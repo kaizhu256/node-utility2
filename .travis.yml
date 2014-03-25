@@ -1,0 +1,6 @@
+before_script:
+  - psql -c "create database travis_ci_test;" -U postgres
+  - export POSTGRES_URL=postgres://localhost/travis_ci_test
+language: node_js
+node_js:
+  - "0.10"
