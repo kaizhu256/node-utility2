@@ -36,12 +36,14 @@ standalone, browser test and code coverage framework for nodejs
           javascriptPlatform: 'unknown',
           /* list of test-generated errors to be ignored */
           onEventErrorDefaultIgnoreList: [],
-          /* phantomjs test url dictionary of test id's */
+          /* dict of phantomjs test id's */
           phantomjsTestUrlDict: {},
-          /* test suite list */
+          /* dict of modules to test */
+          testModuleTestDict: {},
+          /* list of test suites */
           testSuiteList: [],
           /* default timeout */
-          timeoutDefault: 30000
+          timeoutDefault: 300000
         },
         /* global utility2 object */
         utility2: {
@@ -60,6 +62,8 @@ standalone, browser test and code coverage framework for nodejs
         /* return arg for inspection */
         return arg;
       };
+      /* debug onEventError */
+      global.onEventError = local.onEventErrorDefault;
       /* javascript platform - nodejs */
       if (global.process && process.versions && process.versions.node) {
         state.javascriptPlatform = 'nodejs';
@@ -75,29 +79,29 @@ standalone, browser test and code coverage framework for nodejs
         /* set browser test mode */
         state.modeTest = (/\bmodeTest=\w/).test(global.location && global.location.hash);
       }
+      /* export utility2.untilReadyUtility2 */
+      utility2.untilReadyUtility2 = function (onEventError) {
+        local.deferCallback('untilReadyUtility2', 'defer', onEventError);
+        /*
+          this function defers the onEventError callback until utility2 is ready
+        */
+      };
+      /* export utility2.readyUtility2 */
+      utility2.readyUtility2 = local.untilReady(local.nop, function () {
+        /*
+          this function is called to indicate that a component of utility2 is ready
+        */
+        local.deferCallback('untilReadyUtility2', 'ready');
+      });
       /* init module */
       utility2.assert = local.assert;
       local.initModule(module, local);
-    },
-
-    _initOnce: function () {
-      /* utility2 ready */
-      state.onEventReady = state.onEventReady
-        || utility2.onEventMulti(utility2.nop, function () {
-          utility2.deferCallback('untilReadyUtility2', 'ready');
-        });
-    },
-
-    __initOnce_default_test: function (onEventError) {
-      /*
-        this function tests _initOnce's default handling behavior
-      */
-      utility2.testMock(onEventError, [
-        [global, { state: { onEventReady: null } }],
-        [utility2, { deferCallback: utility2.nop, onEventMulti: utility2.callArg1 }]
-      ], function (onEventError) {
-        local._initOnce();
-        onEventError();
+      /* assert state.timeoutDefault is a positive, finite number */
+      setTimeout(function () {
+        utility2.assert(
+          0 < state.timeoutDefault && state.timeoutDefault < Infinity,
+          state.timeoutDefault
+        );
       });
     },
 
@@ -109,6 +113,7 @@ standalone, browser test and code coverage framework for nodejs
         [global, {
           require: null,
           required: null,
+          setTimeout: utility2.callArg0,
           state: { modeBrowser: true },
           window: {}
         }],
@@ -157,6 +162,8 @@ standalone, browser test and code coverage framework for nodejs
       if (callback) {
         callback();
       }
+      /* mock nodejs timer.unref */
+      return { unref: utility2.nop };
     },
 
     _callArg0_default_test: function (onEventError) {
@@ -227,7 +234,7 @@ standalone, browser test and code coverage framework for nodejs
       /*
         this function defers the callback until a ready-state is given
       */
-      var self;
+      var self, timeout;
       self = state.deferCallbackDict = state.deferCallbackDict || {};
       self = self[key] = self[key] || { callbackList: [] };
       switch (mode) {
@@ -240,13 +247,17 @@ standalone, browser test and code coverage framework for nodejs
         /* slow deferred callback */
         self.callbackList.push(callback);
         /* set timeout for deferred callback*/
-        utility2.onEventTimeout(function (error) {
+        timeout = utility2.onEventTimeout(function (error) {
           var ii;
           ii = self.callbackList.indexOf(callback);
           if (ii >= 0) {
             self.callbackList.splice(ii, 1)[0](error);
           }
         }, state.timeoutDefault, 'deferCallback ' + key);
+        /* unref timeout timer to keep it from holding the processs */
+        if (!state.modeCli && timeout && timeout.unref) {
+          timeout.unref();
+        }
         break;
       case 'delete':
         delete state.deferCallbackDict[key];
@@ -266,7 +277,7 @@ standalone, browser test and code coverage framework for nodejs
         this function tests deferCallback's timeout handling behavior
       */
       utility2.testMock(onEventError, [
-        [global, { setTimeout: utility2.callArg0 }]
+        [global, { setTimeout: utility2.callArg0, state: {} }]
       ], function (onEventError) {
         var key;
         key = utility2.uuid4();
@@ -289,6 +300,13 @@ standalone, browser test and code coverage framework for nodejs
       */
       utility2.assert(utility2.echo('_echo_default_test') === '_echo_default_test');
       onEventError();
+    },
+
+    errorStackOrMessage: function (error) {
+      /*
+        this function returns the error's stack or message
+      */
+      return error && (error.stack || error.message || error);
     },
 
     evalOnEventError: function (file, script, onEventError) {
@@ -377,8 +395,7 @@ standalone, browser test and code coverage framework for nodejs
           state.moduleCacheDict[exports.__filename] = module;
           /* watch module */
           utility2.fsWatch({
-            actionList: ['lint', 'eval', 'cache'],
-            exports: exports,
+            actionList: ['lint', 'evalOnWatch', 'createContentBrowser'],
             file: exports.__filename
           }, utility2.onEventErrorDefault);
         }
@@ -387,13 +404,20 @@ standalone, browser test and code coverage framework for nodejs
       state.initOnceDict = state.initOnceDict || {};
       if (local2._initOnce && !state.initOnceDict[local2._name]) {
         state.initOnceDict[local2._name] = true;
-        local2._initOnce();
+        /* defer _initOnce until jQuery.ready */
+        if (state.modeBrowser) {
+          global.jQuery(function () {
+            local2._initOnce();
+          });
+        } else {
+          local2._initOnce();
+        }
       }
       /* init test */
       if (state.modeInit > 1) {
         /* wait until utility2 is ready before running tests */
-        utility2.deferCallback('untilReadyUtility2', 'defer', function () {
-          utility2.testLocal(local2);
+        utility2.untilReadyUtility2(function () {
+          utility2.testModule(local2);
         });
       }
     },
@@ -403,33 +427,58 @@ standalone, browser test and code coverage framework for nodejs
         this function tests initModule's default handling behavior
       */
       utility2.testMock(onEventError, [
-        [global, { required: {}, state: {} }]
+        [global, { jQuery: utility2.callArg0, required: {}, state: { modeBrowser: true } }]
       ], function (onEventError) {
         utility2.initModule(null, {
           /* test class handling behavior */
-          _Foo: utility2.nop,
+          _Aa: utility2.nop,
           /* test class prototype handling behavior */
-          _Foo_prototype_bar: utility2.nop,
+          _Aa_prototype_bar: utility2.nop,
           /* test dict handling behavior */
-          _fooDict_bar: true,
+          _aaDict_bar: true,
           /* test list handling behavior */
-          _fooList_bar: true,
+          _aaList_bar: true,
+          _initOnce: onEventError,
           _name: 'utility2._initModule_default_test'
         });
-        onEventError();
       });
     },
 
-    jsonLog: function (argList) {
+    jsonCopy: function (object) {
+      /*
+        this function deep copies the json object using JSON.parse(JSON.stringify(object))
+      */
+      return JSON.parse(JSON.stringify(object));
+    },
+
+    jsonLog: function (message, data) {
       /*
         this function uses JSON.stringify to give a consistent print format
         across various javascript platforms
       */
-      console.log(argList.map(function (arg) {
-        return typeof arg === 'string' ? arg : utility2.jsonStringifyCircular(arg);
-      }).filter(function (arg) {
-        return arg !== undefined;
-      }).join(', '));
+      if (state.modeDebug !== 'silent') {
+        message = message || '';
+        if (data) {
+          message += ' ' + utility2.jsonStringifyCircular(data, null, 2);
+        }
+        /* security - remove secrets from log */
+        console.log(message.replace(
+          (/"[^"]*(?:authoriz|key|secret|token)[\S\s]*?([,}])/gi),
+          function (_, match1) {
+            return match1 === ',' ? '' : match1;
+          }
+        ));
+      }
+    },
+
+    _jsonLog_secret_test: function (onEventError) {
+      /*
+        this function tests jsonLog's secret handling behavior
+      */
+      utility2.testMock(onEventError, [], function (onEventError) {
+        utility2.jsonLog('_jsonLog_secret_test', { secret1: 'aa', secret2: 'bb' });
+        onEventError();
+      });
     },
 
     jsonParseOrError: function (data) {
@@ -445,7 +494,7 @@ standalone, browser test and code coverage framework for nodejs
 
     _jsonParseOrError_syntaxError_test: function (onEventError) {
       /*
-        this function tests jsonParseOrError's syntax error handling behavior.
+        this function tests jsonParseOrError's syntax error handling behavior
       */
       utility2.assert(utility2.jsonParseOrError('syntax error') instanceof Error);
       onEventError();
@@ -455,14 +504,14 @@ standalone, browser test and code coverage framework for nodejs
       /*
         this function JSON.stringify's the value, ignoring circular references.
         documentation for the arguments provided @
-        https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Using_native_JSON.
+        https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Using_native_JSON
       */
       return JSON.stringify(local._jsonStringifyCircularRecurse(value, []), replacer, space);
     },
 
     _jsonStringifyCircular_default_test: function (onEventError) {
       /*
-        this function tests jsonStringifyCircular's default handling behavior.
+        this function tests jsonStringifyCircular's default handling behavior
       */
       var circular;
       /* test undefined handling behavior */
@@ -477,7 +526,7 @@ standalone, browser test and code coverage framework for nodejs
 
     _jsonStringifyCircularRecurse: function (value, circularList) {
       /*
-        this function recurses the value looking for circular objects
+        this function recurses through the value looking for circular objects
       */
       var result;
       /* return the value if its falsey */
@@ -502,13 +551,13 @@ standalone, browser test and code coverage framework for nodejs
       if (typeof value === 'function') {
         return;
       }
-      /* the value is an array */
+      /* value is an array */
       if (Array.isArray(value)) {
         return value.map(function (element) {
           return local._jsonStringifyCircularRecurse(element, circularList);
         });
       }
-      /* the value is an object */
+      /* value is an object */
       result = {};
       Object.keys(value).forEach(function (key) {
         result[key] = local._jsonStringifyCircularRecurse(value[key], circularList);
@@ -528,7 +577,7 @@ standalone, browser test and code coverage framework for nodejs
 
     _jsonStringifyOrdered_default_test: function (onEventError) {
       /*
-        this function tests jsonStringifyOrdered's default handling behavior.
+        this function tests jsonStringifyOrdered's default handling behavior
       */
       /* test undefined handling behavior */
       utility2.assert(utility2.jsonStringifyOrdered(undefined) === undefined);
@@ -553,7 +602,7 @@ standalone, browser test and code coverage framework for nodejs
         ? '[' + value.map(local._jsonStringifyOrderedRecurse).join(',') + ']'
         : typeof value !== 'object' || !value
         ? JSON.stringify(value)
-        /* sort dictionary keys */
+        /* sort list of keys */
         : '{' + Object.keys(value).filter(function (key) {
           return JSON.stringify(value[key]) !== undefined;
         }).sort().map(function (key) {
@@ -591,7 +640,7 @@ standalone, browser test and code coverage framework for nodejs
             while (result.length < 4) {
               result = ' ' + result;
             }
-            if (error) {
+            if (error && error.evidence) {
               console.error(result + error.reason);
               console.error('    ' + (error.evidence).trim() + ' \/\/ Line ' + error.line
                 + ', Pos ' + error.character);
@@ -647,7 +696,7 @@ standalone, browser test and code coverage framework for nodejs
           /* generate output */
           result = new required.uglify_js.OutputStream({ ascii_only: true });
           ast.print(result);
-          result = result.toString();
+          script = result.toString();
         }
         break;
       }
@@ -684,7 +733,7 @@ standalone, browser test and code coverage framework for nodejs
       /*
         this function provides a default, error / data handling callback.
         if an error is given, it will print the error's message and stack,
-        else it will print the data.
+        else it will print the data
       */
       var ii;
       if (error) {
@@ -697,16 +746,15 @@ standalone, browser test and code coverage framework for nodejs
         }
         /* debug error */
         state.debugError = error;
-        /* print error.message and error.stack */
-        console.error('\nonEventErrorDefault - error\n'
-          + (error.stack || error.message || error)
+        /* print error */
+        console.error('\nonEventErrorDefault - error\n' + utility2.errorStackOrMessage(error)
           + '\n');
       /* print data if it's defined and not an empty string */
       } else if (data !== undefined && data !== '') {
         /* debug data */
         state.debugData = data;
-        utility2.jsonLog(['\nonEventErrorDefault - data\n'
-          + utility2.jsonStringifyCircular(data, null, 2) + '\n']);
+        utility2.jsonLog('\nonEventErrorDefault - data\n'
+          + utility2.jsonStringifyCircular(data, null, 2) + '\n');
       }
     },
 
@@ -749,22 +797,6 @@ standalone, browser test and code coverage framework for nodejs
       onEventError();
     },
 
-    onEventMulti: function (onEventError, onEventFinish) {
-      /*
-        this function creates a multi-callback object
-      */
-      var self;
-      self = function (error, data) {
-        onEventError(error, data);
-        self.remaining -= 1;
-        if (self.remaining === 0) {
-          onEventFinish();
-        }
-      };
-      self.remaining = 0;
-      return self;
-    },
-
     onEventTimeout: function (onEventError, timeout, message) {
       /*
         this function sets a timer to throw and handle a timeout error
@@ -794,10 +826,8 @@ standalone, browser test and code coverage framework for nodejs
           return;
         }
         /* recurse if options2 and defaults2 are both objects */
-        if (defaults2
-            && typeof defaults2 === 'object'
-            && options2
-            && typeof options2 === 'object'
+        if (defaults2 && typeof defaults2 === 'object'
+            && options2 && typeof options2 === 'object'
             && !Array.isArray(options2)) {
           local.stateDefault(options2, defaults2);
         }
@@ -912,33 +942,56 @@ standalone, browser test and code coverage framework for nodejs
       onEventError();
     },
 
+    templateFormat: function (template, dict) {
+      /*
+        this function templates the template with the dict
+      */
+      return template.replace((/\{\{\w+\}\}/g), function (key) {
+        var value;
+        value = dict[key.slice(2, -2)];
+        return typeof value === 'string' ? value : key;
+      });
+    },
+
+    _templateFormat_default_test: function (onEventError) {
+      /*
+        this function tests templateFormat's default handling behavior
+      */
+      utility2.assert(utility2.templateFormat('{{aa}}', { aa: 1 }) === '{{aa}}');
+      utility2.assert(utility2.templateFormat('{{aa}}', { aa: 'bb' }) === 'bb');
+      onEventError();
+    },
+
     testMock: function (onEventError, mockList, test) {
       /*
         this function mocks the state given in the mockList while running the test callback
       */
-      var onEventError2;
-      onEventError2 = function (error) {
-        /* restore state */
-        mockList.reverse().forEach(function (mock) {
-          utility2.stateOverride(mock[0], mock[2], null, 1);
-        });
-        if (error) {
-          onEventError(error);
-        }
-      };
+      var onEventError2, stateOverride;
       /* prepend mandatory mocks for async / unsafe functions */
       mockList = [
         /* suppress console.log */
         [console, { log: utility2.nop }],
         [global, { setInterval: local._throwError, setTimeout: local._throwError }],
-        [utility2, { exit: local._throwError, shell: local._throwError }],
+        [utility2, { shell: local._throwError }],
         [global.process || {}, { exit: local._throwError }]
       ].concat(mockList);
+      onEventError2 = function (error) {
+        /* restore state */
+        mockList.reverse().forEach(function (mock) {
+          stateOverride(mock[0], mock[2], null, 1);
+        });
+        if (error) {
+          onEventError(error);
+        }
+      };
+      /* create local copy of stateOverride in case utility2 is mocked */
+      stateOverride = utility2.stateOverride;
+      /* run onEventError callback in mocked state in a try catch block */
       utility2.tryCatch(function () {
         /* mock state */
         mockList.forEach(function (mock) {
           mock[2] = {};
-          utility2.stateOverride(mock[0], mock[1], mock[2], 1);
+          stateOverride(mock[0], mock[1], mock[2], 1);
         });
         /* run test */
         test(onEventError);
@@ -951,28 +1004,29 @@ standalone, browser test and code coverage framework for nodejs
         this function tests testMock's error handling behavior
       */
       utility2.testMock(onEventError, [
-        [global, { state: { foo: 1 } }]
+        [global, { state: { aa: 1 } }]
       ], function (onEventError) {
         utility2.testMock(function (error) {
           utility2.assert(error instanceof Error);
-          utility2.assert(state.foo === 1);
+          utility2.assert(state.aa === 1);
           onEventError();
         }, [
-          [state, { foo: 2 }]
+          [state, { aa: 2 }]
         ], function () {
           throw new Error();
         });
       });
     },
 
-    testLocal: function (local2) {
+    testModule: function (local2) {
       /*
         this function runs tests on the module's local2 object
       */
-      var onEventFinish, testList, testSuite;
-      if (!(state.modeTest || local2._modeTest)
-          || (state.testModuleList
-          && state.testModuleList.indexOf(local2._name.split('.')[0]) < 0)) {
+      var onEventReady, testList, testSuite;
+      if ((state.modeNodejs && state.modeExtra && !state.serverListened)
+          || (!local2._modeTest && (!state.modeTest
+            || state.testModuleTestDict[local2._name] === false
+            || !state.testModuleTestDict[local2._name.split('.')[0]]))) {
         return;
       }
       /* list all tests in local2 */
@@ -996,7 +1050,7 @@ standalone, browser test and code coverage framework for nodejs
       state.testSuiteRemaining = state.testSuiteRemaining || 0;
       state.testSuiteRemaining += 1;
       /* this callback runs when all tests are finished */
-      onEventFinish = utility2.onEventMulti(utility2.nop, function () {
+      onEventReady = utility2.untilReady(utility2.nop, function () {
         testSuite.passed = testSuite.tests - testSuite.failures;
         state.testSuiteRemaining -= 1;
         if (state.testSuiteRemaining === 0) {
@@ -1006,7 +1060,7 @@ standalone, browser test and code coverage framework for nodejs
           utility2.testReport();
         }
       });
-      onEventFinish.remaining = testList.length;
+      onEventReady.remaining = testList.length;
       /* asynchronously run tests in local2 */
       testList.forEach(function (testName) {
         var onEventError2, remaining, test, timeout;
@@ -1016,19 +1070,27 @@ standalone, browser test and code coverage framework for nodejs
           clearTimeout(timeout);
           /* handle test failure */
           if (error) {
-            console.error('\ntestLocal - test failed, ' + test.name);
+            console.error('\ntestModule - test failed - ' + test.name);
             utility2.onEventErrorDefault(error);
-            test.failure = error.stack || error.message || error;
+            test.failure = utility2.errorStackOrMessage(error);
             testSuite.failures += 1;
+          } else {
+            utility2.jsonLog('testModule - test passed - ' + test.name);
           }
           /* assert test callback was not called multiple times */
           remaining -= 1;
-          utility2.assert(remaining === 0, 'testLocal - ' + test.name
+          utility2.assert(remaining === 0, 'testModule - ' + test.name
             + "'s callback called multiple times");
           /* record time it took for test to run */
           test.time = Date.now() - test.time;
           testSuite.time = Math.max(test.time, testSuite.time);
-          local._setTimeout.call(global, onEventFinish);
+          local._setTimeout.call(global, onEventReady);
+          /* optional qunit hook for saucelabs testing */
+          if (state.modeBrowser && global.QUnit) {
+            global.QUnit.test(test.name, function () {
+              global.QUnit.ok(!error, utility2.errorStackOrMessage(error));
+            });
+          }
         };
         remaining = 1;
         /* create test */
@@ -1037,7 +1099,7 @@ standalone, browser test and code coverage framework for nodejs
           time: Date.now()
         };
         /* set timeout for test */
-        timeout = utility2.onEventTimeout(onEventError2, state.timeoutDefault, 'testLocal');
+        timeout = utility2.onEventTimeout(onEventError2, state.timeoutDefault, 'testModule');
         utility2.tryCatch(function () {
           /* run test */
           local2[testName](onEventError2);
@@ -1046,38 +1108,41 @@ standalone, browser test and code coverage framework for nodejs
       });
     },
 
-    _testLocal_error_test: function (onEventError) {
+    _testModule_error_test: function (onEventError) {
       /*
-        this function tests testLocal's error handling behavior
+        this function tests testModule's error handling behavior
       */
       utility2.testMock(onEventError, [
         [console, { error: utility2.nop }],
+        /* mock qunit test framework */
+        [global, { QUnit: { test: utility2.callArg1, ok: utility2.nop } }],
         [local, { _setTimeout: utility2.callArg0 }],
-        [state, { testSuiteList: [], testSuiteRemaining: 0 }],
+        /* mock browser and testSuite */
+        [state, { modeBrowser: true, testSuiteList: [], testSuiteRemaining: 0 }],
         [utility2, { onEventTimeout: utility2.nop, testReport: utility2.nop }]
       ], function (onEventError) {
-        utility2.testLocal({
+        utility2.testModule({
           _error_test: function (onEventError) {
             onEventError(new Error());
           },
-          _name: 'utility2._testLocal_error_test'
+          _name: 'utility2._testModule_error_test'
         });
         onEventError();
       });
     },
 
-    _testLocal_nullCase_test: function (onEventError) {
+    _testModule_nullCase_test: function (onEventError) {
       /*
-        this function tests testLocal's null case handling behavior
+        this function tests testModule's null case handling behavior
       */
       /* test testMode disabled handling behavior */
       utility2.testMock(onEventError, [
-        [state, { modeTest: null }]
+        [global, { state: { modeTest: null } }]
       ], function (onEventError) {
-        utility2.testLocal({});
+        utility2.testModule({});
       });
       /* test empty testList handling behavior */
-      utility2.testLocal({ _modeTest: true, _name: 'utility2._testLocal_nullCase_test' });
+      utility2.testModule({ _modeTest: true, _name: 'utility2._testModule_nullCase_test' });
       onEventError();
     },
 
@@ -1085,7 +1150,7 @@ standalone, browser test and code coverage framework for nodejs
       /*
         this function creates a test report
       */
-      utility2.jsonLog(['\ntestReport']);
+      utility2.jsonLog('\ntestReport');
       state.testReport = state.testReport || { failures: 0, passed: 0 };
       state.testSuiteList.sort(function (arg1, arg2) {
         arg1 = arg1.name;
@@ -1094,12 +1159,12 @@ standalone, browser test and code coverage framework for nodejs
       }).forEach(function (testSuite) {
         state.testReport.failures += testSuite.failures;
         state.testReport.passed += testSuite.passed;
-        utility2.jsonLog([('        ' + (testSuite.time || 0)).slice(-8) + ' ms | '
+        utility2.jsonLog(('        ' + (testSuite.time || 0)).slice(-8) + ' ms | '
           + testSuite.failures + ' failed | '
           + (Object.keys(testSuite.testCaseList).length - testSuite.failures)
-          + ' passed in ' + testSuite.name]);
+          + ' passed in ' + testSuite.name);
       });
-      utility2.jsonLog([]);
+      utility2.jsonLog();
       local._testReportBrowser();
       local._testReportNodejs();
       state.testSuiteList.length = 0;
@@ -1128,7 +1193,10 @@ standalone, browser test and code coverage framework for nodejs
             testSuiteList: state.testSuiteList
           }),
           url: '/test/report.upload'
-        }, utility2.onEventErrorDefault);
+        }, function (error) {
+          utility2.onEventErrorDefault(error);
+          utility2.deferCallback('_testReportBrowser', 'ready');
+        });
       }
     },
 
@@ -1138,7 +1206,7 @@ standalone, browser test and code coverage framework for nodejs
       */
       utility2.testMock(onEventError, [
         [global, { state: { modeBrowser: true } }],
-        [utility2, { ajax: utility2.nop }]
+        [utility2, { ajax: utility2.callArg1, deferCallback: utility2.nop }]
       ], function (onEventError) {
         local._testReportBrowser();
         onEventError();
@@ -1149,7 +1217,10 @@ standalone, browser test and code coverage framework for nodejs
       /*jslint stupid: true*/
       if (state.modeNodejs && state.modeNpmTest) {
         /* write test report */
-        required.fs.writeFileSync(state.tmpdir + '/test-report.xml', local._testReportXml());
+        required.fs.writeFileSync(
+          state.tmpdir + '/test-report.xml',
+          local._testReportXml()
+        );
         /* exit */
         process.exit();
       }
@@ -1191,7 +1262,10 @@ standalone, browser test and code coverage framework for nodejs
     _testSetTimeout: setTimeout,
 
     _throwError: function () {
-      throw new Error();
+      /*
+        this function always throws an error
+      */
+      throw new Error('_throwError');
     },
 
     _throwError_default_test: function (onEventError) {
@@ -1213,6 +1287,22 @@ standalone, browser test and code coverage framework for nodejs
       } catch (error) {
         onEventError(error);
       }
+    },
+
+    untilReady: function (onEventError, onEventReady) {
+      /*
+        this function defers the onEventReady callback until the remaining counter goes to zero
+      */
+      var self;
+      self = function (error, data) {
+        onEventError(error, data);
+        self.remaining -= 1;
+        if (self.remaining === 0) {
+          onEventReady();
+        }
+      };
+      self.remaining = 0;
+      return self;
     },
 
     uuid4: function () {
@@ -1255,7 +1345,6 @@ standalone, browser test and code coverage framework for nodejs
     this nodejs module inits the cli api
   */
   'use strict';
-  /*jslint stupid: true*/
   var local;
   local = {
 
@@ -1274,21 +1363,23 @@ standalone, browser test and code coverage framework for nodejs
       required.http = required.http || require('http');
       required.https = required.https || require('https');
       required.os = required.os || require('os');
+      required.path = required.path || require('path');
       required.repl = required.repl || require('repl');
       required.stream = required.stream || require('stream');
       required.vm = required.vm || require('vm');
       /* require external npm modules */
       required.connect = required.connect || require('connect');
-      required.pg = required.pg || require('pg');
       required.sqlite3 = required.sqlite3 || require('sqlite3');
-      required.utility2_external = required.utility2_external || require('utility2_external');
-      /* command line */
-      state.modeCli = require.main === module;
-      local._initPackageJson();
-      local._initProcessArgv();
-      local._initNpmTest();
-      local._initCoverage();
-      local._initTmpdir();
+      utility2.tryCatch(function () {
+        require('./.install/public/utility2_external.shared.rollup.js');
+      }, utility2.nop);
+      /* command-line */
+      state.modeCli = state.modeCli || require.main === module;
+      if (state.modeCli) {
+        local._initCli();
+        local._initNpmTest();
+        local._initCoverage();
+      }
       local._initBootstrap();
     },
 
@@ -1300,80 +1391,12 @@ standalone, browser test and code coverage framework for nodejs
         [global, { required: {} }],
         [local, {
           _initBootstrap: utility2.nop,
+          _initCli: utility2.nop,
           _initCoverage: utility2.nop,
-          _initNpmTest: utility2.nop,
-          _initPackageJson: utility2.nop,
-          _initProcessArgv: utility2.nop,
-          _initTmpdir: utility2.nop
+          _initNpmTest: utility2.nop
         }]
       ], function (onEventError) {
         local._initOnce();
-        onEventError();
-      });
-    },
-
-    _initCoverage: function () {
-      if (!state.coverageRegexp || process.env.npm_config_mode_coverage === '') {
-        return;
-      }
-      global.__coverage__ = global.__coverage__ || {};
-      required.istanbul = required.istanbul || require('istanbul');
-      local._collector = local._collector || new required.istanbul.Collector();
-      local._coverageRegexp = local._coverageRegexp || new RegExp(state.coverageRegexp);
-      local._instrumenter = local._instrumenter || new required.istanbul.Instrumenter();
-      required.istanbul.hook.hookRequire(function (file) {
-        return local._coverageRegexp.test(file);
-      }, function (code, file) {
-        if (state.modeNpmTestUtility2 && !state.modeExtra) {
-          code = code.replace((/\n\(function module5ExtraShared\(\) \{\n[\S\s]*/), '');
-        }
-        utility2.jsonLog(['instrumenting file -', file]);
-        state.instrumentedFileDict = state.instrumentedFileDict || {};
-        code = state.instrumentedFileDict[file]
-          = local._instrumenter.instrumentSync(code, file);
-        return code;
-      });
-      /* on exit, create coverage report */
-      process.on('exit', function () {
-        local._collector.add(global.__coverage__);
-        /* print text report */
-        required.istanbul.Report.create('text').writeReport(local._collector);
-        /* create lcov and html report */
-        required.istanbul.Report.create('lcov', { dir: state.tmpdir })
-          .writeReport(local._collector, true);
-      });
-    },
-
-    __initCoverage_default_test: function (onEventError) {
-      /*
-        this function tests _initCoverage's default handling behavior
-      */
-      utility2.testMock(onEventError, [
-        [global, { state: {} }]
-      ], function (onEventError) {
-        local._initCoverage();
-      });
-      utility2.testMock(onEventError, [
-        [global, { state: { coverageRegexp: '\\bfoo\\.js$', modeNpmTestUtility2: true } }],
-        [local, {
-          _collector: { add: utility2.nop },
-          _coverageRegexp: null,
-          _instrumenter: { instrumentSync: utility2.echo }
-        }],
-        [process, { on: utility2.callArg1 }],
-        [required, { istanbul: {
-          hook: { hookRequire: function (callback1, callback2) {
-            utility2.assert(callback1('foo.js') === true);
-            utility2.assert(callback1('bar.js') === false);
-            utility2.assert(callback2('console.log("__initCoverage_default_test");')
-              === 'console.log("__initCoverage_default_test");');
-          } },
-          Report: { create: function () {
-            return { writeReport: utility2.nop };
-          } }
-        } }]
-      ], function (onEventError) {
-        local._initCoverage();
         onEventError();
       });
     },
@@ -1412,23 +1435,209 @@ standalone, browser test and code coverage framework for nodejs
       });
     },
 
+    _initCli: function () {
+      /*
+        this function inits process.argv and integrates it into the state dict
+      */
+      /*jslint stupid: true*/
+      var argv, key2, value;
+      /* load package.json file */
+      state.packageJson = state.packageJson || {};
+      utility2.tryCatch(function () {
+        state.packageJson = JSON.parse(required.fs.readFileSync(process.cwd()
+          + '/package.json'));
+      }, utility2.nop);
+      /* init argv */
+      argv = utility2.jsonCopy(process.argv);
+      /* process argv from process.env.npm_config_utility2_* */
+      Object.keys(process.env).forEach(function (key) {
+        key2 = (/^npm_config_utility2_(.+)/).exec(key);
+        if (key2) {
+          argv.push('--' + key2[1] + '=' + (process.env[key] || 'false'));
+        }
+      });
+      argv.forEach(function (arg, ii, argv) {
+        var error;
+        arg = arg.split('=');
+        /* --foo=true -> state.foo = 1 */
+        value = arg[1]
+          || (((/^--[a-z]/).test(argv[ii + 1]) || (ii + 1) >= argv.length)
+            /* --foo -> state.foo = true */
+            ? 'true'
+            /* --foo true -> state.foo = true */
+            : argv[ii + 1]);
+        arg = arg[0];
+        /* --no-foo -> state.foo = false */
+        if ((/^--no-[a-z]/).test(arg)) {
+          arg = '-' + arg.slice(4);
+          value = 'false';
+        }
+        arg = local._stringToCamelCase(arg.slice(2));
+        error = utility2.jsonParseOrError(value);
+        state[arg] = error instanceof Error ? value : error;
+      });
+      /* toggle state.modeExtra */
+      state.modeExtra = state.modeExtra
+        || state.githubReleaseRemoveFileList
+        || state.githubReleaseUploadFileList
+        || state.minifyFileList
+        || state.modeNpmBuildUtility2
+        || state.rollupFileList;
+      /* save utility2.__dirname to process.env */
+      process.env.NODEJS_UTILITY2_DIR = __dirname;
+      /* save os vars to process.env */
+      Object.keys(required.os).forEach(function (key) {
+        value = required.os[key];
+        process.env['NODEJS_OS_' + key.toUpperCase()]
+          = String(typeof value === 'function' ? value() : value);
+      });
+      /* save process vars to process.env */
+      process.env.NODEJS_PROCESS_PID = process.pid;
+      ['argv', 'cwd', 'pid', 'platform', 'versions'].forEach(function (key) {
+        value = process[key];
+        if (typeof value === 'object') {
+          Object.keys(value).forEach(function (key2) {
+            process.env['NODEJS_PROCESS_' + key.toUpperCase() + '_' + key2.toUpperCase()]
+              = String(value[key2]);
+          });
+        } else {
+          process.env['NODEJS_PROCESS_' + key.toUpperCase()]
+            = String(typeof value === 'function' ? value() : value);
+        }
+      });
+      /* save package.json vars to process.env */
+      Object.keys(state.packageJson).forEach(function (key) {
+        value = state.packageJson[key];
+        if (typeof value === 'string') {
+          process.env['NODEJS_PACKAGE_JSON_' + key.toUpperCase()] = value;
+        }
+      });
+      /* exit abnormally on SIGABRT */
+      process.on('SIGABRT', function () {
+        process.exit(1);
+      });
+      /* exit normally on SIGTERM */
+      process.on('SIGTERM', process.exit);
+    },
+
+    __initCli_default_test: function (onEventError) {
+      /*
+        this function tests _initCli's default handling behavior
+      */
+      utility2.testMock(onEventError, [
+        [global, { process: {
+          cwd: process.cwd,
+          env: {
+            /* test npm argument handling behavior */
+            npm_config_utility2_aa: '',
+            npm_config_utility2_bb: '1'
+          },
+          exit: utility2.nop,
+          on: utility2.callArg1
+        }, state: {} }]
+      ], function (onEventError) {
+        state.modeCli = true;
+        process.argv = ['--cc'];
+        local._initCli();
+        utility2.assert(state.aa === false);
+        utility2.assert(state.bb === 1);
+        utility2.assert(state.cc === true);
+        process.argv = ['--cc', 'bb'];
+        local._initCli();
+        utility2.assert(state.cc === 'bb');
+        process.argv = ['--cc', '1'];
+        local._initCli();
+        utility2.assert(state.cc === 1);
+        process.argv = ['--no-cc'];
+        local._initCli();
+        utility2.assert(state.cc === false);
+        onEventError();
+      });
+    },
+
+    _initCoverage: function () {
+      /*jslint stupid: true*/
+      if (state.coverageRegexp && state.modeCoverage !== false) {
+        global.__coverage__ = global.__coverage__ || {};
+        required.istanbul = required.istanbul || require('istanbul');
+        local._collector = local._collector || new required.istanbul.Collector();
+        local._coverageRegexp = local._coverageRegexp || new RegExp(state.coverageRegexp);
+        local._instrumenter = local._instrumenter || new required.istanbul.Instrumenter();
+        required.istanbul.hook.hookRequire(function (file) {
+          return local._coverageRegexp.test(file);
+        }, function (code, file) {
+          if (state.modeNpmTestUtility2 && !state.modeExtra) {
+            code = code.replace((/\n\(function module5ExtraShared\(\) \{\n[\S\s]*/), '');
+          }
+          utility2.jsonLog('_initCoverage - instrumenting file ' + file);
+          state.instrumentedFileDict = state.instrumentedFileDict || {};
+          code = state.instrumentedFileDict[file]
+            = local._instrumenter.instrumentSync(code, file);
+          return code;
+        });
+        /* on exit, create coverage report */
+        process.on('exit', function () {
+          local._collector.add(global.__coverage__);
+          /* print text report */
+          required.istanbul.Report.create('text').writeReport(local._collector);
+          /* create lcov and html report */
+          required.istanbul.Report.create('lcov', { dir: state.tmpdir })
+            .writeReport(local._collector, true);
+        });
+      }
+    },
+
+    __initCoverage_default_test: function (onEventError) {
+      /*
+        this function tests _initCoverage's default handling behavior
+      */
+      utility2.testMock(onEventError, [
+        [global, {
+          process: { on: utility2.callArg1 },
+          state: { coverageRegexp: '\\bfoo\\.js$', modeNpmTestUtility2: true }
+        }],
+        [local, {
+          _collector: { add: utility2.nop },
+          _coverageRegexp: null,
+          _instrumenter: { instrumentSync: utility2.echo }
+        }],
+        [required, { istanbul: {
+          hook: { hookRequire: function (callback1, callback2) {
+            utility2.assert(callback1('foo.js') === true);
+            utility2.assert(callback1('bar.js') === false);
+            utility2.assert(callback2('console.log("__initCoverage_default_test");')
+              === 'console.log("__initCoverage_default_test");');
+          } },
+          Report: { create: function () {
+            return { writeReport: utility2.nop };
+          } }
+        } }]
+      ], function (onEventError) {
+        local._initCoverage();
+        onEventError();
+      });
+    },
+
     _initNpmTest: function () {
       /* test utility2 */
       if (state.modeNpmTestUtility2) {
-        utility2.stateDefault(state, {
-          coverageRegexp: '\\butility2\\.js$',
-          modeDebugProcess: true,
-          modeRepl: true,
-          modeNpmTest: true,
-          serverPort: 'random',
-          testModuleList: ['utility2'],
-          tmpdir: state.modeExtra ? 'tmp' : 'tmp/core'
-        });
+        state.coverageRegexp = '\\butility2\\.js$';
+        state.modeDebugProcess = true;
+        state.modeRepl = true;
+        state.modeNpmTest = true;
+        state.serverPort = 'random';
+        state.testModuleTestDict = { utility2: true };
+        state.tmpdir = state.modeExtra ? 'tmp' : 'tmp/core';
+        /* perform fast npm test with no web tests */
+        if (process.env.npm_config_fast) {
+          state.modeLocal = true;
+          state.timeoutDefault = 8000;
+        }
       }
       if (state.modeNpmTest) {
         /* set test mode */
         state.modeTest = true;
-        /* tmpdir */
+        /* set tmpdir */
         state.tmpdir = state.tmpdir || 'tmp';
         /* exit with non-zero code if tests failed */
         process.on('exit', function () {
@@ -1444,8 +1653,14 @@ standalone, browser test and code coverage framework for nodejs
         this function tests _initNpmTest's default handling behavior
       */
       utility2.testMock(onEventError, [
-        [global, { state: { testReport: { failures: true } } }],
-        [process, { exit: utility2.nop, on: utility2.callArg1 }]
+        [global, {
+          process: {
+            env: { npm_config_fast: true },
+            exit: utility2.nop,
+            on: utility2.callArg1
+          },
+          state: { testReport: { failures: true } }
+        }]
       ], function (onEventError) {
         /* test modeNpmTest handling behavior */
         state.modeNpmTest = true;
@@ -1461,166 +1676,11 @@ standalone, browser test and code coverage framework for nodejs
       onEventError();
     },
 
-    _initPackageJson: function () {
-      /*
-        this function loads package.json into memory if it exists
-      */
-      /* load package.json file */
-      state.packageJson = state.packageJson || {};
-      utility2.tryCatch(function () {
-        /*jslint stupid: true*/
-        state.packageJson = JSON.parse(required.fs.readFileSync(process.cwd()
-          + '/package.json'));
-      }, utility2.nop);
-    },
-
-    __initPackageJson_default_test: function (onEventError) {
-      /*
-        this function tests _initPackageJson's default handling behavior
-      */
-      utility2.testMock(onEventError, [
-        [global, { state: {} }]
-      ], function (onEventError) {
-        local._initPackageJson();
-        onEventError();
-      });
-    },
-
-    _initProcessArgv: function () {
-      /*
-        this function inits process.argv and integrates it into the state dictionary
-      */
-      if (!(state.modeCli || state.modeProcessArgv)) {
-        return;
-      }
-      process.argv.forEach(function (arg, ii, argv) {
-        var error, value;
-        if (!(/^--[a-z]/).test(arg)) {
-          return;
-        }
-        arg = arg.split('=');
-        /* --foo=true -> state.foo = 1 */
-        value = arg[1]
-          || (/^--[a-z]/).test(argv[ii + 1] || '--a')
-            /* --foo -> state.foo = true */
-            ? 'true'
-            /* --foo true -> state.foo = true */
-            : argv[ii + 1];
-        arg = arg[0];
-        /* --no-foo -> state.foo = false */
-        if ((/^--no-[a-z]/).test(arg)) {
-          arg = '-' + arg.slice(4);
-          value = 'false';
-        }
-        arg = local._stringToCamelCase(arg.slice(2));
-        error = utility2.jsonParseOrError(value);
-        state[arg] = error instanceof Error ? value : error;
-      });
-      /* toggle state.modeExtra */
-      state.modeExtra = state.modeExtra || state.minifyFileList || state.rollupFileList;
-    },
-
-    __initProcessArgv_default_test: function (onEventError) {
-      /*
-        this function tests _initProcessArgv's default handling behavior
-      */
-      utility2.testMock(onEventError, [
-        [global, { process: {}, state: {} }]
-      ], function (onEventError) {
-        /* test null case handling behavior */
-        process.argv = ['--foo'];
-        local._initProcessArgv();
-        utility2.assert(state.foo === undefined);
-        /* test default handling behavior */
-        process.argv = ['--foo'];
-        state.modeProcessArgv = true;
-        local._initProcessArgv();
-        utility2.assert(state.foo === true);
-        process.argv = ['--foo', 'bar'];
-        state.modeProcessArgv = true;
-        local._initProcessArgv();
-        utility2.assert(state.foo === 'bar');
-        process.argv = ['--foo', '1'];
-        state.modeProcessArgv = true;
-        local._initProcessArgv();
-        utility2.assert(state.foo === 1);
-        process.argv = ['--no-foo'];
-        state.modeProcessArgv = true;
-        local._initProcessArgv();
-        utility2.assert(state.foo === false);
-        onEventError();
-      });
-    },
-
-    _initTmpdir: function () {
-      state.tmpdir = required.path.resolve(state.tmpdir
-        || required.os.tmpdir() + '/utility2.' + encodeURIComponent(process.cwd()));
-      /* create tmpdir */
-      utility2.fsMkdirpSync(state.tmpdir);
-    },
-
-    __initTmpdir_default_test: function (onEventError) {
-      /*
-        this function tests _initTmpdir's default handling behavior
-      */
-      utility2.testMock(onEventError, [
-        [global, { state: {} }],
-        [utility2, { fsMkdirpSync: utility2.nop }]
-      ], function (onEventError) {
-        local._initTmpdir();
-        onEventError();
-      });
-    },
-
-    fsMkdirpSync: function (dir) {
-      utility2.tryCatch(function () {
-        required.fs.mkdirSync(dir);
-      }, function (error) {
-        switch (error.code) {
-        case 'EEXIST':
-          break;
-        case 'ENOENT':
-          utility2.fsMkdirpSync(required.path.dirname(dir));
-          utility2.fsMkdirpSync(dir);
-          break;
-        default:
-          throw error;
-        }
-      });
-    },
-
-    _fsMkdirpSync_default_test: function (onEventError) {
-      /*
-        this function tests fsMkdirpSync's default handling behavior
-      */
-      var dir;
-      dir = state.tmpdir + '/cache/' + utility2.uuid4() + '/foo';
-      utility2.fsMkdirpSync(dir);
-      /* mkdir a second time to trigger EEXIST case */
-      utility2.fsMkdirpSync(dir);
-      required.fs.exists(dir, function (exists) {
-        utility2.assert(exists);
-        onEventError();
-      });
-    },
-
-    _fsMkdirpSync_error_test: function (onEventError) {
-      /*
-        this function tests fsMkdirpSync's error handling behavior
-      */
-      utility2.tryCatch(function () {
-        utility2.fsMkdirpSync('/dev/null/foo');
-      }, function (error) {
-        utility2.assert(error instanceof Error);
-        onEventError();
-      });
-    },
-
     _stringToCamelCase: function (text) {
       /*
         this function converts dashed names to camel case
       */
-      return text.replace((/-[a-z]/g), function (match) {
+      return text.replace((/[\-_][a-z]/g), function (match) {
         return match[1].toUpperCase();
       });
     },
@@ -1658,24 +1718,239 @@ standalone, browser test and code coverage framework for nodejs
 
     _initOnce: function () {
       /*jslint stupid: true*/
-      /* watch package.json */
+      /* watch utility2.js2 */
+      utility2.readyUtility2.remaining += 1;
       utility2.fsWatch({
-        actionList: ['lint'],
-        file: utility2.__dirname + '/package.json'
+        actionList: ['lint', 'evalJs2'],
+        file: utility2.__dirname + '/utility2.js2'
       }, utility2.onEventErrorDefault);
-      /* watch utility2_phantomjs.js */
-      utility2.fsWatch({
-        actionList: ['lint'],
-        file: utility2.__dirname + '/utility2_phantomjs.js'
-      }, utility2.onEventErrorDefault);
+      if (state.modeExtra || state.modeNpmTest) {
+        /* watch package.json */
+        utility2.fsWatch({
+          actionList: ['lint'],
+          file: utility2.__dirname + '/package.json'
+        }, utility2.onEventErrorDefault);
+        /* init tmpdir */
+        state.tmpdir = required.path.resolve(state.tmpdir
+          || required.os.tmpdir() + '/utility2.' + encodeURIComponent(process.cwd()));
+        utility2.jsonLog('creating tmpdir ' + state.tmpdir);
+        /* create cache dir */
+        utility2.fsMkdirpSync(state.tmpdir + '/cache');
+        /* cleanup old cache */
+        required.fs.readdirSync(state.tmpdir + '/cache').forEach(function (file) {
+          local._fsRmr(state.tmpdir + '/cache/' + file, utility2.onEventErrorDefault);
+        });
+        /* periodically remove cache files */
+        setInterval(function () {
+          local._fsCacheCleanup(utility2.onEventErrorDefault);
+        }, 300000)
+          /* unref setInterval timer to keep it from holding the process */
+          .unref();
+        /* print debug info about the current process */
+        if (state.modeDebugProcess && state.modeDebugProcess !== 'debugged') {
+          state.modeDebugProcess = 'debugged';
+          utility2.jsonLog('debug - process.argv', process.argv);
+          utility2.jsonLog('debug - process.cwd()', process.cwd());
+          utility2.jsonLog('debug - process.pid', process.pid);
+          utility2.jsonLog('debug - process.env', process.env);
+        }
+      }
+    },
+
+    __initOnce_default_test: function (onEventError) {
+      /*
+        this function tests _initOnce's default handling behavior
+      */
+      /*jslint stupid: true*/
+      utility2.testMock(onEventError, [
+        [global, { setInterval: utility2.callArg0 }]
+      ], function (onEventError) {
+        /* populate cache dir with a file to remove */
+        utility2.fsMkdirpSync(state.tmpdir + '/cache/' + utility2.uuid4());
+        local._initOnce();
+        onEventError();
+      });
+    },
+
+    _fsCacheCleanup: function (onEventError) {
+      /*
+        this function cleans up the cachedir
+      */
+      var dir, mode, onEventError2;
+      mode = 0;
+      onEventError2 = function (error, data) {
+        mode = error instanceof Error ? -1 : mode + 1;
+        switch (mode) {
+        /* loop through state._fsCacheCleanupFsList */
+        case 1:
+          dir = state.tmpdir + '/cache';
+          utility2.jsonLog('_fsCacheCleanup - cleaning ' + dir);
+          state._fsCacheCleanupFsList = state._fsCacheCleanupFsList || [];
+          state._fsCacheCleanupFsList.forEach(onEventError2);
+          mode += 1;
+          onEventError2();
+          break;
+        /* rm -r cached dir / file */
+        case 2:
+          mode -= 1;
+          local._fsRmr(dir + '/' + error, utility2.onEventErrorDefault);
+          break;
+        /* get list of files to be removed for the next cycle */
+        case 3:
+          required.fs.readdir(dir, onEventError2);
+          break;
+        /* save list to state._fsCacheCleanupFsList */
+        case 4:
+          state._fsCacheCleanupFsList = data;
+          onEventError2();
+          break;
+        default:
+          onEventError(error);
+        }
+      };
+      onEventError2();
+    },
+
+    __fsCacheCleanup_default_test: function (onEventError) {
+      /*
+        this function tests _fsCacheCleanup's default handling behavior
+      */
+      var file, mode, onEventError2;
+      mode = 0;
+      onEventError2 = function (error, data) {
+        mode = error instanceof Error ? -1 : mode + 1;
+        switch (mode) {
+        case 1:
+          file = state.tmpdir + '/cache/' + utility2.uuid4() + '/foo';
+          state._fsCacheCleanupFsList = [file];
+          required.fs.mkdir(required.path.dirname(file), onEventError2);
+          break;
+        case 2:
+          required.fs.writeFile(file, '', onEventError2);
+          break;
+        case 3:
+          local._fsCacheCleanup(onEventError2);
+          break;
+        default:
+          onEventError(error);
+        }
+      };
+      onEventError2();
+    },
+
+    __fsCacheCleanup_error_test: function (onEventError) {
+      /*
+        this function tests _fsCacheCleanup's error handling behavior
+      */
+      utility2.testMock(onEventError, [
+        [global, {
+          local: { _fsRmr: utility2.nop },
+          required: { fs: { readdir: function (dir, onEventError) {
+            onEventError(new Error());
+          }, unlink: utility2.callArg1 } }
+        }]
+      ], function (onEventError) {
+        local._fsCacheCleanup(function (error) {
+          utility2.assert(error instanceof Error);
+          onEventError();
+        });
+      });
+    },
+
+    fsMkdirpSync: function (dir) {
+      /*jslint stupid: true*/
+      utility2.tryCatch(function () {
+        required.fs.mkdirSync(dir);
+      }, function (error) {
+        switch (error.code) {
+        case 'EEXIST':
+          break;
+        case 'ENOENT':
+          utility2.fsMkdirpSync(required.path.dirname(dir));
+          utility2.fsMkdirpSync(dir);
+          break;
+        default:
+          throw error;
+        }
+      });
+    },
+
+    _fsMkdirpSync_default_test: function (onEventError) {
+      /*
+        this function tests fsMkdirpSync's default handling behavior
+      */
+      /*jslint stupid: true*/
+      var dir;
+      dir = state.tmpdir + '/cache/' + utility2.uuid4() + '/foo';
+      utility2.fsMkdirpSync(dir);
+      /* mkdir a second time to trigger EEXIST case */
+      utility2.fsMkdirpSync(dir);
+      required.fs.exists(dir, function (exists) {
+        utility2.assert(exists);
+        onEventError();
+      });
+    },
+
+    _fsMkdirpSync_error_test: function (onEventError) {
+      /*
+        this function tests fsMkdirpSync's error handling behavior
+      */
+      /*jslint stupid: true*/
+      utility2.tryCatch(function () {
+        utility2.fsMkdirpSync('/dev/null/foo');
+      }, function (error) {
+        utility2.assert(error instanceof Error);
+        onEventError();
+      });
+    },
+
+    _fsRmr: function (dir, onEventError) {
+      /*
+        this function recursively removes the dir
+      */
+      var mode, onEventReady, onEventError2;
+      mode = 0;
+      onEventError2 = function (error, data) {
+        error = error && error.code === 'ENOENT' ? null : error;
+        mode = error instanceof Error && mode !== 1 ? -1 : mode + 1;
+        switch (mode) {
+        case 1:
+          required.fs.unlink(dir, onEventError2);
+          break;
+        case 2:
+          if (!error) {
+            mode = -2;
+            onEventError2();
+            return;
+          }
+          required.fs.readdir(dir, onEventError2);
+          break;
+        case 3:
+          data = data || [];
+          onEventReady = utility2.untilReady(utility2.onEventErrorDefault, onEventError2);
+          onEventReady.remaining = data.length + 1;
+          data.forEach(function (file) {
+            local._fsRmr(dir + '/' + file, onEventReady);
+          });
+          /* handle directory with empty file list */
+          onEventReady();
+          break;
+        case 4:
+          required.fs.rmdir(dir, onEventError2);
+          break;
+        default:
+          onEventError(error);
+        }
+      };
+      onEventError2();
     },
 
     fsWatch: function (options, onEventError) {
       /*
-        this function watches a file and runs specified actions if it is modified.
+        this function watches a file and runs specified actions if it is modified
         usage example:
         utiliyt2.fsWatch({
-          actionList: ['lint', 'eval'],
+          actionList: ['lint', 'evalOnWatch'],
           file: 'foo.js'
         }, utility2.onEventErrorDefault);
       */
@@ -1693,19 +1968,25 @@ standalone, browser test and code coverage framework for nodejs
             state.testWatchList.forEach(function (response) {
               response.write('data:\n\n');
             });
+            /* save content to options dict */
+            options.content = utility2.commentShebang(content);
             /* run actions */
             options.actionList.forEach(function (action) {
-              /* comment out shebang for executable scripts */
-              state.fsWatchActionDict[action](options, utility2.commentShebang(content));
+              state.fsWatchActionDict[action](options);
             });
+            /* set watch mode */
+            options.modeWatch = true;
             onEventError();
           });
         }
       };
       options.file = required.path.resolve(options.file);
       state.fsWatchDict = state.fsWatchDict || {};
+      /* save options to state.fsWatchDict */
       state.fsWatchDict[options.file] = options;
+      /* unwatch old stale file */
       required.fs.unwatchFile(options.file);
+      /* watch the new file */
       required.fs.watchFile(options.file, { interval: 1000, persistent: false }, onEventChange);
       onEventChange({ mtime: 2}, { mtime: 1});
     },
@@ -1718,7 +1999,7 @@ standalone, browser test and code coverage framework for nodejs
       file = state.tmpdir + '/cache/' + utility2.uuid4() + '.js';
       utility2.fsWatch({ actionList: ['lint'], file: file }, function (error) {
         utility2.assert(error instanceof Error);
-        utility2.fsWatchDelete(file);
+        utility2.fsWatchUnwatch(file);
         onEventError();
       });
     },
@@ -1728,44 +2009,76 @@ standalone, browser test and code coverage framework for nodejs
         this function tests fsWatch's testWatch handling behavior
       */
       utility2.testMock(onEventError, [
-        [global, { state: { testWatchList: [ { write: utility2.nop } ] } }],
+        [global, { state: { testWatchList: [ { write: utility2.nop }] } }],
         [required.fs, {
-          readFile: utility2.callArg2,
+          readFile: function (_, __, onEventError) {
+            onEventError(null, '');
+          },
           unWatchFile: utility2.nop,
           watchFile: utility2.nop
         }]
       ], function (onEventError) {
-        utility2.fsWatch({ actionList: [], file: 'foo.js' }, onEventError);
+        utility2.fsWatch({ actionList: [], file: '_fsWatch_testWatch_test.js' }, onEventError);
       });
     },
 
-    fsWatchActionDict_cache: function (options, content) {
+    fsWatchActionDict_createContentBrowser: function (options) {
       /*
-        this function caches the file content
+        this function caches the file content for browser use,
+        stripping of nodejs code
       */
-      options.exports._fileContentBrowser = utility2.stringToEmptyLine(
-        (state.instrumentedFileDict && state.instrumentedFileDict[options.file]) || content,
+      options.contentBrowser = utility2.stringToEmptyLine(
+        (state.instrumentedFileDict && state.instrumentedFileDict[options.file])
+          || options.content,
         (/^\(function module\w*Nodejs\(\) \{[\S\s]*?^\}\(\)\);$/gm)
       ).trimRight();
     },
 
-    fsWatchActionDict_eval: function (options, content) {
+    fsWatchActionDict_eval: function (options) {
       /*
         this function evals the file content
       */
-      if (!options.initialized) {
-        options.initialized = true;
-        return;
-      }
-      utility2.jsonLog(['fsWatch - eval', options.file]);
-      utility2.evalOnEventError(options, content, function (error) {
+      utility2.evalOnEventError(options.file, options.content, function (error) {
         utility2.onEventErrorDefault(error);
       });
     },
 
-    _fsWatchActionDict_eval_default_test: function (onEventError) {
+    fsWatchActionDict_evalJs2: function (options) {
       /*
-        this function tests fsWatchActionDict_eval's default handling behavior
+        this function parses a js2 file
+      */
+      options.content.replace(
+        (/^\/\* MODULE_BEGIN (.+) \*\/$([\S\s]+?)^\/\* MODULE_END \*\/$/gm),
+        function (_, options2, content, ii) {
+          options2 = JSON.parse(options2);
+          /* save options2 to state.fsWatchDict */
+          state.fsWatchDict[options2.file] = options2;
+          /* save content to options2 dict */
+          options2.content
+            /* preserve lineno */
+            = options.content.slice(0, ii).replace(/.*/g, '') + content;
+          /* run actions */
+          options2.actionList.forEach(function (action) {
+            state.fsWatchActionDict[action](options2);
+          });
+        }
+      );
+    },
+
+    fsWatchActionDict_evalOnWatch: function (options) {
+      /*
+        this function evals the file content only during a watch event
+      */
+      /*jslint evil: true*/
+      if (options.modeWatch) {
+        utility2.jsonLog('fsWatch - evalOnWatch ' + options.file);
+        state.fsWatchActionDict.eval(options);
+      }
+    },
+
+    _fsWatchActionDict_evalOnWatch_default_test: function (onEventError) {
+      /*
+        this function tests fsWatchActionDict_evalOnWatch's default handling behavior
       */
       var file, mode, onEventError2;
       mode = 0;
@@ -1778,7 +2091,7 @@ standalone, browser test and code coverage framework for nodejs
           break;
         case 2:
           utility2.fsWatch({
-            actionList: ['eval'],
+            actionList: ['evalOnWatch'],
             file: file
           }, onEventError2);
           break;
@@ -1792,7 +2105,7 @@ standalone, browser test and code coverage framework for nodejs
         case 4:
           utility2.assert(state[file]);
           delete state[file];
-          utility2.fsWatchDelete(file);
+          utility2.fsWatchUnwatch(file);
           onEventError2();
           break;
         default:
@@ -1802,19 +2115,54 @@ standalone, browser test and code coverage framework for nodejs
       onEventError2();
     },
 
-    fsWatchActionDict_lint: function (options, content) {
+    fsWatchActionDict_lint: function (options) {
       /*
         this function css / js lints the file content
       */
-      utility2.scriptLint(options.file, content);
+      utility2.scriptLint(options.file, options.content);
     },
 
-    fsWatchDelete: function (file) {
+    fsWatchActionDict_shell: function (options) {
       /*
-        this function deletes / unwatches the file
+        this function executes the file content as a shell script
+      */
+      utility2.shell({
+        modeDebug: false,
+        script: options.content
+      }, utility2.onEventErrorDefault);
+    },
+
+    fsWatchUnwatch: function (file) {
+      /*
+        this function unwatches the file
       */
       required.fs.unwatchFile(file);
       delete state.fsWatchDict[file];
+    },
+
+    processKill: function (pid) {
+      /*
+        this function silently attempts to kill the process with the given pid
+      */
+      /* validate pid is a positive, finite number */
+      pid = Number(pid);
+      if (0 < pid && pid < Infinity) {
+        utility2.tryCatch(function () {
+          process.kill(pid);
+        }, utility2.nop);
+      }
+    },
+
+    _processKill_default_test: function (onEventError) {
+      /*
+        this function tests processKill's default handling behavior
+      */
+      utility2.testMock(onEventError, [
+        [process, { kill: utility2.nop }]
+      ], function (onEventError) {
+        utility2.processKill('1');
+        onEventError();
+      });
     }
 
   };
@@ -1891,6 +2239,74 @@ standalone, browser test and code coverage framework for nodejs
       });
     },
 
+    replParseDict_$: function (arg1, arg2) {
+      /*
+        this function runs shell commands from the repl interpreter
+      */
+      utility2.shell({ modeDebug: false, script: utility2.templateFormat(arg2, state) });
+    },
+
+    _replParseDict_$_default_test: function (onEventError) {
+      /*
+        this function tests replParseDict_$'s default handling behavior
+      */
+      utility2.testMock(onEventError, [
+        [utility2, { shell: utility2.nop }]
+      ], function (onEventError) {
+        utility2.replParse('($ echo "_replParseDict_print_default_test"\n)');
+        onEventError();
+      });
+    },
+
+    replParseDict_git: function (arg1, arg2) {
+      /*
+        this function runs git commands from the repl interpreter
+      */
+      switch (arg2) {
+      case 'diff':
+        arg2 = '--no-pager diff';
+        break;
+      case 'log':
+        arg2 = 'log | head -n 18';
+        break;
+      }
+      utility2.shell({ modeDebug: false, script: 'git ' + arg2 });
+    },
+
+    _replParseDict_git_default_test: function (onEventError) {
+      /*
+        this function tests replParseDict_git's default handling behavior
+      */
+      utility2.testMock(onEventError, [
+        [utility2, { shell: utility2.nop }]
+      ], function (onEventError) {
+        utility2.replParse('(git diff\n)');
+        utility2.replParse('(git log\n)');
+        utility2.replParse('(git status\n)');
+        onEventError();
+      });
+    },
+
+    replParseDict_grep: function (arg1, arg2) {
+      utility2.shell({ modeDebug: false, script: 'find . -type f | grep -v '
+        + '"/\\.\\|.*\\b\\(\\.\\d\\|archive\\|artifacts\\|bower_components\\|build'
+        + '\\|coverage\\|docs\\|external\\|git_modules\\|jquery\\|log\\|logs\\|min'
+        + '\\|node_modules\\|rollup.*\\|swp\\|test\\|tmp\\)\\b" '
+        + '| tr "\\n" "\\000" | xargs -0 grep -in ' + JSON.stringify(arg2) });
+    },
+
+    _replParseDict_grep_default_test: function (onEventError) {
+      /*
+        this function tests replParseDict_grep's default handling behavior
+      */
+      utility2.testMock(onEventError, [
+        [utility2, { shell: utility2.nop }]
+      ], function (onEventError) {
+        utility2.replParse('(grep "_replParseDict_grep_default_test"\n)');
+        onEventError();
+      });
+    },
+
     replParseDict_print: function (arg1, arg2) {
       /*
         this function prints arg2 in stringified form from the repl interpreter
@@ -1906,7 +2322,43 @@ standalone, browser test and code coverage framework for nodejs
         utility2.replParse('(print "_replParseDict_print_default_test"\n)');
         onEventError();
       });
+    },
+
+    shell: function (options) {
+      /*
+        this function gives a quick and dirty way to execute shell scripts
+      */
+      var child;
+      options.stdio = options.stdio || ['ignore', 1, 2];
+      child = required.child_process.spawn(
+        options.argv ? options.argv[0] : '/bin/bash',
+        options.argv ? options.argv.slice(1) : ['-c', options.script],
+        options
+      );
+      /* set timeout */
+      required.child_process.spawn('/bin/bash', ['-c', 'sleep '
+        + ((options.timeout || state.timeoutDefault) / 1000) + '; kill ' + child.pid
+        + ' 2>/dev/null']);
+      child.on('exit', function (exitcode) {
+        /* debug shell exit */
+        utility2.jsonLog('shell - process ' + child.pid + ' exited with code ' + exitcode);
+      });
+      /* debug shell options */
+      if (options.modeDebug !== false) {
+        utility2.jsonLog('shell - options', options);
+      }
+      return child;
+    },
+
+    _shell_default_test: function (onEventError) {
+      /*
+        this function tests shell's default handling behavior
+      */
+      utility2.testMock(onEventError, [], function (onEventError) {
+        local.shell({ script: ':' }).on('exit', onEventError);
+      });
     }
+
 
   };
   local._init();
@@ -1962,6 +2414,21 @@ standalone, browser test and code coverage framework for nodejs
           location.reload();
         });
       }
+      /* qunit hook */
+      if (global.QUnit) {
+        global.QUnit.done = function (test_results) {
+          utility2.deferCallback('_testReportBrowser', 'defer', function () {
+            test_results.testDict = state.qunitTestDict;
+            global.global_test_results = test_results;
+          });
+        };
+        global.QUnit.testStart(function (testDetails) {
+          global.QUnit.log = function (details) {
+            state.qunitTestDict = state.qunitTestDict || {};
+            state.qunitTestDict[testDetails.name] = details;
+          };
+        });
+      }
     },
 
     clearCallSetInterval: function (key, callback, interval, timeout) {
@@ -2012,32 +2479,25 @@ standalone, browser test and code coverage framework for nodejs
       /*
         this function tests clearCallSetInterval's timeout handling behavior
       */
-      var onEventFinish;
-      onEventFinish = utility2.onEventMulti(utility2.nop, onEventError);
+      var onEventReady;
+      onEventReady = utility2.untilReady(utility2.nop, onEventError);
       [100, 200, 300].forEach(function (data) {
-        onEventFinish.remaining += 1;
+        onEventReady.remaining += 1;
         utility2.clearCallSetInterval(utility2.uuid4(), function (timeout) {
           if (timeout) {
             utility2.assert(timeout instanceof Error);
             utility2.assert(timeout.code === 'ETIMEDOUT');
-            onEventFinish();
+            onEventReady();
           }
         }, 200, data);
       });
-    },
-
-    jsonCopy: function (object) {
-      /*
-        this function deep copies the json object using JSON.parse(JSON.stringify(object))
-      */
-      return JSON.parse(JSON.stringify(object));
     },
 
     mimeLookup: function (file) {
       /*
         this function returns the file's mime-type
       */
-      return required.mime.lookupDict[required.path.extname(file).slice(1)] || 'text/plain';
+      return required.mime.lookupDict[required.path.extname(file).slice(1)];
     },
 
     _mimeLookup_default_test: function (onEventError) {
@@ -2049,7 +2509,7 @@ standalone, browser test and code coverage framework for nodejs
       utility2.assert(utility2.mimeLookup('foo.js') === 'application/javascript');
       utility2.assert(utility2.mimeLookup('foo.json') === 'application/json');
       utility2.assert(utility2.mimeLookup('foo.txt') === 'text/plain');
-      utility2.assert(utility2.mimeLookup('foo') === 'text/plain');
+      utility2.assert(utility2.mimeLookup('foo') === undefined);
       onEventError();
     },
 
@@ -2074,26 +2534,6 @@ standalone, browser test and code coverage framework for nodejs
       + ' !"#$%&\'()*+,-./0123456789:;<=>?'
       + '@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_'
       + '`abcdefghijklmnopqrstuvwxyz{|}~\x7f',
-
-    templateFormat: function (template, dict) {
-      /*
-        this function templates the template with the dict
-      */
-      return template.replace((/\{\{\w+\}\}/g), function (key) {
-        var value;
-        value = dict[key.slice(2, -2)];
-        return typeof value === 'string' ? value : key;
-      });
-    },
-
-    _templateFormat_default_test: function (onEventError) {
-      /*
-        this function tests templateFormat's default handling behavior
-      */
-      utility2.assert(utility2.templateFormat('{{aa}}', { aa: 1 }) === '{{aa}}');
-      utility2.assert(utility2.templateFormat('{{aa}}', { aa: 'bb' }) === 'bb');
-      onEventError();
-    },
 
     urlDecodeOrError: function (text) {
       /*
@@ -2244,7 +2684,7 @@ standalone, browser test and code coverage framework for nodejs
       /*
         this function remotely evals the javascript code on server
       */
-      utility2.ajax({ data: script, dataType: 'json', url: "/admin/admin.eval" }, onEventError);
+      utility2.ajax({ data: script, resultType: 'json', url: "/admin/admin.eval" }, onEventError);
     },
 
     _adminEval_default_test: function (onEventError) {
@@ -2329,7 +2769,7 @@ standalone, browser test and code coverage framework for nodejs
         case 2:
           data = data.toString();
           /* log script to be eval'd */
-          utility2.jsonLog(['router5MainDict_/admin/admin.eval\n' + data]);
+          utility2.jsonLog('router5MainDict_/admin/admin.eval\n' + data);
           utility2.evalOnEventError('router5MainDict_/admin/admin.eval', data, onEventError2);
           break;
         /* respond with eval'd result */
@@ -2360,12 +2800,12 @@ standalone, browser test and code coverage framework for nodejs
         case 2:
           data = data.toString();
           /* log script to be eval'd */
-          utility2.jsonLog(['router5MainDict_/admin/admin.shell\n' + data]);
+          utility2.jsonLog('router5MainDict_/admin/admin.shell\n' + data);
           onEventData = function (chunk) {
             process.stdout.write(chunk);
             response.write(chunk);
           };
-          child = required.child_process.spawn('/bin/sh', ['-c', data])
+          child = utility2.shell({ script: data, stdio: ['ignore', 'pipe', 'pipe'] })
             .on('close', function (exitCode) {
               response.end('\nexit code: ' + exitCode);
             })
@@ -2444,104 +2884,52 @@ standalone, browser test and code coverage framework for nodejs
       /*
         this function implements the the ajax function for the javascript platform browser
       */
-      var data, mode, onEventError2, timeout, xhr;
+      var data, error, ii, onEventEvent, onEventError2, timeout, xhr;
       /* ajax xss via proxy */
       if ((/^https*:/).test(options.url)) {
         options.url = '/proxy/proxy.ajax/' + options.url;
       }
-      /* set default options */
-      options.contentType = options.contentType || 'application/octet-stream';
-      options.dataType = options.dataType || 'text';
-      options.type = options.type || options.method;
-      /* add ajax progress feature */
-      options.xhr = options.xhr || function () {
-        return local._createXhrProgress(options);
-      };
-      if (options.params) {
-        options.url = utility2.urlParamsParsedJoin({
-          params: options.params,
-          path: options.url
-        });
-      }
-      mode = 0;
-      onEventError2 = function (error, textStatus, jqXHR) {
-        /* clear timeout for ajaxBrowser */
-        clearTimeout(timeout);
-        error = jqXHR instanceof Error ? jqXHR : options.error || error;
-        mode = error instanceof Error ? -1 : mode + 1;
-        xhr = xhr || (error instanceof Error ? jqXHR : error);
-        switch (mode) {
-        case 1:
-          data = error;
-          state.debugXhr = xhr;
-          utility2.deferCallback(options.deferCallbackKey, 'defer', onEventError2);
-          break;
-        default:
-          /* garbage collect deferred object */
-          utility2.deferCallback(options.deferCallbackKey, 'delete');
-          if (error) {
-            error.message = xhr.status + ' ' + xhr.statusText + ' - ' + options.url + '\n'
-              + error.message;
-            if (error.stack) {
-              error.stack = error.message + '\n' + xhr.responseText + '\n' + error.stack;
-            }
-          }
-          onEventError(error, data);
+      /* error handling */
+      onEventError2 = function (error, data) {
+        if (error) {
+          /* add extra debug info to error */
+          utility2.ajaxErrorDebug(
+            error,
+            options.method,
+            xhr.status,
+            options.url,
+            xhr.responseText
+          );
         }
+        onEventError(error, data);
       };
-      /* set timeout for ajaxBrowser */
-      timeout = utility2.onEventTimeout(onEventError2, state.timeoutDefault, 'ajaxBrowser');
-      $.ajax(options).always(onEventError2);
-      /* debug mode option */
-      if (options.modeDebug) {
-        utility2.jsonLog(['ajax - options', options]);
-      }
-    },
-
-    _ajaxBrowser_abort_test: function (onEventError) {
-      /*
-        this function tests ajaxBrowser's abort handling behavior
-      */
-      var interval;
-      /* set interval */
-      interval = setInterval(function () {
-        /* wait until no ajax io is in progress before initiating test */
-        if (!local._xhrList.length) {
-          /* clear interval */
-          clearInterval(interval);
-          utility2.ajax({ url: '/test/test.timeout' }, function (error) {
-            utility2.assert(error instanceof Error);
-            onEventError();
-          });
-          local._divXhrProgress.click();
-        }
-      }, 1000);
-    },
-
-    _createXhrProgress: function (options) {
-      /*
-        this function creates a special xhr object with progress event handling
-      */
-      var ii, onEventEvent, xhr;
-      xhr = new XMLHttpRequest();
-      options.deferCallbackKey = utility2.uuid4();
       /* event handling */
-      onEventEvent = function (event) {
+      onEventEvent = function (event, __) {
         switch (event.type) {
         case 'abort':
         case 'error':
         case 'load':
+          /* clear timeout for ajaxBrowser */
+          clearTimeout(timeout);
           /* remove xhr from progress list */
           ii = local._xhrList.indexOf(xhr);
           if (ii >= 0) {
             local._xhrList.splice(ii, 1);
           }
           /* error message */
-          if (event.type !== 'load' || xhr.status >= 400) {
-            options.error = new Error(event.type);
+          if (__ instanceof Error) {
+            error = __;
+          } else if (event.type !== 'load' || xhr.status >= 400) {
+            error = new Error(event.type);
+          } else if (options.resultType === 'json') {
+            data = utility2.jsonParseOrError(xhr.responseText);
+            if (data instanceof Error) {
+              error = data;
+            }
+          } else {
+            data = xhr.responseText;
           }
-          /* ready */
-          utility2.deferCallback(options.deferCallbackKey, 'ready');
+          onEventError2(error, data);
           break;
         }
         /* increment progress bar */
@@ -2565,10 +2953,22 @@ standalone, browser test and code coverage framework for nodejs
           }
         }, 1000);
       };
+      /* set default options */
+      options.contentType = options.contentType || 'application/octet-stream';
+      /* init xhr object */
+      xhr = new XMLHttpRequest();
+      /* set timeout for ajaxBrowser */
+      timeout = utility2.onEventTimeout(function (timeout) {
+        xhr.abort(timeout);
+      }, state.timeoutDefault, 'ajaxBrowser');
+      /* debug xhr */
+      state.debugXhr = xhr;
       xhr.addEventListener('abort', onEventEvent);
       xhr.addEventListener('error', onEventEvent);
       xhr.addEventListener('load', onEventEvent);
-      xhr.addEventListener('progress', onEventEvent);
+      xhr.addEventListener('loadstart', local._progressIncrement);
+      xhr.addEventListener('progress', local._progressIncrement);
+      xhr.upload.addEventListener('progress', local._progressIncrement);
       /* show progress bar */
       if (local._xhrList.length === 0) {
         local._progressState = 1;
@@ -2581,9 +2981,33 @@ standalone, browser test and code coverage framework for nodejs
         });
       }
       local._xhrList.push(xhr);
-      /* increment progress bar */
-      local._progressIncrement();
-      return xhr;
+      /* open xhr */
+      xhr.open(options.method || 'GET', options.url);
+      Object.keys(options.headers || {}).forEach(function (key) {
+        xhr.sendRequestHeader(key, options.headers[key]);
+      });
+      /* send xhr */
+      xhr.send(options.data);
+    },
+
+    _ajaxBrowser_abort_test: function (onEventError) {
+      /*
+        this function tests ajaxBrowser's abort handling behavior
+      */
+      var interval;
+      /* set interval */
+      interval = setInterval(function () {
+        /* wait until no ajax io is in progress before initiating test */
+        if (!local._xhrList.length) {
+          /* clear interval */
+          clearInterval(interval);
+          utility2.ajax({ url: '/test/test.timeout' }, function (error) {
+            utility2.assert(error instanceof Error);
+            onEventError();
+          });
+          local._divXhrProgress.click();
+        }
+      }, 1000);
     },
 
     _progressIncrement: function () {
@@ -2665,23 +3089,31 @@ standalone, browser test and code coverage framework for nodejs
       /*
         this function implements the the ajax function for the javascript platform nodejs
       */
-      /* localhost */
       var onEventError2, request, response, timeout, urlParsed;
       onEventError2 = function (error, data) {
         /* clear timeout for ajaxNodejs */
         clearTimeout(timeout);
-        /* garbage collect request socket */
-        if (request) {
-          request.destroy();
-        }
-        /* garbage collect response socket */
-        if (response) {
-          response.destroy();
+        if (error) {
+          /* add extra debug info to error */
+          utility2.ajaxErrorDebug(
+            error,
+            options.method,
+            response && response.statusCode,
+            options.url,
+            ''
+          );
+          /* garbage collect request socket */
+          if (request) {
+            request.destroy();
+          }
+          /* garbage collect response socket */
+          if (response) {
+            response.destroy();
+          }
         }
         /* debug mode option */
         if (options.modeDebug) {
-          utility2.jsonLog([
-            'ajaxNodejs - response',
+          utility2.jsonLog('ajaxNodejs - response', [
             options.url,
             options.responseStatusCode,
             options.responseHeaders
@@ -2731,17 +3163,20 @@ standalone, browser test and code coverage framework for nodejs
         ? required.https
         : required.http).request(options, function (_) {
         response = _;
-        /* debug ajaxResponse */
-        state.debugAjaxResponse = response;
         local._ajaxOnEventResponse(options, onEventError2, response);
       }).on('error', onEventError2);
       /* debug ajaxRequest */
       state.debugAjaxRequest = request;
+      /* pipe request */
+      if (options.data instanceof required.stream.Readable) {
+        options.data.on('error', onEventError2).pipe(request.on('error', onEventError2));
       /* end request */
-      request.end(options.data);
+      } else {
+        request.end(options.data);
+      }
       /* debug mode option */
       if (options.modeDebug) {
-        utility2.jsonLog(['ajaxNodejs - options', options]);
+        utility2.jsonLog('ajaxNodejs - options', options);
       }
     },
 
@@ -2749,27 +3184,27 @@ standalone, browser test and code coverage framework for nodejs
       /*
         this function tests ajaxNodejs's cache handling behavior
       */
-      var onEventFinish;
-      onEventFinish = utility2.onEventMulti(utility2.nop, onEventError);
+      var onEventReady;
+      onEventReady = utility2.untilReady(utility2.nop, onEventError);
       /* test cache flush handling behavior */
-      onEventFinish.remaining += 1;
+      onEventReady.remaining += 1;
       utility2.ajax({
         cache: 'miss',
         url: '/test/test.json'
       }, function (error, data) {
         utility2.assert(!error);
         utility2.assert(data.toString() === '"hello test"');
-        onEventFinish();
+        onEventReady();
       });
       /* test cache default handling behavior */
-      onEventFinish.remaining += 1;
+      onEventReady.remaining += 1;
       utility2.ajax({
         cache: true,
         url: '/test/test.json'
       }, function (error, data) {
         utility2.assert(!error);
         utility2.assert(data.toString() === '"hello test"');
-        onEventFinish();
+        onEventReady();
       });
     },
 
@@ -2782,8 +3217,7 @@ standalone, browser test and code coverage framework for nodejs
         return;
       }
       if (options.responseStatusCode >= 400) {
-        onEventError(new Error((options.method || 'GET') + ' - ' + options.url
-          + ' - ' + options.responseStatusCode + ' - ' + data.toString()));
+        onEventError(new Error(data.toString()));
         return;
       }
       /* cache data */
@@ -2794,7 +3228,7 @@ standalone, browser test and code coverage framework for nodejs
           utility2.onEventErrorDefault
         );
       }
-      switch (options.dataType) {
+      switch (options.resultType) {
       case 'binary':
         onEventError(null, data);
         break;
@@ -2810,35 +3244,35 @@ standalone, browser test and code coverage framework for nodejs
 
     __ajaxOnEventData_default_test: function (onEventError) {
       /*
-        this function tests _ajaxOnEventData's dataType handling behavior
+        this function tests _ajaxOnEventData's resultType handling behavior
       */
-      var onEventFinish;
-      onEventFinish = utility2.onEventMulti(utility2.nop, onEventError);
-      /* test binary dataType handling behavior */
-      onEventFinish.remaining += 1;
+      var onEventReady;
+      onEventReady = utility2.untilReady(utility2.nop, onEventError);
+      /* test binary resultType handling behavior */
+      onEventReady.remaining += 1;
       utility2.ajax({
-        dataType: 'binary',
+        resultType: 'binary',
         url: '/test/test.json'
       }, function (error, data) {
         utility2.assert(!error);
         utility2.assert(data.toString() === '"hello test"');
-        onEventFinish();
+        onEventReady();
       });
-      /* test json dataType handling behavior */
-      onEventFinish.remaining += 1;
+      /* test json resultType handling behavior */
+      onEventReady.remaining += 1;
       utility2.ajax({
-        dataType: 'json',
+        resultType: 'json',
         url: '/test/test.json'
       }, function (error, data) {
         utility2.assert(!error);
         utility2.assert(data === 'hello test');
-        onEventFinish();
+        onEventReady();
       });
       /* test error handling behavior */
-      onEventFinish.remaining += 1;
+      onEventReady.remaining += 1;
       local._ajaxOnEventData(null, function (error) {
         utility2.assert(error instanceof Error);
-        onEventFinish();
+        onEventReady();
       }, new Error());
     },
 
@@ -2846,6 +3280,14 @@ standalone, browser test and code coverage framework for nodejs
       /*
         this function handles the response object received by ajax request
       */
+      /* error handling */
+      response.on('error', onEventError);
+      /* debug response */
+      state.debugAjaxResponse = response;
+      if (options.resultType === 'response') {
+        onEventError(null, response);
+        return;
+      }
       options.responseStatusCode = response.statusCode;
       options.responseHeaders = response.headers;
       if (options.redirect !== false) {
@@ -2882,6 +3324,13 @@ standalone, browser test and code coverage framework for nodejs
           local._ajaxOnEventData(options, onEventError, error, data);
         }
       );
+    },
+
+    replParseDict_ajax: function (arg1, arg2) {
+      /*
+        this function runs ajax from the repl interpreter
+      */
+      utility2.ajax({ modeDebug: true, url: arg2 }, utility2.onEventErrorDefault);
     }
 
   };
@@ -2926,9 +3375,9 @@ standalone, browser test and code coverage framework for nodejs
       utility2.assert(typeof onEventError === 'function', 'ajax - invalid callback');
       /* set options.url0 if necessary */
       options.url0 = options.url0 || options.url;
-      /* set options.method and options.type if necessary */
+      /* set options.method if necessary */
       if (options.data) {
-        options.method = options.type = options.method || options.type || 'POST';
+        options.method = options.method || 'POST';
       }
       if (options instanceof Error) {
         onEventError(options);
@@ -2963,7 +3412,19 @@ standalone, browser test and code coverage framework for nodejs
       });
     },
 
-    ajaxMultiUrls: function (options, onEventError, onEventFinish) {
+    ajaxErrorDebug: function (error, method, statusCode, url, data) {
+      /*
+        this function add extra ajax debug info to the error's message and stack
+      */
+      /* add http method / status / url info to error.message */
+      error.message = (method || 'GET') + ' ' + statusCode + ' - ' + url + '\n'
+        + data;
+      if (error.stack) {
+        error.stack = error.message + '\n' + error.stack;
+      }
+    },
+
+    ajaxMultiUrls: function (options, onEventError, onEventReady) {
       /*
         this function makes multiple ajax requests for multiple urls
         usage example:
@@ -2975,35 +3436,36 @@ standalone, browser test and code coverage framework for nodejs
           console.log('finished all ajax requests');
         });
       */
-      var onEventFinish2, remainingList;
+      var onEventReady2, remainingList;
       /* validate options.urlList */
-      onEventFinish2 = utility2.onEventMulti(onEventError, onEventFinish);
+      onEventReady2 = utility2.untilReady(onEventError, onEventReady);
       if (!(options
         && Array.isArray(options.urlList)
         && options.urlList.length
         && options.urlList.every(function (url) {
             return typeof url === 'string';
           }))) {
-        onEventFinish2.remaining = 1;
-        onEventFinish2(new Error('ajaxMultiUrls - invalid options.urlList '
+        onEventReady2.remaining = 1;
+        onEventReady2(new Error('ajaxMultiUrls - invalid options.urlList '
           + utility2.jsonStringifyCircular(options && options.urlList)));
         return;
       }
       remainingList = utility2.jsonCopy(options.urlList);
       options.urlList.forEach(function (url) {
         var optionsUrl;
-        onEventFinish2.remaining += 1;
+        onEventReady2.remaining += 1;
         optionsUrl = utility2.jsonCopy(options);
         optionsUrl.url = url;
         utility2.ajax(optionsUrl, function (error, data) {
           /* debug remainingList */
           remainingList.splice(remainingList.indexOf(optionsUrl.url0), 1);
-          utility2.jsonLog(['ajaxMultiUrls - fetched / remaining',
+          utility2.jsonLog('ajaxMultiUrls - fetched / remaining', [
             optionsUrl.url0,
-            JSON.stringify(remainingList.slice(0, 2)).replace(']', ',...]')]);
-          onEventFinish2(error, {
+            JSON.stringify(remainingList.slice(0, 2)).replace(']', ',...]')
+          ]);
+          onEventReady2(error, {
             data: data,
-            onEventFinish: onEventFinish2,
+            onEventReady: onEventReady2,
             options: optionsUrl
           });
         });
@@ -3207,33 +3669,25 @@ standalone, browser test and code coverage framework for nodejs
 
     _initOnce: function () {
       /*jslint stupid: true*/
+      /* init sqlite3 */
+      utility2.readyUtility2.remaining += 1;
+      state.sqlite3 = new required.sqlite3.cached.Database(
+        state.tmpdir + '/db.sqlite3',
+        utility2.readyUtility2
+      );
       /* create blob dir */
       utility2.fsMkdirpSync(state.tmpdir + '/blob');
-      /* create cache dir */
-      utility2.fsMkdirpSync(state.tmpdir + '/cache');
-      /* init sqlite3 */
-      state.fsFileSqlite3 = state.tmpdir + '/db.sqlite3';
-      state.onEventReady.remaining += 1;
-      state.sqlite3 = required.sqlite3.cached.Database(
-        state.tmpdir + '/db.sqlite3',
-        state.onEventReady
-      );
+      // /* periodically remove db cache blobs */
+      // local._dbCacheCleanup(utility2.onEventErrorDefault);
+      // utility2.clearCallSetInterval('_dbCacheCleanup', function () {
+        // local._dbCacheCleanup(utility2.onEventErrorDefault);
+      // }, 5 * 60 * 1000);
       /* create db blob table */
-      state.onEventReady.remaining += 1;
-      state.dbTableBlob = utility2.createDbTable('blob', state.onEventReady);
+      utility2.readyUtility2.remaining += 1;
+      state.dbTableBlob = utility2.createDbTable('blob', utility2.readyUtility2);
       /* create db test table */
-      state.onEventReady.remaining += 1;
-      state.dbTableTest = utility2.createDbTable('test', state.onEventReady);
-      /* periodically remove fs cache files */
-      local._fsCacheCleanup(utility2.onEventErrorDefault);
-      utility2.clearCallSetInterval('_fsCacheCleanup', function () {
-        local._fsCacheCleanup(utility2.onEventErrorDefault);
-      }, 5 * 60 * 1000);
-      /* periodically remove db cache blobs */
-      local._dbCacheCleanup(utility2.onEventErrorDefault);
-      utility2.clearCallSetInterval('_dbCacheCleanup', function () {
-        local._dbCacheCleanup(utility2.onEventErrorDefault);
-      }, 5 * 60 * 1000);
+      utility2.readyUtility2.remaining += 1;
+      state.dbTableTest = utility2.createDbTable('test', utility2.readyUtility2);
     },
 
     createDbTable: function (name, onEventError) {
@@ -3439,7 +3893,7 @@ standalone, browser test and code coverage framework for nodejs
         /* loop through state._dbCacheCleanupFsList */
         case 1:
           dir = state.tmpdir + '/cache';
-          utility2.jsonLog(['_dbCacheCleanup - cleaning /cache/', dir]);
+          utility2.jsonLog('_dbCacheCleanup - cleaning ' + dir);
           state._dbCacheCleanupFsList = state._dbCacheCleanupFsList || [];
           state._dbCacheCleanupFsList.forEach(onEventError2);
           mode += 1;
@@ -3478,129 +3932,6 @@ standalone, browser test and code coverage framework for nodejs
       */
       state._dbCacheCleanupFsList = ['/cache/' + utility2.uuid4() + '/foo'];
       local._dbCacheCleanup(onEventError);
-    },
-
-    _fsCacheCleanup: function (onEventError) {
-      /*
-        this function cleans up the cachedir
-      */
-      var dir, mode, onEventError2;
-      mode = 0;
-      onEventError2 = function (error, data) {
-        mode = error instanceof Error ? -1 : mode + 1;
-        switch (mode) {
-        /* loop through state._fsCacheCleanupFsList */
-        case 1:
-          dir = state.tmpdir + '/cache';
-          utility2.jsonLog(['_fsCacheCleanup - cleaning cachedir', dir]);
-          state._fsCacheCleanupFsList = state._fsCacheCleanupFsList || [];
-          state._fsCacheCleanupFsList.forEach(onEventError2);
-          mode += 1;
-          onEventError2();
-          break;
-        /* rm -r cached dir / file */
-        case 2:
-          mode -= 1;
-          local._fsRmr(dir + '/' + error, utility2.onEventErrorDefault);
-          break;
-        /* get list of files to be removed for the next cycle */
-        case 3:
-          required.fs.readdir(dir, onEventError2);
-          break;
-        /* save list to state._fsCacheCleanupFsList */
-        case 4:
-          state._fsCacheCleanupFsList = data;
-          onEventError2();
-          break;
-        default:
-          onEventError(error);
-        }
-      };
-      onEventError2();
-    },
-
-    __fsCacheCleanup_default_test: function (onEventError) {
-      /*
-        this function tests _fsCacheCleanup's default handling behavior
-      */
-      var file, mode, onEventError2;
-      mode = 0;
-      onEventError2 = function (error, data) {
-        mode = error instanceof Error ? -1 : mode + 1;
-        switch (mode) {
-        case 1:
-          file = state.tmpdir + '/cache/' + utility2.uuid4() + '/foo';
-          state._fsCacheCleanupFsList = [file];
-          required.fs.mkdir(required.path.dirname(file), onEventError2);
-          break;
-        case 2:
-          required.fs.writeFile(file, '', onEventError2);
-          break;
-        case 3:
-          local._fsCacheCleanup(onEventError2);
-          break;
-        default:
-          onEventError(error);
-        }
-      };
-      onEventError2();
-    },
-
-    __fsCacheCleanup_error_test: function (onEventError) {
-      /*
-        this function tests _fsCacheCleanup's error handling behavior
-      */
-      utility2.testMock(onEventError, [
-        [local, { _rmR: utility2.nop }],
-        [required.fs, { readdir: function (dir, onEventError) {
-          onEventError(new Error());
-        } }],
-        [utility2, { onEventErrorDefault: utility2.nop }]
-      ], function (onEventError) {
-        local._fsCacheCleanup(function (error) {
-          utility2.assert(error instanceof Error);
-          onEventError();
-        });
-      });
-    },
-
-    _fsRmr: function (dir, onEventError) {
-      /*
-        this function recursively removes the dir
-      */
-      var mode, onEventFinish, onEventError2;
-      mode = 0;
-      onEventError2 = function (error, data) {
-        error = error && error.code === 'ENOENT' ? null : error;
-        mode = error instanceof Error && mode !== 1 ? -1 : mode + 1;
-        switch (mode) {
-        case 1:
-          required.fs.unlink(dir, onEventError2);
-          break;
-        case 2:
-          if (!error) {
-            onEventError();
-            return;
-          }
-          required.fs.readdir(dir, onEventError2);
-          break;
-        case 3:
-          onEventFinish = utility2.onEventMulti(utility2.onEventErrorDefault, onEventError2);
-          onEventFinish.remaining = data.length + 1;
-          data.forEach(function (file) {
-            local._fsRmr(dir + '/' + file, onEventFinish);
-          });
-          /* handle directory with empty file list */
-          onEventFinish();
-          break;
-        case 4:
-          required.fs.rmdir(dir, onEventError2);
-          break;
-        default:
-          onEventError(error);
-        }
-      };
-      onEventError2();
     },
 
     fsCopyFileAtomic: function (file1, file2, onEventError) {
@@ -4063,8 +4394,248 @@ standalone, browser test and code coverage framework for nodejs
       /*
         this function runs full-text search on the table
       */
-      this.sqlAll('SELECT rowid, offsets({{table}}_fts), matchinfo({{table}}_fts),'
-        + ' snippet({{table}}_fts) FROM {{table}}_fts WHERE {{table}}_fts match ?;', query, onEventError);
+      this.sqlAll(
+        'SELECT rowid, offsets({{table}}_fts), matchinfo({{table}}_fts),'
+          + ' snippet({{table}}_fts) FROM {{table}}_fts WHERE {{table}}_fts match ?;',
+        query,
+        onEventError
+      );
+    }
+
+  };
+  local._init();
+}());
+
+
+
+(function moduleGithubNodejs() {
+  /*
+    this nodejs module exports the github api
+  */
+  'use strict';
+  var local;
+  local = {
+
+    _name: 'utility2.moduleGithubNodejs',
+
+    _init: function () {
+      if (state.modeNodejs && state.modeExtra) {
+        utility2.initModule(module, local);
+      }
+    },
+
+    _initOnce: function () {
+      state.githubRelease = state.githubRelease || process.env.GITHUB_RELEASE;
+      state.githubToken = state.githubToken || process.env.GITHUB_TOKEN;
+      if (!state.modeLocal && state.githubRelease && state.githubToken) {
+        state.githubReleaseDefault = state.githubReleaseDefault
+          || utility2.createGithubRelease(state.githubRelease, state.githubToken);
+        /* delete files from command-line */
+        if (state.githubReleaseRemoveFileList) {
+          state.githubReleaseRemoveFileList.split(',').forEach(function (file) {
+            utility2.onEventReadyExit.remaining += 1;
+            state.githubReleaseDefault.fileRemove(file, utility2.onEventReadyExit);
+          });
+        }
+        /* upload files from command-line */
+        if (state.githubReleaseUploadFileList) {
+          state.githubReleaseUploadFileList.split(',').forEach(function (file) {
+            utility2.onEventReadyExit.remaining += 1;
+            state.githubReleaseDefault.fileUpload(file, utility2.onEventReadyExit);
+          });
+        }
+      } else {
+        /* skip module tests if not connected to network,
+         * or github authentication doesn't exist */
+        state.testModuleTestDict[local._name] = false;
+      }
+    },
+
+    createGithubRelease: function (release, token) {
+      /*
+        this function creates a github release object for manipulating github releases
+      */
+      var self;
+      self = new local._Release();
+      self.release = release;
+      self.token = token;
+      return self;
+    },
+
+    _fileEncode: function (file) {
+      /*
+        this function encodes the file to github-acceptable format,
+        stripping it of special characters
+      */
+      return required.path.basename(file).replace((/[^\w-.]+/g), '.');
+    },
+
+    _Release: function () {
+      /*
+        this is the _Release class
+      */
+      return;
+    },
+
+    _Release_prototype_headers: function () {
+      /*
+        this function creates authentication headers
+      */
+      return {
+        authorization: 'token ' + this.token,
+        /* github requires user-agent */
+        'user-agent': 'unknown'
+      };
+    },
+
+    _Release_prototype_info: function (onEventError) {
+      /*
+        this function gets info about the release
+      */
+      var info, mode, onEventError2, self;
+      mode = 0;
+      self = this;
+      onEventError2 = function (error, data) {
+        mode = error instanceof Error ? -1 : mode + 1;
+        switch (mode) {
+        case 1:
+          info = self.release.split('/');
+          utility2.ajax({
+            headers: self.headers(),
+            resultType: 'json',
+            url: 'https://api.github.com/repos/' + info.slice(0, -1).join('/')
+          }, onEventError2);
+          break;
+        case 2:
+          data.forEach(onEventError2);
+          mode += 1;
+          onEventError2();
+          break;
+        case 3:
+          mode -= 1;
+          if (error.name === info[3]) {
+            info = error;
+          }
+          break;
+        default:
+          onEventError(error, info);
+        }
+      };
+      onEventError2();
+    },
+
+    _Release_prototype_fileRemove: function (file, onEventError) {
+      /*
+        this function removes the specified file
+      */
+      var mode, name, onEventError2, self, url;
+      mode = 0;
+      self = this;
+      onEventError2 = function (error, data) {
+        mode = error instanceof Error ? -1 : mode + 1;
+        switch (mode) {
+        case 1:
+          self.info(onEventError2);
+          break;
+        case 2:
+          name = local._fileEncode(file);
+          data.assets.forEach(onEventError2);
+          mode += 1;
+          onEventError2();
+          break;
+        case 3:
+          mode -= 1;
+          if (error.name === name) {
+            url = error.url;
+          }
+          break;
+        case 4:
+          if (!url) {
+            onEventError2();
+            return;
+          }
+          utility2.jsonLog('_Release_prototype_fileRemove - removing file ' + file);
+          utility2.ajax({ headers: self.headers(), method: 'DELETE', url: url }, onEventError2);
+          break;
+        default:
+          onEventError(error, data);
+        }
+      };
+      onEventError2();
+    },
+
+    _Release_prototype_fileUpload: function (file, onEventError) {
+      /*
+        this function uploads the specified file
+      */
+      var info, mode, onEventError2, self;
+      mode = 0;
+      self = this;
+      onEventError2 = function (error, data) {
+        mode = error instanceof Error ? -1 : mode + 1;
+        switch (mode) {
+        /* first delete existing file */
+        case 1:
+          self.fileRemove(file, onEventError2);
+          break;
+        /* re-get info */
+        case 2:
+          self.info(onEventError2);
+          break;
+        /* stat file to get its size */
+        case 3:
+          info = data;
+          required.fs.stat(file, onEventError2);
+          break;
+        case 4:
+          utility2.jsonLog('_Release_prototype_fileUpload - uploading file ' + file);
+          utility2.ajax({
+            data: required.fs.createReadStream(file),
+            headers: utility2.stateDefault(self.headers(), {
+              'content-length': data.size,
+              'content-type': utility2.mimeLookup(file) || 'application/octet-stream'
+            }),
+            url: info.upload_url.replace('{?name}', '?name=' + local._fileEncode(file))
+          }, onEventError2);
+          break;
+        default:
+          onEventError(error, data);
+        }
+      };
+      onEventError2();
+    },
+
+    _Release_default_test: function (onEventError) {
+      /*
+        this function tests _Release's default handling behavior
+      */
+      var file, mode, onEventError2, self;
+      self = state.githubReleaseDefault;
+      mode = 0;
+      onEventError2 = function (error, data) {
+        mode = error instanceof Error ? -1 : mode + 1;
+        switch (mode) {
+        case 1:
+          file = state.tmpdir + '/cache/test@txt';
+          required.fs.writeFile(file, 'hello test', onEventError2);
+          break;
+        /* test _Release_prototype_fileRemove's null handling behavior */
+        case 2:
+          self.fileRemove(file, onEventError2);
+          break;
+        /* test _Release_prototype_fileUpload's default handling behavior */
+        case 3:
+          self.fileUpload(file, onEventError2);
+          break;
+        /* test _Release_prototype_fileRemove's default handling behavior */
+        case 4:
+          self.fileRemove(file, onEventError2);
+          break;
+        default:
+          onEventError();
+        }
+      };
+      onEventError2();
     }
 
   };
@@ -4097,9 +4668,9 @@ standalone, browser test and code coverage framework for nodejs
       testCallbackId = utility2.uuid4();
       options.url = utility2.urlParamsSetItem(options.url, 'testCallbackId', testCallbackId, '#');
       required.phantomjs = required.phantomjs || require('phantomjs');
-      state.phantomjs = utility2.shell(required.phantomjs.path
-        + ' ' + utility2.__dirname + '/utility2_phantomjs.js '
-        + new Buffer(JSON.stringify(options)).toString('base64'));
+      state.phantomjs = utility2.shell({ script: required.phantomjs.path
+        + ' ' + utility2.__dirname + '/.install/utility2_phantomjs.js '
+        + new Buffer(JSON.stringify(options)).toString('base64') });
       state.phantomjsTestUrlDict[testCallbackId] = onEventError;
     },
 
@@ -4111,377 +4682,6 @@ standalone, browser test and code coverage framework for nodejs
         timeoutDefault: state.timeoutDefault,
         url: state.localhost + '/test/test.html?modePhantomjs=1#modeTest=1'
       }, onEventError);
-    }
-
-  };
-  local._init();
-}());
-
-
-
-(function modulePostgresNodejs() {
-  /*
-    this nodejs module exports the postgres api
-  */
-  'use strict';
-  var local;
-  local = {
-
-    _name: 'utility2.modulePostgresNodejs',
-
-    _init: function () {
-      if (state.modeNodejs && state.modeExtra) {
-        state.postgresUrl = state.postgreUrl || process.env.POSTGRES_URL;
-        if (state.postgresUrl) {
-          utility2.initModule(module, local);
-        }
-      }
-    },
-
-    _initOnce: function () {
-      /* create postgres default table */
-      state.onEventReady.remaining += 1;
-      state.postgresTableDefault
-        = utility2.createPostgresTable('utility2_default', state.onEventReady);
-    },
-
-    createPostgresTable: function (name, onEventError) {
-      /*
-        this function creates a postgres table for storing key / valuse
-      */
-      var self;
-      /* optimization - use cached table */
-      state.postgresTableCache = state.postgresTableCache || utility2.createCache(256);
-      self = state.postgresTableCache.getItem(name);
-      if (self) {
-        onEventError(null, self);
-        return;
-      }
-      self = new local._Table();
-      self.name = name;
-      /* upsert code from http://www.postgresql.org/docs/current/static/plpgsql-control-structures.html#PLPGSQL-UPSERT-EXAMPLE */
-      self.query('CREATE TABLE IF NOT EXISTS {{table}}(\n'
-          + 'key TEXT PRIMARY KEY NOT NULL,\n'
-          + 'value TEXT NOT NULL\n'
-        + ');\n'
-        + 'CREATE OR REPLACE FUNCTION upsert_{{table}}(key2 TEXT, value2 TEXT)\n'
-        + 'RETURNS VOID AS $$ BEGIN LOOP\n'
-          + '-- first try to update the key\n'
-          + 'UPDATE {{table}} SET value = value2 WHERE key = key2;\n'
-          + 'IF found THEN\n'
-              + 'RETURN;\n'
-          + 'END IF;\n'
-          + '-- not there, so try to insert the key\n'
-          + '-- if someone else inserts the same key concurrently,\n'
-          + '-- we could get a unique-key failure\n'
-          + 'BEGIN\n'
-            + 'INSERT INTO {{table}}(key, value) VALUES (key2, value2);\n'
-            + 'RETURN;\n'
-          + 'EXCEPTION WHEN unique_violation THEN\n'
-            + '-- Do nothing, and loop to try the UPDATE again.\n'
-          + 'END;\n'
-        + 'END LOOP; END; $$\n'
-        + 'LANGUAGE plpgsql;', null, function (error) {
-          /* optimization - cache table */
-          if (!error) {
-            state.postgresTableCache.setItem(name, self);
-          }
-          onEventError(error, self);
-        });
-      return self;
-    },
-
-    replParseDict_postgres: function (arg1, arg2) {
-      switch (arg2) {
-      case '_':
-        console.log(state.postgresResult);
-        return;
-      }
-      state.postgresTableDefault.query(arg2, null, function (error, data) {
-        if (data && data.length) {
-          state.postgresResult = data;
-        }
-        console.log(error || data);
-      });
-    },
-
-    _replParseDict_postgres_default_test: function (onEventError) {
-      /*
-        this function tests replParseDict_postgres's default handling behavior
-      */
-      utility2.testMock(onEventError, [
-        [state, { postgresTableDefault: { query: function (_, __, onEventError) {
-          onEventError(null, [null]);
-        } }, postgresResult: null }]
-      ], function (onEventError) {
-        utility2.replParse('(postgres _\n)');
-        utility2.replParse('(postgres SELECT 1;\n)');
-        onEventError();
-      });
-    },
-
-    _Table: function () {
-      /*
-        this is the _Table class
-      */
-      return;
-    },
-
-    __Table_default_test: function (onEventError) {
-      /*
-        this function tests _Tables's default handling behavior
-      */
-      var mode, onEventError2, self;
-      mode = 0;
-      onEventError2 = function (error, data, ___) {
-        mode = error instanceof Error ? -1 : mode + 1;
-        switch (mode) {
-        /* test utility2.createPostgresTable's default handling behavior */
-        case 1:
-          utility2.createPostgresTable('utility2__Table_default_test', onEventError2);
-          break;
-        /* test utility2.createPostgresTable's cache handling behavior */
-        case 2:
-          utility2.createPostgresTable('utility2__Table_default_test', onEventError2);
-          break;
-        /* test self.drop's default handling behavior */
-        case 3:
-          self = data;
-          self.drop(onEventError2);
-          break;
-        case 4:
-          utility2.createPostgresTable('utility2__Table_default_test', onEventError2);
-          break;
-        /* test self.clear's default handling behavior */
-        case 5:
-          self = data;
-          self.clear(onEventError2);
-          break;
-        /* test self.setItem's default handling behavior */
-        case 6:
-          self.setItem('aa', 'bb', onEventError2);
-          break;
-        case 7:
-          self.setItem('cc', 'dd', onEventError2);
-          break;
-        case 8:
-          self.setItem('ee', 'ff', onEventError2);
-          break;
-        /* test self.removeItem's default handling behavior */
-        case 9:
-          self.removeItem('ee', onEventError2);
-          break;
-        /* test self.getItem's default handling behavior */
-        case 10:
-          self.getItem('aa', onEventError2);
-          break;
-        case 11:
-          utility2.assert(data === 'bb');
-          onEventError2();
-          break;
-        case 12:
-          self.getItem('cc', onEventError2);
-          break;
-        case 13:
-          utility2.assert(data === 'dd');
-          onEventError2();
-          break;
-        case 14:
-          self.getItem('ee', onEventError2);
-          break;
-        case 15:
-          utility2.assert(data === undefined);
-          onEventError2();
-          break;
-        /* test self.key's default handling behavior */
-        case 16:
-          self.key(0, onEventError2);
-          break;
-        case 17:
-          utility2.assert(data === 'bb');
-          onEventError2();
-          break;
-        case 18:
-          self.key(1, onEventError2);
-          break;
-        case 19:
-          utility2.assert(data === 'dd');
-          onEventError2();
-          break;
-        case 20:
-          self.key(2, onEventError2);
-          break;
-        case 21:
-          utility2.assert(data === null);
-          onEventError2();
-          break;
-        /* test self.keys's default handling behavior */
-        case 22:
-          self.keys(onEventError2);
-          break;
-        case 23:
-          utility2.assert(JSON.stringify(data) === '["aa","cc"]');
-          onEventError2();
-          break;
-        /* test self.length's default handling behavior */
-        case 24:
-          self.length(onEventError2);
-          break;
-        case 25:
-          utility2.assert(data === 2);
-          onEventError2();
-          break;
-        default:
-          self.drop(function () {
-            onEventError(error, data);
-          });
-        }
-      };
-      onEventError2();
-    },
-
-    _Table_prototype_clear: function (onEventError) {
-      /*
-        this function atomically cause the table associated with the table
-        to be emptied of all key/value pairs, if there are any.
-      */
-      this.query('DELETE FROM {{table}};', null, onEventError);
-    },
-
-    _Table_prototype_drop: function (onEventError) {
-      /*
-        this function drops the table
-      */
-      /* optimization - flush cache */
-      state.postgresTableCache.removeItem(this.name);
-      this.query(
-        'DROP TABLE {{table}}; DROP FUNCTION upsert_{{table}}(key2 TEXT, value2 TEXT);',
-        null,
-        onEventError
-      );
-    },
-
-    _Table_prototype_getItem: function (key, onEventError) {
-      /*
-        this function returns the current value associated with the given key
-      */
-      var mode, onEventError2, self;
-      mode = 0;
-      self = this;
-      onEventError2 = function (error, data, ___) {
-        mode = error instanceof Error ? -1 : mode + 1;
-        switch (mode) {
-        case 1:
-          self.query('SELECT value from {{table}} WHERE key=$1;', [key], onEventError2);
-          break;
-        case 2:
-          onEventError2(null, data && data[0] && data[0].value);
-          break;
-        default:
-          onEventError(error, data);
-        }
-      };
-      onEventError2();
-    },
-
-    _Table_prototype_key: function (offset, onEventError) {
-      /*
-        this function returns the current value associated with the given key.
-        If the given key does not exist in the table then this method must return null.
-      */
-      this.query(
-        'SELECT value FROM {{table}} OFFSET $1;',
-        [offset],
-        function (error, data) {
-          onEventError(error, (data && data[0] && data[0].value) || null);
-        }
-      );
-    },
-
-    _Table_prototype_keys: function (onEventError) {
-      /*
-        this function returns all keys listed in the table.
-      */
-      var mode, onEventError2, self;
-      mode = 0;
-      self = this;
-      onEventError2 = function (error, data, ___) {
-        mode = error instanceof Error ? -1 : mode + 1;
-        switch (mode) {
-        case 1:
-          self.query('SELECT key from {{table}};', null, onEventError2);
-          break;
-        case 2:
-          data = (data || []).map(onEventError2);
-          mode += 1;
-          onEventError2(null, data);
-          break;
-        case 3:
-          mode -= 1;
-          return error.key;
-        default:
-          onEventError(error, data);
-        }
-      };
-      onEventError2();
-    },
-
-    _Table_prototype_length: function (onEventError) {
-      /*
-        this function returns the number of key/value pairs
-        currently present in the table associated with the table.
-      */
-      this.query('SELECT count(*) FROM {{table}};', null, function (error, data) {
-        onEventError(error, Number(data && data[0] && data[0].count));
-      });
-    },
-
-    _Table_prototype_query: function (statement, params, onEventError) {
-      /*
-       this function performs a sql query
-      */
-      var client, done, mode, onEventError2, self;
-      done = utility2.nop;
-      mode = 0;
-      self = this;
-      onEventError2 = function (error, data, ___) {
-        mode = error instanceof Error ? -1 : mode + 1;
-        switch (mode) {
-        case 1:
-          required.pg.connect(state.postgresUrl, onEventError2);
-          break;
-        case 2:
-          client = data;
-          done = ___;
-          client.query(
-            statement.replace((/\{\{table\}\}/g), self.name),
-            params,
-            onEventError2
-          );
-          break;
-        default:
-          done();
-          onEventError(error, data && data.rows);
-        }
-      };
-      onEventError2();
-    },
-
-    _Table_prototype_removeItem: function (key, onEventError) {
-      /*
-        this function causes the key/value pair with the given key
-        to be removed from the table associated with the table, if it exists.
-        usage example: self.removeItem('foo', utility2.onEventErrorDefault);
-      */
-      this.query('DELETE FROM {{table}} WHERE key=$1;', [key], onEventError);
-    },
-
-    _Table_prototype_setItem: function (key, value, onEventError) {
-      /*
-        this function sets the item with the given key to the given value
-        usage example: self.setItem('foo', 'bar', utility2.onEventErrorDefault);
-      */
-      this.query('SELECT upsert_{{table}}($1, $2);', [key, value], onEventError);
     }
 
   };
@@ -4517,19 +4717,12 @@ standalone, browser test and code coverage framework for nodejs
       /*
         this function minify files given by the command-line
       */
-      var onEventFinish;
       if (!state.minifyFileList) {
         return;
       }
-      onEventFinish = utility2.onEventMulti(function (error) {
-        if (error instanceof Error) {
-          utility2.onEventErrorDefault(error);
-          process.exit(error);
-        }
-      }, process.exit);
       state.minifyFileList.split(',').forEach(function (file) {
-        onEventFinish.remaining += 1;
-        local._minifyFile(file, onEventFinish);
+        utility2.onEventReadyExit.remaining += 1;
+        local._minifyFile(file, utility2.onEventReadyExit);
       });
     },
 
@@ -4537,19 +4730,12 @@ standalone, browser test and code coverage framework for nodejs
       /*
         this function rollup files given by the command-line
       */
-      var onEventFinish;
       if (!state.rollupFileList) {
         return;
       }
-      onEventFinish = utility2.onEventMulti(function (error) {
-        if (error instanceof Error) {
-          utility2.onEventErrorDefault(error);
-          process.exit(error);
-        }
-      }, process.exit);
       state.rollupFileList.split(',').forEach(function (file) {
-        onEventFinish.remaining += 1;
-        local._rollupFile(file, onEventFinish);
+        utility2.onEventReadyExit.remaining += 1;
+        local._rollupFile(file, utility2.onEventReadyExit);
       });
     },
 
@@ -4570,7 +4756,7 @@ standalone, browser test and code coverage framework for nodejs
           required.fs.readFile(file, 'utf8', onEventError2);
           break;
         case 2:
-          utility2.jsonLog(['_minifyFile', file]);
+          utility2.jsonLog('_minifyFile - minifying ' + file);
           data = utility2.commentShebang(data);
           switch (required.path.extname(file)) {
           case '.css':
@@ -4606,13 +4792,17 @@ standalone, browser test and code coverage framework for nodejs
         mode = error instanceof Error ? -1 : mode + 1;
         switch (mode) {
         case 1:
-          utility2.jsonLog(['_rollupFile', file]);
+          utility2.jsonLog('_rollupFile - rolling up ' + file);
           required.fs.readFile(file, 'utf8', onEventError2);
           break;
         case 2:
-          content = (/[\S\s]+?\n\}\(\)\);\n/).exec(data);
-          content = utility2.scriptLint(file + '.js', content && content[0].trim()) + '\n';
-          utility2.evalOnEventError(file, content, onEventError2);
+          content = data;
+          utility2.evalOnEventError(
+            file,
+            utility2.scriptLint(file + '.js', content
+              .replace((/(^\/\* CSS_COMMENT|CSS_COMMENT \*\/$)/gm), '// $1')),
+            onEventError2
+          );
           break;
         case 3:
           options = data;
@@ -4626,10 +4816,10 @@ standalone, browser test and code coverage framework for nodejs
           /* additional css parsing */
           if (required.path.extname(file) === '.css' && !data.modeCss) {
             data.modeCss = true;
-            data.onEventFinish.remaining += 1;
+            data.onEventReady.remaining += 1;
             local._rollupFileCss(data, function (error) {
               mode = 3;
-              data.onEventFinish(error, data);
+              data.onEventReady(error, data);
             });
             return;
           }
@@ -4638,8 +4828,8 @@ standalone, browser test and code coverage framework for nodejs
         case 5:
           /* concat text to content */
           dataList.forEach(function (data) {
-            content += '\n/* module start - ' + data.options.url0 + ' */\n' + data.data.trim()
-              + '\n/* module end */\n';
+            content += '\n/* MODULE_BEGIN ' + data.options.url0 + ' */\n' + data.data.trim()
+              + '\n/* MODULE_END */\n';
           });
           /* post processing */
           if (options.postProcessing) {
@@ -4648,6 +4838,7 @@ standalone, browser test and code coverage framework for nodejs
           /* remove trailing whitespace */
           content = content.replace((/[\t\r ]+$/gm), '').trim() + '\n';
           /* write to file */
+          file = file.replace((/([^.]*$)/), 'rollup.$1');
           utility2.fsWriteFileAtomic(file, content, onEventError2);
           break;
         case 6:
@@ -4673,19 +4864,21 @@ standalone, browser test and code coverage framework for nodejs
         case 1:
           file = state.tmpdir + '/cache/' + utility2.uuid4() + '.css';
           utility2.fsWriteFileAtomic(file, '/*jslint indent: 2, regexp: true*/\n'
+            + '/* CSS_COMMENT\n'
             + '(function () {\n'
             + '  "use strict";\n'
             + '  return { urlList: ['
             + '    "/test/test.css",\n'
             + '    "' + state.localhost + '/test/test.css"\n'
             + '    ] };\n'
-            + '}());\n', onEventError2);
+            + '}());\n'
+            + 'CSS_COMMENT */\n', onEventError2);
           break;
         case 2:
           local._rollupFile(file, onEventError2);
           break;
         case 3:
-          required.fs.readFile(file, 'utf8', onEventError2);
+          required.fs.readFile(file.replace('.css', '.rollup.css'), 'utf8', onEventError2);
           break;
         case 4:
           utility2.assert(!error);
@@ -4727,7 +4920,7 @@ standalone, browser test and code coverage framework for nodejs
           local._rollupFile(file, onEventError2);
           break;
         case 3:
-          required.fs.readFile(file, 'utf8', onEventError2);
+          required.fs.readFile(file.replace('.js', '.rollup.js'), 'utf8', onEventError2);
           break;
         case 4:
           utility2.assert(!error);
@@ -4756,7 +4949,7 @@ standalone, browser test and code coverage framework for nodejs
         mode = error instanceof Error ? -1 : mode + 1;
         switch (mode) {
         case 1:
-          utility2.jsonLog(['_rollupFileCss', options.options.url0]);
+          utility2.jsonLog('_rollupFileCss - rolling up ' + options.options.url0);
           datauriDict = {};
           options.data.replace((/\burl\(([^)]+)\)/g), onEventError2);
           mode += 1;
@@ -4779,7 +4972,7 @@ standalone, browser test and code coverage framework for nodejs
           utility2.ajaxMultiUrls({
             cache: options.options.cache,
             cachePrefix: options.options.cachePrefix,
-            dataType: 'binary',
+            resultType: 'binary',
             urlList: Object.keys(datauriDict)
           }, function (error, data) {
             mode = 3;
@@ -4808,15 +5001,15 @@ standalone, browser test and code coverage framework for nodejs
 
 
 
-(function moduleShellNodejs() {
+(function moduleSaucelabsNodejs() {
   /*
-    this nodejs module exports the shell api
+    this nodejs module exports the saucelabs test api
   */
   'use strict';
   var local;
   local = {
 
-    _name: 'utility2.moduleShellNodejs',
+    _name: 'utility2.moduleSaucelabsNodejs',
 
     _init: function () {
       if (state.modeNodejs && state.modeExtra) {
@@ -4824,92 +5017,137 @@ standalone, browser test and code coverage framework for nodejs
       }
     },
 
-    replParseDict_$: function (arg1, arg2) {
-      /*
-        this function runs shell commands from the repl interpreter
-      */
-      utility2.shell({ modeDebug: false, script: utility2.templateFormat(arg2, state) });
-    },
-
-    _replParseDict_$_default_test: function (onEventError) {
-      /*
-        this function tests replParseDict_$'s default handling behavior
-      */
-      utility2.testMock(onEventError, [
-        [utility2, { shell: utility2.nop }]
-      ], function (onEventError) {
-        utility2.replParse('($ echo "_replParseDict_print_default_test"\n)');
-        onEventError();
-      });
-    },
-
-    replParseDict_git: function (arg1, arg2) {
-      /*
-        this function runs git git commands from the repl interpreter
-      */
-      switch (arg2) {
-      case 'diff':
-        arg2 = '--no-pager diff';
-        break;
-      case 'log':
-        arg2 = 'log | head -n 18';
-        break;
+    _initOnce: function () {
+      if (state.modeLocal
+          || !process.env.SAUCE_ACCESS_KEY
+          || !process.env.SAUCE_USERNAME) {
+        state.testModuleTestDict[local._name] = false;
       }
-      utility2.shell({ modeDebug: false, script: 'git ' + arg2 });
     },
 
-    _replParseDict_git_default_test: function (onEventError) {
+    _saucelabsConnect: function (onEventError) {
       /*
-        this function tests replParseDict_git's default handling behavior
+        this function starts a saucelabs tunnel
       */
-      utility2.testMock(onEventError, [
-        [utility2, { shell: utility2.nop }]
-      ], function (onEventError) {
-        utility2.replParse('(git diff\n)');
-        utility2.replParse('(git log\n)');
-        utility2.replParse('(git status\n)');
-        onEventError();
-      });
+      var mode, onEventError2, readyFile;
+      mode = 0;
+      onEventError2 = function (error) {
+        mode = error instanceof Error && mode !== 1 ? -1 : mode + 1;
+        switch (mode) {
+        case 1:
+          if (state.saucelabsConnect) {
+            onEventError();
+            return;
+          }
+          /* create saucelabs ready file */
+          readyFile = state.tmpdir + '/cache/' + utility2.uuid4();
+          /* kill old saucelabs pid */
+          utility2.shell({ argv: [
+            'killall',
+            'sc.compiled'
+          ], modeDebug: false, stdio: 'ignore' });
+          /* make multiple attempts to create a saucelabs tunnel */
+          utility2.clearCallSetInterval(
+            'saucelabsConnect',
+            onEventError2,
+            5000,
+            state.timeoutDefault
+          );
+          break;
+        case 2:
+          required.fs.exists(readyFile, onEventError2);
+          break;
+        case 3:
+          /* ready file exists */
+          if (error) {
+            /* stop attempting to create a saucelabs tunnel */
+            utility2.clearCallSetInterval('saucelabsConnect', 'clear');
+            onEventError2();
+          } else {
+            mode -= 2;
+            /* continue trying to create a saucelabs tunnel */
+            state.saucelabsConnect = state.saucelabsConnect || utility2.shell({ argv: [
+              utility2.__dirname + '/.install/sc.compiled',
+              '--readyfile',
+              readyFile
+            ], modeDebug: false, timeout: 600000 }).on('exit', function () {
+              delete state.saucelabsConnect;
+            });
+          }
+          break;
+        default:
+          onEventError(error);
+        }
+      };
+      onEventError2();
     },
 
-    replParseDict_grep: function (arg1, arg2) {
-      utility2.shell({ modeDebug: false, script: 'find . -type f | grep -v '
-        + '"/\\.\\|.*\\b\\(\\.\\d\\|archive\\|artifacts\\|bower_components\\|build'
-        + '\\|coverage\\|docs\\|external\\|git_modules\\|jquery\\|log\\|logs\\|min'
-        + '\\|node_modules\\|rollup.*\\|swp\\|test\\|tmp\\)\\b" '
-        + '| tr "\\n" "\\000" | xargs -0 grep -in ' + JSON.stringify(arg2) });
+    saucelabsTestUrl: function (options, onEventError) {
+      var deferKey, headers, mode, onEventError2, testId;
+      headers = {
+        authorization: 'Basic '
+          + global.btoa(process.env.SAUCE_USERNAME + ':' + process.env.SAUCE_ACCESS_KEY),
+        'content-type': 'application/json'
+      };
+      mode = 0;
+      onEventError2 = function (error, data) {
+        mode = error instanceof Error ? -1 : mode + 1;
+        switch (mode) {
+        case 1:
+          local._saucelabsConnect(onEventError2);
+          break;
+        case 2:
+          options.framework = options.framework || 'qunit';
+          options['max-duration'] = options['max-duration'] || 300;
+          options.platforms = options.platforms || [['Linux', 'googlechrome', '']];
+          data = JSON.stringify(options);
+          deferKey = utility2.uuid4();
+          headers['content-length'] = Buffer.byteLength(data);
+          utility2.ajax({
+            data: data,
+            headers: headers,
+            url: 'https://saucelabs.com/rest/v1/' + process.env.SAUCE_USERNAME + '/js-tests'
+          }, onEventError2);
+          break;
+        case 3:
+          testId = data;
+          headers['content-length'] = Buffer.byteLength(testId);
+          /* wait awhile for remote test to run */
+          setTimeout(onEventError2, 30000);
+          break;
+        case 4:
+          utility2.clearCallSetInterval(deferKey, onEventError2, 10000, 5 * 60000);
+          break;
+        case 5:
+          mode -= 1;
+          if (data) {
+            utility2.jsonLog('saucelabsTestUrl - checking test status of ' + options.url);
+            if (data.completed) {
+              mode = -2;
+              onEventError2(null, data);
+            }
+          } else {
+            utility2.ajax({
+              data: testId,
+              headers: headers,
+              resultType: 'json',
+              url: 'https://saucelabs.com/rest/v1/' + process.env.SAUCE_USERNAME
+                + '/js-tests/status'
+            }, onEventError2);
+          }
+          break;
+        default:
+          utility2.clearCallSetInterval(deferKey, 'clear');
+          onEventError(error, data);
+        }
+      };
+      onEventError2();
     },
 
-    _replParseDict_grep_default_test: function (onEventError) {
-      /*
-        this function tests replParseDict_grep's default handling behavior
-      */
-      utility2.testMock(onEventError, [
-        [utility2, { shell: utility2.nop }]
-      ], function (onEventError) {
-        utility2.replParse('(grep "_replParseDict_grep_default_test"\n)');
-        onEventError();
-      });
-    },
-
-    shell: function (options) {
-      /*
-        this function gives a quick and dirty way to execute shell scripts
-      */
-      var child;
-      if (options.modeDebug !== false) {
-        utility2.jsonLog(['shell - options', options]);
-      }
-      if (typeof options === 'string') {
-        options = { script: options };
-      }
-      options.stdio = options.stdio || ['ignore', 1, 2];
-      child = required.child_process.spawn(
-        options.argv ? options.argv[0] : '/bin/sh',
-        options.argv ? options.argv.slice(1) : ['-c', options.script],
-        options
-      );
-      return child;
+    _saucelabsTestUrl_default_test: function (onEventError) {
+      utility2.saucelabsTestUrl({
+        url: state.localhost + '/test/test.html#modeTest=1'
+      }, onEventError);
     }
 
   };
@@ -4935,15 +5173,6 @@ standalone, browser test and code coverage framework for nodejs
     },
 
     _initOnce: function () {
-      /* print debug info about the current process */
-      if (state.modeDebugProcess && state.modeDebugProcess !== 'debugged') {
-        state.modeDebugProcess = 'debugged';
-        utility2.jsonLog(['_initDebugProcess - process.argv', process.argv]);
-        utility2.jsonLog(['_initDebugProcess - process.cwd()', process.cwd()]);
-        utility2.jsonLog(['_initDebugProcess - process.pid', process.pid]);
-        utility2.jsonLog(['_initDebugProcess - process.env', process.env]);
-        utility2.jsonLog(['_initDebugProcess - package.json', state.packageJson]);
-      }
       /* init middlewares */
       [
         'Test',
@@ -4970,29 +5199,32 @@ standalone, browser test and code coverage framework for nodejs
         || required.connect.logger('dev');
       /* init server */
       /* defer local tests until server is listening on state.serverPort */
-      state.onEventReady.remaining += 1;
-      utility2.serverListen(
-        process.env.npm_config_server_port || state.serverPort,
-        function () {
-          if (state.serverListened) {
-            state.onEventReady();
-          }
-        }
-      );
+      utility2.readyUtility2.remaining += 1;
+      /* indicate server is ready */
+      utility2.serverListen(state.serverPort, utility2.readyUtility2);
     },
 
     'router1LoggingDict_/': function (request, response, next) {
       /*
         this function handles default logging
       */
-      state.middleware1LoggingDefault(request, response, next);
+      switch (request.urlPathNormalized) {
+      /* ignore logging for these url paths */
+      case '/favicon.ico':
+        next();
+        break;
+      default:
+        state.middleware1LoggingDefault(request, response, next);
+      }
     },
 
-    'router1LoggingDict_/favicon.ico': function (request, response, next) {
+    '_router1LoggingDict_/_ignore_test': function (onEventError) {
       /*
-        this function ignores logging for /favicon.ico
+        this function tests router1LoggingDict_/'s ignore handling behavior
       */
-      next();
+      utility2.ajax({ url: '/favicon.ico' }, function () {
+        onEventError();
+      });
     },
 
     'router2SecurityDict_/': function (request, response, next) {
@@ -5041,30 +5273,30 @@ standalone, browser test and code coverage framework for nodejs
       /*
         this function tests router2SecurityDict_/signin's default handling behavior
       */
-      var onEventFinish;
-      onEventFinish = utility2.onEventMulti(utility2.nop, onEventError);
+      var onEventReady;
+      onEventReady = utility2.untilReady(utility2.nop, onEventError);
       /* test https redirect */
-      onEventFinish.remaining += 1;
+      onEventReady.remaining += 1;
       utility2.ajax({ url: '/signin?httpsRedirect=1' }, function (error) {
         utility2.assert(error instanceof Error);
-        onEventFinish();
+        onEventReady();
       });
       /* test failed sigin */
-      onEventFinish.remaining += 1;
+      onEventReady.remaining += 1;
       utility2.ajax({ url: '/signin?basicAuthFail=1' }, function (error) {
         utility2.assert(error instanceof Error);
-        onEventFinish();
+        onEventReady();
       });
       /* test successful signin */
-      onEventFinish.remaining += 1;
+      onEventReady.remaining += 1;
       utility2.ajax({ url: '/signin?redirect=%2Ftest%2Ftest.json' }, function (error, data) {
         utility2.assert(!error);
         utility2.assert(data === '"hello test"');
-        onEventFinish();
+        onEventReady();
       });
     },
 
-    'router3CacheDict_/public/utility2_external': function (request, response, next) {
+    'router3CacheDict_/public/utility2': function (request, response, next) {
       /*
         this function grants public access to the /public path
       */
@@ -5076,39 +5308,26 @@ standalone, browser test and code coverage framework for nodejs
       /*
         this function proxies frontend request
       */
-      var next2, request2, response2;
-      next2 = function (error) {
-        /* garbage collect request2 socket */
-        if (request2) {
-          request2.destroy();
-        }
-        /* garbage collect response2 socket */
-        if (response2) {
-          response2.destroy();
-        }
-        next(error);
-      };
-      request2 = required.url.parse(request.url.replace('/proxy/proxy.ajax/', ''));
-      /* bug - disable socket pooling, because it causes timeout errors in tls tests */
-      request2.agent = false;
+      var headers, url;
+      url = request.url.replace('/proxy/proxy.ajax/', '');
       /* create modified copy of request.header */
-      request2.headers = utility2.jsonCopy(request.headers);
+      headers = utility2.jsonCopy(request.headers);
       /* update host header with actual destination host */
-      request2.headers.host = request2.host;
-      /* create http(s) request */
-      request2 = (request2.protocol === 'https:'
-        ? required.https
-        : required.http).request(request2, function (_) {
-        response2 = _;
-        /* proxy response headers */
-        if (!response.headersSent) {
-          response.writeHead(response2.statusCode, response2.headers);
+      headers.host = required.url.parse(url).host;
+      /* init http request */
+      utility2.ajax({
+        data: request,
+        headers: headers,
+        resultType: 'response',
+        url: url
+      }, function (error, response2) {
+        if (error) {
+          next(error);
+          return;
         }
-        /* pipe response */
-        response2.on('error', next2).pipe(response.on('error', next2));
+        /* pipe proxied response back to client */
+        response2.pipe(response);
       });
-      /* pipe request */
-      request.on('error', next2).pipe(request2.on('error', next2));
     },
 
     '_router4ProxyDict_/proxy.ajax_default_test': function (onEventError) {
@@ -5136,7 +5355,7 @@ standalone, browser test and code coverage framework for nodejs
         contentType: 'text/html',
         data: '<!DOCTYPE html><html><head>\n'
           + '<link'
-            + ' href="/public/utility2_external/utility2_external.browser.min.css"'
+            + ' href="/public/utility2/utility2_external.browser.rollup.min.css"'
             + ' rel="stylesheet"/>\n'
           + '<style>\n'
           + utility2.scriptLint('main.css', '\n')
@@ -5285,21 +5504,25 @@ standalone, browser test and code coverage framework for nodejs
       });
     },
 
-    'router6FileDict_/public/utility2_external': function (request, response, next) {
+    'router6FileDict_/public/utility2': function (request, response, next) {
       /*
-        this function serves public, utility2_external files
+        this function serves public, utility2 files
       */
-      utility2.serverRespondFile(response,
-        required.utility2_external.__dirname + '/public/' + request.urlPathNormalized
-          .replace('/public/utility2_external/', ''),
-        next);
+      utility2.serverRespondFile(
+        response,
+        utility2.__dirname + '/.install/public/'
+          + request.urlPathNormalized.replace('/public/utility2/', ''),
+        next
+      );
     },
 
     'router6FileDict_/public/utility2.js': function (request, response) {
       /*
         this function serves the file utility2.js
       */
-      utility2.serverRespond(request, response, 200, { data: utility2._fileContentBrowser });
+      utility2.serverRespond(request, response, 200, {
+        data: state.fsWatchDict[utility2.__filename].contentBrowser
+      });
     },
 
     'router6FileDict_/test/test.png': function (request, response) {
@@ -5328,30 +5551,26 @@ standalone, browser test and code coverage framework for nodejs
       /*
         this function serves the file test.html
       */
-      utility2.serverRespond(request, response, 200, {
-        data: utility2.templateFormat(
-          '<!DOCTYPE html><html><head>\n'
-            + '<link'
-              + ' href="/public/utility2_external/utility2_external.browser.min.css"'
-              + ' rel="stylesheet"/>\n'
-            + '<style>\n'
-            + utility2.scriptLint('test.css', '\n')
-            + '</style></head><body>\n'
-            + '<div id="divTest"></div>\n'
-            + '<script>window.globalOverride = {{globalOverride}};</script>\n'
-            + '<script src="/public/utility2_external/utility2_external.browser'
-            /* bug - phantomjs raises syntax error for minified script */
-            + (request.urlParsed.params.modePhantomjs ? '' : '.min')
-            + '.js"></script>\n'
-            + '<script src="/public/utility2.js"></script>\n'
-            + '</body></html>\n',
-          {
-              globalOverride: JSON.stringify({
-                state: { npmTestUtility2: state.npmTestUtility2, localhost: state.localhost }
-              })
-            }
-        )
-      });
+      utility2.serverRespond(request, response, 200, { data: '<!DOCTYPE html><html><head>\n'
+        + '<link'
+          + ' href="/public/utility2/utility2_external.browser.rollup.min.css"'
+          + ' rel="stylesheet"/>\n'
+        + '<style>\n'
+        + utility2.scriptLint('test.css', '\n')
+        + '</style></head><body>\n'
+        + 'hello world\n'
+        + '<div id="qunit"></div>\n'
+        + '<div id="qunit-fixture"></div>\n'
+        + '<script>window.state = ' + JSON.stringify({
+          testModuleTestDict: { utility2: true },
+          timeoutDefault: state.timeoutDefault
+        }) + ';</script>\n'
+        + '<script src="/public/utility2/utility2_external.browser.rollup'
+        /* bug - phantomjs raises syntax error for minified script */
+        + (request.urlParsed.params.modePhantomjs ? '' : '.min')
+        + '.js"></script>\n'
+        + '<script src="/public/utility2.js"></script>\n'
+        + '</body></html>\n' });
     },
 
     'router6FileDict_/test/test.js': function (request, response) {
@@ -5453,7 +5672,7 @@ standalone, browser test and code coverage framework for nodejs
         switch (mode) {
         /* call error handling middleware */
         case -1:
-          utility2.serverRespond(request, response, 500, { data: error });
+          utility2.serverRespond(request, response, 500, { error: error });
           break;
         /* 1. middleware logging */
         case 1:
@@ -5565,15 +5784,18 @@ standalone, browser test and code coverage framework for nodejs
         break;
       /* 500 internal server error */
       case 500:
-        utility2.onEventErrorDefault(options.data);
-        options.data = String(options.data.stack || options.data.message || options.data);
+        if (options.error) {
+          utility2.onEventErrorDefault(options.error);
+          options.contentType = options.contentType || 'text/plain';
+          options.data = utility2.errorStackOrMessage(options.error);
+        }
         break;
       }
       if (!response.headersSent) {
         response.statusCode = statusCode;
         response.setHeader(
           'content-type',
-          options.contentType || utility2.mimeLookup(request.urlPathNormalized)
+          options.contentType || utility2.mimeLookup(request.urlPathNormalized) || 'text/plain'
         );
       }
       response.end(typeof options.data === 'string' || Buffer.isBuffer(options.data)
@@ -5585,7 +5807,8 @@ standalone, browser test and code coverage framework for nodejs
       /*
         this function serves static files
       */
-      response.setHeader('content-type', utility2.mimeLookup(file));
+      response.setHeader('content-type', utility2.mimeLookup(file)
+        || 'application/octet-stream');
       required.fs.createReadStream(file).on('error', function () {
         /* security - don't leak filesystem info on error */
         next();
@@ -5598,9 +5821,7 @@ standalone, browser test and code coverage framework for nodejs
         and then calls the onEventListen callback
       */
       /* create a random port from 32768 to 65535, inclusive, as needed */
-      port = Number(port === 'random'
-        ? utility2.serverPortRandom()
-        : port || process.env.npm_config_server_port);
+      port = Number(port === 'random' ? utility2.serverPortRandom() : port);
       if (!port) {
         onEventListen();
         return;
@@ -5615,14 +5836,18 @@ standalone, browser test and code coverage framework for nodejs
       state.serverListenDict[port] = true;
       /* set state.serverPort as needed */
       state.serverPort = state.serverPort === 'random' ? port : state.serverPort || port;
-      /* set state.server as needed */
-      state.server = state.server || required.connect().use(utility2.middlewareApplication);
+      /* set state.server with a new http server as needed */
+      state.server = state.server || required.http.createServer(function (request, response) {
+        utility2.middlewareApplication(request, response, function (error) {
+          utility2.serverRespond(request, response, error ? 500 : 404, { error: error });
+        });
+      });
       /* listen on specified port */
+      utility2.jsonLog('serverListen - listening on port ' + port);
       state.server.listen(port, function () {
-        utility2.jsonLog(['serverListen - listening on port', port]);
         if (port === state.serverPort) {
-          state.serverListened = true;
           state.localhost = state.localhost || 'http://localhost:' + state.serverPort;
+          state.serverListened = true;
         }
         /* call onEventListen */
         onEventListen();
@@ -5683,11 +5908,11 @@ standalone, browser test and code coverage framework for nodejs
     _initOnce: function () {
       /* utility2 ready */
       if (state.modeBrowser) {
-        state.onEventReady.remaining += 1;
-        $(state.onEventReady);
+        utility2.readyUtility2.remaining += 1;
+        global.jQuery(utility2.readyUtility2);
       } else if (state.modeNodejs && !state.modeExtra) {
-        state.onEventReady.remaining += 1;
-        state.onEventReady();
+        utility2.readyUtility2.remaining += 1;
+        utility2.readyUtility2();
       }
     },
 
@@ -5696,7 +5921,7 @@ standalone, browser test and code coverage framework for nodejs
         this function tests _initOnce's default handling behavior
       */
       utility2.testMock(onEventError, [
-        [state, { modeExtra: false }],
+        [global, { state: {} }],
         [utility2, { deferCallback: utility2.nop }]
       ], function (onEventError) {
         local._initOnce();
@@ -5707,3 +5932,4 @@ standalone, browser test and code coverage framework for nodejs
   };
   local._init();
 }());
+

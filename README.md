@@ -15,17 +15,24 @@ npm test
 
 ## changelog
 #### todo
-* migrate to codeship
-* test codeship.io build
+* give better explanation of why tests fail
+* add lazy mkdir state.tmpdir
+* add github release download / upload api
 * add trycatch for jsonStringifyCircular to handle dom objects
-* add skip test feature
 * enforce basic auth for localhost requests
-* integrate saucelabs
 * auto-remove test functions from module in production mode
 * auto-skip tests
 * emulate localStorage
 * add heroku dynamic config server
 * integrate forever-webui
+
+#### 2014.03.28
+* integrate saucelabs
+* remove connect dependency
+* add github_release file delete / upload feature
+* integrating node-pre-gyp
+* add codeship heroku deploy
+* decouple jQuery from ajaxBrowser
 
 #### 2014.03.21
 * fix test idempotency bug caused by http agent socket pooling

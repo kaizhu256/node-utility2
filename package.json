@@ -6,13 +6,8 @@
   "dependencies": {
     "connect": "2.14.x",
     "istanbul": "0.2.x",
-    "pg": "2.11.x",
     "phantomjs": "1.9.x",
-    "sqlite3": "2.2.x",
-    "utility2_external": "~2014.03.24"
-  },
-  "devDependencies": {
-    "coveralls": "2.8.x"
+    "sqlite3": "2.2.x"
   },
   "description": "utility2.js - standalone, browser test and code coverage framework for nodejs",
   "main": "utility2.js",
@@ -22,9 +17,12 @@
     "url" : "https://github.com/kaizhu256/utility2.git"
   },
   "scripts": {
-    "postinstall": "prefix=node_modules/utility2_external/public/utility2_external; ./utility2.js --minify-file-list $prefix.browser.css,$prefix.browser.js,$prefix.shared.js",
+    "build": "./utility2.js --mode-npm-utility2 build",
+    "install": "./utility2.js --mode-npm-utility2 install",
+    "publish-github": "./utility2.js --mode-npm-utility2 publish-github",
+    "sauce-connect": ".install/sc.compiled",
     "start": "./utility2.js --load-module utility2.js --mode-extra --mode-repl --serverPort random",
-    "test": "./utility2.js --load-module utility2.js --mode-npm-test-utility2 && ./utility2.js --load-module utility2.js --mode-extra --mode-npm-test-utility2 && if [ $TRAVIS ]; then cat tmp/lcov.info | node_modules/.bin/coveralls; fi"
+    "test": "./utility2.js --load-module utility2.js --mode-npm-test-utility2 && ./utility2.js --load-module utility2.js --mode-extra --mode-npm-test-utility2"
   },
-  "version": "2014.03.21-2"
+  "version": "2014.3.28-1"
 }
