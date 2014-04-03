@@ -17,12 +17,11 @@
     "url" : "https://github.com/kaizhu256/utility2.git"
   },
   "scripts": {
-    "build": "./utility2.js --mode-npm-utility2 build",
-    "install": "./utility2.js --mode-npm-utility2 install",
-    "publish-github": "./utility2.js --mode-npm-utility2 publish-github",
-    "sauce-connect": ".install/sc.compiled",
+    "build": "./utility2.js --mode-cli-command-utility2=bashNpmBuild",
+    "install": "./utility2.js --mode-cli-command-utility2=bashNpmInstall",
+    "publish-github": "./utility2.js --mode-cli-command-utility2=bashNpmPublishGithub",
     "start": "./utility2.js --load-module utility2.js --mode-extra --mode-repl --serverPort random",
     "test": "./utility2.js --load-module utility2.js --mode-npm-test-utility2 && ./utility2.js --load-module utility2.js --mode-extra --mode-npm-test-utility2"
   },
-  "version": "2014.3.28-1"
+  "version": "2014.4.3-1"
 }

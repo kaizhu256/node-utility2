@@ -36,8 +36,8 @@ standalone, browser test and code coverage framework for nodejs
           javascriptPlatform: 'unknown',
           /* list of test-generated errors to be ignored */
           onEventErrorDefaultIgnoreList: [],
-          /* dict of phantomjs test id's */
-          phantomjsTestUrlDict: {},
+          /* dict of browser test callbacks */
+          browserTestCallbackDict: {},
           /* dict of modules to test */
           testModuleTestDict: {},
           /* list of test suites */
@@ -1039,7 +1039,9 @@ standalone, browser test and code coverage framework for nodejs
       /* create test suite for local2 */
       testSuite = {
         failures: 0,
-        name: state.javascriptPlatform + '.' + local2._name,
+        name: state.javascriptPlatform + (state.javascriptPlatform === 'browser'
+          ? '.' + navigator.userAgent
+          : '') + '.' + local2._name,
         passed: 0,
         testCaseList: {},
         tests: testList.length,
@@ -1482,7 +1484,8 @@ standalone, browser test and code coverage framework for nodejs
         || state.githubReleaseUploadFileList
         || state.minifyFileList
         || state.modeNpmBuildUtility2
-        || state.rollupFileList;
+        || state.rollupFileList
+        || state.saucelabsConnect;
       /* save utility2.__dirname to process.env */
       process.env.NODEJS_UTILITY2_DIR = __dirname;
       /* save os vars to process.env */
@@ -1505,6 +1508,8 @@ standalone, browser test and code coverage framework for nodejs
             = String(typeof value === 'function' ? value() : value);
         }
       });
+      /* save utility2 cli command var to process.env */
+      process.env.MODE_CLI_COMMAND_UTILITY2 = state.modeCliCommandUtility2 || '';
       /* save package.json vars to process.env */
       Object.keys(state.packageJson).forEach(function (key) {
         value = state.packageJson[key];
@@ -1754,6 +1759,13 @@ standalone, browser test and code coverage framework for nodejs
           utility2.jsonLog('debug - process.pid', process.pid);
           utility2.jsonLog('debug - process.env', process.env);
         }
+        /* export utility2.readyUtility2Exit */
+        utility2.readyUtility2Exit = utility2.untilReady(function (error) {
+          if (error) {
+            utility2.onEventErrorDefault(error);
+            process.exit(1);
+          }
+        }, process.exit);
       }
     },
 
@@ -4433,15 +4445,15 @@ standalone, browser test and code coverage framework for nodejs
         /* delete files from command-line */
         if (state.githubReleaseRemoveFileList) {
           state.githubReleaseRemoveFileList.split(',').forEach(function (file) {
-            utility2.onEventReadyExit.remaining += 1;
-            state.githubReleaseDefault.fileRemove(file, utility2.onEventReadyExit);
+            utility2.readyUtility2Exit.remaining += 1;
+            state.githubReleaseDefault.fileRemove(file, utility2.readyUtility2Exit);
           });
         }
         /* upload files from command-line */
         if (state.githubReleaseUploadFileList) {
           state.githubReleaseUploadFileList.split(',').forEach(function (file) {
-            utility2.onEventReadyExit.remaining += 1;
-            state.githubReleaseDefault.fileUpload(file, utility2.onEventReadyExit);
+            utility2.readyUtility2Exit.remaining += 1;
+            state.githubReleaseDefault.fileUpload(file, utility2.readyUtility2Exit);
           });
         }
       } else {
@@ -4671,7 +4683,7 @@ standalone, browser test and code coverage framework for nodejs
       state.phantomjs = utility2.shell({ script: required.phantomjs.path
         + ' ' + utility2.__dirname + '/.install/utility2_phantomjs.js '
         + new Buffer(JSON.stringify(options)).toString('base64') });
-      state.phantomjsTestUrlDict[testCallbackId] = onEventError;
+      state.browserTestCallbackDict[testCallbackId] = onEventError;
     },
 
     _phantomjsTestUrl_default_test: function (onEventError) {
@@ -4721,8 +4733,8 @@ standalone, browser test and code coverage framework for nodejs
         return;
       }
       state.minifyFileList.split(',').forEach(function (file) {
-        utility2.onEventReadyExit.remaining += 1;
-        local._minifyFile(file, utility2.onEventReadyExit);
+        utility2.readyUtility2Exit.remaining += 1;
+        local._minifyFile(file, utility2.readyUtility2Exit);
       });
     },
 
@@ -4734,8 +4746,8 @@ standalone, browser test and code coverage framework for nodejs
         return;
       }
       state.rollupFileList.split(',').forEach(function (file) {
-        utility2.onEventReadyExit.remaining += 1;
-        local._rollupFile(file, utility2.onEventReadyExit);
+        utility2.readyUtility2Exit.remaining += 1;
+        local._rollupFile(file, utility2.readyUtility2Exit);
       });
     },
 
@@ -5022,12 +5034,15 @@ standalone, browser test and code coverage framework for nodejs
           || !process.env.SAUCE_ACCESS_KEY
           || !process.env.SAUCE_USERNAME) {
         state.testModuleTestDict[local._name] = false;
+      } else if (state.saucelabsConnect) {
+        utility2.readyUtility2Exit.remaining += 1;
+        local._saucelabsConnect(utility2.readyUtility2Exit);
       }
     },
 
     _saucelabsConnect: function (onEventError) {
       /*
-        this function starts a saucelabs tunnel
+        this function creates a saucelabs tunnel if it doesn't already exist
       */
       var mode, onEventError2, readyFile;
       mode = 0;
@@ -5035,18 +5050,23 @@ standalone, browser test and code coverage framework for nodejs
         mode = error instanceof Error && mode !== 1 ? -1 : mode + 1;
         switch (mode) {
         case 1:
-          if (state.saucelabsConnect) {
-            onEventError();
+          readyFile = '/tmp/.saucelabs.connect.ready';
+          (state.saucelabsConnect === 'restart'
+            /* restart saucelabs tunnel, killing any existing tunnels */
+            ? required.fs.unlink
+            /* re-use existing tunnel if possible */
+            : required.fs.exists)(readyFile, onEventError2);
+          break;
+        case 2:
+          if (state.saucelabsConnect !== 'restart' && error) {
+            mode = -2;
+            onEventError2();
             return;
           }
-          /* create saucelabs ready file */
-          readyFile = state.tmpdir + '/cache/' + utility2.uuid4();
-          /* kill old saucelabs pid */
-          utility2.shell({ argv: [
-            'killall',
-            'sc.compiled'
-          ], modeDebug: false, stdio: 'ignore' });
+          /* kill old saucelabs tunnel process */
+          utility2.shell({ argv: ['killall', 'sc'], modeDebug: false, stdio: 'ignore' });
           /* make multiple attempts to create a saucelabs tunnel */
+          state.saucelabsConnect = null;
           utility2.clearCallSetInterval(
             'saucelabsConnect',
             onEventError2,
@@ -5054,24 +5074,27 @@ standalone, browser test and code coverage framework for nodejs
             state.timeoutDefault
           );
           break;
-        case 2:
+        case 3:
           required.fs.exists(readyFile, onEventError2);
           break;
-        case 3:
-          /* ready file exists */
+        case 4:
+          /* ready file exists, so we stop attempting to create a saucelabs tunnel */
           if (error) {
-            /* stop attempting to create a saucelabs tunnel */
             utility2.clearCallSetInterval('saucelabsConnect', 'clear');
             onEventError2();
+          /* continue attempting to create a saucelabs tunnel */
           } else {
             mode -= 2;
-            /* continue trying to create a saucelabs tunnel */
             state.saucelabsConnect = state.saucelabsConnect || utility2.shell({ argv: [
-              utility2.__dirname + '/.install/sc.compiled',
+              utility2.__dirname + '/.install/sc',
               '--readyfile',
               readyFile
-            ], modeDebug: false, timeout: 600000 }).on('exit', function () {
+            ], modeDebug: false, timeout: 30 * 60000 }).on('exit', function () {
               delete state.saucelabsConnect;
+              utility2.tryCatch(function () {
+                /*jslint stupid: true*/
+                required.fs.unlinkSync(readyFile);
+              }, utility2.nop);
             });
           }
           break;
@@ -5097,10 +5120,12 @@ standalone, browser test and code coverage framework for nodejs
           local._saucelabsConnect(onEventError2);
           break;
         case 2:
-          options.framework = options.framework || 'qunit';
-          options['max-duration'] = options['max-duration'] || 300;
-          options.platforms = options.platforms || [['Linux', 'googlechrome', '']];
-          data = JSON.stringify(options);
+          data = JSON.stringify(utility2.stateDefault(options, {
+            build: process.env.CI_BUILD_NUMBER,
+            framework: 'qunit',
+            'max-duration': 300,
+            platforms: [['Linux', 'chrome', '33']]
+          }));
           deferKey = utility2.uuid4();
           headers['content-length'] = Buffer.byteLength(data);
           utility2.ajax({
@@ -5121,7 +5146,7 @@ standalone, browser test and code coverage framework for nodejs
         case 5:
           mode -= 1;
           if (data) {
-            utility2.jsonLog('saucelabsTestUrl - checking test status of ' + options.url);
+            utility2.jsonLog('saucelabsTestUrl - checking test status - ' + options.url);
             if (data.completed) {
               mode = -2;
               onEventError2(null, data);
@@ -5147,7 +5172,11 @@ standalone, browser test and code coverage framework for nodejs
     _saucelabsTestUrl_default_test: function (onEventError) {
       utility2.saucelabsTestUrl({
         url: state.localhost + '/test/test.html#modeTest=1'
-      }, onEventError);
+      }, function (error, data) {
+        utility2.assert(!error, error);
+        utility2.jsonLog('', data);
+        onEventError();
+      });
     }
 
   };
@@ -5401,9 +5430,9 @@ standalone, browser test and code coverage framework for nodejs
             });
           }
         });
-        onEventError = state.phantomjsTestUrlDict[error.testCallbackId];
+        onEventError = state.browserTestCallbackDict[error.testCallbackId];
         if (onEventError) {
-          delete state.phantomjsTestUrlDict[error.testCallbackId];
+          delete state.browserTestCallbackDict[error.testCallbackId];
           onEventError();
         }
       });

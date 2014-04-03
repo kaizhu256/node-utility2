@@ -1,4 +1,4 @@
-/* MODULE_BEGIN { "actionList": ["lint"], "file": ".build/utility2_external.browser.css" } */
+/* MODULE_BEGIN { "actionList": ["lint"], "file": ".install/public/utility2_external.browser.css" } */
 /*jslint browser: true, indent: 2, maxerr: 8, node: true, nomen: true, regexp: true, todo: true, unparam: true*/
 /*global global, required, state, underscore, utility2, $*/
 /* CSS_COMMENT
@@ -24,7 +24,7 @@ CSS_COMMENT */
 
 
 
-/* MODULE_BEGIN { "actionList": ["lint"], "file": ".build/utility2_external.browser.js" } */
+/* MODULE_BEGIN { "actionList": ["lint"], "file": ".install/public/utility2_external.browser.js" } */
 /*jslint browser: true, indent: 2, maxerr: 8, node: true, nomen: true, regexp: true, todo: true, unparam: true*/
 /*global global, required, state, underscore, utility2, $*/
 (function moduleInit() {
@@ -100,7 +100,7 @@ CSS_COMMENT */
 
 
 
-/* MODULE_BEGIN { "actionList": ["lint"], "file": ".build/utility2_external.shared.js" } */
+/* MODULE_BEGIN { "actionList": ["lint"], "file": ".install/public/utility2_external.shared.js" } */
 /*jslint browser: true, indent: 2, maxerr: 8, node: true, nomen: true, regexp: true, todo: true, unparam: true*/
 /*global global, required, state, underscore, utility2, $*/
 (function moduleInit() {
@@ -201,7 +201,7 @@ CSS_COMMENT */
 
 
 
-/* MODULE_BEGIN { "actionList": ["lint"], "file": ".build/utility2_phantomjs.js" } */
+/* MODULE_BEGIN { "actionList": ["lint"], "file": ".install/utility2_phantomjs.js" } */
 /*jslint browser: true, indent: 2, maxerr: 8, node: true, nomen: true, regexp: true, todo: true, unparam: true*/
 /*global global, required, state, underscore, utility2, $*/
 /*jslint indent: 2, node: true, nomen: true*/
@@ -261,6 +261,84 @@ CSS_COMMENT */
 
 
 
+/* MODULE_BEGIN { "actionList": ["lint", "shell"], "file": ".install/utility2.sh" } */
+bashEval () {
+  ## this function evals $1
+  echo $1
+  eval "$1"
+}
+
+bashKillNodejsParent () {
+  ## this function kills the nodejs parent which spawned this process
+  ## kill parent normally if last exit code was 0
+  if [ $? == 0 ]; then
+    kill -TERM $NODEJS_PROCESS_PID
+  ## kill parent abnormally
+  else
+    kill -ABRT $NODEJS_PROCESS_PID
+  fi
+}
+
+bashMain () {
+## this function is the main program
+  ## cwd
+  CWD=$(pwd)
+  ## utility2 directory
+  DIR=$NODEJS_UTILITY2_DIR
+  FILE=utility2_external.$NODEJS_PACKAGE_JSON_VERSION.tar.gz
+  SCRIPT=":"
+  case $MODE_CLI_COMMAND_UTILITY2 in
+
+  ## called by npm run-script build
+  bashNpmBuild)
+    SCRIPT="$SCRIPT; cd '$DIR'"
+    ## build utility2_external
+    SCRIPT="$SCRIPT && ./utility2.js --mode-debug silent --rollup-file-list"
+    SCRIPT="$SCRIPT .install/public/utility2_external.browser.css"
+    SCRIPT="$SCRIPT,.install/public/utility2_external.browser.js"
+    SCRIPT="$SCRIPT,.install/public/utility2_external.shared.js"
+    SCRIPT="$SCRIPT && tar -czvf .install/$FILE"
+    SCRIPT="$SCRIPT .install/public/utility2_external.browser.rollup.css"
+    SCRIPT="$SCRIPT .install/public/utility2_external.browser.rollup.js"
+    SCRIPT="$SCRIPT .install/public/utility2_external.browser.rollup.min.css"
+    SCRIPT="$SCRIPT .install/public/utility2_external.browser.rollup.min.js"
+    SCRIPT="$SCRIPT .install/public/utility2_external.shared.rollup.js"
+    SCRIPT="$SCRIPT .install/public/utility2_external.shared.rollup.min.js"
+    SCRIPT="$SCRIPT .install/utility2_phantomjs.js"
+    SCRIPT="$SCRIPT; bashKillNodejsParent"
+    bashEval "$SCRIPT"
+    ;;
+
+  ## called by npm run-script install
+  bashNpmInstall)
+    SCRIPT="$SCRIPT; cd '$DIR'"
+    ## install utility2_external
+    SCRIPT="$SCRIPT && curl -sL"
+    SCRIPT="$SCRIPT 'https://github.com/kaizhu256/utility2/releases/download/external/$FILE'"
+    SCRIPT="$SCRIPT | tar -xzvf -"
+    ## install sauce-connect
+    SCRIPT="$SCRIPT && curl -sL 'https://github.com/kaizhu256/utility2/releases/download/external/sc-4.0-$NODEJS_PROCESS_PLATFORM' > .install/sc"
+    SCRIPT="$SCRIPT && chmod 755 .install/sc"
+    SCRIPT="$SCRIPT; bashKillNodejsParent"
+    bashEval "$SCRIPT"
+    ;;
+
+  ## called by npm run-script publish-github
+  bashNpmPublishGithub)
+    SCRIPT="$SCRIPT; cd '$DIR'"
+    SCRIPT="$SCRIPT && ./utility2.js --github-release-upload-file-list .install/$FILE"
+    SCRIPT="$SCRIPT; bashKillNodejsParent"
+    bashEval "$SCRIPT"
+    ;;
+
+  esac
+}
+
+bashMain
+/* MODULE_END */
+
+
+
 /* MODULE_BEGIN { "actionList": ["lint", "eval"], "file": "utility2.js2.js" } */
 /*jslint browser: true, indent: 2, maxerr: 8, node: true, nomen: true, regexp: true, todo: true, unparam: true*/
 /*global global, required, state, underscore, utility2, $*/
@@ -282,13 +360,13 @@ CSS_COMMENT */
 
     _initOnce: function () {
       /*jslint stupid: true*/
-      if (state.modeNpmUtility2 === 'build') {
-        utility2.fsMkdirpSync('.build');
+      if (state.modeCliCommandUtility2 === 'bashNpmBuild') {
+        utility2.fsMkdirpSync('.install/public');
         [
-          ".build/utility2_phantomjs.js",
-          '.build/utility2_external.browser.css',
-          '.build/utility2_external.browser.js',
-          '.build/utility2_external.shared.js'
+          '.install/public/utility2_external.browser.css',
+          '.install/public/utility2_external.browser.js',
+          '.install/public/utility2_external.shared.js',
+          '.install/utility2_phantomjs.js'
         ].forEach(function (file) {
           required.fs.writeFileSync(file, state.fsWatchDict[file].content);
         });
@@ -303,78 +381,5 @@ CSS_COMMENT */
   };
   local._init();
 }());
-/* MODULE_END */
-
-
-
-/* MODULE_BEGIN { "actionList": ["lint", "shell"], "file": "utility2.sh" } */
-privateEval() {
-  ## this function evals $1
-  echo $1
-  eval "$1"
-}
-
-privateMain() {
-## this function is the main program
-  ## cwd
-  CWD=$(pwd)
-  ## utility2 directory
-  DIR=$NODEJS_UTILITY2_DIR
-  ## utility2_external file
-  FILE_UTILITY2_EXTERNAL=utility2_external.$NODEJS_PACKAGE_JSON_VERSION.tar.gz
-  if [ $NODEJS_PROCESS_ARGV_2 == "--mode-npm-utility2" ]; then
-    case $NODEJS_PROCESS_ARGV_3 in
-
-    ## called by npm run-script build
-    build)
-      local SCRIPT="cd '$DIR'"
-      SCRIPT="$SCRIPT && ./utility2.js --mode-debug silent --rollup-file-list"
-      SCRIPT="$SCRIPT .build/utility2_external.browser.css"
-      SCRIPT="$SCRIPT,.build/utility2_external.browser.js"
-      SCRIPT="$SCRIPT,.build/utility2_external.shared.js"
-      SCRIPT="$SCRIPT && rm -fr .install && mkdir -p .install/public"
-      SCRIPT="$SCRIPT && cp .build/utility2_phantomjs.js .install/"
-      SCRIPT="$SCRIPT && cp .build/*.rollup.* .install/public/"
-      SCRIPT="$SCRIPT && tar -czvf .build/$FILE_UTILITY2_EXTERNAL"
-      SCRIPT="$SCRIPT --exclude=*.compiled"
-      SCRIPT="$SCRIPT --exclude=*.log"
-      SCRIPT="$SCRIPT .install"
-      SCRIPT="$SCRIPT && ls -l .build"
-      privateEval "$SCRIPT"
-      ;;
-
-    ## called by npm run-script install
-    install)
-      local SCRIPT="cd '$DIR'"
-      SCRIPT="$SCRIPT && rm -fr .install && mkdir .install"
-      ## install utility2_external
-      SCRIPT="$SCRIPT && curl -sL 'https://github.com/kaizhu256/utility2/releases/download/external/$FILE_UTILITY2_EXTERNAL'"
-      SCRIPT="$SCRIPT | tar -xzvf -"
-      ## install sauce-connect
-      SCRIPT="$SCRIPT && curl -sL 'https://github.com/kaizhu256/utility2/releases/download/external/sc-4.0-$NODEJS_PROCESS_PLATFORM' > .install/sc.compiled"
-      SCRIPT="$SCRIPT && chmod 755 .install/sc.compiled"
-      SCRIPT="$SCRIPT && find .install"
-      privateEval "$SCRIPT"
-      ;;
-
-    ## called by npm run-script publish-github
-    publish-github)
-      local SCRIPT="cd '$DIR'"
-      SCRIPT="$SCRIPT && ./utility2.js --github-release-upload-file-list .build/$FILE_UTILITY2_EXTERNAL"
-      privateEval "$SCRIPT"
-      ;;
-
-    esac
-    ## kill parent normally if last exit code was 0
-    if [ $? == 0 ]; then
-      kill -TERM $NODEJS_PROCESS_PID
-    ## kill parent abnormally
-    else
-      kill -ABRT $NODEJS_PROCESS_PID
-    fi
-  fi
-}
-
-privateMain
 /* MODULE_END */
 
