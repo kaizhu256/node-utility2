@@ -9,13 +9,13 @@
     cachePrefix: '/rollup',
     urlList: [
       //// bootstrap
-      'https://raw.github.com/twbs/bootstrap/master/dist/css/bootstrap.css',
+      'https://raw.githubusercontent.com/twbs/bootstrap/master/dist/css/bootstrap.css',
       //// datatables
-      'https://raw.github.com/DataTables/DataTables/master/media/css/jquery.dataTables.css',
+      'https://raw.githubusercontent.com/DataTables/DataTables/master/media/css/jquery.dataTables.css',
       //// qunit
       'https://qunitjs.com/resources/qunit.css',
       //// select2
-      'https://raw.github.com/ivaynberg/select2/master/select2.css'
+      'https://raw.githubusercontent.com/ivaynberg/select2/master/select2.css'
     ]
   };
 }());
@@ -52,7 +52,7 @@ CSS_COMMENT */
         )
         /* nodejs */
         .replace(
-          (/(\n\/\* MODULE_BEGIN https:\/\/raw\.github\.com\/joyent\/node\/master\/lib\/(\w+)\.js \*\/\n[\S\s]+?\n\/\* MODULE_END \*\/\n)/g),
+          (/(\n\/\* MODULE_BEGIN https:\/\/raw\.githubusercontent\.com\/joyent\/node\/master\/lib\/(\w+)\.js \*\/\n[\S\s]+?\n\/\* MODULE_END \*\/\n)/g),
           '(function () { var module = {}, exports = module.exports = {},'
             + 'process = global.process || {};'
             + 'require = function (module) { return required[module] };'
@@ -72,27 +72,27 @@ CSS_COMMENT */
       /* angularjs */
       'http://code.angularjs.org/snapshot/angular.js',
       /* bootstrap */
-      'https://raw.github.com/twbs/bootstrap/master/dist/js/bootstrap.js',
+      'https://raw.githubusercontent.com/twbs/bootstrap/master/dist/js/bootstrap.js',
       /* datatables */
-      'https://raw.github.com/DataTables/DataTables/master/media/js/jquery.dataTables.js',
+      'https://raw.githubusercontent.com/DataTables/DataTables/master/media/js/jquery.dataTables.js',
       /* highstock */
       'http://code.highcharts.com/stock/highstock.js',
       /* mime.types */
       'http://svn.apache.org/repos/asf/httpd/httpd/trunk/docs/conf/mime.types',
       /* nodejs */
-      'https://raw.github.com/joyent/node/master/lib/util.js',
-      'https://raw.github.com/joyent/node/master/lib/path.js',
-      'https://raw.github.com/joyent/node/master/lib/punycode.js',
-      'https://raw.github.com/joyent/node/master/lib/querystring.js',
-      'https://raw.github.com/joyent/node/master/lib/url.js',
+      'https://raw.githubusercontent.com/joyent/node/master/lib/util.js',
+      'https://raw.githubusercontent.com/joyent/node/master/lib/path.js',
+      'https://raw.githubusercontent.com/joyent/node/master/lib/punycode.js',
+      'https://raw.githubusercontent.com/joyent/node/master/lib/querystring.js',
+      'https://raw.githubusercontent.com/joyent/node/master/lib/url.js',
       /* qunit */
       'https://qunitjs.com/resources/qunit.js',
       /* select2 */
-      'https://raw.github.com/ivaynberg/select2/master/select2.js',
+      'https://raw.githubusercontent.com/ivaynberg/select2/master/select2.js',
       /* typeahead */
-      'https://raw.github.com/twitter/typeahead.js/master/dist/typeahead.bundle.js',
+      'https://raw.githubusercontent.com/twitter/typeahead.js/master/dist/typeahead.bundle.js',
       /* underscore */
-      'https://raw.github.com/jashkenas/underscore/master/underscore.js'
+      'https://raw.githubusercontent.com/jashkenas/underscore/master/underscore.js'
     ]
   };
 }());
@@ -114,28 +114,44 @@ CSS_COMMENT */
     cachePrefix: '/rollup',
     postProcessing: function (content) {
       return content
+        /* colors */
+        .replace(
+          (/(\n\/\* MODULE_BEGIN .*\/colors\.js \*\/\n[\S\s]+?\n\/\* MODULE_END \*\/\n)/g),
+          '(function () { var module = {}, exports = module.exports = {}; $1'
+            + 'required.colors = exports;'
+            + '}());'
+        )
+        /* connect logger */
+        .replace(
+          (/(\n\/\* MODULE_BEGIN .*\/expressjs\/morgan\/master\/index\.js \*\/\n[\S\s]+?\n\/\* MODULE_END \*\/\n)/g),
+          '(function () { var module = {}, exports = module.exports = {};'
+            + 'require = function (module) { return function (arg) { return arg; }; };'
+            + '$1'
+            + 'required.connect_logger = exports;'
+            + '}());'
+        )
         /* csslint */
         .replace(
-          (/(\n\/\* MODULE_BEGIN .*\/csslint.js \*\/\n[\S\s]+?\n\/\* MODULE_END \*\/\n)/g),
+          (/(\n\/\* MODULE_BEGIN .*\/csslint\.js \*\/\n[\S\s]+?\n\/\* MODULE_END \*\/\n)/g),
           '(function () { var module = {}, exports = module.exports = {}; $1'
             + 'required.csslint = CSSLint;'
             + '}());'
         )
         /* cssmin */
         .replace(
-          (/(\n\/\* MODULE_BEGIN .*\/cssmin.js \*\/\n[\S\s]+?\n\/\* MODULE_END \*\/\n)/g),
+          (/(\n\/\* MODULE_BEGIN .*\/cssmin\.js \*\/\n[\S\s]+?\n\/\* MODULE_END \*\/\n)/g),
           '(function () { var module = {}, exports = module.exports = {}; $1'
             + 'required.cssmin = cssmin; }());'
         )
         /* jslint */
         .replace(
-          (/(\n\/\* MODULE_BEGIN .*\/jslint.js \*\/\n[\S\s]+?\n\/\* MODULE_END \*\/\n)/g),
+          (/(\n\/\* MODULE_BEGIN .*\/jslint\.js \*\/\n[\S\s]+?\n\/\* MODULE_END \*\/\n)/g),
           '(function () { var module = {}, exports = module.exports = {}; $1'
             + 'required.jslint = JSLINT; }());'
         )
         /* mime.types */
         .replace(
-          (/(\n\/\* MODULE_BEGIN .*\/mime.types \*\/\n)([\S\s]+?)(\n\/\* MODULE_END \*\/\n)/g),
+          (/(\n\/\* MODULE_BEGIN .*\/mime\.types \*\/\n)([\S\s]+?)(\n\/\* MODULE_END \*\/\n)/g),
           function (_, header, content, footer) {
             return header + '(function () { required.mime = { lookupDict: { /*'
               + content.replace((/^(\w\S+)\s+(\w.*)$/gm), function (_, value, keyList) {
@@ -147,7 +163,7 @@ CSS_COMMENT */
         )
         /* nodejs */
         .replace(
-          (/(\n\/\* MODULE_BEGIN https:\/\/raw\.github\.com\/joyent\/node\/master\/lib\/(\w+)\.js \*\/\n[\S\s]+?\n\/\* MODULE_END \*\/\n)/g),
+          (/(\n\/\* MODULE_BEGIN https:\/\/raw\.githubusercontent\.com\/joyent\/node\/master\/lib\/(\w+)\.js \*\/\n[\S\s]+?\n\/\* MODULE_END \*\/\n)/g),
           '(function () { var module = {}, exports = module.exports = {},'
             + 'process = global.process || {};'
             + 'require = function (module) { return required[module] };'
@@ -156,7 +172,7 @@ CSS_COMMENT */
         )
         /* uglify-js */
         .replace(
-          (/(\n\/\* MODULE_BEGIN https:\/\/raw\.github\.com\/mishoo\/UglifyJS2\/master\/lib\/utils\.js \*\/\n[\S\s]+\n\/\* MODULE_BEGIN https:\/\/raw\.github\.com\/mishoo\/UglifyJS2\/master\/lib\/mozilla-ast\.js \*\/\n[\S\s]+?\n\/\* MODULE_END \*\/\n)/g),
+          (/(\n\/\* MODULE_BEGIN https:\/\/raw\.githubusercontent\.com\/mishoo\/UglifyJS2\/master\/lib\/utils\.js \*\/\n[\S\s]+\n\/\* MODULE_BEGIN https:\/\/raw\.githubusercontent\.com\/mishoo\/UglifyJS2\/master\/lib\/mozilla-ast\.js \*\/\n[\S\s]+?\n\/\* MODULE_END \*\/\n)/g),
           '(function () { var module = {}, exports = module.exports = {}; $1'
             + 'required.uglify_js = { parse: parse, Compressor: Compressor, OutputStream: OutputStream }; }());'
         )
@@ -168,32 +184,36 @@ CSS_COMMENT */
         );
     },
     urlList: [
+      /* colors */
+      'https://raw.githubusercontent.com/Marak/colors.js/master/colors.js',
+      /* connect logger */
+      'https://raw.githubusercontent.com/expressjs/morgan/master/index.js',
       /* csslint */
-      'https://raw.github.com/stubbornella/csslint/master/release/csslint.js',
+      'https://raw.githubusercontent.com/stubbornella/csslint/master/release/csslint.js',
       /* cssmin */
-      'https://raw.github.com/jbleuzen/node-cssmin/master/cssmin.js',
+      'https://raw.githubusercontent.com/jbleuzen/node-cssmin/master/cssmin.js',
       /* jslint */
-      'https://raw.github.com/douglascrockford/JSLint/master/jslint.js',
+      'https://raw.githubusercontent.com/douglascrockford/JSLint/master/jslint.js',
       /* mime.types */
       'http://svn.apache.org/repos/asf/httpd/httpd/trunk/docs/conf/mime.types',
       /* nodejs */
-      'https://raw.github.com/joyent/node/master/lib/util.js',
-      'https://raw.github.com/joyent/node/master/lib/path.js',
-      'https://raw.github.com/joyent/node/master/lib/punycode.js',
-      'https://raw.github.com/joyent/node/master/lib/querystring.js',
-      'https://raw.github.com/joyent/node/master/lib/url.js',
+      'https://raw.githubusercontent.com/joyent/node/master/lib/util.js',
+      'https://raw.githubusercontent.com/joyent/node/master/lib/path.js',
+      'https://raw.githubusercontent.com/joyent/node/master/lib/punycode.js',
+      'https://raw.githubusercontent.com/joyent/node/master/lib/querystring.js',
+      'https://raw.githubusercontent.com/joyent/node/master/lib/url.js',
       /* uglifyjs */
-      'https://raw.github.com/mishoo/UglifyJS2/master/lib/utils.js',
-      'https://raw.github.com/mishoo/UglifyJS2/master/lib/ast.js',
-      'https://raw.github.com/mishoo/UglifyJS2/master/lib/parse.js',
-      'https://raw.github.com/mishoo/UglifyJS2/master/lib/transform.js',
-      'https://raw.github.com/mishoo/UglifyJS2/master/lib/scope.js',
-      'https://raw.github.com/mishoo/UglifyJS2/master/lib/output.js',
-      'https://raw.github.com/mishoo/UglifyJS2/master/lib/compress.js',
-      'https://raw.github.com/mishoo/UglifyJS2/master/lib/sourcemap.js',
-      'https://raw.github.com/mishoo/UglifyJS2/master/lib/mozilla-ast.js',
+      'https://raw.githubusercontent.com/mishoo/UglifyJS2/master/lib/utils.js',
+      'https://raw.githubusercontent.com/mishoo/UglifyJS2/master/lib/ast.js',
+      'https://raw.githubusercontent.com/mishoo/UglifyJS2/master/lib/parse.js',
+      'https://raw.githubusercontent.com/mishoo/UglifyJS2/master/lib/transform.js',
+      'https://raw.githubusercontent.com/mishoo/UglifyJS2/master/lib/scope.js',
+      'https://raw.githubusercontent.com/mishoo/UglifyJS2/master/lib/output.js',
+      'https://raw.githubusercontent.com/mishoo/UglifyJS2/master/lib/compress.js',
+      'https://raw.githubusercontent.com/mishoo/UglifyJS2/master/lib/sourcemap.js',
+      'https://raw.githubusercontent.com/mishoo/UglifyJS2/master/lib/mozilla-ast.js',
       /* underscore */
-      'https://raw.github.com/jashkenas/underscore/master/underscore.js'
+      'https://raw.githubusercontent.com/jashkenas/underscore/master/underscore.js'
     ]
   };
 }());
@@ -217,20 +237,13 @@ CSS_COMMENT */
       var page, state;
       /* init state object */
       state = JSON.parse(global.atob(require('system').args[1]));
-      /* assert state.timeoutDefault is a positive, finite number */
-      setTimeout(function () {
-        utility2.assert(
-          0 < state.timeoutDefault && state.timeoutDefault < Infinity,
-          state.timeoutDefault
-        );
-      });
       /* set timeout */
       setTimeout(function () {
         if (state.modeOpenStatus !== 'success') {
           console.error('phantomjs - timeout', state.modeOpenStatus, state.url);
         }
         global.phantom.exit();
-      }, state.timeoutDefault);
+      }, Number(state.timeoutDefault) || 300000);
       /* open requested webpage */
       page = require('webpage').create();
       page.onConsoleMessage = function () {
@@ -261,80 +274,48 @@ CSS_COMMENT */
 
 
 
-/* MODULE_BEGIN { "actionList": ["lint", "shell"], "file": ".install/utility2.sh" } */
-bashEval () {
-  ## this function evals $1
-  echo $1
-  eval "$1"
+/* MODULE_BEGIN { "actionList": ["lint"], "file": "/main.html" } */
+<!DOCTYPE html><html>
+<head>
+<link href="/public/utility2/utility2_external.browser.rollup.min.css" rel="stylesheet"/>
+</head>
+<body>
+hello world
+</body>
+</html>
+/* MODULE_END */
+
+
+
+/* MODULE_BEGIN { "actionList": ["lint"], "file": "/test/test.html" } */
+<!DOCTYPE html><html>
+<head>
+<link href="/public/utility2/utility2_external.browser.rollup.min.css" rel="stylesheet"/>
+</head>
+<body>
+hello world
+<div id="qunit"></div>
+<div id="qunit-fixture"></div>
+<script>window.state = {{state}};</script>
+<script src="/public/utility2/{{utility2_external.browser.rollup.js}}"></script>
+<script src="/public/utility2.js"></script>
+</body>
+</html>
+/* MODULE_END */
+
+
+
+/* MODULE_BEGIN { "actionList": ["lint"], "file": "utility2.json" } */
+{
+  "url":"{{state.localhost}}/test/test.html#modeTest=1",
+  "framework": "qunit",
+  "max-duration": 300,
+  "platforms": [
+    ["Linux", "chrome","33"],
+    ["Linux", "firefox","28"],
+    ["OS X 10.9", "safari", "7"]
+  ]
 }
-
-bashKillNodejsParent () {
-  ## this function kills the nodejs parent which spawned this process
-  ## kill parent normally if last exit code was 0
-  if [ $? == 0 ]; then
-    kill -TERM $NODEJS_PROCESS_PID
-  ## kill parent abnormally
-  else
-    kill -ABRT $NODEJS_PROCESS_PID
-  fi
-}
-
-bashMain () {
-## this function is the main program
-  ## cwd
-  CWD=$(pwd)
-  ## utility2 directory
-  DIR=$NODEJS_UTILITY2_DIR
-  FILE=utility2_external.$NODEJS_PACKAGE_JSON_VERSION.tar.gz
-  SCRIPT=":"
-  case $MODE_CLI_COMMAND_UTILITY2 in
-
-  ## called by npm run-script build
-  bashNpmBuild)
-    SCRIPT="$SCRIPT; cd '$DIR'"
-    ## build utility2_external
-    SCRIPT="$SCRIPT && ./utility2.js --mode-debug silent --rollup-file-list"
-    SCRIPT="$SCRIPT .install/public/utility2_external.browser.css"
-    SCRIPT="$SCRIPT,.install/public/utility2_external.browser.js"
-    SCRIPT="$SCRIPT,.install/public/utility2_external.shared.js"
-    SCRIPT="$SCRIPT && tar -czvf .install/$FILE"
-    SCRIPT="$SCRIPT .install/public/utility2_external.browser.rollup.css"
-    SCRIPT="$SCRIPT .install/public/utility2_external.browser.rollup.js"
-    SCRIPT="$SCRIPT .install/public/utility2_external.browser.rollup.min.css"
-    SCRIPT="$SCRIPT .install/public/utility2_external.browser.rollup.min.js"
-    SCRIPT="$SCRIPT .install/public/utility2_external.shared.rollup.js"
-    SCRIPT="$SCRIPT .install/public/utility2_external.shared.rollup.min.js"
-    SCRIPT="$SCRIPT .install/utility2_phantomjs.js"
-    SCRIPT="$SCRIPT; bashKillNodejsParent"
-    bashEval "$SCRIPT"
-    ;;
-
-  ## called by npm run-script install
-  bashNpmInstall)
-    SCRIPT="$SCRIPT; cd '$DIR'"
-    ## install utility2_external
-    SCRIPT="$SCRIPT && curl -sL"
-    SCRIPT="$SCRIPT 'https://github.com/kaizhu256/utility2/releases/download/external/$FILE'"
-    SCRIPT="$SCRIPT | tar -xzvf -"
-    ## install sauce-connect
-    SCRIPT="$SCRIPT && curl -sL 'https://github.com/kaizhu256/utility2/releases/download/external/sc-4.0-$NODEJS_PROCESS_PLATFORM' > .install/sc"
-    SCRIPT="$SCRIPT && chmod 755 .install/sc"
-    SCRIPT="$SCRIPT; bashKillNodejsParent"
-    bashEval "$SCRIPT"
-    ;;
-
-  ## called by npm run-script publish-github
-  bashNpmPublishGithub)
-    SCRIPT="$SCRIPT; cd '$DIR'"
-    SCRIPT="$SCRIPT && ./utility2.js --github-release-upload-file-list .install/$FILE"
-    SCRIPT="$SCRIPT; bashKillNodejsParent"
-    bashEval "$SCRIPT"
-    ;;
-
-  esac
-}
-
-bashMain
 /* MODULE_END */
 
 
@@ -360,15 +341,16 @@ bashMain
 
     _initOnce: function () {
       /*jslint stupid: true*/
-      if (state.modeCliCommandUtility2 === 'bashNpmBuild') {
-        utility2.fsMkdirpSync('.install/public');
-        [
-          '.install/public/utility2_external.browser.css',
-          '.install/public/utility2_external.browser.js',
-          '.install/public/utility2_external.shared.js',
-          '.install/utility2_phantomjs.js'
-        ].forEach(function (file) {
-          required.fs.writeFileSync(file, state.fsWatchDict[file].content);
+      if (state.utility2NpmInstall) {
+        utility2.fsMkdirpSync(utility2.__dirname + '/.install/public');
+        Object.keys(state.fsWatchDict).forEach(function (file) {
+          if ((/^\.install\//).test(file)) {
+            /* install files to .install dir */
+            required.fs.writeFileSync(
+              utility2.__dirname + '/' + file,
+              state.fsWatchDict[file].content
+            );
+          }
         });
       }
       if (!state.modeUtility2Js2) {

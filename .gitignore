@@ -23,5 +23,6 @@ node_modules
 npm-debug.log
 log
 logs
+public
 secret.json
 tmp

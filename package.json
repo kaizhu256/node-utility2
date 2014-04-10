@@ -4,12 +4,11 @@
     "email": "kaizhu256@gmail.com"
   }],
   "dependencies": {
-    "connect": "2.14.x",
     "istanbul": "0.2.x",
     "phantomjs": "1.9.x",
     "sqlite3": "2.2.x"
   },
-  "description": "utility2.js - standalone, browser test and code coverage framework for nodejs",
+  "description": "utility2 - standalone, browser test and code coverage framework for nodejs",
   "main": "utility2.js",
   "name": "utility2",
   "repository" : {
@@ -17,11 +16,10 @@
     "url" : "https://github.com/kaizhu256/utility2.git"
   },
   "scripts": {
-    "build": "./utility2.js --mode-cli-command-utility2=bashNpmBuild",
-    "install": "./utility2.js --mode-cli-command-utility2=bashNpmInstall",
-    "publish-github": "./utility2.js --mode-cli-command-utility2=bashNpmPublishGithub",
-    "start": "./utility2.js --load-module utility2.js --mode-extra --mode-repl --serverPort random",
-    "test": "./utility2.js --load-module utility2.js --mode-npm-test-utility2 && ./utility2.js --load-module utility2.js --mode-extra --mode-npm-test-utility2"
+    "install": "./utility2.sh --utility2-npm-install",
+    "start": "./utility2.sh --utility2-npm-start",
+    "test": "./utility2.sh --utility2-npm-test"
   },
-  "version": "2014.4.3-1"
+  "version": "2014.4.6-1"
 }
+

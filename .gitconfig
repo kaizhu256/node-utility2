@@ -5,14 +5,14 @@
   remote = origin
   merge = refs/heads/test
 [core]
-  repositoryformatversion = 0
-  filemode = true
   bare = false
-  logallrefupdates = true
+  filemode = true
   ignorecase = true
+  logallrefupdates = true
+  repositoryformatversion = 0
+[receive]
+  denyCurrentBranch = warn
 [remote "origin"]
   fetch = +refs/heads/*:refs/remotes/origin/*
   url = git@github.com:kaizhu256/utility2.git
-[remote "heroku"]
-  url = git@heroku.com:utility2.git
-  fetch = +refs/heads/*:refs/remotes/heroku/*
+
