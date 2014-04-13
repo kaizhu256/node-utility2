@@ -56,6 +56,8 @@ shMain () {
 
   ## start saucelabs if necessary
   --saucelabs-start)
+    ## exit with error if saucelabs doesn't exist
+    SCRIPT="$SCRIPT && if [ ! -f $UTILITY2_DIR/.install/sc ]; then exit 1; fi"
     ## perform a loop creating a sc connection until one succeeds
     SCRIPT="$SCRIPT && while [ ! -f '$SAUCELABS_READY_FILE' ]"
       SCRIPT="$SCRIPT; do eval '$UTILITY2_DIR/.install/sc --readyfile $SAUCELABS_READY_FILE &'"
@@ -95,13 +97,21 @@ shMain () {
     ## npm install
     ## start saucelabs
     SCRIPT="$SCRIPT && npm install"
-    SCRIPT="$SCRIPT && npm install coveralls"
     SCRIPT="$SCRIPT && $($UTILITY2_SH_ECHO --saucelabs-restart)"
     ## use saucelabs-friendly port
     ## https://saucelabs.com/docs/connect
-    SCRIPT="$SCRIPT && npm test --utility2-timeout-default=300000 --utility2-server-port=49221"
-    ## upload coverage info to coveralls.io
-    SCRIPT="$SCRIPT && cat tmp/lcov.info | node_modules/.bin/coveralls"
+    SCRIPT="$SCRIPT && npm test"
+    SCRIPT="$SCRIPT --utility2-mode-postgres=\$POSTGRES_LOGIN"
+    SCRIPT="$SCRIPT --utility2-timeout-default=300000"
+    SCRIPT="$SCRIPT --utility2-server-port=49221"
+    ## save test exit code
+    SCRIPT="$SCRIPT; EXIT_CODE=\$?"
+    ## upload coverage info to coveralls.io if possible
+    SCRIPT="$SCRIPT; if [ -f tmp/lcov.info ]"
+      SCRIPT="$SCRIPT; then cat tmp/lcov.info | node_modules/.bin/coveralls"
+    SCRIPT="$SCRIPT; fi"
+    ## exit with appropriate exit code
+    SCRIPT="$SCRIPT; exit \$EXIT_CODE"
     ;;
 
   ## called by npm run-script build
@@ -139,7 +149,10 @@ shMain () {
   --utility2-npm-install)
     SCRIPT="$SCRIPT && ./utility2.js --utility2-npm-install"
     ## install utility2_external
-    SCRIPT="$SCRIPT && curl -3Ls https://github.com/kaizhu256/kaizhu256.github.io/releases/download/file/$UTILITY2_EXTERNAL_TAR_GZ | tar -xzvf -"
+    if [ ! -f .install/public/utility2_external.shared.rollup.js ]
+      then SCRIPT="$SCRIPT && curl -3Ls https://github.com/kaizhu256/kaizhu256.github.io/releases/download/file/$UTILITY2_EXTERNAL_TAR_GZ"
+      SCRIPT="$SCRIPT | tar -xzvf -"
+    fi
     ## install saucelabs if necessary
     if [ ! -f .install/sc ]
       then case $NODEJS_PROCESS_PLATFORM in
@@ -152,7 +165,7 @@ shMain () {
         SCRIPT="$SCRIPT > .install/sc.zip && unzip -q .install/sc.zip -d .install"
         ;;
       esac
-      SCRIPT="$SCRIPT && cp .install/sc-4.0-$SAUCELABS_VERSION/bin/sc .install/sc"
+      SCRIPT="$SCRIPT && cp .install/sc-4.1-$SAUCELABS_VERSION/bin/sc .install/sc"
     fi
     ;;
 
@@ -163,14 +176,15 @@ shMain () {
 
   ## called by npm run-script test
   --utility2-npm-test)
-    SCRIPT="$SCRIPT && ./utility2.js --mode-coverage '\\butility2\\.js$' --mode-npm-test-utility2"
-    SCRIPT="$SCRIPT && ./utility2.js --mode-coverage '\\butility2\\.js$' --mode-extra --mode-npm-test-utility2"
-    SCRIPT="$SCRIPT; EXIT_STATUS=\$?"
+    local ARGS="--mode-debug-process --mode-repl --mode-npm-test --server-port=random --test-module-dict={\\\"utility2\\\":true}"
+    SCRIPT="$SCRIPT && ./utility2.js $ARGS --mode-coverage='\\butility2\\.js$' --tmpdir=tmp/core"
+    SCRIPT="$SCRIPT && ./utility2.js $ARGS --mode-coverage='\\butility2\\.js$' --mode-extra --tmpdir=tmp"
+    SCRIPT="$SCRIPT; EXIT_CODE=\$?"
     ## if test failed, then redo without code coverage
-    SCRIPT="$SCRIPT; if [ '\$EXIT_STATUS' != 0 ]"
-      SCRIPT="$SCRIPT; then ./utility2.js --mode-extra --mode-npm-test-utility2"
+    SCRIPT="$SCRIPT; if [ \"\$EXIT_CODE\" != 0 ]"
+      SCRIPT="$SCRIPT; then ./utility2.js $ARGS --mode-extra"
     SCRIPT="$SCRIPT; fi"
-    SCRIPT="$SCRIPT; exit \$EXIT_STATUS"
+    SCRIPT="$SCRIPT; exit \$EXIT_CODE"
     ;;
 
   ## publish utility2_external on github
@@ -181,11 +195,11 @@ shMain () {
 
   ## update utility2
   --utility2-update)
-    SCRIPT="$SCRIPT && cd $UTILITY2_DIR"
+    SCRIPT="$SCRIPT && cd '$UTILITY2_DIR'"
     ## update utility2.js2
-    SCRIPT="$SCRIPT && curl -3Ls https://raw.githubusercontent.com/kaizhu256/kaizhu256.github.io/master/utility2.js2 > utility2.js2"
+    SCRIPT="$SCRIPT && curl -3Ls https://raw.githubusercontent.com/kaizhu256/kaizhu256.github.io/test/utility2.js2 > utility2.js2"
     ## update utility2.sh
-    SCRIPT="$SCRIPT && curl -3Ls https://raw.githubusercontent.com/kaizhu256/kaizhu256.github.io/master/utility2.sh > utility2.sh"
+    SCRIPT="$SCRIPT && curl -3Ls https://raw.githubusercontent.com/kaizhu256/kaizhu256.github.io/test/utility2.sh > utility2.sh"
     SCRIPT="$SCRIPT && chmod 755 utility2.sh"
     ;;
 
@@ -197,9 +211,10 @@ shMain () {
   shift
   done
   ## echo script
-  if [ "$SCRIPT" != ":" ] || [ "$MODE_ECHO" ]; then echo $SCRIPT; fi
+  if [ "$MODE_ECHO" ]; then echo "$SCRIPT" | perl -ne 's/:/[ "\$?" == 0 ]/i; print lc'
+  elif [ "$SCRIPT" != ":" ]; then echo $SCRIPT; fi
   ## eval script
-  if [ "$SCRIPT" != ":" ] && [ ! "$MODE_ECHO" ]; then eval "$SCRIPT"; fi
+  if [ ! "$MODE_ECHO" ]; then eval "$SCRIPT"; fi
 }
 
 shMain $1 $2 $3 $4

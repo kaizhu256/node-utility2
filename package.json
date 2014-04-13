@@ -6,7 +6,11 @@
   "dependencies": {
     "istanbul": "0.2.x",
     "phantomjs": "1.9.x",
+    "pg": "3.0.x",
     "sqlite3": "2.2.x"
+  },
+  "devDependencies": {
+    "coveralls": "2.10.x"
   },
   "description": "utility2 - standalone, browser test and code coverage framework for nodejs",
   "main": "utility2.js",
@@ -20,6 +24,6 @@
     "start": "./utility2.sh --utility2-npm-start",
     "test": "./utility2.sh --utility2-npm-test"
   },
-  "version": "2014.4.6-2"
+  "version": "2014.4.12-1"
 }
 

@@ -1,11 +1,18 @@
 #### todo
-- garbage collect testCallbackId in phantomjs
 - add html linter
 - auto-remove test functions from module in production mode
 - add heroku dynamic config server
 - integrate forever-webui
 
-#### 2014.03.06
+#### 2014.04.12
+- add postgres stateOverride option for heroku apps
+- verify modulePostgresNodejs with tests
+- stop infinite loop in saucelabs start if file does not exist
+- move modeNpmTestUtility2 flag from utility2.js to utility2.sh
+- garbage collect testCallbackId in phantomjs
+- merge .gitignore and .gitconfig into utility2.js2
+
+#### 2014.04.06
 - add CHANGELOG.md and utility2.sh
 - colorize for failed tests
 - merge evel / evalJs2 / shell

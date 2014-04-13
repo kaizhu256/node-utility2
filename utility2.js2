@@ -1,3 +1,79 @@
+/* MODULE_BEGIN { "actionList": ["lint"], "file": "/admin/db.html" } */
+<!DOCTYPE html><html ng-app>
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
+<link href="/public/utility2/utility2_external.browser.rollup.min.css" rel="stylesheet"/>
+</head>
+<body>
+
+    Write some text in textbox:
+    <input type="text" ng-model="sometext" />
+    <h1>Hello {{ sometext }}</h1>
+
+<script src="/public/utility2/{{utility2_external.browser.rollup.js}}"></script>
+<script src="/public/utility2.js"></script>
+</body>
+</html>
+/* MODULE_END */
+
+
+
+/* MODULE_BEGIN { "actionList": ["lint"], "file": ".gitignore" } */
+*.bak
+*.log
+*.min.*
+*.pid
+*.swp
+.DS_Store
+._*
+.build
+.env
+.git
+.gitignore
+.hg
+.install
+.lock-wscript
+.src
+.svn
+.vim
+.wafpickle-*
+CVS
+README.*
+artifacts
+bower_components
+node_modules
+npm-debug.log
+log
+logs
+public
+secret.json
+tmp
+/* MODULE_END */
+
+
+
+/* MODULE_BEGIN { "actionList": ["lint"], "file": ".install/.gitconfig" } */
+[branch "master"]
+  remote = origin
+  merge = refs/heads/master
+[branch "test"]
+  remote = origin
+  merge = refs/heads/test
+[core]
+  bare = false
+  filemode = true
+  ignorecase = true
+  logallrefupdates = true
+  repositoryformatversion = 0
+[receive]
+  denyCurrentBranch = warn
+[remote "origin"]
+  fetch = +refs/heads/*:refs/remotes/origin/*
+  url = git@github.com:kaizhu256/utility2.git
+/* MODULE_END */
+
+
+
 /* MODULE_BEGIN { "actionList": ["lint"], "file": ".install/public/utility2_external.browser.css" } */
 /*jslint browser: true, indent: 2, maxerr: 8, node: true, nomen: true, regexp: true, todo: true, unparam: true*/
 /*global global, required, state, underscore, utility2, $*/
@@ -277,6 +353,7 @@ CSS_COMMENT */
 /* MODULE_BEGIN { "actionList": ["lint"], "file": "/main.html" } */
 <!DOCTYPE html><html>
 <head>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
 <link href="/public/utility2/utility2_external.browser.rollup.min.css" rel="stylesheet"/>
 </head>
 <body>
@@ -290,6 +367,7 @@ hello world
 /* MODULE_BEGIN { "actionList": ["lint"], "file": "/test/test.html" } */
 <!DOCTYPE html><html>
 <head>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
 <link href="/public/utility2/utility2_external.browser.rollup.min.css" rel="stylesheet"/>
 </head>
 <body>
@@ -344,11 +422,13 @@ hello world
       if (state.utility2NpmInstall) {
         utility2.fsMkdirpSync(utility2.__dirname + '/.install/public');
         Object.keys(state.fsWatchDict).forEach(function (file) {
-          if ((/^\.install\//).test(file)) {
+          if ((/^(?:\.gitignore|\.install)\b/).test(file)) {
             /* install files to .install dir */
             required.fs.writeFileSync(
               utility2.__dirname + '/' + file,
-              state.fsWatchDict[file].content
+              (/^\.install\b/).test(file)
+                ? state.fsWatchDict[file].content
+                : state.fsWatchDict[file].content.trimLeft()
             );
           }
         });

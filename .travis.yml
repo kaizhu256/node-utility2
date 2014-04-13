@@ -1,6 +1,6 @@
 ## before_script:
   ## - psql -c "create database travis_ci_test;" -U postgres
-  ## - export POSTGRES_URL=postgres://localhost/travis_ci_test
+  ## - export POSTGRES_LOGIN=postgres://localhost/travis_ci_test
 ## use darwin platform
 language: objective-c
 ## language: node_js
