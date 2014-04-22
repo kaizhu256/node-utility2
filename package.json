@@ -15,6 +15,7 @@
   "description": "utility2 - standalone, browser test and code coverage framework for nodejs",
   "main": "utility2.js",
   "name": "utility2",
+  "os": ["darwin", "linux"],
   "repository" : {
     "type" : "git",
     "url" : "https://github.com/kaizhu256/utility2.git"
@@ -24,6 +25,6 @@
     "start": "./utility2.sh --utility2-npm-start",
     "test": "./utility2.sh --utility2-npm-test"
   },
-  "version": "2014.4.12-1"
+  "version": "2014.4.14-1"
 }
 

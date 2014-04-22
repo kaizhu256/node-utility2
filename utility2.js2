@@ -1,4 +1,4 @@
-/* MODULE_BEGIN { "actionList": ["lint"], "file": "/admin/db.html" } */
+/* MODULE_BEGIN { "actionList": ["lint"], "file": "/admin/admin.html" } */
 <!DOCTYPE html><html ng-app>
 <head>
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
@@ -6,14 +6,39 @@
 </head>
 <body>
 
-    Write some text in textbox:
-    <input type="text" ng-model="sometext" />
-    <h1>Hello {{ sometext }}</h1>
+  Write some text in textbox:
+  <input type="text" ng-model="sometext" />
+  <h1>Hello {{ sometext }}</h1>
 
-<script src="/public/utility2/{{utility2_external.browser.rollup.js}}"></script>
+<script src="/public/utility2/utility2_external.browser.rollup.min.js"></script>
 <script src="/public/utility2.js"></script>
 </body>
 </html>
+/* MODULE_END */
+
+
+
+/* MODULE_BEGIN { "actionList": ["lint"], "file": ".gitconfig" } */
+[branch "master"]
+  remote = origin
+  merge = refs/heads/master
+[branch "unstable"]
+  remote = origin
+  merge = refs/heads/unstable
+[core]
+  bare = false
+  filemode = true
+  ignorecase = true
+  logallrefupdates = true
+  repositoryformatversion = 0
+[receive]
+  denyCurrentBranch = warn
+[remote "heroku"]
+  fetch = +refs/heads/*:refs/remotes/heroku/*
+  url = git@heroku.com:utility2-unstable.git
+[remote "origin"]
+  fetch = +refs/heads/*:refs/remotes/origin/*
+  url = git@github.com:kaizhu256/utility2.git
 /* MODULE_END */
 
 
@@ -29,6 +54,7 @@
 .build
 .env
 .git
+.gitconfig
 .gitignore
 .hg
 .install
@@ -52,31 +78,9 @@ tmp
 
 
 
-/* MODULE_BEGIN { "actionList": ["lint"], "file": ".install/.gitconfig" } */
-[branch "master"]
-  remote = origin
-  merge = refs/heads/master
-[branch "test"]
-  remote = origin
-  merge = refs/heads/test
-[core]
-  bare = false
-  filemode = true
-  ignorecase = true
-  logallrefupdates = true
-  repositoryformatversion = 0
-[receive]
-  denyCurrentBranch = warn
-[remote "origin"]
-  fetch = +refs/heads/*:refs/remotes/origin/*
-  url = git@github.com:kaizhu256/utility2.git
-/* MODULE_END */
-
-
-
 /* MODULE_BEGIN { "actionList": ["lint"], "file": ".install/public/utility2_external.browser.css" } */
 /*jslint browser: true, indent: 2, maxerr: 8, node: true, nomen: true, regexp: true, todo: true, unparam: true*/
-/*global global, required, state, underscore, utility2, $*/
+/*global global, required, state, utility2, $*/
 /* CSS_COMMENT
 (function moduleInit() {
   'use strict';
@@ -86,12 +90,8 @@ tmp
     urlList: [
       //// bootstrap
       'https://raw.githubusercontent.com/twbs/bootstrap/master/dist/css/bootstrap.css',
-      //// datatables
-      'https://raw.githubusercontent.com/DataTables/DataTables/master/media/css/jquery.dataTables.css',
       //// qunit
-      'https://qunitjs.com/resources/qunit.css',
-      //// select2
-      'https://raw.githubusercontent.com/ivaynberg/select2/master/select2.css'
+      'https://qunitjs.com/resources/qunit.css'
     ]
   };
 }());
@@ -102,7 +102,7 @@ CSS_COMMENT */
 
 /* MODULE_BEGIN { "actionList": ["lint"], "file": ".install/public/utility2_external.browser.js" } */
 /*jslint browser: true, indent: 2, maxerr: 8, node: true, nomen: true, regexp: true, todo: true, unparam: true*/
-/*global global, required, state, underscore, utility2, $*/
+/*global global, required, state, utility2, $*/
 (function moduleInit() {
   'use strict';
   if (typeof window === 'object') {
@@ -134,12 +134,6 @@ CSS_COMMENT */
             + 'require = function (module) { return required[module] };'
             + '$1'
             + 'required.$2 = module.exports; }());'
-        )
-        /* underscore */
-        .replace(
-          (/(\n\/\* MODULE_BEGIN .*\/underscore.js \*\/\n[\S\s]+?\n\/\* MODULE_END \*\/\n)/g),
-          '(function () { var module = {}, exports = module.exports = {}; $1'
-            + 'global.underscore = module.exports; }());'
         );
     },
     urlList: [
@@ -149,10 +143,6 @@ CSS_COMMENT */
       'http://code.angularjs.org/snapshot/angular.js',
       /* bootstrap */
       'https://raw.githubusercontent.com/twbs/bootstrap/master/dist/js/bootstrap.js',
-      /* datatables */
-      'https://raw.githubusercontent.com/DataTables/DataTables/master/media/js/jquery.dataTables.js',
-      /* highstock */
-      'http://code.highcharts.com/stock/highstock.js',
       /* mime.types */
       'http://svn.apache.org/repos/asf/httpd/httpd/trunk/docs/conf/mime.types',
       /* nodejs */
@@ -162,13 +152,7 @@ CSS_COMMENT */
       'https://raw.githubusercontent.com/joyent/node/master/lib/querystring.js',
       'https://raw.githubusercontent.com/joyent/node/master/lib/url.js',
       /* qunit */
-      'https://qunitjs.com/resources/qunit.js',
-      /* select2 */
-      'https://raw.githubusercontent.com/ivaynberg/select2/master/select2.js',
-      /* typeahead */
-      'https://raw.githubusercontent.com/twitter/typeahead.js/master/dist/typeahead.bundle.js',
-      /* underscore */
-      'https://raw.githubusercontent.com/jashkenas/underscore/master/underscore.js'
+      'https://qunitjs.com/resources/qunit.js'
     ]
   };
 }());
@@ -178,7 +162,7 @@ CSS_COMMENT */
 
 /* MODULE_BEGIN { "actionList": ["lint"], "file": ".install/public/utility2_external.shared.js" } */
 /*jslint browser: true, indent: 2, maxerr: 8, node: true, nomen: true, regexp: true, todo: true, unparam: true*/
-/*global global, required, state, underscore, utility2, $*/
+/*global global, required, state, utility2, $*/
 (function moduleInit() {
   'use strict';
   if (typeof window === 'object') {
@@ -251,12 +235,6 @@ CSS_COMMENT */
           (/(\n\/\* MODULE_BEGIN https:\/\/raw\.githubusercontent\.com\/mishoo\/UglifyJS2\/master\/lib\/utils\.js \*\/\n[\S\s]+\n\/\* MODULE_BEGIN https:\/\/raw\.githubusercontent\.com\/mishoo\/UglifyJS2\/master\/lib\/mozilla-ast\.js \*\/\n[\S\s]+?\n\/\* MODULE_END \*\/\n)/g),
           '(function () { var module = {}, exports = module.exports = {}; $1'
             + 'required.uglify_js = { parse: parse, Compressor: Compressor, OutputStream: OutputStream }; }());'
-        )
-        /* underscore */
-        .replace(
-          (/(\n\/\* MODULE_BEGIN .*\/underscore.js \*\/\n[\S\s]+?\n\/\* MODULE_END \*\/\n)/g),
-          '(function () { var module = {}, exports = module.exports = {}; $1'
-            + 'global.underscore = module.exports; }());'
         );
     },
     urlList: [
@@ -287,9 +265,7 @@ CSS_COMMENT */
       'https://raw.githubusercontent.com/mishoo/UglifyJS2/master/lib/output.js',
       'https://raw.githubusercontent.com/mishoo/UglifyJS2/master/lib/compress.js',
       'https://raw.githubusercontent.com/mishoo/UglifyJS2/master/lib/sourcemap.js',
-      'https://raw.githubusercontent.com/mishoo/UglifyJS2/master/lib/mozilla-ast.js',
-      /* underscore */
-      'https://raw.githubusercontent.com/jashkenas/underscore/master/underscore.js'
+      'https://raw.githubusercontent.com/mishoo/UglifyJS2/master/lib/mozilla-ast.js'
     ]
   };
 }());
@@ -299,7 +275,7 @@ CSS_COMMENT */
 
 /* MODULE_BEGIN { "actionList": ["lint"], "file": ".install/utility2_phantomjs.js" } */
 /*jslint browser: true, indent: 2, maxerr: 8, node: true, nomen: true, regexp: true, todo: true, unparam: true*/
-/*global global, required, state, underscore, utility2, $*/
+/*global global, phantom, required, state, utility2, $*/
 /*jslint indent: 2, node: true, nomen: true*/
 (function moduleInitPhantomjs() {
   /*
@@ -311,36 +287,52 @@ CSS_COMMENT */
 
     _init: function () {
       var page, state;
+      /* phantomjs error handling - http://phantomjs.org/api/phantom/handler/on-error.html */
+      phantom.onError = function (msg, trace) {
+        var msgStack = ['PHANTOM ERROR: ' + msg];
+        if (trace && trace.length) {
+          msgStack.push('TRACE:');
+          trace.forEach(function (t) {
+            msgStack.push(' -> ' + (t.file || t.sourceURL) + ': ' + t.line
+              + (t.function ? ' (in function ' + t.function + ')' : ''));
+          });
+        }
+        console.error('\n\n\n\n' + msgStack.join('\n') + '\n');
+        phantom.exit(1);
+      };
+      /* export global object */
+      window.global = window.global || window;
       /* init state object */
       state = JSON.parse(global.atob(require('system').args[1]));
-      /* set timeout */
+      /* set timeout for phantomjs */
       setTimeout(function () {
         if (state.modeOpenStatus !== 'success') {
           console.error('phantomjs - timeout', state.modeOpenStatus, state.url);
         }
-        global.phantom.exit();
+        phantom.exit();
       }, Number(state.timeoutDefault) || 300000);
-      /* open requested webpage */
       page = require('webpage').create();
+      /* page error handling - http://phantomjs.org/api/webpage/handler/on-error.html */
+      page.onError = function (msg, trace) {
+        var msgStack = ['ERROR: ' + msg];
+        if (trace && trace.length) {
+          msgStack.push('TRACE:');
+          trace.forEach(function (t) {
+            msgStack.push(' -> ' + t.file + ': ' + t.line
+              + (t.function ? ' (in function "' + t.function + '")' : ''));
+          });
+        }
+        console.error('\n\n\n\n' + msgStack.join('\n') + '\n');
+      };
+      /* pipe page's console.log to stdout */
       page.onConsoleMessage = function () {
         console.log.apply(console, arguments);
       };
+      /* open requested webpage */
       page.open(state.url, function (status) {
         state.modeOpenStatus = status;
         console.log('phantomjs - opened', status, state.url);
       });
-    },
-
-    assert: function (passed, message) {
-      /*
-        this function throws an error if the assertion fails
-      */
-      if (!passed) {
-        setTimeout(function () {
-          global.phantom.exit(1);
-        });
-        throw new Error(message ? 'assertion error - ' + message : 'assertion error');
-      }
     }
 
   };
@@ -375,7 +367,7 @@ hello world
 <div id="qunit"></div>
 <div id="qunit-fixture"></div>
 <script>window.state = {{state}};</script>
-<script src="/public/utility2/{{utility2_external.browser.rollup.js}}"></script>
+<script src="/public/utility2/utility2_external.browser.rollup.min.js"></script>
 <script src="/public/utility2.js"></script>
 </body>
 </html>
@@ -400,7 +392,7 @@ hello world
 
 /* MODULE_BEGIN { "actionList": ["lint", "eval"], "file": "utility2.js2.js" } */
 /*jslint browser: true, indent: 2, maxerr: 8, node: true, nomen: true, regexp: true, todo: true, unparam: true*/
-/*global global, required, state, underscore, utility2, $*/
+/*global global, required, state, utility2, $*/
 (function moduleInitJs2Nodejs() {
   /*
     this nodejs module finishes init of this js2 file
@@ -417,27 +409,21 @@ hello world
       }
     },
 
+    __init_nullCase_test: function (onEventError) {
+      /*
+        this function tests _init's null case handling behavior
+      */
+      utility2.testMock(onEventError, [
+        [global, { state: {} }]
+      ], function (onEventError) {
+        local._init();
+        onEventError();
+      });
+    },
+
     _initOnce: function () {
-      /*jslint stupid: true*/
-      if (state.utility2NpmInstall) {
-        utility2.fsMkdirpSync(utility2.__dirname + '/.install/public');
-        Object.keys(state.fsWatchDict).forEach(function (file) {
-          if ((/^(?:\.gitignore|\.install)\b/).test(file)) {
-            /* install files to .install dir */
-            required.fs.writeFileSync(
-              utility2.__dirname + '/' + file,
-              (/^\.install\b/).test(file)
-                ? state.fsWatchDict[file].content
-                : state.fsWatchDict[file].content.trimLeft()
-            );
-          }
-        });
-      }
-      if (!state.modeUtility2Js2) {
-        state.modeUtility2Js2 = true;
-        /* indicate utility2.js2 is ready */
-        utility2.readyUtility2();
-      }
+      /* indicate utility2.js2 is ready */
+      utility2.readyUtility2();
     }
 
   };

@@ -1,8 +1,15 @@
 #### todo
+- deduplicate github file uploads if the sha hash matches
 - add html linter
 - auto-remove test functions from module in production mode
 - add heroku dynamic config server
 - integrate forever-webui
+
+#### 2014.04.14
+- add github db api
+- add slimerjs test
+- add code coverage in js2 file
+- add ability to do self npm test
 
 #### 2014.04.12
 - add postgres stateOverride option for heroku apps
