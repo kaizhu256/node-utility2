@@ -4,7 +4,7 @@
 
 
 
-(function module1InitShared() {
+(function moduleInitShared() {
   /*
     this shared module inits utility2
   */
@@ -12,12 +12,12 @@
   var local;
   local = {
 
-    _name: 'utility2.module1InitShared',
+    _name: 'utility2.moduleInitShared',
 
     _init: function () {
       /* export global object */
       if (typeof window === 'object') {
-        window.global = window.global || window;
+        window.global = window;
       }
       /* global required object */
       global.required = global.required || {};
@@ -73,7 +73,6 @@
           && global.window) {
         state.javascriptPlatform = 'browser';
         state.modeBrowser = true;
-        state.modeExtra = true;
         state.modeInit = 2;
         /* set browser test mode */
         state.modeTest = (/\bmodeTest=\w/).test(global.location && global.location.hash);
@@ -96,31 +95,6 @@
       });
     },
 
-    __init_browser_test: function (onEventError) {
-      /*
-        this function tests _init's browser handling behavior
-      */
-      utility2.testMock(onEventError, [
-        [global, state.modeBrowser ? { required: null, state: {} } : {
-          document: { body: {} },
-          location: {},
-          jQuery: {},
-          /* code coverage for global.process */
-          process: null,
-          /* code coverage for global.required */
-          required: null,
-          state: {},
-          window: {}
-        }],
-        /* code coverage for console.log2 */
-        [console, { log2: null }],
-        [utility2, { initModule: utility2.nop }]
-      ], function (onEventError) {
-        local._init();
-        onEventError();
-      });
-    },
-
     _initOnce: function () {
       /* export utility2.readyUtility2 */
       utility2.readyUtility2 = utility2.untilReady(function (error) {
@@ -132,24 +106,89 @@
       /* utility2 ready */
       utility2.readyUtility2.remaining += 1;
       (state.modeBrowser ? global.jQuery : setTimeout)(utility2.readyUtility2);
+      /* init browser */
+      local._initBrowser(global);
     },
 
-    __initOnce_default_test: function (onEventError) {
+    _initBrowser: function (global) {
       /*
-        this function tests _initOnce's default handling behavior
+        this function runs browser-side initializations
+      */
+      var params;
+      if (!state.modeBrowser) {
+        return;
+      }
+      /* mock required.colors */
+      required.colors = required.colors || {};
+      [ 'black', 'blackBG', 'blue', 'blueBG', 'bold',
+        'cyan', 'cyanBG',
+        'green', 'greenBG', 'grey', 'greyBG',
+        'inverse', 'italic',
+        'magenta', 'magentaBG',
+        'rainbow', 'red', 'redBG',
+        'strikethrough', 'stripColors',
+        'underline',
+        'white', 'whiteBG',
+        'yellow', 'yellowBG',
+        'zebra' ].forEach(function (color) {
+        required.colors[color] = required.colors[color] || utility2.echo;
+      });
+      /* save test id identifying server-side test callback */
+      state.testCallbackId = utility2.urlParamsGet(global.location.search).testCallbackId;
+      params = utility2.urlParamsGet(global.location.hash, '#');
+      /* browser test mode - watch */
+      if (params.testWatch) {
+        /* increment testWatch counter */
+        global.location.hash = utility2.urlParamsMerge(global.location.hash, {
+          testWatch: (Number(params.testWatch) + 1).toString()
+        }, '#');
+        /* watch server for changes and reload via server-sent events */
+        new global.EventSource('/test/test.watch').addEventListener('message', function () {
+          global.location.reload();
+        });
+      }
+      /* qunit hook */
+      if (global.QUnit) {
+        global.QUnit.done = function (test_results) {
+          utility2.deferCallback('untilReadyTestReport', 'defer', function () {
+            test_results.testDict = state.qunitTestDict;
+            global.global_test_results = test_results;
+          });
+        };
+        global.QUnit.testStart(function (testDetails) {
+          global.QUnit.log = function (details) {
+            state.qunitTestDict = state.qunitTestDict || {};
+            state.qunitTestDict[testDetails.name] = details;
+          };
+        });
+      }
+    },
+
+    __initBrowser_default_test: function (onEventError) {
+      /*
+        this function tests _initBrowser's default handling behavior
       */
       utility2.testMock(onEventError, [
-        [global, { jQuery: utility2.nop, state: {} }],
-        [utility2, { untilReadyUtility2: utility2.nop }]
+        [global, { required: { url: required.url }, state: { modeBrowser: null } }],
+        [utility2, { deferCallback: utility2.callArg2 }]
       ], function (onEventError) {
-        /* test browser handling behavior */
+        var global2;
+        /* test null case handling behavior */
+        local._initBrowser({});
+        /* test default handling behavior */
         state.modeBrowser = true;
-        state.modeNodejs = false;
-        local._initOnce();
-        /* test nodejs handling behavior */
-        state.modeBrowser = false;
-        state.modeNodejs = true;
-        local._initOnce();
+        global2 = {
+          /* test server sent event handling behavior */
+          EventSource: function () {
+            this.addEventListener = utility2.callArg1;
+          },
+          /* test testWatch handling behavior */
+          location: { hash: '#testWatch=1', reload: utility2.nop, search: '' },
+          /* test qunit handling behavior */
+          QUnit: { testStart: utility2.nop }
+        };
+        local._initBrowser(global2);
+        global2.QUnit.done({});
         onEventError();
       });
     },
@@ -226,6 +265,22 @@
         this function tests callArg1's default handling behavior
       */
       utility2.callArg1(null, function () {
+        onEventError();
+      });
+    },
+
+    callArg2: function (_, __, callback) {
+      /*
+        this function calls the callback in arg position 2
+      */
+      callback();
+    },
+
+    _callArg2_default_test: function (onEventError) {
+      /*
+        this function tests callArg2's default handling behavior
+      */
+      utility2.callArg2(null, null, function () {
         onEventError();
       });
     },
@@ -412,19 +467,6 @@
           utility2.assert(error instanceof Error, error);
         }
       );
-      /* test browser handling behavior */
-      utility2.testMock(onEventError, [
-        [global, { state: { modeBrowser: true } }]
-      ], function (onEventError) {
-        utility2.evalOnEventError(
-          '_evalOnEventError_default_test.js',
-          '"_evalOnEventError_default_test"',
-          function (error, data) {
-            utility2.assert(!error);
-            utility2.assert(data === '_evalOnEventError_default_test', data);
-          }
-        );
-      });
       onEventError();
     },
 
@@ -499,8 +541,8 @@
         utility2.untilReadyUtility2(function () {
           /* init test */
           if (state.modeTest !== false
-              /* if state.modeExtra, then ensure state.serverListened or not state.modeNodejs */
-              && (!state.modeExtra || !state.modeNodejs || state.serverListened)
+              /* ensure state.serverListened or not state.modeNodejs */
+              && (!state.modeNodejs || state.serverListened)
               && (local2._modeTest || (state.modeTest
                 && state.testModuleDict[local2._name] !== false
                 && state.testModuleDict[local2._name.split('.')[0]]))) {
@@ -536,7 +578,6 @@
         state.modeTest = false;
         utility2.initModule(null, { _name: 'utility2._initModule_default_test' });
         /* test default handling behavior */
-        state.modeExtra = true;
         state.modeTest = true;
         state.serverListened = true;
         local2 = {
@@ -786,6 +827,40 @@
       return value === undefined ? 'null' : value;
     },
 
+    mimeLookup: function (file) {
+      /*
+        this function returns the file's mime-type
+      */
+      file = required.path.extname(file).slice(1);
+      switch (file) {
+      case 'css':
+        return 'text/css';
+      case 'html':
+        return 'text/html';
+      case 'js':
+        return 'application/javascript';
+      case 'json':
+        return 'application/json';
+      case 'txt':
+        return 'text/plain';
+      default:
+        return required.mime.lookupDict[file];
+      }
+    },
+
+    _mimeLookup_default_test: function (onEventError) {
+      /*
+        this function tests mimeLookup's default handling behavior
+      */
+      utility2.assert(utility2.mimeLookup('foo.css') === 'text/css');
+      utility2.assert(utility2.mimeLookup('foo.html') === 'text/html');
+      utility2.assert(utility2.mimeLookup('foo.js') === 'application/javascript');
+      utility2.assert(utility2.mimeLookup('foo.json') === 'application/json');
+      utility2.assert(utility2.mimeLookup('foo.txt') === 'text/plain');
+      utility2.assert(utility2.mimeLookup('foo') === undefined);
+      onEventError();
+    },
+
     scriptLint: function (file, script) {
       /*
         this function lints css / html / js / json scripts
@@ -861,18 +936,18 @@
         break;
       /* minify js file */
       case '.js':
-        if (required.uglify_js) {
-          ast = required.uglify_js.parse(script, { filename: file });
+        if (required.uglifyjs) {
+          ast = required.uglifyjs.parse(script, { filename: file });
           /* figure out scope */
           ast.figure_out_scope();
           /* compress */
-          ast.transform(new required.uglify_js.Compressor());
+          ast.transform(new required.uglifyjs.Compressor());
           /* mangle */
           ast.figure_out_scope();
           ast.compute_char_frequency();
           ast.mangle_names();
           /* generate output */
-          result = new required.uglify_js.OutputStream({ ascii_only: true });
+          result = new required.uglifyjs.OutputStream({ ascii_only: true });
           ast.print(result);
           script = result.toString();
         }
@@ -1517,6 +1592,115 @@
       onEventError();
     },
 
+    urlDecodeOrError: function (text) {
+      /*
+        this function returns an error if the text cannot be decoded
+      */
+      try {
+        return decodeURIComponent(text || '');
+      } catch (error) {
+        return error;
+      }
+    },
+
+    _urlDecodeOrError_error_test: function (onEventError) {
+      /*
+        this function tests urlDecodeOrError's error handling behavior
+      */
+      var data;
+      data = utility2.urlDecodeOrError(utility2.stringAscii);
+      utility2.assert(data instanceof Error, data);
+      onEventError();
+    },
+
+    urlParamsGet: function (url, delimiter) {
+      /*
+        this function returns a dictionary containing the url hash / search params
+      */
+      var params;
+      params = {};
+      url = required.url.parse(url);
+      url = delimiter === '#' ? url.hash : url.search;
+      (url || '').slice(1).replace((/([^&]+)=([^&]+)/g), function (_, key, value) {
+        /* validate key / value */
+        key = utility2.urlDecodeOrError(key);
+        value = utility2.urlDecodeOrError(value);
+        if (!((key instanceof Error) || (value instanceof Error))) {
+          params[key] = value;
+        }
+      });
+      return params;
+    },
+
+    _urlParamsGet_default_test: function (onEventError) {
+      /*
+        this function tests urlParamsGet's default handling behavior
+      */
+      utility2.assert(utility2.urlParamsGet('/aa?bb=cc%2B#dd=ee%2B', '?').bb === 'cc+');
+      utility2.assert(utility2.urlParamsGet('/aa?bb=cc%2B#dd=ee%2B', '?').dd === undefined);
+      utility2.assert(utility2.urlParamsGet('/aa?bb=cc%2B#dd=ee%2B', '#').bb === undefined);
+      utility2.assert(utility2.urlParamsGet('/aa?bb=cc%2B#dd=ee%2B', '#').dd === 'ee+');
+      onEventError();
+    },
+
+    urlParamsMerge: function (url, params, delimiter) {
+      /*
+        this function merges the url hash / search with the given params
+      */
+      params = utility2.setOverride(utility2.urlParamsGet(url, delimiter), params);
+      params = Object.keys(params).sort().map(function (key) {
+        return encodeURIComponent(key) + '=' + encodeURIComponent(params[key]);
+      }).join('&');
+      url = required.url.parse(url);
+      return [
+        url.protocol ? url.protocol + '//' : '',
+        url.host,
+        url.pathname,
+        delimiter === '#' ? url.search : '?' + params,
+        delimiter === '#' ? '#' + params : url.hash
+      ].map(function (arg) {
+        return arg || '';
+      }).join('');
+    },
+
+    _urlParamsMerge_default_test: function (onEventError) {
+      /*
+        this function tests urlParamsMerge's default handling behavior
+      */
+      utility2.assert(utility2.urlParamsMerge('/aa#dd=ee%2B', { bb: 'cc+' }, '?')
+        === '/aa?bb=cc%2B#dd=ee%2B');
+      utility2.assert(utility2.urlParamsMerge('/aa?bb=cc%2B', { dd: 'ee+' }, '#')
+        === '/aa?bb=cc%2B#dd=ee%2B');
+      onEventError();
+    },
+
+    urlParamsRemove: function (url, keyList, delimiter) {
+      /*
+        this function removes the given keys from the url hash / search params
+      */
+      var params;
+      params = utility2.urlParamsGet(url, delimiter);
+      keyList.forEach(function (key) {
+        delete params[key];
+      });
+      return utility2.urlParamsMerge(
+        url.replace(delimiter === '#' ? (/#.*/) : (/\?[^#]*/), ''),
+        params,
+        delimiter
+      );
+    },
+
+    _urlParamsRemove_default_test: function (onEventError) {
+      /*
+        this function tests urlParamsRemove's default handling behavior
+      */
+      utility2.assert(utility2.urlParamsRemove('/aa?bb=cc%2B#dd=ee%2B', ['bb'], '?')
+        === '/aa?#dd=ee%2B');
+      utility2.assert(utility2.urlParamsRemove('/aa?bb=cc%2B#dd=ee%2B', ['dd'], '#')
+        === '/aa?bb=cc%2B#');
+      onEventError();
+    },
+
     uuid4: function () {
       /*
         this function returns a uuid4 string of form xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx
@@ -1552,7 +1736,7 @@
 
 
 
-(function module2CliNodejs() {
+(function moduleCliNodejs() {
   /*
     this nodejs module inits the cli
   */
@@ -1561,7 +1745,7 @@
   var local;
   local = {
 
-    _name: 'utility2.module2CliNodejs',
+    _name: 'utility2.moduleCliNodejs',
 
     _init: function () {
       if (state.modeNodejs) {
@@ -1660,7 +1844,7 @@
         error = utility2.jsonParseOrError(value);
         state[arg] = error instanceof Error ? value : error;
       });
-      state.exportEnv = tmp = {};
+      tmp = {};
       /* save utility2.__dirname to env */
       tmp.UTILITY2_DIR = utility2.__dirname;
       /* save process vars to env */
@@ -1693,6 +1877,13 @@
       });
       /* save env to process.env */
       utility2.setOverride(process.env, tmp);
+      /* export env */
+      if (state.modeCli === 'exportEnv') {
+        console.log(Object.keys(tmp).sort().map(function (key) {
+          return 'export ' + key + '=' + JSON.stringify(tmp[key]);
+        }).join(' && '));
+        process.exit();
+      }
     },
 
     __initArgv_default_test: function (onEventError) {
@@ -1708,9 +1899,10 @@
               npm_config_utility2_aa: '',
               npm_config_utility2_bb: '1'
             },
+            exit: utility2.nop,
             on: utility2.callArg1
           },
-          state: {}
+          state: { modeCli: 'exportEnv' }
         }]
       ], function (onEventError) {
         process.argv = ['--cc'];
@@ -1789,10 +1981,21 @@
           collector = new required.istanbul.Collector();
           collector.add(global.__coverage__);
           /* print text report */
-          required.istanbul.Report.create('text').writeReport(collector);
-          /* create lcov and html report */
-          required.istanbul.Report.create('lcov', { dir: state.tmpdir })
+          required.istanbul.Report
+            .create('text')
+            .writeReport(collector);
+          /* save cobertura report */
+          required.istanbul.Report
+            .create('cobertura', { dir: state.tmpdir })
             .writeReport(collector, true);
+          /* save lcov and html report */
+          required.istanbul.Report
+            .create('lcov', { dir: state.tmpdir })
+            .writeReport(collector, true);
+          /* save text report */
+          required.istanbul.Report
+            .create('text', { dir: state.tmpdir, file: 'coverage_summary.txt' })
+            .writeReport(collector);
         });
       }
     },
@@ -1841,19 +2044,12 @@
       if (state.modeNpmTest) {
         /* set test mode */
         state.modeTest = true;
-        /* set tmpdir */
-        state.tmpdir = state.tmpdir || 'tmp';
         /* exit with non-zero code if tests failed */
         process.on('exit', function () {
           if (state.testReport && state.testReport.failures) {
             process.exit(1);
           }
         });
-        /* perform fast npm test with no web tests */
-        if (process.env.npm_config_fast) {
-          state.modeLocal = true;
-          state.timeoutDefault = 8000;
-        }
       }
     },
 
@@ -1863,26 +2059,26 @@
       */
       utility2.testMock(onEventError, [
         [global, {
-          process: {
-            env: { npm_config_fast: '' },
-            exit: utility2.nop,
-            on: utility2.callArg1
-          },
+          process: { exit: null, on: utility2.callArg1 },
           state: { testReport: { failures: null } }
         }]
       ], function (onEventError) {
+        var exitCode;
+        process.exit = function (_) {
+          exitCode = _;
+        };
         /* test null case handling behavior */
         state.modeNpmTest = null;
         local._initNpmTest();
+        utility2.assert(!exitCode, exitCode);
         /* test default handling behavior */
         state.modeNpmTest = true;
         local._initNpmTest();
-        /* test fast handling behavior */
-        process.env.npm_config_fast = 'true';
-        local._initNpmTest();
+        utility2.assert(!exitCode, exitCode);
         /* test failure handling behavior */
         state.testReport.failures = true;
         local._initNpmTest();
+        utility2.assert(exitCode, exitCode);
         onEventError();
       });
     },
@@ -1893,9 +2089,6 @@
       */
       if (state.modeCoverage && state.modeCoverage.test(file)) {
         utility2.jsonLog('instrumentCode ' + file);
-        if (!state.modeExtra && state.modeNpmTest) {
-          code = code.replace((/\n\(function module5Utility2ExtraShared\(\) \{\n[\S\s]*/), '');
-        }
         state.instrumentedFileDict = state.instrumentedFileDict || {};
         required.istanbul = required.istanbul || utility2.require('istanbul');
         local._instrumenter = local._instrumenter || new required.istanbul.Instrumenter();
@@ -1962,7 +2155,7 @@
 
 
 
-(function module3InitNodejs() {
+(function moduleInitNodejs() {
   /*
     this nodejs module inits utility2
   */
@@ -1971,7 +2164,7 @@
   var local;
   local = {
 
-    _name: 'utility2.module3InitNodejs',
+    _name: 'utility2.moduleInitNodejs',
 
     _init: function () {
       if (state.modeNodejs) {
@@ -2013,88 +2206,34 @@
         });
       });
       /* init tmpdir */
-      local._initTmpdir();
-      utility2.untilReadyUtility2(function () {
-        local._initCli();
-      });
-    },
-
-    _initCli: function () {
-      switch (state.modeCli) {
-      /* export env */
-      case 'exportEnv':
-        /* save state.tmpdir to env */
-        state.exportEnv.UTILITY2_TMPDIR = state.tmpdir;
-        console.log(Object.keys(state.exportEnv).sort().map(function (key) {
-          return 'export ' + key + '=' + JSON.stringify(state.exportEnv[key]);
-        }).join(' && '));
-        break;
-      case 'utility2NpmInstall':
-        Object.keys(state.fsWatchDict).forEach(function (file) {
-          if ((/^(?:\.gitconfig|\.gitignore|\.install)\b/).test(file)) {
-            /* install files to .install dir */
-            required.fs.writeFileSync(
-              utility2.__dirname + '/' + file,
-              (/^\.install\b/).test(file)
-                ? state.fsWatchDict[file].content
-                : state.fsWatchDict[file].content.trimLeft()
-            );
-          }
-        });
-        break;
+      if (state.tmpdir) {
+        local._initTmpdir();
       }
-    },
-
-    __initCli_exportEnv_test: function (onEventError) {
-      /*
-        this function tests _initCli's exportEnv handling behavior
-      */
-      utility2.testMock(onEventError, [
-        [global, { state: { exportEnv: {}, modeCli: 'exportEnv' } }]
-      ], function (onEventError) {
-        var message;
-        console.log = function (_) {
-          message = _;
-        };
-        local._initCli();
-        utility2.assert((/export UTILITY2_TMPDIR=\w+/).test(message), message);
-        onEventError();
-      });
-    },
-
-    __initCli_utility2NpmInstall_test: function (onEventError) {
-      /*
-        this function tests _initCli's utility2NpmInstall handling behavior
-      */
-      utility2.testMock(onEventError, [
-        [global, { required: { fs: { writeFileSync: utility2.nop } } }],
-        [state, { modeCli: 'utility2NpmInstall' }]
-      ], function (onEventError) {
-        local._initCli();
-        onEventError();
+      utility2.untilReadyUtility2(function () {
+        (state.modeCliDict[state.modeCli] || utility2.nop)();
       });
     },
 
     _initTmpdir: function () {
+      /* default state.tmpdir to empty string if boolean */
+      state.tmpdir = typeof state.tmpdir === 'string' ? state.tmpdir : '';
       /* init state.tmpdir */
       state.tmpdir = required.path.resolve(state.tmpdir
         || required.os.tmpdir() + '/utility2.' + encodeURIComponent(process.cwd()));
-      if (state.modeExtra || state.modeNpmTest) {
-        utility2.assert(state.tmpdir, 'invalid state.tmpdir ' + state.tmpdir);
-        if (!required.fs.existsSync(state.tmpdir + '/cache')) {
-          utility2.jsonLog('creating tmpdir ' + state.tmpdir);
-          /* create cache dir */
-          utility2.fsMkdirpSync(state.tmpdir + '/cache');
-        }
-        /* cleanup old cache */
-        required.fs.readdirSync(state.tmpdir + '/cache').forEach(function (file) {
-          local._fsRmr(state.tmpdir + '/cache/' + file, utility2.onEventErrorDefault);
-        });
-        /* periodically remove cache files */
-        utility2.unref(setInterval(function () {
-          local._fsCacheCleanup(utility2.onEventErrorDefault);
-        }, 300000));
+      utility2.assert(state.tmpdir, 'invalid state.tmpdir ' + state.tmpdir);
+      if (!required.fs.existsSync(state.tmpdir + '/cache')) {
+        utility2.jsonLog('creating tmpdir ' + state.tmpdir);
+        /* create cache dir */
+        utility2.fsMkdirpSync(state.tmpdir + '/cache');
       }
+      /* cleanup old cache */
+      required.fs.readdirSync(state.tmpdir + '/cache').forEach(function (file) {
+        local._fsRmr(state.tmpdir + '/cache/' + file, utility2.onEventErrorDefault);
+      });
+      /* periodically remove cache files */
+      utility2.unref(setInterval(function () {
+        local._fsCacheCleanup(utility2.onEventErrorDefault);
+      }, 300000));
     },
 
     __initTmpdir_default_test: function (onEventError) {
@@ -2104,7 +2243,7 @@
       utility2.testMock(onEventError, [
         [required.fs, { existsSync: utility2.nop }]
       ], function (onEventError) {
-        /* populate cache dir with a file to remove */
+        /* populate cache dir with a nested file to remove */
         utility2.fsMkdirpSync(state.tmpdir + '/cache/' + utility2.uuid4());
         local._initTmpdir();
         onEventError();
@@ -2381,10 +2520,16 @@
       });
     },
 
+    fsWatchActionDict_base64Decode: function (options) {
+      /*
+        this function base64Decodes the file content into a binary blob
+      */
+      options.content = new Buffer(options.content, 'base64');
+    },
+
     fsWatchActionDict_createContentBrowser: function (options) {
       /*
-        this function caches the file content for browser use,
-        stripping of nodejs code
+        this function caches the file content for browser use, stripping it of nodejs code
       */
       options.contentBrowser = utility2.stringToEmptyLine(
         (state.instrumentedFileDict && state.instrumentedFileDict[options.file])
@@ -2502,6 +2647,85 @@
       delete state.fsWatchDict[file];
     },
 
+    headlessPhantomjs: function (options, onEventError) {
+      /*
+        this function starts a separate phantomjs process to open and test a webpage
+      */
+      var mode, onEventError2, testCallbackId, timeout;
+      mode = 0;
+      onEventError2 = function (error, data) {
+        mode = error instanceof Error ? -1 : mode + 1;
+        switch (mode) {
+        case 1:
+          testCallbackId = utility2.uuid4();
+          options.url = utility2.urlParamsMerge(options.url, {
+            testCallbackId: testCallbackId
+          });
+          required.phantomjs = required.phantomjs || utility2.require('phantomjs');
+          state.phantomjs = utility2.shell({ argv: [
+            options.argv0 || required.phantomjs.path,
+            utility2.__dirname + '/.install/utility2_phantomjs.js',
+            new Buffer(JSON.stringify(options)).toString('base64')
+          ], modeDebug: false });
+          state.browserTestCallbackDict[testCallbackId] = onEventError2;
+          /* set timeout for headlessPhantomjs */
+          timeout = utility2.onEventTimeout(
+            onEventError2,
+            state.timeoutDefault,
+            'headlessPhantomjs ' + options.url
+          );
+          break;
+        default:
+          /* clear timeout for headlessPhantomjs */
+          clearTimeout(timeout);
+          /* garbage collect testCallbackId */
+          delete state.browserTestCallbackDict[testCallbackId];
+          onEventError(error);
+        }
+      };
+      onEventError2();
+    },
+
+    _headlessPhantomjs_default_test: function (onEventError) {
+      /*
+        this function tests headlessPhantomjs's default handling behavior
+      */
+      utility2.headlessPhantomjs({
+        timeoutDefault: state.timeoutDefault,
+        url: state.localhost + '/test/test.html#modeTest=1'
+      }, onEventError);
+    },
+
+    modeCliDict_utility2NpmInstall: function () {
+      /*
+        this function installs files from utility2.js2 to the .install dir
+      */
+      Object.keys(state.fsWatchDict).forEach(function (file) {
+        if ((/^(?:\.gitconfig|\.gitignore|\.install)\b/).test(file)) {
+          /* install files to .install dir */
+          required.fs.writeFileSync(
+            utility2.__dirname + '/' + file,
+            (/^\.install\b/).test(file)
+              ? state.fsWatchDict[file].content
+              : state.fsWatchDict[file].content.trimLeft()
+          );
+        }
+      });
+    },
+
+    _modeCliDict_utility2NpmInstall_default_test: function (onEventError) {
+      /*
+        this function tests modeCliDict_utility2NpmInstall's default handling behavior
+      */
+      utility2.testMock(onEventError, [
+        [global, { required: { fs: { writeFileSync: utility2.nop } } }],
+        [state, { modeCli: 'utility2NpmInstall' }]
+      ], function (onEventError) {
+        state.modeCliDict[state.modeCli]();
+        onEventError();
+      });
+    },
+
     processKill: function (pid) {
       /*
         this function silently attempts to kill the process with the given pid
@@ -2612,7 +2836,7 @@
       /* assert child process of utility2 exited within 2000 ms */
       setTimeout(function () {
         utility2.tryCatch(function () {
-          utility2.assert(exitCode === 0, 'exitCode ' + exitCode);
+          utility2.assert(exitCode === 0, exitCode);
           onEventError();
         }, onEventError);
       }, 2000);
@@ -2624,7 +2848,7 @@
 
 
 
-(function module4ReplNodejs() {
+(function moduleReplNodejs() {
   /*
     this nodejs module starts an interactive repl debugger
   */
@@ -2632,7 +2856,7 @@
   var local;
   local = {
 
-    _name: 'utility2.module4ReplNodejs',
+    _name: 'utility2.moduleReplNodejs',
 
     _init: function () {
       if (state.modeNodejs) {
@@ -2812,473 +3036,6 @@
       });
     }
 
-
-  };
-  local._init();
-}());
-
-
-
-(function module5Utility2ExtraShared() {
-  /*
-    this shared module exports extra utilities
-  */
-  'use strict';
-  var local;
-  local = {
-
-    _name: 'utility2.module5Utility2ExtraShared',
-
-    _init: function () {
-      if (state.modeExtra) {
-        utility2.initModule(module, local);
-      }
-    },
-
-    _initOnce: function () {
-      /* exports */
-      global.atob = global.atob || function (text) {
-        return new Buffer(text, 'base64').toString();
-      };
-      global.btoa = global.btoa || function (text) {
-        return new Buffer(text).toString('base64');
-      };
-      if (state.modeBrowser) {
-        local._initBrowser();
-      }
-    },
-
-    _initBrowser: function () {
-      /*
-        this function runs browser-side initializations
-      */
-      var params;
-      /* mock required.colors */
-      required.colors = required.colors || {};
-      [ 'black', 'blackBG', 'blue', 'blueBG', 'bold',
-        'cyan', 'cyanBG',
-        'green', 'greenBG', 'grey', 'greyBG',
-        'inverse', 'italic',
-        'magenta', 'magentaBG',
-        'rainbow', 'red', 'redBG',
-        'strikethrough', 'stripColors',
-        'underline',
-        'white', 'whiteBG',
-        'yellow', 'yellowBG',
-        'zebra' ].forEach(function (color) {
-        required.colors[color] = required.colors[color] || utility2.echo;
-      });
-      /* save test id identifying server-side test callback */
-      state.testCallbackId = utility2.urlParamsGet(location.search).testCallbackId;
-      params = utility2.urlParamsGet(location.hash, '#');
-      /* browser test mode - watch */
-      if (params.testWatch) {
-        /* increment testWatch counter */
-        location.hash = utility2.urlParamsMerge(location.hash, {
-          testWatch: (Number(params.testWatch) + 1).toString()
-        }, '#');
-        /* watch server for changes and reload via server-sent events */
-        new global.EventSource('/test/test.watch').addEventListener('message', function () {
-          location.reload();
-        });
-      }
-      /* qunit hook */
-      if (global.QUnit) {
-        global.QUnit.done = function (test_results) {
-          utility2.deferCallback('untilReadyTestReport', 'defer', function () {
-            test_results.testDict = state.qunitTestDict;
-            global.global_test_results = test_results;
-          });
-        };
-        global.QUnit.testStart(function (testDetails) {
-          global.QUnit.log = function (details) {
-            state.qunitTestDict = state.qunitTestDict || {};
-            state.qunitTestDict[testDetails.name] = details;
-          };
-        });
-      }
-    },
-
-    clearCallSetInterval: function (key, callback, interval, timeout) {
-      /*
-        this function
-        1. clear interval key
-        2. run callback
-        3. set interval key to callback
-        usage example:
-        utility2.clearCallSetInterval('setIntervalFoo', function (timeout) {
-          if (timeout) {
-            console.log('timeout error after 4000 ms');
-            console.error(timeout.stack);
-            utility2.clearCallSetInterval('setIntervalFoo', 'clear');
-            return;
-          }
-          console.log('1000 ms interval');
-        }, 1000, 4000);
-      */
-      var dict;
-      dict = state.clearCallSetIntervalDict = state.clearCallSetIntervalDict || {};
-      dict[key] = dict[key] || {};
-      /* set timeout for clearCallSetInterval */
-      if (timeout) {
-        timeout = utility2.onEventTimeout(function (error) {
-          utility2.clearCallSetInterval(key, 'clear');
-          callback(error);
-        }, timeout, key);
-      }
-      /* 1. clear interval key */
-      clearInterval(dict[key].interval);
-      if (callback === 'clear') {
-        /* clear timeout for clearCallSetInterval */
-        clearTimeout(dict[key].timeout);
-        delete dict[key];
-        return;
-      }
-      /* 2. call callback */
-      callback();
-      /* 3. set interval key to callback */
-      dict[key] = {
-        interval: setInterval(callback, interval),
-        timeout: timeout
-      };
-    },
-
-    _clearCallSetInterval_timeout_test: function (onEventError) {
-      /*
-        this function tests clearCallSetInterval's timeout handling behavior
-      */
-      var onEventReady;
-      onEventReady = utility2.untilReady(onEventError);
-      [100, 200, 300].forEach(function (data) {
-        onEventReady.remaining += 1;
-        utility2.clearCallSetInterval(utility2.uuid4(), function (timeout) {
-          if (timeout) {
-            utility2.assert(timeout instanceof Error);
-            utility2.assert(timeout.code === 'ETIMEDOUT');
-            onEventReady();
-          }
-        }, 200, data);
-      });
-    },
-
-    mimeLookup: function (file) {
-      /*
-        this function returns the file's mime-type
-      */
-      file = required.path.extname(file).slice(1);
-      switch (file) {
-      case 'css':
-        return 'text/css';
-      case 'html':
-        return 'text/html';
-      case 'js':
-        return 'application/javascript';
-      case 'json':
-        return 'application/json';
-      case 'txt':
-        return 'text/plain';
-      default:
-        return required.mime.lookupDict[file];
-      }
-    },
-
-    _mimeLookup_default_test: function (onEventError) {
-      /*
-        this function tests mimeLookup's default handling behavior
-      */
-      utility2.assert(utility2.mimeLookup('foo.css') === 'text/css');
-      utility2.assert(utility2.mimeLookup('foo.html') === 'text/html');
-      utility2.assert(utility2.mimeLookup('foo.js') === 'application/javascript');
-      utility2.assert(utility2.mimeLookup('foo.json') === 'application/json');
-      utility2.assert(utility2.mimeLookup('foo.txt') === 'text/plain');
-      utility2.assert(utility2.mimeLookup('foo') === undefined);
-      onEventError();
-    },
-
-    urlDecodeOrError: function (text) {
-      /*
-        this function returns an error if the text cannot be decoded
-      */
-      try {
-        return decodeURIComponent(text || '');
-      } catch (error) {
-        return error;
-      }
-    },
-
-    _urlDecodeOrError_error_test: function (onEventError) {
-      /*
-        this function tests urlDecodeOrError's error handling behavior
-      */
-      var data;
-      data = utility2.urlDecodeOrError(utility2.stringAscii);
-      utility2.assert(data instanceof Error, data);
-      onEventError();
-    },
-
-    urlParamsGet: function (url, delimiter) {
-      /*
-        this function returns a dictionary containing the url hash / search params
-      */
-      var params;
-      params = {};
-      url = required.url.parse(url);
-      url = delimiter === '#' ? url.hash : url.search;
-      (url || '').slice(1).replace((/([^&]+)=([^&]+)/g), function (_, key, value) {
-        /* validate key / value */
-        key = utility2.urlDecodeOrError(key);
-        value = utility2.urlDecodeOrError(value);
-        if (!((key instanceof Error) || (value instanceof Error))) {
-          params[key] = value;
-        }
-      });
-      return params;
-    },
-
-    _urlParamsGet_default_test: function (onEventError) {
-      /*
-        this function tests urlParamsGet's default handling behavior
-      */
-      utility2.assert(utility2.urlParamsGet('/aa?bb=cc%2B#dd=ee%2B', '?').bb === 'cc+');
-      utility2.assert(utility2.urlParamsGet('/aa?bb=cc%2B#dd=ee%2B', '?').dd === undefined);
-      utility2.assert(utility2.urlParamsGet('/aa?bb=cc%2B#dd=ee%2B', '#').bb === undefined);
-      utility2.assert(utility2.urlParamsGet('/aa?bb=cc%2B#dd=ee%2B', '#').dd === 'ee+');
-      onEventError();
-    },
-
-    urlParamsMerge: function (url, params, delimiter) {
-      /*
-        this function merges the url hash / search with the given params
-      */
-      params = utility2.setOverride(utility2.urlParamsGet(url, delimiter), params);
-      params = Object.keys(params).sort().map(function (key) {
-        return encodeURIComponent(key) + '=' + encodeURIComponent(params[key]);
-      }).join('&');
-      url = required.url.parse(url);
-      return [
-        url.protocol ? url.protocol + '//' : '',
-        url.host,
-        url.pathname,
-        delimiter === '#' ? url.search : '?' + params,
-        delimiter === '#' ? '#' + params : url.hash
-      ].map(function (arg) {
-        return arg || '';
-      }).join('');
-    },
-
-    _urlParamsMerge_default_test: function (onEventError) {
-      /*
-        this function tests urlParamsMerge's default handling behavior
-      */
-      utility2.assert(utility2.urlParamsMerge('/aa#dd=ee%2B', { bb: 'cc+' }, '?')
-        === '/aa?bb=cc%2B#dd=ee%2B');
-      utility2.assert(utility2.urlParamsMerge('/aa?bb=cc%2B', { dd: 'ee+' }, '#')
-        === '/aa?bb=cc%2B#dd=ee%2B');
-      onEventError();
-    },
-
-    urlParamsRemove: function (url, keyList, delimiter) {
-      /*
-        this function removes the given keys from the url hash / search params
-      */
-      var params;
-      params = utility2.urlParamsGet(url, delimiter);
-      keyList.forEach(function (key) {
-        delete params[key];
-      });
-      return utility2.urlParamsMerge(
-        url.replace(delimiter === '#' ? (/#.*/) : (/\?[^#]*/), ''),
-        params,
-        delimiter
-      );
-    },
-
-    _urlParamsRemove_default_test: function (onEventError) {
-      /*
-        this function tests urlParamsRemove's default handling behavior
-      */
-      utility2.assert(utility2.urlParamsRemove('/aa?bb=cc%2B#dd=ee%2B', ['bb'], '?')
-        === '/aa?#dd=ee%2B');
-      utility2.assert(utility2.urlParamsRemove('/aa?bb=cc%2B#dd=ee%2B', ['dd'], '#')
-        === '/aa?bb=cc%2B#');
-      onEventError();
-    }
-
-  };
-  local._init();
-}());
-
-
-
-(function moduleAdminBrowser() {
-  /*
-    this browser module exports the admin api
-  */
-  'use strict';
-  var local;
-  local = {
-
-    _name: 'utility2.moduleAdminBrowser',
-
-    _init: function () {
-      if (state.modeBrowser) {
-        utility2.initModule(module, local);
-      }
-    },
-
-    adminEval: function (script, onEventError) {
-      /*
-        this function remotely evals the javascript code on server
-      */
-      utility2.ajax({ data: script, resultType: 'json', url: "/admin/admin.eval" }, onEventError);
-    },
-
-    _adminEval_default_test: function (onEventError) {
-      /*
-        this function tests adminEval's default handling behavior
-      */
-      utility2.adminEval('"_adminEval_default_test"', function (error, data) {
-        utility2.assert(data === '_adminEval_default_test');
-        onEventError();
-      });
-    },
-
-    adminShell: function (script, onEventError) {
-      /*
-        this function remotely executes shell commands on server
-      */
-      utility2.ajax({ data: script, url: "/admin/admin.shell" }, onEventError);
-    },
-
-    _adminShell_default_test: function (onEventError) {
-      /*
-        this function tests adminShell's default handling behavior
-      */
-      utility2.adminShell(':', onEventError);
-    }
-
-  };
-  local._init();
-}());
-
-
-
-(function moduleAdminNodejs() {
-  /*
-    this nodejs module exports the admin api
-  */
-  'use strict';
-  var local;
-  local = {
-
-    _name: 'utility2.moduleAdminNodejs',
-
-    _init: function () {
-      if (state.modeExtra && state.modeNodejs) {
-        utility2.initModule(module, local);
-      }
-    },
-
-    'router2SecurityDict_/admin': function (request, response, next) {
-      /*
-        this function handles admin security
-      */
-      /* security - https redirect */
-      if (utility2.securityHttpsRedirect(request, response)) {
-        return;
-      }
-      /* security - basic auth passed */
-      if (utility2.securityBasicAuthValidate(request)) {
-        next();
-        return;
-      }
-      /* security - basic auth failed */
-      utility2.serverRespond(request, response, 303, {
-        data: '/signin?redirect=' + encodeURIComponent(request.url)
-      });
-    },
-
-    'router5MainDict_/admin/admin.eval': function (request, response, next) {
-      /*
-        this function evals the javascript code
-      */
-      var mode, onEventError2;
-      mode = 0;
-      onEventError2 = function (error, data) {
-        mode = error instanceof Error ? -1 : mode + 1;
-        switch (mode) {
-        /* read script from request stream */
-        case 1:
-          utility2.streamReadAll(request, onEventError2);
-          break;
-        /* eval script */
-        case 2:
-          data = data.toString();
-          /* log script to be eval'd */
-          utility2.jsonLog('router5MainDict_/admin/admin.eval\n' + data);
-          utility2.evalOnEventError('router5MainDict_/admin/admin.eval', data, onEventError2);
-          break;
-        /* respond with eval'd result */
-        case 3:
-          response.end(utility2.jsonStringifyCircular(data));
-          break;
-        default:
-          next(error);
-        }
-      };
-      onEventError2();
-    },
-
-    'router5MainDict_/admin/admin.shell': function (request, response, next) {
-      /*
-        this function runs shell scripts
-      */
-      var child, mode, onEventData, onEventError2;
-      mode = 0;
-      onEventError2 = function (error, data) {
-        mode = error instanceof Error ? -1 : mode + 1;
-        switch (mode) {
-        /* read script from request stream */
-        case 1:
-          utility2.streamReadAll(request, onEventError2);
-          break;
-        /* eval script */
-        case 2:
-          data = data.toString();
-          /* log script to be eval'd */
-          utility2.jsonLog('router5MainDict_/admin/admin.shell\n' + data);
-          onEventData = function (chunk) {
-            process.stdout.write(chunk);
-            response.write(chunk);
-          };
-          child = utility2.shell({ script: data, stdio: ['ignore', 'pipe', 'pipe'] })
-            .on('close', function (exitCode) {
-              response.end('\nexit code: ' + exitCode);
-            })
-            .on('error', next);
-          child.stderr.on('data', onEventData);
-          child.stdout.on('data', onEventData);
-          break;
-        default:
-          next(error);
-        }
-      };
-      onEventError2();
-    },
-
-    'router6FileDict_/admin/admin.html': function (request, response) {
-      /*
-        this function serves the file admin.html
-      */
-      utility2.serverRespond(request, response, 200, {
-        data: utility2.templateFormat(state.fsWatchDict['/admin/admin.html'].content, {
-          state: JSON.stringify({
-            testModuleDict: { utility2: true },
-            timeoutDefault: state.timeoutDefault
-          })
-        })
-      });
-    }
 
   };
   local._init();
@@ -3517,7 +3274,7 @@
     _name: 'utility2.moduleAjaxNodejs',
 
     _init: function () {
-      if (state.modeExtra && state.modeNodejs) {
+      if (state.modeNodejs) {
         utility2.initModule(module, local);
       }
     },
@@ -3528,7 +3285,6 @@
       */
       options.cachePrefix = options.cachePrefix || '';
       if (!options.cache || options.cache === 'miss') {
-        options.cache = 'miss';
         return true;
       }
       utility2.dbBlobRead(
@@ -3635,39 +3391,39 @@
       }
     },
 
-    _ajaxNodejs_cache_test: function (onEventError) {
-      /*
-        this function tests ajaxNodejs's cache handling behavior
-      */
-      var onEventReady;
-      onEventReady = utility2.untilReady(onEventError);
-      /* test cache flush handling behavior */
-      onEventReady.remaining += 1;
-      utility2.ajax({
-        cache: 'miss',
-        url: '/test/test.json'
-      }, function (error, data) {
-        utility2.tryCatch(function () {
-          utility2.assert(!error);
-          data = data.toString();
-          utility2.assert(data === '"hello test"', data);
-          onEventReady();
-        }, onEventReady);
-      });
-      /* test cache default handling behavior */
-      onEventReady.remaining += 1;
-      utility2.ajax({
-        cache: true,
-        url: '/test/test.json'
-      }, function (error, data) {
-        utility2.tryCatch(function () {
-          utility2.assert(!error);
-          data = data.toString();
-          utility2.assert(data === '"hello test"', data);
-          onEventReady();
-        }, onEventReady);
-      });
-    },
+    // _ajaxNodejs_cache_test: function (onEventError) {
+      // /*
+        // this function tests ajaxNodejs's cache handling behavior
+      // */
+      // var onEventReady;
+      // onEventReady = utility2.untilReady(onEventError);
+      // /* test cache flush handling behavior */
+      // onEventReady.remaining += 1;
+      // utility2.ajax({
+        // cache: 'miss',
+        // url: '/test/test.json'
+      // }, function (error, data) {
+        // utility2.tryCatch(function () {
+          // utility2.assert(!error);
+          // data = data.toString();
+          // utility2.assert(data === '"hello test"', data);
+          // onEventReady();
+        // }, onEventReady);
+      // });
+      // /* test cache default handling behavior */
+      // onEventReady.remaining += 1;
+      // utility2.ajax({
+        // cache: true,
+        // url: '/test/test.json'
+      // }, function (error, data) {
+        // utility2.tryCatch(function () {
+          // utility2.assert(!error);
+          // data = data.toString();
+          // utility2.assert(data === '"hello test"', data);
+          // onEventReady();
+        // }, onEventReady);
+      // });
+    // },
 
     _ajaxOnEventData: function (options, onEventError, error, data) {
       /*
@@ -3816,9 +3572,7 @@
     _name: 'utility2.moduleAjaxShared',
 
     _init: function () {
-      if (state.modeExtra) {
-        utility2.initModule(module, local);
-      }
+      utility2.initModule(module, local);
     },
 
     ajax: function (options, onEventError) {
@@ -3833,8 +3587,7 @@
       */
       /* validate options */
       if (!(options && typeof options.url === 'string')) {
-        onEventError(new Error('ajax - invalid options.url '
-          + (options && options.url)));
+        onEventError(new Error('ajax - invalid options.url ' + (options && options.url)));
         return;
       }
       /* assert callback is a function */
@@ -3987,2077 +3740,6 @@
 
 
 
-(function moduleCacheShared() {
-  /*
-    this shared module exports the cache api
-  */
-  'use strict';
-  var local;
-  local = {
-
-    _name: 'utility2.moduleCacheShared',
-
-    _init: function () {
-      if (state.modeExtra) {
-        utility2.initModule(module, local);
-      }
-    },
-
-    createCache: function (size) {
-      /*
-        this Cache class has lru-like cache behavior,
-        but with O(1) average case gets and sets
-      */
-      var self;
-      self = new local._Cache();
-      utility2.assert(size >= 2, 'size must be greater than or equal to 2');
-      self.size = size;
-      self.clear();
-      return self;
-    },
-
-    _Cache: function () {
-      /*
-        this is the _Cache class
-      */
-      return;
-    },
-
-    _Cache_prototype_clear: function () {
-      /*
-        this function clears the cache
-      */
-      this.cache1 = {};
-      this.cache2 = {};
-      this.remaining = this.size;
-    },
-
-    _Cache_prototype_garbageCollect: function () {
-      /*
-        this function garbage collects an arbitray number of lru items,
-        when this.remaining reaches zero
-       */
-      if (this.remaining <= 0) {
-        this.remaining = this.size;
-        if (2 * Object.keys(this.cache2).length > this.size) {
-          this.cache1 = this.cache2;
-          this.cache2 = {};
-        }
-      }
-      this.remaining -= 1;
-    },
-
-    _Cache_prototype_getItem: function (key) {
-      /*
-        this function gets the item from cache with O(1) average case performance
-      */
-      var value;
-      value = this.cache1[key];
-      if (value !== undefined) {
-        this.cache2[key] = value;
-        this.garbageCollect();
-        return value;
-      }
-    },
-
-    _Cache_prototype_removeItem: function (key) {
-      /*
-        this function removes the item to cache with O(1) average case performance
-      */
-      this.setItem(key, undefined);
-    },
-
-    _Cache_prototype_setItem: function (key, value) {
-      /*
-        this function sets the item to cache with O(1) average case performance
-      */
-      this.garbageCollect();
-      this.cache2[key] = this.cache1[key] = value;
-    },
-
-    __Cache_default_test: function (onEventError) {
-      /*
-        this function tests _Cache's default handling behavior
-      */
-      var self;
-      /* coverage - don't use the "new" keyword */
-      self = utility2.createCache(2);
-      utility2.assert(self.remaining === 2);
-      self.setItem('aa', 1);
-      utility2.assert(self.remaining === 1);
-      utility2.assert(Object.keys(self.cache1).length === 1);
-      utility2.assert(Object.keys(self.cache2).length === 1);
-      self.setItem('bb', 2);
-      utility2.assert(self.remaining === 0);
-      utility2.assert(Object.keys(self.cache1).length === 2);
-      utility2.assert(Object.keys(self.cache2).length === 2);
-      self.setItem('cc', 3);
-      utility2.assert(self.remaining === 1);
-      utility2.assert(Object.keys(self.cache1).length === 3);
-      utility2.assert(Object.keys(self.cache2).length === 1);
-      utility2.assert(self.getItem('aa'));
-      utility2.assert(self.remaining === 0);
-      utility2.assert(Object.keys(self.cache1).length === 3);
-      utility2.assert(Object.keys(self.cache2).length === 2);
-      self.setItem('dd', 4);
-      utility2.assert(self.remaining === 1);
-      utility2.assert(Object.keys(self.cache1).length === 3);
-      utility2.assert(Object.keys(self.cache2).length === 1);
-      self.setItem('ee', 5);
-      utility2.assert(self.remaining === 0);
-      utility2.assert(Object.keys(self.cache1).length === 4);
-      utility2.assert(Object.keys(self.cache2).length === 2);
-      utility2.assert(self.getItem('bb') === undefined);
-      utility2.assert(self.remaining === 0);
-      utility2.assert(Object.keys(self.cache1).length === 4);
-      utility2.assert(Object.keys(self.cache2).length === 2);
-      self.removeItem('ee');
-      utility2.assert(self.remaining === 1);
-      utility2.assert(Object.keys(self.cache1).length === 2);
-      utility2.assert(Object.keys(self.cache2).length === 1);
-      utility2.assert(self.getItem('ee') === undefined);
-      utility2.assert(self.remaining === 1);
-      utility2.assert(Object.keys(self.cache1).length === 2);
-      utility2.assert(Object.keys(self.cache2).length === 1);
-      onEventError();
-    }
-
-  };
-  local._init();
-}());
-
-
-
-(function moduleDbGithubNodejs() {
-  /*
-    this nodejs module exports the github db api
-  */
-  'use strict';
-  var local;
-  local = {
-
-    _name: 'utility2.moduleDbGithubNodejs',
-
-    _init: function () {
-      if (state.modeExtra && state.modeNodejs) {
-        utility2.initModule(module, local);
-      }
-    },
-
-    _initOnce: function () {
-      var onEventReady;
-      onEventReady = utility2.untilReady(utility2.onEventErrorDefault);
-      if (process.env.GITHUB_TOKEN && state.modeDbGithub && !state.modeLocal) {
-        state.dbGithubBranchDefault
-          = utility2.createDbGithubBranch(state.modeDbGithub, process.env.GITHUB_TOKEN);
-        /* delete files from command-line */
-        if (state.dbGithubBranchFileDeleteList) {
-          state.dbGithubBranchFileDeleteList.split(',').forEach(function (file) {
-            onEventReady.remaining += 1;
-            state.dbGithubBranchDefault.fileDelete(
-              state.dbGithubBranchFilePrefix + file,
-              onEventReady
-            );
-          });
-        }
-        /* update files from command-line */
-        if (state.dbGithubBranchFileUpdateList) {
-          state.dbGithubBranchFileUpdateList.split(',').forEach(function (file) {
-            onEventReady.remaining += 1;
-            required.fs.readFile(state.dbGithubBranchFileCwd + file, function (error, data) {
-              utility2.assert(!error, error);
-              state.dbGithubBranchDefault.fileUpdate(
-                state.dbGithubBranchFilePrefix + file,
-                data,
-                onEventReady
-              );
-            });
-          });
-        }
-      /* disable tests for this module */
-      } else {
-        state.testModuleDict[local._name] = false;
-      }
-    },
-
-    createDbGithubBranch: function (ownerRepoBranch, token) {
-      /*
-        this function creates a github db branch for storing files
-      */
-      var self;
-      self = new local._Branch();
-      ownerRepoBranch = ownerRepoBranch.split('/');
-      self.branch = ownerRepoBranch[2];
-      self.token = token;
-      self.url = 'https://api.github.com/repos/'
-        + ownerRepoBranch[0] + '/' + ownerRepoBranch[1] + '/contents';
-      return self;
-    },
-
-    _blobSha1: function (blob) {
-      /*
-        this function calculates a blob's sha1 hash
-      */
-      return required.crypto.createHash('sha1')
-        .update('blob ' + blob.length + '\x00')
-        .update(blob)
-        .digest('hex');
-    },
-
-    _Branch: function () {
-      /*
-        this is the _Branch class
-      */
-      return;
-    },
-
-    _Branch_prototype_ajax: function (options, onEventError) {
-      /*
-        this function makes an ajax request
-      */
-      utility2.ajax(utility2.setOverride(options, { headers: {
-        authorization: 'token ' + this.token,
-        /* data is always a string, so we use Buffer.byteLength */
-        'content-length': options.data ? Buffer.byteLength(options.data) : 0,
-        /* BUG - github api requires user-agent header */
-        'user-agent': 'unknown'
-      }, resultType: 'json' }), onEventError);
-    },
-
-    _Branch_prototype_fileDelete: function (file, onEventError) {
-      /*
-        this function deletes the specified file
-        https://developer.github.com/v3/repos/contents/#delete-a-file
-      */
-      var mode, onEventError2, self;
-      mode = 0;
-      self = this;
-      onEventError2 = function (error, data) {
-        mode = error instanceof Error ? -1 : mode + 1;
-        switch (mode) {
-        /* get the file's sha id */
-        case 1:
-          self.fileSha(file, onEventError2);
-          break;
-        case 2:
-          /* file doesn't exist, so no need to delete it */
-          if (!data) {
-            onEventError();
-            return;
-          }
-          self.ajax({ data: JSON.stringify({
-            branch: self.branch,
-            message: 'delete ' + file,
-            sha: data
-          }), method: 'DELETE', url: self.url + file }, onEventError2);
-          break;
-        default:
-          onEventError(error, data);
-        }
-      };
-      onEventError2();
-    },
-
-    _Branch_prototype_fileUpdate: function (file, blob, onEventError) {
-      /*
-        this function updates the specified file with the given blob
-        https://developer.github.com/v3/repos/contents/#update-a-file
-      */
-      var mode, onEventError2, self;
-      mode = 0;
-      self = this;
-      onEventError2 = function (error, data) {
-        mode = error instanceof Error ? -1 : mode + 1;
-        switch (mode) {
-        /* get the file's sha id */
-        case 1:
-          self.fileSha(file, onEventError2);
-          break;
-        case 2:
-          self.ajax({ data: JSON.stringify({
-            branch: self.branch,
-            content: blob.toString('base64'),
-            message: 'update ' + file,
-            sha: data
-          }), method: 'PUT', url: self.url + file }, onEventError2);
-          break;
-        default:
-          onEventError(error, data);
-        }
-      };
-      onEventError2();
-    },
-
-    _Branch_prototype_fileSha: function (file, onEventError) {
-      /*
-        this function gets the file's sha id on github
-      */
-      var mode, onEventError2, self, sha;
-      mode = 0;
-      self = this;
-      onEventError2 = function (error, data) {
-        mode = error instanceof Error ? -1 : mode + 1;
-        switch (mode) {
-        case 1:
-          self.ajax({
-            url: self.url + required.path.dirname(file) + '?ref=' + self.branch
-          }, onEventError2);
-          break;
-        case 2:
-          file = required.path.basename(file);
-          /* default sha to empty string */
-          sha = '';
-          data.some(onEventError2);
-          mode += 1;
-          onEventError2();
-          break;
-        case 3:
-          mode -= 1;
-          if (error.name === file) {
-            sha = error.sha;
-            return true;
-          }
-          break;
-        default:
-          onEventError((/^GET 404\b/).test(error && error.message) ? null : error, sha);
-        }
-      };
-      onEventError2();
-    },
-
-    _Branch_default_test: function (onEventError) {
-      /*
-        this function tests _Branch's default handling behavior
-      */
-      var file, mode, onEventError2, self;
-      self = state.dbGithubBranchDefault;
-      self = utility2.createDbGithubBranch(state.modeDbGithub, process.env.GITHUB_TOKEN);
-      mode = 0;
-      onEventError2 = function (error) {
-        mode = error instanceof Error ? -1 : mode + 1;
-        switch (mode) {
-        /* test _Branch_prototype_fileDelete's null handling behavior */
-        case 1:
-          file = '/test/_Branch_default_test.json';
-          self.fileDelete(file, onEventError2);
-          break;
-        /* test _Branch_prototype_fileUpdate's default handling behavior */
-        case 2:
-          self.fileUpdate(file, new Buffer('"_Branch_default_test2"'), onEventError2);
-          break;
-        /* test _Branch_prototype_fileDelete's default handling behavior */
-        case 3:
-          self.fileDelete(file, onEventError2);
-          break;
-        default:
-          onEventError(error);
-        }
-      };
-      onEventError2();
-    }
-
-  };
-  local._init();
-}());
-
-
-
-(function moduleDbPostgresNodejs() {
-  /*
-    this nodejs module exports the postgres db api
-  */
-  'use strict';
-  var local;
-  local = {
-
-    _name: 'utility2.moduleDbPostgresNodejs',
-
-    _init: function () {
-      if (state.modeExtra && state.modeNodejs) {
-        utility2.initModule(module, local);
-      }
-    },
-
-    _initOnce: function () {
-      var mode, onEventError2, self;
-      mode = 0;
-      onEventError2 = function (error, data) {
-        mode = error instanceof Error ? -1 : mode + 1;
-        switch (mode) {
-        case 1:
-          state.testModuleDict['utility2.moduleDbPostgresNodejs'] = false;
-          if (!state.modeLocal && state.modeDbPostgres) {
-            required.pg = required.pg || require('pg');
-            utility2.readyUtility2.remaining += 1;
-            required.pg.connect(state.modeDbPostgres, onEventError2);
-          }
-          break;
-        /* create postgres default table */
-        case 2:
-          self = state.dbPostgresTableDefault
-            = utility2.createDbPostgresTable('utility2_default', onEventError2);
-          break;
-        /* get stateOverride.json */
-        case 3:
-          self.getItem('stateOverride.json', utility2.jsonParseHandler(onEventError2));
-          break;
-        /* override state with */
-        case 4:
-          utility2.setOverride(state, data || {});
-          onEventError2();
-          break;
-        default:
-          utility2.assert(!error, error);
-          state.testModuleDict['utility2.moduleDbPostgresNodejs'] = true;
-          utility2.readyUtility2();
-        }
-      };
-      onEventError2();
-    },
-
-    createDbPostgresTable: function (name, onEventError) {
-      /*
-        this function creates a postgres db table for storing key / value pairs
-      */
-      var self;
-      /* optimization - use cached table */
-      state.dbPostgresTableCache = state.dbPostgresTableCache || utility2.createCache(256);
-      self = state.dbPostgresTableCache.getItem(name);
-      if (self) {
-        onEventError(null, self);
-        return;
-      }
-      self = new local._Table();
-      self.name = name;
-      /* upsert code from http://www.postgresql.org/docs/current/static/plpgsql-control-structures.html#PLPGSQL-UPSERT-EXAMPLE */
-      /* CREATE TABLE IF NOT EXISTS utility2_default (key TEXT PRIMARY KEY NOT NULL, value TEXT NOT NULL); */
-      /* INSERT INTO utility2_default (key, value) VALUES (key2, value2) */
-      self.query('CREATE TABLE IF NOT EXISTS {{table}} (\n'
-          + 'key TEXT PRIMARY KEY NOT NULL,\n'
-          + 'value TEXT NOT NULL\n'
-        + ');\n'
-        + 'CREATE OR REPLACE FUNCTION upsert_{{table}} (key2 TEXT, value2 TEXT)\n'
-        + 'RETURNS VOID AS $$ BEGIN LOOP\n'
-          + '-- first try to update the key\n'
-          + 'UPDATE {{table}} SET value = value2 WHERE key = key2;\n'
-          + 'IF found THEN\n'
-              + 'RETURN;\n'
-          + 'END IF;\n'
-          + '-- not there, so try to insert the key\n'
-          + '-- if someone else inserts the same key concurrently,\n'
-          + '-- we could get a unique-key failure\n'
-          + 'BEGIN\n'
-            + 'INSERT INTO {{table}} (key, value) VALUES (key2, value2);\n'
-            + 'RETURN;\n'
-          + 'EXCEPTION WHEN unique_violation THEN\n'
-            + '-- Do nothing, and loop to try the UPDATE again.\n'
-          + 'END;\n'
-        + 'END LOOP; END; $$\n'
-        + 'LANGUAGE plpgsql;', null, function (error) {
-          /* optimization - cache table */
-          if (!error) {
-            state.dbPostgresTableCache.setItem(name, self);
-          }
-          onEventError(error, self);
-        });
-      return self;
-    },
-
-    replParseDict_postgres: function (arg1, arg2) {
-      switch (arg2) {
-      case '_':
-        console.log(state.dbPostgresResult);
-        return;
-      case '.tables':
-        arg2 = 'SELECT table_name FROM information_schema.tables'
-          + " WHERE table_schema = 'public';";
-        break;
-      }
-      state.dbPostgresTableDefault.query(arg2, null, function (error, data) {
-        if (data && data.length) {
-          state.dbPostgresResult = data;
-        }
-        console.log(error || data);
-      });
-    },
-
-    _replParseDict_postgres_default_test: function (onEventError) {
-      /*
-        this function tests replParseDict_postgres's default handling behavior
-      */
-      utility2.testMock(onEventError, [
-        [state, { postgresTableDefault: { query: function (_, __, onEventError) {
-          onEventError(null, [null]);
-        } }, postgresResult: null }]
-      ], function (onEventError) {
-        utility2.replParse('(postgres _\n)');
-        utility2.replParse('(postgres SELECT 1;\n)');
-        onEventError();
-      });
-    },
-
-    _Table: function () {
-      /*
-        this is the _Table class
-      */
-      return;
-    },
-
-    __Table_default_test: function (onEventError) {
-      /*
-        this function tests _Tables's default handling behavior
-      */
-      var mode, onEventError2, self;
-      mode = 0;
-      onEventError2 = function (error, data, ___) {
-        mode = error instanceof Error ? -1 : mode + 1;
-        switch (mode) {
-        /* test utility2.createDbPostgresTable's default handling behavior */
-        case 1:
-          self = utility2.createDbPostgresTable('utility2__Table_default_test', onEventError2);
-          break;
-        /* test utility2.createDbPostgresTable's cache handling behavior */
-        case 2:
-          self = utility2.createDbPostgresTable('utility2__Table_default_test', onEventError2);
-          break;
-        /* test self.drop's default handling behavior */
-        case 3:
-          self.drop(onEventError2);
-          break;
-        case 4:
-          self = utility2.createDbPostgresTable('utility2__Table_default_test', onEventError2);
-          break;
-        /* test self.clear's default handling behavior */
-        case 5:
-          self.clear(onEventError2);
-          break;
-        /* test self.setItem's default handling behavior */
-        case 6:
-          self.setItem('aa', 'bb', onEventError2);
-          break;
-        case 7:
-          self.setItem('cc', 'dd', onEventError2);
-          break;
-        case 8:
-          self.setItem('ee', 'ff', onEventError2);
-          break;
-        /* test self.removeItem's default handling behavior */
-        case 9:
-          self.removeItem('ee', onEventError2);
-          break;
-        /* test self.getItem's default handling behavior */
-        case 10:
-          self.getItem('aa', onEventError2);
-          break;
-        case 11:
-          utility2.tryCatch(function () {
-            utility2.assert(data === 'bb', data);
-            onEventError2();
-          }, onEventError2);
-          break;
-        case 12:
-          self.getItem('cc', onEventError2);
-          break;
-        case 13:
-          utility2.tryCatch(function () {
-            utility2.assert(data === 'dd', data);
-            onEventError2();
-          }, onEventError2);
-          break;
-        case 14:
-          self.getItem('ee', onEventError2);
-          break;
-        case 15:
-          utility2.tryCatch(function () {
-            utility2.assert(data === undefined, data);
-            onEventError2();
-          }, onEventError2);
-          break;
-        /* test self.key's default handling behavior */
-        case 16:
-          self.key(0, onEventError2);
-          break;
-        case 17:
-          utility2.tryCatch(function () {
-            utility2.assert(data === 'bb', data);
-            onEventError2();
-          }, onEventError2);
-          break;
-        case 18:
-          self.key(1, onEventError2);
-          break;
-        case 19:
-          utility2.tryCatch(function () {
-            utility2.assert(data === 'dd', data);
-            onEventError2();
-          }, onEventError2);
-          break;
-        case 20:
-          self.key(2, onEventError2);
-          break;
-        case 21:
-          utility2.tryCatch(function () {
-            utility2.assert(data === null, data);
-            onEventError2();
-          }, onEventError2);
-          break;
-        /* test self.keys's default handling behavior */
-        case 22:
-          self.keys(onEventError2);
-          break;
-        case 23:
-          utility2.tryCatch(function () {
-            utility2.assert(JSON.stringify(data) === '["aa","cc"]', data);
-            onEventError2();
-          }, onEventError2);
-          break;
-        /* test self.length's default handling behavior */
-        case 24:
-          self.length(onEventError2);
-          break;
-        case 25:
-          utility2.tryCatch(function () {
-            utility2.assert(data === 2, data);
-            onEventError2();
-          }, onEventError2);
-          break;
-        default:
-          self.drop(function () {
-            onEventError(error, data);
-          });
-        }
-      };
-      onEventError2();
-    },
-
-    _Table_prototype_clear: function (onEventError) {
-      /*
-        this function atomically cause the table associated with the table
-        to be emptied of all key/value pairs, if there are any.
-      */
-      this.query('DELETE FROM {{table}};', null, onEventError);
-    },
-
-    _Table_prototype_drop: function (onEventError) {
-      /*
-        this function drops the table
-      */
-      /* optimization - flush cache */
-      state.dbPostgresTableCache.removeItem(this.name);
-      this.query(
-        'DROP TABLE IF EXISTS {{table}};'
-          + 'DROP FUNCTION IF EXISTS upsert_{{table}} (key2 TEXT, value2 TEXT);',
-        null,
-        onEventError
-      );
-    },
-
-    _Table_prototype_getItem: function (key, onEventError) {
-      /*
-        this function returns the current value associated with the given key
-      */
-      var mode, onEventError2, self;
-      mode = 0;
-      self = this;
-      onEventError2 = function (error, data, ___) {
-        mode = error instanceof Error ? -1 : mode + 1;
-        switch (mode) {
-        case 1:
-          self.query('SELECT value from {{table}} WHERE key=$1;', [key], onEventError2);
-          break;
-        case 2:
-          onEventError2(null, data && data[0] && data[0].value);
-          break;
-        default:
-          onEventError(error, data);
-        }
-      };
-      onEventError2();
-    },
-
-    _Table_prototype_key: function (offset, onEventError) {
-      /*
-        this function returns the current value associated with the given key.
-        If the given key does not exist in the table then this method must return null.
-      */
-      this.query(
-        'SELECT value FROM {{table}} OFFSET $1;',
-        [offset],
-        function (error, data) {
-          onEventError(error, (data && data[0] && data[0].value) || null);
-        }
-      );
-    },
-
-    _Table_prototype_keys: function (onEventError) {
-      /*
-        this function returns all keys listed in the table.
-      */
-      var mode, onEventError2, self;
-      mode = 0;
-      self = this;
-      onEventError2 = function (error, data, ___) {
-        mode = error instanceof Error ? -1 : mode + 1;
-        switch (mode) {
-        case 1:
-          self.query('SELECT key from {{table}};', null, onEventError2);
-          break;
-        case 2:
-          data = (data || []).map(onEventError2);
-          mode += 1;
-          onEventError2(null, data);
-          break;
-        case 3:
-          mode -= 1;
-          return error.key;
-        default:
-          onEventError(error, data);
-        }
-      };
-      onEventError2();
-    },
-
-    _Table_prototype_length: function (onEventError) {
-      /*
-        this function returns the number of key/value pairs
-        currently present in the table associated with the table.
-      */
-      this.query('SELECT count(*) FROM {{table}};', null, function (error, data) {
-        onEventError(error, Number(data && data[0] && data[0].count));
-      });
-    },
-
-    _Table_prototype_query: function (statement, params, onEventError) {
-      /*
-       this function performs a sql query
-      */
-      var client, done, mode, onEventError2, self;
-      done = utility2.nop;
-      mode = 0;
-      self = this;
-      onEventError2 = function (error, data, ___) {
-        mode = error instanceof Error ? -1 : mode + 1;
-        switch (mode) {
-        case 1:
-          required.pg.connect(state.modeDbPostgres, onEventError2);
-          break;
-        case 2:
-          client = data;
-          done = ___;
-          client.query(
-            statement.replace((/\{\{table\}\}/g), self.name),
-            params,
-            onEventError2
-          );
-          break;
-        default:
-          done();
-          onEventError(error, data && data.rows);
-        }
-      };
-      onEventError2();
-    },
-
-    _Table_prototype_removeItem: function (key, onEventError) {
-      /*
-        this function causes the key/value pair with the given key
-        to be removed from the table associated with the table, if it exists.
-        usage example: self.removeItem('foo', utility2.onEventErrorDefault);
-      */
-      this.query('DELETE FROM {{table}} WHERE key=$1;', [key], onEventError);
-    },
-
-    _Table_prototype_setItem: function (key, value, onEventError) {
-      /*
-        this function sets the item with the given key to the given value
-        usage example: self.setItem('foo', 'bar', utility2.onEventErrorDefault);
-      */
-      this.query('SELECT upsert_{{table}} ($1, $2);', [key, value], onEventError);
-    }
-
-  };
-  local._init();
-}());
-
-
-
-(function moduleDbSqlite3Browser() {
-  /*
-    this browser module exports the sqlite3 db api
-  */
-  'use strict';
-  var local;
-  local = {
-
-    _name: 'utility2.moduleDbSqlite3Browser',
-
-    _init: function () {
-      if (state.modeBrowser) {
-        utility2.initModule(module, local);
-      }
-    }
-
-  };
-  local._init();
-}());
-
-
-
-(function moduleDbSqlite3Nodejs() {
-  /*
-    this nodejs module exports the sqlite3 db api
-  */
-  'use strict';
-  var local;
-  local = {
-
-    _name: 'utility2.moduleDbSqlite3Nodejs',
-
-    _init: function () {
-      if (state.modeExtra && state.modeNodejs) {
-        utility2.initModule(module, local);
-      }
-    },
-
-    _initOnce: function () {
-      /*jslint stupid: true*/
-      /* init sqlite3 */
-      required.sqlite3 = required.sqlite3 || utility2.require('sqlite3');
-      utility2.readyUtility2.remaining += 1;
-      state.sqlite3 = new required.sqlite3.cached.Database(
-        state.tmpdir + '/db.sqlite3',
-        utility2.readyUtility2
-      );
-      /* create sqlite3 default table */
-      utility2.readyUtility2.remaining += 1;
-      state.dbSqlite3TableDefault = utility2.createDbSqlite3Table(
-        'utility2_default',
-        function (error) {
-          utility2.assert(!error, error);
-          utility2.readyUtility2();
-        }
-      );
-      /* create sqlite3 blob table */
-      utility2.readyUtility2.remaining += 1;
-      state.dbSqlite3TableBlob = utility2.createDbSqlite3Table(
-        'utility2_blob',
-        function (error) {
-          utility2.assert(!error, error);
-          /* create blob dir */
-          utility2.fsMkdirpSync(state.tmpdir + '/blob');
-          /* cleanup old cached sqlite3 blobs */
-          state.dbSqlite3TableBlob.sqlAll(
-            "SELECT DISTINCT record FROM {{table}} WHERE record LIKE '/cache/%';",
-            {},
-            function (error, data) {
-              utility2.assert(!error, error);
-              data.forEach(function (record) {
-                utility2.dbBlobDelete(record.record, utility2.onEventErrorDefault);
-              });
-            }
-          );
-          /* periodically remove cached sqlite3 blobs */
-          utility2.unref(setInterval(function () {
-            local._dbCacheCleanup(utility2.onEventErrorDefault);
-          }, 300000));
-          utility2.readyUtility2();
-        }
-      );
-    },
-
-    createDbSqlite3Table: function (name, onEventError) {
-      /*
-        this function creates a sqlite3 db table for storing record / field / value triplets
-      */
-      var self;
-      /* assert valid table name */
-      if ((/_fts_|_(?:1|ai|au|bd|bu|fts)$/).test(name)) {
-        onEventError(new Error('createDbSqlite3Table - invalid table name ' + name));
-        return;
-      }
-      /* optimization - use cached table */
-      state.dbSqlite3TableCache = state.dbSqlite3TableCache || utility2.createCache(256);
-      self = state.dbSqlite3TableCache.getItem(name);
-      if (self) {
-        onEventError(null, self);
-        return;
-      }
-      self = new local._Table();
-      self.name = name;
-      state.sqlite3.exec(self.sqlStatement('CREATE TABLE IF NOT EXISTS {{table}} (\n'
-          + 'id TEXT PRIMARY KEY NOT NULL,\n'
-          + 'record TEXT NOT NULL,\n'
-          + 'field TEXT NOT NULL,\n'
-          + 'value TEXT NOT NULL\n'
-        + ');\n'
-        /* create fts table */
-        + 'CREATE VIRTUAL TABLE IF NOT EXISTS {{table}}_fts USING\n'
-          + "FTS4 (content='{{table}}', record, field, value);\n"
-        /* create fts trigger BEFORE UPDATE */
-        + 'CREATE TRIGGER IF NOT EXISTS {{table}}_bu BEFORE UPDATE ON {{table}} BEGIN\n'
-          + 'DELETE FROM {{table}}_fts WHERE docid=old.rowid;\n'
-        + 'END;\n'
-        /* create fts trigger BEFORE DELETE */
-        + 'CREATE TRIGGER IF NOT EXISTS {{table}}_bd BEFORE DELETE ON {{table}} BEGIN\n'
-          + 'DELETE FROM {{table}}_fts WHERE docid=old.rowid;\n'
-        + 'END;\n'
-        /* create fts trigger AFTER UPDATE */
-        + 'CREATE TRIGGER IF NOT EXISTS {{table}}_au AFTER UPDATE ON {{table}} BEGIN\n'
-          + 'INSERT INTO {{table}}_fts (docid, record, field, value)\n'
-          + 'VALUES (new.rowid, new.record, new.field, new.value);\n'
-        + 'END;\n'
-        /* create fts trigger BEFORE INSERT */
-        + 'CREATE TRIGGER IF NOT EXISTS {{table}}_ai AFTER INSERT ON {{table}} BEGIN\n'
-          + 'INSERT INTO {{table}}_fts (docid, record, field, value)\n'
-          + 'VALUES (new.rowid, new.record, new.field, new.value);\n'
-        + 'END;\n'
-        + 'PRAGMA journal_mode=WAL;'), function (error) {
-        /* optimization - cache table */
-        if (!error) {
-          state.dbSqlite3TableCache.setItem(name, self);
-        }
-        onEventError(error);
-      });
-      return self;
-    },
-
-    _createDbSqlite3Table_error_test: function (onEventError) {
-      /*
-        this function tests createDbSqlite3Table's error handling behavior
-      */
-      utility2.createDbSqlite3Table('table_fts', function (error) {
-        utility2.assert(error instanceof Error);
-        onEventError();
-      });
-    },
-
-    _dbBlobEncodeName: function (file) {
-      /*
-        this function encodes the filename into a flattened filename with no dir structure
-      */
-      return state.tmpdir + '/blob/' + encodeURIComponent(file);
-    },
-
-    dbBlobCopy: function (file1, file2, onEventError) {
-      /*
-        this function will
-        1. copy the blob in persistent fs
-        2. copy the blob's sqlite3 record
-      */
-      var mode, onEventError2;
-      mode = 0;
-      onEventError2 = function (error, data) {
-        mode = error instanceof Error ? -1 : mode + 1;
-        switch (mode) {
-        /* 1. copy the blob in persistent fs */
-        case 1:
-          utility2.fsCopyFileAtomic(
-            local._dbBlobEncodeName(file1),
-            local._dbBlobEncodeName(file2),
-            onEventError2
-          );
-          break;
-        /* 2. copy the blob's sqlite3 record */
-        case 2:
-          state.dbSqlite3TableBlob.recordCopy(file1, file2, onEventError2);
-          break;
-        default:
-          onEventError(error);
-        }
-      };
-      onEventError2();
-    },
-
-    dbBlobDelete: function (file, onEventError) {
-      /*
-        this function will
-        1. unlink the blob in persistent fs
-        2. delete the blob's sqlite3 record
-      */
-      var mode, onEventError2;
-      mode = 0;
-      onEventError2 = function (error) {
-        error = error && error.code === 'ENOENT' ? null : error;
-        mode = error instanceof Error ? -1 : mode + 1;
-        switch (mode) {
-        /* 1. unlink the blob in persistent fs */
-        case 2:
-          required.fs.unlink(local._dbBlobEncodeName(file), onEventError2);
-          break;
-        /* 2. delete the blob's sqlite3 record */
-        case 1:
-          state.dbSqlite3TableBlob.recordDelete(file, onEventError2);
-          break;
-        default:
-          onEventError(error);
-        }
-      };
-      onEventError2();
-    },
-
-    dbBlobRead: function (file, onEventError) {
-      /*
-        this function reads the blob
-      */
-      required.fs.readFile(local._dbBlobEncodeName(file), onEventError);
-    },
-
-    dbBlobRename: function (file1, file2, onEventError) {
-      /*
-        this function will
-        1. rename the blob in persistent fs
-        2. rename the blob's sqlite3 record
-      */
-      var mode, onEventError2;
-      mode = 0;
-      onEventError2 = function (error, data) {
-        mode = error instanceof Error ? -1 : mode + 1;
-        switch (mode) {
-        /* 1. rename the blob in persistent fs */
-        case 1:
-          required.fs.rename(
-            local._dbBlobEncodeName(file1),
-            local._dbBlobEncodeName(file2),
-            onEventError2
-          );
-          break;
-        /* 2. rename the blob's sqlite3 record */
-        case 2:
-          state.dbSqlite3TableBlob.recordRename(file1, file2, onEventError2);
-          break;
-        default:
-          onEventError(error);
-        }
-      };
-      onEventError2();
-    },
-
-    dbBlobWrite: function (file, data, onEventError) {
-      /*
-        this function will
-        1. atomically write the blob to persistent fs
-        2. create the blob's sqlite3 record
-      */
-      var mode, onEventError2;
-      mode = 0;
-      onEventError2 = function (error) {
-        mode = error instanceof Error ? -1 : mode + 1;
-        switch (mode) {
-        /* 1. atomically write the blob to persistent fs */
-        case 1:
-          utility2.fsWriteFileAtomic(local._dbBlobEncodeName(file), data, onEventError2);
-          break;
-        /* 2. create the blob's sqlite3 record */
-        case 2:
-          state.dbSqlite3TableBlob.recordReplace(file, {
-            size: typeof data === 'string' ? Buffer.byteLength(data) : data.length
-          }, onEventError2);
-          break;
-        default:
-          onEventError(error);
-        }
-      };
-      onEventError2();
-    },
-
-    _dbCacheCleanup: function (onEventError) {
-      /*
-        this function cleans up cached db blobs
-      */
-      var dir, mode, onEventError2;
-      mode = 0;
-      onEventError2 = function (error, data) {
-        mode = error instanceof Error ? -1 : mode + 1;
-        switch (mode) {
-        /* loop through state._dbCacheCleanupFsList */
-        case 1:
-          dir = state.tmpdir + '/cache';
-          utility2.jsonLog('_dbCacheCleanup - cleaning ' + dir);
-          state._dbCacheCleanupFsList = state._dbCacheCleanupFsList || [];
-          state._dbCacheCleanupFsList.forEach(onEventError2);
-          mode += 1;
-          onEventError2();
-          break;
-        /* delete cached blob */
-        case 2:
-          mode -= 1;
-          utility2.dbBlobDelete(error, utility2.onEventErrorDefault);
-          break;
-        /* get list of files to be removed for the next cycle */
-        case 3:
-          state.dbSqlite3TableBlob.sqlAll(
-            "SELECT DISTINCT record FROM {{table}} WHERE record LIKE '/cache/%';",
-            {},
-            onEventError2
-          );
-          break;
-        /* save list to state._dbCacheCleanupFsList */
-        case 4:
-          state._dbCacheCleanupFsList = data.map(function (record) {
-            return record.record;
-          });
-          onEventError2();
-          break;
-        default:
-          onEventError(error);
-        }
-      };
-      onEventError2();
-    },
-
-    __dbCacheCleanup_default_test: function (onEventError) {
-      /*
-        this function tests _dbCacheCleanup's default handling behavior
-      */
-      state._dbCacheCleanupFsList = ['/cache/' + utility2.uuid4() + '/foo'];
-      local._dbCacheCleanup(onEventError);
-    },
-
-    dbTableList: function (onEventError) {
-      /*
-        this function lists all user tables in the sqlite3 db
-      */
-      var mode, onEventError2;
-      mode = 0;
-      onEventError2 = function (error, data) {
-        mode = error instanceof Error ? -1 : mode + 1;
-        switch (mode) {
-        case 1:
-          state.sqlite3.all(
-            'SELECT name FROM sqlite_master\n'
-              + 'WHERE type="table" AND name NOT LIKE "%_fts" AND name NOT LIKE "%_fts_%";',
-            onEventError2
-          );
-          break;
-        case 2:
-          data = data.map(onEventError2);
-          mode += 1;
-          break;
-        case 3:
-          mode -= 1;
-          return error.name;
-        default:
-          onEventError(error, data);
-        }
-      };
-      onEventError2();
-    },
-
-    fsCopyFileAtomic: function (file1, file2, onEventError) {
-      /*
-        this function atomically copies file1 to file2
-      */
-      utility2.fsWriteFileAtomic(file2, required.fs.createReadStream(file1), onEventError);
-    },
-
-    _fsCopyFileAtomic_error_test: function (onEventError) {
-      /*
-        this function tests fsCopyFileAtomic's error handling behavior
-      */
-      utility2.fsCopyFileAtomic(utility2.uuid4(), utility2.uuid4(), function (error) {
-        utility2.assert(error instanceof Error);
-        onEventError();
-      });
-    },
-
-    fsWriteFileAtomic: function (file, data, onEventError) {
-      /*
-        this function will
-        1. write the data to a unique cache file
-        2. rename the cache file to persistent file
-      */
-      var mode, onEventError2, tmp;
-      mode = 0;
-      onEventError2 = function (error) {
-        mode = error instanceof Error ? -1 : mode + 1;
-        switch (mode) {
-        /* 1. write the data to a cache file */
-        case 1:
-          tmp = state.tmpdir + '/cache/' + utility2.uuid4();
-          /* write from readable stream */
-          if (data instanceof required.stream.Readable) {
-            data.on('error', onEventError2).pipe(
-              required.fs.createWriteStream(tmp)
-                .on('error', onEventError2)
-                .on('finish', onEventError2)
-            );
-          /* write from buffer / string */
-          } else {
-            required.fs.writeFile(tmp, data, onEventError2);
-          }
-          break;
-        /* 2. rename the cache file to persistent file */
-        case 2:
-          required.fs.rename(tmp, file, onEventError2);
-          break;
-        default:
-          onEventError(error);
-        }
-      };
-      onEventError2();
-    },
-
-    _fsWriteFileAtomic_default_test: function (onEventError) {
-      /*
-        this function tests fsWriteFileAtomic's and friends' default handling behavior
-      */
-      var file1, file2, mode, onEventError2;
-      mode = 0;
-      onEventError2 = function (error, data) {
-        mode = error instanceof Error ? -1 : mode + 1;
-        switch (mode) {
-        case 1:
-          /* test fsWriteFileAtomic's default handling behavior */
-          file1 = state.tmpdir + '/cache/' + utility2.uuid4();
-          utility2.fsWriteFileAtomic(file1, '_fsWriteFileAtomic_default_test', onEventError2);
-          break;
-        case 2:
-          /* test fsCopyFileAtomic's default handling behavior */
-          file2 = state.tmpdir + '/cache/' + utility2.uuid4();
-          utility2.fsCopyFileAtomic(file1, file2, onEventError2);
-          break;
-        case 3:
-          required.fs.readFile(file2, 'utf8', onEventError2);
-          break;
-        case 5:
-          utility2.assert(data === '_fsWriteFileAtomic_default_test');
-          onEventError2();
-          break;
-        default:
-          onEventError(error);
-        }
-      };
-      onEventError2();
-    },
-
-    replParseDict_sqlite3: function (arg1, arg2) {
-      switch (arg2) {
-      case '_':
-        console.log(state.sqlite3Result);
-        return;
-      case '.tables':
-        arg2 = 'SELECT name FROM sqlite_master;';
-        break;
-      case '.tableList':
-        arg2 = 'SELECT name FROM sqlite_master\n'
-          + 'WHERE type="table" AND name NOT LIKE "%_fts" AND name NOT LIKE "%_fts_%";';
-        break;
-      }
-      arg2 = arg2
-        /* list all records in a table */
-        .replace((/^(\S+) (.*)/), function (_, command, arg) {
-          switch (command) {
-          case '.tableDrop':
-            utility2.createDbSqlite3Table(arg, function (error, self) {
-              if (!error) {
-                self.tableDrop(utility2.onEventErrorDefault);
-              }
-            });
-            return 'SELECT 1;';
-          case '.recordList':
-            return 'SELECT DISTINCT record FROM ' + arg + ';';
-          default:
-            return _;
-          }
-        });
-      state.sqlite3.all(arg2, function (error, rows) {
-        if (rows) {
-          state.sqlite3Result = rows;
-        }
-        console.log(error || rows);
-      });
-    },
-
-    _replParseDict_sqlite3_default_test: function (onEventError) {
-      /*
-        this function tests replParseDict_sqlite3's default handling behavior
-      */
-      utility2.testMock(onEventError, [
-        [state, { sqlite3: { all: function (_, onEventError) {
-          onEventError(null, true);
-        } }, sqlite3Result: null }]
-      ], function (onEventError) {
-        utility2.replParse('(sqlite3 _\n)');
-        utility2.replParse('(sqlite3 .tables\n)');
-        onEventError();
-      });
-    },
-
-    _Table: function () {
-      /*
-        this is the _Table class
-      */
-      return;
-    },
-
-    __Table_default_test: function (onEventError) {
-      /*
-        this function tests _Table's default handling behavior
-      */
-      /* test createDbSqlite3Table's default handling behavior */
-      var self;
-      self = utility2.createDbSqlite3Table('cache__Table_default_test', function (error) {
-        /* test self.sqlSerialize's default handling behavior */
-        self.sqlSerialize(function (onEventError2) {
-          /* test self.recordReplace's default handling behavior */
-          self.recordReplace('foo', { aa: true }, onEventError2);
-          self.recordGet('foo', function (error, data) {
-            utility2.assert(!error);
-            utility2.assert(data.aa === true);
-            utility2.assert(data.timestamp);
-          });
-          /* test self.recordUpdate's default handling behavior */
-          self.recordUpdate('foo', { bb: true }, onEventError2);
-          /* test self.recordGet's default handling behavior */
-          self.recordGet('foo', function (error, data) {
-            utility2.assert(!error);
-            utility2.assert(data.aa === true);
-            utility2.assert(data.bb === true);
-            utility2.assert(data.timestamp);
-          });
-          /* test self.recordGetRandom's default handling behavior */
-          self.recordGetRandom(function (error, data) {
-            utility2.assert(!error);
-            utility2.assert(data.aa === true);
-            utility2.assert(data.bb === true);
-            utility2.assert(data.timestamp);
-          });
-          /* test self.recordCopy's default handling behavior */
-          self.recordCopy('foo', 'bar', onEventError2);
-          self.recordGet('bar', function (error, data) {
-            utility2.assert(!error);
-            utility2.assert(data.aa === true);
-            utility2.assert(data.bb === true);
-            utility2.assert(data.timestamp);
-          });
-          /* test self.recordRename's default handling behavior */
-          self.recordRename('bar', 'baz', onEventError2);
-          self.recordGet('baz', function (error, data) {
-            utility2.assert(!error);
-            utility2.assert(data.aa === true);
-            utility2.assert(data.bb === true);
-            utility2.assert(data.timestamp);
-          });
-          /* test self.recordReplace's default handling behavior */
-          self.recordReplace('foo', { bb: true, cc: true }, onEventError2);
-          self.recordGet('foo', function (error, data) {
-            utility2.assert(!error);
-            utility2.assert(data.aa === undefined);
-            utility2.assert(data.bb === true);
-            utility2.assert(data.cc === true);
-            utility2.assert(data.timestamp);
-          });
-          /* test self.recordUpdate's default handling behavior */
-          self.recordUpdate('foo', { bb: null }, onEventError2);
-          self.recordGet('foo', function (error, data) {
-            utility2.assert(!error);
-            utility2.assert(data.aa === undefined);
-            utility2.assert(data.bb === undefined);
-            utility2.assert(data.cc === true);
-            utility2.assert(data.timestamp);
-          });
-          /* test self.recordGet's error handling behavior */
-          self.sqlRun(
-            'INSERT OR REPLACE INTO {{table}} (id, record, field, value) VALUES(?, ?, ?, ?);',
-            [self.idEncode('foo', 'cc'), 'foo', 'cc', 'syntax error'],
-            onEventError2
-          );
-          self.recordGet('foo', function (error, data) {
-            utility2.assert(!error);
-            utility2.assert(data.aa === undefined);
-            utility2.assert(data.bb === undefined);
-            utility2.assert(data.cc === undefined);
-            utility2.assert(data.timestamp);
-          });
-          /* test self.tableFts's default handling behavior */
-          self.tableFts('foo', function (error, data) {
-            utility2.assert(!error);
-            utility2.assert(data);
-          });
-          /* test self.recordDelete's default handling behavior */
-          self.recordDelete('foo', onEventError2);
-          /* test self.recordGet's nonexistent handling behavior */
-          self.recordGet('foo', function (error, data) {
-            utility2.assert(!error);
-            utility2.assert(!data);
-          });
-          /* test self.tableDrop's default handling behavior */
-          self.tableDrop(onEventError2);
-          /* test self.sqlSerialize's multiple error handling behavior */
-          state.onEventErrorDefaultIgnoreList.push(
-            'SQLITE_ERROR: no such table: ' + self.name
-          );
-          self.recordGet('foo', onEventError2);
-          state.onEventErrorDefaultIgnoreList.push(
-            'SQLITE_ERROR: no such table: ' + self.name
-          );
-          self.recordGet('foo', onEventError2);
-        }, function (error) {
-          self.tableDrop(function () {
-            utility2.assert(error instanceof Error);
-            onEventError();
-          });
-        });
-      });
-    },
-
-    _Table_prototype_idEncode: function (record, field) {
-      return encodeURIComponent(record) + ' ' + encodeURIComponent(field);
-    },
-
-    _Table_prototype_recordCopy: function (record1, record2, onEventError) {
-      /*
-        this function copies record1 to record2
-      */
-      var self;
-      self = this;
-      self.sqlSerialize(function (onEventError) {
-        self.sqlRun('DELETE FROM {{table}} WHERE record=?;', record2, onEventError);
-        self.sqlRun('INSERT OR REPLACE INTO {{table}} (id, record, field, value)'
-          + ' SELECT replace(id, ?, ?), ?, field, value from {{table}} WHERE record=?;', [
-            encodeURIComponent(record1) + ' ',
-            encodeURIComponent(record2) + ' ',
-            record2,
-            record1
-          ], onEventError);
-      }, onEventError);
-    },
-
-    _Table_prototype_recordDelete: function (record, onEventError) {
-      this.sqlRun('DELETE FROM {{table}} WHERE record=?;', record, onEventError);
-    },
-
-    _Table_prototype_recordGet: function (record, onEventError, modeRandom) {
-      var dict, field, mode, onEventError2, self;
-      mode = 0;
-      self = this;
-      onEventError2 = function (error, data) {
-        mode = error instanceof Error && mode !== 2 ? -1 : mode + 1;
-        switch (mode) {
-        case 1:
-          if (modeRandom) {
-            self.sqlAll(
-              'SELECT * FROM {{table}} WHERE record IN'
-                + ' (SELECT DISTINCT record FROM {{table}} ORDER BY RANDOM() LIMIT 1);',
-              {},
-              onEventError2
-            );
-          } else {
-            self.sqlAll('SELECT * FROM {{table}} WHERE record=?;', record, onEventError2);
-          }
-          break;
-        case 2:
-          if (data.length === 0) {
-            onEventError();
-            return;
-          }
-          dict = {};
-          data.forEach(onEventError2);
-          mode += 1;
-          onEventError2();
-          break;
-        case 3:
-          mode -= 1;
-          field = error;
-          error = utility2.jsonParseOrError(field.value);
-          if (error instanceof Error) {
-            /* fault-tolerance - auto delete invalid fields */
-            self.sqlRun(
-              'DELETE FROM {{table}} WHERE value=?;',
-              field.value,
-              utility2.onEventErrorDefault
-            );
-            return;
-          }
-          dict[field.field] = error;
-          break;
-        default:
-          onEventError(error, dict);
-          break;
-        }
-      };
-      onEventError2();
-    },
-
-    _Table_prototype_recordGetRandom: function (onEventError) {
-      this.recordGet(null, onEventError, true);
-    },
-
-    _Table_prototype_recordList: function (onEventError) {
-      var mode, onEventError2, self;
-      mode = 0;
-      self = this;
-      onEventError2 = function (error, data) {
-        mode = error instanceof Error ? -1 : mode + 1;
-        switch (mode) {
-        case 1:
-          self.sqlAll('SELECT DISTINCT record FROM {{table}};', {}, onEventError2);
-          break;
-        case 2:
-          data = data.map(onEventError2);
-          mode += 1;
-          onEventError2(null, data);
-          break;
-        case 3:
-          mode -= 1;
-          return error.record;
-        default:
-          onEventError(error);
-        }
-      };
-      onEventError2();
-    },
-
-    _Table_prototype_recordRename: function (record1, record2, onEventError) {
-      /*
-        this function renames record1 to record2
-      */
-      var self;
-      self = this;
-      self.sqlSerialize(function (onEventError) {
-        self.sqlRun('DELETE FROM {{table}} WHERE record=?;', record2, onEventError);
-        self.sqlRun('UPDATE {{table}} SET id = replace(id, ?, ?), record = ?'
-          + ' WHERE record=?;', [
-            encodeURIComponent(record1) + ' ',
-            encodeURIComponent(record2) + ' ',
-            record2,
-            record1
-          ], onEventError);
-      }, onEventError);
-    },
-
-    _Table_prototype_recordReplace: function (record, fieldDict, onEventError, mode) {
-      var self;
-      self = this;
-      self.sqlSerialize(function (onEventError) {
-        if (mode !== 'update') {
-          self.sqlRun('DELETE FROM {{table}} WHERE record=?;', record, onEventError);
-        }
-        Object.keys(fieldDict || {}).forEach(function (field) {
-          /* delete null-valued fields */
-          if (fieldDict[field] === null) {
-            if (mode === 'update') {
-              self.sqlRun(
-                'DELETE FROM {{table}} WHERE id=?;',
-                self.idEncode(record, field),
-                onEventError
-              );
-            }
-          } else {
-            self.sqlRun(
-              'INSERT OR REPLACE INTO {{table}} (id, record, field, value) VALUES(?, ?, ?, ?);',
-              [self.idEncode(record, field), record, field, JSON.stringify(fieldDict[field])],
-              onEventError
-            );
-          }
-        });
-        /* auto timestamp */
-        self.sqlRun(
-          'INSERT OR REPLACE INTO {{table}} (id, record, field, value) VALUES(?, ?, ?, ?);',
-          [
-            self.idEncode(record, 'timestamp'),
-            record,
-            'timestamp',
-            JSON.stringify(new Date().toJSON())
-          ],
-          onEventError
-        );
-      }, onEventError);
-    },
-
-    _Table_prototype_recordUpdate: function (record, fieldDict, onEventError) {
-      this.recordReplace(record, fieldDict, onEventError, 'update');
-    },
-
-    _Table_prototype_sqlAll: function (statement, params, onEventError) {
-      state.sqlite3.all(this.sqlStatement(statement), params, onEventError);
-    },
-
-    _Table_prototype_sqlExec: function (statement, onEventError) {
-      state.sqlite3.exec(this.sqlStatement(statement), onEventError);
-    },
-
-    _Table_prototype_sqlRun: function (statement, params, onEventError) {
-      state.sqlite3.run(this.sqlStatement(statement), params, onEventError);
-    },
-
-    _Table_prototype_sqlSerialize: function (serialize, onEventError) {
-      var mode, onEventError2;
-      mode = 0;
-      onEventError2 = function (error) {
-        if (mode === -1) {
-          utility2.onEventErrorDefault(error);
-          return;
-        }
-        mode = error instanceof Error ? -1 : mode + 1;
-        switch (mode) {
-        case -1:
-          onEventError(error);
-          break;
-        case 1:
-          state.sqlite3.serialize(onEventError2);
-          break;
-        case 2:
-          serialize(onEventError2);
-          state.sqlite3.run('SELECT 0', function (error) {
-            mode = mode === -1 ? mode : -2;
-            onEventError2(error);
-          });
-          break;
-        }
-      };
-      onEventError2();
-    },
-
-    _Table_prototype_sqlStatement: function (statement) {
-      utility2.assert(statement.slice(-1) === ';');
-      return statement.replace((/\{\{table\}\}/g), this.name);
-    },
-
-    _Table_prototype_tableDrop: function (onEventError) {
-      /* optimization - flush cache */
-      state.dbSqlite3TableCache.removeItem(this.name);
-      this.sqlExec('DROP TABLE IF EXISTS {{table}};\n'
-        + 'DROP TABLE IF EXISTS {{table}}_fts;', onEventError);
-    },
-
-    _Table_prototype_tableFts: function (query, onEventError) {
-      /*
-        this function runs full-text search on the table
-      */
-      this.sqlAll(
-        'SELECT rowid, offsets({{table}}_fts), matchinfo({{table}}_fts),'
-          + ' snippet({{table}}_fts) FROM {{table}}_fts WHERE {{table}}_fts match ?;',
-        query,
-        onEventError
-      );
-    }
-
-  };
-  local._init();
-}());
-
-
-
-(function moduleHeadlessPhantomjsNodejs() {
-  /*
-    this nodejs module exports the headless phantomjs test api
-  */
-  'use strict';
-  var local;
-  local = {
-
-    _name: 'utility2.moduleHeadlessPhantomjsNodejs',
-
-    _init: function () {
-      if (state.modeExtra && state.modeNodejs) {
-        utility2.initModule(module, local);
-      }
-    },
-
-    phantomjsTestUrl: function (options, onEventError) {
-      /*
-        this function starts a separate phantomjs process to open and test a webpage
-      */
-      var mode, onEventError2, testCallbackId, timeout;
-      mode = 0;
-      onEventError2 = function (error, data) {
-        mode = error instanceof Error ? -1 : mode + 1;
-        switch (mode) {
-        case 1:
-          testCallbackId = utility2.uuid4();
-          options.url = utility2.urlParamsMerge(options.url, {
-            testCallbackId: testCallbackId
-          });
-          required.phantomjs = required.phantomjs || utility2.require('phantomjs');
-          state.phantomjs = utility2.shell({ argv: [
-            options.argv0 || required.phantomjs.path,
-            utility2.__dirname + '/.install/utility2_phantomjs.js',
-            new Buffer(JSON.stringify(options)).toString('base64')
-          ], modeDebug: false });
-          state.browserTestCallbackDict[testCallbackId] = onEventError2;
-          /* set timeout for phantomjsTestUrl */
-          timeout = utility2.onEventTimeout(
-            onEventError2,
-            state.timeoutDefault,
-            'phantomjsTestUrl ' + options.url
-          );
-          break;
-        default:
-          /* clear timeout for phantomjsTestUrl */
-          clearTimeout(timeout);
-          /* garbage collect testCallbackId */
-          delete state.browserTestCallbackDict[testCallbackId];
-          onEventError(error);
-        }
-      };
-      onEventError2();
-    },
-
-    _phantomjsTestUrl_default_test: function (onEventError) {
-      /*
-        this function tests phantomjsTestUrl's default handling behavior
-      */
-      utility2.phantomjsTestUrl({
-        timeoutDefault: state.timeoutDefault,
-        url: state.localhost + '/test/test.html#modeTest=1'
-      }, onEventError);
-    }
-
-  };
-  local._init();
-}());
-
-
-
-(function moduleHeadlessSlimerjsNodejs() {
-  /*
-    this nodejs module exports the headless slimerjs test api
-  */
-  'use strict';
-  var local;
-  local = {
-
-    _name: 'utility2.moduleHeadlessSlimerjsNodejs',
-
-    _init: function () {
-      if (state.modeExtra && state.modeNodejs) {
-        utility2.initModule(module, local);
-      }
-    },
-
-    _initOnce: function () {
-      /* disable / enable tests for this module */
-      state.testModuleDict[local._name] = !!state.modeHeadlessSlimerjs;
-    },
-
-    slimerjsTestUrl: function (options, onEventError) {
-      /*
-        this function starts a separate slimerjs process to open and test a webpage
-      */
-      options = utility2.jsonCopy(options);
-      options.argv0 = state.modeHeadlessSlimerjs;
-      utility2.phantomjsTestUrl(options, onEventError);
-    },
-
-    _slimerjsTestUrl_default_test: function (onEventError) {
-      /*
-        this function tests slimerjsTestUrl's default handling behavior
-      */
-      utility2.slimerjsTestUrl({
-        timeoutDefault: state.timeoutDefault,
-        url: state.localhost + '/test/test.html#modeTest=1'
-      }, onEventError);
-    }
-
-  };
-  local._init();
-}());
-
-
-
-(function moduleRollupNodejs() {
-  /*
-    this nodejs module exports the rollup api
-  */
-  'use strict';
-  var local;
-  local = {
-
-    _name: 'utility2.moduleRollupNodejs',
-
-    _init: function () {
-      if (state.modeExtra && state.modeNodejs) {
-        utility2.initModule(module, local);
-      }
-    },
-
-    _initOnce: function () {
-      if (state.minifyFileList) {
-        state.minifyFileList.split(',').forEach(function (file) {
-          local._minifyFile(file, utility2.onEventErrorDefault);
-        });
-      }
-      if (state.rollupFileList) {
-        state.rollupFileList.split(',').forEach(function (file) {
-          local._rollupFile(file, utility2.onEventErrorDefault);
-        });
-      }
-    },
-
-    _minifyFile: function (file, onEventError) {
-      /*
-        this function minifies css / js files
-      */
-      var mode, onEventError2;
-      mode = 0;
-      onEventError2 = function (error, data) {
-        if (mode === -1) {
-          utility2.onEventErrorDefault(error, data);
-          return;
-        }
-        mode = error instanceof Error ? -1 : mode + 1;
-        switch (mode) {
-        case 1:
-          required.fs.readFile(file, 'utf8', onEventError2);
-          break;
-        case 2:
-          utility2.jsonLog('_minifyFile - minifying ' + file);
-          data = utility2.commentShebang(data);
-          switch (required.path.extname(file)) {
-          case '.css':
-          case '.js':
-            onEventError2(null, utility2.scriptMinify(file, data));
-            break;
-          default:
-            mode += 1;
-            onEventError2();
-          }
-          break;
-        case 3:
-          utility2.fsWriteFileAtomic(file.replace((/([^.]*$)/), 'min.$1'), data, onEventError2);
-          break;
-        default:
-          onEventError(error);
-        }
-      };
-      onEventError2();
-    },
-
-    _rollupFile: function (file, onEventError) {
-      /*
-        this function rolls up a css / js file
-      */
-      var content, dataList, mode, onEventError2, options, onEventReady;
-      mode = 0;
-      onEventError2 = function (error, data) {
-        if (mode === -1) {
-          utility2.onEventErrorDefault(error, data);
-          return;
-        }
-        mode = error instanceof Error ? -1 : mode + 1;
-        switch (mode) {
-        case 1:
-          utility2.jsonLog('_rollupFile - rolling up ' + file);
-          required.fs.readFile(file, 'utf8', onEventError2);
-          break;
-        case 2:
-          content = data;
-          utility2.evalOnEventError(
-            file,
-            utility2.scriptLint(file + '.js', content
-              .replace((/(^\/\* CSS_COMMENT|CSS_COMMENT \*\/$)/gm), '// $1')),
-            onEventError2
-          );
-          break;
-        case 3:
-          options = data;
-          dataList = utility2.jsonCopy(options.urlList);
-          onEventReady = utility2.untilReady(onEventError2);
-          onEventReady.remaining = dataList.length;
-          utility2.ajaxMultiUrls2(options, function (error, data) {
-            mode = 3;
-            onEventError2(error, data);
-            onEventReady(error);
-          });
-          break;
-        case 4:
-          /* additional css parsing */
-          if (required.path.extname(file) === '.css' && !data.modeCss) {
-            data.modeCss = true;
-            onEventReady.remaining += 1;
-            local._rollupFileCss(data, function (error) {
-              mode = 3;
-              onEventError2(error, data);
-              onEventReady(error);
-            });
-            return;
-          }
-          dataList[dataList.indexOf(data.options.url0)] = data;
-          break;
-        case 5:
-          /* concat text to content */
-          dataList.forEach(function (data) {
-            content += '\n/* MODULE_BEGIN ' + data.options.url0 + ' */\n' + data.data.trim()
-              + '\n/* MODULE_END */\n';
-          });
-          /* post processing */
-          if (options.postProcessing) {
-            content = options.postProcessing(content);
-          }
-          /* remove trailing whitespace */
-          content = content.replace((/[\t\r ]+$/gm), '').trim() + '\n';
-          /* write to file */
-          file = file.replace((/([^.]*$)/), 'rollup.$1');
-          utility2.fsWriteFileAtomic(file, content, onEventError2);
-          break;
-        case 6:
-          local._minifyFile(file, onEventError2);
-          break;
-        default:
-          onEventError(error);
-        }
-      };
-      onEventError2();
-    },
-
-    __rollupFile_cssRollup_test: function (onEventError) {
-      /*
-        this function tests _rollupFile's css rollup handling behavior
-      */
-      var file, mode, onEventError2;
-      mode = 0;
-      onEventError2 = function (error, data) {
-        mode += 1;
-        mode = error instanceof Error ? -1 : mode;
-        switch (mode) {
-        case 1:
-          file = state.tmpdir + '/cache/' + utility2.uuid4() + '.css';
-          utility2.fsWriteFileAtomic(file, '/*jslint indent: 2, regexp: true*/\n'
-            + '/* CSS_COMMENT\n'
-            + '(function () {\n'
-            + '  "use strict";\n'
-            + '  return { urlList: ['
-            + '    "/test/test.css",\n'
-            + '    "' + state.localhost + '/test/test.css"\n'
-            + '    ] };\n'
-            + '}());\n'
-            + 'CSS_COMMENT */\n', onEventError2);
-          break;
-        case 2:
-          local._rollupFile(file, onEventError2);
-          break;
-        case 3:
-          required.fs.readFile(file.replace('.css', '.rollup.css'), 'utf8', onEventError2);
-          break;
-        case 4:
-          utility2.tryCatch(function () {
-            utility2.assert(!error, error);
-            utility2.assert((/data:image\/png;base64/).test(data), data);
-            onEventError2();
-          }, onEventError2);
-          break;
-        default:
-          onEventError(error);
-          return;
-        }
-      };
-      onEventError2();
-    },
-
-    __rollupFile_jsRollup_test: function (onEventError) {
-      /*
-        this function tests _rollupFile's js rollup handling behavior
-      */
-      var file, mode, onEventError2;
-      mode = 0;
-      onEventError2 = function (error, data) {
-        mode += 1;
-        mode = error instanceof Error ? -1 : mode;
-        switch (mode) {
-        case 1:
-          file = state.tmpdir + '/cache/' + utility2.uuid4() + '.js';
-          utility2.fsWriteFileAtomic(file, '/*jslint indent: 2, regexp: true*/\n'
-            + '(function () {\n'
-            + '  "use strict";\n'
-            + '  return { postProcessing: function (content) {\n'
-            + '    return content.replace(/(\\nconsole\\.log.*)test/g, "$1test!");\n'
-            + '  }, urlList: ['
-            + '    "/test/test.js",\n'
-            + '    "' + state.localhost + '/test/test.js"\n'
-            + '    ] };\n'
-            + '}());\n', onEventError2);
-          break;
-        case 2:
-          local._rollupFile(file, onEventError2);
-          break;
-        case 3:
-          required.fs.readFile(file.replace('.js', '.rollup.js'), 'utf8', onEventError2);
-          break;
-        case 4:
-          utility2.tryCatch(function () {
-            utility2.assert(!error, error);
-            utility2.assert((/\nconsole\.log\("hello test!"\);\n/).test(data), data);
-            onEventError2();
-          }, onEventError2);
-          break;
-        default:
-          onEventError(error);
-          return;
-        }
-      };
-      onEventError2();
-    },
-
-    _rollupFileCss: function (options, onEventError) {
-      /*
-        this function runs additional rollup steps for css scripts
-      */
-      var datauriDict, mode, onEventError2, onEventReady;
-      mode = 0;
-      onEventError2 = function (error, data) {
-        if (mode === -1) {
-          utility2.onEventErrorDefault(error, data);
-          return;
-        }
-        mode = error instanceof Error ? -1 : mode + 1;
-        switch (mode) {
-        case 1:
-          utility2.jsonLog('_rollupFileCss - rolling up ' + options.options.url0);
-          datauriDict = {};
-          options.data.replace((/\burl\(([^)]+)\)/g), onEventError2);
-          mode += 1;
-          onEventError2();
-          break;
-        case 2:
-          mode -= 1;
-          data = required.path.resolve('/' + required.path.dirname(options.options.url0) + '/'
-            + data.replace((/["']/g), '')).replace((/^\/(https*:\/)/), '$1/');
-          datauriDict[data] = datauriDict[data] || {};
-          datauriDict[data][error] = null;
-          break;
-        case 3:
-          /* handle null case where there are no external resources to retrieve */
-          if (!Object.keys(datauriDict || {}).length) {
-            mode += 1;
-            onEventError2();
-            return;
-          }
-          onEventReady = utility2.untilReady(onEventError2);
-          onEventReady.remaining += Object.keys(datauriDict).length;
-          utility2.ajaxMultiUrls2({
-            cache: options.options.cache,
-            cachePrefix: options.options.cachePrefix,
-            resultType: 'binary',
-            urlList: Object.keys(datauriDict)
-          }, function (error, data) {
-            mode = 3;
-            onEventError2(error, data);
-            onEventReady(error);
-          });
-          break;
-        case 4:
-          Object.keys(datauriDict[data.options.url0]).forEach(function (match) {
-            options.data = options.data.replace(
-              new RegExp(match.replace((/(\W)/g), '\\$1'), 'g'),
-              'url(\n"data:' + utility2.mimeLookup(data.options.url0) + ';base64,'
-                + data.data.toString('base64') + '"\n)'
-            );
-          });
-          break;
-        default:
-          onEventError(error);
-        }
-      };
-      onEventError2();
-    }
-
-  };
-  local._init();
-}());
-
-
-
 (function moduleServerNodejs() {
   /*
     this nodejs module exports the server api
@@ -6069,7 +3751,7 @@
     _name: 'utility2.moduleServerNodejs',
 
     _init: function () {
-      if (state.modeExtra && state.modeNodejs) {
+      if (required.utility2_external && state.modeNodejs) {
         utility2.initModule(module, local);
       }
     },
@@ -6452,11 +4134,7 @@
         this function serves the file test.png
       */
       utility2.serverRespond(request, response, 200, {
-        data: new Buffer(
-          'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAAA1BMVEUAAACnej3aAAAAAXRSTlMAQObYZgAA'
-            + 'AApJREFUCB1jYAAAAAIAAc/INeUAAAAASUVORK5CYII=',
-          'base64'
-        )
+        data: state.fsWatchDict['/test/test.png'].content
       });
     },
 

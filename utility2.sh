@@ -41,6 +41,7 @@ shMain () {
   SCRIPT=":"
   ## utility2 vars
   UTILITY2_EXTERNAL_TAR_GZ=utility2_external.$NODEJS_PACKAGE_JSON_VERSION.tar.gz
+  UTILITY2_JS=$UTILITY2_DIR/utility2.js
   UTILITY2_SH=$UTILITY2_DIR/utility2.sh
   UTILITY2_SH_ECHO="$UTILITY2_DIR/utility2.sh --mode-echo"
 
@@ -51,6 +52,26 @@ shMain () {
   case $1 in
   --mode-echo)
     MODE_ECHO=1
+    ;;
+
+  ## delete github file
+  --github-file-delete)
+    SCRIPT="$SCRIPT && $UTILITY2_JS"
+    SCRIPT="$SCRIPT --dbGithubBranchFile=$2"
+    SCRIPT="$SCRIPT --mode-cli=dbGithubBranchFileDelete"
+    SCRIPT="$SCRIPT --mode-db-github=$GITHUB_OWNER_REPO_BRANCH"
+    SCRIPT="$SCRIPT --mode-extra"
+    SCRIPT="$SCRIPT --mode-silent"
+    ;;
+
+  ## update github file
+  --github-file-update)
+    SCRIPT="$SCRIPT && cat $3 | $UTILITY2_JS"
+    SCRIPT="$SCRIPT --dbGithubBranchFile=$2"
+    SCRIPT="$SCRIPT --mode-cli=dbGithubBranchFileUpdate"
+    SCRIPT="$SCRIPT --mode-db-github=$GITHUB_OWNER_REPO_BRANCH"
+    SCRIPT="$SCRIPT --mode-extra"
+    SCRIPT="$SCRIPT --mode-silent"
     ;;
 
   # ## restart saucelabs
@@ -114,17 +135,29 @@ shMain () {
         SCRIPT="$SCRIPT --utility2-mode-db-github=kaizhu256/blob/unstable"
         ## test postgres db
         SCRIPT="$SCRIPT --utility2-mode-db-postgres=\$POSTGRES_LOGIN"
-        SCRIPT="$SCRIPT --utility2-timeout-default=300000"
         # ## use saucelabs-friendly port
         # SCRIPT="$SCRIPT --utility2-server-port=49221"
-        ## save npm test exit code
-        SCRIPT="$SCRIPT; EXIT_CODE=\$?"
-        ## upload coverage info to coveralls.io if possible
-        SCRIPT="$SCRIPT; if [ -f tmp/lcov.info ]"
-          SCRIPT="$SCRIPT; then cat tmp/lcov.info | node_modules/.bin/coveralls"
-        SCRIPT="$SCRIPT; fi"
-        ## exit with appropriate exit code
-        SCRIPT="$SCRIPT; exit \$EXIT_CODE"
+        ## publish build
+        SCRIPT="$SCRIPT && ./utility2.sh --utility2-publish-build"
+        SCRIPT="$SCRIPT /utility2.build.codeship.io/latest.$CI_BRANCH"
+        SCRIPT="$SCRIPT && ./utility2.sh --utility2-publish-build"
+        SCRIPT="$SCRIPT /utility2.build.codeship.io/$CI_BUILD_NUMBER.$CI_BRANCH.$CI_COMMIT_ID"
+      elif [ "$TRAVIS" ]
+        ## npm install
+        then SCRIPT="$SCRIPT && npm install"
+        ## npm test
+        SCRIPT="$SCRIPT && npm test"
+        # ## test headless slimerjs
+        # SCRIPT="$SCRIPT --utility2-mode-headless-slimerjs=slimerjs"
+        # ## test github db
+        # SCRIPT="$SCRIPT --utility2-mode-db-github=kaizhu256/blob/unstable"
+        # ## test postgres db
+        # SCRIPT="$SCRIPT --utility2-mode-db-postgres=\$POSTGRES_LOGIN"
+        ## publish build
+        SCRIPT="$SCRIPT && ./utility2.sh --utility2-publish-build"
+        SCRIPT="$SCRIPT /utility2.build.travis-ci.org/latest.$TRAVIS_BRANCH"
+        SCRIPT="$SCRIPT && ./utility2.sh --utility2-publish-build"
+        SCRIPT="$SCRIPT /utility2.build.travis-ci.org/$TRAVIS_BUILD_NUMBER.$TRAVIS_BRANCH.$TRAVIS_COMMIT"
       else
         ## npm install
         SCRIPT="$SCRIPT && npm install"
@@ -138,10 +171,14 @@ shMain () {
   ## called by npm run-script build
   --utility2-external-build)
     ## build utility2_external
-    SCRIPT="$SCRIPT && ./utility2.js --mode-extra --mode-silent --rollup-file-list"
-    SCRIPT="$SCRIPT .install/public/utility2_external.browser.css"
+    SCRIPT="$SCRIPT && ./utility2.js"
+    SCRIPT="$SCRIPT --mode-extra"
+    SCRIPT="$SCRIPT --mode-silent"
+    SCRIPT="$SCRIPT --rollup-file-list"
+    SCRIPT="$SCRIPT=.install/public/utility2_external.browser.css"
     SCRIPT="$SCRIPT,.install/public/utility2_external.browser.js"
     SCRIPT="$SCRIPT,.install/public/utility2_external.shared.js"
+    SCRIPT="$SCRIPT --tmpdir=true"
     SCRIPT="$SCRIPT && tar -czvf .install/$UTILITY2_EXTERNAL_TAR_GZ"
     SCRIPT="$SCRIPT .install/public/utility2_external.browser.rollup.css"
     SCRIPT="$SCRIPT .install/public/utility2_external.browser.rollup.js"
@@ -153,12 +190,7 @@ shMain () {
 
   ## publish utility2_external on github
   --utility2-external-publish)
-    SCRIPT="$SCRIPT && ./utility2.js"
-    SCRIPT="$SCRIPT --dbGithubBranchFileCwd=.install"
-    SCRIPT="$SCRIPT --dbGithubBranchFilePrefix=/utility2_external"
-    SCRIPT="$SCRIPT --dbGithubBranchFileUpdateList=/$UTILITY2_EXTERNAL_TAR_GZ"
-    SCRIPT="$SCRIPT --mode-db-github=kaizhu256/blob/gh-pages"
-    SCRIPT="$SCRIPT --mode-extra"
+    SCRIPT="$SCRIPT && $UTILITY2_SH --github-file-update /utility2_external/$UTILITY2_EXTERNAL_TAR_GZ .install/$UTILITY2_EXTERNAL_TAR_GZ"
     ;;
 
   ## called by npm run-script install
@@ -189,27 +221,54 @@ shMain () {
 
   ## called by npm run-script start
   --utility2-npm-start)
-    SCRIPT="$SCRIPT && ./utility2.js --mode-extra --mode-repl --server-port=random"
+    SCRIPT="$SCRIPT && ./utility2.js --mode-extra --mode-repl --server-port=random --tmpdir=true"
     ;;
 
   ## called by npm run-script test
   --utility2-npm-test)
     ARGS="--mode-npm-test"
+    ARGS="$ARGS --mode-extra"
     ARGS="$ARGS --mode-repl"
     ARGS="$ARGS --server-port=random"
     ARGS="$ARGS --test-module-dict={\\\"utility2\\\":true}"
-    ## npm test core
-    SCRIPT="$SCRIPT && ./utility2.js $ARGS --mode-coverage='\\butility2\\.'"
-    SCRIPT="$SCRIPT --mode-debug-process --tmpdir=tmp/core"
-    ## npm test extra
-    SCRIPT="$SCRIPT && ./utility2.js $ARGS --mode-coverage='\\butility2\\.'"
-    SCRIPT="$SCRIPT --mode-extra --tmpdir=tmp"
+    ARGS="$ARGS --tmpdir=tmp"
+    ## npm test
+    SCRIPT="$SCRIPT && ./utility2.js $ARGS"
+    SCRIPT="$SCRIPT --mode-coverage='\\butility2\\.'"
+    SCRIPT="$SCRIPT --mode-debug-process"
     SCRIPT="$SCRIPT; EXIT_CODE=\$?"
     ## if test failed, then redo without code coverage
     SCRIPT="$SCRIPT; if [ \"\$EXIT_CODE\" != 0 ]"
-      SCRIPT="$SCRIPT; then ./utility2.js $ARGS --mode-extra"
+      SCRIPT="$SCRIPT; then ./utility2.js $ARGS"
     SCRIPT="$SCRIPT; fi"
     SCRIPT="$SCRIPT; exit \$EXIT_CODE"
+    ;;
+
+  ## publish build to github
+  --utility2-publish-build)
+    ## generage coverage badge
+    SCRIPT="$SCRIPT && ./utility2.js"
+    SCRIPT="$SCRIPT --mode-cli=coverageBadgeGenerate --mode-extra --tmpdir=tmp"
+    ## publish build
+    SCRIPT="$SCRIPT && for FILE in"
+    SCRIPT="$SCRIPT cobertura-coverage.xml"
+    SCRIPT="$SCRIPT coverage_summary.txt"
+    SCRIPT="$SCRIPT coverage_badge.svg"
+    SCRIPT="$SCRIPT lcov.info"
+    SCRIPT="$SCRIPT lcov-report/index.html"
+    SCRIPT="$SCRIPT lcov-report/prettify.css"
+    SCRIPT="$SCRIPT lcov-report/prettify.js"
+    SCRIPT="$SCRIPT lcov-report/utility2/index.html"
+    SCRIPT="$SCRIPT lcov-report/utility2/utility2.js.html"
+    SCRIPT="$SCRIPT lcov-report/utility2/utility2.js2.html"
+    SCRIPT="$SCRIPT; do [ \$? == 0 ] && echo updating $2/\$FILE && cat tmp/\$FILE"
+    SCRIPT="$SCRIPT | ./utility2.js"
+    SCRIPT="$SCRIPT --dbGithubBranchFile=$2/\$FILE"
+    SCRIPT="$SCRIPT --mode-cli=dbGithubBranchFileUpdate"
+    SCRIPT="$SCRIPT --mode-db-github=kaizhu256/blob/gh-pages"
+    SCRIPT="$SCRIPT --mode-extra"
+    SCRIPT="$SCRIPT --mode-silent"
+    SCRIPT="$SCRIPT; done"
     ;;
 
   ## unknown option
@@ -220,13 +279,12 @@ shMain () {
   shift
   done
   ## echo script
-  if [ "$MODE_ECHO" ]; then echo "$SCRIPT" | perl -ne 's/:/[ "\$?" == 0 ]/i; print lc'
-  elif [ "$SCRIPT" != ":" ]; then echo $SCRIPT; fi
+  if ([ "$MODE_ECHO" ] || [ "$SCRIPT" != ":" ]); then echo $SCRIPT; fi
   ## eval script
   if [ ! "$MODE_ECHO" ]
     ## save cwd
-    pushd "$(pwd)" > /dev/null
-    then eval "$SCRIPT"
+    then pushd "$(pwd)" > /dev/null
+    eval "$SCRIPT"
     ## save exit code
     EXIT_CODE=$?
     ## restore cwd

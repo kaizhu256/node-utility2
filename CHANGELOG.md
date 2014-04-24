@@ -1,9 +1,13 @@
 #### todo
-- deduplicate github file uploads if the sha hash matches
 - add html linter
 - auto-remove test functions from module in production mode
 - add heroku dynamic config server
 - integrate forever-webui
+
+#### 2014.04.20
+- add native code coverage artifact upload to github
+- add sha hash check to prevent dbGithubBranch from updating identical files
+- expand utility2 core with more extras
 
 #### 2014.04.14
 - add github db api

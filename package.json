@@ -9,10 +9,7 @@
     "pg": "3.0.x",
     "sqlite3": "2.2.x"
   },
-  "devDependencies": {
-    "coveralls": "2.10.x"
-  },
-  "description": "utility2 - standalone, browser test and code coverage framework for nodejs",
+  "description": "utility2 - nodejs test and code coverage utility",
   "main": "utility2.js",
   "name": "utility2",
   "os": ["darwin", "linux"],
@@ -25,6 +22,6 @@
     "start": "./utility2.sh --utility2-npm-start",
     "test": "./utility2.sh --utility2-npm-test"
   },
-  "version": "2014.4.14-1"
+  "version": "2014.4.20-1"
 }
 
