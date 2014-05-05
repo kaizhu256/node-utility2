@@ -504,6 +504,13 @@
           local2[match[1]].prototype[match[2]] = local2[key];
           return;
         }
+        /* angularjs app */
+        match = (/(\w+)_ngApp_(\w+)_(\w+)/).exec(key);
+        if (match) {
+          local2[match[1]] = local2[match[1]] || global.angular.module(match[1], []);
+          local2[match[1]][match[2]](match[3], local2[key]);
+          return;
+        }
         /* set remaining items to exports */
         if (key[0] !== '_') {
           exports[key] = local2[key];
@@ -517,7 +524,7 @@
           state.moduleCacheDict[exports.__filename] = module;
           /* watch module */
           utility2.fsWatch({
-            actionList: ['lint', 'evalOnWatch', 'createContentBrowser'],
+            actionList: ['lint', 'evalOnWatch'],
             file: exports.__filename
           }, utility2.onEventErrorDefault);
         }
@@ -558,6 +565,9 @@
       */
       utility2.testMock(onEventError, [
         [global, {
+          angular: { module: function () {
+            return { controller: utility2.nop };
+          } },
           jQuery: utility2.callArg0,
           required: {},
           state: { modeBrowser: true, modeNodejs: true }
@@ -581,12 +591,14 @@
         state.modeTest = true;
         state.serverListened = true;
         local2 = {
+          /* test dict handling behavior */
+          _aaDict_bb: true,
           /* test class handling behavior */
           _Aa: utility2.nop,
           /* test class prototype handling behavior */
           _Aa_prototype_bb: utility2.nop,
-          /* test dict handling behavior */
-          _aaDict_bb: true,
+          /* test angularjs app handling behavior */
+          _aa_ngApp_controller_bb: [],
           _initOnce: utility2.nop,
           _modeTest: true,
           _name: 'utility2._initModule_default_test'
@@ -1032,9 +1044,12 @@
       ], function (onEventError) {
         var error;
         error = new Error('_onEventErrorDefault_error_test');
+        /* test error.stack handling behavior */
         utility2.onEventErrorDefault(error);
+        /* test error.message handling behavior */
         error.stack = '';
         utility2.onEventErrorDefault(error);
+        /* test no error.message or error.stack handling behavior */
         error.message = '';
         utility2.onEventErrorDefault(error);
         onEventError();
@@ -1342,7 +1357,10 @@
         state.testSuiteRemaining -= 1;
         if (state.testSuiteRemaining === 0) {
           /* assert state.onEventErrorDefaultIgnoreList is empty */
-          utility2.assert(state.onEventErrorDefaultIgnoreList.length === 0);
+          utility2.assert(
+            state.onEventErrorDefaultIgnoreList.length === 0,
+            state.onEventErrorDefaultIgnoreList
+          );
           state.testSuiteRemaining = 0;
           self.report();
         }
@@ -1597,7 +1615,7 @@
         this function returns an error if the text cannot be decoded
       */
       try {
-        return decodeURIComponent(text || '');
+        return decodeURIComponent(text);
       } catch (error) {
         return error;
       }
@@ -2042,14 +2060,14 @@
     _initNpmTest: function () {
       /* test utility2 */
       if (state.modeNpmTest) {
-        /* set test mode */
-        state.modeTest = true;
         /* exit with non-zero code if tests failed */
         process.on('exit', function () {
           if (state.testReport && state.testReport.failures) {
             process.exit(1);
           }
         });
+        /* exit with zero code on user interrupt */
+        process.on('SIGINT', process.exit);
       }
     },
 
@@ -2059,7 +2077,11 @@
       */
       utility2.testMock(onEventError, [
         [global, {
-          process: { exit: null, on: utility2.callArg1 },
+          process: { exit: null, on: function (mode, callback) {
+            if (mode === 'exit') {
+              callback();
+            }
+          } },
           state: { testReport: { failures: null } }
         }]
       ], function (onEventError) {
@@ -2105,7 +2127,6 @@
       utility2.testMock(onEventError, [
         [global, { state: {
           modeCoverage: /^_instrumentCode_default_test\.js$/,
-          modeExtra: null,
           modeNpmTest: null
         } }]
       ], function (onEventError) {
@@ -2354,7 +2375,93 @@
       });
     },
 
+    fsMkdirp: function (dir, onEventError) {
+      /*
+        this function recursively builds up nested directories as necessary
+      */
+      var mode, onEventError2;
+      mode = 0;
+      onEventError2 = function (error) {
+        mode = error instanceof Error ? -1 : mode + 1;
+        switch (mode) {
+        /* attempt to mkdir */
+        case 1:
+          required.fs.mkdir(dir, onEventError2);
+          break;
+        /* mkdir successful */
+        case 2:
+          onEventError();
+          break;
+        /* mkdir failed */
+        default:
+          switch (error && error.code) {
+          /* dir already exists - fallback to success */
+          case 'EEXIST':
+            onEventError();
+            break;
+          /* parent dir doesn't exist - recurse up parent dir */
+          case 'ENOENT':
+            mode = 0;
+            utility2.fsMkdirp(required.path.dirname(dir), onEventError2);
+            break;
+          /* default error */
+          default:
+            onEventError(error);
+          }
+        }
+      };
+      onEventError2();
+    },
+
+    _fsMkdirp_default_test: function (onEventError) {
+      /*
+        this function tests fsMkdirp's default handling behavior
+      */
+      var dir, mode, onEventError2;
+      mode = 0;
+      onEventError2 = function (error) {
+        mode = error instanceof Error ? -1 : mode + 1;
+        switch (mode) {
+        /* test default handling behavior */
+        case 1:
+          dir = state.tmpdir + '/cache/' + utility2.uuid4() + '/' + utility2.uuid4();
+          utility2.fsMkdirp(dir, onEventError2);
+          break;
+        /* test EEXIST handling behavior */
+        case 2:
+          utility2.fsMkdirp(dir, onEventError2);
+          break;
+        /* assert dir exists */
+        case 3:
+          required.fs.exists(dir, onEventError2);
+          break;
+        case 4:
+          utility2.assert(error);
+          onEventError2();
+          break;
+        default:
+          onEventError(error);
+        }
+      };
+      onEventError2();
+    },
+
+    _fsMkdirp_error_test: function (onEventError) {
+      /*
+        this function tests fsMkdirp's error handling behavior
+      */
+      utility2.fsMkdirp('/dev/null/_fsMkdirp_error_test', function (error) {
+        utility2.tryCatch(function () {
+          utility2.assert(error instanceof Error, error);
+          onEventError();
+        }, onEventError);
+      });
+    },
+
     fsMkdirpSync: function (dir) {
+      /*
+        this function recursively builds up nested directories as necessary
+      */
       utility2.tryCatch(function () {
         required.fs.mkdirSync(dir);
       }, function (error) {
@@ -2376,7 +2483,7 @@
         this function tests fsMkdirpSync's default handling behavior
       */
       var dir;
-      dir = state.tmpdir + '/cache/' + utility2.uuid4() + '/foo';
+      dir = state.tmpdir + '/cache/' + utility2.uuid4() + '/' + utility2.uuid4();
       utility2.fsMkdirpSync(dir);
       /* mkdir a second time to trigger EEXIST case */
       utility2.fsMkdirpSync(dir);
@@ -2472,6 +2579,8 @@
             options.actionList.forEach(function (action) {
               state.fsWatchActionDict[action](options);
             });
+            /* save browser content */
+            state.fsWatchActionDict.createContentBrowser(options);
             /* set watch mode */
             options.modeWatch = true;
             onEventError();
@@ -2507,7 +2616,10 @@
         this function tests fsWatch's testWatch handling behavior
       */
       utility2.testMock(onEventError, [
-        [global, { state: { testWatchList: [ { write: utility2.nop }] } }],
+        [global, { state: {
+          fsWatchActionDict: { createContentBrowser: utility2.nop },
+          testWatchList: [{ write: utility2.nop }]
+        } }],
         [required.fs, {
           readFile: function (_, __, onEventError) {
             onEventError(null, '');
@@ -2531,11 +2643,13 @@
       /*
         this function caches the file content for browser use, stripping it of nodejs code
       */
-      options.contentBrowser = utility2.stringToEmptyLine(
-        (state.instrumentedFileDict && state.instrumentedFileDict[options.file])
-          || options.content,
-        (/^\(function module\w*Nodejs\(\) \{[\S\s]*?^\}\(\)\);$/gm)
-      ).trimRight();
+      options.contentBrowser = Buffer.isBuffer(options.content)
+        ? options.content
+        : utility2.stringToEmptyLine(
+          (state.instrumentedFileDict && state.instrumentedFileDict[options.file])
+            || options.content,
+          (/^\(function module\w*Nodejs\(\) \{[\S\s]*?^\}\(\)\);$/gm)
+        ).trimRight();
     },
 
     fsWatchActionDict_eval: function (options) {
@@ -2569,6 +2683,8 @@
             options2.actionList.forEach(function (action) {
               state.fsWatchActionDict[action](options2);
             });
+            /* save browser content */
+            state.fsWatchActionDict.createContentBrowser(options2);
           }
         );
         break;
@@ -2639,12 +2755,81 @@
       utility2.scriptLint(options.file, options.content);
     },
 
+    fsWatchActionDict_trim: function (options) {
+      /*
+        this function trims the file content
+      */
+      options.content = options.content.trim();
+    },
+
     fsWatchUnwatch: function (file) {
       /*
         this function unwatches the file
       */
       required.fs.unwatchFile(file);
       delete state.fsWatchDict[file];
+    },
+
+    fsWriteFileAtomic: function (file, data, onEventError) {
+      /*
+        this function will
+        1. write the data to a unique cache file
+        2. rename the cache file to persistent file
+        3. mkdirp parent dir if necessary
+      */
+      var mode, onEventError2, tmp;
+      mode = 0;
+      onEventError2 = function (error) {
+        mode = error instanceof Error ? -1 : mode + 1;
+        switch (mode) {
+        /* 1. write the data to a cache file */
+        case 1:
+          tmp = state.tmpdir + '/cache/' + utility2.uuid4();
+          required.fs.writeFile(tmp, data, onEventError2);
+          break;
+        /* 2. rename the cache file to persistent file */
+        case 2:
+          required.fs.rename(tmp, file, onEventError2);
+          break;
+        default:
+          /* 3. mkdirp parent dir if necessary */
+          if (error && error.code === 'ENOENT') {
+            mode = 1;
+            utility2.fsMkdirp(required.path.dirname(file), onEventError2);
+            return;
+          }
+          onEventError(error);
+        }
+      };
+      onEventError2();
+    },
+
+    _fsWriteFileAtomic_default_test: function (onEventError) {
+      /*
+        this function tests fsWriteFileAtomic's and friends' default handling behavior
+      */
+      var file, mode, onEventError2;
+      mode = 0;
+      onEventError2 = function (error, data) {
+        mode = error instanceof Error ? -1 : mode + 1;
+        switch (mode) {
+        case 1:
+          /* test fsWriteFileAtomic's default handling behavior */
+          file = state.tmpdir + '/cache/' + utility2.uuid4();
+          utility2.fsWriteFileAtomic(file, '_fsWriteFileAtomic_default_test', onEventError2);
+          break;
+        case 2:
+          required.fs.readFile(file, 'utf8', onEventError2);
+          break;
+        case 3:
+          utility2.assert(data === '_fsWriteFileAtomic_default_test');
+          onEventError2();
+          break;
+        default:
+          onEventError(error);
+        }
+      };
+      onEventError2();
     },
 
     headlessPhantomjs: function (options, onEventError) {
@@ -2692,8 +2877,33 @@
       */
       utility2.headlessPhantomjs({
         timeoutDefault: state.timeoutDefault,
-        url: state.localhost + '/test/test.html#modeTest=1'
+        url: state.localhost + '/test/test.html#modeTest=1&testWatch=1'
       }, onEventError);
+    },
+
+    kill: function (pid, signal) {
+      /*
+        this function kills the pid, while silently ignoring errors
+      */
+      /* validate pid is a positive, finite number */
+      pid = Number(pid);
+      if (0 < pid && pid < Infinity) {
+        utility2.tryCatch(function () {
+          process.kill(pid, signal);
+        }, utility2.nop);
+      }
+    },
+
+    _kill_default_test: function (onEventError) {
+      /*
+        this function tests kill's default handling behavior
+      */
+      utility2.testMock(onEventError, [
+        [process, { kill: utility2.nop }]
+      ], function (onEventError) {
+        utility2.kill('1');
+        onEventError();
+      });
     },
 
     modeCliDict_utility2NpmInstall: function () {
@@ -2722,31 +2932,6 @@
         [state, { modeCli: 'utility2NpmInstall' }]
       ], function (onEventError) {
         state.modeCliDict[state.modeCli]();
-        onEventError();
-      });
-    },
-
-    processKill: function (pid) {
-      /*
-        this function silently attempts to kill the process with the given pid
-      */
-      /* validate pid is a positive, finite number */
-      pid = Number(pid);
-      if (0 < pid && pid < Infinity) {
-        utility2.tryCatch(function () {
-          process.kill(pid);
-        }, utility2.nop);
-      }
-    },
-
-    _processKill_default_test: function (onEventError) {
-      /*
-        this function tests processKill's default handling behavior
-      */
-      utility2.testMock(onEventError, [
-        [process, { kill: utility2.nop }]
-      ], function (onEventError) {
-        utility2.processKill('1');
         onEventError();
       });
     },
@@ -2865,7 +3050,7 @@
     },
 
     _initOnce: function () {
-      /* start interactive repl debugger */
+      /* init interactive repl debugger */
       if (state.modeRepl && !state.repl) {
         state.repl = required.repl.start({
           eval: function (script, context, file, onEventError) {
@@ -3005,7 +3190,7 @@
       /*
         this function gives a quick and dirty way to execute shell scripts
       */
-      var child;
+      var child, timeout;
       options.stdio = options.stdio || ['ignore', 1, 2];
       child = required.child_process.spawn(
         options.argv ? options.argv[0] : '/bin/bash',
@@ -3013,12 +3198,13 @@
         options
       );
       /* set timeout for shell */
-      utility2.unref(required.child_process.spawn('/bin/bash', ['-c', 'sleep '
+      timeout = utility2.unref(required.child_process.spawn('/bin/bash', ['-c', 'sleep '
         + ((options.timeout || state.timeoutDefault) / 1000) + '; kill ' + child.pid
-        + ' 2>/dev/null'], { stdio: 'ignore' }));
+        + ' 2>/dev/null'], { stdio: 'ignore' })).pid;
       /* debug shell exit */
-      child.on('exit', function (exitcode) {
-        utility2.jsonLog('shell - process ' + child.pid + ' exited with code ' + exitcode);
+      child.on('error', utility2.onEventErrorDefault).on('exit', function (exitCode) {
+        utility2.kill(timeout);
+        utility2.jsonLog('shell - process ' + child.pid + ' exited with code ' + exitCode);
       });
       /* debug shell options */
       if (options.modeDebug !== false) {
@@ -3035,7 +3221,6 @@
         local.shell({ script: ':' }).on('exit', onEventError);
       });
     }
-
 
   };
   local._init();
@@ -3102,10 +3287,6 @@
         this function implements the the ajax function for the javascript platform browser
       */
       var data, error, ii, onEventEvent, onEventError2, timeout, xhr;
-      /* ajax xss via proxy */
-      if ((/^https*:/).test(options.url)) {
-        options.url = '/proxy/proxy.ajax/' + options.url;
-      }
       /* error handling */
       onEventError2 = function (error, data) {
         if (error) {
@@ -3121,7 +3302,7 @@
         onEventError(error, data);
       };
       /* event handling */
-      onEventEvent = function (event, __) {
+      onEventEvent = function (event) {
         switch (event.type) {
         case 'abort':
         case 'error':
@@ -3133,18 +3314,20 @@
           if (ii >= 0) {
             local._xhrList.splice(ii, 1);
           }
-          /* error message */
-          if (__ instanceof Error) {
-            error = __;
-          } else if (event.type !== 'load' || xhr.status >= 400) {
-            error = new Error(event.type);
-          } else if (options.resultType === 'json') {
-            data = utility2.jsonParseOrError(xhr.responseText);
-            if (data instanceof Error) {
-              error = data;
+          /* error handling */
+          if (!error) {
+            /* abort or error */
+            if (event.type !== 'load' || xhr.status >= 400) {
+              error = new Error(event.type);
+            /* json.Parse data */
+            } else if (options.resultType === 'json') {
+              data = utility2.jsonParseOrError(xhr.responseText);
+              if (data instanceof Error) {
+                error = data;
+              }
+            } else {
+              data = xhr.responseText;
             }
-          } else {
-            data = xhr.responseText;
           }
           onEventError2(error, data);
           break;
@@ -3176,7 +3359,8 @@
       xhr = new XMLHttpRequest();
       /* set timeout for ajaxBrowser */
       timeout = utility2.onEventTimeout(function (timeout) {
-        xhr.abort(timeout);
+        error = timeout;
+        xhr.abort();
       }, state.timeoutDefault, 'ajaxBrowser');
       /* debug xhr */
       state.debugXhr = xhr;
@@ -3199,12 +3383,28 @@
       }
       local._xhrList.push(xhr);
       /* open xhr */
-      xhr.open(options.method || 'GET', options.url);
-      Object.keys(options.headers || {}).forEach(function (key) {
-        xhr.sendRequestHeader(key, options.headers[key]);
-      });
+      xhr.open(options.method, options.url);
       /* send xhr */
       xhr.send(options.data);
+    },
+
+    _ajaxBrowser_progressFinished_test: function (onEventError) {
+      /*
+        this function tests ajaxBrowser's progress finished handling behavior
+      */
+      utility2.ajax({ url: '/test/test.json' }, function (error) {
+        utility2.assert(!error, error);
+        var interval;
+        /* set interval */
+        interval = setInterval(function () {
+          /* wait until divXhrProgress is hidden before ending test */
+          if (local._divXhrProgress.css('display') === 'none') {
+            /* clear interval */
+            clearInterval(interval);
+            onEventError();
+          }
+        }, 1000);
+      });
     },
 
     _ajaxBrowser_abort_test: function (onEventError) {
@@ -3243,16 +3443,10 @@
       /*
         this function updates the visual progress bar
       */
-      if (width) {
-        local._divXhrProgressBar.css('width', width);
-      }
-      if (type) {
-        local._divXhrProgressBar[0].className
-          = local._divXhrProgressBar[0].className.replace((/progress-bar-\w+/), type); /**/
-      }
-      if (label) {
-        local._divXhrProgressBar.html(label);
-      }
+      local._divXhrProgressBar.css('width', width);
+      local._divXhrProgressBar[0].className
+        = local._divXhrProgressBar[0].className.replace((/progress-bar-\w+/), type); /**/
+      local._divXhrProgressBar.html(label);
     },
 
     _xhrList: []
@@ -3283,29 +3477,91 @@
       /*
         this function tries to get the data from local cache instead of running the ajax request
       */
-      options.cachePrefix = options.cachePrefix || '';
-      if (!options.cache || options.cache === 'miss') {
+      /* cache all ajax request */
+      if (state.modeAjaxOffline) {
+        options.cache = options.cache || 'miss';
+        options.cachePrefix = options.cachePrefix || '/modeAjaxOffline';
+      }
+      options.cachePrefix = options.cachePrefix || '/cache/ajax';
+      if (options.cache && options.cache !== 'miss') {
+        required.fs.readFile(state.tmpdir + '/' + options.cachePrefix + '/'
+          + encodeURIComponent(options.url0 + '#' + options.method), function (error, data) {
+            if (error) {
+              options.cache = 'miss';
+              utility2.ajax(options, onEventError);
+              return;
+            }
+            options.cache = 'hit';
+            local._ajaxOnEventData(options, onEventError, null, data);
+          });
         return true;
       }
-      utility2.dbBlobRead(
-        options.cachePrefix + '/cache/ajax/' + options.url0,
-        function (error, data) {
-          if (error) {
-            options.cache = 'miss';
-            utility2.ajaxNodejs(options, onEventError);
-            return;
-          }
-          options.cache = 'hit';
-          local._ajaxOnEventData(options, onEventError, null, data);
+    },
+
+    __ajaxCache_default_test: function (onEventError) {
+      /*
+        this function tests _ajaxCache's default handling behavior
+      */
+      var mode, onEventError2, options;
+      mode = 0;
+      onEventError2 = function (error) {
+        mode = error instanceof Error ? -1 : mode + 1;
+        switch (mode) {
+        /* test cache miss handling behavior */
+        case 1:
+          options = { cache: true, url: '/test/test.echo?' + utility2.uuid4() };
+          utility2.ajax(options, onEventError2);
+          break;
+        case 2:
+          utility2.tryCatch(function () {
+            utility2.assert(!error, error);
+            utility2.assert(options.cache === 'miss', options);
+            onEventError2();
+          }, onEventError2);
+          break;
+        /* test cache hit handling behavior */
+        case 3:
+          options.cache = true;
+          setTimeout(onEventError2, 1000);
+          break;
+        case 4:
+          utility2.ajax(options, onEventError2);
+          break;
+        case 5:
+          utility2.tryCatch(function () {
+            utility2.assert(!error, error);
+            utility2.assert(options.cache === 'hit', options);
+            onEventError2();
+          }, onEventError2);
+          break;
+        default:
+          onEventError(error);
         }
-      );
+      };
+      onEventError2();
+    },
+
+    __ajaxCache_modeAjaxOffline_test: function (onEventError) {
+      /*
+        this function tests _ajaxCache's modeAjaxOffline handling behavior
+      */
+      utility2.testMock(onEventError, [
+        [global, { state: { modeAjaxOffline: true } }]
+      ], function (onEventError) {
+        var options;
+        options = {};
+        local._ajaxCache(options);
+        utility2.assert(utility2.jsonStringifyOrdered(options)
+          === '{"cache":"miss","cachePrefix":"/modeAjaxOffline"}', options);
+        onEventError();
+      });
     },
 
     ajaxNodejs: function (options, onEventError) {
       /*
         this function implements the the ajax function for the javascript platform nodejs
       */
-      var onEventError2, request, response, timeout, urlParsed;
+      var onEventError2, remaining, request, response, timeout, urlParsed;
       onEventError2 = function (error, data) {
         /* clear timeout for ajaxNodejs */
         clearTimeout(timeout);
@@ -3335,25 +3591,32 @@
             options.responseHeaders
           ]);
         }
-        onEventError(error, data);
+        remaining -= 1;
+        (remaining >= 0 ? onEventError : utility2.onEventErrorDefault)(error, data);
       };
+      remaining = 1;
       /* set timeout for ajaxNodejs */
       timeout = utility2.onEventTimeout(onEventError2, state.timeoutDefault, 'ajaxNodejs');
-      /* ajax - cached file */
-      if (!local._ajaxCache(options, onEventError2)) {
-        return;
-      }
       /* localhost */
       if (options.url[0] === '/') {
         options.url = state.localhost + options.url;
       }
-      /* set default options */
-      urlParsed = required.url.parse(String(options.proxy || options.url));
       /* assert valid http / https url */
-      if (!(/^https*:$/).test(urlParsed.protocol)) {
-        onEventError2(new Error('ajaxNodejs - invalid url ' + (options.proxy || options.url)));
+      if (!(/^https*:/).test(options.url)) {
+        onEventError2(new Error('ajaxNodejs - invalid url ' + options.url));
         return;
       }
+      /* ajax caching */
+      if (local._ajaxCache(options, onEventError2)) {
+        return;
+      }
+      /* use cached data when in local mode */
+      if (state.modeOffline && options.url.indexOf(state.localhost) !== 0) {
+        options.url = state.localhost + '/test/modeAjaxOffline/'
+          + encodeURIComponent(options.url + '#' + options.method);
+      }
+      /* set default options */
+      urlParsed = required.url.parse(String(options.url));
       /* bug - disable socket pooling, because it causes timeout errors in tls tests */
       options.agent = options.agent || false;
       /* host needed for redirects */
@@ -3361,10 +3624,7 @@
       /* hostname needed for http(s).request */
       options.hostname = urlParsed.hostname;
       /* path needed for http(s).request */
-      options.path = options.proxy ? options.url : urlParsed.path;
-      if (options.params) {
-        options.path = utility2.urlParamsMerge(options.path, options.params);
-      }
+      options.path = urlParsed.path;
       /* port needed for http(s).request */
       options.port = urlParsed.port;
       /* protocol needed for http(s).request */
@@ -3391,39 +3651,39 @@
       }
     },
 
-    // _ajaxNodejs_cache_test: function (onEventError) {
-      // /*
-        // this function tests ajaxNodejs's cache handling behavior
-      // */
-      // var onEventReady;
-      // onEventReady = utility2.untilReady(onEventError);
-      // /* test cache flush handling behavior */
-      // onEventReady.remaining += 1;
-      // utility2.ajax({
-        // cache: 'miss',
-        // url: '/test/test.json'
-      // }, function (error, data) {
-        // utility2.tryCatch(function () {
-          // utility2.assert(!error);
-          // data = data.toString();
-          // utility2.assert(data === '"hello test"', data);
-          // onEventReady();
-        // }, onEventReady);
-      // });
-      // /* test cache default handling behavior */
-      // onEventReady.remaining += 1;
-      // utility2.ajax({
-        // cache: true,
-        // url: '/test/test.json'
-      // }, function (error, data) {
-        // utility2.tryCatch(function () {
-          // utility2.assert(!error);
-          // data = data.toString();
-          // utility2.assert(data === '"hello test"', data);
-          // onEventReady();
-        // }, onEventReady);
-      // });
-    // },
+    _ajaxNodejs_invalidUrl_test: function (onEventError) {
+      /*
+        this function tests ajaxNodejs's invalid url handling behavior
+      */
+      utility2.ajax({ url: '_ajaxNodejs_invalidUrl_test' }, function (error) {
+        utility2.tryCatch(function () {
+          utility2.assert(error instanceof Error);
+          onEventError();
+        }, onEventError);
+      });
+    },
+
+    _ajaxNodejs_modeOffline_test: function (onEventError) {
+      /*
+        this function tests ajaxNodejs's modeOffline handling behavior
+      */
+      utility2.testMock(onEventError, [
+        [global, { setTimeout: setTimeout }],
+        [state, { modeOffline: true }]
+      ], function (onEventError) {
+        var options;
+        options = { url: 'http://img.shields.io/badge/coverage-50.0%-777700.svg?style=flat' };
+        utility2.ajax(options, function (error, data) {
+          utility2.tryCatch(function () {
+            utility2.assert(!error, error);
+            utility2.assert(options.url === state.localhost + '/test/modeAjaxOffline/'
+              + 'http%3A%2F%2Fimg.shields.io%2Fbadge%2Fcoverage-50.0%25-777700.svg'
+              + '%3Fstyle%3Dflat%23GET', options.url);
+            onEventError();
+          }, onEventError);
+        });
+      });
+    },
 
     _ajaxOnEventData: function (options, onEventError, error, data) {
       /*
@@ -3439,11 +3699,9 @@
       }
       /* cache data */
       if (options.cache === 'miss') {
-        utility2.dbBlobWrite(
-          options.cachePrefix + '/cache/ajax/' + options.url0,
-          data,
-          utility2.onEventErrorDefault
-        );
+        utility2.fsWriteFileAtomic(state.tmpdir + '/' + options.cachePrefix + '/'
+          + encodeURIComponent(options.url0
+            + '#' + options.method), data, utility2.onEventErrorDefault);
       }
       switch (options.resultType) {
       case 'binary':
@@ -3460,7 +3718,7 @@
 
     __ajaxOnEventData_default_test: function (onEventError) {
       /*
-        this function tests _ajaxOnEventData's resultType handling behavior
+        this function tests _ajaxOnEventData's default handling behavior
       */
       var onEventReady;
       onEventReady = utility2.untilReady(onEventError);
@@ -3553,6 +3811,18 @@
         this function runs ajax from the repl interpreter
       */
       utility2.ajax({ modeDebug: true, url: arg2 }, utility2.onEventErrorDefault);
+    },
+
+    _replParseDict_ajax_default_test: function (onEventError) {
+      /*
+        this function tests replParseDict_ajax's default handling behavior
+      */
+      utility2.testMock(onEventError, [
+        [utility2, { ajax: utility2.nop }]
+      ], function (onEventError) {
+        utility2.replParse('(ajax /test/test.json\n)');
+        onEventError();
+      });
     }
 
   };
@@ -3592,16 +3862,15 @@
       }
       /* assert callback is a function */
       utility2.assert(typeof onEventError === 'function', 'ajax - invalid callback');
+      /* set options.headers if necessary */
+      options.headers = options.headers || {};
       /* set options.url0 if necessary */
       options.url0 = options.url0 || options.url;
       /* set options.method if necessary */
       if (options.data) {
         options.method = options.method || 'POST';
       }
-      if (options instanceof Error) {
-        onEventError(options);
-        return;
-      }
+      options.method = options.method || 'GET';
       (state.modeNodejs ? utility2.ajaxNodejs : utility2.ajaxBrowser)(options, onEventError);
     },
 
@@ -3609,14 +3878,29 @@
       /*
         this function tests ajax's default handling behavior
       */
-      utility2.ajax({
-        data: '_ajax_default_test',
-        modeDebug: true,
-        url: '/test/test.echo'
-      }, function (error, data) {
+      utility2.ajax({ modeDebug: true, url: '/' }, onEventError);
+    },
+
+    _ajax_json_test: function (onEventError) {
+      /*
+        this function tests ajax's json handling behavior
+      */
+      utility2.ajax({ resultType: 'json', url: '/test/test.json' }, function (error, data) {
         utility2.tryCatch(function () {
           utility2.assert(!error, error);
-          utility2.assert((/\n\n_ajax_default_test$/).test(data), data);
+          utility2.assert(data.toString() === 'hello test', data);
+          onEventError();
+        }, onEventError);
+      });
+    },
+
+    _ajax_jsonError_test: function (onEventError) {
+      /*
+        this function tests ajax's json error handling behavior
+      */
+      utility2.ajax({ resultType: 'json', url: '/test/test.echo' }, function (error) {
+        utility2.tryCatch(function () {
+          utility2.assert(error instanceof Error, error);
           onEventError();
         }, onEventError);
       });
@@ -3635,6 +3919,21 @@
       });
     },
 
+    _ajax_timeout_test: function (onEventError) {
+      /*
+        this function tests ajax's timeout handling behavior
+      */
+      utility2.testMock(onEventError, [
+        [state, { timeoutDefault: 1 }]
+      ], function (onEventError) {
+        utility2.ajax({ url: '/test/test.timeout?timeout=1000' }, function (error) {
+          utility2.assert(error instanceof Error, error);
+          utility2.assert(error.code === 'ETIMEDOUT', error.code);
+        });
+        onEventError();
+      });
+    },
+
     ajaxErrorDebug: function (error, method, statusCode, url, data) {
       /*
         this function add extra ajax debug info to the error's message and stack
@@ -3643,11 +3942,14 @@
       error.message = (method || 'GET') + ' ' + statusCode + ' - ' + url + '\n'
         + data;
       if (error.stack) {
-        error.stack = error.message + '\n' + error.stack;
+        /* BUG - phantomjs has readonly error.stack */
+        utility2.tryCatch(function () {
+          error.stack = error.message + '\n' + error.stack;
+        }, utility2.nop);
       }
     },
 
-    ajaxMultiUrls2: function (options, onEventReady) {
+    ajaxMultiUrls: function (options, onEventReady) {
       /*
         this function makes multiple ajax requests for multiple urls
         usage example:
@@ -3663,7 +3965,6 @@
       /* validate options.urlList */
       if (!(options
         && Array.isArray(options.urlList)
-        && options.urlList.length
         && options.urlList.every(function (url) {
             return typeof url === 'string';
           }))) {
@@ -3698,7 +3999,7 @@
       var onEventReady;
       onEventReady = utility2.untilReady(onEventError);
       onEventReady.remaining += 2;
-      utility2.ajaxMultiUrls2({ urlList: [
+      utility2.ajaxMultiUrls({ urlList: [
         '/test/test.json',
         (state.localhost || '') + '/test/test.json'
       ] }, function (error, data) {
@@ -3714,7 +4015,7 @@
       /*
         this function tests ajaxMultiUrls's error handling behavior
       */
-      utility2.ajaxMultiUrls2({ urlList: [null] }, function (error) {
+      utility2.ajaxMultiUrls({ urlList: [null] }, function (error) {
         utility2.tryCatch(function () {
           utility2.assert(error instanceof Error);
           onEventError();
@@ -3726,7 +4027,7 @@
       /*
         this function tests ajaxMultiUrls's null case handling behavior
       */
-      utility2.ajaxMultiUrls2(null, function (error) {
+      utility2.ajaxMultiUrls(null, function (error) {
         utility2.tryCatch(function () {
           utility2.assert(error instanceof Error);
           onEventError();
@@ -3785,7 +4086,7 @@
       /* defer local tests until server is listening on state.serverPort */
       utility2.readyUtility2.remaining += 1;
       /* indicate server is ready */
-      utility2.serverListen(state.serverPort, utility2.readyUtility2);
+      utility2.serverListen(utility2.readyUtility2);
     },
 
     'router1LoggingDict_/': function (request, response, next) {
@@ -3802,16 +4103,7 @@
       }
     },
 
-    '_router1LoggingDict_/_ignore_test': function (onEventError) {
-      /*
-        this function tests router1LoggingDict_/'s ignore handling behavior
-      */
-      utility2.ajax({ url: '/favicon.ico' }, function () {
-        onEventError();
-      });
-    },
-
-    'router2SecurityDict_/': function (request, response, next) {
+    'router2SecurityDict_/security': function (request, response, next) {
       /*
         this function handles default server security
       */
@@ -3821,24 +4113,58 @@
         return;
       }
       /* security - basic auth passed */
-      if (request.urlPathNormalized === '/' || utility2.securityBasicAuthValidate(request)) {
+      if (utility2.securityBasicAuthValidate(request)) {
         next();
         return;
       }
       /* security - basic auth failed */
       utility2.serverRespond(request, response, 303, {
-        data: '/signin?redirect=' + encodeURIComponent(request.url)
+        data: '/security/signin?redirect=' + encodeURIComponent(request.url)
       });
     },
 
-    'router2SecurityDict_/public': function (request, response, next) {
+    '_router2SecurityDict_/_basicAuthFailure_test': function (onEventError) {
       /*
-        this function grants public access to the /public path
+        this function tests router2SecurityDict_/'s basic auth failure handling behavior
       */
-      next();
+      utility2.ajax({
+        url: '/security?basicAuthFail=1'
+      }, function (error) {
+        utility2.tryCatch(function () {
+          utility2.assert(error instanceof Error, error);
+          onEventError();
+        }, onEventError);
+      });
     },
 
-    'router2SecurityDict_/signin': function (request, response, next) {
+    '_router2SecurityDict_/security_default_test': function (onEventError) {
+      /*
+        this function tests router2SecurityDict_/security's default handling behavior
+      */
+      utility2.ajax({ url: '/security' }, function (error, data) {
+        utility2.tryCatch(function () {
+          utility2.assert(error instanceof Error
+            && error.message === 'GET 404 - ' + state.localhost + '/security\n', error);
+          onEventError();
+        }, onEventError);
+      });
+    },
+
+    '_router2SecurityDict_/security_httpsRedirect_test': function (onEventError) {
+      /*
+        this function tests router2SecurityDict_/security's https redirect handling behavior
+      */
+      utility2.testMock(onEventError, [
+        [utility2, { securityHttpsRedirect: function () {
+          return true;
+        } }]
+      ], function (onEventError) {
+        local['router2SecurityDict_/security']();
+        onEventError();
+      });
+    },
+
+    'router2SecurityDict_/security/signin': function (request, response, next) {
       /* security - https redirect */
       if (utility2.securityHttpsRedirect(request, response)) {
         return;
@@ -3853,23 +4179,15 @@
       utility2.serverRespond(request, response, 401, {});
     },
 
-    '_router2SecurityDict_/signin_default_test': function (onEventError) {
+    '_router2SecurityDict_/security/signin_default_test': function (onEventError) {
       /*
-        this function tests router2SecurityDict_/signin's default handling behavior
+        this function tests router2SecurityDict_/security/signin's default handling behavior
       */
       var onEventReady;
       onEventReady = utility2.untilReady(onEventError);
       /* test https redirect */
       onEventReady.remaining += 1;
-      utility2.ajax({ url: '/signin?httpsRedirect=1' }, function (error) {
-        utility2.tryCatch(function () {
-          utility2.assert(error instanceof Error, error);
-          onEventReady();
-        }, onEventReady);
-      });
-      /* test failed signin */
-      onEventReady.remaining += 1;
-      utility2.ajax({ url: '/signin?basicAuthFail=1' }, function (error) {
+      utility2.ajax({ url: '/security/signin?httpsRedirect=1' }, function (error) {
         utility2.tryCatch(function () {
           utility2.assert(error instanceof Error, error);
           onEventReady();
@@ -3877,7 +4195,7 @@
       });
       /* test successful signin */
       onEventReady.remaining += 1;
-      utility2.ajax({ url: '/signin?redirect=%2Ftest%2Ftest.json' }, function (error, data) {
+      utility2.ajax({ url: '/security/signin?redirect=%2Ftest%2Ftest.json' }, function (error, data) {
         utility2.tryCatch(function () {
           utility2.assert(!error, error);
           utility2.assert(data === '"hello test"', data);
@@ -3886,11 +4204,28 @@
       });
     },
 
+    '_router2SecurityDict_/security/signin_failure_test': function (onEventError) {
+      /*
+        this function tests router2SecurityDict_/security/signin's failure handling behavior
+      */
+      utility2.ajax({
+        redirect: false,
+        url: '/security/signin?basicAuthFail=1'
+      }, function (error) {
+        utility2.tryCatch(function () {
+          utility2.assert(error instanceof Error, error);
+          onEventError();
+        }, onEventError);
+      });
+    },
+
     'router3CacheDict_/public/utility2': function (request, response, next) {
       /*
         this function grants public access to the /public path
       */
-      response.setHeader('cache-control', 'public, max-age=31536000');
+      if (!response.headersSent) {
+        response.setHeader('cache-control', 'public, max-age=31536000');
+      }
       next();
     },
 
@@ -3920,18 +4255,24 @@
       });
     },
 
-    '_router4ProxyDict_/proxy.ajax_default_test': function (onEventError) {
+    '_router4ProxyDict_/proxy.ajax_error_test': function (onEventError) {
       /*
-        this function tests router4ProxyDict_/proxy.ajax's default handling behavior
+        this function tests router4ProxyDict_/proxy.ajax's error handling behavior
       */
-      utility2.ajax({
-        url: state.localhost + '/proxy/proxy.ajax/' + state.localhost + '/test/test.json'
-      }, function (error, data) {
-        utility2.tryCatch(function () {
-          utility2.assert(!error, error);
-          utility2.assert(data === '"hello test"', data);
-          onEventError();
-        }, onEventError);
+      utility2.testMock(onEventError, [
+        [utility2, { ajax: function (_, onEventError) {
+          onEventError(new Error('_router4ProxyDict_/proxy.ajax_error_test'));
+        } }]
+      ], function (onEventError) {
+        local['router4ProxyDict_/proxy/proxy.ajax']({
+          headers: {},
+          url: ''
+        }, null, function (error) {
+          utility2.tryCatch(function () {
+            utility2.assert(error instanceof Error, error);
+            onEventError();
+          }, onEventError);
+        });
       });
     },
 
@@ -4033,6 +4374,14 @@
       request.pipe(response);
     },
 
+    'router5MainDict_/test/test.error': function (request, response, next) {
+      /*
+        this function mocks an internal server error
+      */
+      state.onEventErrorDefaultIgnoreList.push('router5MainDict_/test/test.error');
+      next(new Error('router5MainDict_/test/test.error'));
+    },
+
     'router5MainDict_/test/test.timeout': function (request, response, next) {
       /*
         this function responds after state.timeoutDefault milliseconds
@@ -4040,17 +4389,6 @@
       setTimeout(function () {
         response.end();
       }, request.urlParams.timeout || state.timeoutDefault);
-    },
-
-    '_router5MainDict_/test/test.timeout_default_test': function (onEventError) {
-      /*
-        this function tests router5MainDict_/test/test.timeout's default handling behavior
-      */
-      /* test signin's default handling behavior */
-      utility2.ajax({ url: '/test/test.timeout?timeout=1' }, function (error) {
-        utility2.assert(!error);
-        onEventError();
-      });
     },
 
     'router5MainDict_/test/test.watch': function (request, response, next) {
@@ -4063,32 +4401,53 @@
         return;
       }
       /* https://developer.mozilla.org/en-US/docs/Server-sent_events/Using_server-sent_events */
-      response.setHeader('content-type', 'text/event-stream');
+      if (!response.headersSent) {
+        response.setHeader('content-type', 'text/event-stream');
+      }
       /* set retry interval to state.timeoutDefault */
       response.write('retry: ' + state.timeoutDefault + '\n\n');
       list = state.testWatchList;
       /* limit max number of server-sent events */
       if (list.length >= 8) {
-        list.shift();
+        list.pop();
       }
-      list.push(response);
+      list.unshift(response);
+    },
+
+    '_router5MainDict_/test/test.watch_garbageCollect_test': function (onEventError) {
+      /*
+        this function tests _router5MainDict_/test/test.watch's garbage collect
+        handling behavior
+      */
+      utility2.testMock(onEventError, [
+        [global, { state: { testWatchList: [0, 1, 2, 3, 4, 5, 6, 7] } }]
+      ], function (onEventError) {
+        var response;
+        response = { setHeader: utility2.nop, write: utility2.nop };
+        local['router5MainDict_/test/test.watch'](
+          { headers: { accept: 'text/event-stream' } },
+          response
+        );
+        utility2.assert(state.testWatchList.length === 8, state.testWatchList);
+        utility2.assert(state.testWatchList[0] === response, state.testWatchList);
+        onEventError();
+      });
     },
 
     'router6FileDict_/public': function (request, response, next) {
       /*
         this function serves public files
       */
+      var data;
+      data = state.fsWatchDict[request.urlPathNormalized];
+      data = data && data.contentBrowser;
+      /* respond with in-memory cache of data if possible */
+      if (data) {
+        utility2.serverRespond(request, response, 200, { data: data });
+        return;
+      }
+      /* fallback to physical file */
       utility2.serverRespondFile(response, process.cwd() + request.urlPathNormalized, next);
-    },
-
-    '_router6FileDict_/public_error_test': function (onEventError) {
-      /*
-        this function tests router6FileDict_/public's error handling behavior
-      */
-      utility2.ajax({ url: '/public/' + utility2.uuid4() }, function (error) {
-        utility2.assert(error instanceof Error);
-        onEventError();
-      });
     },
 
     'router6FileDict_/public/utility2': function (request, response, next) {
@@ -4112,39 +4471,19 @@
       });
     },
 
-    'router6FileDict_/sandbox': function (request, response, next) {
+    'router6FileDict_/test': function (request, response, next) {
       /*
-        this function serves files from sandbox
+        this function serves public files
       */
-      var ii, fileList;
-      fileList = Object.keys(state.fsWatchDict);
-      for (ii = 0; ii < fileList.length; ii += 1) {
-        if (fileList[ii] === request.urlPathNormalized) {
-          utility2.serverRespond(request, response, 200, {
-            data: state.fsWatchDict[fileList[ii]].content
-          });
-          return;
-        }
+      var data;
+      data = state.fsWatchDict[request.urlPathNormalized];
+      data = data && data.contentBrowser;
+      /* respond with in-memory cache of data if possible */
+      if (data) {
+        utility2.serverRespond(request, response, 200, { data: data });
+        return;
       }
       next();
-    },
-
-    'router6FileDict_/test/test.png': function (request, response) {
-      /*
-        this function serves the file test.png
-      */
-      utility2.serverRespond(request, response, 200, {
-        data: state.fsWatchDict['/test/test.png'].content
-      });
-    },
-
-    'router6FileDict_/test/test.css': function (request, response) {
-      /*
-        this function serves the file test.css
-      */
-      utility2.serverRespond(request, response, 200, {
-        data: utility2.scriptLint('test.css', 'body { background-image:url("test.png"); }')
-      });
     },
 
     'router6FileDict_/test/test.html': function (request, response) {
@@ -4159,20 +4498,6 @@
           })
         })
       });
-    },
-
-    'router6FileDict_/test/test.js': function (request, response) {
-      /*
-        this function serves the file test.js
-      */
-      utility2.serverRespond(request, response, 200, { data: 'console.log("hello test");' });
-    },
-
-    'router6FileDict_/test/test.json': function (request, response) {
-      /*
-        this function responds with the application/json string '"hello test"'
-      */
-      utility2.serverRespond(request, response, 200, { data: '"hello test"' });
     },
 
     _createMiddleware: function (router5MainDict) {
@@ -4196,9 +4521,14 @@
               return;
             }
             path = request.url;
+            /* security - enforce max url length */
             if (path.length <= 4096) {
-              path = (/[^#&?]*/).exec(encodeURI(path))[0];
-              if (path && path.length <= 256 && !(/\.\/|\.$/).test(path)) {
+              path = (/[^#&?]*/).exec(path)[0];
+              if (path
+                  /* security - enforce max path length */
+                  && path.length <= 256
+                  /* security - disallow relative path */
+                  && !(/\.\/|\.$/).test(path)) {
                 /* dyanamic path handler */
                 request.urlPathNormalized = required.path.resolve(path);
                 /* urlParsed */
@@ -4234,18 +4564,34 @@
       };
     },
 
-    __createMiddleware_error_test: function (onEventError) {
+    __createMiddleware_security_test: function (onEventError) {
       /*
-        this function tests _createMiddleware's error handling behavior
+        this function tests _createMiddleware's security handling behavior
       */
+      var onEventReady, url;
+      onEventReady = utility2.untilReady(onEventError);
+      /* test path overflow handling behavior */
+      onEventReady.remaining += 1;
+      url = '/public/' + new Buffer(4096).toString('hex');
       state.onEventErrorDefaultIgnoreList.push(
-        '_createMiddleware request handler - invalid url /public/../foo'
+        '_createMiddleware request handler - invalid url ' + url
       );
-      utility2.ajax({
-        url: '/public/../foo'
-      }, function (error) {
-        utility2.assert(error instanceof Error);
-        onEventError();
+      utility2.ajax({ url: url }, function (error) {
+        utility2.tryCatch(function () {
+          utility2.assert(error instanceof Error);
+          onEventReady();
+        }, onEventReady);
+      });
+      /* test relative path handling behavior */
+      onEventReady.remaining += 1;
+      state.onEventErrorDefaultIgnoreList.push(
+        '_createMiddleware request handler - invalid url /public/../aa'
+      );
+      utility2.ajax({ url: '/public/../aa' }, function (error) {
+        utility2.tryCatch(function () {
+          utility2.assert(error instanceof Error);
+          onEventReady();
+        }, onEventReady);
       });
     },
 
@@ -4258,10 +4604,6 @@
       onEventError2 = function (error) {
         mode = error instanceof Error ? -1 : mode + 1;
         switch (mode) {
-        /* call error handling middleware */
-        case -1:
-          utility2.serverRespond(request, response, 500, { error: error });
-          break;
         /* 1. middleware logging */
         case 1:
           state.middleware1Logging(request, response, onEventError2);
@@ -4288,7 +4630,7 @@
           break;
         /* fallback to next middleware */
         default:
-          next();
+          next(error);
         }
       };
       onEventError2();
@@ -4362,21 +4704,21 @@
       case 307:
       case 308:
       case 309:
-        if (options.data) {
+        if (!response.headersSent) {
           response.setHeader('location', options.data);
         }
         break;
       /* 401 unauthorized */
       case 401:
-        response.setHeader('www-authenticate', 'Basic realm="Authorization Required"');
+        if (!response.headersSent) {
+          response.setHeader('www-authenticate', 'Basic realm="Authorization Required"');
+        }
         break;
       /* 500 internal server error */
       case 500:
-        if (options.error) {
-          utility2.onEventErrorDefault(options.error);
-          options.contentType = options.contentType || 'text/plain';
-          options.data = utility2.errorStack(options.error);
-        }
+        utility2.onEventErrorDefault(options.error);
+        options.contentType = options.contentType || 'text/plain';
+        options.data = utility2.errorStack(options.error);
         break;
       }
       if (!response.headersSent) {
@@ -4393,35 +4735,32 @@
       /*
         this function serves static files
       */
-      response.setHeader('content-type', utility2.mimeLookup(file)
-        || 'application/octet-stream');
+      if (!response.headersSent) {
+        response.setHeader('content-type', utility2.mimeLookup(file)
+          || 'application/octet-stream');
+      }
       required.fs.createReadStream(file).on('error', function () {
         /* security - don't leak filesystem info on error */
         next();
       }).pipe(response);
     },
 
-    serverListen: function (port, onEventListen) {
+    serverListen: function (onEventListen) {
       /*
-        this function makes the listen on the specified port, if not already listening,
+        this function makes the server listen on the specified port, if not already listening,
         and then calls the onEventListen callback
       */
+      /* if already listening, then simply call onEventListen */
+      if (state.serverListened || !state.serverPort) {
+        onEventListen();
+        return;
+      }
       /* create a random port from 32768 to 65535, inclusive, as needed */
-      port = Number(port === 'random' ? utility2.serverPortRandom() : port);
-      if (!port) {
-        onEventListen();
-        return;
-      }
-      /* if already listening on port, then simply call onEventListen */
-      state.serverListenDict = state.serverListenDict || {};
-      if (state.serverListenDict[port]) {
-        /* call onEventListen */
-        onEventListen();
-        return;
-      }
-      state.serverListenDict[port] = true;
-      /* set state.serverPort as needed */
-      state.serverPort = state.serverPort === 'random' ? port : state.serverPort || port;
+      state.serverPort = Number(state.serverPort === 'random'
+        ? utility2.serverPortRandom()
+        : state.serverPort);
+      /* assert valid state.serverPort */
+      utility2.assert(state.serverPort, state.serverPort);
       /* set state.server with a new http server as needed */
       state.server = state.server || required.http.createServer(function (request, response) {
         utility2.middlewareApplication(request, response, function (error) {
@@ -4429,29 +4768,131 @@
         });
       });
       /* listen on specified port */
-      utility2.jsonLog('serverListen - listening on port ' + port);
-      state.server.listen(port, function () {
-        if (port === state.serverPort) {
-          state.localhost = state.localhost || 'http://localhost:' + state.serverPort;
-          state.serverListened = true;
-        }
+      utility2.jsonLog('serverListen - listening on port ' + state.serverPort);
+      state.server.listen(state.serverPort, function () {
+        state.localhost = state.localhost || 'http://localhost:' + state.serverPort;
+        state.serverListened = true;
         /* call onEventListen */
         onEventListen();
       });
-    },
-
-    _serverListen_nullCase_test: function (onEventError) {
-      /*
-        this function tests serverListen's null case handling behavior
-      */
-      utility2.serverListen(null, onEventError);
     },
 
     _serverListen_reListen_test: function (onEventError) {
       /*
         this function tests serverListen's re-listen handling behavior
       */
-      utility2.serverListen(state.serverPort, onEventError);
+      utility2.serverListen(onEventError);
+    }
+
+  };
+  local._init();
+}());
+
+
+
+(function moduleServerShared() {
+  /*
+    this shared module exports the server api
+  */
+  'use strict';
+  var local;
+  local = {
+
+    _name: 'utility2.moduleServerShared',
+
+    _init: function () {
+      utility2.initModule(module, local);
+    },
+
+    '_router1LoggingDict_/_ignoreLogging_test': function (onEventError) {
+      /*
+        this function tests router1LoggingDict_/'s ignore logging handling behavior
+      */
+      utility2.ajax({ url: '/favicon.ico' }, function () {
+        onEventError();
+      });
+    },
+
+    '_router4ProxyDict_/proxy.ajax_default_test': function (onEventError) {
+      /*
+        this function tests router4ProxyDict_/proxy.ajax's default handling behavior
+      */
+      utility2.ajax({
+        url: '/proxy/proxy.ajax//test/test.json'
+      }, function (error, data) {
+        utility2.tryCatch(function () {
+          utility2.assert(!error, error);
+          utility2.assert(data === '"hello test"', data);
+          onEventError();
+        }, onEventError);
+      });
+    },
+
+    '_router5MainDict_/_default_test': function (onEventError) {
+      /*
+        this function tests _router5MainDict_/'s default handling behavior
+      */
+      utility2.ajax({ url: '/'}, onEventError);
+    },
+
+    '_router5MainDict_/test/test.echo_default_test': function (onEventError) {
+      /*
+        this function tests router5MainDict_/test/test.echo's default handling behavior
+      */
+      utility2.ajax({
+        data: '_ajax_default_test',
+        url: '/test/test.echo'
+      }, function (error, data) {
+        utility2.tryCatch(function () {
+          utility2.assert(!error, error);
+          utility2.assert((/\n\n_ajax_default_test$/).test(data), data);
+          onEventError();
+        }, onEventError);
+      });
+    },
+
+    'router5MainDict_/test/test.error_default_test': function (onEventError) {
+      /*
+        this function tests router5MainDict_/test/test.error's default handling behavior
+      */
+      utility2.ajax({ url: '/test/test.error' }, function (error, data) {
+        utility2.tryCatch(function () {
+          utility2.assert(error instanceof Error, error);
+          onEventError();
+        }, onEventError);
+      });
+    },
+
+    '_router5MainDict_/test/test.timeout_default_test': function (onEventError) {
+      /*
+        this function tests router5MainDict_/test/test.timeout's default handling behavior
+      */
+      utility2.ajax({ url: '/test/test.timeout?timeout=1' }, function (error) {
+        utility2.assert(!error);
+        onEventError();
+      });
+    },
+
+    '_router5MainDict_/test/test.watch_nullCase_test': function (onEventError) {
+      /*
+        this function tests _router5MainDict_/test/test.watch's null case handling behavior
+      */
+      utility2.ajax({ url: '/test/test.watch' }, function (error) {
+        utility2.tryCatch(function () {
+          utility2.assert(error instanceof Error, error);
+          onEventError();
+        }, onEventError);
+      });
+    },
+
+    '_router6FileDict_/public_error_test': function (onEventError) {
+      /*
+        this function tests router6FileDict_/public's error handling behavior
+      */
+      utility2.ajax({ url: '/public/' + utility2.uuid4() }, function (error) {
+        utility2.assert(error instanceof Error);
+        onEventError();
+      });
     }
 
   };

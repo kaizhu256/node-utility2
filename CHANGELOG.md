@@ -4,6 +4,11 @@
 - add heroku dynamic config server
 - integrate forever-webui
 
+#### 2014.04.22
+- auto-detect slimerjs
+- add angularjs support
+- add mocks using cached ajax responses
+
 #### 2014.04.20
 - add native code coverage artifact upload to github
 - add sha hash check to prevent dbGithubBranch from updating identical files
