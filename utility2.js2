@@ -1190,7 +1190,7 @@ console.log('hello test');
     _name: 'utility2.moduleDbPostgresNodejs',
 
     _init: function () {
-      if (state.modeDbPostgres && state.modeNodejs) {
+      if (state.modeDbPostgres && state.modeNodejs && state.modeTest !== false) {
         utility2.initModule(module, local);
       }
     },
