@@ -1,11 +1,16 @@
 #### todo
 - add html linter
 - auto-remove test functions from module in production mode
-- add heroku dynamic config server
-- integrate forever-webui
+
+#### 2014.05.02
+- add html test report artifact
+- publish build artifacts even on failed npm test
+- revamp code coverage file structure
+- auto-detect postgres for testing
+- near 100% code coverage for both linux / mac builds
 
 #### 2014.04.22
-- auto-detect slimerjs
+- auto-detect slimerjs for testing
 - add angularjs support
 - add mocks using cached ajax responses
 

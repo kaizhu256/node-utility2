@@ -121,7 +121,6 @@ CSS_COMMENT */
       'https://code.jquery.com/jquery.js',
       /* angularjs */
       'https://code.angularjs.org/snapshot/angular.js',
-      // 'https://code.angularjs.org/snapshot/angular-mocks.js',
       /* bootstrap */
       'https://raw.githubusercontent.com/twbs/bootstrap/master/dist/js/bootstrap.js',
       /* mime.types */
@@ -254,11 +253,11 @@ CSS_COMMENT */
 
 
 
-/* MODULE_BEGIN { "actionList": ["lint"], "file": ".install/utility2_phantomjs.js" } */
+/* MODULE_BEGIN { "actionList": ["lint"], "file": ".install/utility2_headless_phantomjs.js" } */
 /*jslint browser: true, indent: 2, maxerr: 8, node: true, nomen: true, regexp: true, todo: true, unparam: true*/
 /*global global, phantom, required, state, utility2, $*/
 /*jslint indent: 2, node: true, nomen: true*/
-(function moduleInitPhantomjs() {
+(function moduleHeadlessPhantomjs() {
   /*
     this phantomjs module opens a webpage
   */
@@ -323,19 +322,69 @@ CSS_COMMENT */
 
 
 
-/* MODULE_BEGIN { "actionList": ["lint"], "file": "/main.html" } */
+/* MODULE_BEGIN { "actionList": ["lint"], "file": "/test/report.html.template" } */
 <!DOCTYPE html><html>
 <head>
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
-<link href="/public/utility2/utility2_external.browser.rollup.min.css" rel="stylesheet"/>
+<title>utility2 test report</title>
+<style>
+div {
+  border-radius: 5px;
+  border-style: solid;
+  border-width: 1px;
+  margin: 20px;
+  padding: 0px 10px 10px 10px;
+}
+pre {
+  background-color: #fdd;
+  border-top-style: solid;
+  border-width: 1px;
+}
+table {
+  border-top-style: solid;
+  border-width: 1px;
+  text-align: left;
+  width: 100%;
+}
+tr:nth-child(even) {
+  background-color: #ddf;
+}
+.failed, tr.failed {
+  background-color: #f99;
+}
+.summary {
+  background-color: #ddf;
+}
+</style>
 </head>
 <body>
-hello world
-<div id="qunit"></div>
-<div id="qunit-fixture"></div>
-<script src="/public/utility2/utility2_external.browser.rollup.min.js"></script>
-<script src="/public/utility2.js"></script>
-<script src="/public/utility2_extra.js"></script>
+
+<div class="summary"><h2>test report summary</h4><table><thead><tr>
+  <th>total time</th>
+  <th>total tests failed</th>
+  <th>total tests passed</th>
+  <th>total test suites</th>
+</tr></thead><tbody><tr>
+  <td>{{totalTime}} ms</td>
+  <td class="{{totalFailedClass}}">{{totalFailed}}</td>
+  <td>{{totalPassed}}</td>
+  <td>{{totalTestSuites}}</td>
+</tr></tbody></table></div>
+
+{{content}}
+</body>
+</html>
+/* MODULE_END */
+
+
+
+/* MODULE_BEGIN { "actionList": ["lint"], "file": "/test/sandbox.html" } */
+<!DOCTYPE html><html>
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
+<title>utility2 standbox</title>
+</head>
+<body>
 </body>
 </html>
 /* MODULE_END */
@@ -346,12 +395,13 @@ hello world
 <!DOCTYPE html><html>
 <head>
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
+<title>utility2 test page</title>
 <link href="/public/utility2/utility2_external.browser.rollup.min.css" rel="stylesheet"/>
 </head>
 <body>
 <div id="qunit"></div>
 <div id="qunit-fixture"></div>
-<script>window.state = {{state}};</script>
+<script>window.state = { testModuleDict: { utility2: true } };</script>
 <script src="/public/utility2/utility2_external.browser.rollup.min.js"></script>
 <script src="/public/utility2.js"></script>
 <script src="/public/utility2_extra.js"></script>
@@ -392,8 +442,14 @@ ymXCIWMOjxhLC8J1sbqQq/btyWDcn1qj0PUzM+bH4UidMtOe/B7bL9Wlz0MZYXZdLOnfAAAAAElFTkSu
 
 
 
-/* MODULE_BEGIN { "actionList": ["trim"], "file": "/test/modeAjaxOffline/http%3A%2F%2Fimg.shields.io%2Fbadge%2Fcoverage-50.0%25-777700.svg%3Fstyle%3Dflat%23GET" } */
-<svg xmlns="http://www.w3.org/2000/svg" width="110" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#fff" stop-opacity=".1"/><stop offset=".1" stop-color="#fff" stop-opacity=".1"/><stop offset=".9" stop-color="#fff" stop-opacity=".1"/><stop offset="1" stop-color="#fff" stop-opacity=".1"/></linearGradient><path fill="#555" d="M0 0h110v20h-110z"/><path fill="#770" d="M63 0h47v20h-47zM63 0h4v20h-4z"/><path fill="url(#a)" d="M0 0h110v20h-110z"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="32.5" y="13">coverage</text><text x="85.5" y="13">50.0%</text></g></svg>
+/* MODULE_BEGIN { "actionList": ["trim"], "file": "/test/modeAjaxOffline/http%3A%2F%2Fimg.shields.io%2Fbadge%2Fcoverage-100.0%25-00ee00.svg%3Fstyle%3Dflat%23GET" } */
+<svg xmlns="http://www.w3.org/2000/svg" width="117" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#fff" stop-opacity=".1"/><stop offset=".1" stop-color="#fff" stop-opacity=".1"/><stop offset=".9" stop-color="#fff" stop-opacity=".1"/><stop offset="1" stop-color="#fff" stop-opacity=".1"/></linearGradient><path fill="#555" d="M0 0h117v20h-117z"/><path fill="#0e0" d="M63 0h54v20h-54zM63 0h4v20h-4z"/><path fill="url(#a)" d="M0 0h117v20h-117z"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="32.5" y="13">coverage</text><text x="89" y="13">100.0%</text></g></svg>
+/* MODULE_END */
+
+
+
+/* MODULE_BEGIN { "actionList": ["trim"], "file": "/test/modeAjaxOffline/http%3A%2F%2Fimg.shields.io%2Fbadge%2Ftests_failed-999-ee0000.svg%3Fstyle%3Dflat%23GET" } */
+<svg xmlns="http://www.w3.org/2000/svg" width="103" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#fff" stop-opacity=".1"/><stop offset=".1" stop-color="#fff" stop-opacity=".1"/><stop offset=".9" stop-color="#fff" stop-opacity=".1"/><stop offset="1" stop-color="#fff" stop-opacity=".1"/></linearGradient><path fill="#555" d="M0 0h103v20h-103z"/><path fill="#e00" d="M72 0h31v20h-31zM72 0h4v20h-4z"/><path fill="url(#a)" d="M0 0h103v20h-103z"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="37" y="13">tests failed</text><text x="86.5" y="13">999</text></g></svg>
 /* MODULE_END */
 
 
@@ -417,7 +473,12 @@ ymXCIWMOjxhLC8J1sbqQq/btyWDcn1qj0PUzM+bH4UidMtOe/B7bL9Wlz0MZYXZdLOnfAAAAAElFTkSu
 
 
 /* MODULE_BEGIN { "actionList": ["lint"], "file": "/test/test.css" } */
-body {
+aa {
+  background-image:url(
+"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQAQMAAAAlPW0iAAAABlBMVEUAAAD///+l2Z/dAAAAM0lEQVR4nGP4/5/h/1+G/58ZDrAz3D/McH8yw83NDDeNGe4Ug9C9zwz3gVLMDA/A6P9/AFGGFyjOXZtQAAAAAElFTkSuQmCC"
+  );
+}
+bb {
   background-image:url("test.png");
 }
 /* MODULE_END */
@@ -449,88 +510,6 @@ console.log('hello test');
   local = {
 
     _name: 'utility2.moduleExtraNodejs',
-
-    _init: function () {
-      if (state.modeNodejs) {
-        utility2.initModule(module, local);
-      }
-    },
-
-    _initOnce: function () {
-      /* indicate utility2.js2 is ready */
-      setTimeout(utility2.readyUtility2);
-    },
-
-    modeCliDict_coverageBadgeGenerate: function (state, onEventError) {
-      /*
-        this function generates a coverage badge from an existing coverage report
-      */
-      var mode, onEventError2;
-      mode = 0;
-      onEventError2 = function (error, data) {
-        mode = error instanceof Error ? -1 : mode + 1;
-        switch (mode) {
-        /* get coverage info */
-        case 1:
-          state = state || global.state;
-          required.fs.readFile(state.tmpdir + '/cobertura-coverage.xml', 'utf8', onEventError2);
-          break;
-        /* get coverage badge */
-        case 2:
-          /* get coverage percentage */
-          data = Number((/line-rate="([^"]+)"/).exec(data)[1]);
-          /* get coverage badge from generated url */
-          utility2.ajax({ resultType: 'binary', url: 'http://img.shields.io/badge/coverage-'
-            + (100 * data).toFixed(1) + '%-'
-            + ('0' + Math.round((1 - data) * 238).toString(16)).slice(-2)
-            + ('0' + Math.round(data * 238).toString(16)).slice(-2)
-            + '00.svg?style=flat'
-            }, onEventError2);
-          break;
-        /* save coverage badge */
-        case 3:
-          required.fs.writeFile(state.tmpdir + '/coverage_badge.svg', data, onEventError2);
-          break;
-        default:
-          (onEventError || utility2.onEventErrorDefault)(error);
-        }
-      };
-      onEventError2();
-    },
-
-    _modeCliDict_coverageBadgeGenerate_default_test: function (onEventError) {
-      /*
-        this function tests modeCliDict_coverageBadgeGenerate's default handling behavior
-      */
-      required.fs.writeFile(
-        state.tmpdir + '/cache/cobertura-coverage.xml',
-        'line-rate="0.5"',
-        function (error) {
-          utility2.tryCatch(function () {
-            utility2.assert(!error, error);
-            state.modeCliDict.coverageBadgeGenerate({
-              tmpdir: state.tmpdir + '/cache'
-            }, onEventError);
-          }, onEventError);
-        }
-      );
-    }
-
-  };
-  local._init();
-}());
-
-
-
-(function moduleAdminNodejs() {
-  /*
-    this nodejs module exports the admin api
-  */
-  'use strict';
-  var local;
-  local = {
-
-    _name: 'utility2.moduleAdminNodejs',
 
     _init: function () {
       if (state.modeNodejs) {
@@ -688,7 +667,8 @@ console.log('hello test');
         function (error, data) {
           utility2.tryCatch(function () {
             utility2.assert(!error, error);
-            utility2.assert(data === '_router5MainDict_/admin/admin.shell_default_test\n\nexit code: 0', data);
+            utility2.assert(data
+              === '_router5MainDict_/admin/admin.shell_default_test\n\nexit code: 0', data);
             onEventError();
           }, onEventError);
         }
@@ -700,9 +680,7 @@ console.log('hello test');
         this function tests router5MainDict_/admin/admin.shell's error handling behavior
       */
       utility2.testMock(onEventError, [
-        [utility2, { streamReadAll: function (_, onEventError) {
-          onEventError(new Error('_router5MainDict_/admin/admin.shell_error_test'));
-        } }]
+        [utility2, { streamReadAll: utility2.callError1 } ]
       ], function (onEventError) {
         local['router5MainDict_/admin/admin.shell'](null, null, function (error) {
           utility2.assert(error instanceof Error, error);
@@ -717,15 +695,15 @@ console.log('hello test');
 
 
 
-(function moduleAdminShared() {
+(function moduleExtraShared() {
   /*
-    this browser module exports the admin api
+    this shared module exports extra utilities
   */
   'use strict';
   var local;
   local = {
 
-    _name: 'utility2.moduleAdminShared',
+    _name: 'utility2.moduleExtraShared',
 
     _init: function () {
       utility2.initModule(module, local);
@@ -733,7 +711,7 @@ console.log('hello test');
 
     adminEval: function (script, onEventError) {
       /*
-        this function remotely evals the javascript code on server
+        this function remotely evals server-side javascript code
       */
       utility2.ajax({
         data: script,
@@ -744,29 +722,9 @@ console.log('hello test');
 
     adminShell: function (script, onEventError) {
       /*
-        this function remotely executes shell commands on server
+        this function remotely executes server-side shell commands
       */
       utility2.ajax({ data: script, url: "/admin/admin.shell" }, onEventError);
-    }
-
-  };
-  local._init();
-}());
-
-
-
-(function moduleCacheShared() {
-  /*
-    this shared module exports the cache api
-  */
-  'use strict';
-  var local;
-  local = {
-
-    _name: 'utility2.moduleCacheShared',
-
-    _init: function () {
-      utility2.initModule(module, local);
     },
 
     createCache: function (size) {
@@ -854,6 +812,12 @@ console.log('hello test');
       self.setItem('aa', 1);
       utility2.assert(utility2.jsonStringifyOrdered(self)
         === '{"cache1":{"aa":1},"cache2":{"aa":1},"remaining":1,"size":2}', self);
+      /* test getItem 1 */
+      data = self.getItem('aa');
+      utility2.assert(data === 1, data);
+      /* test getItem 2 */
+      data = self.getItem('aa');
+      utility2.assert(data === 1, data);
       /* test setItem */
       self.setItem('bb', 2);
       utility2.assert(utility2.jsonStringifyOrdered(self)
@@ -864,7 +828,7 @@ console.log('hello test');
         === '{"cache1":{"aa":1,"bb":2,"cc":3},"cache2":{"cc":3},"remaining":1,"size":2}', self);
       /* test getItem */
       data = self.getItem('aa');
-      utility2.assert(data, data);
+      utility2.assert(data === 1, data);
       utility2.assert(utility2.jsonStringifyOrdered(self)
         === '{"cache1":{"aa":1,"bb":2,"cc":3},"cache2":{"aa":1,"cc":3},"remaining":0,'
           + '"size":2}', self);
@@ -879,6 +843,7 @@ console.log('hello test');
           + '"size":2}', self);
       /* test getItem */
       data = self.getItem('bb');
+      utility2.assert(data === undefined, data);
       utility2.assert(utility2.jsonStringifyOrdered(self)
         === '{"cache1":{"aa":1,"cc":3,"dd":4,"ee":5},"cache2":{"dd":4,"ee":5},"remaining":0,'
           + '"size":2}', self);
@@ -887,7 +852,8 @@ console.log('hello test');
       utility2.assert(utility2.jsonStringifyOrdered(self)
         === '{"cache1":{"dd":4},"cache2":{},"remaining":1,"size":2}', self);
       /* test getItem */
-      utility2.assert(self.getItem('ee') === undefined);
+      data = self.getItem('ee');
+      utility2.assert(data === undefined, data);
       utility2.assert(utility2.jsonStringifyOrdered(self)
         === '{"cache1":{"dd":4},"cache2":{},"remaining":1,"size":2}', self);
       onEventError();
@@ -936,6 +902,91 @@ console.log('hello test');
       return;
     },
 
+    __Branch_default_test: function (onEventError) {
+      /*
+        this function tests _Branch's default handling behavior
+      */
+      var file, mode, onEventError2, self;
+      self = state.dbGithubBranchDefault;
+      mode = 0;
+      onEventError2 = function (error) {
+        mode = error instanceof Error ? -1 : mode + 1;
+        switch (mode) {
+        /* test _Branch_prototype_fileDelete's null handling behavior */
+        case 1:
+          file = '/test/_Branch_default_test.json';
+          self.fileDelete(file, onEventError2);
+          break;
+        /* test _Branch_prototype_fileUpdate's default handling behavior */
+        case 2:
+          self.fileUpdate(file, new Buffer('"_Branch_default_test2"'), onEventError2);
+          break;
+        /* test _Branch_prototype_fileUpdate's sha hash comparison handling behavior */
+        case 3:
+          self.fileUpdate(file, new Buffer('"_Branch_default_test2"'), onEventError2);
+          break;
+        /* test _Branch_prototype_fileDelete's null handling behavior */
+        case 4:
+          self.fileDelete(file + utility2.uuid4(), onEventError2);
+          break;
+        /* test _Branch_prototype_fileDelete's default handling behavior */
+        case 5:
+          self.fileDelete(file, onEventError2);
+          break;
+        case 6:
+          onEventError2(utility2.error);
+          break;
+        default:
+          utility2.tryCatch(function () {
+            utility2.assert(error instanceof Error && error === utility2.error, error);
+            onEventError();
+          }, onEventError);
+        }
+      };
+      onEventError2();
+    },
+
+    __Branch_error_test: function (onEventError) {
+      /*
+        this function tests _Branch's error handling behavior
+      */
+      utility2.testMock(onEventError, [
+        [utility2, { ajax: utility2.callError1 }]
+      ], function (onEventError) {
+        var self;
+        self = state.dbGithubBranchDefault;
+        /* test _Branch_prototype_fileDelete's error handling behavior */
+        self.fileDelete(null, function (error) {
+          utility2.tryCatch(function () {
+            utility2.assert(error instanceof Error, error);
+          }, onEventError);
+        });
+        /* test _Branch_prototype_fileSha's error handling behavior */
+        self.fileSha(null, function (error) {
+          utility2.tryCatch(function () {
+            utility2.assert(error instanceof Error, error);
+          }, onEventError);
+        });
+        /* test _Branch_prototype_fileUpdate's error handling behavior */
+        self.fileUpdate(null, null, function (error) {
+          utility2.tryCatch(function () {
+            utility2.assert(error instanceof Error, error);
+          }, onEventError);
+        });
+        /* test _Branch_prototype_fileSha's 404 error handling behavior */
+        utility2.ajax = function (_, onEventError) {
+          onEventError(new Error('GET 404'));
+        };
+        self.fileSha(null, function (error, data) {
+          utility2.tryCatch(function () {
+            utility2.assert(!error, error);
+            utility2.assert(!data, data);
+          }, onEventError);
+        });
+        onEventError();
+      });
+    },
+
     _Branch_prototype_ajax: function (options, onEventError) {
       /*
         this function makes an ajax request
@@ -970,6 +1021,7 @@ console.log('hello test');
             onEventError();
             return;
           }
+          /* delete file on github */
           self.ajax({ data: JSON.stringify({
             branch: self.branch,
             message: '--skip-ci delete ' + file,
@@ -978,6 +1030,43 @@ console.log('hello test');
           break;
         default:
           onEventError(error);
+        }
+      };
+      onEventError2();
+    },
+
+    _Branch_prototype_fileSha: function (file, onEventError) {
+      /*
+        this function gets the file's sha id on github
+      */
+      var mode, onEventError2, self, sha;
+      mode = 0;
+      self = this;
+      onEventError2 = function (error, data) {
+        mode = error instanceof Error ? -1 : mode + 1;
+        switch (mode) {
+        case 1:
+          self.ajax({
+            url: self.url + required.path.dirname(file) + '?ref=' + self.branch
+          }, onEventError2);
+          break;
+        case 2:
+          file = required.path.basename(file);
+          /* default sha to empty string */
+          sha = '';
+          data.some(onEventError2);
+          mode += 1;
+          onEventError2();
+          break;
+        case 3:
+          mode -= 1;
+          if (error.name === file) {
+            sha = error.sha;
+            return true;
+          }
+          break;
+        default:
+          onEventError((/^GET 404\b/).test(error && error.message) ? null : error, sha);
         }
       };
       onEventError2();
@@ -1026,7 +1115,7 @@ console.log('hello test');
       blob = new Buffer(1);
       self = state.dbGithubBranchDefault;
       utility2.testMock(onEventError, [
-        [self, { ajax: null, fileSha: function (_, onEventError) {
+        [self, { fileSha: function (_, onEventError) {
           onEventError(null, local._blobSha(blob));
         } }]
       ], function (onEventError) {
@@ -1039,79 +1128,23 @@ console.log('hello test');
       });
     },
 
-    _Branch_prototype_fileSha: function (file, onEventError) {
+    __Branch_prototype_fileUpdate_createFile_test: function (onEventError) {
       /*
-        this function gets the file's sha id on github
+        this function tests _Branch_prototype_fileUpdate's create file handling behavior
       */
-      var mode, onEventError2, self, sha;
-      mode = 0;
-      self = this;
-      onEventError2 = function (error, data) {
-        mode = error instanceof Error ? -1 : mode + 1;
-        switch (mode) {
-        case 1:
-          self.ajax({
-            url: self.url + required.path.dirname(file) + '?ref=' + self.branch
-          }, onEventError2);
-          break;
-        case 2:
-          file = required.path.basename(file);
-          /* default sha to empty string */
-          sha = '';
-          data.some(onEventError2);
-          mode += 1;
-          onEventError2();
-          break;
-        case 3:
-          mode -= 1;
-          if (error.name === file) {
-            sha = error.sha;
-            return true;
-          }
-          break;
-        default:
-          onEventError((/^GET 404\b/).test(error && error.message) ? null : error, sha);
-        }
-      };
-      onEventError2();
-    },
-
-    _Branch_default_test: function (onEventError) {
-      /*
-        this function tests _Branch's default handling behavior
-      */
-      var file, mode, onEventError2, self;
+      var blob, self;
+      blob = new Buffer(1);
       self = state.dbGithubBranchDefault;
-      mode = 0;
-      onEventError2 = function (error) {
-        mode = error instanceof Error ? -1 : mode + 1;
-        switch (mode) {
-        /* test _Branch_prototype_fileDelete's null handling behavior */
-        case 1:
-          file = '/test/_Branch_default_test.json';
-          self.fileDelete(file, onEventError2);
-          break;
-        /* test _Branch_prototype_fileUpdate's default handling behavior */
-        case 2:
-          self.fileUpdate(file, new Buffer('"_Branch_default_test2"'), onEventError2);
-          break;
-        /* test _Branch_prototype_fileUpdate's sha hash comparison handling behavior */
-        case 3:
-          self.fileUpdate(file, new Buffer('"_Branch_default_test2"'), onEventError2);
-          break;
-        /* test _Branch_prototype_fileDelete's null handling behavior */
-        case 4:
-          self.fileDelete(file + utility2.uuid4(), onEventError2);
-          break;
-        /* test _Branch_prototype_fileDelete's default handling behavior */
-        case 5:
-          self.fileDelete(file, onEventError2);
-          break;
-        default:
-          onEventError(error);
-        }
-      };
-      onEventError2();
+      utility2.testMock(onEventError, [
+        [self, { ajax: utility2.callArg1, fileSha: utility2.callArg1 }]
+      ], function (onEventError) {
+        self.fileUpdate(null, blob, function (error) {
+          utility2.tryCatch(function () {
+            utility2.assert(!error, error);
+            onEventError();
+          }, onEventError);
+        });
+      });
     },
 
     _createDbGithubBranch: function (ownerRepoBranch, token) {
@@ -1203,6 +1236,8 @@ console.log('hello test');
         switch (mode) {
         case 1:
           required.pg = required.pg || utility2.require('pg');
+          /* disable tests for this module */
+          state.testModuleDict[local._name] = false;
           utility2.readyUtility2.remaining += 1;
           required.pg.connect(state.modeDbPostgres, onEventError2);
           break;
@@ -1221,11 +1256,31 @@ console.log('hello test');
           onEventError2();
           break;
         default:
-          utility2.assert(!error, error);
+          utility2.assert(state.modeNpmTest || !error, error);
+          /* enable / disable tests for this module */
+          state.testModuleDict[local._name] = !error;
           utility2.readyUtility2();
         }
       };
       onEventError2();
+    },
+
+    __initOnce_error_test: function (onEventError) {
+      /*
+        this function tests _initOnce's error handling behavior
+      */
+      utility2.testMock(onEventError, [
+        [global, {
+          required: { pg: { connect: utility2.callError1 } },
+          state: { testModuleDict: {} }
+        }],
+        [utility2, { readyUtility2: {} }]
+      ], function (onEventError) {
+        utility2.tryCatch(local._initOnce, function (error) {
+          utility2.assert(error instanceof Error, error);
+          onEventError();
+        });
+      });
     },
 
     createDbPostgresTable: function (name, onEventError) {
@@ -1305,8 +1360,11 @@ console.log('hello test');
         } }, postgresResult: null }]
       ], function (onEventError) {
         utility2.replParse('(postgres _\n)');
-        utility2.replParse('(postgres SELECT 1;\n)');
+        utility2.replParse('(postgres SELECT 0;\n)');
         utility2.replParse('(postgres .tableList\n)');
+        /* test error handling behavior */
+        state.dbPostgresTableDefault.query = utility2.callError2;
+        utility2.replParse('(postgres SELECT 0;\n)');
         onEventError();
       });
     },
@@ -1436,13 +1494,54 @@ console.log('hello test');
             onEventError2();
           }, onEventError2);
           break;
+        case 26:
+          onEventError2(utility2.error);
+          break;
         default:
           self.drop(function () {
-            onEventError(error, data);
+            utility2.tryCatch(function () {
+              utility2.assert(error instanceof Error && error === utility2.error, error);
+              onEventError();
+            }, onEventError);
           });
         }
       };
       onEventError2();
+    },
+
+    __Table_error_test: function (onEventError) {
+      /*
+        this function tests _Table's error handling behavior
+      */
+      var self;
+      self = state.dbPostgresTableDefault;
+      utility2.testMock(onEventError, [
+        [global, { required: { pg: { connect: utility2.callError1 } } }]
+      ], function (onEventError) {
+        /* test createDbPostgresTable error handling behavior */
+        utility2.createDbPostgresTable('utility2_error', function (error) {
+          utility2.assert(error instanceof Error, error);
+        });
+        /* test _Table_prototype_getItem error handling behavior */
+        self.getItem(null, function (error) {
+          utility2.tryCatch(function () {
+            utility2.assert(error instanceof Error, error);
+          }, onEventError);
+        });
+        /* test _Table_prototype_keys error handling behavior */
+        self.keys(function (error) {
+          utility2.tryCatch(function () {
+            utility2.assert(error instanceof Error, error);
+          }, onEventError);
+        });
+        /* test _Table_prototype_query error handling behavior */
+        self.query(null, null, function (error) {
+          utility2.tryCatch(function () {
+            utility2.assert(error instanceof Error, error);
+          }, onEventError);
+        });
+        onEventError();
+      });
     },
 
     _Table_prototype_clear: function (onEventError) {
@@ -1518,7 +1617,7 @@ console.log('hello test');
           self.query('SELECT key from {{table}};', null, onEventError2);
           break;
         case 2:
-          data = (data || []).map(onEventError2);
+          data = data.map(onEventError2);
           mode += 1;
           onEventError2(null, data);
           break;
@@ -1689,12 +1788,12 @@ console.log('hello test');
       return self;
     },
 
-    _createDbSqlite3Table_error_test: function (onEventError) {
+    _createDbSqlite3Table_invalidName_test: function (onEventError) {
       /*
-        this function tests createDbSqlite3Table's error handling behavior
+        this function tests createDbSqlite3Table's invalid name handling behavior
       */
-      utility2.createDbSqlite3Table('table_fts', function (error) {
-        utility2.assert(error instanceof Error);
+      utility2.createDbSqlite3Table('utility2_fts', function (error) {
+        utility2.assert(error instanceof Error, error);
         onEventError();
       });
     },
@@ -1713,6 +1812,7 @@ console.log('hello test');
             'SELECT name FROM sqlite_master\n'
               + 'WHERE type="table" AND name NOT LIKE "%_fts" AND name NOT LIKE "%_fts_%"\n'
               + 'ORDER BY name;',
+            {},
             onEventError2
           );
           break;
@@ -1731,7 +1831,7 @@ console.log('hello test');
       onEventError2();
     },
 
-    _dbSqlite3TableList_test: function (onEventError) {
+    _dbSqlite3TableList_default_test: function (onEventError) {
       /*
         this function tests dbSqlite3TableList's default handling behavior
       */
@@ -1769,12 +1869,12 @@ console.log('hello test');
                 self.tableDrop(utility2.onEventErrorDefault);
               }
             });
-            return 'SELECT 1;';
+            return 'SELECT 0;';
           default:
             return _;
           }
         });
-      state.sqlite3.all(arg2, function (error, rows) {
+      state.sqlite3.all(arg2, {}, function (error, rows) {
         if (rows) {
           state.sqlite3Result = rows;
         }
@@ -1787,7 +1887,7 @@ console.log('hello test');
         this function tests replParseDict_sqlite3's default handling behavior
       */
       utility2.testMock(onEventError, [
-        [state, { sqlite3: { all: function (_, onEventError) {
+        [state, { sqlite3: { all: function (_, __, onEventError) {
           onEventError(null, true);
         } }, sqlite3Result: null }],
         [utility2, { createDbSqlite3Table: function (_, onEventError) {
@@ -1799,6 +1899,11 @@ console.log('hello test');
         utility2.replParse('(sqlite3 .tables\n)');
         utility2.replParse('(sqlite3 .tableDrop utility2_cache\n)');
         utility2.replParse('(sqlite3 .tableList\n)');
+        /* test error handling behavior */
+        state.sqlite3.all = utility2.callError2;
+        utility2.createDbSqlite3Table = utility2.callError1;
+        utility2.replParse('(sqlite3 SELECT 0;\n)');
+        utility2.replParse('(sqlite3 .tableDrop utility2_cache\n)');
         onEventError();
       });
     },
@@ -1822,66 +1927,67 @@ console.log('hello test');
           'utility2__Table_default_test',
           utility2.onEventErrorDefault
         ), self);
-        /* test self.sqlSerialize's default handling behavior */
+        /* test _Table_prototype_sqlSerialize's default handling behavior */
         self.sqlSerialize(function (onEventError2) {
-          /* test self.recordReplace's default handling behavior */
-          self.recordReplace('foo', { aa: true }, onEventError2);
+          /* test _Table_prototype_recordReplace's default handling behavior */
+          self.recordReplace('foo', { aa: true, bb: null }, onEventError2);
           self.recordGet('foo', function (error, data) {
             utility2.assert(!error, error);
-            utility2.assert(data.aa === true);
-            utility2.assert(data.timestamp);
+            utility2.assert(data.aa === true, data.aa);
+            utility2.assert(data.bb === undefined, data.bb);
+            utility2.assert(data.timestamp, data.timestamp);
           });
-          /* test self.recordUpdate's default handling behavior */
+          /* test _Table_prototype_recordUpdate's default handling behavior */
           self.recordUpdate('foo', { bb: true }, onEventError2);
-          /* test self.recordGet's default handling behavior */
+          /* test _Table_prototype_recordGet's default handling behavior */
           self.recordGet('foo', function (error, data) {
             utility2.assert(!error, error);
-            utility2.assert(data.aa === true);
-            utility2.assert(data.bb === true);
-            utility2.assert(data.timestamp);
+            utility2.assert(data.aa === true, data.aa);
+            utility2.assert(data.bb === true, data.bb);
+            utility2.assert(data.timestamp, data.timestamp);
           });
-          /* test self.recordGetRandom's default handling behavior */
+          /* test _Table_prototype_recordGetRandom's default handling behavior */
           self.recordGetRandom(function (error, data) {
             utility2.assert(!error, error);
-            utility2.assert(data.aa === true);
-            utility2.assert(data.bb === true);
-            utility2.assert(data.timestamp);
+            utility2.assert(data.aa === true, data.aa);
+            utility2.assert(data.bb === true, data.bb);
+            utility2.assert(data.timestamp, data.timestamp);
           });
-          /* test self.recordCopy's default handling behavior */
+          /* test _Table_prototype_recordCopy's default handling behavior */
           self.recordCopy('foo', 'bar', onEventError2);
           self.recordGet('bar', function (error, data) {
             utility2.assert(!error, error);
-            utility2.assert(data.aa === true);
-            utility2.assert(data.bb === true);
-            utility2.assert(data.timestamp);
+            utility2.assert(data.aa === true, data.aa);
+            utility2.assert(data.bb === true, data.bb);
+            utility2.assert(data.timestamp, data.timestamp);
           });
-          /* test self.recordRename's default handling behavior */
+          /* test _Table_prototype_recordRename's default handling behavior */
           self.recordRename('bar', 'baz', onEventError2);
           self.recordGet('baz', function (error, data) {
             utility2.assert(!error, error);
-            utility2.assert(data.aa === true);
-            utility2.assert(data.bb === true);
-            utility2.assert(data.timestamp);
+            utility2.assert(data.aa === true, data.aa);
+            utility2.assert(data.bb === true, data.bb);
+            utility2.assert(data.timestamp, data.timestamp);
           });
-          /* test self.recordReplace's default handling behavior */
+          /* test _Table_prototype_recordReplace's default handling behavior */
           self.recordReplace('foo', { bb: true, cc: true }, onEventError2);
           self.recordGet('foo', function (error, data) {
             utility2.assert(!error, error);
-            utility2.assert(data.aa === undefined);
-            utility2.assert(data.bb === true);
-            utility2.assert(data.cc === true);
-            utility2.assert(data.timestamp);
+            utility2.assert(data.aa === undefined, data.aa);
+            utility2.assert(data.bb === true, data.bb);
+            utility2.assert(data.cc === true, data.cc);
+            utility2.assert(data.timestamp, data.timestamp);
           });
-          /* test self.recordUpdate's default handling behavior */
+          /* test _Table_prototype_recordUpdate's default handling behavior */
           self.recordUpdate('foo', { bb: null }, onEventError2);
           self.recordGet('foo', function (error, data) {
             utility2.assert(!error, error);
-            utility2.assert(data.aa === undefined);
-            utility2.assert(data.bb === undefined);
-            utility2.assert(data.cc === true);
-            utility2.assert(data.timestamp);
+            utility2.assert(data.aa === undefined, data.aa);
+            utility2.assert(data.bb === undefined, data.bb);
+            utility2.assert(data.cc === true, data.cc);
+            utility2.assert(data.timestamp, data.timestamp);
           });
-          /* test self.recordGet's error handling behavior */
+          /* test _Table_prototype_recordGet's error handling behavior */
           self.sqlRun(
             'INSERT OR REPLACE INTO {{table}} (id, record, field, value) VALUES(?, ?, ?, ?);',
             [self.idEncode('foo', 'cc'), 'foo', 'cc', 'syntax error'],
@@ -1889,31 +1995,31 @@ console.log('hello test');
           );
           self.recordGet('foo', function (error, data) {
             utility2.assert(!error, error);
-            utility2.assert(data.aa === undefined);
-            utility2.assert(data.bb === undefined);
-            utility2.assert(data.cc === undefined);
-            utility2.assert(data.timestamp);
+            utility2.assert(data.aa === undefined, data.aa);
+            utility2.assert(data.bb === undefined, data.bb);
+            utility2.assert(data.cc === undefined, data.cc);
+            utility2.assert(data.timestamp, data.timestamp);
           });
-          /* test self.recordList's default handling behavior */
+          /* test _Table_prototype_recordList's default handling behavior */
           self.recordList(function (error, data) {
             utility2.assert(!error, error);
             utility2.assert(JSON.stringify(data) === '["baz","foo"]', data);
           });
-          /* test self.tableFts's default handling behavior */
+          /* test _Table_prototype_tableFts's default handling behavior */
           self.tableFts('foo', function (error, data) {
             utility2.assert(!error, error);
             utility2.assert(data, data);
           });
-          /* test self.recordDelete's default handling behavior */
+          /* test _Table_prototype_recordDelete's default handling behavior */
           self.recordDelete('foo', onEventError2);
-          /* test self.recordGet's nonexistent handling behavior */
+          /* test _Table_prototype_recordGet's nonexistent handling behavior */
           self.recordGet('foo', function (error, data) {
             utility2.assert(!error, error);
             utility2.assert(!data, data);
           });
-          /* test self.tableDrop's default handling behavior */
+          /* test _Table_prototype_tableDrop's default handling behavior */
           self.tableDrop(onEventError2);
-          /* test self.sqlSerialize's multiple error handling behavior */
+          /* test _Table_prototype_sqlSerialize's multiple error handling behavior */
           state.onEventErrorDefaultIgnoreList.push(
             'SQLITE_ERROR: no such table: ' + self.name
           );
@@ -1928,6 +2034,37 @@ console.log('hello test');
             onEventError();
           });
         });
+      });
+    },
+
+    __Table_error_test: function (onEventError) {
+      /*
+        this function tests _Table's error handling behavior
+      */
+      utility2.testMock(onEventError, [
+        [state, { sqlite3: { all: utility2.callError2, exec: utility2.callError1 } }]
+      ], function (onEventError) {
+        var self;
+        self = state.dbSqlite3TableDefault;
+        /* test createDbSqlite3Table's error handling behavior */
+        utility2.createDbSqlite3Table('utility2_error', function (error) {
+          utility2.tryCatch(function () {
+            utility2.assert(error instanceof Error, error);
+          }, onEventError);
+        });
+        /* test dbSqlite3TableList's error handling behavior */
+        utility2.dbSqlite3TableList(function (error) {
+          utility2.tryCatch(function () {
+            utility2.assert(error instanceof Error, error);
+          }, onEventError);
+        });
+        /* test _Table_prototype_recordList's error handling behavior */
+        self.recordList(function (error) {
+          utility2.tryCatch(function () {
+            utility2.assert(error instanceof Error, error);
+          }, onEventError);
+        });
+        onEventError();
       });
     },
 
@@ -2058,12 +2195,13 @@ console.log('hello test');
 
     _Table_prototype_recordReplace: function (record, fieldDict, onEventError, mode) {
       var self;
+      utility2.assert(fieldDict && typeof fieldDict === 'object', fieldDict);
       self = this;
       self.sqlSerialize(function (onEventError) {
         if (mode !== 'update') {
           self.sqlRun('DELETE FROM {{table}} WHERE record=?;', record, onEventError);
         }
-        Object.keys(fieldDict || {}).forEach(function (field) {
+        Object.keys(fieldDict).forEach(function (field) {
           /* delete null-valued fields */
           if (fieldDict[field] === null) {
             if (mode === 'update') {
@@ -2129,7 +2267,7 @@ console.log('hello test');
           break;
         case 2:
           serialize(onEventError2);
-          state.sqlite3.run('SELECT 0', function (error) {
+          state.sqlite3.run('SELECT 0;', function (error) {
             mode = mode === -1 ? mode : -2;
             onEventError2(error);
           });
@@ -2140,7 +2278,7 @@ console.log('hello test');
     },
 
     _Table_prototype_sqlStatement: function (statement) {
-      utility2.assert(statement.slice(-1) === ';');
+      utility2.assert(statement.slice(-1) === ';', statement);
       return statement.replace((/\{\{table\}\}/g), this.name);
     },
 
@@ -2180,19 +2318,25 @@ console.log('hello test');
     _name: 'utility2.moduleHeadlessSlimerjsNodejs',
 
     _init: function () {
-      var onEventError;
       if (state.modeNodejs) {
         utility2.initModule(module, local);
-        /* test for slimerjs binary */
-        utility2.readyUtility2.remaining += 1;
-        onEventError = function (error) {
-          state.testModuleDict[local._name] = !error;
-          utility2.readyUtility2();
-        };
-        required.child_process.spawn('slimerjs', ['--help'], { stdio: 'ignore' })
-          .on('error', onEventError)
-          .on('exit', onEventError);
       }
+    },
+
+    _initOnce: function () {
+      var onEventError;
+      onEventError = function (error) {
+        /*
+          this function disables tests for this module if slimerjs is not detected
+        */
+        state.testModuleDict[local._name] = !error;
+        utility2.readyUtility2();
+      };
+      utility2.readyUtility2.remaining += 1;
+      /* auto-detect slimerjs binary */
+      required.child_process.spawn('slimerjs', ['--help'], { stdio: 'ignore' })
+        .on('error', onEventError)
+        .on('exit', onEventError);
     },
 
     headlessSlimerjs: function (options, onEventError) {
@@ -2260,6 +2404,22 @@ console.log('hello test');
         }
       };
       onEventError2();
+    },
+
+    __minifyFile_error_test: function (onEventError) {
+      /*
+        this function tests _minifyFile's error handling behavior
+      */
+      utility2.testMock(onEventError, [
+        [required, { fs: { readFile: utility2.callError2 } }]
+      ], function (onEventError) {
+        local._minifyFile(null, function (error) {
+          utility2.tryCatch(function () {
+            utility2.assert(error instanceof Error, error);
+            onEventError();
+          }, onEventError);
+        });
+      });
     },
 
     modeCliDict_rollupFileList: function () {
@@ -2357,6 +2517,22 @@ console.log('hello test');
       onEventError2();
     },
 
+    __rollupFile_error_test: function (onEventError) {
+      /*
+        this function tests _rollupFile's error handling behavior
+      */
+      utility2.testMock(onEventError, [
+        [required, { fs: { readFile: utility2.callError2 } }]
+      ], function (onEventError) {
+        local._rollupFile(null, function (error) {
+          utility2.tryCatch(function () {
+            utility2.assert(error instanceof Error, error);
+            onEventError();
+          }, onEventError);
+        });
+      });
+    },
+
     __rollupFile_jsRollup_test: function (onEventError) {
       /*
         this function tests _rollupFile's js rollup handling behavior
@@ -2390,12 +2566,14 @@ console.log('hello test');
           utility2.tryCatch(function () {
             utility2.assert(!error, error);
             utility2.assert((/console\.log\('hello test!'\);/).test(data), data);
-            onEventError2();
+            onEventError2(utility2.error);
           }, onEventError2);
           break;
         default:
-          onEventError(error);
-          return;
+          utility2.tryCatch(function () {
+            utility2.assert(error instanceof Error && error === utility2.error, error);
+            onEventError();
+          }, onEventError);
         }
       };
       onEventError2();
@@ -2429,7 +2607,7 @@ console.log('hello test');
           break;
         case 3:
           onEventReady = utility2.untilReady(function (error) {
-            mode = -1;
+            mode = -2;
             onEventError2(error);
           });
           onEventReady.remaining += Object.keys(datauriDict).length;
@@ -2448,15 +2626,13 @@ console.log('hello test');
           onEventReady();
           break;
         case 4:
-          if (data) {
-            Object.keys(datauriDict[data.options.url0]).forEach(function (match) {
-              options.data = options.data.replace(
-                new RegExp(match.replace((/(\W)/g), '\\$1'), 'g'),
-                'url(\n"data:' + utility2.mimeLookup(data.options.url0) + ';base64,'
-                  + data.data.toString('base64') + '"\n)'
-              );
-            });
-          }
+          Object.keys(datauriDict[data.options.url0]).forEach(function (match) {
+            options.data = options.data.replace(
+              new RegExp(match.replace((/(\W)/g), '\\$1'), 'g'),
+              'url(\n"data:' + utility2.mimeLookup(data.options.url0) + ';base64,'
+                + data.data.toString('base64') + '"\n)'
+            );
+          });
           break;
         default:
           onEventError(error);
@@ -2495,18 +2671,46 @@ console.log('hello test');
           required.fs.readFile(file.replace('.css', '.rollup.css'), 'utf8', onEventError2);
           break;
         case 4:
-          utility2.tryCatch(function () {
-            utility2.assert(!error, error);
-            utility2.assert((/data:image\/png;base64/).test(data), data);
-            onEventError2();
-          }, onEventError2);
+          utility2.tryCatch(onEventError2, onEventError2);
+          break;
+        case 5:
+          utility2.assert(!error, error);
+          utility2.assert(!(/test.png/).test(data), data);
+          onEventError2();
+          break;
+        case 6:
+          onEventError2(utility2.error);
           break;
         default:
-          onEventError(error);
-          return;
+          utility2.tryCatch(function () {
+            utility2.assert(error instanceof Error && error === utility2.error, error);
+            onEventError();
+          }, onEventError);
         }
       };
       onEventError2();
+    },
+
+    __rollupFileCss_error_test: function (onEventError) {
+      /*
+        this function tests _rollupFileCss's error handling behavior
+      */
+      utility2.testMock(onEventError, [
+        [utility2, { ajaxMultiUrls: utility2.callError1 }]
+      ], function (onEventError) {
+        var onEventReady;
+        onEventReady = utility2.untilReady(onEventError);
+        onEventReady.remaining += 2;
+        local._rollupFileCss({
+          data: 'url("test.png")',
+          options: { url0: '' }
+        }, function (error) {
+          utility2.tryCatch(function () {
+            utility2.assert(error instanceof Error, error);
+            onEventReady();
+          }, onEventError);
+        });
+      });
     }
 
   };
