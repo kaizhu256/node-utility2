@@ -1,4 +1,4 @@
-/* MODULE_BEGIN { "actionList": ["lint"], "file": ".gitconfig" } */
+/* MODULE_BEGIN { "actionList": ["trim"], "file": ".gitconfig" } */
 [branch "master"]
   remote = origin
   merge = refs/heads/master
@@ -23,7 +23,7 @@
 
 
 
-/* MODULE_BEGIN { "actionList": ["lint"], "file": ".gitignore" } */
+/* MODULE_BEGIN { "actionList": ["trim"], "file": ".gitignore" } */
 *.bak
 *.log
 *.min.*
@@ -322,7 +322,7 @@ CSS_COMMENT */
 
 
 
-/* MODULE_BEGIN { "actionList": ["lint"], "file": "/test/report.html.template" } */
+/* MODULE_BEGIN { "actionList": ["trim"], "file": "/test/report.html.template" } */
 <!DOCTYPE html><html>
 <head>
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
@@ -333,12 +333,20 @@ div {
   border-style: solid;
   border-width: 1px;
   margin: 20px;
-  padding: 0px 10px 10px 10px;
+  padding: 0 10px 10px 10px;
 }
 pre {
   background-color: #fdd;
   border-top-style: solid;
+  border-radius: 0 0 5px 5px;
   border-width: 1px;
+  margin-bottom: 0px;
+  padding: 10px;
+}
+span {
+  background-color: #070;
+  color: #fff;
+  padding: 0 0.5em 0 0.5em;
 }
 table {
   border-top-style: solid;
@@ -347,30 +355,28 @@ table {
   width: 100%;
 }
 tr:nth-child(even) {
-  background-color: #ddf;
+  background-color: #bfb;
 }
 .failed, tr.failed {
   background-color: #f99;
 }
 .summary {
-  background-color: #ddf;
+  background-color: #bfb;
 }
 </style>
 </head>
 <body>
-
-<div class="summary"><h2>test report summary</h4><table><thead><tr>
+<div class="summary"><h2>test report summary [{{date}}]</h2><table><thead><tr>
   <th>total time</th>
   <th>total tests failed</th>
   <th>total tests passed</th>
-  <th>total test suites</th>
+  <th>total test suites run</th>
 </tr></thead><tbody><tr>
   <td>{{totalTime}} ms</td>
   <td class="{{totalFailedClass}}">{{totalFailed}}</td>
   <td>{{totalPassed}}</td>
   <td>{{totalTestSuites}}</td>
 </tr></tbody></table></div>
-
 {{content}}
 </body>
 </html>
@@ -378,7 +384,7 @@ tr:nth-child(even) {
 
 
 
-/* MODULE_BEGIN { "actionList": ["lint"], "file": "/test/sandbox.html" } */
+/* MODULE_BEGIN { "actionList": ["trim"], "file": "/test/sandbox.html" } */
 <!DOCTYPE html><html>
 <head>
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
@@ -391,7 +397,7 @@ tr:nth-child(even) {
 
 
 
-/* MODULE_BEGIN { "actionList": ["lint"], "file": "/test/test.html" } */
+/* MODULE_BEGIN { "actionList": ["trim"], "file": "/test/test.html" } */
 <!DOCTYPE html><html>
 <head>
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
@@ -405,6 +411,41 @@ tr:nth-child(even) {
 <script src="/public/utility2/utility2_external.browser.rollup.min.js"></script>
 <script src="/public/utility2.js"></script>
 <script src="/public/utility2_extra.js"></script>
+</body>
+</html>
+/* MODULE_END */
+
+
+
+/* MODULE_BEGIN { "actionList": ["trim"], "file": "/test/test_hello.html" } */
+<!DOCTYPE html><html>
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
+<title>utility2 hello world test page</title>
+</head>
+<body>
+<script>
+window.global_test_results = {
+  "failed": 0,
+  "testReport": {
+    "errorMessageList": [],
+    "testSuiteList": [
+      {
+        "name": "browser." + window.navigator.userAgent,
+        "testCaseList": [
+          {
+            "module": "utility2.moduleHelloBrowser",
+            "name": "_hello_default_test",
+            "time":1
+          }
+        ],
+        "totalTime": 2
+      }
+    ],
+    "totalTime": 3
+  }
+};
+</script>
 </body>
 </html>
 /* MODULE_END */
@@ -427,47 +468,281 @@ ymXCIWMOjxhLC8J1sbqQq/btyWDcn1qj0PUzM+bH4UidMtOe/B7bL9Wlz0MZYXZdLOnfAAAAAElFTkSu
 
 
 
-/* MODULE_BEGIN { "actionList": ["lint"], "file": "utility2.json" } */
+/* MODULE_BEGIN { "actionList": ["lint"], "file": ".install/utility2_saucelabs.all.json" } */
 {
-  "url":"{{state.localhost}}/test/test.html#modeTest=1",
-  "framework": "qunit",
-  "max-duration": 300,
   "platforms": [
-    ["Linux", "chrome","33"],
-    ["Linux", "firefox","28"],
-    ["OS X 10.9", "safari", "7"]
+    ["linux", "android", "4.3"],
+    ["linux", "chrome", "34"],
+    ["linux", "firefox", "29"],
+    ["linux", "opera", "12"],
+    ["osx 10.8", "chrome", "beta"],
+    ["osx 10.9", "ipad", "7.1"],
+    ["osx 10.9", "iphone", "7.1"],
+    ["osx 10.9", "safari", "7"],
+    ["windows 8.1", "chrome", "beta"],
+    ["windows 8.1", "internet explorer", "11"]
+  ],
+  "stateOverride": {
+    "timeoutDefault": 300000
+  }
+}
+/* MODULE_END */
+
+
+
+/* MODULE_BEGIN { "actionList": ["lint"], "file": ".install/utility2_saucelabs.android.json" } */
+{
+  "platforms": [
+    ["linux", "android", "4.3"]
+  ],
+  "stateOverride": {
+    "timeoutDefault": 150000
+  }
+}
+/* MODULE_END */
+
+
+
+/* MODULE_BEGIN { "actionList": ["lint"], "file": ".install/utility2_saucelabs.ios.json" } */
+{
+  "platforms": [
+    ["osx 10.9", "ipad", "7.1"],
+    ["osx 10.9", "iphone", "7.1"]
+  ],
+  "stateOverride": {
+    "timeoutDefault": 150000
+  }
+}
+/* MODULE_END */
+
+
+
+/* MODULE_BEGIN { "actionList": ["lint"], "file": ".install/utility2_saucelabs.linux.json" } */
+{
+  "platforms": [
+    ["linux", "chrome", "34"],
+    ["linux", "firefox", "29"],
+    ["linux", "opera", "12"]
+  ],
+  "stateOverride": {
+    "timeoutDefault": 150000
+  }
+}
+/* MODULE_END */
+
+
+
+/* MODULE_BEGIN { "actionList": ["lint"], "file": ".install/utility2_saucelabs.osx.json" } */
+{
+  "platforms": [
+    ["osx 10.8", "chrome", "beta"],
+    ["osx 10.9", "chrome", "34"],
+    ["osx 10.9", "firefox", "28"],
+    ["osx 10.9", "safari", "7"]
+  ],
+  "stateOverride": {
+    "timeoutDefault": 150000
+  }
+}
+/* MODULE_END */
+
+
+
+/* MODULE_BEGIN { "actionList": ["lint"], "file": ".install/utility2_saucelabs.windows.json" } */
+{
+  "platforms": [
+    ["windows 8.1", "chrome", "beta"],
+    ["windows 8.1", "firefox", "29"],
+    ["windows 8.1", "internet explorer", "11"]
+  ],
+  "stateOverride": {
+    "timeoutDefault": 150000
+  }
+}
+/* MODULE_END */
+
+
+
+/* MODULE_BEGIN { "actionList": ["lint"], "file": "/test/modeAjaxOffline/https%3A%2F%2Fapi.github.com%2Frepos%2Fkaizhu256%2Fblob%2Fcontents%2Ftest%2F_Branch_default_test.json%23DELETE" } */
+{
+  "commit": {
+    "html_url": "https://github.com/kaizhu256/blob/commit/da39a3ee5e6b4b0d3255bfef95601890afd80709",
+    "message": "--skip-ci delete /test/_Branch_default_test.json",
+    "parents": [
+      {
+        "html_url": "https://github.com/kaizhu256/blob/commit/da39a3ee5e6b4b0d3255bfef95601890afd80709",
+        "sha": "da39a3ee5e6b4b0d3255bfef95601890afd80709",
+        "url": "https://api.github.com/repos/kaizhu256/blob/git/commits/da39a3ee5e6b4b0d3255bfef95601890afd80709"
+      }
+    ],
+    "sha": "da39a3ee5e6b4b0d3255bfef95601890afd80709",
+    "tree": {
+      "sha": "da39a3ee5e6b4b0d3255bfef95601890afd80709",
+      "url": "https://api.github.com/repos/kaizhu256/blob/git/trees/da39a3ee5e6b4b0d3255bfef95601890afd80709"
+    },
+    "url": "https://api.github.com/repos/kaizhu256/blob/git/commits/da39a3ee5e6b4b0d3255bfef95601890afd80709"
+  },
+  "content": null
+}
+/* MODULE_END */
+
+
+
+/* MODULE_BEGIN { "actionList": ["lint"], "file": "/test/modeAjaxOffline/https%3A%2F%2Fapi.github.com%2Frepos%2Fkaizhu256%2Fblob%2Fcontents%2Ftest%2F_Branch_default_test.json%23PUT" } */
+{
+  "commit": {
+    "html_url": "https://github.com/kaizhu256/blob/commit/da39a3ee5e6b4b0d3255bfef95601890afd80709",
+    "message": "--skip-ci create /test/_Branch_default_test.json",
+    "parents": [
+      {
+        "html_url": "https://github.com/kaizhu256/blob/commit/da39a3ee5e6b4b0d3255bfef95601890afd80709",
+        "sha": "da39a3ee5e6b4b0d3255bfef95601890afd80709",
+        "url": "https://api.github.com/repos/kaizhu256/blob/git/commits/da39a3ee5e6b4b0d3255bfef95601890afd80709"
+      }
+    ],
+    "sha": "da39a3ee5e6b4b0d3255bfef95601890afd80709",
+    "tree": {
+      "sha": "da39a3ee5e6b4b0d3255bfef95601890afd80709",
+      "url": "https://api.github.com/repos/kaizhu256/blob/git/trees/da39a3ee5e6b4b0d3255bfef95601890afd80709"
+    },
+    "url": "https://api.github.com/repos/kaizhu256/blob/git/commits/da39a3ee5e6b4b0d3255bfef95601890afd80709"
+  },
+  "content": {
+    "_links": {
+      "git": "https://api.github.com/repos/kaizhu256/blob/git/blobs/da39a3ee5e6b4b0d3255bfef95601890afd80709",
+      "html": "https://github.com/kaizhu256/blob/blob/unstable/test/_Branch_default_test.json",
+      "self": "https://api.github.com/repos/kaizhu256/blob/contents/test/_Branch_default_test.json?ref=unstable"
+    },
+    "git_url": "https://api.github.com/repos/kaizhu256/blob/git/blobs/da39a3ee5e6b4b0d3255bfef95601890afd80709",
+    "html_url": "https://github.com/kaizhu256/blob/blob/unstable/test/_Branch_default_test.json",
+    "name": "_Branch_default_test.json",
+    "path": "test/_Branch_default_test.json",
+    "sha": "da39a3ee5e6b4b0d3255bfef95601890afd80709",
+    "size": 23,
+    "type": "file",
+    "url": "https://api.github.com/repos/kaizhu256/blob/contents/test/_Branch_default_test.json?ref=unstable"
+  }
+}
+/* MODULE_END */
+
+
+
+/* MODULE_BEGIN { "actionList": ["lint"], "file": "/test/modeAjaxOffline/https%3A%2F%2Fapi.github.com%2Frepos%2Fkaizhu256%2Fblob%2Fcontents%2Ftest%3Fref%3Dunstable%23GET" } */
+[
+  {
+    "_links": {
+      "git": "https://api.github.com/repos/kaizhu256/blob/git/blobs/da39a3ee5e6b4b0d3255bfef95601890afd80709",
+      "html": "https://github.com/kaizhu256/blob/blob/unstable/test/_Branch_default_test.json",
+      "self": "https://api.github.com/repos/kaizhu256/blob/contents/test/_Branch_default_test.json?ref=unstable"
+    },
+    "git_url": "https://api.github.com/repos/kaizhu256/blob/git/blobs/da39a3ee5e6b4b0d3255bfef95601890afd80709",
+    "html_url": "https://github.com/kaizhu256/blob/blob/unstable/test/_Branch_default_test.json",
+    "name": "_Branch_default_test.json",
+    "path": "test/_Branch_default_test.json",
+    "sha": "da39a3ee5e6b4b0d3255bfef95601890afd80709",
+    "size": 23,
+    "type": "file",
+    "url": "https://api.github.com/repos/kaizhu256/blob/contents/test/_Branch_default_test.json?ref=unstable"
+  }
+]
+/* MODULE_END */
+
+
+
+/* MODULE_BEGIN { "actionList": ["trim"], "file": "/test/modeAjaxOffline/https%3A%2F%2Fimg.shields.io%2Fbadge%2Fcoverage-100.0%25-00ee00.svg%3Fstyle%3Dflat%23GET" } */
+<svg xmlns="http://www.w3.org/2000/svg" width="117" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#fff" stop-opacity=".1"/><stop offset=".1" stop-color="#fff" stop-opacity=".1"/><stop offset=".9" stop-color="#fff" stop-opacity=".1"/><stop offset="1" stop-color="#fff" stop-opacity=".1"/></linearGradient><path fill="#555" d="M0 0h117v20h-117z"/><path fill="#0e0" d="M63 0h54v20h-54zM63 0h4v20h-4z"/><path fill="url(#a)" d="M0 0h117v20h-117z"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="32.5" y="13">coverage</text><text x="89" y="13">100.0%</text></g></svg>
+/* MODULE_END */
+
+
+
+/* MODULE_BEGIN { "actionList": ["trim"], "file": "/test/modeAjaxOffline/https%3A%2F%2Fimg.shields.io%2Fbadge%2Ftests_failed-999-ee0000.svg%3Fstyle%3Dflat%23GET" } */
+<svg xmlns="http://www.w3.org/2000/svg" width="103" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#fff" stop-opacity=".1"/><stop offset=".1" stop-color="#fff" stop-opacity=".1"/><stop offset=".9" stop-color="#fff" stop-opacity=".1"/><stop offset="1" stop-color="#fff" stop-opacity=".1"/></linearGradient><path fill="#555" d="M0 0h103v20h-103z"/><path fill="#e00" d="M72 0h31v20h-31zM72 0h4v20h-4z"/><path fill="url(#a)" d="M0 0h103v20h-103z"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="37" y="13">tests failed</text><text x="86.5" y="13">999</text></g></svg>
+/* MODULE_END */
+
+
+
+/* MODULE_BEGIN { "actionList": ["lint"], "file": "/test/modeAjaxOffline/https%3A%2F%2Fsaucelabs.com%2Frest%2Fv1%2Fkaizhu256%2Fjs-tests%23POST" } */
+{
+  "js tests": [
+    "064df78366ea4b25b32f88878c9d7aa4",
+    "1e5ed949711545bd952456ac37479ada"
   ]
 }
 /* MODULE_END */
 
 
 
-/* MODULE_BEGIN { "actionList": ["trim"], "file": "/test/modeAjaxOffline/http%3A%2F%2Fimg.shields.io%2Fbadge%2Fcoverage-100.0%25-00ee00.svg%3Fstyle%3Dflat%23GET" } */
-<svg xmlns="http://www.w3.org/2000/svg" width="117" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#fff" stop-opacity=".1"/><stop offset=".1" stop-color="#fff" stop-opacity=".1"/><stop offset=".9" stop-color="#fff" stop-opacity=".1"/><stop offset="1" stop-color="#fff" stop-opacity=".1"/></linearGradient><path fill="#555" d="M0 0h117v20h-117z"/><path fill="#0e0" d="M63 0h54v20h-54zM63 0h4v20h-4z"/><path fill="url(#a)" d="M0 0h117v20h-117z"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="32.5" y="13">coverage</text><text x="89" y="13">100.0%</text></g></svg>
-/* MODULE_END */
+/* MODULE_BEGIN { "actionList": ["lint"], "file": "/test/modeAjaxOffline/https%3A%2F%2Fsaucelabs.com%2Frest%2Fv1%2Fkaizhu256%2Fjs-tests%2Fstatus%23POST" } */
+{
+  "completed": true,
+  "js tests": [
+    {
+      "id": "064df78366ea4b25b32f88878c9d7aa4",
+      "job_id": "1a7aec8ef0c64165bcde1230e213ad44",
+      "platform": [
+        "Linux",
+        "chrome",
+        "34"
+      ],
+      "result": {
+        "coverage": null,
+        "failed": 0,
+        "testCallbackId": null,
+        "testReport": {
+          "errorMessageList": [],
+          "testSuiteList": [
+            {
+              "name": "browser.saucelabs_chrome",
+              "testCaseList": [
+                {
+                  "module": "utility2.moduleSaucelabsBrowser",
+                  "name": "_saucelabs_default_test",
+                  "time":1
+                }
+              ],
+              "totalTime": 2
+            }
+          ],
+          "totalTime": 3
+        }
+      },
+      "url": "http://saucelabs.com/jobs/ff737d47e03e47bfb45100a45e4b5ca5"
+    },
+    {
+      "id": "1e5ed949711545bd952456ac37479ada",
+      "job_id": "1a7aec8ef0c64165bcde1230e213ad45",
+      "platform": [
+        "Linux",
+        "firefox",
+        "29"
+      ],
+      "result": {
+        "coverage": null,
+        "failed": 0,
+        "testCallbackId": null,
+        "testReport": {
+          "errorMessageList": [],
+          "testSuiteList": [
+            {
+              "name": "browser.saucelabs_firefox",
+              "testCaseList": [
+                {
+                  "module": "utility2.moduleSaucelabsBrowser",
+                  "name": "_saucelabs_default_test",
+                  "time":1
+                }
+              ],
+              "totalTime": 2
+            }
+          ],
+          "totalTime": 3
 
-
-
-/* MODULE_BEGIN { "actionList": ["trim"], "file": "/test/modeAjaxOffline/http%3A%2F%2Fimg.shields.io%2Fbadge%2Ftests_failed-999-ee0000.svg%3Fstyle%3Dflat%23GET" } */
-<svg xmlns="http://www.w3.org/2000/svg" width="103" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#fff" stop-opacity=".1"/><stop offset=".1" stop-color="#fff" stop-opacity=".1"/><stop offset=".9" stop-color="#fff" stop-opacity=".1"/><stop offset="1" stop-color="#fff" stop-opacity=".1"/></linearGradient><path fill="#555" d="M0 0h103v20h-103z"/><path fill="#e00" d="M72 0h31v20h-31zM72 0h4v20h-4z"/><path fill="url(#a)" d="M0 0h103v20h-103z"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="37" y="13">tests failed</text><text x="86.5" y="13">999</text></g></svg>
-/* MODULE_END */
-
-
-
-/* MODULE_BEGIN { "actionList": ["trim"], "file": "/test/modeAjaxOffline/https%3A%2F%2Fapi.github.com%2Frepos%2Fkaizhu256%2Fblob%2Fcontents%2Ftest%2F_Branch_default_test.json%23DELETE" } */
-{"commit":{"html_url":"https://github.com/kaizhu256/blob/commit/da39a3ee5e6b4b0d3255bfef95601890afd80709","message":"--skip-ci delete /test/_Branch_default_test.json","parents":[{"html_url":"https://github.com/kaizhu256/blob/commit/da39a3ee5e6b4b0d3255bfef95601890afd80709","sha":"da39a3ee5e6b4b0d3255bfef95601890afd80709","url":"https://api.github.com/repos/kaizhu256/blob/git/commits/da39a3ee5e6b4b0d3255bfef95601890afd80709"}],"sha":"da39a3ee5e6b4b0d3255bfef95601890afd80709","tree":{"sha":"da39a3ee5e6b4b0d3255bfef95601890afd80709","url":"https://api.github.com/repos/kaizhu256/blob/git/trees/da39a3ee5e6b4b0d3255bfef95601890afd80709"},"url":"https://api.github.com/repos/kaizhu256/blob/git/commits/da39a3ee5e6b4b0d3255bfef95601890afd80709"},"content":null}
-/* MODULE_END */
-
-
-
-/* MODULE_BEGIN { "actionList": ["trim"], "file": "/test/modeAjaxOffline/https%3A%2F%2Fapi.github.com%2Frepos%2Fkaizhu256%2Fblob%2Fcontents%2Ftest%2F_Branch_default_test.json%23PUT" } */
-{"commit":{"html_url":"https://github.com/kaizhu256/blob/commit/da39a3ee5e6b4b0d3255bfef95601890afd80709","message":"--skip-ci create /test/_Branch_default_test.json","parents":[{"html_url":"https://github.com/kaizhu256/blob/commit/da39a3ee5e6b4b0d3255bfef95601890afd80709","sha":"da39a3ee5e6b4b0d3255bfef95601890afd80709","url":"https://api.github.com/repos/kaizhu256/blob/git/commits/da39a3ee5e6b4b0d3255bfef95601890afd80709"}],"sha":"da39a3ee5e6b4b0d3255bfef95601890afd80709","tree":{"sha":"da39a3ee5e6b4b0d3255bfef95601890afd80709","url":"https://api.github.com/repos/kaizhu256/blob/git/trees/da39a3ee5e6b4b0d3255bfef95601890afd80709"},"url":"https://api.github.com/repos/kaizhu256/blob/git/commits/da39a3ee5e6b4b0d3255bfef95601890afd80709"},"content":{"_links":{"git":"https://api.github.com/repos/kaizhu256/blob/git/blobs/da39a3ee5e6b4b0d3255bfef95601890afd80709","html":"https://github.com/kaizhu256/blob/blob/unstable/test/_Branch_default_test.json","self":"https://api.github.com/repos/kaizhu256/blob/contents/test/_Branch_default_test.json?ref=unstable"},"git_url":"https://api.github.com/repos/kaizhu256/blob/git/blobs/da39a3ee5e6b4b0d3255bfef95601890afd80709","html_url":"https://github.com/kaizhu256/blob/blob/unstable/test/_Branch_default_test.json","name":"_Branch_default_test.json","path":"test/_Branch_default_test.json","sha":"da39a3ee5e6b4b0d3255bfef95601890afd80709","size":23,"type":"file","url":"https://api.github.com/repos/kaizhu256/blob/contents/test/_Branch_default_test.json?ref=unstable"}}
-/* MODULE_END */
-
-
-
-/* MODULE_BEGIN { "actionList": ["trim"], "file": "/test/modeAjaxOffline/https%3A%2F%2Fapi.github.com%2Frepos%2Fkaizhu256%2Fblob%2Fcontents%2Ftest%3Fref%3Dunstable%23GET" } */
-[{"_links":{"git":"https://api.github.com/repos/kaizhu256/blob/git/blobs/da39a3ee5e6b4b0d3255bfef95601890afd80709","html":"https://github.com/kaizhu256/blob/blob/unstable/test/_Branch_default_test.json","self":"https://api.github.com/repos/kaizhu256/blob/contents/test/_Branch_default_test.json?ref=unstable"},"git_url":"https://api.github.com/repos/kaizhu256/blob/git/blobs/da39a3ee5e6b4b0d3255bfef95601890afd80709","html_url":"https://github.com/kaizhu256/blob/blob/unstable/test/_Branch_default_test.json","name":"_Branch_default_test.json","path":"test/_Branch_default_test.json","sha":"da39a3ee5e6b4b0d3255bfef95601890afd80709","size":23,"type":"file","url":"https://api.github.com/repos/kaizhu256/blob/contents/test/_Branch_default_test.json?ref=unstable"}]
+        }
+      },
+      "url": "http://saucelabs.com/jobs/ff737d47e03e47bfb45100a45e4b5ca6"
+    }
+  ]
+}
 /* MODULE_END */
 
 
@@ -857,6 +1132,68 @@ console.log('hello test');
       utility2.assert(utility2.jsonStringifyOrdered(self)
         === '{"cache1":{"dd":4},"cache2":{},"remaining":1,"size":2}', self);
       onEventError();
+    },
+
+    clearCallSetInterval: function (key, callback, interval, timeout) {
+      /*
+        this function
+        1. clear interval key
+        2. run callback
+        3. set interval key to callback
+        usage example:
+        utility2.clearCallSetInterval('setIntervalFoo', function (timeout) {
+          if (timeout) {
+            console.log('timeout error after 4000 ms');
+            console.error(timeout.stack);
+            utility2.clearCallSetInterval('setIntervalFoo', 'clear');
+            return;
+          }
+          console.log('1000 ms interval');
+        }, 1000, 4000);
+      */
+      var dict;
+      dict = state.clearCallSetIntervalDict = state.clearCallSetIntervalDict || {};
+      dict[key] = dict[key] || {};
+      /* set timeout for clearCallSetInterval */
+      if (timeout) {
+        timeout = utility2.onEventTimeout(function (error) {
+          utility2.clearCallSetInterval(key, 'clear');
+          callback(error);
+        }, timeout, key);
+      }
+      /* 1. clear interval key */
+      clearInterval(dict[key].interval);
+      if (callback === 'clear') {
+        /* clear timeout for clearCallSetInterval */
+        clearTimeout(dict[key].timeout);
+        delete dict[key];
+        return;
+      }
+      /* 2. call callback */
+      callback();
+      /* 3. set interval key to callback */
+      dict[key] = {
+        interval: setInterval(callback, interval),
+        timeout: timeout
+      };
+    },
+
+    _clearCallSetInterval_timeout_test: function (onEventError) {
+      /*
+        this function tests clearCallSetInterval's timeout handling behavior
+      */
+      var onEventReady;
+      onEventReady = utility2.untilReady(onEventError);
+      [100, 200, 300].forEach(function (data) {
+        onEventReady.remaining += 1;
+        utility2.clearCallSetInterval(utility2.uuid4(), function (timeout) {
+          if (timeout) {
+            utility2.assert(timeout instanceof Error);
+            utility2.assert(timeout.code === 'ETIMEDOUT');
+            onEventReady();
+          }
+        }, 200, data);
+      });
     }
 
   };
@@ -938,7 +1275,7 @@ console.log('hello test');
           break;
         default:
           utility2.tryCatch(function () {
-            utility2.assert(error instanceof Error && error === utility2.error, error);
+            utility2.assert(error === utility2.error, error);
             onEventError();
           }, onEventError);
         }
@@ -1256,7 +1593,9 @@ console.log('hello test');
           onEventError2();
           break;
         default:
-          utility2.assert(state.modeNpmTest || !error, error);
+          if (error) {
+            utility2.jsonLog('moduleDbPostgresNodejs disabled');
+          }
           /* enable / disable tests for this module */
           state.testModuleDict[local._name] = !error;
           utility2.readyUtility2();
@@ -1500,7 +1839,7 @@ console.log('hello test');
         default:
           self.drop(function () {
             utility2.tryCatch(function () {
-              utility2.assert(error instanceof Error && error === utility2.error, error);
+              utility2.assert(error === utility2.error, error);
               onEventError();
             }, onEventError);
           });
@@ -1925,7 +2264,7 @@ console.log('hello test');
         /* test cache handling behavior */
         utility2.assert(self === utility2.createDbSqlite3Table(
           'utility2__Table_default_test',
-          utility2.onEventErrorDefault
+          utility2.nop
         ), self);
         /* test _Table_prototype_sqlSerialize's default handling behavior */
         self.sqlSerialize(function (onEventError2) {
@@ -2307,6 +2646,279 @@ console.log('hello test');
 
 
 
+(function moduleHeadlessSaucelabsNodejs() {
+  /*
+    this nodejs module exports the saucelabs test api
+  */
+  'use strict';
+  var local;
+  local = {
+
+    _name: 'utility2.moduleSaucelabsNodejs',
+
+    _init: function () {
+      if (state.modeNodejs) {
+        utility2.initModule(module, local);
+      }
+    },
+
+    _initOnce: function () {
+      /* disable tests for this module */
+      state.testModuleDict[local._name] = false;
+      utility2.readyUtility2.remaining += 1;
+      required.fs.exists('/tmp/.saucelabs.ready', function (exists) {
+        /* disable / enable tests for this module */
+        state.testModuleDict[local._name] = !!(state.modeOffline
+          || (exists && process.env.SAUCE_ACCESS_KEY && process.env.SAUCE_USERNAME));
+        utility2.readyUtility2();
+      });
+    },
+
+    __initOnce_default_test: function (onEventError) {
+      /*
+        this function tests _initOnce's default handling behavior
+      */
+      utility2.testMock(onEventError, [
+        [global, {
+          process: { env: { SAUCE_ACCESS_KEY: true, SAUCE_USERNAME: true } },
+          state: { testModuleDict: {}, modeOffline: null }
+        }],
+        [required, { fs: { exists: function (_, onEventError) {
+          onEventError(true);
+        } } }],
+        [utility2, { readyUtility2: null }]
+      ], function (onEventError) {
+        utility2.readyUtility2 = utility2.untilReady(onEventError);
+        local._initOnce();
+      });
+    },
+
+    headlessSaucelabs: function (options, onEventError) {
+      /*
+        this function requests saucelabs to test a webpage
+      */
+      var intervalId, mode, onEventError2, onEventReady, remainingDict, time, timeout;
+      mode = 0;
+      onEventError2 = function (error, data) {
+        mode = error instanceof Error ? -1 : mode + 1;
+        switch (mode) {
+        case 1:
+          /* set timeout for headlessSaucelabs */
+          timeout = utility2.onEventTimeout(
+            onEventError2,
+            state.timeoutDefault,
+            'headlessSaucelabs ' + options.url
+          );
+          intervalId = utility2.uuid4();
+          data = JSON.stringify(utility2.setOverride(options, {
+            build: process.env.CI_BUILD_NUMBER,
+            framework: 'custom',
+            'max-duration': Math.max(state.timeoutDefault / 1000 - 30000, 60000),
+            /* remove stateOverride param */
+            stateOverride: null,
+            url: utility2.templateFormat(options.url
+              || '{{localhost}}/test/test.html?#modeTest=1&timeoutDefault={{timeoutDefault}}', {
+                localhost: state.localhost,
+                timeoutDefault: String(state.timeoutDefault)
+              })
+          }));
+          options = {
+            data: data,
+            headers: {
+              authorization: 'Basic ' + new Buffer(process.env.SAUCE_USERNAME
+                + ':' + process.env.SAUCE_ACCESS_KEY).toString('base64'),
+              'content-length': Buffer.byteLength(data),
+              'content-type': 'application/json'
+            },
+            resultType: 'json',
+            url: 'https://saucelabs.com/rest/v1/' + process.env.SAUCE_USERNAME + '/js-tests'
+          };
+          time = Date.now();
+          utility2.ajax(utility2.jsonCopy(options), utility2.tryCatchHandler(onEventError2));
+          break;
+        case 2:
+          utility2.jsonLog('headlessSaucelabs - starting test', [options, data]);
+          onEventReady = utility2.untilReady(function (error) {
+            mode = -2;
+            onEventError2(error);
+          });
+          remainingDict = {};
+          data['js tests'].forEach(onEventError2);
+          mode += 1;
+          (state.modeOffline ? utility2.callArg0 : setTimeout)(onEventError2, 30000);
+          break;
+        case 3:
+          mode -= 1;
+          onEventReady.remaining += 1;
+          remainingDict[error] = {};
+          break;
+        case 4:
+          /* poll saucelabs for test status */
+          utility2.clearCallSetInterval(intervalId, function () {
+            data = JSON.stringify({ 'js tests': Object.keys(remainingDict) });
+            utility2.setOverride(options, {
+              data: data,
+              headers: { 'content-length': Buffer.byteLength(data) },
+              url: 'https://saucelabs.com/rest/v1/' + process.env.SAUCE_USERNAME
+                + '/js-tests/status'
+            });
+            utility2.ajax(utility2.jsonCopy(options), utility2.tryCatchHandler(onEventError2));
+          }, 10000, state.timeoutDefault);
+          break;
+        case 5:
+          mode -= 1;
+          data['js tests'].forEach(function (data) {
+            if (data.result) {
+              /* merge finished tests into state.testReport */
+              utility2.testReportMerge(state.testReport, data.result.testReport);
+              /* remove finished tests from remainingDict */
+              delete remainingDict[data.id];
+              onEventReady();
+              return;
+            }
+            /* update status of unfinished tests */
+            remainingDict[data.id] = {
+              id: data.id,
+              job_id: data.job_id,
+              platform: data.platform,
+              status: data.status
+            };
+          });
+          utility2.jsonLog('headlessSaucelabs', remainingDict);
+          break;
+        default:
+          /* clear timeout for headlessSaucelabs */
+          clearTimeout(timeout);
+          /* clear interval for headlessSaucelabs */
+          utility2.clearCallSetInterval(intervalId, 'clear');
+          /* fail remaining tests */
+          time = Date.now() - time;
+          Object.keys(remainingDict).forEach(function (data) {
+            data = remainingDict[data];
+            data = { testSuiteList: [{
+              name: 'browser.saucelabs_' + (data.platform || ['unknown_user_agent']).join('_'),
+              testCaseList: [{
+                errorMessage: utility2.errorStack(error),
+                module: local._name,
+                name: '_headlessSaucelabs_default_test',
+                time: time
+              }],
+              totalTIme: time
+            }]};
+            data.errorMessageList = [data.testSuiteList[0].testCaseList[0].errorMessage];
+            utility2.testReportMerge(state.testReport, data);
+          });
+          onEventError(error, data);
+        }
+      };
+      onEventError2();
+    },
+
+    _headlessSaucelabs_default_test: function (onEventError) {
+      /*
+        this function tests headlessSaucelabs's default handling behavior
+      */
+      local.headlessSaucelabs(state.headlessSaucelabsOptions || {
+        /* https://saucelabs.com/platforms */
+        platforms: [['Linux', 'chrome', '34'], ['Linux', 'firefox', '29']]
+      }, function (error, data) {
+        utility2.tryCatch(function () {
+          utility2.assert(!error, error);
+          onEventError();
+        }, onEventError);
+      });
+    },
+
+    _headlessSaucelabs_error_test: function (onEventError) {
+      /*
+        this function tests headlessSaucelabs's error handling behavior
+      */
+      utility2.testMock(onEventError, [
+        [global, { setTimeout: utility2.callArg0 }],
+        [state, { modeOffline: null, testReport: utility2.testReportMerge() }],
+        [utility2, { ajax: null, onEventTimeout: utility2.nop }]
+      ], function (onEventError) {
+        var mode;
+        mode = 0;
+        utility2.ajax = function (_, onEventError) {
+          mode += 1;
+          switch (mode) {
+          case 1:
+            onEventError(null, JSON.parse(state.fsWatchDict[
+              '/test/modeAjaxOffline/https%3A%2F%2Fsaucelabs.com'
+                + '%2Frest%2Fv1%2Fkaizhu256%2Fjs-tests%23POST'
+            ].contentBrowser));
+            break;
+          case 2:
+            onEventError(null, { 'js tests': [{}, null] });
+            break;
+          }
+        };
+        local._headlessSaucelabs_default_test(function (error) {
+          utility2.assert(error instanceof Error, error);
+          onEventError();
+        });
+      });
+    },
+
+    // _headlessSaucelabs_error_test: function (onEventError) {
+      // /*
+        // this function tests headlessSaucelabs's error handling behavior
+      // */
+      // utility2.testMock(onEventError, [
+        // [global, { setTimeout: utility2.callError0 }],
+        // [state, { modeOffline: null, testReport: utility2.testReportMerge() }],
+        // [utility2, { ajax: function (_, onEventError) {
+          // onEventError(null, JSON.parse(state.fsWatchDict[
+            // '/test/modeAjaxOffline/https%3A%2F%2Fsaucelabs.com'
+              // + '%2Frest%2Fv1%2Fkaizhu256%2Fjs-tests%23POST'
+          // ].contentBrowser));
+        // }, onEventTimeout: utility2.nop }]
+      // ], function (onEventError) {
+        // local._headlessSaucelabs_default_test(function (error) {
+          // utility2.assert(error instanceof Error, error);
+          // onEventError();
+        // });
+      // });
+    // },
+
+    modeCliDict_headlessSaucelabs: function () {
+      /*
+        this function runs saucelabs tests with the given json options piped from stdin
+      */
+      /* read saucelabs test options from stdin */
+      utility2.streamReadAll(process.stdin, utility2.jsonParseHandler(function (error, data) {
+        utility2.assert(!error, error);
+        state.headlessSaucelabsOptions = data;
+        /* enable testing for this module */
+        local._modeTest = true;
+        /* init state */
+        utility2.setOverride(state, data && data.stateOverride);
+        utility2.initModule(module, local);
+      }));
+    },
+
+    _modeCliDict_headlessSaucelabs_default_test: function (onEventError) {
+      /*
+        this function tests modeCliDict_headlessSaucelabs's default handling behavior
+      */
+      utility2.testMock(onEventError, [
+        [global, { state: { modeCliDict: state.modeCliDict } }],
+        [utility2, { initModule: utility2.nop, streamReadAll: function (_, onEventError) {
+          onEventError(null, '{"stateOverride":{}}');
+        } }]
+      ], function (onEventError) {
+        state.modeCliDict.headlessSaucelabs();
+        onEventError();
+      });
+    }
+
+  };
+  local._init();
+}());
+
+
+
 (function moduleHeadlessSlimerjsNodejs() {
   /*
     this nodejs module exports the slimerjs test api
@@ -2354,7 +2966,8 @@ console.log('hello test');
       */
       utility2.headlessSlimerjs({
         timeoutDefault: state.timeoutDefault,
-        url: state.localhost + '/test/test.html#modeTest=1'
+        url: '{{localhost}}/test/test.html?testCallbackId={{testCallbackId}}#modeTest=1'
+          + '&testReportUpload=1'
       }, onEventError);
     }
 
@@ -2571,7 +3184,7 @@ console.log('hello test');
           break;
         default:
           utility2.tryCatch(function () {
-            utility2.assert(error instanceof Error && error === utility2.error, error);
+            utility2.assert(error === utility2.error, error);
             onEventError();
           }, onEventError);
         }
@@ -2683,7 +3296,7 @@ console.log('hello test');
           break;
         default:
           utility2.tryCatch(function () {
-            utility2.assert(error instanceof Error && error === utility2.error, error);
+            utility2.assert(error === utility2.error, error);
             onEventError();
           }, onEventError);
         }

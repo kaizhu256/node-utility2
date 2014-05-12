@@ -15,6 +15,7 @@
     _name: 'utility2.moduleInitShared',
 
     _init: function () {
+      var tmp;
       /* export global object */
       if (typeof window === 'object') {
         window.global = window;
@@ -28,12 +29,12 @@
         module: null,
         /* global state object */
         state: {
+          /* dict of browser test callbacks */
+          headlessBrowserTestCallbackDict: {},
           /* javascript platform unknown */
           javascriptPlatform: 'unknown',
           /* list of test-generated errors to be ignored */
           onEventErrorDefaultIgnoreList: [],
-          /* dict of browser test callbacks */
-          browserTestCallbackDict: {},
           /* default timeout */
           timeoutDefault: 60000
         },
@@ -67,16 +68,16 @@
         state.modeNodejs = true;
       }
       /* javascript platform - browser */
-      if (global.document && global.document.body
-          && global.jQuery
-          && global.location
-          && global.window) {
+      if (global.document && global.document.body && global.location && global.window) {
         state.javascriptPlatform = 'browser';
         state.modeBrowser = true;
         state.modeInit = 2;
         /* set browser test mode */
         state.modeTest = state.modeTest
           || (/\bmodeTest=\w/).test(global.location && global.location.hash);
+        /* set browser timeoutDefault */
+        tmp = (/\btimeoutDefault=(\d+)\b/).exec(global.location && global.location.hash);
+        state.timeoutDefault = tmp ? Number(tmp[1]) : state.timeoutDefault;
       }
       /* export utility2.untilReadyUtility2 */
       utility2.untilReadyUtility2 = function (onEventError) {
@@ -108,25 +109,9 @@
       });
       /* utility2 ready */
       utility2.readyUtility2.remaining += 1;
-      (state.modeBrowser ? global.jQuery : setTimeout)(utility2.readyUtility2);
+      setTimeout(utility2.readyUtility2);
       /* init browser */
       local._initBrowser(global);
-    },
-
-    __initOnce_default_test: function (onEventError) {
-      /*
-        this function tests _initOnce's default handling behavior
-      */
-      utility2.testMock(onEventError, [
-        [global, { jQuery: utility2.callArg0, setTimeout: utility2.callArg0 }],
-        [local, { _initBrowser: utility2.nop }],
-        [utility2, { deferCallback: null, readyUtility2: null }]
-      ], function (onEventError) {
-        utility2.deferCallback = function () {
-          onEventError();
-        };
-        local._initOnce();
-      });
     },
 
     _initBrowser: function (global) {
@@ -166,21 +151,6 @@
           global.location.reload();
         });
       }
-      /* qunit hook */
-      if (global.QUnit) {
-        global.QUnit.done = function (test_results) {
-          utility2.deferCallback('untilReadyTestReport', 'defer', function () {
-            test_results.testDict = state.qunitTestDict;
-            global.global_test_results = test_results;
-          });
-        };
-        global.QUnit.testStart(function (testDetails) {
-          global.QUnit.log = function (details) {
-            state.qunitTestDict = state.qunitTestDict || {};
-            state.qunitTestDict[testDetails.name] = details;
-          };
-        });
-      }
     },
 
     __initBrowser_default_test: function (onEventError) {
@@ -202,14 +172,8 @@
             this.addEventListener = utility2.callArg1;
           },
           /* test testWatch handling behavior */
-          location: { hash: '#testWatch=1', reload: utility2.nop, search: '' },
-          /* test qunit handling behavior */
-          QUnit: { testStart: utility2.nop }
+          location: { hash: '#testWatch=1', reload: utility2.nop, search: '' }
         };
-        local._initBrowser(global2);
-        global2.QUnit.done({});
-        /* test no qunit handling behavior */
-        global2.QUnit = null;
         local._initBrowser(global2);
         onEventError();
       });
@@ -384,21 +348,30 @@
       return script.replace(/(^#!.*)/, '//$1');
     },
 
-    _createTest: function (global, local2) {
+    createTest: function (global, local2) {
       /*
         this function creates a _Test object
       */
-      var self;
+      var self, testReport;
       self = new local._Test();
       self.global = global;
       self.local2 = local2;
-      /* set default test values for state */
-      utility2.setDefault(self.global.state, {
-        testSuiteFailList: [],
-        testSuiteList: [],
-        testSuiteRemaining: 0,
-        testSummary: { failures: 0, passed: 0, time: 0 },
-        onEventErrorDefaultIgnoreList: []
+      /* init testReport */
+      testReport = self.global.state.testReport = self.global.state.testReport || {};
+      utility2.testReportMerge(testReport);
+      /* init testReport.totalTime */
+      testReport.totalTime = testReport.totalTime || Date.now();
+      /* init testReport.onEventReady */
+      testReport.onEventReady = testReport.onEventReady || utility2.untilReady(function () {
+        /* record time for testReport to run */
+        testReport.totalTime = Math.min(Date.now()
+          - testReport.totalTime, testReport.totalTime);
+        /* assert state.onEventErrorDefaultIgnoreList is empty */
+        utility2.assert(!state.onEventErrorDefaultIgnoreList
+          || state.onEventErrorDefaultIgnoreList.length === 0,
+          state.onEventErrorDefaultIgnoreList);
+        /* report test results */
+        self.report();
       });
       return self;
     },
@@ -619,14 +592,7 @@
       state.initOnceDict = state.initOnceDict || {};
       if (local2._initOnce && !state.initOnceDict[local2._name]) {
         state.initOnceDict[local2._name] = true;
-        /* defer _initOnce until jQuery.ready */
-        if (state.modeBrowser) {
-          global.jQuery(function () {
-            local2._initOnce();
-          });
-        } else {
-          local2._initOnce();
-        }
+        local2._initOnce();
       }
       /* wait until utility2 is ready before running tests */
       if (state.modeInit > 1) {
@@ -639,7 +605,7 @@
               && (local2._modeTest || (state.modeTest
                 && state.testModuleDict[local2._name] !== false
                 && state.testModuleDict[local2._name.split('.')[0]]))) {
-            local._createTest(global, local2).run();
+            utility2.createTest(global, local2).run();
           }
         });
       }
@@ -654,11 +620,10 @@
           angular: { module: function () {
             return { controller: utility2.nop };
           } },
-          jQuery: utility2.callArg0,
           required: {},
           state: { modeBrowser: true, modeNodejs: true }
         }],
-        [local, { _createTest: function () {
+        [utility2, { createTest: function () {
           return { run: utility2.nop };
         } }]
       ], function (onEventError) {
@@ -756,20 +721,9 @@
       /*
         this function returns a callback that will JSON.parse the data with error handling
       */
-      return function (error, data) {
-        /* silently ignore undefined data */
-        if (error || data === undefined) {
-          onEventError(error, data);
-          return;
-        }
-        try {
-          data = JSON.parse(data);
-        } catch (error2) {
-          onEventError(error2);
-          return;
-        }
-        onEventError(null, data);
-      };
+      return utility2.tryCatchHandler(function (error, data) {
+        onEventError(error, data === undefined ? undefined : JSON.parse(data));
+      });
     },
 
     _jsonParseHandler_default_test: function (onEventError) {
@@ -972,6 +926,113 @@
       onEventError();
     },
 
+    nop: function () {
+      /*
+        this function performs no operation (nop)
+        usage example:
+        utility2.nop();
+      */
+      return;
+    },
+
+    _nop_default_test: function (onEventError) {
+      /*
+        this function tests nop's default handling behavior
+      */
+      utility2.nop();
+      onEventError();
+    },
+
+    onEventErrorDefault: function (error, data) {
+      /*
+        this function provides a default, error / data handling callback.
+        if an error is given, it will print the error's message and stack,
+        else it will print the data
+      */
+      var ii;
+      if (error) {
+        /* ignore test-generated errors */
+        for (ii = 0; ii < (state.onEventErrorDefaultIgnoreList || []).length; ii += 1) {
+          if (state.onEventErrorDefaultIgnoreList[ii] === error.message) {
+            state.onEventErrorDefaultIgnoreList.splice(ii, 1);
+            return;
+          }
+        }
+        /* debug error */
+        state.debugError = error;
+        /* print error */
+        state.debugMessage
+          = '\nonEventErrorDefault - error\n' + utility2.errorStack(error) + '\n';
+        console.error(state.debugMessage);
+      /* print data if it's defined and not an empty string */
+      } else if (data !== undefined && data !== '') {
+        /* debug data */
+        state.debugData = data;
+        state.debugMessage = '\nonEventErrorDefault - data\n'
+          + utility2.jsonStringifyCircular(data, null, 2) + '\n';
+        utility2.jsonLog(state.debugMessage);
+      }
+    },
+
+    _onEventErrorDefault_default_test: function (onEventError) {
+      /*
+        this function tests onEventErrorDefault's default handling behavior
+      */
+      utility2.testMock(onEventError, [[global, { state: {} }]], function (onEventError) {
+        utility2.onEventErrorDefault(null, '_onEventErrorDefault_default_test');
+        onEventError();
+      });
+    },
+
+    _onEventErrorDefault_error_test: function (onEventError) {
+      /*
+        this function tests onEventErrorDefault's error handling behavior
+      */
+      utility2.testMock(onEventError, [
+        [console, { error: utility2.nop }],
+        [global, { state: {} }]
+      ], function (onEventError) {
+        var error;
+        error = new Error('_onEventErrorDefault_error_test');
+        /* test error.stack handling behavior */
+        utility2.onEventErrorDefault(error);
+        /* test error.message handling behavior */
+        error.stack = '';
+        utility2.onEventErrorDefault(error);
+        /* test no error.message or error.stack handling behavior */
+        error.message = '';
+        utility2.onEventErrorDefault(error);
+        onEventError();
+      });
+    },
+
+    _onEventErrorDefault_ignore_test: function (onEventError) {
+      /*
+        this function tests onEventErrorDefault's ignore handling behavior
+      */
+      var error;
+      error = new Error(utility2.uuid4());
+      /* add extraneous error message for code coverage */
+      state.onEventErrorDefaultIgnoreList.push(utility2.uuid4());
+      state.onEventErrorDefaultIgnoreList.push(error.message);
+      utility2.onEventErrorDefault(error);
+      /* remove extraneous error message */
+      state.onEventErrorDefaultIgnoreList.pop();
+      onEventError();
+    },
+
+    onEventTimeout: function (onEventError, timeout, message) {
+      /*
+        this function sets a timer to throw and handle a timeout error
+      */
+      var error;
+      error = new Error('onEventTimeout - timeout error - ' + timeout + ' ms - ' + message);
+      error.code = 'ETIMEDOUT';
+      return setTimeout(function () {
+        onEventError(error);
+      }, timeout);
+    },
+
     scriptLint: function (file, script) {
       /*
         this function lints css / html / js / json scripts
@@ -1082,112 +1143,6 @@
       utility2.scriptMinify('foo.css', '_scriptMinify_default_test {}');
       utility2.scriptMinify('foo.js', 'console.log("_scriptMinify_default_test");');
       onEventError();
-    },
-
-    nop: function () {
-      /*
-        this function performs no operation (nop)
-        usage example:
-        utility2.nop();
-      */
-      return;
-    },
-
-    _nop_default_test: function (onEventError) {
-      /*
-        this function tests nop's default handling behavior
-      */
-      utility2.nop();
-      onEventError();
-    },
-
-    onEventErrorDefault: function (error, data) {
-      /*
-        this function provides a default, error / data handling callback.
-        if an error is given, it will print the error's message and stack,
-        else it will print the data
-      */
-      var ii;
-      if (error) {
-        /* ignore test-generated errors */
-        for (ii = 0; ii < state.onEventErrorDefaultIgnoreList.length; ii += 1) {
-          if (state.onEventErrorDefaultIgnoreList[ii] === error.message) {
-            state.onEventErrorDefaultIgnoreList.splice(ii, 1);
-            return;
-          }
-        }
-        /* debug error */
-        state.debugError = error;
-        /* print error */
-        state.debugMessage
-          = '\nonEventErrorDefault - error\n' + utility2.errorStack(error) + '\n';
-        console.error(state.debugMessage);
-      /* print data if it's defined and not an empty string */
-      } else if (data !== undefined && data !== '') {
-        /* debug data */
-        state.debugData = data;
-        state.debugMessage = '\nonEventErrorDefault - data\n'
-          + utility2.jsonStringifyCircular(data, null, 2) + '\n';
-        utility2.jsonLog(state.debugMessage);
-      }
-    },
-
-    _onEventErrorDefault_default_test: function (onEventError) {
-      /*
-        this function tests onEventErrorDefault's default handling behavior
-      */
-      utility2.testMock(onEventError, [], function (onEventError) {
-        utility2.onEventErrorDefault(null, '_onEventErrorDefault_default_test');
-        onEventError();
-      });
-    },
-
-    _onEventErrorDefault_error_test: function (onEventError) {
-      /*
-        this function tests onEventErrorDefault's error handling behavior
-      */
-      utility2.testMock(onEventError, [
-        [console, { error: utility2.nop }]
-      ], function (onEventError) {
-        var error;
-        error = new Error('_onEventErrorDefault_error_test');
-        /* test error.stack handling behavior */
-        utility2.onEventErrorDefault(error);
-        /* test error.message handling behavior */
-        error.stack = '';
-        utility2.onEventErrorDefault(error);
-        /* test no error.message or error.stack handling behavior */
-        error.message = '';
-        utility2.onEventErrorDefault(error);
-        onEventError();
-      });
-    },
-
-    _onEventErrorDefault_ignore_test: function (onEventError) {
-      /*
-        this function tests onEventErrorDefault's ignore handling behavior
-      */
-      var error;
-      error = new Error(utility2.uuid4());
-      /* add extraneous error message for code coverage */
-      state.onEventErrorDefaultIgnoreList.push(utility2.uuid4());
-      state.onEventErrorDefaultIgnoreList.push(error.message);
-      utility2.onEventErrorDefault(error);
-      /* remove extraneous error message */
-      state.onEventErrorDefaultIgnoreList.pop();
-      onEventError();
-    },
-
-    onEventTimeout: function (onEventError, timeout, message) {
-      /*
-        this function sets a timer to throw and handle a timeout error
-      */
-      var error;
-      error = new Error('onEventTimeout - timeout error - ' + timeout + ' ms - ' + message);
-      error.code = 'ETIMEDOUT';
-      return setTimeout(function () {
-        onEventError(error);
-      }, timeout);
     },
 
     setDefault: function (options, defaults) {
@@ -1353,367 +1308,214 @@
       /*
         this function creates a test report
       */
-      var self, state;
+      var result, self, state;
       self = this;
       state = self.global.state;
-      utility2.jsonLog('\n\n\n\ntest report');
-      /* sort list of test suites by name */
-      state.testSuiteList.sort(function (arg1, arg2) {
-        arg1 = arg1.nameFull;
-        arg2 = arg2.nameFull;
-        return arg1 <= arg2 ? -1 : 1;
-      }).forEach(function (testSuite) {
-        testSuite.testCaseList.sort(function (arg1, arg2) {
-          arg1 = arg1.nameFull;
-          arg2 = arg2.nameFull;
-          return arg1 <= arg2 ? -1 : 1;
-        });
-        state.testSummary.failures += testSuite.failures;
-        state.testSummary.passed += testSuite.passed;
-        state.testSummary.time = Math.max(state.testSummary.time, Number(testSuite.time) || 0);
-        utility2.jsonLog((testSuite.failures ? required.colors.inverse : utility2.echo)(
-          ('        ' + (testSuite.time)).slice(-8) + ' ms | '
-            + testSuite.failures + ' failed | '
-            + (testSuite.testCaseList.length - testSuite.failures)
-            + ' passed in ' + testSuite.nameFull
-        ));
+      result = '\n\n\n\ntest report\n';
+      /* sort state.testReport */
+      utility2.testReportMerge(state.testReport);
+      state.testReport.testSuiteList.forEach(function (testSuite) {
+        result += (testSuite.totalFailed ? required.colors.inverse : utility2.echo)(
+          ('        ' + testSuite.totalTime).slice(-8) + ' ms | '
+            + testSuite.totalFailed + ' failed | '
+            + (testSuite.testCaseList.length - testSuite.totalFailed)
+            + ' passed in ' + testSuite.name + '\n'
+        );
       });
-      utility2.jsonLog(state.testSuiteFailList.sort().join('\n'));
-      utility2.jsonLog();
-      self.reportBrowser();
-      self.reportNodejs();
-      state.testSuiteFailList.length = 0;
-      state.testSuiteList.length = 0;
+      result += '\n' + state.testReport.errorMessageList.join('\n') + '\n';
+      utility2.jsonLog(result);
+      /* record total time for all testSuites to run */
+      state.testReport.totalTime = Math.min(Date.now()
+        - state.testReport.totalTime, state.testReport.totalTime);
+      state.testReportCopy = utility2.jsonCopy(state.testReport);
+      /* browser code */
+      if (state.modeBrowser) {
+        /* notify saucelabs of test results */
+        self.global.global_test_results = {
+          coverage: global.__coverage__,
+          failed: state.testReportCopy.totalFailed,
+          testCallbackId: state.testCallbackId,
+          testReport: state.testReportCopy
+        };
+        if (utility2.urlParamsGet(self.global.location.hash, '#').testReportUpload) {
+          utility2.ajax({
+            data: JSON.stringify(self.global.global_test_results),
+            url: '/test/report.upload?userAgent='
+              + encodeURIComponent(self.global.navigator.userAgent)
+          }, function (error) {
+            utility2.onEventErrorDefault(error);
+          });
+        }
+      }
+      /* nodejs code */
+      if (state.modeNodejs) {
+        utility2.testReportNodejs(state.testReportCopy);
+      }
+      /* reset state.testReport */
+      state.testReport = {};
+      utility2.testReportMerge(state.testReport);
     },
 
-    __Test_prototype_report_failedTest_test: function (onEventError) {
+    __Test_prototype_report_testFailure_test: function (onEventError) {
       /*
-        this function tests _Test_prototype_report's failed test handling behavior
+        this function tests _Test_prototype_report's test failure handling behavior
       */
       utility2.testMock(onEventError, [
-        [utility2, { ajax: utility2.callArg1, deferCallback: utility2.nop }]
+        [utility2, { ajax: utility2.callArg1, onEventErrorDefault: null }]
       ], function (onEventError) {
-        local._createTest({ state: {
-          /* test browser mode handling behavior */
-          modeBrowser: true,
-          /* test multiple test suites handling behavior */
-          testSuiteList: [
-            /* test failure handling behavior */
-            { failures: 1, name: 'bb', passed: 1, testCaseList: [] },
-            { failures: 1, name: 'aa', passed: 1, testCaseList: [] }
-          ]
-        } }).report();
-        onEventError();
-      });
-    },
-
-    _Test_prototype_reportBrowser: function () {
-      /*
-        this function runs extra report handling code in the browser
-      */
-      var self, state;
-      self = this;
-      state = self.global.state;
-      if (state.modeBrowser) {
-        /* upload test report */
-        utility2.ajax({
-          data: JSON.stringify({
-            coverage: global.__coverage__,
-            testCallbackId: state.testCallbackId,
-            testSuiteList: state.testSuiteList
-          }),
-          url: '/test/report.upload'
-        }, function (error) {
-          utility2.onEventErrorDefault(error);
-          utility2.deferCallback('untilReadyTestReport', 'ready');
+        var self;
+        self = utility2.createTest({
+          location: { hash: '' },
+          navigator: {},
+          state: {
+            /* test browser mode handling behavior */
+            modeBrowser: true,
+            /* test multiple test suites handling behavior */
+            testReport: utility2.testReportMerge({ testSuiteList: [
+              /* test test failure handling behavior */
+              { name: 'bb', testCaseList: [ { errorMessage: 'error' } ] },
+              { name: 'aa', testCaseList: [ { errorMessage: 'error' } ] }
+            ] })
+          }
         });
-      }
-    },
-
-    _Test_prototype_reportNodejs: function () {
-      /*
-        this function runs extra report handling code in nodejs
-      */
-      var self, state;
-      self = this;
-      state = self.global.state;
-      if (state.modeNodejs && state.modeNpmTest) {
-        /* write test_report.badge.svg */
-        utility2.readyUtility2Exit.remaining += 1;
-        utility2.fsWriteFileAtomic(
-          state.tmpdir + '/test_report.badge.svg',
-          self.reportNodejsBadge(state.testSummary),
-          utility2.readyUtility2Exit
-        );
-        /* write test_report.html */
-        utility2.readyUtility2Exit.remaining += 1;
-        utility2.fsWriteFileAtomic(
-          state.tmpdir + '/test_report.html',
-          self.reportNodejsHtml(state.testSummary, state.testSuiteList),
-          utility2.readyUtility2Exit
-        );
-        /* write test_report.json */
-        utility2.readyUtility2Exit.remaining += 1;
-        utility2.fsWriteFileAtomic(
-          state.tmpdir + '/test_report.json',
-          JSON.stringify({
-            testSuiteList: state.testSuiteList,
-            testSummary: state.testSummary
-          }, null, 2),
-          utility2.readyUtility2Exit
-        );
-      }
-    },
-
-    _Test_prototype_reportNodejsBadge: function (testSummary) {
-      /*
-        this function generates a test report summary badge
-      */
-      return state.fsWatchDict['/test/modeAjaxOffline/http%3A%2F%2Fimg.shields.io'
-        + '%2Fbadge%2Ftests_failed-999-ee0000.svg%3Fstyle%3Dflat%23GET'].contentBrowser
-        .replace('999', testSummary.failures)
-        .replace('e00', testSummary.failures ? 'e00' : '0e0');
-    },
-
-    __Test_prototype_reportNodejsBadge_failedTest_test: function (onEventError) {
-      /*
-        this function tests _Test_prototype_reportNodejsBadge's failed test handling behavior
-      */
-      var data;
-      if (state.modeNodejs) {
-        data = local._Test_prototype_reportNodejsBadge({ failures: 2});
-        utility2.assert(data.indexOf('#e00') >= 0, data);
-      }
-      onEventError();
-    },
-
-    _Test_prototype_reportNodejsHtml: function (testSummary, testSuiteList) {
-      /*
-        this function generates an html test report from testSuiteList
-      */
-      var content, failureList, testCaseNumber, testSuiteNumber;
-      testCaseNumber = 0;
-      testSuiteNumber = 0;
-      content = testSuiteList.map(function (testSuite, ii) {
-        testSuiteNumber += 1;
-        failureList = [];
-        return '<div>'
-          + '<h4>' + testSuiteNumber + '. ' + testSuite.javascriptPlatform + '</h4>'
-          + '<h4>' + testSuite.userAgent + '</h4>'
-          + '<h4>' + testSuite.name + ' (run in ' + testSuite.time + ' ms)</h4>'
-          + '<table><thead><tr>'
-          + '<th>#</th>'
-          + '<th>time</th>'
-          + '<th>status</th>'
-          + '<th>test case</th>'
-          + '</tr></thead><tbody>'
-          + testSuite.testCaseList.map(function (testCase) {
-            testCaseNumber += 1;
-            if (testCase.failure) {
-              failureList.push(testCaseNumber + '. ' + testCase.name
-                + '\n' + testCase.failure);
-            }
-            return '<tr class=' + (testCase.failure ? 'failed' : 'passed') + '>'
-              + '<td>' + testCaseNumber + '.</td>'
-              + '<td>' + testCase.time + ' ms</td>'
-              + '<td>' + (testCase.failure ? 'failed' : 'passed') + '</td>'
-              + '<td>' + testCase.name + '</td>'
-              + '</tr>';
-          }).join('\n')
-          + '</tbody></table>'
-          + (failureList.length
-            ? '<pre>' + failureList.join('\n\n').replace((/</g), '&lt;') + '</pre>'
-            : '')
-          + '</div>';
-      }).join('\n');
-      return utility2.templateFormat(
-        state.fsWatchDict['/test/report.html.template'].contentBrowser,
-        {
-          content: content,
-          totalFailed: String(testSummary.failures),
-          totalFailedClass: String(testSummary.failures ? 'failed' : 'passed'),
-          totalPassed: String(testSummary.passed),
-          totalTestSuites: String(testSuiteList.length),
-          totalTime: String(testSummary.time)
-        }
-      );
-    },
-
-    __Test_prototype_reportNodejsHtml_failedTest_test: function (onEventError) {
-      /*
-        this function tests _Test_prototype_reportNodejsHtml's failed test handling behavior
-      */
-      var data;
-      if (state.modeNodejs) {
-        data = local._Test_prototype_reportNodejsHtml({
-          failures: 2
-        }, [{ failures: 2, testCaseList: [
-          { failure: 'aa' },
-          { failure: 'bb' }
-        ] }]);
-        utility2.assert(data.indexOf('<td class="failed">2</td>') >= 0, data);
-      }
-      onEventError();
+        /* test no test report upload handling behavior */
+        self.report();
+        /* test test report upload handling behavior */
+        self.global.location.hash = '#testReportUpload=1';
+        utility2.onEventErrorDefault = onEventError;
+        self.report();
+      });
     },
 
     _Test_prototype_run: function () {
       /*
         this function runs all tests for a given module
       */
-      var onEventReady, self, state, testList, testSuite;
+      var self, state, testSuite;
       self = this;
       state = self.global.state;
-      /* create a list of all available tests in local2 */
-      testList = Object.keys(self.local2).filter(function (test) {
-        return test.slice(-5) === '_test';
+      /* create user agent test group */
+      testSuite = state.javascriptPlatform + '.'
+        + ((self.global.navigator && self.global.navigator.userAgent)
+          || 'unknown_user_agent');
+      state.testReport.testSuiteList.forEach(function (value) {
+        if (value.name === testSuite) {
+          testSuite = value;
+        }
       });
-      /* return if there are no tests */
-      if (testList.length === 0) {
-        return;
+      if (typeof testSuite !== 'object') {
+        testSuite = {
+          name: testSuite,
+          testCaseList: [],
+          totalTime: Date.now()
+        };
+        state.testReport.testSuiteList.push(testSuite);
+        state.testReport.onEventReady.remaining += 1;
       }
-      /* create test suite for local2 */
-      testSuite = {
-        failures: 0,
-        javascriptPlatform: state.javascriptPlatform,
-        name: self.local2._name,
-        nameFull: '',
-        passed: 0,
-        testCaseList: [],
-        tests: testList.length,
-        time: 0,
-        userAgent: (self.global.navigator && self.global.navigator.userAgent)
-          || 'unknown user agent'
-      };
-      testSuite.nameFull = testSuite.javascriptPlatform
-        + '.' + testSuite.userAgent
-        + '.' + testSuite.name;
-      /* add test suite to global list of test suites */
-      state.testSuiteList.push(testSuite);
-      state.testSuiteRemaining += 1;
-      /* this callback runs when all tests are finished */
-      onEventReady = utility2.untilReady(function () {
-        testSuite.passed = testSuite.tests - testSuite.failures;
-        state.testSuiteRemaining -= 1;
-        if (state.testSuiteRemaining === 0) {
-          /* assert state.onEventErrorDefaultIgnoreList is empty */
-          utility2.assert(
-            state.onEventErrorDefaultIgnoreList.length === 0,
-            state.onEventErrorDefaultIgnoreList
-          );
-          state.testSuiteRemaining = 0;
-          self.report();
-        }
+      /* init testSuite.onEventReady */
+      testSuite.onEventReady = testSuite.onEventReady || utility2.untilReady(function () {
+        /* record time for testSuite to run */
+        testSuite.totalTime = Math.min(Date.now() - testSuite.totalTime, testSuite.totalTime);
+        state.testReport.onEventReady();
       });
-      onEventReady.remaining += testList.length;
-      /* asynchronously run tests in local2 */
-      testList.forEach(function (testName) {
-        self.runTestCase(testName, testSuite, onEventReady);
+      /* handle null case where there are no test cases to run */
+      testSuite.onEventReady.remaining += 1;
+      self.global.setTimeout(testSuite.onEventReady);
+      /* loop through all tests in local2 */
+      Object.keys(self.local2).forEach(function (testCase) {
+        if (testCase.slice(-5) === '_test') {
+          testSuite.onEventReady.remaining += 1;
+          testCase = {
+            errorMessage: '',
+            module: self.local2._name,
+            name: testCase,
+            time: Date.now()
+          };
+          testSuite.testCaseList.push(testCase);
+          self.runTestCase(testCase, testSuite);
+        }
       });
     },
 
-    __Test_prototype_run_failedTest_test: function (onEventError) {
-      /*
-        this function tests _Test_prototype_run's failed test handling behavior
-      */
-      var self;
-      self = local._createTest({
-        /* suppress error output in mock test */
-        console: { error: utility2.nop },
-        /* test browser user agent handling behavior */
-        navigator: { userAgent: 'unknown' },
-        /* test qunit handling behavior */
-        QUnit: { ok: utility2.nop, test: utility2.callArg1 },
-        setTimeout: setTimeout,
-        /* test browser mode handling behavior */
-        state: { javascriptPlatform: 'browser', modeBrowser: true }
-      }, {
-        _name: 'utility2.__Test_prototype_run_failedTest_test',
-        _test: function (onEventError) {
-          /* test failure handling behavior */
-          onEventError(utility2.error);
-          /* test multiple callback, failure handling behavior */
-          onEventError();
-        }
-      });
-      state.onEventErrorDefaultIgnoreList.push('utility2 error');
-      state.onEventErrorDefaultIgnoreList.push(
-        'runTestCase - browser.unknown.utility2.__Test_prototype_run_failedTest_test._test\'s'
-          + ' callback called multiple times'
-      );
-      self.report = onEventError;
-      self.run();
-    },
-
-    __Test_prototype_run_nullCase_test: function (onEventError) {
+    __Test_prototype_run_testFailure_test: function (onEventError) {
       /*
         this function tests _Test_prototype_run's null case handling behavior
       */
-      local._createTest(
-        { state: {} },
-        { _name: 'utility2.__Test_prototype_run_nullCase_test' }
-      ).run();
+      utility2.createTest({
+        console: { error: utility2.nop },
+        setTimeout: utility2.callArg0,
+        state: { testReport: utility2.testReportMerge({
+          onEventReady: utility2.nop,
+          testSuiteList: [{ testCaseList: [] }]
+        }) }
+      }, {
+        _name: 'utility2.__Test_prototype_run_testFailure_test',
+        _test: function (onEventError) {
+          state.onEventErrorDefaultIgnoreList.push('utility2 error');
+          state.onEventErrorDefaultIgnoreList.push('runTestCase - undefined.unknown_user_agent'
+            + '.utility2.__Test_prototype_run_testFailure_test._test\'s'
+            + ' callback called multiple times');
+          /* test test failure handling behavior */
+          onEventError(utility2.error);
+          /* test multiple callback, test failure handling behavior */
+          onEventError();
+        }
+      }).run();
       onEventError();
     },
 
-    _Test_prototype_runTestCase: function (testName, testSuite, onEventReady) {
+    _Test_prototype_runTestCase: function (testCase, testSuite) {
       /*
         this function creates a testCase object from the given testName
         and runs it asynchronously
       */
-      var errorMessage, onEventError2, remaining, self, state, testCase, timeout;
+      var errorMessage, name, onEventError2, remaining, self, state, timeout;
       self = this;
       state = self.global.state;
       /* handle testCase result */
       onEventError2 = function (error) {
         /* clear timeout for testCase */
         clearTimeout(timeout);
+        name = testSuite.name + '.' + testCase.module + '.' + testCase.name;
         /* assert testCase callback was not called multiple times */
         remaining -= 1;
         if (remaining < 0) {
           error = error || new Error(
-            'runTestCase - ' + testCase.nameFull + "'s callback called multiple times"
+            'runTestCase - ' + name + "'s callback called multiple times"
           );
         }
-        /* handle testCase failure */
+        /* handle test failure */
         if (error) {
-          errorMessage = '\nrunTestCase - failed - ' + testCase.nameFull;
-          self.global.console.error(required.colors.inverse(errorMessage));
+          /* save error message */
+          errorMessage = 'runTestCase - failed - ' + name;
+          self.global.console.error(required.colors.inverse('\n' + errorMessage));
           utility2.onEventErrorDefault(error);
           errorMessage += state.debugMessage;
-          testCase.failure = utility2.errorStack(error);
-          state.testSuiteFailList.push(errorMessage);
+          testCase.errorMessage = errorMessage;
+          state.testReport.errorMessageList.push(errorMessage);
           if (remaining < 0) {
             return;
           }
-          testSuite.failures += 1;
         } else {
-          utility2.jsonLog('runTestCase - passed - ' + testCase.nameFull);
+          utility2.jsonLog('runTestCase - passed - ' + name);
         }
-        /* record time it took for testCase to run */
-        testCase.time = Date.now() - testCase.time;
-        testSuite.time = Math.max(testCase.time, testSuite.time);
-        /* asynchronously finish testCase */
-        self.global.setTimeout.call(global, onEventReady);
-        /* optional qunit hook for saucelabs testing */
+        /* record time for testCase to run */
+        testCase.time = Math.min(Date.now() - testCase.time, testCase.time);
+        /* finish testCase */
+        testSuite.onEventReady();
+        /* optional qunit hook */
         if (self.global.QUnit) {
-          self.global.QUnit.test(testCase.nameFull, function () {
+          self.global.QUnit.test(testCase.name, function () {
             self.global.QUnit.ok(!error, utility2.errorStack(error));
           });
         }
       };
       remaining = 1;
-      /* create testCase */
-      testCase = {
-        name: testName,
-        nameFull: testSuite.nameFull + '.' + testName,
-        time: Date.now()
-      };
-      testSuite.testCaseList.push(testCase);
       /* set timeout for testCase */
       timeout = utility2.onEventTimeout(onEventError2, state.timeoutDefault, 'runTestCase');
       utility2.tryCatch(function () {
         /* run testCase */
-        self.local2[testName](onEventError2);
+        self.local2[testCase.name](onEventError2);
         /* catch synchronously thrown errors */
       }, onEventError2);
     },
@@ -1773,6 +1575,99 @@
       });
     },
 
+    testReportMerge: function (testReport1, testReport2) {
+      /*
+        this function merges testReport2 into testReport1
+      */
+      var testSuite1;
+      testReport1 = utility2.setDefault(testReport1 || {}, {
+        errorMessageList: [],
+        testSuiteList: [],
+        totalTime: 0
+      });
+      testReport2 = testReport2 || {};
+      (testReport2.errorMessageList || []).forEach(function (errorMessage) {
+        testReport1.errorMessageList.push(String(errorMessage));
+      });
+      (testReport2.testSuiteList || []).forEach(function (testSuite2) {
+        testSuite1 = null;
+        /* security - fix potentially malformed testSuite2 */
+        testSuite2 = testSuite2 || {};
+        testSuite2.name = String(testSuite2.name);
+        testSuite2.testCaseList = Array.isArray(testSuite2.testCaseList)
+          ? testSuite2.testCaseList
+          : [];
+        testSuite2.totalTime = Number(testSuite2.totalTime) || 0;
+        testReport1.testSuiteList.forEach(function (_) {
+          /* use existing testSuite1 */
+          if (_.name === testSuite2.name) {
+            testSuite1 = _;
+          }
+        });
+        /* crate new testSuite1 */
+        if (!testSuite1) {
+          testSuite1 = {
+            name: testSuite2.name,
+            testCaseList: [],
+            totalTime: 0
+          };
+          testReport1.testSuiteList.push(testSuite1);
+        }
+        /* merge testSuite2 into testSuite1 */
+        testSuite1.totalTime += testSuite2.totalTime;
+        /* merge testSuite2.testCaseList into testSuite1.testCaseList */
+        testSuite2.testCaseList.forEach(function (testCase) {
+          /* security - fix potentially malformed testCase */
+          testCase.errorMessage = String(testCase.errorMessage || '');
+          testCase.module = String(testCase.module);
+          testCase.name = String(testCase.name);
+          testCase.time = Number(testCase.time) || 0;
+          testSuite1.testCaseList.push(testCase);
+        });
+      });
+      /* update totalTime */
+      if (testReport1.totalTime < 0xffffffff) {
+        testReport1.totalTime += Number(testReport2.totalTime) || 0;
+      }
+      testReport1.totalFailed = 0;
+      testReport1.totalPassed = 0;
+      /* sort testSuiteList by name */
+      testReport1.testSuiteList.sort(function (arg1, arg2) {
+        arg1 = String(arg1.name).toLowerCase();
+        arg2 = String(arg2.name).toLowerCase();
+        return arg1 <= arg2 ? -1 : 1;
+      }).forEach(function (testSuite1) {
+        /* sort testCaseList by module and name */
+        testSuite1.testCaseList.sort(function (arg1, arg2) {
+          arg1 = String(arg1.module + arg1.name).toLowerCase();
+          arg2 = String(arg2.module + arg2.name).toLowerCase();
+          return arg1 <= arg2 ? -1 : 1;
+        });
+        /* update totalFailed */
+        testSuite1.totalFailed = testSuite1.testCaseList.reduce(function (arg1, arg2) {
+          return arg1 + (arg2.errorMessage ? 1 : 0);
+        }, 0);
+        testReport1.totalFailed += testSuite1.totalFailed;
+        /* update totalPassed */
+        testReport1.totalPassed += testSuite1.testCaseList.length - testSuite1.totalFailed;
+      });
+      return testReport1;
+    },
+
+    _testReportMerge_malformedData_test: function (onEventError) {
+      /*
+        this funciton tests testReportMerge's malformed data handling behavior
+      */
+      utility2.testReportMerge({
+        errorMessageList: [],
+        testSuiteList: [ { name: 'aa', testCaseList: [] } ]
+      }, {
+        errorMessageList: [null],
+        testSuiteList: [null, { name: 'aa' }]
+      });
+      onEventError();
+    },
+
     _testSetTimeout: setTimeout,
 
     _throwError: function () {
@@ -1794,13 +1689,27 @@
 
     tryCatch: function (callback, onEventError) {
       /*
-        this function helps achieve 100% code coverage
+        this function calls the callback in a try catch block,
+        and falls back to onEventError if an error is thrown
       */
       try {
         callback();
       } catch (error) {
         onEventError(error);
       }
+    },
+
+    tryCatchHandler: function (onEventError) {
+      /*
+        this function returns a callback that will call onEventError in a try catch block
+      */
+      return function (error, data) {
+        try {
+          onEventError(error, data);
+        } catch (error2) {
+          onEventError(error2);
+        }
+      };
     },
 
     unref: function (obj) {
@@ -1813,23 +1722,18 @@
       return obj;
     },
 
-    untilReady: function (onEventReady) {
+    untilReady: function (onEventError) {
       /*
-        this function defers the onEventReady callback until the remaining counter goes to zero,
+        this function defers the onEventError callback until the remaining counter goes to zero,
         or an error occurs
       */
       var self;
       self = function (error) {
-        /* return any errors encountered */
-        if (self.error) {
-          onEventReady(error || self.error);
-          return;
-        }
         /* save any errors encountered */
         self.error = self.error || error;
         self.remaining -= 1;
         if (self.remaining === 0) {
-          onEventReady(self.error);
+          onEventError(self.error);
         }
       };
       self.remaining = 0;
@@ -1929,6 +1833,8 @@
         this function tests urlParamsMerge's default handling behavior
       */
       var data;
+      data = utility2.urlParamsMerge('http://localhost/aa#dd=ee%2B', { bb: 'cc+' }, '?');
+      utility2.assert(data === 'http://localhost/aa?bb=cc%2B#dd=ee%2B', data);
       data = utility2.urlParamsMerge('/aa#dd=ee%2B', { bb: 'cc+' }, '?');
       utility2.assert(data === '/aa?bb=cc%2B#dd=ee%2B', data);
       data = utility2.urlParamsMerge('/aa?bb=cc%2B', { dd: 'ee+' }, '#');
@@ -2055,7 +1961,7 @@
         this function tests _initOnce's default handling behavior
       */
       utility2.testMock(onEventError, [
-        [global, { required: {} }],
+        [global, { __dirname: null, required: {} }],
         [local, {
           _initArgv: utility2.nop,
           _initBootstrap: utility2.nop,
@@ -2280,7 +2186,7 @@
           );
           data = Number((/line-rate="([^"]+)"/).exec(data)[1]);
           /* create coverage badge */
-          data = state.fsWatchDict['/test/modeAjaxOffline/http%3A%2F%2Fimg.shields.io'
+          data = state.fsWatchDict['/test/modeAjaxOffline/https%3A%2F%2Fimg.shields.io'
             + '%2Fbadge%2Fcoverage-100.0%25-00ee00.svg%3Fstyle%3Dflat%23GET'].contentBrowser
             .replace('100.0', (100 * data).toFixed(1))
             .replace('0e0', ('0' + Math.round((1 - data) * 238).toString(16)).slice(-2)
@@ -2303,7 +2209,7 @@
         [global, {
           process: { env: {}, on: utility2.callArg1 },
           state: {
-            fsWatchDict: { '/test/modeAjaxOffline/http%3A%2F%2Fimg.shields.io%2Fbadge%2Fcoverage-100.0%25-00ee00.svg%3Fstyle%3Dflat%23GET': { contentBrowser: '' } },
+            fsWatchDict: { '/test/modeAjaxOffline/https%3A%2F%2Fimg.shields.io%2Fbadge%2Fcoverage-100.0%25-00ee00.svg%3Fstyle%3Dflat%23GET': { contentBrowser: '' } },
             modeCoverage: null
           }
         }],
@@ -2353,7 +2259,7 @@
         setTimeout(function () {
           /* exit with non-zero code if tests failed */
           process.on('exit', function () {
-            if (state.testSummary && state.testSummary.failures) {
+            if (state.testReportCopy && state.testReportCopy.totalFailed) {
               process.exit(1);
             }
           });
@@ -2375,7 +2281,7 @@
             }
           } },
           setTimeout: utility2.callArg0,
-          state: { testSummary: { failures: 0 } }
+          state: { testReportCopy: utility2.testReportMerge() }
         }]
       ], function (onEventError) {
         var exitCode;
@@ -2390,8 +2296,8 @@
         state.modeNpmTest = true;
         local._initNpmTest();
         utility2.assert(!exitCode, exitCode);
-        /* test failure handling behavior */
-        state.testSummary.failures = 1;
+        /* test test failure handling behavior */
+        state.testReportCopy.totalFailed = 1;
         local._initNpmTest();
         utility2.assert(exitCode, exitCode);
         onEventError();
@@ -2693,7 +2599,7 @@
           break;
         default:
           utility2.tryCatch(function () {
-            utility2.assert(error instanceof Error && error === utility2.error, error);
+            utility2.assert(error === utility2.error, error);
             onEventError();
           }, onEventError);
         }
@@ -2784,7 +2690,7 @@
           break;
         default:
           utility2.tryCatch(function () {
-            utility2.assert(error instanceof Error && error === utility2.error, error);
+            utility2.assert(error === utility2.error, error);
             onEventError();
           }, onEventError);
         }
@@ -3139,7 +3045,7 @@
           break;
         default:
           utility2.tryCatch(function () {
-            utility2.assert(error instanceof Error && error === utility2.error, error);
+            utility2.assert(error === utility2.error, error);
             onEventError();
           }, onEventError);
         }
@@ -3226,7 +3132,7 @@
           break;
         default:
           utility2.tryCatch(function () {
-            utility2.assert(error instanceof Error && error === utility2.error, error);
+            utility2.assert(error === utility2.error, error);
             onEventError();
           }, onEventError);
         }
@@ -3243,18 +3149,22 @@
         /* clear timeout for headlessPhantomjs */
         clearTimeout(timeout);
         /* garbage collect testCallbackId */
-        delete state.browserTestCallbackDict[testCallbackId];
+        delete state.headlessBrowserTestCallbackDict[testCallbackId];
         onEventError(error);
       };
       testCallbackId = utility2.uuid4();
-      options.url = utility2.urlParamsMerge(options.url, { testCallbackId: testCallbackId });
+      options.url = utility2.templateFormat(options.url, {
+        localhost: state.localhost,
+        testCallbackId: testCallbackId,
+        timeoutDefault: String(state.timeoutDefault)
+      });
       required.phantomjs = required.phantomjs || utility2.require('phantomjs');
       state.phantomjs = utility2.shell({ argv: [
         options.argv0 || required.phantomjs.path,
         utility2.__dirname + '/.install/utility2_headless_phantomjs.js',
         new Buffer(JSON.stringify(options)).toString('base64')
       ], modeDebug: false });
-      state.browserTestCallbackDict[testCallbackId] = onEventError2;
+      state.headlessBrowserTestCallbackDict[testCallbackId] = onEventError2;
       /* set timeout for headlessPhantomjs */
       timeout = utility2.onEventTimeout(
         onEventError2,
@@ -3268,7 +3178,8 @@
         this function tests headlessPhantomjs's default handling behavior
       */
       utility2.headlessPhantomjs({
-        url: state.localhost + '/test/test.html#modeTest=1&testWatch=1'
+        url: '{{localhost}}/test/test.html?testCallbackId={{testCallbackId}}#modeTest=1'
+          + '&testReportUpload=1&testWatch=1&timeoutDefault={{timeoutDefault}}'
       }, onEventError);
     },
 
@@ -3567,6 +3478,139 @@
       );
     },
 
+    testReportNodejs: function (testReport) {
+      /*
+        this function runs extra report handling code in nodejs
+      */
+      var onEventReady;
+      onEventReady = state.modeNpmTest
+        ? utility2.readyUtility2Exit
+        : utility2.untilReady(utility2.onEventErrorDefault);
+      /* write test_report.badge.svg */
+      onEventReady.remaining += 1;
+      utility2.fsWriteFileAtomic(
+        state.tmpdir + '/test_report.badge.svg',
+        local._testReportNodejsBadge(testReport),
+        onEventReady
+      );
+      /* write test_report.html */
+      onEventReady.remaining += 1;
+      utility2.fsWriteFileAtomic(
+        state.tmpdir + '/test_report.html',
+        local._testReportNodejsHtml(testReport),
+        onEventReady
+      );
+      /* write test_report.json */
+      onEventReady.remaining += 1;
+      utility2.fsWriteFileAtomic(
+        state.tmpdir + '/test_report.json',
+        JSON.stringify(testReport, null, 2),
+        onEventReady
+      );
+    },
+
+    _testReportNodejs_onEventErrorDefault_test: function (onEventError) {
+      /*
+        this function tests testReportNodejs's onEventErrorDefault handling behavior
+      */
+      utility2.testMock(onEventError, [
+        [global, { state: {} }],
+        [local, { _testReportNodejsBadge: utility2.nop, _testReportNodejsHtml: utility2.nop }],
+        [utility2, { fsWriteFileAtomic: utility2.nop }]
+      ], function (onEventError) {
+        utility2.testReportNodejs();
+        onEventError();
+      });
+    },
+
+    _testReportNodejsBadge: function (testReport) {
+      /*
+        this function generates a test report summary badge
+      */
+      return state.fsWatchDict['/test/modeAjaxOffline/https%3A%2F%2Fimg.shields.io'
+        + '%2Fbadge%2Ftests_failed-999-ee0000.svg%3Fstyle%3Dflat%23GET'].contentBrowser
+        .replace('999', testReport.totalFailed)
+        .replace('e00', testReport.totalFailed ? 'e00' : '0e0');
+    },
+
+    __testReportNodejsBadge_testFailure_test: function (onEventError) {
+      /*
+        this function tests _testReportNodejsBadge's test failure handling behavior
+      */
+      var data;
+      data = local._testReportNodejsBadge({ totalFailed: 2 });
+      utility2.assert(data.indexOf('#e00') >= 0, data);
+      onEventError();
+    },
+
+    _testReportNodejsHtml: function (testReport) {
+      /*
+        this function generates an html test report from testReport
+      */
+      var content, errorMessageList, testCaseNumber, testSuiteNumber;
+      testCaseNumber = 0;
+      testSuiteNumber = 0;
+      content = testReport.testSuiteList.map(function (testSuite, ii) {
+        testSuiteNumber += 1;
+        errorMessageList = [];
+        return '<div>'
+          + '<h4>' + testSuiteNumber
+            + '. <span>' + testSuite.totalTime + ' ms</span> '
+            + testSuite.name + '</h4>'
+          + '<table><thead><tr>'
+          + '<th>#</th>'
+          + '<th>time</th>'
+          + '<th>status</th>'
+          + '<th>test case</th>'
+          + '</tr></thead><tbody>'
+          + testSuite.testCaseList.map(function (testCase) {
+            testCaseNumber += 1;
+            if (testCase.errorMessage) {
+              errorMessageList.push(testCaseNumber + '. ' + testCase.module + '.'
+                + testCase.name + '\n' + testCase.errorMessage);
+            }
+            return '<tr class=' + (testCase.errorMessage ? 'failed' : 'passed') + '>'
+              + '<td>' + testCaseNumber + '.</td>'
+              + '<td>' + testCase.time + ' ms</td>'
+              + '<td>' + (testCase.errorMessage ? 'failed' : 'passed') + '</td>'
+              + '<td>' + testCase.module + '.' + testCase.name + '</td>'
+              + '</tr>';
+          }).join('\n')
+          + '</tbody></table>'
+          + (errorMessageList.length
+            ? '<pre>' + errorMessageList.join('\n').replace((/</g), '&lt;') + '</pre>'
+            : '')
+          + '</div>';
+      }).join('\n');
+      return utility2.templateFormat(
+        state.fsWatchDict['/test/report.html.template'].contentBrowser,
+        {
+          content: content,
+          date: new Date().toISOString(),
+          totalFailed: String(testReport.totalFailed),
+          totalFailedClass: String(testReport.totalFailed ? 'failed' : 'passed'),
+          totalPassed: String(testReport.totalPassed),
+          totalTestSuites: String(testReport.testSuiteList.length),
+          totalTime: String(testReport.totalTime)
+        }
+      );
+    },
+
+    __testReportNodejsHtml_testFailure_test: function (onEventError) {
+      /*
+        this function tests _testReportNodejsHtml's test failure handling behavior
+      */
+      var data;
+      data = local._testReportNodejsHtml(utility2.testReportMerge({
+        testSuiteList: [{ testCaseList: [
+          { errorMessage: 'error1' },
+          { errorMessage: 'error2' }
+        ] }]
+      }));
+      utility2.assert(data.indexOf('<td class="failed">2</td>') >= 0, data);
+      onEventError();
+    },
+
     _utility2_timeout_test: function (onEventError) {
       /*
         this function tests utility2's timeout handling behavior
@@ -3611,7 +3655,7 @@
       /* exports */
       /* css */
       $(document.head).append('<style>\n'
-        + utility2.scriptLint('moduleAjaxBrowser.css', '#divXhrProgress {\n'
+        + utility2.scriptLint('moduleAjaxBrowser.css', '#divAjaxProgress {\n'
           + 'background-color: #fff;\n'
           + 'border: 2px solid black;\n'
           + 'border-radius: 5px;\n'
@@ -3625,20 +3669,20 @@
           + 'width: 128px;\n'
           + 'z-index: 99999;\n'
           + '}\n')
-        + '#divXhrProgress > .progress {\n'
+        + '#divAjaxProgress > .progress {\n'
           + 'background-color: #777;\n'
           + 'margin: 10px;\n'
         + '}\n'
         + '</style>\n');
-      /* init xhr progress container */
-      local._divXhrProgress = $('<div id="divXhrProgress">\n'
+      /* init ajax progress container */
+      local._divAjaxProgress = $('<div id="divAjaxProgress">\n'
         + '<div class="active progress progress-striped">\n'
           + '<div class="progress-bar progress-bar-info">loading\n'
         + '</div></div></a>\n');
-      $(document.body).append(local._divXhrProgress);
-      local._divXhrProgressBar = local._divXhrProgress.find('div.progress-bar');
+      $(document.body).append(local._divAjaxProgress);
+      local._divAjaxProgressBar = local._divAjaxProgress.find('div.progress-bar');
       /* event handling */
-      local._divXhrProgress.on('click', function () {
+      local._divAjaxProgress.on('click', function () {
         while (local._xhrList.length) {
           local._xhrList.pop().abort();
         }
@@ -3709,7 +3753,7 @@
           local._progressUpdate('100%', 'progress-bar-danger', event.type);
         }
         /* allow the final status to be shown for a short time before hiding */
-        setTimeout(local._divXhrProgressHide, 1000);
+        setTimeout(local._divAjaxProgressHide, 1000);
       };
       /* set default options */
       options.contentType = options.contentType || 'application/octet-stream';
@@ -3733,11 +3777,7 @@
         local._progressState = 1;
         local._progressUpdate('0%', 'progress-bar-info', 'loading');
         /* bug - delay displaying progress bar to prevent it from showing 100% width */
-        setTimeout(function () {
-          if (local._xhrList.length) {
-            local._divXhrProgress.show();
-          }
-        });
+        setTimeout(local._divAjaxProgressShow);
       }
       local._xhrList.push(xhr);
       /* open xhr */
@@ -3746,45 +3786,100 @@
       xhr.send(options.data);
     },
 
-    _ajaxBrowser_abort_test: function (onEventError) {
+    _ajaxBrowser_progress_test: function (onEventError) {
       /*
-        this function tests ajaxBrowser's abort handling behavior
+        this function tests ajaxBrowser's progress handling behavior
       */
-      var interval;
-      /* set interval */
-      interval = setInterval(function () {
-        /* wait until no ajax io is in progress before initiating test */
-        if (!local._xhrList.length) {
-          /* clear interval */
-          clearInterval(interval);
-          utility2.ajax({ url: '/test/test.timeout' }, function (error) {
-            utility2.assert(error instanceof Error, error);
-            onEventError();
+      var interval, mode, onEventError2;
+      mode = 0;
+      onEventError2 = function (error, data) {
+        mode = error instanceof Error ? -1 : mode + 1;
+        switch (mode) {
+        case 1:
+          /* test progress abort handling behavior */
+          utility2.ajax({ url: '/test/test.timeout?timeout=2000' }, utility2.nop);
+          utility2.ajax({ url: '/test/test.timeout?timeout' }, function (error) {
+            utility2.tryCatch(function () {
+              utility2.assert(error instanceof Error, error);
+              setTimeout(onEventError2, 1000);
+            }, onEventError2);
           });
-          local._divXhrProgress.click();
+          /* set interval */
+          interval = setInterval(function () {
+            /* wait until only timeout connection is alive */
+            if (local._xhrList.length === 1) {
+              /* clear interval */
+              clearInterval(interval);
+              /* abort ajax request */
+              local._divAjaxProgress.click();
+            }
+          }, 1000);
+          break;
+        case 2:
+          /* test progress finish handling behavior */
+          utility2.ajax({ url: '/test/test.json' }, function (error) {
+            utility2.tryCatch(function () {
+              utility2.assert(!error, error);
+              /* set interval */
+              interval = setInterval(function () {
+                /* wait until progress is finished */
+                if (local._divAjaxProgress.css('display') === 'none') {
+                  /* clear interval */
+                  clearInterval(interval);
+                  onEventError2(utility2.error);
+                }
+              }, 1000);
+            }, onEventError2);
+          });
+          break;
+        default:
+          utility2.tryCatch(function () {
+            utility2.assert(error === utility2.error, error);
+            onEventError();
+          }, onEventError);
         }
-      }, 1000);
+      };
+      onEventError2();
     },
 
-    _divXhrProgressHide: function () {
+    _divAjaxProgressHide: function () {
       /*
-        this function hides the xhr progress bar if all xhr request are finished
+        this function hides the ajax progress bar if all ajax request are finished
       */
       if (local._xhrList.length === 0) {
-        local._divXhrProgress.hide();
+        local._divAjaxProgress.hide();
       }
     },
 
-    __divXhrProgressHide_default_test: function (onEventError) {
+    __divAjaxProgressHide_default_test: function (onEventError) {
       /*
-        this function tests _divXhrProgressHide's default handling behavior
+        this function tests _divAjaxProgressHide's default handling behavior
       */
       utility2.testMock(onEventError, [[local, { _xhrList: [] }]], function (onEventError) {
         /* test hide handling behavior */
-        local._divXhrProgressHide();
+        local._divAjaxProgressHide();
         local._xhrList.push(null);
         /* test nop handling behavior */
-        local._divXhrProgressHide();
+        local._divAjaxProgressHide();
+        onEventError();
+      });
+    },
+
+    _divAjaxProgressShow: function () {
+      /*
+        this function shows the ajax progress bar if ajax requests exists
+      */
+      if (local._xhrList.length) {
+        local._divAjaxProgress.show();
+      }
+    },
+
+    __divAjaxProgressShow_notShow_test: function (onEventError) {
+      /*
+        this function tests _divAjaxProgressShow's not show handling behavior
+      */
+      utility2.testMock(onEventError, [[local, { _xhrList: []}]], function (onEventError) {
+        local._divAjaxProgressShow();
         onEventError();
       });
     },
@@ -3805,10 +3900,10 @@
       /*
         this function updates the visual progress bar
       */
-      local._divXhrProgressBar.css('width', width);
-      local._divXhrProgressBar[0].className
-        = local._divXhrProgressBar[0].className.replace((/progress-bar-\w+/), type); /**/
-      local._divXhrProgressBar.html(label);
+      local._divAjaxProgressBar.css('width', width);
+      local._divAjaxProgressBar[0].className
+        = local._divAjaxProgressBar[0].className.replace((/progress-bar-\w+/), type); /**/
+      local._divAjaxProgressBar.html(label);
     },
 
     _xhrList: []
@@ -3901,7 +3996,7 @@
           break;
         default:
           utility2.tryCatch(function () {
-            utility2.assert(error instanceof Error && error === utility2.error, error);
+            utility2.assert(error === utility2.error, error);
             onEventError();
           }, onEventError);
         }
@@ -4061,12 +4156,12 @@
         [state, { modeOffline: true }]
       ], function (onEventError) {
         var options;
-        options = { url: 'http://img.shields.io/badge/coverage-100.0%-00ee00.svg?style=flat' };
+        options = { url: 'https://img.shields.io/badge/coverage-100.0%-00ee00.svg?style=flat' };
         utility2.ajax(options, function (error, data) {
           utility2.tryCatch(function () {
             utility2.assert(!error, error);
             utility2.assert(options.url === state.localhost + '/test/modeAjaxOffline/'
-              + 'http%3A%2F%2Fimg.shields.io%2Fbadge%2Fcoverage-100.0%25-00ee00.svg'
+              + 'https%3A%2F%2Fimg.shields.io%2Fbadge%2Fcoverage-100.0%25-00ee00.svg'
               + '%3Fstyle%3Dflat%23GET', options.url);
             onEventError();
           }, onEventError);
@@ -4701,7 +4796,7 @@
       /*
         this function receives and parses uploaded test reports
       */
-      var data, failures, mode, onEventError2;
+      var data, mode, onEventError2;
       mode = 0;
       onEventError2 = function (error, _) {
         mode = error instanceof Error ? -1 : mode + 1;
@@ -4715,23 +4810,18 @@
           utility2.tryCatch(onEventError2, onEventError2);
           break;
         case 3:
-          data = data || {};
-          /* merge global.__coverage with uploaded code coverage object */
+          /* debug data */
+          state.debugTestReportUpload = data;
+          /* merge data.coverage into global.__coverage__ */
           local._coverageMerge(global.__coverage__, data.coverage || {});
-          state.testSuiteList = state.testSuiteList || [];
-          /* security - handle malformed data.testSuiteList */
-          (Array.isArray(data.testSuiteList)
-            ? data.testSuiteList
-            : []).forEach(function (testSuite) {
-            if (testSuite) {
-              state.testSuiteList.push(testSuite);
-              failures = failures || testSuite.failures;
-            }
-          });
-          next = state.browserTestCallbackDict[data.testCallbackId];
-          if (next) {
-            next(failures ? new Error('tests failed') : null);
-          }
+          /* merge data.testReport into state.testReport */
+          state.testReport = state.testReport || {};
+          utility2.testReportMerge(state.testReport, data.testReport);
+          /* call testCallbackId callback if it exists */
+          (state.headlessBrowserTestCallbackDict[data.testCallbackId]
+            || utility2.onEventErrorDefault)(
+            data.testReport.totalFailed ? new Error('tests failed') : null
+          );
           response.end();
           break;
         default:
@@ -4755,39 +4845,18 @@
       });
     },
 
-    '_router5MainDict_/test/report.upload_failedTest_test': function (onEventError) {
+    '_router5MainDict_/test/report.upload_testFailure_test': function (onEventError) {
       /*
-        this function tests router5MainDict_/test/report.upload's failed test handling behavior
+        this function tests router5MainDict_/test/report.upload's test failure handling behavior
       */
       utility2.testMock(onEventError, [
-        [global, { state: { browserTestCallbackDict: {}, testSuiteList: null } }],
+        [state, { debugTestReportUpload: null, testReport: null }],
         [utility2, { streamReadAll: function (_, onEventError) {
-          onEventError(null, JSON.stringify({
-            testCallbackId: 'aa',
-            testSuiteList: [null, { failures: 2 }]
-          }));
+          onEventError(null, JSON.stringify({ testReport: { totalFailed: 1 } }));
         } }]
       ], function (onEventError) {
-        state.browserTestCallbackDict.aa = function (error) {
-          utility2.tryCatch(function () {
-            utility2.assert(error instanceof Error, error);
-            onEventError();
-          }, onEventError);
-        };
-        local['router5MainDict_/test/report.upload'](null, { end: utility2.nop });
-      });
-    },
-
-    '_router5MainDict_/test/report.upload_nullCase_test': function (onEventError) {
-      /*
-        this function tests router5MainDict_/test/report.upload's null case handling behavior
-      */
-      utility2.testMock(onEventError, [
-        [global, { state: { browserTestCallbackDict: {}, testSuiteList: null } }],
-        [utility2, { streamReadAll: utility2.callArg1 }]
-      ], function (onEventError) {
-        local['router5MainDict_/test/report.upload'](null, { end: utility2.nop });
-        onEventError();
+        state.onEventErrorDefaultIgnoreList.push('tests failed');
+        local['router5MainDict_/test/report.upload'](null, { end: onEventError });
       });
     },
 

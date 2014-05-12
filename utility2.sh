@@ -10,7 +10,7 @@ shNodejsInstall () {
     NODEJS_PROCESS_PLATFORM=$(uname | perl -ne "s/.*bsd$/bsd/i; print lc")
     ## nodejs version
     NODEJS_VERSION=node-v0.10.26-$NODEJS_PROCESS_PLATFORM-$NODEJS_PROCESS_ARCH
-    if [ ! -f "/tmp/$NODEJS_VERSION/bin/npm" ]
+    if [ ! -f /tmp/$NODEJS_VERSION/bin/npm ]
       then curl -3Ls http://nodejs.org/dist/v0.10.26/$NODEJS_VERSION.tar.gz\
         | tar -C /tmp/ -xzf -
     fi
@@ -22,12 +22,9 @@ shNodejsInstall () {
 shMain () {
   ## this function is the main program
 
-  ## CI_BRANCH
-  if [ ! "$CI_BRANCH" ]
-    then CI_BRANCH=TRAVIS_BRANCH
-  fi
   ## install nodejs / npm if necessary
   shNodejsInstall
+
   ## utility2 root directory
   ## if statement to avoid recursion loop
   if [ ! "$UTILITY2_DIR" ]
@@ -35,10 +32,13 @@ shMain () {
     ## export nodejs env
     eval "$($UTILITY2_DIR/utility2.js --mode-cli=exportEnv --mode-silent)"
   fi
+
   ## export GITHUB_OWNER_REPO_BRANCH
   export GITHUB_OWNER_REPO_BRANCH=kaizhu256/blob/gh-pages
+
   ## script var
   SCRIPT=":"
+
   ## utility2 vars
   UTILITY2_EXTERNAL_TAR_GZ=utility2_external.$NODEJS_PACKAGE_JSON_VERSION.tar.gz
   UTILITY2_JS=$UTILITY2_DIR/utility2.js
@@ -72,68 +72,137 @@ shMain () {
     SCRIPT="$SCRIPT --mode-silent"
     ;;
 
+  ## install saucelabs
+  --saucelabs-install)
+    SAUCELABS_VERSION=$(echo $NODEJS_PROCESS_PLATFORM | perl -ne "s/darwin/osx/i; print")
+    SCRIPT="$SCRIPT && echo installing saucelabs to $UTILITY2_DIR/.install/sc"
+    SCRIPT="$SCRIPT && cd $UTILITY2_DIR"
+    case $NODEJS_PROCESS_PLATFORM in
+    linux)
+      SCRIPT="$SCRIPT && curl -3Ls"
+      SCRIPT="$SCRIPT https://d2nkw87yt5k0to.cloudfront.net/downloads"
+      SCRIPT="$SCRIPT/sc-latest-$SAUCELABS_VERSION.tar.gz"
+      SCRIPT="$SCRIPT | tar -C .install -xzf -"
+      ;;
+    *)
+      SCRIPT="$SCRIPT && curl -3Ls"
+      SCRIPT="$SCRIPT https://d2nkw87yt5k0to.cloudfront.net/downloads"
+      SCRIPT="$SCRIPT/sc-latest-$SAUCELABS_VERSION.zip"
+      SCRIPT="$SCRIPT > .install/sc.zip && unzip -q .install/sc.zip -d .install"
+      ;;
+    esac
+    SCRIPT="$SCRIPT && cp .install/sc-4.1-$SAUCELABS_VERSION/bin/sc .install/sc"
+    ;;
+
+  ## restart saucelabs
+  --saucelabs-restart)
+    ## stop saucelabs
+    SCRIPT="$SCRIPT && $($UTILITY2_SH_ECHO --saucelabs-stop)"
+    ## start saucelabs
+    SCRIPT="$SCRIPT && $($UTILITY2_SH_ECHO --saucelabs-start)"
+    ;;
+
+  ## start saucelabs if not already started
+  --saucelabs-start)
+    SAUCELABS_READY_FILE=/tmp/.saucelabs.ready
+    ## create sauclabs tunnels in a loop until one succeeds
+    SCRIPT="$SCRIPT && while [ ! -f $SAUCELABS_READY_FILE ]"
+      ## install saucelabs if necessary
+      SCRIPT="$SCRIPT; do if [ ! -f '$UTILITY2_DIR/.install/sc' ]"
+        SCRIPT="$SCRIPT; then $($UTILITY2_SH_ECHO --saucelabs-install)"
+      SCRIPT="$SCRIPT; fi"
+      SCRIPT="$SCRIPT; eval"
+      SCRIPT="$SCRIPT '$UTILITY2_DIR/.install/sc --readyfile $SAUCELABS_READY_FILE &'"
+      SCRIPT="$SCRIPT; sleep 10"
+    SCRIPT="$SCRIPT; done"
+    ;;
+
+  ## stop saucelabs
+  --saucelabs-stop)
+    SAUCELABS_PID_FILE=/tmp/.saucelabs.pid
+    SAUCELABS_READY_FILE=/tmp/.saucelabs.ready
+    ## kill any script trying to start saucelabs connect to prevent race condition
+    SCRIPT="$SCRIPT; kill '$([ -f '$SAUCELABS_PID_FILE' ] && cat $SAUCELABS_PID_FILE)'"
+    SCRIPT="$SCRIPT 2>/dev/null"
+    ## kill old saucelabs connect
+    SCRIPT="$SCRIPT; killall sc 2>/dev/null"
+    ## save current script's pid
+    SCRIPT="$SCRIPT; echo $$ > $SAUCELABS_PID_FILE"
+    ## remove ready file
+    SCRIPT="$SCRIPT; rm -f $SAUCELABS_READY_FILE"
+    ;;
+
+  ## test saucelabs
+  --saucelabs-test)
+    SCRIPT="$SCRIPT && cat $2 | $UTILITY2_JS"
+    SCRIPT="$SCRIPT --mode-cli=headlessSaucelabs"
+    SCRIPT="$SCRIPT --mode-npm-test"
+    SCRIPT="$SCRIPT --server-port=49221"
+    SCRIPT="$SCRIPT --tmpdir=tmp"
+    SCRIPT="$SCRIPT $3"
+    ;;
+
   ## build utility2
   --utility2-build)
+    if [ "$CODESHIP" ]
+      then ARTIFACT_DIR=/utility2.build.codeship.io
+      export POSTGRES_LOGIN=postgres://$PG_USER:$PG_PASSWORD@localhost/test
+    elif [ "$TRAVIS" ]
+      then CI_BRANCH=$TRAVIS_BRANCH
+      CI_BUILD_NUMBER=$TRAVIS_BUILD_NUMBER
+      CI_COMMIT_ID=$TRAVIS_COMMIT
+      ARTIFACT_DIR=/utility2.build.travis-ci.org
+      ## install postgres
+      SCRIPT="$SCRIPT && curl -3Ls"
+      SCRIPT="$SCRIPT https://github.com/PostgresApp/PostgresApp/releases"
+      SCRIPT="$SCRIPT/download/9.3.4.1/Postgres-9.3.4.1.zip"
+      SCRIPT="$SCRIPT > /tmp/postgres.zip"
+      SCRIPT="$SCRIPT && unzip -q /tmp/postgres.zip -d /Applications"
+      ## init postgres
+      SCRIPT="$SCRIPT && eval '/Applications/Postgres.app/Contents/MacOS/Postgres&'"
+      export POSTGRES_LOGIN=postgres://localhost/$USER
+      ## install slimerjs
+      SCRIPT="$SCRIPT && curl -3Ls"
+      SCRIPT="$SCRIPT http://download.slimerjs.org/v0.9/0.9.1/slimerjs-0.9.1-mac.tar.bz2"
+      SCRIPT="$SCRIPT | tar -C /tmp -xzf -"
+      ## add slimerjs to PATH
+      SCRIPT="$SCRIPT && export PATH=$PATH:/tmp/slimerjs-0.9.1"
+    fi
     case $CI_BRANCH in
     npm)
       ## install and test utility2 in /tmp dir with no external npm dependencies */
       SCRIPT="$SCRIPT && cd /tmp && rm -fr node_modules utility2"
-      SCRIPT="$SCRIPT && npm install utility2 && cd node_modules/utility2 && npm test"
+      ## npm install utility2
+      SCRIPT="$SCRIPT && npm install utility2"
+      ## npm test utility2
+      SCRIPT="$SCRIPT && cd node_modules/utility2 && npm test"
+      ;;
+    browser)
+      if [ ! "$CODESHIP" ]
+        then exit
+      fi
+      ## npm install
+      SCRIPT="$SCRIPT && npm install"
+      ## npm test saucelabs
+      SCRIPT="$SCRIPT && rm -f tmp/test_report.json"
+      SCRIPT="$SCRIPT && $($UTILITY2_SH_ECHO --saucelabs-test .install/utility2_saucelabs.all.json)"
       ;;
     *)
-      if [ "$CODESHIP" ]
-        then export POSTGRES_LOGIN=postgres://$PG_USER:$PG_PASSWORD@localhost/test
-        ## npm install
-        SCRIPT="$SCRIPT && npm install"
-        ## npm test
-        SCRIPT="$SCRIPT && npm test"
-        ## save EXIT_CODE
-        SCRIPT="$SCRIPT; EXIT_CODE=\$?"
-        ## publish build
-        SCRIPT="$SCRIPT && ./utility2.sh --utility2-build-publish"
-        SCRIPT="$SCRIPT /utility2.build.codeship.io/latest.$CI_BRANCH"
-        SCRIPT="$SCRIPT && ./utility2.sh --utility2-build-publish"
-        SCRIPT="$SCRIPT /utility2.build.codeship.io/$CI_BUILD_NUMBER.$CI_BRANCH.$CI_COMMIT_ID"
-      elif [ "$TRAVIS" ]
-        then CI_BRANCH=$TRAVIS_BRANCH
-        CI_BUILD_NUMBER=$TRAVIS_BUILD_NUMBER
-        CI_COMMIT_ID=$TRAVIS_COMMIT
-        export POSTGRES_LOGIN=postgres://localhost/$USER
-        ## install postgres
-        SCRIPT="$SCRIPT && curl -3Ls"
-        SCRIPT="$SCRIPT https://github.com/PostgresApp/PostgresApp/releases"
-        SCRIPT="$SCRIPT/download/9.3.4.1/Postgres-9.3.4.1.zip"
-        SCRIPT="$SCRIPT > /tmp/postgres.zip"
-        SCRIPT="$SCRIPT && unzip -q /tmp/postgres.zip -d /Applications"
-        ## init postgres
-        SCRIPT="$SCRIPT && eval '/Applications/Postgres.app/Contents/MacOS/Postgres&'"
-        ## install slimerjs
-        SCRIPT="$SCRIPT && curl -3Ls"
-        SCRIPT="$SCRIPT http://download.slimerjs.org/v0.9/0.9.1/slimerjs-0.9.1-mac.tar.bz2"
-        SCRIPT="$SCRIPT | tar -C /tmp -xzf -"
-        ## add slimerjs to PATH
-        SCRIPT="$SCRIPT && export PATH=$PATH:/tmp/slimerjs-0.9.1"
-        ## npm install
-        SCRIPT="$SCRIPT && npm install"
-        ## npm test
-        SCRIPT="$SCRIPT && npm test --utility2-timeout-default=60000"
-        ## save EXIT_CODE
-        SCRIPT="$SCRIPT; EXIT_CODE=\$?"
-        ## publish build
-        SCRIPT="$SCRIPT && ./utility2.sh --utility2-build-publish"
-        SCRIPT="$SCRIPT /utility2.build.travis-ci.org/latest.$CI_BRANCH"
-        SCRIPT="$SCRIPT && ./utility2.sh --utility2-build-publish"
-        SCRIPT="$SCRIPT /utility2.build.travis-ci.org/$CI_BUILD_NUMBER.$CI_BRANCH.$CI_COMMIT_ID"
-      else
-        ## npm install
-        SCRIPT="$SCRIPT && npm install"
-        ## npm test
-        SCRIPT="$SCRIPT && npm test"
-        ## save EXIT_CODE
-        SCRIPT="$SCRIPT; EXIT_CODE=\$?"
-      fi
+      ## npm install
+      SCRIPT="$SCRIPT && npm install"
+      ## npm test
+      SCRIPT="$SCRIPT && npm test"
       ;;
     esac
+    ## save EXIT_CODE
+    SCRIPT="$SCRIPT; EXIT_CODE=\$?"
+    if [ $ARTIFACT_DIR ]
+      ## publish build
+      then SCRIPT="$SCRIPT && ./utility2.sh --utility2-build-publish"
+      SCRIPT="$SCRIPT $ARTIFACT_DIR/latest.$CI_BRANCH"
+      SCRIPT="$SCRIPT && ./utility2.sh --utility2-build-publish"
+      SCRIPT="$SCRIPT $ARTIFACT_DIR/$CI_BUILD_NUMBER.$CI_BRANCH.$CI_COMMIT_ID"
+    fi
     SCRIPT="$SCRIPT; exit \$EXIT_CODE"
     ;;
 
@@ -156,8 +225,9 @@ shMain () {
     SCRIPT="$SCRIPT test_report.badge.svg"
     SCRIPT="$SCRIPT test_report.html"
     SCRIPT="$SCRIPT test_report.json"
-      SCRIPT="$SCRIPT; do [ \$? == 0 ]"
-      SCRIPT="$SCRIPT && $($UTILITY2_SH_ECHO --db-github-branch-file-update $2/\$FILE tmp/\$FILE)"
+      SCRIPT="$SCRIPT; do if [ -f tmp/\$FILE ]"
+        SCRIPT="$SCRIPT; then $($UTILITY2_SH_ECHO --db-github-branch-file-update $2/\$FILE tmp/\$FILE)"
+      SCRIPT="$SCRIPT; fi"
     SCRIPT="$SCRIPT; done"
     ;;
 
@@ -208,28 +278,29 @@ shMain () {
 
   ## called by npm run-script test
   --utility2-npm-test)
-    ARGS="--mode-npm-test"
+    export SAUCE_USERNAME=kaizhu256
+    NPM_TEST_ARGS="--mode-npm-test"
     ## test github db
-    ARGS="$ARGS --mode-db-github=kaizhu256/blob/unstable"
+    NPM_TEST_ARGS="$NPM_TEST_ARGS --mode-db-github=kaizhu256/blob/unstable"
     ## test postgres db
-    ARGS="$ARGS --mode-db-postgres=\$POSTGRES_LOGIN"
+    NPM_TEST_ARGS="$NPM_TEST_ARGS --mode-db-postgres=\$POSTGRES_LOGIN"
     ## offline mode
-    ARGS="$ARGS --mode-offline"
+    NPM_TEST_ARGS="$NPM_TEST_ARGS --mode-offline"
     ## test repl
-    ARGS="$ARGS --mode-repl"
-    ARGS="$ARGS --mode-test"
-    ARGS="$ARGS --server-port=random"
-    ARGS="$ARGS --test-module-dict={\\\"utility2\\\":true}"
-    ARGS="$ARGS --timeout-default=8000"
-    ARGS="$ARGS --tmpdir=tmp"
+    NPM_TEST_ARGS="$NPM_TEST_ARGS --mode-repl"
+    NPM_TEST_ARGS="$NPM_TEST_ARGS --mode-test"
+    ## use random server port
+    NPM_TEST_ARGS="$NPM_TEST_ARGS --server-port=random"
+    NPM_TEST_ARGS="$NPM_TEST_ARGS --test-module-dict={\\\"utility2\\\":true}"
+    NPM_TEST_ARGS="$NPM_TEST_ARGS --tmpdir=tmp"
     ## npm test
-    SCRIPT="$SCRIPT && ./utility2.js $ARGS"
+    SCRIPT="$SCRIPT && ./utility2.js $NPM_TEST_ARGS"
     SCRIPT="$SCRIPT --mode-coverage='\\butility2\\.'"
     SCRIPT="$SCRIPT --mode-debug-process"
     SCRIPT="$SCRIPT; EXIT_CODE=\$?"
     ## if test failed, then redo without code coverage
     SCRIPT="$SCRIPT; if [ \"\$EXIT_CODE\" != 0 ]"
-      SCRIPT="$SCRIPT; then ./utility2.js $ARGS"
+      SCRIPT="$SCRIPT; then ./utility2.js $NPM_TEST_ARGS"
     SCRIPT="$SCRIPT; fi"
     SCRIPT="$SCRIPT; exit \$EXIT_CODE"
     ;;

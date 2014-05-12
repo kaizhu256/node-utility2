@@ -1,6 +1,17 @@
 #### todo
+- display json data in /test/test_hello.html
+- replace 'unknown user agent' with nodejs in state.modeNodejs
 - add html linter
 - auto-remove test functions from module in production mode
+
+#### 2014.05.08
+- auto-calculate totalPassed from testCaseList
+- auto-calculate totalFailed from testCaseList
+- fail remaining jobs in headlessSaucelabs
+- add modeTestReportMerge for merging test report between different processes
+- merge various test state items into state.testReport
+- add configurable timeoutDefault in /test/test.html and headless testing
+- add headless saucelabs testing
 
 #### 2014.05.02
 - add html test report artifact
