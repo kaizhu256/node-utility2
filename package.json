@@ -22,6 +22,6 @@
     "start": "./utility2.sh --utility2-npm-start",
     "test": "./utility2.sh --utility2-npm-test"
   },
-  "version": "2014.05.08-1"
+  "version": "2014.05.10-1"
 }
 

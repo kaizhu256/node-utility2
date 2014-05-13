@@ -22,19 +22,15 @@
       }
       /* init global required object */
       local._initRequired(global);
-      /* global utility2 object */
-      global.utility2 = required.utility2 = global.utility2 || {};
       local.setDefault(global, {
         /* global dummy module object */
         module: null,
         /* global state object */
         state: {
-          /* dict of browser test callbacks */
-          headlessBrowserTestCallbackDict: {},
-          /* javascript platform unknown */
-          javascriptPlatform: 'unknown',
           /* list of test-generated errors to be ignored */
           onEventErrorDefaultIgnoreList: [],
+          /* dict of server-side test callbacks to be triggered by the browser */
+          testCallbackDict: {},
           /* default timeout */
           timeoutDefault: 60000
         },
@@ -44,6 +40,7 @@
           deferCallback: local.deferCallback,
           initModule: local.initModule,
           onEventErrorDefault: local.onEventErrorDefault,
+          onEventTimeout: local.onEventTimeout,
           setDefault: local.setDefault
         }
       });
@@ -54,7 +51,7 @@
           this internal function is used for temporary debugging,
           and jslint will nag you to remove it if used
         */
-        console.log2('\n\n\n\ndebug' + 'Print');
+        console.log2('\n\n\ndebug' + 'Print');
         console.log2.apply(console, arguments);
         console.log2();
         /* return arg for inspection */
@@ -62,14 +59,13 @@
       };
       /* debug onEventError */
       global.onEventError = utility2.onEventErrorDefault;
-      /* javascript platform - nodejs */
+      /* init utility2 for nodejs */
       if (global.process && process.versions && process.versions.node) {
-        state.javascriptPlatform = 'nodejs';
         state.modeNodejs = true;
+        local._initNodejs(require);
       }
-      /* javascript platform - browser */
+      /* init utility2 for browser */
       if (global.document && global.document.body && global.location && global.window) {
-        state.javascriptPlatform = 'browser';
         state.modeBrowser = true;
         state.modeInit = 2;
         /* set browser test mode */
@@ -114,7 +110,7 @@
       local._initBrowser(global);
     },
 
-    _initBrowser: function (global) {
+    _initBrowser: function (global2) {
       /*
         this function runs browser-side initializations
       */
@@ -137,18 +133,18 @@
         'zebra' ].forEach(function (color) {
         required.colors[color] = required.colors[color] || utility2.echo;
       });
-      /* save test id identifying server-side test callback */
-      state.testCallbackId = utility2.urlParamsGet(global.location.search).testCallbackId;
-      params = utility2.urlParamsGet(global.location.hash, '#');
-      /* browser test mode - watch */
+      /* save erver-side testCallbackId */
+      state.testCallbackId = utility2.urlParamsGet(global2.location.search).testCallbackId;
+      /* browser testWatch mode */
+      params = utility2.urlParamsGet(global2.location.hash, '#');
       if (params.testWatch) {
         /* increment testWatch counter */
-        global.location.hash = utility2.urlParamsMerge(global.location.hash, {
+        global2.location.hash = utility2.urlParamsMerge(global2.location.hash, {
           testWatch: (Number(params.testWatch) + 1).toString()
         }, '#');
-        /* watch server for changes and reload via server-sent events */
-        new global.EventSource('/test/test.watch').addEventListener('message', function () {
-          global.location.reload();
+        /* watch server for changes and reload via server-sent-events */
+        new global2.EventSource('/test/test.watch').addEventListener('message', function () {
+          global2.location.reload();
         });
       }
     },
@@ -162,16 +158,16 @@
         [utility2, { deferCallback: utility2.callArg2 }]
       ], function (onEventError) {
         var global2;
-        /* test null case handling behavior */
+        /* test non-browser mode handling behavior */
         local._initBrowser({});
-        /* test default handling behavior */
+        /* test browser mode handling behavior */
         state.modeBrowser = true;
         global2 = {
-          /* test server sent event handling behavior */
+          /* test server-sent-event handling behavior */
           EventSource: function () {
             this.addEventListener = utility2.callArg1;
           },
-          /* test testWatch handling behavior */
+          /* test testWatch mode handling behavior */
           location: { hash: '#testWatch=1', reload: utility2.nop, search: '' }
         };
         local._initBrowser(global2);
@@ -179,10 +175,44 @@
       });
     },
 
-    _initRequired: function (global) {
+    _initNodejs: function (require) {
       /*
-        this function inits the global required object */
-      global.required = global.required || {};
+        this function inits utility2 for nodejs
+      */
+      /* require utility2_external */
+      try {
+        required.utility2_external = required.utility2_external
+          || require('./.install/public/utility2_external.nodejs.rollup.js');
+      } catch (error) {
+        required.utility2_external = error;
+      }
+    },
+
+    __initNodejs_error_test: function (onEventError) {
+      /*
+        this function tests _initNodejs's error handling behavior
+      */
+      utility2.testMock(onEventError, [
+        [required, { utility2_external: null }]
+      ], function (onEventError) {
+        local._initNodejs(local._throwError);
+        /* assert required.utility2_external instanceof Error */
+        utility2.assert(
+          required.utility2_external instanceof Error,
+          required.utility2_external
+        );
+        onEventError();
+      });
+    },
+
+    _initRequired: function (global2) {
+      /*
+        this function inits the global required object
+      */
+      /* init global required object */
+      global2.required = global2.required || {};
+      /* init global utility2 object */
+      global2.utility2 = global2.required.utility2 = global2.utility2 || {};
     },
 
     __initRequired_default_test: function (onEventError) {
@@ -192,7 +222,10 @@
       var global2;
       global2 = {};
       local._initRequired(global2);
+      /* assert global2.required exists */
       utility2.assert(global2.required, global2.required);
+      /* assert global2.required.utility2 exists */
+      utility2.assert(global2.required.utility2, global2.required.utility2);
       onEventError();
     },
 
@@ -251,9 +284,7 @@
       /*
         this function tests callArg0's default handling behavior
       */
-      utility2.callArg0(function () {
-        onEventError();
-      });
+      utility2.callArg0(onEventError);
     },
 
     callArg1: function (_, callback) {
@@ -267,9 +298,7 @@
       /*
         this function tests callArg1's default handling behavior
       */
-      utility2.callArg1(null, function () {
-        onEventError();
-      });
+      utility2.callArg1(null, onEventError);
     },
 
     callArg2: function (_, __, callback) {
@@ -283,9 +312,7 @@
       /*
         this function tests callArg2's default handling behavior
       */
-      utility2.callArg2(null, null, function () {
-        onEventError();
-      });
+      utility2.callArg2(null, null, onEventError);
     },
 
     callError0: function (onEventError) {
@@ -300,6 +327,7 @@
         this function tests callError0's default handling behavior
       */
       utility2.callError0(function (error) {
+        /* assert error was passed to callback */
         utility2.assert(error instanceof Error, error);
         onEventError();
       });
@@ -317,6 +345,7 @@
         this function tests callError1's default handling behavior
       */
       utility2.callError1(null, function (error) {
+        /* assert error was passed to callback */
         utility2.assert(error instanceof Error, error);
         onEventError();
       });
@@ -334,6 +363,7 @@
         this function tests callError2's default handling behavior
       */
       utility2.callError2(null, null, function (error) {
+        /* assert error was passed to callback */
         utility2.assert(error instanceof Error, error);
         onEventError();
       });
@@ -390,7 +420,7 @@
         };
         utility2._zxqjDp('_debug_print_default_test');
         utility2.assert(
-          message === '\n\n\n\ndebug' + 'Print\n_debug_print_default_test\n\n',
+          message === '\n\n\ndebug' + 'Print\n_debug_print_default_test\n\n',
           message
         );
         onEventError();
@@ -494,9 +524,9 @@
       utility2.tryCatch(function () {
         /*jslint evil: true*/
         onEventError(null, state.modeNodejs
-          /* javascript platform nodejs */
+          /* eval in nodejs */
           ? required.vm.runInThisContext(script, file)
-          /* javascript platform browaer */
+          /* eval in browser */
           : eval(script));
       }, onEventError);
     },
@@ -536,6 +566,12 @@
         utility2.initModule(module, local);
       */
       var exports;
+      if (!required.utility2_external) {
+        utility2.deferCallback('untilReadyUtility2External', 'defer', function () {
+          utility2.initModule(module, local2);
+        });
+        return;
+      }
       if (state.modeInit === 1) {
         return;
       }
@@ -575,7 +611,7 @@
           exports[key] = local2[key];
         }
       });
-      /* javascript platform nodejs */
+      /* nodejs specific code */
       if (state.modeNodejs && module && utility2.fsWatch) {
         exports.__filename = exports.__filename || module.filename;
         state.moduleCacheDict = state.moduleCacheDict || {};
@@ -620,7 +656,7 @@
           angular: { module: function () {
             return { controller: utility2.nop };
           } },
-          required: {},
+          required: { utility2_external: true },
           state: { modeBrowser: true, modeNodejs: true }
         }],
         [utility2, { createTest: function () {
@@ -1311,7 +1347,7 @@
       var result, self, state;
       self = this;
       state = self.global.state;
-      result = '\n\n\n\ntest report\n';
+      result = '\n\n\ntest report - ' + utility2.userAgent() + '\n';
       /* sort state.testReport */
       utility2.testReportMerge(state.testReport);
       state.testReport.testSuiteList.forEach(function (testSuite) {
@@ -1327,7 +1363,11 @@
       /* record total time for all testSuites to run */
       state.testReport.totalTime = Math.min(Date.now()
         - state.testReport.totalTime, state.testReport.totalTime);
+      /* copy state.testReport */
       state.testReportCopy = utility2.jsonCopy(state.testReport);
+      /* reset state.testReport */
+      state.testReport = {};
+      utility2.testReportMerge(state.testReport);
       /* browser code */
       if (state.modeBrowser) {
         /* notify saucelabs of test results */
@@ -1340,7 +1380,7 @@
         if (utility2.urlParamsGet(self.global.location.hash, '#').testReportUpload) {
           utility2.ajax({
             data: JSON.stringify(self.global.global_test_results),
-            url: '/test/report.upload?userAgent='
+            url: '/test/testReportUpload?userAgent='
               + encodeURIComponent(self.global.navigator.userAgent)
           }, function (error) {
             utility2.onEventErrorDefault(error);
@@ -1349,11 +1389,11 @@
       }
       /* nodejs code */
       if (state.modeNodejs) {
-        utility2.testReportNodejs(state.testReportCopy);
+        /* wait for any async jobs to finish before reporting test results */
+        setTimeout(function () {
+          utility2.testReportNodejs(state.testReportCopy);
+        }, 100);
       }
-      /* reset state.testReport */
-      state.testReport = {};
-      utility2.testReportMerge(state.testReport);
     },
 
     __Test_prototype_report_testFailure_test: function (onEventError) {
@@ -1395,9 +1435,7 @@
       self = this;
       state = self.global.state;
       /* create user agent test group */
-      testSuite = state.javascriptPlatform + '.'
-        + ((self.global.navigator && self.global.navigator.userAgent)
-          || 'unknown_user_agent');
+      testSuite = utility2.userAgent();
       state.testReport.testSuiteList.forEach(function (value) {
         if (value.name === testSuite) {
           testSuite = value;
@@ -1452,7 +1490,7 @@
         _name: 'utility2.__Test_prototype_run_testFailure_test',
         _test: function (onEventError) {
           state.onEventErrorDefaultIgnoreList.push('utility2 error');
-          state.onEventErrorDefaultIgnoreList.push('runTestCase - undefined.unknown_user_agent'
+          state.onEventErrorDefaultIgnoreList.push('runTestCase - ' + utility2.userAgent()
             + '.utility2.__Test_prototype_run_testFailure_test._test\'s'
             + ' callback called multiple times');
           /* test test failure handling behavior */
@@ -1668,8 +1706,6 @@
       onEventError();
     },
 
-    _testSetTimeout: setTimeout,
-
     _throwError: function () {
       /*
         this function always throws an error
@@ -1870,6 +1906,37 @@
       onEventError();
     },
 
+    userAgent: function () {
+      /*
+        this function returns the current javascript platform's user agent
+      */
+      return state.modeNodejs
+        ? 'nodejs - ' + (global.process && global.process.version)
+        : 'browser - ' + (global.navigator && global.navigator.userAgent);
+    },
+
+    _userAgent_default_test: function (onEventError) {
+      /*
+        this function tests userAgent's default handling behavior
+      */
+      utility2.testMock(onEventError, [
+        [global, { state: { modeNodejs: null, modeBrowser: null } }]
+      ], function (onEventError) {
+        var data;
+        /* test nodejs javascript platform handling behavior */
+        state.modeBrowser = false;
+        state.modeNodejs = true;
+        data = utility2.userAgent();
+        utility2.assert((/^nodejs - /).test(data), data);
+        /* test browser javascript platform handling behavior */
+        state.modeBrowser = true;
+        state.modeNodejs = false;
+        data = utility2.userAgent();
+        utility2.assert((/^browser - /).test(data), data);
+        onEventError();
+      });
+    },
+
     uuid4: function () {
       /*
         this function returns a uuid4 string of form xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx
@@ -1941,19 +2008,14 @@
         'vm' ].forEach(function (module) {
         required[module] = required[module] || utility2.require(module);
       });
-      /* require utility2_external */
-      utility2.tryCatch(function () {
-        required.utility2_external = required.utility2_external
-          || utility2.require('./.install/public/utility2_external.shared.rollup.js');
-      }, utility2.nop);
       /* parse commandline arguments */
-      local._initArgv();
+      local._initOnceArgv();
       /* init npm test mode */
-      local._initNpmTest();
+      local._initOnceNpmTest();
       /* init code coverage mode */
-      local._initCoverage(global);
-      /* init bootstrap code */
-      local._initBootstrap();
+      local._initOnceCoverage(global);
+      /* reload utility2 with code coverage */
+      local._initOnceCoverageUtility2();
     },
 
     __initOnce_default_test: function (onEventError) {
@@ -1963,10 +2025,10 @@
       utility2.testMock(onEventError, [
         [global, { __dirname: null, required: {} }],
         [local, {
-          _initArgv: utility2.nop,
-          _initBootstrap: utility2.nop,
-          _initCoverage: utility2.nop,
-          _initNpmTest: utility2.nop
+          _initOnceArgv: utility2.nop,
+          _initOnceCoverage: utility2.nop,
+          _initOnceCoverageUtility2: utility2.nop,
+          _initOnceNpmTest: utility2.nop
         }],
         /* code coverage for utility2._dirname and utility2.require */
         [utility2, { __dirname: null, require: null }]
@@ -1976,7 +2038,7 @@
       });
     },
 
-    _initArgv: function () {
+    _initOnceArgv: function () {
       /*
         this function parses commandline arguments and integrates it into the state dict
       */
@@ -2000,7 +2062,7 @@
         var error;
         arg = arg.split('=');
         /* --foo=true -> state.foo = 1 */
-        value = arg[1]
+        value = arg.slice(1).join('=')
           || (((/^--[a-z]/).test(tmp[ii + 1]) || (ii + 1) >= tmp.length)
             /* --foo -> state.foo = true */
             ? 'true'
@@ -2058,9 +2120,9 @@
       }
     },
 
-    __initArgv_default_test: function (onEventError) {
+    __initOnceArgv_default_test: function (onEventError) {
       /*
-        this function tests _initArgv's default handling behavior
+        this function tests _initOnceArgv's default handling behavior
       */
       utility2.testMock(onEventError, [
         [global, {
@@ -2078,132 +2140,96 @@
         }]
       ], function (onEventError) {
         process.argv = ['--cc'];
-        local._initArgv();
+        local._initOnceArgv();
         utility2.assert(state.aa === false, state.aa);
         utility2.assert(state.bb === 1, state.bb);
         utility2.assert(state.cc === true, state.cc);
         process.argv = ['--cc', 'bb'];
         state.modeCli = '';
-        local._initArgv();
+        local._initOnceArgv();
         utility2.assert(state.cc === 'bb', state.cc);
         process.argv = ['--cc', '1'];
-        local._initArgv();
+        local._initOnceArgv();
         utility2.assert(state.cc === 1, state.cc);
         process.argv = ['--no-cc'];
-        local._initArgv();
+        local._initOnceArgv();
         utility2.assert(state.cc === false, state.cc);
         onEventError();
       });
     },
 
-    _initBootstrap: function () {
+    _initOnceCoverage: function (global) {
       /*
-        this function inits utility2 bootstrap code
+        this function inits code coverage mode
       */
-      if (!state.modeInit) {
-        state.modeInit = 1;
-        process.nextTick(function () {
-          state.modeInit += 1;
-          /* delete cached utility2 module */
-          utility2.require.cache[module.filename] = null;
-          /* reload utility2 */
-          utility2.require(required.path.resolve(state.loadModule
-            || (utility2.__dirname + '/utility2.js')));
-        });
+      if (!state.modeCoverage) {
+        return;
       }
-    },
-
-    __initBootstrap_default_test: function (onEventError) {
-      /*
-        this function tests _initBootstrap's default handling behavior
-      */
-      utility2.testMock(onEventError, [
-        [global, { state: {} }],
-        [process, { nextTick: utility2.callArg0 }],
-        [utility2, { require: null }]
-      ], function (onEventError) {
-        utility2.require = function () {
-          return;
-        };
-        utility2.require.cache = {};
-        /* test null case handling behavior */
-        state.modeInit = 1;
-        local._initBootstrap();
-        utility2.assert(state.modeInit === 1, state.modeInit);
-        /* test default handling behavior */
-        state.modeInit = 0;
-        local._initBootstrap();
-        utility2.assert(state.modeInit === 2, state.modeInit);
-        onEventError();
+      state.modeCoverage = new RegExp(state.modeCoverage);
+      global.__coverage__ = global.__coverage__ || {};
+      required.istanbul = required.istanbul || utility2.require('istanbul');
+      required.istanbul.hook.hookRequire(function (file) {
+        return state.modeCoverage.test(file);
+      }, function (code, file) {
+        return utility2.instrumentCode(file, code);
+      });
+      /* on exit, create coverage report */
+      process.on('exit', function () {
+        var collector, data;
+        collector = new required.istanbul.Collector();
+        collector.add(global.__coverage__);
+        /* save lcov and html report */
+        utility2.jsonLog('generating code report file://' + state.tmpdir
+          + '/coverage_report/index.html');
+        required.istanbul.Report
+          .create('lcov', { dir: state.tmpdir })
+          .writeReport(collector, true);
+        /* print text report */
+        required.istanbul.Report
+          .create('text')
+          .writeReport(collector);
+        /* save cobertura report */
+        required.istanbul.Report
+          .create('cobertura', { dir: state.tmpdir })
+          .writeReport(collector, true);
+        /* rename coverage files */
+        [
+          ['coverage_report', 'cache/' + utility2.uuid4()],
+          ['lcov-report', 'coverage_report'],
+          ['cobertura-coverage.xml', 'coverage_report/coverage_report.cobertura.xml'],
+          ['lcov.info', 'coverage_report/coverage_report.lcov.info']
+        ].forEach(function (rename) {
+          utility2.tryCatch(function () {
+            required.fs.renameSync(
+              state.tmpdir + '/' + rename[0],
+              state.tmpdir + '/' + rename[1]
+            );
+          }, utility2.nop);
+        });
+        /* get coverage percentage from cobertura report */
+        data = required.fs.readFileSync(
+          state.tmpdir + '/coverage_report/coverage_report.cobertura.xml',
+          'utf8'
+        );
+        data = Number((/line-rate="([^"]+)"/).exec(data)[1]);
+        /* create coverage badge */
+        data = state.fsWatchDict['/test/modeAjaxOffline/https%3A%2F%2Fimg.shields.io'
+          + '%2Fbadge%2Fcoverage-100.0%25-00ee00.svg%3Fstyle%3Dflat%23GET'].contentBrowser
+          .replace('100.0', (100 * data).toFixed(1))
+          .replace('0e0', ('0' + Math.round((1 - data) * 238).toString(16)).slice(-2)
+            + ('0' + Math.round(data * 238).toString(16)).slice(-2)
+            + '00');
+        /* write coverage badge */
+        required.fs.writeFileSync(
+          state.tmpdir + '/coverage_report/coverage_report.badge.svg',
+          data
+        );
       });
     },
 
-    _initCoverage: function (global) {
-      if (state.modeCoverage) {
-        state.modeCoverage = new RegExp(state.modeCoverage);
-        global.__coverage__ = global.__coverage__ || {};
-        required.istanbul = required.istanbul || utility2.require('istanbul');
-        required.istanbul.hook.hookRequire(function (file) {
-          return state.modeCoverage.test(file);
-        }, function (code, file) {
-          return utility2.instrumentCode(file, code);
-        });
-        /* on exit, create coverage report */
-        process.on('exit', function () {
-          var collector, data;
-          collector = new required.istanbul.Collector();
-          collector.add(global.__coverage__);
-          /* print text report */
-          required.istanbul.Report
-            .create('text')
-            .writeReport(collector);
-          /* save cobertura report */
-          required.istanbul.Report
-            .create('cobertura', { dir: state.tmpdir })
-            .writeReport(collector, true);
-          /* save lcov and html report */
-          required.istanbul.Report
-            .create('lcov', { dir: state.tmpdir })
-            .writeReport(collector, true);
-          /* rename coverage files */
-          [
-            ['coverage_report', 'cache/' + utility2.uuid4()],
-            ['lcov-report', 'coverage_report'],
-            ['cobertura-coverage.xml', 'coverage_report/coverage_report.cobertura.xml'],
-            ['lcov.info', 'coverage_report/coverage_report.lcov.info']
-          ].forEach(function (rename) {
-            utility2.tryCatch(function () {
-              required.fs.renameSync(
-                state.tmpdir + '/' + rename[0],
-                state.tmpdir + '/' + rename[1]
-              );
-            }, utility2.nop);
-          });
-          /* get coverage percentage from cobertura report */
-          data = required.fs.readFileSync(
-            state.tmpdir + '/coverage_report/coverage_report.cobertura.xml',
-            'utf8'
-          );
-          data = Number((/line-rate="([^"]+)"/).exec(data)[1]);
-          /* create coverage badge */
-          data = state.fsWatchDict['/test/modeAjaxOffline/https%3A%2F%2Fimg.shields.io'
-            + '%2Fbadge%2Fcoverage-100.0%25-00ee00.svg%3Fstyle%3Dflat%23GET'].contentBrowser
-            .replace('100.0', (100 * data).toFixed(1))
-            .replace('0e0', ('0' + Math.round((1 - data) * 238).toString(16)).slice(-2)
-              + ('0' + Math.round(data * 238).toString(16)).slice(-2)
-              + '00');
-          /* write coverage badge */
-          required.fs.writeFileSync(
-            state.tmpdir + '/coverage_report/coverage_report.badge.svg',
-            data
-          );
-        });
-      }
-    },
-
-    __initCoverage_default_test: function (onEventError) {
+    __initOnceCoverage_default_test: function (onEventError) {
       /*
-        this function tests _initCoverage's default handling behavior
+        this function tests _initOnceCoverage's default handling behavior
       */
       utility2.testMock(onEventError, [
         [global, {
@@ -2230,12 +2256,12 @@
             },
             hook: { hookRequire: function (callback1, callback2) {
               var data;
-              data = callback1('__initCoverage_default_test.js');
+              data = callback1('__initOnceCoverage_default_test.js');
               utility2.assert(data === true, data);
               data = callback1('_.js');
               utility2.assert(data === false, data);
-              data = callback2('"__initCoverage_default_test"');
-              utility2.assert(data === '"__initCoverage_default_test"', data);
+              data = callback2('"__initOnceCoverage_default_test"');
+              utility2.assert(data === '"__initOnceCoverage_default_test"', data);
             } },
             Report: { create: function () {
               return { writeReport: utility2.nop };
@@ -2244,15 +2270,59 @@
         };
         /* test null case handling behavior */
         state.modeCoverage = null;
-        local._initCoverage();
+        local._initOnceCoverage();
         /* test default handling behavior */
-        state.modeCoverage = '\\b__initCoverage_default_test\\.js$';
-        local._initCoverage({});
+        state.modeCoverage = '\\b__initOnceCoverage_default_test\\.js$';
+        local._initOnceCoverage({});
         onEventError();
       });
     },
 
-    _initNpmTest: function () {
+    _initOnceCoverageUtility2: function () {
+      /*
+        this function reloads utility2 with code coverage
+      */
+      /* if state.modeInit is defined, then utility2 is already under code coverage */
+      if (state.modeInit) {
+        return;
+      }
+      state.modeInit = 1;
+      process.nextTick(function () {
+        state.modeInit += 1;
+        /* delete cached utility2 module */
+        utility2.require.cache[module.filename] = null;
+        /* reload utility2 module with code coverage */
+        utility2.require(required.path.resolve(state.loadModule
+          || (utility2.__dirname + '/utility2.js')));
+      });
+    },
+
+    __initOnceCoverageUtility2_default_test: function (onEventError) {
+      /*
+        this function tests _initOnceCoverageUtility2's default handling behavior
+      */
+      utility2.testMock(onEventError, [
+        [global, { state: {} }],
+        [process, { nextTick: utility2.callArg0 }],
+        [utility2, { require: null }]
+      ], function (onEventError) {
+        utility2.require = function () {
+          return;
+        };
+        utility2.require.cache = {};
+        /* test no code coverage for utility2 handling behavior */
+        state.modeInit = 1;
+        local._initOnceCoverageUtility2();
+        utility2.assert(state.modeInit === 1, state.modeInit);
+        /* test code coverage for utility2 handling behavior */
+        state.modeInit = 0;
+        local._initOnceCoverageUtility2();
+        utility2.assert(state.modeInit === 2, state.modeInit);
+        onEventError();
+      });
+    },
+
+    _initOnceNpmTest: function () {
       /* test utility2 */
       if (state.modeNpmTest) {
         /* setTimeout so these listeners are added last, after other utility2 listeners */
@@ -2269,9 +2339,9 @@
       }
     },
 
-    __initNpmTest_default_test: function (onEventError) {
+    __initOnceNpmTest_default_test: function (onEventError) {
       /*
-        this function tests _initNpmTest's default handling behavior
+        this function tests _initOnceNpmTest's default handling behavior
       */
       utility2.testMock(onEventError, [
         [global, {
@@ -2290,15 +2360,15 @@
         };
         /* test null case handling behavior */
         state.modeNpmTest = null;
-        local._initNpmTest();
+        local._initOnceNpmTest();
         utility2.assert(!exitCode, exitCode);
         /* test default handling behavior */
         state.modeNpmTest = true;
-        local._initNpmTest();
+        local._initOnceNpmTest();
         utility2.assert(!exitCode, exitCode);
         /* test test failure handling behavior */
         state.testReportCopy.totalFailed = 1;
-        local._initNpmTest();
+        local._initOnceNpmTest();
         utility2.assert(exitCode, exitCode);
         onEventError();
       });
@@ -3149,7 +3219,7 @@
         /* clear timeout for headlessPhantomjs */
         clearTimeout(timeout);
         /* garbage collect testCallbackId */
-        delete state.headlessBrowserTestCallbackDict[testCallbackId];
+        delete state.testCallbackDict[testCallbackId];
         onEventError(error);
       };
       testCallbackId = utility2.uuid4();
@@ -3164,7 +3234,7 @@
         utility2.__dirname + '/.install/utility2_headless_phantomjs.js',
         new Buffer(JSON.stringify(options)).toString('base64')
       ], modeDebug: false });
-      state.headlessBrowserTestCallbackDict[testCallbackId] = onEventError2;
+      state.testCallbackDict[testCallbackId] = onEventError2;
       /* set timeout for headlessPhantomjs */
       timeout = utility2.onEventTimeout(
         onEventError2,
@@ -3178,7 +3248,8 @@
         this function tests headlessPhantomjs's default handling behavior
       */
       utility2.headlessPhantomjs({
-        url: '{{localhost}}/test/test.html?testCallbackId={{testCallbackId}}#modeTest=1'
+        url: '{{localhost}}/test/test.html'
+          + '?testCallbackId={{testCallbackId}}#modeTest=1'
           + '&testReportUpload=1&testWatch=1&timeoutDefault={{timeoutDefault}}'
       }, onEventError);
     },
@@ -3480,7 +3551,7 @@
 
     testReportNodejs: function (testReport) {
       /*
-        this function runs extra report handling code in nodejs
+        this function runs extra test reporting code for nodejs
       */
       var onEventReady;
       onEventReady = state.modeNpmTest
@@ -3495,6 +3566,8 @@
       );
       /* write test_report.html */
       onEventReady.remaining += 1;
+      utility2.jsonLog('\ngenerating test report file://' + state.tmpdir
+        + '/test_report.html');
       utility2.fsWriteFileAtomic(
         state.tmpdir + '/test_report.html',
         local._testReportNodejsHtml(testReport),
@@ -3545,7 +3618,7 @@
 
     _testReportNodejsHtml: function (testReport) {
       /*
-        this function generates an html test report from testReport
+        this function generates an html test report
       */
       var content, errorMessageList, testCaseNumber, testSuiteNumber;
       testCaseNumber = 0;
@@ -3652,46 +3725,41 @@
     },
 
     _initOnce: function () {
-      /* exports */
-      /* css */
-      $(document.head).append('<style>\n'
-        + utility2.scriptLint('moduleAjaxBrowser.css', '#divAjaxProgress {\n'
-          + 'background-color: #fff;\n'
-          + 'border: 2px solid black;\n'
-          + 'border-radius: 5px;\n'
-          + 'cursor: pointer;\n'
-          + 'display: none;\n'
-          + 'left: 50%;\n'
-          + 'margin: 0px 0px 0px -64px;\n'
-          + 'padding: 0px 0px 0px 0px;\n'
-          + 'position: fixed;\n'
-          + 'top: 49%;\n'
-          + 'width: 128px;\n'
-          + 'z-index: 99999;\n'
-          + '}\n')
-        + '#divAjaxProgress > .progress {\n'
-          + 'background-color: #777;\n'
-          + 'margin: 10px;\n'
-        + '}\n'
-        + '</style>\n');
-      /* init ajax progress container */
-      local._divAjaxProgress = $('<div id="divAjaxProgress">\n'
-        + '<div class="active progress progress-striped">\n'
-          + '<div class="progress-bar progress-bar-info">loading\n'
-        + '</div></div></a>\n');
-      $(document.body).append(local._divAjaxProgress);
-      local._divAjaxProgressBar = local._divAjaxProgress.find('div.progress-bar');
-      /* event handling */
-      local._divAjaxProgress.on('click', function () {
-        while (local._xhrList.length) {
-          local._xhrList.pop().abort();
+      /* init ajaxProgressContainer element */
+      local._initOnceAjaxProgressContainer(global, local);
+      local._ajaxProgressContainer.innerHTML = '<div class="ajaxProgressContainerBar'
+        + ' ajaxProgressContainerBarLoading">loading</div>';
+      /* init ajaxProgressContainerBar element */
+      local._ajaxProgressContainerBar = local._ajaxProgressContainer
+        .getElementsByClassName('ajaxProgressContainerBar')[0];
+      /* reset progres bar */
+      local._ajaxProgressHide();
+      /* abort all pending ajax request on click event */
+      local._ajaxProgressContainer.addEventListener('click', local._ajaxProgressAbort);
+    },
+
+    _initOnceAjaxProgressContainer: function (global2, local2) {
+      /* init ajaxProgressContainer element */
+      local2._ajaxProgressContainer = global2.document.getElementById('ajaxProgressContainer')
+        || global2.document.createElement('div');
+    },
+
+    _initOnceAjaxProgressContainer_progressDisabled_test: function (onEventError) {
+      /*
+        this function tests _initOnceAjaxProgressContainer's progress disabled handling behavior
+      */
+      local._initOnceAjaxProgressContainer({ document: {
+        getElementById: utility2.nop,
+        createElement: function (data) {
+          utility2.assert(data === 'div', data);
+          onEventError();
         }
-      });
+      } }, {});
     },
 
     ajaxBrowser: function (options, onEventError) {
       /*
-        this function implements the the ajax function for the javascript platform browser
+        this function implements the the ajax function for the browser
       */
       var data, error, ii, onEventEvent, onEventError2, timeout, xhr;
       /* error handling */
@@ -3717,21 +3785,21 @@
           /* clear timeout for ajaxBrowser */
           clearTimeout(timeout);
           /* remove xhr from progress list */
-          ii = local._xhrList.indexOf(xhr);
+          ii = local._ajaxProgressList.indexOf(xhr);
           if (ii >= 0) {
-            local._xhrList.splice(ii, 1);
+            local._ajaxProgressList.splice(ii, 1);
           }
-          /* error handling */
           if (!error) {
-            /* abort or error */
+            /* handle abort or error event */
             if (event.type !== 'load' || xhr.status >= 400) {
               error = new Error(event.type);
-            /* json.Parse data */
+            /* handle json data */
             } else if (options.resultType === 'json') {
               data = utility2.jsonParseOrError(xhr.responseText);
               if (data instanceof Error) {
                 error = data;
               }
+            /* handle text data */
             } else {
               data = xhr.responseText;
             }
@@ -3740,23 +3808,21 @@
           break;
         }
         /* increment progress bar */
-        if (local._xhrList.length !== 0) {
-          local._progressIncrement();
+        if (local._ajaxProgressList.length !== 0) {
+          local._ajaxProgressIncrement();
           return;
         }
         /* finish progress bar */
         switch (event.type) {
         case 'load':
-          local._progressUpdate('100%', 'progress-bar-success', 'loaded');
+          local._ajaxProgressUpdate('100%', 'ajaxProgressContainerBarSuccess', 'loaded');
           break;
         default:
-          local._progressUpdate('100%', 'progress-bar-danger', event.type);
+          local._ajaxProgressUpdate('100%', 'ajaxProgressContainerBarError', event.type);
         }
-        /* allow the final status to be shown for a short time before hiding */
-        setTimeout(local._divAjaxProgressHide, 1000);
+        /* display progress status for a short time before hiding */
+        setTimeout(local._ajaxProgressHide, 1000);
       };
-      /* set default options */
-      options.contentType = options.contentType || 'application/octet-stream';
       /* init xhr object */
       xhr = new XMLHttpRequest();
       /* set timeout for ajaxBrowser */
@@ -3764,25 +3830,21 @@
         error = timeout;
         xhr.abort();
       }, state.timeoutDefault, 'ajaxBrowser');
-      /* debug xhr */
-      state.debugXhr = xhr;
+      /* xhr event handling */
       xhr.addEventListener('abort', onEventEvent);
       xhr.addEventListener('error', onEventEvent);
       xhr.addEventListener('load', onEventEvent);
-      xhr.addEventListener('loadstart', local._progressIncrement);
-      xhr.addEventListener('progress', local._progressIncrement);
-      xhr.upload.addEventListener('progress', local._progressIncrement);
-      /* show progress bar */
-      if (local._xhrList.length === 0) {
-        local._progressState = 1;
-        local._progressUpdate('0%', 'progress-bar-info', 'loading');
-        /* bug - delay displaying progress bar to prevent it from showing 100% width */
-        setTimeout(local._divAjaxProgressShow);
+      xhr.addEventListener('loadstart', local._ajaxProgressIncrement);
+      xhr.addEventListener('progress', local._ajaxProgressIncrement);
+      xhr.upload.addEventListener('progress', local._ajaxProgressIncrement);
+      /* display progress bar if hidden */
+      if (local._ajaxProgressList.length === 0) {
+        local._ajaxProgressContainer.style.display = 'block';
       }
-      local._xhrList.push(xhr);
-      /* open xhr */
+      local._ajaxProgressList.push(xhr);
+      /* open url in xhr */
       xhr.open(options.method, options.url);
-      /* send xhr */
+      /* send data through xhr */
       xhr.send(options.data);
     },
 
@@ -3796,41 +3858,41 @@
         mode = error instanceof Error ? -1 : mode + 1;
         switch (mode) {
         case 1:
-          /* test progress abort handling behavior */
-          utility2.ajax({ url: '/test/test.timeout?timeout=2000' }, utility2.nop);
-          utility2.ajax({ url: '/test/test.timeout?timeout' }, function (error) {
-            utility2.tryCatch(function () {
-              utility2.assert(error instanceof Error, error);
-              setTimeout(onEventError2, 1000);
-            }, onEventError2);
-          });
-          /* set interval */
-          interval = setInterval(function () {
-            /* wait until only timeout connection is alive */
-            if (local._xhrList.length === 1) {
-              /* clear interval */
-              clearInterval(interval);
-              /* abort ajax request */
-              local._divAjaxProgress.click();
-            }
-          }, 1000);
-          break;
-        case 2:
-          /* test progress finish handling behavior */
+          /* test progress success handling behavior */
           utility2.ajax({ url: '/test/test.json' }, function (error) {
             utility2.tryCatch(function () {
               utility2.assert(!error, error);
               /* set interval */
               interval = setInterval(function () {
-                /* wait until progress is finished */
-                if (local._divAjaxProgress.css('display') === 'none') {
+                /* wait until progress has successfully finished */
+                if (local._ajaxProgressContainer.style.display === 'none') {
                   /* clear interval */
                   clearInterval(interval);
-                  onEventError2(utility2.error);
+                  onEventError2();
                 }
               }, 1000);
             }, onEventError2);
           });
+          break;
+        case 2:
+          /* test multiple ajax requests handling behavior */
+          utility2.ajax({ url: '/test/test.json' }, utility2.nop);
+          /* test progress abort handling behavior */
+          utility2.ajax({ url: '/test/test.timeout?timeout=10000' }, function (error) {
+            utility2.tryCatch(function () {
+              utility2.assert(error instanceof Error, error);
+              /* bug - wait before initiating next ajax request, or it will also get aborted */
+              setTimeout(function () {
+                onEventError2(utility2.error);
+              }, 1000);
+            }, onEventError2);
+          });
+          /* setTimeout */
+          setTimeout(function () {
+            /* wait until only /test/test.timeout ajax request remains */
+            /* abort progress */
+            utility2.tryCatch(local._ajaxProgressAbort, onEventError2);
+          }, 5000);
           break;
         default:
           utility2.tryCatch(function () {
@@ -3842,71 +3904,83 @@
       onEventError2();
     },
 
-    _divAjaxProgressHide: function () {
+    _ajaxProgressAbort: function () {
       /*
-        this function hides the ajax progress bar if all ajax request are finished
+        this function aborts all pending ajax requests
       */
-      if (local._xhrList.length === 0) {
-        local._divAjaxProgress.hide();
+      while (local._ajaxProgressList.length) {
+        local._ajaxProgressList.pop().abort();
       }
     },
 
-    __divAjaxProgressHide_default_test: function (onEventError) {
+    _ajaxProgressHide: function () {
       /*
-        this function tests _divAjaxProgressHide's default handling behavior
+        this function hides the progress bar if all ajax request are finished
       */
-      utility2.testMock(onEventError, [[local, { _xhrList: [] }]], function (onEventError) {
-        /* test hide handling behavior */
-        local._divAjaxProgressHide();
-        local._xhrList.push(null);
+      if (local._ajaxProgressList.length === 0) {
+        /* hide progress bar */
+        local._ajaxProgressContainer.style.display = 'none';
+        /* reset progress state */
+        local._ajaxProgressState = 1;
+        local._ajaxProgressUpdate('0%', 'ajaxProgressContainerBarLoading', 'loading');
+      }
+    },
+
+    __ajaxProgressHide_default_test: function (onEventError) {
+      /*
+        this function tests _ajaxProgressHide's default handling behavior
+      */
+      utility2.testMock(onEventError, [
+        [local, {
+          _ajaxProgressContainer: { style: { display: 'block' } },
+          _ajaxProgressContainerBar: { className: '', style: {} },
+          _ajaxProgressList: [],
+          _ajaxProgressState: 0
+        }]
+      ], function (onEventError) {
         /* test nop handling behavior */
-        local._divAjaxProgressHide();
+        local._ajaxProgressList.push(null);
+        local._ajaxProgressHide();
+        utility2.assert(
+          local._ajaxProgressContainer.style.display === 'block',
+          local._ajaxProgressContainer.style.display
+        );
+        /* test hide progress bar handling behavior */
+        local._ajaxProgressList.length = 0;
+        local._ajaxProgressHide();
+        utility2.assert(
+          local._ajaxProgressContainer.style.display === 'none',
+          local._ajaxProgressContainer.style.display
+        );
         onEventError();
       });
     },
 
-    _divAjaxProgressShow: function () {
-      /*
-        this function shows the ajax progress bar if ajax requests exists
-      */
-      if (local._xhrList.length) {
-        local._divAjaxProgress.show();
-      }
-    },
-
-    __divAjaxProgressShow_notShow_test: function (onEventError) {
-      /*
-        this function tests _divAjaxProgressShow's not show handling behavior
-      */
-      utility2.testMock(onEventError, [[local, { _xhrList: []}]], function (onEventError) {
-        local._divAjaxProgressShow();
-        onEventError();
-      });
-    },
-
-    _progressIncrement: function () {
+    _ajaxProgressIncrement: function () {
       /*
         this function increments the progress bar
       */
-      local._progressState += 0.25;
-      local._progressUpdate(
-        100 - 100 / (local._progressState) + '%',
-        'progress-bar-info',
+      /* this algorithm can indefinitely increment the progress bar */
+      /* with successively smaller increments without ever reaching 100% */
+      local._ajaxProgressState += 0.25;
+      local._ajaxProgressUpdate(
+        100 - 100 / (local._ajaxProgressState) + '%',
+        'ajaxProgressContainerBarLoading',
         'loading'
       );
     },
 
-    _progressUpdate: function (width, type, label) {
-      /*
-        this function updates the visual progress bar
-      */
-      local._divAjaxProgressBar.css('width', width);
-      local._divAjaxProgressBar[0].className
-        = local._divAjaxProgressBar[0].className.replace((/progress-bar-\w+/), type); /**/
-      local._divAjaxProgressBar.html(label);
-    },
+    _ajaxProgressList: [],
 
-    _xhrList: []
+    _ajaxProgressUpdate: function (width, type, label) {
+      /*
+        this function visually updates the progress bar
+      */
+      local._ajaxProgressContainerBar.style.width = width;
+      local._ajaxProgressContainerBar.className = local._ajaxProgressContainerBar.className
+        .replace((/ajaxProgressContainerBar\w+/), type);
+      local._ajaxProgressContainerBar.innerHTML = label;
+    }
 
   };
   local._init();
@@ -4022,7 +4096,7 @@
 
     ajaxNodejs: function (options, onEventError) {
       /*
-        this function implements the the ajax function for the javascript platform nodejs
+        this function implements the the ajax function for the nodejs javascript platform
       */
       var onEventError2, remaining, request, response, timeout, urlParsed;
       onEventError2 = function (error, data) {
@@ -4436,7 +4510,7 @@
       error.message = method + ' ' + statusCode + ' - ' + url
         + '\n' + error.message + '\n' + data;
       if (error.stack) {
-        /* BUG - phantomjs has readonly error.stack */
+        /* bug - phantomjs has readonly error.stack */
         utility2.tryCatch(function () {
           error.stack = error.message + '\n' + error.stack;
         }, utility2.nop);
@@ -4546,7 +4620,7 @@
     _name: 'utility2.moduleServerNodejs',
 
     _init: function () {
-      if (required.utility2_external && state.modeNodejs) {
+      if (!(required.utility2_external instanceof Error) && state.modeNodejs) {
         utility2.initModule(module, local);
       }
     },
@@ -4792,7 +4866,7 @@
       next();
     },
 
-    'router5MainDict_/test/report.upload': function (request, response, next) {
+    'router5MainDict_/test/testReportUpload': function (request, response, next) {
       /*
         this function receives and parses uploaded test reports
       */
@@ -4818,7 +4892,7 @@
           state.testReport = state.testReport || {};
           utility2.testReportMerge(state.testReport, data.testReport);
           /* call testCallbackId callback if it exists */
-          (state.headlessBrowserTestCallbackDict[data.testCallbackId]
+          (state.testCallbackDict[data.testCallbackId]
             || utility2.onEventErrorDefault)(
             data.testReport.totalFailed ? new Error('tests failed') : null
           );
@@ -4831,23 +4905,26 @@
       onEventError2();
     },
 
-    '_router5MainDict_/test/report.upload_error_test': function (onEventError) {
+    '_router5MainDict_/test/testReportUpload_error_test': function (onEventError) {
       /*
-        this function tests router5MainDict_/test/report.upload's error handling behavior
+        this function tests router5MainDict_/test/testReportUpload's error handling behavior
       */
       utility2.testMock(onEventError, [
         [utility2, { streamReadAll: utility2.callError1 }]
       ], function (onEventError) {
-        local['router5MainDict_/test/report.upload'](null, null, function (error) {
+        local[
+          'router5MainDict_/test/testReportUpload'
+        ](null, null, function (error) {
           utility2.assert(error instanceof Error, error);
           onEventError();
         });
       });
     },
 
-    '_router5MainDict_/test/report.upload_testFailure_test': function (onEventError) {
+    '_router5MainDict_/test/testReportUpload_testFailure_test': function (onEventError) {
       /*
-        this function tests router5MainDict_/test/report.upload's test failure handling behavior
+        this function tests router5MainDict_/test/testReportUpload's
+        test failure handling behavior
       */
       utility2.testMock(onEventError, [
         [state, { debugTestReportUpload: null, testReport: null }],
@@ -4856,7 +4933,9 @@
         } }]
       ], function (onEventError) {
         state.onEventErrorDefaultIgnoreList.push('tests failed');
-        local['router5MainDict_/test/report.upload'](null, { end: onEventError });
+        local[
+          'router5MainDict_/test/testReportUpload'
+        ](null, { end: onEventError });
       });
     },
 
@@ -4889,7 +4968,7 @@
       */
       setTimeout(function () {
         response.end();
-      }, request.urlParams.timeout || state.timeoutDefault);
+      }, request.urlParams.timeout || 0);
     },
 
     'router5MainDict_/test/test.watch': function (request, response, next) {
@@ -5465,9 +5544,30 @@
       /*
         this function tests router5MainDict_/test/test.timeout's default handling behavior
       */
-      utility2.ajax({ url: '/test/test.timeout?timeout=1' }, function (error) {
-        utility2.assert(!error, error);
-        onEventError();
+      var data, onEventReady, time;
+      onEventReady = utility2.untilReady(onEventError);
+      time = Date.now();
+      /* test timeout undefined handling behavior */
+      onEventReady.remaining += 1;
+      utility2.ajax({ url: '/test/test.timeout' }, function (error) {
+        utility2.tryCatch(function () {
+          utility2.assert(!error, error);
+          data = Date.now() - time;
+          /* assert time elapsed is relatively small */
+          utility2.assert(data < 2000, data);
+          onEventReady();
+        });
+      });
+      /* test timeout defined handling behavior */
+      onEventReady.remaining += 1;
+      utility2.ajax({ url: '/test/test.timeout?timeout=2000' }, function (error) {
+        utility2.tryCatch(function () {
+          utility2.assert(!error, error);
+          data = Date.now() - time;
+          /* assert time elapsed is greater than timeout */
+          utility2.assert(data > 2000, data);
+          onEventReady();
+        });
       });
     },
 

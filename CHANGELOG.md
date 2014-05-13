@@ -1,8 +1,16 @@
 #### todo
-- display json data in /test/test_hello.html
-- replace 'unknown user agent' with nodejs in state.modeNodejs
+- fix slimerjs url not displaying
 - add html linter
 - auto-remove test functions from module in production mode
+
+#### 2014.05.10
+- fix saucelabs tests
+- replace all http assets with https ones in README.md
+- remove jquery and bootstrap dependency
+- defer loading utility2.js in browser until utility2_external dependency is loaded
+- display json data in /test/testSaucelabsHelloWorld.html
+- rename utility2_external.shared.rollup.js to utility2_external.nodejs.rollup.js
+- add utility2.userAgent function for getting user agent info of both browsers and nodejs
 
 #### 2014.05.08
 - auto-calculate totalPassed from testCaseList

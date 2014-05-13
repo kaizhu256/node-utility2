@@ -68,8 +68,6 @@ tmp
     cache: true,
     cachePrefix: '/rollup',
     urlList: [
-      //// bootstrap
-      'https://raw.githubusercontent.com/twbs/bootstrap/master/dist/css/bootstrap.css',
       //// qunit
       'https://qunitjs.com/resources/qunit.css'
     ]
@@ -89,6 +87,12 @@ CSS_COMMENT */
     window.global = window.global || window;
   }
   global.required = global.required || {};
+  setTimeout(function () {
+    required.utility2_external = required.utility2_external || {};
+    if (global.utility2 && utility2.deferCallback) {
+      utility2.deferCallback('untilReadyUtility2External', 'ready');
+    }
+  });
   return {
     cache: true,
     cachePrefix: '/rollup',
@@ -117,12 +121,6 @@ CSS_COMMENT */
         );
     },
     urlList: [
-      /* jquery */
-      'https://code.jquery.com/jquery.js',
-      /* angularjs */
-      'https://code.angularjs.org/snapshot/angular.js',
-      /* bootstrap */
-      'https://raw.githubusercontent.com/twbs/bootstrap/master/dist/js/bootstrap.js',
       /* mime.types */
       'https://svn.apache.org/repos/asf/httpd/httpd/trunk/docs/conf/mime.types',
       /* nodejs */
@@ -140,7 +138,7 @@ CSS_COMMENT */
 
 
 
-/* MODULE_BEGIN { "actionList": ["lint"], "file": ".install/public/utility2_external.shared.js" } */
+/* MODULE_BEGIN { "actionList": ["lint"], "file": ".install/public/utility2_external.nodejs.js" } */
 /*jslint browser: true, indent: 2, maxerr: 8, node: true, nomen: true, regexp: true, todo: true, unparam: true*/
 /*global global, required, state, utility2, $*/
 (function moduleInit() {
@@ -403,8 +401,10 @@ tr:nth-child(even) {
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
 <title>utility2 test page</title>
 <link href="/public/utility2/utility2_external.browser.rollup.min.css" rel="stylesheet"/>
+<link href="/public/utility2.css" rel="stylesheet"/>
 </head>
 <body>
+<div id="ajaxProgressContainer"></div>
 <div id="qunit"></div>
 <div id="qunit-fixture"></div>
 <script>window.state = { testModuleDict: { utility2: true } };</script>
@@ -417,7 +417,7 @@ tr:nth-child(even) {
 
 
 
-/* MODULE_BEGIN { "actionList": ["trim"], "file": "/test/test_hello.html" } */
+/* MODULE_BEGIN { "actionList": ["trim"], "file": "/test/testSaucelabsHelloWorld.html" } */
 <!DOCTYPE html><html>
 <head>
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
@@ -431,11 +431,11 @@ window.global_test_results = {
     "errorMessageList": [],
     "testSuiteList": [
       {
-        "name": "browser." + window.navigator.userAgent,
+        "name": "browser - " + window.navigator.userAgent,
         "testCaseList": [
           {
-            "module": "utility2.moduleHelloBrowser",
-            "name": "_hello_default_test",
+            "module": "utility2.moduleHelloWorldBrowser",
+            "name": "_saucelabs_default_test",
             "time":1
           }
         ],
@@ -445,6 +445,11 @@ window.global_test_results = {
     "totalTime": 3
   }
 };
+/* display windwo.global_test_results in browser */
+var pre = document.createElement("pre");
+pre.innerHTML = 'window.global_test_results = '
+  + JSON.stringify(window.global_test_results, null, 2).replace((/</g), '&lt;');
+document.body.appendChild(pre);
 </script>
 </body>
 </html>
@@ -476,87 +481,18 @@ ymXCIWMOjxhLC8J1sbqQq/btyWDcn1qj0PUzM+bH4UidMtOe/B7bL9Wlz0MZYXZdLOnfAAAAAElFTkSu
     ["linux", "firefox", "29"],
     ["linux", "opera", "12"],
     ["osx 10.8", "chrome", "beta"],
+    ["osx 10.9", "chrome", "34"],
+    ["osx 10.9", "firefox", "28"],
     ["osx 10.9", "ipad", "7.1"],
     ["osx 10.9", "iphone", "7.1"],
     ["osx 10.9", "safari", "7"],
-    ["windows 8.1", "chrome", "beta"],
-    ["windows 8.1", "internet explorer", "11"]
-  ],
-  "stateOverride": {
-    "timeoutDefault": 300000
-  }
-}
-/* MODULE_END */
-
-
-
-/* MODULE_BEGIN { "actionList": ["lint"], "file": ".install/utility2_saucelabs.android.json" } */
-{
-  "platforms": [
-    ["linux", "android", "4.3"]
-  ],
-  "stateOverride": {
-    "timeoutDefault": 150000
-  }
-}
-/* MODULE_END */
-
-
-
-/* MODULE_BEGIN { "actionList": ["lint"], "file": ".install/utility2_saucelabs.ios.json" } */
-{
-  "platforms": [
-    ["osx 10.9", "ipad", "7.1"],
-    ["osx 10.9", "iphone", "7.1"]
-  ],
-  "stateOverride": {
-    "timeoutDefault": 150000
-  }
-}
-/* MODULE_END */
-
-
-
-/* MODULE_BEGIN { "actionList": ["lint"], "file": ".install/utility2_saucelabs.linux.json" } */
-{
-  "platforms": [
-    ["linux", "chrome", "34"],
-    ["linux", "firefox", "29"],
-    ["linux", "opera", "12"]
-  ],
-  "stateOverride": {
-    "timeoutDefault": 150000
-  }
-}
-/* MODULE_END */
-
-
-
-/* MODULE_BEGIN { "actionList": ["lint"], "file": ".install/utility2_saucelabs.osx.json" } */
-{
-  "platforms": [
-    ["osx 10.8", "chrome", "beta"],
-    ["osx 10.9", "chrome", "34"],
-    ["osx 10.9", "firefox", "28"],
-    ["osx 10.9", "safari", "7"]
-  ],
-  "stateOverride": {
-    "timeoutDefault": 150000
-  }
-}
-/* MODULE_END */
-
-
-
-/* MODULE_BEGIN { "actionList": ["lint"], "file": ".install/utility2_saucelabs.windows.json" } */
-{
-  "platforms": [
+    ["windows 7", "opera", "12"],
     ["windows 8.1", "chrome", "beta"],
     ["windows 8.1", "firefox", "29"],
     ["windows 8.1", "internet explorer", "11"]
   ],
   "stateOverride": {
-    "timeoutDefault": 150000
+    "timeoutDefault": 600000
   }
 }
 /* MODULE_END */
@@ -692,7 +628,7 @@ ymXCIWMOjxhLC8J1sbqQq/btyWDcn1qj0PUzM+bH4UidMtOe/B7bL9Wlz0MZYXZdLOnfAAAAAElFTkSu
           "errorMessageList": [],
           "testSuiteList": [
             {
-              "name": "browser.saucelabs_chrome",
+              "name": "browser - saucelabs chrome",
               "testCaseList": [
                 {
                   "module": "utility2.moduleSaucelabsBrowser",
@@ -724,7 +660,7 @@ ymXCIWMOjxhLC8J1sbqQq/btyWDcn1qj0PUzM+bH4UidMtOe/B7bL9Wlz0MZYXZdLOnfAAAAAElFTkSu
           "errorMessageList": [],
           "testSuiteList": [
             {
-              "name": "browser.saucelabs_firefox",
+              "name": "browser - saucelabs firefox",
               "testCaseList": [
                 {
                   "module": "utility2.moduleSaucelabsBrowser",
@@ -769,6 +705,66 @@ console.log('hello test');
 
 /* MODULE_BEGIN { "actionList": ["trim"], "file": "/test/test.json" } */
 "hello test"
+/* MODULE_END */
+
+
+
+/* MODULE_BEGIN { "actionList": ["lint"], "file": "/public/utility2.css" } */
+#ajaxProgressContainer {
+  background-color: #fff;
+  border: 1px solid #000;
+  cursor: pointer;
+  display: block;
+  left: 50%;
+  margin: 0px 0px 0px -50px;
+  padding: 5px;
+  position: fixed;
+  top: 49%;
+  width: 100px;
+  z-index: 9999;
+}
+.ajaxProgressContainerBar {
+  animation: 2s linear 0s normal none infinite ajaxProgressContainerBarAnimation;
+  -o-animation: 2s linear 0s normal none infinite ajaxProgressContainerBarAnimation;
+  -webkit-animation: 2s linear 0s normal none infinite ajaxProgressContainerBarAnimation;
+  background-image: linear-gradient(
+    45deg,rgba(255,255,255,.15) 25%,
+    transparent 25%,
+    transparent 50%,
+    rgba(255,255,255,.15) 50%,
+    rgba(255,255,255,.15) 75%,
+    transparent 75%,
+    transparent
+  );
+  background-size: 40px 40px;
+  color: #fff;
+  font-family: sans-serif;
+  font-size: 12px;
+  padding: 2px 0 2px 0;
+  text-align: center;
+  transition: width .5s ease;
+}
+.ajaxProgressContainerBarError {
+  background-color: #e55;
+}
+.ajaxProgressContainerBarLoading {
+  background-color: #49d;
+}
+.ajaxProgressContainerBarSuccess {
+  background-color: #6c6;
+}
+@keyframes ajaxProgressContainerBarAnimation {
+  from { background-position: 40px 0; }
+  to { background-position: 0 0; }
+}
+@-o-keyframes ajaxProgressContainerBarAnimation {
+  from { background-position: 40px 0; }
+  to { background-position: 0 0; }
+}
+@-webkit-keyframes ajaxProgressContainerBarAnimation {
+  from { background-position: 40px 0; }
+  to { background-position: 0 0; }
+}
 /* MODULE_END */
 
 
@@ -2713,10 +2709,11 @@ console.log('hello test');
           data = JSON.stringify(utility2.setOverride(options, {
             build: process.env.CI_BUILD_NUMBER,
             framework: 'custom',
-            'max-duration': Math.max(state.timeoutDefault / 1000 - 30000, 60000),
+            'max-duration': Math.max(state.timeoutDefault / 2000, 60),
             /* remove stateOverride param */
             stateOverride: null,
-            url: utility2.templateFormat(options.url
+            url: utility2.templateFormat(state.headlessSaucelabsUrl
+              || options.url
               || '{{localhost}}/test/test.html?#modeTest=1&timeoutDefault={{timeoutDefault}}', {
                 localhost: state.localhost,
                 timeoutDefault: String(state.timeoutDefault)
@@ -2733,16 +2730,16 @@ console.log('hello test');
             resultType: 'json',
             url: 'https://saucelabs.com/rest/v1/' + process.env.SAUCE_USERNAME + '/js-tests'
           };
+          remainingDict = {};
           time = Date.now();
           utility2.ajax(utility2.jsonCopy(options), utility2.tryCatchHandler(onEventError2));
           break;
         case 2:
-          utility2.jsonLog('headlessSaucelabs - starting test', [options, data]);
+          utility2.jsonLog('\nheadlessSaucelabs - tests started -', [options, data]);
           onEventReady = utility2.untilReady(function (error) {
             mode = -2;
             onEventError2(error);
           });
-          remainingDict = {};
           data['js tests'].forEach(onEventError2);
           mode += 1;
           (state.modeOffline ? utility2.callArg0 : setTimeout)(onEventError2, 30000);
@@ -2766,25 +2763,38 @@ console.log('hello test');
           }, 10000, state.timeoutDefault);
           break;
         case 5:
+          data['js tests'].forEach(onEventError2);
           mode -= 1;
-          data['js tests'].forEach(function (data) {
-            if (data.result) {
-              /* merge finished tests into state.testReport */
-              utility2.testReportMerge(state.testReport, data.result.testReport);
-              /* remove finished tests from remainingDict */
-              delete remainingDict[data.id];
-              onEventReady();
-              return;
-            }
-            /* update status of unfinished tests */
-            remainingDict[data.id] = {
-              id: data.id,
-              job_id: data.job_id,
-              platform: data.platform,
-              status: data.status
-            };
-          });
-          utility2.jsonLog('headlessSaucelabs', remainingDict);
+          utility2.jsonLog('\nheadlessSaucelabs - tests remaining -', remainingDict);
+          break;
+        case 6:
+          mode -= 1;
+          data = error;
+          /* test finished */
+          if (data.result && data.result.testReport) {
+            /* merge finished tests into state.testReport */
+            utility2.testReportMerge(state.testReport, data.result.testReport);
+            /* remove finished tests from remainingDict */
+            delete remainingDict[data.id];
+            onEventReady();
+            return;
+          }
+          /* saucelabs internal error */
+          error = (/error/).exec(data.status || (data.result && data.result.status));
+          if (error) {
+            data.totalTime = Date.now() - time;
+            local._headlessSaucelabsTestFailure(new Error(error.input), data);
+            delete remainingDict[data.id];
+            onEventReady();
+            return;
+          }
+          /* update status of running tests */
+          remainingDict[data.id] = {
+            id: data.id,
+            job_id: data.job_id,
+            platform: data.platform,
+            status: data.status
+          };
           break;
         default:
           /* clear timeout for headlessSaucelabs */
@@ -2795,18 +2805,8 @@ console.log('hello test');
           time = Date.now() - time;
           Object.keys(remainingDict).forEach(function (data) {
             data = remainingDict[data];
-            data = { testSuiteList: [{
-              name: 'browser.saucelabs_' + (data.platform || ['unknown_user_agent']).join('_'),
-              testCaseList: [{
-                errorMessage: utility2.errorStack(error),
-                module: local._name,
-                name: '_headlessSaucelabs_default_test',
-                time: time
-              }],
-              totalTIme: time
-            }]};
-            data.errorMessageList = [data.testSuiteList[0].testCaseList[0].errorMessage];
-            utility2.testReportMerge(state.testReport, data);
+            data.totalTime = time;
+            local._headlessSaucelabsTestFailure(error, data);
           });
           onEventError(error, data);
         }
@@ -2850,7 +2850,14 @@ console.log('hello test');
             ].contentBrowser));
             break;
           case 2:
-            onEventError(null, { 'js tests': [{}, null] });
+            onEventError(null, { 'js tests': [
+              /* test test-in-progress handling behavior */
+              {},
+              /* test saucelabs internal error handling behavior */
+              { result: { status: '_headlessSaucelabs_error_test' } },
+              /* test malformed data error handling behavior */
+              null
+            ] });
             break;
           }
         };
@@ -2861,26 +2868,24 @@ console.log('hello test');
       });
     },
 
-    // _headlessSaucelabs_error_test: function (onEventError) {
-      // /*
-        // this function tests headlessSaucelabs's error handling behavior
-      // */
-      // utility2.testMock(onEventError, [
-        // [global, { setTimeout: utility2.callError0 }],
-        // [state, { modeOffline: null, testReport: utility2.testReportMerge() }],
-        // [utility2, { ajax: function (_, onEventError) {
-          // onEventError(null, JSON.parse(state.fsWatchDict[
-            // '/test/modeAjaxOffline/https%3A%2F%2Fsaucelabs.com'
-              // + '%2Frest%2Fv1%2Fkaizhu256%2Fjs-tests%23POST'
-          // ].contentBrowser));
-        // }, onEventTimeout: utility2.nop }]
-      // ], function (onEventError) {
-        // local._headlessSaucelabs_default_test(function (error) {
-          // utility2.assert(error instanceof Error, error);
-          // onEventError();
-        // });
-      // });
-    // },
+    _headlessSaucelabsTestFailure: function (error, testReport) {
+      /*
+        this function handles saucelabs test failures
+      */
+      testReport = { testSuiteList: [{
+        name: 'browser - saucelabs '
+          + (testReport.platform || ['unknown user agent']).join(' '),
+        testCaseList: [{
+          errorMessage: utility2.errorStack(error),
+          module: local._name,
+          name: '_headlessSaucelabs_default_test',
+          time: testReport.totalTime
+        }],
+        totalTIme: testReport.totalTime
+      }]};
+      testReport.errorMessageList = [testReport.testSuiteList[0].testCaseList[0].errorMessage];
+      utility2.testReportMerge(state.testReport, testReport);
+    },
 
     modeCliDict_headlessSaucelabs: function () {
       /*
