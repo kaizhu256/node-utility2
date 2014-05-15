@@ -58,26 +58,6 @@ tmp
 
 
 
-/* MODULE_BEGIN { "actionList": ["lint"], "file": ".install/public/utility2_external.browser.css" } */
-/*jslint browser: true, indent: 2, maxerr: 8, node: true, nomen: true, regexp: true, todo: true, unparam: true*/
-/*global global, required, state, utility2, $*/
-/* CSS_COMMENT
-(function moduleInit() {
-  'use strict';
-  return {
-    cache: true,
-    cachePrefix: '/rollup',
-    urlList: [
-      //// qunit
-      'https://qunitjs.com/resources/qunit.css'
-    ]
-  };
-}());
-CSS_COMMENT */
-/* MODULE_END */
-
-
-
 /* MODULE_BEGIN { "actionList": ["lint"], "file": ".install/public/utility2_external.browser.js" } */
 /*jslint browser: true, indent: 2, maxerr: 8, node: true, nomen: true, regexp: true, todo: true, unparam: true*/
 /*global global, required, state, utility2, $*/
@@ -128,9 +108,7 @@ CSS_COMMENT */
       'https://raw.githubusercontent.com/joyent/node/master/lib/path.js',
       'https://raw.githubusercontent.com/joyent/node/master/lib/punycode.js',
       'https://raw.githubusercontent.com/joyent/node/master/lib/querystring.js',
-      'https://raw.githubusercontent.com/joyent/node/master/lib/url.js',
-      /* qunit */
-      'https://qunitjs.com/resources/qunit.js'
+      'https://raw.githubusercontent.com/joyent/node/master/lib/url.js'
     ]
   };
 }());
@@ -320,64 +298,64 @@ CSS_COMMENT */
 
 
 
-/* MODULE_BEGIN { "actionList": ["trim"], "file": "/test/report.html.template" } */
-<!DOCTYPE html><html>
-<head>
-<meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
-<title>utility2 test report</title>
+/* MODULE_BEGIN { "actionList": ["trim"], "file": "/public/file/testReport.html.template" } */
 <style>
-div {
+.testReportSuiteDiv {
   border-radius: 5px;
   border-style: solid;
   border-width: 1px;
   margin: 20px;
   padding: 0 10px 10px 10px;
 }
-pre {
+.testReportSuitePre {
   background-color: #fdd;
-  border-top-style: solid;
   border-radius: 0 0 5px 5px;
+  border-top-style: solid;
   border-width: 1px;
   margin-bottom: 0px;
   padding: 10px;
 }
-span {
+.testReportSuiteSpan {
   background-color: #070;
   color: #fff;
   padding: 0 0.5em 0 0.5em;
 }
-table {
+.testReportSuiteTable {
   border-top-style: solid;
   border-width: 1px;
   text-align: left;
   width: 100%;
 }
-tr:nth-child(even) {
+.testReportSummaryDiv {
   background-color: #bfb;
 }
-.failed, tr.failed {
+tr:nth-child(odd).testReportSuiteTr {
+  background-color: #bfb;
+}
+.testReportTestFailed, tr:nth-child(odd).testReportTestFailed {
   background-color: #f99;
 }
-.summary {
-  background-color: #bfb;
-}
 </style>
-</head>
-<body>
-<div class="summary"><h2>test report summary [{{date}}]</h2><table><thead><tr>
+<div class="testReportSuiteDiv testReportSummaryDiv"><h2>
+  test report summary<br/>
+  build date - {{date}}<br/>
+  build number - {{CI_BUILD_NUMBER}}<br/>
+  build branch - {{CI_BRANCH}}<br/>
+  build commit - {{CI_COMMIT_ID}}<br/>
+</h2>
+<table class="testReportSuiteTable"><thead><tr>
   <th>total time</th>
   <th>total tests failed</th>
   <th>total tests passed</th>
-  <th>total test suites run</th>
+  <th>total platforms tested</th>
 </tr></thead><tbody><tr>
   <td>{{totalTime}} ms</td>
   <td class="{{totalFailedClass}}">{{totalFailed}}</td>
   <td>{{totalPassed}}</td>
   <td>{{totalTestSuites}}</td>
-</tr></tbody></table></div>
-{{content}}
-</body>
-</html>
+</tr></tbody></table>
+</div>
+<div class="testReportTestSuiteListDiv">{{content}}</div>
 /* MODULE_END */
 
 
@@ -404,9 +382,8 @@ tr:nth-child(even) {
 <link href="/public/utility2.css" rel="stylesheet"/>
 </head>
 <body>
-<div id="ajaxProgressContainer"></div>
-<div id="qunit"></div>
-<div id="qunit-fixture"></div>
+<div id="ajaxProgressDiv"></div>
+<div id="testReportDiv"></div>
 <script>window.state = { testModuleDict: { utility2: true } };</script>
 <script src="/public/utility2/utility2_external.browser.rollup.min.js"></script>
 <script src="/public/utility2.js"></script>
@@ -493,6 +470,80 @@ ymXCIWMOjxhLC8J1sbqQq/btyWDcn1qj0PUzM+bH4UidMtOe/B7bL9Wlz0MZYXZdLOnfAAAAAElFTkSu
   ],
   "stateOverride": {
     "timeoutDefault": 600000
+  }
+}
+/* MODULE_END */
+
+
+
+/* MODULE_BEGIN { "actionList": ["lint"], "file": ".install/utility2_saucelabs.android.json" } */
+{
+  "platforms": [
+    ["linux", "android", "4.3"]
+  ],
+  "stateOverride": {
+    "timeoutDefault": 150000
+  }
+}
+/* MODULE_END */
+
+
+
+/* MODULE_BEGIN { "actionList": ["lint"], "file": ".install/utility2_saucelabs.ios.json" } */
+{
+  "platforms": [
+    ["osx 10.9", "ipad", "7.1"],
+    ["osx 10.9", "iphone", "7.1"]
+  ],
+  "stateOverride": {
+    "timeoutDefault": 150000
+  }
+}
+/* MODULE_END */
+
+
+
+/* MODULE_BEGIN { "actionList": ["lint"], "file": ".install/utility2_saucelabs.linux.json" } */
+{
+  "platforms": [
+    ["linux", "chrome", "34"],
+    ["linux", "firefox", "29"],
+    ["linux", "opera", "12"]
+  ],
+  "stateOverride": {
+    "timeoutDefault": 150000
+  }
+}
+/* MODULE_END */
+
+
+
+/* MODULE_BEGIN { "actionList": ["lint"], "file": ".install/utility2_saucelabs.osx.json" } */
+{
+  "platforms": [
+    ["osx 10.8", "chrome", "beta"],
+    ["osx 10.9", "chrome", "34"],
+    ["osx 10.9", "firefox", "28"],
+    ["osx 10.9", "safari", "7"]
+  ],
+  "stateOverride": {
+    "timeoutDefault": 150000
+  }
+}
+/* MODULE_END */
+
+
+
+/* MODULE_BEGIN { "actionList": ["lint"], "file": ".install/utility2_saucelabs.windows.json" } */
+{
+  "platforms": [
+    ["windows 7", "opera", "12"],
+    ["windows 8.1", "chrome", "beta"],
+    ["windows 8.1", "firefox", "29"],
+    ["windows 8.1", "internet explorer", "11"]
+  ],
+  "stateOverride": {
+    "timeoutDefault": 150000
   }
 }
 /* MODULE_END */
@@ -710,23 +761,10 @@ console.log('hello test');
 
 
 /* MODULE_BEGIN { "actionList": ["lint"], "file": "/public/utility2.css" } */
-#ajaxProgressContainer {
-  background-color: #fff;
-  border: 1px solid #000;
-  cursor: pointer;
-  display: block;
-  left: 50%;
-  margin: 0px 0px 0px -50px;
-  padding: 5px;
-  position: fixed;
-  top: 49%;
-  width: 100px;
-  z-index: 9999;
-}
-.ajaxProgressContainerBar {
-  animation: 2s linear 0s normal none infinite ajaxProgressContainerBarAnimation;
-  -o-animation: 2s linear 0s normal none infinite ajaxProgressContainerBarAnimation;
-  -webkit-animation: 2s linear 0s normal none infinite ajaxProgressContainerBarAnimation;
+.ajaxProgressBarDiv {
+  animation: 2s linear 0s normal none infinite ajaxProgressBarDivAnimation;
+  -o-animation: 2s linear 0s normal none infinite ajaxProgressBarDivAnimation;
+  -webkit-animation: 2s linear 0s normal none infinite ajaxProgressBarDivAnimation;
   background-image: linear-gradient(
     45deg,rgba(255,255,255,.15) 25%,
     transparent 25%,
@@ -743,25 +781,39 @@ console.log('hello test');
   padding: 2px 0 2px 0;
   text-align: center;
   transition: width .5s ease;
+  width: 0%;
 }
-.ajaxProgressContainerBarError {
+.ajaxProgressBarDivError {
   background-color: #e55;
 }
-.ajaxProgressContainerBarLoading {
+.ajaxProgressBarDivLoading {
   background-color: #49d;
 }
-.ajaxProgressContainerBarSuccess {
+.ajaxProgressBarDivSuccess {
   background-color: #6c6;
 }
-@keyframes ajaxProgressContainerBarAnimation {
+#ajaxProgressDiv {
+  background-color: #fff;
+  border: 1px solid #000;
+  cursor: pointer;
+  display: hidden;
+  left: 50%;
+  margin: 0 0 0 -64px;
+  padding: 8px 9px 8px 8px;
+  position: fixed;
+  top: 49%;
+  width: 128px;
+  z-index: 9999;
+}
+@keyframes ajaxProgressBarDivAnimation {
   from { background-position: 40px 0; }
   to { background-position: 0 0; }
 }
-@-o-keyframes ajaxProgressContainerBarAnimation {
+@-o-keyframes ajaxProgressBarDivAnimation {
   from { background-position: 40px 0; }
   to { background-position: 0 0; }
 }
-@-webkit-keyframes ajaxProgressContainerBarAnimation {
+@-webkit-keyframes ajaxProgressBarDivAnimation {
   from { background-position: 40px 0; }
   to { background-position: 0 0; }
 }
@@ -807,9 +859,9 @@ console.log('hello test');
       });
     },
 
-    '_router2SecurityDict_/admin_basicAuthFailure_test': function (onEventError) {
+    '_router2SecurityDict_/admin_basicAuthFailed_test': function (onEventError) {
       /*
-        this function tests router2SecurityDict_/admin's basic auth failure handling behavior
+        this function tests router2SecurityDict_/admin's basic auth failed handling behavior
       */
       utility2.ajax({ redirect: false, url: '/admin?basicAuthFail=1' }, function (error) {
         utility2.tryCatch(function () {
@@ -871,6 +923,7 @@ console.log('hello test');
         '"_router5MainDict_/admin/admin.eval_default_test"',
         function (error, data) {
           utility2.tryCatch(function () {
+            /* assert no error occurred */
             utility2.assert(!error, error);
             utility2.assert(data === '_router5MainDict_/admin/admin.eval_default_test', data);
             onEventError();
@@ -886,6 +939,7 @@ console.log('hello test');
       state.onEventErrorDefaultIgnoreList.push('_router5MainDict_ is not defined');
       utility2.adminEval('_router5MainDict_/admin/admin.eval_error_test', function (error) {
         utility2.tryCatch(function () {
+          /* assert error occurred */
           utility2.assert(error instanceof Error, error);
           onEventError();
         }, onEventError);
@@ -937,6 +991,7 @@ console.log('hello test');
         'echo _router5MainDict_/admin/admin.shell_default_test',
         function (error, data) {
           utility2.tryCatch(function () {
+            /* assert no error occurred */
             utility2.assert(!error, error);
             utility2.assert(data
               === '_router5MainDict_/admin/admin.shell_default_test\n\nexit code: 0', data);
@@ -954,6 +1009,7 @@ console.log('hello test');
         [utility2, { streamReadAll: utility2.callError1 } ]
       ], function (onEventError) {
         local['router5MainDict_/admin/admin.shell'](null, null, function (error) {
+          /* assert error occurred */
           utility2.assert(error instanceof Error, error);
           onEventError();
         });
@@ -1128,68 +1184,6 @@ console.log('hello test');
       utility2.assert(utility2.jsonStringifyOrdered(self)
         === '{"cache1":{"dd":4},"cache2":{},"remaining":1,"size":2}', self);
       onEventError();
-    },
-
-    clearCallSetInterval: function (key, callback, interval, timeout) {
-      /*
-        this function
-        1. clear interval key
-        2. run callback
-        3. set interval key to callback
-        usage example:
-        utility2.clearCallSetInterval('setIntervalFoo', function (timeout) {
-          if (timeout) {
-            console.log('timeout error after 4000 ms');
-            console.error(timeout.stack);
-            utility2.clearCallSetInterval('setIntervalFoo', 'clear');
-            return;
-          }
-          console.log('1000 ms interval');
-        }, 1000, 4000);
-      */
-      var dict;
-      dict = state.clearCallSetIntervalDict = state.clearCallSetIntervalDict || {};
-      dict[key] = dict[key] || {};
-      /* set timeout for clearCallSetInterval */
-      if (timeout) {
-        timeout = utility2.onEventTimeout(function (error) {
-          utility2.clearCallSetInterval(key, 'clear');
-          callback(error);
-        }, timeout, key);
-      }
-      /* 1. clear interval key */
-      clearInterval(dict[key].interval);
-      if (callback === 'clear') {
-        /* clear timeout for clearCallSetInterval */
-        clearTimeout(dict[key].timeout);
-        delete dict[key];
-        return;
-      }
-      /* 2. call callback */
-      callback();
-      /* 3. set interval key to callback */
-      dict[key] = {
-        interval: setInterval(callback, interval),
-        timeout: timeout
-      };
-    },
-
-    _clearCallSetInterval_timeout_test: function (onEventError) {
-      /*
-        this function tests clearCallSetInterval's timeout handling behavior
-      */
-      var onEventReady;
-      onEventReady = utility2.untilReady(onEventError);
-      [100, 200, 300].forEach(function (data) {
-        onEventReady.remaining += 1;
-        utility2.clearCallSetInterval(utility2.uuid4(), function (timeout) {
-          if (timeout) {
-            utility2.assert(timeout instanceof Error);
-            utility2.assert(timeout.code === 'ETIMEDOUT');
-            onEventReady();
-          }
-        }, 200, data);
-      });
     }
 
   };
@@ -1291,18 +1285,21 @@ console.log('hello test');
         /* test _Branch_prototype_fileDelete's error handling behavior */
         self.fileDelete(null, function (error) {
           utility2.tryCatch(function () {
+            /* assert error occurred */
             utility2.assert(error instanceof Error, error);
           }, onEventError);
         });
         /* test _Branch_prototype_fileSha's error handling behavior */
         self.fileSha(null, function (error) {
           utility2.tryCatch(function () {
+            /* assert error occurred */
             utility2.assert(error instanceof Error, error);
           }, onEventError);
         });
         /* test _Branch_prototype_fileUpdate's error handling behavior */
         self.fileUpdate(null, null, function (error) {
           utility2.tryCatch(function () {
+            /* assert error occurred */
             utility2.assert(error instanceof Error, error);
           }, onEventError);
         });
@@ -1312,6 +1309,7 @@ console.log('hello test');
         };
         self.fileSha(null, function (error, data) {
           utility2.tryCatch(function () {
+            /* assert no error occurred */
             utility2.assert(!error, error);
             utility2.assert(!data, data);
           }, onEventError);
@@ -1454,6 +1452,7 @@ console.log('hello test');
       ], function (onEventError) {
         self.fileUpdate(null, blob, function (error) {
           utility2.tryCatch(function () {
+            /* assert no error occurred */
             utility2.assert(!error, error);
             onEventError();
           }, onEventError);
@@ -1473,6 +1472,7 @@ console.log('hello test');
       ], function (onEventError) {
         self.fileUpdate(null, blob, function (error) {
           utility2.tryCatch(function () {
+            /* assert no error occurred */
             utility2.assert(!error, error);
             onEventError();
           }, onEventError);
@@ -1511,6 +1511,7 @@ console.log('hello test');
       */
       utility2.readyUtility2Exit.remaining += 1;
       utility2.streamReadAll(process.stdin, function (error, data) {
+        /* assert no error occurred */
         utility2.assert(!error, error);
         state.dbGithubBranchDefault.fileUpdate(
           state.dbGithubBranchFile,
@@ -1612,6 +1613,7 @@ console.log('hello test');
         [utility2, { readyUtility2: {} }]
       ], function (onEventError) {
         utility2.tryCatch(local._initOnce, function (error) {
+          /* assert error occurred */
           utility2.assert(error instanceof Error, error);
           onEventError();
         });
@@ -1855,23 +1857,27 @@ console.log('hello test');
       ], function (onEventError) {
         /* test createDbPostgresTable error handling behavior */
         utility2.createDbPostgresTable('utility2_error', function (error) {
+          /* assert error occurred */
           utility2.assert(error instanceof Error, error);
         });
         /* test _Table_prototype_getItem error handling behavior */
         self.getItem(null, function (error) {
           utility2.tryCatch(function () {
+            /* assert error occurred */
             utility2.assert(error instanceof Error, error);
           }, onEventError);
         });
         /* test _Table_prototype_keys error handling behavior */
         self.keys(function (error) {
           utility2.tryCatch(function () {
+            /* assert error occurred */
             utility2.assert(error instanceof Error, error);
           }, onEventError);
         });
         /* test _Table_prototype_query error handling behavior */
         self.query(null, null, function (error) {
           utility2.tryCatch(function () {
+            /* assert error occurred */
             utility2.assert(error instanceof Error, error);
           }, onEventError);
         });
@@ -2011,7 +2017,6 @@ console.log('hello test');
       /*
         this function causes the key/value pair with the given key
         to be removed from the table associated with the table, if it exists.
-        usage example: self.removeItem('foo', utility2.onEventErrorDefault);
       */
       this.query('DELETE FROM {{table}} WHERE key=$1;', [key], onEventError);
     },
@@ -2019,7 +2024,6 @@ console.log('hello test');
     _Table_prototype_setItem: function (key, value, onEventError) {
       /*
         this function sets the item with the given key to the given value
-        usage example: self.setItem('foo', 'bar', utility2.onEventErrorDefault);
       */
       this.query('SELECT upsert_{{table}} ($1, $2);', [key, value], onEventError);
     }
@@ -2060,6 +2064,7 @@ console.log('hello test');
       state.dbSqlite3TableDefault = utility2.createDbSqlite3Table(
         'utility2_default',
         function (error) {
+          /* assert no error occurred */
           utility2.assert(!error, error);
           utility2.readyUtility2();
         }
@@ -2128,6 +2133,7 @@ console.log('hello test');
         this function tests createDbSqlite3Table's invalid name handling behavior
       */
       utility2.createDbSqlite3Table('utility2_fts', function (error) {
+        /* assert error occurred */
         utility2.assert(error instanceof Error, error);
         onEventError();
       });
@@ -2172,6 +2178,7 @@ console.log('hello test');
       */
       utility2.dbSqlite3TableList(function (error, list) {
         utility2.tryCatch(function () {
+          /* assert no error occurred */
           utility2.assert(!error, error);
           utility2.assert(list.indexOf('utility2_default') >= 0, list);
           onEventError();
@@ -2267,6 +2274,7 @@ console.log('hello test');
           /* test _Table_prototype_recordReplace's default handling behavior */
           self.recordReplace('foo', { aa: true, bb: null }, onEventError2);
           self.recordGet('foo', function (error, data) {
+            /* assert no error occurred */
             utility2.assert(!error, error);
             utility2.assert(data.aa === true, data.aa);
             utility2.assert(data.bb === undefined, data.bb);
@@ -2276,6 +2284,7 @@ console.log('hello test');
           self.recordUpdate('foo', { bb: true }, onEventError2);
           /* test _Table_prototype_recordGet's default handling behavior */
           self.recordGet('foo', function (error, data) {
+            /* assert no error occurred */
             utility2.assert(!error, error);
             utility2.assert(data.aa === true, data.aa);
             utility2.assert(data.bb === true, data.bb);
@@ -2283,6 +2292,7 @@ console.log('hello test');
           });
           /* test _Table_prototype_recordGetRandom's default handling behavior */
           self.recordGetRandom(function (error, data) {
+            /* assert no error occurred */
             utility2.assert(!error, error);
             utility2.assert(data.aa === true, data.aa);
             utility2.assert(data.bb === true, data.bb);
@@ -2291,6 +2301,7 @@ console.log('hello test');
           /* test _Table_prototype_recordCopy's default handling behavior */
           self.recordCopy('foo', 'bar', onEventError2);
           self.recordGet('bar', function (error, data) {
+            /* assert no error occurred */
             utility2.assert(!error, error);
             utility2.assert(data.aa === true, data.aa);
             utility2.assert(data.bb === true, data.bb);
@@ -2299,6 +2310,7 @@ console.log('hello test');
           /* test _Table_prototype_recordRename's default handling behavior */
           self.recordRename('bar', 'baz', onEventError2);
           self.recordGet('baz', function (error, data) {
+            /* assert no error occurred */
             utility2.assert(!error, error);
             utility2.assert(data.aa === true, data.aa);
             utility2.assert(data.bb === true, data.bb);
@@ -2307,6 +2319,7 @@ console.log('hello test');
           /* test _Table_prototype_recordReplace's default handling behavior */
           self.recordReplace('foo', { bb: true, cc: true }, onEventError2);
           self.recordGet('foo', function (error, data) {
+            /* assert no error occurred */
             utility2.assert(!error, error);
             utility2.assert(data.aa === undefined, data.aa);
             utility2.assert(data.bb === true, data.bb);
@@ -2316,6 +2329,7 @@ console.log('hello test');
           /* test _Table_prototype_recordUpdate's default handling behavior */
           self.recordUpdate('foo', { bb: null }, onEventError2);
           self.recordGet('foo', function (error, data) {
+            /* assert no error occurred */
             utility2.assert(!error, error);
             utility2.assert(data.aa === undefined, data.aa);
             utility2.assert(data.bb === undefined, data.bb);
@@ -2329,6 +2343,7 @@ console.log('hello test');
             onEventError2
           );
           self.recordGet('foo', function (error, data) {
+            /* assert no error occurred */
             utility2.assert(!error, error);
             utility2.assert(data.aa === undefined, data.aa);
             utility2.assert(data.bb === undefined, data.bb);
@@ -2337,11 +2352,13 @@ console.log('hello test');
           });
           /* test _Table_prototype_recordList's default handling behavior */
           self.recordList(function (error, data) {
+            /* assert no error occurred */
             utility2.assert(!error, error);
             utility2.assert(JSON.stringify(data) === '["baz","foo"]', data);
           });
           /* test _Table_prototype_tableFts's default handling behavior */
           self.tableFts('foo', function (error, data) {
+            /* assert no error occurred */
             utility2.assert(!error, error);
             utility2.assert(data, data);
           });
@@ -2349,6 +2366,7 @@ console.log('hello test');
           self.recordDelete('foo', onEventError2);
           /* test _Table_prototype_recordGet's nonexistent handling behavior */
           self.recordGet('foo', function (error, data) {
+            /* assert no error occurred */
             utility2.assert(!error, error);
             utility2.assert(!data, data);
           });
@@ -2365,6 +2383,7 @@ console.log('hello test');
           self.recordGet('foo', onEventError2);
         }, function (error) {
           self.tableDrop(function () {
+            /* assert error occurred */
             utility2.assert(error instanceof Error, error);
             onEventError();
           });
@@ -2384,18 +2403,21 @@ console.log('hello test');
         /* test createDbSqlite3Table's error handling behavior */
         utility2.createDbSqlite3Table('utility2_error', function (error) {
           utility2.tryCatch(function () {
+            /* assert error occurred */
             utility2.assert(error instanceof Error, error);
           }, onEventError);
         });
         /* test dbSqlite3TableList's error handling behavior */
         utility2.dbSqlite3TableList(function (error) {
           utility2.tryCatch(function () {
+            /* assert error occurred */
             utility2.assert(error instanceof Error, error);
           }, onEventError);
         });
         /* test _Table_prototype_recordList's error handling behavior */
         self.recordList(function (error) {
           utility2.tryCatch(function () {
+            /* assert error occurred */
             utility2.assert(error instanceof Error, error);
           }, onEventError);
         });
@@ -2709,10 +2731,10 @@ console.log('hello test');
           data = JSON.stringify(utility2.setOverride(options, {
             build: process.env.CI_BUILD_NUMBER,
             framework: 'custom',
-            'max-duration': Math.max(state.timeoutDefault / 2000, 60),
+            'max-duration': Math.max(state.timeoutDefault / 1500, 60),
             /* remove stateOverride param */
             stateOverride: null,
-            url: utility2.templateFormat(state.headlessSaucelabsUrl
+            url: utility2.textFormat(state.headlessSaucelabsUrl
               || options.url
               || '{{localhost}}/test/test.html?#modeTest=1&timeoutDefault={{timeoutDefault}}', {
                 localhost: state.localhost,
@@ -2783,7 +2805,7 @@ console.log('hello test');
           error = (/error/).exec(data.status || (data.result && data.result.status));
           if (error) {
             data.totalTime = Date.now() - time;
-            local._headlessSaucelabsTestFailure(new Error(error.input), data);
+            local._headlessSaucelabsTestFailed(new Error(error.input), data);
             delete remainingDict[data.id];
             onEventReady();
             return;
@@ -2806,7 +2828,7 @@ console.log('hello test');
           Object.keys(remainingDict).forEach(function (data) {
             data = remainingDict[data];
             data.totalTime = time;
-            local._headlessSaucelabsTestFailure(error, data);
+            local._headlessSaucelabsTestFailed(error, data);
           });
           onEventError(error, data);
         }
@@ -2823,6 +2845,7 @@ console.log('hello test');
         platforms: [['Linux', 'chrome', '34'], ['Linux', 'firefox', '29']]
       }, function (error, data) {
         utility2.tryCatch(function () {
+          /* assert no error occurred */
           utility2.assert(!error, error);
           onEventError();
         }, onEventError);
@@ -2862,15 +2885,16 @@ console.log('hello test');
           }
         };
         local._headlessSaucelabs_default_test(function (error) {
+          /* assert error occurred */
           utility2.assert(error instanceof Error, error);
           onEventError();
         });
       });
     },
 
-    _headlessSaucelabsTestFailure: function (error, testReport) {
+    _headlessSaucelabsTestFailed: function (error, testReport) {
       /*
-        this function handles saucelabs test failures
+        this function handles failed saucelabs tests
       */
       testReport = { testSuiteList: [{
         name: 'browser - saucelabs '
@@ -2893,6 +2917,7 @@ console.log('hello test');
       */
       /* read saucelabs test options from stdin */
       utility2.streamReadAll(process.stdin, utility2.jsonParseHandler(function (error, data) {
+        /* assert no error occurred */
         utility2.assert(!error, error);
         state.headlessSaucelabsOptions = data;
         /* enable testing for this module */
@@ -3033,6 +3058,7 @@ console.log('hello test');
       ], function (onEventError) {
         local._minifyFile(null, function (error) {
           utility2.tryCatch(function () {
+            /* assert error occurred */
             utility2.assert(error instanceof Error, error);
             onEventError();
           }, onEventError);
@@ -3144,6 +3170,7 @@ console.log('hello test');
       ], function (onEventError) {
         local._rollupFile(null, function (error) {
           utility2.tryCatch(function () {
+            /* assert error occurred */
             utility2.assert(error instanceof Error, error);
             onEventError();
           }, onEventError);
@@ -3182,6 +3209,7 @@ console.log('hello test');
           break;
         case 4:
           utility2.tryCatch(function () {
+            /* assert no error occurred */
             utility2.assert(!error, error);
             utility2.assert((/console\.log\('hello test!'\);/).test(data), data);
             onEventError2(utility2.error);
@@ -3292,6 +3320,7 @@ console.log('hello test');
           utility2.tryCatch(onEventError2, onEventError2);
           break;
         case 5:
+          /* assert no error occurred */
           utility2.assert(!error, error);
           utility2.assert(!(/test.png/).test(data), data);
           onEventError2();
@@ -3324,6 +3353,7 @@ console.log('hello test');
           options: { url0: '' }
         }, function (error) {
           utility2.tryCatch(function () {
+            /* assert error occurred */
             utility2.assert(error instanceof Error, error);
             onEventReady();
           }, onEventError);

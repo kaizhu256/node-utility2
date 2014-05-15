@@ -1,7 +1,11 @@
 #### todo
-- fix slimerjs url not displaying
+- add usage documentation
 - add html linter
 - auto-remove test functions from module in production mode
+
+#### 2014.05.10
+- remove qunit dependency
+- remove .install/public/utility2_external.browser.css and friends
 
 #### 2014.05.10
 - fix saucelabs tests

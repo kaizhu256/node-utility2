@@ -1,6 +1,11 @@
 ## before_script:
   ## - psql -c "create database travis_ci_test;" -U postgres
   ## - export POSTGRES_LOGIN=postgres://localhost/travis_ci_test
+branches:
+  only:
+    - master
+    - npm
+    - unstable
 env:
   global:
     - secure: SrS9Ib5Er6ag39u9zK5h4jv0m/jPgZUBLzkOgbLvf+3htHEF2wBkVrDHC7+HKFSx7eBrvXPfA7/p+rEs6aBm6pcnP3f3BU07f5iFgiHdSXmFlTq7zuO0Xsa/Js4CDaXYJ3KTzqPk43cAQb7IhH2pZWn8fVq0HJXlP79RKG18lMw=

@@ -33,13 +33,13 @@ shMain () {
     eval "$($UTILITY2_DIR/utility2.js --mode-cli=exportEnv --mode-silent)"
   fi
 
-  ## export GITHUB_OWNER_REPO_BRANCH
-  export GITHUB_OWNER_REPO_BRANCH=kaizhu256/blob/gh-pages
+  ## init $GITHUB_OWNER_REPO_BRANCH var
+  GITHUB_OWNER_REPO_BRANCH=kaizhu256/blob/gh-pages
 
-  ## script var
+  ## init $SCRIPT var
   SCRIPT=":"
 
-  ## utility2 vars
+  ## $UTILITY2_* vars
   UTILITY2_EXTERNAL_TAR_GZ=utility2_external.$NODEJS_PACKAGE_JSON_VERSION.tar.gz
   UTILITY2_JS=$UTILITY2_DIR/utility2.js
   UTILITY2_SH=$UTILITY2_DIR/utility2.sh
@@ -74,6 +74,16 @@ shMain () {
     SCRIPT="$SCRIPT --mode-db-github=$GITHUB_OWNER_REPO_BRANCH"
     SCRIPT="$SCRIPT --mode-silent"
     SCRIPT="$SCRIPT --mode-timeoutDefault=120000"
+    ;;
+
+  ## github merge head branch $4 to base branch $3 in user/repo $2
+  --db-github-branch-merge)
+    ## security - avoid $SCRIPT macro to hide $GITHUB_TOKEN
+    curl https://api.github.com/repos/$2/merges\
+      --data-binary "{\"base\":\"$3\",\"head\":\"$4\"}"\
+      --dump-header -\
+      --header "Authorization: token $GITHUB_TOKEN"\
+    && exit $?
     ;;
 
   ## install saucelabs
@@ -152,13 +162,17 @@ shMain () {
   ## build utility2
   --utility2-build)
     if [ "$CODESHIP" ]
+      ## init $ARTIFACT_DIR var
       then ARTIFACT_DIR=/utility2.build.codeship.io
+      ## init postgres
       export POSTGRES_LOGIN=postgres://$PG_USER:$PG_PASSWORD@localhost/test
     elif [ "$TRAVIS" ]
-      then CI_BRANCH=$TRAVIS_BRANCH
-      CI_BUILD_NUMBER=$TRAVIS_BUILD_NUMBER
-      CI_COMMIT_ID=$TRAVIS_COMMIT
-      ARTIFACT_DIR=/utility2.build.travis-ci.org
+      ## init $ARTIFACT_DIR var
+      then ARTIFACT_DIR=/utility2.build.travis-ci.org
+      ## export CI_* vars
+      export CI_BRANCH=$TRAVIS_BRANCH
+      export CI_BUILD_NUMBER=$TRAVIS_BUILD_NUMBER
+      export CI_COMMIT_ID=$TRAVIS_COMMIT
       ## install postgres
       SCRIPT="$SCRIPT && curl -3Ls"
       SCRIPT="$SCRIPT https://github.com/PostgresApp/PostgresApp/releases"
@@ -173,9 +187,38 @@ shMain () {
       SCRIPT="$SCRIPT http://download.slimerjs.org/v0.9/0.9.1/slimerjs-0.9.1-mac.tar.bz2"
       SCRIPT="$SCRIPT | tar -C /tmp -xzf -"
       ## add slimerjs to PATH
-      SCRIPT="$SCRIPT && export PATH=$PATH:/tmp/slimerjs-0.9.1"
+      SCRIPT="$SCRIPT && export PATH=\$PATH:/tmp/slimerjs-0.9.1"
+    else
+      ## export CI_* vars
+      export CI_BRANCH="$(git rev-parse --abbrev-ref HEAD)"
+      export CI_COMMIT_ID="$(git rev-parse --verify HEAD)"
     fi
     case $CI_BRANCH in
+    ## run headless saucelabs browser tests
+    browser)
+      if [ ! "$CODESHIP" ]
+        then exit
+      fi
+      ## set test url
+      HEADLESS_SAUCELABS_URL="https://utility2-unstable.herokuapp.com/test/test.html#modeTest=1"
+      ## npm install
+      SCRIPT="$SCRIPT && npm install"
+      ## spin up heroku dyno if it's sleeping
+      SCRIPT="$SCRIPT && curl -3Ls $HEADLESS_SAUCELABS_URL > /dev/null"
+      ## remove old test report
+      SCRIPT="$SCRIPT && rm -f tmp/test_report.json"
+      ## run saucelabs tests for each of the given os platforms
+      SCRIPT="$SCRIPT && for FILE in"
+      SCRIPT="$SCRIPT .install/utility2_saucelabs.android.json"
+      SCRIPT="$SCRIPT .install/utility2_saucelabs.ios.json"
+      SCRIPT="$SCRIPT .install/utility2_saucelabs.linux.json"
+      SCRIPT="$SCRIPT .install/utility2_saucelabs.osx.json"
+      SCRIPT="$SCRIPT .install/utility2_saucelabs.windows.json"
+        SCRIPT="$SCRIPT; do $($UTILITY2_SH_ECHO --saucelabs-test \$FILE)"
+        SCRIPT="$SCRIPT --headless-saucelabs-url=$HEADLESS_SAUCELABS_URL"
+        SCRIPT="$SCRIPT --mode-test-report-merge"
+      SCRIPT="$SCRIPT; done"
+      ;;
     npm)
       ## install and test utility2 in /tmp dir with no external npm dependencies */
       SCRIPT="$SCRIPT && cd /tmp && rm -fr node_modules utility2"
@@ -183,18 +226,6 @@ shMain () {
       SCRIPT="$SCRIPT && npm install utility2"
       ## npm test utility2
       SCRIPT="$SCRIPT && cd node_modules/utility2 && npm test"
-      ;;
-    browser)
-      if [ ! "$CODESHIP" ]
-        then exit
-      fi
-      HEADLESS_SAUCELABS_URL="https://utility2-unstable.herokuapp.com/test/test.html#modeTest=1"
-      ## npm install
-      SCRIPT="$SCRIPT && npm install"
-      SCRIPT="$SCRIPT && curl -3Ls $HEADLESS_SAUCELABS_URL > /dev/null"
-      ## npm test saucelabs
-      SCRIPT="$SCRIPT && $($UTILITY2_SH_ECHO --saucelabs-test .install/utility2_saucelabs.all.json)"
-      SCRIPT="$SCRIPT --headless-saucelabs-url=$HEADLESS_SAUCELABS_URL"
       ;;
     *)
       ## npm install
@@ -216,11 +247,8 @@ shMain () {
     SCRIPT="$SCRIPT; exit \$EXIT_CODE"
     ;;
 
-  ## publish build to github
+  ## publish utility2 build to github
   --utility2-build-publish)
-    ## generage coverage badge
-    SCRIPT="$SCRIPT && ./utility2.js"
-    SCRIPT="$SCRIPT --mode-cli=coverageBadgeGenerate --tmpdir=tmp"
     ## publish build
     SCRIPT="$SCRIPT && for FILE in"
     SCRIPT="$SCRIPT coverage_report/coverage_report.badge.svg"
@@ -235,9 +263,14 @@ shMain () {
     SCRIPT="$SCRIPT test_report.badge.svg"
     SCRIPT="$SCRIPT test_report.html"
     SCRIPT="$SCRIPT test_report.json"
+      ## exit loop if file update fails
       SCRIPT="$SCRIPT; do [ \$? == 0 ]"
+      ## check if file exists
       SCRIPT="$SCRIPT && if [ -f tmp/\$FILE ]"
-        SCRIPT="$SCRIPT; then $($UTILITY2_SH_ECHO --db-github-branch-file-update $2/\$FILE tmp/\$FILE)"
+        ## add delay interval between file updates to prevent race conditions
+        SCRIPT="$SCRIPT; then sleep 5"
+        ## update file
+        SCRIPT="$SCRIPT && $($UTILITY2_SH_ECHO --db-github-branch-file-update $2/\$FILE tmp/\$FILE)"
       SCRIPT="$SCRIPT; fi"
     SCRIPT="$SCRIPT; done"
     ;;
@@ -250,14 +283,11 @@ shMain () {
     SCRIPT="$SCRIPT --mode-cli=rollupFileList"
     SCRIPT="$SCRIPT --mode-silent"
     SCRIPT="$SCRIPT --rollup-file-list"
-    SCRIPT="$SCRIPT=.install/public/utility2_external.browser.css"
-    SCRIPT="$SCRIPT,.install/public/utility2_external.browser.js"
+    SCRIPT="$SCRIPT .install/public/utility2_external.browser.js"
     SCRIPT="$SCRIPT,.install/public/utility2_external.nodejs.js"
     SCRIPT="$SCRIPT --tmpdir=tmp"
     SCRIPT="$SCRIPT && tar -czvf .install/$UTILITY2_EXTERNAL_TAR_GZ"
-    SCRIPT="$SCRIPT .install/public/utility2_external.browser.rollup.css"
     SCRIPT="$SCRIPT .install/public/utility2_external.browser.rollup.js"
-    SCRIPT="$SCRIPT .install/public/utility2_external.browser.rollup.min.css"
     SCRIPT="$SCRIPT .install/public/utility2_external.browser.rollup.min.js"
     SCRIPT="$SCRIPT .install/public/utility2_external.nodejs.rollup.js"
     SCRIPT="$SCRIPT .install/public/utility2_external.nodejs.rollup.min.js"
@@ -313,6 +343,7 @@ shMain () {
     ## if test failed, then redo without code coverage
     SCRIPT="$SCRIPT; if [ \"\$EXIT_CODE\" != 0 ]"
       SCRIPT="$SCRIPT; then ./utility2.js $NPM_TEST_ARGS"
+      SCRIPT="$SCRIPT --mode-test-report-merge"
     SCRIPT="$SCRIPT; fi"
     SCRIPT="$SCRIPT; exit \$EXIT_CODE"
     ;;

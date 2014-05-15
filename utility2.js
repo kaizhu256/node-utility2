@@ -29,8 +29,14 @@
         state: {
           /* list of test-generated errors to be ignored */
           onEventErrorDefaultIgnoreList: [],
+          /* dict of cached files */
+          fsWatchDict: {},
           /* dict of server-side test callbacks to be triggered by the browser */
           testCallbackDict: {},
+          /* test report object */
+          testReport: {},
+          /* mock state.testReportDiv dom element */
+          testReportDiv: {},
           /* default timeout */
           timeoutDefault: 60000
         },
@@ -65,14 +71,18 @@
         local._initNodejs(require);
       }
       /* init utility2 for browser */
-      if (global.document && global.document.body && global.location && global.window) {
+      if (global.document
+          && document.body
+          && global.location
+          && location.hash
+          && global.window) {
         state.modeBrowser = true;
         state.modeInit = 2;
         /* set browser test mode */
         state.modeTest = state.modeTest
-          || (/\bmodeTest=\w/).test(global.location && global.location.hash);
+          || (/\bmodeTest=\w/).test(location.hash);
         /* set browser timeoutDefault */
-        tmp = (/\btimeoutDefault=(\d+)\b/).exec(global.location && global.location.hash);
+        tmp = (/\btimeoutDefault=(\d+)\b/).exec(location.hash);
         state.timeoutDefault = tmp ? Number(tmp[1]) : state.timeoutDefault;
       }
       /* export utility2.untilReadyUtility2 */
@@ -106,11 +116,13 @@
       /* utility2 ready */
       utility2.readyUtility2.remaining += 1;
       setTimeout(utility2.readyUtility2);
+      /* init state.testReport */
+      utility2.testReportMerge(state.testReport);
       /* init browser */
-      local._initBrowser(global);
+      local._initOnceBrowser(global);
     },
 
-    _initBrowser: function (global2) {
+    _initOnceBrowser: function (global2) {
       /*
         this function runs browser-side initializations
       */
@@ -147,11 +159,32 @@
           global2.location.reload();
         });
       }
+      /* init testReportDiv element */
+      state.testReportDiv = global2.document.getElementById('testReportDiv');
+      if (state.testReportDiv) {
+        utility2.readyUtility2.remaining += 1;
+        setTimeout(function () {
+          /* get testReport html template */
+          utility2.ajax({
+            url: '/public/file/testReport.html.template'
+          }, function (error, data) {
+            state.fsWatchDict['/public/file/testReport.html.template'] = {
+              contentBrowser: data
+            };
+            utility2.readyUtility2(error);
+            utility2.clearCallSetInterval('testReportDivUpdate', function () {
+              state.testReportDiv.innerHTML = utility2.testReportHtml(state.testReport);
+            }, 1000, state.timeoutDefault);
+          });
+        });
+      } else {
+        state.testReportDiv = {};
+      }
     },
 
-    __initBrowser_default_test: function (onEventError) {
+    __initOnceBrowser_default_test: function (onEventError) {
       /*
-        this function tests _initBrowser's default handling behavior
+        this function tests _initOnceBrowser's default handling behavior
       */
       utility2.testMock(onEventError, [
         [global, { required: { url: required.url }, state: { modeBrowser: null } }],
@@ -159,7 +192,7 @@
       ], function (onEventError) {
         var global2;
         /* test non-browser mode handling behavior */
-        local._initBrowser({});
+        local._initOnceBrowser({});
         /* test browser mode handling behavior */
         state.modeBrowser = true;
         global2 = {
@@ -167,10 +200,12 @@
           EventSource: function () {
             this.addEventListener = utility2.callArg1;
           },
+          /* test state.testReportDiv disabled handling behavior */
+          document: { getElementById: utility2.nop },
           /* test testWatch mode handling behavior */
           location: { hash: '#testWatch=1', reload: utility2.nop, search: '' }
         };
-        local._initBrowser(global2);
+        local._initOnceBrowser(global2);
         onEventError();
       });
     },
@@ -195,7 +230,7 @@
       utility2.testMock(onEventError, [
         [required, { utility2_external: null }]
       ], function (onEventError) {
-        local._initNodejs(local._throwError);
+        local._initNodejs(utility2.throwError);
         /* assert required.utility2_external instanceof Error */
         utility2.assert(
           required.utility2_external instanceof Error,
@@ -256,18 +291,21 @@
       utility2.tryCatch(function () {
         utility2.assert(false, undefined);
       }, function (error) {
+        /* assert error occurred */
         utility2.assert(error instanceof Error, error);
       });
       /* test failed assertion with message */
       utility2.tryCatch(function () {
         utility2.assert(false, '_assert_default_test');
       }, function (error) {
+        /* assert error occurred */
         utility2.assert(error instanceof Error, error);
       });
       /* test failed assertion with error */
       utility2.tryCatch(function () {
         utility2.assert(false, utility2.error);
       }, function (error) {
+        /* assert error occurred */
         utility2.assert(error instanceof Error, error);
       });
       onEventError();
@@ -327,7 +365,7 @@
         this function tests callError0's default handling behavior
       */
       utility2.callError0(function (error) {
-        /* assert error was passed to callback */
+        /* assert error occurred */
         utility2.assert(error instanceof Error, error);
         onEventError();
       });
@@ -345,7 +383,7 @@
         this function tests callError1's default handling behavior
       */
       utility2.callError1(null, function (error) {
-        /* assert error was passed to callback */
+        /* assert error occurred */
         utility2.assert(error instanceof Error, error);
         onEventError();
       });
@@ -363,17 +401,101 @@
         this function tests callError2's default handling behavior
       */
       utility2.callError2(null, null, function (error) {
-        /* assert error was passed to callback */
+        /* assert error occurred */
         utility2.assert(error instanceof Error, error);
         onEventError();
       });
     },
 
+    clearCallSetInterval: function (key, callback, interval, timeout) {
+      /*
+        this function
+        1. clear old interval / timeout key
+        2. run callback
+        3. set interval key to callback
+      */
+      var dict;
+      dict = state.clearCallSetIntervalDict = state.clearCallSetIntervalDict || {};
+      dict[key] = dict[key] || {};
+      /* 1. clear old interval / timeout key */
+      clearInterval(dict[key].interval);
+      clearTimeout(dict[key].timeout);
+      /* set timeout for clearCallSetInterval */
+      if (timeout) {
+        dict[key].timeout = utility2.onEventTimeout(function (error) {
+          utility2.clearCallSetInterval(key, 'clear');
+          callback(error);
+        }, timeout, key);
+      }
+      /* clear timer */
+      if (callback === 'clear') {
+        delete dict[key];
+        return;
+      }
+      /* 2. call callback */
+      callback();
+      /* 3. set interval key to callback */
+      if (dict[key]) {
+        dict[key].interval = setInterval(callback, interval);
+        return dict[key].interval;
+      }
+    },
+
+    _clearCallSetInterval_synchronous_test: function (onEventError) {
+      /*
+        this function tests clearCallSetInterval's synchronous handling behavior
+      */
+      var ii, key;
+      ii = 0;
+      key = utility2.uuid4();
+      utility2.clearCallSetInterval(key, function (error) {
+        ii += 1;
+        utility2.tryCatch(function () {
+          /* assert no error occurred */
+          utility2.assert(!error, error);
+          utility2.clearCallSetInterval(key, 'clear');
+          onEventError();
+        }, onEventError);
+      }, 1000);
+      /* assert callback was called synchronously before setInterval */
+      utility2.assert(ii === 1, ii);
+    },
+
+    _clearCallSetInterval_timeout_test: function (onEventError) {
+      /*
+        this function tests clearCallSetInterval's timeout handling behavior
+      */
+      var ii, onEventReady, time;
+      ii = 0;
+      onEventReady = utility2.untilReady(onEventError);
+      time = Date.now();
+      [1000, 3000].forEach(function (timeout) {
+        var key;
+        key = utility2.uuid4();
+        onEventReady.remaining += 1;
+        utility2.clearCallSetInterval(key, function (error) {
+          ii += 1;
+          utility2.tryCatch(function () {
+            if (Date.now() - time < timeout) {
+              /* assert no error occurred */
+              utility2.assert(!error, error);
+              return;
+            }
+            /* assert error occurred */
+            utility2.assert(error instanceof Error);
+            /* assert error is timeout error */
+            utility2.assert(error.code === 'ETIMEDOUT');
+            onEventReady();
+          }, onEventError);
+        }, 2000, timeout);
+      });
+      /* test synchronous handling behavior */
+      utility2.assert(ii === 2, ii);
+    },
+
     commentShebang: function (script) {
       /*
         this function comments out the shebang in a script
-        usage example:
-        utility2.commentShebang('#!/usr/bin/env node\nconsole.log("commentShebang");\n');
       */
       return script.replace(/(^#!.*)/, '//$1');
     },
@@ -387,15 +509,14 @@
       self.global = global;
       self.local2 = local2;
       /* init testReport */
-      testReport = self.global.state.testReport = self.global.state.testReport || {};
+      testReport = self.global.state.testReport;
       utility2.testReportMerge(testReport);
       /* init testReport.totalTime */
       testReport.totalTime = testReport.totalTime || Date.now();
       /* init testReport.onEventReady */
       testReport.onEventReady = testReport.onEventReady || utility2.untilReady(function () {
         /* record time for testReport to run */
-        testReport.totalTime = Math.min(Date.now()
-          - testReport.totalTime, testReport.totalTime);
+        testReport.totalTime = utility2.timeElapsed(testReport.totalTime);
         /* assert state.onEventErrorDefaultIgnoreList is empty */
         utility2.assert(!state.onEventErrorDefaultIgnoreList
           || state.onEventErrorDefaultIgnoreList.length === 0,
@@ -478,6 +599,7 @@
       ], function (onEventError) {
         utility2.deferCallback(key, 'defer', function (error) {
           utility2.tryCatch(function () {
+            /* assert error occurred */
             utility2.assert(error instanceof Error, error);
             utility2.assert(error.code === 'ETIMEDOUT', error.code);
             utility2.deferCallback(key, 'delete');
@@ -540,12 +662,14 @@
         '_evalOnEventError_default_test.js',
         '"_evalOnEventError_default_test"',
         function (error, data) {
+          /* assert no error occurred */
           utility2.assert(!error, error);
           utility2.assert(data === '_evalOnEventError_default_test', data);
         }
       );
       /* test error handling behavior */
       utility2.evalOnEventError(utility2.error, null, function (error) {
+        /* assert error occurred */
         utility2.assert(error instanceof Error, error);
       });
       /* test syntax error handling behavior */
@@ -553,6 +677,7 @@
         '_evalOnEventError_default_test.js',
         '_evalOnEventError_default_test',
         function (error) {
+          /* assert error occurred */
           utility2.assert(error instanceof Error, error);
         }
       );
@@ -562,8 +687,6 @@
     initModule: function (module, local2) {
       /*
         this function inits the module with the local object
-        usage example:
-        utility2.initModule(module, local);
       */
       var exports;
       if (!required.utility2_external) {
@@ -712,16 +835,18 @@
         return;
       }
       message = message || '';
+      /* JSON.stringify data */
       if (data) {
         message += ' ' + utility2.jsonStringifyCircular(data);
       }
-      /* security - remove secrets from log */
-      console.log(message.replace(
+      /* security - scrub sensitive key / value pairs in json data from log */
+      message = message.replace(
         (/"[^"]*(?:authoriz|key|login|passw|secret|token)[\S\s]*?([,}])/gi),
         function (_, match1) {
           return match1 === ',' ? '' : match1;
         }
-      ));
+      );
+      console.log(message);
     },
 
     _jsonLog_default_test: function (onEventError) {
@@ -768,15 +893,18 @@
       */
       /* test default handling behavior */
       utility2.jsonParseHandler(function (error, data) {
+        /* assert no error occurred */
         utility2.assert(!error, error);
         utility2.assert(data === '_jsonParseHandler_default_test', data);
       })(null, '"_jsonParseHandler_default_test"');
       /* test error handling behavior */
       utility2.jsonParseHandler(function (error, data) {
+        /* assert error occurred */
         utility2.assert(error instanceof Error, error);
       })(null, '_jsonParseHandler_default_test');
       /* test undefined handling behavior */
       utility2.jsonParseHandler(function (error, data) {
+        /* assert no error occurred */
         utility2.assert(!error, error);
         utility2.assert(data === undefined, data);
       })();
@@ -965,8 +1093,6 @@
     nop: function () {
       /*
         this function performs no operation (nop)
-        usage example:
-        utility2.nop();
       */
       return;
     },
@@ -1072,8 +1198,6 @@
     scriptLint: function (file, script) {
       /*
         this function lints css / html / js / json scripts
-        usage example:
-        utility2.scriptLint('foo.js', 'console.log("scriptLint");');
       */
       var result;
       switch (required.path.extname(file)) {
@@ -1141,8 +1265,6 @@
     scriptMinify: function (file, script) {
       /*
         this function minifies css / js scripts
-        usage example:
-        utility2.scriptMinify('foo.js', 'console.log("scriptMinify");');
       */
       var ast, result;
       switch (required.path.extname(file)) {
@@ -1285,54 +1407,6 @@
       onEventError();
     },
 
-    stringAscii: '\x00\x01\x02\x03\x04\x05\x06\x07\b\t\n\x0b\f\r\x0e\x0f'
-      + '\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f'
-      + ' !"#$%&\'()*+,-./0123456789:;<=>?'
-      + '@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_'
-      + '`abcdefghijklmnopqrstuvwxyz{|}~\x7f',
-
-    stringToEmptyLine: function (text, regexp) {
-      /*
-        this function replaces regex matches in the text with empty lines
-      */
-      return text.replace(regexp, function (match) {
-        return match.replace((/.*/g), '');
-      });
-    },
-
-    _stringToEmptyLine_default_test: function (onEventError) {
-      /*
-        this function tests stringToEmptyLine's default handling behavior
-      */
-      var data;
-      data = utility2.stringToEmptyLine('aa\nbb1\nbb2\ncc\n', (/^bb.*$/gm));
-      utility2.assert(data === 'aa\n\n\ncc\n', data);
-      onEventError();
-    },
-
-    templateFormat: function (template, dict) {
-      /*
-        this function templates the template with the dict
-      */
-      return template.replace((/\{\{[^{}]+\}\}/g), function (key) {
-        var value;
-        value = dict[key.slice(2, -2)];
-        return typeof value === 'string' ? value : key;
-      });
-    },
-
-    _templateFormat_default_test: function (onEventError) {
-      /*
-        this function tests templateFormat's default handling behavior
-      */
-      var data;
-      data = utility2.templateFormat('{{aa}}', { aa: 1 });
-      utility2.assert(data === '{{aa}}', data);
-      data = utility2.templateFormat('{{aa}}', { aa: 'bb' });
-      utility2.assert(data === 'bb', data);
-      onEventError();
-    },
-
     _Test: function () {
       /*
         this is the _Test class
@@ -1361,8 +1435,7 @@
       result += '\n' + state.testReport.errorMessageList.join('\n') + '\n';
       utility2.jsonLog(result);
       /* record total time for all testSuites to run */
-      state.testReport.totalTime = Math.min(Date.now()
-        - state.testReport.totalTime, state.testReport.totalTime);
+      state.testReport.totalTime = utility2.timeElapsed(state.testReport.totalTime);
       /* copy state.testReport */
       state.testReportCopy = utility2.jsonCopy(state.testReport);
       /* reset state.testReport */
@@ -1386,6 +1459,9 @@
             utility2.onEventErrorDefault(error);
           });
         }
+        /* update state.testReportDiv in browser */
+        state.testReportDiv.innerHTML = utility2.testReportHtml(state.testReportCopy);
+        utility2.clearCallSetInterval('testReportDivUpdate', 'clear');
       }
       /* nodejs code */
       if (state.modeNodejs) {
@@ -1396,12 +1472,16 @@
       }
     },
 
-    __Test_prototype_report_testFailure_test: function (onEventError) {
+    __Test_prototype_report_testFailed_test: function (onEventError) {
       /*
-        this function tests _Test_prototype_report's test failure handling behavior
+        this function tests _Test_prototype_report's test failed handling behavior
       */
       utility2.testMock(onEventError, [
-        [utility2, { ajax: utility2.callArg1, onEventErrorDefault: null }]
+        [utility2, {
+          ajax: utility2.callArg1,
+          clearCallSetInterval: utility2.nop,
+          onEventErrorDefault: null
+        }]
       ], function (onEventError) {
         var self;
         self = utility2.createTest({
@@ -1412,10 +1492,12 @@
             modeBrowser: true,
             /* test multiple test suites handling behavior */
             testReport: utility2.testReportMerge({ testSuiteList: [
-              /* test test failure handling behavior */
+              /* test test failed handling behavior */
               { name: 'bb', testCaseList: [ { errorMessage: 'error' } ] },
               { name: 'aa', testCaseList: [ { errorMessage: 'error' } ] }
-            ] })
+            ] }),
+            /* test state.testReportDiv handling behavior */
+            testReportDiv: {}
           }
         });
         /* test no test report upload handling behavior */
@@ -1453,7 +1535,7 @@
       /* init testSuite.onEventReady */
       testSuite.onEventReady = testSuite.onEventReady || utility2.untilReady(function () {
         /* record time for testSuite to run */
-        testSuite.totalTime = Math.min(Date.now() - testSuite.totalTime, testSuite.totalTime);
+        testSuite.totalTime = utility2.timeElapsed(testSuite.totalTime);
         state.testReport.onEventReady();
       });
       /* handle null case where there are no test cases to run */
@@ -1475,9 +1557,9 @@
       });
     },
 
-    __Test_prototype_run_testFailure_test: function (onEventError) {
+    __Test_prototype_run_testFailed_test: function (onEventError) {
       /*
-        this function tests _Test_prototype_run's null case handling behavior
+        this function tests _Test_prototype_run's test failed case handling behavior
       */
       utility2.createTest({
         console: { error: utility2.nop },
@@ -1487,15 +1569,15 @@
           testSuiteList: [{ testCaseList: [] }]
         }) }
       }, {
-        _name: 'utility2.__Test_prototype_run_testFailure_test',
+        _name: 'utility2.__Test_prototype_run_testFailed_test',
         _test: function (onEventError) {
           state.onEventErrorDefaultIgnoreList.push('utility2 error');
           state.onEventErrorDefaultIgnoreList.push('runTestCase - ' + utility2.userAgent()
-            + '.utility2.__Test_prototype_run_testFailure_test._test\'s'
+            + ' - utility2.__Test_prototype_run_testFailed_test._test\'s'
             + ' callback called multiple times');
-          /* test test failure handling behavior */
+          /* test test failed handling behavior */
           onEventError(utility2.error);
-          /* test multiple callback, test failure handling behavior */
+          /* test multiple callback error handling behavior */
           onEventError();
         }
       }).run();
@@ -1514,7 +1596,7 @@
       onEventError2 = function (error) {
         /* clear timeout for testCase */
         clearTimeout(timeout);
-        name = testSuite.name + '.' + testCase.module + '.' + testCase.name;
+        name = testSuite.name + ' - ' + testCase.module + '.' + testCase.name;
         /* assert testCase callback was not called multiple times */
         remaining -= 1;
         if (remaining < 0) {
@@ -1522,7 +1604,7 @@
             'runTestCase - ' + name + "'s callback called multiple times"
           );
         }
-        /* handle test failure */
+        /* testCase failed */
         if (error) {
           /* save error message */
           errorMessage = 'runTestCase - failed - ' + name;
@@ -1534,19 +1616,11 @@
           if (remaining < 0) {
             return;
           }
-        } else {
-          utility2.jsonLog('runTestCase - passed - ' + name);
         }
         /* record time for testCase to run */
-        testCase.time = Math.min(Date.now() - testCase.time, testCase.time);
+        testCase.time = utility2.timeElapsed(testCase.time);
         /* finish testCase */
         testSuite.onEventReady();
-        /* optional qunit hook */
-        if (self.global.QUnit) {
-          self.global.QUnit.test(testCase.name, function () {
-            self.global.QUnit.ok(!error, utility2.errorStack(error));
-          });
-        }
       };
       remaining = 1;
       /* set timeout for testCase */
@@ -1569,8 +1643,8 @@
         [console, { log: utility2.nop }],
         /* enforce synchonicity by mocking timers as utility2.callArg0 */
         [global, { setInterval: utility2.callArg0, setTimeout: utility2.callArg0 }],
-        [global.process || {}, { exit: local._throwError }],
-        [utility2, { shell: local._throwError }]
+        [global.process || {}, { exit: utility2.throwError }],
+        [utility2, { shell: utility2.throwError }]
       ].concat(mockList);
       onEventError2 = function (error) {
         /* restore state */
@@ -1602,6 +1676,7 @@
         [global, { state: { aa: 1 } }]
       ], function (onEventError) {
         utility2.testMock(function (error) {
+          /* assert error occurred */
           utility2.assert(error instanceof Error, error);
           utility2.assert(state.aa === 1, state);
           onEventError();
@@ -1611,6 +1686,81 @@
           throw utility2.error;
         });
       });
+    },
+
+    testReportHtml: function (testReport) {
+      /*
+        this function generates an html test report
+      */
+      var content, errorMessageList, processEnv, testCaseNumber, testSuiteNumber;
+      testCaseNumber = 0;
+      testSuiteNumber = 0;
+      content = testReport.testSuiteList.map(function (testSuite, ii) {
+        testSuiteNumber += 1;
+        errorMessageList = [];
+        return '<div class="testReportSuiteDiv">'
+          + '<h4>' + testSuiteNumber
+            + '. <span class="testReportSuiteSpan">' + utility2.timeElapsed(testSuite.totalTime)
+            + ' ms</span> '
+            + testSuite.name + '</h4>'
+          + '<table class="testReportSuiteTable"><thead><tr>'
+          + '<th>#</th>'
+          + '<th>time</th>'
+          + '<th>status</th>'
+          + '<th>test case</th>'
+          + '</tr></thead><tbody>'
+          + testSuite.testCaseList.map(function (testCase) {
+            testCaseNumber += 1;
+            if (testCase.errorMessage) {
+              errorMessageList.push(testCaseNumber + '. ' + testCase.module + '.'
+                + testCase.name + '\n' + testCase.errorMessage);
+            }
+            return '<tr class="testReportSuiteTr '
+              + (testCase.errorMessage ? 'testReportTestFailed' : 'testReportTestPassed') + '">'
+              + '<td>' + testCaseNumber + '.</td>'
+              + '<td>' + utility2.timeElapsed(testCase.time) + ' ms</td>'
+              + '<td>' + (testCase.errorMessage ? 'failed' : 'passed') + '</td>'
+              + '<td>' + testCase.module + '.' + testCase.name + '</td>'
+              + '</tr>';
+          }).join('\n')
+          + '</tbody></table>'
+          + (errorMessageList.length
+            ? '<pre class="testReportSuitePre">'
+              + errorMessageList.join('\n').replace((/</g), '&lt;') + '</pre>'
+            : '')
+          + '</div>';
+      }).join('\n');
+      processEnv = (global.process && process.env) || {};
+      return utility2.textFormat(state.fsWatchDict['/public/file/testReport.html.template']
+        && state.fsWatchDict['/public/file/testReport.html.template'].contentBrowser, {
+          CI_BRANCH: String(processEnv.CI_BRANCH),
+          CI_BUILD_NUMBER: String(processEnv.CI_BUILD_NUMBER),
+          CI_COMMIT_ID: String(processEnv.CI_COMMIT_ID),
+          content: content,
+          date: String(testReport.date),
+          totalFailed: String(testReport.totalFailed),
+          totalFailedClass: String(testReport.totalFailed
+            ? 'testReportTestFailed'
+            : 'testReportTestPassed'),
+          totalPassed: String(testReport.totalPassed),
+          totalTestSuites: String(testReport.testSuiteList.length),
+          totalTime: String(utility2.timeElapsed(testReport.totalTime))
+        });
+    },
+
+    _testReportHtml_testFailed_test: function (onEventError) {
+      /*
+        this function tests testReportHtml's test failed handling behavior
+      */
+      var data;
+      data = utility2.testReportHtml(utility2.testReportMerge({
+        testSuiteList: [{ testCaseList: [
+          { errorMessage: 'error1' },
+          { errorMessage: 'error2' }
+        ] }]
+      }));
+      utility2.assert(data.indexOf('<td class="testReportTestFailed">2</td>') >= 0, data);
+      onEventError();
     },
 
     testReportMerge: function (testReport1, testReport2) {
@@ -1663,6 +1813,8 @@
           testSuite1.testCaseList.push(testCase);
         });
       });
+      /* update date */
+      testReport1.date = testReport1.date || new Date().toISOString();
       /* update totalTime */
       if (testReport1.totalTime < 0xffffffff) {
         testReport1.totalTime += Number(testReport2.totalTime) || 0;
@@ -1706,7 +1858,54 @@
       onEventError();
     },
 
-    _throwError: function () {
+    timeElapsed: function (time) {
+      /*
+        this function calculates the time elapsed from present if not already set
+      */
+      time = time < 0xffffffff ? time : Date.now() - time;
+      return time || 0;
+    },
+
+    /* ascii character reference */
+    textAscii: '\x00\x01\x02\x03\x04\x05\x06\x07\b\t\n\x0b\f\r\x0e\x0f'
+      + '\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f'
+      + ' !"#$%&\'()*+,-./0123456789:;<=>?'
+      + '@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_'
+      + '`abcdefghijklmnopqrstuvwxyz{|}~\x7f',
+
+    textFormat: function (template, dict) {
+      /*
+        this function replaces the keys in given text template
+        with the key / value pairs provided by the dict
+      */
+      /* search for keys in the template */
+      return template.replace((/\{\{[^{}]+\}\}/g), function (key) {
+        var value;
+        /* lookup key's value in the dict */
+        value = dict[key.slice(2, -2)];
+        return typeof value === 'string'
+          /* only replace keys that have string values */
+          ? value
+          /* ignore non-string values */
+          : key;
+      });
+    },
+
+    _textFormat_default_test: function (onEventError) {
+      /*
+        this function tests textFormat's default handling behavior
+      */
+      var data;
+      /* ignore non-string values in the dict */
+      data = utility2.textFormat('{{aa}}{{aa}}{{bb}}{{bb}}{{cc}}{{cc}}', {
+        aa: 1,
+        bb: 'cc'
+      });
+      utility2.assert(data === '{{aa}}{{aa}}cccc{{cc}}{{cc}}', data);
+      onEventError();
+    },
+
+    throwError: function () {
       /*
         this function always throws an error
       */
@@ -1717,7 +1916,8 @@
       /*
         this function tests throwError's default handling behavior
       */
-      utility2.tryCatch(local._throwError, function (error) {
+      utility2.tryCatch(utility2.throwError, function (error) {
+        /* assert error occurred */
         utility2.assert(error instanceof Error, error);
         onEventError();
       });
@@ -1782,6 +1982,7 @@
       */
       var onEventReady;
       onEventReady = utility2.untilReady(function (error) {
+        /* assert error occurred */
         utility2.assert(error instanceof Error, error);
       });
       onEventReady.remaining += 1;
@@ -1808,7 +2009,7 @@
         this function tests urlDecodeOrError's error handling behavior
       */
       var data;
-      data = utility2.urlDecodeOrError(utility2.stringAscii);
+      data = utility2.urlDecodeOrError(utility2.textAscii);
       utility2.assert(data instanceof Error, data);
       onEventError();
     },
@@ -1911,8 +2112,8 @@
         this function returns the current javascript platform's user agent
       */
       return state.modeNodejs
-        ? 'nodejs - ' + (global.process && global.process.version)
-        : 'browser - ' + (global.navigator && global.navigator.userAgent);
+        ? 'nodejs - ' + (global.process && (process.platform + ' ' + process.version))
+        : 'browser - ' + (global.navigator && navigator.userAgent);
     },
 
     _userAgent_default_test: function (onEventError) {
@@ -2366,7 +2567,7 @@
         state.modeNpmTest = true;
         local._initOnceNpmTest();
         utility2.assert(!exitCode, exitCode);
-        /* test test failure handling behavior */
+        /* test test failed handling behavior */
         state.testReportCopy.totalFailed = 1;
         local._initOnceNpmTest();
         utility2.assert(exitCode, exitCode);
@@ -2483,7 +2684,7 @@
           if (error) {
             utility2.onEventErrorDefault(error);
           }
-          process.exit(error);
+          process.exit(!!error);
         });
       /* watch files */
       ['package.json', 'utility2.js2', 'utility2.sh'].forEach(function (file) {
@@ -2547,7 +2748,7 @@
         local._fsRmr(state.tmpdir + '/cache/' + file, utility2.onEventErrorDefault);
       });
       /* periodically remove cache files */
-      utility2.unref(setInterval(function () {
+      utility2.unref(utility2.clearCallSetInterval('_fsCacheCleanup', function () {
         local._fsCacheCleanup(utility2.onEventErrorDefault);
       }, 300000));
     },
@@ -2688,6 +2889,7 @@
         }]
       ], function (onEventError) {
         local._fsCacheCleanup(function (error) {
+          /* assert error occurred */
           utility2.assert(error instanceof Error, error);
           onEventError();
         });
@@ -2774,6 +2976,7 @@
       */
       utility2.fsMkdirp('/dev/null/_fsMkdirp_error_test', function (error) {
         utility2.tryCatch(function () {
+          /* assert error occurred */
           utility2.assert(error instanceof Error, error);
           onEventError();
         }, onEventError);
@@ -2822,6 +3025,7 @@
       utility2.tryCatch(function () {
         utility2.fsMkdirpSync('/dev/null/foo');
       }, function (error) {
+        /* assert error occurred */
         utility2.assert(error instanceof Error, error);
         onEventError();
       });
@@ -2878,6 +3082,7 @@
         required.fs.rmdir = required.fs.unlink = utility2.callError1;
         local._fsRmr(state.tmpdir + '/cache/' + utility2.uuid4(), function (error) {
           utility2.tryCatch(function () {
+            /* assert error occurred */
             utility2.assert(error instanceof Error, error);
             onEventError();
           }, onEventError);
@@ -2895,11 +3100,6 @@
     fsWatch: function (options, onEventError) {
       /*
         this function watches a file and runs specified actions if it is modified
-        usage example:
-        utility2.fsWatch({
-          actionList: ['lint', 'evalOnWatch'],
-          file: 'foo.js'
-        }, utility2.onEventErrorDefault);
       */
       var onEventChange, onEventError2;
       onEventChange = function (stat2, stat1) {
@@ -2923,7 +3123,7 @@
             options.actionList.forEach(function (action) {
               state.fsWatchActionDict[action](options);
             });
-            /* save browser content */
+            /* auto-generate browser content, stripped of nodejs code */
             state.fsWatchActionDict.createContentBrowser(options);
             onEventError2();
           });
@@ -2941,7 +3141,6 @@
         utility2.readyUtility2.remaining += 1;
       }
       options.file = required.path.resolve(options.file);
-      state.fsWatchDict = state.fsWatchDict || {};
       /* save options to state.fsWatchDict */
       state.fsWatchDict[options.file] = options;
       /* unwatch old stale file */
@@ -2956,29 +3155,38 @@
         this function tests fsWatch's error handling behavior
       */
       var file;
-      file = state.tmpdir + '/cache/' + utility2.uuid4() + '.js';
+      file = state.tmpdir + '/cache/' + utility2.uuid4();
       utility2.fsWatch({ actionList: ['lint'], file: file }, function (error) {
-        utility2.assert(error instanceof Error, error);
-        utility2.fsWatchUnwatch(file);
-        onEventError();
+        utility2.tryCatch(function () {
+          /* unwatch test file */
+          utility2.fsWatchUnwatch(file);
+          /* assert error occurred */
+          utility2.assert(error instanceof Error, error);
+          onEventError();
+        });
       });
     },
 
-    _fsWatch_misc_test: function (onEventError) {
+    _fsWatch_onEventChangeNop_test: function (onEventError) {
       /*
-        this function tests fsWatch's misc handling behavior
+        this function tests fsWatch's onEventChange nop handling behavior
       */
       utility2.testMock(onEventError, [
-        [global, { state: {} }],
+        [global, { state: { fsWatchDict: {}, tmpdir: state.tmpdir } }],
         [required, { fs: {
           readFile: utility2.nop,
           unwatchFile: utility2.nop,
           watchFile: function (_, __, onEventChange) {
+            /* test onEventChange nop handling behavior */
             onEventChange({ mtime: 1 }, { mtime: 2 });
           }
         } }]
       ], function (onEventError) {
-        utility2.fsWatch({ file: '', modeWatch: true });
+        utility2.fsWatch({
+          file: '',
+          /* test modeWatch already initialized handling behavior */
+          modeWatch: true
+        });
         onEventError();
       });
     },
@@ -2989,18 +3197,38 @@
       */
       utility2.testMock(onEventError, [
         [global, { state: {
-          fsWatchActionDict: { createContentBrowser: utility2.nop },
-          testWatchList: [{ write: utility2.nop }]
+          fsWatchActionDict: {
+            /* test state.fsWatchActionDict.createContentBrowser handling behavior */
+            createContentBrowser: state.fsWatchActionDict.createContentBrowser
+          },
+          fsWatchDict: {},
+          testWatchList: null
         } }],
         [required.fs, {
           readFile: function (_, __, onEventError) {
-            onEventError(null, '');
+            /* test state.fsWatchActionDict.createContentBrowser handling behavior */
+            onEventError(null, '(function module_fsWatch_testWatch_test_Nodejs() {\n}());\n');
           },
           unWatchFile: utility2.nop,
           watchFile: utility2.nop
         }]
       ], function (onEventError) {
-        utility2.fsWatch({ actionList: [], file: '_fsWatch_testWatch_test.js' }, onEventError);
+        var data;
+        state.testWatchList = [{ write: function (_) {
+          data = _;
+        } }];
+        utility2.fsWatch({
+          actionList: [],
+          file: '_fsWatch_testWatch_test.js'
+        }, function (error) {
+          utility2.tryCatch(function (error) {
+            /* assert no error occurred */
+            utility2.assert(!error, error);
+            /* assert server-sent-event data was written to mock response object */
+            utility2.assert(data === 'data:\n\n', data);
+            onEventError();
+          });
+        });
       });
     },
 
@@ -3016,11 +3244,15 @@
         this function caches the file content for browser use, stripping it of nodejs code
       */
       options.contentBrowser = Buffer.isBuffer(options.content)
+        /* do nothing if content is a Buffer object or not a  */
         ? options.content
-        : utility2.stringToEmptyLine(
-          (state.instrumentedFileDict && state.instrumentedFileDict[options.file])
-            || options.content,
-          (/^\(function module\w*Nodejs\(\) \{[\S\s]*?^\}\(\)\);$/gm)
+        /* strip text of code containing nodejs modules, while preserving lineno */
+        : ((state.instrumentedFileDict && state.instrumentedFileDict[options.file])
+            || options.content).replace(
+          (/^\(function module\w*Nodejs\(\) \{[\S\s]*?^\}\(\)\);$/gm),
+          function (match) {
+            return match.replace((/.*/g), '');
+          }
         ).trimRight();
     },
 
@@ -3055,7 +3287,7 @@
             options2.actionList.forEach(function (action) {
               state.fsWatchActionDict[action](options2);
             });
-            /* save browser content */
+            /* auto-generate browser content, stripped of nodejs code */
             state.fsWatchActionDict.createContentBrowser(options2);
           }
         );
@@ -3223,7 +3455,7 @@
         onEventError(error);
       };
       testCallbackId = utility2.uuid4();
-      options.url = utility2.templateFormat(options.url, {
+      options.url = utility2.textFormat(options.url, {
         localhost: state.localhost,
         testCallbackId: testCallbackId,
         timeoutDefault: String(state.timeoutDefault)
@@ -3323,9 +3555,9 @@
       ], function (onEventError) {
         process.exit = function (error) {
           utility2.tryCatch(function () {
-            utility2.assert(error instanceof Error, error);
+            utility2.assert(error === true, error);
             onEventError();
-          });
+          }, onEventError);
         };
         utility2.readyUtility2Exit.remaining += 1;
         utility2.readyUtility2Exit(utility2.error);
@@ -3375,7 +3607,7 @@
       /*
         this function runs shell commands from the repl interpreter
       */
-      utility2.shell({ modeDebug: false, script: utility2.templateFormat(arg2, state) });
+      utility2.shell({ modeDebug: false, script: utility2.textFormat(arg2, state) });
     },
 
     _replParseDict_$_default_test: function (onEventError) {
@@ -3540,6 +3772,7 @@
         utility2.createStreamReadableMock('_streamReadAll_default_test'),
         function (error, data) {
           utility2.tryCatch(function () {
+            /* assert no error occurred */
             utility2.assert(!error, error);
             data = data.toString();
             utility2.assert(data === '_streamReadAll_default_test', data);
@@ -3554,6 +3787,17 @@
         this function runs extra test reporting code for nodejs
       */
       var onEventReady;
+      if (state.modeTestReportMerge && state.modeTestReportMerge !== 'merged') {
+        required.fs.readFile(
+          state.tmpdir + '/test_report.json',
+          utility2.jsonParseHandler(function (error, data) {
+            utility2.testReportMerge(testReport, data);
+            state.modeTestReportMerge = 'merged';
+            utility2.testReportNodejs(testReport);
+          })
+        );
+        return;
+      }
       onEventReady = state.modeNpmTest
         ? utility2.readyUtility2Exit
         : utility2.untilReady(utility2.onEventErrorDefault);
@@ -3570,7 +3814,7 @@
         + '/test_report.html');
       utility2.fsWriteFileAtomic(
         state.tmpdir + '/test_report.html',
-        local._testReportNodejsHtml(testReport),
+        utility2.testReportHtml(testReport),
         onEventReady
       );
       /* write test_report.json */
@@ -3582,14 +3826,20 @@
       );
     },
 
-    _testReportNodejs_onEventErrorDefault_test: function (onEventError) {
+    _testReportNodejs_default_test: function (onEventError) {
       /*
-        this function tests testReportNodejs's onEventErrorDefault handling behavior
+        this function tests testReportNodejs's default handling behavior
       */
       utility2.testMock(onEventError, [
-        [global, { state: {} }],
-        [local, { _testReportNodejsBadge: utility2.nop, _testReportNodejsHtml: utility2.nop }],
-        [utility2, { fsWriteFileAtomic: utility2.nop }]
+        [global, { state: {
+          /* test onEventErrorDefault handling behavior */
+          modeNpmTest: false,
+          /* test state.modeTestReportMerge handling behavior */
+          modeTestReportMerge: true
+        } }],
+        [local, { _testReportNodejsBadge: utility2.nop }],
+        [required, { fs: { readFile: utility2.callArg1 } }],
+        [utility2, { fsWriteFileAtomic: utility2.nop, testReportHtml: utility2.nop }]
       ], function (onEventError) {
         utility2.testReportNodejs();
         onEventError();
@@ -3606,81 +3856,13 @@
         .replace('e00', testReport.totalFailed ? 'e00' : '0e0');
     },
 
-    __testReportNodejsBadge_testFailure_test: function (onEventError) {
+    __testReportNodejsBadge_testFailed_test: function (onEventError) {
       /*
-        this function tests _testReportNodejsBadge's test failure handling behavior
+        this function tests _testReportNodejsBadge's test failed handling behavior
       */
       var data;
       data = local._testReportNodejsBadge({ totalFailed: 2 });
       utility2.assert(data.indexOf('#e00') >= 0, data);
-      onEventError();
-    },
-
-    _testReportNodejsHtml: function (testReport) {
-      /*
-        this function generates an html test report
-      */
-      var content, errorMessageList, testCaseNumber, testSuiteNumber;
-      testCaseNumber = 0;
-      testSuiteNumber = 0;
-      content = testReport.testSuiteList.map(function (testSuite, ii) {
-        testSuiteNumber += 1;
-        errorMessageList = [];
-        return '<div>'
-          + '<h4>' + testSuiteNumber
-            + '. <span>' + testSuite.totalTime + ' ms</span> '
-            + testSuite.name + '</h4>'
-          + '<table><thead><tr>'
-          + '<th>#</th>'
-          + '<th>time</th>'
-          + '<th>status</th>'
-          + '<th>test case</th>'
-          + '</tr></thead><tbody>'
-          + testSuite.testCaseList.map(function (testCase) {
-            testCaseNumber += 1;
-            if (testCase.errorMessage) {
-              errorMessageList.push(testCaseNumber + '. ' + testCase.module + '.'
-                + testCase.name + '\n' + testCase.errorMessage);
-            }
-            return '<tr class=' + (testCase.errorMessage ? 'failed' : 'passed') + '>'
-              + '<td>' + testCaseNumber + '.</td>'
-              + '<td>' + testCase.time + ' ms</td>'
-              + '<td>' + (testCase.errorMessage ? 'failed' : 'passed') + '</td>'
-              + '<td>' + testCase.module + '.' + testCase.name + '</td>'
-              + '</tr>';
-          }).join('\n')
-          + '</tbody></table>'
-          + (errorMessageList.length
-            ? '<pre>' + errorMessageList.join('\n').replace((/</g), '&lt;') + '</pre>'
-            : '')
-          + '</div>';
-      }).join('\n');
-      return utility2.templateFormat(
-        state.fsWatchDict['/test/report.html.template'].contentBrowser,
-        {
-          content: content,
-          date: new Date().toISOString(),
-          totalFailed: String(testReport.totalFailed),
-          totalFailedClass: String(testReport.totalFailed ? 'failed' : 'passed'),
-          totalPassed: String(testReport.totalPassed),
-          totalTestSuites: String(testReport.testSuiteList.length),
-          totalTime: String(testReport.totalTime)
-        }
-      );
-    },
-
-    __testReportNodejsHtml_testFailure_test: function (onEventError) {
-      /*
-        this function tests _testReportNodejsHtml's test failure handling behavior
-      */
-      var data;
-      data = local._testReportNodejsHtml(utility2.testReportMerge({
-        testSuiteList: [{ testCaseList: [
-          { errorMessage: 'error1' },
-          { errorMessage: 'error2' }
-        ] }]
-      }));
-      utility2.assert(data.indexOf('<td class="failed">2</td>') >= 0, data);
       onEventError();
     },
 
@@ -3725,30 +3907,30 @@
     },
 
     _initOnce: function () {
-      /* init ajaxProgressContainer element */
-      local._initOnceAjaxProgressContainer(global, local);
-      local._ajaxProgressContainer.innerHTML = '<div class="ajaxProgressContainerBar'
-        + ' ajaxProgressContainerBarLoading">loading</div>';
-      /* init ajaxProgressContainerBar element */
-      local._ajaxProgressContainerBar = local._ajaxProgressContainer
-        .getElementsByClassName('ajaxProgressContainerBar')[0];
+      /* init ajaxProgressDiv element */
+      local._initOnceAjaxProgressDiv(global, local);
+      local._ajaxProgressDiv.innerHTML = '<div class="ajaxProgressBarDiv'
+        + ' ajaxProgressBarDivLoading">loading</div>';
+      /* init ajaxProgressBarDiv element */
+      local._ajaxProgressBarDiv = local._ajaxProgressDiv
+        .getElementsByClassName('ajaxProgressBarDiv')[0];
       /* reset progres bar */
       local._ajaxProgressHide();
       /* abort all pending ajax request on click event */
-      local._ajaxProgressContainer.addEventListener('click', local._ajaxProgressAbort);
+      local._ajaxProgressDiv.addEventListener('click', local._ajaxProgressAbort);
     },
 
-    _initOnceAjaxProgressContainer: function (global2, local2) {
-      /* init ajaxProgressContainer element */
-      local2._ajaxProgressContainer = global2.document.getElementById('ajaxProgressContainer')
+    _initOnceAjaxProgressDiv: function (global2, local2) {
+      /* init ajaxProgressDiv element */
+      local2._ajaxProgressDiv = global2.document.getElementById('ajaxProgressDiv')
         || global2.document.createElement('div');
     },
 
-    _initOnceAjaxProgressContainer_progressDisabled_test: function (onEventError) {
+    _initOnceAjaxProgressDiv_progressDisabled_test: function (onEventError) {
       /*
-        this function tests _initOnceAjaxProgressContainer's progress disabled handling behavior
+        this function tests _initOnceAjaxProgressDiv's progress disabled handling behavior
       */
-      local._initOnceAjaxProgressContainer({ document: {
+      local._initOnceAjaxProgressDiv({ document: {
         getElementById: utility2.nop,
         createElement: function (data) {
           utility2.assert(data === 'div', data);
@@ -3815,10 +3997,10 @@
         /* finish progress bar */
         switch (event.type) {
         case 'load':
-          local._ajaxProgressUpdate('100%', 'ajaxProgressContainerBarSuccess', 'loaded');
+          local._ajaxProgressUpdate('100%', 'ajaxProgressBarDivSuccess', 'loaded');
           break;
         default:
-          local._ajaxProgressUpdate('100%', 'ajaxProgressContainerBarError', event.type);
+          local._ajaxProgressUpdate('100%', 'ajaxProgressBarDivError', event.type);
         }
         /* display progress status for a short time before hiding */
         setTimeout(local._ajaxProgressHide, 1000);
@@ -3839,7 +4021,7 @@
       xhr.upload.addEventListener('progress', local._ajaxProgressIncrement);
       /* display progress bar if hidden */
       if (local._ajaxProgressList.length === 0) {
-        local._ajaxProgressContainer.style.display = 'block';
+        local._ajaxProgressDiv.style.display = 'block';
       }
       local._ajaxProgressList.push(xhr);
       /* open url in xhr */
@@ -3861,11 +4043,12 @@
           /* test progress success handling behavior */
           utility2.ajax({ url: '/test/test.json' }, function (error) {
             utility2.tryCatch(function () {
+              /* assert no error occurred */
               utility2.assert(!error, error);
               /* set interval */
               interval = setInterval(function () {
                 /* wait until progress has successfully finished */
-                if (local._ajaxProgressContainer.style.display === 'none') {
+                if (local._ajaxProgressDiv.style.display === 'none') {
                   /* clear interval */
                   clearInterval(interval);
                   onEventError2();
@@ -3880,6 +4063,7 @@
           /* test progress abort handling behavior */
           utility2.ajax({ url: '/test/test.timeout?timeout=10000' }, function (error) {
             utility2.tryCatch(function () {
+              /* assert error occurred */
               utility2.assert(error instanceof Error, error);
               /* bug - wait before initiating next ajax request, or it will also get aborted */
               setTimeout(function () {
@@ -3919,10 +4103,10 @@
       */
       if (local._ajaxProgressList.length === 0) {
         /* hide progress bar */
-        local._ajaxProgressContainer.style.display = 'none';
+        local._ajaxProgressDiv.style.display = 'none';
         /* reset progress state */
         local._ajaxProgressState = 1;
-        local._ajaxProgressUpdate('0%', 'ajaxProgressContainerBarLoading', 'loading');
+        local._ajaxProgressUpdate('0%', 'ajaxProgressBarDivLoading', 'loading');
       }
     },
 
@@ -3932,8 +4116,8 @@
       */
       utility2.testMock(onEventError, [
         [local, {
-          _ajaxProgressContainer: { style: { display: 'block' } },
-          _ajaxProgressContainerBar: { className: '', style: {} },
+          _ajaxProgressDiv: { style: { display: 'block' } },
+          _ajaxProgressBarDiv: { className: '', style: {} },
           _ajaxProgressList: [],
           _ajaxProgressState: 0
         }]
@@ -3942,15 +4126,15 @@
         local._ajaxProgressList.push(null);
         local._ajaxProgressHide();
         utility2.assert(
-          local._ajaxProgressContainer.style.display === 'block',
-          local._ajaxProgressContainer.style.display
+          local._ajaxProgressDiv.style.display === 'block',
+          local._ajaxProgressDiv.style.display
         );
         /* test hide progress bar handling behavior */
         local._ajaxProgressList.length = 0;
         local._ajaxProgressHide();
         utility2.assert(
-          local._ajaxProgressContainer.style.display === 'none',
-          local._ajaxProgressContainer.style.display
+          local._ajaxProgressDiv.style.display === 'none',
+          local._ajaxProgressDiv.style.display
         );
         onEventError();
       });
@@ -3965,7 +4149,7 @@
       local._ajaxProgressState += 0.25;
       local._ajaxProgressUpdate(
         100 - 100 / (local._ajaxProgressState) + '%',
-        'ajaxProgressContainerBarLoading',
+        'ajaxProgressBarDivLoading',
         'loading'
       );
     },
@@ -3976,10 +4160,10 @@
       /*
         this function visually updates the progress bar
       */
-      local._ajaxProgressContainerBar.style.width = width;
-      local._ajaxProgressContainerBar.className = local._ajaxProgressContainerBar.className
-        .replace((/ajaxProgressContainerBar\w+/), type);
-      local._ajaxProgressContainerBar.innerHTML = label;
+      local._ajaxProgressBarDiv.style.width = width;
+      local._ajaxProgressBarDiv.className = local._ajaxProgressBarDiv.className
+        .replace((/ajaxProgressBarDiv\w+/), type);
+      local._ajaxProgressBarDiv.innerHTML = label;
     }
 
   };
@@ -4045,6 +4229,7 @@
           break;
         case 2:
           utility2.tryCatch(function () {
+            /* assert no error occurred */
             utility2.assert(!error, error);
             utility2.assert(options.cache === 'miss', options);
             onEventError2();
@@ -4060,6 +4245,7 @@
           break;
         case 5:
           utility2.tryCatch(function () {
+            /* assert no error occurred */
             utility2.assert(!error, error);
             utility2.assert(options.cache === 'hit', options);
             onEventError2();
@@ -4202,6 +4388,7 @@
       ], function (onEventError) {
         utility2.ajax({ url: 'https://_ajaxNodejs_https_test' }, function (error) {
           utility2.tryCatch(function () {
+            /* assert error occurred */
             utility2.assert(error instanceof Error, error);
             onEventError();
           }, onEventError);
@@ -4215,6 +4402,7 @@
       */
       utility2.ajax({ url: '_ajaxNodejs_invalidUrl_test' }, function (error) {
         utility2.tryCatch(function () {
+          /* assert error occurred */
           utility2.assert(error instanceof Error, error);
           onEventError();
         }, onEventError);
@@ -4233,6 +4421,7 @@
         options = { url: 'https://img.shields.io/badge/coverage-100.0%-00ee00.svg?style=flat' };
         utility2.ajax(options, function (error, data) {
           utility2.tryCatch(function () {
+            /* assert no error occurred */
             utility2.assert(!error, error);
             utility2.assert(options.url === state.localhost + '/test/modeAjaxOffline/'
               + 'https%3A%2F%2Fimg.shields.io%2Fbadge%2Fcoverage-100.0%25-00ee00.svg'
@@ -4287,6 +4476,7 @@
         url: '/test/test.json'
       }, function (error, data) {
         utility2.tryCatch(function () {
+          /* assert no error occurred */
           utility2.assert(!error, error);
           utility2.assert(data.toString() === '"hello test"', data);
           onEventReady();
@@ -4299,6 +4489,7 @@
         url: '/test/test.json'
       }, function (error, data) {
         utility2.tryCatch(function () {
+          /* assert no error occurred */
           utility2.assert(!error, error);
           utility2.assert(data.toString() === 'hello test', data);
           onEventReady();
@@ -4308,6 +4499,7 @@
       onEventReady.remaining += 1;
       local._ajaxOnEventData(null, function (error) {
         utility2.tryCatch(function () {
+          /* assert error occurred */
           utility2.assert(error instanceof Error, error);
           onEventReady();
         }, onEventReady);
@@ -4369,6 +4561,7 @@
         this function tests _ajaxOnEventResponse's redirect handling behavior
       */
       local._ajaxOnEventResponse({ redirected: Infinity }, function (error) {
+        /* assert error occurred */
         utility2.assert(error instanceof Error, error);
         onEventError();
       }, { headers: {}, on: utility2.nop, statusCode: 300 });
@@ -4416,12 +4609,6 @@
     ajax: function (options, onEventError) {
       /*
         this function runs the ajax request, and auto-concats the response stream into utf8 text
-        usage example:
-        utility2.ajax({
-          data: 'hello ajax',
-          type: 'POST',
-          url: '/upload/foo.txt'
-        }, utility2.onEventErrorDefault);
       */
       /* validate options */
       if (!(options && typeof options.url === 'string')) {
@@ -4455,6 +4642,7 @@
       */
       utility2.ajax({ resultType: 'json', url: '/test/test.json' }, function (error, data) {
         utility2.tryCatch(function () {
+          /* assert no error occurred */
           utility2.assert(!error, error);
           utility2.assert(data.toString() === 'hello test', data);
           onEventError();
@@ -4468,6 +4656,7 @@
       */
       utility2.ajax({ resultType: 'json', url: '/test/test.echo' }, function (error) {
         utility2.tryCatch(function () {
+          /* assert error occurred */
           utility2.assert(error instanceof Error, error);
           onEventError();
         }, onEventError);
@@ -4480,6 +4669,7 @@
       */
       utility2.ajax({}, function (error, data) {
         utility2.tryCatch(function () {
+          /* assert error occurred */
           utility2.assert(error instanceof Error, error);
           utility2.assert(data === undefined, data);
           onEventError();
@@ -4495,6 +4685,7 @@
         [state, { timeoutDefault: 1 }]
       ], function (onEventError) {
         utility2.ajax({ url: '/test/test.timeout?timeout=1000' }, function (error) {
+          /* assert error occurred */
           utility2.assert(error instanceof Error, error);
           utility2.assert(error.code === 'ETIMEDOUT', error.code);
         });
@@ -4520,14 +4711,6 @@
     ajaxMultiUrls: function (options, onEventReady) {
       /*
         this function makes multiple ajax requests for multiple urls
-        usage example:
-        utility2.ajaxMultiUrls({
-          urlList: ['http://facebook.com', 'http://google.com']
-        }, function (error, data) {
-          console.log(data);
-        }, function () {
-          console.log('finished all ajax requests');
-        });
       */
       var remainingList;
       /* validate options.urlList */
@@ -4572,6 +4755,7 @@
         (state.localhost || '') + '/test/test.json'
       ] }, function (error, data) {
         utility2.tryCatch(function () {
+          /* assert no error occurred */
           utility2.assert(!error, error);
           utility2.assert(data.data === '"hello test"', data.data);
           onEventReady();
@@ -4585,6 +4769,7 @@
       */
       utility2.ajaxMultiUrls({ urlList: [null] }, function (error) {
         utility2.tryCatch(function () {
+          /* assert error occurred */
           utility2.assert(error instanceof Error, error);
           onEventError();
         }, onEventError);
@@ -4597,6 +4782,7 @@
       */
       utility2.ajaxMultiUrls(null, function (error) {
         utility2.tryCatch(function () {
+          /* assert error occurred */
           utility2.assert(error instanceof Error, error);
           onEventError();
         }, onEventError);
@@ -4690,14 +4876,15 @@
       });
     },
 
-    '_router2SecurityDict_/_basicAuthFailure_test': function (onEventError) {
+    '_router2SecurityDict_/_basicAuthFailed_test': function (onEventError) {
       /*
-        this function tests router2SecurityDict_/'s basic auth failure handling behavior
+        this function tests router2SecurityDict_/'s basic auth failed handling behavior
       */
       utility2.ajax({
         url: '/security?basicAuthFail=1'
       }, function (error) {
         utility2.tryCatch(function () {
+          /* assert error occurred */
           utility2.assert(error instanceof Error, error);
           onEventError();
         }, onEventError);
@@ -4710,6 +4897,7 @@
       */
       utility2.ajax({ url: '/security' }, function (error, data) {
         utility2.tryCatch(function () {
+          /* assert error occurred */
           utility2.assert(error instanceof Error
             && error.message === 'GET 404 - ' + state.localhost + '/security\n404 Not Found\n',
             error.message);
@@ -4757,6 +4945,7 @@
       onEventReady.remaining += 1;
       utility2.ajax({ url: '/security/signin?httpsRedirect=1' }, function (error) {
         utility2.tryCatch(function () {
+          /* assert error occurred */
           utility2.assert(error instanceof Error, error);
           onEventReady();
         }, onEventReady);
@@ -4765,6 +4954,7 @@
       onEventReady.remaining += 1;
       utility2.ajax({ url: '/security/signin' }, function (error, data) {
         utility2.tryCatch(function () {
+          /* assert no error occurred */
           utility2.assert(!error, error);
           onEventReady();
         }, onEventReady);
@@ -4775,6 +4965,7 @@
         url: '/security/signin?redirect=%2Ftest%2Ftest.json'
       }, function (error, data) {
         utility2.tryCatch(function () {
+          /* assert no error occurred */
           utility2.assert(!error, error);
           utility2.assert(data === '"hello test"', data);
           onEventReady();
@@ -4782,15 +4973,17 @@
       });
     },
 
-    '_router2SecurityDict_/security/signin_failure_test': function (onEventError) {
+    '_router2SecurityDict_/security/signin_signinFailed_test': function (onEventError) {
       /*
-        this function tests router2SecurityDict_/security/signin's failure handling behavior
+        this function tests router2SecurityDict_/security/signin's
+        signin failed handling behavior
       */
       utility2.ajax({
         redirect: false,
         url: '/security/signin?basicAuthFail=1'
       }, function (error) {
         utility2.tryCatch(function () {
+          /* assert error occurred */
           utility2.assert(error instanceof Error, error);
           onEventError();
         }, onEventError);
@@ -4845,6 +5038,7 @@
           url: ''
         }, null, function (error) {
           utility2.tryCatch(function () {
+            /* assert error occurred */
             utility2.assert(error instanceof Error, error);
             onEventError();
           }, onEventError);
@@ -4889,7 +5083,6 @@
           /* merge data.coverage into global.__coverage__ */
           local._coverageMerge(global.__coverage__, data.coverage || {});
           /* merge data.testReport into state.testReport */
-          state.testReport = state.testReport || {};
           utility2.testReportMerge(state.testReport, data.testReport);
           /* call testCallbackId callback if it exists */
           (state.testCallbackDict[data.testCallbackId]
@@ -4915,16 +5108,17 @@
         local[
           'router5MainDict_/test/testReportUpload'
         ](null, null, function (error) {
+          /* assert error occurred */
           utility2.assert(error instanceof Error, error);
           onEventError();
         });
       });
     },
 
-    '_router5MainDict_/test/testReportUpload_testFailure_test': function (onEventError) {
+    '_router5MainDict_/test/testReportUpload_testFailed_test': function (onEventError) {
       /*
         this function tests router5MainDict_/test/testReportUpload's
-        test failure handling behavior
+        test failed handling behavior
       */
       utility2.testMock(onEventError, [
         [state, { debugTestReportUpload: null, testReport: null }],
@@ -5142,6 +5336,7 @@
       );
       utility2.ajax({ url: url }, function (error) {
         utility2.tryCatch(function () {
+          /* assert error occurred */
           utility2.assert(error instanceof Error, error);
           onEventReady();
         }, onEventReady);
@@ -5153,6 +5348,7 @@
       );
       utility2.ajax({ url: '/public/../aa' }, function (error) {
         utility2.tryCatch(function () {
+          /* assert error occurred */
           utility2.assert(error instanceof Error, error);
           onEventReady();
         }, onEventReady);
@@ -5265,9 +5461,9 @@
           === state.securityBasicAuthSecret);
     },
 
-    _securityBasicAuthValidate_failure_test: function (onEventError) {
+    _securityBasicAuthValidate_basicAuthFailed_test: function (onEventError) {
       /*
-        this function tests securityBasicAuthValidate's failure handling behavior
+        this function tests securityBasicAuthValidate's basic auth failed handling behavior
       */
       var data;
       data = utility2.securityBasicAuthValidate({ headers: {}, urlParams: {} });
@@ -5498,6 +5694,7 @@
         url: '/proxy/proxy.ajax//test/test.json'
       }, function (error, data) {
         utility2.tryCatch(function () {
+          /* assert no error occurred */
           utility2.assert(!error, error);
           utility2.assert(data === '"hello test"', data);
           onEventError();
@@ -5521,6 +5718,7 @@
         url: '/test/test.echo'
       }, function (error, data) {
         utility2.tryCatch(function () {
+          /* assert no error occurred */
           utility2.assert(!error, error);
           utility2.assert((/\n\n_ajax_default_test$/).test(data), data);
           onEventError();
@@ -5534,6 +5732,7 @@
       */
       utility2.ajax({ url: '/test/test.error' }, function (error, data) {
         utility2.tryCatch(function () {
+          /* assert error occurred */
           utility2.assert(error instanceof Error, error);
           onEventError();
         }, onEventError);
@@ -5551,6 +5750,7 @@
       onEventReady.remaining += 1;
       utility2.ajax({ url: '/test/test.timeout' }, function (error) {
         utility2.tryCatch(function () {
+          /* assert no error occurred */
           utility2.assert(!error, error);
           data = Date.now() - time;
           /* assert time elapsed is relatively small */
@@ -5562,6 +5762,7 @@
       onEventReady.remaining += 1;
       utility2.ajax({ url: '/test/test.timeout?timeout=2000' }, function (error) {
         utility2.tryCatch(function () {
+          /* assert no error occurred */
           utility2.assert(!error, error);
           data = Date.now() - time;
           /* assert time elapsed is greater than timeout */
@@ -5577,6 +5778,7 @@
       */
       utility2.ajax({ url: '/test/test.watch' }, function (error) {
         utility2.tryCatch(function () {
+          /* assert error occurred */
           utility2.assert(error instanceof Error, error);
           onEventError();
         }, onEventError);
@@ -5588,6 +5790,7 @@
         this function tests router6FileDict_/public's error handling behavior
       */
       utility2.ajax({ url: '/public/' + utility2.uuid4() }, function (error) {
+        /* assert error occurred */
         utility2.assert(error instanceof Error, error);
         onEventError();
       });
