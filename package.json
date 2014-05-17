@@ -1,4 +1,7 @@
 {
+  "bin": {
+    "utility2": "./utility2.sh"
+  },
   "contributors": [{
     "name": "kai zhu",
     "email": "kaizhu256@gmail.com"
@@ -18,10 +21,10 @@
     "url" : "https://github.com/kaizhu256/utility2.git"
   },
   "scripts": {
-    "install": "./utility2.sh --utility2-npm-install",
-    "start": "./utility2.sh --utility2-npm-start",
-    "test": "./utility2.sh --utility2-npm-test"
+    "install": "./utility2.sh utility2-npm-install",
+    "start": "./utility2.sh start",
+    "test": "./utility2.sh utility2-npm-test"
   },
-  "version": "2014.05.12-1"
+  "version": "2014.05.14-1"
 }
 

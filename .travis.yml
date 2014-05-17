@@ -15,5 +15,5 @@ language: objective-c
 ## node_js:
   ## - "0.10"
 ## script: export PATH=$(./utility2.sh npmInstall) && npm install && npm test
-script: ./utility2.sh --utility2-build
+script: ./utility2.sh utility2-build
 

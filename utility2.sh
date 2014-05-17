@@ -33,9 +33,6 @@ shMain () {
     eval "$($UTILITY2_DIR/utility2.js --mode-cli=exportEnv --mode-silent)"
   fi
 
-  ## init $GITHUB_OWNER_REPO_BRANCH var
-  GITHUB_OWNER_REPO_BRANCH=kaizhu256/blob/gh-pages
-
   ## init $SCRIPT var
   SCRIPT=":"
 
@@ -43,41 +40,41 @@ shMain () {
   UTILITY2_EXTERNAL_TAR_GZ=utility2_external.$NODEJS_PACKAGE_JSON_VERSION.tar.gz
   UTILITY2_JS=$UTILITY2_DIR/utility2.js
   UTILITY2_SH=$UTILITY2_DIR/utility2.sh
-  UTILITY2_SH_ECHO="$UTILITY2_DIR/utility2.sh --mode-echo"
+  UTILITY2_SH_ECHO="$UTILITY2_DIR/utility2.sh mode-echo"
 
   ## parse argv
   ## http://stackoverflow.com/questions/192249/how-do-i-parse-command-line-arguments-in-bash
   while [[ $# > 0 ]]
   do
   case $1 in
-  --mode-echo)
+  mode-echo)
     MODE_ECHO=1
     ;;
 
   ## delete github file
-  --db-github-branch-file-delete)
+  db-github-branch-file-delete)
     SCRIPT="$SCRIPT && echo deleting"
-    SCRIPT="$SCRIPT https://raw.githubusercontent.com/$GITHUB_OWNER_REPO_BRANCH$2"
-    SCRIPT="$SCRIPT --db-github-branch-file=$2"
+    SCRIPT="$SCRIPT https://raw.githubusercontent.com/$2$3"
+    SCRIPT="$SCRIPT --db-github-branch-file=$3"
     SCRIPT="$SCRIPT --mode-cli=dbGithubBranchFileDelete"
-    SCRIPT="$SCRIPT --mode-db-github=$GITHUB_OWNER_REPO_BRANCH"
+    SCRIPT="$SCRIPT --mode-db-github=$2"
     SCRIPT="$SCRIPT --mode-silent"
     ;;
 
   ## update github file
-  --db-github-branch-file-update)
+  db-github-branch-file-update)
     SCRIPT="$SCRIPT && echo updating"
-    SCRIPT="$SCRIPT https://raw.githubusercontent.com/$GITHUB_OWNER_REPO_BRANCH$2"
-    SCRIPT="$SCRIPT && cat $3 | $UTILITY2_JS"
-    SCRIPT="$SCRIPT --db-github-branch-file=$2"
+    SCRIPT="$SCRIPT https://raw.githubusercontent.com/$2$3"
+    SCRIPT="$SCRIPT && cat $4 | $UTILITY2_JS"
+    SCRIPT="$SCRIPT --db-github-branch-file=$3"
     SCRIPT="$SCRIPT --mode-cli=dbGithubBranchFileUpdate"
-    SCRIPT="$SCRIPT --mode-db-github=$GITHUB_OWNER_REPO_BRANCH"
+    SCRIPT="$SCRIPT --mode-db-github=$2"
     SCRIPT="$SCRIPT --mode-silent"
     SCRIPT="$SCRIPT --mode-timeoutDefault=120000"
     ;;
 
   ## github merge head branch $4 to base branch $3 in user/repo $2
-  --db-github-branch-merge)
+  db-github-branch-merge)
     ## security - avoid $SCRIPT macro to hide $GITHUB_TOKEN
     curl https://api.github.com/repos/$2/merges\
       --data-binary "{\"base\":\"$3\",\"head\":\"$4\"}"\
@@ -87,7 +84,7 @@ shMain () {
     ;;
 
   ## install saucelabs
-  --saucelabs-install)
+  saucelabs-install)
     if [ ! -f "$UTILITY2_DIR/.install/sc" ]
       then SAUCELABS_VERSION=$(echo $NODEJS_PROCESS_PLATFORM | perl -ne "s/darwin/osx/i; print")
       SCRIPT="$SCRIPT && echo installing saucelabs to $UTILITY2_DIR/.install/sc"
@@ -111,20 +108,20 @@ shMain () {
     ;;
 
   ## restart saucelabs
-  --saucelabs-restart)
+  saucelabs-restart)
     ## stop saucelabs
-    SCRIPT="$SCRIPT && $($UTILITY2_SH_ECHO --saucelabs-stop)"
+    SCRIPT="$SCRIPT && $($UTILITY2_SH_ECHO saucelabs-stop)"
     ## start saucelabs
-    SCRIPT="$SCRIPT && $($UTILITY2_SH_ECHO --saucelabs-start)"
+    SCRIPT="$SCRIPT && $($UTILITY2_SH_ECHO saucelabs-start)"
     ;;
 
   ## start saucelabs if not already started
-  --saucelabs-start)
+  saucelabs-start)
     SAUCELABS_READY_FILE=/tmp/.saucelabs.ready
     ## start saucelabs only if $SAUCELABS_READY_FILE doesn't exist
     SCRIPT="$SCRIPT && if [ ! -f $SAUCELABS_READY_FILE ]"
       ## install saucelabs if necessary
-      SCRIPT="$SCRIPT; then $($UTILITY2_SH_ECHO --saucelabs-install)"
+      SCRIPT="$SCRIPT; then $($UTILITY2_SH_ECHO saucelabs-install)"
       ## create sauclabs tunnel in a loop until one succeeds
       SCRIPT="$SCRIPT && while [ ! -f $SAUCELABS_READY_FILE ]"
         SCRIPT="$SCRIPT; do eval"
@@ -135,7 +132,7 @@ shMain () {
     ;;
 
   ## stop saucelabs
-  --saucelabs-stop)
+  saucelabs-stop)
     SAUCELABS_PID_FILE=/tmp/.saucelabs.pid
     SAUCELABS_READY_FILE=/tmp/.saucelabs.ready
     ## kill any script trying to start saucelabs connect to prevent race condition
@@ -150,7 +147,7 @@ shMain () {
     ;;
 
   ## test saucelabs
-  --saucelabs-test)
+  saucelabs-test)
     SCRIPT="$SCRIPT && cat $2 | $UTILITY2_JS"
     SCRIPT="$SCRIPT --mode-cli=headlessSaucelabs"
     SCRIPT="$SCRIPT --mode-npm-test"
@@ -159,8 +156,13 @@ shMain () {
     SCRIPT="$SCRIPT $3"
     ;;
 
+  ## start interactive utility2
+  start)
+    SCRIPT="$SCRIPT && $UTILITY2_JS --mode-repl --server-port=random --tmpdir=true"
+    ;;
+
   ## build utility2
-  --utility2-build)
+  utility2-build)
     if [ "$CODESHIP" ]
       ## init $ARTIFACT_DIR var
       then ARTIFACT_DIR=/utility2.build.codeship.io
@@ -214,7 +216,7 @@ shMain () {
       SCRIPT="$SCRIPT .install/utility2_saucelabs.linux.json"
       SCRIPT="$SCRIPT .install/utility2_saucelabs.osx.json"
       SCRIPT="$SCRIPT .install/utility2_saucelabs.windows.json"
-        SCRIPT="$SCRIPT; do $($UTILITY2_SH_ECHO --saucelabs-test \$FILE)"
+        SCRIPT="$SCRIPT; do $($UTILITY2_SH_ECHO saucelabs-test \$FILE)"
         SCRIPT="$SCRIPT --headless-saucelabs-url=$HEADLESS_SAUCELABS_URL"
         SCRIPT="$SCRIPT --mode-test-report-merge"
       SCRIPT="$SCRIPT; done"
@@ -238,9 +240,9 @@ shMain () {
     SCRIPT="$SCRIPT; EXIT_CODE=\$?"
     if [ $ARTIFACT_DIR ]
       ## publish build to $ARTIFACT_DIR/latest.$CI_BRANCH
-      then SCRIPT="$SCRIPT && $($UTILITY2_SH_ECHO --utility2-build-publish $ARTIFACT_DIR/latest.$CI_BRANCH)"
+      then SCRIPT="$SCRIPT && $($UTILITY2_SH_ECHO utility2-build-publish $ARTIFACT_DIR/latest.$CI_BRANCH)"
       ## publish build to $ARTIFACT_DIR/$CI_BUILD_NUMBER.$CI_BRANCH.$CI_COMMIT_ID
-      SCRIPT="$SCRIPT && $($UTILITY2_SH_ECHO --utility2-build-publish $ARTIFACT_DIR/$CI_BUILD_NUMBER.$CI_BRANCH.$CI_COMMIT_ID)"
+      SCRIPT="$SCRIPT && $($UTILITY2_SH_ECHO utility2-build-publish $ARTIFACT_DIR/$CI_BUILD_NUMBER.$CI_BRANCH.$CI_COMMIT_ID)"
       ## exit with error if publish fails
       SCRIPT="$SCRIPT || exit \$?"
     fi
@@ -248,8 +250,8 @@ shMain () {
     ;;
 
   ## publish utility2 build to github
-  --utility2-build-publish)
-    ## publish build
+  utility2-build-publish)
+    ## publish files
     SCRIPT="$SCRIPT && for FILE in"
     SCRIPT="$SCRIPT coverage_report/coverage_report.badge.svg"
     SCRIPT="$SCRIPT coverage_report/coverage_report.cobertura.xml"
@@ -268,17 +270,17 @@ shMain () {
       ## check if file exists
       SCRIPT="$SCRIPT && if [ -f tmp/\$FILE ]"
         ## add delay interval between file updates to prevent race conditions
-        SCRIPT="$SCRIPT; then sleep 5"
+        SCRIPT="$SCRIPT; then sleep 1"
         ## update file
-        SCRIPT="$SCRIPT && $($UTILITY2_SH_ECHO --db-github-branch-file-update $2/\$FILE tmp/\$FILE)"
+        SCRIPT="$SCRIPT && $($UTILITY2_SH_ECHO db-github-branch-file-update kaizhu256/blob/gh-pages $2/\$FILE tmp/\$FILE)"
       SCRIPT="$SCRIPT; fi"
     SCRIPT="$SCRIPT; done"
     ;;
 
   ## called by npm run-script build
-  --utility2-external-build)
+  utility2-external-build)
     ## build utility2_external
-    SCRIPT="$SCRIPT && $($UTILITY2_SH_ECHO --utility2-npm-install)"
+    SCRIPT="$SCRIPT && $($UTILITY2_SH_ECHO utility2-npm-install)"
     SCRIPT="$SCRIPT && ./utility2.js"
     SCRIPT="$SCRIPT --mode-cli=rollupFileList"
     SCRIPT="$SCRIPT --mode-silent"
@@ -294,14 +296,12 @@ shMain () {
     ;;
 
   ## publish utility2_external on github
-  --utility2-external-build-publish)
-    SCRIPT="$SCRIPT && $UTILITY2_SH --db-github-branch-file-update"
-    SCRIPT="$SCRIPT /utility2_external/$UTILITY2_EXTERNAL_TAR_GZ"
-    SCRIPT="$SCRIPT .install/$UTILITY2_EXTERNAL_TAR_GZ"
+  utility2-external-build-publish)
+    SCRIPT="$SCRIPT && $($UTILITY2_SH_ECHO db-github-branch-file-update kaizhu256/blob/gh-pages /utility2_external/$UTILITY2_EXTERNAL_TAR_GZ .install/$UTILITY2_EXTERNAL_TAR_GZ)"
     ;;
 
   ## called by npm run-script install
-  --utility2-npm-install)
+  utility2-npm-install)
     SCRIPT="$SCRIPT && mkdir -p .install/public"
     SCRIPT="$SCRIPT && ./utility2.js --mode-cli=utility2NpmInstall"
     ## install utility2_external
@@ -313,13 +313,8 @@ shMain () {
     fi
     ;;
 
-  ## called by npm run-script start
-  --utility2-npm-start)
-    SCRIPT="$SCRIPT && ./utility2.js --mode-repl --server-port=random --tmpdir=true"
-    ;;
-
   ## called by npm run-script test
-  --utility2-npm-test)
+  utility2-npm-test)
     export SAUCE_USERNAME=kaizhu256
     NPM_TEST_ARGS="--mode-npm-test"
     ## test github db
@@ -373,5 +368,5 @@ shMain () {
   fi
 }
 
-shMain $1 $2 $3 $4
+shMain $1 $2 $3 $4 $5 $6 $7 $8
 

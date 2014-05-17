@@ -1,9 +1,21 @@
 #### todo
+- add example_hello.js2
+- add platforms failed / passed in test report
+- integrate angularjs into /test/test.html
+- add test case pending state
 - add usage documentation
 - add html linter
 - auto-remove test functions from module in production mode
 
-#### 2014.05.10
+#### 2014.05.14
+- add utility2 bin to package.json
+- revamp utility2.fsWatch with onEventError2
+- merge utility2_headlessPhantomjs.js into utility2.js
+- revamp try catch handling in code coverage
+- add chrome34 windows saucelabs test
+- fix ajaxProgress display none
+
+#### 2014.05.12
 - remove qunit dependency
 - remove .install/public/utility2_external.browser.css and friends
 
