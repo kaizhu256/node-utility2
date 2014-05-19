@@ -39,8 +39,11 @@ shMain () {
   ## $UTILITY2_* vars
   UTILITY2_EXTERNAL_TAR_GZ=utility2_external.$NODEJS_PACKAGE_JSON_VERSION.tar.gz
   UTILITY2_JS=$UTILITY2_DIR/utility2.js
-  UTILITY2_SH=$UTILITY2_DIR/utility2.sh
-  UTILITY2_SH_ECHO="$UTILITY2_DIR/utility2.sh mode-echo"
+  UTILITY2_SH=$UTILITY2_DIR/utility2
+  if [ ! -f "$UTILITY2_SH" ]
+    then UTILITY2_SH=$UTILITY2_SH.sh
+  fi
+  UTILITY2_SH_ECHO="$UTILITY2_SH mode-echo"
 
   ## parse argv
   ## http://stackoverflow.com/questions/192249/how-do-i-parse-command-line-arguments-in-bash
@@ -70,7 +73,8 @@ shMain () {
     SCRIPT="$SCRIPT --mode-cli=dbGithubBranchFileUpdate"
     SCRIPT="$SCRIPT --mode-db-github=$2"
     SCRIPT="$SCRIPT --mode-silent"
-    SCRIPT="$SCRIPT --mode-timeoutDefault=120000"
+    SCRIPT="$SCRIPT --mode-timeout-default=120000"
+    SCRIPT="$SCRIPT ${@:2}"
     ;;
 
   ## github merge head branch $4 to base branch $3 in user/repo $2
@@ -159,6 +163,7 @@ shMain () {
   ## start interactive utility2
   start)
     SCRIPT="$SCRIPT && $UTILITY2_JS --mode-repl --server-port=random --tmpdir=true"
+    SCRIPT="$SCRIPT ${@:2}"
     ;;
 
   ## build utility2
@@ -201,6 +206,8 @@ shMain () {
       if [ ! "$CODESHIP" ]
         then exit
       fi
+      ## add random salt to CI_BUILD_NUMBER to prevent conflict in re-runs
+      export CI_BUILD_NUMBER="$CI_BUILD_NUMBER.$(openssl rand -base64 6)"
       ## set test url
       HEADLESS_SAUCELABS_URL="https://utility2-unstable.herokuapp.com/test/test.html#modeTest=1"
       ## npm install
@@ -368,5 +375,5 @@ shMain () {
   fi
 }
 
-shMain $1 $2 $3 $4 $5 $6 $7 $8
+shMain $@
 

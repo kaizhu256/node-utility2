@@ -8,6 +8,7 @@
 - auto-remove test functions from module in production mode
 
 #### 2014.05.14
+- add example usage instructions to README.md
 - add utility2 bin to package.json
 - revamp utility2.fsWatch with onEventError2
 - merge utility2_headlessPhantomjs.js into utility2.js
@@ -16,6 +17,7 @@
 - fix ajaxProgress display none
 
 #### 2014.05.12
+- faster browser tests
 - remove qunit dependency
 - remove .install/public/utility2_external.browser.css and friends
 

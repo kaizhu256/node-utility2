@@ -2004,7 +2004,7 @@ console.log('hello test');
       return setTimeout(function () {
         onEventError(error);
       /* bug - ie and opera may timeout slightly earlier, so increase the timeout */
-      }, 1.00390625 * timeout);
+      }, 1.015625 * timeout);
     },
 
     _onEventTimeout_timeout_test: function (onEventError) {
@@ -4591,11 +4591,45 @@ console.log('hello test');
       xhr.send(options.data);
     },
 
-    _ajaxBrowser_progress_test: function (onEventError) {
+    _ajaxBrowser_progressAbort_test: function (onEventError) {
       /*
-        this function tests ajaxBrowser's progress handling behavior
+        this function tests ajaxBrowser's progress abort handling behavior
       */
-      var interval, mode, onEventError2;
+      utility2.testMock(onEventError, [
+        [local, { _ajaxProgressList: [] }],
+        [global, {
+          setTimeout: utility2.nop,
+          state: {},
+          XMLHttpRequest: function () {
+            var self;
+            self = this;
+            utility2.setOverride(self, {
+              addEventListener: function (eventType, onEventEvent) {
+                state[eventType] = onEventEvent;
+              },
+              open: utility2.nop,
+              send: utility2.nop,
+              upload: { addEventListener: utility2.nop }
+            });
+          }
+        }]
+      ], function (onEventError) {
+        utility2.ajax({ url: '/test/test.json' }, function (error) {
+          /* assert error occurred */
+          utility2.assert(error instanceof Error, error);
+          onEventError();
+        });
+        /* test missing xhr handling behavior */
+        local._ajaxProgressList.length = 0;
+        state.abort({ type: 'abort' });
+      });
+    },
+
+    _ajaxBrowser_progressFinish_test: function (onEventError) {
+      /*
+        this function tests ajaxBrowser's progress finish handling behavior
+      */
+      var intervalId, mode, onEventError2;
       mode = 0;
       onEventError2 = function (error) {
         mode = utility2.modeIncrement(error, mode);
@@ -4605,38 +4639,20 @@ console.log('hello test');
           utility2.ajax({ url: '/test/test.json' }, onEventError2);
           break;
         case 2:
+          /* wait for ajax request to init */
+          setTimeout(onEventError2, 2000);
+          break;
+        case 3:
           /* set interval */
-          interval = setInterval(function () {
+          intervalId = utility2.uuid4();
+          utility2.clearCallSetInterval(intervalId, function () {
             /* wait until progress has successfully finished */
             if (local._ajaxProgressDiv.style.display === 'none') {
               /* clear interval */
-              clearInterval(interval);
+              utility2.clearCallSetInterval(intervalId, 'clear');
               onEventError2();
             }
-          }, 1000);
-          break;
-        case 3:
-          /* test multiple ajax requests handling behavior */
-          utility2.ajax({ url: '/test/test.json' }, utility2.nop);
-          /* test progress abort handling behavior */
-          utility2.ajax({ url: '/test/test.timeout?timeout=6000' }, function (error) {
-            utility2.tryCatch(function () {
-              /* assert error occurred */
-              utility2.assert(error instanceof Error, error);
-              /* bug - wait before initiating next ajax request, or it will also get aborted */
-              setTimeout(onEventError2, 1000);
-            }, onEventError);
-          });
-          /* setTimeout */
-          setTimeout(function () {
-            /* wait until only /test/test.timeout ajax request remains */
-            /* before aborting progress */
-            utility2.tryCatch(local._ajaxProgressAbort, onEventError2);
-          }, 4000);
-          break;
-        case 4:
-          /* end test with successful ajax progress request */
-          utility2.ajax({ url: '/test/test.timeout?timeout=1000' }, onEventError2);
+          }, 1000, state.timeoutDefault);
           break;
         default:
           onEventError(error);
@@ -4652,6 +4668,18 @@ console.log('hello test');
       while (local._ajaxProgressList.length) {
         local._ajaxProgressList.pop().abort();
       }
+    },
+
+    __ajaxProgressAbort_default_test: function (onEventError) {
+      /*
+        this function tests _ajaxProgressAbort's default handling behavior
+      */
+      utility2.testMock(onEventError, [
+        [local, { _ajaxProgressList: [{}] }]
+      ], function (onEventError) {
+        local._ajaxProgressList[0].abort = onEventError;
+        local._ajaxProgressAbort();
+      });
     },
 
     _ajaxProgressHide: function () {

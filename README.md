@@ -8,24 +8,28 @@
 :--------:|:-----------:|:--------------------:
 linux on [![codeship.io build status](https://www.codeship.io/projects/6d1392c0-94e7-0131-971e-16be0a303db9/status?branch=unstable)](https://www.codeship.io/projects/16743?branch=unstable) | [![utility2 test status](https://kaizhu256.github.io/blob/utility2.build.codeship.io/latest.unstable/test_report.badge.svg)](https://kaizhu256.github.io/blob/utility2.build.codeship.io/latest.unstable/test_report.html) | [![istanbul code coverage status](https://kaizhu256.github.io/blob/utility2.build.codeship.io/latest.unstable/coverage_report/coverage_report.badge.svg)](https://kaizhu256.github.io/blob/utility2.build.codeship.io/latest.unstable/coverage_report/utility2/index.html)
 osx on [![travis.ci-org build status](https://api.travis-ci.org/kaizhu256/utility2.svg?branch=unstable)](https://travis-ci.org/kaizhu256/utility2?branch=unstable) | [![utility2 test status](https://kaizhu256.github.io/blob/utility2.build.travis-ci.org/latest.unstable/test_report.badge.svg)](https://kaizhu256.github.io/blob/utility2.build.travis-ci.org/latest.unstable/test_report.html) | [![istanbul code coverage status](https://kaizhu256.github.io/blob/utility2.build.travis-ci.org/latest.unstable/coverage_report/coverage_report.badge.svg)](https://kaizhu256.github.io/blob/utility2.build.travis-ci.org/latest.unstable/coverage_report/utility2/index.html)
-browser on [![Selenium Test Status](https://saucelabs.com/buildstatus/utility2-kaizhu256)](https://saucelabs.com/u/utility2-kaizhu256) | [![utility2 test status](https://kaizhu256.github.io/blob/utility2.build.codeship.io/latest.browser/test_report.badge.svg)](https://kaizhu256.github.io/blob/utility2.build.codeship.io/latest.browser/test_report.html) | n/a
+browser on [![saucelabs selenium test status](https://saucelabs.com/buildstatus/utility2-kaizhu256)](https://saucelabs.com/u/utility2-kaizhu256) | [![utility2 test status](https://kaizhu256.github.io/blob/utility2.build.codeship.io/latest.browser/test_report.badge.svg)](https://kaizhu256.github.io/blob/utility2.build.codeship.io/latest.browser/test_report.html) | n/a
 
 ## build artifacts
 - [https://github.com/kaizhu256/blob/tree/gh-pages](https://github.com/kaizhu256/blob/tree/gh-pages)
 - [https://github.com/kaizhu256/blob/tree/gh-pages/utility2.build.codeship.io](https://github.com/kaizhu256/blob/tree/gh-pages/utility2.build.codeship.io)
 - [https://github.com/kaizhu256/blob/tree/gh-pages/utility2.build.travis-ci.org](https://github.com/kaizhu256/blob/tree/gh-pages/utility2.build.travis-ci.org)
 
-## test server
+## build test server
 - [https://utility2-unstable.herokuapp.com/test/test.html#modeTest=1](https://utility2-unstable.herokuapp.com/test/test.html#modeTest=1)
 
-## installation
+## installation and example usage
+- installation
 ```
-npm install utility2
+npm install -g utility2
 ```
-
-## usage example
+- run interactive test server
 ```
-npm start
+utility2 start --server-port=8080
+> serverListen - listening on port 8080
+> /* open http://localhost:8080#modeTest=1 in browser */
+> /* inspect state.debugServerResponse */
+> state.debugServerResponse
 ```
 
 ## changelog
