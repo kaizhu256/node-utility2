@@ -26,18 +26,15 @@ shMain () {
   shNodejsInstall
 
   ## utility2 root directory
-  ## if statement to avoid recursion loop
-  if [ ! "$UTILITY2_DIR" ]
-    then UTILITY2_DIR=$( cd "$( dirname "$0" )" && pwd )
-    ## export nodejs env
-    eval "$($UTILITY2_DIR/utility2.js --mode-cli=exportEnv --mode-silent)"
-  fi
+  UTILITY2_DIR=$( cd "$( dirname "$0" )" && pwd )
+  ## export nodejs env
+  eval "$($UTILITY2_DIR/utility2.js --mode-cli=exportEnv --mode-silent)"
 
   ## init $SCRIPT var
   SCRIPT=":"
 
   ## $UTILITY2_* vars
-  UTILITY2_EXTERNAL_TAR_GZ=utility2_external.$NODEJS_PACKAGE_JSON_VERSION.tar.gz
+  UTILITY2_EXTERNAL_TAR_GZ=utility2_external.$NODEJS_PACKAGE_JSON_VERSIONSHORT.tar.gz
   UTILITY2_JS=$UTILITY2_DIR/utility2.js
   UTILITY2_SH=$UTILITY2_DIR/utility2
   if [ ! -f "$UTILITY2_SH" ]
@@ -73,7 +70,6 @@ shMain () {
     SCRIPT="$SCRIPT --mode-cli=dbGithubBranchFileUpdate"
     SCRIPT="$SCRIPT --mode-db-github=$2"
     SCRIPT="$SCRIPT --mode-silent"
-    SCRIPT="$SCRIPT --mode-timeout-default=120000"
     SCRIPT="$SCRIPT ${@:2}"
     ;;
 
@@ -107,7 +103,7 @@ shMain () {
         SCRIPT="$SCRIPT > .install/sc.zip && unzip -q .install/sc.zip -d .install"
         ;;
       esac
-      SCRIPT="$SCRIPT && cp .install/sc-4.1-$SAUCELABS_VERSION/bin/sc .install/sc"
+      SCRIPT="$SCRIPT && cp .install/sc-*-$SAUCELABS_VERSION/bin/sc .install/sc"
     fi
     ;;
 
@@ -168,6 +164,8 @@ shMain () {
 
   ## build utility2
   utility2-build)
+    ## export CI_COMMIT_MESSAGE
+    export CI_COMMIT_MESSAGE="$(git log -1 --pretty=%s 2>/dev/null)"
     if [ "$CODESHIP" ]
       ## init $ARTIFACT_DIR var
       then ARTIFACT_DIR=/utility2.build.codeship.io
@@ -187,7 +185,7 @@ shMain () {
       SCRIPT="$SCRIPT > /tmp/postgres.zip"
       SCRIPT="$SCRIPT && unzip -q /tmp/postgres.zip -d /Applications"
       ## init postgres
-      SCRIPT="$SCRIPT && eval '/Applications/Postgres.app/Contents/MacOS/Postgres&'"
+      SCRIPT="$SCRIPT && eval '/Applications/Postgres.app/Contents/MacOS/Postgres &'"
       export POSTGRES_LOGIN=postgres://localhost/$USER
       ## install slimerjs
       SCRIPT="$SCRIPT && curl -3Ls"
@@ -207,13 +205,15 @@ shMain () {
         then exit
       fi
       ## add random salt to CI_BUILD_NUMBER to prevent conflict in re-runs
-      export CI_BUILD_NUMBER="$CI_BUILD_NUMBER.$(openssl rand -base64 6)"
+      export CI_BUILD_NUMBER="$CI_BUILD_NUMBER.$(openssl rand -hex 4)"
       ## set test url
-      HEADLESS_SAUCELABS_URL="https://utility2-unstable.herokuapp.com/test/test.html#modeTest=1"
+      HEADLESS_SAUCELABS_URL="https://utility2-unstable.herokuapp.com/test/test.html#modeTest=1&timeoutDefault={{timeoutDefault}}"
       ## npm install
       SCRIPT="$SCRIPT && npm install"
       ## spin up heroku dyno if it's sleeping
-      SCRIPT="$SCRIPT && curl -3Ls $HEADLESS_SAUCELABS_URL > /dev/null"
+      SCRIPT="$SCRIPT && curl -3Ls"
+      SCRIPT="$SCRIPT '$(echo $HEADLESS_SAUCELABS_URL | perl -ne 's/{.*//i; print')'"
+      SCRIPT="$SCRIPT > /dev/null"
       ## remove old test report
       SCRIPT="$SCRIPT && rm -f tmp/test_report.json"
       ## run saucelabs tests for each of the given os platforms
@@ -224,7 +224,7 @@ shMain () {
       SCRIPT="$SCRIPT .install/utility2_saucelabs.osx.json"
       SCRIPT="$SCRIPT .install/utility2_saucelabs.windows.json"
         SCRIPT="$SCRIPT; do $($UTILITY2_SH_ECHO saucelabs-test \$FILE)"
-        SCRIPT="$SCRIPT --headless-saucelabs-url=$HEADLESS_SAUCELABS_URL"
+        SCRIPT="$SCRIPT --headless-saucelabs-url='$HEADLESS_SAUCELABS_URL'"
         SCRIPT="$SCRIPT --mode-test-report-merge"
       SCRIPT="$SCRIPT; done"
       ;;

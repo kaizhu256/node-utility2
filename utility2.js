@@ -26,7 +26,9 @@
       /*
         this function tests _init's nop handling behavior
       */
-      utility2.testMock(onEventError, [[global, { process: null }]], function (onEventError) {
+      utility2.testMock(onEventError, [
+        [global, { process: null }]
+      ], function (onEventError) {
         local._init();
         onEventError();
       });
@@ -44,7 +46,8 @@
       /* export require */
       utility2.require = utility2.require || require;
       /* require builtin nodejs modules */
-      [ 'child_process', 'crypto',
+      [
+        'child_process', 'crypto',
         'fs',
         'http', 'https',
         'module',
@@ -54,7 +57,8 @@
         'stream',
         'url',
         'util',
-        'vm' ].forEach(function (module) {
+        'vm'
+      ].forEach(function (module) {
         required[module] = required[module] || utility2.require(module);
       });
       /* export utility2.assert */
@@ -104,6 +108,75 @@
       });
     },
 
+    _initOnceCli: function () {
+      var tmp, value;
+      /* load package.json file */
+      state.packageJson = state.packageJson || {};
+      try {
+        state.packageJson = JSON.parse(required.fs.readFileSync(process.cwd()
+          + '/package.json'));
+        state.packageJson.versionShort = state.packageJson.version.replace((/-.*/), '');
+      } catch (ignore) {
+      }
+      switch (state.modeCli) {
+      case 'exportEnv':
+        tmp = {
+          NODEJS_PROCESS_PID: process.pid,
+          UTILITY2_DIR: utility2.__dirname
+        };
+        /* save process vars to env */
+        ['argv', 'cwd', 'pid', 'platform', 'versions'].forEach(function (key) {
+          value = process[key];
+          /* traverse down one level for sub-dict */
+          if (typeof value === 'object') {
+            Object.keys(value).forEach(function (key2) {
+              tmp['NODEJS_PROCESS_' + key.toUpperCase() + '_' + key2.toUpperCase()]
+                = String(value[key2]);
+            });
+          } else {
+            tmp['NODEJS_PROCESS_' + key.toUpperCase()]
+              /* set value to return value of function */
+              = String(typeof value === 'function' ? value() : value);
+          }
+        });
+        /* save package.json vars to env */
+        Object.keys(state.packageJson).forEach(function (key) {
+          value = state.packageJson[key];
+          if (typeof value === 'string') {
+            tmp['NODEJS_PACKAGE_JSON_' + key.toUpperCase()] = value;
+          }
+        });
+        /* export env */
+        console.log(Object.keys(tmp).sort().map(function (key) {
+          return 'export ' + key + '=' + JSON.stringify(tmp[key]);
+        }).join(' && '));
+        process.exit();
+        break;
+      }
+    },
+
+    __initOnceCli_default_test: function (onEventError) {
+      /*
+        this function tests _initOnceCli's default handling behavior
+      */
+      utility2.testMock(onEventError, [
+        [global, {
+          /* test state.modeCoverageRegexp handling behavior */
+          process: { argv: [null], cwd: utility2.nop, exit: null },
+          state: { modeCli: 'exportEnv' }
+        }],
+        [required, {
+          fs: { readFileSync: function () {
+            /* test state.packageJson handling behavior */
+            return '{"aa":"bb","cc":null}';
+          } }
+        }]
+      ], function (onEventError) {
+        process.exit = onEventError;
+        local._initOnceCli();
+      });
+    },
+
     _initOnceCoverage: function () {
       /*
         this function inits code coverage
@@ -121,8 +194,6 @@
           return utility2.coverageInstrumentFileCode(file, code);
         }
       );
-      /* init state.coverageInstrumenFileDict */
-      state.coverageInstrumentFileDict = state.coverageInstrumentFileDict || {};
       /* on exit, create code coverage report */
       process.on('exit', local._coverageReportGenerate);
     },
@@ -132,10 +203,11 @@
         this function tests _initOnceCoverage's default handling behavior
       */
       utility2.testMock(onEventError, [
-        [global, { __coverage__: null, process: { on: utility2.nop }, state: {
-          coverageInstrumentFileDict: null,
-          modeCoverageRegexp: null
-        } }],
+        [global, {
+          __coverage__: null,
+          process: { on: utility2.nop },
+          state: { modeCoverageRegexp: null }
+        }],
         [required, { istanbul: null }],
         [utility2, {
           coverageInstrumentFileCode: utility2.nop,
@@ -171,12 +243,19 @@
         if (match) {
           state.loadModule = match[1];
         }
+        /* get --mode-cli arg */
+        match = (/^--mode-cli=(.+)/).exec(arg);
+        if (match) {
+          state.modeCli = match[1];
+        }
         /* get --mode-coverage arg */
         match = (/^--mode-coverage=(.+)/).exec(arg);
         if (match) {
           state.modeCoverageRegexp = new RegExp(match[1]);
         }
       });
+      /* init cli mode */
+      local._initOnceCli();
       /* init code coverage */
       local._initOnceCoverage();
       /* load utility2.js with code coverage */
@@ -197,11 +276,12 @@
       */
       utility2.testMock(onEventError, [
         [global, {
-          /* test state.modeCoverageRegexp handling behavior */
-          process: { argv: ['node', '--load-module=1', '--mode-coverage=1'] },
-          state: { loadModule: null, modeCoverageInit: null}
+          /* test various process.argv options handling behavior */
+          process: { argv: ['node', '--mode-cli=1', '--load-module=1', '--mode-coverage=1'] },
+          state: { loadModule: null, modeCoverageInit: null }
         }],
         [local, {
+          _initOnceCli: utility2.nop,
           _initOnceCoverage: utility2.nop,
           _initOnceUtility2Js: local._initOnceUtility2Js
         }],
@@ -252,12 +332,10 @@
           break;
         case 3:
           /* watch files */
-          ['package.json', 'utility2.js2', 'utility2.sh'].forEach(function (file) {
-            utility2.fsWatch({
-              actionList: ['lint', 'eval'],
-              file: utility2.__dirname + '/' + file
-            }, utility2.onEventErrorDefault);
-          });
+          utility2.fsWatch({
+            actionList: ['lint', 'eval'],
+            file: utility2.__dirname + '/utility2.js2'
+          }, utility2.onEventErrorDefault);
           /* initModule */
           local._init();
           break;
@@ -282,7 +360,7 @@
       if (utility2.coverageInstrumentFileCheck(file)) {
         utility2.jsonLog('coverageInstrumentFileCode ' + file);
         instrumenter = new required.istanbul.Instrumenter();
-        code = state.coverageInstrumentFileDict[file] = instrumenter.instrumentSync(code, file);
+        code = instrumenter.instrumentSync(code, file);
       }
       return code;
     },
@@ -293,7 +371,6 @@
       */
       utility2.testMock(onEventError, [
         [global, { state: {
-          coverageInstrumentFileDict: {},
           modeCoverageRegexp: /^_coverageInstrumentFileCode_default_test\.js$/
         } }],
         [required, { istanbul: { Instrumenter: function () {

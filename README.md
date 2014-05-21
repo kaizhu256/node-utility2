@@ -19,17 +19,41 @@ browser on [![saucelabs selenium test status](https://saucelabs.com/buildstatus/
 - [https://utility2-unstable.herokuapp.com/test/test.html#modeTest=1](https://utility2-unstable.herokuapp.com/test/test.html#modeTest=1)
 
 ## installation and example usage
-- installation
+#### installation
 ```
 npm install -g utility2
 ```
-- run interactive test server
+#### debug interactive test server
 ```
 utility2 start --server-port=8080
 > serverListen - listening on port 8080
 > /* open http://localhost:8080#modeTest=1 in browser */
 > /* inspect state.debugServerResponse */
 > state.debugServerResponse
+{
+  "_events": { "finish": [[]] },
+  "_hangupClose": false,
+  "_hasBody": true,
+  "_header": "HTTP/1.1 200 OK\r\ncontent-type: text/html\r\n\r\n",
+  "_headerNames": { "content-type": "content-type" },
+  "_headerSent": true,
+  "_headers": { "content-type": "text/html" },
+  "_last": false,
+  "_maxListeners": 10,
+  "_trailer": "",
+  "chunkedEncoding": true,
+  "connection": null,
+  "domain": null,
+  "finished": true,
+  "output": [],
+  "outputEncodings": [],
+  "sendDate": true,
+  "shouldKeepAlive": true,
+  "socket": null,
+  "statusCode": 200,
+  "useChunkedEncodingByDefault": true,
+  "writable": true
+}
 ```
 
 ## changelog

@@ -1,11 +1,15 @@
 #### todo
 - add example_hello.js2
-- add platforms failed / passed in test report
 - integrate angularjs into /test/test.html
-- add test case pending state
 - add usage documentation
 - add html linter
-- auto-remove test functions from module in production mode
+
+#### 2014.05.18
+- add commit message in test report
+- remove test code from browser content in production mode
+- add list comprehension utility2.textFormat
+- add test case skip state
+- add test case / platform pending state
 
 #### 2014.05.14
 - add example usage instructions to README.md
