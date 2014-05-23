@@ -408,7 +408,7 @@
       state.tmpdir = state.tmpdir || process.cwd() + '/tmp';
       /* save lcov and html report */
       utility2.jsonLog('generating code report file://' + state.tmpdir
-        + '/coverage_report/index.html');
+        + '/coverage-report/index.html');
       required.istanbul.Report
         .create('lcov', { dir: state.tmpdir })
         .writeReport(collector, true);
@@ -422,10 +422,10 @@
         .writeReport(collector, true);
       /* rename coverage files */
       [
-        ['coverage_report', 'cache/' + Math.random()],
-        ['lcov-report', 'coverage_report'],
-        ['cobertura-coverage.xml', 'coverage_report/coverage_report.cobertura.xml'],
-        ['lcov.info', 'coverage_report/coverage_report.lcov.info']
+        ['coverage-report', 'cache/' + Math.random()],
+        ['lcov-report', 'coverage-report'],
+        ['cobertura-coverage.xml', 'coverage-report/coverage-report.cobertura.xml'],
+        ['lcov.info', 'coverage-report/coverage-report.lcov.info']
       ].forEach(function (rename) {
         try {
           required.fs.renameSync(
@@ -437,7 +437,7 @@
       });
       /* get coverage percentage from cobertura report */
       data = required.fs.readFileSync(
-        state.tmpdir + '/coverage_report/coverage_report.cobertura.xml',
+        state.tmpdir + '/coverage-report/coverage-report.cobertura.xml',
         'utf8'
       );
       data = Number((/\bline-rate="([^"]+)"/).exec(data)[1]);
@@ -450,7 +450,7 @@
           + '00');
       /* write coverage badge */
       required.fs.writeFileSync(
-        state.tmpdir + '/coverage_report/coverage_report.badge.svg',
+        state.tmpdir + '/coverage-report/coverage-report.badge.svg',
         data
       );
     },

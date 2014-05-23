@@ -34,7 +34,7 @@ shMain () {
   SCRIPT=":"
 
   ## $UTILITY2_* vars
-  UTILITY2_EXTERNAL_TAR_GZ=utility2_external.$NODEJS_PACKAGE_JSON_VERSIONSHORT.tar.gz
+  UTILITY2_EXTERNAL_TAR_GZ=utility2-external.$NODEJS_PACKAGE_JSON_VERSIONSHORT.tar.gz
   UTILITY2_JS=$UTILITY2_DIR/utility2.js
   UTILITY2_SH=$UTILITY2_DIR/utility2
   if [ ! -f "$UTILITY2_SH" ]
@@ -47,14 +47,11 @@ shMain () {
   while [[ $# > 0 ]]
   do
   case $1 in
-  mode-echo)
-    MODE_ECHO=1
-    ;;
-
   ## delete github file
   db-github-branch-file-delete)
     SCRIPT="$SCRIPT && echo deleting"
     SCRIPT="$SCRIPT https://raw.githubusercontent.com/$2$3"
+    SCRIPT="$SCRIPT && $UTILITY2_JS"
     SCRIPT="$SCRIPT --db-github-branch-file=$3"
     SCRIPT="$SCRIPT --mode-cli=dbGithubBranchFileDelete"
     SCRIPT="$SCRIPT --mode-db-github=$2"
@@ -74,13 +71,22 @@ shMain () {
     ;;
 
   ## github merge head branch $4 to base branch $3 in user/repo $2
-  db-github-branch-merge)
-    ## security - avoid $SCRIPT macro to hide $GITHUB_TOKEN
-    curl https://api.github.com/repos/$2/merges\
-      --data-binary "{\"base\":\"$3\",\"head\":\"$4\"}"\
-      --dump-header -\
-      --header "Authorization: token $GITHUB_TOKEN"\
-    && exit $?
+  db-github-branch-branch-merge)
+    SCRIPT="$SCRIPT && echo merging branch $3 into https://github.com"
+    SCRIPT="$SCRIPT/$(echo $2 | perl -ne 's/(\/[^\/]+$)/\/tree$1/; print')"
+    SCRIPT="$SCRIPT && $UTILITY2_JS"
+    SCRIPT="$SCRIPT --db-github-branch-file=$3"
+    if [ "$4" ]
+      then SCRIPT="$SCRIPT --db-github-branch-message=\"$4\""
+    fi
+    SCRIPT="$SCRIPT --mode-cli=dbGithubBranchBranchMerge"
+    SCRIPT="$SCRIPT --mode-db-github=$2"
+    SCRIPT="$SCRIPT --mode-silent"
+    ;;
+
+  ## echo mode
+  mode-echo)
+    MODE_ECHO=1
     ;;
 
   ## install saucelabs
@@ -215,14 +221,14 @@ shMain () {
       SCRIPT="$SCRIPT '$(echo $HEADLESS_SAUCELABS_URL | perl -ne 's/{.*//i; print')'"
       SCRIPT="$SCRIPT > /dev/null"
       ## remove old test report
-      SCRIPT="$SCRIPT && rm -f tmp/test_report.json"
+      SCRIPT="$SCRIPT && rm -f tmp/test-report.json"
       ## run saucelabs tests for each of the given os platforms
       SCRIPT="$SCRIPT && for FILE in"
-      SCRIPT="$SCRIPT .install/utility2_saucelabs.android.json"
-      SCRIPT="$SCRIPT .install/utility2_saucelabs.ios.json"
-      SCRIPT="$SCRIPT .install/utility2_saucelabs.linux.json"
-      SCRIPT="$SCRIPT .install/utility2_saucelabs.osx.json"
-      SCRIPT="$SCRIPT .install/utility2_saucelabs.windows.json"
+      SCRIPT="$SCRIPT .install/utility2-saucelabs.android.json"
+      SCRIPT="$SCRIPT .install/utility2-saucelabs.ios.json"
+      SCRIPT="$SCRIPT .install/utility2-saucelabs.linux.json"
+      SCRIPT="$SCRIPT .install/utility2-saucelabs.osx.json"
+      SCRIPT="$SCRIPT .install/utility2-saucelabs.windows.json"
         SCRIPT="$SCRIPT; do $($UTILITY2_SH_ECHO saucelabs-test \$FILE)"
         SCRIPT="$SCRIPT --headless-saucelabs-url='$HEADLESS_SAUCELABS_URL'"
         SCRIPT="$SCRIPT --mode-test-report-merge"
@@ -260,18 +266,18 @@ shMain () {
   utility2-build-publish)
     ## publish files
     SCRIPT="$SCRIPT && for FILE in"
-    SCRIPT="$SCRIPT coverage_report/coverage_report.badge.svg"
-    SCRIPT="$SCRIPT coverage_report/coverage_report.cobertura.xml"
-    SCRIPT="$SCRIPT coverage_report/coverage_report.lcov.info"
-    SCRIPT="$SCRIPT coverage_report/index.html"
-    SCRIPT="$SCRIPT coverage_report/prettify.css"
-    SCRIPT="$SCRIPT coverage_report/prettify.js"
-    SCRIPT="$SCRIPT coverage_report/utility2/index.html"
-    SCRIPT="$SCRIPT coverage_report/utility2/utility2.js.html"
-    SCRIPT="$SCRIPT coverage_report/utility2/utility2.js2.html"
-    SCRIPT="$SCRIPT test_report.badge.svg"
-    SCRIPT="$SCRIPT test_report.html"
-    SCRIPT="$SCRIPT test_report.json"
+    SCRIPT="$SCRIPT coverage-report/coverage-report.badge.svg"
+    SCRIPT="$SCRIPT coverage-report/coverage-report.cobertura.xml"
+    SCRIPT="$SCRIPT coverage-report/coverage-report.lcov.info"
+    SCRIPT="$SCRIPT coverage-report/index.html"
+    SCRIPT="$SCRIPT coverage-report/prettify.css"
+    SCRIPT="$SCRIPT coverage-report/prettify.js"
+    SCRIPT="$SCRIPT coverage-report/utility2/index.html"
+    SCRIPT="$SCRIPT coverage-report/utility2/utility2.js.html"
+    SCRIPT="$SCRIPT coverage-report/utility2/utility2.js2.html"
+    SCRIPT="$SCRIPT test-report.badge.svg"
+    SCRIPT="$SCRIPT test-report.html"
+    SCRIPT="$SCRIPT test-report.json"
       ## exit loop if file update fails
       SCRIPT="$SCRIPT; do [ \$? == 0 ]"
       ## check if file exists
@@ -286,35 +292,35 @@ shMain () {
 
   ## called by npm run-script build
   utility2-external-build)
-    ## build utility2_external
+    ## build utility2-external
     SCRIPT="$SCRIPT && $($UTILITY2_SH_ECHO utility2-npm-install)"
     SCRIPT="$SCRIPT && ./utility2.js"
     SCRIPT="$SCRIPT --mode-cli=rollupFileList"
     SCRIPT="$SCRIPT --mode-silent"
     SCRIPT="$SCRIPT --rollup-file-list"
-    SCRIPT="$SCRIPT .install/public/utility2_external.browser.js"
-    SCRIPT="$SCRIPT,.install/public/utility2_external.nodejs.js"
+    SCRIPT="$SCRIPT .install/public/utility2-external.browser.js"
+    SCRIPT="$SCRIPT,.install/public/utility2-external.nodejs.js"
     SCRIPT="$SCRIPT --tmpdir=tmp"
     SCRIPT="$SCRIPT && tar -czvf .install/$UTILITY2_EXTERNAL_TAR_GZ"
-    SCRIPT="$SCRIPT .install/public/utility2_external.browser.rollup.js"
-    SCRIPT="$SCRIPT .install/public/utility2_external.browser.rollup.min.js"
-    SCRIPT="$SCRIPT .install/public/utility2_external.nodejs.rollup.js"
-    SCRIPT="$SCRIPT .install/public/utility2_external.nodejs.rollup.min.js"
+    SCRIPT="$SCRIPT .install/public/utility2-external.browser.rollup.js"
+    SCRIPT="$SCRIPT .install/public/utility2-external.browser.rollup.min.js"
+    SCRIPT="$SCRIPT .install/public/utility2-external.nodejs.rollup.js"
+    SCRIPT="$SCRIPT .install/public/utility2-external.nodejs.rollup.min.js"
     ;;
 
-  ## publish utility2_external on github
+  ## publish utility2-external on github
   utility2-external-build-publish)
-    SCRIPT="$SCRIPT && $($UTILITY2_SH_ECHO db-github-branch-file-update kaizhu256/blob/gh-pages /utility2_external/$UTILITY2_EXTERNAL_TAR_GZ .install/$UTILITY2_EXTERNAL_TAR_GZ)"
+    SCRIPT="$SCRIPT && $($UTILITY2_SH_ECHO db-github-branch-file-update kaizhu256/blob/gh-pages /utility2-external/$UTILITY2_EXTERNAL_TAR_GZ .install/$UTILITY2_EXTERNAL_TAR_GZ)"
     ;;
 
   ## called by npm run-script install
   utility2-npm-install)
     SCRIPT="$SCRIPT && mkdir -p .install/public"
     SCRIPT="$SCRIPT && ./utility2.js --mode-cli=utility2NpmInstall"
-    ## install utility2_external
-    if [ ! -f .install/public/utility2_external.nodejs.rollup.js ]
+    ## install utility2-external
+    if [ ! -f .install/public/utility2-external.nodejs.rollup.js ]
       then SCRIPT="$SCRIPT && curl -3Ls"
-      SCRIPT="$SCRIPT https://kaizhu256.github.io/blob/utility2_external"
+      SCRIPT="$SCRIPT https://kaizhu256.github.io/blob/utility2-external"
       SCRIPT="$SCRIPT/$UTILITY2_EXTERNAL_TAR_GZ"
       SCRIPT="$SCRIPT | tar -xzvf -"
     fi
@@ -375,5 +381,5 @@ shMain () {
   fi
 }
 
-shMain $@
+shMain "$@"
 

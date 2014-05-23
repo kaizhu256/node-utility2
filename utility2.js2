@@ -58,7 +58,7 @@ tmp
 
 
 
-/* MODULE_BEGIN { "actionList": ["lint"], "file": ".install/public/utility2_external.browser.js" } */
+/* MODULE_BEGIN { "actionList": ["lint"], "file": ".install/public/utility2-external.browser.js" } */
 /*jslint browser: true, indent: 2, maxerr: 8, node: true, nomen: true, regexp: true*/
 /*global global, required, state, utility2*/
 (function moduleInit() {
@@ -103,8 +103,6 @@ tmp
         );
     },
     urlList: [
-      /* angularjs */
-      'https://code.angularjs.org/snapshot/angular.js',
       /* mime.types */
       'https://svn.apache.org/repos/asf/httpd/httpd/trunk/docs/conf/mime.types',
       /* nodejs */
@@ -120,7 +118,7 @@ tmp
 
 
 
-/* MODULE_BEGIN { "actionList": ["lint"], "file": ".install/public/utility2_external.nodejs.js" } */
+/* MODULE_BEGIN { "actionList": ["lint"], "file": ".install/public/utility2-external.nodejs.js" } */
 /*jslint browser: true, indent: 2, maxerr: 8, node: true, nomen: true, regexp: true*/
 /*global global, required, state, utility2*/
 (function moduleInit() {
@@ -396,7 +394,7 @@ tr:nth-child(odd).testReportPlatformTr {
     location.reload();
   });
 </script>
-<script src="/public/file/utility2/utility2_external.browser.rollup.min.js"></script>
+<script src="/public/file/utility2/utility2-external.browser.rollup.min.js"></script>
 <script src="/public/file/utility2.js"></script>
 </body>
 </html>
@@ -460,7 +458,7 @@ ymXCIWMOjxhLC8J1sbqQq/btyWDcn1qj0PUzM+bH4UidMtOe/B7bL9Wlz0MZYXZdLOnfAAAAAElFTkSu
 
 
 
-/* MODULE_BEGIN { "actionList": ["lint"], "file": ".install/utility2_saucelabs.all.json" } */
+/* MODULE_BEGIN { "actionList": ["lint"], "file": ".install/utility2-saucelabs.all.json" } */
 {
   "platforms": [
     ["linux", "android", "4.3"],
@@ -487,34 +485,34 @@ ymXCIWMOjxhLC8J1sbqQq/btyWDcn1qj0PUzM+bH4UidMtOe/B7bL9Wlz0MZYXZdLOnfAAAAAElFTkSu
 
 
 
-/* MODULE_BEGIN { "actionList": ["lint"], "file": ".install/utility2_saucelabs.android.json" } */
+/* MODULE_BEGIN { "actionList": ["lint"], "file": ".install/utility2-saucelabs.android.json" } */
 {
   "platforms": [
     ["linux", "android", "4.3"]
   ],
   "stateOverride": {
-    "timeoutDefault": 150000
+    "timeoutDefault": 200000
   }
 }
 /* MODULE_END */
 
 
 
-/* MODULE_BEGIN { "actionList": ["lint"], "file": ".install/utility2_saucelabs.ios.json" } */
+/* MODULE_BEGIN { "actionList": ["lint"], "file": ".install/utility2-saucelabs.ios.json" } */
 {
   "platforms": [
     ["osx 10.9", "ipad", "7.1"],
     ["osx 10.9", "iphone", "7.1"]
   ],
   "stateOverride": {
-    "timeoutDefault": 150000
+    "timeoutDefault": 200000
   }
 }
 /* MODULE_END */
 
 
 
-/* MODULE_BEGIN { "actionList": ["lint"], "file": ".install/utility2_saucelabs.linux.json" } */
+/* MODULE_BEGIN { "actionList": ["lint"], "file": ".install/utility2-saucelabs.linux.json" } */
 {
   "platforms": [
     ["linux", "chrome", "34"],
@@ -522,14 +520,14 @@ ymXCIWMOjxhLC8J1sbqQq/btyWDcn1qj0PUzM+bH4UidMtOe/B7bL9Wlz0MZYXZdLOnfAAAAAElFTkSu
     ["linux", "opera", "12"]
   ],
   "stateOverride": {
-    "timeoutDefault": 150000
+    "timeoutDefault": 200000
   }
 }
 /* MODULE_END */
 
 
 
-/* MODULE_BEGIN { "actionList": ["lint"], "file": ".install/utility2_saucelabs.osx.json" } */
+/* MODULE_BEGIN { "actionList": ["lint"], "file": ".install/utility2-saucelabs.osx.json" } */
 {
   "platforms": [
     ["osx 10.9", "chrome", "34"],
@@ -538,14 +536,14 @@ ymXCIWMOjxhLC8J1sbqQq/btyWDcn1qj0PUzM+bH4UidMtOe/B7bL9Wlz0MZYXZdLOnfAAAAAElFTkSu
     ["osx 10.9", "safari", "7"]
   ],
   "stateOverride": {
-    "timeoutDefault": 150000
+    "timeoutDefault": 200000
   }
 }
 /* MODULE_END */
 
 
 
-/* MODULE_BEGIN { "actionList": ["lint"], "file": ".install/utility2_saucelabs.windows.json" } */
+/* MODULE_BEGIN { "actionList": ["lint"], "file": ".install/utility2-saucelabs.windows.json" } */
 {
   "platforms": [
     ["windows 7", "opera", "12"],
@@ -555,7 +553,7 @@ ymXCIWMOjxhLC8J1sbqQq/btyWDcn1qj0PUzM+bH4UidMtOe/B7bL9Wlz0MZYXZdLOnfAAAAAElFTkSu
     ["windows 8.1", "internet explorer", "11"]
   ],
   "stateOverride": {
-    "timeoutDefault": 150000
+    "timeoutDefault": 200000
   }
 }
 /* MODULE_END */
@@ -1049,10 +1047,10 @@ console.log('hello test');
       /*
         this function inits utility2 for nodejs
       */
-      /* require utility2_external */
+      /* require utility2-external */
       try {
         required.utility2_external = required.utility2_external
-          || require('./.install/public/utility2_external.nodejs.rollup.js');
+          || require('./.install/public/utility2-external.nodejs.rollup.js');
       } catch (error) {
         required.utility2_external = error;
       }
@@ -1511,7 +1509,7 @@ console.log('hello test');
         this function inits the module with the local object
       */
       var exports;
-      /* wait until utility2_external is loaded */
+      /* wait until utility2-external is loaded */
       if (!required.utility2_external) {
         utility2.deferCallback('untilReadyUtility2External', 'defer', function () {
           utility2.initModule(module, local2);
@@ -1722,7 +1720,8 @@ console.log('hello test');
         this function returns a callback that will JSON.parse the data with error handling
       */
       return utility2.tryCatchHandler(function (error, data) {
-        onEventError(error, data === undefined ? undefined : JSON.parse(data));
+        /* handle undefined data by returning undefined */
+        onEventError(error, data && data !== 'undefined' ? JSON.parse(data) : undefined);
       });
     },
 
@@ -1755,19 +1754,30 @@ console.log('hello test');
         this function returns JSON.parse(data) or an error
       */
       try {
-        return JSON.parse(data);
+        /* handle undefined data by returning undefined */
+        return data && data !== 'undefined' ? JSON.parse(data) : undefined;
       } catch (error) {
         return error;
       }
     },
 
-    _jsonParseOrError_syntaxError_test: function (onEventError) {
+    _jsonParseOrError_default_test: function (onEventError) {
       /*
-        this function tests jsonParseOrError's syntax error handling behavior
+        this function tests jsonParseOrError's default handling behavior
       */
       var data;
+      /* test default handling behavior */
+      data = utility2.jsonParseOrError('"_jsonParseOrError_default_test"');
+      /* assert data is valid */
+      utility2.assert(data === '_jsonParseOrError_default_test', data);
+      /* test syntax error handling behavior */
       data = utility2.jsonParseOrError('_jsonParseOrError_syntaxError_test');
+      /* assert error occured */
       utility2.assert(data instanceof Error, data);
+      /* test undefined handling behavior */
+      data = utility2.jsonParseOrError('undefined');
+      /* assert data is undefined */
+      utility2.assert(data === undefined, data);
       onEventError();
     },
 
@@ -4547,7 +4557,7 @@ console.log('hello test');
       var onEventReady;
       if (state.modeTestReportMerge && state.modeTestReportMerge !== 'merged') {
         required.fs.readFile(
-          state.tmpdir + '/test_report.json',
+          state.tmpdir + '/test-report.json',
           utility2.jsonParseHandler(function (error, data) {
             /* ignore error */
             utility2.nop(error);
@@ -4561,26 +4571,26 @@ console.log('hello test');
       onEventReady = state.modeNpmTest
         ? utility2.readyUtility2Exit
         : utility2.untilReady(utility2.onEventErrorDefault);
-      /* write test_report.badge.svg */
+      /* write test-report.badge.svg */
       onEventReady.remaining += 1;
       utility2.fsWriteFileAtomic(
-        state.tmpdir + '/test_report.badge.svg',
+        state.tmpdir + '/test-report.badge.svg',
         local._testReportNodejsBadge(testReport),
         onEventReady
       );
-      /* write test_report.html */
+      /* write test-report.html */
       onEventReady.remaining += 1;
       utility2.jsonLog('\ngenerating test report file://' + state.tmpdir
-        + '/test_report.html');
+        + '/test-report.html');
       utility2.fsWriteFileAtomic(
-        state.tmpdir + '/test_report.html',
+        state.tmpdir + '/test-report.html',
         utility2.testReportHtml(testReport),
         onEventReady
       );
-      /* write test_report.json */
+      /* write test-report.json */
       onEventReady.remaining += 1;
       utility2.fsWriteFileAtomic(
-        state.tmpdir + '/test_report.json',
+        state.tmpdir + '/test-report.json',
         JSON.stringify(testReport, null, 2),
         onEventReady
       );
@@ -5266,7 +5276,7 @@ console.log('hello test');
         break;
       /* try to JSON.parse the response */
       case 'json':
-        utility2.jsonParseHandler(onEventError)(error, data);
+        utility2.jsonParseHandler(onEventError)(error, data && data.toString());
         break;
       default:
         onEventError(null, data.toString());
@@ -5742,6 +5752,39 @@ console.log('hello test');
       }, resultType: 'json' }), onEventError);
     },
 
+    _Branch_prototype_branchMerge: function (other, commitMessage, onEventError) {
+      /*
+        this function merges the other branch into the current branch
+      */
+      this.ajax({
+        data: JSON.stringify({
+          base: this.branch,
+          commit_message: commitMessage || undefined,
+          head: other
+        }),
+        url: this.url + '/merges'
+      }, onEventError);
+    },
+
+    __Branch_prototype_branchMerge_default_test: function (onEventError) {
+      /*
+        this function tests _Branch_prototype_branchMerge's default handling behavior
+      */
+      var self;
+      self = state.dbGithubBranchDefault;
+      utility2.testMock(onEventError, [
+        [self, { ajax: utility2.applyArgList1([]) }]
+      ], function (onEventError) {
+        self.branchMerge('other', null, function (error) {
+          utility2.tryCatch(function () {
+            /* assert no error occurred */
+            utility2.assert(!error, error);
+            onEventError();
+          }, onEventError);
+        });
+      });
+    },
+
     _Branch_prototype_fileDelete: function (file, onEventError) {
       /*
         this function deletes the specified file
@@ -5768,7 +5811,7 @@ console.log('hello test');
             branch: self.branch,
             message: '--skip-ci delete ' + file,
             sha: data
-          }), method: 'DELETE', url: self.url + file }, onEventError2);
+          }), method: 'DELETE', url: self.url + '/contents' + file }, onEventError2);
           break;
         default:
           onEventError(error);
@@ -5789,7 +5832,7 @@ console.log('hello test');
         switch (mode) {
         case 1:
           self.ajax({
-            url: self.url + required.path.dirname(file) + '?ref=' + self.branch
+            url: self.url + '/contents' + required.path.dirname(file) + '?ref=' + self.branch
           }, onEventError2);
           break;
         case 2:
@@ -5840,7 +5883,7 @@ console.log('hello test');
             content: blob.toString('base64'),
             message: (data ? '--skip-ci update ' : '--skip-ci create ') + file,
             sha: data
-          }), method: 'PUT', url: self.url + file }, onEventError2);
+          }), method: 'PUT', url: self.url + '/contents' + file }, onEventError2);
           break;
         default:
           onEventError(error);
@@ -5899,8 +5942,20 @@ console.log('hello test');
       self.branch = ownerRepoBranch[2];
       self.token = token;
       self.url = 'https://api.github.com/repos/'
-        + ownerRepoBranch[0] + '/' + ownerRepoBranch[1] + '/contents';
+        + ownerRepoBranch[0] + '/' + ownerRepoBranch[1];
       return self;
+    },
+
+    modeCliDict_dbGithubBranchBranchMerge: function () {
+      /*
+        this function deletes the file on github
+      */
+      utility2.readyUtility2Exit.remaining += 1;
+      state.dbGithubBranchDefault.branchMerge(
+        state.dbGithubBranchFile,
+        state.dbGithubBranchMessage,
+        utility2.readyUtility2Exit
+      );
     },
 
     modeCliDict_dbGithubBranchFileDelete: function () {
@@ -5936,11 +5991,14 @@ console.log('hello test');
       */
       utility2.testMock(onEventError, [
         [state, { dbGithubBranchDefault: {
+          branchMerge: utility2.nop,
           fileDelete: utility2.nop,
           fileUpdate: utility2.nop
         } }],
         [utility2, { readyUtility2Exit: {}, streamReadAll: utility2.applyArgList1([]) }]
       ], function (onEventError) {
+        /* test branch merge handling behavior */
+        state.modeCliDict.dbGithubBranchBranchMerge();
         /* test file delete handling behavior */
         state.modeCliDict.dbGithubBranchFileDelete();
         /* test file update handling behavior */

@@ -4,6 +4,10 @@
 - add usage documentation
 - add html linter
 
+#### 2014.05.20
+- add _Branch_prototype_branchMerge for moduleDbGithubNodejs
+- rename utility2_external to utility2-external
+
 #### 2014.05.18
 - add commit message in test report
 - remove test code from browser content in production mode
