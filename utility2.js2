@@ -6159,12 +6159,14 @@ console.log('hello test');
             return;
           }
           /* saucelabs internal error */
-          error = data.result || (/error/).exec(data.status);
-          if (error) {
+          if (data.completed || data.result || (/error/).exec(data.status)) {
+            error = JSON.stringify(data);
             data.totalTime = Date.now() - time;
-            local._headlessSaucelabsTestFailed(new Error(error.input
-              || error.status
-              || error), data);
+            local._headlessSaucelabsTestFailed(
+              new Error(error.input || error.status || error),
+              data
+            );
+            /* remove failed tests from remainingDict */
             delete remainingDict[data.id];
             onEventReady();
             return;
