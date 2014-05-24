@@ -64,7 +64,7 @@
       /* export utility2.assert */
       utility2.assert = utility2.assert || console.assert;
       /* export utility2.__dirname */
-      process.env.UTILITY2_DIR = utility2.__dirname = utility2.__dirname || __dirname;
+      utility2.__dirname = utility2.__dirname || __dirname;
       /* export utility2 objects */
       Object.keys(local).forEach(function (key) {
         if (key[0] !== '_') {
@@ -237,6 +237,7 @@
       */
       var match;
       state.modeCoverageInit = 1;
+      /* init default state.loadModule */
       state.loadModule = utility2.__dirname + '/utility2.js';
       /* parse process.argv */
       process.argv.forEach(function (arg) {
@@ -405,6 +406,8 @@
         this function generates a code coverage report when nodejs exits
       */
       var collector, data;
+      /* assert state.tmpdir exists */
+      utility2.assert(state.tmpdir, 'invalid tmpdir ' + state.tmpdir);
       collector = new required.istanbul.Collector();
       collector.add(global.__coverage__);
       /* save lcov and html report */
@@ -469,7 +472,8 @@
             '/test/modeAjaxOffline/https%3A%2F%2Fimg.shields.io%2Fbadge%2Fcoverage-100.0%25-00dd00.svg%3Fstyle%3Dflat%23GET': {
               contentBrowser: ''
             }
-          }
+          },
+          tmpdir: true
         } }],
         [required, {
           fs: {

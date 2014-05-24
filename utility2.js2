@@ -2283,6 +2283,7 @@ console.log('hello test');
         self.global.global_test_results = {
           coverage: global.__coverage__,
           failed: state.testReportCopy.testsFailed,
+          passed: state.testReportCopy.testsPassed,
           testCallbackId: state.testCallbackId,
           testReport: state.testReportCopy
         };
@@ -3226,7 +3227,11 @@ console.log('hello test');
         this function tests _initOnce's default handling behavior
       */
       utility2.testMock(onEventError, [
-        [global, { required: { fs: { exists: utility2.applyArgList1([]) } }, state: {} }],
+        [global, {
+          required: { fs: { exists: utility2.applyArgList1([]) } },
+          /* test state.modeDebugProcess handling behavior */
+          state: { modeDebugProcess: true }
+        }],
         [utility2, { untilReadyUtility2: utility2.nop }],
         [local, { _initOnceArgv: utility2.nop, _initOnceNpmTest: utility2.nop }]
       ], function (onEventError) {
@@ -4596,18 +4601,23 @@ console.log('hello test');
       /*
         this function tests utility2's timeout handling behavior
       */
-      var exitCode;
+      var timeout;
       utility2.shell({ argv: [utility2.__filename, '--no-mode-test'], modeDebug: false })
-        .on('exit', function (_) {
-          exitCode = _;
+        .on('exit', function (exitCode) {
+          utility2.tryCatch(function () {
+            /* clear timeout for _utility2_timeout_test */
+            clearTimeout(timeout);
+            /* assert exit code is zero */
+            utility2.assert(exitCode === 0, exitCode);
+            onEventError();
+          }, onEventError);
         });
-      /* assert child process of utility2 exited within 4000 ms */
-      setTimeout(function () {
-        utility2.tryCatch(function () {
-          utility2.assert(exitCode === 0, exitCode);
-          onEventError();
-        }, onEventError);
-      }, 4000);
+      /* assert utility2 child process exits in a relatively small time-frame */
+      timeout = utility2.onEventTimeout(
+        onEventError,
+        8000,
+        '_utility2_timeout_test'
+      );
     }
 
   };
@@ -5293,7 +5303,7 @@ console.log('hello test');
             return;
           }
           options.url = response.headers.location;
-          if (options.url[0] === '/') {
+          if (options.url && options.url[0] === '/') {
             options.url = options.protocol + '//' + options.host + options.url;
           }
           utility2.ajax(options, onEventError);
@@ -5312,11 +5322,23 @@ console.log('hello test');
       /*
         this function tests _ajaxOnEventResponse's redirect handling behavior
       */
-      local._ajaxOnEventResponse({ redirected: Infinity }, function (error) {
-        /* assert error occurred */
-        utility2.assert(error instanceof Error, error);
+      utility2.testMock(onEventError, [
+        [utility2, { ajax: utility2.applyArgList1([]), streamReadAll: utility2.nop }]
+      ], function (onEventError) {
+        /* test default redirect handling behavior */
+        local._ajaxOnEventResponse({}, function (error) {
+          /* assert no error occurred */
+          utility2.assert(!error, error);
+        }, { headers: {}, on: utility2.nop, statusCode: 301 });
+        /* test too many redirects handling behavior */
+        local._ajaxOnEventResponse({ redirected: Infinity }, function (error) {
+          /* assert error occurred */
+          utility2.assert(error instanceof Error, error);
+        }, { headers: {}, on: utility2.nop, statusCode: 301 });
+        /* test redirect disabled handling behavior */
+        local._ajaxOnEventResponse({ redirect: false}, null, { on: utility2.nop });
         onEventError();
-      }, { headers: {}, on: utility2.nop, statusCode: 301 });
+      });
     },
 
     replParseDict_ajax: function (arg2) {
@@ -5437,14 +5459,15 @@ console.log('hello test');
         this function tests ajax's timeout handling behavior
       */
       utility2.testMock(onEventError, [
-        [state, { timeoutDefault: 1 }]
+        [global, { setTimeout: utility2.applyArgList0([]) }]
       ], function (onEventError) {
-        utility2.ajax({ url: '/test/test.timeout?timeout=1000' }, function (error) {
+        utility2.ajax({ url: '/test/test.json' }, function (error) {
           /* assert error occurred */
           utility2.assert(error instanceof Error, error);
+          /* assert error is timeout error */
           utility2.assert(error.code === 'ETIMEDOUT', error.code);
+          onEventError();
         });
-        onEventError();
       });
     },
 
@@ -6338,16 +6361,22 @@ console.log('hello test');
               localhost: state.localhost,
               timeoutDefault: 1
             })
-          }, onEventError2);
+          }, function () {
+            /* ignore ajax errors */
+            onEventError2();
+          });
           break;
         case 3:
+          /* run platform tests sequentially in shell */
           utility2.shell({
             timeout: options.platformsList.length * options.stateOverride.timeoutDefault,
             /* remove old test report */
             script: 'rm -f tmp/test-report.json && '
               /* loop through platformsList */
               + options.platformsList.map(function (platforms) {
-                return "echo '"
+                /* sleep 1 second between platform tests */
+                /* to give saucelabs some breathing room */
+                return "sleep 1 && echo '"
                   + JSON.stringify(utility2.setOverride(utility2.jsonCopy(options), {
                     platforms: platforms,
                     platformsList: undefined
@@ -6986,18 +7015,6 @@ console.log('hello test');
       next();
     },
 
-    'router5MainDict_/test/test.3xx': function (request, response) {
-      /*
-        this function responds with a 3xx redirect
-      */
-      utility2.serverRespond(
-        request,
-        response,
-        request.urlParams.redirectCode || 301,
-        { headers: { location: request.urlParams.redirectPath || '/' } }
-      );
-    },
-
     'router5MainDict_/test/test.401': function (request, response) {
       /*
         this function responds with a 401 authorization required
@@ -7018,15 +7035,6 @@ console.log('hello test');
       });
     },
 
-    'router5MainDict_/test/test.500': function (_, __, next) {
-      /*
-        this function mocks an internal server error
-      */
-      utility2.nop(_, __);
-      state.onEventErrorDefaultIgnoreList.push('utility2 error');
-      next(utility2.error);
-    },
-
     'router5MainDict_/test/test.echo': function (request, response) {
       /*
         this function echoes the request back to the response
@@ -7040,15 +7048,6 @@ console.log('hello test');
       response.write('\n');
       /* optimization - stream data */
       request.pipe(response);
-    },
-
-    'router5MainDict_/test/test.timeout': function (request, response) {
-      /*
-        this function responds after the specified amount of milliseconds in the request
-      */
-      setTimeout(function () {
-        response.end();
-      }, Math.min(Number(request.urlParams.timeout) || 0, state.timeoutDefault));
     },
 
     'router5MainDict_/test/testReportUpload': function (request, response, next) {
@@ -7550,12 +7549,6 @@ console.log('hello test');
       utility2.initModule(module, local);
     },
 
-    _initOnce: function () {
-      /* bug - disable tests for this module for ios */
-      state.testModuleDict[local._name] = !(state.modeBrowser
-        && ((/(iPad|iPhone|iPod)/g).test(navigator.userAgent)));
-    },
-
     '_router1LoggingDict_/_ignoreLogging_test': function (onEventError) {
       /*
         this function tests router1LoggingDict_/'s ignore logging handling behavior
@@ -7575,6 +7568,7 @@ console.log('hello test');
         utility2.tryCatch(function () {
           /* assert no error occurred */
           utility2.assert(!error, error);
+          /* validate json data */
           utility2.assert(data === '"hello test"', data);
           onEventError();
         }, onEventError);
@@ -7588,56 +7582,6 @@ console.log('hello test');
       utility2.ajax({ url: '/' }, onEventError);
     },
 
-    '_router5MainDict_/test/test.3xx_default_test': function (onEventError) {
-      /*
-        this function tests router5MainDict_/test/test.3xx's default handling behavior
-      */
-      var onEventReady;
-      onEventReady = utility2.untilReady(onEventError);
-      onEventReady.remaining += 1;
-      /* test default handling behavior */
-      utility2.ajax({ url: '/test/test.3xx' }, function (error) {
-        utility2.tryCatch(function () {
-          /* assert no error occurred */
-          utility2.assert(!error, error);
-          onEventReady();
-        }, onEventReady);
-      });
-      /* test.3xx disabled handling behavior */
-      utility2.ajax({ redirect: false, url: '/test/test.3xx' }, function (error) {
-        utility2.tryCatch(function () {
-          /* assert no error occurred */
-          utility2.assert(!error, error);
-          onEventReady();
-        }, onEventReady);
-      });
-      /* test custom redirect handling behavior */
-      onEventReady.remaining += 1;
-      utility2.ajax({
-        url: '/test/test.3xx?redirectCode=301&redirectPath='
-          + encodeURIComponent('http://' + utility2.uuid4() + '.com')
-      }, function (error) {
-        utility2.tryCatch(function () {
-          /* assert error occurred */
-          utility2.assert(error instanceof Error, error);
-          onEventReady();
-        }, onEventReady);
-      });
-    },
-
-    '_router5MainDict_/test/test.500_default_test': function (onEventError) {
-      /*
-        this function tests router5MainDict_/test/test.500's default handling behavior
-      */
-      utility2.ajax({ url: '/test/test.500' }, function (error) {
-        utility2.tryCatch(function () {
-          /* assert error occurred */
-          utility2.assert(error instanceof Error, error);
-          onEventError();
-        }, onEventError);
-      });
-    },
-
     '_router5MainDict_/test/test.echo_default_test': function (onEventError) {
       /*
         this function tests router5MainDict_/test/test.echo's default handling behavior
@@ -7649,43 +7593,10 @@ console.log('hello test');
         utility2.tryCatch(function () {
           /* assert no error occurred */
           utility2.assert(!error, error);
-          /* validate echo'd data */
+          /* validate echo data */
           utility2.assert((/\n\n_ajax_default_test$/).test(data), data);
           onEventError();
         }, onEventError);
-      });
-    },
-
-    '_router5MainDict_/test/test.timeout_default_test': function (onEventError) {
-      /*
-        this function tests router5MainDict_/test/test.timeout's default handling behavior
-      */
-      var data, onEventReady, time;
-      onEventReady = utility2.untilReady(onEventError);
-      time = Date.now();
-      /* test timeout undefined handling behavior */
-      onEventReady.remaining += 1;
-      utility2.ajax({ url: '/test/test.timeout' }, function (error) {
-        utility2.tryCatch(function () {
-          /* assert no error occurred */
-          utility2.assert(!error, error);
-          data = Date.now() - time;
-          /* assert time elapsed is relatively small */
-          utility2.assert(data < 4000, data);
-          onEventReady();
-        }, onEventReady);
-      });
-      /* test timeout defined handling behavior */
-      onEventReady.remaining += 1;
-      utility2.ajax({ url: '/test/test.timeout?timeout=2000' }, function (error) {
-        utility2.tryCatch(function () {
-          /* assert no error occurred */
-          utility2.assert(!error, error);
-          data = Date.now() - time;
-          /* assert time elapsed is greater than or equal timeout */
-          utility2.assert(data >= 2000, data);
-          onEventReady();
-        }, onEventReady);
       });
     },
 
@@ -7702,10 +7613,11 @@ console.log('hello test');
       });
     },
 
-    '_router6FileDict_/public_error_test': function (onEventError) {
+    '_router6FileDict_/public_404_test': function (onEventError) {
       /*
-        this function tests router6FileDict_/public's error handling behavior
+        this function tests router6FileDict_/public's 404 handling behavior
       */
+      /* test non-existent url handling behavior */
       utility2.ajax({ url: '/public/' + utility2.uuid4() }, function (error) {
         /* assert error occurred */
         utility2.assert(error instanceof Error, error);

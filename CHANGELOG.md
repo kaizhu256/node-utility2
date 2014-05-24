@@ -5,6 +5,7 @@
 - add html linter
 
 #### 2014.05.20
+- refine build script api for external apps
 - automate saucelabs testing for multi-platform for external apps
 - automate build upload to github for external apps
 - add _Branch_prototype_branchMerge for moduleDbGithubNodejs
