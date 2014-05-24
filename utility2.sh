@@ -1,4 +1,42 @@
 #!/bin/bash
+shCiBuildInit () {
+  ## this function inits the ci build
+  ## export CI_* vars
+  if [ ! "$CI_BRANCH" ]
+    then export CI_BRANCH="$(git rev-parse --abbrev-ref HEAD)"
+  fi
+  if [ ! "$CI_COMMIT_ID" ]
+    then export CI_COMMIT_ID="$(git rev-parse --verify HEAD)"
+  fi
+  if [ ! "$CI_COMMIT_MESSAGE" ]
+    then export CI_COMMIT_MESSAGE="$(git log -1 --pretty=%s)"
+  fi
+  if [ ! "$CI_COMMIT_INFO" ]
+    then export CI_COMMIT_INFO="$CI_COMMIT_ID $CI_COMMIT_MESSAGE"
+  fi
+  if [ ! "$CI_REPO" ]
+    then export CI_REPO="$(git config --get remote.origin.url | perl -ne 's/.*?([\w\-]+\/[^\/]+)\.git$/$1/; print')"
+  fi
+  if [ ! "$CI_REPO_URL" ]
+    then export CI_REPO_URL="https://github.com/$CI_REPO/tree/$CI_BRANCH"
+  fi
+  ## init local script
+  local SCRIPT=":"
+  ## save EXIT_CODE
+  SCRIPT="$SCRIPT; EXIT_CODE=\$?"
+  if [ $CI_BUILD_DIR ]
+    ## upload build to $3/latest.$CI_BRANCH
+    then SCRIPT="$SCRIPT && $($UTILITY2_SH_ECHO db-github-dir-update $CI_REPO/gh-pages $CI_BUILD_DIR/latest.$CI_BRANCH .build)"
+    ## upload build to $3/$CI_BUILD_NUMBER.$CI_BRANCH.$CI_COMMIT_ID
+    SCRIPT="$SCRIPT && $($UTILITY2_SH_ECHO db-github-dir-update $CI_REPO/gh-pages $CI_BUILD_DIR/$CI_BUILD_NUMBER.$CI_BRANCH.$CI_COMMIT_ID .build)"
+    ## save EXIT_CODE if non-zero
+    SCRIPT="$SCRIPT || EXIT_CODE=\$?"
+  fi
+  ## exit with EXIT_CODE
+  SCRIPT="$SCRIPT; exit \$EXIT_CODE"
+  ## export CI_BUILD_SCRIPT_UPLOAD, which uploads ci build to github
+  CI_BUILD_SCRIPT_UPLOAD=$SCRIPT
+}
 
 shNodejsInstall () {
   ## this function installs nodejs / npm if necesary
@@ -11,7 +49,8 @@ shNodejsInstall () {
     ## nodejs version
     NODEJS_VERSION=node-v0.10.26-$NODEJS_PROCESS_PLATFORM-$NODEJS_PROCESS_ARCH
     if [ ! -f /tmp/$NODEJS_VERSION/bin/npm ]
-      then curl -3Ls http://nodejs.org/dist/v0.10.26/$NODEJS_VERSION.tar.gz\
+      then echo "install nodejs npm to /tmp/$NODEJS_VERSION/bin"
+      curl -3Ls http://nodejs.org/dist/v0.10.26/$NODEJS_VERSION.tar.gz\
         | tar -C /tmp/ -xzf -
     fi
     ## export PATH var with nodejs / npm path
@@ -30,10 +69,7 @@ shMain () {
   ## export nodejs env
   eval "$($UTILITY2_DIR/utility2.js --mode-cli=exportEnv --mode-silent)"
 
-  ## init $SCRIPT var
-  SCRIPT=":"
-
-  ## $UTILITY2_* vars
+  ## init $UTILITY2_* vars
   UTILITY2_EXTERNAL_TAR_GZ=utility2-external.$NODEJS_PACKAGE_JSON_VERSIONSHORT.tar.gz
   UTILITY2_JS=$UTILITY2_DIR/utility2.js
   UTILITY2_SH=$UTILITY2_DIR/utility2
@@ -42,46 +78,56 @@ shMain () {
   fi
   UTILITY2_SH_ECHO="$UTILITY2_SH mode-echo"
 
+  ## init $SCRIPT var
+  SCRIPT=":"
+
   ## parse argv
   ## http://stackoverflow.com/questions/192249/how-do-i-parse-command-line-arguments-in-bash
   while [[ $# > 0 ]]
   do
   case $1 in
-  ## delete github file
-  db-github-branch-file-delete)
-    SCRIPT="$SCRIPT && echo deleting"
-    SCRIPT="$SCRIPT https://raw.githubusercontent.com/$2$3"
-    SCRIPT="$SCRIPT && $UTILITY2_JS"
-    SCRIPT="$SCRIPT --db-github-branch-file=$3"
-    SCRIPT="$SCRIPT --mode-cli=dbGithubBranchFileDelete"
-    SCRIPT="$SCRIPT --mode-db-github=$2"
-    SCRIPT="$SCRIPT --mode-silent"
+
+  ## init ci build
+  ci-build-init)
+    SCRIPT="$SCRIPT && $CI_BUILD_SCRIPT_UPLOAD"
     ;;
 
-  ## update github file
-  db-github-branch-file-update)
-    SCRIPT="$SCRIPT && echo updating"
-    SCRIPT="$SCRIPT https://raw.githubusercontent.com/$2$3"
-    SCRIPT="$SCRIPT && cat $4 | $UTILITY2_JS"
-    SCRIPT="$SCRIPT --db-github-branch-file=$3"
-    SCRIPT="$SCRIPT --mode-cli=dbGithubBranchFileUpdate"
+  ## merge head branch $3 into github base branch $2
+  db-github-branch-merge)
+    SCRIPT="$SCRIPT && $UTILITY2_JS"
+    SCRIPT="$SCRIPT --db-github-file=$3"
+    if [ "$4" ]
+      then SCRIPT="$SCRIPT --db-github-message=\"$4\""
+    fi
+    SCRIPT="$SCRIPT --mode-cli=dbGithubBranchMerge"
     SCRIPT="$SCRIPT --mode-db-github=$2"
-    SCRIPT="$SCRIPT --mode-silent"
+    ;;
+
+  ## update github dir $3 with local dir $4
+  db-github-dir-update)
+    SCRIPT="$SCRIPT && $UTILITY2_JS"
+    SCRIPT="$SCRIPT --db-github-file=$3"
+    SCRIPT="$SCRIPT --db-github-local=$4"
+    SCRIPT="$SCRIPT --mode-cli=dbGithubDirUpdate"
+    SCRIPT="$SCRIPT --mode-db-github=$2"
     SCRIPT="$SCRIPT ${@:2}"
     ;;
 
-  ## github merge head branch $4 to base branch $3 in user/repo $2
-  db-github-branch-branch-merge)
-    SCRIPT="$SCRIPT && echo merging branch $3 into https://github.com"
-    SCRIPT="$SCRIPT/$(echo $2 | perl -ne 's/(\/[^\/]+$)/\/tree$1/; print')"
+  ## delete github file $3
+  db-github-file-delete)
     SCRIPT="$SCRIPT && $UTILITY2_JS"
-    SCRIPT="$SCRIPT --db-github-branch-file=$3"
-    if [ "$4" ]
-      then SCRIPT="$SCRIPT --db-github-branch-message=\"$4\""
-    fi
-    SCRIPT="$SCRIPT --mode-cli=dbGithubBranchBranchMerge"
+    SCRIPT="$SCRIPT --db-github-file=$3"
+    SCRIPT="$SCRIPT --mode-cli=dbGithubFileDelete"
     SCRIPT="$SCRIPT --mode-db-github=$2"
-    SCRIPT="$SCRIPT --mode-silent"
+    ;;
+
+  ## update github file $3 with local file $4
+  db-github-file-update)
+    SCRIPT="$SCRIPT && cat $4 | $UTILITY2_JS"
+    SCRIPT="$SCRIPT --db-github-file=$3"
+    SCRIPT="$SCRIPT --mode-cli=dbGithubFileUpdate"
+    SCRIPT="$SCRIPT --mode-db-github=$2"
+    SCRIPT="$SCRIPT ${@:2}"
     ;;
 
   ## echo mode
@@ -89,8 +135,34 @@ shMain () {
     MODE_ECHO=1
     ;;
 
+  postgres-install)
+    if [ ! "$(which postgres)" ]
+      then case $NODEJS_PROCESS_PLATFORM in
+      darwin)
+        ## install postgres
+        SCRIPT="$SCRIPT && curl -3Ls"
+        SCRIPT="$SCRIPT https://github.com/PostgresApp/PostgresApp/releases"
+        SCRIPT="$SCRIPT/download/9.3.4.1/Postgres-9.3.4.1.zip"
+        SCRIPT="$SCRIPT > /tmp/postgres.zip"
+        SCRIPT="$SCRIPT && unzip -q /tmp/postgres.zip -d /Applications"
+        ;;
+      esac
+    fi
+    ;;
+
+  ## debug saucelabs job id
+  saucelabs-debug)
+    ## security - do not use SCRIPT macro to avoid leaking sensitive info
+    curl -X POST https://saucelabs.com/rest/v1/$SAUCE_USERNAME/js-tests/status\
+      --data "{\"js tests\": [\"$2\"]}"\
+      -H 'Content-Type: application/json'\
+      -u $SAUCE_USERNAME:$SAUCE_ACCESS_KEY
+    echo
+    ;;
+
   ## install saucelabs
   saucelabs-install)
+    ## check if saucelabs has already been installed in /tmp dir
     if [ ! -f "$UTILITY2_DIR/.install/sc" ]
       then SAUCELABS_VERSION=$(echo $NODEJS_PROCESS_PLATFORM | perl -ne "s/darwin/osx/i; print")
       SCRIPT="$SCRIPT && echo installing saucelabs to $UTILITY2_DIR/.install/sc"
@@ -162,6 +234,26 @@ shMain () {
     SCRIPT="$SCRIPT $3"
     ;;
 
+  ## test saucelabs
+  saucelabs-test-platforms-list)
+    SCRIPT="$SCRIPT && cat $2 | $UTILITY2_JS"
+    SCRIPT="$SCRIPT --mode-cli=headlessSaucelabsPlatformsList"
+    SCRIPT="$SCRIPT $3"
+    ;;
+
+  ## install slimerjs
+  slimerjs-install)
+    if [ ! "$(which slimerjs)" ]
+      then SCRIPT="$SCRIPT && curl -3Ls"
+      SCRIPT="$SCRIPT http://download.slimerjs.org/v0.9/0.9.1/slimerjs-0.9.1-"
+      SCRIPT="$SCRIPT$(echo $NODEJS_PROCESS_PLATFORM | perl -ne 's/.*darwin$/mac/; s/linux/linux-x86_64/; print')"
+      SCRIPT="$SCRIPT.tar.bz2"
+      SCRIPT="$SCRIPT | tar -C /tmp -xjf -"
+      ## add slimerjs to PATH
+      SCRIPT="$SCRIPT && export PATH=\$PATH:/tmp/slimerjs-0.9.1"
+    fi
+    ;;
+
   ## start interactive utility2
   start)
     SCRIPT="$SCRIPT && $UTILITY2_JS --mode-repl --server-port=random --tmpdir=true"
@@ -170,40 +262,32 @@ shMain () {
 
   ## build utility2
   utility2-build)
-    ## export CI_COMMIT_MESSAGE
-    export CI_COMMIT_MESSAGE="$(git log -1 --pretty=%s 2>/dev/null)"
+    ## install postgres
+    SCRIPT="$SCRIPT && $($UTILITY2_SH_ECHO postgres-install)"
+    ## export POSTGRES_LOGIN
+    if [ ! "$POSTGRES_LOGIN" ]
+      then export POSTGRES_LOGIN=postgres://localhost/$USER
+    fi
+    ## install slimerjs
+    SCRIPT="$SCRIPT && $($UTILITY2_SH_ECHO slimerjs-install)"
     if [ "$CODESHIP" ]
-      ## init $ARTIFACT_DIR var
-      then ARTIFACT_DIR=/utility2.build.codeship.io
+      ## export $CI_BUILD_DIR var
+      then export CI_BUILD_DIR=/utility2.build.codeship.io
       ## init postgres
       export POSTGRES_LOGIN=postgres://$PG_USER:$PG_PASSWORD@localhost/test
     elif [ "$TRAVIS" ]
-      ## init $ARTIFACT_DIR var
-      then ARTIFACT_DIR=/utility2.build.travis-ci.org
+      ## export $CI_BUILD_DIR var
+      then export CI_BUILD_DIR=/utility2.build.travis-ci.org
       ## export CI_* vars
       export CI_BRANCH=$TRAVIS_BRANCH
       export CI_BUILD_NUMBER=$TRAVIS_BUILD_NUMBER
       export CI_COMMIT_ID=$TRAVIS_COMMIT
-      ## install postgres
-      SCRIPT="$SCRIPT && curl -3Ls"
-      SCRIPT="$SCRIPT https://github.com/PostgresApp/PostgresApp/releases"
-      SCRIPT="$SCRIPT/download/9.3.4.1/Postgres-9.3.4.1.zip"
-      SCRIPT="$SCRIPT > /tmp/postgres.zip"
-      SCRIPT="$SCRIPT && unzip -q /tmp/postgres.zip -d /Applications"
       ## init postgres
       SCRIPT="$SCRIPT && eval '/Applications/Postgres.app/Contents/MacOS/Postgres &'"
       export POSTGRES_LOGIN=postgres://localhost/$USER
-      ## install slimerjs
-      SCRIPT="$SCRIPT && curl -3Ls"
-      SCRIPT="$SCRIPT http://download.slimerjs.org/v0.9/0.9.1/slimerjs-0.9.1-mac.tar.bz2"
-      SCRIPT="$SCRIPT | tar -C /tmp -xzf -"
-      ## add slimerjs to PATH
-      SCRIPT="$SCRIPT && export PATH=\$PATH:/tmp/slimerjs-0.9.1"
-    else
-      ## export CI_* vars
-      export CI_BRANCH="$(git rev-parse --abbrev-ref HEAD)"
-      export CI_COMMIT_ID="$(git rev-parse --verify HEAD)"
     fi
+    ## init ci build
+    shCiBuildInit
     case $CI_BRANCH in
     ## run headless saucelabs browser tests
     browser)
@@ -212,27 +296,14 @@ shMain () {
       fi
       ## add random salt to CI_BUILD_NUMBER to prevent conflict in re-runs
       export CI_BUILD_NUMBER="$CI_BUILD_NUMBER.$(openssl rand -hex 4)"
-      ## set test url
-      HEADLESS_SAUCELABS_URL="https://utility2-unstable.herokuapp.com/test/test.html#modeTest=1&timeoutDefault={{timeoutDefault}}"
       ## npm install
       SCRIPT="$SCRIPT && npm install"
       ## spin up heroku dyno if it's sleeping
       SCRIPT="$SCRIPT && curl -3Ls"
       SCRIPT="$SCRIPT '$(echo $HEADLESS_SAUCELABS_URL | perl -ne 's/{.*//i; print')'"
       SCRIPT="$SCRIPT > /dev/null"
-      ## remove old test report
-      SCRIPT="$SCRIPT && rm -f tmp/test-report.json"
-      ## run saucelabs tests for each of the given os platforms
-      SCRIPT="$SCRIPT && for FILE in"
-      SCRIPT="$SCRIPT .install/utility2-saucelabs.android.json"
-      SCRIPT="$SCRIPT .install/utility2-saucelabs.ios.json"
-      SCRIPT="$SCRIPT .install/utility2-saucelabs.linux.json"
-      SCRIPT="$SCRIPT .install/utility2-saucelabs.osx.json"
-      SCRIPT="$SCRIPT .install/utility2-saucelabs.windows.json"
-        SCRIPT="$SCRIPT; do $($UTILITY2_SH_ECHO saucelabs-test \$FILE)"
-        SCRIPT="$SCRIPT --headless-saucelabs-url='$HEADLESS_SAUCELABS_URL'"
-        SCRIPT="$SCRIPT --mode-test-report-merge"
-      SCRIPT="$SCRIPT; done"
+      ## run headless saucelabs browser tests
+      SCRIPT="$SCRIPT; $($UTILITY2_SH_ECHO saucelabs-test-platforms-list .install/utility2-saucelabs.json)"
       ;;
     npm)
       ## install and test utility2 in /tmp dir with no external npm dependencies */
@@ -249,52 +320,15 @@ shMain () {
       SCRIPT="$SCRIPT && npm test"
       ;;
     esac
-    ## save EXIT_CODE
-    SCRIPT="$SCRIPT; EXIT_CODE=\$?"
-    if [ $ARTIFACT_DIR ]
-      ## publish build to $ARTIFACT_DIR/latest.$CI_BRANCH
-      then SCRIPT="$SCRIPT && $($UTILITY2_SH_ECHO utility2-build-publish $ARTIFACT_DIR/latest.$CI_BRANCH)"
-      ## publish build to $ARTIFACT_DIR/$CI_BUILD_NUMBER.$CI_BRANCH.$CI_COMMIT_ID
-      SCRIPT="$SCRIPT && $($UTILITY2_SH_ECHO utility2-build-publish $ARTIFACT_DIR/$CI_BUILD_NUMBER.$CI_BRANCH.$CI_COMMIT_ID)"
-      ## exit with error if publish fails
-      SCRIPT="$SCRIPT || exit \$?"
-    fi
-    SCRIPT="$SCRIPT; exit \$EXIT_CODE"
+    ## upload ci build to github
+    SCRIPT="$SCRIPT && $CI_BUILD_SCRIPT_UPLOAD"
     ;;
 
-  ## publish utility2 build to github
-  utility2-build-publish)
-    ## publish files
-    SCRIPT="$SCRIPT && for FILE in"
-    SCRIPT="$SCRIPT coverage-report/coverage-report.badge.svg"
-    SCRIPT="$SCRIPT coverage-report/coverage-report.cobertura.xml"
-    SCRIPT="$SCRIPT coverage-report/coverage-report.lcov.info"
-    SCRIPT="$SCRIPT coverage-report/index.html"
-    SCRIPT="$SCRIPT coverage-report/prettify.css"
-    SCRIPT="$SCRIPT coverage-report/prettify.js"
-    SCRIPT="$SCRIPT coverage-report/utility2/index.html"
-    SCRIPT="$SCRIPT coverage-report/utility2/utility2.js.html"
-    SCRIPT="$SCRIPT coverage-report/utility2/utility2.js2.html"
-    SCRIPT="$SCRIPT test-report.badge.svg"
-    SCRIPT="$SCRIPT test-report.html"
-    SCRIPT="$SCRIPT test-report.json"
-      ## exit loop if file update fails
-      SCRIPT="$SCRIPT; do [ \$? == 0 ]"
-      ## check if file exists
-      SCRIPT="$SCRIPT && if [ -f tmp/\$FILE ]"
-        ## add delay interval between file updates to prevent race conditions
-        SCRIPT="$SCRIPT; then sleep 1"
-        ## update file
-        SCRIPT="$SCRIPT && $($UTILITY2_SH_ECHO db-github-branch-file-update kaizhu256/blob/gh-pages $2/\$FILE tmp/\$FILE)"
-      SCRIPT="$SCRIPT; fi"
-    SCRIPT="$SCRIPT; done"
-    ;;
-
-  ## called by npm run-script build
+  ## build utility2-external
   utility2-external-build)
     ## build utility2-external
     SCRIPT="$SCRIPT && $($UTILITY2_SH_ECHO utility2-npm-install)"
-    SCRIPT="$SCRIPT && ./utility2.js"
+    SCRIPT="$SCRIPT && $UTILITY2_JS"
     SCRIPT="$SCRIPT --mode-cli=rollupFileList"
     SCRIPT="$SCRIPT --mode-silent"
     SCRIPT="$SCRIPT --rollup-file-list"
@@ -310,17 +344,17 @@ shMain () {
 
   ## publish utility2-external on github
   utility2-external-build-publish)
-    SCRIPT="$SCRIPT && $($UTILITY2_SH_ECHO db-github-branch-file-update kaizhu256/blob/gh-pages /utility2-external/$UTILITY2_EXTERNAL_TAR_GZ .install/$UTILITY2_EXTERNAL_TAR_GZ)"
+    SCRIPT="$SCRIPT && $($UTILITY2_SH_ECHO db-github-file-update kaizhu256/utility2/gh-pages /utility2-external/$UTILITY2_EXTERNAL_TAR_GZ .install/$UTILITY2_EXTERNAL_TAR_GZ)"
     ;;
 
   ## called by npm run-script install
   utility2-npm-install)
     SCRIPT="$SCRIPT && mkdir -p .install/public"
-    SCRIPT="$SCRIPT && ./utility2.js --mode-cli=utility2NpmInstall"
+    SCRIPT="$SCRIPT && $UTILITY2_JS --mode-cli=utility2NpmInstall"
     ## install utility2-external
     if [ ! -f .install/public/utility2-external.nodejs.rollup.js ]
       then SCRIPT="$SCRIPT && curl -3Ls"
-      SCRIPT="$SCRIPT https://kaizhu256.github.io/blob/utility2-external"
+      SCRIPT="$SCRIPT https://kaizhu256.github.io/utility2/utility2-external"
       SCRIPT="$SCRIPT/$UTILITY2_EXTERNAL_TAR_GZ"
       SCRIPT="$SCRIPT | tar -xzvf -"
     fi
@@ -344,13 +378,13 @@ shMain () {
     NPM_TEST_ARGS="$NPM_TEST_ARGS --test-module-dict={\\\"utility2\\\":true}"
     NPM_TEST_ARGS="$NPM_TEST_ARGS --tmpdir=tmp"
     ## npm test
-    SCRIPT="$SCRIPT && ./utility2.js $NPM_TEST_ARGS"
+    SCRIPT="$SCRIPT && $UTILITY2_JS $NPM_TEST_ARGS"
     SCRIPT="$SCRIPT --mode-coverage='\\butility2\\.'"
     SCRIPT="$SCRIPT --mode-debug-process"
     SCRIPT="$SCRIPT; EXIT_CODE=\$?"
     ## if test failed, then redo without code coverage
     SCRIPT="$SCRIPT; if [ \"\$EXIT_CODE\" != 0 ]"
-      SCRIPT="$SCRIPT; then ./utility2.js $NPM_TEST_ARGS"
+      SCRIPT="$SCRIPT; then $UTILITY2_JS $NPM_TEST_ARGS"
       SCRIPT="$SCRIPT --mode-test-report-merge"
     SCRIPT="$SCRIPT; fi"
     SCRIPT="$SCRIPT; exit \$EXIT_CODE"

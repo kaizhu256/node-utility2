@@ -110,6 +110,8 @@
 
     _initOnceCli: function () {
       var tmp, value;
+      /* init state.fsDirBuild */
+      state.fsDirBuild = state.fsDirBuild || process.cwd() + '/.build';
       /* load package.json file */
       state.packageJson = state.packageJson || {};
       try {
@@ -405,12 +407,11 @@
       var collector, data;
       collector = new required.istanbul.Collector();
       collector.add(global.__coverage__);
-      state.tmpdir = state.tmpdir || process.cwd() + '/tmp';
       /* save lcov and html report */
-      utility2.jsonLog('generating code report file://' + state.tmpdir
+      utility2.jsonLog('generating code report file://' + state.fsDirBuild
         + '/coverage-report/index.html');
       required.istanbul.Report
-        .create('lcov', { dir: state.tmpdir })
+        .create('lcov', { dir: state.fsDirBuild })
         .writeReport(collector, true);
       /* print text report */
       required.istanbul.Report
@@ -418,26 +419,29 @@
         .writeReport(collector);
       /* save cobertura report */
       required.istanbul.Report
-        .create('cobertura', { dir: state.tmpdir })
+        .create('cobertura', { dir: state.fsDirBuild })
         .writeReport(collector, true);
+      /* remove old coverage-report */
+      utility2.tryCatch(function () {
+        required.fs.renameSync(
+          state.fsDirBuild + '/coverage-report',
+          state.tmpdir + '/cache/' + utility2.uuid4()
+        );
+      }, utility2.nop);
       /* rename coverage files */
       [
-        ['coverage-report', 'cache/' + Math.random()],
         ['lcov-report', 'coverage-report'],
         ['cobertura-coverage.xml', 'coverage-report/coverage-report.cobertura.xml'],
         ['lcov.info', 'coverage-report/coverage-report.lcov.info']
       ].forEach(function (rename) {
-        try {
-          required.fs.renameSync(
-            state.tmpdir + '/' + rename[0],
-            state.tmpdir + '/' + rename[1]
-          );
-        } catch (ignore) {
-        }
+        required.fs.renameSync(
+          state.fsDirBuild + '/' + rename[0],
+          state.fsDirBuild + '/' + rename[1]
+        );
       });
       /* get coverage percentage from cobertura report */
       data = required.fs.readFileSync(
-        state.tmpdir + '/coverage-report/coverage-report.cobertura.xml',
+        state.fsDirBuild + '/coverage-report/coverage-report.cobertura.xml',
         'utf8'
       );
       data = Number((/\bline-rate="([^"]+)"/).exec(data)[1]);
@@ -450,7 +454,7 @@
           + '00');
       /* write coverage badge */
       required.fs.writeFileSync(
-        state.tmpdir + '/coverage-report/coverage-report.badge.svg',
+        state.fsDirBuild + '/coverage-report/coverage-report.badge.svg',
         data
       );
     },
@@ -465,8 +469,7 @@
             '/test/modeAjaxOffline/https%3A%2F%2Fimg.shields.io%2Fbadge%2Fcoverage-100.0%25-00dd00.svg%3Fstyle%3Dflat%23GET': {
               contentBrowser: ''
             }
-          },
-          tmpdir: null
+          }
         } }],
         [required, {
           fs: {
@@ -487,8 +490,6 @@
         }]
       ], function (onEventError) {
         local._coverageReportGenerate();
-        /* assert state.tmpdir exists */
-        utility2.assert(state.tmpdir, state.tmpdir);
         onEventError();
       });
     },

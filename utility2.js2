@@ -289,9 +289,8 @@ tr:nth-child(odd).testReportPlatformTr {
 <h4>
   <span class="testReportSummarySpan">build date</span>- {{date}}<br>
   <span class="testReportSummarySpan">build id</span>- {{CI_BUILD_NUMBER}}<br>
-  <span class="testReportSummarySpan">branch id</span>- {{CI_BRANCH}}<br>
-  <span class="testReportSummarySpan">commit id</span>- {{CI_COMMIT_ID}}<br>
-  <span class="testReportSummarySpan">commit msg</span>- {{CI_COMMIT_MESSAGE}}<br>
+  <span class="testReportSummarySpan">repo url</span>- <a href="{{CI_REPO_URL}}">{{CI_REPO_URL}}</a><br>
+  <span class="testReportSummarySpan">commit info</span>- {{CI_COMMIT_INFO}}<br>
 </h4>
 <table class="testReportPlatformTable"><thead><tr>
   <th>total time</th>
@@ -388,6 +387,7 @@ tr:nth-child(odd).testReportPlatformTr {
 <button id="testRunButton">run tests</button>
 <div id="testReportDiv"></div>
 <script>
+  /* enable tests for utility2 namespace */
   window.state = { testModuleDict: { utility2: true } };
   document.getElementById('testRunButton').addEventListener('click', function () {
     location.hash = '#modeTest=1';
@@ -458,103 +458,39 @@ ymXCIWMOjxhLC8J1sbqQq/btyWDcn1qj0PUzM+bH4UidMtOe/B7bL9Wlz0MZYXZdLOnfAAAAAElFTkSu
 
 
 
-/* MODULE_BEGIN { "actionList": ["lint"], "file": ".install/utility2-saucelabs.all.json" } */
+/* MODULE_BEGIN { "actionList": ["lint"], "file": ".install/utility2-saucelabs.json" } */
 {
-  "platforms": [
-    ["linux", "android", "4.3"],
-    ["linux", "chrome", "34"],
-    ["linux", "firefox", "29"],
-    ["linux", "opera", "12"],
-    ["osx 10.9", "chrome", "34"],
-    ["osx 10.8", "chrome", "beta"],
-    ["osx 10.9", "firefox", "28"],
-    ["osx 10.9", "ipad", "7.1"],
-    ["osx 10.9", "iphone", "7.1"],
-    ["osx 10.9", "safari", "7"],
-    ["windows 7", "opera", "12"],
-    ["windows 8.1", "chrome", "34"],
-    ["windows 8.1", "chrome", "beta"],
-    ["windows 8.1", "firefox", "29"],
-    ["windows 8.1", "internet explorer", "11"]
-  ],
-  "stateOverride": {
-    "timeoutDefault": 600000
-  }
-}
-/* MODULE_END */
-
-
-
-/* MODULE_BEGIN { "actionList": ["lint"], "file": ".install/utility2-saucelabs.android.json" } */
-{
-  "platforms": [
-    ["linux", "android", "4.3"]
+  "platformsList": [
+    [
+      ["linux", "android", "4.3"]
+    ],
+    [
+      ["osx 10.9", "ipad", "7.1"],
+      ["osx 10.9", "iphone", "7.1"]
+    ],
+    [
+      ["linux", "chrome", "34"],
+      ["linux", "firefox", "29"],
+      ["linux", "opera", "12"]
+    ],
+    [
+      ["osx 10.9", "chrome", "34"],
+      ["osx 10.8", "chrome", "beta"],
+      ["osx 10.9", "firefox", "28"],
+      ["osx 10.9", "safari", "7"]
+    ],
+    [
+      ["windows 7", "opera", "12"],
+      ["windows 8.1", "chrome", "34"],
+      ["windows 8.1", "chrome", "beta"],
+      ["windows 8.1", "firefox", "29"],
+      ["windows 8.1", "internet explorer", "11"]
+    ]
   ],
   "stateOverride": {
     "timeoutDefault": 200000
-  }
-}
-/* MODULE_END */
-
-
-
-/* MODULE_BEGIN { "actionList": ["lint"], "file": ".install/utility2-saucelabs.ios.json" } */
-{
-  "platforms": [
-    ["osx 10.9", "ipad", "7.1"],
-    ["osx 10.9", "iphone", "7.1"]
-  ],
-  "stateOverride": {
-    "timeoutDefault": 200000
-  }
-}
-/* MODULE_END */
-
-
-
-/* MODULE_BEGIN { "actionList": ["lint"], "file": ".install/utility2-saucelabs.linux.json" } */
-{
-  "platforms": [
-    ["linux", "chrome", "34"],
-    ["linux", "firefox", "29"],
-    ["linux", "opera", "12"]
-  ],
-  "stateOverride": {
-    "timeoutDefault": 200000
-  }
-}
-/* MODULE_END */
-
-
-
-/* MODULE_BEGIN { "actionList": ["lint"], "file": ".install/utility2-saucelabs.osx.json" } */
-{
-  "platforms": [
-    ["osx 10.9", "chrome", "34"],
-    ["osx 10.8", "chrome", "beta"],
-    ["osx 10.9", "firefox", "28"],
-    ["osx 10.9", "safari", "7"]
-  ],
-  "stateOverride": {
-    "timeoutDefault": 200000
-  }
-}
-/* MODULE_END */
-
-
-
-/* MODULE_BEGIN { "actionList": ["lint"], "file": ".install/utility2-saucelabs.windows.json" } */
-{
-  "platforms": [
-    ["windows 7", "opera", "12"],
-    ["windows 8.1", "chrome", "34"],
-    ["windows 8.1", "chrome", "beta"],
-    ["windows 8.1", "firefox", "29"],
-    ["windows 8.1", "internet explorer", "11"]
-  ],
-  "stateOverride": {
-    "timeoutDefault": 200000
-  }
+  },
+  "url": "https://utility2-unstable.herokuapp.com/test/test.html#modeTest=1&timeoutDefault={{timeoutDefault}}"
 }
 /* MODULE_END */
 
@@ -915,7 +851,7 @@ console.log('hello test');
         state.timeoutDefault = tmp ? Number(tmp[1]) : state.timeoutDefault;
       }
       /* export utility2.untilReadyUtility2 */
-      utility2.untilReadyUtility2 = function (onEventError) {
+      utility2.untilReadyUtility2 = utility2.untilReadyUtility2 || function (onEventError) {
         /*
           this function defers the onEventError callback until utility2 is ready
         */
@@ -2639,11 +2575,10 @@ console.log('hello test');
       return utility2.textFormat(
         state.fsWatchDict['/public/file/testReport.html.template'].contentBrowser,
         utility2.setOverride(testReport, {
-          CI_BRANCH: processEnv.CI_BRANCH,
           CI_BUILD_NUMBER: processEnv.CI_BUILD_NUMBER,
-          CI_COMMIT_ID: processEnv.CI_COMMIT_ID,
           /* security - sanitize '<' in text */
-          CI_COMMIT_MESSAGE: String(processEnv.CI_COMMIT_MESSAGE).replace((/</g), '&lt;'),
+          CI_COMMIT_INFO: String(processEnv.CI_COMMIT_INFO).replace((/</g), '&lt;'),
+          CI_REPO_URL: processEnv.CI_REPO_URL,
           /* map testPlatformList */
           testPlatformList: testReport.testPlatformList.map(function (testPlatform, ii) {
             errorMessageList = [];
@@ -2658,7 +2593,7 @@ console.log('hello test');
                   /* word wrap error message 128 characters in pre tag */
                   errorMessageList.push({ errorMessage: utility2.textWordwrap(testCaseNumber
                     + '. ' + testCase.module + '.' + testCase.name + '\n'
-                    + testCase.errorMessage, 128)
+                    + testCase.errorMessage, 96)
                       /* security - sanitize '<' in text */
                       .replace((/</g), '&lt;') });
                 }
@@ -3502,8 +3437,8 @@ console.log('hello test');
       onEventError2 = function (error, data) {
         mode = utility2.modeIncrement(error, mode);
         switch (mode) {
-        /* loop through state._fsCacheCleanupFileList */
         case 1:
+          /* loop through state._fsCacheCleanupFileList */
           dir = state.tmpdir + '/cache';
           utility2.jsonLog('_fsCacheCleanup - cleaning ' + dir);
           state._fsCacheCleanupFileList = state._fsCacheCleanupFileList || [];
@@ -3511,17 +3446,17 @@ console.log('hello test');
           mode += 1;
           onEventError2();
           break;
-        /* rm -r cached dir / file */
         case 2:
+          /* rm -r cached dir / file */
           mode -= 1;
           local._fsRmr(dir + '/' + error, utility2.onEventErrorDefault);
           break;
-        /* get list of files to be removed for the next cycle */
         case 3:
+          /* get list of files to be removed for the next cycle */
           required.fs.readdir(dir, onEventError2);
           break;
-        /* save list to state._fsCacheCleanupFileList */
         case 4:
+          /* save list to state._fsCacheCleanupFileList */
           state._fsCacheCleanupFileList = data;
           onEventError2();
           break;
@@ -4288,7 +4223,7 @@ console.log('hello test');
         if ((/^(?:\.gitconfig|\.gitignore|\.install)\b/).test(file)) {
           /* install files to .install dir */
           required.fs.writeFileSync(
-            utility2.__dirname + '/' + file,
+            process.cwd() + '/' + file,
             (/^\.install\b/).test(file)
               ? state.fsWatchDict[file].content
               : state.fsWatchDict[file].content.trimLeft()
@@ -4557,7 +4492,7 @@ console.log('hello test');
       var onEventReady;
       if (state.modeTestReportMerge && state.modeTestReportMerge !== 'merged') {
         required.fs.readFile(
-          state.tmpdir + '/test-report.json',
+          state.fsDirBuild + '/test-report.json',
           utility2.jsonParseHandler(function (error, data) {
             /* ignore error */
             utility2.nop(error);
@@ -4574,23 +4509,23 @@ console.log('hello test');
       /* write test-report.badge.svg */
       onEventReady.remaining += 1;
       utility2.fsWriteFileAtomic(
-        state.tmpdir + '/test-report.badge.svg',
+        state.fsDirBuild + '/test-report.badge.svg',
         local._testReportNodejsBadge(testReport),
         onEventReady
       );
       /* write test-report.html */
       onEventReady.remaining += 1;
-      utility2.jsonLog('\ngenerating test report file://' + state.tmpdir
+      utility2.jsonLog('\ngenerating test report file://' + state.fsDirBuild
         + '/test-report.html');
       utility2.fsWriteFileAtomic(
-        state.tmpdir + '/test-report.html',
+        state.fsDirBuild + '/test-report.html',
         utility2.testReportHtml(testReport),
         onEventReady
       );
       /* write test-report.json */
       onEventReady.remaining += 1;
       utility2.fsWriteFileAtomic(
-        state.tmpdir + '/test-report.json',
+        state.fsDirBuild + '/test-report.json',
         JSON.stringify(testReport, null, 2),
         onEventReady
       );
@@ -5630,8 +5565,8 @@ console.log('hello test');
           && state.modeNodejs
           && process.env.GITHUB_TOKEN) {
         utility2.initModule(module, local);
-        state.dbGithubBranchDefault = state.dbGithubBranchDefault
-          || local._createDbGithubBranch(state.modeDbGithub, process.env.GITHUB_TOKEN);
+        state.dbGithubDefault = state.dbGithubDefault
+          || local._createDbGithub(state.modeDbGithub, process.env.GITHUB_TOKEN);
       }
     },
 
@@ -5657,30 +5592,30 @@ console.log('hello test');
         this function tests _Branch's default handling behavior
       */
       var file, mode, onEventError2, self;
-      self = state.dbGithubBranchDefault;
+      self = state.dbGithubDefault;
       mode = 0;
       onEventError2 = function (error) {
         mode = utility2.modeIncrement(error, mode);
         switch (mode) {
-        /* test _Branch_prototype_fileDelete's null handling behavior */
         case 1:
+          /* test _Branch_prototype_fileDelete's null handling behavior */
           file = '/test/_Branch_default_test.json';
           self.fileDelete(file, onEventError2);
           break;
-        /* test _Branch_prototype_fileUpdate's default handling behavior */
         case 2:
+          /* test _Branch_prototype_fileUpdate's default handling behavior */
           self.fileUpdate(file, new Buffer('"_Branch_default_test"'), onEventError2);
           break;
-        /* test _Branch_prototype_fileUpdate's sha hash comparison handling behavior */
         case 3:
+          /* test _Branch_prototype_fileUpdate's sha hash comparison handling behavior */
           self.fileUpdate(file, new Buffer('"_Branch_default_test"'), onEventError2);
           break;
-        /* test _Branch_prototype_fileDelete's null handling behavior */
         case 4:
+          /* test _Branch_prototype_fileDelete's null handling behavior */
           self.fileDelete(file + utility2.uuid4(), onEventError2);
           break;
-        /* test _Branch_prototype_fileDelete's default handling behavior */
         case 5:
+          /* test _Branch_prototype_fileDelete's default handling behavior */
           self.fileDelete(file, onEventError2);
           break;
         default:
@@ -5701,7 +5636,7 @@ console.log('hello test');
         var onEventReady, self;
         onEventReady = utility2.untilReady(onEventError);
         onEventReady.remaining += 4;
-        self = state.dbGithubBranchDefault;
+        self = state.dbGithubDefault;
         /* test _Branch_prototype_fileDelete's error handling behavior */
         self.fileDelete(null, function (error) {
           utility2.tryCatch(function () {
@@ -5771,7 +5706,7 @@ console.log('hello test');
         this function tests _Branch_prototype_branchMerge's default handling behavior
       */
       var self;
-      self = state.dbGithubBranchDefault;
+      self = state.dbGithubDefault;
       utility2.testMock(onEventError, [
         [self, { ajax: utility2.applyArgList1([]) }]
       ], function (onEventError) {
@@ -5782,6 +5717,83 @@ console.log('hello test');
             onEventError();
           }, onEventError);
         });
+      });
+    },
+
+    _Branch_prototype_dirUpdate: function (dir, dirLocal, onEventError) {
+      /*
+        this function updates the entire github dir with the local dir
+      */
+      var file, fileList, mode, onEventError2, self;
+      mode = 0;
+      self = this;
+      onEventError2 = function (error, data) {
+        mode = utility2.modeIncrement(error, mode);
+        switch (mode) {
+        case 1:
+          /* readdir */
+          required.fs.readdir(dirLocal, onEventError2);
+          break;
+        case 2:
+          /* save result to fileList */
+          fileList = data;
+          onEventError2();
+          break;
+        case 3:
+          setTimeout(onEventError2, 1000);
+          break;
+        case 4:
+          if (fileList.length === 0) {
+            mode = -2;
+            onEventError2();
+            return;
+          }
+          file = fileList.shift();
+          mode -= 2;
+          required.fs.readFile(dirLocal + '/' + file, function (error, data) {
+            if (error) {
+              self.dirUpdate(dir + '/' + file, dirLocal + '/' + file, onEventError2);
+              return;
+            }
+            self.fileUpdate(dir + '/' + file, data, onEventError2);
+          });
+          break;
+        default:
+          onEventError(error);
+        }
+      };
+      onEventError2();
+    },
+
+    __Branch_prototype_dirUpdate_default_test: function (onEventError) {
+      /*
+        this function tests _Branch_prototype_dirUpdate's default handling behavior
+      */
+      /*jslint stupid: true*/
+      var self;
+      self = state.dbGithubDefault;
+      utility2.testMock(onEventError, [
+        [required.fs, {
+          /* mock readdir as a synchronous io operation */
+          readdir: function (dir, onEventError) {
+            utility2.tryCatch(function () {
+              onEventError(null, required.fs.readdirSync(dir));
+            }, onEventError);
+          },
+          /* mock readFile as a synchronous io operation */
+          readFile: function (file, onEventError) {
+            utility2.tryCatch(function () {
+              onEventError(null, required.fs.readFileSync(file));
+            }, onEventError);
+          }
+        }],
+        [self, { fileUpdate: utility2.applyArgList2([]) }]
+      ], function (onEventError) {
+        self.dirUpdate(
+          '__Branch_prototype_dirUpdate_default_test',
+          utility2.__dirname + '/.install',
+          onEventError
+        );
       });
     },
 
@@ -5796,8 +5808,8 @@ console.log('hello test');
       onEventError2 = function (error, data) {
         mode = utility2.modeIncrement(error, mode);
         switch (mode) {
-        /* get the file's sha id */
         case 1:
+          /* get the file's sha id */
           self.fileSha(file, onEventError2);
           break;
         case 2:
@@ -5898,7 +5910,7 @@ console.log('hello test');
       */
       var blob, self;
       blob = new Buffer(1);
-      self = state.dbGithubBranchDefault;
+      self = state.dbGithubDefault;
       utility2.testMock(onEventError, [
         [self, { fileSha: utility2.applyArgList1([null, local._blobSha(blob)]) }]
       ], function (onEventError) {
@@ -5918,7 +5930,7 @@ console.log('hello test');
       */
       var blob, self;
       blob = new Buffer(1);
-      self = state.dbGithubBranchDefault;
+      self = state.dbGithubDefault;
       utility2.testMock(onEventError, [
         [self, { ajax: utility2.applyArgList1([]), fileSha: utility2.applyArgList1([]) }]
       ], function (onEventError) {
@@ -5932,7 +5944,7 @@ console.log('hello test');
       });
     },
 
-    _createDbGithubBranch: function (ownerRepoBranch, token) {
+    _createDbGithub: function (ownerRepoBranch, token) {
       /*
         this function creates a github db branch for storing files
       */
@@ -5946,63 +5958,89 @@ console.log('hello test');
       return self;
     },
 
-    modeCliDict_dbGithubBranchBranchMerge: function () {
+    modeCliDict_dbGithubBranchMerge: function () {
       /*
         this function deletes the file on github
       */
+      utility2.jsonLog('merging branch ' + state.dbGithubFile + ' into https://github.com'
+        + state.modeDbGithub.replace(/([^\/]+$)/, 'tree/$1'));
       utility2.readyUtility2Exit.remaining += 1;
-      state.dbGithubBranchDefault.branchMerge(
-        state.dbGithubBranchFile,
-        state.dbGithubBranchMessage,
+      state.dbGithubDefault.branchMerge(
+        state.dbGithubFile,
+        state.dbGithubMessage,
         utility2.readyUtility2Exit
       );
     },
 
-    modeCliDict_dbGithubBranchFileDelete: function () {
+    modeCliDict_dbGithubDirUpdate: function () {
       /*
         this function deletes the file on github
       */
+      utility2.jsonLog('updating dir https://github.com/'
+        + state.modeDbGithub.replace(/([^\/]+$)/, 'tree/$1')
+        + state.dbGithubFile);
       utility2.readyUtility2Exit.remaining += 1;
-      state.dbGithubBranchDefault.fileDelete(
-        state.dbGithubBranchFile,
+      state.dbGithubDefault.dirUpdate(
+        state.dbGithubFile,
+        state.dbGithubLocal,
         utility2.readyUtility2Exit
       );
     },
 
-    modeCliDict_dbGithubBranchFileUpdate: function () {
+    modeCliDict_dbGithubFileDelete: function () {
+      /*
+        this function deletes the file on github
+      */
+      utility2.jsonLog('deleting https://raw.githubusercontent.com'
+        + state.modeDbGithub
+        + state.dbGithubFile);
+      utility2.readyUtility2Exit.remaining += 1;
+      state.dbGithubDefault.fileDelete(
+        state.dbGithubFile,
+        utility2.readyUtility2Exit
+      );
+    },
+
+    modeCliDict_dbGithubFileUpdate: function () {
       /*
         this function updates the file on github
       */
+      utility2.jsonLog('updating https://raw.githubusercontent.com'
+        + state.modeDbGithub
+        + state.dbGithubFile);
       utility2.readyUtility2Exit.remaining += 1;
       utility2.streamReadAll(process.stdin, function (error, data) {
         /* assert no error occurred */
         utility2.assert(!error, error);
-        state.dbGithubBranchDefault.fileUpdate(
-          state.dbGithubBranchFile,
+        state.dbGithubDefault.fileUpdate(
+          state.dbGithubFile,
           data,
           utility2.readyUtility2Exit
         );
       });
     },
 
-    _modeCliDict_dbGithubBranchFileUpdate_default_test: function (onEventError) {
+    _modeCliDict_dbGithubFileUpdate_default_test: function (onEventError) {
       /*
-        this function tests modeCliDict_dbGithubBranchFileUpdate's default handling behavior
+        this function tests modeCliDict_dbGithubFileUpdate's default handling behavior
       */
       utility2.testMock(onEventError, [
-        [state, { dbGithubBranchDefault: {
+        [state, { dbGithubDefault: {
           branchMerge: utility2.nop,
+          dirUpdate: utility2.nop,
           fileDelete: utility2.nop,
           fileUpdate: utility2.nop
         } }],
         [utility2, { readyUtility2Exit: {}, streamReadAll: utility2.applyArgList1([]) }]
       ], function (onEventError) {
         /* test branch merge handling behavior */
-        state.modeCliDict.dbGithubBranchBranchMerge();
+        state.modeCliDict.dbGithubBranchMerge();
+        /* test dir update handling behavior */
+        state.modeCliDict.dbGithubDirUpdate();
         /* test file delete handling behavior */
-        state.modeCliDict.dbGithubBranchFileDelete();
+        state.modeCliDict.dbGithubFileDelete();
         /* test file update handling behavior */
-        state.modeCliDict.dbGithubBranchFileUpdate();
+        state.modeCliDict.dbGithubFileUpdate();
         onEventError();
       });
     }
@@ -6065,7 +6103,14 @@ console.log('hello test');
       /*
         this function requests saucelabs to test a webpage
       */
-      var intervalId, mode, onEventError2, onEventReady, remainingDict, time, timeout;
+      var completed,
+        intervalId,
+        mode,
+        onEventError2,
+        onEventReady,
+        remainingDict,
+        time,
+        timeout;
       mode = 0;
       onEventError2 = function (error, data) {
         mode = utility2.modeIncrement(error, mode);
@@ -6075,16 +6120,14 @@ console.log('hello test');
           data = JSON.stringify(utility2.setOverride(options, {
             build: process.env.CI_BUILD_NUMBER,
             framework: 'custom',
-            /* halve timeoutDefault to account for saucelabs startup time */
-            'max-duration': Math.max(0.0005 * state.timeoutDefault, 60),
-            /* remove stateOverride param */
-            stateOverride: null,
-            url: utility2.textFormat(state.headlessSaucelabsUrl
-              || options.url
+            /* reduce timeoutDefault to account for saucelabs startup time */
+            /* bug - saucelabs only accepts integers for max-duration */
+            'max-duration': Math.ceil(Math.max(0.00075 * state.timeoutDefault, 60)),
+            url: utility2.textFormat(options.url
               || '{{localhost}}/test/test.html#modeTest=1&timeoutDefault={{timeoutDefault}}', {
                 localhost: state.localhost,
-                /* quarter timeoutDefault to account for max-duration */
-                timeoutDefault: 0.25 * state.timeoutDefault
+                /* reduce timeoutDefault to account for max-duration */
+                timeoutDefault: 0.5 * state.timeoutDefault
               })
           }));
           options = {
@@ -6142,9 +6185,10 @@ console.log('hello test');
           }, 10000, state.timeoutDefault - (Date.now() - time));
           break;
         case 5:
+          utility2.jsonLog('\nheadlessSaucelabs - tests polled -', data);
+          completed = completed || data.completed || (/error/).test(data.status);
           data['js tests'].forEach(onEventError2);
           mode -= 1;
-          utility2.jsonLog('\nheadlessSaucelabs - tests remaining -', remainingDict);
           break;
         case 6:
           mode -= 1;
@@ -6159,11 +6203,10 @@ console.log('hello test');
             return;
           }
           /* saucelabs internal error */
-          if (data.completed || data.result || (/error/).exec(data.status)) {
-            error = JSON.stringify(data);
+          if (completed || data.result || (/error/).test(data.status)) {
             data.totalTime = Date.now() - time;
             local._headlessSaucelabsTestFailed(
-              new Error(error.input || error.status || error),
+              new Error(JSON.stringify(error)),
               data
             );
             /* remove failed tests from remainingDict */
@@ -6201,9 +6244,9 @@ console.log('hello test');
       /*
         this function tests headlessSaucelabs's default handling behavior
       */
-      local.headlessSaucelabs(state.headlessSaucelabsOptions || {
+      utility2.headlessSaucelabs({
         /* https://saucelabs.com/platforms */
-        platforms: [['Linux', 'chrome', '34'], ['Linux', 'firefox', '29']]
+        platforms: [['linux', 'chrome', ''], ['linux', 'firefox', '']]
       }, function (error) {
         utility2.tryCatch(function () {
           /* assert no error occurred */
@@ -6269,26 +6312,106 @@ console.log('hello test');
         }],
         totalTIme: testReport.totalTime
       }] };
-      testReport.errorMessageList = [testReport.testPlatformList[0].testCaseList[0].errorMessage];
+      testReport.errorMessageList
+        = [testReport.testPlatformList[0].testCaseList[0].errorMessage];
       utility2.testReportMerge(state.testReport, testReport);
+    },
+
+    modeCliDict_headlessSaucelabsPlatformsList: function () {
+      /*
+        this function runs saucelabs tests with the given json options piped from stdin
+      */
+      var mode, onEventError2, options;
+      mode = 0;
+      onEventError2 = function (error, data) {
+        mode = utility2.modeIncrement(error, mode);
+        switch (mode) {
+        case 1:
+          /* read saucelabs test options from stdin */
+          utility2.streamReadAll(process.stdin, utility2.jsonParseHandler(onEventError2));
+          break;
+        case 2:
+          options = data;
+          /* warm up test url */
+          utility2.ajax({
+            url: utility2.textFormat(options.url, {
+              localhost: state.localhost,
+              timeoutDefault: 1
+            })
+          }, onEventError2);
+          break;
+        case 3:
+          utility2.shell({
+            timeout: options.platformsList.length * options.stateOverride.timeoutDefault,
+            /* remove old test report */
+            script: 'rm -f tmp/test-report.json && '
+              /* loop through platformsList */
+              + options.platformsList.map(function (platforms) {
+                return "echo '"
+                  + JSON.stringify(utility2.setOverride(utility2.jsonCopy(options), {
+                    platforms: platforms,
+                    platformsList: undefined
+                  })) + "' | " + utility2.__filename
+                    + ' --mode-cli=headlessSaucelabs --mode-npm-test --mode-test-report-merge'
+                    + ' --server-port=49221 --tmpdir=tmp';
+              }).join(';')
+          }).on('exit', onEventError2);
+          break;
+        default:
+          utility2.readyUtility2Exit.remaining = 1;
+          utility2.readyUtility2Exit(error);
+        }
+      };
+      onEventError2();
+    },
+
+    _modeCliDict_headlessSaucelabsPlatformsList_default_test: function (onEventError) {
+      /*
+        this function tests modeCliDict_headlessSaucelabsPlatformsList's
+        default handling behavior
+      */
+      var onEventError2;
+      utility2.testMock(onEventError, [
+        [utility2, {
+          ajax: utility2.applyArgList1([]),
+          readyUtility2Exit: function () {
+            onEventError2();
+          },
+          shell: function () {
+            return { on: utility2.applyArgList1([]) };
+          },
+          streamReadAll: utility2.applyArgList1([null, JSON.stringify({
+            platformsList: [[]],
+            stateOverride: {},
+            url: ''
+          })])
+        }]
+      ], function (onEventError) {
+        onEventError2 = onEventError;
+        state.modeCliDict.headlessSaucelabsPlatformsList();
+      });
     },
 
     modeCliDict_headlessSaucelabs: function () {
       /*
         this function runs saucelabs tests with the given json options piped from stdin
       */
-      /* enable tests for this module */
-      state.testModuleDict[local._name] = true;
       /* read saucelabs test options from stdin */
       utility2.streamReadAll(process.stdin, utility2.jsonParseHandler(function (error, data) {
         /* assert no error occurred */
         utility2.assert(!error, error);
-        state.headlessSaucelabsOptions = data;
-        /* enable testing for this module */
-        local._modeTest = true;
         /* init state */
-        utility2.setOverride(state, data && data.stateOverride);
-        utility2.initModule(module, local);
+        state.testModuleDict[local._name] = true;
+        utility2.setOverride(state, data.stateOverride);
+        /* remove stateOverride param */
+        delete data.stateOverride;
+        utility2.initModule(module, {
+          _headlessSaucelabs_browser_test: function (onEventError) {
+            utility2.headlessSaucelabs(data, onEventError);
+          },
+          _name: local._name,
+          _modeTest: true
+        });
       }));
     },
 
@@ -6296,18 +6419,23 @@ console.log('hello test');
       /*
         this function tests modeCliDict_headlessSaucelabs's default handling behavior
       */
+      var onEventError2;
       utility2.testMock(onEventError, [
         [global, { state: { modeCliDict: state.modeCliDict, testModuleDict: {} } }],
         [utility2, {
-          initModule: utility2.nop,
+          headlessSaucelabs: utility2.applyArgList1([]),
+          initModule: function (_, local2) {
+            utility2.nop(_);
+            local2._headlessSaucelabs_browser_test(onEventError2);
+          },
           streamReadAll: utility2.applyArgList1([null, JSON.stringify({
             /* test stateOverride handling behavior */
             "stateOverride": {}
           })])
         }]
       ], function (onEventError) {
+        onEventError2 = onEventError;
         state.modeCliDict.headlessSaucelabs();
-        onEventError();
       });
     }
 
