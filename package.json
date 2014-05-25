@@ -1,30 +1,21 @@
 {
-  "bin": {
-    "utility2": "./utility2.sh"
-  },
-  "contributors": [{
-    "name": "kai zhu",
-    "email": "kaizhu256@gmail.com"
-  }],
+  "bin": { "utility2": "./utility2.sh" },
+  "bundledDependencies": ["istanbul", "phantomjs"],
+  "contributors": [{ "name": "kai zhu", "email": "kaizhu256@gmail.com" }],
   "dependencies": {
     "istanbul": "0.2.x",
-    "phantomjs": "1.9.x",
-    "pg": "3.0.x",
-    "sqlite3": "2.2.x"
+    "phantomjs": "1.9.x"
   },
   "description": "utility2 - nodejs test and code coverage utility",
   "main": "utility2.js",
   "name": "utility2",
   "os": ["darwin", "linux"],
-  "repository" : {
-    "type" : "git",
-    "url" : "https://github.com/kaizhu256/utility2.git"
-  },
+  "repository" : { "type" : "git", "url" : "https://github.com/kaizhu256/utility2.git" },
   "scripts": {
     "install": "./utility2.sh utility2-npm-install",
     "start": "./utility2.sh start",
     "test": "./utility2.sh utility2-npm-test"
   },
-  "version": "2014.5.20-4"
+  "version": "2014.5.20-5"
 }
 

@@ -5,6 +5,7 @@
 - add html linter
 
 #### 2014.05.20
+- remove postgres dead code
 - refine build script api for external apps
 - automate saucelabs testing for multi-platform for external apps
 - automate build upload to github for external apps

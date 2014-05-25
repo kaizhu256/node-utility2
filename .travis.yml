@@ -1,19 +1,17 @@
-## before_script:
-  ## - psql -c "create database travis_ci_test;" -U postgres
-  ## - export POSTGRES_LOGIN=postgres://localhost/travis_ci_test
 branches:
   only:
-    - master
-    - npm
-    - unstable
+  - master
+  - npm
+  - unstable
 env:
   global:
-    - secure: SrS9Ib5Er6ag39u9zK5h4jv0m/jPgZUBLzkOgbLvf+3htHEF2wBkVrDHC7+HKFSx7eBrvXPfA7/p+rEs6aBm6pcnP3f3BU07f5iFgiHdSXmFlTq7zuO0Xsa/Js4CDaXYJ3KTzqPk43cAQb7IhH2pZWn8fVq0HJXlP79RKG18lMw=
+  ## GITHUB_TOKEN
+  - secure: SrS9Ib5Er6ag39u9zK5h4jv0m/jPgZUBLzkOgbLvf+3htHEF2wBkVrDHC7+HKFSx7eBrvXPfA7/p+rEs6aBm6pcnP3f3BU07f5iFgiHdSXmFlTq7zuO0Xsa/Js4CDaXYJ3KTzqPk43cAQb7IhH2pZWn8fVq0HJXlP79RKG18lMw=
 ## use darwin platform
 language: objective-c
 ## language: node_js
 ## node_js:
-  ## - "0.10"
+## - "0.10"
 ## script: export PATH=$(./utility2.sh npmInstall) && npm install && npm test
 script: ./utility2.sh utility2-build
 

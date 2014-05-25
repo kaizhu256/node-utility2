@@ -2280,13 +2280,23 @@ console.log('hello test');
       /* browser code */
       if (state.modeBrowser) {
         /* notify saucelabs of test results */
-        self.global.global_test_results = {
+        self.global.global_test_results = utility2.setDefault({
           coverage: global.__coverage__,
-          failed: state.testReportCopy.testsFailed,
-          passed: state.testReportCopy.testsPassed,
           testCallbackId: state.testCallbackId,
           testReport: state.testReportCopy
-        };
+        /* extra stuff to keep saucelabs happy - https://saucelabs.com/docs/rest#jsunit */
+        }, {
+          duration: 1,
+          failed: state.testReportCopy.testsFailed,
+          passed: 1,
+          tests: [{
+            duration: 1,
+            message: 'bb',
+            name: 'aa',
+            result: !state.testReportCopy.testsFailed
+          }],
+          total: 1
+        });
         if (utility2.urlParamsGet(self.global.location.hash, '#').testReportUpload) {
           utility2.ajax({
             data: JSON.stringify(self.global.global_test_results),

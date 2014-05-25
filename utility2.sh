@@ -27,8 +27,9 @@ shMain () {
 
   ## init utility2 env
   if [ -f "./utility2.js" ]
-    then eval $(node --eval "global.state = { modeCli: 'exportEnv' }; require('./utility2');")
-  else eval $(node --eval "global.state = { modeCli: 'exportEnv' }; require('utility2');")
+    then eval $(node --eval "global.state = { modeCli: 'exportEnv' }; require('./utility2.js');")
+  else
+    eval $(node --eval "global.state = { modeCli: 'exportEnv' }; require('utility2');")
   fi
   UTILITY2_JS=$UTILITY2_DIR/utility2.js
   UTILITY2_SH=$UTILITY2_DIR/utility2.sh
@@ -173,22 +174,6 @@ shMain () {
     fi
     ;;
 
-  ## install postgres
-  postgres-install)
-    if [ ! "$(which postgres)" ]
-      then case $NODEJS_PROCESS_PLATFORM in
-      darwin)
-        ## install postgres
-        SCRIPT="$SCRIPT && curl -3Ls"
-        SCRIPT="$SCRIPT https://github.com/PostgresApp/PostgresApp/releases"
-        SCRIPT="$SCRIPT/download/9.3.4.1/Postgres-9.3.4.1.zip"
-        SCRIPT="$SCRIPT > /tmp/postgres.zip"
-        SCRIPT="$SCRIPT && unzip -q /tmp/postgres.zip -d /Applications"
-        ;;
-      esac
-    fi
-    ;;
-
   ## debug saucelabs job id
   saucelabs-debug)
     ## security - do not use SCRIPT macro to avoid leaking sensitive info
@@ -305,19 +290,11 @@ shMain () {
 
   ## build utility2
   utility2-build)
-    ## install postgres
-    SCRIPT="$SCRIPT && $($UTILITY2_SH_ECHO postgres-install)"
-    ## export POSTGRES_LOGIN
-    if [ ! "$POSTGRES_LOGIN" ]
-      then export POSTGRES_LOGIN=postgres://localhost/$USER
-    fi
     ## install slimerjs
     SCRIPT="$SCRIPT && $($UTILITY2_SH_ECHO slimerjs-install)"
     if [ "$CODESHIP" ]
       ## export CI_BUILD_DIR var
       then export CI_BUILD_DIR=/utility2.build.codeship.io
-      ## init postgres
-      export POSTGRES_LOGIN=postgres://$PG_USER:$PG_PASSWORD@localhost/test
     elif [ "$TRAVIS" ]
       ## export CI_BUILD_DIR var
       then export CI_BUILD_DIR=/utility2.build.travis-ci.org
@@ -325,9 +302,6 @@ shMain () {
       export CI_BRANCH=$TRAVIS_BRANCH
       export CI_BUILD_NUMBER=$TRAVIS_BUILD_NUMBER
       export CI_COMMIT_ID=$TRAVIS_COMMIT
-      ## init postgres
-      SCRIPT="$SCRIPT && eval '/Applications/Postgres.app/Contents/MacOS/Postgres &'"
-      export POSTGRES_LOGIN=postgres://localhost/$USER
     fi
     ## init ci build
     eval "$($UTILITY2_SH_ECHO ci-build-init)"
@@ -398,8 +372,6 @@ shMain () {
     NPM_TEST_ARGS=""
     ## test github db
     NPM_TEST_ARGS="$NPM_TEST_ARGS --mode-db-github=kaizhu256/blob/unstable"
-    ## test postgres db
-    NPM_TEST_ARGS="$NPM_TEST_ARGS --mode-db-postgres=\$POSTGRES_LOGIN"
     ## offline mode
     NPM_TEST_ARGS="$NPM_TEST_ARGS --mode-offline"
     ## test repl
