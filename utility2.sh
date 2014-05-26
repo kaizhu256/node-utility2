@@ -1,4 +1,61 @@
 #!/bin/bash
+shCiBuildInit () {
+  ## this function inits the ci build
+  ## codeship.io env
+  if [ "$CODESHIP" ]
+    ## export CI_BUILD_DIR var
+    then export CI_BUILD_DIR=/build.codeship.io
+  ## travis-ci.org env
+  elif [ "$TRAVIS" ]
+    ## export CI_BUILD_DIR var
+    then export CI_BUILD_DIR=/build.travis-ci.org
+    ## export TRAVIS_* vars as CI_* vars
+    export CI_BRANCH=$TRAVIS_BRANCH
+    export CI_BUILD_NUMBER=$TRAVIS_BUILD_NUMBER
+    export CI_COMMIT_ID=$TRAVIS_COMMIT
+  fi
+  ## export CI_* vars
+  if [ ! "$CI_BRANCH" ]
+    then export CI_BRANCH="$(git rev-parse --abbrev-ref HEAD)"
+    ## add random salt to CI_BUILD_NUMBER to prevent conflict
+    ## when re-running saucelabs with same CI_BUILD_NUMBER
+    if [ "$CI_BRANCH" == browser ]
+      then export CI_BUILD_NUMBER="$CI_BUILD_NUMBER.$(openssl rand -hex 4)"
+    fi
+  fi
+  if [ ! "$CI_COMMIT_ID" ]
+    then export CI_COMMIT_ID="$(git rev-parse --verify HEAD)"
+  fi
+  if [ ! "$CI_COMMIT_MESSAGE" ]
+    then export CI_COMMIT_MESSAGE="$(git log -1 --pretty=%s)"
+  fi
+  if [ ! "$CI_COMMIT_INFO" ]
+    then export CI_COMMIT_INFO="$CI_COMMIT_ID $CI_COMMIT_MESSAGE"
+  fi
+  if [ ! "$CI_REPO" ]
+    then export CI_REPO="$(git config --get remote.origin.url | perl -ne 's/.*?([\w\-]+\/[^\/]+)\.git$/$1/; print')"
+  fi
+  if [ ! "$CI_REPO_URL" ]
+    then export CI_REPO_URL="https://github.com/$CI_REPO/tree/$CI_BRANCH"
+  fi
+  ## init local script
+  local SCRIPT=":"
+  ## save EXIT_CODE
+  SCRIPT="$SCRIPT; EXIT_CODE=\$?"
+  if [ $CI_BUILD_DIR ]
+    ## upload build to $CI_BUILD_DIR/latest.$CI_BRANCH
+    then SCRIPT="$SCRIPT && $($UTILITY2_SH_ECHO db-github-dir-update $CI_REPO/gh-pages $CI_BUILD_DIR/latest.$CI_BRANCH .build)"
+    ## upload build to $CI_BUILD_DIR/$CI_BUILD_NUMBER.$CI_BRANCH.$CI_COMMIT_ID
+    SCRIPT="$SCRIPT && $($UTILITY2_SH_ECHO db-github-dir-update $CI_REPO/gh-pages $CI_BUILD_DIR/$CI_BUILD_NUMBER.$CI_BRANCH.$CI_COMMIT_ID .build)"
+    ## save EXIT_CODE if non-zero
+    SCRIPT="$SCRIPT || EXIT_CODE=\$?"
+  fi
+  ## exit with EXIT_CODE
+  SCRIPT="$SCRIPT; exit \$EXIT_CODE"
+  ## export SCRIPT_CI_BUILD_UPLOAD, which uploads ci build to github
+  SCRIPT_CI_BUILD_UPLOAD=$SCRIPT
+}
+
 shNodejsInstall () {
   ## this function installs nodejs / npm if necesary
   if [ ! "$(which npm)" ]
@@ -19,84 +76,67 @@ shNodejsInstall () {
   fi
 }
 
+shOpensslDecrypt () {
+  ## this function decrypts stdin using aes-256-cbc
+  openssl enc -aes-256-cbc -K $AES_256_CBC_KEY -iv $AES_256_CBC_IV -d
+}
+
+shOpensslEncrypt () {
+  ## this function encrypts stdin using aes-256-cbc
+  openssl enc -aes-256-cbc -K $AES_256_CBC_KEY -iv $AES_256_CBC_IV
+}
+
+shScriptEval () {
+  ## this function evals the $SCRIPT var
+  ## echo script
+  if [ "$MODE_ECHO" ] || [ "$SCRIPT" != ":" ]
+    then echo $SCRIPT
+  fi
+  ## eval script
+  if [ ! "$MODE_ECHO" ]
+    ## save cwd
+    then pushd "$(pwd)" > /dev/null
+    eval "$SCRIPT"
+    ## save exit code
+    EXIT_CODE=$?
+    ## restore cwd
+    popd > /dev/null
+    ## restore exit code
+    if [ "$EXIT_CODE" != 0 ]
+      then exit $EXIT_CODE
+    fi
+  fi
+}
+
+shUtility2Init() {
+  ## this function inits utility2
+  ## init $SCRIPT var
+  SCRIPT=":"
+  ## init utility2 env
+  UTILITY2_JS=$UTILITY2_DIR/utility2.js
+  UTILITY2_SH=$UTILITY2_DIR/utility2.sh
+  UTILITY2_SH_ECHO="$UTILITY2_SH mode-echo"
+}
+
 shMain () {
   ## this function is the main program
 
   ## install nodejs / npm if necessary
   shNodejsInstall
-
-  ## init utility2 env
+  ## init nodejs env
   if [ -f "./utility2.js" ]
     then eval $(node --eval "global.state = { modeCli: 'exportEnv' }; require('./utility2.js');")
   else
     eval $(node --eval "global.state = { modeCli: 'exportEnv' }; require('utility2');")
   fi
-  UTILITY2_JS=$UTILITY2_DIR/utility2.js
-  UTILITY2_SH=$UTILITY2_DIR/utility2.sh
-  UTILITY2_SH_ECHO="$UTILITY2_SH mode-echo"
-
-  ## init utility2-external env
-  UTILITY2_EXTERNAL_TAR_GZ=utility2-external.$NODEJS_PACKAGE_JSON_VERSIONSHORT.tar.gz
-
-  ## init SCRIPT var
-  SCRIPT=":"
+  ## init utility2
+  shUtility2Init
 
   ## parse argv
   ## http://stackoverflow.com/questions/192249/how-do-i-parse-command-line-arguments-in-bash
   while [[ $# > 0 ]]
   do
   case $1 in
-
-  ## init ci build
-  ci-build-init)
-    ## export CI_* vars
-    if [ ! "$CI_BRANCH" ]
-      then export CI_BRANCH="$(git rev-parse --abbrev-ref HEAD)"
-      SCRIPT="$SCRIPT && export CI_BRANCH=\"$CI_BRANCH\""
-      if [ "$CI_BRANCH" == browser ]
-        ## add random salt to CI_BUILD_NUMBER to prevent conflict
-        ## when re-running saucelabs with same CI_BUILD_NUMBER
-        then export CI_BUILD_NUMBER="$CI_BUILD_NUMBER.$(openssl rand -hex 4)"
-        SCRIPT="$SCRIPT && export CI_BUILD_NUMBER=\"$CI_BUILD_NUMBER\""
-      fi
-    fi
-    if [ ! "$CI_COMMIT_ID" ]
-      then export CI_COMMIT_ID="$(git rev-parse --verify HEAD)"
-      SCRIPT="$SCRIPT && export CI_COMMIT_ID=\"$CI_COMMIT_ID\""
-    fi
-    if [ ! "$CI_COMMIT_MESSAGE" ]
-      then export CI_COMMIT_MESSAGE="$(git log -1 --pretty=%s)"
-      SCRIPT="$SCRIPT && export CI_COMMIT_MESSAGE=\"$CI_COMMIT_MESSAGE\""
-    fi
-    if [ ! "$CI_COMMIT_INFO" ]
-      then export CI_COMMIT_INFO="$CI_COMMIT_ID $CI_COMMIT_MESSAGE"
-      SCRIPT="$SCRIPT && export CI_COMMIT_INFO=\"$CI_COMMIT_INFO\""
-    fi
-    if [ ! "$CI_REPO" ]
-      then export CI_REPO="$(git config --get remote.origin.url | perl -ne 's/.*?([\w\-]+\/[^\/]+)\.git$/$1/; print')"
-      SCRIPT="$SCRIPT && export CI_REPO=\"$CI_REPO\""
-    fi
-    if [ ! "$CI_REPO_URL" ]
-      then export CI_REPO_URL="https://github.com/$CI_REPO/tree/$CI_BRANCH"
-      SCRIPT="$SCRIPT && export CI_REPO_URL=\"$CI_REPO_URL\""
-    fi
-    ;;
-
-  ## upload ci build to github
-  ci-build-upload)
-    ## save EXIT_CODE
-    SCRIPT="$SCRIPT; EXIT_CODE=\$?"
-    if [ "$CI_BUILD_DIR" ]
-      ## upload build to $CI_BUILD_NUMBER/latest.$CI_BRANCH
-      then SCRIPT="$SCRIPT && $($UTILITY2_SH_ECHO db-github-dir-update $CI_REPO/gh-pages $CI_BUILD_DIR/latest.$CI_BRANCH .build)"
-      ## upload build to $CI_BUILD_NUMBER/$CI_BUILD_NUMBER.$CI_BRANCH.$CI_COMMIT_ID
-      SCRIPT="$SCRIPT && $($UTILITY2_SH_ECHO db-github-dir-update $CI_REPO/gh-pages $CI_BUILD_DIR/$CI_BUILD_NUMBER.$CI_BRANCH.$CI_COMMIT_ID .build)"
-      ## save EXIT_CODE if non-zero
-      SCRIPT="$SCRIPT || EXIT_CODE=\$?"
-    fi
-    ## exit with EXIT_CODE
-    SCRIPT="$SCRIPT; exit \$EXIT_CODE"
-    ;;
 
   ## merge head branch $3 into github base branch $2
   db-github-branch-merge)
@@ -154,7 +194,10 @@ shMain () {
   ## run utility2 install script in npm package $2
   npm-install)
     SCRIPT="$SCRIPT && mkdir -p .install/public"
-    SCRIPT="$SCRIPT && $UTILITY2_JS --load-module=$2 --mode-cli=utility2NpmInstall"
+    SCRIPT="$SCRIPT && $UTILITY2_JS --mode-cli=utility2NpmInstall"
+    if [ "$2" ]
+      then SCRIPT="$SCRIPT --load-module=$2"
+    fi
     ;;
 
   ## npm test with code coverage regexp $2 and test args ${@:3}
@@ -258,24 +301,11 @@ shMain () {
     SCRIPT="$SCRIPT $3"
     ;;
 
-  ## test saucelabs
+  ## test saucelabs multi platforms
   saucelabs-test-platforms-list)
-    SCRIPT="$SCRIPT && cat $2 | $UTILITY2_JS"
+    SCRIPT="$SCRIPT && cat .install/saucelabs-test-platforms-list.json | $UTILITY2_JS"
     SCRIPT="$SCRIPT --mode-cli=headlessSaucelabsPlatformsList"
     SCRIPT="$SCRIPT $3"
-    ;;
-
-  ## install slimerjs
-  slimerjs-install)
-    if [ ! "$(which slimerjs)" ]
-      then SCRIPT="$SCRIPT && curl -3Ls"
-      SCRIPT="$SCRIPT http://download.slimerjs.org/v0.9/0.9.1/slimerjs-0.9.1-"
-      SCRIPT="$SCRIPT$(echo $NODEJS_PROCESS_PLATFORM | perl -ne 's/.*darwin$/mac/; s/linux/linux-x86_64/; print')"
-      SCRIPT="$SCRIPT.tar.bz2"
-      SCRIPT="$SCRIPT | tar -C /tmp -xjf -"
-      ## add slimerjs to PATH
-      SCRIPT="$SCRIPT && export PATH=\$PATH:/tmp/slimerjs-0.9.1"
-    fi
     ;;
 
   ## start interactive utility2 app $2
@@ -290,31 +320,15 @@ shMain () {
 
   ## build utility2
   utility2-build)
-    ## install slimerjs
-    SCRIPT="$SCRIPT && $($UTILITY2_SH_ECHO slimerjs-install)"
-    if [ "$CODESHIP" ]
-      ## export CI_BUILD_DIR var
-      then export CI_BUILD_DIR=/utility2.build.codeship.io
-    elif [ "$TRAVIS" ]
-      ## export CI_BUILD_DIR var
-      then export CI_BUILD_DIR=/utility2.build.travis-ci.org
-      ## export CI_* vars
-      export CI_BRANCH=$TRAVIS_BRANCH
-      export CI_BUILD_NUMBER=$TRAVIS_BUILD_NUMBER
-      export CI_COMMIT_ID=$TRAVIS_COMMIT
-    fi
     ## init ci build
-    eval "$($UTILITY2_SH_ECHO ci-build-init)"
+    shCiBuildInit
     case $CI_BRANCH in
     ## run headless saucelabs browser tests
     browser)
-      if [ ! "$CODESHIP" ]
-        then exit
-      fi
       ## npm install
       SCRIPT="$SCRIPT && npm install"
       ## run headless saucelabs browser tests
-      SCRIPT="$SCRIPT && $($UTILITY2_SH_ECHO saucelabs-test-platforms-list .install/utility2-saucelabs.json)"
+      SCRIPT="$SCRIPT && $($UTILITY2_SH_ECHO saucelabs-test-platforms-list)"
       ;;
     npm)
       ## build npm package utility2
@@ -328,11 +342,12 @@ shMain () {
       ;;
     esac
     ## upload ci build to github
-    SCRIPT="$SCRIPT && $($UTILITY2_SH_ECHO ci-build-upload)"
+    SCRIPT="$SCRIPT && $SCRIPT_CI_BUILD_UPLOAD"
     ;;
 
   ## build utility2-external
   utility2-external-build)
+    UTILITY2_EXTERNAL_TAR_GZ=utility2-external.$NODEJS_PACKAGE_JSON_VERSIONSHORT.tar.gz
     SCRIPT="$SCRIPT && $($UTILITY2_SH_ECHO utility2-npm-install)"
     SCRIPT="$SCRIPT && $UTILITY2_JS"
     SCRIPT="$SCRIPT --mode-cli=rollupFileList"
@@ -350,11 +365,13 @@ shMain () {
 
   ## publish utility2-external on github
   utility2-external-build-publish)
+    UTILITY2_EXTERNAL_TAR_GZ=utility2-external.$NODEJS_PACKAGE_JSON_VERSIONSHORT.tar.gz
     SCRIPT="$SCRIPT && $($UTILITY2_SH_ECHO db-github-file-update kaizhu256/utility2/gh-pages /utility2-external/$UTILITY2_EXTERNAL_TAR_GZ .install/$UTILITY2_EXTERNAL_TAR_GZ)"
     ;;
 
   ## called by npm run-script install
   utility2-npm-install)
+    UTILITY2_EXTERNAL_TAR_GZ=utility2-external.$NODEJS_PACKAGE_JSON_VERSIONSHORT.tar.gz
     ## run utility2 install script
     SCRIPT="$SCRIPT && $($UTILITY2_SH_ECHO npm-install)"
     ## install utility2-external
@@ -391,23 +408,9 @@ shMain () {
   esac
   shift
   done
-  ## echo script
-  if ([ "$MODE_ECHO" ] || [ "$SCRIPT" != ":" ])
-    then echo $SCRIPT
-  fi
-  ## eval script
-  if [ ! "$MODE_ECHO" ]
-    ## save cwd
-    then pushd "$(pwd)" > /dev/null
-    eval "$SCRIPT"
-    ## save exit code
-    EXIT_CODE=$?
-    ## restore cwd
-    popd > /dev/null
-    ## restore exit code
-    exit $EXIT_CODE
-  fi
+  ## eval $SCRIPT
+  shScriptEval
 }
-
+## run main program
 shMain "$@"
 

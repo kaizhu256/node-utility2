@@ -61,10 +61,12 @@
       ].forEach(function (module) {
         required[module] = required[module] || utility2.require(module);
       });
-      /* export utility2.assert */
+      /* export utility2.assert stub */
       utility2.assert = utility2.assert || console.assert;
       /* export utility2.__dirname */
       utility2.__dirname = utility2.__dirname || __dirname;
+      /* export utility2.jsonLog stub */
+      utility2.jsonLog = utility2.jsonLog || console.log;
       /* export utility2 objects */
       Object.keys(local).forEach(function (key) {
         if (key[0] !== '_') {
@@ -90,26 +92,47 @@
       /*
         this function tests _initNodejs's init handling behavior
       */
+      var global2;
       utility2.testMock(onEventError, [
         [global, { __dirname: null, require: utility2.nop }],
         [local, { _initOnceUtility2Js: utility2.nop }]
       ], function (onEventError) {
-        var global2;
         global2 = {};
         /* init local._initNodejs with blank global2 state */
         local._initNodejs(global2);
-        /* assert global2.required was created */
-        utility2.assert(global2.required, global2);
-        /* assert global2.state was created */
-        utility2.assert(global2.state, global2);
-        /* assert global2.utility2 was created */
-        utility2.assert(global2.utility2, global2);
+        global2 = utility2.jsonStringifyOrdered(global2);
+        /* validate global2 */
+        utility2.assert(global2 === JSON.stringify({
+          required: { utility2: { __dirname: null } },
+          state: {},
+          utility2: { __dirname: null }
+        }), global2);
         onEventError();
       });
     },
 
     _initOnceCli: function () {
-      var tmp, value;
+      var match, tmp, value;
+      /* init default state.loadModule */
+      state.loadModule = state.loadModule || utility2.__dirname + '/utility2.js';
+      /* parse process.argv */
+      process.argv.forEach(function (arg) {
+        /* get --load-module arg */
+        match = (/^--load-module=(.+)/).exec(arg);
+        if (match) {
+          state.loadModule = match[1];
+        }
+        /* get --mode-cli arg */
+        match = (/^--mode-cli=(.+)/).exec(arg);
+        if (match) {
+          state.modeCli = match[1];
+        }
+        /* get --mode-coverage arg */
+        match = (/^--mode-coverage=(.+)/).exec(arg);
+        if (match) {
+          state.modeCoverageRegexp = new RegExp(match[1]);
+        }
+      });
       /* init state.fsDirBuild */
       state.fsDirBuild = state.fsDirBuild || process.cwd() + '/.build';
       /* load package.json file */
@@ -151,7 +174,7 @@
         /* export env */
         console.log(Object.keys(tmp).sort().map(function (key) {
           return 'export ' + key + '=' + JSON.stringify(tmp[key]);
-        }).join(' && '));
+        }).join(' && ').replace((/`/g), "'"));
         process.exit();
         break;
       }
@@ -161,11 +184,16 @@
       /*
         this function tests _initOnceCli's default handling behavior
       */
+      var data;
       utility2.testMock(onEventError, [
         [global, {
-          /* test state.modeCoverageRegexp handling behavior */
-          process: { argv: [null], cwd: utility2.nop, exit: null },
-          state: { modeCli: 'exportEnv' }
+          process: {
+            /* test various process.argv options handling behavior */
+            argv: ['node', '--mode-cli=exportEnv', '--load-module=1', '--mode-coverage=1'],
+            cwd: utility2.nop,
+            exit: utility2.nop
+          },
+          state: {}
         }],
         [required, {
           fs: { readFileSync: function () {
@@ -174,8 +202,17 @@
           } }
         }]
       ], function (onEventError) {
-        process.exit = onEventError;
         local._initOnceCli();
+        data = utility2.jsonStringifyOrdered(state);
+        /* validate state */
+        utility2.assert(data === JSON.stringify({
+          fsDirBuild: "undefined/.build",
+          loadModule: "1",
+          modeCli: "exportEnv",
+          modeCoverageRegexp: {},
+          packageJson: { aa: "bb", cc: null }
+        }), data);
+        onEventError();
       });
     },
 
@@ -183,19 +220,13 @@
       /*
         this function inits code coverage
       */
+      state.modeCoverageInit = 1;
       if (!state.modeCoverageRegexp) {
         return;
       }
       global.__coverage__ = global.__coverage__ || {};
       /* init istanbul */
       required.istanbul = required.istanbul || utility2.require('istanbul');
-      /* init code coverage require hook */
-      required.istanbul.hook.hookRequire(
-        utility2.coverageInstrumentFileCheck,
-        function (code, file) {
-          return utility2.coverageInstrumentFileCode(file, code);
-        }
-      );
       /* on exit, create code coverage report */
       process.on('exit', local._coverageReportGenerate);
     },
@@ -208,25 +239,18 @@
         [global, {
           __coverage__: null,
           process: { on: utility2.nop },
-          state: { modeCoverageRegexp: null }
+          required: {},
+          state: {}
         }],
-        [required, { istanbul: null }],
-        [utility2, {
-          coverageInstrumentFileCode: utility2.nop,
-          __filename: null,
-          /* test required.istanbul.hook.hookRequire handling behavior */
-          require: function () {
-            return { hook: { hookRequire: utility2.applyArgList1([]) } };
-          }
-        }]
+        [utility2, { require: utility2.nop }]
       ], function (onEventError) {
         /* test no code coverage handling behavior */
         local._initOnceCoverage();
         /* test code coverage handling behavior */
         state.modeCoverageRegexp = true;
         local._initOnceCoverage();
-        /* assert required.istanbul exists */
-        utility2.assert(required.istanbul, required.istanbul);
+        /* assert state.modeCoverageInit === 1 */
+        utility2.assert(state.modeCoverageInit === 1, state.modeCoverageInit);
         onEventError();
       });
     },
@@ -235,28 +259,6 @@
       /*
         this function loads utility2.js with code coverage
       */
-      var match;
-      state.modeCoverageInit = 1;
-      /* init default state.loadModule */
-      state.loadModule = utility2.__dirname + '/utility2.js';
-      /* parse process.argv */
-      process.argv.forEach(function (arg) {
-        /* get --load-module arg */
-        match = (/^--load-module=(.+)/).exec(arg);
-        if (match) {
-          state.loadModule = match[1];
-        }
-        /* get --mode-cli arg */
-        match = (/^--mode-cli=(.+)/).exec(arg);
-        if (match) {
-          state.modeCli = match[1];
-        }
-        /* get --mode-coverage arg */
-        match = (/^--mode-coverage=(.+)/).exec(arg);
-        if (match) {
-          state.modeCoverageRegexp = new RegExp(match[1]);
-        }
-      });
       /* init cli mode */
       local._initOnceCli();
       /* init code coverage */
@@ -278,11 +280,6 @@
         this function tests _initOnceUtility2Js's default handling behavior
       */
       utility2.testMock(onEventError, [
-        [global, {
-          /* test various process.argv options handling behavior */
-          process: { argv: ['node', '--mode-cli=1', '--load-module=1', '--mode-coverage=1'] },
-          state: { loadModule: null, modeCoverageInit: null }
-        }],
         [local, {
           _initOnceCli: utility2.nop,
           _initOnceCoverage: utility2.nop,
@@ -295,10 +292,6 @@
         [utility2, { __filename: null }]
       ], function (onEventError) {
         local._initOnceUtility2Js();
-        /* assert state.modeCoverageInit === 1 */
-        utility2.assert(state.modeCoverageInit === 1, state.modeCoverageInit);
-        /* assert state.modeCoverageRegexp exists */
-        utility2.assert(state.modeCoverageRegexp, state.modeCoverageRegexp);
         onEventError();
       });
     },
@@ -310,6 +303,7 @@
       var ii, mode, onEventError2;
       mode = 0;
       onEventError2 = function (error, data) {
+        /*jslint evil: true*/
         /* assert no error occurred */
         utility2.assert(!error, error);
         mode += 1;
@@ -327,6 +321,7 @@
             utility2.coverageInstrumentFileCode(utility2.__filename + 2, data),
             utility2.__filename + 2
           );
+          /* utility2.js2 is now covered */
           state.modeCoverageInit += 1;
           utility2.fsWatch({
             actionList: ['lint', 'eval'],
@@ -338,7 +333,15 @@
           utility2.fsWatch({
             actionList: ['lint', 'eval'],
             file: utility2.__dirname + '/utility2.js2'
-          }, utility2.onEventErrorDefault);
+          }, onEventError2);
+          break;
+        case 4:
+          /* restore state.loadModule files clobbered by utility2.js2*/
+          state.fsWatchActionDict.eval(
+            state.fsWatchDict[required.path.resolve(state.loadModule)],
+            /* do not eval js scripts */
+            'noEvalJs'
+          );
           /* initModule */
           local._init();
           break;
@@ -406,40 +409,23 @@
         this function generates a code coverage report when nodejs exits
       */
       var collector, data;
-      /* assert state.tmpdir exists */
-      utility2.assert(state.tmpdir, 'invalid tmpdir ' + state.tmpdir);
       collector = new required.istanbul.Collector();
       collector.add(global.__coverage__);
-      /* save lcov and html report */
       utility2.jsonLog('generating code report file://' + state.fsDirBuild
         + '/coverage-report/index.html');
-      required.istanbul.Report
-        .create('lcov', { dir: state.fsDirBuild })
-        .writeReport(collector, true);
-      /* print text report */
-      required.istanbul.Report
-        .create('text')
-        .writeReport(collector);
-      /* save cobertura report */
-      required.istanbul.Report
-        .create('cobertura', { dir: state.fsDirBuild })
-        .writeReport(collector, true);
-      /* remove old coverage-report */
-      utility2.tryCatch(function () {
-        required.fs.renameSync(
-          state.fsDirBuild + '/coverage-report',
-          state.tmpdir + '/cache/' + utility2.uuid4()
-        );
-      }, utility2.nop);
-      /* rename coverage files */
+      ['cobertura', 'html', 'lcovonly', 'text'].forEach(function (report) {
+        required.istanbul.Report
+          .create(report, { dir: state.fsDirBuild + '/coverage-report' })
+          .writeReport(collector, true);
+      });
       [
-        ['lcov-report', 'coverage-report'],
-        ['cobertura-coverage.xml', 'coverage-report/coverage-report.cobertura.xml'],
-        ['lcov.info', 'coverage-report/coverage-report.lcov.info']
+        ['cobertura-coverage.xml', 'coverage-report.cobertura.xml'],
+        ['lcov.info', 'coverage-report.lcov.info']
       ].forEach(function (rename) {
+        /* rename new file */
         required.fs.renameSync(
-          state.fsDirBuild + '/' + rename[0],
-          state.fsDirBuild + '/' + rename[1]
+          state.fsDirBuild + '/coverage-report/' + rename[0],
+          state.fsDirBuild + '/coverage-report/' + rename[1]
         );
       });
       /* get coverage percentage from cobertura report */
@@ -496,13 +482,6 @@
         local._coverageReportGenerate();
         onEventError();
       });
-    },
-
-    jsonLog: function (arg) {
-      /*
-        this function is a stub for the real function
-      */
-      console.log(arg);
     }
 
   };

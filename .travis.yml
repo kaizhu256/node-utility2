@@ -5,7 +5,6 @@ branches:
   - unstable
 env:
   global:
-  ## GITHUB_TOKEN
   - secure: SrS9Ib5Er6ag39u9zK5h4jv0m/jPgZUBLzkOgbLvf+3htHEF2wBkVrDHC7+HKFSx7eBrvXPfA7/p+rEs6aBm6pcnP3f3BU07f5iFgiHdSXmFlTq7zuO0Xsa/Js4CDaXYJ3KTzqPk43cAQb7IhH2pZWn8fVq0HJXlP79RKG18lMw=
 ## use darwin platform
 language: objective-c

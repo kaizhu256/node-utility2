@@ -1,5 +1,5 @@
 #### todo
-- add example_hello.js2
+- fix mysterious saucelabs finish status by using job logs
 - integrate angularjs into /test/test.html
 - add usage documentation
 - add html linter

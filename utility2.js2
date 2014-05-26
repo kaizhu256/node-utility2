@@ -388,7 +388,7 @@ tr:nth-child(odd).testReportPlatformTr {
 <div id="testReportDiv"></div>
 <script>
   /* enable tests for utility2 namespace */
-  window.state = { testModuleDict: { utility2: true } };
+  window.state = { testModuleDict: {{testModuleDict}} };
   document.getElementById('testRunButton').addEventListener('click', function () {
     location.hash = '#modeTest=1';
     location.reload();
@@ -396,6 +396,7 @@ tr:nth-child(odd).testReportPlatformTr {
 </script>
 <script src="/public/file/utility2/utility2-external.browser.rollup.min.js"></script>
 <script src="/public/file/utility2.js"></script>
+<script src="{{testScript}}"></script>
 </body>
 </html>
 /* MODULE_END */
@@ -458,7 +459,7 @@ ymXCIWMOjxhLC8J1sbqQq/btyWDcn1qj0PUzM+bH4UidMtOe/B7bL9Wlz0MZYXZdLOnfAAAAAElFTkSu
 
 
 
-/* MODULE_BEGIN { "actionList": ["lint"], "file": ".install/utility2-saucelabs.json" } */
+/* MODULE_BEGIN { "actionList": ["lint"], "file": ".install/saucelabs-test-platforms-list.json" } */
 {
   "platformsList": [
     [
@@ -767,6 +768,11 @@ console.log('hello test');
 
 
 
+/* MODULE_BEGIN { "actionList": ["lint"], "file": "/public/file/utility2-test.js" } */
+/* MODULE_END */
+
+
+
 /* MODULE_BEGIN { "actionList": ["lint", "eval"], "file": "/public/file/utility2.js" } */
 /*jslint browser: true, indent: 2, maxerr: 8, node: true, nomen: true, regexp: true*/
 /*global global, required, state, utility2*/
@@ -1068,7 +1074,7 @@ console.log('hello test');
       */
       var onEventReady;
       onEventReady = utility2.untilReady(onEventError);
-      onEventReady.remaining += 1;
+      onEventReady.remaining += 3;
       utility2.applyArgList0([])(onEventReady);
       utility2.applyArgList1([])(null, onEventReady);
       utility2.applyArgList2([])(null, null, onEventReady);
@@ -1517,7 +1523,7 @@ console.log('hello test');
         local2._initOnce();
       }
       /* wait until utility2 is ready before running tests */
-      state.testModuleDict = state.testModuleDict || {};
+      state.testModuleDict = state.testModuleDict || { utility2: true };
       utility2.untilReadyUtility2(function () {
         /* init test */
         if (state.modeTest !== false
@@ -1618,13 +1624,13 @@ console.log('hello test');
       /*
         this function tests jsonLog's default handling behavior
       */
+      var message;
       utility2.testMock(onEventError, [
-        [global, { state: { modeSilent: null } }]
-      ], function (onEventError) {
-        var message;
-        console.log = function (_) {
+        [global, { state: { modeSilent: null } }],
+        [console, { log: function (_) {
           message = _;
-        };
+        } }]
+      ], function (onEventError) {
         /* test null arguments handling behavior */
         utility2.jsonLog();
         /* assert no message */
@@ -2280,23 +2286,14 @@ console.log('hello test');
       /* browser code */
       if (state.modeBrowser) {
         /* notify saucelabs of test results */
-        self.global.global_test_results = utility2.setDefault({
+        self.global.global_test_results = {
           coverage: global.__coverage__,
           testCallbackId: state.testCallbackId,
-          testReport: state.testReportCopy
-        /* extra stuff to keep saucelabs happy - https://saucelabs.com/docs/rest#jsunit */
-        }, {
-          duration: 1,
+          testReport: state.testReportCopy,
+          /* extra stuff to keep saucelabs happy - https://saucelabs.com/docs/rest#jsunit */
           failed: state.testReportCopy.testsFailed,
-          passed: 1,
-          tests: [{
-            duration: 1,
-            message: 'bb',
-            name: 'aa',
-            result: !state.testReportCopy.testsFailed
-          }],
-          total: 1
-        });
+          passed: state.testReportCopy.testsPassed
+        };
         if (utility2.urlParamsGet(self.global.location.hash, '#').testReportUpload) {
           utility2.ajax({
             data: JSON.stringify(self.global.global_test_results),
@@ -2970,6 +2967,7 @@ console.log('hello test');
         if (self.remaining === 0) {
           onEventError(self.error);
         }
+        utility2.assert(self.remaining >= 0, 'self.remaining < 0 - ' + self.remaining);
       };
       self.remaining = 0;
       return self;
@@ -2987,9 +2985,12 @@ console.log('hello test');
       onEventReady.remaining += 1;
       /* test error handling behavior */
       onEventReady(utility2.error);
-      /* test multiple callback handling behavior */
-      onEventReady();
-      onEventError();
+      /* test multiple callback error handling behavior */
+      utility2.tryCatch(onEventReady, function (error) {
+        /* assert error occurred */
+        utility2.assert(error instanceof Error, error);
+        onEventError();
+      });
     },
 
     urlDecodeOrError: function (text) {
@@ -3955,16 +3956,18 @@ console.log('hello test');
       });
     },
 
-    fsWatchActionDict_eval: function (options) {
+    fsWatchActionDict_eval: function (options, mode) {
       /*
         this function evals the file content
       */
       switch (required.path.extname(options.file)) {
       /* eval js file */
       case '.js':
-        utility2.evalOnEventError(options.file, options.content, function (error) {
-          utility2.onEventErrorDefault(error);
-        });
+        if (mode !== 'noEvalJs') {
+          utility2.evalOnEventError(options.file, options.content, function (error) {
+            utility2.onEventErrorDefault(error);
+          });
+        }
         break;
       /* eval js2 file */
       case '.js2':
@@ -3986,7 +3989,7 @@ console.log('hello test');
             }
             /* run actions */
             options2.actionList.forEach(function (action) {
-              state.fsWatchActionDict[action](options2);
+              state.fsWatchActionDict[action](options2, mode);
             });
             /* auto-generate browser content, stripped of nodejs code */
             state.fsWatchActionDict.createContentBrowser(options2);
@@ -4003,11 +4006,16 @@ console.log('hello test');
       }
     },
 
-    _fsWatchActionDict_eval_shell_test: function (onEventError) {
+    _fsWatchActionDict_eval_misc_test: function (onEventError) {
       /*
-        this function tests fsWatchActionDict_eval's shell handling behavior
+        this function tests fsWatchActionDict_eval's misc handling behavior
       */
       /*jslint evil: true*/
+      /* test noEvalJs handling behavior */
+      state.fsWatchActionDict.eval({
+        file: '_fsWatchActionDict_eval_shell_test.js'
+      }, 'noEvalJs');
+      /* test shell handling behavior */
       state.fsWatchActionDict.eval({
         content: ':',
         file: '_fsWatchActionDict_eval_shell_test.sh'
@@ -6149,6 +6157,7 @@ console.log('hello test');
         mode = utility2.modeIncrement(error, mode);
         switch (mode) {
         case 1:
+          /* init saucelabs tests */
           intervalId = utility2.uuid4();
           data = JSON.stringify(utility2.setOverride(options, {
             build: process.env.CI_BUILD_NUMBER,
@@ -6187,24 +6196,23 @@ console.log('hello test');
           utility2.ajax(utility2.jsonCopy(options), utility2.tryCatchHandler(onEventError2));
           break;
         case 2:
+          /* parse initial saucelabs response */
           utility2.jsonLog('\nheadlessSaucelabs - tests started -', [options, data]);
           onEventReady = utility2.untilReady(function (error) {
             mode = -2;
             onEventError2(error);
           });
-          data['js tests'].forEach(onEventError2);
-          mode += 1;
+          /* create remainingDict of test id's */
+          data['js tests'].forEach(function (id) {
+            /* increment onEventReady */
+            onEventReady.remaining += 1;
+            /* init remainingDict */
+            remainingDict[id] = { id: id, platform: options.platforms[data] };
+          });
           /* wait 30000 ms for saucelabs test to startup */
           (state.modeOffline ? utility2.applyArgList0([]) : setTimeout)(onEventError2, 30000);
           break;
         case 3:
-          mode -= 1;
-          /* increment onEventReady */
-          onEventReady.remaining += 1;
-          /* init remainingDict */
-          remainingDict[error] = { id: error, platform: options.platforms[data] };
-          break;
-        case 4:
           /* poll saucelabs for test status */
           utility2.clearCallSetInterval(intervalId, function () {
             data = JSON.stringify({ 'js tests': Object.keys(remainingDict) });
@@ -6217,43 +6225,41 @@ console.log('hello test');
             utility2.ajax(utility2.jsonCopy(options), utility2.tryCatchHandler(onEventError2));
           }, 10000, state.timeoutDefault - (Date.now() - time));
           break;
-        case 5:
+        case 4:
+          /* check status of polled tests from saucelabs response */
+          mode -= 1;
           utility2.jsonLog('\nheadlessSaucelabs - tests polled -', data);
           completed = completed || data.completed || (/error/).test(data.status);
-          data['js tests'].forEach(onEventError2);
-          mode -= 1;
-          break;
-        case 6:
-          mode -= 1;
-          data = error;
-          /* test finished */
-          if (data.result && data.result.testReport) {
-            /* merge finished tests into state.testReport */
-            utility2.testReportMerge(state.testReport, data.result.testReport);
-            /* remove finished tests from remainingDict */
-            delete remainingDict[data.id];
-            onEventReady();
-            return;
-          }
-          /* saucelabs internal error */
-          if (completed || data.result || (/error/).test(data.status)) {
-            data.totalTime = Date.now() - time;
-            local._headlessSaucelabsTestFailed(
-              new Error(JSON.stringify(error)),
-              data
-            );
-            /* remove failed tests from remainingDict */
-            delete remainingDict[data.id];
-            onEventReady();
-            return;
-          }
-          /* update status of running tests */
-          remainingDict[data.id] = {
-            id: data.id,
-            job_id: data.job_id,
-            platform: data.platform,
-            status: data.status
-          };
+          data['js tests'].forEach(function (data) {
+            /* test finished - remove from remainingDict */
+            if (data.result && data.result.testReport) {
+              /* merge finished test into state.testReport */
+              utility2.testReportMerge(state.testReport, data.result.testReport);
+              /* remove finished test from remainingDict */
+              delete remainingDict[data.id];
+              onEventReady();
+              return;
+            }
+            /* saucelabs internal error - remove test from remainingDict */
+            if (completed || data.result || (/error/).test(data.status)) {
+              data.totalTime = Date.now() - time;
+              local._headlessSaucelabsTestFailed(
+                new Error(JSON.stringify(data)),
+                data
+              );
+              /* remove failed test from remainingDict */
+              delete remainingDict[data.id];
+              onEventReady();
+              return;
+            }
+            /* update status of running test */
+            remainingDict[data.id] = {
+              id: data.id,
+              job_id: data.job_id,
+              platform: data.platform,
+              status: data.status
+            };
+          });
           break;
         default:
           /* clear timeout for headlessSaucelabs */
@@ -6509,9 +6515,10 @@ console.log('hello test');
         state.testModuleDict[local._name] = !error;
         utility2.readyUtility2();
       };
+      required.slimerjs = required.slimerjs || utility2.require('slimerjs');
       utility2.readyUtility2.remaining += 1;
       /* auto-detect slimerjs binary */
-      required.child_process.spawn('slimerjs', ['--help'], { stdio: 'ignore' })
+      required.child_process.spawn(required.slimerjs.path, ['--help'], { stdio: 'ignore' })
         .on('error', onEventError)
         .on('exit', onEventError);
     },
@@ -6521,7 +6528,7 @@ console.log('hello test');
         this function starts a separate slimerjs process to open and test a webpage
       */
       options = utility2.jsonCopy(options);
-      options.argv0 = 'slimerjs';
+      options.argv0 = required.slimerjs.path;
       utility2.headlessPhantomjs(options, onEventError);
     },
 
@@ -6874,7 +6881,7 @@ console.log('hello test');
       ], function (onEventError) {
         var onEventReady;
         onEventReady = utility2.untilReady(onEventError);
-        onEventReady.remaining += 2;
+        onEventReady.remaining += 3;
         local._rollupFileCss({
           data: 'url("test.png")',
           options: { url0: '' }
@@ -7213,6 +7220,18 @@ console.log('hello test');
         return;
       }
       next();
+    },
+
+    'router6FileDict_/test/test.html': function (request, response) {
+      /*
+        this function serves public files
+      */
+      utility2.serverRespond(request, response, 200, {
+        data: utility2.textFormat(state.fsWatchDict['/test/test.html'].contentBrowser, {
+          testModuleDict: JSON.stringify(state.testModuleDict),
+          testScript: state.testScript || '/public/file/utility2-test.js'
+        })
+      });
     },
 
     _createMiddleware: function (router5MainDict) {
