@@ -1,13 +1,35 @@
 #!/bin/bash
+shAesDecrypt () {
+  ## this function decrypts stdin to stdout using aes-256-cbc
+  ## save stdin to $TEXT
+  local TEXT=$(cat /dev/stdin)
+  ## init $IV from first 32 bytes of $TEXT
+  local IV=${TEXT:0:32}
+  ## decrypt remaining bytes of $TEXT to stdout using aes-256-cbc
+  printf "${TEXT:32}" | base64 -D | openssl enc -aes-256-cbc -d -K $AES_256_KEY -iv $IV
+}
+
+shAesEncrypt () {
+  ## this function encrypts stdin to stdout with a random iv prepended using aes-256-cbc
+  ## generate random 16 byte $IV
+  local IV=$(openssl rand -hex 16)
+  ## print $IV to stdout
+  printf $IV
+  ## encrypt stdin and stream to stdout using aes-256-cbc
+  openssl enc -aes-256-cbc -K $AES_256_KEY -iv $IV | base64
+}
+
 shCiBuildInit () {
   ## this function inits the ci build
+  ## eval encrypted script
+  eval $(shAesDecrypt < .encrypted 2>/dev/null)
   ## codeship.io env
   if [ "$CODESHIP" ]
-    ## export CI_BUILD_DIR var
+    ## export $CI_BUILD_DIR
     then export CI_BUILD_DIR=/build.codeship.io
   ## travis-ci.org env
   elif [ "$TRAVIS" ]
-    ## export CI_BUILD_DIR var
+    ## export $CI_BUILD_DIR
     then export CI_BUILD_DIR=/build.travis-ci.org
     ## export TRAVIS_* vars as CI_* vars
     export CI_BRANCH=$TRAVIS_BRANCH
@@ -38,19 +60,28 @@ shCiBuildInit () {
   if [ ! "$CI_REPO_URL" ]
     then export CI_REPO_URL="https://github.com/$CI_REPO/tree/$CI_BRANCH"
   fi
-  ## init local script
+  ## export $GIT_SSH_* vars
+  export GIT_SSH="$UTILITY2_DIR/.install/git-ssh.sh"
+  if [ ! "$GIT_SSH_IDENTITY_FILE" ]
+    then export GIT_SSH_IDENTITY_FILE=$(mktemp /tmp/.git-ssh-identity-file-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX)
+  fi
+  ## create $GIT_SSH_IDENTITY_FILE
+  chmod 600 $GIT_SSH_IDENTITY_FILE\
+  && echo $GIT_SSH_KEY_BASE64 | base64 -D > $GIT_SSH_IDENTITY_FILE\
+  && chmod 600 $GIT_SSH_IDENTITY_FILE
+  ## init local $SCRIPT
   local SCRIPT=":"
-  ## save EXIT_CODE
+  ## save $EXIT_CODE
   SCRIPT="$SCRIPT; EXIT_CODE=\$?"
   if [ $CI_BUILD_DIR ]
     ## upload build to $CI_BUILD_DIR/latest.$CI_BRANCH
     then SCRIPT="$SCRIPT && $($UTILITY2_SH_ECHO db-github-dir-update $CI_REPO/gh-pages $CI_BUILD_DIR/latest.$CI_BRANCH .build)"
     ## upload build to $CI_BUILD_DIR/$CI_BUILD_NUMBER.$CI_BRANCH.$CI_COMMIT_ID
     SCRIPT="$SCRIPT && $($UTILITY2_SH_ECHO db-github-dir-update $CI_REPO/gh-pages $CI_BUILD_DIR/$CI_BUILD_NUMBER.$CI_BRANCH.$CI_COMMIT_ID .build)"
-    ## save EXIT_CODE if non-zero
+    ## save $EXIT_CODE if non-zero
     SCRIPT="$SCRIPT || EXIT_CODE=\$?"
   fi
-  ## exit with EXIT_CODE
+  ## exit with $EXIT_CODE
   SCRIPT="$SCRIPT; exit \$EXIT_CODE"
   ## export SCRIPT_CI_BUILD_UPLOAD, which uploads ci build to github
   SCRIPT_CI_BUILD_UPLOAD=$SCRIPT
@@ -59,58 +90,45 @@ shCiBuildInit () {
 shNodejsInstall () {
   ## this function installs nodejs / npm if necesary
   if [ ! "$(which npm)" ]
-    ## nodejs cpu architecture
+    ## init $NODEJS_* vars
     then NODEJS_PROCESS_ARCH=$(uname -m | perl -ne "s/arm.*/arm/i; s/i.86.*/i386/i;\
       s/amd64/x64/i; s/x86_64/x64/i; print lc")
-    ## nodejs os platform
     NODEJS_PROCESS_PLATFORM=$(uname | perl -ne "s/.*bsd$/bsd/i; print lc")
-    ## nodejs version
     NODEJS_VERSION=node-v0.10.26-$NODEJS_PROCESS_PLATFORM-$NODEJS_PROCESS_ARCH
     if [ ! -f /tmp/$NODEJS_VERSION/bin/npm ]
-      then echo "install nodejs npm to /tmp/$NODEJS_VERSION/bin"
+      then echo "installing nodejs and npm to /tmp/$NODEJS_VERSION/bin"
       curl -3Ls http://nodejs.org/dist/v0.10.26/$NODEJS_VERSION.tar.gz\
         | tar -C /tmp/ -xzf -
     fi
-    ## export PATH var with nodejs / npm path
+    ## export $PATH with nodejs / npm path
     export PATH=/tmp/$NODEJS_VERSION/bin:$PATH
   fi
 }
 
-shOpensslDecrypt () {
-  ## this function decrypts stdin using aes-256-cbc
-  openssl enc -aes-256-cbc -K $AES_256_CBC_KEY -iv $AES_256_CBC_IV -d
-}
-
-shOpensslEncrypt () {
-  ## this function encrypts stdin using aes-256-cbc
-  openssl enc -aes-256-cbc -K $AES_256_CBC_KEY -iv $AES_256_CBC_IV
-}
-
 shScriptEval () {
-  ## this function evals the $SCRIPT var
-  ## echo script
+  ## this function evals $SCRIPT
+  ## echo $SCRIPT
   if [ "$MODE_ECHO" ] || [ "$SCRIPT" != ":" ]
     then echo $SCRIPT
   fi
-  ## eval script
+  ## eval $SCRIPT
   if [ ! "$MODE_ECHO" ]
     ## save cwd
     then pushd "$(pwd)" > /dev/null
+    ## eval $SCRIPT
     eval "$SCRIPT"
-    ## save exit code
+    ## save $EXIT_CODE
     EXIT_CODE=$?
     ## restore cwd
     popd > /dev/null
-    ## restore exit code
-    if [ "$EXIT_CODE" != 0 ]
-      then exit $EXIT_CODE
-    fi
+    ## return $EXIT_CODE
+    return $EXIT_CODE;
   fi
 }
 
-shUtility2Init() {
+shUtility2Init () {
   ## this function inits utility2
-  ## init $SCRIPT var
+  ## init $SCRIPT
   SCRIPT=":"
   ## init utility2 env
   UTILITY2_JS=$UTILITY2_DIR/utility2.js
@@ -156,7 +174,6 @@ shMain () {
     SCRIPT="$SCRIPT --db-github-local=$4"
     SCRIPT="$SCRIPT --mode-cli=dbGithubDirUpdate"
     SCRIPT="$SCRIPT --mode-db-github=$2"
-    SCRIPT="$SCRIPT ${@:2}"
     ;;
 
   ## delete github file $3
@@ -169,11 +186,11 @@ shMain () {
 
   ## update github file $3 with local file $4
   db-github-file-update)
-    SCRIPT="$SCRIPT && cat $4 | $UTILITY2_JS"
+    SCRIPT="$SCRIPT && $UTILITY2_JS"
     SCRIPT="$SCRIPT --db-github-file=$3"
     SCRIPT="$SCRIPT --mode-cli=dbGithubFileUpdate"
     SCRIPT="$SCRIPT --mode-db-github=$2"
-    SCRIPT="$SCRIPT ${@:2}"
+    SCRIPT="$SCRIPT < $4"
     ;;
 
   ## echo mode
@@ -195,6 +212,7 @@ shMain () {
   npm-install)
     SCRIPT="$SCRIPT && mkdir -p .install/public"
     SCRIPT="$SCRIPT && $UTILITY2_JS --mode-cli=utility2NpmInstall"
+    SCRIPT="$SCRIPT && chmod 755 .install/git-ssh.sh"
     if [ "$2" ]
       then SCRIPT="$SCRIPT --load-module=$2"
     fi
@@ -281,7 +299,7 @@ shMain () {
     SAUCELABS_PID_FILE=/tmp/.saucelabs.pid
     SAUCELABS_READY_FILE=/tmp/.saucelabs.ready
     ## kill any script trying to start saucelabs connect to prevent race condition
-    SCRIPT="$SCRIPT; kill '$([ -f '$SAUCELABS_PID_FILE' ] && cat $SAUCELABS_PID_FILE)'"
+    SCRIPT="$SCRIPT; kill '$(cat $SAUCELABS_PID_FILE 2>/dev/null)'"
     SCRIPT="$SCRIPT 2>/dev/null"
     ## kill old saucelabs connect
     SCRIPT="$SCRIPT; killall sc 2>/dev/null"
@@ -293,19 +311,21 @@ shMain () {
 
   ## test saucelabs
   saucelabs-test)
-    SCRIPT="$SCRIPT && cat $2 | $UTILITY2_JS"
+    SCRIPT="$SCRIPT && $UTILITY2_JS"
     SCRIPT="$SCRIPT --mode-cli=headlessSaucelabs"
     SCRIPT="$SCRIPT --mode-npm-test"
     SCRIPT="$SCRIPT --server-port=49221"
     SCRIPT="$SCRIPT --tmpdir=tmp"
     SCRIPT="$SCRIPT $3"
+    SCRIPT="$SCRIPT < $2"
     ;;
 
   ## test saucelabs multi platforms
   saucelabs-test-platforms-list)
-    SCRIPT="$SCRIPT && cat .install/saucelabs-test-platforms-list.json | $UTILITY2_JS"
+    SCRIPT="$SCRIPT && $UTILITY2_JS"
     SCRIPT="$SCRIPT --mode-cli=headlessSaucelabsPlatformsList"
     SCRIPT="$SCRIPT $3"
+    SCRIPT="$SCRIPT < .install/saucelabs-test-platforms-list.json"
     ;;
 
   ## start interactive utility2 app $2
@@ -315,7 +335,7 @@ shMain () {
       then SCRIPT="$SCRIPT --load-module=$2"
     fi
     SCRIPT="$SCRIPT --mode-repl --server-port=random --tmpdir=true"
-    SCRIPT="$SCRIPT ${@:2}"
+    SCRIPT="$SCRIPT ${@:3}"
     ;;
 
   ## build utility2
@@ -406,6 +426,7 @@ shMain () {
     ;;
 
   esac
+  ## shift argv by 1
   shift
   done
   ## eval $SCRIPT
@@ -413,4 +434,3 @@ shMain () {
 }
 ## run main program
 shMain "$@"
-

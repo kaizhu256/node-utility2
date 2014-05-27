@@ -32,6 +32,7 @@
 .DS_Store
 ._*
 .build
+.decrypted
 .env
 .git
 .gitconfig
@@ -54,6 +55,18 @@ logs
 public
 secret.json
 tmp
+/* MODULE_END */
+
+
+
+/* MODULE_BEGIN { "actionList": ["trim"], "file": ".install/git-ssh.sh" } */
+#!/bin/sh
+exec ssh\
+  -i $GIT_SSH_IDENTITY_FILE\
+  -o CheckHostIP=no\
+  -o StrictHostKeychecking=no\
+  -o UserKnownHostsFile=/dev/null\
+  -- "$@"
 /* MODULE_END */
 
 
