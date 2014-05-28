@@ -65,6 +65,8 @@
       utility2.assert = utility2.assert || console.assert;
       /* export utility2.__dirname */
       utility2.__dirname = utility2.__dirname || __dirname;
+      /* export utility2.__filename */
+      utility2.__filename = utility2.__filename || utility2.__dirname + '/utility2.js';
       /* export utility2.jsonLog stub */
       utility2.jsonLog = utility2.jsonLog || console.log;
       /* export utility2 objects */
@@ -76,11 +78,11 @@
       switch (state.modeCoverageInit || 0) {
       /* load utility2.js with code coverage */
       case 0:
-        local._initOnceUtility2Js(global2);
+        local._initOnceUtility2Js();
         break;
       /* load utility2.js2 with code coverage */
       case 1:
-        local._initOnceUtility2Js2(global2);
+        local._initOnceUtility2Js2();
         break;
       /* initModule */
       default:
@@ -103,9 +105,9 @@
         global2 = utility2.jsonStringifyOrdered(global2);
         /* validate global2 */
         utility2.assert(global2 === JSON.stringify({
-          required: { utility2: { __dirname: null } },
+          required: { utility2: { __dirname: null, __filename: 'null/utility2.js' } },
           state: {},
-          utility2: { __dirname: null }
+          utility2: { __dirname: null, __filename: 'null/utility2.js' }
         }), global2);
         onEventError();
       });
@@ -113,26 +115,6 @@
 
     _initOnceCli: function () {
       var match, tmp, value;
-      /* init default state.loadModule */
-      state.loadModule = state.loadModule || utility2.__dirname + '/utility2.js';
-      /* parse process.argv */
-      process.argv.forEach(function (arg) {
-        /* get --load-module arg */
-        match = (/^--load-module=(.+)/).exec(arg);
-        if (match) {
-          state.loadModule = match[1];
-        }
-        /* get --mode-cli arg */
-        match = (/^--mode-cli=(.+)/).exec(arg);
-        if (match) {
-          state.modeCli = match[1];
-        }
-        /* get --mode-coverage arg */
-        match = (/^--mode-coverage=(.+)/).exec(arg);
-        if (match) {
-          state.modeCoverageRegexp = new RegExp(match[1]);
-        }
-      });
       /* init state.fsDirBuild */
       state.fsDirBuild = state.fsDirBuild || process.cwd() + '/.build';
       /* load package.json file */
@@ -143,7 +125,26 @@
         state.packageJson.versionShort = state.packageJson.version.replace((/-.*/), '');
       } catch (ignore) {
       }
+      /* init state.mainModule */
+      state.mainModule = required.path.resolve(state.packageJson
+        && state.packageJson.name
+        && state.packageJson.name !== 'utility2'
+        ? state.packageJson.name + '.js2'
+        : utility2.__filename);
+      /* parse process.argv */
+      process.argv.forEach(function (arg) {
+        /* parse --mode-cli arg */
+        match = (/^--mode-cli=(.+)/).exec(arg);
+        if (match) {
+          state.modeCli = match[1];
+        }
+        /* parse --mode-coverage arg */
+        if (arg === '--mode-coverage') {
+          state.modeCoverageRegexp = new RegExp('\\b' + state.packageJson.name + '\\.');
+        }
+      });
       switch (state.modeCli) {
+      /* export nodejs env to parent shell process */
       case 'exportEnv':
         tmp = {
           NODEJS_PROCESS_PID: process.pid,
@@ -172,7 +173,7 @@
           }
         });
         /* export env */
-        console.log(Object.keys(tmp).sort().map(function (key) {
+        process.stdout.write(Object.keys(tmp).sort().map(function (key) {
           return 'export ' + key + '=' + JSON.stringify(tmp[key]);
         }).join(' && ').replace((/`/g), "'"));
         process.exit();
@@ -189,28 +190,42 @@
         [global, {
           process: {
             /* test various process.argv options handling behavior */
-            argv: ['node', '--mode-cli=exportEnv', '--load-module=1', '--mode-coverage=1'],
+            argv: ['node', '--mode-cli=exportEnv', '--mode-coverage'],
             cwd: utility2.nop,
-            exit: utility2.nop
+            exit: utility2.nop,
+            stdout: { write: utility2.nop }
           },
           state: {}
         }],
         [required, {
           fs: { readFileSync: function () {
             /* test state.packageJson handling behavior */
-            return '{"aa":"bb","cc":null}';
+            return JSON.stringify(state.packageJson);
           } }
         }]
       ], function (onEventError) {
+        /* test default state.mainModule handling behavior */
         local._initOnceCli();
         data = utility2.jsonStringifyOrdered(state);
         /* validate state */
         utility2.assert(data === JSON.stringify({
           fsDirBuild: "undefined/.build",
-          loadModule: "1",
+          mainModule: utility2.__filename,
           modeCli: "exportEnv",
           modeCoverageRegexp: {},
-          packageJson: { aa: "bb", cc: null }
+          packageJson: {}
+        }), data);
+        /* test custom state.mainModule handling behavior */
+        state.packageJson = { aa: null, name: 'bb' };
+        local._initOnceCli();
+        data = utility2.jsonStringifyOrdered(state);
+        /* validate state */
+        utility2.assert(data === JSON.stringify({
+          fsDirBuild: "undefined/.build",
+          mainModule: required.path.resolve('bb.js2'),
+          modeCli: "exportEnv",
+          modeCoverageRegexp: {},
+          packageJson: { aa: null, name: 'bb' }
         }), data);
         onEventError();
       });
@@ -264,7 +279,6 @@
       /* init code coverage */
       local._initOnceCoverage();
       /* load utility2.js with code coverage */
-      utility2.__filename = utility2.__filename || utility2.__dirname + '/utility2.js';
       required.fs.readFile(utility2.__filename, 'utf8', function (error, data) {
         /* assert no error occurred */
         utility2.assert(!error, error);
@@ -325,7 +339,7 @@
           state.modeCoverageInit += 1;
           utility2.fsWatch({
             actionList: ['lint', 'eval'],
-            file: state.loadModule
+            file: state.mainModule
           }, onEventError2);
           break;
         case 3:
@@ -336,9 +350,9 @@
           }, onEventError2);
           break;
         case 4:
-          /* restore state.loadModule files clobbered by utility2.js2*/
+          /* restore state.mainModule js2 sub-files clobbered by utility2.js2*/
           state.fsWatchActionDict.eval(
-            state.fsWatchDict[required.path.resolve(state.loadModule)],
+            state.fsWatchDict[state.mainModule],
             /* do not eval js scripts */
             'noEvalJs'
           );

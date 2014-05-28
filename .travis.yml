@@ -5,11 +5,11 @@ branches:
   - unstable
 env:
   global:
-  - secure: SrS9Ib5Er6ag39u9zK5h4jv0m/jPgZUBLzkOgbLvf+3htHEF2wBkVrDHC7+HKFSx7eBrvXPfA7/p+rEs6aBm6pcnP3f3BU07f5iFgiHdSXmFlTq7zuO0Xsa/Js4CDaXYJ3KTzqPk43cAQb7IhH2pZWn8fVq0HJXlP79RKG18lMw=
+  - secure: G8Cq+BvB95WZt95we5XJ3TbSft9T17bNt4ESxjI/IVwr85bRWcX2ji5VeiXqjZFmplwcmgNU4z06O51/VACW99b3sOE+44kjhAdzaBUr74x7XMjJsiib/Q6QxsVau5M7gEsh4hCTKE1XdOVWWkyX/zaUzBa4jMZMCfsJe4IXYak=
 ## use darwin platform
 language: objective-c
 ## language: node_js
 ## node_js:
 ## - "0.10"
 ## script: export PATH=$(./utility2.sh npmInstall) && npm install && npm test
-script: ./utility2.sh utility2-build
+script: ./utility2.sh ci-build

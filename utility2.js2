@@ -1,28 +1,3 @@
-/* MODULE_BEGIN { "actionList": ["trim"], "file": ".gitconfig" } */
-[branch "master"]
-  remote = origin
-  merge = refs/heads/master
-[branch "unstable"]
-  remote = origin
-  merge = refs/heads/unstable
-[core]
-  bare = false
-  filemode = true
-  ignorecase = true
-  logallrefupdates = true
-  repositoryformatversion = 0
-[receive]
-  denyCurrentBranch = warn
-[remote "heroku"]
-  fetch = +refs/heads/*:refs/remotes/heroku/*
-  url = git@heroku.com:utility2-unstable.git
-[remote "origin"]
-  fetch = +refs/heads/*:refs/remotes/origin/*
-  url = git@github.com:kaizhu256/utility2.git
-/* MODULE_END */
-
-
-
 /* MODULE_BEGIN { "actionList": ["trim"], "file": ".gitignore" } */
 *.bak
 *.log
@@ -59,10 +34,110 @@ tmp
 
 
 
+/* MODULE_BEGIN { "actionList": ["trim"], "file": ".install/.aes-decrypted.sh.template" } */
+## create ssh key pairs for accessing heroku and github with the following command:
+## utility2 git-ssh-key-create
+export GIT_SSH_KEY="AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwd..."
+
+## copy the contents of GIT_SSH_KEY_PUB to:
+## github @ https://github.com/settings/ssh
+## heroku @ https://dashboard.heroku.com/account
+export GIT_SSH_KEY_PUB="ssh-rsa AECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwd... git"
+
+## create github personal access token @ https://github.com/settings/tokens/new
+export GITHUB_TOKEN=da39a3ee5e6b4b0d3255bfef95601890afd80709
+
+## create a free opensauce account for public git repos @ https://saucelabs.com/opensauce
+## get access key @ https://saucelabs.com/account
+export SAUCE_ACCESS_KEY=aaaaaaaa-aaaa-4aaa-baaa-aaaaaaaaaaaa
+## your opensauce account username
+export SAUCE_USERNAME=utility2-kaizhu256
+/* MODULE_END */
+
+
+
+/* MODULE_BEGIN { "actionList": ["trim"], "file": ".install/.aes-encrypted.sh" } */
+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
+/* MODULE_END */
+
+
+
+/* MODULE_BEGIN { "actionList": ["trim"], "file": ".install/.git-config" } */
+[branch "master"]
+  remote = origin
+  merge = refs/heads/master
+[branch "unstable"]
+  remote = origin
+  merge = refs/heads/unstable
+[core]
+  bare = false
+  filemode = true
+  ignorecase = true
+  logallrefupdates = true
+  repositoryformatversion = 0
+[receive]
+  denyCurrentBranch = warn
+[remote "heroku"]
+  fetch = +refs/heads/*:refs/remotes/heroku/*
+  url = git@heroku.com:utility2-unstable.git
+[remote "origin"]
+  fetch = +refs/heads/*:refs/remotes/origin/*
+  url = git@github.com:kaizhu256/utility2.git
+/* MODULE_END */
+
+
+
 /* MODULE_BEGIN { "actionList": ["trim"], "file": ".install/git-ssh.sh" } */
 #!/bin/sh
 exec ssh\
-  -i $GIT_SSH_IDENTITY_FILE\
+  -i $GIT_SSH_KEY_FILE\
   -o CheckHostIP=no\
   -o StrictHostKeychecking=no\
   -o UserKnownHostsFile=/dev/null\
@@ -2812,11 +2887,24 @@ console.log('hello test');
     },
 
     /* ascii character reference */
-    textAscii: '\x00\x01\x02\x03\x04\x05\x06\x07\b\t\n\x0b\f\r\x0e\x0f'
+    textExampleAscii: '\x00\x01\x02\x03\x04\x05\x06\x07\b\t\n\x0b\f\r\x0e\x0f'
       + '\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f'
       + ' !"#$%&\'()*+,-./0123456789:;<=>?'
       + '@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_'
       + '`abcdefghijklmnopqrstuvwxyz{|}~\x7f',
+
+    /* require('crypto').createHash('sha1').update(new Buffer(0)).digest('hex') */
+    textExampleSha1: 'da39a3ee5e6b4b0d3255bfef95601890afd80709',
+
+    /* utility2.uuid4() */
+    textExampleUuid4: 'aaaaaaaa-aaaa-4aaa-baaa-aaaaaaaaaaaa',
+
+    /* new Buffer(utility2.textExampleAscii).toString('base64') */
+    textExampleBase64: 'AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwd'
+      + 'Hh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4OTo7'
+      + 'PD0+P0BBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZ'
+      + 'WltcXV5fYGFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3'
+      + 'eHl6e3x9fn8=',
 
     textFormat: function (template, dict) {
       /*
@@ -2907,7 +2995,7 @@ console.log('hello test');
       /*
         this function tests textWordwrap's default handling behavior
       */
-      utility2.textWordwrap(utility2.textAscii, 80).split('\n').forEach(function (line) {
+      utility2.textWordwrap(utility2.textExampleAscii, 80).split('\n').forEach(function (line) {
         /* assert line is 80 characters or less */
         utility2.assert(line.length <= 80, line.length);
       });
@@ -3022,7 +3110,7 @@ console.log('hello test');
         this function tests urlDecodeOrError's error handling behavior
       */
       var data;
-      data = utility2.urlDecodeOrError(utility2.textAscii);
+      data = utility2.urlDecodeOrError(utility2.textExampleAscii);
       utility2.assert(data instanceof Error, data);
       onEventError();
     },
@@ -4251,31 +4339,84 @@ console.log('hello test');
       });
     },
 
-    modeCliDict_utility2NpmInstall: function () {
+    modeCliDict_npmInstall: function () {
       /*
         this function installs files from utility2.js2 to the .install dir
       */
-      Object.keys(state.fsWatchDict).forEach(function (file) {
-        if ((/^(?:\.gitconfig|\.gitignore|\.install)\b/).test(file)) {
-          /* install files to .install dir */
-          required.fs.writeFileSync(
-            process.cwd() + '/' + file,
-            (/^\.install\b/).test(file)
-              ? state.fsWatchDict[file].content
-              : state.fsWatchDict[file].content.trimLeft()
-          );
+      var mode, onEventError2, onEventReady;
+      mode = 0;
+      onEventError2 = function (_, data) {
+        utility2.nop(_);
+        mode += 1;
+        switch (mode) {
+        case 1:
+          /* update utility2 from specified branch */
+          if (state.modeUtility2Update) {
+            utility2.jsonLog('npmInstall - updating ' + utility2.__dirname + ' from branch '
+              + state.modeUtility2Update);
+            required.fs.readdir(utility2.__dirname, onEventError2);
+            return;
+          }
+          mode += 1;
+          onEventError2();
+          break;
+        case 2:
+          onEventReady = utility2.untilReady(onEventError2);
+          onEventReady.remaining += data.length;
+          /* loop through dir list and update each file from github */
+          data.forEach(function (file) {
+            data = 'https://raw.githubusercontent.com/kaizhu256/utility2/'
+              + state.modeUtility2Update + '/' + file;
+            utility2.jsonLog('npmInstall - fetching ' + data);
+            utility2.ajax({ url: data }, onEventReady);
+          });
+          break;
+        case 3:
+          /* loop through cached files in state.fsWatchDict and install if necessary */
+          Object.keys(state.fsWatchDict).forEach(function (file) {
+            if ((/^(?:\.gitignore|\.install)\b/).test(file)) {
+              /* install file to .install dir */
+              required.fs.writeFile(
+                process.cwd() + '/' + file,
+                (/^\.install\b/).test(file)
+                  ? state.fsWatchDict[file].content
+                  : state.fsWatchDict[file].content.trimLeft(),
+                utility2.onEventErrorDefault
+              );
+            }
+          });
+          break;
         }
-      });
+      };
+      onEventError2();
     },
 
-    _modeCliDict_utility2NpmInstall_default_test: function (onEventError) {
+    _modeCliDict_npmInstall_default_test: function (onEventError) {
       /*
-        this function tests modeCliDict_utility2NpmInstall's default handling behavior
+        this function tests modeCliDict_npmInstall's default handling behavior
       */
       utility2.testMock(onEventError, [
-        [global, { required: { fs: { writeFileSync: utility2.nop } } }],
-        [state, { modeCli: 'utility2NpmInstall' }]
+        [global, {
+          required: { fs: {
+            readdir: function (_, onEventError) {
+              utility2.nop(_);
+              onEventError(null, [null]);
+            },
+            writeFile: utility2.nop
+          } },
+          state: {
+            fsWatchDict: state.fsWatchDict,
+            modeCli: 'npmInstall',
+            modeCliDict: state.modeCliDict,
+            modeUtility2Update: 'master'
+          }
+        }],
+        [utility2, { ajax: utility2.applyArgList1([]) }]
       ], function (onEventError) {
+        /* test state.modeUtility2Update enabled handling behavior */
+        state.modeCliDict[state.modeCli]();
+        /* test state.modeUtility2Update disabled handling behavior */
+        state.modeUtility2Update = null;
         state.modeCliDict[state.modeCli]();
         onEventError();
       });
@@ -4597,12 +4738,16 @@ console.log('hello test');
         .replace('d00', testReport.testsFailed ? 'd00' : '0d0');
     },
 
-    __testReportNodejsBadge_testsFailed_test: function (onEventError) {
+    __testReportNodejsBadge_default_test: function (onEventError) {
       /*
-        this function tests _testReportNodejsBadge's tests failed handling behavior
+        this function tests _testReportNodejsBadge's default handling behavior
       */
       var data;
-      data = local._testReportNodejsBadge({ testsFailed: 2 });
+      /* test tests passed handling behavior */
+      data = local._testReportNodejsBadge({ testsFailed: 0 });
+      utility2.assert(data.indexOf('#0d0') >= 0, data);
+      /* test tests failed handling behavior */
+      data = local._testReportNodejsBadge({ testsFailed: 1 });
       utility2.assert(data.indexOf('#d00') >= 0, data);
       onEventError();
     },

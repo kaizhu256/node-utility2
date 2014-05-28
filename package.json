@@ -13,10 +13,10 @@
   "os": ["darwin", "linux"],
   "repository" : { "type" : "git", "url" : "https://github.com/kaizhu256/utility2.git" },
   "scripts": {
-    "install": "./utility2.sh utility2-npm-install",
-    "start": "./utility2.sh start",
-    "test": "./utility2.sh utility2-npm-test"
+    "install": "./utility2.sh npm-install",
+    "start": "./utility2.sh npm-start",
+    "test": "./utility2.sh npm-test"
   },
-  "version": "2014.5.20-11"
+  "version": "2014.5.26-1"
 }
 
