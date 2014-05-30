@@ -1,15 +1,18 @@
+before_install:
+  ## init xvfb
+  ## http://docs.travis-ci.com/user/gui-and-headless-browsers/
+  - export DISPLAY=:99.0 && sh -e /etc/init.d/xvfb start
 branches:
   only:
+  - browser
   - master
   - npm
   - unstable
 env:
   global:
   - secure: G8Cq+BvB95WZt95we5XJ3TbSft9T17bNt4ESxjI/IVwr85bRWcX2ji5VeiXqjZFmplwcmgNU4z06O51/VACW99b3sOE+44kjhAdzaBUr74x7XMjJsiib/Q6QxsVau5M7gEsh4hCTKE1XdOVWWkyX/zaUzBa4jMZMCfsJe4IXYak=
-## use darwin platform
-language: objective-c
-## language: node_js
-## node_js:
-## - "0.10"
-## script: export PATH=$(./utility2.sh npmInstall) && npm install && npm test
-script: ./utility2.sh ci-build
+language: node_js
+node_js:
+- '0.10'
+script:
+  - ./utility2.sh ci-build

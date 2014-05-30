@@ -300,7 +300,7 @@
           _initOnceUtility2Js: local._initOnceUtility2Js
         }],
         [required, {
-          fs: { readFile: utility2.applyArgList2([]) },
+          fs: { readFile: utility2.callArg2 },
           vm: { runInThisContext: utility2.nop }
         }],
         [utility2, { __filename: null }]
@@ -472,8 +472,7 @@
             '/test/modeAjaxOffline/https%3A%2F%2Fimg.shields.io%2Fbadge%2Fcoverage-100.0%25-00dd00.svg%3Fstyle%3Dflat%23GET': {
               contentBrowser: ''
             }
-          },
-          tmpdir: true
+          }
         } }],
         [required, {
           fs: {
@@ -600,11 +599,11 @@
           require: function (module) {
             return { system: { args: [] }, webpage: { create: function () {
               return {
-                open: utility2.applyArgList1([])
+                open: utility2.callArg1
               };
             } } }[module];
           },
-          setTimeout: utility2.applyArgList0([]),
+          setTimeout: utility2.callArg0,
           state: null
         }],
         [utility2, { initModule: null }]

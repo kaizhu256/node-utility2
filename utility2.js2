@@ -7,7 +7,6 @@
 .DS_Store
 ._*
 .build
-.decrypted
 .env
 .git
 .gitconfig
@@ -15,6 +14,7 @@
 .hg
 .install
 .lock-wscript
+.npmrc
 .src
 .svn
 .vim
@@ -24,92 +24,72 @@ README.*
 artifacts
 bower_components
 node_modules
-npm-debug.log
 log
 logs
-public
-secret.json
 tmp
 /* MODULE_END */
 
 
 
-/* MODULE_BEGIN { "actionList": ["trim"], "file": ".install/.aes-decrypted.sh.template" } */
-## create ssh key pairs for accessing heroku and github with the following command:
-## utility2 git-ssh-key-create
-export GIT_SSH_KEY="AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwd..."
-
-## copy the contents of GIT_SSH_KEY_PUB to:
-## github @ https://github.com/settings/ssh
-## heroku @ https://dashboard.heroku.com/account
-export GIT_SSH_KEY_PUB="ssh-rsa AECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwd... git"
-
-## create github personal access token @ https://github.com/settings/tokens/new
-export GITHUB_TOKEN=da39a3ee5e6b4b0d3255bfef95601890afd80709
-
-## create a free opensauce account for public git repos @ https://saucelabs.com/opensauce
-## get access key @ https://saucelabs.com/account
-export SAUCE_ACCESS_KEY=aaaaaaaa-aaaa-4aaa-baaa-aaaaaaaaaaaa
-## your opensauce account username
-export SAUCE_USERNAME=utility2-kaizhu256
-/* MODULE_END */
-
-
-
 /* MODULE_BEGIN { "actionList": ["trim"], "file": ".install/.aes-encrypted.sh" } */
-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
+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
+4d/bcMY=
 /* MODULE_END */
 
 
 
 /* MODULE_BEGIN { "actionList": ["trim"], "file": ".install/.git-config" } */
+[branch "gh-pages"]
+	remote = origin
+	merge = refs/heads/gh-pages
 [branch "master"]
   remote = origin
   merge = refs/heads/master
@@ -126,10 +106,13 @@ kPoSxv1uQq52o/0mhrz5Z5wsCcIhF3C4sEzneJ9QFB7/7WincNsVBuasXF/O
   denyCurrentBranch = warn
 [remote "heroku"]
   fetch = +refs/heads/*:refs/remotes/heroku/*
-  url = git@heroku.com:utility2-unstable.git
+  url = git@heroku.com:utility2.git
 [remote "origin"]
   fetch = +refs/heads/*:refs/remotes/origin/*
   url = git@github.com:kaizhu256/utility2.git
+[user]
+	name = kai zhu
+	email = kaizhu256@gmail.com
 /* MODULE_END */
 
 
@@ -140,7 +123,6 @@ exec ssh\
   -i $GIT_SSH_KEY_FILE\
   -o CheckHostIP=no\
   -o StrictHostKeychecking=no\
-  -o UserKnownHostsFile=/dev/null\
   -- "$@"
 /* MODULE_END */
 
@@ -321,14 +303,42 @@ exec ssh\
 
 
 
+/* MODULE_BEGIN { "actionList": ["trim"], "file": ".install/public/utility2-loading.svg" } */
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="8">
+<g transform="translate(8, 4)">
+  <rect x="-8" y="-4" width="5" height="8">
+    <animateTransform id="a" attributeName="transform" type="scale" from="1,0.5" to="1" dur="0.4s" begin="0;b.end"/>
+    <animate attributeName="fill" from="#eee" to="#888" dur="0.4s" begin="0;b.end"/>
+    <animateTransform id="b" attributeName="transform" type="scale" from="1" to="1,0.5" dur="0.4s" begin="a.end"/>
+    <animate attributeName="fill" from="#888" to="#eee" dur="0.4s" begin="a.end"/>
+  </rect>
+  <rect x="-2" y="-4" width="4" height="8">
+    <animateTransform id="c" attributeName="transform" type="scale" from="1,0.5" to="1" dur="0.4s" begin="0.1s;d.end"/>
+    <animate attributeName="fill" from="#eee" to="#888" dur="0.4s" begin="0.1s;d.end"/>
+    <animateTransform id="d" begin="c.end" attributeName="transform" type="scale" to="1,0.5" from="1" dur="0.4s"/>
+    <animate attributeName="fill" from="#888" to="#eee" dur="0.4s" begin="c.end"/>
+  </rect>
+  <rect x="3" y="-4" width="5" height="8">
+    <animateTransform id="e" attributeName="transform" type="scale" from="1,0.5" to="1" dur="0.4s" begin="0.2s;f.end"/>
+    <animate attributeName="fill" from="#eee" to="#888" dur="0.4s" begin="0.2s;f.end"/>
+    <animateTransform id="f" attributeName="transform" type="scale" from="1" to="1,0.5" dur="0.4s" begin="e.end"/>
+    <animate attributeName="fill" from="#888" to="#eee" dur="0.4s" begin="e.end"/>
+  </rect>
+</g>
+</svg>
+/* MODULE_END */
+
+
+
 /* MODULE_BEGIN { "actionList": ["trim"], "file": "/public/file/testReport.html.template" } */
 <style>
 .testReportPlatformDiv {
   border: 1px solid;
   border-radius: 5px;
-  font-family: Arial, Helvetica, sans-serif;
-  margin: 20px;
+  font-family: arial;
+  margin: 20px 0 0 0;
   padding: 0 10px 10px 10px;
+  text-align: left;
 }
 .testReportPlatformPre {
   background-color: #fdd;
@@ -380,21 +390,24 @@ tr:nth-child(odd).testReportPlatformTr {
   <span class="testReportSummarySpan">repo url</span>- <a href="{{CI_REPO_URL}}">{{CI_REPO_URL}}</a><br>
   <span class="testReportSummarySpan">commit info</span>- {{CI_COMMIT_INFO}}<br>
 </h4>
-<table class="testReportPlatformTable"><thead><tr>
+<table class="testReportPlatformTable">
+<thead><tr>
   <th>total time</th>
   <th>total tests failed</th>
   <th>total tests skipped</th>
   <th>total tests passed</th>
   <th>platforms failed</th>
   <th>platforms passed</th>
-</tr></thead><tbody><tr>
+</tr></thead>
+<tbody><tr>
   <td>{{totalTime}} ms</td>
   <td class="{{testsFailedClass}}">{{testsFailed}}</td>
   <td class="{{testsSkippedClass}}">{{testsSkipped}}</td>
   <td class="testReportTestPassed">{{testsPassed}}</td>
   <td class="{{testsFailedClass}}">{{platformsFailed}}</td>
   <td class="testReportTestPassed">{{platformsPassed}}</td>
-</tr></tbody></table>
+</tr></tbody>
+</table>
 </div>
 
 {{@testPlatformList}}
@@ -454,23 +467,25 @@ tr:nth-child(odd).testReportPlatformTr {
 <!DOCTYPE html><html>
 <head>
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
-<title>utility2 test page</title>
+<title>{{name}} test page</title>
 <style>
+body {
+  font-family: arial;
+}
 #testRunButton {
   background-color: #37b;
   border: 0px solid;
   border-radius: 4px;
   color: #fff;
   cursor: pointer;
-  font-family: Arial, Helvetica, sans-serif;
   font-size: medium;
-  margin: 10px 0 0 20px;
   padding: 5px 10px;
 }
 </style>
 <link href="/public/file/utility2.css" rel="stylesheet"/>
 </head>
 <body>
+<h1>{{name}} test page</h1>
 <div id="ajaxProgressDiv"></div>
 <button id="testRunButton">run tests</button>
 <div id="testReportDiv"></div>
@@ -558,28 +573,28 @@ ymXCIWMOjxhLC8J1sbqQq/btyWDcn1qj0PUzM+bH4UidMtOe/B7bL9Wlz0MZYXZdLOnfAAAAAElFTkSu
       ["osx 10.9", "iphone", "7.1"]
     ],
     [
-      ["linux", "chrome", "34"],
+      ["linux", "googlechrome", "34"],
       ["linux", "firefox", "29"],
       ["linux", "opera", "12"]
     ],
     [
-      ["osx 10.9", "chrome", "34"],
-      ["osx 10.8", "chrome", "beta"],
+      ["osx 10.9", "googlechrome", "34"],
+      ["osx 10.8", "googlechrome", "beta"],
       ["osx 10.9", "firefox", "28"],
       ["osx 10.9", "safari", "7"]
     ],
     [
       ["windows 7", "opera", "12"],
-      ["windows 8.1", "chrome", "34"],
-      ["windows 8.1", "chrome", "beta"],
+      ["windows 8.1", "googlechrome", "34"],
+      ["windows 8.1", "googlechrome", "beta"],
       ["windows 8.1", "firefox", "29"],
-      ["windows 8.1", "internet explorer", "11"]
+      ["windows 8.1", "iexplore", "11"]
     ]
   ],
   "stateOverride": {
-    "timeoutDefault": 200000
+    "timeoutDefault": 150000
   },
-  "url": "https://utility2-unstable.herokuapp.com/test/test.html#modeTest=1&timeoutDefault={{timeoutDefault}}"
+  "url": "https://utility2.herokuapp.com/test/test.html#modeTest=1&timeoutDefault={{timeoutDefault}}"
 }
 /* MODULE_END */
 
@@ -589,7 +604,7 @@ ymXCIWMOjxhLC8J1sbqQq/btyWDcn1qj0PUzM+bH4UidMtOe/B7bL9Wlz0MZYXZdLOnfAAAAAElFTkSu
 {
   "commit": {
     "html_url": "https://github.com/kaizhu256/blob/commit/da39a3ee5e6b4b0d3255bfef95601890afd80709",
-    "message": "--skip-ci delete /test/_Branch_default_test.json",
+    "message": "[skip ci] delete /test/_Branch_default_test.json",
     "parents": [
       {
         "html_url": "https://github.com/kaizhu256/blob/commit/da39a3ee5e6b4b0d3255bfef95601890afd80709",
@@ -614,7 +629,7 @@ ymXCIWMOjxhLC8J1sbqQq/btyWDcn1qj0PUzM+bH4UidMtOe/B7bL9Wlz0MZYXZdLOnfAAAAAElFTkSu
 {
   "commit": {
     "html_url": "https://github.com/kaizhu256/blob/commit/da39a3ee5e6b4b0d3255bfef95601890afd80709",
-    "message": "--skip-ci create /test/_Branch_default_test.json",
+    "message": "[skip ci] create /test/_Branch_default_test.json",
     "parents": [
       {
         "html_url": "https://github.com/kaizhu256/blob/commit/da39a3ee5e6b4b0d3255bfef95601890afd80709",
@@ -672,13 +687,38 @@ ymXCIWMOjxhLC8J1sbqQq/btyWDcn1qj0PUzM+bH4UidMtOe/B7bL9Wlz0MZYXZdLOnfAAAAAElFTkSu
 
 
 /* MODULE_BEGIN { "actionList": ["trim"], "file": "/test/modeAjaxOffline/https%3A%2F%2Fimg.shields.io%2Fbadge%2Fcoverage-100.0%25-00dd00.svg%3Fstyle%3Dflat%23GET" } */
-<svg xmlns="http://www.w3.org/2000/svg" width="117" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#fff" stop-opacity=".1"/><stop offset=".1" stop-color="#fff" stop-opacity=".1"/><stop offset=".9" stop-color="#fff" stop-opacity=".1"/><stop offset="1" stop-color="#fff" stop-opacity=".1"/></linearGradient><path fill="#555" d="M0 0h117v20h-117z"/><path fill="#0d0" d="M63 0h54v20h-54zM63 0h4v20h-4z"/><path fill="url(#a)" d="M0 0h117v20h-117z"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="32.5" y="13">coverage</text><text x="89" y="13">100.0%</text></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="117" height="20">
+<linearGradient id="a" x2="0" y2="100%">
+  <stop offset="0" stop-color="#fff" stop-opacity=".1"/>
+  <stop offset=".1" stop-color="#fff" stop-opacity=".1"/>
+  <stop offset=".9" stop-color="#fff" stop-opacity=".1"/>
+  <stop offset="1" stop-color="#fff" stop-opacity=".1"/>
+</linearGradient>
+<path fill="#555" d="M0 0h117v20h-117z"/>
+<path fill="#0d0" d="M63 0h54v20h-54zM63 0h4v20h-4z"/>
+<path fill="url(#a)" d="M0 0h117v20h-117z"/>
+<g fill="#fff" text-anchor="middle" font-family="arial" font-size="11">
+  <text x="32.5" y="13">coverage</text><text x="89" y="13">100.0%</text>
+</g>
+</svg>
 /* MODULE_END */
 
 
 
 /* MODULE_BEGIN { "actionList": ["trim"], "file": "/test/modeAjaxOffline/https%3A%2F%2Fimg.shields.io%2Fbadge%2Ftests_failed-999-dd0000.svg%3Fstyle%3Dflat%23GET" } */
-<svg xmlns="http://www.w3.org/2000/svg" width="103" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#fff" stop-opacity=".1"/><stop offset=".1" stop-color="#fff" stop-opacity=".1"/><stop offset=".9" stop-color="#fff" stop-opacity=".1"/><stop offset="1" stop-color="#fff" stop-opacity=".1"/></linearGradient><path fill="#555" d="M0 0h103v20h-103z"/><path fill="#d00" d="M72 0h31v20h-31zM72 0h4v20h-4z"/><path fill="url(#a)" d="M0 0h103v20h-103z"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="37" y="13">tests failed</text><text x="86.5" y="13">999</text></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="103" height="20">
+<linearGradient id="a" x2="0" y2="100%">
+  <stop offset="0" stop-color="#fff" stop-opacity=".1"/>
+  <stop offset=".1" stop-color="#fff" stop-opacity=".1"/>
+  <stop offset=".9" stop-color="#fff" stop-opacity=".1"/>
+  <stop offset="1" stop-color="#fff" stop-opacity=".1"/>
+</linearGradient><path fill="#555" d="M0 0h103v20h-103z"/>
+<path fill="#d00" d="M72 0h31v20h-31zM72 0h4v20h-4z"/>
+<path fill="url(#a)" d="M0 0h103v20h-103z"/>
+<g fill="#fff" text-anchor="middle" font-family="arial" font-size="11">
+  <text x="37" y="13">tests failed</text><text x="86.5" y="13">999</text>
+</g>
+</svg>
 /* MODULE_END */
 
 
@@ -703,7 +743,7 @@ ymXCIWMOjxhLC8J1sbqQq/btyWDcn1qj0PUzM+bH4UidMtOe/B7bL9Wlz0MZYXZdLOnfAAAAAElFTkSu
       "job_id": "1a7aec8ef0c64165bcde1230e213ad44",
       "platform": [
         "Linux",
-        "chrome",
+        "googlechrome",
         "34"
       ],
       "result": {
@@ -714,7 +754,7 @@ ymXCIWMOjxhLC8J1sbqQq/btyWDcn1qj0PUzM+bH4UidMtOe/B7bL9Wlz0MZYXZdLOnfAAAAAElFTkSu
           "errorMessageList": [],
           "testPlatformList": [
             {
-              "name": "browser - saucelabs chrome",
+              "name": "browser - saucelabs googlechrome",
               "testCaseList": [
                 {
                   "module": "utility2.moduleSaucelabsBrowser",
@@ -811,7 +851,7 @@ console.log('hello test');
   );
   background-size: 40px 40px;
   color: #fff;
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: arial;
   font-size: 12px;
   padding: 2px 0 2px 0;
   text-align: center;
@@ -834,7 +874,7 @@ console.log('hello test');
   display: none;
   left: 50%;
   margin: 0 0 0 -50px;
-  padding: 8px 9px 8px 8px;
+  padding: 5px 5px 5px 5px;
   position: fixed;
   top: 49%;
   width: 100px;
@@ -1051,7 +1091,7 @@ console.log('hello test');
       */
       utility2.testMock(onEventError, [
         [global, { required: { url: required.url }, state: { modeBrowser: null } }],
-        [utility2, { deferCallback: utility2.applyArgList2([]) }]
+        [utility2, { deferCallback: utility2.callArg2 }]
       ], function (onEventError) {
         var global2;
         /* test browser mode disabed handling behavior */
@@ -1061,7 +1101,7 @@ console.log('hello test');
         global2 = {
           /* test server-sent event handling behavior */
           EventSource: function () {
-            this.addEventListener = utility2.applyArgList1([]);
+            this.addEventListener = utility2.callArg1;
           },
           /* test state.testReportDiv disabled handling behavior */
           document: { getElementById: utility2.nop },
@@ -1168,14 +1208,49 @@ console.log('hello test');
       utility2.applyArgList2([])(null, null, onEventReady);
     },
 
-    applyError0: function (onEventError) {
+    callArg0: function (callback) {
+      /*
+        this function calls the callback in arg position 0
+      */
+      callback();
+    },
+
+    callArg1: function (_, callback) {
+      /*
+        this function calls the callback in arg position 1
+      */
+      utility2.nop(_);
+      callback();
+    },
+
+    callArg2: function (_, __, callback) {
+      /*
+        this function calls the callback in arg position 2
+      */
+      utility2.nop(_, __);
+      callback();
+    },
+
+    _callArgX_default_test: function (onEventError) {
+      /*
+        this function tests callArgX's default handling behavior
+      */
+      var onEventReady;
+      onEventReady = utility2.untilReady(onEventError);
+      onEventReady.remaining += 3;
+      utility2.callArg0(onEventReady);
+      utility2.callArg1(null, onEventReady);
+      utility2.callArg2(null, null, onEventReady);
+    },
+
+    callError0: function (onEventError) {
       /*
         this function calls the onEventError callback in arg position 0 with an error object
       */
       onEventError(utility2.error);
     },
 
-    applyError1: function (_, onEventError) {
+    callError1: function (_, onEventError) {
       /*
         this function calls the onEventError callback in arg position 1 with an error object
       */
@@ -1183,7 +1258,7 @@ console.log('hello test');
       onEventError(utility2.error);
     },
 
-    applyError2: function (_, __, onEventError) {
+    callError2: function (_, __, onEventError) {
       /*
         this function calls the onEventError callback in arg position 2 with an error object
       */
@@ -1191,19 +1266,19 @@ console.log('hello test');
       onEventError(utility2.error);
     },
 
-    _applyErrorX_default_test: function (onEventError) {
+    _callErrorX_default_test: function (onEventError) {
       /*
-        this function tests applyErrorX's default handling behavior
+        this function tests callErrorX's default handling behavior
       */
-      utility2.applyError0(function (error) {
+      utility2.callError0(function (error) {
         /* assert error occurred */
         utility2.assert(error instanceof Error, error);
       });
-      utility2.applyError1(null, function (error) {
+      utility2.callError1(null, function (error) {
         /* assert error occurred */
         utility2.assert(error instanceof Error, error);
       });
-      utility2.applyError2(null, null, function (error) {
+      utility2.callError2(null, null, function (error) {
         /* assert error occurred */
         utility2.assert(error instanceof Error, error);
       });
@@ -1371,6 +1446,13 @@ console.log('hello test');
         utility2.assert(!state.onEventErrorDefaultIgnoreList
           || state.onEventErrorDefaultIgnoreList.length === 0,
           state.onEventErrorDefaultIgnoreList);
+        /* assert the following objects have no side-effect properties resulting from test */
+        [
+          utility2.callArg0, utility2.callArg1, utility2.callArg2,
+          utility2.callError0, utility2.callError1, utility2.callError2
+        ].forEach(function (obj) {
+          utility2.assert(Object.keys(obj).length === 0, Object.keys(obj));
+        });
         /* report test results */
         self.report();
       });
@@ -1699,7 +1781,7 @@ console.log('hello test');
       }
       /* security - scrub sensitive key / value pairs in json data from log */
       message = message.replace(
-        (/"[^"]*(?:authoriz|key|login|passw|secret|token)[\S\s]*?([,}])/gi),
+        (/"[^"]*(?:auth|key|login|passw|secret|token)[\S\s]*?([,}])/gi),
         function (_, match1) {
           utility2.nop(_);
           return match1 === ',' ? '' : match1;
@@ -2347,6 +2429,7 @@ console.log('hello test');
       /*
         this function creates a test report
       */
+
       var result, self, state;
       self = this;
       state = self.global.state;
@@ -2369,8 +2452,7 @@ console.log('hello test');
       /* copy state.testReport */
       state.testReportCopy = utility2.jsonCopy(state.testReport);
       /* reset state.testReport */
-      state.testReport = {};
-      utility2.testReportMerge(state.testReport);
+      state.testReport = utility2.testReportMerge();
       /* browser code */
       if (state.modeBrowser) {
         /* notify saucelabs of test results */
@@ -2410,7 +2492,7 @@ console.log('hello test');
       */
       utility2.testMock(onEventError, [
         [utility2, {
-          ajax: utility2.applyArgList1([]),
+          ajax: utility2.callArg1,
           clearCallSetInterval: utility2.nop,
           onEventErrorDefault: null
         }]
@@ -2496,7 +2578,7 @@ console.log('hello test');
       var self, data;
       self = local._createTest({
         console: { error: utility2.nop },
-        setTimeout: utility2.applyArgList0([]),
+        setTimeout: utility2.callArg0,
         state: { testModuleDict: {}, testReport: utility2.testReportMerge({
           onEventReady: utility2.nop,
           testPlatformList: [{ testCaseList: [] }]
@@ -2527,7 +2609,7 @@ console.log('hello test');
       var self, data;
       self = local._createTest({
         console: { error: utility2.nop },
-        setTimeout: utility2.applyArgList0([]),
+        setTimeout: utility2.callArg0,
         state: {
           testModuleDict: { 'utility2.__Test_prototype_run_testsSkipped_test': false },
           testReport: utility2.testReportMerge({
@@ -2536,7 +2618,7 @@ console.log('hello test');
         }
       }, {
         _name: 'utility2.__Test_prototype_run_testsSkipped_test',
-        _test: utility2.applyArgList0([])
+        _test: utility2.callArg0
       });
       self.run();
       data = self.global.state.testReport.testPlatformList[0].testCaseList[0].status;
@@ -2613,8 +2695,8 @@ console.log('hello test');
       mockList = [
         /* suppress console.log */
         [console, { log: utility2.nop }],
-        /* enforce synchonicity by mocking timers as utility2.applyArgList0([]) */
-        [global, { setInterval: utility2.applyArgList0([]), setTimeout: utility2.applyArgList0([]) }],
+        /* enforce synchonicity by mocking timers as utility2.callArg0 */
+        [global, { setInterval: utility2.callArg0, setTimeout: utility2.callArg0 }],
         [global.process || {}, { exit: utility2.throwError }],
         [utility2, { shell: utility2.throwError }]
       ].concat(mockList);
@@ -2694,7 +2776,7 @@ console.log('hello test');
                       .replace((/</g), '&lt;') });
                 }
                 return utility2.setOverride(testCase, {
-                  name: testCase.module + '.' + testCase.name,
+                  name: testCase.modeCiBuild + '.' + testCase.module + '.' + testCase.name,
                   testCaseNumber: testCaseNumber,
                   testReportTestStatusClass: 'testReportTest'
                     + testCase.status[0].toUpperCase() + testCase.status.slice(1),
@@ -2750,6 +2832,7 @@ console.log('hello test');
       */
       var testPlatform1;
       testReport1 = utility2.setDefault(testReport1 || {}, {
+        modeCiBuild: state.modeBrowser ? 'browser' : process.env.MODE_CI_BUILD,
         errorMessageList: [],
         testPlatformList: [],
         totalTime: 0
@@ -2763,9 +2846,6 @@ console.log('hello test');
         /* security - fix potentially malformed testPlatform2 */
         testPlatform2 = testPlatform2 || {};
         testPlatform2.name = String(testPlatform2.name);
-        testPlatform2.testCaseList = Array.isArray(testPlatform2.testCaseList)
-          ? testPlatform2.testCaseList
-          : [];
         testPlatform2.totalTime = Number(testPlatform2.totalTime) || 0;
         testReport1.testPlatformList.forEach(function (_) {
           /* use existing testPlatform1 */
@@ -2785,14 +2865,17 @@ console.log('hello test');
         /* merge testPlatform2 into testPlatform1 */
         testPlatform1.totalTime += testPlatform2.totalTime;
         /* merge testPlatform2.testCaseList into testPlatform1.testCaseList */
-        testPlatform2.testCaseList.forEach(function (testCase) {
-          /* security - fix potentially malformed testCase */
-          testCase.errorMessage = String(testCase.errorMessage || '');
-          testCase.module = String(testCase.module);
-          testCase.name = String(testCase.name);
-          testCase.time = Number(testCase.time) || 0;
-          testPlatform1.testCaseList.push(testCase);
-        });
+        if (Array.isArray(testPlatform2.testCaseList)) {
+          testPlatform2.testCaseList.forEach(function (testCase) {
+            /* security - fix potentially malformed testCase */
+            testCase.modeCiBuild = testCase.modeCiBuild || testPlatform2.modeCiBuild;
+            testCase.errorMessage = String(testCase.errorMessage || '');
+            testCase.module = String(testCase.module);
+            testCase.name = String(testCase.name);
+            testCase.time = Number(testCase.time) || 0;
+            testPlatform1.testCaseList.push(testCase);
+          });
+        }
       });
       /* update date */
       testReport1.date = testReport1.date || new Date().toISOString();
@@ -2812,6 +2895,7 @@ console.log('hello test');
         testPlatform1.testsPassed = 0;
         testPlatform1.testsSkipped = 0;
         testPlatform1.testCaseList.forEach(function (testCase) {
+          testCase.modeCiBuild = testCase.modeCiBuild || testReport1.modeCiBuild;
           /* update tests skipped */
           if (testCase.status === 'skipped') {
             testReport1.testsSkipped += 1;
@@ -2848,9 +2932,11 @@ console.log('hello test');
         }
         /* sort testCaseList by status.module.name */
         testPlatform1.testCaseList.sort(function (arg1, arg2) {
-          arg1 = String(arg1.status.replace('passed', 'z') + arg1.module + arg1.name)
+          arg1 = String(arg1.modeCiBuild + arg1.status.replace('passed', 'z') + arg1.module
+            + arg1.name)
             .toLowerCase();
-          arg2 = String(arg2.status.replace('passed', 'z') + arg2.module + arg2.name)
+          arg2 = String(arg2.modeCiBuild + arg2.status.replace('passed', 'z') + arg2.module
+            + arg2.name)
             .toLowerCase();
           return arg1 <= arg2 ? -1 : 1;
         });
@@ -3340,7 +3426,7 @@ console.log('hello test');
       */
       utility2.testMock(onEventError, [
         [global, {
-          required: { fs: { exists: utility2.applyArgList1([]) } },
+          required: { fs: { exists: utility2.callArg1 } },
           /* test state.modeDebugProcess handling behavior */
           state: { modeDebugProcess: true }
         }],
@@ -3402,7 +3488,7 @@ console.log('hello test');
               npm_config_utility2_bb: '1'
             },
             exit: utility2.nop,
-            on: utility2.applyArgList1([])
+            on: utility2.callArg1
           },
           state: { modeCli: 'exportEnv' }
         }]
@@ -3454,7 +3540,7 @@ console.log('hello test');
               callback();
             }
           } },
-          setTimeout: utility2.applyArgList0([]),
+          setTimeout: utility2.callArg0,
           state: { testReportCopy: utility2.testReportMerge() }
         }]
       ], function (onEventError) {
@@ -3484,6 +3570,7 @@ console.log('hello test');
       /* init state.tmpdir */
       state.tmpdir = required.path.resolve(state.tmpdir
         || required.os.tmpdir() + '/utility2.' + encodeURIComponent(process.cwd()));
+      utility2.jsonLog('_initOnceTmpdir - creating tmpdir ' + state.tmpdir);
       utility2.assert(state.tmpdir, state.tmpdir);
       if (!required.fs.existsSync(state.tmpdir + '/cache')) {
         utility2.jsonLog('creating tmpdir ' + state.tmpdir);
@@ -3626,7 +3713,7 @@ console.log('hello test');
       utility2.testMock(onEventError, [
         [global, {
           local: { _fsRmr: utility2.nop },
-          required: { fs: { readdir: utility2.applyError1, unlink: utility2.applyArgList1([]) } }
+          required: { fs: { readdir: utility2.callError1, unlink: utility2.callArg1 } }
         }]
       ], function (onEventError) {
         local._fsCacheCleanup(function (error) {
@@ -3819,8 +3906,8 @@ console.log('hello test');
       utility2.testMock(onEventError, [
         [required, { fs: {} }]
       ], function (onEventError) {
-        required.fs.readdir = utility2.applyArgList1([]);
-        required.fs.rmdir = required.fs.unlink = utility2.applyError1;
+        required.fs.readdir = utility2.callArg1;
+        required.fs.rmdir = required.fs.unlink = utility2.callError1;
         local._fsRmr(state.tmpdir + '/cache/' + utility2.uuid4(), function (error) {
           utility2.tryCatch(function () {
             /* assert error occurred */
@@ -4213,6 +4300,7 @@ console.log('hello test');
         3. mkdirp parent dir if necessary
       */
       var mode, onEventError2, tmp;
+      utility2.assert(state.tmpdir, 'fsWriteFileAtomic - invalid state.tmpdir ' + state.tmpdir);
       mode = 0;
       onEventError2 = function (error) {
         mode = utility2.modeIncrement(error, mode);
@@ -4411,13 +4499,36 @@ console.log('hello test');
             modeUtility2Update: 'master'
           }
         }],
-        [utility2, { ajax: utility2.applyArgList1([]) }]
+        [utility2, { ajax: utility2.callArg1 }]
       ], function (onEventError) {
         /* test state.modeUtility2Update enabled handling behavior */
         state.modeCliDict[state.modeCli]();
         /* test state.modeUtility2Update disabled handling behavior */
         state.modeUtility2Update = null;
         state.modeCliDict[state.modeCli]();
+        onEventError();
+      });
+    },
+
+    modeCliDict_testReportMerge: function () {
+      /*
+        this function creates a merged testReport from .build/test-report.json
+      */
+      state.modeTestReportMerge = true;
+      utility2.testReportNodejs(utility2.testReportMerge());
+    },
+
+    _modeCliDict_testReportMerge_default_test: function (onEventError) {
+      /*
+        this function tests modeCliDict_testReportMerge's default handling behavior
+      */
+      utility2.testMock(onEventError, [
+        [global, { state: { modeCli: 'testReportMerge', modeCliDict: state.modeCliDict } }],
+        [utility2, { testReportNodejs: utility2.nop }]
+      ], function (onEventError) {
+        state.modeCliDict[state.modeCli]();
+        /* assert state.modeTestReportMerge is true */
+        utility2.assert(state.modeTestReportMerge, state.modeTestReportMerge);
         onEventError();
       });
     },
@@ -4692,7 +4803,7 @@ console.log('hello test');
       );
       /* write test-report.html */
       onEventReady.remaining += 1;
-      utility2.jsonLog('\ngenerating test report file://' + state.fsDirBuild
+      utility2.jsonLog('\ncreating test report file://' + state.fsDirBuild
         + '/test-report.html');
       utility2.fsWriteFileAtomic(
         state.fsDirBuild + '/test-report.html',
@@ -4720,7 +4831,7 @@ console.log('hello test');
           modeTestReportMerge: true
         } }],
         [local, { _testReportNodejsBadge: utility2.nop }],
-        [required, { fs: { readFile: utility2.applyArgList1([]) } }],
+        [required, { fs: { readFile: utility2.callArg1 } }],
         [utility2, { fsWriteFileAtomic: utility2.nop, testReportHtml: utility2.nop }]
       ], function (onEventError) {
         utility2.testReportNodejs();
@@ -5499,7 +5610,7 @@ console.log('hello test');
         this function tests _ajaxOnEventResponse's redirect handling behavior
       */
       utility2.testMock(onEventError, [
-        [utility2, { ajax: utility2.applyArgList1([]), streamReadAll: utility2.nop }]
+        [utility2, { ajax: utility2.callArg1, streamReadAll: utility2.nop }]
       ], function (onEventError) {
         /* test default redirect handling behavior */
         local._ajaxOnEventResponse({}, function (error) {
@@ -5635,7 +5746,7 @@ console.log('hello test');
         this function tests ajax's timeout handling behavior
       */
       utility2.testMock(onEventError, [
-        [global, { setTimeout: utility2.applyArgList0([]) }]
+        [global, { setTimeout: utility2.callArg0 }]
       ], function (onEventError) {
         utility2.ajax({ url: '/test/test.json' }, function (error) {
           /* assert error occurred */
@@ -5830,7 +5941,7 @@ console.log('hello test');
       */
       utility2.testMock(onEventError, [
         /* ajax error handling behavior */
-        [utility2, { ajax: utility2.applyError1 }]
+        [utility2, { ajax: utility2.callError1 }]
       ], function (onEventError) {
         var onEventReady, self;
         onEventReady = utility2.untilReady(onEventError);
@@ -5907,7 +6018,7 @@ console.log('hello test');
       var self;
       self = state.dbGithubDefault;
       utility2.testMock(onEventError, [
-        [self, { ajax: utility2.applyArgList1([]) }]
+        [self, { ajax: utility2.callArg1 }]
       ], function (onEventError) {
         self.branchMerge('other', null, function (error) {
           utility2.tryCatch(function () {
@@ -5939,7 +6050,8 @@ console.log('hello test');
           onEventError2();
           break;
         case 3:
-          setTimeout(onEventError2, 1000);
+          /* wait a while for github database to reach consistency before updating again */
+          setTimeout(onEventError2, 2000);
           break;
         case 4:
           if (fileList.length === 0) {
@@ -5986,7 +6098,7 @@ console.log('hello test');
             }, onEventError);
           }
         }],
-        [self, { fileUpdate: utility2.applyArgList2([]) }]
+        [self, { fileUpdate: utility2.callArg2 }]
       ], function (onEventError) {
         self.dirUpdate(
           '__Branch_prototype_dirUpdate_default_test',
@@ -6020,7 +6132,7 @@ console.log('hello test');
           /* delete file on github */
           self.ajax({ data: JSON.stringify({
             branch: self.branch,
-            message: '--skip-ci delete ' + file,
+            message: '[skip ci] delete ' + file,
             sha: data
           }), method: 'DELETE', url: self.url + '/contents' + file }, onEventError2);
           break;
@@ -6092,7 +6204,7 @@ console.log('hello test');
           self.ajax({ data: JSON.stringify({
             branch: self.branch,
             content: blob.toString('base64'),
-            message: (data ? '--skip-ci update ' : '--skip-ci create ') + file,
+            message: (data ? '[skip ci] update ' : '[skip ci] create ') + file,
             sha: data
           }), method: 'PUT', url: self.url + '/contents' + file }, onEventError2);
           break;
@@ -6131,7 +6243,7 @@ console.log('hello test');
       blob = new Buffer(1);
       self = state.dbGithubDefault;
       utility2.testMock(onEventError, [
-        [self, { ajax: utility2.applyArgList1([]), fileSha: utility2.applyArgList1([]) }]
+        [self, { ajax: utility2.callArg1, fileSha: utility2.callArg1 }]
       ], function (onEventError) {
         self.fileUpdate(null, blob, function (error) {
           utility2.tryCatch(function () {
@@ -6230,7 +6342,7 @@ console.log('hello test');
           fileDelete: utility2.nop,
           fileUpdate: utility2.nop
         } }],
-        [utility2, { readyUtility2Exit: {}, streamReadAll: utility2.applyArgList1([]) }]
+        [utility2, { readyUtility2Exit: {}, streamReadAll: utility2.callArg1 }]
       ], function (onEventError) {
         /* test branch merge handling behavior */
         state.modeCliDict.dbGithubBranchMerge();
@@ -6318,7 +6430,7 @@ console.log('hello test');
           /* init saucelabs tests */
           intervalId = utility2.uuid4();
           data = JSON.stringify(utility2.setOverride(options, {
-            build: process.env.CI_BUILD_NUMBER,
+            build: process.env.CI_BUILD_NUMBER_SAUCELABS,
             framework: 'custom',
             /* reduce timeoutDefault to account for saucelabs startup time */
             /* bug - saucelabs only accepts integers for max-duration */
@@ -6358,7 +6470,7 @@ console.log('hello test');
           utility2.jsonLog('\nheadlessSaucelabs - tests started -', [options, data]);
           onEventReady = utility2.untilReady(function (error) {
             mode = -2;
-            onEventError2(error);
+            onEventError(error);
           });
           /* create remainingDict of test id's */
           data['js tests'].forEach(function (id) {
@@ -6368,7 +6480,7 @@ console.log('hello test');
             remainingDict[id] = { id: id, platform: options.platforms[data] };
           });
           /* wait 30000 ms for saucelabs test to startup */
-          (state.modeOffline ? utility2.applyArgList0([]) : setTimeout)(onEventError2, 30000);
+          (state.modeOffline ? utility2.callArg0 : setTimeout)(onEventError2, 30000);
           break;
         case 3:
           /* poll saucelabs for test status */
@@ -6391,26 +6503,28 @@ console.log('hello test');
           data['js tests'].forEach(function (data) {
             /* test finished - remove from remainingDict */
             if (data.result && data.result.testReport) {
+              /* remove test from remainingDict */
+              delete remainingDict[data.id];
               /* merge finished test into state.testReport */
               utility2.testReportMerge(state.testReport, data.result.testReport);
-              /* remove finished test from remainingDict */
-              delete remainingDict[data.id];
               onEventReady();
               return;
             }
-            /* saucelabs internal error - remove test from remainingDict */
+            /* test undefined - saucelabs internal error - remove from remainingDict */
             if (completed || data.result || (/error/).test(data.status)) {
-              data.totalTime = Date.now() - time;
-              local._headlessSaucelabsTestFailed(
-                new Error(JSON.stringify(data)),
-                data
-              );
-              /* remove failed test from remainingDict */
+              /* remove test from remainingDict */
               delete remainingDict[data.id];
-              onEventReady();
+              /* record time elapsed */
+              data.totalTime = Date.now() - time;
+              /* try to recover test status */
+              local._headlessSaucelabsRecover(
+                new Error(JSON.stringify(data)),
+                data,
+                onEventReady
+              );
               return;
             }
-            /* update status of running test */
+            /* test pending - update test status */
             remainingDict[data.id] = {
               id: data.id,
               job_id: data.job_id,
@@ -6424,14 +6538,14 @@ console.log('hello test');
           clearTimeout(timeout);
           /* clear interval for headlessSaucelabs */
           utility2.clearCallSetInterval(intervalId, 'clear');
-          /* fail remaining tests */
+          /* record time elapsed */
           time = Date.now() - time;
+          /* try to recover remaining tests */
           Object.keys(remainingDict).forEach(function (data) {
             data = remainingDict[data];
             data.totalTime = time;
-            local._headlessSaucelabsTestFailed(error, data);
+            local._headlessSaucelabsRecover(error, data, onEventReady);
           });
-          onEventError(error, data);
         }
       };
       onEventError2();
@@ -6443,7 +6557,7 @@ console.log('hello test');
       */
       utility2.headlessSaucelabs({
         /* https://saucelabs.com/platforms */
-        platforms: [['linux', 'chrome', ''], ['linux', 'firefox', '']]
+        platforms: [['linux', 'googlechrome', ''], ['linux', 'firefox', '']]
       }, function (error) {
         utility2.tryCatch(function () {
           /* assert no error occurred */
@@ -6457,61 +6571,153 @@ console.log('hello test');
       /*
         this function tests headlessSaucelabs's error handling behavior
       */
+      var mode;
+      mode = 0;
       utility2.testMock(onEventError, [
-        [global, { setTimeout: utility2.applyArgList0([]) }],
-        [state, { modeOffline: null, testReport: utility2.testReportMerge() }],
-        [utility2, { ajax: null, onEventTimeout: utility2.nop }]
+        [global, { setTimeout: utility2.callArg0, state: {} }],
+        [local, { _headlessSaucelabsRecover: function (error, data, onEventError) {
+          onEventError(error, data);
+        } }],
+        [utility2, {
+          ajax: function (_, onEventError) {
+            utility2.nop(_);
+            mode += 1;
+            switch (mode) {
+            case 1:
+              onEventError(null, { 'js tests': [0, 1, 2, 3]});
+              break;
+            case 2:
+              onEventError(null, { 'js tests': [
+                /* test test finished handling behavior */
+                { id: 0, result: { testReport: {} } },
+                /* test internal saucelabs error handling behavior */
+                { id: 1, status: 'error' },
+                /* test test pending handling behavior */
+                { id: 2, status: 'pending' },
+                /* test malformed data handling behavior */
+                null
+              ]});
+              break;
+            }
+          },
+          clearCallSetInterval: function (_, callback) {
+            utility2.nop(_);
+            if (typeof callback === 'function') {
+              callback();
+            }
+          },
+          onEventTimeout: utility2.nop
+        }]
       ], function (onEventError) {
-        var mode;
-        mode = 0;
-        utility2.ajax = function (_, onEventError) {
-          utility2.nop(_);
-          mode += 1;
-          switch (mode) {
-          case 1:
-            onEventError(null, JSON.parse(state.fsWatchDict[
-              '/test/modeAjaxOffline/https%3A%2F%2Fsaucelabs.com'
-                + '%2Frest%2Fv1%2Futility2-kaizhu256%2Fjs-tests%23POST'
-            ].contentBrowser));
-            break;
-          case 2:
-            onEventError(null, { 'js tests': [
-              /* test test-in-progress handling behavior */
-              {},
-              /* test saucelabs internal error handling behavior */
-              { result: '_headlessSaucelabs_error_test' },
-              /* test malformed data error handling behavior */
-              null
-            ] });
-            break;
-          }
-        };
-        local._headlessSaucelabs_default_test(function (error) {
-          /* assert error occurred */
-          utility2.assert(error instanceof Error, error);
-          onEventError();
+        utility2.headlessSaucelabs({
+          /* https://saucelabs.com/platforms */
+          platforms: [[], [], [], []]
+        }, function (error) {
+          utility2.tryCatch(function () {
+            /* assert error occurred */
+            utility2.assert(error instanceof Error, error);
+            onEventError();
+          }, onEventError);
         });
       });
     },
 
-    _headlessSaucelabsTestFailed: function (error, testReport) {
+    _headlessSaucelabsRecover: function (error, testReport, onEventError) {
       /*
-        this function handles failed saucelabs tests
+        this function tries to recover the testReport from saucelabs internal errors
       */
-      testReport = { testPlatformList: [{
-        name: 'browser - saucelabs '
-          + (testReport.platform || ['unknown user agent']).join(' '),
-        testCaseList: [{
-          errorMessage: utility2.errorStack(error),
-          module: local._name,
-          name: '_headlessSaucelabs_default_test',
-          time: testReport.totalTime
-        }],
-        totalTIme: testReport.totalTime
-      }] };
-      testReport.errorMessageList
-        = [testReport.testPlatformList[0].testCaseList[0].errorMessage];
-      utility2.testReportMerge(state.testReport, testReport);
+      var jobId, mode, onEventError2;
+      mode = 0;
+      onEventError2 = function (_, data) {
+        mode = utility2.modeIncrement(_, mode);
+        switch (mode) {
+        case 1:
+          jobId = testReport.job_id;
+          /* fetch saucelabs logs */
+          utility2.ajax({
+            resultType: 'json',
+            url: 'https://saucelabs.com/jobs/' + jobId + '/log.json'
+          }, utility2.tryCatchHandler(onEventError2));
+          break;
+        case 2:
+          /* try to recover testReport from saucelabs logs */
+          data.forEach(function (data) {
+            testReport = (data && data.result && data.result.testReport) || testReport;
+          });
+          /* testReport recovery succeeded */
+          if (testReport.testPlatformList) {
+            error = null;
+          }
+          /* notify saucelabs of pass / fail test statue */
+          data = '{"passed":' + !error + '}';
+          utility2.ajax({
+            data: data,
+            headers: {
+              authorization: 'Basic ' + new Buffer(process.env.SAUCE_USERNAME
+                + ':' + process.env.SAUCE_ACCESS_KEY).toString('base64'),
+              'content-length': Buffer.byteLength(data),
+              'content-type': 'application/json'
+            },
+            method: 'PUT',
+            url: 'https://saucelabs.com/rest/v1/' + process.env.SAUCE_USERNAME + '/jobs/'
+              + jobId
+          }, onEventError2);
+          break;
+        default:
+          /* testReport recovery failed */
+          if (error) {
+            /* create a minimal testReport reporting saucelabs internal error */
+            testReport = { testPlatformList: [{
+              name: 'browser - saucelabs '
+                + (testReport.platform || ['unknown user agent']).join(' '),
+              testCaseList: [{
+                errorMessage: utility2.errorStack(error),
+                module: local._name,
+                name: '_headlessSaucelabs_default_test',
+                time: testReport.totalTime
+              }],
+              totalTIme: testReport.totalTime
+            }] };
+            testReport.errorMessageList
+              = [testReport.testPlatformList[0].testCaseList[0].errorMessage];
+          } else {
+            utility2.jsonLog('_headlessSaucelabsRecover - recovered testReport for jobId '
+              + jobId);
+          }
+          /* merge recovered testReport into state.testReport */
+          utility2.testReportMerge(state.testReport, testReport);
+          onEventError(error);
+        }
+      };
+      onEventError2();
+    },
+
+    __headlessSaucelabsRecover_default_test: function (onEventError) {
+      /*
+        this function tests _headlessSaucelabsRecover's default handling behavior
+      */
+      var testReport;
+      utility2.testMock(onEventError, [
+        [global, { state: {} }],
+        [utility2, { ajax: function (_, onEventError) {
+          utility2.nop(_);
+          onEventError(null, [null, { result: { testReport: testReport } } ]);
+        } }]
+      ], function (onEventError) {
+        /* test testReport recovery failed handling behavior */
+        testReport = null;
+        local._headlessSaucelabsRecover(utility2.error, {}, function (error) {
+          /* assert error occurred */
+          utility2.assert(error instanceof Error);
+        });
+        /* test testReport recovery success handling behavior */
+        testReport = utility2.testReportMerge();
+        local._headlessSaucelabsRecover(utility2.error, {}, function (error) {
+          /* assert no error occurred */
+          utility2.assert(!error, error);
+        });
+        onEventError();
+      });
     },
 
     modeCliDict_headlessSaucelabsPlatformsList: function () {
@@ -6576,12 +6782,12 @@ console.log('hello test');
       var onEventError2;
       utility2.testMock(onEventError, [
         [utility2, {
-          ajax: utility2.applyArgList1([]),
+          ajax: utility2.callArg1,
           readyUtility2Exit: function () {
             onEventError2();
           },
           shell: function () {
-            return { on: utility2.applyArgList1([]) };
+            return { on: utility2.callArg1 };
           },
           streamReadAll: utility2.applyArgList1([null, JSON.stringify({
             platformsList: [[]],
@@ -6626,7 +6832,7 @@ console.log('hello test');
       utility2.testMock(onEventError, [
         [global, { state: { modeCliDict: state.modeCliDict, testModuleDict: {} } }],
         [utility2, {
-          headlessSaucelabs: utility2.applyArgList1([]),
+          headlessSaucelabs: utility2.callArg1,
           initModule: function (_, local2) {
             utility2.nop(_);
             local2._headlessSaucelabs_browser_test(onEventError2);
@@ -6754,7 +6960,7 @@ console.log('hello test');
         this function tests _minifyFile's error handling behavior
       */
       utility2.testMock(onEventError, [
-        [required, { fs: { readFile: utility2.applyError2 } }]
+        [required, { fs: { readFile: utility2.callError2 } }]
       ], function (onEventError) {
         local._minifyFile(null, function (error) {
           utility2.tryCatch(function () {
@@ -6866,7 +7072,7 @@ console.log('hello test');
         this function tests _rollupFile's error handling behavior
       */
       utility2.testMock(onEventError, [
-        [required, { fs: { readFile: utility2.applyError2 } }]
+        [required, { fs: { readFile: utility2.callError2 } }]
       ], function (onEventError) {
         local._rollupFile(null, function (error) {
           utility2.tryCatch(function () {
@@ -7035,7 +7241,7 @@ console.log('hello test');
         this function tests _rollupFileCss's error handling behavior
       */
       utility2.testMock(onEventError, [
-        [utility2, { ajaxMultiUrls: utility2.applyError1 }]
+        [utility2, { ajaxMultiUrls: utility2.callError1 }]
       ], function (onEventError) {
         var onEventReady;
         onEventReady = utility2.untilReady(onEventError);
@@ -7159,7 +7365,7 @@ console.log('hello test');
         this function tests router4ProxyDict_/proxy.ajax's error handling behavior
       */
       utility2.testMock(onEventError, [
-        [utility2, { ajax: utility2.applyError1 }]
+        [utility2, { ajax: utility2.callError1 }]
       ], function (onEventError) {
         local['router4ProxyDict_/proxy/proxy.ajax']({
           headers: {},
@@ -7183,7 +7389,7 @@ console.log('hello test');
           request,
           response,
           request.urlParams.redirectCode || 303,
-          { headers: { location: '/test/test.html#modeTest=1' } }
+          { headers: { location: '/test/test.html' } }
         );
         return;
       }
@@ -7267,7 +7473,7 @@ console.log('hello test');
         this function tests router5MainDict_/test/testReportUpload's error handling behavior
       */
       utility2.testMock(onEventError, [
-        [utility2, { streamReadAll: utility2.applyError1 }]
+        [utility2, { streamReadAll: utility2.callError1 }]
       ], function (onEventError) {
         local[
           'router5MainDict_/test/testReportUpload'
@@ -7386,6 +7592,7 @@ console.log('hello test');
       */
       utility2.serverRespond(request, response, 200, {
         data: utility2.textFormat(state.fsWatchDict['/test/test.html'].contentBrowser, {
+          name: state.packageJson.name,
           testModuleDict: JSON.stringify(state.testModuleDict),
           testScript: state.testScript || '/public/file/utility2-test.js'
         })
@@ -7616,7 +7823,7 @@ console.log('hello test');
         this function tests serverListen's default handling behavior
       */
       utility2.testMock(onEventError, [
-        [global, { state: { server: { listen: utility2.applyArgList1([]) }, serverPort: 1 } }]
+        [global, { state: { server: { listen: utility2.callArg1 }, serverPort: 1 } }]
       ], function (onEventError) {
         /* test default handling behavior */
         utility2.serverListen(utility2.nop);

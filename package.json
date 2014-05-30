@@ -7,7 +7,7 @@
     "phantomjs": "1.9.x",
     "slimerjs": "0.9.x"
   },
-  "description": "utility2 - nodejs test and code coverage utility",
+  "description": "utility2 - nodejs test and coverage utility",
   "main": "utility2.js",
   "name": "utility2",
   "os": ["darwin", "linux"],
@@ -17,6 +17,5 @@
     "start": "./utility2.sh npm-start",
     "test": "./utility2.sh npm-test"
   },
-  "version": "2014.5.26-1"
+  "version": "2014.5.26-4"
 }
-

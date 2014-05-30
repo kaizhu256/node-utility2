@@ -20,20 +20,18 @@ shAesEncrypt () {
   openssl enc -aes-256-cbc -K $AES_256_KEY -iv $IV | base64 | tr -d "\n"
 }
 
-shCiBuildInit () {
-  ## this function inits the ci build
-  ## eval encrypted script
-  if [ "$AES_256_KEY" ]
-    then eval $(shAesDecrypt < .install/.aes-encrypted.sh)
-  fi
+shCiBuild () {
+  ## this function runs the main ci build routine
+  ## decrypt and eval .install/.aes-encrypted.sh
+  eval $(shAesDecrypt < .install/.aes-encrypted.sh) || return $?
   ## codeship.io env
   if [ "$CODESHIP" ]
     ## export $CI_BUILD_DIR
-    then export CI_BUILD_DIR=/build.codeship.io
+    then export CI_BUILD_DIR=build.codeship.io
   ## travis-ci.org env
   elif [ "$TRAVIS" ]
     ## export $CI_BUILD_DIR
-    then export CI_BUILD_DIR=/build.travis-ci.org
+    then export CI_BUILD_DIR=build.travis-ci.org
     ## export TRAVIS_* vars as CI_* vars
     if [ ! "$CI_BRANCH" ]
       then export CI_BRANCH=$TRAVIS_BRANCH
@@ -51,9 +49,7 @@ shCiBuildInit () {
   fi
   ## add random salt to CI_BUILD_NUMBER to prevent conflict
   ## when re-running saucelabs with same CI_BUILD_NUMBER
-  if [ "$CI_BRANCH" == browser ]
-    then export CI_BUILD_NUMBER="$CI_BUILD_NUMBER.$(openssl rand -hex 4)"
-  fi
+  export CI_BUILD_NUMBER_SAUCELABS="$CI_BUILD_NUMBER.$(openssl rand -hex 8)"
   if [ ! "$CI_COMMIT_ID" ]
     then export CI_COMMIT_ID="$(git rev-parse --verify HEAD)"
   fi
@@ -61,86 +57,142 @@ shCiBuildInit () {
     then export CI_COMMIT_MESSAGE="$(git log -1 --pretty=%s)"
   fi
   if [ ! "$CI_COMMIT_INFO" ]
-    then export CI_COMMIT_INFO="$CI_COMMIT_ID $CI_COMMIT_MESSAGE"
+    then export CI_COMMIT_INFO="$CI_COMMIT_ID - $CI_COMMIT_MESSAGE"
   fi
   if [ ! "$CI_REPO" ]
-    then export CI_REPO="$(git config --get remote.origin.url | perl -ne 's/.*?([\w\-]+\/[^\/]+)\.git$/$1/; print')"
+    then export CI_REPO="$(git config --get remote.origin.url\
+      | perl -ne 's/.*?([\w\-]+\/[^\/]+)\.git$/$1/; print')"
   fi
   if [ ! "$CI_REPO_URL" ]
     then export CI_REPO_URL="https://github.com/$CI_REPO/tree/$CI_BRANCH"
   fi
-  if [ "$GIT_SSH_KEY" ]
-    ## export $GIT_SSH_* vars
-    then export GIT_SSH="$UTILITY2_DIR/.install/git-ssh.sh"
-    if [ ! "$GIT_SSH_KEY_FILE" ]
-      then export GIT_SSH_KEY_FILE=$(mktemp /tmp/.git-ssh-key-file-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX)
-    fi
-    ## create $GIT_SSH_KEY_FILE
-    chmod 600 $GIT_SSH_KEY_FILE\
-    && echo $GIT_SSH_KEY | base64 --decode > $GIT_SSH_KEY_FILE\
-    && chmod 600 $GIT_SSH_KEY_FILE
-    ## init $HEROKU_* vars
-    HEROKU_REPO=$(perl -ne 'print $1 if /git\@heroku.com:([^.]+)/' < .install/.git-config)
-    HEROKU_TEST_URL=https://$HEROKU_REPO.herokuapp.com/
+  ## init $FILE
+  local FILE
+  ## export $GIT_SSH
+  export GIT_SSH=$UTILITY2_DIR/.install/git-ssh.sh
+  ## export and create $GIT_SSH_KEY_FILE
+  export GIT_SSH_KEY_FILE=$(mktemp /tmp/.git-ssh-key-file-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX)\
+  && echo $GIT_SSH_KEY | base64 --decode > $GIT_SSH_KEY_FILE\
+  && chmod 600 $GIT_SSH_KEY_FILE\
+  || return $?
+
+  ## init .git/config
+  SCRIPT="$SCRIPT && (cp .install/.git-config .git/config || :)"
+  ## unshallow git repo
+  SCRIPT="$SCRIPT && git fetch --depth=99999999 origin $CI_BRANCH gh-pages"
+  ## update coverage / test report badges with loading icon
+  if [ "$CI_BUILD_DIR" ]
+    then CI_BUILD_DIR_COMMIT=$CI_BUILD_DIR/$CI_BUILD_NUMBER.$CI_BRANCH.$CI_COMMIT_ID
+    CI_BUILD_DIR_LATEST=$CI_BUILD_DIR/latest.$CI_BRANCH
+    SCRIPT="$SCRIPT && (git checkout gh-pagesl"
+    SCRIPT="$SCRIPT || git checkout -b gh-pages origin/gh-pages)"
+    SCRIPT="$SCRIPT && git pull origin gh-pages"
+    for FILE in $CI_BUILD_DIR_LATEST/coverage-report/coverage-report.badge.svg\
+      $CI_BUILD_DIR_LATEST/test-report.badge.svg
+    do
+      SCRIPT="$SCRIPT && mkdir -p $(dirname $FILE)"
+      SCRIPT="$SCRIPT && cp $UTILITY2_DIR/.install/public/utility2-loading.svg $FILE"
+      SCRIPT="$SCRIPT && git add $FILE"
+    done
+    SCRIPT="$SCRIPT && (git commit -m '[skip ci] update $FILE' > /dev/null || :)"
+    SCRIPT="$SCRIPT && git push -f origin gh-pages"
+    SCRIPT="$SCRIPT && (git checkout $CI_BRANCH"
+    SCRIPT="$SCRIPT || git checkout -b $CI_BRANCH origin/$CI_BRANCH)"
   fi
 
-  case $CI_BRANCH in
+  ## run npm test
+  SCRIPT="$SCRIPT && export MODE_CI_BUILD=npmTestLocal"
+  SCRIPT="$SCRIPT && echo && echo [MODE_CI_BUILD=\$MODE_CI_BUILD]"
+  SCRIPT="$SCRIPT npm test $CWD ..."
+  SCRIPT="$SCRIPT && npm test"
+
+  ## deploy to heroku
+  ## init $HEROKU_* vars
+  local HEROKU_REPO=$(perl -ne 'print $1 if /git\@heroku.com:([^.]+)/' < .install/.git-config)
+  local HEROKU_TEST_URL=http://$HEROKU_REPO.herokuapp.com/
+  SCRIPT="$SCRIPT && export MODE_CI_BUILD=herokuDeploy"
+  SCRIPT="$SCRIPT && echo && echo [MODE_CI_BUILD=\$MODE_CI_BUILD]"
+  SCRIPT="$SCRIPT deploy $CWD to git\@heroku.com:$HEROKU_REPO.git ..."
+  ## push to heroku
+  SCRIPT="$SCRIPT && git push -f heroku $CI_BRANCH:master"
+  ## test heroku webpage
+  SCRIPT="$SCRIPT && echo && echo [MODE_CI_BUILD=\$MODE_CI_BUILD]"
+  SCRIPT="$SCRIPT checking webpage $HEROKU_TEST_URL ..."
+  SCRIPT="$SCRIPT && (curl -3Ls $HEROKU_TEST_URL > /dev/null"
+  SCRIPT="$SCRIPT && echo ... check succeeded"
+  SCRIPT="$SCRIPT || (echo ... check failed && shReturn 1))"
+
   ## run headless saucelabs browser tests
-  browser)
-    SCRIPT="$SCRIPT && $UTILITY2_JS"
-    SCRIPT="$SCRIPT --mode-cli=headlessSaucelabsPlatformsList"
-    SCRIPT="$SCRIPT $3"
-    SCRIPT="$SCRIPT < .install/saucelabs-test-platforms-list.json"
-    ;;
-  npm)
-    ## build npm package utility2
-    ## install and test package in /tmp dir with no external npm dependencies */
-    SCRIPT="$SCRIPT && cd /tmp && rm -fr node_modules $NODEJS_PACKAGE_JSON_NAME"
-    ## npm install package
-    SCRIPT="$SCRIPT && npm install $NODEJS_PACKAGE_JSON_NAME"
-    ## cd into package
-    SCRIPT="$SCRIPT && cd node_modules/$NODEJS_PACKAGE_JSON_NAME"
-    ## npm test package
-    SCRIPT="$SCRIPT && npm test"
-    ;;
-  *)
-    ## npm test
-    SCRIPT="$SCRIPT && npm test"
-    if [ "$GIT_SSH_KEY_FILE" ]
-      ## init .git/config
-      then SCRIPT="$SCRIPT && (cp .install/.git-config .git/config || :)"
-      ## unshallow git repo
-      SCRIPT="$SCRIPT && echo $GIT_SSH"
-      SCRIPT="$SCRIPT && echo && echo ci-build - unshallowing local repo ..."
-      SCRIPT="$SCRIPT && git fetch --depth=99999999 origin $CI_BRANCH"
-      ## deploy to heroku
-      SCRIPT="$SCRIPT && echo && echo ci-build - deploying to git@heroku.com:$HEROKU_REPO.git ..."
-      SCRIPT="$SCRIPT && git push -f heroku $CI_BRANCH:master"
-      ## test heroku webpage
-      SCRIPT="$SCRIPT && echo && echo ci-build - testing access to webpage $HEROKU_TEST_URL ..."
-      SCRIPT="$SCRIPT && curl -3iLs $HEROKU_TEST_URL > /dev/null"
-      ## exit on non-zero exit code
-      SCRIPT="$SCRIPT || (echo failed && exit 1)"
-      SCRIPT="$SCRIPT && echo passed"
-      ## run browser tests
-      SCRIPT="$SCRIPT && git push -f origin $CI_BRANCH:browser"
-    fi
-    ;;
-  esac
+  SCRIPT="$SCRIPT && export MODE_CI_BUILD=saucelabsTest"
+  SCRIPT="$SCRIPT && echo && echo [MODE_CI_BUILD=\$MODE_CI_BUILD]"
+  SCRIPT="$SCRIPT run headless saucelabs browser tests ..."
+  SCRIPT="$SCRIPT && $UTILITY2_JS --mode-cli=headlessSaucelabsPlatformsList"
+  SCRIPT="$SCRIPT < .install/saucelabs-test-platforms-list.json"
+
+  ## try to publish package to npm
+  if [ "$NPM_AUTH" ]
+    ## security - do not use SCRIPT macro to avoid leaking sensitive info
+    then printf "_auth = $NPM_AUTH\nemail = $NPM_EMAIL\n" > ~/.npmrc
+    SCRIPT="$SCRIPT && export MODE_CI_BUILD=npmPublish"
+    SCRIPT="$SCRIPT && echo && echo [MODE_CI_BUILD=\$MODE_CI_BUILD]"
+    SCRIPT="$SCRIPT npm publish $NODEJS_PACKAGE_JSON_NAME ..."
+    SCRIPT="$SCRIPT && (./$NODEJS_PACKAGE_JSON_NAME.sh npm-publish 2>dev/null"
+    SCRIPT="$SCRIPT && echo ... npm publish succeeded && echo"
+    SCRIPT="$SCRIPT && sleep 10"
+    SCRIPT="$SCRIPT || (echo ... npm publish failed && echo))"
+  fi
+
+  ## install and test latest npm package in /tmp dir with no external npm dependencies */
+  SCRIPT="$SCRIPT && export MODE_CI_BUILD=npmTestPackage"
+  SCRIPT="$SCRIPT && echo && echo [MODE_CI_BUILD=\$MODE_CI_BUILD]"
+  SCRIPT="$SCRIPT npm install and test package $NODEJS_PACKAGE_JSON_NAME ..."
+  ## rm old npm package
+  SCRIPT="$SCRIPT && cd /tmp && rm -fr node_modules $NODEJS_PACKAGE_JSON_NAME"
+  ## npm install package
+  SCRIPT="$SCRIPT && npm install $NODEJS_PACKAGE_JSON_NAME"
+  ## cd into package
+  SCRIPT="$SCRIPT && cd node_modules/$NODEJS_PACKAGE_JSON_NAME"
+  ## list package content
+  SCRIPT="$SCRIPT && export MODE_CI_BUILD=npmTestPackage"
+  SCRIPT="$SCRIPT && echo && echo [MODE_CI_BUILD=\$MODE_CI_BUILD]"
+  SCRIPT="$SCRIPT list $NODEJS_PACKAGE_JSON_NAME npm package contents ..."
+  SCRIPT="$SCRIPT && find . -path ./node_modules -prune -o -type f -print"
+  ## copy previous test-report.json into .build dir
+  SCRIPT="$SCRIPT && mkdir -p .build && cp $CWD/.build/test-report.json .build"
+  ## npm test package and merge result into previous test-report.json
+  SCRIPT="$SCRIPT && npm test --utility2-mode-test-report-merge"
+  ## copy merged test-report.json into current directory
+  SCRIPT="$SCRIPT && cp .build/test-report.json $CWD/.build"
   ## save $EXIT_CODE
   SCRIPT="$SCRIPT; EXIT_CODE=\$?"
-  if [ "$CI_BUILD_DIR" ] && [ "$CI_BUILD_UPLOAD" != false ]
-    ## upload build to $CI_BUILD_DIR/latest.$CI_BRANCH on github
-    then SCRIPT="$SCRIPT && $($UTILITY2_SH_ECHO db-github-dir-update $CI_REPO/gh-pages $CI_BUILD_DIR/latest.$CI_BRANCH .build)"
-    ## upload build to $CI_BUILD_DIR/$CI_BUILD_NUMBER.$CI_BRANCH.$CI_COMMIT_ID on github
-    SCRIPT="$SCRIPT && $($UTILITY2_SH_ECHO db-github-dir-update $CI_REPO/gh-pages $CI_BUILD_DIR/$CI_BUILD_NUMBER.$CI_BRANCH.$CI_COMMIT_ID .build)"
-    ## exit on non-zero exit code
-    SCRIPT="$SCRIPT || exit 1"
+  ## restore cwd
+  SCRIPT="$SCRIPT && cd $CWD"
+  ## regenerate test report
+  SCRIPT="$SCRIPT && $UTILITY2_JS --mode-cli=testReportMerge --tmpdir"
+  ## return exit code
+  SCRIPT="$SCRIPT && shReturn \$EXIT_CODE"
+
+  ## push build artifact to github
+  if [ "$CI_BUILD_DIR" ]
+    ## save $EXIT_CODE
+    then SCRIPT="$SCRIPT; EXIT_CODE=\$?"
+    SCRIPT="$SCRIPT && export MODE_CI_BUILD=buildUpload"
+    SCRIPT="$SCRIPT && echo && echo [MODE_CI_BUILD=\$MODE_CI_BUILD]"
+    SCRIPT="$SCRIPT updating https://github.com/$CI_REPO/tree/gh-pages/$CI_BUILD_DIR_LATEST ..."
+    SCRIPT="$SCRIPT && git checkout gh-pages"
+    SCRIPT="$SCRIPT && git pull origin gh-pages"
+    for FILE in $CI_BUILD_DIR_LATEST $CI_BUILD_DIR_COMMIT
+    do
+      SCRIPT="$SCRIPT && rm -fr $FILE"
+      SCRIPT="$SCRIPT && cp -a .build $FILE"
+      SCRIPT="$SCRIPT && git add $FILE"
+    done
+    SCRIPT="$SCRIPT && (git commit -m '[skip ci] update $FILE' > /dev/null || :)"
+    SCRIPT="$SCRIPT && git push -f origin gh-pages"
+    SCRIPT="$SCRIPT && git checkout $CI_BRANCH"
+    ## return exit code
+    SCRIPT="$SCRIPT && shReturn \$EXIT_CODE"
   fi
-  ## exit on non-zero exit code
-  SCRIPT="$SCRIPT; if [ \$EXIT_CODE != 0 ]"
-    SCRIPT="$SCRIPT; then exit \$EXIT_CODE"
-  SCRIPT="$SCRIPT; fi"
 }
 
 shNodejsInstall () {
@@ -161,6 +213,13 @@ shNodejsInstall () {
   fi
 }
 
+shReturn () {
+  ## this function returns the specified exit code
+  return $1
+}
+## export function shReturn1
+export -f shReturn
+
 shScriptEval () {
   ## this function evals $SCRIPT
   ## echo $SCRIPT
@@ -169,14 +228,12 @@ shScriptEval () {
   fi
   ## eval $SCRIPT
   if [ ! "$MODE_ECHO" ]
-    ## save cwd
-    then pushd "$(pwd)" > /dev/null
     ## eval $SCRIPT
-    eval "$SCRIPT"
+    then eval "$SCRIPT"
     ## save $EXIT_CODE
     EXIT_CODE=$?
     ## restore cwd
-    popd > /dev/null
+    cd $CWD
     ## return $EXIT_CODE
     return $EXIT_CODE;
   fi
@@ -184,6 +241,10 @@ shScriptEval () {
 
 shUtility2Init () {
   ## this function inits utility2
+  ## save current dir to $CWD
+  CWD=$(pwd)
+  ## save executable dir to $EXEC_DIR
+  EXEC_DIR=$( cd "$( dirname "$0" )" && pwd )
   ## init $SCRIPT
   SCRIPT=":"
   ## init utility2 env
@@ -194,13 +255,14 @@ shUtility2Init () {
 }
 
 shMain () {
-  ## this function is the main program and parse argv
+  ## this function is the main program and parses argv
 
   ## install nodejs / npm if necessary
   shNodejsInstall
   ## init nodejs env
   if [ -f "./utility2.js" ]
-    then eval $(node --eval "global.state = { modeCli: 'exportEnv' }; require('./utility2.js');")
+    then eval $(node --eval\
+      "global.state = { modeCli: 'exportEnv' }; require('./utility2.js');")
   else
     eval $(node --eval "global.state = { modeCli: 'exportEnv' }; require('utility2');")
   fi
@@ -221,10 +283,8 @@ shMain () {
 
   ## ci build utility2
   ci-build)
-    ## npm install
-    npm install
-    ## init ci build
-    shCiBuildInit
+    ## run ci build
+    shCiBuild
     ;;
 
   ## merge head branch $3 into github base branch $2
@@ -266,8 +326,8 @@ shMain () {
 
   ## create ssh key pair for git
   git-ssh-key-create)
-    SCRIPT="$SCRIPT && ssh-keygen -C 'git' -f id_rsa.git -N '' -t rsa"
-    SCRIPT="$SCRIPT; printf '\nexport GIT_SSH_KEY=\"'"
+    SCRIPT="$SCRIPT && (ssh-keygen -C 'git' -f id_rsa.git -N '' -t rsa || :)"
+    SCRIPT="$SCRIPT && printf '\nexport GIT_SSH_KEY=\"'"
     SCRIPT="$SCRIPT && base64 < id_rsa.git | tr -d '\n'"
     SCRIPT="$SCRIPT && printf '\"\n\nexport GIT_SSH_KEY_PUB=\"'"
     SCRIPT="$SCRIPT && cat id_rsa.git.pub | tr -d '\n'"
@@ -282,16 +342,25 @@ shMain () {
   ## called by npm run-script install
   npm-install)
     SCRIPT="$SCRIPT && mkdir -p .install/public"
-    SCRIPT="$SCRIPT && $UTILITY2_JS --mode-cli=npmInstall"
-    SCRIPT="$SCRIPT ${@:2}"
+    SCRIPT="$SCRIPT && $UTILITY2_JS --mode-cli=npmInstall ${@:2}"
     SCRIPT="$SCRIPT && chmod 755 .install/git-ssh.sh"
     ## install utility2-external
     if [ "$NODEJS_PACKAGE_JSON_NAME" == utility2 ]\
         && [ ! -f .install/public/utility2-external.nodejs.rollup.js ]
-      then SCRIPT="$SCRIPT && curl -3Ls"
-      SCRIPT="$SCRIPT https://kaizhu256.github.io/utility2/utility2-external"
+      then SCRIPT="$SCRIPT && curl -3Ls\
+        https://kaizhu256.github.io/utility2/utility2-external"
       SCRIPT="$SCRIPT/$UTILITY2_EXTERNAL_TAR_GZ"
       SCRIPT="$SCRIPT | tar -xzvf -"
+    fi
+    ;;
+
+  ## called by npm run-script publish
+  npm-publish)
+    SCRIPT="$SCRIPT && npm publish"
+    ## extra utility2 code
+    if [ "$NODEJS_PACKAGE_JSON_NAME" == utility2 ]
+      then SCRIPT="$SCRIPT && $($UTILITY2_SH_ECHO utility2-external-build)"
+      SCRIPT="$SCRIPT && $($UTILITY2_SH_ECHO utility2-external-build-publish)"
     fi
     ;;
 
@@ -300,7 +369,7 @@ shMain () {
     SCRIPT="$SCRIPT && $UTILITY2_JS"
     SCRIPT="$SCRIPT --mode-repl"
     SCRIPT="$SCRIPT --server-port=random"
-    SCRIPT="$SCRIPT --tmpdir=true"
+    SCRIPT="$SCRIPT --tmpdir"
     SCRIPT="$SCRIPT ${@:2}"
     ;;
 
@@ -324,20 +393,16 @@ shMain () {
       NPM_TEST_ARGS="$NPM_TEST_ARGS --mode-offline"
     fi
     ## run npm test with code coverage
-    SCRIPT="$SCRIPT && $UTILITY2_JS $NPM_TEST_ARGS"
-    ## use regular expression to filter files needing code coverage
-    SCRIPT="$SCRIPT --mode-coverage"
+    SCRIPT="$SCRIPT && $UTILITY2_JS $NPM_TEST_ARGS --mode-coverage"
+    ## save $EXIT_CODE
     SCRIPT="$SCRIPT; EXIT_CODE=\$?"
     ## re-run npm test without code coverage if tests failed
     ## so we can debug line numbers in stack trace
     SCRIPT="$SCRIPT; if [ \$EXIT_CODE != 0 ]"
-      SCRIPT="$SCRIPT; then $UTILITY2_JS $NPM_TEST_ARGS"
-      SCRIPT="$SCRIPT --mode-test-report-merge"
+      SCRIPT="$SCRIPT; then $UTILITY2_JS $NPM_TEST_ARGS --mode-test-report-merge"
     SCRIPT="$SCRIPT; fi"
-    ## exit on non-zero exit code
-    SCRIPT="$SCRIPT; if [ \$EXIT_CODE != 0 ]"
-      SCRIPT="$SCRIPT; then exit \$EXIT_CODE"
-    SCRIPT="$SCRIPT; fi"
+    ## return exit code
+    SCRIPT="$SCRIPT && shReturn \$EXIT_CODE"
     ;;
 
   ## debug saucelabs job id
@@ -359,14 +424,12 @@ shMain () {
       SCRIPT="$SCRIPT && cd $UTILITY2_DIR"
       case $NODEJS_PROCESS_PLATFORM in
       linux)
-        SCRIPT="$SCRIPT && curl -3Ls"
-        SCRIPT="$SCRIPT https://d2nkw87yt5k0to.cloudfront.net/downloads"
-        SCRIPT="$SCRIPT/sc-latest-$SAUCELABS_VERSION.tar.gz"
+        SCRIPT="$SCRIPT && curl -3Ls\
+          https://d2nkw87yt5k0to.cloudfront.net/downloads/sc-latest-$SAUCELABS_VERSION.tar.gz"
         SCRIPT="$SCRIPT | tar -C .install -xzf -"
         ;;
       *)
-        SCRIPT="$SCRIPT && curl -3Ls"
-        SCRIPT="$SCRIPT https://d2nkw87yt5k0to.cloudfront.net/downloads"
+        SCRIPT="$SCRIPT && curl -3Ls https://d2nkw87yt5k0to.cloudfront.net/downloads"
         SCRIPT="$SCRIPT/sc-latest-$SAUCELABS_VERSION.zip"
         SCRIPT="$SCRIPT > .install/sc.zip && unzip -q .install/sc.zip -d .install"
         ;;
@@ -444,7 +507,8 @@ shMain () {
 
   ## publish utility2-external on github
   utility2-external-build-publish)
-    SCRIPT="$SCRIPT && $($UTILITY2_SH_ECHO db-github-file-update kaizhu256/utility2/gh-pages /utility2-external/$UTILITY2_EXTERNAL_TAR_GZ .install/$UTILITY2_EXTERNAL_TAR_GZ)"
+    SCRIPT="$SCRIPT && $($UTILITY2_SH_ECHO db-github-file-update kaizhu256/utility2/gh-pages\
+      /utility2-external/$UTILITY2_EXTERNAL_TAR_GZ .install/$UTILITY2_EXTERNAL_TAR_GZ)"
     ;;
 
   ## unknown arg

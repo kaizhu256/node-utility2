@@ -1,24 +1,15 @@
-# utility2 [![npm version](https://img.shields.io/npm/v/utility2.svg?style=flat)](https://npmjs.org/package/utility2)
-#### nodejs test and code coverage utility
+utility2 [![npm version](https://img.shields.io/npm/v/utility2.svg?style=flat)](https://npmjs.org/package/utility2)
+========
+#### nodejs test and coverage utility
 
 ## build status
 [![saucelabs.com selenium test status](https://saucelabs.com/browser-matrix/utility2-kaizhu256.svg)](https://saucelabs.com/u/utility2-kaizhu256)
 
- platform | test report | code coverage report
-:--------:|:-----------:|:--------------------:
-linux on [![codeship.io build status](https://www.codeship.io/projects/6d1392c0-94e7-0131-971e-16be0a303db9/status?branch=unstable)](https://www.codeship.io/projects/16743?branch=unstable) | [![utility2 test status](https://kaizhu256.github.io/utility2/build.codeship.io/latest.unstable/test-report.badge.svg)](https://kaizhu256.github.io/utility2/build.codeship.io/latest.unstable/test-report.html) | [![istanbul code coverage status](https://kaizhu256.github.io/utility2/build.codeship.io/latest.unstable/coverage-report/coverage-report.badge.svg)](https://kaizhu256.github.io/utility2/build.codeship.io/latest.unstable/coverage-report/utility2/index.html)
-osx on [![travis.ci-org build status](https://api.travis-ci.org/kaizhu256/utility2.svg?branch=unstable)](https://travis-ci.org/kaizhu256/utility2?branch=unstable) | [![utility2 test status](https://kaizhu256.github.io/utility2/build.travis-ci.org/latest.unstable/test-report.badge.svg)](https://kaizhu256.github.io/utility2/build.travis-ci.org/latest.unstable/test-report.html) | [![istanbul code coverage status](https://kaizhu256.github.io/utility2/build.travis-ci.org/latest.unstable/coverage-report/coverage-report.badge.svg)](https://kaizhu256.github.io/utility2/build.travis-ci.org/latest.unstable/coverage-report/utility2/index.html)
-browser on [![saucelabs selenium test status](https://saucelabs.com/buildstatus/utility2-kaizhu256)](https://saucelabs.com/u/utility2-kaizhu256) | [![utility2 test status](https://kaizhu256.github.io/utility2/build.codeship.io/latest.browser/test-report.badge.svg)](https://kaizhu256.github.io/utility2/build.codeship.io/latest.browser/test-report.html) | n/a
+ test server | test report | coverage report | build log | build artifact
+:-----------:|:-----------:|:---------------:|:---------:|:--------------:
+[![heroku.com test server](https://d1lpkba4w1baqt.cloudfront.net/heroku-logo-light-88x31.png)](https://utility2.herokuapp.com/test/test.html) | [![utility2 test report](https://kaizhu256.github.io/utility2/build.travis-ci.org/latest.unstable/test-report.badge.svg)](https://kaizhu256.github.io/utility2/build.travis-ci.org/latest.unstable/test-report.html) | [![istanbul coverage report](https://kaizhu256.github.io/utility2/build.travis-ci.org/latest.unstable/coverage-report/coverage-report.badge.svg)](https://kaizhu256.github.io/utility2/build.travis-ci.org/latest.unstable/coverage-report/utility2/index.html) | [![travis.ci-org build status](https://api.travis-ci.org/kaizhu256/utility2.svg?branch=unstable)](https://travis-ci.org/kaizhu256/utility2?branch=unstable) | [![build artifacts](https://kaizhu256.github.io/public/file/glyphicons_free/glyphicons/png/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/utility2/tree/gh-pages/build.travis-ci.org/latest.unstable)
 
-## build artifacts
-- [https://github.com/kaizhu256/utility2/tree/gh-pages](https://github.com/kaizhu256/utility2/tree/gh-pages)
-- [https://github.com/kaizhu256/utility2/tree/gh-pages/build.codeship.io](https://github.com/kaizhu256/utility2/tree/gh-pages/build.codeship.io)
-- [https://github.com/kaizhu256/utility2/tree/gh-pages/build.travis-ci.org](https://github.com/kaizhu256/utility2/tree/gh-pages/build.travis-ci.org)
-
-## build test server
-- [https://utility2-unstable.herokuapp.com/test/test.html#modeTest=1](https://utility2-unstable.herokuapp.com/test/test.html#modeTest=1)
-
-## installation and example usage
+## installation and usage example
 #### installation
 ```
 npm install -g utility2
@@ -27,7 +18,7 @@ npm install -g utility2
 ```
 utility2 start --server-port=8080
 > serverListen - listening on port 8080
-> /* open http://localhost:8080#modeTest=1 in browser */
+> /* open http://localhost:8080 in browser */
 > /* inspect state.debugServerResponse */
 > state.debugServerResponse
 {
@@ -58,10 +49,18 @@ utility2 start --server-port=8080
 
 ## changelog
 #### todo
+- print to stdout build artifacts that fail to upload to github
+- allow saucelabs testing of deployed gh-pages
+- replace utility2.callArgListX with simpler utility2.callArgX
 - add usage documentation
 - add html linter
 
 #### 2014.05.26
+- update README.md with loading icons for test / coverage reports when building
+- auto test latest npm package in ci-build
+- deploy to utility2.herokuapp.com instead of utility2-unstable.herokuapp.com
+- update saucelabs job's pass / fail status after attempting recovery
+- add fault tolerance to recover from saucelabs internal errors
 - merge .encrypted file into utility2.js2
 - update shAesDecrypt / shAesEncrypt to full base64 input / output in utility2.sh
 - add state.modeUtility2Update feature which will update utility2 from github for specified branch
@@ -172,3 +171,6 @@ utility2 start --server-port=8080
 #### 2014.03.19
 - add nodejs.url to utility2-external
 
+## admin
+- [edit README.md](https://github.com/kaizhu256/utility2/edit/unstable/README.md)
+- counter 1
