@@ -27,11 +27,11 @@ shCiBuild () {
   ## codeship.io env
   if [ "$CODESHIP" ]
     ## export $CI_BUILD_DIR
-    then export CI_BUILD_DIR=build.codeship.io
+    then export CI_BUILD_DIR=/build.codeship.io
   ## travis-ci.org env
   elif [ "$TRAVIS" ]
     ## export $CI_BUILD_DIR
-    then export CI_BUILD_DIR=build.travis-ci.org
+    then export CI_BUILD_DIR=/build.travis-ci.org
     ## export TRAVIS_* vars as CI_* vars
     if [ ! "$CI_BRANCH" ]
       then export CI_BRANCH=$TRAVIS_BRANCH
@@ -42,14 +42,13 @@ shCiBuild () {
     if [ ! "$CI_COMMIT_ID" ]
       then export CI_COMMIT_ID=$TRAVIS_COMMIT
     fi
+  else
+    export CI_BUILD_DIR=/build.local
   fi
   ## export CI_* vars
   if [ ! "$CI_BRANCH" ]
     then export CI_BRANCH="$(git rev-parse --abbrev-ref HEAD)"
   fi
-  ## add random salt to CI_BUILD_NUMBER to prevent conflict
-  ## when re-running saucelabs with same CI_BUILD_NUMBER
-  export CI_BUILD_NUMBER_SAUCELABS="$CI_BUILD_NUMBER.$(openssl rand -hex 8)"
   if [ ! "$CI_COMMIT_ID" ]
     then export CI_COMMIT_ID="$(git rev-parse --verify HEAD)"
   fi
@@ -66,8 +65,6 @@ shCiBuild () {
   if [ ! "$CI_REPO_URL" ]
     then export CI_REPO_URL="https://github.com/$CI_REPO/tree/$CI_BRANCH"
   fi
-  ## init $FILE
-  local FILE
   ## export $GIT_SSH
   export GIT_SSH=$UTILITY2_DIR/.install/git-ssh.sh
   ## export and create $GIT_SSH_KEY_FILE
@@ -75,67 +72,53 @@ shCiBuild () {
   && echo $GIT_SSH_KEY | base64 --decode > $GIT_SSH_KEY_FILE\
   && chmod 600 $GIT_SSH_KEY_FILE\
   || return $?
+  ## init $TMPFILE
+  local TMPFILE
 
-  ## init .git/config
-  SCRIPT="$SCRIPT && (cp .install/.git-config .git/config || :)"
-  ## unshallow git repo
-  SCRIPT="$SCRIPT && git fetch --depth=99999999 origin $CI_BRANCH gh-pages"
   ## update coverage / test report badges with loading icon
-  if [ "$CI_BUILD_DIR" ]
-    then CI_BUILD_DIR_COMMIT=$CI_BUILD_DIR/$CI_BUILD_NUMBER.$CI_BRANCH.$CI_COMMIT_ID
-    CI_BUILD_DIR_LATEST=$CI_BUILD_DIR/latest.$CI_BRANCH
-    SCRIPT="$SCRIPT && (git checkout gh-pagesl"
-    SCRIPT="$SCRIPT || git checkout -b gh-pages origin/gh-pages)"
-    SCRIPT="$SCRIPT && git pull origin gh-pages"
-    for FILE in $CI_BUILD_DIR_LATEST/coverage-report/coverage-report.badge.svg\
-      $CI_BUILD_DIR_LATEST/test-report.badge.svg
-    do
-      SCRIPT="$SCRIPT && mkdir -p $(dirname $FILE)"
-      SCRIPT="$SCRIPT && cp $UTILITY2_DIR/.install/public/utility2-loading.svg $FILE"
-      SCRIPT="$SCRIPT && git add $FILE"
-    done
-    SCRIPT="$SCRIPT && (git commit -m '[skip ci] update $FILE' > /dev/null || :)"
-    SCRIPT="$SCRIPT && git push -f origin gh-pages"
-    SCRIPT="$SCRIPT && (git checkout $CI_BRANCH"
-    SCRIPT="$SCRIPT || git checkout -b $CI_BRANCH origin/$CI_BRANCH)"
-  fi
+  local CI_BUILD_DIR_COMMIT=$CI_BUILD_DIR/$CI_BUILD_NUMBER.$CI_BRANCH.$CI_COMMIT_ID
+  local CI_BUILD_DIR_LATEST=$CI_BUILD_DIR/latest.$CI_BRANCH
+  for TMPFILE in $CI_BUILD_DIR_LATEST/coverage-report/coverage-report.badge.svg\
+    $CI_BUILD_DIR_LATEST/test-report.badge.svg
+  do
+    SCRIPT="$SCRIPT && $($UTILITY2_SH_ECHO db-github-file-update $CI_REPO/gh-pages $TMPFILE\
+      $UTILITY2_DIR/.install/public/utility2-loading.svg $TMPFILE)"
+  done
 
   ## run npm test
-  SCRIPT="$SCRIPT && export MODE_CI_BUILD=npmTestLocal"
-  SCRIPT="$SCRIPT && echo && echo [MODE_CI_BUILD=\$MODE_CI_BUILD]"
-  SCRIPT="$SCRIPT npm test $CWD ..."
+  SCRIPT="$SCRIPT && shCiBuildLog npmTestLocal 'npm test $CWD ...'"
   SCRIPT="$SCRIPT && npm test"
 
   ## deploy to heroku
   ## init $HEROKU_* vars
   local HEROKU_REPO=$(perl -ne 'print $1 if /git\@heroku.com:([^.]+)/' < .install/.git-config)
   local HEROKU_TEST_URL=http://$HEROKU_REPO.herokuapp.com/
-  SCRIPT="$SCRIPT && export MODE_CI_BUILD=herokuDeploy"
-  SCRIPT="$SCRIPT && echo && echo [MODE_CI_BUILD=\$MODE_CI_BUILD]"
-  SCRIPT="$SCRIPT deploy $CWD to git\@heroku.com:$HEROKU_REPO.git ..."
+  SCRIPT="$SCRIPT && shCiBuildLog herokuDeploy"
+  SCRIPT="$SCRIPT 'deploy $CWD to git\@heroku.com:$HEROKU_REPO.git ...'"
   ## push to heroku
-  SCRIPT="$SCRIPT && git push -f heroku $CI_BRANCH:master"
+  SCRIPT="$SCRIPT && git push -f git\@heroku.com:$HEROKU_REPO.git $CI_BRANCH:master"
   ## test heroku webpage
   SCRIPT="$SCRIPT && echo && echo [MODE_CI_BUILD=\$MODE_CI_BUILD]"
-  SCRIPT="$SCRIPT checking webpage $HEROKU_TEST_URL ..."
+  SCRIPT="$SCRIPT - checking webpage $HEROKU_TEST_URL ..."
   SCRIPT="$SCRIPT && (curl -3Ls $HEROKU_TEST_URL > /dev/null"
   SCRIPT="$SCRIPT && echo ... check succeeded"
   SCRIPT="$SCRIPT || (echo ... check failed && shReturn 1))"
 
   ## run headless saucelabs browser tests
-  SCRIPT="$SCRIPT && export MODE_CI_BUILD=saucelabsTest"
-  SCRIPT="$SCRIPT && echo && echo [MODE_CI_BUILD=\$MODE_CI_BUILD]"
-  SCRIPT="$SCRIPT run headless saucelabs browser tests ..."
-  SCRIPT="$SCRIPT && $UTILITY2_JS --mode-cli=headlessSaucelabsPlatformsList"
-  SCRIPT="$SCRIPT < .install/saucelabs-test-platforms-list.json"
+  if [ "$CI_BUILD_SAUCELABS" != false ]
+    ## add random salt to CI_BUILD_NUMBER to prevent conflict
+    ## when re-running saucelabs with same CI_BUILD_NUMBER
+    then export CI_BUILD_NUMBER_SAUCELABS="$CI_BUILD_NUMBER.$(openssl rand -hex 8)"
+    SCRIPT="$SCRIPT && shCiBuildLog saucelabsTest 'run headless saucelabs browser tests ...'"
+    SCRIPT="$SCRIPT && $UTILITY2_JS --mode-cli=headlessSaucelabsPlatformsList"
+    SCRIPT="$SCRIPT < .install/saucelabs-test-platforms-list.json"
+  fi
 
   ## try to publish package to npm
   if [ "$NPM_AUTH" ]
     ## security - do not use SCRIPT macro to avoid leaking sensitive info
-    then printf "_auth = $NPM_AUTH\nemail = $NPM_EMAIL\n" > ~/.npmrc
-    SCRIPT="$SCRIPT && export MODE_CI_BUILD=npmPublish"
-    SCRIPT="$SCRIPT && echo && echo [MODE_CI_BUILD=\$MODE_CI_BUILD]"
-    SCRIPT="$SCRIPT npm publish $NODEJS_PACKAGE_JSON_NAME ..."
+    then printf "_auth = $NPM_AUTH\nemail = $NPM_EMAIL\n" > $HOME/.npmrc
+    SCRIPT="$SCRIPT && shCiBuildLog npmPublish 'npm publish $NODEJS_PACKAGE_JSON_NAME ...'"
     SCRIPT="$SCRIPT && (./$NODEJS_PACKAGE_JSON_NAME.sh npm-publish 2>/dev/null"
     SCRIPT="$SCRIPT && echo ... npm publish succeeded && echo"
     SCRIPT="$SCRIPT && sleep 10"
@@ -143,9 +126,8 @@ shCiBuild () {
   fi
 
   ## install and test latest npm package in /tmp dir with no external npm dependencies */
-  SCRIPT="$SCRIPT && export MODE_CI_BUILD=npmTestPackage"
-  SCRIPT="$SCRIPT && echo && echo [MODE_CI_BUILD=\$MODE_CI_BUILD]"
-  SCRIPT="$SCRIPT npm install and test package $NODEJS_PACKAGE_JSON_NAME ..."
+  SCRIPT="$SCRIPT && shCiBuildLog npmTestPackage"
+  SCRIPT="$SCRIPT 'npm install and test package $NODEJS_PACKAGE_JSON_NAME ...'"
   ## rm old npm package
   SCRIPT="$SCRIPT && cd /tmp && rm -fr node_modules $NODEJS_PACKAGE_JSON_NAME"
   ## npm install package
@@ -153,9 +135,8 @@ shCiBuild () {
   ## cd into package
   SCRIPT="$SCRIPT && cd node_modules/$NODEJS_PACKAGE_JSON_NAME"
   ## list package content
-  SCRIPT="$SCRIPT && export MODE_CI_BUILD=npmTestPackage"
-  SCRIPT="$SCRIPT && echo && echo [MODE_CI_BUILD=\$MODE_CI_BUILD]"
-  SCRIPT="$SCRIPT list $NODEJS_PACKAGE_JSON_NAME npm package contents ..."
+  SCRIPT="$SCRIPT && shCiBuildLog npmTestPackage"
+  SCRIPT="$SCRIPT 'list $NODEJS_PACKAGE_JSON_NAME npm package contents ...'"
   SCRIPT="$SCRIPT && find . -path ./node_modules -prune -o -type f -print"
   ## copy previous test-report.json into .build dir
   SCRIPT="$SCRIPT && mkdir -p .build && cp $CWD/.build/test-report.json .build"
@@ -168,32 +149,30 @@ shCiBuild () {
   ## restore cwd
   SCRIPT="$SCRIPT && cd $CWD"
   ## regenerate test report
-  SCRIPT="$SCRIPT && $UTILITY2_JS --mode-cli=testReportMerge --tmpdir"
+  SCRIPT="$SCRIPT && $UTILITY2_JS --mode-cli=testReportMerge"
   ## return exit code
   SCRIPT="$SCRIPT && shReturn \$EXIT_CODE"
 
   ## push build artifact to github
-  if [ "$CI_BUILD_DIR" ]
-    ## save $EXIT_CODE
-    then SCRIPT="$SCRIPT; EXIT_CODE=\$?"
-    SCRIPT="$SCRIPT && export MODE_CI_BUILD=buildUpload"
-    SCRIPT="$SCRIPT && echo && echo [MODE_CI_BUILD=\$MODE_CI_BUILD]"
-    SCRIPT="$SCRIPT updating https://github.com/$CI_REPO/tree/gh-pages/$CI_BUILD_DIR_LATEST ..."
-    SCRIPT="$SCRIPT && git checkout gh-pages"
-    SCRIPT="$SCRIPT && git pull origin gh-pages"
-    for FILE in $CI_BUILD_DIR_LATEST $CI_BUILD_DIR_COMMIT
-    do
-      SCRIPT="$SCRIPT && rm -fr $FILE"
-      SCRIPT="$SCRIPT && cp -a .build $FILE"
-      SCRIPT="$SCRIPT && git add $FILE"
-    done
-    SCRIPT="$SCRIPT && (git commit -m '[skip ci] update $FILE' > /dev/null || :)"
-    SCRIPT="$SCRIPT && git push -f origin gh-pages"
-    SCRIPT="$SCRIPT && git checkout $CI_BRANCH"
-    ## return exit code
-    SCRIPT="$SCRIPT && shReturn \$EXIT_CODE"
-  fi
+  ## save $EXIT_CODE
+  SCRIPT="$SCRIPT; EXIT_CODE=\$?"
+  ## cleanup $GIT_SSH_KEY_FILE
+  SCRIPT="$SCRIPT; rm -f $GIT_SSH_KEY_FILE"
+  for TMPFILE in $CI_BUILD_DIR_COMMIT $CI_BUILD_DIR_LATEST
+  do
+    SCRIPT="$SCRIPT && $($UTILITY2_SH_ECHO db-github-dir-update\
+      $CI_REPO/gh-pages $TMPFILE .build)"
+  done
+  SCRIPT="$SCRIPT && shReturn \$EXIT_CODE"
 }
+
+shCiBuildLog () {
+  ## this function logs output about ci build state
+  export MODE_CI_BUILD=$1
+  printf "\n[MODE_CI_BUILD=$MODE_CI_BUILD] - $2\n"
+}
+## export function
+export -f shCiBuildLog
 
 shNodejsInstall () {
   ## this function installs nodejs / npm if necesary
@@ -217,7 +196,7 @@ shReturn () {
   ## this function returns the specified exit code
   return $1
 }
-## export function shReturn1
+## export function
 export -f shReturn
 
 shScriptEval () {
@@ -275,9 +254,42 @@ shMain () {
   do
   case $1 in
 
-  ## aes encrypt file $2
-  aes-encrypt)
-    shAesEncrypt < $2
+  ## create decrypted file containing authentications
+  aes-decrypted-create)
+    ## create $TMPFILE
+    TMPFILE=$(mktemp /tmp/.aes-decrypted-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX)
+    rm -f $TMPFILE
+    printf '## script begin - aes-decrypted.sh - store this in a safe place\n'
+    ## create $AES_256_KEY
+    printf "\nexport AES_256_KEY=$(openssl rand -hex 32)\n"
+    ## create $GIT_SSH_KEY
+    (ssh-keygen -C "git" -f $TMPFILE -N "" -t rsa || :) > /dev/null
+    printf "\nexport GIT_SSH_KEY="
+    base64 < $TMPFILE | tr -d "\n"
+    ## create $GIT_SSH_KEY_PUB
+    printf "\n\nexport GIT_SSH_KEY_PUB=\""
+    cat $TMPFILE.pub | tr -d "\n"
+    ## cleanup $TMPFILE
+    rm -f $TMPFILE $TMPFILE.pub
+    printf "\"\n"
+    ## create $NPM_AUTH
+    printf "\n## copy and paste _auth value from ~/.npmrc"
+    printf "\nexport NPM_AUTH=\n"
+    ## create $NPM_EMAIL
+    printf "\n## copy and paste email value from ~/.npmrc"
+    printf "\nexport NPM_EMAIL=\n"
+    ## create $SAUCE_ACCESS_KEY
+    printf "\n## get sauce access key from https://saucelabs.com/account\n"
+    printf "export SAUCE_ACCESS_KEY=\n"
+    ## create $SAUCE_USERNAME
+    printf "\n## your opensauce account username"
+    printf "\nexport SAUCE_USERNAME=\n"
+    printf "\n## script end\n"
+    ;;
+
+  ## encrypt decrypted file
+  aes-encrypted-create)
+    shAesEncrypt < $2 | fold
     echo
     ;;
 
@@ -322,16 +334,6 @@ shMain () {
     SCRIPT="$SCRIPT --mode-cli=dbGithubFileUpdate"
     SCRIPT="$SCRIPT --mode-db-github=$2"
     SCRIPT="$SCRIPT < $4"
-    ;;
-
-  ## create ssh key pair for git
-  git-ssh-key-create)
-    SCRIPT="$SCRIPT && (ssh-keygen -C 'git' -f id_rsa.git -N '' -t rsa || :)"
-    SCRIPT="$SCRIPT && printf '\nexport GIT_SSH_KEY=\"'"
-    SCRIPT="$SCRIPT && base64 < id_rsa.git | tr -d '\n'"
-    SCRIPT="$SCRIPT && printf '\"\n\nexport GIT_SSH_KEY_PUB=\"'"
-    SCRIPT="$SCRIPT && cat id_rsa.git.pub | tr -d '\n'"
-    SCRIPT="$SCRIPT && printf '\"\n\n'"
     ;;
 
   ## echo mode

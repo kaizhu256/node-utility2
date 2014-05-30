@@ -49,6 +49,7 @@ utility2 start --server-port=8080
 
 ## changelog
 #### todo
+- merge utility2.js in utility2.js2
 - print to stdout build artifacts that fail to upload to github
 - allow saucelabs testing of deployed gh-pages
 - replace utility2.callArgListX with simpler utility2.callArgX
@@ -56,6 +57,7 @@ utility2 start --server-port=8080
 - add html linter
 
 #### 2014.05.26
+- merge browser testing / npm publish / npm package testing into a single build
 - update README.md with loading icons for test / coverage reports when building
 - auto test latest npm package in ci-build
 - deploy to utility2.herokuapp.com instead of utility2-unstable.herokuapp.com

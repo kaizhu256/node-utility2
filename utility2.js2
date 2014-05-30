@@ -387,7 +387,7 @@ tr:nth-child(odd).testReportPlatformTr {
 <h4>
   <span class="testReportSummarySpan">build date</span>- {{date}}<br>
   <span class="testReportSummarySpan">build id</span>- {{CI_BUILD_NUMBER}}<br>
-  <span class="testReportSummarySpan">repo url</span>- <a href="{{CI_REPO_URL}}">{{CI_REPO_URL}}</a><br>
+  <span class="testReportSummarySpan">repo url</span>- <a href="{{CI_REPO_URL_HREF}}">{{CI_REPO_URL}}</a><br>
   <span class="testReportSummarySpan">commit info</span>- {{CI_COMMIT_INFO}}<br>
 </h4>
 <table class="testReportPlatformTable">
@@ -1408,7 +1408,8 @@ console.log('hello test');
               utility2.assert(error.code === 'ETIMEDOUT');
               time = Date.now() - time;
               /* assert time passed is greater than timeout */
-              utility2.assert(time >= timeout, time);
+              /* bug - ie and opera may timeout slightly earlier, so increase the timeout */
+              utility2.assert(1.1 * time >= timeout, time);
               onEventReady();
             }
           }, onEventReady);
@@ -1831,10 +1832,22 @@ console.log('hello test');
       /*
         this function returns a callback that will JSON.parse the data with error handling
       */
-      return utility2.tryCatchHandler(function (error, data) {
-        /* handle undefined data by returning undefined */
-        onEventError(error, data && data !== 'undefined' ? JSON.parse(data) : undefined);
-      });
+      return function (error, data) {
+        if (error) {
+          onEventError(error);
+          return;
+        }
+        try {
+          /* accept undefined data */
+          if (data !== undefined) {
+            data = JSON.parse(data);
+          }
+        } catch (error2) {
+          onEventError(error2);
+          return;
+        }
+        onEventError(null, data);
+      };
     },
 
     _jsonParseHandler_default_test: function (onEventError) {
@@ -2181,8 +2194,7 @@ console.log('hello test');
       error.code = 'ETIMEDOUT';
       return setTimeout(function () {
         onEventError(error);
-      /* bug - ie and opera may timeout slightly earlier, so increase the timeout */
-      }, 1.0625 * timeout);
+      }, timeout);
     },
 
     _onEventTimeout_timeout_test: function (onEventError) {
@@ -2430,29 +2442,17 @@ console.log('hello test');
         this function creates a test report
       */
 
-      var result, self, state;
+      var self, state;
       self = this;
       state = self.global.state;
-      result = '\n\n\ntest report - ' + utility2.userAgent() + '\n';
-      /* sort state.testReport */
       utility2.testReportMerge(state.testReport);
-      state.testReport.testPlatformList.forEach(function (testPlatform) {
-        result += (testPlatform.testsFailed ? required.colors.inverse : utility2.echo)(
-          ('        ' + testPlatform.totalTime).slice(-8) + ' ms | '
-            + (' ' + testPlatform.testsFailed).slice(-2) + ' failed | '
-            + (' ' + testPlatform.testsSkipped).slice(-2) + ' skipped | '
-            + ('  ' + testPlatform.testsPassed).slice(-3) + ' passed in '
-            + testPlatform.name + '\n'
-        );
-      });
-      result += '\n' + state.testReport.errorMessageList.join('\n') + '\n';
-      utility2.jsonLog(result);
+      utility2.testReportLog(state.testReport);
       /* record total time for all testPlatforms to run */
       state.testReport.totalTime = utility2.timeElapsed(state.testReport.totalTime);
       /* copy state.testReport */
       state.testReportCopy = utility2.jsonCopy(state.testReport);
       /* reset state.testReport */
-      state.testReport = utility2.testReportMerge();
+      state.testReport = utility2.testReportMerge({});
       /* browser code */
       if (state.modeBrowser) {
         /* notify saucelabs of test results */
@@ -2757,6 +2757,7 @@ console.log('hello test');
           /* security - sanitize '<' in text */
           CI_COMMIT_INFO: String(processEnv.CI_COMMIT_INFO).replace((/</g), '&lt;'),
           CI_REPO_URL: processEnv.CI_REPO_URL,
+          CI_REPO_URL_HREF: processEnv.CI_REPO_URL || '#',
           /* map testPlatformList */
           testPlatformList: testReport.testPlatformList.map(function (testPlatform, ii) {
             errorMessageList = [];
@@ -2776,7 +2777,7 @@ console.log('hello test');
                       .replace((/</g), '&lt;') });
                 }
                 return utility2.setOverride(testCase, {
-                  name: testCase.modeCiBuild + '.' + testCase.module + '.' + testCase.name,
+                  name: testCase.module + '.' + testCase.name,
                   testCaseNumber: testCaseNumber,
                   testReportTestStatusClass: 'testReportTest'
                     + testCase.status[0].toUpperCase() + testCase.status.slice(1),
@@ -2826,13 +2827,36 @@ console.log('hello test');
       onEventError();
     },
 
+    testReportLog: function (testReport) {
+      /*
+        this function prints a human-readable summary of the testReport
+      */
+      var result;
+      result = '\n\n\ntest report - ' + utility2.userAgent() + '\n';
+      /* merge testReport */
+      testReport.testPlatformList.forEach(function (testPlatform) {
+        result += (testPlatform.testsFailed ? required.colors.inverse : utility2.echo)(
+          ('        ' + testPlatform.totalTime).slice(-8) + ' ms | '
+            + (' ' + testPlatform.testsFailed).slice(-2) + ' failed | '
+            + (' ' + testPlatform.testsSkipped).slice(-2) + ' skipped | '
+            + ('  ' + testPlatform.testsPassed).slice(-3) + ' passed in '
+            + testPlatform.name + '\n'
+        );
+      });
+      result += '\n' + testReport.errorMessageList.join('\n') + '\n';
+      utility2.jsonLog(result);
+    },
+
     testReportMerge: function (testReport1, testReport2) {
       /*
         this function merges testReport2 into testReport1
       */
       var testPlatform1;
-      testReport1 = utility2.setDefault(testReport1 || {}, {
-        modeCiBuild: state.modeBrowser ? 'browser' : process.env.MODE_CI_BUILD,
+      utility2.assert(
+        testReport1 && typeof testReport1 === 'object',
+        'invalid testReport1 ' + typeof testReport1
+      );
+      testReport1 = utility2.setDefault(testReport1, {
         errorMessageList: [],
         testPlatformList: [],
         totalTime: 0
@@ -2868,7 +2892,6 @@ console.log('hello test');
         if (Array.isArray(testPlatform2.testCaseList)) {
           testPlatform2.testCaseList.forEach(function (testCase) {
             /* security - fix potentially malformed testCase */
-            testCase.modeCiBuild = testCase.modeCiBuild || testPlatform2.modeCiBuild;
             testCase.errorMessage = String(testCase.errorMessage || '');
             testCase.module = String(testCase.module);
             testCase.name = String(testCase.name);
@@ -2895,7 +2918,6 @@ console.log('hello test');
         testPlatform1.testsPassed = 0;
         testPlatform1.testsSkipped = 0;
         testPlatform1.testCaseList.forEach(function (testCase) {
-          testCase.modeCiBuild = testCase.modeCiBuild || testReport1.modeCiBuild;
           /* update tests skipped */
           if (testCase.status === 'skipped') {
             testReport1.testsSkipped += 1;
@@ -2932,11 +2954,9 @@ console.log('hello test');
         }
         /* sort testCaseList by status.module.name */
         testPlatform1.testCaseList.sort(function (arg1, arg2) {
-          arg1 = String(arg1.modeCiBuild + arg1.status.replace('passed', 'z') + arg1.module
-            + arg1.name)
+          arg1 = String(arg1.status.replace('passed', 'z') + arg1.module + arg1.name)
             .toLowerCase();
-          arg2 = String(arg2.modeCiBuild + arg2.status.replace('passed', 'z') + arg2.module
-            + arg2.name)
+          arg2 = String(arg2.status.replace('passed', 'z') + arg2.module + arg2.name)
             .toLowerCase();
           return arg1 <= arg2 ? -1 : 1;
         });
@@ -3123,12 +3143,16 @@ console.log('hello test');
         this function returns a callback that will call onEventError in a try catch block
       */
       return function (error, data) {
+        if (error) {
+          onEventError(error);
+          return;
+        }
         try {
-          onEventError(error, data);
+          onEventError(null, data);
         } catch (error2) {
           onEventError(error2);
         }
-      };
+      }
     },
 
     unref: function (obj) {
@@ -3301,6 +3325,7 @@ console.log('hello test');
       */
       return state.modeNodejs
         ? 'nodejs - ' + (global.process && (process.platform + ' ' + process.version))
+          + ' - ' + (global.process && process.env && process.env.MODE_CI_BUILD)
         : 'browser - ' + (global.navigator && navigator.userAgent);
     },
 
@@ -3541,7 +3566,7 @@ console.log('hello test');
             }
           } },
           setTimeout: utility2.callArg0,
-          state: { testReportCopy: utility2.testReportMerge() }
+          state: { testReportCopy: utility2.testReportMerge({}) }
         }]
       ], function (onEventError) {
         var exitCode;
@@ -3571,9 +3596,8 @@ console.log('hello test');
       state.tmpdir = required.path.resolve(state.tmpdir
         || required.os.tmpdir() + '/utility2.' + encodeURIComponent(process.cwd()));
       utility2.jsonLog('_initOnceTmpdir - creating tmpdir ' + state.tmpdir);
-      utility2.assert(state.tmpdir, state.tmpdir);
       if (!required.fs.existsSync(state.tmpdir + '/cache')) {
-        utility2.jsonLog('creating tmpdir ' + state.tmpdir);
+        utility2.jsonLog('creating cache dir ' + state.tmpdir + '/cache');
         /* create cache dir */
         utility2.fsMkdirpSync(state.tmpdir + '/cache');
       }
@@ -3591,32 +3615,24 @@ console.log('hello test');
       /*
         this function tests _initOnceTmpdir's default handling behavior
       */
+      var data;
       utility2.testMock(onEventError, [
-        [required.fs, { existsSync: utility2.nop }]
-      ], function (onEventError) {
-        /* populate cache dir with a nested file to remove */
-        utility2.fsMkdirpSync(state.tmpdir + '/cache/' + utility2.uuid4());
-        local._initOnceTmpdir();
-        onEventError();
-      });
-    },
-
-    __initOnceTmpdir_defaultTmpdir_test: function (onEventError) {
-      /*
-        this function tests _initOnceTmpdir's default tmpdir handling behavior
-      */
-      utility2.testMock(onEventError, [
-        [global, { setInterval: utility2.nop, state: {} }],
+        [global, { state: {} }],
+        [local, { _fsCacheCleanup: utility2.nop, _fsRmr: utility2.nop }],
         [required.fs, {
-          existsSync: function () {
-            return true;
-          },
+          existsSync: utility2.nop,
           readdirSync: function () {
-            return [];
+            return [null];
           }
-        }]
+        } ],
+        [utility2, { clearCallSetInterval: utility2.callArg1 }]
       ], function (onEventError) {
         local._initOnceTmpdir();
+        data = utility2.jsonStringifyOrdered(state);
+        /* validate state */
+        utility2.assert(data === JSON.stringify({ tmpdir: required.path.resolve(
+          required.os.tmpdir() + '/utility2.' + encodeURIComponent(process.cwd())
+        )}), data);
         onEventError();
       });
     },
@@ -3771,17 +3787,17 @@ console.log('hello test');
       onEventError2 = function (error) {
         mode = utility2.modeIncrement(error, mode);
         switch (mode) {
-        /* test default handling behavior */
         case 1:
+          /* test default handling behavior */
           dir = state.tmpdir + '/cache/' + utility2.uuid4() + '/' + utility2.uuid4();
           utility2.fsMkdirp(dir, onEventError2);
           break;
-        /* test EEXIST handling behavior */
         case 2:
+          /* test EEXIST handling behavior */
           utility2.fsMkdirp(dir, onEventError2);
           break;
-        /* assert dir exists */
         case 3:
+          /* assert dir exists */
           required.fs.exists(dir, utility2.tryCatchHandler(onEventError2));
           break;
         case 4:
@@ -3864,15 +3880,18 @@ console.log('hello test');
       var mode, onEventReady, onEventError2;
       mode = 0;
       onEventError2 = function (error, data) {
+        /* ignore ENOENT error - since file doesn't exist, rm was technically successful */
         error = error && error.code === 'ENOENT' ? null : error;
         mode = error instanceof Error && mode !== 1 ? -1 : mode + 1;
         switch (mode) {
         case 1:
+          /* common case - try to unlink dir if its a regular file */
           required.fs.unlink(dir, onEventError2);
           break;
         case 2:
-          /* if error, then its a dir, which will we will recursively rm */
+          /* if error occurred, then its a dir */
           if (error) {
+            /* readdir dir and recursively apply _fsRmr to its files */
             required.fs.readdir(dir, onEventError2);
             return;
           }
@@ -4515,7 +4534,7 @@ console.log('hello test');
         this function creates a merged testReport from .build/test-report.json
       */
       state.modeTestReportMerge = true;
-      utility2.testReportNodejs(utility2.testReportMerge());
+      utility2.testReportNodejs(utility2.testReportMerge({}));
     },
 
     _modeCliDict_testReportMerge_default_test: function (onEventError) {
@@ -4777,46 +4796,63 @@ console.log('hello test');
       /*
         this function runs extra test reporting code for nodejs
       */
-      var onEventReady;
-      if (state.modeTestReportMerge && state.modeTestReportMerge !== 'merged') {
-        required.fs.readFile(
-          state.fsDirBuild + '/test-report.json',
-          utility2.jsonParseHandler(function (error, data) {
-            /* ignore error */
-            utility2.nop(error);
-            utility2.testReportMerge(testReport, data);
-            state.modeTestReportMerge = 'merged';
-            utility2.testReportNodejs(testReport);
-          })
-        );
-        return;
-      }
-      onEventReady = state.modeNpmTest
-        ? utility2.readyUtility2Exit
-        : utility2.untilReady(utility2.onEventErrorDefault);
-      /* write test-report.badge.svg */
-      onEventReady.remaining += 1;
-      utility2.fsWriteFileAtomic(
-        state.fsDirBuild + '/test-report.badge.svg',
-        local._testReportNodejsBadge(testReport),
-        onEventReady
-      );
-      /* write test-report.html */
-      onEventReady.remaining += 1;
-      utility2.jsonLog('\ncreating test report file://' + state.fsDirBuild
-        + '/test-report.html');
-      utility2.fsWriteFileAtomic(
-        state.fsDirBuild + '/test-report.html',
-        utility2.testReportHtml(testReport),
-        onEventReady
-      );
-      /* write test-report.json */
-      onEventReady.remaining += 1;
-      utility2.fsWriteFileAtomic(
-        state.fsDirBuild + '/test-report.json',
-        JSON.stringify(testReport, null, 2),
-        onEventReady
-      );
+      var mode, onEventError2, onEventReady;
+      mode = 0;
+      onEventError2 = function (error, data) {
+        mode += 1;
+        switch (mode) {
+        case 1:
+          if (state.modeTestReportMerge) {
+            required.fs.readFile(
+              state.fsDirBuild + '/test-report.json',
+              utility2.jsonParseHandler(onEventError2)
+            );
+            return;
+          }
+          mode += 1;
+          onEventError2();
+          break;
+        case 2:
+          /* ignore error */
+          utility2.nop(error);
+          /* merge previous data into current testReport */
+          utility2.testReportMerge(testReport, data);
+          utility2.testReportLog(testReport);
+          onEventError2();
+          break;
+        case 3:
+          /* mkdir testReport */
+          utility2.fsMkdirp(state.fsDirBuild, onEventError2);
+          break;
+        case 4:
+          onEventReady = state.modeNpmTest
+            ? utility2.readyUtility2Exit
+            : utility2.untilReady(utility2.onEventErrorDefault);
+          /* write test-report.badge.svg */
+          onEventReady.remaining += 3;
+          required.fs.writeFile(
+            state.fsDirBuild + '/test-report.badge.svg',
+            local._testReportNodejsBadge(testReport),
+            onEventReady
+          );
+          /* write test-report.html */
+          utility2.jsonLog('\ncreating test report file://' + state.fsDirBuild
+            + '/test-report.html');
+          required.fs.writeFile(
+            state.fsDirBuild + '/test-report.html',
+            utility2.testReportHtml(testReport),
+            onEventReady
+          );
+          /* write test-report.json */
+          required.fs.writeFile(
+            state.fsDirBuild + '/test-report.json',
+            JSON.stringify(testReport, null, 2),
+            onEventReady
+          );
+          break;
+        }
+      };
+      onEventError2();
     },
 
     _testReportNodejs_default_test: function (onEventError) {
@@ -4831,10 +4867,10 @@ console.log('hello test');
           modeTestReportMerge: true
         } }],
         [local, { _testReportNodejsBadge: utility2.nop }],
-        [required, { fs: { readFile: utility2.callArg1 } }],
-        [utility2, { fsWriteFileAtomic: utility2.nop, testReportHtml: utility2.nop }]
+        [required, { fs: { readFile: utility2.callArg1, writeFile: utility2.callArg2 } }],
+        [utility2, { fsMkdirp: utility2.callArg1, testReportHtml: utility2.nop }]
       ], function (onEventError) {
-        utility2.testReportNodejs();
+        utility2.testReportNodejs({});
         onEventError();
       });
     },
@@ -5037,11 +5073,6 @@ console.log('hello test');
       };
       /* init xhr object */
       xhr = new XMLHttpRequest();
-      /* set timeout for ajaxBrowser */
-      timeout = utility2.onEventTimeout(function (timeout) {
-        error = timeout;
-        xhr.abort();
-      }, state.timeoutDefault, 'ajaxBrowser');
       /* xhr event handling */
       xhr.addEventListener('abort', onEventEvent);
       xhr.addEventListener('error', onEventEvent);
@@ -5049,6 +5080,11 @@ console.log('hello test');
       xhr.addEventListener('loadstart', local._ajaxProgressIncrement);
       xhr.addEventListener('progress', local._ajaxProgressIncrement);
       xhr.upload.addEventListener('progress', local._ajaxProgressIncrement);
+      /* set timeout for ajaxBrowser */
+      timeout = utility2.onEventTimeout(function (timeout) {
+        error = timeout;
+        xhr.abort();
+      }, state.timeoutDefault, 'ajaxBrowser');
       /* display progress bar if hidden */
       if (local._ajaxProgressList.length === 0) {
         local._ajaxProgressDiv.style.display = 'block';
@@ -5138,6 +5174,42 @@ console.log('hello test');
       onEventError2();
     },
 
+    _ajaxBrowser_timeout_test: function (onEventError) {
+      /*
+        this function tests ajaxBrowser's timeout handling behavior
+      */
+      var self;
+      utility2.testMock(onEventError, [
+        [global, {
+          /* mock xhr.abort */
+          XMLHttpRequest: function () {
+            self = this;
+            utility2.setOverride(self, {
+              abort: function () {
+                self._abort({ type: 'abort' });
+              },
+              addEventListener: function (event, callback) {
+                self['_' + event] = callback;
+              },
+              open: utility2.nop,
+              send: utility2.nop,
+              upload: { addEventListener: utility2.nop }
+            });
+          },
+          setTimeout: utility2.callArg0
+        }],
+        [local, { _ajaxProgressList: [], _ajaxProgressUpdate: utility2.nop }]
+      ], function (onEventError) {
+        utility2.ajax({ url: '/test/test.json' }, function (error) {
+          /* assert error occurred */
+          utility2.assert(error instanceof Error, error);
+          /* assert error is timeout error */
+          utility2.assert(error.code === 'ETIMEDOUT', error.code);
+          onEventError();
+        });
+      });
+    },
+
     _ajaxProgressAbort: function () {
       /*
         this function aborts all pending ajax requests
@@ -5167,7 +5239,7 @@ console.log('hello test');
         /* hide progress bar */
         local._ajaxProgressDiv.style.display = 'none';
         /* reset progress state */
-        local._ajaxProgressState = 1;
+        local._ajaxProgressState = 0;
         local._ajaxProgressUpdate('0%', 'ajaxProgressBarDivLoading', 'loading');
       }
     },
@@ -5208,9 +5280,9 @@ console.log('hello test');
       */
       /* this algorithm can indefinitely increment the progress bar */
       /* with successively smaller increments without ever reaching 100% */
-      local._ajaxProgressState += 0.25;
+      local._ajaxProgressState += 1;
       local._ajaxProgressUpdate(
-        100 - 100 / (local._ajaxProgressState) + '%',
+        100 - 75 * Math.exp(-0.125 * local._ajaxProgressState) + '%',
         'ajaxProgressBarDivLoading',
         'loading'
       );
@@ -5367,7 +5439,10 @@ console.log('hello test');
           ]);
         }
         remaining -= 1;
-        (remaining >= 0 ? onEventError : utility2.onEventErrorDefault)(error, data);
+        /* ignore responses after timeout */
+        if (remaining === 0) {
+          onEventError(error, data);
+        }
       };
       remaining = 1;
       /* set timeout for ajaxNodejs */
@@ -5426,6 +5501,23 @@ console.log('hello test');
       if (options.modeDebug) {
         utility2.jsonLog('ajaxNodejs - options', options);
       }
+    },
+
+    _ajaxNodejs_timeout_test: function (onEventError) {
+      /*
+        this function tests ajaxNodejs's timeout handling behavior
+      */
+      utility2.testMock(onEventError, [
+        [global, { setTimeout: utility2.callArg0 }]
+      ], function (onEventError) {
+        utility2.ajax({ url: '/test/test.json' }, function (error) {
+          /* assert error occurred */
+          utility2.assert(error instanceof Error, error);
+          /* assert error is timeout error */
+          utility2.assert(error.code === 'ETIMEDOUT', error.code);
+          onEventError();
+        });
+      });
     },
 
     _ajaxNodejs_https_test: function (onEventError) {
@@ -5738,23 +5830,6 @@ console.log('hello test');
           utility2.assert(data === undefined, data);
           onEventError();
         }, onEventError);
-      });
-    },
-
-    _ajax_timeout_test: function (onEventError) {
-      /*
-        this function tests ajax's timeout handling behavior
-      */
-      utility2.testMock(onEventError, [
-        [global, { setTimeout: utility2.callArg0 }]
-      ], function (onEventError) {
-        utility2.ajax({ url: '/test/test.json' }, function (error) {
-          /* assert error occurred */
-          utility2.assert(error instanceof Error, error);
-          /* assert error is timeout error */
-          utility2.assert(error.code === 'ETIMEDOUT', error.code);
-          onEventError();
-        });
       });
     },
 
@@ -6302,7 +6377,7 @@ console.log('hello test');
       /*
         this function deletes the file on github
       */
-      utility2.jsonLog('deleting https://raw.githubusercontent.com'
+      utility2.jsonLog('deleting https://raw.githubusercontent.com/'
         + state.modeDbGithub
         + state.dbGithubFile);
       utility2.readyUtility2Exit.remaining += 1;
@@ -6316,7 +6391,7 @@ console.log('hello test');
       /*
         this function updates the file on github
       */
-      utility2.jsonLog('updating https://raw.githubusercontent.com'
+      utility2.jsonLog('updating https://raw.githubusercontent.com/'
         + state.modeDbGithub
         + state.dbGithubFile);
       utility2.readyUtility2Exit.remaining += 1;
@@ -6345,7 +6420,7 @@ console.log('hello test');
         [utility2, { readyUtility2Exit: {}, streamReadAll: utility2.callArg1 }]
       ], function (onEventError) {
         /* test branch merge handling behavior */
-        state.modeCliDict.dbGithubBranchMerge();
+        state.modeCliDict.dbGithubBranchMerge({});
         /* test dir update handling behavior */
         state.modeCliDict.dbGithubDirUpdate();
         /* test file delete handling behavior */
@@ -6574,7 +6649,7 @@ console.log('hello test');
       var mode;
       mode = 0;
       utility2.testMock(onEventError, [
-        [global, { setTimeout: utility2.callArg0, state: {} }],
+        [global, { setTimeout: utility2.callArg0, state: { testReport: {} } }],
         [local, { _headlessSaucelabsRecover: function (error, data, onEventError) {
           onEventError(error, data);
         } }],
@@ -6698,7 +6773,7 @@ console.log('hello test');
       */
       var testReport;
       utility2.testMock(onEventError, [
-        [global, { state: {} }],
+        [global, { state: { testReport: {} } }],
         [utility2, { ajax: function (_, onEventError) {
           utility2.nop(_);
           onEventError(null, [null, { result: { testReport: testReport } } ]);
@@ -6711,7 +6786,7 @@ console.log('hello test');
           utility2.assert(error instanceof Error);
         });
         /* test testReport recovery success handling behavior */
-        testReport = utility2.testReportMerge();
+        testReport = utility2.testReportMerge({});
         local._headlessSaucelabsRecover(utility2.error, {}, function (error) {
           /* assert no error occurred */
           utility2.assert(!error, error);
@@ -7491,14 +7566,21 @@ console.log('hello test');
         tests failed handling behavior
       */
       utility2.testMock(onEventError, [
-        [state, { debugTestReportUpload: null, testReport: null }],
-        [utility2, { streamReadAll:
-          utility2.applyArgList1([null, JSON.stringify({ testReport: { testsFailed: 1 } })]) }]
+        [global, { state: {
+          debugTestReportUpload: null,
+          onEventErrorDefaultIgnoreList: state.onEventErrorDefaultIgnoreList,
+          testCallbackDict: {},
+          testReport: {}
+        } }],
+        [utility2, { streamReadAll: function (_, onEventError) {
+          utility2.nop(_);
+          onEventError(null, JSON.stringify({ testReport: { testsFailed: 1 } }));
+        } }]
       ], function (onEventError) {
         state.onEventErrorDefaultIgnoreList.push('tests failed');
-        local[
-          'router5MainDict_/test/testReportUpload'
-        ](null, { end: onEventError });
+        local['router5MainDict_/test/testReportUpload'](null, {
+          end: onEventError
+        }, onEventError);
       });
     },
 
