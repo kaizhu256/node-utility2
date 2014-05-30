@@ -358,7 +358,7 @@ shMain () {
 
   ## called by npm run-script publish
   npm-publish)
-    SCRIPT="$SCRIPT && npm publish"
+    SCRIPT="$SCRIPT && npm publish ${@:2}"
     ## extra utility2 code
     if [ "$NODEJS_PACKAGE_JSON_NAME" == utility2 ]
       then SCRIPT="$SCRIPT && $($UTILITY2_SH_ECHO utility2-external-build)"

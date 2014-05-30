@@ -2211,7 +2211,8 @@ console.log('hello test');
           utility2.assert(error.code === 'ETIMEDOUT');
           time = Date.now() - time;
           /* assert time passed is greater than timeout */
-          utility2.assert(time >= 1000, time);
+          /* bug - ie and opera may timeout slightly earlier, so increase the timeout */
+          utility2.assert(1.1 * time >= 1000, time);
           onEventError();
         }, onEventError);
       }, 1000, '_onEventTimeout_timeoutError_test');
@@ -3152,7 +3153,7 @@ console.log('hello test');
         } catch (error2) {
           onEventError(error2);
         }
-      }
+      };
     },
 
     unref: function (obj) {
@@ -3627,6 +3628,17 @@ console.log('hello test');
         } ],
         [utility2, { clearCallSetInterval: utility2.callArg1 }]
       ], function (onEventError) {
+        /* test state.tmpdir does not exist handling behavior */
+        local._initOnceTmpdir();
+        data = utility2.jsonStringifyOrdered(state);
+        /* validate state */
+        utility2.assert(data === JSON.stringify({ tmpdir: required.path.resolve(
+          required.os.tmpdir() + '/utility2.' + encodeURIComponent(process.cwd())
+        )}), data);
+        /* test state.tmpdir exists handling behavior */
+        required.fs.existsSync = function () {
+          return true;
+        };
         local._initOnceTmpdir();
         data = utility2.jsonStringifyOrdered(state);
         /* validate state */
