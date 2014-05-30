@@ -136,7 +136,7 @@ shCiBuild () {
     SCRIPT="$SCRIPT && export MODE_CI_BUILD=npmPublish"
     SCRIPT="$SCRIPT && echo && echo [MODE_CI_BUILD=\$MODE_CI_BUILD]"
     SCRIPT="$SCRIPT npm publish $NODEJS_PACKAGE_JSON_NAME ..."
-    SCRIPT="$SCRIPT && (./$NODEJS_PACKAGE_JSON_NAME.sh npm-publish 2>dev/null"
+    SCRIPT="$SCRIPT && (./$NODEJS_PACKAGE_JSON_NAME.sh npm-publish 2>/dev/null"
     SCRIPT="$SCRIPT && echo ... npm publish succeeded && echo"
     SCRIPT="$SCRIPT && sleep 10"
     SCRIPT="$SCRIPT || (echo ... npm publish failed && echo))"
