@@ -10,7 +10,8 @@ branches:
   - unstable
 env:
   global:
-  - secure: G8Cq+BvB95WZt95we5XJ3TbSft9T17bNt4ESxjI/IVwr85bRWcX2ji5VeiXqjZFmplwcmgNU4z06O51/VACW99b3sOE+44kjhAdzaBUr74x7XMjJsiib/Q6QxsVau5M7gEsh4hCTKE1XdOVWWkyX/zaUzBa4jMZMCfsJe4IXYak=
+  ## AES_256_KEY
+  - secure: L4pFPTRxjJJYJomGUxQKxQFtb3iH/+c38VqxglZ+XP6UTzmEMmwPN/28u0Jj6v4GhIH5USHJnIBFxnJo4ygmj1Ikxk0njnE5AUpExM54bE39KDV47kCYP+uOmkFRVlyremrRrYFBDVvMKw5nvtT7s5uDgly6BFjc/VVLdlh1EAg=
 language: node_js
 node_js:
 - '0.10'

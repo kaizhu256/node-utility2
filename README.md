@@ -49,6 +49,7 @@ utility2 start --server-port=8080
 
 ## changelog
 #### todo
+- fix npm-publish
 - merge utility2.js in utility2.js2
 - print to stdout build artifacts that fail to upload to github
 - allow saucelabs testing of deployed gh-pages
@@ -57,6 +58,8 @@ utility2 start --server-port=8080
 - add html linter
 
 #### 2014.05.26
+- move encrypted content from utility2.js2 to separate file .aes-encrypted.sh
+- add aes-encrypt-credential encryption tool
 - merge browser testing / npm publish / npm package testing into a single build
 - update README.md with loading icons for test / coverage reports when building
 - auto test latest npm package in ci-build

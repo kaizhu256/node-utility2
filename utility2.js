@@ -122,7 +122,6 @@
       try {
         state.packageJson = JSON.parse(required.fs.readFileSync(process.cwd()
           + '/package.json'));
-        state.packageJson.versionShort = state.packageJson.version.replace((/-.*/), '');
       } catch (ignore) {
       }
       /* init state.mainModule */

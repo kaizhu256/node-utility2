@@ -17,5 +17,5 @@
     "start": "./utility2.sh npm-start",
     "test": "./utility2.sh npm-test"
   },
-  "version": "2014.5.26-6"
+  "version": "2014.5.26-12"
 }
