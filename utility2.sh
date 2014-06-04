@@ -1,5 +1,5 @@
 #!/bin/bash
-shAesDecrypt () {
+function shAesDecrypt () {
   ## this function decrypts base64-encode stdin to stdout using aes-256-cbc
   ## save stdin to $TEXT
   local TEXT=$(cat /dev/stdin)
@@ -9,7 +9,7 @@ shAesDecrypt () {
   printf "${TEXT:44}" | base64 --decode | openssl enc -aes-256-cbc -d -K $AES_256_KEY -iv $IV
 }
 
-shAesEncrypt () {
+function shAesEncrypt () {
   ## this function encrypts stdin to base64-encode stdout,
   ## with a random iv prepended using aes-256-cbc
   ## init $IV from random 16 bytes
@@ -20,7 +20,7 @@ shAesEncrypt () {
   openssl enc -aes-256-cbc -K $AES_256_KEY -iv $IV | base64 | tr -d "\n"
 }
 
-shCiBuildAppCopy () {
+function shCiBuildAppCopy () {
   ## this function copies the app to /tmp/app with only the bare repo files
   ## rm old /tmp/app
   rm -fr /tmp/app && mkdir -p /tmp/app || return $?
@@ -28,7 +28,7 @@ shCiBuildAppCopy () {
   git ls-tree -r HEAD --name-only | xargs tar -czf - | tar -C /tmp/app -xzvf -
 }
 
-shCiBuildExit () {
+function shCiBuildExit () {
   ## this function exits the ci build
   ## cleanup $GIT_SSH_KEY_FILE
   SCRIPT="$SCRIPT; rm -f $GIT_SSH_KEY_FILE"
@@ -42,15 +42,15 @@ shCiBuildExit () {
   exit $EXIT_CODE
 }
 
-shCiBuildHerokuDeploy () {
+function shCiBuildHerokuDeploy () {
   ## this function deploys the app to heroku
   ## export $GIT_SSH
   export GIT_SSH=$UTILITY2_DIR/.install/git-ssh.sh
   ## export and create $GIT_SSH_KEY_FILE
   export GIT_SSH_KEY_FILE=$(mktemp /tmp/.git-ssh-key-file-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX)\
-  && echo $GIT_SSH_KEY | base64 --decode > $GIT_SSH_KEY_FILE\
-  && chmod 600 $GIT_SSH_KEY_FILE\
-  || return $?
+    && echo $GIT_SSH_KEY | base64 --decode > $GIT_SSH_KEY_FILE\
+    && chmod 600 $GIT_SSH_KEY_FILE\
+    || return $?
   local HEROKU_URL=http://$(perl -ne 'print $1 if /git\@heroku\.com:(.*)\.git$/'\
     .install/.git-config).herokuapp.com
   SCRIPT="$SCRIPT && shCiBuildLog herokuDeploy 'deploy local app to heroku ...'"
@@ -77,7 +77,7 @@ shCiBuildHerokuDeploy () {
   shScriptEval "$SCRIPT" || shCiBuildExit
 }
 
-shCiBuildInit () {
+function shCiBuildInit () {
   ## this function inits the ci build
   if [ ! "$NODEJS_PACKAGE_JSON_NAME" ]
     then shCiBuildLog init "could not read package.json"
@@ -122,13 +122,6 @@ shCiBuildInit () {
   if [ ! "$CI_COMMIT_INFO" ]
     then export CI_COMMIT_INFO="$CI_COMMIT_ID - $CI_COMMIT_MESSAGE"
   fi
-  if [ ! "$GITHUB_REPO" ]
-    then export GITHUB_REPO="$(git config --get remote.origin.url\
-      | perl -ne 'print $1 if /([\w-]+\/[^.]+)/')"
-  fi
-  if [ ! "$GITHUB_REPO_URL" ]
-    then export GITHUB_REPO_URL="https://github.com/$GITHUB_REPO/tree/$CI_BRANCH"
-  fi
   export CI_BUILD_DIR_COMMIT=$CI_BUILD_DIR/$CI_BUILD_NUMBER.$CI_BRANCH.$CI_COMMIT_ID
   export CI_BUILD_DIR_LATEST=$CI_BUILD_DIR/latest.$CI_BRANCH
   ## update coverage / test report badges with loading icon
@@ -141,13 +134,13 @@ shCiBuildInit () {
   shScriptEval "$SCRIPT" || shCiBuildExit
 }
 
-shCiBuildLog () {
+function shCiBuildLog () {
   ## this function logs output about ci build state
   export MODE_CI_BUILD=$1
   printf "\n[MODE_CI_BUILD=$MODE_CI_BUILD] - $2\n"
 }
 
-shCiBuildNpmPublish () {
+function shCiBuildNpmPublish () {
   ## this function npm publishes the app if the version changed
   ## security - sensitive data - avoid $SCRIPT macro
   printf "_auth = $NPM_AUTH\nemail = $NPM_EMAIL\n" > $HOME/.npmrc
@@ -160,9 +153,10 @@ shCiBuildNpmPublish () {
   SCRIPT="$SCRIPT && shCiBuildLog npmPublish 'npm publish succeeded'"
   ## wait awhile for npm registry to sync
   SCRIPT="$SCRIPT && sleep 10"
+  shScriptEval "$SCRIPT" || shCiBuildExit
 }
 
-shCiBuildNpmTestLocal () {
+function shCiBuildNpmTestLocal () {
   ## this function npm tests the local app
   SCRIPT="$SCRIPT && shCiBuildLog npmTestLocal 'npm test $CWD ...'"
   SCRIPT="$SCRIPT && npm test"
@@ -170,7 +164,7 @@ shCiBuildNpmTestLocal () {
   shScriptEval "$SCRIPT" || shCiBuildExit
 }
 
-shCiBuildNpmTestPublished () {
+function shCiBuildNpmTestPublished () {
   ## this function npm tests the latest published version of the app
   SCRIPT="$SCRIPT && shCiBuildLog npmTestPublished"
   SCRIPT="$SCRIPT 'npm install and test published package $NODEJS_PACKAGE_JSON_NAME ...'"
@@ -194,16 +188,16 @@ shCiBuildNpmTestPublished () {
   SCRIPT="$SCRIPT; EXIT_CODE=\$?"
   ## copy merged test-report.json into current directory
   SCRIPT="$SCRIPT; cp .build/test-report.json $CWD/.build"
-  ## regenerate test report in $CWD
+  ## merge test report into $CWD
   SCRIPT="$SCRIPT && cd $CWD"
   SCRIPT="$SCRIPT && $UTILITY2_JS --mode-cli=testReportMerge"
   SCRIPT="$SCRIPT && shCiBuildLog 'npm test of latest published package succeeded'"
-  SCRIPT="$SCRIPT || shReturn 1"
   ## return $EXIT_CODE
   SCRIPT="$SCRIPT && shReturn \$EXIT_CODE"
+  shScriptEval "$SCRIPT" || shCiBuildExit
 }
 
-shCiBuildSaucelabsTest () {
+function shCiBuildSaucelabsTest () {
   ## this function runs headless saucelabs browser tests
   ## add random salt to CI_BUILD_NUMBER to prevent conflict
   ## when re-running saucelabs with same CI_BUILD_NUMBER
@@ -213,9 +207,10 @@ shCiBuildSaucelabsTest () {
   SCRIPT="$SCRIPT && $UTILITY2_JS --mode-cli=headlessSaucelabsPlatformsList"
   SCRIPT="$SCRIPT < .install/saucelabs-test-platforms-list.json"
   SCRIPT="$SCRIPT && shCiBuildLog saucelabsTest 'saucelabs tests succeeded'"
+  shScriptEval "$SCRIPT" || shCiBuildExit
 }
 
-shNodejsInstall () {
+function shNodejsInstall () {
   ## this function installs nodejs / npm if necesary
   if [ ! "$(which npm)" ]
     ## init $NODEJS_* vars
@@ -233,12 +228,12 @@ shNodejsInstall () {
   fi
 }
 
-shReturn () {
+function shReturn () {
   ## this function returns the specified exit code
   return $1
 }
 
-shScriptEval () {
+function shScriptEval () {
   ## this function evals $SCRIPT
   ## echo $SCRIPT
   if [ "$MODE_ECHO" ] || [ "$SCRIPT" != ":" ]
@@ -256,12 +251,60 @@ shScriptEval () {
     cd $CWD
     ## reset SCRIPT
     SCRIPT=":"
+    ## cleanup $TMPFILE
+    rm -f $TMPFILE
     ## return $EXIT_CODE
     return $EXIT_CODE;
   fi
 }
 
-shUtility2Init () {
+function shSemverGreaterThan() {
+  ## function echoes 1 if semver $1 is greater than semver $2 or 0 otherwise
+  local REGEXP='([0-9]+)\.([0-9]+)\.([0-9]+)([0-9A-Za-z-]*)'
+  MAJOR1=$(echo $1 | perl -ne "print \$1 if /$REGEXP/")
+  MINOR1=$(echo $1 | perl -ne "print \$2 if /$REGEXP/")
+  PATCH1=$(echo $1 | perl -ne "print \$3 if /$REGEXP/")
+  SPECIAL1=$(echo $1 | perl -ne "print \$4 if /$REGEXP/")
+  MAJOR2=$(echo $2 | perl -ne "print \$1 if /$REGEXP/")
+  MINOR2=$(echo $2 | perl -ne "print \$2 if /$REGEXP/")
+  PATCH2=$(echo $2 | perl -ne "print \$3 if /$REGEXP/")
+  SPECIAL2=$(echo $2 | perl -ne "print \$4 if /$REGEXP/")
+  ## return 1 if invalid semver $1 or semver $2
+  if [ ! "$MAJOR1" ] || [ ! "$MAJOR2" ]
+    then return 1
+  ## return 1 if $MAJOR1 < $MAJOR2
+  elif [ $MAJOR1 -lt $MAJOR2 ]
+    then return 1
+  ## return 0 if $MAJOR1 > $MAJOR2
+  elif [ $MAJOR1 -gt $MAJOR2 ]
+    then return 0
+  ## return 1 if $MINOR1 < $MINOR2
+  elif [ $MINOR1 -lt $MINOR2 ]
+    then return 1
+  ## return 0 if $MINOR1 > $MINOR2
+  elif [ $MINOR1 -gt $MINOR2 ]
+    then return 0
+  ## return 1 if $PATCH1 < $PATCH2
+  elif [ $PATCH1 -lt $PATCH2 ]
+    then return 1
+  ## return 0 if $PATCH1 > $PATCH2
+  elif [ $PATCH1 -gt $PATCH2 ]
+    then return 0
+  ## return 1 if $SPECIAL1 < $SPECIAL2
+  elif [ "$SPECIAL1" ] && [ ! "$SPECIAL2" ]
+    then return 1
+  elif [ "$SPECIAL1" \< "$SPECIAL2" ]
+    then return 1
+  ## return 0 if $SPECIAL1 > $SPECIAL2
+  elif [ "$SPECIAL1" \> $SPECIAL2 ]
+    then return 0
+  ## return 1 otherwise
+  else
+    return 1
+  fi
+}
+
+function shUtility2Init () {
   ## this function inits utility2
   ## save current dir to $CWD
   CWD=$(pwd)
@@ -269,6 +312,10 @@ shUtility2Init () {
   EXEC_DIR=$( cd "$( dirname "$0" )" && pwd )
   ## init $EXIT_CODE
   EXIT_CODE=0
+  if [ ! "$GITHUB_REPO" ]
+    then export GITHUB_REPO="$(git config --get remote.origin.url\
+      | perl -ne 'print $1 if /([\w-]+\/[^.]+)/')"
+  fi
   ## init $SCRIPT
   SCRIPT=":"
   ## init TMPFILE
@@ -281,7 +328,7 @@ shUtility2Init () {
     | perl -ne 'print $1 if /(\d+\.\d+\.\d+)/').tar.gz
 }
 
-shMain () {
+function shMain () {
   ## this function is the main program and parses argv
 
   ## install nodejs / npm if necessary
@@ -309,130 +356,21 @@ shMain () {
 
   ## aes encrypt .install/.aes-decrypted.sh to .aes-encrypted.sh
   aes-encrypt)
-    SCRIPT="$SCRIPT && shAesEncrypt < .install/.aes-decrypted.sh | fold > .aes-encrypted.sh"
-    ;;
-
-  ## aes encrypt credential
-  aes-encrypt-credential)
-    printf "\n"
-    printf "## this program will aes-256 encrypt your application's\n"
-    printf "## github / npm / saucelabs credential for use on travis-ci\n"
-
-    printf "\n"
-    printf "## github\n"
-    printf "## your github credential is used on travis-ci to push build artifacts\n"
-    printf "## like test and coverage reports to your github repo\n"
-    printf "## make sure the token has the 'public_repo' scope enabled\n"
-    read -p "github repo: (e.g. kaizhu256/utility2) " GITHUB_REPO
-    read -sp "github api token: (from https://github.com/settings/tokens/new) " GITHUB_TOKEN
-    echo
-
-    printf "\n"
-    printf "## npm\n"
-    printf "## your npm credential is used on travis-ci to npm publish your app\n"
-    printf "## after it passes all build tests\n"
-    read -p "npm package name: " NODEJS_PACKAGE_JSON_NAME
-    read -p "npm email: " NPM_EMAIL
-    read -p "npm username: " NPM_USER
-    read -sp "npm password: " NPM_PASSWORD
-    echo
-    NPM_AUTH=$(printf "$NPM_USER:$NPM_PASSWORD" | base64 | tr -d "\n")
-
-    printf "\n"
-    printf "## saucelabs\n"
-    printf "## your saucelabs credential is used on travis-ci to run saucelabs tests\n"
-    read -p "saucelabs username: " SAUCE_USERNAME
-    read -sp "saucelabs access key: (from http://saucelabs.com/account) " SAUCE_ACCESS_KEY
-    echo
-
-    ## create $TMPFILE
-    TMPFILE=$(mktemp /tmp/.aes-encrypted-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX) || return $?
-
-    printf "\n"
-    printf "## creating random \$AES_256_KEY ...\n"
-    AES_256_KEY=$(openssl rand -hex 32) || return $?
-
-    printf "\n"
     printf "## fetching public rsa key from https://api.travis-ci.org/repos/$GITHUB_REPO/key ...\n"
     curl -3Ls https://api.travis-ci.org/repos/$GITHUB_REPO/key\
     | perl -ne 's/[^-]*//; s/"[^"]*$//; s/\\n/\n/g; s/ RSA / /g; print'\
     > $TMPFILE
-
-    printf "\n"
-    printf "## encrypting \$AES_256_KEY_ENCRYPTED with fetched public rsa key ...\n"
+    printf "## encrypting \$AES_256_KEY with fetched public rsa key ...\n"
     AES_256_KEY_ENCRYPTED=$(printf "AES_256_KEY=$AES_256_KEY"\
       | openssl rsautl -encrypt -pubin -inkey $TMPFILE | base64 | tr -d "\n")
     if [ ! "$AES_256_KEY_ENCRYPTED" ]
       then printf "failed to encrypt \$AES_256_KEY for \$GITHU_REPO=$GITHUB_REPO\n";
       return 1
     fi
-
-    printf "\n"
-    printf "## creating random \$GIT_SSH_KEY / \$GIT_SSH_KEY_PUB key pair ...\n"
-    rm -f $TMPFILE || return $?
-    ssh-keygen -C "git-ssh" -f $TMPFILE -N "" -t rsa || return $?
-    GIT_SSH_KEY=$(base64 < $TMPFILE | tr -d "\n")
-    GIT_SSH_KEY_PUB="$(cat $TMPFILE.pub | tr -d '\n')"
-
-    printf "\n"
-    printf "## encrypting credential with \$AES_256_KEY and random iv ...\n"
-    printf "## DECRYPTED AUTO-GENERATED CREDENTIAL\n" > $TMPFILE
-    printf "export AES_256_KEY=$AES_256_KEY\n" >> $TMPFILE
-    printf "export AES_256_KEY_ENCRYPTED=$AES_256_KEY_ENCRYPTED\n" >> $TMPFILE
-    printf "export AES_256_KEY_SIGNATURE=$(openssl rand -hex 32)\n" >> $TMPFILE
-    printf "export GIT_SSH_KEY=$GIT_SSH_KEY\n" >> $TMPFILE
-    printf "export GIT_SSH_KEY_PUB='$GIT_SSH_KEY_PUB'\n" >> $TMPFILE
-    printf "\n\n\n" >> $TMPFILE
-    printf "## DECRYPTED USER-SUPPLIED CREDENTIAL\n" >> $TMPFILE
-    printf "export GITHUB_REPO=$GITHUB_REPO\n" >> $TMPFILE
-    printf "export GITHUB_TOKEN=$GITHUB_TOKEN\n" >> $TMPFILE
-    printf "export NODEJS_PACKAGE_JSON_NAME=$NODEJS_PACKAGE_JSON_NAME\n" >> $TMPFILE
-    printf "export NPM_AUTH=$NPM_AUTH\n" >> $TMPFILE
-    printf "export NPM_EMAIL=$NPM_EMAIL\n" >> $TMPFILE
-    printf "export SAUCE_ACCESS_KEY=$SAUCE_ACCESS_KEY\n" >> $TMPFILE
-    printf "export SAUCE_USERNAME=$SAUCE_USERNAME\n" >> $TMPFILE
-    shAesEncrypt < $TMPFILE | fold > $TMPFILE.pub
-    ## cleanup $TMPFILE
-    rm -f $TMPFILE
-
-    printf "\n"
-    read -p "press [return] to view your encrypted credential: "
-    printf "\n\n\n\n"
-    printf "## ENCRYPTED CREDENTIAL\n"
-    printf '/* MODULE_BEGIN { "actionList": ["trim"],'
-    printf ' "file": ".install/.aes-encrypted.sh" } */\n'
-    cat $TMPFILE.pub
-    printf "\n"
-    printf "/* MODULE_END */\n"
-    printf "\n\n\n\n"
-
-    read -p "press [return] to test-decrypt your encrypted credential: "
-    printf "\n\n\n\n"
-    shAesDecrypt < $TMPFILE.pub
-    ## cleanup $TMPFILE
-    rm -f $TMPFILE $TMPFILE.pub
-    printf "\n\n\n\n"
-    printf "## please verify your \"## DECRYPTED USER-SUPPLIED CREDENTIAL\""
-    echo "#" > /dev/null
-    printf " displayed above are correct\n"
-    read -p "press [return] for instructions on deploying your credential: "
-    printf "\n\n\n\n"
-    printf "(1) update $NODEJS_PACKAGE_JSON_NAME.js2's \"## ENCRYPTED CREDENTIAL\" section\n"
-    echo "#" > /dev/null
-    printf "    with the one displayed above\n"
-    printf "\n\n"
-    printf "(2) update .travis.yml's \$AES_256_KEY_ENCRYPTED var:\n"
-    printf "\n"
-    printf "    env:\n"
-    printf "      global:\n"
-    printf "      ## AES_256_KEY_ENCRYPTED\n"
-    printf "      - secure: $AES_256_KEY_ENCRYPTED\n"
-    printf "\n\n"
-    printf "(3) add the auto-generated \$GIT_SSH_KEY_PUB"
-    printf " to https://dashboard.heroku.com/account#ssh-keys:\n"
-    printf "\n"
-    printf "    $GIT_SSH_KEY_PUB\n"
-    printf "\n\n\n\n"
+    printf "## updating .travis.yml with encrypted key ...\n"
+    perl -i -pe "s|(^\s*- secure: ).*( ## AES_256_KEY$)|\$1$AES_256_KEY_ENCRYPTED\$2|" .travis.yml
+    printf "## encrypting .install/.aes-decrypted.sh to .aes-encrypted.sh ...\n"
+    shAesEncrypt < .install/.aes-decrypted.sh | fold > .aes-encrypted.sh
     ;;
 
   ## ci build utility2
@@ -450,10 +388,11 @@ shMain () {
       then shCiBuildSaucelabsTest
     fi
     ## npm publish app if version changed
-    if [ "$NPM_AUTH" ]\
+    if [ "$MODE_NPM_PUBLISH" != false ]\
+      && [ "$NPM_AUTH" ]\
       && [ "$NPM_EMAIL" ]\
       && [ "$NODEJS_PACKAGE_JSON_VERSION" ]\
-      && [ "$NODEJS_PACKAGE_JSON_VERSION" != "$(npm info $NODEJS_PACKAGE_JSON_NAME version)" ]
+      && semverGreaterThan "$NODEJS_PACKAGE_JSON_VERSION" "$(npm info $NODEJS_PACKAGE_JSON_NAME version 2>/dev/null)"
       then shCiBuildNpmPublish
     fi
     ## npm test latest published app

@@ -57,6 +57,10 @@ utility2 start --server-port=8080
 - add usage documentation
 - add html linter
 
+#### 0.2.0-2014-06-01
+- change to new versioning scheme
+- add semverGreaterThan comparison operator in utility2.sh for testing whether to npm publish
+
 #### 2014.05.26
 - move encrypted content from utility2.js2 to separate file .aes-encrypted.sh
 - add aes-encrypt-credential encryption tool
