@@ -4,6 +4,7 @@
 *.min.*
 *.pid
 *.swp
+*decrypted*
 .DS_Store
 ._*
 .build
@@ -2249,7 +2250,7 @@ console.log('hello test');
           ast.figure_out_scope();
           ast.compute_char_frequency();
           ast.mangle_names();
-          /* generate output */
+          /* create output */
           result = new required.uglifyjs.OutputStream({ ascii_only: true });
           ast.print(result);
           script = result.toString();
@@ -2686,7 +2687,7 @@ console.log('hello test');
 
     testReportHtml: function (testReport) {
       /*
-        this function generates an html test report
+        this function creates an html test report
       */
       var errorMessageList, processEnv, testCaseNumber;
       processEnv = (global.process && process.env) || {};
@@ -4834,7 +4835,7 @@ console.log('hello test');
 
     _testReportNodejsBadge: function (testReport) {
       /*
-        this function generates a test report summary badge
+        this function creates a test report summary badge
       */
       return state.fsWatchDict['/test/modeAjaxOffline/https%3A%2F%2Fimg.shields.io'
         + '%2Fbadge%2Ftests_failed-999-dd0000.svg%3Fstyle%3Dflat%23GET'].contentBrowser
@@ -6301,20 +6302,6 @@ console.log('hello test');
       return self;
     },
 
-    modeCliDict_dbGithubBranchMerge: function () {
-      /*
-        this function deletes the file on github
-      */
-      utility2.jsonLog('merging branch ' + state.dbGithubFile + ' into https://github.com'
-        + state.modeDbGithub.replace(/([^\/]+$)/, 'tree/$1'));
-      utility2.readyUtility2Exit.remaining += 1;
-      state.dbGithubDefault.branchMerge(
-        state.dbGithubFile,
-        state.dbGithubMessage,
-        utility2.readyUtility2Exit
-      );
-    },
-
     modeCliDict_dbGithubDirUpdate: function () {
       /*
         this function deletes the file on github
@@ -6376,8 +6363,6 @@ console.log('hello test');
         } }],
         [utility2, { readyUtility2Exit: {}, streamReadAll: utility2.callArg1 }]
       ], function (onEventError) {
-        /* test branch merge handling behavior */
-        state.modeCliDict.dbGithubBranchMerge({});
         /* test dir update handling behavior */
         state.modeCliDict.dbGithubDirUpdate();
         /* test file delete handling behavior */
@@ -7874,7 +7859,7 @@ console.log('hello test');
 
     serverPortRandom: function () {
       /*
-        this function generates a random port number from 32768-65535
+        this function creates a random port number from 32768-65535
       */
       /*jslint bitwise: true*/
       return (Math.random() * 0xffff) | 0x8000;

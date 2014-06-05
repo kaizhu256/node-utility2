@@ -242,7 +242,7 @@
       /* init istanbul */
       required.istanbul = required.istanbul || utility2.require('istanbul');
       /* on exit, create code coverage report */
-      process.on('exit', local._coverageReportGenerate);
+      process.on('exit', local._coverageReportCreate);
     },
 
     __initOnceCoverage_default_test: function (onEventError) {
@@ -417,14 +417,14 @@
       });
     },
 
-    _coverageReportGenerate: function () {
+    _coverageReportCreate: function () {
       /*
-        this function generates a code coverage report when nodejs exits
+        this function creates a code coverage report when nodejs exits
       */
       var collector, data;
       collector = new required.istanbul.Collector();
       collector.add(global.__coverage__);
-      utility2.jsonLog('generating code report file://' + state.fsDirBuild
+      utility2.jsonLog('creating code report file://' + state.fsDirBuild
         + '/coverage-report/index.html');
       ['cobertura', 'html', 'lcovonly', 'text'].forEach(function (report) {
         required.istanbul.Report
@@ -461,9 +461,9 @@
       );
     },
 
-    __coverageReportGenerate_default_test: function (onEventError) {
+    __coverageReportCreate_default_test: function (onEventError) {
       /*
-        this function tests _coverageReportGenerate's default handling behavior
+        this function tests _coverageReportCreate's default handling behavior
       */
       utility2.testMock(onEventError, [
         [global, { state: {
@@ -491,7 +491,7 @@
           }
         }]
       ], function (onEventError) {
-        local._coverageReportGenerate();
+        local._coverageReportCreate();
         onEventError();
       });
     }
