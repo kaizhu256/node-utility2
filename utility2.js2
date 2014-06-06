@@ -4346,9 +4346,8 @@ console.log('hello test');
         testCallbackId: testCallbackId,
         timeoutDefault: state.timeoutDefault
       });
-      required.phantomjs = required.phantomjs || utility2.require('phantomjs');
       state.phantomjs = utility2.shell({ argv: [
-        options.argv0 || required.phantomjs.path,
+        options.argv0 || (utility2.__dirname + '/.install/phantomjs/bin/phantomjs'),
         utility2.__filename,
         new Buffer(JSON.stringify(options)).toString('base64')
       ], modeDebug: false });
@@ -6737,6 +6736,53 @@ console.log('hello test');
       });
     },
 
+    modeCliDict_headlessSaucelabs: function () {
+      /*
+        this function runs saucelabs tests with the given json options piped from stdin
+      */
+      /* read saucelabs test options from stdin */
+      utility2.streamReadAll(process.stdin, utility2.jsonParseHandler(function (error, data) {
+        /* assert no error occurred */
+        utility2.assert(!error, error);
+        /* init state */
+        state.testModuleDict[local._name] = true;
+        utility2.setOverride(state, data.stateOverride);
+        /* remove stateOverride param */
+        delete data.stateOverride;
+        utility2.initModule(module, {
+          _headlessSaucelabs_browser_test: function (onEventError) {
+            utility2.headlessSaucelabs(data, onEventError);
+          },
+          _name: local._name,
+          _modeTest: true
+        });
+      }));
+    },
+
+    _modeCliDict_headlessSaucelabs_default_test: function (onEventError) {
+      /*
+        this function tests modeCliDict_headlessSaucelabs's default handling behavior
+      */
+      var onEventError2;
+      utility2.testMock(onEventError, [
+        [global, { state: { modeCliDict: state.modeCliDict, testModuleDict: {} } }],
+        [utility2, {
+          headlessSaucelabs: utility2.callArg1,
+          initModule: function (_, local2) {
+            utility2.nop(_);
+            local2._headlessSaucelabs_browser_test(onEventError2);
+          },
+          streamReadAll: utility2.applyArgList1([null, JSON.stringify({
+            /* test stateOverride handling behavior */
+            "stateOverride": {}
+          })])
+        }]
+      ], function (onEventError) {
+        onEventError2 = onEventError;
+        state.modeCliDict.headlessSaucelabs();
+      });
+    },
+
     modeCliDict_headlessSaucelabsPlatformsList: function () {
       /*
         this function runs saucelabs tests with the given json options piped from stdin
@@ -6816,53 +6862,6 @@ console.log('hello test');
         onEventError2 = onEventError;
         state.modeCliDict.headlessSaucelabsPlatformsList();
       });
-    },
-
-    modeCliDict_headlessSaucelabs: function () {
-      /*
-        this function runs saucelabs tests with the given json options piped from stdin
-      */
-      /* read saucelabs test options from stdin */
-      utility2.streamReadAll(process.stdin, utility2.jsonParseHandler(function (error, data) {
-        /* assert no error occurred */
-        utility2.assert(!error, error);
-        /* init state */
-        state.testModuleDict[local._name] = true;
-        utility2.setOverride(state, data.stateOverride);
-        /* remove stateOverride param */
-        delete data.stateOverride;
-        utility2.initModule(module, {
-          _headlessSaucelabs_browser_test: function (onEventError) {
-            utility2.headlessSaucelabs(data, onEventError);
-          },
-          _name: local._name,
-          _modeTest: true
-        });
-      }));
-    },
-
-    _modeCliDict_headlessSaucelabs_default_test: function (onEventError) {
-      /*
-        this function tests modeCliDict_headlessSaucelabs's default handling behavior
-      */
-      var onEventError2;
-      utility2.testMock(onEventError, [
-        [global, { state: { modeCliDict: state.modeCliDict, testModuleDict: {} } }],
-        [utility2, {
-          headlessSaucelabs: utility2.callArg1,
-          initModule: function (_, local2) {
-            utility2.nop(_);
-            local2._headlessSaucelabs_browser_test(onEventError2);
-          },
-          streamReadAll: utility2.applyArgList1([null, JSON.stringify({
-            /* test stateOverride handling behavior */
-            "stateOverride": {}
-          })])
-        }]
-      ], function (onEventError) {
-        onEventError2 = onEventError;
-        state.modeCliDict.headlessSaucelabs();
-      });
     }
 
   };
@@ -6896,10 +6895,13 @@ console.log('hello test');
         state.testModuleDict[local._name] = !error;
         utility2.readyUtility2();
       };
-      required.slimerjs = required.slimerjs || utility2.require('slimerjs');
       utility2.readyUtility2.remaining += 1;
       /* auto-detect slimerjs binary */
-      required.child_process.spawn(required.slimerjs.path, ['--help'], { stdio: 'ignore' })
+      required.child_process.spawn(
+        utility2.__dirname + '/.install/slimerjs/slimerjs',
+        ['--help'],
+        { stdio: 'ignore' }
+      )
         .on('error', onEventError)
         .on('exit', onEventError);
     },
@@ -6909,7 +6911,7 @@ console.log('hello test');
         this function starts a separate slimerjs process to open and test a webpage
       */
       options = utility2.jsonCopy(options);
-      options.argv0 = required.slimerjs.path;
+      options.argv0 = utility2.__dirname + '/.install/slimerjs/slimerjs';
       utility2.headlessPhantomjs(options, onEventError);
     },
 

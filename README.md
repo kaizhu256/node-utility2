@@ -63,6 +63,7 @@ utility2 start --server-port=8080
 - add html linter
 
 #### 0.2.0-2014-06-01
+- remove phantomjs and slimerjs npm dependencies
 - add shTravisEncrypt shell function
 - change to new versioning scheme
 - add semverGreaterThan comparison operator in utility2.sh for testing whether to npm publish
