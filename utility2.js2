@@ -21,6 +21,7 @@
 .vim
 .wafpickle-*
 CVS
+Procfile
 README.*
 artifacts
 bower_components
@@ -56,9 +57,6 @@ tmp
 [remote "origin"]
   fetch = +refs/heads/*:refs/remotes/origin/*
   url = git@github.com:kaizhu256/utility2.git
-[user]
-  name = kai zhu
-  email = kaizhu256@gmail.com
 /* MODULE_END */
 
 
@@ -268,6 +266,46 @@ exec ssh -i $GIT_SSH_KEY_FILE -o CheckHostIP=no -o StrictHostKeychecking=no -- "
   </rect>
 </g>
 </svg>
+/* MODULE_END */
+
+
+
+/* MODULE_BEGIN { "actionList": ["lint"], "file": ".install/saucelabs-test-platforms-list.json" } */
+{
+  "platformsList": [
+    [
+      ["linux", "android", "4.3"],
+      ["linux", "googlechrome", "34"],
+      ["linux", "firefox", "29"],
+      ["linux", "opera", "12"]
+    ],
+    [
+      ["osx 10.8", "googlechrome", "beta"],
+      ["osx 10.9", "googlechrome", "34"],
+      ["osx 10.9", "firefox", "28"],
+      ["osx 10.9", "ipad", "7.1"],
+      ["osx 10.9", "iphone", "7.1"],
+      ["osx 10.9", "safari", "7"]
+    ],
+    [
+      ["windows 7", "opera", "12"],
+      ["windows 8.1", "googlechrome", "34"],
+      ["windows 8.1", "googlechrome", "beta"],
+      ["windows 8.1", "firefox", "29"],
+      ["windows 8.1", "iexplore", "11"]
+    ]
+  ],
+  "stateOverride": {
+    "timeoutDefault": 150000
+  },
+  "url": "https://utility2.herokuapp.com/test/test.html#modeTest=1&timeoutDefault={{timeoutDefault}}"
+}
+/* MODULE_END */
+
+
+
+/* MODULE_BEGIN { "actionList": ["trim"], "file": "Procfile" } */
+web: npm start --utility2-server-port=$PORT
 /* MODULE_END */
 
 
@@ -500,44 +538,6 @@ hJW01KqpVwxztVQUFE2OjCdPXmCtKGGM3TBJFLA5t1xQ0oaerRXKhqKtludOLS5SQhCnfzXf3d/7z3MT
 nZ6q6aqcThjrDKwwisKYPzh++6D3/9py49rFbUIgAoAIGA0teyd1MC9IR+1282NLliTbc9pDCymZnXEzwUym6VyxglEKR34c
 +fFk6HZOnLpZyEkSRJhCQiUSTr2W12+PxmkubX99dXLiEBbyhLLYTzBCA8Hes7un59YxwSxO3jbfB35w/cLmj+9cgfBdu/7b
 ymXCIWMOjxhLC8J1sbqQq/btyWDcn1qj0PUzM+bH4UidMtOe/B7bL9Wlz0MZYXZdLOnfAAAAAElFTkSuQmCC
-/* MODULE_END */
-
-
-
-/* MODULE_BEGIN { "actionList": ["lint"], "file": ".install/saucelabs-test-platforms-list.json" } */
-{
-  "platformsList": [
-    [
-      ["linux", "android", "4.3"]
-    ],
-    [
-      ["osx 10.9", "ipad", "7.1"],
-      ["osx 10.9", "iphone", "7.1"]
-    ],
-    [
-      ["linux", "googlechrome", "34"],
-      ["linux", "firefox", "29"],
-      ["linux", "opera", "12"]
-    ],
-    [
-      ["osx 10.9", "googlechrome", "34"],
-      ["osx 10.8", "googlechrome", "beta"],
-      ["osx 10.9", "firefox", "28"],
-      ["osx 10.9", "safari", "7"]
-    ],
-    [
-      ["windows 7", "opera", "12"],
-      ["windows 8.1", "googlechrome", "34"],
-      ["windows 8.1", "googlechrome", "beta"],
-      ["windows 8.1", "firefox", "29"],
-      ["windows 8.1", "iexplore", "11"]
-    ]
-  ],
-  "stateOverride": {
-    "timeoutDefault": 150000
-  },
-  "url": "https://utility2.herokuapp.com/test/test.html#modeTest=1&timeoutDefault={{timeoutDefault}}"
-}
 /* MODULE_END */
 
 
@@ -2946,7 +2946,7 @@ console.log('hello test');
     textExampleSha1: 'da39a3ee5e6b4b0d3255bfef95601890afd80709',
 
     /* utility2.uuid4() */
-    textExampleUuid4: 'da39a3ee-5e6b-4b0d-3255-bfef95601890',
+    textExampleUuid4: 'aaaaaaaa-aaaa-4aaa-baaa-aaaaaaaaaaaa',
 
     /* new Buffer(utility2.textExampleAscii).toString('base64') */
     textExampleBase64: 'AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwd'
@@ -4434,13 +4434,11 @@ console.log('hello test');
         case 3:
           /* loop through cached files in state.fsWatchDict and install if necessary */
           Object.keys(state.fsWatchDict).forEach(function (file) {
-            if ((/^(?:\.gitignore|\.install)\b/).test(file)) {
+            if ((/^(?:\.gitignore|\.install|Procfile)\b/).test(file)) {
               /* install file to .install dir */
               required.fs.writeFile(
                 process.cwd() + '/' + file,
-                (/^\.install\b/).test(file)
-                  ? state.fsWatchDict[file].content
-                  : state.fsWatchDict[file].content.trimLeft(),
+                state.fsWatchDict[file].content,
                 utility2.onEventErrorDefault
               );
             }

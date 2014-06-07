@@ -9,11 +9,6 @@ function shAesDecrypt () {
   printf "${TEXT:44}" | base64 --decode | openssl enc -aes-256-cbc -d -K $AES_256_KEY -iv $IV
 }
 
-function shAesDecryptScript () {
-  ## this function decrypts .aes-encrypted.sh to stdout
-  shAesDecrypt < .aes-encrypted.sh || return $?
-}
-
 function shAesEncrypt () {
   ## this function encrypts stdin to base64-encode stdout,
   ## with a random iv prepended using aes-256-cbc
@@ -25,34 +20,6 @@ function shAesEncrypt () {
   openssl enc -aes-256-cbc -K $AES_256_KEY -iv $IV | base64 | tr -d "\n" || return $?
 }
 
-function shAesEncryptScript () {
-  ## this function encrypts the script $1 to .aes-encrypted.sh
-  FILE=$1
-  if [ ! -f "$FILE" ]
-  then
-    printf "## non-existent file $FILE\n"
-    return 1
-  fi
-  if [ ! "$AES_256_KEY" ]
-  then
-    printf "## no \$AES_256_KEY detected in env - creating new AES_256_KEY ...\n"
-    AES_256_KEY=$(openssl rand -hex 32)
-    printf "## a new \$AES_256_KEY for encrypting data has been created.\n"
-    printf "## you may want to copy the following to your $HOME/.bashrc script\n"
-    printf "## so it can be used on local ci builds:\n"
-    printf "export AES_256_KEY=$AES_256_KEY\n\n"
-  fi
-  printf "## travis-encrypting \$AES_256_KEY ...\n"
-  AES_256_KEY_ENCRYPTED=$(shTravisEncrypt $GITHUB_REPO \$AES_256_KEY=$AES_256_KEY)
-  printf "## updating .travis.yml with encrypted key ...\n"
-  perl -i -pe\
-    "s|(^\s*- secure: )(.*)( ## AES_256_KEY$)|\$1$AES_256_KEY_ENCRYPTED\$3|"\
-    .travis.yml\
-    || return $?
-  printf "## encrypting $FILE to .aes-encrypted.sh ...\n"
-  shAesEncrypt < $FILE | fold > .aes-encrypted.sh || return $?
-}
-
 function shCiBuild () {
   ## this function builds the app
   ## init ci build
@@ -61,11 +28,9 @@ function shCiBuild () {
     shCiBuildLog init "could not read package.json"
     exit 1
   fi
-  ## decrypt and eval .aes-encrypted.sh
   shCiBuildLog aesDecrypt "shasum - $(printf $AES_256_KEY | shasum) \$AES_256_KEY"
-  shCiBuildLog aesDecrypt "shasum - $(shasum .aes-encrypted.sh)"
-  ## eval .aes-encrypted.sh
-  eval "$(shAesDecrypt < .aes-encrypted.sh)" || exit $?
+  ## decrypt and eval $AES_ENCRYPTED_SH
+  eval "$(shUtility2Decrypt)" || exit $?
   ## init codeship.io env
   if [ "$CODESHIP" ]
   then
@@ -113,21 +78,6 @@ function shCiBuild () {
   export CI_BUILD_DIR_LATEST=$CI_BUILD_DIR/latest.$CI_BRANCH
   ## used in test report summary
   export GITHUB_REPO_URL="https://github.com/$GITHUB_REPO/tree/$CI_BRANCH"
-  if [ "$CI_BRANCH" != local ]
-  then
-    ## update coverage / test report badges with loading icon
-    for FILE in $CI_BUILD_DIR_LATEST/coverage-report/coverage-report.badge.svg\
-      $CI_BUILD_DIR_LATEST/test-report.badge.svg
-    do
-      ## update build artifiact with loading icon
-      $UTILITY2_JS\
-        --db-github-file=$FILE\
-        --mode-cli=dbGithubFileUpdate\
-        --mode-db-github=$GITHUB_REPO/gh-pages\
-        < $UTILITY2_DIR/.install/public/utility2-loading.svg\
-        || shCiBuildExit $?
-    done
-  fi
   ## npm test local app
   shCiBuildNpmTestLocal || shCiBuildExit $?
   if [ "$CI_BRANCH" != local ]
@@ -258,8 +208,6 @@ function shCiBuildNpmPublish () {
   printf "_auth = $NPM_AUTH\nemail = nobody\n" > $HOME/.npmrc || return $?
   ## init clean repo in /tmp/app
   shCiBuildAppCopy && cd /tmp/app || return $?
-  ## npm install
-  npm install || return $?
   ## publish npm package
   npm publish || return $?
   shCiBuildLog npmPublish "npm publish succeeded"
@@ -286,9 +234,6 @@ function shCiBuildNpmTestPublished () {
   npm install $NODEJS_PACKAGE_JSON_NAME || return $?
   ## cd into package
   cd node_modules/$NODEJS_PACKAGE_JSON_NAME || return $?
-  ## list package content
-  shCiBuildLog npmTestPublished "listing npm package contents ..."
-  find . -path ./node_modules -prune -o -type f -print || return $?
   ## copy previous test-report.json into .build dir
   mkdir -p .build && cp $CWD/.build/test-report.json .build || return $?
   ## npm test package and merge result into previous test-report.json
@@ -305,6 +250,15 @@ function shCiBuildSaucelabsTest () {
   $UTILITY2_JS --mode-cli=headlessSaucelabsPlatformsList\
     < .install/saucelabs-test-platforms-list.json || return $?
   shCiBuildLog saucelabsTest "saucelabs tests passed"
+}
+
+function shGitSquash () {
+  ## this function squashes the HEAD to the specified commit $1
+  ## git squash
+  ## http://stackoverflow.com/questions/5189560/how-can-i-squash-my-last-x-commits-together-using-git
+  local COMMIT=$1
+  local MESSAGE=${2-squash}
+  git reset --hard $COMMIT && git merge --squash HEAD@{1} && git commit -am "$MESSAGE"
 }
 
 function shSaucelabsDebug () {
@@ -391,6 +345,51 @@ function shTravisEncrypt () {
     || return $?
 }
 
+function shUtility2Decrypt () {
+  ## this function decrypts $AES_ENCRYPTED_SH in .travis.yml to stdout
+  perl -ne "print \$2 if /(^\s*- AES_ENCRYPTED_SH: )(.*)( ## AES_ENCRYPTED_SH\$)/" .travis.yml\
+    | shAesDecrypt\
+    || return $?
+}
+
+function shUtility2Encrypt () {
+  ## this function encrypts the script $1 to $AES_ENCRYPTED_SH and stores it in .travis.yml
+  ## init $FILE
+  local FILE=$1
+  if [ ! -f "$FILE" ]
+  then
+    printf "## non-existent file $FILE\n"
+    return 1
+  fi
+  if [ ! "$AES_256_KEY" ]
+  then
+    printf "## no \$AES_256_KEY detected in env - creating new AES_256_KEY ...\n"
+    AES_256_KEY=$(openssl rand -hex 32)
+    printf "## a new \$AES_256_KEY for encrypting data has been created.\n"
+    printf "## you may want to copy the following to your .bashrc script\n"
+    printf "## so you can run ci builds locally:\n"
+    printf "export AES_256_KEY=$AES_256_KEY\n\n"
+  fi
+  printf "## travis-encrypting \$AES_256_KEY for $GITHUB_REPO ...\n"
+  AES_256_KEY_ENCRYPTED=$(shTravisEncrypt $GITHUB_REPO \$AES_256_KEY=$AES_256_KEY)
+  ## return non-zero exit code if $AES_256_KEY_ENCRYPTED is empty string
+  if [ ! "$AES_256_KEY_ENCRYPTED" ]
+  then
+    return 1
+  fi
+  printf "## updating .travis.yml with encrypted key ...\n"
+  perl -i -pe\
+    "s%(^\s*- secure: )(.*)( ## AES_256_KEY$)%\$1$AES_256_KEY_ENCRYPTED\$3%"\
+    .travis.yml\
+    || return $?
+
+  printf "## updating .travis.yml with encrypted script ...\n"
+  perl -i -pe\
+    "s%(^\s*- AES_ENCRYPTED_SH: )(.*)( ## AES_ENCRYPTED_SH$)%\$1$(shAesEncrypt < $FILE)\$3%"\
+    .travis.yml\
+    || return $?
+}
+
 function shUtility2ExternalBuild () {
   ## this function builds utility2-external
   shUtility2NpmInstall || return $?
@@ -452,7 +451,7 @@ function shUtility2NpmInstallUtility2 () {
       ## fetch phantomjs
       if [ ! -f "/tmp/$FILE.zip" ]
       then
-        curl -#3L https://bitbucket.org/ariya/phantomjs/downloads/$FILE.zip\
+        curl -3Ls https://bitbucket.org/ariya/phantomjs/downloads/$FILE.zip\
           > /tmp/$FILE.zip || return $?
       fi
       ## unzip phantomjs
@@ -463,7 +462,7 @@ function shUtility2NpmInstallUtility2 () {
       ## fetch phantomjs
       if [ ! -f "/tmp/$FILE.tar.bz2" ]
       then
-        curl -#3L https://bitbucket.org/ariya/phantomjs/downloads/$FILE.tar.bz2\
+        curl -3Ls https://bitbucket.org/ariya/phantomjs/downloads/$FILE.tar.bz2\
           > /tmp/$FILE.tar.bz2 || return $?
       fi
       ## untar phantomjs
@@ -487,7 +486,7 @@ function shUtility2NpmInstallUtility2 () {
     ## fetch slimerjs
     if [ ! -f "/tmp/$FILE.tar.bz2" ]
     then
-      curl -#3L http://download.slimerjs.org/releases/0.9.1/$FILE.tar.bz2\
+      curl -3Ls http://download.slimerjs.org/releases/0.9.1/$FILE.tar.bz2\
         > /tmp/$FILE.tar.bz2 || return $?
     fi
     ## untar slimerjs
@@ -497,19 +496,11 @@ function shUtility2NpmInstallUtility2 () {
   ## install utility2-external
   if [ ! -f ".install/public/utility2-external.nodejs.rollup.js" ]
   then
-    curl -#3L\
+    curl -3Ls\
       https://kaizhu256.github.io/utility2/utility2-external/$UTILITY2_EXTERNAL_TAR_GZ\
       | tar -xzvf -\
       || return $?
   fi
-}
-
-function shUtility2NpmPublish () {
-  ## this function runs after npm publish
-  ## build utility2-external
-  shUtility2ExternalBuild || return $?
-  ## publish utility2-external
-  shUtility2ExternalBuildPublish || return $?
 }
 
 function shUtility2NpmStart () {
@@ -521,12 +512,15 @@ function shUtility2NpmTest () {
   ## this function runs npm test
   ## init $ARGS
   ARGS=""
+  ## enable npm test mode
   ARGS="$ARGS --mode-npm-test"
-  ## enable interactive repl debugger during test
+  ## enable interactive repl debugger
   ARGS="$ARGS --mode-repl"
+  ## enable test mode
   ARGS="$ARGS --mode-test"
   ## default to random server port
   ARGS="$ARGS --server-port=random"
+  ## init tmpdir
   ARGS="$ARGS --tmpdir=tmp"
   ARGS="$ARGS $@"
   ## extra utility2 test args
@@ -554,7 +548,7 @@ function shUtility2NpmTest () {
 function shUtility2Main () {
   ## this function is the main program and parses argv
 
-  ## don't do anything if no args are provided
+  ## return if argv is empty
   if [ ! "$1" ]
   then
     return
@@ -586,7 +580,7 @@ function shUtility2Main () {
   UTILITY2_EXTERNAL_TAR_GZ=utility2-external.$(echo $NODEJS_PACKAGE_JSON_VERSION\
     | perl -ne "print \$1 if /(\d+\.\d+\.\d+)/").tar.gz
 
-  ## eval args
+  ## eval argv
   eval "${@:1}"
   ## save $EXIT_CODE
   EXIT_CODE=$?

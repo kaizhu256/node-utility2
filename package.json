@@ -12,9 +12,8 @@
   "repository" : { "type" : "git", "url" : "https://github.com/kaizhu256/utility2.git" },
   "scripts": {
     "install": "./utility2.sh shUtility2NpmInstall",
-    "publish": "./utility2.sh shUtility2NpmPublish",
     "start": "./utility2.sh shUtility2NpmStart",
     "test": "./utility2.sh shUtility2NpmTest"
   },
-  "version": "0.2.0-2014-06-01-g"
+  "version": "2014.6.6-2"
 }
