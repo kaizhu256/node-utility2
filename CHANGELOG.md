@@ -5,7 +5,13 @@
 - add usage documentation
 - add html linter
 
-#### 2014.6.6
+#### 2014.6.6 - fe17c1b482d540f1cd1e529ee38dc2020924fd2f
+- fix npmInstall not actually updating utility2 files
+- don&#39;t test published npm package if $NPM_AUTH env var is not supplied
+- add curl error handling in utility2.sh
+- remove $HEROKU_APP var requirement and enforce heroku app name is
+  $NODEJS_PACKAGE_JSON_NAME-unstable
+- fix ajax error handling on saucelabs tests
 - reintroduce CHANGELOG.md
 - remove deadcode for npm post-publish
 - merge .aes-encrypted.sh into .travis.yml
@@ -25,11 +31,12 @@
 - update README.md with loading icons for test / coverage reports when building
 - auto test latest npm package in ci-build
 - deploy to utility2.herokuapp.com instead of utility2-unstable.herokuapp.com
-- update saucelabs job's pass / fail status after attempting recovery
+- update saucelabs job&#39;s pass / fail status after attempting recovery
 - add fault tolerance to recover from saucelabs internal errors
 - merge .encrypted file into utility2.js2
 - update shAesDecrypt / shAesEncrypt to full base64 input / output in utility2.sh
-- add state.modeUtility2Update feature which will update utility2 from github for specified branch
+- add state.modeUtility2Update feature which will update utility2 from github
+  for specified branch
 
 #### 2014.5.20
 - remove postgres dead code

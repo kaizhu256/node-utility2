@@ -6,7 +6,7 @@ utility2 [![npm version](https://img.shields.io/npm/v/utility2.svg?style=flat)](
 
  test server | test report | coverage report | build log | build artifact
 :-----------:|:-----------:|:---------------:|:---------:|:--------------:
-[![heroku.com test server](https://d1lpkba4w1baqt.cloudfront.net/heroku-logo-light-88x31.png)](https://utility2.herokuapp.com/test/test.html) | [![utility2 test report](https://kaizhu256.github.io/utility2/build.travis-ci.org/latest.unstable/test-report.badge.svg)](https://kaizhu256.github.io/utility2/build.travis-ci.org/latest.unstable/test-report.html) | [![istanbul coverage report](https://kaizhu256.github.io/utility2/build.travis-ci.org/latest.unstable/coverage-report/coverage-report.badge.svg)](https://kaizhu256.github.io/utility2/build.travis-ci.org/latest.unstable/coverage-report/utility2/index.html) | [![travis.ci-org build status](https://api.travis-ci.org/kaizhu256/utility2.svg?branch=unstable)](https://travis-ci.org/kaizhu256/utility2?branch=unstable) | [![build artifacts](https://kaizhu256.github.io/public/file/glyphicons_free/glyphicons/png/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/utility2/tree/gh-pages/build.travis-ci.org/latest.unstable)
+[![heroku.com test server](https://d1lpkba4w1baqt.cloudfront.net/heroku-logo-light-88x31.png)](https://utility2-unstable.herokuapp.com/test/test.html) | [![utility2 test report](https://kaizhu256.github.io/utility2/build.travis-ci.org/latest.unstable/test-report.badge.svg)](https://kaizhu256.github.io/utility2/build.travis-ci.org/latest.unstable/test-report.html) | [![istanbul coverage report](https://kaizhu256.github.io/utility2/build.travis-ci.org/latest.unstable/coverage-report/coverage-report.badge.svg)](https://kaizhu256.github.io/utility2/build.travis-ci.org/latest.unstable/coverage-report/utility2/index.html) | [![travis.ci-org build status](https://api.travis-ci.org/kaizhu256/utility2.svg?branch=unstable)](https://travis-ci.org/kaizhu256/utility2?branch=unstable) | [![build artifacts](https://kaizhu256.github.io/public/file/glyphicons_free/glyphicons/png/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/utility2/tree/gh-pages/build.travis-ci.org/latest.unstable)
 
 
 
@@ -18,7 +18,7 @@ npm install -g utility2
 ```
 
 #### quickstart - create new build project
-- https://github.com/kaizhu256/utility2/wiki/quickstart
+- https://github.com/kaizhu256/utility2-example-app
 
 #### start interactive sandbox server
 ```
@@ -62,4 +62,4 @@ utility2 start --server-port=8080
 
 ## admin
 - [edit README.md](https://github.com/kaizhu256/utility2/edit/gh-pages/README.md)
-- counter 3
+- counter 4

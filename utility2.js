@@ -350,11 +350,7 @@
           break;
         case 4:
           /* restore state.mainModule js2 sub-files clobbered by utility2.js2*/
-          state.fsWatchActionDict.eval(
-            state.fsWatchDict[state.mainModule],
-            /* do not eval js scripts */
-            'noEvalJs'
-          );
+          state.fsWatchActionDict.eval(state.fsWatchDict[state.mainModule]);
           /* initModule */
           local._init();
           break;

@@ -15,5 +15,5 @@
     "start": "./utility2.sh shUtility2NpmStart",
     "test": "./utility2.sh shUtility2NpmTest"
   },
-  "version": "2014.6.6-2"
+  "version": "2014.6.6-8"
 }

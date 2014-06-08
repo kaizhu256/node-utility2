@@ -53,7 +53,7 @@ tmp
   denyCurrentBranch = warn
 [remote "heroku"]
   fetch = +refs/heads/*:refs/remotes/heroku/*
-  url = git@heroku.com:utility2.git
+  url = git@heroku.com:utility2-unstable.git
 [remote "origin"]
   fetch = +refs/heads/*:refs/remotes/origin/*
   url = git@github.com:kaizhu256/utility2.git
@@ -296,7 +296,7 @@ exec ssh -i $GIT_SSH_KEY_FILE -o CheckHostIP=no -o StrictHostKeychecking=no -- "
     ]
   ],
   "stateOverride": {
-    "timeoutDefault": 150000
+    "timeoutDefault": 200000
   },
   "url": "https://utility2.herokuapp.com/test/test.html#modeTest=1&timeoutDefault={{timeoutDefault}}"
 }
@@ -1107,47 +1107,6 @@ console.log('hello test');
       /* assert global2.required.utility2 exists */
       utility2.assert(global2.required.utility2, global2.required.utility2);
       onEventError();
-    },
-
-    applyArgList0: function (argList) {
-      /*
-        this function applies argList to the callback in arg position 0
-      */
-      return function (callback) {
-        callback.apply(null, argList);
-      };
-    },
-
-    applyArgList1: function (argList) {
-      /*
-        this function applies argList to the callback in arg position 1
-      */
-      return function (_, callback) {
-        utility2.nop(_);
-        callback.apply(null, argList);
-      };
-    },
-
-    applyArgList2: function (argList) {
-      /*
-        this function applies argList to the callback in arg position 2
-      */
-      return function (_, __, callback) {
-        utility2.nop(_, __);
-        callback.apply(null, argList);
-      };
-    },
-
-    _applyArgListX_default_test: function (onEventError) {
-      /*
-        this function tests applyArgListX's default handling behavior
-      */
-      var onEventReady;
-      onEventReady = utility2.untilReady(onEventError);
-      onEventReady.remaining += 3;
-      utility2.applyArgList0([])(onEventReady);
-      utility2.applyArgList1([])(null, onEventReady);
-      utility2.applyArgList2([])(null, null, onEventReady);
     },
 
     callArg0: function (callback) {
@@ -3996,19 +3955,24 @@ console.log('hello test');
       /*
         this function tests fsWatch's onEventChange nop handling behavior
       */
+      var onEventError2;
       utility2.testMock(onEventError, [
         [global, { state: { fsWatchDict: {}, tmpdir: state.tmpdir } }],
         [required, { fs: {
-          readFile: null,
+          readFile: function () {
+            /* assert required.fs.readFile was called only once by required.fs.watchFile */
+            onEventError2();
+          },
           unwatchFile: utility2.nop,
-          /* test onEventChange nop handling behavior */
-          watchFile: utility2.applyArgList2([{ mtime: 1 }, { mtime: 2 }])
+          watchFile: function (_, __, callback) {
+            utility2.nop(_);
+            utility2.nop(__);
+            /* test onEventChange's nop handling behavior */
+            callback({ mtime: 1 }, { mtime: 2 });
+          }
         } }]
       ], function (onEventError) {
-        /* assert required.fs.readFile was called only once by required.fs.watchFile */
-        required.fs.readFile = function () {
-          onEventError();
-        };
+        onEventError2 = onEventError;
         utility2.fsWatch({ file: '' });
       });
     },
@@ -4017,6 +3981,7 @@ console.log('hello test');
       /*
         this function tests fsWatch's testWatch handling behavior
       */
+      var data;
       utility2.testMock(onEventError, [
         [global, { state: {
           fsWatchActionDict: {
@@ -4024,36 +3989,36 @@ console.log('hello test');
             createContentBrowser: state.fsWatchActionDict.createContentBrowser
           },
           fsWatchDict: {},
-          testWatchList: null
+          testWatchList: [{ write: function (_) {
+            data = _;
+          } }]
         } }],
         [required.fs, {
-          readFile: utility2.applyArgList2([
-            null,
-            /* test nodejs code removal handling behavior */
-            '(function module_fsWatch_testWatch_test_Nodejs() {\n}());'
-          ]),
+          readFile: function (_, __, onEventError) {
+            utility2.nop(_);
+            utility2.nop(__);
+            onEventError(
+              null,
+              /* test nodejs code removal handling behavior */
+              '(function module_fsWatch_testWatch_test_Nodejs() {\n}());'
+            );
+          },
           unWatchFile: utility2.nop,
           watchFile: utility2.nop
         }]
       ], function (onEventError) {
-        var data;
-        state.testWatchList = [{ write: function (_) {
-          data = _;
-        } }];
         utility2.fsWatch({
           actionList: [],
           file: '/_fsWatch_testWatch_test.js'
         }, function (error) {
-          utility2.tryCatch(function () {
-            /* assert no error occurred */
-            utility2.assert(!error, error);
-            /* assert server-sent event data was written to response object */
-            utility2.assert(data === 'data:\n\n', data);
-            data = state.fsWatchDict['/_fsWatch_testWatch_test.js'].contentBrowser;
-            /* assert nodejs code removed from contentBrowser */
-            utility2.assert(data === '', data);
-            onEventError();
-          }, onEventError);
+          /* assert no error occurred */
+          utility2.assert(!error, error);
+          /* assert server-sent event data was written to response object */
+          utility2.assert(data === 'data:\n\n', data);
+          data = state.fsWatchDict['/_fsWatch_testWatch_test.js'].contentBrowser;
+          /* assert nodejs code removed from contentBrowser */
+          utility2.assert(data === '', data);
+          onEventError();
         });
       });
     },
@@ -4117,18 +4082,16 @@ console.log('hello test');
       });
     },
 
-    fsWatchActionDict_eval: function (options, mode) {
+    fsWatchActionDict_eval: function (options) {
       /*
         this function evals the file content
       */
       switch (required.path.extname(options.file)) {
       /* eval js file */
       case '.js':
-        if (mode !== 'noEvalJs') {
-          utility2.evalOnEventError(options.file, options.content, function (error) {
-            utility2.onEventErrorDefault(error);
-          });
-        }
+        utility2.evalOnEventError(options.file, options.content, function (error) {
+          utility2.onEventErrorDefault(error);
+        });
         break;
       /* eval js2 file */
       case '.js2':
@@ -4150,7 +4113,7 @@ console.log('hello test');
             }
             /* run actions */
             options2.actionList.forEach(function (action) {
-              state.fsWatchActionDict[action](options2, mode);
+              state.fsWatchActionDict[action](options2);
             });
             /* auto-generate browser content, stripped of nodejs code */
             state.fsWatchActionDict.createContentBrowser(options2);
@@ -4172,11 +4135,6 @@ console.log('hello test');
         this function tests fsWatchActionDict_eval's misc handling behavior
       */
       /*jslint evil: true*/
-      /* test noEvalJs handling behavior */
-      state.fsWatchActionDict.eval({
-        file: '_fsWatchActionDict_eval_shell_test.js'
-      }, 'noEvalJs');
-      /* test shell handling behavior */
       state.fsWatchActionDict.eval({
         content: ':',
         file: '_fsWatchActionDict_eval_shell_test.sh'
@@ -4425,10 +4383,20 @@ console.log('hello test');
           onEventReady.remaining += data.length;
           /* loop through dir list and update each file from github */
           data.forEach(function (file) {
-            data = 'https://raw.githubusercontent.com/kaizhu256/utility2/'
+            var url;
+            url = 'https://raw.githubusercontent.com/kaizhu256/utility2/'
               + state.modeUtility2Update + '/' + file;
-            utility2.jsonLog('npmInstall - fetching ' + data);
-            utility2.ajax({ url: data }, onEventReady);
+            /* fetch file from github */
+            utility2.ajax({ url: url }, function (error, data) {
+              if (error) {
+                /* ignore error likely due to non-existent remote file */
+                onEventReady();
+                return;
+              }
+              utility2.jsonLog('npmInstall - fetched ' + url);
+              /* update local file with fetched data */
+              required.fs.writeFile(utility2.__dirname + '/' + file, data, onEventReady);
+            });
           });
           break;
         case 3:
@@ -4472,6 +4440,9 @@ console.log('hello test');
         [utility2, { ajax: utility2.callArg1 }]
       ], function (onEventError) {
         /* test state.modeUtility2Update enabled handling behavior */
+        state.modeCliDict[state.modeCli]();
+        /* test state.modeUtility2Update enabled with error handling behavior */
+        utility2.ajax = utility2.callError1;
         state.modeCliDict[state.modeCli]();
         /* test state.modeUtility2Update disabled handling behavior */
         state.modeUtility2Update = null;
@@ -6002,7 +5973,10 @@ console.log('hello test');
           }, onEventReady);
         });
         /* test _Branch_prototype_fileSha's 404 error handling behavior */
-        utility2.ajax = utility2.applyArgList1([new Error('GET 404')]);
+        utility2.ajax = function (_, onEventError) {
+          utility2.nop(_);
+          onEventError(new Error('GET 404'));
+        };
         self.fileSha(null, function (error, data) {
           utility2.tryCatch(function () {
             /* assert no error occurred */
@@ -6253,7 +6227,10 @@ console.log('hello test');
       blob = new Buffer(1);
       self = state.dbGithubDefault;
       utility2.testMock(onEventError, [
-        [self, { fileSha: utility2.applyArgList1([null, local._blobSha(blob)]) }]
+        [self, { fileSha: function (_, onEventError) {
+          utility2.nop(_);
+          onEventError(null, local._blobSha(blob));
+        } }]
       ], function (onEventError) {
         self.fileUpdate(null, blob, function (error) {
           utility2.tryCatch(function () {
@@ -6416,7 +6393,10 @@ console.log('hello test');
           process: { env: { SAUCE_ACCESS_KEY: true, SAUCE_USERNAME: true } },
           state: { testModuleDict: {}, modeOffline: null }
         }],
-        [required, { fs: { exists: utility2.applyArgList1([true]) } }],
+        [required, { fs: { exists: function (_, callback) {
+          utility2.nop(_);
+          callback(true);
+        } } }],
         [utility2, { readyUtility2: null }]
       ], function (onEventError) {
         utility2.readyUtility2 = utility2.untilReady(onEventError);
@@ -6456,6 +6436,10 @@ console.log('hello test');
                 timeoutDefault: 0.5 * state.timeoutDefault
               })
           }));
+          onEventReady = utility2.untilReady(function (error) {
+            mode = -2;
+            onEventError(error);
+          });
           options = {
             data: data,
             headers: {
@@ -6482,10 +6466,6 @@ console.log('hello test');
         case 2:
           /* parse initial saucelabs response */
           utility2.jsonLog('\nheadlessSaucelabs - tests started -', [options, data]);
-          onEventReady = utility2.untilReady(function (error) {
-            mode = -2;
-            onEventError(error);
-          });
           /* create remainingDict of test id's */
           data['js tests'].forEach(function (id) {
             /* increment onEventReady */
@@ -6554,6 +6534,12 @@ console.log('hello test');
           utility2.clearCallSetInterval(intervalId, 'clear');
           /* record time elapsed */
           time = Date.now() - time;
+          /* handle non-test-related error */
+          if (onEventReady.remaining === 0) {
+            onEventReady.remaining += 1;
+            onEventReady(error);
+            return;
+          }
           /* try to recover remaining tests */
           Object.keys(remainingDict).forEach(function (data) {
             data = remainingDict[data];
@@ -6630,9 +6616,17 @@ console.log('hello test');
           utility2.tryCatch(function () {
             /* assert error occurred */
             utility2.assert(error instanceof Error, error);
-            onEventError();
           }, onEventError);
         });
+        /* test ajax error handling behavior */
+        utility2.ajax = utility2.callError1;
+        utility2.headlessSaucelabs({}, function (error) {
+          utility2.tryCatch(function () {
+            /* assert error occurred */
+            utility2.assert(error instanceof Error, error);
+          }, onEventError);
+        });
+        onEventError();
       });
     },
 
@@ -6770,10 +6764,13 @@ console.log('hello test');
             utility2.nop(_);
             local2._headlessSaucelabs_browser_test(onEventError2);
           },
-          streamReadAll: utility2.applyArgList1([null, JSON.stringify({
-            /* test stateOverride handling behavior */
-            "stateOverride": {}
-          })])
+          streamReadAll: function (_, onEventError) {
+            utility2.nop(_);
+            onEventError(null, JSON.stringify({
+              /* test stateOverride handling behavior */
+              "stateOverride": {}
+            }));
+          }
         }]
       ], function (onEventError) {
         onEventError2 = onEventError;
@@ -6811,20 +6808,18 @@ console.log('hello test');
           /* run platform tests sequentially in shell */
           utility2.shell({
             timeout: options.platformsList.length * options.stateOverride.timeoutDefault,
-            /* remove old test report */
-            script: 'rm -f tmp/test-report.json && '
-              /* loop through platformsList */
-              + options.platformsList.map(function (platforms) {
-                /* sleep 1 second between platform tests */
-                /* to give saucelabs some breathing room */
-                return "sleep 1 && echo '"
-                  + JSON.stringify(utility2.setOverride(utility2.jsonCopy(options), {
-                    platforms: platforms,
-                    platformsList: undefined
-                  })) + "' | " + utility2.__filename
-                    + ' --mode-cli=headlessSaucelabs --mode-npm-test --mode-test-report-merge'
-                    + ' --server-port=49221 --tmpdir=tmp';
-              }).join(';')
+            /* loop through platformsList */
+            script: options.platformsList.map(function (platforms) {
+              /* sleep 1 second between platform tests */
+              /* to give saucelabs some breathing room */
+              return "sleep 1 && echo '"
+                + JSON.stringify(utility2.setOverride(utility2.jsonCopy(options), {
+                  platforms: platforms,
+                  platformsList: undefined
+                })) + "' | " + utility2.__filename
+                  + ' --mode-cli=headlessSaucelabs --mode-npm-test --mode-test-report-merge'
+                  + ' --server-port=49221 --tmpdir=' + state.tmpdir;
+            }).join(';')
           }).on('exit', onEventError2);
           break;
         default:
@@ -6850,11 +6845,14 @@ console.log('hello test');
           shell: function () {
             return { on: utility2.callArg1 };
           },
-          streamReadAll: utility2.applyArgList1([null, JSON.stringify({
-            platformsList: [[]],
-            stateOverride: {},
-            url: ''
-          })])
+          streamReadAll: function (_, onEventError) {
+            utility2.nop(_);
+            onEventError(null, JSON.stringify({
+              platformsList: [[]],
+              stateOverride: {},
+              url: ''
+            }));
+          }
         }]
       ], function (onEventError) {
         onEventError2 = onEventError;

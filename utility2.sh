@@ -31,6 +31,10 @@ function shCiBuild () {
   shCiBuildLog aesDecrypt "shasum - $(printf $AES_256_KEY | shasum) \$AES_256_KEY"
   ## decrypt and eval $AES_ENCRYPTED_SH
   eval "$(shUtility2Decrypt)" || exit $?
+  if [ ! "$GITHUB_TOKEN" ]
+  then
+    exit 1
+  fi
   ## init codeship.io env
   if [ "$CODESHIP" ]
   then
@@ -92,17 +96,18 @@ function shCiBuild () {
     then
       shCiBuildSaucelabsTest || shCiBuildExit $?
     fi
-    ## npm publish app if version changed
-    if [ "$NODEJS_PACKAGE_JSON_VERSION" ]\
-      && [ "$NPM_AUTH" ]\
-      && shSemverGreaterThan\
-      "$NODEJS_PACKAGE_JSON_VERSION"\
-      $(npm info $NODEJS_PACKAGE_JSON_NAME version 2>/dev/null)
+    if [ "$NPM_AUTH" ]
     then
-      shCiBuildNpmPublish || shCiBuildExit $?
+      ## npm publish app if version changed
+      if shSemverGreaterThan\
+        "$NODEJS_PACKAGE_JSON_VERSION"\
+        $(npm info $NODEJS_PACKAGE_JSON_NAME version 2>/dev/null)
+      then
+        shCiBuildNpmPublish || shCiBuildExit $?
+      fi
+      ## npm test latest published app
+      shCiBuildNpmTestPublished
     fi
-    ## npm test latest published app
-    shCiBuildNpmTestPublished
     ## save $EXIT_CODE
     EXIT_CODE=$?
     ## copy merged test-report.json into current directory
@@ -168,8 +173,6 @@ function shCiBuildHerokuDeploy () {
   echo $GIT_SSH_KEY | base64 --decode > $GIT_SSH_KEY_FILE || return $?
   ## secure $GIT_SSH_KEY_FILE
   chmod 600 $GIT_SSH_KEY_FILE || return $?
-  ## init $HEROKU_URL
-  local HEROKU_URL=http://$HEROKU_APP.herokuapp.com
   ## init clean repo in /tmp/app
   shCiBuildAppCopy && cd /tmp/app || return $?
   ## init .git
@@ -183,11 +186,13 @@ function shCiBuildHerokuDeploy () {
   ## git commit
   git commit -am "utility2 deploy" || return $?
   ## git push to heroku
-  git push -f git@heroku.com:$HEROKU_APP.git HEAD:master || return $?
+  git push -f git@heroku.com:$NODEJS_PACKAGE_JSON_NAME-unstable.git HEAD:master || return $?
+  ## init $HEROKU_URL
+  local HEROKU_URL=http://$NODEJS_PACKAGE_JSON_NAME-unstable.herokuapp.com
   ## check deployed webpage on heroku
   shCiBuildLog herokuDeploy "checking deployed webpage $HEROKU_URL ..."
   (
-    curl -3Ls $HEROKU_URL > /dev/null\
+    curl -3fLs $HEROKU_URL > /dev/null\
       && shCiBuildLog herokuDeploy "check passed"\
       || (shCiBUildLog herokuDeploy "check failed"; return 1)
   )
@@ -264,7 +269,7 @@ function shGitSquash () {
 function shSaucelabsDebug () {
   ## this function fetches debug info on the given saucelabs test id $1
   local ID=$!
-  curl -X POST https://saucelabs.com/rest/v1/$SAUCE_USERNAME/js-tests/status\
+  curl -3fLs -X POST https://saucelabs.com/rest/v1/$SAUCE_USERNAME/js-tests/status\
     --data "{\"js tests\": [\"$ID\"]}"\
     -H "Content-Type: application/json"\
     -u $SAUCE_USERNAME:$SAUCE_ACCESS_KEY\
@@ -333,7 +338,7 @@ function shTravisEncrypt () {
   local GITHUB_REPO="$1"
   local SECRET="$2"
   ## get public rsa key from https://api.travis-ci.org/repos/<owner>/<repo>/key
-  curl -3Ls https://api.travis-ci.org/repos/$GITHUB_REPO/key\
+  curl -3fLs https://api.travis-ci.org/repos/$GITHUB_REPO/key\
     | perl -pe "s/[^-]+(.+-).+/\$1/; s/\\\\n/\n/g; s/ RSA / /g"\
     > /tmp/id_rsa.pub\
     || return $?
@@ -347,7 +352,7 @@ function shTravisEncrypt () {
 
 function shUtility2Decrypt () {
   ## this function decrypts $AES_ENCRYPTED_SH in .travis.yml to stdout
-  perl -ne "print \$2 if /(^\s*- AES_ENCRYPTED_SH: )(.*)( ## AES_ENCRYPTED_SH\$)/" .travis.yml\
+  perl -ne "print \$2 if /(- AES_ENCRYPTED_SH: )(.*)( ## AES_ENCRYPTED_SH\$)/" .travis.yml\
     | shAesDecrypt\
     || return $?
 }
@@ -379,13 +384,13 @@ function shUtility2Encrypt () {
   fi
   printf "## updating .travis.yml with encrypted key ...\n"
   perl -i -pe\
-    "s%(^\s*- secure: )(.*)( ## AES_256_KEY$)%\$1$AES_256_KEY_ENCRYPTED\$3%"\
+    "s%(- secure: )(.*)( ## AES_256_KEY$)%\$1$AES_256_KEY_ENCRYPTED\$3%"\
     .travis.yml\
     || return $?
 
   printf "## updating .travis.yml with encrypted script ...\n"
   perl -i -pe\
-    "s%(^\s*- AES_ENCRYPTED_SH: )(.*)( ## AES_ENCRYPTED_SH$)%\$1$(shAesEncrypt < $FILE)\$3%"\
+    "s%(- AES_ENCRYPTED_SH: )(.*)( ## AES_ENCRYPTED_SH$)%\$1$(shAesEncrypt < $FILE)\$3%"\
     .travis.yml\
     || return $?
 }
@@ -451,7 +456,7 @@ function shUtility2NpmInstallUtility2 () {
       ## fetch phantomjs
       if [ ! -f "/tmp/$FILE.zip" ]
       then
-        curl -3Ls https://bitbucket.org/ariya/phantomjs/downloads/$FILE.zip\
+        curl -3fLs https://bitbucket.org/ariya/phantomjs/downloads/$FILE.zip\
           > /tmp/$FILE.zip || return $?
       fi
       ## unzip phantomjs
@@ -462,7 +467,7 @@ function shUtility2NpmInstallUtility2 () {
       ## fetch phantomjs
       if [ ! -f "/tmp/$FILE.tar.bz2" ]
       then
-        curl -3Ls https://bitbucket.org/ariya/phantomjs/downloads/$FILE.tar.bz2\
+        curl -3fLs https://bitbucket.org/ariya/phantomjs/downloads/$FILE.tar.bz2\
           > /tmp/$FILE.tar.bz2 || return $?
       fi
       ## untar phantomjs
@@ -486,7 +491,7 @@ function shUtility2NpmInstallUtility2 () {
     ## fetch slimerjs
     if [ ! -f "/tmp/$FILE.tar.bz2" ]
     then
-      curl -3Ls http://download.slimerjs.org/releases/0.9.1/$FILE.tar.bz2\
+      curl -3fLs http://download.slimerjs.org/releases/0.9.1/$FILE.tar.bz2\
         > /tmp/$FILE.tar.bz2 || return $?
     fi
     ## untar slimerjs
@@ -496,8 +501,7 @@ function shUtility2NpmInstallUtility2 () {
   ## install utility2-external
   if [ ! -f ".install/public/utility2-external.nodejs.rollup.js" ]
   then
-    curl -3Ls\
-      https://kaizhu256.github.io/utility2/utility2-external/$UTILITY2_EXTERNAL_TAR_GZ\
+    curl -3fLs https://kaizhu256.github.io/utility2/utility2-external/$UTILITY2_EXTERNAL_TAR_GZ\
       | tar -xzvf -\
       || return $?
   fi
