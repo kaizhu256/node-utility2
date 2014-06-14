@@ -6,7 +6,7 @@
     "istanbul": "0.2.x"
   },
   "description": "utility2 - nodejs test and coverage utility",
-  "main": "utility2.js",
+  "main": "utility2.cli.js",
   "name": "utility2",
   "os": ["darwin", "linux"],
   "repository" : { "type" : "git", "url" : "https://github.com/kaizhu256/utility2.git" },
@@ -15,5 +15,5 @@
     "start": "./utility2.sh shUtility2NpmStart",
     "test": "./utility2.sh shUtility2NpmTest"
   },
-  "version": "2014.6.6-8"
+  "version": "2014.6.15-1"
 }

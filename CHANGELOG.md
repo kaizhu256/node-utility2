@@ -5,7 +5,7 @@
 - add usage documentation
 - add html linter
 
-#### 2014.6.6 - fe17c1b482d540f1cd1e529ee38dc2020924fd2f
+#### 2014.6.6 - 3954ddbcb3496c14ad5ec855cc547b95396a550b
 - fix npmInstall not actually updating utility2 files
 - don&#39;t test published npm package if $NPM_AUTH env var is not supplied
 - add curl error handling in utility2.sh

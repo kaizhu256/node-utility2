@@ -1,0 +1,58 @@
+<!doctype html><html ng-app>
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
+<title>test page</title>
+<link href="/public/utility2/utility2.css" rel="stylesheet"/>
+</head>
+<body>
+<h1>test page</h1>
+
+stock:
+<input id="stockInput" type="text"/>
+<button id="stockInputButton">submit</button>
+<br/><br/>
+
+<table style="background-color:#bbb;text-align:left;">
+<thead>
+<tr>
+<th>Information Source</th><th>Company</th><th>News</th><th>News Time</th><th>Estimate（From -5 to +5</th>
+</tr>
+</thead>
+<tbody>
+
+<tr>
+<td><a href='#'>
+QQ Finance  & Economics</a></td><td>长江实业（00001）</td><td>传长实(00001.HK)香叶道项目获洽购 作价30亿</td><td>2014/6/12 9:33</td><td>3
+</td>
+</tr>
+<tr>
+<td><a href='#'>
+Sinai Finance & Economics</a></td><td>长江实业（00001）</td><td>李嘉诚香港新盘万人抢购,开发商或加速以价换量</td><td>2014/6/4 7:34</td><td>4
+</a>
+</td>
+</tr>
+<tr>
+<td><a href='#'>
+Yahoo Finance</a></td><td> 長實(00001.HK)</td><td>「環宇海灣」錄四宗撻訂個案</td><td>2014/6/11 9:35</td><td>2
+</td>
+</tr>
+<tr>
+<td><a href='#'>
+21cbh</a></td><td>长江实业（00001）</td><td>ST天一6000万变卖长江实业保壳</td><td>2013/9/17 19:28</td><td>-3
+</td>
+</tr>
+
+</tbody>
+</table>
+
+<br><br>
+
+<iframe id="yahooIframe" width='1000' height='800' name='iframename' frameborder='0' src='http://finance.yahoo.com/echarts?s=0696.HK' scrolling="no" style="overflow: hidden;"></iframe>
+<iframe id="insiderIframe" width='1000' height='500' name='iframename' frameborder='0' src='http://sdinotice.hkex.com.hk/di/NSAllSSList.aspx?sa2=as&sid=10107200&corpn=TravelSky+Technology+Ltd.+-+H+Shares&sd=01/01/1990&ed=01/01/2020&sa1=cl&scsd=14%2f06%2f2013&sced=14%2f06%2f2014&sc=0696&src=MAIN&lang=EN&'></iframe>
+
+<script src="//code.jquery.com/jquery-2.1.1.min.js"></script>
+<script src="public/utility2/utility2-external.browser.rollup.min.js"></script>
+<script src="public/utility2/utility2.js"></script>
+<script src="public/app.js"></script>
+</body>
+</html>

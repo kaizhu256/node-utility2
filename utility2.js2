@@ -9,9 +9,7 @@
 ._*
 .build
 .env
-.git
-.gitconfig
-.gitignore
+.git*
 .hg
 .install
 .lock-wscript
@@ -28,12 +26,13 @@ bower_components
 node_modules
 log
 logs
+public/utility2
 tmp
 /* MODULE_END */
 
 
 
-/* MODULE_BEGIN { "actionList": ["trim"], "file": ".install/.git-config" } */
+/* MODULE_BEGIN { "actionList": ["trim"], "file": ".install/git-config" } */
 [branch "gh-pages"]
   remote = origin
   merge = refs/heads/gh-pages
@@ -53,36 +52,32 @@ tmp
   denyCurrentBranch = warn
 [remote "heroku"]
   fetch = +refs/heads/*:refs/remotes/heroku/*
-  url = git@heroku.com:utility2-unstable.git
+  url = git@heroku.com:codeaholics-hackathon-unstable.git
 [remote "origin"]
   fetch = +refs/heads/*:refs/remotes/origin/*
-  url = git@github.com:kaizhu256/utility2.git
+  url = git@github.com:kaizhu256/codeaholics-hackathon.git
 /* MODULE_END */
 
 
 
 /* MODULE_BEGIN { "actionList": ["trim"], "file": ".install/git-ssh.sh" } */
 #!/bin/sh
+## this script overrides the default key file used by ssh
 exec ssh -i $GIT_SSH_KEY_FILE -o CheckHostIP=no -o StrictHostKeychecking=no -- "$@"
 /* MODULE_END */
 
 
 
-/* MODULE_BEGIN { "actionList": ["lint"], "file": ".install/public/utility2-external.browser.js" } */
+/* MODULE_BEGIN { "actionList": ["lint"], "file": "/public/utility2/utility2-external.browser.js" } */
 /*jslint browser: true, indent: 2, maxerr: 8, node: true, nomen: true, regexp: true*/
 /*global global, required, state, utility2*/
-(function moduleInit() {
+(function initModule() {
   'use strict';
   if (typeof window === 'object') {
     window.global = window.global || window;
   }
+  /* init required object */
   global.required = global.required || {};
-  setTimeout(function () {
-    required.utility2_external = required.utility2_external || {};
-    if (global.utility2 && utility2.deferCallback) {
-      utility2.deferCallback('untilReadyUtility2External', 'ready');
-    }
-  });
   return {
     cache: true,
     cachePrefix: '/rollup',
@@ -128,10 +123,10 @@ exec ssh -i $GIT_SSH_KEY_FILE -o CheckHostIP=no -o StrictHostKeychecking=no -- "
 
 
 
-/* MODULE_BEGIN { "actionList": ["lint"], "file": ".install/public/utility2-external.nodejs.js" } */
+/* MODULE_BEGIN { "actionList": ["lint"], "file": "/public/utility2/utility2-external.nodejs.js" } */
 /*jslint browser: true, indent: 2, maxerr: 8, node: true, nomen: true, regexp: true*/
 /*global global, required, state, utility2*/
-(function moduleInit() {
+(function initModule() {
   'use strict';
   if (typeof window === 'object') {
     window.global = window.global || window;
@@ -243,7 +238,7 @@ exec ssh -i $GIT_SSH_KEY_FILE -o CheckHostIP=no -o StrictHostKeychecking=no -- "
 
 
 
-/* MODULE_BEGIN { "actionList": ["trim"], "file": ".install/public/utility2-loading.svg" } */
+/* MODULE_BEGIN { "actionList": ["trim"], "file": "/public/utility2/utility2-loading.svg" } */
 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="8">
 <g transform="translate(8, 4)">
   <rect x="-8" y="-4" width="5" height="8">
@@ -277,21 +272,10 @@ exec ssh -i $GIT_SSH_KEY_FILE -o CheckHostIP=no -o StrictHostKeychecking=no -- "
       ["linux", "android", "4.3"],
       ["linux", "googlechrome", "34"],
       ["linux", "firefox", "29"],
-      ["linux", "opera", "12"]
-    ],
-    [
-      ["osx 10.8", "googlechrome", "beta"],
-      ["osx 10.9", "googlechrome", "34"],
-      ["osx 10.9", "firefox", "28"],
+      ["linux", "opera", "12"],
       ["osx 10.9", "ipad", "7.1"],
       ["osx 10.9", "iphone", "7.1"],
-      ["osx 10.9", "safari", "7"]
-    ],
-    [
-      ["windows 7", "opera", "12"],
-      ["windows 8.1", "googlechrome", "34"],
-      ["windows 8.1", "googlechrome", "beta"],
-      ["windows 8.1", "firefox", "29"],
+      ["osx 10.9", "safari", "7"],
       ["windows 8.1", "iexplore", "11"]
     ]
   ],
@@ -310,7 +294,7 @@ web: npm start --utility2-server-port=$PORT
 
 
 
-/* MODULE_BEGIN { "actionList": ["trim"], "file": "/public/file/testReport.html.template" } */
+/* MODULE_BEGIN { "actionList": ["trim"], "file": "/public/utility2/testReport.html.template" } */
 <style>
 .testReportPlatformDiv {
   border: 1px solid;
@@ -430,19 +414,6 @@ tr:nth-child(odd).testReportPlatformTr {
 
 
 
-/* MODULE_BEGIN { "actionList": ["trim"], "file": "/test/sandbox.html" } */
-<!DOCTYPE html><html>
-<head>
-<meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
-<title>utility2 standbox</title>
-</head>
-<body>
-</body>
-</html>
-/* MODULE_END */
-
-
-
 /* MODULE_BEGIN { "actionList": ["trim"], "file": "/test/test.html" } */
 <!DOCTYPE html><html>
 <head>
@@ -462,7 +433,7 @@ body {
   padding: 5px 10px;
 }
 </style>
-<link href="/public/file/utility2.css" rel="stylesheet"/>
+<link href="/public/utility2/utility2.css" rel="stylesheet"/>
 </head>
 <body>
 <h1>{{name}} test page</h1>
@@ -477,49 +448,9 @@ body {
     location.reload();
   });
 </script>
-<script src="/public/file/utility2/utility2-external.browser.rollup.min.js"></script>
-<script src="/public/file/utility2.js"></script>
+<script src="/public/utility2/utility2-external.browser.rollup.min.js"></script>
+<script src="/public/utility2/utility2.js"></script>
 <script src="{{testScript}}"></script>
-</body>
-</html>
-/* MODULE_END */
-
-
-
-/* MODULE_BEGIN { "actionList": ["trim"], "file": "/test/testSaucelabsHelloWorld.html" } */
-<!DOCTYPE html><html>
-<head>
-<meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
-<title>utility2 hello world test page</title>
-</head>
-<body>
-<script>
-window.global_test_results = {
-  "failed": 0,
-  "testReport": {
-    "errorMessageList": [],
-    "testPlatformList": [
-      {
-        "name": "browser - " + window.navigator.userAgent,
-        "testCaseList": [
-          {
-            "module": "utility2.moduleHelloWorldBrowser",
-            "name": "_saucelabs_default_test",
-            "time":1
-          }
-        ],
-        "totalTime": 2
-      }
-    ],
-    "totalTime": 3
-  }
-};
-/* display window.global_test_results in browser */
-var pre = document.createElement("pre");
-pre.innerHTML = 'window.global_test_results = '
-  + JSON.stringify(window.global_test_results, null, 2).replace((/</g), '&lt;');
-document.body.appendChild(pre);
-</script>
 </body>
 </html>
 /* MODULE_END */
@@ -777,7 +708,7 @@ console.log('hello test');
 
 
 
-/* MODULE_BEGIN { "actionList": ["lint"], "file": "/public/file/utility2.css" } */
+/* MODULE_BEGIN { "actionList": ["lint"], "file": "/public/utility2/utility2.css" } */
 .ajaxProgressBarDiv {
   animation: 2s linear 0s normal none infinite ajaxProgressBarDivAnimation;
   -o-animation: 2s linear 0s normal none infinite ajaxProgressBarDivAnimation;
@@ -838,13 +769,13 @@ console.log('hello test');
 
 
 
-/* MODULE_BEGIN { "actionList": ["lint"], "file": "/public/file/utility2-test.js" } */
+/* MODULE_BEGIN { "actionList": ["lint"], "file": "/public/utility2/utility2-test.js" } */
 /* MODULE_END */
 
 
 
-/* MODULE_BEGIN { "actionList": ["lint", "eval"], "file": "/public/file/utility2.js" } */
-/*jslint browser: true, indent: 2, maxerr: 8, node: true, nomen: true, regexp: true*/
+/* MODULE_BEGIN { "actionList": ["lint", "eval"], "file": "/public/utility2/utility2.js" } */
+/*jslint browser: true, indent: 2, maxerr: 8, node: true, nomen: true, regexp: true, stupid: true*/
 /*global global, required, state, utility2*/
 (function moduleInitShared() {
   /*
@@ -858,15 +789,13 @@ console.log('hello test');
 
     _init: function () {
       var tmp;
-      /* export global object */
+      /* init global object */
       if (typeof window === 'object') {
         window.global = window;
       }
-      /* init global required object */
-      local._initRequired(global);
+      /* init utility2 object */
+      global.utility2 = global.required.utility2 = global.utility2 || {};
       local.setDefault(global, {
-        /* global dummy module object */
-        module: null,
         /* global state object */
         state: {
           /* list of test-generated errors to be ignored */
@@ -875,10 +804,6 @@ console.log('hello test');
           fsWatchDict: {},
           /* dict of server-side test callbacks to be triggered by the browser */
           testCallbackDict: {},
-          /* test report object */
-          testReport: {},
-          /* mock state.testReportDiv dom element */
-          testReportDiv: {},
           /* default timeout */
           timeoutDefault: 120000
         },
@@ -886,13 +811,13 @@ console.log('hello test');
         utility2: {
           assert: local.assert,
           deferCallback: local.deferCallback,
-          initModule: local.initModule,
+          initLocal: local.initLocal,
           onEventErrorDefault: local.onEventErrorDefault,
           onEventTimeout: local.onEventTimeout,
           setDefault: local.setDefault
         }
       });
-      /* debug print */
+      /* init debug print */
       global[['debug', 'Print'].join('')] = utility2._zxqjDp = function (arg) {
         /*
           this internal function is used for tmp debugging,
@@ -904,12 +829,15 @@ console.log('hello test');
         /* return arg for inspection */
         return arg;
       };
-      /* debug onEventError */
+      /* init global.onEventError debug callback */
       global.onEventError = utility2.onEventErrorDefault;
       /* init utility2 for nodejs */
-      if (global.process && process.versions && process.versions.node) {
-        state.modeNodejs = true;
-        local._initNodejs(utility2.require);
+      if (state.modeNodejs) {
+        /* require utility2-external */
+        if (process.argv.indexOf('--mode-cli=npmInstall') < 0) {
+          required.utility2_external = required.utility2_external
+            || utility2.require('./public/utility2/utility2-external.nodejs.rollup.js');
+        }
       }
       /* init utility2 for browser */
       if (global.document
@@ -920,20 +848,19 @@ console.log('hello test');
         state.modeBrowser = true;
         state.modeCoverageInit = 2;
         /* set browser test mode */
-        state.modeTest = state.modeTest
-          || (/\bmodeTest=\w/).test(location.hash);
+        state.modeTest = state.modeTest || (/\bmodeTest=\w/).test(location.hash);
         /* set browser timeoutDefault */
         tmp = (/\btimeoutDefault=(\d+)\b/).exec(location.hash);
         state.timeoutDefault = tmp ? Number(tmp[1]) : state.timeoutDefault;
       }
-      /* export utility2.untilReadyUtility2 */
+      /* init utility2.untilReadyUtility2 */
       utility2.untilReadyUtility2 = utility2.untilReadyUtility2 || function (onEventError) {
         /*
           this function defers the onEventError callback until utility2 is ready
         */
         utility2.deferCallback('untilReadyUtility2', 'defer', onEventError);
       };
-      /* export utility2.readyUtility2 */
+      /* init utility2.readyUtility2 */
       utility2.readyUtility2 = utility2.readyUtility2 || local.untilReady(function (error) {
         /*
           this function is called to indicate that a component of utility2 is ready
@@ -944,7 +871,7 @@ console.log('hello test');
       utility2.readyUtility2.remaining += 1;
       setTimeout(utility2.readyUtility2);
       /* init module */
-      utility2.initModule(module, local);
+      utility2.initLocal(local);
       /* assert state.timeoutDefault is a positive, finite number */
       setTimeout(function () {
         utility2.assert(
@@ -955,9 +882,10 @@ console.log('hello test');
     },
 
     _initOnce: function () {
-      /* export utility2 error object */
+      /* init utility2.error object */
       utility2.error = utility2.error || new Error('utility2 error');
       /* init state.testReport */
+      state.testReport = state.testReport || {};
       utility2.testReportMerge(state.testReport);
       /* init browser */
       local._initOnceBrowser(global);
@@ -967,7 +895,6 @@ console.log('hello test');
       /*
         this function runs browser-side initializations
       */
-      var params;
       if (!state.modeBrowser) {
         return;
       }
@@ -990,19 +917,6 @@ console.log('hello test');
       });
       /* save erver-side testCallbackId */
       state.testCallbackId = utility2.urlParamsGet(global2.location.search).testCallbackId;
-      /* browser testWatch mode */
-      params = utility2.urlParamsGet(global2.location.hash, '#');
-      if (params.testWatch) {
-        /* increment testWatch counter */
-        state.modeTestWatch = (Number(params.testWatch) || 0) + 1;
-        global2.location.hash = utility2.urlParamsMerge(global2.location.hash, {
-          testWatch: state.modeTestWatch
-        }, '#');
-        /* watch server for changes and reload via server-sent events */
-        new global2.EventSource('/test/testWatch').addEventListener('message', function () {
-          global2.location.reload();
-        });
-      }
       /* init testReportDiv element */
       state.testReportDiv = global2.document.getElementById('testReportDiv');
       if (state.testReportDiv) {
@@ -1010,9 +924,9 @@ console.log('hello test');
         setTimeout(function () {
           /* get testReport html template */
           utility2.ajax({
-            url: '/public/file/testReport.html.template'
+            url: '/public/utility2/testReport.html.template'
           }, function (error, data) {
-            state.fsWatchDict['/public/file/testReport.html.template'] = {
+            state.fsWatchDict['/public/utility2/testReport.html.template'] = {
               contentBrowser: data
             };
             utility2.readyUtility2(error);
@@ -1031,82 +945,34 @@ console.log('hello test');
       /*
         this function tests _initOnceBrowser's default handling behavior
       */
+      var data, global2;
       utility2.testMock(onEventError, [
-        [global, { required: { url: required.url }, state: { modeBrowser: null } }],
+        [global, { required: { url: required.url }, state: {} }],
         [utility2, { deferCallback: utility2.callArg2 }]
       ], function (onEventError) {
-        var global2;
         /* test browser mode disabed handling behavior */
+        state.modeBrowser = false;
         local._initOnceBrowser({});
+        data = utility2.jsonStringifyOrdered(global.state);
+        /* validate state */
+        utility2.assert(data === JSON.stringify({ modeBrowser: false }), data);
         /* test browser mode handling behavior */
         state.modeBrowser = true;
         global2 = {
-          /* test server-sent event handling behavior */
-          EventSource: function () {
-            this.addEventListener = utility2.callArg1;
-          },
           /* test state.testReportDiv disabled handling behavior */
           document: { getElementById: utility2.nop },
-          /* test testWatch mode handling behavior */
-          location: { hash: '#testWatch=0', reload: utility2.nop, search: '' }
+          location: { search: '' }
         };
         local._initOnceBrowser(global2);
+        data = utility2.jsonStringifyOrdered(global.state);
+        /* validate state */
+        utility2.assert(data === JSON.stringify({
+          modeBrowser: true,
+          testCallbackId: undefined,
+          testReportDiv: {}
+        }), data);
         onEventError();
       });
-    },
-
-    _initNodejs: function (require) {
-      /*
-        this function inits utility2 for nodejs
-      */
-      /* require utility2-external */
-      try {
-        required.utility2_external = required.utility2_external
-          || require('./.install/public/utility2-external.nodejs.rollup.js');
-      } catch (error) {
-        required.utility2_external = error;
-      }
-    },
-
-    __initNodejs_error_test: function (onEventError) {
-      /*
-        this function tests _initNodejs's error handling behavior
-      */
-      utility2.testMock(onEventError, [
-        [required, { utility2_external: null }]
-      ], function (onEventError) {
-        local._initNodejs(utility2.throwError);
-        /* assert required.utility2_external instanceof Error */
-        utility2.assert(
-          required.utility2_external instanceof Error,
-          required.utility2_external
-        );
-        onEventError();
-      });
-    },
-
-    _initRequired: function (global2) {
-      /*
-        this function inits the global required object
-      */
-      /* init global required object */
-      global2.required = global2.required || {};
-      /* init global utility2 object */
-      global2.utility2 = global2.required.utility2 = global2.utility2 || {};
-    },
-
-    __initRequired_default_test: function (onEventError) {
-      /*
-        this function tests _initRequired's default handling behavior
-      */
-      var global2;
-      global2 = {};
-      local._initRequired(global2);
-      /* assert global2.required exists */
-      utility2.assert(global2.required, global2.required);
-      /* assert global2.required.utility2 exists */
-      utility2.assert(global2.required.utility2, global2.required.utility2);
-      onEventError();
     },
 
     callArg0: function (callback) {
@@ -1132,18 +998,6 @@ console.log('hello test');
       callback();
     },
 
-    _callArgX_default_test: function (onEventError) {
-      /*
-        this function tests callArgX's default handling behavior
-      */
-      var onEventReady;
-      onEventReady = utility2.untilReady(onEventError);
-      onEventReady.remaining += 3;
-      utility2.callArg0(onEventReady);
-      utility2.callArg1(null, onEventReady);
-      utility2.callArg2(null, null, onEventReady);
-    },
-
     callError0: function (onEventError) {
       /*
         this function calls the onEventError callback in arg position 0 with an error object
@@ -1167,10 +1021,22 @@ console.log('hello test');
       onEventError(utility2.error);
     },
 
-    _callErrorX_default_test: function (onEventError) {
+    _callX_default_test: function (onEventError) {
       /*
-        this function tests callErrorX's default handling behavior
+        this function tests callX's default handling behavior
       */
+      utility2.callArg0(function (error) {
+        /* assert no error occurred */
+        utility2.assert(!error, error);
+      });
+      utility2.callArg1(null, function (error) {
+        /* assert no error occurred */
+        utility2.assert(!error, error);
+      });
+      utility2.callArg2(null, null, function (error) {
+        /* assert no error occurred */
+        utility2.assert(!error, error);
+      });
       utility2.callError0(function (error) {
         /* assert error occurred */
         utility2.assert(error instanceof Error, error);
@@ -1216,14 +1082,14 @@ console.log('hello test');
         /* assert error occurred */
         utility2.assert(error instanceof Error, error);
       });
-      /* test assertion failed with message */
+      /* test assertion failed with text message */
       utility2.tryCatch(function () {
         utility2.assert(false, '_assert_default_test');
       }, function (error) {
         /* assert error occurred */
         utility2.assert(error instanceof Error, error);
       });
-      /* test assertion failed with error */
+      /* test assertion failed with error object */
       utility2.tryCatch(function () {
         utility2.assert(false, utility2.error);
       }, function (error) {
@@ -1320,13 +1186,6 @@ console.log('hello test');
       utility2.assert(ii === 3, ii);
     },
 
-    commentShebang: function (script) {
-      /*
-        this function comments out the shebang in a script
-      */
-      return script.replace(/(^#!.*)/, '//$1');
-    },
-
     _createTest: function (global, local2) {
       /*
         this function creates a _Test object
@@ -1384,32 +1243,22 @@ console.log('hello test');
 
     deferCallback: function (key, mode, callback) {
       /*
-        this function defers the callback until a ready-state is triggered
+        this function defers the callback until ready
       */
-      var callback2, self, timeout;
-      callback2 = function () {
-        clearTimeout(timeout);
-        callback.apply(null, arguments);
-      };
+      var self;
       self = state.deferCallbackDict = state.deferCallbackDict || {};
       self = self[key] = self[key] || { callbackList: [] };
       switch (mode) {
       case 'defer':
         /* optimization - fast callback if ready-state already triggered */
         if (self.modeReady) {
-          callback2(self.error);
+          callback(self.error);
           return;
         }
         /* slow deferred callback */
-        self.callbackList.push(callback2);
-        /* set timeout for deferred callback*/
-        self.timeout = timeout = utility2.onEventTimeout(function (error) {
-          self.callbackList.splice(self.callbackList.indexOf(callback2), 1)[0](error);
-        }, state.timeoutDefault, 'deferCallback ' + key);
+        self.callbackList.push(callback);
         break;
       case 'delete':
-        /* clear timeout */
-        clearTimeout(self.timeout);
         delete state.deferCallbackDict[key];
         break;
       case 'ready':
@@ -1420,31 +1269,6 @@ console.log('hello test');
         }
         break;
       }
-    },
-
-    _deferCallback_timeout_test: function (onEventError) {
-      /*
-        this function tests deferCallback's timeout handling behavior
-      */
-      var key;
-      key = utility2.uuid4();
-      utility2.testMock(onEventError, [
-        [global, { state: {} }]
-      ], function (onEventError) {
-        utility2.deferCallback(key, 'defer', function (error) {
-          utility2.tryCatch(function () {
-            /* assert error occurred */
-            utility2.assert(error instanceof Error, error);
-            utility2.assert(error.code === 'ETIMEDOUT', error.code);
-            utility2.deferCallback(key, 'delete');
-            utility2.assert(
-              state.deferCallbackDict[key] === undefined,
-              state.deferCallbackDict[key]
-            );
-            onEventError();
-          }, onEventError);
-        });
-      });
     },
 
     echo: function (arg) {
@@ -1518,18 +1342,11 @@ console.log('hello test');
       onEventError();
     },
 
-    initModule: function (module, local2) {
+    initLocal: function (local2) {
       /*
         this function inits the module with the local object
       */
       var exports;
-      /* wait until utility2-external is loaded */
-      if (!required.utility2_external) {
-        utility2.deferCallback('untilReadyUtility2External', 'defer', function () {
-          utility2.initModule(module, local2);
-        });
-        return;
-      }
       /* assert local2._name */
       utility2.assert(local2._name, 'invalid local2._name ' + local2._name);
       /* module exports */
@@ -1566,27 +1383,9 @@ console.log('hello test');
           exports[key] = local2[key];
         }
       });
-      /* wait until code coverage is ready */
+      /* wait until coverage is ready */
       if (state.modeCoverageInit <= 1) {
         return;
-      }
-      /* run nodejs specific code */
-      if (state.modeNodejs && module && utility2.fsWatch) {
-        /* export exports.__filename */
-        exports.__filename = exports.__filename || module.filename;
-        /* export exports.require */
-        exports.require = exports.require || function (path) {
-          return module.require(path);
-        };
-        state.moduleCacheDict = state.moduleCacheDict || {};
-        if (!state.moduleCacheDict[exports.__filename]) {
-          state.moduleCacheDict[exports.__filename] = module;
-          /* watch module */
-          utility2.fsWatch({
-            actionList: ['lint', 'evalOnWatch'],
-            file: exports.__filename
-          }, utility2.onEventErrorDefault);
-        }
       }
       /* init local2._initOnce */
       state.initOnceDict = state.initOnceDict || {};
@@ -1598,36 +1397,32 @@ console.log('hello test');
       state.testModuleDict = state.testModuleDict || { utility2: true };
       utility2.untilReadyUtility2(function () {
         /* init test */
-        if (state.modeTest !== false
-            /* ensure state.serverListened or not state.modeNodejs */
-            && (!state.modeNodejs || state.serverListened)
-            && (local2._modeTest || (state.modeTest
-              && state.testModuleDict[local2._name.split('.')[0]]))) {
+        if ((local2._modeTest
+              || (state.modeTest && state.testModuleDict[local2._name.split('.')[0]]))) {
           local._createTest(global, local2).run();
         }
       });
     },
 
-    _initModule_default_test: function (onEventError) {
+    _moduleInit_default_test: function (onEventError) {
       /*
-        this function tests initModule's default handling behavior
+        this function tests initLocal's default handling behavior
       */
       utility2.testMock(onEventError, [
         [global, {
           angular: { module: function () {
             return { controller: utility2.nop };
           } },
-          required: { _initModule_default_test: null, utility2_external: true },
+          required: { _moduleInit_default_test: null },
           state: {
             /* test browser mode handling behavior */
             modeBrowser: true,
-            /* test code coverage handling behavior */
+            /* test coverage handling behavior */
             modeCoverageInit: 2,
             /* test nodejs mode handling behavior */
             modeNodejs: true,
             /* test test mode disabled handling behavior */
-            modeTest: false,
-            moduleCacheDict: null
+            modeTest: false
           }
         }],
         [utility2, { fsWatch: utility2.nop }]
@@ -1642,19 +1437,15 @@ console.log('hello test');
           _Aa_prototype_bb: utility2.nop,
           /* test angularjs app handling behavior */
           _aa_ngApp_controller_bb: [],
-          _name: '_initModule_default_test'
+          _name: '_moduleInit_default_test'
         };
         /* test default handling behavior */
-        utility2.initModule({ require: function () {
-          return;
-        } }, local2);
+        utility2.initLocal(local2);
         /* assert local2._Aa.prototype.bb exists */
         utility2.assert(local2._Aa.prototype.bb, local2._Aa.prototype);
         /* assert exports exists */
-        exports = required._initModule_default_test;
+        exports = required._moduleInit_default_test;
         utility2.assert(exports, exports);
-        /* test exports.module handling behavior */
-        exports.require();
         /* assert local2._aa exists */
         utility2.assert(local2._aa, local._aa);
         onEventError();
@@ -1772,38 +1563,6 @@ console.log('hello test');
         utility2.assert(!error, error);
         utility2.assert(data === undefined, data);
       })();
-      onEventError();
-    },
-
-    jsonParseOrError: function (data) {
-      /*
-        this function returns JSON.parse(data) or an error
-      */
-      try {
-        /* handle undefined data by returning undefined */
-        return data && data !== 'undefined' ? JSON.parse(data) : undefined;
-      } catch (error) {
-        return error;
-      }
-    },
-
-    _jsonParseOrError_default_test: function (onEventError) {
-      /*
-        this function tests jsonParseOrError's default handling behavior
-      */
-      var data;
-      /* test default handling behavior */
-      data = utility2.jsonParseOrError('"_jsonParseOrError_default_test"');
-      /* assert data is valid */
-      utility2.assert(data === '_jsonParseOrError_default_test', data);
-      /* test syntax error handling behavior */
-      data = utility2.jsonParseOrError('_jsonParseOrError_syntaxError_test');
-      /* assert error occured */
-      utility2.assert(data instanceof Error, data);
-      /* test undefined handling behavior */
-      data = utility2.jsonParseOrError('undefined');
-      /* assert data is undefined */
-      utility2.assert(data === undefined, data);
       onEventError();
     },
 
@@ -1971,7 +1730,7 @@ console.log('hello test');
     modeIncrement: function (error, mode) {
       /*
         this function increments the mode if no error occurs or returns -1
-        it is used to improve conditional branch code coverage in asynchronous tests
+        it is used to improve conditional branch coverage in asynchronous tests
       */
       return error instanceof Error ? -1 : mode + 1;
     },
@@ -2242,7 +2001,7 @@ console.log('hello test');
           options[key] = defaults2;
           return;
         }
-        /* recurse if options2 and defaults2 are both objects */
+        /* recurse defaults2 if options2 and defaults2 are both objects */
         if (defaults2 && typeof defaults2 === 'object'
             && options2 && typeof options2 === 'object'
             && !Array.isArray(options2)) {
@@ -2653,7 +2412,7 @@ console.log('hello test');
       testCaseNumber = 0;
       testReport = utility2.jsonCopy(utility2.testReportMerge(testReport));
       return utility2.textFormat(
-        state.fsWatchDict['/public/file/testReport.html.template'].contentBrowser,
+        state.fsWatchDict['/public/utility2/testReport.html.template'].contentBrowser,
         utility2.setOverride(testReport, {
           CI_BUILD_NUMBER: processEnv.CI_BUILD_NUMBER,
           /* security - sanitize '<' in text */
@@ -3069,8 +2828,7 @@ console.log('hello test');
 
     untilReady: function (onEventError) {
       /*
-        this function defers the onEventError callback until the remaining counter goes to zero,
-        or an error occurs
+        this function defers the onEventError callback until the remaining counter goes to zero
       */
       var self;
       self = function (error) {
@@ -3080,7 +2838,8 @@ console.log('hello test');
         if (self.remaining === 0) {
           onEventError(self.error);
         }
-        utility2.assert(self.remaining >= 0, 'self.remaining < 0 - ' + self.remaining);
+        /* assert remaining >= 0 */
+        utility2.assert(self.remaining >= 0, 'invalid self.remaining ' + self.remaining);
       };
       self.remaining = 0;
       return self;
@@ -3293,7 +3052,6 @@ console.log('hello test');
     this nodejs module inits utility2
   */
   'use strict';
-  /*jslint stupid: true*/
   var local;
   local = {
 
@@ -3301,26 +3059,41 @@ console.log('hello test');
 
     _init: function () {
       if (state.modeNodejs) {
+        /* require builtin nodejs modules */
+        [
+          'child_process', 'crypto',
+          'fs',
+          'http', 'https',
+          'module',
+          'os',
+          'path',
+          'repl',
+          'stream',
+          'url',
+          'util',
+          'vm'
+        ].forEach(function (module) {
+          required[module] = required[module] || utility2.require(module);
+        });
         /* subclass local._StreamReadableMock from stream.Readable */
         required.util.inherits(local._StreamReadableMock, required.stream.Readable);
-        utility2.initModule(module, local);
+        utility2.initLocal(local);
+        local._initOnce();
       }
     },
 
     _initOnce: function () {
+      if (state.modeCoverageInit > 1) {
+        return;
+      }
+      /* indicate coverage is ready */
+      state.modeCoverageInit += 1;
+
       /* parse commandline arguments */
       local._initOnceArgv();
       /* init npm test mode */
       local._initOnceNpmTest();
-      /* print debug info about the current process */
-      if (state.modeDebugProcess && state.modeDebugProcess !== 'debugged') {
-        state.modeDebugProcess = 'debugged';
-        utility2.jsonLog('debug - process.argv', process.argv);
-        utility2.jsonLog('debug - process.cwd()', process.cwd());
-        utility2.jsonLog('debug - process.pid', process.pid);
-        utility2.jsonLog('debug - process.env', process.env);
-      }
-      /* export utility2.readyUtility2Exit */
+      /* init utility2.readyUtility2Exit */
       utility2.readyUtility2Exit = utility2.readyUtility2Exit
         || utility2.untilReady(function (error) {
           if (error) {
@@ -3345,6 +3118,21 @@ console.log('hello test');
           useGlobal: true
         });
       }
+      /* init utility2.__filename */
+      utility2.__filename = utility2.__filename || utility2.__dirname + '/utility2.cli.js';
+      /* watch files */
+      utility2.fsWatch({
+        actionList: ['lint', 'eval'],
+        file: utility2.__filename
+      });
+      utility2.fsWatch({
+        actionList: ['lint', 'eval'],
+        file: utility2.__dirname + '/utility2.js2'
+      });
+      utility2.fsWatch({
+        actionList: ['lint'],
+        file: process.cwd() + '/public/app.js'
+      });
     },
 
     __initOnce_default_test: function (onEventError) {
@@ -3354,10 +3142,9 @@ console.log('hello test');
       utility2.testMock(onEventError, [
         [global, {
           required: { fs: { exists: utility2.callArg1 } },
-          /* test state.modeDebugProcess handling behavior */
-          state: { modeDebugProcess: true }
+          state: {}
         }],
-        [utility2, { untilReadyUtility2: utility2.nop }],
+        [utility2, { fsWatch: utility2.nop, untilReadyUtility2: utility2.nop }],
         [local, { _initOnceArgv: utility2.nop, _initOnceNpmTest: utility2.nop }]
       ], function (onEventError) {
         local._initOnce();
@@ -3380,7 +3167,6 @@ console.log('hello test');
         }
       });
       argv.forEach(function (arg, ii) {
-        var error;
         arg = arg.split('=');
         /* --foo=true -> state.foo = 1 */
         value = arg.slice(1).join('=')
@@ -3396,8 +3182,11 @@ console.log('hello test');
           value = 'false';
         }
         arg = local._textToCamelCase(arg.slice(2));
-        error = utility2.jsonParseOrError(value);
-        state[arg] = error instanceof Error ? value : error;
+        try {
+          state[arg] = JSON.parse(value);
+        } catch (error) {
+          state[arg] = value;
+        }
       });
     },
 
@@ -3857,67 +3646,28 @@ console.log('hello test');
       local._fsRmr(state.tmpdir + '/cache/' + utility2.uuid4(), onEventError);
     },
 
-    fsWatch: function (options, onEventError) {
+    fsWatch: function (options) {
       /*
         this function watches a file and evals it if it's modified
       */
       var onEventChange;
       onEventChange = function (stat2, stat1) {
-        var mode, onEventError2;
-        mode = 0;
-        onEventError2 = function (error, data) {
-          mode = utility2.modeIncrement(error, mode);
-          switch (mode) {
-          case 1:
-            /* execute following code only if modified timestamp has changed */
-            if (stat2.mtime >= stat1.mtime) {
-              /* read file */
-              required.fs.readFile(options.file, 'utf8', onEventError2);
-              break;
-            }
-            break;
-          case 2:
-            /* send server-sent event to response objects in state.testWatchList */
-            state.testWatchList = state.testWatchList || [];
-            state.testWatchList.forEach(onEventError2);
-            mode += 1;
-            /* save content to options dict */
-            options.content = required.path.extname(options.file) === '.js'
-              ? utility2.coverageInstrumentFileCode(options.file, utility2.commentShebang(data))
-              : data;
-            /* run actions */
-            options.actionList.forEach(onEventError2);
-            mode += 1;
-            /* auto-generate browser content, stripped of nodejs code */
-            state.fsWatchActionDict.createContentBrowser(options);
-            onEventError2();
-            break;
-          /* send server-sent event to response object */
-          case 3:
-            mode -= 1;
-            error.write('data:\n\n');
-            break;
-          case 4:
-            mode -= 1;
-            state.fsWatchActionDict[error](options);
-            break;
-          default:
-            /* set watch mode */
-            if (!options.modeWatch) {
-              options.modeWatch = true;
-              setTimeout(utility2.readyUtility2);
-              /* call onEventError only once */
-              onEventError(error);
-              return;
-            }
-            utility2.onEventErrorDefault(error);
-          }
-        };
-        onEventError2();
+        var data;
+        if (stat2.mtime < stat1.mtime) {
+          return;
+        }
+        data = required.fs.readFileSync(options.file, 'utf8');
+        /* save content to options dict */
+        options.content = required.path.extname(options.file) === '.js'
+          ? utility2.scriptInstrument(options.file, data)
+          : data;
+        /* run actions */
+        options.actionList.forEach(function (action) {
+          state.fsWatchActionDict[action](options);
+        });
+        /* auto-generate browser content, stripped of nodejs code */
+        state.fsWatchActionDict.createContentBrowser(options);
       };
-      if (!options.modeWatch) {
-        utility2.readyUtility2.remaining += 1;
-      }
       options.file = required.path.resolve(options.file);
       /* save options to state.fsWatchDict */
       state.fsWatchDict[options.file] = options;
@@ -3927,100 +3677,6 @@ console.log('hello test');
       required.fs.watchFile(options.file, { interval: 1000, persistent: false }, onEventChange);
       /* synchronously eval the file */
       onEventChange({ mtime: 2 }, { mtime: 1 });
-    },
-
-    _fsWatch_error_test: function (onEventError) {
-      /*
-        this function tests fsWatch's error handling behavior
-      */
-      var file, options;
-      /* test file does not exit error handling behavior */
-      file = state.tmpdir + '/cache/' + utility2.uuid4();
-      options = { actionList: ['lint'], file: file };
-      utility2.fsWatch(options, function (error) {
-        utility2.tryCatch(function () {
-          /* test modeWatch already initialized handling behavior */
-          state.onEventErrorDefaultIgnoreList.push("ENOENT, open '" + file + "'");
-          utility2.fsWatch(options);
-          /* unwatch test file */
-          utility2.fsWatchUnwatch(file);
-          /* assert error occurred */
-          utility2.assert(error instanceof Error, error);
-          onEventError();
-        }, onEventError);
-      });
-    },
-
-    _fsWatch_onEventChangeNop_test: function (onEventError) {
-      /*
-        this function tests fsWatch's onEventChange nop handling behavior
-      */
-      var onEventError2;
-      utility2.testMock(onEventError, [
-        [global, { state: { fsWatchDict: {}, tmpdir: state.tmpdir } }],
-        [required, { fs: {
-          readFile: function () {
-            /* assert required.fs.readFile was called only once by required.fs.watchFile */
-            onEventError2();
-          },
-          unwatchFile: utility2.nop,
-          watchFile: function (_, __, callback) {
-            utility2.nop(_);
-            utility2.nop(__);
-            /* test onEventChange's nop handling behavior */
-            callback({ mtime: 1 }, { mtime: 2 });
-          }
-        } }]
-      ], function (onEventError) {
-        onEventError2 = onEventError;
-        utility2.fsWatch({ file: '' });
-      });
-    },
-
-    _fsWatch_testWatch_test: function (onEventError) {
-      /*
-        this function tests fsWatch's testWatch handling behavior
-      */
-      var data;
-      utility2.testMock(onEventError, [
-        [global, { state: {
-          fsWatchActionDict: {
-            /* test state.fsWatchActionDict.createContentBrowser handling behavior */
-            createContentBrowser: state.fsWatchActionDict.createContentBrowser
-          },
-          fsWatchDict: {},
-          testWatchList: [{ write: function (_) {
-            data = _;
-          } }]
-        } }],
-        [required.fs, {
-          readFile: function (_, __, onEventError) {
-            utility2.nop(_);
-            utility2.nop(__);
-            onEventError(
-              null,
-              /* test nodejs code removal handling behavior */
-              '(function module_fsWatch_testWatch_test_Nodejs() {\n}());'
-            );
-          },
-          unWatchFile: utility2.nop,
-          watchFile: utility2.nop
-        }]
-      ], function (onEventError) {
-        utility2.fsWatch({
-          actionList: [],
-          file: '/_fsWatch_testWatch_test.js'
-        }, function (error) {
-          /* assert no error occurred */
-          utility2.assert(!error, error);
-          /* assert server-sent event data was written to response object */
-          utility2.assert(data === 'data:\n\n', data);
-          data = state.fsWatchDict['/_fsWatch_testWatch_test.js'].contentBrowser;
-          /* assert nodejs code removed from contentBrowser */
-          utility2.assert(data === '', data);
-          onEventError();
-        });
-      });
     },
 
     fsWatchActionDict_base64Decode: function (options) {
@@ -4046,40 +3702,6 @@ console.log('hello test');
           return match.replace((/.*/g), '');
         }
       ).trimRight();
-      /* if production mode, remove test code */
-      if (state.modeProduction) {
-        options.contentBrowser = options.contentBrowser
-          .replace((/^ {4}\S*_test["']{0,1}: function \([\S\s]*?^ {4}\},{0,1}/gm), function (testFunction) {
-            return testFunction.replace(/.*/g, '');
-          });
-      }
-    },
-
-    _fsWatchActionDict_createContentBrowser_production_test: function (onEventError) {
-      /*
-        this function tests fsWatchActionDict_createContentBrowser's
-        production handling behavior
-      */
-      utility2.testMock(onEventError, [
-        /* test state.modeProduction handling behavior */
-        [global, { state: {
-          fsWatchActionDict: state.fsWatchActionDict,
-          modeProduction: true
-        } }]
-      ], function (onEventError) {
-        /*jslint stupid: true*/
-        var options;
-        options = {
-          content: required.fs.readFileSync(utility2.__filename, 'utf8'),
-          file: '_fsWatchActionDict_createContentBrowser_production_test.js'
-        };
-        state.fsWatchActionDict.createContentBrowser(options);
-        utility2.assert(
-          !(/^ {4}\S*_test["']{0,1}: function \(/m).test(options.contentBrowser),
-          options.contentBrowser.slice(-256)
-        );
-        onEventError();
-      });
     },
 
     fsWatchActionDict_eval: function (options) {
@@ -4109,7 +3731,7 @@ console.log('hello test');
             /* instrument js file */
             if (required.path.extname(options2.file) === '.js') {
               options2.content
-                = utility2.coverageInstrumentFileCode(options.file, options2.content);
+                = utility2.scriptInstrument(options.file, options2.content);
             }
             /* run actions */
             options2.actionList.forEach(function (action) {
@@ -4120,85 +3742,7 @@ console.log('hello test');
           }
         );
         break;
-      /* eval shell script */
-      case '.sh':
-        utility2.shell({
-          modeDebug: false,
-          script: options.content
-        }, utility2.onEventErrorDefault);
-        break;
       }
-    },
-
-    _fsWatchActionDict_eval_misc_test: function (onEventError) {
-      /*
-        this function tests fsWatchActionDict_eval's misc handling behavior
-      */
-      /*jslint evil: true*/
-      state.fsWatchActionDict.eval({
-        content: ':',
-        file: '_fsWatchActionDict_eval_shell_test.sh'
-      });
-      onEventError();
-    },
-
-    fsWatchActionDict_evalOnWatch: function (options) {
-      /*
-        this function evals the file content only during a watch event
-      */
-      /*jslint evil: true*/
-      if (options.modeWatch) {
-        state.fsWatchActionDict.eval(options);
-      }
-    },
-
-    _fsWatchActionDict_evalOnWatch_default_test: function (onEventError) {
-      /*
-        this function tests fsWatchActionDict_evalOnWatch's default handling behavior
-      */
-      var file, mode, onEventError2;
-      mode = 0;
-      onEventError2 = function (error) {
-        mode = utility2.modeIncrement(error, mode);
-        switch (mode) {
-        case 1:
-          /* create random tmp file */
-          file = state.tmpdir + '/cache/' + utility2.uuid4() + '.js';
-          /* write to file */
-          required.fs.writeFile(file, '', onEventError2);
-          break;
-        case 2:
-          /* fsWatch file */
-          utility2.fsWatch({ actionList: ['evalOnWatch'], file: file }, onEventError2);
-          break;
-        case 3:
-          /* assert state[file] does not exist */
-          utility2.assert(!state[file], state[file]);
-          /* re-write to file with state changing code */
-          required.fs.writeFile(
-            file,
-            'state[' + JSON.stringify(file) + '] = true;',
-            onEventError2
-          );
-          break;
-        case 4:
-          /* wait for fsWatch to react */
-          setTimeout(onEventError2, 2000);
-          break;
-        case 5:
-          /* assert state[file] exists */
-          utility2.assert(state[file], state[file]);
-          onEventError2();
-          break;
-        default:
-          /* clean up state */
-          delete state[file];
-          /* unwatch file */
-          utility2.fsWatchUnwatch(file);
-          onEventError(error);
-        }
-      };
-      onEventError2();
     },
 
     fsWatchActionDict_lint: function (options) {
@@ -4213,14 +3757,6 @@ console.log('hello test');
         this function trims the file content
       */
       options.content = options.content.trim();
-    },
-
-    fsWatchUnwatch: function (file) {
-      /*
-        this function unwatches the file
-      */
-      required.fs.unwatchFile(file);
-      delete state.fsWatchDict[file];
     },
 
     fsWriteFileAtomic: function (file, data, onEventError) {
@@ -4325,36 +3861,8 @@ console.log('hello test');
       utility2.headlessPhantomjs({
         url: '{{localhost}}/test/test.html'
           + '?testCallbackId={{testCallbackId}}#modeTest=1'
-          + '&testReportUpload=1&testWatch=1&timeoutDefault={{timeoutDefault}}'
+          + '&testReportUpload=1&timeoutDefault={{timeoutDefault}}'
       }, onEventError);
-    },
-
-    kill: function (pid, signal) {
-      /*
-        this function kills the pid, while silently ignoring errors
-      */
-      /* validate pid is a positive, finite number */
-      pid = Number(pid);
-      if (0 < pid && pid < Infinity) {
-        utility2.tryCatch(function () {
-          process.kill(pid, signal);
-        }, utility2.nop);
-      }
-    },
-
-    _kill_default_test: function (onEventError) {
-      /*
-        this function tests kill's default handling behavior
-      */
-      utility2.testMock(onEventError, [
-        [process, { kill: utility2.nop }]
-      ], function (onEventError) {
-        /* test default handling behavior */
-        utility2.kill(1);
-        /* test invalid pid handling behavior */
-        utility2.kill('invalid pid');
-        onEventError();
-      });
     },
 
     modeCliDict_npmInstall: function () {
@@ -4402,11 +3910,11 @@ console.log('hello test');
         case 3:
           /* loop through cached files in state.fsWatchDict and install if necessary */
           Object.keys(state.fsWatchDict).forEach(function (file) {
-            if ((/^(?:\.gitignore|\.install|Procfile)\b/).test(file)) {
+            if ((/^(?:\.gitignore|\.install|Procfile|\/public)\b/).test(file)) {
               /* install file to .install dir */
               required.fs.writeFile(
                 process.cwd() + '/' + file,
-                state.fsWatchDict[file].content,
+                state.fsWatchDict[file].contentBrowser,
                 utility2.onEventErrorDefault
               );
             }
@@ -4639,10 +4147,16 @@ console.log('hello test');
         + ((options.timeout || state.timeoutDefault) / 1000) + '; kill ' + child.pid
         + ' 2>/dev/null'], { stdio: 'ignore' })).pid;
       /* debug shell exit code */
-      child.on('error', utility2.onEventErrorDefault).on('exit', function (exitCode) {
-        utility2.kill(timeout);
-        utility2.jsonLog('shell - process ' + child.pid + ' exited with code ' + exitCode);
-      });
+      child
+        .on('error', utility2.onEventErrorDefault)
+        .on('exit', function (exitCode) {
+          try {
+            /* kill timeout process */
+            process.kill(timeout);
+          } catch (ignore) {
+          }
+          utility2.jsonLog('shell - process ' + child.pid + ' exited with code ' + exitCode);
+        });
       /* debug shell options */
       if (options.modeDebug !== false) {
         utility2.jsonLog('shell - options', options);
@@ -4726,7 +4240,7 @@ console.log('hello test');
         case 1:
           if (state.modeTestReportMerge) {
             required.fs.readFile(
-              state.fsDirBuild + '/test-report.json',
+              state.builddir + '/test-report.json',
               utility2.jsonParseHandler(onEventError2)
             );
             return;
@@ -4744,7 +4258,7 @@ console.log('hello test');
           break;
         case 3:
           /* mkdir testReport */
-          utility2.fsMkdirp(state.fsDirBuild, onEventError2);
+          utility2.fsMkdirp(state.builddir, onEventError2);
           break;
         case 4:
           onEventReady = state.modeNpmTest
@@ -4753,21 +4267,21 @@ console.log('hello test');
           /* write test-report.badge.svg */
           onEventReady.remaining += 3;
           required.fs.writeFile(
-            state.fsDirBuild + '/test-report.badge.svg',
+            state.builddir + '/test-report.badge.svg',
             local._testReportNodejsBadge(testReport),
             onEventReady
           );
           /* write test-report.html */
-          utility2.jsonLog('\ncreating test report file://' + state.fsDirBuild
+          utility2.jsonLog('\ncreating test report file://' + state.builddir
             + '/test-report.html');
           required.fs.writeFile(
-            state.fsDirBuild + '/test-report.html',
+            state.builddir + '/test-report.html',
             utility2.testReportHtml(testReport),
             onEventReady
           );
           /* write test-report.json */
           required.fs.writeFile(
-            state.fsDirBuild + '/test-report.json',
+            state.builddir + '/test-report.json',
             JSON.stringify(testReport, null, 2),
             onEventReady
           );
@@ -4887,7 +4401,7 @@ console.log('hello test');
 
     _init: function () {
       if (state.modeBrowser) {
-        utility2.initModule(module, local);
+        utility2.initLocal(local);
       }
     },
 
@@ -4969,12 +4483,6 @@ console.log('hello test');
             /* handle abort or error event */
             if (event.type !== 'load' || xhr.status >= 400) {
               error = new Error(event.type);
-            /* handle json data */
-            } else if (options.resultType === 'json') {
-              data = utility2.jsonParseOrError(xhr.responseText);
-              if (data instanceof Error) {
-                error = data;
-              }
             /* handle text data */
             } else {
               data = xhr.responseText;
@@ -5244,7 +4752,7 @@ console.log('hello test');
 
     _init: function () {
       if (state.modeNodejs) {
-        utility2.initModule(module, local);
+        utility2.initLocal(local);
       }
     },
 
@@ -5520,17 +5028,7 @@ console.log('hello test');
           + encodeURIComponent(options.url0
             + '#' + options.method), data, utility2.onEventErrorDefault);
       }
-      switch (options.resultType) {
-      case 'binary':
-        onEventError(null, data);
-        break;
-      /* try to JSON.parse the response */
-      case 'json':
-        utility2.jsonParseHandler(onEventError)(error, data && data.toString());
-        break;
-      default:
-        onEventError(null, data.toString());
-      }
+      onEventError(null, options.resultType === 'binary' ? data : data.toString());
     },
 
     __ajaxOnEventData_default_test: function (onEventError) {
@@ -5539,8 +5037,19 @@ console.log('hello test');
       */
       var onEventReady;
       onEventReady = utility2.untilReady(onEventError);
+      onEventReady.remaining += 3;
+      /* test default handling behavior */
+      utility2.ajax({
+        url: '/test/test.json'
+      }, function (error, data) {
+        utility2.tryCatch(function () {
+          /* assert no error occurred */
+          utility2.assert(!error, error);
+          utility2.assert(data === '"hello test"', data);
+          onEventReady();
+        }, onEventReady);
+      });
       /* test binary resultType handling behavior */
-      onEventReady.remaining += 1;
       utility2.ajax({
         resultType: 'binary',
         url: '/test/test.json'
@@ -5552,21 +5061,7 @@ console.log('hello test');
           onEventReady();
         }, onEventReady);
       });
-      /* test json resultType handling behavior */
-      onEventReady.remaining += 1;
-      utility2.ajax({
-        resultType: 'json',
-        url: '/test/test.json'
-      }, function (error, data) {
-        utility2.tryCatch(function () {
-          /* assert no error occurred */
-          utility2.assert(!error, error);
-          utility2.assert(data.toString() === 'hello test', data);
-          onEventReady();
-        }, onEventReady);
-      });
       /* test error handling behavior */
-      onEventReady.remaining += 1;
       local._ajaxOnEventData(null, function (error) {
         utility2.tryCatch(function () {
           /* assert error occurred */
@@ -5682,7 +5177,7 @@ console.log('hello test');
     _name: 'utility2.moduleAjaxShared',
 
     _init: function () {
-      utility2.initModule(module, local);
+      utility2.initLocal(local);
     },
 
     ajax: function (options, onEventError) {
@@ -5716,33 +5211,6 @@ console.log('hello test');
         this function tests ajax's default handling behavior
       */
       utility2.ajax({ modeDebug: true, url: '/' }, onEventError);
-    },
-
-    _ajax_json_test: function (onEventError) {
-      /*
-        this function tests ajax's json handling behavior
-      */
-      utility2.ajax({ resultType: 'json', url: '/test/test.json' }, function (error, data) {
-        utility2.tryCatch(function () {
-          /* assert no error occurred */
-          utility2.assert(!error, error);
-          utility2.assert(data.toString() === 'hello test', data);
-          onEventError();
-        }, onEventError);
-      });
-    },
-
-    _ajax_jsonError_test: function (onEventError) {
-      /*
-        this function tests ajax's json error handling behavior
-      */
-      utility2.ajax({ resultType: 'json', url: '/test/test.css' }, function (error) {
-        utility2.tryCatch(function () {
-          /* assert error occurred */
-          utility2.assert(error instanceof Error, error);
-          onEventError();
-        }, onEventError);
-      });
     },
 
     _ajax_nullCase_test: function (onEventError) {
@@ -5861,23 +5329,23 @@ console.log('hello test');
 
 
 
-(function moduleDbGithubNodejs() {
+(function moduleGithubNodejs() {
   /*
-    this nodejs module exports the github db api
+    this nodejs module exports the github api
   */
   'use strict';
   var local;
   local = {
 
-    _name: 'utility2.moduleDbGithubNodejs',
+    _name: 'utility2.moduleGithubNodejs',
 
     _init: function () {
-      if (state.modeDbGithub
+      if (state.modeGithub
           && state.modeNodejs
           && process.env.GITHUB_TOKEN) {
-        utility2.initModule(module, local);
-        state.dbGithubDefault = state.dbGithubDefault
-          || local._createDbGithub(state.modeDbGithub, process.env.GITHUB_TOKEN);
+        utility2.initLocal(local);
+        state.githubDefault = state.githubDefault
+          || local._createGithub(state.modeGithub, process.env.GITHUB_TOKEN);
       }
     },
 
@@ -5903,7 +5371,7 @@ console.log('hello test');
         this function tests _Branch's default handling behavior
       */
       var file, mode, onEventError2, self;
-      self = state.dbGithubDefault;
+      self = state.githubDefault;
       mode = 0;
       onEventError2 = function (error) {
         mode = utility2.modeIncrement(error, mode);
@@ -5947,7 +5415,7 @@ console.log('hello test');
         var onEventReady, self;
         onEventReady = utility2.untilReady(onEventError);
         onEventReady.remaining += 4;
-        self = state.dbGithubDefault;
+        self = state.githubDefault;
         /* test _Branch_prototype_fileDelete's error handling behavior */
         self.fileDelete(null, function (error) {
           utility2.tryCatch(function () {
@@ -5998,7 +5466,7 @@ console.log('hello test');
         'content-length': options.data ? Buffer.byteLength(options.data) : 0,
         /* BUG - github api requires user-agent header */
         'user-agent': 'unknown'
-      }, resultType: 'json' }), onEventError);
+      } }), utility2.jsonParseHandler(onEventError));
     },
 
     _Branch_prototype_branchMerge: function (other, commitMessage, onEventError) {
@@ -6020,7 +5488,7 @@ console.log('hello test');
         this function tests _Branch_prototype_branchMerge's default handling behavior
       */
       var self;
-      self = state.dbGithubDefault;
+      self = state.githubDefault;
       utility2.testMock(onEventError, [
         [self, { ajax: utility2.callArg1 }]
       ], function (onEventError) {
@@ -6084,9 +5552,8 @@ console.log('hello test');
       /*
         this function tests _Branch_prototype_dirUpdate's default handling behavior
       */
-      /*jslint stupid: true*/
       var self;
-      self = state.dbGithubDefault;
+      self = state.githubDefault;
       utility2.testMock(onEventError, [
         [required.fs, {
           /* mock readdir as a synchronous io operation */
@@ -6225,7 +5692,7 @@ console.log('hello test');
       */
       var blob, self;
       blob = new Buffer(1);
-      self = state.dbGithubDefault;
+      self = state.githubDefault;
       utility2.testMock(onEventError, [
         [self, { fileSha: function (_, onEventError) {
           utility2.nop(_);
@@ -6248,7 +5715,7 @@ console.log('hello test');
       */
       var blob, self;
       blob = new Buffer(1);
-      self = state.dbGithubDefault;
+      self = state.githubDefault;
       utility2.testMock(onEventError, [
         [self, { ajax: utility2.callArg1, fileSha: utility2.callArg1 }]
       ], function (onEventError) {
@@ -6262,9 +5729,9 @@ console.log('hello test');
       });
     },
 
-    _createDbGithub: function (ownerRepoBranch, token) {
+    _createGithub: function (ownerRepoBranch, token) {
       /*
-        this function creates a github db branch for storing files
+        this function creates a github object for storing files
       */
       var self;
       self = new local._Branch();
@@ -6276,60 +5743,60 @@ console.log('hello test');
       return self;
     },
 
-    modeCliDict_dbGithubDirUpdate: function () {
+    modeCliDict_githubDirUpdate: function () {
       /*
         this function deletes the file on github
       */
       utility2.jsonLog('updating dir https://github.com/'
-        + state.modeDbGithub.replace(/([^\/]+$)/, 'tree/$1')
-        + state.dbGithubFile);
+        + state.modeGithub.replace(/([^\/]+$)/, 'tree/$1')
+        + state.githubFile);
       utility2.readyUtility2Exit.remaining += 1;
-      state.dbGithubDefault.dirUpdate(
-        state.dbGithubFile,
-        state.dbGithubLocal,
+      state.githubDefault.dirUpdate(
+        state.githubFile,
+        state.githubLocal,
         utility2.readyUtility2Exit
       );
     },
 
-    modeCliDict_dbGithubFileDelete: function () {
+    modeCliDict_githubFileDelete: function () {
       /*
         this function deletes the file on github
       */
       utility2.jsonLog('deleting https://raw.githubusercontent.com/'
-        + state.modeDbGithub
-        + state.dbGithubFile);
+        + state.modeGithub
+        + state.githubFile);
       utility2.readyUtility2Exit.remaining += 1;
-      state.dbGithubDefault.fileDelete(
-        state.dbGithubFile,
+      state.githubDefault.fileDelete(
+        state.githubFile,
         utility2.readyUtility2Exit
       );
     },
 
-    modeCliDict_dbGithubFileUpdate: function () {
+    modeCliDict_githubFileUpdate: function () {
       /*
         this function updates the file on github
       */
       utility2.jsonLog('updating https://raw.githubusercontent.com/'
-        + state.modeDbGithub
-        + state.dbGithubFile);
+        + state.modeGithub
+        + state.githubFile);
       utility2.readyUtility2Exit.remaining += 1;
       utility2.streamReadAll(process.stdin, function (error, data) {
         /* assert no error occurred */
         utility2.assert(!error, error);
-        state.dbGithubDefault.fileUpdate(
-          state.dbGithubFile,
+        state.githubDefault.fileUpdate(
+          state.githubFile,
           data,
           utility2.readyUtility2Exit
         );
       });
     },
 
-    _modeCliDict_dbGithubFileUpdate_default_test: function (onEventError) {
+    _modeCliDict_githubFileUpdate_default_test: function (onEventError) {
       /*
-        this function tests modeCliDict_dbGithubFileUpdate's default handling behavior
+        this function tests modeCliDict_githubFileUpdate's default handling behavior
       */
       utility2.testMock(onEventError, [
-        [state, { dbGithubDefault: {
+        [state, { githubDefault: {
           branchMerge: utility2.nop,
           dirUpdate: utility2.nop,
           fileDelete: utility2.nop,
@@ -6338,11 +5805,11 @@ console.log('hello test');
         [utility2, { readyUtility2Exit: {}, streamReadAll: utility2.callArg1 }]
       ], function (onEventError) {
         /* test dir update handling behavior */
-        state.modeCliDict.dbGithubDirUpdate();
+        state.modeCliDict.githubDirUpdate();
         /* test file delete handling behavior */
-        state.modeCliDict.dbGithubFileDelete();
+        state.modeCliDict.githubFileDelete();
         /* test file update handling behavior */
-        state.modeCliDict.dbGithubFileUpdate();
+        state.modeCliDict.githubFileUpdate();
         onEventError();
       });
     }
@@ -6361,11 +5828,11 @@ console.log('hello test');
   var local;
   local = {
 
-    _name: 'utility2.moduleSaucelabsNodejs',
+    _name: 'utility2.moduleHeadlessSaucelabsNodejs',
 
     _init: function () {
       if (state.modeNodejs) {
-        utility2.initModule(module, local);
+        utility2.initLocal(local);
       }
     },
 
@@ -6450,7 +5917,6 @@ console.log('hello test');
             },
             /* platforms needed for later debugging */
             platforms: options.platforms,
-            resultType: 'json',
             url: 'https://saucelabs.com/rest/v1/' + process.env.SAUCE_USERNAME + '/js-tests'
           };
           remainingDict = {};
@@ -6461,7 +5927,10 @@ console.log('hello test');
             state.timeoutDefault,
             'headlessSaucelabs ' + options.url
           );
-          utility2.ajax(utility2.jsonCopy(options), utility2.tryCatchHandler(onEventError2));
+          utility2.ajax(
+            utility2.jsonCopy(options),
+            utility2.tryCatchHandler(utility2.jsonParseHandler(onEventError2))
+          );
           break;
         case 2:
           /* parse initial saucelabs response */
@@ -6486,7 +5955,10 @@ console.log('hello test');
               url: 'https://saucelabs.com/rest/v1/' + process.env.SAUCE_USERNAME
                 + '/js-tests/status'
             });
-            utility2.ajax(utility2.jsonCopy(options), utility2.tryCatchHandler(onEventError2));
+            utility2.ajax(
+              utility2.jsonCopy(options),
+              utility2.tryCatchHandler(utility2.jsonParseHandler(onEventError2))
+            );
           }, 10000, state.timeoutDefault - (Date.now() - time));
           break;
         case 4:
@@ -6643,9 +6115,8 @@ console.log('hello test');
           jobId = testReport.job_id;
           /* fetch saucelabs logs */
           utility2.ajax({
-            resultType: 'json',
             url: 'https://saucelabs.com/jobs/' + jobId + '/log.json'
-          }, utility2.tryCatchHandler(onEventError2));
+          }, utility2.tryCatchHandler(utility2.jsonParseHandler(onEventError2)));
           break;
         case 2:
           /* try to recover testReport from saucelabs logs */
@@ -6709,7 +6180,7 @@ console.log('hello test');
         [global, { state: { testReport: {} } }],
         [utility2, { ajax: function (_, onEventError) {
           utility2.nop(_);
-          onEventError(null, [null, { result: { testReport: testReport } } ]);
+          onEventError(null, JSON.stringify([null, { result: { testReport: testReport } } ]));
         } }]
       ], function (onEventError) {
         /* test testReport recovery failed handling behavior */
@@ -6741,7 +6212,7 @@ console.log('hello test');
         utility2.setOverride(state, data.stateOverride);
         /* remove stateOverride param */
         delete data.stateOverride;
-        utility2.initModule(module, {
+        utility2.initLocal({
           _headlessSaucelabs_browser_test: function (onEventError) {
             utility2.headlessSaucelabs(data, onEventError);
           },
@@ -6760,8 +6231,7 @@ console.log('hello test');
         [global, { state: { modeCliDict: state.modeCliDict, testModuleDict: {} } }],
         [utility2, {
           headlessSaucelabs: utility2.callArg1,
-          initModule: function (_, local2) {
-            utility2.nop(_);
+          initLocal: function (local2) {
             local2._headlessSaucelabs_browser_test(onEventError2);
           },
           streamReadAll: function (_, onEventError) {
@@ -6878,7 +6348,7 @@ console.log('hello test');
 
     _init: function () {
       if (state.modeNodejs) {
-        utility2.initModule(module, local);
+        utility2.initLocal(local);
       }
     },
 
@@ -6940,7 +6410,7 @@ console.log('hello test');
 
     _init: function () {
       if (state.modeNodejs) {
-        utility2.initModule(module, local);
+        utility2.initLocal(local);
       }
     },
 
@@ -7004,7 +6474,7 @@ console.log('hello test');
         [local, { _rollupFile: utility2.nop }],
         [state, { modeCli: 'rollupFileList', rollupFileList: 'aa,bb' }]
       ], function (onEventError) {
-        state.modeCliDict[state.modeCli]();
+        local.modeCliDict_rollupFileList();
         onEventError();
       });
     },
@@ -7291,8 +6761,8 @@ console.log('hello test');
     _name: 'utility2.moduleServerNodejs',
 
     _init: function () {
-      if (!(required.utility2_external instanceof Error) && state.modeNodejs) {
-        utility2.initModule(module, local);
+      if (required.utility2_external) {
+        utility2.initLocal(local);
       }
     },
 
@@ -7338,22 +6808,24 @@ console.log('hello test');
       }
     },
 
-    'router3CacheDict_/public/file/utility2': function (_, response, next) {
-      /*
-        this function caches files served from /public/file/utility2
-      */
-      utility2.nop(_);
-      utility2.serverResponseWriteHead(response, null, {
-        'cache-control': 'public, max-age=31536000'
-      });
-      next();
-    },
+    // 'router3CacheDict_/public/utility2': function (_, response, next) {
+      // /*
+        // this function caches files served from /public/utility2
+      // */
+      // utility2.nop(_);
+      // utility2.serverResponseWriteHead(response, null, {
+        // 'cache-control': 'public, max-age=31536000'
+      // });
+      // next();
+    // },
 
     'router4ProxyDict_/proxy/proxy.ajax': function (request, response, next) {
       /*
         this function proxies frontend request
       */
       var headers, url;
+      /* allow cors */
+      response.setHeader('Access-Control-Allow-Origin', '*');
       url = request.url.replace('/proxy/proxy.ajax/', '');
       /* create modified copy of request.header */
       headers = utility2.jsonCopy(request.headers);
@@ -7385,7 +6857,7 @@ console.log('hello test');
         local['router4ProxyDict_/proxy/proxy.ajax']({
           headers: {},
           url: ''
-        }, null, function (error) {
+        }, { setHeader: utility2.nop }, function (error) {
           utility2.tryCatch(function () {
             /* assert error occurred */
             utility2.assert(error instanceof Error, error);
@@ -7400,12 +6872,7 @@ console.log('hello test');
         this function handles the main page
       */
       if (request.urlPathNormalized === '/') {
-        utility2.serverRespond(
-          request,
-          response,
-          request.urlParams.redirectCode || 303,
-          { headers: { location: '/test/test.html' } }
-        );
+        utility2.serverRespondFile(response, process.cwd() + '/index.html', next);
         return;
       }
       next();
@@ -7524,47 +6991,6 @@ console.log('hello test');
       });
     },
 
-    'router5MainDict_/test/testWatch': function (request, response, next) {
-      /*
-        this function informs the client about server file changes using server-sent events
-      */
-      var list;
-      if (request.headers.accept !== 'text/event-stream') {
-        next();
-        return;
-      }
-      /* https://developer.mozilla.org/en-US/docs/Server-sent_events/Using_server-sent_events */
-      utility2.serverResponseWriteHead(response, null, { 'content-type': 'text/event-stream' });
-      /* set retry interval to state.timeoutDefault */
-      response.write('retry: ' + state.timeoutDefault + '\n\n');
-      list = state.testWatchList;
-      /* limit max number of server-sent events */
-      if (list.length >= 8) {
-        list.pop();
-      }
-      list.unshift(utility2.unref(response));
-    },
-
-    '_router5MainDict_/test/testWatch_garbageCollect_test': function (onEventError) {
-      /*
-        this function tests _router5MainDict_/test/testWatch's garbage collect
-        handling behavior
-      */
-      utility2.testMock(onEventError, [
-        [global, { state: { testWatchList: [0, 1, 2, 3, 4, 5, 6, 7] } }]
-      ], function (onEventError) {
-        var response;
-        response = { setHeader: utility2.nop, write: utility2.nop };
-        local['router5MainDict_/test/testWatch'](
-          { headers: { accept: 'text/event-stream' } },
-          response
-        );
-        utility2.assert(state.testWatchList.length === 8, state.testWatchList);
-        utility2.assert(state.testWatchList[0] === response, state.testWatchList);
-        onEventError();
-      });
-    },
-
     'router6FileDict_/public': function (request, response, next) {
       /*
         this function serves public files
@@ -7579,18 +7005,6 @@ console.log('hello test');
       }
       /* fallback to physical file */
       utility2.serverRespondFile(response, process.cwd() + request.urlPathNormalized, next);
-    },
-
-    'router6FileDict_/public/file/utility2': function (request, response, next) {
-      /*
-        this function serves public, utility2 files
-      */
-      utility2.serverRespondFile(
-        response,
-        utility2.__dirname + '/.install/public/'
-          + request.urlPathNormalized.replace('/public/file/utility2/', ''),
-        next
-      );
     },
 
     'router6FileDict_/test': function (request, response, next) {
@@ -7614,9 +7028,9 @@ console.log('hello test');
       */
       utility2.serverRespond(request, response, 200, {
         data: utility2.textFormat(state.fsWatchDict['/test/test.html'].contentBrowser, {
-          name: state.packageJson.name,
+          name: state.name,
           testModuleDict: JSON.stringify(state.testModuleDict),
-          testScript: state.testScript || '/public/file/utility2-test.js'
+          testScript: state.testScript || '/public/utility2/utility2-test.js'
         })
       });
     },
@@ -7962,7 +7376,7 @@ console.log('hello test');
     _name: 'utility2.moduleServerShared',
 
     _init: function () {
-      utility2.initModule(module, local);
+      utility2.initLocal(local);
     },
 
     '_router1LoggingDict_/_ignoreLogging_test': function (onEventError) {
@@ -8016,19 +7430,6 @@ console.log('hello test');
       });
     },
 
-    '_router5MainDict_/test/testWatch_nullCase_test': function (onEventError) {
-      /*
-        this function tests _router5MainDict_/test/testWatch's null case handling behavior
-      */
-      utility2.ajax({ url: '/test/testWatch' }, function (error) {
-        utility2.tryCatch(function () {
-          /* assert error occurred */
-          utility2.assert(error instanceof Error, error);
-          onEventError();
-        }, onEventError);
-      });
-    },
-
     '_router6FileDict_/public_404_test': function (onEventError) {
       /*
         this function tests router6FileDict_/public's 404 handling behavior
@@ -8044,5 +7445,61 @@ console.log('hello test');
   };
   local._init();
 }());
-/* MODULE_END */
 
+
+
+(function moduleCliExportEnvNodejs() {
+  /*
+    this nodejs module exports the nodejs env to its parent shell process
+  */
+  'use strict';
+  var local;
+  local = {
+
+    _name: 'utility2.moduleCliExportEnvNodejs',
+
+    _init: function (global) {
+      var envDict, tmp, value;
+      if (global.utility2 && utility2.initLocal) {
+        utility2.initLocal(local);
+      }
+      if (!state.modeModuleEval) {
+        return;
+      }
+      envDict = { NODEJS_PROCESS_PID: process.pid };
+      /* save process vars to env */
+      ['argv', 'cwd', 'pid', 'platform', 'versions'].forEach(function (key) {
+        value = process[key];
+        /* traverse one level for sub-dict */
+        if (typeof value === 'object') {
+          Object.keys(value).forEach(function (key2) {
+            envDict['NODEJS_PROCESS_' + key.toUpperCase() + '_' + key2.toUpperCase()]
+              = String(value[key2]);
+          });
+        } else {
+          envDict['NODEJS_PROCESS_' + key.toUpperCase()]
+            /* set value to return value of function */
+            = String(typeof value === 'function' ? value() : value);
+        }
+      });
+      /* load package.json file */
+      tmp = JSON.parse(
+        require('fs').readFileSync(process.cwd() + '/package.json')
+      );
+      /* save package.json vars to env */
+      Object.keys(tmp).forEach(function (key) {
+        value = tmp[key];
+        if (typeof value === 'string') {
+          envDict['NODEJS_PACKAGE_JSON_' + key.toUpperCase()] = value;
+        }
+      });
+      /* export env */
+      process.stdout.write(Object.keys(envDict).sort().map(function (key) {
+        return 'export ' + key + '=' + JSON.stringify(envDict[key]);
+      }).join(' && ').replace((/`/g), "'"));
+    }
+
+  };
+  local._init(global);
+}());
+/* MODULE_END */
