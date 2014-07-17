@@ -1,19 +1,25 @@
 {
-  "bin": { "utility2": "./utility2.sh" },
-  "bundledDependencies": ["istanbul"],
+  "bin": { "utility2": "main.js" },
   "contributors": [{ "name": "kai zhu", "email": "kaizhu256@gmail.com" }],
-  "dependencies": {
-    "istanbul": "0.2.x"
+  "description": "lightweight nodejs test and coverage utility",
+  "devDependencies": {
+    "istanbul": "0.2.x",
+    "jslint-lite": "2014.x.x",
+    "phantomjs": "1.9.x",
+    "slimerjs": "0.9.x"
   },
-  "description": "utility2 - nodejs test and coverage utility",
-  "main": "utility2.cli.js",
+  "engines": { "node": ">=0.10.x" },
+  "main": "main.js",
   "name": "utility2",
   "os": ["darwin", "linux"],
-  "repository" : { "type" : "git", "url" : "https://github.com/kaizhu256/utility2.git" },
-  "scripts": {
-    "install": "./utility2.sh shUtility2NpmInstall",
-    "start": "./utility2.sh shUtility2NpmStart",
-    "test": "./utility2.sh shUtility2NpmTest"
+  "repository" : {
+    "type" : "git",
+    "url" : "https://github.com/kaizhu256/node-utility2.git"
   },
-  "version": "2014.6.15-1"
+  "scripts": {
+    "install": "./utility2.sh shNpmInstall",
+    "start": "./utility2.sh shNpmStart",
+    "test": "./utility2.sh shNpmTest"
+  },
+  "version": "2014.7.12-2"
 }

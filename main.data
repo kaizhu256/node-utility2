@@ -1,0 +1,22 @@
+/* MODULE_BEGIN { "actionList": ["trim", "install"], "file": ".git-config" } */
+[branch "master"]
+  remote = origin
+  merge = refs/heads/master
+[branch "unstable"]
+  remote = origin
+  merge = refs/heads/unstable
+[core]
+  bare = false
+  filemode = true
+  ignorecase = true
+  logallrefupdates = true
+  repositoryformatversion = 0
+[receive]
+  denyCurrentBranch = warn
+[remote "heroku"]
+  fetch = +refs/heads/*:refs/remotes/heroku/*
+  url = git@heroku.com:hrku01-utility2.git
+[remote "origin"]
+  fetch = +refs/heads/*:refs/remotes/origin/*
+  url = git@github.com:kaizhu256/node-utility2.git
+/* MODULE_END */

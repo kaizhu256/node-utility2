@@ -1,0 +1,387 @@
+/* MODULE_BEGIN { "actionList": ["trim", "install"], "file": ".gitignore" } */
+*.bak
+*.log
+*.min.*
+*.pid
+*.swp
+*decrypted*
+.DS_Store
+._*
+.build
+.env
+.git*
+.hg
+.install
+.lock-wscript
+.npmrc
+.src
+.svn
+.vim
+.wafpickle-*
+CVS
+Procfile
+README.*
+artifacts
+bower_components
+node_modules
+log
+logs
+tmp
+/* MODULE_END */
+
+
+
+/* MODULE_BEGIN { "actionList": ["trim"], "file": "https%3A%2F%2Fimg.shields.io%2Fbadge%2Fcoverage-100.0%25-00dd00.svg%3Fstyle%3Dflat" } */
+<svg xmlns="http://www.w3.org/2000/svg" width="117" height="20">
+<linearGradient id="a" x2="0" y2="100%">
+  <stop offset="0" stop-color="#fff" stop-opacity=".1"/>
+  <stop offset=".1" stop-color="#fff" stop-opacity=".1"/>
+  <stop offset=".9" stop-color="#fff" stop-opacity=".1"/>
+  <stop offset="1" stop-color="#fff" stop-opacity=".1"/>
+</linearGradient>
+<path fill="#555" d="M0 0h117v20h-117z"/>
+<path fill="#0d0" d="M63 0h54v20h-54zM63 0h4v20h-4z"/>
+<path fill="url(#a)" d="M0 0h117v20h-117z"/>
+<g fill="#fff" text-anchor="middle" font-family="arial" font-size="11">
+  <text x="32.5" y="13">coverage</text><text x="89" y="13">100.0%</text>
+</g>
+</svg>
+/* MODULE_END */
+
+
+
+/* MODULE_BEGIN { "actionList": ["trim"], "file": "https%3A%2F%2Fimg.shields.io%2Fbadge%2Ftests_failed-999-dd0000.svg%3Fstyle%3Dflat" } */
+<svg xmlns="http://www.w3.org/2000/svg" width="103" height="20">
+<linearGradient id="a" x2="0" y2="100%">
+  <stop offset="0" stop-color="#fff" stop-opacity=".1"/>
+  <stop offset=".1" stop-color="#fff" stop-opacity=".1"/>
+  <stop offset=".9" stop-color="#fff" stop-opacity=".1"/>
+  <stop offset="1" stop-color="#fff" stop-opacity=".1"/>
+</linearGradient><path fill="#555" d="M0 0h103v20h-103z"/>
+<path fill="#d00" d="M72 0h31v20h-31zM72 0h4v20h-4z"/>
+<path fill="url(#a)" d="M0 0h103v20h-103z"/>
+<g fill="#fff" text-anchor="middle" font-family="arial" font-size="11">
+  <text x="37" y="13">tests failed</text><text x="86.5" y="13">999</text>
+</g>
+</svg>
+/* MODULE_END */
+
+
+
+/* MODULE_BEGIN { "actionList": ["trim", "install"], "file": ".install/git-ssh.sh" } */
+#!/bin/sh
+exec ssh -i $GIT_SSH_KEY_FILE -o CheckHostIP=no -o StrictHostKeychecking=no -- "$@"
+/* MODULE_END */
+
+
+
+/* MODULE_BEGIN { "actionList": ["lint", "trim", "install"], "file": ".install/saucelabs-platforms.json" } */
+{
+  "platforms": [
+    ["linux", "android", "4.3"],
+    ["linux", "googlechrome", "34"],
+    ["linux", "firefox", "29"],
+    ["osx 10.9", "ipad", "7.1"],
+    ["osx 10.9", "iphone", "7.1"],
+    ["osx 10.9", "safari", "7"],
+    ["windows 8.1", "iexplore", "11"]
+  ],
+  "stateOverride": {
+    "timeoutDefault": 200000
+  },
+  "url": "{{host}}/test/test.html?modeTest=1&timeoutDefault={{timeoutDefault}}"
+}
+/* MODULE_END */
+
+
+
+/* MODULE_BEGIN { "actionList": ["lint", "install"], "file": ".install/phantomjs.js" } */
+/*jslint browser: true, indent:2, node: true, nomen: true*/
+/*global phantom*/
+
+
+
+(function submodulePhantomjs() {
+  /*
+    this phantomjs submodule opens a webpage
+  */
+  'use strict';
+  var local;
+  local = {
+
+    _name: 'utility2.submodulePhantomjs',
+
+    _init: function () {
+      var page, state;
+      // phantomjs error handling - http://phantomjs.org/api/phantom/handler/on-error.html
+      phantom.onError = function (msg, trace) {
+        var msgStack = ['PHANTOM ERROR: ' + msg];
+        if (trace && trace.length) {
+          msgStack.push('PHANTOM TRACE:');
+          trace.forEach(function (t) {
+            msgStack.push(' -> ' + (t.file || t.sourceURL) + ': ' + t.line
+              + (t.function ? ' (in function ' + t.function + ')' : ''));
+          });
+        }
+        console.error('\n\n\n\n' + msgStack.join('\n') + '\n');
+        phantom.exit(1);
+      };
+      // init state object
+      state = JSON.parse(window.atob(require('system').args[1]));
+      // set timeout for phantomjs
+      setTimeout(function () {
+        if (state.pageOpenStatus !== 'success') {
+          console.error('phantomjs - timeout', state.pageOpenStatus, state.url);
+        }
+        phantom.exit();
+      }, Number(state.timeoutDefault) || 300000);
+      page = require('webpage').create();
+      // page error handling - http://phantomjs.org/api/webpage/handler/on-error.html
+      page.onError = function (msg, trace) {
+        var msgStack = ['ERROR: ' + msg];
+        if (trace && trace.length) {
+          msgStack.push('TRACE:');
+          trace.forEach(function (t) {
+            msgStack.push(' -> ' + t.file + ': ' + t.line
+              + (t.function ? ' (in function "' + t.function + '")' : ''));
+          });
+        }
+        console.error('\n\n\n\n' + msgStack.join('\n') + '\n');
+      };
+      // pipe page's console.log to stdout
+      page.onConsoleMessage = function () {
+        console.log.apply(console, arguments);
+      };
+      // open requested webpage
+      page.open(state.url, function (status) {
+        state.pageOpenStatus = status;
+        console.log(state.argv0 + ' - opened ' + status + ' ' + state.url);
+      });
+    }
+
+  };
+  local._init();
+}());
+/* MODULE_END */
+
+
+
+/* MODULE_BEGIN { "actionList": ["trim", "install"], "file": "Procfile" } */
+web: npm start --server-port=$PORT
+/* MODULE_END */
+
+
+
+/* MODULE_BEGIN { "actionList": ["trim"], "file": "/public/testReport.html.template" } */
+<style>
+.testReportPlatformDiv {
+  border: 1px solid;
+  border-radius: 5px;
+  font-family: arial;
+  margin: 20px 0 0 0;
+  padding: 0 10px 10px 10px;
+  text-align: left;
+}
+.testReportPlatformPre {
+  background-color: #fdd;
+  border: 1px;
+  border-radius: 0 0 5px 5px;
+  border-top-style: solid;
+  margin-bottom: 0px;
+  padding: 10px;
+}
+.testReportPlatformPreHidden {
+  display: none;
+}
+.testReportPlatformSpan {
+  display: inline-block;
+  width: 7em;
+}
+.testReportPlatformTable {
+  border: 1px;
+  border-top-style: solid;
+  text-align: left;
+  width: 100%;
+}
+.testReportSummaryDiv {
+  background-color: #bfb;
+}
+.testReportSummarySpan {
+  display: inline-block;
+  width: 6.5em;
+}
+tr:nth-child(odd).testReportPlatformTr {
+  background-color: #bfb;
+}
+.testReportTestFailed {
+  background-color: #f99;
+}
+.testReportTestPending {
+  background-color: #99f;
+}
+</style>
+
+<div class="testReportPlatformDiv testReportSummaryDiv">
+<h2>test report summary</h2>
+<h4>
+  <span class="testReportSummarySpan">build date</span>- {{date}}<br>
+  <span class="testReportSummarySpan">build id</span>- {{CI_BUILD_NUMBER}}<br>
+  <span class="testReportSummarySpan">commit info</span>- {{CI_COMMIT_INFO}}<br>
+</h4>
+<table class="testReportPlatformTable">
+<thead><tr>
+  <th>total time elapsed</th>
+  <th>total tests failed</th>
+  <th>total tests passed</th>
+  <th>total tests pending</th>
+</tr></thead>
+<tbody><tr>
+  <td>{{timeElapsed}} ms</td>
+  <td class="{{testsFailedClass}}">{{testsFailed}}</td>
+  <td>{{testsPassed}}</td>
+  <td>{{testsPending}}</td>
+</tr></tbody>
+</table>
+</div>
+
+{{@testPlatformList}}
+<div class="testReportPlatformDiv">
+<h4>
+  {{testPlatformNumber}}. {{name}}<br>
+  <span class="testReportPlatformSpan">time elapsed</span>- {{timeElapsed}} ms<br>
+  <span class="testReportPlatformSpan">tests failed</span>- {{testsFailed}}<br>
+  <span class="testReportPlatformSpan">tests passed</span>- {{testsPassed}}<br>
+  <span class="testReportPlatformSpan">tests pending</span>- {{testsPending}}<br>
+</h4>
+<table class="testReportPlatformTable">
+<thead><tr>
+  <th>#</th>
+  <th>time elapsed</th>
+  <th>status</th>
+  <th>test case</th>
+</tr></thead>
+<tbody>
+{{@testCaseList}}
+<tr class="testReportPlatformTr">
+  <td>{{testCaseNumber}}</td>
+  <td>{{timeElapsed}} ms</td>
+  <td class="{{testReportTestStatusClass}}">{{status}}</td>
+  <td>{{name}}</td>
+</tr>
+{{/@testCaseList}}
+</tbody>
+</table>
+<pre class="{{testReportPlatformPreClass}}">
+{{@errorMessageList}}
+{{errorMessage}}
+{{/@errorMessageList}}
+</pre>
+</div>
+{{/@testPlatformList}}
+/* MODULE_END */
+
+
+
+/* MODULE_BEGIN { "actionList": ["lint"], "file": "/public/utility2.css" } */
+.ajaxProgressBarDiv {
+  animation: 2s linear 0s normal none infinite ajaxProgressBarDivAnimation;
+  -o-animation: 2s linear 0s normal none infinite ajaxProgressBarDivAnimation;
+  -webkit-animation: 2s linear 0s normal none infinite ajaxProgressBarDivAnimation;
+  background-image: linear-gradient(
+    45deg,rgba(255,255,255,.25) 25%,
+    transparent 25%,
+    transparent 50%,
+    rgba(255,255,255,.25) 50%,
+    rgba(255,255,255,.25) 75%,
+    transparent 75%,
+    transparent
+  );
+  background-size: 40px 40px;
+  color: #fff;
+  font-family: arial;
+  font-size: 12px;
+  padding: 2px 0 2px 0;
+  text-align: center;
+  transition: width .5s ease;
+  width: 0%;
+}
+.ajaxProgressBarDivError {
+  background-color: #d33;
+}
+.ajaxProgressBarDivLoading {
+  background-color: #37b;
+}
+.ajaxProgressBarDivSuccess {
+  background-color: #3b3;
+}
+#ajaxProgressDiv {
+  background-color: #fff;
+  border: 1px solid;
+  cursor: pointer;
+  display: none;
+  left: 50%;
+  margin: 0 0 0 -50px;
+  padding: 5px 5px 5px 5px;
+  position: fixed;
+  top: 49%;
+  width: 100px;
+  z-index: 9999;
+}
+@keyframes ajaxProgressBarDivAnimation {
+  from { background-position: 40px 0; }
+  to { background-position: 0 0; }
+}
+@-o-keyframes ajaxProgressBarDivAnimation {
+  from { background-position: 40px 0; }
+  to { background-position: 0 0; }
+}
+@-webkit-keyframes ajaxProgressBarDivAnimation {
+  from { background-position: 40px 0; }
+  to { background-position: 0 0; }
+}
+/* MODULE_END */
+
+
+
+/* MODULE_BEGIN { "actionList": ["trim"], "file": "/test/test.html" } */
+<!DOCTYPE html><html>
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
+<title>{{name}} test page</title>
+<style>
+body {
+  font-family: arial;
+}
+#testRunButton {
+  background-color: #37b;
+  border: 0px solid;
+  border-radius: 4px;
+  color: #fff;
+  cursor: pointer;
+  font-size: medium;
+  padding: 5px 10px;
+}
+</style>
+<link href="/public/utility2.css" rel="stylesheet"/>
+</head>
+<body>
+<h1>{{name}} test page</h1>
+<div id="ajaxProgressDiv"></div>
+<button id="testRunButton">run tests</button>
+<div id="testReportDiv"></div>
+<script src="/public/utility2.js"></script>
+<script>
+(function() {
+  'use strict';
+  /* init state object */
+  exports.setOverride(state, {{state}});
+  /* enable tests for utility2 namespace */
+  document.getElementById('testRunButton').addEventListener('click', function () {
+    location.search = 'modeTest=1';
+  });
+}());
+</script>
+<script src="/public/main.js"></script>
+</body>
+</html>
+/* MODULE_END */

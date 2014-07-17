@@ -1,65 +1,63 @@
-utility2 [![npm version](https://img.shields.io/npm/v/utility2.svg?style=flat)](https://npmjs.org/package/utility2)
-========
-#### nodejs test and coverage utility
+utility2
+==========
+lightweight nodejs test and coverage utility
+
 ## build status
-[![saucelabs.com selenium test status](https://saucelabs.com/browser-matrix/utility2-kaizhu256.svg)](https://saucelabs.com/u/utility2-kaizhu256)
+[![saucelabs.com selenium test status](https://saucelabs.com/browser-matrix/sclb01-utility2.svg)](https://saucelabs.com/u/sclb01-utility2)
 
  test server | test report | coverage report | build log | build artifact
 :-----------:|:-----------:|:---------------:|:---------:|:--------------:
-[![heroku.com test server](https://d1lpkba4w1baqt.cloudfront.net/heroku-logo-light-88x31.png)](https://utility2-unstable.herokuapp.com/test/test.html) | [![utility2 test report](https://kaizhu256.github.io/utility2/build.travis-ci.org/latest.unstable/test-report.badge.svg)](https://kaizhu256.github.io/utility2/build.travis-ci.org/latest.unstable/test-report.html) | [![istanbul coverage report](https://kaizhu256.github.io/utility2/build.travis-ci.org/latest.unstable/coverage-report/coverage-report.badge.svg)](https://kaizhu256.github.io/utility2/build.travis-ci.org/latest.unstable/coverage-report/utility2/index.html) | [![travis.ci-org build status](https://api.travis-ci.org/kaizhu256/utility2.svg?branch=unstable)](https://travis-ci.org/kaizhu256/utility2?branch=unstable) | [![build artifacts](https://kaizhu256.github.io/public/file/glyphicons_free/glyphicons/png/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/utility2/tree/gh-pages/build.travis-ci.org/latest.unstable)
+[![heroku.com test server](https://kaizhu256.github.io/public/heroku-logo-light-88x31.png)](https://hrku01-utility2.herokuapp.com/test/test.html) | [![test report](https://kaizhu256.github.io/node-utility2-data/build.travis-ci.org/latest.unstable/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2-data/build.travis-ci.org/latest.unstable/test-report.html) | [![istanbul coverage report](https://kaizhu256.github.io/node-utility2-data/build.travis-ci.org/latest.unstable/coverage-report/coverage-report.badge.svg)](https://kaizhu256.github.io/node-utility2-data/build.travis-ci.org/latest.unstable/coverage-report/node-utility2/index.html) | [![travis.ci-org build status](https://api.travis-ci.org/kaizhu256/node-utility2.svg?branch=unstable)](https://travis-ci.org/kaizhu256/node-utility2?branch=unstable) | [![build artifacts](https://kaizhu256.github.io/public/glyphicons_free/glyphicons/png/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2-data/tree/gh-pages/build.travis-ci.org/latest.unstable)
 
-
-
-## installation and usage example
-
-#### installation
+## quickstart
 ```
-npm install -g utility2
-```
-
-#### quickstart - create new build project
-- https://github.com/kaizhu256/utility2-example-app
-
-#### start interactive sandbox server
-```
-utility2 start --server-port=8080
-> serverListen - listening on port 8080
-> /* open http://localhost:8080 in browser */
-> /* inspect state.debugServerResponse */
-> state.debugServerResponse
-{
-  "_events": { "finish": [[]] },
-  "_hangupClose": false,
-  "_hasBody": true,
-  "_header": "HTTP/1.1 200 OK\r\ncontent-type: text/html\r\n\r\n",
-  "_headerNames": { "content-type": "content-type" },
-  "_headerSent": true,
-  "_headers": { "content-type": "text/html" },
-  "_last": false,
-  "_maxListeners": 10,
-  "_trailer": "",
-  "chunkedEncoding": true,
-  "connection": null,
-  "domain": null,
-  "finished": true,
-  "output": [],
-  "outputEncodings": [],
-  "sendDate": true,
-  "shouldKeepAlive": true,
-  "socket": null,
-  "statusCode": 200,
-  "useChunkedEncodingByDefault": true,
-  "writable": true
-}
+npm install utility2
+cd node_modules/utility2
+## start utility2 server on port 8080
+npm start --server-port=8080
 ```
 
+## library usage example
+```
+// example.js
+/*jslint bitwise: true, indent:2, node: true*/
+(function () {
+  'use strict';
+  var example, port, server;
+  port = (Math.random() * 0xffff) | 0x8000;
+  example = require('./main.js');
+  console.log('example test server starting on random port ' + port);
+  server = require('http').createServer(function (request, response) {
+    example.serverMiddleware(request, response, function (error) {
+      example.serverRespondDefault(response, error ? 500 : 404, error);
+    });
+  });
+  // listen on the specified port
+  server.listen(port, function () {
+    console.log('example test server started on port ' + port);
+    setTimeout(function () {
+      server.close();
+      console.log('example test server closed after 1 second');
+    }, 1000);
+  });
+}());
+```
 
+## todo
+- add basic auth for test report upload
+- move image resources in README.md to footer
 
 ## changelog
-- https://github.com/kaizhu256/utility2/blob/unstable/CHANGELOG.md
+#### 2014.7.12
+- automate saucelabs testing in build
 
+#### 2014.7.11
+- add browser-side code coverage
+- automate phantomjs and slimerjs headless browser testing
+- implement browser-side ajax
+- update browser test report status every 1000 ms until finished
+- redirect main page to test.html
+- watch and auto-jslint main.js and utility2.js
 
-
-## admin
-- [edit README.md](https://github.com/kaizhu256/utility2/edit/gh-pages/README.md)
-- counter 4
+#### 2014.7.3
+- initial commit
