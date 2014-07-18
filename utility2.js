@@ -28,42 +28,50 @@ var exports, required, state;
       exports = module.exports = {};
       // init state object
       state = exports.state = exports.state || {};
-      // init nodejs mode
+      // init flag indicating whether we are in either browser or nodejs environment
       state.modeNodejs = global.process && process.versions && process.versions.node;
       local.setDefault(state, {
         // default error
         errorDefault: new Error(),
         // cached dict of files
         fileDict: {},
+        // mime-type lookup for given file extensions
+        mimeLookupDict: {
+          'css': 'text/css',
+          'html': 'text/html',
+          'js': 'application/javascript',
+          'json': 'application/json',
+          'txt': 'text/plain'
+        },
         // dict of cli commands
         modeCliDict: {},
-        // dict of server-side test callbacks to be triggered by the browser
+        // dict of server-side callbacks used to create test reports from browser tests
         testCallbackDict: {},
-        // test report object
+        // main test report object used to accumulate test reports from this and other platforms
         testReport: {
-          // list of javascript test platforms
+          // list of javascript test platforms - e.g. browser / nodejs
           testPlatformList: [{
             // javascript platform name
             name: state.modeNodejs ? 'nodejs - ' + process.platform + ' ' + process.version
               : 'browser - ' + (navigator && navigator.userAgent),
-            // list of test cases to run
+            // list of test cases and their results
             testCaseList: []
           }]
         },
-        // default timeout for http request and other async io
+        // default timeout for ajax requests and other async io
         timeoutDefault: 30000
       });
       // init test platform object
       state.testPlatform = state.testReport.testPlatformList[0];
-      // init local object
-      local.initLocal(local);
+      // init this submodule
+      local.initSubmodule(local);
       // init state.testReport
       exports.testReportCreate(state.testReport, {});
     },
 
-    initLocal: function (local) {
+    initSubmodule: function (local) {
       /*
-        this function inits a module's local object
+        this function inits a submodule's local object
       */
       Object.keys(local).forEach(function (key) {
         var match;
@@ -82,6 +90,13 @@ var exports, required, state;
           state[match[1]][match[2]] = local[key];
           return;
         }
+        // angularjs app
+        match = (/(\w+)_ngApp_(\w+)_(\w+)/).exec(key);
+        if (match) {
+          local[match[1]] = local[match[1]] || global.angular.module(match[1], []);
+          local[match[1]][match[2]](match[3], local[key]);
+          return;
+        }
         // export items that don't start with an underscore _
         if (key[0] !== '_') {
           exports[key] = local[key];
@@ -89,21 +104,20 @@ var exports, required, state;
       });
     },
 
-    _initLocal_default_test: function (onEventError) {
+    _initSubmodule_default_test: function (onEventError) {
       /*
-        this function tests initLocal's default handling behavior
+        this function tests initSubmodule's default handling behavior
       */
-      var data, local2;
+      var data;
       exports.testMock(onEventError, [
       ], function (onEventError) {
         state = {};
-        local2 = {
+        // test default handling behavior
+        exports.initSubmodule({
           // test dict handling behavior
           _aaDict_bb: true,
-          _name: '_initLocal_default_test'
-        };
-        // test default handling behavior
-        exports.initLocal(local2);
+          _name: '_initSubmodule_default_test'
+        });
         // validate state
         data = exports.jsonStringifyOrdered(state);
         exports.assert(data === '{"_aaDict":{"bb":true}}', data);
@@ -177,6 +191,7 @@ var exports, required, state;
       /*
         this function calls the callback in arg position 1
       */
+      // jslint hack
       exports.nop(_);
       callback();
     },
@@ -185,6 +200,7 @@ var exports, required, state;
       /*
         this function calls the callback in arg position 2
       */
+      // jslint hack
       exports.nop(_, __);
       callback();
     },
@@ -200,6 +216,7 @@ var exports, required, state;
       /*
         this function calls the onEventError callback in arg position 1 with an error object
       */
+      // jslint hack
       exports.nop(_);
       onEventError(state.errorDefault);
     },
@@ -208,6 +225,7 @@ var exports, required, state;
       /*
         this function calls the onEventError callback in arg position 2 with an error object
       */
+      // jslint hack
       exports.nop(_, __);
       onEventError(state.errorDefault);
     },
@@ -399,12 +417,12 @@ var exports, required, state;
           }
         }]
       ], function (onEventError) {
-        //!! // test default handling behavior
-        //!! message = '';
-        //!! exports.onEventErrorDefault(null, '_onEventErrorDefault_default_test');
-        //!! // validate message
-        //!! exports.assert(message ===
-          //!! '\nonEventErrorDefault - data\n"_onEventErrorDefault_default_test"\n', message);
+        // test default handling behavior
+        message = '';
+        exports.onEventErrorDefault(null, '_onEventErrorDefault_default_test');
+        // validate message
+        exports.assert(message ===
+          '\nonEventErrorDefault - data\n"_onEventErrorDefault_default_test"\n', message);
         // test error handling behavior
         message = '';
         exports.onEventErrorDefault(new Error('_onEventErrorDefault_default_test'));
@@ -847,7 +865,7 @@ var exports, required, state;
       /*
         this function runs the tests
       */
-      var remaining, testPlatform, testReportHtml;
+      var modeTestReportUpload, remaining, testPlatform, testReportHtml;
       // start testReport timer
       testReport.timeElapsed = Date.now();
       // init testPlatform
@@ -932,9 +950,11 @@ var exports, required, state;
                 // extra stuff to keep saucelabs happy - https://saucelabs.com/docs/rest#jsunit
                 failed: state.testReport.testsFailed
               };
-              if ((/\bmodeTestReportUpload=\w/).test(location.search)) {
+              modeTestReportUpload = (/\bmodeTestReportUpload=(\w+)/).exec(location.search);
+              if (modeTestReportUpload) {
                 exports.ajax({
                   data: JSON.stringify(global.global_test_results),
+                  headers: { authorization: modeTestReportUpload[1] },
                   method: 'POST',
                   url: '/test/testReportUpload'
                 }, function (error) {
@@ -1037,6 +1057,7 @@ var exports, required, state;
       */
       var rgx, match, onEventReplace;
       onEventReplace = function (_, fragment) {
+        // jslint hack
         exports.nop(_);
         return dict[match].map(function (dict) {
           return exports.textFormat(fragment, dict);
@@ -1076,34 +1097,6 @@ var exports, required, state;
           onEventError(error2);
         }
       };
-    },
-
-    uuid4: function () {
-      /*
-        this function returns a uuid4 string of form xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx
-      */
-      var id, ii;
-      id = '';
-      for (ii = 0; ii < 32; ii += 1) {
-        switch (ii) {
-        case 8:
-        case 20:
-          id += '-';
-          id += (Math.random() * 16 | 0).toString(16);
-          break;
-        case 12:
-          id += '-';
-          id += '4';
-          break;
-        case 16:
-          id += '-';
-          id += (Math.random() * 4 | 8).toString(16);
-          break;
-        default:
-          id += (Math.random() * 16 | 0).toString(16);
-        }
-      }
-      return id;
     }
 
   };
@@ -1128,8 +1121,8 @@ var exports, required, state;
       if (state.modeNodejs) {
         return;
       }
-      // init local object
-      exports.initLocal(local);
+      // init this submodule
+      exports.initSubmodule(local);
       // init state.timeoutDefault
       tmp = (/\btimeoutDefault=(\d+)\b/).exec(location.search);
       state.timeoutDefault = tmp ? Number(tmp[1]) : state.timeoutDefault;
@@ -1274,6 +1267,10 @@ var exports, required, state;
       local._ajaxProgressList.push(xhr);
       // open url in xhr
       xhr.open(options.method || 'GET', options.url);
+      // init xhr headers
+      Object.keys(options.headers || {}).forEach(function (key) {
+        xhr.setRequestHeader(key, options.headers[key]);
+      });
       // send data through xhr
       xhr.send(options.data);
     },
@@ -1385,8 +1382,8 @@ var exports, required, state;
       if (!state.modeNodejs) {
         return;
       }
-      // init local object
-      exports.initLocal(local);
+      // init this submodule
+      exports.initSubmodule(local);
       // init required object
       required = exports.required = exports.required || {};
       // require builtin modules
@@ -1412,7 +1409,7 @@ var exports, required, state;
       });
       // load package.json file
       state.packageJson = state.packageJson || {};
-      state.packageJson = JSON.parse(required.fs.readFileSync(process.cwd() + '/package.json'));
+      state.packageJson = JSON.parse(required.fs.readFileSync(__dirname + '/package.json'));
       // init data files
       [__dirname + '/utility2.data', __dirname + '/main.data'].forEach(function (file) {
         local._initFile(file);
@@ -1518,6 +1515,7 @@ var exports, required, state;
       data.replace(
         (/^\/\* MODULE_BEGIN (.+) \*\/$([\S\s]+?)^\/\* MODULE_END \*\/$/gm),
         function (_, options, content, ii) {
+          // jslint hack
           exports.nop(_);
           options = JSON.parse(options);
           // save options to state.fileDict
@@ -1548,6 +1546,7 @@ var exports, required, state;
       // start repl
       require('repl').start({
         eval: function (script, __, file, onEventError) {
+          // jslint hack
           exports.nop(__);
           try {
             onEventError(null, required.vm.runInThisContext(local._replParse(script), file));
@@ -1612,7 +1611,7 @@ var exports, required, state;
         }, function (stat2, stat1) {
           if (stat2.mtime >= stat1.mtime) {
             if (required.jslint_lite && required.jslint_lite.jslint) {
-              required.jslint_lite.jslint(
+              required.jslint_lite.jslintPrint(
                 required.fs.readFileSync(file, 'utf8')
                   // remove hashbang
                   .replace((/^#!/), '//#!'),
@@ -1816,7 +1815,7 @@ var exports, required, state;
       case '.js':
       case '.json':
         if (required.jslint_lite && required.jslint_lite.jslint) {
-          required.jslint_lite.jslint(options.content, options.file);
+          required.jslint_lite.jslintPrint(options.content, options.file);
         }
         break;
       }
@@ -1829,49 +1828,57 @@ var exports, required, state;
       options.content = options.content.trim();
     },
 
-    headlessPhantomjs: function (options, onEventError) {
+    headlessBrowser: function (file, onEventError) {
       /*
-        this function starts a separate phantomjs process to open and test a webpage
+        this function spawns the headless browser process file to test a webpage
       */
       var onEventError2, testCallbackId, timerTimeout;
       onEventError2 = function (error) {
-        // clear timerTimeout for phantomjs
+        // clear timerTimeout for headlessBrowser
         clearTimeout(timerTimeout);
         // garbage collect testCallbackId
         delete state.testCallbackDict[testCallbackId];
         onEventError(error);
       };
-      // set timerTimeout for phantomjs
+      // set timerTimeout for headlessBrowser
       timerTimeout = exports.onEventTimeout(
         onEventError2,
         state.timeoutDefault,
-        options.argv0 + options.url
+        file
       );
       // init testCallbackId
-      testCallbackId = exports.uuid4();
+      testCallbackId = Math.random().toString('36').slice(2);
       state.testCallbackDict[testCallbackId] = onEventError2;
-      options.argv0 = options.argv0 || require('phantomjs').path;
-      options.url = exports.textFormat(options.url, {
-        localhost: state.localhost,
-        testCallbackId: testCallbackId,
-        timeoutDefault: state.timeoutDefault
-      });
+      // spawn the headless browser process file to test a webpage
       exports.shell({ argv: [
-        options.argv0,
+        file,
         __dirname + '/.install/phantomjs.js',
-        new Buffer(JSON.stringify(options)).toString('base64')
+        new Buffer(JSON.stringify({ argv0: file, url: state.localhost +
+          '/test/test.html' +
+          '?modeTest=1' +
+          '&modeTestReportUpload=' + process.env.MODE_TEST_REPORT_UPLOAD +
+          '&testCallbackId=' + testCallbackId +
+          '&timeoutDefault=' + state.timeoutDefault })).toString('base64')
       ], modeDebug: false });
     },
 
-    _headlessPhantomjs_default_test: function (onEventError) {
+    _headlessBrowser_default_test: function (onEventError) {
       /*
-        this function tests headlessPhantomjs's default handling behavior
+        this function tests headlessBrowser's default handling behavior
       */
-      exports.headlessPhantomjs({
-        url: '{{localhost}}/test/test.html' +
-          '?modeTest=1&modeTestReportUpload=1&testCallbackId={{testCallbackId}}&' +
-          'timeoutDefault={{timeoutDefault}}'
-      }, onEventError);
+      var onEventFinish, remaining, remainingError;
+      onEventFinish = function (error) {
+        remainingError = remainingError || error;
+        remaining -= 1;
+        if (remaining === 0) {
+          onEventError(remainingError);
+        }
+      };
+      remaining = 2;
+      // run browser test in phantomjs
+      exports.headlessBrowser(require('phantomjs').path, onEventFinish);
+      // run browser test in slimerjs
+      exports.headlessBrowser(require('slimerjs').path, onEventFinish);
     },
 
     headlessSaucelabs: function (options, onEventError) {
@@ -1962,7 +1969,6 @@ var exports, required, state;
           // check status of polled tests from saucelabs response
           // decrement mode to repeat io loop
           mode -= 1;
-          console.log('\nsaucelabs - tests remaining - ' + data);
           // JSON.parse data
           data = JSON.parse(data);
           completed = completed || data.completed || (/error/).test(data.status);
@@ -1985,6 +1991,7 @@ var exports, required, state;
               }
             }
           });
+          console.log('\nsaucelabs - tests remaining - ' + JSON.stringify(remainingDict));
           break;
         default:
           // clear interval for headlessSaucelabs
@@ -2093,25 +2100,6 @@ var exports, required, state;
       exports.testRun(state.testReport);
     },
 
-    headlessSlimerjs: function (options, onEventError) {
-      /*
-        this function starts a separate slimerjs process to open and test a webpage
-      */
-      options.argv0 = require('slimerjs').path;
-      exports.headlessPhantomjs(options, onEventError);
-    },
-
-    _headlessSlimerjs_default_test: function (onEventError) {
-      /*
-        this function tests headlessSlimerjs's default handling behavior
-      */
-      exports.headlessSlimerjs({
-        url: '{{localhost}}/test/test.html' +
-          '?modeTest=1&modeTestReportUpload=1&testCallbackId={{testCallbackId}}&' +
-          'timeoutDefault={{timeoutDefault}}'
-      }, onEventError);
-    },
-
     modeCliDict_coverageReportBadgeCreate: function () {
       /*
         this function creates a coverage badge
@@ -2171,9 +2159,10 @@ var exports, required, state;
             process.env.GITHUB_REPO.replace('/', '.github.io/') + '-data/' + file2);
           exports.ajax({
             headers: {
-              Authorization: 'token ' + process.env.GITHUB_TOKEN,
-              // bug - github api requires User-Agent header
-              'User-Agent': 'unknown'
+              // github oauth authentication
+              authorization: 'token ' + process.env.GITHUB_TOKEN,
+              // bug - github api requires user-agent header
+              'user-agent': 'unknown'
             },
             url: 'https://api.github.com/repos/' + process.env.GITHUB_REPO +
               '-data/contents/' + required.path.dirname(file2) + '?ref=gh-pages'
@@ -2183,14 +2172,14 @@ var exports, required, state;
           blob = required.fs.readFileSync(file1);
           data = data && JSON.parse(data);
           if (Array.isArray(data)) {
-            // calculate blob sha
+            // calculate git blob sha
             sha = require('crypto').createHash('sha1')
               .update('blob ' + blob.length + '\x00')
               .update(blob)
               .digest('hex');
             data.forEach(function (dict) {
               if (dict.path === file2) {
-                // no need to update if blob sha matches
+                // no need to update if local and remote git blob sha matches
                 if (dict.sha === sha) {
                   process.exit();
                 }
@@ -2206,9 +2195,10 @@ var exports, required, state;
               sha: sha
             }),
             headers: {
-              Authorization: 'token ' + process.env.GITHUB_TOKEN,
-              // bug - github api requires User-Agent header
-              'User-Agent': 'unknown'
+              // github oauth authentication
+              authorization: 'token ' + process.env.GITHUB_TOKEN,
+              // bug - github api requires user-agent header
+              'user-agent': 'unknown'
             },
             method: 'PUT',
             url: 'https://api.github.com/repos/' + process.env.GITHUB_REPO +
@@ -2231,6 +2221,7 @@ var exports, required, state;
       exports.testMock(onEventError, [
         [console, { error: exports.nop }],
         [exports, { ajax: function (_, onEventError) {
+          // jslint hack
           exports.nop(_);
           mode += 1;
           switch (mode) {
@@ -2362,32 +2353,46 @@ var exports, required, state;
       next();
     },
 
+    'serverRequestHandlerDict_/public': function (request, response, next) {
+      /*
+        this function responds with public cached content if it exists
+      */
+      request = state.fileDict[request.urlPathNormalized];
+      // cached content exists
+      if (request) {
+        exports.serverRespondData(
+          response,
+          200,
+          state.mimeLookupDict[required.path.extname(request.file).slice(1)] ||
+            'application/octet-stream',
+          request.content
+        );
+        return;
+      }
+      // cached content does not exist
+      next();
+    },
+
     'serverRequestHandlerDict_/public/main.js': function (_, response, next) {
+      // jslint hack
       exports.nop(_);
       exports.serverRespondScript(response, 200, next, exports.__filename);
     },
 
-    'serverRequestHandlerDict_/public/utility2.css': function (_, response) {
-      exports.nop(_);
-      exports.serverRespondData(
-        response,
-        200,
-        'text/css',
-        state.fileDict['/public/utility2.css'].content
-      );
-    },
-
     'serverRequestHandlerDict_/public/utility2.js': function (_, response, next) {
+      // jslint hack
       exports.nop(_);
       exports.serverRespondScript(response, 200, next, __dirname + '/utility2.js');
     },
 
     'serverRequestHandlerDict_/test/hello.json': function (_, response) {
+      // jslint hack
       exports.nop(_);
       exports.serverRespondData(response, 200, 'application/json', '"hello"');
     },
 
     'serverRequestHandlerDict_/test/test.html': function (_, response) {
+      // jslint hack
       exports.nop(_);
       exports.serverRespondData(response, 200, 'text/html', exports.textFormat(
         state.fileDict['/test/test.html'].content,
@@ -2413,6 +2418,13 @@ var exports, required, state;
         mode = error instanceof Error ? -1 : mode + 1;
         switch (mode) {
         case 1:
+          // authenticate request with basic authentication
+          if (!(process.env.MODE_TEST_REPORT_UPLOAD &&
+              process.env.MODE_TEST_REPORT_UPLOAD === request.headers.authorization)) {
+            // respond with http status code 401 if authentication fails
+            exports.serverRespondDefault(response, 401);
+            return;
+          }
           exports.streamReadAll(
             request,
             // security - use try catch block to parse potential malformed data

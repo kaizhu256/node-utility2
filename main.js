@@ -23,8 +23,8 @@ var exports, required, state;
       exports.__dirname = __dirname;
       // export __filename
       exports.__filename = __filename;
-      // init local object
-      exports.initLocal(local);
+      // init this submodule
+      exports.initSubmodule(local);
       // init required object
       required = exports.required;
       // init state object

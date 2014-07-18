@@ -71,7 +71,7 @@ shBuild() {
   ## this function builds the package
   ## decrypt and exec encrypted data
   eval "$(shAesDecryptTravis)" || return $?
-  ## init travis-ci.org env
+  ## try to init travis-ci.org env
   if [ "$TRAVIS" ]
   then
     ## init xvfb
@@ -81,7 +81,7 @@ shBuild() {
     export CI_BRANCH=$TRAVIS_BRANCH || return $?
     export CI_BUILD_NUMBER=$TRAVIS_BUILD_NUMBER || return $?
     export CI_COMMIT_ID=$TRAVIS_COMMIT || return $?
-  ## init default env
+  ## else init default env
   else
     export CI_BUILD_DIR=build.local || return $?
     export CI_BRANCH=local || return $?
@@ -90,14 +90,14 @@ shBuild() {
   fi
   export CI_COMMIT_MESSAGE="$(git log -1 --pretty=%s)" || return $?
   export CI_COMMIT_INFO="$CI_COMMIT_ID - $CI_COMMIT_MESSAGE" || return $?
-  ## npm test local app
+  ## run local npm test
   shBuildPrint npmTestLocal "npm testing $CWD ..." || return $?
   npm test || shBuildExit
   ## deploy app to heroku
   shBuildHerokuDeploy || shBuildExit
-  ## saucelabs test
-  shBuildPrint saucelabsTest "running saucelabs tests ..." || return $?
-  export CI_BUILD_NUMBER_SAUCELABS=$CI_BUILD_NUMBER.$(openssl rand -hex 8) || return $?
+  ## run saucelabs test
+  shBuildPrint saucelabsTest "running saucelabs tests ..." || shBuildExit
+  export CI_BUILD_NUMBER_SAUCELABS=$CI_BUILD_NUMBER.$(openssl rand -hex 8) || shBuildExit
   node main.js --mode-cli=saucelabsTest --modeTestReportMerge || shBuildExit
   ## npm publish app if its version is greater than the published version
   shBuildNpmPublish || shBuildExit
@@ -296,8 +296,6 @@ shNpmTest() {
   npm install || return $?
   ## run example.js
   node example.js || return $?
-  ## remove old coverage report
-  rm -fr .build/coverage-report || return $?
   ## init $ARGS
   local ARGS="main.js" || return $?
   ARGS="$ARGS --dir=.build/coverage-report" || return $?
@@ -307,12 +305,16 @@ shNpmTest() {
   ARGS="$ARGS --mode-cli=npmTest" || return $?
   ARGS="$ARGS --mode-repl" || return $?
   ARGS="$ARGS --server-port=random" || return $?
+  ## create random authentication string for uploading test reports
+  export MODE_TEST_REPORT_UPLOAD=$(openssl rand -hex 64) || return $?
   ## disable code coverage
   if [ "$npm_config_disable_coverage" ]
   then
     istanbul test $ARGS || return $?
     return $?
   fi
+  ## remove old coverage report
+  rm -fr .build/coverage-report || return $?
   ## npm test with coverage
   istanbul cover $ARGS --mode-coverage
   ## save $EXIT_CODE

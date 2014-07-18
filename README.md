@@ -44,10 +44,12 @@ npm start --server-port=8080
 ```
 
 ## todo
-- add basic auth for test report upload
-- move image resources in README.md to footer
 
 ## changelog
+#### 2014.7.18
+- add basic auth for test report upload
+- rename exports.initLocal to exports.initSubmodule
+
 #### 2014.7.12
 - automate saucelabs testing in build
 

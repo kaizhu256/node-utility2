@@ -20,3 +20,8 @@
   fetch = +refs/heads/*:refs/remotes/origin/*
   url = git@github.com:kaizhu256/node-utility2.git
 /* MODULE_END */
+
+
+
+/* MODULE_BEGIN { "actionList": ["lint"], "file": "/public/main.css" } */
+/* MODULE_END */
