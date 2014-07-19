@@ -2,6 +2,8 @@ utility2
 ==========
 lightweight nodejs test and coverage utility
 
+[![heroku.com test server](https://kaizhu256.github.io/node-utility2-data/build.travis-ci.org/latest.unstable/test-report.screenshot.heroku.png)](https://hrku01-utility2.herokuapp.com/test/test.html)
+
 ## build status
 [![saucelabs.com selenium test status](https://saucelabs.com/browser-matrix/sclb01-utility2.svg)](https://saucelabs.com/u/sclb01-utility2)
 
@@ -44,9 +46,11 @@ npm start --server-port=8080
 ```
 
 ## todo
+- minify angularjs
 
 ## changelog
 #### 2014.7.18
+- automatically capture browser screenshots via phantomjs / slimerjs / saucelabs
 - add basic auth for test report upload
 - rename exports.initLocal to exports.initSubmodule
 

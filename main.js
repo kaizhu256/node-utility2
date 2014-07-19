@@ -5,13 +5,13 @@ var exports, required, state;
 
 
 
-(function submoduleUtility2Nodejs() {
+(function submoduleMainNodejs() {
   /*
-    this nodejs submodule exports the utility2 api
+    this nodejs submodule exports the main api
   */
   'use strict';
   var local = {
-    _name: 'proxy-lite.submoduleUtility2Nodejs',
+    _name: 'utility2.submoduleMainNodejs',
 
     _init: function () {
       /*

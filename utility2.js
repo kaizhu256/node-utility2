@@ -459,8 +459,8 @@ var exports, required, state;
           exports.assert(error.code === 'ETIMEDOUT');
           timeElapsed = Date.now() - timeElapsed;
           // assert timeElapsed passed is greater than timeout
-          // bug - ie might timeout slightly earlier
-          exports.assert(timeElapsed >= 999, timeElapsed);
+          // bug - ie might timeout slightly earlier so increase timeElapsed by a small amount
+          exports.assert(timeElapsed + 100 >= 1000, timeElapsed);
           onEventError();
         }, onEventError);
       }, 1000, '_onEventTimeout_timeoutError_test');
@@ -711,29 +711,16 @@ var exports, required, state;
       // merge testPlatformList
       testReport2.testPlatformList.forEach(function (testPlatform2) {
         testPlatform1 = null;
-        testReport1.testPlatformList.forEach(function (_) {
-          // use existing testPlatform1
+        testReport1.testPlatformList.forEach(function (_, ii) {
+          // replace existing testPlatform1 with testPlatform2
           if (_.name === testPlatform2.name) {
-            testPlatform1 = _;
+            testPlatform1 = testReport1.testPlatformList[ii] = testPlatform2;
           }
         });
-        // create new testPlatform1
+        // push new testPlatform2
         if (!testPlatform1) {
-          testPlatform1 = {
-            name: testPlatform2.name,
-            testCaseList: [],
-            timeElapsed: 0
-          };
-          testReport1.testPlatformList.push(testPlatform1);
+          testReport1.testPlatformList.push(testPlatform2);
         }
-        // update testPlatform1.timeElapsed
-        if (testPlatform1.timeElapsed < 0xffffffff) {
-          testPlatform1.timeElapsed += testPlatform2.timeElapsed;
-        }
-        // merge testPlatform2.testCaseList into testPlatform1.testCaseList
-        testPlatform2.testCaseList.forEach(function (testCase) {
-          testPlatform1.testCaseList.push(testCase);
-        });
       });
       // update testReport1.timeElapsed
       if (testReport1.timeElapsed < 0xffffffff) {
@@ -775,6 +762,11 @@ var exports, required, state;
           arg2 = arg2.status.replace('passed', 'z') + arg2.name.toLowerCase();
           return arg1 <= arg2 ? -1 : 1;
         });
+        // update testReport.timeElapsed
+        if (testPlatform.timeElapsed < 0xffffffff &&
+            testPlatform.timeElapsed > testReport.timeElapsed) {
+          testReport.timeElapsed = testPlatform.timeElapsed;
+        }
       });
       // sort testPlatformList by status and name
       testReport.testPlatformList.sort(function (arg1, arg2) {
@@ -786,6 +778,8 @@ var exports, required, state;
       if (testReport.testsPending === 0 && testReport.timeElapsed > 0xffffffff) {
         testReport.timeElapsed = Date.now() - testReport.timeElapsed;
       }
+      // merge remaining items in testReport2 into testReport1
+      exports.setDefault(testReport1, testReport2);
       // part 2 - create and return html test report
       // create a copy of testReport, which will be modified for html templating
       testReport = JSON.parse(JSON.stringify(testReport));
@@ -821,10 +815,26 @@ var exports, required, state;
           // map testPlatformList
           testPlatformList: testReport.testPlatformList.map(function (testPlatform, ii) {
             errorMessageList = [];
+            testPlatform.screenshotImg = testPlatform.screenshotImg || (state.modeNodejs && (
+              (/PhantomJS/).test(testPlatform.name) ?
+                  'test-report.screenshot.phantomjs.png'
+                : (/SlimerJS/).test(testPlatform.name) ?
+                    'test-report.screenshot.slimerjs.png'
+                  : required.fs.existsSync('.build/test-report.screenshot.travis.png') ?
+                      'test-report.screenshot.travis.png'
+                    : ''
+            ));
             return exports.setOverride(testPlatform, {
               errorMessageList: errorMessageList,
               // security - sanitize '<' in text
               name: String(testPlatform.name).replace((/</g), '&lt;'),
+              screenshot: testPlatform.screenshotImg ?
+                  '<a class="testReportPlatformScreenshotA" href="' +
+                  testPlatform.screenshotImg + '">' +
+                  '<img class="testReportPlatformScreenshotImg" src="' +
+                  testPlatform.screenshotImg + '">' +
+                  '</a>'
+                : '',
               // map testCaseList
               testCaseList: testPlatform.testCaseList.map(function (testCase) {
                 testCaseNumber += 1;
@@ -861,11 +871,12 @@ var exports, required, state;
       );
     },
 
-    testRun: function (testReport) {
+    testRun: function () {
       /*
         this function runs the tests
       */
-      var modeTestReportUpload, remaining, testPlatform, testReportHtml;
+      var modeTestReportUpload, remaining, testPlatform, testReport, testReportHtml;
+      testReport = state.testReport;
       // start testReport timer
       testReport.timeElapsed = Date.now();
       // init testPlatform
@@ -1174,7 +1185,7 @@ var exports, required, state;
       // todo - implement proper promise
       setTimeout(function () {
         // run tests
-        exports.testRun(state.testReport);
+        exports.testRun();
         // create initial blank test page
         state.testReportDiv.innerHTML = exports.testReportCreate(state.testReport, {});
         // update test report status every 1000 ms until finished
@@ -1410,10 +1421,8 @@ var exports, required, state;
       // load package.json file
       state.packageJson = state.packageJson || {};
       state.packageJson = JSON.parse(required.fs.readFileSync(__dirname + '/package.json'));
-      // init data files
-      [__dirname + '/utility2.data', __dirname + '/main.data'].forEach(function (file) {
-        local._initFile(file);
-      });
+      // init and watch builtin files
+      local._initFile();
       // run the following code only if this module is in the root directory
       if (__dirname !== process.cwd()) {
         return;
@@ -1426,8 +1435,6 @@ var exports, required, state;
       local._initRepl();
       // init server
       local._initServer();
-      // init watch
-      local._initWatch();
     },
 
     _initCli: function (argv, env) {
@@ -1463,6 +1470,13 @@ var exports, required, state;
           }
         }
       });
+      // merge previous test report into current test report
+      if (state.modeTestReportMerge || process.env.npm_config_modeTestReportMerge) {
+        exports.testReportCreate(
+          state.testReport,
+          JSON.parse(required.fs.readFileSync('.build/test-report.json'))
+        );
+      }
       // init cli after all modules have been synchronously loaded
       setTimeout(function () {
         tmp = state.modeCliDict[state.modeCli];
@@ -1478,6 +1492,11 @@ var exports, required, state;
       */
       var data;
       exports.testMock(onEventError, [
+        [exports, { testReportCreate: exports.nop }],
+        [process, { env: { npm_config_modeTestReportMerge: 'true' } }],
+        [required, { fs: { readFileSync: function () {
+          return 'null';
+        } } }]
       ], function (onEventError) {
         state = { modeCliDict: {} };
         local._initCli(['aa', '--bb', '--cc=dd'], {});
@@ -1506,28 +1525,75 @@ var exports, required, state;
       }
     },
 
-    _initFile: function (file) {
+    _initFile: function () {
       /*
-        this function inits the data file
+        this function inits and watches builtin files
       */
-      var data;
-      data = required.fs.readFileSync(file, 'utf8');
-      data.replace(
-        (/^\/\* MODULE_BEGIN (.+) \*\/$([\S\s]+?)^\/\* MODULE_END \*\/$/gm),
-        function (_, options, content, ii) {
-          // jslint hack
-          exports.nop(_);
-          options = JSON.parse(options);
-          // save options to state.fileDict
-          state.fileDict[options.file] = options;
-          // preserve lineno
-          options.content = data.slice(0, ii).replace(/.*/g, '') + content;
-          // run actions
-          options.actionList.forEach(function (action) {
-            state.fileActionDict[action](options);
-          });
-        }
-      );
+      var initFile;
+      initFile = function (file) {
+        var data;
+        data = required.fs.readFileSync(__dirname + '/' + file, 'utf8');
+        data.replace(
+          (/^\/\* MODULE_BEGIN (.+) \*\/$([\S\s]+?)^\/\* MODULE_END \*\/$/gm),
+          function (_, options, content, ii) {
+            // jslint hack
+            exports.nop(_);
+            options = JSON.parse(options);
+            // save options to state.fileDict
+            state.fileDict[options.file] = options;
+            // preserve lineno
+            options.content = data.slice(0, ii).replace(/.*/g, '') + content;
+            // run actions
+            options.actionList.forEach(function (action) {
+              state.fileActionDict[action](options);
+            });
+          }
+        );
+      };
+      // init data files
+      ['utility2.data', 'main.data'].forEach(function (file) {
+        // init data file
+        initFile(file);
+      });
+      // run the following code only if this module is in the root directory
+      if (__dirname !== process.cwd()) {
+        return;
+      }
+      // watch and auto-init data files
+      ['utility2.data', 'main.data'].forEach(function (file) {
+        // cleanup up old watch
+        required.fs.unwatchFile(file);
+        // watch data file
+        required.fs.watchFile(file, {
+          interval: 1000,
+          persistent: false
+        }, function (stat2, stat1) {
+          if (stat2.mtime >= stat1.mtime) {
+            initFile(file);
+          }
+        });
+      });
+      // watch and auto-jslint js files
+      ['utility2.js', 'main.js'].forEach(function (file) {
+        // cleanup up old watch
+        required.fs.unwatchFile(file);
+        // watch js file
+        required.fs.watchFile(file, {
+          interval: 1000,
+          persistent: false
+        }, function (stat2, stat1) {
+          if (stat2.mtime >= stat1.mtime) {
+            if (required.jslint_lite && required.jslint_lite.jslint) {
+              required.jslint_lite.jslintPrint(
+                required.fs.readFileSync(file, 'utf8')
+                  // remove hashbang from script
+                  .replace((/^#!/), '//#!'),
+                file
+              );
+            }
+          }
+        });
+      });
     },
 
     _initRepl: function () {
@@ -1588,41 +1654,6 @@ var exports, required, state;
         });
     },
 
-    _initWatch: function () {
-      /*
-        this function inits file watching
-      */
-      [__dirname + '/utility2.data', __dirname + '/main.data'].forEach(function (file) {
-        required.fs.watchFile(file, {
-          interval: 1000,
-          persistent: false
-        }, function (stat2, stat1) {
-          if (stat2.mtime >= stat1.mtime) {
-            local._initFile(file);
-          }
-        });
-      });
-      // watch and auto-jslint utility2.js and main.js
-      ['utility2.js', 'main.js'].forEach(function (file) {
-        file = __dirname + '/' + file;
-        required.fs.watchFile(file, {
-          interval: 1000,
-          persistent: false
-        }, function (stat2, stat1) {
-          if (stat2.mtime >= stat1.mtime) {
-            if (required.jslint_lite && required.jslint_lite.jslint) {
-              required.jslint_lite.jslintPrint(
-                required.fs.readFileSync(file, 'utf8')
-                  // remove hashbang
-                  .replace((/^#!/), '//#!'),
-                file
-              );
-            }
-          }
-        });
-      });
-    },
-
     ajax: function (options, onEventError) {
       /*
         this functions performs an asynchronous http(s) request with error handling and timeout,
@@ -1630,7 +1661,7 @@ var exports, required, state;
       */
       var finished,
         mode,
-        onEventError2,
+        onEventMode,
         redirect,
         request,
         response,
@@ -1638,7 +1669,7 @@ var exports, required, state;
         timerTimeout,
         urlParsed;
       mode = 0;
-      onEventError2 = function (error, data) {
+      onEventMode = function (error, data) {
         mode = error instanceof Error ? -1 : mode + 1;
         switch (mode) {
         case 1:
@@ -1646,7 +1677,7 @@ var exports, required, state;
           clearTimeout(timerTimeout);
           // set timerTimeout
           timerTimeout = exports.onEventTimeout(
-            onEventError2,
+            onEventMode,
             options.timerTimeout || state.timeoutDefault,
             'ajax ' + options.url
           );
@@ -1676,9 +1707,9 @@ var exports, required, state;
             : Buffer.isBuffer(options.data) ? options.data.length
               : 0;
           request = (options.protocol === 'https:' ? required.https : required.http)
-            .request(options, onEventError2)
+            .request(options, onEventMode)
             // handle error event
-            .on('error', onEventError2);
+            .on('error', onEventMode);
           // debug ajax request
           state.debugAjaxRequest = request;
           // send request and / or data
@@ -1699,22 +1730,22 @@ var exports, required, state;
           case 307:
             mode = -2;
             redirect = true;
-            onEventError2();
+            onEventMode();
             return;
           }
           // concat response stream into responseText
-          exports.streamReadAll(response, onEventError2);
+          exports.streamReadAll(response, onEventMode);
           break;
         case 3:
           // init responseText
-          responseText = data.toString();
+          responseText = options.resultType === 'binary' ? data : data.toString();
           // error handling for http status code >= 400
           if (response.statusCode >= 400) {
-            onEventError2(new Error(responseText));
+            onEventMode(new Error(responseText));
             return;
           }
           // successful response
-          onEventError2(null, responseText, response);
+          onEventMode(null, responseText);
           break;
         default:
           // ignore error / data if already finished
@@ -1745,7 +1776,7 @@ var exports, required, state;
             options.redirected = options.redirected || 8;
             options.redirected -= 1;
             if (options.redirected < 0) {
-              onEventError2(new Error('ajax - too many http redirects to ' +
+              onEventMode(new Error('ajax - too many http redirects to ' +
                 response.headers.location));
               return;
             }
@@ -1759,7 +1790,7 @@ var exports, required, state;
           onEventError(null, responseText, response);
         }
       };
-      onEventError2();
+      onEventMode();
     },
 
     _ajax_default_test: function (onEventError) {
@@ -1802,6 +1833,7 @@ var exports, required, state;
       /*
         this function installs the file
       */
+      // run the following code only if this module is in the root directory
       if (state.modeCli === 'npmInstall' && __dirname === process.cwd()) {
         required.fs.writeFileSync(options.file, options.content);
       }
@@ -1826,278 +1858,6 @@ var exports, required, state;
         this function trims the file content
       */
       options.content = options.content.trim();
-    },
-
-    headlessBrowser: function (file, onEventError) {
-      /*
-        this function spawns the headless browser process file to test a webpage
-      */
-      var onEventError2, testCallbackId, timerTimeout;
-      onEventError2 = function (error) {
-        // clear timerTimeout for headlessBrowser
-        clearTimeout(timerTimeout);
-        // garbage collect testCallbackId
-        delete state.testCallbackDict[testCallbackId];
-        onEventError(error);
-      };
-      // set timerTimeout for headlessBrowser
-      timerTimeout = exports.onEventTimeout(
-        onEventError2,
-        state.timeoutDefault,
-        file
-      );
-      // init testCallbackId
-      testCallbackId = Math.random().toString('36').slice(2);
-      state.testCallbackDict[testCallbackId] = onEventError2;
-      // spawn the headless browser process file to test a webpage
-      exports.shell({ argv: [
-        file,
-        __dirname + '/.install/phantomjs.js',
-        new Buffer(JSON.stringify({ argv0: file, url: state.localhost +
-          '/test/test.html' +
-          '?modeTest=1' +
-          '&modeTestReportUpload=' + process.env.MODE_TEST_REPORT_UPLOAD +
-          '&testCallbackId=' + testCallbackId +
-          '&timeoutDefault=' + state.timeoutDefault })).toString('base64')
-      ], modeDebug: false });
-    },
-
-    _headlessBrowser_default_test: function (onEventError) {
-      /*
-        this function tests headlessBrowser's default handling behavior
-      */
-      var onEventFinish, remaining, remainingError;
-      onEventFinish = function (error) {
-        remainingError = remainingError || error;
-        remaining -= 1;
-        if (remaining === 0) {
-          onEventError(remainingError);
-        }
-      };
-      remaining = 2;
-      // run browser test in phantomjs
-      exports.headlessBrowser(require('phantomjs').path, onEventFinish);
-      // run browser test in slimerjs
-      exports.headlessBrowser(require('slimerjs').path, onEventFinish);
-    },
-
-    headlessSaucelabs: function (options, onEventError) {
-      /*
-        this function requests saucelabs to test a webpage
-      */
-      var completed,
-        mode,
-        onEventError2,
-        onEventFinish,
-        remaining,
-        remainingDict,
-        remainingError,
-        timerTimeout,
-        timerInterval;
-      mode = 0;
-      onEventError2 = function (error, data) {
-        mode = error instanceof Error ? -1 : mode + 1;
-        switch (mode) {
-        case 1:
-          // init saucelabs tests
-          onEventFinish = function (error) {
-            remainingError = remainingError || error;
-            remaining -= 1;
-            if (remaining === 0) {
-              mode = -2;
-              onEventError2(remainingError);
-            }
-          };
-          options = {
-            data: JSON.stringify(exports.setOverride(options, {
-              build: process.env.CI_BUILD_NUMBER_SAUCELABS,
-              // specify custom test framework in saucelabs
-              framework: 'custom',
-              // reduce timeoutDefault to account for saucelabs startup time
-              // bug - saucelabs only accepts integers for max-duration
-              'max-duration': Math.ceil(Math.max(0.00075 * state.timeoutDefault, 60)),
-              url: exports.textFormat(options.url, {
-                host: process.env.HEROKU_URL || state.localhost,
-                // reduce timeoutDefault to account for max-duration
-                timeoutDefault: 0.5 * state.timeoutDefault
-              })
-            })),
-            headers: {
-              authorization: 'Basic ' + new Buffer(process.env.SAUCE_USERNAME + ':' +
-                process.env.SAUCE_ACCESS_KEY).toString('base64'),
-              'content-type': 'application/json'
-            },
-            method: 'POST',
-            // platforms needed for later debugging
-            platforms: options.platforms,
-            url: 'https://saucelabs.com/rest/v1/' + process.env.SAUCE_USERNAME + '/js-tests'
-          };
-          remaining = 0;
-          remainingDict = {};
-          // set timeout for headlessSaucelabs
-          timerTimeout = exports.onEventTimeout(
-            onEventError2,
-            state.timeoutDefault,
-            'headlessSaucelabs ' + options.url
-          );
-          exports.ajax(options, exports.tryCatchHandler(onEventError2));
-          break;
-        case 2:
-          // JSON.parse data
-          data = JSON.parse(data);
-          // parse initial saucelabs response
-          console.log('\nsaucelabs - tests started - ' + JSON.stringify({
-            request: JSON.parse(options.data),
-            response: data
-          }));
-          // create remainingDict of test id's
-          data['js tests'].forEach(function (id, ii) {
-            remaining += 1;
-            remainingDict[id] = { id: id, platform: options.platforms[ii] };
-          });
-          // poll saucelabs for test status
-          timerInterval = setInterval(function () {
-            // request test status
-            exports.ajax(exports.setOverride(options, {
-              data: JSON.stringify({ 'js tests': Object.keys(remainingDict) }),
-              url: 'https://saucelabs.com/rest/v1/' + process.env.SAUCE_USERNAME +
-                '/js-tests/status'
-            }), exports.tryCatchHandler(onEventError2));
-          }, 30000);
-          break;
-        case 3:
-          // check status of polled tests from saucelabs response
-          // decrement mode to repeat io loop
-          mode -= 1;
-          // JSON.parse data
-          data = JSON.parse(data);
-          completed = completed || data.completed || (/error/).test(data.status);
-          data['js tests'].forEach(function (data) {
-            if (remainingDict[data.id]) {
-              // test finished - remove from remainingDict
-              if (completed || data.result || (/error/).test(data.status)) {
-                // remove test from remainingDict
-                delete remainingDict[data.id];
-                // merge browser test report
-                local._headlessSaucelabsMerge(data, onEventFinish);
-              // test pending - update test status
-              } else {
-                remainingDict[data.id] = {
-                  id: data.id,
-                  job_id: data.job_id,
-                  platform: data.platform,
-                  status: data.status
-                };
-              }
-            }
-          });
-          console.log('\nsaucelabs - tests remaining - ' + JSON.stringify(remainingDict));
-          break;
-        default:
-          // clear interval for headlessSaucelabs
-          clearInterval(timerInterval);
-          // clear timeout for headlessSaucelabs
-          clearTimeout(timerTimeout);
-          onEventError(error);
-        }
-      };
-      onEventError2();
-    },
-
-    _headlessSaucelabsMerge: function (testReport, onEventError) {
-      /*
-        this function merges the saucelabs test report into state.testReport
-      */
-      var errorDefault, jobId, mode, onEventError2;
-      mode = 0;
-      onEventError2 = function (error, data) {
-        mode = error instanceof Error ? -1 : mode + 1;
-        switch (mode) {
-        case 1:
-          // init errorDefault
-          errorDefault = new Error(JSON.stringify(testReport));
-          // init jobId
-          jobId = testReport.job_id;
-          // fetch saucelabs logs for specified jobId
-          exports.ajax({
-            url: 'https://saucelabs.com/jobs/' + jobId + '/log.json'
-          }, exports.tryCatchHandler(onEventError2));
-          break;
-        case 2:
-          // JSON.parse data
-          data = JSON.parse(data);
-          // fetch testReport from saucelabs logs
-          data.forEach(function (data) {
-            testReport = (data && data.result && data.result.testReport) || testReport;
-          });
-          // testReport recovery succeeded
-          if (testReport.testPlatformList) {
-            // clear errorDefault
-            errorDefault = null;
-          }
-          // notify saucelabs of pass / fail test statue
-          exports.ajax({
-            data: '{"passed":' + !errorDefault + '}',
-            headers: {
-              authorization: 'Basic ' + new Buffer(process.env.SAUCE_USERNAME +
-                ':' + process.env.SAUCE_ACCESS_KEY).toString('base64'),
-              'content-type': 'application/json'
-            },
-            method: 'PUT',
-            url: 'https://saucelabs.com/rest/v1/' + process.env.SAUCE_USERNAME + '/jobs/' +
-              jobId
-          }, exports.nop);
-          onEventError2();
-          break;
-        default:
-          // testReport recovery failed
-          if (errorDefault) {
-            // create a minimal testReport reporting saucelabs internal error
-            testReport = { testPlatformList: [{
-              name: 'browser - saucelabs ' +
-                (testReport.platform || ['unknown user agent']).join(' '),
-              testCaseList: [{
-                errorMessage: exports.errorStack(errorDefault),
-                name: '_headlessSaucelabs_default_test',
-                timeElapsed: testReport.timeElapsed
-              }],
-              timeElapsed: testReport.timeElapsed
-            }] };
-            testReport.errorMessageList =
-              [testReport.testPlatformList[0].testCaseList[0].errorMessage];
-          }
-          // merge recovered testReport into state.testReport
-          exports.testReportCreate(state.testReport, testReport);
-          onEventError(errorDefault);
-        }
-      };
-      onEventError2();
-    },
-
-    modeCliDict_saucelabsTest: function () {
-      /*
-        this function runs saucelabs tests with the given json options piped from stdin
-      */
-      var options;
-      // merge previous test report into current test
-      if (state.modeTestReportMerge) {
-        exports.testReportCreate(
-          state.testReport,
-          JSON.parse(required.fs.readFileSync('.build/test-report.json'))
-        );
-      }
-      options = JSON.parse(required.fs.readFileSync('.install/saucelabs-platforms.json'));
-      // init state
-      exports.setOverride(state, options.stateOverride);
-      // remove stateOverride param
-      delete options.stateOverride;
-      state.testPlatform.testCaseList = [{
-        callback: function (onEventError) {
-          exports.headlessSaucelabs(options, onEventError);
-        },
-        name: local._name + '._headlessSaucelabs_browser_test'
-      }];
-      exports.testRun(state.testReport);
     },
 
     modeCliDict_coverageReportBadgeCreate: function () {
@@ -2147,9 +1907,9 @@ var exports, required, state;
       /*
         this function pushes the local file1 to the remote github file2
       */
-      var blob, file1, file2, mode, onEventError2, sha;
+      var blob, file1, file2, mode, onEventMode, sha;
       mode = 0;
-      onEventError2 = function (error, data) {
+      onEventMode = function (error, data) {
         mode += 1;
         switch (mode) {
         case 1:
@@ -2166,7 +1926,7 @@ var exports, required, state;
             },
             url: 'https://api.github.com/repos/' + process.env.GITHUB_REPO +
               '-data/contents/' + required.path.dirname(file2) + '?ref=gh-pages'
-          }, onEventError2);
+          }, onEventMode);
           break;
         case 2:
           blob = required.fs.readFileSync(file1);
@@ -2203,14 +1963,14 @@ var exports, required, state;
             method: 'PUT',
             url: 'https://api.github.com/repos/' + process.env.GITHUB_REPO +
               '-data/contents/' + file2
-          }, onEventError2);
+          }, onEventMode);
           break;
         default:
           onEventError(error);
           process.exit(!!error);
         }
       };
-      onEventError2();
+      onEventMode();
     },
 
     _modeCliDict_githubContentsFilePush_default_test: function (onEventError) {
@@ -2280,23 +2040,51 @@ var exports, required, state;
         this function runs after npm install
       */
       // re-init data files with the install flag
-      [__dirname + '/utility2.data', __dirname + '/main.data'].forEach(function (file) {
-        local._initFile(file);
-      });
+      local._initFile();
     },
 
     modeCliDict_npmTest: function () {
       /*
         this function runs npm test
       */
-      // merge previous test report into current test
-      if (state.modeTestReportMerge) {
-        exports.testReportCreate(
-          state.testReport,
-          JSON.parse(required.fs.readFileSync('.build/test-report.json'))
-        );
-      }
-      exports.testRun(state.testReport);
+      exports.testRun();
+    },
+
+    modeCliDict_saucelabsScreenshot: function () {
+      /*
+        this function grabs screenshots using saucelabs
+      */
+      [
+        {
+          file: 'test-report.screenshot.heroku.png',
+          url: process.env.HEROKU_URL + '/test/test.html?modeTest=1'
+        },
+        {
+          file: 'test-report.screenshot.travis.png',
+          url: 'https://travis-ci.org/' + process.env.GITHUB_REPO
+        }
+      ].forEach(function (options) {
+        local._saucelabsScreenshot(options, exports.onEventErrorDefault);
+      });
+    },
+
+    modeCliDict_saucelabsTest: function () {
+      /*
+        this function runs saucelabs tests with the given json options piped from stdin
+      */
+      var options;
+      options = JSON.parse(required.fs.readFileSync('.install/saucelabs-config.json'));
+      // init state
+      exports.setOverride(state, options.stateOverride);
+      // remove stateOverride param
+      delete options.stateOverride;
+      state.testPlatform.testCaseList = [{
+        callback: function (onEventError) {
+          local._saucelabsTest(options, onEventError);
+        },
+        name: local._name + '.__saucelabsTest_default_test'
+      }];
+      exports.testRun();
     },
 
     _replParse: function (script) {
@@ -2412,9 +2200,9 @@ var exports, required, state;
       /*
         this function receives and parses uploaded test reports
       */
-      var coverage1, coverage2, file1, file2, mode, onEventError2;
+      var coverage1, coverage2, file1, file2, mode, onEventMode;
       mode = 0;
-      onEventError2 = function (error, data) {
+      onEventMode = function (error, data) {
         mode = error instanceof Error ? -1 : mode + 1;
         switch (mode) {
         case 1:
@@ -2428,7 +2216,7 @@ var exports, required, state;
           exports.streamReadAll(
             request,
             // security - use try catch block to parse potential malformed data
-            exports.tryCatchHandler(onEventError2)
+            exports.tryCatchHandler(onEventMode)
           );
           break;
         case 2:
@@ -2475,13 +2263,13 @@ var exports, required, state;
           next(error);
         }
       };
-      onEventError2();
+      onEventMode();
     },
 
     serverMiddleware: function (request, response, next) {
-      var mode, onEventError2, path;
+      var mode, onEventMode, path;
       mode = 0;
-      onEventError2 = function () {
+      onEventMode = function () {
         mode += 1;
         switch (mode) {
         case 1:
@@ -2491,7 +2279,7 @@ var exports, required, state;
           state.debugServerResponse = response;
           // security - validate request url path
           if (request.urlPathNormalized) {
-            onEventError2();
+            onEventMode();
             return;
           }
           path = request.url;
@@ -2506,7 +2294,7 @@ var exports, required, state;
                 !(/\.\/|\.$/).test(path)) {
               // dyanamic path handler
               request.urlPathNormalized = required.path.resolve(path);
-              onEventError2();
+              onEventMode();
               return;
             }
           }
@@ -2524,7 +2312,7 @@ var exports, required, state;
             state.debugServerHandler = state.serverRequestHandlerDict[path];
             // process request with error handling
             try {
-              onEventError2();
+              onEventMode();
             } catch (error) {
               next(error);
             }
@@ -2538,7 +2326,7 @@ var exports, required, state;
           break;
         }
       };
-      onEventError2();
+      onEventMode();
     },
 
     serverRespondDefault: function (response, statusCode, error) {
@@ -2660,6 +2448,351 @@ var exports, required, state;
         onEventError(null, Buffer.concat(chunks));
       // pass any errors to the callback
       }).on('error', onEventError);
+    },
+
+    testBrowserHeadless: function (file, onEventError) {
+      /*
+        this function spawns the headless browser process file to test a webpage
+      */
+      var onEventError2, testCallbackId, timerTimeout;
+      onEventError2 = function (error) {
+        // clear timerTimeout for testBrowserHeadless
+        clearTimeout(timerTimeout);
+        // garbage collect testCallbackId
+        delete state.testCallbackDict[testCallbackId];
+        onEventError(error);
+      };
+      // set timerTimeout for testBrowserHeadless
+      timerTimeout = exports.onEventTimeout(
+        onEventError2,
+        state.timeoutDefault,
+        file
+      );
+      // init testCallbackId
+      testCallbackId = Math.random().toString('36').slice(2);
+      state.testCallbackDict[testCallbackId] = onEventError2;
+      // spawn the headless browser process file to test a webpage
+      exports.shell({ argv: [
+        file,
+        '.install/phantomjs-test.js',
+        new Buffer(JSON.stringify({ argv0: required.path.basename(file), url: state.localhost +
+          '/test/test.html' +
+          '?modeTest=1' +
+          '&modeTestReportUpload=' + process.env.MODE_TEST_REPORT_UPLOAD +
+          '&testCallbackId=' + testCallbackId +
+          '&timeoutDefault=' + state.timeoutDefault })).toString('base64')
+      ], modeDebug: false });
+    },
+
+    _testBrowserHeadless_default_test: function (onEventError) {
+      /*
+        this function tests testBrowserHeadless's default handling behavior
+      */
+      var onEventRemaining, remaining, remainingError;
+      onEventRemaining = function (error) {
+        remainingError = remainingError || error;
+        remaining -= 1;
+        if (remaining === 0) {
+          onEventError(remainingError);
+        }
+      };
+      remaining = 2;
+      // run browser test in phantomjs
+      exports.testBrowserHeadless(require('phantomjs').path, onEventRemaining);
+      // run browser test in slimerjs
+      exports.testBrowserHeadless(require('slimerjs').path, onEventRemaining);
+    },
+
+    _saucelabsTest: function (options, onEventError) {
+      /*
+        this function requests saucelabs to test a webpage
+      */
+      var completed,
+        mode,
+        onEventMode,
+        onEventRemaining,
+        remaining,
+        remainingDict,
+        remainingError,
+        timerInterval,
+        timerTimeout;
+      mode = 0;
+      onEventMode = function (error, data) {
+        mode = error instanceof Error ? -1 : mode + 1;
+        switch (mode) {
+        case 1:
+          onEventRemaining = function (error) {
+            remainingError = remainingError || error;
+            remaining -= 1;
+            if (remaining === 0) {
+              mode = -2;
+              onEventMode(remainingError);
+            }
+          };
+          options = {
+            data: JSON.stringify(exports.setOverride(options, {
+              build: process.env.CI_BUILD_NUMBER_SAUCELABS,
+              // specify custom test framework in saucelabs
+              framework: 'custom',
+              // reduce timeoutDefault to account for saucelabs startup time
+              // bug - saucelabs only accepts integers for max-duration
+              'max-duration': Math.ceil(Math.max(0.00075 * state.timeoutDefault, 60)),
+              url: exports.textFormat(options.url, {
+                host: process.env.HEROKU_URL || state.localhost,
+                // reduce timeoutDefault to account for max-duration
+                timeoutDefault: 0.5 * state.timeoutDefault
+              })
+            })),
+            headers: {
+              authorization: 'Basic ' + new Buffer(process.env.SAUCE_USERNAME + ':' +
+                process.env.SAUCE_ACCESS_KEY).toString('base64'),
+              'content-type': 'application/json'
+            },
+            method: 'POST',
+            // platforms needed for later debugging
+            platforms: options.platforms,
+            url: 'https://saucelabs.com/rest/v1/' + process.env.SAUCE_USERNAME + '/js-tests',
+            url0: options.url
+          };
+          remaining = 0;
+          remainingDict = {};
+          // set timeout for _saucelabsTest
+          timerTimeout = exports.onEventTimeout(
+            onEventMode,
+            state.timeoutDefault,
+            '_saucelabsTest ' + options.url0
+          );
+          exports.ajax(options, exports.tryCatchHandler(onEventMode));
+          break;
+        case 2:
+          // JSON.parse data
+          data = JSON.parse(data);
+          // parse initial saucelabs response
+          console.log('\nsaucelabs - tests started - ' + JSON.stringify({
+            request: JSON.parse(options.data),
+            response: data
+          }));
+          // create remainingDict of test id's
+          data['js tests'].forEach(function (id, ii) {
+            remaining += 1;
+            remainingDict[id] = { id: id, platform: options.platforms[ii] };
+          });
+          // poll saucelabs for test status
+          timerInterval = setInterval(function () {
+            // request test status
+            exports.ajax(exports.setOverride(options, {
+              data: JSON.stringify({ 'js tests': Object.keys(remainingDict) }),
+              url: 'https://saucelabs.com/rest/v1/' + process.env.SAUCE_USERNAME +
+                '/js-tests/status'
+            }), exports.tryCatchHandler(onEventMode));
+          }, 30000);
+          break;
+        case 3:
+          // check status of polled tests from saucelabs response
+          // decrement mode to repeat io loop
+          mode -= 1;
+          // JSON.parse data
+          data = JSON.parse(data);
+          completed = completed || data.completed || (/error/).test(data.status);
+          data['js tests'].forEach(function (data) {
+            if (remainingDict[data.id]) {
+              // test finished - remove from remainingDict
+              if (completed || data.result || (/error/).test(data.status)) {
+                // remove test from remainingDict
+                delete remainingDict[data.id];
+                // merge browser test report
+                local._saucelabsMerge(data, onEventRemaining);
+              // test pending - update test status
+              } else {
+                remainingDict[data.id] = {
+                  id: data.id,
+                  job_id: data.job_id,
+                  platform: data.platform,
+                  status: data.status
+                };
+              }
+            }
+          });
+          console.log('\nsaucelabs - tests remaining - ' + JSON.stringify(remainingDict));
+          break;
+        default:
+          remaining = -2;
+          // clear interval for _saucelabsTest
+          clearInterval(timerInterval);
+          // clear timeout for _saucelabsTest
+          clearTimeout(timerTimeout);
+          onEventError(error);
+        }
+      };
+      onEventMode();
+    },
+
+    _saucelabsMerge: function (testReport, onEventError) {
+      /*
+        this function merges the saucelabs test report into state.testReport
+      */
+      var errorDefault, jobId, mode, onEventMode;
+      mode = 0;
+      onEventMode = function (error, data) {
+        mode = error instanceof Error ? -1 : mode + 1;
+        switch (mode) {
+        case 1:
+          // init errorDefault
+          errorDefault = new Error(JSON.stringify(testReport));
+          // init jobId
+          jobId = testReport.job_id;
+          // fetch saucelabs logs for the given jobId
+          exports.ajax({
+            url: 'https://saucelabs.com/jobs/' + jobId + '/log.json'
+          }, exports.tryCatchHandler(onEventMode));
+          break;
+        case 2:
+          // JSON.parse data
+          data = JSON.parse(data);
+          // fetch testReport from saucelabs logs
+          data.forEach(function (data) {
+            testReport = (data && data.result && data.result.testReport) || testReport;
+          });
+          // testReport recovery succeeded case
+          if (testReport.testPlatformList) {
+            // clear errorDefault
+            errorDefault = null;
+            // capture saucelabs screenshot
+            testReport.testPlatformList[0].screenshotImg =
+              'https://assets.saucelabs.com/jobs/' + jobId + '/0002screenshot.png';
+          }
+          onEventMode();
+          break;
+        default:
+          // notify saucelabs of pass / fail test statue
+          exports.ajax({
+            data: '{"passed":' + !errorDefault + '}',
+            headers: {
+              authorization: 'Basic ' + new Buffer(process.env.SAUCE_USERNAME +
+                ':' + process.env.SAUCE_ACCESS_KEY).toString('base64'),
+              'content-type': 'application/json'
+            },
+            method: 'PUT',
+            url: 'https://saucelabs.com/rest/v1/' + process.env.SAUCE_USERNAME + '/jobs/' +
+              jobId
+          }, exports.nop);
+          // testReport recovery failed case
+          if (errorDefault) {
+            // create a minimal testReport reporting saucelabs internal error
+            testReport = { testPlatformList: [{
+              name: 'browser - saucelabs ' +
+                (testReport.platform || ['unknown user agent']).join(' '),
+              testCaseList: [{
+                errorMessage: exports.errorStack(errorDefault),
+                name: '__saucelabsTest_default_test',
+                timeElapsed: testReport.timeElapsed
+              }],
+              timeElapsed: testReport.timeElapsed
+            }] };
+            testReport.errorMessageList =
+              [testReport.testPlatformList[0].testCaseList[0].errorMessage];
+          }
+          // merge recovered testReport into state.testReport
+          exports.testReportCreate(state.testReport, testReport);
+          onEventError(errorDefault);
+        }
+      };
+      onEventMode();
+    },
+
+    _saucelabsScreenshot: function (options, onEventError) {
+      /*
+        this function returns a url for the screenshot captured by saucelabs
+      */
+      var jobId,
+        mode,
+        onEventMode,
+        remaining,
+        screenshotImg,
+        timerTimeout;
+      mode = 0;
+      onEventMode = function (error, data) {
+        mode = error instanceof Error ? -1 : mode + 1;
+        switch (mode) {
+        case 1:
+          // set timeout for screenshot to capture in seconds
+          exports.setOverride(options, {
+            data: JSON.stringify(exports.setOverride(JSON.parse(JSON.stringify(options)), {
+              // specify custom test framework in saucelabs
+              framework: 'custom',
+              // set max-duration timeout in seconds
+              // bug - saucelabs only accepts integers for max-duration
+              'max-duration': Math.ceil(0.00025 * state.timeoutDefault),
+              platforms: [["linux", "googlechrome", ""]],
+              // disable video recording for faster performance
+              "record-video": false
+            })),
+            headers: {
+              authorization: 'Basic ' + new Buffer(process.env.SAUCE_USERNAME + ':' +
+                process.env.SAUCE_ACCESS_KEY).toString('base64'),
+              'content-type': 'application/json'
+            },
+            method: 'POST',
+            url: 'https://saucelabs.com/rest/v1/' + process.env.SAUCE_USERNAME + '/js-tests',
+            url0: options.url
+          });
+          remaining = 1;
+          // set timeout for _saucelabsScreenshot
+          timerTimeout = exports.onEventTimeout(
+            onEventMode,
+            state.timeoutDefault,
+            '_saucelabsScreenshot ' + options.url0
+          );
+          exports.ajax(options, onEventMode);
+          break;
+        case 2:
+          exports.setOverride(options, {
+            data: data,
+            url: 'https://saucelabs.com/rest/v1/' + process.env.SAUCE_USERNAME +
+              '/js-tests/status'
+          });
+          onEventMode();
+          break;
+        case 3:
+          setTimeout(function () {
+            exports.ajax(options, exports.tryCatchHandler(onEventMode));
+          }, 5000);
+          break;
+        case 4:
+          jobId = JSON.parse(data)['js tests'][0].job_id;
+          if (jobId === 'job not ready') {
+            mode -= 2;
+            onEventMode();
+            return;
+          }
+          remaining -= 1;
+          if (remaining === 0) {
+            screenshotImg = 'https://assets.saucelabs.com/jobs/' + jobId +
+              '/0004screenshot.png';
+            setTimeout(onEventMode, 0.25 * state.timeoutDefault);
+          }
+          break;
+        case 5:
+          // fetch screenshotImg
+          exports.ajax({
+            resultType: 'binary',
+            url: screenshotImg
+          }, onEventMode);
+          break;
+        case 6:
+          // save screenshotImg
+          console.log('_saucelabsScreenshot - saving screenshot of ' + options.url0 +
+            ' to ' + '.build/' + options.file);
+          required.fs.writeFile('.build/' + options.file, data, onEventMode);
+          break;
+        default:
+          remaining = -2;
+          // clear timeout for _saucelabsScreenshot
+          clearTimeout(timerTimeout);
+          onEventError(error, screenshotImg);
+        }
+      };
+      onEventMode();
     },
 
     unref: function (obj) {

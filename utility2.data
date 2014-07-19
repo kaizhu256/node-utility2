@@ -75,7 +75,7 @@ exec ssh -i $GIT_SSH_KEY_FILE -o CheckHostIP=no -o StrictHostKeychecking=no -- "
 
 
 
-/* MODULE_BEGIN { "actionList": ["lint", "trim", "install"], "file": ".install/saucelabs-platforms.json" } */
+/* MODULE_BEGIN { "actionList": ["lint", "trim", "install"], "file": ".install/saucelabs-config.json" } */
 {
   "platforms": [
     ["linux", "android", "4.3"],
@@ -95,21 +95,18 @@ exec ssh -i $GIT_SSH_KEY_FILE -o CheckHostIP=no -o StrictHostKeychecking=no -- "
 
 
 
-/* MODULE_BEGIN { "actionList": ["lint", "install"], "file": ".install/phantomjs.js" } */
+/* MODULE_BEGIN { "actionList": ["lint", "install"], "file": ".install/phantomjs-test.js" } */
 /*jslint browser: true, indent:2, node: true, nomen: true*/
 /*global phantom*/
-
-
-
-(function submodulePhantomjs() {
+(function submoduleTestPhantomjs() {
   /*
-    this phantomjs submodule opens a webpage
+    this phantomjs submodule tests a webpage
   */
   'use strict';
   var local;
   local = {
 
-    _name: 'utility2.submodulePhantomjs',
+    _name: 'utility2.submoduleTestPhantomjs',
 
     _init: function () {
       var page, state;
@@ -136,6 +133,7 @@ exec ssh -i $GIT_SSH_KEY_FILE -o CheckHostIP=no -o StrictHostKeychecking=no -- "
         phantom.exit();
       }, Number(state.timeoutDefault) || 300000);
       page = require('webpage').create();
+      page.viewportSize = { height: 768, width: 1024 };
       // page error handling - http://phantomjs.org/api/webpage/handler/on-error.html
       page.onError = function (msg, trace) {
         var msgStack = ['ERROR: ' + msg];
@@ -156,6 +154,11 @@ exec ssh -i $GIT_SSH_KEY_FILE -o CheckHostIP=no -o StrictHostKeychecking=no -- "
       page.open(state.url, function (status) {
         state.pageOpenStatus = status;
         console.log(state.argv0 + ' - open ' + status + ' ' + state.url);
+        setTimeout(function () {
+          // save screenshot of webpage
+          console.log(state.argv0 + ' - render ' + state.url);
+          page.render('.build/test-report.screenshot.' + state.argv0 + '.png');
+        }, 2000);
       });
     }
 
@@ -168,6 +171,235 @@ exec ssh -i $GIT_SSH_KEY_FILE -o CheckHostIP=no -o StrictHostKeychecking=no -- "
 
 /* MODULE_BEGIN { "actionList": ["trim", "install"], "file": "Procfile" } */
 web: npm start --server-port=$PORT
+/* MODULE_END */
+
+
+
+/* MODULE_BEGIN { "actionList": ["trim"], "file": "/public/testReport.html.template" } */
+<style>
+.testReportPlatformDiv {
+  border: 1px solid;
+  border-radius: 5px;
+  font-family: arial;
+  margin: 20px 0 0 0;
+  padding: 0 10px 10px 10px;
+  text-align: left;
+}
+.testReportPlatformPre {
+  background-color: #fdd;
+  border: 1px;
+  border-radius: 0 0 5px 5px;
+  border-top-style: solid;
+  margin-bottom: 0px;
+  padding: 10px;
+}
+.testReportPlatformPreHidden {
+  display: none;
+}
+.testReportPlatformScreenshotA {
+  display:block;
+  max-height:256px;
+  max-width:320px;
+  overflow:hidden;
+}
+.testReportPlatformScreenshotImg {
+  max-width:320px;
+}
+.testReportPlatformSpan {
+  display: inline-block;
+  width: 7em;
+}
+.testReportPlatformTable {
+  border: 1px;
+  border-top-style: solid;
+  text-align: left;
+  width: 100%;
+}
+.testReportSummaryDiv {
+  background-color: #bfb;
+}
+.testReportSummarySpan {
+  display: inline-block;
+  width: 6.5em;
+}
+tr:nth-child(odd).testReportPlatformTr {
+  background-color: #bfb;
+}
+.testReportTestFailed {
+  background-color: #f99;
+}
+.testReportTestPending {
+  background-color: #99f;
+}
+</style>
+
+<div class="testReportPlatformDiv testReportSummaryDiv">
+<h2>test report summary</h2>
+<h4>
+  <span class="testReportSummarySpan">build date</span>- {{date}}<br>
+  <span class="testReportSummarySpan">build id</span>- {{CI_BUILD_NUMBER}}<br>
+  <span class="testReportSummarySpan">commit info</span>- {{CI_COMMIT_INFO}}<br>
+</h4>
+<table class="testReportPlatformTable">
+<thead><tr>
+  <th>total time elapsed</th>
+  <th>total tests failed</th>
+  <th>total tests passed</th>
+  <th>total tests pending</th>
+</tr></thead>
+<tbody><tr>
+  <td>{{timeElapsed}} ms</td>
+  <td class="{{testsFailedClass}}">{{testsFailed}}</td>
+  <td>{{testsPassed}}</td>
+  <td>{{testsPending}}</td>
+</tr></tbody>
+</table>
+</div>
+
+{{@testPlatformList}}
+<div class="testReportPlatformDiv">
+{{screenshot}}
+<h4>
+  {{testPlatformNumber}}. {{name}}<br>
+  <span class="testReportPlatformSpan">time elapsed</span>- {{timeElapsed}} ms<br>
+  <span class="testReportPlatformSpan">tests failed</span>- {{testsFailed}}<br>
+  <span class="testReportPlatformSpan">tests passed</span>- {{testsPassed}}<br>
+  <span class="testReportPlatformSpan">tests pending</span>- {{testsPending}}<br>
+</h4>
+<table class="testReportPlatformTable">
+<thead><tr>
+  <th>#</th>
+  <th>time elapsed</th>
+  <th>status</th>
+  <th>test case</th>
+</tr></thead>
+<tbody>
+{{@testCaseList}}
+<tr class="testReportPlatformTr">
+  <td>{{testCaseNumber}}</td>
+  <td>{{timeElapsed}} ms</td>
+  <td class="{{testReportTestStatusClass}}">{{status}}</td>
+  <td>{{name}}</td>
+</tr>
+{{/@testCaseList}}
+</tbody>
+</table>
+<pre class="{{testReportPlatformPreClass}}">
+{{@errorMessageList}}
+{{errorMessage}}
+{{/@errorMessageList}}
+</pre>
+</div>
+{{/@testPlatformList}}
+/* MODULE_END */
+
+
+
+/* MODULE_BEGIN { "actionList": ["lint"], "file": "/public/utility2.css" } */
+.ajaxProgressBarDiv {
+  animation: 2s linear 0s normal none infinite ajaxProgressBarDivAnimation;
+  -o-animation: 2s linear 0s normal none infinite ajaxProgressBarDivAnimation;
+  -webkit-animation: 2s linear 0s normal none infinite ajaxProgressBarDivAnimation;
+  background-image: linear-gradient(
+    45deg,rgba(255,255,255,.25) 25%,
+    transparent 25%,
+    transparent 50%,
+    rgba(255,255,255,.25) 50%,
+    rgba(255,255,255,.25) 75%,
+    transparent 75%,
+    transparent
+  );
+  background-size: 40px 40px;
+  color: #fff;
+  font-family: arial;
+  font-size: 12px;
+  padding: 2px 0 2px 0;
+  text-align: center;
+  transition: width .5s ease;
+  width: 0%;
+}
+.ajaxProgressBarDivError {
+  background-color: #d33;
+}
+.ajaxProgressBarDivLoading {
+  background-color: #37b;
+}
+.ajaxProgressBarDivSuccess {
+  background-color: #3b3;
+}
+#ajaxProgressDiv {
+  background-color: #fff;
+  border: 1px solid;
+  cursor: pointer;
+  display: none;
+  left: 50%;
+  margin: 0 0 0 -50px;
+  padding: 5px 5px 5px 5px;
+  position: fixed;
+  top: 49%;
+  width: 100px;
+  z-index: 9999;
+}
+@keyframes ajaxProgressBarDivAnimation {
+  from { background-position: 40px 0; }
+  to { background-position: 0 0; }
+}
+@-o-keyframes ajaxProgressBarDivAnimation {
+  from { background-position: 40px 0; }
+  to { background-position: 0 0; }
+}
+@-webkit-keyframes ajaxProgressBarDivAnimation {
+  from { background-position: 40px 0; }
+  to { background-position: 0 0; }
+}
+/* MODULE_END */
+
+
+
+/* MODULE_BEGIN { "actionList": ["trim"], "file": "/test/test.html" } */
+<!DOCTYPE html><html ng-app="utility2">
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
+<title>{{name}} test page</title>
+<style>
+body {
+  font-family: arial;
+}
+#testRunButton {
+  background-color: #37b;
+  border: 0px solid;
+  border-radius: 4px;
+  color: #fff;
+  cursor: pointer;
+  font-size: medium;
+  padding: 5px 10px;
+}
+</style>
+<link href="/public/utility2.css" rel="stylesheet"/>
+</head>
+<body ng-controller="MyController">
+<h1>{{name}} test page</h1>
+<div id="ajaxProgressDiv"></div>
+<button id="testRunButton" ng-click="runTest()">run test</button>
+<div id="testReportDiv"></div>
+<script src="/public/external/angular.js"></script>
+<script src="/public/utility2.js"></script>
+<script>
+(function() {
+  'use strict';
+  // init state object
+  exports.setOverride(state, {{state}});
+  // init event handling
+  angular.module('utility2', []).controller('MyController', ['$scope', function ($scope) {
+    $scope.runTest = function () {
+      location.search = 'modeTest=1';
+    };
+  }]);
+}());
+</script>
+<script src="/public/main.js"></script>
+</body>
+</html>
 /* MODULE_END */
 
 
@@ -23330,223 +23562,4 @@ var styleDirective = valueFn({
 })(window, document);
 
 !window.angular.$$csp() && window.angular.element(document).find('head').prepend('<style type="text/css">@charset "UTF-8";[ng\\:cloak],[ng-cloak],[data-ng-cloak],[x-ng-cloak],.ng-cloak,.x-ng-cloak,.ng-hide:not(.ng-animate){display:none !important;}ng\\:form{display:block;}</style>');
-/* MODULE_END */
-
-
-
-/* MODULE_BEGIN { "actionList": ["trim"], "file": "/public/testReport.html.template" } */
-<style>
-.testReportPlatformDiv {
-  border: 1px solid;
-  border-radius: 5px;
-  font-family: arial;
-  margin: 20px 0 0 0;
-  padding: 0 10px 10px 10px;
-  text-align: left;
-}
-.testReportPlatformPre {
-  background-color: #fdd;
-  border: 1px;
-  border-radius: 0 0 5px 5px;
-  border-top-style: solid;
-  margin-bottom: 0px;
-  padding: 10px;
-}
-.testReportPlatformPreHidden {
-  display: none;
-}
-.testReportPlatformSpan {
-  display: inline-block;
-  width: 7em;
-}
-.testReportPlatformTable {
-  border: 1px;
-  border-top-style: solid;
-  text-align: left;
-  width: 100%;
-}
-.testReportSummaryDiv {
-  background-color: #bfb;
-}
-.testReportSummarySpan {
-  display: inline-block;
-  width: 6.5em;
-}
-tr:nth-child(odd).testReportPlatformTr {
-  background-color: #bfb;
-}
-.testReportTestFailed {
-  background-color: #f99;
-}
-.testReportTestPending {
-  background-color: #99f;
-}
-</style>
-
-<div class="testReportPlatformDiv testReportSummaryDiv">
-<h2>test report summary</h2>
-<h4>
-  <span class="testReportSummarySpan">build date</span>- {{date}}<br>
-  <span class="testReportSummarySpan">build id</span>- {{CI_BUILD_NUMBER}}<br>
-  <span class="testReportSummarySpan">commit info</span>- {{CI_COMMIT_INFO}}<br>
-</h4>
-<table class="testReportPlatformTable">
-<thead><tr>
-  <th>total time elapsed</th>
-  <th>total tests failed</th>
-  <th>total tests passed</th>
-  <th>total tests pending</th>
-</tr></thead>
-<tbody><tr>
-  <td>{{timeElapsed}} ms</td>
-  <td class="{{testsFailedClass}}">{{testsFailed}}</td>
-  <td>{{testsPassed}}</td>
-  <td>{{testsPending}}</td>
-</tr></tbody>
-</table>
-</div>
-
-{{@testPlatformList}}
-<div class="testReportPlatformDiv">
-<h4>
-  {{testPlatformNumber}}. {{name}}<br>
-  <span class="testReportPlatformSpan">time elapsed</span>- {{timeElapsed}} ms<br>
-  <span class="testReportPlatformSpan">tests failed</span>- {{testsFailed}}<br>
-  <span class="testReportPlatformSpan">tests passed</span>- {{testsPassed}}<br>
-  <span class="testReportPlatformSpan">tests pending</span>- {{testsPending}}<br>
-</h4>
-<table class="testReportPlatformTable">
-<thead><tr>
-  <th>#</th>
-  <th>time elapsed</th>
-  <th>status</th>
-  <th>test case</th>
-</tr></thead>
-<tbody>
-{{@testCaseList}}
-<tr class="testReportPlatformTr">
-  <td>{{testCaseNumber}}</td>
-  <td>{{timeElapsed}} ms</td>
-  <td class="{{testReportTestStatusClass}}">{{status}}</td>
-  <td>{{name}}</td>
-</tr>
-{{/@testCaseList}}
-</tbody>
-</table>
-<pre class="{{testReportPlatformPreClass}}">
-{{@errorMessageList}}
-{{errorMessage}}
-{{/@errorMessageList}}
-</pre>
-</div>
-{{/@testPlatformList}}
-/* MODULE_END */
-
-
-
-/* MODULE_BEGIN { "actionList": ["lint"], "file": "/public/utility2.css" } */
-.ajaxProgressBarDiv {
-  animation: 2s linear 0s normal none infinite ajaxProgressBarDivAnimation;
-  -o-animation: 2s linear 0s normal none infinite ajaxProgressBarDivAnimation;
-  -webkit-animation: 2s linear 0s normal none infinite ajaxProgressBarDivAnimation;
-  background-image: linear-gradient(
-    45deg,rgba(255,255,255,.25) 25%,
-    transparent 25%,
-    transparent 50%,
-    rgba(255,255,255,.25) 50%,
-    rgba(255,255,255,.25) 75%,
-    transparent 75%,
-    transparent
-  );
-  background-size: 40px 40px;
-  color: #fff;
-  font-family: arial;
-  font-size: 12px;
-  padding: 2px 0 2px 0;
-  text-align: center;
-  transition: width .5s ease;
-  width: 0%;
-}
-.ajaxProgressBarDivError {
-  background-color: #d33;
-}
-.ajaxProgressBarDivLoading {
-  background-color: #37b;
-}
-.ajaxProgressBarDivSuccess {
-  background-color: #3b3;
-}
-#ajaxProgressDiv {
-  background-color: #fff;
-  border: 1px solid;
-  cursor: pointer;
-  display: none;
-  left: 50%;
-  margin: 0 0 0 -50px;
-  padding: 5px 5px 5px 5px;
-  position: fixed;
-  top: 49%;
-  width: 100px;
-  z-index: 9999;
-}
-@keyframes ajaxProgressBarDivAnimation {
-  from { background-position: 40px 0; }
-  to { background-position: 0 0; }
-}
-@-o-keyframes ajaxProgressBarDivAnimation {
-  from { background-position: 40px 0; }
-  to { background-position: 0 0; }
-}
-@-webkit-keyframes ajaxProgressBarDivAnimation {
-  from { background-position: 40px 0; }
-  to { background-position: 0 0; }
-}
-/* MODULE_END */
-
-
-
-/* MODULE_BEGIN { "actionList": ["trim"], "file": "/test/test.html" } */
-<!DOCTYPE html><html ng-app="utility2">
-<head>
-<meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
-<title>{{name}} test page</title>
-<style>
-body {
-  font-family: arial;
-}
-#testRunButton {
-  background-color: #37b;
-  border: 0px solid;
-  border-radius: 4px;
-  color: #fff;
-  cursor: pointer;
-  font-size: medium;
-  padding: 5px 10px;
-}
-</style>
-<link href="/public/utility2.css" rel="stylesheet"/>
-</head>
-<body ng-controller="MyController">
-<h1>{{name}} test page</h1>
-<div id="ajaxProgressDiv"></div>
-<button id="testRunButton" ng-click="runTest()">run tests</button>
-<div id="testReportDiv"></div>
-<script src="/public/external/angular.js"></script>
-<script src="/public/utility2.js"></script>
-<script>
-(function() {
-  'use strict';
-  // init state object
-  exports.setOverride(state, {{state}});
-  // init event handling
-  angular.module('utility2', []).controller('MyController', ['$scope', function ($scope) {
-    $scope.runTest = function () {
-      location.search = 'modeTest=1';
-    };
-  }]);
-}());
-</script>
-<script src="/public/main.js"></script>
-</body>
-</html>
 /* MODULE_END */

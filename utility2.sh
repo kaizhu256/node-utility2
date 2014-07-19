@@ -95,12 +95,18 @@ shBuild() {
   npm test || shBuildExit
   ## deploy app to heroku
   shBuildHerokuDeploy || shBuildExit
+  ## capture browser screenshots using saucelabs
+  shBuildPrint saucelabsScreenshot "using saucelabs to capture screenshots ..." || shBuildExit
+  node main.js --mode-cli=saucelabsScreenshot --timeout-default=120000
   ## run saucelabs test
   shBuildPrint saucelabsTest "running saucelabs tests ..." || shBuildExit
   export CI_BUILD_NUMBER_SAUCELABS=$CI_BUILD_NUMBER.$(openssl rand -hex 8) || shBuildExit
   node main.js --mode-cli=saucelabsTest --modeTestReportMerge || shBuildExit
   ## npm publish app if its version is greater than the published version
   shBuildNpmPublish || shBuildExit
+  ## re-run npm test to build latest report
+  shBuildPrint npmTestLocal "npm testing $CWD ..." || shBuildExit
+  npm test --modeTestReportMerge || shBuildExit
   ## gracefully exit build
   shBuildExit
 }
@@ -274,7 +280,7 @@ shPackageJsonGetItem() {
 shNpmInstall() {
   ## this function runs after npm install
   ## init .build .install dir
-  mkdir -p .build .install || return $?
+  mkdir -p .build .install .tmp || return $?
   ## install files from utility
   node utility2.js --mode-cli=npmInstall || return $?
   ## make .install/git-ssh.sh executable
