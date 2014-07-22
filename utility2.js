@@ -49,6 +49,8 @@ var exports, required, state;
         testCallbackDict: {},
         // main test report object used to accumulate test reports from this and other platforms
         testReport: {
+          // global code coverage object if it exists
+          coverage: global.__coverage__,
           // list of javascript test platforms - e.g. browser / nodejs
           testPlatformList: [{
             // javascript platform name
@@ -631,6 +633,8 @@ var exports, required, state;
       */
       var errorMessageList,
         env,
+        file1,
+        file2,
         testCaseNumber,
         testPlatform1,
         testReport,
@@ -780,7 +784,32 @@ var exports, required, state;
       }
       // merge remaining items in testReport2 into testReport1
       exports.setDefault(testReport1, testReport2);
-      // part 2 - create and return html test report
+      // part 2 - merge testReport2.coverage int testReport1.coverage
+      // code derived from istanbul.utils.mergeFileCoverage
+      testReport1.coverage = testReport1.coverage || {};
+      testReport2.coverage = testReport2.coverage || {};
+      Object.keys(testReport2.coverage).forEach(function (key) {
+        file1 = testReport1.coverage[key];
+        file2 = testReport2.coverage[key];
+        // remove derived info
+        delete file1.l;
+        Object.keys(file2.b).forEach(function (key) {
+          file1.b[key] = file1.b[key] || [];
+          file2.b[key].forEach(function (count, ii) {
+            file1.b[key][ii] = file1.b[key][ii] || 0;
+            file1.b[key][ii] += count;
+          });
+        });
+        Object.keys(file2.f || {}).forEach(function (key) {
+          file1.f[key] = file1.f[key] || 0;
+          file1.f[key] += file2.f[key];
+        });
+        Object.keys(file2.s || {}).forEach(function (key) {
+          file1.s[key] = file1.s[key] || 0;
+          file1.s[key] += file2.s[key];
+        });
+      });
+      // part 3 - create and return html test report
       // create a copy of testReport, which will be modified for html templating
       testReport = JSON.parse(JSON.stringify(testReport));
       // init env
@@ -924,14 +953,12 @@ var exports, required, state;
             }).join('\n') + '\n');
             // nodejs code
             if (state.modeNodejs) {
-              // create json test report
-              required.fs.writeFileSync('.build/test-report.json', JSON.stringify(testReport));
               // create html test report
               console.log('\ncreating test report file://' + __dirname +
                 '/.build/test-report.html');
               if (required.istanbul_instrumenter) {
                 console.log('creating coverage report file://' + __dirname +
-                  '/.build/coverage-report/index.html');
+                  '/.build/coverage-report.html/index.html');
               }
               required.fs.writeFileSync('.build/test-report.html', testReportHtml);
               // create test report badge
@@ -955,7 +982,6 @@ var exports, required, state;
             } else {
               // notify saucelabs of test results
               global.global_test_results = {
-                coverage: global.__coverage__,
                 testReport: state.testReport,
                 testCallbackId: state.testCallbackId,
                 // extra stuff to keep saucelabs happy - https://saucelabs.com/docs/rest#jsunit
@@ -1193,7 +1219,7 @@ var exports, required, state;
           // update state.testReportDiv in browser
           state.testReportDiv.innerHTML = exports.testReportCreate(state.testReport, {});
           if (state.testReport.testsPending === 0) {
-            // clear timerInterval for test report updates */
+            // cleanup timerInterval
             clearInterval(timerInterval);
           }
         }, 1000);
@@ -1212,7 +1238,8 @@ var exports, required, state;
           error.message = options.method + ' ' + xhr.status + ' - ' +
             options.url + '\n' +
             JSON.stringify((xhr.responseText || '').slice(0, 256) + '...') + '\n' +
-            error.message;
+            // trim potentially very long html response
+            error.message.slice(0, 4096);
         }
         onEventError(error, data, xhr);
       };
@@ -1222,7 +1249,7 @@ var exports, required, state;
         case 'abort':
         case 'error':
         case 'load':
-          // clear timerTimeout for ajax
+          // cleanup timerTimeout
           clearTimeout(timerTimeout);
           // remove xhr from progress list
           ii = local._ajaxProgressList.indexOf(xhr);
@@ -1266,7 +1293,7 @@ var exports, required, state;
       xhr.addEventListener('loadstart', local._ajaxProgressIncrement);
       xhr.addEventListener('progress', local._ajaxProgressIncrement);
       xhr.upload.addEventListener('progress', local._ajaxProgressIncrement);
-      // set timerTimeout for ajax
+      // set timerTimeout
       timerTimeout = exports.onEventTimeout(function (timerTimeout) {
         error = timerTimeout;
         xhr.abort();
@@ -1471,11 +1498,22 @@ var exports, required, state;
         }
       });
       // merge previous test report into current test report
-      if (state.modeTestReportMerge || process.env.npm_config_modeTestReportMerge) {
-        exports.testReportCreate(
-          state.testReport,
-          JSON.parse(required.fs.readFileSync('.build/test-report.json'))
-        );
+      if (process.env.MODE_TEST_REPORT_MERGE) {
+        try {
+          exports.testReportCreate(
+            state.testReport,
+            JSON.parse(required.fs.readFileSync('.build/test-report.json'))
+          );
+          process.on('exit', function () {
+            // create json test report
+            required.fs.writeFileSync(
+              '.build/test-report.json',
+              JSON.stringify(state.testReport)
+            );
+          });
+        } catch (error) {
+          console.log(process.cwd() + '/.build/test-report.json not loaded');
+        }
       }
       // init cli after all modules have been synchronously loaded
       setTimeout(function () {
@@ -1493,7 +1531,6 @@ var exports, required, state;
       var data;
       exports.testMock(onEventError, [
         [exports, { testReportCreate: exports.nop }],
-        [process, { env: { npm_config_modeTestReportMerge: 'true' } }],
         [required, { fs: { readFileSync: function () {
           return 'null';
         } } }]
@@ -1511,14 +1548,18 @@ var exports, required, state;
       /*
         this function inits the coverage api
       */
-      var istanbul;
+      var coverage, istanbul;
+      // init testReport.coverage object
+      Object.keys(global).forEach(function (key) {
+        if (key.indexOf('$$cov_') === 0) {
+          coverage = state.testReport.coverage;
+          // reference to state.testReport.coverage to global coverage object
+          state.testReport.coverage = global[key];
+          // merge old coverage object to the global coverage object
+          exports.testReportCreate(state.testReport, { coverage: coverage });
+        }
+      });
       if (state.modeCoverage) {
-        // init __coverage__ object
-        Object.keys(global).forEach(function (key) {
-          if (key.indexOf('$$cov_') === 0) {
-            global.__coverage__ = global[key];
-          }
-        });
         // init required.istanbul_instrumenter
         istanbul = require('istanbul');
         required.istanbul_instrumenter = new istanbul.Instrumenter();
@@ -1753,7 +1794,7 @@ var exports, required, state;
             return;
           }
           finished = true;
-          // clear timerTimeout
+          // cleanup timerTimeout
           clearTimeout(timerTimeout);
           // cleanup request socket
           if (request) {
@@ -1768,7 +1809,8 @@ var exports, required, state;
             error.message = options.method + ' ' + (response && response.statusCode) + ' - ' +
               options.url + '\n' +
               JSON.stringify((responseText || '').slice(0, 256) + '...') + '\n' +
-              error.message;
+              // trim potentially very long html response
+              error.message.slice(0, 4096);
             onEventError(error, responseText, response);
             return;
           }
@@ -1866,9 +1908,9 @@ var exports, required, state;
       */
       var percent;
       percent = (/Statements: <span class="metric">([.\d]+)/)
-        .exec(required.fs.readFileSync('.build/coverage-report/index.html', 'utf8'))[1];
+        .exec(required.fs.readFileSync('.build/coverage-report.html/index.html', 'utf8'))[1];
       required.fs.writeFileSync(
-        '.build/coverage-report/coverage-report.badge.svg',
+        '.build/coverage-report.badge.svg',
         state.fileDict[
           'https%3A%2F%2Fimg.shields.io%2Fbadge%2Fcoverage-100.0%25-00dd00.svg%3Fstyle%3Dflat'
         ]
@@ -2087,6 +2129,60 @@ var exports, required, state;
       exports.testRun();
     },
 
+    _phantomjsTest: function (file, onEventError) {
+      /*
+        this function spawns a phantomjs / slimerjs process from the given file
+        to test a webpage
+      */
+      var onEventError2, testCallbackId, timerTimeout;
+      onEventError2 = function (error) {
+        // cleanup timerTimeout
+        clearTimeout(timerTimeout);
+        // garbage collect testCallbackId
+        delete state.testCallbackDict[testCallbackId];
+        onEventError(error);
+      };
+      // set timerTimeout
+      timerTimeout = exports.onEventTimeout(
+        onEventError2,
+        state.timeoutDefault,
+        file
+      );
+      // init testCallbackId
+      testCallbackId = Math.random().toString('36').slice(2);
+      state.testCallbackDict[testCallbackId] = onEventError2;
+      // spawn a phantomjs / slimerjs process from the given file to test a webpage
+      exports.shell({ argv: [
+        file,
+        '.install/phantomjs-test.js',
+        new Buffer(JSON.stringify({ argv0: required.path.basename(file), url: state.localhost +
+          '/test/test.html' +
+          '?modeTest=1' +
+          '&modeTestReportUpload=' + process.env.MODE_TEST_REPORT_UPLOAD +
+          '&testCallbackId=' + testCallbackId +
+          '&timeoutDefault=' + state.timeoutDefault })).toString('base64')
+      ], modeDebug: false });
+    },
+
+    __phantomjsTest_default_test: function (onEventError) {
+      /*
+        this function tests _phantomjsTest's default handling behavior
+      */
+      var onEventRemaining, remaining, remainingError;
+      onEventRemaining = function (error) {
+        remainingError = remainingError || error;
+        remaining -= 1;
+        if (remaining === 0) {
+          onEventError(remainingError);
+        }
+      };
+      remaining = 2;
+      // run browser test in phantomjs
+      local._phantomjsTest(require('phantomjs').path, onEventRemaining);
+      // run browser test in slimerjs
+      local._phantomjsTest(require('slimerjs').path, onEventRemaining);
+    },
+
     _replParse: function (script) {
       /*
         this function parses repl stdin
@@ -2129,6 +2225,65 @@ var exports, required, state;
         this function prints arg2 in stringified form from the repl interpreter
       */
       return '(console.log(String(' + arg2 + '))\n)';
+    },
+
+    serverMiddleware: function (request, response, next) {
+      var mode, onEventMode, path;
+      mode = 0;
+      onEventMode = function () {
+        mode += 1;
+        switch (mode) {
+        case 1:
+          // debug server request
+          state.debugServerRequest = request;
+          // debug server response
+          state.debugServerResponse = response;
+          // security - validate request url path
+          path = request.url;
+          // security - enforce max url length
+          if (path.length <= 4096) {
+            // get base path without search params
+            path = (/[^#&?]*/).exec(path)[0];
+            if (path &&
+                // security - enforce max path length
+                path.length <= 256 &&
+                // security - disallow relative path
+                !(/\.\/|\.$/).test(path)) {
+              // dyanamic path handler
+              request.urlPathNormalized = required.path.resolve(path);
+              onEventMode();
+              return;
+            }
+          }
+          next(new Error('serverMiddleware - invalid url ' + path));
+          break;
+        case 2:
+          path = request.urlPathNormalized;
+          // walk up parent path
+          while (!(state.serverRequestHandlerDict[path] || path === '/')) {
+            path = required.path.dirname(path);
+          }
+          // found a handler matching request path
+          if (state.serverRequestHandlerDict[path]) {
+            // debug server request handler
+            state.debugServerHandler = state.serverRequestHandlerDict[path];
+            // process request with error handling
+            try {
+              onEventMode();
+            } catch (error) {
+              next(error);
+            }
+          // else move on to next middleware
+          } else {
+            next();
+          }
+          break;
+        case 3:
+          state.serverRequestHandlerDict[path](request, response, next);
+          break;
+        }
+      };
+      onEventMode();
     },
 
     'serverRequestHandlerDict_/': function (request, response, next) {
@@ -2200,7 +2355,7 @@ var exports, required, state;
       /*
         this function receives and parses uploaded test reports
       */
-      var coverage1, coverage2, file1, file2, mode, onEventMode;
+      var mode, onEventMode;
       mode = 0;
       onEventMode = function (error, data) {
         mode = error instanceof Error ? -1 : mode + 1;
@@ -2223,34 +2378,6 @@ var exports, required, state;
           data = JSON.parse(data);
           // debug data
           state.debugTestReportUpload = data;
-          // merge data.coverage into global.__coverage__
-          coverage1 = global.__coverage__;
-          coverage2 = data.coverage;
-          // merge coverage2 into coverage1
-          // derived from istanbul.utils.mergeFileCoverage
-          if (coverage1 && coverage2) {
-            Object.keys(coverage2).forEach(function (key) {
-              file1 = coverage1[key];
-              file2 = coverage2[key];
-              // remove derived info
-              delete file1.l;
-              Object.keys(file2.b).forEach(function (key) {
-                file1.b[key] = file1.b[key] || [];
-                file2.b[key].forEach(function (count, ii) {
-                  file1.b[key][ii] = file1.b[key][ii] || 0;
-                  file1.b[key][ii] += count;
-                });
-              });
-              Object.keys(file2.f || {}).forEach(function (key) {
-                file1.f[key] = file1.f[key] || 0;
-                file1.f[key] += file2.f[key];
-              });
-              Object.keys(file2.s || {}).forEach(function (key) {
-                file1.s[key] = file1.s[key] || 0;
-                file1.s[key] += file2.s[key];
-              });
-            });
-          }
           // merge data.testReport into state.testReport
           exports.testReportCreate(state.testReport, data.testReport);
           // call testCallbackId callback if it exists
@@ -2261,69 +2388,6 @@ var exports, required, state;
           break;
         default:
           next(error);
-        }
-      };
-      onEventMode();
-    },
-
-    serverMiddleware: function (request, response, next) {
-      var mode, onEventMode, path;
-      mode = 0;
-      onEventMode = function () {
-        mode += 1;
-        switch (mode) {
-        case 1:
-          // debug server request
-          state.debugServerRequest = request;
-          // debug server response
-          state.debugServerResponse = response;
-          // security - validate request url path
-          if (request.urlPathNormalized) {
-            onEventMode();
-            return;
-          }
-          path = request.url;
-          // security - enforce max url length
-          if (path.length <= 4096) {
-            // get base path without search params
-            path = (/[^#&?]*/).exec(path)[0];
-            if (path &&
-                // security - enforce max path length
-                path.length <= 256 &&
-                // security - disallow relative path
-                !(/\.\/|\.$/).test(path)) {
-              // dyanamic path handler
-              request.urlPathNormalized = required.path.resolve(path);
-              onEventMode();
-              return;
-            }
-          }
-          next(new Error('serverMiddleware - invalid url ' + path));
-          break;
-        case 2:
-          path = request.urlPathNormalized;
-          // walk up parent path
-          while (!(state.serverRequestHandlerDict[path] || path === '/')) {
-            path = required.path.dirname(path);
-          }
-          // found a handler matching request path
-          if (state.serverRequestHandlerDict[path]) {
-            // debug server request handler
-            state.debugServerHandler = state.serverRequestHandlerDict[path];
-            // process request with error handling
-            try {
-              onEventMode();
-            } catch (error) {
-              next(error);
-            }
-          // else move on to next middleware
-          } else {
-            next();
-          }
-          break;
-        case 3:
-          state.serverRequestHandlerDict[path](request, response, next);
-          break;
         }
       };
       onEventMode();
@@ -2405,7 +2469,7 @@ var exports, required, state;
       /*
         this function executes shell scripts with timeout handling
       */
-      var child, timeoutPid;
+      var child, timerTimeoutPid;
       // init options.stdio
       options.stdio = options.stdio || ['ignore', 1, 2];
       // debug shell options
@@ -2414,10 +2478,14 @@ var exports, required, state;
       }
       // spawn shell in child process
       child = required.child_process.spawn(options.argv[0], options.argv.slice(1), options);
-      // set timerTimeout for shell
-      timeoutPid = exports.unref(required.child_process.spawn('/bin/sh', ['-c', 'sleep ' +
+      // set timerTimeoutPid
+      timerTimeoutPid = required.child_process.spawn('/bin/sh', ['-c', 'sleep ' +
         ((options.timeout || state.timeoutDefault) / 1000) + '; kill ' + child.pid +
-        ' 2>/dev/null'], { stdio: 'ignore' })).pid;
+        ' 2>/dev/null'], { stdio: 'ignore' });
+      // unref timerTimout process so it can continue tracking the original shell
+      // after nodejs exits
+      timerTimeoutPid.unref();
+      timerTimeoutPid = timerTimeoutPid.pid;
       // debug shell exit code
       child
         // handle error event
@@ -2425,8 +2493,8 @@ var exports, required, state;
         // handle exit event
         .on('exit', function (exitCode) {
           try {
-            // kill timeoutPid
-            process.kill(timeoutPid);
+            // cleanup timerTimeoutPid
+            process.kill(timerTimeoutPid);
           } catch (ignore) {
           }
           console.log('shell - process ' + child.pid + ' exited with code ' + exitCode);
@@ -2448,59 +2516,6 @@ var exports, required, state;
         onEventError(null, Buffer.concat(chunks));
       // pass any errors to the callback
       }).on('error', onEventError);
-    },
-
-    testBrowserHeadless: function (file, onEventError) {
-      /*
-        this function spawns the headless browser process file to test a webpage
-      */
-      var onEventError2, testCallbackId, timerTimeout;
-      onEventError2 = function (error) {
-        // clear timerTimeout for testBrowserHeadless
-        clearTimeout(timerTimeout);
-        // garbage collect testCallbackId
-        delete state.testCallbackDict[testCallbackId];
-        onEventError(error);
-      };
-      // set timerTimeout for testBrowserHeadless
-      timerTimeout = exports.onEventTimeout(
-        onEventError2,
-        state.timeoutDefault,
-        file
-      );
-      // init testCallbackId
-      testCallbackId = Math.random().toString('36').slice(2);
-      state.testCallbackDict[testCallbackId] = onEventError2;
-      // spawn the headless browser process file to test a webpage
-      exports.shell({ argv: [
-        file,
-        '.install/phantomjs-test.js',
-        new Buffer(JSON.stringify({ argv0: required.path.basename(file), url: state.localhost +
-          '/test/test.html' +
-          '?modeTest=1' +
-          '&modeTestReportUpload=' + process.env.MODE_TEST_REPORT_UPLOAD +
-          '&testCallbackId=' + testCallbackId +
-          '&timeoutDefault=' + state.timeoutDefault })).toString('base64')
-      ], modeDebug: false });
-    },
-
-    _testBrowserHeadless_default_test: function (onEventError) {
-      /*
-        this function tests testBrowserHeadless's default handling behavior
-      */
-      var onEventRemaining, remaining, remainingError;
-      onEventRemaining = function (error) {
-        remainingError = remainingError || error;
-        remaining -= 1;
-        if (remaining === 0) {
-          onEventError(remainingError);
-        }
-      };
-      remaining = 2;
-      // run browser test in phantomjs
-      exports.testBrowserHeadless(require('phantomjs').path, onEventRemaining);
-      // run browser test in slimerjs
-      exports.testBrowserHeadless(require('slimerjs').path, onEventRemaining);
     },
 
     _saucelabsTest: function (options, onEventError) {
@@ -2577,7 +2592,7 @@ var exports, required, state;
             remaining += 1;
             remainingDict[id] = { id: id, platform: options.platforms[ii] };
           });
-          // poll saucelabs for test status
+          // set timerInterval to poll saucelabs for test status
           timerInterval = setInterval(function () {
             // request test status
             exports.ajax(exports.setOverride(options, {
@@ -2617,9 +2632,9 @@ var exports, required, state;
           break;
         default:
           remaining = -2;
-          // clear interval for _saucelabsTest
+          // cleanup timerInterval
           clearInterval(timerInterval);
-          // clear timeout for _saucelabsTest
+          // cleanup timerTimeout
           clearTimeout(timerTimeout);
           onEventError(error);
         }
@@ -2768,7 +2783,7 @@ var exports, required, state;
           remaining -= 1;
           if (remaining === 0) {
             screenshotImg = 'https://assets.saucelabs.com/jobs/' + jobId +
-              '/0004screenshot.png';
+              '/0002screenshot.png';
             setTimeout(onEventMode, 0.25 * state.timeoutDefault);
           }
           break;
@@ -2787,22 +2802,12 @@ var exports, required, state;
           break;
         default:
           remaining = -2;
-          // clear timeout for _saucelabsScreenshot
+          // cleanup timerTimeout
           clearTimeout(timerTimeout);
-          onEventError(error, screenshotImg);
+          onEventError(error);
         }
       };
       onEventMode();
-    },
-
-    unref: function (obj) {
-      /*
-        this function unref's the object under nodejs
-      */
-      if (obj && obj.unref) {
-        obj.unref();
-      }
-      return obj;
     }
 
   };

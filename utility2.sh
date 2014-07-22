@@ -90,6 +90,10 @@ shBuild() {
   fi
   export CI_COMMIT_MESSAGE="$(git log -1 --pretty=%s)" || return $?
   export CI_COMMIT_INFO="$CI_COMMIT_ID - $CI_COMMIT_MESSAGE" || return $?
+  ## merge successive test reports
+  export MODE_TEST_REPORT_MERGE=true || return $?
+  ## create initial test-report.json
+  echo "{}" > .build/test-report.json
   ## run local npm test
   shBuildPrint npmTestLocal "npm testing $CWD ..." || return $?
   npm test || shBuildExit
@@ -97,16 +101,18 @@ shBuild() {
   shBuildHerokuDeploy || shBuildExit
   ## capture browser screenshots using saucelabs
   shBuildPrint saucelabsScreenshot "using saucelabs to capture screenshots ..." || shBuildExit
-  node main.js --mode-cli=saucelabsScreenshot --timeout-default=120000
+  istanbul cover main.js --dir=/tmp/coverage --\
+    --mode-cli=saucelabsScreenshot --timeout-default=120000 || shBuildExit
   ## run saucelabs test
   shBuildPrint saucelabsTest "running saucelabs tests ..." || shBuildExit
   export CI_BUILD_NUMBER_SAUCELABS=$CI_BUILD_NUMBER.$(openssl rand -hex 8) || shBuildExit
-  node main.js --mode-cli=saucelabsTest --modeTestReportMerge || shBuildExit
+  istanbul cover main.js --dir=/tmp/coverage --\
+    --mode-cli=saucelabsTest || shBuildExit
   ## npm publish app if its version is greater than the published version
   shBuildNpmPublish || shBuildExit
   ## re-run npm test to build latest report
   shBuildPrint npmTestLocal "npm testing $CWD ..." || shBuildExit
-  npm test --modeTestReportMerge || shBuildExit
+  npm test || shBuildExit
   ## gracefully exit build
   shBuildExit
 }
@@ -244,8 +250,8 @@ shBuildNpmPublish() {
   mkdir -p .build && cp $CWD/.build/test-report.json .build || return $?
   shBuildPrint npmPublishedTest\
     "npm testing published app $NODEJS_PACKAGE_JSON_NAME ..." || return $?
-  ## npm test app and merge result into previous test-report.json
-  npm test --mode-test-report-merge || return $?
+  ## re-run npm test app and merge result into previous test-report.json
+  npm test --disable-coverage || return $?
   cp .build/test-report.* $CWD/.build
   ## restore $CWD
   cd $CWD
@@ -256,19 +262,6 @@ shBuildPrint() {
   export MODE_CI_BUILD=$1 || return $?
   local MESSAGE="$2" || return $?
   printf "\n[MODE_CI_BUILD=$MODE_CI_BUILD] - $MESSAGE\n\n" || return $?
-}
-
-shGithubContentsDirPush() {
-  ## this function pushes the local DIR1 $1 to the remote github DIR2 $2
-  local DIR1=$1 || return $?
-  local DIR2=$2 || return $?
-  local FILE1 || return $?
-  for FILE1 in $(find $DIR1 -type f)
-  do
-    node utility2.js --mode-cli=githubContentsFilePush $FILE1 $DIR1 $DIR2 || return $?
-    ## throttle github file updates
-    sleep 1 || return $?
-  done
 }
 
 shPackageJsonGetItem() {
@@ -304,7 +297,7 @@ shNpmTest() {
   node example.js || return $?
   ## init $ARGS
   local ARGS="main.js" || return $?
-  ARGS="$ARGS --dir=.build/coverage-report" || return $?
+  ARGS="$ARGS --dir=.build/coverage-report.html" || return $?
   ARGS="$ARGS --print=detail" || return $?
   ARGS="$ARGS --report=html" || return $?
   ARGS="$ARGS --" || return $?
@@ -320,7 +313,7 @@ shNpmTest() {
     return $?
   fi
   ## remove old coverage report
-  rm -fr .build/coverage-report || return $?
+  rm -fr .build/coverage-report.html || return $?
   ## npm test with coverage
   istanbul cover $ARGS --mode-coverage
   ## save $EXIT_CODE
