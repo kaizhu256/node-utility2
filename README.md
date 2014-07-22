@@ -1,15 +1,15 @@
 utility2
 ==========
-lightweight nodejs test and coverage utility
+lightweight nodejs / browser test and coverage utility
 
-[![heroku.com test server](https://kaizhu256.github.io/node-utility2-data/build.travis-ci.org/latest.unstable/test-report.screenshot.heroku.png)](https://hrku01-utility2.herokuapp.com/test/test.html)
+[![heroku.com test server](https://kaizhu256.github.io/utility2-data/build.travis-ci.org/latest.unstable/test-report.screenshot.heroku.png)](https://hrku01-utility2.herokuapp.com/test/test.html)
 
 ## build status
 [![saucelabs.com selenium test status](https://saucelabs.com/browser-matrix/sclb01-utility2.svg)](https://saucelabs.com/u/sclb01-utility2)
 
  test server | test report | coverage report | build log | build artifact
 :-----------:|:-----------:|:---------------:|:---------:|:--------------:
-[![heroku.com test server](https://kaizhu256.github.io/public/heroku-logo-light-88x31.png)](https://hrku01-utility2.herokuapp.com/test/test.html) | [![test report](https://kaizhu256.github.io/node-utility2-data/build.travis-ci.org/latest.unstable/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2-data/build.travis-ci.org/latest.unstable/test-report.html) | [![istanbul coverage report](https://kaizhu256.github.io/node-utility2-data/build.travis-ci.org/latest.unstable/coverage-report.badge.svg)](https://kaizhu256.github.io/node-utility2-data/build.travis-ci.org/latest.unstable/coverage-report.html/node-utility2/index.html) | [![travis.ci-org build status](https://api.travis-ci.org/kaizhu256/node-utility2.svg)](https://travis-ci.org/kaizhu256/node-utility2) | [![build artifacts](https://kaizhu256.github.io/public/glyphicons_free/glyphicons/png/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2-data/tree/gh-pages/build.travis-ci.org/latest.unstable)
+[![heroku.com test server](https://kaizhu256.github.io/public/heroku-logo-light-88x31.png)](https://hrku01-utility2.herokuapp.com/test/test.html) | [![test report](https://kaizhu256.github.io/utility2-data/build.travis-ci.org/latest.unstable/test-report.badge.svg)](https://kaizhu256.github.io/utility2-data/build.travis-ci.org/latest.unstable/test-report.html) | [![istanbul coverage report](https://kaizhu256.github.io/utility2-data/build.travis-ci.org/latest.unstable/coverage-report.badge.svg)](https://kaizhu256.github.io/utility2-data/build.travis-ci.org/latest.unstable/coverage-report.html/utility2/index.html) | [![travis.ci-org build status](https://api.travis-ci.org/kaizhu256/utility2.svg)](https://travis-ci.org/kaizhu256/utility2) | [![build artifacts](https://kaizhu256.github.io/public/glyphicons_free/glyphicons/png/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/utility2-data/tree/gh-pages/build.travis-ci.org/latest.unstable)
 
 ## quickstart
 ```

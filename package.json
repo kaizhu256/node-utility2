@@ -14,12 +14,12 @@
   "os": ["darwin", "linux"],
   "repository" : {
     "type" : "git",
-    "url" : "https://github.com/kaizhu256/node-utility2.git"
+    "url" : "https://github.com/kaizhu256/utility2.git"
   },
   "scripts": {
     "install": "./utility2.sh shNpmInstall",
     "start": "./utility2.sh shNpmStart",
     "test": "./utility2.sh shNpmTest"
   },
-  "version": "2014.7.18-8"
+  "version": "2014.7.18-9"
 }
