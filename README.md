@@ -2,15 +2,21 @@ utility2
 ==========
 lightweight nodejs / browser test and coverage utility
 
-[![heroku.com test server](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/latest.unstable/test-report.screenshot.heroku.png)](https://hrku01-utility2.herokuapp.com/test/test.html)
+[![heroku.com test server](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/beta/test-report.screenshot.heroku.png)](https://hrku01-utility2-beta.herokuapp.com/test/test.html)
 
-## build status ![build commit](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/latest.unstable/commit.badge.svg)
+
+
+## build status ![build commit](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/beta/commit.badge.svg) [![travis.ci-org build status](https://api.travis-ci.org/kaizhu256/node-utility2.svg)](https://travis-ci.org/kaizhu256/node-utility2)
 
 [![saucelabs.com selenium test status](https://saucelabs.com/browser-matrix/sclb01-utility2.svg)](https://saucelabs.com/u/sclb01-utility2)
 
- test server | test report | coverage report | build log | build artifact
-:-----------:|:-----------:|:---------------:|:---------:|:--------------:
-[![heroku.com test server](https://kaizhu256.github.io/public/heroku-logo-light-88x31.png)](https://hrku01-utility2.herokuapp.com/test/test.html) | [![test report](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/latest.unstable/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/latest.unstable/test-report.html) | [![istanbul coverage report](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/latest.unstable/coverage-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/latest.unstable/coverage-report.html/node-utility2/index.html) | [![travis.ci-org build status](https://api.travis-ci.org/kaizhu256/node-utility2.svg)](https://travis-ci.org/kaizhu256/node-utility2) | [![build artifacts](https://kaizhu256.github.io/public/glyphicons_free/glyphicons/png/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build.travis-ci.org/latest.unstable)
+ branch | test server | test report | coverage report | build artifact
+:------:|:-----------:|:-----------:|:---------------:|:--------------:
+master | [![heroku.com test server](https://kaizhu256.github.io/public/heroku-logo-light-88x31.png)](https://hrku01-utility2.herokuapp.com/test/test.html) | [![test report](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/master/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/master/test-report.html) | [![istanbul coverage report](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/master/coverage-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/master/coverage-report.html/node-utility2/index.html) | [![build artifacts](https://kaizhu256.github.io/public/glyphicons_free/glyphicons/png/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build.travis-ci.org/master)
+beta | [![heroku.com test server](https://kaizhu256.github.io/public/heroku-logo-light-88x31.png)](https://hrku01-utility2-beta.herokuapp.com/test/test.html) | [![test report](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/beta/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/beta/test-report.html) | [![istanbul coverage report](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/beta/coverage-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/beta/coverage-report.html/node-utility2/index.html) | [![build artifacts](https://kaizhu256.github.io/public/glyphicons_free/glyphicons/png/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build.travis-ci.org/beta)
+alpha | [![heroku.com test server](https://kaizhu256.github.io/public/heroku-logo-light-88x31.png)](https://hrku01-utility2-alpha.herokuapp.com/test/test.html) | [![test report](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/alpha/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/alpha/test-report.html) | [![istanbul coverage report](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/alpha/coverage-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/alpha/coverage-report.html/node-utility2/index.html) | [![build artifacts](https://kaizhu256.github.io/public/glyphicons_free/glyphicons/png/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build.travis-ci.org/alpha)
+
+
 
 ## quickstart
 ```
@@ -19,6 +25,8 @@ cd node_modules/utility2
 ## start utility2 server on port 8080
 npm start --server-port=8080
 ```
+
+
 
 ## library usage example
 ```
@@ -30,15 +38,19 @@ npm start --server-port=8080
 */
 (function () {
   'use strict';
-  var example, port, server;
+  var port, server, utility2;
   // create random port in the inclusive range 0x8000 - 0xffff
   port = (Math.random() * 0xffff) | 0x8000;
-  example = require('utility2');
+  try {
+    utility2 = require('utility2');
+  } catch (error) {
+    utility2 = require('./main.js');
+  }
   console.log('example test server starting on random port ' + port);
   // init server with example middleware
   server = require('http').createServer(function (request, response) {
-    example.serverMiddleware(request, response, function (error) {
-      example.serverRespondDefault(response, error ? 500 : 404, error);
+    utility2.serverMiddleware(request, response, function (error) {
+      utility2.serverRespondDefault(response, error ? 500 : 404, error);
     });
   });
   // set server to listen on the specified port
@@ -51,6 +63,8 @@ npm start --server-port=8080
   });
 }());
 ```
+
+
 
 ## description of files
 - .travis.yml
@@ -87,19 +101,24 @@ npm start --server-port=8080
     - npm install and test the published app in a clean environment
     - upload tests / coverages / screenshots to a separate github build repo
 
+
+
 ## todo
-- migrate from unstable -> master workflow to alpha -> beta -> master
+- add test flag in heroku Procfile
 - simulate real test failure in npm test for code coverage
 - add server stress test using phantomjs
 - modularize shBuild
 - implement proper promise in browser init
-- add caching for main.js and utility2.js
+- add caching for scripts
 - replace external istanbul dependency with istanbul-lite
 - add file update feature for data files
 - minify /public/main.data.js and /public/utility2.data.js
 
+
+
 ## changelog
 #### 2014.7.29
+- migrate from unstable -> master workflow to alpha -> beta -> master workflow
 - add build commit badge in README.md
 - merge node-utility2-data gh-pages repo into node-utility2
 - add exportBrowserScript

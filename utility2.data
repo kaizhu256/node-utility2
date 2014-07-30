@@ -2,12 +2,15 @@
   "actionList": ["trim", "format", "install"],
   "file": ".git-config"
 } */
+[branch "alpha"]
+  remote = origin
+  merge = refs/heads/alpha
+[branch "beta"]
+  remote = origin
+  merge = refs/heads/beta
 [branch "master"]
   remote = origin
   merge = refs/heads/master
-[branch "unstable"]
-  remote = origin
-  merge = refs/heads/unstable
 [core]
   bare = false
   filemode = true

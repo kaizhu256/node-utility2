@@ -6,15 +6,19 @@
 */
 (function () {
   'use strict';
-  var example, port, server;
+  var port, server, utility2;
   // create random port in the inclusive range 0x8000 - 0xffff
   port = (Math.random() * 0xffff) | 0x8000;
-  example = require('utility2');
+  try {
+    utility2 = require('utility2');
+  } catch (error) {
+    utility2 = require('./main.js');
+  }
   console.log('example test server starting on random port ' + port);
   // init server with example middleware
   server = require('http').createServer(function (request, response) {
-    example.serverMiddleware(request, response, function (error) {
-      example.serverRespondDefault(response, error ? 500 : 404, error);
+    utility2.serverMiddleware(request, response, function (error) {
+      utility2.serverRespondDefault(response, error ? 500 : 404, error);
     });
   });
   // set server to listen on the specified port

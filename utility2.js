@@ -1435,7 +1435,7 @@ stateRestore = function (state2) {
       required = exports.required = exports.required || {};
       // require builtin modules
       [
-        'child_process',
+        'child_process', 'crypto',
         'fs',
         'http', 'https',
         'path',
@@ -1516,9 +1516,8 @@ stateRestore = function (state2) {
       // merge previous test report into current test report
       if (process.env.MODE_TEST_REPORT_MERGE) {
         try {
-          exports.testReportCreate(state.testReport, require('.build/test-report.json'));
-        } catch (error) {
-          console.log(process.cwd() + '/.build/test-report.json not loaded for merging');
+          exports.testReportCreate(state.testReport, require('./.build/test-report.json'));
+        } catch (ignore) {
         }
         // on exit, create .build/test-report.json
         process.on('exit', function () {
@@ -2031,7 +2030,7 @@ stateRestore = function (state2) {
           data = data && JSON.parse(data);
           if (Array.isArray(data)) {
             // calculate git blob sha
-            sha = require('crypto').createHash('sha1')
+            sha = required.crypto.createHash('sha1')
               .update('blob ' + blob.length + '\x00')
               .update(blob)
               .digest('hex');

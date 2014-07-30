@@ -32,7 +32,7 @@ shAesEncrypt() {
 shAesEncryptTravis() {
   ## this function encrypts the script $1 to $AES_ENCRYPTED_SH and stores it in .travis.yml
   ## init $FILE
-  local FILE=$1/aes-decrypted.$(echo $GITHUB_REPO | perl -pe "s/\//./").sh || return $?
+  local FILE=$1/aes-decrypted.$(printf $GITHUB_REPO | perl -pe "s/\//./").sh || return $?
   if [ ! -f "$FILE" ]
   then
     printf "## non-existent file $FILE\n" || return $?
@@ -86,7 +86,7 @@ shBuild() {
   ## merge successive test reports
   export MODE_TEST_REPORT_MERGE=true || return $?
   ## create initial test-report.json
-  echo "{}" > .build/test-report.json || return $?
+  printf "{}" > .build/test-report.json || return $?
   ## run local npm test
   shBuildPrint npmTestLocal "npm testing $CWD ..." && shNpmTest || shBuildExit
   ## deploy app to heroku
@@ -127,20 +127,17 @@ shBuildExit() {
   ## cleanup $TMPFILE
   rm -f $TMPFILE || exit $?
   ## upload build to github
-  if [ "$CI_BRANCH" != local ]
-  then
-    for DIR in\
-      $CI_BUILD_DIR/latest.$CI_BRANCH\
-      $CI_BUILD_DIR/$CI_BUILD_NUMBER.$CI_BRANCH.$CI_COMMIT_ID
+  for DIR in\
+    $CI_BUILD_DIR/$CI_BRANCH\
+    $CI_BUILD_DIR/$CI_BRANCH.$CI_BUILD_NUMBER.$CI_COMMIT_ID
+  do
+    for FILE in $(find .build -type f)
     do
-      for FILE in $(find .build -type f)
-      do
-        node utility2.js --mode-cli=githubContentsFilePush $FILE .build $DIR || exit $?
-        ## throttle github file push
-        sleep 1 || exit $?
-      done
+      node utility2.js --mode-cli=githubContentsFilePush $FILE .build $DIR || exit $?
+      ## throttle github file push
+      sleep 1 || exit $?
     done
-  fi
+  done
   ## exit with $EXIT_CODE
   exit $EXIT_CODE
 }
@@ -148,8 +145,7 @@ shBuildExit() {
 shBuildHerokuDeploy() {
   ## this function deploys the app to heroku
   ## init $HEROKU_REPO
-  local HEROKU_REPO=$(git config --file .git-config --get remote.heroku.url |\
-    perl -ne "print \$1 if /([^:]+)\.git$/") || return $?
+  local HEROKU_REPO=$(shPackageJsonGetItem repoHeroku)-$CI_BRANCH || return $?
   if [ ! "$GIT_SSH_KEY" ] || [ ! "$HEROKU_REPO" ]
   then
     return
@@ -163,7 +159,7 @@ shBuildHerokuDeploy() {
   ## export and create $GIT_SSH_KEY_FILE
   export GIT_SSH_KEY_FILE=$TMPFILE || return $?
   ## save $GIT_SSH_KEY to $GIT_SSH_KEY_FILE
-  echo $GIT_SSH_KEY | base64 --decode > $GIT_SSH_KEY_FILE || return $?
+  printf $GIT_SSH_KEY | base64 --decode > $GIT_SSH_KEY_FILE || return $?
   ## secure $GIT_SSH_KEY_FILE
   chmod 600 $GIT_SSH_KEY_FILE || return $?
   ## init clean repo in /tmp/app
@@ -207,9 +203,11 @@ shBuildHerokuDeploy() {
 shBuildNpmPublish() {
   ## this function npm publishes the app if its version is greater than the published version
   ## init $NODEJS_PACKAGE_JSON_NAME
-  local NODEJS_PACKAGE_JSON_NAME=$(shPackageJsonGetItem name) || return $?
+  local NODEJS_PACKAGE_JSON_NAME=$(node -e\
+    "process.stdout.write(require('./package.json').name)") || return $?
   ## init $NODEJS_PACKAGE_JSON_VERSION
-  local NODEJS_PACKAGE_JSON_VERSION=$(shPackageJsonGetItem version) || return $?
+  local NODEJS_PACKAGE_JSON_VERSION=$(node -e\
+    "process.stdout.write(require('./package.json').version)") || return $?
   if [ "$CI_BRANCH" = local ] || [ ! "$NPM_AUTH" ]
   then
     return
@@ -245,22 +243,30 @@ shBuildNpmPublish() {
     "npm testing published app $NODEJS_PACKAGE_JSON_NAME ..." || return $?
   ## re-run npm test app and merge result into previous test-report.json
   npm test --mode-no-coverage || return $?
-  cp .build/test-report.* $CWD/.build
+  cp .build/test-report.* $CWD/.build || return $?
   ## restore $CWD
   cd $CWD
 }
 
 shBuildPrint() {
-  ## this function prints info about the build state
+  ## this function prints debug info about the build state
   export MODE_CI_BUILD=$1 || return $?
   local MESSAGE="$2" || return $?
   printf "\n[MODE_CI_BUILD=$MODE_CI_BUILD] - $MESSAGE\n\n" || return $?
 }
 
-shPackageJsonGetItem() {
-  ## this function prints the value for the given KEY $1 in package.json
-  local KEY=$1 || return $?
-  perl -ne "print \$1 if /  \"$KEY\": \"([^\"]+)/" package.json || return $?
+shGitSquash () {
+  ## this function squashes the HEAD to the specified commit $1
+  ## git squash
+  ## http://stackoverflow.com/questions/5189560/how-can-i-squash-my-last-x-commits-together-using-git
+  local COMMIT=$1
+  local MESSAGE=${2-squash}
+  ## reset git to previous $COMMIT
+  git reset --hard $COMMIT || return $?
+  ## reset files to current HEAD
+  git merge --squash HEAD@{1} || return $?
+  ## commit HEAD immediately after previous $COMMIT
+  git commit -am "$MESSAGE" || return $?
 }
 
 shNpmInstall() {
@@ -287,7 +293,7 @@ shNpmTest() {
   then
     ## init default env
     export CI_BUILD_DIR=build.local || return $?
-    export CI_BRANCH=local || return $?
+    export CI_BRANCH=alpha || return $?
     export CI_BUILD_NUMBER=0 || return $?
     export CI_COMMIT_ID=$(git rev-parse --verify HEAD) || return $?
     ## try to init travis-ci.org env
@@ -342,6 +348,12 @@ shNpmTest() {
   return $EXIT_CODE
 }
 
+shPackageJsonGetItem() {
+  ## this function prints the value for the given KEY $1 in package.json
+  local KEY=$1 || return $?
+  printf $(node -e "process.stdout.write(require('./package.json').$KEY)") || return $?
+}
+
 shSandbox() {
   ## this function is for sandboxing
   ## decrypt and exec encrypted data
@@ -351,14 +363,14 @@ shSandbox() {
 shSemverGreaterThan() {
   ## function return 0 if semver $1 is greater than semver $2 or 1 otherwise
   local REGEXP="([0-9]+)\.([0-9]+)\.([0-9]+)([0-9A-Za-z-]*)" || return $?
-  MAJOR1=$(echo $1 | perl -ne "print \$1 if /$REGEXP/") || return $?
-  MINOR1=$(echo $1 | perl -ne "print \$2 if /$REGEXP/") || return $?
-  PATCH1=$(echo $1 | perl -ne "print \$3 if /$REGEXP/") || return $?
-  SPECIAL1=$(echo $1 | perl -ne "print \$4 if /$REGEXP/") || return $?
-  MAJOR2=$(echo $2 | perl -ne "print \$1 if /$REGEXP/") || return $?
-  MINOR2=$(echo $2 | perl -ne "print \$2 if /$REGEXP/") || return $?
-  PATCH2=$(echo $2 | perl -ne "print \$3 if /$REGEXP/") || return $?
-  SPECIAL2=$(echo $2 | perl -ne "print \$4 if /$REGEXP/") || return $?
+  MAJOR1=$(printf $1 | perl -ne "print \$1 if /$REGEXP/") || return $?
+  MINOR1=$(printf $1 | perl -ne "print \$2 if /$REGEXP/") || return $?
+  PATCH1=$(printf $1 | perl -ne "print \$3 if /$REGEXP/") || return $?
+  SPECIAL1=$(printf $1 | perl -ne "print \$4 if /$REGEXP/") || return $?
+  MAJOR2=$(printf $2 | perl -ne "print \$1 if /$REGEXP/") || return $?
+  MINOR2=$(printf $2 | perl -ne "print \$2 if /$REGEXP/") || return $?
+  PATCH2=$(printf $2 | perl -ne "print \$3 if /$REGEXP/") || return $?
+  SPECIAL2=$(printf $2 | perl -ne "print \$4 if /$REGEXP/") || return $?
   ## return 1 if invalid semver $1 or semver $2
   if [ ! "$MAJOR1" ] || [ ! "$MAJOR2" ]
   then
@@ -439,8 +451,7 @@ shMain() {
   ## save $CWD
   CWD=$(pwd) || return $?
   ## init $GITHUB_REPO
-  export GITHUB_REPO=$(git config --file .git-config --get remote.origin.url |\
-    perl -ne "print \$1 if /([^:]+)\.git$/") || return $?
+  export GITHUB_REPO=$(shPackageJsonGetItem repoGithub) || return $?
   ## init $PATH with $CWD/node_modules
   export PATH=$CWD/node_modules/.bin:$PATH || return $?
   ## init $TMPFILE
