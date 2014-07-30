@@ -955,11 +955,18 @@ stateRestore = function (state2) {
                 console.log('creating coverage report file://' + process.cwd() +
                   '/.build/coverage-report.html/index.html');
               }
-              // create commit badge
+              // create build badge
               required.fs.writeFileSync(
-                '.build/commit.badge.svg',
-                state.fileDict['.build/commit.badge.svg']
+                '.build/build.badge.svg',
+                state.fileDict['.build/build.badge.svg']
                   .data
+                  // edit branch name
+                  .replace(
+                    '0000 00 00 00 00 00',
+                    new Date().toISOString().slice(0, 19).replace('T', ' ')
+                  )
+                  // edit branch name
+                  .replace('master', process.env.CI_BRANCH)
                   // edit commit id
                   .replace('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', process.env.CI_COMMIT_ID)
               );
@@ -968,9 +975,9 @@ stateRestore = function (state2) {
                 '.build/test-report.badge.svg',
                 state.fileDict['.build/test-report.badge.svg']
                   .data
-                  // edit coverage badge testReport.testsFailed
+                  // edit number of tests failed
                   .replace('999', testReport.testsFailed)
-                  // edit coverage badge color
+                  // edit badge color
                   .replace('d00', testReport.testsFailed ? 'd00' : '0d0')
               );
               // non-zero exit if tests failed

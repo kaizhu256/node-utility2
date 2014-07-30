@@ -126,6 +126,9 @@ shBuildExit() {
   cd $CWD || exit $?
   ## cleanup $TMPFILE
   rm -f $TMPFILE || exit $?
+  ## upload build badge
+  node utility2.js --mode-cli=githubContentsFilePush .build/build.badge.svg .build\
+    $CI_BUILD_DIR || exit $?
   ## upload build to github
   for DIR in\
     $CI_BUILD_DIR/$CI_BRANCH\
@@ -261,6 +264,8 @@ shGitSquash () {
   ## http://stackoverflow.com/questions/5189560/how-can-i-squash-my-last-x-commits-together-using-git
   local COMMIT=$1
   local MESSAGE=${2-squash}
+  ## commit any uncommitted data
+  git commit -am sync
   ## reset git to previous $COMMIT
   git reset --hard $COMMIT || return $?
   ## reset files to current HEAD

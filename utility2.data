@@ -77,29 +77,6 @@ exec ssh -i $GIT_SSH_KEY_FILE -o CheckHostIP=no -o StrictHostKeychecking=no -- "
 
 
 /* FILE_BEGIN {
-  "actionList": ["lint", "trim", "install"],
-  "file": ".install/saucelabs-config.json"
-} */
-{
-  "platforms": [
-    ["linux", "android", "4.3"],
-    ["linux", "googlechrome", "34"],
-    ["linux", "firefox", "29"],
-    ["osx 10.9", "ipad", "7.1"],
-    ["osx 10.9", "iphone", "7.1"],
-    ["osx 10.9", "safari", "7"],
-    ["windows 8.1", "iexplore", "11"]
-  ],
-  "stateOverride": {
-    "timeoutDefault": 200000
-  },
-  "url": "{{host}}/test/test.html?modeTest=1&timeoutDefault={{timeoutDefault}}"
-}
-/* FILE_END */
-
-
-
-/* FILE_BEGIN {
   "actionList": ["lint", "install"],
   "file": ".install/phantomjs-test.js"
 } */
@@ -172,6 +149,29 @@ exec ssh -i $GIT_SSH_KEY_FILE -o CheckHostIP=no -o StrictHostKeychecking=no -- "
   };
   local._init();
 }());
+/* FILE_END */
+
+
+
+/* FILE_BEGIN {
+  "actionList": ["lint", "trim", "install"],
+  "file": ".install/saucelabs-config.json"
+} */
+{
+  "platforms": [
+    ["linux", "android", "4.3"],
+    ["linux", "googlechrome", "34"],
+    ["linux", "firefox", "29"],
+    ["osx 10.9", "ipad", "7.1"],
+    ["osx 10.9", "iphone", "7.1"],
+    ["osx 10.9", "safari", "7"],
+    ["windows 8.1", "iexplore", "11"]
+  ],
+  "stateOverride": {
+    "timeoutDefault": 200000
+  },
+  "url": "{{host}}/test/test.html?modeTest=1&timeoutDefault={{timeoutDefault}}"
+}
 /* FILE_END */
 
 
@@ -438,10 +438,10 @@ body {
 
 /* FILE_BEGIN {
   "actionList": ["trim"],
-  "file": ".build/commit.badge.svg",
-  "source": "https://img.shields.io/badge/commit-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-0077ff.svg?style=flat"
+  "file": ".build/build.badge.svg",
+  "source": "https://img.shields.io/badge/last_build-0000_00_00_00_00_00_--_master_--_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-0077ff.svg?style=flat"
 } */
-<svg xmlns="http://www.w3.org/2000/svg" width="342" height="20"><path fill="#555" d="M0 0h342v20h-342z"/><path fill="#07f" d="M52 0h290v20h-290zM52 0h4v20h-4z"/><path fill="#fff" fill-opacity=".1" d="M0 0h342v20h-342z"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="27" y="14">commit</text><text x="196" y="14">aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</text></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="535" height="20"><path fill="#555" d="M0 0h535v20h-535z"/><path fill="#07f" d="M61 0h474v20h-474zM61 0h4v20h-4z"/><path fill="#fff" fill-opacity=".1" d="M0 0h535v20h-535z"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="31.5" y="14">last build</text><text x="297" y="14">0000 00 00 00 00 00 - master - aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</text></g></svg>
 /* FILE_END */
 
 
