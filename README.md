@@ -2,14 +2,15 @@ utility2
 ==========
 lightweight nodejs / browser test and coverage utility
 
-[![heroku.com test server](https://kaizhu256.github.io/utility2-data/build.travis-ci.org/latest.unstable/test-report.screenshot.heroku.png)](https://hrku01-utility2.herokuapp.com/test/test.html)
+[![heroku.com test server](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/latest.unstable/test-report.screenshot.heroku.png)](https://hrku01-utility2.herokuapp.com/test/test.html)
 
-## build status
+## build status ![build commit](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/latest.unstable/commit.badge.svg)
+
 [![saucelabs.com selenium test status](https://saucelabs.com/browser-matrix/sclb01-utility2.svg)](https://saucelabs.com/u/sclb01-utility2)
 
  test server | test report | coverage report | build log | build artifact
 :-----------:|:-----------:|:---------------:|:---------:|:--------------:
-[![heroku.com test server](https://kaizhu256.github.io/public/heroku-logo-light-88x31.png)](https://hrku01-utility2.herokuapp.com/test/test.html) | [![test report](https://kaizhu256.github.io/utility2-data/build.travis-ci.org/latest.unstable/test-report.badge.svg)](https://kaizhu256.github.io/utility2-data/build.travis-ci.org/latest.unstable/test-report.html) | [![istanbul coverage report](https://kaizhu256.github.io/utility2-data/build.travis-ci.org/latest.unstable/coverage-report.badge.svg)](https://kaizhu256.github.io/utility2-data/build.travis-ci.org/latest.unstable/coverage-report.html/utility2/index.html) | [![travis.ci-org build status](https://api.travis-ci.org/kaizhu256/utility2.svg)](https://travis-ci.org/kaizhu256/utility2) | [![build artifacts](https://kaizhu256.github.io/public/glyphicons_free/glyphicons/png/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/utility2-data/tree/gh-pages/build.travis-ci.org/latest.unstable)
+[![heroku.com test server](https://kaizhu256.github.io/public/heroku-logo-light-88x31.png)](https://hrku01-utility2.herokuapp.com/test/test.html) | [![test report](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/latest.unstable/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/latest.unstable/test-report.html) | [![istanbul coverage report](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/latest.unstable/coverage-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/latest.unstable/coverage-report.html/node-utility2/index.html) | [![travis.ci-org build status](https://api.travis-ci.org/kaizhu256/node-utility2.svg)](https://travis-ci.org/kaizhu256/node-utility2) | [![build artifacts](https://kaizhu256.github.io/public/glyphicons_free/glyphicons/png/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build.travis-ci.org/latest.unstable)
 
 ## quickstart
 ```
@@ -22,19 +23,25 @@ npm start --server-port=8080
 ## library usage example
 ```
 // example.js
-/*jslint bitwise: true, indent:2, node: true*/
+/*jslint
+  bitwise: true,
+  indent:2,
+  node: true
+*/
 (function () {
   'use strict';
   var example, port, server;
+  // create random port in the inclusive range 0x8000 - 0xffff
   port = (Math.random() * 0xffff) | 0x8000;
-  example = require('./main.js');
+  example = require('utility2');
   console.log('example test server starting on random port ' + port);
+  // init server with example middleware
   server = require('http').createServer(function (request, response) {
     example.serverMiddleware(request, response, function (error) {
       example.serverRespondDefault(response, error ? 500 : 404, error);
     });
   });
-  // listen on the specified port
+  // set server to listen on the specified port
   server.listen(port, function () {
     console.log('example test server started on port ' + port);
     setTimeout(function () {
@@ -81,9 +88,26 @@ npm start --server-port=8080
     - upload tests / coverages / screenshots to a separate github build repo
 
 ## todo
-- minify angularjs
+- migrate from unstable -> master workflow to alpha -> beta -> master
+- simulate real test failure in npm test for code coverage
+- add server stress test using phantomjs
+- modularize shBuild
+- implement proper promise in browser init
+- add caching for main.js and utility2.js
+- replace external istanbul dependency with istanbul-lite
+- add file update feature for data files
+- minify /public/main.data.js and /public/utility2.data.js
 
 ## changelog
+#### 2014.7.29
+- add build commit badge in README.md
+- merge node-utility2-data gh-pages repo into node-utility2
+- add exportBrowserScript
+- replace serving msin.data.js and main.js with {{name}}.data.js and {{name}}.js
+- exit build on decrypt error
+- add magic to auto-config state.repoGithub and state.repoHeroku
+- enable testReportUpload only through command-line
+
 #### 2014.7.18
 - add description of files in README.md
 - add code coverage for saucelabs test routine

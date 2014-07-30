@@ -1,6 +1,21 @@
-/*jslint bitwise: true, browser: true, indent:2, node: true, nomen: true, regexp: true, stupid: true, todo: true*/
+/*jslint
+  bitwise: true, browser: true,
+  indent: 2,
+  maxerr: 8,
+  node: true, nomen: true,
+  regexp: true,
+  stupid: true,
+  todo: true
+*/
 // declare module vars
-var exports, required, state;
+var exports, required, state, stateRestore, stateRestore2;
+stateRestore = function (state2) {
+  /*
+    this function is used by testMock to restore the local state var
+  */
+  'use strict';
+  state = state2;
+};
 
 
 
@@ -37,14 +52,16 @@ var exports, required, state;
         fileDict: {},
         // mime-type lookup for given file extensions
         mimeLookupDict: {
-          'css': 'text/css',
-          'html': 'text/html',
-          'js': 'application/javascript',
-          'json': 'application/json',
-          'txt': 'text/plain'
+          '.css': 'text/css',
+          '.html': 'text/html',
+          '.js': 'application/javascript',
+          '.json': 'application/json',
+          '.txt': 'text/plain'
         },
         // dict of cli commands
         modeCliDict: {},
+        // state to export to browser
+        stateBrowser: { fileDict: {} },
         // dict of server-side callbacks used to create test reports from browser tests
         testCallbackDict: {},
         // main test report object used to accumulate test reports from this and other platforms
@@ -92,11 +109,12 @@ var exports, required, state;
           state[match[1]][match[2]] = local[key];
           return;
         }
-        // angularjs app
-        match = (/(\w+)_ngApp_(\w+)_(\w+)/).exec(key);
+        match = (/(^ngApp_\w+)_(\w+)_(\w+)$/).exec(key);
         if (match) {
-          local[match[1]] = local[match[1]] || global.angular.module(match[1], []);
-          local[match[1]][match[2]](match[3], local[key]);
+          // init angularjs app
+          state[match[1]] = state[match[1]] || global.angular.module(match[1], []);
+          // init angularjs app's sub-component
+          state[match[1]][match[2]](match[3], local[key]);
           return;
         }
         // export items that don't start with an underscore _
@@ -111,7 +129,7 @@ var exports, required, state;
         this function tests initSubmodule's default handling behavior
       */
       var data;
-      exports.testMock(onEventError, [
+      exports.testMock(onEventError, stateRestore, [
       ], function (onEventError) {
         state = {};
         // test default handling behavior
@@ -153,7 +171,7 @@ var exports, required, state;
       exports.testTryCatch(function () {
         exports.assert(false);
       }, function (error) {
-        // assert error occurred
+        // validate error occurred
         exports.assert(error instanceof Error, error);
         // validate error message
         exports.assert(error.message === 'assertion error - undefined', error.message);
@@ -162,7 +180,7 @@ var exports, required, state;
       exports.testTryCatch(function () {
         exports.assert(false, '_assert_default_test');
       }, function (error) {
-        // assert error occurred
+        // validate error occurred
         exports.assert(error instanceof Error, error);
         // validate error message
         exports.assert(
@@ -174,7 +192,7 @@ var exports, required, state;
       exports.testTryCatch(function () {
         exports.assert(false, state.errorDefault);
       }, function (error) {
-        // assert error occurred
+        // validate error occurred
         exports.assert(error instanceof Error, error);
         // validate error message
         exports.assert(error.message.indexOf('assertion error - ') === 0, error.message);
@@ -193,7 +211,7 @@ var exports, required, state;
       /*
         this function calls the callback in arg position 1
       */
-      // jslint hack
+      // nop hack to pass jslint
       exports.nop(_);
       callback();
     },
@@ -202,7 +220,7 @@ var exports, required, state;
       /*
         this function calls the callback in arg position 2
       */
-      // jslint hack
+      // nop hack to pass jslint
       exports.nop(_, __);
       callback();
     },
@@ -218,7 +236,7 @@ var exports, required, state;
       /*
         this function calls the onEventError callback in arg position 1 with an error object
       */
-      // jslint hack
+      // nop hack to pass jslint
       exports.nop(_);
       onEventError(state.errorDefault);
     },
@@ -227,7 +245,7 @@ var exports, required, state;
       /*
         this function calls the onEventError callback in arg position 2 with an error object
       */
-      // jslint hack
+      // nop hack to pass jslint
       exports.nop(_, __);
       onEventError(state.errorDefault);
     },
@@ -237,27 +255,27 @@ var exports, required, state;
         this function tests callX's default handling behavior
       */
       exports.callArg0(function (error) {
-        // assert no error occurred
+        // validate no error occurred
         exports.assert(!error, error);
       });
       exports.callArg1(null, function (error) {
-        // assert no error occurred
+        // validate no error occurred
         exports.assert(!error, error);
       });
       exports.callArg2(null, null, function (error) {
-        // assert no error occurred
+        // validate no error occurred
         exports.assert(!error, error);
       });
       exports.callError0(function (error) {
-        // assert error occurred
+        // validate error occurred
         exports.assert(error instanceof Error, error);
       });
       exports.callError1(null, function (error) {
-        // assert error occurred
+        // validate error occurred
         exports.assert(error instanceof Error, error);
       });
       exports.callError2(null, null, function (error) {
-        // assert error occurred
+        // validate error occurred
         exports.assert(error instanceof Error, error);
       });
       onEventError();
@@ -280,7 +298,7 @@ var exports, required, state;
         this function tests _debug_print's default handling behavior
       */
       var message;
-      exports.testMock(onEventError, [
+      exports.testMock(onEventError, stateRestore, [
         [console, { error: function (_) {
           message += (_ || '') + '\n';
         } }]
@@ -293,23 +311,6 @@ var exports, required, state;
         );
         onEventError();
       });
-    },
-
-    echo: function (arg) {
-      /*
-        this function returns the arg
-      */
-      return arg;
-    },
-
-    _echo_default_test: function (onEventError) {
-      /*
-      this function tests echo's default handling behavior
-      */
-      var data;
-      data = exports.echo('_echo_default_test');
-      exports.assert(data === '_echo_default_test', data);
-      onEventError();
     },
 
     errorStack: function (error) {
@@ -377,17 +378,6 @@ var exports, required, state;
       return;
     },
 
-    _nop_default_test: function (onEventError) {
-      /*
-        this function tests nop's default handling behavior
-      */
-      var data;
-      data = exports.nop();
-      // validate data
-      exports.assert(data === undefined, data);
-      onEventError();
-    },
-
     onEventErrorDefault: function (error, data) {
       /*
         this function provides a default, error / data handling callback.
@@ -409,26 +399,31 @@ var exports, required, state;
         this function tests onEventErrorDefault's default handling behavior
       */
       var message;
-      exports.testMock(onEventError, [
+      exports.testMock(onEventError, stateRestore, [
         [console, {
           error: function (_) {
-            message += _;
+            message = _;
           },
           log: function (_) {
-            message += _;
+            message = _;
           }
         }]
       ], function (onEventError) {
         // test default handling behavior
-        message = '';
+        message = null;
         exports.onEventErrorDefault(null, '_onEventErrorDefault_default_test');
-        // validate message
+        // validate data message
         exports.assert(message ===
           '\nonEventErrorDefault - data\n"_onEventErrorDefault_default_test"\n', message);
+        // test no data handling behavior
+        message = null;
+        exports.onEventErrorDefault(null, '');
+        // validate no message was printed
+        exports.assert(message === null, message);
         // test error handling behavior
         message = '';
         exports.onEventErrorDefault(new Error('_onEventErrorDefault_default_test'));
-        // validate message
+        // validate error message
         exports.assert((/\nonEventErrorDefault - error\n.*_onEventErrorDefault_default_test/)
           .test(message.split('\n').slice(0, 3).join('\n')), JSON.stringify(message));
         onEventError();
@@ -455,17 +450,17 @@ var exports, required, state;
       timeElapsed = Date.now();
       exports.onEventTimeout(function (error) {
         exports.testTryCatch(function () {
-          // assert error occurred
+          // validate error occurred
           exports.assert(error instanceof Error);
-          // assert error is timeout error
+          // validate error is timeout error
           exports.assert(error.code === 'ETIMEDOUT');
           timeElapsed = Date.now() - timeElapsed;
-          // assert timeElapsed passed is greater than timeout
+          // validate timeElapsed passed is greater than timeout
           // bug - ie might timeout slightly earlier so increase timeElapsed by a small amount
-          exports.assert(timeElapsed + 100 >= 1000, timeElapsed);
+          exports.assert(timeElapsed + 100 >= 2000, timeElapsed);
           onEventError();
         }, onEventError);
-      }, 1000, '_onEventTimeout_timeoutError_test');
+      }, 2000, '_onEventTimeout_timeoutError_test');
     },
 
     setDefault: function (options, defaults) {
@@ -577,11 +572,11 @@ var exports, required, state;
       });
     },
 
-    testMock: function (onEventError, mockList, test) {
+    testMock: function (onEventError, stateRestore, mockList, test) {
       /*
         this function mocks the state given in the mockList while running the test callback
       */
-      var onEventError2, state2;
+      var onEventError2;
       // prepend mandatory mocks for async / unsafe functions
       mockList = [
         // suppress console.log
@@ -592,7 +587,7 @@ var exports, required, state;
       ].concat(mockList);
       onEventError2 = function (error) {
         // restore state
-        state = state2;
+        stateRestore(exports.state);
         mockList.reverse().forEach(function (mock) {
           exports.setOverride(mock[0], mock[2], null, 1);
         });
@@ -605,7 +600,6 @@ var exports, required, state;
           mock[2] = {};
           exports.setOverride(mock[0], mock[1], mock[2], 1);
         });
-        state2 = state;
         // run test
         test(onEventError2);
       } catch (error) {
@@ -618,10 +612,10 @@ var exports, required, state;
         this function tests testMock's error handling behavior
       */
       exports.testMock(function (error) {
-        // assert error occurred
+        // validate error occurred
         exports.assert(error instanceof Error, error);
         onEventError();
-      }, [
+      }, stateRestore, [
       ], function () {
         throw state.errorDefault;
       });
@@ -794,17 +788,16 @@ var exports, required, state;
         // remove derived info
         delete file1.l;
         Object.keys(file2.b).forEach(function (key) {
-          file1.b[key] = file1.b[key] || [];
           file2.b[key].forEach(function (count, ii) {
             file1.b[key][ii] = file1.b[key][ii] || 0;
             file1.b[key][ii] += count;
           });
         });
-        Object.keys(file2.f || {}).forEach(function (key) {
+        Object.keys(file2.f).forEach(function (key) {
           file1.f[key] = file1.f[key] || 0;
           file1.f[key] += file2.f[key];
         });
-        Object.keys(file2.s || {}).forEach(function (key) {
+        Object.keys(file2.s).forEach(function (key) {
           file1.s[key] = file1.s[key] || 0;
           file1.s[key] += file2.s[key];
         });
@@ -832,11 +825,11 @@ var exports, required, state;
       });
       // create html test report
       testCaseNumber = 0;
-      if (!state.fileDict['/public/testReport.html.template']) {
+      if (!state.fileDict['/public/test-report.html.template']) {
         return;
       }
       return exports.textFormat(
-        state.fileDict['/public/testReport.html.template'].content,
+        state.fileDict['/public/test-report.html.template'].data,
         exports.setOverride(testReport, {
           CI_BUILD_NUMBER: env.CI_BUILD_NUMBER,
           // security - sanitize '<' in text
@@ -904,7 +897,7 @@ var exports, required, state;
       /*
         this function runs the tests
       */
-      var modeTestReportUpload, remaining, testPlatform, testReport, testReportHtml;
+      var remaining, testPlatform, testReport, testReportHtml;
       testReport = state.testReport;
       // start testReport timer
       testReport.timeElapsed = Date.now();
@@ -924,7 +917,7 @@ var exports, required, state;
             console.error('\ntestCase ' + testCase.name + ' failed\n' +
               exports.errorStack(error));
             // save test error
-            testCase.errorMessage = testCase.errorMessage || exports.errorStack(error);
+            testCase.errorMessage = testCase.errorMessage || exports.errorStack(error) || '';
           }
           // error - multiple callbacks in test case
           if (finished) {
@@ -954,21 +947,27 @@ var exports, required, state;
             // nodejs code
             if (state.modeNodejs) {
               // create html test report
-              console.log('\ncreating test report file://' + __dirname +
+              console.log('\ncreating test report file://' + process.cwd() +
                 '/.build/test-report.html');
-              if (required.istanbul_instrumenter) {
-                console.log('creating coverage report file://' + __dirname +
+              required.fs.writeFileSync('.build/test-report.html', testReportHtml);
+              // create html coverage report
+              if (state.modeCoverage) {
+                console.log('creating coverage report file://' + process.cwd() +
                   '/.build/coverage-report.html/index.html');
               }
-              required.fs.writeFileSync('.build/test-report.html', testReportHtml);
+              // create commit badge
+              required.fs.writeFileSync(
+                '.build/commit.badge.svg',
+                state.fileDict['.build/commit.badge.svg']
+                  .data
+                  // edit commit id
+                  .replace('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', process.env.CI_COMMIT_ID)
+              );
               // create test report badge
               required.fs.writeFileSync(
                 '.build/test-report.badge.svg',
-                state.fileDict[
-                  'https%3A%2F%2Fimg.shields.io%2Fbadge%2Ftests_failed-999-dd0000.svg' +
-                    '%3Fstyle%3Dflat'
-                ]
-                  .content
+                state.fileDict['.build/test-report.badge.svg']
+                  .data
                   // edit coverage badge testReport.testsFailed
                   .replace('999', testReport.testsFailed)
                   // edit coverage badge color
@@ -987,13 +986,11 @@ var exports, required, state;
                 // extra stuff to keep saucelabs happy - https://saucelabs.com/docs/rest#jsunit
                 failed: state.testReport.testsFailed
               };
-              modeTestReportUpload = (/\bmodeTestReportUpload=(\w+)/).exec(location.search);
-              if (modeTestReportUpload) {
+              if ((/\bmodeTestReportUpload=1\b/).test(location.search)) {
                 exports.ajax({
                   data: JSON.stringify(global.global_test_results),
-                  headers: { authorization: modeTestReportUpload[1] },
                   method: 'POST',
-                  url: '/test/testReportUpload'
+                  url: '/test/test-report-upload'
                 }, function (error) {
                   exports.onEventErrorDefault(error);
                 });
@@ -1005,6 +1002,11 @@ var exports, required, state;
         try {
           // start testCase timer
           testCase.timeElapsed = Date.now();
+          // ignore utility2 tests in fast mode
+          if (state.modeNodejs && state.modeFast && testCase.name.indexOf('utility2.') === 0) {
+            onEventError();
+            return;
+          }
           testCase.callback(onEventError);
         } catch (error) {
           onEventError(error);
@@ -1034,7 +1036,7 @@ var exports, required, state;
       exports.testTryCatch(function () {
         throw state.errorDefault;
       }, function (error) {
-        // assert error occurred
+        // validate error occurred
         exports.assert(error instanceof Error, error);
       });
       onEventError();
@@ -1094,7 +1096,7 @@ var exports, required, state;
       */
       var rgx, match, onEventReplace;
       onEventReplace = function (_, fragment) {
-        // jslint hack
+        // nop hack to pass jslint
         exports.nop(_);
         return dict[match].map(function (dict) {
           return exports.textFormat(fragment, dict);
@@ -1174,24 +1176,41 @@ var exports, required, state;
         this function inits the ajax api
       */
       // init ajaxProgressDiv element
-      local._ajaxProgressDiv = document.getElementById('ajaxProgressDiv') ||
+      local._ajaxProgressDiv = document.getElementsByClassName('ajaxProgressDiv')[0] ||
         document.createElement('div');
-      local._ajaxProgressDiv.innerHTML = '<div class="ajaxProgressBarDiv' +
-        ' ajaxProgressBarDivLoading">loading</div>';
       // init ajaxProgressBarDiv element
-      local._ajaxProgressBarDiv = local._ajaxProgressDiv
-        .getElementsByClassName('ajaxProgressBarDiv')[0];
-      // reset progress bar
+      local._ajaxProgressBarDiv = document.getElementsByClassName('ajaxProgressBarDiv')[0] ||
+        document.createElement('div');
+      // check ajax progress status every second,
+      // and hide the ajax progress bar if necessary
       local._ajaxProgressHide();
-      // create global setInterval to check ajax progress
-      // and hide the progress bar if necessary
-      setInterval(function () {
-        if (local._ajaxProgressList.length === 0 &&
-            local._ajaxProgressDiv.style.display !== 'none') {
-          // display progress status for a short time before hiding
-          setTimeout(local._ajaxProgressHide, 1000);
-        }
-      }, 1000);
+    },
+
+    __initAjax_noAjaxProgressBar_test: function (onEventError) {
+      /*
+        this function tests _initAjax's no ajax progress bar handling behavior
+      */
+      exports.testMock(onEventError, stateRestore, [
+        [document, {
+          createElement: exports.nop,
+          // disable finding ajax progress bar
+          getElementsByClassName: function () {
+            return [];
+          }
+        }],
+        [local, {
+          _ajaxProgressBarDiv: null,
+          _ajaxProgressDiv: null,
+          _ajaxProgressHide: exports.nop
+        }]
+      ], function (onEventError) {
+        local._initAjax();
+        // validate #ajaxProgressBarDiv was not found
+        exports.assert(local._ajaxProgressBarDiv === undefined, local._ajaxProgressBarDiv);
+        // validate #ajaxProgressDiv was not found
+        exports.assert(local._ajaxProgressDiv === undefined, local._ajaxProgressDiv);
+        onEventError();
+      });
     },
 
     _initTest: function () {
@@ -1200,11 +1219,11 @@ var exports, required, state;
       */
       var timerInterval;
       // run tests in test mode
-      if (!(/\bmodeTest=\w/).test(location.search)) {
+      if (!(/\bmodeTest=1\b/).test(location.search)) {
         return;
       }
       // init testReportDiv element
-      state.testReportDiv = document.getElementById('testReportDiv') || {};
+      state.testReportDiv = document.getElementsByClassName('testReportDiv')[0] || {};
       // save server-side testCallbackId
       state.testCallbackId = (/\btestCallbackId=([^&]+)/).exec(location.search);
       state.testCallbackId = state.testCallbackId && state.testCallbackId[1];
@@ -1251,7 +1270,7 @@ var exports, required, state;
         case 'load':
           // cleanup timerTimeout
           clearTimeout(timerTimeout);
-          // remove xhr from progress list
+          // remove xhr from ajax progress list
           ii = local._ajaxProgressList.indexOf(xhr);
           if (ii >= 0) {
             local._ajaxProgressList.splice(ii, 1);
@@ -1268,12 +1287,12 @@ var exports, required, state;
           onEventError2(error, data);
           break;
         }
-        // increment progress bar
+        // increment ajax progress bar
         if (local._ajaxProgressList.length !== 0) {
           local._ajaxProgressIncrement();
           return;
         }
-        // finish progress bar
+        // finish ajax progress bar
         switch (event.type) {
         case 'load':
           local._ajaxProgressUpdate('100%', 'ajaxProgressBarDivSuccess', 'loaded');
@@ -1298,7 +1317,7 @@ var exports, required, state;
         error = timerTimeout;
         xhr.abort();
       }, state.timeoutDefault, 'ajax');
-      // display progress bar if hidden
+      // display ajax progress bar if hidden
       if (local._ajaxProgressList.length === 0) {
         local._ajaxProgressDiv.style.display = 'block';
       }
@@ -1321,7 +1340,7 @@ var exports, required, state;
         url: '/test/hello.json'
       }, function (error, data) {
         exports.testTryCatch(function () {
-          // assert no error occurred
+          // validate no error occurred
           exports.assert(!error, error);
           // validate data
           exports.assert(data === '"hello"', data);
@@ -1331,53 +1350,34 @@ var exports, required, state;
     },
 
     _ajaxProgressHide: function () {
-      /*
-        this function hides the progress bar if all ajax request are finished
-      */
-      if (local._ajaxProgressList.length === 0) {
-        // hide progress bar
-        local._ajaxProgressDiv.style.display = 'none';
-        // reset progress state
-        local._ajaxProgressState = 0;
-        local._ajaxProgressUpdate('0%', 'ajaxProgressBarDivLoading', 'loading');
+      // keep track of how many consecutive cycles ajax progress is complete
+      if (local._ajaxProgressList.length === 0 &&
+          local._ajaxProgressDiv.style.display !== 'none') {
+        local._ajaxProgressHideMode += 1;
+        // if ajax progress is complete for 2 consecutive cycles,
+        // then hide ajax progress bar and reset ajax progress
+        if (local._ajaxProgressHideMode === 2) {
+          local._ajaxProgressHideMode = 0;
+          // hide ajax progress bar
+          local._ajaxProgressDiv.style.display = 'none';
+          // reset ajax progress
+          local._ajaxProgressState = 0;
+          local._ajaxProgressUpdate('0%', 'ajaxProgressBarDivLoading', 'loading');
+        }
+      } else {
+        local._ajaxProgressHideMode = 0;
       }
+      // check ajax progress status every second
+      setTimeout(local._ajaxProgressHide, 1000);
     },
 
-    __ajaxProgressHide_default_test: function (onEventError) {
-      /*
-        this function tests _ajaxProgressHide's default handling behavior
-      */
-      exports.testMock(onEventError, [
-        [local, {
-          _ajaxProgressDiv: { style: { display: 'block' } },
-          _ajaxProgressBarDiv: { className: '', style: {} },
-          _ajaxProgressList: [],
-          _ajaxProgressState: 0
-        }]
-      ], function (onEventError) {
-        // test nop handling behavior
-        local._ajaxProgressList.push(null);
-        local._ajaxProgressHide();
-        exports.assert(
-          local._ajaxProgressDiv.style.display === 'block',
-          local._ajaxProgressDiv.style.display
-        );
-        // test hide progress bar handling behavior
-        local._ajaxProgressList.length = 0;
-        local._ajaxProgressHide();
-        exports.assert(
-          local._ajaxProgressDiv.style.display === 'none',
-          local._ajaxProgressDiv.style.display
-        );
-        onEventError();
-      });
-    },
+    _ajaxProgressHideMode: 0,
 
     _ajaxProgressIncrement: function () {
       /*
-        this function increments the progress bar
+        this function increments the ajax progress bar
       */
-      // this algorithm can indefinitely increment the progress bar
+      // this algorithm can indefinitely increment the ajax progress bar
       // with successively smaller increments without ever reaching 100%
       local._ajaxProgressState += 1;
       local._ajaxProgressUpdate(
@@ -1389,15 +1389,24 @@ var exports, required, state;
 
     _ajaxProgressList: [],
 
+    _ajaxProgressState: 0,
+
     _ajaxProgressUpdate: function (width, type, label) {
       /*
-        this function visually updates the progress bar
+        this function visually updates the ajax progress bar
       */
       local._ajaxProgressBarDiv.style.width = width;
       local._ajaxProgressBarDiv.className = local._ajaxProgressBarDiv.className
         .replace((/ajaxProgressBarDiv\w+/), type);
       local._ajaxProgressBarDiv.innerHTML = label;
-    }
+    },
+
+    // init event handling
+    ngApp_utility2_controller_TestController: ['$scope', function ($scope) {
+      $scope.runTest = function () {
+        location.search = 'modeTest=1';
+      };
+    }]
 
   };
   local._init();
@@ -1437,19 +1446,24 @@ var exports, required, state;
       });
       // require external modules
       [
+        'istanbul-lite',
         'jslint-lite'
       ].forEach(function (module) {
         try {
           required[module.replace((/-/g), '_')] = require(module);
-        } catch (error) {
-          console.log('module ' + module + ' not loaded');
+        } catch (ignore) {
         }
       });
-      // load package.json file
-      state.packageJson = state.packageJson || {};
-      state.packageJson = JSON.parse(required.fs.readFileSync(__dirname + '/package.json'));
+      // override state with package.json object
+      exports.setOverride(state, require(__dirname + '/package.json'));
       // init and watch builtin files
       local._initFile();
+      // init main.data
+      required.vm.runInNewContext(
+        state.fileDict['main.data'].data,
+        { exports: exports },
+        'main.data'
+      );
       // run the following code only if this module is in the root directory
       if (__dirname !== process.cwd()) {
         return;
@@ -1462,6 +1476,8 @@ var exports, required, state;
       local._initRepl();
       // init server
       local._initServer();
+      // re-init and re-watch builtin files
+      local._initFile();
     },
 
     _initCli: function (argv, env) {
@@ -1500,20 +1516,17 @@ var exports, required, state;
       // merge previous test report into current test report
       if (process.env.MODE_TEST_REPORT_MERGE) {
         try {
-          exports.testReportCreate(
-            state.testReport,
-            JSON.parse(required.fs.readFileSync('.build/test-report.json'))
-          );
-          process.on('exit', function () {
-            // create json test report
-            required.fs.writeFileSync(
-              '.build/test-report.json',
-              JSON.stringify(state.testReport)
-            );
-          });
+          exports.testReportCreate(state.testReport, require('.build/test-report.json'));
         } catch (error) {
-          console.log(process.cwd() + '/.build/test-report.json not loaded');
+          console.log(process.cwd() + '/.build/test-report.json not loaded for merging');
         }
+        // on exit, create .build/test-report.json
+        process.on('exit', function () {
+          required.fs.writeFileSync(
+            '.build/test-report.json',
+            JSON.stringify(state.testReport)
+          );
+        });
       }
       // init cli after all modules have been synchronously loaded
       setTimeout(function () {
@@ -1529,11 +1542,9 @@ var exports, required, state;
         this function tests _initCli's default handling behavior
       */
       var data;
-      exports.testMock(onEventError, [
+      exports.testMock(onEventError, stateRestore, [
         [exports, { testReportCreate: exports.nop }],
-        [required, { fs: { readFileSync: function () {
-          return 'null';
-        } } }]
+        [global, { require: exports.nop }]
       ], function (onEventError) {
         state = { modeCliDict: {} };
         local._initCli(['aa', '--bb', '--cc=dd'], {});
@@ -1548,90 +1559,121 @@ var exports, required, state;
       /*
         this function inits the coverage api
       */
-      var coverage, istanbul;
+      var coverage;
       // init testReport.coverage object
       Object.keys(global).forEach(function (key) {
         if (key.indexOf('$$cov_') === 0) {
           coverage = state.testReport.coverage;
-          // reference to state.testReport.coverage to global coverage object
+          // reference state.testReport.coverage to global coverage object
           state.testReport.coverage = global[key];
           // merge old coverage object to the global coverage object
           exports.testReportCreate(state.testReport, { coverage: coverage });
         }
       });
-      if (state.modeCoverage) {
-        // init required.istanbul_instrumenter
-        istanbul = require('istanbul');
-        required.istanbul_instrumenter = new istanbul.Instrumenter();
-      }
     },
 
     _initFile: function () {
       /*
         this function inits and watches builtin files
       */
-      var initFile;
-      initFile = function (file) {
+      var parseFile;
+      parseFile = function (file) {
         var data;
-        data = required.fs.readFileSync(__dirname + '/' + file, 'utf8');
-        data.replace(
-          (/^\/\* MODULE_BEGIN (.+) \*\/$([\S\s]+?)^\/\* MODULE_END \*\/$/gm),
-          function (_, options, content, ii) {
-            // jslint hack
-            exports.nop(_);
-            options = JSON.parse(options);
-            // save options to state.fileDict
-            state.fileDict[options.file] = options;
-            // preserve lineno
-            options.content = data.slice(0, ii).replace(/.*/g, '') + content;
-            // run actions
-            options.actionList.forEach(function (action) {
-              state.fileActionDict[action](options);
-            });
+        data = required.fs.readFileSync(__dirname + '/' + file, 'utf8')
+          // comment out shebang
+          .replace((/^#!/), '//#!');
+        switch (file) {
+        case 'example.js':
+          state.stateBrowser.fileDict[file] = { data: data, file: file };
+          break;
+        case 'main.js':
+        case 'utility2.js':
+          data = data
+            // remove nodejs modules from script
+            .replace(
+              (/^\(function submodule\w*Nodejs\(\) \{[\S\s]*?^\}\(\)\);$/gm),
+              function (match) {
+                // preserve lineno
+                return match.replace((/.*/g), '');
+              }
+            )
+            .trimRight();
+          // instrument script if coverage flag is enabled
+          if (state.modeCoverage) {
+            data = required.istanbul_lite.instrument(data, __dirname + '/' + file);
           }
-        );
+          break;
+        case 'main.data':
+        case 'utility2.data':
+          data = data.replace(
+            (/^\/\* FILE_BEGIN ([\S\s]+?) \*\/$([\S\s]+?)^\/\* FILE_END \*\/$/gm),
+            function (_, options, data, ii) {
+              // nop hack to pass jslint
+              exports.nop(_);
+              options = JSON.parse(options);
+              // save options to state.fileDict
+              state.fileDict[options.file] = options;
+              // preserve lineno
+              options.data = data.slice(0, ii).replace(/.*/g, '') + data;
+              // run actions
+              options.actionList.forEach(function (action) {
+                (state.fileActionDict[action] || exports.nop)(options);
+              });
+              // preserve script in data file for export to browser
+              return options.actionList.indexOf('exportBrowserScript') >= 0 ? _
+                // preserve lineno
+                : _.replace((/.*/g), '');
+            }
+          );
+          break;
+        }
+        return data;
       };
       // init data files
-      ['utility2.data', 'main.data'].forEach(function (file) {
-        // init data file
-        initFile(file);
+      ['main.data', 'utility2.data'].forEach(function (file) {
+        // cache file data to state.fileDict
+        state.fileDict[file] = { data: parseFile(file), file: file };
       });
       // run the following code only if this module is in the root directory
       if (__dirname !== process.cwd()) {
         return;
       }
       // watch and auto-init data files
-      ['utility2.data', 'main.data'].forEach(function (file) {
-        // cleanup up old watch
+      ['main.data', 'utility2.data'].forEach(function (file) {
+        // cleanup any existing watchers on the file
         required.fs.unwatchFile(file);
-        // watch data file
+        // watch the file using 1000 ms polling
         required.fs.watchFile(file, {
           interval: 1000,
           persistent: false
         }, function (stat2, stat1) {
           if (stat2.mtime >= stat1.mtime) {
-            initFile(file);
+            // cache file data to state.fileDict
+            state.fileDict[file] = { data: parseFile(file), file: file };
           }
         });
       });
       // watch and auto-jslint js files
-      ['utility2.js', 'main.js'].forEach(function (file) {
-        // cleanup up old watch
+      ['example.js', 'main.js', 'utility2.js'].forEach(function (file) {
+        // cache file data to state.fileDict
+        state.fileDict[file] = { data: parseFile(file), file: file };
+        // cleanup any existing watchers on the file
         required.fs.unwatchFile(file);
-        // watch js file
+        // watch the file using 1000 ms polling
         required.fs.watchFile(file, {
           interval: 1000,
           persistent: false
         }, function (stat2, stat1) {
           if (stat2.mtime >= stat1.mtime) {
+            // if modified, auto-jslint the file
             if (required.jslint_lite && required.jslint_lite.jslint) {
               required.jslint_lite.jslintPrint(
-                required.fs.readFileSync(file, 'utf8')
-                  // remove hashbang from script
-                  .replace((/^#!/), '//#!'),
+                required.fs.readFileSync(file, 'utf8'),
                 file
               );
             }
+            // if modified, re-cache file data to state.fileDict
+            state.fileDict[file] = { data: parseFile(file), file: file };
           }
         });
       });
@@ -1653,7 +1695,7 @@ var exports, required, state;
       // start repl
       require('repl').start({
         eval: function (script, __, file, onEventError) {
-          // jslint hack
+          // nop hack to pass jslint
           exports.nop(__);
           try {
             onEventError(null, required.vm.runInThisContext(local._replParse(script), file));
@@ -1673,7 +1715,9 @@ var exports, required, state;
         return;
       }
       state.serverPort = Math.floor(
-        state.serverPort === 'random' ? (Math.random() * 0xffff) | 0x8000 : state.serverPort
+        // create random port in the inclusive range 0x8000 - 0xffff
+        state.serverPort === 'random' ? (Math.random() * 0xffff) | 0x8000
+          : state.serverPort
       );
       // validate state.serverPort
       exports.assert(
@@ -1682,16 +1726,16 @@ var exports, required, state;
       );
       // init state.localhost
       state.localhost = 'http://localhost:' + state.serverPort;
-      console.log('\nserver starting on port ' + state.serverPort);
+      console.log('\nserver starting on port ' + state.serverPort + ' ...');
       // init server with exports.serverMiddleware
       required.http.createServer(function (request, response) {
         exports.serverMiddleware(request, response, function (error) {
           exports.serverRespondDefault(response, error ? 500 : 404, error);
         });
       })
-        // listen on state.serverPort
+        // set server to listen on state.serverPort
         .listen(state.serverPort, function () {
-          console.log('server started on port ' + state.serverPort);
+          console.log('... server started on port ' + state.serverPort);
         });
     },
 
@@ -1843,7 +1887,7 @@ var exports, required, state;
         url: '/test/hello.json'
       }, function (error, data, response) {
         exports.testTryCatch(function () {
-          // assert no error occurred
+          // validate no error occurred
           exports.assert(!error, error);
           // validate data
           exports.assert(data === '"hello"', data);
@@ -1871,13 +1915,27 @@ var exports, required, state;
       });
     },
 
+    fileActionDict_exportBrowserFile: function (options) {
+      /*
+        this function exports the file to stateBrowser
+      */
+      state.stateBrowser.fileDict[options.file] = options;
+    },
+
+    fileActionDict_format: function (options) {
+      /*
+        this function formats the file with the state dict
+      */
+      options.data = exports.textFormat(options.data, state);
+    },
+
     fileActionDict_install: function (options) {
       /*
         this function installs the file
       */
       // run the following code only if this module is in the root directory
       if (state.modeCli === 'npmInstall' && __dirname === process.cwd()) {
-        required.fs.writeFileSync(options.file, options.content);
+        required.fs.writeFileSync(options.file, options.data);
       }
     },
 
@@ -1889,7 +1947,7 @@ var exports, required, state;
       case '.js':
       case '.json':
         if (required.jslint_lite && required.jslint_lite.jslint) {
-          required.jslint_lite.jslintPrint(options.content, options.file);
+          required.jslint_lite.jslintPrint(options.data, options.file);
         }
         break;
       }
@@ -1897,9 +1955,9 @@ var exports, required, state;
 
     fileActionDict_trim: function (options) {
       /*
-        this function trims the file content
+        this function trims the file data
       */
-      options.content = options.content.trim();
+      options.data = options.data.trim();
     },
 
     modeCliDict_coverageReportBadgeCreate: function () {
@@ -1911,10 +1969,8 @@ var exports, required, state;
         .exec(required.fs.readFileSync('.build/coverage-report.html/index.html', 'utf8'))[1];
       required.fs.writeFileSync(
         '.build/coverage-report.badge.svg',
-        state.fileDict[
-          'https%3A%2F%2Fimg.shields.io%2Fbadge%2Fcoverage-100.0%25-00dd00.svg%3Fstyle%3Dflat'
-        ]
-          .content
+        state.fileDict['.build/coverage-report.badge.svg']
+          .data
           // edit coverage badge percent
           .replace('100.0', percent)
           // edit coverage badge color
@@ -1932,7 +1988,7 @@ var exports, required, state;
       /*
         this function tests modeCliDict_coverageReportBadgeCreate's default handling behavior
       */
-      exports.testMock(onEventError, [
+      exports.testMock(onEventError, stateRestore, [
         [required, { fs: {
           readFileSync: function () {
             return 'Statements: <span class="metric">50.0%';
@@ -1958,7 +2014,7 @@ var exports, required, state;
           file1 = argv[3];
           file2 = file1.replace(argv[4], argv[5]);
           console.log('pushing file https://' +
-            process.env.GITHUB_REPO.replace('/', '.github.io/') + '-data/' + file2);
+            process.env.GITHUB_REPO.replace('/', '.github.io/') + '/' + file2);
           exports.ajax({
             headers: {
               // github oauth authentication
@@ -1967,7 +2023,7 @@ var exports, required, state;
               'user-agent': 'unknown'
             },
             url: 'https://api.github.com/repos/' + process.env.GITHUB_REPO +
-              '-data/contents/' + required.path.dirname(file2) + '?ref=gh-pages'
+              '/contents/' + required.path.dirname(file2) + '?ref=gh-pages'
           }, onEventMode);
           break;
         case 2:
@@ -2003,8 +2059,7 @@ var exports, required, state;
               'user-agent': 'unknown'
             },
             method: 'PUT',
-            url: 'https://api.github.com/repos/' + process.env.GITHUB_REPO +
-              '-data/contents/' + file2
+            url: 'https://api.github.com/repos/' + process.env.GITHUB_REPO + '/contents/' + file2
           }, onEventMode);
           break;
         default:
@@ -2020,10 +2075,10 @@ var exports, required, state;
         this function tests modeCliDict_githubContentsFilePush's default handling behavior
       */
       var ajax1, mode;
-      exports.testMock(onEventError, [
+      exports.testMock(onEventError, stateRestore, [
         [console, { error: exports.nop }],
         [exports, { ajax: function (_, onEventError) {
-          // jslint hack
+          // nop hack to pass jslint
           exports.nop(_);
           mode += 1;
           switch (mode) {
@@ -2050,7 +2105,7 @@ var exports, required, state;
         };
         local.modeCliDict_githubContentsFilePush(process.argv, function (error) {
           exports.testTryCatch(function () {
-            // assert no error occurred
+            // validate no error occurred
             exports.assert(!error, error);
           }, onEventError);
         });
@@ -2069,20 +2124,12 @@ var exports, required, state;
         };
         local.modeCliDict_githubContentsFilePush(process.argv, function (error) {
           exports.testTryCatch(function () {
-            // assert no error occurred
+            // validate no error occurred
             exports.assert(!error, error);
           }, onEventError);
         });
         onEventError();
       });
-    },
-
-    modeCliDict_npmInstall: function () {
-      /*
-        this function runs after npm install
-      */
-      // re-init data files with the install flag
-      local._initFile();
     },
 
     modeCliDict_npmTest: function () {
@@ -2158,7 +2205,7 @@ var exports, required, state;
         new Buffer(JSON.stringify({ argv0: required.path.basename(file), url: state.localhost +
           '/test/test.html' +
           '?modeTest=1' +
-          '&modeTestReportUpload=' + process.env.MODE_TEST_REPORT_UPLOAD +
+          '&modeTestReportUpload=1' +
           '&testCallbackId=' + testCallbackId +
           '&timeoutDefault=' + state.timeoutDefault })).toString('base64')
       ], modeDebug: false });
@@ -2288,70 +2335,60 @@ var exports, required, state;
 
     'serverRequestHandlerDict_/': function (request, response, next) {
       if (request.urlPathNormalized === '/') {
-        // redirect to test page
-        exports.serverRespondWriteHead(response, 303, { location: '/test/test.html' });
-        exports.serverRespondDefault(response, 303);
+        exports.serverRespondData(response, 200, 'text/html', exports.textFormat(
+          state.fileDict['/main.html'].data,
+          { stateBrowserJson: JSON.stringify(state.stateBrowser) }
+        ));
         return;
       }
+      // goto next middleware
       next();
     },
 
     'serverRequestHandlerDict_/public': function (request, response, next) {
       /*
-        this function responds with public cached content if it exists
+        this function responds with public cached data if it exists
       */
-      request = state.fileDict[request.urlPathNormalized];
-      // cached content exists
-      if (request) {
+      var options;
+      options = {
+        '/public/main.data.js': 'main.data',
+        '/public/main.js': 'main.js',
+        '/public/utility2.data.js': 'utility2.data',
+        '/public/utility2.js': 'utility2.js'
+      };
+      options = state.fileDict[options[request.urlPathNormalized] || request.urlPathNormalized];
+      // cached data exists - respond with cached data
+      if (options) {
         exports.serverRespondData(
           response,
           200,
-          state.mimeLookupDict[required.path.extname(request.file).slice(1)] ||
-            'application/octet-stream',
-          request.content
+          state.mimeLookupDict[
+            required.path.extname(request.urlPathNormalized)
+          ] || 'application/octet-stream',
+          options.data
         );
         return;
       }
-      // cached content does not exist
+      // cached data does not exist - goto next middleware
       next();
     },
 
-    'serverRequestHandlerDict_/public/main.js': function (_, response, next) {
-      // jslint hack
-      exports.nop(_);
-      exports.serverRespondScript(response, 200, next, exports.__filename);
-    },
-
-    'serverRequestHandlerDict_/public/utility2.js': function (_, response, next) {
-      // jslint hack
-      exports.nop(_);
-      exports.serverRespondScript(response, 200, next, __dirname + '/utility2.js');
-    },
-
     'serverRequestHandlerDict_/test/hello.json': function (_, response) {
-      // jslint hack
+      // nop hack to pass jslint
       exports.nop(_);
       exports.serverRespondData(response, 200, 'application/json', '"hello"');
     },
 
     'serverRequestHandlerDict_/test/test.html': function (_, response) {
-      // jslint hack
+      // nop hack to pass jslint
       exports.nop(_);
       exports.serverRespondData(response, 200, 'text/html', exports.textFormat(
-        state.fileDict['/test/test.html'].content,
-        {
-          name: state.packageJson.name,
-          state: JSON.stringify({
-            fileDict: {
-              '/public/testReport.html.template':
-                state.fileDict['/public/testReport.html.template']
-            }
-          })
-        }
+        state.fileDict['/test/test.html'].data,
+        { stateBrowserJson: JSON.stringify(state.stateBrowser) }
       ));
     },
 
-    'serverRequestHandlerDict_/test/testReportUpload': function (request, response, next) {
+    'serverRequestHandlerDict_/test/test-report-upload': function (request, response, next) {
       /*
         this function receives and parses uploaded test reports
       */
@@ -2362,10 +2399,8 @@ var exports, required, state;
         switch (mode) {
         case 1:
           // authenticate request with basic authentication
-          if (!(process.env.MODE_TEST_REPORT_UPLOAD &&
-              process.env.MODE_TEST_REPORT_UPLOAD === request.headers.authorization)) {
-            // respond with http status code 401 if authentication fails
-            exports.serverRespondDefault(response, 401);
+          if (!state.modeTestReportUpload) {
+            next();
             return;
           }
           exports.streamReadAll(
@@ -2418,35 +2453,6 @@ var exports, required, state;
       exports.serverRespondWriteHead(response, statusCode, { 'content-type': contentType });
       // end response with data
       response.end(data);
-    },
-
-    serverRespondScript: function (response, statusCode, next, file) {
-      /*
-        this function responds with javascript file parsed for the browser
-      */
-      required.fs.readFile(file, 'utf8', function (error, script) {
-        if (error) {
-          next(error);
-          return;
-        }
-        script = script
-          // remove hashbang
-          .replace((/^#!/), '//#!')
-          // remove nodejs modules
-          .replace(
-            (/^\(function submodule\w*Nodejs\(\) \{[\S\s]*?^\}\(\)\);$/gm),
-            function (match) {
-              // preserve lineno
-              return match.replace((/.*/g), '');
-            }
-          )
-          .trimRight();
-        // instrument script
-        if (required.istanbul_instrumenter) {
-          script = required.istanbul_instrumenter.instrumentSync(script, file);
-        }
-        exports.serverRespondData(response, statusCode, 'application/javascript', script);
-      });
     },
 
     serverRespondWriteHead: function (response, statusCode, headers) {

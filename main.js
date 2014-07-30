@@ -1,5 +1,13 @@
 #!/usr/bin/env node
-/*jslint bitwise: true, browser: true, indent:2, node: true, nomen: true, regexp: true, stupid: true*/
+/*jslint
+  bitwise: true, browser: true,
+  indent: 2,
+  maxerr: 8,
+  node: true, nomen: true,
+  regexp: true,
+  stupid: true,
+  todo: true
+*/
 // declare module vars
 var exports, required, state;
 

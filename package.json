@@ -4,6 +4,7 @@
   "description": "lightweight nodejs test and coverage utility",
   "devDependencies": {
     "istanbul": "0.2.x",
+    "istanbul-lite": "2014.x.x",
     "jslint-lite": "2014.x.x",
     "phantomjs": "1.9.x",
     "slimerjs": "0.9.x"
@@ -12,14 +13,16 @@
   "main": "main.js",
   "name": "utility2",
   "os": ["darwin", "linux"],
+  "repoGithub": "kaizhu256/node-utility2",
+  "repoHeroku": "hrku01-utility2",
   "repository" : {
     "type" : "git",
-    "url" : "https://github.com/kaizhu256/utility2.git"
+    "url" : "https://github.com/kaizhu256/node-utility2.git"
   },
   "scripts": {
     "install": "./utility2.sh shNpmInstall",
     "start": "./utility2.sh shNpmStart",
     "test": "./utility2.sh shNpmTest"
   },
-  "version": "2014.7.18-9"
+  "version": "2014.7.29-12"
 }

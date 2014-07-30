@@ -71,36 +71,30 @@ shBuild() {
   ## this function builds the package
   ## decrypt and exec encrypted data
   eval "$(shAesDecryptTravis)" || return $?
+  ## non-zero return on failed decryption of build credentials
+  if [ ! "$AES_256_KEY" ]
+  then
+    return 1
+  fi
   ## try to init travis-ci.org env
   if [ "$TRAVIS" ]
   then
     ## init xvfb
     ## http://docs.travis-ci.com/user/gui-and-headless-browsers/
     export DISPLAY=:99.0 && sh -e /etc/init.d/xvfb start || return $?
-    export CI_BUILD_DIR=build.travis-ci.org || return $?
-    export CI_BRANCH=$TRAVIS_BRANCH || return $?
-    export CI_BUILD_NUMBER=$TRAVIS_BUILD_NUMBER || return $?
-    export CI_COMMIT_ID=$TRAVIS_COMMIT || return $?
-  ## else init default env
-  else
-    export CI_BUILD_DIR=build.local || return $?
-    export CI_BRANCH=local || return $?
-    export CI_BUILD_NUMBER=0 || return $?
-    export CI_COMMIT_ID=$(git rev-parse --verify HEAD) || return $?
   fi
-  export CI_COMMIT_MESSAGE="$(git log -1 --pretty=%s)" || return $?
-  export CI_COMMIT_INFO="$CI_COMMIT_ID - $CI_COMMIT_MESSAGE" || return $?
   ## merge successive test reports
   export MODE_TEST_REPORT_MERGE=true || return $?
   ## create initial test-report.json
-  echo "{}" > .build/test-report.json
+  echo "{}" > .build/test-report.json || return $?
   ## run local npm test
-  shBuildPrint npmTestLocal "npm testing $CWD ..." || return $?
-  npm test || shBuildExit
+  shBuildPrint npmTestLocal "npm testing $CWD ..." && shNpmTest || shBuildExit
   ## deploy app to heroku
   shBuildHerokuDeploy || shBuildExit
   ## capture browser screenshots using saucelabs
-  shBuildPrint saucelabsScreenshot "using saucelabs to capture screenshots ..." || shBuildExit
+  shBuildPrint saucelabsScreenshot\
+    "using saucelabs to capture browser screenshots of heroku server and travis build ..." ||\
+    shBuildExit
   istanbul cover main.js --dir=/tmp/coverage --\
     --mode-cli=saucelabsScreenshot --timeout-default=120000 || shBuildExit
   ## run saucelabs test
@@ -111,8 +105,7 @@ shBuild() {
   ## npm publish app if its version is greater than the published version
   shBuildNpmPublish || shBuildExit
   ## re-run npm test to build latest report
-  shBuildPrint npmTestLocal "npm testing $CWD ..." || shBuildExit
-  npm test || shBuildExit
+  shBuildPrint npmTestLocal "npm testing $CWD ..." && shNpmTest || shBuildExit
   ## gracefully exit build
   shBuildExit
 }
@@ -251,7 +244,7 @@ shBuildNpmPublish() {
   shBuildPrint npmPublishedTest\
     "npm testing published app $NODEJS_PACKAGE_JSON_NAME ..." || return $?
   ## re-run npm test app and merge result into previous test-report.json
-  npm test --disable-coverage || return $?
+  npm test --mode-no-coverage || return $?
   cp .build/test-report.* $CWD/.build
   ## restore $CWD
   cd $CWD
@@ -289,6 +282,25 @@ shNpmStart() {
 
 shNpmTest() {
   ## this function runs npm test
+  ## init ci env
+  if [ -d .git ]
+  then
+    ## init default env
+    export CI_BUILD_DIR=build.local || return $?
+    export CI_BRANCH=local || return $?
+    export CI_BUILD_NUMBER=0 || return $?
+    export CI_COMMIT_ID=$(git rev-parse --verify HEAD) || return $?
+    ## try to init travis-ci.org env
+    if [ "$TRAVIS" ]
+    then
+      export CI_BUILD_DIR=build.travis-ci.org || return $?
+      export CI_BRANCH=$TRAVIS_BRANCH || return $?
+      export CI_BUILD_NUMBER=$TRAVIS_BUILD_NUMBER || return $?
+      export CI_COMMIT_ID=$TRAVIS_COMMIT || return $?
+    fi
+    export CI_COMMIT_MESSAGE="$(git log -1 --pretty=%s)" || return $?
+    export CI_COMMIT_INFO="$CI_COMMIT_ID - $CI_COMMIT_MESSAGE" || return $?
+  fi
   ## jslint example.js / main.js / utility2.js
   jslint-lite example.js main.js utility2.js
   ## npm install dev dependencies
@@ -303,11 +315,10 @@ shNpmTest() {
   ARGS="$ARGS --" || return $?
   ARGS="$ARGS --mode-cli=npmTest" || return $?
   ARGS="$ARGS --mode-repl" || return $?
+  ARGS="$ARGS --mode-test-report-upload" || return $?
   ARGS="$ARGS --server-port=random" || return $?
-  ## create random authentication string for uploading test reports
-  export MODE_TEST_REPORT_UPLOAD=$(openssl rand -hex 64) || return $?
   ## disable code coverage
-  if [ "$npm_config_disable_coverage" ]
+  if [ "$npm_config_mode_fast" ] || [ "$npm_config_mode_no_coverage" ]
   then
     istanbul test $ARGS || return $?
     return $?
