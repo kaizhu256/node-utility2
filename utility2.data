@@ -177,10 +177,10 @@ exec ssh -i $GIT_SSH_KEY_FILE -o CheckHostIP=no -o StrictHostKeychecking=no -- "
 
 
 /* FILE_BEGIN {
-  "actionList": ["trim", "install"],
+  "actionList": ["format", "trim", "install"],
   "file": "Procfile"
 } */
-web: npm start --server-port=$PORT
+web: npm start --mode-test={{modeTest}} --server-port=$PORT
 /* FILE_END */
 
 
@@ -385,7 +385,7 @@ tr:nth-child(odd).testReportPlatformTr {
 
 
 /* FILE_BEGIN {
-  "actionList": ["trim", "format"],
+  "actionList": ["format", "trim"],
   "file": "/test/test.html"
 } */
 <!DOCTYPE html>
@@ -422,13 +422,13 @@ body {
 <!-- enable test report -->
 <div class="testReportDiv"></div>
 <!-- load scripts -->
-<script src="/public/utility2.data.js"></script>
-<script src="/public/utility2.js"></script>
+<script src="{{cacheUrl.utility2.data}}"></script>
+<script src="{{cacheUrl.utility2.js}}"></script>
 <!-- init state object -->
 <script>window.exports.setOverride(window.state, {{stateBrowserJson}});</script>
 <!-- run main program -->
-<script src="/public/main.data.js"></script>
-<script src="/public/main.js"></script>
+<script src="{{cacheUrl.main.data}}"></script>
+<script src="{{cacheUrl.main.js}}"></script>
 </body>
 
 </html>

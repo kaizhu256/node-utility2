@@ -90,17 +90,17 @@ shBuild() {
   ## run local npm test
   shBuildPrint npmTestLocal "npm testing $CWD ..." && shNpmTest || shBuildExit
   ## deploy app to heroku
-  shBuildHerokuDeploy || shBuildExit
+  shBuildHerokuDeploy --mode-test || shBuildExit
   ## capture browser screenshots using saucelabs
   shBuildPrint saucelabsScreenshot\
     "using saucelabs to capture browser screenshots of heroku server and travis build ..." ||\
     shBuildExit
-  istanbul cover main.js --dir=/tmp/coverage --\
+  istanbul cover utility2.js --dir=/tmp/coverage --\
     --mode-cli=saucelabsScreenshot --timeout-default=120000 || shBuildExit
   ## run saucelabs test
   shBuildPrint saucelabsTest "running saucelabs tests ..." || shBuildExit
   export CI_BUILD_NUMBER_SAUCELABS=$CI_BUILD_NUMBER.$(openssl rand -hex 8) || shBuildExit
-  istanbul cover main.js --dir=/tmp/coverage --\
+  istanbul cover utility2.js --dir=/tmp/coverage --\
     --mode-cli=saucelabsTest || shBuildExit
   ## npm publish app if its version is greater than the published version
   shBuildNpmPublish || shBuildExit
@@ -147,6 +147,8 @@ shBuildExit() {
 
 shBuildHerokuDeploy() {
   ## this function deploys the app to heroku
+  ## init $ARGS
+  local ARGS=$1
   ## init $HEROKU_REPO
   local HEROKU_REPO=$(shPackageJsonGetItem repoHeroku)-$CI_BRANCH || return $?
   if [ ! "$GIT_SSH_KEY" ] || [ ! "$HEROKU_REPO" ]
@@ -168,7 +170,7 @@ shBuildHerokuDeploy() {
   ## init clean repo in /tmp/app
   shBuildAppCopy && cd /tmp/app || return $?
   ## npm run-script install
-  npm run-script install
+  npm run-script install $ARGS
   ## init .git
   git init || return $?
   ## init .git/config
@@ -326,6 +328,7 @@ shNpmTest() {
   ARGS="$ARGS --" || return $?
   ARGS="$ARGS --mode-cli=npmTest" || return $?
   ARGS="$ARGS --mode-repl" || return $?
+  ARGS="$ARGS --mode-test" || return $?
   ARGS="$ARGS --mode-test-report-upload" || return $?
   ARGS="$ARGS --server-port=random" || return $?
   ## disable code coverage

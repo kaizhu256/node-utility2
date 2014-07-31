@@ -803,7 +803,7 @@ stateRestore = function (state2) {
         });
       });
       // part 3 - create and return html test report
-      // create a copy of testReport, which will be modified for html templating
+      // json-copy testReport, which will be modified for html templating
       testReport = JSON.parse(JSON.stringify(testReport));
       // init env
       env = (global.process && process.env) || {};
@@ -966,7 +966,7 @@ stateRestore = function (state2) {
                     new Date().toISOString().slice(0, 19).replace('T', ' ')
                   )
                   // edit branch name
-                  .replace('master', process.env.CI_BRANCH)
+                  .replace('- master -', '| ' + process.env.CI_BRANCH + ' |')
                   // edit commit id
                   .replace('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', process.env.CI_COMMIT_ID)
               );
@@ -1463,7 +1463,7 @@ stateRestore = function (state2) {
       });
       // override state with package.json object
       exports.setOverride(state, require(__dirname + '/package.json'));
-      // init and watch builtin files
+      // init and watch package files
       local._initFile();
       // init main.data
       required.vm.runInNewContext(
@@ -1483,7 +1483,7 @@ stateRestore = function (state2) {
       local._initRepl();
       // init server
       local._initServer();
-      // re-init and re-watch builtin files
+      // re-init and re-watch package files
       local._initFile();
     },
 
@@ -1513,8 +1513,10 @@ stateRestore = function (state2) {
           arg = arg[0].slice(2).replace((/[\-_][a-z]/g), function (match) {
             return match[1].toUpperCase();
           });
+          // try to parse arg as json object
           try {
             state[arg] = JSON.parse(tmp);
+          // else keep arg as is
           } catch (error) {
             state[arg] = tmp;
           }
@@ -1580,11 +1582,30 @@ stateRestore = function (state2) {
 
     _initFile: function () {
       /*
-        this function inits and watches builtin files
+        this function inits and watches package files.
+        it parses the file data, and saves it to state.fileDict
       */
-      var parseFile;
+      var data, cacheFile, parseFile;
+      cacheFile = function (options) {
+        /*
+          this function creates a unique cache url for the file data
+        */
+        options.cacheUrl = '/public/cache/' + required.path.basename(options.file) + '.' +
+          required.crypto.createHash('sha256').update(data).digest('hex') +
+          required.path.extname(options.file);
+        // add .js extension for main.data and utility2.data
+        if ((/^(?:main\.data|utility2\.data)$/).test(options.file)) {
+          options.cacheUrl += '.js';
+        }
+        state.fileDict[options.cacheUrl] = options;
+        state['cacheUrl.' + required.path.basename(options.file)] = options.cacheUrl;
+      };
       parseFile = function (file) {
-        var data;
+        /*
+          this function parses the file data and saves it to state.fileDict
+        */
+        // init state.fileDict[file]
+        state.fileDict[file] = { file: file };
         data = required.fs.readFileSync(__dirname + '/' + file, 'utf8')
           // comment out shebang
           .replace((/^#!/), '//#!');
@@ -1599,12 +1620,13 @@ stateRestore = function (state2) {
             .replace(
               (/^\(function submodule\w*Nodejs\(\) \{[\S\s]*?^\}\(\)\);$/gm),
               function (match) {
-                // preserve lineno
-                return match.replace((/.*/g), '');
+                return match
+                  // preserve lineno
+                  .replace((/.*/g), '');
               }
             )
             .trimRight();
-          // instrument script if coverage flag is enabled
+          // if state.modeCoverage flag is enabled, then instrument the script
           if (state.modeCoverage) {
             data = required.istanbul_lite.instrument(data, __dirname + '/' + file);
           }
@@ -1619,27 +1641,32 @@ stateRestore = function (state2) {
               options = JSON.parse(options);
               // save options to state.fileDict
               state.fileDict[options.file] = options;
-              // preserve lineno
-              options.data = data.slice(0, ii).replace(/.*/g, '') + data;
-              // run actions
+              options.data = data
+                .slice(0, ii)
+                // preserve lineno
+                .replace((/.*/g), '')
+                + data;
+              // run each action in options.actionList
               options.actionList.forEach(function (action) {
                 (state.fileActionDict[action] || exports.nop)(options);
               });
-              // preserve script in data file for export to browser
-              return options.actionList.indexOf('exportBrowserScript') >= 0 ? _
+              // create a unique cache url for the file data
+              cacheFile(options);
+              // if indicated by exportBrowserScript, then export the data to browser
+              return options.actionList.indexOf('exportBrowserScript') >= 0 ? _ : _
                 // preserve lineno
-                : _.replace((/.*/g), '');
+                .replace((/.*/g), '');
             }
           );
           break;
         }
-        return data;
+        // save file data to state.fileDict
+        state.fileDict[file].data = data;
+        // create a unique cache url for the file data
+        cacheFile(state.fileDict[file]);
       };
       // init data files
-      ['main.data', 'utility2.data'].forEach(function (file) {
-        // cache file data to state.fileDict
-        state.fileDict[file] = { data: parseFile(file), file: file };
-      });
+      ['main.data', 'utility2.data'].forEach(parseFile);
       // run the following code only if this module is in the root directory
       if (__dirname !== process.cwd()) {
         return;
@@ -1654,15 +1681,15 @@ stateRestore = function (state2) {
           persistent: false
         }, function (stat2, stat1) {
           if (stat2.mtime >= stat1.mtime) {
-            // cache file data to state.fileDict
-            state.fileDict[file] = { data: parseFile(file), file: file };
+            // save file data to state.fileDict
+            parseFile(file);
           }
         });
       });
       // watch and auto-jslint js files
       ['example.js', 'main.js', 'utility2.js'].forEach(function (file) {
-        // cache file data to state.fileDict
-        state.fileDict[file] = { data: parseFile(file), file: file };
+        // save file data to state.fileDict
+        parseFile(file);
         // cleanup any existing watchers on the file
         required.fs.unwatchFile(file);
         // watch the file using 1000 ms polling
@@ -1672,14 +1699,14 @@ stateRestore = function (state2) {
         }, function (stat2, stat1) {
           if (stat2.mtime >= stat1.mtime) {
             // if modified, auto-jslint the file
-            if (required.jslint_lite && required.jslint_lite.jslint) {
+            if (required.jslint_lite) {
               required.jslint_lite.jslintPrint(
                 required.fs.readFileSync(file, 'utf8'),
                 file
               );
             }
-            // if modified, re-cache file data to state.fileDict
-            state.fileDict[file] = { data: parseFile(file), file: file };
+            // if modified, re-save file data to state.fileDict
+            parseFile(file);
           }
         });
       });
@@ -1926,6 +1953,8 @@ stateRestore = function (state2) {
         this function exports the file to stateBrowser
       */
       state.stateBrowser.fileDict[options.file] = options;
+      // update state.stateBrowserJson
+      state.stateBrowserJson = JSON.stringify(state.stateBrowser);
     },
 
     fileActionDict_format: function (options) {
@@ -2312,66 +2341,70 @@ stateRestore = function (state2) {
           break;
         case 2:
           path = request.urlPathNormalized;
-          // walk up parent path
-          while (!(state.serverRequestHandlerDict[path] || path === '/')) {
+          // security - if state.modeTest is falsey, then disallow /test/* path
+          if (path.indexOf('/test/') === 0 && !state.modeTest) {
+            next();
+            return;
+          }
+          // notify browser to cache /public/cache/* path
+          if (path.indexOf('/public/cache/') === 0) {
+            exports.serverRespondWriteHead(response, null, {
+              'cache-control': 'max-age=86400'
+            });
+          }
+          // walk up parent path, all the while looking for a matching handler for the path
+          while (!(state.serverPathHandlerDict[path] || path === '/')) {
             path = required.path.dirname(path);
           }
           // found a handler matching request path
-          if (state.serverRequestHandlerDict[path]) {
+          if (state.serverPathHandlerDict[path]) {
             // debug server request handler
-            state.debugServerHandler = state.serverRequestHandlerDict[path];
+            state.debugServerHandler = state.serverPathHandlerDict[path];
             // process request with error handling
             try {
               onEventMode();
             } catch (error) {
               next(error);
             }
-          // else move on to next middleware
+          // else goto next middleware
           } else {
             next();
           }
           break;
         case 3:
-          state.serverRequestHandlerDict[path](request, response, next);
+          state.serverPathHandlerDict[path](request, response, next);
           break;
         }
       };
       onEventMode();
     },
 
-    'serverRequestHandlerDict_/': function (request, response, next) {
-      if (request.urlPathNormalized === '/') {
-        exports.serverRespondData(response, 200, 'text/html', exports.textFormat(
-          state.fileDict['/main.html'].data,
-          { stateBrowserJson: JSON.stringify(state.stateBrowser) }
-        ));
+    'serverPathHandlerDict_/': function (request, response, next) {
+      // goto next middleware
+      if (request.urlPathNormalized !== '/') {
+        next();
         return;
       }
-      // goto next middleware
-      next();
+      exports.serverRespondData(response, 200, 'text/html', exports.textFormat(
+        state.fileDict['/main.html'].data,
+        { stateBrowserJson: JSON.stringify(state.stateBrowser) }
+      ));
     },
 
-    'serverRequestHandlerDict_/public': function (request, response, next) {
+    'serverPathHandlerDict_/public': function (request, response, next) {
       /*
         this function responds with public cached data if it exists
       */
-      var options;
-      options = {
-        '/public/main.data.js': 'main.data',
-        '/public/main.js': 'main.js',
-        '/public/utility2.data.js': 'utility2.data',
-        '/public/utility2.js': 'utility2.js'
-      };
-      options = state.fileDict[options[request.urlPathNormalized] || request.urlPathNormalized];
+      request = state.fileDict[request.urlPathNormalized];
       // cached data exists - respond with cached data
-      if (options) {
+      if (request) {
         exports.serverRespondData(
           response,
           200,
           state.mimeLookupDict[
             required.path.extname(request.urlPathNormalized)
           ] || 'application/octet-stream',
-          options.data
+          request.data
         );
         return;
       }
@@ -2379,22 +2412,22 @@ stateRestore = function (state2) {
       next();
     },
 
-    'serverRequestHandlerDict_/test/hello.json': function (_, response) {
+    'serverPathHandlerDict_/test/hello.json': function (_, response) {
       // nop hack to pass jslint
       exports.nop(_);
       exports.serverRespondData(response, 200, 'application/json', '"hello"');
     },
 
-    'serverRequestHandlerDict_/test/test.html': function (_, response) {
+    'serverPathHandlerDict_/test/test.html': function (_, response) {
       // nop hack to pass jslint
       exports.nop(_);
       exports.serverRespondData(response, 200, 'text/html', exports.textFormat(
         state.fileDict['/test/test.html'].data,
-        { stateBrowserJson: JSON.stringify(state.stateBrowser) }
+        state
       ));
     },
 
-    'serverRequestHandlerDict_/test/test-report-upload': function (request, response, next) {
+    'serverPathHandlerDict_/test/test-report-upload': function (request, response, next) {
       /*
         this function receives and parses uploaded test reports
       */
@@ -2404,11 +2437,12 @@ stateRestore = function (state2) {
         mode = error instanceof Error ? -1 : mode + 1;
         switch (mode) {
         case 1:
-          // authenticate request with basic authentication
+          // if report uploads are not allowed, then goto next middleware
           if (!state.modeTestReportUpload) {
             next();
             return;
           }
+          // stream test report data into buffer
           exports.streamReadAll(
             request,
             // security - use try catch block to parse potential malformed data

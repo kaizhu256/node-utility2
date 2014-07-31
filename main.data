@@ -20,8 +20,8 @@ body {
   font-family: arial;
 }
 </style>
-<link href="/public/utility2.css" rel="stylesheet"/>
-<link href="/public/main.css" rel="stylesheet"/>
+<link href="{{cacheUrl.utility2.css}}" rel="stylesheet"/>
+<link href="{{cacheUrl.main.css}}" rel="stylesheet"/>
 </head>
 
 <body>
@@ -31,13 +31,13 @@ body {
   <div class="ajaxProgressBarDiv ajaxProgressBarDivLoading">loading</div>
 </div>
 <!-- load scripts -->
-<script src="/public/utility2.data.js"></script>
-<script src="/public/utility2.js"></script>
+<script src="{{cacheUrl.utility2.data}}"></script>
+<script src="{{cacheUrl.utility2.js}}"></script>
 <!-- init state object -->
 <script>window.exports.setOverride(window.state, {{stateBrowserJson}});</script>
 <!-- run main program -->
-<script src="/public/main.data.js"></script>
-<script src="/public/main.js"></script>
+<script src="{{cacheUrl.main.data}}"></script>
+<script src="{{cacheUrl.main.js}}"></script>
 </body>
 
 </html>
