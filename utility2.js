@@ -958,8 +958,7 @@ stateRestore = function (state2) {
               // create build badge
               required.fs.writeFileSync(
                 '.build/build.badge.svg',
-                state.fileDict['.build/build.badge.svg']
-                  .data
+                state.fileDict['.build/build.badge.svg'].data
                   // edit branch name
                   .replace(
                     '0000 00 00 00 00 00',
@@ -973,8 +972,7 @@ stateRestore = function (state2) {
               // create test report badge
               required.fs.writeFileSync(
                 '.build/test-report.badge.svg',
-                state.fileDict['.build/test-report.badge.svg']
-                  .data
+                state.fileDict['.build/test-report.badge.svg'].data
                   // edit number of tests failed
                   .replace('999', testReport.testsFailed)
                   // edit badge color
@@ -1479,12 +1477,12 @@ stateRestore = function (state2) {
       local._initCli(process.argv, process.env);
       // init coverage
       local._initCoverage();
+      // re-init and re-watch package files
+      local._initFile();
       // init repl
       local._initRepl();
       // init server
       local._initServer();
-      // re-init and re-watch package files
-      local._initFile();
     },
 
     _initCli: function (argv, env) {
@@ -1585,28 +1583,39 @@ stateRestore = function (state2) {
         this function inits and watches package files.
         it parses the file data, and saves it to state.fileDict
       */
-      var data, cacheFile, parseFile;
+      var cacheFile, parseFile;
       cacheFile = function (options) {
         /*
           this function creates a unique cache url for the file data
         */
-        options.cacheUrl = '/public/cache/' + required.path.basename(options.file) + '.' +
-          required.crypto.createHash('sha256').update(data).digest('hex') +
-          required.path.extname(options.file);
-        // add .js extension for main.data and utility2.data
-        if ((/^(?:main\.data|utility2\.data)$/).test(options.file)) {
-          options.cacheUrl += '.js';
+        var key;
+        // cache only package files or /public/* files
+        if (!((/^(?:main.data|main.js|utility2.data|utility2.js)$/).test(options.file) ||
+            (/^\/public\/[^\/]+$/).test(options.file))) {
+          return;
         }
-        state.fileDict[options.cacheUrl] = options;
-        state['cacheUrl.' + required.path.basename(options.file)] = options.cacheUrl;
+        key = 'cacheUrl.' + options.file.replace('/public/', '');
+        // add .js extension for main.data and utility2.data
+        if ((/^(?:main\.data|utility2\.data)$/).test(key)) {
+          key += '.js';
+        }
+        // create unique cache url for the file data using its sha256 hash
+        key = state[key] = state[key] || '/public/cache/' + key + '.' +
+          required.crypto.createHash('sha256').update(options.data).digest('hex') +
+          required.path.extname(key);
+        state.fileDict[key] = options;
       };
       parseFile = function (file) {
         /*
           this function parses the file data and saves it to state.fileDict
         */
+        var data;
         // init state.fileDict[file]
-        state.fileDict[file] = { file: file };
-        data = required.fs.readFileSync(__dirname + '/' + file, 'utf8')
+        state.fileDict[file] = {
+          dataRaw: required.fs.readFileSync(__dirname + '/' + file, 'utf8'),
+          file: file
+        };
+        data = state.fileDict[file].dataRaw
           // comment out shebang
           .replace((/^#!/), '//#!');
         switch (file) {
@@ -1620,9 +1629,8 @@ stateRestore = function (state2) {
             .replace(
               (/^\(function submodule\w*Nodejs\(\) \{[\S\s]*?^\}\(\)\);$/gm),
               function (match) {
-                return match
-                  // preserve lineno
-                  .replace((/.*/g), '');
+                // preserve lineno
+                return match.replace((/.*/g), '');
               }
             )
             .trimRight();
@@ -1635,34 +1643,34 @@ stateRestore = function (state2) {
         case 'utility2.data':
           data = data.replace(
             (/^\/\* FILE_BEGIN ([\S\s]+?) \*\/$([\S\s]+?)^\/\* FILE_END \*\/$/gm),
-            function (_, options, data, ii) {
+            function (_, options, data2, ii) {
               // nop hack to pass jslint
               exports.nop(_);
               options = JSON.parse(options);
               // save options to state.fileDict
-              state.fileDict[options.file] = options;
-              options.data = data
-                .slice(0, ii)
+              state.fileDict[options.file] = exports.setOverride(options, {
                 // preserve lineno
-                .replace((/.*/g), '')
-                + data;
+                data: data.slice(0, ii).replace((/.*/g), '') + data2,
+                dataRaw: data2,
+                fileParent: file
+              });
               // run each action in options.actionList
               options.actionList.forEach(function (action) {
                 (state.fileActionDict[action] || exports.nop)(options);
               });
-              // create a unique cache url for the file data
+              // create unique cache url for the file data
               cacheFile(options);
               // if indicated by exportBrowserScript, then export the data to browser
-              return options.actionList.indexOf('exportBrowserScript') >= 0 ? _ : _
+              return options.actionList.indexOf('exportBrowserScript') >= 0 ? _
                 // preserve lineno
-                .replace((/.*/g), '');
+                : _.replace((/.*/g), '');
             }
           );
           break;
         }
         // save file data to state.fileDict
         state.fileDict[file].data = data;
-        // create a unique cache url for the file data
+        // create unique cache url for the file data
         cacheFile(state.fileDict[file]);
       };
       // init data files
@@ -1995,6 +2003,24 @@ stateRestore = function (state2) {
       options.data = options.data.trim();
     },
 
+    fileActionDict_updateExternal: function (options) {
+      /*
+        this function updates external sources in the file
+      */
+      if (state.modeCli !== 'updateExternal') {
+        return;
+      }
+      exports.ajax({ url: options.externalUrl }, function (error, data) {
+        if (error) {
+          exports.onEventErrorDefault(error);
+          return;
+        }
+        state.fileDict[options.fileParent].dataRaw =
+          state.fileDict[options.fileParent].dataRaw.replace(options.dataRaw, '\n' +
+            data.trim() + '\n');
+      });
+    },
+
     modeCliDict_coverageReportBadgeCreate: function () {
       /*
         this function creates a coverage badge
@@ -2211,6 +2237,19 @@ stateRestore = function (state2) {
       exports.testRun();
     },
 
+    modeCliDict_updateExternal: function () {
+      /*
+        this function updates external resources in main.data and utility2.data
+      */
+      // the updating code is done elsewhere.
+      // all we have to do is to save the updated file data on exit
+      process.on('exit', function () {
+        ['main.data', 'utility2.data'].forEach(function (file) {
+          required.fs.writeFileSync(file, state.fileDict[file].dataRaw);
+        });
+      });
+    },
+
     _phantomjsTest: function (file, onEventError) {
       /*
         this function spawns a phantomjs / slimerjs process from the given file
@@ -2395,16 +2434,17 @@ stateRestore = function (state2) {
       /*
         this function responds with public cached data if it exists
       */
-      request = state.fileDict[request.urlPathNormalized];
+      var options;
+      options = state.fileDict[request.urlPathNormalized];
       // cached data exists - respond with cached data
-      if (request) {
+      if (options) {
         exports.serverRespondData(
           response,
           200,
           state.mimeLookupDict[
             required.path.extname(request.urlPathNormalized)
           ] || 'application/octet-stream',
-          request.data
+          options.data
         );
         return;
       }

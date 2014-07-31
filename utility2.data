@@ -417,7 +417,7 @@ body {
 <br>
 <br>
 <!-- demo main page in iframe -->
-<iframe class="testMainIframe" src="/"></iframe>
+<!--!! <iframe class="testMainIframe" src="/"></iframe> -->
 <br>
 <!-- enable test report -->
 <div class="testReportDiv"></div>
@@ -437,9 +437,9 @@ body {
 
 
 /* FILE_BEGIN {
-  "actionList": ["trim"],
-  "file": ".build/build.badge.svg",
-  "source": "https://img.shields.io/badge/last_build-0000_00_00_00_00_00_--_master_--_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-0077ff.svg?style=flat"
+  "actionList": ["updateExternal", "trim"],
+  "externalUrl": "https://img.shields.io/badge/last_build-0000_00_00_00_00_00_--_master_--_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-0077ff.svg?style=flat",
+  "file": ".build/build.badge.svg"
 } */
 <svg xmlns="http://www.w3.org/2000/svg" width="535" height="20"><path fill="#555" d="M0 0h535v20h-535z"/><path fill="#07f" d="M61 0h474v20h-474zM61 0h4v20h-4z"/><path fill="#fff" fill-opacity=".1" d="M0 0h535v20h-535z"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="31.5" y="14">last build</text><text x="297" y="14">0000 00 00 00 00 00 - master - aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</text></g></svg>
 /* FILE_END */
@@ -447,9 +447,9 @@ body {
 
 
 /* FILE_BEGIN {
-  "actionList": ["trim"],
-  "file": ".build/coverage-report.badge.svg",
-  "source": "https://img.shields.io/badge/coverage-100.0%-00dd00.svg?style=flat"
+  "actionList": ["updateExternal", "trim"],
+  "externalUrl": "https://img.shields.io/badge/coverage-100.0%-00dd00.svg?style=flat",
+  "file": ".build/coverage-report.badge.svg"
 } */
 <svg xmlns="http://www.w3.org/2000/svg" width="117" height="20"><path fill="#555" d="M0 0h117v20h-117z"/><path fill="#0d0" d="M63 0h54v20h-54zM63 0h4v20h-4z"/><path fill="#fff" fill-opacity=".1" d="M0 0h117v20h-117z"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="32.5" y="14">coverage</text><text x="89" y="14">100.0%</text></g></svg>
 /* FILE_END */
@@ -457,9 +457,9 @@ body {
 
 
 /* FILE_BEGIN {
-  "actionList": ["trim"],
-  "file": ".build/test-report.badge.svg",
-  "source": "https://img.shields.io/badge/tests_failed-999-dd0000.svg?style=flat"
+  "actionList": ["updateExternal", "trim"],
+  "externalUrl": "https://img.shields.io/badge/tests_failed-999-dd0000.svg?style=flat",
+  "file": ".build/test-report.badge.svg"
 } */
 <svg xmlns="http://www.w3.org/2000/svg" width="103" height="20"><path fill="#555" d="M0 0h103v20h-103z"/><path fill="#d00" d="M72 0h31v20h-31zM72 0h4v20h-4z"/><path fill="#fff" fill-opacity=".1" d="M0 0h103v20h-103z"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="37" y="14">tests failed</text><text x="86.5" y="14">999</text></g></svg>
 /* FILE_END */
@@ -468,8 +468,8 @@ body {
 
 /* FILE_BEGIN {
   "actionList": ["exportBrowserScript"],
-  "file": "/public/external/angular.js",
-  "source": "https://ajax.googleapis.com/ajax/libs/angularjs/1.3.0-beta.17/angular.js"
+  "externalUrl": "https://ajax.googleapis.com/ajax/libs/angularjs/1.3.0-beta.17/angular.js",
+  "file": "/public/external/angular.js"
 } */
 /**
  * @license AngularJS v1.3.0-beta.17

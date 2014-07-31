@@ -449,6 +449,11 @@ shTravisEncrypt() {
     tr -d "\n" || return $?
 }
 
+shUpdateExternal() {
+  ## this function updates external resources in main.data and utility2.data
+  node utility2.js --mode-cli=updateExternal
+}
+
 shMain() {
   ## this function is the main program and parses argv
   ## return if argv is empty

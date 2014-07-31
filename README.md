@@ -107,7 +107,6 @@ npm start --mode-test=true --server-port=8080
 
 
 ## todo
-- add file update feature for data files
 - simulate real test failure in npm test for code coverage
 - add server stress test using phantomjs
 - replace external istanbul dependency with istanbul-lite
@@ -117,6 +116,7 @@ npm start --mode-test=true --server-port=8080
 
 ## changelog
 #### 2014.7.29
+- add file update feature for data files
 - add test flag in heroku Procfile
 - add caching for scripts
 - migrate from unstable -> master workflow to alpha -> beta -> master workflow
