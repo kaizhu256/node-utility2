@@ -68,7 +68,7 @@ shAesEncryptTravis() {
 }
 
 shBuild() {
-  ## this function builds the package
+  ## this function runs the main ci-build routine
   ## decrypt and exec encrypted data
   eval "$(shAesDecryptTravis)" || return $?
   ## non-zero return on failed decryption of build credentials
@@ -83,13 +83,21 @@ shBuild() {
     ## http://docs.travis-ci.com/user/gui-and-headless-browsers/
     export DISPLAY=:99.0 && sh -e /etc/init.d/xvfb start || return $?
   fi
-  ## merge successive test reports
-  export MODE_TEST_REPORT_MERGE=true || return $?
-  ## create initial test-report.json
+  ## merge successive test-reports
+  export MODE_TEST_REPORT_MERGE=1 || return $?
+  ## create blank test-report.json
   printf "{}" > .build/test-report.json || return $?
+  ## run local npm test with dummy failed tests for code coverage
+  shNpmTest "--mode-test-fail --mode-test-report-merge" > /dev/null 2>&1 || shBuildExit
   ## run local npm test
-  shBuildPrint npmTestLocal "npm testing $CWD ..." && shNpmTest || shBuildExit
-  ## deploy app to heroku
+  shBuildPrint npmTestLocal "npm testing $CWD ..." || shBuildExit
+  shNpmTest --mode-test-report-merge || shBuildExit
+  ## if $MODE_OFFLINE, then exit without running the code below which requires internet access
+  if [ "$MODE_OFFLINE" ]
+  then
+    shBuildExit
+  fi
+  ## deploy the app to heroku
   shBuildHerokuDeploy --mode-test || shBuildExit
   ## capture browser screenshots using saucelabs
   shBuildPrint saucelabsScreenshot\
@@ -97,15 +105,16 @@ shBuild() {
     shBuildExit
   istanbul cover utility2.js --dir=/tmp/coverage --\
     --mode-cli=saucelabsScreenshot --timeout-default=120000 || shBuildExit
-  ## run saucelabs test
+  ## run browser tests using saucelabs
   shBuildPrint saucelabsTest "running saucelabs tests ..." || shBuildExit
   export CI_BUILD_NUMBER_SAUCELABS=$CI_BUILD_NUMBER.$(openssl rand -hex 8) || shBuildExit
   istanbul cover utility2.js --dir=/tmp/coverage --\
     --mode-cli=saucelabsTest || shBuildExit
-  ## npm publish app if its version is greater than the published version
+  ## npm publish the app if its version is greater than the published version
   shBuildNpmPublish || shBuildExit
-  ## re-run npm test to build latest report
-  shBuildPrint npmTestLocal "npm testing $CWD ..." && shNpmTest || shBuildExit
+  ## re-run npm test to build latest test-report
+  shBuildPrint npmTestLocal "npm testing $CWD ..." || shBuildExit
+  shNpmTest --mode-test-report-merge || shBuildExit
   ## gracefully exit build
   shBuildExit
 }
@@ -126,6 +135,12 @@ shBuildExit() {
   cd $CWD || exit $?
   ## cleanup $TMPFILE
   rm -f $TMPFILE || exit $?
+  ## if $MODE_OFFLINE, then do not upload build artifacts to github
+  if [ "$MODE_OFFLINE" ]
+  then
+    ## exit with $EXIT_CODE
+    exit $EXIT_CODE
+  fi
   ## upload build badge
   node utility2.js --mode-cli=githubContentsFilePush .build/build.badge.svg .build\
     $CI_BUILD_DIR || exit $?
@@ -181,23 +196,20 @@ shBuildHerokuDeploy() {
   git add . || return $?
   ## git commit
   git commit -am "heroku deploy" || return $?
-  if [ "$CI_BRANCH" != local ]
+  ## deploy the app to heroku
+  git push -f git@heroku.com:$HEROKU_REPO.git HEAD:master || return $?
+  ## wait for deployment to finish
+  sleep 10 || return $?
+  ## check deployed webpage on heroku
+  shBuildPrint herokuDeploy "checking deployed webpage $HEROKU_URL ..." || return $?
+  curl -3fLs $HEROKU_URL > /dev/null
+  ## save $EXIT_CODE
+  EXIT_CODE=$? || return $?
+  if [ "$EXIT_CODE" = 0 ]
   then
-    ## deploy app to heroku
-    git push -f git@heroku.com:$HEROKU_REPO.git HEAD:master || return $?
-    ## wait for deployment to finish
-    sleep 10 || return $?
-    ## check deployed webpage on heroku
-    shBuildPrint herokuDeploy "checking deployed webpage $HEROKU_URL ..." || return $?
-    curl -3fLs $HEROKU_URL > /dev/null
-    ## save $EXIT_CODE
-    EXIT_CODE=$? || return $?
-    if [ "$EXIT_CODE" = 0 ]
-    then
-      shBuildPrint herokuDeploy "check passed" || return $?
-    else
-      shBuildPrint herokuDeploy "check failed" || return $?
-    fi
+    shBuildPrint herokuDeploy "check passed" || return $?
+  else
+    shBuildPrint herokuDeploy "check failed" || return $?
   fi
   ## restore $CWD
   cd $CWD || return $?
@@ -207,16 +219,18 @@ shBuildHerokuDeploy() {
 
 shBuildNpmPublish() {
   ## this function npm publishes the app if its version is greater than the published version
+  ## if required npm credentials do not exist, then return without npm publishing the app
+  if [ ! "$NPM_AUTH" ]
+  then
+    return
+  fi
   ## init $NODEJS_PACKAGE_JSON_NAME
   local NODEJS_PACKAGE_JSON_NAME=$(node -e\
     "process.stdout.write(require('./package.json').name)") || return $?
   ## init $NODEJS_PACKAGE_JSON_VERSION
   local NODEJS_PACKAGE_JSON_VERSION=$(node -e\
     "process.stdout.write(require('./package.json').version)") || return $?
-  if [ "$CI_BRANCH" = local ] || [ ! "$NPM_AUTH" ]
-  then
-    return
-  fi
+  ## if this app version is greater than the published app, then npm publish this app
   if shSemverGreaterThan\
     "$NODEJS_PACKAGE_JSON_VERSION"\
     "$(npm info $NODEJS_PACKAGE_JSON_NAME version 2>/dev/null)"
@@ -227,7 +241,7 @@ shBuildNpmPublish() {
     printf "_auth = $NPM_AUTH\nemail = nobody\n" > $HOME/.npmrc || return $?
     ## init clean repo in /tmp/app
     shBuildAppCopy && cd /tmp/app || return $?
-    ## npm publish app
+    ## npm publish the app
     npm publish || return $?
     shBuildPrint npmPublish "npm publish succeeded" || return $?
     ## wait for npm registry to sync
@@ -235,19 +249,19 @@ shBuildNpmPublish() {
   fi
   shBuildPrint npmPublishedInstall\
     "npm installing published app $NODEJS_PACKAGE_JSON_NAME ..." || return $?
-  ## npm install app in /tmp dir with no external npm dependencies
+  ## npm install the app in /tmp dir with no external npm dependencies
   ## cleanup /tmp
   cd /tmp && rm -fr node_modules $NODEJS_PACKAGE_JSON_NAME || return $?
-  ## npm install app
+  ## npm install the app
   npm install $NODEJS_PACKAGE_JSON_NAME || return $?
-  ## cd into app
+  ## cd into the app
   cd node_modules/$NODEJS_PACKAGE_JSON_NAME || return $?
   ## copy previous test-report.json into .build dir
   mkdir -p .build && cp $CWD/.build/test-report.json .build || return $?
   shBuildPrint npmPublishedTest\
     "npm testing published app $NODEJS_PACKAGE_JSON_NAME ..." || return $?
-  ## re-run npm test app and merge result into previous test-report.json
-  npm test --mode-no-coverage || return $?
+  ## npm test published app and merge result into previous test-report.json
+  npm test --mode-no-coverage --mode-test-report-merge || return $?
   cp .build/test-report.* $CWD/.build || return $?
   ## restore $CWD
   cd $CWD
@@ -319,13 +333,16 @@ shNpmTest() {
   ## npm install dev dependencies
   npm install || return $?
   ## run example.js
-  node example.js || return $?
+  if [ ! "$npm_config_mode_fast" ]
+  then
+    node example.js || return $?
+  fi
   ## init $ARGS
   local ARGS="main.js" || return $?
   ARGS="$ARGS --dir=.build/coverage-report.html" || return $?
   ARGS="$ARGS --print=detail" || return $?
   ARGS="$ARGS --report=html" || return $?
-  ARGS="$ARGS --" || return $?
+  ARGS="$ARGS -- $1" || return $?
   ARGS="$ARGS --mode-cli=npmTest" || return $?
   ARGS="$ARGS --mode-repl" || return $?
   ARGS="$ARGS --mode-test" || return $?

@@ -251,7 +251,7 @@ tr:nth-child(odd).testReportPlatformTr {
 </style>
 
 <div class="testReportPlatformDiv testReportSummaryDiv">
-<h2>test report summary</h2>
+<h2>test-report summary</h2>
 <h4>
   <span class="testReportSummarySpan">build date</span>- {{date}}<br>
   <span class="testReportSummarySpan">build id</span>- {{CI_BUILD_NUMBER}}<br>
@@ -419,7 +419,7 @@ body {
 <!-- demo main page in iframe -->
 <!--!! <iframe class="testMainIframe" src="/"></iframe> -->
 <br>
-<!-- enable test report -->
+<!-- enable test-report -->
 <div class="testReportDiv"></div>
 <!-- load scripts -->
 <script src="{{cacheUrl.utility2.data}}"></script>

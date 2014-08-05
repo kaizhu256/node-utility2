@@ -62,9 +62,9 @@ stateRestore = function (state2) {
         modeCliDict: {},
         // state to export to browser
         stateBrowser: { fileDict: {} },
-        // dict of server-side callbacks used to create test reports from browser tests
+        // dict of server-side callbacks used to create test-reports from browser tests
         testCallbackDict: {},
-        // main test report object used to accumulate test reports from this and other platforms
+        // main test-report object used to accumulate test-reports from this and other platforms
         testReport: {
           // global code coverage object if it exists
           coverage: global.__coverage__,
@@ -623,7 +623,10 @@ stateRestore = function (state2) {
 
     testReportCreate: function (testReport1, testReport2) {
       /*
-        this function merges testReport2 into testReport1 and returns an html test report
+        this function
+        1. merges testReport2 into testReport1
+        2. merges testReport2.coverage into testReport1.coverage
+        3. returns testReport1 in html format
       */
       var errorMessageList,
         env,
@@ -652,13 +655,6 @@ stateRestore = function (state2) {
           typeof testReport.timeElapsed === 'number',
           ii + ' invalid testReport.timeElapsed ' + typeof testReport.timeElapsed
         );
-        // security - handle malformed testReport.errorMessageList
-        testReport.errorMessageList.forEach(function (errorMessage) {
-          exports.assert(
-            typeof errorMessage === 'string',
-            ii + ' invalid errorMessage ' + typeof errorMessage
-          );
-        });
         // security - handle malformed testReport.testPlatformList
         testReport.testPlatformList.forEach(function (testPlatform) {
           exports.setDefault(testPlatform, {
@@ -701,10 +697,6 @@ stateRestore = function (state2) {
             );
           });
         });
-      });
-      // merge errorMessageList
-      testReport2.errorMessageList.forEach(function (errorMessage) {
-        testReport1.errorMessageList.push(errorMessage);
       });
       // merge testPlatformList
       testReport2.testPlatformList.forEach(function (testPlatform2) {
@@ -776,33 +768,36 @@ stateRestore = function (state2) {
       if (testReport.testsPending === 0 && testReport.timeElapsed > 0xffffffff) {
         testReport.timeElapsed = Date.now() - testReport.timeElapsed;
       }
-      // merge remaining items in testReport2 into testReport1
-      exports.setDefault(testReport1, testReport2);
-      // part 2 - merge testReport2.coverage int testReport1.coverage
-      // code derived from istanbul.utils.mergeFileCoverage
+      // part 2 - merge testReport2.coverage into testReport1.coverage
       testReport1.coverage = testReport1.coverage || {};
       testReport2.coverage = testReport2.coverage || {};
-      Object.keys(testReport2.coverage).forEach(function (key) {
-        file1 = testReport1.coverage[key];
-        file2 = testReport2.coverage[key];
-        // remove derived info
-        delete file1.l;
-        Object.keys(file2.b).forEach(function (key) {
-          file2.b[key].forEach(function (count, ii) {
-            file1.b[key][ii] = file1.b[key][ii] || 0;
-            file1.b[key][ii] += count;
+      Object.keys(testReport2.coverage).forEach(function (file) {
+        // if it doesn't exist, then create a coverage object for the given file
+        file1 = testReport1.coverage[file] = testReport1.coverage[file] ||
+          { b: {}, f: {}, s: {} };
+        file2 = testReport2.coverage[file];
+        // merge branching statements
+        Object.keys(file2.b).forEach(function (lineno) {
+          file1.b[lineno] = file1.b[lineno] || [];
+          file2.b[lineno].forEach(function (count, ii) {
+            file1.b[lineno][ii] = file1.b[lineno][ii] || 0;
+            file1.b[lineno][ii] += count;
           });
         });
-        Object.keys(file2.f).forEach(function (key) {
-          file1.f[key] = file1.f[key] || 0;
-          file1.f[key] += file2.f[key];
+        // merge function definitions
+        Object.keys(file2.f).forEach(function (lineno) {
+          file1.f[lineno] = file1.f[lineno] || 0;
+          file1.f[lineno] += file2.f[lineno];
         });
-        Object.keys(file2.s).forEach(function (key) {
-          file1.s[key] = file1.s[key] || 0;
-          file1.s[key] += file2.s[key];
+        // merge non-branching statements
+        Object.keys(file2.s).forEach(function (lineno) {
+          file1.s[lineno] = file1.s[lineno] || 0;
+          file1.s[lineno] += file2.s[lineno];
         });
       });
-      // part 3 - create and return html test report
+      // merge remaining items from testReport2 into testReport1
+      exports.setDefault(testReport1, testReport2);
+      // part 3 - create and return html test-report
       // json-copy testReport, which will be modified for html templating
       testReport = JSON.parse(JSON.stringify(testReport));
       // init env
@@ -823,7 +818,7 @@ stateRestore = function (state2) {
           timeElapsedParse(testCase);
         });
       });
-      // create html test report
+      // create html test-report
       testCaseNumber = 0;
       if (!state.fileDict['/public/test-report.html.template']) {
         return;
@@ -908,10 +903,6 @@ stateRestore = function (state2) {
       remaining = testPlatform.testCaseList.length;
       testPlatform.testCaseList.forEach(function (testCase) {
         var errorFinished, finished, onEventError;
-        if (!testCase.callback) {
-          remaining -= 1;
-          return;
-        }
         onEventError = function (error) {
           if (error) {
             console.error('\ntestCase ' + testCase.name + ' failed\n' +
@@ -932,22 +923,22 @@ stateRestore = function (state2) {
           testCase.timeElapsed = Date.now() - testCase.timeElapsed;
           // decrement test counter
           remaining -= 1;
-          // create test report when all tests have finished
+          // create test-report when all tests have finished
           if (remaining === 0) {
             // stop testPlatform timer
             testPlatform.timeElapsed = Date.now() - testPlatform.timeElapsed;
             testReportHtml = exports.testReportCreate(testReport, {});
-            // print test report summary
+            // print test-report summary
             console.log(testReport.testPlatformList.map(function (testPlatform) {
-              return '\ntest report - ' + testPlatform.name + '\n' +
+              return '\ntest-report - ' + testPlatform.name + '\n' +
                 ('        ' + testPlatform.timeElapsed).slice(-8) + ' ms | ' +
                 (' ' + testPlatform.testsFailed).slice(-2) + ' failed | ' +
                 ('  ' + testPlatform.testsPassed).slice(-3) + ' passed';
             }).join('\n') + '\n');
             // nodejs code
             if (state.modeNodejs) {
-              // create html test report
-              console.log('\ncreating test report file://' + process.cwd() +
+              // create html test-report
+              console.log('\ncreating test-report file://' + process.cwd() +
                 '/.build/test-report.html');
               required.fs.writeFileSync('.build/test-report.html', testReportHtml);
               // create html coverage report
@@ -969,7 +960,7 @@ stateRestore = function (state2) {
                   // edit commit id
                   .replace('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', process.env.CI_COMMIT_ID)
               );
-              // create test report badge
+              // create test-report badge
               required.fs.writeFileSync(
                 '.build/test-report.badge.svg',
                 state.fileDict['.build/test-report.badge.svg'].data
@@ -996,9 +987,7 @@ stateRestore = function (state2) {
                   data: JSON.stringify(global.global_test_results),
                   method: 'POST',
                   url: '/test/test-report-upload'
-                }, function (error) {
-                  exports.onEventErrorDefault(error);
-                });
+                }, exports.onEventErrorDefault);
               }
             }
           }
@@ -1011,6 +1000,14 @@ stateRestore = function (state2) {
           if (state.modeNodejs && state.modeFast && testCase.name.indexOf('utility2.') === 0) {
             onEventError();
             return;
+          }
+          // create dummy failed test for code coverage
+          if (state.modeTestFail) {
+            onEventError();
+            // code coverage for multiple callback error
+            onEventError();
+            // code coverage for thrown error
+            throw state.errorDefault;
           }
           testCase.callback(onEventError);
         } catch (error) {
@@ -1238,7 +1235,7 @@ stateRestore = function (state2) {
         exports.testRun();
         // create initial blank test page
         state.testReportDiv.innerHTML = exports.testReportCreate(state.testReport, {});
-        // update test report status every 1000 ms until finished
+        // update test-report status every 1000 ms until finished
         timerInterval = setInterval(function () {
           // update state.testReportDiv in browser
           state.testReportDiv.innerHTML = exports.testReportCreate(state.testReport, {});
@@ -1520,14 +1517,17 @@ stateRestore = function (state2) {
           }
         }
       });
-      // merge previous test report into current test report
-      if (process.env.MODE_TEST_REPORT_MERGE) {
-        try {
+      if (process.env.MODE_TEST_REPORT_MERGE || state.modeTestReportMerge) {
+        // if it exists, then merge the previous test-report
+        if (required.fs.existsSync('.build/test-report.json')) {
           exports.testReportCreate(state.testReport, require('./.build/test-report.json'));
-        } catch (ignore) {
         }
-        // on exit, create .build/test-report.json
+        // on exit, write the test-report to .build/test-report.json
         process.on('exit', function () {
+          // ignore dummy failed tests used for code coverage
+          if (state.modeTestFail) {
+            state.testReport = { coverage: state.testReport.coverage };
+          }
           required.fs.writeFileSync(
             '.build/test-report.json',
             JSON.stringify(state.testReport)
@@ -2227,7 +2227,7 @@ stateRestore = function (state2) {
       // init state
       exports.setOverride(state, options.stateOverride);
       // remove stateOverride param
-      delete options.stateOverride;
+      options.stateOverride = undefined;
       state.testPlatform.testCaseList = [{
         callback: function (onEventError) {
           local._saucelabsTest(options, onEventError);
@@ -2315,14 +2315,6 @@ stateRestore = function (state2) {
         return script;
       }
       script = match[1];
-      // parse '@@' syntax sugar
-      while (true) {
-        match = (/(.*\w)@@(.*)/).exec(script);
-        if (!match) {
-          break;
-        }
-        script = match[1] + '( ' + match[2] + ')';
-      }
       match = (/([^ ]*)(.*)/).exec(script);
       if (state.replParseDict[match[1]]) {
         return state.replParseDict[match[1]](match[2]);
@@ -2469,7 +2461,7 @@ stateRestore = function (state2) {
 
     'serverPathHandlerDict_/test/test-report-upload': function (request, response, next) {
       /*
-        this function receives and parses uploaded test reports
+        this function receives and parses uploaded test-reports
       */
       var mode, onEventMode;
       mode = 0;
@@ -2482,7 +2474,7 @@ stateRestore = function (state2) {
             next();
             return;
           }
-          // stream test report data into buffer
+          // stream test-report data into buffer
           exports.streamReadAll(
             request,
             // security - use try catch block to parse potential malformed data
@@ -2701,7 +2693,7 @@ stateRestore = function (state2) {
               if (completed || data.result || (/error/).test(data.status)) {
                 // remove test from remainingDict
                 delete remainingDict[data.id];
-                // merge browser test report
+                // merge browser test-report
                 local._saucelabsMerge(data, onEventRemaining);
               // test pending - update test status
               } else {
@@ -2730,7 +2722,7 @@ stateRestore = function (state2) {
 
     _saucelabsMerge: function (testReport, onEventError) {
       /*
-        this function merges the saucelabs test report into state.testReport
+        this function merges the saucelabs test-report into state.testReport
       */
       var errorDefault, jobId, mode, onEventMode;
       mode = 0;
@@ -2790,8 +2782,6 @@ stateRestore = function (state2) {
               }],
               timeElapsed: testReport.timeElapsed
             }] };
-            testReport.errorMessageList =
-              [testReport.testPlatformList[0].testCaseList[0].errorMessage];
           }
           // merge recovered testReport into state.testReport
           exports.testReportCreate(state.testReport, testReport);
