@@ -174,7 +174,7 @@ exec ssh -i $GIT_SSH_KEY_FILE -o CheckHostIP=no -o StrictHostKeychecking=no -- "
   ],
   "record-video": false,
   "stateOverride": {
-    "timeoutDefault": 200000
+    "timeoutDefault": 300000
   },
   "url": "{{host}}/?modeTest=1&timeoutDefault={{timeoutDefault}}"
 }
