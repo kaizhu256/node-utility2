@@ -88,10 +88,10 @@ shBuild() {
   ## create blank test-report.json
   printf "{}" > .build/test-report.json || return $?
   ## run local npm test with dummy failed tests for code coverage
-  shNpmTest "--mode-test-fail --mode-test-report-merge" > /dev/null 2>&1 || shBuildExit
+  shNpmTest "--mode-test-fail" > /dev/null 2>&1 || shBuildExit
   ## run local npm test
   shBuildPrint npmTestLocal "npm testing $CWD ..." || shBuildExit
-  shNpmTest --mode-test-report-merge || shBuildExit
+  shNpmTest || shBuildExit
   ## if $MODE_OFFLINE, then exit without running the code below which requires internet access
   if [ "$MODE_OFFLINE" ]
   then
@@ -114,7 +114,7 @@ shBuild() {
   shBuildNpmPublish || shBuildExit
   ## re-run npm test to build latest test-report
   shBuildPrint npmTestLocal "npm testing $CWD ..." || shBuildExit
-  shNpmTest --mode-test-report-merge || shBuildExit
+  shNpmTest || shBuildExit
   ## gracefully exit build
   shBuildExit
 }
@@ -185,7 +185,7 @@ shBuildHerokuDeploy() {
   ## init clean repo in /tmp/app
   shBuildAppCopy && cd /tmp/app || return $?
   ## npm run-script install
-  npm run-script install $ARGS
+  npm run-script install $ARGS || return $?
   ## init .git
   git init || return $?
   ## init .git/config
@@ -261,7 +261,7 @@ shBuildNpmPublish() {
   shBuildPrint npmPublishedTest\
     "npm testing published app $NODEJS_PACKAGE_JSON_NAME ..." || return $?
   ## npm test published app and merge result into previous test-report.json
-  npm test --mode-no-coverage --mode-test-report-merge || return $?
+  npm test --mode-no-coverage || return $?
   cp .build/test-report.* $CWD/.build || return $?
   ## restore $CWD
   cd $CWD
@@ -327,6 +327,11 @@ shNpmTest() {
     fi
     export CI_COMMIT_MESSAGE="$(git log -1 --pretty=%s)" || return $?
     export CI_COMMIT_INFO="$CI_COMMIT_ID - $CI_COMMIT_MESSAGE" || return $?
+  fi
+  if [ ! "$MODE_CI_BUILD" ]
+  then
+    ## run local npm test
+    shBuildPrint npmTestLocal "npm testing $CWD ..." || shBuildExit
   fi
   ## jslint example.js / main.js / utility2.js
   jslint-lite example.js main.js utility2.js

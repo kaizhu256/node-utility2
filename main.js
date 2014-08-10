@@ -9,7 +9,14 @@
   todo: true
 */
 // declare module vars
-var exports, required, state;
+var exports, required, state, stateRestore;
+stateRestore = function (state2) {
+  /*
+    this function is used by testMock to restore the local state var
+  */
+  'use strict';
+  state = state2;
+};
 
 
 
@@ -19,7 +26,7 @@ var exports, required, state;
   */
   'use strict';
   var local = {
-    _name: 'utility2.submoduleMainNodejs',
+    _name: 'main.submoduleMainNodejs',
 
     _init: function () {
       /*

@@ -4,12 +4,12 @@
   "description": "lightweight nodejs test and coverage utility",
   "devDependencies": {
     "istanbul": "0.2.x",
-    "istanbul-lite": "2014.x.x",
     "jslint-lite": "2014.x.x",
     "phantomjs": "1.9.x",
     "slimerjs": "0.9.x"
   },
   "engines": { "node": ">=0.10.x" },
+  "license": "MIT",
   "main": "main.js",
   "name": "utility2",
   "os": ["darwin", "linux"],
@@ -24,5 +24,5 @@
     "start": "./utility2.sh shNpmStart",
     "test": "./utility2.sh shNpmTest"
   },
-  "version": "2014.7.29-18"
+  "version": "2014.7.29-19"
 }

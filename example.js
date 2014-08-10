@@ -7,13 +7,14 @@
 (function () {
   'use strict';
   var port, server, utility2;
-  // create random port in the inclusive range 0x8000 - 0xffff
-  port = (Math.random() * 0xffff) | 0x8000;
+  // require utility2 module
   try {
     utility2 = require('utility2');
   } catch (error) {
     utility2 = require('./main.js');
   }
+  // create random port in the inclusive range 0x8000 - 0xffff
+  port = (Math.random() * 0xffff) | 0x8000;
   console.log('example test server starting on random port ' + port);
   // init server with example middleware
   server = require('http').createServer(function (request, response) {
