@@ -248,7 +248,7 @@ shBuildNpmPublish() {
   ## if this app version is greater than the published app, then npm publish this app
   if shSemverGreaterThan\
     "$NODEJS_PACKAGE_JSON_VERSION"\
-    "$(npm info $NODEJS_PACKAGE_JSON_NAME version > /dev/null 2>&1)"
+    "$(npm info $NODEJS_PACKAGE_JSON_NAME version 2>/dev/null)"
   then
     shBuildPrint npmPublish\
       "npm publishing $NODEJS_PACKAGE_JSON_NAME@$NODEJS_PACKAGE_JSON_VERSION ..." || return $?
