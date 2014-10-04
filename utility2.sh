@@ -87,10 +87,19 @@ shBuild() {
   export MODE_TEST_REPORT_MERGE=1 || return $?
   ## create blank test-report.json
   printf "{}" > .build/test-report.json || return $?
-  ## run local npm test with dummy failed tests for code coverage
-  shNpmTest "--mode-test-fail" > /dev/null 2>&1 || shBuildExit
-  ## run local npm test
-  shBuildPrint npmTestLocal "npm testing $CWD ..." || shBuildExit
+  ## npm install
+  npm install || return $?
+  ## code-coverage - local npm postinstall
+  shBuildPrint localNpmPostinstall "npm postinstalling $CWD ..." || return $?
+  istanbul cover utility2.js --dir=/tmp/coverage -- --mode-cli=npmInstall || return $?
+  ## code-coverage - local npm test with dummy failed tests
+  shBuildPrint localNpmTestFail "npm testing $CWD with dummy failed tests ..." || shBuildExit
+  shNpmTest --mode-test-fail > /dev/null 2>&1 || shBuildExit
+  ## code-coverage - local npm test with fast mode
+  shBuildPrint localNpmTestFast "npm testing $CWD with fast mode ..." || shBuildExit
+  shNpmTest --mode-test-fast || shBuildExit
+  ## code-coverage - local npm test
+  shBuildPrint localNpmTest "npm testing $CWD ..." || shBuildExit
   shNpmTest || shBuildExit
   ## if $MODE_OFFLINE, then exit without running the code below which requires internet access
   if [ "$MODE_OFFLINE" ]
@@ -99,13 +108,19 @@ shBuild() {
   fi
   ## deploy the app to heroku
   shBuildHerokuDeploy --mode-test || shBuildExit
-  ## capture browser screenshots using saucelabs
+  ## code-coverage - capture browser screenshots using saucelabs
   shBuildPrint saucelabsScreenshot\
     "using saucelabs to capture browser screenshots of heroku server and travis build ..." ||\
     shBuildExit
   istanbul cover utility2.js --dir=/tmp/coverage --\
-    --mode-cli=saucelabsScreenshot --timeout-default=120000 || shBuildExit
-  ## run browser tests using saucelabs
+    --mode-cli=saucelabsScreenshot\
+    --saucelabs-screenshot-url="$HEROKU_URL/?modeTest=1"\
+    --saucelabs-screenshot-file=.build/test-report.screenshot.heroku.png || shBuildExit
+  istanbul cover utility2.js --dir=/tmp/coverage --\
+    --mode-cli=saucelabsScreenshot\
+    --saucelabs-screenshot-url="https://travis-ci.org/$GITHUB_REPO"\
+    --saucelabs-screenshot-file=.build/test-report.screenshot.travis.png || shBuildExit
+  ## code-coverage - run saucelabs browser tests
   shBuildPrint saucelabsTest "running saucelabs tests ..." || shBuildExit
   export CI_BUILD_NUMBER_SAUCELABS=$CI_BUILD_NUMBER.$(openssl rand -hex 8) || shBuildExit
   istanbul cover utility2.js --dir=/tmp/coverage --\
@@ -113,7 +128,7 @@ shBuild() {
   ## npm publish the app if its version is greater than the published version
   shBuildNpmPublish || shBuildExit
   ## re-run npm test to build latest test-report
-  shBuildPrint npmTestLocal "npm testing $CWD ..." || shBuildExit
+  shBuildPrint localNpmTest "npm testing $CWD ..." || shBuildExit
   shNpmTest || shBuildExit
   ## gracefully exit build
   shBuildExit
@@ -233,7 +248,7 @@ shBuildNpmPublish() {
   ## if this app version is greater than the published app, then npm publish this app
   if shSemverGreaterThan\
     "$NODEJS_PACKAGE_JSON_VERSION"\
-    "$(npm info $NODEJS_PACKAGE_JSON_NAME version 2>/dev/null)"
+    "$(npm info $NODEJS_PACKAGE_JSON_NAME version > /dev/null 2>&1)"
   then
     shBuildPrint npmPublish\
       "npm publishing $NODEJS_PACKAGE_JSON_NAME@$NODEJS_PACKAGE_JSON_VERSION ..." || return $?
@@ -261,7 +276,7 @@ shBuildNpmPublish() {
   shBuildPrint npmPublishedTest\
     "npm testing published app $NODEJS_PACKAGE_JSON_NAME ..." || return $?
   ## npm test published app and merge result into previous test-report.json
-  npm test --mode-no-coverage || return $?
+  shNpmTest --mode-no-coverage || return $?
   cp .build/test-report.* $CWD/.build || return $?
   ## restore $CWD
   cd $CWD
@@ -290,7 +305,7 @@ shGitSquash () {
   git commit -am "$MESSAGE" || return $?
 }
 
-shNpmInstall() {
+shNpmPostinstall() {
   ## this function runs after npm install
   ## init .build .install dir
   mkdir -p .build .install .tmp || return $?
@@ -301,9 +316,10 @@ shNpmInstall() {
 }
 
 shNpmStart() {
+  ## this function runs npm start
   ## jslint example.js / main.js / utility2.js
   jslint-lite example.js main.js utility2.js
-  ## this function runs npm start
+  ## start app
   node main.js --mode-repl --server-port=$npm_config_server_port
 }
 
@@ -331,14 +347,14 @@ shNpmTest() {
   if [ ! "$MODE_CI_BUILD" ]
   then
     ## run local npm test
-    shBuildPrint npmTestLocal "npm testing $CWD ..." || shBuildExit
+    shBuildPrint localNpmTest "npm testing $CWD ..." || shBuildExit
   fi
   ## jslint example.js / main.js / utility2.js
   jslint-lite example.js main.js utility2.js
   ## npm install dev dependencies
   npm install || return $?
   ## run example.js
-  if [ ! "$npm_config_mode_fast" ]
+  if [ ! "$npm_config_mode_test_fast" ]
   then
     node example.js || return $?
   fi
@@ -353,8 +369,13 @@ shNpmTest() {
   ARGS="$ARGS --mode-test" || return $?
   ARGS="$ARGS --mode-test-report-upload" || return $?
   ARGS="$ARGS --server-port=random" || return $?
+  ## test if slimerjs is available
+  if slimerjs .install/phantomjs-test.js3 > /dev/null 2>&1
+  then
+    ARGS="$ARGS --mode-slimerjs" || return $?
+  fi
   ## disable code coverage
-  if [ "$npm_config_mode_fast" ] || [ "$npm_config_mode_no_coverage" ]
+  if [ "$npm_config_mode_test_fast" ] || [ "$npm_config_mode_no_coverage" ]
   then
     istanbul test $ARGS || return $?
     return $?
@@ -365,8 +386,6 @@ shNpmTest() {
   istanbul cover $ARGS --mode-coverage
   ## save $EXIT_CODE
   EXIT_CODE=$? || return $?
-  ## create coverage badge
-  node utility2.js --mode-cli=coverageReportBadgeCreate || return $?
   ## re-run npm test without coverage if tests failed,
   ## so we can debug line numbers in stack trace
   if [ "$EXIT_CODE" != 0 ]
@@ -380,8 +399,8 @@ shNpmTest() {
 
 shPackageJsonGetItem() {
   ## this function prints the value for the given KEY $1 in package.json
-  local KEY=$1 || return $?
-  printf $(node -e "process.stdout.write(require('./package.json').$KEY)") || return $?
+  local KEY=${1-undefined} || return $?
+  printf $(node -e "process.stdout.write(String(require('./package.json').$KEY))") || return $?
 }
 
 shSandbox() {
@@ -460,10 +479,15 @@ shTravisEncrypt() {
   ## this function travis-encrypts github repo $1's secret $2
   local GITHUB_REPO=$1 || return $?
   local SECRET=$2 || return $?
-  ## get public rsa key from https://api.travis-ci.org/repos/<owner>/<repo>/key
-  curl -3fLs https://api.travis-ci.org/repos/$GITHUB_REPO/key |\
-    perl -pe "s/[^-]+(.+-).+/\$1/; s/\\\\n/\n/g; s/ RSA / /g" >\
-    $TMPFILE || return $?
+  if [ "$TRAVIS_CI_PRO_TOKEN" ]
+  then
+    ## get private rsa key from https://api.travis-ci.com/repos/<owner>/<repo>/key
+    curl -3fLs https://api.travis-ci.com/repos/$GITHUB_REPO/key -H "Authorization: token $TRAVIS_CI_PRO_TOKEN" > $TMPFILE || return $?
+  else
+    ## get public rsa key from https://api.travis-ci.org/repos/<owner>/<repo>/key
+    curl -3fLs https://api.travis-ci.org/repos/$GITHUB_REPO/key > $TMPFILE || return $?
+  fi
+  perl -pi -e "s/[^-]+(.+-).+/\$1/; s/\\\\n/\n/g; s/ RSA / /g" $TMPFILE || return $?
   ## rsa-encrypt $SECRET and print it
   printf "$SECRET" |\
     openssl rsautl -encrypt -pubin -inkey $TMPFILE |\
@@ -488,7 +512,7 @@ shMain() {
   ## init $GITHUB_REPO
   export GITHUB_REPO=$(shPackageJsonGetItem repoGithub) || return $?
   ## init $PATH with $CWD/node_modules
-  export PATH=$CWD/node_modules/.bin:$PATH || return $?
+  export PATH=$CWD/node_modules/headless-browser-lite:$CWD/node_modules/.bin:$PATH || return $?
   ## init $TMPFILE
   export TMPFILE=/tmp/tmpfile.$(openssl rand -hex 8) || return $?
   ## init $EXIT_CODE
@@ -504,5 +528,5 @@ shMain() {
   ## return $EXIT_CODE
   return $EXIT_CODE
 }
-## int main routine
+## init main routine
 shMain "$@"

@@ -49,3 +49,57 @@ stateRestore = function (state2) {
   };
   local._init();
 }());
+
+
+
+(function submoduleMainBrowser() {
+  /*
+    this browser submodule exports the main api
+  */
+  'use strict';
+  var local = {
+    _name: 'main.submoduleMainBrowser',
+
+    _init: function () {
+      /*
+        this function inits the submodule
+      */
+      if (state.modeNodejs) {
+        return;
+      }
+      // init this submodule
+      exports.initSubmodule(local);
+    },
+
+    ngApp_main_controller_MainController: ['$scope', function ($scope) {
+      /*
+        this function inits the main angularjs controller
+      */
+      // export $scope to local object for testing
+      local._$scope = $scope;
+      exports.setDefault($scope, {
+        exampleModel: 'hello model',
+        exampleMethod: function () {
+          /*
+            this function jslint's the script in the main textarea
+          */
+          $scope.exampleModel = 'bye model';
+        }
+      });
+    }],
+
+    _ngApp_main_controller_MainController_default_test: function (onEventError) {
+      /*
+        this function tests ngApp_main_controller_MainController's default handling behavior
+      */
+      var $scope;
+      $scope = state.scope = local._$scope;
+      $scope.exampleMethod();
+      // validate $scope.exampleModel
+      exports.assert($scope.exampleModel === 'bye model', $scope.exampleModel);
+      onEventError();
+    }
+
+  };
+  local._init();
+}());

@@ -1,9 +1,11 @@
-utility2
+utility2 [![NPM](https://img.shields.io/npm/v/utility2.svg?style=flat-square)](https://www.npmjs.org/package/utility2)
 ========
-lightweight nodejs module for testing and covering code in browsers
+lightweight nodejs module for testing and covering browser-side code
 
+
+
+## demo server
 [![heroku.com test server](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/beta/test-report.screenshot.heroku.png)](https://hrku01-utility2-beta.herokuapp.com/?modeTest=1)
-<br><br><br><br>
 
 
 
@@ -21,10 +23,12 @@ lightweight nodejs module for testing and covering code in browsers
 
 
 
-## quickstart
+## installation and quickstart
 ```
-npm install utility2
-cd node_modules/utility2
+## install utility2
+npm install utility2 && cd node_modules/utility2
+## run browser tests and create test and coverage reports on self
+npm test
 ## start utility2 test server on port 8080 with test mode enabled
 npm start --mode-test=true --server-port=8080
 ```
@@ -71,45 +75,46 @@ npm start --mode-test=true --server-port=8080
 
 
 ## description of files
+- .build/
+  - auto-created directory where test and coverage reports are generated
+- .install/
+  - auto-created directory where npm postinstall files are generated
 - .travis.yml
   - travis-ci config file
-  - can contain encrypted credentials used by travis-ci to
-    - deploy to heroku after passing npm test
-    - run saucelabs browser tests on deployed heroku server
-    - publish this app to npm registry after passing browser tests,
-      and detecting a version change in package.json
-    - upload tests / coverages / screenshots to a separate github build repo
+  - contains encrypted credentials used by travis-ci
 - README.md
-  - readme file
+  - this readme file
 - example.js
   - example nodejs script demonstrating how to use this app
 - main.data
-  - data file containing embedded resources specific to this app
+  - data file containing embedded resources for this app
 - main.js
   - this app's main program / library
-  - may contain features and utilities provided by utility2.js
 - package.json
   - npm config file
 - utility2.data
-  - data file containing embedded resources used by travis-ci
+  - data file containing embedded resources for testing this app
 - utility2.js
-  - nodejs build script used by travis-ci
+  - nodejs build script
 - utility2.sh
-  - shell build script used by travis-ci
-  - can
-    - run npm test with integrated phantomjs / slimerjs browser testing
-    - deploy to heroku after passing npm test
+  - shell build script used by travis-ci to do the following:
+    - run local phantomjs and slimerjs browser tests on local server
+    - deploy to heroku after passing local browser tests
     - run saucelabs browser tests on deployed heroku server
-    - publish this app to npm registry after passing browser tests,
-      and detecting a version change in package.json
-    - npm install and test the published app in a clean environment
-    - upload tests / coverages / screenshots to a separate github build repo
+    - on version change, publish this app to npm registry after passing saucelabs browser tests
+    - upload tests, coverages, screenshots, and other build artifacts to github
+
+
+
+## npm dependencies
+- headless-browser-lite v2014.x.x (dev-dependency)
+- istanbul v0.2.x (dev-dependency)
+- jslint-lite v2014.x.x (dev-dependency)
 
 
 
 ## todo
-- remove coverage.json when pushing build artifact to github
-- optionally install main.data to improve cli startup
+- optionally install main.data to improve cli startup (e.g. node-jslint-lite)
 - add csslint
 - add server stress test using phantomjs
 - minify /public/main.data.js and /public/utility2.data.js
@@ -117,7 +122,19 @@ npm start --mode-test=true --server-port=8080
 
 
 ## changelog
+#### 2014.9.22
+- auto-detect slimerjs testing
+- add url query-param feature modeErrorIgnore=1 to ignore test-simulated errors
+- move main.* and utility2.* assets to /public/cache path
+- fix code coverage for failed tests
+- remove global dependencies in nodejs env
+- create ./build/test-report.xml for jenkins
+- merge phantomjs and slimerjs dependencies into headless-browser package
+- remove coverage.json when pushing build artifact to github
+
 #### 2014.7.29
+- add github basic auth for building private repo
+- revamp ajax redirect in nodejs code
 - integrate browser tests into main page
 - add offline mode for shBuild
 - add dummy failed tests in npm test for code coverage

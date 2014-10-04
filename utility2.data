@@ -152,7 +152,11 @@ exec ssh -i $GIT_SSH_KEY_FILE -o CheckHostIP=no -o StrictHostKeychecking=no -- "
     }
 
   };
-  local._init();
+  if (require('system').args.length > 1) {
+    local._init();
+  } else {
+    phantom.exit();
+  }
 }());
 /* FILE_END */
 
@@ -172,7 +176,6 @@ exec ssh -i $GIT_SSH_KEY_FILE -o CheckHostIP=no -o StrictHostKeychecking=no -- "
     ["osx 10.9", "safari", "7"],
     ["windows 8.1", "iexplore", "11"]
   ],
-  "record-video": false,
   "stateOverride": {
     "timeoutDefault": 300000
   },
@@ -314,7 +317,7 @@ tr:nth-child(odd).testReportPlatformTr {
 
 /* FILE_BEGIN {
   "actionList": ["lint"],
-  "file": "/public/utility2.css"
+  "file": "/public/cache/utility2.css"
 } */
 .ajaxProgressBarDiv {
   animation: 2s linear 0s normal none infinite ajaxProgressBarDivAnimation;
@@ -413,7 +416,7 @@ tr:nth-child(odd).testReportPlatformTr {
 /* FILE_BEGIN {
   "actionList": ["trim"],
   "externalUrl": "https://ajax.googleapis.com/ajax/libs/angularjs/1.3.0-beta.17/angular.js",
-  "file": "/public/external/angular.js"
+  "file": "/public/cache/external/angular.js"
 } */
 /**
  * @license AngularJS v1.3.0-beta.17
@@ -23790,7 +23793,7 @@ var styleDirective = valueFn({
 /* FILE_BEGIN {
   "actionList": ["updateExternal", "trim"],
   "externalUrl": "https://raw.githubusercontent.com/twbs/bootstrap/master/dist/css/bootstrap.css",
-  "file": "/public/external/bootstrap.css"
+  "file": "/public/cache/external/bootstrap.css"
 } */
 /*!
  * Bootstrap v3.2.0 (http://getbootstrap.com)

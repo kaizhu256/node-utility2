@@ -1,6 +1,6 @@
 /* FILE_BEGIN {
   "actionList": ["lint"],
-  "file": "/public/main.css"
+  "file": "/public/cache/main.css"
 } */
 body {
   padding: 10px;
@@ -18,14 +18,17 @@ body {
 
 <head>
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
-<link href="{{/public/external/bootstrap.css}}" rel="stylesheet"/>
-<link href="{{/public/utility2.css}}" rel="stylesheet"/>
-<link href="{{/public/main.css}}" rel="stylesheet"/>
+<link href="{{/public/cache/external/bootstrap.css}}" rel="stylesheet"/>
+<link href="{{/public/cache/utility2.css}}" rel="stylesheet"/>
+<link href="{{/public/cache/main.css}}" rel="stylesheet"/>
 </head>
 
 <body>
-<!-- main div -->
-<div>
+<!-- main app div -->
+<div
+  data-ng-app="ngApp_main"
+  data-ng-controller="MainController"
+>
 <h1>{{name}}</h1>
 <h3>{{description}}</h3>
 </div>
@@ -34,13 +37,13 @@ body {
   <div class="ajaxProgressBarDiv ajaxProgressBarDivLoading">loading</div>
 </div>
 <!-- load scripts -->
-<script src="{{/public/utility2.data.js}}"></script>
-<script src="{{/public/utility2.js}}"></script>
+<script src="{{/public/cache/utility2.data.js}}"></script>
+<script src="{{/public/cache/utility2.js}}"></script>
 <!-- init state object -->
 <script>window.exports.setOverride(window.state, {{stateBrowserJson}});</script>
 <!-- run main program -->
-<script src="{{/public/main.data.js}}"></script>
-<script src="{{/public/main.js}}"></script>
+<script src="{{/public/cache/main.data.js}}"></script>
+<script src="{{/public/cache/main.js}}"></script>
 </body>
 
 </html>

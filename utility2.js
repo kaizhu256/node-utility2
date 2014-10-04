@@ -31,14 +31,15 @@ stateRestore = function (state2) {
       /*
         this function inits the submodule
       */
-      // export global object
-      if (typeof window === 'object') {
+      // check for browser environment
+      if (typeof window === 'object' && window.navigator && window.navigator.userAgent) {
+        // export global object
         window.global = window;
+        // init module object
+        global.module = global.module || {};
+        // init exports object
+        exports = global.__exports__ = module.exports = module.exports || {};
       }
-      // init module object
-      global.module = global.module || {};
-      // init exports object
-      exports = global.__exports__ = module.exports = {};
       // init _debug_print
       exports[['debug', 'Print'].join('')] = global[['debug', 'Print'].join('')] =
         local._debug_print;
@@ -143,6 +144,59 @@ stateRestore = function (state2) {
         data = exports.jsonStringifyOrdered(state);
         exports.assert(data === '{"_aaDict":{"bb":true}}', data);
         onEventError();
+      });
+    },
+
+    _ajax_default_test: function (onEventError) {
+      /*
+        this function tests ajax's default handling behavior
+      */
+      var onEventRemaining, remaining, remainingError;
+      onEventRemaining = function (error) {
+        remaining -= 1;
+        remainingError = remainingError || error;
+        if (remaining === 0) {
+          onEventError(remainingError);
+        }
+      };
+      remaining = 0;
+      // test json handling behavior
+      remaining += 1;
+      exports.ajax({ url: '/test/hello.json' }, function (error, data) {
+        exports.testTryCatch(function () {
+          // validate no error occurred
+          exports.assert(!error, error);
+          // validate data
+          exports.assert(data === '"hello"', data);
+          onEventRemaining();
+        }, onEventRemaining);
+      });
+      [{
+        // test 404 error handling behavior
+        url: '/public/undefined/' + Math.random()
+      }, {
+        // test 404 error handling behavior
+        url: '/test/undefined/' + Math.random()
+      }, {
+        // test unusually long url query-params handling behavior
+        url: '/test/url?modeErrorIgnore=1&' + new Array(0x2000).join('a')
+      }, {
+        // test unusually long url pathname handling behavior
+        url: '/test/path/' + new Array(0x200).join('a') + '?modeErrorIgnore=1'
+      }, {
+        // test error on test-report upload handling behavior
+        data: 'syntax error',
+        method: 'POST',
+        url: '/test/test-report-upload?modeErrorIgnore=1'
+      }].forEach(function (options) {
+        remaining += 1;
+        exports.ajax(options, function (error) {
+          exports.testTryCatch(function () {
+            // validate error occurred
+            exports.assert(error instanceof Error, error);
+            onEventRemaining();
+          }, onEventRemaining);
+        });
       });
     },
 
@@ -318,7 +372,7 @@ stateRestore = function (state2) {
       /*
         this function returns the error's stack or message attribute if possible
       */
-      return error.stack || error.message;
+      return String(error.stack || error.message);
     },
 
     jsonStringifyOrdered: function (value, replacer, space) {
@@ -385,10 +439,10 @@ stateRestore = function (state2) {
         if an error is given, it will print the error's message and stack,
         else it will print the data
       */
+      // error exists, then print it
       if (error) {
-        // print error
         console.error('\nonEventErrorDefault - error\n' + exports.errorStack(error) + '\n');
-      // print data if it's defined and not an empty string
+      // else if data exists and is a non-empty string, then print it
       } else if (data !== undefined && data !== '') {
         // debug data
         console.log('\nonEventErrorDefault - data\n' + JSON.stringify(data, null, 2) + '\n');
@@ -594,7 +648,7 @@ stateRestore = function (state2) {
         });
         onEventError(error);
       };
-      // run onEventError callback in mocked state in a try catch block
+      // run onEventError callback in mocked state in a try-catch block
       try {
         // mock state
         mockList.forEach(function (mock) {
@@ -636,8 +690,7 @@ stateRestore = function (state2) {
         testCaseNumber,
         testPlatform1,
         testReport,
-        text,
-        timeElapsedParse;
+        text;
       // part 1 - merge testReport2 into testReport1
       [testReport1, testReport2].forEach(function (testReport, ii) {
         ii += 1;
@@ -701,6 +754,9 @@ stateRestore = function (state2) {
       });
       // merge testPlatformList
       testReport2.testPlatformList.forEach(function (testPlatform2) {
+        if (testPlatform2.name === state.testPlatform.name) {
+          return;
+        }
         testPlatform1 = null;
         testReport1.testPlatformList.forEach(function (_, ii) {
           // replace existing testPlatform1 with testPlatform2
@@ -744,20 +800,15 @@ stateRestore = function (state2) {
           }
         });
         // update testPlatform.status
-        testPlatform.status = testPlatform.testsFailed ? 'failed' :
-            testPlatform.testsPending ? 'pending' :
-                'passed';
+        testPlatform.status = testPlatform.testsFailed ? 'failed'
+          : testPlatform.testsPending ? 'pending'
+            : 'passed';
         // sort testCaseList by status and name
         testPlatform.testCaseList.sort(function (arg1, arg2) {
           arg1 = arg1.status.replace('passed', 'z') + arg1.name.toLowerCase();
           arg2 = arg2.status.replace('passed', 'z') + arg2.name.toLowerCase();
           return arg1 <= arg2 ? -1 : 1;
         });
-        // update testReport.timeElapsed
-        if (testPlatform.timeElapsed < 0xffffffff &&
-            testPlatform.timeElapsed > testReport.timeElapsed) {
-          testReport.timeElapsed = testPlatform.timeElapsed;
-        }
       });
       // sort testPlatformList by status and name
       testReport.testPlatformList.sort(function (arg1, arg2) {
@@ -766,58 +817,73 @@ stateRestore = function (state2) {
         return arg1 <= arg2 ? -1 : 1;
       });
       // stop testReport timer
-      if (testReport.testsPending === 0 && testReport.timeElapsed > 0xffffffff) {
-        testReport.timeElapsed = Date.now() - testReport.timeElapsed;
+      if (testReport.testsPending === 0) {
+        local._timeElapsedParse(testReport);
       }
       // part 2 - merge testReport2.coverage into testReport1.coverage
       testReport1.coverage = testReport1.coverage || {};
       testReport2.coverage = testReport2.coverage || {};
       Object.keys(testReport2.coverage).forEach(function (file) {
-        // if it doesn't exist, then create a coverage object for the given file
-        file1 = testReport1.coverage[file] = testReport1.coverage[file] ||
-          { b: {}, f: {}, s: {} };
+        if (!testReport1.coverage[file]) {
+          testReport1.coverage[file] = testReport2.coverage[file];
+          return;
+        }
+        file1 = testReport1.coverage[file];
         file2 = testReport2.coverage[file];
-        // merge branching statements
-        Object.keys(file2.b).forEach(function (lineno) {
-          file1.b[lineno] = file1.b[lineno] || [];
-          file2.b[lineno].forEach(function (count, ii) {
-            file1.b[lineno][ii] = file1.b[lineno][ii] || 0;
-            file1.b[lineno][ii] += count;
+        [
+          ['b', 'branchMap'],
+          ['f', 'fnMap'],
+          ['s', 'statementMap']
+        ].forEach(function (item) {
+          var countDict1, countDict2,
+            key1,
+            lineDict1, lineno,
+            mapDict1, mapDict2;
+          countDict1 = file1[item[0]];
+          countDict2 = file2[item[0]];
+          lineDict1 = {};
+          lineno = function (obj) {
+            return item[0] === 'b' ? obj.line + obj.type
+              : item[0] === 'f' ? obj.line
+                : obj.start.line;
+          };
+          mapDict1 = file1[item[1]];
+          mapDict2 = file2[item[1]];
+          // index lineno with the given key
+          Object.keys(mapDict1).forEach(function (key1) {
+            lineDict1[lineno(mapDict1[key1])] = key1;
+          });
+          Object.keys(mapDict2).forEach(function (key2) {
+            key1 = lineDict1[lineno(mapDict2[key2])];
+            // validate key1 exists
+            exports.assert(key1, key1);
+            // merge count2 into count1
+            if (item[0] === 'b') {
+              countDict2[key2].forEach(function (count, jj) {
+                countDict1[key1][jj] = countDict1[key1][jj] ? countDict1[key1][jj] + count
+                  : count;
+              });
+            } else {
+              countDict1[key1] = countDict1[key1] ? countDict1[key1] + countDict2[key2]
+                : countDict2[key2];
+            }
           });
         });
-        // merge function definitions
-        Object.keys(file2.f).forEach(function (lineno) {
-          file1.f[lineno] = file1.f[lineno] || 0;
-          file1.f[lineno] += file2.f[lineno];
-        });
-        // merge non-branching statements
-        Object.keys(file2.s).forEach(function (lineno) {
-          file1.s[lineno] = file1.s[lineno] || 0;
-          file1.s[lineno] += file2.s[lineno];
-        });
       });
-      // merge remaining items from testReport2 into testReport1
-      exports.setDefault(testReport1, testReport2);
       // part 3 - create and return html test-report
       // json-copy testReport, which will be modified for html templating
       testReport = JSON.parse(JSON.stringify(testReport));
       // init env
       env = (global.process && process.env) || {};
-      timeElapsedParse = function (obj) {
-        /*
-          this function parses test timeElapsed
-        */
-        if (obj.timeElapsed > 0xffffffff) {
-          obj.timeElapsed = Date.now() - obj.timeElapsed;
-        }
-      };
       // parse timeElapsed
-      timeElapsedParse(testReport);
+      local._timeElapsedParse(testReport);
       testReport.testPlatformList.forEach(function (testPlatform) {
-        timeElapsedParse(testPlatform);
+        local._timeElapsedParse(testPlatform);
         testPlatform.testCaseList.forEach(function (testCase) {
-          timeElapsedParse(testCase);
+          local._timeElapsedParse(testCase);
+          testPlatform.timeElapsed = Math.max(testPlatform.timeElapsed, testCase.timeElapsed);
         });
+        testReport.timeElapsed = Math.max(testReport.timeElapsed, testPlatform.timeElapsed);
       });
       // create html test-report
       testCaseNumber = 0;
@@ -894,7 +960,7 @@ stateRestore = function (state2) {
       /*
         this function runs the tests
       */
-      var remaining, testPlatform, testReport, testReportHtml;
+      var coveragePercent, remaining, testPlatform, testReport, testReportHtml;
       testReport = state.testReport;
       // start testReport timer
       testReport.timeElapsed = Date.now();
@@ -910,7 +976,7 @@ stateRestore = function (state2) {
             console.error('\ntestCase ' + testCase.name + ' failed\n' +
               exports.errorStack(error));
             // save test error
-            testCase.errorMessage = testCase.errorMessage || exports.errorStack(error) || '';
+            testCase.errorMessage = testCase.errorMessage || exports.errorStack(error);
           }
           // error - multiple callbacks in test case
           if (finished) {
@@ -922,13 +988,14 @@ stateRestore = function (state2) {
           }
           finished = true;
           // stop testCase timer
-          testCase.timeElapsed = Date.now() - testCase.timeElapsed;
+          local._timeElapsedParse(testCase);
           // decrement test counter
           remaining -= 1;
           // create test-report when all tests have finished
           if (remaining === 0) {
             // stop testPlatform timer
-            testPlatform.timeElapsed = Date.now() - testPlatform.timeElapsed;
+            local._timeElapsedParse(testPlatform);
+            // create testReportHtml
             testReportHtml = exports.testReportCreate(testReport, {});
             // print test-report summary
             console.log(testReport.testPlatformList.map(function (testPlatform) {
@@ -943,11 +1010,6 @@ stateRestore = function (state2) {
               console.log('\ncreating test-report file://' + process.cwd() +
                 '/.build/test-report.html');
               required.fs.writeFileSync('.build/test-report.html', testReportHtml);
-              // create html coverage report
-              if (state.modeCoverage) {
-                console.log('creating coverage report file://' + process.cwd() +
-                  '/.build/coverage-report.html/' + state.name + '/index.html');
-              }
               // create build badge
               required.fs.writeFileSync(
                 '.build/build.badge.svg',
@@ -976,8 +1038,38 @@ stateRestore = function (state2) {
               );
               // non-zero exit if tests failed
               setTimeout(function () {
-                process.exit(testReport.testsFailed);
+                process.exit(testReport.testsFailed && !state.modeTestFail);
               }, 1000);
+              if (state.modeCoverage) {
+                // create html coverage-report
+                console.log('creating coverage-report file://' + process.cwd() +
+                  '/.build/coverage-report.html/index.html');
+                // create coverage-report badge
+                coveragePercent = [0, 0];
+                Object.keys(testReport.coverage).forEach(function (statementDict) {
+                  statementDict = testReport.coverage[statementDict].s;
+                  Object.keys(statementDict).forEach(function (key) {
+                    coveragePercent[0] += statementDict[key] ? 1 : 0;
+                  });
+                  coveragePercent[1] += Object.keys(statementDict).length;
+                });
+                coveragePercent = 100 * coveragePercent[0] / coveragePercent[1];
+                required.fs.writeFileSync(
+                  '.build/coverage-report.badge.svg',
+                  state.fileDict['.build/coverage-report.badge.svg']
+                    .data
+                    // edit coverage badge percent
+                    .replace((/100.0/g), coveragePercent.toFixed(1))
+                    // edit coverage badge color
+                    .replace(
+                      (/0d0/g),
+                      ('0' + Math.round((100 - coveragePercent) * 2.21).toString(16))
+                        .slice(-2) +
+                        ('0' + Math.round(coveragePercent * 2.21).toString(16)).slice(-2) +
+                        '00'
+                    )
+                );
+              }
             // browser code
             } else {
               // notify saucelabs of test results
@@ -1002,13 +1094,16 @@ stateRestore = function (state2) {
           // start testCase timer
           testCase.timeElapsed = Date.now();
           // ignore utility2 tests in fast mode
-          if (state.modeNodejs && state.modeFast && testCase.name.indexOf('utility2.') === 0) {
+          if (state.modeNodejs &&
+              state.modeTestFast &&
+              testCase.name.indexOf('utility2.') === 0) {
             onEventError();
             return;
           }
           // create dummy failed test for code coverage
           if (state.modeTestFail) {
-            onEventError();
+            // use fuzzy logic to increase code coverage
+            onEventError(Math.random() < 0.5 ? null : state.errorDefault);
             // code coverage for multiple callback error
             onEventError();
             // code coverage for thrown error
@@ -1023,7 +1118,7 @@ stateRestore = function (state2) {
 
     testTryCatch: function (callback, onEventError) {
       /*
-        this function calls the callback in a try catch block,
+        this function calls the callback in a try-catch block,
         and falls back to onEventError if an error is thrown
       */
       try {
@@ -1128,9 +1223,18 @@ stateRestore = function (state2) {
       return template;
     },
 
+    _timeElapsedParse: function (obj) {
+      /*
+        this function parses test timeElapsed
+      */
+      if (obj.timeElapsed > 0xffffffff) {
+        obj.timeElapsed = Date.now() - obj.timeElapsed;
+      }
+    },
+
     tryCatchHandler: function (onEventError) {
       /*
-        this function returns a callback that will call onEventError in a try catch block
+        this function returns a callback that will call onEventError in a try-catch block
       */
       return function (error, data) {
         if (error) {
@@ -1340,23 +1444,6 @@ stateRestore = function (state2) {
       xhr.send(options.data);
     },
 
-    _ajax_default_test: function (onEventError) {
-      /*
-        this function tests ajax's default handling behavior
-      */
-      exports.ajax({
-        url: '/test/hello.json'
-      }, function (error, data) {
-        exports.testTryCatch(function () {
-          // validate no error occurred
-          exports.assert(!error, error);
-          // validate data
-          exports.assert(data === '"hello"', data);
-          onEventError();
-        }, onEventError);
-      });
-    },
-
     _ajaxProgressHide: function () {
       // keep track of how many consecutive cycles ajax progress is complete
       if (local._ajaxProgressList.length === 0 &&
@@ -1427,9 +1514,6 @@ stateRestore = function (state2) {
       /*
         this function inits the submodule
       */
-      if (!state.modeNodejs) {
-        return;
-      }
       // init this submodule
       exports.initSubmodule(local);
       // init required object
@@ -1441,7 +1525,7 @@ stateRestore = function (state2) {
         'http', 'https',
         'module',
         'path',
-        'url',
+        'url', 'util',
         'vm'
       ].forEach(function (module) {
         required[module] = required[module] || require(module);
@@ -1513,7 +1597,7 @@ stateRestore = function (state2) {
           }
         }
       });
-      if (state.modeTestReportMerge || process.env.MODE_TEST_REPORT_MERGE) {
+      if (process.env.MODE_TEST_REPORT_MERGE) {
         // if it exists, then merge the previous test-report into state.testReport
         if (required.fs.existsSync('.build/test-report.json')) {
           exports.testReportCreate(state.testReport, require('./.build/test-report.json'));
@@ -1526,7 +1610,7 @@ stateRestore = function (state2) {
           }
           required.fs.writeFileSync(
             '.build/test-report.json',
-            JSON.stringify(state.testReport)
+            JSON.stringify(state.testReport, null, 2)
           );
         });
       }
@@ -1570,13 +1654,13 @@ stateRestore = function (state2) {
         file = options.file;
         // cache only package files or /public/* files
         if ((/^(?:main.data|main.js|utility2.data|utility2.js)$/).test(file)) {
-          file = '/public/' + file;
+          file = '/public/cache/' + file;
         }
-        if (file.indexOf('/public/') !== 0) {
+        if (file.indexOf('/public/cache/') !== 0) {
           return;
         }
         // add .js extension for main.data and utility2.data
-        if ((/^\/public\/(?:main\.data|utility2\.data)$/).test(file)) {
+        if ((/^\/public\/cache\/(?:main\.data|utility2\.data)$/).test(file)) {
           file += '.js';
         }
         // create unique cache url for the file data using its sha256 hash
@@ -1750,22 +1834,22 @@ stateRestore = function (state2) {
 
     _initRepl: function () {
       /*
-        this function inits the ropl debugger
+        this function inits the repl debugger
       */
       if (!state.modeRepl) {
         return;
       }
-      // export exports
-      global.exports = exports;
-      // export required
-      global.required = required;
-      // export state
-      global.state = state;
-      // start repl
-      require('repl').start({
-        eval: local._initReplEval,
-        useGlobal: true
-      });
+      // save repl context
+      local._initReplContext = require('repl')
+        // start repl
+        .start({ eval: local._initReplEval })
+        .context;
+      // export exports object
+      local._initReplContext.exports = exports;
+      // export required object
+      local._initReplContext.required = required;
+      // export state object
+      local._initReplContext.state = state;
     },
 
     _initReplEval: function (script, __, file, onEventError) {
@@ -1780,7 +1864,7 @@ stateRestore = function (state2) {
         if (match && state.replParseDict[match[1]]) {
           script = state.replParseDict[match[1]](match[2]);
         }
-        onEventError(null, required.vm.runInThisContext(script, file));
+        onEventError(null, required.vm.runInNewContext(script, local._initReplContext, file));
       } catch (error) {
         onEventError(error);
       }
@@ -1791,12 +1875,22 @@ stateRestore = function (state2) {
         this function tests _initReplEval's default handling behavior
       */
       [
-        '($\n)',
+        // test shell handling behavior
+        '($ :\n)',
+        // test print handling behavior
         '(print\n)'
       ].forEach(function (script) {
         local._initReplEval(script, null, 'repl', exports.nop);
       });
-      onEventError();
+      // test error handling behavior
+      local._initReplEval('syntax error', null, 'repl', function (error) {
+        exports.testTryCatch(function () {
+          // validate error occurred
+          // bug - use util.isError to validate error when using eval
+          exports.assert(required.util.isError(error), error);
+          onEventError();
+        }, onEventError);
+      });
     },
 
     _initServer: function () {
@@ -1822,7 +1916,7 @@ stateRestore = function (state2) {
       // init server with exports.serverMiddleware
       required.http.createServer(function (request, response) {
         exports.serverMiddleware(request, response, function (error) {
-          exports.serverRespondDefault(response, error ? 500 : 404, error);
+          exports.serverRespondDefault(request, response, error ? 500 : 404, error);
         });
       })
         // set server to listen on state.serverPort
@@ -1839,7 +1933,6 @@ stateRestore = function (state2) {
       var finished,
         modeIo,
         onEventIo,
-        redirect,
         request,
         response,
         responseText,
@@ -1864,10 +1957,8 @@ stateRestore = function (state2) {
           }
           // parse options.url
           urlParsed = required.url.parse(options.url);
-          // bug - disable socket pooling, because it causes timerTimeout errors in tls tests
+          // disable socket pooling
           options.agent = options.agent || false;
-          // host needed for redirects
-          options.host = urlParsed.host;
           // hostname needed for http(s).request
           options.hostname = urlParsed.hostname;
           // path needed for http(s).request
@@ -1883,37 +1974,27 @@ stateRestore = function (state2) {
             typeof options.data === 'string' ? Buffer.byteLength(options.data)
             : Buffer.isBuffer(options.data) ? options.data.length
               : 0;
+          onEventIo();
+          break;
+        case 2:
+          // make http(s) request
           request = (options.protocol === 'https:' ? required.https : required.http)
             .request(options, onEventIo)
             // handle error event
             .on('error', onEventIo);
           // debug ajax request
           state.debugAjaxRequest = request;
-          // send request and / or data
+          // send request and/or data
           request.end(options.data);
           break;
-        case 2:
+        case 3:
           response = error;
           // debug ajax response
           state.debugAjaxResponse = response;
-          // follow redirects
-          switch (response.statusCode) {
-          case 301:
-          case 302:
-          case 303:
-          case 304:
-          case 305:
-          case 306:
-          case 307:
-            modeIo = -2;
-            redirect = true;
-            onEventIo();
-            return;
-          }
           // concat response stream into responseText
           exports.streamReadAll(response, onEventIo);
           break;
-        case 3:
+        case 4:
           // init responseText
           responseText = options.resultType === 'binary' ? data : data.toString();
           // error handling for http status code >= 400
@@ -1947,64 +2028,13 @@ stateRestore = function (state2) {
               JSON.stringify((responseText || '').slice(0, 256) + '...') + '\n' +
               // trim potentially very long html response
               error.message.slice(0, 4096);
-            onEventError(error, responseText, response);
+            onEventError(error, responseText);
             return;
           }
-          if (redirect) {
-            options.redirected = options.redirected || 8;
-            options.redirected -= 1;
-            if (options.redirected < 0) {
-              onEventIo(new Error('ajax - too many http redirects to ' +
-                response.headers.location));
-              return;
-            }
-            options.url = response.headers.location;
-            if (options.url && options.url[0] === '/') {
-              options.url = options.protocol + '//' + options.host + options.url;
-            }
-            exports.ajax(options, onEventError);
-            return;
-          }
-          onEventError(null, responseText, response);
+          onEventError(null, responseText);
         }
       };
       onEventIo();
-    },
-
-    _ajax_default_test: function (onEventError) {
-      /*
-        this function tests ajax's default handling behavior
-      */
-      exports.ajax({
-        url: '/test/hello.json'
-      }, function (error, data, response) {
-        exports.testTryCatch(function () {
-          // validate no error occurred
-          exports.assert(!error, error);
-          // validate data
-          exports.assert(data === '"hello"', data);
-          // validate response
-          data = JSON.stringify({
-            headers: {
-              'connection': response.headers.connection,
-              'content-type': response.headers['content-type'],
-              'transfer-encoding': response.headers['transfer-encoding']
-            },
-            httpVersion: response.httpVersion,
-            statusCode: response.statusCode
-          });
-          exports.assert(data === JSON.stringify({
-            headers: {
-              'connection': 'close',
-              'content-type': 'application/json',
-              'transfer-encoding': 'chunked'
-            },
-            httpVersion: '1.1',
-            statusCode: 200
-          }), data);
-          onEventError();
-        }, onEventError);
-      });
     },
 
     fileActionDict_exportFile: function (options) {
@@ -2056,65 +2086,12 @@ stateRestore = function (state2) {
       options.data = options.data.trim();
     },
 
-    fileActionDict_updateExternal: function (options) {
+    fileActionDict_updateExternal: function () {
       /*
         this function updates external sources embedded in the data file
       */
-      // do not update external resources unless specified in the commandline
-      if (state.modeCli !== 'updateExternal') {
-        return;
-      }
-      console.log('updateExternal - updating ' + options.externalUrl);
-      exports.ajax({ url: options.externalUrl }, function (error, data) {
-        if (error) {
-          exports.onEventErrorDefault(error);
-          return;
-        }
-        state.fileDict[options.fileParent].dataRaw =
-          state.fileDict[options.fileParent].dataRaw.replace(options.dataRaw, '\n' +
-            data.trim() + '\n');
-      });
-    },
-
-    modeCliDict_coverageReportBadgeCreate: function () {
-      /*
-        this function creates a coverage badge
-      */
-      var percent;
-      percent = (/Statements: <span class="metric">([.\d]+)/)
-        .exec(required.fs.readFileSync('.build/coverage-report.html/index.html', 'utf8'))[1];
-      required.fs.writeFileSync(
-        '.build/coverage-report.badge.svg',
-        state.fileDict['.build/coverage-report.badge.svg']
-          .data
-          // edit coverage badge percent
-          .replace((/100.0/g), percent)
-          // edit coverage badge color
-          .replace(
-            (/0d0/g),
-            ('0' + Math.round((100 - Number(percent)) * 2.21).toString(16))
-              .slice(-2) +
-              ('0' + Math.round(Number(percent) * 2.21).toString(16)).slice(-2) +
-              '00'
-          )
-      );
-    },
-
-    _modeCliDict_coverageReportBadgeCreate_default_test: function (onEventError) {
-      /*
-        this function tests modeCliDict_coverageReportBadgeCreate's default handling behavior
-      */
-      exports.testMock(onEventError, stateRestore, [
-        [required, { fs: {
-          readFileSync: function () {
-            return 'Statements: <span class="metric">50.0%';
-          },
-          writeFileSync: exports.nop
-        } }]
-      ], function (onEventError) {
-        local.modeCliDict_coverageReportBadgeCreate();
-        onEventError();
-      });
+      // todo
+      return;
     },
 
     modeCliDict_githubContentsFilePush: function (argv, onEventError) {
@@ -2133,10 +2110,12 @@ stateRestore = function (state2) {
             process.env.GITHUB_REPO.replace('/', '.github.io/') + '/' + file2);
           exports.ajax({
             headers: {
-              // github oauth authentication
-              authorization: 'token ' + process.env.GITHUB_TOKEN,
+              // github basic authentication
+              authorization: process.env.GITHUB_BASIC ? 'basic ' + process.env.GITHUB_BASIC
+                // github oauth authentication
+                : 'token ' + process.env.GITHUB_TOKEN,
               // bug - github api requires user-agent header
-              'user-agent': 'unknown'
+              'user-agent': 'undefined'
             },
             url: 'https://api.github.com/repos/' + process.env.GITHUB_REPO +
               '/contents/' + required.path.dirname(file2) + '?ref=gh-pages'
@@ -2169,10 +2148,12 @@ stateRestore = function (state2) {
               sha: sha
             }),
             headers: {
-              // github oauth authentication
-              authorization: 'token ' + process.env.GITHUB_TOKEN,
+              // github basic authentication
+              authorization: process.env.GITHUB_BASIC ? 'basic ' + process.env.GITHUB_BASIC
+                // github oauth authentication
+                : 'token ' + process.env.GITHUB_TOKEN,
               // bug - github api requires user-agent header
-              'user-agent': 'unknown'
+              'user-agent': 'undefined'
             },
             method: 'PUT',
             url: 'https://api.github.com/repos/' + process.env.GITHUB_REPO + '/contents/' + file2
@@ -2252,25 +2233,91 @@ stateRestore = function (state2) {
       /*
         this function runs npm test
       */
-      exports.testRun();
+      // wait awhile for async init
+      setTimeout(exports.testRun, 1000);
     },
 
     modeCliDict_saucelabsScreenshot: function () {
       /*
         this function grabs screenshots using saucelabs
       */
-      [
-        {
-          file: 'test-report.screenshot.heroku.png',
-          url: process.env.HEROKU_URL + '/?modeTest=1'
-        },
-        {
-          file: 'test-report.screenshot.travis.png',
-          url: 'https://travis-ci.org/' + process.env.GITHUB_REPO
+      var modeIo, onEventIo, options;
+      modeIo = 0;
+      onEventIo = function (error, data) {
+        if (error) {
+          throw error;
         }
-      ].forEach(function (options) {
-        local._saucelabsScreenshot(options, exports.onEventErrorDefault);
-      });
+        modeIo += 1;
+        switch (modeIo) {
+        case 1:
+          exports.onEventTimeout(
+            onEventIo,
+            state.timeoutDefault,
+            'saucelabsScreenshot ' + state.saucelabsScreenshotUrl
+          );
+          options = {
+            // json-copy options
+            data: JSON.stringify({
+              // specify custom test framework in saucelabs
+              framework: 'custom',
+              // set max-duration timeout in seconds
+              'max-duration': 10,
+              platforms: [["linux", "googlechrome", ""]],
+              // disable video recording for faster performance
+              'record-video': false,
+              url: state.saucelabsScreenshotUrl
+            }),
+            headers: {
+              authorization: 'Basic ' + new Buffer(process.env.SAUCE_USERNAME + ':' +
+                process.env.SAUCE_ACCESS_KEY).toString('base64'),
+              'content-type': 'application/json'
+            },
+            method: 'POST',
+            url: 'https://saucelabs.com/rest/v1/' + process.env.SAUCE_USERNAME + '/js-tests'
+          };
+          // create job request
+          exports.ajax(options, onEventIo);
+          break;
+        case 2:
+          // get job status
+          options.data = data;
+          options.url += '/status';
+          onEventIo();
+          break;
+        case 3:
+          setTimeout(function () {
+            exports.ajax(options, onEventIo);
+          }, 4000);
+          break;
+        case 4:
+          // get job id
+          data = JSON.parse(data)['js tests'][0].job_id;
+          // retry getting job id if not available
+          if (data === 'job not ready') {
+            modeIo -= 2;
+            onEventIo();
+            return;
+          }
+          options.method = 'GET';
+          options.resultType = 'binary';
+          options.url = 'https://saucelabs.com/jobs/' + data + '/0003screenshot.png';
+          onEventIo();
+          break;
+        case 5:
+          setTimeout(function () {
+            exports.ajax(options, function (error, data) {
+              if (error) {
+                modeIo -= 1;
+                onEventIo();
+                return;
+              }
+              required.fs.writeFile(state.saucelabsScreenshotFile, data, process.exit);
+            });
+          }, 4000);
+          break;
+        }
+      };
+      onEventIo();
     },
 
     modeCliDict_saucelabsTest: function () {
@@ -2290,19 +2337,6 @@ stateRestore = function (state2) {
         name: local._name + '.__saucelabsTest_default_test'
       }];
       exports.testRun();
-    },
-
-    modeCliDict_updateExternal: function () {
-      /*
-        this function updates external resources in main.data and utility2.data
-      */
-      // the updating code is done elsewhere.
-      // all we have to do is to save the updated file data on exit
-      process.on('exit', function () {
-        ['main.data', 'utility2.data'].forEach(function (file) {
-          required.fs.writeFileSync(file, state.fileDict[file].dataRaw);
-        });
-      });
     },
 
     _phantomjsTest: function (file, onEventError) {
@@ -2336,7 +2370,7 @@ stateRestore = function (state2) {
           '&modeTestReportUpload=1' +
           '&testCallbackId=' + testCallbackId +
           '&timeoutDefault=' + state.timeoutDefault })).toString('base64')
-      ], modeDebug: false });
+      ] });
     },
 
     __phantomjsTest_default_test: function (onEventError) {
@@ -2351,21 +2385,22 @@ stateRestore = function (state2) {
           onEventError(remainingError);
         }
       };
-      remaining = 2;
-      // run browser test in phantomjs
-      local._phantomjsTest(require('phantomjs').path, onEventRemaining);
-      // run browser test in slimerjs
-      local._phantomjsTest(require('slimerjs').path, onEventRemaining);
+      remaining = 0;
+      // run phantomjs browser test
+      remaining += 1;
+      local._phantomjsTest('phantomjs', onEventRemaining);
+      // run slimerjs browser test if slimerjs is available
+      if (state.modeSlimerjs) {
+        remaining += 1;
+        local._phantomjsTest('slimerjs', onEventRemaining);
+      }
     },
 
     replParseDict_$: function (arg2) {
       /*
         this function runs shell commands from the repl interpreter
       */
-      exports.shell({
-        argv: ['/bin/bash', '-c', exports.textFormat(arg2, state)],
-        modeDebug: false
-      });
+      exports.shell({ argv: ['/bin/bash', '-c', exports.textFormat(arg2, state)] });
     },
 
     replParseDict_print: function (arg2) {
@@ -2373,253 +2408,6 @@ stateRestore = function (state2) {
         this function prints arg2 in stringified form from the repl interpreter
       */
       return '(console.log(String(' + arg2 + '))\n)';
-    },
-
-    serverMiddleware: function (request, response, next) {
-      var modeIo, onEventIo, path;
-      modeIo = 0;
-      onEventIo = function () {
-        modeIo += 1;
-        switch (modeIo) {
-        case 1:
-          // debug server request
-          state.debugServerRequest = request;
-          // debug server response
-          state.debugServerResponse = response;
-          // security - validate request url path
-          path = request.url;
-          // security - enforce max url length
-          if (path.length <= 4096) {
-            // get base path without search params
-            path = (/[^#&?]*/).exec(path)[0];
-            if (path &&
-                // security - enforce max path length
-                path.length <= 256 &&
-                // security - disallow relative path
-                !(/\.\/|\.$/).test(path)) {
-              // dyanamic path handler
-              request.urlPathNormalized = required.path.resolve(path);
-              onEventIo();
-              return;
-            }
-          }
-          next(new Error('serverMiddleware - invalid url ' + path));
-          break;
-        case 2:
-          path = request.urlPathNormalized;
-          // security - if state.modeTest is falsey, then disallow /test/* path
-          if (path.indexOf('/test/') === 0 && !state.modeTest) {
-            next();
-            return;
-          }
-          // notify browser to cache /public/cache/* path
-          if (path.indexOf('/public/cache/') === 0) {
-            exports.serverRespondWriteHead(response, null, {
-              'cache-control': 'max-age=86400'
-            });
-          }
-          // walk up parent path, all the while looking for a matching handler for the path
-          while (!(state.serverPathHandlerDict[path] || path === '/')) {
-            path = required.path.dirname(path);
-          }
-          // found a handler matching request path
-          if (state.serverPathHandlerDict[path]) {
-            // debug server request handler
-            state.debugServerHandler = state.serverPathHandlerDict[path];
-            // process request with error handling
-            try {
-              onEventIo();
-            } catch (error) {
-              next(error);
-            }
-          // else goto next middleware
-          } else {
-            next();
-          }
-          break;
-        case 3:
-          state.serverPathHandlerDict[path](request, response, next);
-          break;
-        }
-      };
-      onEventIo();
-    },
-
-    'serverPathHandlerDict_/': function (request, response, next) {
-      // goto next middleware
-      if (request.urlPathNormalized !== '/') {
-        next();
-        return;
-      }
-      exports.serverRespondData(response, 200, 'text/html', exports.textFormat(
-        state.fileDict['/public/main.html'].data,
-        { stateBrowserJson: state.stateBrowserJson }
-      ));
-    },
-
-    'serverPathHandlerDict_/public': function (request, response, next) {
-      /*
-        this function responds with public cached data if it exists
-      */
-      var options;
-      options = state.fileDict[request.urlPathNormalized];
-      // cached data exists - respond with cached data
-      if (options) {
-        exports.serverRespondData(
-          response,
-          200,
-          state.mimeLookupDict[
-            required.path.extname(request.urlPathNormalized)
-          ] || 'application/octet-stream',
-          options.data
-        );
-        return;
-      }
-      // cached data does not exist - goto next middleware
-      next();
-    },
-
-    'serverPathHandlerDict_/test/hello.json': function (_, response) {
-      // nop hack to pass jslint
-      exports.nop(_);
-      exports.serverRespondData(response, 200, 'application/json', '"hello"');
-    },
-
-    'serverPathHandlerDict_/test/test-report-upload': function (request, response, next) {
-      /*
-        this function receives and parses uploaded test-reports
-      */
-      var modeIo, onEventIo;
-      modeIo = 0;
-      onEventIo = function (error, data) {
-        modeIo = error instanceof Error ? -1 : modeIo + 1;
-        switch (modeIo) {
-        case 1:
-          // if report uploads are not allowed, then goto next middleware
-          if (!state.modeTestReportUpload) {
-            next();
-            return;
-          }
-          // stream test-report data into buffer
-          exports.streamReadAll(
-            request,
-            // security - use try catch block to parse potential malformed data
-            exports.tryCatchHandler(onEventIo)
-          );
-          break;
-        case 2:
-          data = JSON.parse(data);
-          // debug data
-          state.debugTestReportUpload = data;
-          // merge data.testReport into state.testReport
-          exports.testReportCreate(state.testReport, data.testReport);
-          // call testCallbackId callback if it exists
-          (state.testCallbackDict[data.testCallbackId] || exports.onEventErrorDefault)(
-            data.testReport.testsFailed ? new Error('tests failed') : null
-          );
-          response.end();
-          break;
-        default:
-          next(error);
-        }
-      };
-      onEventIo();
-    },
-
-    serverRespondDefault: function (response, statusCode, error) {
-      /*
-        this function responds with a default message or error stack for the given statusCode
-      */
-      // set response / statusCode / contentType
-      exports.serverRespondWriteHead(response, statusCode, { 'content-type': 'text/plain' });
-      // end response with error stack
-      if (error) {
-        exports.onEventErrorDefault(error);
-        response.end(exports.errorStack(error));
-        return;
-      }
-      // end response with default statusCode message
-      response.end(statusCode + ' ' +
-        (required.http.STATUS_CODES[statusCode] || 'Unknown Status Code'));
-    },
-
-    serverRespondData: function (response, statusCode, contentType, data) {
-      /*
-        this function responds with the given data
-      */
-      // set response / statusCode / contentType
-      exports.serverRespondWriteHead(response, statusCode, { 'content-type': contentType });
-      // end response with data
-      response.end(data);
-    },
-
-    serverRespondWriteHead: function (response, statusCode, headers) {
-      /*
-        this function sets the response object's statusCode / headers
-      */
-      if (!response.headersSent) {
-        // set response.statusCode
-        response.statusCode = statusCode || response.statusCode;
-        Object.keys(headers).forEach(function (key) {
-          // set only truthy headers
-          if (headers[key]) {
-            response.setHeader(key, headers[key]);
-          }
-        });
-      }
-    },
-
-    shell: function (options) {
-      /*
-        this function executes shell scripts with timeout handling
-      */
-      var child, timerTimeoutPid;
-      // init options.stdio
-      options.stdio = options.stdio || ['ignore', 1, 2];
-      // debug shell options
-      if (options.modeDebug !== false) {
-        console.log('shell - options ' +  JSON.stringify(options));
-      }
-      // spawn shell in child process
-      child = required.child_process.spawn(options.argv[0], options.argv.slice(1), options);
-      // set timerTimeoutPid
-      timerTimeoutPid = required.child_process.spawn('/bin/sh', ['-c', 'sleep ' +
-        ((options.timeout || state.timeoutDefault) / 1000) + '; kill ' + child.pid +
-        ' 2>/dev/null'], { stdio: 'ignore' });
-      // unref timerTimout process so it can continue tracking the original shell
-      // after nodejs exits
-      timerTimeoutPid.unref();
-      timerTimeoutPid = timerTimeoutPid.pid;
-      // debug shell exit code
-      child
-        // handle error event
-        .on('error', exports.onEventErrorDefault)
-        // handle exit event
-        .on('exit', function (exitCode) {
-          try {
-            // cleanup timerTimeoutPid
-            process.kill(timerTimeoutPid);
-          } catch (ignore) {
-          }
-          console.log('shell - process ' + child.pid + ' exited with code ' + exitCode);
-        });
-      return child;
-    },
-
-    streamReadAll: function (readableStream, onEventError) {
-      /*
-        this function concats data from readable stream and passes it to callback when done
-      */
-      var chunks;
-      chunks = [];
-      // read data from readable stream
-      readableStream.on('data', function (chunk) {
-        chunks.push(chunk);
-      // call callback when finished reading
-      }).on('end', function () {
-        onEventError(null, Buffer.concat(chunks));
-      // pass any errors to the callback
-      }).on('error', onEventError);
     },
 
     _saucelabsTest: function (options, onEventError) {
@@ -2720,7 +2508,7 @@ stateRestore = function (state2) {
                 // remove test from remainingDict
                 delete remainingDict[data.id];
                 // merge browser test-report
-                local._saucelabsMerge(data, onEventRemaining);
+                local._saucelabsTestMerge(data, onEventRemaining);
               // test pending - update test status
               } else {
                 remainingDict[data.id] = {
@@ -2746,7 +2534,7 @@ stateRestore = function (state2) {
       onEventIo();
     },
 
-    _saucelabsMerge: function (testReport, onEventError) {
+    _saucelabsTestMerge: function (testReport, onEventError) {
       /*
         this function merges the saucelabs test-report into state.testReport
       */
@@ -2817,99 +2605,250 @@ stateRestore = function (state2) {
       onEventIo();
     },
 
-    _saucelabsScreenshot: function (options, onEventError) {
+    serverMiddleware: function (request, response, next) {
+      var modeIo, onEventIo, path;
+      modeIo = 0;
+      onEventIo = function () {
+        modeIo += 1;
+        switch (modeIo) {
+        case 1:
+          // debug server request
+          state.debugServerRequest = request;
+          // debug server response
+          state.debugServerResponse = response;
+          // security - validate request url path
+          path = request.url;
+          // security - enforce max url length
+          if (path.length <= 4096) {
+            // get base path without search params
+            path = (/[^#&?]*/).exec(path)[0];
+            if (path &&
+                // security - enforce max path length
+                path.length <= 256 &&
+                // security - disallow relative path
+                !(/\.\/|\.$/).test(path)) {
+              // dyanamic path handler
+              request.urlPathNormalized = required.path.resolve(path);
+              onEventIo();
+              return;
+            }
+          }
+          next(new Error('serverMiddleware - invalid url ' + path));
+          break;
+        case 2:
+          path = request.urlPathNormalized;
+          // security - if state.modeTest is falsey, then disallow /test/* path
+          if (path.indexOf('/test/') === 0 && !state.modeTest) {
+            next();
+            return;
+          }
+          // notify browser to cache /public/cache/* path
+          if (path.indexOf('/public/cache/') === 0) {
+            exports.serverRespondWriteHead(request, response, null, {
+              'cache-control': 'max-age=86400'
+            });
+          }
+          // walk up parent path, all the while looking for a matching handler for the path
+          while (!(state.serverPathHandlerDict[path] || path === '/')) {
+            path = required.path.dirname(path);
+          }
+          // debug server request handler
+          state.debugServerHandler = state.serverPathHandlerDict[path];
+          // handle request in a try-catch block
+          exports.testTryCatch(onEventIo, next);
+          break;
+        case 3:
+          // pass request / response objects to the handler
+          state.serverPathHandlerDict[path](request, response, next);
+          break;
+        }
+      };
+      onEventIo();
+    },
+
+    'serverPathHandlerDict_/': function (request, response, next) {
       /*
-        this function returns a url for the screenshot captured by saucelabs
+        this function is the default fallback handler
       */
-      var jobId,
-        modeIo,
-        onEventIo,
-        remaining,
-        screenshotImg,
-        timerTimeout;
+      // serve main page
+      if (request.urlPathNormalized === '/') {
+        exports.serverRespondData(request, response, 200, 'text/html', exports.textFormat(
+          state.fileDict['/public/main.html'].data,
+          { stateBrowserJson: state.stateBrowserJson }
+        ));
+        return;
+      }
+      // else fallback to next middleware
+      next();
+    },
+
+    'serverPathHandlerDict_/public': function (request, response, next) {
+      /*
+        this function responds with public cached data if it exists
+      */
+      var options;
+      options = state.fileDict[request.urlPathNormalized];
+      // cached data exists - respond with cached data
+      if (options) {
+        exports.serverRespondData(request, response, 200, state.mimeLookupDict[
+          required.path.extname(request.urlPathNormalized)
+        ], options.data);
+        return;
+      }
+      // cached data does not exist - goto next middleware
+      next();
+    },
+
+    'serverPathHandlerDict_/test/hello.json': function (request, response) {
+      /*
+        this function responds with a simple hello json string
+      */
+      exports.serverRespondData(request, response, 200, 'application/json', '"hello"');
+    },
+
+    'serverPathHandlerDict_/test/test-report-upload': function (request, response, next) {
+      /*
+        this function receives and parses uploaded test-reports
+      */
+      var modeIo, onEventIo;
       modeIo = 0;
       onEventIo = function (error, data) {
         modeIo = error instanceof Error ? -1 : modeIo + 1;
         switch (modeIo) {
         case 1:
-          // set timeout for screenshot to capture in seconds
-          exports.setOverride(options, {
-            data: JSON.stringify(exports.setOverride(JSON.parse(JSON.stringify(options)), {
-              // specify custom test framework in saucelabs
-              framework: 'custom',
-              // set max-duration timeout in seconds
-              // bug - saucelabs only accepts integers for max-duration
-              'max-duration': Math.ceil(0.00025 * state.timeoutDefault),
-              platforms: [["linux", "googlechrome", ""]],
-              // disable video recording for faster performance
-              'record-video': false
-            })),
-            headers: {
-              authorization: 'Basic ' + new Buffer(process.env.SAUCE_USERNAME + ':' +
-                process.env.SAUCE_ACCESS_KEY).toString('base64'),
-              'content-type': 'application/json'
-            },
-            method: 'POST',
-            url: 'https://saucelabs.com/rest/v1/' + process.env.SAUCE_USERNAME + '/js-tests',
-            url0: options.url
-          });
-          remaining = 1;
-          // set timeout for _saucelabsScreenshot
-          timerTimeout = exports.onEventTimeout(
-            onEventIo,
-            state.timeoutDefault,
-            '_saucelabsScreenshot ' + options.url0
-          );
-          exports.ajax(options, onEventIo);
-          break;
-        case 2:
-          exports.setOverride(options, {
-            data: data,
-            url: 'https://saucelabs.com/rest/v1/' + process.env.SAUCE_USERNAME +
-              '/js-tests/status'
-          });
-          onEventIo();
-          break;
-        case 3:
-          setTimeout(function () {
-            exports.ajax(options, exports.tryCatchHandler(onEventIo));
-          }, 5000);
-          break;
-        case 4:
-          jobId = JSON.parse(data)['js tests'][0].job_id;
-          if (jobId === 'job not ready') {
-            modeIo -= 2;
-            onEventIo();
+          // security - if test-report upload mode is disabled, then goto next middleware
+          if (!state.modeTestReportUpload) {
+            next();
             return;
           }
-          remaining -= 1;
-          if (remaining === 0) {
-            screenshotImg = 'https://assets.saucelabs.com/jobs/' + jobId +
-              '/0003screenshot.png';
-            setTimeout(onEventIo, 0.25 * state.timeoutDefault);
-          }
+          // stream test-report data into buffer
+          exports.streamReadAll(
+            request,
+            // security - use try-catch block to parse potential malformed data
+            exports.tryCatchHandler(onEventIo)
+          );
           break;
-        case 5:
-          // fetch screenshotImg
-          exports.ajax({
-            resultType: 'binary',
-            url: screenshotImg
-          }, onEventIo);
-          break;
-        case 6:
-          // save screenshotImg
-          console.log('_saucelabsScreenshot - saving screenshot of ' + options.url0 +
-            ' to ' + '.build/' + options.file);
-          required.fs.writeFile('.build/' + options.file, data, onEventIo);
+        case 2:
+          data = JSON.parse(data);
+          // debug uploaded test-report
+          state.debugTestReportUpload = data;
+          // validate data.testCallbackId exists in state.testCallbackDict
+          exports.assert(
+            state.testCallbackDict[data && data.testCallbackId],
+            'invalid data.testCallbackId ' + (data && data.testCallbackId)
+          );
+          // merge data.testReport into state.testReport
+          exports.testReportCreate(state.testReport, data.testReport);
+          // call testCallbackId callback if it exists
+          state.testCallbackDict[data.testCallbackId](
+            data.testReport.testsFailed ? new Error('tests failed') : null
+          );
+          response.end();
           break;
         default:
-          remaining = -2;
-          // cleanup timerTimeout
-          clearTimeout(timerTimeout);
-          onEventError(error);
+          next(error);
         }
       };
       onEventIo();
+    },
+
+    serverRespondData: function (request, response, statusCode, contentType, data) {
+      /*
+        this function responds with the given data
+      */
+      // set response / statusCode / contentType
+      exports.serverRespondWriteHead(request, response, statusCode, {
+        'content-type': contentType
+      });
+      // end response with data
+      response.end(data);
+    },
+
+    serverRespondDefault: function (request, response, statusCode, error) {
+      /*
+        this function responds with a default message or error stack for the given statusCode
+      */
+      // set response / statusCode / contentType
+      exports.serverRespondWriteHead(request, response, statusCode, {
+        'content-type': 'text/plain'
+      });
+      // end response with error stack
+      if (error) {
+        if (!(state.modeTest && (/\?.*\bmodeErrorIgnore=1\b/).test(request.url))) {
+          exports.onEventErrorDefault(error);
+        }
+        response.end(exports.errorStack(error));
+        return;
+      }
+      // end response with default statusCode message
+      response.end(statusCode + ' ' + required.http.STATUS_CODES[statusCode]);
+    },
+
+    serverRespondWriteHead: function (_, response, statusCode, headers) {
+      /*
+        this function sets the response object's statusCode / headers
+      */
+      // nop hack to pass jslint
+      exports.nop(_);
+      if (!response.headersSent) {
+        // set response.statusCode
+        response.statusCode = statusCode || response.statusCode;
+        Object.keys(headers).forEach(function (key) {
+          // set only truthy headers
+          if (headers[key]) {
+            response.setHeader(key, headers[key]);
+          }
+        });
+      }
+    },
+
+    shell: function (options) {
+      /*
+        this function executes shell scripts with timeout handling
+      */
+      var child, timerTimeoutPid;
+      // init options.stdio
+      options.stdio = options.stdio || ['ignore', 1, 2];
+      // spawn shell in child process
+      child = required.child_process.spawn(options.argv[0], options.argv.slice(1), options);
+      // set timerTimeoutPid
+      timerTimeoutPid = required.child_process.spawn('/bin/sh', ['-c', 'sleep ' +
+        ((options.timeout || state.timeoutDefault) / 1000) + '; kill ' + child.pid +
+        ' 2>/dev/null'], { stdio: 'ignore' });
+      // unref timerTimout process so it can continue tracking the original shell
+      // after nodejs exits
+      timerTimeoutPid.unref();
+      timerTimeoutPid = timerTimeoutPid.pid;
+      // debug shell exit code
+      child
+        // handle error event
+        .on('error', exports.onEventErrorDefault)
+        // handle exit event
+        .on('exit', function (exitCode) {
+          try {
+            // cleanup timerTimeoutPid
+            process.kill(timerTimeoutPid);
+          } catch (ignore) {
+          }
+          console.log('shell - process ' + child.pid + ' exited with code ' + exitCode);
+        });
+      return child;
+    },
+
+    streamReadAll: function (readableStream, onEventError) {
+      /*
+        this function concats data from readable stream and passes it to callback when done
+      */
+      var chunks;
+      chunks = [];
+      // read data from readable stream
+      readableStream.on('data', function (chunk) {
+        chunks.push(chunk);
+      // call callback when finished reading
+      }).on('end', function () {
+        onEventError(null, Buffer.concat(chunks));
+      // pass any errors to the callback
+      }).on('error', onEventError);
     }
 
   };

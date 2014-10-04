@@ -1,12 +1,11 @@
 {
   "bin": { "utility2": "main.js" },
   "contributors": [{ "name": "kai zhu", "email": "kaizhu256@gmail.com" }],
-  "description": "lightweight nodejs module for testing and covering code in browsers",
+  "description": "lightweight nodejs module for testing and covering browser-side code",
   "devDependencies": {
+    "headless-browser-lite": "2014.x.x",
     "istanbul": "0.2.x",
-    "jslint-lite": "2014.x.x",
-    "phantomjs": "1.9.x",
-    "slimerjs": "0.9.x"
+    "jslint-lite": "2014.x.x"
   },
   "engines": { "node": ">=0.10.x" },
   "license": "MIT",
@@ -20,9 +19,9 @@
     "url" : "https://github.com/kaizhu256/node-utility2.git"
   },
   "scripts": {
-    "install": "./utility2.sh shNpmInstall",
+    "postinstall": "./utility2.sh shNpmPostinstall",
     "start": "./utility2.sh shNpmStart",
     "test": "./utility2.sh shNpmTest"
   },
-  "version": "2014.7.29-20"
+  "version": "2014.9.22-12"
 }
