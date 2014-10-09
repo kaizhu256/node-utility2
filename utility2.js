@@ -45,7 +45,7 @@ stateRestore = function (state2) {
         local._debug_print;
       // init state object
       state = exports.state = exports.state || {};
-      // init flag indicating whether we are in either browser or nodejs environment
+      // init mode indicating whether we are in either browser or nodejs environment
       state.modeNodejs = global.process && process.versions && process.versions.node;
       local.setDefault(state, {
         // default error
@@ -68,7 +68,7 @@ stateRestore = function (state2) {
         testCallbackDict: {},
         // main test-report object used to accumulate test-reports from this and other platforms
         testReport: {
-          // global code coverage object if it exists
+          // global coverage object
           coverage: global.__coverage__,
           // list of javascript test platforms - e.g. browser / nodejs
           testPlatformList: [{
@@ -162,7 +162,10 @@ stateRestore = function (state2) {
       remaining = 0;
       // test json handling behavior
       remaining += 1;
-      exports.ajax({ url: '/test/hello.json' }, function (error, data) {
+      exports.ajax({ headers: {
+        // test header handling behavior
+        foo: 'bar'
+      }, url: '/test/hello.json' }, function (error, data) {
         exports.testTryCatch(function () {
           // validate no error occurred
           exports.assert(!error, error);
@@ -172,10 +175,14 @@ stateRestore = function (state2) {
         }, onEventRemaining);
       });
       [{
-        // test 404 error handling behavior
+        // test timeout handling behavior
+        timeout: 1,
+        url: '/test/timeout'
+      }, {
+        // test 404 error handling behavior in /public
         url: '/public/undefined/' + Math.random()
       }, {
-        // test 404 error handling behavior
+        // test 404 error handling behavior in /test
         url: '/test/undefined/' + Math.random()
       }, {
         // test unusually long url query-params handling behavior
@@ -184,19 +191,20 @@ stateRestore = function (state2) {
         // test unusually long url pathname handling behavior
         url: '/test/path/' + new Array(0x200).join('a') + '?modeErrorIgnore=1'
       }, {
-        // test error on test-report upload handling behavior
+        // test JSON.parse error on test-report upload handling behavior
         data: 'syntax error',
         method: 'POST',
         url: '/test/test-report-upload?modeErrorIgnore=1'
       }].forEach(function (options) {
         remaining += 1;
-        exports.ajax(options, function (error) {
+        // coverage - cover exports.tryCatchHandler's error handling behavior
+        exports.ajax(options, exports.tryCatchHandler(function (error) {
           exports.testTryCatch(function () {
             // validate error occurred
             exports.assert(error instanceof Error, error);
             onEventRemaining();
           }, onEventRemaining);
-        });
+        }));
       });
     },
 
@@ -490,6 +498,10 @@ stateRestore = function (state2) {
         this function sets a timer to throw and handle a timeout error
       */
       var error;
+      // validate timeout is integer
+      exports.assert(timeout === Math.floor(timeout) &&
+        // validate timeout is positive and finite
+        0 <= timeout && timeout < Infinity, 'invalid timeout ' + timeout);
       error = new Error('onEventTimeout - timeout error - ' + timeout + ' ms - ' + message);
       error.code = 'ETIMEDOUT';
       return setTimeout(function () {
@@ -752,19 +764,23 @@ stateRestore = function (state2) {
           });
         });
       });
-      // merge testPlatformList
+
+      // merge testReport2.testPlatformList into testReport1.testPlatformList
       testReport2.testPlatformList.forEach(function (testPlatform2) {
+        // if testPlatform2 collides with existing state.testPlatform,
+        // then give precedence to existing state.testPlatform
         if (testPlatform2.name === state.testPlatform.name) {
           return;
         }
+        // if testPlatform2 collides with existing testPlatform1,
+        // then replace existing testPlatform1 with testPlatform2
         testPlatform1 = null;
         testReport1.testPlatformList.forEach(function (_, ii) {
-          // replace existing testPlatform1 with testPlatform2
           if (_.name === testPlatform2.name) {
             testPlatform1 = testReport1.testPlatformList[ii] = testPlatform2;
           }
         });
-        // push new testPlatform2
+        // else add testPlatform2
         if (!testPlatform1) {
           testReport1.testPlatformList.push(testPlatform2);
         }
@@ -835,10 +851,13 @@ stateRestore = function (state2) {
           ['f', 'fnMap'],
           ['s', 'statementMap']
         ].forEach(function (item) {
-          var countDict1, countDict2,
+          var countDict1,
+            countDict2,
             key1,
-            lineDict1, lineno,
-            mapDict1, mapDict2;
+            lineDict1,
+            lineno,
+            mapDict1,
+            mapDict2;
           countDict1 = file1[item[0]];
           countDict2 = file2[item[0]];
           lineDict1 = {};
@@ -978,6 +997,10 @@ stateRestore = function (state2) {
             // save test error
             testCase.errorMessage = testCase.errorMessage || exports.errorStack(error);
           }
+          // coverage - if state.modeTestFail is enabled, then reset testCase.errorMessage
+          if (state.modeTestFail) {
+            testCase.errorMessage = '';
+          }
           // error - multiple callbacks in test case
           if (finished) {
             errorFinished = new Error('testCase ' + testCase.name + ' called multiple times');
@@ -1038,7 +1061,7 @@ stateRestore = function (state2) {
               );
               // non-zero exit if tests failed
               setTimeout(function () {
-                process.exit(testReport.testsFailed && !state.modeTestFail);
+                process.exit(testReport.testsFailed);
               }, 1000);
               if (state.modeCoverage) {
                 // create html coverage-report
@@ -1079,12 +1102,16 @@ stateRestore = function (state2) {
                 // extra stuff to keep saucelabs happy - https://saucelabs.com/docs/rest#jsunit
                 failed: state.testReport.testsFailed
               };
+              // upload browser test-report to server
               if ((/\bmodeTestReportUpload=1\b/).test(location.search)) {
-                exports.ajax({
-                  data: JSON.stringify(global.global_test_results),
-                  method: 'POST',
-                  url: '/test/test-report-upload'
-                }, exports.onEventErrorDefault);
+                // coverage - delay uploading test-report to cover any async cleanup code
+                setTimeout(function () {
+                  exports.ajax({
+                    data: JSON.stringify(global.global_test_results),
+                    method: 'POST',
+                    url: '/test/test-report-upload'
+                  }, exports.onEventErrorDefault);
+                }, 1000);
               }
             }
           }
@@ -1093,23 +1120,18 @@ stateRestore = function (state2) {
         try {
           // start testCase timer
           testCase.timeElapsed = Date.now();
-          // ignore utility2 tests in fast mode
+          // if state.modeTest is enabled, then ignore utility2 tests
           if (state.modeNodejs &&
               state.modeTestFast &&
               testCase.name.indexOf('utility2.') === 0) {
             onEventError();
             return;
           }
-          // create dummy failed test for code coverage
+          testCase.callback(onEventError);
+          // coverage - if state.modeTestFail is enabled, then throw dummy test error
           if (state.modeTestFail) {
-            // use fuzzy logic to increase code coverage
-            onEventError(Math.random() < 0.5 ? null : state.errorDefault);
-            // code coverage for multiple callback error
-            onEventError();
-            // code coverage for thrown error
             throw state.errorDefault;
           }
-          testCase.callback(onEventError);
         } catch (error) {
           onEventError(error);
         }
@@ -1329,7 +1351,7 @@ stateRestore = function (state2) {
         this function inits the test api
       */
       var timerInterval;
-      // run tests in test mode
+      // if modeTest is diabled, then do not run tests
       if (!(/\bmodeTest=1\b/).test(location.search)) {
         return;
       }
@@ -1361,32 +1383,39 @@ stateRestore = function (state2) {
       /*
         this function implements the the ajax function for the browser
       */
-      var data, error, ii, onEventEvent, onEventError2, timerTimeout, xhr;
+      var data, error, finished, ii, onEventEvent, onEventError2, timerTimeout, xhr;
       // error handling
       onEventError2 = function (error, data) {
-        if (error) {
+        if (error && xhr.readyState === 4) {
           // add http method / statusCode / url debug info to error.message
           error.message = options.method + ' ' + xhr.status + ' - ' +
             options.url + '\n' +
-            JSON.stringify((xhr.responseText || '').slice(0, 256) + '...') + '\n' +
+            JSON.stringify(xhr.responseText.slice(0, 256) + '...') + '\n' +
             // trim potentially very long html response
             error.message.slice(0, 4096);
+          // debug status code
+          error.statusCode = xhr.status;
         }
         onEventError(error, data, xhr);
       };
       // event handling
       onEventEvent = function (event) {
+        // if already finished, then ignore event
+        if (finished) {
+          return;
+        }
         switch (event.type) {
         case 'abort':
         case 'error':
         case 'load':
+          finished = true;
           // cleanup timerTimeout
           clearTimeout(timerTimeout);
-          // remove xhr from ajax progress list
+          // validate xhr exists in local._ajaxProgressList
           ii = local._ajaxProgressList.indexOf(xhr);
-          if (ii >= 0) {
-            local._ajaxProgressList.splice(ii, 1);
-          }
+          exports.assert(ii >= 0, 'missing xhr in local._ajaxProgressList');
+          // remove xhr from ajax progress list
+          local._ajaxProgressList.splice(ii, 1);
           if (!error) {
             // handle abort or error event
             if (event.type === 'abort' || event.type === 'error' || xhr.status >= 400) {
@@ -1400,7 +1429,7 @@ stateRestore = function (state2) {
           break;
         }
         // increment ajax progress bar
-        if (local._ajaxProgressList.length !== 0) {
+        if (local._ajaxProgressList.length > 0) {
           local._ajaxProgressIncrement();
           return;
         }
@@ -1413,11 +1442,11 @@ stateRestore = function (state2) {
           local._ajaxProgressUpdate('100%', 'ajaxProgressBarDivError', event.type);
         }
       };
-      // init xhr object
+      // init xhr
       xhr = new XMLHttpRequest();
       // debug xhr
       state.debugXhr = xhr;
-      // xhr event handling
+      // init event handling
       xhr.addEventListener('abort', onEventEvent);
       xhr.addEventListener('error', onEventEvent);
       xhr.addEventListener('load', onEventEvent);
@@ -1425,22 +1454,23 @@ stateRestore = function (state2) {
       xhr.addEventListener('progress', local._ajaxProgressIncrement);
       xhr.upload.addEventListener('progress', local._ajaxProgressIncrement);
       // set timerTimeout
-      timerTimeout = exports.onEventTimeout(function (timerTimeout) {
-        error = timerTimeout;
-        xhr.abort();
-      }, state.timeoutDefault, 'ajax');
-      // display ajax progress bar if hidden
+      timerTimeout = exports.onEventTimeout(function (errorTimeout) {
+        error = errorTimeout;
+        onEventEvent({ type: 'abort' });
+      }, options.timeout || state.timeoutDefault, 'ajax');
+      // if ajax progress bar is hidden, then display it
       if (local._ajaxProgressList.length === 0) {
         local._ajaxProgressDiv.style.display = 'block';
       }
+      // add xhr to local._ajaxProgressList
       local._ajaxProgressList.push(xhr);
-      // open url in xhr
+      // open url
       xhr.open(options.method || 'GET', options.url);
-      // init xhr headers
+      // send request headers
       Object.keys(options.headers || {}).forEach(function (key) {
         xhr.setRequestHeader(key, options.headers[key]);
       });
-      // send data through xhr
+      // send data
       xhr.send(options.data);
     },
 
@@ -1599,19 +1629,17 @@ stateRestore = function (state2) {
       });
       if (process.env.MODE_TEST_REPORT_MERGE) {
         // if it exists, then merge the previous test-report into state.testReport
-        if (required.fs.existsSync('.build/test-report.json')) {
+        if (required.fs.existsSync('./.build/test-report.json')) {
           exports.testReportCreate(state.testReport, require('./.build/test-report.json'));
         }
         // on exit, write state.testReport to .build/test-report.json
         process.on('exit', function () {
-          // remove dummy failed tests used for code coverage
+          // coverage - if state.modeTestFail is enabled, then remove dummy failed tests
           if (state.modeTestFail) {
             state.testReport = { coverage: state.testReport.coverage };
           }
-          required.fs.writeFileSync(
-            '.build/test-report.json',
-            JSON.stringify(state.testReport, null, 2)
-          );
+          // coverage - save coverage on exit
+          local._coverageSaveOnExit();
         });
       }
       // init cli after all modules have been synchronously loaded
@@ -1690,7 +1718,7 @@ stateRestore = function (state2) {
         case 'utility2.js':
           // remove nodejs submodules from script
           data = removeSubmodule(data, 'Nodejs');
-          // if state.modeCoverage flag is enabled, then instrument the script
+          // if state.modeCoverage is enabled, then instrument the script
           if (state.modeCoverage) {
             data = (new required.istanbul.Instrumenter())
               .instrumentSync(data, __dirname + '/' + file);
@@ -1713,7 +1741,9 @@ stateRestore = function (state2) {
               });
               // run each action in options.actionList
               options.actionList.forEach(function (action) {
-                (state.fileActionDict[action] || exports.nop)(options);
+                // validate action exists
+                exports.assert(state.fileActionDict[action], 'invalid file action ', action);
+                state.fileActionDict[action](options);
               });
               // create unique cache url for the file data
               cacheFile(options);
@@ -1792,7 +1822,8 @@ stateRestore = function (state2) {
         }, function (stat2, stat1) {
           if (stat2.mtime >= stat1.mtime) {
             // if modified, auto-jslint the file
-            if (required.jslint_lite) {
+            // bug - jslint-lite does not have jslintPrint method when requiring itself
+            if (required.jslint_lite && required.jslint_lite.jslintPrint) {
               required.jslint_lite.jslintPrint(
                 required.fs.readFileSync(file, 'utf8'),
                 file
@@ -1948,7 +1979,7 @@ stateRestore = function (state2) {
           // set timerTimeout
           timerTimeout = exports.onEventTimeout(
             onEventIo,
-            options.timerTimeout || state.timeoutDefault,
+            options.timeout || state.timeoutDefault,
             'ajax ' + options.url
           );
           // handle implicit localhost
@@ -2006,7 +2037,7 @@ stateRestore = function (state2) {
           onEventIo(null, responseText);
           break;
         default:
-          // ignore error / data if already finished
+          // if already finished, then ignore error / data
           if (finished) {
             return;
           }
@@ -2028,6 +2059,8 @@ stateRestore = function (state2) {
               JSON.stringify((responseText || '').slice(0, 256) + '...') + '\n' +
               // trim potentially very long html response
               error.message.slice(0, 4096);
+            // debug status code
+            error.statusCode = response && response.statusCode;
             onEventError(error, responseText);
             return;
           }
@@ -2035,6 +2068,20 @@ stateRestore = function (state2) {
         }
       };
       onEventIo();
+    },
+
+    _coverageSaveOnExit: function () {
+      /*
+        this function saves the current coverage on exit
+      */
+      // if process.env.MODE_TEST_REPORT_MERGE is enabled, then save the current coverage
+      // to ./build/test-report.json
+      if (process.env.MODE_TEST_REPORT_MERGE) {
+        required.fs.writeFileSync(
+          '.build/test-report.json',
+          JSON.stringify(state.testReport, null, 2)
+        );
+      }
     },
 
     fileActionDict_exportFile: function (options) {
@@ -2060,7 +2107,7 @@ stateRestore = function (state2) {
         this function installs the file
       */
       // run the following code only if this module is in the root directory
-      if (state.modeCli === 'npmInstall' && __dirname === process.cwd()) {
+      if (state.modeCli === 'npmPostinstall' && __dirname === process.cwd()) {
         required.fs.writeFileSync(options.file, options.data);
       }
     },
@@ -2072,6 +2119,7 @@ stateRestore = function (state2) {
       switch (required.path.extname(options.file)) {
       case '.js':
       case '.json':
+        // bug - jslint-lite does not have jslintPrint method when requiring itself
         if (required.jslint_lite && required.jslint_lite.jslintPrint) {
           required.jslint_lite.jslintPrint(options.data, options.file);
         }
@@ -2086,17 +2134,27 @@ stateRestore = function (state2) {
       options.data = options.data.trim();
     },
 
-    fileActionDict_updateExternal: function () {
+    fileActionDict_updateExternal: function (options) {
       /*
         this function updates external sources embedded in the data file
       */
-      // todo
-      return;
+      // do not update external resources unless specified in cli
+      if (state.modeCli !== 'updateExternal') {
+        return;
+      }
+      console.log('updateExternal - updating ' + options.externalUrl);
+      exports.ajax({ url: options.externalUrl }, function (error, data) {
+        // validate no error occurred
+        exports.assert(!error, error);
+        state.fileDict[options.fileParent].dataRaw =
+          state.fileDict[options.fileParent].dataRaw.replace(options.dataRaw, '\n' +
+            data.trim() + '\n');
+      });
     },
 
-    modeCliDict_githubContentsFilePush: function (argv, onEventError) {
+    modeCliDict_githubContentsFilePut: function (argv, onEventError) {
       /*
-        this function pushes the local file1 to the remote github file2
+        this function puts the local file1 to the remote github file2
       */
       var blob, file1, file2, modeIo, onEventIo, sha;
       modeIo = 0;
@@ -2106,7 +2164,7 @@ stateRestore = function (state2) {
         case 1:
           file1 = argv[3];
           file2 = file1.replace(argv[4], argv[5]);
-          console.log('pushing file https://' +
+          console.log('putting file https://' +
             process.env.GITHUB_REPO.replace('/', '.github.io/') + '/' + file2);
           exports.ajax({
             headers: {
@@ -2167,9 +2225,9 @@ stateRestore = function (state2) {
       onEventIo();
     },
 
-    _modeCliDict_githubContentsFilePush_default_test: function (onEventError) {
+    _modeCliDict_githubContentsFilePut_default_test: function (onEventError) {
       /*
-        this function tests modeCliDict_githubContentsFilePush's default handling behavior
+        this function tests modeCliDict_githubContentsFilePut's default handling behavior
       */
       var ajax1, mode;
       exports.testMock(onEventError, stateRestore, [
@@ -2200,7 +2258,7 @@ stateRestore = function (state2) {
           // test file create handling behavior
           onEventError(null, '{}');
         };
-        local.modeCliDict_githubContentsFilePush(process.argv, function (error) {
+        local.modeCliDict_githubContentsFilePut(process.argv, function (error) {
           exports.testTryCatch(function () {
             // validate no error occurred
             exports.assert(!error, error);
@@ -2219,7 +2277,7 @@ stateRestore = function (state2) {
             { path: 'bb/cc' }
           ]));
         };
-        local.modeCliDict_githubContentsFilePush(process.argv, function (error) {
+        local.modeCliDict_githubContentsFilePut(process.argv, function (error) {
           exports.testTryCatch(function () {
             // validate no error occurred
             exports.assert(!error, error);
@@ -2244,9 +2302,8 @@ stateRestore = function (state2) {
       var modeIo, onEventIo, options;
       modeIo = 0;
       onEventIo = function (error, data) {
-        if (error) {
-          throw error;
-        }
+        // validate no error occurred
+        exports.assert(!error, error);
         modeIo += 1;
         switch (modeIo) {
         case 1:
@@ -2254,14 +2311,16 @@ stateRestore = function (state2) {
             onEventIo,
             state.timeoutDefault,
             'saucelabsScreenshot ' + state.saucelabsScreenshotUrl
-          );
+          )
+            // unref timerTimout so process can exit normally
+            .unref();
           options = {
             // json-copy options
             data: JSON.stringify({
               // specify custom test framework in saucelabs
               framework: 'custom',
               // set max-duration timeout in seconds
-              'max-duration': 10,
+              'max-duration': 30,
               platforms: [["linux", "googlechrome", ""]],
               // disable video recording for faster performance
               'record-video': false,
@@ -2285,33 +2344,39 @@ stateRestore = function (state2) {
           onEventIo();
           break;
         case 3:
-          setTimeout(function () {
-            exports.ajax(options, onEventIo);
-          }, 4000);
+          // try to get job_id
+          exports.ajax(options, onEventIo);
           break;
         case 4:
-          // get job id
           data = JSON.parse(data)['js tests'][0].job_id;
-          // retry getting job id if not available
+          // if job_id is not available yet, then try getting it again
           if (data === 'job not ready') {
             modeIo -= 2;
-            onEventIo();
+            setTimeout(onEventIo, 4000);
             return;
           }
+          // create screenshot url
           options.method = 'GET';
           options.resultType = 'binary';
           options.url = 'https://saucelabs.com/jobs/' + data + '/0003screenshot.png';
           onEventIo();
           break;
         case 5:
+          // try to get screenshot
           setTimeout(function () {
             exports.ajax(options, function (error, data) {
+              // if screenshot is not available yet, then try getting it again
               if (error) {
                 modeIo -= 1;
                 onEventIo();
                 return;
               }
-              required.fs.writeFile(state.saucelabsScreenshotFile, data, process.exit);
+              // else save screenshot to file
+              required.fs.writeFile(
+                state.saucelabsScreenshotFile,
+                data,
+                exports.onEventErrorDefault
+              );
             });
           }, 4000);
           break;
@@ -2339,12 +2404,27 @@ stateRestore = function (state2) {
       exports.testRun();
     },
 
+    modeCliDict_updateExternal: function () {
+      /*
+        this function updates external resources in main.data and utility2.data
+      */
+      // the updating code is done elsewhere.
+      // all we have to do is to save the updated file data on exit
+      process.on('exit', function () {
+        ['main.data', 'utility2.data'].forEach(function (file) {
+          required.fs.writeFileSync(file, state.fileDict[file].dataRaw);
+        });
+        // coverage - save coverage on exit
+        local._coverageSaveOnExit();
+      });
+    },
+
     _phantomjsTest: function (file, onEventError) {
       /*
         this function spawns a phantomjs / slimerjs process from the given file
         to test a webpage
       */
-      var onEventError2, testCallbackId, timerTimeout;
+      var onEventError2, request, testCallbackId, timerTimeout;
       onEventError2 = function (error) {
         // cleanup timerTimeout
         clearTimeout(timerTimeout);
@@ -2365,12 +2445,43 @@ stateRestore = function (state2) {
       exports.shell({ argv: [
         file,
         '.install/phantomjs-test.js',
-        new Buffer(JSON.stringify({ argv0: required.path.basename(file), url: state.localhost +
-          '/?modeTest=1' +
-          '&modeTestReportUpload=1' +
-          '&testCallbackId=' + testCallbackId +
-          '&timeoutDefault=' + state.timeoutDefault })).toString('base64')
+        new Buffer(JSON.stringify({
+          argv0: required.path.basename(file),
+          modeTestFail: state.modeTestFail,
+          url: state.localhost +
+            '/?modeTest=1' +
+            '&modeTestReportUpload=1' +
+            '&testCallbackId=' + testCallbackId +
+            '&timeoutDefault=' + state.timeoutDefault
+        })).toString('base64')
       ] });
+      // coverage - if state.modeTestFail is enabled, then mock-upload failed test-report
+      if (state.modeTestFail) {
+        // mock request object
+        request = { on: function (evt, callback) {
+          switch (evt) {
+          case 'data':
+            // mock failed test-report
+            callback(JSON.stringify({
+              testCallbackId: testCallbackId,
+              testReport: { testsFailed: 1 }
+            }));
+            break;
+          case 'end':
+            callback();
+            break;
+          case 'error':
+            break;
+          }
+          return request;
+        } };
+        // mock upload
+        local['serverPathHandlerDict_/test/test-report-upload'](
+          request,
+          { end: exports.nop },
+          exports.nop
+        );
+      }
     },
 
     __phantomjsTest_default_test: function (onEventError) {
@@ -2445,7 +2556,7 @@ stateRestore = function (state2) {
               // bug - saucelabs only accepts integers for max-duration
               'max-duration': Math.ceil(Math.max(0.00075 * state.timeoutDefault, 60)),
               url: exports.textFormat(options.url, {
-                host: process.env.HEROKU_URL || state.localhost,
+                host: process.env.HEROKU_URL,
                 // reduce timeoutDefault to account for max-duration
                 timeoutDefault: 0.5 * state.timeoutDefault
               })
@@ -2637,7 +2748,7 @@ stateRestore = function (state2) {
           break;
         case 2:
           path = request.urlPathNormalized;
-          // security - if state.modeTest is falsey, then disallow /test/* path
+          // security - if state.modeTest is disabled, then disallow /test/* path
           if (path.indexOf('/test/') === 0 && !state.modeTest) {
             next();
             return;
@@ -2706,6 +2817,15 @@ stateRestore = function (state2) {
       exports.serverRespondData(request, response, 200, 'application/json', '"hello"');
     },
 
+    'serverPathHandlerDict_/test/timeout': function (request, response) {
+      /*
+        this function responds with a delayed timeout
+      */
+      setTimeout(function () {
+        exports.serverRespondDefault(request, response, 200);
+      }, 1000);
+    },
+
     'serverPathHandlerDict_/test/test-report-upload': function (request, response, next) {
       /*
         this function receives and parses uploaded test-reports
@@ -2716,11 +2836,6 @@ stateRestore = function (state2) {
         modeIo = error instanceof Error ? -1 : modeIo + 1;
         switch (modeIo) {
         case 1:
-          // security - if test-report upload mode is disabled, then goto next middleware
-          if (!state.modeTestReportUpload) {
-            next();
-            return;
-          }
           // stream test-report data into buffer
           exports.streamReadAll(
             request,
@@ -2739,11 +2854,13 @@ stateRestore = function (state2) {
           );
           // merge data.testReport into state.testReport
           exports.testReportCreate(state.testReport, data.testReport);
-          // call testCallbackId callback if it exists
+          // call testCallbackId callback
           state.testCallbackDict[data.testCallbackId](
-            data.testReport.testsFailed ? new Error('tests failed') : null
+            data.testReport.testsFailed ? new Error('browser tests failed') : null
           );
           response.end();
+          // coverage - cover serverRespondWriteHead's response.headersSent handling behavior
+          exports.serverRespondWriteHead(request, response, 500, {});
           break;
         default:
           next(error);
@@ -2794,10 +2911,9 @@ stateRestore = function (state2) {
         // set response.statusCode
         response.statusCode = statusCode || response.statusCode;
         Object.keys(headers).forEach(function (key) {
-          // set only truthy headers
-          if (headers[key]) {
-            response.setHeader(key, headers[key]);
-          }
+          // validate header is non-empty string
+          exports.assert(headers[key], 'invalid response header ' + key);
+          response.setHeader(key, headers[key]);
         });
       }
     },

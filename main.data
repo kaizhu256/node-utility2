@@ -15,14 +15,12 @@ body {
 } */
 <!DOCTYPE html>
 <html>
-
 <head>
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
 <link href="{{/public/cache/external/bootstrap.css}}" rel="stylesheet"/>
 <link href="{{/public/cache/utility2.css}}" rel="stylesheet"/>
 <link href="{{/public/cache/main.css}}" rel="stylesheet"/>
 </head>
-
 <body>
 <!-- main app div -->
 <div
@@ -31,11 +29,17 @@ body {
 >
 <h1>{{name}}</h1>
 <h3>{{description}}</h3>
-</div>
 <!-- enable ajax progress bar -->
 <div class="ajaxProgressDiv">
   <div class="ajaxProgressBarDiv ajaxProgressBarDivLoading">loading</div>
 </div>
+
+
+
+<!-- main app content -->
+
+
+
 <!-- load scripts -->
 <script src="{{/public/cache/utility2.data.js}}"></script>
 <script src="{{/public/cache/utility2.js}}"></script>
@@ -45,6 +49,6 @@ body {
 <script src="{{/public/cache/main.data.js}}"></script>
 <script src="{{/public/cache/main.js}}"></script>
 </body>
-
+</div>
 </html>
 /* FILE_END */

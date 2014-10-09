@@ -27,7 +27,7 @@ lightweight nodejs module for testing and covering browser-side code
 ```
 ## install utility2
 npm install utility2 && cd node_modules/utility2
-## run browser tests and create test and coverage reports on self
+## run server and browser tests, and create tests and coverages on self
 npm test
 ## start utility2 test server on port 8080 with test mode enabled
 npm start --mode-test=true --server-port=8080
@@ -76,14 +76,14 @@ npm start --mode-test=true --server-port=8080
 
 ## description of files
 - .build/
-  - auto-created directory where test and coverage reports are generated
+  - auto-created directory where tests and coverages are stored
 - .install/
-  - auto-created directory where npm postinstall files are generated
+  - auto-created directory where npm postinstall files are stored
 - .travis.yml
   - travis-ci config file
   - contains encrypted credentials used by travis-ci
 - README.md
-  - this readme file
+  - readme file
 - example.js
   - example nodejs script demonstrating how to use this app
 - main.data
@@ -114,6 +114,8 @@ npm start --mode-test=true --server-port=8080
 
 
 ## todo
+- add code-coverage test for _init
+- integrate codeship.io ci
 - optionally install main.data to improve cli startup (e.g. node-jslint-lite)
 - add csslint
 - add server stress test using phantomjs
@@ -123,10 +125,12 @@ npm start --mode-test=true --server-port=8080
 
 ## changelog
 #### 2014.9.22
+- significantly increase code coverage
+- add ajax timeout testing
 - auto-detect slimerjs testing
 - add url query-param feature modeErrorIgnore=1 to ignore test-simulated errors
 - move main.* and utility2.* assets to /public/cache path
-- fix code coverage for failed tests
+- fix code-coverage for failed tests
 - remove global dependencies in nodejs env
 - create ./build/test-report.xml for jenkins
 - merge phantomjs and slimerjs dependencies into headless-browser package
@@ -137,7 +141,7 @@ npm start --mode-test=true --server-port=8080
 - revamp ajax redirect in nodejs code
 - integrate browser tests into main page
 - add offline mode for shBuild
-- add dummy failed tests in npm test for code coverage
+- add dummy failed tests in npm test for code-coverage
 - add file update feature for data files
 - add test flag in heroku Procfile
 - add caching for scripts
@@ -152,7 +156,7 @@ npm start --mode-test=true --server-port=8080
 
 #### 2014.7.18
 - add description of files in README.md
-- add code coverage for saucelabs test routine
+- add code-coverage for saucelabs test routine
 - automatically capture browser screenshots via phantomjs / slimerjs / saucelabs
 - add basic auth for test-report upload
 - rename exports.initLocal to exports.initSubmodule
@@ -161,7 +165,7 @@ npm start --mode-test=true --server-port=8080
 - automate saucelabs testing in build
 
 #### 2014.7.11
-- add browser-side code coverage
+- add browser-side code-coverage
 - automate phantomjs and slimerjs headless browser testing
 - implement browser-side ajax
 - update browser test-report status every 1000 ms until finished
