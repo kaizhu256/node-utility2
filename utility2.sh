@@ -14,7 +14,7 @@ shAesDecrypt() {
 
 shAesDecryptTravis() {
   # this function decrypts $AES_ENCRYPTED_SH in .travis.yml to stdout
-  perl -ne "print \$2 if /(- AES_ENCRYPTED_SH: )(.*)( ## AES_ENCRYPTED_SH\$)/" .travis.yml |\
+  perl -ne "print \$2 if /(- AES_ENCRYPTED_SH: )(.*)( # AES_ENCRYPTED_SH\$)/" .travis.yml |\
     shAesDecrypt || return $?
 }
 
@@ -35,35 +35,35 @@ shAesEncryptTravis() {
   local FILE=$1/aes-decrypted.$(printf $GITHUB_REPO | perl -pe "s/\//./").sh || return $?
   if [ ! -f "$FILE" ]
   then
-    printf "## non-existent file $FILE\n" || return $?
+    printf "# non-existent file $FILE\n" || return $?
     return 1
   fi
-  printf "## sourcing file $FILE ...\n" || return $?
+  printf "# sourcing file $FILE ...\n" || return $?
   . $FILE || return $?
   if [ ! "$AES_256_KEY" ]
   then
-    printf "## no \$AES_256_KEY detected in env - creating new AES_256_KEY ...\n" || return $?
+    printf "# no \$AES_256_KEY detected in env - creating new AES_256_KEY ...\n" || return $?
     AES_256_KEY=$(openssl rand -hex 32) || return $?
-    printf "## a new \$AES_256_KEY for encrypting data has been created.\n" || return $?
-    printf "## you may want to copy the following to your .bashrc script\n" || return $?
-    printf "## so you can run builds locally:\n" || return $?
+    printf "# a new \$AES_256_KEY for encrypting data has been created.\n" || return $?
+    printf "# you may want to copy the following to your .bashrc script\n" || return $?
+    printf "# so you can run builds locally:\n" || return $?
     printf "export AES_256_KEY=$AES_256_KEY\n\n" || return $?
   fi
-  printf "## travis-encrypting \$AES_256_KEY for $GITHUB_REPO ...\n" || return $?
+  printf "# travis-encrypting \$AES_256_KEY for $GITHUB_REPO ...\n" || return $?
   AES_256_KEY_ENCRYPTED=$(shTravisEncrypt $GITHUB_REPO \$AES_256_KEY=$AES_256_KEY) || return $?
   # return non-zero exit code if $AES_256_KEY_ENCRYPTED is empty string
   if [ ! "$AES_256_KEY_ENCRYPTED" ]
   then
     return 1
   fi
-  printf "## updating .travis.yml with encrypted key ...\n" || return $?
+  printf "# updating .travis.yml with encrypted key ...\n" || return $?
   perl -i -pe\
-    "s%(- secure: )(.*)( ## AES_256_KEY$)%\$1$AES_256_KEY_ENCRYPTED\$3%"\
+    "s%(- secure: )(.*)( # AES_256_KEY$)%\$1$AES_256_KEY_ENCRYPTED\$3%"\
     .travis.yml || return $?
 
-  printf "## updating .travis.yml with encrypted script ...\n" || return $?
+  printf "# updating .travis.yml with encrypted script ...\n" || return $?
   perl -i -pe\
-    "s%(- AES_ENCRYPTED_SH: )(.*)( ## AES_ENCRYPTED_SH$)%\$1$(shAesEncrypt < $FILE)\$3%"\
+    "s%(- AES_ENCRYPTED_SH: )(.*)( # AES_ENCRYPTED_SH$)%\$1$(shAesEncrypt < $FILE)\$3%"\
     .travis.yml || return $?
 }
 
@@ -79,30 +79,49 @@ shBuild() {
       return 1
     fi
   fi
-  # merge successive test-reports
-  export MODE_TEST_REPORT_MERGE=1 || return $?
+  # cleanup old build
+  rm -fr .build || return $?
   # npm install
   npm install || return $?
-  # coverage - local npm postinstall
+  # coverage - init $NODE_BINARY
+  export NODE_BINARY=shIstanbulCover
+  # coverage - simulate loading app as npm package
+  shBuildPrint localNpmPackage "npm loading package $CWD ..." || return $?
+  $NODE_BINARY utility2.js --mode-npm-package || return $?
+  # merge successive test-reports
+  export MODE_TEST_REPORT_MERGE=1 || return $?
+  # coverage - run local npm postinstall
   shBuildPrint localNpmPostinstall "npm postinstalling $CWD ..." || return $?
-  shIstanbulCover utility2.js --mode-cli=npmPostinstall || return $?
-  # coverage - local npm test with dummy failed tests
+  $NODE_BINARY utility2.js --mode-cli=npmPostinstall || return $?
+  # coverage - run local npm test with dummy failed tests
   shBuildPrint localNpmTestFail "npm testing $CWD with dummy failed tests ..." || shBuildExit
   npm test --mode-test-fail --no-mode-foo 2>/dev/null && shBuildExit
-  # coverage - local npm test with fast mode
-  shBuildPrint localNpmTestFast "npm testing $CWD with fast test mode ..." || shBuildExit
-  # use shNpmTest to force coverage
-  shNpmTest --mode-test-fast || shBuildExit
-  # coverage - local npm test
+  # local npm test
   shBuildPrint localNpmTest "npm testing $CWD ..." || shBuildExit
   npm test || shBuildExit
-  # deploy the app to heroku
-  shBuildHerokuDeploy --mode-test || shBuildExit
-  # npm publish the app if its version is greater than the published version
-  shBuildNpmPublish || shBuildExit
-  # coverage - update external resource in main.data and utility2.data
-  shIstanbulCover utility2.js --mode-cli=updateExternal
-  # coverage - re-run npm test to build latest test-report
+  if [ ! "$MODE_OFFLINE" ]
+  then
+    # deploy the app to heroku
+    shBuildHerokuDeploy --mode-test || shBuildExit
+    # run saucelabs tests on heroku server
+    shBuildSaucelabsTest || shBuildExit
+    # npm publish the app if its version is greater than the published version
+    shBuildNpmPublish || shBuildExit
+    # coverage - update external resources in main.data and utility2.data
+    $NODE_BINARY utility2.js --mode-cli=updateExternal || shBuildExit
+    # coverage - push files to github
+    if [ "$GITHUB_TOKEN" ]
+    then
+      for FILE in coverage-report.badge.svg test-report.badge.svg test-report.badge.svg
+      do
+        $NODE_BINARY utility2.js --mode-cli=githubContentsFilePut .build/$FILE .build\
+          $CI_BUILD_DIR/$CI_BRANCH.$CI_BUILD_NUMBER.$CI_COMMIT_ID || shBuildExit
+        # throttle github file put
+        sleep 1 || shBuildExit
+      done
+    fi
+  fi
+  # re-run npm test to build latest test-report
   shBuildPrint localNpmTest "npm testing $CWD ..." || shBuildExit
   npm test || shBuildExit
   # gracefully exit build
@@ -125,12 +144,13 @@ shBuildExit() {
   cd $CWD || exit $?
   # cleanup $TMPFILE
   rm -f $TMPFILE || exit $?
-  # if ! $TRAVIS, then do not upload build artifacts to github
-  if [ ! "$TRAVIS" ] || [ ! "$GITHUB_TOKEN" ]
+  if [ "$MODE_OFFLINE" ] || [ ! "$GITHUB_TOKEN" ]
   then
     # exit with $EXIT_CODE
     exit $EXIT_CODE
   fi
+  # cleanup .build
+  rm -f .build/coverage-report.html/coverage* || exit $?
   # upload build badge
   node utility2.js --mode-cli=githubContentsFilePut .build/build.badge.svg .build\
     $CI_BUILD_DIR || exit $?
@@ -152,14 +172,10 @@ shBuildExit() {
 
 shBuildHerokuDeploy() {
   # this function deploys the app to heroku
-  # init $HEROKU_REPO
-  local HEROKU_REPO=$(shPackageJsonGetItem repoHeroku)-$CI_BRANCH || return $?
   if [ ! "$GIT_SSH_KEY" ] || [ ! "$HEROKU_REPO" ]
   then
     return
   fi
-  # init $HEROKU_URL
-  export HEROKU_URL=https://$HEROKU_REPO.herokuapp.com || return $?
   # this function deploys the app to heroku
   shBuildPrint herokuDeploy "deploying $HEROKU_URL ..." || return $?
   # export $GIT_SSH
@@ -190,20 +206,17 @@ shBuildHerokuDeploy() {
   sleep 10 || return $?
   # check deployed webpage on heroku
   shBuildPrint herokuDeploy "checking deployed webpage $HEROKU_URL ..." || return $?
-  curl -3fLs $HEROKU_URL > /dev/null
+  curl -fLSs $HEROKU_URL > /dev/null
   # save $EXIT_CODE
   EXIT_CODE=$? || return $?
   if [ "$EXIT_CODE" = 0 ]
   then
     shBuildPrint herokuDeploy "check passed" || return $?
-    export HEROKU_DEPLOYED=1 || return $?
   else
     shBuildPrint herokuDeploy "check failed" || return $?
   fi
   # restore $CWD
   cd $CWD || return $?
-  # run saucelabs browser tests on heroku server
-  shBuildSaucelabsTest $HEROKU_URL/?modeTest=1 || shBuildExit
   # return $EXIT_CODE
   return $EXIT_CODE
 }
@@ -216,11 +229,9 @@ shBuildNpmPublish() {
     return
   fi
   # init $NODEJS_PACKAGE_JSON_NAME
-  local NODEJS_PACKAGE_JSON_NAME=$(node -e\
-    "process.stdout.write(require('./package.json').name)") || return $?
+  local NODEJS_PACKAGE_JSON_NAME=$(shPackageJsonGetItem name) || return $?
   # init $NODEJS_PACKAGE_JSON_VERSION
-  local NODEJS_PACKAGE_JSON_VERSION=$(node -e\
-    "process.stdout.write(require('./package.json').version)") || return $?
+  local NODEJS_PACKAGE_JSON_VERSION=$(shPackageJsonGetItem version) || return $?
   # if this app version is greater than the published app, then npm publish this app
   if shSemverGreaterThan\
     "$NODEJS_PACKAGE_JSON_VERSION"\
@@ -272,25 +283,32 @@ shBuildSaucelabsTest() {
   then
     return
   fi
-  local URL=$1
-  # coverage - capture browser screenshots using saucelabs
-  shBuildPrint saucelabsScreenshot\
-    "using saucelabs to capture browser screenshots of heroku server and travis build ..." ||\
+  export SAUCE_TEST_HOST=$HEROKU_URL
+  export SAUCE_TEST_URL="$HEROKU_URL/?modeTest=1"
+  export CI_BUILD_NUMBER_SAUCELABS=$CI_BUILD_NUMBER.$CI_COMMIT_ID.$(openssl rand -hex 8) ||\
     return $?
-  istanbul cover utility2.js --dir=/tmp/coverage --\
-    --mode-cli=saucelabsScreenshot\
-    --saucelabs-screenshot-url="$1"\
-    --saucelabs-screenshot-file=.build/test-report.screenshot.heroku.png --timeoutDefault=60000\
+  # capture browser screenshots using saucelabs
+  shBuildPrint saucelabsScreenshot\
+    "capturing saucelabs screenshot of $SAUCE_TEST_URL ..." ||\
+    return $?
+  shSaucelabsScreenshot\
+    "$SAUCE_TEST_URL"\
+    .build/test-report.screenshot.heroku.png ||\
+    return $?
+  shBuildPrint saucelabsScreenshot\
+    "capturing saucelabs screenshot of https://travis-ci.org/$GITHUB_REPO ..."\
     || return $?
-  istanbul cover utility2.js --dir=/tmp/coverage --\
-    --mode-cli=saucelabsScreenshot\
-    --saucelabs-screenshot-url="https://travis-ci.org/$GITHUB_REPO"\
-    --saucelabs-screenshot-file=.build/test-report.screenshot.travis.png --timeoutDefault=60000\
-    || return $?
-  # coverage - run saucelabs browser tests
+  shSaucelabsScreenshot\
+    "https://travis-ci.org/$GITHUB_REPO"\
+    .build/test-report.screenshot.travis.png ||\
+    return $?
+  # coverage - run saucelabs tests with dummy failed tests
+  shBuildPrint saucelabsTest "running saucelabs tests with dummy failed tests ..." || return $?
+  $NODE_BINARY utility2.js --mode-cli=saucelabsTest --mode-test-fail\
+    2>/dev/null && return 1
+  # run saucelabs tests
   shBuildPrint saucelabsTest "running saucelabs tests ..." || return $?
-  export CI_BUILD_NUMBER_SAUCELABS=$CI_BUILD_NUMBER.$(openssl rand -hex 8) || return $?
-  shIstanbulCover utility2.js --mode-cli=saucelabsTest || return $?
+  $NODE_BINARY utility2.js --mode-cli=saucelabsTest || return $?
 }
 
 shGitSquash() {
@@ -314,7 +332,7 @@ shIstanbulCover() {
   local CMD=$1 || return $?
   shift || return $?
   istanbul cover $CMD --dir=.build/coverage-report.html --print=detail\
-    --report=html -- $@
+    --report=html --report=json -- $@
 }
 
 shNpmPostinstall() {
@@ -352,40 +370,42 @@ shNpmTest() {
     node example.js || return $?
   fi
   # init $ARGS
-  local ARGS="$@" || return $?
+  local ARGS="main.js $@" || return $?
   ARGS="$ARGS --mode-cli=npmTest" || return $?
-  # coverage - cover --foo bar -> state.foo = 'bar'
+  # coverage - parse process.argv - --foo bar -> state.foo = 'bar'
   ARGS="$ARGS --foo bar" || return $?
   ARGS="$ARGS --mode-repl" || return $?
   if [ ! "$npm_config_mode_test_fail" ]
   then
-    # enable --mode-test for the server
-    ARGS="$ARGS --mode-test" || return $?
-    # test if slimerjs is available
+    # coverage - auto-detect slimerjs
     if slimerjs .install/phantomjs-test.js > /dev/null 2>&1
     then
       ARGS="$ARGS --mode-slimerjs" || return $?
     fi
   fi
-  ARGS="$ARGS --server-port=random" || return $?
+  # use random server-port
+  ARGS="$ARGS --server-port=$(node -e 'console.log((Math.random() * 0x10000) | 0x8000)')" ||\
+    return $?
+  # enable --mode-test for the server
+  ARGS="$ARGS --mode-test" || return $?
   # disable coverage
   if [ "$npm_config_mode_test_fast" ] || [ "$npm_config_mode_no_coverage" ]
   then
-    node main.js $ARGS || return $?
+    node $ARGS || return $?
     return $?
   fi
   # remove old coverage report
   rm -fr .build/coverage-report.html || return $?
   # npm test with coverage
-  shIstanbulCover main.js "$ARGS --mode-coverage"
+  shIstanbulCover $ARGS --mode-coverage
   # save $EXIT_CODE
   EXIT_CODE=$? || return $?
   # re-run npm test without coverage if tests failed,
   # so we can debug line numbers in stack trace
-  if [ "$EXIT_CODE" != 0 ]
+  if [ "$EXIT_CODE" != 0 ] && [ ! "$npm_config_mode_test_fail" ]
   then
     # npm test without coverage
-    node main.js $ARGS || return $?
+    node $ARGS || return $?
   fi
   # return $EXIT_CODE
   return $EXIT_CODE
@@ -397,10 +417,9 @@ shPackageJsonGetItem() {
   printf $(node -e "process.stdout.write(String(require('./package.json').$KEY))") || return $?
 }
 
-shSandbox() {
-  # this function is for sandboxing
-  # decrypt and exec encrypted data
-  eval "$(shAesDecryptTravis)" || return $?
+shSaucelabsScreenshot() {
+  # this function uses saucelabs to capture a screenshot of url $1 and saves it to file $2
+  $NODE_BINARY utility2.js --mode-cli=saucelabsScreenshot $@ --timeoutDefault=60000 || return $?
 }
 
 shSemverGreaterThan() {
@@ -473,15 +492,8 @@ shTravisEncrypt() {
   # this function travis-encrypts github repo $1's secret $2
   local GITHUB_REPO=$1 || return $?
   local SECRET=$2 || return $?
-  if [ "$TRAVIS_CI_PRO_TOKEN" ]
-  then
-    # get private rsa key from https://api.travis-ci.com/repos/<owner>/<repo>/key
-    curl -3fLs https://api.travis-ci.com/repos/$GITHUB_REPO/key -H\
-      "Authorization: token $TRAVIS_CI_PRO_TOKEN" > $TMPFILE || return $?
-  else
-    # get public rsa key from https://api.travis-ci.org/repos/<owner>/<repo>/key
-    curl -3fLs https://api.travis-ci.org/repos/$GITHUB_REPO/key > $TMPFILE || return $?
-  fi
+  # get public rsa key from https://api.travis-ci.org/repos/<owner>/<repo>/key
+  curl -fLSs https://api.travis-ci.org/repos/$GITHUB_REPO/key > $TMPFILE || return $?
   perl -pi -e "s/[^-]+(.+-).+/\$1/; s/\\\\n/\n/g; s/ RSA / /g" $TMPFILE || return $?
   # rsa-encrypt $SECRET and print it
   printf "$SECRET" | openssl rsautl -encrypt -pubin -inkey $TMPFILE | base64 | tr -d "\n" ||\
@@ -529,6 +541,12 @@ shMain() {
   CWD=$(pwd) || return $?
   # init $GITHUB_REPO
   export GITHUB_REPO=$(shPackageJsonGetItem repoGithub) || return $?
+  # init $HEROKU_REPO
+  export HEROKU_REPO=$(shPackageJsonGetItem repoHeroku)-$CI_BRANCH || return $?
+  # init $HEROKU_URL
+  export HEROKU_URL=https://$HEROKU_REPO.herokuapp.com || return $?
+  # init $NODE_BINARY
+  export NODE_BINARY=node
   # init $PATH with $CWD/node_modules
   export PATH=$CWD/node_modules/headless-browser-lite:$CWD/node_modules/.bin:$PATH || return $?
   # init $TMPFILE

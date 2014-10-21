@@ -9,14 +9,7 @@
   todo: true
 */
 // declare module vars
-var exports, required, state, stateRestore;
-stateRestore = function (state2) {
-  /*
-    this function is used by testMock to restore the local state var
-  */
-  'use strict';
-  state = state2;
-};
+var mainApp, required, state, stateRestore;
 
 
 
@@ -30,20 +23,20 @@ stateRestore = function (state2) {
 
     _init: function () {
       /*
-        this function inits the submodule
+        this function inits this submodule
       */
       // init export object
-      exports = module.exports = require(__dirname + '/utility2.js');
+      mainApp = require(__dirname + '/utility2.js');
       // export __dirname
-      exports.__dirname = __dirname;
+      mainApp.__dirname = __dirname;
       // export __filename
-      exports.__filename = __filename;
+      mainApp.__filename = __filename;
       // init this submodule
-      exports.initSubmodule(local);
+      mainApp.initSubmodule(local);
       // init required object
-      required = exports.required;
+      required = mainApp.required;
       // init state object
-      state = exports.state;
+      state = mainApp.state;
     }
 
   };
@@ -62,13 +55,13 @@ stateRestore = function (state2) {
 
     _init: function () {
       /*
-        this function inits the submodule
+        this function inits this submodule
       */
       if (state.modeNodejs) {
         return;
       }
       // init this submodule
-      exports.initSubmodule(local);
+      mainApp.initSubmodule(local);
     },
 
     ngApp_main_controller_MainController: ['$scope', function ($scope) {
@@ -77,7 +70,7 @@ stateRestore = function (state2) {
       */
       // export $scope to local object for testing
       local._$scope = $scope;
-      exports.setDefault($scope, {
+      mainApp.setDefault($scope, {
         exampleModel: 'hello model',
         exampleMethod: function () {
           /*
@@ -96,7 +89,7 @@ stateRestore = function (state2) {
       $scope = state.scope = local._$scope;
       $scope.exampleMethod();
       // validate $scope.exampleModel
-      exports.assert($scope.exampleModel === 'bye model', $scope.exampleModel);
+      mainApp.assert($scope.exampleModel === 'bye model', $scope.exampleModel);
       onEventError();
     }
 

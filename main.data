@@ -22,6 +22,10 @@ body {
 <link href="{{/public/cache/main.css}}" rel="stylesheet"/>
 </head>
 <body>
+<!-- enable ajax progress bar -->
+<div class="ajaxProgressDiv">
+  <div class="ajaxProgressBarDiv ajaxProgressBarDivLoading">loading</div>
+</div>
 <!-- main app div -->
 <div
   data-ng-app="ngApp_main"
@@ -29,10 +33,6 @@ body {
 >
 <h1>{{name}}</h1>
 <h3>{{description}}</h3>
-<!-- enable ajax progress bar -->
-<div class="ajaxProgressDiv">
-  <div class="ajaxProgressBarDiv ajaxProgressBarDivLoading">loading</div>
-</div>
 
 
 
@@ -44,11 +44,11 @@ body {
 <script src="{{/public/cache/utility2.data.js}}"></script>
 <script src="{{/public/cache/utility2.js}}"></script>
 <!-- init state object -->
-<script>window.exports.setOverride(window.state, {{stateBrowserJson}});</script>
+<script>window.$$mainApp.setOverride(window.$$mainApp.state, {{stateBrowserJson}});</script>
 <!-- run main program -->
 <script src="{{/public/cache/main.data.js}}"></script>
 <script src="{{/public/cache/main.js}}"></script>
-</body>
 </div>
+</body>
 </html>
 /* FILE_END */

@@ -136,11 +136,9 @@ exec ssh -i $GIT_SSH_KEY_FILE -o CheckHostIP=no -o StrictHostKeychecking=no -- "
         console.error('\n\n\n\n' + msgStack.join('\n') + '\n');
       };
       // pipe page's console.log to stdout
-      if (!state.modeTestFail) {
-        page.onConsoleMessage = function () {
-          console.log.apply(console, arguments);
-        };
-      }
+      page.onConsoleMessage = function () {
+        console.log.apply(console, arguments);
+      };
       // open requested webpage
       page.open(state.url, function (status) {
         state.pageOpenStatus = status;
@@ -166,7 +164,7 @@ exec ssh -i $GIT_SSH_KEY_FILE -o CheckHostIP=no -o StrictHostKeychecking=no -- "
 
 /* FILE_BEGIN {
   "actionList": ["lint", "trim", "install"],
-  "file": ".install/saucelabs-config.json"
+  "file": ".install/saucelabs-options.json"
 } */
 {
   "platforms": [
@@ -23987,8 +23985,11 @@ td,
 th {
   padding: 0;
 }
+/*! Source: https://github.com/h5bp/html5-boilerplate/blob/master/src/css/main.css */
 @media print {
-  * {
+  *,
+  *:before,
+  *:after {
     color: #000 !important;
     text-shadow: none !important;
     background: transparent !important;
@@ -29302,7 +29303,7 @@ button.close {
   right: 0;
   bottom: 0;
   left: 0;
-  z-index: 1050;
+  z-index: 1040;
   display: none;
   overflow: hidden;
   -webkit-overflow-scrolling: touch;
@@ -29350,7 +29351,6 @@ button.close {
   right: 0;
   bottom: 0;
   left: 0;
-  z-index: 1040;
   background-color: #000;
 }
 .modal-backdrop.fade {

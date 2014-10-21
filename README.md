@@ -114,8 +114,6 @@ npm start --mode-test=true --server-port=8080
 
 
 ## todo
-- add code-coverage test for _init
-- integrate codeship.io ci
 - optionally install main.data to improve cli startup (e.g. node-jslint-lite)
 - add csslint
 - add server stress test using phantomjs
@@ -125,6 +123,13 @@ npm start --mode-test=true --server-port=8080
 
 ## changelog
 #### 2014.9.22
+- near 100% code-coverage during travis-ci build
+- integrate codeship.io ci
+- rename exports to mainApp
+- remove global, exports, required, state, stateRestore from browser window
+- add better error stack for browser ajax
+- integrate code-coverage for browser initializations into _init_browser_test
+- integrate code-coverage for nodejs initializations into _init_nodejs_test
 - significantly increase code coverage
 - add ajax timeout testing
 - auto-detect slimerjs testing
