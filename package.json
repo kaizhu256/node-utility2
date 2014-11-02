@@ -3,9 +3,9 @@
   "contributors": [{ "name": "kai zhu", "email": "kaizhu256@gmail.com" }],
   "description": "lightweight nodejs module for testing and covering browser-side code",
   "devDependencies": {
-    "headless-browser-lite": "2014.x.x",
-    "istanbul": "0.2.x",
-    "jslint-lite": "2014.x.x"
+    "headless-browser-lite": "2014.9.20-16",
+    "istanbul": "0.3.2",
+    "jslint-lite": "2014.7.29-21"
   },
   "engines": { "node": ">=0.10.x" },
   "license": "MIT",
@@ -23,5 +23,5 @@
     "start": "./utility2.sh shNpmStart",
     "test": "./utility2.sh shNpmTest"
   },
-  "version": "2014.9.22-14"
+  "version": "2014.9.22-17"
 }

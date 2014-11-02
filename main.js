@@ -9,7 +9,7 @@
   todo: true
 */
 // declare module vars
-var mainApp, required, state, stateRestore;
+var mainApp;
 
 
 
@@ -25,18 +25,14 @@ var mainApp, required, state, stateRestore;
       /*
         this function inits this submodule
       */
-      // init export object
-      mainApp = require(__dirname + '/utility2.js');
-      // export __dirname
-      mainApp.__dirname = __dirname;
-      // export __filename
-      mainApp.__filename = __filename;
+      // init main app
+      mainApp = module.exports = require(__dirname + '/utility2.js');
       // init this submodule
       mainApp.initSubmodule(local);
-      // init required object
-      required = mainApp.required;
-      // init state object
-      state = mainApp.state;
+      // run nodejs tests
+      if (mainApp.modeNpmTest) {
+        setTimeout(mainApp.testRun);
+      }
     }
 
   };
@@ -57,11 +53,15 @@ var mainApp, required, state, stateRestore;
       /*
         this function inits this submodule
       */
-      if (state.modeNodejs) {
+      if (mainApp.modeNodejs) {
         return;
       }
       // init this submodule
       mainApp.initSubmodule(local);
+      // run browser tests
+      if (mainApp.modeTest) {
+        window.addEventListener('load', mainApp.testRun);
+      }
     },
 
     ngApp_main_controller_MainController: ['$scope', function ($scope) {
@@ -86,7 +86,7 @@ var mainApp, required, state, stateRestore;
         this function tests ngApp_main_controller_MainController's default handling behavior
       */
       var $scope;
-      $scope = state.scope = local._$scope;
+      $scope = mainApp.scope = local._$scope;
       $scope.exampleMethod();
       // validate $scope.exampleModel
       mainApp.assert($scope.exampleModel === 'bye model', $scope.exampleModel);

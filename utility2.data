@@ -77,6 +77,28 @@ exec ssh -i $GIT_SSH_KEY_FILE -o CheckHostIP=no -o StrictHostKeychecking=no -- "
 
 
 /* FILE_BEGIN {
+  "actionList": [],
+  "file": ".install/aes-decrypted.example.sh"
+} */
+shMain() {
+  # openssl rand -hex 32
+  export AES_256_KEY=ffffffff
+  # https://github.com/settings/applications
+  export GITHUB_TOKEN=ffffffff
+  # ssh-keygen -C "git" -f $TMPFILE -N "" -t rsa && base64 < $TMPFILE | tr -d "\n"
+  export GIT_SSH_KEY=abcdefghijklmnopqrstuvwxyz==
+  # $HOME/.npmrc
+  export NPM_AUTH=abcdefghijklmnopqrstuvwxyz==
+  # https://saucelabs.com/account
+  export SAUCE_ACCESS_KEY=ffff
+  export SAUCE_USERNAME=johndoe
+}
+shMain
+/* FILE_END */
+
+
+
+/* FILE_BEGIN {
   "actionList": ["lint", "install"],
   "file": ".install/phantomjs-test.js"
 } */
@@ -176,9 +198,6 @@ exec ssh -i $GIT_SSH_KEY_FILE -o CheckHostIP=no -o StrictHostKeychecking=no -- "
     ["osx 10.9", "safari", "7"],
     ["windows 8.1", "iexplore", "11"]
   ],
-  "stateOverride": {
-    "timeoutDefault": 300000
-  },
   "url": "{{host}}/?modeTest=1&timeoutDefault={{timeoutDefault}}"
 }
 /* FILE_END */

@@ -8,17 +8,7 @@
   todo: true
 */
 // declare module vars
-var mainApp, required, state, stateRestore;
-
-
-
-stateRestore = function (state2) {
-  /*
-    this function is used by testMock to restore the local state var
-  */
-  'use strict';
-  state = state2;
-};
+var mainApp;
 
 
 
@@ -35,19 +25,17 @@ stateRestore = function (state2) {
         this function inits this submodule
       */
       var argv, tmp;
-      // init the main app
+      // init main app
       mainApp = mainApp || exports;
       // init _debug_print
       mainApp[['debug', 'Print'].join('')] = global[['debug', 'Print'].join('')] =
         local._debug_print;
-      // init state
-      state = mainApp.state = mainApp.state || {};
       // init mode indicating whether we are in either browser or nodejs environment
-      state.modeNodejs = global.process && process.versions && process.versions.node;
+      mainApp.modeNodejs = global.process && process.versions && process.versions.node;
       // init dict of argv key / value pairs
-      state.argvDict = state.argvDict || {};
+      mainApp.argvDict = mainApp.argvDict || {};
       // init argvDict in nodejs
-      if (state.modeNodejs) {
+      if (mainApp.modeNodejs) {
         // json-copy process.argv before modifying it
         argv = JSON.parse(JSON.stringify(process.argv));
         // append process.env.npm_config_mode_* to argv
@@ -57,15 +45,15 @@ stateRestore = function (state2) {
             argv.push('--' + tmp[1] + '=' + (process.env[key] || 'false'));
           }
         });
-        // parse argv and integrate it into the state.argvDict
+        // parse argv and integrate it into the mainApp.argvDict
         argv.forEach(function (arg, ii) {
           if (arg.indexOf('--') === 0) {
             arg = arg.split('=');
-            // parse --foo=1 -> state.foo = 1
+            // parse --foo=1 -> mainApp.foo = 1
             tmp = arg.length > 1 ? arg.slice(1).join('=')
-              // parse --foo bar -> state.foo = 'bar'
+              // parse --foo bar -> mainApp.foo = 'bar'
               : argv[ii + 1] && argv[ii + 1].indexOf('--') !== 0 ? argv[ii + 1]
-                // parse --foo -> state.foo = true
+                // parse --foo -> mainApp.foo = true
                 : true;
             // convert key to camel case
             arg = arg[0].slice(2).replace((/[\-_][a-z]/g), function (match) {
@@ -73,10 +61,10 @@ stateRestore = function (state2) {
             });
             // try to parse value as json object
             try {
-              state.argvDict[arg] = JSON.parse(tmp);
+              mainApp.argvDict[arg] = JSON.parse(tmp);
             // else keep value as-is
             } catch (errorCaught) {
-              state.argvDict[arg] = tmp;
+              mainApp.argvDict[arg] = tmp;
             }
           }
         });
@@ -90,16 +78,16 @@ stateRestore = function (state2) {
             local.nop(_);
             // try to parse value as json object
             try {
-              state.argvDict[key] = JSON.parse(value);
+              mainApp.argvDict[key] = JSON.parse(value);
             // else keep value as-is
             } catch (errorCaught) {
-              state.argvDict[key] = value;
+              mainApp.argvDict[key] = value;
             }
           }
         );
       }
-      // init state with default values
-      local.setDefault(state, {
+      // init mainApp with default values
+      local.setDefault(mainApp, {
         // init dict of argv key / value pairs
         argvDict: {},
         // init default error
@@ -117,10 +105,10 @@ stateRestore = function (state2) {
         // init dict of cli commands
         modeCliDict: {},
         // init dummy-test mode
-        modeTestDummy: state.argvDict.modeTestFail,
+        modeTestDummy: mainApp.argvDict.modeTestFail,
         // init fail-all-tests mode
-        modeTestFail: state.argvDict.modeTestFail,
-        // init state to export to browser
+        modeTestFail: mainApp.argvDict.modeTestFail,
+        // init browser state
         stateBrowser: { fileDict: {} },
         // init dict of server-side callbacks used to merge test-reports from browser tests
         testCallbackDict: {},
@@ -128,34 +116,34 @@ stateRestore = function (state2) {
         timeoutDefault: 30000
       });
       // init this app's test-platform object
-      state.testPlatform = {
-        modeTestDummy: state.modeTestDummy,
+      mainApp.testPlatform = {
+        modeTestDummy: mainApp.modeTestDummy,
         // init this test-platform's name
         // e.g. 'nodejs - darwin v0.10.32' or 'browser - Mozilla/5.0 ...'
-        name: state.modeNodejs ? 'nodejs - ' + process.platform + ' ' + process.version
+        name: mainApp.modeNodejs ? 'nodejs - ' + process.platform + ' ' + process.version
           : 'browser - ' + (navigator && navigator.userAgent),
         // list of test-cases and their test-results
         testCaseList: []
       };
-      // init the main test-report object,
+      // init main test-report object,
       // used to accumulate test-reports from this app and other test-platforms
-      state.testReport = {
+      mainApp.testReport = {
         // init global coverage object
         coverage: global.__coverage__,
         // init list of test-platforms
         // e.g. 'nodejs - darwin v0.10.32' or 'browser - Mozilla/5.0 ...'
-        testPlatformList: [state.testPlatform]
+        testPlatformList: [mainApp.testPlatform]
       };
       // init this submodule
       local.initSubmodule(local);
-      // validate state.timeoutDefault is a finite, positive-definite integer
-      tmp = state.timeoutDefault;
+      // validate mainApp.timeoutDefault is a finite, positive-definite integer
+      tmp = mainApp.timeoutDefault;
       mainApp.assert(
         (tmp | 0) === tmp && 0 < tmp && tmp < Infinity,
-        'invalid state.timeoutDefault ' + state.timeoutDefault
+        'invalid mainApp.timeoutDefault ' + mainApp.timeoutDefault
       );
       // flesh out test-report object
-      mainApp.testReportCreate(state.testReport, {});
+      mainApp.testReportCreate(mainApp.testReport, {});
     },
 
     initSubmodule: function (local) {
@@ -164,27 +152,27 @@ stateRestore = function (state2) {
       */
       Object.keys(local).forEach(function (key) {
         var match;
-        // add testCase to state.testReport
+        // add testCase to mainApp.testReport
         if (key.slice(-5) === '_test') {
-          state.testPlatform.testCaseList.push({
+          mainApp.testPlatform.testCaseList.push({
             callback: local[key],
             name: local._name + '.' + key
           });
           return;
         }
-        // set dict items to state object
+        // set dict items to mainApp object
         match = (/(.+Dict)_(.*)/).exec(key);
         if (match) {
-          state[match[1]] = state[match[1]] || {};
-          state[match[1]][match[2]] = local[key];
+          mainApp[match[1]] = mainApp[match[1]] || {};
+          mainApp[match[1]][match[2]] = local[key];
           return;
         }
         match = (/(^ngApp_\w+)_(\w+)_(\w+)$/).exec(key);
         if (match) {
           // init angularjs app
-          state[match[1]] = state[match[1]] || global.angular.module(match[1], []);
+          mainApp[match[1]] = mainApp[match[1]] || global.angular.module(match[1], []);
           // init angularjs app's sub-component
-          state[match[1]][match[2]](match[3], local[key]);
+          mainApp[match[1]][match[2]](match[3], local[key]);
           return;
         }
         // export items that don't start with an underscore _
@@ -213,7 +201,7 @@ stateRestore = function (state2) {
         // test data upload handling behavior
         data:
           // if nodejs, then test binary data upload
-          state.modeNodejs ? new Buffer('1')
+          mainApp.modeNodejs ? new Buffer('1')
             // else test text data upload
             : '1',
         headers: {
@@ -241,7 +229,7 @@ stateRestore = function (state2) {
         timeout: 1,
         url: '/test/timeout?modeErrorIgnore=1'
       }, {
-        // test not state.modeTest security handling behavior
+        // test not mainApp.modeTest security handling behavior
         url: '/test/no-mode-test?modeErrorIgnore=1'
       }, {
         // test unusually long url query-params security handling behavior
@@ -310,7 +298,7 @@ stateRestore = function (state2) {
       });
       // test assertion failed with error object
       mainApp.testTryCatch(function () {
-        mainApp.assert(false, state.errorDefault);
+        mainApp.assert(false, mainApp.errorDefault);
       }, function (error) {
         // validate error occurred
         mainApp.assert(error instanceof Error, error);
@@ -349,7 +337,7 @@ stateRestore = function (state2) {
       /*
         this function calls the onEventError callback in arg position 0 with an error object
       */
-      onEventError(state.errorDefault);
+      onEventError(mainApp.errorDefault);
     },
 
     callError1: function (_, onEventError) {
@@ -358,7 +346,7 @@ stateRestore = function (state2) {
       */
       // nop hack to pass jslint
       mainApp.nop(_);
-      onEventError(state.errorDefault);
+      onEventError(mainApp.errorDefault);
     },
 
     callError2: function (_, __, onEventError) {
@@ -367,7 +355,7 @@ stateRestore = function (state2) {
       */
       // nop hack to pass jslint
       mainApp.nop(_, __);
-      onEventError(state.errorDefault);
+      onEventError(mainApp.errorDefault);
     },
 
     _callX_default_test: function (onEventError) {
@@ -418,7 +406,7 @@ stateRestore = function (state2) {
         this function tests _debug_print's default handling behavior
       */
       var message;
-      mainApp.testMock(onEventError, stateRestore, [
+      mainApp.testMock(onEventError, [
         [console, { error: function (_) {
           message += (_ || '') + '\n';
         } }]
@@ -528,7 +516,7 @@ stateRestore = function (state2) {
         this function tests onEventErrorDefault's default handling behavior
       */
       var message;
-      mainApp.testMock(onEventError, stateRestore, [
+      mainApp.testMock(onEventError, [
         [console, {
           error: function (_) {
             message = _;
@@ -707,9 +695,9 @@ stateRestore = function (state2) {
       });
     },
 
-    testMock: function (onEventError, stateRestore, mockList, test) {
+    testMock: function (onEventError, mockList, test) {
       /*
-        this function mocks the state given in the mockList while running the test callback
+        this function mocks the mainApp given in the mockList while running the test callback
       */
       var onEventError2;
       // prepend mandatory mocks for async / unsafe functions
@@ -721,16 +709,14 @@ stateRestore = function (state2) {
         [global.process || {}, { exit: mainApp.nop }]
       ].concat(mockList);
       onEventError2 = function (error) {
-        // restore state
-        stateRestore(mainApp.state);
         mockList.reverse().forEach(function (mock) {
           mainApp.setOverride(mock[0], mock[2], null, 1);
         });
         onEventError(error);
       };
-      // run onEventError callback in mocked state in a try-catch block
+      // run onEventError callback in mocked mainApp in a try-catch block
       mainApp.testTryCatch(function () {
-        // mock state
+        // mock mainApp
         mockList.forEach(function (mock) {
           mock[2] = {};
           mainApp.setOverride(mock[0], mock[1], mock[2], 1);
@@ -784,7 +770,7 @@ stateRestore = function (state2) {
             typeof testPlatform.name === 'string',
             ii + ' invalid testPlatform.name ' + typeof testPlatform.name
           );
-          if (state.modeNodejs) {
+          if (mainApp.modeNodejs) {
             testPlatform.name = testPlatform.name.replace(
               (/^(browser|nodejs)/),
               process.env.MODE_CI_BUILD + ' - $1'
@@ -819,9 +805,9 @@ stateRestore = function (state2) {
 
       // merge testReport2.testPlatformList into testReport1.testPlatformList
       testReport2.testPlatformList.forEach(function (testPlatform2) {
-        // if testPlatform2 collides with existing state.testPlatform or is a dummy,
-        // then give precedence to existing state.testPlatform
-        if (testPlatform2.name === state.testPlatform.name || testPlatform2.modeTestDummy) {
+        // if testPlatform2 collides with existing mainApp.testPlatform or is a dummy,
+        // then give precedence to existing mainApp.testPlatform
+        if (testPlatform2.name === mainApp.testPlatform.name || testPlatform2.modeTestDummy) {
           return;
         }
         // if testPlatform2 collides with existing testPlatform1,
@@ -959,25 +945,25 @@ stateRestore = function (state2) {
       });
       // create html test-report
       testCaseNumber = 0;
-      if (!state.fileDict['/public/test-report.html.template']) {
+      if (!mainApp.fileDict['/public/test-report.html.template']) {
         return;
       }
       return mainApp.textFormat(
-        state.fileDict['/public/test-report.html.template'].data,
+        mainApp.fileDict['/public/test-report.html.template'].data,
         mainApp.setOverride(testReport, {
           CI_BUILD_NUMBER: env.CI_BUILD_NUMBER,
           // security - sanitize '<' in text
           CI_COMMIT_INFO: String(env.CI_COMMIT_INFO).replace((/</g), '&lt;'),
-          name: state.name,
+          name: mainApp.name,
           // map testPlatformList
           testPlatformList: testReport.testPlatformList.map(function (testPlatform, ii) {
             errorMessageList = [];
-            testPlatform.screenshotImg = testPlatform.screenshotImg || (state.modeNodejs && (
+            testPlatform.screenshotImg = testPlatform.screenshotImg || (mainApp.modeNodejs && (
               (/PhantomJS/).test(testPlatform.name) ?
                   'test-report.screenshot.phantomjs.png'
                 : (/SlimerJS/).test(testPlatform.name) ?
                     'test-report.screenshot.slimerjs.png'
-                  : required.fs.existsSync('.build/test-report.screenshot.travis.png') ?
+                  : mainApp.fs.existsSync('.build/test-report.screenshot.travis.png') ?
                       'test-report.screenshot.travis.png'
                     : ''
             ));
@@ -1033,11 +1019,11 @@ stateRestore = function (state2) {
         this function runs the tests
       */
       var coveragePercent, remaining, testPlatform, testReport, testReportHtml;
-      testReport = state.testReport;
+      testReport = mainApp.testReport;
       // start testReport timer
       testReport.timeElapsed = Date.now();
       // init testPlatform
-      testPlatform = state.testPlatform;
+      testPlatform = mainApp.testPlatform;
       // start testPlatform timer
       testPlatform.timeElapsed = Date.now();
       remaining = testPlatform.testCaseList.length;
@@ -1079,15 +1065,15 @@ stateRestore = function (state2) {
                 ('  ' + testPlatform.testsPassed).slice(-3) + ' passed';
             }).join('\n') + '\n');
             // nodejs code
-            if (state.modeNodejs) {
+            if (mainApp.modeNodejs) {
               // create html test-report
               console.log('\ncreating test-report file://' + process.cwd() +
                 '/.build/test-report.html');
-              required.fs.writeFileSync('.build/test-report.html', testReportHtml);
+              mainApp.fs.writeFileSync('.build/test-report.html', testReportHtml);
               // create build badge
-              required.fs.writeFileSync(
+              mainApp.fs.writeFileSync(
                 '.build/build.badge.svg',
-                state.fileDict['.build/build.badge.svg'].data
+                mainApp.fileDict['.build/build.badge.svg'].data
                   // edit branch name
                   .replace(
                     (/0000 00 00 00 00 00/g),
@@ -1102,9 +1088,9 @@ stateRestore = function (state2) {
                   )
               );
               // create test-report badge
-              required.fs.writeFileSync(
+              mainApp.fs.writeFileSync(
                 '.build/test-report.badge.svg',
-                state.fileDict['.build/test-report.badge.svg'].data
+                mainApp.fileDict['.build/test-report.badge.svg'].data
                   // edit number of tests failed
                   .replace((/999/g), testReport.testsFailed)
                   // edit badge color
@@ -1112,11 +1098,11 @@ stateRestore = function (state2) {
               );
               // non-zero exit if tests failed
               setTimeout(function () {
-                // finalize state.testReport
+                // finalize mainApp.testReport
                 mainApp.testReportCreate(testReport, {});
                 process.exit(testReport.testsFailed);
               }, 1000);
-              if (state.modeCoverage && !state.modeTestDummy) {
+              if (mainApp.modeCoverage && !mainApp.modeTestDummy) {
                 // create html coverage-report
                 console.log('creating coverage-report file://' + process.cwd() +
                   '/.build/coverage-report.html/index.html');
@@ -1130,9 +1116,9 @@ stateRestore = function (state2) {
                   coveragePercent[1] += Object.keys(statementDict).length;
                 });
                 coveragePercent = 100 * coveragePercent[0] / coveragePercent[1];
-                required.fs.writeFileSync(
+                mainApp.fs.writeFileSync(
                   '.build/coverage-report.badge.svg',
-                  state.fileDict['.build/coverage-report.badge.svg']
+                  mainApp.fileDict['.build/coverage-report.badge.svg']
                     .data
                     // edit coverage badge percent
                     .replace((/100.0/g), coveragePercent.toFixed(1))
@@ -1150,10 +1136,10 @@ stateRestore = function (state2) {
             } else {
               // notify saucelabs of test results
               global.global_test_results = {
-                testReport: state.testReport,
-                testCallbackId: state.testCallbackId,
+                testReport: mainApp.testReport,
+                testCallbackId: mainApp.testCallbackId,
                 // extra stuff to keep saucelabs happy - https://saucelabs.com/docs/rest#jsunit
-                failed: state.testReport.testsFailed
+                failed: mainApp.testReport.testsFailed
               };
               // upload brower test-report back to server
               mainApp.testReportUpload();
@@ -1165,14 +1151,14 @@ stateRestore = function (state2) {
           // start testCase timer
           testCase.timeElapsed = Date.now();
           testCase.callback(onEventError);
-          // coverage - if state.modeTestFail,
+          // coverage - if mainApp.modeTestFail,
           // then throw a dummy error to cover error handling behavior
-          mainApp.errorThrow(state.modeTestFail &&
+          mainApp.errorThrow(mainApp.modeTestFail &&
               testCase.name !== 'utility2.submoduleUtility2Nodejs._phantomjsTest_default_test'
               &&
               testCase.name !== 'utility2.submoduleUtility2Nodejs.__saucelabsTest_default_test'
               &&
-              state.errorDefault);
+              mainApp.errorDefault);
         } catch (errorCaught) {
           onEventError(errorCaught);
         }
@@ -1313,11 +1299,11 @@ stateRestore = function (state2) {
       /*
         this function inits this submodule
       */
-      if (state.modeNodejs) {
+      if (mainApp.modeNodejs) {
         return;
       }
-      // override state with state.argvDict
-      mainApp.setOverride(state, state.argvDict);
+      // override mainApp with mainApp.argvDict
+      mainApp.setOverride(mainApp, mainApp.argvDict);
       // init this submodule
       mainApp.initSubmodule(local);
       // init ajax
@@ -1330,9 +1316,9 @@ stateRestore = function (state2) {
       /*
         this function tests _init's browser handling behavior
       */
-      mainApp.testMock(onEventError, stateRestore, [
+      mainApp.testMock(onEventError, [
+        [mainApp, { modeTest: null, modeTestReportUpload: null }]
       ], function (onEventError) {
-        state = {};
         // test _initTest's nop handling behavior
         local._initTest();
         // test testReportUpload's nop handling behavior
@@ -1346,8 +1332,8 @@ stateRestore = function (state2) {
         this function inits the ajax api
       */
       var tmp;
-      // coverage - if state.modeTestDummy, then cover no-ajaxProgress handling behavior
-      if (state.modeTestDummy) {
+      // coverage - if mainApp.modeTestDummy, then cover no-ajaxProgress handling behavior
+      if (mainApp.modeTestDummy) {
         tmp = document.getElementsByClassName('ajaxProgressDiv')[0];
         tmp.parentNode.removeChild(tmp);
       }
@@ -1367,23 +1353,21 @@ stateRestore = function (state2) {
       */
       var timerInterval;
       // if modeTest is diabled, then do not run tests
-      if (!state.modeTest) {
+      if (!mainApp.modeTest) {
         return;
       }
       // run test after all external resources have been loaded
       window.addEventListener('load', function () {
         // init testReportDiv element
-        state.testReportDiv = document.createElement('div');
-        document.body.appendChild(state.testReportDiv);
-        // run tests
-        mainApp.testRun();
+        mainApp.testReportDiv = document.createElement('div');
+        document.body.appendChild(mainApp.testReportDiv);
         // create initial blank test page
-        state.testReportDiv.innerHTML = mainApp.testReportCreate(state.testReport, {});
+        mainApp.testReportDiv.innerHTML = mainApp.testReportCreate(mainApp.testReport, {});
         // update test-report status every 1000 ms until finished
         timerInterval = setInterval(function () {
-          // update state.testReportDiv in browser
-          state.testReportDiv.innerHTML = mainApp.testReportCreate(state.testReport, {});
-          if (state.testReport.testsPending === 0) {
+          // update mainApp.testReportDiv in browser
+          mainApp.testReportDiv.innerHTML = mainApp.testReportCreate(mainApp.testReport, {});
+          if (mainApp.testReport.testsPending === 0) {
             // cleanup timerInterval
             clearInterval(timerInterval);
           }
@@ -1454,7 +1438,7 @@ stateRestore = function (state2) {
       // init xhr
       xhr = new XMLHttpRequest();
       // debug xhr
-      state.debugXhr = xhr;
+      mainApp.debugXhr = xhr;
       // init event handling
       xhr.addEventListener('abort', onEventEvent);
       xhr.addEventListener('error', onEventEvent);
@@ -1466,7 +1450,7 @@ stateRestore = function (state2) {
       timerTimeout = mainApp.onEventTimeout(function (errorTimeout) {
         error = errorTimeout;
         onEventEvent({ type: 'abort' });
-      }, options.timeout || state.timeoutDefault, 'ajax');
+      }, options.timeout || mainApp.timeoutDefault, 'ajax');
       // if ajaxProgressBar is hidden, then display it
       if (local._ajaxProgressList.length === 0) {
         local._ajaxProgressDiv.style.display = 'block';
@@ -1540,8 +1524,8 @@ stateRestore = function (state2) {
       /*
         this function uploads the brower test-report back to server
       */
-      // if !state.modeTestReportUpload, then do not upload browser test-report
-      if (!state.modeTestReportUpload) {
+      // if !mainApp.modeTestReportUpload, then do not upload browser test-report
+      if (!mainApp.modeTestReportUpload) {
         return;
       }
       setTimeout(function () {
@@ -1574,8 +1558,6 @@ stateRestore = function (state2) {
       */
       // init this submodule
       mainApp.initSubmodule(local);
-      // init required object
-      required = mainApp.required = mainApp.required || {};
       // require builtin modules
       [
         'child_process', 'crypto',
@@ -1586,7 +1568,7 @@ stateRestore = function (state2) {
         'url', 'util',
         'vm'
       ].forEach(function (module) {
-        required[module] = required[module] || require(module);
+        mainApp[module] = mainApp[module] || require(module);
       });
       // require external modules
       [
@@ -1594,18 +1576,18 @@ stateRestore = function (state2) {
         'jslint-lite'
       ].forEach(function (module) {
         try {
-          required[module.replace((/-/g), '_')] = require(module);
+          mainApp[module.replace((/-/g), '_')] = require(module);
         } catch (ignore) {
         }
       });
       // bug - jslint-lite does not have jslintPrint method when requiring itself
-      mainApp.setDefault(required, { jslint_lite: { jslintPrint: mainApp.nop } });
-      // override state with package.json object
-      mainApp.setOverride(state, require(__dirname + '/package.json'));
+      mainApp.setDefault(mainApp, { jslint_lite: { jslintPrint: mainApp.nop } });
+      // override mainApp with package.json object
+      mainApp.setOverride(mainApp, require(__dirname + '/package.json'));
       // init and watch package files
       local._initFile();
       // if this module is not in the root directory, then do not run this module as an app
-      if (__dirname !== process.cwd() || state.argvDict.modeNpmPackage) {
+      if (__dirname !== process.cwd() || mainApp.argvDict.modeNpmPackage) {
         return;
       }
       // init cli
@@ -1615,7 +1597,7 @@ stateRestore = function (state2) {
       // re-init and re-watch package files
       local._initFile();
       // init repl
-      local._initRepl();
+      mainApp.initRepl({ mainApp: mainApp });
       // init server
       local._initServer();
     },
@@ -1634,18 +1616,18 @@ stateRestore = function (state2) {
       };
       remaining = 5;
       // test _initCli's default handling behavior
-      mainApp.testMock(onEventRemaining, stateRestore, [
+      mainApp.testMock(onEventRemaining, [
         [process, { on: mainApp.callArg1 }],
-        [required, { fs: { writeFileSync: mainApp.nop } }]
+        [mainApp, { fs: { writeFileSync: mainApp.nop } }]
       ], function (onEventError) {
         // test update external resources hnadling behavior
-        state.modeCliDict.updateExternal();
+        mainApp.modeCliDict.updateExternal();
         onEventError();
       });
       // test _initCoverage's nop handling behavior
-      mainApp.testMock(onEventRemaining, stateRestore, [
+      mainApp.testMock(onEventRemaining, [
         [process, { on: mainApp.nop }],
-        [required, { fs: { existsSync: mainApp.nop } }]
+        [mainApp, { fs: { existsSync: mainApp.nop } }]
       ], function (onEventError) {
         // test no process.env.MODE_TEST_REPORT_MERGE handling behavior
         local._initCoverage({ process: { env: {} } });
@@ -1660,14 +1642,14 @@ stateRestore = function (state2) {
         // test auto-init handling behavior
         'main.data'
       ].forEach(function (file) {
-        required.fs.stat(file, function (error, stat) {
+        mainApp.fs.stat(file, function (error, stat) {
           // test default watchFile handling behavior
           remaining += 1;
-          required.fs.utimes(file, stat.atime, new Date(), onEventRemaining);
+          mainApp.fs.utimes(file, stat.atime, new Date(), onEventRemaining);
           // test nop watchFile handling behavior
           remaining += 1;
           setTimeout(function () {
-            required.fs.utimes(file, stat.atime, stat.mtime, onEventRemaining);
+            mainApp.fs.utimes(file, stat.atime, stat.mtime, onEventRemaining);
           // coverage - use 1500 ms to cover setInterval watchFile in nodejs
           }, 1500);
           onEventRemaining(error);
@@ -1687,7 +1669,7 @@ stateRestore = function (state2) {
         mainApp.testTryCatch(function () {
           // validate error occurred
           // bug - use util.isError to validate error when using eval
-          mainApp.assert(required.util.isError(error), error);
+          mainApp.assert(mainApp.util.isError(error), error);
           onEventRemaining();
         }, onEventRemaining);
       });
@@ -1698,11 +1680,11 @@ stateRestore = function (state2) {
         this function inits the cli
       */
       var tmp;
-      // override state with state.argvDict
-      mainApp.setOverride(state, state.argvDict);
+      // override mainApp with mainApp.argvDict
+      mainApp.setOverride(mainApp, mainApp.argvDict);
       // init cli after all modules have been synchronously loaded
       setTimeout(function () {
-        tmp = state.modeCliDict[state.modeCli];
+        tmp = mainApp.modeCliDict[mainApp.modeCli];
         if (tmp) {
           tmp();
         }
@@ -1716,32 +1698,32 @@ stateRestore = function (state2) {
       var tmp;
       // merge old coverage and test-report
       if (global.process.env.MODE_TEST_REPORT_MERGE) {
-        // if a previous test-report exists, then merge it into state.testReport
-        if (required.fs.existsSync('.build/test-report.json')) {
-          mainApp.testReportCreate(state.testReport, require('./.build/test-report.json'));
-        // if a previous coverage exists, then merge it into state.testReport
-        } else if (required.fs.existsSync('.build/coverage-report.html/coverage.json')) {
-          mainApp.testReportCreate(state.testReport, {
+        // if a previous test-report exists, then merge it into mainApp.testReport
+        if (mainApp.fs.existsSync('.build/test-report.json')) {
+          mainApp.testReportCreate(mainApp.testReport, require('./.build/test-report.json'));
+        // if a previous coverage exists, then merge it into mainApp.testReport
+        } else if (mainApp.fs.existsSync('.build/coverage-report.html/coverage.json')) {
+          mainApp.testReportCreate(mainApp.testReport, {
             coverage: require('./.build/coverage-report.html/coverage.json')
           });
         }
         // coverage - save coverages and tests on exit
         process.on('exit', function () {
-          // save state.testReport to ./build/test-report.json
-          required.fs.writeFileSync(
+          // save mainApp.testReport to ./build/test-report.json
+          mainApp.fs.writeFileSync(
             '.build/test-report.json',
-            JSON.stringify(state.testReport)
+            JSON.stringify(mainApp.testReport)
           );
         });
       }
       // init testReport.coverage object
       Object.keys(global).forEach(function (key) {
         if (key.indexOf('$$cov_') === 0) {
-          tmp = state.testReport.coverage;
-          // reference state.testReport.coverage to global coverage object
-          state.testReport.coverage = global[key];
+          tmp = mainApp.testReport.coverage;
+          // reference mainApp.testReport.coverage to global coverage object
+          mainApp.testReport.coverage = global[key];
           // merge old coverage object to the global coverage object
-          mainApp.testReportCreate(state.testReport, { coverage: tmp });
+          mainApp.testReportCreate(mainApp.testReport, { coverage: tmp });
         }
       });
     },
@@ -1749,7 +1731,7 @@ stateRestore = function (state2) {
     _initFile: function () {
       /*
         this function inits and watches package files.
-        it parses the file data, and saves it to state.fileDict
+        it parses the file data, and saves it to mainApp.fileDict
       */
       var cacheFile, parseFile, removeSubmodule;
       cacheFile = function (options) {
@@ -1770,27 +1752,27 @@ stateRestore = function (state2) {
           file += '.js';
         }
         // create unique cache url for the file data using its sha256 hash
-        fileCache = state[file] = state[file] || file + '.' +
-          required.crypto.createHash('sha256').update(options.data).digest('hex') +
-          required.path.extname(file);
-        state.fileDict[fileCache] = options;
+        fileCache = mainApp[file] = mainApp[file] || file + '.' +
+          mainApp.crypto.createHash('sha256').update(options.data).digest('hex') +
+          mainApp.path.extname(file);
+        mainApp.fileDict[fileCache] = options;
       };
       parseFile = function (file) {
         /*
-          this function parses the file data and saves it to state.fileDict
+          this function parses the file data and saves it to mainApp.fileDict
         */
         var data;
-        // init state.fileDict[file]
-        state.fileDict[file] = {
-          dataRaw: required.fs.readFileSync(__dirname + '/' + file, 'utf8'),
+        // init mainApp.fileDict[file]
+        mainApp.fileDict[file] = {
+          dataRaw: mainApp.fs.readFileSync(__dirname + '/' + file, 'utf8'),
           file: file
         };
-        data = state.fileDict[file].dataRaw
+        data = mainApp.fileDict[file].dataRaw
           // comment out shebang
           .replace((/^#!/), '//#!');
         switch (file) {
         case 'example.js':
-          state.stateBrowser.fileDict[file] = { data: data, file: file };
+          mainApp.stateBrowser.fileDict[file] = { data: data, file: file };
           break;
         case 'main.js':
         case 'utility2.js':
@@ -1805,8 +1787,8 @@ stateRestore = function (state2) {
               // nop hack to pass jslint
               mainApp.nop(_);
               options = JSON.parse(options);
-              // save options to state.fileDict
-              state.fileDict[options.file] = mainApp.setOverride(options, {
+              // save options to mainApp.fileDict
+              mainApp.fileDict[options.file] = mainApp.setOverride(options, {
                 // preserve lineno
                 data: data.slice(0, ii).replace((/.*/g), '') + data2,
                 dataRaw: data2,
@@ -1815,8 +1797,8 @@ stateRestore = function (state2) {
               // run each action in options.actionList
               options.actionList.forEach(function (action) {
                 // validate action exists
-                mainApp.assert(state.fileActionDict[action], 'invalid file action ', action);
-                state.fileActionDict[action](options);
+                mainApp.assert(mainApp.fileActionDict[action], 'invalid file action ', action);
+                mainApp.fileActionDict[action](options);
               });
               // create unique cache url for the file data
               cacheFile(options);
@@ -1833,7 +1815,7 @@ stateRestore = function (state2) {
           }).replace('}());\n\n\n\n', '').replace((/.*$/), '').trimRight();
           // eval embedded nodejs script in data file
           // remove browser submodules from script
-          required.vm.runInNewContext(removeSubmodule(data, 'Browser', file), {
+          mainApp.vm.runInNewContext(removeSubmodule(data, 'Browser', file), {
             console: console,
             $$mainApp: mainApp
           }, file);
@@ -1841,12 +1823,12 @@ stateRestore = function (state2) {
           data = removeSubmodule(data, 'Nodejs', file);
           break;
         }
-        // save file data to state.fileDict
-        state.fileDict[file].data = data.trimRight();
+        // save file data to mainApp.fileDict
+        mainApp.fileDict[file].data = data.trimRight();
         // create unique cache url for the file data
-        cacheFile(state.fileDict[file]);
-        // update state.stateBrowserJson
-        state.stateBrowserJson = JSON.stringify(state.stateBrowser);
+        cacheFile(mainApp.fileDict[file]);
+        // update mainApp.stateBrowserJson
+        mainApp.stateBrowserJson = JSON.stringify(mainApp.stateBrowser);
       };
       removeSubmodule = function (script, mode, file) {
         /*
@@ -1862,9 +1844,9 @@ stateRestore = function (state2) {
         switch (file) {
         case 'main.js':
         case 'utility2.js':
-          // if state.modeCoverage, then instrument the script
-          if (state.modeCoverage) {
-            script = new required.istanbul.Instrumenter()
+          // if mainApp.modeCoverage, then instrument the script
+          if (mainApp.modeCoverage) {
+            script = new mainApp.istanbul.Instrumenter()
               .instrumentSync(script, __dirname + '/' + file);
           }
           break;
@@ -1874,8 +1856,6 @@ stateRestore = function (state2) {
           script = '(function () {' +
             'var global = window;' +
             'var mainApp = global.$$mainApp = global.$$mainApp || {};' +
-            'var required = mainApp.required = mainApp.required || {};' +
-            'var state = mainApp.state = mainApp.state || {};' +
             script +
             '}());';
           break;
@@ -1885,53 +1865,53 @@ stateRestore = function (state2) {
       // init data files
       ['utility2.data', 'main.data'].forEach(parseFile);
       // if this module is not in the root directory, then do not run the following code
-      if (__dirname !== process.cwd() || state.argvDict.modeNpmPackage) {
+      if (__dirname !== process.cwd() || mainApp.argvDict.modeNpmPackage) {
         return;
       }
       // watch and auto-init data files
       ['main.data', 'utility2.data'].forEach(function (file) {
         // cleanup any existing watchers on the file
-        required.fs.unwatchFile(file);
+        mainApp.fs.unwatchFile(file);
         // watch the file using 1000 ms polling
-        required.fs.watchFile(file, {
+        mainApp.fs.watchFile(file, {
           interval: 1000,
           persistent: false
         }, function (stat2, stat1) {
           if (stat2.mtime >= stat1.mtime) {
-            // save file data to state.fileDict
+            // save file data to mainApp.fileDict
             parseFile(file);
           }
         });
       });
       // watch and auto-jslint js files
       ['example.js', 'main.js', 'package.json', 'utility2.js'].forEach(function (file) {
-        // save file data to state.fileDict
+        // save file data to mainApp.fileDict
         parseFile(file);
         // cleanup any existing watchers on the file
-        required.fs.unwatchFile(file);
+        mainApp.fs.unwatchFile(file);
         // watch the file using 1000 ms polling
-        required.fs.watchFile(file, {
+        mainApp.fs.watchFile(file, {
           interval: 1000,
           persistent: false
         }, function (stat2, stat1) {
           if (stat2.mtime >= stat1.mtime) {
             // if modified, auto-jslint the file
-            required.jslint_lite.jslintPrint(
-              required.fs.readFileSync(file, 'utf8'),
+            mainApp.jslint_lite.jslintPrint(
+              mainApp.fs.readFileSync(file, 'utf8'),
               file
             );
-            // if modified, re-save file data to state.fileDict
+            // if modified, re-save file data to mainApp.fileDict
             parseFile(file);
           }
         });
       });
     },
 
-    _initRepl: function () {
+    initRepl: function (global) {
       /*
         this function inits the repl debugger
       */
-      if (!state.modeRepl) {
+      if (!mainApp.modeRepl) {
         return;
       }
       // save repl context
@@ -1939,12 +1919,10 @@ stateRestore = function (state2) {
         // start repl
         .start({ eval: local._initReplEval })
         .context;
-      // export mainApp object
-      local._initReplContext.mainApp = mainApp;
-      // export required object
-      local._initReplContext.required = required;
-      // export state object
-      local._initReplContext.state = state;
+      // export global object
+      Object.keys(global).forEach(function (key) {
+        local._initReplContext[key] = global[key];
+      });
     },
 
     _initReplEval: function (script, __, file, onEventError) {
@@ -1956,10 +1934,10 @@ stateRestore = function (state2) {
         // nop hack to pass jslint
         mainApp.nop(__);
         match = (/^\(([^ ]+)(.*)\n\)/).exec(script);
-        if (match && state.replParseDict[match[1]]) {
-          script = state.replParseDict[match[1]](match[2]);
+        if (match && mainApp.replParseDict[match[1]]) {
+          script = mainApp.replParseDict[match[1]](match[2]);
         }
-        onEventError(null, required.vm.runInNewContext(script, local._initReplContext, file));
+        onEventError(null, mainApp.vm.runInNewContext(script, local._initReplContext, file));
       } catch (errorCaught) {
         onEventError(errorCaught);
       }
@@ -1969,27 +1947,27 @@ stateRestore = function (state2) {
       /*
         this function inits the server
       */
-      if (!state.serverPort || state.serverPort === true) {
+      if (!mainApp.serverPort || mainApp.serverPort === true) {
         return;
       }
-      // validate state.serverPort is a valid port number
+      // validate mainApp.serverPort is a valid port number
       mainApp.assert(
-        (state.serverPort | 0) === state.serverPort &&
-          0 < state.serverPort && state.serverPort < 0x10000,
-        'invalid state.serverPort ' + state.serverPort
+        (mainApp.serverPort | 0) === mainApp.serverPort &&
+          0 < mainApp.serverPort && mainApp.serverPort < 0x10000,
+        'invalid mainApp.serverPort ' + mainApp.serverPort
       );
-      // init state.localhost with hostname and port
-      state.localhost = 'http://localhost:' + state.serverPort;
-      console.log('\nserver starting on port ' + state.serverPort + ' ...');
+      // init mainApp.localhost with hostname and port
+      mainApp.localhost = 'http://localhost:' + mainApp.serverPort;
+      console.log('\nserver starting on port ' + mainApp.serverPort + ' ...');
       // init server with mainApp.serverMiddleware
-      required.http.createServer(function (request, response) {
+      mainApp.http.createServer(function (request, response) {
         mainApp.serverMiddleware(request, response, function (error) {
           mainApp.serverRespondDefault(request, response, error ? 500 : 404, error);
         });
       })
-        // set server to listen on state.serverPort
-        .listen(state.serverPort, function () {
-          console.log('... server started on port ' + state.serverPort);
+        // set server to listen on mainApp.serverPort
+        .listen(mainApp.serverPort, function () {
+          console.log('... server started on port ' + mainApp.serverPort);
         });
     },
 
@@ -2015,15 +1993,15 @@ stateRestore = function (state2) {
           // set timerTimeout
           timerTimeout = mainApp.onEventTimeout(
             onEventIo,
-            options.timeout || state.timeoutDefault,
+            options.timeout || mainApp.timeoutDefault,
             'ajax ' + options.url
           );
           // handle implicit localhost
           if (options.url[0] === '/') {
-            options.url = state.localhost + options.url;
+            options.url = mainApp.localhost + options.url;
           }
           // parse options.url
-          urlParsed = required.url.parse(options.url);
+          urlParsed = mainApp.url.parse(options.url);
           // disable socket pooling
           options.agent = options.agent || false;
           // hostname needed for http(s).request
@@ -2042,19 +2020,19 @@ stateRestore = function (state2) {
             : Buffer.isBuffer(options.data) ? options.data.length
               : 0;
           // make http(s) request
-          request = (options.protocol === 'https:' ? required.https : required.http)
+          request = (options.protocol === 'https:' ? mainApp.https : mainApp.http)
             .request(options, onEventIo)
             // handle error event
             .on('error', onEventIo);
           // debug ajax request
-          state.debugAjaxRequest = request;
+          mainApp.debugAjaxRequest = request;
           // send request and/or data
           request.end(options.data);
           break;
         case 2:
           response = error;
           // debug ajax response
-          state.debugAjaxResponse = response;
+          mainApp.debugAjaxResponse = response;
           // concat response stream into responseText
           mainApp.streamReadAll(response, onEventIo);
           break;
@@ -2105,18 +2083,18 @@ stateRestore = function (state2) {
       /*
         this function exports the file to stateBrowser
       */
-      state.stateBrowser.fileDict[options.file] = options;
-      mainApp.setOverride(state.stateBrowser, {
-        description: state.description,
-        name: state.name
+      mainApp.stateBrowser.fileDict[options.file] = options;
+      mainApp.setOverride(mainApp.stateBrowser, {
+        description: mainApp.description,
+        name: mainApp.name
       });
     },
 
     fileActionDict_format: function (options) {
       /*
-        this function formats the file with the state dict
+        this function formats the file with the mainApp dict
       */
-      options.data = mainApp.textFormat(options.data, state);
+      options.data = mainApp.textFormat(options.data, mainApp);
     },
 
     fileActionDict_install: function (options) {
@@ -2124,8 +2102,8 @@ stateRestore = function (state2) {
         this function installs the file embedded in a *.data resource file
       */
       // if this this module is in the root directory, then install embedded file
-      if (state.modeCli === 'npmPostinstall' && __dirname === process.cwd()) {
-        required.fs.writeFileSync(options.file, options.data);
+      if (mainApp.modeCli === 'npmPostinstall' && __dirname === process.cwd()) {
+        mainApp.fs.writeFileSync(options.file, options.data);
       }
     },
 
@@ -2133,10 +2111,10 @@ stateRestore = function (state2) {
       /*
         this function lints the file
       */
-      switch (required.path.extname(options.file)) {
+      switch (mainApp.path.extname(options.file)) {
       case '.js':
       case '.json':
-        required.jslint_lite.jslintPrint(options.data, options.file);
+        mainApp.jslint_lite.jslintPrint(options.data, options.file);
         break;
       }
     },
@@ -2153,15 +2131,15 @@ stateRestore = function (state2) {
         this function updates external sources embedded in the data file
       */
       // do not update external resources unless specified in cli
-      if (state.modeCli !== 'updateExternal') {
+      if (mainApp.modeCli !== 'updateExternal') {
         return;
       }
       console.log('updateExternal - updating ' + options.externalUrl);
       mainApp.ajax({ url: options.externalUrl }, function (error, data) {
         // validate no error occurred
         mainApp.assert(!error, error);
-        state.fileDict[options.fileParent].dataRaw =
-          state.fileDict[options.fileParent].dataRaw.replace(options.dataRaw, '\n' +
+        mainApp.fileDict[options.fileParent].dataRaw =
+          mainApp.fileDict[options.fileParent].dataRaw.replace(options.dataRaw, '\n' +
             data.trim() + '\n');
       });
     },
@@ -2190,12 +2168,12 @@ stateRestore = function (state2) {
               'user-agent': 'undefined'
             },
             url: 'https://api.github.com/repos/' + process.env.GITHUB_REPO +
-              '/contents/' + required.path.dirname(file2) + '?ref=gh-pages'
+              '/contents/' + mainApp.path.dirname(file2) + '?ref=gh-pages'
           };
           mainApp.ajax(options, onEventIo);
           break;
         case 2:
-          blob = required.fs.readFileSync(file1);
+          blob = mainApp.fs.readFileSync(file1);
           data = data && JSON.parse(data);
           if (Array.isArray(data)) {
             data.forEach(function (dict) {
@@ -2221,14 +2199,6 @@ stateRestore = function (state2) {
       onEventIo();
     },
 
-    modeCliDict_npmTest: function () {
-      /*
-        this function runs npm test
-      */
-      // wait awhile for async init
-      setTimeout(mainApp.testRun, 1000);
-    },
-
     modeCliDict_saucelabsScreenshot: function () {
       /*
         this function grabs screenshots using saucelabs
@@ -2243,7 +2213,7 @@ stateRestore = function (state2) {
         case 1:
           mainApp.onEventTimeout(
             onEventIo,
-            state.timeoutDefault,
+            mainApp.timeoutDefault,
             'saucelabsScreenshot ' + JSON.stringify(process.argv)
           )
             // unref timerTimout so process can exit normally
@@ -2306,7 +2276,7 @@ stateRestore = function (state2) {
                 return;
               }
               // else save screenshot to file
-              required.fs.writeFile(
+              mainApp.fs.writeFile(
                 process.argv[4],
                 data,
                 mainApp.onEventErrorDefault
@@ -2324,13 +2294,11 @@ stateRestore = function (state2) {
         this function runs saucelabs tests with the given json options piped from stdin
       */
       var options;
-      options = JSON.parse(required.fs.readFileSync('.install/saucelabs-options.json'));
-      // init state
-      mainApp.setOverride(state, options.stateOverride);
-      // remove stateOverride param
-      options.stateOverride = undefined;
+      options = JSON.parse(mainApp.fs.readFileSync('.install/saucelabs-options.json'));
+      // override timeoutDefault to 300000 ms
+      mainApp.timeoutDefault = 300000;
       // create saucelabs browser testCase and run it
-      state.testPlatform.testCaseList = [{
+      mainApp.testPlatform.testCaseList = [{
         callback: function (onEventError) {
           local._saucelabsTest(options, onEventError);
         },
@@ -2347,7 +2315,7 @@ stateRestore = function (state2) {
       // all we have to do is to save the updated file data on exit
       process.on('exit', function () {
         ['main.data', 'utility2.data'].forEach(function (file) {
-          required.fs.writeFileSync(file, state.fileDict[file].dataRaw);
+          mainApp.fs.writeFileSync(file, mainApp.fileDict[file].dataRaw);
         });
       });
     },
@@ -2362,34 +2330,33 @@ stateRestore = function (state2) {
         // cleanup timerTimeout
         clearTimeout(timerTimeout);
         // garbage collect testCallbackId
-        delete state.testCallbackDict[testCallbackId];
+        delete mainApp.testCallbackDict[testCallbackId];
         onEventError(error);
       };
       // set timerTimeout
       timerTimeout = mainApp.onEventTimeout(
         onEventError2,
-        state.timeoutDefault,
+        mainApp.timeoutDefault,
         file
       );
       // init testCallbackId
       testCallbackId = Math.random().toString('36').slice(2);
-      state.testCallbackDict[testCallbackId] = onEventError2;
+      mainApp.testCallbackDict[testCallbackId] = onEventError2;
       // spawn a phantomjs / slimerjs process from the given file to test a webpage
       mainApp.shell({ argv: [
         file,
         '.install/phantomjs-test.js',
         new Buffer(JSON.stringify({
-          argv0: required.path.basename(file),
-          modeTestFail: state.modeTestFail,
-          url: state.localhost +
+          argv0: mainApp.path.basename(file),
+          url: mainApp.localhost +
             // init query-params
             '/?modeTest=1' +
-            (state.modeTestFail ? '&modeTestFail=1' : '') +
+            (mainApp.modeTestFail ? '&modeTestFail=1' : '') +
             '&modeTestReportUpload=1' +
             '&testCallbackId=' + testCallbackId +
-            '&timeoutDefault=' + state.timeoutDefault
+            '&timeoutDefault=' + mainApp.timeoutDefault
         })).toString('base64')
-      ], stdio: state.modeTestFail ? 'ignore' : null });
+      ], stdio: mainApp.modeTestFail ? 'ignore' : null });
     },
 
     _phantomjsTest_default_test: function (onEventError) {
@@ -2409,7 +2376,7 @@ stateRestore = function (state2) {
       remaining += 1;
       local._phantomjsTest('phantomjs', onEventRemaining);
       // run slimerjs browser test if slimerjs is available
-      if (state.modeSlimerjs) {
+      if (mainApp.modeSlimerjs) {
         remaining += 1;
         local._phantomjsTest('slimerjs', onEventRemaining);
       }
@@ -2419,7 +2386,7 @@ stateRestore = function (state2) {
       /*
         this function runs shell commands from the repl interpreter
       */
-      mainApp.shell({ argv: ['/bin/bash', '-c', mainApp.textFormat(arg2, state)] });
+      mainApp.shell({ argv: ['/bin/bash', '-c', mainApp.textFormat(arg2, mainApp)] });
     },
 
     replParseDict_print: function (arg2) {
@@ -2450,7 +2417,7 @@ stateRestore = function (state2) {
           // set timeout for _saucelabsTest
           timerTimeout = mainApp.onEventTimeout(
             onEventIo,
-            state.timeoutDefault,
+            mainApp.timeoutDefault,
             '_saucelabsTest ' + options.url
           );
           onEventRemaining = function (error) {
@@ -2461,23 +2428,23 @@ stateRestore = function (state2) {
               onEventIo(remainingError);
             }
           };
-          // coverage - if state.modeTestDummy,
+          // coverage - if mainApp.modeTestDummy,
           // then shorten the test time by testing only one platform
-          if (state.modeTestDummy) {
+          if (mainApp.modeTestDummy) {
             options.platforms = options.platforms.slice(0, 1);
           }
           options = {
             data: JSON.stringify(mainApp.setOverride(options, {
-              build: state.modeTestDummy || process.env.CI_BUILD_NUMBER_SAUCELABS,
+              build: mainApp.modeTestDummy || process.env.CI_BUILD_NUMBER_SAUCELABS,
               // specify custom test framework in saucelabs
               framework: 'custom',
               // reduce timeoutDefault to account for saucelabs startup time
               // bug - saucelabs only accepts integers for max-duration
-              'max-duration': Math.ceil(Math.max(0.00075 * state.timeoutDefault, 60)),
+              'max-duration': Math.ceil(Math.max(0.00075 * mainApp.timeoutDefault, 60)),
               url: mainApp.textFormat(options.url, {
                 host: process.env.SAUCE_TEST_HOST,
                 // reduce timeoutDefault to account for max-duration
-                timeoutDefault: 0.5 * state.timeoutDefault
+                timeoutDefault: 0.5 * mainApp.timeoutDefault
               })
             })),
             headers: {
@@ -2562,7 +2529,7 @@ stateRestore = function (state2) {
 
     _saucelabsTestMerge: function (testReport, onEventError) {
       /*
-        this function merges the saucelabs test-report into state.testReport
+        this function merges the saucelabs test-report into mainApp.testReport
       */
       var errorDefault, jobId, modeIo, onEventIo;
       modeIo = 0;
@@ -2586,9 +2553,9 @@ stateRestore = function (state2) {
           data.forEach(function (data) {
             testReport = (data && data.result && data.result.testReport) || testReport;
           });
-          // coverage - if state.modeTestDummy,
+          // coverage - if mainApp.modeTestDummy,
           // then cover testReport recovery failed case
-          if (state.modeTestDummy) {
+          if (mainApp.modeTestDummy) {
             testReport.testPlatformList = null;
           }
           // testReport recovery succeeded case
@@ -2618,7 +2585,7 @@ stateRestore = function (state2) {
           if (errorDefault) {
             // create a minimal testReport reporting saucelabs internal error
             testReport = { testPlatformList: [{
-              modeTestDummy: state.modeTestDummy,
+              modeTestDummy: mainApp.modeTestDummy,
               name: 'browser - saucelabs ' +
                 (testReport.platform || ['unknown user agent']).join(' '),
               testCaseList: [{
@@ -2629,8 +2596,8 @@ stateRestore = function (state2) {
               timeElapsed: testReport.timeElapsed
             }] };
           }
-          // merge recovered testReport into state.testReport
-          mainApp.testReportCreate(state.testReport, testReport);
+          // merge recovered testReport into mainApp.testReport
+          mainApp.testReportCreate(mainApp.testReport, testReport);
           onEventError(errorDefault);
         }
       };
@@ -2645,9 +2612,9 @@ stateRestore = function (state2) {
         switch (modeIo) {
         case 1:
           // debug server request
-          state.debugServerRequest = request;
+          mainApp.debugServerRequest = request;
           // debug server response
-          state.debugServerResponse = response;
+          mainApp.debugServerResponse = response;
           // security - validate request url path
           path = request.url;
           // security - enforce max url length
@@ -2660,7 +2627,7 @@ stateRestore = function (state2) {
                 // security - disable relative path
                 !(/\.\/|\.$/).test(path)) {
               // dyanamic path handler
-              request.urlPathNormalized = required.path.resolve(path);
+              request.urlPathNormalized = mainApp.path.resolve(path);
               onEventIo();
               return;
             }
@@ -2669,8 +2636,8 @@ stateRestore = function (state2) {
           break;
         case 2:
           path = request.urlPathNormalized;
-          // security - if not state.modeTest, then disable /test/* path
-          if ((path.indexOf('/test/') === 0 && !state.modeTest) ||
+          // security - if not mainApp.modeTest, then disable /test/* path
+          if ((path.indexOf('/test/') === 0 && !mainApp.modeTest) ||
               // coverage - cover disabling of /test/* path
               request.urlPathNormalized === '/test/no-mode-test') {
             next();
@@ -2683,17 +2650,17 @@ stateRestore = function (state2) {
             });
           }
           // walk up parent path, all the while looking for a matching handler for the path
-          while (!(state.serverPathHandlerDict[path] || path === '/')) {
-            path = required.path.dirname(path);
+          while (!(mainApp.serverPathHandlerDict[path] || path === '/')) {
+            path = mainApp.path.dirname(path);
           }
           // debug server request handler
-          state.debugServerHandler = state.serverPathHandlerDict[path];
+          mainApp.debugServerHandler = mainApp.serverPathHandlerDict[path];
           // handle request in a try-catch block
           mainApp.testTryCatch(onEventIo, next);
           break;
         case 3:
           // pass request / response objects to the handler
-          state.serverPathHandlerDict[path](request, response, next);
+          mainApp.serverPathHandlerDict[path](request, response, next);
           break;
         }
       };
@@ -2707,8 +2674,8 @@ stateRestore = function (state2) {
       // serve main page
       if (request.urlPathNormalized === '/') {
         mainApp.serverRespondData(request, response, 200, 'text/html', mainApp.textFormat(
-          state.fileDict['/public/main.html'].data,
-          { stateBrowserJson: state.stateBrowserJson }
+          mainApp.fileDict['/public/main.html'].data,
+          { stateBrowserJson: mainApp.stateBrowserJson }
         ));
         return;
       }
@@ -2721,11 +2688,11 @@ stateRestore = function (state2) {
         this function responds with public cached data if it exists
       */
       var options;
-      options = state.fileDict[request.urlPathNormalized];
+      options = mainApp.fileDict[request.urlPathNormalized];
       // cached data exists - respond with cached data
       if (options) {
-        mainApp.serverRespondData(request, response, 200, state.mimeLookupDict[
-          required.path.extname(request.urlPathNormalized)
+        mainApp.serverRespondData(request, response, 200, mainApp.mimeLookupDict[
+          mainApp.path.extname(request.urlPathNormalized)
         ], options.data);
         return;
       }
@@ -2769,16 +2736,16 @@ stateRestore = function (state2) {
         case 2:
           data = JSON.parse(data);
           // debug uploaded test-report
-          state.debugTestReportUpload = data;
-          // validate data.testCallbackId exists in state.testCallbackDict
+          mainApp.debugTestReportUpload = data;
+          // validate data.testCallbackId exists in mainApp.testCallbackDict
           mainApp.assert(
-            state.testCallbackDict[data && data.testCallbackId],
+            mainApp.testCallbackDict[data && data.testCallbackId],
             'invalid data.testCallbackId ' + (data && data.testCallbackId)
           );
-          // merge data.testReport into state.testReport
-          mainApp.testReportCreate(state.testReport, data.testReport);
+          // merge data.testReport into mainApp.testReport
+          mainApp.testReportCreate(mainApp.testReport, data.testReport);
           // call testCallbackId callback
-          state.testCallbackDict[data.testCallbackId](
+          mainApp.testCallbackDict[data.testCallbackId](
             data.testReport.testsFailed ? new Error('browser tests failed') : null
           );
           response.end();
@@ -2814,10 +2781,10 @@ stateRestore = function (state2) {
       });
       if (error) {
         // if not modeErrorIgnore in request, then print error.stack to stderr
-        if (!(state.modeTest && (/\?.*\bmodeErrorIgnore=1\b/).test(request.url)) ||
-            // coverage - if state.modeTestDummy,
+        if (!(mainApp.modeTest && (/\?.*\bmodeErrorIgnore=1\b/).test(request.url)) ||
+            // coverage - if mainApp.modeTestDummy,
             // then cover printing error.stack handling behavior
-            state.modeTestDummy) {
+            mainApp.modeTestDummy) {
           mainApp.onEventErrorDefault(error);
         }
         // end response with error.stack
@@ -2825,7 +2792,7 @@ stateRestore = function (state2) {
         return;
       }
       // end response with default statusCode message
-      response.end(statusCode + ' ' + required.http.STATUS_CODES[statusCode]);
+      response.end(statusCode + ' ' + mainApp.http.STATUS_CODES[statusCode]);
     },
 
     serverRespondWriteHead: function (_, response, statusCode, headers) {
@@ -2853,10 +2820,10 @@ stateRestore = function (state2) {
       // init options.stdio
       options.stdio = options.stdio || ['ignore', 1, 2];
       // spawn shell in child process
-      child = required.child_process.spawn(options.argv[0], options.argv.slice(1), options);
+      child = mainApp.child_process.spawn(options.argv[0], options.argv.slice(1), options);
       // set timerTimeoutPid
-      timerTimeoutPid = required.child_process.spawn('/bin/sh', ['-c', 'sleep ' +
-        ((options.timeout || state.timeoutDefault) / 1000) + '; kill ' + child.pid +
+      timerTimeoutPid = mainApp.child_process.spawn('/bin/sh', ['-c', 'sleep ' +
+        ((options.timeout || mainApp.timeoutDefault) / 1000) + '; kill ' + child.pid +
         ' 2>/dev/null'], { stdio: 'ignore' });
       // unref timerTimout process so it can continue tracking the original shell
       // after nodejs exits

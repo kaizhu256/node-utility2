@@ -43,9 +43,9 @@ body {
 <!-- load scripts -->
 <script src="{{/public/cache/utility2.data.js}}"></script>
 <script src="{{/public/cache/utility2.js}}"></script>
-<!-- init state object -->
-<script>window.$$mainApp.setOverride(window.$$mainApp.state, {{stateBrowserJson}});</script>
-<!-- run main program -->
+<!-- init main app -->
+<script>window.$$mainApp.setOverride(window.$$mainApp, {{stateBrowserJson}});</script>
+<!-- run main app -->
 <script src="{{/public/cache/main.data.js}}"></script>
 <script src="{{/public/cache/main.js}}"></script>
 </div>

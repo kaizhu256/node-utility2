@@ -329,10 +329,14 @@ shGitSquash() {
 
 shIstanbulCover() {
   # this function runs the command with istanbul code-coverage
-  local CMD=$1 || return $?
+  local ARGS=$1 || return $?
   shift || return $?
-  istanbul cover $CMD --dir=.build/coverage-report.html --print=detail\
-    --report=html --report=json -- $@
+  ARGS="$ARGS --dir=.build/coverage-report.html" || return $?
+  ARGS="$ARGS --print=detail" || return $?
+  ARGS="$ARGS --report=html" || return $?
+  ARGS="$ARGS --report=json" || return $?
+  ARGS="$ARGS --mode-npm-test" || return $?
+  istanbul cover $ARGS -- $@
 }
 
 shNpmPostinstall() {
@@ -371,9 +375,9 @@ shNpmTest() {
   fi
   # init $ARGS
   local ARGS="main.js $@" || return $?
-  ARGS="$ARGS --mode-cli=npmTest" || return $?
   # coverage - parse process.argv - --foo bar -> state.foo = 'bar'
   ARGS="$ARGS --foo bar" || return $?
+  ARGS="$ARGS --mode-npm-test" || return $?
   ARGS="$ARGS --mode-repl" || return $?
   if [ ! "$npm_config_mode_test_fail" ]
   then
