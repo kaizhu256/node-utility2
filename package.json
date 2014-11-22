@@ -1,27 +1,27 @@
 {
-  "bin": { "utility2": "main.js" },
-  "contributors": [{ "name": "kai zhu", "email": "kaizhu256@gmail.com" }],
-  "description": "lightweight nodejs module for testing and covering browser-side code",
-  "devDependencies": {
-    "headless-browser-lite": "2014.9.20-16",
-    "istanbul": "0.3.2",
-    "jslint-lite": "2014.7.29-21"
+  "author": "kai zhu <kaizhu256@gmail.com>",
+  "bin": { "utility2" : "cli.sh" },
+  "dependencies": {
+    "csslint": "^0.10.0",
+    "jslint-lite": "^2014.0.0"
   },
-  "engines": { "node": ">=0.10.x" },
+  "description": "lightweight nodejs module for covering and testing browser code",
+  "devDependencies": {
+    "istanbul": "^0.3.0",
+    "phantomjs-lite": "^2014.10.31"
+  },
+  "engines": { "node": "^0.10.x" },
   "license": "MIT",
-  "main": "main.js",
   "name": "utility2",
   "os": ["darwin", "linux"],
-  "repoGithub": "kaizhu256/node-utility2",
-  "repoHeroku": "hrku01-utility2",
   "repository" : {
     "type" : "git",
     "url" : "https://github.com/kaizhu256/node-utility2.git"
   },
   "scripts": {
-    "postinstall": "./utility2.sh shNpmPostinstall",
-    "start": "./utility2.sh shNpmStart",
-    "test": "./utility2.sh shNpmTest"
+    "postinstall": "mkdir -p node_modules && rm -f node_modules/utility2.js && ln -s ../index.js node_modules/utility2.js",
+    "start": "./cli.sh node example.js",
+    "test": "./cli.sh shNpmTest example.js"
   },
-  "version": "2014.9.22-17"
+  "version": "2014.10.31-14"
 }

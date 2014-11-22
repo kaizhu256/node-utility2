@@ -5,123 +5,91 @@ lightweight nodejs module for testing and covering browser-side code
 
 
 ## demo server
-[![heroku.com test server](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/beta/test-report.screenshot.heroku.png)](https://hrku01-utility2-beta.herokuapp.com/?modeTest=1)
+[![heroku.com test server](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/beta/test-report.screenshot.localNpmTest.phantomjs.png)](https://hrku01-utility2-beta.herokuapp.com/?modeTest=1)
 
 
 
 ## build status [![travis.ci-org build status](https://api.travis-ci.org/kaizhu256/node-utility2.svg)](https://travis-ci.org/kaizhu256/node-utility2)
 
-[![build commit status](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/build.badge.svg)](https://travis-ci.org/kaizhu256/node-utility2)
-
-[![saucelabs.com selenium test status](https://saucelabs.com/browser-matrix/sclb01-utility2.svg)](https://saucelabs.com/u/sclb01-utility2)
+[![build commit status](https://kaizhu256.github.io/node-utility2/build.badge.svg)](https://travis-ci.org/kaizhu256/node-utility2)
 
  git branch | test server | test report | coverage report | build artifact
 :----------:|:-----------:|:-----------:|:---------------:|:--------------:
-[master](https://github.com/kaizhu256/node-utility2/tree/master) | [![heroku.com test server](https://kaizhu256.github.io/public/heroku-logo-light-88x31.png)](https://hrku01-utility2-master.herokuapp.com/?modeTest=1) | [![test-report](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/master/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/master/test-report.html) | [![istanbul coverage report](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/master/coverage-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/master/coverage-report.html/node-utility2/index.html) | [![build artifacts](https://kaizhu256.github.io/public/glyphicons_free/glyphicons/png/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build.travis-ci.org/master)
-[beta](https://github.com/kaizhu256/node-utility2/tree/beta) | [![heroku.com test server](https://kaizhu256.github.io/public/heroku-logo-light-88x31.png)](https://hrku01-utility2-beta.herokuapp.com/?modeTest=1) | [![test-report](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/beta/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/beta/test-report.html) | [![istanbul coverage report](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/beta/coverage-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/beta/coverage-report.html/node-utility2/index.html) | [![build artifacts](https://kaizhu256.github.io/public/glyphicons_free/glyphicons/png/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build.travis-ci.org/beta)
-[alpha](https://github.com/kaizhu256/node-utility2/tree/alpha) | [![heroku.com test server](https://kaizhu256.github.io/public/heroku-logo-light-88x31.png)](https://hrku01-utility2-alpha.herokuapp.com/?modeTest=1) | [![test-report](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/alpha/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/alpha/test-report.html) | [![istanbul coverage report](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/alpha/coverage-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/alpha/coverage-report.html/node-utility2/index.html) | [![build artifacts](https://kaizhu256.github.io/public/glyphicons_free/glyphicons/png/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build.travis-ci.org/alpha)
+[master](https://github.com/kaizhu256/node-utility2/tree/master) | [![heroku.com test server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://hrku01-utility2-master.herokuapp.com/?modeTest=1) | [![test-report](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/master/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/master/test-report.html) | [![istanbul coverage report](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/master/coverage-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/master/coverage-report.html/node-utility2/index.html) | [![build artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build.travis-ci.org/master)
+[beta](https://github.com/kaizhu256/node-utility2/tree/beta) | [![heroku.com test server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://hrku01-utility2-beta.herokuapp.com/?modeTest=1) | [![test-report](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/beta/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/beta/test-report.html) | [![istanbul coverage report](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/beta/coverage-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/beta/coverage-report.html/node-utility2/index.html) | [![build artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build.travis-ci.org/beta)
+[alpha](https://github.com/kaizhu256/node-utility2/tree/alpha) | [![heroku.com test server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://hrku01-utility2-alpha.herokuapp.com/?modeTest=1) | [![test-report](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/alpha/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/alpha/test-report.html) | [![istanbul coverage report](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/alpha/coverage-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/alpha/coverage-report.html/node-utility2/index.html) | [![build artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build.travis-ci.org/alpha)
 
 
 
 ## installation and quickstart
 ```
-## install utility2
-npm install utility2 && cd node_modules/utility2
-## run server and browser tests, and create tests and coverages on self
+# install utility2
+npm install utility2 && cd node_modules/utility2 && npm install
+# run server and browser tests on self with code-coverage
 npm test
-## start utility2 test server on port 8080 with test mode enabled
-npm start --mode-test=true --server-port=8080
+# start utility2 test server on port 8080
+npm start --server-port=8080
 ```
 
 
 
 ## library usage example
-```
-// example.js
-/*jslint
-  bitwise: true,
-  indent:2,
-  node: true
-*/
-(function () {
-  'use strict';
-  var port, server, utility2;
-  // require utility2 module
-  try {
-    utility2 = require('utility2');
-  } catch (error) {
-    utility2 = require('./main.js');
-  }
-  // create random port in the inclusive range 0x8000 - 0xffff
-  port = (Math.random() * 0xffff) | 0x8000;
-  console.log('example test server starting on random port ' + port);
-  // init server with example middleware
-  server = require('http').createServer(function (request, response) {
-    utility2.serverMiddleware(request, response, function (error) {
-      utility2.serverRespondDefault(response, error ? 500 : 404, error);
-    });
-  });
-  // set server to listen on the specified port
-  server.listen(port, function () {
-    console.log('example test server started on port ' + port);
-    setTimeout(function () {
-      server.close();
-      console.log('example test server closed after 1 second');
-    }, 1000);
-  });
-}());
-```
+- see included ./example.js
 
 
 
-## description of files
+## package content
 - .build/
   - auto-created directory where tests and coverages are stored
-- .install/
-  - auto-created directory where npm postinstall files are stored
+- .gitignore
+  - git ignore file
 - .travis.yml
   - travis-ci config file
-  - contains encrypted credentials used by travis-ci
+- Procfile
+  - heroku deploy script
 - README.md
   - readme file
-- example.js
-  - example nodejs script demonstrating how to use this app
-- main.data
-  - data file containing embedded resources for this app
-- main.js
-  - this app's main program / library
-- package.json
-  - npm config file
-- utility2.data
-  - data file containing embedded resources for testing this app
-- utility2.js
-  - nodejs build script
-- utility2.sh
+- cli.sh
   - shell build script used by travis-ci to do the following:
     - run local phantomjs and slimerjs browser tests on local server
     - deploy to heroku after passing local browser tests
-    - run saucelabs browser tests on deployed heroku server
-    - on version change, publish this app to npm registry after passing saucelabs browser tests
     - upload tests, coverages, screenshots, and other build artifacts to github
-
-
-
-## npm dependencies
-- headless-browser-lite v2014.x.x (dev-dependency)
-- istanbul v0.2.x (dev-dependency)
-- jslint-lite v2014.x.x (dev-dependency)
+- example.data
+  - example data file containing embedded resources for testing this app
+- example.js
+  - example nodejs script demonstrating how to use this app
+- git-ssh.sh
+  - ssh authentication hook used for heroku git deployment
+- index.data
+  - data file containing embedded resources for testing this app
+- index.js
+  - nodejs build script
+- package.json
+  - npm config file
 
 
 
 ## todo
-- optionally install main.data to improve cli startup (e.g. node-jslint-lite)
-- add csslint
+- inline library usage example
+- add grep in repl debugger
+- add profiling
+- add process.cwd to githubFilePut
 - add server stress test using phantomjs
-- minify /public/main.data.js and /public/utility2.data.js
+- minify /assets/utility2.js
 
 
 
 ## changelog
+#### 2014.10.31
+- revamp server
+- revamp phantomjs test
+- revamp ajax
+- add csslint
+- emphasize low-level helper functions over high-level ones
+- revert from saucelabs testing to phantomjs / slimerjs
+
+
+
 #### 2014.9.22
 - near 100% code-coverage during travis-ci build
 - integrate codeship.io ci

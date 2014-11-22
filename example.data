@@ -1,0 +1,58 @@
+/* FILE_BEGIN {
+  "actionList": ["lint"],
+  "file": "/assets/index.css"
+} */
+body {
+  font-family: arial;
+}
+/* FILE_END */
+
+
+
+/* FILE_BEGIN {
+  "actionList": ["lint"],
+  "file": "/assets/test-lint-handling-behavior.js"
+} */
+(function () {
+    'use strict';
+    return;
+}());
+/* FILE_END */
+
+
+
+/* FILE_BEGIN {
+  "actionList": ["format"],
+  "file": "/index.html"
+} */
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
+<link href="/assets/utility2.css" rel="stylesheet"/>
+<link href="/assets/index.css" rel="stylesheet"/>
+</head>
+<body>
+<!-- ajax progress bar begin -->
+  <div class="ajaxProgressDiv">
+    <div class="ajaxProgressBarDiv ajaxProgressBarDivLoading">loading</div>
+  </div>
+<!-- ajax progress bar end -->
+<!-- main app div begin -->
+  <div
+    data-ng-app="ngApp_main"
+    data-ng-controller="MainController"
+  >
+  <h1>{{PACKAGE_JSON_NAME}}</h1>
+  <h3>{{PACKAGE_JSON_DESCRIPTION}}</h3>
+  <!-- main app content -->
+  </div>
+<!-- main app div end -->
+<!-- script begin -->
+  <script>window.$$mainApp = {{mainAppBrowserJson}}</script>
+  <script src="/assets/utility2.js"></script>
+  <script src="/assets/example.js"></script>
+<!-- script end -->
+</body>
+</html>
+/* FILE_END */
