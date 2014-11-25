@@ -22,4 +22,5 @@ script:
   - export TEST_URL="https://hrku01-utility2-$TRAVIS_BRANCH.herokuapp.com/?modeTest=1"
   - export GITHUB_REPO=kaizhu256/node-utility2
   - export HEROKU_REPO=hrku01-utility2-$TRAVIS_BRANCH
-  - ./cli.sh shNpmTestPublished && ./cli.sh shBuild
+  - ./cli.sh shNpmTestPublished && npm test && ./cli.sh shHerokuDeploy
+  - ./cli.sh shBuildExit

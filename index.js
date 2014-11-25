@@ -714,6 +714,18 @@
           response.end(statusCode + ' ' + mainApp.http.STATUS_CODES[statusCode]);
         },
 
+        serverRespondEcho: function (request, response) {
+          /*
+            this function responds with debug info
+          */
+          response.write(request.method + ' ' + request.url +
+            ' HTTP/' + request.httpVersion + '\r\n' +
+            Object.keys(request.headers).map(function (key) {
+              return key + ': ' + request.headers[key] + '\r\n';
+            }).join('') + '\r\n');
+          request.pipe(response);
+        },
+
         serverRespondWriteHead: function (_, response, statusCode, headers) {
           /*
             this function sets the response object's statusCode / headers
@@ -913,7 +925,7 @@
                 'test-report.screenshot.' + mainApp.argv0 + '.png';
               [[
                 '.build/test-report.' + mainApp.argv0 + '.json',
-                JSON.parse(JSON.stringify(data.testReport))
+                mainApp.jsonCopy(data.testReport)
               ], [
                 '.build/coverage-report.html/coverage.' + mainApp.argv0 + '.json',
                 global.__coverage__
@@ -1247,7 +1259,14 @@
           return String(error.stack || error.message);
         },
 
-        jsonStringifyOrdered: function (value) {
+        jsonCopy: function (obj) {
+          /*
+            this function returns a deep-copy of the JSON obj
+          */
+          return JSON.parse(JSON.stringify(obj));
+        },
+
+        jsonStringifyOrdered: function (value, replacer, space) {
           /*
             this function JSON.stringify's the value with dictionaries in sorted order,
             allowing reliable / reproducible string comparisons and tests
@@ -1274,7 +1293,9 @@
             return JSON.stringify(value);
           };
           value = JSON.stringify(value);
-          return typeof value === 'string' ? stringifyOrdered(JSON.parse(value)) : value;
+          return typeof value === 'string' ?
+              JSON.stringify(JSON.parse(stringifyOrdered(JSON.parse(value))), replacer, space)
+            : value;
         },
 
         _jsonStringifyOrdered_default_test: function (onError) {
@@ -1705,7 +1726,7 @@
           }
           // part 2 - create and return html test-report
           // json-copy testReport, which will be modified for html templating
-          testReport = JSON.parse(JSON.stringify(testReport));
+          testReport = mainApp.jsonCopy(testReport);
           // init env
           env = (global.process && process.env) || {};
           // parse timeElapsed

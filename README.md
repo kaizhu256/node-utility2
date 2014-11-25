@@ -81,6 +81,7 @@ npm start --server-port=8080
 
 ## changelog
 #### 2014.10.31
+- add jsonCopy
 - revamp server
 - revamp phantomjs test
 - revamp ajax

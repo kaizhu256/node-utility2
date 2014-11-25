@@ -67,24 +67,6 @@ shAesEncryptTravis() {
     .travis.yml || return $?
 }
 
-shBuild() {
-  # this functions runs the build process
-  if [ "$TRAVIS" ]
-  then
-    # decrypt and exec encrypted data
-    eval "$(shAesDecryptTravis)" || return $?
-    # non-zero return on failed decryption of build credentials
-    if [ ! "$AES_256_KEY" ]
-    then
-      return 1
-    fi
-  fi
-  npm test || shBuildExit
-  # deploy to heroku
-  shHerokuDeploy || shBuildExit
-  shBuildExit
-}
-
 shBuildExit() {
   # this function gracefully exits the build
   # save $EXIT_CODE and restore $CWD
@@ -152,17 +134,9 @@ shHerokuDeploy() {
   then
     return
   fi
-  # init $HEROKU_URL
-  export HEROKU_URL=https://$HEROKU_REPO.herokuapp.com || return $?
-  shBuildPrint herokuDeploy "deploying $HEROKU_URL ..." || return $?
-  # export $GIT_SSH
-  export GIT_SSH=$DIRNAME/git-ssh.sh || return $?
-  # export and create $GIT_SSH_KEY_FILE
-  export GIT_SSH_KEY_FILE=$TMPFILE || return $?
-  # save $GIT_SSH_KEY to $GIT_SSH_KEY_FILE
-  printf $GIT_SSH_KEY | base64 --decode > $GIT_SSH_KEY_FILE || return $?
-  # secure $GIT_SSH_KEY_FILE
-  chmod 600 $GIT_SSH_KEY_FILE || return $?
+  # init $HEROKU_HOSTNAME
+  export HEROKU_HOSTNAME=$HEROKU_REPO.herokuapp.com || return $?
+  shBuildPrint herokuDeploy "deploying to https://$HEROKU_HOSTNAME ..." || return $?
   # init clean repo in /tmp/app
   shGitCopyTmp && cd /tmp/app || return $?
   # init .git
@@ -173,6 +147,14 @@ shHerokuDeploy() {
   rm -f .gitignore || return $?
   # git add everything
   git add . || return $?
+  # init Procfile
+  node -e "var fs, utility2;\
+    fs = require('fs');\
+    utility2 = require('$DIRNAME_LIB');\
+    fs.writeFileSync(\
+      'Procfile',\
+      utility2.textFormat(fs.readFileSync('Procfile', 'utf8'), process.env)\
+    );"
   # git commit
   git commit -am "heroku deploy" || return $?
   # deploy the app to heroku
@@ -180,8 +162,9 @@ shHerokuDeploy() {
   # wait for deployment to finish
   sleep 10 || return $?
   # check deployed webpage on heroku
-  shBuildPrint herokuDeploy "checking deployed webpage $HEROKU_URL ..." || return $?
-  curl -fLSs $HEROKU_URL > /dev/null
+  shBuildPrint herokuDeploy "checking deployed webpage https://$HEROKU_HOSTNAME ..." ||\
+    return $?
+  curl -fLSs https://$HEROKU_HOSTNAME > /dev/null
   # save $EXIT_CODE and restore $CWD
   shReturn $? || return $?
   if [ "$EXIT_CODE" != 0 ]
@@ -241,7 +224,7 @@ shNpmTest() {
   if [ ! "$MODE_CI_BUILD" ]
   then
     # run local npm test
-    shBuildPrint localNpmTest "npm testing $CWD ..." || shBuildExit
+    shBuildPrint localNpmTest "npm testing $CWD ..." || return $?
   fi
   # init .build dir
   mkdir -p .build/coverage-report.html || return $?
@@ -346,6 +329,11 @@ shMain() {
       export CI_BRANCH=$TRAVIS_BRANCH || return $?
       export CI_BUILD_NUMBER=$TRAVIS_BUILD_NUMBER || return $?
       export CI_COMMIT_ID=$TRAVIS_COMMIT || return $?
+      # decrypt and exec encrypted data
+      if [ "$AES_256_KEY" ]
+      then
+        eval "$(shAesDecryptTravis)" || return $?
+      fi
     else
       # init default env
       export CI_BUILD_DIR=build.local || return $?
@@ -363,6 +351,11 @@ shMain() {
   DIRNAME=$(cd "$(dirname $0)" && pwd) || return $?
   # init $DIRNAME_LIB
   DIRNAME_LIB=$DIRNAME/index.js || return $?
+  # init $GIT_SSH
+  if [ "$GIT_SSH_KEY" ]
+  then
+    export GIT_SSH=$DIRNAME/git-ssh.sh || return $?
+  fi
   # init $PACKAGE_JSON_*
   eval $(node -e "var dict, value;\
     dict = require('./package.json');
@@ -375,7 +368,7 @@ shMain() {
   # init $PATH with $CWD/node_modules/.bin
   export PATH=$CWD/node_modules/phantomjs-lite:$CWD/node_modules/.bin:$PATH || return $?
   # init $TMPFILE
-  TMPFILE=/tmp/tmpfile.$(openssl rand -hex 8) || return $?
+  export TMPFILE=/tmp/tmpfile.$(openssl rand -hex 8) || return $?
   # auto-detect slimerjs
   if slimerjs .install/phantomjs-test.js > /dev/null 2>&1
   then

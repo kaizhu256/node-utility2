@@ -23,5 +23,5 @@
     "start": "./cli.sh node example.js",
     "test": "./cli.sh shNpmTest example.js"
   },
-  "version": "2014.10.31-14"
+  "version": "2014.10.31-15"
 }
