@@ -174,13 +174,11 @@ shHerokuDeploy() {
     return $EXIT_CODE
   fi
   shBuildPrint herokuDeploy "check passed" || return $?
-  if [ ! "$TEST_URL" ]
-  then
-    return
-  fi
   # test url
-  shBuildPrint herokuDeploy "phantom testing $TEST_URL ..." || return $?
-  shPhantomTest "$TEST_URL" || return $?
+  if [ "$TEST_URL" ]
+  then
+    shPhantomTest "$TEST_URL" || return $?
+  fi
 }
 
 shIstanbulCover() {
@@ -221,11 +219,7 @@ shIstanbulReport() {
 
 shNpmTest() {
   # this function runs npm test
-  if [ ! "$MODE_CI_BUILD" ]
-  then
-    # run local npm test
-    shBuildPrint localNpmTest "npm testing $CWD ..." || return $?
-  fi
+  shBuildPrint "${MODE_CI_BUILD:-localNpmTest}" "npm testing $CWD ..." || return $?
   # init .build dir
   mkdir -p .build/coverage-report.html || return $?
   # init random server port
@@ -277,6 +271,7 @@ shPhantomTest() {
   # this function runs phantomjs tests on the specified $URL,
   # and merge it into the existing test-report
   local URL=$1 || return $?
+  shBuildPrint "${MODE_CI_BUILD:-remotePhantomTest}" "phantom testing $URL ..." || return $?
   node -e "var mainApp;\
     mainApp = require('utility2');\
     mainApp._testReport = require('$CWD/.build/test-report.json');\

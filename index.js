@@ -1830,7 +1830,9 @@
             /*
               this function create the test-report after all tests have finished
             */
-            var testReport, testReportHtml;
+            var separator, testReport, testReportHtml;
+            // init new-line separator
+            separator = new Array(56).join('-');
             // init testReport
             testReport = mainApp._testReport;
             // stop testPlatform timer
@@ -1838,12 +1840,14 @@
             // create testReportHtml
             testReportHtml = mainApp.testMerge(testReport, {});
             // print test-report summary
-            console.log(testReport.testPlatformList.map(function (testPlatform) {
-              return '\ntest-report - ' + testPlatform.name + '\n' +
-                ('        ' + testPlatform.timeElapsed).slice(-8) + ' ms | ' +
-                (' ' + testPlatform.testsFailed).slice(-2) + ' failed | ' +
-                ('  ' + testPlatform.testsPassed).slice(-3) + ' passed';
-            }).join('\n') + '\n');
+            console.log('\n' + separator + '\n' +
+              testReport.testPlatformList.map(function (testPlatform) {
+                return '| test-report - ' + testPlatform.name + '\n|' +
+                  ('        ' + testPlatform.timeElapsed + ' ms     ').slice(-16) +
+                  ('        ' + testPlatform.testsFailed + ' failed ').slice(-16) +
+                  ('        ' + testPlatform.testsPassed + ' passed ').slice(-16) +
+                  '     |\n' + separator;
+              }).join('\n') + '\n');
             switch (mainApp.modeJs) {
             case 'browser':
               // notify saucelabs of test results
@@ -2025,7 +2029,7 @@
             key.slice(2, -2).split('.').forEach(function (key) {
               value = value && value[key];
             });
-            return value === undefined ? key : value;
+            return value === undefined ? '' : value;
           });
         },
 
@@ -2046,7 +2050,7 @@
             // test nested value handling behavior
             ee: { ff: 'gg' }
           });
-          mainApp.assert(data === 'aaaa1null{{dd}}gg', data);
+          mainApp.assert(data === 'aaaa1nullgg', data);
           // test list handling behavior
           data = mainApp.textFormat('[{{#list1}}[{{#list2}}{{aa}},{{/list2}}],{{/list1}}]', {
             list1: [
@@ -2056,7 +2060,7 @@
               { list2: [{ aa: 'bb' }, { aa: 'cc' }] }
             ]
           });
-          mainApp.assert(data === '[[{{#list2}}{{aa}},{{/list2}}],[bb,cc,],]', data);
+          mainApp.assert(data === '[[,],[bb,cc,],]', data);
           onError();
         },
 
