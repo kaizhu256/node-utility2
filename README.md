@@ -23,11 +23,11 @@ lightweight nodejs module for testing and covering browser-side code
 
 ## installation and quickstart
 ```
-# install utility2
-npm install utility2 && cd node_modules/utility2 && npm install
+# install
+npm install utility2
 # run server and browser tests on self with code-coverage
-npm test
-# start utility2 test server on port 8080
+cd node_modules/utility2 && npm install && npm test
+# start example test server on port 8080
 npm start --server-port=8080
 ```
 

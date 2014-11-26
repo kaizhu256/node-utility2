@@ -67,21 +67,25 @@ shAesEncryptTravis() {
     .travis.yml || return $?
 }
 
-shBuildExit() {
-  # this function gracefully exits the build
-  # save $EXIT_CODE and restore $CWD
-  shReturn $? || exit $?
+shBuildPrint() {
+  # this function prints debug info about the build state
+  export MODE_CI_BUILD=$1 || return $?
+  local MESSAGE="$2" || return $?
+  printf "\n[MODE_CI_BUILD=$MODE_CI_BUILD] - $MESSAGE\n\n" || return $?
+}
+
+shBuildUploadGithub() {
+  # this function uploads the ./build dir to github
   if [ "$MODE_OFFLINE" ] || ! ([ "$GITHUB_BASIC" ] || [ "$GITHUB_TOKEN" ])
   then
-    # exit with $EXIT_CODE
-    exit $EXIT_CODE
+    return
   fi
   # cleanup .build
-  rm -f .build/coverage-report.html/coverage* || exit $?
+  rm -f .build/coverage-report.html/coverage* || return $?
   find .build -path "*.json" -print0 | xargs -0 rm
-  # upload build to github
+  # upload build artifacts to github
   shGithubFilePut https://github.com/$GITHUB_REPO/blob/gh-pages/build.badge.svg\
-    $CWD/.build/build.badge.svg > /dev/null || exit $?
+    $CWD/.build/build.badge.svg > /dev/null || return $?
   for DIR in\
     $CI_BUILD_DIR/$CI_BRANCH\
     $CI_BUILD_DIR/$CI_BRANCH.$CI_BUILD_NUMBER.$CI_COMMIT_ID
@@ -89,22 +93,13 @@ shBuildExit() {
     for FILE in $(find .build -type f)
     do
       FILE=$(node -e "console.log('$FILE'.replace('.build/', ''))")
-      printf "uploading https://github.com/$GITHUB_REPO/blob/gh-pages/$DIR/$FILE\n" || exit $?
+      printf "uploading https://github.com/$GITHUB_REPO/blob/gh-pages/$DIR/$FILE\n" || return $?
       shGithubFilePut https://github.com/$GITHUB_REPO/blob/gh-pages/$DIR/$FILE\
-        $CWD/.build/$FILE > /dev/null || exit $?
+        $CWD/.build/$FILE > /dev/null || return $?
       # throttle github file put
-      sleep 1 || exit $?
+      sleep 1 || return $?
     done
   done
-  # exit with $EXIT_CODE
-  exit $EXIT_CODE
-}
-
-shBuildPrint() {
-  # this function prints debug info about the build state
-  export MODE_CI_BUILD=$1 || return $?
-  local MESSAGE="$2" || return $?
-  printf "\n[MODE_CI_BUILD=$MODE_CI_BUILD] - $MESSAGE\n\n" || return $?
 }
 
 shGitCopyTmp() {
@@ -183,12 +178,6 @@ shHerokuDeploy() {
 
 shIstanbulCover() {
   # this function runs the command with istanbul code-coverage
-  # if coverage-mode is disabled, then do not cover code
-  if [ "$npm_config_mode_no_coverage" ]
-  then
-    $@
-    return $?
-  fi
   local ARGS=$1 || return $?
   shift || return $?
   ARGS="$ARGS --dir=.build/coverage-report.html" || return $?
@@ -227,6 +216,12 @@ shNpmTest() {
     return $?
   # init npm test mode
   export npm_config_mode_npm_test=1 || return $?
+  # if coverage-mode is disabled, then run npm test without coverage
+  if [ "$npm_config_mode_no_coverage" ]
+  then
+    node $@
+    return $?
+  fi
   # cleanup old coverage
   rm -f .build/coverage-report.html/coverage.*
   # run npm test with coverage

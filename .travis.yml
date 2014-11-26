@@ -19,8 +19,14 @@ node_js:
   - "0.10"
 script:
   # init env
-  - export TEST_URL="https://hrku01-utility2-$TRAVIS_BRANCH.herokuapp.com/?modeTest=1"
   - export GITHUB_REPO=kaizhu256/node-utility2
   - export HEROKU_REPO=hrku01-utility2-$TRAVIS_BRANCH
-  - ./cli.sh shNpmTestPublished && npm test && ./cli.sh shHerokuDeploy
-  - ./cli.sh shBuildExit
+  - export TEST_URL="https://hrku01-utility2-$TRAVIS_BRANCH.herokuapp.com/?modeTest=1"
+  # test published package
+  - ./cli.sh shNpmTestPublished
+  # test package
+  - npm test
+  # deploy to heroku
+  - ./cli.sh shHerokuDeploy
+  # upload build artifacts to github
+  - ./cli.sh shBuildUploadGithub

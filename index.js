@@ -252,7 +252,6 @@
           */
           // require modules
           mainApp.child_process = require('child_process');
-          mainApp.csslint = require('csslint');
           mainApp.fs = require('fs');
           mainApp.http = require('http');
           mainApp.https = require('https');
@@ -513,22 +512,7 @@
                     break;
                   // lint options2.data
                   case 'lint':
-                    switch (mainApp.path.extname(options2.file)) {
-                    case '.css':
-                      tmp = mainApp.csslint.CSSLint.getFormatter('text').formatResults(
-                        mainApp.csslint.CSSLint.verify(options2.data),
-                        options2.file,
-                        { quiet: true }
-                      );
-                      if (tmp) {
-                        console.log(tmp + '\n');
-                      }
-                      break;
-                    case '.js':
-                    case '.json':
-                      mainApp.jslint_lite.jslintPrint(options2.data, options2.file);
-                      break;
-                    }
+                    mainApp.jslint_lite.jslintPrint(options2.data, options2.file);
                     break;
                   }
                 });

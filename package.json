@@ -2,8 +2,7 @@
   "author": "kai zhu <kaizhu256@gmail.com>",
   "bin": { "utility2" : "cli.sh" },
   "dependencies": {
-    "csslint": "^0.10.0",
-    "jslint-lite": "^2014.0.0"
+    "jslint-lite": "^2014.11.26-11"
   },
   "description": "lightweight nodejs module for covering and testing browser code",
   "devDependencies": {
@@ -23,5 +22,5 @@
     "start": "./cli.sh node example.js",
     "test": "./cli.sh shNpmTest example.js"
   },
-  "version": "2014.10.31-16"
+  "version": "2014.10.31-18"
 }
