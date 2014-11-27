@@ -22,11 +22,14 @@ script:
   - export GITHUB_REPO=kaizhu256/node-utility2
   - export HEROKU_REPO=hrku01-utility2-$TRAVIS_BRANCH
   - export TEST_URL="https://hrku01-utility2-$TRAVIS_BRANCH.herokuapp.com/?modeTest=1"
+  - . ./index.sh && shInit
   # test published package
-  - ./cli.sh shNpmTestPublished
+  - shRun shNpmTestPublished
+  # test example.js
+  - node example.js
   # test package
   - npm test
   # deploy to heroku
-  - ./cli.sh shHerokuDeploy
+  - shRun shHerokuDeploy
   # upload build artifacts to github
-  - ./cli.sh shBuildUploadGithub
+  - shRun shBuildUploadGithub

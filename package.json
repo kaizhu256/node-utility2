@@ -1,6 +1,6 @@
 {
   "author": "kai zhu <kaizhu256@gmail.com>",
-  "bin": { "utility2" : "cli.sh" },
+  "bin": { "utility2" : "index.sh" },
   "dependencies": {
     "jslint-lite": "^2014.11.26-11"
   },
@@ -19,8 +19,8 @@
   },
   "scripts": {
     "postinstall": "mkdir -p node_modules && rm -f node_modules/utility2.js && ln -s ../index.js node_modules/utility2.js",
-    "start": "./cli.sh node example.js",
-    "test": "./cli.sh shNpmTest example.js"
+    "start": "node test.js",
+    "test": ". ./index.sh && shInit && shRun shNpmTest test.js"
   },
-  "version": "2014.10.31-18"
+  "version": "2014.10.31-20"
 }

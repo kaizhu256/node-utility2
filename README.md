@@ -34,7 +34,7 @@ npm start --server-port=8080
 
 
 ## library usage example
-- see included ./example.js
+- see included ./test.js
 
 
 
@@ -49,30 +49,29 @@ npm start --server-port=8080
   - heroku deploy script
 - README.md
   - readme file
-- cli.sh
-  - shell build script used by travis-ci to do the following:
-    - run local phantomjs and slimerjs browser tests on local server
-    - deploy to heroku after passing local browser tests
-    - upload tests, coverages, screenshots, and other build artifacts to github
-- example.data
-  - example data file containing embedded resources for testing this app
 - example.js
-  - example nodejs script demonstrating how to use this app
+  - nodejs example usage script
 - git-ssh.sh
   - ssh authentication hook used for heroku git deployment
 - index.data
   - data file containing embedded resources for testing this app
 - index.js
-  - nodejs build script
+  - main nodejs app
+- index.sh
+  - shell script exporting various helper test functions
 - package.json
   - npm config file
+- test.data
+  - data file containing embedded test resources
+- test.js
+  - nodejs test script
 
 
 
 ## todo
 - inline library usage example
 - add grep in repl debugger
-- add profiling
+- add profiling and flame graph
 - add process.cwd to githubFilePut
 - add server stress test using phantomjs
 - minify /assets/utility2.js
@@ -81,6 +80,7 @@ npm start --server-port=8080
 
 ## changelog
 #### 2014.10.31
+- rename cli.sh to index.sh
 - add jsonCopy
 - revamp server
 - revamp phantomjs test

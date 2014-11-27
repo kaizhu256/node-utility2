@@ -1,4 +1,3 @@
-#!/bin/sh
 shAesDecrypt() {
   # this function decrypts base64-encode stdin to stdout using aes-256-cbc
   # save stdin to $TEXT
@@ -115,7 +114,7 @@ shGithubFilePut() {
   local URL=$1 || return $?
   local FILE=$2 || return $?
   local SHA=${3-undefined} || return $?
-  node -e "require('$DIRNAME_LIB').githubFilePut('$URL', '$FILE', $SHA)" || return $?
+  node -e "require('utility2').githubFilePut('$URL', '$FILE', $SHA)" || return $?
 }
 
 shGithubFilePost() {
@@ -143,12 +142,11 @@ shHerokuDeploy() {
   # git add everything
   git add . || return $?
   # init Procfile
-  node -e "var fs, utility2;\
+  node -e "var fs;\
     fs = require('fs');\
-    utility2 = require('$DIRNAME_LIB');\
     fs.writeFileSync(\
       'Procfile',\
-      utility2.textFormat(fs.readFileSync('Procfile', 'utf8'), process.env)\
+      require('utility2').textFormat(fs.readFileSync('Procfile', 'utf8'), process.env)\
     );"
   # git commit
   git commit -am "heroku deploy" || return $?
@@ -176,6 +174,68 @@ shHerokuDeploy() {
   fi
 }
 
+shInit() {
+  # this function inits the env
+  # init CI_*
+  if [ -d .git ]
+  then
+    # init codeship.io env
+    if [ "$CI_NAME" = "codeship" ]
+    then
+      export CI_BUILD_DIR=build.codeship.io || return $?
+    # init travis-ci.org env
+    elif [ "$TRAVIS" ]
+    then
+      export CI_BUILD_DIR=build.travis-ci.org || return $?
+      export CI_BRANCH=$TRAVIS_BRANCH || return $?
+      export CI_BUILD_NUMBER=$TRAVIS_BUILD_NUMBER || return $?
+      export CI_COMMIT_ID=$TRAVIS_COMMIT || return $?
+      # decrypt and exec encrypted data
+      if [ "$AES_256_KEY" ]
+      then
+        eval "$(shAesDecryptTravis)" || return $?
+      fi
+    else
+      # init default env
+      export CI_BUILD_DIR=build.local || return $?
+      export CI_BRANCH=alpha || return $?
+      export CI_BUILD_NUMBER=0 || return $?
+      export CI_COMMIT_ID=$(git rev-parse --verify HEAD) || return $?
+    fi
+    # init $CI_COMMIT_*
+    export CI_COMMIT_MESSAGE="$(git log -1 --pretty=%s)" || return $?
+    export CI_COMMIT_INFO="$CI_COMMIT_ID - $CI_COMMIT_MESSAGE" || return $?
+  fi
+  # init $CWD
+  CWD=$(pwd) || return $?
+  # init $GIT_SSH
+  if [ "$GIT_SSH_KEY" ]
+  then
+    export GIT_SSH=$(node -e "console.log(require('utility2').__dirname)")/git-ssh.sh || return $?
+  fi
+  # init $PACKAGE_JSON_*
+  if [ -f package.json ]
+  then
+    eval $(node -e "var dict, value;\
+      dict = require('./package.json');
+      console.log(Object.keys(dict).map(function (key) {\
+        value = dict[key];\
+        return typeof value === 'string' ? 'export PACKAGE_JSON_' + key.toUpperCase() + '='\
+            + JSON.stringify(value.split('\n')[0])\
+          : ':';\
+      }).join(';'))") || return $?
+  fi
+  # init $PATH with $CWD/node_modules/.bin
+  export PATH=$CWD/node_modules/phantomjs-lite:$CWD/node_modules/.bin:$PATH || return $?
+  # init $TMPFILE
+  export TMPFILE=/tmp/tmpfile.$(openssl rand -hex 8) || return $?
+  # auto-detect slimerjs
+  if slimerjs .install/phantomjs-test.js > /dev/null 2>&1
+  then
+    export npm_config_mode_slimerjs=1 || return $?
+  fi
+}
+
 shIstanbulCover() {
   # this function runs the command with istanbul code-coverage
   local ARGS=$1 || return $?
@@ -196,7 +256,7 @@ shIstanbulReport() {
       fs = require('fs');\
       fs.writeFileSync(\
         '.build/coverage-report.html/coverage.json',\
-        JSON.stringify(require('$DIRNAME_LIB').coverageMerge(\
+        JSON.stringify(require('utility2').coverageMerge(\
           require('./.build/coverage-report.html/coverage.json'),\
           require('./$COVERAGE')\
         ))\
@@ -234,7 +294,7 @@ shNpmTest() {
   printf "created coverage-report file:///$CWD/.build/coverage-report.html/index.html\n\n" ||\
     return $?
   # create coverage-report badge
-  node -e "require('$DIRNAME_LIB')\
+  node -e "require('utility2')\
     .coverageBadge(require('./.build/coverage-report.html/coverage.json'))" || return $?
   if [ "$EXIT_CODE" != 0 ]
   # if npm test failed, then run it again without coverage
@@ -245,12 +305,6 @@ shNpmTest() {
 }
 
 shNpmTestPublished() {
-  # this function runs npm test on the lastest published version of this app
-  shNpmTestPublishedTmp
-  shReturn $?
-}
-
-shNpmTestPublishedTmp() {
   # this function runs npm test on the lastest published version of this app in the tmp dir
   if [ "$MODE_OFFLINE" ]
   then
@@ -291,6 +345,15 @@ shReturn() {
   return $EXIT_CODE
 }
 
+shRun() {
+  # eval argv
+  $@
+  # save $EXIT_CODE and restore $CWD
+  shReturn $? || return $?
+  # return $EXIT_CODE
+  return $EXIT_CODE
+}
+
 shTravisEncrypt() {
   # this function travis-encrypts github repo $1's secret $2
   local GITHUB_REPO=$1 || return $?
@@ -302,75 +365,3 @@ shTravisEncrypt() {
   printf "$SECRET" | openssl rsautl -encrypt -pubin -inkey $TMPFILE | base64 | tr -d "\n" ||\
     return $?
 }
-
-shMain() {
-  # this function is the main program and parses argv
-  # init CI_*
-  if [ -d .git ]
-  then
-    # init codeship.io env
-    if [ "$CI_NAME" = "codeship" ]
-    then
-      export CI_BUILD_DIR=build.codeship.io || return $?
-    # init travis-ci.org env
-    elif [ "$TRAVIS" ]
-    then
-      export CI_BUILD_DIR=build.travis-ci.org || return $?
-      export CI_BRANCH=$TRAVIS_BRANCH || return $?
-      export CI_BUILD_NUMBER=$TRAVIS_BUILD_NUMBER || return $?
-      export CI_COMMIT_ID=$TRAVIS_COMMIT || return $?
-      # decrypt and exec encrypted data
-      if [ "$AES_256_KEY" ]
-      then
-        eval "$(shAesDecryptTravis)" || return $?
-      fi
-    else
-      # init default env
-      export CI_BUILD_DIR=build.local || return $?
-      export CI_BRANCH=alpha || return $?
-      export CI_BUILD_NUMBER=0 || return $?
-      export CI_COMMIT_ID=$(git rev-parse --verify HEAD) || return $?
-    fi
-    # init $CI_COMMIT_*
-    export CI_COMMIT_MESSAGE="$(git log -1 --pretty=%s)" || return $?
-    export CI_COMMIT_INFO="$CI_COMMIT_ID - $CI_COMMIT_MESSAGE" || return $?
-  fi
-  # init $CWD
-  CWD=$(pwd) || return $?
-  # init $DIRNAME
-  DIRNAME=$(cd "$(dirname $0)" && pwd) || return $?
-  # init $DIRNAME_LIB
-  DIRNAME_LIB=$DIRNAME/index.js || return $?
-  # init $GIT_SSH
-  if [ "$GIT_SSH_KEY" ]
-  then
-    export GIT_SSH=$DIRNAME/git-ssh.sh || return $?
-  fi
-  # init $PACKAGE_JSON_*
-  eval $(node -e "var dict, value;\
-    dict = require('./package.json');
-    console.log(Object.keys(dict).map(function (key) {\
-      value = dict[key];\
-      return typeof value === 'string' ?\
-        'export PACKAGE_JSON_' + key.toUpperCase() + '=' + JSON.stringify(value.split('\n')[0])\
-        : ':';\
-    }).join(';'))") || return $?
-  # init $PATH with $CWD/node_modules/.bin
-  export PATH=$CWD/node_modules/phantomjs-lite:$CWD/node_modules/.bin:$PATH || return $?
-  # init $TMPFILE
-  export TMPFILE=/tmp/tmpfile.$(openssl rand -hex 8) || return $?
-  # auto-detect slimerjs
-  if slimerjs .install/phantomjs-test.js > /dev/null 2>&1
-  then
-    export npm_config_mode_slimerjs=1 || return $?
-  fi
-  # eval argv
-  $@
-  # save $EXIT_CODE and restore $CWD
-  shReturn $? || return $?
-  # return $EXIT_CODE
-  return $EXIT_CODE
-}
-
-# init main routine
-shMain $@

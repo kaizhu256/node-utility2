@@ -51,7 +51,7 @@ body {
 <!-- script begin -->
   <script>window.$$mainApp = {{mainAppBrowserJson}}</script>
   <script src="/assets/utility2.js"></script>
-  <script src="/assets/example.js"></script>
+  <script src="/assets/test.js"></script>
 <!-- script end -->
 </body>
 </html>
