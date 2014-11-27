@@ -114,7 +114,7 @@ shGithubFilePut() {
   local URL=$1 || return $?
   local FILE=$2 || return $?
   local SHA=${3-undefined} || return $?
-  node -e "require('utility2').githubFilePut('$URL', '$FILE', $SHA)" || return $?
+  node -e "require('$DIRNAME').githubFilePut('$URL', '$FILE', $SHA)" || return $?
 }
 
 shGithubFilePost() {
@@ -146,7 +146,7 @@ shHerokuDeploy() {
     fs = require('fs');\
     fs.writeFileSync(\
       'Procfile',\
-      require('utility2').textFormat(fs.readFileSync('Procfile', 'utf8'), process.env)\
+      require('$DIRNAME').textFormat(fs.readFileSync('Procfile', 'utf8'), process.env)\
     );"
   # git commit
   git commit -am "heroku deploy" || return $?
@@ -208,10 +208,12 @@ shInit() {
   fi
   # init $CWD
   CWD=$(pwd) || return $?
+  # init $DIRNAME
+  export DIRNAME=$(node -e "console.log(require('utility2').__dirname)") || return $?
   # init $GIT_SSH
   if [ "$GIT_SSH_KEY" ]
   then
-    export GIT_SSH=$(node -e "console.log(require('utility2').__dirname)")/git-ssh.sh || return $?
+    export GIT_SSH=$DIRNAME/git-ssh.sh || return $?
   fi
   # init $PACKAGE_JSON_*
   if [ -f package.json ]
@@ -256,7 +258,7 @@ shIstanbulReport() {
       fs = require('fs');\
       fs.writeFileSync(\
         '.build/coverage-report.html/coverage.json',\
-        JSON.stringify(require('utility2').coverageMerge(\
+        JSON.stringify(require('$DIRNAME').coverageMerge(\
           require('./.build/coverage-report.html/coverage.json'),\
           require('./$COVERAGE')\
         ))\
@@ -294,7 +296,7 @@ shNpmTest() {
   printf "created coverage-report file:///$CWD/.build/coverage-report.html/index.html\n\n" ||\
     return $?
   # create coverage-report badge
-  node -e "require('utility2')\
+  node -e "require('$DIRNAME')\
     .coverageBadge(require('./.build/coverage-report.html/coverage.json'))" || return $?
   if [ "$EXIT_CODE" != 0 ]
   # if npm test failed, then run it again without coverage
@@ -322,7 +324,7 @@ shPhantomTest() {
   local URL=$1 || return $?
   shBuildPrint "${MODE_CI_BUILD:-remotePhantomTest}" "phantom testing $URL ..." || return $?
   node -e "var mainApp;\
-    mainApp = require('utility2');\
+    mainApp = require('$DIRNAME');\
     mainApp._testReport = require('$CWD/.build/test-report.json');\
     mainApp.testPhantom('$URL', function (error) {\
       mainApp.fs.writeFileSync(\

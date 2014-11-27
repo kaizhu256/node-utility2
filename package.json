@@ -22,5 +22,5 @@
     "start": "node test.js",
     "test": ". ./index.sh && shInit && shRun shNpmTest test.js"
   },
-  "version": "2014.10.31-20"
+  "version": "2014.10.31-21"
 }

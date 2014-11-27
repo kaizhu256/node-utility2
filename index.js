@@ -918,7 +918,7 @@
                 mainApp.fs.write(file, JSON.stringify(args[1]));
                 console.log('created ' + 'file://' + file);
               });
-              phantom.exit();
+              phantom.exit(data.testReport.testsFailed);
               break;
             }
           };
