@@ -208,6 +208,8 @@ shInit() {
   fi
   # init $CWD
   CWD=$(pwd) || return $?
+  # init $PATH with $CWD/node_modules/.bin
+  export PATH=$CWD/node_modules/phantomjs-lite:$CWD/node_modules/.bin:$PATH || return $?
   # init $DIRNAME
   export DIRNAME=$(node -e "console.log(require('utility2').__dirname)") || return $?
   # init $GIT_SSH
@@ -227,8 +229,6 @@ shInit() {
           : ':';\
       }).join(';'))") || return $?
   fi
-  # init $PATH with $CWD/node_modules/.bin
-  export PATH=$CWD/node_modules/phantomjs-lite:$CWD/node_modules/.bin:$PATH || return $?
   # init $TMPFILE
   export TMPFILE=/tmp/tmpfile.$(openssl rand -hex 8) || return $?
   # auto-detect slimerjs
@@ -348,12 +348,37 @@ shReturn() {
 }
 
 shRun() {
+  # this function executes $@ and restores $CWD on exit
+  # eval argv forever
+  if [ "$npm_config_mode_forever" ]
+  then
+    eval "shRunForever $@"
   # eval argv
-  $@
+  else
+    $@
+  fi
   # save $EXIT_CODE and restore $CWD
   shReturn $? || return $?
   # return $EXIT_CODE
   return $EXIT_CODE
+}
+
+shRunForever() {
+  # this function executes $@ and auto-respawns on exit
+  mkdir -p .tmp
+  # kill old forever process
+  kill $(cat .tmp/forever.pid) > /dev/null 2>&1
+  sleep 2 || return $?
+  # kill old forever process forcefully
+  kill $(cat .tmp/forever.pid) -s9 2>/dev/null
+  # record new forever pid
+  printf "$$" > .tmp/forever.pid || return $?
+  echo "\nprocess $$ - running '$@' ..." >&2 || return $?
+  until npm_config_pid_parent=$$ $@
+  do
+    echo "\nprocess $$ - '$@' exited with code $?. respawning ..." >&2 || return $?
+    sleep 2 || return $?
+  done
 }
 
 shTravisEncrypt() {
@@ -367,3 +392,9 @@ shTravisEncrypt() {
   printf "$SECRET" | openssl rsautl -encrypt -pubin -inkey $TMPFILE | base64 | tr -d "\n" ||\
     return $?
 }
+
+# if the first argument is shRun, then run the command
+if [ "$1" = shRun ]
+then
+  shInit && $@
+fi

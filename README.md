@@ -2,10 +2,10 @@ utility2 [![NPM](https://img.shields.io/npm/v/utility2.svg?style=flat-square)](h
 ========
 lightweight nodejs module for testing and covering browser-side code
 
+| test server screenshot |
+|:---------------------- |
+|[![heroku.com test server](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/beta/test-report.screenshot.herokuDeploy.phantomjs.png)](https://hrku01-utility2-beta.herokuapp.com/?modeTest=1)|
 
-
-## demo server
-[![heroku.com test server](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/beta/test-report.screenshot.localNpmTest.phantomjs.png)](https://hrku01-utility2-beta.herokuapp.com/?modeTest=1)
 
 
 
@@ -13,11 +13,11 @@ lightweight nodejs module for testing and covering browser-side code
 
 [![build commit status](https://kaizhu256.github.io/node-utility2/build.badge.svg)](https://travis-ci.org/kaizhu256/node-utility2)
 
- git branch | test server | test report | coverage report | build artifact
-:----------:|:-----------:|:-----------:|:---------------:|:--------------:
-[master](https://github.com/kaizhu256/node-utility2/tree/master) | [![heroku.com test server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://hrku01-utility2-master.herokuapp.com/?modeTest=1) | [![test-report](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/master/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/master/test-report.html) | [![istanbul coverage report](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/master/coverage-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/master/coverage-report.html/node-utility2/index.html) | [![build artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build.travis-ci.org/master)
-[beta](https://github.com/kaizhu256/node-utility2/tree/beta) | [![heroku.com test server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://hrku01-utility2-beta.herokuapp.com/?modeTest=1) | [![test-report](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/beta/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/beta/test-report.html) | [![istanbul coverage report](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/beta/coverage-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/beta/coverage-report.html/node-utility2/index.html) | [![build artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build.travis-ci.org/beta)
-[alpha](https://github.com/kaizhu256/node-utility2/tree/alpha) | [![heroku.com test server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://hrku01-utility2-alpha.herokuapp.com/?modeTest=1) | [![test-report](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/alpha/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/alpha/test-report.html) | [![istanbul coverage report](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/alpha/coverage-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/alpha/coverage-report.html/node-utility2/index.html) | [![build artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build.travis-ci.org/alpha)
+| git branch | test server | test report | coverage report | build artifact |
+|:----------:|:-----------:|:-----------:|:---------------:|:--------------:|
+|[master](https://github.com/kaizhu256/node-utility2/tree/master) | [![heroku.com test server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://hrku01-utility2-master.herokuapp.com/?modeTest=1) | [![test-report](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/master/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/master/test-report.html) | [![istanbul coverage report](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/master/coverage-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/master/coverage-report.html/node-utility2/index.html) | [![build artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build.travis-ci.org/master)|
+|[beta](https://github.com/kaizhu256/node-utility2/tree/beta) | [![heroku.com test server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://hrku01-utility2-beta.herokuapp.com/?modeTest=1) | [![test-report](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/beta/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/beta/test-report.html) | [![istanbul coverage report](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/beta/coverage-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/beta/coverage-report.html/node-utility2/index.html) | [![build artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build.travis-ci.org/beta)|
+|[alpha](https://github.com/kaizhu256/node-utility2/tree/alpha) | [![heroku.com test server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://hrku01-utility2-alpha.herokuapp.com/?modeTest=1) | [![test-report](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/alpha/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/alpha/test-report.html) | [![istanbul coverage report](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/alpha/coverage-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/alpha/coverage-report.html/node-utility2/index.html) | [![build artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build.travis-ci.org/alpha)|
 
 
 
@@ -34,7 +34,136 @@ npm start --server-port=8080
 
 
 ## library usage example
-- see included ./test.js
+```
+/*
+ example.js
+
+ 1) copy the code below to example.js
+
+ 2) to start the example server on port 8080, run:
+    $ npm_config_server_port=8080 node example.js
+
+ 3) to start the example server on random port,
+    and run browser tests with code-coverage, run:
+    $ npm install utility2 && node_modules/.bin/utility2 shRun shNpmTest example.js
+*/
+/*jslint
+  bitwise: true, browser: true,
+  indent: 2,
+  maxerr: 8,
+  node: true, nomen: true,
+  regexp: true,
+  stupid: true,
+  todo: true
+*/
+(function () {
+  'use strict';
+  var mainApp;
+  // init mainApp.modeJs
+  mainApp = { modeJs: 'undefined' };
+  try {
+    // check node js env
+    mainApp.modeJs = global && module.exports && process.versions.node && 'node';
+  } catch (errorCaughtNode) {
+    try {
+      // check browser js env
+      mainApp.modeJs = window && navigator.userAgent && 'browser';
+    } catch (ignore) {
+    }
+  }
+  switch (mainApp.modeJs) {
+  // init browser js env
+  case 'browser':
+    // init mainApp
+    mainApp = window.$$mainApp;
+    // init local object
+    mainApp.localExport({
+      _name: 'example.browser',
+      _ajax_httpGet_test: function (onError) {
+        /*
+          this function tests ajax's http GET handling behavior
+        */
+        // test http GET handling behavior
+        mainApp.ajax({ url: '/test/hello' }, function (error, data) {
+          mainApp.testTryCatch(function () {
+            // validate no error occurred
+            mainApp.assert(!error, error);
+            // validate data
+            mainApp.assert(data === 'hello', data);
+            onError();
+          }, onError);
+        });
+      }
+    }, mainApp);
+    // init test
+    mainApp.testRun();
+    break;
+  // init node js env
+  case 'node':
+    // init PACKAGE_JSON_NAME
+    process.env.PACKAGE_JSON_NAME = 'example';
+    mainApp.utility2 = require('utility2');
+    // init local object
+    mainApp.utility2.localExport({
+      _name: 'example.node',
+      _testPhantom_default_test: function (onError) {
+        /*
+          this function tests testPhantom' default handling behavior
+        */
+        mainApp.testPhantom(
+          'http://localhost:' + process.env.npm_config_server_port + '/?modeTest=phantom',
+          onError
+        );
+      }
+    }, mainApp);
+    // init server
+    mainApp.http.createServer(function (request, response) {
+      switch (mainApp.url.parse(request.url).pathname) {
+      // serve the following assets from _fileCacheDict
+      case '/assets/example.js':
+        mainApp.fs.readFile(__dirname + '/example.js', function (error, data) {
+          // nop hack to pass jslint
+          mainApp.nop(error);
+          response.end(data);
+        });
+        break;
+      case '/assets/utility2.css':
+      case '/assets/utility2.js':
+        response.end(mainApp.utility2._fileCacheDict[request.url].data);
+        break;
+      // serve index.html template
+      case '/':
+        response.end('<html>' +
+          '<body>' +
+            '<link href="/assets/utility2.css" rel="stylesheet"/>' +
+            '<script>window.$$mainApp = ' + JSON.stringify(mainApp.utility2._mainAppBrowser) +
+            '</script>' +
+            '<script src="/assets/utility2.js"></script>' +
+            '<script src="/assets/example.js"></script>' +
+          '</body>' +
+          '</html>');
+        break;
+      // test http GET handling behavior
+      case '/test/hello':
+        response.end('hello');
+        break;
+      // fallback to 404 Not Found
+      default:
+        mainApp.serverRespondDefault(request, response, 404);
+      }
+    })
+      // start server on port process.env.npm_config_server_port
+      .listen(process.env.npm_config_server_port, function () {
+        console.log('server listening on port ' + process.env.npm_config_server_port);
+        // init test
+        if (process.env.npm_config_mode_npm_test) {
+          mainApp.testRun();
+        }
+      });
+    break;
+  }
+}());
+```
 
 
 
@@ -69,10 +198,11 @@ npm start --server-port=8080
 
 
 ## todo
-- inline library usage example
+- add shTmpMv to move app to /tmp/app and change shTmpCopy to copy app to /tmp/app.tmp
+- add grep sugar in repl
+- add tarball creation for deployment
 - add grep in repl debugger
 - add profiling and flame graph
-- add process.cwd to githubFilePut
 - add server stress test using phantomjs
 - minify /assets/utility2.js
 
@@ -80,6 +210,10 @@ npm start --server-port=8080
 
 ## changelog
 #### 2014.10.31
+- notify phantomjs of test-completion by throwing a special error
+- inline library usage example
+- add --mode-forever to npm start
+- add modeTestCase to test a single test-case
 - rename cli.sh to index.sh
 - add jsonCopy
 - revamp server

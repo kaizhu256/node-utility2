@@ -522,7 +522,9 @@
             );
           }
           // if coverage-mode is enabled, then cover options.data
-          if (local.__coverage__ && options.coverage === mainApp._PACKAGE_JSON_NAME) {
+          if (local.__coverage__ &&
+              options.coverage &&
+              options.coverage === mainApp._PACKAGE_JSON_NAME) {
             options.data = local._coverageInstrument(options.data, options.file);
           }
         },
@@ -664,21 +666,10 @@
           });
         },
 
-        serverRespondData: function (request, response, statusCode, contentType, data) {
-          /*
-            this function responds with the given data
-          */
-          // set response / statusCode / contentType
-          mainApp.serverRespondWriteHead(request, response, statusCode, {
-            'Content-Type': contentType
-          });
-          // end response with data
-          response.end(data);
-        },
-
         serverRespondDefault: function (request, response, statusCode, error) {
           /*
-            this function responds with a default message or error.stack for the given statusCode
+            this function responds with a default message,
+            or error stack for the given statusCode
           */
           // set response / statusCode / contentType
           mainApp.serverRespondWriteHead(request, response, statusCode, {
@@ -754,6 +745,7 @@
           */
           var onParallel;
           onParallel = mainApp.onParallel(onError);
+          onParallel.counter += 1;
           ['phantomjs', 'slimerjs'].forEach(function (argv0) {
             var file, onError2, timerTimeout;
             // if slimerjs is not available, then do not use it
@@ -829,81 +821,52 @@
           /*
             this function inits this module
           */
-          var file, modeIo, onIo;
-          modeIo = 0;
-          onIo = function (data) {
-            modeIo += 1;
-            switch (modeIo) {
-            case 1:
-              // require modules
-              mainApp.fs = require('fs');
-              mainApp.system = require('system');
-              // if no args are given, then exit
-              if (mainApp.system.args.length === 1) {
-                phantom.exit();
-                return;
-              }
-              // phantom error handling - http://phantomjs.org/api/phantom/handler/on-error.html
-              phantom.onError = function (msg, trace) {
-                var msgStack = [mainApp.argv0 + ' ERROR: ' + msg];
-                if (trace && trace.length) {
-                  msgStack.push(mainApp.argv0 + ' TRACE:');
-                  trace.forEach(function (t) {
-                    msgStack.push(' -> ' + (t.file || t.sourceURL) + ': ' + t.line
-                      + (t.function ? ' (in function ' + t.function + ')' : ''));
-                  });
-                }
-                console.error('\n\n\n\n' + msgStack.join('\n') + '\n');
-                phantom.exit(1);
-              };
-              // init mainApp
-              mainApp.setOverride(
-                mainApp,
-                -1,
-                JSON.parse(decodeURIComponent(mainApp.system.args[1]))
-              );
-              // set timeout for phantom
-              setTimeout(function () {
-                throw new Error(mainApp.argv0 + ' - timeout ' + mainApp.url);
-              }, Number(mainApp._timeoutDefault) || 30000);
-              // require modules
-              mainApp.page = require('webpage').create();
-              // init browser view size
-              mainApp.page.viewportSize = { height: 600, width: 800 };
-              // init page error handling
-              // http://phantomjs.org/api/webpage/handler/on-error.html
-              mainApp.page.onError = phantom.onError;
-              // pipe page's console.log to stdout
-              mainApp.page.onConsoleMessage = function () {
-                console.log.apply(console, arguments);
-              };
-              // open requested webpage
-              mainApp.page.open(mainApp.url, onIo);
-              break;
-            case 2:
-              console.log(mainApp.argv0 + ' - open ' + data + ' ' + mainApp.url);
-              // validate page opened successfully
-              mainApp.assert(data === 'success', data);
-              // wait 2000 ms to create screenshot
-              setTimeout(function () {
-                file = mainApp.fs.workingDirectory +
-                  '/.build/test-report.screenshot.' + mainApp.argv0 + '.png';
-                mainApp.page.render(file);
-                console.log('created ' + 'file://' + file);
-              }, 2000);
-              // check for test results every 2000 ms
-              setInterval(function () {
-                data = mainApp.page.evaluate(function () {
-                  return JSON.stringify(window.global_test_results);
-                });
-                if (data) {
-                  onIo(JSON.parse(data));
-                }
-              }, 2000);
-              break;
-            default:
+          // require modules
+          mainApp.fs = require('fs');
+          mainApp.system = require('system');
+          // phantom error handling - http://phantomjs.org/api/phantom/handler/on-error.html
+          phantom.onError = function (msg, trace) {
+            var msgStack = [mainApp.argv0 + ' ERROR: ' + msg];
+            if (trace && trace.length) {
+              msgStack.push(mainApp.argv0 + ' TRACE:');
+              trace.forEach(function (t) {
+                msgStack.push(' -> ' + (t.file || t.sourceURL) + ': ' + t.line
+                  + (t.function ? ' (in function ' + t.function + ')' : ''));
+              });
+            }
+            console.error('\n\n\n\n' + msgStack.join('\n') + '\n');
+            // non-zero exit-code
+            phantom.exit(1);
+          };
+          // init mainApp
+          mainApp.setOverride(
+            mainApp,
+            -1,
+            JSON.parse(decodeURIComponent(mainApp.system.args[1]))
+          );
+          // set timeout for phantom
+          setTimeout(function () {
+            throw new Error(mainApp.argv0 + ' - timeout ' + mainApp.url);
+          }, Number(mainApp._timeoutDefault) || 30000);
+          // require modules
+          mainApp.page = require('webpage').create();
+          // init browser view size
+          mainApp.page.viewportSize = { height: 600, width: 800 };
+          // init page error handling
+          // http://phantomjs.org/api/webpage/handler/on-error.html
+          mainApp.page.onError = function (msg, trace) {
+            var data, file;
+            data = (/^Error: (\{"global_test_results":\{.+)/).exec(msg);
+            data = data && JSON.parse(data[1]).global_test_results;
+            if (data) {
+              // merge coverage
               global.__coverage__ = global.__coverage__ || {};
               mainApp.coverageMerge(global.__coverage__, data.coverage || {});
+              // create screenshot
+              file = mainApp.fs.workingDirectory +
+                '/.build/test-report.screenshot.' + mainApp.argv0 + '.png';
+              mainApp.page.render(file);
+              console.log('created ' + 'file://' + file);
               // integrate screenshot into test-report
               data.testReport.testPlatformList[0].screenshotImg =
                 'test-report.screenshot.' + mainApp.argv0 + '.png';
@@ -918,11 +881,22 @@
                 mainApp.fs.write(file, JSON.stringify(args[1]));
                 console.log('created ' + 'file://' + file);
               });
+              // exit-code based on number of tests failed
               phantom.exit(data.testReport.testsFailed);
-              break;
+              return;
             }
+            phantom.onError(msg, trace);
           };
-          onIo();
+          // pipe page's console.log to stdout
+          mainApp.page.onConsoleMessage = function () {
+            console.log.apply(console, arguments);
+          };
+          // open requested webpage
+          mainApp.page.open(mainApp.url, function (data) {
+            console.log(mainApp.argv0 + ' - open ' + data + ' ' + mainApp.url);
+            // validate page opened successfully
+            mainApp.assert(data === 'success', data);
+          });
         }
       };
       // init this module
@@ -1005,7 +979,8 @@
           */
           var onParallel;
           onParallel = mainApp.onParallel(onError);
-          // test default handling behavior
+          onParallel.counter += 1;
+          // test http GET handling behavior
           onParallel.counter += 1;
           mainApp.ajax({ url: '/test/hello' }, function (error, data) {
             mainApp.testTryCatch(function () {
@@ -1016,7 +991,7 @@
               onParallel();
             }, onParallel);
           });
-          // test post handling behavior
+          // test http POST handling behavior
           ['binary', 'text'].forEach(function (resultType) {
             onParallel.counter += 1;
             mainApp.ajax({
@@ -1028,7 +1003,7 @@
               headers: { 'X-Header-Hello': 'Hello' },
               method: 'POST',
               resultType: resultType,
-              url: '/test/post'
+              url: '/test/echo'
             }, function (error, data) {
               mainApp.testTryCatch(function () {
                 // validate no error occurred
@@ -1039,7 +1014,7 @@
                   data = String(data);
                 }
                 // validate text data
-                mainApp.assert(data === 'hello', data);
+                mainApp.assert(data.indexOf('hello') >= 0, data);
                 onParallel();
               }, onParallel);
             });
@@ -1124,8 +1099,8 @@
           var message;
           mainApp.testMock(onError, [
             // mock console.error
-            [console, { error: function (_) {
-              message += (_ || '') + '\n';
+            [console, { error: function (arg) {
+              message += (arg || '') + '\n';
             } }]
           ], function (onError) {
             message = '';
@@ -1309,22 +1284,15 @@
           /*
             this function exports the local object to exports
           */
-          var match;
           Object.keys(local).forEach(function (key) {
             // add testCase to mainApp._testReport
             if (key.slice(-5) === '_test' &&
-                local._name.split('.')[0] === mainApp._PACKAGE_JSON_NAME) {
+                local._name.split('.')[0] === mainApp._PACKAGE_JSON_NAME &&
+                (!mainApp.modeTestCase || mainApp.modeTestCase === key)) {
               mainApp._testPlatform.testCaseList.push({
                 callback: local[key],
                 name: local._name + '.' + key
               });
-              return;
-            }
-            // set dict items to mainApp object
-            match = (/(.+Dict)_(.*)/).exec(key);
-            if (match) {
-              mainApp[match[1]] = mainApp[match[1]] || {};
-              mainApp[match[1]][match[2]] = local[key];
               return;
             }
             // export items that don't start with an underscore _
@@ -1358,6 +1326,29 @@
           }
         },
 
+        __onErrorDefault_default_test: function (onError) {
+          /*
+            this function tests _onErrorDefault's default handling behavior
+          */
+          var message;
+          mainApp.testMock(onError, [
+            // mock console.error
+            [console, { error: function (arg) {
+              message = arg;
+            } }]
+          ], function (onError) {
+            // test no error handling behavior
+            mainApp.onErrorDefault();
+            // validate message
+            mainApp.assert(!message, message);
+            // test error handling behavior
+            mainApp.onErrorDefault(mainApp._errorDefault);
+            // validate message
+            mainApp.assert(message, message);
+            onError();
+          });
+        },
+
         onParallel: function (onError) {
           /*
             this function returns another function that runs async tasks in parallel,
@@ -1377,7 +1368,7 @@
             }
           };
           // init counter
-          self.counter = 1;
+          self.counter = 0;
           // return callback
           return self;
         },
@@ -1790,25 +1781,22 @@
           var consoleError, onParallel, testPlatform, timerInterval;
           // if in browser mode, visually refresh test progress unti it finishes
           if (mainApp.modeJs === 'browser') {
-            // run test after all external resources have been loaded
-            global.addEventListener('load', function () {
-              // init testReportDiv element
-              mainApp._testReportDiv = document.createElement('div');
-              document.body.appendChild(mainApp._testReportDiv);
-              // create initial blank test page
+            // init testReportDiv element
+            mainApp._testReportDiv = document.createElement('div');
+            document.body.appendChild(mainApp._testReportDiv);
+            // create initial blank test page
+            mainApp._testReportDiv.innerHTML =
+              mainApp.testMerge(mainApp._testReport, {});
+            // update test-report status every 1000 ms until finished
+            timerInterval = setInterval(function () {
+              // update mainApp._testReportDiv in browser
               mainApp._testReportDiv.innerHTML =
                 mainApp.testMerge(mainApp._testReport, {});
-              // update test-report status every 1000 ms until finished
-              timerInterval = setInterval(function () {
-                // update mainApp._testReportDiv in browser
-                mainApp._testReportDiv.innerHTML =
-                  mainApp.testMerge(mainApp._testReport, {});
-                if (mainApp._testReport.testsPending === 0) {
-                  // cleanup timerInterval
-                  clearInterval(timerInterval);
-                }
-              }, 1000);
-            });
+              if (mainApp._testReport.testsPending === 0) {
+                // cleanup timerInterval
+                clearInterval(timerInterval);
+              }
+            }, 1000);
           }
           onParallel = mainApp.onParallel(function () {
             /*
@@ -1841,6 +1829,13 @@
                 failed: mainApp._testReport.testsFailed,
                 testReport: mainApp._testReport
               };
+              if (mainApp.modeTest === 'phantom') {
+                setTimeout(function () {
+                  throw new Error(JSON.stringify({
+                    global_test_results: global.global_test_results
+                  }));
+                });
+              }
               break;
             case 'node':
               // create build badge
@@ -1888,6 +1883,7 @@
               break;
             }
           });
+          onParallel.counter += 1;
           // init testReport timer
           mainApp._testReport.timeElapsed = Date.now();
           // init testPlatform

@@ -59,7 +59,7 @@
         }
       };
       // init this module
-      local._init();
+      global.addEventListener('load', local._init);
     },
 
     _initNode: function () {
@@ -115,23 +115,11 @@
               case '/assets/test.js':
               case '/assets/utility2.css':
               case '/assets/utility2.js':
-                mainApp.serverRespondData(
-                  request,
-                  response,
-                  200,
-                  mainApp.utility2._mimeLookupDict[
-                    mainApp.path.extname(request.urlPathNormalized)
-                  ],
-                  mainApp.utility2._fileCacheDict[request.urlPathNormalized].data
-                );
+                response.end(mainApp.utility2._fileCacheDict[request.urlPathNormalized].data);
                 break;
               // serve index.html template
               case '/':
-                mainApp.serverRespondData(
-                  request,
-                  response,
-                  200,
-                  'text/html; charset=utf-8',
+                response.end(
                   mainApp.textFormat(mainApp.utility2._fileCacheDict['/index.html'].data, {
                     PACKAGE_JSON_DESCRIPTION: process.env.PACKAGE_JSON_DESCRIPTION,
                     PACKAGE_JSON_LICENSE: process.env.PACKAGE_JSON_LICENSE,
@@ -142,18 +130,17 @@
                   })
                 );
                 break;
+              // test http POST handling behavior
+              case '/test/echo':
+                mainApp.serverRespondEcho(request, response);
+                break;
               // test internal server error handling behavior
               case '/test/error':
                 next(mainApp.utility2._errorDefault);
                 break;
-              // test default handling behavior
+              // test http GET handling behavior
               case '/test/hello':
-                mainApp.serverRespondData(request, response, 200, 'application/json', 'hello');
-                break;
-              // test post handling behavior
-              case '/test/post':
-                // pipe post data stream from request into response
-                request.on('error', next).pipe(response.on('error', next));
+                response.end('hello');
                 break;
               // fallback to 404 Not Found
               default:
@@ -166,6 +153,7 @@
             // start server on port process.env.npm_config_server_port
             .listen(process.env.npm_config_server_port, function () {
               console.log('server listening on port ' + process.env.npm_config_server_port);
+              // init test
               if (process.env.npm_config_mode_npm_test) {
                 mainApp.testRun();
               }
@@ -263,7 +251,7 @@
             this function tests testPhantom' default handling behavior
           */
           mainApp.testPhantom('http://localhost:' + process.env.npm_config_server_port +
-            '/?modeTest=1&_timeoutDefault=' + mainApp.utility2._timeoutDefault, onError);
+            '/?modeTest=phantom&_timeoutDefault=' + mainApp.utility2._timeoutDefault, onError);
         }
       };
       // init this module
