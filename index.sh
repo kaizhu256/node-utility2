@@ -101,14 +101,6 @@ shBuildUploadGithub() {
   done
 }
 
-shGitCopyTmp() {
-  # this function copies the app to /tmp/app with only the bare git repo files
-  # init /tmp/app
-  rm -fr /tmp/app && mkdir -p /tmp/app || return $?
-  # tar / untar repo contents to /tmp/app, since we can't git clone a shallow repo
-  git ls-tree -r HEAD --name-only | xargs tar -czf - | tar -C /tmp/app -xzvf - || return $?
-}
-
 shGithubFilePut() {
   # this function puts a file into the specified github url
   local URL=$1 || return $?
@@ -131,8 +123,8 @@ shHerokuDeploy() {
   # init $HEROKU_HOSTNAME
   export HEROKU_HOSTNAME=$HEROKU_REPO.herokuapp.com || return $?
   shBuildPrint herokuDeploy "deploying to https://$HEROKU_HOSTNAME ..." || return $?
-  # init clean repo in /tmp/app
-  shGitCopyTmp && cd /tmp/app || return $?
+  # init clean repo in /tmp/app.tmp
+  shTmpCopy && cd /tmp/app.tmp || return $?
   # init .git
   git init || return $?
   # init .git/config
@@ -159,7 +151,7 @@ shHerokuDeploy() {
     return $?
   curl -fLSs https://$HEROKU_HOSTNAME > /dev/null
   # save $EXIT_CODE and restore $CWD
-  shReturn $? || return $?
+  shSave $? || return $?
   if [ "$EXIT_CODE" != 0 ]
   then
     shBuildPrint herokuDeploy "check failed"
@@ -287,9 +279,9 @@ shNpmTest() {
   # cleanup old coverage
   rm -f .build/coverage-report.html/coverage.*
   # run npm test with coverage
-  npm_config_mode_coverage=1 shIstanbulCover $@
+  shIstanbulCover $@
   # save $EXIT_CODE and restore $CWD
-  shReturn $? || return $?
+  shSave $? || return $?
   # create coverage-report
   shIstanbulReport || return $?
   printf "\ncreated test-report file:///$CWD/.build/test-report.html\n" || return $?
@@ -298,10 +290,10 @@ shNpmTest() {
   # create coverage-report badge
   node -e "require('$DIRNAME')\
     .coverageBadge(require('./.build/coverage-report.html/coverage.json'))" || return $?
-  if [ "$EXIT_CODE" != 0 ]
   # if npm test failed, then run it again without coverage
+  if [ "$EXIT_CODE" != 0 ]
   then
-    node $@ || return $?
+    node $@
   fi
   return $EXIT_CODE
 }
@@ -316,6 +308,7 @@ shNpmTestPublished() {
     "npm testing published app $NODEJS_PACKAGE_JSON_NAME ..." || return $?
   cd /tmp && rm -fr /tmp/node_modules && npm install $PACKAGE_JSON_NAME || return $?
   cd /tmp/node_modules/$PACKAGE_JSON_NAME && npm install && npm test || return $?
+  unset MODE_CI_BUILD || return $?
 }
 
 shPhantomTest() {
@@ -335,18 +328,6 @@ shPhantomTest() {
     });" || return $?
 }
 
-shReturn() {
-  # this function restores the $CWD and then returns the last $EXIT_CODE
-  # save $EXIT_CODE
-  EXIT_CODE=$1 || return $?
-  # restore $CWD
-  cd $CWD || return $?
-  # cleanup $TMPFILE
-  rm -f $TMPFILE || return $?
-  # return $EXIT_CODE
-  return $EXIT_CODE
-}
-
 shRun() {
   # this function executes $@ and restores $CWD on exit
   # eval argv forever
@@ -358,7 +339,7 @@ shRun() {
     $@
   fi
   # save $EXIT_CODE and restore $CWD
-  shReturn $? || return $?
+  shSave $? || return $?
   # return $EXIT_CODE
   return $EXIT_CODE
 }
@@ -381,6 +362,24 @@ shRunForever() {
   done
 }
 
+shSave() {
+  # this function saves the global $EXIT_CODE and restores the global $CWD
+  # save $EXIT_CODE
+  EXIT_CODE=$1 || return $?
+  # restore $CWD
+  cd $CWD || return $?
+  # cleanup $TMPFILE
+  rm -f $TMPFILE || return $?
+}
+
+shTmpCopy() {
+  # this function copies the app to /tmp/app.tmp with only the bare git repo files
+  # init /tmp/app.tmp
+  rm -fr /tmp/app.tmp && mkdir -p /tmp/app.tmp || return $?
+  # tar / untar repo contents to /tmp/app.tmp, since we can't git clone a shallow repo
+  git ls-tree -r HEAD --name-only | xargs tar -czf - | tar -C /tmp/app.tmp -xzvf - || return $?
+}
+
 shTravisEncrypt() {
   # this function travis-encrypts github repo $1's secret $2
   local GITHUB_REPO=$1 || return $?
@@ -393,7 +392,7 @@ shTravisEncrypt() {
     return $?
 }
 
-# if the first argument is shRun, then run the command
+# if the first argument $1 is shRun, then run the command $@
 if [ "$1" = shRun ]
 then
   shInit && $@

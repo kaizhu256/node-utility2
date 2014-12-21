@@ -18,12 +18,10 @@ language:
 node_js:
   - "0.10"
 script:
-  # test example.js
-  - npm install utility2 && node_modules/.bin/utility2 shRun shNpmTest example.js
   # init env
-  - export GITHUB_REPO=kaizhu256/node-utility2
-  - export HEROKU_REPO=hrku01-utility2-$TRAVIS_BRANCH
-  - export TEST_URL="https://hrku01-utility2-$TRAVIS_BRANCH.herokuapp.com/?modeTest=phantom"
+  - if [ "$TRAVIS" ]; then export GITHUB_REPO=kaizhu256/node-utility2; fi
+  - if [ "$TRAVIS" ]; then export HEROKU_REPO=hrku01-utility2-$TRAVIS_BRANCH; fi
+  - if [ "$TRAVIS" ]; then export TEST_URL="https://hrku01-utility2-$TRAVIS_BRANCH.herokuapp.com/?modeTest=phantom"; fi
   - . ./index.sh && shInit
   # test published package
   - shRun shNpmTestPublished

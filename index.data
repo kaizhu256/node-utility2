@@ -6,7 +6,7 @@
 .testReportPlatformDiv {
   border: 1px solid;
   border-radius: 5px;
-  font-family: arial;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
   margin: 20px 0 0 0;
   padding: 0 10px 10px 10px;
   text-align: left;
@@ -59,10 +59,11 @@ tr:nth-child(odd).testReportPlatformTr {
 }
 </style>
 <div class="testReportPlatformDiv testReportSummaryDiv">
-<h2>{{name}} test-report summary</h2>
+<h2>{{_envDict.PACKAGE_JSON_NAME}} test-report summary</h2>
 <h4>
+  <span class="testReportSummarySpan">version</span>- {{_envDict.PACKAGE_JSON_VERSION}}<br>
   <span class="testReportSummarySpan">build date</span>- {{date}}<br>
-  <span class="testReportSummarySpan">build id</span>- {{CI_BUILD_NUMBER}}<br>
+  <span class="testReportSummarySpan">build id</span>- {{_envDict.CI_BUILD_NUMBER}}<br>
   <span class="testReportSummarySpan">commit info</span>- {{CI_COMMIT_INFO}}<br>
 </h4>
 <table class="testReportPlatformTable">
@@ -172,7 +173,7 @@ tr:nth-child(odd).testReportPlatformTr {
   );
   background-size: 40px 40px;
   color: #fff;
-  font-family: arial;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-size: 12px;
   padding: 2px 0 2px 0;
   text-align: center;

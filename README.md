@@ -2,11 +2,6 @@ utility2 [![NPM](https://img.shields.io/npm/v/utility2.svg?style=flat-square)](h
 ========
 lightweight nodejs module for testing and covering browser-side code
 
-| test server screenshot |
-|:---------------------- |
-|[![heroku.com test server](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/beta/test-report.screenshot.herokuDeploy.phantomjs.png)](https://hrku01-utility2-beta.herokuapp.com/?modeTest=1)|
-
-
 
 
 ## build status [![travis.ci-org build status](https://api.travis-ci.org/kaizhu256/node-utility2.svg)](https://travis-ci.org/kaizhu256/node-utility2)
@@ -18,6 +13,10 @@ lightweight nodejs module for testing and covering browser-side code
 |[master](https://github.com/kaizhu256/node-utility2/tree/master) | [![heroku.com test server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://hrku01-utility2-master.herokuapp.com/?modeTest=1) | [![test-report](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/master/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/master/test-report.html) | [![istanbul coverage report](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/master/coverage-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/master/coverage-report.html/node-utility2/index.html) | [![build artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build.travis-ci.org/master)|
 |[beta](https://github.com/kaizhu256/node-utility2/tree/beta) | [![heroku.com test server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://hrku01-utility2-beta.herokuapp.com/?modeTest=1) | [![test-report](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/beta/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/beta/test-report.html) | [![istanbul coverage report](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/beta/coverage-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/beta/coverage-report.html/node-utility2/index.html) | [![build artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build.travis-ci.org/beta)|
 |[alpha](https://github.com/kaizhu256/node-utility2/tree/alpha) | [![heroku.com test server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://hrku01-utility2-alpha.herokuapp.com/?modeTest=1) | [![test-report](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/alpha/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/alpha/test-report.html) | [![istanbul coverage report](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/alpha/coverage-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/alpha/coverage-report.html/node-utility2/index.html) | [![build artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build.travis-ci.org/alpha)|
+
+| test server screenshot |
+|:---------------------- |
+|[![heroku.com test server](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/beta/test-report.screenshot.herokuDeploy.phantomjs.png)](https://hrku01-utility2-beta.herokuapp.com/?modeTest=1)|
 
 
 
@@ -35,18 +34,6 @@ npm start --server-port=8080
 
 ## library usage example
 ```
-/*
- example.js
-
- 1) copy the code below to example.js
-
- 2) to start the example server on port 8080, run:
-    $ npm_config_server_port=8080 node example.js
-
- 3) to start the example server on random port,
-    and run browser tests with code-coverage, run:
-    $ npm install utility2 && node_modules/.bin/utility2 shRun shNpmTest example.js
-*/
 /*jslint
   bitwise: true, browser: true,
   indent: 2,
@@ -56,113 +43,237 @@ npm start --server-port=8080
   stupid: true,
   todo: true
 */
-(function () {
+(function test($$options) {
+  /*
+    this function tests this module
+  */
   'use strict';
   var mainApp;
-  // init mainApp.modeJs
-  mainApp = { modeJs: 'undefined' };
-  try {
-    // check node js env
-    mainApp.modeJs = global && module.exports && process.versions.node && 'node';
-  } catch (errorCaughtNode) {
-    try {
-      // check browser js env
-      mainApp.modeJs = window && navigator.userAgent && 'browser';
-    } catch (ignore) {
-    }
-  }
-  switch (mainApp.modeJs) {
+  switch ($$options.modeJs) {
   // init browser js env
   case 'browser':
     // init mainApp
     mainApp = window.$$mainApp;
-    // init local object
-    mainApp.localExport({
-      _name: 'example.browser',
-      _ajax_httpGet_test: function (onError) {
-        /*
-          this function tests ajax's http GET handling behavior
-        */
-        // test http GET handling behavior
-        mainApp.ajax({ url: '/test/hello' }, function (error, data) {
-          mainApp.testTryCatch(function () {
-            // validate no error occurred
-            mainApp.assert(!error, error);
-            // validate data
-            mainApp.assert(data === 'hello', data);
-            onError();
-          }, onError);
-        });
-      }
-    }, mainApp);
-    // init test
-    mainApp.testRun();
+    // init browser test
+    if (mainApp.modeTest) {
+      mainApp.testRun();
+    }
     break;
   // init node js env
   case 'node':
-    // init PACKAGE_JSON_NAME
-    process.env.PACKAGE_JSON_NAME = 'example';
+    // init mainApp
+    mainApp = module.exports;
+    // require modules
     mainApp.utility2 = require('utility2');
     // init local object
     mainApp.utility2.localExport({
-      _name: 'example.node',
+      _name: 'utility2.test.node',
+
+      _initNode_watchFile_test: function (onError) {
+        /*
+          this function tests this initNode's watchFile handling behavior
+        */
+        var onRemaining, remaining, remainingError;
+        onRemaining = function (error) {
+          remaining -= 1;
+          remainingError = remainingError || error;
+          if (remaining === 0) {
+            onError(remainingError);
+          }
+        };
+        remaining = 1;
+        // test fileCacheAndParse's watchFile handling behavior
+        [
+          // test auto-jslint handling behavior
+          __dirname + '/package.json',
+          // test auto-cache handling behavior
+          __dirname + '/index.data'
+        ].forEach(function (file) {
+          remaining += 1;
+          mainApp.fs.stat(file, function (error, stat) {
+            // test default watchFile handling behavior
+            remaining += 1;
+            mainApp.fs.utimes(file, stat.atime, new Date(), onRemaining);
+            // test nop watchFile handling behavior
+            remaining += 1;
+            setTimeout(function () {
+              mainApp.fs.utimes(file, stat.atime, stat.mtime, onRemaining);
+            // coverage - use 1500 ms to cover setInterval watchFile in node
+            }, 1500);
+            onRemaining(error);
+          });
+        });
+        onRemaining();
+      },
+
       _testPhantom_default_test: function (onError) {
         /*
           this function tests testPhantom' default handling behavior
         */
-        mainApp.testPhantom(
-          'http://localhost:' + process.env.npm_config_server_port + '/?modeTest=phantom',
-          onError
-        );
+        mainApp.testPhantom('http://localhost:' + process.env.npm_config_server_port +
+          '/?modeTest=phantom&_timeoutDefault=' + mainApp.utility2._timeoutDefault, onError);
       }
     }, mainApp);
+    // cache test.* files
+    [{
+      cache: '/assets/test.js',
+      coverage: 'utility2',
+      file: __dirname + '/test.js'
+    }].forEach(function (options) {
+      mainApp.fileCacheAndParse(options);
+    });
+    // validate process.env.npm_config_server_port
+    // is a positive-definite integer less then 0x10000
+    (function () {
+      var serverPort;
+      serverPort = Number(process.env.npm_config_server_port);
+      mainApp.assert(
+        (serverPort | 0) === serverPort && 0 < serverPort && serverPort < 0x10000,
+        'invalid server-port ' + serverPort
+      );
+    }());
     // init server
     mainApp.http.createServer(function (request, response) {
-      switch (mainApp.url.parse(request.url).pathname) {
-      // serve the following assets from _fileCacheDict
-      case '/assets/example.js':
-        mainApp.fs.readFile(__dirname + '/example.js', function (error, data) {
-          // nop hack to pass jslint
-          mainApp.nop(error);
-          response.end(data);
-        });
-        break;
-      case '/assets/utility2.css':
-      case '/assets/utility2.js':
-        response.end(mainApp.utility2._fileCacheDict[request.url].data);
-        break;
-      // serve index.html template
-      case '/':
-        response.end('<html>' +
-          '<body>' +
+      (function middleware(request, response, next) {
+        // init urlPathNormalized
+        request.urlPathNormalized =
+          mainApp.path.resolve(mainApp.url.parse(request.url).pathname);
+        switch (request.urlPathNormalized) {
+        // serve the following assets from _fileCacheDict
+        case '/assets/test.js':
+        case '/assets/utility2.css':
+        case '/assets/utility2.js':
+          response.end(mainApp.utility2._fileCacheDict[request.urlPathNormalized].data);
+          break;
+        // serve main page
+        case '/':
+          response.end(mainApp.textFormat('<!DOCTYPE html>' +
+            '<html>' +
+            '<head>' +
+            '<meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>' +
             '<link href="/assets/utility2.css" rel="stylesheet"/>' +
-            '<script>window.$$mainApp = ' + JSON.stringify(mainApp.utility2._mainAppBrowser) +
-            '</script>' +
+            '<style>body { font-family: arial; }</style>' +
+            '</head>' +
+            '<body>' +
+            '<!-- ajax progress bar begin -->' +
+            '<div class="ajaxProgressDiv">' +
+              '<div class="ajaxProgressBarDiv ajaxProgressBarDivLoading">loading</div>' +
+            '</div>' +
+            '<!-- ajax progress bar end -->' +
+            '<!-- main app div begin -->' +
+            '<div>' +
+              '<h1>{{env.PACKAGE_JSON_NAME}} <{{env.PACKAGE_JSON_VERSION}}></h1>' +
+              '<h3>{{env.PACKAGE_JSON_DESCRIPTION}}</h3>' +
+              '<!-- main app content -->' +
+            '</div>' +
+            '<!-- main app div end -->' +
+            '<!-- script begin -->' +
+            '<script>window.$$mainApp = {{mainAppBrowserJson}}</script>' +
             '<script src="/assets/utility2.js"></script>' +
-            '<script src="/assets/example.js"></script>' +
-          '</body>' +
-          '</html>');
-        break;
-      // test http GET handling behavior
-      case '/test/hello':
-        response.end('hello');
-        break;
-      // fallback to 404 Not Found
-      default:
-        mainApp.serverRespondDefault(request, response, 404);
-      }
+            '<script src="/assets/test.js"></script>' +
+            '<!-- script end -->' +
+            '</body>' +
+            '</html>', {
+              env: process.env,
+              fileCacheDict: mainApp.utility2._fileCacheDict,
+              mainAppBrowserJson: JSON.stringify(mainApp.utility2._mainAppBrowser)
+            }));
+          break;
+        // test http POST handling behavior
+        case '/test/echo':
+          mainApp.serverRespondEcho(request, response);
+          break;
+        // test internal server error handling behavior
+        case '/test/error':
+          next(mainApp.utility2._errorDefault);
+          break;
+        // test http GET handling behavior
+        case '/test/hello':
+          response.end('hello');
+          break;
+        // fallback to 404 Not Found
+        default:
+          next();
+        }
+      }(request, response, function (error) {
+        mainApp.serverRespondDefault(request, response, error ? 500 : 404, error);
+      }));
     })
       // start server on port process.env.npm_config_server_port
       .listen(process.env.npm_config_server_port, function () {
         console.log('server listening on port ' + process.env.npm_config_server_port);
-        // init test
+        // init node test
         if (process.env.npm_config_mode_npm_test) {
           mainApp.testRun();
         }
       });
+    // watch and auto-cache the following files when modified
+    [{
+      file: __dirname + '/index.data',
+      parse: true
+    }, {
+      cache: '/assets/test.js',
+      coverage: 'utility2',
+      file: __dirname + '/test.js'
+    }, {
+      cache: '/assets/utility2.js',
+      coverage: 'utility2',
+      file: __dirname + '/index.js'
+    }].forEach(function (options) {
+      console.log('auto-cache ' + options.file);
+      mainApp.fs.watchFile(options.file, {
+        interval: 1000,
+        persistent: false
+      }, function (stat2, stat1) {
+        if (stat2.mtime > stat1.mtime) {
+          mainApp.fileCacheAndParse(options);
+        }
+      });
+    });
+    // watch and auto-jslint the files in __dirname when modified
+    mainApp.fs.readdirSync(__dirname).forEach(function (file) {
+      switch (mainApp.path.extname(file)) {
+      case '.js':
+      case '.json':
+        file = __dirname + '/' + file;
+        console.log('auto-jslint ' + file);
+        // jslint file
+        mainApp.jslint_lite.jslintPrint(mainApp.fs.readFileSync(file, 'utf8'), file);
+        // if the file is modified, then auto-jslint it
+        mainApp.fs.watchFile(file, {
+          interval: 1000,
+          persistent: false
+        }, function (stat2, stat1) {
+          if (stat2.mtime > stat1.mtime) {
+            mainApp.jslint_lite.jslintPrint(mainApp.fs.readFileSync(file, 'utf8'), file);
+          }
+        });
+        break;
+      }
+    });
+    // init repl debugger
+    mainApp.replStart({ mainApp: mainApp });
     break;
   }
-}());
+}((function initOptions() {
+  /*
+    this function passes js env options to the calling function
+  */
+  'use strict';
+  try {
+    // init node js env
+    return {
+      modeJs: module.exports && typeof process.versions.node === 'string' &&
+        typeof require('child_process').spawn === 'function' && 'node'
+    };
+  } catch (errorCaughtNode) {
+    // init browser js env
+    return {
+      modeJs: typeof navigator.userAgent === 'string' &&
+        typeof document.body.querySelector('div') === 'object' && 'browser'
+    };
+  }
+}())));
 ```
 
 
@@ -178,8 +289,6 @@ npm start --server-port=8080
   - heroku deploy script
 - README.md
   - readme file
-- example.js
-  - nodejs example usage script
 - git-ssh.sh
   - ssh authentication hook used for heroku git deployment
 - index.data
@@ -190,15 +299,15 @@ npm start --server-port=8080
   - shell script exporting various helper test functions
 - package.json
   - npm config file
-- test.data
-  - data file containing embedded test resources
 - test.js
   - nodejs test script
 
 
 
 ## todo
-- add shTmpMv to move app to /tmp/app and change shTmpCopy to copy app to /tmp/app.tmp
+- embed istanbul-lite
+- screenshot of quickstart and demo library usage
+- add shTmpMove to move app to /tmp/app and change shTmpCopy to copy app to /tmp/app.tmp
 - add grep sugar in repl
 - add tarball creation for deployment
 - add grep in repl debugger
