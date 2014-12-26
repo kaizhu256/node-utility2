@@ -46,7 +46,9 @@
           headers: { 'X-Header-Hello': 'Hello' },
           method: 'POST',
           resultType: resultType,
-          url: '/test/echo'
+          url: '/test/echo?' +
+            // test _testSecret handling behavior
+            '?_testSecret=' + mainApp._testSecret
         }, function (error, data) {
           mainApp.testTryCatch(function () {
             // validate no error occurred
@@ -399,17 +401,29 @@
         this function returns another function that runs async tasks in parallel,
         and calls onError only if there's an error, or if its counter reaches zero
       */
-      var self;
+      var self, timerTimeout;
+      // set timerTimeout
+      timerTimeout = mainApp.onTimeout(onError, mainApp._timeoutDefault, 'onParallel');
       self = function (error) {
-        // if it exists, then print error
-        mainApp.onErrorDefault(error);
-        // if error is not already set, then set it to error
-        self.error = self.error || error;
+        // if error already occurred, then return
+        if (self.error) {
+          return;
+        }
+        // error handling behavior
+        if (error) {
+          self.error = error;
+          // print error to stderr
+          mainApp.onErrorDefault(error);
+          // ensure counter will decrement to zero
+          self.counter = 1;
+        }
         // decrement counter
         self.counter -= 1;
         // if counter is 0, then call onError with error
         if (self.counter === 0) {
-          onError(self.error);
+          // cleanup timerTimeout
+          clearTimeout(timerTimeout);
+          onError(error);
         }
       };
       // init counter
@@ -457,7 +471,7 @@
           onError();
         }, onError);
       // coverage - use 1500 ms to cover setInterval test-report refreshes in browser
-      }, 1500, '_onTimeout_timeoutError_test');
+      }, 1500, '_onTimeout_errorTimeout_test');
     },
 
     setDefault: function (options, depth, defaults) {
@@ -784,7 +798,6 @@
               testCaseList: testPlatform.testCaseList.map(function (testCase) {
                 testCaseNumber += 1;
                 if (testCase.errorStack) {
-                  // word wrap error message to 96 characters in html <pre> tag
                   errorStackList.push({ errorStack:
                     (testCaseNumber + '. ' + testCase.name + '\n' + testCase.errorStack)
                       // security - sanitize '<' in text
@@ -1098,7 +1111,7 @@
       var data, error, errorStack, finished, ii, onEvent, timerTimeout, xhr;
       // init stack trace of this function's caller in case of error
       errorStack = new Error().stack;
-      // event handling
+      // init event-handling
       onEvent = function (event) {
         switch (event.type) {
         case 'abort':
@@ -1128,9 +1141,7 @@
               // add http method / statusCode / url debug info to error.message
               error.message = options.method + ' ' + xhr.status + ' - ' +
                 options.url + '\n' +
-                JSON.stringify(xhr.responseText.slice(0, 256) + '...') + '\n' +
-                // trim potentially very long html response
-                error.message.slice(0, 4096);
+                JSON.stringify(xhr.responseText.slice(0, 256) + '...') + '\n' + error.message;
               // debug status code
               error.statusCode = xhr.status;
               if (errorStack && error.stack) {
@@ -1163,7 +1174,7 @@
       xhr = new XMLHttpRequest();
       // debug xhr
       mainApp.debugXhr = xhr;
-      // init event handling
+      // init event-handling
       xhr.addEventListener('abort', onEvent);
       xhr.addEventListener('error', onEvent);
       xhr.addEventListener('load', onEvent);
@@ -1279,11 +1290,15 @@
             .request(options, onIo)
             // handle error event
             .on('error', onIo);
+          // debug ajax request
+          mainApp.debugAjaxRequest = request;
           // send request and/or data
           request.end(options.data);
           break;
         case 2:
           response = error;
+          // debug ajax response
+          mainApp.debugAjaxResponse = response;
           mainApp.streamReadAll(response, onIo);
           break;
         case 3:
@@ -1306,9 +1321,7 @@
           // cleanup timerTimeout
           clearTimeout(timerTimeout);
           // cleanup request socket
-          if (request) {
-            request.destroy();
-          }
+          request.destroy();
           // cleanup response socket
           if (response) {
             response.destroy();
@@ -1317,15 +1330,11 @@
             // add http method / statusCode / url debug info to error.message
             error.message = options.method + ' ' + (response && response.statusCode) + ' - ' +
               options.url + '\n' +
-              JSON.stringify((responseText || '').slice(0, 256) + '...') + '\n' +
-              // trim potentially very long html response
-              error.message.slice(0, 4096);
+              JSON.stringify((responseText || '').slice(0, 256) + '...') + '\n' + error.message;
             // debug status code
             error.statusCode = response && response.statusCode;
-            onError(error, responseText);
-            return;
           }
-          onError(null, responseText);
+          onError(error, responseText);
         }
       };
       onIo();
@@ -1679,6 +1688,41 @@
         .on('error', onError);
     },
 
+    testMiddleware: function (request, response, next) {
+      /*
+        this function is the test middleware
+      */
+      // debug server request
+      mainApp.debugServerRequest = request;
+      // debug server response
+      mainApp.debugServerResponse = response;
+      // check if _testSecret is valid
+      request.testSecretValid = (/\b_testSecret=(\w+)\b/).exec(request.url);
+      request.testSecretValid =
+        request.testSecretValid && request.testSecretValid[1] === mainApp._testSecret;
+      // init urlPathNormalized
+      request.urlPathNormalized =
+        mainApp.path.resolve(mainApp.url.parse(request.url).pathname);
+      switch (request.urlPathNormalized) {
+      // serve the following assets from _fileCacheDict
+      case '/assets/test.js':
+      case '/assets/utility2.js':
+        response.end(mainApp._fileCacheDict[request.urlPathNormalized].data);
+        break;
+      // serve main page
+      case '/':
+        response.end(mainApp.textFormat(mainApp._fileCacheDict['/assets/test.html'].data, {
+          env: process.env,
+          mainAppBrowserJson: JSON.stringify(mainApp._mainAppBrowser),
+          utility2Css: mainApp._fileCacheDict['/assets/utility2.css'].data
+        }));
+        break;
+      // fallback to next middleware
+      default:
+        next();
+      }
+    },
+
     testPhantom: function (url, onError) {
       /*
         this function spawns a phantomjs process to test a webpage
@@ -1715,6 +1759,7 @@
           JSON.stringify({
             argv0: argv0,
             __dirname: __dirname,
+            _testSecret: mainApp._testSecret,
             _timeoutDefault: mainApp._timeoutDefault,
             url: url
           })
@@ -1871,6 +1916,7 @@
     case 'node':
       // require modules
       mainApp.child_process = require('child_process');
+      mainApp.crypto = require('crypto');
       mainApp.fs = require('fs');
       mainApp.http = require('http');
       mainApp.https = require('https');
@@ -1910,6 +1956,16 @@
       }].forEach(function (options) {
         mainApp.fileCacheAndParse(options);
       });
+      (function () {
+        var testSecretCreate;
+        testSecretCreate = function () {
+          mainApp._testSecret = mainApp.crypto.randomBytes(32).toString('hex');
+        };
+        // init _testSecret
+        testSecretCreate();
+        // change _testSecret every 60 seconds
+        setInterval(testSecretCreate, 60000).unref();
+      }());
       break;
     // init module in phantom js env
     case 'phantom':
@@ -1985,7 +2041,11 @@
         console.log.apply(console, arguments);
       };
       // open requested webpage
-      mainApp.page.open(mainApp.url, function (data) {
+      mainApp.page.open(mainApp.url.replace(
+        // security - insert _testSecret in url without revealing it
+        '{{_testSecret}}',
+        mainApp._testSecret
+      ), function (data) {
         console.log(mainApp.argv0 + ' - open ' + data + ' ' + mainApp.url);
         // validate page opened successfully
         mainApp.assert(data === 'success', data);
@@ -2018,7 +2078,7 @@
       return {
         global: window,
         modeJs: typeof navigator.userAgent === 'string' &&
-          typeof document.body.querySelector('div') === 'object' && 'browser'
+          typeof document.querySelector('body') === 'object' && 'browser'
       };
     }
   }

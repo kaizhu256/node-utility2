@@ -12,12 +12,14 @@
     this function tests this module
   */
   'use strict';
-  var mainApp;
+  var global, mainApp;
+  // init global object
+  global = $$options.global;
   switch ($$options.modeJs) {
   // init browser js env
   case 'browser':
     // init mainApp
-    mainApp = window.$$mainApp;
+    mainApp = global.mainApp = global.$$mainApp;
     // init browser test
     if (mainApp.modeTest) {
       mainApp.testRun();
@@ -28,7 +30,7 @@
     // init mainApp
     mainApp = module.exports;
     // require modules
-    mainApp.utility2 = require('utility2');
+    mainApp.utility2 = require('./index.js');
     // init local object
     mainApp.utility2.localExport({
       _name: 'utility2.test.node',
@@ -86,6 +88,10 @@
     }].forEach(function (options) {
       mainApp.fileCacheAndParse(options);
     });
+    // if process.env.npm_config_server_port is undefined,
+    // then assign it a random port in inclusive range 0x1000 to 0xffff
+    process.env.npm_config_server_port = process.env.npm_config_server_port ||
+      ((Math.random() * 0x10000) | 0x8000).toString();
     // validate process.env.npm_config_server_port
     // is a positive-definite integer less then 0x10000
     (function () {
@@ -98,51 +104,15 @@
     }());
     // init server
     mainApp.http.createServer(function (request, response) {
-      (function middleware(request, response, next) {
-        // init urlPathNormalized
-        request.urlPathNormalized =
-          mainApp.path.resolve(mainApp.url.parse(request.url).pathname);
+      mainApp.testMiddleware(request, response, function () {
+        /*
+          this function is the main test middleware
+        */
+        var next;
+        next = function (error) {
+          mainApp.serverRespondDefault(request, response, error ? 500 : 404, error);
+        };
         switch (request.urlPathNormalized) {
-        // serve the following assets from _fileCacheDict
-        case '/assets/test.js':
-        case '/assets/utility2.css':
-        case '/assets/utility2.js':
-          response.end(mainApp.utility2._fileCacheDict[request.urlPathNormalized].data);
-          break;
-        // serve main page
-        case '/':
-          response.end(mainApp.textFormat('<!DOCTYPE html>' +
-            '<html>' +
-            '<head>' +
-            '<meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>' +
-            '<link href="/assets/utility2.css" rel="stylesheet"/>' +
-            '<style>body { font-family: arial; }</style>' +
-            '</head>' +
-            '<body>' +
-            '<!-- ajax progress bar begin -->' +
-            '<div class="ajaxProgressDiv">' +
-              '<div class="ajaxProgressBarDiv ajaxProgressBarDivLoading">loading</div>' +
-            '</div>' +
-            '<!-- ajax progress bar end -->' +
-            '<!-- main app div begin -->' +
-            '<div>' +
-              '<h1>{{env.PACKAGE_JSON_NAME}} <{{env.PACKAGE_JSON_VERSION}}></h1>' +
-              '<h3>{{env.PACKAGE_JSON_DESCRIPTION}}</h3>' +
-              '<!-- main app content -->' +
-            '</div>' +
-            '<!-- main app div end -->' +
-            '<!-- script begin -->' +
-            '<script>window.$$mainApp = {{mainAppBrowserJson}}</script>' +
-            '<script src="/assets/utility2.js"></script>' +
-            '<script src="/assets/test.js"></script>' +
-            '<!-- script end -->' +
-            '</body>' +
-            '</html>', {
-              env: process.env,
-              fileCacheDict: mainApp.utility2._fileCacheDict,
-              mainAppBrowserJson: JSON.stringify(mainApp.utility2._mainAppBrowser)
-            }));
-          break;
         // test http POST handling behavior
         case '/test/echo':
           mainApp.serverRespondEcho(request, response);
@@ -159,9 +129,7 @@
         default:
           next();
         }
-      }(request, response, function (error) {
-        mainApp.serverRespondDefault(request, response, error ? 500 : 404, error);
-      }));
+      });
     })
       // start server on port process.env.npm_config_server_port
       .listen(process.env.npm_config_server_port, function () {
@@ -227,14 +195,16 @@
   try {
     // init node js env
     return {
+      global: global,
       modeJs: module.exports && typeof process.versions.node === 'string' &&
         typeof require('child_process').spawn === 'function' && 'node'
     };
   } catch (errorCaughtNode) {
     // init browser js env
     return {
+      global: window,
       modeJs: typeof navigator.userAgent === 'string' &&
-        typeof document.body.querySelector('div') === 'object' && 'browser'
+        typeof document.querySelector('body') === 'object' && 'browser'
     };
   }
 }())));

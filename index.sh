@@ -114,6 +114,22 @@ shGithubFilePost() {
   shGithubFilePut $1 $2 null
 }
 
+shGitSquash () {
+  # this function squashes the HEAD to the specified commit $1
+  # git squash
+  # http://stackoverflow.com/questions/5189560/how-can-i-squash-my-last-x-commits-together-using-git
+  local COMMIT=$1
+  local MESSAGE=${2-squash}
+  # commit any uncommitted data
+  git commit -am "$MESSAGE"
+  # reset git to previous $COMMIT
+  git reset --hard $COMMIT || return $?
+  # reset files to current HEAD
+  git merge --squash HEAD@{1} || return $?
+  # commit HEAD immediately after previous $COMMIT
+  git commit -am "$MESSAGE" || return $?
+}
+
 shHerokuDeploy() {
   # this function deploys the app to heroku
   if [ ! "$GIT_SSH_KEY" ] || [ ! "$HEROKU_REPO" ]
@@ -125,6 +141,8 @@ shHerokuDeploy() {
   shBuildPrint herokuDeploy "deploying to https://$HEROKU_HOSTNAME ..." || return $?
   # init clean repo in /tmp/app.tmp
   shTmpCopy && cd /tmp/app.tmp || return $?
+  # npm install
+  rm -fr /tmp/node_modules && npm install || return $?
   # init .git
   git init || return $?
   # init .git/config
@@ -141,7 +159,7 @@ shHerokuDeploy() {
       require('$DIRNAME').textFormat(fs.readFileSync('Procfile', 'utf8'), process.env)\
     );"
   # git commit
-  git commit -am "heroku deploy" || return $?
+  git commit -am "heroku deploy" > /dev/null || return $?
   # deploy the app to heroku
   git push -f git@heroku.com:$HEROKU_REPO.git HEAD:master || return $?
   # wait for deployment to finish
@@ -203,7 +221,11 @@ shInit() {
   # init $PATH with $CWD/node_modules/.bin
   export PATH=$CWD/node_modules/phantomjs-lite:$CWD/node_modules/.bin:$PATH || return $?
   # init $DIRNAME
-  export DIRNAME=$(node -e "console.log(require('utility2').__dirname)") || return $?
+  export DIRNAME=$(node -e "try {\
+    console.log(require('utility2').__dirname)\
+  } catch (errorCaught) {\
+    console.log(require('./index.js').__dirname)\
+  }") || return $?
   # init $GIT_SSH
   if [ "$GIT_SSH_KEY" ]
   then
@@ -326,6 +348,11 @@ shPhantomTest() {
       );\
       process.exit(!!error);
     });" || return $?
+}
+
+shPortRandom() {
+  # this function prints a random port in the inclusive range 0x1000 to 0xffff
+  printf $(($(hexdump -n 2 -e '/2 "%u"' /dev/urandom)|32768))
 }
 
 shRun() {

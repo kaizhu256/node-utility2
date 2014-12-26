@@ -18,9 +18,8 @@
     "url" : "https://github.com/kaizhu256/node-utility2.git"
   },
   "scripts": {
-    "postinstall": "mkdir -p node_modules/.bin && rm -f node_modules/utility2.js && ln -s ../index.js node_modules/utility2.js && rm -f node_modules/.bin/utility2 && ln -s ../../index.sh node_modules/.bin/utility2",
     "start": "./index.sh shRun node test.js",
     "test": "./index.sh shRun shNpmTest test.js"
   },
-  "version": "2014.10.31-29"
+  "version": "2014.10.31-401"
 }
