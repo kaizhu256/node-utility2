@@ -187,7 +187,7 @@ tr:nth-child(odd).testReportPlatformTr {
 
 
 /* FILE_BEGIN {
-  "actionList": ["lint"],
+  "actionList": ["jslint"],
   "file": "/assets/utility2.css"
 } */
 /*csslint

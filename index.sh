@@ -75,43 +75,32 @@ shBuildPrint() {
 
 shBuildUploadGithub() {
   # this function uploads the ./build dir to github
-  if [ "$MODE_OFFLINE" ] || ! ([ "$GITHUB_BASIC" ] || [ "$GITHUB_TOKEN" ])
+  if [ "$MODE_OFFLINE" ] || [ ! "$GIT_SSH_KEY" ]
   then
     return
   fi
-  # cleanup .build
-  rm -f .build/coverage-report.html/coverage* || return $?
-  find .build -path "*.json" -print0 | xargs -0 rm
-  # upload build artifacts to github
-  shGithubFilePut https://github.com/$GITHUB_REPO/blob/gh-pages/build.badge.svg\
-    $CWD/.build/build.badge.svg > /dev/null || return $?
+  # clone gh-pages branch
+  cd /tmp && rm -fr /tmp/gh-pages && git clone git@github.com:$GITHUB_REPO.git\
+    --branch=gh-pages --single-branch /tmp/gh-pages && cd /tmp/gh-pages || return $?
+  # cleanup $CWD/.build
+  rm -f $CWD/.build/coverage-report.html/coverage* || return $?
+  find $CWD/.build -path "*.json" -print0 | xargs -0 rm -f || return $?
+  # copy build artifacts to .
+  cp $CWD/.build/build.badge.svg . || return $?
+  mkdir -p $CI_BUILD_DIR || return $?
   for DIR in\
     $CI_BUILD_DIR/$CI_BRANCH\
     $CI_BUILD_DIR/$CI_BRANCH.$CI_BUILD_NUMBER.$CI_COMMIT_ID
   do
-    for FILE in $(find .build -type f)
-    do
-      FILE=$(node -e "console.log('$FILE'.replace('.build/', ''))")
-      printf "uploading https://github.com/$GITHUB_REPO/blob/gh-pages/$DIR/$FILE\n" || return $?
-      shGithubFilePut https://github.com/$GITHUB_REPO/blob/gh-pages/$DIR/$FILE\
-        $CWD/.build/$FILE > /dev/null || return $?
-      # throttle github file put
-      sleep 1 || return $?
-    done
+    rm -fr $DIR && cp -a $CWD/.build $DIR || return $?
   done
-}
-
-shGithubFilePut() {
-  # this function puts a file into the specified github url
-  local URL=$1 || return $?
-  local FILE=$2 || return $?
-  local SHA=${3-undefined} || return $?
-  node -e "require('$DIRNAME').githubFilePut('$URL', '$FILE', $SHA)" || return $?
-}
-
-shGithubFilePost() {
-  # this function posts a file into the specified github url
-  shGithubFilePut $1 $2 null
+  # init .git/config
+  printf "\n[user]\nname=nobody\nemail=nobody\n" > .git/config || return $?
+  # git squash gh-pages branch
+  git add -A && shGitSquash $(git rev-list --max-parents=0 HEAD) "[skip ci] squash" >\
+    /dev/null || return $?
+  # update gh-pages
+  git push -f git@github.com:$GITHUB_REPO.git gh-pages || return $?
 }
 
 shGitSquash () {
@@ -132,16 +121,18 @@ shGitSquash () {
 
 shHerokuDeploy() {
   # this function deploys the app to heroku
-  if [ ! "$GIT_SSH_KEY" ] || [ ! "$HEROKU_REPO" ]
+  if [ "$MODE_OFFLINE" ] || [ ! "$GIT_SSH_KEY" ] || [ ! "$HEROKU_REPO" ]
   then
     return
   fi
+  # init $TEST_SECRET
+  export TEST_SECRET=$(openssl rand -hex 32) || return $?
   # init $HEROKU_HOSTNAME
   export HEROKU_HOSTNAME=$HEROKU_REPO.herokuapp.com || return $?
   shBuildPrint herokuDeploy "deploying to https://$HEROKU_HOSTNAME ..." || return $?
   # init clean repo in /tmp/app.tmp
   shTmpCopy && cd /tmp/app.tmp || return $?
-  # npm install
+  # npm install dependencies
   rm -fr /tmp/node_modules && npm install || return $?
   # init .git
   git init || return $?
@@ -246,7 +237,7 @@ shInit() {
   # init $TMPFILE
   export TMPFILE=/tmp/tmpfile.$(openssl rand -hex 8) || return $?
   # auto-detect slimerjs
-  if slimerjs .install/phantomjs-test.js > /dev/null 2>&1
+  if slimerjs undefined > /dev/null 2>&1
   then
     export npm_config_mode_slimerjs=1 || return $?
   fi
@@ -286,10 +277,9 @@ shNpmTest() {
   # this function runs npm test
   shBuildPrint "${MODE_CI_BUILD:-localNpmTest}" "npm testing $CWD ..." || return $?
   # init .build dir
-  mkdir -p .build/coverage-report.html || return $?
+  mkdir -p $CWD/.build/coverage-report.html || return $?
   # init random server port
-  export npm_config_server_port=$(node -e 'console.log((Math.random() * 0x10000) | 0x8000)') ||\
-    return $?
+  export npm_config_server_port=$(shServerPortRandom) || return $?
   # init npm test mode
   export npm_config_mode_npm_test=1 || return $?
   # if coverage-mode is disabled, then run npm test without coverage
@@ -299,7 +289,7 @@ shNpmTest() {
     return $?
   fi
   # cleanup old coverage
-  rm -f .build/coverage-report.html/coverage.*
+  rm -f .build/coverage-report.html/coverage.* || return $?
   # run npm test with coverage
   shIstanbulCover $@
   # save $EXIT_CODE and restore $CWD
@@ -320,39 +310,51 @@ shNpmTest() {
   return $EXIT_CODE
 }
 
-shNpmTestPublished() {
-  # this function runs npm test on the lastest published version of this app in the tmp dir
-  if [ "$MODE_OFFLINE" ]
-  then
-    return
-  fi
-  shBuildPrint publishedNpmTest\
-    "npm testing published app $NODEJS_PACKAGE_JSON_NAME ..." || return $?
-  cd /tmp && rm -fr /tmp/node_modules && npm install $PACKAGE_JSON_NAME || return $?
-  cd /tmp/node_modules/$PACKAGE_JSON_NAME && npm install && npm test || return $?
-  unset MODE_CI_BUILD || return $?
-}
-
 shPhantomTest() {
   # this function runs phantomjs tests on the specified $URL,
   # and merge it into the existing test-report
   local URL=$1 || return $?
   shBuildPrint "${MODE_CI_BUILD:-remotePhantomTest}" "phantom testing $URL ..." || return $?
-  node -e "var mainApp;\
-    mainApp = require('$DIRNAME');\
-    mainApp._testReport = require('$CWD/.build/test-report.json');\
-    mainApp.testPhantom('$URL', function (error) {\
-      mainApp.fs.writeFileSync(\
+  node -e "var local;\
+    local = require('$DIRNAME');\
+    local._testReport = require('$CWD/.build/test-report.json');\
+    local.testPhantom('$URL', function (error) {\
+      local.fs.writeFileSync(\
         '$CWD/.build/test-report.html',\
-        mainApp.testMerge(mainApp._testReport, {})\
+        local.testMerge(local._testReport, {})\
       );\
       process.exit(!!error);
     });" || return $?
 }
 
-shPortRandom() {
-  # this function prints a random port in the inclusive range 0x1000 to 0xffff
-  printf $(($(hexdump -n 2 -e '/2 "%u"' /dev/urandom)|32768))
+shQuickstartTest() {
+  # this function tests the quickstart script $1
+  if [ "$MODE_OFFLINE" ]
+  then
+    return
+  fi
+  # read script from README.md
+  node -e "console.log(\
+    (/\n## quickstart\n\`\`\`\n([\S\s]+)\`\`\`/)\
+      .exec(require('fs').readFileSync('README.md', 'utf8'))[1]
+  );" > /tmp/quickstart.sh
+  local SCRIPT=$CWD/$1 || return $?
+  shBuildPrint quickstartTest "testing /tmp/quickstart.sh ..." || return $?
+  cd /tmp && rm -fr /tmp/node_modules && /bin/sh /tmp/quickstart.sh && sleep 1 || return $?
+  # init .build dir
+  mkdir -p $CWD/.build/coverage-report.html || return $?
+  # create screenshot of quickstart
+  # http://www.cnx-software.com/2011/09/22/how-to-convert-a-command-line-result-into-an-image-in-linux/
+  if [ "$(uname)" = "Linux" ]
+  then
+    cd /tmp && rm -fr /tmp/node_modules && /bin/sh /tmp/quickstart.sh | convert\
+      -background gray45 -border 2 -bordercolor gray45\
+      -fill palegreen -font Nimbus-Mono-Bold -frame 1\
+      -mattecolor black\
+      -pointsize 10\
+      label:@- $CWD/.build/test-report.screenshot.quickstartTest.png || return $?
+  fi
+  unset MODE_CI_BUILD || return $?
 }
 
 shRun() {
@@ -373,7 +375,7 @@ shRun() {
 
 shRunForever() {
   # this function executes $@ and auto-respawns on exit
-  mkdir -p .tmp
+  mkdir -p $CWD/.tmp
   # kill old forever process
   kill $(cat .tmp/forever.pid) > /dev/null 2>&1
   sleep 2 || return $?
@@ -397,6 +399,11 @@ shSave() {
   cd $CWD || return $?
   # cleanup $TMPFILE
   rm -f $TMPFILE || return $?
+}
+
+shServerPortRandom() {
+  # this function prints a random port in the inclusive range 0x1000 to 0xffff
+  printf $(($(hexdump -n 2 -e '/2 "%u"' /dev/urandom)|32768))
 }
 
 shTmpCopy() {

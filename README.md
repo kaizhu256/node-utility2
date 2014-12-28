@@ -20,26 +20,28 @@ lightweight nodejs module for testing and covering browser-side code
 
 
 
-## installation and quickstart
+## quickstart
 ```
-# install
+# npm install utility2
 npm install utility2
-# run server and browser tests on self with code-coverage
+
+# run server and browser tests with code-coverage
 cd node_modules/utility2 && npm install && npm test
-# start example test server on port 8080
-npm start --server-port=8080
+
+# start test server on port 4380 and exit after 10000 ms
+npm start --server-port=4380 --timeout-exit=10000
+# open browser to http://localhost:4380/?modeTest=1
 ```
+![screenshot](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/beta/test-report.screenshot.quickstartTest.png)
 
 
 
-## library usage example
+## example code
 - see this package's [test.js](https://github.com/kaizhu256/node-utility2/blob/beta/test.js)
 
 
 
 ## package content
-- .build/
-  - auto-created directory where tests and coverages are stored
 - .gitignore
   - git ignore file
 - .travis.yml
@@ -55,7 +57,7 @@ npm start --server-port=8080
 - index.js
   - main nodejs app
 - index.sh
-  - shell script exporting various helper test functions
+  - shell build script
 - package.json
   - npm config file
 - test.js
@@ -63,24 +65,31 @@ npm start --server-port=8080
 
 
 
+## package dependencies
+- jslint-lite
+
+
+
 ## todo
-- replace onTimeout with errorStack
+- add screenshot of example library usage
 - embed istanbul-lite
-- screenshot of quickstart and demo library usage
 - add shTmpMove to move app to /tmp/app and change shTmpCopy to copy app to /tmp/app.tmp
-- add grep sugar in repl
 - add tarball creation for deployment
-- add grep in repl debugger
 - add profiling and flame graph
 - add server stress test using phantomjs
-- minify /assets/utility2.js
+- minify /assets/utility2.js in production-mode
 
 
 
 ## changelog
 #### 2014.10.31
+- auto git-squash gh-pages when uploading build artifacts
+- add shQuickstartTest with screenshot-capture and auto-kill server in quickstart code
+- add github-upload dev-dependency
+- add middlewareError
+- add grep sugar in repl
 - add mainApp._testSecret attribute for private testing
-- add testMiddleware
+- add middlewareTest
 - remove npm postinstall script
 - add timeout for onParallel
 - notify phantomjs of test-completion by throwing a special error
