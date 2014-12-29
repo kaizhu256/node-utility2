@@ -22,12 +22,14 @@ script:
   - if [ "$TRAVIS" ]; then export GITHUB_REPO=kaizhu256/node-utility2; fi
   - if [ "$TRAVIS" ]; then export HEROKU_REPO=hrku01-utility2-$TRAVIS_BRANCH; fi
   - if [ "$TRAVIS" ]; then export TEST_URL="https://hrku01-utility2-$TRAVIS_BRANCH.herokuapp.com/?modeTest=phantom&_testSecret={{_testSecret}}"; fi
-  - . index.sh && shInit
+  - . ./index.sh && shInit && mkdir -p .tmp/build/coverage-report.html
   # test quickstart
-  - shRun shQuickstartTest
+  - MODE_CI_BUILD=testQuickstart shRunScreenshot shTestQuickstart
+  # test example
+  - MODE_CI_BUILD=testExample shRunScreenshot shTestExample
   # npm test
-  - npm test
+  - MODE_CI_BUILD=npmTest shRunScreenshot npm test
   # deploy to heroku
-  - shRun shHerokuDeploy
+  - if [ "$TRAVIS" ]; then shRun shHerokuDeploy; fi
   # upload build artifacts to github
-  - shRun shBuildUploadGithub
+  - if [ "$TRAVIS" ]; then shRun shBuildGithubUpload; fi

@@ -14,9 +14,10 @@ lightweight nodejs module for testing and covering browser-side code
 |[beta](https://github.com/kaizhu256/node-utility2/tree/beta) | [![heroku.com test server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://hrku01-utility2-beta.herokuapp.com/?modeTest=1) | [![test-report](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/beta/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/beta/test-report.html) | [![istanbul coverage report](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/beta/coverage-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/beta/coverage-report.html/node-utility2/index.html) | [![build artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build.travis-ci.org/beta)|
 |[alpha](https://github.com/kaizhu256/node-utility2/tree/alpha) | [![heroku.com test server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://hrku01-utility2-alpha.herokuapp.com/?modeTest=1) | [![test-report](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/alpha/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/alpha/test-report.html) | [![istanbul coverage report](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/alpha/coverage-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/alpha/coverage-report.html/node-utility2/index.html) | [![build artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build.travis-ci.org/alpha)|
 
-| test server screenshot |
-|:---------------------- |
-|[![heroku.com test server](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/beta/test-report.screenshot.herokuDeploy.phantomjs.png)](https://hrku01-utility2-beta.herokuapp.com/?modeTest=1)|
+
+
+## live test server
+[![heroku.com test server](https://kaizhu256.github.io/node-utility2/screenshot.herokuDeploy.phantomjs.png)](https://hrku01-utility2-beta.herokuapp.com/?modeTest=1)
 
 
 
@@ -32,11 +33,16 @@ cd node_modules/utility2 && npm install && npm test
 npm start --server-port=4380 --timeout-exit=10000
 # open browser to http://localhost:4380/?modeTest=1
 ```
-![screenshot](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/beta/test-report.screenshot.quickstartTest.png)
+[![screenshot](https://kaizhu256.github.io/node-utility2/screenshot.testQuickstart.png)](https://kaizhu256.github.io/node-utility2/screenshot.testQuickstart.png)
 
 
 
 ## example code
+```
+// example.js
+// todo
+```
+[![screenshot](https://kaizhu256.github.io/node-utility2/screenshot.testExample.png)](https://kaizhu256.github.io/node-utility2/screenshot.testExample.png)
 - see this package's [test.js](https://github.com/kaizhu256/node-utility2/blob/beta/test.js)
 
 
@@ -65,13 +71,14 @@ npm start --server-port=4380 --timeout-exit=10000
 
 
 
-## package dependencies
+## npm dependencies
 - jslint-lite
 
 
 
-## todo
-- add screenshot of example library usage
+## changelog
+#### todo
+- pass middlewareList to testServerCreateAndListen
 - embed istanbul-lite
 - add shTmpMove to move app to /tmp/app and change shTmpCopy to copy app to /tmp/app.tmp
 - add tarball creation for deployment
@@ -79,13 +86,18 @@ npm start --server-port=4380 --timeout-exit=10000
 - add server stress test using phantomjs
 - minify /assets/utility2.js in production-mode
 
+#### 2014.12.29
+- merge middlewareError and middlewareTest into testServerCreateAndListen
+- add border around phantomjs screenshot
+- use tee in shRunScreenshot and add word-wrap and max-width of 80 characters
+- merge .build into .tmp/build
+- add shTestExample with screenshot-capture
+- move screenshot.* from beta to root directory in gh-pages branch
+- change textFormat's undefined valueDefault handling behavior
 
-
-## changelog
 #### 2014.10.31
 - auto git-squash gh-pages when uploading build artifacts
-- add shQuickstartTest with screenshot-capture and auto-kill server in quickstart code
-- add github-upload dev-dependency
+- add shTestQuickstart with screenshot-capture and auto-kill server in quickstart code
 - add middlewareError
 - add grep sugar in repl
 - add mainApp._testSecret attribute for private testing
@@ -103,8 +115,6 @@ npm start --server-port=4380 --timeout-exit=10000
 - add csslint
 - emphasize low-level helper functions over high-level ones
 - revert from saucelabs testing to phantomjs / slimerjs
-
-
 
 #### 2014.9.22
 - near 100% code-coverage during travis-ci build

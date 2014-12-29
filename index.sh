@@ -66,6 +66,42 @@ shAesEncryptTravis() {
     .travis.yml || return $?
 }
 
+shBuildGithubUpload() {
+  # this function uploads the ./build dir to github
+  # cleanup $TMPDIR2/build
+  find $TMPDIR2/build -path "*.json" -print0 | xargs -0 rm -f || return $?
+  # add black border around phantomjs screenshot
+  if (mogrify --version > /dev/null 2>&1)
+  then
+    ls $TMPDIR2/build/*.phantomjs.png $TMPDIR2/build/*.slimerjs.png 2>/dev/null |\
+      xargs -n 1 mogrify -frame 1 -mattecolor black || return $?
+  fi
+  if [ "$MODE_OFFLINE" ] || [ ! "$GIT_SSH_KEY" ]
+  then
+    return
+  fi
+  # clone gh-pages branch
+  rm -fr $TMPDIR2/gh-pages && cd $TMPDIR2 && git clone git@github.com:$GITHUB_REPO.git\
+    --branch=gh-pages --single-branch $TMPDIR2/gh-pages && cd $TMPDIR2/gh-pages || return $?
+  # copy build artifacts to .
+  cp $TMPDIR2/build/build.badge.svg . || return $?
+  cp $TMPDIR2/build/screenshot.* . || return $?
+  mkdir -p $CI_BUILD_DIR || return $?
+  for DIR in\
+    $CI_BUILD_DIR/$CI_BRANCH\
+    $CI_BUILD_DIR/$CI_BRANCH.$CI_BUILD_NUMBER.$CI_COMMIT_ID
+  do
+    rm -fr $DIR && cp -a $TMPDIR2/build $DIR || return $?
+  done
+  # init .git/config
+  printf "\n[user]\nname=nobody\nemail=nobody\n" > .git/config || return $?
+  # git squash gh-pages branch
+  git add -A && shGitSquash $(git rev-list --max-parents=0 HEAD) "[skip ci] squash" > /dev/null\
+    || return $?
+  # update gh-pages
+  git push -f git@github.com:$GITHUB_REPO.git gh-pages || return $?
+}
+
 shBuildPrint() {
   # this function prints debug info about the build state
   export MODE_CI_BUILD=$1 || return $?
@@ -73,34 +109,16 @@ shBuildPrint() {
   printf "\n[MODE_CI_BUILD=$MODE_CI_BUILD] - $MESSAGE\n\n" || return $?
 }
 
-shBuildUploadGithub() {
-  # this function uploads the ./build dir to github
-  if [ "$MODE_OFFLINE" ] || [ ! "$GIT_SSH_KEY" ]
+shExitCodeSave() {
+  # this function saves the global $EXIT_CODE and restores the global $CWD
+  # save $EXIT_CODE
+  EXIT_CODE=$1 || return $?
+  if [ -d $TMPDIR2 ]
   then
-    return
+    printf "$EXIT_CODE" > $TMPFILE2 || return $?
   fi
-  # clone gh-pages branch
-  cd /tmp && rm -fr /tmp/gh-pages && git clone git@github.com:$GITHUB_REPO.git\
-    --branch=gh-pages --single-branch /tmp/gh-pages && cd /tmp/gh-pages || return $?
-  # cleanup $CWD/.build
-  rm -f $CWD/.build/coverage-report.html/coverage* || return $?
-  find $CWD/.build -path "*.json" -print0 | xargs -0 rm -f || return $?
-  # copy build artifacts to .
-  cp $CWD/.build/build.badge.svg . || return $?
-  mkdir -p $CI_BUILD_DIR || return $?
-  for DIR in\
-    $CI_BUILD_DIR/$CI_BRANCH\
-    $CI_BUILD_DIR/$CI_BRANCH.$CI_BUILD_NUMBER.$CI_COMMIT_ID
-  do
-    rm -fr $DIR && cp -a $CWD/.build $DIR || return $?
-  done
-  # init .git/config
-  printf "\n[user]\nname=nobody\nemail=nobody\n" > .git/config || return $?
-  # git squash gh-pages branch
-  git add -A && shGitSquash $(git rev-list --max-parents=0 HEAD) "[skip ci] squash" >\
-    /dev/null || return $?
-  # update gh-pages
-  git push -f git@github.com:$GITHUB_REPO.git gh-pages || return $?
+  # restore $CWD
+  cd $CWD || return $?
 }
 
 shGitSquash () {
@@ -130,8 +148,8 @@ shHerokuDeploy() {
   # init $HEROKU_HOSTNAME
   export HEROKU_HOSTNAME=$HEROKU_REPO.herokuapp.com || return $?
   shBuildPrint herokuDeploy "deploying to https://$HEROKU_HOSTNAME ..." || return $?
-  # init clean repo in /tmp/app.tmp
-  shTmpCopy && cd /tmp/app.tmp || return $?
+  # init clean repo in /tmp/app.copy
+  shTmpAppCopy && cd /tmp/app.copy || return $?
   # npm install dependencies
   rm -fr /tmp/node_modules && npm install || return $?
   # init .git
@@ -143,11 +161,11 @@ shHerokuDeploy() {
   # git add everything
   git add . || return $?
   # init Procfile
-  node -e "var fs;\
-    fs = require('fs');\
-    fs.writeFileSync(\
-      'Procfile',\
-      require('$DIRNAME').textFormat(fs.readFileSync('Procfile', 'utf8'), process.env)\
+  node -e "var fs;
+    fs = require('fs');
+    fs.writeFileSync(
+      'Procfile',
+      require('$DIRNAME').textFormat(fs.readFileSync('Procfile', 'utf8'), process.env)
     );"
   # git commit
   git commit -am "heroku deploy" > /dev/null || return $?
@@ -160,7 +178,7 @@ shHerokuDeploy() {
     return $?
   curl -fLSs https://$HEROKU_HOSTNAME > /dev/null
   # save $EXIT_CODE and restore $CWD
-  shSave $? || return $?
+  shExitCodeSave $? || return $?
   if [ "$EXIT_CODE" != 0 ]
   then
     shBuildPrint herokuDeploy "check failed"
@@ -171,7 +189,7 @@ shHerokuDeploy() {
   # test url
   if [ "$TEST_URL" ]
   then
-    shPhantomTest "$TEST_URL" || return $?
+    shTestPhantom "$TEST_URL" || return $?
   fi
 }
 
@@ -212,10 +230,10 @@ shInit() {
   # init $PATH with $CWD/node_modules/.bin
   export PATH=$CWD/node_modules/phantomjs-lite:$CWD/node_modules/.bin:$PATH || return $?
   # init $DIRNAME
-  export DIRNAME=$(node -e "try {\
-    console.log(require('utility2').__dirname)\
-  } catch (errorCaught) {\
-    console.log(require('./index.js').__dirname)\
+  export DIRNAME=$(node -e "try {
+    console.log(require('utility2').__dirname)
+  } catch (errorCaught) {
+    console.log(require('./index.js').__dirname)
   }") || return $?
   # init $GIT_SSH
   if [ "$GIT_SSH_KEY" ]
@@ -225,17 +243,19 @@ shInit() {
   # init $PACKAGE_JSON_*
   if [ -f package.json ]
   then
-    eval $(node -e "var dict, value;\
+    eval $(node -e "var dict, value;
       dict = require('./package.json');
-      console.log(Object.keys(dict).map(function (key) {\
-        value = dict[key];\
-        return typeof value === 'string' ? 'export PACKAGE_JSON_' + key.toUpperCase() + '='\
-            + JSON.stringify(value.split('\n')[0])\
-          : ':';\
+      console.log(Object.keys(dict).map(function (key) {
+        value = dict[key];
+        return typeof value === 'string' ? 'export PACKAGE_JSON_' + key.toUpperCase() + '='
+            + JSON.stringify(value.split('\n')[0])
+          : ':';
       }).join(';'))") || return $?
   fi
-  # init $TMPFILE
-  export TMPFILE=/tmp/tmpfile.$(openssl rand -hex 8) || return $?
+  # init $TMPDIR2
+  export TMPDIR2=$CWD/.tmp || return $?
+  # init $TMPFILE2
+  export TMPFILE2=$TMPDIR2/tmpfile || return $?
   # auto-detect slimerjs
   if slimerjs undefined > /dev/null 2>&1
   then
@@ -247,37 +267,37 @@ shIstanbulCover() {
   # this function runs the command with istanbul code-coverage
   local ARGS=$1 || return $?
   shift || return $?
-  ARGS="$ARGS --dir=.build/coverage-report.html" || return $?
+  ARGS="$ARGS --dir=$TMPDIR2/build/coverage-report.html" || return $?
   ARGS="$ARGS --print=none" || return $?
   ARGS="$ARGS --report=json" || return $?
   istanbul cover $ARGS -- $@ || return $?
 }
 
 shIstanbulReport() {
-  # this function merges $COVERAGE into .build/coverage-report.html/coverage.json,
-  # and creates .build/coverage-report.html
+  # this function merges $COVERAGE into $TMPDIR2/build/coverage-report.html/coverage.json,
+  # and creates $TMPDIR2/build/coverage-report.html
   local COVERAGE=$1 || return $?
   if [ "$COVERAGE" ]
   then
-    node -e "var fs;\
-      fs = require('fs');\
-      fs.writeFileSync(\
-        '.build/coverage-report.html/coverage.json',\
-        JSON.stringify(require('$DIRNAME').coverageMerge(\
-          require('./.build/coverage-report.html/coverage.json'),\
-          require('./$COVERAGE')\
-        ))\
+    node -e "var fs;
+      fs = require('fs');
+      fs.writeFileSync(
+        '$TMPDIR2/build/coverage-report.html/coverage.json',
+        JSON.stringify(require('$DIRNAME').coverageMerge(
+          require('$TMPDIR2/build/coverage-report.html/coverage.json'),
+          require('./$COVERAGE')
+        ))
       );" || return $?
   fi
-  istanbul report --dir=.build/coverage-report.html\
-    --include=.build/coverage-report.html/coverage.json html text || return $?
+  istanbul report --dir=$TMPDIR2/build/coverage-report.html\
+    --include=$TMPDIR2/build/coverage-report.html/coverage.json html text || return $?
 }
 
 shNpmTest() {
   # this function runs npm test
-  shBuildPrint "${MODE_CI_BUILD:-localNpmTest}" "npm testing $CWD ..." || return $?
-  # init .build dir
-  mkdir -p $CWD/.build/coverage-report.html || return $?
+  shBuildPrint "${MODE_CI_BUILD:-npmTest}" "npm testing $CWD ..." || return $?
+  # init $TMPDIR2 dir
+  mkdir -p $TMPDIR2/build/coverage-report.html || return $?
   # init random server port
   export npm_config_server_port=$(shServerPortRandom) || return $?
   # init npm test mode
@@ -289,19 +309,18 @@ shNpmTest() {
     return $?
   fi
   # cleanup old coverage
-  rm -f .build/coverage-report.html/coverage.* || return $?
+  rm -f $TMPDIR2/build/coverage-report.html/coverage.* || return $?
   # run npm test with coverage
   shIstanbulCover $@
   # save $EXIT_CODE and restore $CWD
-  shSave $? || return $?
+  shExitCodeSave $? || return $?
   # create coverage-report
   shIstanbulReport || return $?
-  printf "\ncreated test-report file:///$CWD/.build/test-report.html\n" || return $?
-  printf "created coverage-report file:///$CWD/.build/coverage-report.html/index.html\n\n" ||\
-    return $?
+  printf "\ncreated test-report file:///$TMPDIR2/build/test-report.html\n" || return $?
+  printf "created coverage-report file:///$TMPDIR2/build/coverage-report.html/index.html\n\n"\      || return $?
   # create coverage-report badge
-  node -e "require('$DIRNAME')\
-    .coverageBadge(require('./.build/coverage-report.html/coverage.json'))" || return $?
+  node -e "require('$DIRNAME')
+    .coverageBadge(require('$TMPDIR2/build/coverage-report.html/coverage.json'))" || return $?
   # if npm test failed, then run it again without coverage
   if [ "$EXIT_CODE" != 0 ]
   then
@@ -310,55 +329,8 @@ shNpmTest() {
   return $EXIT_CODE
 }
 
-shPhantomTest() {
-  # this function runs phantomjs tests on the specified $URL,
-  # and merge it into the existing test-report
-  local URL=$1 || return $?
-  shBuildPrint "${MODE_CI_BUILD:-remotePhantomTest}" "phantom testing $URL ..." || return $?
-  node -e "var local;\
-    local = require('$DIRNAME');\
-    local._testReport = require('$CWD/.build/test-report.json');\
-    local.testPhantom('$URL', function (error) {\
-      local.fs.writeFileSync(\
-        '$CWD/.build/test-report.html',\
-        local.testMerge(local._testReport, {})\
-      );\
-      process.exit(!!error);
-    });" || return $?
-}
-
-shQuickstartTest() {
-  # this function tests the quickstart script $1
-  if [ "$MODE_OFFLINE" ]
-  then
-    return
-  fi
-  # read script from README.md
-  node -e "console.log(\
-    (/\n## quickstart\n\`\`\`\n([\S\s]+)\`\`\`/)\
-      .exec(require('fs').readFileSync('README.md', 'utf8'))[1]
-  );" > /tmp/quickstart.sh
-  local SCRIPT=$CWD/$1 || return $?
-  shBuildPrint quickstartTest "testing /tmp/quickstart.sh ..." || return $?
-  cd /tmp && rm -fr /tmp/node_modules && /bin/sh /tmp/quickstart.sh && sleep 1 || return $?
-  # init .build dir
-  mkdir -p $CWD/.build/coverage-report.html || return $?
-  # create screenshot of quickstart
-  # http://www.cnx-software.com/2011/09/22/how-to-convert-a-command-line-result-into-an-image-in-linux/
-  if [ "$(uname)" = "Linux" ]
-  then
-    cd /tmp && rm -fr /tmp/node_modules && /bin/sh /tmp/quickstart.sh | convert\
-      -background gray45 -border 2 -bordercolor gray45\
-      -fill palegreen -font Nimbus-Mono-Bold -frame 1\
-      -mattecolor black\
-      -pointsize 10\
-      label:@- $CWD/.build/test-report.screenshot.quickstartTest.png || return $?
-  fi
-  unset MODE_CI_BUILD || return $?
-}
-
 shRun() {
-  # this function executes $@ and restores $CWD on exit
+  # this function runs the command $@ and restores $CWD on exit
   # eval argv forever
   if [ "$npm_config_mode_forever" ]
   then
@@ -368,37 +340,46 @@ shRun() {
     $@
   fi
   # save $EXIT_CODE and restore $CWD
-  shSave $? || return $?
+  shExitCodeSave $? || return $?
   # return $EXIT_CODE
   return $EXIT_CODE
 }
 
 shRunForever() {
-  # this function executes $@ and auto-respawns on exit
-  mkdir -p $CWD/.tmp
+  # this function runs the command $@ and auto-respawns on exit
   # kill old forever process
-  kill $(cat .tmp/forever.pid) > /dev/null 2>&1
+  kill $(cat $TMPDIR2/forever.pid) > /dev/null 2>&1
   sleep 2 || return $?
   # kill old forever process forcefully
-  kill $(cat .tmp/forever.pid) -s9 2>/dev/null
+  kill $(cat $TMPDIR2/forever.pid) -s9 2>/dev/null
   # record new forever pid
-  printf "$$" > .tmp/forever.pid || return $?
-  echo "\nprocess $$ - running '$@' ..." >&2 || return $?
+  printf "$$" > $TMPDIR2/forever.pid || return $?
+  printf "\nprocess $$ - running '$@' ...\n" >&2 || return $?
   until npm_config_pid_parent=$$ $@
   do
-    echo "\nprocess $$ - '$@' exited with code $?. respawning ..." >&2 || return $?
+    printf "\nprocess $$ - '$@' exited with code $?. respawning ...\n" >&2 || return $?
     sleep 2 || return $?
   done
 }
 
-shSave() {
-  # this function saves the global $EXIT_CODE and restores the global $CWD
-  # save $EXIT_CODE
-  EXIT_CODE=$1 || return $?
-  # restore $CWD
-  cd $CWD || return $?
-  # cleanup $TMPFILE
-  rm -f $TMPFILE || return $?
+shRunScreenshot() {
+  # this function runs the command $@ and creates a screenshot of the output
+  # http://www.cnx-software.com/2011/09/22/how-to-convert-a-command-line-result-into-an-image-in-linux/
+  export MODE_CI_BUILD_SCREENSHOT=screenshot.$MODE_CI_BUILD.png
+  shRun $@ 2>&1 | tee $TMPDIR2/screenshot.txt || return $?
+  # save $EXIT_CODE and restore $CWD
+  shExitCodeSave $(cat $TMPFILE2) || return $?
+  if (convert --version > /dev/null 2>&1)
+  then
+    # word-wrap $TMPDIR2/screenshot.txt to 80 characters
+    fold $TMPDIR2/screenshot.txt |\
+      # convert $TMPDIR2/screenshot.txt to png screenshot image
+      convert -background gray40 -border 4 -bordercolor gray40\
+      -fill palegreen -font Courier-Bold\
+      -pointsize 10\
+      label:@- $TMPDIR2/build/$MODE_CI_BUILD_SCREENSHOT || return $?
+  fi
+  return $EXIT_CODE
 }
 
 shServerPortRandom() {
@@ -406,12 +387,84 @@ shServerPortRandom() {
   printf $(($(hexdump -n 2 -e '/2 "%u"' /dev/urandom)|32768))
 }
 
-shTmpCopy() {
-  # this function copies the app to /tmp/app.tmp with only the bare git repo files
-  # init /tmp/app.tmp
-  rm -fr /tmp/app.tmp && mkdir -p /tmp/app.tmp || return $?
-  # tar / untar repo contents to /tmp/app.tmp, since we can't git clone a shallow repo
-  git ls-tree -r HEAD --name-only | xargs tar -czf - | tar -C /tmp/app.tmp -xzvf - || return $?
+shTestPhantom() {
+  # this function runs phantomjs tests on the specified $URL,
+  # and merge it into the existing test-report
+  local URL=$1 || return $?
+  shBuildPrint "${MODE_CI_BUILD:-testPhantom}" "phantom testing $URL ..." || return $?
+  node -e "var local;
+    local = require('$DIRNAME');
+    local._testReport = require('$TMPDIR2/build/test-report.json');
+    local.testPhantom('$URL', function (error) {
+      local.fs.writeFileSync(
+        '$TMPDIR2/build/test-report.html',
+        local.testMerge(local._testReport, {})
+      );
+      process.exit(!!error);
+    });" || return $?
+}
+
+shTestExample() {
+  # this function tests the example script in README.md
+  if [ "$MODE_OFFLINE" ]
+  then
+    return
+  fi
+  # read and parse script from README.md
+  node -e "console.log(
+    (/\n## example code\n\`\`\`\n([\S\s]+?)\`\`\`/)
+      .exec(require('fs').readFileSync('README.md', 'utf8'))[1]
+  );" > /tmp/example.js || return $?
+  shBuildPrint testExample "testing /tmp/example.js ..." || return $?
+  # cleanup /tmp/node_modules
+  cd /tmp && rm -fr /tmp/node_modules || return $?
+  # npm install package
+  npm install $PACKAGE_JSON_NAME || return $?
+  # test /tmp/example.js
+  printf "node /tmp/example.js\n" && node /tmp/example.js || return $?
+}
+
+shTestQuickstart() {
+  # this function tests the quickstart script in README.md
+  if [ "$MODE_OFFLINE" ]
+  then
+    return
+  fi
+  # read and parse script from README.md
+  node -e "console.log(
+    (/\n## quickstart\n\`\`\`\n([\S\s]+?)\`\`\`/)
+      .exec(require('fs').readFileSync('README.md', 'utf8'))[1]
+  );" > /tmp/quickstart.sh || return $?
+  shBuildPrint testQuickstart "testing /tmp/quickstart.sh ..." || return $?
+  # cleanup /tmp/node_modules
+  cd /tmp && rm -fr /tmp/node_modules || return $?
+  # test /tmp/quickstart.sh
+  cat /tmp/quickstart.sh && /bin/sh /tmp/quickstart.sh || return $?
+}
+
+shTestTravis() {
+  # this function tests the travis script in .travis.yml
+  if [ "$MODE_OFFLINE" ]
+  then
+    return
+  fi
+  # read and parse script from .travis.yml
+  node -e "console.log(
+    'shTestTravis() {\n' + (/\nscript:\n([\S\s]+)/)
+      .exec(require('fs').readFileSync('.travis.yml', 'utf8'))[1]
+      .replace((/^[ \-]*/gm), '')
+      .replace((/^(.+)/gm), '\$1 || EXIT_CODE=\$?') + '\nexit \$EXIT_CODE\n}\nshTestTravis'
+  );" > /tmp/travis.sh || return $?
+  # test /tmp/travis.sh
+  cat /tmp/travis.sh && /bin/sh /tmp/travis.sh || return $?
+}
+
+shTmpAppCopy() {
+  # this function copies the app to /tmp/app.copy with only the bare git repo files
+  # init /tmp/app.copy
+  rm -fr /tmp/app.copy && mkdir -p /tmp/app.copy || return $?
+  # tar / untar repo contents to /tmp/app.copy, since we can't git clone a shallow repo
+  git ls-tree -r HEAD --name-only | xargs tar -czf - | tar -C /tmp/app.copy -xzvf - || return $?
 }
 
 shTravisEncrypt() {
@@ -419,10 +472,10 @@ shTravisEncrypt() {
   local GITHUB_REPO=$1 || return $?
   local SECRET=$2 || return $?
   # get public rsa key from https://api.travis-ci.org/repos/<owner>/<repo>/key
-  curl -fLSs https://api.travis-ci.org/repos/$GITHUB_REPO/key > $TMPFILE || return $?
-  perl -pi -e "s/[^-]+(.+-).+/\$1/; s/\\\\n/\n/g; s/ RSA / /g" $TMPFILE || return $?
+  curl -fLSs https://api.travis-ci.org/repos/$GITHUB_REPO/key > $TMPFILE2 || return $?
+  perl -pi -e "s/[^-]+(.+-).+/\$1/; s/\\\\n/\n/g; s/ RSA / /g" $TMPFILE2 || return $?
   # rsa-encrypt $SECRET and print it
-  printf "$SECRET" | openssl rsautl -encrypt -pubin -inkey $TMPFILE | base64 | tr -d "\n" ||\
+  printf "$SECRET" | openssl rsautl -encrypt -pubin -inkey $TMPFILE2 | base64 | tr -d "\n" ||\
     return $?
 }
 

@@ -356,7 +356,7 @@
     });
   };
 
-  local.onParallel = function (onError) {
+  local.onParallel = function (onError, onDebug) {
     /*
       this function returns another function that runs async tasks in parallel,
       and calls onError only if there's an error, or if its counter reaches zero
@@ -364,7 +364,9 @@
     var self, timerTimeout;
     // set timerTimeout
     timerTimeout = mainApp.onTimeout(onError, mainApp._timeoutDefault, 'onParallel');
+    onDebug = onDebug || mainApp.nop;
     self = function (error) {
+      onDebug(self);
       // if error already occurred, then return
       if (self.error) {
         return;
@@ -860,8 +862,8 @@
       case 'node':
         // create build badge
         mainApp.fs.writeFileSync(
-          process.cwd() + '/.build/build.badge.svg',
-          mainApp._fileCacheDict['.build/build.badge.svg'].data
+          process.cwd() + '/.tmp/build/build.badge.svg',
+          mainApp._fileCacheDict['.tmp/build/build.badge.svg'].data
             // edit branch name
             .replace(
               (/0000 00 00 00 00 00/g),
@@ -877,8 +879,8 @@
         );
         // create test-report.badge.svg
         mainApp.fs.writeFileSync(
-          process.cwd() + '/.build/test-report.badge.svg',
-          mainApp._fileCacheDict['.build/test-report.badge.svg'].data
+          process.cwd() + '/.tmp/build/test-report.badge.svg',
+          mainApp._fileCacheDict['.tmp/build/test-report.badge.svg'].data
             // edit number of tests failed
             .replace((/999/g), testReport.testsFailed)
             // edit badge color
@@ -886,12 +888,12 @@
         );
         // create test-report.html
         mainApp.fs.writeFileSync(
-          process.cwd() + '/.build/test-report.html',
+          process.cwd() + '/.tmp/build/test-report.html',
           testReportHtml
         );
         // create test-report.json
         mainApp.fs.writeFileSync(
-          process.cwd() + '/.build/test-report.json',
+          process.cwd() + '/.tmp/build/test-report.json',
           JSON.stringify(mainApp._testReport)
         );
         // if any test failed, then exit with non-zero exit-code
@@ -991,7 +993,7 @@
     }
   };
 
-  local.textFormat = function (template, dict, undefinedValue) {
+  local.textFormat = function (template, dict, valueDefault) {
     /*
       this function replaces the keys in given text template
       with the key / value pairs provided by the dict
@@ -1003,7 +1005,7 @@
       mainApp.nop(match0);
       return dict[match].map(function (dict) {
         // recursively format the array fragment
-        return mainApp.textFormat(fragment, dict, undefinedValue);
+        return mainApp.textFormat(fragment, dict, valueDefault);
       }).join('');
     };
     rgx = (/\{\{#[^{]+\}\}/g);
@@ -1023,13 +1025,13 @@
       }
     }
     // search for keys in the template
-    return template.replace((/\{\{[^{}]+\}\}/g), function (key) {
+    return template.replace((/\{\{[^{}]+\}\}/g), function (keyList) {
       value = dict;
       // iteratively lookup nested values in the dict
-      key.slice(2, -2).split('.').forEach(function (key) {
+      keyList.slice(2, -2).split('.').forEach(function (key) {
         value = value && value[key];
       });
-      return value === undefined ? undefinedValue : value;
+      return value === undefined ? valueDefault || keyList : value;
     });
   };
 
@@ -1038,6 +1040,10 @@
       this function tests textFormat's default handling behavior
     */
     var data;
+    // test undefined valueDefault handling behavior
+    data = mainApp.textFormat('{{aa}}', {}, undefined);
+    mainApp.assert(data === '{{aa}}', data);
+    // test default handling behavior
     data = mainApp.textFormat('{{aa}}{{aa}}{{bb}}{{cc}}{{dd}}{{ee.ff}}', {
       // test string value handling behavior
       aa: 'aa',
@@ -1146,7 +1152,7 @@
       // init xhr
       xhr = new XMLHttpRequest();
       // debug xhr
-      mainApp.debugXhr = xhr;
+      mainApp._debugXhr = xhr;
       // init event-handling
       xhr.addEventListener('abort', onEvent);
       xhr.addEventListener('error', onEvent);
@@ -1265,14 +1271,14 @@
             // handle error event
             .on('error', onIo);
           // debug ajax request
-          mainApp.debugAjaxRequest = request;
+          mainApp._debugAjaxRequest = request;
           // send request and/or data
           request.end(options.data);
           break;
         case 2:
           response = error;
           // debug ajax response
-          mainApp.debugAjaxResponse = response;
+          mainApp._debugAjaxResponse = response;
           mainApp.streamReadAll(response, onIo);
           break;
         case 3:
@@ -1327,8 +1333,8 @@
       });
       coveragePercent = 100 * coveragePercent[0] / coveragePercent[1];
       mainApp.fs.writeFileSync(
-        process.cwd() + '/.build/coverage-report.badge.svg',
-        mainApp._fileCacheDict['.build/coverage-report.badge.svg']
+        process.cwd() + '/.tmp/build/coverage-report.badge.svg',
+        mainApp._fileCacheDict['.tmp/build/coverage-report.badge.svg']
           .data
           // edit coverage badge percent
           .replace((/100.0/g), coveragePercent.toFixed(1))
@@ -1350,7 +1356,7 @@
       var data;
       mainApp.coverageBadge({ file1: { s: { 1: 0, 2: 1 } } });
       data = mainApp.fs.readFileSync(
-        process.cwd() + '/.build/coverage-report.badge.svg',
+        process.cwd() + '/.tmp/build/coverage-report.badge.svg',
         'utf8'
       );
       mainApp.assert(data === '<svg xmlns="http://www.w3.org/2000/svg" width="117" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="3" width="117" height="20" fill="#555"/><rect rx="3" x="63" width="54" height="20" fill="#6f6f00"/><path fill="#6f6f00" d="M63 0h4v20h-4z"/><rect rx="3" width="117" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="32.5" y="15" fill="#010101" fill-opacity=".3">coverage</text><text x="32.5" y="14">coverage</text><text x="89" y="15" fill="#010101" fill-opacity=".3">50.0%</text><text x="89" y="14">50.0%</text></g></svg>', data);
@@ -1445,54 +1451,6 @@
       }
     };
 
-    local.middlewareError = function (error, request, response, next) {
-      /*
-        this function is the error middleware
-      */
-      // nop hack to pass jslint
-      mainApp.nop(next);
-      mainApp.serverRespondDefault(request, response, error ? 500 : 404, error);
-    };
-
-    local.middlewareTest = function (request, response, next) {
-      /*
-        this function is the test middleware
-      */
-      // debug server request
-      mainApp.debugServerRequest = request;
-      // debug server response
-      mainApp.debugServerResponse = response;
-      // check if _testSecret is valid
-      request.testSecretValid = (/\b_testSecret=(\w+)\b/).exec(request.url);
-      request.testSecretValid =
-        request.testSecretValid && request.testSecretValid[1] === mainApp._testSecret;
-      // init urlPathNormalized
-      request.urlPathNormalized =
-        mainApp.path.resolve(mainApp.url.parse(request.url).pathname);
-      switch (request.urlPathNormalized) {
-      // serve main page
-      case '/':
-        response.end(mainApp.textFormat(mainApp._fileCacheDict['/assets/test.html'].data, {
-          env: process.env,
-          mainAppBrowserJson: JSON.stringify(mainApp._mainAppBrowser),
-          utility2Css: mainApp._fileCacheDict['/assets/utility2.css'].data
-        }));
-        break;
-      // serve the following assets from _fileCacheDict
-      case '/assets/test.js':
-      case '/assets/utility2.js':
-        response.end(mainApp._fileCacheDict[request.urlPathNormalized].data);
-        break;
-      // test http GET handling behavior
-      case '/test/hello':
-        response.end('hello');
-        break;
-      // fallback to next middleware
-      default:
-        next();
-      }
-    };
-
     local.onFileModifiedCacheAndParse = function (options) {
       /*
         this function watches the file and if modified, then cache and parse it
@@ -1523,7 +1481,7 @@
 
     local._onFileModified_default_test = function (onError) {
       /*
-        this function tests this initNode's watchFile handling behavior
+        this function tests onFileModified's watchFile handling behavior
       */
       var onParallel;
       onParallel = mainApp.onParallel(onError);
@@ -1611,7 +1569,7 @@
               'node_modules\\|' +
               'rollup\\|' +
               'swp\\|' +
-              'test\\|tmp\\)\\b" | tr "\\n" "\\000" | xargs -0 grep -in "' + match[2] + '"'],
+              'tmp\\)\\b" | tr "\\n" "\\000" | xargs -0 grep -in "' + match[2].trim() + '"'],
             { stdio: process.env.npm_config_mode_npm_test ? 'ignore' : ['ignore', 1, 2] }
           )
             // on shell exit, print return prompt
@@ -1657,22 +1615,6 @@
           onError();
         }, onError);
       });
-    };
-
-    local.serverPortInit = function () {
-      /*
-        this function inits process.env.npm_config_server_port
-      */
-      var serverPort;
-      serverPort = process.env.npm_config_server_port = process.env.npm_config_server_port ||
-        // if serverPort is undefined,
-        // then assign it a random integer in the inclusive range 1 to 0xffff
-        ((Math.random() * 0x10000) | 0x8000).toString();
-      // validate serverPort is an integer in the inclusive range 1 to 0xffff
-      mainApp.assert(
-        String(serverPort | 0) === serverPort && 1 <= serverPort && serverPort <= 0xffff,
-        'invalid server-port ' + serverPort
-      );
     };
 
     local.serverRespondDefault = function (request, response, statusCode, error) {
@@ -1730,29 +1672,6 @@
           response.setHeader(key, headers[key]);
         });
       }
-    };
-
-    local.setTimeoutExit = function (timeout) {
-      /*
-        this function calls process.exit after timeout ms
-      */
-      if (Number(timeout)) {
-        setTimeout(process.exit, timeout).unref();
-      }
-    };
-
-    local._setTimeoutExit_default_test = function (onError) {
-      /*
-        this function tests setTimeoutExit's default handling behavior
-      */
-      mainApp.testMock([
-      ], onError, function (onError) {
-        // test null-case handling behavior
-        local.setTimeoutExit();
-        // test default handling behavior
-        local.setTimeoutExit(1);
-        onError();
-      });
     };
 
     local.streamReadAll = function (readableStream, onError) {
@@ -1825,7 +1744,7 @@
                 local.__coverage__,
                 JSON.parse(mainApp.fs.readFileSync(
                   process.cwd() +
-                    '/.build/coverage-report.html/coverage.' + argv0 + '.json',
+                    '/.tmp/build/coverage-report.html/coverage.' + argv0 + '.json',
                   'utf8'
                 ))
               );
@@ -1834,7 +1753,7 @@
             mainApp.testMerge(
               mainApp._testReport,
               JSON.parse(mainApp.fs.readFileSync(
-                process.cwd() + '/.build/test-report.' + argv0 + '.json',
+                process.cwd() + '/.tmp/build/test-report.' + argv0 + '.json',
                 'utf8'
               ))
             );
@@ -1842,6 +1761,90 @@
           });
       });
       onParallel();
+    };
+
+    local.testServerCreateAndListen = function (middleware) {
+    /*
+      this function inits a test-server to listen on $npm_config_server_port
+    */
+      // if $npm_config_timeout_exit is defined,
+      // then exit this process after $npm_config_timeout_exit ms
+      if (Number(process.env.npm_config_timeout_exit)) {
+        setTimeout(process.exit, Number(process.env.npm_config_timeout_exit))
+          // keep timerTimeout from blocking the process from exiting
+          .unref();
+      }
+      // init $npm_config_server_port
+      process.env.npm_config_server_port = process.env.npm_config_server_port ||
+        // if $npm_config_server_port is undefined,
+        // then assign it a random integer in the inclusive range 1 to 0xffff
+        ((Math.random() * 0x10000) | 0x8000).toString();
+      // create test-server
+      mainApp.http.createServer(function (request, response) {
+        var modeIo, onIo;
+        modeIo = 0;
+        onIo = function (error) {
+          modeIo = error instanceof Error ? -1 : modeIo + 1;
+          switch (modeIo) {
+          case 1:
+            // debug server request
+            mainApp._debugServerRequest = request;
+            // debug server response
+            mainApp._debugServerResponse = response;
+            // check if _testSecret is valid
+            request.testSecretValid = (/\b_testSecret=(\w+)\b/).exec(request.url);
+            request.testSecretValid =
+              request.testSecretValid && request.testSecretValid[1] === mainApp._testSecret;
+            // init urlPathNormalized
+            request.urlPathNormalized =
+              mainApp.path.resolve(mainApp.url.parse(request.url).pathname);
+            switch (request.urlPathNormalized) {
+            // serve main page
+            case '/':
+              response.end(mainApp.textFormat(mainApp._fileCacheDict[
+                '/assets/test.html'
+              ].data, {
+                env: process.env,
+                mainAppBrowserJson: JSON.stringify(mainApp._mainAppBrowser),
+                utility2Css: mainApp._fileCacheDict['/assets/utility2.css'].data
+              }));
+              break;
+            // serve the following assets from _fileCacheDict
+            case '/assets/test.js':
+            case '/assets/utility2.js':
+              response.end(mainApp._fileCacheDict[request.urlPathNormalized].data);
+              break;
+            // test http GET handling behavior
+            case '/test/hello':
+              response.end('hello');
+              break;
+            // test internal server error handling behavior
+            case '/test/error':
+              onIo(mainApp._errorDefault);
+              break;
+            // fallback to next middleware
+            default:
+              onIo();
+            }
+            break;
+          case 2:
+            // run custom middleware
+            middleware(request, response, onIo);
+            break;
+          default:
+            // if error occurred, then respond with '500 Internal Server Error'
+            // else respond with '404 Not Found'
+            mainApp.serverRespondDefault(request, response, error ? 500 : 404, error);
+          }
+        };
+        onIo();
+      })
+        // listen on port $npm_config_server_port
+        .listen(process.env.npm_config_server_port, function () {
+          console.log('test-server listening on port ' + process.env.npm_config_server_port);
+          // init node test
+          mainApp.testRun();
+        });
     };
   }
 
@@ -1888,6 +1891,8 @@
     });
     // init main test-platform
     mainApp._testPlatform = {
+      // test-platform screenshot image file
+      screenshotImg: mainApp._envDict.MODE_CI_BUILD_SCREENSHOT,
       // list of test-cases and their test-results
       testCaseList: []
     };
@@ -2056,17 +2061,17 @@
           mainApp.coverageMerge(global.__coverage__, data.coverage || {});
           // create screenshot
           file = mainApp.fs.workingDirectory +
-            '/.build/test-report.screenshot.' + mainApp.argv0 + '.png';
+            '/.tmp/build/screenshot.' + mainApp.argv0 + '.png';
           mainApp.page.render(file);
           console.log('created ' + 'file://' + file);
           // integrate screenshot into test-report
           data.testReport.testPlatformList[0].screenshotImg =
-            'test-report.screenshot.' + mainApp.argv0 + '.png';
+            'screenshot.' + mainApp.argv0 + '.png';
           [[
-            '.build/test-report.' + mainApp.argv0 + '.json',
+            '.tmp/build/test-report.' + mainApp.argv0 + '.json',
             mainApp.jsonCopy(data.testReport)
           ], [
-            '.build/coverage-report.html/coverage.' + mainApp.argv0 + '.json',
+            '.tmp/build/coverage-report.html/coverage.' + mainApp.argv0 + '.json',
             global.__coverage__
           ]].forEach(function (args) {
             file = mainApp.fs.workingDirectory + '/' + args[0];

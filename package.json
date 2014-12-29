@@ -6,7 +6,6 @@
   },
   "description": "lightweight nodejs module for covering and testing browser code",
   "devDependencies": {
-    "github-upload": "^2014.12.21-100",
     "istanbul": "^0.3.0",
     "phantomjs-lite": "^2014.10.31"
   },
@@ -22,5 +21,5 @@
     "start": "./index.sh shRun node test.js",
     "test": "./index.sh shRun shNpmTest test.js"
   },
-  "version": "2014.10.31-411"
+  "version": "2014.12.29-101"
 }

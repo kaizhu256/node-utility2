@@ -42,41 +42,21 @@
         mainApp.utility2._timeoutDefault, onError);
     };
     mainApp.utility2.localExport(local, mainApp);
-    // init timeout-exit
-    mainApp.setTimeoutExit(process.env.npm_config_timeout_exit);
-    // init process.env.npm_config_server_port
-    mainApp.serverPortInit();
-    // init server
-    mainApp.http.createServer(function (request, response) {
-      mainApp.middlewareTest(request, response, function () {
-        /*
-          this function is the main test middleware
-        */
-        var next;
-        next = function (error) {
-          mainApp.middlewareError(error, request, response);
-        };
-        switch (request.urlPathNormalized) {
-        // test http POST handling behavior
-        case '/test/echo':
-          mainApp.serverRespondEcho(request, response);
-          break;
-        // test internal server error handling behavior
-        case '/test/error':
-          next(mainApp.utility2._errorDefault);
-          break;
-        // fallback to 404 Not Found
-        default:
-          next();
-        }
-      });
-    })
-      // start server on port process.env.npm_config_server_port
-      .listen(process.env.npm_config_server_port, function () {
-        console.log('server listening on port ' + process.env.npm_config_server_port);
-        // init node test
-        mainApp.testRun();
-      });
+    // init test server
+    mainApp.testServerCreateAndListen(function (request, response, next) {
+      /*
+        this function is the main test middleware
+      */
+      switch (request.urlPathNormalized) {
+      // test http POST handling behavior
+      case '/test/echo':
+        mainApp.serverRespondEcho(request, response);
+        break;
+      // fallback to 404 Not Found
+      default:
+        next();
+      }
+    });
     // watch the following files, and if they are modified, then cache and parse them
     [{
       file: __dirname + '/index.data',

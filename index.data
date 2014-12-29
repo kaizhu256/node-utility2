@@ -123,7 +123,7 @@ tr:nth-child(odd).testReportPlatformTr {
 /* FILE_BEGIN {
   "actionList": [],
   "externalUrl": "https://img.shields.io/badge/last_build-0000_00_00_00_00_00_UTC_--_master_--_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-0077ff.svg?style=flat",
-  "file": ".build/build.badge.svg"
+  "file": ".tmp/build/build.badge.svg"
 } */
 <svg xmlns="http://www.w3.org/2000/svg" width="563" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="3" width="563" height="20" fill="#555"/><rect rx="3" x="61" width="502" height="20" fill="#07f"/><path fill="#07f" d="M61 0h4v20h-4z"/><rect rx="3" width="563" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="31.5" y="15" fill="#010101" fill-opacity=".3">last build</text><text x="31.5" y="14">last build</text><text x="311" y="15" fill="#010101" fill-opacity=".3">0000 00 00 00 00 00 UTC - master - aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</text><text x="311" y="14">0000 00 00 00 00 00 UTC - master - aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</text></g></svg>
 /* FILE_END */
@@ -133,7 +133,7 @@ tr:nth-child(odd).testReportPlatformTr {
 /* FILE_BEGIN {
   "actionList": [],
   "externalUrl": "https://img.shields.io/badge/coverage-100.0%-00dd00.svg?style=flat",
-  "file": ".build/coverage-report.badge.svg"
+  "file": ".tmp/build/coverage-report.badge.svg"
 } */
 <svg xmlns="http://www.w3.org/2000/svg" width="117" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="3" width="117" height="20" fill="#555"/><rect rx="3" x="63" width="54" height="20" fill="#0d0"/><path fill="#0d0" d="M63 0h4v20h-4z"/><rect rx="3" width="117" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="32.5" y="15" fill="#010101" fill-opacity=".3">coverage</text><text x="32.5" y="14">coverage</text><text x="89" y="15" fill="#010101" fill-opacity=".3">100.0%</text><text x="89" y="14">100.0%</text></g></svg>
 /* FILE_END */
@@ -143,7 +143,7 @@ tr:nth-child(odd).testReportPlatformTr {
 /* FILE_BEGIN {
   "actionList": [],
   "externalUrl": "https://img.shields.io/badge/tests_failed-999-dd0000.svg?style=flat",
-  "file": ".build/test-report.badge.svg"
+  "file": ".tmp/build/test-report.badge.svg"
 } */
 <svg xmlns="http://www.w3.org/2000/svg" width="103" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="3" width="103" height="20" fill="#555"/><rect rx="3" x="72" width="31" height="20" fill="#d00"/><path fill="#d00" d="M72 0h4v20h-4z"/><rect rx="3" width="103" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="37" y="15" fill="#010101" fill-opacity=".3">tests failed</text><text x="37" y="14">tests failed</text><text x="86.5" y="15" fill="#010101" fill-opacity=".3">999</text><text x="86.5" y="14">999</text></g></svg>
 /* FILE_END */
@@ -160,7 +160,10 @@ tr:nth-child(odd).testReportPlatformTr {
   <meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
   <style>
   {{utility2Css}}
-  body { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; }
+  body {
+  background-color: "white";
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  }
   </style>
 </head>
 <body>
