@@ -1490,8 +1490,8 @@
             // nop hack to pass jslint
             mainApp.nop(match0);
             // preserve lineno
-            tmp = options.data.slice(0, ii).replace((/.*/g), '') +
-              options2.replace((/.*/g), '');
+            tmp =
+              options.data.slice(0, ii).replace((/.+/g), '') + options2.replace((/.+/g), '');
             options2 = JSON.parse(options2);
             // cache options2 to mainApp._fileCacheDict[options2.file]
             mainApp._fileCacheDict[options2.file] = options2;
@@ -2177,7 +2177,7 @@
             console.log('created ' + 'file://' + file);
             // integrate screenshot into test-report
             data.testReport.testPlatformList[0].screenshotImg =
-              'screenshot.' + mainApp.argv0 + '.png';
+              file.replace((/^.*\//), '');
             // merge test-report
             mainApp.testMerge(mainApp._testReport, data.testReport);
           // 2. else handle it as a normal error

@@ -66,13 +66,13 @@ exit $EXIT_CODE
 
 shQuickstartSh() {
   # npm install utility2
-  npm install utility2
+  npm install utility2 || return $?
 
   # run browser and server tests with code-coverage
-  cd node_modules/utility2 && npm install && npm test
+  cd node_modules/utility2 && npm install && npm test || return $?
 
   # start test-server on port 4380 and exit after 10000 ms
-  npm start --server-port=4380 --timeout-exit=10000
+  npm start --server-port=4380 --timeout-exit=10000 || return $?
 
   # open browser to http://localhost:4380/?modeTest=1
 }

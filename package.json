@@ -32,5 +32,5 @@
     "start": "./index.sh shRun node test.js",
     "test": "./index.sh shRun shNpmTest test.js"
   },
-  "version": "2015.1.4-105"
+  "version": "2015.1.4-106"
 }
