@@ -23,6 +23,8 @@
   display: none;
 }
 .testReportPlatformScreenshotA {
+  border: 1px solid;
+  border-color: #000;
   display:block;
   max-height:256px;
   max-width:320px;
@@ -83,9 +85,9 @@ tr:nth-child(odd).testReportPlatformTr {
 </div>
 {{#testPlatformList}}
 <div class="testReportPlatformDiv">
-{{screenshot}}
 <h4>
   {{testPlatformNumber}}. {{name}}<br>
+  {{screenshot}}
   <span class="testReportPlatformSpan">time elapsed</span>- {{timeElapsed}} ms<br>
   <span class="testReportPlatformSpan">tests failed</span>- {{testsFailed}}<br>
   <span class="testReportPlatformSpan">tests passed</span>- {{testsPassed}}<br>
@@ -146,45 +148,6 @@ tr:nth-child(odd).testReportPlatformTr {
   "file": ".tmp/build/test-report.badge.svg"
 } */
 <svg xmlns="http://www.w3.org/2000/svg" width="103" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="3" width="103" height="20" fill="#555"/><rect rx="3" x="72" width="31" height="20" fill="#d00"/><path fill="#d00" d="M72 0h4v20h-4z"/><rect rx="3" width="103" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="37" y="15" fill="#010101" fill-opacity=".3">tests failed</text><text x="37" y="14">tests failed</text><text x="86.5" y="15" fill="#010101" fill-opacity=".3">999</text><text x="86.5" y="14">999</text></g></svg>
-/* FILE_END */
-
-
-
-/* FILE_BEGIN {
-  "actionList": [],
-  "file": "/assets/test.html"
-} */
-<!DOCTYPE html>
-<html>
-<head>
-  <meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
-  <style>
-  {{utility2Css}}
-  body {
-  background-color: "white";
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-  }
-  </style>
-</head>
-<body>
-  <!-- main app div begin -->
-  <div class="mainAppDiv">
-  <h1>{{env.PACKAGE_JSON_NAME}} <{{env.PACKAGE_JSON_VERSION}}></h1>
-  <h3>{{env.PACKAGE_JSON_DESCRIPTION}}</h3>
-  </div>
-  <!-- main app div end -->
-  <!-- ajax progress bar begin -->
-  <div class="ajaxProgressDiv">
-  <div class="ajaxProgressBarDiv ajaxProgressBarDivLoading">loading</div>
-  </div>
-  <!-- ajax progress bar end -->
-  <!-- script begin -->
-  <script>window.$$mainApp = {{mainAppBrowserJson}}</script>
-  <script src="/assets/utility2.js"></script>
-  <script src="/assets/test.js"></script>
-  <!-- script end -->
-</body>
-</html>
 /* FILE_END */
 
 
@@ -252,4 +215,73 @@ tr:nth-child(odd).testReportPlatformTr {
   from { background-position: 40px 0; }
   to { background-position: 0 0; }
 }
+/* FILE_END */
+
+
+
+/* FILE_BEGIN {
+  "actionList": [],
+  "file": "/test/test.html"
+} */
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>{{env.PACKAGE_JSON_NAME}} [{{env.PACKAGE_JSON_VERSION}}]</title>
+  <style>
+  {{utility2Css}}
+  body {
+  background-color: #fff;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  }
+  </style>
+</head>
+<body>
+  <!-- main app div begin -->
+  <div class="mainAppDiv">
+  <h1>{{env.PACKAGE_JSON_NAME}} [{{env.PACKAGE_JSON_VERSION}}]</h1>
+  <h3>{{env.PACKAGE_JSON_DESCRIPTION}}</h3>
+  </div>
+  <!-- main app div end -->
+  <!-- ajax progress bar begin -->
+  <div class="ajaxProgressDiv">
+  <div class="ajaxProgressBarDiv ajaxProgressBarDivLoading">loading</div>
+  </div>
+  <!-- ajax progress bar end -->
+  <!-- script begin -->
+  <script>window.$$mainApp = {{mainAppBrowserJson}}</script>
+  <script src="/assets/utility2.js"></script>
+  <script src="/test/test.js"></script>
+  <!-- script end -->
+</body>
+</html>
+/* FILE_END */
+
+
+
+/* FILE_BEGIN {
+  "actionList": [],
+  "file": "/test/utility2.html"
+} */
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>utility2.js library</title>
+</head>
+<body>
+  <script src="/assets/utility2.js"></script>
+  <script>
+  (function (mainApp) {
+    'use strict';
+    if (mainApp.modeTest === 'phantom') {
+      throw new Error(JSON.stringify({ global_test_results: {
+        coverage: mainApp.__coverage__,
+        testReport: mainApp._testReport
+      } }));
+    }
+  }($$mainApp));
+  </script>
+</body>
+</html>
 /* FILE_END */

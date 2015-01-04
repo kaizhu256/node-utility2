@@ -2,14 +2,24 @@
   "author": "kai zhu <kaizhu256@gmail.com>",
   "bin": { "utility2" : "index.sh" },
   "dependencies": {
-    "jslint-lite": "^2014.11.26-11"
+    "jslint-lite": "2014.11.26-16"
   },
-  "description": "lightweight nodejs module for covering and testing browser code",
+  "description": "lightweight nodejs module for testing and covering browser code",
   "devDependencies": {
     "istanbul": "^0.3.0",
-    "phantomjs-lite": "^2014.10.31"
+    "phantomjs-lite": "2015.1.4-102"
   },
   "engines": { "node": "^0.10.x" },
+  "keywords": [
+    "browser",
+    "build",
+    "ci",
+    "continuous integration",
+    "cover",
+    "coverage",
+    "lightweight",
+    "test"
+  ],
   "license": "MIT",
   "name": "utility2",
   "os": ["darwin", "linux"],
@@ -18,8 +28,9 @@
     "url" : "https://github.com/kaizhu256/node-utility2.git"
   },
   "scripts": {
+    "build-ci": "./index.sh shRun shBuildCi",
     "start": "./index.sh shRun node test.js",
     "test": "./index.sh shRun shNpmTest test.js"
   },
-  "version": "2014.12.29-101"
+  "version": "2015.1.4-105"
 }

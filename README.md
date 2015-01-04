@@ -1,49 +1,214 @@
 utility2 [![NPM](https://img.shields.io/npm/v/utility2.svg?style=flat-square)](https://www.npmjs.org/package/utility2)
 ========
-lightweight nodejs module for testing and covering browser-side code
+lightweight nodejs module for testing and covering browser code
 
 
 
-## build status [![travis.ci-org build status](https://api.travis-ci.org/kaizhu256/node-utility2.svg)](https://travis-ci.org/kaizhu256/node-utility2)
+## build info [![travis-ci.org build status](https://api.travis-ci.org/kaizhu256/node-utility2.svg)](https://travis-ci.org/kaizhu256/node-utility2) ![codeship.io build status](https://codeship.com/projects/df8f44c0-2ee3-0132-0af5-6a016ae0b812/status)
 
 [![build commit status](https://kaizhu256.github.io/node-utility2/build.badge.svg)](https://travis-ci.org/kaizhu256/node-utility2)
 
-| git branch | test server | test report | coverage report | build artifact |
+| git branch | test-server | test-report | coverage-report | build artifact |
 |:----------:|:-----------:|:-----------:|:---------------:|:--------------:|
-|[master](https://github.com/kaizhu256/node-utility2/tree/master) | [![heroku.com test server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://hrku01-utility2-master.herokuapp.com/?modeTest=1) | [![test-report](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/master/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/master/test-report.html) | [![istanbul coverage report](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/master/coverage-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/master/coverage-report.html/node-utility2/index.html) | [![build artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build.travis-ci.org/master)|
-|[beta](https://github.com/kaizhu256/node-utility2/tree/beta) | [![heroku.com test server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://hrku01-utility2-beta.herokuapp.com/?modeTest=1) | [![test-report](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/beta/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/beta/test-report.html) | [![istanbul coverage report](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/beta/coverage-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/beta/coverage-report.html/node-utility2/index.html) | [![build artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build.travis-ci.org/beta)|
-|[alpha](https://github.com/kaizhu256/node-utility2/tree/alpha) | [![heroku.com test server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://hrku01-utility2-alpha.herokuapp.com/?modeTest=1) | [![test-report](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/alpha/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/alpha/test-report.html) | [![istanbul coverage report](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/alpha/coverage-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/alpha/coverage-report.html/node-utility2/index.html) | [![build artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build.travis-ci.org/alpha)|
+|[master](https://github.com/kaizhu256/node-utility2/tree/master) | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://hrku01-utility2-master.herokuapp.com/?modeTest=1) | [![test-report](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/master/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/master/test-report.html) | [![istanbul coverage-report](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/master/coverage-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/master/coverage-report.html/node-utility2/index.html) | [![build artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build.travis-ci.org/master)|
+|[beta](https://github.com/kaizhu256/node-utility2/tree/beta) | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://hrku01-utility2-beta.herokuapp.com/?modeTest=1) | [![test-report](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/beta/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/beta/test-report.html) | [![istanbul coverage-report](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/beta/coverage-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/beta/coverage-report.html/node-utility2/index.html) | [![build artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build.travis-ci.org/beta)|
+|[alpha](https://github.com/kaizhu256/node-utility2/tree/alpha) | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://hrku01-utility2-alpha.herokuapp.com/?modeTest=1) | [![test-report](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/alpha/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/alpha/test-report.html) | [![istanbul coverage-report](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/alpha/coverage-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/alpha/coverage-report.html/node-utility2/index.html) | [![build artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build.travis-ci.org/alpha)|
+```
+# build-ci.sh
+# this shell code runs the ci-build process
+shBuildCi() {
+  # init $TRAVIS env
+  if [ "$TRAVIS" ]
+  then
+    export HEROKU_REPO=hrku01-utility2-$TRAVIS_BRANCH || return $?
+    export TEST_URL="https://hrku01-utility2-$TRAVIS_BRANCH.herokuapp.com/?modeTest=phantom&_testSecret={{_testSecret}}" || return $?
+  fi
+  # init env
+  . ./index.sh && shInit && mkdir -p .tmp/build/coverage-report.html || return $?
+  # test quickstart
+  MODE_CI_BUILD=testQuickstartSh shRunScreenshot shTestQuickstartSh || return $?
+  # test example code
+  MODE_CI_BUILD=testExampleJs shRunScreenshot shTestExampleJs || return $?
+  # npm test
+  MODE_CI_BUILD=npmTest shRunScreenshot npm test || return $?
+  # deploy to heroku
+  if [ "$TRAVIS" ]
+  then
+    shRun shTestHeroku || return $?
+  fi
+}
+# run build process in ci env
+shBuildCi
+# save exit code
+EXITCODE=$?
+# upload build artifacts to github
+if [ "$TRAVIS" ]
+then
+  shRun shBuildGithubUpload || exit $?
+fi
+# exit with $EXIT_CODE
+exit $EXIT_CODE
+```
 
 
 
-## live test server
-[![heroku.com test server](https://kaizhu256.github.io/node-utility2/screenshot.herokuDeploy.phantomjs.png)](https://hrku01-utility2-beta.herokuapp.com/?modeTest=1)
+## live test-server
+[![heroku.com test-server](https://kaizhu256.github.io/node-utility2/screenshot.testHeroku.phantomjs.png)](https://hrku01-utility2-beta.herokuapp.com/?modeTest=1)
 
 
 
 ## quickstart
 ```
-# npm install utility2
-npm install utility2
+# quickstart.sh
+# this shell code runs the quickstart demo
+# 1. create a clean app directory (e.g /tmp/app)
+# 2. inside app directory, run the following shell code inside a terminal
 
-# run server and browser tests with code-coverage
-cd node_modules/utility2 && npm install && npm test
+shQuickstartSh() {
+  # npm install utility2
+  npm install utility2
 
-# start test server on port 4380 and exit after 10000 ms
-npm start --server-port=4380 --timeout-exit=10000
-# open browser to http://localhost:4380/?modeTest=1
+  # run browser and server tests with code-coverage
+  cd node_modules/utility2 && npm install && npm test
+
+  # start test-server on port 4380 and exit after 10000 ms
+  npm start --server-port=4380 --timeout-exit=10000
+
+  # open browser to http://localhost:4380/?modeTest=1
+}
+
+# run quickstart demo
+shQuickstartSh
 ```
-[![screenshot](https://kaizhu256.github.io/node-utility2/screenshot.testQuickstart.png)](https://kaizhu256.github.io/node-utility2/screenshot.testQuickstart.png)
+#### output
+[![screenshot](https://kaizhu256.github.io/node-utility2/screenshot.testQuickstartSh.png)](https://kaizhu256.github.io/node-utility2/screenshot.testQuickstartSh.png)
 
 
 
-## example code
+## example nodejs code
 ```
 // example.js
-// todo
+// this nodejs code runs browser and server tests with code-coverage
+// 1. create a clean app directory (e.g /tmp/app)
+// 2. inside app directory, save this js code as example.js
+// 3. inside app directory, run the following shell command:
+//    $ npm install istanbul utility2 && node_modules/.bin/utility2 shRun shNpmTest example.js
+/*jslint
+  browser: true,
+  indent: 2,
+  node: true, nomen: true
+*/
+(function $$example() {
+  'use strict';
+  var mainApp;
+  // browser js env
+  if (typeof window === 'object') {
+    // init mainApp
+    mainApp = window.$$mainApp;
+    // init test cases in browser js env
+    mainApp._testPlatform.testCaseList = [{
+      callback: function (onError) {
+        /*
+          this function tests ajax's 200 http status-code handling behavior
+        */
+        // test the defined url '/test/hello'
+        mainApp.ajax({
+          url: '/test/hello'
+        }, function (error, data) {
+          mainApp.testTryCatch(function () {
+            // validate no error occurred
+            mainApp.assert(!error, error);
+            // validate data
+            mainApp.assert(data === 'hello', data);
+            onError();
+          }, onError);
+        });
+      },
+      name: 'browser._ajax_200_test'
+    }, {
+      callback: function (onError) {
+        /*
+          this function tests ajax's 404 http status-code handling behavior
+        */
+        // test the undefined url '/test/undefined'
+        mainApp.ajax({
+          url: '/test/undefined'
+        }, function (error) {
+          mainApp.testTryCatch(function () {
+            // validate error occurred
+            mainApp.assert(error instanceof Error, error);
+            // validate 404 http status-code
+            mainApp.assert(error.statusCode === 404, error.statusCode);
+            onError();
+          }, onError);
+        });
+      },
+      name: 'browser._ajax_404_test'
+    }];
+    // init browser test
+    mainApp.testRun(mainApp.nop);
+  // node js env
+  } else {
+    // init mainApp
+    mainApp = require('utility2');
+    // watch the following files, and if they are modified, then re-cache and re-parse them
+    [{
+      // cache file as /test/test.js
+      cache: '/test/test.js',
+      // init browser code-coverage for /test/test.js
+      coverage: 'undefined',
+      file: __dirname + '/example.js'
+    }].forEach(function (options) {
+      console.log('auto-cache and auto-parse ' + options.file);
+      // cache and parse the file
+      mainApp.fileCacheAndParse(options);
+      // if the file is modified, then cache and parse it
+      mainApp.onFileModifiedCacheAndParse(options);
+    });
+    // init test cases in node js env
+    mainApp._testPlatform.testCaseList = [{
+      callback: function (onError) {
+        /*
+          this function spawns a phantomjs process to test a webpage
+        */
+        mainApp.testPhantom({
+          url: 'http://localhost:' + process.env.npm_config_server_port +
+            '/test/test.html?modeTest=phantom'
+        }, onError);
+      },
+      name: 'node._testPhantom_default_test'
+    }];
+    // init server test
+    mainApp.testRunServer([function (request, response, next) {
+      /*
+        this function is the main test middleware
+      */
+      // nop hack to pass jslint
+      mainApp.nop(request);
+      switch (request.urlPathNormalized) {
+      // test http GET handling behavior
+      case '/test/hello':
+        response.end('hello');
+        break;
+      // fallback to 404 Not Found
+      default:
+        next();
+      }
+    }], function () {
+      // exit after test-run ends
+      process.exit(mainApp._testReport.testsFailed);
+    });
+  }
+  return;
+}());
 ```
-[![screenshot](https://kaizhu256.github.io/node-utility2/screenshot.testExample.png)](https://kaizhu256.github.io/node-utility2/screenshot.testExample.png)
-- see this package's [test.js](https://github.com/kaizhu256/node-utility2/blob/beta/test.js)
+#### output
+[![screenshot](https://kaizhu256.github.io/node-utility2/screenshot.testExampleJs.png)](https://kaizhu256.github.io/node-utility2/screenshot.testExampleJs.png)
+
+
+
+## npm dependencies
+- jslint-lite
 
 
 
@@ -71,33 +236,38 @@ npm start --server-port=4380 --timeout-exit=10000
 
 
 
-## npm dependencies
-- jslint-lite
-
-
-
 ## changelog
 #### todo
-- pass middlewareList to testServerCreateAndListen
+- embed test script in README.md
 - embed istanbul-lite
-- add shTmpMove to move app to /tmp/app and change shTmpCopy to copy app to /tmp/app.tmp
-- add tarball creation for deployment
-- add profiling and flame graph
 - add server stress test using phantomjs
 - minify /assets/utility2.js in production-mode
 
+#### 2014.1.x
+- improve code-coverage
+- validate test page @ http://validator.w3.org/
+- remove global phantom and slimer object references
+- auto-detect $GITHUB_REPO
+
 #### 2014.12.29
-- merge middlewareError and middlewareTest into testServerCreateAndListen
+- merge global.__coverage__ and  local.__coverage__ into mainApp.__coverage__
+- flesh out example code
+- add onTestRunEnd callback to testRun
+- replace argument middleware with middlewareList in testRunServer
+- add phantomjs testing
+- add timestamp in screenshots
+- move build script from .travis.yml to README.md
+- merge middlewareError and middlewareTest into testRunServer
 - add border around phantomjs screenshot
 - use tee in shRunScreenshot and add word-wrap and max-width of 80 characters
 - merge .build into .tmp/build
-- add shTestExample with screenshot-capture
+- add shTestExampleJs with screenshot-capture
 - move screenshot.* from beta to root directory in gh-pages branch
 - change textFormat's undefined valueDefault handling behavior
 
 #### 2014.10.31
 - auto git-squash gh-pages when uploading build artifacts
-- add shTestQuickstart with screenshot-capture and auto-kill server in quickstart code
+- add shTestQuickstartSh with screenshot-capture and auto-kill server in quickstart code
 - add middlewareError
 - add grep sugar in repl
 - add mainApp._testSecret attribute for private testing
@@ -139,7 +309,7 @@ npm start --server-port=4380 --timeout-exit=10000
 - add github basic auth for building private repo
 - revamp ajax redirect in nodejs code
 - integrate browser tests into main page
-- add offline mode for shBuild
+- add offline mode for shBuildCi
 - add dummy failed tests in npm test for code-coverage
 - add file update feature for data files
 - add test flag in heroku Procfile
