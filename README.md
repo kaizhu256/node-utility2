@@ -40,7 +40,7 @@ shBuildCi() {
 # run build process in ci env
 shBuildCi
 # save exit code
-EXITCODE=$?
+EXIT_CODE=$?
 # upload build artifacts to github
 if [ "$TRAVIS" ]
 then
@@ -85,7 +85,7 @@ shQuickstartSh
 
 
 
-## example nodejs code
+## nodejs example code
 ```
 // example.js
 // this nodejs code runs browser and server tests with code-coverage
@@ -106,8 +106,8 @@ shQuickstartSh
     // init mainApp
     mainApp = window.$$mainApp;
     // init test cases in browser js env
-    mainApp._testPlatform.testCaseList = [{
-      callback: function (onError) {
+    mainApp.testPlatform.testCaseList = [{
+      function: function (onError) {
         /*
           this function tests ajax's 200 http status-code handling behavior
         */
@@ -126,7 +126,7 @@ shQuickstartSh
       },
       name: 'browser._ajax_200_test'
     }, {
-      callback: function (onError) {
+      function: function (onError) {
         /*
           this function tests ajax's 404 http status-code handling behavior
         */
@@ -166,8 +166,8 @@ shQuickstartSh
       mainApp.onFileModifiedCacheAndParse(options);
     });
     // init test cases in node js env
-    mainApp._testPlatform.testCaseList = [{
-      callback: function (onError) {
+    mainApp.testPlatform.testCaseList = [{
+      function: function (onError) {
         /*
           this function spawns a phantomjs process to test a webpage
         */
@@ -196,7 +196,7 @@ shQuickstartSh
       }
     }], function () {
       // exit after test-run ends
-      process.exit(mainApp._testReport.testsFailed);
+      process.exit(mainApp.testReport.testsFailed);
     });
   }
   return;
@@ -238,12 +238,15 @@ shQuickstartSh
 
 ## changelog
 #### todo
-- embed test script in README.md
+- preserve lineno in shTestExampleJs
+- embed nodejs test code in README.md
 - embed istanbul-lite
 - add server stress test using phantomjs
 - minify /assets/utility2.js in production-mode
 
 #### 2014.1.x
+- export most utility2 properties
+- add shGrep shell command
 - improve code-coverage
 - validate test page @ http://validator.w3.org/
 - remove global phantom and slimer object references

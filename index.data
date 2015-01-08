@@ -61,11 +61,11 @@ tr:nth-child(odd).testReportPlatformTr {
 }
 </style>
 <div class="testReportPlatformDiv testReportSummaryDiv">
-<h2>{{_envDict.PACKAGE_JSON_NAME}} test-report summary</h2>
+<h2>{{envDict.PACKAGE_JSON_NAME}} test-report summary</h2>
 <h4>
-  <span class="testReportSummarySpan">version</span>- {{_envDict.PACKAGE_JSON_VERSION}}<br>
+  <span class="testReportSummarySpan">version</span>- {{envDict.PACKAGE_JSON_VERSION}}<br>
   <span class="testReportSummarySpan">build date</span>- {{date}}<br>
-  <span class="testReportSummarySpan">build id</span>- {{_envDict.CI_BUILD_NUMBER}}<br>
+  <span class="testReportSummarySpan">build id</span>- {{envDict.CI_BUILD_NUMBER}}<br>
   <span class="testReportSummarySpan">commit info</span>- {{CI_COMMIT_INFO}}<br>
 </h4>
 <table class="testReportPlatformTable">
@@ -227,7 +227,7 @@ tr:nth-child(odd).testReportPlatformTr {
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>{{env.PACKAGE_JSON_NAME}} [{{env.PACKAGE_JSON_VERSION}}]</title>
+  <title>{{envDict.PACKAGE_JSON_NAME}} [{{envDict.PACKAGE_JSON_VERSION}}]</title>
   <style>
   {{utility2Css}}
   body {
@@ -239,8 +239,11 @@ tr:nth-child(odd).testReportPlatformTr {
 <body>
   <!-- main app div begin -->
   <div class="mainAppDiv">
-  <h1>{{env.PACKAGE_JSON_NAME}} [{{env.PACKAGE_JSON_VERSION}}]</h1>
-  <h3>{{env.PACKAGE_JSON_DESCRIPTION}}</h3>
+  <h1>{{envDict.PACKAGE_JSON_NAME}} [{{envDict.PACKAGE_JSON_VERSION}}]</h1>
+  <h3>{{envDict.PACKAGE_JSON_DESCRIPTION}}</h3>
+  <div><button
+    onclick="window.$$mainApp.modeTest=1; window.$$mainApp.testRun(window.$$mainApp.nop);"
+  >run test</button></div>
   </div>
   <!-- main app div end -->
   <!-- ajax progress bar begin -->
@@ -277,7 +280,7 @@ tr:nth-child(odd).testReportPlatformTr {
     if (mainApp.modeTest === 'phantom') {
       throw new Error(JSON.stringify({ global_test_results: {
         coverage: mainApp.__coverage__,
-        testReport: mainApp._testReport
+        testReport: mainApp.testReport
       } }));
     }
   }($$mainApp));

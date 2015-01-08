@@ -59,8 +59,8 @@
         '/?modeTest=phantom&' +
         // test _testSecret-validation handling behavior
         '_testSecret={{_testSecret}}&' +
-        // test _timeoutDefault-override handling behavior
-        '_timeoutDefault=' + mainApp.utility2._timeoutDefault }, onParallel);
+        // test timeoutDefault-override handling behavior
+        'timeoutDefault=' + mainApp.timeoutDefault }, onParallel);
       // test single-test-case handling behavior
       onParallel.counter += 1;
       mainApp.testPhantom({
@@ -68,8 +68,8 @@
         url: 'http://localhost:' + process.env.npm_config_server_port +
           // test modeTest !== 'phantom' handling behavior
           '/?modeTest=phantom2&' +
-          // test testRun's failedTest handling behavior
-          'modeTestCase=_testRun_failedTest_test'
+          // test testRun's failure handling behavior
+          'modeTestCase=_testRun_failure_test'
       }, function (error) {
         mainApp.testTryCatch(function () {
           // validate error occurred
@@ -163,7 +163,8 @@
       });
       onParallel();
     };
-    mainApp.utility2.localExport(local, mainApp);
+    // export local node object
+    mainApp.utility2.exportLocal(local, mainApp);
     // init server test
     mainApp.testRunServer([function (request, response, next) {
       // nop hack to pass jslint
@@ -199,9 +200,9 @@
       case '/test/server-error':
         // test multiple serverRespondWriteHead callback handling behavior
         mainApp.serverRespondWriteHead(request, response, null, {});
-        next(mainApp.utility2._errorDefault);
+        next(mainApp.errorDefault);
         // test multiple-callback error handling behavior
-        next(mainApp.utility2._errorDefault);
+        next(mainApp.errorDefault);
         // test onErrorDefault handling behavior
         mainApp.testMock([
           // suppress console.error
@@ -209,7 +210,7 @@
           // suppress modeErrorIgnore
           [request, { url: '' }]
         ], mainApp.nop, function (onError) {
-          mainApp.serverRespondDefault(request, response, 500, mainApp.utility2._errorDefault);
+          mainApp.serverRespondDefault(request, response, 500, mainApp.errorDefault);
           onError();
         });
         break;

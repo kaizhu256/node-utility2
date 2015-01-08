@@ -204,7 +204,7 @@
     });
     // test assertion failed with error object
     mainApp.testTryCatch(function () {
-      mainApp.assert(false, mainApp._errorDefault);
+      mainApp.assert(false, mainApp.errorDefault);
     }, function (error) {
       // validate error occurred
       mainApp.assert(error instanceof Error, error);
@@ -223,7 +223,7 @@
 
   local.errorStack = function (error) {
     /*
-      this function returns the error's stack or message attribute
+      this function returns the error stack or message
     */
     return String(error.stack || error.message);
   };
@@ -235,6 +235,38 @@
     if (error1.stack && error2.stack) {
       error1.stack += '\n' + error2.stack;
     }
+  };
+
+  local.exportLocal = function (local, exports) {
+    /*
+      this function exports the local object to exports
+    */
+    // init modeTestCase
+    mainApp.modeTestCase = mainApp.modeTestCase || mainApp.envDict.npm_config_mode_test_case;
+    Object.keys(local).forEach(function (key) {
+      // add testCase to mainApp.testPlatform.testCaseList
+      if (key.slice(-5) === '_test' &&
+          local._name.split('.')[0] === mainApp.envDict.PACKAGE_JSON_NAME &&
+          (!mainApp.modeTestCase || mainApp.modeTestCase === key) &&
+          (key !== '_testRun_failure_test' || mainApp.modeTestCase === key)) {
+        mainApp.testPlatform.testCaseList.push({
+          function: local[key],
+          name: local._name + '.' + key
+        });
+        return;
+      }
+      // export items that don't start with an underscore _
+      if (key[0] !== '_') {
+        mainApp[key] = local[key];
+      }
+    });
+    // export mainApp
+    Object.keys(mainApp).forEach(function (key) {
+      // export items that don't start with an underscore _
+      if (key[0] !== '_' && !exports[key]) {
+        exports[key] = mainApp[key];
+      }
+    });
   };
 
   local.jsonCopy = function (value) {
@@ -316,38 +348,6 @@
     onError();
   };
 
-  local.localExport = function (local, exports) {
-    /*
-      this function exports the local object to exports
-    */
-    // init modeTestCase
-    mainApp.modeTestCase = mainApp.modeTestCase || mainApp._envDict.npm_config_mode_test_case;
-    Object.keys(local).forEach(function (key) {
-      // add testCase to mainApp._testPlatform.testCaseList
-      if (key.slice(-5) === '_test' &&
-          local._name.split('.')[0] === mainApp._envDict.PACKAGE_JSON_NAME &&
-          (!mainApp.modeTestCase || mainApp.modeTestCase === key) &&
-          (key !== '_testRun_failedTest_test' || mainApp.modeTestCase === key)) {
-        mainApp._testPlatform.testCaseList.push({
-          callback: local[key],
-          name: local._name + '.' + key
-        });
-        return;
-      }
-      // export items that don't start with an underscore _
-      if (key[0] !== '_') {
-        mainApp[key] = local[key];
-      }
-    });
-    // export mainApp
-    Object.keys(mainApp).forEach(function (key) {
-      // export items that don't start with an underscore _
-      if (key[0] !== '_' && !exports[key]) {
-        exports[key] = mainApp[key];
-      }
-    });
-  };
-
   local.nop = function () {
     /*
       this function performs no operation - nop
@@ -357,7 +357,8 @@
 
   local.onErrorDefault = function (error) {
     /*
-      this function provides a default error handling callback.
+      this function provides a default error handling callback,
+      which simply prints the error stack or message to stderr
     */
     // if error is defined, then print the error stack
     if (error) {
@@ -381,7 +382,7 @@
       // validate message
       mainApp.assert(!message, message);
       // test error handling behavior
-      mainApp.onErrorDefault(mainApp._errorDefault);
+      mainApp.onErrorDefault(mainApp.errorDefault);
       // validate message
       mainApp.assert(message, message);
       onError();
@@ -451,7 +452,7 @@
       onParallelError.counter += 1;
       // test error handling behavior
       onParallelError.counter += 1;
-      onParallelError(mainApp._errorDefault);
+      onParallelError(mainApp.errorDefault);
       // test ignore-after-error handling behavior
       onParallelError();
     });
@@ -577,8 +578,8 @@
         // 1. save the options item to the backup object
         backup[key] = options2;
         // 2. set the override item to the options object
-        // if options is process.env, then override falsey values with empty string
-        options[key] = options === mainApp._envDict ? override2 || '' : override2;
+        // if options is mainApp.envDict, then override falsey values with empty string
+        options[key] = options === mainApp.envDict ? override2 || '' : override2;
         return;
       }
       // 3. recurse options[key] and override[key]
@@ -625,7 +626,7 @@
 
   local.testMock = function (mockList, onError, test) {
     /*
-      this function mocks the mainApp given in the mockList while running the test callback
+      this function mocks the mainApp given in the mockList while running the test function
     */
     var callCallback, onError2;
     callCallback = function (callback) {
@@ -633,6 +634,7 @@
         this function calls the callback
       */
       callback();
+      // return a mock timer object with the unref method
       return { unref: mainApp.nop };
     };
     // prepend mandatory mocks for async / unsafe functions
@@ -701,10 +703,10 @@
           ii + ' invalid testPlatform.name ' + typeof testPlatform.name
         );
         // insert $MODE_CI_BUILD into testPlatform.name
-        if (mainApp._envDict.MODE_CI_BUILD) {
+        if (mainApp.envDict.MODE_CI_BUILD) {
           testPlatform.name = testPlatform.name.replace(
             (/^(browser|node|phantom|slimer)\b/),
-            mainApp._envDict.MODE_CI_BUILD + ' - $1'
+            mainApp.envDict.MODE_CI_BUILD + ' - $1'
           );
         }
         mainApp.assert(
@@ -807,11 +809,11 @@
     // create html test-report
     testCaseNumber = 0;
     return mainApp.textFormat(
-      mainApp._fileCacheDict['/test/test-report.html.template'].data,
+      mainApp.fileCacheDict['/test/test-report.html.template'].data,
       mainApp.setOverride(testReport, -1, {
-        _envDict: mainApp._envDict,
         // security - sanitize '<' in text
-        CI_COMMIT_INFO: String(mainApp._envDict.CI_COMMIT_INFO).replace((/</g), '&lt;'),
+        CI_COMMIT_INFO: String(mainApp.envDict.CI_COMMIT_INFO).replace((/</g), '&lt;'),
+        envDict: mainApp.envDict,
         // map testPlatformList
         testPlatformList: testReport.testPlatformList.filter(function (testPlatform) {
           // if testPlatform has no tests, then filter it out
@@ -861,7 +863,7 @@
       this function inits tests
     */
     var onParallel, testPlatform, timerInterval;
-    mainApp.modeTest = mainApp.modeTest || mainApp._envDict.npm_config_mode_npm_test;
+    mainApp.modeTest = mainApp.modeTest || mainApp.envDict.npm_config_mode_npm_test;
     if (!mainApp.modeTest) {
       return;
     }
@@ -872,13 +874,13 @@
       document.body.appendChild(mainApp._testReportDiv);
       // create initial blank test page
       mainApp._testReportDiv.innerHTML =
-        mainApp.testMerge(mainApp._testReport, {});
+        mainApp.testMerge(mainApp.testReport, {});
       // update test-report status every 1000 ms until finished
       timerInterval = setInterval(function () {
         // update mainApp._testReportDiv in browser
         mainApp._testReportDiv.innerHTML =
-          mainApp.testMerge(mainApp._testReport, {});
-        if (mainApp._testReport.testsPending === 0) {
+          mainApp.testMerge(mainApp.testReport, {});
+        if (mainApp.testReport.testsPending === 0) {
           // cleanup timerInterval
           clearInterval(timerInterval);
         }
@@ -892,7 +894,7 @@
       // init new-line separator
       separator = new Array(56).join('-');
       // init testReport
-      testReport = mainApp._testReport;
+      testReport = mainApp.testReport;
       // stop testPlatform timer
       local._timeElapsedStop(testPlatform);
       // create testReportHtml
@@ -912,12 +914,12 @@
         // https://docs.saucelabs.com/reference/rest-api/#js-unit-testing
         global.global_test_results = {
           coverage: mainApp.__coverage__,
-          failed: mainApp._testReport.testsFailed,
-          testReport: mainApp._testReport
+          failed: mainApp.testReport.testsFailed,
+          testReport: mainApp.testReport
         };
         setTimeout(function () {
           // call callback with number of tests failed
-          onTestRunEnd(mainApp._testReport.testsFailed);
+          onTestRunEnd(mainApp.testReport.testsFailed);
           // throw global_test_results as an error,
           // so it can be caught and passed to the phantom js env
           if (mainApp.modeTest === 'phantom') {
@@ -931,24 +933,24 @@
         // create build badge
         mainApp.fs.writeFileSync(
           process.cwd() + '/.tmp/build/build.badge.svg',
-          mainApp._fileCacheDict['.tmp/build/build.badge.svg'].data
+          mainApp.fileCacheDict['.tmp/build/build.badge.svg'].data
             // edit branch name
             .replace(
               (/0000 00 00 00 00 00/g),
               new Date().toISOString().slice(0, 19).replace('T', ' ')
             )
             // edit branch name
-            .replace((/- master -/g), '| ' + process.env.CI_BRANCH + ' |')
+            .replace((/- master -/g), '| ' + mainApp.envDict.CI_BRANCH + ' |')
             // edit commit id
             .replace(
               (/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/g),
-              process.env.CI_COMMIT_ID
+              mainApp.envDict.CI_COMMIT_ID
             )
         );
         // create test-report.badge.svg
         mainApp.fs.writeFileSync(
           process.cwd() + '/.tmp/build/test-report.badge.svg',
-          mainApp._fileCacheDict['.tmp/build/test-report.badge.svg'].data
+          mainApp.fileCacheDict['.tmp/build/test-report.badge.svg'].data
             // edit number of tests failed
             .replace((/999/g), testReport.testsFailed)
             // edit badge color
@@ -966,30 +968,30 @@
         // create test-report.json
         mainApp.fs.writeFileSync(
           process.cwd() + '/.tmp/build/test-report.json',
-          JSON.stringify(mainApp._testReport)
+          JSON.stringify(mainApp.testReport)
         );
         // if any test failed, then exit with non-zero exit-code
         setTimeout(function () {
-          // finalize mainApp._testReport
+          // finalize mainApp.testReport
           mainApp.testMerge(testReport, {});
-          console.log('\n' + process.env.MODE_CI_BUILD + ' - ' +
-            mainApp._testReport.testsFailed + ' failed tests\n');
+          console.log('\n' + mainApp.envDict.MODE_CI_BUILD + ' - ' +
+            mainApp.testReport.testsFailed + ' failed tests\n');
           // call callback with number of tests failed
-          onTestRunEnd(mainApp._testReport.testsFailed);
+          onTestRunEnd(mainApp.testReport.testsFailed);
         }, 1000);
         break;
       default:
         setTimeout(function () {
           // call callback with number of tests failed
-          onTestRunEnd(mainApp._testReport.testsFailed);
+          onTestRunEnd(mainApp.testReport.testsFailed);
         }, 1000);
       }
     });
     onParallel.counter += 1;
     // init testReport timer
-    mainApp._testReport.timeElapsed = Date.now();
+    mainApp.testReport.timeElapsed = Date.now();
     // init testPlatform
-    testPlatform = mainApp._testPlatform;
+    testPlatform = mainApp.testPlatform;
     // init testPlatform timer
     testPlatform.timeElapsed = Date.now();
     testPlatform.testCaseList.map(function (testCase) {
@@ -1029,7 +1031,7 @@
       try {
         // start testCase timer
         testCase.timeElapsed = Date.now();
-        testCase.callback(onError);
+        testCase.function(onError);
       } catch (errorCaught) {
         onError(errorCaught);
       }
@@ -1037,16 +1039,16 @@
     onParallel();
   };
 
-  local._testRun_failedTest_test = function (onError) {
+  local._testRun_failure_test = function (onError) {
     /*
-      this function test testRun's failed test handling behavior
+      this function test testRun's failure handling behavior
     */
-    // test failed test from callback handling behavior
-    onError(mainApp._errorDefault);
-    // test failed test from multiple-callback handling behavior
+    // test failure from callback handling behavior
+    onError(mainApp.errorDefault);
+    // test failure from multiple-callback handling behavior
     onError();
-    // test failed test from thrown error handling behavior
-    throw mainApp._errorDefault;
+    // test failure from thrown error handling behavior
+    throw mainApp.errorDefault;
   };
 
   local.testTryCatch = function (callback, onError) {
@@ -1231,7 +1233,7 @@
       timerTimeout = mainApp.onTimeout(function (errorTimeout) {
         error = errorTimeout;
         xhr.abort();
-      }, options.timeout || mainApp._timeoutDefault, 'ajax');
+      }, options.timeout || mainApp.timeoutDefault, 'ajax');
       // if ajaxProgressBar is hidden, then display it
       if (local._ajaxProgressList.length === 0) {
         local._ajaxProgressDiv.style.display = 'block';
@@ -1308,14 +1310,14 @@
           // set timerTimeout
           timerTimeout = mainApp.onTimeout(
             onIo,
-            options.timeout || mainApp._timeoutDefault,
+            options.timeout || mainApp.timeoutDefault,
             'ajax ' + options.url
           );
           // init request and response
           request = response = { destroy: local.nop };
           // handle implicit localhost
           if (options.url[0] === '/') {
-            options.url = 'http://localhost:' + process.env.npm_config_server_port +
+            options.url = 'http://localhost:' + mainApp.envDict.npm_config_server_port +
               options.url;
           }
           // parse options.url
@@ -1406,7 +1408,7 @@
       coveragePercent = 100 * coveragePercent[0] / coveragePercent[1];
       mainApp.fs.writeFileSync(
         process.cwd() + '/.tmp/build/coverage-report.badge.svg',
-        mainApp._fileCacheDict['.tmp/build/coverage-report.badge.svg']
+        mainApp.fileCacheDict['.tmp/build/coverage-report.badge.svg']
           .data
           // edit coverage badge percent
           .replace((/100.0/g), coveragePercent.toFixed(1))
@@ -1471,16 +1473,16 @@
 
     local.fileCacheAndParse = function (options) {
       /*
-        this function parses options.file and caches it to mainApp._fileCacheDict
+        this function parses options.file and caches it to mainApp.fileCacheDict
       */
       var tmp;
       // read options.data from options.file
       options.data = mainApp.fs.readFileSync(options.file, 'utf8')
         // comment out shebang
         .replace((/^#!/), '//#!');
-      // cache options to mainApp._fileCacheDict[options.cache]
+      // cache options to mainApp.fileCacheDict[options.cache]
       if (options.cache) {
-        mainApp._fileCacheDict[options.cache] = options;
+        mainApp.fileCacheDict[options.cache] = options;
       }
       // parse options.data's embedded sub-files
       if (options.parse) {
@@ -1493,16 +1495,16 @@
             tmp =
               options.data.slice(0, ii).replace((/.+/g), '') + options2.replace((/.+/g), '');
             options2 = JSON.parse(options2);
-            // cache options2 to mainApp._fileCacheDict[options2.file]
-            mainApp._fileCacheDict[options2.file] = options2;
+            // cache options2 to mainApp.fileCacheDict[options2.file]
+            mainApp.fileCacheDict[options2.file] = options2;
             // cache data to option2.data and preserve lineno
             options2.data = tmp + data;
             // run each action in options2.actionList
             options2.actionList.forEach(function (action) {
               switch (action) {
-              // export options2.data to mainApp._mainAppBrowser._fileCacheDict
+              // export options2.data to mainApp.mainAppBrowser.fileCacheDict
               case 'exportBrowser':
-                mainApp._mainAppBrowser._fileCacheDict[options2.file] = options2;
+                mainApp.mainAppBrowser.fileCacheDict[options2.file] = options2;
                 break;
               // jslint options2.data
               case 'jslint':
@@ -1518,7 +1520,7 @@
       // if coverage-mode is enabled, then instrument options.data
       if (mainApp.__coverage__ &&
           options.coverage &&
-          options.coverage === process.env.PACKAGE_JSON_NAME) {
+          options.coverage === mainApp.envDict.PACKAGE_JSON_NAME) {
         options.data = local._coverageInstrument(options.data, options.file);
         // write instrumented options.data to fs
         mainApp.fs.writeFileSync(
@@ -1789,16 +1791,16 @@
       onParallel = mainApp.onParallel(onError);
       onParallel.counter += 1;
       // init timeout
-      options.timeout = options.timeout || mainApp._timeoutDefault;
+      options.timeout = options.timeout || mainApp.timeoutDefault;
       ['phantomjs', 'slimerjs'].forEach(function (argv0) {
         var file, onError2, timerTimeout;
         // if slimerjs is not available, then do not use it
-        if (argv0 === 'slimerjs' && (!process.env.npm_config_mode_slimerjs ||
-            process.env.npm_config_mode_no_slimerjs)) {
+        if (argv0 === 'slimerjs' && (!mainApp.envDict.npm_config_mode_slimerjs ||
+            mainApp.envDict.npm_config_mode_no_slimerjs)) {
           return;
         }
-        argv0 = process.env.MODE_CI_BUILD + '.' + argv0;
-        if (process.env.PACKAGE_JSON_NAME === 'utility2') {
+        argv0 = mainApp.envDict.MODE_CI_BUILD + '.' + argv0;
+        if (mainApp.envDict.PACKAGE_JSON_NAME === 'utility2') {
           argv0 += (mainApp.url.parse(options.url).path).replace((/\W+/g), '.');
         }
         onParallel.counter += 1;
@@ -1811,7 +1813,7 @@
         timerTimeout = mainApp.onTimeout(onError2, options.timeout, argv0);
         file = __dirname + '/index.js';
         // cover index.js
-        if (mainApp.__coverage__ && 'utility2' === process.env.PACKAGE_JSON_NAME) {
+        if (mainApp.__coverage__ && 'utility2' === mainApp.envDict.PACKAGE_JSON_NAME) {
           file = process.cwd() + '/.tmp/instrumented..assets.utility2.js';
         }
         // spawn a phantomjs process to test a url
@@ -1820,7 +1822,7 @@
             argv0: argv0,
             __dirname: __dirname,
             _testSecret: mainApp._testSecret,
-            _timeoutDefault: options.timeout
+            timeoutDefault: options.timeout
           }, 1, options))
         )], { stdio: 'inherit' })
           .on('exit', function (exitCode) {
@@ -1836,7 +1838,7 @@
             // merge tests
             if (!options.modeErrorIgnore) {
               mainApp.testMerge(
-                mainApp._testReport,
+                mainApp.testReport,
                 JSON.parse(mainApp.fs.readFileSync(
                   process.cwd() + '/.tmp/build/test-report.' + argv0 + '.json',
                   'utf8'
@@ -1858,8 +1860,8 @@
     */
       // if $npm_config_timeout_exit is defined,
       // then exit this process after $npm_config_timeout_exit ms
-      if (Number(process.env.npm_config_timeout_exit)) {
-        setTimeout(process.exit, Number(process.env.npm_config_timeout_exit))
+      if (Number(mainApp.envDict.npm_config_timeout_exit)) {
+        setTimeout(process.exit, Number(mainApp.envDict.npm_config_timeout_exit))
           // keep timerTimeout from blocking the process from exiting
           .unref();
       }
@@ -1889,20 +1891,20 @@
           'Content-Type': contentTypeDict[mainApp.path.extname(request.urlPathNormalized)]
         });
         switch (request.urlPathNormalized) {
-        // serve the following assets from _fileCacheDict
+        // serve the following assets from fileCacheDict
         case '/assets/utility2.js':
         case '/test/test.js':
-          response.end(mainApp._fileCacheDict[request.urlPathNormalized].data);
+          response.end(mainApp.fileCacheDict[request.urlPathNormalized].data);
           break;
         // serve test page
         case '/test/test.html':
         case '/test/utility2.html':
-          response.end(mainApp.textFormat(mainApp._fileCacheDict[
+          response.end(mainApp.textFormat(mainApp.fileCacheDict[
             request.urlPathNormalized
           ].data, {
-            env: process.env,
-            mainAppBrowserJson: JSON.stringify(mainApp._mainAppBrowser),
-            utility2Css: mainApp._fileCacheDict['/assets/utility2.css'].data
+            envDict: mainApp.envDict,
+            mainAppBrowserJson: JSON.stringify(mainApp.mainAppBrowser),
+            utility2Css: mainApp.fileCacheDict['/assets/utility2.css'].data
           }));
           break;
         // fallback to next middleware
@@ -1912,7 +1914,7 @@
       });
       // if $npm_config_server_port is undefined,
       // then assign it a random integer in the inclusive range 1 to 0xffff
-      process.env.npm_config_server_port = process.env.npm_config_server_port ||
+      mainApp.envDict.npm_config_server_port = mainApp.envDict.npm_config_server_port ||
         ((Math.random() * 0x10000) | 0x8000).toString();
       // 1. create a test-server with middlewareList
       mainApp.http.createServer(function (request, response) {
@@ -1931,8 +1933,8 @@
         onIo();
       })
         // 2. start test-server on $npm_config_server_port
-        .listen(process.env.npm_config_server_port, function () {
-          console.log('test-server listening on port ' + process.env.npm_config_server_port);
+        .listen(mainApp.envDict.npm_config_server_port, function () {
+          console.log('test-server listening on port ' + mainApp.envDict.npm_config_server_port);
           // 3. test test-server
           // init node test
           mainApp.testRun(onTestRunEnd);
@@ -1948,7 +1950,7 @@
         [mainApp.http, { createServer: function () {
           return { listen: mainApp.nop };
         } }],
-        [process.env, {
+        [mainApp.envDict, {
           // test auto-exit handling behavior
           npm_config_timeout_exit: '1',
           // test random $npm_config_server_port handling behavior
@@ -1977,21 +1979,38 @@
     case 'browser':
       // init mainApp
       mainApp = global.$$mainApp = global.$$mainApp || {};
-      mainApp._envDict = mainApp._envDict || {};
+      // init mainApp properties
+      mainApp.envDict = mainApp.envDict || {};
       mainApp.modeJs = 'browser';
       break;
     // init node js env
     case 'node':
       // init mainApp
       mainApp = module.exports;
-      mainApp._envDict = process.env;
+      // require modules
+      mainApp.child_process = require('child_process');
+      mainApp.crypto = require('crypto');
+      mainApp.fs = require('fs');
+      mainApp.http = require('http');
+      mainApp.https = require('https');
+      mainApp.jslint_lite = require('jslint-lite');
+      mainApp.path = require('path');
+      mainApp.url = require('url');
+      mainApp.vm = require('vm');
+      // init mainApp properties
+      mainApp.envDict = process.env;
       mainApp.modeJs = 'node';
       break;
     // init phantom js env
     case 'phantom':
       // init mainApp
       mainApp = {};
-      mainApp._envDict = require('system').env;
+      // require modules
+      mainApp.fs = require('fs');
+      mainApp.system = require('system');
+      mainApp.webpage = require('webpage');
+      // init mainApp properties
+      mainApp.envDict = mainApp.system.env;
       mainApp.modeJs = 'phantom';
       mainApp.phantom = global.phantom;
       break;
@@ -2004,53 +2023,53 @@
       }
     });
     // init main test-platform
-    mainApp._testPlatform = {
+    mainApp.testPlatform = {
       // test-platform screenshot image file
-      screenshotImg: mainApp._envDict.MODE_CI_BUILD_SCREENSHOT,
+      screenshotImg: mainApp.envDict.MODE_CI_BUILD_SCREENSHOT,
       // list of test-cases and their test-results
       testCaseList: []
     };
     // init main test-platform's name
     switch (mainApp.modeJs) {
     case 'browser':
-      mainApp._testPlatform.name = 'browser - ' + navigator.userAgent;
+      mainApp.testPlatform.name = 'browser - ' + navigator.userAgent;
       break;
     case 'node':
-      mainApp._testPlatform.name = 'node - ' + process.platform + ' ' + process.version;
+      mainApp.testPlatform.name = 'node - ' + process.platform + ' ' + process.version;
       break;
     case 'phantom':
-      mainApp._testPlatform.name = (global.slimer ? 'slimer - ' : 'phantom - ') +
-        require('system').os.name + ' ' +
+      mainApp.testPlatform.name = (global.slimer ? 'slimer - ' : 'phantom - ') +
+        mainApp.system.os.name + ' ' +
         mainApp.phantom.version.major + '.' +
         mainApp.phantom.version.minor + '.' +
         mainApp.phantom.version.patch;
       break;
     }
-    mainApp._testPlatform.name += ' - ' + new Date().toISOString();
+    mainApp.testPlatform.name += ' - ' + new Date().toISOString();
     // init mainApp with default values
     mainApp.setDefault(mainApp, -1, {
       __coverage__: global.__coverage__ || null,
       // init default error
-      _errorDefault: new Error('default error'),
+      errorDefault: new Error('default error'),
       // init cached dict of files
-      _fileCacheDict: {},
+      fileCacheDict: {},
       // init main test-report
-      _testReport: { testPlatformList: [mainApp._testPlatform] },
+      testReport: { testPlatformList: [mainApp.testPlatform] },
       // init ascii character reference
-      _textExampleAscii: '\x00\x01\x02\x03\x04\x05\x06\x07\b\t\n\x0b\f\r\x0e\x0f' +
+      textExampleAscii: '\x00\x01\x02\x03\x04\x05\x06\x07\b\t\n\x0b\f\r\x0e\x0f' +
         '\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f' +
         ' !"#$%&\'()*+,-./0123456789:;<=>?' +
         '@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_' +
         '`abcdefghijklmnopqrstuvwxyz{|}~\x7f',
       // init default timeout for ajax requests and other async io
-      _timeoutDefault: 30000
+      timeoutDefault: 30000
     });
     switch (mainApp.modeJs) {
     // init module in browser js env
     case 'browser':
-      // parse any query-param that matches 'mode*' or '_testSecret' or '_timeoutDefault'
+      // parse any query-param that matches 'mode*' or '_testSecret' or 'timeoutDefault'
       location.search.replace(
-        (/\b(mode[A-Z]\w+|_testSecret|_timeoutDefault)=([^#&=]+)/g),
+        (/\b(mode[A-Z]\w+|_testSecret|timeoutDefault)=([^#&=]+)/g),
         function (match0, key, value) {
           // nop hack to pass jslint
           mainApp.nop(match0);
@@ -2062,8 +2081,8 @@
           }
         }
       );
-      // init local object
-      mainApp.localExport(local, mainApp);
+      // export local object
+      mainApp.exportLocal(local, mainApp);
       // init _ajaxProgressBarDiv element
       local._ajaxProgressBarDiv = document.getElementsByClassName('ajaxProgressBarDiv')[0];
       // init _ajaxProgressDiv element
@@ -2077,37 +2096,26 @@
       break;
     // init module in node js env
     case 'node':
-      // require modules
-      mainApp.child_process = require('child_process');
-      mainApp.crypto = require('crypto');
-      mainApp.fs = require('fs');
-      mainApp.http = require('http');
-      mainApp.https = require('https');
-      mainApp.jslint_lite = require('jslint-lite');
-      mainApp.os = require('os');
-      mainApp.path = require('path');
-      mainApp.url = require('url');
-      mainApp.vm = require('vm');
       // if global coverage object is defined, then export it to mainApp.__coverage__
       Object.keys(global).forEach(function (key) {
         if (key.indexOf('$$cov_') === 0) {
           mainApp.__coverage__ = global[key];
         }
       });
-      // init local object
-      mainApp.localExport(local, mainApp);
+      // export local object
+      mainApp.exportLocal(local, mainApp);
       // init mainApp with default values
       mainApp.setDefault(mainApp, -1, {
         // export __dirname
         __dirname: __dirname,
         // init state file used for browser init
-        _mainAppBrowser: {
-          _envDict: {
-            PACKAGE_JSON_DESCRIPTION: process.env.PACKAGE_JSON_DESCRIPTION,
-            PACKAGE_JSON_NAME: process.env.PACKAGE_JSON_NAME,
-            PACKAGE_JSON_VERSION: process.env.PACKAGE_JSON_VERSION
+        mainAppBrowser: {
+          envDict: {
+            PACKAGE_JSON_DESCRIPTION: mainApp.envDict.PACKAGE_JSON_DESCRIPTION,
+            PACKAGE_JSON_NAME: mainApp.envDict.PACKAGE_JSON_NAME,
+            PACKAGE_JSON_VERSION: mainApp.envDict.PACKAGE_JSON_VERSION
           },
-          _fileCacheDict: {}
+          fileCacheDict: {}
         }
       });
       // cache index.* files
@@ -2129,27 +2137,23 @@
         };
         // init _testSecret
         testSecretCreate();
-        mainApp._testSecret = process.env.TEST_SECRET || mainApp._testSecret;
+        mainApp._testSecret = mainApp.envDict.TEST_SECRET || mainApp._testSecret;
         // re-init _testSecret every 60 seconds
         setInterval(testSecretCreate, 60000).unref();
       }());
       break;
     // init module in phantom js env
     case 'phantom':
-      // require modules
-      mainApp.fs = require('fs');
-      mainApp.system = require('system');
-      mainApp.webpage = require('webpage');
-      // init local object
-      mainApp.localExport(local, mainApp);
+      // export local object
+      mainApp.exportLocal(local, mainApp);
       // init mainApp
       mainApp.setOverride(
         mainApp,
         -1,
         JSON.parse(decodeURIComponent(mainApp.system.args[1]))
       );
-      // mock mainApp._fileCacheDict['/test/test-report.html.template'].data
-      mainApp._fileCacheDict = { '/test/test-report.html.template': { data: '' } };
+      // mock mainApp.fileCacheDict['/test/test-report.html.template'].data
+      mainApp.fileCacheDict = { '/test/test-report.html.template': { data: '' } };
       // if modeErrorIgnore, then suppress console.error and console.log
       if (mainApp.modeErrorIgnore) {
         console.error = console.log = mainApp.nop;
@@ -2179,7 +2183,7 @@
             data.testReport.testPlatformList[0].screenshotImg =
               file.replace((/^.*\//), '');
             // merge test-report
-            mainApp.testMerge(mainApp._testReport, data.testReport);
+            mainApp.testMerge(mainApp.testReport, data.testReport);
           // 2. else handle it as a normal error
           } else {
             // phantom error handling - http://phantomjs.org/api/phantom/handler/on-error.html
@@ -2196,7 +2200,7 @@
           }
           [[
             '.tmp/build/test-report.' + mainApp.argv0 + '.json',
-            mainApp._testReport
+            mainApp.testReport
           ], [
             '.tmp/build/coverage-report.html/coverage.' + mainApp.argv0 + '.json',
             mainApp.__coverage__
@@ -2215,9 +2219,9 @@
       // set timeout for phantom
       mainApp.onTimeout(function (error) {
         mainApp.phantom.onError(error.message);
-      }, mainApp._timeoutDefault, mainApp.url);
+      }, mainApp.timeoutDefault, mainApp.url);
       // reset testCaseList
-      mainApp._testPlatform.testCaseList = [];
+      mainApp.testPlatform.testCaseList = [];
       // init page
       mainApp.page = mainApp.webpage.create();
       // init page's viewport-size
@@ -2241,8 +2245,8 @@
       );
       // test phantom.onError
       if (mainApp.modeTestPhantomOnError) {
-        mainApp._testPlatform.testCaseList = [{
-          callback: function (onError) {
+        mainApp.testPlatform.testCaseList = [{
+          function: function (onError) {
             /*
               this function tests phantom.onError's default handling behavior
             */
@@ -2258,13 +2262,13 @@
               mainApp.testTryCatch(function () {
                 // test default handling behavior
                 global.phantom.onError('Error: ' + JSON.stringify({ global_test_results: {
-                  testReport: mainApp._testReport
+                  testReport: mainApp.testReport
                 } }));
                 // validate exitCode
                 mainApp.assert(!exitCode, exitCode);
                 // test error-caught handling behavior
                 global.phantom.onError('Error: ' + JSON.stringify({ global_test_results: {
-                  testReport: mainApp._testReport
+                  testReport: mainApp.testReport
                 } }) + 'syntax-error');
                 // validate exitCode
                 mainApp.assert(exitCode, exitCode);
@@ -2290,7 +2294,7 @@
         }];
         mainApp.testRun(function () {
           mainApp.phantom.onError('Error: ' + JSON.stringify({ global_test_results: {
-            testReport: mainApp._testReport
+            testReport: mainApp.testReport
           } }));
         });
       }

@@ -119,7 +119,7 @@ shBuildGithubUpload() {
   git add -A || return $?
   git commit -am "[skip ci] update gh-pages" || return $?
   # update gh-pages
-  git push -f git@github.com:$GITHUB_REPO.git gh-pages || return $?
+  git push git@github.com:$GITHUB_REPO.git gh-pages || return $?
 }
 
 shBuildPrint() {
@@ -138,7 +138,10 @@ shDateIso() {
 shExitCodeSave() {
   # this function saves the global $EXIT_CODE and restores the global $CWD
   # save $EXIT_CODE
-  EXIT_CODE=$1 || return $?
+  if [ ! "$EXIT_CODE" ] || [ "$EXIT_CODE" = 0 ]
+  then
+    EXIT_CODE=$1 || return $?
+  fi
   if [ -d $TMPDIR2 ]
   then
     printf "$EXIT_CODE" > $TMPFILE2 || return $?
@@ -166,6 +169,29 @@ shGitSquash () {
 shGitSquashGhPages() {
   # this function squashes the HEAD to the earliest commit
   shGitSquash $(git rev-list --max-parents=0 HEAD) "[skip ci] squash"
+}
+
+shGrep() {
+  # this function recursively greps the regex $1 in the current directory
+  local FILE_FILTER="/\\.\\" || return $?
+  FILE_FILTER="$FILE_FILTER|.*\\b\\(\\.\\d\\" || return $?
+  FILE_FILTER="$FILE_FILTER|archive\\" || return $?
+  FILE_FILTER="$FILE_FILTER|artifacts\\" || return $?
+  FILE_FILTER="$FILE_FILTER|bower_components\\" || return $?
+  FILE_FILTER="$FILE_FILTER|build\\" || return $?
+  FILE_FILTER="$FILE_FILTER|coverage\\" || return $?
+  FILE_FILTER="$FILE_FILTER|docs\\" || return $?
+  FILE_FILTER="$FILE_FILTER|external\\" || return $?
+  FILE_FILTER="$FILE_FILTER|git_modules\\" || return $?
+  FILE_FILTER="$FILE_FILTER|jquery\\" || return $?
+  FILE_FILTER="$FILE_FILTER|log\\" || return $?
+  FILE_FILTER="$FILE_FILTER|logs\\" || return $?
+  FILE_FILTER="$FILE_FILTER|min\\" || return $?
+  FILE_FILTER="$FILE_FILTER|node_modules\\" || return $?
+  FILE_FILTER="$FILE_FILTER|rollup.*\\" || return $?
+  FILE_FILTER="$FILE_FILTER|swp\\" || return $?
+  FILE_FILTER="$FILE_FILTER|tmp\\)\\b" || return $?
+  find . -type f | grep -v "$FILE_FILTER" | tr "\n" "\000" | xargs -0 grep -in "$1"
 }
 
 shInit() {
@@ -466,11 +492,11 @@ shTestPhantom() {
   shBuildPrint "${MODE_CI_BUILD:-testPhantom}" "testing $URL with phantomjs ..." || return $?
   node -e "var local;
     local = require('$DIRNAME');
-    local._testReport = require('$TMPDIR2/build/test-report.json');
+    local.testReport = require('$TMPDIR2/build/test-report.json');
     local.testPhantom({ url: '$URL' }, function (error) {
       local.fs.writeFileSync(
         '$TMPDIR2/build/test-report.html',
-        local.testMerge(local._testReport, {})
+        local.testMerge(local.testReport, {})
       );
       process.exit(!!error);
     });" || return $?
