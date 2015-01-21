@@ -4,7 +4,7 @@
   "dependencies": {
     "jslint-lite": "2014.11.26-16"
   },
-  "description": "lightweight nodejs module for testing and covering browser code",
+  "description": "lightweight nodejs module that runs phantomjs tests with browser code-coverage (via istanbul)",
   "devDependencies": {
     "istanbul": "^0.3.0",
     "phantomjs-lite": "2015.1.4-102"
@@ -17,7 +17,11 @@
     "continuous integration",
     "cover",
     "coverage",
+    "istanbul",
+    "jslint",
     "lightweight",
+    "phantomjs",
+    "slimerjs",
     "test"
   ],
   "license": "MIT",
@@ -32,5 +36,5 @@
     "start": "./index.sh shRun node test.js",
     "test": "./index.sh shRun shNpmTest test.js"
   },
-  "version": "2015.1.4-109"
+  "version": "2015.1.21-11"
 }

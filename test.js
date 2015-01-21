@@ -4,47 +4,49 @@
   maxerr: 8,
   node: true, nomen: true,
   regexp: true,
-  stupid: true,
-  todo: true
+  stupid: true
 */
-(function test(local) {
+(function () {
   /*
     this function tests this module
   */
   'use strict';
-  var global, mainApp;
-  // init global object
-  global = local.global;
-  switch (local.modeJs) {
-  // init browser js env
-  case 'browser':
+  var local, mainApp;
+  // init local
+  local = {};
+  // init browser js-env
+  if (typeof window === 'object') {
     // init mainApp
-    mainApp = global.mainApp = global.$$mainApp;
+    mainApp = window.mainApp = window.$$mainApp;
     // test !mainApp.modeTest handling behavior
     mainApp._modeTest = mainApp.modeTest;
     mainApp.modeTest = null;
     mainApp.testRun();
     mainApp.modeTest = mainApp._modeTest;
-    // init browser test
+    // run test
     mainApp.testRun(function () {
-      // test modeTest !== 'phantom' handling behavior
+      // test mainApp.modeTest !== 'phantom' handling behavior
       if (mainApp.modeTest === 'phantom2') {
         setTimeout(function () {
           throw new Error(JSON.stringify({
-            global_test_results: global.global_test_results
+            global_test_results: window.global_test_results
           }));
         });
       }
     });
-    break;
-  // init node js env
-  case 'node':
+  // init node js-env
+  } else {
     // init mainApp
-    mainApp = module.exports;
+    mainApp = global.mainApp = module.exports;
     // require modules
     mainApp.utility2 = require('./index.js');
-    // init local node object
-    local._name = 'utility2.test.node';
+    // merge utility2 into mainApp;
+    Object.keys(mainApp.utility2).forEach(function (key) {
+      if (key[0] !== '_') {
+        mainApp[key] = mainApp.utility2[key];
+      }
+    });
+    // init local test-case's
     local._testPhantom_default_test = function (onError) {
       /*
         this function tests testPhantom's default handling behavior
@@ -163,10 +165,11 @@
       });
       onParallel();
     };
-    // export local node object
-    mainApp.utility2.exportLocal(local, mainApp);
-    // init server test
-    mainApp.testRunServer([function (request, response, next) {
+    local._testPrefix = 'utility2.test.node';
+    // add local test-case's
+    mainApp.testCaseAdd(local, mainApp);
+    // run server test
+    mainApp.testRunServer([mainApp.testMiddleware, function (request, response, next) {
       // nop hack to pass jslint
       mainApp.nop(request);
       mainApp.nop(response);
@@ -236,7 +239,7 @@
       console.log('auto-cache and auto-parse ' + options.file);
       // cache and parse the file
       mainApp.fileCacheAndParse(options);
-      // if the file is modified, then cache and parse it
+      // if the file is modified, then re-cache and re-parse it
       mainApp.onFileModifiedCacheAndParse(options);
     });
     // watch the following files, and if they are modified, then re-jslint them
@@ -248,33 +251,12 @@
         console.log('auto-jslint ' + file);
         // jslint the file
         mainApp.jslint_lite.jslintPrint(mainApp.fs.readFileSync(file, 'utf8'), file);
-        // if the file is modified, then jslint it
+        // if the file is modified, then re-jslint it
         mainApp.onFileModifiedJslint(file);
         break;
       }
     });
     // init repl debugger
     mainApp.replStart({ mainApp: mainApp });
-    break;
   }
-}((function $$jsEnvOptions() {
-  /*
-    this function passes js env options to the calling function
-  */
-  'use strict';
-  try {
-    // init node js env
-    return {
-      global: global,
-      modeJs: module.exports && typeof process.versions.node === 'string' &&
-        typeof require('child_process').spawn === 'function' && 'node'
-    };
-  } catch (errorCaughtNode) {
-    // init browser js env
-    return {
-      global: window,
-      modeJs: typeof navigator.userAgent === 'string' &&
-        typeof document.querySelector('body') === 'object' && 'browser'
-    };
-  }
-}())));
+}());

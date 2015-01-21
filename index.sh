@@ -70,16 +70,8 @@ shBuildCi() {
   # this function runs the build-ci script in README.md
   # init $TMPDIR2
   mkdir -p $TMPDIR2/build/coverage-report.html || return $?
-  local FILE=$TMPDIR2/build-ci.sh || return $?
-  shBuildPrint buildCi "building $FILE ..." || return $?
   # read and parse script from README.md
-  node -e "console.log(
-    (/\`\`\`\n(# build-ci.sh\n[\S\s]+?)\`\`\`/).exec(
-      require('fs').readFileSync('$CWD/README.md', 'utf8')
-    )[1]
-  );" > $FILE || return $?
-  # test $FILE
-  cat $FILE && /bin/sh $FILE || return $?
+  MODE_CI_BUILD=buildCi shTestScriptSh $TMPDIR2/build-ci.sh || return $?
 }
 
 shBuildGithubUpload() {
@@ -93,7 +85,7 @@ shBuildGithubUpload() {
     $TMPDIR2/build/screenshot.*.phantomjs*.png\
     $TMPDIR2/build/screenshot.*.slimerjs*.png\
     2>/dev/null)" || return $?
-  if [ "$FILE_LIST" != "" ] && (mogrify --version > /dev/null 2>&1)
+  if [ "$FILE_LIST" ] && (mogrify --version > /dev/null 2>&1)
   then
     printf "$FILE_LIST" | xargs -n 1 mogrify -frame 1 -mattecolor black || return $?
   fi
@@ -266,11 +258,6 @@ shInit() {
   then
     export GIT_SSH=$DIRNAME/git-ssh.sh || return $?
   fi
-  # auto-detect slimerjs
-  if slimerjs undefined > /dev/null 2>&1
-  then
-    export npm_config_mode_slimerjs=1 || return $?
-  fi
 }
 
 shIstanbulCover() {
@@ -308,10 +295,15 @@ shNpmTest() {
   shBuildPrint "${MODE_CI_BUILD:-npmTest}" "npm testing $CWD ..." || return $?
   # init $TMPDIR2
   mkdir -p $TMPDIR2/build/coverage-report.html || return $?
-  # init random server port
-  export npm_config_server_port=$(shServerPortRandom) || return $?
+  # auto-detect slimerjs
+  if [ ! "$npm_config_mode_slimerjs" ] && (slimerjs undefined > /dev/null 2>&1)
+  then
+    export npm_config_mode_slimerjs=1 || return $?
+  fi
   # init npm test mode
   export npm_config_mode_npm_test=1 || return $?
+  # init random server port
+  export npm_config_server_port=$(shServerPortRandom) || return $?
   # if coverage-mode is disabled, then run npm test without coverage
   if [ "$npm_config_mode_no_coverage" ]
   then
@@ -330,9 +322,29 @@ shNpmTest() {
   printf "created coverage-report file://$TMPDIR2/build/coverage-report.html/index.html\n\n"\
     || return $?
   # create coverage-report badge
-  node -e "require('$DIRNAME')
-    .coverageBadge(require('$TMPDIR2/build/coverage-report.html/coverage.json'));" || return $?
-  # if npm test failed, then run it again without coverage
+  node -e "var coverage, percent;
+    coverage = require('$TMPDIR2/build/coverage-report.html/coverage.json');
+    percent = [0, 0];
+    Object.keys(coverage).forEach(function (statementDict) {
+      statementDict = coverage[statementDict].s;
+      Object.keys(statementDict).forEach(function (key) {
+        percent[0] += statementDict[key] ? 1 : 0;
+      });
+      percent[1] += Object.keys(statementDict).length;
+    });
+    percent = Math.floor((100000 * percent[0] / percent[1] + 5) / 10) / 100;
+    require('fs').writeFileSync(
+      '$TMPDIR2/build/coverage-report.badge.svg',
+      '"'<svg xmlns="http://www.w3.org/2000/svg" width="117" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="117" height="20" fill="#555"/><rect rx="0" x="63" width="54" height="20" fill="#0d0"/><path fill="#0d0" d="M63 0h4v20h-4z"/><rect rx="0" width="117" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="32.5" y="15" fill="#010101" fill-opacity=".3">coverage</text><text x="32.5" y="14">coverage</text><text x="89" y="15" fill="#010101" fill-opacity=".3">100.0%</text><text x="89" y="14">100.0%</text></g></svg>'"'
+        // edit coverage badge percent
+        .replace((/100.0/g), percent)
+        // edit coverage badge color
+        .replace(
+          (/0d0/g),
+          ('0' + Math.round((100 - percent) * 2.21).toString(16)).slice(-2) +
+            ('0' + Math.round(percent * 2.21).toString(16)).slice(-2) + '00'
+        )
+    );" || return $?
   if [ "$EXIT_CODE" != 0 ]
   then
     node $@
@@ -404,42 +416,6 @@ shServerPortRandom() {
   printf $(($(hexdump -n 2 -e '/2 "%u"' /dev/urandom)|32768))
 }
 
-shTestExampleJs() {
-  # this function tests the example script in README.md
-  shBuildPrint testExampleJs "testing example.js ..." || return $?
-  # init /tmp/app
-  if [ ! "$MODE_OFFLINE" ]
-  then
-    rm -fr /tmp/app /tmp/node_modules && mkdir -p /tmp/app && cd /tmp/app || return $?
-  fi
-  # cd /tmp/app
-  cd /tmp/app || return $?
-  # read and parse script from README.md
-  node -e "console.log(
-    (/\`\`\`\n(\/\/ example.js\n[\S\s]+?)\`\`\`/).exec(
-      require('fs').readFileSync('$CWD/README.md', 'utf8')
-    )[1]
-  );" > example.js || return $?
-  # jslint example.js
-  local SCRIPT="npm install jslint-lite > /dev/null && node_modules/.bin/jslint-lite example.js"
-  if [ "$MODE_OFFLINE" ]
-  then
-    SCRIPT=$(node -e "console.log('$SCRIPT'.replace('npm install', 'echo'));")
-  fi
-  eval "$SCRIPT" || return $?
-  # test example.js
-  SCRIPT=$(node -e "console.log(
-    (/ \\$ (.*)/).exec(
-      require('fs').readFileSync('example.js', 'utf8')
-    )[1]
-  );")
-  if [ "$MODE_OFFLINE" ]
-  then
-    SCRIPT=$(node -e "console.log('$SCRIPT'.replace('npm install', 'echo'));")
-  fi
-  printf "$SCRIPT\n\n" && eval "$SCRIPT" || return $?
-}
-
 shTestHeroku() {
   # this function deploys the app to heroku and then test it
   if [ ! "$GIT_SSH_KEY" ] || [ ! "$HEROKU_REPO" ]
@@ -490,6 +466,11 @@ shTestPhantom() {
   # and merge it into the existing test-report
   local URL="$1" || return $?
   shBuildPrint "${MODE_CI_BUILD:-testPhantom}" "testing $URL with phantomjs ..." || return $?
+  # auto-detect slimerjs
+  if [ ! "$npm_config_mode_slimerjs" ] && (slimerjs undefined > /dev/null 2>&1)
+  then
+    export npm_config_mode_slimerjs=1 || return $?
+  fi
   node -e "var local;
     local = require('$DIRNAME');
     local.testReport = require('$TMPDIR2/build/test-report.json');
@@ -504,24 +485,81 @@ shTestPhantom() {
 
 shTestQuickstartSh() {
   # this function tests the quickstart script in README.md
-  shBuildPrint testQuickstartSh "testing quickstart.sh ..." || return $?
   # init /tmp/app
   rm -fr /tmp/app /tmp/node_modules && mkdir -p /tmp/app && cd /tmp/app || return $?
   # read and parse script from README.md
-  node -e "console.log(
-    (/\`\`\`\n(# quickstart.sh\n[\S\s]+?)\`\`\`/).exec(
-      require('fs').readFileSync('$CWD/README.md', 'utf8')
+  MODE_CI_BUILD=testQuickstartSh shTestScriptSh quickstart.sh || return $?
+}
+
+shTestScriptJs() {
+  # this function tests the js script $1 in README.md
+  local FILE=$1 || return $?
+  shBuildPrint $MODE_CI_BUILD "testing $FILE ..." || return $?
+  # init /tmp/app
+  if [ ! "$MODE_OFFLINE" ]
+  then
+    rm -fr /tmp/app /tmp/node_modules && mkdir -p /tmp/app && cd /tmp/app || return $?
+  fi
+  # cd /tmp/app
+  cd /tmp/app || return $?
+  # read and parse script from README.md
+  node -e "var data, match;
+    data = require('fs').readFileSync('$CWD/README.md', 'utf8');
+    match = (/\`\`\`(\n\/\/ $FILE\n[\S\s]+?)\`\`\`/).exec(data);
+    // save script to file
+    require('fs').writeFileSync(
+      '$FILE',
+      // preserve lineno
+      data.slice(0, match.index).replace((/.*/g), '') + match[1]
+    );" || return $?
+  # jslint $FILE
+  local SCRIPT="npm install jslint-lite > /dev/null && node_modules/.bin/jslint-lite $FILE"
+  if [ "$MODE_OFFLINE" ]
+  then
+    SCRIPT=$(node -e "console.log('$SCRIPT'.replace('npm install', 'echo'));")
+  fi
+  eval "$SCRIPT"
+  # test $FILE
+  SCRIPT=$(node -e "console.log(
+    (/ \\$ (.*)/).exec(
+      require('fs').readFileSync('$FILE', 'utf8')
     )[1]
-  );" > quickstart.sh || return $?
-  # test quickstart.sh
-  cat quickstart.sh && /bin/sh quickstart.sh || return $?
+  );")
+  if [ "$MODE_OFFLINE" ]
+  then
+    SCRIPT=$(node -e "console.log('$SCRIPT'.replace('npm install', 'echo'));")
+  fi
+  printf "$SCRIPT\n\n" && eval "$SCRIPT" || return $?
+  # copy phantomjs screenshots to $TMPDIR2/build
+  cp /tmp/app/.tmp/build/screenshot.* $TMPDIR2/build > /dev/null 2>&1
+}
+
+shTestScriptSh() {
+  # this function tests the sh script $1 in README.md
+  local FILE=$1 || return $?
+  local FILE_BASENAME=$(node -e "console.log(require('path').basename('$FILE'))") || return $?
+  shBuildPrint $MODE_CI_BUILD "testing $FILE ..." || return $?
+  # read and parse script from README.md
+  node -e "var data, match;
+    data = require('fs').readFileSync('$CWD/README.md', 'utf8');
+    match = (/\`\`\`(\n# $FILE_BASENAME\n[\S\s]+?)\`\`\`/).exec(data);
+    // save script to file
+    require('fs').writeFileSync(
+      '$FILE',
+      // preserve lineno
+      data.slice(0, match.index).replace((/.*/g), '') + match[1]
+    );
+    // print script to stdout
+    console.log(match[1].trim() + '\n');" || return $?
+  # test $FILE
+  /bin/sh $FILE || return $?
 }
 
 shTmpAppCopy() {
   # this function copies the app to /tmp/app.copy with only the bare git repo files
   # init /tmp/app.copy
   rm -fr /tmp/app.copy && mkdir -p /tmp/app.copy || return $?
-  # tar / untar repo contents to /tmp/app.copy, since we can't git clone a shallow repo
+  # tar / untar repo contents to /tmp/app.copy
   git ls-tree -r HEAD --name-only | xargs tar -czf - | tar -C /tmp/app.copy -xzvf - || return $?
 }
 
