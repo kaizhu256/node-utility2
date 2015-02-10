@@ -2,26 +2,24 @@
   "author": "kai zhu <kaizhu256@gmail.com>",
   "bin": { "utility2" : "index.sh" },
   "dependencies": {
-    "jslint-lite": "2014.11.26-16"
+    "istanbul-lite": "2015.2.10-18",
+    "jslint-lite": "2015.2.10-14"
   },
-  "description": "lightweight nodejs module that runs phantomjs tests with browser code-coverage (via istanbul)",
+  "description": "lightweight nodejs module that runs phantomjs tests with browser code-coverage (via istanbul-lite and phantomjs-lite)",
   "devDependencies": {
-    "istanbul": "^0.3.0",
     "phantomjs-lite": "2015.1.4-102"
   },
-  "engines": { "node": "^0.10.x" },
+  "engines": { "node": "0.10" },
   "keywords": [
     "browser",
     "build",
     "ci",
     "continuous integration",
-    "cover",
     "coverage",
-    "istanbul",
-    "jslint",
+    "istanbul-lite",
+    "jslint-lite",
     "lightweight",
-    "phantomjs",
-    "slimerjs",
+    "phantomjs-lite",
     "test"
   ],
   "license": "MIT",
@@ -36,5 +34,5 @@
     "start": "./index.sh shRun node test.js",
     "test": "./index.sh shRun shNpmTest test.js"
   },
-  "version": "2015.1.21-11"
+  "version": "2015.2.10-17"
 }

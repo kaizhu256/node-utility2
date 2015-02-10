@@ -169,60 +169,64 @@
     // add local test-case's
     mainApp.testCaseAdd(local, mainApp);
     // run server test
-    mainApp.testRunServer([mainApp.testMiddleware, function (request, response, next) {
-      // nop hack to pass jslint
-      mainApp.nop(request);
-      mainApp.nop(response);
-      // test next middleware handling behavior
-      next();
-    }, function (request, response, next) {
-      /*
-        this function is the main test middleware
-      */
-      switch (request.urlPathNormalized) {
-      // serve main page
-      case '/':
-        mainApp.serverRespondWriteHead(request, response, 303, {
-          'Location': request.url.replace('/', '/test/test.html')
-        });
-        response.end();
-        break;
-      // test http POST handling behavior
-      case '/test/echo':
-        mainApp.serverRespondEcho(request, response);
-        break;
-      // test http GET handling behavior
-      case '/test/hello':
-        response.end('hello');
-        break;
-      // test script-error handling behavior
-      case '/test/script-error.html':
-        response.end('<script>throw new Error("script-error")</script>');
-        break;
-      // test 500-internal-server-error handling behavior
-      case '/test/server-error':
-        // test multiple serverRespondWriteHead callback handling behavior
-        mainApp.serverRespondWriteHead(request, response, null, {});
-        next(mainApp.errorDefault);
-        // test multiple-callback error handling behavior
-        next(mainApp.errorDefault);
-        // test onErrorDefault handling behavior
-        mainApp.testMock([
-          // suppress console.error
-          [console, { error: mainApp.nop }],
-          // suppress modeErrorIgnore
-          [request, { url: '' }]
-        ], mainApp.nop, function (onError) {
-          mainApp.serverRespondDefault(request, response, 500, mainApp.errorDefault);
-          onError();
-        });
-        break;
-      // fallback to 404-not-found-error
-      default:
+    mainApp.testRunServer(process.exit, [
+      // exit after test-run ends
+      mainApp.testMiddleware,
+      function (request, response, next) {
+        // nop hack to pass jslint
+        mainApp.nop(request);
+        mainApp.nop(response);
+        // test next middleware handling behavior
         next();
+      },
+      function (request, response, next) {
+        /*
+          this function is the main test middleware
+        */
+        switch (request.urlPathNormalized) {
+        // serve main page
+        case '/':
+          mainApp.serverRespondWriteHead(request, response, 303, {
+            'Location': request.url.replace('/', '/test/test.html')
+          });
+          response.end();
+          break;
+        // test http POST handling behavior
+        case '/test/echo':
+          mainApp.serverRespondEcho(request, response);
+          break;
+        // test http GET handling behavior
+        case '/test/hello':
+          response.end('hello');
+          break;
+        // test script-error handling behavior
+        case '/test/script-error.html':
+          response.end('<script>throw new Error("script-error")</script>');
+          break;
+        // test 500-internal-server-error handling behavior
+        case '/test/server-error':
+          // test multiple serverRespondWriteHead callback handling behavior
+          mainApp.serverRespondWriteHead(request, response, null, {});
+          next(mainApp.errorDefault);
+          // test multiple-callback error handling behavior
+          next(mainApp.errorDefault);
+          // test onErrorDefault handling behavior
+          mainApp.testMock([
+            // suppress console.error
+            [console, { error: mainApp.nop }],
+            // suppress modeErrorIgnore
+            [request, { url: '' }]
+          ], mainApp.nop, function (onError) {
+            mainApp.serverRespondDefault(request, response, 500, mainApp.errorDefault);
+            onError();
+          });
+          break;
+        // fallback to 404-not-found-error
+        default:
+          next();
+        }
       }
-    // exit after test-run ends
-    }], process.exit);
+    ]);
     // watch the following files, and if they are modified, then re-cache and re-parse them
     [{
       file: __dirname + '/index.data',
@@ -250,7 +254,7 @@
         file = __dirname + '/' + file;
         console.log('auto-jslint ' + file);
         // jslint the file
-        mainApp.jslint_lite.jslintPrint(mainApp.fs.readFileSync(file, 'utf8'), file);
+        mainApp.jslint_lite.jslintAndPrint(mainApp.fs.readFileSync(file, 'utf8'), file);
         // if the file is modified, then re-jslint it
         mainApp.onFileModifiedJslint(file);
         break;

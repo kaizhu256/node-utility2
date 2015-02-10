@@ -50,7 +50,7 @@ shAesEncryptTravis() {
   fi
   printf "# travis-encrypting \$AES_256_KEY for $GITHUB_REPO ...\n" || return $?
   AES_256_KEY_ENCRYPTED=$(shTravisEncrypt $GITHUB_REPO \$AES_256_KEY=$AES_256_KEY) || return $?
-  # return non-zero exit code if $AES_256_KEY_ENCRYPTED is empty string
+  # return non-zero exit-code if $AES_256_KEY_ENCRYPTED is empty string
   if [ ! "$AES_256_KEY_ENCRYPTED" ]
   then
     return 1
@@ -70,7 +70,7 @@ shBuildCi() {
   # this function runs the build-ci script in README.md
   # init $TMPDIR2
   mkdir -p $TMPDIR2/build/coverage-report.html || return $?
-  # read and parse script from README.md
+  # run script from README.md
   MODE_CI_BUILD=buildCi shTestScriptSh $TMPDIR2/build-ci.sh || return $?
 }
 
@@ -80,10 +80,10 @@ shBuildGithubUpload() {
     "uploading build artifacts to git@github.com:$GITHUB_REPO.git ..." || return $?
   # cleanup $TMPDIR2/build
   find $TMPDIR2/build -path "*.json" -print0 | xargs -0 rm -f || return $?
-  # add black border around phantomjs screenshot
+  # add black border around phantomjs screen-capture
   local FILE_LIST="$(ls\
-    $TMPDIR2/build/screenshot.*.phantomjs*.png\
-    $TMPDIR2/build/screenshot.*.slimerjs*.png\
+    $TMPDIR2/build/screen-capture.*.phantomjs*.png\
+    $TMPDIR2/build/screen-capture.*.slimerjs*.png\
     2>/dev/null)" || return $?
   if [ "$FILE_LIST" ] && (mogrify --version > /dev/null 2>&1)
   then
@@ -98,7 +98,7 @@ shBuildGithubUpload() {
     --branch=gh-pages --single-branch $TMPDIR2/gh-pages && cd $TMPDIR2/gh-pages || return $?
   # copy build artifacts to .
   cp $TMPDIR2/build/build.badge.svg . > /dev/null 2>&1
-  cp $TMPDIR2/build/screenshot.* . > /dev/null 2>&1
+  cp $TMPDIR2/build/screen-capture.* . > /dev/null 2>&1
   mkdir -p $CI_BUILD_DIR || return $?
   for DIR in\
     $CI_BUILD_DIR/$CI_BRANCH\
@@ -253,6 +253,10 @@ shInit() {
   else
     export DIRNAME=$(node -e "console.log(require('utility2').__dirname);") || return $?
   fi
+  # init $ISTANBUL_LITE
+  export ISTANBUL_LITE=$(cd $DIRNAME &&\
+    node -e "console.log(require('istanbul-lite').__dirname)")/index.js || return $?
+  echo $ISTANBUL_LITE
   # init $GIT_SSH
   if [ "$GIT_SSH_KEY" ]
   then
@@ -262,18 +266,16 @@ shInit() {
 
 shIstanbulCover() {
   # this function runs the command with istanbul code-coverage
-  local ARGS=$1 || return $?
-  shift || return $?
-  ARGS="$ARGS --dir=$TMPDIR2/build/coverage-report.html" || return $?
-  ARGS="$ARGS --print=none" || return $?
-  ARGS="$ARGS --report=json" || return $?
-  istanbul cover $ARGS -- $@ || return $?
+  npm_config_coverage_report_dir="$TMPDIR2/build/coverage-report.html"\
+    $ISTANBUL_LITE cover $@ || return $?
 }
 
 shIstanbulReport() {
-  # this function merges $COVERAGE into $TMPDIR2/build/coverage-report.html/coverage.json,
-  # and creates $TMPDIR2/build/coverage-report.html
+  # this function will
+  # 1. merge $COVERAGE into $TMPDIR2/build/coverage-report.html/coverage.json
+  # 2. create $TMPDIR2/build/coverage-report.html
   local COVERAGE=$1 || return $?
+  # 1. merge $COVERAGE into $TMPDIR2/build/coverage-report.html/coverage.json
   if [ "$COVERAGE" ]
   then
     node -e "var fs;
@@ -286,8 +288,9 @@ shIstanbulReport() {
         ))
       );" || return $?
   fi
-  istanbul report --dir=$TMPDIR2/build/coverage-report.html\
-    --include=$TMPDIR2/build/coverage-report.html/coverage.json html text || return $?
+  # 2. create $TMPDIR2/build/coverage-report.html
+  npm_config_coverage_report_dir="$TMPDIR2/build/coverage-report.html"\
+    $ISTANBUL_LITE report || return $?
 }
 
 shNpmTest() {
@@ -319,18 +322,16 @@ shNpmTest() {
   # create coverage-report
   shIstanbulReport || return $?
   printf "\ncreated test-report file://$TMPDIR2/build/test-report.html\n" || return $?
-  printf "created coverage-report file://$TMPDIR2/build/coverage-report.html/index.html\n\n"\
-    || return $?
   # create coverage-report badge
   node -e "var coverage, percent;
     coverage = require('$TMPDIR2/build/coverage-report.html/coverage.json');
     percent = [0, 0];
-    Object.keys(coverage).forEach(function (statementDict) {
-      statementDict = coverage[statementDict].s;
-      Object.keys(statementDict).forEach(function (key) {
-        percent[0] += statementDict[key] ? 1 : 0;
+    Object.keys(coverage).forEach(function (file) {
+      file = coverage[file];
+      Object.keys(file.s).forEach(function (key) {
+        percent[0] += file.s[key] || file.statementMap[key].skip ? 1 : 0;
+        percent[1] += 1;
       });
-      percent[1] += Object.keys(statementDict).length;
     });
     percent = Math.floor((100000 * percent[0] / percent[1] + 5) / 10) / 100;
     require('fs').writeFileSync(
@@ -352,12 +353,38 @@ shNpmTest() {
   return $EXIT_CODE
 }
 
+shNpmTestPublished() {
+  # this function runs npm test on the published package
+  shBuildPrint npmTestPublished "npm testing published package $PACKAGE_JSON_NAME ..." ||\
+    return $?
+  # init /tmp/app
+  rm -fr /tmp/app /tmp/node_modules && mkdir -p /tmp/app && cd /tmp/app || return $?
+  # npm install package
+  npm install $PACKAGE_JSON_NAME || return $?
+  # npm test package
+  cd node_modules/$PACKAGE_JSON_NAME && npm install && npm test || return $?
+}
+
 shRun() {
   # this function runs the command $@ and restores $CWD on exit
-  # eval argv forever
-  if [ "$npm_config_mode_forever" ]
+  # eval argv and auto-restart on exit, unless by exited by control-c
+  if [ "$npm_config_mode_auto_restart" ] && [ ! "$npm_config_mode_auto_restart_child" ]
   then
-    eval "shRunForever $@"
+    export npm_config_mode_auto_restart_child=1
+    while true
+    do
+      printf "(re)starting $@" || return $?
+      printf "\n" || return $?
+      $@
+      # save $EXIT_CODE
+      EXIT_CODE=$? || return $?
+      printf "process exited with code $EXIT_CODE\n" || return $?
+      if [ "$EXIT_CODE" = 130 ] || [ "$EXIT_CODE" = 137 ] || [ "$EXIT_CODE" = 143 ]
+      then
+        break || return $?
+      fi
+      sleep 1 || return $?
+    done
   # eval argv
   else
     $@
@@ -368,45 +395,36 @@ shRun() {
   return $EXIT_CODE
 }
 
-shRunForever() {
-  # this function runs the command $@ and auto-respawns on exit
-  # kill old forever process
-  kill $(cat $TMPDIR2/forever.pid) > /dev/null 2>&1
-  sleep 2 || return $?
-  # kill old forever process forcefully
-  kill $(cat $TMPDIR2/forever.pid) -s9 2>/dev/null
-  # record new forever pid
-  printf "$$" > $TMPDIR2/forever.pid || return $?
-  printf "\nprocess $$ - running '$@' ...\n" >&2 || return $?
-  until npm_config_pid_parent=$$ $@
-  do
-    printf "\nprocess $$ - '$@' exited with code $?. respawning ...\n" >&2 || return $?
-    sleep 2 || return $?
-  done
-}
-
-shRunScreenshot() {
-  # this function runs the command $@ and creates a screenshot of the output
+shRunScreenCapture() {
+  # this function runs the command $@ and screen-capture's the output
   # http://www.cnx-software.com/2011/09/22/how-to-convert-a-command-line-result-into-an-image-in-linux/
   # init $TMPDIR2
   mkdir -p $TMPDIR2/build/coverage-report.html || return $?
-  export MODE_CI_BUILD_SCREENSHOT=screenshot.$MODE_CI_BUILD.png
-  shRun $@ 2>&1 | tee $TMPDIR2/screenshot.txt || return $?
+  export MODE_CI_BUILD_SCREEN_CAPTURE=screen-capture.$MODE_CI_BUILD.png
+  shRun $@ 2>&1 | tee $TMPDIR2/screen-capture.txt || return $?
   # save $EXIT_CODE and restore $CWD
   shExitCodeSave $(cat $TMPFILE2) || return $?
-  if (convert -list font | grep "\bCourier-Bold\b" > /dev/null 2>&1) &&\
+  # remove ansi escape code
+  node -e "require('fs').writeFileSync(
+    '$TMPDIR2/screen-capture.txt',
+    require('fs').readFileSync('$TMPDIR2/screen-capture.txt', 'utf8')
+      .replace((/\t/g), '    ')
+      .replace((/\u001b.*?m/g), '')
+      .trim()
+  );" || return $?
+  if (convert -list font | grep "\bCourier\b" > /dev/null 2>&1) &&\
     (fold package.json > /dev/null 2>&1)
   then
-    # word-wrap $TMPDIR2/screenshot.txt to 96 characters
-    fold -w 96 $TMPDIR2/screenshot.txt |\
-      # convert $TMPDIR2/screenshot.txt to png screenshot image
-      convert -background gray25 -border 4 -bordercolor gray25\
+    # word-wrap $TMPDIR2/screen-capture.txt to 96 characters
+    fold -w 96 $TMPDIR2/screen-capture.txt |\
+      # convert $TMPDIR2/screen-capture.txt to png image
+      convert -background gray25 -border 10 -bordercolor gray25\
       -depth 4\
       -fill palegreen -font Courier\
       -pointsize 12\
       -quality 90\
       -type Palette\
-      label:@- $TMPDIR2/build/$MODE_CI_BUILD_SCREENSHOT || return $?
+      label:@- $TMPDIR2/build/$MODE_CI_BUILD_SCREEN_CAPTURE || return $?
   fi
   return $EXIT_CODE
 }
@@ -427,8 +445,8 @@ shTestHeroku() {
   # init $HEROKU_HOSTNAME
   export HEROKU_HOSTNAME=$HEROKU_REPO.herokuapp.com || return $?
   shBuildPrint testHeroku "deploying to https://$HEROKU_HOSTNAME ..." || return $?
-  # init clean repo in /tmp/app.copy
-  shTmpAppCopy && cd /tmp/app.copy || return $?
+  # init clean repo in /tmp/app
+  shTmpAppCopy && cd /tmp/app || return $?
   # npm install dependencies
   rm -fr /tmp/node_modules && npm install || return $?
   # init .git
@@ -483,21 +501,13 @@ shTestPhantom() {
     });" || return $?
 }
 
-shTestQuickstartSh() {
-  # this function tests the quickstart script in README.md
-  # init /tmp/app
-  rm -fr /tmp/app /tmp/node_modules && mkdir -p /tmp/app && cd /tmp/app || return $?
-  # read and parse script from README.md
-  MODE_CI_BUILD=testQuickstartSh shTestScriptSh quickstart.sh || return $?
-}
-
 shTestScriptJs() {
   # this function tests the js script $1 in README.md
   local FILE=$1 || return $?
   shBuildPrint $MODE_CI_BUILD "testing $FILE ..." || return $?
-  # init /tmp/app
   if [ ! "$MODE_OFFLINE" ]
   then
+    # init /tmp/app
     rm -fr /tmp/app /tmp/node_modules && mkdir -p /tmp/app && cd /tmp/app || return $?
   fi
   # cd /tmp/app
@@ -513,25 +523,28 @@ shTestScriptJs() {
       data.slice(0, match.index).replace((/.*/g), '') + match[1]
     );" || return $?
   # jslint $FILE
-  local SCRIPT="npm install jslint-lite > /dev/null && node_modules/.bin/jslint-lite $FILE"
+  local SCRIPT || return $?
+  if [ ! "$npm_config_mode_no_jslint" ]
+  then
+    SCRIPT="npm install jslint-lite > /dev/null && node_modules/.bin/jslint-lite $FILE" ||\
+      return $?
+  fi
   if [ "$MODE_OFFLINE" ]
   then
-    SCRIPT=$(node -e "console.log('$SCRIPT'.replace('npm install', 'echo'));")
+    SCRIPT=$(node -e "console.log('$SCRIPT'.replace('npm install', 'echo'));") || return $?
   fi
-  eval "$SCRIPT"
+  eval "$SCRIPT" || :
   # test $FILE
   SCRIPT=$(node -e "console.log(
     (/ \\$ (.*)/).exec(
       require('fs').readFileSync('$FILE', 'utf8')
     )[1]
-  );")
+  );") || return $?
   if [ "$MODE_OFFLINE" ]
   then
-    SCRIPT=$(node -e "console.log('$SCRIPT'.replace('npm install', 'echo'));")
+    SCRIPT=$(node -e "console.log('$SCRIPT'.replace('npm install', 'echo'));") || return $?
   fi
   printf "$SCRIPT\n\n" && eval "$SCRIPT" || return $?
-  # copy phantomjs screenshots to $TMPDIR2/build
-  cp /tmp/app/.tmp/build/screenshot.* $TMPDIR2/build > /dev/null 2>&1
 }
 
 shTestScriptSh() {
@@ -539,6 +552,11 @@ shTestScriptSh() {
   local FILE=$1 || return $?
   local FILE_BASENAME=$(node -e "console.log(require('path').basename('$FILE'))") || return $?
   shBuildPrint $MODE_CI_BUILD "testing $FILE ..." || return $?
+  if [ "$MODE_CI_BUILD" != "buildCi" ]
+  then
+    # init /tmp/app
+    rm -fr /tmp/app /tmp/node_modules && mkdir -p /tmp/app && cd /tmp/app || return $?
+  fi
   # read and parse script from README.md
   node -e "var data, match;
     data = require('fs').readFileSync('$CWD/README.md', 'utf8');
@@ -556,11 +574,11 @@ shTestScriptSh() {
 }
 
 shTmpAppCopy() {
-  # this function copies the app to /tmp/app.copy with only the bare git repo files
-  # init /tmp/app.copy
-  rm -fr /tmp/app.copy && mkdir -p /tmp/app.copy || return $?
-  # tar / untar repo contents to /tmp/app.copy
-  git ls-tree -r HEAD --name-only | xargs tar -czf - | tar -C /tmp/app.copy -xzvf - || return $?
+  # this function copies the app to /tmp/app with only the bare git repo files
+  # init /tmp/app
+  rm -fr /tmp/app && mkdir -p /tmp/app || return $?
+  # tar / untar repo contents to /tmp/app
+  git ls-tree -r HEAD --name-only | xargs tar -czf - | tar -C /tmp/app -xzvf - || return $?
 }
 
 shTravisEncrypt() {

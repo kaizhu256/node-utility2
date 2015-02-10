@@ -1,6 +1,6 @@
 utility2 [![NPM](https://img.shields.io/npm/v/utility2.svg?style=flat-square)](https://www.npmjs.org/package/utility2)
 ========
-lightweight nodejs module that runs phantomjs tests with browser code-coverage (via istanbul)
+lightweight nodejs module that runs phantomjs tests with browser code-coverage (via istanbul-lite)
 
 
 
@@ -10,26 +10,25 @@ lightweight nodejs module that runs phantomjs tests with browser code-coverage (
 
 | git branch | test-server | test-report | coverage-report | build artifact |
 |:----------:|:-----------:|:-----------:|:---------------:|:--------------:|
-|[master](https://github.com/kaizhu256/node-utility2/tree/master) | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://hrku01-utility2-master.herokuapp.com/?modeTest=1) | [![test-report](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/master/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/master/test-report.html) | [![istanbul coverage-report](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/master/coverage-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/master/coverage-report.html/node-utility2/index.html) | [![build artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build.travis-ci.org/master)|
-|[beta](https://github.com/kaizhu256/node-utility2/tree/beta) | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://hrku01-utility2-beta.herokuapp.com/?modeTest=1) | [![test-report](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/beta/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/beta/test-report.html) | [![istanbul coverage-report](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/beta/coverage-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/beta/coverage-report.html/node-utility2/index.html) | [![build artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build.travis-ci.org/beta)|
-|[alpha](https://github.com/kaizhu256/node-utility2/tree/alpha) | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://hrku01-utility2-alpha.herokuapp.com/?modeTest=1) | [![test-report](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/alpha/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/alpha/test-report.html) | [![istanbul coverage-report](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/alpha/coverage-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/alpha/coverage-report.html/node-utility2/index.html) | [![build artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build.travis-ci.org/alpha)|
+|[master](https://github.com/kaizhu256/node-utility2/tree/master) | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://hrku01-utility2-master.herokuapp.com/?modeTest=1) | [![test-report](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/master/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/master/test-report.html) | [![istanbul-lite coverage-report](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/master/coverage-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/master/coverage-report.html/node-utility2/index.html) | [![build artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build.travis-ci.org/master)|
+|[beta](https://github.com/kaizhu256/node-utility2/tree/beta) | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://hrku01-utility2-beta.herokuapp.com/?modeTest=1) | [![test-report](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/beta/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/beta/test-report.html) | [![istanbul-lite coverage-report](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/beta/coverage-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/beta/coverage-report.html/node-utility2/index.html) | [![build artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build.travis-ci.org/beta)|
+|[alpha](https://github.com/kaizhu256/node-utility2/tree/alpha) | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://hrku01-utility2-alpha.herokuapp.com/?modeTest=1) | [![test-report](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/alpha/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/alpha/test-report.html) | [![istanbul-lite coverage-report](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/alpha/coverage-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/alpha/coverage-report.html/node-utility2/index.html) | [![build artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build.travis-ci.org/alpha)|
 
 
 
 ## live test-server
-[![heroku.com test-server](https://kaizhu256.github.io/node-utility2/screenshot.testHeroku.phantomjs.png)](https://hrku01-utility2-beta.herokuapp.com/?modeTest=1)
+[![heroku.com test-server](https://kaizhu256.github.io/node-utility2/screen-capture.testHeroku.phantomjs.png)](https://hrku01-utility2-beta.herokuapp.com/?modeTest=1)
 
 
 
 ## quickstart
-#### follow the commented instructions in the code below
 ```
 // example.js
 // this example nodejs code runs browser and server tests with code-coverage
 // 1. create a clean app directory (e.g /tmp/app)
 // 2. inside app directory, save this js code as example.js
 // 3. inside app directory, run the following shell command:
-//    $ npm install istanbul utility2 && node_modules/.bin/utility2 shRun shNpmTest example.js
+//    $ npm install istanbul-lite utility2 && node_modules/.bin/utility2 shRun shNpmTest example.js
 /*jslint
   browser: true,
   indent: 2,
@@ -127,68 +126,53 @@ lightweight nodejs module that runs phantomjs tests with browser code-coverage (
       mainApp.onFileModifiedCacheAndParse(options);
     });
     // run server test
-    mainApp.testRunServer([mainApp.testMiddleware, function (request, response, next) {
-      /*
-        this function is the main test middleware
-      */
-      // nop hack to pass jslint
-      mainApp.nop(request);
-      switch (request.urlPathNormalized) {
-      // test http GET handling behavior
-      case '/test/hello':
-        response.end('hello');
-        break;
-      // fallback to 404 Not Found
-      default:
-        next();
-      }
-    }], function () {
+    mainApp.testRunServer(function () {
       // exit after test-run ends
       process.exit(mainApp.testReport.testsFailed);
-    });
+    }, [
+      mainApp.testMiddleware,
+      function (request, response, next) {
+        /*
+          this function is the main test middleware
+        */
+        // nop hack to pass jslint
+        mainApp.nop(request);
+        switch (request.urlPathNormalized) {
+        // test http GET handling behavior
+        case '/test/hello':
+          response.end('hello');
+          break;
+        // fallback to 404 Not Found
+        default:
+          next();
+        }
+      }
+    ]);
   }
   return;
 }());
 ```
 #### output
-![screenshot](https://kaizhu256.github.io/node-utility2/screenshot.testExampleJs.png)
-![screenshot](https://kaizhu256.github.io/node-utility2/screenshot.testExampleJs.phantomjs.png)
+![screen-capture](https://kaizhu256.github.io/node-utility2/screen-capture.testExampleJs.png)
+![screen-capture](https://kaizhu256.github.io/node-utility2/screen-capture.testExampleJs.phantomjs.png)
 
 
 
 ## npm dependencies
-- jslint-lite
+- [istanbul-lite](https://www.npmjs.com/package/istanbul-lite)
+- [jslint-lite](https://www.npmjs.com/package/jslint-lite)
 
 
 
 ## package content
-- .gitignore
-  - git ignore file
-- .travis.yml
-  - travis-ci config file
-- Procfile
-  - heroku deploy script
-- README.md
-  - readme file
-- git-ssh.sh
-  - ssh authentication hook used for heroku git deployment
-- index.data
-  - data file containing embedded resources for testing this app
-- index.js
-  - main nodejs app
-- index.sh
-  - shell build script
-- package.json
-  - npm config file
-- test.js
-  - nodejs test script
+[![screen-capture](https://kaizhu256.github.io/node-utility2/screen-capture.gitLsTree.png)](https://github.com/kaizhu256/node-utility2)
 
 
 
 ## build script
 ```
 # build-ci.sh
-# this internal shell code runs the ci-build process for this package
+# this shell code runs the ci-build process for this package
 shBuildCi() {
   # init $TRAVIS env
   if [ "$TRAVIS" ]
@@ -198,19 +182,25 @@ shBuildCi() {
   fi
   # init env
   . ./index.sh && shInit && mkdir -p .tmp/build/coverage-report.html || return $?
+  # create package content listing
+  MODE_CI_BUILD=gitLsTree shRunScreenCapture git ls-tree --abbrev=8 --full-name -l -r HEAD || return $?
+  # run npm test on published package
+  shNpmTestPublished
   # test example code
-  MODE_CI_BUILD=testExampleJs shRunScreenshot shTestScriptJs example.js || return $?
+  MODE_CI_BUILD=testExampleJs shRunScreenCapture shTestScriptJs example.js || return $?
+  # copy phantomjs screen-capture to .tmp/build
+  cp /tmp/app/.tmp/build/screen-capture.* .tmp/build || return $?
   # run npm test
-  MODE_CI_BUILD=npmTest shRunScreenshot npm test || return $?
+  MODE_CI_BUILD=npmTest shRunScreenCapture npm test || return $?
   # deploy to heroku
   if [ "$TRAVIS" ]
   then
     shRun shTestHeroku || return $?
   fi
 }
-# run build process in ci env
+# run ci-build
 shBuildCi
-# save exit code
+# save exit-code
 EXIT_CODE=$?
 # upload build artifacts to github
 if [ "$TRAVIS" ]
@@ -225,12 +215,18 @@ exit $EXIT_CODE
 
 ## changelog
 #### todo
+- auto-git-squash gh-pages after 256 commits
 - move testPhantomjs from index.js to index.sh
 - auto-generate help doc from README.md
-- embed nodejs test code in README.md
-- embed istanbul-lite
 - add server stress test using phantomjs
 - minify /assets/utility2.js in production-mode
+
+#### 2014.2.x
+- rename screenshot to screenCapture
+- replace istanbul with istanbul-lite
+- remove ansi escape code in shell screen-captures
+- inline shRunForever and add mainApp.onFileModifiedRestart
+- inline mainApp.errorStackAppend
 
 #### 2014.1.x
 - replace mainApp.exportLocal with mainApp.testCaseAdd
@@ -248,19 +244,19 @@ exit $EXIT_CODE
 - add onTestRunEnd callback to testRun
 - replace argument middleware with middlewareList in testRunServer
 - add phantomjs testing
-- add timestamp in screenshots
+- add timestamp in screen-captures
 - move build script from .travis.yml to README.md
 - merge middlewareError and middlewareTest into testRunServer
-- add border around phantomjs screenshot
-- use tee in shRunScreenshot and add word-wrap and max-width of 80 characters
+- add border around phantomjs screen-capture
+- use tee in shRunScreenCapture and add word-wrap and max-width of 80 characters
 - merge .build into .tmp/build
-- add shTestScriptJs with screenshot-capture
-- move screenshot.* from beta to root directory in gh-pages branch
+- add shTestScriptJs with screen-capture
+- move screen-capture.* from beta to root directory in gh-pages branch
 - change textFormat's undefined valueDefault handling behavior
 
 #### 2014.10.31
 - auto git-squash gh-pages when uploading build artifacts
-- add shTestQuickstartSh with screenshot-capture and auto-kill server in quickstart code
+- add shTestQuickstartSh with screen-capture and auto-kill server in quickstart code
 - add middlewareError
 - add grep sugar in repl
 - add mainApp._testSecret attribute for private testing
@@ -319,7 +315,7 @@ exit $EXIT_CODE
 #### 2014.7.18
 - add description of files in README.md
 - add code-coverage for saucelabs test routine
-- automatically capture browser screenshots via phantomjs / slimerjs / saucelabs
+- automatically capture browser screen-captures via phantomjs / slimerjs / saucelabs
 - add basic auth for test-report upload
 - rename exports.initLocal to exports.initSubmodule
 

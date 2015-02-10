@@ -154,7 +154,7 @@
         throw new Error(
           // if message is a string, then leave it as is
           typeof message === 'string' ? message
-            // if message is an Error object, then get its stack trace
+            // if message is an Error object, then get its stack-trace
             : message instanceof Error ? mainApp.errorStack(message)
               // else JSON.stringify message
               : JSON.stringify(message)
@@ -243,18 +243,16 @@
 
     mainApp.errorStack = function (error) {
       /*
-        this function returns the error stack or message
+        this function returns the error's stack-trace
       */
-      return String(error.stack || error.message);
-    };
-
-    mainApp.errorStackAppend = function (error1, error2) {
-      /*
-        this function appends error2.stack to error1.stack
-      */
-      if (error1.stack && error2.stack) {
-        error1.stack += '\n' + error2.stack;
+      if (!(error && typeof error.stack === 'string')) {
+        try {
+          throw new Error();
+        } catch (errorCaught) {
+          error = errorCaught;
+        }
       }
+      return error.stack;
     };
 
     mainApp.jsonCopy = function (value) {
@@ -379,8 +377,8 @@
         this function returns another function that runs async tasks in parallel,
         and calls onError only if there's an error, or if its counter === 0
       */
-      var errorCaller, self;
-      errorCaller = new Error();
+      var errorStack, self;
+      errorStack = mainApp.errorStack();
       onDebug = onDebug || mainApp.nop;
       self = function (error) {
         onDebug(error, self);
@@ -393,8 +391,8 @@
           self.error = error;
           // ensure counter will decrement to 0
           self.counter = 1;
-          // append errorCaller.stack
-          mainApp.errorStackAppend(error, errorCaller);
+          // append errorStack to error.stack
+          error.stack = mainApp.errorStack(error) + '\n' + errorStack;
         }
         // decrement counter
         self.counter -= 1;
@@ -828,11 +826,11 @@
               errorStackList: errorStackList,
               // security - sanitize '<' in text
               name: String(testPlatform.name).replace((/</g), '&lt;'),
-              screenshot: testPlatform.screenshotImg ?
-                  '<a class="testReportPlatformScreenshotA" href="' +
-                  testPlatform.screenshotImg + '">' +
-                  '<img class="testReportPlatformScreenshotImg" src="' +
-                  testPlatform.screenshotImg + '">' +
+              screenCapture: testPlatform.screenCaptureImg ?
+                  '<a class="testReportPlatformScreenCaptureA" href="' +
+                  testPlatform.screenCaptureImg + '">' +
+                  '<img class="testReportPlatformScreenCaptureImg" src="' +
+                  testPlatform.screenCaptureImg + '">' +
                   '</a>'
                 : '',
               // map testCaseList
@@ -875,10 +873,8 @@
       if (mainApp.modeJs === 'browser') {
         // init mainApp._testReportDiv element
         mainApp._testReportDiv = document.createElement('div');
+        mainApp._testReportDiv.innerHTML = mainApp.testMerge(mainApp.testReport, {});
         document.body.appendChild(mainApp._testReportDiv);
-        // create initial blank test page
-        mainApp._testReportDiv.innerHTML =
-          mainApp.testMerge(mainApp.testReport, {});
         // update test-report status every 1000 ms until finished
         timerInterval = setInterval(function () {
           // update mainApp._testReportDiv in browser
@@ -1166,8 +1162,8 @@
       /*
         this functions performs a brower ajax request with error handling and timeout
       */
-      var data, error, errorCaller, finished, ii, onEvent, timerTimeout, xhr;
-      errorCaller = new Error();
+      var data, error, errorStack, finished, ii, onEvent, timerTimeout, xhr;
+      errorStack = mainApp.errorStack();
       // init event-handling
       onEvent = function (event) {
         switch (event.type) {
@@ -1201,8 +1197,8 @@
                 JSON.stringify(xhr.responseText.slice(0, 256) + '...') + '\n' + error.message;
               // debug status code
               error.statusCode = xhr.status;
-              // append errorCaller.stack
-              mainApp.errorStackAppend(error, errorCaller);
+              // append errorStack to error.stack
+              error.stack = mainApp.errorStack(error) + '\n' + errorStack;
             }
           }
           // hide _ajaxProgressDiv
@@ -1312,7 +1308,7 @@
       /*
         this functions runs a node http request with error handling and timeout
       */
-      var errorCaller,
+      var errorStack,
         finished,
         modeIo,
         onIo,
@@ -1321,7 +1317,7 @@
         responseText,
         timerTimeout,
         urlParsed;
-      errorCaller = new Error();
+      errorStack = mainApp.errorStack();
       modeIo = 0;
       onIo = function (error, data) {
         modeIo = error instanceof Error ? NaN : modeIo + 1;
@@ -1403,8 +1399,8 @@
               JSON.stringify((responseText || '').slice(0, 256) + '...') + '\n' + error.message;
             // debug status code
             error.statusCode = response && response.statusCode;
-            // append errorCaller.stack
-            mainApp.errorStackAppend(error, errorCaller);
+            // append errorStack to error.stack
+            error.stack = mainApp.errorStack(error) + '\n' + errorStack;
           }
           onError(error, responseText);
         }
@@ -1417,7 +1413,7 @@
         this function instruments the given script and file
       */
       var istanbul;
-      istanbul = require('istanbul');
+      istanbul = require('istanbul-lite');
       return new istanbul.Instrumenter().instrumentSync(script, file);
     };
 
@@ -1483,7 +1479,7 @@
                 break;
               // jslint options2.data
               case 'jslint':
-                mainApp.jslint_lite.jslintPrint(options2.data, options2.file);
+                mainApp.jslint_lite.jslintAndPrint(options2.data, options2.file);
                 break;
               }
             });
@@ -1528,9 +1524,25 @@
         persistent: false
       }, function (stat2, stat1) {
         if (stat2.mtime > stat1.mtime) {
-          mainApp.jslint_lite.jslintPrint(mainApp.fs.readFileSync(file, 'utf8'), file);
+          mainApp.jslint_lite.jslintAndPrint(mainApp.fs.readFileSync(file, 'utf8'), file);
         }
       });
+    };
+
+    mainApp.onFileModifiedRestart = function (file) {
+      /*
+        this function watches the file and if modified, then restart the process
+      */
+      if (process.env.npm_config_mode_auto_restart && mainApp.fs.statSync(file).isFile()) {
+        mainApp.fs.watchFile(file, {
+          interval: 1000,
+          persistent: false
+        }, function (stat2, stat1) {
+          if (stat2.mtime > stat1.mtime) {
+            process.exit();
+          }
+        });
+      }
     };
 
     local._onFileModified_default_test = function (onError) {
@@ -1591,7 +1603,7 @@
             break;
           // syntax sugar to run git log
           case ' git log':
-            match[2] = ' git log -n 8 | cat';
+            match[2] = ' git log -n 4 | cat';
             break;
           }
           // run async shell command
@@ -1873,7 +1885,7 @@
       onParallel();
     };
 
-    mainApp.testRunServer = function (middlewareList, onTestRunEnd) {
+    mainApp.testRunServer = function (onTestRunEnd, middlewareList) {
     /*
       this function will
       1. create a test-server with middlewareList
@@ -1933,7 +1945,7 @@
           npm_config_server_port: ''
         }]
       ], onError, function (onError) {
-        mainApp.testRunServer([], mainApp.nop);
+        mainApp.testRunServer(mainApp.nop, []);
         onError();
       });
     };
@@ -1954,7 +1966,7 @@
       mainApp.envDict = mainApp.envDict || {};
       mainApp.testPlatform.name = 'browser - ' + navigator.userAgent +
         ' - ' + new Date().toISOString();
-      mainApp.testPlatform.screenshotImg = mainApp.envDict.MODE_CI_BUILD_SCREENSHOT;
+      mainApp.testPlatform.screenCaptureImg = mainApp.envDict.MODE_CI_BUILD_SCREEN_CAPTURE;
       // parse any url-search-params that matches 'mode*' or '_testSecret' or 'timeoutDefault'
       location.search.replace(
         (/\b(mode[A-Z]\w+|_testSecret|timeoutDefault)=([^#&=]+)/g),
@@ -1986,7 +1998,7 @@
       mainApp.envDict = process.env;
       mainApp.testPlatform.name = 'node - ' + process.platform + ' ' + process.version +
         ' - ' + new Date().toISOString();
-      mainApp.testPlatform.screenshotImg = mainApp.envDict.MODE_CI_BUILD_SCREENSHOT;
+      mainApp.testPlatform.screenCaptureImg = mainApp.envDict.MODE_CI_BUILD_SCREEN_CAPTURE;
       // init mainApp.__coverage__
       Object.keys(global).forEach(function (key) {
         if (key.indexOf('$$cov_') === 0) {
@@ -2046,7 +2058,7 @@
         mainApp.phantom.version.minor + '.' +
         mainApp.phantom.version.patch +
         ' - ' + new Date().toISOString();
-      mainApp.testPlatform.screenshotImg = mainApp.envDict.MODE_CI_BUILD_SCREENSHOT;
+      mainApp.testPlatform.screenCaptureImg = mainApp.envDict.MODE_CI_BUILD_SCREEN_CAPTURE;
       // override mainApp properties
       mainApp.setOverride(
         mainApp,
@@ -2075,13 +2087,13 @@
             // handle global_test_results passed as error
             // merge coverage
             mainApp.coverageMerge(mainApp.__coverage__, data.coverage);
-            // create screenshot
-            file = mainApp.fs.workingDirectory + '/.tmp/build/screenshot.' +
+            // create screenCapture
+            file = mainApp.fs.workingDirectory + '/.tmp/build/screen-capture.' +
               mainApp.argv0.replace((/\b(phantomjs|slimerjs)\b.*/g), '$1') + '.png';
             mainApp.page.render(file);
             console.log('created ' + 'file://' + file);
-            // integrate screenshot into test-report
-            data.testReport.testPlatformList[0].screenshotImg =
+            // integrate screenCapture into test-report
+            data.testReport.testPlatformList[0].screenCaptureImg =
               file.replace((/^.*\//), '');
             // merge test-report
             mainApp.testMerge(mainApp.testReport, data.testReport);

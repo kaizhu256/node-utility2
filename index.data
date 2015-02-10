@@ -6,7 +6,7 @@
 .testReportPlatformDiv {
   border: 1px solid;
   border-radius: 5px;
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: Helvetical Neue, Helvetica, Arial, sans-serif;
   margin-top: 20px;
   padding: 0 10px 10px 10px;
   text-align: left;
@@ -22,15 +22,16 @@
 .testReportPlatformPreHidden {
   display: none;
 }
-.testReportPlatformScreenshotA {
+.testReportPlatformScreenCaptureA {
   border: 1px solid;
   border-color: #000;
   display:block;
+  margin: 5px 0 5px 0;
   max-height:256px;
   max-width:320px;
   overflow:hidden;
 }
-.testReportPlatformScreenshotImg {
+.testReportPlatformScreenCaptureImg {
   max-width:320px;
 }
 .testReportPlatformSpan {
@@ -87,7 +88,7 @@ tr:nth-child(odd).testReportPlatformTr {
 <div class="testReportPlatformDiv">
 <h4>
   {{testPlatformNumber}}. {{name}}<br>
-  {{screenshot}}
+  {{screenCapture}}
   <span class="testReportPlatformSpan">time elapsed</span>- {{timeElapsed}} ms<br>
   <span class="testReportPlatformSpan">tests failed</span>- {{testsFailed}}<br>
   <span class="testReportPlatformSpan">tests passed</span>- {{testsPassed}}<br>
@@ -175,7 +176,7 @@ tr:nth-child(odd).testReportPlatformTr {
   );
   background-size: 40px 40px;
   color: #fff;
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: Helvetical Neue, Helvetica, Arial, sans-serif;
   font-size: 12px;
   padding: 2px 0 2px 0;
   text-align: center;
@@ -232,7 +233,7 @@ tr:nth-child(odd).testReportPlatformTr {
   {{utility2Css}}
   body {
   background-color: #fff;
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: Helvetical Neue, Helvetica, Arial, sans-serif;
   }
   </style>
 </head>
