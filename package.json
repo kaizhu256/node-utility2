@@ -2,8 +2,8 @@
   "author": "kai zhu <kaizhu256@gmail.com>",
   "bin": { "utility2" : "index.sh" },
   "dependencies": {
-    "istanbul-lite": "2015.2.10-18",
-    "jslint-lite": "2015.2.10-14"
+    "istanbul-lite": "2015.2.10-18 - 2015.2.10",
+    "jslint-lite": "2015.2.10-14 - 2015.2.10"
   },
   "description": "lightweight nodejs module that runs phantomjs tests with browser code-coverage (via istanbul-lite and phantomjs-lite)",
   "devDependencies": {
@@ -14,13 +14,15 @@
     "browser",
     "build",
     "ci",
-    "continuous integration",
+    "cover",
     "coverage",
-    "istanbul-lite",
-    "jslint-lite",
+    "istanbul",
+    "jslint",
     "lightweight",
-    "phantomjs-lite",
-    "test"
+    "phantomjs",
+    "slimerjs",
+    "test",
+    "travis"
   ],
   "license": "MIT",
   "name": "utility2",

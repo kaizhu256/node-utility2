@@ -10,9 +10,9 @@ lightweight nodejs module that runs phantomjs tests with browser code-coverage (
 
 | git branch | test-server | test-report | coverage-report | build artifact |
 |:----------:|:-----------:|:-----------:|:---------------:|:--------------:|
-|[master](https://github.com/kaizhu256/node-utility2/tree/master) | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://hrku01-utility2-master.herokuapp.com/?modeTest=1) | [![test-report](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/master/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/master/test-report.html) | [![istanbul-lite coverage-report](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/master/coverage-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/master/coverage-report.html/node-utility2/index.html) | [![build artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build.travis-ci.org/master)|
-|[beta](https://github.com/kaizhu256/node-utility2/tree/beta) | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://hrku01-utility2-beta.herokuapp.com/?modeTest=1) | [![test-report](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/beta/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/beta/test-report.html) | [![istanbul-lite coverage-report](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/beta/coverage-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/beta/coverage-report.html/node-utility2/index.html) | [![build artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build.travis-ci.org/beta)|
-|[alpha](https://github.com/kaizhu256/node-utility2/tree/alpha) | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://hrku01-utility2-alpha.herokuapp.com/?modeTest=1) | [![test-report](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/alpha/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/alpha/test-report.html) | [![istanbul-lite coverage-report](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/alpha/coverage-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build.travis-ci.org/alpha/coverage-report.html/node-utility2/index.html) | [![build artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build.travis-ci.org/alpha)|
+|[master](https://github.com/kaizhu256/node-utility2/tree/master) | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://hrku01-utility2-master.herokuapp.com/?modeTest=1) | [![test-report](https://kaizhu256.github.io/node-utility2/build/master/travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build/master/travis-ci.org/test-report.html) | [![istanbul-lite coverage-report](https://kaizhu256.github.io/node-utility2/build/master/travis-ci.org/coverage-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build/master/travis-ci.org/coverage-report.html/node-utility2/index.html) | [![build artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build/master/travis-ci.org)|
+|[beta](https://github.com/kaizhu256/node-utility2/tree/beta) | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://hrku01-utility2-beta.herokuapp.com/?modeTest=1) | [![test-report](https://kaizhu256.github.io/node-utility2/build/beta/travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build/beta/travis-ci.org/test-report.html) | [![istanbul-lite coverage-report](https://kaizhu256.github.io/node-utility2/build/beta/travis-ci.org/coverage-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build/beta/travis-ci.org/coverage-report.html/node-utility2/index.html) | [![build artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build/beta/travis-ci.org)|
+|[alpha](https://github.com/kaizhu256/node-utility2/tree/alpha) | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://hrku01-utility2-alpha.herokuapp.com/?modeTest=1) | [![test-report](https://kaizhu256.github.io/node-utility2/build/alpha/travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build/alpha/travis-ci.org/test-report.html) | [![istanbul-lite coverage-report](https://kaizhu256.github.io/node-utility2/build/alpha/travis-ci.org/coverage-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build/alpha/travis-ci.org/coverage-report.html/node-utility2/index.html) | [![build artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build/alpha/travis-ci.org)|
 
 
 
@@ -24,9 +24,9 @@ lightweight nodejs module that runs phantomjs tests with browser code-coverage (
 ## quickstart
 ```
 // example.js
-// this example nodejs code runs browser and server tests with code-coverage
+// this example nodejs script runs browser and server tests with code-coverage
 // 1. create a clean app directory (e.g /tmp/app)
-// 2. inside app directory, save this js code as example.js
+// 2. inside app directory, save this js script as example.js
 // 3. inside app directory, run the following shell command:
 //    $ npm install istanbul-lite utility2 && node_modules/.bin/utility2 shRun shNpmTest example.js
 /*jslint
@@ -172,7 +172,7 @@ lightweight nodejs module that runs phantomjs tests with browser code-coverage (
 ## build script
 ```
 # build-ci.sh
-# this shell code runs the ci-build process for this package
+# this shell script runs the ci-build process for this package
 shBuildCi() {
   # init $TRAVIS env
   if [ "$TRAVIS" ]
@@ -186,7 +186,7 @@ shBuildCi() {
   MODE_CI_BUILD=gitLsTree shRunScreenCapture git ls-tree --abbrev=8 --full-name -l -r HEAD || return $?
   # run npm test on published package
   shNpmTestPublished
-  # test example code
+  # test example script
   MODE_CI_BUILD=testExampleJs shRunScreenCapture shTestScriptJs example.js || return $?
   # copy phantomjs screen-capture to .tmp/build
   cp /tmp/app/.tmp/build/screen-capture.* .tmp/build || return $?
@@ -222,6 +222,8 @@ exit $EXIT_CODE
 - minify /assets/utility2.js in production-mode
 
 #### 2014.2.x
+- remove rarely used artifact versioning
+- change build-artifact-dir to build/$CI_BRANCH/<ci-host>
 - rename screenshot to screenCapture
 - replace istanbul with istanbul-lite
 - remove ansi escape code in shell screen-captures

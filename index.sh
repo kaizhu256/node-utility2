@@ -100,12 +100,7 @@ shBuildGithubUpload() {
   cp $TMPDIR2/build/build.badge.svg . > /dev/null 2>&1
   cp $TMPDIR2/build/screen-capture.* . > /dev/null 2>&1
   mkdir -p $CI_BUILD_DIR || return $?
-  for DIR in\
-    $CI_BUILD_DIR/$CI_BRANCH\
-    $CI_BUILD_DIR/$CI_BRANCH.$(shDateIso).$CI_BUILD_NUMBER.$CI_COMMIT_ID
-  do
-    rm -fr $DIR && cp -a $TMPDIR2/build $DIR || return $?
-  done
+  rm -fr $CI_BUILD_DIR && cp -a $TMPDIR2/build $CI_BUILD_DIR || return $?
   # init .git/config
   printf "\n[user]\nname=nobody\nemail=nobody\n" > .git/config || return $?
   git add -A || return $?
@@ -194,26 +189,25 @@ shInit() {
     # init codeship.io env
     if [ "$CI_NAME" = "codeship" ]
     then
-      export CI_BUILD_DIR=build.codeship.io || return $?
+      export CI_BUILD_DIR=codeship.io || return $?
     # init travis-ci.org env
     elif [ "$TRAVIS" ]
     then
-      export CI_BUILD_DIR=build.travis-ci.org || return $?
+      export CI_BUILD_DIR=travis-ci.org || return $?
       export CI_BRANCH=$TRAVIS_BRANCH || return $?
-      export CI_BUILD_NUMBER=$TRAVIS_BUILD_NUMBER || return $?
       export CI_COMMIT_ID=$TRAVIS_COMMIT || return $?
       # decrypt and exec encrypted data
       if [ "$AES_256_KEY" ]
       then
         eval "$(shAesDecryptTravis)" || return $?
       fi
+    # init default env
     else
-      # init default env
-      export CI_BUILD_DIR=build.local || return $?
+      export CI_BUILD_DIR=localhost || return $?
       export CI_BRANCH=alpha || return $?
-      export CI_BUILD_NUMBER=0 || return $?
       export CI_COMMIT_ID=$(git rev-parse --verify HEAD) || return $?
     fi
+    CI_BUILD_DIR="build/$CI_BRANCH/$CI_BUILD_DIR" || return $?
     # init $CI_COMMIT_*
     export CI_COMMIT_MESSAGE="$(git log -1 --pretty=%s)" || return $?
     export CI_COMMIT_INFO="$CI_COMMIT_ID - $CI_COMMIT_MESSAGE" || return $?

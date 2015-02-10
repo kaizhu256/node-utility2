@@ -66,7 +66,6 @@ tr:nth-child(odd).testReportPlatformTr {
 <h4>
   <span class="testReportSummarySpan">version</span>- {{envDict.PACKAGE_JSON_VERSION}}<br>
   <span class="testReportSummarySpan">build date</span>- {{date}}<br>
-  <span class="testReportSummarySpan">build id</span>- {{envDict.CI_BUILD_NUMBER}}<br>
   <span class="testReportSummarySpan">commit info</span>- {{CI_COMMIT_INFO}}<br>
 </h4>
 <table class="testReportPlatformTable">
