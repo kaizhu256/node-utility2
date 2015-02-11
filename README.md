@@ -6,7 +6,7 @@ lightweight nodejs module that runs phantomjs tests with browser code-coverage (
 
 ## build status [![travis-ci.org build status](https://api.travis-ci.org/kaizhu256/node-utility2.svg)](https://travis-ci.org/kaizhu256/node-utility2) ![codeship.io build status](https://codeship.com/projects/df8f44c0-2ee3-0132-0af5-6a016ae0b812/status)
 
-[![build commit status](https://kaizhu256.github.io/node-utility2/build.badge.svg)](https://travis-ci.org/kaizhu256/node-utility2)
+[![build commit status](https://kaizhu256.github.io/node-utility2/build/build.badge.svg)](https://travis-ci.org/kaizhu256/node-utility2)
 
 | git branch | test-server | test-report | coverage-report | build artifact |
 |:----------:|:-----------:|:-----------:|:---------------:|:--------------:|
@@ -17,7 +17,7 @@ lightweight nodejs module that runs phantomjs tests with browser code-coverage (
 
 
 ## live test-server
-[![heroku.com test-server](https://kaizhu256.github.io/node-utility2/screen-capture.testHeroku.phantomjs.png)](https://hrku01-utility2-beta.herokuapp.com/?modeTest=1)
+[![heroku.com test-server](https://kaizhu256.github.io/node-utility2/build/screen-capture.testHeroku.phantomjs.png)](https://hrku01-utility2-beta.herokuapp.com/?modeTest=1)
 
 
 
@@ -153,8 +153,8 @@ lightweight nodejs module that runs phantomjs tests with browser code-coverage (
 }());
 ```
 #### output
-![screen-capture](https://kaizhu256.github.io/node-utility2/screen-capture.testExampleJs.png)
-![screen-capture](https://kaizhu256.github.io/node-utility2/screen-capture.testExampleJs.phantomjs.png)
+![screen-capture](https://kaizhu256.github.io/node-utility2/build//screen-capture.testExampleJs.png)
+![screen-capture](https://kaizhu256.github.io/node-utility2/build//screen-capture.testExampleJs.phantomjs.png)
 
 
 
@@ -165,15 +165,15 @@ lightweight nodejs module that runs phantomjs tests with browser code-coverage (
 
 
 ## package content
-[![screen-capture](https://kaizhu256.github.io/node-utility2/screen-capture.gitLsTree.png)](https://github.com/kaizhu256/node-utility2)
+[![screen-capture](https://kaizhu256.github.io/node-utility2/build//screen-capture.gitLsTree.png)](https://github.com/kaizhu256/node-utility2)
 
 
 
 ## build script
 ```
-# build-ci.sh
-# this shell script runs the ci-build process for this package
-shBuildCi() {
+# build.sh
+# this shell script runs the build process for this package
+shBuild() {
   # init $TRAVIS env
   if [ "$TRAVIS" ]
   then
@@ -183,23 +183,23 @@ shBuildCi() {
   # init env
   . ./index.sh && shInit && mkdir -p .tmp/build/coverage-report.html || return $?
   # create package content listing
-  MODE_CI_BUILD=gitLsTree shRunScreenCapture git ls-tree --abbrev=8 --full-name -l -r HEAD || return $?
+  MODE_BUILD=gitLsTree shRunScreenCapture git ls-tree --abbrev=8 --full-name -l -r HEAD || return $?
   # run npm test on published package
   shNpmTestPublished
   # test example script
-  MODE_CI_BUILD=testExampleJs shRunScreenCapture shTestScriptJs example.js || return $?
+  MODE_BUILD=testExampleJs shRunScreenCapture shTestScriptJs example.js || return $?
   # copy phantomjs screen-capture to .tmp/build
   cp /tmp/app/.tmp/build/screen-capture.* .tmp/build || return $?
   # run npm test
-  MODE_CI_BUILD=npmTest shRunScreenCapture npm test || return $?
+  MODE_BUILD=npmTest shRunScreenCapture npm test || return $?
   # deploy to heroku
   if [ "$TRAVIS" ]
   then
     shRun shTestHeroku || return $?
   fi
 }
-# run ci-build
-shBuildCi
+# run build
+shBuild
 # save exit-code
 EXIT_CODE=$?
 # upload build artifacts to github
@@ -215,14 +215,14 @@ exit $EXIT_CODE
 
 ## changelog
 #### todo
-- auto-git-squash gh-pages after 256 commits
 - move testPhantomjs from index.js to index.sh
 - auto-generate help doc from README.md
 - add server stress test using phantomjs
 - minify /assets/utility2.js in production-mode
 
 #### 2014.2.x
-- remove rarely used artifact versioning
+- auto-git-squash gh-pages after 256 commits
+- remove artifact versioning
 - change build-artifact-dir to build/$CI_BRANCH/<ci-host>
 - rename screenshot to screenCapture
 - replace istanbul with istanbul-lite
@@ -300,7 +300,7 @@ exit $EXIT_CODE
 - add github basic auth for building private repo
 - revamp ajax redirect in nodejs code
 - integrate browser tests into main page
-- add offline mode for shBuildCi
+- add offline mode for shBuild
 - add dummy failed tests in npm test for code-coverage
 - add file update feature for data files
 - add test flag in heroku Procfile

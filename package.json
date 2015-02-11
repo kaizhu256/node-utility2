@@ -32,7 +32,7 @@
     "url" : "https://github.com/kaizhu256/node-utility2.git"
   },
   "scripts": {
-    "build-ci": "./index.sh shRun shBuildCi",
+    "build2": "./index.sh shRun shBuild",
     "start": "./index.sh shRun node test.js",
     "test": "./index.sh shRun shNpmTest test.js"
   },

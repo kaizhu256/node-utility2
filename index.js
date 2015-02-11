@@ -704,11 +704,11 @@
             typeof testPlatform.name === 'string',
             ii + ' invalid testPlatform.name ' + typeof testPlatform.name
           );
-          // insert $MODE_CI_BUILD into testPlatform.name
-          if (mainApp.envDict.MODE_CI_BUILD) {
+          // insert $MODE_BUILD into testPlatform.name
+          if (mainApp.envDict.MODE_BUILD) {
             testPlatform.name = testPlatform.name.replace(
               (/^(browser|node|phantom|slimer)\b/),
-              mainApp.envDict.MODE_CI_BUILD + ' - $1'
+              mainApp.envDict.MODE_BUILD + ' - $1'
             );
           }
           mainApp.assert(
@@ -974,7 +974,7 @@
           setTimeout(function () {
             // finalize mainApp.testReport
             mainApp.testMerge(testReport, {});
-            console.log('\n' + mainApp.envDict.MODE_CI_BUILD + ' - ' +
+            console.log('\n' + mainApp.envDict.MODE_BUILD + ' - ' +
               mainApp.testReport.testsFailed + ' failed tests\n');
             // call callback with number of tests failed
             onTestRunEnd(mainApp.testReport.testsFailed);
@@ -1833,7 +1833,7 @@
             mainApp.envDict.npm_config_mode_no_slimerjs)) {
           return;
         }
-        argv0 = mainApp.envDict.MODE_CI_BUILD + '.' + argv0;
+        argv0 = mainApp.envDict.MODE_BUILD + '.' + argv0;
         if ('utility2' === mainApp.envDict.PACKAGE_JSON_NAME) {
           argv0 += (mainApp.url.parse(options.url).path).replace((/\W+/g), '.');
         }
@@ -1966,7 +1966,7 @@
       mainApp.envDict = mainApp.envDict || {};
       mainApp.testPlatform.name = 'browser - ' + navigator.userAgent +
         ' - ' + new Date().toISOString();
-      mainApp.testPlatform.screenCaptureImg = mainApp.envDict.MODE_CI_BUILD_SCREEN_CAPTURE;
+      mainApp.testPlatform.screenCaptureImg = mainApp.envDict.MODE_BUILD_SCREEN_CAPTURE;
       // parse any url-search-params that matches 'mode*' or '_testSecret' or 'timeoutDefault'
       location.search.replace(
         (/\b(mode[A-Z]\w+|_testSecret|timeoutDefault)=([^#&=]+)/g),
@@ -1998,7 +1998,7 @@
       mainApp.envDict = process.env;
       mainApp.testPlatform.name = 'node - ' + process.platform + ' ' + process.version +
         ' - ' + new Date().toISOString();
-      mainApp.testPlatform.screenCaptureImg = mainApp.envDict.MODE_CI_BUILD_SCREEN_CAPTURE;
+      mainApp.testPlatform.screenCaptureImg = mainApp.envDict.MODE_BUILD_SCREEN_CAPTURE;
       // init mainApp.__coverage__
       Object.keys(global).forEach(function (key) {
         if (key.indexOf('$$cov_') === 0) {
@@ -2058,7 +2058,7 @@
         mainApp.phantom.version.minor + '.' +
         mainApp.phantom.version.patch +
         ' - ' + new Date().toISOString();
-      mainApp.testPlatform.screenCaptureImg = mainApp.envDict.MODE_CI_BUILD_SCREEN_CAPTURE;
+      mainApp.testPlatform.screenCaptureImg = mainApp.envDict.MODE_BUILD_SCREEN_CAPTURE;
       // override mainApp properties
       mainApp.setOverride(
         mainApp,

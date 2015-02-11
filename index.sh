@@ -66,14 +66,6 @@ shAesEncryptTravis() {
     .travis.yml || return $?
 }
 
-shBuildCi() {
-  # this function runs the build-ci script in README.md
-  # init $TMPDIR2
-  mkdir -p $TMPDIR2/build/coverage-report.html || return $?
-  # run script from README.md
-  MODE_CI_BUILD=buildCi shTestScriptSh $TMPDIR2/build-ci.sh || return $?
-}
-
 shBuildGithubUpload() {
   # this function uploads the ./build dir to github
   shBuildPrint githubUpload\
@@ -97,24 +89,37 @@ shBuildGithubUpload() {
   rm -fr $TMPDIR2/gh-pages && cd $TMPDIR2 && git clone git@github.com:$GITHUB_REPO.git\
     --branch=gh-pages --single-branch $TMPDIR2/gh-pages && cd $TMPDIR2/gh-pages || return $?
   # copy build artifacts to .
-  cp $TMPDIR2/build/build.badge.svg . > /dev/null 2>&1
-  cp $TMPDIR2/build/screen-capture.* . > /dev/null 2>&1
-  mkdir -p $CI_BUILD_DIR || return $?
-  rm -fr $CI_BUILD_DIR && cp -a $TMPDIR2/build $CI_BUILD_DIR || return $?
+  cp $TMPDIR2/build/build.badge.svg build > /dev/null 2>&1
+  cp $TMPDIR2/build/screen-capture.* build > /dev/null 2>&1
+  mkdir -p $BUILD_DIR || return $?
+  rm -fr $BUILD_DIR && cp -a $TMPDIR2/build $BUILD_DIR || return $?
   # init .git/config
   printf "\n[user]\nname=nobody\nemail=nobody\n" > .git/config || return $?
   git add -A || return $?
   git commit -am "[skip ci] update gh-pages" || return $?
+  # if number of commits > 256, then squash HEAD to the earliest commit
+  if [ $(git rev-list HEAD --count) -gt 256 ]
+  then
+    shGitSquash $(git rev-list --max-parents=0 HEAD) || return $?
+  fi
   # update gh-pages
   git push git@github.com:$GITHUB_REPO.git gh-pages || return $?
 }
 
 shBuildPrint() {
   # this function prints debug info about the build state
-  export MODE_CI_BUILD=$1 || return $?
+  export MODE_BUILD=$1 || return $?
   local MESSAGE="$2" || return $?
-  printf "\n[MODE_CI_BUILD=$MODE_CI_BUILD] - $(shDateIso) - $MESSAGE\n\n"\
+  printf "\n[MODE_BUILD=$MODE_BUILD] - $(shDateIso) - $MESSAGE\n\n"\
     || return $?
+}
+
+shBuild() {
+  # this function runs the build script in README.md
+  # init $TMPDIR2
+  mkdir -p $TMPDIR2/build/coverage-report.html || return $?
+  # run script from README.md
+  MODE_BUILD=build shTestScriptSh $TMPDIR2/build.sh || return $?
 }
 
 shDateIso() {
@@ -123,7 +128,7 @@ shDateIso() {
 }
 
 shExitCodeSave() {
-  # this function saves the global $EXIT_CODE and restores the global $CWD
+  # this function will save the global $EXIT_CODE and restore the global $CWD
   # save $EXIT_CODE
   if [ ! "$EXIT_CODE" ] || [ "$EXIT_CODE" = 0 ]
   then
@@ -137,25 +142,20 @@ shExitCodeSave() {
   cd $CWD || return $?
 }
 
-shGitSquash () {
-  # this function squashes the HEAD to the specified commit $1
+shGitSquash() {
+  # this function will squash the HEAD to the specified commit $1
   # git squash
   # http://stackoverflow.com/questions/5189560/how-can-i-squash-my-last-x-commits-together-using-git
   local COMMIT=$1 || return $?
-  local MESSAGE="${2-squash}" || return $?
+  local MESSAGE="${2-$(git log -1 --pretty=%s)}" || return $?
   # commit any uncommitted data
-  git commit -am "$MESSAGE"
+  git commit -am "$MESSAGE" || :
   # reset git to previous $COMMIT
   git reset --hard $COMMIT || return $?
   # reset files to current HEAD
   git merge --squash HEAD@{1} || return $?
   # commit HEAD immediately after previous $COMMIT
   git commit -am "$MESSAGE" || return $?
-}
-
-shGitSquashGhPages() {
-  # this function squashes the HEAD to the earliest commit
-  shGitSquash $(git rev-list --max-parents=0 HEAD) "[skip ci] squash"
 }
 
 shGrep() {
@@ -189,11 +189,11 @@ shInit() {
     # init codeship.io env
     if [ "$CI_NAME" = "codeship" ]
     then
-      export CI_BUILD_DIR=codeship.io || return $?
+      export BUILD_DIR=codeship.io || return $?
     # init travis-ci.org env
     elif [ "$TRAVIS" ]
     then
-      export CI_BUILD_DIR=travis-ci.org || return $?
+      export BUILD_DIR=travis-ci.org || return $?
       export CI_BRANCH=$TRAVIS_BRANCH || return $?
       export CI_COMMIT_ID=$TRAVIS_COMMIT || return $?
       # decrypt and exec encrypted data
@@ -203,11 +203,11 @@ shInit() {
       fi
     # init default env
     else
-      export CI_BUILD_DIR=localhost || return $?
+      export BUILD_DIR=localhost || return $?
       export CI_BRANCH=alpha || return $?
       export CI_COMMIT_ID=$(git rev-parse --verify HEAD) || return $?
     fi
-    CI_BUILD_DIR="build/$CI_BRANCH/$CI_BUILD_DIR" || return $?
+    BUILD_DIR="build/branch/$CI_BRANCH/$BUILD_DIR" || return $?
     # init $CI_COMMIT_*
     export CI_COMMIT_MESSAGE="$(git log -1 --pretty=%s)" || return $?
     export CI_COMMIT_INFO="$CI_COMMIT_ID - $CI_COMMIT_MESSAGE" || return $?
@@ -289,7 +289,7 @@ shIstanbulReport() {
 
 shNpmTest() {
   # this function runs npm test
-  shBuildPrint "${MODE_CI_BUILD:-npmTest}" "npm testing $CWD ..." || return $?
+  shBuildPrint "${MODE_BUILD:-npmTest}" "npm testing $CWD ..." || return $?
   # init $TMPDIR2
   mkdir -p $TMPDIR2/build/coverage-report.html || return $?
   # auto-detect slimerjs
@@ -394,7 +394,7 @@ shRunScreenCapture() {
   # http://www.cnx-software.com/2011/09/22/how-to-convert-a-command-line-result-into-an-image-in-linux/
   # init $TMPDIR2
   mkdir -p $TMPDIR2/build/coverage-report.html || return $?
-  export MODE_CI_BUILD_SCREEN_CAPTURE=screen-capture.$MODE_CI_BUILD.png
+  export MODE_BUILD_SCREEN_CAPTURE=screen-capture.$MODE_BUILD.png
   shRun $@ 2>&1 | tee $TMPDIR2/screen-capture.txt || return $?
   # save $EXIT_CODE and restore $CWD
   shExitCodeSave $(cat $TMPFILE2) || return $?
@@ -418,7 +418,7 @@ shRunScreenCapture() {
       -pointsize 12\
       -quality 90\
       -type Palette\
-      label:@- $TMPDIR2/build/$MODE_CI_BUILD_SCREEN_CAPTURE || return $?
+      label:@- $TMPDIR2/build/$MODE_BUILD_SCREEN_CAPTURE || return $?
   fi
   return $EXIT_CODE
 }
@@ -477,7 +477,7 @@ shTestPhantom() {
   # this function runs phantomjs tests on the specified $URL,
   # and merge it into the existing test-report
   local URL="$1" || return $?
-  shBuildPrint "${MODE_CI_BUILD:-testPhantom}" "testing $URL with phantomjs ..." || return $?
+  shBuildPrint "${MODE_BUILD:-testPhantom}" "testing $URL with phantomjs ..." || return $?
   # auto-detect slimerjs
   if [ ! "$npm_config_mode_slimerjs" ] && (slimerjs undefined > /dev/null 2>&1)
   then
@@ -498,7 +498,7 @@ shTestPhantom() {
 shTestScriptJs() {
   # this function tests the js script $1 in README.md
   local FILE=$1 || return $?
-  shBuildPrint $MODE_CI_BUILD "testing $FILE ..." || return $?
+  shBuildPrint $MODE_BUILD "testing $FILE ..." || return $?
   if [ ! "$MODE_OFFLINE" ]
   then
     # init /tmp/app
@@ -545,8 +545,8 @@ shTestScriptSh() {
   # this function tests the sh script $1 in README.md
   local FILE=$1 || return $?
   local FILE_BASENAME=$(node -e "console.log(require('path').basename('$FILE'))") || return $?
-  shBuildPrint $MODE_CI_BUILD "testing $FILE ..." || return $?
-  if [ "$MODE_CI_BUILD" != "buildCi" ]
+  shBuildPrint $MODE_BUILD "testing $FILE ..." || return $?
+  if [ "$MODE_BUILD" != "build" ]
   then
     # init /tmp/app
     rm -fr /tmp/app /tmp/node_modules && mkdir -p /tmp/app && cd /tmp/app || return $?
