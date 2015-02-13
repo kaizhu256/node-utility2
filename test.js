@@ -6,27 +6,25 @@
   regexp: true,
   stupid: true
 */
-(function () {
+(function (local) {
   /*
     this function tests this module
   */
   'use strict';
-  var local, mainApp;
-  // init local
-  local = {};
+  switch (local.modeJs) {
   // init browser js-env
-  if (typeof window === 'object') {
-    // init mainApp
-    mainApp = window.mainApp = window.$$mainApp;
-    // test !mainApp.modeTest handling behavior
-    mainApp._modeTest = mainApp.modeTest;
-    mainApp.modeTest = null;
-    mainApp.testRun();
-    mainApp.modeTest = mainApp._modeTest;
+  case 'browser':
+    // init local.utility2
+    local.utility2 = window.utility2;
+    // test !local.utility2.modeTest handling behavior
+    local._modeTest = local.utility2.modeTest;
+    local.utility2.modeTest = null;
+    local.utility2.testRun();
+    local.utility2.modeTest = local._modeTest;
     // run test
-    mainApp.testRun(function () {
-      // test mainApp.modeTest !== 'phantom' handling behavior
-      if (mainApp.modeTest === 'phantom2') {
+    local.utility2.testRun(function () {
+      // test local.utility2.modeTest !== 'phantom' handling behavior
+      if (local.utility2.modeTest === 'phantom2') {
         setTimeout(function () {
           throw new Error(JSON.stringify({
             global_test_results: window.global_test_results
@@ -34,38 +32,31 @@
         });
       }
     });
+    break;
   // init node js-env
-  } else {
-    // init mainApp
-    mainApp = global.mainApp = module.exports;
+  case 'node':
     // require modules
-    mainApp.utility2 = require('./index.js');
-    // merge utility2 into mainApp;
-    Object.keys(mainApp.utility2).forEach(function (key) {
-      if (key[0] !== '_') {
-        mainApp[key] = mainApp.utility2[key];
-      }
-    });
+    local.utility2 = require('./index.js');
     // init local test-case's
     local._testPhantom_default_test = function (onError) {
       /*
         this function tests testPhantom's default handling behavior
       */
       var onParallel;
-      onParallel = mainApp.onParallel(onError);
+      onParallel = local.utility2.onParallel(onError);
       onParallel.counter += 1;
       // test default handling behavior
       onParallel.counter += 1;
-      mainApp.testPhantom({ url: 'http://localhost:' + process.env.npm_config_server_port +
+      local.utility2.testPhantom({ url: 'http://localhost:' + process.env.npm_config_server_port +
         // test phantom-callback handling behavior
         '/?modeTest=phantom&' +
         // test _testSecret-validation handling behavior
         '_testSecret={{_testSecret}}&' +
         // test timeoutDefault-override handling behavior
-        'timeoutDefault=' + mainApp.timeoutDefault }, onParallel);
+        'timeoutDefault=' + local.utility2.timeoutDefault }, onParallel);
       // test single-test-case handling behavior
       onParallel.counter += 1;
-      mainApp.testPhantom({
+      local.utility2.testPhantom({
         modeErrorIgnore: true,
         url: 'http://localhost:' + process.env.npm_config_server_port +
           // test modeTest !== 'phantom' handling behavior
@@ -73,68 +64,54 @@
           // test testRun's failure handling behavior
           'modeTestCase=_testRun_failure_test'
       }, function (error) {
-        mainApp.testTryCatch(function () {
+        local.utility2.testTryCatch(function () {
           // validate error occurred
-          mainApp.assert(error instanceof Error, error);
+          local.utility2.assert(error instanceof Error, error);
           onParallel();
         }, onParallel);
       });
       // test standalone utility2.js library handling behavior
       onParallel.counter += 1;
-      mainApp.testPhantom({
+      local.utility2.testPhantom({
         url: 'http://localhost:' + process.env.npm_config_server_port +
           // test phantom-callback handling behavior
           '/test/utility2.html?modeTest=phantom'
       }, onParallel);
       // test script-error handling behavior
       onParallel.counter += 1;
-      mainApp.testPhantom({
+      local.utility2.testPhantom({
         modeErrorIgnore: true,
         url:
           'http://localhost:' + process.env.npm_config_server_port + '/test/script-error.html'
       }, function (error) {
-        mainApp.testTryCatch(function () {
+        local.utility2.testTryCatch(function () {
           // validate error occurred
-          mainApp.assert(error instanceof Error, error);
+          local.utility2.assert(error instanceof Error, error);
           onParallel();
         }, onParallel);
       });
       // test timeout handling behavior
       onParallel.counter += 1;
-      mainApp.testPhantom({
+      local.utility2.testPhantom({
         modeErrorIgnore: true,
         timeout: 1000,
         url: 'http://localhost:' + process.env.npm_config_server_port + '/test/hello'
       }, function (error) {
-        mainApp.testTryCatch(function () {
+        local.utility2.testTryCatch(function () {
           // validate error occurred
-          mainApp.assert(error instanceof Error, error);
-          onParallel();
-        }, onParallel);
-      });
-      // test phantom.onError handling behavior
-      onParallel.counter += 1;
-      mainApp.testPhantom({
-        modeErrorIgnore: true,
-        modeTestPhantomOnError: true,
-        url: 'http://localhost:' + process.env.npm_config_server_port +
-          '/test/modeTestPhantomOnError'
-      }, function (error) {
-        mainApp.testTryCatch(function () {
-          // validate no error occurred
-          mainApp.assert(!error, error);
+          local.utility2.assert(error instanceof Error, error);
           onParallel();
         }, onParallel);
       });
       // test misc handling behavior
       onParallel.counter += 1;
-      mainApp.testMock([
+      local.utility2.testMock([
         // test no coverage handling behavior
-        [mainApp.utility2, {
+        [local.utility2, {
           child_process: { spawn: function () {
             return { on: function (event, onExit) {
               // nop hack to pass jslint
-              mainApp.nop(event);
+              local.utility2.nop(event);
               onExit();
             } };
           } },
@@ -142,8 +119,8 @@
           fs: { readFileSync: function () {
             return 'null';
           } },
-          onTimeout: mainApp.nop,
-          testMerge: mainApp.nop
+          onTimeout: local.utility2.nop,
+          testMerge: local.utility2.nop
         }],
         [process.env, {
           // test $PACKAGE_JSON !== 'utility2' handling behavior
@@ -152,13 +129,13 @@
           npm_config_mode_no_slimerjs: '1'
         }]
       ], onParallel, function (onError) {
-        mainApp.testPhantom({
+        local.utility2.testPhantom({
           modeErrorIgnore: true,
           url: 'http://localhost:' + process.env.npm_config_server_port + '/test/misc'
         }, function (error) {
-          mainApp.testTryCatch(function () {
+          local.utility2.testTryCatch(function () {
             // validate no error occurred
-            mainApp.assert(!error, error);
+            local.utility2.assert(!error, error);
             onError();
           }, onError);
         });
@@ -167,15 +144,15 @@
     };
     local._testPrefix = 'utility2.test.node';
     // add local test-case's
-    mainApp.testCaseAdd(local, mainApp);
+    local.utility2.testCaseAdd(local);
     // run server test
-    mainApp.testRunServer(process.exit, [
+    local.utility2.testRunServer(process.exit, [
       // exit after test-run ends
-      mainApp.testMiddleware,
+      local.utility2.testMiddleware,
       function (request, response, next) {
         // nop hack to pass jslint
-        mainApp.nop(request);
-        mainApp.nop(response);
+        local.utility2.nop(request);
+        local.utility2.nop(response);
         // test next middleware handling behavior
         next();
       },
@@ -186,14 +163,14 @@
         switch (request.urlPathNormalized) {
         // serve main page
         case '/':
-          mainApp.serverRespondWriteHead(request, response, 303, {
+          local.utility2.serverRespondWriteHead(request, response, 303, {
             'Location': request.url.replace('/', '/test/test.html')
           });
           response.end();
           break;
         // test http POST handling behavior
         case '/test/echo':
-          mainApp.serverRespondEcho(request, response);
+          local.utility2.serverRespondEcho(request, response);
           break;
         // test http GET handling behavior
         case '/test/hello':
@@ -206,18 +183,18 @@
         // test 500-internal-server-error handling behavior
         case '/test/server-error':
           // test multiple serverRespondWriteHead callback handling behavior
-          mainApp.serverRespondWriteHead(request, response, null, {});
-          next(mainApp.errorDefault);
+          local.utility2.serverRespondWriteHead(request, response, null, {});
+          next(local.utility2.errorDefault);
           // test multiple-callback error handling behavior
-          next(mainApp.errorDefault);
+          next(local.utility2.errorDefault);
           // test onErrorDefault handling behavior
-          mainApp.testMock([
+          local.utility2.testMock([
             // suppress console.error
-            [console, { error: mainApp.nop }],
+            [console, { error: local.utility2.nop }],
             // suppress modeErrorIgnore
             [request, { url: '' }]
-          ], mainApp.nop, function (onError) {
-            mainApp.serverRespondDefault(request, response, 500, mainApp.errorDefault);
+          ], local.utility2.nop, function (onError) {
+            local.utility2.serverRespondDefault(request, response, 500, local.utility2.errorDefault);
             onError();
           });
           break;
@@ -242,25 +219,46 @@
     }].forEach(function (options) {
       console.log('auto-cache and auto-parse ' + options.file);
       // cache and parse the file
-      mainApp.fileCacheAndParse(options);
+      local.utility2.fileCacheAndParse(options);
       // if the file is modified, then re-cache and re-parse it
-      mainApp.onFileModifiedCacheAndParse(options);
+      local.utility2.onFileModifiedCacheAndParse(options);
     });
-    // watch the following files, and if they are modified, then re-jslint them
-    mainApp.fs.readdirSync(__dirname).forEach(function (file) {
-      switch (mainApp.path.extname(file)) {
+    local.utility2.fs.readdirSync(__dirname).forEach(function (file) {
+      file = __dirname + '/' + file;
+      switch (local.utility2.path.extname(file)) {
       case '.js':
       case '.json':
-        file = __dirname + '/' + file;
-        console.log('auto-jslint ' + file);
         // jslint the file
-        mainApp.jslint_lite.jslintAndPrint(mainApp.fs.readFileSync(file, 'utf8'), file);
-        // if the file is modified, then re-jslint it
-        mainApp.onFileModifiedJslint(file);
+        local.utility2.jslint_lite.jslintAndPrint(local.utility2.fs.readFileSync(file, 'utf8'), file);
         break;
       }
+      // if the file is modified, then restart the process
+      local.utility2.onFileModifiedRestart(file);
     });
     // init repl debugger
-    mainApp.replStart({ mainApp: mainApp });
+    local.utility2.replStart({ local: local });
+    break;
   }
-}());
+}((function () {
+  'use strict';
+  var local;
+  // init shared js-env
+  (function () {
+    // init local
+    local = {};
+    local.modeJs = (function () {
+      try {
+        return module.exports && typeof process.versions.node === 'string' &&
+          typeof require('child_process').spawn === 'function' && 'node';
+      } catch (errorCaughtNode) {
+        return typeof navigator.userAgent === 'string' &&
+          typeof document.querySelector('body') === 'object' && 'browser';
+      }
+    }());
+    // init global
+    local.global = local.modeJs === 'browser' ? window : global;
+    // export local
+    local.global.local = local;
+  }());
+  return local;
+}())));

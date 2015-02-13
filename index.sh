@@ -100,6 +100,7 @@ shBuildGithubUpload() {
   # if number of commits > 256, then squash HEAD to the earliest commit
   if [ $(git rev-list HEAD --count) -gt 256 ]
   then
+    git push git@github.com:$GITHUB_REPO.git gh-pages:gh-pages.backup || return $?
     shGitSquash $(git rev-list --max-parents=0 HEAD) || return $?
   fi
   # update gh-pages
@@ -110,8 +111,7 @@ shBuildPrint() {
   # this function prints debug info about the build state
   export MODE_BUILD=$1 || return $?
   local MESSAGE="$2" || return $?
-  printf "\n[MODE_BUILD=$MODE_BUILD] - $(shDateIso) - $MESSAGE\n\n"\
-    || return $?
+  printf "\n[MODE_BUILD=$MODE_BUILD] - $(shDateIso) - $MESSAGE\n\n" || return $?
 }
 
 shBuild() {
@@ -360,8 +360,8 @@ shNpmTestPublished() {
 }
 
 shRun() {
-  # this function runs the command $@ and restores $CWD on exit
-  # eval argv and auto-restart on exit, unless by exited by control-c
+  # this function will run the command $@ and restore $CWD on exit
+  # eval argv and auto-restart on non-zero exit, unless exited by SIGINT
   if [ "$npm_config_mode_auto_restart" ] && [ ! "$npm_config_mode_auto_restart_child" ]
   then
     export npm_config_mode_auto_restart_child=1
@@ -373,7 +373,15 @@ shRun() {
       # save $EXIT_CODE
       EXIT_CODE=$? || return $?
       printf "process exited with code $EXIT_CODE\n" || return $?
-      if [ "$EXIT_CODE" = 130 ] || [ "$EXIT_CODE" = 137 ] || [ "$EXIT_CODE" = 143 ]
+      # http://en.wikipedia.org/wiki/Unix_signal
+      # exit-code 0 - normal exit
+      if [ "$EXIT_CODE" = 0 ] || [ "$EXIT_CODE" = 128 ]\
+        # exit-code 2 - SIGINT
+        [ "$EXIT_CODE" = 2 ] || [ "$EXIT_CODE" = 130 ] ||\
+        # exit-code 9 - SIGKILL
+        [ "$EXIT_CODE" = 9 ] || [ "$EXIT_CODE" = 137 ] ||\
+        # exit-code 15 - SIGTERM
+        [ "$EXIT_CODE" = 15 ] || [ "$EXIT_CODE" = 143 ]
       then
         break || return $?
       fi
@@ -409,9 +417,9 @@ shRunScreenCapture() {
   if (convert -list font | grep "\bCourier\b" > /dev/null 2>&1) &&\
     (fold package.json > /dev/null 2>&1)
   then
-    # word-wrap $TMPDIR2/screen-capture.txt to 96 characters
+    # word-wrap $TMPDIR2/screen-capture.txt to 96 characters,
+    # and convert to png image
     fold -w 96 $TMPDIR2/screen-capture.txt |\
-      # convert $TMPDIR2/screen-capture.txt to png image
       convert -background gray25 -border 10 -bordercolor gray25\
       -depth 4\
       -fill palegreen -font Courier\
@@ -590,7 +598,7 @@ shTravisEncrypt() {
 }
 
 # if the first argument $1 is shRun, then run the command $@
-if [ "$1" = shRun ]
+if [ "$1" = shRun ] || [ "$1" = shRunScreenCapture ]
 then
   shInit && $@
 fi

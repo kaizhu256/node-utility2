@@ -238,11 +238,11 @@ tr:nth-child(odd).testReportPlatformTr {
 </head>
 <body>
   <!-- main app div begin -->
-  <div class="mainAppDiv">
+  <div class="utility2Div">
   <h1>{{envDict.PACKAGE_JSON_NAME}} [{{envDict.PACKAGE_JSON_VERSION}}]</h1>
   <h3>{{envDict.PACKAGE_JSON_DESCRIPTION}}</h3>
   <div><button
-    onclick="window.$$mainApp.modeTest=1; window.$$mainApp.testRun(window.$$mainApp.nop);"
+    onclick="window.utility2.modeTest=1; window.utility2.testRun(window.utility2.nop);"
   >run test</button></div>
   </div>
   <!-- main app div end -->
@@ -252,7 +252,7 @@ tr:nth-child(odd).testReportPlatformTr {
   </div>
   <!-- ajax progress bar end -->
   <!-- script begin -->
-  <script>window.$$mainApp = {{mainAppBrowserJson}}</script>
+  <script>window.utility2 = {{utility2BrowserJson}}</script>
   <script src="/assets/utility2.js"></script>
   <script src="/test/test.js"></script>
   <!-- script end -->
@@ -275,15 +275,15 @@ tr:nth-child(odd).testReportPlatformTr {
 <body>
   <script src="/assets/utility2.js"></script>
   <script>
-  (function (mainApp) {
+  (function () {
     'use strict';
-    if (mainApp.modeTest === 'phantom') {
+    if (window.utility2.modeTest === 'phantom') {
       throw new Error(JSON.stringify({ global_test_results: {
-        coverage: mainApp.__coverage__,
-        testReport: mainApp.testReport
+        coverage: utility2.__coverage__,
+        testReport: utility2.testReport
       } }));
     }
-  }($$mainApp));
+  }());
   </script>
 </body>
 </html>

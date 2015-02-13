@@ -11,7 +11,7 @@
     this function is the main module
   */
   'use strict';
-  var global, mainApp;
+  var global;
 
 
 
@@ -21,47 +21,44 @@
     */
     // init global
     global = local.global;
-    // init mainApp
-    mainApp = local.mainApp;
-    // init mainApp properties
-    mainApp.modeJs = local.modeJs;
-    mainApp.errorDefault = mainApp.errorDefault || new Error('default error');
-    mainApp.fileCacheDict = mainApp.fileCacheDict || {};
-    mainApp.testPlatform = { testCaseList: [] };
-    mainApp.testReport = mainApp.testReport || { testPlatformList: [mainApp.testPlatform] };
-    mainApp.textExampleAscii = mainApp.textExampleAscii ||
+    // init local properties
+    local.errorDefault = local.errorDefault || new Error('default error');
+    local.fileCacheDict = local.fileCacheDict || {};
+    local.testPlatform = { testCaseList: [] };
+    local.testReport = local.testReport || { testPlatformList: [local.testPlatform] };
+    local.textExampleAscii = local.textExampleAscii ||
       '\x00\x01\x02\x03\x04\x05\x06\x07\b\t\n\x0b\f\r\x0e\x0f' +
       '\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f' +
       ' !"#$%&\'()*+,-./0123456789:;<=>?' +
       '@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_' +
       '`abcdefghijklmnopqrstuvwxyz{|}~\x7f';
-    mainApp.timeoutDefault = mainApp.timeoutDefault || 30000;
-    mainApp.__coverage__ = mainApp.__coverage__ || global.__coverage__ || null;
+    local.timeoutDefault = local.timeoutDefault || 30000;
+    local.__coverage__ = local.__coverage__ || global.__coverage__ || null;
 
     local._ajax_default_test = function (onError) {
       /*
         this function tests ajax's default handling behavior
       */
       var onParallel;
-      onParallel = mainApp.onParallel(onError);
+      onParallel = local.onParallel(onError);
       onParallel.counter += 1;
       // test http GET handling behavior
       onParallel.counter += 1;
-      mainApp.ajax({ url: '/test/hello' }, function (error, data) {
-        mainApp.testTryCatch(function () {
+      local.ajax({ url: '/test/hello' }, function (error, data) {
+        local.testTryCatch(function () {
           // validate no error occurred
-          mainApp.assert(!error, error);
+          local.assert(!error, error);
           // validate data
-          mainApp.assert(data === 'hello', data);
+          local.assert(data === 'hello', data);
           onParallel();
         }, onParallel);
       });
       // test http POST handling behavior
       ['binary', 'text'].forEach(function (resultType) {
         onParallel.counter += 1;
-        mainApp.ajax({
+        local.ajax({
           // test binary post handling behavior
-          data: resultType === 'binary' && mainApp.modeJs === 'node' ? new Buffer('hello')
+          data: resultType === 'binary' && local.modeJs === 'node' ? new Buffer('hello')
             // test text post handling behavior
             : 'hello',
           // test request header handling behavior
@@ -70,16 +67,16 @@
           resultType: resultType,
           url: '/test/echo'
         }, function (error, data) {
-          mainApp.testTryCatch(function () {
+          local.testTryCatch(function () {
             // validate no error occurred
-            mainApp.assert(!error, error);
+            local.assert(!error, error);
             // validate binary data
-            if (resultType === 'binary' && mainApp.modeJs === 'node') {
-              mainApp.assert(Buffer.isBuffer(data), data);
+            if (resultType === 'binary' && local.modeJs === 'node') {
+              local.assert(Buffer.isBuffer(data), data);
               data = String(data);
             }
             // validate text data
-            mainApp.assert(data.indexOf('hello') >= 0, data);
+            local.assert(data.indexOf('hello') >= 0, data);
             onParallel();
           }, onParallel);
         });
@@ -96,10 +93,10 @@
         url: 'https://undefined' + Date.now() + Math.random() + '.com'
       }].forEach(function (options) {
         onParallel.counter += 1;
-        mainApp.ajax(options, function (error) {
-          mainApp.testTryCatch(function () {
+        local.ajax(options, function (error) {
+          local.testTryCatch(function () {
             // validate error occurred
-            mainApp.assert(error instanceof Error, error);
+            local.assert(error instanceof Error, error);
             onParallel();
           }, onParallel);
         });
@@ -107,7 +104,7 @@
       onParallel();
     };
 
-    mainApp.coverageMerge = function (coverage1, coverage2) {
+    local.coverageMerge = function (coverage1, coverage2) {
       /*
         this function merges coverage2 into coverage1
       */
@@ -146,7 +143,7 @@
       return coverage1;
     };
 
-    mainApp.assert = function (passed, message) {
+    local.assert = function (passed, message) {
       /*
         this function throws an error if the assertion fails
       */
@@ -155,7 +152,7 @@
           // if message is a string, then leave it as is
           typeof message === 'string' ? message
             // if message is an Error object, then get its stack-trace
-            : message instanceof Error ? mainApp.errorStack(message)
+            : message instanceof Error ? local.errorStack(message)
               // else JSON.stringify message
               : JSON.stringify(message)
         );
@@ -167,40 +164,40 @@
         this function tests assert's default handling behavior
       */
       // test assertion passed
-      mainApp.assert(true, true);
+      local.assert(true, true);
       // test assertion failed with undefined message
-      mainApp.testTryCatch(function () {
-        mainApp.assert(false);
+      local.testTryCatch(function () {
+        local.assert(false);
       }, function (error) {
         // validate error occurred
-        mainApp.assert(error instanceof Error, error);
+        local.assert(error instanceof Error, error);
         // validate error-message
-        mainApp.assert(error.message === '', error.message);
+        local.assert(error.message === '', error.message);
       });
       // test assertion failed with text message
-      mainApp.testTryCatch(function () {
-        mainApp.assert(false, '_assert_default_test');
+      local.testTryCatch(function () {
+        local.assert(false, '_assert_default_test');
       }, function (error) {
         // validate error occurred
-        mainApp.assert(error instanceof Error, error);
+        local.assert(error instanceof Error, error);
         // validate error-message
-        mainApp.assert(error.message === '_assert_default_test', error.message);
+        local.assert(error.message === '_assert_default_test', error.message);
       });
       // test assertion failed with error object
-      mainApp.testTryCatch(function () {
-        mainApp.assert(false, mainApp.errorDefault);
+      local.testTryCatch(function () {
+        local.assert(false, local.errorDefault);
       }, function (error) {
         // validate error occurred
-        mainApp.assert(error instanceof Error, error);
+        local.assert(error instanceof Error, error);
       });
       // test assertion failed with json object
-      mainApp.testTryCatch(function () {
-        mainApp.assert(false, { aa: 1 });
+      local.testTryCatch(function () {
+        local.assert(false, { aa: 1 });
       }, function (error) {
         // validate error occurred
-        mainApp.assert(error instanceof Error, error);
+        local.assert(error instanceof Error, error);
         // validate error-message
-        mainApp.assert(error.message === '{"aa":1}', error.message);
+        local.assert(error.message === '{"aa":1}', error.message);
       });
       onError();
     };
@@ -211,7 +208,7 @@
         and jslint will nag you to remove it if used
       */
       // debug arguments
-      mainApp[['debug', 'PrintArguments'].join('')] = arguments;
+      local[['debug', 'PrintArguments'].join('')] = arguments;
       console.error('\n\n\ndebug' + 'Print');
       console.error.apply(console, arguments);
       console.error();
@@ -224,7 +221,7 @@
         this function tests _debug_print's default handling behavior
       */
       var message;
-      mainApp.testMock([
+      local.testMock([
         // suppress console.error
         [console, { error: function (arg) {
           message += (arg || '') + '\n';
@@ -233,7 +230,7 @@
         message = '';
         local._debug_print('__debug_print_default_test');
         // validate message
-        mainApp.assert(
+        local.assert(
           message === '\n\n\ndebug' + 'Print\n__debug_print_default_test\n\n',
           message
         );
@@ -241,7 +238,7 @@
       });
     };
 
-    mainApp.errorStack = function (error) {
+    local.errorStack = function (error) {
       /*
         this function returns the error's stack-trace
       */
@@ -255,7 +252,7 @@
       return error.stack;
     };
 
-    mainApp.jsonCopy = function (value) {
+    local.jsonCopy = function (value) {
       /*
         this function returns a deep-copy of the JSON value
       */
@@ -268,12 +265,12 @@
       */
       // test various data-type handling behavior
       [undefined, null, false, true, 0, 1, 1.5, 'a'].forEach(function (data) {
-        mainApp.assert(mainApp.jsonCopy(data) === data, [mainApp.jsonCopy(data), data]);
+        local.assert(local.jsonCopy(data) === data, [local.jsonCopy(data), data]);
       });
       onError();
     };
 
-    mainApp.jsonStringifyOrdered = function (value, replacer, space) {
+    local.jsonStringifyOrdered = function (value, replacer, space) {
       /*
         this function JSON.stringify's the value with dictionaries in sorted order,
         allowing reliable / reproducible string comparisons and tests
@@ -312,40 +309,40 @@
       var data;
       // test various data-type handling behavior
       [undefined, null, false, true, 0, 1, 1.5, 'a', {}, []].forEach(function (data) {
-        mainApp.assert(
-          mainApp.jsonStringifyOrdered(data) === JSON.stringify(data),
-          [mainApp.jsonStringifyOrdered(data), JSON.stringify(data)]
+        local.assert(
+          local.jsonStringifyOrdered(data) === JSON.stringify(data),
+          [local.jsonStringifyOrdered(data), JSON.stringify(data)]
         );
       });
       // test data-ordering handling behavior
-      data = mainApp.jsonStringifyOrdered({
+      data = local.jsonStringifyOrdered({
         // test nested dict handling behavior
         ee: { gg: 2, ff: 1},
         // test array handling behavior
         dd: [undefined],
-        cc: mainApp.nop,
+        cc: local.nop,
         bb: 2,
         aa: 1
       });
-      mainApp.assert(data === '{"aa":1,"bb":2,"dd":[null],"ee":{"ff":1,"gg":2}}', data);
+      local.assert(data === '{"aa":1,"bb":2,"dd":[null],"ee":{"ff":1,"gg":2}}', data);
       onError();
     };
 
-    mainApp.nop = function () {
+    local.nop = function () {
       /*
         this function performs no operation - nop
       */
       return;
     };
 
-    mainApp.onErrorDefault = function (error) {
+    local.onErrorDefault = function (error) {
       /*
         this function provides a default error handling callback,
         which simply prints the error stack or message to stderr
       */
       // if error is defined, then print the error stack
       if (error) {
-        console.error('\nonErrorDefault - error\n' + mainApp.errorStack(error) + '\n');
+        console.error('\nonErrorDefault - error\n' + local.errorStack(error) + '\n');
       }
     };
 
@@ -354,32 +351,32 @@
         this function tests onErrorDefault's default handling behavior
       */
       var message;
-      mainApp.testMock([
+      local.testMock([
         // suppress console.error
         [console, { error: function (arg) {
           message = arg;
         } }]
       ], onError, function (onError) {
         // test no error handling behavior
-        mainApp.onErrorDefault();
+        local.onErrorDefault();
         // validate message
-        mainApp.assert(!message, message);
+        local.assert(!message, message);
         // test error handling behavior
-        mainApp.onErrorDefault(mainApp.errorDefault);
+        local.onErrorDefault(local.errorDefault);
         // validate message
-        mainApp.assert(message, message);
+        local.assert(message, message);
         onError();
       });
     };
 
-    mainApp.onParallel = function (onError, onDebug) {
+    local.onParallel = function (onError, onDebug) {
       /*
         this function returns another function that runs async tasks in parallel,
         and calls onError only if there's an error, or if its counter === 0
       */
       var errorStack, self;
-      errorStack = mainApp.errorStack();
-      onDebug = onDebug || mainApp.nop;
+      errorStack = local.errorStack();
+      onDebug = onDebug || local.nop;
       self = function (error) {
         onDebug(error, self);
         // if counter === 0 or error already occurred, then return
@@ -392,7 +389,7 @@
           // ensure counter will decrement to 0
           self.counter = 1;
           // append errorStack to error.stack
-          error.stack = mainApp.errorStack(error) + '\n' + errorStack;
+          error.stack = local.errorStack(error) + '\n' + errorStack;
         }
         // decrement counter
         self.counter -= 1;
@@ -413,28 +410,28 @@
       */
       var onParallel, onParallelError;
       // test onDebug handling behavior
-      onParallel = mainApp.onParallel(onError, function (error, self) {
-        mainApp.testTryCatch(function () {
+      onParallel = local.onParallel(onError, function (error, self) {
+        local.testTryCatch(function () {
           // validate no error occurred
-          mainApp.assert(!error, error);
+          local.assert(!error, error);
           // validate self
-          mainApp.assert(self.counter >= 0, self);
+          local.assert(self.counter >= 0, self);
         }, onError);
       });
       onParallel.counter += 1;
       onParallel.counter += 1;
       setTimeout(function () {
-        onParallelError = mainApp.onParallel(function (error) {
-          mainApp.testTryCatch(function () {
+        onParallelError = local.onParallel(function (error) {
+          local.testTryCatch(function () {
             // validate error occurred
-            mainApp.assert(error instanceof Error, error);
+            local.assert(error instanceof Error, error);
             onParallel();
           }, onParallel);
         });
         onParallelError.counter += 1;
         // test error handling behavior
         onParallelError.counter += 1;
-        onParallelError(mainApp.errorDefault);
+        onParallelError(local.errorDefault);
         // test ignore-after-error handling behavior
         onParallelError();
       });
@@ -442,14 +439,14 @@
       onParallel();
     };
 
-    mainApp.onTimeout = function (onError, timeout, message) {
+    local.onTimeout = function (onError, timeout, message) {
       /*
         this function creates a timer that passes a timeout error to onError,
         when the specified timeout has passed
       */
       var error;
       // validate timeout is an integer in the exclusive range 0 to Infinity
-      mainApp.assert(
+      local.assert(
         (timeout | 0) === timeout && 0 < timeout && timeout < Infinity,
         'invalid timeout ' + timeout
       );
@@ -467,23 +464,23 @@
       */
       var timeElapsed;
       timeElapsed = Date.now();
-      mainApp.onTimeout(function (error) {
-        mainApp.testTryCatch(function () {
+      local.onTimeout(function (error) {
+        local.testTryCatch(function () {
           // validate error occurred
-          mainApp.assert(error instanceof Error);
+          local.assert(error instanceof Error);
           // save timeElapsed
           timeElapsed = Date.now() - timeElapsed;
           // validate timeElapsed passed is greater than timeout
           // bug - ie might timeout slightly earlier,
           // so increase timeElapsed by a small amount
-          mainApp.assert(timeElapsed + 100 >= 1000, timeElapsed);
+          local.assert(timeElapsed + 100 >= 1000, timeElapsed);
           onError();
         }, onError);
       // coverage - use 1500 ms to cover setInterval test-report refreshes in browser
       }, 1500, '_onTimeout_errorTimeout_test');
     };
 
-    mainApp.setDefault = function (options, depth, defaults) {
+    local.setDefault = function (options, depth, defaults) {
       /*
         this function recursively sets default values
         for unset leaf nodes in the options object
@@ -503,7 +500,7 @@
         if (depth !== 0 &&
             defaults2 && typeof defaults2 === 'object' && !Array.isArray(defaults2) &&
             options2 && typeof options2 === 'object' && !Array.isArray(options2)) {
-          mainApp.setDefault(options2, depth, defaults2);
+          local.setDefault(options2, depth, defaults2);
         }
       });
       return options;
@@ -515,31 +512,31 @@
       */
       var options;
       // test non-recursive handling behavior
-      options = mainApp.setDefault(
+      options = local.setDefault(
         { aa: 1, bb: {}, cc: [] },
         1,
         { aa: 2, bb: { cc: 2 }, cc: [1, 2] }
       );
       // validate options
-      mainApp.assert(
-        mainApp.jsonStringifyOrdered(options) === '{"aa":1,"bb":{},"cc":[]}',
+      local.assert(
+        local.jsonStringifyOrdered(options) === '{"aa":1,"bb":{},"cc":[]}',
         options
       );
       // test recursive handling behavior
-      options = mainApp.setDefault(
+      options = local.setDefault(
         { aa: 1, bb: {}, cc: [] },
         -1,
         { aa: 2, bb: { cc: 2 }, cc: [1, 2] }
       );
       // validate options
-      mainApp.assert(
-        mainApp.jsonStringifyOrdered(options) === '{"aa":1,"bb":{"cc":2},"cc":[]}',
+      local.assert(
+        local.jsonStringifyOrdered(options) === '{"aa":1,"bb":{"cc":2},"cc":[]}',
         options
       );
       onError();
     };
 
-    mainApp.setOverride = function (options, depth, override, backup) {
+    local.setOverride = function (options, depth, override, backup) {
       /*
         this function recursively overrides the options object with the override object,
         and optionally saves the original options object a backup object,
@@ -559,12 +556,12 @@
           // 1. save the options item to the backup object
           backup[key] = options2;
           // 2. set the override item to the options object
-          // if options is mainApp.envDict, then override falsey values with empty string
-          options[key] = options === mainApp.envDict ? override2 || '' : override2;
+          // if options is local.envDict, then override falsey values with empty string
+          options[key] = options === local.envDict ? override2 || '' : override2;
           return;
         }
         // 3. recurse options[key] and override[key]
-        mainApp.setOverride(options2, depth, override2, override2, backup);
+        local.setOverride(options2, depth, override2, override2, backup);
       });
       return options;
     };
@@ -576,7 +573,7 @@
       var backup, data, options;
       backup = {};
       // test override handling behavior
-      options = mainApp.setOverride(
+      options = local.setOverride(
         { aa: 1, bb: { cc: 2 }, dd: [3, 4], ee: { ff: { gg: 5, hh: 6 } } },
         // test depth handling behavior
         2,
@@ -585,40 +582,40 @@
         backup
       );
       // validate backup
-      data = mainApp.jsonStringifyOrdered(backup);
-      mainApp.assert(data ===
+      data = local.jsonStringifyOrdered(backup);
+      local.assert(data ===
         '{"aa":1,"bb":{},"dd":[3,4],"ee":{"ff":{"gg":5,"hh":6}}}', data);
       // validate options
-      data = mainApp.jsonStringifyOrdered(options);
-      mainApp.assert(data ===
+      data = local.jsonStringifyOrdered(options);
+      local.assert(data ===
         '{"aa":2,"bb":{"cc":2,"dd":3},"dd":[4,5],"ee":{"ff":{"gg":6}}}', data);
       // test restore options from backup handling behavior
-      mainApp.setOverride(options, -1, backup);
+      local.setOverride(options, -1, backup);
       // validate backup
-      data = mainApp.jsonStringifyOrdered(backup);
-      mainApp.assert(data ===
+      data = local.jsonStringifyOrdered(backup);
+      local.assert(data ===
         '{"aa":1,"bb":{"dd":3},"dd":[3,4],"ee":{"ff":{"gg":6}}}', data);
       // validate options
-      data = mainApp.jsonStringifyOrdered(options);
-      mainApp.assert(data ===
+      data = local.jsonStringifyOrdered(options);
+      local.assert(data ===
         '{"aa":1,"bb":{"cc":2},"dd":[3,4],"ee":{"ff":{"gg":5,"hh":6}}}', data);
       onError();
     };
 
-    mainApp.testCaseAdd = function (testCaseDict) {
+    local.testCaseAdd = function (testCaseDict) {
       /*
-        this function adds test-case's from testCaseDict into mainApp.testPlatform.testCaseList
+        this function adds test-case's from testCaseDict into local.testPlatform.testCaseList
       */
-      // init mainApp.modeTestCase
-      mainApp.modeTestCase = mainApp.modeTestCase || mainApp.envDict.npm_config_mode_test_case;
+      // init local.modeTestCase
+      local.modeTestCase = local.modeTestCase || local.envDict.npm_config_mode_test_case;
       Object.keys(testCaseDict).forEach(function (key) {
-        // add test-case testCaseDict[key] to mainApp.testPlatform.testCaseList
+        // add test-case testCaseDict[key] to local.testPlatform.testCaseList
         if (key.slice(-5) === '_test' &&
             (testCaseDict._testPrefix + '.')
-              .indexOf(mainApp.envDict.PACKAGE_JSON_NAME + '.') === 0 &&
-            (mainApp.modeTestCase === key ||
-              (!mainApp.modeTestCase && key !== '_testRun_failure_test'))) {
-          mainApp.testPlatform.testCaseList.push({
+              .indexOf(local.envDict.PACKAGE_JSON_NAME + '.') === 0 &&
+            (local.modeTestCase === key ||
+              (!local.modeTestCase && key !== '_testRun_failure_test'))) {
+          local.testPlatform.testCaseList.push({
             name: testCaseDict._testPrefix + '.' + key,
             onTestCase: testCaseDict[key]
           });
@@ -626,9 +623,9 @@
       });
     };
 
-    mainApp.testMock = function (mockList, onError, testCase) {
+    local.testMock = function (mockList, onError, testCase) {
       /*
-        this function mocks the mainApp given in the mockList while running the testCase
+        this function mocks the local given in the mockList while running the testCase
       */
       var callCallback, onError2;
       callCallback = function (callback) {
@@ -637,38 +634,38 @@
         */
         callback();
         // return a mock timer object with the unref method
-        return { unref: mainApp.nop };
+        return { unref: local.nop };
       };
       // prepend mandatory mocks for async / unsafe functions
       mockList = [
         // suppress console.log
-        [console, { log: mainApp.nop }],
+        [console, { log: local.nop }],
         // enforce synchronicity by mocking timers as callCallback
         [global, { setInterval: callCallback, setTimeout: callCallback }],
-        [global.process || {}, { exit: mainApp.nop }]
+        [global.process || {}, { exit: local.nop }]
       ].concat(mockList);
       onError2 = function (error) {
         // restore mock[0] from mock[2]
         mockList.reverse().forEach(function (mock) {
-          mainApp.setOverride(mock[0], 1, mock[2], null);
+          local.setOverride(mock[0], 1, mock[2], null);
         });
         onError(error);
       };
-      // run onError callback in mocked mainApp in a try-catch block
-      mainApp.testTryCatch(function () {
-        // mock mainApp
+      // run onError callback in mocked local in a try-catch block
+      local.testTryCatch(function () {
+        // mock local
         mockList.forEach(function (mock) {
           mock[2] = {};
           // backup mock[0] into mock[2]
           // override mock[0] with mock[1]
-          mainApp.setOverride(mock[0], 1, mock[1], mock[2]);
+          local.setOverride(mock[0], 1, mock[1], mock[2]);
         });
         // run testCase
         testCase(onError2);
       }, onError2);
     };
 
-    mainApp.testMerge = function (testReport1, testReport2) {
+    local.testMerge = function (testReport1, testReport2) {
       /*
         this function will
         1. merge testReport2 into testReport1
@@ -678,59 +675,59 @@
       // 1. merge testReport2 into testReport1
       [testReport1, testReport2].forEach(function (testReport, ii) {
         ii += 1;
-        mainApp.setDefault(testReport, -1, {
+        local.setDefault(testReport, -1, {
           date: new Date().toISOString(),
           errorStackList: [],
           testPlatformList: [],
           timeElapsed: 0
         });
         // security - handle malformed testReport
-        mainApp.assert(
+        local.assert(
           testReport && typeof testReport === 'object',
           ii + ' invalid testReport ' + typeof testReport
         );
-        mainApp.assert(
+        local.assert(
           typeof testReport.timeElapsed === 'number',
           ii + ' invalid testReport.timeElapsed ' + typeof testReport.timeElapsed
         );
         // security - handle malformed testReport.testPlatformList
         testReport.testPlatformList.forEach(function (testPlatform) {
-          mainApp.setDefault(testPlatform, -1, {
+          local.setDefault(testPlatform, -1, {
             name: 'undefined',
             testCaseList: [],
             timeElapsed: 0
           });
-          mainApp.assert(
+          local.assert(
             typeof testPlatform.name === 'string',
             ii + ' invalid testPlatform.name ' + typeof testPlatform.name
           );
           // insert $MODE_BUILD into testPlatform.name
-          if (mainApp.envDict.MODE_BUILD) {
+          if (local.envDict.MODE_BUILD) {
             testPlatform.name = testPlatform.name.replace(
               (/^(browser|node|phantom|slimer)\b/),
-              mainApp.envDict.MODE_BUILD + ' - $1'
+              local.envDict.MODE_BUILD + ' - $1'
             );
           }
-          mainApp.assert(
+          local.assert(
             typeof testPlatform.timeElapsed === 'number',
             ii + ' invalid testPlatform.timeElapsed ' + typeof testPlatform.timeElapsed
           );
           // security - handle malformed testReport.testPlatformList.testCaseList
           testPlatform.testCaseList.forEach(function (testCase) {
-            mainApp.setDefault(testCase, -1, {
+            local.setDefault(testCase, -1, {
               errorStack: '',
               name: 'undefined',
               timeElapsed: 0
             });
-            mainApp.assert(
+            local.assert(
               typeof testCase.errorStack === 'string',
               ii + ' invalid testCase.errorStack ' + typeof testCase.errorStack
             );
-            mainApp.assert(
+            local.assert(
               typeof testCase.name === 'string',
               ii + ' invalid testCase.name ' + typeof testCase.name
             );
-            mainApp.assert(
+            local.assert(
               typeof testCase.timeElapsed === 'number',
               ii + ' invalid testCase.timeElapsed ' + typeof testCase.timeElapsed
             );
@@ -795,7 +792,7 @@
       }
       // 2. return testReport1 in html-format
       // json-copy testReport, which will be modified for html templating
-      testReport = mainApp.jsonCopy(testReport1);
+      testReport = local.jsonCopy(testReport1);
       // update timeElapsed
       local._timeElapsedStop(testReport);
       testReport.testPlatformList.forEach(function (testPlatform) {
@@ -810,19 +807,19 @@
       });
       // create html test-report
       testCaseNumber = 0;
-      return mainApp.textFormat(
-        mainApp.fileCacheDict['/test/test-report.html.template'].data,
-        mainApp.setOverride(testReport, -1, {
+      return local.textFormat(
+        local.fileCacheDict['/test/test-report.html.template'].data,
+        local.setOverride(testReport, -1, {
           // security - sanitize '<' in text
-          CI_COMMIT_INFO: String(mainApp.envDict.CI_COMMIT_INFO).replace((/</g), '&lt;'),
-          envDict: mainApp.envDict,
+          CI_COMMIT_INFO: String(local.envDict.CI_COMMIT_INFO).replace((/</g), '&lt;'),
+          envDict: local.envDict,
           // map testPlatformList
           testPlatformList: testReport.testPlatformList.filter(function (testPlatform) {
             // if testPlatform has no tests, then filter it out
             return testPlatform.testCaseList.length;
           }).map(function (testPlatform, ii) {
             errorStackList = [];
-            return mainApp.setOverride(testPlatform, -1, {
+            return local.setOverride(testPlatform, -1, {
               errorStackList: errorStackList,
               // security - sanitize '<' in text
               name: String(testPlatform.name).replace((/</g), '&lt;'),
@@ -842,7 +839,7 @@
                       // security - sanitize '<' in text
                       .replace((/</g), '&lt;') });
                 }
-                return mainApp.setOverride(testCase, -1, {
+                return local.setOverride(testCase, -1, {
                   testCaseNumber: testCaseNumber,
                   testReportTestStatusClass: 'testReportTest' +
                     testCase.status[0].toUpperCase() + testCase.status.slice(1)
@@ -860,33 +857,33 @@
       );
     };
 
-    mainApp.testRun = function (onTestRunEnd) {
+    local.testRun = function (onTestRunEnd) {
       /*
-        this function runs the tests in mainApp.testPlatform.testCaseList
+        this function runs the tests in local.testPlatform.testCaseList
       */
       var onParallel, testPlatform, timerInterval;
-      mainApp.modeTest = mainApp.modeTest || mainApp.envDict.npm_config_mode_npm_test;
-      if (!mainApp.modeTest) {
+      local.modeTest = local.modeTest || local.envDict.npm_config_mode_npm_test;
+      if (!local.modeTest) {
         return;
       }
       // if in browser mode, visually refresh test progress until it finishes
-      if (mainApp.modeJs === 'browser') {
-        // init mainApp._testReportDiv element
-        mainApp._testReportDiv = document.createElement('div');
-        mainApp._testReportDiv.innerHTML = mainApp.testMerge(mainApp.testReport, {});
-        document.body.appendChild(mainApp._testReportDiv);
+      if (local.modeJs === 'browser') {
+        // init local._testReportDiv element
+        local._testReportDiv = document.createElement('div');
+        local._testReportDiv.innerHTML = local.testMerge(local.testReport, {});
+        document.body.appendChild(local._testReportDiv);
         // update test-report status every 1000 ms until finished
         timerInterval = setInterval(function () {
-          // update mainApp._testReportDiv in browser
-          mainApp._testReportDiv.innerHTML =
-            mainApp.testMerge(mainApp.testReport, {});
-          if (mainApp.testReport.testsPending === 0) {
+          // update local._testReportDiv in browser
+          local._testReportDiv.innerHTML =
+            local.testMerge(local.testReport, {});
+          if (local.testReport.testsPending === 0) {
             // cleanup timerInterval
             clearInterval(timerInterval);
           }
         }, 1000);
       }
-      onParallel = mainApp.onParallel(function () {
+      onParallel = local.onParallel(function () {
         /*
           this function create the test-report after all tests have finished
         */
@@ -894,11 +891,11 @@
         // init new-line separator
         separator = new Array(56).join('-');
         // init testReport
-        testReport = mainApp.testReport;
+        testReport = local.testReport;
         // stop testPlatform timer
         local._timeElapsedStop(testPlatform);
         // create testReportHtml
-        testReportHtml = mainApp.testMerge(testReport, {});
+        testReportHtml = local.testMerge(testReport, {});
         // print test-report summary
         console.log('\n' + separator + '\n' +
           testReport.testPlatformList.map(function (testPlatform) {
@@ -908,21 +905,21 @@
               ('        ' + testPlatform.testsPassed + ' passed ').slice(-16) +
               '     |\n' + separator;
           }).join('\n') + '\n');
-        switch (mainApp.modeJs) {
+        switch (local.modeJs) {
         case 'browser':
           // notify saucelabs of test results
           // https://docs.saucelabs.com/reference/rest-api/#js-unit-testing
           global.global_test_results = {
-            coverage: mainApp.__coverage__,
-            failed: mainApp.testReport.testsFailed,
-            testReport: mainApp.testReport
+            coverage: local.__coverage__,
+            failed: local.testReport.testsFailed,
+            testReport: local.testReport
           };
           setTimeout(function () {
             // call callback with number of tests failed
-            onTestRunEnd(mainApp.testReport.testsFailed);
+            onTestRunEnd(local.testReport.testsFailed);
             // throw global_test_results as an error,
             // so it can be caught and passed to the phantom js-env
-            if (mainApp.modeTest === 'phantom') {
+            if (local.modeTest === 'phantom') {
               throw new Error(JSON.stringify({
                 global_test_results: global.global_test_results
               }));
@@ -931,26 +928,26 @@
           break;
         case 'node':
           // create build badge
-          mainApp.fs.writeFileSync(
+          local.fs.writeFileSync(
             process.cwd() + '/.tmp/build/build.badge.svg',
-            mainApp.fileCacheDict['.tmp/build/build.badge.svg'].data
+            local.fileCacheDict['.tmp/build/build.badge.svg'].data
               // edit branch name
               .replace(
                 (/0000 00 00 00 00 00/g),
                 new Date().toISOString().slice(0, 19).replace('T', ' ')
               )
               // edit branch name
-              .replace((/- master -/g), '| ' + mainApp.envDict.CI_BRANCH + ' |')
+              .replace((/- master -/g), '| ' + local.envDict.CI_BRANCH + ' |')
               // edit commit id
               .replace(
                 (/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/g),
-                mainApp.envDict.CI_COMMIT_ID
+                local.envDict.CI_COMMIT_ID
               )
           );
           // create test-report.badge.svg
-          mainApp.fs.writeFileSync(
+          local.fs.writeFileSync(
             process.cwd() + '/.tmp/build/test-report.badge.svg',
-            mainApp.fileCacheDict['.tmp/build/test-report.badge.svg'].data
+            local.fileCacheDict['.tmp/build/test-report.badge.svg'].data
               // edit number of tests failed
               .replace((/999/g), testReport.testsFailed)
               // edit badge color
@@ -961,37 +958,37 @@
               )
           );
           // create test-report.html
-          mainApp.fs.writeFileSync(
+          local.fs.writeFileSync(
             process.cwd() + '/.tmp/build/test-report.html',
             testReportHtml
           );
           // create test-report.json
-          mainApp.fs.writeFileSync(
+          local.fs.writeFileSync(
             process.cwd() + '/.tmp/build/test-report.json',
-            JSON.stringify(mainApp.testReport)
+            JSON.stringify(local.testReport)
           );
           // if any test failed, then exit with non-zero exit-code
           setTimeout(function () {
-            // finalize mainApp.testReport
-            mainApp.testMerge(testReport, {});
-            console.log('\n' + mainApp.envDict.MODE_BUILD + ' - ' +
-              mainApp.testReport.testsFailed + ' failed tests\n');
+            // finalize local.testReport
+            local.testMerge(testReport, {});
+            console.log('\n' + local.envDict.MODE_BUILD + ' - ' +
+              local.testReport.testsFailed + ' failed tests\n');
             // call callback with number of tests failed
-            onTestRunEnd(mainApp.testReport.testsFailed);
+            onTestRunEnd(local.testReport.testsFailed);
           }, 1000);
           break;
         default:
           setTimeout(function () {
             // call callback with number of tests failed
-            onTestRunEnd(mainApp.testReport.testsFailed);
+            onTestRunEnd(local.testReport.testsFailed);
           }, 1000);
         }
       });
       onParallel.counter += 1;
       // init testReport timer
-      mainApp.testReport.timeElapsed = Date.now();
+      local.testReport.timeElapsed = Date.now();
       // init testPlatform
-      testPlatform = mainApp.testPlatform;
+      testPlatform = local.testPlatform;
       // init testPlatform timer
       testPlatform.timeElapsed = Date.now();
       // bug - use shallow copy of testPlatform.testCaseList,
@@ -1007,10 +1004,10 @@
           // if error occurred, then fail testCase
           if (error) {
             console.error('\ntestCase ' + testCase.name + ' failed\n' +
-              mainApp.errorStack(error));
-            testCase.errorStack = testCase.errorStack || mainApp.errorStack(error);
+              local.errorStack(error));
+            testCase.errorStack = testCase.errorStack || local.errorStack(error);
             // validate errorStack is non-empty
-            mainApp.assert(testCase.errorStack, 'invalid errorStack ' + testCase.errorStack);
+            local.assert(testCase.errorStack, 'invalid errorStack ' + testCase.errorStack);
           }
           // if testCase already finished, then do not run finish code again
           if (finished) {
@@ -1042,14 +1039,14 @@
         this function test testRun's failure handling behavior
       */
       // test failure from callback handling behavior
-      onError(mainApp.errorDefault);
+      onError(local.errorDefault);
       // test failure from multiple-callback handling behavior
       onError();
       // test failure from thrown error handling behavior
-      throw mainApp.errorDefault;
+      throw local.errorDefault;
     };
 
-    mainApp.testTryCatch = function (callback, onError) {
+    local.testTryCatch = function (callback, onError) {
       /*
         this function calls the callback in a try-catch block,
         and passes any caught errors to onError
@@ -1061,7 +1058,7 @@
       }
     };
 
-    mainApp.textFormat = function (template, dict, valueDefault) {
+    local.textFormat = function (template, dict, valueDefault) {
       /*
         this function replaces the keys in given text template
         with the key / value pairs provided by the dict
@@ -1070,10 +1067,10 @@
       dict = dict || {};
       replace = function (match0, fragment) {
         // nop hack to pass jslint
-        mainApp.nop(match0);
+        local.nop(match0);
         return dict[match].map(function (dict) {
           // recursively format the array fragment
-          return mainApp.textFormat(fragment, dict, valueDefault);
+          return local.textFormat(fragment, dict, valueDefault);
         }).join('');
       };
       rgx = (/\{\{#[^{]+\}\}/g);
@@ -1109,10 +1106,10 @@
       */
       var data;
       // test undefined valueDefault handling behavior
-      data = mainApp.textFormat('{{aa}}', {}, undefined);
-      mainApp.assert(data === '{{aa}}', data);
+      data = local.textFormat('{{aa}}', {}, undefined);
+      local.assert(data === '{{aa}}', data);
       // test default handling behavior
-      data = mainApp.textFormat('{{aa}}{{aa}}{{bb}}{{cc}}{{dd}}{{ee.ff}}', {
+      data = local.textFormat('{{aa}}{{aa}}{{bb}}{{cc}}{{dd}}{{ee.ff}}', {
         // test string value handling behavior
         aa: 'aa',
         // test non-string value handling behavior
@@ -1124,9 +1121,9 @@
         // test nested value handling behavior
         ee: { ff: 'gg' }
       }, '<undefined>');
-      mainApp.assert(data === 'aaaa1null<undefined>gg', data);
+      local.assert(data === 'aaaa1null<undefined>gg', data);
       // test list handling behavior
-      data = mainApp.textFormat('[{{#list1}}[{{#list2}}{{aa}},{{/list2}}],{{/list1}}]', {
+      data = local.textFormat('[{{#list1}}[{{#list2}}{{aa}},{{/list2}}],{{/list1}}]', {
         list1: [
           // test null-value handling behavior
           null,
@@ -1134,7 +1131,7 @@
           { list2: [{ aa: 'bb' }, { aa: 'cc' }] }
         ]
       }, '<undefined>');
-      mainApp.assert(data === '[[<undefined><undefined>,<undefined>],[bb,cc,],]', data);
+      local.assert(data === '[[<undefined><undefined>,<undefined>],[bb,cc,],]', data);
       onError();
     };
 
@@ -1154,16 +1151,16 @@
     /*
       this function runs browser js-env code
     */
-    if (mainApp.modeJs !== 'browser') {
+    if (local.modeJs !== 'browser') {
       return;
     }
 
-    mainApp.ajax = function (options, onError) {
+    local.ajax = function (options, onError) {
       /*
         this functions performs a brower ajax request with error handling and timeout
       */
       var data, error, errorStack, finished, ii, onEvent, timerTimeout, xhr;
-      errorStack = mainApp.errorStack();
+      errorStack = local.errorStack();
       // init event-handling
       onEvent = function (event) {
         switch (event.type) {
@@ -1173,12 +1170,12 @@
           // cleanup timerTimeout
           clearTimeout(timerTimeout);
           // validate finished is falsey
-          mainApp.assert(!finished, finished);
+          local.assert(!finished, finished);
           // set finished to true
           finished = true;
           // validate xhr is defined in local._ajaxProgressList
           ii = local._ajaxProgressList.indexOf(xhr);
-          mainApp.assert(ii >= 0, 'missing xhr in local._ajaxProgressList');
+          local.assert(ii >= 0, 'missing xhr in local._ajaxProgressList');
           // remove xhr from ajaxProgressList
           local._ajaxProgressList.splice(ii, 1);
           // handle abort or error event
@@ -1198,7 +1195,7 @@
               // debug status code
               error.statusCode = xhr.status;
               // append errorStack to error.stack
-              error.stack = mainApp.errorStack(error) + '\n' + errorStack;
+              error.stack = local.errorStack(error) + '\n' + errorStack;
             }
           }
           // hide _ajaxProgressDiv
@@ -1225,7 +1222,7 @@
       // init xhr
       xhr = new XMLHttpRequest();
       // debug xhr
-      mainApp._debugXhr = xhr;
+      local._debugXhr = xhr;
       // init event-handling
       xhr.addEventListener('abort', onEvent);
       xhr.addEventListener('error', onEvent);
@@ -1234,10 +1231,10 @@
       xhr.addEventListener('progress', local._ajaxProgressIncrement);
       xhr.upload.addEventListener('progress', local._ajaxProgressIncrement);
       // set timerTimeout
-      timerTimeout = mainApp.onTimeout(function (errorTimeout) {
+      timerTimeout = local.onTimeout(function (errorTimeout) {
         error = errorTimeout;
         xhr.abort();
-      }, options.timeout || mainApp.timeoutDefault, 'ajax');
+      }, options.timeout || local.timeoutDefault, 'ajax');
       // if ajaxProgressBar is hidden, then display it
       if (local._ajaxProgressList.length === 0) {
         local._ajaxProgressDiv.style.display = 'block';
@@ -1300,11 +1297,11 @@
     /*
       this function runs node js-env code
     */
-    if (mainApp.modeJs !== 'node') {
+    if (local.modeJs !== 'node') {
       return;
     }
 
-    mainApp.ajax = function (options, onError) {
+    local.ajax = function (options, onError) {
       /*
         this functions runs a node http request with error handling and timeout
       */
@@ -1317,27 +1314,27 @@
         responseText,
         timerTimeout,
         urlParsed;
-      errorStack = mainApp.errorStack();
+      errorStack = local.errorStack();
       modeIo = 0;
       onIo = function (error, data) {
         modeIo = error instanceof Error ? NaN : modeIo + 1;
         switch (modeIo) {
         case 1:
           // set timerTimeout
-          timerTimeout = mainApp.onTimeout(
+          timerTimeout = local.onTimeout(
             onIo,
-            options.timeout || mainApp.timeoutDefault,
+            options.timeout || local.timeoutDefault,
             'ajax ' + options.url
           );
           // init request and response
-          request = response = { destroy: mainApp.nop };
+          request = response = { destroy: local.nop };
           // handle implicit localhost
           if (options.url[0] === '/') {
-            options.url = 'http://localhost:' + mainApp.envDict.npm_config_server_port +
+            options.url = 'http://localhost:' + local.envDict.npm_config_server_port +
               options.url;
           }
           // parse options.url
-          urlParsed = mainApp.url.parse(String(options.url));
+          urlParsed = local.url.parse(String(options.url));
           // disable socket pooling
           options.agent = options.agent || false;
           // hostname needed for http.request
@@ -1354,20 +1351,20 @@
             : Buffer.isBuffer(options.data) ? options.data.length
               : 0;
           // make http request
-          request = (urlParsed.protocol === 'https:' ? mainApp.https : mainApp.http)
+          request = (urlParsed.protocol === 'https:' ? local.https : local.http)
             .request(options, onIo)
             // handle error event
             .on('error', onIo);
           // debug ajax request
-          mainApp._debugAjaxRequest = request;
+          local._debugAjaxRequest = request;
           // send request and/or data
           request.end(options.data);
           break;
         case 2:
           response = error;
           // debug ajax response
-          mainApp._debugAjaxResponse = response;
-          mainApp.streamReadAll(response, onIo);
+          local._debugAjaxResponse = response;
+          local.streamReadAll(response, onIo);
           break;
         case 3:
           // init responseText
@@ -1400,7 +1397,7 @@
             // debug status code
             error.statusCode = response && response.statusCode;
             // append errorStack to error.stack
-            error.stack = mainApp.errorStack(error) + '\n' + errorStack;
+            error.stack = local.errorStack(error) + '\n' + errorStack;
           }
           onError(error, responseText);
         }
@@ -1426,34 +1423,34 @@
         '(function () {\nreturn arg ? __coverage__ : __coverage__;\n}());',
         'test'
       );
-      mainApp.arg = 0;
+      local.arg = 0;
       // init coverage1
-      coverage1 = mainApp.vm.runInNewContext(script, { arg: 0 });
+      coverage1 = local.vm.runInNewContext(script, { arg: 0 });
       // validate coverage1
-      mainApp.assert(mainApp.jsonStringifyOrdered(coverage1) === '{"test":{"b":{"1":[0,1]},"branchMap":{"1":{"line":2,"locations":[{"end":{"column":25,"line":2},"start":{"column":13,"line":2}},{"end":{"column":40,"line":2},"start":{"column":28,"line":2}}],"type":"cond-expr"}},"f":{"1":1},"fnMap":{"1":{"line":1,"loc":{"end":{"column":13,"line":1},"start":{"column":1,"line":1}},"name":"(anonymous_1)"}},"path":"test","s":{"1":1,"2":1},"statementMap":{"1":{"end":{"column":5,"line":3},"start":{"column":0,"line":1}},"2":{"end":{"column":41,"line":2},"start":{"column":0,"line":2}}}}}', coverage1);
+      local.assert(local.jsonStringifyOrdered(coverage1) === '{"test":{"b":{"1":[0,1]},"branchMap":{"1":{"line":2,"locations":[{"end":{"column":25,"line":2},"start":{"column":13,"line":2}},{"end":{"column":40,"line":2},"start":{"column":28,"line":2}}],"type":"cond-expr"}},"f":{"1":1},"fnMap":{"1":{"line":1,"loc":{"end":{"column":13,"line":1},"start":{"column":1,"line":1}},"name":"(anonymous_1)"}},"path":"test","s":{"1":1,"2":1},"statementMap":{"1":{"end":{"column":5,"line":3},"start":{"column":0,"line":1}},"2":{"end":{"column":41,"line":2},"start":{"column":0,"line":2}}}}}', coverage1);
       // init coverage1
-      coverage2 = mainApp.vm.runInNewContext(script, { arg: 1 });
+      coverage2 = local.vm.runInNewContext(script, { arg: 1 });
       // validate coverage2
-      mainApp.assert(mainApp.jsonStringifyOrdered(coverage2) === '{"test":{"b":{"1":[1,0]},"branchMap":{"1":{"line":2,"locations":[{"end":{"column":25,"line":2},"start":{"column":13,"line":2}},{"end":{"column":40,"line":2},"start":{"column":28,"line":2}}],"type":"cond-expr"}},"f":{"1":1},"fnMap":{"1":{"line":1,"loc":{"end":{"column":13,"line":1},"start":{"column":1,"line":1}},"name":"(anonymous_1)"}},"path":"test","s":{"1":1,"2":1},"statementMap":{"1":{"end":{"column":5,"line":3},"start":{"column":0,"line":1}},"2":{"end":{"column":41,"line":2},"start":{"column":0,"line":2}}}}}', coverage2);
+      local.assert(local.jsonStringifyOrdered(coverage2) === '{"test":{"b":{"1":[1,0]},"branchMap":{"1":{"line":2,"locations":[{"end":{"column":25,"line":2},"start":{"column":13,"line":2}},{"end":{"column":40,"line":2},"start":{"column":28,"line":2}}],"type":"cond-expr"}},"f":{"1":1},"fnMap":{"1":{"line":1,"loc":{"end":{"column":13,"line":1},"start":{"column":1,"line":1}},"name":"(anonymous_1)"}},"path":"test","s":{"1":1,"2":1},"statementMap":{"1":{"end":{"column":5,"line":3},"start":{"column":0,"line":1}},"2":{"end":{"column":41,"line":2},"start":{"column":0,"line":2}}}}}', coverage2);
       // merge coverage2 into coverage1
-      mainApp.coverageMerge(coverage1, coverage2);
+      local.coverageMerge(coverage1, coverage2);
       // validate merged coverage1
-      mainApp.assert(mainApp.jsonStringifyOrdered(coverage1) === '{"test":{"b":{"1":[1,1]},"branchMap":{"1":{"line":2,"locations":[{"end":{"column":25,"line":2},"start":{"column":13,"line":2}},{"end":{"column":40,"line":2},"start":{"column":28,"line":2}}],"type":"cond-expr"}},"f":{"1":2},"fnMap":{"1":{"line":1,"loc":{"end":{"column":13,"line":1},"start":{"column":1,"line":1}},"name":"(anonymous_1)"}},"path":"test","s":{"1":2,"2":2},"statementMap":{"1":{"end":{"column":5,"line":3},"start":{"column":0,"line":1}},"2":{"end":{"column":41,"line":2},"start":{"column":0,"line":2}}}}}', coverage1);
+      local.assert(local.jsonStringifyOrdered(coverage1) === '{"test":{"b":{"1":[1,1]},"branchMap":{"1":{"line":2,"locations":[{"end":{"column":25,"line":2},"start":{"column":13,"line":2}},{"end":{"column":40,"line":2},"start":{"column":28,"line":2}}],"type":"cond-expr"}},"f":{"1":2},"fnMap":{"1":{"line":1,"loc":{"end":{"column":13,"line":1},"start":{"column":1,"line":1}},"name":"(anonymous_1)"}},"path":"test","s":{"1":2,"2":2},"statementMap":{"1":{"end":{"column":5,"line":3},"start":{"column":0,"line":1}},"2":{"end":{"column":41,"line":2},"start":{"column":0,"line":2}}}}}', coverage1);
       onError();
     };
 
-    mainApp.fileCacheAndParse = function (options) {
+    local.fileCacheAndParse = function (options) {
       /*
-        this function parses options.file and caches it to mainApp.fileCacheDict
+        this function parses options.file and caches it to local.fileCacheDict
       */
       var tmp;
       // read options.data from options.file
-      options.data = mainApp.fs.readFileSync(options.file, 'utf8')
+      options.data = local.fs.readFileSync(options.file, 'utf8')
         // comment out shebang
         .replace((/^#!/), '//#!');
-      // cache options to mainApp.fileCacheDict[options.cache]
+      // cache options to local.fileCacheDict[options.cache]
       if (options.cache) {
-        mainApp.fileCacheDict[options.cache] = options;
+        local.fileCacheDict[options.cache] = options;
       }
       // parse options.data's embedded sub-files
       if (options.parse) {
@@ -1461,25 +1458,25 @@
           (/^\/\* FILE_BEGIN ([\S\s]+?) \*\/$([\S\s]+?)^\/\* FILE_END \*\/$/gm),
           function (match0, options2, data, ii) {
             // nop hack to pass jslint
-            mainApp.nop(match0);
+            local.nop(match0);
             // preserve lineno
             tmp =
               options.data.slice(0, ii).replace((/.+/g), '') + options2.replace((/.+/g), '');
             options2 = JSON.parse(options2);
-            // cache options2 to mainApp.fileCacheDict[options2.file]
-            mainApp.fileCacheDict[options2.file] = options2;
+            // cache options2 to local.fileCacheDict[options2.file]
+            local.fileCacheDict[options2.file] = options2;
             // cache data to option2.data and preserve lineno
             options2.data = tmp + data;
             // run each action in options2.actionList
             options2.actionList.forEach(function (action) {
               switch (action) {
-              // export options2.data to mainApp.mainAppBrowser.fileCacheDict
+              // export options2.data to local.utility2Browser.fileCacheDict
               case 'exportBrowser':
-                mainApp.mainAppBrowser.fileCacheDict[options2.file] = options2;
+                local.utility2Browser.fileCacheDict[options2.file] = options2;
                 break;
               // jslint options2.data
               case 'jslint':
-                mainApp.jslint_lite.jslintAndPrint(options2.data, options2.file);
+                local.jslint_lite.jslintAndPrint(options2.data, options2.file);
                 break;
               }
             });
@@ -1489,57 +1486,43 @@
         );
       }
       // if coverage-mode is enabled, then instrument options.data
-      if (mainApp.__coverage__ &&
+      if (local.__coverage__ &&
           options.coverage &&
-          options.coverage === mainApp.envDict.PACKAGE_JSON_NAME) {
+          options.coverage === local.envDict.PACKAGE_JSON_NAME) {
         options.data = local._coverageInstrument(options.data, options.file);
         // write instrumented options.data to fs
-        mainApp.fs.writeFileSync(
+        local.fs.writeFileSync(
           process.cwd() + '/.tmp/instrumented.' + options.cache.replace((/[^\w\-]/g), '.'),
           options.data
         );
       }
     };
 
-    mainApp.onFileModifiedCacheAndParse = function (options) {
+    local.onFileModifiedCacheAndParse = function (options) {
       /*
         this function watches the file and if modified, then cache and parse it
       */
-      mainApp.fs.watchFile(options.file, {
+      local.fs.watchFile(options.file, {
         interval: 1000,
         persistent: false
       }, function (stat2, stat1) {
         if (stat2.mtime > stat1.mtime) {
-          mainApp.fileCacheAndParse(options);
+          local.fileCacheAndParse(options);
         }
       });
     };
 
-    mainApp.onFileModifiedJslint = function (file) {
-      /*
-        this function watches the file and if modified, then jslint it
-      */
-      mainApp.fs.watchFile(file, {
-        interval: 1000,
-        persistent: false
-      }, function (stat2, stat1) {
-        if (stat2.mtime > stat1.mtime) {
-          mainApp.jslint_lite.jslintAndPrint(mainApp.fs.readFileSync(file, 'utf8'), file);
-        }
-      });
-    };
-
-    mainApp.onFileModifiedRestart = function (file) {
+    local.onFileModifiedRestart = function (file) {
       /*
         this function watches the file and if modified, then restart the process
       */
-      if (process.env.npm_config_mode_auto_restart && mainApp.fs.statSync(file).isFile()) {
-        mainApp.fs.watchFile(file, {
+      if (process.env.npm_config_mode_auto_restart && local.fs.statSync(file).isFile()) {
+        local.fs.watchFile(file, {
           interval: 1000,
           persistent: false
         }, function (stat2, stat1) {
           if (stat2.mtime > stat1.mtime) {
-            process.exit();
+            process.exit(1);
           }
         });
       }
@@ -1550,7 +1533,7 @@
         this function tests onFileModified's watchFile handling behavior
       */
       var onParallel;
-      onParallel = mainApp.onParallel(onError);
+      onParallel = local.onParallel(onError);
       onParallel.counter += 1;
       // test fileCacheAndParse's watchFile handling behavior
       [
@@ -1560,14 +1543,14 @@
         __dirname + '/index.data'
       ].forEach(function (file) {
         onParallel.counter += 1;
-        mainApp.fs.stat(file, function (error, stat) {
+        local.fs.stat(file, function (error, stat) {
           // test default watchFile handling behavior
           onParallel.counter += 1;
-          mainApp.fs.utimes(file, stat.atime, new Date(), onParallel);
+          local.fs.utimes(file, stat.atime, new Date(), onParallel);
           // test nop watchFile handling behavior
           onParallel.counter += 1;
           setTimeout(function () {
-            mainApp.fs.utimes(file, stat.atime, stat.mtime, onParallel);
+            local.fs.utimes(file, stat.atime, stat.mtime, onParallel);
           // coverage - use 1500 ms to cover setInterval watchFile in node
           }, 1500);
           onParallel(error);
@@ -1576,7 +1559,7 @@
       onParallel();
     };
 
-    mainApp.replStart = function (globalDict) {
+    local.replStart = function (globalDict) {
       /*
         this function starts the repl debugger
       */
@@ -1607,7 +1590,7 @@
             break;
           }
           // run async shell command
-          mainApp.child_process.spawn(
+          local.child_process.spawn(
             '/bin/bash',
             ['-c', match[2]],
             { stdio: ['ignore', 1, 2] }
@@ -1620,7 +1603,7 @@
         // syntax sugar to grep current directory
         case 'grep':
           // run async shell command
-          mainApp.child_process.spawn(
+          local.child_process.spawn(
             '/bin/bash',
             ['-c', 'find . -type f | grep -v "/\\.\\|.*\\b\\(\\.\\d\\|' +
               'archive\\|artifacts\\|' +
@@ -1658,11 +1641,11 @@
         this function test replStart's default handling behavior
       */
       var evil;
-      mainApp.testMock([
-        [mainApp.child_process, { spawn: function () {
+      local.testMock([
+        [local.child_process, { spawn: function () {
           return { on: function (event, callback) {
             // nop hack to pass jslint
-            mainApp.nop(event);
+            local.nop(event);
             callback();
           } };
         } }]
@@ -1681,44 +1664,44 @@
           // test print handling behavior
           '(print\n)'
         ].forEach(function (script) {
-          local._replServer[evil](script, null, 'repl', mainApp.nop);
+          local._replServer[evil](script, null, 'repl', local.nop);
         });
         // test syntax-error handling behavior
         local._replServer[evil]('syntax-error', null, 'repl', function (error) {
-          mainApp.testTryCatch(function () {
+          local.testTryCatch(function () {
             // validate error occurred
             // bug - use util.isError to validate error when using eval
-            mainApp.assert(require('util').isError(error), error);
+            local.assert(require('util').isError(error), error);
             onError();
           }, onError);
         });
       });
     };
 
-    mainApp.serverRespondDefault = function (request, response, statusCode, error) {
+    local.serverRespondDefault = function (request, response, statusCode, error) {
       /*
         this function responds with a default message,
         or error stack for the given statusCode
       */
       // set response / statusCode / contentType
-      mainApp.serverRespondWriteHead(request, response, statusCode, {
+      local.serverRespondWriteHead(request, response, statusCode, {
         'Content-Type': 'text/plain; charset=utf-8'
       });
       if (error) {
         // if modeErrorIgnore is undefined in url search params,
         // then print error.stack to stderr
         if (!(/\?.*\bmodeErrorIgnore=1\b/).test(request.url)) {
-          mainApp.onErrorDefault(error);
+          local.onErrorDefault(error);
         }
         // end response with error.stack
-        response.end(mainApp.errorStack(error));
+        response.end(local.errorStack(error));
         return;
       }
       // end response with default statusCode message
-      response.end(statusCode + ' ' + mainApp.http.STATUS_CODES[statusCode]);
+      response.end(statusCode + ' ' + local.http.STATUS_CODES[statusCode]);
     };
 
-    mainApp.serverRespondEcho = function (request, response) {
+    local.serverRespondEcho = function (request, response) {
       /*
         this function responds with debug info
       */
@@ -1730,12 +1713,12 @@
       request.pipe(response);
     };
 
-    mainApp.serverRespondWriteHead = function (request, response, statusCode, headers) {
+    local.serverRespondWriteHead = function (request, response, statusCode, headers) {
       /*
         this function sets the response object's statusCode / headers
       */
       // nop hack to pass jslint
-      mainApp.nop(request);
+      local.nop(request);
       if (!response.headersSent) {
         // set response.statusCode
         if (statusCode) {
@@ -1749,7 +1732,7 @@
       }
     };
 
-    mainApp.streamReadAll = function (readableStream, onError) {
+    local.streamReadAll = function (readableStream, onError) {
       /*
         this function concats data from the readableStream,
         and passes it to onError when finished reading
@@ -1770,19 +1753,19 @@
         .on('error', onError);
     };
 
-    mainApp.testMiddleware = function (request, response, onIo) {
+    local.testMiddleware = function (request, response, onIo) {
       var contentTypeDict;
       // debug server request
-      mainApp._debugServerRequest = request;
+      local._debugServerRequest = request;
       // debug server response
-      mainApp._debugServerResponse = response;
+      local._debugServerResponse = response;
       // check if _testSecret is valid
       request._testSecretValid = (/\b_testSecret=(\w+)\b/).exec(request.url);
       request._testSecretValid =
-        request._testSecretValid && request._testSecretValid[1] === mainApp._testSecret;
+        request._testSecretValid && request._testSecretValid[1] === local._testSecret;
       // init request.urlPathNormalized
       request.urlPathNormalized =
-        mainApp.path.resolve(mainApp.url.parse(request.url).pathname);
+        local.path.resolve(local.url.parse(request.url).pathname);
       // init Content-Type header
       contentTypeDict = {
         '.css': 'text/css; charset=UTF-8',
@@ -1791,24 +1774,24 @@
         '.json': 'application/json; charset=UTF-8',
         '.txt': 'text/txt; charset=UTF-8'
       };
-      mainApp.serverRespondWriteHead(request, response, null, {
-        'Content-Type': contentTypeDict[mainApp.path.extname(request.urlPathNormalized)]
+      local.serverRespondWriteHead(request, response, null, {
+        'Content-Type': contentTypeDict[local.path.extname(request.urlPathNormalized)]
       });
       switch (request.urlPathNormalized) {
       // serve the following assets from fileCacheDict
       case '/assets/utility2.js':
       case '/test/test.js':
-        response.end(mainApp.fileCacheDict[request.urlPathNormalized].data);
+        response.end(local.fileCacheDict[request.urlPathNormalized].data);
         break;
       // serve test page
       case '/test/test.html':
       case '/test/utility2.html':
-        response.end(mainApp.textFormat(mainApp.fileCacheDict[
+        response.end(local.textFormat(local.fileCacheDict[
           request.urlPathNormalized
         ].data, {
-          envDict: mainApp.envDict,
-          mainAppBrowserJson: JSON.stringify(mainApp.mainAppBrowser),
-          utility2Css: mainApp.fileCacheDict['/assets/utility2.css'].data
+          envDict: local.envDict,
+          utility2BrowserJson: JSON.stringify(local.utility2Browser),
+          utility2Css: local.fileCacheDict['/assets/utility2.css'].data
         }));
         break;
       // fallback to next middleware
@@ -1817,25 +1800,25 @@
       }
     };
 
-    mainApp.testPhantom = function (options, onError) {
+    local.testPhantom = function (options, onError) {
       /*
         this function spawns a phantomjs process to test a url
       */
       var onParallel;
-      onParallel = mainApp.onParallel(onError);
+      onParallel = local.onParallel(onError);
       onParallel.counter += 1;
       // init timeout
-      options.timeout = options.timeout || mainApp.timeoutDefault;
+      options.timeout = options.timeout || local.timeoutDefault;
       ['phantomjs', 'slimerjs'].forEach(function (argv0) {
         var file, onError2, timerTimeout;
         // if slimerjs is not available, then do not use it
-        if (argv0 === 'slimerjs' && (!mainApp.envDict.npm_config_mode_slimerjs ||
-            mainApp.envDict.npm_config_mode_no_slimerjs)) {
+        if (argv0 === 'slimerjs' && (!local.envDict.npm_config_mode_slimerjs ||
+            local.envDict.npm_config_mode_no_slimerjs)) {
           return;
         }
-        argv0 = mainApp.envDict.MODE_BUILD + '.' + argv0;
-        if ('utility2' === mainApp.envDict.PACKAGE_JSON_NAME) {
-          argv0 += (mainApp.url.parse(options.url).path).replace((/\W+/g), '.');
+        argv0 = local.envDict.MODE_BUILD + '.' + argv0;
+        if ('utility2' === local.envDict.PACKAGE_JSON_NAME) {
+          argv0 += (local.url.parse(options.url).path).replace((/\W+/g), '.');
         }
         onParallel.counter += 1;
         onError2 = function (error) {
@@ -1844,26 +1827,26 @@
           onParallel(error);
         };
         // set timerTimeout
-        timerTimeout = mainApp.onTimeout(onError2, options.timeout, argv0);
+        timerTimeout = local.onTimeout(onError2, options.timeout, argv0);
         file = __dirname + '/index.js';
         // cover index.js
-        if (mainApp.__coverage__ && 'utility2' === mainApp.envDict.PACKAGE_JSON_NAME) {
+        if (local.__coverage__ && 'utility2' === local.envDict.PACKAGE_JSON_NAME) {
           file = process.cwd() + '/.tmp/instrumented..assets.utility2.js';
         }
         // spawn a phantomjs process to test a url
-        mainApp.child_process.spawn(argv0.split('.')[1], [file, encodeURIComponent(
-          JSON.stringify(mainApp.setOverride({
+        local.child_process.spawn(argv0.split('.')[1], [file, encodeURIComponent(
+          JSON.stringify(local.setOverride({
             argv0: argv0,
             __dirname: __dirname,
-            _testSecret: mainApp._testSecret,
+            _testSecret: local._testSecret,
             timeoutDefault: options.timeout
           }, 1, options))
         )], { stdio: 'inherit' })
           .on('exit', function (exitCode) {
             // merge coverage code
-            mainApp.coverageMerge(
-              mainApp.__coverage__,
-              JSON.parse(mainApp.fs.readFileSync(
+            local.coverageMerge(
+              local.__coverage__,
+              JSON.parse(local.fs.readFileSync(
                 process.cwd() +
                   '/.tmp/build/coverage-report.html/coverage.' + argv0 + '.json',
                 'utf8'
@@ -1871,9 +1854,9 @@
             );
             // merge tests
             if (!options.modeErrorIgnore) {
-              mainApp.testMerge(
-                mainApp.testReport,
-                JSON.parse(mainApp.fs.readFileSync(
+              local.testMerge(
+                local.testReport,
+                JSON.parse(local.fs.readFileSync(
                   process.cwd() + '/.tmp/build/test-report.' + argv0 + '.json',
                   'utf8'
                 ))
@@ -1885,7 +1868,7 @@
       onParallel();
     };
 
-    mainApp.testRunServer = function (onTestRunEnd, middlewareList) {
+    local.testRunServer = function (onTestRunEnd, middlewareList) {
     /*
       this function will
       1. create a test-server with middlewareList
@@ -1894,17 +1877,17 @@
     */
       // if $npm_config_timeout_exit is defined,
       // then exit this process after $npm_config_timeout_exit ms
-      if (Number(mainApp.envDict.npm_config_timeout_exit)) {
-        setTimeout(process.exit, Number(mainApp.envDict.npm_config_timeout_exit))
+      if (Number(local.envDict.npm_config_timeout_exit)) {
+        setTimeout(process.exit, Number(local.envDict.npm_config_timeout_exit))
           // keep timerTimeout from blocking the process from exiting
           .unref();
       }
       // if $npm_config_server_port is undefined,
       // then assign it a random integer in the inclusive range 1 to 0xffff
-      mainApp.envDict.npm_config_server_port = mainApp.envDict.npm_config_server_port ||
+      local.envDict.npm_config_server_port = local.envDict.npm_config_server_port ||
         ((Math.random() * 0x10000) | 0x8000).toString();
       // 1. create a test-server with middlewareList
-      mainApp.http.createServer(function (request, response) {
+      local.http.createServer(function (request, response) {
         var modeIo, onIo;
         modeIo = -1;
         onIo = function (error) {
@@ -1915,17 +1898,17 @@
           }
           // if error occurred, then respond with '500 Internal Server Error'
           // else respond with '404 Not Found'
-          mainApp.serverRespondDefault(request, response, error ? 500 : 404, error);
+          local.serverRespondDefault(request, response, error ? 500 : 404, error);
         };
         onIo();
       })
         // 2. start test-server on $npm_config_server_port
-        .listen(mainApp.envDict.npm_config_server_port, function () {
+        .listen(local.envDict.npm_config_server_port, function () {
           console.log(
-            'test-server listening on port ' + mainApp.envDict.npm_config_server_port
+            'test-server listening on port ' + local.envDict.npm_config_server_port
           );
           // 3. test test-server
-          mainApp.testRun(onTestRunEnd);
+          local.testRun(onTestRunEnd);
         });
     };
 
@@ -1934,18 +1917,18 @@
         this function tests testRunServer's misc handling behavior
       */
       // test random server-port handling behavior
-      mainApp.testMock([
-        [mainApp.http, { createServer: function () {
-          return { listen: mainApp.nop };
+      local.testMock([
+        [local.http, { createServer: function () {
+          return { listen: local.nop };
         } }],
-        [mainApp.envDict, {
+        [local.envDict, {
           // test auto-exit handling behavior
           npm_config_timeout_exit: '1',
           // test random $npm_config_server_port handling behavior
           npm_config_server_port: ''
         }]
       ], onError, function (onError) {
-        mainApp.testRunServer(mainApp.nop, []);
+        local.testRunServer(local.nop, []);
         onError();
       });
     };
@@ -1957,26 +1940,24 @@
     /*
       this function runs shared js-env code
     */
-    switch (mainApp.modeJs) {
+    switch (local.modeJs) {
     // init browser js-env
     case 'browser':
-      // init mainApp
-      global.$$mainApp = global.$$mainApp || mainApp;
-      // init mainApp properties
-      mainApp.envDict = mainApp.envDict || {};
-      mainApp.testPlatform.name = 'browser - ' + navigator.userAgent +
+      // init local properties
+      local.envDict = local.envDict || {};
+      local.testPlatform.name = 'browser - ' + navigator.userAgent +
         ' - ' + new Date().toISOString();
-      mainApp.testPlatform.screenCaptureImg = mainApp.envDict.MODE_BUILD_SCREEN_CAPTURE;
+      local.testPlatform.screenCaptureImg = local.envDict.MODE_BUILD_SCREEN_CAPTURE;
       // parse any url-search-params that matches 'mode*' or '_testSecret' or 'timeoutDefault'
       location.search.replace(
         (/\b(mode[A-Z]\w+|_testSecret|timeoutDefault)=([^#&=]+)/g),
         function (match0, key, value) {
           // nop hack to pass jslint
-          mainApp.nop(match0);
-          mainApp[key] = value;
+          local.nop(match0);
+          local[key] = value;
           // try to parse value as json object
           try {
-            mainApp[key] = JSON.parse(value);
+            local[key] = JSON.parse(value);
           } catch (ignore) {
           }
         }
@@ -1985,36 +1966,36 @@
     // init node js-env
     case 'node':
       // require modules
-      mainApp.child_process = require('child_process');
-      mainApp.crypto = require('crypto');
-      mainApp.fs = require('fs');
-      mainApp.http = require('http');
-      mainApp.https = require('https');
-      mainApp.jslint_lite = require('jslint-lite');
-      mainApp.path = require('path');
-      mainApp.url = require('url');
-      mainApp.vm = require('vm');
-      // init mainApp properties
-      mainApp.envDict = process.env;
-      mainApp.testPlatform.name = 'node - ' + process.platform + ' ' + process.version +
+      local.child_process = require('child_process');
+      local.crypto = require('crypto');
+      local.fs = require('fs');
+      local.http = require('http');
+      local.https = require('https');
+      local.jslint_lite = require('jslint-lite');
+      local.path = require('path');
+      local.url = require('url');
+      local.vm = require('vm');
+      // init local properties
+      local.envDict = process.env;
+      local.testPlatform.name = 'node - ' + process.platform + ' ' + process.version +
         ' - ' + new Date().toISOString();
-      mainApp.testPlatform.screenCaptureImg = mainApp.envDict.MODE_BUILD_SCREEN_CAPTURE;
-      // init mainApp.__coverage__
+      local.testPlatform.screenCaptureImg = local.envDict.MODE_BUILD_SCREEN_CAPTURE;
+      // init local.__coverage__
       Object.keys(global).forEach(function (key) {
         if (key.indexOf('$$cov_') === 0) {
-          mainApp.__coverage__ = global[key];
+          local.__coverage__ = global[key];
         }
       });
-      // init mainApp with default values
-      mainApp.setDefault(mainApp, -1, {
+      // init local with default values
+      local.setDefault(local, -1, {
         // export __dirname
         __dirname: __dirname,
         // init state file used for browser init
-        mainAppBrowser: {
+        utility2Browser: {
           envDict: {
-            PACKAGE_JSON_DESCRIPTION: mainApp.envDict.PACKAGE_JSON_DESCRIPTION,
-            PACKAGE_JSON_NAME: mainApp.envDict.PACKAGE_JSON_NAME,
-            PACKAGE_JSON_VERSION: mainApp.envDict.PACKAGE_JSON_VERSION
+            PACKAGE_JSON_DESCRIPTION: local.envDict.PACKAGE_JSON_DESCRIPTION,
+            PACKAGE_JSON_NAME: local.envDict.PACKAGE_JSON_NAME,
+            PACKAGE_JSON_VERSION: local.envDict.PACKAGE_JSON_VERSION
           },
           fileCacheDict: {}
         }
@@ -2028,17 +2009,17 @@
         coverage: 'utility2',
         file: __dirname + '/index.js'
       }].forEach(function (options) {
-        mainApp.fileCacheAndParse(options);
+        local.fileCacheAndParse(options);
       });
       // init _testSecret
       (function () {
         var testSecretCreate;
         testSecretCreate = function () {
-          mainApp._testSecret = mainApp.crypto.randomBytes(32).toString('hex');
+          local._testSecret = local.crypto.randomBytes(32).toString('hex');
         };
         // init _testSecret
         testSecretCreate();
-        mainApp._testSecret = mainApp.envDict.TEST_SECRET || mainApp._testSecret;
+        local._testSecret = local.envDict.TEST_SECRET || local._testSecret;
         // re-init _testSecret every 60 seconds
         setInterval(testSecretCreate, 60000).unref();
       }());
@@ -2046,33 +2027,32 @@
     // init phantom js-env
     case 'phantom':
       // require modules
-      mainApp.fs = require('fs');
-      mainApp.system = require('system');
-      mainApp.webpage = require('webpage');
-      // init mainApp properties
-      mainApp.envDict = mainApp.system.env;
-      mainApp.phantom = global.phantom;
-      mainApp.testPlatform.name = (global.slimer ? 'slimer - ' : 'phantom - ') +
-        mainApp.system.os.name + ' ' +
-        mainApp.phantom.version.major + '.' +
-        mainApp.phantom.version.minor + '.' +
-        mainApp.phantom.version.patch +
+      local.fs = require('fs');
+      local.system = require('system');
+      local.webpage = require('webpage');
+      // init local properties
+      local.envDict = local.system.env;
+      local.testPlatform.name = (global.slimer ? 'slimer - ' : 'phantom - ') +
+        local.system.os.name + ' ' +
+        global.phantom.version.major + '.' +
+        global.phantom.version.minor + '.' +
+        global.phantom.version.patch +
         ' - ' + new Date().toISOString();
-      mainApp.testPlatform.screenCaptureImg = mainApp.envDict.MODE_BUILD_SCREEN_CAPTURE;
-      // override mainApp properties
-      mainApp.setOverride(
-        mainApp,
+      local.testPlatform.screenCaptureImg = local.envDict.MODE_BUILD_SCREEN_CAPTURE;
+      // override local properties
+      local.setOverride(
+        local,
         -1,
-        JSON.parse(decodeURIComponent(mainApp.system.args[1]))
+        JSON.parse(decodeURIComponent(local.system.args[1]))
       );
-      // mock mainApp.fileCacheDict['/test/test-report.html.template'].data
-      mainApp.fileCacheDict = { '/test/test-report.html.template': { data: '' } };
+      // mock local.fileCacheDict['/test/test-report.html.template'].data
+      local.fileCacheDict = { '/test/test-report.html.template': { data: '' } };
       // if modeErrorIgnore, then suppress console.error and console.log
-      if (mainApp.modeErrorIgnore) {
-        console.error = console.log = mainApp.nop;
+      if (local.modeErrorIgnore) {
+        console.error = console.log = local.nop;
       }
       // init error handling
-      mainApp.phantom.onError = function (message, trace) {
+      global.phantom.onError = function (message, trace) {
         /*
           this function will catch all errors and
           1. check if the error-message is a test-callback, and handle it appropriately
@@ -2086,24 +2066,24 @@
           if (data) {
             // handle global_test_results passed as error
             // merge coverage
-            mainApp.coverageMerge(mainApp.__coverage__, data.coverage);
+            local.coverageMerge(local.__coverage__, data.coverage);
             // create screenCapture
-            file = mainApp.fs.workingDirectory + '/.tmp/build/screen-capture.' +
-              mainApp.argv0.replace((/\b(phantomjs|slimerjs)\b.*/g), '$1') + '.png';
-            mainApp.page.render(file);
+            file = local.fs.workingDirectory + '/.tmp/build/screen-capture.' +
+              local.argv0.replace((/\b(phantomjs|slimerjs)\b.*/g), '$1') + '.png';
+            local.page.render(file);
             console.log('created ' + 'file://' + file);
             // integrate screenCapture into test-report
             data.testReport.testPlatformList[0].screenCaptureImg =
               file.replace((/^.*\//), '');
             // merge test-report
-            mainApp.testMerge(mainApp.testReport, data.testReport);
+            local.testMerge(local.testReport, data.testReport);
           // 2. else handle it as a normal error
           } else {
             // phantom error handling - http://phantomjs.org/api/phantom/handler/on-error.html
             console.error('\n\n');
-            console.error(mainApp.argv0 + ' ERROR: ' + message);
+            console.error(local.argv0 + ' ERROR: ' + message);
             if (trace && trace.length) {
-              console.error(mainApp.argv0 + ' TRACE:');
+              console.error(local.argv0 + ' TRACE:');
               trace.forEach(function (t) {
                 console.error(' -> ' + (t.file || t.sourceURL) + ': ' + t.line
                   + (t.function ? ' (in function ' + t.function + ')' : ''));
@@ -2112,143 +2092,95 @@
             console.error('\n\n');
           }
           [[
-            '.tmp/build/test-report.' + mainApp.argv0 + '.json',
-            mainApp.testReport
+            '.tmp/build/test-report.' + local.argv0 + '.json',
+            local.testReport
           ], [
-            '.tmp/build/coverage-report.html/coverage.' + mainApp.argv0 + '.json',
-            mainApp.__coverage__
+            '.tmp/build/coverage-report.html/coverage.' + local.argv0 + '.json',
+            local.__coverage__
           ]].forEach(function (args) {
-            file = mainApp.fs.workingDirectory + '/' + args[0];
-            mainApp.fs.write(file, JSON.stringify(args[1]));
+            file = local.fs.workingDirectory + '/' + args[0];
+            local.fs.write(file, JSON.stringify(args[1]));
             console.log('created ' + 'file://' + file);
           });
           // exit with number of tests failed as exit-code
-          mainApp.phantom.exit(!data || data.testReport.testsFailed);
+          global.phantom.exit(!data || data.testReport.testsFailed);
         } catch (error) {
           console.error(error.message);
-          mainApp.phantom.exit(1);
+          global.phantom.exit(1);
         }
       };
       // set timeout for phantom
-      mainApp.onTimeout(function (error) {
-        mainApp.phantom.onError(error.message);
-      }, mainApp.timeoutDefault, mainApp.url);
+      local.onTimeout(function (error) {
+        global.phantom.onError(error.message);
+      }, local.timeoutDefault, local.url);
       // reset testCaseList
-      mainApp.testPlatform.testCaseList = [];
+      local.testPlatform.testCaseList = [];
       // init page
-      mainApp.page = mainApp.webpage.create();
+      local.page = local.webpage.create();
       // init page's viewport-size
-      mainApp.page.viewportSize = mainApp.viewportSize || { height: 600, width: 800 };
+      local.page.viewportSize = local.viewportSize || { height: 600, width: 800 };
       // init page's error handling
       // http://phantomjs.org/api/webpage/handler/on-error.html
-      mainApp.page.onError = mainApp.phantom.onError;
+      local.page.onError = global.phantom.onError;
       // pipe page's console.log to stdout
-      mainApp.page.onConsoleMessage = function () {
+      local.page.onConsoleMessage = function () {
         console.log.apply(console, arguments);
       };
       // open requested webpage
-      mainApp.page.open(
+      local.page.open(
         // security - insert _testSecret in url without revealing it
-        mainApp.url.replace('{{_testSecret}}', mainApp._testSecret),
+        local.url.replace('{{_testSecret}}', local._testSecret),
         function (data) {
-          console.log(mainApp.argv0 + ' - open ' + data + ' ' + mainApp.url);
+          console.log(local.argv0 + ' - open ' + data + ' ' + local.url);
           // validate page opened successfully
-          mainApp.assert(data === 'success', data);
+          local.assert(data === 'success', data);
         }
       );
-      // test phantom.onError
-      if (mainApp.modeTestPhantomOnError) {
-        mainApp.testPlatform.testCaseList = [{
-          name: 'utility2.phantom._phantomOnError_default_test',
-          onTestCase: function (onError) {
-            /*
-              this function tests phantom.onError's default handling behavior
-            */
-            var exitCode;
-            mainApp.testMock([
-              [mainApp, {
-                fs: { write: mainApp.nop },
-                phantom: { exit: function (_exitCode) {
-                  exitCode = _exitCode;
-                } }
-              }]
-            ], onError, function (onError) {
-              mainApp.testTryCatch(function () {
-                // test default handling behavior
-                global.phantom.onError('Error: ' + JSON.stringify({ global_test_results: {
-                  testReport: mainApp.testReport
-                } }));
-                // validate exitCode
-                mainApp.assert(!exitCode, exitCode);
-                // test error-caught handling behavior
-                global.phantom.onError('Error: ' + JSON.stringify({ global_test_results: {
-                  testReport: mainApp.testReport
-                } }) + 'syntax-error');
-                // validate exitCode
-                mainApp.assert(exitCode, exitCode);
-                // test error-trace handling behavior
-                global.phantom.onError('error-trace', [{
-                  file: 'undefined'
-                }, {
-                  function: 'undefined'
-                }, {
-                  sourceUrl: 'undefined'
-                }]);
-                // validate exitCode
-                mainApp.assert(exitCode, exitCode);
-                // test no error-trace handling behavior
-                global.phantom.onError('no-error-trace');
-                // validate exitCode
-                mainApp.assert(exitCode, exitCode);
-                onError();
-              }, onError);
-            });
-          }
-        }];
-        mainApp.testRun(function () {
-          mainApp.phantom.onError('Error: ' + JSON.stringify({ global_test_results: {
-            testReport: mainApp.testReport
-          } }));
-        });
-      }
       break;
     }
     // add local test-case's
-    mainApp.testCaseAdd(local, mainApp);
+    local.testCaseAdd(local, local);
   }());
-}((function ($$self) {
-  /*
-    this function returns js-env options
-  */
+}((function (self) {
   'use strict';
-  try {
-    // init phantom js-env
-    return {
-      global: $$self,
-      mainApp: {},
-      modeJs: $$self.phantom.version &&
-        typeof require('webpage').create === 'function' && 'phantom',
-      _testPrefix: 'utility2.index.phantom'
-    };
-  } catch (errorCaughtPhantom) {
-    try {
-      // init node js-env
-      return {
-        global: global,
-        mainApp: module.exports,
-        modeJs: module.exports && typeof process.versions.node === 'string' &&
-          typeof require('child_process').spawn === 'function' && 'node',
-        _testPrefix: 'utility2.index.node'
-      };
-    } catch (errorCaughtNode) {
-      // init browser js-env
-      return {
-        global: window,
-        mainApp: window.$$mainApp || {},
-        modeJs: window && typeof navigator.userAgent === 'string' &&
-          typeof document.querySelector('body') === 'object' && 'browser',
-        _testPrefix: 'utility2.index.browser'
-      };
-    }
+  var local;
+  // init shared js-env
+  (function () {
+    local = {};
+    local.modeJs = (function () {
+      try {
+        return self.phantom.version &&
+          typeof require('webpage').create === 'function' && 'phantom';
+      } catch (errorCaughtPhantom) {
+        try {
+          return module.exports && typeof process.versions.node === 'string' &&
+            typeof require('child_process').spawn === 'function' && 'node';
+        } catch (errorCaughtNode) {
+          local = window.utility2 = window.utility2 || local;
+          local.modeJs = typeof navigator.userAgent === 'string' &&
+            typeof document.querySelector('body') === 'object' && 'browser';
+          return local.modeJs;
+        }
+      }
+    }());
+  }());
+  switch (local.modeJs) {
+  // init browser js-env
+  case 'browser':
+    local._testPrefix = 'utility2.index.browser';
+    local.global = window;
+    break;
+  // init node js-env
+  case 'node':
+    local._testPrefix = 'utility2.index.node';
+    local.global = global;
+    module.exports = local;
+    break;
+  // init phantom js-env
+  case 'phantom':
+    local._testPrefix = 'utility2.index.phantom';
+    local.global = self;
+    break;
   }
+  return local;
 }(this))));

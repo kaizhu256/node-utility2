@@ -28,7 +28,7 @@ lightweight nodejs module that runs phantomjs tests with browser code-coverage (
 // 1. create a clean app directory (e.g /tmp/app)
 // 2. inside app directory, save this js script as example.js
 // 3. inside app directory, run the following shell command:
-//    $ npm install istanbul-lite utility2 && node_modules/.bin/utility2 shRun shNpmTest example.js
+//    $ npm install utility2 && node_modules/.bin/utility2 shRun shNpmTest example.js
 /*jslint
   browser: true,
   indent: 2,
@@ -42,7 +42,7 @@ lightweight nodejs module that runs phantomjs tests with browser code-coverage (
   // init browser js-env
   if (typeof window === 'object') {
     // init mainApp
-    mainApp = window.$$mainApp;
+    mainApp = window.utility2;
     // init local test-case's
     local._ajax_200_test = function (onError) {
       /*
@@ -96,7 +96,7 @@ lightweight nodejs module that runs phantomjs tests with browser code-coverage (
       }
     });
     // mock process.env.PACKAGE_JSON_NAME to match local._prefixTest
-    process.env.PACKAGE_JSON_NAME = mainApp.mainAppBrowser.envDict.PACKAGE_JSON_NAME =
+    process.env.PACKAGE_JSON_NAME = mainApp.utility2Browser.envDict.PACKAGE_JSON_NAME =
       'example';
     // init local test-case's
     local._testPhantom_default_test = function (onError) {
@@ -185,11 +185,11 @@ shBuild() {
   # create package content listing
   MODE_BUILD=gitLsTree shRunScreenCapture git ls-tree --abbrev=8 --full-name -l -r HEAD || return $?
   # run npm test on published package
-  shNpmTestPublished
-  # test example script
-  MODE_BUILD=testExampleJs shRunScreenCapture shTestScriptJs example.js || return $?
-  # copy phantomjs screen-capture to .tmp/build
-  cp /tmp/app/.tmp/build/screen-capture.* .tmp/build || return $?
+  shRun shNpmTestPublished
+  #!! # test example script
+  #!! MODE_BUILD=testExampleJs shRunScreenCapture shTestScriptJs example.js || return $?
+  #!! # copy phantomjs screen-capture to .tmp/build
+  #!! cp /tmp/app/.tmp/build/screen-capture.* .tmp/build || return $?
   # run npm test
   MODE_BUILD=npmTest shRunScreenCapture npm test || return $?
   # deploy to heroku
@@ -215,12 +215,15 @@ exit $EXIT_CODE
 
 ## changelog
 #### todo
+- add alphaDependencies
+- merge testAddCase into testRun
 - move testPhantomjs from index.js to index.sh
 - auto-generate help doc from README.md
 - add server stress test using phantomjs
 - minify /assets/utility2.js in production-mode
 
 #### 2014.2.x
+- merge mainApp into local object
 - auto-git-squash gh-pages after 256 commits
 - remove artifact versioning
 - change build-artifact-dir to build/$CI_BRANCH/<ci-host>
