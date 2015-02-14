@@ -602,27 +602,6 @@
       onError();
     };
 
-    local.testCaseAdd = function (testCaseDict) {
-      /*
-        this function adds test-case's from testCaseDict into local.testPlatform.testCaseList
-      */
-      // init local.modeTestCase
-      local.modeTestCase = local.modeTestCase || local.envDict.npm_config_mode_test_case;
-      Object.keys(testCaseDict).forEach(function (key) {
-        // add test-case testCaseDict[key] to local.testPlatform.testCaseList
-        if (key.slice(-5) === '_test' &&
-            (testCaseDict._testPrefix + '.')
-              .indexOf(local.envDict.PACKAGE_JSON_NAME + '.') === 0 &&
-            (local.modeTestCase === key ||
-              (!local.modeTestCase && key !== '_testRun_failure_test'))) {
-          local.testPlatform.testCaseList.push({
-            name: testCaseDict._testPrefix + '.' + key,
-            onTestCase: testCaseDict[key]
-          });
-        }
-      });
-    };
-
     local.testMock = function (mockList, onError, testCase) {
       /*
         this function mocks the local given in the mockList while running the testCase
@@ -857,19 +836,35 @@
       );
     };
 
-    local.testRun = function (onTestRunEnd) {
+    local.testRun = function (options, onTestRunEnd) {
       /*
-        this function runs the tests in local.testPlatform.testCaseList
+        this function will run the test-cases in local.testPlatform.testCaseList
       */
       var onParallel, testPlatform, timerInterval;
       local.modeTest = local.modeTest || local.envDict.npm_config_mode_npm_test;
       if (!local.modeTest) {
         return;
       }
+      // init local.modeTestCase
+      local.modeTestCase = local.modeTestCase || local.envDict.npm_config_mode_test_case;
+      // reset local.testPlatform.testCaseList
+      local.testPlatform.testCaseList.length = 0;
+      // add test-cases into local.testPlatform.testCaseList
+      Object.keys(options).forEach(function (key) {
+        // add test-case options[key] to local.testPlatform.testCaseList
+        if (key.slice(-5) === '_test' &&
+            (local.modeTestCase === key ||
+              (!local.modeTestCase && key !== '_testRun_failure_test'))) {
+          local.testPlatform.testCaseList.push({
+            name: key,
+            onTestCase: options[key]
+          });
+        }
+      });
       // if in browser mode, visually refresh test progress until it finishes
       if (local.modeJs === 'browser') {
         // init local._testReportDiv element
-        local._testReportDiv = document.createElement('div');
+        local._testReportDiv = document.querySelector('.testReportDiv') || {};
         local._testReportDiv.innerHTML = local.testMerge(local.testReport, {});
         document.body.appendChild(local._testReportDiv);
         // update test-report status every 1000 ms until finished
@@ -1498,20 +1493,6 @@
       }
     };
 
-    local.onFileModifiedCacheAndParse = function (options) {
-      /*
-        this function watches the file and if modified, then cache and parse it
-      */
-      local.fs.watchFile(options.file, {
-        interval: 1000,
-        persistent: false
-      }, function (stat2, stat1) {
-        if (stat2.mtime > stat1.mtime) {
-          local.fileCacheAndParse(options);
-        }
-      });
-    };
-
     local.onFileModifiedRestart = function (file) {
       /*
         this function watches the file and if modified, then restart the process
@@ -1526,37 +1507,6 @@
           }
         });
       }
-    };
-
-    local._onFileModified_default_test = function (onError) {
-      /*
-        this function tests onFileModified's watchFile handling behavior
-      */
-      var onParallel;
-      onParallel = local.onParallel(onError);
-      onParallel.counter += 1;
-      // test fileCacheAndParse's watchFile handling behavior
-      [
-        // test auto-jslint handling behavior
-        __dirname + '/package.json',
-        // test auto-cache handling behavior
-        __dirname + '/index.data'
-      ].forEach(function (file) {
-        onParallel.counter += 1;
-        local.fs.stat(file, function (error, stat) {
-          // test default watchFile handling behavior
-          onParallel.counter += 1;
-          local.fs.utimes(file, stat.atime, new Date(), onParallel);
-          // test nop watchFile handling behavior
-          onParallel.counter += 1;
-          setTimeout(function () {
-            local.fs.utimes(file, stat.atime, stat.mtime, onParallel);
-          // coverage - use 1500 ms to cover setInterval watchFile in node
-          }, 1500);
-          onParallel(error);
-        });
-      });
-      onParallel();
     };
 
     local.replStart = function (globalDict) {
@@ -1868,10 +1818,10 @@
       onParallel();
     };
 
-    local.testRunServer = function (onTestRunEnd, middlewareList) {
+    local.testRunServer = function (options, onTestRunEnd) {
     /*
       this function will
-      1. create a test-server with middlewareList
+      1. create test-server with options.serverMiddlewareList
       2. start test-server on $npm_config_server_port
       3. test test-server
     */
@@ -1886,14 +1836,14 @@
       // then assign it a random integer in the inclusive range 1 to 0xffff
       local.envDict.npm_config_server_port = local.envDict.npm_config_server_port ||
         ((Math.random() * 0x10000) | 0x8000).toString();
-      // 1. create a test-server with middlewareList
+      // 1. create test-server with options.serverMiddlewareList
       local.http.createServer(function (request, response) {
         var modeIo, onIo;
         modeIo = -1;
         onIo = function (error) {
           modeIo = error instanceof Error ? NaN : modeIo + 1;
-          if (middlewareList[modeIo]) {
-            middlewareList[modeIo](request, response, onIo);
+          if (options.serverMiddlewareList[modeIo]) {
+            options.serverMiddlewareList[modeIo](request, response, onIo);
             return;
           }
           // if error occurred, then respond with '500 Internal Server Error'
@@ -1908,7 +1858,7 @@
             'test-server listening on port ' + local.envDict.npm_config_server_port
           );
           // 3. test test-server
-          local.testRun(onTestRunEnd);
+          local.testRun(options, onTestRunEnd);
         });
     };
 
@@ -1928,7 +1878,7 @@
           npm_config_server_port: ''
         }]
       ], onError, function (onError) {
-        local.testRunServer(local.nop, []);
+        local.testRunServer({ serverMiddlewareList: [] }, local.nop);
         onError();
       });
     };
@@ -2138,8 +2088,6 @@
       );
       break;
     }
-    // add local test-case's
-    local.testCaseAdd(local, local);
   }());
 }((function (self) {
   'use strict';
@@ -2167,18 +2115,15 @@
   switch (local.modeJs) {
   // init browser js-env
   case 'browser':
-    local._testPrefix = 'utility2.index.browser';
     local.global = window;
     break;
   // init node js-env
   case 'node':
-    local._testPrefix = 'utility2.index.node';
     local.global = global;
     module.exports = local;
     break;
   // init phantom js-env
   case 'phantom':
-    local._testPrefix = 'utility2.index.phantom';
     local.global = self;
     break;
   }

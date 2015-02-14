@@ -28,7 +28,7 @@ lightweight nodejs module that runs phantomjs tests with browser code-coverage (
 // 1. create a clean app directory (e.g /tmp/app)
 // 2. inside app directory, save this js script as example.js
 // 3. inside app directory, run the following shell command:
-//    $ npm install utility2 && node_modules/.bin/utility2 shRun shNpmTest example.js
+//    $ npm install phantomjs-lite utility2 && node_modules/.bin/utility2 shRun shNpmTest example.js
 /*jslint
   browser: true,
   indent: 2,
@@ -78,11 +78,8 @@ lightweight nodejs module that runs phantomjs tests with browser code-coverage (
         }, onError);
       });
     };
-    // add local test-case's
-    local._testPrefix = 'example.browser';
-    local.utility2.testCaseAdd(local);
     // run test
-    local.utility2.testRun(local.utility2.nop);
+    local.utility2.testRun(local, local.utility2.nop);
   // init node js-env
   } else {
     // require modules
@@ -100,9 +97,6 @@ lightweight nodejs module that runs phantomjs tests with browser code-coverage (
           '/test/test.html?modeTest=phantom'
       }, onError);
     };
-    // add local test-case's
-    local._testPrefix = 'example.node';
-    local.utility2.testCaseAdd(local);
     // watch the following files, and if they are modified, then re-cache and re-parse them
     [{
       // cache file as /test/test.js
@@ -117,11 +111,8 @@ lightweight nodejs module that runs phantomjs tests with browser code-coverage (
       // if the file is modified, then cache and parse it
       local.utility2.onFileModifiedCacheAndParse(options);
     });
-    // run server test
-    local.utility2.testRunServer(function () {
-      // exit after test-run ends
-      process.exit(local.utility2.testReport.testsFailed);
-    }, [
+    // init local.serverMiddlewareList
+    local.serverMiddlewareList = [
       local.utility2.testMiddleware,
       function (request, response, next) {
         /*
@@ -139,7 +130,9 @@ lightweight nodejs module that runs phantomjs tests with browser code-coverage (
           next();
         }
       }
-    ]);
+    ];
+    // run server test and exit after it ends
+    local.utility2.testRunServer(local, process.exit);
   }
   return;
 }());
@@ -177,11 +170,11 @@ shBuild() {
   # create package content listing
   MODE_BUILD=gitLsTree shRunScreenCapture git ls-tree --abbrev=8 --full-name -l -r HEAD || return $?
   # run npm test on published package
-  shRun shNpmTestPublished
-  #!! # test example script
-  #!! MODE_BUILD=testExampleJs shRunScreenCapture shTestScriptJs example.js || return $?
-  #!! # copy phantomjs screen-capture to .tmp/build
-  #!! cp /tmp/app/.tmp/build/screen-capture.* .tmp/build || return $?
+  shRun shNpmTestPublished || return $?
+  # test example script
+  MODE_BUILD=testExampleJs shRunScreenCapture shTestScriptJs example.js || return $?
+  # copy phantomjs screen-capture to .tmp/build
+  cp /tmp/app/.tmp/build/screen-capture.* .tmp/build || return $?
   # run npm test
   MODE_BUILD=npmTest shRunScreenCapture npm test || return $?
   # deploy to heroku
@@ -205,16 +198,18 @@ exit $EXIT_CODE
 
 
 
-## changelog
+## recent changelog
 #### todo
-- add alphaDependencies
-- merge testAddCase into testRun
+- rename local.utility2 to exports
+- merge index.data into index.js
 - move testPhantomjs from index.js to index.sh
 - auto-generate help doc from README.md
 - add server stress test using phantomjs
 - minify /assets/utility2.js in production-mode
 
 #### 2014.2.x
+- remove _testPrefix
+- merge testAddCase into testRun
 - merge mainApp into local object
 - auto-git-squash gh-pages after 256 commits
 - remove artifact versioning

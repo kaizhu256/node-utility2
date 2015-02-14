@@ -242,8 +242,9 @@ tr:nth-child(odd).testReportPlatformTr {
   <h1>{{envDict.PACKAGE_JSON_NAME}} [{{envDict.PACKAGE_JSON_VERSION}}]</h1>
   <h3>{{envDict.PACKAGE_JSON_DESCRIPTION}}</h3>
   <div><button
-    onclick="window.utility2.modeTest=1; window.utility2.testRun(window.utility2.nop);"
+    onclick="window.utility2.modeTest=1; window.utility2.testRun(window.utility2, window.utility2.nop);"
   >run test</button></div>
+  <div class="testReportDiv"></div>
   </div>
   <!-- main app div end -->
   <!-- ajax progress bar begin -->

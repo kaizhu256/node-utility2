@@ -14,15 +14,13 @@
   switch (local.modeJs) {
   // init browser js-env
   case 'browser':
-    // init local.utility2
-    local.utility2 = window.utility2;
     // test !local.utility2.modeTest handling behavior
     local._modeTest = local.utility2.modeTest;
     local.utility2.modeTest = null;
     local.utility2.testRun();
     local.utility2.modeTest = local._modeTest;
     // run test
-    local.utility2.testRun(function () {
+    local.utility2.testRun(local, function () {
       // test local.utility2.modeTest !== 'phantom' handling behavior
       if (local.utility2.modeTest === 'phantom2') {
         setTimeout(function () {
@@ -36,7 +34,8 @@
   // init node js-env
   case 'node':
     // require modules
-    local.utility2 = require('./index.js');
+    local.fs = require('fs');
+    local.path = require('path');
     // init local test-case's
     local._testPhantom_default_test = function (onError) {
       /*
@@ -47,7 +46,8 @@
       onParallel.counter += 1;
       // test default handling behavior
       onParallel.counter += 1;
-      local.utility2.testPhantom({ url: 'http://localhost:' + process.env.npm_config_server_port +
+      local.utility2.testPhantom({ url: 'http://localhost:' +
+        process.env.npm_config_server_port +
         // test phantom-callback handling behavior
         '/?modeTest=phantom&' +
         // test _testSecret-validation handling behavior
@@ -142,11 +142,8 @@
       });
       onParallel();
     };
-    local._testPrefix = 'utility2.test.node';
-    // add local test-case's
-    local.utility2.testCaseAdd(local);
-    // run server test
-    local.utility2.testRunServer(process.exit, [
+    // init local.serverMiddlewareList
+    local.serverMiddlewareList = [
       // exit after test-run ends
       local.utility2.testMiddleware,
       function (request, response, next) {
@@ -194,7 +191,12 @@
             // suppress modeErrorIgnore
             [request, { url: '' }]
           ], local.utility2.nop, function (onError) {
-            local.utility2.serverRespondDefault(request, response, 500, local.utility2.errorDefault);
+            local.utility2.serverRespondDefault(
+              request,
+              response,
+              500,
+              local.utility2.errorDefault
+            );
             onError();
           });
           break;
@@ -203,7 +205,9 @@
           next();
         }
       }
-    ]);
+    ];
+    // run server-test
+    local.utility2.testRunServer(local, process.exit);
     // watch the following files, and if they are modified, then re-cache and re-parse them
     [{
       file: __dirname + '/index.data',
@@ -217,19 +221,17 @@
       coverage: 'utility2',
       file: __dirname + '/test.js'
     }].forEach(function (options) {
-      console.log('auto-cache and auto-parse ' + options.file);
+      console.log('cache and parse ' + options.file);
       // cache and parse the file
       local.utility2.fileCacheAndParse(options);
-      // if the file is modified, then re-cache and re-parse it
-      local.utility2.onFileModifiedCacheAndParse(options);
     });
-    local.utility2.fs.readdirSync(__dirname).forEach(function (file) {
+    local.fs.readdirSync(__dirname).forEach(function (file) {
       file = __dirname + '/' + file;
-      switch (local.utility2.path.extname(file)) {
+      switch (local.path.extname(file)) {
       case '.js':
       case '.json':
         // jslint the file
-        local.utility2.jslint_lite.jslintAndPrint(local.utility2.fs.readFileSync(file, 'utf8'), file);
+        local.utility2.jslint_lite.jslintAndPrint(local.fs.readFileSync(file, 'utf8'), file);
         break;
       }
       // if the file is modified, then restart the process
@@ -255,10 +257,18 @@
           typeof document.querySelector('body') === 'object' && 'browser';
       }
     }());
-    // init global
+    // init local.global
     local.global = local.modeJs === 'browser' ? window : global;
     // export local
     local.global.local = local;
+    // init local.utility2
+    local.utility2 = local.modeJs === 'browser' ? window.utility2 : require('./index.js');
+    // import test-cases from local.utility2
+    Object.keys(local.utility2).forEach(function (key) {
+      if (key.slice(-5) === '_test') {
+        local[key] = local.utility2[key];
+      }
+    });
   }());
   return local;
 }())));

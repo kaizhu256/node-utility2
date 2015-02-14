@@ -204,7 +204,7 @@ shInit() {
     # init default env
     else
       export BUILD_DIR=localhost || return $?
-      export CI_BRANCH=alpha || return $?
+      export CI_BRANCH=undefined || return $?
       export CI_COMMIT_ID=$(git rev-parse --verify HEAD) || return $?
     fi
     BUILD_DIR="build/branch/$CI_BRANCH/$BUILD_DIR" || return $?
