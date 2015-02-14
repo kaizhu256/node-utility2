@@ -1,5 +1,5 @@
 shAesDecrypt() {
-  # this function decrypts base64-encoded stdin to stdout using aes-256-cbc
+  # this function will decrypt base64-encoded stdin to stdout using aes-256-cbc
   # save stdin to $TEXT
   local TEXT=$(cat /dev/stdin) || return $?
   # init $IV from first 44 base64-encoded bytes of $TEXT
@@ -12,13 +12,13 @@ shAesDecrypt() {
 }
 
 shAesDecryptTravis() {
-  # this function decrypts $AES_ENCRYPTED_SH in .travis.yml to stdout
+  # this function will decrypt $AES_ENCRYPTED_SH in .travis.yml to stdout
   perl -ne "print \$1 if /- AES_ENCRYPTED_SH: (.*) # AES_ENCRYPTED_SH\$/" .travis.yml |\
     shAesDecrypt || return $?
 }
 
 shAesEncrypt() {
-  # this function encrypts stdin to base64-encoded stdout,
+  # this function will encrypt stdin to base64-encoded stdout,
   # with a random iv prepended using aes-256-cbc
   # init $IV from random 16 bytes
   local IV=$(openssl rand -hex 16) || return $?
@@ -29,7 +29,7 @@ shAesEncrypt() {
 }
 
 shAesEncryptTravis() {
-  # this function encrypts the script $1 to $AES_ENCRYPTED_SH and stores it in .travis.yml
+  # this function will encrypt the script $1 to $AES_ENCRYPTED_SH and stores it in .travis.yml
   # init $FILE
   local FILE=$1/aes-decrypted.$(printf $GITHUB_REPO | perl -pe "s/\//./").sh || return $?
   if [ ! -f "$FILE" ]
@@ -66,8 +66,16 @@ shAesEncryptTravis() {
     .travis.yml || return $?
 }
 
+shBuild() {
+  # this function will run the build script in README.md
+  # init $TMPDIR2
+  mkdir -p $TMPDIR2/build/coverage-report.html || return $?
+  # run script from README.md
+  MODE_BUILD=build shTestScriptSh $TMPDIR2/build.sh || return $?
+}
+
 shBuildGithubUpload() {
-  # this function uploads the ./build dir to github
+  # this function will upload the ./build dir to github
   shBuildPrint githubUpload\
     "uploading build artifacts to git@github.com:$GITHUB_REPO.git ..." || return $?
   # cleanup $TMPDIR2/build
@@ -94,36 +102,24 @@ shBuildGithubUpload() {
   mkdir -p $BUILD_DIR || return $?
   rm -fr $BUILD_DIR && cp -a $TMPDIR2/build $BUILD_DIR || return $?
   # init .git/config
-  printf "\n[user]\nname=nobody\nemail=nobody\n" > .git/config || return $?
+  printf "\n[user]\nname=nobody\nemail=nobody" >> .git/config || return $?
+  # update gh-pages
   git add -A || return $?
   git commit -am "[skip ci] update gh-pages" || return $?
-  # if number of commits > 256, then squash HEAD to the earliest commit
-  if [ $(git rev-list HEAD --count) -gt 256 ]
-  then
-    git push git@github.com:$GITHUB_REPO.git gh-pages:gh-pages.backup || return $?
-    shGitSquash $(git rev-list --max-parents=0 HEAD) || return $?
-  fi
-  # update gh-pages
-  git push git@github.com:$GITHUB_REPO.git gh-pages || return $?
+  git push origin gh-pages || return $?
+  # if number of commits > $COMMIT_LIMIT, then squash HEAD to the earliest commit
+  shGitPushAndSquashAndPush gh-pages $COMMIT_LIMIT || return $?
 }
 
 shBuildPrint() {
-  # this function prints debug info about the build state
+  # this function will print debug info about the build state
   export MODE_BUILD=$1 || return $?
   local MESSAGE="$2" || return $?
   printf "\n[MODE_BUILD=$MODE_BUILD] - $(shDateIso) - $MESSAGE\n\n" || return $?
 }
 
-shBuild() {
-  # this function runs the build script in README.md
-  # init $TMPDIR2
-  mkdir -p $TMPDIR2/build/coverage-report.html || return $?
-  # run script from README.md
-  MODE_BUILD=build shTestScriptSh $TMPDIR2/build.sh || return $?
-}
-
 shDateIso() {
-  # this function prints the date in ISO format
+  # this function will print the date in ISO format
   date -u "+%Y-%m-%dT%H:%M:%SZ"
 }
 
@@ -140,6 +136,25 @@ shExitCodeSave() {
   fi
   # restore $CWD
   cd $CWD || return $?
+}
+
+shGitPushAndSquashAndPush() {
+  # this function will, if number of commits > $COMMIT_LIMIT,
+  # 1. push the current $BRANCH to origin/$BRANCH.backup
+  # 2. squash the HEAD to the first commit
+  # 3. push the squashed $BRANCH to origin/$BRANCH
+  local BRANCH=$1 || return $?
+  local COMMIT_LIMIT=$2 || return $?
+  # if number of commits > $COMMIT_LIMIT
+  if [ "$COMMIT_LIMIT" ] && [ $(git rev-list HEAD --count) -gt $COMMIT_LIMIT ]
+  then
+    # 1. push the current $BRANCH to $BRANCH.backup
+    git push -f origin $BRANCH:$BRANCH.backup || return $?
+    # 2. squash the HEAD to the first commit
+    shGitSquash $(git rev-list --max-parents=0 HEAD) || return $?
+    # 3. push the squashed $BRANCH to origin/$BRANCH
+    git push -f origin $BRANCH || return $?
+  fi
 }
 
 shGitSquash() {
@@ -159,7 +174,7 @@ shGitSquash() {
 }
 
 shGrep() {
-  # this function recursively greps the regex $1 in the current directory
+  # this function will recursively grep the regex $1 in the current directory
   local FILE_FILTER="/\\.\\" || return $?
   FILE_FILTER="$FILE_FILTER|.*\\b\\(\\.\\d\\" || return $?
   FILE_FILTER="$FILE_FILTER|archive\\" || return $?
@@ -182,7 +197,7 @@ shGrep() {
 }
 
 shInit() {
-  # this function inits the env
+  # this function will init the env
   # init CI_*
   if [ -d .git ]
   then
@@ -259,7 +274,7 @@ shInit() {
 }
 
 shIstanbulCover() {
-  # this function runs the command with istanbul code-coverage
+  # this function will run the command $@ with istanbul code-coverage
   npm_config_coverage_report_dir="$TMPDIR2/build/coverage-report.html"\
     $ISTANBUL_LITE cover $@ || return $?
 }
@@ -288,7 +303,7 @@ shIstanbulReport() {
 }
 
 shNpmTest() {
-  # this function runs npm test
+  # this function will run npm test
   shBuildPrint "${MODE_BUILD:-npmTest}" "npm testing $CWD ..." || return $?
   # init $TMPDIR2
   mkdir -p $TMPDIR2/build/coverage-report.html || return $?
@@ -348,7 +363,7 @@ shNpmTest() {
 }
 
 shNpmTestPublished() {
-  # this function runs npm test on the published package
+  # this function will run npm test on the published package
   shBuildPrint npmTestPublished "npm testing published package $PACKAGE_JSON_NAME ..." ||\
     return $?
   # init /tmp/app
@@ -398,7 +413,7 @@ shRun() {
 }
 
 shRunScreenCapture() {
-  # this function runs the command $@ and screen-capture's the output
+  # this function will run the command $@ and screen-capture the output
   # http://www.cnx-software.com/2011/09/22/how-to-convert-a-command-line-result-into-an-image-in-linux/
   # init $TMPDIR2
   mkdir -p $TMPDIR2/build/coverage-report.html || return $?
@@ -432,12 +447,12 @@ shRunScreenCapture() {
 }
 
 shServerPortRandom() {
-  # this function prints a random port in the inclusive range 0x1000 to 0xffff
+  # this function will print a random port in the inclusive range 0x1000 to 0xffff
   printf $(($(hexdump -n 2 -e '/2 "%u"' /dev/urandom)|32768))
 }
 
 shTestHeroku() {
-  # this function deploys the app to heroku and then test it
+  # this function will deploy the app to heroku and test it
   if [ ! "$GIT_SSH_KEY" ] || [ ! "$HEROKU_REPO" ]
   then
     return
@@ -482,7 +497,7 @@ shTestHeroku() {
 }
 
 shTestPhantom() {
-  # this function runs phantomjs tests on the specified $URL,
+  # this function will run phantomjs tests on the specified $URL,
   # and merge it into the existing test-report
   local URL="$1" || return $?
   shBuildPrint "${MODE_BUILD:-testPhantom}" "testing $URL with phantomjs ..." || return $?
@@ -504,7 +519,7 @@ shTestPhantom() {
 }
 
 shTestScriptJs() {
-  # this function tests the js script $1 in README.md
+  # this function will test the js script $1 in README.md
   local FILE=$1 || return $?
   shBuildPrint $MODE_BUILD "testing $FILE ..." || return $?
   if [ ! "$MODE_OFFLINE" ]
@@ -550,7 +565,7 @@ shTestScriptJs() {
 }
 
 shTestScriptSh() {
-  # this function tests the sh script $1 in README.md
+  # this function will test the sh script $1 in README.md
   local FILE=$1 || return $?
   local FILE_BASENAME=$(node -e "console.log(require('path').basename('$FILE'))") || return $?
   shBuildPrint $MODE_BUILD "testing $FILE ..." || return $?
@@ -576,7 +591,7 @@ shTestScriptSh() {
 }
 
 shTmpAppCopy() {
-  # this function copies the app to /tmp/app with only the bare git repo files
+  # this function will copy the the bare git repo files to /tmp/app
   # init /tmp/app
   rm -fr /tmp/app && mkdir -p /tmp/app || return $?
   # tar / untar repo contents to /tmp/app
@@ -584,7 +599,7 @@ shTmpAppCopy() {
 }
 
 shTravisEncrypt() {
-  # this function travis-encrypts github repo $1's secret $2
+  # this function will travis-encrypt github repo $1's secret $2
   # init $TMPDIR2 dir
   mkdir -p $TMPDIR2/build/coverage-report.html || return $?
   local GITHUB_REPO=$1 || return $?

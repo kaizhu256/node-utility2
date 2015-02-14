@@ -10,9 +10,9 @@ lightweight nodejs module that runs phantomjs tests with browser code-coverage (
 
 | git branch | test-server | test-report | coverage-report | build artifact |
 |:----------:|:-----------:|:-----------:|:---------------:|:--------------:|
-|[master](https://github.com/kaizhu256/node-utility2/tree/master) | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://hrku01-utility2-master.herokuapp.com/?modeTest=1) | [![test-report](https://kaizhu256.github.io/node-utility2/build/master/travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build/master/travis-ci.org/test-report.html) | [![istanbul-lite coverage-report](https://kaizhu256.github.io/node-utility2/build/master/travis-ci.org/coverage-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build/master/travis-ci.org/coverage-report.html/node-utility2/index.html) | [![build artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build/master/travis-ci.org)|
-|[beta](https://github.com/kaizhu256/node-utility2/tree/beta) | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://hrku01-utility2-beta.herokuapp.com/?modeTest=1) | [![test-report](https://kaizhu256.github.io/node-utility2/build/beta/travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build/beta/travis-ci.org/test-report.html) | [![istanbul-lite coverage-report](https://kaizhu256.github.io/node-utility2/build/beta/travis-ci.org/coverage-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build/beta/travis-ci.org/coverage-report.html/node-utility2/index.html) | [![build artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build/beta/travis-ci.org)|
-|[alpha](https://github.com/kaizhu256/node-utility2/tree/alpha) | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://hrku01-utility2-alpha.herokuapp.com/?modeTest=1) | [![test-report](https://kaizhu256.github.io/node-utility2/build/alpha/travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build/alpha/travis-ci.org/test-report.html) | [![istanbul-lite coverage-report](https://kaizhu256.github.io/node-utility2/build/alpha/travis-ci.org/coverage-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build/alpha/travis-ci.org/coverage-report.html/node-utility2/index.html) | [![build artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build/alpha/travis-ci.org)|
+|[master](https://github.com/kaizhu256/node-utility2/tree/master) | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/build/heroku-logo.75x25.png)](https://hrku01-utility2-master.herokuapp.com/?modeTest=1) | [![test-report](https://kaizhu256.github.io/node-utility2/build//branch/master/travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build//branch/master/travis-ci.org/test-report.html) | [![istanbul-lite coverage-report](https://kaizhu256.github.io/node-utility2/build//branch/master/travis-ci.org/coverage-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build//branch/master/travis-ci.org/coverage-report.html/node-utility2/index.html) | [![build artifacts](https://kaizhu256.github.io/node-utility2/build/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build//branch/master/travis-ci.org)|
+|[beta](https://github.com/kaizhu256/node-utility2/tree/beta) | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/build/heroku-logo.75x25.png)](https://hrku01-utility2-beta.herokuapp.com/?modeTest=1) | [![test-report](https://kaizhu256.github.io/node-utility2/build//branch/beta/travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build//branch/beta/travis-ci.org/test-report.html) | [![istanbul-lite coverage-report](https://kaizhu256.github.io/node-utility2/build//branch/beta/travis-ci.org/coverage-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build//branch/beta/travis-ci.org/coverage-report.html/node-utility2/index.html) | [![build artifacts](https://kaizhu256.github.io/node-utility2/build/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build//branch/beta/travis-ci.org)|
+|[alpha](https://github.com/kaizhu256/node-utility2/tree/alpha) | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/build/heroku-logo.75x25.png)](https://hrku01-utility2-alpha.herokuapp.com/?modeTest=1) | [![test-report](https://kaizhu256.github.io/node-utility2/build//branch/alpha/travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build//branch/alpha/travis-ci.org/test-report.html) | [![istanbul-lite coverage-report](https://kaizhu256.github.io/node-utility2/build//branch/alpha/travis-ci.org/coverage-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build//branch/alpha/travis-ci.org/coverage-report.html/node-utility2/index.html) | [![build artifacts](https://kaizhu256.github.io/node-utility2/build/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build//branch/alpha/travis-ci.org)|
 
 
 
@@ -28,7 +28,7 @@ lightweight nodejs module that runs phantomjs tests with browser code-coverage (
 // 1. create a clean app directory (e.g /tmp/app)
 // 2. inside app directory, save this js script as example.js
 // 3. inside app directory, run the following shell command:
-//    $ npm install phantomjs-lite utility2 && node_modules/.bin/utility2 shRun shNpmTest example.js
+//    $ npm install utility2 && node_modules/.bin/utility2 shRun shNpmTest example.js
 /*jslint
   browser: true,
   indent: 2,
@@ -82,11 +82,12 @@ lightweight nodejs module that runs phantomjs tests with browser code-coverage (
     local.utility2.testRun(local, local.utility2.nop);
   // init node js-env
   } else {
+    // mock $PACKAGE_JSON_NAME
+    process.env.PACKAGE_JSON_NAME = 'example-module';
+    // mock $PACKAGE_JSON_VERSION
+    process.env.PACKAGE_JSON_VERSION = '1.0.0';
     // require modules
     local.utility2 = require('utility2');
-    // mock process.env.PACKAGE_JSON_NAME to match local._prefixTest
-    process.env.PACKAGE_JSON_NAME = local.utility2.utility2Browser.envDict.PACKAGE_JSON_NAME =
-      'example';
     // init local test-case's
     local._testPhantom_default_test = function (onError) {
       /*
@@ -97,7 +98,6 @@ lightweight nodejs module that runs phantomjs tests with browser code-coverage (
           '/test/test.html?modeTest=phantom'
       }, onError);
     };
-    // watch the following files, and if they are modified, then re-cache and re-parse them
     [{
       // cache file as /test/test.js
       cache: '/test/test.js',
@@ -108,8 +108,6 @@ lightweight nodejs module that runs phantomjs tests with browser code-coverage (
       console.log('auto-cache and auto-parse ' + options.file);
       // cache and parse the file
       local.utility2.fileCacheAndParse(options);
-      // if the file is modified, then cache and parse it
-      local.utility2.onFileModifiedCacheAndParse(options);
     });
     // init local.serverMiddlewareList
     local.serverMiddlewareList = [
@@ -150,7 +148,7 @@ lightweight nodejs module that runs phantomjs tests with browser code-coverage (
 
 
 ## package content
-[![screen-capture](https://kaizhu256.github.io/node-utility2/build//screen-capture.gitLsTree.png)](https://github.com/kaizhu256/node-utility2)
+[![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.gitLsTree.png)](https://github.com/kaizhu256/node-utility2)
 
 
 
@@ -190,7 +188,7 @@ EXIT_CODE=$?
 # upload build artifacts to github
 if [ "$TRAVIS" ]
 then
-  shRun shBuildGithubUpload || exit $?
+  COMMIT_LIMIT=256 shRun shBuildGithubUpload || exit $?
 fi
 # exit with $EXIT_CODE
 exit $EXIT_CODE
@@ -200,14 +198,15 @@ exit $EXIT_CODE
 
 ## recent changelog
 #### todo
-- rename local.utility2 to exports
+- move testPhantomjs from index.js to index.sh and auto-install phantomjs-lite when required
 - merge index.data into index.js
-- move testPhantomjs from index.js to index.sh
 - auto-generate help doc from README.md
 - add server stress test using phantomjs
 - minify /assets/utility2.js in production-mode
 
 #### 2014.2.x
+- add shGitPushAndSquashAndPush
+- rename local.utility2 to exports
 - remove _testPrefix
 - merge testAddCase into testRun
 - merge mainApp into local object
