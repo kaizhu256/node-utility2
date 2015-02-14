@@ -36,27 +36,27 @@ lightweight nodejs module that runs phantomjs tests with browser code-coverage (
 */
 (function () {
   'use strict';
-  var local, mainApp;
+  var local;
   // init local
   local = {};
   // init browser js-env
   if (typeof window === 'object') {
-    // init mainApp
-    mainApp = window.utility2;
+    // init local.utility2
+    local.utility2 = window.utility2;
     // init local test-case's
     local._ajax_200_test = function (onError) {
       /*
         this function tests ajax's 200 http status-code handling behavior
       */
       // test the defined url '/test/hello'
-      mainApp.ajax({
+      local.utility2.ajax({
         url: '/test/hello'
       }, function (error, data) {
-        mainApp.testTryCatch(function () {
+        local.utility2.testTryCatch(function () {
           // validate no error occurred
-          mainApp.assert(!error, error);
+          local.utility2.assert(!error, error);
           // validate data
-          mainApp.assert(data === 'hello', data);
+          local.utility2.assert(data === 'hello', data);
           onError();
         }, onError);
       });
@@ -66,51 +66,43 @@ lightweight nodejs module that runs phantomjs tests with browser code-coverage (
         this function tests ajax's 404 http status-code handling behavior
       */
       // test the undefined url '/test/undefined'
-      mainApp.ajax({
+      local.utility2.ajax({
         url: '/test/undefined'
       }, function (error) {
-        mainApp.testTryCatch(function () {
+        local.utility2.testTryCatch(function () {
           // validate error occurred
-          mainApp.assert(error instanceof Error, error);
+          local.utility2.assert(error instanceof Error, error);
           // validate 404 http status-code
-          mainApp.assert(error.statusCode === 404, error.statusCode);
+          local.utility2.assert(error.statusCode === 404, error.statusCode);
           onError();
         }, onError);
       });
     };
     // add local test-case's
     local._testPrefix = 'example.browser';
-    mainApp.testCaseAdd(local, mainApp);
+    local.utility2.testCaseAdd(local);
     // run test
-    mainApp.testRun(mainApp.nop);
+    local.utility2.testRun(local.utility2.nop);
   // init node js-env
   } else {
-    // init mainApp
-    mainApp = module.exports;
     // require modules
-    mainApp.utility2 = require('utility2');
-    // merge utility2 into mainApp;
-    Object.keys(mainApp.utility2).forEach(function (key) {
-      if (key[0] !== '_') {
-        mainApp[key] = mainApp.utility2[key];
-      }
-    });
+    local.utility2 = require('utility2');
     // mock process.env.PACKAGE_JSON_NAME to match local._prefixTest
-    process.env.PACKAGE_JSON_NAME = mainApp.utility2Browser.envDict.PACKAGE_JSON_NAME =
+    process.env.PACKAGE_JSON_NAME = local.utility2.utility2Browser.envDict.PACKAGE_JSON_NAME =
       'example';
     // init local test-case's
     local._testPhantom_default_test = function (onError) {
       /*
         this function spawns a phantomjs process to test a webpage
       */
-      mainApp.testPhantom({
+      local.utility2.testPhantom({
         url: 'http://localhost:' + process.env.npm_config_server_port +
           '/test/test.html?modeTest=phantom'
       }, onError);
     };
     // add local test-case's
     local._testPrefix = 'example.node';
-    mainApp.testCaseAdd(local, mainApp);
+    local.utility2.testCaseAdd(local);
     // watch the following files, and if they are modified, then re-cache and re-parse them
     [{
       // cache file as /test/test.js
@@ -121,22 +113,22 @@ lightweight nodejs module that runs phantomjs tests with browser code-coverage (
     }].forEach(function (options) {
       console.log('auto-cache and auto-parse ' + options.file);
       // cache and parse the file
-      mainApp.fileCacheAndParse(options);
+      local.utility2.fileCacheAndParse(options);
       // if the file is modified, then cache and parse it
-      mainApp.onFileModifiedCacheAndParse(options);
+      local.utility2.onFileModifiedCacheAndParse(options);
     });
     // run server test
-    mainApp.testRunServer(function () {
+    local.utility2.testRunServer(function () {
       // exit after test-run ends
-      process.exit(mainApp.testReport.testsFailed);
+      process.exit(local.utility2.testReport.testsFailed);
     }, [
-      mainApp.testMiddleware,
+      local.utility2.testMiddleware,
       function (request, response, next) {
         /*
           this function is the main test middleware
         */
         // nop hack to pass jslint
-        mainApp.nop(request);
+        local.utility2.nop(request);
         switch (request.urlPathNormalized) {
         // test http GET handling behavior
         case '/test/hello':
