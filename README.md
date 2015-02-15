@@ -144,6 +144,7 @@ lightweight nodejs module that runs phantomjs tests with browser code-coverage (
 ## npm dependencies
 - [istanbul-lite](https://www.npmjs.com/package/istanbul-lite)
 - [jslint-lite](https://www.npmjs.com/package/jslint-lite)
+- [phantomjs-lite](https://www.npmjs.com/package/phantomjs-lite)
 
 
 
@@ -200,6 +201,7 @@ exit $EXIT_CODE
 
 
 ## todo
+- explicitly require slimerjs instead of auto-detecting it
 - move testPhantomjs from index.js to index.sh and auto-install phantomjs-lite when required
 - merge index.data into index.js
 - auto-generate help doc from README.md

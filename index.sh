@@ -265,7 +265,9 @@ shInit() {
   # init $ISTANBUL_LITE
   export ISTANBUL_LITE=$(cd $DIRNAME &&\
     node -e "console.log(require('istanbul-lite').__dirname)")/index.js || return $?
-  echo $ISTANBUL_LITE
+  # init $PHANTOMJS_LITE
+  export PHANTOMJS_LITE=$(cd $DIRNAME &&\
+    node -e "console.log(require('phantomjs-lite').__dirname)")/phantomjs || return $?
   # init $GIT_SSH
   if [ "$GIT_SSH_KEY" ]
   then

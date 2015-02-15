@@ -8,7 +8,6 @@
 */
 (function (exports) {
   'use strict';
-  var global;
 
 
 
@@ -16,22 +15,6 @@
     /*
       this function will run shared js-env code
     */
-    // init global
-    global = exports.global;
-    // init exports properties
-    exports.errorDefault = exports.errorDefault || new Error('default error');
-    exports.fileCacheDict = exports.fileCacheDict || {};
-    exports.testPlatform = { testCaseList: [] };
-    exports.testReport = exports.testReport || { testPlatformList: [exports.testPlatform] };
-    exports.textExampleAscii = exports.textExampleAscii ||
-      '\x00\x01\x02\x03\x04\x05\x06\x07\b\t\n\x0b\f\r\x0e\x0f' +
-      '\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f' +
-      ' !"#$%&\'()*+,-./0123456789:;<=>?' +
-      '@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_' +
-      '`abcdefghijklmnopqrstuvwxyz{|}~\x7f';
-    exports.timeoutDefault = exports.timeoutDefault || 30000;
-    exports.__coverage__ = exports.__coverage__ || global.__coverage__ || null;
-
     exports._ajax_default_test = function (onError) {
       /*
         this function will test ajax's default handling behavior
@@ -199,42 +182,6 @@
       onError();
     };
 
-    exports._debug_print = global[['debug', 'Print'].join('')] = function (arg) {
-      /*
-        this internal function is used for tmp debugging,
-        and jslint will nag you to remove it if used
-      */
-      // debug arguments
-      exports[['debug', 'PrintArguments'].join('')] = arguments;
-      console.error('\n\n\ndebug' + 'Print');
-      console.error.apply(console, arguments);
-      console.error();
-      // return arg for inspection
-      return arg;
-    };
-
-    exports.__debug_print_default_test = function (onError) {
-      /*
-        this function will test _debug_print's default handling behavior
-      */
-      var message;
-      exports.testMock([
-        // suppress console.error
-        [console, { error: function (arg) {
-          message += (arg || '') + '\n';
-        } }]
-      ], onError, function (onError) {
-        message = '';
-        exports._debug_print('__debug_print_default_test');
-        // validate message
-        exports.assert(
-          message === '\n\n\ndebug' + 'Print\n__debug_print_default_test\n\n',
-          message
-        );
-        onError();
-      });
-    };
-
     exports.errorStack = function (error) {
       /*
         this function will return the error's stack-trace
@@ -323,13 +270,6 @@
       });
       exports.assert(data === '{"aa":1,"bb":2,"dd":[null],"ee":{"ff":1,"gg":2}}', data);
       onError();
-    };
-
-    exports.nop = function () {
-      /*
-        this function will perform no operation - nop
-      */
-      return;
     };
 
     exports.onErrorDefault = function (error) {
@@ -617,8 +557,8 @@
         // suppress console.log
         [console, { log: exports.nop }],
         // enforce synchronicity by mocking timers as callCallback
-        [global, { setInterval: callCallback, setTimeout: callCallback }],
-        [global.process || {}, { exit: exports.nop }]
+        [exports.global, { setInterval: callCallback, setTimeout: callCallback }],
+        [exports.global.process || {}, { exit: exports.nop }]
       ].concat(mockList);
       onError2 = function (error) {
         // restore mock[0] from mock[2]
@@ -901,7 +841,7 @@
         case 'browser':
           // notify saucelabs of test results
           // https://docs.saucelabs.com/reference/rest-api/#js-unit-testing
-          global.global_test_results = {
+          exports.global.global_test_results = {
             coverage: exports.__coverage__,
             failed: exports.testReport.testsFailed,
             testReport: exports.testReport
@@ -913,7 +853,7 @@
             // so it can be caught and passed to the phantom js-env
             if (exports.modeTest === 'phantom') {
               throw new Error(JSON.stringify({
-                global_test_results: global.global_test_results
+                global_test_results: exports.global.global_test_results
               }));
             }
           }, 1000);
@@ -1494,7 +1434,7 @@
       /*
         this function will watche the file and if modified, then restart the process
       */
-      if (process.env.npm_config_mode_auto_restart && exports.fs.statSync(file).isFile()) {
+      if (exports.envDict.npm_config_mode_auto_restart && exports.fs.statSync(file).isFile()) {
         exports.fs.watchFile(file, {
           interval: 1000,
           persistent: false
@@ -1514,7 +1454,7 @@
       // evil hack to pass jslint
       evil = 'eval';
       Object.keys(globalDict).forEach(function (key) {
-        global[key] = globalDict[key];
+        exports.global[key] = globalDict[key];
       });
       // start repl server
       exports._replServer = require('repl').start({ useGlobals: true });
@@ -1781,14 +1721,18 @@
           file = process.cwd() + '/.tmp/instrumented..assets.utility2.js';
         }
         // spawn a phantomjs process to test a url
-        exports.child_process.spawn(argv0.split('.')[1], [file, encodeURIComponent(
-          JSON.stringify(exports.setOverride({
-            argv0: argv0,
-            __dirname: __dirname,
-            _testSecret: exports._testSecret,
-            timeoutDefault: options.timeout
-          }, 1, options))
-        )], { stdio: 'inherit' })
+        exports.child_process.spawn(
+          require('phantomjs-lite').__dirname + '/' + argv0.split('.')[1],
+          [
+            file,
+            encodeURIComponent(JSON.stringify(exports.setOverride({
+              argv0: argv0,
+              _testSecret: exports._testSecret,
+              timeoutDefault: options.timeout
+            }, 1, options)))
+          ],
+          { stdio: 'inherit' }
+        )
           .on('exit', function (exitCode) {
             // merge coverage code
             exports.coverageMerge(
@@ -1879,212 +1823,126 @@
         onError();
       });
     };
+
+    // cache index.* files
+    [{
+      file: __dirname + '/index.data',
+      parse: true
+    }, {
+      cache: '/assets/utility2.js',
+      coverage: 'utility2',
+      file: __dirname + '/index.js'
+    }].forEach(function (options) {
+      exports.fileCacheAndParse(options);
+    });
   }());
 
 
 
   (function () {
     /*
-      this function will run shared js-env code
+      this function will run phantom js-env code
     */
-    switch (exports.modeJs) {
-    // init browser js-env
-    case 'browser':
-      // init exports properties
-      exports.envDict = exports.envDict || {};
-      exports.testPlatform.name = 'browser - ' + navigator.userAgent +
-        ' - ' + new Date().toISOString();
-      exports.testPlatform.screenCaptureImg = exports.envDict.MODE_BUILD_SCREEN_CAPTURE;
-      // parse any url-search-params that matches 'mode*' or '_testSecret' or 'timeoutDefault'
-      location.search.replace(
-        (/\b(mode[A-Z]\w+|_testSecret|timeoutDefault)=([^#&=]+)/g),
-        function (match0, key, value) {
-          // nop hack to pass jslint
-          exports.nop(match0);
-          exports[key] = value;
-          // try to parse value as json object
-          try {
-            exports[key] = JSON.parse(value);
-          } catch (ignore) {
-          }
-        }
-      );
-      break;
-    // init node js-env
-    case 'node':
-      // require modules
-      exports.child_process = require('child_process');
-      exports.crypto = require('crypto');
-      exports.fs = require('fs');
-      exports.http = require('http');
-      exports.https = require('https');
-      exports.jslint_lite = require('jslint-lite');
-      exports.path = require('path');
-      exports.url = require('url');
-      exports.vm = require('vm');
-      // init exports properties
-      exports.envDict = process.env;
-      exports.testPlatform.name = 'node - ' + process.platform + ' ' + process.version +
-        ' - ' + new Date().toISOString();
-      exports.testPlatform.screenCaptureImg = exports.envDict.MODE_BUILD_SCREEN_CAPTURE;
-      // init exports.__coverage__
-      Object.keys(global).forEach(function (key) {
-        if (key.indexOf('$$cov_') === 0) {
-          exports.__coverage__ = global[key];
-        }
-      });
-      // init exports with default values
-      exports.setDefault(exports, -1, {
-        // export __dirname
-        __dirname: __dirname,
-        // init state file used for browser init
-        utility2Browser: {
-          envDict: {
-            PACKAGE_JSON_DESCRIPTION: exports.envDict.PACKAGE_JSON_DESCRIPTION,
-            PACKAGE_JSON_NAME: exports.envDict.PACKAGE_JSON_NAME,
-            PACKAGE_JSON_VERSION: exports.envDict.PACKAGE_JSON_VERSION
-          },
-          fileCacheDict: {}
-        }
-      });
-      // cache index.* files
-      [{
-        file: __dirname + '/index.data',
-        parse: true
-      }, {
-        cache: '/assets/utility2.js',
-        coverage: 'utility2',
-        file: __dirname + '/index.js'
-      }].forEach(function (options) {
-        exports.fileCacheAndParse(options);
-      });
-      // init _testSecret
-      (function () {
-        var testSecretCreate;
-        testSecretCreate = function () {
-          exports._testSecret = exports.crypto.randomBytes(32).toString('hex');
-        };
-        // init _testSecret
-        testSecretCreate();
-        exports._testSecret = exports.envDict.TEST_SECRET || exports._testSecret;
-        // re-init _testSecret every 60 seconds
-        setInterval(testSecretCreate, 60000).unref();
-      }());
-      break;
-    // init phantom js-env
-    case 'phantom':
-      // require modules
-      exports.fs = require('fs');
-      exports.system = require('system');
-      exports.webpage = require('webpage');
-      // init exports properties
-      exports.envDict = exports.system.env;
-      exports.testPlatform.name = (global.slimer ? 'slimer - ' : 'phantom - ') +
-        exports.system.os.name + ' ' +
-        global.phantom.version.major + '.' +
-        global.phantom.version.minor + '.' +
-        global.phantom.version.patch +
-        ' - ' + new Date().toISOString();
-      exports.testPlatform.screenCaptureImg = exports.envDict.MODE_BUILD_SCREEN_CAPTURE;
-      // override exports properties
-      exports.setOverride(
-        exports,
-        -1,
-        JSON.parse(decodeURIComponent(exports.system.args[1]))
-      );
-      // mock exports.fileCacheDict['/test/test-report.html.template'].data
-      exports.fileCacheDict = { '/test/test-report.html.template': { data: '' } };
-      // if modeErrorIgnore, then suppress console.error and console.log
-      if (exports.modeErrorIgnore) {
-        console.error = console.log = exports.nop;
-      }
-      // init error handling
-      global.phantom.onError = function (message, trace) {
-        /*
-          this function will catch all errors and
-          1. check if the error-message is a test-callback, and handle it appropriately
-          2. else handle it as a normal error
-        */
-        try {
-          var data, file;
-          data = (/^Error: (\{"global_test_results":\{.+)/).exec(message);
-          data = data && JSON.parse(data[1]).global_test_results;
-          // 1. check if the error-message is a test-callback, and handle it appropriately
-          if (data) {
-            // handle global_test_results passed as error
-            // merge coverage
-            exports.coverageMerge(exports.__coverage__, data.coverage);
-            // create screenCapture
-            file = exports.fs.workingDirectory + '/.tmp/build/screen-capture.' +
-              exports.argv0.replace((/\b(phantomjs|slimerjs)\b.*/g), '$1') + '.png';
-            exports.page.render(file);
-            console.log('created ' + 'file://' + file);
-            // integrate screenCapture into test-report
-            data.testReport.testPlatformList[0].screenCaptureImg =
-              file.replace((/^.*\//), '');
-            // merge test-report
-            exports.testMerge(exports.testReport, data.testReport);
-          // 2. else handle it as a normal error
-          } else {
-            // phantom error handling - http://phantomjs.org/api/phantom/handler/on-error.html
-            console.error('\n\n');
-            console.error(exports.argv0 + ' ERROR: ' + message);
-            if (trace && trace.length) {
-              console.error(exports.argv0 + ' TRACE:');
-              trace.forEach(function (t) {
-                console.error(' -> ' + (t.file || t.sourceURL) + ': ' + t.line
-                  + (t.function ? ' (in function ' + t.function + ')' : ''));
-              });
-            }
-            console.error('\n\n');
-          }
-          [[
-            '.tmp/build/test-report.' + exports.argv0 + '.json',
-            exports.testReport
-          ], [
-            '.tmp/build/coverage-report.html/coverage.' + exports.argv0 + '.json',
-            exports.__coverage__
-          ]].forEach(function (args) {
-            file = exports.fs.workingDirectory + '/' + args[0];
-            exports.fs.write(file, JSON.stringify(args[1]));
-            console.log('created ' + 'file://' + file);
-          });
-          // exit with number of tests failed as exit-code
-          global.phantom.exit(!data || data.testReport.testsFailed);
-        } catch (error) {
-          console.error(error.message);
-          global.phantom.exit(1);
-        }
-      };
-      // set timeout for phantom
-      exports.onTimeout(function (error) {
-        global.phantom.onError(error.message);
-      }, exports.timeoutDefault, exports.url);
-      // reset testCaseList
-      exports.testPlatform.testCaseList = [];
-      // init page
-      exports.page = exports.webpage.create();
-      // init page's viewport-size
-      exports.page.viewportSize = exports.viewportSize || { height: 600, width: 800 };
-      // init page's error handling
-      // http://phantomjs.org/api/webpage/handler/on-error.html
-      exports.page.onError = global.phantom.onError;
-      // pipe page's console.log to stdout
-      exports.page.onConsoleMessage = function () {
-        console.log.apply(console, arguments);
-      };
-      // open requested webpage
-      exports.page.open(
-        // security - insert _testSecret in url without revealing it
-        exports.url.replace('{{_testSecret}}', exports._testSecret),
-        function (data) {
-          console.log(exports.argv0 + ' - open ' + data + ' ' + exports.url);
-          // validate page opened successfully
-          exports.assert(data === 'success', data);
-        }
-      );
-      break;
+    if (exports.modeJs !== 'phantom') {
+      return;
     }
+    // override exports properties
+    exports.setOverride(
+      exports,
+      -1,
+      JSON.parse(decodeURIComponent(exports.system.args[1]))
+    );
+    // mock exports.fileCacheDict['/test/test-report.html.template'].data
+    exports.fileCacheDict = { '/test/test-report.html.template': { data: '' } };
+    // if modeErrorIgnore, then suppress console.error and console.log
+    if (exports.modeErrorIgnore) {
+      console.error = console.log = exports.nop;
+    }
+    // init error handling
+    exports.global.phantom.onError = function (message, trace) {
+      /*
+        this function will catch all errors and
+        1. check if the error-message is a test-callback, and handle it appropriately
+        2. else handle it as a normal error
+      */
+      try {
+        var data, file;
+        data = (/^Error: (\{"global_test_results":\{.+)/).exec(message);
+        data = data && JSON.parse(data[1]).global_test_results;
+        // 1. check if the error-message is a test-callback, and handle it appropriately
+        if (data) {
+          // handle global_test_results passed as error
+          // merge coverage
+          exports.coverageMerge(exports.__coverage__, data.coverage);
+          // create screenCapture
+          file = exports.fs.workingDirectory + '/.tmp/build/screen-capture.' +
+            exports.argv0.replace((/\b(phantomjs|slimerjs)\b.*/g), '$1') + '.png';
+          exports.page.render(file);
+          console.log('created ' + 'file://' + file);
+          // integrate screenCapture into test-report
+          data.testReport.testPlatformList[0].screenCaptureImg =
+            file.replace((/^.*\//), '');
+          // merge test-report
+          exports.testMerge(exports.testReport, data.testReport);
+        // 2. else handle it as a normal error
+        } else {
+          // phantom error handling - http://phantomjs.org/api/phantom/handler/on-error.html
+          console.error('\n\n');
+          console.error(exports.argv0 + ' ERROR: ' + message);
+          if (trace && trace.length) {
+            console.error(exports.argv0 + ' TRACE:');
+            trace.forEach(function (t) {
+              console.error(' -> ' + (t.file || t.sourceURL) + ': ' + t.line
+                + (t.function ? ' (in function ' + t.function + ')' : ''));
+            });
+          }
+          console.error('\n\n');
+        }
+        [[
+          '.tmp/build/test-report.' + exports.argv0 + '.json',
+          exports.testReport
+        ], [
+          '.tmp/build/coverage-report.html/coverage.' + exports.argv0 + '.json',
+          exports.__coverage__
+        ]].forEach(function (args) {
+          file = exports.fs.workingDirectory + '/' + args[0];
+          exports.fs.write(file, JSON.stringify(args[1]));
+          console.log('created ' + 'file://' + file);
+        });
+        // exit with number of tests failed as exit-code
+        exports.global.phantom.exit(!data || data.testReport.testsFailed);
+      } catch (error) {
+        console.error(error.message);
+        exports.global.phantom.exit(1);
+      }
+    };
+    // set timeout for phantom
+    exports.onTimeout(function (error) {
+      exports.global.phantom.onError(error.message);
+    }, exports.timeoutDefault, exports.url);
+    // reset testCaseList
+    exports.testPlatform.testCaseList = [];
+    // init page
+    exports.page = exports.webpage.create();
+    // init page's viewport-size
+    exports.page.viewportSize = exports.viewportSize || { height: 600, width: 800 };
+    // init page's error handling
+    // http://phantomjs.org/api/webpage/handler/on-error.html
+    exports.page.onError = exports.global.phantom.onError;
+    // pipe page's console.log to stdout
+    exports.page.onConsoleMessage = function () {
+      console.log.apply(console, arguments);
+    };
+    // open requested webpage
+    exports.page.open(
+      // security - insert _testSecret in url without revealing it
+      exports.url.replace('{{_testSecret}}', exports._testSecret),
+      function (data) {
+        console.log(exports.argv0 + ' - open ' + data + ' ' + exports.url);
+        // validate page opened successfully
+        exports.assert(data === 'success', data);
+      }
+    );
   }());
 }((function (self) {
   'use strict';
@@ -2108,6 +1966,12 @@
         }
       }
     }());
+    exports.nop = function () {
+      /*
+        this function will perform no operation - nop
+      */
+      return;
+    };
   }());
   switch (exports.modeJs) {
   // init browser js-env
@@ -2122,6 +1986,134 @@
   // init phantom js-env
   case 'phantom':
     exports.global = self;
+    break;
+  }
+  // init shared js-env
+  (function () {
+    exports.global[['debug', 'Print'].join('')] = function (arg) {
+      /*
+        this function will both print the arg to stderr and return it,
+        and jslint will nag you to remove it if used
+      */
+      // debug arguments
+      exports[['debug', 'PrintArguments'].join('')] = arguments;
+      console.error('\n\n\ndebug' + 'Print');
+      console.error.apply(console, arguments);
+      console.error();
+      // return arg for inspection
+      return arg;
+    };
+    exports._debug_print_default_test = function (onError) {
+      /*
+        this function will test debug_print's default handling behavior
+      */
+      var message;
+      exports.testMock([
+        // suppress console.error
+        [console, { error: function (arg) {
+          message += (arg || '') + '\n';
+        } }]
+      ], onError, function (onError) {
+        message = '';
+        exports.global[['debug', 'Print'].join('')]('_debug_print_default_test');
+        // validate message
+        exports.assert(
+          message === '\n\n\ndebug' + 'Print\n_debug_print_default_test\n\n',
+          message
+        );
+        onError();
+      });
+    };
+    exports.errorDefault = exports.errorDefault || new Error('default error');
+    exports.fileCacheDict = exports.fileCacheDict || {};
+    exports.testPlatform = { testCaseList: [] };
+    exports.testReport = exports.testReport || { testPlatformList: [exports.testPlatform] };
+    exports.textExampleAscii = exports.textExampleAscii ||
+      '\x00\x01\x02\x03\x04\x05\x06\x07\b\t\n\x0b\f\r\x0e\x0f' +
+      '\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f' +
+      ' !"#$%&\'()*+,-./0123456789:;<=>?' +
+      '@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_' +
+      '`abcdefghijklmnopqrstuvwxyz{|}~\x7f';
+    exports.timeoutDefault = exports.timeoutDefault || 30000;
+    exports.__coverage__ = exports.__coverage__ || exports.global.__coverage__ || null;
+  }());
+  switch (exports.modeJs) {
+  // init browser js-env
+  case 'browser':
+    // init exports properties
+    exports.envDict = exports.envDict || {};
+    exports.testPlatform.name = 'browser - ' + navigator.userAgent +
+      ' - ' + new Date().toISOString();
+    exports.testPlatform.screenCaptureImg = exports.envDict.MODE_BUILD_SCREEN_CAPTURE;
+    // parse any url-search-params that matches 'mode*' or '_testSecret' or 'timeoutDefault'
+    location.search.replace(
+      (/\b(mode[A-Z]\w+|_testSecret|timeoutDefault)=([^#&=]+)/g),
+      function (match0, key, value) {
+        // nop hack to pass jslint
+        exports.nop(match0);
+        exports[key] = value;
+        // try to parse value as json object
+        try {
+          exports[key] = JSON.parse(value);
+        } catch (ignore) {
+        }
+      }
+    );
+    break;
+  // init node js-env
+  case 'node':
+    // require modules
+    exports.child_process = require('child_process');
+    exports.crypto = require('crypto');
+    exports.fs = require('fs');
+    exports.http = require('http');
+    exports.https = require('https');
+    exports.jslint_lite = require('jslint-lite');
+    exports.path = require('path');
+    exports.url = require('url');
+    exports.vm = require('vm');
+    // init exports properties
+    exports.__dirname = __dirname;
+    exports.envDict = process.env;
+    exports.testPlatform.name = 'node - ' + process.platform + ' ' + process.version +
+      ' - ' + new Date().toISOString();
+    exports.testPlatform.screenCaptureImg = exports.envDict.MODE_BUILD_SCREEN_CAPTURE;
+    exports.utility2Browser = {
+      envDict: {
+        PACKAGE_JSON_DESCRIPTION: exports.envDict.PACKAGE_JSON_DESCRIPTION,
+        PACKAGE_JSON_NAME: exports.envDict.PACKAGE_JSON_NAME,
+        PACKAGE_JSON_VERSION: exports.envDict.PACKAGE_JSON_VERSION
+      },
+      fileCacheDict: {}
+    };
+    // init _testSecret
+    (function () {
+      var testSecretCreate;
+      testSecretCreate = function () {
+        exports._testSecret = exports.crypto.randomBytes(32).toString('hex');
+      };
+      // init _testSecret
+      testSecretCreate();
+      exports._testSecret = exports.envDict.TEST_SECRET || exports._testSecret;
+      // re-init _testSecret every 60 seconds
+      setInterval(testSecretCreate, 60000).unref();
+    }());
+    break;
+  // init phantom js-env
+  case 'phantom':
+    // require modules
+    exports.fs = require('fs');
+    exports.system = require('system');
+    exports.webpage = require('webpage');
+    // init exports properties
+    exports.envDict = exports.system.env;
+    exports.testPlatform.name = (exports.global.slimer ? 'slimer - ' : 'phantom - ') +
+      exports.system.os.name + ' ' +
+      exports.global.phantom.version.major + '.' +
+      exports.global.phantom.version.minor + '.' +
+      exports.global.phantom.version.patch +
+      ' - ' + new Date().toISOString();
+    exports.testPlatform.screenCaptureImg = exports.envDict.MODE_BUILD_SCREEN_CAPTURE;
     break;
   }
   return exports;
