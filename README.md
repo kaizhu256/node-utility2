@@ -180,9 +180,8 @@ shBuild() {
     shRun shTestHeroku || return $?
     # create package content listing
     MODE_BUILD=gitLsTree shRunScreenCapture git ls-tree --abbrev=8 --full-name -l -r HEAD || return $?
-    # create recent changelog of last 100 commits
-    git fetch origin $CI_BRANCH --depth=100 || return $?
-    MODE_BUILD=gitLog shRunScreenCapture git log -100 --pretty="%ai\u0020%s" || return $?
+    # create recent changelog of last 50 commits
+    MODE_BUILD=gitLog shRunScreenCapture git log -50 --pretty="%ai\u0020%s" || return $?
   fi
 }
 # run build
@@ -210,5 +209,5 @@ exit $EXIT_CODE
 
 
 
-## recent changelog of last 100 commits
+## recent changelog of last 50 commits
 ![screen-capture](https://kaizhu256.github.io/node-utility2/build//screen-capture.gitLog.png)
