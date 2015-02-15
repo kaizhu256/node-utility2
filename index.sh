@@ -425,7 +425,8 @@ shRunScreenCapture() {
   node -e "require('fs').writeFileSync(
     '$TMPDIR2/screen-capture.txt',
     require('fs').readFileSync('$TMPDIR2/screen-capture.txt', 'utf8')
-      .replace((/\t/g), '    ')
+      .replace((/\\\\u0020/g), ' ')
+      .replace((/\u0009/g), '    ')
       .replace((/\u001b.*?m/g), '')
       .trim()
   );" || return $?

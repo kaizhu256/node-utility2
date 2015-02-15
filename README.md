@@ -147,7 +147,7 @@ lightweight nodejs module that runs phantomjs tests with browser code-coverage (
 
 
 
-## package content
+## package content listing
 [![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.gitLsTree.png)](https://github.com/kaizhu256/node-utility2)
 
 
@@ -160,13 +160,11 @@ shBuild() {
   # init $TRAVIS env
   if [ "$TRAVIS" ]
   then
-    export HEROKU_REPO=hrku01-utility2-$TRAVIS_BRANCH || return $?
-    export TEST_URL="https://hrku01-utility2-$TRAVIS_BRANCH.herokuapp.com/?modeTest=phantom&_testSecret={{_testSecret}}" || return $?
+    export HEROKU_REPO=hrku01-utility2-$CI_BRANCH || return $?
+    export TEST_URL="https://hrku01-utility2-$CI_BRANCH.herokuapp.com/?modeTest=phantom&_testSecret={{_testSecret}}" || return $?
   fi
   # init env
-  . ./index.sh && shInit && mkdir -p .tmp/build/coverage-report.html || return $?
-  # create package content listing
-  MODE_BUILD=gitLsTree shRunScreenCapture git ls-tree --abbrev=8 --full-name -l -r HEAD || return $?
+  . ./index.sh && shInit || return $?
   # run npm test on published package
   shRun shNpmTestPublished || return $?
   # test example script
@@ -179,6 +177,11 @@ shBuild() {
   if [ "$TRAVIS" ]
   then
     shRun shTestHeroku || return $?
+    # create package content listing
+    MODE_BUILD=gitLsTree shRunScreenCapture git ls-tree --abbrev=8 --full-name -l -r HEAD || return $?
+    # create recent changelog of last 100 commits
+    git fetch origin $CI_BRANCH --depth=100 || return $?
+    MODE_BUILD=gitLog shRunScreenCapture git log -100 --pretty="%ai\u0020%s" || return $?
   fi
 }
 # run build
@@ -196,130 +199,14 @@ exit $EXIT_CODE
 
 
 
-## recent changelog
-#### todo
+## todo
 - move testPhantomjs from index.js to index.sh and auto-install phantomjs-lite when required
 - merge index.data into index.js
 - auto-generate help doc from README.md
 - add server stress test using phantomjs
 - minify /assets/utility2.js in production-mode
 
-#### 2014.2.x
-- add shGitPushAndSquashAndPush
-- rename local.utility2 to exports
-- remove _testPrefix
-- merge testAddCase into testRun
-- merge mainApp into local object
-- auto-git-squash gh-pages after 256 commits
-- remove artifact versioning
-- change build-artifact-dir to build/$CI_BRANCH/<ci-host>
-- rename screenshot to screenCapture
-- replace istanbul with istanbul-lite
-- remove ansi escape code in shell screen-captures
-- inline shRunForever and add mainApp.onFileModifiedRestart
-- inline mainApp.errorStackAppend
 
-#### 2014.1.x
-- replace mainApp.exportLocal with mainApp.testCaseAdd
-- preserve lineno in shTestScriptJs
-- export most utility2 properties
-- add shGrep shell command
-- improve code-coverage
-- validate test page @ http://validator.w3.org/
-- remove global phantom and slimer object references
-- auto-detect $GITHUB_REPO
 
-#### 2014.12.29
-- merge global.__coverage__ and  local.__coverage__ into mainApp.__coverage__
-- flesh out example code
-- add onTestRunEnd callback to testRun
-- replace argument middleware with middlewareList in testRunServer
-- add phantomjs testing
-- add timestamp in screen-captures
-- move build script from .travis.yml to README.md
-- merge middlewareError and middlewareTest into testRunServer
-- add border around phantomjs screen-capture
-- use tee in shRunScreenCapture and add word-wrap and max-width of 80 characters
-- merge .build into .tmp/build
-- add shTestScriptJs with screen-capture
-- move screen-capture.* from beta to root directory in gh-pages branch
-- change textFormat's undefined valueDefault handling behavior
-
-#### 2014.10.31
-- auto git-squash gh-pages when uploading build artifacts
-- add shTestQuickstartSh with screen-capture and auto-kill server in quickstart code
-- add middlewareError
-- add grep sugar in repl
-- add mainApp._testSecret attribute for private testing
-- add middlewareTest
-- remove npm postinstall script
-- add timeout for onParallel
-- notify phantomjs of test-completion by throwing a special error
-- add --mode-forever to npm start
-- add modeTestCase to test a single test-case
-- rename cli.sh to index.sh
-- add jsonCopy
-- revamp server
-- revamp phantomjs test
-- revamp ajax
-- add csslint
-- emphasize low-level helper functions over high-level ones
-- revert from saucelabs testing to phantomjs / slimerjs
-
-#### 2014.9.22
-- near 100% code-coverage during travis-ci build
-- integrate codeship.io ci
-- rename exports to mainApp
-- remove global, exports, required, state, stateRestore from browser window
-- add better error stack for browser ajax
-- integrate code-coverage for browser initializations into _init_browser_test
-- integrate code-coverage for nodejs initializations into _init_nodejs_test
-- significantly increase code coverage
-- add ajax timeout testing
-- auto-detect slimerjs testing
-- add url query-param feature modeErrorIgnore=1 to ignore test-simulated errors
-- move main.* and utility2.* assets to /public/cache path
-- fix code-coverage for failed tests
-- remove global dependencies in nodejs env
-- create ./build/test-report.xml for jenkins
-- merge phantomjs and slimerjs dependencies into headless-browser package
-- remove coverage.json when pushing build artifact to github
-
-#### 2014.7.29
-- add github basic auth for building private repo
-- revamp ajax redirect in nodejs code
-- integrate browser tests into main page
-- add offline mode for shBuild
-- add dummy failed tests in npm test for code-coverage
-- add file update feature for data files
-- add test flag in heroku Procfile
-- add caching for scripts
-- migrate from unstable -> master workflow to alpha -> beta -> master workflow
-- add build commit badge in README.md
-- merge node-utility2-data gh-pages repo into node-utility2
-- add exportBrowserScript
-- replace serving msin.data.js and main.js with {{name}}.data.js and {{name}}.js
-- exit build on decrypt error
-- add magic to auto-config state.repoGithub and state.repoHeroku
-- enable testReportUpload only through command-line
-
-#### 2014.7.18
-- add description of files in README.md
-- add code-coverage for saucelabs test routine
-- automatically capture browser screen-captures via phantomjs / slimerjs / saucelabs
-- add basic auth for test-report upload
-- rename exports.initLocal to exports.initSubmodule
-
-#### 2014.7.12
-- automate saucelabs testing in build
-
-#### 2014.7.11
-- add browser-side code-coverage
-- automate phantomjs and slimerjs headless browser testing
-- implement browser-side ajax
-- update browser test-report status every 1000 ms until finished
-- redirect main page to test.html
-- watch and auto-jslint main.js and utility2.js
-
-#### 2014.7.3
-- initial commit
+## recent changelog of last 100 commits
+![screen-capture](https://kaizhu256.github.io/node-utility2/build//screen-capture.gitLog.png)
