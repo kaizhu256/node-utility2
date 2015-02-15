@@ -34,5 +34,5 @@
     "start": "npm_config_mode_auto_restart=1 ./index.sh shRun node test.js",
     "test": "./index.sh shRun shNpmTest test.js"
   },
-  "version": "2015.2.15-12"
+  "version": "2015.2.15-13"
 }
