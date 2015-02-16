@@ -1949,6 +1949,7 @@
   var exports;
   // init shared js-env
   (function () {
+    // init exports
     exports = {};
     exports.modeJs = (function () {
       try {
@@ -1976,75 +1977,9 @@
   switch (exports.modeJs) {
   // init browser js-env
   case 'browser':
-    exports.global = window;
-    break;
-  // init node js-env
-  case 'node':
-    exports.global = global;
-    module.exports = exports;
-    break;
-  // init phantom js-env
-  case 'phantom':
-    exports.global = self;
-    break;
-  }
-  // init shared js-env
-  (function () {
-    exports.global[['debug', 'Print'].join('')] = function (arg) {
-      /*
-        this function will both print the arg to stderr and return it,
-        and jslint will nag you to remove it if used
-      */
-      // debug arguments
-      exports[['debug', 'PrintArguments'].join('')] = arguments;
-      console.error('\n\n\ndebug' + 'Print');
-      console.error.apply(console, arguments);
-      console.error();
-      // return arg for inspection
-      return arg;
-    };
-    exports._debug_print_default_test = function (onError) {
-      /*
-        this function will test debug_print's default handling behavior
-      */
-      var message;
-      exports.testMock([
-        // suppress console.error
-        [console, { error: function (arg) {
-          message += (arg || '') + '\n';
-        } }]
-      ], onError, function (onError) {
-        message = '';
-        exports.global[['debug', 'Print'].join('')]('_debug_print_default_test');
-        // validate message
-        exports.assert(
-          message === '\n\n\ndebug' + 'Print\n_debug_print_default_test\n\n',
-          message
-        );
-        onError();
-      });
-    };
-    exports.errorDefault = exports.errorDefault || new Error('default error');
-    exports.fileCacheDict = exports.fileCacheDict || {};
-    exports.testPlatform = { testCaseList: [] };
-    exports.testReport = exports.testReport || { testPlatformList: [exports.testPlatform] };
-    exports.textExampleAscii = exports.textExampleAscii ||
-      '\x00\x01\x02\x03\x04\x05\x06\x07\b\t\n\x0b\f\r\x0e\x0f' +
-      '\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f' +
-      ' !"#$%&\'()*+,-./0123456789:;<=>?' +
-      '@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_' +
-      '`abcdefghijklmnopqrstuvwxyz{|}~\x7f';
-    exports.timeoutDefault = exports.timeoutDefault || 30000;
-    exports.__coverage__ = exports.__coverage__ || exports.global.__coverage__ || null;
-  }());
-  switch (exports.modeJs) {
-  // init browser js-env
-  case 'browser':
     // init exports properties
     exports.envDict = exports.envDict || {};
-    exports.testPlatform.name = 'browser - ' + navigator.userAgent +
-      ' - ' + new Date().toISOString();
-    exports.testPlatform.screenCaptureImg = exports.envDict.MODE_BUILD_SCREEN_CAPTURE;
+    exports.global = window;
     // parse any url-search-params that matches 'mode*' or '_testSecret' or 'timeoutDefault'
     location.search.replace(
       (/\b(mode[A-Z]\w+|_testSecret|timeoutDefault)=([^#&=]+)/g),
@@ -2075,9 +2010,7 @@
     // init exports properties
     exports.__dirname = __dirname;
     exports.envDict = process.env;
-    exports.testPlatform.name = 'node - ' + process.platform + ' ' + process.version +
-      ' - ' + new Date().toISOString();
-    exports.testPlatform.screenCaptureImg = exports.envDict.MODE_BUILD_SCREEN_CAPTURE;
+    exports.global = global;
     exports.utility2Browser = {
       envDict: {
         PACKAGE_JSON_DESCRIPTION: exports.envDict.PACKAGE_JSON_DESCRIPTION,
@@ -2098,6 +2031,7 @@
       // re-init _testSecret every 60 seconds
       setInterval(testSecretCreate, 60000).unref();
     }());
+    module.exports = exports;
     break;
   // init phantom js-env
   case 'phantom':
@@ -2107,14 +2041,73 @@
     exports.webpage = require('webpage');
     // init exports properties
     exports.envDict = exports.system.env;
-    exports.testPlatform.name = (exports.global.slimer ? 'slimer - ' : 'phantom - ') +
-      exports.system.os.name + ' ' +
-      exports.global.phantom.version.major + '.' +
-      exports.global.phantom.version.minor + '.' +
-      exports.global.phantom.version.patch +
-      ' - ' + new Date().toISOString();
-    exports.testPlatform.screenCaptureImg = exports.envDict.MODE_BUILD_SCREEN_CAPTURE;
+    exports.global = self;
     break;
   }
+  // init shared js-env
+  (function () {
+    var debug_print;
+    debug_print = 'debug_print'.replace('_p', 'P');
+    // init global debug_print
+    exports.global[debug_print] = function (arg) {
+      /*
+        this function will both print the arg to stderr and return it,
+        and jslint will nag you to remove it if used
+      */
+      // debug arguments
+      exports[debug_print + 'Arguments'] = arguments;
+      console.error('\n\n\n' + debug_print);
+      console.error.apply(console, arguments);
+      console.error();
+      // return arg for inspection
+      return arg;
+    };
+    exports._debug_print_default_test = function (onError) {
+      /*
+        this function will test debug_print's default handling behavior
+      */
+      var message;
+      exports.testMock([
+        // suppress console.error
+        [console, { error: function (arg) {
+          message += (arg || '') + '\n';
+        } }]
+      ], onError, function (onError) {
+        message = '';
+        exports.global['debug_print'.replace('_p', 'P')]('_debug_print_default_test');
+        // validate message
+        exports.assert(
+          message === '\n\n\ndebug' + 'Print\n_debug_print_default_test\n\n',
+          message
+        );
+        onError();
+      });
+    };
+    exports.__coverage__ = exports.__coverage__ || exports.global.__coverage__ || null;
+    exports.errorDefault = new Error('default error');
+    exports.fileCacheDict = exports.fileCacheDict || {};
+    exports.testPlatform = {
+      name: exports.modeJs === 'browser' ? 'browser - ' +
+        navigator.userAgent + ' - ' + new Date().toISOString() :
+          exports.modeJs === 'node' ? 'node - ' +
+            process.platform + ' ' + process.version + ' - ' + new Date().toISOString() :
+              (exports.global.slimer ? 'slimer - ' : 'phantom - ') +
+              exports.system.os.name + ' ' +
+              exports.global.phantom.version.major + '.' +
+              exports.global.phantom.version.minor + '.' +
+              exports.global.phantom.version.patch + ' - ' + new Date().toISOString(),
+      screenCaptureImg: exports.envDict.MODE_BUILD_SCREEN_CAPTURE,
+      testCaseList: []
+    };
+    exports.testReport = { testPlatformList: [exports.testPlatform] };
+    exports.textExampleAscii = exports.textExampleAscii ||
+      '\x00\x01\x02\x03\x04\x05\x06\x07\b\t\n\x0b\f\r\x0e\x0f' +
+      '\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f' +
+      ' !"#$%&\'()*+,-./0123456789:;<=>?' +
+      '@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_' +
+      '`abcdefghijklmnopqrstuvwxyz{|}~\x7f';
+    exports.timeoutDefault =
+      exports.envDict.npm_config_timeout_default || exports.timeoutDefault || 30000;
+  }());
   return exports;
 }(this))));
