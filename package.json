@@ -3,7 +3,7 @@
   "bin": { "utility2" : "index.sh" },
   "dependencies": {
     "istanbul-lite": "2015.2.10-18",
-    "jslint-lite": "2015.2.10-14",
+    "jslint-lite": "^2015.2.10-14",
     "phantomjs-lite": "2015.1.4-102"
   },
   "description": "lightweight nodejs module that runs phantomjs tests with browser code-coverage (via istanbul-lite and phantomjs-lite)",
