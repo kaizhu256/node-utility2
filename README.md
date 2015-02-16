@@ -98,16 +98,12 @@ lightweight nodejs module that runs phantomjs tests with browser code-coverage (
           '/test/test.html?modeTest=phantom'
       }, onError);
     };
-    [{
-      // cache file as /test/test.js
+    // web-serve example.js as /test/test.js
+    local.utility2.fileCacheAndParse({
       cache: '/test/test.js',
       // init browser code-coverage for /test/test.js
-      coverage: 'example',
+      coverage: 'example-module',
       file: __dirname + '/example.js'
-    }].forEach(function (options) {
-      console.log('auto-cache and auto-parse ' + options.file);
-      // cache and parse the file
-      local.utility2.fileCacheAndParse(options);
     });
     // init local.serverMiddlewareList
     local.serverMiddlewareList = [
@@ -162,7 +158,8 @@ shBuild() {
   if [ "$TRAVIS" ]
   then
     export HEROKU_REPO=hrku01-utility2-$CI_BRANCH || return $?
-    export TEST_URL="https://hrku01-utility2-$CI_BRANCH.herokuapp.com/?modeTest=phantom&_testSecret={{_testSecret}}" || return $?
+    export TEST_URL="https://hrku01-utility2-$CI_BRANCH.herokuapp.com" || return $?
+    export TEST_URL="$TEST_URL/?modeTest=phantom&_testSecret={{_testSecret}}" || return $?
   fi
   # init env
   . ./index.sh && shInit || return $?
@@ -179,7 +176,8 @@ shBuild() {
   then
     shRun shTestHeroku || return $?
     # create package content listing
-    MODE_BUILD=gitLsTree shRunScreenCapture git ls-tree --abbrev=8 --full-name -l -r HEAD || return $?
+    MODE_BUILD=gitLsTree shRunScreenCapture git ls-tree --abbrev=8 --full-name -l -r HEAD ||\
+      return $?
     # create recent changelog of last 50 commits
     MODE_BUILD=gitLog shRunScreenCapture git log -50 --pretty="%ai\u0020%s" || return $?
   fi

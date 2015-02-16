@@ -1379,8 +1379,7 @@
         this function will parse options.file and cache it to exports.fileCacheDict
       */
       // read options.data from options.file and comment out shebang
-      options.data =
-        options.data || exports.fs.readFileSync(options.file, 'utf8').replace((/^#!/), '//#!');
+      options.data = exports.fs.readFileSync(options.file, 'utf8').replace((/^#!/), '//#!');
       // if coverage-mode is enabled, then instrument options.data
       if (exports.__coverage__ &&
           options.coverage && options.coverage === exports.envDict.PACKAGE_JSON_NAME) {
@@ -1735,13 +1734,13 @@
           // keep timerTimeout from blocking the process from exiting
           .unref();
       }
-      // cache utility2.js
+      // web-server __filename as /assets/utility2.js
       exports.fileCacheAndParse({
         cache: '/assets/utility2.js',
         coverage: 'utility2',
-        file: __dirname + '/index.js'
+        file: __filename
       });
-      // write instrumented utility2.js to fs
+      // save instrumented utility2.js to fs
       if (exports.__coverage__ && exports.envDict.PACKAGE_JSON_NAME === 'utility2') {
         exports.fs.writeFileSync(
           process.cwd() + '/.tmp/instrumented.utility2.js',
@@ -2077,7 +2076,7 @@
 
   // init fileCacheDict
   exports.fileCacheDict = {
-/*jslint-ignore begin*/
+/* jslint-ignore-begin */
 '/test/test-report.html.template': { data: '\
 <style>\n\
 .testReportPlatformDiv {\n\
@@ -2349,7 +2348,7 @@ tr:nth-child(odd).testReportPlatformTr {\n\
 </body>\n\
 </html>\n\
 ' }
-/*jslint-ignore end*/
+/* jslint-ignore-end */
   };
   return exports;
 }(this))));
