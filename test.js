@@ -174,7 +174,7 @@
       // cache and parse the file
       exports.fileCacheAndParse(options);
     });
-    // init local.serverMiddlewareList
+    // init serverMiddlewareList
     local.serverMiddlewareList = [
       // exit after test-run ends
       exports.testMiddleware,

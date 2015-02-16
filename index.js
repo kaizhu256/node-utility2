@@ -123,6 +123,35 @@
       return coverage1;
     };
 
+    exports._coverageMerge_default_test = function (onError) {
+      /*
+        this function will test coverageMerge's default handling behavior
+      */
+      var coverage1, coverage2, script;
+      if (exports.modeJs !== 'node') {
+        onError();
+        return;
+      }
+      script = exports._coverageInstrument(
+        '(function () {\nreturn arg ? __coverage__ : __coverage__;\n}());',
+        'test'
+      );
+      exports.arg = 0;
+      // init coverage1
+      coverage1 = exports.vm.runInNewContext(script, { arg: 0 });
+      // validate coverage1
+      exports.assert(exports.jsonStringifyOrdered(coverage1) === '{"test":{"b":{"1":[0,1]},"branchMap":{"1":{"line":2,"locations":[{"end":{"column":25,"line":2},"start":{"column":13,"line":2}},{"end":{"column":40,"line":2},"start":{"column":28,"line":2}}],"type":"cond-expr"}},"f":{"1":1},"fnMap":{"1":{"line":1,"loc":{"end":{"column":13,"line":1},"start":{"column":1,"line":1}},"name":"(anonymous_1)"}},"path":"test","s":{"1":1,"2":1},"statementMap":{"1":{"end":{"column":5,"line":3},"start":{"column":0,"line":1}},"2":{"end":{"column":41,"line":2},"start":{"column":0,"line":2}}}}}', coverage1);
+      // init coverage1
+      coverage2 = exports.vm.runInNewContext(script, { arg: 1 });
+      // validate coverage2
+      exports.assert(exports.jsonStringifyOrdered(coverage2) === '{"test":{"b":{"1":[1,0]},"branchMap":{"1":{"line":2,"locations":[{"end":{"column":25,"line":2},"start":{"column":13,"line":2}},{"end":{"column":40,"line":2},"start":{"column":28,"line":2}}],"type":"cond-expr"}},"f":{"1":1},"fnMap":{"1":{"line":1,"loc":{"end":{"column":13,"line":1},"start":{"column":1,"line":1}},"name":"(anonymous_1)"}},"path":"test","s":{"1":1,"2":1},"statementMap":{"1":{"end":{"column":5,"line":3},"start":{"column":0,"line":1}},"2":{"end":{"column":41,"line":2},"start":{"column":0,"line":2}}}}}', coverage2);
+      // merge coverage2 into coverage1
+      exports.coverageMerge(coverage1, coverage2);
+      // validate merged coverage1
+      exports.assert(exports.jsonStringifyOrdered(coverage1) === '{"test":{"b":{"1":[1,1]},"branchMap":{"1":{"line":2,"locations":[{"end":{"column":25,"line":2},"start":{"column":13,"line":2}},{"end":{"column":40,"line":2},"start":{"column":28,"line":2}}],"type":"cond-expr"}},"f":{"1":2},"fnMap":{"1":{"line":1,"loc":{"end":{"column":13,"line":1},"start":{"column":1,"line":1}},"name":"(anonymous_1)"}},"path":"test","s":{"1":2,"2":2},"statementMap":{"1":{"end":{"column":5,"line":3},"start":{"column":0,"line":1}},"2":{"end":{"column":41,"line":2},"start":{"column":0,"line":2}}}}}', coverage1);
+      onError();
+    };
+
     exports.assert = function (passed, message) {
       /*
         this function will throw an error if the assertion fails
@@ -1354,31 +1383,6 @@
       return exports._instrumenter.instrumentSync(script, file);
     };
 
-    exports._coverageMerge_default_test = function (onError) {
-      /*
-        this function will test coverageMerge's default handling behavior
-      */
-      var coverage1, coverage2, script;
-      script = exports._coverageInstrument(
-        '(function () {\nreturn arg ? __coverage__ : __coverage__;\n}());',
-        'test'
-      );
-      exports.arg = 0;
-      // init coverage1
-      coverage1 = exports.vm.runInNewContext(script, { arg: 0 });
-      // validate coverage1
-      exports.assert(exports.jsonStringifyOrdered(coverage1) === '{"test":{"b":{"1":[0,1]},"branchMap":{"1":{"line":2,"locations":[{"end":{"column":25,"line":2},"start":{"column":13,"line":2}},{"end":{"column":40,"line":2},"start":{"column":28,"line":2}}],"type":"cond-expr"}},"f":{"1":1},"fnMap":{"1":{"line":1,"loc":{"end":{"column":13,"line":1},"start":{"column":1,"line":1}},"name":"(anonymous_1)"}},"path":"test","s":{"1":1,"2":1},"statementMap":{"1":{"end":{"column":5,"line":3},"start":{"column":0,"line":1}},"2":{"end":{"column":41,"line":2},"start":{"column":0,"line":2}}}}}', coverage1);
-      // init coverage1
-      coverage2 = exports.vm.runInNewContext(script, { arg: 1 });
-      // validate coverage2
-      exports.assert(exports.jsonStringifyOrdered(coverage2) === '{"test":{"b":{"1":[1,0]},"branchMap":{"1":{"line":2,"locations":[{"end":{"column":25,"line":2},"start":{"column":13,"line":2}},{"end":{"column":40,"line":2},"start":{"column":28,"line":2}}],"type":"cond-expr"}},"f":{"1":1},"fnMap":{"1":{"line":1,"loc":{"end":{"column":13,"line":1},"start":{"column":1,"line":1}},"name":"(anonymous_1)"}},"path":"test","s":{"1":1,"2":1},"statementMap":{"1":{"end":{"column":5,"line":3},"start":{"column":0,"line":1}},"2":{"end":{"column":41,"line":2},"start":{"column":0,"line":2}}}}}', coverage2);
-      // merge coverage2 into coverage1
-      exports.coverageMerge(coverage1, coverage2);
-      // validate merged coverage1
-      exports.assert(exports.jsonStringifyOrdered(coverage1) === '{"test":{"b":{"1":[1,1]},"branchMap":{"1":{"line":2,"locations":[{"end":{"column":25,"line":2},"start":{"column":13,"line":2}},{"end":{"column":40,"line":2},"start":{"column":28,"line":2}}],"type":"cond-expr"}},"f":{"1":2},"fnMap":{"1":{"line":1,"loc":{"end":{"column":13,"line":1},"start":{"column":1,"line":1}},"name":"(anonymous_1)"}},"path":"test","s":{"1":2,"2":2},"statementMap":{"1":{"end":{"column":5,"line":3},"start":{"column":0,"line":1}},"2":{"end":{"column":41,"line":2},"start":{"column":0,"line":2}}}}}', coverage1);
-      onError();
-    };
-
     exports.fileCacheAndParse = function (options) {
       /*
         this function will parse options.file and cache it to exports.fileCacheDict
@@ -1728,9 +1732,9 @@
     exports.testRunServer = function (options, onTestRunEnd) {
     /*
       this function will
-      1. create test-server with options.serverMiddlewareList
-      2. start test-server on $npm_config_server_port
-      3. test test-server
+      1. create http-server with options.serverMiddlewareList
+      2. start http-server on $npm_config_server_port
+      3. test http-server
     */
       // if $npm_config_timeout_exit is defined,
       // then exit this process after $npm_config_timeout_exit ms
@@ -1756,7 +1760,12 @@
       // then assign it a random integer in the inclusive range 1 to 0xffff
       exports.envDict.npm_config_server_port = exports.envDict.npm_config_server_port ||
         ((Math.random() * 0x10000) | 0x8000).toString();
-      // 1. create test-server with options.serverMiddlewareList
+      // 3. test http-server
+      exports.onReady.onReady = function () {
+        exports.testRun(options, onTestRunEnd);
+      };
+      exports.onReady.counter += 1;
+      // 1. create http-server with options.serverMiddlewareList
       exports.http.createServer(function (request, response) {
         var modeNext, onNext;
         modeNext = -1;
@@ -1772,13 +1781,12 @@
         };
         onNext();
       })
-        // 2. start test-server on $npm_config_server_port
+        // 2. start http-server on $npm_config_server_port
         .listen(exports.envDict.npm_config_server_port, function () {
           console.log(
-            'test-server listening on port ' + exports.envDict.npm_config_server_port
+            'http-server listening on port ' + exports.envDict.npm_config_server_port
           );
-          // 3. test test-server
-          exports.testRun(options, onTestRunEnd);
+          exports.onReady();
         });
     };
 
