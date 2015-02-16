@@ -198,7 +198,6 @@ exit $EXIT_CODE
 
 
 ## todo
-- add onErrorWithStack
 - add onReady and options.onListen to testRunServer
 - explicitly require slimerjs instead of auto-detecting it
 - move testPhantomjs from index.js to index.sh and auto-install phantomjs-lite when required

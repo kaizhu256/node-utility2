@@ -186,14 +186,7 @@
       /*
         this function will return the error's stack-trace
       */
-      if (!(error && typeof error.stack === 'string')) {
-        try {
-          throw new Error();
-        } catch (errorCaught) {
-          error = errorCaught;
-        }
-      }
-      return error.stack;
+      return error.stack || error.message || 'undefined';
     };
 
     exports.jsonCopy = function (value) {
@@ -306,15 +299,36 @@
       });
     };
 
+    exports.onErrorWithStack = function (onError) {
+      /*
+        this function will return a new callback that calls onError,
+        with the current stack-trace appended to any error
+      */
+      var errorStack;
+      try {
+        throw new Error();
+      } catch (errorCaught) {
+        errorStack = errorCaught.stack;
+      }
+      return function () {
+        var args;
+        args = arguments;
+        if (args[0]) {
+          // append errorStack to args[0].stack
+          args[0].stack = args[0] ? args[0] + '\n' + errorStack : errorStack;
+        }
+        onError.apply(null, args);
+      };
+    };
+
     exports.onParallel = function (onError, onDebug) {
       /*
         this function will return another function that runs async tasks in parallel,
         and calls onError only if there's an error, or if its counter === 0
       */
-      var errorStack, self;
-      errorStack = exports.errorStack();
+      var self;
       onDebug = onDebug || exports.nop;
-      self = function (error) {
+      self = exports.onErrorWithStack(function (error) {
         onDebug(error, self);
         // if counter === 0 or error already occurred, then return
         if (self.counter === 0 || self.error) {
@@ -325,8 +339,6 @@
           self.error = error;
           // ensure counter will decrement to 0
           self.counter = 1;
-          // append errorStack to error.stack
-          error.stack = exports.errorStack(error) + '\n' + errorStack;
         }
         // decrement counter
         self.counter -= 1;
@@ -334,7 +346,7 @@
         if (self.counter === 0) {
           onError(error);
         }
-      };
+      });
       // init counter
       self.counter = 0;
       // return callback
@@ -1091,10 +1103,9 @@
       /*
         this functions performs a brower ajax request with error handling and timeout
       */
-      var data, error, errorStack, finished, ii, onEvent, timerTimeout, xhr;
-      errorStack = exports.errorStack();
+      var data, error, finished, ii, onEvent, timerTimeout, xhr;
       // init event-handling
-      onEvent = function (event) {
+      onEvent = exports.onErrorWithStack(function (event) {
         switch (event.type) {
         case 'abort':
         case 'error':
@@ -1126,8 +1137,6 @@
                 JSON.stringify(xhr.responseText.slice(0, 256) + '...') + '\n' + error.message;
               // debug status code
               error.statusCode = xhr.status;
-              // append errorStack to error.stack
-              error.stack = exports.errorStack(error) + '\n' + errorStack;
             }
           }
           // hide _ajaxProgressDiv
@@ -1150,7 +1159,7 @@
         }
         // finish ajaxProgressBar
         exports._ajaxProgressUpdate('100%', 'ajaxProgressBarDivSuccess', 'loaded');
-      };
+      });
       // init xhr
       xhr = new XMLHttpRequest();
       // debug xhr
@@ -1237,8 +1246,7 @@
       /*
         this functions runs a node http request with error handling and timeout
       */
-      var errorStack,
-        finished,
+      var finished,
         modeNext,
         onNext,
         request,
@@ -1246,9 +1254,8 @@
         responseText,
         timerTimeout,
         urlParsed;
-      errorStack = exports.errorStack();
       modeNext = 0;
-      onNext = function (error, data) {
+      onNext = exports.onErrorWithStack(function (error, data) {
         modeNext = error instanceof Error ? NaN : modeNext + 1;
         switch (modeNext) {
         case 1:
@@ -1328,12 +1335,10 @@
               JSON.stringify((responseText || '').slice(0, 256) + '...') + '\n' + error.message;
             // debug status code
             error.statusCode = response && response.statusCode;
-            // append errorStack to error.stack
-            error.stack = exports.errorStack(error) + '\n' + errorStack;
           }
           onError(error, responseText);
         }
-      };
+      });
       onNext();
     };
 
@@ -2078,9 +2083,9 @@
     exports.onReady = exports.onParallel(function (error) {
       exports.onReady.onReady(error);
     });
-    exports.onReady.onReady = exports.nop;
+    exports.onReady.onReady = exports.onErrorDefault;
     exports.onReady.counter += 1;
-    setTimeout(exports.onReady).unref();
+    setTimeout(exports.onReady);
   };
 
 
