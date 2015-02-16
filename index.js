@@ -1239,22 +1239,22 @@
       */
       var errorStack,
         finished,
-        modeIo,
-        onIo,
+        modeNext,
+        onNext,
         request,
         response,
         responseText,
         timerTimeout,
         urlParsed;
       errorStack = exports.errorStack();
-      modeIo = 0;
-      onIo = function (error, data) {
-        modeIo = error instanceof Error ? NaN : modeIo + 1;
-        switch (modeIo) {
+      modeNext = 0;
+      onNext = function (error, data) {
+        modeNext = error instanceof Error ? NaN : modeNext + 1;
+        switch (modeNext) {
         case 1:
           // set timerTimeout
           timerTimeout = exports.onTimeout(
-            onIo,
+            onNext,
             options.timeout || exports.timeoutDefault,
             'ajax ' + options.url
           );
@@ -1284,9 +1284,9 @@
               : 0;
           // make http request
           request = (urlParsed.protocol === 'https:' ? exports.https : exports.http)
-            .request(options, onIo)
+            .request(options, onNext)
             // handle error event
-            .on('error', onIo);
+            .on('error', onNext);
           // debug ajax request
           exports._debugAjaxRequest = request;
           // send request and/or data
@@ -1296,18 +1296,18 @@
           response = error;
           // debug ajax response
           exports._debugAjaxResponse = response;
-          exports.streamReadAll(response, onIo);
+          exports.streamReadAll(response, onNext);
           break;
         case 3:
           // init responseText
           responseText = options.resultType === 'binary' ? data : data.toString();
           // error handling for http status code >= 400
           if (response.statusCode >= 400) {
-            onIo(new Error(responseText));
+            onNext(new Error(responseText));
             return;
           }
           // successful response
-          onIo(null, responseText);
+          onNext(null, responseText);
           break;
         default:
           // if already finished, then ignore error / data
@@ -1334,7 +1334,7 @@
           onError(error, responseText);
         }
       };
-      onIo();
+      onNext();
     };
 
     exports._coverageInstrument = function (script, file) {
@@ -1601,7 +1601,7 @@
         .on('error', onError);
     };
 
-    exports.testMiddleware = function (request, response, onIo) {
+    exports.testMiddleware = function (request, response, onNext) {
       var contentTypeDict;
       // debug server request
       exports._debugServerRequest = request;
@@ -1644,7 +1644,7 @@
         break;
       // fallback to next middleware
       default:
-        onIo();
+        onNext();
       }
     };
 
@@ -1753,19 +1753,19 @@
         ((Math.random() * 0x10000) | 0x8000).toString();
       // 1. create test-server with options.serverMiddlewareList
       exports.http.createServer(function (request, response) {
-        var modeIo, onIo;
-        modeIo = -1;
-        onIo = function (error) {
-          modeIo = error instanceof Error ? NaN : modeIo + 1;
-          if (options.serverMiddlewareList[modeIo]) {
-            options.serverMiddlewareList[modeIo](request, response, onIo);
+        var modeNext, onNext;
+        modeNext = -1;
+        onNext = function (error) {
+          modeNext = error instanceof Error ? NaN : modeNext + 1;
+          if (options.serverMiddlewareList[modeNext]) {
+            options.serverMiddlewareList[modeNext](request, response, onNext);
             return;
           }
           // if error occurred, then respond with '500 Internal Server Error'
           // else respond with '404 Not Found'
           exports.serverRespondDefault(request, response, error ? 500 : 404, error);
         };
-        onIo();
+        onNext();
       })
         // 2. start test-server on $npm_config_server_port
         .listen(exports.envDict.npm_config_server_port, function () {
@@ -1781,7 +1781,6 @@
       /*
         this function will test testRunServer's misc handling behavior
       */
-      // test random server-port handling behavior
       exports.testMock([
         [exports.http, { createServer: function () {
           return { listen: exports.nop };
@@ -1908,6 +1907,8 @@
 
 
 
+  // run postInit
+  exports._postInit();
 }((function (self) {
   'use strict';
   var exports;
@@ -2071,7 +2072,16 @@
     exports.timeoutDefault =
       exports.envDict.npm_config_timeout_default || exports.timeoutDefault || 30000;
   }());
-
+  // post-init shared js-env
+  exports._postInit = function () {
+    // init onReady
+    exports.onReady = exports.onParallel(function (error) {
+      exports.onReady.onReady(error);
+    });
+    exports.onReady.onReady = exports.nop;
+    exports.onReady.counter += 1;
+    setTimeout(exports.onReady).unref();
+  };
 
 
   // init fileCacheDict
