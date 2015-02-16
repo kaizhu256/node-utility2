@@ -165,6 +165,15 @@
       });
       onParallel();
     };
+    [{
+      cache: '/test/test.js',
+      coverage: 'utility2',
+      file: __dirname + '/test.js'
+    }].forEach(function (options) {
+      console.log('cache and parse ' + options.file);
+      // cache and parse the file
+      exports.fileCacheAndParse(options);
+    });
     // init local.serverMiddlewareList
     local.serverMiddlewareList = [
       // exit after test-run ends

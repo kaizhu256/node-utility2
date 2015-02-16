@@ -724,7 +724,7 @@
       // create html test-report
       testCaseNumber = 0;
       return exports.textFormat(
-        exports.fileCacheDict['/test/test-report.html.template'],
+        exports.fileCacheDict['/test/test-report.html.template'].data,
         exports.setOverride(testReport, -1, {
           // security - sanitize '<' in text
           CI_COMMIT_INFO: String(exports.envDict.CI_COMMIT_INFO).replace((/</g), '&lt;'),
@@ -862,7 +862,7 @@
           // create build badge
           exports.fs.writeFileSync(
             process.cwd() + '/.tmp/build/build.badge.svg',
-            exports.fileCacheDict['.tmp/build/build.badge.svg']
+            exports.fileCacheDict['.tmp/build/build.badge.svg'].data
               // edit branch name
               .replace(
                 (/0000 00 00 00 00 00/g),
@@ -879,7 +879,7 @@
           // create test-report.badge.svg
           exports.fs.writeFileSync(
             process.cwd() + '/.tmp/build/test-report.badge.svg',
-            exports.fileCacheDict['.tmp/build/test-report.badge.svg']
+            exports.fileCacheDict['.tmp/build/test-report.badge.svg'].data
               // edit number of tests failed
               .replace((/999/g), testReport.testsFailed)
               // edit badge color
@@ -1342,8 +1342,11 @@
         this function will instrument the given script and file
       */
       var istanbul;
-      istanbul = require('istanbul-lite');
-      return new istanbul.Instrumenter().instrumentSync(script, file);
+      if (!exports._instrumenter) {
+        istanbul = require('istanbul-lite');
+        exports._instrumenter = new istanbul.Instrumenter();
+      }
+      return exports._instrumenter.instrumentSync(script, file);
     };
 
     exports._coverageMerge_default_test = function (onError) {
@@ -1369,6 +1372,24 @@
       // validate merged coverage1
       exports.assert(exports.jsonStringifyOrdered(coverage1) === '{"test":{"b":{"1":[1,1]},"branchMap":{"1":{"line":2,"locations":[{"end":{"column":25,"line":2},"start":{"column":13,"line":2}},{"end":{"column":40,"line":2},"start":{"column":28,"line":2}}],"type":"cond-expr"}},"f":{"1":2},"fnMap":{"1":{"line":1,"loc":{"end":{"column":13,"line":1},"start":{"column":1,"line":1}},"name":"(anonymous_1)"}},"path":"test","s":{"1":2,"2":2},"statementMap":{"1":{"end":{"column":5,"line":3},"start":{"column":0,"line":1}},"2":{"end":{"column":41,"line":2},"start":{"column":0,"line":2}}}}}', coverage1);
       onError();
+    };
+
+    exports.fileCacheAndParse = function (options) {
+      /*
+        this function will parse options.file and cache it to exports.fileCacheDict
+      */
+      // read options.data from options.file and comment out shebang
+      options.data =
+        options.data || exports.fs.readFileSync(options.file, 'utf8').replace((/^#!/), '//#!');
+      // if coverage-mode is enabled, then instrument options.data
+      if (exports.__coverage__ &&
+          options.coverage && options.coverage === exports.envDict.PACKAGE_JSON_NAME) {
+        options.data = exports._coverageInstrument(options.data, options.file);
+      }
+      // cache options to exports.fileCacheDict[options.cache]
+      if (options.cache) {
+        exports.fileCacheDict[options.cache] = options;
+      }
     };
 
     exports.onFileModifiedRestart = function (file) {
@@ -1609,17 +1630,17 @@
       // serve the following assets from fileCacheDict
       case '/assets/utility2.js':
       case '/test/test.js':
-        response.end(exports.fileCacheDict[request.urlPathNormalized]);
+        response.end(exports.fileCacheDict[request.urlPathNormalized].data);
         break;
       // serve test page
       case '/test/test.html':
       case '/test/utility2.html':
         response.end(exports.textFormat(exports.fileCacheDict[
           request.urlPathNormalized
-        ], {
+        ].data, {
           envDict: exports.envDict,
           utility2BrowserJson: JSON.stringify(exports.utility2Browser),
-          utility2Css: exports.fileCacheDict['/assets/utility2.css']
+          utility2Css: exports.fileCacheDict['/assets/utility2.css'].data
         }));
         break;
       // fallback to next middleware
@@ -1659,7 +1680,7 @@
         file = __dirname + '/index.js';
         // cover index.js
         if (exports.__coverage__ && 'utility2' === exports.envDict.PACKAGE_JSON_NAME) {
-          file = process.cwd() + '/.tmp/instrumented..assets.utility2.js';
+          file = process.cwd() + '/.tmp/instrumented.utility2.js';
         }
         // spawn a phantomjs process to test a url
         exports.child_process.spawn(
@@ -1714,6 +1735,19 @@
           // keep timerTimeout from blocking the process from exiting
           .unref();
       }
+      // cache utility2.js
+      exports.fileCacheAndParse({
+        cache: '/assets/utility2.js',
+        coverage: 'utility2',
+        file: __dirname + '/index.js'
+      });
+      // write instrumented utility2.js to fs
+      if (exports.__coverage__ && exports.envDict.PACKAGE_JSON_NAME === 'utility2') {
+        exports.fs.writeFileSync(
+          process.cwd() + '/.tmp/instrumented.utility2.js',
+          exports.fileCacheDict['/assets/utility2.js'].data
+        );
+      }
       // if $npm_config_server_port is undefined,
       // then assign it a random integer in the inclusive range 1 to 0xffff
       exports.envDict.npm_config_server_port = exports.envDict.npm_config_server_port ||
@@ -1765,12 +1799,6 @@
       });
     };
 
-    // init fileCacheDict
-    exports.fileCacheDict['/assets/utility2.js'] = exports.fs.readFileSync(__filename, 'utf8');
-    if (exports.fs.existsSync(process.cwd() + '/test.js')) {
-      exports.fileCacheDict['/test/test.js'] =
-        exports.fs.readFileSync(process.cwd() + '/test.js', 'utf8');
-    }
   }());
 
 
@@ -2050,7 +2078,7 @@
   // init fileCacheDict
   exports.fileCacheDict = {
 /*jslint-ignore begin*/
-'/test/test-report.html.template': '\
+'/test/test-report.html.template': { data: '\
 <style>\n\
 .testReportPlatformDiv {\n\
   border: 1px solid;\n\
@@ -2167,33 +2195,33 @@ tr:nth-child(odd).testReportPlatformTr {\n\
 </pre>\n\
 </div>\n\
 {{/testPlatformList}}\n\
-',
+' },
 
 
 
 // https://img.shields.io/badge/last_build-0000_00_00_00_00_00_UTC_--_master_--_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-0077ff.svg?style=flat
-'.tmp/build/build.badge.svg': '\
+'.tmp/build/build.badge.svg': { data: '\
 <svg xmlns="http://www.w3.org/2000/svg" width="563" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="563" height="20" fill="#555"/><rect rx="0" x="61" width="502" height="20" fill="#07f"/><path fill="#07f" d="M61 0h4v20h-4z"/><rect rx="0" width="563" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="31.5" y="15" fill="#010101" fill-opacity=".3">last build</text><text x="31.5" y="14">last build</text><text x="311" y="15" fill="#010101" fill-opacity=".3">0000 00 00 00 00 00 UTC - master - aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</text><text x="311" y="14">0000 00 00 00 00 00 UTC - master - aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</text></g></svg>\n\
-',
+' },
 
 
 
 // https://img.shields.io/badge/coverage-100.0%-00dd00.svg?style=flat
-'.tmp/build/coverage-report.badge.svg': '\
+'.tmp/build/coverage-report.badge.svg': { data: '\
 <svg xmlns="http://www.w3.org/2000/svg" width="117" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="117" height="20" fill="#555"/><rect rx="0" x="63" width="54" height="20" fill="#0d0"/><path fill="#0d0" d="M63 0h4v20h-4z"/><rect rx="0" width="117" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="32.5" y="15" fill="#010101" fill-opacity=".3">coverage</text><text x="32.5" y="14">coverage</text><text x="89" y="15" fill="#010101" fill-opacity=".3">100.0%</text><text x="89" y="14">100.0%</text></g></svg>\n\
-',
+' },
 
 
 
 // https://img.shields.io/badge/tests_failed-999-dd0000.svg?style=flat
-'.tmp/build/test-report.badge.svg': '\
+'.tmp/build/test-report.badge.svg': { data: '\
 <svg xmlns="http://www.w3.org/2000/svg" width="103" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="103" height="20" fill="#555"/><rect rx="0" x="72" width="31" height="20" fill="#d00"/><path fill="#d00" d="M72 0h4v20h-4z"/><rect rx="0" width="103" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="37" y="15" fill="#010101" fill-opacity=".3">tests failed</text><text x="37" y="14">tests failed</text><text x="86.5" y="15" fill="#010101" fill-opacity=".3">999</text><text x="86.5" y="14">999</text></g></svg>\n\
-',
+' },
 
 
 
 // https://img.shields.io/badge/tests_failed-999-dd0000.svg?style=flat
-'/assets/utility2.css': '\
+'/assets/utility2.css': { data: '\
 /*csslint\n\
   box-model: false\n\
 */\n\
@@ -2253,11 +2281,11 @@ tr:nth-child(odd).testReportPlatformTr {\n\
   from { background-position: 40px 0; }\n\
   to { background-position: 0 0; }\n\
 }\n\
-',
+' },
 
 
 
-'/test/test.html': '\
+'/test/test.html': { data: '\
 <!DOCTYPE html>\n\
 <html>\n\
 <head>\n\
@@ -2294,11 +2322,11 @@ tr:nth-child(odd).testReportPlatformTr {\n\
   <!-- script end -->\n\
 </body>\n\
 </html>\n\
-',
+' },
 
 
 
-'/test/utility2.html': '\
+'/test/utility2.html': { data: '\
 <!DOCTYPE html>\n\
 <html>\n\
 <head>\n\
@@ -2320,7 +2348,7 @@ tr:nth-child(odd).testReportPlatformTr {\n\
   </script>\n\
 </body>\n\
 </html>\n\
-'
+' }
 /*jslint-ignore end*/
   };
   return exports;

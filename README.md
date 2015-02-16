@@ -203,7 +203,6 @@ exit $EXIT_CODE
 - add options.onListen to testRunServer
 - explicitly require slimerjs instead of auto-detecting it
 - move testPhantomjs from index.js to index.sh and auto-install phantomjs-lite when required
-- merge index.data into index.js
 - auto-generate help doc from README.md
 - add server stress test using phantomjs
 - minify /assets/utility2.js in production-mode
