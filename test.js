@@ -231,22 +231,6 @@
     ];
     // run server-test
     exports.testRunServer(local, process.exit);
-    [{
-      file: __dirname + '/index.data',
-      parse: true
-    }, {
-      cache: '/assets/utility2.js',
-      coverage: 'utility2',
-      file: __dirname + '/index.js'
-    }, {
-      cache: '/test/test.js',
-      coverage: 'utility2',
-      file: __dirname + '/test.js'
-    }].forEach(function (options) {
-      console.log('cache and parse ' + options.file);
-      // cache and parse the file
-      exports.fileCacheAndParse(options);
-    });
     local.fs.readdirSync(__dirname).forEach(function (file) {
       file = __dirname + '/' + file;
       switch (local.path.extname(file)) {

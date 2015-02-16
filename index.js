@@ -493,7 +493,7 @@
           // 1. save the options item to the backup object
           backup[key] = options2;
           // 2. set the override item to the options object
-          // if options is exports.envDict, then override falsey values with empty string
+          // if options is envDict, then override falsey values with empty string
           options[key] = options === exports.envDict ? override2 || '' : override2;
           return;
         }
@@ -724,7 +724,7 @@
       // create html test-report
       testCaseNumber = 0;
       return exports.textFormat(
-        exports.fileCacheDict['/test/test-report.html.template'].data,
+        exports.fileCacheDict['/test/test-report.html.template'],
         exports.setOverride(testReport, -1, {
           // security - sanitize '<' in text
           CI_COMMIT_INFO: String(exports.envDict.CI_COMMIT_INFO).replace((/</g), '&lt;'),
@@ -782,13 +782,13 @@
       if (!exports.modeTest) {
         return;
       }
-      // init exports.modeTestCase
+      // init modeTestCase
       exports.modeTestCase = exports.modeTestCase || exports.envDict.npm_config_mode_test_case;
-      // reset exports.testPlatform.testCaseList
+      // reset testPlatform.testCaseList
       exports.testPlatform.testCaseList.length = 0;
-      // add test-cases into exports.testPlatform.testCaseList
+      // add test-cases into testPlatform.testCaseList
       Object.keys(options).forEach(function (key) {
-        // add test-case options[key] to exports.testPlatform.testCaseList
+        // add test-case options[key] to testPlatform.testCaseList
         if (key.slice(-5) === '_test' &&
             (exports.modeTestCase === key ||
               (!exports.modeTestCase && key !== '_testRun_failure_test'))) {
@@ -800,13 +800,13 @@
       });
       // if in browser mode, visually refresh test progress until it finishes
       if (exports.modeJs === 'browser') {
-        // init exports._testReportDiv element
+        // init _testReportDiv element
         exports._testReportDiv = document.querySelector('.testReportDiv') || {};
         exports._testReportDiv.innerHTML = exports.testMerge(exports.testReport, {});
         document.body.appendChild(exports._testReportDiv);
         // update test-report status every 1000 ms until finished
         timerInterval = setInterval(function () {
-          // update exports._testReportDiv in browser
+          // update _testReportDiv in browser
           exports._testReportDiv.innerHTML =
             exports.testMerge(exports.testReport, {});
           if (exports.testReport.testsPending === 0) {
@@ -862,7 +862,7 @@
           // create build badge
           exports.fs.writeFileSync(
             process.cwd() + '/.tmp/build/build.badge.svg',
-            exports.fileCacheDict['.tmp/build/build.badge.svg'].data
+            exports.fileCacheDict['.tmp/build/build.badge.svg']
               // edit branch name
               .replace(
                 (/0000 00 00 00 00 00/g),
@@ -879,7 +879,7 @@
           // create test-report.badge.svg
           exports.fs.writeFileSync(
             process.cwd() + '/.tmp/build/test-report.badge.svg',
-            exports.fileCacheDict['.tmp/build/test-report.badge.svg'].data
+            exports.fileCacheDict['.tmp/build/test-report.badge.svg']
               // edit number of tests failed
               .replace((/999/g), testReport.testsFailed)
               // edit badge color
@@ -901,7 +901,7 @@
           );
           // if any test failed, then exit with non-zero exit-code
           setTimeout(function () {
-            // finalize exports.testReport
+            // finalize testReport
             exports.testMerge(testReport, {});
             console.log('\n' + exports.envDict.MODE_BUILD + ' - ' +
               exports.testReport.testsFailed + ' failed tests\n');
@@ -1105,7 +1105,7 @@
           exports.assert(!finished, finished);
           // set finished to true
           finished = true;
-          // validate xhr is defined in exports._ajaxProgressList
+          // validate xhr is defined in _ajaxProgressList
           ii = exports._ajaxProgressList.indexOf(xhr);
           exports.assert(ii >= 0, 'missing xhr in exports._ajaxProgressList');
           // remove xhr from ajaxProgressList
@@ -1171,7 +1171,7 @@
       if (exports._ajaxProgressList.length === 0) {
         exports._ajaxProgressDiv.style.display = 'block';
       }
-      // add xhr to exports._ajaxProgressList
+      // add xhr to _ajaxProgressList
       exports._ajaxProgressList.push(xhr);
       // open url
       xhr.open(options.method || 'GET', options.url);
@@ -1185,11 +1185,11 @@
       xhr.send(options.data);
     };
 
-    // init exports._ajaxProgressBarDiv element
+    // init _ajaxProgressBarDiv element
     exports._ajaxProgressBarDiv =
       document.querySelector('.ajaxProgressBarDiv') || { className: '', style: {} };
 
-    // init exports._ajaxProgressDiv element
+    // init _ajaxProgressDiv element
     exports._ajaxProgressDiv = document.querySelector('.ajaxProgressDiv') || { style: {} };
 
     exports._ajaxProgressIncrement = function () {
@@ -1209,7 +1209,7 @@
     // init list of xhr used in ajaxProgress
     exports._ajaxProgressList = [];
 
-    // init exports._ajaxProgressState
+    // init _ajaxProgressState
     exports._ajaxProgressState = 0;
 
     exports._ajaxProgressUpdate = function (width, type, label) {
@@ -1369,65 +1369,6 @@
       // validate merged coverage1
       exports.assert(exports.jsonStringifyOrdered(coverage1) === '{"test":{"b":{"1":[1,1]},"branchMap":{"1":{"line":2,"locations":[{"end":{"column":25,"line":2},"start":{"column":13,"line":2}},{"end":{"column":40,"line":2},"start":{"column":28,"line":2}}],"type":"cond-expr"}},"f":{"1":2},"fnMap":{"1":{"line":1,"loc":{"end":{"column":13,"line":1},"start":{"column":1,"line":1}},"name":"(anonymous_1)"}},"path":"test","s":{"1":2,"2":2},"statementMap":{"1":{"end":{"column":5,"line":3},"start":{"column":0,"line":1}},"2":{"end":{"column":41,"line":2},"start":{"column":0,"line":2}}}}}', coverage1);
       onError();
-    };
-
-    exports.fileCacheAndParse = function (options) {
-      /*
-        this function will parse options.file and cache it to exports.fileCacheDict
-      */
-      var tmp;
-      // read options.data from options.file
-      options.data = exports.fs.readFileSync(options.file, 'utf8')
-        // comment out shebang
-        .replace((/^#!/), '//#!');
-      // cache options to exports.fileCacheDict[options.cache]
-      if (options.cache) {
-        exports.fileCacheDict[options.cache] = options;
-      }
-      // parse options.data's embedded sub-files
-      if (options.parse) {
-        options.data.replace(
-          (/^\/\* FILE_BEGIN ([\S\s]+?) \*\/$([\S\s]+?)^\/\* FILE_END \*\/$/gm),
-          function (match0, options2, data, ii) {
-            // nop hack to pass jslint
-            exports.nop(match0);
-            // preserve lineno
-            tmp =
-              options.data.slice(0, ii).replace((/.+/g), '') + options2.replace((/.+/g), '');
-            options2 = JSON.parse(options2);
-            // cache options2 to exports.fileCacheDict[options2.file]
-            exports.fileCacheDict[options2.file] = options2;
-            // cache data to option2.data and preserve lineno
-            options2.data = tmp + data;
-            // run each action in options2.actionList
-            options2.actionList.forEach(function (action) {
-              switch (action) {
-              // export options2.data to exports.utility2Browser.fileCacheDict
-              case 'exportBrowser':
-                exports.utility2Browser.fileCacheDict[options2.file] = options2;
-                break;
-              // jslint options2.data
-              case 'jslint':
-                exports.jslint_lite.jslintAndPrint(options2.data, options2.file);
-                break;
-              }
-            });
-            // auto-trim data
-            options2.data = options2.data.trim();
-          }
-        );
-      }
-      // if coverage-mode is enabled, then instrument options.data
-      if (exports.__coverage__ &&
-          options.coverage &&
-          options.coverage === exports.envDict.PACKAGE_JSON_NAME) {
-        options.data = exports._coverageInstrument(options.data, options.file);
-        // write instrumented options.data to fs
-        exports.fs.writeFileSync(
-          process.cwd() + '/.tmp/instrumented.' + options.cache.replace((/[^\w\-]/g), '.'),
-          options.data
-        );
-      }
     };
 
     exports.onFileModifiedRestart = function (file) {
@@ -1668,17 +1609,17 @@
       // serve the following assets from fileCacheDict
       case '/assets/utility2.js':
       case '/test/test.js':
-        response.end(exports.fileCacheDict[request.urlPathNormalized].data);
+        response.end(exports.fileCacheDict[request.urlPathNormalized]);
         break;
       // serve test page
       case '/test/test.html':
       case '/test/utility2.html':
         response.end(exports.textFormat(exports.fileCacheDict[
           request.urlPathNormalized
-        ].data, {
+        ], {
           envDict: exports.envDict,
           utility2BrowserJson: JSON.stringify(exports.utility2Browser),
-          utility2Css: exports.fileCacheDict['/assets/utility2.css'].data
+          utility2Css: exports.fileCacheDict['/assets/utility2.css']
         }));
         break;
       // fallback to next middleware
@@ -1824,17 +1765,12 @@
       });
     };
 
-    // cache index.* files
-    [{
-      file: __dirname + '/index.data',
-      parse: true
-    }, {
-      cache: '/assets/utility2.js',
-      coverage: 'utility2',
-      file: __dirname + '/index.js'
-    }].forEach(function (options) {
-      exports.fileCacheAndParse(options);
-    });
+    // init fileCacheDict
+    exports.fileCacheDict['/assets/utility2.js'] = exports.fs.readFileSync(__filename, 'utf8');
+    if (exports.fs.existsSync(process.cwd() + '/test.js')) {
+      exports.fileCacheDict['/test/test.js'] =
+        exports.fs.readFileSync(process.cwd() + '/test.js', 'utf8');
+    }
   }());
 
 
@@ -1852,8 +1788,6 @@
       -1,
       JSON.parse(decodeURIComponent(exports.system.args[1]))
     );
-    // mock exports.fileCacheDict['/test/test-report.html.template'].data
-    exports.fileCacheDict = { '/test/test-report.html.template': { data: '' } };
     // if modeErrorIgnore, then suppress console.error and console.log
     if (exports.modeErrorIgnore) {
       console.error = console.log = exports.nop;
@@ -1944,6 +1878,9 @@
       }
     );
   }());
+
+
+
 }((function (self) {
   'use strict';
   var exports;
@@ -2016,8 +1953,7 @@
         PACKAGE_JSON_DESCRIPTION: exports.envDict.PACKAGE_JSON_DESCRIPTION,
         PACKAGE_JSON_NAME: exports.envDict.PACKAGE_JSON_NAME,
         PACKAGE_JSON_VERSION: exports.envDict.PACKAGE_JSON_VERSION
-      },
-      fileCacheDict: {}
+      }
     };
     // init _testSecret
     (function () {
@@ -2085,7 +2021,6 @@
     };
     exports.__coverage__ = exports.__coverage__ || exports.global.__coverage__ || null;
     exports.errorDefault = new Error('default error');
-    exports.fileCacheDict = exports.fileCacheDict || {};
     exports.testPlatform = {
       name: exports.modeJs === 'browser' ? 'browser - ' +
         navigator.userAgent + ' - ' + new Date().toISOString() :
@@ -2109,5 +2044,284 @@
     exports.timeoutDefault =
       exports.envDict.npm_config_timeout_default || exports.timeoutDefault || 30000;
   }());
+
+
+
+  // init fileCacheDict
+  exports.fileCacheDict = {
+/*jslint-ignore begin*/
+'/test/test-report.html.template': '\
+<style>\n\
+.testReportPlatformDiv {\n\
+  border: 1px solid;\n\
+  border-radius: 5px;\n\
+  font-family: Helvetical Neue, Helvetica, Arial, sans-serif;\n\
+  margin-top: 20px;\n\
+  padding: 0 10px 10px 10px;\n\
+  text-align: left;\n\
+}\n\
+.testReportPlatformPre {\n\
+  background-color: #fdd;\n\
+  border: 1px;\n\
+  border-radius: 0 0 5px 5px;\n\
+  border-top-style: solid;\n\
+  margin-bottom: 0;\n\
+  padding: 10px;\n\
+}\n\
+.testReportPlatformPreHidden {\n\
+  display: none;\n\
+}\n\
+.testReportPlatformScreenCaptureA {\n\
+  border: 1px solid;\n\
+  border-color: #000;\n\
+  display:block;\n\
+  margin: 5px 0 5px 0;\n\
+  max-height:256px;\n\
+  max-width:320px;\n\
+  overflow:hidden;\n\
+}\n\
+.testReportPlatformScreenCaptureImg {\n\
+  max-width:320px;\n\
+}\n\
+.testReportPlatformSpan {\n\
+  display: inline-block;\n\
+  width: 8em;\n\
+}\n\
+.testReportPlatformTable {\n\
+  border: 1px;\n\
+  border-top-style: solid;\n\
+  text-align: left;\n\
+  width: 100%;\n\
+}\n\
+.testReportSummaryDiv {\n\
+  background-color: #bfb;\n\
+}\n\
+.testReportSummarySpan {\n\
+  display: inline-block;\n\
+  width: 6.5em;\n\
+}\n\
+tr:nth-child(odd).testReportPlatformTr {\n\
+  background-color: #bfb;\n\
+}\n\
+.testReportTestFailed {\n\
+  background-color: #f99;\n\
+}\n\
+.testReportTestPending {\n\
+  background-color: #99f;\n\
+}\n\
+</style>\n\
+<div class="testReportPlatformDiv testReportSummaryDiv">\n\
+<h2>{{envDict.PACKAGE_JSON_NAME}} test-report summary</h2>\n\
+<h4>\n\
+  <span class="testReportSummarySpan">version</span>- {{envDict.PACKAGE_JSON_VERSION}}<br>\n\
+  <span class="testReportSummarySpan">build date</span>- {{date}}<br>\n\
+  <span class="testReportSummarySpan">commit info</span>- {{CI_COMMIT_INFO}}<br>\n\
+</h4>\n\
+<table class="testReportPlatformTable">\n\
+<thead><tr>\n\
+  <th>total time elapsed</th>\n\
+  <th>total tests failed</th>\n\
+  <th>total tests passed</th>\n\
+  <th>total tests pending</th>\n\
+</tr></thead>\n\
+<tbody><tr>\n\
+  <td>{{timeElapsed}} ms</td>\n\
+  <td class="{{testsFailedClass}}">{{testsFailed}}</td>\n\
+  <td>{{testsPassed}}</td>\n\
+  <td>{{testsPending}}</td>\n\
+</tr></tbody>\n\
+</table>\n\
+</div>\n\
+{{#testPlatformList}}\n\
+<div class="testReportPlatformDiv">\n\
+<h4>\n\
+  {{testPlatformNumber}}. {{name}}<br>\n\
+  {{screenCapture}}\n\
+  <span class="testReportPlatformSpan">time elapsed</span>- {{timeElapsed}} ms<br>\n\
+  <span class="testReportPlatformSpan">tests failed</span>- {{testsFailed}}<br>\n\
+  <span class="testReportPlatformSpan">tests passed</span>- {{testsPassed}}<br>\n\
+  <span class="testReportPlatformSpan">tests pending</span>- {{testsPending}}<br>\n\
+</h4>\n\
+<table class="testReportPlatformTable">\n\
+<thead><tr>\n\
+  <th>#</th>\n\
+  <th>time elapsed</th>\n\
+  <th>status</th>\n\
+  <th>test case</th>\n\
+</tr></thead>\n\
+<tbody>\n\
+{{#testCaseList}}\n\
+<tr class="testReportPlatformTr">\n\
+  <td>{{testCaseNumber}}</td>\n\
+  <td>{{timeElapsed}} ms</td>\n\
+  <td class="{{testReportTestStatusClass}}">{{status}}</td>\n\
+  <td>{{name}}</td>\n\
+</tr>\n\
+{{/testCaseList}}\n\
+</tbody>\n\
+</table>\n\
+<pre class="{{testReportPlatformPreClass}}">\n\
+{{#errorStackList}}\n\
+{{errorStack}}\n\
+{{/errorStackList}}\n\
+</pre>\n\
+</div>\n\
+{{/testPlatformList}}\n\
+',
+
+
+
+// https://img.shields.io/badge/last_build-0000_00_00_00_00_00_UTC_--_master_--_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-0077ff.svg?style=flat
+'.tmp/build/build.badge.svg': '\
+<svg xmlns="http://www.w3.org/2000/svg" width="563" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="563" height="20" fill="#555"/><rect rx="0" x="61" width="502" height="20" fill="#07f"/><path fill="#07f" d="M61 0h4v20h-4z"/><rect rx="0" width="563" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="31.5" y="15" fill="#010101" fill-opacity=".3">last build</text><text x="31.5" y="14">last build</text><text x="311" y="15" fill="#010101" fill-opacity=".3">0000 00 00 00 00 00 UTC - master - aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</text><text x="311" y="14">0000 00 00 00 00 00 UTC - master - aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</text></g></svg>\n\
+',
+
+
+
+// https://img.shields.io/badge/coverage-100.0%-00dd00.svg?style=flat
+'.tmp/build/coverage-report.badge.svg': '\
+<svg xmlns="http://www.w3.org/2000/svg" width="117" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="117" height="20" fill="#555"/><rect rx="0" x="63" width="54" height="20" fill="#0d0"/><path fill="#0d0" d="M63 0h4v20h-4z"/><rect rx="0" width="117" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="32.5" y="15" fill="#010101" fill-opacity=".3">coverage</text><text x="32.5" y="14">coverage</text><text x="89" y="15" fill="#010101" fill-opacity=".3">100.0%</text><text x="89" y="14">100.0%</text></g></svg>\n\
+',
+
+
+
+// https://img.shields.io/badge/tests_failed-999-dd0000.svg?style=flat
+'.tmp/build/test-report.badge.svg': '\
+<svg xmlns="http://www.w3.org/2000/svg" width="103" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="103" height="20" fill="#555"/><rect rx="0" x="72" width="31" height="20" fill="#d00"/><path fill="#d00" d="M72 0h4v20h-4z"/><rect rx="0" width="103" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="37" y="15" fill="#010101" fill-opacity=".3">tests failed</text><text x="37" y="14">tests failed</text><text x="86.5" y="15" fill="#010101" fill-opacity=".3">999</text><text x="86.5" y="14">999</text></g></svg>\n\
+',
+
+
+
+// https://img.shields.io/badge/tests_failed-999-dd0000.svg?style=flat
+'/assets/utility2.css': '\
+/*csslint\n\
+  box-model: false\n\
+*/\n\
+.ajaxProgressBarDiv {\n\
+  animation: 2s linear 0s normal none infinite ajaxProgressBarDivAnimation;\n\
+  -o-animation: 2s linear 0s normal none infinite ajaxProgressBarDivAnimation;\n\
+  -moz-animation: 2s linear 0s normal none infinite ajaxProgressBarDivAnimation;\n\
+  -webkit-animation: 2s linear 0s normal none infinite ajaxProgressBarDivAnimation;\n\
+  background-image: linear-gradient(\n\
+    45deg,rgba(255,255,255,.25) 25%,\n\
+    transparent 25%,\n\
+    transparent 50%,\n\
+    rgba(255,255,255,.25) 50%,\n\
+    rgba(255,255,255,.25) 75%,\n\
+    transparent 75%,\n\
+    transparent\n\
+  );\n\
+  background-size: 40px 40px;\n\
+  color: #fff;\n\
+  font-family: Helvetical Neue, Helvetica, Arial, sans-serif;\n\
+  font-size: 12px;\n\
+  padding: 2px 0 2px 0;\n\
+  text-align: center;\n\
+  transition: width .5s ease;\n\
+  width: 25%;\n\
+}\n\
+.ajaxProgressBarDivError {\n\
+  background-color: #d33;\n\
+}\n\
+.ajaxProgressBarDivLoading {\n\
+  background-color: #37b;\n\
+}\n\
+.ajaxProgressBarDivSuccess {\n\
+  background-color: #3b3;\n\
+}\n\
+.ajaxProgressDiv {\n\
+  background-color: #fff;\n\
+  border: 1px solid;\n\
+  display: none;\n\
+  left: 50%;\n\
+  margin: 0 0 0 -50px;\n\
+  padding: 5px 5px 5px 5px;\n\
+  position: fixed;\n\
+  top: 49%;\n\
+  width: 100px;\n\
+  z-index: 9999;\n\
+}\n\
+@keyframes ajaxProgressBarDivAnimation {\n\
+  from { background-position: 40px 0; }\n\
+  to { background-position: 0 0; }\n\
+}\n\
+@-o-keyframes ajaxProgressBarDivAnimation {\n\
+  from { background-position: 40px 0; }\n\
+  to { background-position: 0 0; }\n\
+}\n\
+@-webkit-keyframes ajaxProgressBarDivAnimation {\n\
+  from { background-position: 40px 0; }\n\
+  to { background-position: 0 0; }\n\
+}\n\
+',
+
+
+
+'/test/test.html': '\
+<!DOCTYPE html>\n\
+<html>\n\
+<head>\n\
+  <meta charset="UTF-8">\n\
+  <title>{{envDict.PACKAGE_JSON_NAME}} [{{envDict.PACKAGE_JSON_VERSION}}]</title>\n\
+  <style>\n\
+  {{utility2Css}}\n\
+  body {\n\
+  background-color: #fff;\n\
+  font-family: Helvetical Neue, Helvetica, Arial, sans-serif;\n\
+  }\n\
+  </style>\n\
+</head>\n\
+<body>\n\
+  <!-- main app div begin -->\n\
+  <div class="utility2Div">\n\
+  <h1>{{envDict.PACKAGE_JSON_NAME}} [{{envDict.PACKAGE_JSON_VERSION}}]</h1>\n\
+  <h3>{{envDict.PACKAGE_JSON_DESCRIPTION}}</h3>\n\
+  <div><button\n\
+    onclick="window.utility2.modeTest=1; window.utility2.testRun(window.utility2, window.utility2.nop);"\n\
+  >run test</button></div>\n\
+  <div class="testReportDiv"></div>\n\
+  </div>\n\
+  <!-- main app div end -->\n\
+  <!-- ajax progress bar begin -->\n\
+  <div class="ajaxProgressDiv">\n\
+  <div class="ajaxProgressBarDiv ajaxProgressBarDivLoading">loading</div>\n\
+  </div>\n\
+  <!-- ajax progress bar end -->\n\
+  <!-- script begin -->\n\
+  <script>window.utility2 = {{utility2BrowserJson}}</script>\n\
+  <script src="/assets/utility2.js"></script>\n\
+  <script src="/test/test.js"></script>\n\
+  <!-- script end -->\n\
+</body>\n\
+</html>\n\
+',
+
+
+
+'/test/utility2.html': '\
+<!DOCTYPE html>\n\
+<html>\n\
+<head>\n\
+  <meta charset="UTF-8">\n\
+  <title>utility2.js library</title>\n\
+</head>\n\
+<body>\n\
+  <script src="/assets/utility2.js"></script>\n\
+  <script>\n\
+  (function () {\n\
+    "use strict";\n\
+    if (window.utility2.modeTest === "phantom") {\n\
+      throw new Error(JSON.stringify({ global_test_results: {\n\
+        coverage: window.utility2.__coverage__,\n\
+        testReport: window.utility2.testReport\n\
+      } }));\n\
+    }\n\
+  }());\n\
+  </script>\n\
+</body>\n\
+</html>\n\
+'
+/*jslint-ignore end*/
+  };
   return exports;
 }(this))));
