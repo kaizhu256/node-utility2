@@ -32,7 +32,7 @@
   "scripts": {
     "build2": "./index.sh shRun shBuild",
     "start": "npm_config_mode_auto_restart=1 ./index.sh shRun node test.js",
-    "test": "./index.sh shRun shNpmTest test.js"
+    "test": "npm_config_mode_auto_restart=1 npm_config_mode_auto_restart_child=1 ./index.sh shRun shNpmTest test.js"
   },
   "version": "2015.2.15-13"
 }

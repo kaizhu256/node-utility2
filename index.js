@@ -598,8 +598,7 @@
         // suppress console.log
         [console, { log: exports.nop }],
         // enforce synchronicity by mocking timers as callCallback
-        [exports.global, { setInterval: callCallback, setTimeout: callCallback }],
-        [exports.global.process || {}, { exit: exports.nop }]
+        [exports.global, { setInterval: callCallback, setTimeout: callCallback }]
       ].concat(mockList);
       onError2 = function (error) {
         // restore mock[0] from mock[2]
@@ -818,11 +817,14 @@
       /*
         this function will run the test-cases in exports.testPlatform.testCaseList
       */
-      var onParallel, testPlatform, timerInterval;
+      var exit, onParallel, testPlatform, timerInterval;
       exports.modeTest = exports.modeTest || exports.envDict.npm_config_mode_npm_test;
       if (!exports.modeTest) {
         return;
       }
+      // mock exit
+      exit = exports.exit;
+      exports.exit = exports.nop;
       // init modeTestCase
       exports.modeTestCase = exports.modeTestCase || exports.envDict.npm_config_mode_test_case;
       // reset testPlatform.testCaseList
@@ -861,6 +863,8 @@
           this function create the test-report after all tests have finished
         */
         var separator, testReport, testReportHtml;
+        // restore exit
+        exports.exit = exit;
         // init new-line separator
         separator = new Array(56).join('-');
         // init testReport
@@ -1410,10 +1414,32 @@
           persistent: false
         }, function (stat2, stat1) {
           if (stat2.mtime > stat1.mtime) {
-            process.exit(1);
+            exports.exit(1);
           }
         });
       }
+    };
+
+    exports._onFileModifiedRestart_default_test = function (onError) {
+       /*
+        this function tests onFileModifiedRestart's watchFile handling behavior
+       */
+      var file, onParallel;
+      file = __dirname + '/package.json';
+      onParallel = exports.onParallel(onError);
+      onParallel.counter += 1;
+      exports.fs.stat(file, function (error, stat) {
+        // test default watchFile handling behavior
+        onParallel.counter += 1;
+        exports.fs.utimes(file, stat.atime, new Date(), onParallel);
+        // test nop watchFile handling behavior
+        onParallel.counter += 1;
+        setTimeout(function () {
+          exports.fs.utimes(file, stat.atime, stat.mtime, onParallel);
+        // coverage - use 1500 ms to cover setInterval watchFile in node
+        }, 1500);
+        onParallel(error);
+      });
     };
 
     exports.replStart = function (globalDict) {
@@ -1739,7 +1765,7 @@
       // if $npm_config_timeout_exit is defined,
       // then exit this process after $npm_config_timeout_exit ms
       if (Number(exports.envDict.npm_config_timeout_exit)) {
-        setTimeout(process.exit, Number(exports.envDict.npm_config_timeout_exit))
+        setTimeout(exports.exit, Number(exports.envDict.npm_config_timeout_exit))
           // keep timerTimeout from blocking the process from exiting
           .unref();
       }
@@ -1883,10 +1909,10 @@
           console.log('created ' + 'file://' + file);
         });
         // exit with number of tests failed as exit-code
-        exports.global.phantom.exit(!data || data.testReport.testsFailed);
+        exports.exit(!data || data.testReport.testsFailed);
       } catch (error) {
         console.error(error.message);
-        exports.global.phantom.exit(1);
+        exports.exit(1);
       }
     };
     // set timeout for phantom
@@ -1957,6 +1983,7 @@
   case 'browser':
     // init exports properties
     exports.envDict = exports.envDict || {};
+    exports.exit = exports.nop;
     exports.global = window;
     // parse any url-search-params that matches 'mode*' or '_testSecret' or 'timeoutDefault'
     location.search.replace(
@@ -1988,6 +2015,7 @@
     // init exports properties
     exports.__dirname = __dirname;
     exports.envDict = process.env;
+    exports.exit = process.exit;
     exports.global = global;
     exports.utility2Browser = {
       envDict: {
@@ -2018,6 +2046,7 @@
     exports.webpage = require('webpage');
     // init exports properties
     exports.envDict = exports.system.env;
+    exports.exit = self.phantom.exit;
     exports.global = self;
     break;
   }
