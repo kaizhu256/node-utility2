@@ -402,6 +402,7 @@
 
   // init browser js-env
   case 'browser':
+    window.local = local;
     // test !exports.modeTest handling behavior
     local._modeTest = exports.modeTest;
     exports.modeTest = null;
@@ -629,17 +630,29 @@
         this function will test testRunServer's misc handling behavior
       */
       exports.testMock([
-        [exports.http, { createServer: function () {
-          return { listen: exports.nop };
-        } }],
-        [exports.envDict, {
-          // test auto-exit handling behavior
-          npm_config_timeout_exit: '1',
-          // test random $npm_config_server_port handling behavior
-          npm_config_server_port: ''
+        [exports, {
+          envDict: {
+            // test not-utiilty2 package handling behavior
+            PACKAGE_JSON_NAME: 'undefined',
+            // test auto-exit handling behavior
+            npm_config_timeout_exit: '1',
+            // test random $npm_config_server_port handling behavior
+            npm_config_server_port: ''
+          },
+          fileCacheAndParse: exports.nop,
+          http: {
+            createServer: function () {
+              return { listen: exports.nop };
+            }
+          }
         }]
       ], onError, function (onError) {
         exports.testRunServer({ serverMiddlewareList: [] }, exports.nop);
+        // validate $npm_config_server_port
+        exports.assert(
+          Number(exports.envDict.npm_config_server_port),
+          exports.envDict.npm_config_server_port
+        );
         onError();
       });
     };

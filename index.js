@@ -630,11 +630,6 @@
             onTestRunEnd(exports.testReport.testsFailed);
           }, 1000);
           break;
-        default:
-          setTimeout(function () {
-            // call callback with number of tests failed
-            onTestRunEnd(exports.testReport.testsFailed);
-          }, 1000);
         }
       });
       onParallel.counter += 1;
@@ -1873,7 +1868,7 @@ tr:nth-child(odd).testReportPlatformTr {\n\
   <h1>{{envDict.PACKAGE_JSON_NAME}} [{{envDict.PACKAGE_JSON_VERSION}}]</h1>\n\
   <h3>{{envDict.PACKAGE_JSON_DESCRIPTION}}</h3>\n\
   <div><button\n\
-    onclick="window.utility2.modeTest=1; window.utility2.testRun(window.utility2, window.utility2.nop);"\n\
+    onclick="window.utility2.modeTest=1; window.utility2.testRun(window.local, window.utility2.nop);"\n\
   >run test</button></div>\n\
   <div class="testReportDiv"></div>\n\
   </div>\n\
