@@ -15,75 +15,6 @@
     /*
       this function will run shared js-env code
     */
-    exports._ajax_default_test = function (onError) {
-      /*
-        this function will test ajax's default handling behavior
-      */
-      var onParallel;
-      onParallel = exports.onParallel(onError);
-      onParallel.counter += 1;
-      // test http GET handling behavior
-      onParallel.counter += 1;
-      exports.ajax({ url: '/test/hello' }, function (error, data) {
-        exports.testTryCatch(function () {
-          // validate no error occurred
-          exports.assert(!error, error);
-          // validate data
-          exports.assert(data === 'hello', data);
-          onParallel();
-        }, onParallel);
-      });
-      // test http POST handling behavior
-      ['binary', 'text'].forEach(function (resultType) {
-        onParallel.counter += 1;
-        exports.ajax({
-          // test binary post handling behavior
-          data: resultType === 'binary' && exports.modeJs === 'node' ? new Buffer('hello')
-            // test text post handling behavior
-            : 'hello',
-          // test request header handling behavior
-          headers: { 'X-Header-Hello': 'Hello' },
-          method: 'POST',
-          resultType: resultType,
-          url: '/test/echo'
-        }, function (error, data) {
-          exports.testTryCatch(function () {
-            // validate no error occurred
-            exports.assert(!error, error);
-            // validate binary data
-            if (resultType === 'binary' && exports.modeJs === 'node') {
-              exports.assert(Buffer.isBuffer(data), data);
-              data = String(data);
-            }
-            // validate text data
-            exports.assert(data.indexOf('hello') >= 0, data);
-            onParallel();
-          }, onParallel);
-        });
-      });
-      [{
-        // test 404-not-found-error handling behavior
-        url: '/test/undefined?modeErrorIgnore=1'
-      }, {
-        // test 500-internal-server-error handling behavior
-        url: '/test/server-error?modeErrorIgnore=1'
-      }, {
-        // test undefined https host handling behavior
-        timeout: 1,
-        url: 'https://undefined' + Date.now() + Math.random() + '.com'
-      }].forEach(function (options) {
-        onParallel.counter += 1;
-        exports.ajax(options, function (error) {
-          exports.testTryCatch(function () {
-            // validate error occurred
-            exports.assert(error instanceof Error, error);
-            onParallel();
-          }, onParallel);
-        });
-      });
-      onParallel();
-    };
-
     exports.coverageMerge = function (coverage1, coverage2) {
       /*
         this function will merge coverage2 into coverage1
@@ -123,35 +54,6 @@
       return coverage1;
     };
 
-    exports._coverageMerge_default_test = function (onError) {
-      /*
-        this function will test coverageMerge's default handling behavior
-      */
-      var coverage1, coverage2, script;
-      if (exports.modeJs !== 'node') {
-        onError();
-        return;
-      }
-      script = exports._coverageInstrument(
-        '(function () {\nreturn arg ? __coverage__ : __coverage__;\n}());',
-        'test'
-      );
-      exports.arg = 0;
-      // init coverage1
-      coverage1 = exports.vm.runInNewContext(script, { arg: 0 });
-      // validate coverage1
-      exports.assert(exports.jsonStringifyOrdered(coverage1) === '{"test":{"b":{"1":[0,1]},"branchMap":{"1":{"line":2,"locations":[{"end":{"column":25,"line":2},"start":{"column":13,"line":2}},{"end":{"column":40,"line":2},"start":{"column":28,"line":2}}],"type":"cond-expr"}},"f":{"1":1},"fnMap":{"1":{"line":1,"loc":{"end":{"column":13,"line":1},"start":{"column":1,"line":1}},"name":"(anonymous_1)"}},"path":"test","s":{"1":1,"2":1},"statementMap":{"1":{"end":{"column":5,"line":3},"start":{"column":0,"line":1}},"2":{"end":{"column":41,"line":2},"start":{"column":0,"line":2}}}}}', coverage1);
-      // init coverage1
-      coverage2 = exports.vm.runInNewContext(script, { arg: 1 });
-      // validate coverage2
-      exports.assert(exports.jsonStringifyOrdered(coverage2) === '{"test":{"b":{"1":[1,0]},"branchMap":{"1":{"line":2,"locations":[{"end":{"column":25,"line":2},"start":{"column":13,"line":2}},{"end":{"column":40,"line":2},"start":{"column":28,"line":2}}],"type":"cond-expr"}},"f":{"1":1},"fnMap":{"1":{"line":1,"loc":{"end":{"column":13,"line":1},"start":{"column":1,"line":1}},"name":"(anonymous_1)"}},"path":"test","s":{"1":1,"2":1},"statementMap":{"1":{"end":{"column":5,"line":3},"start":{"column":0,"line":1}},"2":{"end":{"column":41,"line":2},"start":{"column":0,"line":2}}}}}', coverage2);
-      // merge coverage2 into coverage1
-      exports.coverageMerge(coverage1, coverage2);
-      // validate merged coverage1
-      exports.assert(exports.jsonStringifyOrdered(coverage1) === '{"test":{"b":{"1":[1,1]},"branchMap":{"1":{"line":2,"locations":[{"end":{"column":25,"line":2},"start":{"column":13,"line":2}},{"end":{"column":40,"line":2},"start":{"column":28,"line":2}}],"type":"cond-expr"}},"f":{"1":2},"fnMap":{"1":{"line":1,"loc":{"end":{"column":13,"line":1},"start":{"column":1,"line":1}},"name":"(anonymous_1)"}},"path":"test","s":{"1":2,"2":2},"statementMap":{"1":{"end":{"column":5,"line":3},"start":{"column":0,"line":1}},"2":{"end":{"column":41,"line":2},"start":{"column":0,"line":2}}}}}', coverage1);
-      onError();
-    };
-
     exports.assert = function (passed, message) {
       /*
         this function will throw an error if the assertion fails
@@ -168,49 +70,6 @@
       }
     };
 
-    exports._assert_default_test = function (onError) {
-      /*
-        this function will test assert's default handling behavior
-      */
-      // test assertion passed
-      exports.assert(true, true);
-      // test assertion failed with undefined message
-      exports.testTryCatch(function () {
-        exports.assert(false);
-      }, function (error) {
-        // validate error occurred
-        exports.assert(error instanceof Error, error);
-        // validate error-message
-        exports.assert(error.message === '', error.message);
-      });
-      // test assertion failed with text message
-      exports.testTryCatch(function () {
-        exports.assert(false, '_assert_default_test');
-      }, function (error) {
-        // validate error occurred
-        exports.assert(error instanceof Error, error);
-        // validate error-message
-        exports.assert(error.message === '_assert_default_test', error.message);
-      });
-      // test assertion failed with error object
-      exports.testTryCatch(function () {
-        exports.assert(false, exports.errorDefault);
-      }, function (error) {
-        // validate error occurred
-        exports.assert(error instanceof Error, error);
-      });
-      // test assertion failed with json object
-      exports.testTryCatch(function () {
-        exports.assert(false, { aa: 1 });
-      }, function (error) {
-        // validate error occurred
-        exports.assert(error instanceof Error, error);
-        // validate error-message
-        exports.assert(error.message === '{"aa":1}', error.message);
-      });
-      onError();
-    };
-
     exports.errorStack = function (error) {
       /*
         this function will return the error's stack-trace
@@ -223,17 +82,6 @@
         this function will return a deep-copy of the JSON value
       */
       return value === undefined ? undefined : JSON.parse(JSON.stringify(value));
-    };
-
-    exports._jsonCopy_default_test = function (onError) {
-      /*
-        this function will test jsonCopy's default handling behavior
-      */
-      // test various data-type handling behavior
-      [undefined, null, false, true, 0, 1, 1.5, 'a'].forEach(function (data) {
-        exports.assert(exports.jsonCopy(data) === data, [exports.jsonCopy(data), data]);
-      });
-      onError();
     };
 
     exports.jsonStringifyOrdered = function (value, replacer, space) {
@@ -268,32 +116,6 @@
         : value;
     };
 
-    exports._jsonStringifyOrdered_default_test = function (onError) {
-      /*
-        this function will test jsonStringifyOrdered's default handling behavior
-      */
-      var data;
-      // test various data-type handling behavior
-      [undefined, null, false, true, 0, 1, 1.5, 'a', {}, []].forEach(function (data) {
-        exports.assert(
-          exports.jsonStringifyOrdered(data) === JSON.stringify(data),
-          [exports.jsonStringifyOrdered(data), JSON.stringify(data)]
-        );
-      });
-      // test data-ordering handling behavior
-      data = exports.jsonStringifyOrdered({
-        // test nested dict handling behavior
-        ee: { gg: 2, ff: 1},
-        // test array handling behavior
-        dd: [undefined],
-        cc: exports.nop,
-        bb: 2,
-        aa: 1
-      });
-      exports.assert(data === '{"aa":1,"bb":2,"dd":[null],"ee":{"ff":1,"gg":2}}', data);
-      onError();
-    };
-
     exports.onErrorDefault = function (error) {
       /*
         this function will provide a default error handling callback,
@@ -303,29 +125,6 @@
       if (error) {
         console.error('\nonErrorDefault - error\n' + exports.errorStack(error) + '\n');
       }
-    };
-
-    exports._onErrorDefault_default_test = function (onError) {
-      /*
-        this function will test onErrorDefault's default handling behavior
-      */
-      var message;
-      exports.testMock([
-        // suppress console.error
-        [console, { error: function (arg) {
-          message = arg;
-        } }]
-      ], onError, function (onError) {
-        // test no error handling behavior
-        exports.onErrorDefault();
-        // validate message
-        exports.assert(!message, message);
-        // test error handling behavior
-        exports.onErrorDefault(exports.errorDefault);
-        // validate message
-        exports.assert(message, message);
-        onError();
-      });
     };
 
     exports.onErrorWithStack = function (onError) {
@@ -382,41 +181,6 @@
       return self;
     };
 
-    exports._onParallel_default_test = function (onError) {
-      /*
-        this function will test onParallel's default handling behavior
-      */
-      var onParallel, onParallelError;
-      // test onDebug handling behavior
-      onParallel = exports.onParallel(onError, function (error, self) {
-        exports.testTryCatch(function () {
-          // validate no error occurred
-          exports.assert(!error, error);
-          // validate self
-          exports.assert(self.counter >= 0, self);
-        }, onError);
-      });
-      onParallel.counter += 1;
-      onParallel.counter += 1;
-      setTimeout(function () {
-        onParallelError = exports.onParallel(function (error) {
-          exports.testTryCatch(function () {
-            // validate error occurred
-            exports.assert(error instanceof Error, error);
-            onParallel();
-          }, onParallel);
-        });
-        onParallelError.counter += 1;
-        // test error handling behavior
-        onParallelError.counter += 1;
-        onParallelError(exports.errorDefault);
-        // test ignore-after-error handling behavior
-        onParallelError();
-      });
-      // test default handling behavior
-      onParallel();
-    };
-
     exports.onTimeout = function (onError, timeout, message) {
       /*
         this function will create a timer that passes a timeout error to onError,
@@ -434,28 +198,6 @@
       return setTimeout(function () {
         onError(error);
       }, timeout);
-    };
-
-    exports._onTimeout_timeout_test = function (onError) {
-      /*
-        this function will test onTimeout's timeout handling behavior
-      */
-      var timeElapsed;
-      timeElapsed = Date.now();
-      exports.onTimeout(function (error) {
-        exports.testTryCatch(function () {
-          // validate error occurred
-          exports.assert(error instanceof Error);
-          // save timeElapsed
-          timeElapsed = Date.now() - timeElapsed;
-          // validate timeElapsed passed is greater than timeout
-          // bug - ie might timeout slightly earlier,
-          // so increase timeElapsed by a small amount
-          exports.assert(timeElapsed + 100 >= 1000, timeElapsed);
-          onError();
-        }, onError);
-      // coverage - use 1500 ms to cover setInterval test-report refreshes in browser
-      }, 1500, '_onTimeout_errorTimeout_test');
     };
 
     exports.setDefault = function (options, depth, defaults) {
@@ -482,36 +224,6 @@
         }
       });
       return options;
-    };
-
-    exports._setDefault_default_test = function (onError) {
-      /*
-        this function will test setDefault's default handling behavior
-      */
-      var options;
-      // test non-recursive handling behavior
-      options = exports.setDefault(
-        { aa: 1, bb: {}, cc: [] },
-        1,
-        { aa: 2, bb: { cc: 2 }, cc: [1, 2] }
-      );
-      // validate options
-      exports.assert(
-        exports.jsonStringifyOrdered(options) === '{"aa":1,"bb":{},"cc":[]}',
-        options
-      );
-      // test recursive handling behavior
-      options = exports.setDefault(
-        { aa: 1, bb: {}, cc: [] },
-        -1,
-        { aa: 2, bb: { cc: 2 }, cc: [1, 2] }
-      );
-      // validate options
-      exports.assert(
-        exports.jsonStringifyOrdered(options) === '{"aa":1,"bb":{"cc":2},"cc":[]}',
-        options
-      );
-      onError();
     };
 
     exports.setOverride = function (options, depth, override, backup) {
@@ -542,42 +254,6 @@
         exports.setOverride(options2, depth, override2, override2, backup);
       });
       return options;
-    };
-
-    exports._setOverride_default_test = function (onError) {
-      /*
-        this function will test setOverride's default handling behavior
-      */
-      var backup, data, options;
-      backup = {};
-      // test override handling behavior
-      options = exports.setOverride(
-        { aa: 1, bb: { cc: 2 }, dd: [3, 4], ee: { ff: { gg: 5, hh: 6 } } },
-        // test depth handling behavior
-        2,
-        { aa: 2, bb: { dd: 3 }, dd: [4, 5], ee: { ff: { gg: 6 } } },
-        // test backup handling behavior
-        backup
-      );
-      // validate backup
-      data = exports.jsonStringifyOrdered(backup);
-      exports.assert(data ===
-        '{"aa":1,"bb":{},"dd":[3,4],"ee":{"ff":{"gg":5,"hh":6}}}', data);
-      // validate options
-      data = exports.jsonStringifyOrdered(options);
-      exports.assert(data ===
-        '{"aa":2,"bb":{"cc":2,"dd":3},"dd":[4,5],"ee":{"ff":{"gg":6}}}', data);
-      // test restore options from backup handling behavior
-      exports.setOverride(options, -1, backup);
-      // validate backup
-      data = exports.jsonStringifyOrdered(backup);
-      exports.assert(data ===
-        '{"aa":1,"bb":{"dd":3},"dd":[3,4],"ee":{"ff":{"gg":6}}}', data);
-      // validate options
-      data = exports.jsonStringifyOrdered(options);
-      exports.assert(data ===
-        '{"aa":1,"bb":{"cc":2},"dd":[3,4],"ee":{"ff":{"gg":5,"hh":6}}}', data);
-      onError();
     };
 
     exports.testMock = function (mockList, onError, testCase) {
@@ -1011,18 +687,6 @@
       onParallel();
     };
 
-    exports._testRun_failure_test = function (onError) {
-      /*
-        this function will test testRun's failure handling behavior
-      */
-      // test failure from callback handling behavior
-      onError(exports.errorDefault);
-      // test failure from multiple-callback handling behavior
-      onError();
-      // test failure from thrown error handling behavior
-      throw exports.errorDefault;
-    };
-
     exports.testTryCatch = function (callback, onError) {
       /*
         this function will call the callback in a try-catch block,
@@ -1075,41 +739,6 @@
         });
         return value === undefined ? valueDefault || keyList : value;
       });
-    };
-
-    exports._textFormat_default_test = function (onError) {
-      /*
-        this function will test textFormat's default handling behavior
-      */
-      var data;
-      // test undefined valueDefault handling behavior
-      data = exports.textFormat('{{aa}}', {}, undefined);
-      exports.assert(data === '{{aa}}', data);
-      // test default handling behavior
-      data = exports.textFormat('{{aa}}{{aa}}{{bb}}{{cc}}{{dd}}{{ee.ff}}', {
-        // test string value handling behavior
-        aa: 'aa',
-        // test non-string value handling behavior
-        bb: 1,
-        // test null-value handling behavior
-        cc: null,
-        // test undefined-value handling behavior
-        dd: undefined,
-        // test nested value handling behavior
-        ee: { ff: 'gg' }
-      }, '<undefined>');
-      exports.assert(data === 'aaaa1null<undefined>gg', data);
-      // test list handling behavior
-      data = exports.textFormat('[{{#list1}}[{{#list2}}{{aa}},{{/list2}}],{{/list1}}]', {
-        list1: [
-          // test null-value handling behavior
-          null,
-          // test recursive list handling behavior
-          { list2: [{ aa: 'bb' }, { aa: 'cc' }] }
-        ]
-      }, '<undefined>');
-      exports.assert(data === '[[<undefined><undefined>,<undefined>],[bb,cc,],]', data);
-      onError();
     };
 
     exports._timeElapsedStop = function (options) {
@@ -1420,28 +1049,6 @@
       }
     };
 
-    exports._onFileModifiedRestart_default_test = function (onError) {
-       /*
-        this function tests onFileModifiedRestart's watchFile handling behavior
-       */
-      var file, onParallel;
-      file = __dirname + '/package.json';
-      onParallel = exports.onParallel(onError);
-      onParallel.counter += 1;
-      exports.fs.stat(file, function (error, stat) {
-        // test default watchFile handling behavior
-        onParallel.counter += 1;
-        exports.fs.utimes(file, stat.atime, new Date(), onParallel);
-        // test nop watchFile handling behavior
-        onParallel.counter += 1;
-        setTimeout(function () {
-          exports.fs.utimes(file, stat.atime, stat.mtime, onParallel);
-        // coverage - use 1500 ms to cover setInterval watchFile in node
-        }, 1500);
-        onParallel(error);
-      });
-    };
-
     exports.replStart = function (globalDict) {
       /*
         this function will start the repl debugger
@@ -1517,48 +1124,6 @@
         // eval modified script
         exports._replServer.evalDefault(script, context, file, onError);
       };
-    };
-
-    exports._replStart_default_test = function (onError) {
-      /*
-        this function will test replStart's default handling behavior
-      */
-      var evil;
-      exports.testMock([
-        [exports.child_process, { spawn: function () {
-          return { on: function (event, callback) {
-            // nop hack to pass jslint
-            exports.nop(event);
-            callback();
-          } };
-        } }]
-      ], onError, function (onError) {
-        // evil hack to pass jslint
-        evil = 'eval';
-        [
-          // test shell handling behavior
-          '($ :\n)',
-          // test git diff handling behavior
-          '($ git diff\n)',
-          // test git log handling behavior
-          '($ git log\n)',
-          // test grep handling behavior
-          '(grep \\bhello\\b\n)',
-          // test print handling behavior
-          '(print\n)'
-        ].forEach(function (script) {
-          exports._replServer[evil](script, null, 'repl', exports.nop);
-        });
-        // test syntax-error handling behavior
-        exports._replServer[evil]('syntax-error', null, 'repl', function (error) {
-          exports.testTryCatch(function () {
-            // validate error occurred
-            // bug - use util.isError to validate error when using eval
-            exports.assert(require('util').isError(error), error);
-            onError();
-          }, onError);
-        });
-      });
     };
 
     exports.serverRespondDefault = function (request, response, statusCode, error) {
@@ -1815,27 +1380,6 @@
           exports.onReady();
         });
     };
-
-    exports._testRunServer_misc_test = function (onError) {
-      /*
-        this function will test testRunServer's misc handling behavior
-      */
-      exports.testMock([
-        [exports.http, { createServer: function () {
-          return { listen: exports.nop };
-        } }],
-        [exports.envDict, {
-          // test auto-exit handling behavior
-          npm_config_timeout_exit: '1',
-          // test random $npm_config_server_port handling behavior
-          npm_config_server_port: ''
-        }]
-      ], onError, function (onError) {
-        exports.testRunServer({ serverMiddlewareList: [] }, exports.nop);
-        onError();
-      });
-    };
-
   }());
 
 
@@ -2052,42 +1596,19 @@
   }
   // init shared js-env
   (function () {
-    var debug_print;
-    debug_print = 'debug_print'.replace('_p', 'P');
     // init global debug_print
-    exports.global[debug_print] = function (arg) {
+    exports.global['debug_print'.replace('_p', 'P')] = function (arg) {
       /*
         this function will both print the arg to stderr and return it,
         and jslint will nag you to remove it if used
       */
       // debug arguments
-      exports[debug_print + 'Arguments'] = arguments;
-      console.error('\n\n\n' + debug_print);
+      exports['debug_printArguments'.replace('_p', 'P')] = arguments;
+      console.error('\n\n\ndebug_print'.replace('_p', 'P'));
       console.error.apply(console, arguments);
       console.error();
       // return arg for inspection
       return arg;
-    };
-    exports._debug_print_default_test = function (onError) {
-      /*
-        this function will test debug_print's default handling behavior
-      */
-      var message;
-      exports.testMock([
-        // suppress console.error
-        [console, { error: function (arg) {
-          message += (arg || '') + '\n';
-        } }]
-      ], onError, function (onError) {
-        message = '';
-        exports.global['debug_print'.replace('_p', 'P')]('_debug_print_default_test');
-        // validate message
-        exports.assert(
-          message === '\n\n\ndebug' + 'Print\n_debug_print_default_test\n\n',
-          message
-        );
-        onError();
-      });
     };
     exports.__coverage__ = exports.__coverage__ || exports.global.__coverage__ || null;
     exports.errorDefault = new Error('default error');
