@@ -1238,7 +1238,6 @@
           request.urlPathNormalized
         ].data, {
           envDict: exports.envDict,
-          utility2BrowserJson: JSON.stringify(exports.utility2Browser),
           utility2Css: exports.fileCacheDict['/assets/utility2.css'].data
         }));
         break;
@@ -1508,10 +1507,8 @@
           return module.exports && typeof process.versions.node === 'string' &&
             typeof require('child_process').spawn === 'function' && 'node';
         } catch (errorCaughtNode) {
-          exports = window.utility2 = window.utility2 || exports;
-          exports.modeJs = typeof navigator.userAgent === 'string' &&
+          return typeof navigator.userAgent === 'string' &&
             typeof document.querySelector('body') === 'object' && 'browser';
-          return exports.modeJs;
         }
       }
     }());
@@ -1525,6 +1522,7 @@
   switch (exports.modeJs) {
   // init browser js-env
   case 'browser':
+    window.utility2 = exports;
     // init exports properties
     exports.envDict = exports.envDict || {};
     exports.exit = exports.nop;
@@ -1546,6 +1544,7 @@
     break;
   // init node js-env
   case 'node':
+    module.exports = exports;
     // require modules
     exports.child_process = require('child_process');
     exports.crypto = require('crypto');
@@ -1561,13 +1560,6 @@
     exports.envDict = process.env;
     exports.exit = process.exit;
     exports.global = global;
-    exports.utility2Browser = {
-      envDict: {
-        PACKAGE_JSON_DESCRIPTION: exports.envDict.PACKAGE_JSON_DESCRIPTION,
-        PACKAGE_JSON_NAME: exports.envDict.PACKAGE_JSON_NAME,
-        PACKAGE_JSON_VERSION: exports.envDict.PACKAGE_JSON_VERSION
-      }
-    };
     // init _testSecret
     (function () {
       var testSecretCreate;
@@ -1580,10 +1572,10 @@
       // re-init _testSecret every 60 seconds
       setInterval(testSecretCreate, 60000).unref();
     }());
-    module.exports = exports;
     break;
   // init phantom js-env
   case 'phantom':
+    self.utility2 = exports;
     // require modules
     exports.fs = require('fs');
     exports.system = require('system');
@@ -1635,6 +1627,9 @@
     exports.timeoutDefault =
       exports.envDict.npm_config_timeout_default || exports.timeoutDefault || 30000;
   }());
+
+
+
   // post-init shared js-env
   exports._postInit = function () {
     // init onReady
@@ -1645,6 +1640,7 @@
     exports.onReady.counter += 1;
     setTimeout(exports.onReady);
   };
+
 
 
   // init fileCacheDict
@@ -1888,8 +1884,12 @@ tr:nth-child(odd).testReportPlatformTr {\n\
   </div>\n\
   <!-- ajax progress bar end -->\n\
   <!-- script begin -->\n\
-  <script>window.utility2 = {{utility2BrowserJson}}</script>\n\
   <script src="/assets/utility2.js"></script>\n\
+  <script>window.utility2.envDict = {\n\
+    PACKAGE_JSON_DESCRIPTION: "{{envDict.PACKAGE_JSON_DESCRIPTION}}",\n\
+    PACKAGE_JSON_NAME: "{{envDict.PACKAGE_JSON_NAME}}",\n\
+    PACKAGE_JSON_VERSION: "{{envDict.PACKAGE_JSON_VERSION}}"\n\
+  }</script>\n\
   <script src="/test/test.js"></script>\n\
   <!-- script end -->\n\
 </body>\n\
