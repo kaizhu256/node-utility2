@@ -1057,9 +1057,20 @@
       }
     };
 
+    exports.phantomRender = function (options, onError) {
+      /*
+        this function will spawn phantomjs to render options.url
+      */
+      exports.phantomTest(exports.setDefault(options, 1, {
+        modeErrorIgnore: true,
+        modePhantom: 'render',
+        timeoutDefault: 5000
+      }), onError);
+    };
+
     exports.phantomTest = function (options, onError) {
       /*
-        this function will spawn a phantomjs process to test a url
+        this function will spawn phantomjs to test options.url
       */
       var onParallel;
       exports.setDefault(options, 1, {
@@ -1069,14 +1080,25 @@
       onParallel = exports.onParallel(onError);
       onParallel.counter += 1;
       ['phantomjs', 'slimerjs'].forEach(function (argv0) {
-        var file, onError2, timerTimeout;
+        var argv1, onError2, options2, timerTimeout;
         // if slimerjs is not available, then do not use it
         if (argv0 === 'slimerjs' && (!exports.envDict.npm_config_mode_slimerjs ||
             exports.envDict.npm_config_mode_no_slimerjs)) {
           return;
         }
-        argv0 = exports.envDict.MODE_BUILD + '.' + argv0 +
-          (exports.url.parse(options.url).path).replace((/\W+/g), '.');
+        argv1 = exports.envDict.MODE_BUILD + '.' + argv0 + '.' +
+          encodeURIComponent(exports.url.parse(options.url).pathname);
+        options2 = exports.setDefault(exports.jsonCopy(options), 1, {
+          _testSecret: exports._testSecret,
+          argv0: argv0,
+          argv1: argv1,
+          fileCoverage: process.cwd() + '/.tmp/coverage.' + argv1 + '.json',
+          fileRender: (process.cwd() + '/.tmp/build/screen-capture.' + argv1 + '.png')
+            .replace((/%/g), '_')
+            .replace((/_2F.png$/), 'png'),
+          fileTestReport: process.cwd() + '/.tmp/test-report.' + argv1 + '.json',
+          modePhantom: 'test'
+        });
         onParallel.counter += 1;
         onError2 = function (error) {
           // cleanup timerTimeout
@@ -1084,57 +1106,41 @@
           onParallel(error);
         };
         // set timerTimeout
-        timerTimeout = exports.onTimeout(onError2, exports.timeoutDefault, argv0);
-        file = __dirname + '/index.js';
+        timerTimeout = exports.onTimeout(onError2, exports.timeoutDefault, argv1);
+        options.fileUtility2 = __dirname + '/index.js';
         // cover index.js
         if (exports.__coverage__ && 'utility2' === exports.envDict.PACKAGE_JSON_NAME) {
-          file = process.cwd() + '/.tmp/instrumented.utility2.js';
+          options.fileUtility2 = process.cwd() + '/.tmp/instrumented.utility2.js';
         }
-        // spawn a phantomjs process to test a url
-        options.argv0 = argv0;
-        exports.child_process.spawn(
-          require('phantomjs-lite').__dirname + '/' + argv0.split('.')[1],
-          [
-            file,
-            encodeURIComponent(JSON.stringify(options))
-          ],
-          { stdio: 'inherit' }
-        )
+        // spawn phantomjs to test a url
+        exports.child_process
+          .spawn(
+            require('phantomjs-lite').__dirname + '/' + argv0,
+            [
+              options.fileUtility2,
+              encodeURIComponent(JSON.stringify(options2))
+            ],
+            { stdio: 'inherit' }
+          )
           .on('exit', function (exitCode) {
-            // merge phantom js-env code-coverage
-            try {
-              exports.istanbulMerge(
-                exports.__coverage__,
-                JSON.parse(exports.fs.readFileSync(process.cwd() +
-                  '/.tmp/build/coverage-report.html/coverage.' + argv0 + '.json', 'utf8'))
-              );
-            } catch (ignore) {
-            }
-            // merge tests
-            if (!options.modeErrorIgnore) {
-              exports.testMerge(
-                exports.testReport,
-                JSON.parse(exports.fs.readFileSync(
-                  process.cwd() + '/.tmp/build/test-report.' + argv0 + '.json',
-                  'utf8'
-                ))
-              );
-            }
+            [options2.fileCoverage, options2.fileTestReport].forEach(function (file, ii) {
+              var data;
+              try {
+                data = JSON.parse(exports.fs.readFileSync(file, 'utf8'));
+                // merge phantom js-env code-coverage
+                if (ii === 0) {
+                  exports.istanbulMerge(exports.__coverage__, data);
+                // merge tests
+                } else if (options2.modePhantom === 'test' && !options2.modeErrorIgnore) {
+                  exports.testMerge(exports.testReport, data);
+                }
+              } catch (ignore) {
+              }
+            });
             onError2(exitCode && new Error(argv0 + ' exit-code ' + exitCode));
           });
       });
       onParallel();
-    };
-
-    exports.phantomTestScreenCapture = function (options, onError) {
-      /*
-        this function will spawn a phantomjs process to screenCapture a url
-      */
-      exports.phantomTest(exports.setDefault(options, 1, {
-        modeErrorIgnore: true,
-        modePhantom: 'screenCapture',
-        timeoutDefault: 5000
-      }), onError);
     };
 
     exports.replStart = function (globalDict) {
@@ -1412,9 +1418,9 @@
         http://phantomjs.org/api/phantom/handler/on-error.html
       */
       var msgStack;
-      msgStack = [exports.argv0 + ' ERROR: ' + msg];
+      msgStack = [exports.argv1 + '\nERROR: ' + msg];
       if (trace && trace.length) {
-        msgStack.push(exports.argv0 + ' TRACE:');
+        msgStack.push('TRACE:');
         trace.forEach(function (t) {
           msgStack.push(' -> ' + (t.file || t.sourceURL) + ': ' + t.line +
             (t.function ? ' (in function ' + t.function + ')' : ''));
@@ -1428,8 +1434,8 @@
         this function will save code coverage before exiting
       */
       setTimeout(function () {
-        if (exports.modePhantom === 'screenCapture') {
-          exports.render();
+        if (exports.modePhantom === 'render') {
+          exports.page.render(exports.fileRender);
           error = 0;
         }
         if (error instanceof Error) {
@@ -1437,33 +1443,13 @@
           error = 1;
         }
         if (exports.modePhantom === 'test') {
-          exports.fs.write(
-            exports.fs.workingDirectory + '/' +
-              '.tmp/build/test-report.' + exports.argv0 + '.json',
-            JSON.stringify(exports.testReport)
-          );
+          exports.fs.write(exports.fileTestReport, JSON.stringify(exports.testReport));
         }
         if (exports.__coverage__) {
-          exports.fs.write(
-            exports.fs.workingDirectory + '/' +
-              '.tmp/build/coverage-report.html/coverage.' + exports.argv0 + '.json',
-            JSON.stringify(exports.__coverage__)
-          );
+          exports.fs.write(exports.fileCoverage, JSON.stringify(exports.__coverage__));
         }
         exports.exit(error);
       });
-    };
-
-    exports.render = function () {
-      /*
-        this function will render webpage to file
-      */
-      var file;
-      file = exports.fs.workingDirectory + '/.tmp/build/screen-capture.' +
-        exports.argv0.replace((/\b(phantomjs|slimerjs)\b.*/g), '$1') + '.png';
-      exports.page.render(file);
-      console.error(file);
-      return file;
     };
 
     var modeNext, onNext;
@@ -1513,7 +1499,7 @@
           exports.assert(error === 'success', error);
           break;
         case 3:
-          if (exports.modePhantom === 'screenCapture') {
+          if (exports.modePhantom === 'render') {
             return;
           }
           data = (/\nphantom\n(\{"global_test_results":\{.+)/).exec(error);
@@ -1527,9 +1513,11 @@
           // handle global_test_results passed as error
           // merge coverage
           exports.istanbulMerge(exports.__coverage__, data.coverage);
-          // create screenCapture and integrate screenCapture into test-report
+          // create screen-capture
+          exports.page.render(exports.fileRender);
+          // integrate screen-capture into test-report
           data.testReport.testPlatformList[0].screenCaptureImg =
-            exports.render().replace((/^.*\//), '');
+            exports.fileRender.replace((/^.*\//), '');
           // merge test-report
           exports.testMerge(exports.testReport, data.testReport);
           // exit with number of tests failed as exit-code

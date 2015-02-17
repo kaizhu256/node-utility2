@@ -538,7 +538,7 @@
       });
       // test screenCapture handling behavior
       onParallel.counter += 1;
-      exports.phantomTestScreenCapture({
+      exports.phantomRender({
         timeoutDefault: 5000,
         url:
           'http://localhost:' + process.env.npm_config_server_port + '/test/script-error.html'

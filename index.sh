@@ -262,7 +262,7 @@ shIstanbulReport() {
 
 shNpmTest() {
   # this function will run npm test
-  shBuildPrint "${MODE_BUILD:-npmTest}" "npm testing $CWD ..." || return $?
+  shBuildPrint ${MODE_BUILD:-npmTest} "npm testing $CWD ..." || return $?
   # init $TMPDIR2
   mkdir -p $TMPDIR2/build/coverage-report.html || return $?
   # auto-detect slimerjs
@@ -332,11 +332,18 @@ shNpmTestPublished() {
   cd node_modules/$PACKAGE_JSON_NAME && npm install && npm test || return $?
 }
 
+shPhantomRender() {
+  # this function will spawn phantomjs to render the specified $URL
+  MODE_BUILD=${MODE_BUILD:-phantomRender} shPhantomTest "$1" ${2-5000} render || return $?
+}
+
 shPhantomTest() {
-  # this function will run phantomjs tests on the specified $URL,
+  # this function will spawn phantomjs to test the specified $URL,
   # and merge it into the existing test-report
+  local MODE_PHANTOM="${3-test}" || return $?
+  local TIMEOUT_DEFAULT="${2-30000}" || return $?
   local URL="$1" || return $?
-  shBuildPrint "${MODE_BUILD:-phantomTest}" "testing $URL with phantomjs ..." || return $?
+  shBuildPrint ${MODE_BUILD:-phantomTest} "testing $URL with phantomjs ..." || return $?
   # auto-detect slimerjs
   if [ ! "$npm_config_mode_slimerjs" ] && (slimerjs undefined > /dev/null 2>&1)
   then
@@ -345,7 +352,15 @@ shPhantomTest() {
   node -e "var local;
     local = require('$DIRNAME');
     local.testReport = require('$TMPDIR2/build/test-report.json');
-    local.phantomTest({ url: '$URL' }, function (error) {
+    local.phantomTest({
+      modePhantom: '$MODE_PHANTOM',
+      timeoutDefault: $TIMEOUT_DEFAULT,
+      url: '$URL'
+    }, function (error) {
+      if ('$MODE_PHANTOM' === 'render') {
+        process.exit();
+        return;
+      }
       local.fs.writeFileSync(
         '$TMPDIR2/build/test-report.html',
         local.testMerge(local.testReport, {})
