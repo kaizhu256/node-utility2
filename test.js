@@ -31,7 +31,7 @@
     // init exports
     exports = local.modeJs === 'browser' ? window.utility2 : require('./index.js');
 
-    // init local test-cases
+    // init tests
     local._ajax_default_test = function (onError) {
       /*
         this function will test ajax's default handling behavior
@@ -434,13 +434,13 @@
     local.fs = require('fs');
     local.path = require('path');
 
-    // init local test-cases
-    local._coverageMerge_default_test = function (onError) {
+    // init tests
+    local._istanbulMerge_default_test = function (onError) {
       /*
-        this function will test coverageMerge's default handling behavior
+        this function will test istanbulMerge's default handling behavior
       */
       var coverage1, coverage2, script;
-      script = exports._coverageInstrument(
+      script = exports.istanbulInstrument(
         '(function () {\nreturn arg ? __coverage__ : __coverage__;\n}());',
         'test'
       );
@@ -454,13 +454,13 @@
       // validate coverage2
       exports.assert(exports.jsonStringifyOrdered(coverage2) === '{"test":{"b":{"1":[1,0]},"branchMap":{"1":{"line":2,"locations":[{"end":{"column":25,"line":2},"start":{"column":13,"line":2}},{"end":{"column":40,"line":2},"start":{"column":28,"line":2}}],"type":"cond-expr"}},"f":{"1":1},"fnMap":{"1":{"line":1,"loc":{"end":{"column":13,"line":1},"start":{"column":1,"line":1}},"name":"(anonymous_1)"}},"path":"test","s":{"1":1,"2":1},"statementMap":{"1":{"end":{"column":5,"line":3},"start":{"column":0,"line":1}},"2":{"end":{"column":41,"line":2},"start":{"column":0,"line":2}}}}}', coverage2);
       // merge coverage2 into coverage1
-      exports.coverageMerge(coverage1, coverage2);
+      exports.istanbulMerge(coverage1, coverage2);
       // validate merged coverage1
       exports.assert(exports.jsonStringifyOrdered(coverage1) === '{"test":{"b":{"1":[1,1]},"branchMap":{"1":{"line":2,"locations":[{"end":{"column":25,"line":2},"start":{"column":13,"line":2}},{"end":{"column":40,"line":2},"start":{"column":28,"line":2}}],"type":"cond-expr"}},"f":{"1":2},"fnMap":{"1":{"line":1,"loc":{"end":{"column":13,"line":1},"start":{"column":1,"line":1}},"name":"(anonymous_1)"}},"path":"test","s":{"1":2,"2":2},"statementMap":{"1":{"end":{"column":5,"line":3},"start":{"column":0,"line":1}},"2":{"end":{"column":41,"line":2},"start":{"column":0,"line":2}}}}}', coverage1);
       // test null-case handling behavior
       coverage1 = null;
       coverage2 = null;
-      exports.coverageMerge(coverage1, coverage2);
+      exports.istanbulMerge(coverage1, coverage2);
       // validate merged coverage1
       exports.assert(coverage1 === null, coverage1);
       onError();
@@ -468,7 +468,7 @@
 
     local._onFileModifiedRestart_default_test = function (onError) {
        /*
-        this function tests onFileModifiedRestart's watchFile handling behavior
+        this function will test onFileModifiedRestart's watchFile handling behavior
        */
       var file, onParallel;
       file = __dirname + '/package.json';
@@ -486,6 +486,70 @@
         }, 1500);
         onParallel(error);
       });
+    };
+
+    local._phantomTest_default_test = function (onError) {
+      /*
+        this function will test phantomTest's default handling behavior
+      */
+      var onParallel;
+      onParallel = exports.onParallel(onError);
+      onParallel.counter += 1;
+      // test default handling behavior
+      onParallel.counter += 1;
+      exports.phantomTest({ url: 'http://localhost:' +
+        process.env.npm_config_server_port +
+        // test phantom-callback handling behavior
+        '/?modeTest=phantom&' +
+        // test _testSecret-validation handling behavior
+        '_testSecret={{_testSecret}}&' +
+        // test timeoutDefault-override handling behavior
+        'timeoutDefault=' + exports.timeoutDefault }, onParallel);
+      // test single-test-case handling behavior
+      onParallel.counter += 1;
+      exports.phantomTest({
+        modeErrorIgnore: true,
+        url: 'http://localhost:' + process.env.npm_config_server_port +
+          // test standalone utility2.js library handling behavior
+          '/test/utility2.html?' +
+          // test modeTest !== 'phantom' handling behavior
+          'modeTest=phantom2&' +
+          // test testRun's failure handling behavior
+          'modeTestCase=_testRun_failure_test'
+      }, function (error) {
+        exports.testTryCatch(function () {
+          // validate error occurred
+          exports.assert(error instanceof Error, error);
+          onParallel();
+        }, onParallel);
+      });
+      // test script-error handling behavior
+      onParallel.counter += 1;
+      exports.phantomTest({
+        modeErrorIgnore: true,
+        url:
+          'http://localhost:' + process.env.npm_config_server_port + '/test/script-error.html'
+      }, function (error) {
+        exports.testTryCatch(function () {
+          // validate error occurred
+          exports.assert(error instanceof Error, error);
+          onParallel();
+        }, onParallel);
+      });
+      // test screenCapture handling behavior
+      onParallel.counter += 1;
+      exports.phantomTestScreenCapture({
+        timeoutDefault: 5000,
+        url:
+          'http://localhost:' + process.env.npm_config_server_port + '/test/script-error.html'
+      }, function (error) {
+        exports.testTryCatch(function () {
+          // validate no error occurred
+          exports.assert(!error, error);
+          onParallel();
+        }, onParallel);
+      });
+      onParallel();
     };
 
     local._replStart_default_test = function (onError) {
@@ -528,70 +592,6 @@
           }, onError);
         });
       });
-    };
-
-    local._testPhantom_default_test = function (onError) {
-      /*
-        this function will test testPhantom's default handling behavior
-      */
-      var onParallel;
-      onParallel = exports.onParallel(onError);
-      onParallel.counter += 1;
-      // test default handling behavior
-      onParallel.counter += 1;
-      exports.testPhantom({ url: 'http://localhost:' +
-        process.env.npm_config_server_port +
-        // test phantom-callback handling behavior
-        '/?modeTest=phantom&' +
-        // test _testSecret-validation handling behavior
-        '_testSecret={{_testSecret}}&' +
-        // test timeoutDefault-override handling behavior
-        'timeoutDefault=' + exports.timeoutDefault }, onParallel);
-      // test single-test-case handling behavior
-      onParallel.counter += 1;
-      exports.testPhantom({
-        modeErrorIgnore: true,
-        url: 'http://localhost:' + process.env.npm_config_server_port +
-          // test standalone utility2.js library handling behavior
-          '/test/utility2.html?' +
-          // test modeTest !== 'phantom' handling behavior
-          'modeTest=phantom2&' +
-          // test testRun's failure handling behavior
-          'modeTestCase=_testRun_failure_test'
-      }, function (error) {
-        exports.testTryCatch(function () {
-          // validate error occurred
-          exports.assert(error instanceof Error, error);
-          onParallel();
-        }, onParallel);
-      });
-      // test script-error handling behavior
-      onParallel.counter += 1;
-      exports.testPhantom({
-        modeErrorIgnore: true,
-        url:
-          'http://localhost:' + process.env.npm_config_server_port + '/test/script-error.html'
-      }, function (error) {
-        exports.testTryCatch(function () {
-          // validate error occurred
-          exports.assert(error instanceof Error, error);
-          onParallel();
-        }, onParallel);
-      });
-      // test screenCapture handling behavior
-      onParallel.counter += 1;
-      exports.testPhantomScreenCapture({
-        timeoutDefault: 5000,
-        url:
-          'http://localhost:' + process.env.npm_config_server_port + '/test/script-error.html'
-      }, function (error) {
-        exports.testTryCatch(function () {
-          // validate no error occurred
-          exports.assert(!error, error);
-          onParallel();
-        }, onParallel);
-      });
-      onParallel();
     };
 
     local._testRunServer_misc_test = function (onError) {
@@ -648,7 +648,7 @@
       },
       function (request, response, next) {
         /*
-          this function is the main test-middleware
+          this function will run the main test-middleware
         */
         switch (request.urlPathNormalized) {
         // serve main-page

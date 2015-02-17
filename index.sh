@@ -262,8 +262,8 @@ shInit() {
   else
     export DIRNAME=$(node -e "console.log(require('utility2').__dirname);") || return $?
   fi
-  # init $ISTANBUL_LITE
-  export ISTANBUL_LITE=$(cd $DIRNAME &&\
+  # init $ISTANBUL
+  export ISTANBUL=$(cd $DIRNAME &&\
     node -e "console.log(require('istanbul-lite').__dirname)")/index.js || return $?
   # init $PHANTOMJS_LITE
   export PHANTOMJS_LITE=$(cd $DIRNAME &&\
@@ -278,7 +278,7 @@ shInit() {
 shIstanbulCover() {
   # this function will run the command $@ with istanbul code-coverage
   npm_config_coverage_report_dir="$TMPDIR2/build/coverage-report.html"\
-    $ISTANBUL_LITE cover $@ || return $?
+    $ISTANBUL cover $@ || return $?
 }
 
 shIstanbulReport() {
@@ -293,7 +293,7 @@ shIstanbulReport() {
       fs = require('fs');
       fs.writeFileSync(
         '$TMPDIR2/build/coverage-report.html/coverage.json',
-        JSON.stringify(require('$DIRNAME').coverageMerge(
+        JSON.stringify(require('$DIRNAME').istanbulMerge(
           require('$TMPDIR2/build/coverage-report.html/coverage.json'),
           require('./$COVERAGE')
         ))
@@ -301,7 +301,7 @@ shIstanbulReport() {
   fi
   # 2. create $TMPDIR2/build/coverage-report.html
   npm_config_coverage_report_dir="$TMPDIR2/build/coverage-report.html"\
-    $ISTANBUL_LITE report || return $?
+    $ISTANBUL report || return $?
 }
 
 shNpmTest() {
@@ -374,6 +374,28 @@ shNpmTestPublished() {
   npm install $PACKAGE_JSON_NAME || return $?
   # npm test package
   cd node_modules/$PACKAGE_JSON_NAME && npm install && npm test || return $?
+}
+
+shPhantomTest() {
+  # this function will run phantomjs tests on the specified $URL,
+  # and merge it into the existing test-report
+  local URL="$1" || return $?
+  shBuildPrint "${MODE_BUILD:-phantomTest}" "testing $URL with phantomjs ..." || return $?
+  # auto-detect slimerjs
+  if [ ! "$npm_config_mode_slimerjs" ] && (slimerjs undefined > /dev/null 2>&1)
+  then
+    export npm_config_mode_slimerjs=1 || return $?
+  fi
+  node -e "var local;
+    local = require('$DIRNAME');
+    local.testReport = require('$TMPDIR2/build/test-report.json');
+    local.phantomTest({ url: '$URL' }, function (error) {
+      local.fs.writeFileSync(
+        '$TMPDIR2/build/test-report.html',
+        local.testMerge(local.testReport, {})
+      );
+      process.exit(!!error);
+    });" || return $?
 }
 
 shRun() {
@@ -495,30 +517,8 @@ shTestHeroku() {
   # test url with phantomjs
   if [ "$TEST_URL" ]
   then
-    shTestPhantom "$TEST_URL" || return $?
+    shPhantomTest "$TEST_URL" || return $?
   fi
-}
-
-shTestPhantom() {
-  # this function will run phantomjs tests on the specified $URL,
-  # and merge it into the existing test-report
-  local URL="$1" || return $?
-  shBuildPrint "${MODE_BUILD:-testPhantom}" "testing $URL with phantomjs ..." || return $?
-  # auto-detect slimerjs
-  if [ ! "$npm_config_mode_slimerjs" ] && (slimerjs undefined > /dev/null 2>&1)
-  then
-    export npm_config_mode_slimerjs=1 || return $?
-  fi
-  node -e "var local;
-    local = require('$DIRNAME');
-    local.testReport = require('$TMPDIR2/build/test-report.json');
-    local.testPhantom({ url: '$URL' }, function (error) {
-      local.fs.writeFileSync(
-        '$TMPDIR2/build/test-report.html',
-        local.testMerge(local.testReport, {})
-      );
-      process.exit(!!error);
-    });" || return $?
 }
 
 shTestScriptJs() {

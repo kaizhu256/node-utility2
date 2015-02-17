@@ -31,7 +31,14 @@
       }
     };
 
-    exports.coverageMerge = function (coverage1, coverage2) {
+    exports.errorStack = function (error) {
+      /*
+        this function will return the error's stack-trace
+      */
+      return error.stack || error.message || 'undefined';
+    };
+
+    exports.istanbulMerge = function (coverage1, coverage2) {
       /*
         this function will merge coverage2 into coverage1
       */
@@ -68,13 +75,6 @@
         });
       });
       return coverage1;
-    };
-
-    exports.errorStack = function (error) {
-      /*
-        this function will return the error's stack-trace
-      */
-      return error.stack || error.message || 'undefined';
     };
 
     exports.jsonCopy = function (value) {
@@ -505,7 +505,7 @@
 
     exports.testRun = function (options) {
       /*
-        this function will run the test-cases in exports.testPlatform.testCaseList
+        this function will run the tests in exports.testPlatform.testCaseList
       */
       var exit, onParallel, testPlatform, timerInterval;
       exports.modeTest = exports.modeTest || exports.envDict.npm_config_mode_npm_test;
@@ -519,7 +519,7 @@
       exports.modeTestCase = exports.modeTestCase || exports.envDict.npm_config_mode_test_case;
       // reset testPlatform.testCaseList
       exports.testPlatform.testCaseList.length = 0;
-      // add test-cases into testPlatform.testCaseList
+      // add tests into testPlatform.testCaseList
       Object.keys(options).forEach(function (key) {
         // add test-case options[key] to testPlatform.testCaseList
         if (key.slice(-5) === '_test' &&
@@ -549,7 +549,7 @@
       }
       onParallel = exports.onParallel(function () {
         /*
-          this function create the test-report after all tests have finished
+          this function will create the test-report after all tests have finished
         */
         var separator, testReport, testReportHtml;
         // restore exit
@@ -1012,18 +1012,6 @@
       onNext();
     };
 
-    exports._coverageInstrument = function (script, file) {
-      /*
-        this function will instrument the given script and file
-      */
-      var istanbul;
-      if (!exports._instrumenter) {
-        istanbul = require('istanbul-lite');
-        exports._instrumenter = new istanbul.Instrumenter();
-      }
-      return exports._instrumenter.instrumentSync(script, file);
-    };
-
     exports.fileCacheAndParse = function (options) {
       /*
         this function will parse options.file and cache it to exports.fileCacheDict
@@ -1033,12 +1021,24 @@
       // if coverage-mode is enabled, then instrument options.data
       if (exports.__coverage__ &&
           options.coverage && options.coverage === exports.envDict.PACKAGE_JSON_NAME) {
-        options.data = exports._coverageInstrument(options.data, options.file);
+        options.data = exports.istanbulInstrument(options.data, options.file);
       }
       // cache options to exports.fileCacheDict[options.cache]
       if (options.cache) {
         exports.fileCacheDict[options.cache] = options;
       }
+    };
+
+    exports.istanbulInstrument = function (script, file) {
+      /*
+        this function will instrument the given script and file
+      */
+      var istanbul;
+      if (!exports._instrumenter) {
+        istanbul = require('istanbul-lite');
+        exports._instrumenter = new istanbul.Instrumenter();
+      }
+      return exports._instrumenter.instrumentSync(script, file);
     };
 
     exports.onFileModifiedRestart = function (file) {
@@ -1055,6 +1055,86 @@
           }
         });
       }
+    };
+
+    exports.phantomTest = function (options, onError) {
+      /*
+        this function will spawn a phantomjs process to test a url
+      */
+      var onParallel;
+      exports.setDefault(options, 1, {
+        _testSecret: exports._testSecret,
+        modePhantom: 'test'
+      });
+      onParallel = exports.onParallel(onError);
+      onParallel.counter += 1;
+      ['phantomjs', 'slimerjs'].forEach(function (argv0) {
+        var file, onError2, timerTimeout;
+        // if slimerjs is not available, then do not use it
+        if (argv0 === 'slimerjs' && (!exports.envDict.npm_config_mode_slimerjs ||
+            exports.envDict.npm_config_mode_no_slimerjs)) {
+          return;
+        }
+        argv0 = exports.envDict.MODE_BUILD + '.' + argv0 +
+          (exports.url.parse(options.url).path).replace((/\W+/g), '.');
+        onParallel.counter += 1;
+        onError2 = function (error) {
+          // cleanup timerTimeout
+          clearTimeout(timerTimeout);
+          onParallel(error);
+        };
+        // set timerTimeout
+        timerTimeout = exports.onTimeout(onError2, exports.timeoutDefault, argv0);
+        file = __dirname + '/index.js';
+        // cover index.js
+        if (exports.__coverage__ && 'utility2' === exports.envDict.PACKAGE_JSON_NAME) {
+          file = process.cwd() + '/.tmp/instrumented.utility2.js';
+        }
+        // spawn a phantomjs process to test a url
+        options.argv0 = argv0;
+        exports.child_process.spawn(
+          require('phantomjs-lite').__dirname + '/' + argv0.split('.')[1],
+          [
+            file,
+            encodeURIComponent(JSON.stringify(options))
+          ],
+          { stdio: 'inherit' }
+        )
+          .on('exit', function (exitCode) {
+            // merge phantom js-env code-coverage
+            try {
+              exports.istanbulMerge(
+                exports.__coverage__,
+                JSON.parse(exports.fs.readFileSync(process.cwd() +
+                  '/.tmp/build/coverage-report.html/coverage.' + argv0 + '.json', 'utf8'))
+              );
+            } catch (ignore) {
+            }
+            // merge tests
+            if (!options.modeErrorIgnore) {
+              exports.testMerge(
+                exports.testReport,
+                JSON.parse(exports.fs.readFileSync(
+                  process.cwd() + '/.tmp/build/test-report.' + argv0 + '.json',
+                  'utf8'
+                ))
+              );
+            }
+            onError2(exitCode && new Error(argv0 + ' exit-code ' + exitCode));
+          });
+      });
+      onParallel();
+    };
+
+    exports.phantomTestScreenCapture = function (options, onError) {
+      /*
+        this function will spawn a phantomjs process to screenCapture a url
+      */
+      exports.phantomTest(exports.setDefault(options, 1, {
+        modeErrorIgnore: true,
+        modePhantom: 'screenCapture',
+        timeoutDefault: 5000
+      }), onError);
     };
 
     exports.replStart = function (globalDict) {
@@ -1254,86 +1334,6 @@
       }
     };
 
-    exports.testPhantom = function (options, onError) {
-      /*
-        this function will spawn a phantomjs process to test a url
-      */
-      var onParallel;
-      exports.setDefault(options, 1, {
-        _testSecret: exports._testSecret,
-        modePhantom: 'test'
-      });
-      onParallel = exports.onParallel(onError);
-      onParallel.counter += 1;
-      ['phantomjs', 'slimerjs'].forEach(function (argv0) {
-        var file, onError2, timerTimeout;
-        // if slimerjs is not available, then do not use it
-        if (argv0 === 'slimerjs' && (!exports.envDict.npm_config_mode_slimerjs ||
-            exports.envDict.npm_config_mode_no_slimerjs)) {
-          return;
-        }
-        argv0 = exports.envDict.MODE_BUILD + '.' + argv0 +
-          (exports.url.parse(options.url).path).replace((/\W+/g), '.');
-        onParallel.counter += 1;
-        onError2 = function (error) {
-          // cleanup timerTimeout
-          clearTimeout(timerTimeout);
-          onParallel(error);
-        };
-        // set timerTimeout
-        timerTimeout = exports.onTimeout(onError2, exports.timeoutDefault, argv0);
-        file = __dirname + '/index.js';
-        // cover index.js
-        if (exports.__coverage__ && 'utility2' === exports.envDict.PACKAGE_JSON_NAME) {
-          file = process.cwd() + '/.tmp/instrumented.utility2.js';
-        }
-        // spawn a phantomjs process to test a url
-        options.argv0 = argv0;
-        exports.child_process.spawn(
-          require('phantomjs-lite').__dirname + '/' + argv0.split('.')[1],
-          [
-            file,
-            encodeURIComponent(JSON.stringify(options))
-          ],
-          { stdio: 'inherit' }
-        )
-          .on('exit', function (exitCode) {
-            // merge phantom js-env code-coverage
-            try {
-              exports.coverageMerge(
-                exports.__coverage__,
-                JSON.parse(exports.fs.readFileSync(process.cwd() +
-                  '/.tmp/build/coverage-report.html/coverage.' + argv0 + '.json', 'utf8'))
-              );
-            } catch (ignore) {
-            }
-            // merge tests
-            if (!options.modeErrorIgnore) {
-              exports.testMerge(
-                exports.testReport,
-                JSON.parse(exports.fs.readFileSync(
-                  process.cwd() + '/.tmp/build/test-report.' + argv0 + '.json',
-                  'utf8'
-                ))
-              );
-            }
-            onError2(exitCode && new Error(argv0 + ' exit-code ' + exitCode));
-          });
-      });
-      onParallel();
-    };
-
-    exports.testPhantomScreenCapture = function (options, onError) {
-      /*
-        this function will spawn a phantomjs process to screenCapture a url
-      */
-      exports.testPhantom(exports.setDefault(options, 1, {
-        modeErrorIgnore: true,
-        modePhantom: 'screenCapture',
-        timeoutDefault: 5000
-      }), onError);
-    };
-
     exports.testRunServer = function (options) {
       /*
         this function will
@@ -1526,7 +1526,7 @@
           }
           // handle global_test_results passed as error
           // merge coverage
-          exports.coverageMerge(exports.__coverage__, data.coverage);
+          exports.istanbulMerge(exports.__coverage__, data.coverage);
           // create screenCapture and integrate screenCapture into test-report
           data.testReport.testPlatformList[0].screenCaptureImg =
             exports.render().replace((/^.*\//), '');

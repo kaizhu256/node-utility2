@@ -43,10 +43,10 @@ lightweight nodejs module that runs phantomjs tests with browser code-coverage (
   if (typeof window === 'object') {
     // init local.utility2
     local.utility2 = window.utility2;
-    // init local test-case's
+    // init tests
     local._ajax_200_test = function (onError) {
       /*
-        this function tests ajax's 200 http status-code handling behavior
+        this function will test ajax's 200 http-status-code handling behavior
       */
       // test the defined url '/test/hello'
       local.utility2.ajax({
@@ -63,7 +63,7 @@ lightweight nodejs module that runs phantomjs tests with browser code-coverage (
     };
     local._ajax_404_test = function (onError) {
       /*
-        this function tests ajax's 404 http status-code handling behavior
+        this function will test ajax's 404 http-status-code handling behavior
       */
       // test the undefined url '/test/undefined'
       local.utility2.ajax({
@@ -88,12 +88,12 @@ lightweight nodejs module that runs phantomjs tests with browser code-coverage (
     process.env.PACKAGE_JSON_VERSION = '1.0.0';
     // require modules
     local.utility2 = require('utility2');
-    // init local test-case's
-    local._testPhantom_default_test = function (onError) {
+    // init tests
+    local._phantomTest_default_test = function (onError) {
       /*
-        this function spawns a phantomjs process to test a webpage
+        this function will spawn a phantomjs process to test a webpage
       */
-      local.utility2.testPhantom({
+      local.utility2.phantomTest({
         url: 'http://localhost:' + process.env.npm_config_server_port +
           '/test/test.html?modeTest=phantom'
       }, onError);
@@ -110,7 +110,7 @@ lightweight nodejs module that runs phantomjs tests with browser code-coverage (
       local.utility2.testMiddleware,
       function (request, response, next) {
         /*
-          this function is the main test middleware
+          this function will run the main test-middleware
         */
         // nop hack to pass jslint
         local.utility2.nop(request);
@@ -199,7 +199,7 @@ exit $EXIT_CODE
 
 ## todo
 - merge testRunServer into testRun
-- revamp testPhantom
+- revamp phantomTest
 - explicitly require slimerjs instead of auto-detecting it
 - auto-generate help doc from README.md
 - add server stress test using phantomjs
