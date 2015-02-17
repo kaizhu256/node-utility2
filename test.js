@@ -407,13 +407,7 @@
   // init browser js-env
   case 'browser':
     window.local = local;
-    // test !exports.modeTest handling behavior
-    local._modeTest = exports.modeTest;
-    exports.modeTest = null;
-    exports.testRun();
-    exports.modeTest = local._modeTest;
-    // run test
-    exports.testRun(local, function () {
+    exports.onErrorExit = function () {
       // test exports.modeTest !== 'phantom' handling behavior
       if (exports.modeTest === 'phantom2') {
         setTimeout(function () {
@@ -422,7 +416,14 @@
           }));
         }, 1000);
       }
-    });
+    };
+    // test !exports.modeTest handling behavior
+    local._modeTest = exports.modeTest;
+    exports.modeTest = null;
+    exports.testRun();
+    exports.modeTest = local._modeTest;
+    // run test
+    exports.testRun(local);
     break;
 
 
@@ -432,6 +433,11 @@
     // require modules
     local.fs = require('fs');
     local.path = require('path');
+
+    // init export properties
+    exports._coverageMergePhantom = function (coverage1, coverage2) {
+      exports.coverageMerge(coverage1, JSON.parse(exports.fs.readFileSync(coverage2, 'utf8')));
+    };
 
     // init local test-cases
     local._coverageMerge_default_test = function (onError) {
@@ -602,7 +608,7 @@
           }
         }]
       ], onError, function (onError) {
-        exports.testRunServer({ serverMiddlewareList: [] }, exports.nop);
+        exports.testRunServer({ serverMiddlewareList: [] });
         // validate $npm_config_server_port
         exports.assert(
           Number(exports.envDict.npm_config_server_port),
@@ -690,7 +696,7 @@
         }
       }
     ];
-    exports.testRunServer(local, process.exit);
+    exports.testRunServer(local);
     local.fs.readdirSync(__dirname).forEach(function (file) {
       file = __dirname + '/' + file;
       switch (local.path.extname(file)) {

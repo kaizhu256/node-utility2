@@ -15,6 +15,22 @@
     /*
       this function will run shared js-env code
     */
+    exports.assert = function (passed, message) {
+      /*
+        this function will throw an error if the assertion fails
+      */
+      if (!passed) {
+        throw new Error(
+          // if message is a string, then leave it as is
+          typeof message === 'string' ? message
+            // if message is an Error object, then get its stack-trace
+            : message instanceof Error ? exports.errorStack(message)
+              // else JSON.stringify message
+              : JSON.stringify(message)
+        );
+      }
+    };
+
     exports.coverageMerge = function (coverage1, coverage2) {
       /*
         this function will merge coverage2 into coverage1
@@ -52,22 +68,6 @@
         });
       });
       return coverage1;
-    };
-
-    exports.assert = function (passed, message) {
-      /*
-        this function will throw an error if the assertion fails
-      */
-      if (!passed) {
-        throw new Error(
-          // if message is a string, then leave it as is
-          typeof message === 'string' ? message
-            // if message is an Error object, then get its stack-trace
-            : message instanceof Error ? exports.errorStack(message)
-              // else JSON.stringify message
-              : JSON.stringify(message)
-        );
-      }
     };
 
     exports.errorStack = function (error) {
@@ -126,6 +126,8 @@
         console.error('\nonErrorDefault - error\n' + exports.errorStack(error) + '\n');
       }
     };
+
+    exports.onErrorExit = exports.exit;
 
     exports.onErrorWithStack = function (onError) {
       /*
@@ -501,7 +503,7 @@
       );
     };
 
-    exports.testRun = function (options, onTestRunEnd) {
+    exports.testRun = function (options) {
       /*
         this function will run the test-cases in exports.testPlatform.testCaseList
       */
@@ -580,7 +582,7 @@
           };
           setTimeout(function () {
             // call callback with number of tests failed
-            onTestRunEnd(exports.testReport.testsFailed);
+            exports.onErrorExit(exports.testReport.testsFailed);
             // throw global_test_results as an error,
             // so it can be caught and passed to the phantom js-env
             if (exports.modeTest === 'phantom') {
@@ -638,7 +640,7 @@
             console.log('\n' + exports.envDict.MODE_BUILD + ' - ' +
               exports.testReport.testsFailed + ' failed tests\n');
             // call callback with number of tests failed
-            onTestRunEnd(exports.testReport.testsFailed);
+            exports.onErrorExit(exports.testReport.testsFailed);
           }, 1000);
           break;
         }
@@ -1297,14 +1299,10 @@
           { stdio: 'inherit' }
         )
           .on('exit', function (exitCode) {
-            // merge coverage code
-            exports.coverageMerge(
+            // merge phantom js-env code-coverage
+            exports._coverageMergePhantom(
               exports.__coverage__,
-              JSON.parse(exports.fs.readFileSync(
-                process.cwd() +
-                  '/.tmp/build/coverage-report.html/coverage.' + argv0 + '.json',
-                'utf8'
-              ))
+              process.cwd() + '/.tmp/build/coverage-report.html/coverage.' + argv0 + '.json'
             );
             // merge tests
             if (!options.modeErrorIgnore) {
@@ -1322,13 +1320,13 @@
       onParallel();
     };
 
-    exports.testRunServer = function (options, onTestRunEnd) {
-    /*
-      this function will
-      1. create http-server with options.serverMiddlewareList
-      2. start http-server on $npm_config_server_port
-      3. test http-server
-    */
+    exports.testRunServer = function (options) {
+      /*
+        this function will
+        1. create http-server with options.serverMiddlewareList
+        2. start http-server on $npm_config_server_port
+        3. test http-server
+      */
       // if $npm_config_timeout_exit is defined,
       // then exit this process after $npm_config_timeout_exit ms
       if (Number(exports.envDict.npm_config_timeout_exit)) {
@@ -1355,7 +1353,7 @@
         ((Math.random() * 0x10000) | 0x8000).toString();
       // 3. test http-server
       exports.onReady.onReady = function () {
-        exports.testRun(options, onTestRunEnd);
+        exports.testRun(options);
       };
       exports.onReady.counter += 1;
       // 1. create http-server with options.serverMiddlewareList
@@ -1390,7 +1388,6 @@
     /*
       this function will run phantom js-env code
     */
-    var file, message, trace, modeNext, onNext;
     if (exports.modeJs !== 'phantom') {
       return;
     }
@@ -1399,12 +1396,10 @@
       /*
         this function will save code coverage before exiting
       */
-      var exitCode;
       setTimeout(function () {
-        exitCode = (/^exitCode=(\d+)$/).exec(error.message);
-        if (exitCode) {
-          exitCode = Number(exitCode[1]);
-          error = null;
+        if (error instanceof Error) {
+          exports.onErrorDefault(error);
+          error = 1;
         }
         if (exports.modePhantom === 'test') {
           exports.fs.write(
@@ -1420,11 +1415,11 @@
             );
           }
         }
-        exports.onErrorDefault(error);
-        exports.exit(exitCode || error);
+        exports.exit(error);
       });
     };
 
+    var file, message, trace, modeNext, onNext;
     modeNext = 0;
     onNext = function (error, data) {
       try {
@@ -1474,7 +1469,7 @@
           trace = data;
           data = (/^Error: (\{"global_test_results":\{.+)/).exec(message);
           data = data && JSON.parse(data[1]).global_test_results;
-          // 1. check if the error-message is a test-callback, and handle it appropriately
+          // check if the error-message is a test-callback, and handle it appropriately
           if (data) {
             // handle global_test_results passed as error
             // merge coverage
@@ -1490,10 +1485,10 @@
             // merge test-report
             exports.testMerge(exports.testReport, data.testReport);
             // exit with number of tests failed as exit-code
-            onNext(new Error('exitCode=' + data.testReport.testsFailed));
+            onNext(data.testReport.testsFailed);
             return;
-          // 2. else handle it as a normal error
           }
+          // else handle it as a normal error
           // phantom error handling - http://phantomjs.org/api/phantom/handler/on-error.html
           console.error('\n\n');
           console.error(exports.argv0 + ' ERROR: ' + message);
@@ -1505,7 +1500,7 @@
             });
           }
           console.error('\n\n');
-          onNext(new Error('exitCode=1'));
+          onNext(1);
           break;
         default:
           throw error;
@@ -1585,6 +1580,7 @@
     exports.vm = require('vm');
     // init exports properties
     exports.__dirname = __dirname;
+    exports._coverageMergePhantom = exports.nop;
     exports.envDict = process.env;
     exports.exit = process.exit;
     exports.global = global;
@@ -1888,7 +1884,7 @@ tr:nth-child(odd).testReportPlatformTr {\n\
   <h1>{{envDict.PACKAGE_JSON_NAME}} [{{envDict.PACKAGE_JSON_VERSION}}]</h1>\n\
   <h3>{{envDict.PACKAGE_JSON_DESCRIPTION}}</h3>\n\
   <div><button\n\
-    onclick="window.utility2.modeTest=1; window.utility2.testRun(window.local, window.utility2.nop);"\n\
+    onclick="window.utility2.modeTest=1; window.utility2.testRun(window.local);"\n\
   >run test</button></div>\n\
   <div class="testReportDiv"></div>\n\
   </div>\n\

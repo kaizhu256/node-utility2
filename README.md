@@ -198,6 +198,7 @@ exit $EXIT_CODE
 
 
 ## todo
+- merge testRunServer into testRun
 - revamp testPhantom
 - explicitly require slimerjs instead of auto-detecting it
 - auto-generate help doc from README.md
