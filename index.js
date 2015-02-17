@@ -1259,6 +1259,10 @@
         this function will spawn a phantomjs process to test a url
       */
       var onParallel;
+      exports.setDefault(options, 1, {
+        _testSecret: exports._testSecret,
+        modePhantom: 'test'
+      });
       onParallel = exports.onParallel(onError);
       onParallel.counter += 1;
       ['phantomjs', 'slimerjs'].forEach(function (argv0) {
@@ -1268,10 +1272,8 @@
             exports.envDict.npm_config_mode_no_slimerjs)) {
           return;
         }
-        argv0 = exports.envDict.MODE_BUILD + '.' + argv0;
-        if ('utility2' === exports.envDict.PACKAGE_JSON_NAME) {
-          argv0 += (exports.url.parse(options.url).path).replace((/\W+/g), '.');
-        }
+        argv0 = exports.envDict.MODE_BUILD + '.' + argv0 +
+          (exports.url.parse(options.url).path).replace((/\W+/g), '.');
         onParallel.counter += 1;
         onError2 = function (error) {
           // cleanup timerTimeout
@@ -1286,25 +1288,25 @@
           file = process.cwd() + '/.tmp/instrumented.utility2.js';
         }
         // spawn a phantomjs process to test a url
+        options.argv0 = argv0;
         exports.child_process.spawn(
           require('phantomjs-lite').__dirname + '/' + argv0.split('.')[1],
           [
             file,
-            encodeURIComponent(JSON.stringify(exports.setOverride({
-              _testSecret: exports._testSecret,
-              argv0: argv0,
-              modePhantom: 'test'
-            }, 1, options)))
+            encodeURIComponent(JSON.stringify(options))
           ],
           { stdio: 'inherit' }
         )
           .on('exit', function (exitCode) {
             // merge phantom js-env code-coverage
-            exports.coverageMerge(
-              exports.__coverage__,
-              JSON.parse(exports.fs.readFileSync(process.cwd() +
-                '/.tmp/build/coverage-report.html/coverage.' + argv0 + '.json', 'utf8'))
-            );
+            try {
+              exports.coverageMerge(
+                exports.__coverage__,
+                JSON.parse(exports.fs.readFileSync(process.cwd() +
+                  '/.tmp/build/coverage-report.html/coverage.' + argv0 + '.json', 'utf8'))
+              );
+            } catch (ignore) {
+            }
             // merge tests
             if (!options.modeErrorIgnore) {
               exports.testMerge(
@@ -1319,6 +1321,17 @@
           });
       });
       onParallel();
+    };
+
+    exports.testPhantomScreenCapture = function (options, onError) {
+      /*
+        this function will spawn a phantomjs process to screenCapture a url
+      */
+      exports.testPhantom(exports.setDefault(options, 1, {
+        modeErrorIgnore: true,
+        modePhantom: 'screenCapture',
+        timeoutDefault: 5000
+      }), onError);
     };
 
     exports.testRunServer = function (options) {
@@ -1393,7 +1406,7 @@
       return;
     }
 
-    exports._onError = function (msg, trace) {
+    exports.onError = function (msg, trace) {
       /*
         this function will provide global error handling
         http://phantomjs.org/api/phantom/handler/on-error.html
@@ -1415,6 +1428,10 @@
         this function will save code coverage before exiting
       */
       setTimeout(function () {
+        if (exports.modePhantom === 'screenCapture') {
+          exports.render();
+          error = 0;
+        }
         if (error instanceof Error) {
           exports.onErrorDefault(error);
           error = 1;
@@ -1425,6 +1442,8 @@
               '.tmp/build/test-report.' + exports.argv0 + '.json',
             JSON.stringify(exports.testReport)
           );
+        }
+        if (exports.__coverage__) {
           exports.fs.write(
             exports.fs.workingDirectory + '/' +
               '.tmp/build/coverage-report.html/coverage.' + exports.argv0 + '.json',
@@ -1435,11 +1454,15 @@
       });
     };
 
-    exports._screenCapture = function () {
+    exports.render = function () {
+      /*
+        this function will render webpage to file
+      */
       var file;
       file = exports.fs.workingDirectory + '/.tmp/build/screen-capture.' +
         exports.argv0.replace((/\b(phantomjs|slimerjs)\b.*/g), '$1') + '.png';
       exports.page.render(file);
+      console.error(file);
       return file;
     };
 
@@ -1454,8 +1477,6 @@
           // init global error handling
           // http://phantomjs.org/api/phantom/handler/on-error.html
           exports.global.phantom.onError = onNext;
-          // set timeout for phantom
-          exports.onTimeout(exports.onErrorExit, exports.timeoutDefault, exports.url);
           // override exports properties
           exports.setOverride(
             exports,
@@ -1466,6 +1487,8 @@
           if (exports.modeErrorIgnore) {
             console.error = console.log = exports.nop;
           }
+          // set timeout for phantom
+          exports.onTimeout(exports.onErrorExit, exports.timeoutDefault, exports.url);
           // init webpage
           exports.page = exports.webpage.create();
           // init webpage's viewport-size
@@ -1490,11 +1513,14 @@
           exports.assert(error === 'success', error);
           break;
         case 3:
+          if (exports.modePhantom === 'screenCapture') {
+            return;
+          }
           data = (/\nphantom\n(\{"global_test_results":\{.+)/).exec(error);
           data = data && JSON.parse(data[1]).global_test_results;
           // handle normal error
           if (!data) {
-            exports._onError(error, trace);
+            exports.onError(error, trace);
             onNext(1);
             return;
           }
@@ -1503,7 +1529,7 @@
           exports.coverageMerge(exports.__coverage__, data.coverage);
           // create screenCapture and integrate screenCapture into test-report
           data.testReport.testPlatformList[0].screenCaptureImg =
-            exports._screenCapture().replace((/^.*\//), '');
+            exports.render().replace((/^.*\//), '');
           // merge test-report
           exports.testMerge(exports.testReport, data.testReport);
           // exit with number of tests failed as exit-code
@@ -1632,7 +1658,7 @@
       // return arg for inspection
       return arg;
     };
-    exports.__coverage__ = exports.__coverage__ || exports.global.__coverage__ || null;
+    exports.__coverage__ = exports.__coverage__ || exports.global.__coverage__;
     exports.errorDefault = new Error('default error');
     exports.testPlatform = {
       name: exports.modeJs === 'browser' ? 'browser - ' +

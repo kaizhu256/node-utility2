@@ -578,6 +578,19 @@
           onParallel();
         }, onParallel);
       });
+      // test screenCapture handling behavior
+      onParallel.counter += 1;
+      exports.testPhantomScreenCapture({
+        timeoutDefault: 5000,
+        url:
+          'http://localhost:' + process.env.npm_config_server_port + '/test/script-error.html'
+      }, function (error) {
+        exports.testTryCatch(function () {
+          // validate no error occurred
+          exports.assert(!error, error);
+          onParallel();
+        }, onParallel);
+      });
       onParallel();
     };
 
