@@ -156,25 +156,27 @@
       */
       var self;
       onDebug = onDebug || exports.nop;
-      self = exports.onErrorWithStack(function (error) {
-        onDebug(error, self);
-        // if counter === 0 or error already occurred, then return
-        if (self.counter === 0 || self.error) {
-          return;
-        }
-        // error handling behavior
-        if (error) {
-          self.error = error;
-          // ensure counter will decrement to 0
-          self.counter = 1;
-        }
-        // decrement counter
-        self.counter -= 1;
-        // if counter === 0, then call onError with error
-        if (self.counter === 0) {
-          onError(error);
-        }
-      });
+      self = function (error) {
+        exports.onErrorWithStack(function (error) {
+          onDebug(error, self);
+          // if counter === 0 or error already occurred, then return
+          if (self.counter === 0 || self.error) {
+            return;
+          }
+          // error handling behavior
+          if (error) {
+            self.error = error;
+            // ensure counter will decrement to 0
+            self.counter = 1;
+          }
+          // decrement counter
+          self.counter -= 1;
+          // if counter === 0, then call onError with error
+          if (self.counter === 0) {
+            onError(error);
+          }
+        })(error);
+      };
       // init counter
       self.counter = 0;
       // return callback
@@ -1257,8 +1259,6 @@
       var onParallel;
       onParallel = exports.onParallel(onError);
       onParallel.counter += 1;
-      // init timeout
-      options.timeout = options.timeout || exports.timeoutDefault;
       ['phantomjs', 'slimerjs'].forEach(function (argv0) {
         var file, onError2, timerTimeout;
         // if slimerjs is not available, then do not use it
@@ -1277,7 +1277,7 @@
           onParallel(error);
         };
         // set timerTimeout
-        timerTimeout = exports.onTimeout(onError2, options.timeout, argv0);
+        timerTimeout = exports.onTimeout(onError2, exports.timeoutDefault, argv0);
         file = __dirname + '/index.js';
         // cover index.js
         if (exports.__coverage__ && 'utility2' === exports.envDict.PACKAGE_JSON_NAME) {
@@ -1288,10 +1288,10 @@
           require('phantomjs-lite').__dirname + '/' + argv0.split('.')[1],
           [
             file,
-            'test',
             encodeURIComponent(JSON.stringify(exports.setOverride({
+              _testSecret: exports._testSecret,
               argv0: argv0,
-              _testSecret: exports._testSecret
+              modePhantom: 'test'
             }, 1, options)))
           ],
           { stdio: 'inherit' }
@@ -1316,7 +1316,7 @@
                 ))
               );
             }
-            onError2(exitCode && new Error(argv0 + ' exit ' + exitCode));
+            onError2(exitCode && new Error(argv0 + ' exit-code ' + exitCode));
           });
       });
       onParallel();
@@ -1390,30 +1390,88 @@
     /*
       this function will run phantom js-env code
     */
+    var file, message, trace, modeNext, onNext;
     if (exports.modeJs !== 'phantom') {
       return;
     }
-    switch (exports.system.args[1]) {
-    case 'test':
-      // override exports properties
-      exports.setOverride(
-        exports,
-        -1,
-        JSON.parse(decodeURIComponent(exports.system.args[2]))
-      );
-      // if modeErrorIgnore, then suppress console.error and console.log
-      if (exports.modeErrorIgnore) {
-        console.error = console.log = exports.nop;
-      }
-      // init error handling
-      exports.global.phantom.onError = function (message, trace) {
-        /*
-          this function will catch all errors and
-          1. check if the error-message is a test-callback, and handle it appropriately
-          2. else handle it as a normal error
-        */
-        try {
-          var data, file;
+
+    exports.onErrorExit = function (error) {
+      /*
+        this function will save code coverage before exiting
+      */
+      var exitCode;
+      setTimeout(function () {
+        exitCode = (/^exitCode=(\d+)$/).exec(error.message);
+        if (exitCode) {
+          exitCode = Number(exitCode[1]);
+          error = null;
+        }
+        if (exports.modePhantom === 'test') {
+          exports.fs.write(
+            exports.fs.workingDirectory + '/' +
+              '.tmp/build/test-report.' + exports.argv0 + '.json',
+            JSON.stringify(exports.testReport)
+          );
+          if (exports.__coverage__) {
+            exports.fs.write(
+              exports.fs.workingDirectory + '/' +
+                '.tmp/build/coverage-report.html/coverage.' + exports.argv0 + '.json',
+              JSON.stringify(exports.__coverage__)
+            );
+          }
+        }
+        exports.onErrorDefault(error);
+        exports.exit(exitCode || error);
+      });
+    };
+
+    modeNext = 0;
+    onNext = function (error, data) {
+      try {
+        modeNext = error instanceof Error ? NaN : data ? 3 : modeNext + 1;
+        switch (modeNext) {
+        case 1:
+          // init global error handling
+          // http://phantomjs.org/api/phantom/handler/on-error.html
+          exports.global.phantom.onError = onNext;
+          // set timeout for phantom
+          exports.onTimeout(onNext, exports.timeoutDefault, exports.url);
+          // override exports properties
+          exports.setOverride(
+            exports,
+            -1,
+            JSON.parse(decodeURIComponent(exports.system.args[1]))
+          );
+          // if modeErrorIgnore, then suppress console.error and console.log
+          if (exports.modeErrorIgnore) {
+            console.error = console.log = exports.nop;
+          }
+          // init webpage
+          exports.page = exports.webpage.create();
+          // init webpage's viewport-size
+          exports.page.viewportSize = exports.viewportSize || { height: 600, width: 800 };
+          // init webpage's error handling
+          // http://phantomjs.org/api/webpage/handler/on-error.html
+          exports.page.onError = exports.global.phantom.onError;
+          // pipe webpage's console.log to stdout
+          exports.page.onConsoleMessage = function () {
+            console.log.apply(console, arguments);
+          };
+          // open requested webpage
+          exports.page.open(
+            // security - insert _testSecret in url without revealing it
+            exports.url.replace('{{_testSecret}}', exports._testSecret),
+            onNext
+          );
+          break;
+        case 2:
+          console.log(exports.argv0 + ' - open ' + error + ' ' + exports.url);
+          // validate webpage opened successfully
+          exports.assert(error === 'success', error);
+          break;
+        case 3:
+          message = error;
+          trace = data;
           data = (/^Error: (\{"global_test_results":\{.+)/).exec(message);
           data = data && JSON.parse(data[1]).global_test_results;
           // 1. check if the error-message is a test-callback, and handle it appropriately
@@ -1431,67 +1489,32 @@
               file.replace((/^.*\//), '');
             // merge test-report
             exports.testMerge(exports.testReport, data.testReport);
+            // exit with number of tests failed as exit-code
+            onNext(new Error('exitCode=' + data.testReport.testsFailed));
+            return;
           // 2. else handle it as a normal error
-          } else {
-            // phantom error handling - http://phantomjs.org/api/phantom/handler/on-error.html
-            console.error('\n\n');
-            console.error(exports.argv0 + ' ERROR: ' + message);
-            if (trace && trace.length) {
-              console.error(exports.argv0 + ' TRACE:');
-              trace.forEach(function (t) {
-                console.error(' -> ' + (t.file || t.sourceURL) + ': ' + t.line
-                  + (t.function ? ' (in function ' + t.function + ')' : ''));
-              });
-            }
-            console.error('\n\n');
           }
-          [[
-            '.tmp/build/test-report.' + exports.argv0 + '.json',
-            exports.testReport
-          ], [
-            '.tmp/build/coverage-report.html/coverage.' + exports.argv0 + '.json',
-            exports.__coverage__
-          ]].forEach(function (args) {
-            file = exports.fs.workingDirectory + '/' + args[0];
-            exports.fs.write(file, JSON.stringify(args[1]));
-            console.log('created ' + 'file://' + file);
-          });
-          // exit with number of tests failed as exit-code
-          exports.exit(!data || data.testReport.testsFailed);
-        } catch (error) {
-          console.error(error.message);
-          exports.exit(1);
+          // phantom error handling - http://phantomjs.org/api/phantom/handler/on-error.html
+          console.error('\n\n');
+          console.error(exports.argv0 + ' ERROR: ' + message);
+          if (trace && trace.length) {
+            console.error(exports.argv0 + ' TRACE:');
+            trace.forEach(function (t) {
+              console.error(' -> ' + (t.file || t.sourceURL) + ': ' + t.line
+                + (t.function ? ' (in function ' + t.function + ')' : ''));
+            });
+          }
+          console.error('\n\n');
+          onNext(new Error('exitCode=1'));
+          break;
+        default:
+          throw error;
         }
-      };
-      // set timeout for phantom
-      exports.onTimeout(function (error) {
-        exports.global.phantom.onError(error.message);
-      }, exports.timeoutDefault, exports.url);
-      // reset testCaseList
-      exports.testPlatform.testCaseList = [];
-      // init page
-      exports.page = exports.webpage.create();
-      // init page's viewport-size
-      exports.page.viewportSize = exports.viewportSize || { height: 600, width: 800 };
-      // init page's error handling
-      // http://phantomjs.org/api/webpage/handler/on-error.html
-      exports.page.onError = exports.global.phantom.onError;
-      // pipe page's console.log to stdout
-      exports.page.onConsoleMessage = function () {
-        console.log.apply(console, arguments);
-      };
-      // open requested webpage
-      exports.page.open(
-        // security - insert _testSecret in url without revealing it
-        exports.url.replace('{{_testSecret}}', exports._testSecret),
-        function (data) {
-          console.log(exports.argv0 + ' - open ' + data + ' ' + exports.url);
-          // validate page opened successfully
-          exports.assert(data === 'success', data);
-        }
-      );
-      break;
-    }
+      } catch (errorCaught) {
+        exports.onErrorExit(errorCaught);
+      }
+    };
+    onNext();
   }());
 
 
