@@ -11,12 +11,6 @@ shAesDecrypt() {
     openssl enc -aes-256-cbc -d -K $AES_256_KEY -iv $IV || return $?
 }
 
-shAesDecryptTravis() {
-  # this function will decrypt $AES_ENCRYPTED_SH in .travis.yml to stdout
-  perl -ne "print \$1 if /- AES_ENCRYPTED_SH: (.*) # AES_ENCRYPTED_SH\$/" .travis.yml |\
-    shAesDecrypt || return $?
-}
-
 shAesEncrypt() {
   # this function will encrypt stdin to base64-encoded stdout,
   # with a random iv prepended using aes-256-cbc
@@ -26,44 +20,6 @@ shAesEncrypt() {
   printf $(printf "$IV " | base64) || return $?
   # encrypt stdin and stream to stdout using aes-256-cbc with base64-encoding
   openssl enc -aes-256-cbc -K $AES_256_KEY -iv $IV | base64 | tr -d "\n" || return $?
-}
-
-shAesEncryptTravis() {
-  # this function will encrypt the script $1 to $AES_ENCRYPTED_SH and stores it in .travis.yml
-  # init $FILE
-  local FILE=$1/aes-decrypted.$(printf $GITHUB_REPO | perl -pe "s/\//./").sh || return $?
-  if [ ! -f "$FILE" ]
-  then
-    printf "# non-existent file $FILE\n" || return $?
-    return 1
-  fi
-  printf "# sourcing file $FILE ...\n" || return $?
-  . $FILE || return $?
-  if [ ! "$AES_256_KEY" ]
-  then
-    printf "# no \$AES_256_KEY detected in env - creating new AES_256_KEY ...\n" || return $?
-    AES_256_KEY=$(openssl rand -hex 32) || return $?
-    printf "# a new \$AES_256_KEY for encrypting data has been created.\n" || return $?
-    printf "# you may want to copy the following to your .bashrc script\n" || return $?
-    printf "# so you can run builds locally:\n" || return $?
-    printf "export AES_256_KEY=$AES_256_KEY\n\n" || return $?
-  fi
-  printf "# travis-encrypting \$AES_256_KEY for $GITHUB_REPO ...\n" || return $?
-  AES_256_KEY_ENCRYPTED=$(shTravisEncrypt $GITHUB_REPO \$AES_256_KEY=$AES_256_KEY) || return $?
-  # return non-zero exit-code if $AES_256_KEY_ENCRYPTED is empty string
-  if [ ! "$AES_256_KEY_ENCRYPTED" ]
-  then
-    return 1
-  fi
-  printf "# updating .travis.yml with encrypted key ...\n" || return $?
-  perl -i -pe\
-    "s%(- secure: )(.*)( # AES_256_KEY$)%\$1$AES_256_KEY_ENCRYPTED\$3%"\
-    .travis.yml || return $?
-
-  printf "# updating .travis.yml with encrypted script ...\n" || return $?
-  perl -i -pe\
-    "s%(- AES_ENCRYPTED_SH: )(.*)( # AES_ENCRYPTED_SH$)%\$1$(shAesEncrypt < $FILE)\$3%"\
-    .travis.yml || return $?
 }
 
 shBuild() {
@@ -214,7 +170,7 @@ shInit() {
       # decrypt and exec encrypted data
       if [ "$AES_256_KEY" ]
       then
-        eval "$(shAesDecryptTravis)" || return $?
+        eval "$(shTravisDecryptYml)" || return $?
       fi
     # init default env
     else
@@ -601,6 +557,12 @@ shTmpAppCopy() {
   git ls-tree -r HEAD --name-only | xargs tar -czf - | tar -C /tmp/app -xzvf - || return $?
 }
 
+shTravisDecryptYml() {
+  # this function will decrypt $AES_ENCRYPTED_SH in .travis.yml to stdout
+  perl -ne "print \$1 if /- AES_ENCRYPTED_SH: (.*) # AES_ENCRYPTED_SH\$/" .travis.yml |\
+    shAesDecrypt || return $?
+}
+
 shTravisEncrypt() {
   # this function will travis-encrypt github repo $1's secret $2
   # init $TMPDIR2 dir
@@ -613,6 +575,44 @@ shTravisEncrypt() {
   # rsa-encrypt $SECRET and print it
   printf "$SECRET" | openssl rsautl -encrypt -pubin -inkey $TMPFILE2 | base64 | tr -d "\n" ||\
     return $?
+}
+
+shTravisEncryptYml() {
+  # this function will encrypt the script $1 to $AES_ENCRYPTED_SH and stores it in .travis.yml
+  # init $FILE
+  local FILE=$1/aes-decrypted.$(printf $GITHUB_REPO | perl -pe "s/\//./").sh || return $?
+  if [ ! -f "$FILE" ]
+  then
+    printf "# non-existent file $FILE\n" || return $?
+    return 1
+  fi
+  printf "# sourcing file $FILE ...\n" || return $?
+  . $FILE || return $?
+  if [ ! "$AES_256_KEY" ]
+  then
+    printf "# no \$AES_256_KEY detected in env - creating new AES_256_KEY ...\n" || return $?
+    AES_256_KEY=$(openssl rand -hex 32) || return $?
+    printf "# a new \$AES_256_KEY for encrypting data has been created.\n" || return $?
+    printf "# you may want to copy the following to your .bashrc script\n" || return $?
+    printf "# so you can run builds locally:\n" || return $?
+    printf "export AES_256_KEY=$AES_256_KEY\n\n" || return $?
+  fi
+  printf "# travis-encrypting \$AES_256_KEY for $GITHUB_REPO ...\n" || return $?
+  AES_256_KEY_ENCRYPTED=$(shTravisEncrypt $GITHUB_REPO \$AES_256_KEY=$AES_256_KEY) || return $?
+  # return non-zero exit-code if $AES_256_KEY_ENCRYPTED is empty string
+  if [ ! "$AES_256_KEY_ENCRYPTED" ]
+  then
+    return 1
+  fi
+  printf "# updating .travis.yml with encrypted key ...\n" || return $?
+  perl -i -pe\
+    "s%(- secure: )(.*)( # AES_256_KEY$)%\$1$AES_256_KEY_ENCRYPTED\$3%"\
+    .travis.yml || return $?
+
+  printf "# updating .travis.yml with encrypted script ...\n" || return $?
+  perl -i -pe\
+    "s%(- AES_ENCRYPTED_SH: )(.*)( # AES_ENCRYPTED_SH$)%\$1$(shAesEncrypt < $FILE)\$3%"\
+    .travis.yml || return $?
 }
 
 # if the first argument $1 is shRun, then run the command $@
