@@ -1632,7 +1632,7 @@
       // return arg for inspection
       return arg;
     };
-    exports.__coverage__ = exports.__coverage__ || exports.global.__coverage__;
+    exports.__coverage__ = exports.__coverage__ || exports.global.__coverage__ || null;
     exports.errorDefault = new Error('default error');
     exports.testPlatform = {
       name: exports.modeJs === 'browser' ? 'browser - ' +
