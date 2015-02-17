@@ -89,11 +89,11 @@ lightweight nodejs module that runs phantomjs tests with browser code-coverage (
     // require modules
     local.utility2 = require('utility2');
     // init tests
-    local._phantomTest_default_test = function (onError) {
+    local._testPhantom_default_test = function (onError) {
       /*
         this function will spawn a phantomjs process to test a webpage
       */
-      local.utility2.phantomTest({
+      local.utility2.testPhantom({
         url: 'http://localhost:' + process.env.npm_config_server_port +
           '/test/test.html?modeTest=phantom'
       }, onError);
