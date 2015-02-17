@@ -586,7 +586,7 @@
             // throw global_test_results as an error,
             // so it can be caught and passed to the phantom js-env
             if (exports.modeTest === 'phantom') {
-              throw new Error(JSON.stringify({
+              throw new Error('\nphantom\n' + JSON.stringify({
                 global_test_results: exports.global.global_test_results
               }));
             }
@@ -1300,9 +1300,10 @@
         )
           .on('exit', function (exitCode) {
             // merge phantom js-env code-coverage
-            exports._coverageMergePhantom(
+            exports.coverageMerge(
               exports.__coverage__,
-              process.cwd() + '/.tmp/build/coverage-report.html/coverage.' + argv0 + '.json'
+              JSON.parse(exports.fs.readFileSync(process.cwd() +
+                '/.tmp/build/coverage-report.html/coverage.' + argv0 + '.json', 'utf8'))
             );
             // merge tests
             if (!options.modeErrorIgnore) {
@@ -1392,6 +1393,23 @@
       return;
     }
 
+    exports._onError = function (msg, trace) {
+      /*
+        this function will provide global error handling
+        http://phantomjs.org/api/phantom/handler/on-error.html
+      */
+      var msgStack;
+      msgStack = [exports.argv0 + ' ERROR: ' + msg];
+      if (trace && trace.length) {
+        msgStack.push(exports.argv0 + ' TRACE:');
+        trace.forEach(function (t) {
+          msgStack.push(' -> ' + (t.file || t.sourceURL) + ': ' + t.line +
+            (t.function ? ' (in function ' + t.function + ')' : ''));
+        });
+      }
+      console.error('\n' + msgStack.join('\n') + '\n');
+    };
+
     exports.onErrorExit = function (error) {
       /*
         this function will save code coverage before exiting
@@ -1407,30 +1425,37 @@
               '.tmp/build/test-report.' + exports.argv0 + '.json',
             JSON.stringify(exports.testReport)
           );
-          if (exports.__coverage__) {
-            exports.fs.write(
-              exports.fs.workingDirectory + '/' +
-                '.tmp/build/coverage-report.html/coverage.' + exports.argv0 + '.json',
-              JSON.stringify(exports.__coverage__)
-            );
-          }
+          exports.fs.write(
+            exports.fs.workingDirectory + '/' +
+              '.tmp/build/coverage-report.html/coverage.' + exports.argv0 + '.json',
+            JSON.stringify(exports.__coverage__)
+          );
         }
         exports.exit(error);
       });
     };
 
-    var file, message, trace, modeNext, onNext;
+    exports._screenCapture = function () {
+      var file;
+      file = exports.fs.workingDirectory + '/.tmp/build/screen-capture.' +
+        exports.argv0.replace((/\b(phantomjs|slimerjs)\b.*/g), '$1') + '.png';
+      exports.page.render(file);
+      return file;
+    };
+
+    var modeNext, onNext;
     modeNext = 0;
-    onNext = function (error, data) {
+    onNext = function (error, trace) {
+      var data;
       try {
-        modeNext = error instanceof Error ? NaN : data ? 3 : modeNext + 1;
+        modeNext = trace ? 3 : modeNext + 1;
         switch (modeNext) {
         case 1:
           // init global error handling
           // http://phantomjs.org/api/phantom/handler/on-error.html
           exports.global.phantom.onError = onNext;
           // set timeout for phantom
-          exports.onTimeout(onNext, exports.timeoutDefault, exports.url);
+          exports.onTimeout(exports.onErrorExit, exports.timeoutDefault, exports.url);
           // override exports properties
           exports.setOverride(
             exports,
@@ -1465,42 +1490,24 @@
           exports.assert(error === 'success', error);
           break;
         case 3:
-          message = error;
-          trace = data;
-          data = (/^Error: (\{"global_test_results":\{.+)/).exec(message);
+          data = (/\nphantom\n(\{"global_test_results":\{.+)/).exec(error);
           data = data && JSON.parse(data[1]).global_test_results;
-          // check if the error-message is a test-callback, and handle it appropriately
-          if (data) {
-            // handle global_test_results passed as error
-            // merge coverage
-            exports.coverageMerge(exports.__coverage__, data.coverage);
-            // create screenCapture
-            file = exports.fs.workingDirectory + '/.tmp/build/screen-capture.' +
-              exports.argv0.replace((/\b(phantomjs|slimerjs)\b.*/g), '$1') + '.png';
-            exports.page.render(file);
-            console.log('created ' + 'file://' + file);
-            // integrate screenCapture into test-report
-            data.testReport.testPlatformList[0].screenCaptureImg =
-              file.replace((/^.*\//), '');
-            // merge test-report
-            exports.testMerge(exports.testReport, data.testReport);
-            // exit with number of tests failed as exit-code
-            onNext(data.testReport.testsFailed);
+          // handle normal error
+          if (!data) {
+            exports._onError(error, trace);
+            onNext(1);
             return;
           }
-          // else handle it as a normal error
-          // phantom error handling - http://phantomjs.org/api/phantom/handler/on-error.html
-          console.error('\n\n');
-          console.error(exports.argv0 + ' ERROR: ' + message);
-          if (trace && trace.length) {
-            console.error(exports.argv0 + ' TRACE:');
-            trace.forEach(function (t) {
-              console.error(' -> ' + (t.file || t.sourceURL) + ': ' + t.line
-                + (t.function ? ' (in function ' + t.function + ')' : ''));
-            });
-          }
-          console.error('\n\n');
-          onNext(1);
+          // handle global_test_results passed as error
+          // merge coverage
+          exports.coverageMerge(exports.__coverage__, data.coverage);
+          // create screenCapture and integrate screenCapture into test-report
+          data.testReport.testPlatformList[0].screenCaptureImg =
+            exports._screenCapture().replace((/^.*\//), '');
+          // merge test-report
+          exports.testMerge(exports.testReport, data.testReport);
+          // exit with number of tests failed as exit-code
+          onNext(data.testReport.testsFailed);
           break;
         default:
           throw error;
@@ -1580,7 +1587,6 @@
     exports.vm = require('vm');
     // init exports properties
     exports.__dirname = __dirname;
-    exports._coverageMergePhantom = exports.nop;
     exports.envDict = process.env;
     exports.exit = process.exit;
     exports.global = global;
@@ -1626,7 +1632,7 @@
       // return arg for inspection
       return arg;
     };
-    exports.__coverage__ = exports.__coverage__ || exports.global.__coverage__ || null;
+    exports.__coverage__ = exports.__coverage__ || exports.global.__coverage__;
     exports.errorDefault = new Error('default error');
     exports.testPlatform = {
       name: exports.modeJs === 'browser' ? 'browser - ' +

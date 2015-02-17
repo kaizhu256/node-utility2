@@ -411,7 +411,7 @@
       // test exports.modeTest !== 'phantom' handling behavior
       if (exports.modeTest === 'phantom2') {
         setTimeout(function () {
-          throw new Error(JSON.stringify({
+          throw new Error('\nphantom\n' + JSON.stringify({
             global_test_results: window.global_test_results
           }));
         }, 1000);
@@ -433,11 +433,6 @@
     // require modules
     local.fs = require('fs');
     local.path = require('path');
-
-    // init export properties
-    exports._coverageMergePhantom = function (coverage1, coverage2) {
-      exports.coverageMerge(coverage1, JSON.parse(exports.fs.readFileSync(coverage2, 'utf8')));
-    };
 
     // init local test-cases
     local._coverageMerge_default_test = function (onError) {
