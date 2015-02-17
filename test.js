@@ -346,6 +346,10 @@
       data = exports.jsonStringifyOrdered(options);
       exports.assert(data ===
         '{"aa":1,"bb":{"cc":2},"dd":[3,4],"ee":{"ff":{"gg":5,"hh":6}}}', data);
+      // test override envDict with empty-string handling behavior
+      options = exports.setOverride(exports.envDict, 1, { 'emptyString': null });
+      // validate options
+      exports.assert(options.emptyString === '', options.emptyString);
       onError();
     };
 
@@ -416,7 +420,7 @@
           throw new Error(JSON.stringify({
             global_test_results: window.global_test_results
           }));
-        });
+        }, 1000);
       }
     });
     break;
@@ -444,7 +448,7 @@
       coverage1 = exports.vm.runInNewContext(script, { arg: 0 });
       // validate coverage1
       exports.assert(exports.jsonStringifyOrdered(coverage1) === '{"test":{"b":{"1":[0,1]},"branchMap":{"1":{"line":2,"locations":[{"end":{"column":25,"line":2},"start":{"column":13,"line":2}},{"end":{"column":40,"line":2},"start":{"column":28,"line":2}}],"type":"cond-expr"}},"f":{"1":1},"fnMap":{"1":{"line":1,"loc":{"end":{"column":13,"line":1},"start":{"column":1,"line":1}},"name":"(anonymous_1)"}},"path":"test","s":{"1":1,"2":1},"statementMap":{"1":{"end":{"column":5,"line":3},"start":{"column":0,"line":1}},"2":{"end":{"column":41,"line":2},"start":{"column":0,"line":2}}}}}', coverage1);
-      // init coverage1
+      // init coverage2
       coverage2 = exports.vm.runInNewContext(script, { arg: 1 });
       // validate coverage2
       exports.assert(exports.jsonStringifyOrdered(coverage2) === '{"test":{"b":{"1":[1,0]},"branchMap":{"1":{"line":2,"locations":[{"end":{"column":25,"line":2},"start":{"column":13,"line":2}},{"end":{"column":40,"line":2},"start":{"column":28,"line":2}}],"type":"cond-expr"}},"f":{"1":1},"fnMap":{"1":{"line":1,"loc":{"end":{"column":13,"line":1},"start":{"column":1,"line":1}},"name":"(anonymous_1)"}},"path":"test","s":{"1":1,"2":1},"statementMap":{"1":{"end":{"column":5,"line":3},"start":{"column":0,"line":1}},"2":{"end":{"column":41,"line":2},"start":{"column":0,"line":2}}}}}', coverage2);
@@ -452,6 +456,12 @@
       exports.coverageMerge(coverage1, coverage2);
       // validate merged coverage1
       exports.assert(exports.jsonStringifyOrdered(coverage1) === '{"test":{"b":{"1":[1,1]},"branchMap":{"1":{"line":2,"locations":[{"end":{"column":25,"line":2},"start":{"column":13,"line":2}},{"end":{"column":40,"line":2},"start":{"column":28,"line":2}}],"type":"cond-expr"}},"f":{"1":2},"fnMap":{"1":{"line":1,"loc":{"end":{"column":13,"line":1},"start":{"column":1,"line":1}},"name":"(anonymous_1)"}},"path":"test","s":{"1":2,"2":2},"statementMap":{"1":{"end":{"column":5,"line":3},"start":{"column":0,"line":1}},"2":{"end":{"column":41,"line":2},"start":{"column":0,"line":2}}}}}', coverage1);
+      // test null-case handling behavior
+      coverage1 = null;
+      coverage2 = null;
+      exports.coverageMerge(coverage1, coverage2);
+      // validate merged coverage1
+      exports.assert(coverage1 === null, coverage1);
       onError();
     };
 
@@ -541,8 +551,10 @@
       exports.testPhantom({
         modeErrorIgnore: true,
         url: 'http://localhost:' + process.env.npm_config_server_port +
+          // test standalone utility2.js library handling behavior
+          '/test/utility2.html?' +
           // test modeTest !== 'phantom' handling behavior
-          '/?modeTest=phantom2&' +
+          'modeTest=phantom2&' +
           // test testRun's failure handling behavior
           'modeTestCase=_testRun_failure_test'
       }, function (error) {
@@ -552,13 +564,6 @@
           onParallel();
         }, onParallel);
       });
-      // test standalone utility2.js library handling behavior
-      onParallel.counter += 1;
-      exports.testPhantom({
-        url: 'http://localhost:' + process.env.npm_config_server_port +
-          // test phantom-callback handling behavior
-          '/test/utility2.html?modeTest=phantom'
-      }, onParallel);
       // test script-error handling behavior
       onParallel.counter += 1;
       exports.testPhantom({
@@ -572,56 +577,6 @@
           onParallel();
         }, onParallel);
       });
-      // test timeout handling behavior
-      onParallel.counter += 1;
-      exports.testPhantom({
-        modeErrorIgnore: true,
-        timeout: 1000,
-        url: 'http://localhost:' + process.env.npm_config_server_port + '/test/hello'
-      }, function (error) {
-        exports.testTryCatch(function () {
-          // validate error occurred
-          exports.assert(error instanceof Error, error);
-          onParallel();
-        }, onParallel);
-      });
-      // test misc handling behavior
-      onParallel.counter += 1;
-      exports.testMock([
-        // test no coverage handling behavior
-        [exports, {
-          child_process: { spawn: function () {
-            return { on: function (event, onExit) {
-              // nop hack to pass jslint
-              exports.nop(event);
-              onExit();
-            } };
-          } },
-          __coverage__: null,
-          fs: { readFileSync: function () {
-            return 'null';
-          } },
-          onTimeout: exports.nop,
-          testMerge: exports.nop
-        }],
-        [process.env, {
-          // test $PACKAGE_JSON !== 'utility2' handling behavior
-          PACKAGE_JSON_NAME: '',
-          // test no slimerjs handling behavior
-          npm_config_mode_no_slimerjs: '1'
-        }]
-      ], onParallel, function (onError) {
-        exports.testPhantom({
-          modeErrorIgnore: true,
-          url: 'http://localhost:' + process.env.npm_config_server_port + '/test/misc'
-        }, function (error) {
-          exports.testTryCatch(function () {
-            // validate no error occurred
-            exports.assert(!error, error);
-            onError();
-          }, onError);
-        });
-      });
       onParallel();
     };
 
@@ -632,7 +587,7 @@
       exports.testMock([
         [exports, {
           envDict: {
-            // test not-utiilty2 package handling behavior
+            // test $PACKAGE_JSON !== 'utility2' handling behavior
             PACKAGE_JSON_NAME: 'undefined',
             // test auto-exit handling behavior
             npm_config_timeout_exit: '1',
@@ -700,6 +655,11 @@
         // test script-error handling behavior
         case '/test/script-error.html':
           response.end('<script>throw new Error("script-error")</script>');
+          break;
+        // test standalone utility2.js library handling behavior
+        case '/test/utility2.html':
+          response.end('<script src="/assets/utility2.js">' +
+            '</script><script src="/test/test.js"></script>');
           break;
         // test 500-internal-server-error handling behavior
         case '/test/server-error':

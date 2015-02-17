@@ -198,8 +198,8 @@ exit $EXIT_CODE
 
 
 ## todo
+- revamp testPhantom
 - explicitly require slimerjs instead of auto-detecting it
-- move testPhantomjs from index.js to index.sh and auto-install phantomjs-lite when required
 - auto-generate help doc from README.md
 - add server stress test using phantomjs
 - minify /assets/utility2.js in production-mode
