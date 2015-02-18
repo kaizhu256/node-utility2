@@ -86,9 +86,9 @@ lightweight nodejs module that runs phantomjs browser-tests with code-coverage (
   // init node js-env
   } else {
     // mock package.json
-    process.env.PACKAGE_JSON_DESCRIPTION = 'this is a demo';
-    process.env.PACKAGE_JSON_NAME = 'example-module';
-    process.env.PACKAGE_JSON_VERSION = '1.0.0';
+    process.env.npm_package_description = 'this is a demo';
+    process.env.npm_package_name = 'example-module';
+    process.env.npm_package_version = '1.0.0';
     // require modules
     local.utility2 = require('utility2');
     // init tests
@@ -206,6 +206,7 @@ exit $EXIT_CODE
 
 
 ## todo
+- rename build dir to .tmp/build.<branch>.<host>
 - merge testRunServer into testRun
 - revamp phantomTest
 - explicitly require slimerjs instead of auto-detecting it

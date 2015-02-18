@@ -601,8 +601,8 @@
       exports.testMock([
         [exports, {
           envDict: {
-            // test $PACKAGE_JSON !== 'utility2' handling behavior
-            PACKAGE_JSON_NAME: 'undefined',
+            // test $npm_package_name !== 'utility2' handling behavior
+            npm_package_name: 'undefined',
             // test auto-exit handling behavior
             npm_config_timeout_exit: '1',
             // test random $npm_config_server_port handling behavior

@@ -595,8 +595,8 @@
         case 'node':
           // create build badge
           exports.fs.writeFileSync(
-            process.cwd() + '/.tmp/build/build.badge.svg',
-            exports.fileCacheDict['.tmp/build/build.badge.svg'].data
+            exports.envDict.npm_package_dir_build_local + '/build.badge.svg',
+            exports.fileCacheDict['/build/build.badge.svg'].data
               // edit branch name
               .replace(
                 (/0000 00 00 00 00 00/g),
@@ -612,8 +612,8 @@
           );
           // create test-report.badge.svg
           exports.fs.writeFileSync(
-            process.cwd() + '/.tmp/build/test-report.badge.svg',
-            exports.fileCacheDict['.tmp/build/test-report.badge.svg'].data
+            exports.envDict.npm_package_dir_build_local + '/test-report.badge.svg',
+            exports.fileCacheDict['/build/test-report.badge.svg'].data
               // edit number of tests failed
               .replace((/999/g), testReport.testsFailed)
               // edit badge color
@@ -625,12 +625,12 @@
           );
           // create test-report.html
           exports.fs.writeFileSync(
-            process.cwd() + '/.tmp/build/test-report.html',
+            exports.envDict.npm_package_dir_build_local + '/test-report.html',
             testReportHtml
           );
           // create test-report.json
           exports.fs.writeFileSync(
-            process.cwd() + '/.tmp/build/test-report.json',
+            exports.envDict.npm_package_dir_build_local + '/test-report.json',
             JSON.stringify(exports.testReport)
           );
           // if any test failed, then exit with non-zero exit-code
@@ -1020,7 +1020,7 @@
       options.data = exports.fs.readFileSync(options.file, 'utf8').replace((/^#!/), '//#!');
       // if coverage-mode is enabled, then instrument options.data
       if (exports.__coverage__ &&
-          options.coverage && options.coverage === exports.envDict.PACKAGE_JSON_NAME) {
+          options.coverage && options.coverage === exports.envDict.npm_package_name) {
         options.data = exports.istanbulInstrument(options.data, options.file);
       }
       // cache options to exports.fileCacheDict[options.cache]
@@ -1092,11 +1092,15 @@
           _testSecret: exports._testSecret,
           argv0: argv0,
           argv1: argv1,
-          fileCoverage: process.cwd() + '/.tmp/coverage.' + argv1 + '.json',
-          fileRender: (process.cwd() + '/.tmp/build/screen-capture.' + argv1 + '.png')
+          fileCoverage:
+            exports.envDict.npm_package_dir_tmp_local + '/coverage.' + argv1 + '.json',
+          fileRender: (
+            exports.envDict.npm_package_dir_build_local + '/screen-capture.' + argv1 + '.png'
+          )
             .replace((/%/g), '_')
             .replace((/_2F.png$/), 'png'),
-          fileTestReport: process.cwd() + '/.tmp/test-report.' + argv1 + '.json',
+          fileTestReport:
+            exports.envDict.npm_package_dir_tmp_local + '/test-report.' + argv1 + '.json',
           modePhantom: 'test'
         });
         onParallel.counter += 1;
@@ -1109,8 +1113,9 @@
         timerTimeout = exports.onTimeout(onError2, exports.timeoutDefault, argv1);
         options.fileUtility2 = __dirname + '/index.js';
         // cover index.js
-        if (exports.__coverage__ && 'utility2' === exports.envDict.PACKAGE_JSON_NAME) {
-          options.fileUtility2 = process.cwd() + '/.tmp/instrumented.utility2.js';
+        if (exports.__coverage__ && 'utility2' === exports.envDict.npm_package_name) {
+          options.fileUtility2 =
+            exports.envDict.npm_package_dir_tmp_local + '/instrumented.utility2.js';
         }
         // spawn phantomjs to test a url
         exports.child_process
@@ -1345,9 +1350,9 @@
         file: __filename
       });
       // save instrumented utility2.js to fs
-      if (exports.__coverage__ && exports.envDict.PACKAGE_JSON_NAME === 'utility2') {
+      if (exports.__coverage__ && exports.envDict.npm_package_name === 'utility2') {
         exports.fs.writeFileSync(
-          process.cwd() + '/.tmp/instrumented.utility2.js',
+          exports.envDict.npm_package_dir_tmp_local + '/instrumented.utility2.js',
           exports.fileCacheDict['/assets/utility2.js'].data
         );
       }
@@ -1612,6 +1617,9 @@
     // init exports properties
     exports.__dirname = __dirname;
     exports.envDict = process.env;
+    exports.envDict.npm_package_dir_build_local =
+      process.cwd() + '/.tmp/build..undefined..localhost';
+    exports.envDict.npm_package_dir_tmp_local = process.cwd() + '/.tmp';
     exports.exit = process.exit;
     exports.global = global;
     // init _testSecret
@@ -1748,9 +1756,9 @@ tr:nth-child(odd).testReportPlatformTr {\n\
 }\n\
 </style>\n\
 <div class="testReportPlatformDiv testReportSummaryDiv">\n\
-<h2>{{envDict.PACKAGE_JSON_NAME}} test-report summary</h2>\n\
+<h2>{{envDict.npm_package_name}} test-report summary</h2>\n\
 <h4>\n\
-  <span class="testReportSummarySpan">version</span>- {{envDict.PACKAGE_JSON_VERSION}}<br>\n\
+  <span class="testReportSummarySpan">version</span>- {{envDict.npm_package_version}}<br>\n\
   <span class="testReportSummarySpan">test date</span>- {{date}}<br>\n\
   <span class="testReportSummarySpan">commit info</span>- {{CI_COMMIT_INFO}}<br>\n\
 </h4>\n\
@@ -1809,21 +1817,21 @@ tr:nth-child(odd).testReportPlatformTr {\n\
 
 
 // https://img.shields.io/badge/last_build-0000_00_00_00_00_00_UTC_--_master_--_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-0077ff.svg?style=flat
-'.tmp/build/build.badge.svg': { data: '\
+'/build/build.badge.svg': { data: '\
 <svg xmlns="http://www.w3.org/2000/svg" width="563" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="563" height="20" fill="#555"/><rect rx="0" x="61" width="502" height="20" fill="#07f"/><path fill="#07f" d="M61 0h4v20h-4z"/><rect rx="0" width="563" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="31.5" y="15" fill="#010101" fill-opacity=".3">last build</text><text x="31.5" y="14">last build</text><text x="311" y="15" fill="#010101" fill-opacity=".3">0000 00 00 00 00 00 UTC - master - aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</text><text x="311" y="14">0000 00 00 00 00 00 UTC - master - aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</text></g></svg>\n\
 ' },
 
 
 
 // https://img.shields.io/badge/coverage-100.0%-00dd00.svg?style=flat
-'.tmp/build/coverage-report.badge.svg': { data: '\
+'/build/coverage-report.badge.svg': { data: '\
 <svg xmlns="http://www.w3.org/2000/svg" width="117" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="117" height="20" fill="#555"/><rect rx="0" x="63" width="54" height="20" fill="#0d0"/><path fill="#0d0" d="M63 0h4v20h-4z"/><rect rx="0" width="117" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="32.5" y="15" fill="#010101" fill-opacity=".3">coverage</text><text x="32.5" y="14">coverage</text><text x="89" y="15" fill="#010101" fill-opacity=".3">100.0%</text><text x="89" y="14">100.0%</text></g></svg>\n\
 ' },
 
 
 
 // https://img.shields.io/badge/tests_failed-999-dd0000.svg?style=flat
-'.tmp/build/test-report.badge.svg': { data: '\
+'/build/test-report.badge.svg': { data: '\
 <svg xmlns="http://www.w3.org/2000/svg" width="103" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="103" height="20" fill="#555"/><rect rx="0" x="72" width="31" height="20" fill="#d00"/><path fill="#d00" d="M72 0h4v20h-4z"/><rect rx="0" width="103" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="37" y="15" fill="#010101" fill-opacity=".3">tests failed</text><text x="37" y="14">tests failed</text><text x="86.5" y="15" fill="#010101" fill-opacity=".3">999</text><text x="86.5" y="14">999</text></g></svg>\n\
 ' },
 
@@ -1900,7 +1908,7 @@ tr:nth-child(odd).testReportPlatformTr {\n\
 <html>\n\
 <head>\n\
   <meta charset="UTF-8">\n\
-  <title>{{envDict.PACKAGE_JSON_NAME}} [{{envDict.PACKAGE_JSON_VERSION}}]</title>\n\
+  <title>{{envDict.npm_package_name}} [{{envDict.npm_package_version}}]</title>\n\
   <style>\n\
     {{utility2Css}}\n\
     body {\n\
@@ -1917,8 +1925,8 @@ tr:nth-child(odd).testReportPlatformTr {\n\
   <!-- ajax-progress end -->\n\
   <!-- main-app begin -->\n\
   <div class="mainAppDiv">\n\
-    <h1>{{envDict.PACKAGE_JSON_NAME}} [{{envDict.PACKAGE_JSON_VERSION}}]</h1>\n\
-    <h3>{{envDict.PACKAGE_JSON_DESCRIPTION}}</h3>\n\
+    <h1>{{envDict.npm_package_name}} [{{envDict.npm_package_version}}]</h1>\n\
+    <h3>{{envDict.npm_package_description}}</h3>\n\
     <div>\n\
       <button\n\
         onclick="window.utility2.modeTest=1; window.utility2.testRun(window.local);"\n\
@@ -1932,9 +1940,9 @@ tr:nth-child(odd).testReportPlatformTr {\n\
   <!-- script begin -->\n\
   <script src="/assets/utility2.js"></script>\n\
   <script>window.utility2.envDict = {\n\
-    PACKAGE_JSON_DESCRIPTION: "{{envDict.PACKAGE_JSON_DESCRIPTION}}",\n\
-    PACKAGE_JSON_NAME: "{{envDict.PACKAGE_JSON_NAME}}",\n\
-    PACKAGE_JSON_VERSION: "{{envDict.PACKAGE_JSON_VERSION}}"\n\
+    npm_package_description: "{{envDict.npm_package_description}}",\n\
+    npm_package_name: "{{envDict.npm_package_name}}",\n\
+    npm_package_version: "{{envDict.npm_package_version}}"\n\
   }</script>\n\
   <script src="/test/test.js"></script>\n\
   <!-- script end -->\n\
