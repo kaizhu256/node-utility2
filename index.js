@@ -1296,30 +1296,14 @@
     };
 
     exports.testMiddleware = function (request, response, onNext) {
-      var contentTypeDict;
-      // debug server request
-      exports._debugServerRequest = request;
-      // debug server response
-      exports._debugServerResponse = response;
-      // check if _testSecret is valid
-      request._testSecretValid = (/\b_testSecret=(\w+)\b/).exec(request.url);
-      request._testSecretValid =
-        request._testSecretValid && request._testSecretValid[1] === exports._testSecret;
-      // init request.urlPathNormalized
-      request.urlPathNormalized =
-        exports.path.resolve(exports.url.parse(request.url).pathname);
-      // init Content-Type header
-      contentTypeDict = {
-        '.css': 'text/css; charset=UTF-8',
-        '.html': 'text/html; charset=UTF-8',
-        '.js': 'application/javascript; charset=UTF-8',
-        '.json': 'application/json; charset=UTF-8',
-        '.txt': 'text/txt; charset=UTF-8'
-      };
-      exports.serverRespondWriteHead(request, response, null, {
-        'Content-Type': contentTypeDict[exports.path.extname(request.urlPathNormalized)]
-      });
       switch (request.urlPathNormalized) {
+      // redirect main-page to test-page
+      case '/':
+        exports.serverRespondWriteHead(request, response, 303, {
+          'Location': request.url.replace('/', '/test/test.html')
+        });
+        response.end();
+        break;
       // serve the following assets from fileCacheDict
       case '/assets/utility2.js':
       case '/test/test.js':
@@ -1378,11 +1362,37 @@
       exports.onReady.counter += 1;
       // 1. create http-server with options.serverMiddlewareList
       exports.http.createServer(function (request, response) {
-        var modeNext, onNext;
-        modeNext = -1;
+        var contentTypeDict, modeNext, onNext;
+        modeNext = -2;
         onNext = function (error) {
           modeNext = error instanceof Error ? NaN : modeNext + 1;
-          if (options.serverMiddlewareList[modeNext]) {
+          if (modeNext === -1) {
+            // debug server request
+            exports._debugServerRequest = request;
+            // debug server response
+            exports._debugServerResponse = response;
+            // check if _testSecret is valid
+            request._testSecretValid = (/\b_testSecret=(\w+)\b/).exec(request.url);
+            request._testSecretValid =
+              request._testSecretValid && request._testSecretValid[1] === exports._testSecret;
+            // init request.urlPathNormalized
+            request.urlPathNormalized =
+              exports.path.resolve(exports.url.parse(request.url).pathname);
+            // init Content-Type header
+            contentTypeDict = {
+              '.css': 'text/css; charset=UTF-8',
+              '.html': 'text/html; charset=UTF-8',
+              '.js': 'application/javascript; charset=UTF-8',
+              '.json': 'application/json; charset=UTF-8',
+              '.txt': 'text/txt; charset=UTF-8'
+            };
+            exports.serverRespondWriteHead(request, response, null, {
+              'Content-Type': contentTypeDict[exports.path.extname(request.urlPathNormalized)]
+            });
+            onNext();
+            return;
+          }
+          if (modeNext < options.serverMiddlewareList.length) {
             options.serverMiddlewareList[modeNext](request, response, onNext);
             return;
           }
@@ -1884,6 +1894,7 @@ tr:nth-child(odd).testReportPlatformTr {\n\
 
 
 
+// http://validator.w3.org/check?uri=https%3A%2F%2Fkaizhu256.github.io%2Fnode-utility2%2Fbuild%2Ftest.html&charset=%28detect+automatically%29&doctype=Inline&group=0&user-agent=W3C_Validator%2F1.3+http%3A%2F%2Fvalidator.w3.org%2Fservices
 '/test/test.html': { data: '\
 <!DOCTYPE html>\n\
 <html>\n\
@@ -1891,29 +1902,33 @@ tr:nth-child(odd).testReportPlatformTr {\n\
   <meta charset="UTF-8">\n\
   <title>{{envDict.PACKAGE_JSON_NAME}} [{{envDict.PACKAGE_JSON_VERSION}}]</title>\n\
   <style>\n\
-  {{utility2Css}}\n\
-  body {\n\
-  background-color: #fff;\n\
-  font-family: Helvetical Neue, Helvetica, Arial, sans-serif;\n\
-  }\n\
+    {{utility2Css}}\n\
+    body {\n\
+      background-color: #fff;\n\
+      font-family: Helvetical Neue, Helvetica, Arial, sans-serif;\n\
+    }\n\
   </style>\n\
 </head>\n\
 <body>\n\
-  <!-- main app div begin -->\n\
-  <div class="utility2Div">\n\
-  <h1>{{envDict.PACKAGE_JSON_NAME}} [{{envDict.PACKAGE_JSON_VERSION}}]</h1>\n\
-  <h3>{{envDict.PACKAGE_JSON_DESCRIPTION}}</h3>\n\
-  <div><button\n\
-    onclick="window.utility2.modeTest=1; window.utility2.testRun(window.local);"\n\
-  >run test</button></div>\n\
+  <!-- ajax-progress begin -->\n\
+  <div class="ajaxProgressDiv" style="display: none;">\n\
+    <div class="ajaxProgressBarDiv ajaxProgressBarDivLoading">loading</div>\n\
+  </div>\n\
+  <!-- ajax-progress end -->\n\
+  <!-- main-app begin -->\n\
+  <div class="mainAppDiv">\n\
+    <h1>{{envDict.PACKAGE_JSON_NAME}} [{{envDict.PACKAGE_JSON_VERSION}}]</h1>\n\
+    <h3>{{envDict.PACKAGE_JSON_DESCRIPTION}}</h3>\n\
+    <div>\n\
+      <button\n\
+        onclick="window.utility2.modeTest=1; window.utility2.testRun(window.local);"\n\
+      >run test</button>\n\
+    </div>\n\
+  </div>\n\
+  <!-- main-app end -->\n\
+  <!-- test-report begin -->\n\
   <div class="testReportDiv"></div>\n\
-  </div>\n\
-  <!-- main app div end -->\n\
-  <!-- ajax progress bar begin -->\n\
-  <div class="ajaxProgressDiv">\n\
-  <div class="ajaxProgressBarDiv ajaxProgressBarDivLoading">loading</div>\n\
-  </div>\n\
-  <!-- ajax progress bar end -->\n\
+  <!-- test-report end -->\n\
   <!-- script begin -->\n\
   <script src="/assets/utility2.js"></script>\n\
   <script>window.utility2.envDict = {\n\

@@ -500,7 +500,7 @@
       exports.phantomTest({ url: 'http://localhost:' +
         process.env.npm_config_server_port +
         // test phantom-callback handling behavior
-        '/?modeTest=phantom&' +
+        '?modeTest=phantom&' +
         // test _testSecret-validation handling behavior
         '_testSecret={{_testSecret}}&' +
         // test timeoutDefault-override handling behavior
@@ -651,13 +651,6 @@
           this function will run the main test-middleware
         */
         switch (request.urlPathNormalized) {
-        // serve main-page
-        case '/':
-          exports.serverRespondWriteHead(request, response, 303, {
-            'Location': request.url.replace('/', '/test/test.html')
-          });
-          response.end();
-          break;
         // test http POST handling behavior
         case '/test/echo':
           exports.serverRespondEcho(request, response);
