@@ -119,7 +119,7 @@ lightweight nodejs module that runs phantomjs tests with browser code-coverage (
         switch (request.urlPathNormalized) {
         // serve main-page
         case '/':
-          exports.serverRespondWriteHead(request, response, 303, {
+          local.utility2.serverRespondWriteHead(request, response, 303, {
             'Location': request.url.replace('/', '/test/test.html')
           });
           response.end();
