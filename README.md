@@ -85,9 +85,9 @@ lightweight nodejs module that runs phantomjs tests with browser code-coverage (
     local.utility2.testRun(local, local.utility2.nop);
   // init node js-env
   } else {
-    // mock $PACKAGE_JSON_NAME
+    // mock package.json
+    process.env.PACKAGE_JSON_DESCRIPTION = 'this is a demo';
     process.env.PACKAGE_JSON_NAME = 'example-module';
-    // mock $PACKAGE_JSON_VERSION
     process.env.PACKAGE_JSON_VERSION = '1.0.0';
     // require modules
     local.utility2 = require('utility2');
