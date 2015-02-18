@@ -31,9 +31,9 @@ shBuild() {
 }
 
 shBuildGithubUpload() {
-  # this function will upload the ./build dir to github
+  # this function will upload build-artifacts to github
   shBuildPrint githubUpload\
-    "uploading build artifacts to git@github.com:$GITHUB_REPO.git ..." || return $?
+    "uploading build-artifacts to git@github.com:$GITHUB_REPO.git ..." || return $?
   # cleanup $npm_package_dir_build_local
   find $npm_package_dir_build_local -path "*.json" -print0 | xargs -0 rm -f || return $?
   # add black border around phantomjs screen-capture
@@ -50,12 +50,12 @@ shBuildGithubUpload() {
     return
   fi
   # clone gh-pages branch
-  rm -fr $npm_package_dir_tmp_local/gh-pages && cd $npm_package_dir_tmp_local && git clone git@github.com:$GITHUB_REPO.git\
-    --branch=gh-pages --single-branch $npm_package_dir_tmp_local/gh-pages && cd $npm_package_dir_tmp_local/gh-pages || return $?
-  # copy build artifacts to .
-  cp $npm_package_dir_build_local/build.badge.svg build > /dev/null 2>&1
-  cp $npm_package_dir_build_local/screen-capture.* build > /dev/null 2>&1
-  for DIR in $BUILD_DIR build..undefined..localhost
+  rm -fr $npm_package_dir_tmp_local/gh-pages || return $?
+  cd $npm_package_dir_tmp_local && git clone git@github.com:$GITHUB_REPO.git\
+    --branch=gh-pages --single-branch $npm_package_dir_tmp_local/gh-pages || return $?
+  cd $npm_package_dir_tmp_local/gh-pages || return $?
+  # copy build-artifacts to $DIR
+  for DIR in build $npm_package_dir_build_remote
   do
     mkdir -p $DIR && rm -fr $DIR && cp -a $npm_package_dir_build_local $DIR || return $?
   done
@@ -151,7 +151,7 @@ shGrep() {
   FILE_FILTER="$FILE_FILTER|rollup.*\\" || return $?
   FILE_FILTER="$FILE_FILTER|swp\\" || return $?
   FILE_FILTER="$FILE_FILTER|tmp\\)\\b" || return $?
-  find . -type f | grep -v "$FILE_FILTER" | tr "\n" "\000" | xargs -0 grep -in "$1"
+  find . -type f | grep -v "$FILE_FILTER" | tr "\n" "\000" | xargs -0 grep -in "$1" || return $?
 }
 
 shInit() {
@@ -162,11 +162,11 @@ shInit() {
     # init codeship.io env
     if [ "$CI_NAME" = "codeship" ]
     then
-      export BUILD_DIR=codeship.io || return $?
+      export npm_package_dir_build_remote=codeship.io || return $?
     # init travis-ci.org env
     elif [ "$TRAVIS" ]
     then
-      export BUILD_DIR=travis-ci.org || return $?
+      export npm_package_dir_build_remote=travis-ci.org || return $?
       export CI_BRANCH=$TRAVIS_BRANCH || return $?
       export CI_COMMIT_ID=$TRAVIS_COMMIT || return $?
       # decrypt and exec encrypted data
@@ -176,11 +176,12 @@ shInit() {
       fi
     # init default env
     else
-      export BUILD_DIR=localhost || return $?
+      export npm_package_dir_build_remote=localhost || return $?
       export CI_BRANCH=undefined || return $?
       export CI_COMMIT_ID=$(git rev-parse --verify HEAD) || return $?
     fi
-    BUILD_DIR="build..$CI_BRANCH..$BUILD_DIR" || return $?
+    export npm_package_dir_build_remote="build..$CI_BRANCH..$npm_package_dir_build_remote" ||\
+      return $?
     # init $CI_COMMIT_*
     export CI_COMMIT_MESSAGE="$(git log -1 --pretty=%s)" || return $?
     export CI_COMMIT_INFO="$CI_COMMIT_ID - $CI_COMMIT_MESSAGE" || return $?
@@ -191,7 +192,7 @@ shInit() {
   export PATH=$CWD/node_modules/phantomjs-lite:$CWD/node_modules/.bin:$PATH || return $?
   # init $npm_package_*
   export npm_package_description=${npm_package_description-undefined} || return $?
-  export npm_package_dir_build_local=$CWD/.tmp/build..undefined..localhost || return $?
+  export npm_package_dir_build_local=$CWD/.tmp/build || return $?
   export npm_package_dir_tmp_local=$CWD/.tmp || return $?
   export npm_package_file_tmp_local=$CWD/.tmp/tmpfile || return $?
   export npm_package_name=${npm_package_name-undefined} || return $?
@@ -573,8 +574,10 @@ shTravisEncrypt() {
   local GITHUB_REPO=$1 || return $?
   local SECRET=$2 || return $?
   # get public rsa key from https://api.travis-ci.org/repos/<owner>/<repo>/key
-  curl -fLSs https://api.travis-ci.org/repos/$GITHUB_REPO/key > $npm_package_file_tmp_local || return $?
-  perl -pi -e "s/[^-]+(.+-).+/\$1/; s/\\\\n/\n/g; s/ RSA / /g" $npm_package_file_tmp_local || return $?
+  curl -fLSs https://api.travis-ci.org/repos/$GITHUB_REPO/key > $npm_package_file_tmp_local ||\
+    return $?
+  perl -pi -e "s/[^-]+(.+-).+/\$1/; s/\\\\n/\n/g; s/ RSA / /g" $npm_package_file_tmp_local ||\
+    return $?
   # rsa-encrypt $SECRET and print it
   printf "$SECRET" | openssl rsautl -encrypt -pubin -inkey $npm_package_file_tmp_local | base64 | tr -d "\n" ||\
     return $?

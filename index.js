@@ -1617,8 +1617,7 @@
     // init exports properties
     exports.__dirname = __dirname;
     exports.envDict = process.env;
-    exports.envDict.npm_package_dir_build_local =
-      process.cwd() + '/.tmp/build..undefined..localhost';
+    exports.envDict.npm_package_dir_build_local = process.cwd() + '/.tmp/build';
     exports.envDict.npm_package_dir_tmp_local = process.cwd() + '/.tmp';
     exports.exit = process.exit;
     exports.global = global;
