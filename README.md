@@ -169,12 +169,6 @@ shBuild() {
     export HEROKU_REPO=hrku01-utility2-$CI_BRANCH || return $?
     export TEST_URL="https://hrku01-utility2-$CI_BRANCH.herokuapp.com" || return $?
     export TEST_URL="$TEST_URL?modeTest=phantom&_testSecret={{_testSecret}}" || return $?
-    # if number of commits > 1000, then squash older commits
-    shGitBackupAndSquashAndPush 1000 || return $?
-    # create package-content listing
-    MODE_BUILD=gitLsTree shRunScreenCapture shGitLsTree || return $?
-    # create recent changelog of last 50 commits
-    MODE_BUILD=gitLog shRunScreenCapture git log -50 --pretty="%ai\u0020%s" || return $?
   fi
   # init env
   . ./index.sh && shInit || return $?
@@ -190,6 +184,12 @@ shBuild() {
   if [ "$TRAVIS" ]
   then
     shRun shTestHeroku || return $?
+    # create package-content listing
+    MODE_BUILD=gitLsTree shRunScreenCapture shGitLsTree || return $?
+    # create recent changelog of last 50 commits
+    MODE_BUILD=gitLog shRunScreenCapture git log -50 --pretty="%ai\u0020%s" || return $?
+    # if number of commits > 1000, then squash older commits
+    shGitBackupAndSquashAndPush 1000 || return $?
   fi
 }
 # run build
