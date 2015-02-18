@@ -200,6 +200,10 @@ if [ "$TRAVIS" ]
 then
   COMMIT_LIMIT=256 shRun shBuildGithubUpload || exit $?
 fi
+shBuildGithubUploadCleanup() {
+  # this function will cleanup gh-pages
+  rm -r ..alpha..travis-ci.org ..beta..travis-ci.org || return $?
+}
 # exit with $EXIT_CODE
 exit $EXIT_CODE
 ```
