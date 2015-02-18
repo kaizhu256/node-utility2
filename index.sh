@@ -209,6 +209,21 @@ shInit() {
   # init $PATH with $CWD/node_modules/.bin
   export PATH=$CWD/node_modules/phantomjs-lite:$CWD/node_modules/.bin:$PATH || return $?
   # init $npm_package_*
+  if [ -f package.json ]
+  then
+    eval $(node -e "var dict, value;
+      dict = require('./package.json');
+      Object.keys(dict).forEach(function (key) {
+        value = dict[key];
+        if ((/[^\n]/).test(value)) {
+          process.stdout.write('export npm_package_' + key + '=' + JSON.stringify(value + ';'));
+        }
+      });
+      value = (/\bgithub\.com\/(.*)\.git\$/).exec(dict.repository && dict.repository.url);
+      if (process.env.GITHUB_REPO === undefined && value) {
+        process.stdout.write('export GITHUB_REPO=' + JSON.stringify(value[1]) + ';');
+      }") || return $?
+  fi
   export npm_package_description="${npm_package_description-undefined}" || return $?
   export npm_package_dir_build=$CWD/.tmp/build || return $?
   export npm_package_dir_tmp=$CWD/.tmp || return $?
