@@ -137,12 +137,13 @@ shGitSquashShift() {
   # this function will squash $RANGE to the first commit
   local BRANCH=$(git rev-parse --abbrev-ref HEAD) || return $?
   local RANGE=$1 || return $?
-  git checkout --quiet HEAD~$RANGE || return $?
-  git reset --quiet $(git rev-list --max-parents=0 HEAD) || return $?
+  git checkout -q HEAD~$RANGE || return $?
+  git reset -q $(git rev-list --max-parents=0 HEAD) || return $?
   git add . > /dev/null || return $?
   git commit -m squash || return $?
   git cherry-pick --strategy=recursive -X theirs $BRANCH~$RANGE..$BRANCH || return $?
   git push -f . HEAD:$BRANCH || return $?
+  git checkout $BRANCH || return $?
 }
 
 shGrep() {
