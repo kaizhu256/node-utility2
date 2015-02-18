@@ -2,8 +2,8 @@
   "author": "kai zhu <kaizhu256@gmail.com>",
   "bin": { "utility2" : "index.sh" },
   "dependencies": {
-    "istanbul-lite": "2015.2.10-18",
-    "jslint-lite": "2015.2.10-14"
+    "istanbul-lite": "2015.2.18-10",
+    "jslint-lite": "2015.2.18-10"
   },
   "devDependencies": {
     "phantomjs-lite": "^2015.1.4-102"
@@ -14,11 +14,16 @@
     "browser",
     "build",
     "ci",
+    "code",
     "cover",
     "coverage",
+    "csslint",
     "istanbul",
+    "instrument",
+    "jshint",
     "jslint",
     "lightweight",
+    "lint",
     "phantomjs",
     "slimerjs",
     "test",
@@ -36,5 +41,5 @@
     "start": "npm_config_mode_auto_restart=1 ./index.sh shRun node test.js",
     "test": "npm_config_mode_auto_restart=1 npm_config_mode_auto_restart_child=1 ./index.sh shRun shNpmTest test.js"
   },
-  "version": "2015.2.15-13"
+  "version": "2015.2.18-10"
 }
