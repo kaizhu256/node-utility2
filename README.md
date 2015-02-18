@@ -169,6 +169,8 @@ shBuild() {
     export HEROKU_REPO=hrku01-utility2-$CI_BRANCH || return $?
     export TEST_URL="https://hrku01-utility2-$CI_BRANCH.herokuapp.com" || return $?
     export TEST_URL="$TEST_URL?modeTest=phantom&_testSecret={{_testSecret}}" || return $?
+    # if number of commits > 1000, then squash older commits
+    shGitBackupAndSquashAndPush 1000 || return $?
     # create package-content listing
     MODE_BUILD=gitLsTree shRunScreenCapture shGitLsTree || return $?
     # create recent changelog of last 50 commits
@@ -197,7 +199,8 @@ EXIT_CODE=$?
 # upload build artifacts to github
 if [ "$TRAVIS" ]
 then
-  COMMIT_LIMIT=256 shRun shBuildGithubUpload || exit $?
+  # if number of commits > 100, then squash older commits
+  COMMIT_LIMIT=100 shRun shBuildGithubUpload || exit $?
 fi
 # exit with $EXIT_CODE
 exit $EXIT_CODE
@@ -206,7 +209,6 @@ exit $EXIT_CODE
 
 
 ## todo
-- rename build dir to build.<branch>.<host>
 - merge testRunServer into testRun
 - revamp phantomTest
 - explicitly require slimerjs instead of auto-detecting it

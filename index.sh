@@ -95,8 +95,8 @@ shExitCodeSave() {
 
 shGitBackupAndSquashAndPush() {
   # this function will, if number of commits > $COMMIT_LIMIT,
-  # 1. push current $BRANCH to origin/$BRANCH.backup
-  # 2. squash $RANGE to the first commit
+  # 1. backup current $BRANCH to origin/$BRANCH.backup
+  # 2. squash $RANGE to the first commit in $BRANCH
   # 3. push squashed $BRANCH to origin/$BRANCH
   local COMMIT_LIMIT=$1 || return $?
   # if number of commits > $COMMIT_LIMIT
@@ -106,11 +106,11 @@ shGitBackupAndSquashAndPush() {
   fi
   local BRANCH=$(git rev-parse --abbrev-ref HEAD) || return $?
   local RANGE=$(($COMMIT_LIMIT/2)) || return $?
-  # 1. push the current $BRANCH to $BRANCH.backup
+  # 1. backup current $BRANCH to origin/$BRANCH.backup
   git push -f origin $BRANCH:$BRANCH.backup || return $?
-  # 2. squash the HEAD to the first commit
+  # 2. squash $RANGE to the first commit in $BRANCH
   shGitSquashShift $RANGE || return $?
-  # 3. push the squashed $BRANCH to origin/$BRANCH
+  # 3. push squashed $BRANCH to origin/$BRANCH
   git push -f origin $BRANCH || return $?
 }
 
