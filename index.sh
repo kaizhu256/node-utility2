@@ -66,7 +66,7 @@ shBuildGithubUpload() {
   git commit -am "[skip ci] update gh-pages" || return $?
   git push origin gh-pages || return $?
   # if number of commits > $COMMIT_LIMIT, then squash HEAD to the earliest commit
-  shGitPushAndSquashAndPush gh-pages $COMMIT_LIMIT || return $?
+  shGitBackupAndSquashAndPush $COMMIT_LIMIT || return $?
 }
 
 shBuildPrint() {
@@ -96,20 +96,21 @@ shExitCodeSave() {
   cd $CWD || return $?
 }
 
-shGitPushAndSquashAndPush() {
+shGitBackupAndSquashAndPush() {
   # this function will, if number of commits > $COMMIT_LIMIT,
-  # 1. push the current $BRANCH to origin/$BRANCH.backup
-  # 2. squash the HEAD to the first commit
-  # 3. push the squashed $BRANCH to origin/$BRANCH
-  local BRANCH=$1 || return $?
-  local COMMIT_LIMIT=$2 || return $?
+  # 1. push current $BRANCH to origin/$BRANCH.backup
+  # 2. squash $RANGE to the first commit
+  # 3. push squashed $BRANCH to origin/$BRANCH
+  local BRANCH=$(git rev-parse --abbrev-ref HEAD) || return $?
+  local COMMIT_LIMIT=$1 || return $?
+  local RANGE=$(($COMMIT_LIMIT/2)) || return $?
   # if number of commits > $COMMIT_LIMIT
   if [ "$COMMIT_LIMIT" ] && [ $(git rev-list HEAD --count) -gt $COMMIT_LIMIT ]
   then
     # 1. push the current $BRANCH to $BRANCH.backup
     git push -f origin $BRANCH:$BRANCH.backup || return $?
     # 2. squash the HEAD to the first commit
-    shGitSquashPop $(git rev-list --max-parents=0 HEAD) || return $?
+    shGitSquashShift $RANGE || return $?
     # 3. push the squashed $BRANCH to origin/$BRANCH
     git push -f origin $BRANCH || return $?
   fi
