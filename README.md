@@ -169,6 +169,11 @@ shBuild() {
     export HEROKU_REPO=hrku01-utility2-$CI_BRANCH || return $?
     export TEST_URL="https://hrku01-utility2-$CI_BRANCH.herokuapp.com" || return $?
     export TEST_URL="$TEST_URL?modeTest=phantom&_testSecret={{_testSecret}}" || return $?
+    # create package-content listing
+    MODE_BUILD=gitLsTree shRunScreenCapture git ls-tree --abbrev=8 --full-name -l -r HEAD ||\
+      return $?
+    # create recent changelog of last 50 commits
+    MODE_BUILD=gitLog shRunScreenCapture git log -50 --pretty="%ai\u0020%s" || return $?
   fi
   # init env
   . ./index.sh && shInit || return $?
@@ -176,19 +181,14 @@ shBuild() {
   shRun shNpmTestPublished || return $?
   # test example script
   MODE_BUILD=testExampleJs shRunScreenCapture shTestScriptJs example.js || return $?
-  # copy phantomjs screen-capture to .tmp/build
-  cp /tmp/app/.tmp/build/screen-capture.* .tmp/build || return $?
+  # copy phantomjs screen-capture to $npm_package_dir_build
+  cp /tmp/app/.tmp/build/screen-capture.* $npm_package_dir_build || return $?
   # run npm test
   MODE_BUILD=npmTest shRunScreenCapture npm test || return $?
   # deploy to heroku
   if [ "$TRAVIS" ]
   then
     shRun shTestHeroku || return $?
-    # create package-content listing
-    MODE_BUILD=gitLsTree shRunScreenCapture git ls-tree --abbrev=8 --full-name -l -r HEAD ||\
-      return $?
-    # create recent changelog of last 50 commits
-    MODE_BUILD=gitLog shRunScreenCapture git log -50 --pretty="%ai\u0020%s" || return $?
   fi
 }
 # run build
