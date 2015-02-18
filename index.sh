@@ -504,15 +504,17 @@ shTestScriptJs() {
   # cd /tmp/app
   cd /tmp/app || return $?
   # read and parse script from README.md
-  node -e "var data, match;
-    data = require('fs').readFileSync('$CWD/README.md', 'utf8');
-    match = (/\`\`\`(\n\/\/ $FILE\n[\S\s]+?)\`\`\`/).exec(data);
-    // save script to file
-    require('fs').writeFileSync(
-      '$FILE',
-      // preserve lineno
-      data.slice(0, match.index).replace((/.*/g), '') + match[1]
-    );" || return $?
+  node -e "require('fs').readFileSync('$CWD/README.md', 'utf8').replace(
+    (/\n\`\`\`\n\/\*\n *$FILE\n[\S\s]+?\n\`\`\`/),
+    function (match0, index, data) {
+      // save script to file
+      require('fs').writeFileSync(
+        '$FILE',
+        // preserve lineno
+        data.slice(0, match0.index).replace((/.*/g), '') + match0.slice(4, -4)
+      );
+    }
+  );" || return $?
   # jslint $FILE
   local SCRIPT || return $?
   if [ ! "$npm_config_mode_no_jslint" ]
@@ -527,9 +529,9 @@ shTestScriptJs() {
   eval "$SCRIPT" || :
   # test $FILE
   SCRIPT=$(node -e "console.log(
-    (/ \\$ (.*)/).exec(
+    (/\n *\\$ ([\S\s]+?[^\\\\])\n/).exec(
       require('fs').readFileSync('$FILE', 'utf8')
-    )[1]
+    )[1].replace((/\\\\\n */g), ' ')
   );") || return $?
   if [ "$MODE_OFFLINE" ]
   then

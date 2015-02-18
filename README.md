@@ -23,12 +23,15 @@ lightweight nodejs module that runs phantomjs tests with browser code-coverage (
 
 ## quickstart
 ```
-// example.js
-// this example nodejs script runs browser and server tests with code-coverage
-// 1. create a clean app directory (e.g /tmp/app)
-// 2. inside app directory, save this js script as example.js
-// 3. inside app directory, run the following shell command:
-//    $ npm install utility2 && node_modules/.bin/utility2 shRun shNpmTest example.js
+/*
+  example.js
+  this example nodejs script runs browser and server tests with code-coverage
+  1. create a clean app directory (e.g /tmp/app)
+  2. inside app directory, save this js script as example.js
+  3. inside app directory, run the following shell command:
+     $ npm install phantomjs-lite utility2 &&\
+       node_modules/.bin/utility2 shRun shNpmTest example.js
+*/
 /*jslint
   browser: true,
   indent: 2,
@@ -89,11 +92,11 @@ lightweight nodejs module that runs phantomjs tests with browser code-coverage (
     // require modules
     local.utility2 = require('utility2');
     // init tests
-    local._testPhantom_default_test = function (onError) {
+    local._phantomTest_default_test = function (onError) {
       /*
         this function will spawn phantomjs to test the test-webpage
       */
-      local.utility2.testPhantom({
+      local.utility2.phantomTest({
         url: 'http://localhost:' + process.env.npm_config_server_port +
           '/test/test.html?modeTest=phantom'
       }, onError);
@@ -140,7 +143,6 @@ lightweight nodejs module that runs phantomjs tests with browser code-coverage (
 ## npm dependencies
 - [istanbul-lite](https://www.npmjs.com/package/istanbul-lite)
 - [jslint-lite](https://www.npmjs.com/package/jslint-lite)
-- [phantomjs-lite](https://www.npmjs.com/package/phantomjs-lite)
 
 
 
