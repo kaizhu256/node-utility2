@@ -191,7 +191,7 @@ shInit() {
   # init $PATH with $CWD/node_modules/.bin
   export PATH=$CWD/node_modules/phantomjs-lite:$CWD/node_modules/.bin:$PATH || return $?
   # init $npm_package_*
-  export npm_package_description=${npm_package_description-undefined} || return $?
+  export npm_package_description="${npm_package_description-undefined}" || return $?
   export npm_package_dir_build_local=$CWD/.tmp/build || return $?
   export npm_package_dir_tmp_local=$CWD/.tmp || return $?
   export npm_package_file_tmp_local=$CWD/.tmp/tmpfile || return $?
