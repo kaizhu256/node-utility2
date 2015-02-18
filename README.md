@@ -165,6 +165,7 @@ shBuild() {
   # init $TRAVIS env
   if [ "$TRAVIS" ]
   then
+    export GITHUB_REPO=kaizhu256/node-utility2 || return $?
     export HEROKU_REPO=hrku01-utility2-$CI_BRANCH || return $?
     export TEST_URL="https://hrku01-utility2-$CI_BRANCH.herokuapp.com" || return $?
     export TEST_URL="$TEST_URL?modeTest=phantom&_testSecret={{_testSecret}}" || return $?

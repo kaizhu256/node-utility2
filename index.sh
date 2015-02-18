@@ -207,8 +207,6 @@ shInit() {
   then
     export GIT_SSH=$DIRNAME/git-ssh.sh || return $?
   fi
-  # init $GITHUB_REPO
-  export GITHUB_REPO=$npm_package_repository_url || return $?
   # init $ISTANBUL
   export ISTANBUL=$(cd $DIRNAME &&\
     node -e "console.log(require('istanbul-lite').__dirname)")/index.js || return $?
