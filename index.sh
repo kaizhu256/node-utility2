@@ -62,17 +62,12 @@ shBuildGithubUpload() {
   # init .git/config
   printf "\n[user]\nname=nobody\nemail=nobody" >> .git/config || return $?
   # update gh-pages
-  shBuildGithubUploadCleanup || return $?
+  debugprint=1 rm -r ..alpha..travis-ci.org ..beta..travis-ci.org || return $?
   git add -A || return $?
   git commit -am "[skip ci] update gh-pages" || return $?
   git push origin gh-pages || return $?
   # if number of commits > $COMMIT_LIMIT, then squash HEAD to the earliest commit
   shGitBackupAndSquashAndPush $COMMIT_LIMIT || return $?
-}
-
-shBuildGithubUploadCleanup() {
-  # this function will be overridden by the user to cleanup gh-pages
-  return
 }
 
 shBuildPrint() {
