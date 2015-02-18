@@ -10,14 +10,14 @@ lightweight nodejs module that runs phantomjs tests with browser code-coverage (
 
 | git branch | test-server | test-report | coverage-report | build artifact |
 |:----------:|:-----------:|:-----------:|:---------------:|:--------------:|
-|[master](https://github.com/kaizhu256/node-utility2/tree/master) | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/build/heroku-logo.75x25.png)](https://hrku01-utility2-master.herokuapp.com/?modeTest=1) | [![test-report](https://kaizhu256.github.io/node-utility2/build//branch/master/travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build//branch/master/travis-ci.org/test-report.html) | [![istanbul-lite coverage-report](https://kaizhu256.github.io/node-utility2/build//branch/master/travis-ci.org/coverage-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build//branch/master/travis-ci.org/coverage-report.html/node-utility2/index.html) | [![build artifacts](https://kaizhu256.github.io/node-utility2/build/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build//branch/master/travis-ci.org)|
-|[beta](https://github.com/kaizhu256/node-utility2/tree/beta) | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/build/heroku-logo.75x25.png)](https://hrku01-utility2-beta.herokuapp.com/?modeTest=1) | [![test-report](https://kaizhu256.github.io/node-utility2/build//branch/beta/travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build//branch/beta/travis-ci.org/test-report.html) | [![istanbul-lite coverage-report](https://kaizhu256.github.io/node-utility2/build//branch/beta/travis-ci.org/coverage-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build//branch/beta/travis-ci.org/coverage-report.html/node-utility2/index.html) | [![build artifacts](https://kaizhu256.github.io/node-utility2/build/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build//branch/beta/travis-ci.org)|
-|[alpha](https://github.com/kaizhu256/node-utility2/tree/alpha) | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/build/heroku-logo.75x25.png)](https://hrku01-utility2-alpha.herokuapp.com/?modeTest=1) | [![test-report](https://kaizhu256.github.io/node-utility2/build//branch/alpha/travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build//branch/alpha/travis-ci.org/test-report.html) | [![istanbul-lite coverage-report](https://kaizhu256.github.io/node-utility2/build//branch/alpha/travis-ci.org/coverage-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build//branch/alpha/travis-ci.org/coverage-report.html/node-utility2/index.html) | [![build artifacts](https://kaizhu256.github.io/node-utility2/build/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build//branch/alpha/travis-ci.org)|
+|[master](https://github.com/kaizhu256/node-utility2/tree/master) | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/build/heroku-logo.75x25.png)](https://hrku01-utility2-master.herokuapp.com/?modeTest=1) | [![test-report](https://kaizhu256.github.io/node-utility2/build/branch/master/travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build/branch/master/travis-ci.org/test-report.html) | [![istanbul-lite coverage-report](https://kaizhu256.github.io/node-utility2/build/branch/master/travis-ci.org/coverage-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build/branch/master/travis-ci.org/coverage-report.html/node-utility2/index.html) | [![build artifacts](https://kaizhu256.github.io/node-utility2/build/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build/branch/master/travis-ci.org)|
+|[beta](https://github.com/kaizhu256/node-utility2/tree/beta) | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/build/heroku-logo.75x25.png)](https://hrku01-utility2-beta.herokuapp.com/?modeTest=1) | [![test-report](https://kaizhu256.github.io/node-utility2/build/branch/beta/travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build/branch/beta/travis-ci.org/test-report.html) | [![istanbul-lite coverage-report](https://kaizhu256.github.io/node-utility2/build/branch/beta/travis-ci.org/coverage-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build/branch/beta/travis-ci.org/coverage-report.html/node-utility2/index.html) | [![build artifacts](https://kaizhu256.github.io/node-utility2/build/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build/branch/beta/travis-ci.org)|
+|[alpha](https://github.com/kaizhu256/node-utility2/tree/alpha) | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/build/heroku-logo.75x25.png)](https://hrku01-utility2-alpha.herokuapp.com/?modeTest=1) | [![test-report](https://kaizhu256.github.io/node-utility2/build/branch/alpha/travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build/branch/alpha/travis-ci.org/test-report.html) | [![istanbul-lite coverage-report](https://kaizhu256.github.io/node-utility2/build/branch/alpha/travis-ci.org/coverage-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build/branch/alpha/travis-ci.org/coverage-report.html/node-utility2/index.html) | [![build artifacts](https://kaizhu256.github.io/node-utility2/build/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build/branch/alpha/travis-ci.org)|
 
 
 
 ## live test-server
-[![heroku.com test-server](https://kaizhu256.github.io/node-utility2/build/screen-capture.testHeroku.phantomjs.png)](https://hrku01-utility2-beta.herokuapp.com/?modeTest=1)
+[![heroku.com test-server](https://kaizhu256.github.io/node-utility2/build/screen-capture.testHeroku.slimerjs.png)](https://hrku01-utility2-beta.herokuapp.com/?modeTest=1)
 
 
 
@@ -97,8 +97,7 @@ lightweight nodejs module that runs phantomjs tests with browser code-coverage (
         this function will spawn phantomjs to test the test-webpage
       */
       local.utility2.phantomTest({
-        url: 'http://localhost:' + process.env.npm_config_server_port +
-          '/test/test.html?modeTest=phantom'
+        url: 'http://localhost:' + process.env.npm_config_server_port + '?modeTest=phantom'
       }, onError);
     };
     // web-serve example.js as /test/test.js
@@ -118,6 +117,13 @@ lightweight nodejs module that runs phantomjs tests with browser code-coverage (
         // nop hack to pass jslint
         local.utility2.nop(request);
         switch (request.urlPathNormalized) {
+        // serve main-page
+        case '/':
+          exports.serverRespondWriteHead(request, response, 303, {
+            'Location': request.url.replace('/', '/test/test.html')
+          });
+          response.end();
+          break;
         // test http GET handling behavior
         case '/test/hello':
           response.end('hello');
@@ -135,8 +141,8 @@ lightweight nodejs module that runs phantomjs tests with browser code-coverage (
 }());
 ```
 #### output
-![screen-capture](https://kaizhu256.github.io/node-utility2/build//screen-capture.testExampleJs.png)
-![screen-capture](https://kaizhu256.github.io/node-utility2/build//screen-capture.testExampleJs.phantomjs.png)
+![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleJs.png)
+![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleJs.slimerjs.png)
 
 
 
@@ -210,4 +216,4 @@ exit $EXIT_CODE
 
 
 ## recent changelog of last 50 commits
-![screen-capture](https://kaizhu256.github.io/node-utility2/build//screen-capture.gitLog.png)
+![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.gitLog.png)
