@@ -215,8 +215,8 @@ shInit() {
       dict = require('./package.json');
       Object.keys(dict).forEach(function (key) {
         value = dict[key];
-        if ((/[^\n]/).test(value)) {
-          process.stdout.write('export npm_package_' + key + '=' + JSON.stringify(value + ';'));
+        if (typeof value === 'string' && value.indexOf('\n') === -1) {
+          process.stdout.write('export npm_package_' + key + '=' + JSON.stringify(value) + ';');
         }
       });
       value = (/\bgithub\.com\/(.*)\.git\$/).exec(dict.repository && dict.repository.url);
