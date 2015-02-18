@@ -202,7 +202,7 @@ then
 fi
 shBuildGithubUploadCleanup() {
   # this function will cleanup gh-pages
-  rm -r ..alpha..travis-ci.org ..beta..travis-ci.org || return $?
+  return
 }
 # exit with $EXIT_CODE
 exit $EXIT_CODE

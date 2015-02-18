@@ -66,8 +66,8 @@ shBuildGithubUpload() {
   git add -A || return $?
   git commit -am "[skip ci] update gh-pages" || return $?
   git push origin gh-pages || return $?
-  #!! # if number of commits > $COMMIT_LIMIT, then squash HEAD to the earliest commit
-  #!! shGitBackupAndSquashAndPush $COMMIT_LIMIT || return $?
+  # if number of commits > $COMMIT_LIMIT, then squash HEAD to the earliest commit
+  shGitBackupAndSquashAndPush $COMMIT_LIMIT || return $?
 }
 
 shBuildGithubUploadCleanup() {
@@ -471,10 +471,6 @@ shTestHeroku() {
   git init || return $?
   # init .git/config
   printf "\n[user]\nname=nobody\nemail=nobody\n" > .git/config || return $?
-  # rm .gitignore so we can git add everything
-  rm -f .gitignore || return $?
-  # git add everything
-  git add . || return $?
   # init Procfile
   node -e "var fs;
     fs = require('fs');
@@ -482,8 +478,12 @@ shTestHeroku() {
       'Procfile',
       require('$DIRNAME').textFormat(fs.readFileSync('Procfile', 'utf8'), process.env)
     );"
+  # rm .gitignore so we can git add everything
+  rm -f .gitignore || return $?
+  # git add everything
+  git add . || return $?
   # git commit
-  git commit -amq "heroku deploy" || return $?
+  git commit -aqm "heroku deploy" || return $?
   # deploy the app to heroku
   git push -f git@heroku.com:$HEROKU_REPO.git HEAD:master || return $?
   # save $EXIT_CODE and restore $CWD
