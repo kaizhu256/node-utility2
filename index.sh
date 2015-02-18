@@ -34,8 +34,6 @@ shBuildGithubUpload() {
   # this function will upload build-artifacts to github
   shBuildPrint githubUpload\
     "uploading build-artifacts to git@github.com:$GITHUB_REPO.git ..." || return $?
-  #!! # cleanup $npm_package_dir_build
-  #!! find $npm_package_dir_build -path "*.json" -print0 | xargs -0 rm -f || return $?
   # add black border around phantomjs screen-capture
   local FILE_LIST="$(ls\
     $npm_package_dir_build/screen-capture.*.phantomjs*.png\
@@ -51,14 +49,13 @@ shBuildGithubUpload() {
   fi
   # clone gh-pages branch
   rm -fr $npm_package_dir_tmp/gh-pages || return $?
-  cd $npm_package_dir_tmp && git clone git@github.com:$GITHUB_REPO.git\
+  git clone git@github.com:$GITHUB_REPO.git\
     --branch=gh-pages --single-branch $npm_package_dir_tmp/gh-pages || return $?
   cd $npm_package_dir_tmp/gh-pages || return $?
-  # copy build-artifacts to $DIR
-  for DIR in build build..$CI_BRANCH..$CI_HOST
-  do
-    mkdir -p $DIR && rm -fr $DIR && cp -a $npm_package_dir_build $DIR || return $?
-  done
+  # copy build-artifacts to gh-pages
+  cp -a $npm_package_dir_build . || return $?
+  local DIR=build..$CI_BRANCH..$CI_HOST || return $?
+  rm -fr $DIR && cp -a $npm_package_dir_build $DIR || return $?
   # init .git/config
   printf "\n[user]\nname=nobody\nemail=nobody" >> .git/config || return $?
   # update gh-pages
@@ -115,6 +112,14 @@ shGitBackupAndSquashAndPush() {
   shGitSquashShift $RANGE || return $?
   # 3. push the squashed $BRANCH to origin/$BRANCH
   git push -f origin $BRANCH || return $?
+}
+
+shGitLsTree() {
+  # this function will list all files committed to HEAD
+  git ls-tree --name-only -r HEAD | while read file
+  do
+    printf "$(git log -1 --format="%ai" -- $file) $(wc -c $file)\n" || return $?
+  done
 }
 
 shGitSquashPop() {
@@ -459,8 +464,6 @@ shTestHeroku() {
   shBuildPrint testHeroku "deploying to https://$HEROKU_HOSTNAME ..." || return $?
   # init clean repo in /tmp/app
   shTmpAppCopy && cd /tmp/app || return $?
-  #!! # npm install dependencies
-  #!! rm -fr /tmp/node_modules && npm install || return $?
   # init .git
   git init || return $?
   # init .git/config

@@ -170,8 +170,7 @@ shBuild() {
     export TEST_URL="https://hrku01-utility2-$CI_BRANCH.herokuapp.com" || return $?
     export TEST_URL="$TEST_URL?modeTest=phantom&_testSecret={{_testSecret}}" || return $?
     # create package-content listing
-    MODE_BUILD=gitLsTree shRunScreenCapture git ls-tree --abbrev=8 --full-name -l -r HEAD ||\
-      return $?
+    MODE_BUILD=gitLsTree shRunScreenCapture shGitLsTree || return $?
     # create recent changelog of last 50 commits
     MODE_BUILD=gitLog shRunScreenCapture git log -50 --pretty="%ai\u0020%s" || return $?
   fi
@@ -207,7 +206,6 @@ exit $EXIT_CODE
 
 
 ## todo
-- add date to package-content listing
 - rename build dir to build.<branch>.<host>
 - merge testRunServer into testRun
 - revamp phantomTest
