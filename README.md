@@ -208,7 +208,7 @@ exit $EXIT_CODE
 
 ## todo
 - add date to package-content listing
-- rename build dir to .tmp/build.<branch>.<host>
+- rename build dir to build.<branch>.<host>
 - merge testRunServer into testRun
 - revamp phantomTest
 - explicitly require slimerjs instead of auto-detecting it

@@ -34,8 +34,8 @@ shBuildGithubUpload() {
   # this function will upload build-artifacts to github
   shBuildPrint githubUpload\
     "uploading build-artifacts to git@github.com:$GITHUB_REPO.git ..." || return $?
-  # cleanup $npm_package_dir_build
-  find $npm_package_dir_build -path "*.json" -print0 | xargs -0 rm -f || return $?
+  #!! # cleanup $npm_package_dir_build
+  #!! find $npm_package_dir_build -path "*.json" -print0 | xargs -0 rm -f || return $?
   # add black border around phantomjs screen-capture
   local FILE_LIST="$(ls\
     $npm_package_dir_build/screen-capture.*.phantomjs*.png\
@@ -55,7 +55,7 @@ shBuildGithubUpload() {
     --branch=gh-pages --single-branch $npm_package_dir_tmp/gh-pages || return $?
   cd $npm_package_dir_tmp/gh-pages || return $?
   # copy build-artifacts to $DIR
-  for DIR in build $build..$CI_BRANCH..$CI_HOST
+  for DIR in build build..$CI_BRANCH..$CI_HOST
   do
     mkdir -p $DIR && rm -fr $DIR && cp -a $npm_package_dir_build $DIR || return $?
   done
