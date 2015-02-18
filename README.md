@@ -4,7 +4,7 @@ lightweight nodejs module that runs phantomjs browser-tests with code-coverage (
 
 
 
-## build status [![travis-ci.org build status](https://api.travis-ci.org/kaizhu256/node-utility2.svg)](https://travis-ci.org/kaizhu256/node-utility2) ![codeship.io build status](https://codeship.com/projects/df8f44c0-2ee3-0132-0af5-6a016ae0b812/status)
+## build-status [![travis-ci.org build-status](https://api.travis-ci.org/kaizhu256/node-utility2.svg)](https://travis-ci.org/kaizhu256/node-utility2) ![codeship.io build-status](https://codeship.com/projects/df8f44c0-2ee3-0132-0af5-6a016ae0b812/status)
 
 [![build commit status](https://kaizhu256.github.io/node-utility2/build/build.badge.svg)](https://travis-ci.org/kaizhu256/node-utility2)
 
@@ -146,13 +146,13 @@ lightweight nodejs module that runs phantomjs browser-tests with code-coverage (
 
 
 
-## npm dependencies
+## npm-dependencies
 - [istanbul-lite](https://www.npmjs.com/package/istanbul-lite)
 - [jslint-lite](https://www.npmjs.com/package/jslint-lite)
 
 
 
-## package content listing
+## package-content listing
 [![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.gitLsTree.png)](https://github.com/kaizhu256/node-utility2)
 
 
@@ -183,7 +183,7 @@ shBuild() {
   if [ "$TRAVIS" ]
   then
     shRun shTestHeroku || return $?
-    # create package content listing
+    # create package-content listing
     MODE_BUILD=gitLsTree shRunScreenCapture git ls-tree --abbrev=8 --full-name -l -r HEAD ||\
       return $?
     # create recent changelog of last 50 commits
@@ -206,6 +206,7 @@ exit $EXIT_CODE
 
 
 ## todo
+- add date to package-content listing
 - rename build dir to .tmp/build.<branch>.<host>
 - merge testRunServer into testRun
 - revamp phantomTest
