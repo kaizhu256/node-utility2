@@ -24,22 +24,22 @@ shAesEncrypt() {
 
 shBuild() {
   # this function will run the build script in README.md
-  # init $npm_package_dir_build_local
-  mkdir -p $npm_package_dir_build_local/coverage-report.html || return $?
+  # init $npm_package_dir_build
+  mkdir -p $npm_package_dir_build/coverage-report.html || return $?
   # run script from README.md
-  MODE_BUILD=build shTestScriptSh $npm_package_dir_tmp_local/build.sh || return $?
+  MODE_BUILD=build shTestScriptSh $npm_package_dir_tmp/build.sh || return $?
 }
 
 shBuildGithubUpload() {
   # this function will upload build-artifacts to github
   shBuildPrint githubUpload\
     "uploading build-artifacts to git@github.com:$GITHUB_REPO.git ..." || return $?
-  # cleanup $npm_package_dir_build_local
-  find $npm_package_dir_build_local -path "*.json" -print0 | xargs -0 rm -f || return $?
+  # cleanup $npm_package_dir_build
+  find $npm_package_dir_build -path "*.json" -print0 | xargs -0 rm -f || return $?
   # add black border around phantomjs screen-capture
   local FILE_LIST="$(ls\
-    $npm_package_dir_build_local/screen-capture.*.phantomjs*.png\
-    $npm_package_dir_build_local/screen-capture.*.slimerjs*.png\
+    $npm_package_dir_build/screen-capture.*.phantomjs*.png\
+    $npm_package_dir_build/screen-capture.*.slimerjs*.png\
     2>/dev/null)" || return $?
   if [ "$FILE_LIST" ] && (mogrify --version > /dev/null 2>&1)
   then
@@ -50,14 +50,14 @@ shBuildGithubUpload() {
     return
   fi
   # clone gh-pages branch
-  rm -fr $npm_package_dir_tmp_local/gh-pages || return $?
-  cd $npm_package_dir_tmp_local && git clone git@github.com:$GITHUB_REPO.git\
-    --branch=gh-pages --single-branch $npm_package_dir_tmp_local/gh-pages || return $?
-  cd $npm_package_dir_tmp_local/gh-pages || return $?
+  rm -fr $npm_package_dir_tmp/gh-pages || return $?
+  cd $npm_package_dir_tmp && git clone git@github.com:$GITHUB_REPO.git\
+    --branch=gh-pages --single-branch $npm_package_dir_tmp/gh-pages || return $?
+  cd $npm_package_dir_tmp/gh-pages || return $?
   # copy build-artifacts to $DIR
-  for DIR in build $npm_package_dir_build_remote
+  for DIR in build $build..$CI_BRANCH..$CI_HOST
   do
-    mkdir -p $DIR && rm -fr $DIR && cp -a $npm_package_dir_build_local $DIR || return $?
+    mkdir -p $DIR && rm -fr $DIR && cp -a $npm_package_dir_build $DIR || return $?
   done
   # init .git/config
   printf "\n[user]\nname=nobody\nemail=nobody" >> .git/config || return $?
@@ -88,7 +88,7 @@ shExitCodeSave() {
   then
     EXIT_CODE=$1 || return $?
   fi
-  if [ -d $npm_package_dir_tmp_local ]
+  if [ -d $npm_package_dir_tmp ]
   then
     printf "$EXIT_CODE" > $npm_package_file_tmp_local || return $?
   fi
@@ -162,13 +162,13 @@ shInit() {
     # init codeship.io env
     if [ "$CI_NAME" = "codeship" ]
     then
-      export npm_package_dir_build_remote=codeship.io || return $?
+      export CI_HOST=codeship.io || return $?
     # init travis-ci.org env
     elif [ "$TRAVIS" ]
     then
-      export npm_package_dir_build_remote=travis-ci.org || return $?
       export CI_BRANCH=$TRAVIS_BRANCH || return $?
       export CI_COMMIT_ID=$TRAVIS_COMMIT || return $?
+      export CI_HOST=travis-ci.org || return $?
       # decrypt and exec encrypted data
       if [ "$AES_256_KEY" ]
       then
@@ -176,12 +176,10 @@ shInit() {
       fi
     # init default env
     else
-      export npm_package_dir_build_remote=localhost || return $?
       export CI_BRANCH=undefined || return $?
       export CI_COMMIT_ID=$(git rev-parse --verify HEAD) || return $?
+      export CI_HOST=localhost || return $?
     fi
-    export npm_package_dir_build_remote="build..$CI_BRANCH..$npm_package_dir_build_remote" ||\
-      return $?
     # init $CI_COMMIT_*
     export CI_COMMIT_MESSAGE="$(git log -1 --pretty=%s)" || return $?
     export CI_COMMIT_INFO="$CI_COMMIT_ID - $CI_COMMIT_MESSAGE" || return $?
@@ -192,8 +190,8 @@ shInit() {
   export PATH=$CWD/node_modules/phantomjs-lite:$CWD/node_modules/.bin:$PATH || return $?
   # init $npm_package_*
   export npm_package_description="${npm_package_description-undefined}" || return $?
-  export npm_package_dir_build_local=$CWD/.tmp/build || return $?
-  export npm_package_dir_tmp_local=$CWD/.tmp || return $?
+  export npm_package_dir_build=$CWD/.tmp/build || return $?
+  export npm_package_dir_tmp=$CWD/.tmp || return $?
   export npm_package_file_tmp_local=$CWD/.tmp/tmpfile || return $?
   export npm_package_name=${npm_package_name-undefined} || return $?
   export npm_package_version=${npm_package_version-undefined} || return $?
@@ -204,53 +202,55 @@ shInit() {
   else
     export DIRNAME=$(node -e "console.log(require('utility2').__dirname);") || return $?
   fi
+  # init $GIT_SSH
+  if [ "$GIT_SSH_KEY" ]
+  then
+    export GIT_SSH=$DIRNAME/git-ssh.sh || return $?
+  fi
+  # init $GITHUB_REPO
+  export GITHUB_REPO=$npm_package_repository_url || return $?
   # init $ISTANBUL
   export ISTANBUL=$(cd $DIRNAME &&\
     node -e "console.log(require('istanbul-lite').__dirname)")/index.js || return $?
   # init $PHANTOMJS_LITE
   export PHANTOMJS_LITE=$(cd $DIRNAME &&\
     node -e "console.log(require('phantomjs-lite').__dirname)")/phantomjs || return $?
-  # init $GIT_SSH
-  if [ "$GIT_SSH_KEY" ]
-  then
-    export GIT_SSH=$DIRNAME/git-ssh.sh || return $?
-  fi
 }
 
 shIstanbulCover() {
   # this function will run the command $@ with istanbul code-coverage
-  npm_config_coverage_report_dir="$npm_package_dir_build_local/coverage-report.html"\
+  npm_config_coverage_report_dir="$npm_package_dir_build/coverage-report.html"\
     $ISTANBUL cover $@ || return $?
 }
 
 shIstanbulReport() {
   # this function will
-  # 1. merge $COVERAGE into $npm_package_dir_build_local/coverage-report.html/coverage.json
-  # 2. create $npm_package_dir_build_local/coverage-report.html
+  # 1. merge $COVERAGE into $npm_package_dir_build/coverage-report.html/coverage.json
+  # 2. create $npm_package_dir_build/coverage-report.html
   local COVERAGE=$1 || return $?
-  # 1. merge $COVERAGE into $npm_package_dir_build_local/coverage-report.html/coverage.json
+  # 1. merge $COVERAGE into $npm_package_dir_build/coverage-report.html/coverage.json
   if [ "$COVERAGE" ]
   then
     node -e "var fs;
       fs = require('fs');
       fs.writeFileSync(
-        '$npm_package_dir_build_local/coverage-report.html/coverage.json',
+        '$npm_package_dir_build/coverage-report.html/coverage.json',
         JSON.stringify(require('$DIRNAME').istanbulMerge(
-          require('$npm_package_dir_build_local/coverage-report.html/coverage.json'),
+          require('$npm_package_dir_build/coverage-report.html/coverage.json'),
           require('./$COVERAGE')
         ))
       );" || return $?
   fi
-  # 2. create $npm_package_dir_build_local/coverage-report.html
-  npm_config_coverage_report_dir="$npm_package_dir_build_local/coverage-report.html"\
+  # 2. create $npm_package_dir_build/coverage-report.html
+  npm_config_coverage_report_dir="$npm_package_dir_build/coverage-report.html"\
     $ISTANBUL report || return $?
 }
 
 shNpmTest() {
   # this function will run npm test
   shBuildPrint ${MODE_BUILD:-npmTest} "npm testing $CWD ..." || return $?
-  # init $npm_package_dir_build_local
-  mkdir -p $npm_package_dir_build_local/coverage-report.html || return $?
+  # init $npm_package_dir_build
+  mkdir -p $npm_package_dir_build/coverage-report.html || return $?
   # auto-detect slimerjs
   if [ ! "$npm_config_mode_slimerjs" ] && (slimerjs undefined > /dev/null 2>&1)
   then
@@ -267,18 +267,17 @@ shNpmTest() {
     return $?
   fi
   # cleanup old coverage
-  rm -f $npm_package_dir_build_local/coverage-report.html/coverage.* || return $?
+  rm -f $npm_package_dir_build/coverage-report.html/coverage.* || return $?
   # run npm test with coverage
   shIstanbulCover $@
   # save $EXIT_CODE and restore $CWD
   shExitCodeSave $? || return $?
   # create coverage-report
   shIstanbulReport || return $?
-  printf "\ncreated test-report file://$npm_package_dir_build_local/test-report.html\n" ||\
-    return $?
+  printf "\ncreated test-report file://$npm_package_dir_build/test-report.html\n" || return $?
   # create coverage-report badge
   node -e "var coverage, percent;
-    coverage = require('$npm_package_dir_build_local/coverage-report.html/coverage.json');
+    coverage = require('$npm_package_dir_build/coverage-report.html/coverage.json');
     percent = [0, 0];
     Object.keys(coverage).forEach(function (file) {
       file = coverage[file];
@@ -289,7 +288,7 @@ shNpmTest() {
     });
     percent = Math.floor((100000 * percent[0] / percent[1] + 5) / 10) / 100;
     require('fs').writeFileSync(
-      '$npm_package_dir_build_local/coverage-report.badge.svg',
+      '$npm_package_dir_build/coverage-report.badge.svg',
       '"'<svg xmlns="http://www.w3.org/2000/svg" width="117" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="117" height="20" fill="#555"/><rect rx="0" x="63" width="54" height="20" fill="#0d0"/><path fill="#0d0" d="M63 0h4v20h-4z"/><rect rx="0" width="117" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="32.5" y="15" fill="#010101" fill-opacity=".3">coverage</text><text x="32.5" y="14">coverage</text><text x="89" y="15" fill="#010101" fill-opacity=".3">100.0%</text><text x="89" y="14">100.0%</text></g></svg>'"'
         // edit coverage badge percent
         .replace((/100.0/g), percent)
@@ -338,7 +337,7 @@ shPhantomTest() {
   fi
   node -e "var local;
     local = require('$DIRNAME');
-    local.testReport = require('$npm_package_dir_build_local/test-report.json');
+    local.testReport = require('$npm_package_dir_build/test-report.json');
     local.phantomTest({
       modePhantom: '$MODE_PHANTOM',
       timeoutDefault: $TIMEOUT_DEFAULT,
@@ -349,7 +348,7 @@ shPhantomTest() {
         return;
       }
       local.fs.writeFileSync(
-        '$npm_package_dir_build_local/test-report.html',
+        '$npm_package_dir_build/test-report.html',
         local.testMerge(local.testReport, {})
       );
       process.exit(!!error);
@@ -397,16 +396,16 @@ shRun() {
 shRunScreenCapture() {
   # this function will run the command $@ and screen-capture the output
   # http://www.cnx-software.com/2011/09/22/how-to-convert-a-command-line-result-into-an-image-in-linux/
-  # init $npm_package_dir_build_local
-  mkdir -p $npm_package_dir_build_local/coverage-report.html || return $?
+  # init $npm_package_dir_build
+  mkdir -p $npm_package_dir_build/coverage-report.html || return $?
   export MODE_BUILD_SCREEN_CAPTURE=screen-capture.$MODE_BUILD.png
-  shRun $@ 2>&1 | tee $npm_package_dir_tmp_local/screen-capture.txt || return $?
+  shRun $@ 2>&1 | tee $npm_package_dir_tmp/screen-capture.txt || return $?
   # save $EXIT_CODE and restore $CWD
   shExitCodeSave $(cat $npm_package_file_tmp_local) || return $?
   # remove ansi escape code
   node -e "require('fs').writeFileSync(
-    '$npm_package_dir_tmp_local/screen-capture.txt',
-    require('fs').readFileSync('$npm_package_dir_tmp_local/screen-capture.txt', 'utf8')
+    '$npm_package_dir_tmp/screen-capture.txt',
+    require('fs').readFileSync('$npm_package_dir_tmp/screen-capture.txt', 'utf8')
       .replace((/\\\\u0020/g), ' ')
       .replace((/\u0009/g), '    ')
       .replace((/\u001b.*?m/g), '')
@@ -415,16 +414,16 @@ shRunScreenCapture() {
   if (convert -list font | grep "\bCourier\b" > /dev/null 2>&1) &&\
     (fold package.json > /dev/null 2>&1)
   then
-    # word-wrap $npm_package_dir_tmp_local/screen-capture.txt to 96 characters,
+    # word-wrap $npm_package_dir_tmp/screen-capture.txt to 96 characters,
     # and convert to png image
-    fold -w 96 $npm_package_dir_tmp_local/screen-capture.txt |\
+    fold -w 96 $npm_package_dir_tmp/screen-capture.txt |\
       convert -background gray25 -border 10 -bordercolor gray25\
       -depth 4\
       -fill palegreen -font Courier\
       -pointsize 12\
       -quality 90\
       -type Palette\
-      label:@- $npm_package_dir_build_local/$MODE_BUILD_SCREEN_CAPTURE || return $?
+      label:@- $npm_package_dir_build/$MODE_BUILD_SCREEN_CAPTURE || return $?
   fi
   return $EXIT_CODE
 }
@@ -569,8 +568,8 @@ shTravisDecryptYml() {
 
 shTravisEncrypt() {
   # this function will travis-encrypt github repo $1's secret $2
-  # init $npm_package_dir_build_local dir
-  mkdir -p $npm_package_dir_build_local/coverage-report.html || return $?
+  # init $npm_package_dir_build dir
+  mkdir -p $npm_package_dir_build/coverage-report.html || return $?
   local GITHUB_REPO=$1 || return $?
   local SECRET=$2 || return $?
   # get public rsa key from https://api.travis-ci.org/repos/<owner>/<repo>/key

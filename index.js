@@ -595,7 +595,7 @@
         case 'node':
           // create build badge
           exports.fs.writeFileSync(
-            exports.envDict.npm_package_dir_build_local + '/build.badge.svg',
+            exports.envDict.npm_package_dir_build + '/build.badge.svg',
             exports.fileCacheDict['/build/build.badge.svg'].data
               // edit branch name
               .replace(
@@ -612,7 +612,7 @@
           );
           // create test-report.badge.svg
           exports.fs.writeFileSync(
-            exports.envDict.npm_package_dir_build_local + '/test-report.badge.svg',
+            exports.envDict.npm_package_dir_build + '/test-report.badge.svg',
             exports.fileCacheDict['/build/test-report.badge.svg'].data
               // edit number of tests failed
               .replace((/999/g), testReport.testsFailed)
@@ -625,12 +625,12 @@
           );
           // create test-report.html
           exports.fs.writeFileSync(
-            exports.envDict.npm_package_dir_build_local + '/test-report.html',
+            exports.envDict.npm_package_dir_build + '/test-report.html',
             testReportHtml
           );
           // create test-report.json
           exports.fs.writeFileSync(
-            exports.envDict.npm_package_dir_build_local + '/test-report.json',
+            exports.envDict.npm_package_dir_build + '/test-report.json',
             JSON.stringify(exports.testReport)
           );
           // if any test failed, then exit with non-zero exit-code
@@ -1093,14 +1093,14 @@
           argv0: argv0,
           argv1: argv1,
           fileCoverage:
-            exports.envDict.npm_package_dir_tmp_local + '/coverage.' + argv1 + '.json',
+            exports.envDict.npm_package_dir_tmp + '/coverage.' + argv1 + '.json',
           fileRender: (
-            exports.envDict.npm_package_dir_build_local + '/screen-capture.' + argv1 + '.png'
+            exports.envDict.npm_package_dir_build + '/screen-capture.' + argv1 + '.png'
           )
             .replace((/%/g), '_')
             .replace((/_2F.png$/), 'png'),
           fileTestReport:
-            exports.envDict.npm_package_dir_tmp_local + '/test-report.' + argv1 + '.json',
+            exports.envDict.npm_package_dir_tmp + '/test-report.' + argv1 + '.json',
           modePhantom: 'test'
         });
         onParallel.counter += 1;
@@ -1115,7 +1115,7 @@
         // cover index.js
         if (exports.__coverage__ && 'utility2' === exports.envDict.npm_package_name) {
           options.fileUtility2 =
-            exports.envDict.npm_package_dir_tmp_local + '/instrumented.utility2.js';
+            exports.envDict.npm_package_dir_tmp + '/instrumented.utility2.js';
         }
         // spawn phantomjs to test a url
         exports.child_process
@@ -1352,7 +1352,7 @@
       // save instrumented utility2.js to fs
       if (exports.__coverage__ && exports.envDict.npm_package_name === 'utility2') {
         exports.fs.writeFileSync(
-          exports.envDict.npm_package_dir_tmp_local + '/instrumented.utility2.js',
+          exports.envDict.npm_package_dir_tmp + '/instrumented.utility2.js',
           exports.fileCacheDict['/assets/utility2.js'].data
         );
       }
@@ -1617,8 +1617,8 @@
     // init exports properties
     exports.__dirname = __dirname;
     exports.envDict = process.env;
-    exports.envDict.npm_package_dir_build_local = process.cwd() + '/.tmp/build';
-    exports.envDict.npm_package_dir_tmp_local = process.cwd() + '/.tmp';
+    exports.envDict.npm_package_dir_build = process.cwd() + '/.tmp/build';
+    exports.envDict.npm_package_dir_tmp = process.cwd() + '/.tmp';
     exports.exit = process.exit;
     exports.global = global;
     // init _testSecret
