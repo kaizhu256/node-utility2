@@ -109,14 +109,14 @@ shGitPushAndSquashAndPush() {
     # 1. push the current $BRANCH to $BRANCH.backup
     git push -f origin $BRANCH:$BRANCH.backup || return $?
     # 2. squash the HEAD to the first commit
-    shGitSquash $(git rev-list --max-parents=0 HEAD) || return $?
+    shGitSquashPop $(git rev-list --max-parents=0 HEAD) || return $?
     # 3. push the squashed $BRANCH to origin/$BRANCH
     git push -f origin $BRANCH || return $?
   fi
 }
 
-shGitSquash() {
-  # this function will squash the HEAD to the specified commit $1
+shGitSquashPop() {
+  # this function will squash the HEAD to the specified $COMMIT
   # git squash
   # http://stackoverflow.com/questions/5189560/how-can-i-squash-my-last-x-commits-together-using-git
   local COMMIT=$1 || return $?
@@ -129,6 +129,18 @@ shGitSquash() {
   git merge --squash HEAD@{1} || return $?
   # commit HEAD immediately after previous $COMMIT
   git commit -am "$MESSAGE" || return $?
+}
+
+shGitSquashShift() {
+  # this function will squash $RANGE to the first commit
+  local BRANCH=$(git rev-parse --abbrev-ref HEAD) || return $?
+  local RANGE=$1 || return $?
+  git checkout --quiet HEAD~$RANGE || return $?
+  git reset --quiet $(git rev-list --max-parents=0 HEAD) || return $?
+  git add . > /dev/null || return $?
+  git commit -m squash || return $?
+  git cherry-pick --strategy=recursive -X theirs $BRANCH~$RANGE..$BRANCH || return $?
+  git push -f . HEAD:$BRANCH || return $?
 }
 
 shGrep() {
@@ -444,8 +456,8 @@ shTestHeroku() {
   shBuildPrint testHeroku "deploying to https://$HEROKU_HOSTNAME ..." || return $?
   # init clean repo in /tmp/app
   shTmpAppCopy && cd /tmp/app || return $?
-  # npm install dependencies
-  rm -fr /tmp/node_modules && npm install || return $?
+  #!! # npm install dependencies
+  #!! rm -fr /tmp/node_modules && npm install || return $?
   # init .git
   git init || return $?
   # init .git/config
@@ -462,7 +474,7 @@ shTestHeroku() {
       require('$DIRNAME').textFormat(fs.readFileSync('Procfile', 'utf8'), process.env)
     );"
   # git commit
-  git commit -am "heroku deploy" > /dev/null || return $?
+  git commit -amq "heroku deploy" || return $?
   # deploy the app to heroku
   git push -f git@heroku.com:$HEROKU_REPO.git HEAD:master || return $?
   # save $EXIT_CODE and restore $CWD
@@ -555,7 +567,7 @@ shTmpAppCopy() {
   # init /tmp/app
   rm -fr /tmp/app && mkdir -p /tmp/app || return $?
   # tar / untar repo contents to /tmp/app
-  git ls-tree -r HEAD --name-only | xargs tar -czf - | tar -C /tmp/app -xzvf - || return $?
+  git ls-tree --name-only -r HEAD | xargs tar -czf - | tar -C /tmp/app -xzvf - || return $?
 }
 
 shTravisDecryptYml() {
