@@ -193,7 +193,7 @@ shBuild() {
   then
     shRun shTestHeroku || return $?
     # if number of commits > 1000, then squash older commits
-    shRun shGitBackupAndSquashAndPush 1000 || return $?
+    shRun shGitBackupAndSquashAndPush 1000 > /dev/null || return $?
   fi
 }
 # run build

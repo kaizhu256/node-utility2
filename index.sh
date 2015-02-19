@@ -63,7 +63,7 @@ shBuildGithubUpload() {
   git commit -am "[skip ci] update gh-pages" || return $?
   git push origin gh-pages || return $?
   # if number of commits > $COMMIT_LIMIT, then squash HEAD to the earliest commit
-  shGitBackupAndSquashAndPush $COMMIT_LIMIT || return $?
+  shGitBackupAndSquashAndPush $COMMIT_LIMIT > /dev/null || return $?
 }
 
 shBuildPrint() {
@@ -368,7 +368,7 @@ shPhantomScreenCapture() {
 shPhantomTest() {
   # this function will spawn phantomjs to test the specified $URL,
   # and merge it into the existing test-report
-  local MODE_PHANTOM="${4-test}" || return $?
+  local MODE_PHANTOM="${4-testUrl}" || return $?
   local TIMEOUT_DEFAULT="${2-30000}" || return $?
   local TIMEOUT_SCREEN_CAPTURE="${3-2000}" || return $?
   local URL="$1" || return $?
