@@ -1179,11 +1179,12 @@
             break;
           }
           // run async shell command
-          exports.child_process.spawn(
-            '/bin/bash',
-            ['-c', match[2]],
-            { stdio: ['ignore', 1, 2] }
-          )
+          exports.child_process
+            .spawn(
+              '/bin/sh',
+              ['-c', '. ' + __dirname + '/index.sh && ' + match[2]],
+              { stdio: ['ignore', 1, 2] }
+            )
             // on shell exit, print return prompt
             .on('exit', function () {
               exports._replServer.evalDefault('\n', context, file, onError);
@@ -1192,24 +1193,25 @@
         // syntax sugar to grep current directory
         case 'grep':
           // run async shell command
-          exports.child_process.spawn(
-            '/bin/bash',
-            ['-c', 'find . -type f | grep -v "/\\.\\|.*\\b\\(\\.\\d\\|' +
-              'archive\\|artifacts\\|' +
-              'bower_components\\|build\\|' +
-              'coverage\\|' +
-              'docs\\|' +
-              'external\\|' +
-              'git_modules\\|' +
-              'jquery\\|' +
-              'log\\|logs\\|' +
-              'min\\|' +
-              'node_modules\\|' +
-              'rollup\\|' +
-              'swp\\|' +
-              'tmp\\)\\b" | tr "\\n" "\\000" | xargs -0 grep -in "' + match[2].trim() + '"'],
-            { stdio: ['ignore', 1, 2] }
-          )
+          exports.child_process
+            .spawn(
+              '/bin/sh',
+              ['-c', 'find . -type f | grep -v "/\\.\\|.*\\b\\(\\.\\d\\|' +
+                'archive\\|artifacts\\|' +
+                'bower_components\\|build\\|' +
+                'coverage\\|' +
+                'docs\\|' +
+                'external\\|' +
+                'git_modules\\|' +
+                'jquery\\|' +
+                'log\\|logs\\|' +
+                'min\\|' +
+                'node_modules\\|' +
+                'rollup\\|' +
+                'swp\\|' +
+                'tmp\\)\\b" | tr "\\n" "\\000" | xargs -0 grep -in "' + match[2].trim() + '"'],
+              { stdio: ['ignore', 1, 2] }
+            )
             // on shell exit, print return prompt
             .on('exit', function () {
               exports._replServer.evalDefault('\n', context, file, onError);
@@ -1514,7 +1516,7 @@
           exports.assert(error === 'success', error);
           break;
         case 3:
-          if (exports.modePhantom === 'render') {
+          if (exports.modePhantom !== 'test') {
             return;
           }
           data = (/\nphantom\n(\{"global_test_results":\{.+)/).exec(error);

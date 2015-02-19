@@ -246,10 +246,10 @@ shInit() {
   fi
   # init $ISTANBUL
   export ISTANBUL=$(cd $DIRNAME &&\
-    node -e "console.log(require('istanbul-lite').__dirname)")/index.js || return $?
+    node -e "console.log(require('istanbul-lite').__dirname);")/index.js || return $?
   # init $PHANTOMJS_LITE
   export PHANTOMJS_LITE=$(cd $DIRNAME &&\
-    node -e "console.log(require('phantomjs-lite').__dirname)")/phantomjs || return $?
+    node -e "console.log(require('phantomjs-lite').__dirname);")/phantomjs || return $?
 }
 
 shIstanbulCover() {
@@ -266,15 +266,13 @@ shIstanbulReport() {
   # 1. merge $COVERAGE into $npm_package_dir_build/coverage-report.html/coverage.json
   if [ "$COVERAGE" ]
   then
-    node -e "var fs;
-      fs = require('fs');
-      fs.writeFileSync(
-        '$npm_package_dir_build/coverage-report.html/coverage.json',
-        JSON.stringify(require('$DIRNAME').istanbulMerge(
-          require('$npm_package_dir_build/coverage-report.html/coverage.json'),
-          require('./$COVERAGE')
-        ))
-      );" || return $?
+    node -e "require('fs').writeFileSync(
+      '$npm_package_dir_build/coverage-report.html/coverage.json',
+      JSON.stringify(require('$DIRNAME').istanbulMerge(
+        require('$npm_package_dir_build/coverage-report.html/coverage.json'),
+        require('./$COVERAGE')
+      ))
+    );" || return $?
   fi
   # 2. create $npm_package_dir_build/coverage-report.html
   npm_config_coverage_report_dir="$npm_package_dir_build/coverage-report.html"\
@@ -433,7 +431,7 @@ shRunScreenCapture() {
   # http://www.cnx-software.com/2011/09/22/how-to-convert-a-command-line-result-into-an-image-in-linux/
   # init $npm_package_dir_build
   mkdir -p $npm_package_dir_build/coverage-report.html || return $?
-  export MODE_BUILD_SCREEN_CAPTURE=screen-capture.$MODE_BUILD.png
+  export MODE_BUILD_SCREEN_CAPTURE=screen-capture.${MODE_BUILD-undefined}.png
   shRun $@ 2>&1 | tee $npm_package_dir_tmp/screen-capture.txt || return $?
   # save $EXIT_CODE and restore $CWD
   shExitCodeSave $(cat $npm_package_file_tmp) || return $?
@@ -485,12 +483,10 @@ shTestHeroku() {
   # init .git/config
   printf "\n[user]\nname=nobody\nemail=nobody\n" > .git/config || return $?
   # init Procfile
-  node -e "var fs;
-    fs = require('fs');
-    fs.writeFileSync(
-      'Procfile',
-      require('$DIRNAME').textFormat(fs.readFileSync('Procfile', 'utf8'), process.env)
-    );"
+  node -e "require('fs').writeFileSync(
+    'Procfile',
+    require('$DIRNAME').textFormat(require('fs').readFileSync('Procfile', 'utf8'), process.env)
+  );" || return $?
   # rm .gitignore so we can git add everything
   rm -f .gitignore || return $?
   # git add everything
@@ -561,7 +557,7 @@ shTestScriptJs() {
 shTestScriptSh() {
   # this function will test the sh script $FILE in README.md
   local FILE=$1 || return $?
-  local FILE_BASENAME=$(node -e "console.log(require('path').basename('$FILE'))") || return $?
+  local FILE_BASENAME=$(node -e "console.log(require('path').basename('$FILE'));") || return $?
   shBuildPrint $MODE_BUILD "testing $FILE ..." || return $?
   if [ "$MODE_BUILD" != "build" ]
   then
@@ -569,17 +565,17 @@ shTestScriptSh() {
     rm -fr /tmp/app /tmp/node_modules && mkdir -p /tmp/app && cd /tmp/app || return $?
   fi
   # read and parse script from README.md
-  node -e "var data, match;
-    data = require('fs').readFileSync('$CWD/README.md', 'utf8');
-    match = (/\`\`\`(\n# $FILE_BASENAME\n[\S\s]+?)\`\`\`/).exec(data);
-    // save script to file
-    require('fs').writeFileSync(
-      '$FILE',
-      // preserve lineno
-      data.slice(0, match.index).replace((/.*/g), '') + match[1]
-    );
-    // print script to stdout
-    console.log(match[1].trim() + '\n');" || return $?
+  node -e "require('fs').readFileSync('$CWD/README.md', 'utf8').replace(
+    (/\n\`\`\`\n# $FILE_BASENAME\n[\S\s]+?\n\`\`\`/),
+    function (match0, index, data) {
+      // save script to file
+      require('fs').writeFileSync(
+        '$FILE',
+        // preserve lineno
+        data.slice(0, match0.index).replace((/.*/g), '') + match0.slice(4, -4)
+      );
+    }
+  );" || return $?
   # test $FILE
   /bin/sh $FILE || return $?
 }

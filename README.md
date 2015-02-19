@@ -97,7 +97,8 @@ lightweight nodejs module that runs phantomjs browser-tests with code-coverage (
         this function will spawn phantomjs to test the test-webpage
       */
       local.utility2.phantomTest({
-        url: 'http://localhost:' + process.env.npm_config_server_port + '?modeTest=phantom'
+        url: 'http://localhost:' + process.env.npm_config_server_port +
+          '?modeTest=phantom'
       }, onError);
     };
     // web-serve example.js as /test/test.js
@@ -166,19 +167,23 @@ shBuild() {
   if [ "$TRAVIS" ]
   then
     export HEROKU_REPO=hrku01-utility2-$CI_BRANCH || return $?
-    export TEST_URL="https://hrku01-utility2-$CI_BRANCH.herokuapp.com" || return $?
-    export TEST_URL="$TEST_URL?modeTest=phantom&_testSecret={{_testSecret}}" || return $?
+    export TEST_URL="https://hrku01-utility2-$CI_BRANCH.herokuapp.com" ||\
+      return $?
+    export TEST_URL="$TEST_URL?modeTest=phantom&_testSecret={{_testSecret}}"\
+      || return $?
   fi
   # init env
   . ./index.sh && shInit || return $?
   # create package-listing
   MODE_BUILD=gitLsTree shRunScreenCapture shGitLsTree || return $?
   # create recent changelog of last 50 commits
-  MODE_BUILD=gitLog shRunScreenCapture git log -50 --pretty="%ai\u0020%B" || return $?
+  MODE_BUILD=gitLog shRunScreenCapture git log -50 --pretty="%ai\u0020%B" ||\
+    return $?
   # run npm test on published package
   shRun shNpmTestPublished || return $?
   # test example script
-  MODE_BUILD=testExampleJs shRunScreenCapture shTestScriptJs example.js || return $?
+  MODE_BUILD=testExampleJs shRunScreenCapture shTestScriptJs example.js ||\
+    return $?
   # copy phantomjs screen-capture to $npm_package_dir_build
   cp /tmp/app/.tmp/build/screen-capture.* $npm_package_dir_build || return $?
   # run npm test
@@ -208,8 +213,8 @@ exit $EXIT_CODE
 
 
 ## todo
-- merge testRunServer into testRun
-- revamp phantomTest
+- revamp phantomRender and add timeoutRender
+- create flamegraph from istanbul code-coverage
 - explicitly require slimerjs instead of auto-detecting it
 - auto-generate help doc from README.md
 - add server stress test using phantomjs
