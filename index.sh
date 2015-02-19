@@ -87,7 +87,7 @@ shExitCodeSave() {
   fi
   if [ -d $npm_package_dir_tmp ]
   then
-    printf "$EXIT_CODE" > $npm_package_file_tmp_local || return $?
+    printf "$EXIT_CODE" > $npm_package_file_tmp || return $?
   fi
   # restore $CWD
   cd $CWD || return $?
@@ -223,13 +223,14 @@ shInit() {
       if (process.env.GITHUB_REPO === undefined && value) {
         process.stdout.write('export GITHUB_REPO=' + JSON.stringify(value[1]) + ';');
       }") || return $?
+  else
+    export npm_package_description=undefined || return $?
+    export npm_package_name=undefined || return $?
+    export npm_package_version=undefined || return $?
   fi
-  export npm_package_description="${npm_package_description-undefined}" || return $?
   export npm_package_dir_build=$CWD/.tmp/build || return $?
   export npm_package_dir_tmp=$CWD/.tmp || return $?
-  export npm_package_file_tmp_local=$CWD/.tmp/tmpfile || return $?
-  export npm_package_name=${npm_package_name-undefined} || return $?
-  export npm_package_version=${npm_package_version-undefined} || return $?
+  export npm_package_file_tmp=$CWD/.tmp/tmpfile || return $?
   # init $DIRNAME
   if [ "$npm_package_name" = utility2 ]
   then
@@ -434,7 +435,7 @@ shRunScreenCapture() {
   export MODE_BUILD_SCREEN_CAPTURE=screen-capture.$MODE_BUILD.png
   shRun $@ 2>&1 | tee $npm_package_dir_tmp/screen-capture.txt || return $?
   # save $EXIT_CODE and restore $CWD
-  shExitCodeSave $(cat $npm_package_file_tmp_local) || return $?
+  shExitCodeSave $(cat $npm_package_file_tmp) || return $?
   # remove ansi escape code
   node -e "require('fs').writeFileSync(
     '$npm_package_dir_tmp/screen-capture.txt',
@@ -604,13 +605,15 @@ shTravisEncrypt() {
   local GITHUB_REPO=$1 || return $?
   local SECRET=$2 || return $?
   # get public rsa key from https://api.travis-ci.org/repos/<owner>/<repo>/key
-  curl -fLSs https://api.travis-ci.org/repos/$GITHUB_REPO/key > $npm_package_file_tmp_local ||\
+  curl -fLSs https://api.travis-ci.org/repos/$GITHUB_REPO/key > $npm_package_file_tmp ||\
     return $?
-  perl -pi -e "s/[^-]+(.+-).+/\$1/; s/\\\\n/\n/g; s/ RSA / /g" $npm_package_file_tmp_local ||\
+  perl -pi -e "s/[^-]+(.+-).+/\$1/; s/\\\\n/\n/g; s/ RSA / /g" $npm_package_file_tmp ||\
     return $?
   # rsa-encrypt $SECRET and print it
-  printf "$SECRET" | openssl rsautl -encrypt -pubin -inkey $npm_package_file_tmp_local | base64 | tr -d "\n" ||\
-    return $?
+  printf "$SECRET" |\
+    openssl rsautl -encrypt -pubin -inkey $npm_package_file_tmp |\
+    base64 |\
+    tr -d "\n" || return $?
 }
 
 shTravisEncryptYml() {
