@@ -11,12 +11,6 @@ shAesDecrypt() {
     openssl enc -aes-256-cbc -d -K $AES_256_KEY -iv $IV || return $?
 }
 
-shAesDecryptTravis() {
-  # this function will decrypt $AES_ENCRYPTED_SH in .travis.yml to stdout
-  perl -ne "print \$1 if /- AES_ENCRYPTED_SH: (.*) # AES_ENCRYPTED_SH\$/" .travis.yml |\
-    shAesDecrypt || return $?
-}
-
 shAesEncrypt() {
   # this function will encrypt stdin to base64-encoded stdout,
   # with a random iv prepended using aes-256-cbc
@@ -28,62 +22,22 @@ shAesEncrypt() {
   openssl enc -aes-256-cbc -K $AES_256_KEY -iv $IV | base64 | tr -d "\n" || return $?
 }
 
-shAesEncryptTravis() {
-  # this function will encrypt the script $1 to $AES_ENCRYPTED_SH and stores it in .travis.yml
-  # init $FILE
-  local FILE=$1/aes-decrypted.$(printf $GITHUB_REPO | perl -pe "s/\//./").sh || return $?
-  if [ ! -f "$FILE" ]
-  then
-    printf "# non-existent file $FILE\n" || return $?
-    return 1
-  fi
-  printf "# sourcing file $FILE ...\n" || return $?
-  . $FILE || return $?
-  if [ ! "$AES_256_KEY" ]
-  then
-    printf "# no \$AES_256_KEY detected in env - creating new AES_256_KEY ...\n" || return $?
-    AES_256_KEY=$(openssl rand -hex 32) || return $?
-    printf "# a new \$AES_256_KEY for encrypting data has been created.\n" || return $?
-    printf "# you may want to copy the following to your .bashrc script\n" || return $?
-    printf "# so you can run builds locally:\n" || return $?
-    printf "export AES_256_KEY=$AES_256_KEY\n\n" || return $?
-  fi
-  printf "# travis-encrypting \$AES_256_KEY for $GITHUB_REPO ...\n" || return $?
-  AES_256_KEY_ENCRYPTED=$(shTravisEncrypt $GITHUB_REPO \$AES_256_KEY=$AES_256_KEY) || return $?
-  # return non-zero exit-code if $AES_256_KEY_ENCRYPTED is empty string
-  if [ ! "$AES_256_KEY_ENCRYPTED" ]
-  then
-    return 1
-  fi
-  printf "# updating .travis.yml with encrypted key ...\n" || return $?
-  perl -i -pe\
-    "s%(- secure: )(.*)( # AES_256_KEY$)%\$1$AES_256_KEY_ENCRYPTED\$3%"\
-    .travis.yml || return $?
-
-  printf "# updating .travis.yml with encrypted script ...\n" || return $?
-  perl -i -pe\
-    "s%(- AES_ENCRYPTED_SH: )(.*)( # AES_ENCRYPTED_SH$)%\$1$(shAesEncrypt < $FILE)\$3%"\
-    .travis.yml || return $?
-}
-
 shBuild() {
   # this function will run the build script in README.md
-  # init $TMPDIR2
-  mkdir -p $TMPDIR2/build/coverage-report.html || return $?
+  # init $npm_package_dir_build
+  mkdir -p $npm_package_dir_build/coverage-report.html || return $?
   # run script from README.md
-  MODE_BUILD=build shTestScriptSh $TMPDIR2/build.sh || return $?
+  MODE_BUILD=build shTestScriptSh $npm_package_dir_tmp/build.sh || return $?
 }
 
 shBuildGithubUpload() {
-  # this function will upload the ./build dir to github
+  # this function will upload build-artifacts to github
   shBuildPrint githubUpload\
-    "uploading build artifacts to git@github.com:$GITHUB_REPO.git ..." || return $?
-  # cleanup $TMPDIR2/build
-  find $TMPDIR2/build -path "*.json" -print0 | xargs -0 rm -f || return $?
+    "uploading build-artifacts to git@github.com:$GITHUB_REPO.git ..." || return $?
   # add black border around phantomjs screen-capture
   local FILE_LIST="$(ls\
-    $TMPDIR2/build/screen-capture.*.phantomjs*.png\
-    $TMPDIR2/build/screen-capture.*.slimerjs*.png\
+    $npm_package_dir_build/screen-capture.*.phantomjs*.png\
+    $npm_package_dir_build/screen-capture.*.slimerjs*.png\
     2>/dev/null)" || return $?
   if [ "$FILE_LIST" ] && (mogrify --version > /dev/null 2>&1)
   then
@@ -94,13 +48,14 @@ shBuildGithubUpload() {
     return
   fi
   # clone gh-pages branch
-  rm -fr $TMPDIR2/gh-pages && cd $TMPDIR2 && git clone git@github.com:$GITHUB_REPO.git\
-    --branch=gh-pages --single-branch $TMPDIR2/gh-pages && cd $TMPDIR2/gh-pages || return $?
-  # copy build artifacts to .
-  cp $TMPDIR2/build/build.badge.svg build > /dev/null 2>&1
-  cp $TMPDIR2/build/screen-capture.* build > /dev/null 2>&1
-  mkdir -p $BUILD_DIR || return $?
-  rm -fr $BUILD_DIR && cp -a $TMPDIR2/build $BUILD_DIR || return $?
+  rm -fr $npm_package_dir_tmp/gh-pages || return $?
+  git clone git@github.com:$GITHUB_REPO.git\
+    --branch=gh-pages --single-branch $npm_package_dir_tmp/gh-pages || return $?
+  cd $npm_package_dir_tmp/gh-pages || return $?
+  # copy build-artifacts to gh-pages
+  cp -a $npm_package_dir_build . || return $?
+  local DIR=build..$CI_BRANCH..$CI_HOST || return $?
+  rm -fr $DIR && cp -a $npm_package_dir_build $DIR || return $?
   # init .git/config
   printf "\n[user]\nname=nobody\nemail=nobody" >> .git/config || return $?
   # update gh-pages
@@ -108,7 +63,7 @@ shBuildGithubUpload() {
   git commit -am "[skip ci] update gh-pages" || return $?
   git push origin gh-pages || return $?
   # if number of commits > $COMMIT_LIMIT, then squash HEAD to the earliest commit
-  shGitPushAndSquashAndPush gh-pages $COMMIT_LIMIT || return $?
+  shGitBackupAndSquashAndPush $COMMIT_LIMIT || return $?
 }
 
 shBuildPrint() {
@@ -130,35 +85,45 @@ shExitCodeSave() {
   then
     EXIT_CODE=$1 || return $?
   fi
-  if [ -d $TMPDIR2 ]
+  if [ -d $npm_package_dir_tmp ]
   then
-    printf "$EXIT_CODE" > $TMPFILE2 || return $?
+    printf "$EXIT_CODE" > $npm_package_file_tmp || return $?
   fi
   # restore $CWD
   cd $CWD || return $?
 }
 
-shGitPushAndSquashAndPush() {
+shGitBackupAndSquashAndPush() {
   # this function will, if number of commits > $COMMIT_LIMIT,
-  # 1. push the current $BRANCH to origin/$BRANCH.backup
-  # 2. squash the HEAD to the first commit
-  # 3. push the squashed $BRANCH to origin/$BRANCH
-  local BRANCH=$1 || return $?
-  local COMMIT_LIMIT=$2 || return $?
+  # 1. backup current $BRANCH to origin/$BRANCH.backup
+  # 2. squash $RANGE to the first commit in $BRANCH
+  # 3. push squashed $BRANCH to origin/$BRANCH
+  local COMMIT_LIMIT=$1 || return $?
   # if number of commits > $COMMIT_LIMIT
-  if [ "$COMMIT_LIMIT" ] && [ $(git rev-list HEAD --count) -gt $COMMIT_LIMIT ]
+  if [ ! "$COMMIT_LIMIT" ] || [ ! $(git rev-list HEAD --count) -gt $COMMIT_LIMIT ]
   then
-    # 1. push the current $BRANCH to $BRANCH.backup
-    git push -f origin $BRANCH:$BRANCH.backup || return $?
-    # 2. squash the HEAD to the first commit
-    shGitSquash $(git rev-list --max-parents=0 HEAD) || return $?
-    # 3. push the squashed $BRANCH to origin/$BRANCH
-    git push -f origin $BRANCH || return $?
+    return
   fi
+  local BRANCH=$(git rev-parse --abbrev-ref HEAD) || return $?
+  local RANGE=$(($COMMIT_LIMIT/2)) || return $?
+  # 1. backup current $BRANCH to origin/$BRANCH.backup
+  git push -f origin $BRANCH:$BRANCH.backup || return $?
+  # 2. squash $RANGE to the first commit in $BRANCH
+  shGitSquashShift $RANGE || return $?
+  # 3. push squashed $BRANCH to origin/$BRANCH
+  git push -f origin $BRANCH || return $?
 }
 
-shGitSquash() {
-  # this function will squash the HEAD to the specified commit $1
+shGitLsTree() {
+  # this function will list all files committed to HEAD
+  git ls-tree --name-only -r HEAD | while read file
+  do
+    printf "$(git log -1 --format="%ai" -- $file) $(wc -c $file)\n" || return $?
+  done
+}
+
+shGitSquashPop() {
+  # this function will squash the HEAD to the specified $COMMIT
   # git squash
   # http://stackoverflow.com/questions/5189560/how-can-i-squash-my-last-x-commits-together-using-git
   local COMMIT=$1 || return $?
@@ -171,6 +136,19 @@ shGitSquash() {
   git merge --squash HEAD@{1} || return $?
   # commit HEAD immediately after previous $COMMIT
   git commit -am "$MESSAGE" || return $?
+}
+
+shGitSquashShift() {
+  # this function will squash $RANGE to the first commit
+  local BRANCH=$(git rev-parse --abbrev-ref HEAD) || return $?
+  local RANGE=$1 || return $?
+  git checkout -q HEAD~$RANGE || return $?
+  git reset -q $(git rev-list --max-parents=0 HEAD) || return $?
+  git add . > /dev/null || return $?
+  git commit -m squash || return $?
+  git cherry-pick --strategy=recursive -X theirs $BRANCH~$RANGE..$BRANCH || return $?
+  git push -f . HEAD:$BRANCH || return $?
+  git checkout $BRANCH || return $?
 }
 
 shGrep() {
@@ -193,7 +171,7 @@ shGrep() {
   FILE_FILTER="$FILE_FILTER|rollup.*\\" || return $?
   FILE_FILTER="$FILE_FILTER|swp\\" || return $?
   FILE_FILTER="$FILE_FILTER|tmp\\)\\b" || return $?
-  find . -type f | grep -v "$FILE_FILTER" | tr "\n" "\000" | xargs -0 grep -in "$1"
+  find . -type f | grep -v "$FILE_FILTER" | tr "\n" "\000" | xargs -0 grep -in "$1" || return $?
 }
 
 shInit() {
@@ -204,41 +182,41 @@ shInit() {
     # init codeship.io env
     if [ "$CI_NAME" = "codeship" ]
     then
-      export BUILD_DIR=codeship.io || return $?
+      export CI_HOST=codeship.io || return $?
     # init travis-ci.org env
     elif [ "$TRAVIS" ]
     then
-      export BUILD_DIR=travis-ci.org || return $?
       export CI_BRANCH=$TRAVIS_BRANCH || return $?
       export CI_COMMIT_ID=$TRAVIS_COMMIT || return $?
+      export CI_HOST=travis-ci.org || return $?
       # decrypt and exec encrypted data
       if [ "$AES_256_KEY" ]
       then
-        eval "$(shAesDecryptTravis)" || return $?
+        eval "$(shTravisDecryptYml)" || return $?
       fi
     # init default env
     else
-      export BUILD_DIR=localhost || return $?
       export CI_BRANCH=undefined || return $?
       export CI_COMMIT_ID=$(git rev-parse --verify HEAD) || return $?
+      export CI_HOST=localhost || return $?
     fi
-    BUILD_DIR="build/branch/$CI_BRANCH/$BUILD_DIR" || return $?
     # init $CI_COMMIT_*
     export CI_COMMIT_MESSAGE="$(git log -1 --pretty=%s)" || return $?
     export CI_COMMIT_INFO="$CI_COMMIT_ID - $CI_COMMIT_MESSAGE" || return $?
   fi
   # init $CWD
   CWD=$(pwd) || return $?
-  # init $PACKAGE_JSON_*
+  # init $PATH with $CWD/node_modules/.bin
+  export PATH=$CWD/node_modules/phantomjs-lite:$CWD/node_modules/.bin:$PATH || return $?
+  # init $npm_package_*
   if [ -f package.json ]
   then
     eval $(node -e "var dict, value;
       dict = require('./package.json');
       Object.keys(dict).forEach(function (key) {
         value = dict[key];
-        if (typeof value === 'string') {
-          process.stdout.write('export PACKAGE_JSON_' + key.toUpperCase() + '='
-            + JSON.stringify(value.split('\n')[0]) + ';');
+        if (typeof value === 'string' && value.indexOf('\n') === -1) {
+          process.stdout.write('export npm_package_' + key + '=' + JSON.stringify(value) + ';');
         }
       });
       value = (/\bgithub\.com\/(.*)\.git\$/).exec(dict.repository && dict.repository.url);
@@ -246,69 +224,67 @@ shInit() {
         process.stdout.write('export GITHUB_REPO=' + JSON.stringify(value[1]) + ';');
       }") || return $?
   else
-    export PACKAGE_JSON_NAME=undefined || return $?
-    export PACKAGE_JSON_VERSION=undefined || return $?
+    export npm_package_description=undefined || return $?
+    export npm_package_name=undefined || return $?
+    export npm_package_version=undefined || return $?
   fi
-  # init $PATH with $CWD/node_modules/.bin
-  export PATH=$CWD/node_modules/phantomjs-lite:$CWD/node_modules/.bin:$PATH || return $?
-  # init $TMPDIR2
-  export TMPDIR2=$CWD/.tmp || return $?
-  # init $TMPFILE2
-  export TMPFILE2=$TMPDIR2/tmpfile || return $?
+  export npm_package_dir_build=$CWD/.tmp/build || return $?
+  export npm_package_dir_tmp=$CWD/.tmp || return $?
+  export npm_package_file_tmp=$CWD/.tmp/tmpfile || return $?
   # init $DIRNAME
-  if [ "$PACKAGE_JSON_NAME" = utility2 ]
+  if [ "$npm_package_name" = utility2 ]
   then
     export DIRNAME=$CWD || return
   else
     export DIRNAME=$(node -e "console.log(require('utility2').__dirname);") || return $?
   fi
-  # init $ISTANBUL_LITE
-  export ISTANBUL_LITE=$(cd $DIRNAME &&\
-    node -e "console.log(require('istanbul-lite').__dirname)")/index.js || return $?
-  # init $PHANTOMJS_LITE
-  export PHANTOMJS_LITE=$(cd $DIRNAME &&\
-    node -e "console.log(require('phantomjs-lite').__dirname)")/phantomjs || return $?
   # init $GIT_SSH
   if [ "$GIT_SSH_KEY" ]
   then
     export GIT_SSH=$DIRNAME/git-ssh.sh || return $?
   fi
+  # init $ISTANBUL
+  export ISTANBUL=$(cd $DIRNAME &&\
+    node -e "console.log(require('istanbul-lite').__dirname)")/index.js || return $?
+  # init $PHANTOMJS_LITE
+  export PHANTOMJS_LITE=$(cd $DIRNAME &&\
+    node -e "console.log(require('phantomjs-lite').__dirname)")/phantomjs || return $?
 }
 
 shIstanbulCover() {
   # this function will run the command $@ with istanbul code-coverage
-  npm_config_coverage_report_dir="$TMPDIR2/build/coverage-report.html"\
-    $ISTANBUL_LITE cover $@ || return $?
+  npm_config_coverage_report_dir="$npm_package_dir_build/coverage-report.html"\
+    $ISTANBUL cover $@ || return $?
 }
 
 shIstanbulReport() {
   # this function will
-  # 1. merge $COVERAGE into $TMPDIR2/build/coverage-report.html/coverage.json
-  # 2. create $TMPDIR2/build/coverage-report.html
+  # 1. merge $COVERAGE into $npm_package_dir_build/coverage-report.html/coverage.json
+  # 2. create $npm_package_dir_build/coverage-report.html
   local COVERAGE=$1 || return $?
-  # 1. merge $COVERAGE into $TMPDIR2/build/coverage-report.html/coverage.json
+  # 1. merge $COVERAGE into $npm_package_dir_build/coverage-report.html/coverage.json
   if [ "$COVERAGE" ]
   then
     node -e "var fs;
       fs = require('fs');
       fs.writeFileSync(
-        '$TMPDIR2/build/coverage-report.html/coverage.json',
-        JSON.stringify(require('$DIRNAME').coverageMerge(
-          require('$TMPDIR2/build/coverage-report.html/coverage.json'),
+        '$npm_package_dir_build/coverage-report.html/coverage.json',
+        JSON.stringify(require('$DIRNAME').istanbulMerge(
+          require('$npm_package_dir_build/coverage-report.html/coverage.json'),
           require('./$COVERAGE')
         ))
       );" || return $?
   fi
-  # 2. create $TMPDIR2/build/coverage-report.html
-  npm_config_coverage_report_dir="$TMPDIR2/build/coverage-report.html"\
-    $ISTANBUL_LITE report || return $?
+  # 2. create $npm_package_dir_build/coverage-report.html
+  npm_config_coverage_report_dir="$npm_package_dir_build/coverage-report.html"\
+    $ISTANBUL report || return $?
 }
 
 shNpmTest() {
   # this function will run npm test
-  shBuildPrint "${MODE_BUILD:-npmTest}" "npm testing $CWD ..." || return $?
-  # init $TMPDIR2
-  mkdir -p $TMPDIR2/build/coverage-report.html || return $?
+  shBuildPrint ${MODE_BUILD:-npmTest} "npm testing $CWD ..." || return $?
+  # init $npm_package_dir_build
+  mkdir -p $npm_package_dir_build/coverage-report.html || return $?
   # auto-detect slimerjs
   if [ ! "$npm_config_mode_slimerjs" ] && (slimerjs undefined > /dev/null 2>&1)
   then
@@ -325,17 +301,17 @@ shNpmTest() {
     return $?
   fi
   # cleanup old coverage
-  rm -f $TMPDIR2/build/coverage-report.html/coverage.* || return $?
+  rm -f $npm_package_dir_build/coverage-report.html/coverage.* || return $?
   # run npm test with coverage
   shIstanbulCover $@
   # save $EXIT_CODE and restore $CWD
   shExitCodeSave $? || return $?
   # create coverage-report
   shIstanbulReport || return $?
-  printf "\ncreated test-report file://$TMPDIR2/build/test-report.html\n" || return $?
+  printf "\ncreated test-report file://$npm_package_dir_build/test-report.html\n" || return $?
   # create coverage-report badge
   node -e "var coverage, percent;
-    coverage = require('$TMPDIR2/build/coverage-report.html/coverage.json');
+    coverage = require('$npm_package_dir_build/coverage-report.html/coverage.json');
     percent = [0, 0];
     Object.keys(coverage).forEach(function (file) {
       file = coverage[file];
@@ -346,7 +322,7 @@ shNpmTest() {
     });
     percent = Math.floor((100000 * percent[0] / percent[1] + 5) / 10) / 100;
     require('fs').writeFileSync(
-      '$TMPDIR2/build/coverage-report.badge.svg',
+      '$npm_package_dir_build/coverage-report.badge.svg',
       '"'<svg xmlns="http://www.w3.org/2000/svg" width="117" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="117" height="20" fill="#555"/><rect rx="0" x="63" width="54" height="20" fill="#0d0"/><path fill="#0d0" d="M63 0h4v20h-4z"/><rect rx="0" width="117" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="32.5" y="15" fill="#010101" fill-opacity=".3">coverage</text><text x="32.5" y="14">coverage</text><text x="89" y="15" fill="#010101" fill-opacity=".3">100.0%</text><text x="89" y="14">100.0%</text></g></svg>'"'
         // edit coverage badge percent
         .replace((/100.0/g), percent)
@@ -366,14 +342,51 @@ shNpmTest() {
 
 shNpmTestPublished() {
   # this function will run npm test on the published package
-  shBuildPrint npmTestPublished "npm testing published package $PACKAGE_JSON_NAME ..." ||\
+  shBuildPrint npmTestPublished "npm testing published package $npm_package_name ..." ||\
     return $?
   # init /tmp/app
   rm -fr /tmp/app /tmp/node_modules && mkdir -p /tmp/app && cd /tmp/app || return $?
   # npm install package
-  npm install $PACKAGE_JSON_NAME || return $?
+  npm install $npm_package_name || return $?
   # npm test package
-  cd node_modules/$PACKAGE_JSON_NAME && npm install && npm test || return $?
+  cd node_modules/$npm_package_name && npm install && npm test || return $?
+}
+
+shPhantomRender() {
+  # this function will spawn phantomjs to render the specified $URL
+  MODE_BUILD=${MODE_BUILD:-phantomRender} shPhantomTest "$1" ${2-5000} render || return $?
+}
+
+shPhantomTest() {
+  # this function will spawn phantomjs to test the specified $URL,
+  # and merge it into the existing test-report
+  local MODE_PHANTOM="${3-test}" || return $?
+  local TIMEOUT_DEFAULT="${2-30000}" || return $?
+  local URL="$1" || return $?
+  shBuildPrint ${MODE_BUILD:-phantomTest} "testing $URL with phantomjs ..." || return $?
+  # auto-detect slimerjs
+  if [ ! "$npm_config_mode_slimerjs" ] && (slimerjs undefined > /dev/null 2>&1)
+  then
+    export npm_config_mode_slimerjs=1 || return $?
+  fi
+  node -e "var local;
+    local = require('$DIRNAME');
+    local.testReport = require('$npm_package_dir_build/test-report.json');
+    local.phantomTest({
+      modePhantom: '$MODE_PHANTOM',
+      timeoutDefault: $TIMEOUT_DEFAULT,
+      url: '$URL'
+    }, function (error) {
+      if ('$MODE_PHANTOM' === 'render') {
+        process.exit();
+        return;
+      }
+      local.fs.writeFileSync(
+        '$npm_package_dir_build/test-report.html',
+        local.testMerge(local.testReport, {})
+      );
+      process.exit(!!error);
+    });" || return $?
 }
 
 shRun() {
@@ -417,16 +430,16 @@ shRun() {
 shRunScreenCapture() {
   # this function will run the command $@ and screen-capture the output
   # http://www.cnx-software.com/2011/09/22/how-to-convert-a-command-line-result-into-an-image-in-linux/
-  # init $TMPDIR2
-  mkdir -p $TMPDIR2/build/coverage-report.html || return $?
+  # init $npm_package_dir_build
+  mkdir -p $npm_package_dir_build/coverage-report.html || return $?
   export MODE_BUILD_SCREEN_CAPTURE=screen-capture.$MODE_BUILD.png
-  shRun $@ 2>&1 | tee $TMPDIR2/screen-capture.txt || return $?
+  shRun $@ 2>&1 | tee $npm_package_dir_tmp/screen-capture.txt || return $?
   # save $EXIT_CODE and restore $CWD
-  shExitCodeSave $(cat $TMPFILE2) || return $?
+  shExitCodeSave $(cat $npm_package_file_tmp) || return $?
   # remove ansi escape code
   node -e "require('fs').writeFileSync(
-    '$TMPDIR2/screen-capture.txt',
-    require('fs').readFileSync('$TMPDIR2/screen-capture.txt', 'utf8')
+    '$npm_package_dir_tmp/screen-capture.txt',
+    require('fs').readFileSync('$npm_package_dir_tmp/screen-capture.txt', 'utf8')
       .replace((/\\\\u0020/g), ' ')
       .replace((/\u0009/g), '    ')
       .replace((/\u001b.*?m/g), '')
@@ -435,16 +448,16 @@ shRunScreenCapture() {
   if (convert -list font | grep "\bCourier\b" > /dev/null 2>&1) &&\
     (fold package.json > /dev/null 2>&1)
   then
-    # word-wrap $TMPDIR2/screen-capture.txt to 96 characters,
+    # word-wrap $npm_package_dir_tmp/screen-capture.txt to 96 characters,
     # and convert to png image
-    fold -w 96 $TMPDIR2/screen-capture.txt |\
+    fold -w 96 $npm_package_dir_tmp/screen-capture.txt |\
       convert -background gray25 -border 10 -bordercolor gray25\
       -depth 4\
       -fill palegreen -font Courier\
       -pointsize 12\
       -quality 90\
       -type Palette\
-      label:@- $TMPDIR2/build/$MODE_BUILD_SCREEN_CAPTURE || return $?
+      label:@- $npm_package_dir_build/$MODE_BUILD_SCREEN_CAPTURE || return $?
   fi
   return $EXIT_CODE
 }
@@ -467,16 +480,10 @@ shTestHeroku() {
   shBuildPrint testHeroku "deploying to https://$HEROKU_HOSTNAME ..." || return $?
   # init clean repo in /tmp/app
   shTmpAppCopy && cd /tmp/app || return $?
-  # npm install dependencies
-  rm -fr /tmp/node_modules && npm install || return $?
   # init .git
   git init || return $?
   # init .git/config
   printf "\n[user]\nname=nobody\nemail=nobody\n" > .git/config || return $?
-  # rm .gitignore so we can git add everything
-  rm -f .gitignore || return $?
-  # git add everything
-  git add . || return $?
   # init Procfile
   node -e "var fs;
     fs = require('fs');
@@ -484,8 +491,12 @@ shTestHeroku() {
       'Procfile',
       require('$DIRNAME').textFormat(fs.readFileSync('Procfile', 'utf8'), process.env)
     );"
+  # rm .gitignore so we can git add everything
+  rm -f .gitignore || return $?
+  # git add everything
+  git add . || return $?
   # git commit
-  git commit -am "heroku deploy" > /dev/null || return $?
+  git commit -aqm "heroku deploy" || return $?
   # deploy the app to heroku
   git push -f git@heroku.com:$HEROKU_REPO.git HEAD:master || return $?
   # save $EXIT_CODE and restore $CWD
@@ -495,30 +506,8 @@ shTestHeroku() {
   # test url with phantomjs
   if [ "$TEST_URL" ]
   then
-    shTestPhantom "$TEST_URL" || return $?
+    shPhantomTest "$TEST_URL" || return $?
   fi
-}
-
-shTestPhantom() {
-  # this function will run phantomjs tests on the specified $URL,
-  # and merge it into the existing test-report
-  local URL="$1" || return $?
-  shBuildPrint "${MODE_BUILD:-testPhantom}" "testing $URL with phantomjs ..." || return $?
-  # auto-detect slimerjs
-  if [ ! "$npm_config_mode_slimerjs" ] && (slimerjs undefined > /dev/null 2>&1)
-  then
-    export npm_config_mode_slimerjs=1 || return $?
-  fi
-  node -e "var local;
-    local = require('$DIRNAME');
-    local.testReport = require('$TMPDIR2/build/test-report.json');
-    local.testPhantom({ url: '$URL' }, function (error) {
-      local.fs.writeFileSync(
-        '$TMPDIR2/build/test-report.html',
-        local.testMerge(local.testReport, {})
-      );
-      process.exit(!!error);
-    });" || return $?
 }
 
 shTestScriptJs() {
@@ -533,15 +522,17 @@ shTestScriptJs() {
   # cd /tmp/app
   cd /tmp/app || return $?
   # read and parse script from README.md
-  node -e "var data, match;
-    data = require('fs').readFileSync('$CWD/README.md', 'utf8');
-    match = (/\`\`\`(\n\/\/ $FILE\n[\S\s]+?)\`\`\`/).exec(data);
-    // save script to file
-    require('fs').writeFileSync(
-      '$FILE',
-      // preserve lineno
-      data.slice(0, match.index).replace((/.*/g), '') + match[1]
-    );" || return $?
+  node -e "require('fs').readFileSync('$CWD/README.md', 'utf8').replace(
+    (/\n\`\`\`\n\/\*\n *$FILE\n[\S\s]+?\n\`\`\`/),
+    function (match0, index, data) {
+      // save script to file
+      require('fs').writeFileSync(
+        '$FILE',
+        // preserve lineno
+        data.slice(0, match0.index).replace((/.*/g), '') + match0.slice(4, -4)
+      );
+    }
+  );" || return $?
   # jslint $FILE
   local SCRIPT || return $?
   if [ ! "$npm_config_mode_no_jslint" ]
@@ -556,9 +547,9 @@ shTestScriptJs() {
   eval "$SCRIPT" || :
   # test $FILE
   SCRIPT=$(node -e "console.log(
-    (/ \\$ (.*)/).exec(
+    (/\n *\\$ ([\S\s]+?[^\\\\])\n/).exec(
       require('fs').readFileSync('$FILE', 'utf8')
-    )[1]
+    )[1].replace((/\\\\\n */g), ' ')
   );") || return $?
   if [ "$MODE_OFFLINE" ]
   then
@@ -598,21 +589,69 @@ shTmpAppCopy() {
   # init /tmp/app
   rm -fr /tmp/app && mkdir -p /tmp/app || return $?
   # tar / untar repo contents to /tmp/app
-  git ls-tree -r HEAD --name-only | xargs tar -czf - | tar -C /tmp/app -xzvf - || return $?
+  git ls-tree --name-only -r HEAD | xargs tar -czf - | tar -C /tmp/app -xzvf - || return $?
+}
+
+shTravisDecryptYml() {
+  # this function will decrypt $AES_ENCRYPTED_SH in .travis.yml to stdout
+  perl -ne "print \$1 if /- AES_ENCRYPTED_SH: (.*) # AES_ENCRYPTED_SH\$/" .travis.yml |\
+    shAesDecrypt || return $?
 }
 
 shTravisEncrypt() {
   # this function will travis-encrypt github repo $1's secret $2
-  # init $TMPDIR2 dir
-  mkdir -p $TMPDIR2/build/coverage-report.html || return $?
+  # init $npm_package_dir_build dir
+  mkdir -p $npm_package_dir_build/coverage-report.html || return $?
   local GITHUB_REPO=$1 || return $?
   local SECRET=$2 || return $?
   # get public rsa key from https://api.travis-ci.org/repos/<owner>/<repo>/key
-  curl -fLSs https://api.travis-ci.org/repos/$GITHUB_REPO/key > $TMPFILE2 || return $?
-  perl -pi -e "s/[^-]+(.+-).+/\$1/; s/\\\\n/\n/g; s/ RSA / /g" $TMPFILE2 || return $?
-  # rsa-encrypt $SECRET and print it
-  printf "$SECRET" | openssl rsautl -encrypt -pubin -inkey $TMPFILE2 | base64 | tr -d "\n" ||\
+  curl -fLSs https://api.travis-ci.org/repos/$GITHUB_REPO/key > $npm_package_file_tmp ||\
     return $?
+  perl -pi -e "s/[^-]+(.+-).+/\$1/; s/\\\\n/\n/g; s/ RSA / /g" $npm_package_file_tmp ||\
+    return $?
+  # rsa-encrypt $SECRET and print it
+  printf "$SECRET" |\
+    openssl rsautl -encrypt -pubin -inkey $npm_package_file_tmp |\
+    base64 |\
+    tr -d "\n" || return $?
+}
+
+shTravisEncryptYml() {
+  # this function will encrypt the script $1 to $AES_ENCRYPTED_SH and stores it in .travis.yml
+  # init $FILE
+  local FILE=$1/aes-decrypted.$(printf $GITHUB_REPO | perl -pe "s/\//./").sh || return $?
+  if [ ! -f "$FILE" ]
+  then
+    printf "# non-existent file $FILE\n" || return $?
+    return 1
+  fi
+  printf "# sourcing file $FILE ...\n" || return $?
+  . $FILE || return $?
+  if [ ! "$AES_256_KEY" ]
+  then
+    printf "# no \$AES_256_KEY detected in env - creating new AES_256_KEY ...\n" || return $?
+    AES_256_KEY=$(openssl rand -hex 32) || return $?
+    printf "# a new \$AES_256_KEY for encrypting data has been created.\n" || return $?
+    printf "# you may want to copy the following to your .bashrc script\n" || return $?
+    printf "# so you can run builds locally:\n" || return $?
+    printf "export AES_256_KEY=$AES_256_KEY\n\n" || return $?
+  fi
+  printf "# travis-encrypting \$AES_256_KEY for $GITHUB_REPO ...\n" || return $?
+  AES_256_KEY_ENCRYPTED=$(shTravisEncrypt $GITHUB_REPO \$AES_256_KEY=$AES_256_KEY) || return $?
+  # return non-zero exit-code if $AES_256_KEY_ENCRYPTED is empty string
+  if [ ! "$AES_256_KEY_ENCRYPTED" ]
+  then
+    return 1
+  fi
+  printf "# updating .travis.yml with encrypted key ...\n" || return $?
+  perl -i -pe\
+    "s%(- secure: )(.*)( # AES_256_KEY$)%\$1$AES_256_KEY_ENCRYPTED\$3%"\
+    .travis.yml || return $?
+
+  printf "# updating .travis.yml with encrypted script ...\n" || return $?
+  perl -i -pe\
+    "s%(- AES_ENCRYPTED_SH: )(.*)( # AES_ENCRYPTED_SH$)%\$1$(shAesEncrypt < $FILE)\$3%"\
+    .travis.yml || return $?
 }
 
 # if the first argument $1 is shRun, then run the command $@

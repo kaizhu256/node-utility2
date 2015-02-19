@@ -15,76 +15,30 @@
     /*
       this function will run shared js-env code
     */
-    exports._ajax_default_test = function (onError) {
+    exports.assert = function (passed, message) {
       /*
-        this function will test ajax's default handling behavior
+        this function will throw an error if the assertion fails
       */
-      var onParallel;
-      onParallel = exports.onParallel(onError);
-      onParallel.counter += 1;
-      // test http GET handling behavior
-      onParallel.counter += 1;
-      exports.ajax({ url: '/test/hello' }, function (error, data) {
-        exports.testTryCatch(function () {
-          // validate no error occurred
-          exports.assert(!error, error);
-          // validate data
-          exports.assert(data === 'hello', data);
-          onParallel();
-        }, onParallel);
-      });
-      // test http POST handling behavior
-      ['binary', 'text'].forEach(function (resultType) {
-        onParallel.counter += 1;
-        exports.ajax({
-          // test binary post handling behavior
-          data: resultType === 'binary' && exports.modeJs === 'node' ? new Buffer('hello')
-            // test text post handling behavior
-            : 'hello',
-          // test request header handling behavior
-          headers: { 'X-Header-Hello': 'Hello' },
-          method: 'POST',
-          resultType: resultType,
-          url: '/test/echo'
-        }, function (error, data) {
-          exports.testTryCatch(function () {
-            // validate no error occurred
-            exports.assert(!error, error);
-            // validate binary data
-            if (resultType === 'binary' && exports.modeJs === 'node') {
-              exports.assert(Buffer.isBuffer(data), data);
-              data = String(data);
-            }
-            // validate text data
-            exports.assert(data.indexOf('hello') >= 0, data);
-            onParallel();
-          }, onParallel);
-        });
-      });
-      [{
-        // test 404-not-found-error handling behavior
-        url: '/test/undefined?modeErrorIgnore=1'
-      }, {
-        // test 500-internal-server-error handling behavior
-        url: '/test/server-error?modeErrorIgnore=1'
-      }, {
-        // test undefined https host handling behavior
-        timeout: 1,
-        url: 'https://undefined' + Date.now() + Math.random() + '.com'
-      }].forEach(function (options) {
-        onParallel.counter += 1;
-        exports.ajax(options, function (error) {
-          exports.testTryCatch(function () {
-            // validate error occurred
-            exports.assert(error instanceof Error, error);
-            onParallel();
-          }, onParallel);
-        });
-      });
-      onParallel();
+      if (!passed) {
+        throw new Error(
+          // if message is a string, then leave it as is
+          typeof message === 'string' ? message
+            // if message is an Error object, then get its stack-trace
+            : message instanceof Error ? exports.errorStack(message)
+              // else JSON.stringify message
+              : JSON.stringify(message)
+        );
+      }
     };
 
-    exports.coverageMerge = function (coverage1, coverage2) {
+    exports.errorStack = function (error) {
+      /*
+        this function will return the error's stack-trace
+      */
+      return error.stack || error.message || 'undefined';
+    };
+
+    exports.istanbulMerge = function (coverage1, coverage2) {
       /*
         this function will merge coverage2 into coverage1
       */
@@ -123,95 +77,11 @@
       return coverage1;
     };
 
-    exports.assert = function (passed, message) {
-      /*
-        this function will throw an error if the assertion fails
-      */
-      if (!passed) {
-        throw new Error(
-          // if message is a string, then leave it as is
-          typeof message === 'string' ? message
-            // if message is an Error object, then get its stack-trace
-            : message instanceof Error ? exports.errorStack(message)
-              // else JSON.stringify message
-              : JSON.stringify(message)
-        );
-      }
-    };
-
-    exports._assert_default_test = function (onError) {
-      /*
-        this function will test assert's default handling behavior
-      */
-      // test assertion passed
-      exports.assert(true, true);
-      // test assertion failed with undefined message
-      exports.testTryCatch(function () {
-        exports.assert(false);
-      }, function (error) {
-        // validate error occurred
-        exports.assert(error instanceof Error, error);
-        // validate error-message
-        exports.assert(error.message === '', error.message);
-      });
-      // test assertion failed with text message
-      exports.testTryCatch(function () {
-        exports.assert(false, '_assert_default_test');
-      }, function (error) {
-        // validate error occurred
-        exports.assert(error instanceof Error, error);
-        // validate error-message
-        exports.assert(error.message === '_assert_default_test', error.message);
-      });
-      // test assertion failed with error object
-      exports.testTryCatch(function () {
-        exports.assert(false, exports.errorDefault);
-      }, function (error) {
-        // validate error occurred
-        exports.assert(error instanceof Error, error);
-      });
-      // test assertion failed with json object
-      exports.testTryCatch(function () {
-        exports.assert(false, { aa: 1 });
-      }, function (error) {
-        // validate error occurred
-        exports.assert(error instanceof Error, error);
-        // validate error-message
-        exports.assert(error.message === '{"aa":1}', error.message);
-      });
-      onError();
-    };
-
-    exports.errorStack = function (error) {
-      /*
-        this function will return the error's stack-trace
-      */
-      if (!(error && typeof error.stack === 'string')) {
-        try {
-          throw new Error();
-        } catch (errorCaught) {
-          error = errorCaught;
-        }
-      }
-      return error.stack;
-    };
-
     exports.jsonCopy = function (value) {
       /*
         this function will return a deep-copy of the JSON value
       */
       return value === undefined ? undefined : JSON.parse(JSON.stringify(value));
-    };
-
-    exports._jsonCopy_default_test = function (onError) {
-      /*
-        this function will test jsonCopy's default handling behavior
-      */
-      // test various data-type handling behavior
-      [undefined, null, false, true, 0, 1, 1.5, 'a'].forEach(function (data) {
-        exports.assert(exports.jsonCopy(data) === data, [exports.jsonCopy(data), data]);
-      });
-      onError();
     };
 
     exports.jsonStringifyOrdered = function (value, replacer, space) {
@@ -246,32 +116,6 @@
         : value;
     };
 
-    exports._jsonStringifyOrdered_default_test = function (onError) {
-      /*
-        this function will test jsonStringifyOrdered's default handling behavior
-      */
-      var data;
-      // test various data-type handling behavior
-      [undefined, null, false, true, 0, 1, 1.5, 'a', {}, []].forEach(function (data) {
-        exports.assert(
-          exports.jsonStringifyOrdered(data) === JSON.stringify(data),
-          [exports.jsonStringifyOrdered(data), JSON.stringify(data)]
-        );
-      });
-      // test data-ordering handling behavior
-      data = exports.jsonStringifyOrdered({
-        // test nested dict handling behavior
-        ee: { gg: 2, ff: 1},
-        // test array handling behavior
-        dd: [undefined],
-        cc: exports.nop,
-        bb: 2,
-        aa: 1
-      });
-      exports.assert(data === '{"aa":1,"bb":2,"dd":[null],"ee":{"ff":1,"gg":2}}', data);
-      onError();
-    };
-
     exports.onErrorDefault = function (error) {
       /*
         this function will provide a default error handling callback,
@@ -283,27 +127,28 @@
       }
     };
 
-    exports._onErrorDefault_default_test = function (onError) {
+    exports.onErrorExit = exports.exit;
+
+    exports.onErrorWithStack = function (onError) {
       /*
-        this function will test onErrorDefault's default handling behavior
+        this function will return a new callback that calls onError,
+        with the current stack-trace appended to any error
       */
-      var message;
-      exports.testMock([
-        // suppress console.error
-        [console, { error: function (arg) {
-          message = arg;
-        } }]
-      ], onError, function (onError) {
-        // test no error handling behavior
-        exports.onErrorDefault();
-        // validate message
-        exports.assert(!message, message);
-        // test error handling behavior
-        exports.onErrorDefault(exports.errorDefault);
-        // validate message
-        exports.assert(message, message);
-        onError();
-      });
+      var errorStack;
+      try {
+        throw new Error();
+      } catch (errorCaught) {
+        errorStack = errorCaught.stack;
+      }
+      return function () {
+        var args;
+        args = arguments;
+        if (args[0]) {
+          // append errorStack to args[0].stack
+          args[0].stack = args[0] ? args[0] + '\n' + errorStack : errorStack;
+        }
+        onError.apply(null, args);
+      };
     };
 
     exports.onParallel = function (onError, onDebug) {
@@ -311,29 +156,28 @@
         this function will return another function that runs async tasks in parallel,
         and calls onError only if there's an error, or if its counter === 0
       */
-      var errorStack, self;
-      errorStack = exports.errorStack();
+      var self;
       onDebug = onDebug || exports.nop;
       self = function (error) {
-        onDebug(error, self);
-        // if counter === 0 or error already occurred, then return
-        if (self.counter === 0 || self.error) {
-          return;
-        }
-        // error handling behavior
-        if (error) {
-          self.error = error;
-          // ensure counter will decrement to 0
-          self.counter = 1;
-          // append errorStack to error.stack
-          error.stack = exports.errorStack(error) + '\n' + errorStack;
-        }
-        // decrement counter
-        self.counter -= 1;
-        // if counter === 0, then call onError with error
-        if (self.counter === 0) {
-          onError(error);
-        }
+        exports.onErrorWithStack(function (error) {
+          onDebug(error, self);
+          // if counter === 0 or error already occurred, then return
+          if (self.counter === 0 || self.error) {
+            return;
+          }
+          // error handling behavior
+          if (error) {
+            self.error = error;
+            // ensure counter will decrement to 0
+            self.counter = 1;
+          }
+          // decrement counter
+          self.counter -= 1;
+          // if counter === 0, then call onError with error
+          if (self.counter === 0) {
+            onError(error);
+          }
+        })(error);
       };
       // init counter
       self.counter = 0;
@@ -341,40 +185,15 @@
       return self;
     };
 
-    exports._onParallel_default_test = function (onError) {
-      /*
-        this function will test onParallel's default handling behavior
-      */
-      var onParallel, onParallelError;
-      // test onDebug handling behavior
-      onParallel = exports.onParallel(onError, function (error, self) {
-        exports.testTryCatch(function () {
-          // validate no error occurred
-          exports.assert(!error, error);
-          // validate self
-          exports.assert(self.counter >= 0, self);
-        }, onError);
+    // init onReady
+    (function () {
+      exports.onReady = exports.onParallel(function (error) {
+        exports.onReady.onReady(error);
       });
-      onParallel.counter += 1;
-      onParallel.counter += 1;
-      setTimeout(function () {
-        onParallelError = exports.onParallel(function (error) {
-          exports.testTryCatch(function () {
-            // validate error occurred
-            exports.assert(error instanceof Error, error);
-            onParallel();
-          }, onParallel);
-        });
-        onParallelError.counter += 1;
-        // test error handling behavior
-        onParallelError.counter += 1;
-        onParallelError(exports.errorDefault);
-        // test ignore-after-error handling behavior
-        onParallelError();
-      });
-      // test default handling behavior
-      onParallel();
-    };
+      exports.onReady.onReady = exports.onErrorDefault;
+      exports.onReady.counter += 1;
+      setTimeout(exports.onReady);
+    }());
 
     exports.onTimeout = function (onError, timeout, message) {
       /*
@@ -393,28 +212,6 @@
       return setTimeout(function () {
         onError(error);
       }, timeout);
-    };
-
-    exports._onTimeout_timeout_test = function (onError) {
-      /*
-        this function will test onTimeout's timeout handling behavior
-      */
-      var timeElapsed;
-      timeElapsed = Date.now();
-      exports.onTimeout(function (error) {
-        exports.testTryCatch(function () {
-          // validate error occurred
-          exports.assert(error instanceof Error);
-          // save timeElapsed
-          timeElapsed = Date.now() - timeElapsed;
-          // validate timeElapsed passed is greater than timeout
-          // bug - ie might timeout slightly earlier,
-          // so increase timeElapsed by a small amount
-          exports.assert(timeElapsed + 100 >= 1000, timeElapsed);
-          onError();
-        }, onError);
-      // coverage - use 1500 ms to cover setInterval test-report refreshes in browser
-      }, 1500, '_onTimeout_errorTimeout_test');
     };
 
     exports.setDefault = function (options, depth, defaults) {
@@ -443,36 +240,6 @@
       return options;
     };
 
-    exports._setDefault_default_test = function (onError) {
-      /*
-        this function will test setDefault's default handling behavior
-      */
-      var options;
-      // test non-recursive handling behavior
-      options = exports.setDefault(
-        { aa: 1, bb: {}, cc: [] },
-        1,
-        { aa: 2, bb: { cc: 2 }, cc: [1, 2] }
-      );
-      // validate options
-      exports.assert(
-        exports.jsonStringifyOrdered(options) === '{"aa":1,"bb":{},"cc":[]}',
-        options
-      );
-      // test recursive handling behavior
-      options = exports.setDefault(
-        { aa: 1, bb: {}, cc: [] },
-        -1,
-        { aa: 2, bb: { cc: 2 }, cc: [1, 2] }
-      );
-      // validate options
-      exports.assert(
-        exports.jsonStringifyOrdered(options) === '{"aa":1,"bb":{"cc":2},"cc":[]}',
-        options
-      );
-      onError();
-    };
-
     exports.setOverride = function (options, depth, override, backup) {
       /*
         this function will recursively override the options object with the override object,
@@ -493,7 +260,7 @@
           // 1. save the options item to the backup object
           backup[key] = options2;
           // 2. set the override item to the options object
-          // if options is exports.envDict, then override falsey values with empty string
+          // if options is envDict, then override falsey values with empty string
           options[key] = options === exports.envDict ? override2 || '' : override2;
           return;
         }
@@ -501,42 +268,6 @@
         exports.setOverride(options2, depth, override2, override2, backup);
       });
       return options;
-    };
-
-    exports._setOverride_default_test = function (onError) {
-      /*
-        this function will test setOverride's default handling behavior
-      */
-      var backup, data, options;
-      backup = {};
-      // test override handling behavior
-      options = exports.setOverride(
-        { aa: 1, bb: { cc: 2 }, dd: [3, 4], ee: { ff: { gg: 5, hh: 6 } } },
-        // test depth handling behavior
-        2,
-        { aa: 2, bb: { dd: 3 }, dd: [4, 5], ee: { ff: { gg: 6 } } },
-        // test backup handling behavior
-        backup
-      );
-      // validate backup
-      data = exports.jsonStringifyOrdered(backup);
-      exports.assert(data ===
-        '{"aa":1,"bb":{},"dd":[3,4],"ee":{"ff":{"gg":5,"hh":6}}}', data);
-      // validate options
-      data = exports.jsonStringifyOrdered(options);
-      exports.assert(data ===
-        '{"aa":2,"bb":{"cc":2,"dd":3},"dd":[4,5],"ee":{"ff":{"gg":6}}}', data);
-      // test restore options from backup handling behavior
-      exports.setOverride(options, -1, backup);
-      // validate backup
-      data = exports.jsonStringifyOrdered(backup);
-      exports.assert(data ===
-        '{"aa":1,"bb":{"dd":3},"dd":[3,4],"ee":{"ff":{"gg":6}}}', data);
-      // validate options
-      data = exports.jsonStringifyOrdered(options);
-      exports.assert(data ===
-        '{"aa":1,"bb":{"cc":2},"dd":[3,4],"ee":{"ff":{"gg":5,"hh":6}}}', data);
-      onError();
     };
 
     exports.testMock = function (mockList, onError, testCase) {
@@ -557,8 +288,7 @@
         // suppress console.log
         [console, { log: exports.nop }],
         // enforce synchronicity by mocking timers as callCallback
-        [exports.global, { setInterval: callCallback, setTimeout: callCallback }],
-        [exports.global.process || {}, { exit: exports.nop }]
+        [exports.global, { setInterval: callCallback, setTimeout: callCallback }]
       ].concat(mockList);
       onError2 = function (error) {
         // restore mock[0] from mock[2]
@@ -773,22 +503,25 @@
       );
     };
 
-    exports.testRun = function (options, onTestRunEnd) {
+    exports.testRun = function (options) {
       /*
-        this function will run the test-cases in exports.testPlatform.testCaseList
+        this function will run the tests in exports.testPlatform.testCaseList
       */
-      var onParallel, testPlatform, timerInterval;
+      var exit, onParallel, testPlatform, timerInterval;
       exports.modeTest = exports.modeTest || exports.envDict.npm_config_mode_npm_test;
       if (!exports.modeTest) {
         return;
       }
-      // init exports.modeTestCase
+      // mock exit
+      exit = exports.exit;
+      exports.exit = exports.nop;
+      // init modeTestCase
       exports.modeTestCase = exports.modeTestCase || exports.envDict.npm_config_mode_test_case;
-      // reset exports.testPlatform.testCaseList
+      // reset testPlatform.testCaseList
       exports.testPlatform.testCaseList.length = 0;
-      // add test-cases into exports.testPlatform.testCaseList
+      // add tests into testPlatform.testCaseList
       Object.keys(options).forEach(function (key) {
-        // add test-case options[key] to exports.testPlatform.testCaseList
+        // add test-case options[key] to testPlatform.testCaseList
         if (key.slice(-5) === '_test' &&
             (exports.modeTestCase === key ||
               (!exports.modeTestCase && key !== '_testRun_failure_test'))) {
@@ -800,13 +533,12 @@
       });
       // if in browser mode, visually refresh test progress until it finishes
       if (exports.modeJs === 'browser') {
-        // init exports._testReportDiv element
+        // init _testReportDiv element
         exports._testReportDiv = document.querySelector('.testReportDiv') || {};
         exports._testReportDiv.innerHTML = exports.testMerge(exports.testReport, {});
-        document.body.appendChild(exports._testReportDiv);
         // update test-report status every 1000 ms until finished
         timerInterval = setInterval(function () {
-          // update exports._testReportDiv in browser
+          // update _testReportDiv in browser
           exports._testReportDiv.innerHTML =
             exports.testMerge(exports.testReport, {});
           if (exports.testReport.testsPending === 0) {
@@ -817,9 +549,11 @@
       }
       onParallel = exports.onParallel(function () {
         /*
-          this function create the test-report after all tests have finished
+          this function will create the test-report after all tests have finished
         */
         var separator, testReport, testReportHtml;
+        // restore exit
+        exports.exit = exit;
         // init new-line separator
         separator = new Array(56).join('-');
         // init testReport
@@ -848,11 +582,11 @@
           };
           setTimeout(function () {
             // call callback with number of tests failed
-            onTestRunEnd(exports.testReport.testsFailed);
+            exports.onErrorExit(exports.testReport.testsFailed);
             // throw global_test_results as an error,
             // so it can be caught and passed to the phantom js-env
             if (exports.modeTest === 'phantom') {
-              throw new Error(JSON.stringify({
+              throw new Error('\nphantom\n' + JSON.stringify({
                 global_test_results: exports.global.global_test_results
               }));
             }
@@ -861,8 +595,8 @@
         case 'node':
           // create build badge
           exports.fs.writeFileSync(
-            process.cwd() + '/.tmp/build/build.badge.svg',
-            exports.fileCacheDict['.tmp/build/build.badge.svg'].data
+            exports.envDict.npm_package_dir_build + '/build.badge.svg',
+            exports.fileCacheDict['/build/build.badge.svg'].data
               // edit branch name
               .replace(
                 (/0000 00 00 00 00 00/g),
@@ -878,8 +612,8 @@
           );
           // create test-report.badge.svg
           exports.fs.writeFileSync(
-            process.cwd() + '/.tmp/build/test-report.badge.svg',
-            exports.fileCacheDict['.tmp/build/test-report.badge.svg'].data
+            exports.envDict.npm_package_dir_build + '/test-report.badge.svg',
+            exports.fileCacheDict['/build/test-report.badge.svg'].data
               // edit number of tests failed
               .replace((/999/g), testReport.testsFailed)
               // edit badge color
@@ -891,29 +625,24 @@
           );
           // create test-report.html
           exports.fs.writeFileSync(
-            process.cwd() + '/.tmp/build/test-report.html',
+            exports.envDict.npm_package_dir_build + '/test-report.html',
             testReportHtml
           );
           // create test-report.json
           exports.fs.writeFileSync(
-            process.cwd() + '/.tmp/build/test-report.json',
+            exports.envDict.npm_package_dir_build + '/test-report.json',
             JSON.stringify(exports.testReport)
           );
           // if any test failed, then exit with non-zero exit-code
           setTimeout(function () {
-            // finalize exports.testReport
+            // finalize testReport
             exports.testMerge(testReport, {});
             console.log('\n' + exports.envDict.MODE_BUILD + ' - ' +
               exports.testReport.testsFailed + ' failed tests\n');
             // call callback with number of tests failed
-            onTestRunEnd(exports.testReport.testsFailed);
+            exports.onErrorExit(exports.testReport.testsFailed);
           }, 1000);
           break;
-        default:
-          setTimeout(function () {
-            // call callback with number of tests failed
-            onTestRunEnd(exports.testReport.testsFailed);
-          }, 1000);
         }
       });
       onParallel.counter += 1;
@@ -964,18 +693,6 @@
         }
       });
       onParallel();
-    };
-
-    exports._testRun_failure_test = function (onError) {
-      /*
-        this function will test testRun's failure handling behavior
-      */
-      // test failure from callback handling behavior
-      onError(exports.errorDefault);
-      // test failure from multiple-callback handling behavior
-      onError();
-      // test failure from thrown error handling behavior
-      throw exports.errorDefault;
     };
 
     exports.testTryCatch = function (callback, onError) {
@@ -1032,41 +749,6 @@
       });
     };
 
-    exports._textFormat_default_test = function (onError) {
-      /*
-        this function will test textFormat's default handling behavior
-      */
-      var data;
-      // test undefined valueDefault handling behavior
-      data = exports.textFormat('{{aa}}', {}, undefined);
-      exports.assert(data === '{{aa}}', data);
-      // test default handling behavior
-      data = exports.textFormat('{{aa}}{{aa}}{{bb}}{{cc}}{{dd}}{{ee.ff}}', {
-        // test string value handling behavior
-        aa: 'aa',
-        // test non-string value handling behavior
-        bb: 1,
-        // test null-value handling behavior
-        cc: null,
-        // test undefined-value handling behavior
-        dd: undefined,
-        // test nested value handling behavior
-        ee: { ff: 'gg' }
-      }, '<undefined>');
-      exports.assert(data === 'aaaa1null<undefined>gg', data);
-      // test list handling behavior
-      data = exports.textFormat('[{{#list1}}[{{#list2}}{{aa}},{{/list2}}],{{/list1}}]', {
-        list1: [
-          // test null-value handling behavior
-          null,
-          // test recursive list handling behavior
-          { list2: [{ aa: 'bb' }, { aa: 'cc' }] }
-        ]
-      }, '<undefined>');
-      exports.assert(data === '[[<undefined><undefined>,<undefined>],[bb,cc,],]', data);
-      onError();
-    };
-
     exports._timeElapsedStop = function (options) {
       /*
         this function will stop options.timeElapsed
@@ -1091,10 +773,9 @@
       /*
         this functions performs a brower ajax request with error handling and timeout
       */
-      var data, error, errorStack, finished, ii, onEvent, timerTimeout, xhr;
-      errorStack = exports.errorStack();
+      var data, error, finished, ii, onEvent, timerTimeout, xhr;
       // init event-handling
-      onEvent = function (event) {
+      onEvent = exports.onErrorWithStack(function (event) {
         switch (event.type) {
         case 'abort':
         case 'error':
@@ -1105,7 +786,7 @@
           exports.assert(!finished, finished);
           // set finished to true
           finished = true;
-          // validate xhr is defined in exports._ajaxProgressList
+          // validate xhr is defined in _ajaxProgressList
           ii = exports._ajaxProgressList.indexOf(xhr);
           exports.assert(ii >= 0, 'missing xhr in exports._ajaxProgressList');
           // remove xhr from ajaxProgressList
@@ -1126,8 +807,6 @@
                 JSON.stringify(xhr.responseText.slice(0, 256) + '...') + '\n' + error.message;
               // debug status code
               error.statusCode = xhr.status;
-              // append errorStack to error.stack
-              error.stack = exports.errorStack(error) + '\n' + errorStack;
             }
           }
           // hide _ajaxProgressDiv
@@ -1150,7 +829,7 @@
         }
         // finish ajaxProgressBar
         exports._ajaxProgressUpdate('100%', 'ajaxProgressBarDivSuccess', 'loaded');
-      };
+      });
       // init xhr
       xhr = new XMLHttpRequest();
       // debug xhr
@@ -1171,7 +850,7 @@
       if (exports._ajaxProgressList.length === 0) {
         exports._ajaxProgressDiv.style.display = 'block';
       }
-      // add xhr to exports._ajaxProgressList
+      // add xhr to _ajaxProgressList
       exports._ajaxProgressList.push(xhr);
       // open url
       xhr.open(options.method || 'GET', options.url);
@@ -1185,11 +864,11 @@
       xhr.send(options.data);
     };
 
-    // init exports._ajaxProgressBarDiv element
+    // init _ajaxProgressBarDiv element
     exports._ajaxProgressBarDiv =
       document.querySelector('.ajaxProgressBarDiv') || { className: '', style: {} };
 
-    // init exports._ajaxProgressDiv element
+    // init _ajaxProgressDiv element
     exports._ajaxProgressDiv = document.querySelector('.ajaxProgressDiv') || { style: {} };
 
     exports._ajaxProgressIncrement = function () {
@@ -1209,7 +888,7 @@
     // init list of xhr used in ajaxProgress
     exports._ajaxProgressList = [];
 
-    // init exports._ajaxProgressState
+    // init _ajaxProgressState
     exports._ajaxProgressState = 0;
 
     exports._ajaxProgressUpdate = function (width, type, label) {
@@ -1237,24 +916,22 @@
       /*
         this functions runs a node http request with error handling and timeout
       */
-      var errorStack,
-        finished,
-        modeIo,
-        onIo,
+      var finished,
+        modeNext,
+        onNext,
         request,
         response,
         responseText,
         timerTimeout,
         urlParsed;
-      errorStack = exports.errorStack();
-      modeIo = 0;
-      onIo = function (error, data) {
-        modeIo = error instanceof Error ? NaN : modeIo + 1;
-        switch (modeIo) {
+      modeNext = 0;
+      onNext = exports.onErrorWithStack(function (error, data) {
+        modeNext = error instanceof Error ? NaN : modeNext + 1;
+        switch (modeNext) {
         case 1:
           // set timerTimeout
           timerTimeout = exports.onTimeout(
-            onIo,
+            onNext,
             options.timeout || exports.timeoutDefault,
             'ajax ' + options.url
           );
@@ -1284,9 +961,9 @@
               : 0;
           // make http request
           request = (urlParsed.protocol === 'https:' ? exports.https : exports.http)
-            .request(options, onIo)
+            .request(options, onNext)
             // handle error event
-            .on('error', onIo);
+            .on('error', onNext);
           // debug ajax request
           exports._debugAjaxRequest = request;
           // send request and/or data
@@ -1296,18 +973,18 @@
           response = error;
           // debug ajax response
           exports._debugAjaxResponse = response;
-          exports.streamReadAll(response, onIo);
+          exports.streamReadAll(response, onNext);
           break;
         case 3:
           // init responseText
           responseText = options.resultType === 'binary' ? data : data.toString();
           // error handling for http status code >= 400
           if (response.statusCode >= 400) {
-            onIo(new Error(responseText));
+            onNext(new Error(responseText));
             return;
           }
           // successful response
-          onIo(null, responseText);
+          onNext(null, responseText);
           break;
         default:
           // if already finished, then ignore error / data
@@ -1328,106 +1005,40 @@
               JSON.stringify((responseText || '').slice(0, 256) + '...') + '\n' + error.message;
             // debug status code
             error.statusCode = response && response.statusCode;
-            // append errorStack to error.stack
-            error.stack = exports.errorStack(error) + '\n' + errorStack;
           }
           onError(error, responseText);
         }
-      };
-      onIo();
-    };
-
-    exports._coverageInstrument = function (script, file) {
-      /*
-        this function will instrument the given script and file
-      */
-      var istanbul;
-      istanbul = require('istanbul-lite');
-      return new istanbul.Instrumenter().instrumentSync(script, file);
-    };
-
-    exports._coverageMerge_default_test = function (onError) {
-      /*
-        this function will test coverageMerge's default handling behavior
-      */
-      var coverage1, coverage2, script;
-      script = exports._coverageInstrument(
-        '(function () {\nreturn arg ? __coverage__ : __coverage__;\n}());',
-        'test'
-      );
-      exports.arg = 0;
-      // init coverage1
-      coverage1 = exports.vm.runInNewContext(script, { arg: 0 });
-      // validate coverage1
-      exports.assert(exports.jsonStringifyOrdered(coverage1) === '{"test":{"b":{"1":[0,1]},"branchMap":{"1":{"line":2,"locations":[{"end":{"column":25,"line":2},"start":{"column":13,"line":2}},{"end":{"column":40,"line":2},"start":{"column":28,"line":2}}],"type":"cond-expr"}},"f":{"1":1},"fnMap":{"1":{"line":1,"loc":{"end":{"column":13,"line":1},"start":{"column":1,"line":1}},"name":"(anonymous_1)"}},"path":"test","s":{"1":1,"2":1},"statementMap":{"1":{"end":{"column":5,"line":3},"start":{"column":0,"line":1}},"2":{"end":{"column":41,"line":2},"start":{"column":0,"line":2}}}}}', coverage1);
-      // init coverage1
-      coverage2 = exports.vm.runInNewContext(script, { arg: 1 });
-      // validate coverage2
-      exports.assert(exports.jsonStringifyOrdered(coverage2) === '{"test":{"b":{"1":[1,0]},"branchMap":{"1":{"line":2,"locations":[{"end":{"column":25,"line":2},"start":{"column":13,"line":2}},{"end":{"column":40,"line":2},"start":{"column":28,"line":2}}],"type":"cond-expr"}},"f":{"1":1},"fnMap":{"1":{"line":1,"loc":{"end":{"column":13,"line":1},"start":{"column":1,"line":1}},"name":"(anonymous_1)"}},"path":"test","s":{"1":1,"2":1},"statementMap":{"1":{"end":{"column":5,"line":3},"start":{"column":0,"line":1}},"2":{"end":{"column":41,"line":2},"start":{"column":0,"line":2}}}}}', coverage2);
-      // merge coverage2 into coverage1
-      exports.coverageMerge(coverage1, coverage2);
-      // validate merged coverage1
-      exports.assert(exports.jsonStringifyOrdered(coverage1) === '{"test":{"b":{"1":[1,1]},"branchMap":{"1":{"line":2,"locations":[{"end":{"column":25,"line":2},"start":{"column":13,"line":2}},{"end":{"column":40,"line":2},"start":{"column":28,"line":2}}],"type":"cond-expr"}},"f":{"1":2},"fnMap":{"1":{"line":1,"loc":{"end":{"column":13,"line":1},"start":{"column":1,"line":1}},"name":"(anonymous_1)"}},"path":"test","s":{"1":2,"2":2},"statementMap":{"1":{"end":{"column":5,"line":3},"start":{"column":0,"line":1}},"2":{"end":{"column":41,"line":2},"start":{"column":0,"line":2}}}}}', coverage1);
-      onError();
+      });
+      onNext();
     };
 
     exports.fileCacheAndParse = function (options) {
       /*
         this function will parse options.file and cache it to exports.fileCacheDict
       */
-      var tmp;
-      // read options.data from options.file
-      options.data = exports.fs.readFileSync(options.file, 'utf8')
-        // comment out shebang
-        .replace((/^#!/), '//#!');
+      // read options.data from options.file and comment out shebang
+      options.data = exports.fs.readFileSync(options.file, 'utf8').replace((/^#!/), '//#!');
+      // if coverage-mode is enabled, then instrument options.data
+      if (exports.__coverage__ &&
+          options.coverage && options.coverage === exports.envDict.npm_package_name) {
+        options.data = exports.istanbulInstrument(options.data, options.file);
+      }
       // cache options to exports.fileCacheDict[options.cache]
       if (options.cache) {
         exports.fileCacheDict[options.cache] = options;
       }
-      // parse options.data's embedded sub-files
-      if (options.parse) {
-        options.data.replace(
-          (/^\/\* FILE_BEGIN ([\S\s]+?) \*\/$([\S\s]+?)^\/\* FILE_END \*\/$/gm),
-          function (match0, options2, data, ii) {
-            // nop hack to pass jslint
-            exports.nop(match0);
-            // preserve lineno
-            tmp =
-              options.data.slice(0, ii).replace((/.+/g), '') + options2.replace((/.+/g), '');
-            options2 = JSON.parse(options2);
-            // cache options2 to exports.fileCacheDict[options2.file]
-            exports.fileCacheDict[options2.file] = options2;
-            // cache data to option2.data and preserve lineno
-            options2.data = tmp + data;
-            // run each action in options2.actionList
-            options2.actionList.forEach(function (action) {
-              switch (action) {
-              // export options2.data to exports.utility2Browser.fileCacheDict
-              case 'exportBrowser':
-                exports.utility2Browser.fileCacheDict[options2.file] = options2;
-                break;
-              // jslint options2.data
-              case 'jslint':
-                exports.jslint_lite.jslintAndPrint(options2.data, options2.file);
-                break;
-              }
-            });
-            // auto-trim data
-            options2.data = options2.data.trim();
-          }
-        );
+    };
+
+    exports.istanbulInstrument = function (script, file) {
+      /*
+        this function will instrument the given script and file
+      */
+      var istanbul;
+      if (!exports._instrumenter) {
+        istanbul = require('istanbul-lite');
+        exports._instrumenter = new istanbul.Instrumenter();
       }
-      // if coverage-mode is enabled, then instrument options.data
-      if (exports.__coverage__ &&
-          options.coverage &&
-          options.coverage === exports.envDict.PACKAGE_JSON_NAME) {
-        options.data = exports._coverageInstrument(options.data, options.file);
-        // write instrumented options.data to fs
-        exports.fs.writeFileSync(
-          process.cwd() + '/.tmp/instrumented.' + options.cache.replace((/[^\w\-]/g), '.'),
-          options.data
-        );
-      }
+      return exports._instrumenter.instrumentSync(script, file);
     };
 
     exports.onFileModifiedRestart = function (file) {
@@ -1440,10 +1051,101 @@
           persistent: false
         }, function (stat2, stat1) {
           if (stat2.mtime > stat1.mtime) {
-            process.exit(1);
+            exports.exit(1);
           }
         });
       }
+    };
+
+    exports.phantomRender = function (options, onError) {
+      /*
+        this function will spawn phantomjs to render options.url
+      */
+      exports.phantomTest(exports.setDefault(options, 1, {
+        modeErrorIgnore: true,
+        modePhantom: 'render',
+        timeoutDefault: 5000
+      }), onError);
+    };
+
+    exports.phantomTest = function (options, onError) {
+      /*
+        this function will spawn phantomjs to test options.url
+      */
+      var onParallel;
+      exports.setDefault(options, 1, {
+        _testSecret: exports._testSecret,
+        modePhantom: 'test'
+      });
+      onParallel = exports.onParallel(onError);
+      onParallel.counter += 1;
+      ['phantomjs', 'slimerjs'].forEach(function (argv0) {
+        var argv1, onError2, options2, timerTimeout;
+        // if slimerjs is not available, then do not use it
+        if (argv0 === 'slimerjs' && (!exports.envDict.npm_config_mode_slimerjs ||
+            exports.envDict.npm_config_mode_no_slimerjs)) {
+          return;
+        }
+        argv1 = exports.envDict.MODE_BUILD + '.' + argv0 + '.' +
+          encodeURIComponent(exports.url.parse(options.url).pathname);
+        options2 = exports.setDefault(exports.jsonCopy(options), 1, {
+          _testSecret: exports._testSecret,
+          argv0: argv0,
+          argv1: argv1,
+          fileCoverage:
+            exports.envDict.npm_package_dir_tmp + '/coverage.' + argv1 + '.json',
+          fileRender: (
+            exports.envDict.npm_package_dir_build + '/screen-capture.' + argv1 + '.png'
+          )
+            .replace((/%/g), '_')
+            .replace((/_2F.png$/), 'png'),
+          fileTestReport:
+            exports.envDict.npm_package_dir_tmp + '/test-report.' + argv1 + '.json',
+          modePhantom: 'test'
+        });
+        onParallel.counter += 1;
+        onError2 = function (error) {
+          // cleanup timerTimeout
+          clearTimeout(timerTimeout);
+          onParallel(error);
+        };
+        // set timerTimeout
+        timerTimeout = exports.onTimeout(onError2, exports.timeoutDefault, argv1);
+        options.fileUtility2 = __dirname + '/index.js';
+        // cover index.js
+        if (exports.__coverage__ && 'utility2' === exports.envDict.npm_package_name) {
+          options.fileUtility2 =
+            exports.envDict.npm_package_dir_tmp + '/instrumented.utility2.js';
+        }
+        // spawn phantomjs to test a url
+        exports.child_process
+          .spawn(
+            require('phantomjs-lite').__dirname + '/' + argv0,
+            [
+              options.fileUtility2,
+              encodeURIComponent(JSON.stringify(options2))
+            ],
+            { stdio: 'inherit' }
+          )
+          .on('exit', function (exitCode) {
+            [options2.fileCoverage, options2.fileTestReport].forEach(function (file, ii) {
+              var data;
+              try {
+                data = JSON.parse(exports.fs.readFileSync(file, 'utf8'));
+                // merge phantom js-env code-coverage
+                if (ii === 0) {
+                  exports.istanbulMerge(exports.__coverage__, data);
+                // merge tests
+                } else if (options2.modePhantom === 'test' && !options2.modeErrorIgnore) {
+                  exports.testMerge(exports.testReport, data);
+                }
+              } catch (ignore) {
+              }
+            });
+            onError2(exitCode && new Error(argv0 + ' exit-code ' + exitCode));
+          });
+      });
+      onParallel();
     };
 
     exports.replStart = function (globalDict) {
@@ -1523,48 +1225,6 @@
       };
     };
 
-    exports._replStart_default_test = function (onError) {
-      /*
-        this function will test replStart's default handling behavior
-      */
-      var evil;
-      exports.testMock([
-        [exports.child_process, { spawn: function () {
-          return { on: function (event, callback) {
-            // nop hack to pass jslint
-            exports.nop(event);
-            callback();
-          } };
-        } }]
-      ], onError, function (onError) {
-        // evil hack to pass jslint
-        evil = 'eval';
-        [
-          // test shell handling behavior
-          '($ :\n)',
-          // test git diff handling behavior
-          '($ git diff\n)',
-          // test git log handling behavior
-          '($ git log\n)',
-          // test grep handling behavior
-          '(grep \\bhello\\b\n)',
-          // test print handling behavior
-          '(print\n)'
-        ].forEach(function (script) {
-          exports._replServer[evil](script, null, 'repl', exports.nop);
-        });
-        // test syntax-error handling behavior
-        exports._replServer[evil]('syntax-error', null, 'repl', function (error) {
-          exports.testTryCatch(function () {
-            // validate error occurred
-            // bug - use util.isError to validate error when using eval
-            exports.assert(require('util').isError(error), error);
-            onError();
-          }, onError);
-        });
-      });
-    };
-
     exports.serverRespondDefault = function (request, response, statusCode, error) {
       /*
         this function will respond with a default message,
@@ -1640,31 +1300,15 @@
         .on('error', onError);
     };
 
-    exports.testMiddleware = function (request, response, onIo) {
-      var contentTypeDict;
-      // debug server request
-      exports._debugServerRequest = request;
-      // debug server response
-      exports._debugServerResponse = response;
-      // check if _testSecret is valid
-      request._testSecretValid = (/\b_testSecret=(\w+)\b/).exec(request.url);
-      request._testSecretValid =
-        request._testSecretValid && request._testSecretValid[1] === exports._testSecret;
-      // init request.urlPathNormalized
-      request.urlPathNormalized =
-        exports.path.resolve(exports.url.parse(request.url).pathname);
-      // init Content-Type header
-      contentTypeDict = {
-        '.css': 'text/css; charset=UTF-8',
-        '.html': 'text/html; charset=UTF-8',
-        '.js': 'application/javascript; charset=UTF-8',
-        '.json': 'application/json; charset=UTF-8',
-        '.txt': 'text/txt; charset=UTF-8'
-      };
-      exports.serverRespondWriteHead(request, response, null, {
-        'Content-Type': contentTypeDict[exports.path.extname(request.urlPathNormalized)]
-      });
+    exports.testMiddleware = function (request, response, onNext) {
       switch (request.urlPathNormalized) {
+      // redirect main-page to test-page
+      case '/':
+        exports.serverRespondWriteHead(request, response, 303, {
+          'Location': request.url.replace('/', '/test/test.html')
+        });
+        response.end();
+        break;
       // serve the following assets from fileCacheDict
       case '/assets/utility2.js':
       case '/test/test.js':
@@ -1672,169 +1316,105 @@
         break;
       // serve test page
       case '/test/test.html':
-      case '/test/utility2.html':
         response.end(exports.textFormat(exports.fileCacheDict[
           request.urlPathNormalized
         ].data, {
           envDict: exports.envDict,
-          utility2BrowserJson: JSON.stringify(exports.utility2Browser),
           utility2Css: exports.fileCacheDict['/assets/utility2.css'].data
         }));
         break;
       // fallback to next middleware
       default:
-        onIo();
+        onNext();
       }
     };
 
-    exports.testPhantom = function (options, onError) {
+    exports.testRunServer = function (options) {
       /*
-        this function will spawn a phantomjs process to test a url
+        this function will
+        1. create http-server with options.serverMiddlewareList
+        2. start http-server on $npm_config_server_port
+        3. test http-server
       */
-      var onParallel;
-      onParallel = exports.onParallel(onError);
-      onParallel.counter += 1;
-      // init timeout
-      options.timeout = options.timeout || exports.timeoutDefault;
-      ['phantomjs', 'slimerjs'].forEach(function (argv0) {
-        var file, onError2, timerTimeout;
-        // if slimerjs is not available, then do not use it
-        if (argv0 === 'slimerjs' && (!exports.envDict.npm_config_mode_slimerjs ||
-            exports.envDict.npm_config_mode_no_slimerjs)) {
-          return;
-        }
-        argv0 = exports.envDict.MODE_BUILD + '.' + argv0;
-        if ('utility2' === exports.envDict.PACKAGE_JSON_NAME) {
-          argv0 += (exports.url.parse(options.url).path).replace((/\W+/g), '.');
-        }
-        onParallel.counter += 1;
-        onError2 = function (error) {
-          // cleanup timerTimeout
-          clearTimeout(timerTimeout);
-          onParallel(error);
-        };
-        // set timerTimeout
-        timerTimeout = exports.onTimeout(onError2, options.timeout, argv0);
-        file = __dirname + '/index.js';
-        // cover index.js
-        if (exports.__coverage__ && 'utility2' === exports.envDict.PACKAGE_JSON_NAME) {
-          file = process.cwd() + '/.tmp/instrumented..assets.utility2.js';
-        }
-        // spawn a phantomjs process to test a url
-        exports.child_process.spawn(
-          require('phantomjs-lite').__dirname + '/' + argv0.split('.')[1],
-          [
-            file,
-            encodeURIComponent(JSON.stringify(exports.setOverride({
-              argv0: argv0,
-              _testSecret: exports._testSecret,
-              timeoutDefault: options.timeout
-            }, 1, options)))
-          ],
-          { stdio: 'inherit' }
-        )
-          .on('exit', function (exitCode) {
-            // merge coverage code
-            exports.coverageMerge(
-              exports.__coverage__,
-              JSON.parse(exports.fs.readFileSync(
-                process.cwd() +
-                  '/.tmp/build/coverage-report.html/coverage.' + argv0 + '.json',
-                'utf8'
-              ))
-            );
-            // merge tests
-            if (!options.modeErrorIgnore) {
-              exports.testMerge(
-                exports.testReport,
-                JSON.parse(exports.fs.readFileSync(
-                  process.cwd() + '/.tmp/build/test-report.' + argv0 + '.json',
-                  'utf8'
-                ))
-              );
-            }
-            onError2(exitCode && new Error(argv0 + ' exit ' + exitCode));
-          });
-      });
-      onParallel();
-    };
-
-    exports.testRunServer = function (options, onTestRunEnd) {
-    /*
-      this function will
-      1. create test-server with options.serverMiddlewareList
-      2. start test-server on $npm_config_server_port
-      3. test test-server
-    */
       // if $npm_config_timeout_exit is defined,
       // then exit this process after $npm_config_timeout_exit ms
       if (Number(exports.envDict.npm_config_timeout_exit)) {
-        setTimeout(process.exit, Number(exports.envDict.npm_config_timeout_exit))
+        setTimeout(exports.exit, Number(exports.envDict.npm_config_timeout_exit))
           // keep timerTimeout from blocking the process from exiting
           .unref();
+      }
+      // web-server __filename as /assets/utility2.js
+      exports.fileCacheAndParse({
+        cache: '/assets/utility2.js',
+        coverage: 'utility2',
+        file: __filename
+      });
+      // save instrumented utility2.js to fs
+      if (exports.__coverage__ && exports.envDict.npm_package_name === 'utility2') {
+        exports.fs.writeFileSync(
+          exports.envDict.npm_package_dir_tmp + '/instrumented.utility2.js',
+          exports.fileCacheDict['/assets/utility2.js'].data
+        );
       }
       // if $npm_config_server_port is undefined,
       // then assign it a random integer in the inclusive range 1 to 0xffff
       exports.envDict.npm_config_server_port = exports.envDict.npm_config_server_port ||
         ((Math.random() * 0x10000) | 0x8000).toString();
-      // 1. create test-server with options.serverMiddlewareList
+      // 3. test http-server
+      exports.onReady.onReady = function () {
+        exports.testRun(options);
+      };
+      exports.onReady.counter += 1;
+      // 1. create http-server with options.serverMiddlewareList
       exports.http.createServer(function (request, response) {
-        var modeIo, onIo;
-        modeIo = -1;
-        onIo = function (error) {
-          modeIo = error instanceof Error ? NaN : modeIo + 1;
-          if (options.serverMiddlewareList[modeIo]) {
-            options.serverMiddlewareList[modeIo](request, response, onIo);
+        var contentTypeDict, modeNext, onNext;
+        modeNext = -2;
+        onNext = function (error) {
+          modeNext = error instanceof Error ? NaN : modeNext + 1;
+          if (modeNext === -1) {
+            // debug server request
+            exports._debugServerRequest = request;
+            // debug server response
+            exports._debugServerResponse = response;
+            // check if _testSecret is valid
+            request._testSecretValid = (/\b_testSecret=(\w+)\b/).exec(request.url);
+            request._testSecretValid =
+              request._testSecretValid && request._testSecretValid[1] === exports._testSecret;
+            // init request.urlPathNormalized
+            request.urlPathNormalized =
+              exports.path.resolve(exports.url.parse(request.url).pathname);
+            // init Content-Type header
+            contentTypeDict = {
+              '.css': 'text/css; charset=UTF-8',
+              '.html': 'text/html; charset=UTF-8',
+              '.js': 'application/javascript; charset=UTF-8',
+              '.json': 'application/json; charset=UTF-8',
+              '.txt': 'text/txt; charset=UTF-8'
+            };
+            exports.serverRespondWriteHead(request, response, null, {
+              'Content-Type': contentTypeDict[exports.path.extname(request.urlPathNormalized)]
+            });
+            onNext();
+            return;
+          }
+          if (modeNext < options.serverMiddlewareList.length) {
+            options.serverMiddlewareList[modeNext](request, response, onNext);
             return;
           }
           // if error occurred, then respond with '500 Internal Server Error'
           // else respond with '404 Not Found'
           exports.serverRespondDefault(request, response, error ? 500 : 404, error);
         };
-        onIo();
+        onNext();
       })
-        // 2. start test-server on $npm_config_server_port
+        // 2. start http-server on $npm_config_server_port
         .listen(exports.envDict.npm_config_server_port, function () {
           console.log(
-            'test-server listening on port ' + exports.envDict.npm_config_server_port
+            'http-server listening on port ' + exports.envDict.npm_config_server_port
           );
-          // 3. test test-server
-          exports.testRun(options, onTestRunEnd);
+          exports.onReady();
         });
     };
-
-    exports._testRunServer_misc_test = function (onError) {
-      /*
-        this function will test testRunServer's misc handling behavior
-      */
-      // test random server-port handling behavior
-      exports.testMock([
-        [exports.http, { createServer: function () {
-          return { listen: exports.nop };
-        } }],
-        [exports.envDict, {
-          // test auto-exit handling behavior
-          npm_config_timeout_exit: '1',
-          // test random $npm_config_server_port handling behavior
-          npm_config_server_port: ''
-        }]
-      ], onError, function (onError) {
-        exports.testRunServer({ serverMiddlewareList: [] }, exports.nop);
-        onError();
-      });
-    };
-
-    // cache index.* files
-    [{
-      file: __dirname + '/index.data',
-      parse: true
-    }, {
-      cache: '/assets/utility2.js',
-      coverage: 'utility2',
-      file: __dirname + '/index.js'
-    }].forEach(function (options) {
-      exports.fileCacheAndParse(options);
-    });
   }());
 
 
@@ -1846,109 +1426,136 @@
     if (exports.modeJs !== 'phantom') {
       return;
     }
-    // override exports properties
-    exports.setOverride(
-      exports,
-      -1,
-      JSON.parse(decodeURIComponent(exports.system.args[1]))
-    );
-    // mock exports.fileCacheDict['/test/test-report.html.template'].data
-    exports.fileCacheDict = { '/test/test-report.html.template': { data: '' } };
-    // if modeErrorIgnore, then suppress console.error and console.log
-    if (exports.modeErrorIgnore) {
-      console.error = console.log = exports.nop;
-    }
-    // init error handling
-    exports.global.phantom.onError = function (message, trace) {
+
+    exports.onError = function (msg, trace) {
       /*
-        this function will catch all errors and
-        1. check if the error-message is a test-callback, and handle it appropriately
-        2. else handle it as a normal error
+        this function will provide global error handling
+        http://phantomjs.org/api/phantom/handler/on-error.html
       */
+      var msgStack;
+      msgStack = [exports.argv1 + '\nERROR: ' + msg];
+      if (trace && trace.length) {
+        msgStack.push('TRACE:');
+        trace.forEach(function (t) {
+          msgStack.push(' -> ' + (t.file || t.sourceURL) + ': ' + t.line +
+            (t.function ? ' (in function ' + t.function + ')' : ''));
+        });
+      }
+      console.error('\n' + msgStack.join('\n') + '\n');
+    };
+
+    exports.onErrorExit = function (error) {
+      /*
+        this function will save code coverage before exiting
+      */
+      setTimeout(function () {
+        if (exports.modePhantom === 'render') {
+          exports.page.render(exports.fileRender);
+          error = 0;
+        }
+        if (error instanceof Error) {
+          exports.onErrorDefault(error);
+          error = 1;
+        }
+        if (exports.modePhantom === 'test') {
+          exports.fs.write(exports.fileTestReport, JSON.stringify(exports.testReport));
+        }
+        if (exports.__coverage__) {
+          exports.fs.write(exports.fileCoverage, JSON.stringify(exports.__coverage__));
+        }
+        exports.exit(error);
+      });
+    };
+
+    var modeNext, onNext;
+    modeNext = 0;
+    onNext = function (error, trace) {
+      var data;
       try {
-        var data, file;
-        data = (/^Error: (\{"global_test_results":\{.+)/).exec(message);
-        data = data && JSON.parse(data[1]).global_test_results;
-        // 1. check if the error-message is a test-callback, and handle it appropriately
-        if (data) {
+        modeNext = trace ? 3 : modeNext + 1;
+        switch (modeNext) {
+        case 1:
+          // init global error handling
+          // http://phantomjs.org/api/phantom/handler/on-error.html
+          exports.global.phantom.onError = onNext;
+          // override exports properties
+          exports.setOverride(
+            exports,
+            -1,
+            JSON.parse(decodeURIComponent(exports.system.args[1]))
+          );
+          // if modeErrorIgnore, then suppress console.error and console.log
+          if (exports.modeErrorIgnore) {
+            console.error = console.log = exports.nop;
+          }
+          // set timeout for phantom
+          exports.onTimeout(exports.onErrorExit, exports.timeoutDefault, exports.url);
+          // init webpage
+          exports.page = exports.webpage.create();
+          // init webpage's viewport-size
+          exports.page.viewportSize = exports.viewportSize || { height: 600, width: 800 };
+          // init webpage's error handling
+          // http://phantomjs.org/api/webpage/handler/on-error.html
+          exports.page.onError = exports.global.phantom.onError;
+          // pipe webpage's console.log to stdout
+          exports.page.onConsoleMessage = function () {
+            console.log.apply(console, arguments);
+          };
+          // open requested webpage
+          exports.page.open(
+            // security - insert _testSecret in url without revealing it
+            exports.url.replace('{{_testSecret}}', exports._testSecret),
+            onNext
+          );
+          break;
+        case 2:
+          console.log(exports.argv0 + ' - open ' + error + ' ' + exports.url);
+          // validate webpage opened successfully
+          exports.assert(error === 'success', error);
+          break;
+        case 3:
+          if (exports.modePhantom === 'render') {
+            return;
+          }
+          data = (/\nphantom\n(\{"global_test_results":\{.+)/).exec(error);
+          data = data && JSON.parse(data[1]).global_test_results;
+          // handle normal error
+          if (!data) {
+            exports.onError(error, trace);
+            onNext(1);
+            return;
+          }
           // handle global_test_results passed as error
           // merge coverage
-          exports.coverageMerge(exports.__coverage__, data.coverage);
-          // create screenCapture
-          file = exports.fs.workingDirectory + '/.tmp/build/screen-capture.' +
-            exports.argv0.replace((/\b(phantomjs|slimerjs)\b.*/g), '$1') + '.png';
-          exports.page.render(file);
-          console.log('created ' + 'file://' + file);
-          // integrate screenCapture into test-report
+          exports.istanbulMerge(exports.__coverage__, data.coverage);
+          // create screen-capture
+          exports.page.render(exports.fileRender);
+          // integrate screen-capture into test-report
           data.testReport.testPlatformList[0].screenCaptureImg =
-            file.replace((/^.*\//), '');
+            exports.fileRender.replace((/^.*\//), '');
           // merge test-report
           exports.testMerge(exports.testReport, data.testReport);
-        // 2. else handle it as a normal error
-        } else {
-          // phantom error handling - http://phantomjs.org/api/phantom/handler/on-error.html
-          console.error('\n\n');
-          console.error(exports.argv0 + ' ERROR: ' + message);
-          if (trace && trace.length) {
-            console.error(exports.argv0 + ' TRACE:');
-            trace.forEach(function (t) {
-              console.error(' -> ' + (t.file || t.sourceURL) + ': ' + t.line
-                + (t.function ? ' (in function ' + t.function + ')' : ''));
-            });
-          }
-          console.error('\n\n');
+          // exit with number of tests failed as exit-code
+          onNext(data.testReport.testsFailed);
+          break;
+        default:
+          throw error;
         }
-        [[
-          '.tmp/build/test-report.' + exports.argv0 + '.json',
-          exports.testReport
-        ], [
-          '.tmp/build/coverage-report.html/coverage.' + exports.argv0 + '.json',
-          exports.__coverage__
-        ]].forEach(function (args) {
-          file = exports.fs.workingDirectory + '/' + args[0];
-          exports.fs.write(file, JSON.stringify(args[1]));
-          console.log('created ' + 'file://' + file);
-        });
-        // exit with number of tests failed as exit-code
-        exports.global.phantom.exit(!data || data.testReport.testsFailed);
-      } catch (error) {
-        console.error(error.message);
-        exports.global.phantom.exit(1);
+      } catch (errorCaught) {
+        exports.onErrorExit(errorCaught);
       }
     };
-    // set timeout for phantom
-    exports.onTimeout(function (error) {
-      exports.global.phantom.onError(error.message);
-    }, exports.timeoutDefault, exports.url);
-    // reset testCaseList
-    exports.testPlatform.testCaseList = [];
-    // init page
-    exports.page = exports.webpage.create();
-    // init page's viewport-size
-    exports.page.viewportSize = exports.viewportSize || { height: 600, width: 800 };
-    // init page's error handling
-    // http://phantomjs.org/api/webpage/handler/on-error.html
-    exports.page.onError = exports.global.phantom.onError;
-    // pipe page's console.log to stdout
-    exports.page.onConsoleMessage = function () {
-      console.log.apply(console, arguments);
-    };
-    // open requested webpage
-    exports.page.open(
-      // security - insert _testSecret in url without revealing it
-      exports.url.replace('{{_testSecret}}', exports._testSecret),
-      function (data) {
-        console.log(exports.argv0 + ' - open ' + data + ' ' + exports.url);
-        // validate page opened successfully
-        exports.assert(data === 'success', data);
-      }
-    );
+    onNext();
   }());
+
+
+
 }((function (self) {
   'use strict';
   var exports;
   // init shared js-env
   (function () {
+    // init exports
     exports = {};
     exports.modeJs = (function () {
       try {
@@ -1959,10 +1566,8 @@
           return module.exports && typeof process.versions.node === 'string' &&
             typeof require('child_process').spawn === 'function' && 'node';
         } catch (errorCaughtNode) {
-          exports = window.utility2 = window.utility2 || exports;
-          exports.modeJs = typeof navigator.userAgent === 'string' &&
+          return typeof navigator.userAgent === 'string' &&
             typeof document.querySelector('body') === 'object' && 'browser';
-          return exports.modeJs;
         }
       }
     }());
@@ -1976,75 +1581,11 @@
   switch (exports.modeJs) {
   // init browser js-env
   case 'browser':
-    exports.global = window;
-    break;
-  // init node js-env
-  case 'node':
-    exports.global = global;
-    module.exports = exports;
-    break;
-  // init phantom js-env
-  case 'phantom':
-    exports.global = self;
-    break;
-  }
-  // init shared js-env
-  (function () {
-    exports.global[['debug', 'Print'].join('')] = function (arg) {
-      /*
-        this function will both print the arg to stderr and return it,
-        and jslint will nag you to remove it if used
-      */
-      // debug arguments
-      exports[['debug', 'PrintArguments'].join('')] = arguments;
-      console.error('\n\n\ndebug' + 'Print');
-      console.error.apply(console, arguments);
-      console.error();
-      // return arg for inspection
-      return arg;
-    };
-    exports._debug_print_default_test = function (onError) {
-      /*
-        this function will test debug_print's default handling behavior
-      */
-      var message;
-      exports.testMock([
-        // suppress console.error
-        [console, { error: function (arg) {
-          message += (arg || '') + '\n';
-        } }]
-      ], onError, function (onError) {
-        message = '';
-        exports.global[['debug', 'Print'].join('')]('_debug_print_default_test');
-        // validate message
-        exports.assert(
-          message === '\n\n\ndebug' + 'Print\n_debug_print_default_test\n\n',
-          message
-        );
-        onError();
-      });
-    };
-    exports.errorDefault = exports.errorDefault || new Error('default error');
-    exports.fileCacheDict = exports.fileCacheDict || {};
-    exports.testPlatform = { testCaseList: [] };
-    exports.testReport = exports.testReport || { testPlatformList: [exports.testPlatform] };
-    exports.textExampleAscii = exports.textExampleAscii ||
-      '\x00\x01\x02\x03\x04\x05\x06\x07\b\t\n\x0b\f\r\x0e\x0f' +
-      '\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f' +
-      ' !"#$%&\'()*+,-./0123456789:;<=>?' +
-      '@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_' +
-      '`abcdefghijklmnopqrstuvwxyz{|}~\x7f';
-    exports.timeoutDefault = exports.timeoutDefault || 30000;
-    exports.__coverage__ = exports.__coverage__ || exports.global.__coverage__ || null;
-  }());
-  switch (exports.modeJs) {
-  // init browser js-env
-  case 'browser':
+    window.utility2 = exports;
     // init exports properties
     exports.envDict = exports.envDict || {};
-    exports.testPlatform.name = 'browser - ' + navigator.userAgent +
-      ' - ' + new Date().toISOString();
-    exports.testPlatform.screenCaptureImg = exports.envDict.MODE_BUILD_SCREEN_CAPTURE;
+    exports.exit = exports.nop;
+    exports.global = window;
     // parse any url-search-params that matches 'mode*' or '_testSecret' or 'timeoutDefault'
     location.search.replace(
       (/\b(mode[A-Z]\w+|_testSecret|timeoutDefault)=([^#&=]+)/g),
@@ -2062,6 +1603,7 @@
     break;
   // init node js-env
   case 'node':
+    module.exports = exports;
     // require modules
     exports.child_process = require('child_process');
     exports.crypto = require('crypto');
@@ -2075,17 +1617,10 @@
     // init exports properties
     exports.__dirname = __dirname;
     exports.envDict = process.env;
-    exports.testPlatform.name = 'node - ' + process.platform + ' ' + process.version +
-      ' - ' + new Date().toISOString();
-    exports.testPlatform.screenCaptureImg = exports.envDict.MODE_BUILD_SCREEN_CAPTURE;
-    exports.utility2Browser = {
-      envDict: {
-        PACKAGE_JSON_DESCRIPTION: exports.envDict.PACKAGE_JSON_DESCRIPTION,
-        PACKAGE_JSON_NAME: exports.envDict.PACKAGE_JSON_NAME,
-        PACKAGE_JSON_VERSION: exports.envDict.PACKAGE_JSON_VERSION
-      },
-      fileCacheDict: {}
-    };
+    exports.envDict.npm_package_dir_build = process.cwd() + '/.tmp/build';
+    exports.envDict.npm_package_dir_tmp = process.cwd() + '/.tmp';
+    exports.exit = process.exit;
+    exports.global = global;
     // init _testSecret
     (function () {
       var testSecretCreate;
@@ -2101,20 +1636,319 @@
     break;
   // init phantom js-env
   case 'phantom':
+    self.utility2 = exports;
     // require modules
     exports.fs = require('fs');
     exports.system = require('system');
     exports.webpage = require('webpage');
     // init exports properties
     exports.envDict = exports.system.env;
-    exports.testPlatform.name = (exports.global.slimer ? 'slimer - ' : 'phantom - ') +
-      exports.system.os.name + ' ' +
-      exports.global.phantom.version.major + '.' +
-      exports.global.phantom.version.minor + '.' +
-      exports.global.phantom.version.patch +
-      ' - ' + new Date().toISOString();
-    exports.testPlatform.screenCaptureImg = exports.envDict.MODE_BUILD_SCREEN_CAPTURE;
+    exports.exit = self.phantom.exit;
+    exports.global = self;
     break;
   }
+  // init shared js-env
+  (function () {
+    // init global debug_print
+    exports.global['debug_print'.replace('_p', 'P')] = function (arg) {
+      /*
+        this function will both print the arg to stderr and return it,
+        and jslint will nag you to remove it if used
+      */
+      // debug arguments
+      exports['debug_printArguments'.replace('_p', 'P')] = arguments;
+      console.error('\n\n\ndebug_print'.replace('_p', 'P'));
+      console.error.apply(console, arguments);
+      console.error();
+      // return arg for inspection
+      return arg;
+    };
+    exports.__coverage__ = exports.__coverage__ || exports.global.__coverage__;
+    exports.errorDefault = new Error('default error');
+    exports.testPlatform = {
+      name: exports.modeJs === 'browser' ? 'browser - ' +
+        navigator.userAgent + ' - ' + new Date().toISOString() :
+          exports.modeJs === 'node' ? 'node - ' +
+            process.platform + ' ' + process.version + ' - ' + new Date().toISOString() :
+              (exports.global.slimer ? 'slimer - ' : 'phantom - ') +
+              exports.system.os.name + ' ' +
+              exports.global.phantom.version.major + '.' +
+              exports.global.phantom.version.minor + '.' +
+              exports.global.phantom.version.patch + ' - ' + new Date().toISOString(),
+      screenCaptureImg: exports.envDict.MODE_BUILD_SCREEN_CAPTURE,
+      testCaseList: []
+    };
+    exports.testReport = { testPlatformList: [exports.testPlatform] };
+    exports.textExampleAscii = exports.textExampleAscii ||
+      '\x00\x01\x02\x03\x04\x05\x06\x07\b\t\n\x0b\f\r\x0e\x0f' +
+      '\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f' +
+      ' !"#$%&\'()*+,-./0123456789:;<=>?' +
+      '@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_' +
+      '`abcdefghijklmnopqrstuvwxyz{|}~\x7f';
+    exports.timeoutDefault =
+      exports.envDict.npm_config_timeout_default || exports.timeoutDefault || 30000;
+  }());
+
+
+
+  // init fileCacheDict
+  exports.fileCacheDict = {
+/* jslint-ignore-begin */
+'/test/test-report.html.template': { data: '\
+<style>\n\
+.testReportPlatformDiv {\n\
+  border: 1px solid;\n\
+  border-radius: 5px;\n\
+  font-family: Helvetical Neue, Helvetica, Arial, sans-serif;\n\
+  margin-top: 20px;\n\
+  padding: 0 10px 10px 10px;\n\
+  text-align: left;\n\
+}\n\
+.testReportPlatformPre {\n\
+  background-color: #fdd;\n\
+  border: 1px;\n\
+  border-radius: 0 0 5px 5px;\n\
+  border-top-style: solid;\n\
+  margin-bottom: 0;\n\
+  padding: 10px;\n\
+}\n\
+.testReportPlatformPreHidden {\n\
+  display: none;\n\
+}\n\
+.testReportPlatformScreenCaptureA {\n\
+  border: 1px solid;\n\
+  border-color: #000;\n\
+  display:block;\n\
+  margin: 5px 0 5px 0;\n\
+  max-height:256px;\n\
+  max-width:320px;\n\
+  overflow:hidden;\n\
+}\n\
+.testReportPlatformScreenCaptureImg {\n\
+  max-width:320px;\n\
+}\n\
+.testReportPlatformSpan {\n\
+  display: inline-block;\n\
+  width: 8em;\n\
+}\n\
+.testReportPlatformTable {\n\
+  border: 1px;\n\
+  border-top-style: solid;\n\
+  text-align: left;\n\
+  width: 100%;\n\
+}\n\
+.testReportSummaryDiv {\n\
+  background-color: #bfb;\n\
+}\n\
+.testReportSummarySpan {\n\
+  display: inline-block;\n\
+  width: 6.5em;\n\
+}\n\
+tr:nth-child(odd).testReportPlatformTr {\n\
+  background-color: #bfb;\n\
+}\n\
+.testReportTestFailed {\n\
+  background-color: #f99;\n\
+}\n\
+.testReportTestPending {\n\
+  background-color: #99f;\n\
+}\n\
+</style>\n\
+<div class="testReportPlatformDiv testReportSummaryDiv">\n\
+<h2>{{envDict.npm_package_name}} test-report summary</h2>\n\
+<h4>\n\
+  <span class="testReportSummarySpan">version</span>- {{envDict.npm_package_version}}<br>\n\
+  <span class="testReportSummarySpan">test date</span>- {{date}}<br>\n\
+  <span class="testReportSummarySpan">commit info</span>- {{CI_COMMIT_INFO}}<br>\n\
+</h4>\n\
+<table class="testReportPlatformTable">\n\
+<thead><tr>\n\
+  <th>total time elapsed</th>\n\
+  <th>total tests failed</th>\n\
+  <th>total tests passed</th>\n\
+  <th>total tests pending</th>\n\
+</tr></thead>\n\
+<tbody><tr>\n\
+  <td>{{timeElapsed}} ms</td>\n\
+  <td class="{{testsFailedClass}}">{{testsFailed}}</td>\n\
+  <td>{{testsPassed}}</td>\n\
+  <td>{{testsPending}}</td>\n\
+</tr></tbody>\n\
+</table>\n\
+</div>\n\
+{{#testPlatformList}}\n\
+<div class="testReportPlatformDiv">\n\
+<h4>\n\
+  {{testPlatformNumber}}. {{name}}<br>\n\
+  {{screenCapture}}\n\
+  <span class="testReportPlatformSpan">time elapsed</span>- {{timeElapsed}} ms<br>\n\
+  <span class="testReportPlatformSpan">tests failed</span>- {{testsFailed}}<br>\n\
+  <span class="testReportPlatformSpan">tests passed</span>- {{testsPassed}}<br>\n\
+  <span class="testReportPlatformSpan">tests pending</span>- {{testsPending}}<br>\n\
+</h4>\n\
+<table class="testReportPlatformTable">\n\
+<thead><tr>\n\
+  <th>#</th>\n\
+  <th>time elapsed</th>\n\
+  <th>status</th>\n\
+  <th>test case</th>\n\
+</tr></thead>\n\
+<tbody>\n\
+{{#testCaseList}}\n\
+<tr class="testReportPlatformTr">\n\
+  <td>{{testCaseNumber}}</td>\n\
+  <td>{{timeElapsed}} ms</td>\n\
+  <td class="{{testReportTestStatusClass}}">{{status}}</td>\n\
+  <td>{{name}}</td>\n\
+</tr>\n\
+{{/testCaseList}}\n\
+</tbody>\n\
+</table>\n\
+<pre class="{{testReportPlatformPreClass}}">\n\
+{{#errorStackList}}\n\
+{{errorStack}}\n\
+{{/errorStackList}}\n\
+</pre>\n\
+</div>\n\
+{{/testPlatformList}}\n\
+' },
+
+
+
+// https://img.shields.io/badge/last_build-0000_00_00_00_00_00_UTC_--_master_--_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-0077ff.svg?style=flat
+'/build/build.badge.svg': { data: '\
+<svg xmlns="http://www.w3.org/2000/svg" width="563" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="563" height="20" fill="#555"/><rect rx="0" x="61" width="502" height="20" fill="#07f"/><path fill="#07f" d="M61 0h4v20h-4z"/><rect rx="0" width="563" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="31.5" y="15" fill="#010101" fill-opacity=".3">last build</text><text x="31.5" y="14">last build</text><text x="311" y="15" fill="#010101" fill-opacity=".3">0000 00 00 00 00 00 UTC - master - aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</text><text x="311" y="14">0000 00 00 00 00 00 UTC - master - aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</text></g></svg>\n\
+' },
+
+
+
+// https://img.shields.io/badge/coverage-100.0%-00dd00.svg?style=flat
+'/build/coverage-report.badge.svg': { data: '\
+<svg xmlns="http://www.w3.org/2000/svg" width="117" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="117" height="20" fill="#555"/><rect rx="0" x="63" width="54" height="20" fill="#0d0"/><path fill="#0d0" d="M63 0h4v20h-4z"/><rect rx="0" width="117" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="32.5" y="15" fill="#010101" fill-opacity=".3">coverage</text><text x="32.5" y="14">coverage</text><text x="89" y="15" fill="#010101" fill-opacity=".3">100.0%</text><text x="89" y="14">100.0%</text></g></svg>\n\
+' },
+
+
+
+// https://img.shields.io/badge/tests_failed-999-dd0000.svg?style=flat
+'/build/test-report.badge.svg': { data: '\
+<svg xmlns="http://www.w3.org/2000/svg" width="103" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="103" height="20" fill="#555"/><rect rx="0" x="72" width="31" height="20" fill="#d00"/><path fill="#d00" d="M72 0h4v20h-4z"/><rect rx="0" width="103" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="37" y="15" fill="#010101" fill-opacity=".3">tests failed</text><text x="37" y="14">tests failed</text><text x="86.5" y="15" fill="#010101" fill-opacity=".3">999</text><text x="86.5" y="14">999</text></g></svg>\n\
+' },
+
+
+
+// https://img.shields.io/badge/tests_failed-999-dd0000.svg?style=flat
+'/assets/utility2.css': { data: '\
+/*csslint\n\
+  box-model: false\n\
+*/\n\
+.ajaxProgressBarDiv {\n\
+  animation: 2s linear 0s normal none infinite ajaxProgressBarDivAnimation;\n\
+  -o-animation: 2s linear 0s normal none infinite ajaxProgressBarDivAnimation;\n\
+  -moz-animation: 2s linear 0s normal none infinite ajaxProgressBarDivAnimation;\n\
+  -webkit-animation: 2s linear 0s normal none infinite ajaxProgressBarDivAnimation;\n\
+  background-image: linear-gradient(\n\
+    45deg,rgba(255,255,255,.25) 25%,\n\
+    transparent 25%,\n\
+    transparent 50%,\n\
+    rgba(255,255,255,.25) 50%,\n\
+    rgba(255,255,255,.25) 75%,\n\
+    transparent 75%,\n\
+    transparent\n\
+  );\n\
+  background-size: 40px 40px;\n\
+  color: #fff;\n\
+  font-family: Helvetical Neue, Helvetica, Arial, sans-serif;\n\
+  font-size: 12px;\n\
+  padding: 2px 0 2px 0;\n\
+  text-align: center;\n\
+  transition: width .5s ease;\n\
+  width: 25%;\n\
+}\n\
+.ajaxProgressBarDivError {\n\
+  background-color: #d33;\n\
+}\n\
+.ajaxProgressBarDivLoading {\n\
+  background-color: #37b;\n\
+}\n\
+.ajaxProgressBarDivSuccess {\n\
+  background-color: #3b3;\n\
+}\n\
+.ajaxProgressDiv {\n\
+  background-color: #fff;\n\
+  border: 1px solid;\n\
+  display: none;\n\
+  left: 50%;\n\
+  margin: 0 0 0 -50px;\n\
+  padding: 5px 5px 5px 5px;\n\
+  position: fixed;\n\
+  top: 49%;\n\
+  width: 100px;\n\
+  z-index: 9999;\n\
+}\n\
+@keyframes ajaxProgressBarDivAnimation {\n\
+  from { background-position: 40px 0; }\n\
+  to { background-position: 0 0; }\n\
+}\n\
+@-o-keyframes ajaxProgressBarDivAnimation {\n\
+  from { background-position: 40px 0; }\n\
+  to { background-position: 0 0; }\n\
+}\n\
+@-webkit-keyframes ajaxProgressBarDivAnimation {\n\
+  from { background-position: 40px 0; }\n\
+  to { background-position: 0 0; }\n\
+}\n\
+' },
+
+
+
+// http://validator.w3.org/check?uri=https%3A%2F%2Fkaizhu256.github.io%2Fnode-utility2%2Fbuild%2Ftest.html&charset=%28detect+automatically%29&doctype=Inline&group=0&user-agent=W3C_Validator%2F1.3+http%3A%2F%2Fvalidator.w3.org%2Fservices
+'/test/test.html': { data: '\
+<!DOCTYPE html>\n\
+<html>\n\
+<head>\n\
+  <meta charset="UTF-8">\n\
+  <title>{{envDict.npm_package_name}} [{{envDict.npm_package_version}}]</title>\n\
+  <style>\n\
+    {{utility2Css}}\n\
+    body {\n\
+      background-color: #fff;\n\
+      font-family: Helvetical Neue, Helvetica, Arial, sans-serif;\n\
+    }\n\
+  </style>\n\
+</head>\n\
+<body>\n\
+  <!-- ajax-progress begin -->\n\
+  <div class="ajaxProgressDiv" style="display: none;">\n\
+    <div class="ajaxProgressBarDiv ajaxProgressBarDivLoading">loading</div>\n\
+  </div>\n\
+  <!-- ajax-progress end -->\n\
+  <!-- main-app begin -->\n\
+  <div class="mainAppDiv">\n\
+    <h1>{{envDict.npm_package_name}} [{{envDict.npm_package_version}}]</h1>\n\
+    <h3>{{envDict.npm_package_description}}</h3>\n\
+    <div>\n\
+      <button\n\
+        onclick="window.utility2.modeTest=1; window.utility2.testRun(window.local);"\n\
+      >run test</button>\n\
+    </div>\n\
+  </div>\n\
+  <!-- main-app end -->\n\
+  <!-- test-report begin -->\n\
+  <div class="testReportDiv"></div>\n\
+  <!-- test-report end -->\n\
+  <!-- script begin -->\n\
+  <script src="/assets/utility2.js"></script>\n\
+  <script>window.utility2.envDict = {\n\
+    npm_package_description: "{{envDict.npm_package_description}}",\n\
+    npm_package_name: "{{envDict.npm_package_name}}",\n\
+    npm_package_version: "{{envDict.npm_package_version}}"\n\
+  }</script>\n\
+  <script src="/test/test.js"></script>\n\
+  <!-- script end -->\n\
+</body>\n\
+</html>\n\
+' }
+/* jslint-ignore-end */
+  };
   return exports;
 }(this))));
