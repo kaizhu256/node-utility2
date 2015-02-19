@@ -619,7 +619,7 @@
               // edit badge color
               .replace(
                 (/d00/g),
-                // coverage hack
+                // coverage-hack - cover pass and fail cases
                 '0d00'.slice(!!testReport.testsFailed).slice(0, 3)
               )
           );
@@ -1112,7 +1112,7 @@
         // set timerTimeout
         timerTimeout = exports.onTimeout(onError2, exports.timeoutDefault, argv1);
         options.fileUtility2 = __dirname + '/index.js';
-        // cover index.js
+        // coverage-hack - cover index.js
         if (exports.__coverage__ && 'utility2' === exports.envDict.npm_package_name) {
           options.fileUtility2 =
             exports.envDict.npm_package_dir_tmp + '/instrumented.utility2.js';
@@ -1429,52 +1429,12 @@
       return;
     }
 
-    exports.onError = function (msg, trace) {
-      /*
-        this function will provide global error handling
-        http://phantomjs.org/api/phantom/handler/on-error.html
-      */
-      var msgStack;
-      msgStack = [exports.argv1 + '\nERROR: ' + msg];
-      if (trace && trace.length) {
-        msgStack.push('TRACE:');
-        trace.forEach(function (t) {
-          msgStack.push(' -> ' + (t.file || t.sourceURL) + ': ' + t.line +
-            (t.function ? ' (in function ' + t.function + ')' : ''));
-        });
-      }
-      console.error('\n' + msgStack.join('\n') + '\n');
-    };
-
-    exports.onErrorExit = function (error) {
-      /*
-        this function will save code coverage before exiting
-      */
-      setTimeout(function () {
-        if (exports.modePhantom === 'render') {
-          exports.page.render(exports.fileRender);
-          error = 0;
-        }
-        if (error instanceof Error) {
-          exports.onErrorDefault(error);
-          error = 1;
-        }
-        if (exports.modePhantom === 'test') {
-          exports.fs.write(exports.fileTestReport, JSON.stringify(exports.testReport));
-        }
-        if (exports.__coverage__) {
-          exports.fs.write(exports.fileCoverage, JSON.stringify(exports.__coverage__));
-        }
-        exports.exit(error);
-      });
-    };
-
     var modeNext, onNext;
     modeNext = 0;
     onNext = function (error, trace) {
       var data;
       try {
-        modeNext = trace ? 3 : modeNext + 1;
+        modeNext = error instanceof Error ? NaN : modeNext + 1;
         switch (modeNext) {
         case 1:
           // init global error handling
@@ -1515,36 +1475,55 @@
           // validate webpage opened successfully
           exports.assert(error === 'success', error);
           break;
-        case 3:
-          if (exports.modePhantom !== 'test') {
-            return;
-          }
-          data = (/\nphantom\n(\{"global_test_results":\{.+)/).exec(error);
-          data = data && JSON.parse(data[1]).global_test_results;
-          // handle normal error
-          if (!data) {
-            exports.onError(error, trace);
-            onNext(1);
-            return;
-          }
-          // handle global_test_results passed as error
-          // merge coverage
-          exports.istanbulMerge(exports.__coverage__, data.coverage);
-          // create screen-capture
-          exports.page.render(exports.fileRender);
-          // integrate screen-capture into test-report
-          data.testReport.testPlatformList[0].screenCaptureImg =
-            exports.fileRender.replace((/^.*\//), '');
-          // merge test-report
-          exports.testMerge(exports.testReport, data.testReport);
-          // exit with number of tests failed as exit-code
-          onNext(data.testReport.testsFailed);
-          break;
         default:
+          switch (exports.modePhantom) {
+          // handle test-report callback
+          case 'test':
+            data = (/\nphantom\n(\{"global_test_results":\{.+)/).exec(error);
+            data = data && JSON.parse(data[1]).global_test_results;
+            if (data) {
+              // handle global_test_results passed as error
+              // merge coverage
+              exports.istanbulMerge(exports.__coverage__, data.coverage);
+              // create screen-capture
+              exports.page.render(exports.fileRender);
+              // integrate screen-capture into test-report
+              data.testReport.testPlatformList[0].screenCaptureImg =
+                exports.fileRender.replace((/^.*\//), '');
+              // merge test-report
+              exports.testMerge(exports.testReport, data.testReport);
+              // write test-report
+              exports.fs.write(exports.fileTestReport, JSON.stringify(exports.testReport));
+              // exit with number of tests failed as exit-code
+              throw data.testReport.testsFailed;
+            }
+            break;
+          }
+          // handle webpage error
+          // http://phantomjs.org/api/phantom/handler/on-error.html
+          if (trace) {
+            console.error('\n' + exports.argv1 + '\nERROR: ' + error + ' TRACE:');
+            trace.forEach(function (t) {
+              console.error(' -> ' + (t.file || t.sourceURL) + ': ' + t.line +
+                (t.function ? ' (in function ' + t.function + ')' : ''));
+            });
+            console.error();
+            throw 1;
+          }
+          // handle phantom error
           throw error;
         }
       } catch (errorCaught) {
-        exports.onErrorExit(errorCaught);
+        // convert errorCaught to a numerical exit-code and exit with it
+        if (errorCaught instanceof Error) {
+          exports.onErrorDefault(errorCaught);
+          errorCaught = 1;
+        }
+        // save code-coverage before exiting
+        if (exports.__coverage__) {
+          exports.fs.write(exports.fileCoverage, JSON.stringify(exports.__coverage__));
+        }
+        exports.exit(errorCaught);
       }
     };
     onNext();

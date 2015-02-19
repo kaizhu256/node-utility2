@@ -177,7 +177,7 @@ shBuild() {
   # create package-listing
   MODE_BUILD=gitLsTree shRunScreenCapture shGitLsTree || return $?
   # create recent changelog of last 50 commits
-  MODE_BUILD=gitLog shRunScreenCapture git log -50 --pretty="%ai\u0020%B" ||\
+  MODE_BUILD=gitLog shRunScreenCapture git log -50 --pretty="%ai\u000a%B" ||\
     return $?
   # run npm test on published package
   shRun shNpmTestPublished || return $?
@@ -193,7 +193,7 @@ shBuild() {
   then
     shRun shTestHeroku || return $?
     # if number of commits > 1000, then squash older commits
-    shGitBackupAndSquashAndPush 1000 || return $?
+    shRun shGitBackupAndSquashAndPush 1000 || return $?
   fi
 }
 # run build
@@ -213,6 +213,7 @@ exit $EXIT_CODE
 
 
 ## todo
+- add max-height option in shRunScreenCapture
 - revamp phantomRender and add timeoutRender
 - create flamegraph from istanbul code-coverage
 - explicitly require slimerjs instead of auto-detecting it

@@ -435,12 +435,16 @@ shRunScreenCapture() {
   shRun $@ 2>&1 | tee $npm_package_dir_tmp/screen-capture.txt || return $?
   # save $EXIT_CODE and restore $CWD
   shExitCodeSave $(cat $npm_package_file_tmp) || return $?
-  # remove ansi escape code
+  # format text-output
   node -e "require('fs').writeFileSync(
     '$npm_package_dir_tmp/screen-capture.txt',
     require('fs').readFileSync('$npm_package_dir_tmp/screen-capture.txt', 'utf8')
-      .replace((/\\\\u0020/g), ' ')
+      // remove ansi escape-code
       .replace((/\u001b.*?m/g), '')
+      // format unicode
+      .replace((/\\\\u[0-9a-f]{4}/g), function (match0) {
+        return String.fromCharCode('0x' + match0.slice(-4));
+      })
       .trimRight()
   );" || return $?
   if (convert -list font | grep "\bCourier\b" > /dev/null 2>&1) &&\
