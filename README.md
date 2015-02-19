@@ -1,4 +1,4 @@
-utility2 [![NPM](https://img.shields.io/npm/v/utility2.svg?style=flat-square)](https://www.npmjs.org/package/utility2)
+utility2 [![NPM](https://img.shields.io/npm/v/utility2.svg?style=flat-square)](https://www.npmjs.com/package/utility2)
 ========
 lightweight nodejs module that runs phantomjs browser-tests with code-coverage (via istanbul-lite and phantomjs-lite)
 
@@ -8,11 +8,11 @@ lightweight nodejs module that runs phantomjs browser-tests with code-coverage (
 
 [![build commit status](https://kaizhu256.github.io/node-utility2/build/build.badge.svg)](https://travis-ci.org/kaizhu256/node-utility2)
 
-| git branch | test-server | test-report | coverage-report | build artifact |
-|:----------:|:-----------:|:-----------:|:---------------:|:--------------:|
-|[master](https://github.com/kaizhu256/node-utility2/tree/master) | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://hrku01-utility2-master.herokuapp.com?modeTest=1) | [![test-report](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/test-report.html) | [![istanbul-lite coverage-report](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/coverage-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/coverage-report.html/node-utility2/index.html) | [![build artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..master..travis-ci.org)|
-|[beta](https://github.com/kaizhu256/node-utility2/tree/beta) | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://hrku01-utility2-beta.herokuapp.com?modeTest=1) | [![test-report](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/test-report.html) | [![istanbul-lite coverage-report](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/coverage-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/coverage-report.html/node-utility2/index.html) | [![build artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..beta..travis-ci.org)|
-|[alpha](https://github.com/kaizhu256/node-utility2/tree/alpha) | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://hrku01-utility2-alpha.herokuapp.com?modeTest=1) | [![test-report](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/test-report.html) | [![istanbul-lite coverage-report](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/coverage-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/coverage-report.html/node-utility2/index.html) | [![build artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..alpha..travis-ci.org)|
+| git-branch | test-server | test-report | coverage-report | build-artifacts |
+|:----------:|:-----------:|:-----------:|:---------------:|:---------------:|
+|[master](https://github.com/kaizhu256/node-utility2/tree/master) | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://hrku01-utility2-master.herokuapp.com?modeTest=1) | [![test-report](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/test-report.html) | [![istanbul-lite coverage-report](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/coverage-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/coverage-report.html/node-utility2/index.html) | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..master..travis-ci.org)|
+|[beta](https://github.com/kaizhu256/node-utility2/tree/beta) | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://hrku01-utility2-beta.herokuapp.com?modeTest=1) | [![test-report](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/test-report.html) | [![istanbul-lite coverage-report](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/coverage-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/coverage-report.html/node-utility2/index.html) | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..beta..travis-ci.org)|
+|[alpha](https://github.com/kaizhu256/node-utility2/tree/alpha) | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://hrku01-utility2-alpha.herokuapp.com?modeTest=1) | [![test-report](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/test-report.html) | [![istanbul-lite coverage-report](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/coverage-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/coverage-report.html/node-utility2/index.html) | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..alpha..travis-ci.org)|
 
 
 
@@ -152,12 +152,12 @@ lightweight nodejs module that runs phantomjs browser-tests with code-coverage (
 
 
 
-## package-content listing
+## package-listing
 [![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.gitLsTree.png)](https://github.com/kaizhu256/node-utility2)
 
 
 
-## build script
+## build-script
 ```
 # build.sh
 # this shell script runs the build process for this package
@@ -171,7 +171,7 @@ shBuild() {
   fi
   # init env
   . ./index.sh && shInit || return $?
-  # create package-content listing
+  # create package-listing
   MODE_BUILD=gitLsTree shRunScreenCapture shGitLsTree || return $?
   # create recent changelog of last 50 commits
   MODE_BUILD=gitLog shRunScreenCapture git log -50 --pretty="%ai\u0020%B" || return $?
@@ -195,7 +195,7 @@ shBuild() {
 shBuild
 # save exit-code
 EXIT_CODE=$?
-# upload build artifacts to github
+# upload build-artifacts to github
 if [ "$TRAVIS" ]
 then
   # if number of commits > 100, then squash older commits

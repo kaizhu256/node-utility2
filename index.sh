@@ -23,7 +23,7 @@ shAesEncrypt() {
 }
 
 shBuild() {
-  # this function will run the build script in README.md
+  # this function will run the build-script in README.md
   # init $npm_package_dir_build
   mkdir -p $npm_package_dir_build/coverage-report.html || return $?
   # run script from README.md
@@ -118,7 +118,8 @@ shGitLsTree() {
   # this function will list all files committed to HEAD
   git ls-tree --name-only -r HEAD | while read file
   do
-    printf "$(git log -1 --format="%ai" -- $file) $(wc -c $file)\n" || return $?
+    printf "%10s bytes    $(git log -1 --format="%ai  " -- $file)  $file\n\n"\
+      $(ls -ln $file | awk "{print \$5}") || return $?
   done
 }
 
@@ -442,7 +443,7 @@ shRunScreenCapture() {
     require('fs').readFileSync('$npm_package_dir_tmp/screen-capture.txt', 'utf8')
       .replace((/\\\\u0020/g), ' ')
       .replace((/\u001b.*?m/g), '')
-      .trim()
+      .trimRight()
   );" || return $?
   if (convert -list font | grep "\bCourier\b" > /dev/null 2>&1) &&\
     (fold package.json > /dev/null 2>&1)
@@ -510,7 +511,7 @@ shTestHeroku() {
 }
 
 shTestScriptJs() {
-  # this function will test the js script $1 in README.md
+  # this function will test the js script $FILE in README.md
   local FILE=$1 || return $?
   shBuildPrint $MODE_BUILD "testing $FILE ..." || return $?
   if [ ! "$MODE_OFFLINE" ]
@@ -558,7 +559,7 @@ shTestScriptJs() {
 }
 
 shTestScriptSh() {
-  # this function will test the sh script $1 in README.md
+  # this function will test the sh script $FILE in README.md
   local FILE=$1 || return $?
   local FILE_BASENAME=$(node -e "console.log(require('path').basename('$FILE'))") || return $?
   shBuildPrint $MODE_BUILD "testing $FILE ..." || return $?
