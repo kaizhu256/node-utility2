@@ -1057,14 +1057,14 @@
       }
     };
 
-    exports.phantomRender = function (options, onError) {
+    exports.phantomScreenCapture = function (options, onError) {
       /*
-        this function will spawn phantomjs to render options.url
+        this function will spawn phantomjs to screen-capture options.url
       */
       exports.phantomTest(exports.setDefault(options, 1, {
         modeErrorIgnore: true,
-        modePhantom: 'render',
-        timeoutDefault: 5000
+        modePhantom: 'screenCapture',
+        timeoutScreenCapture: 2000
       }), onError);
     };
 
@@ -1075,9 +1075,11 @@
       var onParallel;
       exports.setDefault(options, 1, {
         _testSecret: exports._testSecret,
-        modePhantom: 'test'
+        modePhantom: 'testUrl'
       });
-      onParallel = exports.onParallel(onError);
+      onParallel = exports.onParallel(function (error) {
+        onError(error, options);
+      });
       onParallel.counter += 1;
       ['phantomjs', 'slimerjs'].forEach(function (argv0) {
         var argv1, onError2, options2, timerTimeout;
@@ -1094,15 +1096,19 @@
           argv1: argv1,
           fileCoverage:
             exports.envDict.npm_package_dir_tmp + '/coverage.' + argv1 + '.json',
-          fileRender: (
+          fileScreenCapture: (
             exports.envDict.npm_package_dir_build + '/screen-capture.' + argv1 + '.png'
           )
             .replace((/%/g), '_')
             .replace((/_2F.png$/), 'png'),
           fileTestReport:
             exports.envDict.npm_package_dir_tmp + '/test-report.' + argv1 + '.json',
-          modePhantom: 'test'
+          modePhantom: 'testUrl'
         });
+        // save fileScreenCapture
+        options[
+          'fileScreenCapture' + (argv0 === 'slimerjs' ? 'Slimerjs' : '')
+        ] = options2.fileScreenCapture;
         onParallel.counter += 1;
         onError2 = function (error) {
           // cleanup timerTimeout
@@ -1136,7 +1142,7 @@
                 if (ii === 0) {
                   exports.istanbulMerge(exports.__coverage__, data);
                 // merge tests
-                } else if (options2.modePhantom === 'test' && !options2.modeErrorIgnore) {
+                } else if (options2.modePhantom === 'testUrl' && !options2.modeErrorIgnore) {
                   exports.testMerge(exports.testReport, data);
                 }
               } catch (ignore) {
@@ -1474,11 +1480,21 @@
           console.log(exports.argv0 + ' - open ' + error + ' ' + exports.url);
           // validate webpage opened successfully
           exports.assert(error === 'success', error);
+          // screen-capture webpage after timeoutScreenCapture ms
+          if (exports.modePhantom === 'screenCapture') {
+            setTimeout(onNext, exports.timeoutScreenCapture);
+          }
           break;
         default:
           switch (exports.modePhantom) {
+          // screen-capture webpage
+          case 'screenCapture':
+            // create screen-capture
+            exports.page.render(exports.fileScreenCapture);
+            console.log('created file://' + exports.fileScreenCapture);
+            break;
           // handle test-report callback
-          case 'test':
+          case 'testUrl':
             data = (/\nphantom\n(\{"global_test_results":\{.+)/).exec(error);
             data = data && JSON.parse(data[1]).global_test_results;
             if (data) {
@@ -1486,10 +1502,10 @@
               // merge coverage
               exports.istanbulMerge(exports.__coverage__, data.coverage);
               // create screen-capture
-              exports.page.render(exports.fileRender);
+              exports.page.render(exports.fileScreenCapture);
               // integrate screen-capture into test-report
               data.testReport.testPlatformList[0].screenCaptureImg =
-                exports.fileRender.replace((/^.*\//), '');
+                exports.fileScreenCapture.replace((/^.*\//), '');
               // merge test-report
               exports.testMerge(exports.testReport, data.testReport);
               // write test-report

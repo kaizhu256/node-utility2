@@ -74,8 +74,16 @@ shBuildPrint() {
 }
 
 shDateIso() {
-  # this function will print the date in ISO format
+  # this function will print the current date in ISO format
   date -u "+%Y-%m-%dT%H:%M:%SZ"
+}
+
+shDebugArgv() {
+  # this function will print each element in $@ in a separate line
+  for ARG in $@
+  do
+    printf "'$ARG'\n"
+  done
 }
 
 shExitCodeSave() {
@@ -351,16 +359,18 @@ shNpmTestPublished() {
   cd node_modules/$npm_package_name && npm install && npm test || return $?
 }
 
-shPhantomRender() {
-  # this function will spawn phantomjs to render the specified $URL
-  MODE_BUILD=${MODE_BUILD:-phantomRender} shPhantomTest "$1" ${2-5000} render || return $?
+shPhantomScreenCapture() {
+  # this function will spawn phantomjs to screen-capture the specified $URL
+  MODE_BUILD=${MODE_BUILD:-phantomScreenCapture} shPhantomTest "$1" ${2-30000} ${3-2000}\
+    screenCapture || return $?
 }
 
 shPhantomTest() {
   # this function will spawn phantomjs to test the specified $URL,
   # and merge it into the existing test-report
-  local MODE_PHANTOM="${3-test}" || return $?
+  local MODE_PHANTOM="${4-test}" || return $?
   local TIMEOUT_DEFAULT="${2-30000}" || return $?
+  local TIMEOUT_SCREEN_CAPTURE="${3-2000}" || return $?
   local URL="$1" || return $?
   shBuildPrint ${MODE_BUILD:-phantomTest} "testing $URL with phantomjs ..." || return $?
   # auto-detect slimerjs
@@ -374,9 +384,10 @@ shPhantomTest() {
     local.phantomTest({
       modePhantom: '$MODE_PHANTOM',
       timeoutDefault: $TIMEOUT_DEFAULT,
+      timeoutScreenCapture: $TIMEOUT_SCREEN_CAPTURE,
       url: '$URL'
     }, function (error) {
-      if ('$MODE_PHANTOM' === 'render') {
+      if ('$MODE_PHANTOM' === 'screenCapture') {
         process.exit();
         return;
       }

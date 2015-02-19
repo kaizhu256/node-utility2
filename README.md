@@ -203,8 +203,8 @@ EXIT_CODE=$?
 # upload build-artifacts to github
 if [ "$TRAVIS" ]
 then
-  # if number of commits > 100, then squash older commits
-  COMMIT_LIMIT=100 shRun shBuildGithubUpload || exit $?
+  # if number of commits > 16, then squash older commits
+  COMMIT_LIMIT=16 shRun shBuildGithubUpload || exit $?
 fi
 # exit with $EXIT_CODE
 exit $EXIT_CODE
@@ -214,7 +214,6 @@ exit $EXIT_CODE
 
 ## todo
 - add max-height option in shRunScreenCapture
-- revamp phantomRender and add timeoutRender
 - create flamegraph from istanbul code-coverage
 - explicitly require slimerjs instead of auto-detecting it
 - auto-generate help doc from README.md
