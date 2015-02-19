@@ -1901,7 +1901,7 @@ tr:nth-child(odd).testReportPlatformTr {\n\
 
 
 
-// http://validator.w3.org/check?uri=https%3A%2F%2Fkaizhu256.github.io%2Fnode-utility2%2Fbuild%2Ftest.html&charset=%28detect+automatically%29&doctype=Inline&group=0&user-agent=W3C_Validator%2F1.3+http%3A%2F%2Fvalidator.w3.org%2Fservices
+// http://validator.w3.org/check?uri=https%3A%2F%2Fhrku01-utility2-beta.herokuapp.com
 '/test/test.html': { data: '\
 <!DOCTYPE html>\n\
 <html>\n\

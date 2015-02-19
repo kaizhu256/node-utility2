@@ -171,6 +171,10 @@ shBuild() {
   fi
   # init env
   . ./index.sh && shInit || return $?
+  # create package-content listing
+  MODE_BUILD=gitLsTree shRunScreenCapture shGitLsTree || return $?
+  # create recent changelog of last 50 commits
+  MODE_BUILD=gitLog shRunScreenCapture git log -50 --pretty="%ai\u0020%B" || return $?
   # run npm test on published package
   shRun shNpmTestPublished || return $?
   # test example script
@@ -183,10 +187,6 @@ shBuild() {
   if [ "$TRAVIS" ]
   then
     shRun shTestHeroku || return $?
-    # create package-content listing
-    MODE_BUILD=gitLsTree shRunScreenCapture shGitLsTree || return $?
-    # create recent changelog of last 50 commits
-    MODE_BUILD=gitLog shRunScreenCapture git log -50 --pretty="%ai\u0020%s" || return $?
     # if number of commits > 1000, then squash older commits
     shGitBackupAndSquashAndPush 1000 || return $?
   fi
