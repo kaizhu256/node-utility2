@@ -441,7 +441,6 @@ shRunScreenCapture() {
     '$npm_package_dir_tmp/screen-capture.txt',
     require('fs').readFileSync('$npm_package_dir_tmp/screen-capture.txt', 'utf8')
       .replace((/\\\\u0020/g), ' ')
-      .replace((/\u0009/g), '    ')
       .replace((/\u001b.*?m/g), '')
       .trim()
   );" || return $?

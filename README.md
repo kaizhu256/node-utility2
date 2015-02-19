@@ -117,7 +117,7 @@ lightweight nodejs module that runs phantomjs browser-tests with code-coverage (
         // nop hack to pass jslint
         local.utility2.nop(request);
         switch (request.urlPathNormalized) {
-        // serve main-page
+        // redirect main-page to test-page
         case '/':
           local.utility2.serverRespondWriteHead(request, response, 303, {
             'Location': request.url.replace('/', '/test/test.html')
@@ -128,7 +128,7 @@ lightweight nodejs module that runs phantomjs browser-tests with code-coverage (
         case '/test/hello':
           response.end('hello');
           break;
-        // fallback to 404 Not Found
+        // fallback to next middleware
         default:
           next();
         }
