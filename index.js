@@ -619,7 +619,7 @@
               // edit badge color
               .replace(
                 (/d00/g),
-                // coverage hack
+                // coverage-hack - cover pass and fail cases
                 '0d00'.slice(!!testReport.testsFailed).slice(0, 3)
               )
           );
@@ -1018,10 +1018,10 @@
       */
       // read options.data from options.file and comment out shebang
       options.data = exports.fs.readFileSync(options.file, 'utf8').replace((/^#!/), '//#!');
-      // if coverage-mode is enabled, then instrument options.data
+      // if coverage-mode is enabled, then cover options.data
       if (exports.__coverage__ &&
           options.coverage && options.coverage === exports.envDict.npm_package_name) {
-        options.data = exports.istanbulInstrument(options.data, options.file);
+        options.data = exports.istanbulCover(options.data, options.file);
       }
       // cache options to exports.fileCacheDict[options.cache]
       if (options.cache) {
@@ -1029,9 +1029,9 @@
       }
     };
 
-    exports.istanbulInstrument = function (script, file) {
+    exports.istanbulCover = function (script, file) {
       /*
-        this function will instrument the given script and file
+        this function will cover the given script and file
       */
       var istanbul;
       if (!exports._instrumenter) {
@@ -1057,14 +1057,14 @@
       }
     };
 
-    exports.phantomRender = function (options, onError) {
+    exports.phantomScreenCapture = function (options, onError) {
       /*
-        this function will spawn phantomjs to render options.url
+        this function will spawn phantomjs to screen-capture options.url
       */
       exports.phantomTest(exports.setDefault(options, 1, {
         modeErrorIgnore: true,
-        modePhantom: 'render',
-        timeoutDefault: 5000
+        modePhantom: 'screenCapture',
+        timeoutScreenCapture: 2000
       }), onError);
     };
 
@@ -1075,9 +1075,11 @@
       var onParallel;
       exports.setDefault(options, 1, {
         _testSecret: exports._testSecret,
-        modePhantom: 'test'
+        modePhantom: 'testUrl'
       });
-      onParallel = exports.onParallel(onError);
+      onParallel = exports.onParallel(function (error) {
+        onError(error, options);
+      });
       onParallel.counter += 1;
       ['phantomjs', 'slimerjs'].forEach(function (argv0) {
         var argv1, onError2, options2, timerTimeout;
@@ -1094,15 +1096,17 @@
           argv1: argv1,
           fileCoverage:
             exports.envDict.npm_package_dir_tmp + '/coverage.' + argv1 + '.json',
-          fileRender: (
+          fileScreenCapture: (
             exports.envDict.npm_package_dir_build + '/screen-capture.' + argv1 + '.png'
           )
             .replace((/%/g), '_')
             .replace((/_2F.png$/), 'png'),
           fileTestReport:
             exports.envDict.npm_package_dir_tmp + '/test-report.' + argv1 + '.json',
-          modePhantom: 'test'
+          modePhantom: 'testUrl'
         });
+        // save fileScreenCapture
+        options['fileScreenCapture_' + argv0] = options2.fileScreenCapture;
         onParallel.counter += 1;
         onError2 = function (error) {
           // cleanup timerTimeout
@@ -1112,10 +1116,10 @@
         // set timerTimeout
         timerTimeout = exports.onTimeout(onError2, exports.timeoutDefault, argv1);
         options.fileUtility2 = __dirname + '/index.js';
-        // cover index.js
-        if (exports.__coverage__ && 'utility2' === exports.envDict.npm_package_name) {
+        // coverage-hack - cover utility2.js
+        if (exports.__coverage__ && exports.envDict.npm_package_name === 'utility2') {
           options.fileUtility2 =
-            exports.envDict.npm_package_dir_tmp + '/instrumented.utility2.js';
+            exports.envDict.npm_package_dir_tmp + '/covered.utility2.js';
         }
         // spawn phantomjs to test a url
         exports.child_process
@@ -1132,11 +1136,11 @@
               var data;
               try {
                 data = JSON.parse(exports.fs.readFileSync(file, 'utf8'));
-                // merge phantom js-env code-coverage
+                // merge phantom js-env coverage
                 if (ii === 0) {
                   exports.istanbulMerge(exports.__coverage__, data);
                 // merge tests
-                } else if (options2.modePhantom === 'test' && !options2.modeErrorIgnore) {
+                } else if (options2.modePhantom === 'testUrl' && !options2.modeErrorIgnore) {
                   exports.testMerge(exports.testReport, data);
                 }
               } catch (ignore) {
@@ -1179,11 +1183,12 @@
             break;
           }
           // run async shell command
-          exports.child_process.spawn(
-            '/bin/bash',
-            ['-c', match[2]],
-            { stdio: ['ignore', 1, 2] }
-          )
+          exports.child_process
+            .spawn(
+              '/bin/sh',
+              ['-c', '. ' + __dirname + '/index.sh && ' + match[2]],
+              { stdio: ['ignore', 1, 2] }
+            )
             // on shell exit, print return prompt
             .on('exit', function () {
               exports._replServer.evalDefault('\n', context, file, onError);
@@ -1192,24 +1197,25 @@
         // syntax sugar to grep current directory
         case 'grep':
           // run async shell command
-          exports.child_process.spawn(
-            '/bin/bash',
-            ['-c', 'find . -type f | grep -v "/\\.\\|.*\\b\\(\\.\\d\\|' +
-              'archive\\|artifacts\\|' +
-              'bower_components\\|build\\|' +
-              'coverage\\|' +
-              'docs\\|' +
-              'external\\|' +
-              'git_modules\\|' +
-              'jquery\\|' +
-              'log\\|logs\\|' +
-              'min\\|' +
-              'node_modules\\|' +
-              'rollup\\|' +
-              'swp\\|' +
-              'tmp\\)\\b" | tr "\\n" "\\000" | xargs -0 grep -in "' + match[2].trim() + '"'],
-            { stdio: ['ignore', 1, 2] }
-          )
+          exports.child_process
+            .spawn(
+              '/bin/sh',
+              ['-c', 'find . -type f | grep -v "/\\.\\|.*\\b\\(\\.\\d\\|' +
+                'archive\\|artifacts\\|' +
+                'bower_components\\|build\\|' +
+                'coverage\\|' +
+                'docs\\|' +
+                'external\\|' +
+                'git_modules\\|' +
+                'jquery\\|' +
+                'log\\|logs\\|' +
+                'min\\|' +
+                'node_modules\\|' +
+                'rollup\\|' +
+                'swp\\|' +
+                'tmp\\)\\b" | tr "\\n" "\\000" | xargs -0 grep -in "' + match[2].trim() + '"'],
+              { stdio: ['ignore', 1, 2] }
+            )
             // on shell exit, print return prompt
             .on('exit', function () {
               exports._replServer.evalDefault('\n', context, file, onError);
@@ -1349,10 +1355,10 @@
         coverage: 'utility2',
         file: __filename
       });
-      // save instrumented utility2.js to fs
+      // save covered utility2.js to fs
       if (exports.__coverage__ && exports.envDict.npm_package_name === 'utility2') {
         exports.fs.writeFileSync(
-          exports.envDict.npm_package_dir_tmp + '/instrumented.utility2.js',
+          exports.envDict.npm_package_dir_tmp + '/covered.utility2.js',
           exports.fileCacheDict['/assets/utility2.js'].data
         );
       }
@@ -1427,52 +1433,12 @@
       return;
     }
 
-    exports.onError = function (msg, trace) {
-      /*
-        this function will provide global error handling
-        http://phantomjs.org/api/phantom/handler/on-error.html
-      */
-      var msgStack;
-      msgStack = [exports.argv1 + '\nERROR: ' + msg];
-      if (trace && trace.length) {
-        msgStack.push('TRACE:');
-        trace.forEach(function (t) {
-          msgStack.push(' -> ' + (t.file || t.sourceURL) + ': ' + t.line +
-            (t.function ? ' (in function ' + t.function + ')' : ''));
-        });
-      }
-      console.error('\n' + msgStack.join('\n') + '\n');
-    };
-
-    exports.onErrorExit = function (error) {
-      /*
-        this function will save code coverage before exiting
-      */
-      setTimeout(function () {
-        if (exports.modePhantom === 'render') {
-          exports.page.render(exports.fileRender);
-          error = 0;
-        }
-        if (error instanceof Error) {
-          exports.onErrorDefault(error);
-          error = 1;
-        }
-        if (exports.modePhantom === 'test') {
-          exports.fs.write(exports.fileTestReport, JSON.stringify(exports.testReport));
-        }
-        if (exports.__coverage__) {
-          exports.fs.write(exports.fileCoverage, JSON.stringify(exports.__coverage__));
-        }
-        exports.exit(error);
-      });
-    };
-
     var modeNext, onNext;
     modeNext = 0;
     onNext = function (error, trace) {
       var data;
       try {
-        modeNext = trace ? 3 : modeNext + 1;
+        modeNext += 1;
         switch (modeNext) {
         case 1:
           // init global error handling
@@ -1509,40 +1475,75 @@
           );
           break;
         case 2:
-          console.log(exports.argv0 + ' - open ' + error + ' ' + exports.url);
-          // validate webpage opened successfully
-          exports.assert(error === 'success', error);
-          break;
-        case 3:
-          if (exports.modePhantom === 'render') {
+          console.log(exports.argv0 + ' - open ' + (error === 'success' ? 'success' : 'fail') +
+            ' ' + exports.url);
+          // screen-capture webpage after timeoutScreenCapture ms
+          if (exports.modePhantom === 'screenCapture') {
+            setTimeout(onNext, exports.timeoutScreenCapture);
             return;
           }
-          data = (/\nphantom\n(\{"global_test_results":\{.+)/).exec(error);
-          data = data && JSON.parse(data[1]).global_test_results;
-          // handle normal error
-          if (!data) {
-            exports.onError(error, trace);
-            onNext(1);
-            return;
+          if (error !== 'success') {
+            onNext(error, trace);
           }
-          // handle global_test_results passed as error
-          // merge coverage
-          exports.istanbulMerge(exports.__coverage__, data.coverage);
-          // create screen-capture
-          exports.page.render(exports.fileRender);
-          // integrate screen-capture into test-report
-          data.testReport.testPlatformList[0].screenCaptureImg =
-            exports.fileRender.replace((/^.*\//), '');
-          // merge test-report
-          exports.testMerge(exports.testReport, data.testReport);
-          // exit with number of tests failed as exit-code
-          onNext(data.testReport.testsFailed);
           break;
         default:
+          switch (exports.modePhantom) {
+          // screen-capture webpage
+          case 'screenCapture':
+            // create screen-capture
+            exports.page.render(exports.fileScreenCapture);
+            console.log('created file://' + exports.fileScreenCapture);
+            break;
+          // handle test-report callback
+          case 'testUrl':
+            try {
+              data = (/\nphantom\n(\{"global_test_results":\{.+)/).exec(error);
+              data = data && JSON.parse(data[1]).global_test_results;
+            } catch (ignore) {
+            }
+            if (data) {
+              // handle global_test_results passed as error
+              // merge coverage
+              exports.istanbulMerge(exports.__coverage__, data.coverage);
+              // create screen-capture
+              exports.page.render(exports.fileScreenCapture);
+              // integrate screen-capture into test-report
+              data.testReport.testPlatformList[0].screenCaptureImg =
+                exports.fileScreenCapture.replace((/^.*\//), '');
+              // merge test-report
+              exports.testMerge(exports.testReport, data.testReport);
+              // write test-report
+              exports.fs.write(exports.fileTestReport, JSON.stringify(exports.testReport));
+              // exit with number of tests failed as exit-code
+              throw data.testReport.testsFailed;
+            }
+            break;
+          }
+          // handle webpage error
+          // http://phantomjs.org/api/phantom/handler/on-error.html
+          if (trace) {
+            console.error('\n' + exports.argv1 + '\nERROR: ' + error + ' TRACE:');
+            trace.forEach(function (t) {
+              console.error(' -> ' + (t.file || t.sourceURL) + ': ' + t.line +
+                (t.function ? ' (in function ' + t.function + ')' : ''));
+            });
+            console.error();
+            throw 1;
+          }
+          // handle phantom error
           throw error;
         }
       } catch (errorCaught) {
-        exports.onErrorExit(errorCaught);
+        // convert errorCaught to a numerical exit-code and exit with it
+        if (errorCaught && typeof errorCaught !== 'number') {
+          exports.onErrorDefault(errorCaught);
+          errorCaught = 1;
+        }
+        // save coverage before exiting
+        if (exports.__coverage__) {
+          exports.fs.write(exports.fileCoverage, JSON.stringify(exports.__coverage__));
+        }
+        exports.exit(errorCaught);
       }
     };
     onNext();
@@ -1823,7 +1824,7 @@ tr:nth-child(odd).testReportPlatformTr {\n\
 
 
 // https://img.shields.io/badge/coverage-100.0%-00dd00.svg?style=flat
-'/build/coverage-report.badge.svg': { data: '\
+'/build/coverage.badge.svg': { data: '\
 <svg xmlns="http://www.w3.org/2000/svg" width="117" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="117" height="20" fill="#555"/><rect rx="0" x="63" width="54" height="20" fill="#0d0"/><path fill="#0d0" d="M63 0h4v20h-4z"/><rect rx="0" width="117" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="32.5" y="15" fill="#010101" fill-opacity=".3">coverage</text><text x="32.5" y="14">coverage</text><text x="89" y="15" fill="#010101" fill-opacity=".3">100.0%</text><text x="89" y="14">100.0%</text></g></svg>\n\
 ' },
 
@@ -1901,7 +1902,7 @@ tr:nth-child(odd).testReportPlatformTr {\n\
 
 
 
-// http://validator.w3.org/check?uri=https%3A%2F%2Fkaizhu256.github.io%2Fnode-utility2%2Fbuild%2Ftest.html&charset=%28detect+automatically%29&doctype=Inline&group=0&user-agent=W3C_Validator%2F1.3+http%3A%2F%2Fvalidator.w3.org%2Fservices
+// http://validator.w3.org/check?uri=https%3A%2F%2Fhrku01-utility2-beta.herokuapp.com
 '/test/test.html': { data: '\
 <!DOCTYPE html>\n\
 <html>\n\

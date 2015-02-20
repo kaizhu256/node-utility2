@@ -85,6 +85,10 @@
         // test 500-internal-server-error handling behavior
         url: '/test/server-error?modeErrorIgnore=1'
       }, {
+        // test timeout handling behavior
+        timeout: 1,
+        url: '/test/timeout'
+      }, {
         // test undefined https host handling behavior
         timeout: 1,
         url: 'https://undefined' + Date.now() + Math.random() + '.com'
@@ -105,6 +109,7 @@
       /*
         this function will test assert's default handling behavior
       */
+      var error;
       // test assertion passed
       exports.assert(true, true);
       // test assertion failed with undefined message
@@ -115,6 +120,18 @@
         exports.assert(error instanceof Error, error);
         // validate error-message
         exports.assert(error.message === '', error.message);
+      });
+      // test assertion failed with error object with no error.message and no error.trace
+      error = new Error();
+      error.message = '';
+      error.stack = '';
+      exports.testTryCatch(function () {
+        exports.assert(false, error);
+      }, function (error) {
+        // validate error occurred
+        exports.assert(error instanceof Error, error);
+        // validate error.message
+        exports.assert(error.message === 'undefined', error.message);
       });
       // test assertion failed with text message
       exports.testTryCatch(function () {
@@ -279,7 +296,7 @@
           exports.assert(timeElapsed + 100 >= 1000, timeElapsed);
           onError();
         }, onError);
-      // coverage - use 1500 ms to cover setInterval test-report refreshes in browser
+      // coverage-hack - use 1500 ms to cover setInterval test-report refresh in browser
       }, 1500, '_onTimeout_errorTimeout_test');
     };
 
@@ -440,7 +457,7 @@
         this function will test istanbulMerge's default handling behavior
       */
       var coverage1, coverage2, script;
-      script = exports.istanbulInstrument(
+      script = exports.istanbulCover(
         '(function () {\nreturn arg ? __coverage__ : __coverage__;\n}());',
         'test'
       );
@@ -482,7 +499,7 @@
         onParallel.counter += 1;
         setTimeout(function () {
           exports.fs.utimes(file, stat.atime, stat.mtime, onParallel);
-        // coverage - use 1500 ms to cover setInterval watchFile in node
+        // coverage-hack - use 1500 ms to cover setInterval watchFile in node
         }, 1500);
         onParallel(error);
       });
@@ -538,14 +555,22 @@
       });
       // test screenCapture handling behavior
       onParallel.counter += 1;
-      exports.phantomRender({
-        timeoutDefault: 5000,
+      exports.phantomScreenCapture({
+        timeoutScreenCapture: 1,
         url:
-          'http://localhost:' + process.env.npm_config_server_port + '/test/script-error.html'
-      }, function (error) {
+          'http://localhost:' + process.env.npm_config_server_port + '/test/screen-capture'
+      }, function (error, options) {
         exports.testTryCatch(function () {
           // validate no error occurred
           exports.assert(!error, error);
+          // validate screen-capture file
+          exports.assert(
+            options.fileScreenCapture_phantomjs &&
+              exports.fs.existsSync(options.fileScreenCapture_phantomjs),
+            options.fileScreenCapture_phantomjs
+          );
+          // delete screen-capture file, so it will not interfere with re-tests
+          exports.fs.unlinkSync(options.fileScreenCapture_phantomjs);
           onParallel();
         }, onParallel);
       });
@@ -659,9 +684,15 @@
         case '/test/hello':
           response.end('hello');
           break;
+        // test timeout handling behavior
+        case '/test/timeout':
+          setTimeout(function () {
+            response.end();
+          }, 1000);
+          break;
         // test script-error handling behavior
         case '/test/script-error.html':
-          response.end('<script>throw new Error("script-error")</script>');
+          response.end('<script>syntax error</script>');
           break;
         // test standalone utility2.js library handling behavior
         case '/test/utility2.html':
