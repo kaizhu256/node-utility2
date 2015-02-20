@@ -1018,10 +1018,10 @@
       */
       // read options.data from options.file and comment out shebang
       options.data = exports.fs.readFileSync(options.file, 'utf8').replace((/^#!/), '//#!');
-      // if coverage-mode is enabled, then instrument options.data
+      // if coverage-mode is enabled, then cover options.data
       if (exports.__coverage__ &&
           options.coverage && options.coverage === exports.envDict.npm_package_name) {
-        options.data = exports.istanbulInstrument(options.data, options.file);
+        options.data = exports.istanbulCover(options.data, options.file);
       }
       // cache options to exports.fileCacheDict[options.cache]
       if (options.cache) {
@@ -1029,9 +1029,9 @@
       }
     };
 
-    exports.istanbulInstrument = function (script, file) {
+    exports.istanbulCover = function (script, file) {
       /*
-        this function will instrument the given script and file
+        this function will cover the given script and file
       */
       var istanbul;
       if (!exports._instrumenter) {
@@ -1106,9 +1106,7 @@
           modePhantom: 'testUrl'
         });
         // save fileScreenCapture
-        options[
-          'fileScreenCapture' + (argv0 === 'slimerjs' ? 'Slimerjs' : '')
-        ] = options2.fileScreenCapture;
+        options['fileScreenCapture_' + argv0] = options2.fileScreenCapture;
         onParallel.counter += 1;
         onError2 = function (error) {
           // cleanup timerTimeout
@@ -1118,10 +1116,10 @@
         // set timerTimeout
         timerTimeout = exports.onTimeout(onError2, exports.timeoutDefault, argv1);
         options.fileUtility2 = __dirname + '/index.js';
-        // coverage-hack - cover index.js
-        if (exports.__coverage__ && 'utility2' === exports.envDict.npm_package_name) {
+        // coverage-hack - cover utility2.js
+        if (exports.__coverage__ && exports.envDict.npm_package_name === 'utility2') {
           options.fileUtility2 =
-            exports.envDict.npm_package_dir_tmp + '/instrumented.utility2.js';
+            exports.envDict.npm_package_dir_tmp + '/covered.utility2.js';
         }
         // spawn phantomjs to test a url
         exports.child_process
@@ -1357,10 +1355,10 @@
         coverage: 'utility2',
         file: __filename
       });
-      // save instrumented utility2.js to fs
+      // save covered utility2.js to fs
       if (exports.__coverage__ && exports.envDict.npm_package_name === 'utility2') {
         exports.fs.writeFileSync(
-          exports.envDict.npm_package_dir_tmp + '/instrumented.utility2.js',
+          exports.envDict.npm_package_dir_tmp + '/covered.utility2.js',
           exports.fileCacheDict['/assets/utility2.js'].data
         );
       }
@@ -1440,7 +1438,7 @@
     onNext = function (error, trace) {
       var data;
       try {
-        modeNext = error instanceof Error ? NaN : modeNext + 1;
+        modeNext += 1;
         switch (modeNext) {
         case 1:
           // init global error handling
@@ -1477,12 +1475,15 @@
           );
           break;
         case 2:
-          console.log(exports.argv0 + ' - open ' + error + ' ' + exports.url);
-          // validate webpage opened successfully
-          exports.assert(error === 'success', error);
+          console.log(exports.argv0 + ' - open ' + (error === 'success' ? 'success' : 'fail') +
+            ' ' + exports.url);
           // screen-capture webpage after timeoutScreenCapture ms
           if (exports.modePhantom === 'screenCapture') {
             setTimeout(onNext, exports.timeoutScreenCapture);
+            return;
+          }
+          if (error !== 'success') {
+            onNext(error, trace);
           }
           break;
         default:
@@ -1495,8 +1496,11 @@
             break;
           // handle test-report callback
           case 'testUrl':
-            data = (/\nphantom\n(\{"global_test_results":\{.+)/).exec(error);
-            data = data && JSON.parse(data[1]).global_test_results;
+            try {
+              data = (/\nphantom\n(\{"global_test_results":\{.+)/).exec(error);
+              data = data && JSON.parse(data[1]).global_test_results;
+            } catch (ignore) {
+            }
             if (data) {
               // handle global_test_results passed as error
               // merge coverage
@@ -1531,7 +1535,7 @@
         }
       } catch (errorCaught) {
         // convert errorCaught to a numerical exit-code and exit with it
-        if (errorCaught instanceof Error) {
+        if (errorCaught && typeof errorCaught !== 'number') {
           exports.onErrorDefault(errorCaught);
           errorCaught = 1;
         }

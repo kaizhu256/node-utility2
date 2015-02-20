@@ -85,6 +85,10 @@
         // test 500-internal-server-error handling behavior
         url: '/test/server-error?modeErrorIgnore=1'
       }, {
+        // test timeout handling behavior
+        timeout: 1,
+        url: '/test/timeout'
+      }, {
         // test undefined https host handling behavior
         timeout: 1,
         url: 'https://undefined' + Date.now() + Math.random() + '.com'
@@ -105,6 +109,7 @@
       /*
         this function will test assert's default handling behavior
       */
+      var error;
       // test assertion passed
       exports.assert(true, true);
       // test assertion failed with undefined message
@@ -115,6 +120,18 @@
         exports.assert(error instanceof Error, error);
         // validate error-message
         exports.assert(error.message === '', error.message);
+      });
+      // test assertion failed with error object with no error.message and no error.trace
+      error = new Error();
+      error.message = '';
+      error.stack = '';
+      exports.testTryCatch(function () {
+        exports.assert(false, error);
+      }, function (error) {
+        // validate error occurred
+        exports.assert(error instanceof Error, error);
+        // validate error.message
+        exports.assert(error.message === 'undefined', error.message);
       });
       // test assertion failed with text message
       exports.testTryCatch(function () {
@@ -440,7 +457,7 @@
         this function will test istanbulMerge's default handling behavior
       */
       var coverage1, coverage2, script;
-      script = exports.istanbulInstrument(
+      script = exports.istanbulCover(
         '(function () {\nreturn arg ? __coverage__ : __coverage__;\n}());',
         'test'
       );
@@ -548,9 +565,12 @@
           exports.assert(!error, error);
           // validate screen-capture file
           exports.assert(
-            options.fileScreenCapture && exports.fs.existsSync(options.fileScreenCapture),
-            options.fileScreenCapture
+            options.fileScreenCapture_phantomjs &&
+              exports.fs.existsSync(options.fileScreenCapture_phantomjs),
+            options.fileScreenCapture_phantomjs
           );
+          // delete screen-capture file, so it will not interfere with re-tests
+          exports.fs.unlinkSync(options.fileScreenCapture_phantomjs);
           onParallel();
         }, onParallel);
       });
@@ -664,9 +684,15 @@
         case '/test/hello':
           response.end('hello');
           break;
+        // test timeout handling behavior
+        case '/test/timeout':
+          setTimeout(function () {
+            response.end();
+          }, 1000);
+          break;
         // test script-error handling behavior
         case '/test/script-error.html':
-          response.end('<script>throw new Error("script-error")</script>');
+          response.end('<script>syntax error</script>');
           break;
         // test standalone utility2.js library handling behavior
         case '/test/utility2.html':
