@@ -145,7 +145,7 @@
         args = arguments;
         if (args[0]) {
           // append errorStack to args[0].stack
-          args[0].stack = args[0] ? args[0] + '\n' + errorStack : errorStack;
+          args[0].stack = args[0].stack ? args[0].stack + '\n' + errorStack : errorStack;
         }
         onError.apply(null, args);
       };
@@ -1070,86 +1070,109 @@
 
     exports.phantomTest = function (options, onError) {
       /*
-        this function will spawn phantomjs to test options.url
+        this function will spawn both phantomjs and slimerjs to test options.url
       */
       var onParallel;
-      exports.setDefault(options, 1, {
-        _testSecret: exports._testSecret,
-        modePhantom: 'testUrl'
-      });
-      onParallel = exports.onParallel(function (error) {
-        onError(error, options);
-      });
+      onParallel = exports.onParallel(onError);
       onParallel.counter += 1;
       ['phantomjs', 'slimerjs'].forEach(function (argv0) {
-        var argv1, onError2, options2, timerTimeout;
+        var options2;
         // if slimerjs is not available, then do not use it
         if (argv0 === 'slimerjs' && (!exports.envDict.npm_config_mode_slimerjs ||
-            exports.envDict.npm_config_mode_no_slimerjs)) {
+          exports.envDict.npm_config_mode_no_slimerjs)) {
           return;
         }
-        argv1 = exports.envDict.MODE_BUILD + '.' + argv0 + '.' +
-          encodeURIComponent(exports.url.parse(options.url).pathname);
-        options2 = exports.setDefault(exports.jsonCopy(options), 1, {
-          _testSecret: exports._testSecret,
-          argv0: argv0,
-          argv1: argv1,
-          fileCoverage:
-            exports.envDict.npm_package_dir_tmp + '/coverage.' + argv1 + '.json',
-          fileScreenCapture: (
-            exports.envDict.npm_package_dir_build + '/screen-capture.' + argv1 + '.png'
-          )
-            .replace((/%/g), '_')
-            .replace((/_2F.png$/), 'png'),
-          fileTestReport:
-            exports.envDict.npm_package_dir_tmp + '/test-report.' + argv1 + '.json',
-          modePhantom: 'testUrl'
-        });
-        // save fileScreenCapture
-        options['fileScreenCapture_' + argv0] = options2.fileScreenCapture;
+        options2 = exports.jsonCopy(options);
+        options2.argv0 = argv0;
         onParallel.counter += 1;
-        onError2 = function (error) {
-          // cleanup timerTimeout
-          clearTimeout(timerTimeout);
+        exports._phantomTestSingle(options2, function (error) {
+          options[argv0] = options2;
           onParallel(error);
-        };
-        // set timerTimeout
-        timerTimeout = exports.onTimeout(onError2, exports.timeoutDefault, argv1);
-        options.fileUtility2 = __dirname + '/index.js';
-        // coverage-hack - cover utility2.js
-        if (exports.__coverage__ && exports.envDict.npm_package_name === 'utility2') {
-          options.fileUtility2 =
-            exports.envDict.npm_package_dir_tmp + '/covered.utility2.js';
-        }
-        // spawn phantomjs to test a url
-        exports.child_process
-          .spawn(
-            require('phantomjs-lite').__dirname + '/' + argv0,
-            [
-              options.fileUtility2,
-              encodeURIComponent(JSON.stringify(options2))
-            ],
-            { stdio: 'inherit' }
-          )
-          .on('exit', function (exitCode) {
-            [options2.fileCoverage, options2.fileTestReport].forEach(function (file, ii) {
-              var data;
-              try {
-                data = JSON.parse(exports.fs.readFileSync(file, 'utf8'));
-                // merge phantom js-env coverage
-                if (ii === 0) {
-                  exports.istanbulMerge(exports.__coverage__, data);
-                // merge tests
-                } else if (options2.modePhantom === 'testUrl' && !options2.modeErrorIgnore) {
-                  exports.testMerge(exports.testReport, data);
-                }
-              } catch (ignore) {
-              }
-            });
-            onError2(exitCode && new Error(argv0 + ' exit-code ' + exitCode));
-          });
+        });
       });
       onParallel();
+    };
+
+    exports._phantomTestSingle = function (options, onError) {
+      /*
+        this function will spawn either phantomjs or slimerjs to test options.url
+      */
+      var modeNext, onNext, onParallel, timerTimeout;
+      modeNext = 0;
+      onNext = function (error) {
+        modeNext = error instanceof Error ? NaN : modeNext + 1;
+        switch (modeNext) {
+        case 1:
+          options.argv1 = exports.envDict.MODE_BUILD + '.' + options.argv0 + '.' +
+            encodeURIComponent(exports.url.parse(options.url).pathname);
+          exports.setDefault(options, 1, {
+            _testSecret: exports._testSecret,
+            fileCoverage:
+              exports.envDict.npm_package_dir_tmp + '/coverage.' + options.argv1 + '.json',
+            fileScreenCapture: (exports.envDict.npm_package_dir_build +
+              '/screen-capture.' + options.argv1 + '.png')
+              .replace((/%/g), '_')
+              .replace((/_2F.png$/), 'png'),
+            fileTestReport:
+              exports.envDict.npm_package_dir_tmp + '/test-report.' + options.argv1 + '.json',
+            modePhantom: 'testUrl'
+          });
+          // set timerTimeout
+          timerTimeout = exports.onTimeout(onNext, exports.timeoutDefault, options.argv1);
+          // spawn phantomjs to test a url
+          exports.child_process
+            .spawn(
+              require('phantomjs-lite').__dirname + '/' + options.argv0,
+              [
+                // coverage-hack - cover utility2.js
+                exports.__coverage__ && exports.envDict.npm_package_name === 'utility2' ?
+                    exports.envDict.npm_package_dir_tmp + '/covered.utility2.js'
+                  : __dirname + '/index.js',
+                encodeURIComponent(JSON.stringify(options))
+              ],
+              { stdio: 'inherit' }
+            )
+            .on('exit', onNext);
+          break;
+        case 2:
+          options.exitCode = error;
+          onParallel = exports.onParallel(onNext);
+          onParallel.counter += 1;
+          [options.fileCoverage, options.fileTestReport].forEach(function (file, ii) {
+            onParallel.counter += 1;
+            exports.fs.readFile(file, 'utf8', function (error, data) {
+              // nop hack to pass jslint
+              exports.nop(error);
+              try {
+                data = JSON.parse(data);
+              } catch (ignore) {
+              }
+              if (data) {
+                // merge coverage
+                if (ii === 0) {
+                  exports.istanbulMerge(exports.__coverage__, data);
+                // merge test-report
+                } else if (options.modePhantom === 'testUrl' && !options.modeErrorIgnore) {
+                  exports.testMerge(exports.testReport, data);
+                }
+              }
+              onParallel();
+            });
+          });
+          onParallel();
+          break;
+        case 3:
+          onNext(
+            options.exitCode && new Error(options.argv0 + ' exit-code ' + options.exitCode)
+          );
+          break;
+        default:
+          // cleanup timerTimeout
+          clearTimeout(timerTimeout);
+          onError(error);
+        }
+      };
+      onNext();
     };
 
     exports.replStart = function (globalDict) {
@@ -1456,6 +1479,24 @@
           }
           // set timeout for phantom
           exports.onTimeout(exports.onErrorExit, exports.timeoutDefault, exports.url);
+          // test phantom internal-error handling behavior
+          if (exports.modePhantom === 'testPhantomInternalError') {
+            exports.testMock([
+              [exports, {
+                exit: exports.nop
+              }]
+            ], onNext, function (onError) {
+              // test trace-less error handling behavior
+              onNext('error', null);
+              // test function and sourceUrl trace error handling behavior
+              onNext('error', [{
+                function: true,
+                sourceUrl: true
+              }]);
+              // test error handling behavior
+              onError(exports.errorDefault);
+            });
+          }
           // init webpage
           exports.page = exports.webpage.create();
           // init webpage's viewport-size
@@ -1490,8 +1531,10 @@
           switch (exports.modePhantom) {
           // screen-capture webpage
           case 'screenCapture':
-            // create screen-capture
+            // save screen-capture
             exports.page.render(exports.fileScreenCapture);
+            // save html-content
+            exports.fs.write(exports.fileScreenCapture + '.html', exports.page.content);
             console.log('created file://' + exports.fileScreenCapture);
             break;
           // handle test-report callback
@@ -1505,8 +1548,10 @@
               // handle global_test_results passed as error
               // merge coverage
               exports.istanbulMerge(exports.__coverage__, data.coverage);
-              // create screen-capture
+              // save screen-capture
               exports.page.render(exports.fileScreenCapture);
+              // save html-content
+              exports.fs.write(exports.fileScreenCapture + '.html', exports.page.content);
               // integrate screen-capture into test-report
               data.testReport.testPlatformList[0].screenCaptureImg =
                 exports.fileScreenCapture.replace((/^.*\//), '');
@@ -1521,14 +1566,14 @@
           }
           // handle webpage error
           // http://phantomjs.org/api/phantom/handler/on-error.html
-          if (trace) {
+          if (error && typeof error === 'string') {
             console.error('\n' + exports.argv1 + '\nERROR: ' + error + ' TRACE:');
-            trace.forEach(function (t) {
+            (trace || []).forEach(function (t) {
               console.error(' -> ' + (t.file || t.sourceURL) + ': ' + t.line +
                 (t.function ? ' (in function ' + t.function + ')' : ''));
             });
             console.error();
-            throw 1;
+            error = 1;
           }
           // handle phantom error
           throw error;

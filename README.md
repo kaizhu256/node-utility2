@@ -94,7 +94,7 @@ lightweight nodejs module that runs phantomjs browser-tests with coverage (via i
     // init tests
     local._phantomTest_default_test = function (onError) {
       /*
-        this function will spawn phantomjs to test the test-webpage
+        this function will spawn phantomjs to test the test-page
       */
       local.utility2.phantomTest({
         url: 'http://localhost:' + process.env.npm_config_server_port +
@@ -213,7 +213,7 @@ exit $EXIT_CODE
 
 
 ## todo
-- add phantomjs tests for coverage
+- delete env var $npm_config_coverage_report_dir
 - add max-height option in shRunScreenCapture
 - create flamegraph from istanbul coverage
 - explicitly require slimerjs instead of auto-detecting it
