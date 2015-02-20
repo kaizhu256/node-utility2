@@ -1464,6 +1464,8 @@
         modeNext += 1;
         switch (modeNext) {
         case 1:
+          // init __coverage__
+          exports.__coverage__ = exports.global.__coverage__ || {};
           // init global error handling
           // http://phantomjs.org/api/phantom/handler/on-error.html
           exports.global.phantom.onError = onNext;
@@ -1548,16 +1550,16 @@
               // handle global_test_results passed as error
               // merge coverage
               exports.istanbulMerge(exports.__coverage__, data.coverage);
-              // save screen-capture
-              exports.page.render(exports.fileScreenCapture);
+              // merge test-report
+              exports.testMerge(exports.testReport, data.testReport);
               // save html-content
               exports.fs.write(exports.fileScreenCapture + '.html', exports.page.content);
+              // save screen-capture
+              exports.page.render(exports.fileScreenCapture);
               // integrate screen-capture into test-report
               data.testReport.testPlatformList[0].screenCaptureImg =
                 exports.fileScreenCapture.replace((/^.*\//), '');
-              // merge test-report
-              exports.testMerge(exports.testReport, data.testReport);
-              // write test-report
+              // save test-report
               exports.fs.write(exports.fileTestReport, JSON.stringify(exports.testReport));
               // exit with number of tests failed as exit-code
               throw data.testReport.testsFailed;
@@ -1585,9 +1587,7 @@
           errorCaught = 1;
         }
         // save coverage before exiting
-        if (exports.__coverage__) {
-          exports.fs.write(exports.fileCoverage, JSON.stringify(exports.__coverage__));
-        }
+        exports.fs.write(exports.fileCoverage, JSON.stringify(exports.__coverage__));
         exports.exit(errorCaught);
       }
     };

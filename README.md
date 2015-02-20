@@ -46,6 +46,7 @@ lightweight nodejs module that runs phantomjs browser-tests with coverage (via i
   if (typeof window === 'object') {
     // init local.utility2
     local.utility2 = window.utility2;
+    local.utility2.__coverage__ = local.utility2.__coverage__ || window.__coverage__;
     // init tests
     local._ajax_200_test = function (onError) {
       /*
