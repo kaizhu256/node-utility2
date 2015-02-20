@@ -52,14 +52,14 @@ shBuildGithubUpload() {
   git clone git@github.com:$GITHUB_REPO.git\
     --branch=gh-pages --single-branch $npm_package_dir_tmp/gh-pages || return $?
   cd $npm_package_dir_tmp/gh-pages || return $?
-  # uncomment the line below to cleanup build dir
-  rm -fr build || return $?
   # copy build-artifacts to gh-pages
   cp -a $npm_package_dir_build . || return $?
   local DIR=build..$CI_BRANCH..$CI_HOST || return $?
   rm -fr $DIR && cp -a $npm_package_dir_build $DIR || return $?
   # init .git/config
   printf "\n[user]\nname=nobody\nemail=nobody" >> .git/config || return $?
+  # cleanup dir
+  shBuildGithubUploadCleanup || return $?
   # update gh-pages
   git add -A || return $?
   git commit -am "[skip ci] update gh-pages" || return $?
@@ -546,7 +546,9 @@ shTestScriptJs() {
       require('fs').writeFileSync(
         '$FILE',
         // preserve lineno
-        data.slice(0, match0.index).replace((/.*/g), '') + match0.slice(4, -4)
+        ('$MODE_LINENO_PRESERVE'
+          ? data.slice(0, index).replace((/.*/g), '') + '\n\n'
+          : '') + match0.slice(5, -4)
       );
     }
   );" || return $?
@@ -593,7 +595,7 @@ shTestScriptSh() {
       require('fs').writeFileSync(
         '$FILE',
         // preserve lineno
-        data.slice(0, match0.index).replace((/.*/g), '') + match0.slice(4, -4)
+        data.slice(0, match0.index).replace((/.*/g), '') + '\n\n' + match0.slice(5, -4)
       );
     }
   );" || return $?

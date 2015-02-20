@@ -22,11 +22,13 @@
       if (!passed) {
         throw new Error(
           // if message is a string, then leave it as is
-          typeof message === 'string' ? message
+          typeof message === 'string'
+            ? message
             // if message is an Error object, then get its stack-trace
-            : message instanceof Error ? exports.errorStack(message)
-              // else JSON.stringify message
-              : JSON.stringify(message)
+            : message instanceof Error
+            ? exports.errorStack(message)
+            // else JSON.stringify message
+            : JSON.stringify(message)
         );
       }
     };
@@ -111,8 +113,8 @@
         return JSON.stringify(value);
       };
       value = JSON.stringify(value);
-      return typeof value === 'string' ?
-          JSON.stringify(JSON.parse(stringifyOrdered(JSON.parse(value))), replacer, space)
+      return typeof value === 'string'
+        ? JSON.stringify(JSON.parse(stringifyOrdered(JSON.parse(value))), replacer, space)
         : value;
     };
 
@@ -416,9 +418,11 @@
           }
         });
         // update testPlatform.status
-        testPlatform.status = testPlatform.testsFailed ? 'failed'
-          : testPlatform.testsPending ? 'pending'
-            : 'passed';
+        testPlatform.status = testPlatform.testsFailed
+          ? 'failed'
+          : testPlatform.testsPending
+          ? 'pending'
+          : 'passed';
         // sort testCaseList by status and name
         testPlatform.testCaseList.sort(function (arg1, arg2) {
           arg1 = arg1.status.replace('passed', 'z') + arg1.name.toLowerCase();
@@ -469,8 +473,8 @@
               errorStackList: errorStackList,
               // security - sanitize '<' in text
               name: String(testPlatform.name).replace((/</g), '&lt;'),
-              screenCapture: testPlatform.screenCaptureImg ?
-                  '<a class="testReportPlatformScreenCaptureA" href="' +
+              screenCapture: testPlatform.screenCaptureImg
+                ? '<a class="testReportPlatformScreenCaptureA" href="' +
                   testPlatform.screenCaptureImg + '">' +
                   '<img class="testReportPlatformScreenCaptureImg" src="' +
                   testPlatform.screenCaptureImg + '">' +
@@ -496,7 +500,8 @@
               testPlatformNumber: ii + 1
             });
           }),
-          testsFailedClass: testReport.testsFailed ? 'testReportTestFailed'
+          testsFailedClass: testReport.testsFailed
+            ? 'testReportTestFailed'
             : 'testReportTestPassed'
         }),
         'undefined'
@@ -956,9 +961,11 @@
           options.headers = options.headers || {};
           // init Content-Length header
           options.headers['Content-Length'] =
-            typeof options.data === 'string' ? Buffer.byteLength(options.data)
-            : Buffer.isBuffer(options.data) ? options.data.length
-              : 0;
+            typeof options.data === 'string'
+            ? Buffer.byteLength(options.data)
+            : Buffer.isBuffer(options.data)
+            ? options.data.length
+            : 0;
           // make http request
           request = (urlParsed.protocol === 'https:' ? exports.https : exports.http)
             .request(options, onNext)
@@ -1125,8 +1132,8 @@
               require('phantomjs-lite').__dirname + '/' + options.argv0,
               [
                 // coverage-hack - cover utility2.js
-                exports.global.__coverage__ && exports.envDict.npm_package_name === 'utility2' ?
-                    exports.envDict.npm_package_dir_tmp + '/covered.utility2.js'
+                exports.global.__coverage__ && exports.envDict.npm_package_name === 'utility2'
+                  ? exports.envDict.npm_package_dir_tmp + '/covered.utility2.js'
                   : __dirname + '/index.js',
                 encodeURIComponent(JSON.stringify(options))
               ],
@@ -1481,32 +1488,34 @@
           }
           // set timeout for phantom
           exports.onTimeout(exports.onErrorExit, exports.timeoutDefault, exports.url);
-          // test phantom internal-error handling behavior
-          if (exports.modePhantom === 'testPhantomInternalError') {
-            exports.testMock([
-              [exports, {
-                exit: exports.nop
-              }]
-            ], onNext, function (onError) {
-              // test trace-less error handling behavior
-              onNext('error', null);
-              // test function and sourceUrl trace error handling behavior
-              onNext('error', [{
-                function: true,
-                sourceUrl: true
-              }]);
-              // test error handling behavior
-              onError(exports.errorDefault);
-            });
-          }
+          //!! // test phantom internal-error handling behavior
+          //!! if (exports.modePhantom === 'testPhantomInternalError') {
+            //!! exports.testMock([
+              //!! [exports, {
+                //!! exit: exports.nop
+              //!! }]
+            //!! ], onNext, function (onError) {
+              //!! // test trace-less error handling behavior
+              //!! onNext('error', null);
+              //!! // test function and sourceUrl trace error handling behavior
+              //!! onNext('error', [{
+                //!! function: true,
+                //!! sourceUrl: true
+              //!! }]);
+              //!! // test error handling behavior
+              //!! onError(exports.errorDefault);
+            //!! });
+          //!! }
           // init webpage
           exports.page = exports.webpage.create();
-          // init webpage's viewport-size
-          exports.page.viewportSize = exports.viewportSize || { height: 600, width: 800 };
-          // init webpage's error handling
+          // init webpage clipRect
+          exports.page.clipRect = { height: 600, left: 0, top: 0, width: 800 };
+          // init webpage viewportSize
+          exports.page.viewportSize = { height: 600, width: 800 };
+          // init webpage error handling
           // http://phantomjs.org/api/webpage/handler/on-error.html
           exports.page.onError = exports.global.phantom.onError;
-          // pipe webpage's console.log to stdout
+          // pipe webpage console.log to stdout
           exports.page.onConsoleMessage = function () {
             console.log.apply(console, arguments);
           };
@@ -1518,7 +1527,8 @@
           );
           break;
         case 2:
-          console.log(exports.argv0 + ' - open ' + (error === 'success' ? 'success' : 'fail') +
+          console.log(exports.argv0 + ' - open ' +
+            (error === 'success' ? 'success' : 'fail') +
             ' ' + exports.url);
           // screen-capture webpage after timeoutScreenCapture ms
           if (exports.modePhantom === 'screenCapture') {
@@ -1535,8 +1545,6 @@
           case 'screenCapture':
             // save screen-capture
             exports.page.render(exports.fileScreenCapture);
-            //!! // save html-content
-            //!! exports.fs.write(exports.fileScreenCapture + '.html', exports.page.content);
             console.log('created file://' + exports.fileScreenCapture);
             break;
           // handle test-report callback
@@ -1552,8 +1560,6 @@
               exports.istanbulMerge(exports.global.__coverage__, data.coverage);
               // merge test-report
               exports.testMerge(exports.testReport, data.testReport);
-              //!! // save html-content
-              //!! exports.fs.write(exports.fileScreenCapture + '.html', exports.page.content);
               // save screen-capture
               exports.page.render(exports.fileScreenCapture);
               // integrate screen-capture into test-report
@@ -1711,15 +1717,16 @@
     };
     exports.errorDefault = new Error('default error');
     exports.testPlatform = {
-      name: exports.modeJs === 'browser' ? 'browser - ' +
-        navigator.userAgent + ' - ' + new Date().toISOString() :
-          exports.modeJs === 'node' ? 'node - ' +
-            process.platform + ' ' + process.version + ' - ' + new Date().toISOString() :
-              (exports.global.slimer ? 'slimer - ' : 'phantom - ') +
-              exports.system.os.name + ' ' +
-              exports.global.phantom.version.major + '.' +
-              exports.global.phantom.version.minor + '.' +
-              exports.global.phantom.version.patch + ' - ' + new Date().toISOString(),
+      name: exports.modeJs === 'browser'
+        ? 'browser - ' + navigator.userAgent + ' - ' + new Date().toISOString()
+        : exports.modeJs === 'node'
+        ? 'node - ' +
+          process.platform + ' ' + process.version + ' - ' + new Date().toISOString()
+        : (exports.global.slimer ? 'slimer - ' : 'phantom - ') +
+          exports.system.os.name + ' ' +
+          exports.global.phantom.version.major + '.' +
+          exports.global.phantom.version.minor + '.' +
+          exports.global.phantom.version.patch + ' - ' + new Date().toISOString(),
       screenCaptureImg: exports.envDict.MODE_BUILD_SCREEN_CAPTURE,
       testCaseList: []
     };

@@ -537,11 +537,11 @@
         url: 'http://localhost:' + exports.envDict.npm_config_server_port +
           // test script-error handling behavior
           '/test/script-error.html'
-      }, {
-        modeErrorIgnore: true,
-        // test phantom internal-error handling behavior
-        modePhantom: 'testPhantomInternalError',
-        url: 'http://localhost:' + exports.envDict.npm_config_server_port
+      //!! }, {
+        //!! modeErrorIgnore: true,
+        //!! // test phantom internal-error handling behavior
+        //!! modePhantom: 'testPhantomInternalError',
+        //!! url: 'http://localhost:' + exports.envDict.npm_config_server_port
       }].forEach(function (options) {
         onParallel.counter += 1;
         exports.phantomTest(options, function (error) {

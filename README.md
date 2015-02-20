@@ -208,6 +208,11 @@ EXIT_CODE=$?
 # upload build-artifacts to github
 if [ "$TRAVIS" ]
 then
+  shBuildGithubUploadCleanup() {
+    # this function can be overriden to cleanup gh-pages
+    touch a00.txt || return $?
+    echo 'hello shBuildGithubUploadCleanup' || return $?
+  }
   # if number of commits > 16, then squash older commits
   COMMIT_LIMIT=16 shRun shBuildGithubUpload || exit $?
 fi
@@ -218,6 +223,7 @@ exit $EXIT_CODE
 
 
 ## todo
+- fix unsafe javascript warning
 - delete __coverage__ init code in example.js
 - delete env var $npm_config_coverage_report_dir
 - add max-height option in shRunScreenCapture
