@@ -46,7 +46,6 @@ this lightweight nodejs module will run phantomjs browser-tests with coverage (v
   if (typeof window === 'object') {
     // init local.utility2
     local.utility2 = window.utility2;
-    local.utility2.__coverage__ = local.utility2.__coverage__ || window.__coverage__;
     // init tests
     local._ajax_200_test = function (onError) {
       /*
@@ -144,7 +143,9 @@ this lightweight nodejs module will run phantomjs browser-tests with coverage (v
 ```
 #### output
 ![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleJs.png)
+
 ![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleJs.slimerjs.png)
+
 ![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleJs.slimerjs._2Ftmp_2Fapp_2F.tmp_2Fbuild_2Fcoverage.html_2Fapp_2Fexample.js.html.png)
 
 
@@ -209,9 +210,8 @@ EXIT_CODE=$?
 if [ "$TRAVIS" ]
 then
   shBuildGithubUploadCleanup() {
-    # this function can be overriden to cleanup gh-pages
-    touch a00.txt || return $?
-    echo 'hello shBuildGithubUploadCleanup' || return $?
+    # this function will cleanup build-artifacts before uploading
+    return
   }
   # if number of commits > 16, then squash older commits
   COMMIT_LIMIT=16 shRun shBuildGithubUpload || exit $?
@@ -223,10 +223,7 @@ exit $EXIT_CODE
 
 
 ## todo
-- fix unsafe javascript warning
-- delete __coverage__ init code in example.js
 - delete env var $npm_config_coverage_report_dir
-- add max-height option in shRunScreenCapture
 - create flamegraph from istanbul coverage
 - explicitly require slimerjs instead of auto-detecting it
 - auto-generate help doc from README.md

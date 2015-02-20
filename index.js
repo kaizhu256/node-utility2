@@ -1467,134 +1467,117 @@
     modeNext = 0;
     onNext = function (error, trace) {
       var data;
-      try {
-        modeNext += 1;
-        switch (modeNext) {
-        case 1:
-          // init __coverage__
-          exports.global.__coverage__ = exports.global.__coverage__ || {};
-          // init global error handling
-          // http://phantomjs.org/api/phantom/handler/on-error.html
-          exports.global.phantom.onError = onNext;
-          // override exports properties
-          exports.setOverride(
-            exports,
-            -1,
-            JSON.parse(decodeURIComponent(exports.system.args[1]))
-          );
-          // if modeErrorIgnore, then suppress console.error and console.log
-          if (exports.modeErrorIgnore) {
-            console.error = console.log = exports.nop;
-          }
-          // set timeout for phantom
-          exports.onTimeout(exports.onErrorExit, exports.timeoutDefault, exports.url);
-          //!! // test phantom internal-error handling behavior
-          //!! if (exports.modePhantom === 'testPhantomInternalError') {
-            //!! exports.testMock([
-              //!! [exports, {
-                //!! exit: exports.nop
-              //!! }]
-            //!! ], onNext, function (onError) {
-              //!! // test trace-less error handling behavior
-              //!! onNext('error', null);
-              //!! // test function and sourceUrl trace error handling behavior
-              //!! onNext('error', [{
-                //!! function: true,
-                //!! sourceUrl: true
-              //!! }]);
-              //!! // test error handling behavior
-              //!! onError(exports.errorDefault);
-            //!! });
-          //!! }
-          // init webpage
-          exports.page = exports.webpage.create();
-          // init webpage clipRect
-          exports.page.clipRect = { height: 600, left: 0, top: 0, width: 800 };
-          // init webpage viewportSize
-          exports.page.viewportSize = { height: 600, width: 800 };
-          // init webpage error handling
-          // http://phantomjs.org/api/webpage/handler/on-error.html
-          exports.page.onError = exports.global.phantom.onError;
-          // pipe webpage console.log to stdout
-          exports.page.onConsoleMessage = function () {
-            console.log.apply(console, arguments);
-          };
-          // open requested webpage
-          exports.page.open(
-            // security - insert _testSecret in url without revealing it
-            exports.url.replace('{{_testSecret}}', exports._testSecret),
-            onNext
-          );
+      modeNext += 1;
+      switch (modeNext) {
+      case 1:
+        // init __coverage__
+        exports.global.__coverage__ = exports.global.__coverage__ || {};
+        // init global error handling
+        // http://phantomjs.org/api/phantom/handler/on-error.html
+        exports.global.phantom.onError = onNext;
+        // override exports properties
+        exports.setOverride(
+          exports,
+          -1,
+          JSON.parse(decodeURIComponent(exports.system.args[1]))
+        );
+        // if modeErrorIgnore, then suppress console.error and console.log
+        if (exports.modeErrorIgnore) {
+          console.error = console.log = exports.nop;
+        }
+        // set timeout for phantom
+        exports.onTimeout(exports.onErrorExit, exports.timeoutDefault, exports.url);
+        // init webpage
+        exports.page = exports.webpage.create();
+        // init webpage clipRect
+        exports.page.clipRect = { height: 768, left: 0, top: 0, width: 1024 };
+        // init webpage viewportSize
+        exports.page.viewportSize = { height: 768, width: 1024 };
+        // init webpage error handling
+        // http://phantomjs.org/api/webpage/handler/on-error.html
+        exports.page.onError = exports.global.phantom.onError;
+        // pipe webpage console.log to stdout
+        exports.page.onConsoleMessage = function () {
+          console.log.apply(console, arguments);
+        };
+        // open requested webpage
+        exports.page.open(
+          // security - insert _testSecret in url without revealing it
+          exports.url.replace('{{_testSecret}}', exports._testSecret),
+          onNext
+        );
+        break;
+      case 2:
+        console.log(exports.argv0 + ' - open ' +
+          (error === 'success' ? 'success' : 'fail') +
+          ' ' + exports.url);
+        switch (exports.modePhantom) {
+        // screen-capture webpage after timeoutScreenCapture ms
+        case 'screenCapture':
+          setTimeout(onNext, exports.timeoutScreenCapture);
           break;
-        case 2:
-          console.log(exports.argv0 + ' - open ' +
-            (error === 'success' ? 'success' : 'fail') +
-            ' ' + exports.url);
-          // screen-capture webpage after timeoutScreenCapture ms
-          if (exports.modePhantom === 'screenCapture') {
-            setTimeout(onNext, exports.timeoutScreenCapture);
-            return;
-          }
+        case 'testUrl':
           if (error !== 'success') {
             onNext(error, trace);
           }
           break;
-        default:
-          switch (exports.modePhantom) {
-          // screen-capture webpage
-          case 'screenCapture':
+        }
+        break;
+      case 3:
+        switch (exports.modePhantom) {
+        // screen-capture webpage
+        case 'screenCapture':
+          // save screen-capture
+          exports.page.render(exports.fileScreenCapture);
+          console.log('created file://' + exports.fileScreenCapture);
+          break;
+        // handle test-report callback
+        case 'testUrl':
+          try {
+            data = (/\nphantom\n(\{"global_test_results":\{.+)/).exec(error);
+            data = data && JSON.parse(data[1]).global_test_results;
+          } catch (ignore) {
+          }
+          if (data) {
+            // handle global_test_results passed as error
+            // merge coverage
+            exports.istanbulMerge(exports.global.__coverage__, data.coverage);
+            // merge test-report
+            exports.testMerge(exports.testReport, data.testReport);
             // save screen-capture
             exports.page.render(exports.fileScreenCapture);
-            console.log('created file://' + exports.fileScreenCapture);
-            break;
-          // handle test-report callback
-          case 'testUrl':
-            try {
-              data = (/\nphantom\n(\{"global_test_results":\{.+)/).exec(error);
-              data = data && JSON.parse(data[1]).global_test_results;
-            } catch (ignore) {
-            }
-            if (data) {
-              // handle global_test_results passed as error
-              // merge coverage
-              exports.istanbulMerge(exports.global.__coverage__, data.coverage);
-              // merge test-report
-              exports.testMerge(exports.testReport, data.testReport);
-              // save screen-capture
-              exports.page.render(exports.fileScreenCapture);
-              // integrate screen-capture into test-report
-              data.testReport.testPlatformList[0].screenCaptureImg =
-                exports.fileScreenCapture.replace((/^.*\//), '');
-              // save test-report
-              exports.fs.write(exports.fileTestReport, JSON.stringify(exports.testReport));
-              // exit with number of tests failed as exit-code
-              throw data.testReport.testsFailed;
-            }
-            break;
+            // integrate screen-capture into test-report
+            data.testReport.testPlatformList[0].screenCaptureImg =
+              exports.fileScreenCapture.replace((/^.*\//), '');
+            // save test-report
+            exports.fs.write(exports.fileTestReport, JSON.stringify(exports.testReport));
+            // exit with number of tests failed as exit-code
+            onNext(data.testReport.testsFailed);
+            return;
           }
-          // handle webpage error
-          // http://phantomjs.org/api/phantom/handler/on-error.html
-          if (error && typeof error === 'string') {
-            console.error('\n' + exports.argv1 + '\nERROR: ' + error + ' TRACE:');
-            (trace || []).forEach(function (t) {
-              console.error(' -> ' + (t.file || t.sourceURL) + ': ' + t.line +
-                (t.function ? ' (in function ' + t.function + ')' : ''));
-            });
-            console.error();
-            error = 1;
-          }
-          // handle phantom error
-          throw error;
+          break;
         }
-      } catch (errorCaught) {
-        // convert errorCaught to a numerical exit-code and exit with it
-        if (errorCaught && typeof errorCaught !== 'number') {
-          exports.onErrorDefault(errorCaught);
-          errorCaught = 1;
+        // handle webpage error
+        // http://phantomjs.org/api/phantom/handler/on-error.html
+        if (error && typeof error === 'string') {
+          console.error('\n' + exports.argv1 + '\nERROR: ' + error + ' TRACE:');
+          (trace || []).forEach(function (t) {
+            console.error(' -> ' + (t.file || t.sourceURL) + ': ' + t.line +
+              (t.function ? ' (in function ' + t.function + ')' : ''));
+          });
+          console.error();
+        // handle phantom error
+        } else {
+          exports.onErrorDefault(error);
         }
-        // save coverage before exiting
-        exports.fs.write(exports.fileCoverage, JSON.stringify(exports.global.__coverage__));
-        exports.exit(errorCaught);
+        onNext(!!error);
+        break;
+      default:
+        setTimeout(function () {
+          // save coverage before exiting
+          exports.fs.write(exports.fileCoverage, JSON.stringify(exports.global.__coverage__));
+          exports.exit(error);
+        });
       }
     };
     onNext();
