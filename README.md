@@ -1,6 +1,6 @@
 utility2 [![NPM](https://img.shields.io/npm/v/utility2.svg?style=flat-square)](https://www.npmjs.com/package/utility2)
 ========
-lightweight nodejs module that runs phantomjs browser-tests with code-coverage (via istanbul-lite and phantomjs-lite)
+lightweight nodejs module that runs phantomjs browser-tests with coverage (via istanbul-lite and phantomjs-lite)
 
 
 
@@ -8,11 +8,11 @@ lightweight nodejs module that runs phantomjs browser-tests with code-coverage (
 
 [![build commit status](https://kaizhu256.github.io/node-utility2/build/build.badge.svg)](https://travis-ci.org/kaizhu256/node-utility2)
 
-| git-branch | test-server | test-report | coverage-report | build-artifacts |
-|:----------:|:-----------:|:-----------:|:---------------:|:---------------:|
-|[master](https://github.com/kaizhu256/node-utility2/tree/master) | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://hrku01-utility2-master.herokuapp.com?modeTest=1) | [![test-report](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/test-report.html) | [![istanbul-lite coverage-report](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/coverage-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/coverage-report.html/node-utility2/index.html) | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..master..travis-ci.org)|
-|[beta](https://github.com/kaizhu256/node-utility2/tree/beta) | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://hrku01-utility2-beta.herokuapp.com?modeTest=1) | [![test-report](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/test-report.html) | [![istanbul-lite coverage-report](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/coverage-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/coverage-report.html/node-utility2/index.html) | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..beta..travis-ci.org)|
-|[alpha](https://github.com/kaizhu256/node-utility2/tree/alpha) | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://hrku01-utility2-alpha.herokuapp.com?modeTest=1) | [![test-report](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/test-report.html) | [![istanbul-lite coverage-report](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/coverage-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/coverage-report.html/node-utility2/index.html) | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..alpha..travis-ci.org)|
+| git-branch | test-server | test-report | coverage | build-artifacts |
+|:----------:|:-----------:|:-----------:|:---------:|:---------------:|
+|[master](https://github.com/kaizhu256/node-utility2/tree/master) | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://hrku01-utility2-master.herokuapp.com?modeTest=1) | [![test-report](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/test-report.html) | [![istanbul-lite coverage](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/coverage.html/node-utility2/index.html) | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..master..travis-ci.org)|
+|[beta](https://github.com/kaizhu256/node-utility2/tree/beta) | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://hrku01-utility2-beta.herokuapp.com?modeTest=1) | [![test-report](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/test-report.html) | [![istanbul-lite coverage](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/coverage.html/node-utility2/index.html) | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..beta..travis-ci.org)|
+|[alpha](https://github.com/kaizhu256/node-utility2/tree/alpha) | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://hrku01-utility2-alpha.herokuapp.com?modeTest=1) | [![test-report](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/test-report.html) | [![istanbul-lite coverage](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/coverage.html/node-utility2/index.html) | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..alpha..travis-ci.org)|
 
 
 
@@ -25,7 +25,7 @@ lightweight nodejs module that runs phantomjs browser-tests with code-coverage (
 ```
 /*
   example.js
-  this example nodejs script runs browser and server tests with code-coverage
+  this example nodejs script runs browser and server tests with coverage
   1. create a clean app directory (e.g /tmp/app)
   2. inside app directory, save this js script as example.js
   3. inside app directory, run the following shell command:
@@ -104,7 +104,7 @@ lightweight nodejs module that runs phantomjs browser-tests with code-coverage (
     // web-serve example.js as /test/test.js
     local.utility2.fileCacheAndParse({
       cache: '/test/test.js',
-      // init browser code-coverage for /test/test.js
+      // init browser coverage for /test/test.js
       coverage: 'example-module',
       file: __dirname + '/example.js'
     });
@@ -213,8 +213,9 @@ exit $EXIT_CODE
 
 
 ## todo
+- add phantomjs tests for coverage
 - add max-height option in shRunScreenCapture
-- create flamegraph from istanbul code-coverage
+- create flamegraph from istanbul coverage
 - explicitly require slimerjs instead of auto-detecting it
 - auto-generate help doc from README.md
 - add server stress test using phantomjs

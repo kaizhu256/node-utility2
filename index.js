@@ -1138,7 +1138,7 @@
               var data;
               try {
                 data = JSON.parse(exports.fs.readFileSync(file, 'utf8'));
-                // merge phantom js-env code-coverage
+                // merge phantom js-env coverage
                 if (ii === 0) {
                   exports.istanbulMerge(exports.__coverage__, data);
                 // merge tests
@@ -1535,7 +1535,7 @@
           exports.onErrorDefault(errorCaught);
           errorCaught = 1;
         }
-        // save code-coverage before exiting
+        // save coverage before exiting
         if (exports.__coverage__) {
           exports.fs.write(exports.fileCoverage, JSON.stringify(exports.__coverage__));
         }
@@ -1820,7 +1820,7 @@ tr:nth-child(odd).testReportPlatformTr {\n\
 
 
 // https://img.shields.io/badge/coverage-100.0%-00dd00.svg?style=flat
-'/build/coverage-report.badge.svg': { data: '\
+'/build/coverage.badge.svg': { data: '\
 <svg xmlns="http://www.w3.org/2000/svg" width="117" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="117" height="20" fill="#555"/><rect rx="0" x="63" width="54" height="20" fill="#0d0"/><path fill="#0d0" d="M63 0h4v20h-4z"/><rect rx="0" width="117" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="32.5" y="15" fill="#010101" fill-opacity=".3">coverage</text><text x="32.5" y="14">coverage</text><text x="89" y="15" fill="#010101" fill-opacity=".3">100.0%</text><text x="89" y="14">100.0%</text></g></svg>\n\
 ' },
 

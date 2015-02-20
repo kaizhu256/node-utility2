@@ -25,7 +25,7 @@ shAesEncrypt() {
 shBuild() {
   # this function will run the build-script in README.md
   # init $npm_package_dir_build
-  mkdir -p $npm_package_dir_build/coverage-report.html || return $?
+  mkdir -p $npm_package_dir_build/coverage.html || return $?
   # run script from README.md
   MODE_BUILD=build shTestScriptSh $npm_package_dir_tmp/build.sh || return $?
 }
@@ -261,29 +261,29 @@ shInit() {
 }
 
 shIstanbulCover() {
-  # this function will run the command $@ with istanbul code-coverage
-  npm_config_coverage_report_dir="$npm_package_dir_build/coverage-report.html"\
+  # this function will run the command $@ with istanbul coverage
+  npm_config_coverage_report_dir="$npm_package_dir_build/coverage.html"\
     $ISTANBUL cover $@ || return $?
 }
 
 shIstanbulReport() {
   # this function will
-  # 1. merge $COVERAGE into $npm_package_dir_build/coverage-report.html/coverage.json
-  # 2. create $npm_package_dir_build/coverage-report.html
+  # 1. merge $COVERAGE into $npm_package_dir_build/coverage.html/coverage.json
+  # 2. create $npm_package_dir_build/coverage.html
   local COVERAGE=$1 || return $?
-  # 1. merge $COVERAGE into $npm_package_dir_build/coverage-report.html/coverage.json
+  # 1. merge $COVERAGE into $npm_package_dir_build/coverage.html/coverage.json
   if [ "$COVERAGE" ]
   then
     node -e "require('fs').writeFileSync(
-      '$npm_package_dir_build/coverage-report.html/coverage.json',
+      '$npm_package_dir_build/coverage.html/coverage.json',
       JSON.stringify(require('$DIRNAME').istanbulMerge(
-        require('$npm_package_dir_build/coverage-report.html/coverage.json'),
+        require('$npm_package_dir_build/coverage.html/coverage.json'),
         require('./$COVERAGE')
       ))
     );" || return $?
   fi
-  # 2. create $npm_package_dir_build/coverage-report.html
-  npm_config_coverage_report_dir="$npm_package_dir_build/coverage-report.html"\
+  # 2. create $npm_package_dir_build/coverage.html
+  npm_config_coverage_report_dir="$npm_package_dir_build/coverage.html"\
     $ISTANBUL report || return $?
 }
 
@@ -291,7 +291,7 @@ shNpmTest() {
   # this function will run npm test
   shBuildPrint ${MODE_BUILD:-npmTest} "npm testing $CWD ..." || return $?
   # init $npm_package_dir_build
-  mkdir -p $npm_package_dir_build/coverage-report.html || return $?
+  mkdir -p $npm_package_dir_build/coverage.html || return $?
   # auto-detect slimerjs
   if [ ! "$npm_config_mode_slimerjs" ] && (slimerjs undefined > /dev/null 2>&1)
   then
@@ -308,17 +308,17 @@ shNpmTest() {
     return $?
   fi
   # cleanup old coverage
-  rm -f $npm_package_dir_build/coverage-report.html/coverage.* || return $?
+  rm -f $npm_package_dir_build/coverage.html/coverage.* || return $?
   # run npm test with coverage
   shIstanbulCover $@
   # save $EXIT_CODE and restore $CWD
   shExitCodeSave $? || return $?
-  # create coverage-report
+  # create coverage
   shIstanbulReport || return $?
   printf "\ncreated test-report file://$npm_package_dir_build/test-report.html\n" || return $?
-  # create coverage-report badge
+  # create coverage badge
   node -e "var coverage, percent;
-    coverage = require('$npm_package_dir_build/coverage-report.html/coverage.json');
+    coverage = require('$npm_package_dir_build/coverage.html/coverage.json');
     percent = [0, 0];
     Object.keys(coverage).forEach(function (file) {
       file = coverage[file];
@@ -329,7 +329,7 @@ shNpmTest() {
     });
     percent = Math.floor((100000 * percent[0] / percent[1] + 5) / 10) / 100;
     require('fs').writeFileSync(
-      '$npm_package_dir_build/coverage-report.badge.svg',
+      '$npm_package_dir_build/coverage.badge.svg',
       '"'<svg xmlns="http://www.w3.org/2000/svg" width="117" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="117" height="20" fill="#555"/><rect rx="0" x="63" width="54" height="20" fill="#0d0"/><path fill="#0d0" d="M63 0h4v20h-4z"/><rect rx="0" width="117" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="32.5" y="15" fill="#010101" fill-opacity=".3">coverage</text><text x="32.5" y="14">coverage</text><text x="89" y="15" fill="#010101" fill-opacity=".3">100.0%</text><text x="89" y="14">100.0%</text></g></svg>'"'
         // edit coverage badge percent
         .replace((/100.0/g), percent)
@@ -441,7 +441,7 @@ shRunScreenCapture() {
   # this function will run the command $@ and screen-capture the output
   # http://www.cnx-software.com/2011/09/22/how-to-convert-a-command-line-result-into-an-image-in-linux/
   # init $npm_package_dir_build
-  mkdir -p $npm_package_dir_build/coverage-report.html || return $?
+  mkdir -p $npm_package_dir_build/coverage.html || return $?
   export MODE_BUILD_SCREEN_CAPTURE=screen-capture.${MODE_BUILD-undefined}.png
   shRun $@ 2>&1 | tee $npm_package_dir_tmp/screen-capture.txt || return $?
   # save $EXIT_CODE and restore $CWD
@@ -612,7 +612,7 @@ shTravisDecryptYml() {
 shTravisEncrypt() {
   # this function will travis-encrypt github repo $1's secret $2
   # init $npm_package_dir_build dir
-  mkdir -p $npm_package_dir_build/coverage-report.html || return $?
+  mkdir -p $npm_package_dir_build/coverage.html || return $?
   local GITHUB_REPO=$1 || return $?
   local SECRET=$2 || return $?
   # get public rsa key from https://api.travis-ci.org/repos/<owner>/<repo>/key
