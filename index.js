@@ -1535,8 +1535,8 @@
           case 'screenCapture':
             // save screen-capture
             exports.page.render(exports.fileScreenCapture);
-            // save html-content
-            exports.fs.write(exports.fileScreenCapture + '.html', exports.page.content);
+            //!! // save html-content
+            //!! exports.fs.write(exports.fileScreenCapture + '.html', exports.page.content);
             console.log('created file://' + exports.fileScreenCapture);
             break;
           // handle test-report callback
@@ -1552,8 +1552,8 @@
               exports.istanbulMerge(exports.global.__coverage__, data.coverage);
               // merge test-report
               exports.testMerge(exports.testReport, data.testReport);
-              // save html-content
-              exports.fs.write(exports.fileScreenCapture + '.html', exports.page.content);
+              //!! // save html-content
+              //!! exports.fs.write(exports.fileScreenCapture + '.html', exports.page.content);
               // save screen-capture
               exports.page.render(exports.fileScreenCapture);
               // integrate screen-capture into test-report

@@ -52,6 +52,8 @@ shBuildGithubUpload() {
   git clone git@github.com:$GITHUB_REPO.git\
     --branch=gh-pages --single-branch $npm_package_dir_tmp/gh-pages || return $?
   cd $npm_package_dir_tmp/gh-pages || return $?
+  # uncomment the line below to cleanup build dir
+  rm -fr build || return $?
   # copy build-artifacts to gh-pages
   cp -a $npm_package_dir_build . || return $?
   local DIR=build..$CI_BRANCH..$CI_HOST || return $?
@@ -382,7 +384,9 @@ shPhantomTest() {
   fi
   node -e "var local;
     local = require('$DIRNAME');
-    local.testReport = require('$npm_package_dir_build/test-report.json');
+    if ('$MODE_PHANTOM' === 'testUrl') {
+      local.testReport = require('$npm_package_dir_build/test-report.json');
+    }
     local.phantomTest({
       modePhantom: '$MODE_PHANTOM',
       timeoutDefault: $TIMEOUT_DEFAULT,

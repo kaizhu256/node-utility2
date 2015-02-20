@@ -218,6 +218,7 @@ exit $EXIT_CODE
 
 
 ## todo
+- delete __coverage__ init code in example.js
 - delete env var $npm_config_coverage_report_dir
 - add max-height option in shRunScreenCapture
 - create flamegraph from istanbul coverage
