@@ -1,6 +1,6 @@
 utility2 [![NPM](https://img.shields.io/npm/v/utility2.svg?style=flat-square)](https://www.npmjs.com/package/utility2)
 ========
-lightweight nodejs module that runs phantomjs browser-tests with coverage (via istanbul-lite and phantomjs-lite)
+this lightweight nodejs module will run phantomjs browser-tests with coverage (via istanbul-lite and phantomjs-lite)
 
 
 
@@ -145,6 +145,7 @@ lightweight nodejs module that runs phantomjs browser-tests with coverage (via i
 #### output
 ![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleJs.png)
 ![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleJs.slimerjs.png)
+![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleJs.slimerjs._2Ftmp_2Fapp_2F.tmp_2Fbuild_2Fcoverage.html_2Fapp_2Fexample.js.html.png)
 
 
 
@@ -185,8 +186,11 @@ shBuild() {
   # test example script
   MODE_BUILD=testExampleJs shRunScreenCapture shTestScriptJs example.js ||\
     return $?
+  # screen-capture example.js coverage
+  MODE_BUILD=testExampleJs shRun shPhantomScreenCapture\
+    /tmp/app/.tmp/build/coverage.html/app/example.js.html
   # copy phantomjs screen-capture to $npm_package_dir_build
-  cp /tmp/app/.tmp/build/screen-capture.* $npm_package_dir_build || return $?
+  cp /tmp/app/.tmp/build/screen-capture.*.png $npm_package_dir_build || return $?
   # run npm test
   MODE_BUILD=npmTest shRunScreenCapture npm test || return $?
   # deploy to heroku

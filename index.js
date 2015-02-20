@@ -576,7 +576,7 @@
           // notify saucelabs of test results
           // https://docs.saucelabs.com/reference/rest-api/#js-unit-testing
           exports.global.global_test_results = {
-            coverage: exports.__coverage__,
+            coverage: exports.global.__coverage__,
             failed: exports.testReport.testsFailed,
             testReport: exports.testReport
           };
@@ -1019,7 +1019,7 @@
       // read options.data from options.file and comment out shebang
       options.data = exports.fs.readFileSync(options.file, 'utf8').replace((/^#!/), '//#!');
       // if coverage-mode is enabled, then cover options.data
-      if (exports.__coverage__ &&
+      if (exports.global.__coverage__ &&
           options.coverage && options.coverage === exports.envDict.npm_package_name) {
         options.data = exports.istanbulCover(options.data, options.file);
       }
@@ -1125,7 +1125,7 @@
               require('phantomjs-lite').__dirname + '/' + options.argv0,
               [
                 // coverage-hack - cover utility2.js
-                exports.__coverage__ && exports.envDict.npm_package_name === 'utility2' ?
+                exports.global.__coverage__ && exports.envDict.npm_package_name === 'utility2' ?
                     exports.envDict.npm_package_dir_tmp + '/covered.utility2.js'
                   : __dirname + '/index.js',
                 encodeURIComponent(JSON.stringify(options))
@@ -1150,7 +1150,7 @@
               if (data) {
                 // merge coverage
                 if (ii === 0) {
-                  exports.istanbulMerge(exports.__coverage__, data);
+                  exports.istanbulMerge(exports.global.__coverage__, data);
                 // merge test-report
                 } else if (options.modePhantom === 'testUrl' && !options.modeErrorIgnore) {
                   exports.testMerge(exports.testReport, data);
@@ -1379,7 +1379,7 @@
         file: __filename
       });
       // save covered utility2.js to fs
-      if (exports.__coverage__ && exports.envDict.npm_package_name === 'utility2') {
+      if (exports.global.__coverage__ && exports.envDict.npm_package_name === 'utility2') {
         exports.fs.writeFileSync(
           exports.envDict.npm_package_dir_tmp + '/covered.utility2.js',
           exports.fileCacheDict['/assets/utility2.js'].data
@@ -1465,7 +1465,7 @@
         switch (modeNext) {
         case 1:
           // init __coverage__
-          exports.__coverage__ = exports.global.__coverage__ || {};
+          exports.global.__coverage__ = exports.global.__coverage__ || {};
           // init global error handling
           // http://phantomjs.org/api/phantom/handler/on-error.html
           exports.global.phantom.onError = onNext;
@@ -1549,7 +1549,7 @@
             if (data) {
               // handle global_test_results passed as error
               // merge coverage
-              exports.istanbulMerge(exports.__coverage__, data.coverage);
+              exports.istanbulMerge(exports.global.__coverage__, data.coverage);
               // merge test-report
               exports.testMerge(exports.testReport, data.testReport);
               // save html-content
@@ -1587,7 +1587,7 @@
           errorCaught = 1;
         }
         // save coverage before exiting
-        exports.fs.write(exports.fileCoverage, JSON.stringify(exports.__coverage__));
+        exports.fs.write(exports.fileCoverage, JSON.stringify(exports.global.__coverage__));
         exports.exit(errorCaught);
       }
     };
@@ -1709,7 +1709,6 @@
       // return arg for inspection
       return arg;
     };
-    exports.__coverage__ = exports.__coverage__ || exports.global.__coverage__;
     exports.errorDefault = new Error('default error');
     exports.testPlatform = {
       name: exports.modeJs === 'browser' ? 'browser - ' +
