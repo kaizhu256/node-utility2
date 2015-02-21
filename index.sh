@@ -325,6 +325,7 @@ shNpmTest() {
     percent = Math.floor((100000 * percent[0] / percent[1] + 5) / 10) / 100;
     require('fs').writeFileSync(
       '$npm_package_dir_build/coverage.badge.svg',
+      // https://img.shields.io/badge/coverage-100.0%-00dd00.svg?style=flat
       '"'<svg xmlns="http://www.w3.org/2000/svg" width="117" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="117" height="20" fill="#555"/><rect rx="0" x="63" width="54" height="20" fill="#0d0"/><path fill="#0d0" d="M63 0h4v20h-4z"/><rect rx="0" width="117" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="32.5" y="15" fill="#010101" fill-opacity=".3">coverage</text><text x="32.5" y="14">coverage</text><text x="89" y="15" fill="#010101" fill-opacity=".3">100.0%</text><text x="89" y="14">100.0%</text></g></svg>'"'
         // edit coverage badge percent
         .replace((/100.0/g), percent)
@@ -519,7 +520,7 @@ shTestHeroku() {
 }
 
 shTestScriptJs() {
-  # this function will test the js script $FILE in README.md
+  # this function will test the javascript script $FILE in README.md
   local FILE=$1 || return $?
   shBuildPrint $MODE_BUILD "testing $FILE ..." || return $?
   if [ ! "$MODE_OFFLINE" ]
@@ -569,7 +570,7 @@ shTestScriptJs() {
 }
 
 shTestScriptSh() {
-  # this function will test the sh script $FILE in README.md
+  # this function will test the shell script $FILE in README.md
   local FILE=$1 || return $?
   local FILE_BASENAME=$(node -e "console.log(require('path').basename('$FILE'));") || return $?
   shBuildPrint $MODE_BUILD "testing $FILE ..." || return $?
@@ -586,7 +587,7 @@ shTestScriptSh() {
       require('fs').writeFileSync(
         '$FILE',
         // preserve lineno
-        data.slice(0, match0.index).replace((/.*/g), '') + '\n\n' + match0.slice(5, -4)
+        data.slice(0, index).replace((/.*/g), '') + '\n\n' + match0.slice(5, -4)
       );
     }
   );" || return $?

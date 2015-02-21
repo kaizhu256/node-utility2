@@ -667,7 +667,7 @@
       });
     };
 
-    // run server-test
+    // init server-assets
     [{
       // coverage-hack - cover no cache handling behavior
       cache: null,
@@ -683,19 +683,11 @@
       // cache and parse the file
       exports.fileCacheAndParse(options);
     });
+    // init server-middlewares
     local.serverMiddlewareList = [
-      // exit after test-run ends
-      exports.testMiddleware,
-      function (request, response, next) {
-        // nop hack to pass jslint
-        exports.nop(request);
-        exports.nop(response);
-        // test next middleware handling behavior
-        next();
-      },
-      function (request, response, next) {
+      function (request, response, onNext) {
         /*
-          this function will run the main test-middleware
+          this user-defined middleware will override the builtin test-middleware
         */
         switch (request.urlPathNormalized) {
         // test http POST handling behavior
@@ -725,9 +717,9 @@
         case '/test/server-error':
           // test multiple serverRespondWriteHead callback handling behavior
           exports.serverRespondWriteHead(request, response, null, {});
-          next(exports.errorDefault);
+          onNext(exports.errorDefault);
           // test multiple-callback error handling behavior
-          next(exports.errorDefault);
+          onNext(exports.errorDefault);
           // test onErrorDefault handling behavior
           exports.testMock([
             // suppress console.error
@@ -744,12 +736,15 @@
             onError();
           });
           break;
-        // fallback to 404-not-found-error
+        // fallback to next middleware
         default:
-          next();
+          onNext();
         }
-      }
+      },
+      // builtin test-middleware
+      exports.testMiddleware
     ];
+    // run server-test
     exports.testRunServer(local);
     local.fs.readdirSync(__dirname).forEach(function (file) {
       file = __dirname + '/' + file;
