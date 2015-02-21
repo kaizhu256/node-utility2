@@ -256,7 +256,6 @@ shInit() {
 shIstanbulCover() {
   # this function will run the command $@ with istanbul coverage
   npm_config_coverage_dir="$npm_package_dir_build/coverage.html"\
-  npm_config_coverage_report_dir="$npm_package_dir_build/coverage.html"\
     $ISTANBUL cover $@ || return $?
 }
 
@@ -278,7 +277,6 @@ shIstanbulReport() {
   fi
   # 2. create $npm_package_dir_build/coverage.html
   npm_config_coverage_dir="$npm_package_dir_build/coverage.html"\
-  npm_config_coverage_report_dir="$npm_package_dir_build/coverage.html"\
     $ISTANBUL report || return $?
 }
 

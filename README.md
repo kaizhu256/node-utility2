@@ -179,7 +179,6 @@ lightweight nodejs module that runs phantomjs browser-tests with coverage (via i
 
 
 ## todo
-- delete env var $npm_config_coverage_report_dir
 - create flamegraph from istanbul coverage
 - explicitly require slimerjs instead of auto-detecting it
 - auto-generate help doc from README.md
