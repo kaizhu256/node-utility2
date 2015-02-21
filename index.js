@@ -1145,6 +1145,7 @@
           options.exitCode = error;
           onParallel = exports.onParallel(onNext);
           onParallel.counter += 1;
+          // merge coverage and test-report
           [options.fileCoverage, options.fileTestReport].forEach(function (file, ii) {
             onParallel.counter += 1;
             exports.fs.readFile(file, 'utf8', function (error, data) {

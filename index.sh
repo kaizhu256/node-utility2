@@ -34,15 +34,6 @@ shBuildGithubUpload() {
   # this function will upload build-artifacts to github
   shBuildPrint githubUpload\
     "uploading build-artifacts to git@github.com:$GITHUB_REPO.git ..." || return $?
-  # add black border around phantomjs screen-capture
-  local FILE_LIST="$(ls\
-    $npm_package_dir_build/screen-capture.*.phantomjs*.png\
-    $npm_package_dir_build/screen-capture.*.slimerjs*.png\
-    2>/dev/null)" || return $?
-  if [ "$FILE_LIST" ] && (mogrify --version > /dev/null 2>&1)
-  then
-    printf "$FILE_LIST" | xargs -n 1 mogrify -frame 1 -mattecolor black || return $?
-  fi
   if [ ! "$CI_BRANCH" ] || [ ! "$GIT_SSH_KEY" ] || [ "$MODE_OFFLINE" ]
   then
     return
