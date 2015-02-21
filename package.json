@@ -8,7 +8,7 @@
   "devDependencies": {
     "phantomjs-lite": "^2015.1.4-102"
   },
-  "description": "this lightweight nodejs module will run phantomjs browser-tests with coverage (via istanbul-lite and phantomjs-lite)",
+  "description": "lightweight nodejs module that runs phantomjs browser-tests with coverage (via istanbul-lite and phantomjs-lite)",
   "engines": { "node": "0.10" },
   "keywords": [
     "browser",

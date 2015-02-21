@@ -1337,20 +1337,28 @@
     };
 
     exports.testMiddleware = function (request, response, onNext) {
+      /*
+        this builtin test-middleware will
+        1. redirect '/' to '/test/test.html'
+        2. serve '/assets/utility2.js' from builtin test-library
+        3. serve '/test/test.js' from user-defined test-code
+        4. serve '/test/test.html' from builtin test-page
+      */
       switch (request.urlPathNormalized) {
-      // redirect main-page to test-page
+      // 1. redirect '/' to '/test/test.html'
       case '/':
         exports.serverRespondWriteHead(request, response, 303, {
           'Location': request.url.replace('/', '/test/test.html')
         });
         response.end();
         break;
-      // serve the following assets from fileCacheDict
+      // 2. serve '/assets/utility2.js' from builtin test-library
       case '/assets/utility2.js':
+      // 3. serve '/test/test.js' from user-defined test-file
       case '/test/test.js':
         response.end(exports.fileCacheDict[request.urlPathNormalized].data);
         break;
-      // serve test page
+      // 4. serve '/test/test.html' from builtin test-page
       case '/test/test.html':
         response.end(exports.textFormat(exports.fileCacheDict[
           request.urlPathNormalized
@@ -1368,10 +1376,11 @@
     exports.testRunServer = function (options) {
       /*
         this function will
-        1. create http-server with options.serverMiddlewareList
-        2. start http-server on $npm_config_server_port
-        3. test http-server
+        1. create http-server from options.serverMiddlewareList
+        2. start http-server on port $npm_config_server_port
+        3. if env var $npm_config_mode_npm_test is defined, then run tests
       */
+      var server;
       // if $npm_config_timeout_exit is defined,
       // then exit this process after $npm_config_timeout_exit ms
       if (Number(exports.envDict.npm_config_timeout_exit)) {
@@ -1379,30 +1388,21 @@
           // keep timerTimeout from blocking the process from exiting
           .unref();
       }
-      // web-server __filename as /assets/utility2.js
+      // serve this file as /assets/utility2.js with coverage
       exports.fileCacheAndParse({
         cache: '/assets/utility2.js',
         coverage: 'utility2',
         file: __filename
       });
-      // save covered utility2.js to fs
+      // save covered utility2.js for phantomjs
       if (exports.global.__coverage__ && exports.envDict.npm_package_name === 'utility2') {
         exports.fs.writeFileSync(
           exports.envDict.npm_package_dir_tmp + '/covered.utility2.js',
           exports.fileCacheDict['/assets/utility2.js'].data
         );
       }
-      // if $npm_config_server_port is undefined,
-      // then assign it a random integer in the inclusive range 1 to 0xffff
-      exports.envDict.npm_config_server_port = exports.envDict.npm_config_server_port ||
-        ((Math.random() * 0x10000) | 0x8000).toString();
-      // 3. test http-server
-      exports.onReady.onReady = function () {
-        exports.testRun(options);
-      };
-      exports.onReady.counter += 1;
-      // 1. create http-server with options.serverMiddlewareList
-      exports.http.createServer(function (request, response) {
+      // 1. create http-server from options.serverMiddlewareList
+      server = exports.http.createServer(function (request, response) {
         var contentTypeDict, modeNext, onNext;
         modeNext = -2;
         onNext = function (error) {
@@ -1442,14 +1442,24 @@
           exports.serverRespondDefault(request, response, error ? 500 : 404, error);
         };
         onNext();
-      })
-        // 2. start http-server on $npm_config_server_port
-        .listen(exports.envDict.npm_config_server_port, function () {
-          console.log(
-            'http-server listening on port ' + exports.envDict.npm_config_server_port
-          );
-          exports.onReady();
-        });
+      });
+      // if $npm_config_server_port is undefined,
+      // then assign it a random integer in the inclusive range 1 to 0xffff
+      exports.envDict.npm_config_server_port = exports.envDict.npm_config_server_port ||
+        ((Math.random() * 0x10000) | 0x8000).toString();
+      // 2. start http-server on port $npm_config_server_port
+      server.listen(exports.envDict.npm_config_server_port, function () {
+        console.log(
+          'http-server listening on port ' + exports.envDict.npm_config_server_port
+        );
+        exports.onReady();
+      });
+      // 3. if env var $npm_config_mode_npm_test is defined, then run tests
+      exports.onReady.onReady = function () {
+        exports.testRun(options);
+      };
+      exports.onReady.counter += 1;
+      return server;
     };
   }());
 

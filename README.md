@@ -1,6 +1,6 @@
 utility2 [![NPM](https://img.shields.io/npm/v/utility2.svg?style=flat-square)](https://www.npmjs.com/package/utility2)
 ========
-this lightweight nodejs module will run phantomjs browser-tests with coverage (via istanbul-lite and phantomjs-lite)
+lightweight nodejs module that runs phantomjs browser-tests with coverage (via istanbul-lite and phantomjs-lite)
 
 
 
@@ -25,12 +25,22 @@ this lightweight nodejs module will run phantomjs browser-tests with coverage (v
 ```
 /*
   example.js
-  this example nodejs script runs browser and server tests with coverage
+
+  this example browser / nodejs script will run phantomjs browser-tests
+  on itself with coverage for both the browser and server
+
+  instruction to programmatically test browser and server with coverage
   1. create a clean app directory (e.g /tmp/app)
   2. inside app directory, save this js script as example.js
-  3. inside app directory, run the following shell command:
+  3. inside app directory, run the shell command:
      $ npm install phantomjs-lite utility2 &&\
        node_modules/.bin/utility2 shRun shNpmTest example.js
+
+  instruction to interactively test server on port 8080 without coverage
+  1. save this js script as example.js
+  2. run shell command:
+     $ npm install utility2 && npm_config_server_port=8080 node example.js
+  3. interactively test server on http://localhost:8080
 */
 /*jslint
   browser: true,
@@ -101,24 +111,22 @@ this lightweight nodejs module will run phantomjs browser-tests with coverage (v
           '?modeTest=phantom'
       }, onError);
     };
-    // web-serve example.js as /test/test.js
+    // serve this file as '/test/test.js' with coverage
     local.utility2.fileCacheAndParse({
       cache: '/test/test.js',
-      // init browser coverage for /test/test.js
       coverage: 'example-module',
-      file: __dirname + '/example.js'
+      file: __filename
     });
     // init local.serverMiddlewareList
     local.serverMiddlewareList = [
-      local.utility2.testMiddleware,
       function (request, response, next) {
         /*
-          this function will run the main test-middleware
+          this user-defined middleware will override the builtin test-middleware
         */
         // nop hack to pass jslint
         local.utility2.nop(request);
         switch (request.urlPathNormalized) {
-        // redirect main-page to test-page
+        // redirect '/' to '/test/test.html'
         case '/':
           local.utility2.serverRespondWriteHead(request, response, 303, {
             'Location': request.url.replace('/', '/test/test.html')
@@ -129,13 +137,22 @@ this lightweight nodejs module will run phantomjs browser-tests with coverage (v
         case '/test/hello':
           response.end('hello');
           break;
-        // fallback to next middleware
+        // fallback to builtin test-middleware
         default:
           next();
         }
-      }
+      },
+      // this builtin test-middleware will
+      // 1. redirect '/' to '/test/test.html'
+      // 2. serve '/assets/utility2.js' from builtin test-library
+      // 3. serve '/test/test.js' from user-defined test-file
+      // 4. serve '/test/test.html' from builtin test-page
+      local.utility2.testMiddleware
     ];
-    // run server test and exit after it ends
+    // this function will
+    // 1. create http-server from local.serverMiddlewareList
+    // 2. start http-server on port $npm_config_server_port
+    // 3. if env var $npm_config_mode_npm_test is defined, then run tests
     local.utility2.testRunServer(local, process.exit);
   }
   return;
@@ -223,6 +240,7 @@ exit $EXIT_CODE
 
 
 ## todo
+- experiment with using black text on white background for screen-capture
 - delete env var $npm_config_coverage_report_dir
 - create flamegraph from istanbul coverage
 - explicitly require slimerjs instead of auto-detecting it
@@ -232,5 +250,5 @@ exit $EXIT_CODE
 
 
 
-## recent changelog of last 50 commits
+## changelog of last 50 commits
 ![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.gitLog.png)
