@@ -31,15 +31,14 @@ lightweight nodejs module that runs phantomjs browser-tests with coverage (via i
   on itself with coverage for both the browser and server
 
   instruction to programmatically test browser and server with coverage
-  1. create a clean app directory (e.g /tmp/app)
-  2. inside app directory, save this script as example.js
-  3. inside app directory, run the shell command:
+  1. save this script as example.js
+  2. run the shell command:
      $ npm install phantomjs-lite utility2 &&\
        node_modules/.bin/utility2 shRun shNpmTest example.js
 
   instruction to interactively test server on port 8080 without coverage
   1. save this script as example.js
-  2. run shell command:
+  2. run the shell command:
      $ npm install utility2 && npm_config_server_port=8080 node example.js
   3. interactively test server on http://localhost:8080
 */
@@ -227,8 +226,8 @@ shBuild() {
   if [ "$TRAVIS" ]
   then
     shRun shTestHeroku || return $?
-    # if number of commits > 1000, then squash older commits
-    shRun shGitBackupAndSquashAndPush 1000 > /dev/null || return $?
+    # if number of commits > 1024, then squash older commits
+    shRun shGitBackupAndSquashAndPush 1024 > /dev/null || return $?
   fi
 }
 # run build
