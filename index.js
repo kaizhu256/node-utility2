@@ -22,11 +22,13 @@
       if (!passed) {
         throw new Error(
           // if message is a string, then leave it as is
-          typeof message === 'string' ? message
+          typeof message === 'string'
+            ? message
             // if message is an Error object, then get its stack-trace
-            : message instanceof Error ? exports.errorStack(message)
-              // else JSON.stringify message
-              : JSON.stringify(message)
+            : message instanceof Error
+            ? exports.errorStack(message)
+            // else JSON.stringify message
+            : JSON.stringify(message)
         );
       }
     };
@@ -111,8 +113,8 @@
         return JSON.stringify(value);
       };
       value = JSON.stringify(value);
-      return typeof value === 'string' ?
-          JSON.stringify(JSON.parse(stringifyOrdered(JSON.parse(value))), replacer, space)
+      return typeof value === 'string'
+        ? JSON.stringify(JSON.parse(stringifyOrdered(JSON.parse(value))), replacer, space)
         : value;
     };
 
@@ -145,7 +147,7 @@
         args = arguments;
         if (args[0]) {
           // append errorStack to args[0].stack
-          args[0].stack = args[0] ? args[0] + '\n' + errorStack : errorStack;
+          args[0].stack = args[0].stack ? args[0].stack + '\n' + errorStack : errorStack;
         }
         onError.apply(null, args);
       };
@@ -416,9 +418,11 @@
           }
         });
         // update testPlatform.status
-        testPlatform.status = testPlatform.testsFailed ? 'failed'
-          : testPlatform.testsPending ? 'pending'
-            : 'passed';
+        testPlatform.status = testPlatform.testsFailed
+          ? 'failed'
+          : testPlatform.testsPending
+          ? 'pending'
+          : 'passed';
         // sort testCaseList by status and name
         testPlatform.testCaseList.sort(function (arg1, arg2) {
           arg1 = arg1.status.replace('passed', 'z') + arg1.name.toLowerCase();
@@ -469,8 +473,8 @@
               errorStackList: errorStackList,
               // security - sanitize '<' in text
               name: String(testPlatform.name).replace((/</g), '&lt;'),
-              screenCapture: testPlatform.screenCaptureImg ?
-                  '<a class="testReportPlatformScreenCaptureA" href="' +
+              screenCapture: testPlatform.screenCaptureImg
+                ? '<a class="testReportPlatformScreenCaptureA" href="' +
                   testPlatform.screenCaptureImg + '">' +
                   '<img class="testReportPlatformScreenCaptureImg" src="' +
                   testPlatform.screenCaptureImg + '">' +
@@ -496,7 +500,8 @@
               testPlatformNumber: ii + 1
             });
           }),
-          testsFailedClass: testReport.testsFailed ? 'testReportTestFailed'
+          testsFailedClass: testReport.testsFailed
+            ? 'testReportTestFailed'
             : 'testReportTestPassed'
         }),
         'undefined'
@@ -576,7 +581,7 @@
           // notify saucelabs of test results
           // https://docs.saucelabs.com/reference/rest-api/#js-unit-testing
           exports.global.global_test_results = {
-            coverage: exports.__coverage__,
+            coverage: exports.global.__coverage__,
             failed: exports.testReport.testsFailed,
             testReport: exports.testReport
           };
@@ -956,9 +961,11 @@
           options.headers = options.headers || {};
           // init Content-Length header
           options.headers['Content-Length'] =
-            typeof options.data === 'string' ? Buffer.byteLength(options.data)
-            : Buffer.isBuffer(options.data) ? options.data.length
-              : 0;
+            typeof options.data === 'string'
+            ? Buffer.byteLength(options.data)
+            : Buffer.isBuffer(options.data)
+            ? options.data.length
+            : 0;
           // make http request
           request = (urlParsed.protocol === 'https:' ? exports.https : exports.http)
             .request(options, onNext)
@@ -1019,7 +1026,7 @@
       // read options.data from options.file and comment out shebang
       options.data = exports.fs.readFileSync(options.file, 'utf8').replace((/^#!/), '//#!');
       // if coverage-mode is enabled, then cover options.data
-      if (exports.__coverage__ &&
+      if (exports.global.__coverage__ &&
           options.coverage && options.coverage === exports.envDict.npm_package_name) {
         options.data = exports.istanbulCover(options.data, options.file);
       }
@@ -1070,86 +1077,110 @@
 
     exports.phantomTest = function (options, onError) {
       /*
-        this function will spawn phantomjs to test options.url
+        this function will spawn both phantomjs and slimerjs to test options.url
       */
       var onParallel;
-      exports.setDefault(options, 1, {
-        _testSecret: exports._testSecret,
-        modePhantom: 'testUrl'
-      });
-      onParallel = exports.onParallel(function (error) {
-        onError(error, options);
-      });
+      onParallel = exports.onParallel(onError);
       onParallel.counter += 1;
       ['phantomjs', 'slimerjs'].forEach(function (argv0) {
-        var argv1, onError2, options2, timerTimeout;
+        var options2;
         // if slimerjs is not available, then do not use it
         if (argv0 === 'slimerjs' && (!exports.envDict.npm_config_mode_slimerjs ||
-            exports.envDict.npm_config_mode_no_slimerjs)) {
+          exports.envDict.npm_config_mode_no_slimerjs)) {
           return;
         }
-        argv1 = exports.envDict.MODE_BUILD + '.' + argv0 + '.' +
-          encodeURIComponent(exports.url.parse(options.url).pathname);
-        options2 = exports.setDefault(exports.jsonCopy(options), 1, {
-          _testSecret: exports._testSecret,
-          argv0: argv0,
-          argv1: argv1,
-          fileCoverage:
-            exports.envDict.npm_package_dir_tmp + '/coverage.' + argv1 + '.json',
-          fileScreenCapture: (
-            exports.envDict.npm_package_dir_build + '/screen-capture.' + argv1 + '.png'
-          )
-            .replace((/%/g), '_')
-            .replace((/_2F.png$/), 'png'),
-          fileTestReport:
-            exports.envDict.npm_package_dir_tmp + '/test-report.' + argv1 + '.json',
-          modePhantom: 'testUrl'
-        });
-        // save fileScreenCapture
-        options['fileScreenCapture_' + argv0] = options2.fileScreenCapture;
+        options2 = exports.jsonCopy(options);
+        options2.argv0 = argv0;
         onParallel.counter += 1;
-        onError2 = function (error) {
-          // cleanup timerTimeout
-          clearTimeout(timerTimeout);
+        exports._phantomTestSingle(options2, function (error) {
+          options[argv0] = options2;
           onParallel(error);
-        };
-        // set timerTimeout
-        timerTimeout = exports.onTimeout(onError2, exports.timeoutDefault, argv1);
-        options.fileUtility2 = __dirname + '/index.js';
-        // coverage-hack - cover utility2.js
-        if (exports.__coverage__ && exports.envDict.npm_package_name === 'utility2') {
-          options.fileUtility2 =
-            exports.envDict.npm_package_dir_tmp + '/covered.utility2.js';
-        }
-        // spawn phantomjs to test a url
-        exports.child_process
-          .spawn(
-            require('phantomjs-lite').__dirname + '/' + argv0,
-            [
-              options.fileUtility2,
-              encodeURIComponent(JSON.stringify(options2))
-            ],
-            { stdio: 'inherit' }
-          )
-          .on('exit', function (exitCode) {
-            [options2.fileCoverage, options2.fileTestReport].forEach(function (file, ii) {
-              var data;
-              try {
-                data = JSON.parse(exports.fs.readFileSync(file, 'utf8'));
-                // merge phantom js-env coverage
-                if (ii === 0) {
-                  exports.istanbulMerge(exports.__coverage__, data);
-                // merge tests
-                } else if (options2.modePhantom === 'testUrl' && !options2.modeErrorIgnore) {
-                  exports.testMerge(exports.testReport, data);
-                }
-              } catch (ignore) {
-              }
-            });
-            onError2(exitCode && new Error(argv0 + ' exit-code ' + exitCode));
-          });
+        });
       });
       onParallel();
+    };
+
+    exports._phantomTestSingle = function (options, onError) {
+      /*
+        this function will spawn either phantomjs or slimerjs to test options.url
+      */
+      var modeNext, onNext, onParallel, timerTimeout;
+      modeNext = 0;
+      onNext = function (error) {
+        modeNext = error instanceof Error ? NaN : modeNext + 1;
+        switch (modeNext) {
+        case 1:
+          options.argv1 = exports.envDict.MODE_BUILD + '.' + options.argv0 + '.' +
+            encodeURIComponent(exports.url.parse(options.url).pathname);
+          exports.setDefault(options, 1, {
+            _testSecret: exports._testSecret,
+            fileCoverage:
+              exports.envDict.npm_package_dir_tmp + '/coverage.' + options.argv1 + '.json',
+            fileScreenCapture: (exports.envDict.npm_package_dir_build +
+              '/screen-capture.' + options.argv1 + '.png')
+              .replace((/%/g), '_')
+              .replace((/_2F.png$/), 'png'),
+            fileTestReport:
+              exports.envDict.npm_package_dir_tmp + '/test-report.' + options.argv1 + '.json',
+            modePhantom: 'testUrl'
+          });
+          // set timerTimeout
+          timerTimeout = exports.onTimeout(onNext, exports.timeoutDefault, options.argv1);
+          // spawn phantomjs to test a url
+          exports.child_process
+            .spawn(
+              require('phantomjs-lite').__dirname + '/' + options.argv0,
+              [
+                // coverage-hack - cover utility2.js
+                exports.global.__coverage__ && exports.envDict.npm_package_name === 'utility2'
+                  ? exports.envDict.npm_package_dir_tmp + '/covered.utility2.js'
+                  : __dirname + '/index.js',
+                encodeURIComponent(JSON.stringify(options))
+              ],
+              { stdio: 'inherit' }
+            )
+            .on('exit', onNext);
+          break;
+        case 2:
+          options.exitCode = error;
+          onParallel = exports.onParallel(onNext);
+          onParallel.counter += 1;
+          // merge coverage and test-report
+          [options.fileCoverage, options.fileTestReport].forEach(function (file, ii) {
+            onParallel.counter += 1;
+            exports.fs.readFile(file, 'utf8', function (error, data) {
+              // nop hack to pass jslint
+              exports.nop(error);
+              try {
+                data = JSON.parse(data);
+              } catch (ignore) {
+              }
+              if (data) {
+                // merge coverage
+                if (ii === 0) {
+                  exports.istanbulMerge(exports.global.__coverage__, data);
+                // merge test-report
+                } else if (options.modePhantom === 'testUrl' && !options.modeErrorIgnore) {
+                  exports.testMerge(exports.testReport, data);
+                }
+              }
+              onParallel();
+            });
+          });
+          onParallel();
+          break;
+        case 3:
+          onNext(
+            options.exitCode && new Error(options.argv0 + ' exit-code ' + options.exitCode)
+          );
+          break;
+        default:
+          // cleanup timerTimeout
+          clearTimeout(timerTimeout);
+          onError(error);
+        }
+      };
+      onNext();
     };
 
     exports.replStart = function (globalDict) {
@@ -1307,20 +1338,28 @@
     };
 
     exports.testMiddleware = function (request, response, onNext) {
+      /*
+        this builtin test-middleware will
+        1. redirect '/' to '/test/test.html'
+        2. serve '/assets/utility2.js' from builtin test-library
+        3. serve '/test/test.js' from user-defined test-code
+        4. serve '/test/test.html' from builtin test-page
+      */
       switch (request.urlPathNormalized) {
-      // redirect main-page to test-page
+      // 1. redirect '/' to '/test/test.html'
       case '/':
         exports.serverRespondWriteHead(request, response, 303, {
           'Location': request.url.replace('/', '/test/test.html')
         });
         response.end();
         break;
-      // serve the following assets from fileCacheDict
+      // 2. serve '/assets/utility2.js' from builtin test-library
       case '/assets/utility2.js':
+      // 3. serve '/test/test.js' from user-defined test-file
       case '/test/test.js':
         response.end(exports.fileCacheDict[request.urlPathNormalized].data);
         break;
-      // serve test page
+      // 4. serve '/test/test.html' from builtin test-page
       case '/test/test.html':
         response.end(exports.textFormat(exports.fileCacheDict[
           request.urlPathNormalized
@@ -1338,10 +1377,11 @@
     exports.testRunServer = function (options) {
       /*
         this function will
-        1. create http-server with options.serverMiddlewareList
-        2. start http-server on $npm_config_server_port
-        3. test http-server
+        1. create http-server from options.serverMiddlewareList
+        2. start http-server on port $npm_config_server_port
+        3. if env var $npm_config_mode_npm_test is defined, then run tests
       */
+      var server;
       // if $npm_config_timeout_exit is defined,
       // then exit this process after $npm_config_timeout_exit ms
       if (Number(exports.envDict.npm_config_timeout_exit)) {
@@ -1349,30 +1389,21 @@
           // keep timerTimeout from blocking the process from exiting
           .unref();
       }
-      // web-server __filename as /assets/utility2.js
+      // serve this file as /assets/utility2.js with coverage
       exports.fileCacheAndParse({
         cache: '/assets/utility2.js',
         coverage: 'utility2',
         file: __filename
       });
-      // save covered utility2.js to fs
-      if (exports.__coverage__ && exports.envDict.npm_package_name === 'utility2') {
+      // save covered utility2.js for phantomjs
+      if (exports.global.__coverage__ && exports.envDict.npm_package_name === 'utility2') {
         exports.fs.writeFileSync(
           exports.envDict.npm_package_dir_tmp + '/covered.utility2.js',
           exports.fileCacheDict['/assets/utility2.js'].data
         );
       }
-      // if $npm_config_server_port is undefined,
-      // then assign it a random integer in the inclusive range 1 to 0xffff
-      exports.envDict.npm_config_server_port = exports.envDict.npm_config_server_port ||
-        ((Math.random() * 0x10000) | 0x8000).toString();
-      // 3. test http-server
-      exports.onReady.onReady = function () {
-        exports.testRun(options);
-      };
-      exports.onReady.counter += 1;
-      // 1. create http-server with options.serverMiddlewareList
-      exports.http.createServer(function (request, response) {
+      // 1. create http-server from options.serverMiddlewareList
+      server = exports.http.createServer(function (request, response) {
         var contentTypeDict, modeNext, onNext;
         modeNext = -2;
         onNext = function (error) {
@@ -1412,14 +1443,24 @@
           exports.serverRespondDefault(request, response, error ? 500 : 404, error);
         };
         onNext();
-      })
-        // 2. start http-server on $npm_config_server_port
-        .listen(exports.envDict.npm_config_server_port, function () {
-          console.log(
-            'http-server listening on port ' + exports.envDict.npm_config_server_port
-          );
-          exports.onReady();
-        });
+      });
+      // if $npm_config_server_port is undefined,
+      // then assign it a random integer in the inclusive range 1 to 0xffff
+      exports.envDict.npm_config_server_port = exports.envDict.npm_config_server_port ||
+        ((Math.random() * 0x10000) | 0x8000).toString();
+      // 2. start http-server on port $npm_config_server_port
+      server.listen(exports.envDict.npm_config_server_port, function () {
+        console.log(
+          'http-server listening on port ' + exports.envDict.npm_config_server_port
+        );
+        exports.onReady();
+      });
+      // 3. if env var $npm_config_mode_npm_test is defined, then run tests
+      exports.onReady.onReady = function () {
+        exports.testRun(options);
+      };
+      exports.onReady.counter += 1;
+      return server;
     };
   }());
 
@@ -1437,113 +1478,117 @@
     modeNext = 0;
     onNext = function (error, trace) {
       var data;
-      try {
-        modeNext += 1;
-        switch (modeNext) {
-        case 1:
-          // init global error handling
-          // http://phantomjs.org/api/phantom/handler/on-error.html
-          exports.global.phantom.onError = onNext;
-          // override exports properties
-          exports.setOverride(
-            exports,
-            -1,
-            JSON.parse(decodeURIComponent(exports.system.args[1]))
-          );
-          // if modeErrorIgnore, then suppress console.error and console.log
-          if (exports.modeErrorIgnore) {
-            console.error = console.log = exports.nop;
-          }
-          // set timeout for phantom
-          exports.onTimeout(exports.onErrorExit, exports.timeoutDefault, exports.url);
-          // init webpage
-          exports.page = exports.webpage.create();
-          // init webpage's viewport-size
-          exports.page.viewportSize = exports.viewportSize || { height: 600, width: 800 };
-          // init webpage's error handling
-          // http://phantomjs.org/api/webpage/handler/on-error.html
-          exports.page.onError = exports.global.phantom.onError;
-          // pipe webpage's console.log to stdout
-          exports.page.onConsoleMessage = function () {
-            console.log.apply(console, arguments);
-          };
-          // open requested webpage
-          exports.page.open(
-            // security - insert _testSecret in url without revealing it
-            exports.url.replace('{{_testSecret}}', exports._testSecret),
-            onNext
-          );
+      modeNext += 1;
+      switch (modeNext) {
+      case 1:
+        // init __coverage__
+        exports.global.__coverage__ = exports.global.__coverage__ || {};
+        // init global error handling
+        // http://phantomjs.org/api/phantom/handler/on-error.html
+        exports.global.phantom.onError = onNext;
+        // override exports properties
+        exports.setOverride(
+          exports,
+          -1,
+          JSON.parse(decodeURIComponent(exports.system.args[1]))
+        );
+        // if modeErrorIgnore, then suppress console.error and console.log
+        if (exports.modeErrorIgnore) {
+          console.error = console.log = exports.nop;
+        }
+        // set timeout for phantom
+        exports.onTimeout(exports.onErrorExit, exports.timeoutDefault, exports.url);
+        // init webpage
+        exports.page = exports.webpage.create();
+        // init webpage clipRect
+        exports.page.clipRect = { height: 768, left: 0, top: 0, width: 1024 };
+        // init webpage viewportSize
+        exports.page.viewportSize = { height: 768, width: 1024 };
+        // init webpage error handling
+        // http://phantomjs.org/api/webpage/handler/on-error.html
+        exports.page.onError = exports.global.phantom.onError;
+        // pipe webpage console.log to stdout
+        exports.page.onConsoleMessage = function () {
+          console.log.apply(console, arguments);
+        };
+        // open requested webpage
+        exports.page.open(
+          // security - insert _testSecret in url without revealing it
+          exports.url.replace('{{_testSecret}}', exports._testSecret),
+          onNext
+        );
+        break;
+      case 2:
+        console.log(exports.argv0 + ' - open ' +
+          (error === 'success' ? 'success' : 'fail') +
+          ' ' + exports.url);
+        switch (exports.modePhantom) {
+        // screen-capture webpage after timeoutScreenCapture ms
+        case 'screenCapture':
+          setTimeout(onNext, exports.timeoutScreenCapture);
           break;
-        case 2:
-          console.log(exports.argv0 + ' - open ' + (error === 'success' ? 'success' : 'fail') +
-            ' ' + exports.url);
-          // screen-capture webpage after timeoutScreenCapture ms
-          if (exports.modePhantom === 'screenCapture') {
-            setTimeout(onNext, exports.timeoutScreenCapture);
-            return;
-          }
+        case 'testUrl':
           if (error !== 'success') {
             onNext(error, trace);
           }
           break;
-        default:
-          switch (exports.modePhantom) {
-          // screen-capture webpage
-          case 'screenCapture':
-            // create screen-capture
+        }
+        break;
+      case 3:
+        switch (exports.modePhantom) {
+        // screen-capture webpage
+        case 'screenCapture':
+          // save screen-capture
+          exports.page.render(exports.fileScreenCapture);
+          console.log('created file://' + exports.fileScreenCapture);
+          break;
+        // handle test-report callback
+        case 'testUrl':
+          try {
+            data = (/\nphantom\n(\{"global_test_results":\{.+)/).exec(error);
+            data = data && JSON.parse(data[1]).global_test_results;
+          } catch (ignore) {
+          }
+          if (data) {
+            // handle global_test_results passed as error
+            // merge coverage
+            exports.istanbulMerge(exports.global.__coverage__, data.coverage);
+            // merge test-report
+            exports.testMerge(exports.testReport, data.testReport);
+            // save screen-capture
             exports.page.render(exports.fileScreenCapture);
-            console.log('created file://' + exports.fileScreenCapture);
-            break;
-          // handle test-report callback
-          case 'testUrl':
-            try {
-              data = (/\nphantom\n(\{"global_test_results":\{.+)/).exec(error);
-              data = data && JSON.parse(data[1]).global_test_results;
-            } catch (ignore) {
-            }
-            if (data) {
-              // handle global_test_results passed as error
-              // merge coverage
-              exports.istanbulMerge(exports.__coverage__, data.coverage);
-              // create screen-capture
-              exports.page.render(exports.fileScreenCapture);
-              // integrate screen-capture into test-report
-              data.testReport.testPlatformList[0].screenCaptureImg =
-                exports.fileScreenCapture.replace((/^.*\//), '');
-              // merge test-report
-              exports.testMerge(exports.testReport, data.testReport);
-              // write test-report
-              exports.fs.write(exports.fileTestReport, JSON.stringify(exports.testReport));
-              // exit with number of tests failed as exit-code
-              throw data.testReport.testsFailed;
-            }
-            break;
+            // integrate screen-capture into test-report
+            data.testReport.testPlatformList[0].screenCaptureImg =
+              exports.fileScreenCapture.replace((/^.*\//), '');
+            // save test-report
+            exports.fs.write(exports.fileTestReport, JSON.stringify(exports.testReport));
+            // exit with number of tests failed as exit-code
+            onNext(data.testReport.testsFailed);
+            return;
           }
-          // handle webpage error
-          // http://phantomjs.org/api/phantom/handler/on-error.html
-          if (trace) {
-            console.error('\n' + exports.argv1 + '\nERROR: ' + error + ' TRACE:');
-            trace.forEach(function (t) {
-              console.error(' -> ' + (t.file || t.sourceURL) + ': ' + t.line +
-                (t.function ? ' (in function ' + t.function + ')' : ''));
-            });
-            console.error();
-            throw 1;
-          }
-          // handle phantom error
-          throw error;
+          break;
         }
-      } catch (errorCaught) {
-        // convert errorCaught to a numerical exit-code and exit with it
-        if (errorCaught && typeof errorCaught !== 'number') {
-          exports.onErrorDefault(errorCaught);
-          errorCaught = 1;
+        // handle webpage error
+        // http://phantomjs.org/api/phantom/handler/on-error.html
+        if (error && typeof error === 'string') {
+          console.error('\n' + exports.argv1 + '\nERROR: ' + error + ' TRACE:');
+          (trace || []).forEach(function (t) {
+            console.error(' -> ' + (t.file || t.sourceURL) + ': ' + t.line +
+              (t.function ? ' (in function ' + t.function + ')' : ''));
+          });
+          console.error();
+        // handle phantom error
+        } else {
+          exports.onErrorDefault(error);
         }
-        // save coverage before exiting
-        if (exports.__coverage__) {
-          exports.fs.write(exports.fileCoverage, JSON.stringify(exports.__coverage__));
-        }
-        exports.exit(errorCaught);
+        onNext(!!error);
+        break;
+      default:
+        setTimeout(function () {
+          // save coverage before exiting
+          exports.fs.write(exports.fileCoverage, JSON.stringify(exports.global.__coverage__));
+          exports.exit(error);
+        });
       }
     };
     onNext();
@@ -1664,18 +1709,18 @@
       // return arg for inspection
       return arg;
     };
-    exports.__coverage__ = exports.__coverage__ || exports.global.__coverage__;
     exports.errorDefault = new Error('default error');
     exports.testPlatform = {
-      name: exports.modeJs === 'browser' ? 'browser - ' +
-        navigator.userAgent + ' - ' + new Date().toISOString() :
-          exports.modeJs === 'node' ? 'node - ' +
-            process.platform + ' ' + process.version + ' - ' + new Date().toISOString() :
-              (exports.global.slimer ? 'slimer - ' : 'phantom - ') +
-              exports.system.os.name + ' ' +
-              exports.global.phantom.version.major + '.' +
-              exports.global.phantom.version.minor + '.' +
-              exports.global.phantom.version.patch + ' - ' + new Date().toISOString(),
+      name: exports.modeJs === 'browser'
+        ? 'browser - ' + navigator.userAgent + ' - ' + new Date().toISOString()
+        : exports.modeJs === 'node'
+        ? 'node - ' +
+          process.platform + ' ' + process.version + ' - ' + new Date().toISOString()
+        : (exports.global.slimer ? 'slimer - ' : 'phantom - ') +
+          exports.system.os.name + ' ' +
+          exports.global.phantom.version.major + '.' +
+          exports.global.phantom.version.minor + '.' +
+          exports.global.phantom.version.patch + ' - ' + new Date().toISOString(),
       screenCaptureImg: exports.envDict.MODE_BUILD_SCREEN_CAPTURE,
       testCaseList: []
     };

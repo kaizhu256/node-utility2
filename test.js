@@ -231,7 +231,7 @@
           message = arg;
         } }]
       ], onError, function (onError) {
-        // test no error handling behavior
+        // test no-error handling behavior
         exports.onErrorDefault();
         // validate message
         exports.assert(!message, message);
@@ -425,7 +425,7 @@
   case 'browser':
     window.local = local;
     exports.onErrorExit = function () {
-      // test exports.modeTest !== 'phantom' handling behavior
+      // test modeTest !== 'phantom' handling behavior
       if (exports.modeTest === 'phantom2') {
         setTimeout(function () {
           throw new Error('\nphantom\n' + JSON.stringify({
@@ -434,7 +434,6 @@
         }, 1000);
       }
     };
-    // test !exports.modeTest handling behavior
     local._modeTest = exports.modeTest;
     exports.modeTest = null;
     exports.testRun();
@@ -509,70 +508,87 @@
       /*
         this function will test phantomTest's default handling behavior
       */
-      var onParallel;
+      var onParallel, options;
       onParallel = exports.onParallel(onError);
       onParallel.counter += 1;
       // test default handling behavior
       onParallel.counter += 1;
-      exports.phantomTest({ url: 'http://localhost:' +
-        process.env.npm_config_server_port +
-        // test phantom-callback handling behavior
-        '?modeTest=phantom&' +
-        // test _testSecret-validation handling behavior
-        '_testSecret={{_testSecret}}&' +
-        // test timeoutDefault-override handling behavior
-        'timeoutDefault=' + exports.timeoutDefault }, onParallel);
-      // test single-test-case handling behavior
-      onParallel.counter += 1;
       exports.phantomTest({
+        url: 'http://localhost:' + exports.envDict.npm_config_server_port +
+          // test phantom-callback handling behavior
+          '?modeTest=phantom&' +
+          // test _testSecret-validation handling behavior
+          '_testSecret={{_testSecret}}&' +
+          // test timeoutDefault-override handling behavior
+          'timeoutDefault=' + exports.timeoutDefault
+      }, onParallel);
+      [{
         modeErrorIgnore: true,
-        url: 'http://localhost:' + process.env.npm_config_server_port +
+        url: 'http://localhost:' + exports.envDict.npm_config_server_port +
           // test standalone utility2.js library handling behavior
           '/test/utility2.html?' +
           // test modeTest !== 'phantom' handling behavior
           'modeTest=phantom2&' +
+          // test single-test-case handling behavior
           // test testRun's failure handling behavior
           'modeTestCase=_testRun_failure_test'
-      }, function (error) {
-        exports.testTryCatch(function () {
-          // validate error occurred
-          exports.assert(error instanceof Error, error);
-          onParallel();
-        }, onParallel);
-      });
-      // test script-error handling behavior
-      onParallel.counter += 1;
-      exports.phantomTest({
+      }, {
         modeErrorIgnore: true,
-        url:
-          'http://localhost:' + process.env.npm_config_server_port + '/test/script-error.html'
-      }, function (error) {
-        exports.testTryCatch(function () {
-          // validate error occurred
-          exports.assert(error instanceof Error, error);
-          onParallel();
-        }, onParallel);
+        url: 'http://localhost:' + exports.envDict.npm_config_server_port +
+          // test script-error handling behavior
+          '/test/script-error.html'
+      }].forEach(function (options) {
+        onParallel.counter += 1;
+        exports.phantomTest(options, function (error) {
+          exports.testTryCatch(function () {
+            // validate error occurred
+            exports.assert(error instanceof Error, error);
+            onParallel();
+          }, onParallel);
+        });
       });
       // test screenCapture handling behavior
       onParallel.counter += 1;
-      exports.phantomScreenCapture({
+      options = {
         timeoutScreenCapture: 1,
-        url:
-          'http://localhost:' + process.env.npm_config_server_port + '/test/screen-capture'
-      }, function (error, options) {
+        url: 'http://localhost:' + exports.envDict.npm_config_server_port +
+          '/test/screen-capture'
+      };
+      exports.phantomScreenCapture(options, function (error) {
         exports.testTryCatch(function () {
           // validate no error occurred
           exports.assert(!error, error);
           // validate screen-capture file
           exports.assert(
-            options.fileScreenCapture_phantomjs &&
-              exports.fs.existsSync(options.fileScreenCapture_phantomjs),
-            options.fileScreenCapture_phantomjs
+            options.phantomjs.fileScreenCapture &&
+              exports.fs.existsSync(options.phantomjs.fileScreenCapture),
+            options.phantomjs.fileScreenCapture
           );
           // delete screen-capture file, so it will not interfere with re-tests
-          exports.fs.unlinkSync(options.fileScreenCapture_phantomjs);
+          exports.fs.unlinkSync(options.phantomjs.fileScreenCapture);
           onParallel();
         }, onParallel);
+      });
+      // test misc handling behavior
+      onParallel.counter += 1;
+      exports.testMock([
+        [exports, {
+          child_process: { spawn: function () {
+            return { on: exports.nop };
+          } },
+          envDict: {
+            // test no slimerjs handling behavior
+            npm_config_mode_no_slimerjs: '1',
+            // test no cover utility2.js handling behavior
+            npm_package_name: 'undefined'
+          },
+          onTimeout: exports.nop
+        }]
+      ], onParallel, function (onError) {
+        exports.phantomTest({
+          url: 'http://localhost:' + exports.envDict.npm_config_server_port
+        });
+        onError();
       });
       onParallel();
     };
@@ -651,8 +667,14 @@
       });
     };
 
-    // run server-test
+    // init server-assets
     [{
+      // coverage-hack - cover no cache handling behavior
+      cache: null,
+      // coverage-hack - cover no coverage handling behavior
+      coverage: null,
+      file: __dirname + '/test.js'
+    }, {
       cache: '/test/test.js',
       coverage: 'utility2',
       file: __dirname + '/test.js'
@@ -661,19 +683,11 @@
       // cache and parse the file
       exports.fileCacheAndParse(options);
     });
+    // init server-middlewares
     local.serverMiddlewareList = [
-      // exit after test-run ends
-      exports.testMiddleware,
-      function (request, response, next) {
-        // nop hack to pass jslint
-        exports.nop(request);
-        exports.nop(response);
-        // test next middleware handling behavior
-        next();
-      },
-      function (request, response, next) {
+      function (request, response, onNext) {
         /*
-          this function will run the main test-middleware
+          this user-defined middleware will override the builtin test-middleware
         */
         switch (request.urlPathNormalized) {
         // test http POST handling behavior
@@ -703,9 +717,9 @@
         case '/test/server-error':
           // test multiple serverRespondWriteHead callback handling behavior
           exports.serverRespondWriteHead(request, response, null, {});
-          next(exports.errorDefault);
+          onNext(exports.errorDefault);
           // test multiple-callback error handling behavior
-          next(exports.errorDefault);
+          onNext(exports.errorDefault);
           // test onErrorDefault handling behavior
           exports.testMock([
             // suppress console.error
@@ -722,12 +736,15 @@
             onError();
           });
           break;
-        // fallback to 404-not-found-error
+        // fallback to next middleware
         default:
-          next();
+          onNext();
         }
-      }
+      },
+      // builtin test-middleware
+      exports.testMiddleware
     ];
+    // run server-test
     exports.testRunServer(local);
     local.fs.readdirSync(__dirname).forEach(function (file) {
       file = __dirname + '/' + file;
