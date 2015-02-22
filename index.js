@@ -11,10 +11,8 @@
 
 
 
+  // run shared js-env code
   (function () {
-    /*
-      this function will run shared js-env code
-    */
     exports.assert = function (passed, message) {
       /*
         this function will throw an error if the assertion fails
@@ -766,10 +764,8 @@
 
 
 
+  // run browser js-env code
   (function () {
-    /*
-      this function will run browser js-env code
-    */
     if (exports.modeJs !== 'browser') {
       return;
     }
@@ -909,10 +905,8 @@
 
 
 
+  // run node js-env code
   (function () {
-    /*
-      this function will run node js-env code
-    */
     if (exports.modeJs !== 'node') {
       return;
     }
@@ -1038,7 +1032,7 @@
 
     exports.istanbulCover = function (script, file) {
       /*
-        this function will cover the given script and file
+        this function will cover the js script and file
       */
       var istanbul;
       if (!exports._instrumenter) {
@@ -1083,17 +1077,20 @@
       onParallel = exports.onParallel(onError);
       onParallel.counter += 1;
       ['phantomjs', 'slimerjs'].forEach(function (argv0) {
-        var options2;
+        var optionsCopy;
         // if slimerjs is not available, then do not use it
         if (argv0 === 'slimerjs' && (!exports.envDict.npm_config_mode_slimerjs ||
           exports.envDict.npm_config_mode_no_slimerjs)) {
           return;
         }
-        options2 = exports.jsonCopy(options);
-        options2.argv0 = argv0;
+        // copy options to create separate phantomjs / slimerjs state
+        optionsCopy = exports.jsonCopy(options);
+        optionsCopy.argv0 = argv0;
+        // run phantomjs / slimerjs instance
         onParallel.counter += 1;
-        exports._phantomTestSingle(options2, function (error) {
-          options[argv0] = options2;
+        exports._phantomTestSingle(optionsCopy, function (error) {
+          // save phantomjs / slimerjs state to options
+          options[argv0] = optionsCopy;
           onParallel(error);
         });
       });
@@ -1466,10 +1463,8 @@
 
 
 
+  // run phantom js-env code
   (function () {
-    /*
-      this function will run phantom js-env code
-    */
     if (exports.modeJs !== 'phantom') {
       return;
     }
@@ -1593,13 +1588,13 @@
     };
     onNext();
   }());
-
-
-
 }((function (self) {
   'use strict';
   var exports;
-  // init shared js-env
+
+
+
+  // run shared js-env code
   (function () {
     // init exports
     exports = {};
@@ -1610,7 +1605,7 @@
       } catch (errorCaughtPhantom) {
         try {
           return module.exports && typeof process.versions.node === 'string' &&
-            typeof require('child_process').spawn === 'function' && 'node';
+            typeof require('http').createServer === 'function' && 'node';
         } catch (errorCaughtNode) {
           return typeof navigator.userAgent === 'string' &&
             typeof document.querySelector('body') === 'object' && 'browser';
@@ -1625,7 +1620,10 @@
     };
   }());
   switch (exports.modeJs) {
-  // init browser js-env
+
+
+
+  // run browser js-env code
   case 'browser':
     window.utility2 = exports;
     // init exports properties
@@ -1647,7 +1645,10 @@
       }
     );
     break;
-  // init node js-env
+
+
+
+  // run node js-env code
   case 'node':
     module.exports = exports;
     // require modules
@@ -1680,7 +1681,10 @@
       setInterval(testSecretCreate, 60000).unref();
     }());
     break;
-  // init phantom js-env
+
+
+
+  // run phantom js-env code
   case 'phantom':
     self.utility2 = exports;
     // require modules
@@ -1693,7 +1697,10 @@
     exports.global = self;
     break;
   }
-  // init shared js-env
+
+
+
+  // run shared js-env code
   (function () {
     // init global debug_print
     exports.global['debug_print'.replace('_p', 'P')] = function (arg) {

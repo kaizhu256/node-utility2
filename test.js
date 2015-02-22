@@ -15,14 +15,14 @@
 
 
 
-  // init shared js-env
+  // run shared js-env code
   (function () {
     // init local
     local = {};
     local.modeJs = (function () {
       try {
         return module.exports && typeof process.versions.node === 'string' &&
-          typeof require('child_process').spawn === 'function' && 'node';
+          typeof require('http').createServer === 'function' && 'node';
       } catch (errorCaughtNode) {
         return typeof navigator.userAgent === 'string' &&
           typeof document.querySelector('body') === 'object' && 'browser';
@@ -421,7 +421,7 @@
 
 
 
-  // init browser js-env
+  // run browser js-env code
   case 'browser':
     window.local = local;
     exports.onErrorExit = function () {
@@ -444,7 +444,7 @@
 
 
 
-  // init node js-env
+  // run node js-env code
   case 'node':
     // require modules
     local.fs = require('fs');
@@ -644,7 +644,7 @@
           envDict: {
             // test $npm_package_name !== 'utility2' handling behavior
             npm_package_name: 'undefined',
-            // test auto-exit handling behavior
+            // test exit-after-timeout handling behavior
             npm_config_timeout_exit: '1',
             // test random $npm_config_server_port handling behavior
             npm_config_server_port: ''

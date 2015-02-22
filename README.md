@@ -1,6 +1,6 @@
 utility2 [![NPM](https://img.shields.io/npm/v/utility2.svg?style=flat-square)](https://www.npmjs.com/package/utility2)
 ========
-lightweight nodejs module that runs phantomjs browser-tests with coverage (via istanbul-lite and phantomjs-lite)
+lightweight library that runs phantomjs browser-tests with browser-coverage (via istanbul-lite and phantomjs-lite)
 
 
 
@@ -27,20 +27,20 @@ lightweight nodejs module that runs phantomjs browser-tests with coverage (via i
 /*
   example.js
 
-  this example browser / nodejs script will run phantomjs browser-tests
+  this shared browser / server script will run phantomjs browser-tests
   on itself with coverage for both the browser and server
 
   instruction to programmatically test browser and server with coverage
-  1. save this script as example.js
+  1. save this js script as example.js
   2. run the shell command:
      $ npm install phantomjs-lite utility2 &&\
        node_modules/.bin/utility2 shRun shNpmTest example.js
 
-  instruction to interactively test server on port 8080 without coverage
-  1. save this script as example.js
+  instruction to interactively test server on port 1337 without coverage
+  1. save this js script as example.js
   2. run the shell command:
-     $ npm install utility2 && npm_config_server_port=8080 node example.js
-  3. interactively test server on http://localhost:8080
+     $ npm install utility2 && npm_config_server_port=1337 node example.js
+  3. interactively test server on http://localhost:1337
 */
 /*jslint
   browser: true,
@@ -52,7 +52,7 @@ lightweight nodejs module that runs phantomjs browser-tests with coverage (via i
   var local;
   // init local
   local = {};
-  // init browser js-env
+  // run browser js-env code
   if (typeof window === 'object') {
     // init local.utility2
     local.utility2 = window.utility2;
@@ -93,10 +93,10 @@ lightweight nodejs module that runs phantomjs browser-tests with coverage (via i
     };
     // run test
     local.utility2.testRun(local, local.utility2.nop);
-  // init node js-env
+  // run node js-env code
   } else {
     // mock package.json
-    process.env.npm_package_description = 'this is a demo';
+    process.env.npm_package_description = 'this is an example module';
     process.env.npm_package_name = 'example-module';
     process.env.npm_package_version = '1.0.0';
     // require modules
@@ -215,7 +215,7 @@ shBuild() {
     return $?
   # screen-capture example.js coverage
   MODE_BUILD=testExampleJs shRun shPhantomScreenCapture\
-    /tmp/app/.tmp/build/coverage.html/app/example.js.html
+    /tmp/app/.tmp/build/coverage.html/app/example.js.html || :
   # copy phantomjs screen-capture to $npm_package_dir_build
   cp /tmp/app/.tmp/build/screen-capture.*.png $npm_package_dir_build ||\
     return $?

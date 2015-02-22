@@ -26,7 +26,7 @@ shBuild() {
   # this function will run the build-script in README.md
   # init $npm_package_dir_build
   mkdir -p $npm_package_dir_build/coverage.html || return $?
-  # run script from README.md
+  # run shell script from README.md
   MODE_BUILD=build shTestScriptSh $npm_package_dir_tmp/build.sh || return $?
 }
 
@@ -233,23 +233,24 @@ shInit() {
   export npm_package_dir_build=$CWD/.tmp/build || return $?
   export npm_package_dir_tmp=$CWD/.tmp || return $?
   export npm_package_file_tmp=$CWD/.tmp/tmpfile || return $?
-  # init $DIRNAME
+  # init $npm_package_dir_utility2
   if [ "$npm_package_name" = utility2 ]
   then
-    export DIRNAME=$CWD || return
+    export npm_package_dir_utility2=$CWD || return
   else
-    export DIRNAME=$(node -e "console.log(require('utility2').__dirname);") || return $?
+    export npm_package_dir_utility2=$(node -e "console.log(require('utility2').__dirname);") ||\
+      return $?
   fi
   # init $GIT_SSH
   if [ "$GIT_SSH_KEY" ]
   then
-    export GIT_SSH=$DIRNAME/git-ssh.sh || return $?
+    export GIT_SSH=$npm_package_dir_utility2/git-ssh.sh || return $?
   fi
   # init $ISTANBUL
-  export ISTANBUL=$(cd $DIRNAME &&\
+  export ISTANBUL=$(cd $npm_package_dir_utility2 &&\
     node -e "console.log(require('istanbul-lite').__dirname);")/index.js || return $?
   # init $PHANTOMJS_LITE
-  export PHANTOMJS_LITE=$(cd $DIRNAME &&\
+  export PHANTOMJS_LITE=$(cd $npm_package_dir_utility2 &&\
     node -e "console.log(require('phantomjs-lite').__dirname);")/phantomjs || return $?
 }
 
@@ -269,7 +270,7 @@ shIstanbulReport() {
   then
     node -e "require('fs').writeFileSync(
       '$npm_package_dir_build/coverage.html/coverage.json',
-      JSON.stringify(require('$DIRNAME').istanbulMerge(
+      JSON.stringify(require('$npm_package_dir_utility2').istanbulMerge(
         require('$npm_package_dir_build/coverage.html/coverage.json'),
         require('./$COVERAGE')
       ))
@@ -373,7 +374,7 @@ shPhantomTest() {
     export npm_config_mode_slimerjs=1 || return $?
   fi
   node -e "var local;
-    local = require('$DIRNAME');
+    local = require('$npm_package_dir_utility2');
     if ('$MODE_PHANTOM' === 'testUrl') {
       local.testReport = require('$npm_package_dir_build/test-report.json');
     }
@@ -496,7 +497,9 @@ shTestHeroku() {
   # init Procfile
   node -e "require('fs').writeFileSync(
     'Procfile',
-    require('$DIRNAME').textFormat(require('fs').readFileSync('Procfile', 'utf8'), process.env)
+    require('$npm_package_dir_utility2').textFormat(
+      require('fs').readFileSync('Procfile', 'utf8'), process.env
+    )
   );" || return $?
   # rm .gitignore so we can git add everything
   rm -f .gitignore || return $?
@@ -518,7 +521,7 @@ shTestHeroku() {
 }
 
 shTestScriptJs() {
-  # this function will test the javascript script $FILE in README.md
+  # this function will test the js script $FILE in README.md
   local FILE=$1 || return $?
   shBuildPrint $MODE_BUILD "testing $FILE ..." || return $?
   if [ ! "$MODE_OFFLINE" ]
@@ -528,11 +531,11 @@ shTestScriptJs() {
   fi
   # cd /tmp/app
   cd /tmp/app || return $?
-  # read and parse script from README.md
+  # read and parse js script from README.md
   node -e "require('fs').readFileSync('$CWD/README.md', 'utf8').replace(
     (/\n\`\`\`\n\/\*\n *$FILE\n[\S\s]+?\n\`\`\`/),
     function (match0, index, data) {
-      // save script to file
+      // save js script to file
       require('fs').writeFileSync(
         '$FILE',
         // preserve lineno
