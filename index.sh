@@ -24,10 +24,10 @@ shAesEncrypt() {
 
 shBuild() {
   # this function will run the build-script in README.md
-  # init $npm_package_dir_build
-  mkdir -p $npm_package_dir_build/coverage.html || return $?
+  # init $npm_config_dir_build
+  mkdir -p $npm_config_dir_build/coverage.html || return $?
   # run shell script from README.md
-  MODE_BUILD=build shTestScriptSh $npm_package_dir_tmp/build.sh || return $?
+  MODE_BUILD=build shTestScriptSh $npm_config_dir_tmp/build.sh || return $?
 }
 
 shBuildGithubUpload() {
@@ -39,14 +39,14 @@ shBuildGithubUpload() {
     return
   fi
   # clone gh-pages branch
-  rm -fr $npm_package_dir_tmp/gh-pages || return $?
+  rm -fr $npm_config_dir_tmp/gh-pages || return $?
   git clone git@github.com:$GITHUB_REPO.git\
-    --branch=gh-pages --single-branch $npm_package_dir_tmp/gh-pages || return $?
-  cd $npm_package_dir_tmp/gh-pages || return $?
+    --branch=gh-pages --single-branch $npm_config_dir_tmp/gh-pages || return $?
+  cd $npm_config_dir_tmp/gh-pages || return $?
   # copy build-artifacts to gh-pages
-  cp -a $npm_package_dir_build . || return $?
+  cp -a $npm_config_dir_build . || return $?
   local DIR=build..$CI_BRANCH..$CI_HOST || return $?
-  rm -fr $DIR && cp -a $npm_package_dir_build $DIR || return $?
+  rm -fr $DIR && cp -a $npm_config_dir_build $DIR || return $?
   # init .git/config
   printf "\n[user]\nname=nobody\nemail=nobody" >> .git/config || return $?
   # cleanup dir
@@ -86,9 +86,9 @@ shExitCodeSave() {
   then
     EXIT_CODE=$1 || return $?
   fi
-  if [ -d $npm_package_dir_tmp ]
+  if [ -d $npm_config_dir_tmp ]
   then
-    printf "$EXIT_CODE" > $npm_package_file_tmp || return $?
+    printf "$EXIT_CODE" > $npm_config_file_tmp || return $?
   fi
   # restore $CWD
   cd $CWD || return $?
@@ -230,62 +230,63 @@ shInit() {
     export npm_package_name=undefined || return $?
     export npm_package_version=undefined || return $?
   fi
-  export npm_package_dir_build=$CWD/.tmp/build || return $?
-  export npm_package_dir_tmp=$CWD/.tmp || return $?
-  export npm_package_file_tmp=$CWD/.tmp/tmpfile || return $?
-  # init $npm_package_dir_utility2
+  # init $npm_config_*
+  export npm_config_dir_build=$CWD/.tmp/build || return $?
+  export npm_config_dir_tmp=$CWD/.tmp || return $?
+  export npm_config_file_tmp=$CWD/.tmp/tmpfile || return $?
+  # init $npm_config_dir_utility2
   if [ "$npm_package_name" = utility2 ]
   then
-    export npm_package_dir_utility2=$CWD || return
+    export npm_config_dir_utility2=$CWD || return
   else
-    export npm_package_dir_utility2=$(node -e "console.log(require('utility2').__dirname);") ||\
+    export npm_config_dir_utility2=$(node -e "console.log(require('utility2').__dirname);") ||\
       return $?
   fi
   # init $GIT_SSH
   if [ "$GIT_SSH_KEY" ]
   then
-    export GIT_SSH=$npm_package_dir_utility2/git-ssh.sh || return $?
+    export GIT_SSH=$npm_config_dir_utility2/git-ssh.sh || return $?
   fi
   # init $ISTANBUL
-  export ISTANBUL=$(cd $npm_package_dir_utility2 &&\
+  export ISTANBUL=$(cd $npm_config_dir_utility2 &&\
     node -e "console.log(require('istanbul-lite').__dirname);")/index.js || return $?
   # init $PHANTOMJS_LITE
-  export PHANTOMJS_LITE=$(cd $npm_package_dir_utility2 &&\
+  export PHANTOMJS_LITE=$(cd $npm_config_dir_utility2 &&\
     node -e "console.log(require('phantomjs-lite').__dirname);")/phantomjs || return $?
 }
 
 shIstanbulCover() {
   # this function will run the command $@ with istanbul coverage
-  npm_config_coverage_dir="$npm_package_dir_build/coverage.html"\
+  npm_config_coverage_dir="$npm_config_dir_build/coverage.html"\
     $ISTANBUL cover $@ || return $?
 }
 
 shIstanbulReport() {
   # this function will
-  # 1. merge $COVERAGE into $npm_package_dir_build/coverage.html/coverage.json
-  # 2. create $npm_package_dir_build/coverage.html
+  # 1. merge $COVERAGE into $npm_config_dir_build/coverage.html/coverage.json
+  # 2. create $npm_config_dir_build/coverage.html
   local COVERAGE=$1 || return $?
-  # 1. merge $COVERAGE into $npm_package_dir_build/coverage.html/coverage.json
+  # 1. merge $COVERAGE into $npm_config_dir_build/coverage.html/coverage.json
   if [ "$COVERAGE" ]
   then
     node -e "require('fs').writeFileSync(
-      '$npm_package_dir_build/coverage.html/coverage.json',
-      JSON.stringify(require('$npm_package_dir_utility2').istanbulMerge(
-        require('$npm_package_dir_build/coverage.html/coverage.json'),
+      '$npm_config_dir_build/coverage.html/coverage.json',
+      JSON.stringify(require('$npm_config_dir_utility2').istanbulMerge(
+        require('$npm_config_dir_build/coverage.html/coverage.json'),
         require('./$COVERAGE')
       ))
     );" || return $?
   fi
-  # 2. create $npm_package_dir_build/coverage.html
-  npm_config_coverage_dir="$npm_package_dir_build/coverage.html"\
+  # 2. create $npm_config_dir_build/coverage.html
+  npm_config_coverage_dir="$npm_config_dir_build/coverage.html"\
     $ISTANBUL report || return $?
 }
 
 shNpmTest() {
   # this function will run npm test
   shBuildPrint ${MODE_BUILD:-npmTest} "npm testing $CWD ..." || return $?
-  # init $npm_package_dir_build
-  mkdir -p $npm_package_dir_build/coverage.html || return $?
+  # init $npm_config_dir_build
+  mkdir -p $npm_config_dir_build/coverage.html || return $?
   # auto-detect slimerjs
   if [ ! "$npm_config_mode_slimerjs" ] && (slimerjs undefined > /dev/null 2>&1)
   then
@@ -302,17 +303,17 @@ shNpmTest() {
     return $?
   fi
   # cleanup old coverage
-  rm -f $npm_package_dir_build/coverage.html/coverage.* || return $?
+  rm -f $npm_config_dir_build/coverage.html/coverage.* || return $?
   # run npm test with coverage
   shIstanbulCover $@
   # save $EXIT_CODE and restore $CWD
   shExitCodeSave $? || return $?
   # create coverage
   shIstanbulReport || return $?
-  printf "\ncreated test-report file://$npm_package_dir_build/test-report.html\n" || return $?
+  printf "\ncreated test-report file://$npm_config_dir_build/test-report.html\n" || return $?
   # create coverage badge
   node -e "var coverage, percent;
-    coverage = require('$npm_package_dir_build/coverage.html/coverage.json');
+    coverage = require('$npm_config_dir_build/coverage.html/coverage.json');
     percent = [0, 0];
     Object.keys(coverage).forEach(function (file) {
       file = coverage[file];
@@ -323,7 +324,7 @@ shNpmTest() {
     });
     percent = Math.floor((100000 * percent[0] / percent[1] + 5) / 10) / 100;
     require('fs').writeFileSync(
-      '$npm_package_dir_build/coverage.badge.svg',
+      '$npm_config_dir_build/coverage.badge.svg',
       // https://img.shields.io/badge/coverage-100.0%-00dd00.svg?style=flat
       '"'<svg xmlns="http://www.w3.org/2000/svg" width="117" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="117" height="20" fill="#555"/><rect rx="0" x="63" width="54" height="20" fill="#0d0"/><path fill="#0d0" d="M63 0h4v20h-4z"/><rect rx="0" width="117" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="32.5" y="15" fill="#010101" fill-opacity=".3">coverage</text><text x="32.5" y="14">coverage</text><text x="89" y="15" fill="#010101" fill-opacity=".3">100.0%</text><text x="89" y="14">100.0%</text></g></svg>'"'
         // edit coverage badge percent
@@ -374,9 +375,9 @@ shPhantomTest() {
     export npm_config_mode_slimerjs=1 || return $?
   fi
   node -e "var local;
-    local = require('$npm_package_dir_utility2');
+    local = require('$npm_config_dir_utility2');
     if ('$MODE_PHANTOM' === 'testUrl') {
-      local.testReport = require('$npm_package_dir_build/test-report.json');
+      local.testReport = require('$npm_config_dir_build/test-report.json');
     }
     local.phantomTest({
       modePhantom: '$MODE_PHANTOM',
@@ -389,7 +390,7 @@ shPhantomTest() {
         return;
       }
       local.fs.writeFileSync(
-        '$npm_package_dir_build/test-report.html',
+        '$npm_config_dir_build/test-report.html',
         local.testMerge(local.testReport, {})
       );
       process.exit(!!error);
@@ -437,16 +438,16 @@ shRun() {
 shRunScreenCapture() {
   # this function will run the command $@ and screen-capture the output
   # http://www.cnx-software.com/2011/09/22/how-to-convert-a-command-line-result-into-an-image-in-linux/
-  # init $npm_package_dir_build
-  mkdir -p $npm_package_dir_build/coverage.html || return $?
+  # init $npm_config_dir_build
+  mkdir -p $npm_config_dir_build/coverage.html || return $?
   export MODE_BUILD_SCREEN_CAPTURE=screen-capture.${MODE_BUILD-undefined}.png
-  shRun $@ 2>&1 | tee $npm_package_dir_tmp/screen-capture.txt || return $?
+  shRun $@ 2>&1 | tee $npm_config_dir_tmp/screen-capture.txt || return $?
   # save $EXIT_CODE and restore $CWD
-  shExitCodeSave $(cat $npm_package_file_tmp) || return $?
+  shExitCodeSave $(cat $npm_config_file_tmp) || return $?
   # format text-output
   node -e "require('fs').writeFileSync(
-    '$npm_package_dir_tmp/screen-capture.txt',
-    require('fs').readFileSync('$npm_package_dir_tmp/screen-capture.txt', 'utf8')
+    '$npm_config_dir_tmp/screen-capture.txt',
+    require('fs').readFileSync('$npm_config_dir_tmp/screen-capture.txt', 'utf8')
       // remove ansi escape-code
       .replace((/\u001b.*?m/g), '')
       // format unicode
@@ -458,16 +459,16 @@ shRunScreenCapture() {
   if (convert -list font | grep "\bCourier\b" > /dev/null 2>&1) &&\
     (fold package.json > /dev/null 2>&1)
   then
-    # word-wrap $npm_package_dir_tmp/screen-capture.txt to 96 characters,
+    # word-wrap $npm_config_dir_tmp/screen-capture.txt to 96 characters,
     # and convert to png image
-    fold -w 96 $npm_package_dir_tmp/screen-capture.txt |\
+    fold -w 96 $npm_config_dir_tmp/screen-capture.txt |\
       convert -background gray25 -border 10 -bordercolor gray25\
       -depth 4\
       -fill palegreen -font Courier\
       -pointsize 12\
       -quality 90\
       -type Palette\
-      label:@- $npm_package_dir_build/$MODE_BUILD_SCREEN_CAPTURE || return $?
+      label:@- $npm_config_dir_build/$MODE_BUILD_SCREEN_CAPTURE || return $?
   fi
   return $EXIT_CODE
 }
@@ -497,7 +498,7 @@ shTestHeroku() {
   # init Procfile
   node -e "require('fs').writeFileSync(
     'Procfile',
-    require('$npm_package_dir_utility2').textFormat(
+    require('$npm_config_dir_utility2').textFormat(
       require('fs').readFileSync('Procfile', 'utf8'), process.env
     )
   );" || return $?
@@ -612,18 +613,18 @@ shTravisDecryptYml() {
 
 shTravisEncrypt() {
   # this function will travis-encrypt github repo $1's secret $2
-  # init $npm_package_dir_build dir
-  mkdir -p $npm_package_dir_build/coverage.html || return $?
+  # init $npm_config_dir_build dir
+  mkdir -p $npm_config_dir_build/coverage.html || return $?
   local GITHUB_REPO=$1 || return $?
   local SECRET=$2 || return $?
   # get public rsa key from https://api.travis-ci.org/repos/<owner>/<repo>/key
-  curl -fLSs https://api.travis-ci.org/repos/$GITHUB_REPO/key > $npm_package_file_tmp ||\
+  curl -fLSs https://api.travis-ci.org/repos/$GITHUB_REPO/key > $npm_config_file_tmp ||\
     return $?
-  perl -pi -e "s/[^-]+(.+-).+/\$1/; s/\\\\n/\n/g; s/ RSA / /g" $npm_package_file_tmp ||\
+  perl -pi -e "s/[^-]+(.+-).+/\$1/; s/\\\\n/\n/g; s/ RSA / /g" $npm_config_file_tmp ||\
     return $?
   # rsa-encrypt $SECRET and print it
   printf "$SECRET" |\
-    openssl rsautl -encrypt -pubin -inkey $npm_package_file_tmp |\
+    openssl rsautl -encrypt -pubin -inkey $npm_config_file_tmp |\
     base64 |\
     tr -d "\n" || return $?
 }

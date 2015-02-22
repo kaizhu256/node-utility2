@@ -216,9 +216,8 @@ shBuild() {
   # screen-capture example.js coverage
   MODE_BUILD=testExampleJs shRun shPhantomScreenCapture\
     /tmp/app/.tmp/build/coverage.html/app/example.js.html || :
-  # copy phantomjs screen-capture to $npm_package_dir_build
-  cp /tmp/app/.tmp/build/screen-capture.*.png $npm_package_dir_build ||\
-    return $?
+  # copy phantomjs screen-capture to $npm_config_dir_build
+  cp /tmp/app/.tmp/build/screen-capture.*.png $npm_config_dir_build || return $?
   # run npm test
   MODE_BUILD=npmTest shRunScreenCapture npm test || return $?
   # deploy to heroku
@@ -246,8 +245,8 @@ shBuildCleanup() {
   shBuildPrint phantomScreenCapture\
     "add black border around phantomjs screen-capture" || return $?
   local FILE_LIST="$(ls\
-    $npm_package_dir_build/screen-capture.*.phantomjs*.png\
-    $npm_package_dir_build/screen-capture.*.slimerjs*.png\
+    $npm_config_dir_build/screen-capture.*.phantomjs*.png\
+    $npm_config_dir_build/screen-capture.*.slimerjs*.png\
     2>/dev/null)" || return $?
   if [ "$FILE_LIST" ] && (mogrify --version > /dev/null 2>&1)
   then
