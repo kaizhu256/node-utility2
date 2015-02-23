@@ -1063,7 +1063,6 @@
         this function will spawn phantomjs to screen-capture options.url
       */
       exports.phantomTest(exports.setDefault(options, 1, {
-        modeErrorIgnore: true,
         modePhantom: 'screenCapture',
         timeoutScreenCapture: 2000
       }), onError);

@@ -52,6 +52,9 @@ lightweight library that runs phantomjs browser-tests with browser-coverage (via
   var local;
   // init local
   local = {};
+
+
+
   // run browser js-env code
   if (typeof window === 'object') {
     // init local.utility2
@@ -93,6 +96,9 @@ lightweight library that runs phantomjs browser-tests with browser-coverage (via
     };
     // run test
     local.utility2.testRun(local, local.utility2.nop);
+
+
+
   // run node js-env code
   } else {
     // mock package.json
@@ -205,14 +211,15 @@ shBuild() {
       return $?
     export TEST_URL="$TEST_URL?modeTest=phantom&_testSecret={{_testSecret}}"\
       || return $?
+    export npm_config_mode_slimerjs=1 || return $?
   fi
   # init env
   . ./index.sh && shInit || return $?
   # run npm test on published package
   shRun shNpmTestPublished || return $?
-  # test example script
-  MODE_BUILD=testExampleJs shRunScreenCapture shTestScriptJs example.js ||\
-    return $?
+  # test example js script
+  MODE_BUILD=testExampleJs\
+  shRunScreenCapture shTestScriptJs example.js || return $?
   # screen-capture example.js coverage
   MODE_BUILD=testExampleJs shRun shPhantomScreenCapture\
     /tmp/app/.tmp/build/coverage.html/app/example.js.html || :
@@ -254,7 +261,7 @@ shBuildCleanup() {
       xargs -n 1 mogrify -frame 1 -mattecolor black || return $?
   fi
 }
-shBuildCleanup
+shBuildCleanup || exit $?
 # upload build-artifacts to github
 if [ "$TRAVIS" ]
 then
