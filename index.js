@@ -985,7 +985,7 @@
             return;
           }
           // successful response
-          onNext(null, responseText);
+          onNext();
           break;
         default:
           // if already finished, then ignore error / data
@@ -1007,7 +1007,7 @@
             // debug status code
             error.statusCode = response && response.statusCode;
           }
-          onError(error, responseText);
+          onError(error, responseText, options);
         }
       });
       onNext();
