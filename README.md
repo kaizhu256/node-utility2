@@ -4,7 +4,7 @@ lightweight library that runs phantomjs browser-tests with browser-coverage (via
 
 
 
-## build-status [![travis-ci.org build-status](https://api.travis-ci.org/kaizhu256/node-utility2.svg)](https://travis-ci.org/kaizhu256/node-utility2) ![codeship.io build-status](https://codeship.com/projects/df8f44c0-2ee3-0132-0af5-6a016ae0b812/status)
+# build-status [![travis-ci.org build-status](https://api.travis-ci.org/kaizhu256/node-utility2.svg)](https://travis-ci.org/kaizhu256/node-utility2) ![codeship.io build-status](https://codeship.com/projects/df8f44c0-2ee3-0132-0af5-6a016ae0b812/status)
 
 [![build commit status](https://kaizhu256.github.io/node-utility2/build/build.badge.svg)](https://travis-ci.org/kaizhu256/node-utility2)
 
@@ -16,13 +16,13 @@ lightweight library that runs phantomjs browser-tests with browser-coverage (via
 
 
 
-## live test-server
+# live test-server
 [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/build/screen-capture.testHeroku.slimerjs.png)](https://hrku01-utility2-beta.herokuapp.com?modeTest=1)
 
 
 
-## quickstart
-#### follow the instruction inside this script
+# quickstart
+#### follow the instruction in this script
 ```
 /*
   example.js
@@ -173,18 +173,18 @@ lightweight library that runs phantomjs browser-tests with browser-coverage (via
 
 
 
-## package-listing
+# package-listing
 [![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.gitLsTree.png)](https://github.com/kaizhu256/node-utility2)
 
 
 
-## npm-dependencies
+# npm-dependencies
 - [istanbul-lite](https://www.npmjs.com/package/istanbul-lite)
 - [jslint-lite](https://www.npmjs.com/package/jslint-lite)
 
 
 
-## todo
+# todo
 - create flamegraph from istanbul coverage
 - explicitly require slimerjs instead of auto-detecting it
 - auto-generate help doc from README.md
@@ -193,12 +193,12 @@ lightweight library that runs phantomjs browser-tests with browser-coverage (via
 
 
 
-## changelog of last 50 commits
+# changelog of last 50 commits
 ![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.gitLog.png)
 
 
 
-## internal build-script
+# internal build-script
 ```
 # build.sh
 # this shell script runs the build process for this package

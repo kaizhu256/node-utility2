@@ -1127,7 +1127,7 @@
             .spawn(
               require('phantomjs-lite').__dirname + '/' + options.argv0,
               [
-                // coverage-hack - cover utility2.js
+                // coverage-hack - cover utility2 in phantomjs
                 exports.global.__coverage__ && exports.envDict.npm_package_name === 'utility2'
                   ? exports.envDict.npm_config_dir_tmp + '/covered.utility2.js'
                   : __dirname + '/index.js',
@@ -1337,9 +1337,10 @@
       /*
         this builtin test-middleware will
         1. redirect '/' to '/test/test.html'
-        2. serve '/assets/utility2.js' from builtin test-library
-        3. serve '/test/test.js' from user-defined test-code
-        4. serve '/test/test.html' from builtin test-page
+        2. serve '/assets/utility2.css' from builtin test-library
+        3. serve '/assets/utility2.js' from builtin test-library
+        4. serve '/test/test.js' from user-defined test-code
+        5. serve '/test/test.html' from builtin test-page
       */
       switch (request.urlPathNormalized) {
       // 1. redirect '/' to '/test/test.html'
@@ -1349,20 +1350,19 @@
         });
         response.end();
         break;
-      // 2. serve '/assets/utility2.js' from builtin test-library
+      // 2. serve '/assets/utility2.css' from builtin test-library
+      case '/assets/utility2.css':
+      // 3. serve '/assets/utility2.js' from builtin test-library
       case '/assets/utility2.js':
-      // 3. serve '/test/test.js' from user-defined test-file
+      // 4. serve '/test/test.js' from user-defined test-file
       case '/test/test.js':
         response.end(exports.fileCacheDict[request.urlPathNormalized].data);
         break;
-      // 4. serve '/test/test.html' from builtin test-page
+      // 5. serve '/test/test.html' from builtin test-page
       case '/test/test.html':
         response.end(exports.textFormat(exports.fileCacheDict[
           request.urlPathNormalized
-        ].data, {
-          envDict: exports.envDict,
-          utility2Css: exports.fileCacheDict['/assets/utility2.css'].data
-        }));
+        ].data, { envDict: exports.envDict }));
         break;
       // fallback to next middleware
       default:
@@ -1391,7 +1391,7 @@
         coverage: 'utility2',
         file: __filename
       });
-      // save covered utility2.js for phantomjs
+      // coverage-hack - cover utility2 in phantomjs
       if (exports.global.__coverage__ && exports.envDict.npm_package_name === 'utility2') {
         exports.fs.writeFileSync(
           exports.envDict.npm_config_dir_tmp + '/covered.utility2.js',
@@ -1960,8 +1960,8 @@ tr:nth-child(odd).testReportPlatformTr {\n\
 <head>\n\
   <meta charset="UTF-8">\n\
   <title>{{envDict.npm_package_name}} [{{envDict.npm_package_version}}]</title>\n\
+  <link rel="stylesheet" href="/assets/utility2.css">\n\
   <style>\n\
-    {{utility2Css}}\n\
     body {\n\
       background-color: #fff;\n\
       font-family: Helvetical Neue, Helvetica, Arial, sans-serif;\n\

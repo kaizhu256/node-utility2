@@ -73,6 +73,7 @@ shDateIso() {
 
 shDebugArgv() {
   # this function will print each element in $@ in a separate line
+  local ARG || return $?
   for ARG in $@
   do
     printf "'$ARG'\n"
@@ -242,23 +243,23 @@ shInit() {
     export npm_config_dir_utility2=$(node -e "console.log(require('utility2').__dirname);") ||\
       return $?
   fi
+  # init $npm_config_file_istanbul
+  if [ ! "$npm_config_file_istanbul" ]
+  then
+    export npm_config_file_istanbul=$(cd $npm_config_dir_utility2 &&\
+      node -e "console.log(require('istanbul-lite').__dirname);")/index.js || return $?
+  fi
   # init $GIT_SSH
   if [ "$GIT_SSH_KEY" ]
   then
     export GIT_SSH=$npm_config_dir_utility2/git-ssh.sh || return $?
   fi
-  # init $ISTANBUL
-  export ISTANBUL=$(cd $npm_config_dir_utility2 &&\
-    node -e "console.log(require('istanbul-lite').__dirname);")/index.js || return $?
-  # init $PHANTOMJS_LITE
-  export PHANTOMJS_LITE=$(cd $npm_config_dir_utility2 &&\
-    node -e "console.log(require('phantomjs-lite').__dirname);")/phantomjs || return $?
 }
 
 shIstanbulCover() {
   # this function will run the command $@ with istanbul coverage
-  npm_config_coverage_dir="$npm_config_dir_build/coverage.html"\
-    $ISTANBUL cover $@ || return $?
+  npm_config_dir_coverage="$npm_config_dir_build/coverage.html"\
+    $npm_config_file_istanbul cover $@ || return $?
 }
 
 shIstanbulReport() {
@@ -278,8 +279,8 @@ shIstanbulReport() {
     );" || return $?
   fi
   # 2. create $npm_config_dir_build/coverage.html
-  npm_config_coverage_dir="$npm_config_dir_build/coverage.html"\
-    $ISTANBUL report || return $?
+  npm_config_dir_coverage="$npm_config_dir_build/coverage.html"\
+    $npm_config_file_istanbul report || return $?
 }
 
 shNpmTest() {
