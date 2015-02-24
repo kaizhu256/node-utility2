@@ -40,7 +40,7 @@ lightweight library that runs phantomjs browser-tests with browser-coverage (via
   1. save this js script as example.js
   2. run the shell command:
      $ npm install utility2 && npm_config_server_port=1337 node example.js
-  3. interactively test server on http://localhost:1337
+  3. open a browser to http://localhost:1337
 */
 /*jslint
   browser: true,

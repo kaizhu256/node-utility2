@@ -37,7 +37,7 @@ shBuildGithubUpload() {
     return
   fi
   shBuildPrint githubUpload\
-    "uploading build-artifacts to git@github.com:$GITHUB_REPO.git ..." || return $?
+    "uploading build-artifacts to git@github.com:$GITHUB_REPO.git" || return $?
   # clone gh-pages branch
   rm -fr $npm_config_dir_tmp/gh-pages || return $?
   git clone git@github.com:$GITHUB_REPO.git\
@@ -285,7 +285,7 @@ shIstanbulReport() {
 
 shNpmTest() {
   # this function will run npm test
-  shBuildPrint ${MODE_BUILD:-npmTest} "npm testing $CWD ..." || return $?
+  shBuildPrint ${MODE_BUILD:-npmTest} "npm testing $CWD" || return $?
   # init $npm_config_dir_build
   mkdir -p $npm_config_dir_build/coverage.html || return $?
   # auto-detect slimerjs
@@ -309,9 +309,6 @@ shNpmTest() {
   shIstanbulCover $@
   # save $EXIT_CODE and restore $CWD
   shExitCodeSave $? || return $?
-  # create coverage
-  shIstanbulReport || return $?
-  printf "\ncreated test-report file://$npm_config_dir_build/test-report.html\n" || return $?
   # create coverage badge
   node -e "var coverage, percent;
     coverage = require('$npm_config_dir_build/coverage.html/coverage.json');
@@ -346,7 +343,7 @@ shNpmTest() {
 
 shNpmTestPublished() {
   # this function will run npm test on the published package
-  shBuildPrint npmTestPublished "npm testing published package $npm_package_name ..." ||\
+  shBuildPrint npmTestPublished "npm testing published package $npm_package_name" ||\
     return $?
   # init /tmp/app
   rm -fr /tmp/app /tmp/node_modules && mkdir -p /tmp/app && cd /tmp/app || return $?
@@ -369,7 +366,7 @@ shPhantomTest() {
   local TIMEOUT_DEFAULT="${2-30000}" || return $?
   local TIMEOUT_SCREEN_CAPTURE="${3-2000}" || return $?
   local URL="$1" || return $?
-  shBuildPrint ${MODE_BUILD:-phantomTest} "testing $URL with phantomjs ..." || return $?
+  shBuildPrint ${MODE_BUILD:-phantomTest} "testing $URL with phantomjs" || return $?
   # auto-detect slimerjs
   if [ ! "$npm_config_mode_slimerjs" ] && (slimerjs undefined > /dev/null 2>&1)
   then
@@ -489,7 +486,7 @@ shTestHeroku() {
   export TEST_SECRET=$(openssl rand -hex 32) || return $?
   # init $HEROKU_HOSTNAME
   export HEROKU_HOSTNAME=$HEROKU_REPO.herokuapp.com || return $?
-  shBuildPrint testHeroku "deploying to https://$HEROKU_HOSTNAME ..." || return $?
+  shBuildPrint testHeroku "deploying to https://$HEROKU_HOSTNAME" || return $?
   # init clean repo in /tmp/app
   shTmpAppCopy && cd /tmp/app || return $?
   # init .git
@@ -525,7 +522,7 @@ shTestHeroku() {
 shTestScriptJs() {
   # this function will test the js script $FILE in README.md
   local FILE=$1 || return $?
-  shBuildPrint $MODE_BUILD "testing $FILE ..." || return $?
+  shBuildPrint $MODE_BUILD "testing $FILE" || return $?
   if [ ! "$MODE_OFFLINE" ]
   then
     # init /tmp/app
@@ -576,7 +573,7 @@ shTestScriptSh() {
   # this function will test the shell script $FILE in README.md
   local FILE=$1 || return $?
   local FILE_BASENAME=$(node -e "console.log(require('path').basename('$FILE'));") || return $?
-  shBuildPrint $MODE_BUILD "testing $FILE ..." || return $?
+  shBuildPrint $MODE_BUILD "testing $FILE" || return $?
   if [ "$MODE_BUILD" != "build" ]
   then
     # init /tmp/app
@@ -639,30 +636,30 @@ shTravisEncryptYml() {
     printf "# non-existent file $FILE\n" || return $?
     return 1
   fi
-  printf "# sourcing file $FILE ...\n" || return $?
+  printf "# sourcing file $FILE\n" || return $?
   . $FILE || return $?
   if [ ! "$AES_256_KEY" ]
   then
-    printf "# no \$AES_256_KEY detected in env - creating new AES_256_KEY ...\n" || return $?
+    printf "# no \$AES_256_KEY detected in env - creating new AES_256_KEY\n" || return $?
     AES_256_KEY=$(openssl rand -hex 32) || return $?
-    printf "# a new \$AES_256_KEY for encrypting data has been created.\n" || return $?
+    printf "# created new \$AES_256_KEY for encrypting data.\n" || return $?
     printf "# you may want to copy the following to your .bashrc script\n" || return $?
     printf "# so you can run builds locally:\n" || return $?
     printf "export AES_256_KEY=$AES_256_KEY\n\n" || return $?
   fi
-  printf "# travis-encrypting \$AES_256_KEY for $GITHUB_REPO ...\n" || return $?
+  printf "# travis-encrypting \$AES_256_KEY for $GITHUB_REPO\n" || return $?
   AES_256_KEY_ENCRYPTED=$(shTravisEncrypt $GITHUB_REPO \$AES_256_KEY=$AES_256_KEY) || return $?
   # return non-zero exit-code if $AES_256_KEY_ENCRYPTED is empty string
   if [ ! "$AES_256_KEY_ENCRYPTED" ]
   then
     return 1
   fi
-  printf "# updating .travis.yml with encrypted key ...\n" || return $?
+  printf "# updating .travis.yml with encrypted key\n" || return $?
   perl -i -pe\
     "s%(- secure: )(.*)( # AES_256_KEY$)%\$1$AES_256_KEY_ENCRYPTED\$3%"\
     .travis.yml || return $?
 
-  printf "# updating .travis.yml with encrypted script ...\n" || return $?
+  printf "# updating .travis.yml with encrypted script\n" || return $?
   perl -i -pe\
     "s%(- AES_ENCRYPTED_SH: )(.*)( # AES_ENCRYPTED_SH$)%\$1$(shAesEncrypt < $FILE)\$3%"\
     .travis.yml || return $?

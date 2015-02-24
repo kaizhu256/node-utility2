@@ -628,6 +628,8 @@
               )
           );
           // create test-report.html
+          console.log('creating test-report ' +
+            exports.envDict.npm_config_dir_build + '/test-report.html');
           exports.fs.writeFileSync(
             exports.envDict.npm_config_dir_build + '/test-report.html',
             testReportHtml
@@ -1535,8 +1537,8 @@
         // screen-capture webpage
         case 'screenCapture':
           // save screen-capture
+          console.log('creating screen-capture file://' + exports.fileScreenCapture);
           exports.page.render(exports.fileScreenCapture);
-          console.log('created file://' + exports.fileScreenCapture);
           break;
         // handle test-report callback
         case 'testUrl':
