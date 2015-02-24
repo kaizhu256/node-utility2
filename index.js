@@ -1018,7 +1018,8 @@
         this function will parse options.file and cache it to exports.fileCacheDict
       */
       // read options.data from options.file and comment out shebang
-      options.data = exports.fs.readFileSync(options.file, 'utf8').replace((/^#!/), '//#!');
+      options.data = options.data ||
+        exports.fs.readFileSync(options.file, 'utf8').replace((/^#!/), '//#!');
       // if coverage-mode is enabled, then cover options.data
       if (exports.global.__coverage__ &&
           options.coverage && options.coverage === exports.envDict.npm_package_name) {
@@ -1745,262 +1746,253 @@
 
   // init fileCacheDict
   exports.fileCacheDict = {
-/* jslint-ignore-begin */
-'/test/test-report.html.template': { data: '\
-<style>\n\
-.testReportPlatformDiv {\n\
-  border: 1px solid;\n\
-  border-radius: 5px;\n\
-  font-family: Helvetical Neue, Helvetica, Arial, sans-serif;\n\
-  margin-top: 20px;\n\
-  padding: 0 10px 10px 10px;\n\
-  text-align: left;\n\
-}\n\
-.testReportPlatformPre {\n\
-  background-color: #fdd;\n\
-  border: 1px;\n\
-  border-radius: 0 0 5px 5px;\n\
-  border-top-style: solid;\n\
-  margin-bottom: 0;\n\
-  padding: 10px;\n\
-}\n\
-.testReportPlatformPreHidden {\n\
-  display: none;\n\
-}\n\
-.testReportPlatformScreenCaptureA {\n\
-  border: 1px solid;\n\
-  border-color: #000;\n\
-  display:block;\n\
-  margin: 5px 0 5px 0;\n\
-  max-height:256px;\n\
-  max-width:320px;\n\
-  overflow:hidden;\n\
-}\n\
-.testReportPlatformScreenCaptureImg {\n\
-  max-width:320px;\n\
-}\n\
-.testReportPlatformSpan {\n\
-  display: inline-block;\n\
-  width: 8em;\n\
-}\n\
-.testReportPlatformTable {\n\
-  border: 1px;\n\
-  border-top-style: solid;\n\
-  text-align: left;\n\
-  width: 100%;\n\
-}\n\
-.testReportSummaryDiv {\n\
-  background-color: #bfb;\n\
-}\n\
-.testReportSummarySpan {\n\
-  display: inline-block;\n\
-  width: 6.5em;\n\
-}\n\
-tr:nth-child(odd).testReportPlatformTr {\n\
-  background-color: #bfb;\n\
-}\n\
-.testReportTestFailed {\n\
-  background-color: #f99;\n\
-}\n\
-.testReportTestPending {\n\
-  background-color: #99f;\n\
-}\n\
-</style>\n\
-<div class="testReportPlatformDiv testReportSummaryDiv">\n\
-<h2>{{envDict.npm_package_name}} test-report summary</h2>\n\
-<h4>\n\
-  <span class="testReportSummarySpan">version</span>- {{envDict.npm_package_version}}<br>\n\
-  <span class="testReportSummarySpan">test date</span>- {{date}}<br>\n\
-  <span class="testReportSummarySpan">commit info</span>- {{CI_COMMIT_INFO}}<br>\n\
-</h4>\n\
-<table class="testReportPlatformTable">\n\
-<thead><tr>\n\
-  <th>total time elapsed</th>\n\
-  <th>total tests failed</th>\n\
-  <th>total tests passed</th>\n\
-  <th>total tests pending</th>\n\
-</tr></thead>\n\
-<tbody><tr>\n\
-  <td>{{timeElapsed}} ms</td>\n\
-  <td class="{{testsFailedClass}}">{{testsFailed}}</td>\n\
-  <td>{{testsPassed}}</td>\n\
-  <td>{{testsPending}}</td>\n\
-</tr></tbody>\n\
-</table>\n\
-</div>\n\
-{{#testPlatformList}}\n\
-<div class="testReportPlatformDiv">\n\
-<h4>\n\
-  {{testPlatformNumber}}. {{name}}<br>\n\
-  {{screenCapture}}\n\
-  <span class="testReportPlatformSpan">time elapsed</span>- {{timeElapsed}} ms<br>\n\
-  <span class="testReportPlatformSpan">tests failed</span>- {{testsFailed}}<br>\n\
-  <span class="testReportPlatformSpan">tests passed</span>- {{testsPassed}}<br>\n\
-  <span class="testReportPlatformSpan">tests pending</span>- {{testsPending}}<br>\n\
-</h4>\n\
-<table class="testReportPlatformTable">\n\
-<thead><tr>\n\
-  <th>#</th>\n\
-  <th>time elapsed</th>\n\
-  <th>status</th>\n\
-  <th>test case</th>\n\
-</tr></thead>\n\
-<tbody>\n\
-{{#testCaseList}}\n\
-<tr class="testReportPlatformTr">\n\
-  <td>{{testCaseNumber}}</td>\n\
-  <td>{{timeElapsed}} ms</td>\n\
-  <td class="{{testReportTestStatusClass}}">{{status}}</td>\n\
-  <td>{{name}}</td>\n\
-</tr>\n\
-{{/testCaseList}}\n\
-</tbody>\n\
-</table>\n\
-<pre class="{{testReportPlatformPreClass}}">\n\
-{{#errorStackList}}\n\
-{{errorStack}}\n\
-{{/errorStackList}}\n\
-</pre>\n\
-</div>\n\
-{{/testPlatformList}}\n\
-' },
+    '/test/test-report.html.template': { data: String() +
+      '<style>\n' +
+      '.testReportPlatformDiv {\n' +
+        'border: 1px solid;\n' +
+        'border-radius: 5px;\n' +
+        'font-family: Helvetical Neue, Helvetica, Arial, sans-serif;\n' +
+        'margin-top: 20px;\n' +
+        'padding: 0 10px 10px 10px;\n' +
+        'text-align: left;\n' +
+      '}\n' +
+      '.testReportPlatformPre {\n' +
+        'background-color: #fdd;\n' +
+        'border: 1px;\n' +
+        'border-radius: 0 0 5px 5px;\n' +
+        'border-top-style: solid;\n' +
+        'margin-bottom: 0;\n' +
+        'padding: 10px;\n' +
+      '}\n' +
+      '.testReportPlatformPreHidden {\n' +
+        'display: none;\n' +
+      '}\n' +
+      '.testReportPlatformScreenCaptureA {\n' +
+        'border: 1px solid;\n' +
+        'border-color: #000;\n' +
+        'display:block;\n' +
+        'margin: 5px 0 5px 0;\n' +
+        'max-height:256px;\n' +
+        'max-width:320px;\n' +
+        'overflow:hidden;\n' +
+      '}\n' +
+      '.testReportPlatformScreenCaptureImg {\n' +
+        'max-width:320px;\n' +
+      '}\n' +
+      '.testReportPlatformSpan {\n' +
+        'display: inline-block;\n' +
+        'width: 8em;\n' +
+      '}\n' +
+      '.testReportPlatformTable {\n' +
+        'border: 1px;\n' +
+        'border-top-style: solid;\n' +
+        'text-align: left;\n' +
+        'width: 100%;\n' +
+      '}\n' +
+      '.testReportSummaryDiv {\n' +
+        'background-color: #bfb;\n' +
+      '}\n' +
+      '.testReportSummarySpan {\n' +
+        'display: inline-block;\n' +
+        'width: 6.5em;\n' +
+      '}\n' +
+      'tr:nth-child(odd).testReportPlatformTr {\n' +
+        'background-color: #bfb;\n' +
+      '}\n' +
+      '.testReportTestFailed {\n' +
+        'background-color: #f99;\n' +
+      '}\n' +
+      '.testReportTestPending {\n' +
+        'background-color: #99f;\n' +
+      '}\n' +
+      '</style>\n' +
+      '<div class="testReportPlatformDiv testReportSummaryDiv">\n' +
+      '<h2>{{envDict.npm_package_name}} test-report summary</h2>\n' +
+      '<h4>\n' +
+        '<span class="testReportSummarySpan">version</span>- {{envDict.npm_package_version}}<br>\n' +
+        '<span class="testReportSummarySpan">test date</span>- {{date}}<br>\n' +
+        '<span class="testReportSummarySpan">commit info</span>- {{CI_COMMIT_INFO}}<br>\n' +
+      '</h4>\n' +
+      '<table class="testReportPlatformTable">\n' +
+      '<thead><tr>\n' +
+        '<th>total time elapsed</th>\n' +
+        '<th>total tests failed</th>\n' +
+        '<th>total tests passed</th>\n' +
+        '<th>total tests pending</th>\n' +
+      '</tr></thead>\n' +
+      '<tbody><tr>\n' +
+        '<td>{{timeElapsed}} ms</td>\n' +
+        '<td class="{{testsFailedClass}}">{{testsFailed}}</td>\n' +
+        '<td>{{testsPassed}}</td>\n' +
+        '<td>{{testsPending}}</td>\n' +
+      '</tr></tbody>\n' +
+      '</table>\n' +
+      '</div>\n' +
+      '{{#testPlatformList}}\n' +
+      '<div class="testReportPlatformDiv">\n' +
+      '<h4>\n' +
+        '{{testPlatformNumber}}. {{name}}<br>\n' +
+        '{{screenCapture}}\n' +
+        '<span class="testReportPlatformSpan">time elapsed</span>- {{timeElapsed}} ms<br>\n' +
+        '<span class="testReportPlatformSpan">tests failed</span>- {{testsFailed}}<br>\n' +
+        '<span class="testReportPlatformSpan">tests passed</span>- {{testsPassed}}<br>\n' +
+        '<span class="testReportPlatformSpan">tests pending</span>- {{testsPending}}<br>\n' +
+      '</h4>\n' +
+      '<table class="testReportPlatformTable">\n' +
+      '<thead><tr>\n' +
+        '<th>#</th>\n' +
+        '<th>time elapsed</th>\n' +
+        '<th>status</th>\n' +
+        '<th>test case</th>\n' +
+      '</tr></thead>\n' +
+      '<tbody>\n' +
+      '{{#testCaseList}}\n' +
+      '<tr class="testReportPlatformTr">\n' +
+        '<td>{{testCaseNumber}}</td>\n' +
+        '<td>{{timeElapsed}} ms</td>\n' +
+        '<td class="{{testReportTestStatusClass}}">{{status}}</td>\n' +
+        '<td>{{name}}</td>\n' +
+      '</tr>\n' +
+      '{{/testCaseList}}\n' +
+      '</tbody>\n' +
+      '</table>\n' +
+      '<pre class="{{testReportPlatformPreClass}}">\n' +
+      '{{#errorStackList}}\n' +
+      '{{errorStack}}\n' +
+      '{{/errorStackList}}\n' +
+      '</pre>\n' +
+      '</div>\n' +
+      '{{/testPlatformList}}\n' +
+      String() },
 
 
 
-// https://img.shields.io/badge/last_build-0000_00_00_00_00_00_UTC_--_master_--_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-0077ff.svg?style=flat
-'/build/build.badge.svg': { data: '\
-<svg xmlns="http://www.w3.org/2000/svg" width="563" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="563" height="20" fill="#555"/><rect rx="0" x="61" width="502" height="20" fill="#07f"/><path fill="#07f" d="M61 0h4v20h-4z"/><rect rx="0" width="563" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="31.5" y="15" fill="#010101" fill-opacity=".3">last build</text><text x="31.5" y="14">last build</text><text x="311" y="15" fill="#010101" fill-opacity=".3">0000 00 00 00 00 00 UTC - master - aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</text><text x="311" y="14">0000 00 00 00 00 00 UTC - master - aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</text></g></svg>\n\
-' },
+    // https://img.shields.io/badge/last_build-0000_00_00_00_00_00_UTC_--_master_--_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-0077ff.svg?style=flat
+    '/build/build.badge.svg': { data: '<svg xmlns="http://www.w3.org/2000/svg" width="563" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="563" height="20" fill="#555"/><rect rx="0" x="61" width="502" height="20" fill="#07f"/><path fill="#07f" d="M61 0h4v20h-4z"/><rect rx="0" width="563" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="31.5" y="15" fill="#010101" fill-opacity=".3">last build</text><text x="31.5" y="14">last build</text><text x="311" y="15" fill="#010101" fill-opacity=".3">0000 00 00 00 00 00 UTC - master - aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</text><text x="311" y="14">0000 00 00 00 00 00 UTC - master - aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</text></g></svg>' },
 
 
 
-// https://img.shields.io/badge/coverage-100.0%-00dd00.svg?style=flat
-'/build/coverage.badge.svg': { data: '\
-<svg xmlns="http://www.w3.org/2000/svg" width="117" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="117" height="20" fill="#555"/><rect rx="0" x="63" width="54" height="20" fill="#0d0"/><path fill="#0d0" d="M63 0h4v20h-4z"/><rect rx="0" width="117" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="32.5" y="15" fill="#010101" fill-opacity=".3">coverage</text><text x="32.5" y="14">coverage</text><text x="89" y="15" fill="#010101" fill-opacity=".3">100.0%</text><text x="89" y="14">100.0%</text></g></svg>\n\
-' },
+    // https://img.shields.io/badge/coverage-100.0%-00dd00.svg?style=flat
+    '/build/coverage.badge.svg': { data: '<svg xmlns="http://www.w3.org/2000/svg" width="117" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="117" height="20" fill="#555"/><rect rx="0" x="63" width="54" height="20" fill="#0d0"/><path fill="#0d0" d="M63 0h4v20h-4z"/><rect rx="0" width="117" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="32.5" y="15" fill="#010101" fill-opacity=".3">coverage</text><text x="32.5" y="14">coverage</text><text x="89" y="15" fill="#010101" fill-opacity=".3">100.0%</text><text x="89" y="14">100.0%</text></g></svg>' },
 
 
 
-// https://img.shields.io/badge/tests_failed-999-dd0000.svg?style=flat
-'/build/test-report.badge.svg': { data: '\
-<svg xmlns="http://www.w3.org/2000/svg" width="103" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="103" height="20" fill="#555"/><rect rx="0" x="72" width="31" height="20" fill="#d00"/><path fill="#d00" d="M72 0h4v20h-4z"/><rect rx="0" width="103" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="37" y="15" fill="#010101" fill-opacity=".3">tests failed</text><text x="37" y="14">tests failed</text><text x="86.5" y="15" fill="#010101" fill-opacity=".3">999</text><text x="86.5" y="14">999</text></g></svg>\n\
-' },
+    // https://img.shields.io/badge/tests_failed-999-dd0000.svg?style=flat
+    '/build/test-report.badge.svg': { data: '<svg xmlns="http://www.w3.org/2000/svg" width="103" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="103" height="20" fill="#555"/><rect rx="0" x="72" width="31" height="20" fill="#d00"/><path fill="#d00" d="M72 0h4v20h-4z"/><rect rx="0" width="103" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="37" y="15" fill="#010101" fill-opacity=".3">tests failed</text><text x="37" y="14">tests failed</text><text x="86.5" y="15" fill="#010101" fill-opacity=".3">999</text><text x="86.5" y="14">999</text></g></svg>' },
 
 
 
-// https://img.shields.io/badge/tests_failed-999-dd0000.svg?style=flat
-'/assets/utility2.css': { data: '\
-/*csslint\n\
-  box-model: false\n\
-*/\n\
-.ajaxProgressBarDiv {\n\
-  animation: 2s linear 0s normal none infinite ajaxProgressBarDivAnimation;\n\
-  -o-animation: 2s linear 0s normal none infinite ajaxProgressBarDivAnimation;\n\
-  -moz-animation: 2s linear 0s normal none infinite ajaxProgressBarDivAnimation;\n\
-  -webkit-animation: 2s linear 0s normal none infinite ajaxProgressBarDivAnimation;\n\
-  background-image: linear-gradient(\n\
-    45deg,rgba(255,255,255,.25) 25%,\n\
-    transparent 25%,\n\
-    transparent 50%,\n\
-    rgba(255,255,255,.25) 50%,\n\
-    rgba(255,255,255,.25) 75%,\n\
-    transparent 75%,\n\
-    transparent\n\
-  );\n\
-  background-size: 40px 40px;\n\
-  color: #fff;\n\
-  font-family: Helvetical Neue, Helvetica, Arial, sans-serif;\n\
-  font-size: 12px;\n\
-  padding: 2px 0 2px 0;\n\
-  text-align: center;\n\
-  transition: width .5s ease;\n\
-  width: 25%;\n\
-}\n\
-.ajaxProgressBarDivError {\n\
-  background-color: #d33;\n\
-}\n\
-.ajaxProgressBarDivLoading {\n\
-  background-color: #37b;\n\
-}\n\
-.ajaxProgressBarDivSuccess {\n\
-  background-color: #3b3;\n\
-}\n\
-.ajaxProgressDiv {\n\
-  background-color: #fff;\n\
-  border: 1px solid;\n\
-  display: none;\n\
-  left: 50%;\n\
-  margin: 0 0 0 -50px;\n\
-  padding: 5px 5px 5px 5px;\n\
-  position: fixed;\n\
-  top: 49%;\n\
-  width: 100px;\n\
-  z-index: 9999;\n\
-}\n\
-@keyframes ajaxProgressBarDivAnimation {\n\
-  from { background-position: 40px 0; }\n\
-  to { background-position: 0 0; }\n\
-}\n\
-@-o-keyframes ajaxProgressBarDivAnimation {\n\
-  from { background-position: 40px 0; }\n\
-  to { background-position: 0 0; }\n\
-}\n\
-@-webkit-keyframes ajaxProgressBarDivAnimation {\n\
-  from { background-position: 40px 0; }\n\
-  to { background-position: 0 0; }\n\
-}\n\
-' },
+    '/assets/utility2.css': { data: String() +
+      '/*csslint\n' +
+        'box-model: false\n' +
+      '*/\n' +
+      '.ajaxProgressBarDiv {\n' +
+        'animation: 2s linear 0s normal none infinite ajaxProgressBarDivAnimation;\n' +
+        '-o-animation: 2s linear 0s normal none infinite ajaxProgressBarDivAnimation;\n' +
+        '-moz-animation: 2s linear 0s normal none infinite ajaxProgressBarDivAnimation;\n' +
+        '-webkit-animation: 2s linear 0s normal none infinite ajaxProgressBarDivAnimation;\n' +
+        'background-image: linear-gradient(\n' +
+          '45deg,rgba(255,255,255,.25) 25%,\n' +
+          'transparent 25%,\n' +
+          'transparent 50%,\n' +
+          'rgba(255,255,255,.25) 50%,\n' +
+          'rgba(255,255,255,.25) 75%,\n' +
+          'transparent 75%,\n' +
+          'transparent\n' +
+        ');\n' +
+        'background-size: 40px 40px;\n' +
+        'color: #fff;\n' +
+        'font-family: Helvetical Neue, Helvetica, Arial, sans-serif;\n' +
+        'font-size: 12px;\n' +
+        'padding: 2px 0 2px 0;\n' +
+        'text-align: center;\n' +
+        'transition: width .5s ease;\n' +
+        'width: 25%;\n' +
+      '}\n' +
+      '.ajaxProgressBarDivError {\n' +
+        'background-color: #d33;\n' +
+      '}\n' +
+      '.ajaxProgressBarDivLoading {\n' +
+        'background-color: #37b;\n' +
+      '}\n' +
+      '.ajaxProgressBarDivSuccess {\n' +
+        'background-color: #3b3;\n' +
+      '}\n' +
+      '.ajaxProgressDiv {\n' +
+        'background-color: #fff;\n' +
+        'border: 1px solid;\n' +
+        'display: none;\n' +
+        'left: 50%;\n' +
+        'margin: 0 0 0 -50px;\n' +
+        'padding: 5px 5px 5px 5px;\n' +
+        'position: fixed;\n' +
+        'top: 49%;\n' +
+        'width: 100px;\n' +
+        'z-index: 9999;\n' +
+      '}\n' +
+      '@keyframes ajaxProgressBarDivAnimation {\n' +
+        'from { background-position: 40px 0; }\n' +
+        'to { background-position: 0 0; }\n' +
+      '}\n' +
+      '@-o-keyframes ajaxProgressBarDivAnimation {\n' +
+        'from { background-position: 40px 0; }\n' +
+        'to { background-position: 0 0; }\n' +
+      '}\n' +
+      '@-webkit-keyframes ajaxProgressBarDivAnimation {\n' +
+        'from { background-position: 40px 0; }\n' +
+        'to { background-position: 0 0; }\n' +
+      '}\n' +
+      String() },
 
 
 
-// http://validator.w3.org/check?uri=https%3A%2F%2Fhrku01-utility2-beta.herokuapp.com
-'/test/test.html': { data: '\
-<!DOCTYPE html>\n\
-<html>\n\
-<head>\n\
-  <meta charset="UTF-8">\n\
-  <title>{{envDict.npm_package_name}} [{{envDict.npm_package_version}}]</title>\n\
-  <link rel="stylesheet" href="/assets/utility2.css">\n\
-  <style>\n\
-    body {\n\
-      background-color: #fff;\n\
-      font-family: Helvetical Neue, Helvetica, Arial, sans-serif;\n\
-    }\n\
-  </style>\n\
-</head>\n\
-<body>\n\
-  <!-- ajax-progress begin -->\n\
-  <div class="ajaxProgressDiv" style="display: none;">\n\
-    <div class="ajaxProgressBarDiv ajaxProgressBarDivLoading">loading</div>\n\
-  </div>\n\
-  <!-- ajax-progress end -->\n\
-  <!-- main-app begin -->\n\
-  <div class="mainAppDiv">\n\
-    <h1>{{envDict.npm_package_name}} [{{envDict.npm_package_version}}]</h1>\n\
-    <h3>{{envDict.npm_package_description}}</h3>\n\
-    <div>\n\
-      <button\n\
-        onclick="window.utility2.modeTest=1; window.utility2.testRun(window.local);"\n\
-      >run test</button>\n\
-    </div>\n\
-  </div>\n\
-  <!-- main-app end -->\n\
-  <!-- test-report begin -->\n\
-  <div class="testReportDiv"></div>\n\
-  <!-- test-report end -->\n\
-  <!-- script begin -->\n\
-  <script src="/assets/utility2.js"></script>\n\
-  <script>window.utility2.envDict = {\n\
-    npm_package_description: "{{envDict.npm_package_description}}",\n\
-    npm_package_name: "{{envDict.npm_package_name}}",\n\
-    npm_package_version: "{{envDict.npm_package_version}}"\n\
-  }</script>\n\
-  <script src="/test/test.js"></script>\n\
-  <!-- script end -->\n\
-</body>\n\
-</html>\n\
-' }
-/* jslint-ignore-end */
+    // http://validator.w3.org/check?uri=https%3A%2F%2Fhrku01-utility2-beta.herokuapp.com
+    '/test/test.html': { data: String() +
+      '<!DOCTYPE html>\n' +
+      '<html>\n' +
+      '<head>\n' +
+        '<meta charset="UTF-8">\n' +
+        '<title>{{envDict.npm_package_name}} [{{envDict.npm_package_version}}]</title>\n' +
+        '<link rel="stylesheet" href="/assets/utility2.css">\n' +
+        '<style>\n' +
+          'body {\n' +
+            'background-color: #fff;\n' +
+            'font-family: Helvetical Neue, Helvetica, Arial, sans-serif;\n' +
+          '}\n' +
+        '</style>\n' +
+      '</head>\n' +
+      '<body>\n' +
+        '<!-- ajax-progress begin -->\n' +
+        '<div class="ajaxProgressDiv" style="display: none;">\n' +
+          '<div class="ajaxProgressBarDiv ajaxProgressBarDivLoading">loading</div>\n' +
+        '</div>\n' +
+        '<!-- ajax-progress end -->\n' +
+        '<!-- main-app begin -->\n' +
+        '<div class="mainAppDiv">\n' +
+          '<h1>{{envDict.npm_package_name}} [{{envDict.npm_package_version}}]</h1>\n' +
+          '<h3>{{envDict.npm_package_description}}</h3>\n' +
+          '<div>\n' +
+            '<button\n' +
+              'onclick="window.utility2.modeTest=1; window.utility2.testRun(window.local);"\n' +
+            '>run test</button>\n' +
+          '</div>\n' +
+        '</div>\n' +
+        '<!-- main-app end -->\n' +
+        '<!-- test-report begin -->\n' +
+        '<div class="testReportDiv"></div>\n' +
+        '<!-- test-report end -->\n' +
+        '<!-- script begin -->\n' +
+        '<script src="/assets/utility2.js"></script>\n' +
+        '<script>window.utility2.envDict = {\n' +
+          'npm_package_description: "{{envDict.npm_package_description}}",\n' +
+          'npm_package_name: "{{envDict.npm_package_name}}",\n' +
+          'npm_package_version: "{{envDict.npm_package_version}}"\n' +
+        '}</script>\n' +
+        '<script src="/test/test.js"></script>\n' +
+        '<!-- script end -->\n' +
+      '</body>\n' +
+      '</html>\n' +
+      String() }
   };
   return exports;
 }(this))));
