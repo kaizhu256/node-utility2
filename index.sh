@@ -32,12 +32,12 @@ shBuild() {
 
 shBuildGithubUpload() {
   # this function will upload build-artifacts to github
-  shBuildPrint githubUpload\
-    "uploading build-artifacts to git@github.com:$GITHUB_REPO.git ..." || return $?
   if [ ! "$CI_BRANCH" ] || [ ! "$GIT_SSH_KEY" ] || [ "$MODE_OFFLINE" ]
   then
     return
   fi
+  shBuildPrint githubUpload\
+    "uploading build-artifacts to git@github.com:$GITHUB_REPO.git ..." || return $?
   # clone gh-pages branch
   rm -fr $npm_config_dir_tmp/gh-pages || return $?
   git clone git@github.com:$GITHUB_REPO.git\
@@ -155,7 +155,7 @@ shGitSquashShift() {
 }
 
 shGrep() {
-  # this function will recursively grep the regex $1 in the current directory
+  # this function will recursively grep the regex $1 in the current dir
   local FILE_FILTER="/\\.\\" || return $?
   FILE_FILTER="$FILE_FILTER|.*\\b\\(\\.\\d\\" || return $?
   FILE_FILTER="$FILE_FILTER|archive\\" || return $?

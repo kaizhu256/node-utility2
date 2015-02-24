@@ -201,19 +201,15 @@ lightweight library that runs phantomjs browser-tests with browser-coverage (via
 # internal build-script
 ```
 # build.sh
-# this shell script runs the build process for this package
+# this shell script will run the build process for this package
 shBuild() {
-  # init $TRAVIS env
-  if [ "$TRAVIS" ]
-  then
-    export HEROKU_REPO=hrku01-utility2-$CI_BRANCH || return $?
-    export TEST_URL="https://hrku01-utility2-$CI_BRANCH.herokuapp.com" ||\
-      return $?
-    export TEST_URL="$TEST_URL?modeTest=phantom&_testSecret={{_testSecret}}"\
-      || return $?
-    export npm_config_mode_slimerjs=1 || return $?
-  fi
   # init env
+  export HEROKU_REPO=hrku01-utility2-$CI_BRANCH || return $?
+  export TEST_URL="https://hrku01-utility2-$CI_BRANCH.herokuapp.com" ||\
+    return $?
+  export TEST_URL="$TEST_URL?modeTest=phantom&_testSecret={{_testSecret}}" ||\
+    return $?
+  export npm_config_mode_slimerjs=1 || return $?
   . ./index.sh && shInit || return $?
   # run npm test on published package
   shRun shNpmTestPublished || return $?
@@ -227,13 +223,10 @@ shBuild() {
   cp /tmp/app/.tmp/build/screen-capture.*.png $npm_config_dir_build || return $?
   # run npm test
   MODE_BUILD=npmTest shRunScreenCapture npm test || return $?
-  if [ "$TRAVIS" ]
-  then
-    # deploy and test on heroku
-    shRun shTestHeroku || return $?
-    # if number of commits > 1024, then squash older commits
-    shRun shGitBackupAndSquashAndPush 1024 > /dev/null || return $?
-  fi
+  # deploy and test on heroku
+  shRun shTestHeroku || return $?
+  # if number of commits > 1024, then squash older commits
+  shRun shGitBackupAndSquashAndPush 1024 > /dev/null || return $?
 }
 # run build
 shBuild
@@ -262,16 +255,13 @@ shBuildCleanup() {
   fi
 }
 shBuildCleanup || exit $?
-# upload build-artifacts to github
-if [ "$TRAVIS" ]
-then
-  shBuildGithubUploadCleanup() {
-    # this function will cleanup build-artifacts in local gh-pages repo
-    return
-  }
-  # if number of commits > 16, then squash older commits
-  COMMIT_LIMIT=16 shRun shBuildGithubUpload || exit $?
-fi
+shBuildGithubUploadCleanup() {
+  # this function will cleanup build-artifacts in local gh-pages repo
+  return
+}
+# upload build-artifacts to github,
+# and if number of commits > 16, then squash older commits
+COMMIT_LIMIT=16 shRun shBuildGithubUpload || exit $?
 # exit with $EXIT_CODE
 exit $EXIT_CODE
 ```

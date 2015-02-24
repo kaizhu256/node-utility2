@@ -537,7 +537,8 @@
       // if in browser mode, visually refresh test progress until it finishes
       if (exports.modeJs === 'browser') {
         // init _testReportDiv element
-        exports._testReportDiv = document.querySelector('.testReportDiv') || {};
+        exports._testReportDiv = document.querySelector('.testReportDiv') || { style: {} };
+        exports._testReportDiv.style.display = 'block';
         exports._testReportDiv.innerHTML = exports.testMerge(exports.testReport, {});
         // update test-report status every 1000 ms until finished
         timerInterval = setInterval(function () {
@@ -1222,7 +1223,7 @@
               exports._replServer.evalDefault('\n', context, file, onError);
             });
           return;
-        // syntax sugar to grep current directory
+        // syntax sugar to grep current dir
         case 'grep':
           // run async shell command
           exports.child_process
@@ -1962,26 +1963,12 @@
         '</style>\n' +
       '</head>\n' +
       '<body>\n' +
-        '<!-- ajax-progress begin -->\n' +
         '<div class="ajaxProgressDiv" style="display: none;">\n' +
           '<div class="ajaxProgressBarDiv ajaxProgressBarDivLoading">loading</div>\n' +
         '</div>\n' +
-        '<!-- ajax-progress end -->\n' +
-        '<!-- main-app begin -->\n' +
-        '<div class="mainAppDiv">\n' +
-          '<h1>{{envDict.npm_package_name}} [{{envDict.npm_package_version}}]</h1>\n' +
-          '<h3>{{envDict.npm_package_description}}</h3>\n' +
-          '<div>\n' +
-            '<button\n' +
-              'onclick="window.utility2.modeTest=1; window.utility2.testRun(window.local);"\n' +
-            '>run test</button>\n' +
-          '</div>\n' +
-        '</div>\n' +
-        '<!-- main-app end -->\n' +
-        '<!-- test-report begin -->\n' +
+        '<h1>{{envDict.npm_package_name}} [{{envDict.npm_package_version}}]</h1>\n' +
+        '<h3>{{envDict.npm_package_description}}</h3>\n' +
         '<div class="testReportDiv"></div>\n' +
-        '<!-- test-report end -->\n' +
-        '<!-- script begin -->\n' +
         '<script src="/assets/utility2.js"></script>\n' +
         '<script>window.utility2.envDict = {\n' +
           'npm_package_description: "{{envDict.npm_package_description}}",\n' +
@@ -1989,7 +1976,6 @@
           'npm_package_version: "{{envDict.npm_package_version}}"\n' +
         '}</script>\n' +
         '<script src="/test/test.js"></script>\n' +
-        '<!-- script end -->\n' +
       '</body>\n' +
       '</html>\n' +
       String() }

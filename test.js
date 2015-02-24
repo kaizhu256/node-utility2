@@ -706,7 +706,7 @@
           break;
         // test script-error handling behavior
         case '/test/script-error.html':
-          response.end('<script>syntax error</script>');
+          response.end('<script>syntax-error!</script>');
           break;
         // test standalone utility2.js library handling behavior
         case '/test/utility2.html':
