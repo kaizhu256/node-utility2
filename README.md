@@ -27,7 +27,7 @@ lightweight library that runs phantomjs browser-tests with browser-coverage (via
 /*
   example.js
 
-  this shared browser / server script will run phantomjs browser-tests
+  this shared browser / node script will run phantomjs browser-tests
   on itself with coverage for both the browser and server
 
   instruction to programmatically test browser and server with coverage
@@ -227,9 +227,9 @@ shBuild() {
   cp /tmp/app/.tmp/build/screen-capture.*.png $npm_config_dir_build || return $?
   # run npm test
   MODE_BUILD=npmTest shRunScreenCapture npm test || return $?
-  # deploy to heroku
   if [ "$TRAVIS" ]
   then
+    # deploy and test on heroku
     shRun shTestHeroku || return $?
     # if number of commits > 1024, then squash older commits
     shRun shGitBackupAndSquashAndPush 1024 > /dev/null || return $?
