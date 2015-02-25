@@ -27,7 +27,7 @@ shBuild() {
   # init $npm_config_dir_build
   mkdir -p $npm_config_dir_build/coverage.html || return $?
   # run shell script from README.md
-  MODE_BUILD=build shTestScriptSh $npm_config_dir_tmp/build.sh || return $?
+  MODE_BUILD=build shReadmeTestSh $npm_config_dir_tmp/build.sh || return $?
 }
 
 shBuildGithubUpload() {
@@ -343,8 +343,7 @@ shNpmTest() {
 
 shNpmTestPublished() {
   # this function will run npm test on the published package
-  shBuildPrint npmTestPublished "npm testing published package $npm_package_name" ||\
-    return $?
+  shBuildPrint npmTestPublished "npm testing published package $npm_package_name" || return $?
   # init /tmp/app
   rm -fr /tmp/app /tmp/node_modules && mkdir -p /tmp/app && cd /tmp/app || return $?
   # npm install package
@@ -393,6 +392,82 @@ shPhantomTest() {
       );
       process.exit(!!error);
     });" || return $?
+}
+
+shReadmeTestJs() {
+  # this function will test the js script $FILE in README.md
+  local FILE=$1 || return $?
+  shBuildPrint $MODE_BUILD "testing $FILE" || return $?
+  if [ ! "$MODE_OFFLINE" ]
+  then
+    # init /tmp/app
+    rm -fr /tmp/app /tmp/node_modules && mkdir -p /tmp/app && cd /tmp/app || return $?
+  fi
+  # cd /tmp/app
+  cd /tmp/app || return $?
+  # read and parse js script from README.md
+  node -e "require('fs').readFileSync('$CWD/README.md', 'utf8').replace(
+    (/\n\`\`\`\n\/\*\n *$FILE\n[\S\s]+?\n\`\`\`/),
+    function (match0, index, data) {
+      // save js script to file
+      require('fs').writeFileSync(
+        '$FILE',
+        // preserve lineno
+        ('$MODE_LINENO_PRESERVE'
+          ? data.slice(0, index).replace((/.*/g), '') + '\n\n'
+          : '') + match0.slice(5, -4)
+      );
+    }
+  );" || return $?
+  # jslint $FILE
+  local SCRIPT || return $?
+  if [ ! "$npm_config_mode_no_jslint" ]
+  then
+    SCRIPT="npm install jslint-lite > /dev/null && node_modules/.bin/jslint-lite $FILE" ||\
+      return $?
+  fi
+  if [ "$MODE_OFFLINE" ]
+  then
+    SCRIPT=$(node -e "console.log('$SCRIPT'.replace('npm install', 'echo'));") || return $?
+  fi
+  eval "$SCRIPT" || :
+  # test $FILE
+  SCRIPT=$(node -e "console.log(
+    (/\n *\\$ ([\S\s]+?[^\\\\])\n/).exec(
+      require('fs').readFileSync('$FILE', 'utf8')
+    )[1].replace((/\\\\\n */g), ' ')
+  );") || return $?
+  if [ "$MODE_OFFLINE" ]
+  then
+    SCRIPT=$(node -e "console.log('$SCRIPT'.replace('npm install', 'echo'));") || return $?
+  fi
+  printf "$SCRIPT\n\n" && eval "$SCRIPT" || return $?
+}
+
+shReadmeTestSh() {
+  # this function will test the shell script $FILE in README.md
+  local FILE=$1 || return $?
+  local FILE_BASENAME=$(node -e "console.log(require('path').basename('$FILE'));") || return $?
+  shBuildPrint $MODE_BUILD "testing $FILE" || return $?
+  if [ "$MODE_BUILD" != "build" ]
+  then
+    # init /tmp/app
+    rm -fr /tmp/app /tmp/node_modules && mkdir -p /tmp/app && cd /tmp/app || return $?
+  fi
+  # read and parse script from README.md
+  node -e "require('fs').readFileSync('$CWD/README.md', 'utf8').replace(
+    (/\n\`\`\`\n# $FILE_BASENAME\n[\S\s]+?\n\`\`\`/),
+    function (match0, index, data) {
+      // save script to file
+      require('fs').writeFileSync(
+        '$FILE',
+        // preserve lineno
+        data.slice(0, index).replace((/.*/g), '') + '\n\n' + match0.slice(5, -4)
+      );
+    }
+  );" || return $?
+  # test $FILE
+  /bin/sh $FILE || return $?
 }
 
 shRun() {
@@ -517,82 +592,6 @@ shTestHeroku() {
   then
     shPhantomTest "$TEST_URL" || return $?
   fi
-}
-
-shTestScriptJs() {
-  # this function will test the js script $FILE in README.md
-  local FILE=$1 || return $?
-  shBuildPrint $MODE_BUILD "testing $FILE" || return $?
-  if [ ! "$MODE_OFFLINE" ]
-  then
-    # init /tmp/app
-    rm -fr /tmp/app /tmp/node_modules && mkdir -p /tmp/app && cd /tmp/app || return $?
-  fi
-  # cd /tmp/app
-  cd /tmp/app || return $?
-  # read and parse js script from README.md
-  node -e "require('fs').readFileSync('$CWD/README.md', 'utf8').replace(
-    (/\n\`\`\`\n\/\*\n *$FILE\n[\S\s]+?\n\`\`\`/),
-    function (match0, index, data) {
-      // save js script to file
-      require('fs').writeFileSync(
-        '$FILE',
-        // preserve lineno
-        ('$MODE_LINENO_PRESERVE'
-          ? data.slice(0, index).replace((/.*/g), '') + '\n\n'
-          : '') + match0.slice(5, -4)
-      );
-    }
-  );" || return $?
-  # jslint $FILE
-  local SCRIPT || return $?
-  if [ ! "$npm_config_mode_no_jslint" ]
-  then
-    SCRIPT="npm install jslint-lite > /dev/null && node_modules/.bin/jslint-lite $FILE" ||\
-      return $?
-  fi
-  if [ "$MODE_OFFLINE" ]
-  then
-    SCRIPT=$(node -e "console.log('$SCRIPT'.replace('npm install', 'echo'));") || return $?
-  fi
-  eval "$SCRIPT" || :
-  # test $FILE
-  SCRIPT=$(node -e "console.log(
-    (/\n *\\$ ([\S\s]+?[^\\\\])\n/).exec(
-      require('fs').readFileSync('$FILE', 'utf8')
-    )[1].replace((/\\\\\n */g), ' ')
-  );") || return $?
-  if [ "$MODE_OFFLINE" ]
-  then
-    SCRIPT=$(node -e "console.log('$SCRIPT'.replace('npm install', 'echo'));") || return $?
-  fi
-  printf "$SCRIPT\n\n" && eval "$SCRIPT" || return $?
-}
-
-shTestScriptSh() {
-  # this function will test the shell script $FILE in README.md
-  local FILE=$1 || return $?
-  local FILE_BASENAME=$(node -e "console.log(require('path').basename('$FILE'));") || return $?
-  shBuildPrint $MODE_BUILD "testing $FILE" || return $?
-  if [ "$MODE_BUILD" != "build" ]
-  then
-    # init /tmp/app
-    rm -fr /tmp/app /tmp/node_modules && mkdir -p /tmp/app && cd /tmp/app || return $?
-  fi
-  # read and parse script from README.md
-  node -e "require('fs').readFileSync('$CWD/README.md', 'utf8').replace(
-    (/\n\`\`\`\n# $FILE_BASENAME\n[\S\s]+?\n\`\`\`/),
-    function (match0, index, data) {
-      // save script to file
-      require('fs').writeFileSync(
-        '$FILE',
-        // preserve lineno
-        data.slice(0, index).replace((/.*/g), '') + '\n\n' + match0.slice(5, -4)
-      );
-    }
-  );" || return $?
-  # test $FILE
-  /bin/sh $FILE || return $?
 }
 
 shTmpAppCopy() {

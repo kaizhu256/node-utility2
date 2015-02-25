@@ -27,7 +27,8 @@
     "phantomjs",
     "slimerjs",
     "test",
-    "travis"
+    "travis",
+    "web"
   ],
   "license": "MIT",
   "name": "utility2",

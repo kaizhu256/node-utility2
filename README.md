@@ -21,14 +21,14 @@ lightweight library that runs phantomjs browser-tests with browser-coverage (via
 
 
 
-# quickstart
+# quickstart to run browser-tests with browser-coverage
 #### follow the instruction in this script
 ```
 /*
   example.js
 
   this shared browser / node script will run phantomjs browser-tests
-  on itself with coverage for both the browser and server
+  and browser-coverage on itself
 
   instruction to programmatically test browser and server with coverage
   1. save this js script as example.js
@@ -185,11 +185,14 @@ lightweight library that runs phantomjs browser-tests with browser-coverage (via
 
 
 # todo
+- split testHeroku into herokuDeploy and herokuTest
+- inline package.json into README.md and auto-create with npm test
 - create flamegraph from istanbul coverage
 - explicitly require slimerjs instead of auto-detecting it
 - auto-generate help doc from README.md
 - add server stress test using phantomjs
 - minify /assets/utility2.js in production-mode
+- none
 
 
 
@@ -215,7 +218,7 @@ shBuild() {
   shRun shNpmTestPublished || return $?
   # test example js script
   MODE_BUILD=testExampleJs\
-  shRunScreenCapture shTestScriptJs example.js || return $?
+  shRunScreenCapture shReadmeTestJs example.js || return $?
   # screen-capture example.js coverage
   MODE_BUILD=testExampleJs shRun shPhantomScreenCapture\
     /tmp/app/.tmp/build/coverage.html/app/example.js.html || :
