@@ -273,8 +273,10 @@ shBuild() {
     [ "$CI_BRANCH" = master ]
   then
     # test deployed app to heroku
-    local TEST_URL="https://hrku01-utility2-$CI_BRANCH.herokuapp.com" || return $?
-    TEST_URL="$TEST_URL?modeTest=phantom&_testSecret={{_testSecret}}" || return $?
+    local TEST_URL="https://hrku01-utility2-$CI_BRANCH.herokuapp.com" ||\
+      return $?
+    TEST_URL="$TEST_URL?modeTest=phantom&_testSecret={{_testSecret}}" ||\
+      return $?
     MODE_BUILD=herokuTest shRun shPhantomTest $TEST_URL || return $?
   fi
   # if number of commits > 1024, then squash older commits

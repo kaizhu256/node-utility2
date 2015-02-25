@@ -596,8 +596,10 @@ shHerokuDeploy() {
   git add . || return $?
   # git commit
   git commit -aqm "heroku deploy" || return $?
-  # deploy the app to heroku
+  # git push app to heroku
   git push -f git@heroku.com:$HEROKU_REPO.git HEAD:master || return $?
+  # wait 10 seconds for heroku to deploy app
+  sleep 10 || return $?
   # verify deployed app's main-page returns status-code < 400
   [ $(curl -Ls -o /dev/null -w "%{http_code}" https://www.google.com) -lt 400 ] || return $?
 }

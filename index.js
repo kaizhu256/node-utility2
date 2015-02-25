@@ -1955,14 +1955,25 @@
       '<html>\n' +
       '<head>\n' +
         '<meta charset="UTF-8">\n' +
-        '<title>{{envDict.npm_package_name}} [{{envDict.npm_package_version}}]</title>\n' +
         '<link rel="stylesheet" href="/assets/utility2.css">\n' +
         '<style>\n' +
+          '* {\n' +
+            'box-sizing: border-box;\n' +
+          '}\n' +
           'body {\n' +
             'background-color: #fff;\n' +
             'font-family: Helvetical Neue, Helvetica, Arial, sans-serif;\n' +
           '}\n' +
+          'body > div {\n' +
+            'margin-top: 20px;\n' +
+          '}\n' +
+          'textarea {\n' +
+            'font-family: monospace;\n' +
+            'height: 8em;\n' +
+            'width: 100%;\n' +
+          '}\n' +
         '</style>\n' +
+        '<title>{{envDict.npm_package_name}} [{{envDict.npm_package_version}}]</title>\n' +
       '</head>\n' +
       '<body>\n' +
         '<div class="ajaxProgressDiv" style="display: none;">\n' +
@@ -1970,6 +1981,15 @@
         '</div>\n' +
         '<h1>{{envDict.npm_package_name}} [{{envDict.npm_package_version}}]</h1>\n' +
         '<h3>{{envDict.npm_package_description}}</h3>\n' +
+        '<div class="mainApp"></div>\n' +
+        '<div>\n' +
+          '<div>edit or paste script below to eval, test, and cover</div>\n' +
+          '<div><textarea class="istanbulLiteEvalInputTextarea">if (true) {\n' +
+            'console.log("hello");\n' +
+          '} else {\n' +
+            'console.log("bye");\n' +
+          '}</textarea></div>\n' +
+        '</div>\n' +
         '<div>\n' +
           '<button\n' +
             'onclick="window.utility2.modeTest=1; window.utility2.testRun(window.local);"\n' +
