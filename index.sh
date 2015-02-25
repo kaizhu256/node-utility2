@@ -289,7 +289,9 @@ shNpmTest() {
   # init $npm_config_dir_build
   mkdir -p $npm_config_dir_build/coverage.html || return $?
   # auto-detect slimerjs
-  if [ ! "$npm_config_mode_slimerjs" ] && (slimerjs undefined > /dev/null 2>&1)
+  if [ ! "$npm_config_mode_no_slimerjs" ] &&
+    [ ! "$npm_config_mode_slimerjs" ] &&
+    (slimerjs undefined > /dev/null 2>&1)
   then
     export npm_config_mode_slimerjs=1 || return $?
   fi

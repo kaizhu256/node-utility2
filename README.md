@@ -225,14 +225,13 @@ lightweight library that runs phantomjs browser-tests with browser-coverage (via
     "start": "npm_config_mode_auto_restart=1 ./index.sh shRun node test.js",
     "test": "./index.sh shRun shReadmePackageJsonExport && npm_config_mode_auto_restart=1 npm_config_mode_auto_restart_child=1 ./index.sh shRun shNpmTest test.js"
   },
-  "version": "2015.2.24-14"
+  "version": "2015.2.25-10"
 }
 ```
 
 
 
 # todo
-- rename shBuild to shReadmeBuild
 - create flamegraph from istanbul coverage
 - explicitly require slimerjs instead of auto-detecting it
 - auto-generate help doc from README.md

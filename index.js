@@ -1970,6 +1970,11 @@
         '</div>\n' +
         '<h1>{{envDict.npm_package_name}} [{{envDict.npm_package_version}}]</h1>\n' +
         '<h3>{{envDict.npm_package_description}}</h3>\n' +
+        '<div>\n' +
+          '<button\n' +
+            'onclick="window.utility2.modeTest=1; window.utility2.testRun(window.local);"\n' +
+          '>run test</button>\n' +
+        '</div>\n' +
         '<div class="testReportDiv"></div>\n' +
         '<script src="/assets/utility2.js"></script>\n' +
         '<script>window.utility2.envDict = {\n' +
