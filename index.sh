@@ -415,7 +415,7 @@ shReadmeTestJs() {
         // preserve lineno
         ('$MODE_LINENO_PRESERVE'
           ? data.slice(0, index).replace((/.*/g), '') + '\n\n'
-          : '') + match0.slice(5, -4)
+          : '') + match0.slice(5, -3)
       );
     }
   );" || return $?
@@ -462,12 +462,24 @@ shReadmeTestSh() {
       require('fs').writeFileSync(
         '$FILE',
         // preserve lineno
-        data.slice(0, index).replace((/.*/g), '') + '\n\n' + match0.slice(5, -4)
+        data.slice(0, index).replace((/.*/g), '') + '\n\n' + match0.slice(5, -3)
       );
     }
   );" || return $?
   # test $FILE
   /bin/sh $FILE || return $?
+}
+
+shReadmePackageJsonExport() {
+  # this function will export the package.json file embedded in README.md
+  # read and parse script from README.md
+  node -e "require('fs').readFileSync('$CWD/README.md', 'utf8').replace(
+    (/\n\`\`\`\n{\n *\"_packageJson\": true,\n[\S\s]+?}\n\`\`\`/),
+    function (match0) {
+      // save script to file
+      require('fs').writeFileSync('$CWD/package.json', match0.slice(5, -3));
+    }
+  );" || return $?
 }
 
 shRun() {

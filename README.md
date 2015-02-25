@@ -184,9 +184,61 @@ lightweight library that runs phantomjs browser-tests with browser-coverage (via
 
 
 
+# package.json
+```
+{
+  "_packageJson": true,
+  "author": "kai zhu <kaizhu256@gmail.com>",
+  "bin": { "utility2" : "index.sh" },
+  "dependencies": {
+    "istanbul-lite": "2015.2.24-14",
+    "jslint-lite": "2015.2.18-10"
+  },
+  "devDependencies": {
+    "phantomjs-lite": "^2015.1.4-102"
+  },
+  "description": "lightweight library that runs phantomjs browser-tests with browser-coverage (via istanbul-lite and phantomjs-lite)",
+  "engines": { "node": "0.10" },
+  "keywords": [
+    "browser",
+    "build",
+    "ci",
+    "code",
+    "cover",
+    "coverage",
+    "csslint",
+    "istanbul",
+    "instrument",
+    "jshint",
+    "jslint",
+    "lightweight",
+    "lint",
+    "phantomjs",
+    "slimerjs",
+    "test",
+    "travis",
+    "web"
+  ],
+  "license": "MIT",
+  "name": "utility2",
+  "os": ["darwin", "linux"],
+  "repository" : {
+    "type" : "git",
+    "url" : "https://github.com/kaizhu256/node-utility2.git"
+  },
+  "scripts": {
+    "build2": "./index.sh shRun shBuild",
+    "start": "npm_config_mode_auto_restart=1 ./index.sh shRun node test.js",
+    "test": "./index.sh shRun shReadmePackageJsonExport && npm_config_mode_auto_restart=1 npm_config_mode_auto_restart_child=1 ./index.sh shRun shNpmTest test.js"
+  },
+  "version": "2015.2.24-14"
+}
+```
+
+
+
 # todo
 - split testHeroku into herokuDeploy and herokuTest
-- inline package.json into README.md and auto-create with npm test
 - create flamegraph from istanbul coverage
 - explicitly require slimerjs instead of auto-detecting it
 - auto-generate help doc from README.md
