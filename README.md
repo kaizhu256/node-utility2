@@ -17,7 +17,7 @@ lightweight library that runs phantomjs browser-tests with browser-coverage (via
 
 
 # live test-server
-[![heroku.com test-server](https://kaizhu256.github.io/node-utility2/build/screen-capture.testHeroku.slimerjs.png)](https://hrku01-utility2-beta.herokuapp.com?modeTest=1)
+[![heroku.com test-server](https://kaizhu256.github.io/node-utility2/build/screen-capture.herokuTest.slimerjs.png)](https://hrku01-utility2-beta.herokuapp.com?modeTest=1)
 
 
 
@@ -178,12 +178,6 @@ lightweight library that runs phantomjs browser-tests with browser-coverage (via
 
 
 
-# npm-dependencies
-- [istanbul-lite](https://www.npmjs.com/package/istanbul-lite)
-- [jslint-lite](https://www.npmjs.com/package/jslint-lite)
-
-
-
 # package.json
 ```
 {
@@ -238,7 +232,7 @@ lightweight library that runs phantomjs browser-tests with browser-coverage (via
 
 
 # todo
-- split testHeroku into herokuDeploy and herokuTest
+- rename shBuild to shReadmeBuild
 - create flamegraph from istanbul coverage
 - explicitly require slimerjs instead of auto-detecting it
 - auto-generate help doc from README.md
@@ -259,11 +253,6 @@ lightweight library that runs phantomjs browser-tests with browser-coverage (via
 # this shell script will run the build process for this package
 shBuild() {
   # init env
-  export HEROKU_REPO=hrku01-utility2-$CI_BRANCH || return $?
-  export TEST_URL="https://hrku01-utility2-$CI_BRANCH.herokuapp.com" ||\
-    return $?
-  export TEST_URL="$TEST_URL?modeTest=phantom&_testSecret={{_testSecret}}" ||\
-    return $?
   export npm_config_mode_slimerjs=1 || return $?
   . ./index.sh && shInit || return $?
   # run npm test on published package
@@ -278,8 +267,17 @@ shBuild() {
   cp /tmp/app/.tmp/build/screen-capture.*.png $npm_config_dir_build || return $?
   # run npm test
   MODE_BUILD=npmTest shRunScreenCapture npm test || return $?
-  # deploy and test on heroku
-  shRun shTestHeroku || return $?
+  # deploy app to heroku
+  shRun shHerokuDeploy hrku01-utility2-$CI_BRANCH || return $?
+  if [ "$CI_BRANCH" = alpha ] ||
+    [ "$CI_BRANCH" = beta ] ||
+    [ "$CI_BRANCH" = master ]
+  then
+    # test deployed app to heroku
+    local TEST_URL="https://hrku01-utility2-$CI_BRANCH.herokuapp.com" || return $?
+    TEST_URL="$TEST_URL?modeTest=phantom&_testSecret={{_testSecret}}" || return $?
+    MODE_BUILD=herokuTest shRun shPhantomTest $TEST_URL || return $?
+  fi
   # if number of commits > 1024, then squash older commits
   shRun shGitBackupAndSquashAndPush 1024 > /dev/null || return $?
 }

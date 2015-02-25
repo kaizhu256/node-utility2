@@ -563,12 +563,13 @@ shServerPortRandom() {
   printf $(($(hexdump -n 2 -e '/2 "%u"' /dev/urandom)|32768))
 }
 
-shTestHeroku() {
-  # this function will deploy the app to heroku and test it
-  if [ ! "$GIT_SSH_KEY" ] || [ ! "$HEROKU_REPO" ]
+shHerokuDeploy() {
+  # this function will deploy the app to $HEROKU_REPO
+  if [ ! "$GIT_SSH_KEY" ]
   then
     return
   fi
+  local HEROKU_REPO=$1 || return $?
   # init $TEST_SECRET
   export TEST_SECRET=$(openssl rand -hex 32) || return $?
   # init $HEROKU_HOSTNAME
@@ -595,15 +596,8 @@ shTestHeroku() {
   git commit -aqm "heroku deploy" || return $?
   # deploy the app to heroku
   git push -f git@heroku.com:$HEROKU_REPO.git HEAD:master || return $?
-  # save $EXIT_CODE and restore $CWD
-  shExitCodeSave $? || return $?
-  # wait 10 seconds for deployment to finish
-  sleep 10 || return $?
-  # test url with phantomjs
-  if [ "$TEST_URL" ]
-  then
-    shPhantomTest "$TEST_URL" || return $?
-  fi
+  # verify deployed app's main-page returns status-code < 400
+  [ $(curl -Ls -o /dev/null -w "%{http_code}" https://www.google.com) -lt 400 ] || return $?
 }
 
 shTmpAppCopy() {
