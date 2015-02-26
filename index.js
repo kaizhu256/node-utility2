@@ -511,7 +511,10 @@
         this function will run the tests in exports.testPlatform.testCaseList
       */
       var exit, onParallel, testPlatform, timerInterval;
-      exports.modeTest = exports.modeTest || exports.envDict.npm_config_mode_npm_test;
+      options = options || {};
+      exports.modeTest = exports.modeTest ||
+        options.modeTest ||
+        exports.envDict.npm_config_mode_npm_test;
       if (!exports.modeTest) {
         return;
       }
@@ -589,6 +592,10 @@
             testReport: exports.testReport
           };
           setTimeout(function () {
+            if (exports.global.istanbul_lite &&
+                exports.global.istanbul_lite.coverageReportCreate) {
+              exports.global.istanbul_lite.coverageReportCreate();
+            }
             // call callback with number of tests failed
             exports.onErrorExit(exports.testReport.testsFailed);
             // throw global_test_results as an error,
@@ -911,58 +918,18 @@
 
     exports._testPageEval = function () {
       /*jslint evil: true*/
-      var innerHTML;
       try {
-        window.__coverage__ = window.__coverage__ || {};
-        eval(window.istanbul_lite.instrumentSync(
-          exports._utility2InputTextarea.value,
-          '/input.js'
+        exports.global.__coverage__ = exports.global.__coverage__ || {};
+        // cleanup __coverage__
+        delete exports.global.__coverage__['/istanbulLiteInputTextarea.js'];
+        eval(exports.global.istanbul_lite.instrumentSync(
+          (document.querySelector('.istanbulLiteInputTextareaDiv') || {}).value,
+          '/istanbulLiteInputTextarea.js'
         ));
-        innerHTML = '<style>\n' + window.istanbul_lite.baseCss
-          .replace((/(.+\{)/g), function (match0) {
-            return '.istanbulLiteCoverageDivDiv ' +
-              match0.replace((/,/g), ', .istanbulLiteCoverageDivDiv ');
-          })
-          .replace('margin: 3em;', 'margin: 0;')
-          .replace('margin-top: 10em;', 'margin: 20px;')
-          .replace('position: fixed;', 'position: static;')
-          .replace('width: 100%;', 'width: auto;') +
-          '.istanbulLiteCoverageDiv {\n' +
-            'border: 1px solid;\n' +
-            'border-radius: 5px;\n' +
-            'padding: 0 10px 10px 10px;\n' +
-          '}\n' +
-            '.istanbulLiteCoverageDivDiv {\n' +
-            'border: 1px solid;\n' +
-            'margin-top: 20px;\n' +
-          '}\n' +
-            '.istanbulLiteCoverageDivDiv a {\n' +
-            'cursor: default;\n' +
-            'pointer-events: none;\n' +
-          '}\n' +
-            '.istanbulLiteCoverageDivDiv .footer {\n' +
-            'display: none;\n' +
-          '}\n' +
-          '</style>\n' +
-          '<h2>coverage</h2>\n' +
-          window.istanbul_lite.coverageReportWriteSync({
-            coverage: { '/input.js': window.__coverage__['/input.js'] }
-          });
       } catch (errorCaught) {
-        innerHTML = '<pre>' + errorCaught.stack.replace((/</g), '&lt') + '</pre>';
+        (document.querySelector('.istanbulLiteCoverageDiv') || {}).innerHTML =
+          '<pre>' + errorCaught.stack.replace((/</g), '&lt') + '</pre>';
       }
-      document.querySelector('.istanbulLiteCoverageDiv').innerHTML = innerHTML;
-      // cleanup __coverage__
-      delete window.__coverage__['/input.js'];
-      return innerHTML;
-    };
-
-    exports._testPageInit = function () {
-      /*
-        this function will init the test-page
-      */
-      exports._utility2InputTextarea = document.querySelector('.utility2InputTextarea');
-      exports._utility2InputTextarea.addEventListener('keyup', exports._testPageEval);
     };
   }());
 
@@ -1447,7 +1414,9 @@
         coverage: 'utility2',
         file: __filename
       }].forEach(function (options) {
-        exports.fileCacheAndParse(options);
+        if (!exports.fileCacheDict[options.cache]) {
+          exports.fileCacheAndParse(options);
+        }
       });
       // coverage-hack - cover utility2 in phantomjs
       if (exports.global.__coverage__ && exports.envDict.npm_package_name === 'utility2') {
@@ -2039,11 +2008,12 @@
         '<div class="mainApp"></div>\n' +
         '<div>\n' +
           '<div>edit or paste script below to test and cover</div>\n' +
-          '<div><textarea class="utility2InputTextarea">\n' +
+          '<div><textarea class="istanbulLiteInputTextareaDiv">\n' +
             "(function () {\n" +
             "  var local, utility2;\n" +
             "  local = {};\n" +
             "  utility2 = window.utility2;\n" +
+            "  local.modeTest = true;\n" +
             "  // init browser js-env tests\n" +
             "  local._ajax_200_test = function (onError) {\n" +
             "    /*\n" +
@@ -2094,7 +2064,9 @@
           'npm_package_name: "{{envDict.npm_package_name}}",\n' +
           'npm_package_version: "{{envDict.npm_package_version}}"\n' +
         '};\n' +
-        'window.utility2._testPageInit();\n' +
+        'document.querySelector(\n' +
+          '".istanbulLiteInputTextareaDiv"\n' +
+        ').addEventListener("keyup", window.utility2._testPageEval);\n' +
         'window.utility2._testPageEval();</script>\n' +
         '<script src="/test/test.js"></script>\n' +
       '</body>\n' +
