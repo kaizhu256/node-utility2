@@ -512,10 +512,8 @@
       */
       var exit, onParallel, testPlatform, timerInterval;
       options = options || {};
-      exports.modeTest = exports.modeTest ||
-        options.modeTest ||
-        exports.envDict.npm_config_mode_npm_test;
-      if (!exports.modeTest) {
+      exports.modeTest = exports.modeTest || exports.envDict.npm_config_mode_npm_test;
+      if (!(exports.modeTest || options.modeTest)) {
         return;
       }
       // mock exit
@@ -539,10 +537,6 @@
       });
       // if in browser mode, visually refresh test progress until it finishes
       if (exports.modeJs === 'browser') {
-        // init _coverageReportDiv element
-        exports._coverageReportDiv =
-          document.querySelector('._coverageReportDiv') || { style: {} };
-        exports._coverageReportDiv.style.display = 'block';
         // init _testReportDiv element
         exports._testReportDiv = document.querySelector('.testReportDiv') || { style: {} };
         exports._testReportDiv.style.display = 'block';
@@ -552,6 +546,11 @@
           // update _testReportDiv in browser
           exports._testReportDiv.innerHTML =
             exports.testMerge(exports.testReport, {});
+          // update _istanbulLiteInputTextareDiv
+          if (exports.global.istanbul_lite &&
+              exports.global.istanbul_lite.coverageReportCreate) {
+            exports.global.istanbul_lite.coverageReportCreate();
+          }
           if (exports.testReport.testsPending === 0) {
             // cleanup timerInterval
             clearInterval(timerInterval);
@@ -592,14 +591,6 @@
             testReport: exports.testReport
           };
           setTimeout(function () {
-            if (exports.global.istanbul_lite &&
-                exports.global.istanbul_lite.coverageReportCreate) {
-              exports.global.istanbul_lite.coverageReportCreate({ coverage: {
-                '/istanbulLiteInputTextarea.js': exports.global.__coverage__[
-                  '/istanbulLiteInputTextarea.js'
-                ]
-              } });
-            }
             // call callback with number of tests failed
             exports.onErrorExit(exports.testReport.testsFailed);
             // throw global_test_results as an error,
@@ -918,20 +909,6 @@
       exports._ajaxProgressBarDiv.className = exports._ajaxProgressBarDiv.className
         .replace((/ajaxProgressBarDiv\w+/), type);
       exports._ajaxProgressBarDiv.innerHTML = label;
-    };
-
-    exports._testPageEval = function () {
-      /*jslint evil: true*/
-      try {
-        exports.global.__coverage__ = exports.global.__coverage__ || {};
-        eval(exports.global.istanbul_lite.instrumentSync(
-          (document.querySelector('.istanbulLiteInputTextareaDiv') || {}).value,
-          '/istanbulLiteInputTextarea.js'
-        ));
-      } catch (errorCaught) {
-        (document.querySelector('.istanbulLiteCoverageDiv') || {}).innerHTML =
-          '<pre>' + errorCaught.stack.replace((/</g), '&lt') + '</pre>';
-      }
     };
   }());
 
@@ -1993,6 +1970,9 @@
           'body > div {\n' +
             'margin-top: 20px;\n' +
           '}\n' +
+          '.testReportDiv {\n' +
+            'display: none;\n' +
+          '}\n' +
           'textarea {\n' +
             'font-family: monospace;\n' +
             'height: 16em;\n' +
@@ -2052,11 +2032,6 @@
             "}());\n" +
           '</textarea></div>\n' +
         '</div>\n' +
-        '<div>\n' +
-          '<button\n' +
-            'onclick="window.utility2.modeTest=1; window.utility2.testRun(window.local);"\n' +
-          '>run test</button>\n' +
-        '</div>\n' +
         '<div class="testReportDiv"></div>\n' +
         '<div class="istanbulLiteCoverageDiv"></div>\n' +
         '<script src="/assets/istanbul-lite.js"></script>\n' +
@@ -2068,8 +2043,8 @@
         '};\n' +
         'document.querySelector(\n' +
           '".istanbulLiteInputTextareaDiv"\n' +
-        ').addEventListener("keyup", window.utility2._testPageEval);\n' +
-        'window.utility2._testPageEval();</script>\n' +
+        ').addEventListener("keyup", window.istanbul_lite.coverAndEval);\n' +
+        'window.istanbul_lite.coverAndEval();</script>\n' +
         '<script src="/test/test.js"></script>\n' +
       '</body>\n' +
       '</html>\n' +
