@@ -594,7 +594,11 @@
           setTimeout(function () {
             if (exports.global.istanbul_lite &&
                 exports.global.istanbul_lite.coverageReportCreate) {
-              exports.global.istanbul_lite.coverageReportCreate();
+              exports.global.istanbul_lite.coverageReportCreate({ coverage: {
+                '/istanbulLiteInputTextarea.js': exports.global.__coverage__[
+                  '/istanbulLiteInputTextarea.js'
+                ]
+              } });
             }
             // call callback with number of tests failed
             exports.onErrorExit(exports.testReport.testsFailed);
@@ -920,8 +924,6 @@
       /*jslint evil: true*/
       try {
         exports.global.__coverage__ = exports.global.__coverage__ || {};
-        // cleanup __coverage__
-        delete exports.global.__coverage__['/istanbulLiteInputTextarea.js'];
         eval(exports.global.istanbul_lite.instrumentSync(
           (document.querySelector('.istanbulLiteInputTextareaDiv') || {}).value,
           '/istanbulLiteInputTextarea.js'
