@@ -621,10 +621,10 @@
           // test print handling behavior
           '(print\n)'
         ].forEach(function (script) {
-          exports._replServer[evil](script, null, 'repl', exports.nop);
+          exports._replServer[evil](script, {}, 'repl', exports.nop);
         });
         // test syntax-error handling behavior
-        exports._replServer[evil]('syntax-error', null, 'repl', function (error) {
+        exports._replServer[evil]('syntax-error', {}, 'repl', function (error) {
           exports.testTryCatch(function () {
             // validate error occurred
             // bug - use util.isError to validate error when using eval
