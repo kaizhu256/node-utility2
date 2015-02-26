@@ -784,7 +784,7 @@
         this functions performs a brower ajax request with error handling and timeout
       */
       var data, error, finished, ii, onEvent, timerTimeout, xhr;
-      // init event-handling
+      // init event handling
       onEvent = exports.onErrorWithStack(function (event) {
         switch (event.type) {
         case 'abort':
@@ -844,7 +844,7 @@
       xhr = new XMLHttpRequest();
       // debug xhr
       exports._debugXhr = xhr;
-      // init event-handling
+      // init event handling
       xhr.addEventListener('abort', onEvent);
       xhr.addEventListener('error', onEvent);
       xhr.addEventListener('load', onEvent);
@@ -1989,7 +1989,7 @@
         '<h3>{{envDict.npm_package_description}}</h3>\n' +
         '<div class="mainApp"></div>\n' +
         '<div>\n' +
-          '<div>edit or paste script below to test and cover</div>\n' +
+          '<div>edit or paste script below to cover and test</div>\n' +
           '<div><textarea class="istanbulLiteInputTextareaDiv">\n' +
             "(function () {\n" +
             "  var local, utility2;\n" +
