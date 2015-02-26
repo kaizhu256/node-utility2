@@ -597,7 +597,10 @@
       /*
         this function will test replStart's default handling behavior
       */
-      var evil;
+      var evil, onParallel;
+      onParallel = exports.onParallel(onError);
+      onParallel.counter += 1;
+      onParallel.counter += 1;
       exports.testMock([
         [exports.child_process, { spawn: function () {
           return { on: function (event, callback) {
@@ -606,8 +609,8 @@
             callback();
           } };
         } }]
-      ], onError, function (onError) {
-        // evil hack to pass jslint
+      ], onParallel, function (onError) {
+        // jslint-hack
         evil = 'eval';
         [
           // test shell handling behavior
@@ -621,18 +624,23 @@
           // test print handling behavior
           '(print\n)'
         ].forEach(function (script) {
-          exports._replServer[evil](script, {}, 'repl', exports.nop);
+          onParallel.counter += 1;
+          exports._replServer[evil](script, null, 'repl', onParallel);
+          onParallel();
         });
         // test syntax-error handling behavior
-        exports._replServer[evil]('syntax-error', {}, 'repl', function (error) {
+        onParallel.counter += 1;
+        exports._replServer[evil]('syntax-error', null, 'repl', function (error) {
           exports.testTryCatch(function () {
             // validate error occurred
             // bug - use util.isError to validate error when using eval
             exports.assert(require('util').isError(error), error);
-            onError();
-          }, onError);
+            onParallel();
+          }, onParallel);
         });
+        onError();
       });
+      onParallel();
     };
 
     local._testRunServer_misc_test = function (onError) {
