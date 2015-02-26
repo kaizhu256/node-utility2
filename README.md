@@ -198,7 +198,7 @@ lightweight library that runs phantomjs browser-tests with browser-coverage (via
     "phantomjs-lite": "^2015.1.4-102"
   },
   "description": "lightweight library that runs phantomjs browser-tests with browser-coverage (via istanbul-lite and phantomjs-lite)",
-  "engines": { "node": ">=0.10 <=0.12" },
+  "engines": { "node": ">=0.10 <=0.10" },
   "keywords": [
     "browser",
     "build",
