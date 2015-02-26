@@ -16,6 +16,9 @@ env:
 language:
   - node_js
 node_js:
-  - "0.10"
+  - "0.12"
 script:
   - npm run-script build2
+# http://docs.travis-ci.com/user/workers/container-based-infrastructure
+sudo:
+  false

@@ -536,6 +536,10 @@
       });
       // if in browser mode, visually refresh test progress until it finishes
       if (exports.modeJs === 'browser') {
+        // init _coverageReportDiv element
+        exports._coverageReportDiv =
+          document.querySelector('._coverageReportDiv') || { style: {} };
+        exports._coverageReportDiv.style.display = 'block';
         // init _testReportDiv element
         exports._testReportDiv = document.querySelector('.testReportDiv') || { style: {} };
         exports._testReportDiv.style.display = 'block';
@@ -904,6 +908,62 @@
         .replace((/ajaxProgressBarDiv\w+/), type);
       exports._ajaxProgressBarDiv.innerHTML = label;
     };
+
+    exports._testPageEval = function () {
+      /*jslint evil: true*/
+      var innerHTML;
+      try {
+        window.__coverage__ = window.__coverage__ || {};
+        eval(window.istanbul_lite.instrumentSync(
+          exports._utility2InputTextarea.value,
+          '/input.js'
+        ));
+        innerHTML = '<style>\n' + window.istanbul_lite.baseCss
+          .replace((/(.+\{)/g), function (match0) {
+            return '.istanbulLiteCoverageDivDiv ' +
+              match0.replace((/,/g), ', .istanbulLiteCoverageDivDiv ');
+          })
+          .replace('margin: 3em;', 'margin: 0;')
+          .replace('margin-top: 10em;', 'margin: 20px;')
+          .replace('position: fixed;', 'position: static;')
+          .replace('width: 100%;', 'width: auto;') +
+          '.istanbulLiteCoverageDiv {\n' +
+            'border: 1px solid;\n' +
+            'border-radius: 5px;\n' +
+            'padding: 0 10px 10px 10px;\n' +
+          '}\n' +
+            '.istanbulLiteCoverageDivDiv {\n' +
+            'border: 1px solid;\n' +
+            'margin-top: 20px;\n' +
+          '}\n' +
+            '.istanbulLiteCoverageDivDiv a {\n' +
+            'cursor: default;\n' +
+            'pointer-events: none;\n' +
+          '}\n' +
+            '.istanbulLiteCoverageDivDiv .footer {\n' +
+            'display: none;\n' +
+          '}\n' +
+          '</style>\n' +
+          '<h2>coverage</h2>\n' +
+          window.istanbul_lite.coverageReportWriteSync({
+            coverage: { '/input.js': window.__coverage__['/input.js'] }
+          });
+      } catch (errorCaught) {
+        innerHTML = '<pre>' + errorCaught.stack.replace((/</g), '&lt') + '</pre>';
+      }
+      document.querySelector('.istanbulLiteCoverageDiv').innerHTML = innerHTML;
+      // cleanup __coverage__
+      delete window.__coverage__['/input.js'];
+      return innerHTML;
+    };
+
+    exports._testPageInit = function () {
+      /*
+        this function will init the test-page
+      */
+      exports._utility2InputTextarea = document.querySelector('.utility2InputTextarea');
+      exports._utility2InputTextarea.addEventListener('keyup', exports._testPageEval);
+    };
   }());
 
 
@@ -1026,24 +1086,12 @@
       // if coverage-mode is enabled, then cover options.data
       if (exports.global.__coverage__ &&
           options.coverage && options.coverage === exports.envDict.npm_package_name) {
-        options.data = exports.istanbulCover(options.data, options.file);
+        options.data = exports.istanbul_lite.instrumentSync(options.data, options.file);
       }
       // cache options to exports.fileCacheDict[options.cache]
       if (options.cache) {
         exports.fileCacheDict[options.cache] = options;
       }
-    };
-
-    exports.istanbulCover = function (script, file) {
-      /*
-        this function will cover the js script and file
-      */
-      var istanbul;
-      if (!exports._instrumenter) {
-        istanbul = require('istanbul-lite');
-        exports._instrumenter = new istanbul.Instrumenter();
-      }
-      return exports._instrumenter.instrumentSync(script, file);
     };
 
     exports.onFileModifiedRestart = function (file) {
@@ -1354,6 +1402,7 @@
         });
         response.end();
         break;
+      case '/assets/istanbul-lite.js':
       // 2. serve '/assets/utility2.css' from builtin test-library
       case '/assets/utility2.css':
       // 3. serve '/assets/utility2.js' from builtin test-library
@@ -1389,11 +1438,16 @@
           // keep timerTimeout from blocking the process from exiting
           .unref();
       }
-      // serve this file as /assets/utility2.js with coverage
-      exports.fileCacheAndParse({
+      // init assets
+      [{
+        cache: '/assets/istanbul-lite.js',
+        data: exports.istanbul_lite.istanbulLiteJs
+      }, {
         cache: '/assets/utility2.js',
         coverage: 'utility2',
         file: __filename
+      }].forEach(function (options) {
+        exports.fileCacheAndParse(options);
       });
       // coverage-hack - cover utility2 in phantomjs
       if (exports.global.__coverage__ && exports.envDict.npm_package_name === 'utility2') {
@@ -1660,6 +1714,7 @@
     exports.fs = require('fs');
     exports.http = require('http');
     exports.https = require('https');
+    exports.istanbul_lite = require('istanbul-lite');
     exports.jslint_lite = require('jslint-lite');
     exports.path = require('path');
     exports.url = require('url');
@@ -1969,7 +2024,7 @@
           '}\n' +
           'textarea {\n' +
             'font-family: monospace;\n' +
-            'height: 8em;\n' +
+            'height: 16em;\n' +
             'width: 100%;\n' +
           '}\n' +
         '</style>\n' +
@@ -1983,12 +2038,47 @@
         '<h3>{{envDict.npm_package_description}}</h3>\n' +
         '<div class="mainApp"></div>\n' +
         '<div>\n' +
-          '<div>edit or paste script below to eval, test, and cover</div>\n' +
-          '<div><textarea class="istanbulLiteEvalInputTextarea">if (true) {\n' +
-            'console.log("hello");\n' +
-          '} else {\n' +
-            'console.log("bye");\n' +
-          '}</textarea></div>\n' +
+          '<div>edit or paste script below to test and cover</div>\n' +
+          '<div><textarea class="utility2InputTextarea">\n' +
+            "(function () {\n" +
+            "  var local, utility2;\n" +
+            "  local = {};\n" +
+            "  utility2 = window.utility2;\n" +
+            "  // init browser js-env tests\n" +
+            "  local._ajax_200_test = function (onError) {\n" +
+            "    /*\n" +
+            "      this function will test ajax's 200 http-status-code handling behavior\n" +
+            "    */\n" +
+            "    // ajax-request builtin-url '/test/hello'\n" +
+            "    utility2.ajax({ url: '/test/hello' }, function (error, data) {\n" +
+            "      utility2.testTryCatch(function () {\n" +
+            "        // validate no error occurred\n" +
+            "        utility2.assert(!error, error);\n" +
+            "        // validate data\n" +
+            "        utility2.assert(data === 'hello', data);\n" +
+            "        onError();\n" +
+            "      }, onError);\n" +
+            "    });\n" +
+            "  };\n" +
+            "  local._ajax_404_test = function (onError) {\n" +
+            "    /*\n" +
+            "      this function will test ajax's 404 http-status-code handling behavior\n" +
+            "    */\n" +
+            "    // ajax-request undefined-url '/test/undefined'\n" +
+            "    utility2.ajax({ url: '/test/undefined' }, function (error) {\n" +
+            "      utility2.testTryCatch(function () {\n" +
+            "        // validate error occurred\n" +
+            "        utility2.assert(error instanceof Error, error);\n" +
+            "        // validate 404 http status-code\n" +
+            "        utility2.assert(error.statusCode === 404, error.statusCode);\n" +
+            "        onError();\n" +
+            "      }, onError);\n" +
+            "    });\n" +
+            "  };\n" +
+            "  // run test\n" +
+            "  utility2.testRun(local);\n" +
+            "}());\n" +
+          '</textarea></div>\n' +
         '</div>\n' +
         '<div>\n' +
           '<button\n' +
@@ -1996,12 +2086,16 @@
           '>run test</button>\n' +
         '</div>\n' +
         '<div class="testReportDiv"></div>\n' +
+        '<div class="istanbulLiteCoverageDiv"></div>\n' +
+        '<script src="/assets/istanbul-lite.js"></script>\n' +
         '<script src="/assets/utility2.js"></script>\n' +
         '<script>window.utility2.envDict = {\n' +
           'npm_package_description: "{{envDict.npm_package_description}}",\n' +
           'npm_package_name: "{{envDict.npm_package_name}}",\n' +
           'npm_package_version: "{{envDict.npm_package_version}}"\n' +
-        '}</script>\n' +
+        '};\n' +
+        'window.utility2._testPageInit();\n' +
+        'window.utility2._testPageEval();</script>\n' +
         '<script src="/test/test.js"></script>\n' +
       '</body>\n' +
       '</html>\n' +

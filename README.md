@@ -52,19 +52,21 @@ lightweight library that runs phantomjs browser-tests with browser-coverage (via
   var local;
   // init local
   local = {};
+  // init utility2
+  local.utility2 = typeof window === 'object'
+    ? window.utility2
+    : require('utility2');
 
 
 
   // run browser js-env code
   if (typeof window === 'object') {
-    // init local.utility2
-    local.utility2 = window.utility2;
-    // init tests
+    // init browser js-env tests
     local._ajax_200_test = function (onError) {
       /*
         this function will test ajax's 200 http-status-code handling behavior
       */
-      // test the defined url '/test/hello'
+      // ajax-request builtin-url '/test/hello'
       local.utility2.ajax({
         url: '/test/hello'
       }, function (error, data) {
@@ -81,7 +83,7 @@ lightweight library that runs phantomjs browser-tests with browser-coverage (via
       /*
         this function will test ajax's 404 http-status-code handling behavior
       */
-      // test the undefined url '/test/undefined'
+      // ajax-request undefined-url '/test/undefined'
       local.utility2.ajax({
         url: '/test/undefined'
       }, function (error) {
@@ -105,9 +107,7 @@ lightweight library that runs phantomjs browser-tests with browser-coverage (via
     process.env.npm_package_description = 'this is an example module';
     process.env.npm_package_name = 'example-module';
     process.env.npm_package_version = '1.0.0';
-    // require modules
-    local.utility2 = require('utility2');
-    // init tests
+    // init node js-env tests
     local._phantomTest_default_test = function (onError) {
       /*
         this function will spawn phantomjs to test the test-page
@@ -173,6 +173,12 @@ lightweight library that runs phantomjs browser-tests with browser-coverage (via
 
 
 
+# npm-dependencies
+- [istanbul-lite](https://www.npmjs.com/package/istanbul-lite)
+- [jslint-lite](https://www.npmjs.com/package/jslint-lite)
+
+
+
 # package-listing
 [![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.gitLsTree.png)](https://github.com/kaizhu256/node-utility2)
 
@@ -192,7 +198,7 @@ lightweight library that runs phantomjs browser-tests with browser-coverage (via
     "phantomjs-lite": "^2015.1.4-102"
   },
   "description": "lightweight library that runs phantomjs browser-tests with browser-coverage (via istanbul-lite and phantomjs-lite)",
-  "engines": { "node": "0.10" },
+  "engines": { "node": ">=0.10 <=0.12" },
   "keywords": [
     "browser",
     "build",
@@ -232,6 +238,7 @@ lightweight library that runs phantomjs browser-tests with browser-coverage (via
 
 
 # todo
+- revamping with dynamic test and coverage
 - create flamegraph from istanbul coverage
 - explicitly require slimerjs instead of auto-detecting it
 - auto-generate help doc from README.md
@@ -250,12 +257,15 @@ lightweight library that runs phantomjs browser-tests with browser-coverage (via
 ```
 # build.sh
 # this shell script will run the build process for this package
+
 shBuild() {
   # init env
   export npm_config_mode_slimerjs=1 || return $?
   . ./index.sh && shInit || return $?
+
   # run npm test on published package
   shRun shNpmTestPublished || return $?
+
   # test example js script
   MODE_BUILD=testExampleJs\
   shRunScreenCapture shReadmeTestJs example.js || return $?
@@ -264,28 +274,33 @@ shBuild() {
     /tmp/app/.tmp/build/coverage.html/app/example.js.html || :
   # copy phantomjs screen-capture to $npm_config_dir_build
   cp /tmp/app/.tmp/build/screen-capture.*.png $npm_config_dir_build || return $?
+
   # run npm test
   MODE_BUILD=npmTest shRunScreenCapture npm test || return $?
+
   # deploy app to heroku
   shRun shHerokuDeploy hrku01-utility2-$CI_BRANCH || return $?
+
+  # test deployed app to heroku
   if [ "$CI_BRANCH" = alpha ] ||
     [ "$CI_BRANCH" = beta ] ||
     [ "$CI_BRANCH" = master ]
   then
-    # test deployed app to heroku
     local TEST_URL="https://hrku01-utility2-$CI_BRANCH.herokuapp.com" ||\
       return $?
     TEST_URL="$TEST_URL?modeTest=phantom&_testSecret={{_testSecret}}" ||\
       return $?
     MODE_BUILD=herokuTest shRun shPhantomTest $TEST_URL || return $?
   fi
+
   # if number of commits > 1024, then squash older commits
   shRun shGitBackupAndSquashAndPush 1024 > /dev/null || return $?
 }
-# run build
 shBuild
+
 # save exit-code
 EXIT_CODE=$?
+
 shBuildCleanup() {
   # this function will cleanup build-artifacts in local build dir
   # init env
@@ -309,13 +324,16 @@ shBuildCleanup() {
   fi
 }
 shBuildCleanup || exit $?
+
 shBuildGithubUploadCleanup() {
   # this function will cleanup build-artifacts in local gh-pages repo
   return
 }
+
 # upload build-artifacts to github,
 # and if number of commits > 16, then squash older commits
 COMMIT_LIMIT=16 shRun shBuildGithubUpload || exit $?
+
 # exit with $EXIT_CODE
 exit $EXIT_CODE
 ```
