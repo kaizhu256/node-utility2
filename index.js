@@ -6,14 +6,14 @@
   regexp: true,
   stupid: true
 */
-(function (exports) {
+(function (app) {
   'use strict';
 
 
 
   // run shared js-env code
   (function () {
-    exports.assert = function (passed, message) {
+    app.utility2.assert = function (passed, message) {
       /*
         this function will throw an error if the assertion fails
       */
@@ -24,21 +24,21 @@
             ? message
             // if message is an Error object, then get its stack-trace
             : message instanceof Error
-            ? exports.errorStack(message)
+            ? app.utility2.errorStack(message)
             // else JSON.stringify message
             : JSON.stringify(message)
         );
       }
     };
 
-    exports.errorStack = function (error) {
+    app.utility2.errorStack = function (error) {
       /*
         this function will return the error's stack-trace
       */
       return error.stack || error.message || 'undefined';
     };
 
-    exports.istanbulMerge = function (coverage1, coverage2) {
+    app.utility2.istanbulMerge = function (coverage1, coverage2) {
       /*
         this function will merge coverage2 into coverage1
       */
@@ -77,14 +77,14 @@
       return coverage1;
     };
 
-    exports.jsonCopy = function (value) {
+    app.utility2.jsonCopy = function (value) {
       /*
         this function will return a deep-copy of the JSON value
       */
       return value === undefined ? undefined : JSON.parse(JSON.stringify(value));
     };
 
-    exports.jsonStringifyOrdered = function (value, replacer, space) {
+    app.utility2.jsonStringifyOrdered = function (value, replacer, space) {
       /*
         this function will JSON.stringify the value with dictionaries in sorted order,
         and is used in tests
@@ -116,20 +116,20 @@
         : value;
     };
 
-    exports.onErrorDefault = function (error) {
+    app.utility2.onErrorDefault = function (error) {
       /*
         this function will provide a default error handling callback,
         which simply prints the error stack or message to stderr
       */
       // if error is defined, then print the error stack
       if (error) {
-        console.error('\nonErrorDefault - error\n' + exports.errorStack(error) + '\n');
+        console.error('\nonErrorDefault - error\n' + app.utility2.errorStack(error) + '\n');
       }
     };
 
-    exports.onErrorExit = exports.exit;
+    app.utility2.onErrorExit = app.utility2.exit;
 
-    exports.onErrorWithStack = function (onError) {
+    app.utility2.onErrorWithStack = function (onError) {
       /*
         this function will return a new callback that calls onError,
         with the current stack-trace appended to any error
@@ -151,15 +151,15 @@
       };
     };
 
-    exports.onParallel = function (onError, onDebug) {
+    app.utility2.onParallel = function (onError, onDebug) {
       /*
         this function will return another function that runs async tasks in parallel,
         and calls onError only if there's an error, or if its counter === 0
       */
       var self;
-      onDebug = onDebug || exports.nop;
+      onDebug = onDebug || app.utility2.nop;
       self = function (error) {
-        exports.onErrorWithStack(function (error) {
+        app.utility2.onErrorWithStack(function (error) {
           onDebug(error, self);
           // if counter === 0 or error already occurred, then return
           if (self.counter === 0 || self.error) {
@@ -187,22 +187,22 @@
 
     // init onReady
     (function () {
-      exports.onReady = exports.onParallel(function (error) {
-        exports.onReady.onReady(error);
+      app.utility2.onReady = app.utility2.onParallel(function (error) {
+        app.utility2.onReady.onReady(error);
       });
-      exports.onReady.onReady = exports.onErrorDefault;
-      exports.onReady.counter += 1;
-      setTimeout(exports.onReady);
+      app.utility2.onReady.onReady = app.utility2.onErrorDefault;
+      app.utility2.onReady.counter += 1;
+      setTimeout(app.utility2.onReady);
     }());
 
-    exports.onTimeout = function (onError, timeout, message) {
+    app.utility2.onTimeout = function (onError, timeout, message) {
       /*
         this function will create a timer that passes a timeout error to onError,
         when the specified timeout has passed
       */
       var error;
       // validate timeout is an integer in the exclusive range 0 to Infinity
-      exports.assert(
+      app.utility2.assert(
         (timeout | 0) === timeout && 0 < timeout && timeout < Infinity,
         'invalid timeout ' + timeout
       );
@@ -214,7 +214,7 @@
       }, timeout);
     };
 
-    exports.setDefault = function (options, depth, defaults) {
+    app.utility2.setDefault = function (options, depth, defaults) {
       /*
         this function will recursively set default values
         for unset leaf nodes in the options object
@@ -234,13 +234,13 @@
         if (depth !== 0 &&
             defaults2 && typeof defaults2 === 'object' && !Array.isArray(defaults2) &&
             options2 && typeof options2 === 'object' && !Array.isArray(options2)) {
-          exports.setDefault(options2, depth, defaults2);
+          app.utility2.setDefault(options2, depth, defaults2);
         }
       });
       return options;
     };
 
-    exports.setOverride = function (options, depth, override, backup) {
+    app.utility2.setOverride = function (options, depth, override, backup) {
       /*
         this function will recursively override the options object with the override object,
         and optionally saves the original options object a backup object,
@@ -261,16 +261,16 @@
           backup[key] = options2;
           // 2. set the override item to the options object
           // if options is envDict, then override falsey values with empty string
-          options[key] = options === exports.envDict ? override2 || '' : override2;
+          options[key] = options === app.utility2.envDict ? override2 || '' : override2;
           return;
         }
         // 3. recurse options[key] and override[key]
-        exports.setOverride(options2, depth, override2, override2, backup);
+        app.utility2.setOverride(options2, depth, override2, override2, backup);
       });
       return options;
     };
 
-    exports.testMock = function (mockList, onError, testCase) {
+    app.utility2.testMock = function (mockList, onError, testCase) {
       /*
         this function will mock the exports given in the mockList while running the testCase
       */
@@ -281,37 +281,37 @@
         */
         callback();
         // return a mock timer object with the unref method
-        return { unref: exports.nop };
+        return { unref: app.utility2.nop };
       };
       // prepend mandatory mocks for async / unsafe functions
       mockList = [
         // suppress console.log
-        [console, { log: exports.nop }],
+        [console, { log: app.utility2.nop }],
         // enforce synchronicity by mocking timers as callCallback
-        [exports.global, { setInterval: callCallback, setTimeout: callCallback }]
+        [app.utility2.global, { setInterval: callCallback, setTimeout: callCallback }]
       ].concat(mockList);
       onError2 = function (error) {
         // restore mock[0] from mock[2]
         mockList.reverse().forEach(function (mock) {
-          exports.setOverride(mock[0], 1, mock[2], null);
+          app.utility2.setOverride(mock[0], 1, mock[2], null);
         });
         onError(error);
       };
       // run onError callback in mocked exports in a try-catch block
-      exports.testTryCatch(function () {
+      app.utility2.testTryCatch(function () {
         // mock exports
         mockList.forEach(function (mock) {
           mock[2] = {};
           // backup mock[0] into mock[2]
           // override mock[0] with mock[1]
-          exports.setOverride(mock[0], 1, mock[1], mock[2]);
+          app.utility2.setOverride(mock[0], 1, mock[1], mock[2]);
         });
         // run testCase
         testCase(onError2);
       }, onError2);
     };
 
-    exports.testMerge = function (testReport1, testReport2) {
+    app.utility2.testMerge = function (testReport1, testReport2) {
       /*
         this function will
         1. merge testReport2 into testReport1
@@ -321,59 +321,59 @@
       // 1. merge testReport2 into testReport1
       [testReport1, testReport2].forEach(function (testReport, ii) {
         ii += 1;
-        exports.setDefault(testReport, -1, {
+        app.utility2.setDefault(testReport, -1, {
           date: new Date().toISOString(),
           errorStackList: [],
           testPlatformList: [],
           timeElapsed: 0
         });
         // security - handle malformed testReport
-        exports.assert(
+        app.utility2.assert(
           testReport && typeof testReport === 'object',
           ii + ' invalid testReport ' + typeof testReport
         );
-        exports.assert(
+        app.utility2.assert(
           typeof testReport.timeElapsed === 'number',
           ii + ' invalid testReport.timeElapsed ' + typeof testReport.timeElapsed
         );
         // security - handle malformed testReport.testPlatformList
         testReport.testPlatformList.forEach(function (testPlatform) {
-          exports.setDefault(testPlatform, -1, {
+          app.utility2.setDefault(testPlatform, -1, {
             name: 'undefined',
             testCaseList: [],
             timeElapsed: 0
           });
-          exports.assert(
+          app.utility2.assert(
             typeof testPlatform.name === 'string',
             ii + ' invalid testPlatform.name ' + typeof testPlatform.name
           );
           // insert $MODE_BUILD into testPlatform.name
-          if (exports.envDict.MODE_BUILD) {
+          if (app.utility2.envDict.MODE_BUILD) {
             testPlatform.name = testPlatform.name.replace(
               (/^(browser|node|phantom|slimer)\b/),
-              exports.envDict.MODE_BUILD + ' - $1'
+              app.utility2.envDict.MODE_BUILD + ' - $1'
             );
           }
-          exports.assert(
+          app.utility2.assert(
             typeof testPlatform.timeElapsed === 'number',
             ii + ' invalid testPlatform.timeElapsed ' + typeof testPlatform.timeElapsed
           );
           // security - handle malformed testReport.testPlatformList.testCaseList
           testPlatform.testCaseList.forEach(function (testCase) {
-            exports.setDefault(testCase, -1, {
+            app.utility2.setDefault(testCase, -1, {
               errorStack: '',
               name: 'undefined',
               timeElapsed: 0
             });
-            exports.assert(
+            app.utility2.assert(
               typeof testCase.errorStack === 'string',
               ii + ' invalid testCase.errorStack ' + typeof testCase.errorStack
             );
-            exports.assert(
+            app.utility2.assert(
               typeof testCase.name === 'string',
               ii + ' invalid testCase.name ' + typeof testCase.name
             );
-            exports.assert(
+            app.utility2.assert(
               typeof testCase.timeElapsed === 'number',
               ii + ' invalid testCase.timeElapsed ' + typeof testCase.timeElapsed
             );
@@ -436,17 +436,17 @@
       });
       // stop testReport timer
       if (testReport.testsPending === 0) {
-        exports._timeElapsedStop(testReport);
+        app.utility2._timeElapsedStop(testReport);
       }
       // 2. return testReport1 in html-format
       // json-copy testReport, which will be modified for html templating
-      testReport = exports.jsonCopy(testReport1);
+      testReport = app.utility2.jsonCopy(testReport1);
       // update timeElapsed
-      exports._timeElapsedStop(testReport);
+      app.utility2._timeElapsedStop(testReport);
       testReport.testPlatformList.forEach(function (testPlatform) {
-        exports._timeElapsedStop(testPlatform);
+        app.utility2._timeElapsedStop(testPlatform);
         testPlatform.testCaseList.forEach(function (testCase) {
-          exports._timeElapsedStop(testCase);
+          app.utility2._timeElapsedStop(testCase);
           testPlatform.timeElapsed =
             Math.max(testPlatform.timeElapsed, testCase.timeElapsed);
         });
@@ -455,19 +455,19 @@
       });
       // create html test-report
       testCaseNumber = 0;
-      return exports.textFormat(
-        exports.fileCacheDict['/test/test-report.html.template'].data,
-        exports.setOverride(testReport, -1, {
+      return app.utility2.textFormat(
+        app.utility2.fileCacheDict['/test/test-report.html.template'].data,
+        app.utility2.setOverride(testReport, -1, {
           // security - sanitize '<' in text
-          CI_COMMIT_INFO: String(exports.envDict.CI_COMMIT_INFO).replace((/</g), '&lt;'),
-          envDict: exports.envDict,
+          CI_COMMIT_INFO: String(app.utility2.envDict.CI_COMMIT_INFO).replace((/</g), '&lt;'),
+          envDict: app.utility2.envDict,
           // map testPlatformList
           testPlatformList: testReport.testPlatformList.filter(function (testPlatform) {
             // if testPlatform has no tests, then filter it out
             return testPlatform.testCaseList.length;
           }).map(function (testPlatform, ii) {
             errorStackList = [];
-            return exports.setOverride(testPlatform, -1, {
+            return app.utility2.setOverride(testPlatform, -1, {
               errorStackList: errorStackList,
               // security - sanitize '<' in text
               name: String(testPlatform.name).replace((/</g), '&lt;'),
@@ -487,7 +487,7 @@
                       // security - sanitize '<' in text
                       .replace((/</g), '&lt;') });
                 }
-                return exports.setOverride(testCase, -1, {
+                return app.utility2.setOverride(testCase, -1, {
                   testCaseNumber: testCaseNumber,
                   testReportTestStatusClass: 'testReportTest' +
                     testCase.status[0].toUpperCase() + testCase.status.slice(1)
@@ -506,72 +506,75 @@
       );
     };
 
-    exports.testRun = function (options) {
+    app.utility2.testRun = function (options) {
       /*
-        this function will run the tests in exports.testPlatform.testCaseList
+        this function will run the tests in testPlatform.testCaseList
       */
       var exit, onParallel, testPlatform, timerInterval;
       options = options || {};
-      exports.modeTest = exports.modeTest || exports.envDict.npm_config_mode_npm_test;
-      if (!(exports.modeTest || options.modeTest)) {
+      app.utility2.modeTest =
+        app.utility2.modeTest || app.utility2.envDict.npm_config_mode_npm_test;
+      if (!(app.utility2.modeTest || options.modeTest)) {
         return;
       }
       // mock exit
-      exit = exports.exit;
-      exports.exit = exports.nop;
+      exit = app.utility2.exit;
+      app.utility2.exit = app.utility2.nop;
       // init modeTestCase
-      exports.modeTestCase = exports.modeTestCase || exports.envDict.npm_config_mode_test_case;
+      app.utility2.modeTestCase =
+        app.utility2.modeTestCase || app.utility2.envDict.npm_config_mode_test_case;
       // reset testPlatform.testCaseList
-      exports.testPlatform.testCaseList.length = 0;
+      app.utility2.testPlatform.testCaseList.length = 0;
       // add tests into testPlatform.testCaseList
       Object.keys(options).forEach(function (key) {
         // add test-case options[key] to testPlatform.testCaseList
         if (key.slice(-5) === '_test' &&
-            (exports.modeTestCase === key ||
-              (!exports.modeTestCase && key !== '_testRun_failure_test'))) {
-          exports.testPlatform.testCaseList.push({
+            (app.utility2.modeTestCase === key ||
+              (!app.utility2.modeTestCase && key !== '_testRun_failure_test'))) {
+          app.utility2.testPlatform.testCaseList.push({
             name: key,
             onTestCase: options[key]
           });
         }
       });
       // if in browser mode, visually refresh test progress until it finishes
-      if (exports.modeJs === 'browser') {
+      if (app.utility2.modeJs === 'browser') {
         // init _testReportDiv element
-        exports._testReportDiv = document.querySelector('.testReportDiv') || { style: {} };
-        exports._testReportDiv.style.display = 'block';
-        exports._testReportDiv.innerHTML = exports.testMerge(exports.testReport, {});
+        app.utility2._testReportDiv = document.querySelector('.testReportDiv') || { style: {} };
+        app.utility2._testReportDiv.style.display = 'block';
+        app.utility2._testReportDiv.innerHTML =
+          app.utility2.testMerge(app.utility2.testReport, {});
         // update test-report status every 1000 ms until finished
         timerInterval = setInterval(function () {
           // update _testReportDiv in browser
-          exports._testReportDiv.innerHTML =
-            exports.testMerge(exports.testReport, {});
+          app.utility2._testReportDiv.innerHTML =
+            app.utility2.testMerge(app.utility2.testReport, {});
           // update _istanbulLiteInputTextareDiv
-          if (exports.global.istanbul_lite &&
-              exports.global.istanbul_lite.coverageReportCreate) {
-            exports.global.istanbul_lite.coverageReportCreate();
+          if (app.utility2.global.istanbul_lite &&
+              app.utility2.global.istanbul_lite.coverageReportCreate) {
+            app.utility2.global.istanbul_lite.coverageReportCreate();
           }
-          if (exports.testReport.testsPending === 0) {
+          if (app.utility2.testReport.testsPending === 0) {
             // cleanup timerInterval
             clearInterval(timerInterval);
           }
         }, 1000);
       }
-      onParallel = exports.onParallel(function () {
+      onParallel = app.utility2.onParallel(function () {
         /*
           this function will create the test-report after all tests have finished
         */
         var separator, testReport, testReportHtml;
         // restore exit
-        exports.exit = exit;
+        app.utility2.exit = exit;
         // init new-line separator
         separator = new Array(56).join('-');
         // init testReport
-        testReport = exports.testReport;
+        testReport = app.utility2.testReport;
         // stop testPlatform timer
-        exports._timeElapsedStop(testPlatform);
+        app.utility2._timeElapsedStop(testPlatform);
         // create testReportHtml
-        testReportHtml = exports.testMerge(testReport, {});
+        testReportHtml = app.utility2.testMerge(testReport, {});
         // print test-report summary
         console.log('\n' + separator + '\n' +
           testReport.testPlatformList.map(function (testPlatform) {
@@ -581,49 +584,49 @@
               ('        ' + testPlatform.testsPassed + ' passed ').slice(-16) +
               '     |\n' + separator;
           }).join('\n') + '\n');
-        switch (exports.modeJs) {
+        switch (app.utility2.modeJs) {
         case 'browser':
           // notify saucelabs of test results
           // https://docs.saucelabs.com/reference/rest-api/#js-unit-testing
-          exports.global.global_test_results = {
-            coverage: exports.global.__coverage__,
-            failed: exports.testReport.testsFailed,
-            testReport: exports.testReport
+          app.utility2.global.global_test_results = {
+            coverage: app.utility2.global.__coverage__,
+            failed: app.utility2.testReport.testsFailed,
+            testReport: app.utility2.testReport
           };
           setTimeout(function () {
             // call callback with number of tests failed
-            exports.onErrorExit(exports.testReport.testsFailed);
+            app.utility2.onErrorExit(app.utility2.testReport.testsFailed);
             // throw global_test_results as an error,
             // so it can be caught and passed to the phantom js-env
-            if (exports.modeTest === 'phantom') {
+            if (app.utility2.modeTest === 'phantom') {
               throw new Error('\nphantom\n' + JSON.stringify({
-                global_test_results: exports.global.global_test_results
+                global_test_results: app.utility2.global.global_test_results
               }));
             }
           }, 1000);
           break;
         case 'node':
           // create build badge
-          exports.fs.writeFileSync(
-            exports.envDict.npm_config_dir_build + '/build.badge.svg',
-            exports.fileCacheDict['/build/build.badge.svg'].data
+          app.utility2.fs.writeFileSync(
+            app.utility2.envDict.npm_config_dir_build + '/build.badge.svg',
+            app.utility2.fileCacheDict['/build/build.badge.svg'].data
               // edit branch name
               .replace(
                 (/0000 00 00 00 00 00/g),
                 new Date().toISOString().slice(0, 19).replace('T', ' ')
               )
               // edit branch name
-              .replace((/- master -/g), '| ' + exports.envDict.CI_BRANCH + ' |')
+              .replace((/- master -/g), '| ' + app.utility2.envDict.CI_BRANCH + ' |')
               // edit commit id
               .replace(
                 (/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/g),
-                exports.envDict.CI_COMMIT_ID
+                app.utility2.envDict.CI_COMMIT_ID
               )
           );
           // create test-report.badge.svg
-          exports.fs.writeFileSync(
-            exports.envDict.npm_config_dir_build + '/test-report.badge.svg',
-            exports.fileCacheDict['/build/test-report.badge.svg'].data
+          app.utility2.fs.writeFileSync(
+            app.utility2.envDict.npm_config_dir_build + '/test-report.badge.svg',
+            app.utility2.fileCacheDict['/build/test-report.badge.svg'].data
               // edit number of tests failed
               .replace((/999/g), testReport.testsFailed)
               // edit badge color
@@ -635,33 +638,33 @@
           );
           // create test-report.html
           console.log('creating test-report ' +
-            exports.envDict.npm_config_dir_build + '/test-report.html');
-          exports.fs.writeFileSync(
-            exports.envDict.npm_config_dir_build + '/test-report.html',
+            app.utility2.envDict.npm_config_dir_build + '/test-report.html');
+          app.utility2.fs.writeFileSync(
+            app.utility2.envDict.npm_config_dir_build + '/test-report.html',
             testReportHtml
           );
           // create test-report.json
-          exports.fs.writeFileSync(
-            exports.envDict.npm_config_dir_build + '/test-report.json',
-            JSON.stringify(exports.testReport)
+          app.utility2.fs.writeFileSync(
+            app.utility2.envDict.npm_config_dir_build + '/test-report.json',
+            JSON.stringify(app.utility2.testReport)
           );
           // if any test failed, then exit with non-zero exit-code
           setTimeout(function () {
             // finalize testReport
-            exports.testMerge(testReport, {});
-            console.log('\n' + exports.envDict.MODE_BUILD + ' - ' +
-              exports.testReport.testsFailed + ' failed tests\n');
+            app.utility2.testMerge(testReport, {});
+            console.log('\n' + app.utility2.envDict.MODE_BUILD + ' - ' +
+              app.utility2.testReport.testsFailed + ' failed tests\n');
             // call callback with number of tests failed
-            exports.onErrorExit(exports.testReport.testsFailed);
+            app.utility2.onErrorExit(app.utility2.testReport.testsFailed);
           }, 1000);
           break;
         }
       });
       onParallel.counter += 1;
       // init testReport timer
-      exports.testReport.timeElapsed = Date.now();
+      app.utility2.testReport.timeElapsed = Date.now();
       // init testPlatform
-      testPlatform = exports.testPlatform;
+      testPlatform = app.utility2.testPlatform;
       // init testPlatform timer
       testPlatform.timeElapsed = Date.now();
       // bug - use shallow copy of testPlatform.testCaseList,
@@ -677,10 +680,10 @@
           // if error occurred, then fail testCase
           if (error) {
             console.error('\ntestCase ' + testCase.name + ' failed\n' +
-              exports.errorStack(error));
-            testCase.errorStack = testCase.errorStack || exports.errorStack(error);
+              app.utility2.errorStack(error));
+            testCase.errorStack = testCase.errorStack || app.utility2.errorStack(error);
             // validate errorStack is non-empty
-            exports.assert(testCase.errorStack, 'invalid errorStack ' + testCase.errorStack);
+            app.utility2.assert(testCase.errorStack, 'invalid errorStack ' + testCase.errorStack);
           }
           // if testCase already finished, then do not run finish code again
           if (finished) {
@@ -689,7 +692,7 @@
           // finish testCase
           finished = true;
           // stop testCase timer
-          exports._timeElapsedStop(testCase);
+          app.utility2._timeElapsedStop(testCase);
           // if all tests have finished, then create test-report
           onParallel();
         };
@@ -707,7 +710,7 @@
       onParallel();
     };
 
-    exports.testTryCatch = function (callback, onError) {
+    app.utility2.testTryCatch = function (callback, onError) {
       /*
         this function will call the callback in a try-catch block,
         and pass any caught errors to onError
@@ -719,7 +722,7 @@
       }
     };
 
-    exports.textFormat = function (template, dict, valueDefault) {
+    app.utility2.textFormat = function (template, dict, valueDefault) {
       /*
         this function will replace the keys in given text template
         with the key / value pairs provided by the dict
@@ -728,10 +731,10 @@
       dict = dict || {};
       replace = function (match0, fragment) {
         // nop hack to pass jslint
-        exports.nop(match0);
+        app.utility2.nop(match0);
         return dict[match].map(function (dict) {
           // recursively format the array fragment
-          return exports.textFormat(fragment, dict, valueDefault);
+          return app.utility2.textFormat(fragment, dict, valueDefault);
         }).join('');
       };
       rgx = (/\{\{#[^{]+\}\}/g);
@@ -761,7 +764,7 @@
       });
     };
 
-    exports._timeElapsedStop = function (options) {
+    app.utility2._timeElapsedStop = function (options) {
       /*
         this function will stop options.timeElapsed
       */
@@ -775,17 +778,17 @@
 
   // run browser js-env code
   (function () {
-    if (exports.modeJs !== 'browser') {
+    if (app.utility2.modeJs !== 'browser') {
       return;
     }
 
-    exports.ajax = function (options, onError) {
+    app.utility2.ajax = function (options, onError) {
       /*
         this functions performs a brower ajax request with error handling and timeout
       */
       var data, error, finished, ii, onEvent, timerTimeout, xhr;
       // init event handling
-      onEvent = exports.onErrorWithStack(function (event) {
+      onEvent = app.utility2.onErrorWithStack(function (event) {
         switch (event.type) {
         case 'abort':
         case 'error':
@@ -793,14 +796,14 @@
           // cleanup timerTimeout
           clearTimeout(timerTimeout);
           // validate finished is falsey
-          exports.assert(!finished, finished);
+          app.utility2.assert(!finished, finished);
           // set finished to true
           finished = true;
           // validate xhr is defined in _ajaxProgressList
-          ii = exports._ajaxProgressList.indexOf(xhr);
-          exports.assert(ii >= 0, 'missing xhr in exports._ajaxProgressList');
+          ii = app.utility2._ajaxProgressList.indexOf(xhr);
+          app.utility2.assert(ii >= 0, 'missing xhr in _ajaxProgressList');
           // remove xhr from ajaxProgressList
-          exports._ajaxProgressList.splice(ii, 1);
+          app.utility2._ajaxProgressList.splice(ii, 1);
           // handle abort or error event
           if (!error &&
               (event.type === 'abort' || event.type === 'error' || xhr.status >= 400)) {
@@ -820,48 +823,48 @@
             }
           }
           // hide _ajaxProgressDiv
-          if (exports._ajaxProgressList.length === 0) {
-            exports._ajaxProgressBarHide = setTimeout(function () {
+          if (app.utility2._ajaxProgressList.length === 0) {
+            app.utility2._ajaxProgressBarHide = setTimeout(function () {
               // hide ajaxProgressBar
-              exports._ajaxProgressDiv.style.display = 'none';
+              app.utility2._ajaxProgressDiv.style.display = 'none';
               // reset ajaxProgress
-              exports._ajaxProgressState = 0;
-              exports._ajaxProgressUpdate('0%', 'ajaxProgressBarDivLoading', 'loading');
+              app.utility2._ajaxProgressState = 0;
+              app.utility2._ajaxProgressUpdate('0%', 'ajaxProgressBarDivLoading', 'loading');
             }, 1000);
           }
           onError(error, data, xhr);
           break;
         }
         // increment ajaxProgressBar
-        if (exports._ajaxProgressList.length > 0) {
-          exports._ajaxProgressIncrement();
+        if (app.utility2._ajaxProgressList.length > 0) {
+          app.utility2._ajaxProgressIncrement();
           return;
         }
         // finish ajaxProgressBar
-        exports._ajaxProgressUpdate('100%', 'ajaxProgressBarDivSuccess', 'loaded');
+        app.utility2._ajaxProgressUpdate('100%', 'ajaxProgressBarDivSuccess', 'loaded');
       });
       // init xhr
       xhr = new XMLHttpRequest();
       // debug xhr
-      exports._debugXhr = xhr;
+      app.utility2._debugXhr = xhr;
       // init event handling
       xhr.addEventListener('abort', onEvent);
       xhr.addEventListener('error', onEvent);
       xhr.addEventListener('load', onEvent);
-      xhr.addEventListener('loadstart', exports._ajaxProgressIncrement);
-      xhr.addEventListener('progress', exports._ajaxProgressIncrement);
-      xhr.upload.addEventListener('progress', exports._ajaxProgressIncrement);
+      xhr.addEventListener('loadstart', app.utility2._ajaxProgressIncrement);
+      xhr.addEventListener('progress', app.utility2._ajaxProgressIncrement);
+      xhr.upload.addEventListener('progress', app.utility2._ajaxProgressIncrement);
       // set timerTimeout
-      timerTimeout = exports.onTimeout(function (errorTimeout) {
+      timerTimeout = app.utility2.onTimeout(function (errorTimeout) {
         error = errorTimeout;
         xhr.abort();
-      }, options.timeout || exports.timeoutDefault, 'ajax');
+      }, options.timeout || app.utility2.timeoutDefault, 'ajax');
       // if ajaxProgressBar is hidden, then display it
-      if (exports._ajaxProgressList.length === 0) {
-        exports._ajaxProgressDiv.style.display = 'block';
+      if (app.utility2._ajaxProgressList.length === 0) {
+        app.utility2._ajaxProgressDiv.style.display = 'block';
       }
       // add xhr to _ajaxProgressList
-      exports._ajaxProgressList.push(xhr);
+      app.utility2._ajaxProgressList.push(xhr);
       // open url
       xhr.open(options.method || 'GET', options.url);
       // send request headers
@@ -869,46 +872,46 @@
         xhr.setRequestHeader(key, options.headers[key]);
       });
       // clear any pending timer to hide _ajaxProgressDiv
-      clearTimeout(exports._ajaxProgressBarHide);
+      clearTimeout(app.utility2._ajaxProgressBarHide);
       // send data
       xhr.send(options.data);
     };
 
     // init _ajaxProgressBarDiv element
-    exports._ajaxProgressBarDiv =
+    app.utility2._ajaxProgressBarDiv =
       document.querySelector('.ajaxProgressBarDiv') || { className: '', style: {} };
 
     // init _ajaxProgressDiv element
-    exports._ajaxProgressDiv = document.querySelector('.ajaxProgressDiv') || { style: {} };
+    app.utility2._ajaxProgressDiv = document.querySelector('.ajaxProgressDiv') || { style: {} };
 
-    exports._ajaxProgressIncrement = function () {
+    app.utility2._ajaxProgressIncrement = function () {
       /*
         this function will increment the ajaxProgressBar
       */
       // this algorithm can indefinitely increment the ajaxProgressBar
       // with successively smaller increments without ever reaching 100%
-      exports._ajaxProgressState += 1;
-      exports._ajaxProgressUpdate(
-        100 - 75 * Math.exp(-0.125 * exports._ajaxProgressState) + '%',
+      app.utility2._ajaxProgressState += 1;
+      app.utility2._ajaxProgressUpdate(
+        100 - 75 * Math.exp(-0.125 * app.utility2._ajaxProgressState) + '%',
         'ajaxProgressBarDivLoading',
         'loading'
       );
     };
 
     // init list of xhr used in ajaxProgress
-    exports._ajaxProgressList = [];
+    app.utility2._ajaxProgressList = [];
 
     // init _ajaxProgressState
-    exports._ajaxProgressState = 0;
+    app.utility2._ajaxProgressState = 0;
 
-    exports._ajaxProgressUpdate = function (width, type, label) {
+    app.utility2._ajaxProgressUpdate = function (width, type, label) {
       /*
         this function will visually update the ajaxProgressBar
       */
-      exports._ajaxProgressBarDiv.style.width = width;
-      exports._ajaxProgressBarDiv.className = exports._ajaxProgressBarDiv.className
+      app.utility2._ajaxProgressBarDiv.style.width = width;
+      app.utility2._ajaxProgressBarDiv.className = app.utility2._ajaxProgressBarDiv.className
         .replace((/ajaxProgressBarDiv\w+/), type);
-      exports._ajaxProgressBarDiv.innerHTML = label;
+      app.utility2._ajaxProgressBarDiv.innerHTML = label;
     };
   }());
 
@@ -916,11 +919,11 @@
 
   // run node js-env code
   (function () {
-    if (exports.modeJs !== 'node') {
+    if (app.utility2.modeJs !== 'node') {
       return;
     }
 
-    exports.ajax = function (options, onError) {
+    app.utility2.ajax = function (options, onError) {
       /*
         this functions runs a node http request with error handling and timeout
       */
@@ -933,25 +936,25 @@
         timerTimeout,
         urlParsed;
       modeNext = 0;
-      onNext = exports.onErrorWithStack(function (error, data) {
+      onNext = app.utility2.onErrorWithStack(function (error, data) {
         modeNext = error instanceof Error ? NaN : modeNext + 1;
         switch (modeNext) {
         case 1:
           // set timerTimeout
-          timerTimeout = exports.onTimeout(
+          timerTimeout = app.utility2.onTimeout(
             onNext,
-            options.timeout || exports.timeoutDefault,
+            options.timeout || app.utility2.timeoutDefault,
             'ajax ' + options.url
           );
           // init request and response
-          request = response = { destroy: exports.nop };
+          request = response = { destroy: app.utility2.nop };
           // handle implicit localhost
           if (options.url[0] === '/') {
-            options.url = 'http://localhost:' + exports.envDict.npm_config_server_port +
+            options.url = 'http://localhost:' + app.utility2.envDict.npm_config_server_port +
               options.url;
           }
           // parse options.url
-          urlParsed = exports.url.parse(String(options.url));
+          urlParsed = app.utility2.url.parse(String(options.url));
           // disable socket pooling
           options.agent = options.agent || false;
           // hostname needed for http.request
@@ -970,20 +973,20 @@
             ? options.data.length
             : 0;
           // make http request
-          request = (urlParsed.protocol === 'https:' ? exports.https : exports.http)
+          request = (urlParsed.protocol === 'https:' ? app.utility2.https : app.utility2.http)
             .request(options, onNext)
             // handle error event
             .on('error', onNext);
           // debug ajax request
-          exports._debugAjaxRequest = request;
+          app.utility2._debugAjaxRequest = request;
           // send request and/or data
           request.end(options.data);
           break;
         case 2:
           response = error;
           // debug ajax response
-          exports._debugAjaxResponse = response;
-          exports.streamReadAll(response, onNext);
+          app.utility2._debugAjaxResponse = response;
+          app.utility2.streamReadAll(response, onNext);
           break;
         case 3:
           // init responseText
@@ -1022,70 +1025,70 @@
       onNext();
     };
 
-    exports.fileCacheAndParse = function (options) {
+    app.utility2.fileCacheAndParse = function (options) {
       /*
-        this function will parse options.file and cache it to exports.fileCacheDict
+        this function will parse options.file and cache it to fileCacheDict
       */
       // read options.data from options.file and comment out shebang
       options.data = options.data ||
-        exports.fs.readFileSync(options.file, 'utf8').replace((/^#!/), '//#!');
+        app.utility2.fs.readFileSync(options.file, 'utf8').replace((/^#!/), '//#!');
       // if coverage-mode is enabled, then cover options.data
-      if (exports.global.__coverage__ &&
-          options.coverage && options.coverage === exports.envDict.npm_package_name) {
-        options.data = exports.istanbul_lite.instrumentSync(options.data, options.file);
+      if (app.utility2.global.__coverage__ &&
+          options.coverage && options.coverage === app.utility2.envDict.npm_package_name) {
+        options.data = app.utility2.istanbul_lite.instrumentSync(options.data, options.file);
       }
-      // cache options to exports.fileCacheDict[options.cache]
+      // cache options to fileCacheDict[options.cache]
       if (options.cache) {
-        exports.fileCacheDict[options.cache] = options;
+        app.utility2.fileCacheDict[options.cache] = options;
       }
     };
 
-    exports.onFileModifiedRestart = function (file) {
+    app.utility2.onFileModifiedRestart = function (file) {
       /*
         this function will watche the file and if modified, then restart the process
       */
-      if (exports.envDict.npm_config_mode_auto_restart && exports.fs.statSync(file).isFile()) {
-        exports.fs.watchFile(file, {
+      if (app.utility2.envDict.npm_config_mode_auto_restart && app.utility2.fs.statSync(file).isFile()) {
+        app.utility2.fs.watchFile(file, {
           interval: 1000,
           persistent: false
         }, function (stat2, stat1) {
           if (stat2.mtime > stat1.mtime) {
-            exports.exit(1);
+            app.utility2.exit(1);
           }
         });
       }
     };
 
-    exports.phantomScreenCapture = function (options, onError) {
+    app.utility2.phantomScreenCapture = function (options, onError) {
       /*
         this function will spawn phantomjs to screen-capture options.url
       */
-      exports.phantomTest(exports.setDefault(options, 1, {
+      app.utility2.phantomTest(app.utility2.setDefault(options, 1, {
         modePhantom: 'screenCapture',
         timeoutScreenCapture: 2000
       }), onError);
     };
 
-    exports.phantomTest = function (options, onError) {
+    app.utility2.phantomTest = function (options, onError) {
       /*
         this function will spawn both phantomjs and slimerjs to test options.url
       */
       var onParallel;
-      onParallel = exports.onParallel(onError);
+      onParallel = app.utility2.onParallel(onError);
       onParallel.counter += 1;
       ['phantomjs', 'slimerjs'].forEach(function (argv0) {
         var optionsCopy;
         // if slimerjs is not available, then do not use it
-        if (argv0 === 'slimerjs' && (!exports.envDict.npm_config_mode_slimerjs ||
-          exports.envDict.npm_config_mode_no_slimerjs)) {
+        if (argv0 === 'slimerjs' && (!app.utility2.envDict.npm_config_mode_slimerjs ||
+          app.utility2.envDict.npm_config_mode_no_slimerjs)) {
           return;
         }
         // copy options to create separate phantomjs / slimerjs state
-        optionsCopy = exports.jsonCopy(options);
+        optionsCopy = app.utility2.jsonCopy(options);
         optionsCopy.argv0 = argv0;
         // run phantomjs / slimerjs instance
         onParallel.counter += 1;
-        exports._phantomTestSingle(optionsCopy, function (error) {
+        app.utility2._phantomTestSingle(optionsCopy, function (error) {
           // save phantomjs / slimerjs state to options
           options[argv0] = optionsCopy;
           onParallel(error);
@@ -1094,7 +1097,7 @@
       onParallel();
     };
 
-    exports._phantomTestSingle = function (options, onError) {
+    app.utility2._phantomTestSingle = function (options, onError) {
       /*
         this function will spawn either phantomjs or slimerjs to test options.url
       */
@@ -1104,30 +1107,31 @@
         modeNext = error instanceof Error ? NaN : modeNext + 1;
         switch (modeNext) {
         case 1:
-          options.argv1 = exports.envDict.MODE_BUILD + '.' + options.argv0 + '.' +
-            encodeURIComponent(exports.url.parse(options.url).pathname);
-          exports.setDefault(options, 1, {
-            _testSecret: exports._testSecret,
+          options.argv1 = app.utility2.envDict.MODE_BUILD + '.' + options.argv0 + '.' +
+            encodeURIComponent(app.utility2.url.parse(options.url).pathname);
+          app.utility2.setDefault(options, 1, {
+            _testSecret: app.utility2._testSecret,
             fileCoverage:
-              exports.envDict.npm_config_dir_tmp + '/coverage.' + options.argv1 + '.json',
-            fileScreenCapture: (exports.envDict.npm_config_dir_build +
+              app.utility2.envDict.npm_config_dir_tmp + '/coverage.' + options.argv1 + '.json',
+            fileScreenCapture: (app.utility2.envDict.npm_config_dir_build +
               '/screen-capture.' + options.argv1 + '.png')
               .replace((/%/g), '_')
               .replace((/_2F.png$/), 'png'),
             fileTestReport:
-              exports.envDict.npm_config_dir_tmp + '/test-report.' + options.argv1 + '.json',
+              app.utility2.envDict.npm_config_dir_tmp + '/test-report.' + options.argv1 + '.json',
             modePhantom: 'testUrl'
           });
           // set timerTimeout
-          timerTimeout = exports.onTimeout(onNext, exports.timeoutDefault, options.argv1);
+          timerTimeout = app.utility2.onTimeout(onNext, app.utility2.timeoutDefault, options.argv1);
           // spawn phantomjs to test a url
-          exports.child_process
+          app.utility2.child_process
             .spawn(
               require('phantomjs-lite').__dirname + '/' + options.argv0,
               [
                 // coverage-hack - cover utility2 in phantomjs
-                exports.global.__coverage__ && exports.envDict.npm_package_name === 'utility2'
-                  ? exports.envDict.npm_config_dir_tmp + '/covered.utility2.js'
+                app.utility2.global.__coverage__ &&
+                  app.utility2.envDict.npm_package_name === 'utility2'
+                  ? app.utility2.envDict.npm_config_dir_tmp + '/covered.utility2.js'
                   : __dirname + '/index.js',
                 encodeURIComponent(JSON.stringify(options))
               ],
@@ -1137,14 +1141,14 @@
           break;
         case 2:
           options.exitCode = error;
-          onParallel = exports.onParallel(onNext);
+          onParallel = app.utility2.onParallel(onNext);
           onParallel.counter += 1;
           // merge coverage and test-report
           [options.fileCoverage, options.fileTestReport].forEach(function (file, ii) {
             onParallel.counter += 1;
-            exports.fs.readFile(file, 'utf8', function (error, data) {
+            app.utility2.fs.readFile(file, 'utf8', function (error, data) {
               // nop hack to pass jslint
-              exports.nop(error);
+              app.utility2.nop(error);
               try {
                 data = JSON.parse(data);
               } catch (ignore) {
@@ -1152,10 +1156,10 @@
               if (data) {
                 // merge coverage
                 if (ii === 0) {
-                  exports.istanbulMerge(exports.global.__coverage__, data);
+                  app.utility2.istanbulMerge(app.utility2.global.__coverage__, data);
                 // merge test-report
                 } else if (options.modePhantom === 'testUrl' && !options.modeErrorIgnore) {
-                  exports.testMerge(exports.testReport, data);
+                  app.utility2.testMerge(app.utility2.testReport, data);
                 }
               }
               onParallel();
@@ -1177,7 +1181,7 @@
       onNext();
     };
 
-    exports.replStart = function (globalDict) {
+    app.utility2.replStart = function (globalDict) {
       /*
         this function will start the repl debugger
       */
@@ -1185,14 +1189,14 @@
       // evil hack to pass jslint
       evil = 'eval';
       Object.keys(globalDict).forEach(function (key) {
-        exports.global[key] = globalDict[key];
+        app.utility2.global[key] = globalDict[key];
       });
       // start repl server
-      exports._replServer = require('repl').start({ useGlobals: true });
+      app.utility2._replServer = require('repl').start({ useGlobals: true });
       // save repl eval function
-      exports._replServer.evalDefault = exports._replServer[evil];
+      app.utility2._replServer.evalDefault = app.utility2._replServer[evil];
       // hook custom repl eval function
-      exports._replServer[evil] = function (script, context, file, onError) {
+      app.utility2._replServer[evil] = function (script, context, file, onError) {
         match = (/^\(([^ ]+)(.*)\n\)/).exec(script);
         switch (match && match[1]) {
         // syntax sugar to run async shell command
@@ -1208,7 +1212,7 @@
             break;
           }
           // run async shell command
-          exports.child_process
+          app.utility2.child_process
             .spawn(
               '/bin/sh',
               ['-c', '. ' + __dirname + '/index.sh && ' + match[2]],
@@ -1216,13 +1220,13 @@
             )
             // on shell exit, print return prompt
             .on('exit', function () {
-              exports._replServer.evalDefault('\n', context, file, onError);
+              app.utility2._replServer.evalDefault('\n', context, file, onError);
             });
           return;
         // syntax sugar to grep current dir
         case 'grep':
           // run async shell command
-          exports.child_process
+          app.utility2.child_process
             .spawn(
               '/bin/sh',
               ['-c', 'find . -type f | grep -v "/\\.\\|.*\\b\\(\\.\\d\\|' +
@@ -1243,7 +1247,7 @@
             )
             // on shell exit, print return prompt
             .on('exit', function () {
-              exports._replServer.evalDefault('\n', context, file, onError);
+              app.utility2._replServer.evalDefault('\n', context, file, onError);
             });
           return;
         // syntax sugar to print stringified arg
@@ -1252,34 +1256,34 @@
           break;
         }
         // eval modified script
-        exports._replServer.evalDefault(script, context, file, onError);
+        app.utility2._replServer.evalDefault(script, context, file, onError);
       };
     };
 
-    exports.serverRespondDefault = function (request, response, statusCode, error) {
+    app.utility2.serverRespondDefault = function (request, response, statusCode, error) {
       /*
         this function will respond with a default message,
         or error stack for the given statusCode
       */
       // set response / statusCode / contentType
-      exports.serverRespondWriteHead(request, response, statusCode, {
+      app.utility2.serverRespondWriteHead(request, response, statusCode, {
         'Content-Type': 'text/plain; charset=utf-8'
       });
       if (error) {
         // if modeErrorIgnore is undefined in url search params,
         // then print error.stack to stderr
         if (!(/\?.*\bmodeErrorIgnore=1\b/).test(request.url)) {
-          exports.onErrorDefault(error);
+          app.utility2.onErrorDefault(error);
         }
         // end response with error.stack
-        response.end(exports.errorStack(error));
+        response.end(app.utility2.errorStack(error));
         return;
       }
       // end response with default statusCode message
-      response.end(statusCode + ' ' + exports.http.STATUS_CODES[statusCode]);
+      response.end(statusCode + ' ' + app.utility2.http.STATUS_CODES[statusCode]);
     };
 
-    exports.serverRespondEcho = function (request, response) {
+    app.utility2.serverRespondEcho = function (request, response) {
       /*
         this function will respond with debug info
       */
@@ -1291,12 +1295,12 @@
       request.pipe(response);
     };
 
-    exports.serverRespondWriteHead = function (request, response, statusCode, headers) {
+    app.utility2.serverRespondWriteHead = function (request, response, statusCode, headers) {
       /*
         this function will set the response object's statusCode / headers
       */
       // nop hack to pass jslint
-      exports.nop(request);
+      app.utility2.nop(request);
       if (!response.headersSent) {
         // set response.statusCode
         if (statusCode) {
@@ -1310,7 +1314,7 @@
       }
     };
 
-    exports.streamReadAll = function (readableStream, onError) {
+    app.utility2.streamReadAll = function (readableStream, onError) {
       /*
         this function will concat data from the readableStream,
         and pass it to onError when finished reading
@@ -1331,7 +1335,7 @@
         .on('error', onError);
     };
 
-    exports.testMiddleware = function (request, response, onNext) {
+    app.utility2.testMiddleware = function (request, response, onNext) {
       /*
         this builtin test-middleware will
         1. redirect '/' to '/test/test.html'
@@ -1343,7 +1347,7 @@
       switch (request.urlPathNormalized) {
       // 1. redirect '/' to '/test/test.html'
       case '/':
-        exports.serverRespondWriteHead(request, response, 303, {
+        app.utility2.serverRespondWriteHead(request, response, 303, {
           'Location': request.url.replace('/', '/test/test.html')
         });
         response.end();
@@ -1355,13 +1359,13 @@
       case '/assets/utility2.js':
       // 4. serve '/test/test.js' from user-defined test-file
       case '/test/test.js':
-        response.end(exports.fileCacheDict[request.urlPathNormalized].data);
+        response.end(app.utility2.fileCacheDict[request.urlPathNormalized].data);
         break;
       // 5. serve '/test/test.html' from builtin test-page
       case '/test/test.html':
-        response.end(exports.textFormat(exports.fileCacheDict[
+        response.end(app.utility2.textFormat(app.utility2.fileCacheDict[
           request.urlPathNormalized
-        ].data, { envDict: exports.envDict }));
+        ].data, { envDict: app.utility2.envDict }));
         break;
       // fallback to next middleware
       default:
@@ -1369,7 +1373,7 @@
       }
     };
 
-    exports.testRunServer = function (options) {
+    app.utility2.testRunServer = function (options) {
       /*
         this function will
         1. create http-server from options.serverMiddlewareList
@@ -1379,49 +1383,49 @@
       var server;
       // if $npm_config_timeout_exit is defined,
       // then exit this process after $npm_config_timeout_exit ms
-      if (Number(exports.envDict.npm_config_timeout_exit)) {
-        setTimeout(exports.exit, Number(exports.envDict.npm_config_timeout_exit))
+      if (Number(app.utility2.envDict.npm_config_timeout_exit)) {
+        setTimeout(app.utility2.exit, Number(app.utility2.envDict.npm_config_timeout_exit))
           // keep timerTimeout from blocking the process from exiting
           .unref();
       }
       // init assets
       [{
         cache: '/assets/istanbul-lite.js',
-        data: exports.istanbul_lite.istanbulLiteJs
+        data: app.utility2.istanbul_lite.istanbulLiteJs
       }, {
         cache: '/assets/utility2.js',
         coverage: 'utility2',
         file: __filename
       }].forEach(function (options) {
-        if (!exports.fileCacheDict[options.cache]) {
-          exports.fileCacheAndParse(options);
+        if (!app.utility2.fileCacheDict[options.cache]) {
+          app.utility2.fileCacheAndParse(options);
         }
       });
       // coverage-hack - cover utility2 in phantomjs
-      if (exports.global.__coverage__ && exports.envDict.npm_package_name === 'utility2') {
-        exports.fs.writeFileSync(
-          exports.envDict.npm_config_dir_tmp + '/covered.utility2.js',
-          exports.fileCacheDict['/assets/utility2.js'].data
+      if (app.utility2.global.__coverage__ && app.utility2.envDict.npm_package_name === 'utility2') {
+        app.utility2.fs.writeFileSync(
+          app.utility2.envDict.npm_config_dir_tmp + '/covered.utility2.js',
+          app.utility2.fileCacheDict['/assets/utility2.js'].data
         );
       }
       // 1. create http-server from options.serverMiddlewareList
-      server = exports.http.createServer(function (request, response) {
+      server = app.utility2.http.createServer(function (request, response) {
         var contentTypeDict, modeNext, onNext;
         modeNext = -2;
         onNext = function (error) {
           modeNext = error instanceof Error ? NaN : modeNext + 1;
           if (modeNext === -1) {
             // debug server request
-            exports._debugServerRequest = request;
+            app.utility2._debugServerRequest = request;
             // debug server response
-            exports._debugServerResponse = response;
+            app.utility2._debugServerResponse = response;
             // check if _testSecret is valid
             request._testSecretValid = (/\b_testSecret=(\w+)\b/).exec(request.url);
             request._testSecretValid =
-              request._testSecretValid && request._testSecretValid[1] === exports._testSecret;
+              request._testSecretValid && request._testSecretValid[1] === app.utility2._testSecret;
             // init request.urlPathNormalized
             request.urlPathNormalized =
-              exports.path.resolve(exports.url.parse(request.url).pathname);
+              app.utility2.path.resolve(app.utility2.url.parse(request.url).pathname);
             // init Content-Type header
             contentTypeDict = {
               '.css': 'text/css; charset=UTF-8',
@@ -1430,8 +1434,10 @@
               '.json': 'application/json; charset=UTF-8',
               '.txt': 'text/txt; charset=UTF-8'
             };
-            exports.serverRespondWriteHead(request, response, null, {
-              'Content-Type': contentTypeDict[exports.path.extname(request.urlPathNormalized)]
+            app.utility2.serverRespondWriteHead(request, response, null, {
+              'Content-Type': contentTypeDict[
+                app.utility2.path.extname(request.urlPathNormalized)
+              ]
             });
             onNext();
             return;
@@ -1442,48 +1448,48 @@
           }
           // if error occurred, then respond with '500 Internal Server Error'
           // else respond with '404 Not Found'
-          exports.serverRespondDefault(request, response, error ? 500 : 404, error);
+          app.utility2.serverRespondDefault(request, response, error ? 500 : 404, error);
         };
         onNext();
       });
       // if $npm_config_server_port is undefined,
       // then assign it a random integer in the inclusive range 1 to 0xffff
-      exports.envDict.npm_config_server_port = exports.envDict.npm_config_server_port ||
+      app.utility2.envDict.npm_config_server_port =
+        app.utility2.envDict.npm_config_server_port ||
         ((Math.random() * 0x10000) | 0x8000).toString();
       // 2. start http-server on port $npm_config_server_port
-      server.listen(exports.envDict.npm_config_server_port, function () {
+      server.listen(app.utility2.envDict.npm_config_server_port, function () {
         console.log(
-          'http-server listening on port ' + exports.envDict.npm_config_server_port
+          'http-server listening on port ' + app.utility2.envDict.npm_config_server_port
         );
-        exports.onReady();
+        app.utility2.onReady();
       });
       // 3. if env var $npm_config_mode_npm_test is defined, then run tests
-      exports.onReady.onReady = function () {
-        exports.testRun(options);
+      app.utility2.onReady.onReady = function () {
+        app.utility2.testRun(options);
       };
-      exports.onReady.counter += 1;
+      app.utility2.onReady.counter += 1;
       return server;
     };
 
     // init assets
     [{
       cache: '/test/test.html',
-      data: exports.fs.readFileSync(process.cwd() + '/README.md', 'utf8')
+      data: app.utility2.fs.readFileSync(process.cwd() + '/README.md', 'utf8')
         .replace((/[\S\s]+?(<!DOCTYPE html>[\S\s]+?<\/html>)[\S\s]+/), '$1')
         .replace((/\\n\\$/gm), '')
     }].forEach(function (options) {
-      if (!exports.fileCacheDict[options.cache]) {
-        exports.fileCacheAndParse(options);
+      if (!app.utility2.fileCacheDict[options.cache]) {
+        app.utility2.fileCacheAndParse(options);
       }
     });
-    //!! debugPrint(exports.fileCacheDict['/test/test.html'].data);
   }());
 
 
 
   // run phantom js-env code
   (function () {
-    if (exports.modeJs !== 'phantom') {
+    if (app.utility2.modeJs !== 'phantom') {
       return;
     }
 
@@ -1495,50 +1501,54 @@
       switch (modeNext) {
       case 1:
         // init __coverage__
-        exports.global.__coverage__ = exports.global.__coverage__ || {};
+        app.utility2.global.__coverage__ = app.utility2.global.__coverage__ || {};
         // init global error handling
         // http://phantomjs.org/api/phantom/handler/on-error.html
-        exports.global.phantom.onError = onNext;
-        // override exports properties
-        exports.setOverride(
-          exports,
+        app.utility2.global.phantom.onError = onNext;
+        // override utility2 properties
+        app.utility2.setOverride(
+          app.utility2,
           -1,
-          JSON.parse(decodeURIComponent(exports.system.args[1]))
+          JSON.parse(decodeURIComponent(app.utility2.system.args[1]))
         );
         // if modeErrorIgnore, then suppress console.error and console.log
-        if (exports.modeErrorIgnore) {
-          console.error = console.log = exports.nop;
+        if (app.utility2.modeErrorIgnore) {
+          console.error = console.log = app.utility2.nop;
         }
         // set timeout for phantom
-        exports.onTimeout(exports.onErrorExit, exports.timeoutDefault, exports.url);
+        app.utility2.onTimeout(
+          app.utility2.onErrorExit,
+          app.utility2.timeoutDefault,
+          app.utility2.url
+        );
         // init webpage
-        exports.page = exports.webpage.create();
+        app.utility2.page = app.utility2.webpage.create();
         // init webpage clipRect
-        exports.page.clipRect = { height: 768, left: 0, top: 0, width: 1024 };
+        app.utility2.page.clipRect = { height: 768, left: 0, top: 0, width: 1024 };
         // init webpage viewportSize
-        exports.page.viewportSize = { height: 768, width: 1024 };
+        app.utility2.page.viewportSize = { height: 768, width: 1024 };
         // init webpage error handling
         // http://phantomjs.org/api/webpage/handler/on-error.html
-        exports.page.onError = exports.global.phantom.onError;
+        app.utility2.page.onError = app.utility2.global.phantom.onError;
         // pipe webpage console.log to stdout
-        exports.page.onConsoleMessage = function () {
+        app.utility2.page.onConsoleMessage = function () {
           console.log.apply(console, arguments);
         };
         // open requested webpage
-        exports.page.open(
+        app.utility2.page.open(
           // security - insert _testSecret in url without revealing it
-          exports.url.replace('{{_testSecret}}', exports._testSecret),
+          app.utility2.url.replace('{{_testSecret}}', app.utility2._testSecret),
           onNext
         );
         break;
       case 2:
-        console.log(exports.argv0 + ' - open ' +
+        console.log(app.utility2.argv0 + ' - open ' +
           (error === 'success' ? 'success' : 'fail') +
-          ' ' + exports.url);
-        switch (exports.modePhantom) {
+          ' ' + app.utility2.url);
+        switch (app.utility2.modePhantom) {
         // screen-capture webpage after timeoutScreenCapture ms
         case 'screenCapture':
-          setTimeout(onNext, exports.timeoutScreenCapture);
+          setTimeout(onNext, app.utility2.timeoutScreenCapture);
           break;
         case 'testUrl':
           if (error !== 'success') {
@@ -1548,12 +1558,12 @@
         }
         break;
       case 3:
-        switch (exports.modePhantom) {
+        switch (app.utility2.modePhantom) {
         // screen-capture webpage
         case 'screenCapture':
           // save screen-capture
-          console.log('creating screen-capture file://' + exports.fileScreenCapture);
-          exports.page.render(exports.fileScreenCapture);
+          console.log('creating screen-capture file://' + app.utility2.fileScreenCapture);
+          app.utility2.page.render(app.utility2.fileScreenCapture);
           break;
         // handle test-report callback
         case 'testUrl':
@@ -1565,16 +1575,19 @@
           if (data) {
             // handle global_test_results passed as error
             // merge coverage
-            exports.istanbulMerge(exports.global.__coverage__, data.coverage);
+            app.utility2.istanbulMerge(app.utility2.global.__coverage__, data.coverage);
             // merge test-report
-            exports.testMerge(exports.testReport, data.testReport);
+            app.utility2.testMerge(app.utility2.testReport, data.testReport);
             // save screen-capture
-            exports.page.render(exports.fileScreenCapture);
+            app.utility2.page.render(app.utility2.fileScreenCapture);
             // integrate screen-capture into test-report
             data.testReport.testPlatformList[0].screenCaptureImg =
-              exports.fileScreenCapture.replace((/^.*\//), '');
+              app.utility2.fileScreenCapture.replace((/^.*\//), '');
             // save test-report
-            exports.fs.write(exports.fileTestReport, JSON.stringify(exports.testReport));
+            app.utility2.fs.write(
+              app.utility2.fileTestReport,
+              JSON.stringify(app.utility2.testReport)
+            );
             // exit with number of tests failed as exit-code
             onNext(data.testReport.testsFailed);
             return;
@@ -1584,7 +1597,7 @@
         // handle webpage error
         // http://phantomjs.org/api/phantom/handler/on-error.html
         if (error && typeof error === 'string') {
-          console.error('\n' + exports.argv1 + '\nERROR: ' + error + ' TRACE:');
+          console.error('\n' + app.utility2.argv1 + '\nERROR: ' + error + ' TRACE:');
           (trace || []).forEach(function (t) {
             console.error(' -> ' + (t.file || t.sourceURL) + ': ' + t.line +
               (t.function ? ' (in function ' + t.function + ')' : ''));
@@ -1592,15 +1605,18 @@
           console.error();
         // handle phantom error
         } else {
-          exports.onErrorDefault(error);
+          app.utility2.onErrorDefault(error);
         }
         onNext(!!error);
         break;
       default:
         setTimeout(function () {
           // save coverage before exiting
-          exports.fs.write(exports.fileCoverage, JSON.stringify(exports.global.__coverage__));
-          exports.exit(error);
+          app.utility2.fs.write(
+            app.utility2.fileCoverage,
+            JSON.stringify(app.utility2.global.__coverage__)
+          );
+          app.utility2.exit(error);
         });
       }
     };
@@ -1608,15 +1624,17 @@
   }());
 }((function (self) {
   'use strict';
-  var exports;
+  var app;
 
 
 
   // run shared js-env code
   (function () {
-    // init exports
-    exports = {};
-    exports.modeJs = (function () {
+    // init app
+    app = {};
+    // init utility2
+    app.utility2 = {};
+    app.utility2.modeJs = (function () {
       try {
         return self.phantom.version &&
           typeof require('webpage').create === 'function' && 'phantom';
@@ -1630,34 +1648,35 @@
         }
       }
     }());
-    exports.nop = function () {
+    app.utility2.nop = function () {
       /*
         this function will perform no operation - nop
       */
       return;
     };
   }());
-  switch (exports.modeJs) {
+  switch (app.utility2.modeJs) {
 
 
 
   // run browser js-env code
   case 'browser':
-    window.utility2 = exports;
-    // init exports properties
-    exports.envDict = exports.envDict || {};
-    exports.exit = exports.nop;
-    exports.global = window;
+    // export utility2
+    window.utility2 = app.utility2;
+    // init utility2 properties
+    app.utility2.envDict = app.utility2.envDict || {};
+    app.utility2.exit = app.utility2.nop;
+    app.utility2.global = window;
     // parse any url-search-params that matches 'mode*' or '_testSecret' or 'timeoutDefault'
     location.search.replace(
       (/\b(mode[A-Z]\w+|_testSecret|timeoutDefault)=([^#&=]+)/g),
       function (match0, key, value) {
         // nop hack to pass jslint
-        exports.nop(match0);
-        exports[key] = value;
+        app.utility2.nop(match0);
+        app.utility2[key] = value;
         // try to parse value as json object
         try {
-          exports[key] = JSON.parse(value);
+          app.utility2[key] = JSON.parse(value);
         } catch (ignore) {
         }
       }
@@ -1668,34 +1687,35 @@
 
   // run node js-env code
   case 'node':
-    module.exports = exports;
+    // export utility2
+    module.exports = app.utility2;
     // require modules
-    exports.child_process = require('child_process');
-    exports.crypto = require('crypto');
-    exports.fs = require('fs');
-    exports.http = require('http');
-    exports.https = require('https');
-    exports.istanbul_lite = require('istanbul-lite');
-    exports.jslint_lite = require('jslint-lite');
-    exports.path = require('path');
-    exports.url = require('url');
-    exports.vm = require('vm');
-    // init exports properties
-    exports.__dirname = __dirname;
-    exports.envDict = process.env;
-    exports.envDict.npm_config_dir_build = process.cwd() + '/.tmp/build';
-    exports.envDict.npm_config_dir_tmp = process.cwd() + '/.tmp';
-    exports.exit = process.exit;
-    exports.global = global;
+    app.utility2.child_process = require('child_process');
+    app.utility2.crypto = require('crypto');
+    app.utility2.fs = require('fs');
+    app.utility2.http = require('http');
+    app.utility2.https = require('https');
+    app.utility2.istanbul_lite = require('istanbul-lite');
+    app.utility2.jslint_lite = require('jslint-lite');
+    app.utility2.path = require('path');
+    app.utility2.url = require('url');
+    app.utility2.vm = require('vm');
+    // init utility2 properties
+    app.utility2.__dirname = __dirname;
+    app.utility2.envDict = process.env;
+    app.utility2.envDict.npm_config_dir_build = process.cwd() + '/.tmp/build';
+    app.utility2.envDict.npm_config_dir_tmp = process.cwd() + '/.tmp';
+    app.utility2.exit = process.exit;
+    app.utility2.global = global;
     // init _testSecret
     (function () {
       var testSecretCreate;
       testSecretCreate = function () {
-        exports._testSecret = exports.crypto.randomBytes(32).toString('hex');
+        app.utility2._testSecret = app.utility2.crypto.randomBytes(32).toString('hex');
       };
       // init _testSecret
       testSecretCreate();
-      exports._testSecret = exports.envDict.TEST_SECRET || exports._testSecret;
+      app.utility2._testSecret = app.utility2.envDict.TEST_SECRET || app.utility2._testSecret;
       // re-init _testSecret every 60 seconds
       setInterval(testSecretCreate, 60000).unref();
     }());
@@ -1705,15 +1725,16 @@
 
   // run phantom js-env code
   case 'phantom':
-    self.utility2 = exports;
+    // export utility2
+    self.utility2 = app.utility2;
     // require modules
-    exports.fs = require('fs');
-    exports.system = require('system');
-    exports.webpage = require('webpage');
-    // init exports properties
-    exports.envDict = exports.system.env;
-    exports.exit = self.phantom.exit;
-    exports.global = self;
+    app.utility2.fs = require('fs');
+    app.utility2.system = require('system');
+    app.utility2.webpage = require('webpage');
+    // init utility2 properties
+    app.utility2.envDict = app.utility2.system.env;
+    app.utility2.exit = self.phantom.exit;
+    app.utility2.global = self;
     break;
   }
 
@@ -1722,49 +1743,49 @@
   // run shared js-env code
   (function () {
     // init global debug_print
-    exports.global['debug_print'.replace('_p', 'P')] = function (arg) {
+    app.utility2.global['debug_print'.replace('_p', 'P')] = function (arg) {
       /*
         this function will both print the arg to stderr and return it,
         and jslint will nag you to remove it if used
       */
       // debug arguments
-      exports['debug_printArguments'.replace('_p', 'P')] = arguments;
+      app.utility2['debug_printArguments'.replace('_p', 'P')] = arguments;
       console.error('\n\n\ndebug_print'.replace('_p', 'P'));
       console.error.apply(console, arguments);
       console.error();
       // return arg for inspection
       return arg;
     };
-    exports.errorDefault = new Error('default error');
-    exports.testPlatform = {
-      name: exports.modeJs === 'browser'
+    app.utility2.errorDefault = new Error('default error');
+    app.utility2.testPlatform = {
+      name: app.utility2.modeJs === 'browser'
         ? 'browser - ' + navigator.userAgent + ' - ' + new Date().toISOString()
-        : exports.modeJs === 'node'
+        : app.utility2.modeJs === 'node'
         ? 'node - ' +
           process.platform + ' ' + process.version + ' - ' + new Date().toISOString()
-        : (exports.global.slimer ? 'slimer - ' : 'phantom - ') +
-          exports.system.os.name + ' ' +
-          exports.global.phantom.version.major + '.' +
-          exports.global.phantom.version.minor + '.' +
-          exports.global.phantom.version.patch + ' - ' + new Date().toISOString(),
-      screenCaptureImg: exports.envDict.MODE_BUILD_SCREEN_CAPTURE,
+        : (app.utility2.global.slimer ? 'slimer - ' : 'phantom - ') +
+          app.utility2.system.os.name + ' ' +
+          app.utility2.global.phantom.version.major + '.' +
+          app.utility2.global.phantom.version.minor + '.' +
+          app.utility2.global.phantom.version.patch + ' - ' + new Date().toISOString(),
+      screenCaptureImg: app.utility2.envDict.MODE_BUILD_SCREEN_CAPTURE,
       testCaseList: []
     };
-    exports.testReport = { testPlatformList: [exports.testPlatform] };
-    exports.textExampleAscii = exports.textExampleAscii ||
+    app.utility2.testReport = { testPlatformList: [app.utility2.testPlatform] };
+    app.utility2.textExampleAscii = app.utility2.textExampleAscii ||
       '\x00\x01\x02\x03\x04\x05\x06\x07\b\t\n\x0b\f\r\x0e\x0f' +
       '\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f' +
       ' !"#$%&\'()*+,-./0123456789:;<=>?' +
       '@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_' +
       '`abcdefghijklmnopqrstuvwxyz{|}~\x7f';
-    exports.timeoutDefault =
-      exports.envDict.npm_config_timeout_default || exports.timeoutDefault || 30000;
+    app.utility2.timeoutDefault =
+      app.utility2.envDict.npm_config_timeout_default || app.utility2.timeoutDefault || 30000;
   }());
 
 
 
   // init fileCacheDict
-  exports.fileCacheDict = {
+  app.utility2.fileCacheDict = {
     '/test/test-report.html.template': { data: String() +
       '<style>\n' +
       '.testReportPlatformDiv {\n' +
@@ -1963,5 +1984,5 @@
       '}\n' +
       String() }
   };
-  return exports;
+  return app;
 }(this))));

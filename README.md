@@ -21,7 +21,7 @@ lightweight module that can dynamically cover and test browser-code (via istanbu
 
 
 
-# quickstart to run browser-tests with browser-coverage
+# quickstart
 #### follow the instruction in this script
 ```
 /*
@@ -49,11 +49,11 @@ lightweight module that can dynamically cover and test browser-code (via istanbu
 */
 (function () {
   'use strict';
-  var local;
-  // init local
-  local = {};
+  var app;
+  // init app
+  app = {};
   // init utility2
-  local.utility2 = typeof window === 'object'
+  app.utility2 = typeof window === 'object'
     ? window.utility2
     : require('utility2');
 
@@ -62,42 +62,42 @@ lightweight module that can dynamically cover and test browser-code (via istanbu
   // run browser js-env code
   if (typeof window === 'object') {
     // init browser js-env tests
-    local._ajax_200_test = function (onError) {
+    app._ajax_200_test = function (onError) {
       /*
         this function will test ajax's 200 http-status-code handling behavior
       */
       // ajax-request builtin-url '/test/hello'
-      local.utility2.ajax({
+      app.utility2.ajax({
         url: '/test/hello'
       }, function (error, data) {
-        local.utility2.testTryCatch(function () {
+        app.utility2.testTryCatch(function () {
           // validate no error occurred
-          local.utility2.assert(!error, error);
+          app.utility2.assert(!error, error);
           // validate data
-          local.utility2.assert(data === 'hello', data);
+          app.utility2.assert(data === 'hello', data);
           onError();
         }, onError);
       });
     };
-    local._ajax_404_test = function (onError) {
+    app._ajax_404_test = function (onError) {
       /*
         this function will test ajax's 404 http-status-code handling behavior
       */
       // ajax-request undefined-url '/test/undefined'
-      local.utility2.ajax({
+      app.utility2.ajax({
         url: '/test/undefined'
       }, function (error) {
-        local.utility2.testTryCatch(function () {
+        app.utility2.testTryCatch(function () {
           // validate error occurred
-          local.utility2.assert(error instanceof Error, error);
+          app.utility2.assert(error instanceof Error, error);
           // validate 404 http status-code
-          local.utility2.assert(error.statusCode === 404, error.statusCode);
+          app.utility2.assert(error.statusCode === 404, error.statusCode);
           onError();
         }, onError);
       });
     };
     // run test
-    local.utility2.testRun(local, local.utility2.nop);
+    app.utility2.testRun(app, app.utility2.nop);
 
 
 
@@ -108,33 +108,33 @@ lightweight module that can dynamically cover and test browser-code (via istanbu
     process.env.npm_package_name = 'example-module';
     process.env.npm_package_version = '1.0.0';
     // init node js-env tests
-    local._phantomTest_default_test = function (onError) {
+    app._phantomTest_default_test = function (onError) {
       /*
         this function will spawn phantomjs to test the test-page
       */
-      local.utility2.phantomTest({
+      app.utility2.phantomTest({
         url: 'http://localhost:' + process.env.npm_config_server_port +
           '?modeTest=phantom'
       }, onError);
     };
     // serve this file as '/test/test.js' with coverage
-    local.utility2.fileCacheAndParse({
+    app.utility2.fileCacheAndParse({
       cache: '/test/test.js',
       coverage: 'example-module',
       file: __filename
     });
-    // init local.serverMiddlewareList
-    local.serverMiddlewareList = [
+    // init app.serverMiddlewareList
+    app.serverMiddlewareList = [
       function (request, response, next) {
         /*
           this user-defined middleware will override the builtin test-middleware
         */
         // nop hack to pass jslint
-        local.utility2.nop(request);
+        app.utility2.nop(request);
         switch (request.urlPathNormalized) {
         // redirect '/' to '/test/test.html'
         case '/':
-          response.end(local.utility2.textFormat(String() +
+          response.end(app.utility2.textFormat(String() +
 /* jslint-ignore-begin */
 '\
 <!DOCTYPE html>\n\
@@ -218,7 +218,7 @@ window.utility2.testRun({\n\
 </html>\n\
 ' +
 /* jslint-ignore-end */
-            String(), { envDict: local.utility2.envDict }));
+            String(), { envDict: app.utility2.envDict }));
           response.end();
           break;
         // test http GET handling behavior
@@ -235,13 +235,13 @@ window.utility2.testRun({\n\
       // 2. serve '/assets/utility2.js' from builtin test-library
       // 3. serve '/test/test.js' from user-defined test-file
       // 4. serve '/test/test.html' from builtin test-page
-      local.utility2.testMiddleware
+      app.utility2.testMiddleware
     ];
     // this function will
-    // 1. create http-server from local.serverMiddlewareList
+    // 1. create http-server from app.serverMiddlewareList
     // 2. start http-server on port $npm_config_server_port
     // 3. if env var $npm_config_mode_npm_test is defined, then run tests
-    local.utility2.testRunServer(local, process.exit);
+    app.utility2.testRunServer(app, process.exit);
   }
   return;
 }());
@@ -321,7 +321,6 @@ window.utility2.testRun({\n\
 
 # todo
 - fix npm test for node v0.12
-- unify var name "exports" and "local.utility2" to "app.utility2"
 - fix newly covered lines remaining uncovered
 - revamping with dynamic test and coverage
 - create flamegraph from istanbul coverage
