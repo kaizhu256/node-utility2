@@ -134,9 +134,102 @@ lightweight library that runs phantomjs browser-tests with browser-coverage (via
         switch (request.urlPathNormalized) {
         // redirect '/' to '/test/test.html'
         case '/':
-          local.utility2.serverRespondWriteHead(request, response, 303, {
-            'Location': request.url.replace('/', '/test/test.html')
-          });
+          response.end(local.utility2.textFormat(String() +
+            '<!DOCTYPE html>\n' +
+            '<html>\n' +
+            '<head>\n' +
+              '<meta charset="UTF-8">\n' +
+              '<link rel="stylesheet" href="/assets/utility2.css">\n' +
+              '<style>\n' +
+                '* {\n' +
+                  'box-sizing: border-box;\n' +
+                '}\n' +
+                'body {\n' +
+                  'background-color: #fff;\n' +
+                  'font-family: Helvetical Neue, Helvetica, Arial, sans-serif;\n' +
+                '}\n' +
+                'body > div {\n' +
+                  'margin-top: 20px;\n' +
+                '}\n' +
+                '.testReportDiv {\n' +
+                  'display: none;\n' +
+                '}\n' +
+                'textarea {\n' +
+                  'font-family: monospace;\n' +
+                  'height: 16em;\n' +
+                  'width: 100%;\n' +
+                '}\n' +
+              '</style>\n' +
+              '<title>{{envDict.npm_package_name}} [{{envDict.npm_package_version}}]</title>\n' +
+            '</head>\n' +
+            '<body>\n' +
+              '<div class="ajaxProgressDiv" style="display: none;">\n' +
+                '<div class="ajaxProgressBarDiv ajaxProgressBarDivLoading">loading</div>\n' +
+              '</div>\n' +
+              '<h1>{{envDict.npm_package_name}} [{{envDict.npm_package_version}}]</h1>\n' +
+              '<h3>{{envDict.npm_package_description}}</h3>\n' +
+              '<div class="mainApp"></div>\n' +
+              '<div>\n' +
+                '<div>edit or paste script below to cover and test</div>\n' +
+                '<div><textarea class="istanbulLiteInputTextareaDiv">\n' +
+                "(function () {\n" +
+                "  var local, utility2;\n" +
+                "  local = {};\n" +
+                "  utility2 = window.utility2;\n" +
+                "  local.modeTest = true;\n" +
+                "  // init browser js-env tests\n" +
+                "  local._ajax_200_test = function (onError) {\n" +
+                "    /*\n" +
+                "      this function will test ajax's 200 http-status-code handling behavior\n" +
+                "    */\n" +
+                "    // ajax-request builtin-url '/test/hello'\n" +
+                "    utility2.ajax({ url: '/test/hello' }, function (error, data) {\n" +
+                "      utility2.testTryCatch(function () {\n" +
+                "        // validate no error occurred\n" +
+                "        utility2.assert(!error, error);\n" +
+                "        // validate data\n" +
+                "        utility2.assert(data === 'hello', data);\n" +
+                "        onError();\n" +
+                "      }, onError);\n" +
+                "    });\n" +
+                "  };\n" +
+                "  local._ajax_404_test = function (onError) {\n" +
+                "    /*\n" +
+                "      this function will test ajax's 404 http-status-code handling behavior\n" +
+                "    */\n" +
+                "    // ajax-request undefined-url '/test/undefined'\n" +
+                "    utility2.ajax({ url: '/test/undefined' }, function (error) {\n" +
+                "      utility2.testTryCatch(function () {\n" +
+                "        // validate error occurred\n" +
+                "        utility2.assert(error instanceof Error, error);\n" +
+                "        // validate 404 http status-code\n" +
+                "        utility2.assert(error.statusCode === 404, error.statusCode);\n" +
+                "        onError();\n" +
+                "      }, onError);\n" +
+                "    });\n" +
+                "  };\n" +
+                "  // run test\n" +
+                "  utility2.testRun(local);\n" +
+                "}());\n" +
+                '</textarea></div>\n' +
+              '</div>\n' +
+              '<div class="testReportDiv"></div>\n' +
+              '<div class="istanbulLiteCoverageDiv"></div>\n' +
+              '<script src="/assets/istanbul-lite.js"></script>\n' +
+              '<script src="/assets/utility2.js"></script>\n' +
+              '<script>window.utility2.envDict = {\n' +
+                'npm_package_description: "{{envDict.npm_package_description}}",\n' +
+                'npm_package_name: "{{envDict.npm_package_name}}",\n' +
+                'npm_package_version: "{{envDict.npm_package_version}}"\n' +
+              '};\n' +
+              'document.querySelector(\n' +
+                '".istanbulLiteInputTextareaDiv"\n' +
+              ').addEventListener("keyup", window.istanbul_lite.coverAndEval);\n' +
+              'window.istanbul_lite.coverAndEval();</script>\n' +
+              '<script src="/test/test.js"></script>\n' +
+            '</body>\n' +
+            '</html>\n' +
+            String(), { envDict: local.utility2.envDict }));
           response.end();
           break;
         // test http GET handling behavior
@@ -238,6 +331,7 @@ lightweight library that runs phantomjs browser-tests with browser-coverage (via
 
 
 # todo
+- fix newly covered lines remaining uncovered
 - revamping with dynamic test and coverage
 - create flamegraph from istanbul coverage
 - explicitly require slimerjs instead of auto-detecting it

@@ -1464,6 +1464,27 @@
       exports.onReady.counter += 1;
       return server;
     };
+
+    // init assets
+    [{
+      cache: '/test/test.html',
+      data: exports.fs.readFileSync(process.cwd() + '/README.md', 'utf8')
+        // remove indent before "'"
+        .replace(
+          (/[\S\s]+?(\n *)('<!DOCTYPE html>\\n[\S\s]+?<\/html>\\n')[\S\s]+/),
+          function (match0, match1, match2) {
+            // jslint-hack
+            exports.nop(match0);
+            return match2.replace(new RegExp(match1, 'g'), '\n');
+          }
+        )
+        .replace((/["'](.*?)\\n.*/gm), '$1')
+    }].forEach(function (options) {
+      if (!exports.fileCacheDict[options.cache]) {
+        exports.fileCacheAndParse(options);
+      }
+    });
+    //!! debugPrint(exports.fileCacheDict['/test/test.html'].data);
   }());
 
 
@@ -1948,106 +1969,6 @@
         'from { background-position: 40px 0; }\n' +
         'to { background-position: 0 0; }\n' +
       '}\n' +
-      String() },
-
-
-
-    // http://validator.w3.org/check?uri=https%3A%2F%2Fhrku01-utility2-beta.herokuapp.com
-    '/test/test.html': { data: String() +
-      '<!DOCTYPE html>\n' +
-      '<html>\n' +
-      '<head>\n' +
-        '<meta charset="UTF-8">\n' +
-        '<link rel="stylesheet" href="/assets/utility2.css">\n' +
-        '<style>\n' +
-          '* {\n' +
-            'box-sizing: border-box;\n' +
-          '}\n' +
-          'body {\n' +
-            'background-color: #fff;\n' +
-            'font-family: Helvetical Neue, Helvetica, Arial, sans-serif;\n' +
-          '}\n' +
-          'body > div {\n' +
-            'margin-top: 20px;\n' +
-          '}\n' +
-          '.testReportDiv {\n' +
-            'display: none;\n' +
-          '}\n' +
-          'textarea {\n' +
-            'font-family: monospace;\n' +
-            'height: 16em;\n' +
-            'width: 100%;\n' +
-          '}\n' +
-        '</style>\n' +
-        '<title>{{envDict.npm_package_name}} [{{envDict.npm_package_version}}]</title>\n' +
-      '</head>\n' +
-      '<body>\n' +
-        '<div class="ajaxProgressDiv" style="display: none;">\n' +
-          '<div class="ajaxProgressBarDiv ajaxProgressBarDivLoading">loading</div>\n' +
-        '</div>\n' +
-        '<h1>{{envDict.npm_package_name}} [{{envDict.npm_package_version}}]</h1>\n' +
-        '<h3>{{envDict.npm_package_description}}</h3>\n' +
-        '<div class="mainApp"></div>\n' +
-        '<div>\n' +
-          '<div>edit or paste script below to cover and test</div>\n' +
-          '<div><textarea class="istanbulLiteInputTextareaDiv">\n' +
-            "(function () {\n" +
-            "  var local, utility2;\n" +
-            "  local = {};\n" +
-            "  utility2 = window.utility2;\n" +
-            "  local.modeTest = true;\n" +
-            "  // init browser js-env tests\n" +
-            "  local._ajax_200_test = function (onError) {\n" +
-            "    /*\n" +
-            "      this function will test ajax's 200 http-status-code handling behavior\n" +
-            "    */\n" +
-            "    // ajax-request builtin-url '/test/hello'\n" +
-            "    utility2.ajax({ url: '/test/hello' }, function (error, data) {\n" +
-            "      utility2.testTryCatch(function () {\n" +
-            "        // validate no error occurred\n" +
-            "        utility2.assert(!error, error);\n" +
-            "        // validate data\n" +
-            "        utility2.assert(data === 'hello', data);\n" +
-            "        onError();\n" +
-            "      }, onError);\n" +
-            "    });\n" +
-            "  };\n" +
-            "  local._ajax_404_test = function (onError) {\n" +
-            "    /*\n" +
-            "      this function will test ajax's 404 http-status-code handling behavior\n" +
-            "    */\n" +
-            "    // ajax-request undefined-url '/test/undefined'\n" +
-            "    utility2.ajax({ url: '/test/undefined' }, function (error) {\n" +
-            "      utility2.testTryCatch(function () {\n" +
-            "        // validate error occurred\n" +
-            "        utility2.assert(error instanceof Error, error);\n" +
-            "        // validate 404 http status-code\n" +
-            "        utility2.assert(error.statusCode === 404, error.statusCode);\n" +
-            "        onError();\n" +
-            "      }, onError);\n" +
-            "    });\n" +
-            "  };\n" +
-            "  // run test\n" +
-            "  utility2.testRun(local);\n" +
-            "}());\n" +
-          '</textarea></div>\n' +
-        '</div>\n' +
-        '<div class="testReportDiv"></div>\n' +
-        '<div class="istanbulLiteCoverageDiv"></div>\n' +
-        '<script src="/assets/istanbul-lite.js"></script>\n' +
-        '<script src="/assets/utility2.js"></script>\n' +
-        '<script>window.utility2.envDict = {\n' +
-          'npm_package_description: "{{envDict.npm_package_description}}",\n' +
-          'npm_package_name: "{{envDict.npm_package_name}}",\n' +
-          'npm_package_version: "{{envDict.npm_package_version}}"\n' +
-        '};\n' +
-        'document.querySelector(\n' +
-          '".istanbulLiteInputTextareaDiv"\n' +
-        ').addEventListener("keyup", window.istanbul_lite.coverAndEval);\n' +
-        'window.istanbul_lite.coverAndEval();</script>\n' +
-        '<script src="/test/test.js"></script>\n' +
-      '</body>\n' +
-      '</html>\n' +
       String() }
   };
   return exports;

@@ -564,7 +564,7 @@
               exports.fs.existsSync(options.phantomjs.fileScreenCapture),
             options.phantomjs.fileScreenCapture
           );
-          // delete screen-capture file, so it will not interfere with re-tests
+          // remove screen-capture file, so it will not interfere with re-tests
           exports.fs.unlinkSync(options.phantomjs.fileScreenCapture);
           onParallel();
         }, onParallel);
