@@ -1469,16 +1469,8 @@
     [{
       cache: '/test/test.html',
       data: exports.fs.readFileSync(process.cwd() + '/README.md', 'utf8')
-        // remove indent before "'"
-        .replace(
-          (/[\S\s]+?(\n *)('<!DOCTYPE html>\\n[\S\s]+?<\/html>\\n')[\S\s]+/),
-          function (match0, match1, match2) {
-            // jslint-hack
-            exports.nop(match0);
-            return match2.replace(new RegExp(match1, 'g'), '\n');
-          }
-        )
-        .replace((/["'](.*?)\\n.*/gm), '$1')
+        .replace((/[\S\s]+?(<!DOCTYPE html>[\S\s]+?<\/html>)[\S\s]+/), '$1')
+        .replace((/\\n\\$/gm), '')
     }].forEach(function (options) {
       if (!exports.fileCacheDict[options.cache]) {
         exports.fileCacheAndParse(options);
