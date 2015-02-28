@@ -61,7 +61,9 @@
           case 'b':
             Object.keys(dict2).forEach(function (key) {
               dict2[key].forEach(function (count, ii) {
-                dict1[key][ii] = dict1[key][ii] ? dict1[key][ii] + count : count;
+                dict1[key][ii] = dict1[key][ii]
+                  ? dict1[key][ii] + count
+                  : count;
               });
             });
             break;
@@ -69,7 +71,9 @@
           case 'f':
           case 's':
             Object.keys(dict2).forEach(function (key) {
-              dict1[key] = dict1[key] ? dict1[key] + dict2[key] : dict2[key];
+              dict1[key] = dict1[key]
+                ? dict1[key] + dict2[key]
+                : dict2[key];
             });
             break;
           }
@@ -82,7 +86,9 @@
       /*
         this function will return a deep-copy of the JSON value
       */
-      return value === undefined ? undefined : JSON.parse(JSON.stringify(value));
+      return value === undefined
+        ? undefined
+        : JSON.parse(JSON.stringify(value));
     };
 
     app.utility2.jsonStringifyOrdered = function (value, replacer, space) {
@@ -93,7 +99,8 @@
       var stringifyOrdered;
       stringifyOrdered = function (value) {
         /*
-          this function will recursively stringify the value, sorting object keys along the way
+          this function will recursively stringify the value,
+          and sort its object-keys along the way
         */
         // if value is an array, then recursively stringify its elements
         if (Array.isArray(value)) {
@@ -147,7 +154,9 @@
         if (args[0]) {
           // try to append errorStack to args[0].stack
           try {
-            args[0].stack = args[0].stack ? args[0].stack + '\n' + errorStack : errorStack;
+            args[0].stack = args[0].stack
+              ? args[0].stack + '\n' + errorStack
+              : errorStack;
           } catch (ignore) {
           }
         }
@@ -266,7 +275,9 @@
           backup[key] = options2;
           // 2. set the override item to the options object
           // if options is envDict, then override falsey values with empty string
-          options[key] = options === app.utility2.envDict ? override2 || '' : override2;
+          options[key] = options === app.utility2.envDict
+            ? override2 || ''
+            : override2;
           return;
         }
         // 3. recurse options[key] and override[key]
@@ -430,14 +441,18 @@
         testPlatform.testCaseList.sort(function (arg1, arg2) {
           arg1 = arg1.status.replace('passed', 'z') + arg1.name.toLowerCase();
           arg2 = arg2.status.replace('passed', 'z') + arg2.name.toLowerCase();
-          return arg1 <= arg2 ? -1 : 1;
+          return arg1 <= arg2
+            ? -1
+            : 1;
         });
       });
       // sort testPlatformList by status and name
       testReport.testPlatformList.sort(function (arg1, arg2) {
         arg1 = arg1.status.replace('passed', 'z') + arg1.name.toLowerCase();
         arg2 = arg2.status.replace('passed', 'z') + arg2.name.toLowerCase();
-        return arg1 <= arg2 ? -1 : 1;
+        return arg1 <= arg2
+          ? -1
+          : 1;
       });
       // stop testReport timer
       if (testReport.testsPending === 0) {
@@ -498,8 +513,9 @@
                     testCase.status[0].toUpperCase() + testCase.status.slice(1)
                 });
               }),
-              testReportPlatformPreClass: 'testReportPlatformPre' +
-                (errorStackList.length ? '' : 'Hidden'),
+              testReportPlatformPreClass: 'testReportPlatformPre' + (errorStackList.length
+                ? ''
+                : 'Hidden'),
               testPlatformNumber: ii + 1
             });
           }),
@@ -768,7 +784,9 @@
         keyList.slice(2, -2).split('.').forEach(function (key) {
           value = value && value[key];
         });
-        return value === undefined ? valueDefault || keyList : value;
+        return value === undefined
+          ? valueDefault || keyList
+          : value;
       });
     };
 
@@ -945,7 +963,9 @@
         urlParsed;
       modeNext = 0;
       onNext = app.utility2.onErrorWithStack(function (error, data) {
-        modeNext = error instanceof Error ? NaN : modeNext + 1;
+        modeNext = error instanceof Error
+          ? NaN
+          : modeNext + 1;
         switch (modeNext) {
         case 1:
           // set timerTimeout
@@ -981,7 +1001,9 @@
             ? options.data.length
             : 0;
           // make http request
-          request = (urlParsed.protocol === 'https:' ? app.utility2.https : app.utility2.http)
+          request = (urlParsed.protocol === 'https:'
+            ? app.utility2.https
+            : app.utility2.http)
             .request(options, onNext)
             // handle error event
             .on('error', onNext);
@@ -998,7 +1020,9 @@
           break;
         case 3:
           // init responseText
-          responseText = options.resultType === 'binary' ? data : data.toString();
+          responseText = options.resultType === 'binary'
+            ? data
+            : data.toString();
           // error handling for http status code >= 400
           if (response.statusCode >= 400) {
             onNext(new Error(responseText));
@@ -1113,7 +1137,9 @@
       var modeNext, onNext, onParallel, timerTimeout;
       modeNext = 0;
       onNext = function (error) {
-        modeNext = error instanceof Error ? NaN : modeNext + 1;
+        modeNext = error instanceof Error
+          ? NaN
+          : modeNext + 1;
         switch (modeNext) {
         case 1:
           options.argv1 = app.utility2.envDict.MODE_BUILD + '.' + options.argv0 + '.' +
@@ -1379,7 +1405,9 @@
         var contentTypeDict, modeNext, onNext;
         modeNext = -2;
         onNext = function (error) {
-          modeNext = error instanceof Error ? NaN : modeNext + 1;
+          modeNext = error instanceof Error
+            ? NaN
+            : modeNext + 1;
           if (modeNext === -1) {
             // debug server request
             app.utility2._debugServerRequest = request;
@@ -1414,7 +1442,9 @@
           }
           // if error occurred, then respond with '500 Internal Server Error'
           // else respond with '404 Not Found'
-          app.utility2.serverRespondDefault(request, response, error ? 500 : 404, error);
+          app.utility2.serverRespondDefault(request, response, error
+            ? 500
+            : 404, error);
         };
         onNext();
       });
@@ -1516,9 +1546,9 @@
         );
         break;
       case 2:
-        console.log(app.utility2.argv0 + ' - open ' +
-          (error === 'success' ? 'success' : 'fail') +
-          ' ' + app.utility2.url);
+        console.log(app.utility2.argv0 + ' - open ' + (error === 'success'
+          ? 'success'
+          : 'fail') + ' ' + app.utility2.url);
         switch (app.utility2.modePhantom) {
         // screen-capture webpage after timeoutScreenCapture ms
         case 'screenCapture':
@@ -1573,8 +1603,9 @@
         if (error && typeof error === 'string') {
           console.error('\n' + app.utility2.argv1 + '\nERROR: ' + error + ' TRACE:');
           (trace || []).forEach(function (t) {
-            console.error(' -> ' + (t.file || t.sourceURL) + ': ' + t.line +
-              (t.function ? ' (in function ' + t.function + ')' : ''));
+            console.error(' -> ' + (t.file || t.sourceURL) + ': ' + t.line + (t.function
+              ? ' (in function ' + t.function + ')'
+              : ''));
           });
           console.error();
         // handle phantom error
@@ -1737,7 +1768,9 @@
         : app.utility2.modeJs === 'node'
         ? 'node - ' +
           process.platform + ' ' + process.version + ' - ' + new Date().toISOString()
-        : (app.utility2.global.slimer ? 'slimer - ' : 'phantom - ') +
+        : (app.utility2.global.slimer
+          ? 'slimer - '
+          : 'phantom - ') +
           app.utility2.system.os.name + ' ' +
           app.utility2.global.phantom.version.major + '.' +
           app.utility2.global.phantom.version.minor + '.' +

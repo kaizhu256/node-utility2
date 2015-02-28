@@ -30,7 +30,9 @@
       }
     }());
     // init utility2
-    app.utility2 = app.modeJs === 'browser' ? window.utility2 : require('./index.js');
+    app.utility2 = app.modeJs === 'browser'
+      ? window.utility2
+      : require('./index.js');
 
     // init tests
     app._ajax_default_test = function (onError) {
@@ -648,7 +650,6 @@
             // test random $npm_config_server_port handling behavior
             npm_config_server_port: ''
           },
-          fileCacheAndParse: app.utility2.nop,
           http: {
             createServer: function () {
               return { listen: app.utility2.nop };
@@ -682,11 +683,15 @@
       // cache and parse the file
       app.utility2.fileCacheAndParse(options);
     });
-    // init server-middlewares
+    // jslint /assets/utility2.css
+    app.utility2.jslint_lite.jslintAndPrint(app.utility2.fileCacheDict[
+      '/assets/utility2.css'
+    ].data, '/assets/utility2.css');
+    // init serverMiddlewareList
     app.serverMiddlewareList = [
       function (request, response, onNext) {
         /*
-          this user-defined middleware will override the builtin test-middleware
+          this function is the main test-middleware
         */
         switch (request.urlPathNormalized) {
         // redirect '/' to '/test/test.html'

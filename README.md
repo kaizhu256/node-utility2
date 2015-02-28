@@ -142,30 +142,30 @@ run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
 <html>\n\
 <head>\n\
   <meta charset="UTF-8">\n\
-  <link rel="stylesheet" href="/assets/utility2.css">\n\
-  <style>\n\
-    * {\n\
-      box-sizing: border-box;\n\
-    }\n\
-    body {\n\
-      background-color: #fff;\n\
-      font-family: Helvetical Neue, Helvetica, Arial, sans-serif;\n\
-    }\n\
-    body > div {\n\
-      margin-top: 20px;\n\
-    }\n\
-    .testReportDiv {\n\
-      display: none;\n\
-    }\n\
-    textarea {\n\
-      font-family: monospace;\n\
-      height: 24em;\n\
-      width: 100%;\n\
-    }\n\
-  </style>\n\
   <title>\n\
     {{envDict.npm_package_name}} [{{envDict.npm_package_version}}]\n\
   </title>\n\
+  <link rel="stylesheet" href="/assets/utility2.css">\n\
+  <style>\n\
+  * {\n\
+    box-sizing: border-box;\n\
+  }\n\
+  body {\n\
+    background-color: #fff;\n\
+    font-family: Helvetical Neue, Helvetica, Arial, sans-serif;\n\
+  }\n\
+  body > div {\n\
+    margin-top: 20px;\n\
+  }\n\
+  .testReportDiv {\n\
+    display: none;\n\
+  }\n\
+  textarea {\n\
+    font-family: monospace;\n\
+    height: 24em;\n\
+    width: 100%;\n\
+  }\n\
+  </style>\n\
 </head>\n\
 <body>\n\
   <div class="ajaxProgressDiv" style="display: none;">\n\
@@ -173,9 +173,9 @@ run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
   </div>\n\
   <h1>{{envDict.npm_package_name}} [{{envDict.npm_package_version}}]</h1>\n\
   <h3>{{envDict.npm_package_description}}</h3>\n\
-  <div class="mainApp"></div>\n\
-  <div>edit or paste script below to cover and test</div>\n\
-  <textarea class="istanbulLiteInputTextareaDiv">\n\
+  <div class="testApp">\n\
+    <div>edit or paste script below to cover and test</div>\n\
+    <textarea class="istanbulLiteInputTextareaDiv">\n\
 window.utility2.testRun({\n\
 \n\
   modeTest: true,\n\
@@ -184,13 +184,15 @@ window.utility2.testRun({\n\
     /*\n\
       this function will test ajax"s GET handling behavior\n\
     */\n\
-    // test ajax GET request for url "/test/hello"\n\
-    utility2.ajax({ url: "/test/hello" }, function (error, data) {\n\
+    // request main-page "/"\n\
+    utility2.ajax({ url: "/" }, function (error, data, xhr) {\n\
       try {\n\
         // validate no error occurred\n\
         utility2.assert(!error, error);\n\
-        // validate data\n\
-        utility2.assert(data === "hello", data);\n\
+        // validate main-page is non-empty\n\
+        if (xhr.statusCode === 200) {\n\
+          utility2.assert(data, data);\n\
+        }\n\
         onError();\n\
       } catch (error) {\n\
         onError(error);\n\
@@ -198,7 +200,8 @@ window.utility2.testRun({\n\
     });\n\
   }\n\
 });\n\
-  </textarea>\n\
+    </textarea>\n\
+  </div>\n\
   <div class="testReportDiv"></div>\n\
   <div class="istanbulLiteCoverageDiv"></div>\n\
   <script src="/assets/istanbul-lite.js"></script>\n\
@@ -322,7 +325,6 @@ window.utility2.testRun({\n\
 
 # todo
 - jslint utility2.css
-- revamping with dynamic test and coverage
 - create flamegraph from istanbul coverage
 - explicitly require slimerjs instead of auto-detecting it
 - auto-generate help doc from README.md

@@ -318,7 +318,9 @@ shNpmTest() {
     Object.keys(coverage).forEach(function (file) {
       file = coverage[file];
       Object.keys(file.s).forEach(function (key) {
-        percent[0] += file.s[key] || file.statementMap[key].skip ? 1 : 0;
+        percent[0] += file.s[key] || file.statementMap[key].skip
+          ? 1
+          : 0;
         percent[1] += 1;
       });
     });
