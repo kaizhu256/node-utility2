@@ -322,7 +322,6 @@ window.utility2.testRun({\n\
 
 # todo
 - jslint utility2.css
-- debug repl error
 - revamping with dynamic test and coverage
 - create flamegraph from istanbul coverage
 - explicitly require slimerjs instead of auto-detecting it

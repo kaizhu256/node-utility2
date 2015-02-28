@@ -1202,13 +1202,18 @@
         app.utility2.global[key] = globalDict[key];
       });
       // start repl server
-      app.utility2._replServer = require('repl').start({ useGlobals: true });
+      app.utility2._replServer = require('repl').start({ useGlobal: true });
       // save repl eval function
       app.utility2._replServer.evalDefault = app.utility2._replServer.eval;
       // hook custom repl eval function
       app.utility2._replServer.eval = function (script, context, file, onError) {
-        var match;
+        var match, onError2;
         match = (/^([^ ]+)(.*)\n/).exec(script);
+        onError2 = function (error, data) {
+          // debug error
+          app.utility2.debugReplError = error || app.utility2.debugReplError;
+          onError(error, data);
+        };
         switch (match && match[1]) {
         // syntax sugar to run async shell command
         case '$':
@@ -1231,7 +1236,7 @@
             )
             // on shell exit, print return prompt
             .on('exit', function () {
-              app.utility2._replServer.evalDefault('\n', context, file, onError);
+              app.utility2._replServer.evalDefault('\n', context, file, onError2);
             });
           return;
         // syntax sugar to grep current dir
@@ -1258,7 +1263,7 @@
             )
             // on shell exit, print return prompt
             .on('exit', function () {
-              app.utility2._replServer.evalDefault('\n', context, file, onError);
+              app.utility2._replServer.evalDefault('\n', context, file, onError2);
             });
           return;
         // syntax sugar to print stringified arg
@@ -1267,7 +1272,7 @@
           break;
         }
         // eval modified script
-        app.utility2._replServer.evalDefault(script, context, file, onError);
+        app.utility2._replServer.evalDefault(script, context, file, onError2);
       };
     };
 
@@ -1443,9 +1448,10 @@
       file: __filename
     }, {
       cache: '/test/test.html',
-      data: app.utility2.fs.readFileSync(__dirname + '/README.md', 'utf8')
+      data: app.utility2.textFormat(app.utility2.fs
+        .readFileSync(__dirname + '/README.md', 'utf8')
         .replace((/[\S\s]+?(<!DOCTYPE html>[\S\s]+?<\/html>)[\S\s]+/), '$1')
-        .replace((/\\n\\$/gm), '')
+        .replace((/\\n\\$/gm), ''), { envDict: app.utility2.envDict })
     }].forEach(function (options) {
       if (!app.utility2.fileCacheDict[options.cache]) {
         app.utility2.fileCacheAndParse(options);

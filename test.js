@@ -614,8 +614,7 @@
             app.utility2.nop(event);
             callback();
           } };
-        } }],
-        [app.utility2._replServer, { evalDefault: app.utility2.nop }]
+        } }]
       ], onError, function (onError) {
         [
           // test shell handling behavior
