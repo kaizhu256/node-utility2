@@ -610,7 +610,7 @@
       app.utility2.testMock([
         [app.utility2.child_process, { spawn: function () {
           return { on: function (event, callback) {
-            // nop hack to pass jslint
+            // jslint-hack
             app.utility2.nop(event);
             callback();
           } };
@@ -690,6 +690,21 @@
           this user-defined middleware will override the builtin test-middleware
         */
         switch (request.urlPathNormalized) {
+        // redirect '/' to '/test/test.html'
+        case '/':
+          app.utility2.serverRespondWriteHead(request, response, 303, {
+            'Location': request.url.replace('/', '/test/test.html')
+          });
+          response.end();
+          break;
+        // serve builtin assets
+        case '/assets/istanbul-lite.js':
+        case '/assets/utility2.css':
+        case '/assets/utility2.js':
+        case '/test/test.html':
+        case '/test/test.js':
+          response.end(app.utility2.fileCacheDict[request.urlPathNormalized].data);
+          break;
         // test http POST handling behavior
         case '/test/echo':
           app.utility2.serverRespondEcho(request, response);
@@ -740,9 +755,7 @@
         default:
           onNext();
         }
-      },
-      // builtin test-middleware
-      app.utility2.testMiddleware
+      }
     ];
     // run server-test
     app.utility2.testRunServer(app);

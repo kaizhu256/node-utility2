@@ -738,7 +738,7 @@
       var match, replace, rgx, value;
       dict = dict || {};
       replace = function (match0, fragment) {
-        // nop hack to pass jslint
+        // jslint-hack
         app.utility2.nop(match0);
         return dict[match].map(function (dict) {
           // recursively format the array fragment
@@ -1157,7 +1157,7 @@
           [options.fileCoverage, options.fileTestReport].forEach(function (file, ii) {
             onParallel.counter += 1;
             app.utility2.fs.readFile(file, 'utf8', function (error, data) {
-              // nop hack to pass jslint
+              // jslint-hack
               app.utility2.nop(error);
               try {
                 data = JSON.parse(data);
@@ -1310,7 +1310,7 @@
       /*
         this function will set the response object's statusCode / headers
       */
-      // nop hack to pass jslint
+      // jslint-hack
       app.utility2.nop(request);
       if (!response.headersSent) {
         // set response.statusCode
@@ -1346,44 +1346,6 @@
         .on('error', onError);
     };
 
-    app.utility2.testMiddleware = function (request, response, onNext) {
-      /*
-        this builtin test-middleware will
-        1. redirect '/' to '/test/test.html'
-        2. serve '/assets/utility2.css' from builtin test-library
-        3. serve '/assets/utility2.js' from builtin test-library
-        4. serve '/test/test.js' from user-defined test-code
-        5. serve '/test/test.html' from builtin test-page
-      */
-      switch (request.urlPathNormalized) {
-      // 1. redirect '/' to '/test/test.html'
-      case '/':
-        app.utility2.serverRespondWriteHead(request, response, 303, {
-          'Location': request.url.replace('/', '/test/test.html')
-        });
-        response.end();
-        break;
-      case '/assets/istanbul-lite.js':
-      // 2. serve '/assets/utility2.css' from builtin test-library
-      case '/assets/utility2.css':
-      // 3. serve '/assets/utility2.js' from builtin test-library
-      case '/assets/utility2.js':
-      // 4. serve '/test/test.js' from user-defined test-file
-      case '/test/test.js':
-        response.end(app.utility2.fileCacheDict[request.urlPathNormalized].data);
-        break;
-      // 5. serve '/test/test.html' from builtin test-page
-      case '/test/test.html':
-        response.end(app.utility2.textFormat(app.utility2.fileCacheDict[
-          request.urlPathNormalized
-        ].data, { envDict: app.utility2.envDict }));
-        break;
-      // fallback to next middleware
-      default:
-        onNext();
-      }
-    };
-
     app.utility2.testRunServer = function (options) {
       /*
         this function will
@@ -1399,19 +1361,6 @@
           // keep timerTimeout from blocking the process from exiting
           .unref();
       }
-      // init assets
-      [{
-        cache: '/assets/istanbul-lite.js',
-        data: app.utility2.istanbul_lite.istanbulLiteJs
-      }, {
-        cache: '/assets/utility2.js',
-        coverage: 'utility2',
-        file: __filename
-      }].forEach(function (options) {
-        if (!app.utility2.fileCacheDict[options.cache]) {
-          app.utility2.fileCacheAndParse(options);
-        }
-      });
       // coverage-hack - cover utility2 in phantomjs
       if (app.utility2.global.__coverage__ &&
           app.utility2.envDict.npm_package_name === 'utility2') {
@@ -1486,6 +1435,13 @@
 
     // init assets
     [{
+      cache: '/assets/istanbul-lite.js',
+      data: app.utility2.istanbul_lite.istanbulLiteJs
+    }, {
+      cache: '/assets/utility2.js',
+      coverage: 'utility2',
+      file: __filename
+    }, {
       cache: '/test/test.html',
       data: app.utility2.fs.readFileSync(__dirname + '/README.md', 'utf8')
         .replace((/[\S\s]+?(<!DOCTYPE html>[\S\s]+?<\/html>)[\S\s]+/), '$1')
@@ -1683,7 +1639,7 @@
     location.search.replace(
       (/\b(mode[A-Z]\w+|_testSecret|timeoutDefault)=([^#&=]+)/g),
       function (match0, key, value) {
-        // nop hack to pass jslint
+        // jslint-hack
         app.utility2.nop(match0);
         app.utility2[key] = value;
         // try to parse value as json object
@@ -1798,6 +1754,87 @@
 
   // init fileCacheDict
   app.utility2.fileCacheDict = {
+    '/assets/utility2.css': { data: String() +
+      '/*csslint\n' +
+        'box-model: false\n' +
+      '*/\n' +
+      '.ajaxProgressBarDiv {\n' +
+        'animation: 2s linear 0s normal none infinite ajaxProgressBarDivAnimation;\n' +
+        '-o-animation: 2s linear 0s normal none infinite ajaxProgressBarDivAnimation;\n' +
+        '-moz-animation: 2s linear 0s normal none infinite ajaxProgressBarDivAnimation;\n' +
+        '-webkit-animation: 2s linear 0s normal none infinite ajaxProgressBarDivAnimation;\n' +
+        'background-image: linear-gradient(\n' +
+          '45deg,rgba(255,255,255,.25) 25%,\n' +
+          'transparent 25%,\n' +
+          'transparent 50%,\n' +
+          'rgba(255,255,255,.25) 50%,\n' +
+          'rgba(255,255,255,.25) 75%,\n' +
+          'transparent 75%,\n' +
+          'transparent\n' +
+        ');\n' +
+        'background-size: 40px 40px;\n' +
+        'color: #fff;\n' +
+        'font-family: Helvetical Neue, Helvetica, Arial, sans-serif;\n' +
+        'font-size: 12px;\n' +
+        'padding: 2px 0 2px 0;\n' +
+        'text-align: center;\n' +
+        'transition: width .5s ease;\n' +
+        'width: 25%;\n' +
+      '}\n' +
+      '.ajaxProgressBarDivError {\n' +
+        'background-color: #d33;\n' +
+      '}\n' +
+      '.ajaxProgressBarDivLoading {\n' +
+        'background-color: #37b;\n' +
+      '}\n' +
+      '.ajaxProgressBarDivSuccess {\n' +
+        'background-color: #3b3;\n' +
+      '}\n' +
+      '.ajaxProgressDiv {\n' +
+        'background-color: #fff;\n' +
+        'border: 1px solid;\n' +
+        'display: none;\n' +
+        'left: 50%;\n' +
+        'margin: 0 0 0 -50px;\n' +
+        'padding: 5px 5px 5px 5px;\n' +
+        'position: fixed;\n' +
+        'top: 49%;\n' +
+        'width: 100px;\n' +
+        'z-index: 9999;\n' +
+      '}\n' +
+      '@keyframes ajaxProgressBarDivAnimation {\n' +
+        'from { background-position: 40px 0; }\n' +
+        'to { background-position: 0 0; }\n' +
+      '}\n' +
+      '@-o-keyframes ajaxProgressBarDivAnimation {\n' +
+        'from { background-position: 40px 0; }\n' +
+        'to { background-position: 0 0; }\n' +
+      '}\n' +
+      '@-webkit-keyframes ajaxProgressBarDivAnimation {\n' +
+        'from { background-position: 40px 0; }\n' +
+        'to { background-position: 0 0; }\n' +
+      '}\n' +
+      String() },
+
+
+
+/* jslint-ignore-begin */
+    // https://img.shields.io/badge/last_build-0000_00_00_00_00_00_UTC_--_master_--_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-0077ff.svg?style=flat
+    '/build/build.badge.svg': { data: '<svg xmlns="http://www.w3.org/2000/svg" width="563" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="563" height="20" fill="#555"/><rect rx="0" x="61" width="502" height="20" fill="#07f"/><path fill="#07f" d="M61 0h4v20h-4z"/><rect rx="0" width="563" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="31.5" y="15" fill="#010101" fill-opacity=".3">last build</text><text x="31.5" y="14">last build</text><text x="311" y="15" fill="#010101" fill-opacity=".3">0000 00 00 00 00 00 UTC - master - aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</text><text x="311" y="14">0000 00 00 00 00 00 UTC - master - aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</text></g></svg>' },
+
+
+
+    // https://img.shields.io/badge/coverage-100.0%-00dd00.svg?style=flat
+    '/build/coverage.badge.svg': { data: '<svg xmlns="http://www.w3.org/2000/svg" width="117" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="117" height="20" fill="#555"/><rect rx="0" x="63" width="54" height="20" fill="#0d0"/><path fill="#0d0" d="M63 0h4v20h-4z"/><rect rx="0" width="117" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="32.5" y="15" fill="#010101" fill-opacity=".3">coverage</text><text x="32.5" y="14">coverage</text><text x="89" y="15" fill="#010101" fill-opacity=".3">100.0%</text><text x="89" y="14">100.0%</text></g></svg>' },
+
+
+
+    // https://img.shields.io/badge/tests_failed-999-dd0000.svg?style=flat
+    '/build/test-report.badge.svg': { data: '<svg xmlns="http://www.w3.org/2000/svg" width="103" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="103" height="20" fill="#555"/><rect rx="0" x="72" width="31" height="20" fill="#d00"/><path fill="#d00" d="M72 0h4v20h-4z"/><rect rx="0" width="103" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="37" y="15" fill="#010101" fill-opacity=".3">tests failed</text><text x="37" y="14">tests failed</text><text x="86.5" y="15" fill="#010101" fill-opacity=".3">999</text><text x="86.5" y="14">999</text></g></svg>' },
+/* jslint-ignore-end */
+
+
+
     '/test/test-report.html.template': { data: String() +
       '<style>\n' +
       '.testReportPlatformDiv {\n' +
@@ -1916,91 +1953,6 @@
       '</pre>\n' +
       '</div>\n' +
       '{{/testPlatformList}}\n' +
-      String() },
-
-
-
-/* jslint-ignore-begin */
-    // https://img.shields.io/badge/last_build-0000_00_00_00_00_00_UTC_--_master_--_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-0077ff.svg?style=flat
-    '/build/build.badge.svg': { data: '<svg xmlns="http://www.w3.org/2000/svg" width="563" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="563" height="20" fill="#555"/><rect rx="0" x="61" width="502" height="20" fill="#07f"/><path fill="#07f" d="M61 0h4v20h-4z"/><rect rx="0" width="563" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="31.5" y="15" fill="#010101" fill-opacity=".3">last build</text><text x="31.5" y="14">last build</text><text x="311" y="15" fill="#010101" fill-opacity=".3">0000 00 00 00 00 00 UTC - master - aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</text><text x="311" y="14">0000 00 00 00 00 00 UTC - master - aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</text></g></svg>' },
-/* jslint-ignore-end */
-
-
-
-    // https://img.shields.io/badge/coverage-100.0%-00dd00.svg?style=flat
-/* jslint-ignore-begin */
-    '/build/coverage.badge.svg': { data: '<svg xmlns="http://www.w3.org/2000/svg" width="117" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="117" height="20" fill="#555"/><rect rx="0" x="63" width="54" height="20" fill="#0d0"/><path fill="#0d0" d="M63 0h4v20h-4z"/><rect rx="0" width="117" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="32.5" y="15" fill="#010101" fill-opacity=".3">coverage</text><text x="32.5" y="14">coverage</text><text x="89" y="15" fill="#010101" fill-opacity=".3">100.0%</text><text x="89" y="14">100.0%</text></g></svg>' },
-/* jslint-ignore-end */
-
-
-
-    // https://img.shields.io/badge/tests_failed-999-dd0000.svg?style=flat
-/* jslint-ignore-begin */
-    '/build/test-report.badge.svg': { data: '<svg xmlns="http://www.w3.org/2000/svg" width="103" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="103" height="20" fill="#555"/><rect rx="0" x="72" width="31" height="20" fill="#d00"/><path fill="#d00" d="M72 0h4v20h-4z"/><rect rx="0" width="103" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="37" y="15" fill="#010101" fill-opacity=".3">tests failed</text><text x="37" y="14">tests failed</text><text x="86.5" y="15" fill="#010101" fill-opacity=".3">999</text><text x="86.5" y="14">999</text></g></svg>' },
-/* jslint-ignore-end */
-
-
-
-    '/assets/utility2.css': { data: String() +
-      '/*csslint\n' +
-        'box-model: false\n' +
-      '*/\n' +
-      '.ajaxProgressBarDiv {\n' +
-        'animation: 2s linear 0s normal none infinite ajaxProgressBarDivAnimation;\n' +
-        '-o-animation: 2s linear 0s normal none infinite ajaxProgressBarDivAnimation;\n' +
-        '-moz-animation: 2s linear 0s normal none infinite ajaxProgressBarDivAnimation;\n' +
-        '-webkit-animation: 2s linear 0s normal none infinite ajaxProgressBarDivAnimation;\n' +
-        'background-image: linear-gradient(\n' +
-          '45deg,rgba(255,255,255,.25) 25%,\n' +
-          'transparent 25%,\n' +
-          'transparent 50%,\n' +
-          'rgba(255,255,255,.25) 50%,\n' +
-          'rgba(255,255,255,.25) 75%,\n' +
-          'transparent 75%,\n' +
-          'transparent\n' +
-        ');\n' +
-        'background-size: 40px 40px;\n' +
-        'color: #fff;\n' +
-        'font-family: Helvetical Neue, Helvetica, Arial, sans-serif;\n' +
-        'font-size: 12px;\n' +
-        'padding: 2px 0 2px 0;\n' +
-        'text-align: center;\n' +
-        'transition: width .5s ease;\n' +
-        'width: 25%;\n' +
-      '}\n' +
-      '.ajaxProgressBarDivError {\n' +
-        'background-color: #d33;\n' +
-      '}\n' +
-      '.ajaxProgressBarDivLoading {\n' +
-        'background-color: #37b;\n' +
-      '}\n' +
-      '.ajaxProgressBarDivSuccess {\n' +
-        'background-color: #3b3;\n' +
-      '}\n' +
-      '.ajaxProgressDiv {\n' +
-        'background-color: #fff;\n' +
-        'border: 1px solid;\n' +
-        'display: none;\n' +
-        'left: 50%;\n' +
-        'margin: 0 0 0 -50px;\n' +
-        'padding: 5px 5px 5px 5px;\n' +
-        'position: fixed;\n' +
-        'top: 49%;\n' +
-        'width: 100px;\n' +
-        'z-index: 9999;\n' +
-      '}\n' +
-      '@keyframes ajaxProgressBarDivAnimation {\n' +
-        'from { background-position: 40px 0; }\n' +
-        'to { background-position: 0 0; }\n' +
-      '}\n' +
-      '@-o-keyframes ajaxProgressBarDivAnimation {\n' +
-        'from { background-position: 40px 0; }\n' +
-        'to { background-position: 0 0; }\n' +
-      '}\n' +
-      '@-webkit-keyframes ajaxProgressBarDivAnimation {\n' +
-        'from { background-position: 40px 0; }\n' +
-        'to { background-position: 0 0; }\n' +
-      '}\n' +
       String() }
   };
   return app;

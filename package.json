@@ -9,7 +9,7 @@
   "devDependencies": {
     "phantomjs-lite": "^2015.1.4-102"
   },
-  "description": "lightweight module that can dynamically cover and test browser-code (via istanbul-lite and phantomjs-lite)",
+  "description": "run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)",
   "engines": { "node": ">=0.10 <=0.12" },
   "keywords": [
     "browser",

@@ -1,6 +1,6 @@
 utility2 [![NPM](https://img.shields.io/npm/v/utility2.svg?style=flat-square)](https://www.npmjs.com/package/utility2)
 ========
-lightweight module that can dynamically cover and test browser-code (via istanbul-lite and phantomjs-lite)
+run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
 
 
 
@@ -130,7 +130,7 @@ lightweight module that can dynamically cover and test browser-code (via istanbu
         /*
           this user-defined middleware will override the builtin test-middleware
         */
-        // nop hack to pass jslint
+        // jslint-hack
         app.utility2.nop(request);
         switch (request.urlPathNormalized) {
         // redirect '/' to '/test/test.html'
@@ -280,7 +280,7 @@ window.utility2.testRun({\n\
   "devDependencies": {
     "phantomjs-lite": "^2015.1.4-102"
   },
-  "description": "lightweight module that can dynamically cover and test browser-code (via istanbul-lite and phantomjs-lite)",
+  "description": "run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)",
   "engines": { "node": ">=0.10 <=0.12" },
   "keywords": [
     "browser",
@@ -321,6 +321,8 @@ window.utility2.testRun({\n\
 
 
 # todo
+- jslint utility2.css
+- debug repl error
 - revamping with dynamic test and coverage
 - create flamegraph from istanbul coverage
 - explicitly require slimerjs instead of auto-detecting it
