@@ -1195,22 +1195,19 @@
       /*
         this function will start the repl debugger
       */
-      var evil, match;
-      // evil hack to pass jslint
-      evil = 'eval';
+      /*jslint
+        evil: true
+      */
       Object.keys(globalDict).forEach(function (key) {
         app.utility2.global[key] = globalDict[key];
       });
       // start repl server
       app.utility2._replServer = require('repl').start({ useGlobals: true });
       // save repl eval function
-      app.utility2._replServer.evalDefault = app.utility2._replServer[evil];
+      app.utility2._replServer.evalDefault = app.utility2._replServer.eval;
       // hook custom repl eval function
-      app.utility2._replServer[evil] = function (script, context, file, onError) {
-        // legacy node v0.10 code
-        if (process.version <= 'v0.10.x') {
-          match = (/^\(([^ ]+)(.*)\n\)/).exec(script);
-        }
+      app.utility2._replServer.eval = function (script, context, file, onError) {
+        var match;
         match = (/^([^ ]+)(.*)\n/).exec(script);
         switch (match && match[1]) {
         // syntax sugar to run async shell command
@@ -1266,10 +1263,6 @@
           return;
         // syntax sugar to print stringified arg
         case 'print':
-          // legacy node v0.10 code
-          if (process.version <= 'v0.10.x') {
-            script = '(console.log(String(' + match[2] + '))\n)';
-          }
           script = 'console.log(String(' + match[2] + '))\n';
           break;
         }

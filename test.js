@@ -608,7 +608,9 @@
       /*
         this function will test replStart's default handling behavior
       */
-      var evil;
+      /*jslint
+        evil: true
+      */
       app.utility2.testMock([
         [app.utility2.child_process, { spawn: function () {
           return { on: function (event, callback) {
@@ -619,8 +621,6 @@
         } }],
         [app.utility2._replServer, { evalDefault: app.utility2.nop }]
       ], onError, function (onError) {
-        // evil hack to pass jslint
-        evil = 'eval';
         [
           // test shell handling behavior
           '$ :\n',
@@ -633,22 +633,9 @@
           // test print handling behavior
           'print\n'
         ].forEach(function (script) {
-          // legacy node v0.10 code
-          if (process.version <= 'v0.10.x') {
-            script = '(' + script + ')';
-          }
-          app.utility2._replServer[evil](script, null, 'repl', app.utility2.nop);
+          app.utility2._replServer.eval(script, null, 'repl', app.utility2.nop);
         });
         onError();
-        //!! // test syntax-error handling behavior
-        //!! app.utility2._replServer[evil]('syntax-error', null, 'repl', function (error) {
-          //!! app.utility2.testTryCatch(function () {
-            //!! // validate error occurred
-            //!! // bug - use util.isError to validate error when using eval
-            //!! app.utility2.assert(require('util').isError(error), error);
-            //!! onError();
-          //!! }, onError);
-        //!! });
       });
     };
 
