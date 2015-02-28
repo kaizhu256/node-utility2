@@ -1487,7 +1487,7 @@
     // init assets
     [{
       cache: '/test/test.html',
-      data: app.utility2.fs.readFileSync(process.cwd() + '/README.md', 'utf8')
+      data: app.utility2.fs.readFileSync(__dirname + '/README.md', 'utf8')
         .replace((/[\S\s]+?(<!DOCTYPE html>[\S\s]+?<\/html>)[\S\s]+/), '$1')
         .replace((/\\n\\$/gm), '')
     }].forEach(function (options) {

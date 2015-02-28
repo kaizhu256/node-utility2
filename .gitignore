@@ -1,4 +1,6 @@
 *.log
 .DS_Store
 .tmp/
-node_modules
+.travis.yml
+Procfile
+node_modules/
