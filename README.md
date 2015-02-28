@@ -45,6 +45,7 @@ lightweight module that can dynamically cover and test browser-code (via istanbu
 /*jslint
   browser: true,
   indent: 2,
+  maxlen: 80,
   node: true, nomen: true
 */
 (function () {
@@ -321,7 +322,6 @@ window.utility2.testRun({\n\
 
 # todo
 - fix npm test for node v0.12
-- fix newly covered lines remaining uncovered
 - revamping with dynamic test and coverage
 - create flamegraph from istanbul coverage
 - explicitly require slimerjs instead of auto-detecting it

@@ -2,6 +2,7 @@
   bitwise: true, browser: true,
   indent: 2,
   maxerr: 8,
+  maxlen: 96,
   node: true, nomen: true,
   regexp: true,
   stupid: true
@@ -683,7 +684,10 @@
               app.utility2.errorStack(error));
             testCase.errorStack = testCase.errorStack || app.utility2.errorStack(error);
             // validate errorStack is non-empty
-            app.utility2.assert(testCase.errorStack, 'invalid errorStack ' + testCase.errorStack);
+            app.utility2.assert(
+              testCase.errorStack,
+              'invalid errorStack ' + testCase.errorStack
+            );
           }
           // if testCase already finished, then do not run finish code again
           if (finished) {
@@ -1047,7 +1051,8 @@
       /*
         this function will watche the file and if modified, then restart the process
       */
-      if (app.utility2.envDict.npm_config_mode_auto_restart && app.utility2.fs.statSync(file).isFile()) {
+      if (app.utility2.envDict.npm_config_mode_auto_restart &&
+          app.utility2.fs.statSync(file).isFile()) {
         app.utility2.fs.watchFile(file, {
           interval: 1000,
           persistent: false
@@ -1117,12 +1122,13 @@
               '/screen-capture.' + options.argv1 + '.png')
               .replace((/%/g), '_')
               .replace((/_2F.png$/), 'png'),
-            fileTestReport:
-              app.utility2.envDict.npm_config_dir_tmp + '/test-report.' + options.argv1 + '.json',
+            fileTestReport: app.utility2.envDict.npm_config_dir_tmp +
+              '/test-report.' + options.argv1 + '.json',
             modePhantom: 'testUrl'
           });
           // set timerTimeout
-          timerTimeout = app.utility2.onTimeout(onNext, app.utility2.timeoutDefault, options.argv1);
+          timerTimeout =
+            app.utility2.onTimeout(onNext, app.utility2.timeoutDefault, options.argv1);
           // spawn phantomjs to test a url
           app.utility2.child_process
             .spawn(
@@ -1402,7 +1408,8 @@
         }
       });
       // coverage-hack - cover utility2 in phantomjs
-      if (app.utility2.global.__coverage__ && app.utility2.envDict.npm_package_name === 'utility2') {
+      if (app.utility2.global.__coverage__ &&
+          app.utility2.envDict.npm_package_name === 'utility2') {
         app.utility2.fs.writeFileSync(
           app.utility2.envDict.npm_config_dir_tmp + '/covered.utility2.js',
           app.utility2.fileCacheDict['/assets/utility2.js'].data
@@ -1421,8 +1428,8 @@
             app.utility2._debugServerResponse = response;
             // check if _testSecret is valid
             request._testSecretValid = (/\b_testSecret=(\w+)\b/).exec(request.url);
-            request._testSecretValid =
-              request._testSecretValid && request._testSecretValid[1] === app.utility2._testSecret;
+            request._testSecretValid = request._testSecretValid &&
+              request._testSecretValid[1] === app.utility2._testSecret;
             // init request.urlPathNormalized
             request.urlPathNormalized =
               app.utility2.path.resolve(app.utility2.url.parse(request.url).pathname);
@@ -1849,7 +1856,8 @@
       '<div class="testReportPlatformDiv testReportSummaryDiv">\n' +
       '<h2>{{envDict.npm_package_name}} test-report summary</h2>\n' +
       '<h4>\n' +
-        '<span class="testReportSummarySpan">version</span>- {{envDict.npm_package_version}}<br>\n' +
+        '<span class="testReportSummarySpan">version</span>-\n' +
+          '{{envDict.npm_package_version}}<br>\n' +
         '<span class="testReportSummarySpan">test date</span>- {{date}}<br>\n' +
         '<span class="testReportSummarySpan">commit info</span>- {{CI_COMMIT_INFO}}<br>\n' +
       '</h4>\n' +
@@ -1907,18 +1915,24 @@
 
 
 
+/* jslint-ignore-begin */
     // https://img.shields.io/badge/last_build-0000_00_00_00_00_00_UTC_--_master_--_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-0077ff.svg?style=flat
     '/build/build.badge.svg': { data: '<svg xmlns="http://www.w3.org/2000/svg" width="563" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="563" height="20" fill="#555"/><rect rx="0" x="61" width="502" height="20" fill="#07f"/><path fill="#07f" d="M61 0h4v20h-4z"/><rect rx="0" width="563" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="31.5" y="15" fill="#010101" fill-opacity=".3">last build</text><text x="31.5" y="14">last build</text><text x="311" y="15" fill="#010101" fill-opacity=".3">0000 00 00 00 00 00 UTC - master - aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</text><text x="311" y="14">0000 00 00 00 00 00 UTC - master - aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</text></g></svg>' },
+/* jslint-ignore-end */
 
 
 
     // https://img.shields.io/badge/coverage-100.0%-00dd00.svg?style=flat
+/* jslint-ignore-begin */
     '/build/coverage.badge.svg': { data: '<svg xmlns="http://www.w3.org/2000/svg" width="117" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="117" height="20" fill="#555"/><rect rx="0" x="63" width="54" height="20" fill="#0d0"/><path fill="#0d0" d="M63 0h4v20h-4z"/><rect rx="0" width="117" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="32.5" y="15" fill="#010101" fill-opacity=".3">coverage</text><text x="32.5" y="14">coverage</text><text x="89" y="15" fill="#010101" fill-opacity=".3">100.0%</text><text x="89" y="14">100.0%</text></g></svg>' },
+/* jslint-ignore-end */
 
 
 
     // https://img.shields.io/badge/tests_failed-999-dd0000.svg?style=flat
+/* jslint-ignore-begin */
     '/build/test-report.badge.svg': { data: '<svg xmlns="http://www.w3.org/2000/svg" width="103" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="103" height="20" fill="#555"/><rect rx="0" x="72" width="31" height="20" fill="#d00"/><path fill="#d00" d="M72 0h4v20h-4z"/><rect rx="0" width="103" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="37" y="15" fill="#010101" fill-opacity=".3">tests failed</text><text x="37" y="14">tests failed</text><text x="86.5" y="15" fill="#010101" fill-opacity=".3">999</text><text x="86.5" y="14">999</text></g></svg>' },
+/* jslint-ignore-end */
 
 
 
