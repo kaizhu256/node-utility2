@@ -616,22 +616,27 @@
             app.utility2.nop(event);
             callback();
           } };
-        } }]
+        } }],
+        [app.utility2._replServer, { evalDefault: app.utility2.nop }]
       ], onError, function (onError) {
         // evil hack to pass jslint
         evil = 'eval';
         [
           // test shell handling behavior
-          '($ :\n)',
+          '$ :\n',
           // test git diff handling behavior
-          '($ git diff\n)',
+          '$ git diff\n',
           // test git log handling behavior
-          '($ git log\n)',
+          '$ git log\n',
           // test grep handling behavior
-          '(grep \\bhello\\b\n)',
+          'grep \\bhello\\b\n',
           // test print handling behavior
-          '(print\n)'
+          'print\n'
         ].forEach(function (script) {
+          // legacy node v0.10 code
+          if (process.version < 'v0.12') {
+            script = '(' + script + ')';
+          }
           app.utility2._replServer[evil](script, null, 'repl', app.utility2.nop);
         });
         // test syntax-error handling behavior

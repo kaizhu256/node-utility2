@@ -145,8 +145,11 @@
         var args;
         args = arguments;
         if (args[0]) {
-          // append errorStack to args[0].stack
-          args[0].stack = args[0].stack ? args[0].stack + '\n' + errorStack : errorStack;
+          // try to append errorStack to args[0].stack
+          try {
+            args[0].stack = args[0].stack ? args[0].stack + '\n' + errorStack : errorStack;
+          } catch (ignore) {
+          }
         }
         onError.apply(null, args);
       };
@@ -201,6 +204,7 @@
         this function will create a timer that passes a timeout error to onError,
         when the specified timeout has passed
       */
+      onError = app.utility2.onErrorWithStack(onError);
       var error;
       // validate timeout is an integer in the exclusive range 0 to Infinity
       app.utility2.assert(
@@ -1203,7 +1207,11 @@
       app.utility2._replServer.evalDefault = app.utility2._replServer[evil];
       // hook custom repl eval function
       app.utility2._replServer[evil] = function (script, context, file, onError) {
-        match = (/^\(([^ ]+)(.*)\n\)/).exec(script);
+        // legacy node v0.10 code
+        if (process.version < 'v0.12') {
+          match = (/^\(([^ ]+)(.*)\n\)/).exec(script);
+        }
+        match = (/^([^ ]+)(.*)\n/).exec(script);
         switch (match && match[1]) {
         // syntax sugar to run async shell command
         case '$':
@@ -1258,7 +1266,11 @@
           return;
         // syntax sugar to print stringified arg
         case 'print':
-          script = '(console.log(String(' + match[2] + '))\n)';
+          // legacy node v0.10 code
+          if (process.version < 'v0.12') {
+            script = '(console.log(String(' + match[2] + '))\n)';
+          }
+          script = 'console.log(String(' + match[2] + '))\n';
           break;
         }
         // eval modified script
