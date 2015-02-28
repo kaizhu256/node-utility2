@@ -281,7 +281,7 @@ window.utility2.testRun({\n\
     "phantomjs-lite": "^2015.1.4-102"
   },
   "description": "lightweight module that can dynamically cover and test browser-code (via istanbul-lite and phantomjs-lite)",
-  "engines": { "node": ">=0.10 <=0.10" },
+  "engines": { "node": ">=0.10 <=0.12" },
   "keywords": [
     "browser",
     "build",
@@ -321,7 +321,6 @@ window.utility2.testRun({\n\
 
 
 # todo
-- fix npm test for node v0.12
 - revamping with dynamic test and coverage
 - create flamegraph from istanbul coverage
 - explicitly require slimerjs instead of auto-detecting it

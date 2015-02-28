@@ -277,7 +277,7 @@
 
     app.utility2.testMock = function (mockList, onError, testCase) {
       /*
-        this function will mock the exports given in the mockList while running the testCase
+        this function will mock the objects given in the mockList while running the testCase
       */
       var callCallback, onError2;
       callCallback = function (callback) {
@@ -302,9 +302,9 @@
         });
         onError(error);
       };
-      // run onError callback in mocked exports in a try-catch block
+      // run onError callback in mocked objects in a try-catch block
       app.utility2.testTryCatch(function () {
-        // mock exports
+        // mock objects
         mockList.forEach(function (mock) {
           mock[2] = {};
           // backup mock[0] into mock[2]
@@ -1208,7 +1208,7 @@
       // hook custom repl eval function
       app.utility2._replServer[evil] = function (script, context, file, onError) {
         // legacy node v0.10 code
-        if (process.version < 'v0.12') {
+        if (process.version <= 'v0.10.x') {
           match = (/^\(([^ ]+)(.*)\n\)/).exec(script);
         }
         match = (/^([^ ]+)(.*)\n/).exec(script);
@@ -1267,7 +1267,7 @@
         // syntax sugar to print stringified arg
         case 'print':
           // legacy node v0.10 code
-          if (process.version < 'v0.12') {
+          if (process.version <= 'v0.10.x') {
             script = '(console.log(String(' + match[2] + '))\n)';
           }
           script = 'console.log(String(' + match[2] + '))\n';
