@@ -185,6 +185,26 @@
       });
     };
 
+    app._istanbulInstrumentInPackage_default_test = function (onError) {
+      /*
+        this function will test istanbulInstrumentInPackage's default handling behavior
+      */
+      var data;
+      app.utility2.testMock([
+        [app.utility2.global, { __coverage__: {} }]
+      ], onError, function (onError) {
+        // test no cover handling behavior
+        data = app.utility2.istanbulInstrumentInPackage('1', 'test.js', '');
+        // validate data
+        app.utility2.assert(data === '1', data);
+        // test cover handling behavior
+        data = app.utility2.istanbulInstrumentInPackage('1', 'test.js', 'utility2');
+        // validate data
+        app.utility2.assert(data.indexOf(".s[\'1\']++;1;\n") >= 0, data);
+        onError();
+      });
+    };
+
     app._jsonCopy_default_test = function (onError) {
       /*
         this function will test jsonCopy's default handling behavior
@@ -236,7 +256,7 @@
           message = arg;
         } }]
       ], onError, function (onError) {
-        // test no-error handling behavior
+        // test no error handling behavior
         app.utility2.onErrorDefault();
         // validate message
         app.utility2.assert(!message, message);
@@ -672,13 +692,13 @@
     app['/assets/utility2.css'] =
       app.utility2['/assets/utility2.css'];
     app['/assets/utility2.js'] =
-      app.utility2.instrumentInPackage(
+      app.utility2.istanbulInstrumentInPackage(
         app.utility2['/assets/utility2.js'],
         __dirname + '/index.js',
         'utility2'
       );
     app['/test/test.js'] =
-      app.utility2.instrumentInPackage(
+      app.utility2.istanbulInstrumentInPackage(
         app.utility2.fs.readFileSync(__filename, 'utf8'),
         __filename,
         'utility2'

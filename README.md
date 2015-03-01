@@ -67,7 +67,7 @@ run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
     // init browser js-env tests
     app._ajax_200_test = function (onError) {
       /*
-        this function will test ajax's 200 http-status-code handling behavior
+        this function will test ajax's 200 http statusCode handling behavior
       */
       // test '/test/hello'
       app.utility2.ajax({
@@ -84,7 +84,7 @@ run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
     };
     app._ajax_404_test = function (onError) {
       /*
-        this function will test ajax's 404 http-status-code handling behavior
+        this function will test ajax's 404 http statusCode handling behavior
       */
       // test '/test/undefined'
       app.utility2.ajax({
@@ -93,7 +93,7 @@ run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
         app.utility2.testTryCatch(function () {
           // validate error occurred
           app.utility2.assert(error instanceof Error, error);
-          // validate 404 http status-code
+          // validate 404 http statusCode
           app.utility2.assert(error.statusCode === 404, error.statusCode);
           onError();
         }, onError);
@@ -117,7 +117,7 @@ run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
       }, onError);
     };
     // init assets
-    app.utility2['/test/test.js'] = app.utility2.instrumentInPackage(
+    app.utility2['/test/test.js'] = app.utility2.istanbulInstrumentInPackage(
       app.utility2.fs.readFileSync(__filename, 'utf8'),
       __filename,
       'example-module'
@@ -140,7 +140,7 @@ run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
 '<head>\n' +
   '<meta charset="UTF-8">\n' +
   '<title>\n' +
-    '{{envDict.npm_package_name}} [{{envDict.npm_package_version}}]\n' +
+  '{{envDict.npm_package_name}} [{{envDict.npm_package_version}}]\n' +
   '</title>\n' +
   '<link rel="stylesheet" href="/assets/utility2.css">\n' +
   '<style>\n' +
@@ -166,7 +166,7 @@ run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
 '</head>\n' +
 '<body>\n' +
   '<div class="ajaxProgressDiv" style="display: none;">\n' +
-    '<div class="ajaxProgressBarDiv ajaxProgressBarDivLoading">loading</div>\n' +
+  '<div class="ajaxProgressBarDiv ajaxProgressBarDivLoading">loading</div>\n' +
   '</div>\n' +
   '<h1>{{envDict.npm_package_name}} [{{envDict.npm_package_version}}]</h1>\n' +
   '<h3>{{envDict.npm_package_description}}</h3>\n' +

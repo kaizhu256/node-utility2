@@ -39,6 +39,16 @@
       return error.stack || error.message || 'undefined';
     };
 
+    app.utility2.istanbulInstrumentInPackage = function (code, file, packageName) {
+      /*
+        this function will cover the code, only if packageName === $npm_package_name
+      */
+      return app.utility2.global.__coverage__ &&
+        packageName === app.utility2.envDict.npm_package_name
+        ? app.utility2.istanbul_lite.instrumentSync(code, file)
+        : code;
+    };
+
     app.utility2.istanbulMerge = function (coverage1, coverage2) {
       /*
         this function will merge coverage2 into coverage1
@@ -852,7 +862,7 @@
               error.message = options.method + ' ' + xhr.status + ' - ' +
                 options.url + '\n' +
                 JSON.stringify(xhr.responseText.slice(0, 256) + '...') + '\n' + error.message;
-              // debug status code
+              // debug statusCode
               error.statusCode = xhr.status;
             }
           }
@@ -1031,7 +1041,7 @@
           responseText = options.resultType === 'binary'
             ? data
             : data.toString();
-          // error handling for http status code >= 400
+          // error handling for http statusCode >= 400
           if (response.statusCode >= 400) {
             onNext(new Error(responseText));
             return;
@@ -1056,23 +1066,13 @@
             error.message = options.method + ' ' + (response && response.statusCode) + ' - ' +
               options.url + '\n' +
               JSON.stringify((responseText || '').slice(0, 256) + '...') + '\n' + error.message;
-            // debug status code
+            // debug statusCode
             error.statusCode = response && response.statusCode;
           }
           onError(error, responseText, options);
         }
       });
       onNext();
-    };
-
-    app.utility2.instrumentInPackage = function (code, file, packageName) {
-      /*
-        this function will cover the code, only if packageName === $npm_package_name
-      */
-      return app.utility2.global.__coverage__ &&
-        packageName === app.utility2.envDict.npm_package_name
-        ? app.utility2.istanbul_lite.instrumentSync(code, file)
-        : code;
     };
 
     app.utility2.onFileModifiedRestart = function (file) {
@@ -1166,7 +1166,7 @@
             options.argv1 = app.utility2.envDict.npm_config_dir_tmp + '/covered.utility2.js';
             app.utility2.fs.writeFileSync(
               options.argv1,
-              app.utility2.instrumentInPackage(app.utility2[
+              app.utility2.istanbulInstrumentInPackage(app.utility2[
                 '/assets/utility2.js'
               ], __dirname + '/index.js', 'utility2')
             );
@@ -1659,6 +1659,7 @@
     app.utility2.envDict = app.utility2.envDict || {};
     app.utility2.exit = app.utility2.nop;
     app.utility2.global = window;
+    app.utility2.istanbul_lite = window.istanbul_lite;
     // parse any url-search-params that matches 'mode*' or '_testSecret' or 'timeoutDefault'
     location.search.replace(
       (/\b(mode[A-Z]\w+|_testSecret|timeoutDefault)=([^#&=]+)/g),
