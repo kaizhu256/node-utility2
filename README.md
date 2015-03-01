@@ -117,23 +117,7 @@ run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
       }, onError);
     };
     // init assets
-    app.utility2['/test/test.js'] = app.utility2.istanbulInstrumentInPackage(
-      app.utility2.fs.readFileSync(__filename, 'utf8'),
-      __filename,
-      'example-module'
-    );
-    // init app.serverMiddlewareList
-    app.serverMiddlewareList = [
-      function (request, response, next) {
-        /*
-          this function is the main test-middleware
-        */
-        // jslint-hack
-        app.utility2.nop(request);
-        switch (request.urlPathNormalized) {
-        // serve main-page '/'
-        case '/':
-          response.end(app.utility2.textFormat(String() +
+    app['/'] = (String() +
 /* jslint-ignore-begin */
 '<!DOCTYPE html>\n' +
 '<html>\n' +
@@ -219,25 +203,43 @@ run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
 '</body>\n' +
 '</html>\n' +
 /* jslint-ignore-end */
-            String()).replace((/\{\{envDict\.\w+?\}\}/g), function (match0) {
-            switch (match0) {
-            case '{{envDict.npm_package_description}}':
-              return 'this is an example module';
-            case '{{envDict.npm_package_name}}':
-              return 'example-module';
-            case '{{envDict.npm_package_version}}':
-              return '0.0.1';
-            }
-          }));
-          response.end();
-          break;
+    String()).replace((/\{\{envDict\.\w+?\}\}/g), function (match0) {
+      switch (match0) {
+      case '{{envDict.npm_package_description}}':
+        return 'this is an example module';
+      case '{{envDict.npm_package_name}}':
+        return 'example-module';
+      case '{{envDict.npm_package_version}}':
+        return '0.0.1';
+      }
+    });
+    app['/assets/istanbul-lite.js'] =
+      app.utility2.istanbul_lite['/assets/istanbul-lite.js'];
+    app['/assets/utility2.css'] =
+      app.utility2['/assets/utility2.css'];
+    app['/assets/utility2.js'] =
+      app.utility2['/assets/utility2.js'];
+    app['/test/test.js'] =
+      app.utility2.istanbul_lite.instrumentSync(
+        app.utility2.fs.readFileSync(__filename, 'utf8'),
+        __filename
+      );
+    // init app.serverMiddlewareList
+    app.serverMiddlewareList = [
+      function (request, response, next) {
+        /*
+          this function is the main test-middleware
+        */
+        // jslint-hack
+        app.utility2.nop(request);
+        switch (request.urlPathNormalized) {
         // serve assets
+        case '/':
         case '/assets/istanbul-lite.js':
         case '/assets/utility2.css':
         case '/assets/utility2.js':
         case '/test/test.js':
-          response.end(app.utility2[request.urlPathNormalized] ||
-            app.utility2.istanbul_lite[request.urlPathNormalized]);
+          response.end(app[request.urlPathNormalized]);
           break;
         // test http GET handling behavior
         case '/test/hello':
