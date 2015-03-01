@@ -285,7 +285,7 @@ _ajax_get_test: function (onError) {\n\
   "author": "kai zhu <kaizhu256@gmail.com>",
   "bin": { "utility2" : "index.sh" },
   "dependencies": {
-    "istanbul-lite": "2015.2.28-11",
+    "istanbul-lite": "2015.3.1-10",
     "jslint-lite": "2015.2.18-10"
   },
   "devDependencies": {
@@ -301,6 +301,7 @@ _ajax_get_test: function (onError) {\n\
     "cover",
     "coverage",
     "csslint",
+    "eslint",
     "istanbul",
     "instrument",
     "jshint",
@@ -325,7 +326,7 @@ _ajax_get_test: function (onError) {\n\
     "start": "npm_config_mode_auto_restart=1 ./index.sh shRun node test.js",
     "test": "./index.sh shRun shReadmePackageJsonExport && npm_config_mode_auto_restart=1 npm_config_mode_auto_restart_child=1 ./index.sh shRun shNpmTest test.js"
   },
-  "version": "2015.2.28-11"
+  "version": "2015.3.1-10"
 }
 ```
 
