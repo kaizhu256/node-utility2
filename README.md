@@ -219,6 +219,8 @@ run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
       app.utility2['/assets/utility2.css'];
     app['/assets/utility2.js'] =
       app.utility2['/assets/utility2.js'];
+    app['/test/hello'] =
+      'hello';
     app['/test/test.js'] =
       app.utility2.istanbul_lite.instrumentSync(
         app.utility2.fs.readFileSync(__filename, 'utf8'),
@@ -230,20 +232,15 @@ run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
         /*
           this function is the main test-middleware
         */
-        // jslint-hack
-        app.utility2.nop(request);
         switch (request.urlPathNormalized) {
         // serve assets
         case '/':
         case '/assets/istanbul-lite.js':
         case '/assets/utility2.css':
         case '/assets/utility2.js':
+        case '/test/hello':
         case '/test/test.js':
           response.end(app[request.urlPathNormalized]);
-          break;
-        // test http GET handling behavior
-        case '/test/hello':
-          response.end('hello');
           break;
         // default to next middleware
         default:
