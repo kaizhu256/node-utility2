@@ -1065,10 +1065,9 @@
       onNext();
     };
 
-    app.utility2.coverInPackage = function (code, file, packageName) {
+    app.utility2.instrumentInPackage = function (code, file, packageName) {
       /*
-        this function will only cover the code,
-        if packageName === envDict.npm_package_name
+        this function will cover the code, only if packageName === $npm_package_name
       */
       return app.utility2.global.__coverage__ &&
         packageName === app.utility2.envDict.npm_package_name
@@ -1167,7 +1166,7 @@
             options.argv1 = app.utility2.envDict.npm_config_dir_tmp + '/covered.utility2.js';
             app.utility2.fs.writeFileSync(
               options.argv1,
-              app.utility2.coverInPackage(app.utility2[
+              app.utility2.instrumentInPackage(app.utility2[
                 '/assets/utility2.js'
               ], __dirname + '/index.js', 'utility2')
             );

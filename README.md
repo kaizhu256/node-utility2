@@ -47,7 +47,8 @@ run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
   indent: 2,
   maxerr: 8,
   maxlen: 80,
-  node: true, nomen: true
+  node: true, nomen: true,
+  stupid: true
 */
 (function () {
   'use strict';
@@ -116,7 +117,7 @@ run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
       }, onError);
     };
     // init assets
-    app.utility2['/test/test.js'] = app.utility2.coverInPackage(
+    app.utility2['/test/test.js'] = app.utility2.instrumentInPackage(
       app.utility2.fs.readFileSync(__filename, 'utf8'),
       __filename,
       'example-module'
@@ -210,7 +211,9 @@ run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
   'document.querySelector(\n' +
     '".istanbulLiteInputTextarea"\n' +
   ').addEventListener("keyup", window.istanbul_lite.coverAndEval);\n' +
-  'window.istanbul_lite.coverAndEval();\n' +
+  'if (!window.utility2.modeTest) {\n' +
+    'window.istanbul_lite.coverAndEval();\n' +
+  '}\n' +
   '</script>\n' +
   '<script src="/test/test.js"></script>\n' +
 '</body>\n' +

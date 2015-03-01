@@ -672,13 +672,13 @@
     app['/assets/utility2.css'] =
       app.utility2['/assets/utility2.css'];
     app['/assets/utility2.js'] =
-      app.utility2.coverInPackage(
+      app.utility2.instrumentInPackage(
         app.utility2['/assets/utility2.js'],
         __dirname + '/index.js',
         'utility2'
       );
     app['/test/test.js'] =
-      app.utility2.coverInPackage(
+      app.utility2.instrumentInPackage(
         app.utility2.fs.readFileSync(__filename, 'utf8'),
         __filename,
         'utility2'
