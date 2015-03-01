@@ -653,7 +653,7 @@
               // edit badge color
               .replace(
                 (/d00/g),
-                // coverage-hack - cover pass and fail cases
+                // coverage-hack - cover both fail and pass cases
                 '0d00'.slice(!!testReport.testsFailed).slice(0, 3)
               )
           );
@@ -1135,33 +1135,41 @@
           : modeNext + 1;
         switch (modeNext) {
         case 1:
-          options.argv1 = app.utility2.envDict.MODE_BUILD + '.' + options.argv0 + '.' +
+          options.testName = app.utility2.envDict.MODE_BUILD + '.' + options.argv0 + '.' +
             encodeURIComponent(app.utility2.url.parse(options.url).pathname);
           app.utility2.setDefault(options, 1, {
             _testSecret: app.utility2._testSecret,
-            fileCoverage:
-              app.utility2.envDict.npm_config_dir_tmp + '/coverage.' + options.argv1 + '.json',
+            fileCoverage: app.utility2.envDict.npm_config_dir_tmp +
+              '/coverage.' + options.testName + '.json',
             fileScreenCapture: (app.utility2.envDict.npm_config_dir_build +
-              '/screen-capture.' + options.argv1 + '.png')
+              '/screen-capture.' + options.testName + '.png')
               .replace((/%/g), '_')
               .replace((/_2F.png$/), 'png'),
             fileTestReport: app.utility2.envDict.npm_config_dir_tmp +
-              '/test-report.' + options.argv1 + '.json',
+              '/test-report.' + options.testName + '.json',
             modePhantom: 'testUrl'
           });
           // set timerTimeout
           timerTimeout =
-            app.utility2.onTimeout(onNext, app.utility2.timeoutDefault, options.argv1);
+            app.utility2.onTimeout(onNext, app.utility2.timeoutDefault, options.testName);
+          // coverage-hack - cover utility2 in phantomjs
+          options.argv1 = __dirname + '/index.js';
+          if (app.utility2.global.__coverage__ &&
+              app.utility2.envDict.npm_package_name === 'utility2') {
+            options.argv1 = app.utility2.envDict.npm_config_dir_tmp + '/covered.utility2.js';
+            app.utility2.fs.writeFileSync(
+              options.argv1,
+              app.utility2.coverInPackage(app.utility2[
+                '/assets/utility2.js'
+              ], __dirname + '/index.js', 'utility2')
+            );
+          }
           // spawn phantomjs to test a url
           app.utility2.child_process
             .spawn(
               require('phantomjs-lite').__dirname + '/' + options.argv0,
               [
-                // coverage-hack - cover utility2 in phantomjs
-                app.utility2.global.__coverage__ &&
-                  app.utility2.envDict.npm_package_name === 'utility2'
-                  ? app.utility2.envDict.npm_config_dir_tmp + '/covered.utility2.js'
-                  : __dirname + '/index.js',
+                options.argv1,
                 encodeURIComponent(JSON.stringify(options))
               ],
               { stdio: 'inherit' }
@@ -1383,14 +1391,6 @@
           // keep timerTimeout from blocking the process from exiting
           .unref();
       }
-      // coverage-hack - cover utility2 in phantomjs
-      if (app.utility2.global.__coverage__ &&
-          app.utility2.envDict.npm_package_name === 'utility2') {
-        app.utility2.fs.writeFileSync(
-          app.utility2.envDict.npm_config_dir_tmp + '/covered.utility2.js',
-          app.utility2['/assets/utility2.js']
-        );
-      }
       // 1. create http-server from options.serverMiddlewareList
       server = app.utility2.http.createServer(function (request, response) {
         var contentTypeDict, modeNext, onNext;
@@ -1581,7 +1581,7 @@
         // handle webpage error
         // http://phantomjs.org/api/phantom/handler/on-error.html
         if (error && typeof error === 'string') {
-          console.error('\n' + app.utility2.argv1 + '\nERROR: ' + error + ' TRACE:');
+          console.error('\n' + app.utility2.testName + '\nERROR: ' + error + ' TRACE:');
           (trace || []).forEach(function (t) {
             console.error(' -> ' + (t.file || t.sourceURL) + ': ' + t.line + (t.function
               ? ' (in function ' + t.function + ')'
