@@ -45,6 +45,7 @@ run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
 /*jslint
   browser: true,
   indent: 2,
+  maxerr: 8,
   maxlen: 80,
   node: true, nomen: true
 */
@@ -67,7 +68,7 @@ run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
       /*
         this function will test ajax's 200 http-status-code handling behavior
       */
-      // ajax-request builtin-url '/test/hello'
+      // test '/test/hello'
       app.utility2.ajax({
         url: '/test/hello'
       }, function (error, data) {
@@ -84,7 +85,7 @@ run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
       /*
         this function will test ajax's 404 http-status-code handling behavior
       */
-      // ajax-request undefined-url '/test/undefined'
+      // test '/test/undefined'
       app.utility2.ajax({
         url: '/test/undefined'
       }, function (error) {
@@ -124,7 +125,7 @@ run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
     app.serverMiddlewareList = [
       function (request, response, next) {
         /*
-          this user-defined middleware will override the builtin test-middleware
+          this function is the main test-middleware
         */
         // jslint-hack
         app.utility2.nop(request);
@@ -170,7 +171,7 @@ run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
   <h1>{{envDict.npm_package_name}} [{{envDict.npm_package_version}}]</h1>\n\
   <h3>{{envDict.npm_package_description}}</h3>\n\
   <div>edit or paste script below to cover and test</div>\n\
-  <textarea class="istanbulLiteInputTextareaDiv">\n\
+  <textarea class="istanbulLiteInputTextarea">\n\
 window.utility2.testRun({\n\
 \n\
 modeTest: true,\n\
@@ -179,7 +180,7 @@ _ajax_get_test: function (onError) {\n\
   /*\n\
     this function will test ajax"s GET handling behavior\n\
   */\n\
-  // request main-page "/"\n\
+  // test main-page "/"\n\
   utility2.ajax({ url: "/" }, function (error, data, xhr) {\n\
     try {\n\
       // validate no error occurred\n\
@@ -208,7 +209,7 @@ _ajax_get_test: function (onError) {\n\
     npm_package_version: "{{envDict.npm_package_version}}"\n\
   };\n\
   document.querySelector(\n\
-    ".istanbulLiteInputTextareaDiv"\n\
+    ".istanbulLiteInputTextarea"\n\
   ).addEventListener("keyup", window.istanbul_lite.coverAndEval);\n\
   window.istanbul_lite.coverAndEval();\n\
   </script>\n\
@@ -229,7 +230,7 @@ _ajax_get_test: function (onError) {\n\
           }));
           response.end();
           break;
-        // serve builtin assets
+        // serve assets
         case '/assets/istanbul-lite.js':
         case '/assets/utility2.css':
         case '/assets/utility2.js':
@@ -242,7 +243,7 @@ _ajax_get_test: function (onError) {\n\
         case '/test/hello':
           response.end('hello');
           break;
-        // fallback to builtin test-middleware
+        // default to next middleware
         default:
           next();
         }

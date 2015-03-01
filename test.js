@@ -606,9 +606,7 @@
       /*
         this function will test replStart's default handling behavior
       */
-      /*jslint
-        evil: true
-      */
+      /*jslint evil: true*/
       app.utility2.testMock([
         [app.utility2.child_process, { spawn: function () {
           return { on: function (event, callback) {
@@ -700,7 +698,7 @@
           });
           response.end();
           break;
-        // serve builtin assets
+        // serve assets
         case '/assets/istanbul-lite.js':
         case '/assets/utility2.css':
         case '/assets/utility2.js':
@@ -754,7 +752,7 @@
             onError();
           });
           break;
-        // fallback to next middleware
+        // default to next middleware
         default:
           onNext();
         }

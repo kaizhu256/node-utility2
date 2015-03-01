@@ -1221,9 +1221,7 @@
       /*
         this function will start the repl debugger
       */
-      /*jslint
-        evil: true
-      */
+      /*jslint evil: true*/
       Object.keys(globalDict).forEach(function (key) {
         app.utility2.global[key] = globalDict[key];
       });
