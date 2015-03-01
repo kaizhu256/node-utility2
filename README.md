@@ -104,10 +104,6 @@ run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
 
   // run node js-env code
   } else {
-    // mock package.json
-    process.env.npm_package_description = 'this is an example module';
-    process.env.npm_package_name = 'example-module';
-    process.env.npm_package_version = '1.0.0';
     // init node js-env tests
     app._phantomTest_default_test = function (onError) {
       /*
@@ -133,7 +129,7 @@ run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
         // jslint-hack
         app.utility2.nop(request);
         switch (request.urlPathNormalized) {
-        // redirect '/' to '/test/test.html'
+        // serve main-page '/'
         case '/':
           response.end(app.utility2.textFormat(String() +
 /* jslint-ignore-begin */
@@ -173,40 +169,39 @@ run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
   </div>\n\
   <h1>{{envDict.npm_package_name}} [{{envDict.npm_package_version}}]</h1>\n\
   <h3>{{envDict.npm_package_description}}</h3>\n\
-  <div class="testApp">\n\
-    <div>edit or paste script below to cover and test</div>\n\
-    <textarea class="istanbulLiteInputTextareaDiv">\n\
+  <div>edit or paste script below to cover and test</div>\n\
+  <textarea class="istanbulLiteInputTextareaDiv">\n\
 window.utility2.testRun({\n\
 \n\
-  modeTest: true,\n\
+modeTest: true,\n\
 \n\
-  _ajax_get_test: function (onError) {\n\
-    /*\n\
-      this function will test ajax"s GET handling behavior\n\
-    */\n\
-    // request main-page "/"\n\
-    utility2.ajax({ url: "/" }, function (error, data, xhr) {\n\
-      try {\n\
-        // validate no error occurred\n\
-        utility2.assert(!error, error);\n\
-        // validate main-page is non-empty\n\
-        if (xhr.statusCode === 200) {\n\
-          utility2.assert(data, data);\n\
-        }\n\
-        onError();\n\
-      } catch (error) {\n\
-        onError(error);\n\
+_ajax_get_test: function (onError) {\n\
+  /*\n\
+    this function will test ajax"s GET handling behavior\n\
+  */\n\
+  // request main-page "/"\n\
+  utility2.ajax({ url: "/" }, function (error, data, xhr) {\n\
+    try {\n\
+      // validate no error occurred\n\
+      utility2.assert(!error, error);\n\
+      // validate main-page is non-empty\n\
+      if (xhr.statusCode === 200) {\n\
+        utility2.assert(data, data);\n\
       }\n\
-    });\n\
-  }\n\
+      onError();\n\
+    } catch (error) {\n\
+      onError(error);\n\
+    }\n\
+  });\n\
+}\n\
 });\n\
-    </textarea>\n\
-  </div>\n\
+  </textarea>\n\
   <div class="testReportDiv"></div>\n\
   <div class="istanbulLiteCoverageDiv"></div>\n\
   <script src="/assets/istanbul-lite.js"></script>\n\
   <script src="/assets/utility2.js"></script>\n\
   <script>\n\
+  window.utility2 = window.utility2 || {};\n\
   window.utility2.envDict = {\n\
     npm_package_description: "{{envDict.npm_package_description}}",\n\
     npm_package_name: "{{envDict.npm_package_name}}",\n\
@@ -222,7 +217,16 @@ window.utility2.testRun({\n\
 </html>\n\
 ' +
 /* jslint-ignore-end */
-            String(), { envDict: app.utility2.envDict }));
+            String()).replace((/\{\{envDict\..*?\}\}/g), function (match0) {
+            switch (match0) {
+            case '{{envDict.npm_package_description}}':
+              return 'this is an example module';
+            case '{{envDict.npm_package_name}}':
+              return 'example-module';
+            case '{{envDict.npm_package_version}}':
+              return '0.0.1';
+            }
+          }));
           response.end();
           break;
         // test http GET handling behavior

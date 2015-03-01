@@ -761,7 +761,7 @@
           return app.utility2.textFormat(fragment, dict, valueDefault);
         }).join('');
       };
-      rgx = (/\{\{#[^{]+\}\}/g);
+      rgx = (/\{\{#[^{]+?\}\}/g);
       while (true) {
         // search for array fragments in the template
         match = rgx.exec(template);
@@ -778,7 +778,7 @@
         }
       }
       // search for keys in the template
-      return template.replace((/\{\{[^{}]+\}\}/g), function (keyList) {
+      return template.replace((/\{\{[^{}]+?\}\}/g), function (keyList) {
         value = dict;
         // iteratively lookup nested values in the dict
         keyList.slice(2, -2).split('.').forEach(function (key) {
@@ -1234,7 +1234,7 @@
       // hook custom repl eval function
       app.utility2._replServer.eval = function (script, context, file, onError) {
         var match, onError2;
-        match = (/^([^ ]+)(.*)\n/).exec(script);
+        match = (/^([^ ]+)(.*?)\n/).exec(script);
         onError2 = function (error, data) {
           // debug error
           app.utility2.debugReplError = error || app.utility2.debugReplError;
@@ -1314,7 +1314,7 @@
       if (error) {
         // if modeErrorIgnore is undefined in url search params,
         // then print error.stack to stderr
-        if (!(/\?.*\bmodeErrorIgnore=1\b/).test(request.url)) {
+        if (!(/\?.*?\bmodeErrorIgnore=1\b/).test(request.url)) {
           app.utility2.onErrorDefault(error);
         }
         // end response with error.stack
