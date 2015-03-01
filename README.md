@@ -115,12 +115,12 @@ run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
           '?modeTest=phantom'
       }, onError);
     };
-    // serve this file as '/test/test.js' with coverage
-    app.utility2.fileCacheAndParse({
-      cache: '/test/test.js',
-      coverage: 'example-module',
-      file: __filename
-    });
+    // init assets
+    app.utility2['/test/test.js'] = app.utility2.coverInPackage(
+      app.utility2.fs.readFileSync(__filename, 'utf8'),
+      __filename,
+      'example-module'
+    );
     // init app.serverMiddlewareList
     app.serverMiddlewareList = [
       function (request, response, next) {
@@ -233,9 +233,7 @@ run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
         case '/assets/utility2.css':
         case '/assets/utility2.js':
         case '/test/test.js':
-          response.end(app.utility2.fileCacheDict[
-            request.urlPathNormalized
-          ].data);
+          response.end(app.utility2[request.urlPathNormalized]);
           break;
         // test http GET handling behavior
         case '/test/hello':
@@ -332,7 +330,6 @@ run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
 
 # todo
 - rename mode* to state*
-- remove fileCacheDict
 - create flamegraph from istanbul coverage
 - explicitly require slimerjs instead of auto-detecting it
 - auto-generate help doc from README.md

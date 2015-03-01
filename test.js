@@ -665,24 +665,24 @@
     };
 
     // init assets
-    [{
-      // coverage-hack - cover no cache handling behavior
-      cache: null,
-      // coverage-hack - cover no coverage handling behavior
-      coverage: null,
-      file: __dirname + '/test.js'
-    }, {
-      cache: '/test/test.js',
-      coverage: 'utility2',
-      file: __filename
-    }].forEach(function (options) {
-      // cache and parse the file
-      app.utility2.fileCacheAndParse(options);
-    });
-    // jslint /assets/utility2.css
-    app.utility2.jslint_lite.jslintAndPrint(app.utility2.fileCacheDict[
-      '/assets/utility2.css'
-    ].data, '/assets/utility2.css');
+    app['/'] =
+      app.utility2['/test/test.html'];
+    app['/assets/istanbul-lite.js'] =
+      app.utility2.istanbul_lite['/assets/istanbul-lite.js'];
+    app['/assets/utility2.css'] =
+      app.utility2['/assets/utility2.css'];
+    app['/assets/utility2.js'] =
+      app.utility2.coverInPackage(
+        app.utility2['/assets/utility2.js'],
+        __dirname + '/index.js',
+        'utility2'
+      );
+    app['/test/test.js'] =
+      app.utility2.coverInPackage(
+        app.utility2.fs.readFileSync(__filename, 'utf8'),
+        __filename,
+        'utility2'
+      );
     // init serverMiddlewareList
     app.serverMiddlewareList = [
       function (request, response, onNext) {
@@ -690,20 +690,13 @@
           this function is the main test-middleware
         */
         switch (request.urlPathNormalized) {
-        // redirect '/' to '/test/test.html'
-        case '/':
-          app.utility2.serverRespondWriteHead(request, response, 303, {
-            'Location': request.url.replace('/', '/test/test.html')
-          });
-          response.end();
-          break;
         // serve assets
+        case '/':
         case '/assets/istanbul-lite.js':
         case '/assets/utility2.css':
         case '/assets/utility2.js':
-        case '/test/test.html':
         case '/test/test.js':
-          response.end(app.utility2.fileCacheDict[request.urlPathNormalized].data);
+          response.end(app[request.urlPathNormalized]);
           break;
         // test http POST handling behavior
         case '/test/echo':
@@ -771,6 +764,11 @@
       // if the file is modified, then restart the process
       app.utility2.onFileModifiedRestart(file);
     });
+    // jslint /assets/utility2.css
+    app.utility2.jslint_lite.jslintAndPrint(
+      app.utility2['/assets/utility2.css'],
+      '/assets/utility2.css'
+    );
     // init repl debugger
     app.utility2.replStart({ app: app });
     break;
