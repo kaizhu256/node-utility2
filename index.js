@@ -551,7 +551,7 @@
         // add test-case options[key] to testPlatform.testCaseList
         if (key.slice(-5) === '_test' &&
             (app.utility2.modeTestCase === key ||
-              (!app.utility2.modeTestCase && key !== '_testRun_failure_test'))) {
+            (!app.utility2.modeTestCase && key !== '_testRun_failure_test'))) {
           app.utility2.testPlatform.testCaseList.push({
             name: key,
             onTestCase: options[key]
@@ -691,8 +691,10 @@
       // bug - use shallow copy of testPlatform.testCaseList,
       // because the original might get in-place sorted during testing
       testPlatform.testCaseList.slice().forEach(function (testCase) {
-        var finished, onError;
+        var finished, onError, timerTimeout;
         onError = function (error) {
+          // cleanup timerTimeout
+          clearTimeout(timerTimeout);
           // if testCase already finished, then fail testCase with error for finishing again
           if (finished) {
             error = error ||
@@ -720,6 +722,12 @@
           // if all tests have finished, then create test-report
           onParallel();
         };
+        // set timerTimeout
+        timerTimeout = app.utility2.onTimeout(
+          onError,
+          app.utility2.timeoutDefault,
+          testCase.name
+        );
         // increment number of tests remaining
         onParallel.counter += 1;
         // run testCase in try-catch block

@@ -329,7 +329,7 @@ run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
 
 
 # todo
-- rename mode* to state*
+- major revamp - rename mode* to state*
 - create flamegraph from istanbul coverage
 - explicitly require slimerjs instead of auto-detecting it
 - auto-generate help doc from README.md
