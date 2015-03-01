@@ -1479,7 +1479,7 @@
       data: app.utility2.textFormat(app.utility2.fs
         .readFileSync(__dirname + '/README.md', 'utf8')
         .replace((/[\S\s]+?(<!DOCTYPE html>[\S\s]+?<\/html>)[\S\s]+/), '$1')
-        .replace((/\\n\\$/gm), ''), { envDict: app.utility2.envDict })
+        .replace((/\\n' \+(\s*?)'/g), '$1'), { envDict: app.utility2.envDict })
     }].forEach(function (options) {
       if (!app.utility2.fileCacheDict[options.cache]) {
         app.utility2.fileCacheAndParse(options);

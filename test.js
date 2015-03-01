@@ -4,7 +4,6 @@
   maxerr: 8,
   maxlen: 96,
   node: true, nomen: true,
-  regexp: true,
   stupid: true
 */
 (function () {
@@ -675,7 +674,7 @@
     }, {
       cache: '/test/test.js',
       coverage: 'utility2',
-      file: __dirname + '/test.js'
+      file: __filename
     }].forEach(function (options) {
       // cache and parse the file
       app.utility2.fileCacheAndParse(options);

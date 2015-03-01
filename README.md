@@ -134,89 +134,87 @@ run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
         case '/':
           response.end(app.utility2.textFormat(String() +
 /* jslint-ignore-begin */
-'\
-<!DOCTYPE html>\n\
-<html>\n\
-<head>\n\
-  <meta charset="UTF-8">\n\
-  <title>\n\
-    {{envDict.npm_package_name}} [{{envDict.npm_package_version}}]\n\
-  </title>\n\
-  <link rel="stylesheet" href="/assets/utility2.css">\n\
-  <style>\n\
-  * {\n\
-    box-sizing: border-box;\n\
-  }\n\
-  body {\n\
-    background-color: #fff;\n\
-    font-family: Helvetical Neue, Helvetica, Arial, sans-serif;\n\
-  }\n\
-  body > div {\n\
-    margin-top: 20px;\n\
-  }\n\
-  .testReportDiv {\n\
-    display: none;\n\
-  }\n\
-  textarea {\n\
-    font-family: monospace;\n\
-    height: 24em;\n\
-    width: 100%;\n\
-  }\n\
-  </style>\n\
-</head>\n\
-<body>\n\
-  <div class="ajaxProgressDiv" style="display: none;">\n\
-    <div class="ajaxProgressBarDiv ajaxProgressBarDivLoading">loading</div>\n\
-  </div>\n\
-  <h1>{{envDict.npm_package_name}} [{{envDict.npm_package_version}}]</h1>\n\
-  <h3>{{envDict.npm_package_description}}</h3>\n\
-  <div>edit or paste script below to cover and test</div>\n\
-  <textarea class="istanbulLiteInputTextarea">\n\
-window.utility2.testRun({\n\
-\n\
-modeTest: true,\n\
-\n\
-_ajax_get_test: function (onError) {\n\
-  /*\n\
-    this function will test ajax"s GET handling behavior\n\
-  */\n\
-  // test main-page "/"\n\
-  utility2.ajax({ url: "/" }, function (error, data, xhr) {\n\
-    try {\n\
-      // validate no error occurred\n\
-      utility2.assert(!error, error);\n\
-      // validate main-page is non-empty\n\
-      if (xhr.statusCode === 200) {\n\
-        utility2.assert(data, data);\n\
-      }\n\
-      onError();\n\
-    } catch (error) {\n\
-      onError(error);\n\
-    }\n\
-  });\n\
-}\n\
-});\n\
-  </textarea>\n\
-  <div class="testReportDiv"></div>\n\
-  <div class="istanbulLiteCoverageDiv"></div>\n\
-  <script src="/assets/istanbul-lite.js"></script>\n\
-  <script src="/assets/utility2.js"></script>\n\
-  <script>\n\
-  window.utility2 = window.utility2 || {};\n\
-  window.utility2.envDict = {\n\
-    npm_package_description: "{{envDict.npm_package_description}}",\n\
-    npm_package_name: "{{envDict.npm_package_name}}",\n\
-    npm_package_version: "{{envDict.npm_package_version}}"\n\
-  };\n\
-  document.querySelector(\n\
-    ".istanbulLiteInputTextarea"\n\
-  ).addEventListener("keyup", window.istanbul_lite.coverAndEval);\n\
-  window.istanbul_lite.coverAndEval();\n\
-  </script>\n\
-  <script src="/test/test.js"></script>\n\
-</body>\n\
-</html>\n\
-' +
+'<!DOCTYPE html>\n' +
+'<html>\n' +
+'<head>\n' +
+  '<meta charset="UTF-8">\n' +
+  '<title>\n' +
+    '{{envDict.npm_package_name}} [{{envDict.npm_package_version}}]\n' +
+  '</title>\n' +
+  '<link rel="stylesheet" href="/assets/utility2.css">\n' +
+  '<style>\n' +
+  '* {\n' +
+    'box-sizing: border-box;\n' +
+  '}\n' +
+  'body {\n' +
+    'background-color: #fff;\n' +
+    'font-family: Helvetical Neue, Helvetica, Arial, sans-serif;\n' +
+  '}\n' +
+  'body > div {\n' +
+    'margin-top: 20px;\n' +
+  '}\n' +
+  '.testReportDiv {\n' +
+    'display: none;\n' +
+  '}\n' +
+  'textarea {\n' +
+    'font-family: monospace;\n' +
+    'height: 24em;\n' +
+    'width: 100%;\n' +
+  '}\n' +
+  '</style>\n' +
+'</head>\n' +
+'<body>\n' +
+  '<div class="ajaxProgressDiv" style="display: none;">\n' +
+    '<div class="ajaxProgressBarDiv ajaxProgressBarDivLoading">loading</div>\n' +
+  '</div>\n' +
+  '<h1>{{envDict.npm_package_name}} [{{envDict.npm_package_version}}]</h1>\n' +
+  '<h3>{{envDict.npm_package_description}}</h3>\n' +
+  '<div>edit or paste script below to cover and test</div>\n' +
+  '<textarea class="istanbulLiteInputTextarea">\n' +
+'window.utility2.testRun({\n' +
+'\n' +
+'modeTest: true,\n' +
+'\n' +
+'_ajax_get_test: function (onError) {\n' +
+  '/*\n' +
+    'this function will test ajax"s GET handling behavior\n' +
+  '*/\n' +
+  '// test main-page "/"\n' +
+  'utility2.ajax({ url: "/" }, function (error, data, xhr) {\n' +
+    'try {\n' +
+      '// validate no error occurred\n' +
+      'utility2.assert(!error, error);\n' +
+      '// validate main-page is non-empty\n' +
+      'if (xhr.statusCode === 200) {\n' +
+        'utility2.assert(data, data);\n' +
+      '}\n' +
+      'onError();\n' +
+    '} catch (error) {\n' +
+      'onError(error);\n' +
+    '}\n' +
+  '});\n' +
+'}\n' +
+'});\n' +
+  '</textarea>\n' +
+  '<div class="testReportDiv"></div>\n' +
+  '<div class="istanbulLiteCoverageDiv"></div>\n' +
+  '<script src="/assets/istanbul-lite.js"></script>\n' +
+  '<script src="/assets/utility2.js"></script>\n' +
+  '<script>\n' +
+  'window.utility2 = window.utility2 || {};\n' +
+  'window.utility2.envDict = {\n' +
+    'npm_package_description: "{{envDict.npm_package_description}}",\n' +
+    'npm_package_name: "{{envDict.npm_package_name}}",\n' +
+    'npm_package_version: "{{envDict.npm_package_version}}"\n' +
+  '};\n' +
+  'document.querySelector(\n' +
+    '".istanbulLiteInputTextarea"\n' +
+  ').addEventListener("keyup", window.istanbul_lite.coverAndEval);\n' +
+  'window.istanbul_lite.coverAndEval();\n' +
+  '</script>\n' +
+  '<script src="/test/test.js"></script>\n' +
+'</body>\n' +
+'</html>\n' +
 /* jslint-ignore-end */
             String()).replace((/\{\{envDict\.\w+?\}\}/g), function (match0) {
             switch (match0) {
@@ -333,7 +331,8 @@ _ajax_get_test: function (onError) {\n\
 
 
 # todo
-- jslint utility2.css
+- rename mode* to state*
+- remove fileCacheDict
 - create flamegraph from istanbul coverage
 - explicitly require slimerjs instead of auto-detecting it
 - auto-generate help doc from README.md
