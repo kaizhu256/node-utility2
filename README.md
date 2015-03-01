@@ -236,7 +236,8 @@ run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
         case '/assets/utility2.css':
         case '/assets/utility2.js':
         case '/test/test.js':
-          response.end(app.utility2[request.urlPathNormalized]);
+          response.end(app.utility2[request.urlPathNormalized] ||
+            app.utility2.istanbul_lite[request.urlPathNormalized]);
           break;
         // test http GET handling behavior
         case '/test/hello':
@@ -284,7 +285,7 @@ run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
   "author": "kai zhu <kaizhu256@gmail.com>",
   "bin": { "utility2" : "index.sh" },
   "dependencies": {
-    "istanbul-lite": "2015.3.2-10",
+    "istanbul-lite": "2015.3.2-11",
     "jslint-lite": "2015.2.18-10"
   },
   "devDependencies": {
@@ -325,7 +326,7 @@ run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
     "start": "npm_config_mode_auto_restart=1 ./index.sh shRun node test.js",
     "test": "./index.sh shRun shReadmePackageJsonExport && npm_config_mode_auto_restart=1 npm_config_mode_auto_restart_child=1 ./index.sh shRun shNpmTest test.js"
   },
-  "version": "2015.3.2-10"
+  "version": "2015.3.2-11"
 }
 ```
 
