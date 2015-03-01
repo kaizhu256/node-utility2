@@ -667,7 +667,7 @@
       });
     };
 
-    // init server-assets
+    // init assets
     [{
       // coverage-hack - cover no cache handling behavior
       cache: null,
@@ -679,7 +679,6 @@
       coverage: 'utility2',
       file: __dirname + '/test.js'
     }].forEach(function (options) {
-      console.log('cache and parse ' + options.file);
       // cache and parse the file
       app.utility2.fileCacheAndParse(options);
     });

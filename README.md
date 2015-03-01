@@ -217,7 +217,7 @@ _ajax_get_test: function (onError) {\n\
 </html>\n\
 ' +
 /* jslint-ignore-end */
-            String()).replace((/\{\{envDict\..*?\}\}/g), function (match0) {
+            String()).replace((/\{\{envDict\.\w+?\}\}/g), function (match0) {
             switch (match0) {
             case '{{envDict.npm_package_description}}':
               return 'this is an example module';
@@ -229,6 +229,15 @@ _ajax_get_test: function (onError) {\n\
           }));
           response.end();
           break;
+        // serve builtin assets
+        case '/assets/istanbul-lite.js':
+        case '/assets/utility2.css':
+        case '/assets/utility2.js':
+        case '/test/test.js':
+          response.end(app.utility2.fileCacheDict[
+            request.urlPathNormalized
+          ].data);
+          break;
         // test http GET handling behavior
         case '/test/hello':
           response.end('hello');
@@ -237,13 +246,7 @@ _ajax_get_test: function (onError) {\n\
         default:
           next();
         }
-      },
-      // this builtin test-middleware will
-      // 1. redirect '/' to '/test/test.html'
-      // 2. serve '/assets/utility2.js' from builtin test-library
-      // 3. serve '/test/test.js' from user-defined test-file
-      // 4. serve '/test/test.html' from builtin test-page
-      app.utility2.testMiddleware
+      }
     ];
     // this function will
     // 1. create http-server from app.serverMiddlewareList
