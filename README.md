@@ -262,7 +262,7 @@ run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
 #### output from [phantomjs-lite](https://www.npmjs.com/package/phantomjs-lite)
 ![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleJs.slimerjs.png)
 #### output from [istanbul-lite](https://www.npmjs.com/package/istanbul-lite)
-![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleJs.slimerjs._2Ftmp_2Fapp_2F.tmp_2Fbuild_2Fcoverage.html_2Fapp_2Fexample.js.html.png)
+![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleJs.slimerjs._2Ftmp_2Fapp_2Ftmp_2Fbuild_2Fcoverage.html_2Fapp_2Fexample.js.html.png)
 
 
 
@@ -284,7 +284,7 @@ run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
   "author": "kai zhu <kaizhu256@gmail.com>",
   "bin": { "utility2" : "index.sh" },
   "dependencies": {
-    "istanbul-lite": "2015.3.2-11",
+    "istanbul-lite": "2015.3.2-12",
     "jslint-lite": "2015.2.18-10"
   },
   "devDependencies": {
@@ -326,15 +326,14 @@ run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
     "start": "npm_config_mode_auto_restart=1 ./index.sh shRun node test.js",
     "test": "./index.sh shRun shReadmePackageJsonExport && npm_config_mode_auto_restart=1 npm_config_mode_auto_restart_child=1 ./index.sh shRun shNpmTest test.js"
   },
-  "version": "2015.3.2-11"
+  "version": "2015.3.2-12"
 }
 ```
 
 
 
 # todo
-- rename .tmp to tmp
-- major revamp - jslint - use 4 space indent and 80 col maxlen
+- jslint - use 4 space indent and 80 col maxlen
 - create flamegraph from istanbul coverage
 - explicitly require slimerjs instead of auto-detecting it
 - auto-generate help doc from README.md
@@ -366,9 +365,9 @@ shBuild() {
   shRunScreenCapture shReadmeTestJs example.js || return $?
   # screen-capture example.js coverage
   MODE_BUILD=testExampleJs shRun shPhantomScreenCapture\
-    /tmp/app/.tmp/build/coverage.html/app/example.js.html || :
+    /tmp/app/tmp/build/coverage.html/app/example.js.html || :
   # copy phantomjs screen-capture to $npm_config_dir_build
-  cp /tmp/app/.tmp/build/screen-capture.*.png $npm_config_dir_build || return $?
+  cp /tmp/app/tmp/build/screen-capture.*.png $npm_config_dir_build || return $?
 
   # run npm-test
   MODE_BUILD=npmTest shRunScreenCapture npm test || return $?

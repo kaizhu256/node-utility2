@@ -232,9 +232,9 @@ shInit() {
     export npm_package_version=undefined || return $?
   fi
   # init $npm_config_*
-  export npm_config_dir_build=$CWD/.tmp/build || return $?
-  export npm_config_dir_tmp=$CWD/.tmp || return $?
-  export npm_config_file_tmp=$CWD/.tmp/tmpfile || return $?
+  export npm_config_dir_build=$CWD/tmp/build || return $?
+  export npm_config_dir_tmp=$CWD/tmp || return $?
+  export npm_config_file_tmp=$CWD/tmp/tmpfile || return $?
   # init $npm_config_dir_utility2
   if [ "$npm_package_name" = utility2 ]
   then

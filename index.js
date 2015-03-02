@@ -1695,8 +1695,8 @@
     // init utility2 properties
     app.utility2.__dirname = __dirname;
     app.utility2.envDict = process.env;
-    app.utility2.envDict.npm_config_dir_build = process.cwd() + '/.tmp/build';
-    app.utility2.envDict.npm_config_dir_tmp = process.cwd() + '/.tmp';
+    app.utility2.envDict.npm_config_dir_build = process.cwd() + '/tmp/build';
+    app.utility2.envDict.npm_config_dir_tmp = process.cwd() + '/tmp';
     app.utility2.exit = process.exit;
     app.utility2.global = global;
     // init _testSecret
