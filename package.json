@@ -19,6 +19,7 @@
     "cover",
     "coverage",
     "csslint",
+    "eshint",
     "eslint",
     "istanbul",
     "instrument",

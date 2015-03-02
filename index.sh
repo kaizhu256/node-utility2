@@ -284,8 +284,8 @@ shIstanbulReport() {
 }
 
 shNpmTest() {
-  # this function will run npm test
-  shBuildPrint ${MODE_BUILD:-npmTest} "npm testing $CWD" || return $?
+  # this function will run npm-test
+  shBuildPrint ${MODE_BUILD:-npmTest} "npm-testing $CWD" || return $?
   # init $npm_config_dir_build
   mkdir -p $npm_config_dir_build/coverage.html || return $?
   # auto-detect slimerjs
@@ -295,11 +295,11 @@ shNpmTest() {
   then
     export npm_config_mode_slimerjs=1 || return $?
   fi
-  # init npm test mode
+  # init npm-test-mode
   export npm_config_mode_npm_test=1 || return $?
-  # init random server port
+  # init random server-port
   export npm_config_server_port=$(shServerPortRandom) || return $?
-  # if coverage-mode is disabled, then run npm test without coverage
+  # if coverage-mode is disabled, then run npm-test without coverage
   if [ "$npm_config_mode_no_coverage" ]
   then
     node $@
@@ -307,7 +307,7 @@ shNpmTest() {
   fi
   # cleanup old coverage
   rm -f $npm_config_dir_build/coverage.html/coverage.* || return $?
-  # run npm test with coverage
+  # run npm-test with coverage
   shIstanbulCover $@
   # save $EXIT_CODE and restore $CWD
   shExitCodeSave $? || return $?
@@ -346,13 +346,13 @@ shNpmTest() {
 }
 
 shNpmTestPublished() {
-  # this function will run npm test on the published package
-  shBuildPrint npmTestPublished "npm testing published package $npm_package_name" || return $?
+  # this function will run npm-test on the published package
+  shBuildPrint npmTestPublished "npm-testing published package $npm_package_name" || return $?
   # init /tmp/app
   rm -fr /tmp/app /tmp/node_modules && mkdir -p /tmp/app && cd /tmp/app || return $?
   # npm install package
   npm install $npm_package_name || return $?
-  # npm test package
+  # npm-test package
   cd node_modules/$npm_package_name && npm install && npm test || return $?
 }
 

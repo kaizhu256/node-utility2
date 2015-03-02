@@ -300,6 +300,7 @@ run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
     "cover",
     "coverage",
     "csslint",
+    "eshint",
     "eslint",
     "istanbul",
     "instrument",
@@ -332,7 +333,8 @@ run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
 
 
 # todo
-- major revamp - rename mode* to state*
+- rename .tmp to tmp
+- major revamp - jslint - use 4 space indent and 80 col maxlen
 - create flamegraph from istanbul coverage
 - explicitly require slimerjs instead of auto-detecting it
 - auto-generate help doc from README.md
@@ -351,13 +353,12 @@ run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
 ```
 # build.sh
 # this shell script will run the build process for this package
-
 shBuild() {
   # init env
   export npm_config_mode_slimerjs=1 || return $?
   . ./index.sh && shInit || return $?
 
-  # run npm test on published package
+  # run npm-test on published package
   shRun shNpmTestPublished || return $?
 
   # test example js script
@@ -369,7 +370,7 @@ shBuild() {
   # copy phantomjs screen-capture to $npm_config_dir_build
   cp /tmp/app/.tmp/build/screen-capture.*.png $npm_config_dir_build || return $?
 
-  # run npm test
+  # run npm-test
   MODE_BUILD=npmTest shRunScreenCapture npm test || return $?
 
   # deploy app to heroku

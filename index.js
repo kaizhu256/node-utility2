@@ -568,7 +568,7 @@
           });
         }
       });
-      // if in browser mode, visually refresh test progress until it finishes
+      // visually update test-progress until it finishes
       if (app.utility2.modeJs === 'browser') {
         // init _testReportDiv element
         app.utility2._testReportDiv = document.querySelector('.testReportDiv') || { style: {} };
@@ -698,8 +698,7 @@
       testPlatform = app.utility2.testPlatform;
       // init testPlatform timer
       testPlatform.timeElapsed = Date.now();
-      // bug - use shallow copy of testPlatform.testCaseList,
-      // because the original might get in-place sorted during testing
+      // shallow copy testPlatform.testCaseList, to guard against in-place sort from testMerge
       testPlatform.testCaseList.slice().forEach(function (testCase) {
         var finished, onError, timerTimeout;
         onError = function (error) {
