@@ -734,7 +734,7 @@
           break;
         // test script-error handling behavior
         case '/test/script-error.html':
-          response.end('<script>syntax-error!</script>');
+          response.end('<script>syntax error</script>');
           break;
         // test standalone utility2.js library handling behavior
         case '/test/utility2.html':
@@ -772,6 +772,7 @@
     ];
     // run server-test
     app.utility2.testRunServer(app);
+    // init dir
     app.fs.readdirSync(__dirname).forEach(function (file) {
       file = __dirname + '/' + file;
       switch (app.path.extname(file)) {

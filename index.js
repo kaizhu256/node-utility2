@@ -668,7 +668,7 @@
               )
           );
           // create test-report.html
-          console.log('creating test-report ' +
+          console.log('creating test-report file://' +
             app.utility2.envDict.npm_config_dir_build + '/test-report.html');
           app.utility2.fs.writeFileSync(
             app.utility2.envDict.npm_config_dir_build + '/test-report.html',
@@ -1266,7 +1266,8 @@
               { stdio: ['ignore', 1, 2] }
             )
             // on shell exit, print return prompt
-            .on('exit', function () {
+            .on('exit', function (exitCode) {
+              console.log('exit-code ' + exitCode);
               app.utility2._replServer.evalDefault('\n', context, file, onError2);
             });
           return;
@@ -1293,7 +1294,8 @@
               { stdio: ['ignore', 1, 2] }
             )
             // on shell exit, print return prompt
-            .on('exit', function () {
+            .on('exit', function (exitCode) {
+              console.log('exit-code ' + exitCode);
               app.utility2._replServer.evalDefault('\n', context, file, onError2);
             });
           return;

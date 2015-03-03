@@ -155,7 +155,7 @@ run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
   '<h1>{{envDict.npm_package_name}} [{{envDict.npm_package_version}}]</h1>\n' +
   '<h3>{{envDict.npm_package_description}}</h3>\n' +
   '<div>edit or paste script below to cover and test</div>\n' +
-  '<textarea class="istanbulLiteInputTextarea">\n' +
+'<textarea class="istanbulLiteInputTextarea">\n' +
 'window.utility2.testRun({\n' +
 '\n' +
 'modeTest: true,\n' +
@@ -170,7 +170,7 @@ run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
       '// validate no error occurred\n' +
       'utility2.assert(!error, error);\n' +
       '// validate main-page is non-empty\n' +
-      'if (xhr.statusCode === 200) {\n' +
+      'if (xhr.status === 200) {\n' +
         'utility2.assert(data, data);\n' +
       '}\n' +
       'onError();\n' +
@@ -180,7 +180,7 @@ run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
   '});\n' +
 '}\n' +
 '});\n' +
-  '</textarea>\n' +
+'</textarea>\n' +
   '<div class="testReportDiv"></div>\n' +
   '<div class="istanbulLiteCoverageDiv"></div>\n' +
   '<script src="/assets/istanbul-lite.js"></script>\n' +
@@ -285,7 +285,7 @@ run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
   "bin": { "utility2" : "index.sh" },
   "dependencies": {
     "istanbul-lite": "2015.3.2-12",
-    "jslint-lite": "2015.2.18-10"
+    "jslint-lite": "2015.3.3-12"
   },
   "devDependencies": {
     "phantomjs-lite": "^2015.1.4-102"
@@ -326,13 +326,14 @@ run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
     "start": "npm_config_mode_auto_restart=1 ./index.sh shRun node test.js",
     "test": "./index.sh shRun shReadmePackageJsonExport && npm_config_mode_auto_restart=1 npm_config_mode_auto_restart_child=1 ./index.sh shRun shNpmTest test.js"
   },
-  "version": "2015.3.2-12"
+  "version": "2015.3.3-12"
 }
 ```
 
 
 
 # todo
+- npm publish 2015.3.3-12
 - jslint - use 4 space indent and 80 col maxlen
 - create flamegraph from istanbul coverage
 - explicitly require slimerjs instead of auto-detecting it
