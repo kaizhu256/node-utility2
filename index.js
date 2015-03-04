@@ -541,7 +541,7 @@
       /*
         this function will run the tests in testPlatform.testCaseList
       */
-      var exit, onParallel, testPlatform, timerInterval;
+      var exit, onParallel, testPlatform, testReportDiv, timerInterval;
       options = options || {};
       app.utility2.modeTest =
         app.utility2.modeTest || app.utility2.envDict.npm_config_mode_npm_test;
@@ -571,15 +571,13 @@
       // visually update test-progress until it finishes
       if (app.utility2.modeJs === 'browser') {
         // init _testReportDiv element
-        app.utility2._testReportDiv = document.querySelector('.testReportDiv') || { style: {} };
-        app.utility2._testReportDiv.style.display = 'block';
-        app.utility2._testReportDiv.innerHTML =
-          app.utility2.testMerge(app.utility2.testReport, {});
+        testReportDiv = document.querySelector('.testReportDiv') || { style: {} };
+        testReportDiv.style.display = 'block';
+        testReportDiv.innerHTML = app.utility2.testMerge(app.utility2.testReport, {});
         // update test-report status every 1000 ms until finished
         timerInterval = setInterval(function () {
           // update _testReportDiv in browser
-          app.utility2._testReportDiv.innerHTML =
-            app.utility2.testMerge(app.utility2.testReport, {});
+          testReportDiv.innerHTML = app.utility2.testMerge(app.utility2.testReport, {});
           // update _istanbulLiteInputTextareDiv
           if (app.utility2.global.istanbul_lite &&
               app.utility2.global.istanbul_lite.coverageReportCreate) {
@@ -829,7 +827,10 @@
       /*
         this functions performs a brower ajax request with error handling and timeout
       */
-      var data, error, finished, ii, onEvent, timerTimeout, xhr;
+      var ajaxProgressDiv, data, error, finished, ii, onEvent, timerTimeout, xhr;
+      // init ajaxProgressDiv
+      ajaxProgressDiv = document.querySelector('.ajaxProgressDiv') || { style: {} };
+
       // init event handling
       onEvent = app.utility2.onErrorWithStack(function (event) {
         switch (event.type) {
@@ -869,7 +870,7 @@
           if (app.utility2._ajaxProgressList.length === 0) {
             app.utility2._ajaxProgressBarHide = setTimeout(function () {
               // hide ajaxProgressBar
-              app.utility2._ajaxProgressDiv.style.display = 'none';
+              ajaxProgressDiv.style.display = 'none';
               // reset ajaxProgress
               app.utility2._ajaxProgressState = 0;
               app.utility2._ajaxProgressUpdate('0%', 'ajaxProgressBarDivLoading', 'loading');
@@ -904,7 +905,7 @@
       }, options.timeout || app.utility2.timeoutDefault, 'ajax');
       // if ajaxProgressBar is hidden, then display it
       if (app.utility2._ajaxProgressList.length === 0) {
-        app.utility2._ajaxProgressDiv.style.display = 'block';
+        ajaxProgressDiv.style.display = 'block';
       }
       // add xhr to _ajaxProgressList
       app.utility2._ajaxProgressList.push(xhr);
@@ -919,13 +920,6 @@
       // send data
       xhr.send(options.data);
     };
-
-    // init _ajaxProgressBarDiv element
-    app.utility2._ajaxProgressBarDiv =
-      document.querySelector('.ajaxProgressBarDiv') || { className: '', style: {} };
-
-    // init _ajaxProgressDiv element
-    app.utility2._ajaxProgressDiv = document.querySelector('.ajaxProgressDiv') || { style: {} };
 
     app.utility2._ajaxProgressIncrement = function () {
       /*
@@ -951,10 +945,13 @@
       /*
         this function will visually update the ajaxProgressBar
       */
-      app.utility2._ajaxProgressBarDiv.style.width = width;
-      app.utility2._ajaxProgressBarDiv.className = app.utility2._ajaxProgressBarDiv.className
+      var ajaxProgressBarDiv;
+      ajaxProgressBarDiv =
+        document.querySelector('.ajaxProgressBarDiv') || { className: '', style: {} };
+      ajaxProgressBarDiv.style.width = width;
+      ajaxProgressBarDiv.className = ajaxProgressBarDiv.className
         .replace((/ajaxProgressBarDiv\w+/), type);
-      app.utility2._ajaxProgressBarDiv.innerHTML = label;
+      ajaxProgressBarDiv.innerHTML = label;
     };
   }());
 

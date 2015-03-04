@@ -138,13 +138,16 @@ run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
   'body > div {\n' +
     'margin-top: 20px;\n' +
   '}\n' +
-  '.testReportDiv {\n' +
-    'display: none;\n' +
-  '}\n' +
   'textarea {\n' +
     'font-family: monospace;\n' +
     'height: 24em;\n' +
     'width: 100%;\n' +
+  '}\n' +
+  '.jslintOutputPre {\n' +
+    'color: #f00;\n' +
+  '}\n' +
+  '.testReportDiv {\n' +
+    'display: none;\n' +
   '}\n' +
   '</style>\n' +
 '</head>\n' +
@@ -181,6 +184,7 @@ run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
 '}\n' +
 '});\n' +
 '</textarea>\n' +
+  '<pre class="jslintOutputPre"></pre>\n' +
   '<div class="testReportDiv"></div>\n' +
   '<div class="istanbulLiteCoverageDiv"></div>\n' +
   '<script src="/assets/istanbul-lite.js"></script>\n' +
@@ -333,7 +337,6 @@ run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
 
 
 # todo
-- npm publish 2015.3.3-12
 - jslint - use 4 space indent and 80 col maxlen
 - create flamegraph from istanbul coverage
 - explicitly require slimerjs instead of auto-detecting it
