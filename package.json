@@ -1,49 +1,49 @@
 {
-  "_packageJson": true,
-  "author": "kai zhu <kaizhu256@gmail.com>",
-  "bin": { "utility2" : "index.sh" },
-  "dependencies": {
-    "istanbul-lite": "2015.3.5-12",
-    "jslint-lite": "2015.3.5-11"
-  },
-  "devDependencies": {
-    "phantomjs-lite": "^2015.1.4-102"
-  },
-  "description": "run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)",
-  "engines": { "node": ">=0.10 <=0.12" },
-  "keywords": [
-    "browser",
-    "build",
-    "ci",
-    "code",
-    "cover",
-    "coverage",
-    "csslint",
-    "eshint",
-    "eslint",
-    "istanbul",
-    "instrument",
-    "jshint",
-    "jslint",
-    "lightweight",
-    "lint",
-    "phantomjs",
-    "slimerjs",
-    "test",
-    "travis",
-    "web"
-  ],
-  "license": "MIT",
-  "name": "utility2",
-  "os": ["darwin", "linux"],
-  "repository" : {
-    "type" : "git",
-    "url" : "https://github.com/kaizhu256/node-utility2.git"
-  },
-  "scripts": {
-    "build2": "./index.sh shRun shBuild",
-    "start": "npm_config_mode_auto_restart=1 ./index.sh shRun node test.js",
-    "test": "./index.sh shRun shReadmePackageJsonExport && npm_config_mode_auto_restart=1 npm_config_mode_auto_restart_child=1 ./index.sh shRun shNpmTest test.js"
-  },
-  "version": "2015.3.5-12"
+    "_packageJson": true,
+    "author": "kai zhu <kaizhu256@gmail.com>",
+    "bin": { "utility2" : "index.sh" },
+    "dependencies": {
+        "istanbul-lite": "2015.3.5-12",
+        "jslint-lite": "2015.3.5-11"
+    },
+    "devDependencies": {
+        "phantomjs-lite": "^2015.1.4-102"
+    },
+    "description": "run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)",
+    "engines": { "node": ">=0.10 <=0.12" },
+    "keywords": [
+        "browser",
+        "build",
+        "ci",
+        "code",
+        "cover",
+        "coverage",
+        "csslint",
+        "eshint",
+        "eslint",
+        "istanbul",
+        "instrument",
+        "jshint",
+        "jslint",
+        "lightweight",
+        "lint",
+        "phantomjs",
+        "slimerjs",
+        "test",
+        "travis",
+        "web"
+    ],
+    "license": "MIT",
+    "name": "utility2",
+    "os": ["darwin", "linux"],
+    "repository" : {
+        "type" : "git",
+        "url" : "https://github.com/kaizhu256/node-utility2.git"
+    },
+    "scripts": {
+        "build2": "./index.sh shRun shBuild",
+        "start": "npm_config_mode_auto_restart=1 ./index.sh shRun node test.js",
+        "test": "./index.sh shRun shReadmePackageJsonExport && npm_config_mode_auto_restart=1 npm_config_mode_auto_restart_child=1 ./index.sh shRun shNpmTest test.js"
+    },
+    "version": "2015.3.5-12"
 }
