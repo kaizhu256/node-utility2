@@ -5,7 +5,6 @@ maxerr: 4,
 maxlen: 200,
 node: true,
 nomen: true,
-regexp: true,
 stupid: true
 */
 (function (app) {
@@ -767,7 +766,7 @@ stupid: true
                     return app.utility2.textFormat(fragment, dict, valueDefault);
                 }).join('');
             };
-            rgx = (/\{\{#[^{]+?\}\}/g);
+            rgx = (/\{\{#\S+?\}\}/g);
             while (true) {
                 // search for array fragments in the template
                 match = rgx.exec(template);
@@ -784,7 +783,7 @@ stupid: true
                 }
             }
             // search for keys in the template
-            return template.replace((/\{\{[^{}]+?\}\}/g), function (keyList) {
+            return template.replace((/\{\{\S+?\}\}/g), function (keyList) {
                 value = dict;
                 // iteratively lookup nested values in the dict
                 keyList.slice(2, -2).split('.').forEach(function (key) {
@@ -1138,7 +1137,7 @@ stupid: true
                         fileScreenCapture: (app.utility2.envDict.npm_config_dir_build +
                             '/screen-capture.' + options.testName + '.png')
                             .replace((/%/g), '_')
-                            .replace((/_2F.png$/), 'png'),
+                            .replace((/_2F\.png$/), 'png'),
                         fileTestReport: app.utility2.envDict.npm_config_dir_tmp +
                             '/test-report.' + options.testName + '.json',
                         modePhantom: 'testUrl'
@@ -1227,7 +1226,7 @@ stupid: true
             // hook custom repl eval function
             app.utility2._replServer.eval = function (script, context, file, onError) {
                 var match, onError2;
-                match = (/^([^ ]+)(.*?)\n/).exec(script);
+                match = (/^(\S+)([\S\s]*?)\n/).exec(script);
                 onError2 = function (error, data) {
                     // debug error
                     app.utility2.debugReplError = error || app.utility2.debugReplError;
@@ -1309,7 +1308,7 @@ stupid: true
             if (error) {
                 // if modeErrorIgnore is undefined in url search params,
                 // then print error.stack to stderr
-                if (!(/\?.*?\bmodeErrorIgnore=1\b/).test(request.url)) {
+                if (!(/\?\S*?\bmodeErrorIgnore=1\b/).test(request.url)) {
                     app.utility2.onErrorDefault(error);
                 }
                 // end response with error.stack
@@ -1548,7 +1547,7 @@ stupid: true
                 // handle test-report callback
                 case 'testUrl':
                     try {
-                        data = (/\nphantom\n(\{"global_test_results":\{.+)/).exec(error);
+                        data = (/\nphantom\n(\{"global_test_results":\{[\S\s]+)/).exec(error);
                         data = data && JSON.parse(data[1]).global_test_results;
                     } catch (ignore) {
                     }
@@ -1562,7 +1561,7 @@ stupid: true
                         app.utility2.page.render(app.utility2.fileScreenCapture);
                         // integrate screen-capture into test-report
                         data.testReport.testPlatformList[0].screenCaptureImg =
-                            app.utility2.fileScreenCapture.replace((/^.*\//), '');
+                            app.utility2.fileScreenCapture.replace((/^[\S\s]*?\//), '');
                         // save test-report
                         app.utility2.fs.write(
                             app.utility2.fileTestReport,
@@ -1651,7 +1650,7 @@ stupid: true
         app.utility2.istanbul_lite = window.istanbul_lite;
         // parse any url-search-params that matches 'mode*' or '_testSecret' or 'timeoutDefault'
         location.search.replace(
-            (/\b(mode[A-Z]\w+|_testSecret|timeoutDefault)=([^#&=]+)/g),
+            (/\b(mode[A-Z]\w+|_testSecret|timeoutDefault)=([\w\-\.\%]+)/g),
             function (match0, key, value) {
                 // jslint-hack
                 app.utility2.nop(match0);
@@ -1739,19 +1738,27 @@ stupid: true
             return arg;
         };
         app.utility2.errorDefault = new Error('default error');
+        // http://www.w3.org/TR/html5/forms.html#valid-e-mail-address
+        app.utility2.regexpEmailValidate = new RegExp(
+            '^[a-zA-Z0-9.!#$%&\'*+\\/=?\\^_`{|}~\\-]+@' +
+                '[a-zA-Z0-9](?:[a-zA-Z0-9\\-]{0,61}[a-zA-Z0-9])?' +
+                '(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9\\-]{0,61}[a-zA-Z0-9])?)*$'
+        );
         app.utility2.testPlatform = {
             name: app.utility2.modeJs === 'browser'
-                ? 'browser - ' + navigator.userAgent + ' - ' + new Date().toISOString()
+                ? 'browser - ' + navigator.userAgent + ' - ' +
+                    new Date().toISOString()
                 : app.utility2.modeJs === 'node'
-                ? 'node - ' +
-                    process.platform + ' ' + process.version + ' - ' + new Date().toISOString()
+                ? 'node - ' + process.platform + ' ' + process.version + ' - ' +
+                    new Date().toISOString()
                 : (app.utility2.global.slimer
                     ? 'slimer - '
                     : 'phantom - ') +
                     app.utility2.system.os.name + ' ' +
                     app.utility2.global.phantom.version.major + '.' +
                     app.utility2.global.phantom.version.minor + '.' +
-                    app.utility2.global.phantom.version.patch + ' - ' + new Date().toISOString(),
+                    app.utility2.global.phantom.version.patch + ' - ' +
+                    new Date().toISOString(),
             screenCaptureImg: app.utility2.envDict.MODE_BUILD_SCREEN_CAPTURE,
             testCaseList: []
         };
@@ -1762,7 +1769,8 @@ stupid: true
             ' !"#$%&\'()*+,-./0123456789:;<=>?' +
             '@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_' +
             '`abcdefghijklmnopqrstuvwxyz{|}~\x7f';
-        app.utility2.textExampleUri = '!%\'()*-.0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz~';
+        app.utility2.textExampleUri = '!%\'()*-.' +
+            '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz~';
         app.utility2.timeoutDefault =
             app.utility2.envDict.npm_config_timeout_default || app.utility2.timeoutDefault || 30000;
     }());
