@@ -39,16 +39,6 @@
       return error.stack || error.message || 'undefined';
     };
 
-    app.utility2.istanbulInstrumentInPackage = function (code, file, packageName) {
-      /*
-        this function will cover the code, only if packageName === $npm_package_name
-      */
-      return app.utility2.global.__coverage__ &&
-        packageName === app.utility2.envDict.npm_package_name
-        ? app.utility2.istanbul_lite.instrumentSync(code, file)
-        : code;
-    };
-
     app.utility2.istanbulMerge = function (coverage1, coverage2) {
       /*
         this function will merge coverage2 into coverage1
@@ -1162,7 +1152,7 @@
             options.argv1 = app.utility2.envDict.npm_config_dir_tmp + '/covered.utility2.js';
             app.utility2.fs.writeFileSync(
               options.argv1,
-              app.utility2.istanbulInstrumentInPackage(app.utility2[
+              app.utility2.istanbul_lite.instrumentInPackage(app.utility2[
                 '/assets/utility2.js'
               ], __dirname + '/index.js', 'utility2')
             );

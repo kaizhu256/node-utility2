@@ -185,26 +185,6 @@
       });
     };
 
-    app._istanbulInstrumentInPackage_default_test = function (onError) {
-      /*
-        this function will test istanbulInstrumentInPackage's default handling behavior
-      */
-      var data;
-      app.utility2.testMock([
-        [app.utility2.global, { __coverage__: {} }]
-      ], onError, function (onError) {
-        // test no cover handling behavior
-        data = app.utility2.istanbulInstrumentInPackage('1', 'test.js', '');
-        // validate data
-        app.utility2.assert(data === '1', data);
-        // test cover handling behavior
-        data = app.utility2.istanbulInstrumentInPackage('1', 'test.js', 'utility2');
-        // validate data
-        app.utility2.assert(data.indexOf(".s[\'1\']++;1;\n") >= 0, data);
-        onError();
-      });
-    };
-
     app._jsonCopy_default_test = function (onError) {
       /*
         this function will test jsonCopy's default handling behavior
@@ -403,6 +383,10 @@
       onError(app.utility2.errorDefault);
       // test failure from multiple-callback handling behavior
       onError();
+      // test failure from ajax handling behavior
+      app.utility2.ajax({
+        url: '/test/undefined?modeErrorIgnore=1'
+      }, onError);
       // test failure from thrown error handling behavior
       throw app.utility2.errorDefault;
     };
@@ -553,8 +537,8 @@
       [{
         modeErrorIgnore: true,
         url: 'http://localhost:' + app.utility2.envDict.npm_config_server_port +
-          // test standalone utility2.js library handling behavior
-          '/test/utility2.html?' +
+          // test standalone script handling behavior
+          '/test/script.html?' +
           // test modeTest !== 'phantom' handling behavior
           'modeTest=phantom2&' +
           // test single-test-case handling behavior
@@ -692,13 +676,13 @@
     app['/assets/utility2.css'] =
       app.utility2['/assets/utility2.css'];
     app['/assets/utility2.js'] =
-      app.utility2.istanbulInstrumentInPackage(
+      app.utility2.istanbul_lite.instrumentInPackage(
         app.utility2['/assets/utility2.js'],
         __dirname + '/index.js',
         'utility2'
       );
     app['/test/test.js'] =
-      app.utility2.istanbulInstrumentInPackage(
+      app.utility2.istanbul_lite.instrumentInPackage(
         app.utility2.fs.readFileSync(__filename, 'utf8'),
         __filename,
         'utility2'
@@ -732,14 +716,14 @@
             response.end();
           }, 1000);
           break;
+        // test standalone script handling behavior
+        case '/test/script.html':
+          response.end('<script src="/assets/utility2.js">' +
+            '</script><script src="/test/test.js"></script>');
+          break;
         // test script-error handling behavior
         case '/test/script-error.html':
           response.end('<script>syntax error</script>');
-          break;
-        // test standalone utility2.js library handling behavior
-        case '/test/utility2.html':
-          response.end('<script src="/assets/utility2.js">' +
-            '</script><script src="/test/test.js"></script>');
           break;
         // test 500-internal-server-error handling behavior
         case '/test/server-error':

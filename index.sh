@@ -240,8 +240,9 @@ shInit() {
     then
         export npm_config_dir_utility2=$CWD || return
     else
-        export npm_config_dir_utility2=$(node -e "console.log(require('utility2').__dirname);") ||\
-            return $?
+        export npm_config_dir_utility2=$(node -e "console.log(\
+            require('utility2').__dirname\
+        );") || return $?
     fi
     # init $npm_config_file_istanbul
     if [ ! "$npm_config_file_istanbul" ]
@@ -258,8 +259,13 @@ shInit() {
 
 shIstanbulCover() {
     # this function will run the command $@ with istanbul coverage
-    npm_config_dir_coverage="$npm_config_dir_build/coverage.html"\
-        $npm_config_file_istanbul cover $@ || return $?
+    if [ "$npm_config_mode_no_coverage" ]
+    then
+        node $@
+    else
+        npm_config_dir_coverage="$npm_config_dir_build/coverage.html"\
+            $npm_config_file_istanbul cover $@ || return $?
+    fi
 }
 
 shIstanbulReport() {
@@ -281,6 +287,17 @@ shIstanbulReport() {
     # 2. create $npm_config_dir_build/coverage.html
     npm_config_dir_coverage="$npm_config_dir_build/coverage.html"\
         $npm_config_file_istanbul report || return $?
+}
+
+shIstanbulTest() {
+    # this function will run the command $@ with istanbul coverage
+    if [ "$npm_config_mode_no_coverage" ] || [ ! "$npm_config_mode_coverage" ]
+    then
+        node $@
+    else
+        npm_config_dir_coverage="$npm_config_dir_build/coverage.html"\
+            $npm_config_file_istanbul cover $@ || return $?
+    fi
 }
 
 shNpmTest() {
