@@ -288,8 +288,8 @@ run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
   "author": "kai zhu <kaizhu256@gmail.com>",
   "bin": { "utility2" : "index.sh" },
   "dependencies": {
-    "istanbul-lite": "2015.3.2-12",
-    "jslint-lite": "2015.3.3-12"
+    "istanbul-lite": "2015.3.5-10",
+    "jslint-lite": "2015.3.5-10"
   },
   "devDependencies": {
     "phantomjs-lite": "^2015.1.4-102"
@@ -330,13 +330,14 @@ run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
     "start": "npm_config_mode_auto_restart=1 ./index.sh shRun node test.js",
     "test": "./index.sh shRun shReadmePackageJsonExport && npm_config_mode_auto_restart=1 npm_config_mode_auto_restart_child=1 ./index.sh shRun shNpmTest test.js"
   },
-  "version": "2015.3.3-12"
+  "version": "2015.3.5-10"
 }
 ```
 
 
 
 # todo
+- allow screen-capture to exit with non-zero exit-code
 - jslint - use 4 space indent and 80 col maxlen
 - create flamegraph from istanbul coverage
 - explicitly require slimerjs instead of auto-detecting it
