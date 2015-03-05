@@ -158,7 +158,7 @@ run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
   '<h1>{{envDict.npm_package_name}} [{{envDict.npm_package_version}}]</h1>\n' +
   '<h3>{{envDict.npm_package_description}}</h3>\n' +
   '<div>edit or paste script below to cover and test</div>\n' +
-'<textarea class="istanbulLiteInputTextarea">\n' +
+'<textarea class="istanbulInputTextarea">\n' +
 'window.utility2.testRun({\n' +
 '\n' +
 'modeTest: true,\n' +
@@ -186,7 +186,7 @@ run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
 '</textarea>\n' +
   '<pre class="jslintOutputPre"></pre>\n' +
   '<div class="testReportDiv"></div>\n' +
-  '<div class="istanbulLiteCoverageDiv"></div>\n' +
+  '<div class="istanbulCoverageDiv"></div>\n' +
   '<script src="/assets/istanbul-lite.js"></script>\n' +
   '<script src="/assets/utility2.js"></script>\n' +
   '<script>\n' +
@@ -197,10 +197,10 @@ run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
     'npm_package_version: "{{envDict.npm_package_version}}"\n' +
   '};\n' +
   'document.querySelector(\n' +
-    '".istanbulLiteInputTextarea"\n' +
-  ').addEventListener("keyup", window.istanbul_lite.coverAndEval);\n' +
+    '".istanbulInputTextarea"\n' +
+  ').addEventListener("keyup", window.istanbul_lite.coverTextarea);\n' +
   'if (!window.utility2.modeTest) {\n' +
-    'window.istanbul_lite.coverAndEval();\n' +
+    'window.istanbul_lite.coverTextarea();\n' +
   '}\n' +
   '</script>\n' +
   '<script src="/test/test.js"></script>\n' +
@@ -288,7 +288,7 @@ run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
   "author": "kai zhu <kaizhu256@gmail.com>",
   "bin": { "utility2" : "index.sh" },
   "dependencies": {
-    "istanbul-lite": "2015.3.5-11",
+    "istanbul-lite": "2015.3.5-12",
     "jslint-lite": "2015.3.5-11"
   },
   "devDependencies": {
@@ -330,7 +330,7 @@ run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
     "start": "npm_config_mode_auto_restart=1 ./index.sh shRun node test.js",
     "test": "./index.sh shRun shReadmePackageJsonExport && npm_config_mode_auto_restart=1 npm_config_mode_auto_restart_child=1 ./index.sh shRun shNpmTest test.js"
   },
-  "version": "2015.3.5-11"
+  "version": "2015.3.5-12"
 }
 ```
 

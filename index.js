@@ -560,15 +560,15 @@
       });
       // visually update test-progress until it finishes
       if (app.utility2.modeJs === 'browser') {
-        // init _testReportDiv element
+        // init testReportDiv element
         testReportDiv = document.querySelector('.testReportDiv') || { style: {} };
         testReportDiv.style.display = 'block';
         testReportDiv.innerHTML = app.utility2.testMerge(app.utility2.testReport, {});
         // update test-report status every 1000 ms until finished
         timerInterval = setInterval(function () {
-          // update _testReportDiv in browser
+          // update testReportDiv in browser
           testReportDiv.innerHTML = app.utility2.testMerge(app.utility2.testReport, {});
-          // update _istanbulLiteInputTextareDiv
+          // update istanbulInputTextareDiv
           if (app.utility2.global.istanbul_lite &&
               app.utility2.global.istanbul_lite.coverageReportCreate) {
             app.utility2.global.istanbul_lite.coverageReportCreate();
