@@ -2,7 +2,7 @@
 bitwise: true,
 browser: true,
 maxerr: 4,
-maxlen: 200,
+maxlen: 96,
 node: true,
 nomen: true,
 stupid: true
@@ -23,7 +23,8 @@ stupid: true
                     // if message is a string, then leave it as is
                     typeof message === 'string'
                         ? message
-                        // if message is an Error object, then get its stack-trace
+                        // if message is an Error object,
+                        // then get its stack-trace
                         : message instanceof Error
                         ? app.utility2.errorStack(message)
                         // else JSON.stringify message
@@ -100,8 +101,8 @@ stupid: true
 
         app.utility2.jsonStringifyOrdered = function (value, replacer, space) {
             /*
-            this function will JSON.stringify the value with dictionaries in sorted order,
-            and is used in tests
+            this function will JSON.stringify the value with dictionaries
+            in sorted order, for testing purposes
             */
             var stringifyOrdered;
             stringifyOrdered = function (value) {
@@ -109,16 +110,19 @@ stupid: true
                 this function will recursively stringify the value,
                 and sort its object-keys along the way
                 */
-                // if value is an array, then recursively stringify its elements
+                // if value is an array,
+                // then recursively stringify its elements
                 if (Array.isArray(value)) {
                     return '[' + value.map(stringifyOrdered).join(',') + ']';
                 }
-                // if value is an object, then recursively stringify its items sorted by their keys
+                // if value is an object,
+                // then recursively stringify its items sorted by their keys
                 if (value && typeof value === 'object') {
                     return '{' + Object.keys(value)
                         .sort()
                         .map(function (key) {
-                            return JSON.stringify(key) + ':' + stringifyOrdered(value[key]);
+                            return JSON.stringify(key) + ':' +
+                                stringifyOrdered(value[key]);
                         })
                         .join(',') + '}';
                 }
@@ -127,7 +131,11 @@ stupid: true
             };
             value = JSON.stringify(value);
             return typeof value === 'string'
-                ? JSON.stringify(JSON.parse(stringifyOrdered(JSON.parse(value))), replacer, space)
+                ? JSON.stringify(
+                    JSON.parse(stringifyOrdered(JSON.parse(value))),
+                    replacer,
+                    space
+                )
                 : value;
         };
 
@@ -138,7 +146,8 @@ stupid: true
             */
             // if error is defined, then print the error stack
             if (error) {
-                console.error('\nonErrorDefault - error\n' + app.utility2.errorStack(error) + '\n');
+                console.error('\nonErrorDefault - error\n' +
+                    app.utility2.errorStack(error) + '\n');
             }
         };
 
@@ -173,8 +182,9 @@ stupid: true
 
         app.utility2.onParallel = function (onError, onDebug) {
             /*
-            this function will return another function that runs async tasks in parallel,
-            and calls onError only if there's an error, or if its counter === 0
+            this function will return another function that will
+            1. runs async tasks in parallel,
+            2. call onError only if there's an error, or if its counter === 0
             */
             var self;
             onDebug = onDebug || app.utility2.nop;
@@ -217,21 +227,22 @@ stupid: true
 
         app.utility2.onTimeout = function (onError, timeout, message) {
             /*
-            this function will create a timer that passes a timeout error to onError,
-            when the specified timeout has passed
+            this function will create a timer
+            that will call onError with a timeout error,
+            with a full stack-trace
             */
             onError = app.utility2.onErrorWithStack(onError);
-            var error;
-            // validate timeout is an integer in the exclusive range 0 to Infinity
+            // validate timeout is an integer
+            // in the exclusive range 0 to Infinity
             app.utility2.assert(
                 (timeout | 0) === timeout && 0 < timeout && timeout < Infinity,
                 'invalid timeout ' + timeout
             );
-            // create an error object in the current stack frame
-            error = new Error('onTimeout - timeout error - ' + timeout + ' ms - ' + message);
             // create timeout timer
             return setTimeout(function () {
-                onError(error);
+                onError(new Error('onTimeout - timeout error - ' +
+                    timeout + ' ms - ' +
+                    message));
             }, timeout);
         };
 
@@ -250,11 +261,16 @@ stupid: true
                     options[key] = defaults2;
                     return;
                 }
-                // if options[key] and defaults[key] are both non-null, non-array objects
+                // if options[key] and defaults[key]
+                // are both non-null and non-array objects,
                 // then recurse options[key] and defaults[key]
                 if (depth !== 0 &&
-                        defaults2 && typeof defaults2 === 'object' && !Array.isArray(defaults2) &&
-                        options2 && typeof options2 === 'object' && !Array.isArray(options2)) {
+                        defaults2 &&
+                        typeof defaults2 === 'object' &&
+                        !Array.isArray(defaults2) &&
+                        options2 &&
+                        typeof options2 === 'object' &&
+                        !Array.isArray(options2)) {
                     app.utility2.setDefault(options2, depth, defaults2);
                 }
             });
@@ -263,7 +279,8 @@ stupid: true
 
         app.utility2.setOverride = function (options, depth, override, backup) {
             /*
-            this function will recursively override the options object with the override object,
+            this function will recursively override
+            the options object with the override object,
             and optionally saves the original options object a backup object,
             and optionally accepts a depth recursion limit
             */
@@ -275,27 +292,39 @@ stupid: true
                 override2 = backup[key] = override[key];
                 if (depth === 0 ||
                         // override[key] is not a non-null, non-array object
-                        !(override2 && typeof override2 === 'object' && !Array.isArray(override2)) ||
+                        !(override2 &&
+                        typeof override2 === 'object' &&
+                        !Array.isArray(override2)) ||
                         // options[key] is not a non-null, non-array object
-                        !(options2 && typeof options2 === 'object' && !Array.isArray(options2))) {
+                        !(options2 &&
+                        typeof options2 === 'object' &&
+                        !Array.isArray(options2))) {
                     // 1. save the options item to the backup object
                     backup[key] = options2;
                     // 2. set the override item to the options object
-                    // if options is envDict, then override falsey values with empty string
+                    // if options is envDict,
+                    // then override falsey values with empty string
                     options[key] = options === app.utility2.envDict
                         ? override2 || ''
                         : override2;
                     return;
                 }
                 // 3. recurse options[key] and override[key]
-                app.utility2.setOverride(options2, depth, override2, override2, backup);
+                app.utility2.setOverride(
+                    options2,
+                    depth,
+                    override2,
+                    override2,
+                    backup
+                );
             });
             return options;
         };
 
         app.utility2.testMock = function (mockList, onError, testCase) {
             /*
-            this function will mock the objects given in the mockList while running the testCase
+            this function will mock the objects given in the mockList
+            while running the testCase
             */
             var callCallback, onError2;
             callCallback = function (callback) {
@@ -311,7 +340,10 @@ stupid: true
                 // suppress console.log
                 [console, { log: app.utility2.nop }],
                 // enforce synchronicity by mocking timers as callCallback
-                [app.utility2.global, { setInterval: callCallback, setTimeout: callCallback }]
+                [app.utility2.global, {
+                    setInterval: callCallback,
+                    setTimeout: callCallback
+                }]
             ].concat(mockList);
             onError2 = function (error) {
                 // restore mock[0] from mock[2]
@@ -357,7 +389,8 @@ stupid: true
                 );
                 app.utility2.assert(
                     typeof testReport.timeElapsed === 'number',
-                    ii + ' invalid testReport.timeElapsed ' + typeof testReport.timeElapsed
+                    ii + ' invalid testReport.timeElapsed ' +
+                        typeof testReport.timeElapsed
                 );
                 // security - handle malformed testReport.testPlatformList
                 testReport.testPlatformList.forEach(function (testPlatform) {
@@ -368,7 +401,8 @@ stupid: true
                     });
                     app.utility2.assert(
                         typeof testPlatform.name === 'string',
-                        ii + ' invalid testPlatform.name ' + typeof testPlatform.name
+                        ii + ' invalid testPlatform.name ' +
+                            typeof testPlatform.name
                     );
                     // insert $MODE_BUILD into testPlatform.name
                     if (app.utility2.envDict.MODE_BUILD) {
@@ -379,9 +413,11 @@ stupid: true
                     }
                     app.utility2.assert(
                         typeof testPlatform.timeElapsed === 'number',
-                        ii + ' invalid testPlatform.timeElapsed ' + typeof testPlatform.timeElapsed
+                        ii + ' invalid testPlatform.timeElapsed ' +
+                            typeof testPlatform.timeElapsed
                     );
-                    // security - handle malformed testReport.testPlatformList.testCaseList
+                    // security - handle malformed
+                    // testReport.testPlatformList.testCaseList
                     testPlatform.testCaseList.forEach(function (testCase) {
                         app.utility2.setDefault(testCase, -1, {
                             errorStack: '',
@@ -390,20 +426,24 @@ stupid: true
                         });
                         app.utility2.assert(
                             typeof testCase.errorStack === 'string',
-                            ii + ' invalid testCase.errorStack ' + typeof testCase.errorStack
+                            ii + ' invalid testCase.errorStack ' +
+                                typeof testCase.errorStack
                         );
                         app.utility2.assert(
                             typeof testCase.name === 'string',
-                            ii + ' invalid testCase.name ' + typeof testCase.name
+                            ii + ' invalid testCase.name ' +
+                                typeof testCase.name
                         );
                         app.utility2.assert(
                             typeof testCase.timeElapsed === 'number',
-                            ii + ' invalid testCase.timeElapsed ' + typeof testCase.timeElapsed
+                            ii + ' invalid testCase.timeElapsed ' +
+                                typeof testCase.timeElapsed
                         );
                     });
                 });
             });
-            // merge testReport2.testPlatformList into testReport1.testPlatformList
+            // merge testReport2.testPlatformList
+            // into testReport1.testPlatformList
             testReport2.testPlatformList.forEach(function (testPlatform2) {
                 // add testPlatform2 to testReport1.testPlatformList
                 testReport1.testPlatformList.push(testPlatform2);
@@ -446,8 +486,10 @@ stupid: true
                     : 'passed';
                 // sort testCaseList by status and name
                 testPlatform.testCaseList.sort(function (arg1, arg2) {
-                    arg1 = arg1.status.replace('passed', 'z') + arg1.name.toLowerCase();
-                    arg2 = arg2.status.replace('passed', 'z') + arg2.name.toLowerCase();
+                    arg1 = arg1.status
+                        .replace('passed', 'z') + arg1.name.toLowerCase();
+                    arg2 = arg2.status
+                        .replace('passed', 'z') + arg2.name.toLowerCase();
                     return arg1 <= arg2
                         ? -1
                         : 1;
@@ -455,8 +497,10 @@ stupid: true
             });
             // sort testPlatformList by status and name
             testReport.testPlatformList.sort(function (arg1, arg2) {
-                arg1 = arg1.status.replace('passed', 'z') + arg1.name.toLowerCase();
-                arg2 = arg2.status.replace('passed', 'z') + arg2.name.toLowerCase();
+                arg1 = arg1.status
+                    .replace('passed', 'z') + arg1.name.toLowerCase();
+                arg2 = arg2.status
+                    .replace('passed', 'z') + arg2.name.toLowerCase();
                 return arg1 <= arg2
                     ? -1
                     : 1;
@@ -474,11 +518,16 @@ stupid: true
                 app._timeElapsedStop(testPlatform);
                 testPlatform.testCaseList.forEach(function (testCase) {
                     app._timeElapsedStop(testCase);
-                    testPlatform.timeElapsed =
-                        Math.max(testPlatform.timeElapsed, testCase.timeElapsed);
+                    testPlatform.timeElapsed = Math.max(
+                        testPlatform.timeElapsed,
+                        testCase.timeElapsed
+                    );
                 });
                 // update testReport.timeElapsed with testPlatform.timeElapsed
-                testReport.timeElapsed = Math.max(testReport.timeElapsed, testPlatform.timeElapsed);
+                testReport.timeElapsed = Math.max(
+                    testReport.timeElapsed,
+                    testPlatform.timeElapsed
+                );
             });
             // create html test-report
             testCaseNumber = 0;
@@ -486,46 +535,61 @@ stupid: true
                 app.utility2['/test/test-report.html.template'],
                 app.utility2.setOverride(testReport, -1, {
                     // security - sanitize '<' in text
-                    CI_COMMIT_INFO: String(app.utility2.envDict.CI_COMMIT_INFO).replace((/</g), '&lt;'),
+                    CI_COMMIT_INFO: String(app.utility2.envDict.CI_COMMIT_INFO)
+                        .replace((/</g), '&lt;'),
                     envDict: app.utility2.envDict,
                     // map testPlatformList
-                    testPlatformList: testReport.testPlatformList.filter(function (testPlatform) {
-                        // if testPlatform has no tests, then filter it out
-                        return testPlatform.testCaseList.length;
-                    }).map(function (testPlatform, ii) {
-                        errorStackList = [];
-                        return app.utility2.setOverride(testPlatform, -1, {
-                            errorStackList: errorStackList,
-                            // security - sanitize '<' in text
-                            name: String(testPlatform.name).replace((/</g), '&lt;'),
-                            screenCapture: testPlatform.screenCaptureImg
-                                ? '<a class="testReportPlatformScreenCaptureA" href="' +
-                                    testPlatform.screenCaptureImg + '">' +
-                                    '<img class="testReportPlatformScreenCaptureImg" src="' +
-                                    testPlatform.screenCaptureImg + '">' +
-                                    '</a>'
-                                : '',
-                            // map testCaseList
-                            testCaseList: testPlatform.testCaseList.map(function (testCase) {
-                                testCaseNumber += 1;
-                                if (testCase.errorStack) {
-                                    errorStackList.push({ errorStack:
-                                        (testCaseNumber + '. ' + testCase.name + '\n' + testCase.errorStack)
-                                            // security - sanitize '<' in text
-                                            .replace((/</g), '&lt;') });
-                                }
-                                return app.utility2.setOverride(testCase, -1, {
-                                    testCaseNumber: testCaseNumber,
-                                    testReportTestStatusClass: 'testReportTest' +
-                                        testCase.status[0].toUpperCase() + testCase.status.slice(1)
-                                });
-                            }),
-                            testReportPlatformPreClass: 'testReportPlatformPre' + (errorStackList.length
-                                ? ''
-                                : 'Hidden'),
-                            testPlatformNumber: ii + 1
-                        });
-                    }),
+                    testPlatformList: testReport.testPlatformList
+                        .filter(function (testPlatform) {
+                            // if testPlatform has no tests, then filter it out
+                            return testPlatform.testCaseList.length;
+                        })
+                        .map(function (testPlatform, ii) {
+
+
+
+/* jslint-indent-begin 28 */
+/*jslint maxlen: 108*/
+errorStackList = [];
+return app.utility2.setOverride(testPlatform, -1, {
+    errorStackList: errorStackList,
+    // security - sanitize '<' in text
+    name: String(testPlatform.name).replace((/</g), '&lt;'),
+    screenCapture: testPlatform.screenCaptureImg
+        ? '<a class="testReportPlatformScreenCaptureA" href="' +
+            testPlatform.screenCaptureImg + '">' +
+            '<img class="testReportPlatformScreenCaptureImg" src="' +
+            testPlatform.screenCaptureImg + '">' +
+            '</a>'
+        : '',
+    // map testCaseList
+    testCaseList: testPlatform.testCaseList.map(function (testCase) {
+        testCaseNumber += 1;
+        if (testCase.errorStack) {
+            errorStackList.push({
+                errorStack: (
+                    testCaseNumber + '. ' + testCase.name + '\n' +
+                        testCase.errorStack
+                // security - sanitize '<' in text
+                ).replace((/</g), '&lt;')
+            });
+        }
+        return app.utility2.setOverride(testCase, -1, {
+            testCaseNumber: testCaseNumber,
+            testReportTestStatusClass: 'testReportTest' +
+                testCase.status[0].toUpperCase() + testCase.status.slice(1)
+        });
+    }),
+    testReportPlatformPreClass: 'testReportPlatformPre' + (errorStackList.length
+        ? ''
+        : 'Hidden'),
+    testPlatformNumber: ii + 1
+});
+/* jslint-indent-end */
+
+
+
+                        }),
                     testsFailedClass: testReport.testsFailed
                         ? 'testReportTestFailed'
                         : 'testReportTestPassed'
@@ -541,7 +605,8 @@ stupid: true
             var exit, onParallel, testPlatform, testReportDiv, timerInterval;
             options = options || {};
             app.utility2.modeTest =
-                app.utility2.modeTest || app.utility2.envDict.npm_config_mode_npm_test;
+                app.utility2.modeTest ||
+                app.utility2.envDict.npm_config_mode_npm_test;
             if (!(app.utility2.modeTest || options.modeTest)) {
                 return;
             }
@@ -550,7 +615,8 @@ stupid: true
             app.utility2.exit = app.utility2.nop;
             // init modeTestCase
             app.utility2.modeTestCase =
-                app.utility2.modeTestCase || app.utility2.envDict.npm_config_mode_test_case;
+                app.utility2.modeTestCase ||
+                app.utility2.envDict.npm_config_mode_test_case;
             // reset testPlatform.testCaseList
             app.utility2.testPlatform.testCaseList.length = 0;
             // add tests into testPlatform.testCaseList
@@ -558,7 +624,8 @@ stupid: true
                 // add test-case options[key] to testPlatform.testCaseList
                 if (key.slice(-5) === '_test' &&
                         (app.utility2.modeTestCase === key ||
-                        (!app.utility2.modeTestCase && key !== '_testRun_failure_test'))) {
+                        (!app.utility2.modeTestCase &&
+                                key !== '_testRun_failure_test'))) {
                     app.utility2.testPlatform.testCaseList.push({
                         name: key,
                         onTestCase: options[key]
@@ -568,17 +635,21 @@ stupid: true
             // visually update test-progress until it finishes
             if (app.modeJs === 'browser') {
                 // init testReportDiv element
-                testReportDiv = document.querySelector('.testReportDiv') || { style: {} };
+                testReportDiv =
+                    document.querySelector('.testReportDiv') ||
+                    { style: {} };
                 testReportDiv.style.display = 'block';
-                testReportDiv.innerHTML = app.utility2.testMerge(app.utility2.testReport, {});
+                testReportDiv.innerHTML =
+                    app.utility2.testMerge(app.utility2.testReport, {});
                 // update test-report status every 1000 ms until finished
                 timerInterval = setInterval(function () {
                     // update testReportDiv in browser
-                    testReportDiv.innerHTML = app.utility2.testMerge(app.utility2.testReport, {});
+                    testReportDiv.innerHTML =
+                        app.utility2.testMerge(app.utility2.testReport, {});
                     // update istanbulInputTextareDiv
-                    if (app.utility2.global.istanbul_lite &&
-                            app.utility2.global.istanbul_lite.coverageReportCreate) {
-                        app.utility2.global.istanbul_lite.coverageReportCreate();
+                    if (app.istanbul_lite &&
+                            app.istanbul_lite.coverageReportCreate) {
+                        app.istanbul_lite.coverageReportCreate();
                     }
                     if (app.utility2.testReport.testsPending === 0) {
                         // cleanup timerInterval
@@ -588,7 +659,8 @@ stupid: true
             }
             onParallel = app.utility2.onParallel(function () {
                 /*
-                this function will create the test-report after all tests have finished
+                this function will create the test-report
+                after all tests have finished
                 */
                 var separator, testReport, testReportHtml;
                 // restore exit
@@ -642,7 +714,10 @@ stupid: true
                                 new Date().toISOString().slice(0, 19).replace('T', ' ')
                             )
                             // edit branch name
-                            .replace((/- master -/g), '| ' + app.utility2.envDict.CI_BRANCH + ' |')
+                            .replace(
+                                (/- master -/g),
+                                '| ' + app.utility2.envDict.CI_BRANCH + ' |'
+                            )
                             // edit commit id
                             .replace(
                                 (/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/g),
@@ -658,17 +733,18 @@ stupid: true
                             // edit badge color
                             .replace(
                                 (/d00/g),
-                                // coverage-hack - cover both fail and pass cases
+                                // coverage-hack
+                                // cover both fail and pass cases
                                 '0d00'.slice(!!testReport.testsFailed).slice(0, 3)
                             )
                     );
                     // create test-report.html
-                    console.log('creating test-report file://' +
-                        app.utility2.envDict.npm_config_dir_build + '/test-report.html');
                     app.fs.writeFileSync(
                         app.utility2.envDict.npm_config_dir_build + '/test-report.html',
                         testReportHtml
                     );
+                    console.log('created test-report file://' +
+                        app.utility2.envDict.npm_config_dir_build + '/test-report.html');
                     // create test-report.json
                     app.fs.writeFileSync(
                         app.utility2.envDict.npm_config_dir_build + '/test-report.json',
@@ -693,22 +769,27 @@ stupid: true
             testPlatform = app.utility2.testPlatform;
             // init testPlatform timer
             testPlatform.timeElapsed = Date.now();
-            // shallow copy testPlatform.testCaseList, to guard against in-place sort from testMerge
+            // shallow copy testPlatform.testCaseList,
+            // to guard against in-place sort from testMerge
             testPlatform.testCaseList.slice().forEach(function (testCase) {
                 var finished, onError, timerTimeout;
                 onError = function (error) {
                     // cleanup timerTimeout
                     clearTimeout(timerTimeout);
-                    // if testCase already finished, then fail testCase with error for finishing again
+                    // if testCase already finished,
+                    // then fail testCase with error for finishing again
                     if (finished) {
-                        error = error ||
-                            new Error('callback in testCase ' + testCase.name + ' called multiple times');
+                        error = error || new Error(
+                            'callback in testCase ' + testCase.name + ' called multiple times'
+                        );
                     }
                     // if error occurred, then fail testCase
                     if (error) {
                         console.error('\ntestCase ' + testCase.name + ' failed\n' +
                             app.utility2.errorStack(error));
-                        testCase.errorStack = testCase.errorStack || app.utility2.errorStack(error);
+                        testCase.errorStack = testCase.errorStack || app.utility2.errorStack(
+                            error
+                        );
                         // validate errorStack is non-empty
                         app.utility2.assert(
                             testCase.errorStack,
@@ -784,7 +865,11 @@ stupid: true
                 // if value is an array, then iteratively format the array fragment with it
                 if (Array.isArray(dict[match])) {
                     template = template.replace(
-                        new RegExp('\\{\\{#' + match + '\\}\\}([\\S\\s]*?)\\{\\{\\/' + match + '\\}\\}'),
+                        new RegExp('\\{\\{#' +
+                            match +
+                            '\\}\\}([\\S\\s]*?)\\{\\{\\/' +
+                            match +
+                            '\\}\\}'),
                         replace
                     );
                 }
@@ -841,13 +926,15 @@ stupid: true
                     // set finished to true
                     finished = true;
                     // validate xhr is defined in _ajaxProgressList
-                    ii = app.utility2._ajaxProgressList.indexOf(xhr);
+                    ii = app._ajaxProgressList.indexOf(xhr);
                     app.utility2.assert(ii >= 0, 'missing xhr in _ajaxProgressList');
                     // remove xhr from ajaxProgressList
-                    app.utility2._ajaxProgressList.splice(ii, 1);
+                    app._ajaxProgressList.splice(ii, 1);
                     // handle abort or error event
                     if (!error &&
-                            (event.type === 'abort' || event.type === 'error' || xhr.status >= 400)) {
+                            (event.type === 'abort' ||
+                            event.type === 'error' ||
+                            xhr.status >= 400)) {
                         error = new Error(event.type);
                     }
                     // handle completed xhr request
@@ -858,31 +945,36 @@ stupid: true
                             // add http method / statusCode / url debug info to error.message
                             error.message = options.method + ' ' + xhr.status + ' - ' +
                                 options.url + '\n' +
-                                JSON.stringify(xhr.responseText.slice(0, 256) + '...') + '\n' + error.message;
+                                JSON.stringify(xhr.responseText.slice(0, 256) + '...') +
+                                '\n' + error.message;
                             // debug statusCode
                             error.statusCode = xhr.status;
                         }
                     }
                     // hide _ajaxProgressDiv
-                    if (app.utility2._ajaxProgressList.length === 0) {
-                        app.utility2._ajaxProgressBarHide = setTimeout(function () {
+                    if (app._ajaxProgressList.length === 0) {
+                        app._ajaxProgressBarHide = setTimeout(function () {
                             // hide ajaxProgressBar
                             ajaxProgressDiv.style.display = 'none';
                             // reset ajaxProgress
-                            app.utility2._ajaxProgressState = 0;
-                            app.utility2._ajaxProgressUpdate('0%', 'ajaxProgressBarDivLoading', 'loading');
+                            app._ajaxProgressState = 0;
+                            app._ajaxProgressUpdate(
+                                '0%',
+                                'ajaxProgressBarDivLoading',
+                                'loading'
+                            );
                         }, 1000);
                     }
                     onError(error, data, xhr);
                     break;
                 }
                 // increment ajaxProgressBar
-                if (app.utility2._ajaxProgressList.length > 0) {
-                    app.utility2._ajaxProgressIncrement();
+                if (app._ajaxProgressList.length > 0) {
+                    app._ajaxProgressIncrement();
                     return;
                 }
                 // finish ajaxProgressBar
-                app.utility2._ajaxProgressUpdate('100%', 'ajaxProgressBarDivSuccess', 'loaded');
+                app._ajaxProgressUpdate('100%', 'ajaxProgressBarDivSuccess', 'loaded');
             });
             // init xhr
             xhr = new XMLHttpRequest();
@@ -892,20 +984,20 @@ stupid: true
             xhr.addEventListener('abort', onEvent);
             xhr.addEventListener('error', onEvent);
             xhr.addEventListener('load', onEvent);
-            xhr.addEventListener('loadstart', app.utility2._ajaxProgressIncrement);
-            xhr.addEventListener('progress', app.utility2._ajaxProgressIncrement);
-            xhr.upload.addEventListener('progress', app.utility2._ajaxProgressIncrement);
+            xhr.addEventListener('loadstart', app._ajaxProgressIncrement);
+            xhr.addEventListener('progress', app._ajaxProgressIncrement);
+            xhr.upload.addEventListener('progress', app._ajaxProgressIncrement);
             // set timerTimeout
             timerTimeout = app.utility2.onTimeout(function (errorTimeout) {
                 error = errorTimeout;
                 xhr.abort();
             }, options.timeout || app.utility2.timeoutDefault, 'ajax');
             // if ajaxProgressBar is hidden, then display it
-            if (app.utility2._ajaxProgressList.length === 0) {
+            if (app._ajaxProgressList.length === 0) {
                 ajaxProgressDiv.style.display = 'block';
             }
             // add xhr to _ajaxProgressList
-            app.utility2._ajaxProgressList.push(xhr);
+            app._ajaxProgressList.push(xhr);
             // open url
             xhr.open(options.method || 'GET', options.url);
             // send request headers
@@ -913,32 +1005,32 @@ stupid: true
                 xhr.setRequestHeader(key, options.headers[key]);
             });
             // clear any pending timer to hide _ajaxProgressDiv
-            clearTimeout(app.utility2._ajaxProgressBarHide);
+            clearTimeout(app._ajaxProgressBarHide);
             // send data
             xhr.send(options.data);
         };
 
-        app.utility2._ajaxProgressIncrement = function () {
+        app._ajaxProgressIncrement = function () {
             /*
             this function will increment the ajaxProgressBar
             */
             // this algorithm can indefinitely increment the ajaxProgressBar
             // with successively smaller increments without ever reaching 100%
-            app.utility2._ajaxProgressState += 1;
-            app.utility2._ajaxProgressUpdate(
-                100 - 75 * Math.exp(-0.125 * app.utility2._ajaxProgressState) + '%',
+            app._ajaxProgressState += 1;
+            app._ajaxProgressUpdate(
+                100 - 75 * Math.exp(-0.125 * app._ajaxProgressState) + '%',
                 'ajaxProgressBarDivLoading',
                 'loading'
             );
         };
 
         // init list of xhr used in ajaxProgress
-        app.utility2._ajaxProgressList = [];
+        app._ajaxProgressList = [];
 
         // init _ajaxProgressState
-        app.utility2._ajaxProgressState = 0;
+        app._ajaxProgressState = 0;
 
-        app.utility2._ajaxProgressUpdate = function (width, type, label) {
+        app._ajaxProgressUpdate = function (width, type, label) {
             /*
             this function will visually update the ajaxProgressBar
             */
@@ -989,7 +1081,8 @@ stupid: true
                     request = response = { destroy: app.utility2.nop };
                     // handle implicit localhost
                     if (options.url[0] === '/') {
-                        options.url = 'http://localhost:' + app.utility2.envDict.npm_config_server_port +
+                        options.url = 'http://localhost:' +
+                            app.utility2.envDict.npm_config_server_port +
                             options.url;
                     }
                     // parse options.url
@@ -1056,9 +1149,11 @@ stupid: true
                     response.destroy();
                     if (error) {
                         // add http method / statusCode / url debug info to error.message
-                        error.message = options.method + ' ' + (response && response.statusCode) + ' - ' +
+                        error.message = options.method + ' ' +
+                            (response && response.statusCode) + ' - ' +
                             options.url + '\n' +
-                            JSON.stringify((responseText || '').slice(0, 256) + '...') + '\n' + error.message;
+                            JSON.stringify((responseText || '').slice(0, 256) + '...') +
+                            '\n' + error.message;
                         // debug statusCode
                         error.statusCode = response && response.statusCode;
                     }
@@ -1135,7 +1230,8 @@ stupid: true
                     : modeNext + 1;
                 switch (modeNext) {
                 case 1:
-                    options.testName = app.utility2.envDict.MODE_BUILD + '.' + options.argv0 + '.' +
+                    options.testName = app.utility2.envDict.MODE_BUILD +
+                        '.' + options.argv0 + '.' +
                         encodeURIComponent(app.url.parse(options.url).pathname);
                     app.utility2.setDefault(options, 1, {
                         _testSecret: app.utility2._testSecret,
@@ -1150,16 +1246,21 @@ stupid: true
                         modePhantom: 'testUrl'
                     });
                     // set timerTimeout
-                    timerTimeout =
-                        app.utility2.onTimeout(onNext, app.utility2.timeoutDefault, options.testName);
+                    timerTimeout = app.utility2.onTimeout(
+                        onNext,
+                        app.utility2.timeoutDefault,
+                        options.testName
+                    );
                     // coverage-hack - cover utility2 in phantomjs
                     options.argv1 = __dirname + '/index.js';
                     if (app.utility2.global.__coverage__ &&
                             app.utility2.envDict.npm_package_name === 'utility2') {
-                        options.argv1 = app.utility2.envDict.npm_config_dir_tmp + '/covered.utility2.js';
+                        options.argv1 =
+                            app.utility2.envDict.npm_config_dir_tmp +
+                            '/covered.utility2.js';
                         app.fs.writeFileSync(
                             options.argv1,
-                            app.utility2.istanbul_lite.instrumentInPackage(app.utility2[
+                            app.istanbul_lite.instrumentInPackage(app.utility2[
                                 '/assets/utility2.js'
                             ], __dirname + '/index.js', 'utility2')
                         );
@@ -1181,7 +1282,10 @@ stupid: true
                     onParallel = app.utility2.onParallel(onNext);
                     onParallel.counter += 1;
                     // merge coverage and test-report
-                    [options.fileCoverage, options.fileTestReport].forEach(function (file, ii) {
+                    [
+                        options.fileCoverage,
+                        options.fileTestReport
+                    ].forEach(function (file, ii) {
                         onParallel.counter += 1;
                         app.fs.readFile(file, 'utf8', function (error, data) {
                             // jslint-hack
@@ -1193,9 +1297,13 @@ stupid: true
                             if (data) {
                                 // merge coverage
                                 if (ii === 0) {
-                                    app.utility2.istanbulMerge(app.utility2.global.__coverage__, data);
+                                    app.utility2.istanbulMerge(
+                                        app.utility2.global.__coverage__,
+                                        data
+                                    );
                                 // merge test-report
-                                } else if (options.modePhantom === 'testUrl' && !options.modeErrorIgnore) {
+                                } else if (options.modePhantom === 'testUrl' &&
+                                        !options.modeErrorIgnore) {
                                     app.utility2.testMerge(app.utility2.testReport, data);
                                 }
                             }
@@ -1205,9 +1313,9 @@ stupid: true
                     onParallel();
                     break;
                 case 3:
-                    onNext(
-                        options.exitCode && new Error(options.argv0 + ' exit-code ' + options.exitCode)
-                    );
+                    onNext(options.exitCode && new Error(
+                        options.argv0 + ' exit-code ' + options.exitCode
+                    ));
                     break;
                 default:
                     // cleanup timerTimeout
@@ -1276,7 +1384,8 @@ stupid: true
                     app.child_process
                         .spawn(
                             '/bin/sh',
-                            ['-c', 'find . -type f | grep -v "/\\.\\|.*\\b\\(\\.\\d\\|' +
+                            ['-c', 'find . -type f | grep -v ' +
+                                '"/\\.\\|.*\\b\\(\\.\\d\\|' +
                                 'archive\\|artifacts\\|' +
                                 'bower_components\\|build\\|' +
                                 'coverage\\|' +
@@ -1289,7 +1398,9 @@ stupid: true
                                 'node_modules\\|' +
                                 'rollup\\|' +
                                 'swp\\|' +
-                                'tmp\\)\\b" | tr "\\n" "\\000" | xargs -0 grep -in "' + match[2].trim() + '"'],
+                                'tmp\\)\\b" ' +
+                                '| tr "\\n" "\\000" | xargs -0 grep -in "' +
+                                match[2].trim() + '"'],
                             { stdio: ['ignore', 1, 2] }
                         )
                         // on shell exit, print return prompt
@@ -1345,7 +1456,12 @@ stupid: true
             request.pipe(response);
         };
 
-        app.utility2.serverRespondWriteHead = function (request, response, statusCode, headers) {
+        app.utility2.serverRespondWriteHead = function (
+            request,
+            response,
+            statusCode,
+            headers
+        ) {
             /*
             this function will set the response object's statusCode / headers
             */
@@ -1396,9 +1512,11 @@ stupid: true
             // if $npm_config_timeout_exit is defined,
             // then exit this process after $npm_config_timeout_exit ms
             if (Number(app.utility2.envDict.npm_config_timeout_exit)) {
-                setTimeout(app.utility2.exit, Number(app.utility2.envDict.npm_config_timeout_exit))
-                    // keep timerTimeout from blocking the process from exiting
-                    .unref();
+                setTimeout(
+                    app.utility2.exit,
+                    Number(app.utility2.envDict.npm_config_timeout_exit)
+                // keep timerTimeout from blocking the process from exiting
+                ).unref();
             }
             // 1. create http-server from options.serverMiddlewareList
             server = app.http.createServer(function (request, response) {
@@ -1455,9 +1573,8 @@ stupid: true
                 ((Math.random() * 0x10000) | 0x8000).toString();
             // 2. start http-server on port $npm_config_server_port
             server.listen(app.utility2.envDict.npm_config_server_port, function () {
-                console.log(
-                    'http-server listening on port ' + app.utility2.envDict.npm_config_server_port
-                );
+                console.log('http-server listening on port ' +
+                    app.utility2.envDict.npm_config_server_port);
                 app.utility2.onReady();
             });
             // 3. if env var $npm_config_mode_npm_test is defined, then run tests
@@ -1555,8 +1672,9 @@ stupid: true
                 // screen-capture webpage
                 case 'screenCapture':
                     // save screen-capture
-                    console.log('creating screen-capture file://' + app.utility2.fileScreenCapture);
                     app.utility2.page.render(app.utility2.fileScreenCapture);
+                    console.log('created screen-capture file://' +
+                        app.utility2.fileScreenCapture);
                     break;
                 // handle test-report callback
                 case 'testUrl':
@@ -1568,7 +1686,10 @@ stupid: true
                     if (data) {
                         // handle global_test_results passed as error
                         // merge coverage
-                        app.utility2.istanbulMerge(app.utility2.global.__coverage__, data.coverage);
+                        app.utility2.istanbulMerge(
+                            app.utility2.global.__coverage__,
+                            data.coverage
+                        );
                         // merge test-report
                         app.utility2.testMerge(app.utility2.testReport, data.testReport);
                         // save screen-capture
@@ -1590,9 +1711,11 @@ stupid: true
                 // handle webpage error
                 // http://phantomjs.org/api/phantom/handler/on-error.html
                 if (error && typeof error === 'string') {
-                    console.error('\n' + app.utility2.testName + '\nERROR: ' + error + ' TRACE:');
+                    console.error('\n' +
+                        app.utility2.testName + '\nERROR: ' + error + ' TRACE:');
                     (trace || []).forEach(function (t) {
-                        console.error(' -> ' + (t.file || t.sourceURL) + ': ' + t.line + (t.function
+                        console.error(' -> ' + (t.file || t.sourceURL) + ': ' +
+                            t.line + (t.function
                             ? ' (in function ' + t.function + ')'
                             : ''));
                     });
@@ -1694,8 +1817,8 @@ stupid: true
         app.fs = require('fs');
         app.http = require('http');
         app.https = require('https');
-        app.utility2.istanbul_lite = require('istanbul-lite');
-        app.utility2.jslint_lite = require('jslint-lite');
+        app.utility2.istanbul_lite = app.istanbul_lite = require('istanbul-lite');
+        app.utility2.jslint_lite = app.jslint_lite = require('jslint-lite');
         app.path = require('path');
         app.url = require('url');
         // init utility2 properties
@@ -1709,11 +1832,14 @@ stupid: true
         (function () {
             var testSecretCreate;
             testSecretCreate = function () {
-                app.utility2._testSecret = app.crypto.randomBytes(32).toString('hex');
+                app.utility2._testSecret =
+                    app.crypto.randomBytes(32).toString('hex');
             };
             // init _testSecret
             testSecretCreate();
-            app.utility2._testSecret = app.utility2.envDict.TEST_SECRET || app.utility2._testSecret;
+            app.utility2._testSecret =
+                app.utility2.envDict.TEST_SECRET ||
+                app.utility2._testSecret;
             // re-init _testSecret every 60 seconds
             setInterval(testSecretCreate, 60000).unref();
         }());
@@ -1779,7 +1905,9 @@ stupid: true
             screenCaptureImg: app.utility2.envDict.MODE_BUILD_SCREEN_CAPTURE,
             testCaseList: []
         };
-        app.utility2.testReport = { testPlatformList: [app.utility2.testPlatform] };
+        app.utility2.testReport = {
+            testPlatformList: [app.utility2.testPlatform]
+        };
         app.utility2.textExampleAscii = app.utility2.textExampleAscii ||
             '\x00\x01\x02\x03\x04\x05\x06\x07\b\t\n\x0b\f\r\x0e\x0f' +
             '\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f' +
@@ -1789,211 +1917,217 @@ stupid: true
         app.utility2.textExampleUri = '!%\'()*-.' +
             '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz~';
         app.utility2.timeoutDefault =
-            app.utility2.envDict.npm_config_timeout_default || app.utility2.timeoutDefault || 30000;
+            app.utility2.envDict.npm_config_timeout_default ||
+            app.utility2.timeoutDefault ||
+            30000;
     }());
 
 
 
-    // init assets
-    app.utility2['/assets/utility2.css'] = String() +
-        '/*csslint\n' +
-            'box-model: false\n' +
-        '*/\n' +
-        '.ajaxProgressBarDiv {\n' +
-            'animation: 2s linear 0s normal none infinite ajaxProgressBarDivAnimation;\n' +
-            '-o-animation: 2s linear 0s normal none infinite ajaxProgressBarDivAnimation;\n' +
-            '-moz-animation: 2s linear 0s normal none infinite ajaxProgressBarDivAnimation;\n' +
-            '-webkit-animation: 2s linear 0s normal none infinite ajaxProgressBarDivAnimation;\n' +
-            'background-image: linear-gradient(\n' +
-                '45deg,rgba(255,255,255,.25) 25%,\n' +
-                'transparent 25%,\n' +
-                'transparent 50%,\n' +
-                'rgba(255,255,255,.25) 50%,\n' +
-                'rgba(255,255,255,.25) 75%,\n' +
-                'transparent 75%,\n' +
-                'transparent\n' +
-            ');\n' +
-            'background-size: 40px 40px;\n' +
-            'color: #fff;\n' +
-            'font-family: Helvetical Neue, Helvetica, Arial, sans-serif;\n' +
-            'font-size: 12px;\n' +
-            'padding: 2px 0 2px 0;\n' +
-            'text-align: center;\n' +
-            'transition: width .5s ease;\n' +
-            'width: 25%;\n' +
-        '}\n' +
-        '.ajaxProgressBarDivError {\n' +
-            'background-color: #d33;\n' +
-        '}\n' +
-        '.ajaxProgressBarDivLoading {\n' +
-            'background-color: #37b;\n' +
-        '}\n' +
-        '.ajaxProgressBarDivSuccess {\n' +
-            'background-color: #3b3;\n' +
-        '}\n' +
-        '.ajaxProgressDiv {\n' +
-            'background-color: #fff;\n' +
-            'border: 1px solid;\n' +
-            'display: none;\n' +
-            'left: 50%;\n' +
-            'margin: 0 0 0 -50px;\n' +
-            'padding: 5px 5px 5px 5px;\n' +
-            'position: fixed;\n' +
-            'top: 49%;\n' +
-            'width: 100px;\n' +
-            'z-index: 9999;\n' +
-        '}\n' +
-        '@keyframes ajaxProgressBarDivAnimation {\n' +
-            'from { background-position: 40px 0; }\n' +
-            'to { background-position: 0 0; }\n' +
-        '}\n' +
-        '@-o-keyframes ajaxProgressBarDivAnimation {\n' +
-            'from { background-position: 40px 0; }\n' +
-            'to { background-position: 0 0; }\n' +
-        '}\n' +
-        '@-webkit-keyframes ajaxProgressBarDivAnimation {\n' +
-            'from { background-position: 40px 0; }\n' +
-            'to { background-position: 0 0; }\n' +
-        '}\n' +
-        String();
+    (function () {
+        /*jslint maxlen: 256*/
+        // init assets
+        app.utility2['/assets/utility2.css'] = String() +
+            '/*csslint\n' +
+                'box-model: false\n' +
+            '*/\n' +
+            '.ajaxProgressBarDiv {\n' +
+                'animation: 2s linear 0s normal none infinite ajaxProgressBarDivAnimation;\n' +
+                '-o-animation: 2s linear 0s normal none infinite ajaxProgressBarDivAnimation;\n' +
+                '-moz-animation: 2s linear 0s normal none infinite ajaxProgressBarDivAnimation;\n' +
+                '-webkit-animation: 2s linear 0s normal none infinite ajaxProgressBarDivAnimation;\n' +
+                'background-image: linear-gradient(\n' +
+                    '45deg,rgba(255,255,255,.25) 25%,\n' +
+                    'transparent 25%,\n' +
+                    'transparent 50%,\n' +
+                    'rgba(255,255,255,.25) 50%,\n' +
+                    'rgba(255,255,255,.25) 75%,\n' +
+                    'transparent 75%,\n' +
+                    'transparent\n' +
+                ');\n' +
+                'background-size: 40px 40px;\n' +
+                'color: #fff;\n' +
+                'font-family: Helvetical Neue, Helvetica, Arial, sans-serif;\n' +
+                'font-size: 12px;\n' +
+                'padding: 2px 0 2px 0;\n' +
+                'text-align: center;\n' +
+                'transition: width .5s ease;\n' +
+                'width: 25%;\n' +
+            '}\n' +
+            '.ajaxProgressBarDivError {\n' +
+                'background-color: #d33;\n' +
+            '}\n' +
+            '.ajaxProgressBarDivLoading {\n' +
+                'background-color: #37b;\n' +
+            '}\n' +
+            '.ajaxProgressBarDivSuccess {\n' +
+                'background-color: #3b3;\n' +
+            '}\n' +
+            '.ajaxProgressDiv {\n' +
+                'background-color: #fff;\n' +
+                'border: 1px solid;\n' +
+                'display: none;\n' +
+                'left: 50%;\n' +
+                'margin: 0 0 0 -50px;\n' +
+                'padding: 5px 5px 5px 5px;\n' +
+                'position: fixed;\n' +
+                'top: 49%;\n' +
+                'width: 100px;\n' +
+                'z-index: 9999;\n' +
+            '}\n' +
+            '@keyframes ajaxProgressBarDivAnimation {\n' +
+                'from { background-position: 40px 0; }\n' +
+                'to { background-position: 0 0; }\n' +
+            '}\n' +
+            '@-o-keyframes ajaxProgressBarDivAnimation {\n' +
+                'from { background-position: 40px 0; }\n' +
+                'to { background-position: 0 0; }\n' +
+            '}\n' +
+            '@-webkit-keyframes ajaxProgressBarDivAnimation {\n' +
+                'from { background-position: 40px 0; }\n' +
+                'to { background-position: 0 0; }\n' +
+            '}\n' +
+            String();
 
 
 
-/* jslint-ignore-begin */
-    // https://img.shields.io/badge/last_build-0000_00_00_00_00_00_UTC_--_master_--_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-0077ff.svg?style=flat
-    app.utility2['/build/build.badge.svg'] = '<svg xmlns="http://www.w3.org/2000/svg" width="563" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="563" height="20" fill="#555"/><rect rx="0" x="61" width="502" height="20" fill="#07f"/><path fill="#07f" d="M61 0h4v20h-4z"/><rect rx="0" width="563" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="31.5" y="15" fill="#010101" fill-opacity=".3">last build</text><text x="31.5" y="14">last build</text><text x="311" y="15" fill="#010101" fill-opacity=".3">0000 00 00 00 00 00 UTC - master - aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</text><text x="311" y="14">0000 00 00 00 00 00 UTC - master - aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</text></g></svg>';
+        // https://img.shields.io/badge/last_build-0000_00_00_00_00_00_UTC_--_master_--_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-0077ff.svg?style=flat
+        /* jslint-ignore-next-line */
+        app.utility2['/build/build.badge.svg'] = '<svg xmlns="http://www.w3.org/2000/svg" width="563" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="563" height="20" fill="#555"/><rect rx="0" x="61" width="502" height="20" fill="#07f"/><path fill="#07f" d="M61 0h4v20h-4z"/><rect rx="0" width="563" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="31.5" y="15" fill="#010101" fill-opacity=".3">last build</text><text x="31.5" y="14">last build</text><text x="311" y="15" fill="#010101" fill-opacity=".3">0000 00 00 00 00 00 UTC - master - aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</text><text x="311" y="14">0000 00 00 00 00 00 UTC - master - aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</text></g></svg>';
 
 
 
-    // https://img.shields.io/badge/coverage-100.0%-00dd00.svg?style=flat
-    app.utility2['/build/coverage.badge.svg'] = '<svg xmlns="http://www.w3.org/2000/svg" width="117" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="117" height="20" fill="#555"/><rect rx="0" x="63" width="54" height="20" fill="#0d0"/><path fill="#0d0" d="M63 0h4v20h-4z"/><rect rx="0" width="117" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="32.5" y="15" fill="#010101" fill-opacity=".3">coverage</text><text x="32.5" y="14">coverage</text><text x="89" y="15" fill="#010101" fill-opacity=".3">100.0%</text><text x="89" y="14">100.0%</text></g></svg>';
+        // https://img.shields.io/badge/coverage-100.0%-00dd00.svg?style=flat
+        /* jslint-ignore-next-line */
+        app.utility2['/build/coverage.badge.svg'] = '<svg xmlns="http://www.w3.org/2000/svg" width="117" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="117" height="20" fill="#555"/><rect rx="0" x="63" width="54" height="20" fill="#0d0"/><path fill="#0d0" d="M63 0h4v20h-4z"/><rect rx="0" width="117" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="32.5" y="15" fill="#010101" fill-opacity=".3">coverage</text><text x="32.5" y="14">coverage</text><text x="89" y="15" fill="#010101" fill-opacity=".3">100.0%</text><text x="89" y="14">100.0%</text></g></svg>';
 
 
 
-    // https://img.shields.io/badge/tests_failed-999-dd0000.svg?style=flat
-    app.utility2['/build/test-report.badge.svg'] = '<svg xmlns="http://www.w3.org/2000/svg" width="103" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="103" height="20" fill="#555"/><rect rx="0" x="72" width="31" height="20" fill="#d00"/><path fill="#d00" d="M72 0h4v20h-4z"/><rect rx="0" width="103" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="37" y="15" fill="#010101" fill-opacity=".3">tests failed</text><text x="37" y="14">tests failed</text><text x="86.5" y="15" fill="#010101" fill-opacity=".3">999</text><text x="86.5" y="14">999</text></g></svg>';
-/* jslint-ignore-end */
+        // https://img.shields.io/badge/tests_failed-999-dd0000.svg?style=flat
+        /* jslint-ignore-next-line */
+        app.utility2['/build/test-report.badge.svg'] = '<svg xmlns="http://www.w3.org/2000/svg" width="103" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="103" height="20" fill="#555"/><rect rx="0" x="72" width="31" height="20" fill="#d00"/><path fill="#d00" d="M72 0h4v20h-4z"/><rect rx="0" width="103" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="37" y="15" fill="#010101" fill-opacity=".3">tests failed</text><text x="37" y="14">tests failed</text><text x="86.5" y="15" fill="#010101" fill-opacity=".3">999</text><text x="86.5" y="14">999</text></g></svg>';
 
 
 
-    app.utility2['/test/test-report.html.template'] = String() +
-        '<style>\n' +
-        '.testReportPlatformDiv {\n' +
-            'border: 1px solid;\n' +
-            'border-radius: 5px;\n' +
-            'font-family: Helvetical Neue, Helvetica, Arial, sans-serif;\n' +
-            'margin-top: 20px;\n' +
-            'padding: 0 10px 10px 10px;\n' +
-            'text-align: left;\n' +
-        '}\n' +
-        '.testReportPlatformPre {\n' +
-            'background-color: #fdd;\n' +
-            'border: 1px;\n' +
-            'border-radius: 0 0 5px 5px;\n' +
-            'border-top-style: solid;\n' +
-            'margin-bottom: 0;\n' +
-            'padding: 10px;\n' +
-        '}\n' +
-        '.testReportPlatformPreHidden {\n' +
-            'display: none;\n' +
-        '}\n' +
-        '.testReportPlatformScreenCaptureA {\n' +
-            'border: 1px solid;\n' +
-            'border-color: #000;\n' +
-            'display:block;\n' +
-            'margin: 5px 0 5px 0;\n' +
-            'max-height:256px;\n' +
-            'max-width:320px;\n' +
-            'overflow:hidden;\n' +
-        '}\n' +
-        '.testReportPlatformScreenCaptureImg {\n' +
-            'max-width:320px;\n' +
-        '}\n' +
-        '.testReportPlatformSpan {\n' +
-            'display: inline-block;\n' +
-            'width: 8em;\n' +
-        '}\n' +
-        '.testReportPlatformTable {\n' +
-            'border: 1px;\n' +
-            'border-top-style: solid;\n' +
-            'text-align: left;\n' +
-            'width: 100%;\n' +
-        '}\n' +
-        '.testReportSummaryDiv {\n' +
-            'background-color: #bfb;\n' +
-        '}\n' +
-        '.testReportSummarySpan {\n' +
-            'display: inline-block;\n' +
-            'width: 6.5em;\n' +
-        '}\n' +
-        'tr:nth-child(odd).testReportPlatformTr {\n' +
-            'background-color: #bfb;\n' +
-        '}\n' +
-        '.testReportTestFailed {\n' +
-            'background-color: #f99;\n' +
-        '}\n' +
-        '.testReportTestPending {\n' +
-            'background-color: #99f;\n' +
-        '}\n' +
-        '</style>\n' +
-        '<div class="testReportPlatformDiv testReportSummaryDiv">\n' +
-        '<h2>{{envDict.npm_package_name}} test-report summary</h2>\n' +
-        '<h4>\n' +
-            '<span class="testReportSummarySpan">version</span>-\n' +
-                '{{envDict.npm_package_version}}<br>\n' +
-            '<span class="testReportSummarySpan">test date</span>- {{date}}<br>\n' +
-            '<span class="testReportSummarySpan">commit info</span>- {{CI_COMMIT_INFO}}<br>\n' +
-        '</h4>\n' +
-        '<table class="testReportPlatformTable">\n' +
-        '<thead><tr>\n' +
-            '<th>total time elapsed</th>\n' +
-            '<th>total tests failed</th>\n' +
-            '<th>total tests passed</th>\n' +
-            '<th>total tests pending</th>\n' +
-        '</tr></thead>\n' +
-        '<tbody><tr>\n' +
-            '<td>{{timeElapsed}} ms</td>\n' +
-            '<td class="{{testsFailedClass}}">{{testsFailed}}</td>\n' +
-            '<td>{{testsPassed}}</td>\n' +
-            '<td>{{testsPending}}</td>\n' +
-        '</tr></tbody>\n' +
-        '</table>\n' +
-        '</div>\n' +
-        '{{#testPlatformList}}\n' +
-        '<div class="testReportPlatformDiv">\n' +
-        '<h4>\n' +
-            '{{testPlatformNumber}}. {{name}}<br>\n' +
-            '{{screenCapture}}\n' +
-            '<span class="testReportPlatformSpan">time elapsed</span>- {{timeElapsed}} ms<br>\n' +
-            '<span class="testReportPlatformSpan">tests failed</span>- {{testsFailed}}<br>\n' +
-            '<span class="testReportPlatformSpan">tests passed</span>- {{testsPassed}}<br>\n' +
-            '<span class="testReportPlatformSpan">tests pending</span>- {{testsPending}}<br>\n' +
-        '</h4>\n' +
-        '<table class="testReportPlatformTable">\n' +
-        '<thead><tr>\n' +
-            '<th>#</th>\n' +
-            '<th>time elapsed</th>\n' +
-            '<th>status</th>\n' +
-            '<th>test case</th>\n' +
-        '</tr></thead>\n' +
-        '<tbody>\n' +
-        '{{#testCaseList}}\n' +
-        '<tr class="testReportPlatformTr">\n' +
-            '<td>{{testCaseNumber}}</td>\n' +
-            '<td>{{timeElapsed}} ms</td>\n' +
-            '<td class="{{testReportTestStatusClass}}">{{status}}</td>\n' +
-            '<td>{{name}}</td>\n' +
-        '</tr>\n' +
-        '{{/testCaseList}}\n' +
-        '</tbody>\n' +
-        '</table>\n' +
-        '<pre class="{{testReportPlatformPreClass}}">\n' +
-        '{{#errorStackList}}\n' +
-        '{{errorStack}}\n' +
-        '{{/errorStackList}}\n' +
-        '</pre>\n' +
-        '</div>\n' +
-        '{{/testPlatformList}}\n' +
-        String();
+        app.utility2['/test/test-report.html.template'] = String() +
+            '<style>\n' +
+            '.testReportPlatformDiv {\n' +
+                'border: 1px solid;\n' +
+                'border-radius: 5px;\n' +
+                'font-family: Helvetical Neue, Helvetica, Arial, sans-serif;\n' +
+                'margin-top: 20px;\n' +
+                'padding: 0 10px 10px 10px;\n' +
+                'text-align: left;\n' +
+            '}\n' +
+            '.testReportPlatformPre {\n' +
+                'background-color: #fdd;\n' +
+                'border: 1px;\n' +
+                'border-radius: 0 0 5px 5px;\n' +
+                'border-top-style: solid;\n' +
+                'margin-bottom: 0;\n' +
+                'padding: 10px;\n' +
+            '}\n' +
+            '.testReportPlatformPreHidden {\n' +
+                'display: none;\n' +
+            '}\n' +
+            '.testReportPlatformScreenCaptureA {\n' +
+                'border: 1px solid;\n' +
+                'border-color: #000;\n' +
+                'display:block;\n' +
+                'margin: 5px 0 5px 0;\n' +
+                'max-height:256px;\n' +
+                'max-width:320px;\n' +
+                'overflow:hidden;\n' +
+            '}\n' +
+            '.testReportPlatformScreenCaptureImg {\n' +
+                'max-width:320px;\n' +
+            '}\n' +
+            '.testReportPlatformSpan {\n' +
+                'display: inline-block;\n' +
+                'width: 8em;\n' +
+            '}\n' +
+            '.testReportPlatformTable {\n' +
+                'border: 1px;\n' +
+                'border-top-style: solid;\n' +
+                'text-align: left;\n' +
+                'width: 100%;\n' +
+            '}\n' +
+            '.testReportSummaryDiv {\n' +
+                'background-color: #bfb;\n' +
+            '}\n' +
+            '.testReportSummarySpan {\n' +
+                'display: inline-block;\n' +
+                'width: 6.5em;\n' +
+            '}\n' +
+            'tr:nth-child(odd).testReportPlatformTr {\n' +
+                'background-color: #bfb;\n' +
+            '}\n' +
+            '.testReportTestFailed {\n' +
+                'background-color: #f99;\n' +
+            '}\n' +
+            '.testReportTestPending {\n' +
+                'background-color: #99f;\n' +
+            '}\n' +
+            '</style>\n' +
+            '<div class="testReportPlatformDiv testReportSummaryDiv">\n' +
+            '<h2>{{envDict.npm_package_name}} test-report summary</h2>\n' +
+            '<h4>\n' +
+                '<span class="testReportSummarySpan">version</span>-\n' +
+                    '{{envDict.npm_package_version}}<br>\n' +
+                '<span class="testReportSummarySpan">test date</span>- {{date}}<br>\n' +
+                '<span class="testReportSummarySpan">commit info</span>- {{CI_COMMIT_INFO}}<br>\n' +
+            '</h4>\n' +
+            '<table class="testReportPlatformTable">\n' +
+            '<thead><tr>\n' +
+                '<th>total time elapsed</th>\n' +
+                '<th>total tests failed</th>\n' +
+                '<th>total tests passed</th>\n' +
+                '<th>total tests pending</th>\n' +
+            '</tr></thead>\n' +
+            '<tbody><tr>\n' +
+                '<td>{{timeElapsed}} ms</td>\n' +
+                '<td class="{{testsFailedClass}}">{{testsFailed}}</td>\n' +
+                '<td>{{testsPassed}}</td>\n' +
+                '<td>{{testsPending}}</td>\n' +
+            '</tr></tbody>\n' +
+            '</table>\n' +
+            '</div>\n' +
+            '{{#testPlatformList}}\n' +
+            '<div class="testReportPlatformDiv">\n' +
+            '<h4>\n' +
+                '{{testPlatformNumber}}. {{name}}<br>\n' +
+                '{{screenCapture}}\n' +
+                '<span class="testReportPlatformSpan">time elapsed</span>- {{timeElapsed}} ms<br>\n' +
+                '<span class="testReportPlatformSpan">tests failed</span>- {{testsFailed}}<br>\n' +
+                '<span class="testReportPlatformSpan">tests passed</span>- {{testsPassed}}<br>\n' +
+                '<span class="testReportPlatformSpan">tests pending</span>- {{testsPending}}<br>\n' +
+            '</h4>\n' +
+            '<table class="testReportPlatformTable">\n' +
+            '<thead><tr>\n' +
+                '<th>#</th>\n' +
+                '<th>time elapsed</th>\n' +
+                '<th>status</th>\n' +
+                '<th>test case</th>\n' +
+            '</tr></thead>\n' +
+            '<tbody>\n' +
+            '{{#testCaseList}}\n' +
+            '<tr class="testReportPlatformTr">\n' +
+                '<td>{{testCaseNumber}}</td>\n' +
+                '<td>{{timeElapsed}} ms</td>\n' +
+                '<td class="{{testReportTestStatusClass}}">{{status}}</td>\n' +
+                '<td>{{name}}</td>\n' +
+            '</tr>\n' +
+            '{{/testCaseList}}\n' +
+            '</tbody>\n' +
+            '</table>\n' +
+            '<pre class="{{testReportPlatformPreClass}}">\n' +
+            '{{#errorStackList}}\n' +
+            '{{errorStack}}\n' +
+            '{{/errorStackList}}\n' +
+            '</pre>\n' +
+            '</div>\n' +
+            '{{/testPlatformList}}\n' +
+            String();
+    }());
     return app;
 }(this))));

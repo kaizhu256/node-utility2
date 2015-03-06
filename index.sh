@@ -392,12 +392,12 @@ shPhantomTest() {
     then
         export npm_config_mode_slimerjs=1 || return $?
     fi
-    node -e "var local;
-        local = require('$npm_config_dir_utility2');
+    node -e "var utility2;
+        utility2 = require('$npm_config_dir_utility2');
         if ('$MODE_PHANTOM' === 'testUrl') {
-            local.testReport = require('$npm_config_dir_build/test-report.json');
+            utility2.testReport = require('$npm_config_dir_build/test-report.json');
         }
-        local.phantomTest({
+        utility2.phantomTest({
             modePhantom: '$MODE_PHANTOM',
             timeoutDefault: $TIMEOUT_DEFAULT,
             timeoutScreenCapture: $TIMEOUT_SCREEN_CAPTURE,
@@ -409,7 +409,7 @@ shPhantomTest() {
             }
             require('fs').writeFileSync(
                 '$npm_config_dir_build/test-report.html',
-                local.testMerge(local.testReport, {})
+                utility2.testMerge(utility2.testReport, {})
             );
             process.exit(!!error);
         });" || return $?

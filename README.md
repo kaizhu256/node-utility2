@@ -125,7 +125,11 @@ stupid: true
             }, onError);
         };
         // init assets
-        app['/'] = (String() +
+        app['/'] =
+            (String() +
+
+
+
 /* jslint-ignore-begin */
 '<!DOCTYPE html>\n' +
 '<html>\n' +
@@ -215,6 +219,9 @@ stupid: true
 '</body>\n' +
 '</html>\n' +
 /* jslint-ignore-end */
+
+
+
         String()).replace((/\{\{envDict\.\w+?\}\}/g), function (match0) {
             switch (match0) {
             case '{{envDict.npm_package_description}}':
@@ -296,8 +303,8 @@ stupid: true
     "author": "kai zhu <kaizhu256@gmail.com>",
     "bin": { "utility2" : "index.sh" },
     "dependencies": {
-        "istanbul-lite": "2015.3.5-12",
-        "jslint-lite": "2015.3.5-11"
+        "istanbul-lite": "2015.3.6-10",
+        "jslint-lite": "2015.3.6-10"
     },
     "devDependencies": {
         "phantomjs-lite": "^2015.1.4-102"
@@ -338,18 +345,18 @@ stupid: true
         "start": "npm_config_mode_auto_restart=1 ./index.sh shRun node test.js",
         "test": "./index.sh shRun shReadmePackageJsonExport && npm_config_mode_auto_restart=1 npm_config_mode_auto_restart_child=1 ./index.sh shRun shNpmTest test.js"
     },
-    "version": "2015.3.5-12"
+    "version": "2015.3.6-10"
 }
 ```
 
 
 
 # todo
+- npm publish 2015.3.6-10
 - jslint - 80 col maxlen
 - create function app.utility2.internal
 - allow screen-capture to exit with non-zero exit-code
 - create flamegraph from istanbul coverage
-- explicitly require slimerjs instead of auto-detecting it
 - auto-generate help doc from README.md
 - add server stress test using phantomjs
 - minify /assets/utility2.js in production-mode
