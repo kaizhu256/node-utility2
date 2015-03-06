@@ -1227,11 +1227,11 @@ stupid: true
                 app.utility2.global[key] = globalDict[key];
             });
             // start repl server
-            app.utility2._replServer = require('repl').start({ useGlobal: true });
+            app.replServer = require('repl').start({ useGlobal: true });
             // save repl eval function
-            app.utility2._replServer.evalDefault = app.utility2._replServer.eval;
+            app.replServer.evalDefault = app.replServer.eval;
             // hook custom repl eval function
-            app.utility2._replServer.eval = function (script, context, file, onError) {
+            app.replServer.eval = function (script, context, file, onError) {
                 var match, onError2;
                 match = (/^(\S+)([\S\s]*?)\n/).exec(script);
                 onError2 = function (error, data) {
@@ -1262,7 +1262,7 @@ stupid: true
                         // on shell exit, print return prompt
                         .on('exit', function (exitCode) {
                             console.log('exit-code ' + exitCode);
-                            app.utility2._replServer.evalDefault('\n', context, file, onError2);
+                            app.replServer.evalDefault('\n', context, file, onError2);
                         });
                     return;
                 // syntax sugar to grep current dir
@@ -1290,7 +1290,7 @@ stupid: true
                         // on shell exit, print return prompt
                         .on('exit', function (exitCode) {
                             console.log('exit-code ' + exitCode);
-                            app.utility2._replServer.evalDefault('\n', context, file, onError2);
+                            app.replServer.evalDefault('\n', context, file, onError2);
                         });
                     return;
                 // syntax sugar to print stringified arg
@@ -1299,7 +1299,7 @@ stupid: true
                     break;
                 }
                 // eval modified script
-                app.utility2._replServer.evalDefault(script, context, file, onError2);
+                app.replServer.evalDefault(script, context, file, onError2);
             };
         };
 

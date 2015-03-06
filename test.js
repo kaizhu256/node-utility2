@@ -635,7 +635,12 @@ stupid: true
                     // test print handling behavior
                     'print\n'
                 ].forEach(function (script) {
-                    app.utility2._replServer.eval(script, null, 'repl', app.utility2.nop);
+                    app.utility2.internal().replServer.eval(
+                        script,
+                        null,
+                        'repl',
+                        app.utility2.nop
+                    );
                 });
                 onError();
             });

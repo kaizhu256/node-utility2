@@ -407,7 +407,7 @@ shPhantomTest() {
                 process.exit();
                 return;
             }
-            local.fs.writeFileSync(
+            require('fs').writeFileSync(
                 '$npm_config_dir_build/test-report.html',
                 local.testMerge(local.testReport, {})
             );
