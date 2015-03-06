@@ -345,9 +345,7 @@ stupid: true
 
 
 # todo
-- move many objects from app.utility2 to app
 - create function app.utility2.internal
-- jslint - and 80 col maxlen
 - allow screen-capture to exit with non-zero exit-code
 - create flamegraph from istanbul coverage
 - explicitly require slimerjs instead of auto-detecting it

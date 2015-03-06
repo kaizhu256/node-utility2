@@ -463,17 +463,17 @@ stupid: true
             });
             // stop testReport timer
             if (testReport.testsPending === 0) {
-                app.utility2._timeElapsedStop(testReport);
+                app._timeElapsedStop(testReport);
             }
             // 2. return testReport1 in html-format
             // json-copy testReport, which will be modified for html templating
             testReport = app.utility2.jsonCopy(testReport1);
             // update timeElapsed
-            app.utility2._timeElapsedStop(testReport);
+            app._timeElapsedStop(testReport);
             testReport.testPlatformList.forEach(function (testPlatform) {
-                app.utility2._timeElapsedStop(testPlatform);
+                app._timeElapsedStop(testPlatform);
                 testPlatform.testCaseList.forEach(function (testCase) {
-                    app.utility2._timeElapsedStop(testCase);
+                    app._timeElapsedStop(testCase);
                     testPlatform.timeElapsed =
                         Math.max(testPlatform.timeElapsed, testCase.timeElapsed);
                 });
@@ -598,7 +598,7 @@ stupid: true
                 // init testReport
                 testReport = app.utility2.testReport;
                 // stop testPlatform timer
-                app.utility2._timeElapsedStop(testPlatform);
+                app._timeElapsedStop(testPlatform);
                 // create testReportHtml
                 testReportHtml = app.utility2.testMerge(testReport, {});
                 // print test-report summary
@@ -722,7 +722,7 @@ stupid: true
                     // finish testCase
                     finished = true;
                     // stop testCase timer
-                    app.utility2._timeElapsedStop(testCase);
+                    app._timeElapsedStop(testCase);
                     // if all tests have finished, then create test-report
                     onParallel();
                 };
@@ -802,7 +802,7 @@ stupid: true
             });
         };
 
-        app.utility2._timeElapsedStop = function (options) {
+        app._timeElapsedStop = function (options) {
             /*
             this function will stop options.timeElapsed
             */
@@ -1114,7 +1114,7 @@ stupid: true
                 optionsCopy.argv0 = argv0;
                 // run phantomjs / slimerjs instance
                 onParallel.counter += 1;
-                app.utility2._phantomTestSingle(optionsCopy, function (error) {
+                app._phantomTestSingle(optionsCopy, function (error) {
                     // save phantomjs / slimerjs state to options
                     options[argv0] = optionsCopy;
                     onParallel(error);
@@ -1123,7 +1123,7 @@ stupid: true
             onParallel();
         };
 
-        app.utility2._phantomTestSingle = function (options, onError) {
+        app._phantomTestSingle = function (options, onError) {
             /*
             this function will spawn either phantomjs or slimerjs to test options.url
             */
@@ -1227,16 +1227,21 @@ stupid: true
                 app.utility2.global[key] = globalDict[key];
             });
             // start repl server
-            app.replServer = require('repl').start({ useGlobal: true });
+            app._replServer = require('repl').start({ useGlobal: true });
             // save repl eval function
-            app.replServer.evalDefault = app.replServer.eval;
+            app._replServer.evalDefault = app._replServer.eval;
+            // debug error
+            app._replServer.evalDefault('process.domain && ' +
+                'process.domain.on("error", function (error) {' +
+                'require("utility2")._debugReplError = error;' +
+                '});\n', null, 'repl', app.utility2.onErrorDefault);
             // hook custom repl eval function
-            app.replServer.eval = function (script, context, file, onError) {
+            app._replServer.eval = function (script, context, file, onError) {
                 var match, onError2;
                 match = (/^(\S+)([\S\s]*?)\n/).exec(script);
                 onError2 = function (error, data) {
                     // debug error
-                    app.utility2.debugReplError = error || app.utility2.debugReplError;
+                    app.utility2._debugReplError = error || app.utility2._debugReplError;
                     onError(error, data);
                 };
                 switch (match && match[1]) {
@@ -1262,7 +1267,7 @@ stupid: true
                         // on shell exit, print return prompt
                         .on('exit', function (exitCode) {
                             console.log('exit-code ' + exitCode);
-                            app.replServer.evalDefault('\n', context, file, onError2);
+                            app._replServer.evalDefault('\n', context, file, onError2);
                         });
                     return;
                 // syntax sugar to grep current dir
@@ -1290,7 +1295,7 @@ stupid: true
                         // on shell exit, print return prompt
                         .on('exit', function (exitCode) {
                             console.log('exit-code ' + exitCode);
-                            app.replServer.evalDefault('\n', context, file, onError2);
+                            app._replServer.evalDefault('\n', context, file, onError2);
                         });
                     return;
                 // syntax sugar to print stringified arg
@@ -1299,7 +1304,9 @@ stupid: true
                     break;
                 }
                 // eval modified script
-                app.replServer.evalDefault(script, context, file, onError2);
+                app.utility2.testTryCatch(function () {
+                    app._replServer.evalDefault(script, context, file, onError2);
+                }, onError2);
             };
         };
 

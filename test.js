@@ -1,7 +1,7 @@
 /*jslint
 browser: true,
 maxerr: 4,
-maxlen: 200,
+maxlen: 80,
 node: true,
 nomen: true,
 stupid: true
@@ -59,8 +59,9 @@ stupid: true
             ['binary', 'text'].forEach(function (resultType) {
                 onParallel.counter += 1;
                 app.utility2.ajax({
-                    // test binary post handling behavior
-                    data: resultType === 'binary' && app.modeJs === 'node' ? new Buffer('hello')
+                    data: resultType === 'binary' && app.modeJs === 'node'
+                        // test binary post handling behavior
+                        ? new Buffer('hello')
                         // test text post handling behavior
                         : 'hello',
                     // test request header handling behavior
@@ -126,7 +127,8 @@ stupid: true
                 // validate error-message
                 app.utility2.assert(error.message === '', error.message);
             });
-            // test assertion failed with error object with no error.message and no error.trace
+            // test assertion failed with error object
+            // with no error.message and no error.trace
             error = new Error();
             error.message = '';
             error.stack = '';
@@ -136,7 +138,10 @@ stupid: true
                 // validate error occurred
                 app.utility2.assert(error instanceof Error, error);
                 // validate error.message
-                app.utility2.assert(error.message === 'undefined', error.message);
+                app.utility2.assert(
+                    error.message === 'undefined',
+                    error.message
+                );
             });
             // test assertion failed with text message
             app.utility2.testTryCatch(function () {
@@ -145,7 +150,10 @@ stupid: true
                 // validate error occurred
                 app.utility2.assert(error instanceof Error, error);
                 // validate error-message
-                app.utility2.assert(error.message === '_assert_default_test', error.message);
+                app.utility2.assert(
+                    error.message === '_assert_default_test',
+                    error.message
+                );
             });
             // test assertion failed with error object
             app.utility2.testTryCatch(function () {
@@ -161,7 +169,10 @@ stupid: true
                 // validate error occurred
                 app.utility2.assert(error instanceof Error, error);
                 // validate error-message
-                app.utility2.assert(error.message === '{"aa":1}', error.message);
+                app.utility2.assert(
+                    error.message === '{"aa":1}',
+                    error.message
+                );
             });
             onError();
         };
@@ -178,10 +189,14 @@ stupid: true
                 } }]
             ], onError, function (onError) {
                 message = '';
-                app.utility2.global['debug_print'.replace('_p', 'P')]('_debug_print_default_test');
+                app.utility2.global[
+                    'debug_print'.replace('_p', 'P')
+                ]('_debug_print_default_test');
                 // validate message
                 app.utility2.assert(
-                    message === '\n\n\ndebug' + 'Print\n_debug_print_default_test\n\n',
+                    message === '\n\n\n' +
+                        'debug_print'.replace('_p', 'P') +
+                        '\n_debug_print_default_test\n\n',
                     message
                 );
                 onError();
@@ -193,7 +208,16 @@ stupid: true
             this function will test jsonCopy's default handling behavior
             */
             // test various data-type handling behavior
-            [undefined, null, false, true, 0, 1, 1.5, 'a'].forEach(function (data) {
+            [
+                undefined,
+                null,
+                false,
+                true,
+                0,
+                1,
+                1.5,
+                'a'
+            ].forEach(function (data) {
                 app.utility2.assert(
                     app.utility2.jsonCopy(data) === data,
                     [app.utility2.jsonCopy(data), data]
@@ -204,14 +228,30 @@ stupid: true
 
         app._jsonStringifyOrdered_default_test = function (onError) {
             /*
-            this function will test jsonStringifyOrdered's default handling behavior
+            this function will test jsonStringifyOrdered's
+            default handling behavior
             */
             var data;
             // test various data-type handling behavior
-            [undefined, null, false, true, 0, 1, 1.5, 'a', {}, []].forEach(function (data) {
+            [
+                undefined,
+                null,
+                false,
+                true,
+                0,
+                1,
+                1.5,
+                'a',
+                {},
+                []
+            ].forEach(function (data) {
                 app.utility2.assert(
-                    app.utility2.jsonStringifyOrdered(data) === JSON.stringify(data),
-                    [app.utility2.jsonStringifyOrdered(data), JSON.stringify(data)]
+                    app.utility2.jsonStringifyOrdered(data) ===
+                        JSON.stringify(data),
+                    [
+                            app.utility2.jsonStringifyOrdered(data),
+                            JSON.stringify(data)
+                        ]
                 );
             });
             // test data-ordering handling behavior
@@ -224,7 +264,10 @@ stupid: true
                 bb: 2,
                 aa: 1
             });
-            app.utility2.assert(data === '{"aa":1,"bb":2,"dd":[null],"ee":{"ff":1,"gg":2}}', data);
+            app.utility2.assert(
+                data === '{"aa":1,"bb":2,"dd":[null],"ee":{"ff":1,"gg":2}}',
+                data
+            );
             onError();
         };
 
@@ -257,7 +300,10 @@ stupid: true
             */
             var onParallel, onParallelError;
             // test onDebug handling behavior
-            onParallel = app.utility2.onParallel(onError, function (error, self) {
+            onParallel = app.utility2.onParallel(onError, function (
+                error,
+                self
+            ) {
                 app.utility2.testTryCatch(function () {
                     // validate no error occurred
                     app.utility2.assert(!error, error);
@@ -304,7 +350,8 @@ stupid: true
                     app.utility2.assert(timeElapsed + 100 >= 1000, timeElapsed);
                     onError();
                 }, onError);
-            // coverage-hack - use 1500 ms to cover setInterval test-report refresh in browser
+            // coverage-hack
+            // use 1500 ms to cover setInterval test-report refresh in browser
             }, 1500, '_onTimeout_errorTimeout_test');
         };
 
@@ -321,7 +368,8 @@ stupid: true
             );
             // validate options
             app.utility2.assert(
-                app.utility2.jsonStringifyOrdered(options) === '{"aa":1,"bb":{},"cc":[]}',
+                app.utility2.jsonStringifyOrdered(options) ===
+                    '{"aa":1,"bb":{},"cc":[]}',
                 options
             );
             // test recursive handling behavior
@@ -332,7 +380,8 @@ stupid: true
             );
             // validate options
             app.utility2.assert(
-                app.utility2.jsonStringifyOrdered(options) === '{"aa":1,"bb":{"cc":2},"cc":[]}',
+                app.utility2.jsonStringifyOrdered(options) ===
+                    '{"aa":1,"bb":{"cc":2},"cc":[]}',
                 options
             );
             onError();
@@ -346,35 +395,56 @@ stupid: true
             backup = {};
             // test override handling behavior
             options = app.utility2.setOverride(
-                { aa: 1, bb: { cc: 2 }, dd: [3, 4], ee: { ff: { gg: 5, hh: 6 } } },
+                {
+                    aa: 1,
+                    bb: { cc: 2 },
+                    dd: [3, 4],
+                    ee: { ff: { gg: 5, hh: 6 } }
+                },
                 // test depth handling behavior
                 2,
-                { aa: 2, bb: { dd: 3 }, dd: [4, 5], ee: { ff: { gg: 6 } } },
+                {
+                    aa: 2,
+                    bb: { dd: 3 },
+                    dd: [4, 5],
+                    ee: { ff: { gg: 6 } }
+                },
                 // test backup handling behavior
                 backup
             );
             // validate backup
             data = app.utility2.jsonStringifyOrdered(backup);
             app.utility2.assert(data ===
-                '{"aa":1,"bb":{},"dd":[3,4],"ee":{"ff":{"gg":5,"hh":6}}}', data);
+                '{"aa":1,"bb":{},"dd":[3,4],' +
+                '"ee":{"ff":{"gg":5,"hh":6}}}', data);
             // validate options
             data = app.utility2.jsonStringifyOrdered(options);
             app.utility2.assert(data ===
-                '{"aa":2,"bb":{"cc":2,"dd":3},"dd":[4,5],"ee":{"ff":{"gg":6}}}', data);
+                '{"aa":2,"bb":{"cc":2,"dd":3},"dd":[4,5],' +
+                '"ee":{"ff":{"gg":6}}}', data);
             // test restore options from backup handling behavior
             app.utility2.setOverride(options, -1, backup);
             // validate backup
             data = app.utility2.jsonStringifyOrdered(backup);
             app.utility2.assert(data ===
-                '{"aa":1,"bb":{"dd":3},"dd":[3,4],"ee":{"ff":{"gg":6}}}', data);
+                '{"aa":1,"bb":{"dd":3},"dd":[3,4],' +
+                '"ee":{"ff":{"gg":6}}}', data);
             // validate options
             data = app.utility2.jsonStringifyOrdered(options);
             app.utility2.assert(data ===
-                '{"aa":1,"bb":{"cc":2},"dd":[3,4],"ee":{"ff":{"gg":5,"hh":6}}}', data);
+                '{"aa":1,"bb":{"cc":2},"dd":[3,4],' +
+                '"ee":{"ff":{"gg":5,"hh":6}}}', data);
             // test override envDict with empty-string handling behavior
-            options = app.utility2.setOverride(app.utility2.envDict, 1, { 'emptyString': null });
+            options = app.utility2.setOverride(
+                app.utility2.envDict,
+                1,
+                { 'emptyString': null }
+            );
             // validate options
-            app.utility2.assert(options.emptyString === '', options.emptyString);
+            app.utility2.assert(
+                options.emptyString === '',
+                options.emptyString
+            );
             onError();
         };
 
@@ -403,29 +473,40 @@ stupid: true
             data = app.utility2.textFormat('{{aa}}', {}, undefined);
             app.utility2.assert(data === '{{aa}}', data);
             // test default handling behavior
-            data = app.utility2.textFormat('{{aa}}{{aa}}{{bb}}{{cc}}{{dd}}{{ee.ff}}', {
-                // test string value handling behavior
-                aa: 'aa',
-                // test non-string value handling behavior
-                bb: 1,
-                // test null-value handling behavior
-                cc: null,
-                // test undefined-value handling behavior
-                dd: undefined,
-                // test nested value handling behavior
-                ee: { ff: 'gg' }
-            }, '<undefined>');
+            data = app.utility2.textFormat(
+                '{{aa}}{{aa}}{{bb}}{{cc}}{{dd}}{{ee.ff}}',
+                {
+                    // test string value handling behavior
+                    aa: 'aa',
+                    // test non-string value handling behavior
+                    bb: 1,
+                    // test null-value handling behavior
+                    cc: null,
+                    // test undefined-value handling behavior
+                    dd: undefined,
+                    // test nested value handling behavior
+                    ee: { ff: 'gg' }
+                },
+                '<undefined>'
+            );
             app.utility2.assert(data === 'aaaa1null<undefined>gg', data);
             // test list handling behavior
-            data = app.utility2.textFormat('[{{#list1}}[{{#list2}}{{aa}},{{/list2}}],{{/list1}}]', {
-                list1: [
-                    // test null-value handling behavior
-                    null,
-                    // test recursive list handling behavior
-                    { list2: [{ aa: 'bb' }, { aa: 'cc' }] }
-                ]
-            }, '<undefined>');
-            app.utility2.assert(data === '[[<undefined><undefined>,<undefined>],[bb,cc,],]', data);
+            data = app.utility2.textFormat(
+                '[{{#list1}}[{{#list2}}{{aa}},{{/list2}}],{{/list1}}]',
+                {
+                    list1: [
+                        // test null-value handling behavior
+                        null,
+                        // test recursive list handling behavior
+                        { list2: [{ aa: 'bb' }, { aa: 'cc' }] }
+                    ]
+                },
+                '<undefined>'
+            );
+            app.utility2.assert(
+                data === '[[<undefined><undefined>,<undefined>],[bb,cc,],]',
+                data
+            );
             onError();
         };
     }());
@@ -467,28 +548,32 @@ stupid: true
         // init tests
         app._istanbulMerge_default_test = function (onError) {
             /*
-            this function will test istanbulMerge's default handling behavior
+            this function will test istanbulMerge's
+            default handling behavior
             */
             var coverage1, coverage2, script;
             script = app.utility2.istanbul_lite.instrumentSync(
-                '(function () {\nreturn arg ? __coverage__ : __coverage__;\n}());',
+                '(function () {\nreturn arg ' +
+                    '? __coverage__ ' +
+                    ': __coverage__;\n}());',
                 'test'
             );
             app.utility2.arg = 0;
             // init coverage1
             coverage1 = app.vm.runInNewContext(script, { arg: 0 });
             // validate coverage1
-/* jslint-ignore-begin */
+            /* jslint-ignore-next-line */
             app.utility2.assert(app.utility2.jsonStringifyOrdered(coverage1) === '{"/test":{"b":{"1":[0,1]},"branchMap":{"1":{"line":2,"locations":[{"end":{"column":25,"line":2},"start":{"column":13,"line":2}},{"end":{"column":40,"line":2},"start":{"column":28,"line":2}}],"type":"cond-expr"}},"f":{"1":1},"fnMap":{"1":{"line":1,"loc":{"end":{"column":13,"line":1},"start":{"column":1,"line":1}},"name":"(anonymous_1)"}},"path":"/test","s":{"1":1,"2":1},"statementMap":{"1":{"end":{"column":5,"line":3},"start":{"column":0,"line":1}},"2":{"end":{"column":41,"line":2},"start":{"column":0,"line":2}}}}}', coverage1);
             // init coverage2
             coverage2 = app.vm.runInNewContext(script, { arg: 1 });
             // validate coverage2
+            /* jslint-ignore-next-line */
             app.utility2.assert(app.utility2.jsonStringifyOrdered(coverage2) === '{"/test":{"b":{"1":[1,0]},"branchMap":{"1":{"line":2,"locations":[{"end":{"column":25,"line":2},"start":{"column":13,"line":2}},{"end":{"column":40,"line":2},"start":{"column":28,"line":2}}],"type":"cond-expr"}},"f":{"1":1},"fnMap":{"1":{"line":1,"loc":{"end":{"column":13,"line":1},"start":{"column":1,"line":1}},"name":"(anonymous_1)"}},"path":"/test","s":{"1":1,"2":1},"statementMap":{"1":{"end":{"column":5,"line":3},"start":{"column":0,"line":1}},"2":{"end":{"column":41,"line":2},"start":{"column":0,"line":2}}}}}', coverage2);
             // merge coverage2 into coverage1
             app.utility2.istanbulMerge(coverage1, coverage2);
             // validate merged coverage1
+            /* jslint-ignore-next-line */
             app.utility2.assert(app.utility2.jsonStringifyOrdered(coverage1) === '{"/test":{"b":{"1":[1,1]},"branchMap":{"1":{"line":2,"locations":[{"end":{"column":25,"line":2},"start":{"column":13,"line":2}},{"end":{"column":40,"line":2},"start":{"column":28,"line":2}}],"type":"cond-expr"}},"f":{"1":2},"fnMap":{"1":{"line":1,"loc":{"end":{"column":13,"line":1},"start":{"column":1,"line":1}},"name":"(anonymous_1)"}},"path":"/test","s":{"1":2,"2":2},"statementMap":{"1":{"end":{"column":5,"line":3},"start":{"column":0,"line":1}},"2":{"end":{"column":41,"line":2},"start":{"column":0,"line":2}}}}}', coverage1);
-/* jslint-ignore-end */
             // test null-case handling behavior
             coverage1 = null;
             coverage2 = null;
@@ -500,7 +585,8 @@ stupid: true
 
         app._onFileModifiedRestart_default_test = function (onError) {
             /*
-            this function will test onFileModifiedRestart's watchFile handling behavior
+            this function will test onFileModifiedRestart's
+            watchFile handling behavior
             */
             var file, onParallel;
             file = __dirname + '/package.json';
@@ -514,7 +600,8 @@ stupid: true
                 onParallel.counter += 1;
                 setTimeout(function () {
                     app.fs.utimes(file, stat.atime, stat.mtime, onParallel);
-                // coverage-hack - use 1500 ms to cover setInterval watchFile in node
+                // coverage-hack
+                // use 1500 ms to cover setInterval watchFile in node
                 }, 1500);
                 onParallel(error);
             });
@@ -530,7 +617,8 @@ stupid: true
             // test default handling behavior
             onParallel.counter += 1;
             app.utility2.phantomTest({
-                url: 'http://localhost:' + app.utility2.envDict.npm_config_server_port +
+                url: 'http://localhost:' +
+                    app.utility2.envDict.npm_config_server_port +
                     // test phantom-callback handling behavior
                     '?modeTest=phantom&' +
                     // test _testSecret-validation handling behavior
@@ -540,7 +628,8 @@ stupid: true
             }, onParallel);
             [{
                 modeErrorIgnore: true,
-                url: 'http://localhost:' + app.utility2.envDict.npm_config_server_port +
+                url: 'http://localhost:' +
+                    app.utility2.envDict.npm_config_server_port +
                     // test standalone script handling behavior
                     '/test/script.html?' +
                     // test modeTest !== 'phantom' handling behavior
@@ -550,7 +639,8 @@ stupid: true
                     'modeTestCase=_testRun_failure_test'
             }, {
                 modeErrorIgnore: true,
-                url: 'http://localhost:' + app.utility2.envDict.npm_config_server_port +
+                url: 'http://localhost:' +
+                    app.utility2.envDict.npm_config_server_port +
                     // test script-error handling behavior
                     '/test/script-error.html'
             }].forEach(function (options) {
@@ -567,7 +657,8 @@ stupid: true
             onParallel.counter += 1;
             options = {
                 timeoutScreenCapture: 1,
-                url: 'http://localhost:' + app.utility2.envDict.npm_config_server_port +
+                url: 'http://localhost:' +
+                    app.utility2.envDict.npm_config_server_port +
                     '/test/screen-capture'
             };
             app.utility2.phantomScreenCapture(options, function (error) {
@@ -577,10 +668,13 @@ stupid: true
                     // validate screen-capture file
                     app.utility2.assert(
                         options.phantomjs.fileScreenCapture &&
-                            app.fs.existsSync(options.phantomjs.fileScreenCapture),
+                            app.fs.existsSync(
+                                options.phantomjs.fileScreenCapture
+                            ),
                         options.phantomjs.fileScreenCapture
                     );
-                    // remove screen-capture file, so it will not interfere with re-tests
+                    // remove screen-capture file,
+                    // so it will not interfere with re-test
                     app.fs.unlinkSync(options.phantomjs.fileScreenCapture);
                     onParallel();
                 }, onParallel);
@@ -602,7 +696,8 @@ stupid: true
                 }]
             ], onParallel, function (onError) {
                 app.utility2.phantomTest({
-                    url: 'http://localhost:' + app.utility2.envDict.npm_config_server_port
+                    url: 'http://localhost:' +
+                        app.utility2.envDict.npm_config_server_port
                 });
                 onError();
             });
@@ -635,7 +730,7 @@ stupid: true
                     // test print handling behavior
                     'print\n'
                 ].forEach(function (script) {
-                    app.utility2.internal().replServer.eval(
+                    app.utility2.internal()._replServer.eval(
                         script,
                         null,
                         'repl',
