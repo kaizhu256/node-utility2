@@ -37,7 +37,7 @@ stupid: true
             : require('./index.js');
 
         // init tests
-        app._ajax_default_test = function (onError) {
+        app.testCase_ajax_default = function (onError) {
             /*
             this function will test ajax's default handling behavior
             */
@@ -111,7 +111,7 @@ stupid: true
             onParallel();
         };
 
-        app._assert_default_test = function (onError) {
+        app.testCase_assert_default = function (onError) {
             /*
             this function will test assert's default handling behavior
             */
@@ -145,13 +145,13 @@ stupid: true
             });
             // test assertion failed with text message
             app.utility2.testTryCatch(function () {
-                app.utility2.assert(false, '_assert_default_test');
+                app.utility2.assert(false, 'hello');
             }, function (error) {
                 // validate error occurred
                 app.utility2.assert(error instanceof Error, error);
                 // validate error-message
                 app.utility2.assert(
-                    error.message === '_assert_default_test',
+                    error.message === 'hello',
                     error.message
                 );
             });
@@ -177,7 +177,7 @@ stupid: true
             onError();
         };
 
-        app._debug_print_default_test = function (onError) {
+        app.testCase_debug_print_default = function (onError) {
             /*
             this function will test debug_print's default handling behavior
             */
@@ -191,19 +191,19 @@ stupid: true
                 message = '';
                 app.utility2.global[
                     'debug_print'.replace('_p', 'P')
-                ]('_debug_print_default_test');
+                ]('hello');
                 // validate message
                 app.utility2.assert(
                     message === '\n\n\n' +
                         'debug_print'.replace('_p', 'P') +
-                        '\n_debug_print_default_test\n\n',
+                        '\nhello\n\n',
                     message
                 );
                 onError();
             });
         };
 
-        app._jsonCopy_default_test = function (onError) {
+        app.testCase_jsonCopy_default = function (onError) {
             /*
             this function will test jsonCopy's default handling behavior
             */
@@ -226,7 +226,7 @@ stupid: true
             onError();
         };
 
-        app._jsonStringifyOrdered_default_test = function (onError) {
+        app.testCase_jsonStringifyOrdered_default = function (onError) {
             /*
             this function will test jsonStringifyOrdered's default
             handling behavior
@@ -271,7 +271,7 @@ stupid: true
             onError();
         };
 
-        app._onErrorDefault_default_test = function (onError) {
+        app.testCase_onErrorDefault_default = function (onError) {
             /*
             this function will test onErrorDefault's default handling behavior
             */
@@ -294,7 +294,7 @@ stupid: true
             });
         };
 
-        app._onParallel_default_test = function (onError) {
+        app.testCase_onParallel_default = function (onError) {
             /*
             this function will test onParallel's default handling behavior
             */
@@ -332,7 +332,7 @@ stupid: true
             onParallel();
         };
 
-        app._onTimeout_timeout_test = function (onError) {
+        app.testCase_onTimeout_timeout = function (onError) {
             /*
             this function will test onTimeout's timeout handling behavior
             */
@@ -352,10 +352,10 @@ stupid: true
                 }, onError);
             // coverage-hack
             // use 1500 ms to cover setInterval test-report refresh in browser
-            }, 1500, '_onTimeout_errorTimeout_test');
+            }, 1500, 'testCase_onTimeout_errorTimeout');
         };
 
-        app._setDefault_default_test = function (onError) {
+        app.testCase_setDefault_default = function (onError) {
             /*
             this function will test setDefault's default handling behavior
             */
@@ -387,7 +387,7 @@ stupid: true
             onError();
         };
 
-        app._setOverride_default_test = function (onError) {
+        app.testCase_setOverride_default = function (onError) {
             /*
             this function will test setOverride's default handling behavior
             */
@@ -448,7 +448,7 @@ stupid: true
             onError();
         };
 
-        app._testRun_failure_test = function (onError) {
+        app.testCase_testRun_failure = function (onError) {
             /*
             this function will test testRun's failure handling behavior
             */
@@ -464,7 +464,7 @@ stupid: true
             throw app.utility2.errorDefault;
         };
 
-        app._textFormat_default_test = function (onError) {
+        app.testCase_textFormat_default = function (onError) {
             /*
             this function will test textFormat's default handling behavior
             */
@@ -546,7 +546,7 @@ stupid: true
         app.vm = require('vm');
 
         // init tests
-        app._istanbulMerge_default_test = function (onError) {
+        app.testCase_istanbulMerge_default = function (onError) {
             /*
             this function will test istanbulMerge's default
             handling behavior
@@ -590,7 +590,7 @@ stupid: true
             onError();
         };
 
-        app._onFileModifiedRestart_default_test = function (onError) {
+        app.testCase_onFileModifiedRestart_default = function (onError) {
             /*
             this function will test onFileModifiedRestart's watchFile
             handling behavior
@@ -614,7 +614,7 @@ stupid: true
             });
         };
 
-        app._phantomTest_default_test = function (onError) {
+        app.testCase_phantomTest_default = function (onError) {
             /*
             this function will test phantomTest's default handling behavior
             */
@@ -643,7 +643,7 @@ stupid: true
                     'modeTest=phantom2&' +
                     // test single-test-case handling behavior
                     // test testRun's failure handling behavior
-                    'modeTestCase=_testRun_failure_test'
+                    'modeTestCase=testCase_testRun_failure'
             }, {
                 modeErrorIgnore: true,
                 url: 'http://localhost:' +
@@ -690,9 +690,6 @@ stupid: true
             onParallel.counter += 1;
             app.utility2.testMock([
                 [app.utility2, {
-                    child_process: { spawn: function () {
-                        return { on: app.utility2.nop };
-                    } },
                     envDict: {
                         // test no slimerjs handling behavior
                         npm_config_mode_no_slimerjs: '1',
@@ -700,6 +697,11 @@ stupid: true
                         npm_package_name: 'undefined'
                     },
                     onTimeout: app.utility2.nop
+                }],
+                [app.utility2.internal(), {
+                    child_process: { spawn: function () {
+                        return { on: app.utility2.nop };
+                    } }
                 }]
             ], onParallel, function (onError) {
                 app.utility2.phantomTest({
@@ -711,19 +713,21 @@ stupid: true
             onParallel();
         };
 
-        app._replStart_default_test = function (onError) {
+        app.testCase_replStart_default = function (onError) {
             /*
             this function will test replStart's default handling behavior
             */
             /*jslint evil: true*/
             app.utility2.testMock([
-                [app.utility2.internal().child_process, { spawn: function () {
-                    return { on: function (event, callback) {
-                        // jslint-hack
-                        app.utility2.nop(event);
-                        callback();
-                    } };
-                } }]
+                [app.utility2.internal(), {
+                    child_process: { spawn: function () {
+                        return { on: function (event, callback) {
+                            // jslint-hack
+                            app.utility2.nop(event);
+                            callback();
+                        } };
+                    } }
+                }]
             ], onError, function (onError) {
                 [
                     // test shell handling behavior
@@ -748,7 +752,7 @@ stupid: true
             });
         };
 
-        app._testRunServer_misc_test = function (onError) {
+        app.testCase_testRunServer_misc = function (onError) {
             /*
             this function will test testRunServer's misc handling behavior
             */

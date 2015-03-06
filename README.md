@@ -67,7 +67,7 @@ stupid: true
     // run browser js-env code
     if (typeof window === 'object') {
         // init browser js-env tests
-        app._ajax_200_test = function (onError) {
+        app.testCase_ajax_200 = function (onError) {
             /*
             this function will test ajax's 200 http statusCode handling behavior
             */
@@ -84,7 +84,7 @@ stupid: true
                 }, onError);
             });
         };
-        app._ajax_404_test = function (onError) {
+        app.testCase_ajax_404 = function (onError) {
             /*
             this function will test ajax's 404 http statusCode handling behavior
             */
@@ -114,7 +114,7 @@ stupid: true
         // require modules
         app.fs = require('fs');
         // init node js-env tests
-        app._phantomTest_default_test = function (onError) {
+        app.testCase_phantomTest_default = function (onError) {
             /*
             this function will spawn phantomjs to test the test-page
             */
@@ -174,7 +174,7 @@ stupid: true
 '\n' +
     'modeTest: true,\n' +
 '\n' +
-    '_ajax_get_test: function (onError) {\n' +
+    'testCase_ajax_get: function (onError) {\n' +
         '/*\n' +
         'this function will test ajax"s GET handling behavior\n' +
         '*/\n' +
@@ -302,8 +302,8 @@ stupid: true
     "author": "kai zhu <kaizhu256@gmail.com>",
     "bin": { "utility2" : "index.sh" },
     "dependencies": {
-        "istanbul-lite": "2015.3.6-11",
-        "jslint-lite": "2015.3.6-11"
+        "istanbul-lite": "2015.3.6-12",
+        "jslint-lite": "2015.3.6-12"
     },
     "devDependencies": {
         "phantomjs-lite": "^2015.1.4-102"
@@ -347,16 +347,16 @@ stupid: true
 && npm_config_mode_auto_restart=1 npm_config_mode_auto_restart_child=1 \
 ./index.sh shRun shNpmTest test.js"
     },
-    "version": "2015.3.6-11"
+    "version": "2015.3.6-12"
 }
 ```
 
 
 
 # todo
-- npm publish 2015.3.6-11
-- jslint - 80 col maxlen
-- add '\' line continuation for parsing README.md
+- npm publish 2015.3.6-12
+- use new-style test-case name - testCase_*
+- filter out dummy tests in test-report
 - allow screen-capture to exit with non-zero exit-code
 - create flamegraph from istanbul coverage
 - auto-generate help doc from README.md

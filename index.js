@@ -373,9 +373,6 @@ stupid: true
             2. return testReport1 in html-format
             */
             var errorStackList, testCaseNumber, testReport;
-            // update coverage-report
-            ((app.istanbul_lite &&
-                app.istanbul_lite.coverageReportCreate) || app.utility2.nop)();
             // 1. merge testReport2 into testReport1
             [testReport1, testReport2].forEach(function (testReport, ii) {
                 ii += 1;
@@ -605,7 +602,12 @@ return app.utility2.setOverride(testPlatform, -1, {
             /*
             this function will run the tests in testPlatform.testCaseList
             */
-            var exit, onParallel, testPlatform, testReportDiv, timerInterval;
+            var coverageReportCreate,
+                exit,
+                onParallel,
+                testPlatform,
+                testReportDiv,
+                timerInterval;
             options = options || {};
             app.utility2.modeTest =
                 app.utility2.modeTest ||
@@ -613,6 +615,10 @@ return app.utility2.setOverride(testPlatform, -1, {
             if (!(app.utility2.modeTest || options.modeTest)) {
                 return;
             }
+            // init coverageReportCreate
+            coverageReportCreate = (
+                app.istanbul_lite && app.istanbul_lite.coverageReportCreate
+            ) || app.utility2.nop;
             // mock exit
             exit = app.utility2.exit;
             app.utility2.exit = app.utility2.nop;
@@ -625,10 +631,10 @@ return app.utility2.setOverride(testPlatform, -1, {
             // add tests into testPlatform.testCaseList
             Object.keys(options).forEach(function (key) {
                 // add test-case options[key] to testPlatform.testCaseList
-                if (key.slice(-5) === '_test' &&
+                if (key.indexOf('testCase_') === 0 &&
                         (app.utility2.modeTestCase === key ||
                         (!app.utility2.modeTestCase &&
-                                key !== '_testRun_failure_test'))) {
+                                key !== 'testCase_testRun_failure'))) {
                     app.utility2.testPlatform.testCaseList.push({
                         name: key,
                         onTestCase: options[key]
@@ -653,7 +659,11 @@ return app.utility2.setOverride(testPlatform, -1, {
                         // cleanup timerInterval
                         clearInterval(timerInterval);
                     }
+                    // update coverageReport
+                    coverageReportCreate();
                 }, 1000);
+                // update coverageReport
+                coverageReportCreate();
             }
             onParallel = app.utility2.onParallel(function () {
                 /*
@@ -677,14 +687,19 @@ app._timeElapsedStop(testPlatform);
 // create testReportHtml
 testReportHtml = app.utility2.testMerge(testReport, {});
 // print test-report summary
-console.log('\n' + separator + '\n' +
-    testReport.testPlatformList.map(function (testPlatform) {
+console.log('\n' + separator + '\n' + testReport.testPlatformList
+    .filter(function (testPlatform) {
+        // if testPlatform has no tests, then filter it out
+        return testPlatform.testCaseList.length;
+    })
+    .map(function (testPlatform) {
         return '| test-report - ' + testPlatform.name + '\n|' +
             ('        ' + testPlatform.timeElapsed + ' ms     ').slice(-16) +
             ('        ' + testPlatform.testsFailed + ' failed ').slice(-16) +
             ('        ' + testPlatform.testsPassed + ' passed ').slice(-16) +
             '     |\n' + separator;
-    }).join('\n') + '\n');
+    })
+    .join('\n') + '\n');
 switch (app.modeJs) {
 case 'browser':
     // notify saucelabs of test results
@@ -695,6 +710,8 @@ case 'browser':
         testReport: app.utility2.testReport
     };
     setTimeout(function () {
+        // update coverageReport
+        coverageReportCreate();
         // call callback with number of tests failed
         app.utility2.onErrorExit(app.utility2.testReport.testsFailed);
         // throw global_test_results as an error,
@@ -1815,7 +1832,7 @@ case 'node':
                         // integrate screen-capture into test-report
                         data.testReport.testPlatformList[0].screenCaptureImg =
                             app.utility2.fileScreenCapture.replace(
-                                (/^[\S\s]*?\//),
+                                (/[\S\s]*\//),
                                 ''
                             );
                         // save test-report
