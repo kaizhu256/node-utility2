@@ -21,11 +21,14 @@ stupid: true
         app = {};
         app.modeJs = (function () {
             try {
-                return module.exports && typeof process.versions.node === 'string' &&
-                    typeof require('http').createServer === 'function' && 'node';
+                return module.exports &&
+                    typeof process.versions.node === 'string' &&
+                    typeof require('http').createServer === 'function' &&
+                    'node';
             } catch (errorCaughtNode) {
                 return typeof navigator.userAgent === 'string' &&
-                    typeof document.querySelector('body') === 'object' && 'browser';
+                    typeof document.querySelector('body') === 'object' &&
+                    'browser';
             }
         }());
         // init utility2
@@ -57,7 +60,7 @@ stupid: true
                 onParallel.counter += 1;
                 app.utility2.ajax({
                     // test binary post handling behavior
-                    data: resultType === 'binary' && app.utility2.modeJs === 'node' ? new Buffer('hello')
+                    data: resultType === 'binary' && app.modeJs === 'node' ? new Buffer('hello')
                         // test text post handling behavior
                         : 'hello',
                     // test request header handling behavior
@@ -70,7 +73,7 @@ stupid: true
                         // validate no error occurred
                         app.utility2.assert(!error, error);
                         // validate binary data
-                        if (resultType === 'binary' && app.utility2.modeJs === 'node') {
+                        if (resultType === 'binary' && app.modeJs === 'node') {
                             app.utility2.assert(Buffer.isBuffer(data), data);
                             data = String(data);
                         }
@@ -459,6 +462,7 @@ stupid: true
         // require modules
         app.fs = require('fs');
         app.path = require('path');
+        app.vm = require('vm');
 
         // init tests
         app._istanbulMerge_default_test = function (onError) {
@@ -472,12 +476,12 @@ stupid: true
             );
             app.utility2.arg = 0;
             // init coverage1
-            coverage1 = app.utility2.vm.runInNewContext(script, { arg: 0 });
+            coverage1 = app.vm.runInNewContext(script, { arg: 0 });
             // validate coverage1
 /* jslint-ignore-begin */
             app.utility2.assert(app.utility2.jsonStringifyOrdered(coverage1) === '{"/test":{"b":{"1":[0,1]},"branchMap":{"1":{"line":2,"locations":[{"end":{"column":25,"line":2},"start":{"column":13,"line":2}},{"end":{"column":40,"line":2},"start":{"column":28,"line":2}}],"type":"cond-expr"}},"f":{"1":1},"fnMap":{"1":{"line":1,"loc":{"end":{"column":13,"line":1},"start":{"column":1,"line":1}},"name":"(anonymous_1)"}},"path":"/test","s":{"1":1,"2":1},"statementMap":{"1":{"end":{"column":5,"line":3},"start":{"column":0,"line":1}},"2":{"end":{"column":41,"line":2},"start":{"column":0,"line":2}}}}}', coverage1);
             // init coverage2
-            coverage2 = app.utility2.vm.runInNewContext(script, { arg: 1 });
+            coverage2 = app.vm.runInNewContext(script, { arg: 1 });
             // validate coverage2
             app.utility2.assert(app.utility2.jsonStringifyOrdered(coverage2) === '{"/test":{"b":{"1":[1,0]},"branchMap":{"1":{"line":2,"locations":[{"end":{"column":25,"line":2},"start":{"column":13,"line":2}},{"end":{"column":40,"line":2},"start":{"column":28,"line":2}}],"type":"cond-expr"}},"f":{"1":1},"fnMap":{"1":{"line":1,"loc":{"end":{"column":13,"line":1},"start":{"column":1,"line":1}},"name":"(anonymous_1)"}},"path":"/test","s":{"1":1,"2":1},"statementMap":{"1":{"end":{"column":5,"line":3},"start":{"column":0,"line":1}},"2":{"end":{"column":41,"line":2},"start":{"column":0,"line":2}}}}}', coverage2);
             // merge coverage2 into coverage1
@@ -502,14 +506,14 @@ stupid: true
             file = __dirname + '/package.json';
             onParallel = app.utility2.onParallel(onError);
             onParallel.counter += 1;
-            app.utility2.fs.stat(file, function (error, stat) {
+            app.fs.stat(file, function (error, stat) {
                 // test default watchFile handling behavior
                 onParallel.counter += 1;
-                app.utility2.fs.utimes(file, stat.atime, new Date(), onParallel);
+                app.fs.utimes(file, stat.atime, new Date(), onParallel);
                 // test nop watchFile handling behavior
                 onParallel.counter += 1;
                 setTimeout(function () {
-                    app.utility2.fs.utimes(file, stat.atime, stat.mtime, onParallel);
+                    app.fs.utimes(file, stat.atime, stat.mtime, onParallel);
                 // coverage-hack - use 1500 ms to cover setInterval watchFile in node
                 }, 1500);
                 onParallel(error);
@@ -573,11 +577,11 @@ stupid: true
                     // validate screen-capture file
                     app.utility2.assert(
                         options.phantomjs.fileScreenCapture &&
-                            app.utility2.fs.existsSync(options.phantomjs.fileScreenCapture),
+                            app.fs.existsSync(options.phantomjs.fileScreenCapture),
                         options.phantomjs.fileScreenCapture
                     );
                     // remove screen-capture file, so it will not interfere with re-tests
-                    app.utility2.fs.unlinkSync(options.phantomjs.fileScreenCapture);
+                    app.fs.unlinkSync(options.phantomjs.fileScreenCapture);
                     onParallel();
                 }, onParallel);
             });
@@ -611,7 +615,7 @@ stupid: true
             */
             /*jslint evil: true*/
             app.utility2.testMock([
-                [app.utility2.child_process, { spawn: function () {
+                [app.utility2.internal().child_process, { spawn: function () {
                     return { on: function (event, callback) {
                         // jslint-hack
                         app.utility2.nop(event);
@@ -650,7 +654,9 @@ stupid: true
                         npm_config_timeout_exit: '1',
                         // test random $npm_config_server_port handling behavior
                         npm_config_server_port: ''
-                    },
+                    }
+                }],
+                [app.utility2.internal(), {
                     http: {
                         createServer: function () {
                             return { listen: app.utility2.nop };
@@ -683,7 +689,7 @@ stupid: true
             );
         app['/test/test.js'] =
             app.utility2.istanbul_lite.instrumentInPackage(
-                app.utility2.fs.readFileSync(__filename, 'utf8'),
+                app.fs.readFileSync(__filename, 'utf8'),
                 __filename,
                 'utility2'
             );

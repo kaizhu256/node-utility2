@@ -111,6 +111,8 @@ stupid: true
 
     // run node js-env code
     } else {
+        // require modules
+        app.fs = require('fs');
         // init node js-env tests
         app._phantomTest_default_test = function (onError) {
             /*
@@ -233,7 +235,7 @@ stupid: true
             'hello';
         app['/test/test.js'] =
             app.utility2.istanbul_lite.instrumentSync(
-                app.utility2.fs.readFileSync(__filename, 'utf8'),
+                app.fs.readFileSync(__filename, 'utf8'),
                 __filename
             );
         // init app.serverMiddlewareList
@@ -343,6 +345,8 @@ stupid: true
 
 
 # todo
+- move many objects from app.utility2 to app
+- create function app.utility2.internal
 - jslint - and 80 col maxlen
 - allow screen-capture to exit with non-zero exit-code
 - create flamegraph from istanbul coverage

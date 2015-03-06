@@ -32,6 +32,13 @@ stupid: true
             }
         };
 
+        app.utility2.internal = function () {
+            /*
+            this function will return this module's internal api
+            */
+            return app;
+        };
+
         app.utility2.errorStack = function (error) {
             /*
             this function will return the error's stack-trace
@@ -559,7 +566,7 @@ stupid: true
                 }
             });
             // visually update test-progress until it finishes
-            if (app.utility2.modeJs === 'browser') {
+            if (app.modeJs === 'browser') {
                 // init testReportDiv element
                 testReportDiv = document.querySelector('.testReportDiv') || { style: {} };
                 testReportDiv.style.display = 'block';
@@ -603,7 +610,7 @@ stupid: true
                             ('        ' + testPlatform.testsPassed + ' passed ').slice(-16) +
                             '     |\n' + separator;
                     }).join('\n') + '\n');
-                switch (app.utility2.modeJs) {
+                switch (app.modeJs) {
                 case 'browser':
                     // notify saucelabs of test results
                     // https://docs.saucelabs.com/reference/rest-api/#js-unit-testing
@@ -626,7 +633,7 @@ stupid: true
                     break;
                 case 'node':
                     // create build badge
-                    app.utility2.fs.writeFileSync(
+                    app.fs.writeFileSync(
                         app.utility2.envDict.npm_config_dir_build + '/build.badge.svg',
                         app.utility2['/build/build.badge.svg']
                             // edit branch name
@@ -643,7 +650,7 @@ stupid: true
                             )
                     );
                     // create test-report.badge.svg
-                    app.utility2.fs.writeFileSync(
+                    app.fs.writeFileSync(
                         app.utility2.envDict.npm_config_dir_build + '/test-report.badge.svg',
                         app.utility2['/build/test-report.badge.svg']
                             // edit number of tests failed
@@ -658,12 +665,12 @@ stupid: true
                     // create test-report.html
                     console.log('creating test-report file://' +
                         app.utility2.envDict.npm_config_dir_build + '/test-report.html');
-                    app.utility2.fs.writeFileSync(
+                    app.fs.writeFileSync(
                         app.utility2.envDict.npm_config_dir_build + '/test-report.html',
                         testReportHtml
                     );
                     // create test-report.json
-                    app.utility2.fs.writeFileSync(
+                    app.fs.writeFileSync(
                         app.utility2.envDict.npm_config_dir_build + '/test-report.json',
                         JSON.stringify(app.utility2.testReport)
                     );
@@ -809,7 +816,7 @@ stupid: true
 
     // run browser js-env code
     (function () {
-        if (app.utility2.modeJs !== 'browser') {
+        if (app.modeJs !== 'browser') {
             return;
         }
 
@@ -949,7 +956,7 @@ stupid: true
 
     // run node js-env code
     (function () {
-        if (app.utility2.modeJs !== 'node') {
+        if (app.modeJs !== 'node') {
             return;
         }
 
@@ -986,7 +993,7 @@ stupid: true
                             options.url;
                     }
                     // parse options.url
-                    urlParsed = app.utility2.url.parse(String(options.url));
+                    urlParsed = app.url.parse(String(options.url));
                     // disable socket pooling
                     options.agent = options.agent || false;
                     // hostname needed for http.request
@@ -1006,8 +1013,8 @@ stupid: true
                         : 0;
                     // make http request
                     request = (urlParsed.protocol === 'https:'
-                        ? app.utility2.https
-                        : app.utility2.http)
+                        ? app.https
+                        : app.http)
                         .request(options, onNext)
                         // handle error event
                         .on('error', onNext);
@@ -1066,8 +1073,8 @@ stupid: true
             this function will watche the file and if modified, then restart the process
             */
             if (app.utility2.envDict.npm_config_mode_auto_restart &&
-                    app.utility2.fs.statSync(file).isFile()) {
-                app.utility2.fs.watchFile(file, {
+                    app.fs.statSync(file).isFile()) {
+                app.fs.watchFile(file, {
                     interval: 1000,
                     persistent: false
                 }, function (stat2, stat1) {
@@ -1129,7 +1136,7 @@ stupid: true
                 switch (modeNext) {
                 case 1:
                     options.testName = app.utility2.envDict.MODE_BUILD + '.' + options.argv0 + '.' +
-                        encodeURIComponent(app.utility2.url.parse(options.url).pathname);
+                        encodeURIComponent(app.url.parse(options.url).pathname);
                     app.utility2.setDefault(options, 1, {
                         _testSecret: app.utility2._testSecret,
                         fileCoverage: app.utility2.envDict.npm_config_dir_tmp +
@@ -1150,7 +1157,7 @@ stupid: true
                     if (app.utility2.global.__coverage__ &&
                             app.utility2.envDict.npm_package_name === 'utility2') {
                         options.argv1 = app.utility2.envDict.npm_config_dir_tmp + '/covered.utility2.js';
-                        app.utility2.fs.writeFileSync(
+                        app.fs.writeFileSync(
                             options.argv1,
                             app.utility2.istanbul_lite.instrumentInPackage(app.utility2[
                                 '/assets/utility2.js'
@@ -1158,7 +1165,7 @@ stupid: true
                         );
                     }
                     // spawn phantomjs to test a url
-                    app.utility2.child_process
+                    app.child_process
                         .spawn(
                             require('phantomjs-lite').__dirname + '/' + options.argv0,
                             [
@@ -1176,7 +1183,7 @@ stupid: true
                     // merge coverage and test-report
                     [options.fileCoverage, options.fileTestReport].forEach(function (file, ii) {
                         onParallel.counter += 1;
-                        app.utility2.fs.readFile(file, 'utf8', function (error, data) {
+                        app.fs.readFile(file, 'utf8', function (error, data) {
                             // jslint-hack
                             app.utility2.nop(error);
                             try {
@@ -1246,7 +1253,7 @@ stupid: true
                         break;
                     }
                     // run async shell command
-                    app.utility2.child_process
+                    app.child_process
                         .spawn(
                             '/bin/sh',
                             ['-c', '. ' + __dirname + '/index.sh && ' + match[2]],
@@ -1261,7 +1268,7 @@ stupid: true
                 // syntax sugar to grep current dir
                 case 'grep':
                     // run async shell command
-                    app.utility2.child_process
+                    app.child_process
                         .spawn(
                             '/bin/sh',
                             ['-c', 'find . -type f | grep -v "/\\.\\|.*\\b\\(\\.\\d\\|' +
@@ -1316,7 +1323,7 @@ stupid: true
                 return;
             }
             // end response with default statusCode message
-            response.end(statusCode + ' ' + app.utility2.http.STATUS_CODES[statusCode]);
+            response.end(statusCode + ' ' + app.http.STATUS_CODES[statusCode]);
         };
 
         app.utility2.serverRespondEcho = function (request, response) {
@@ -1387,7 +1394,7 @@ stupid: true
                     .unref();
             }
             // 1. create http-server from options.serverMiddlewareList
-            server = app.utility2.http.createServer(function (request, response) {
+            server = app.http.createServer(function (request, response) {
                 var contentTypeDict, modeNext, onNext;
                 modeNext = -2;
                 onNext = function (error) {
@@ -1405,7 +1412,7 @@ stupid: true
                             request._testSecretValid[1] === app.utility2._testSecret;
                         // init request.urlPathNormalized
                         request.urlPathNormalized =
-                            app.utility2.path.resolve(app.utility2.url.parse(request.url).pathname);
+                            app.path.resolve(app.url.parse(request.url).pathname);
                         // init Content-Type header
                         contentTypeDict = {
                             '.css': 'text/css; charset=UTF-8',
@@ -1416,7 +1423,7 @@ stupid: true
                         };
                         app.utility2.serverRespondWriteHead(request, response, null, {
                             'Content-Type': contentTypeDict[
-                                app.utility2.path.extname(request.urlPathNormalized)
+                                app.path.extname(request.urlPathNormalized)
                             ]
                         });
                         onNext();
@@ -1456,9 +1463,9 @@ stupid: true
 
         // init assets
         app.utility2['/assets/utility2.js'] =
-            app.utility2.fs.readFileSync(__filename, 'utf8');
+            app.fs.readFileSync(__filename, 'utf8');
         app.utility2['/test/test.html'] =
-            app.utility2.textFormat(app.utility2.fs
+            app.utility2.textFormat(app.fs
                 .readFileSync(__dirname + '/README.md', 'utf8')
                 .replace((/[\S\s]+?(<!DOCTYPE html>[\S\s]+?<\/html>)[\S\s]+/), '$1')
                 .replace((/\\n' \+(\s*?)'/g), '$1'), { envDict: app.utility2.envDict });
@@ -1468,7 +1475,7 @@ stupid: true
 
     // run phantom js-env code
     (function () {
-        if (app.utility2.modeJs !== 'phantom') {
+        if (app.modeJs !== 'phantom') {
             return;
         }
 
@@ -1563,7 +1570,7 @@ stupid: true
                         data.testReport.testPlatformList[0].screenCaptureImg =
                             app.utility2.fileScreenCapture.replace((/^[\S\s]*?\//), '');
                         // save test-report
-                        app.utility2.fs.write(
+                        app.fs.write(
                             app.utility2.fileTestReport,
                             JSON.stringify(app.utility2.testReport)
                         );
@@ -1592,7 +1599,7 @@ stupid: true
             default:
                 setTimeout(function () {
                     // save coverage before exiting
-                    app.utility2.fs.write(
+                    app.fs.write(
                         app.utility2.fileCoverage,
                         JSON.stringify(app.utility2.global.__coverage__)
                     );
@@ -1614,17 +1621,21 @@ stupid: true
         app = {};
         // init utility2
         app.utility2 = {};
-        app.utility2.modeJs = (function () {
+        app.modeJs = (function () {
             try {
                 return self.phantom.version &&
-                    typeof require('webpage').create === 'function' && 'phantom';
+                    typeof require('webpage').create === 'function' &&
+                    'phantom';
             } catch (errorCaughtPhantom) {
                 try {
-                    return module.exports && typeof process.versions.node === 'string' &&
-                        typeof require('http').createServer === 'function' && 'node';
+                    return module.exports &&
+                        typeof process.versions.node === 'string' &&
+                        typeof require('http').createServer === 'function' &&
+                        'node';
                 } catch (errorCaughtNode) {
                     return typeof navigator.userAgent === 'string' &&
-                        typeof document.querySelector('body') === 'object' && 'browser';
+                        typeof document.querySelector('body') === 'object' &&
+                        'browser';
                 }
             }
         }());
@@ -1635,7 +1646,7 @@ stupid: true
             return;
         };
     }());
-    switch (app.utility2.modeJs) {
+    switch (app.modeJs) {
 
 
 
@@ -1671,16 +1682,15 @@ stupid: true
         // export utility2
         module.exports = app.utility2;
         // require modules
-        app.utility2.child_process = require('child_process');
-        app.utility2.crypto = require('crypto');
-        app.utility2.fs = require('fs');
-        app.utility2.http = require('http');
-        app.utility2.https = require('https');
+        app.child_process = require('child_process');
+        app.crypto = require('crypto');
+        app.fs = require('fs');
+        app.http = require('http');
+        app.https = require('https');
         app.utility2.istanbul_lite = require('istanbul-lite');
         app.utility2.jslint_lite = require('jslint-lite');
-        app.utility2.path = require('path');
-        app.utility2.url = require('url');
-        app.utility2.vm = require('vm');
+        app.path = require('path');
+        app.url = require('url');
         // init utility2 properties
         app.utility2.__dirname = __dirname;
         app.utility2.envDict = process.env;
@@ -1692,7 +1702,7 @@ stupid: true
         (function () {
             var testSecretCreate;
             testSecretCreate = function () {
-                app.utility2._testSecret = app.utility2.crypto.randomBytes(32).toString('hex');
+                app.utility2._testSecret = app.crypto.randomBytes(32).toString('hex');
             };
             // init _testSecret
             testSecretCreate();
@@ -1709,7 +1719,7 @@ stupid: true
         // export utility2
         self.utility2 = app.utility2;
         // require modules
-        app.utility2.fs = require('fs');
+        app.fs = require('fs');
         app.utility2.system = require('system');
         app.utility2.webpage = require('webpage');
         // init utility2 properties
@@ -1745,10 +1755,10 @@ stupid: true
                 '(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9\\-]{0,61}[a-zA-Z0-9])?)*$'
         );
         app.utility2.testPlatform = {
-            name: app.utility2.modeJs === 'browser'
+            name: app.modeJs === 'browser'
                 ? 'browser - ' + navigator.userAgent + ' - ' +
                     new Date().toISOString()
-                : app.utility2.modeJs === 'node'
+                : app.modeJs === 'node'
                 ? 'node - ' + process.platform + ' ' + process.version + ' - ' +
                     new Date().toISOString()
                 : (app.utility2.global.slimer
