@@ -228,8 +228,8 @@ stupid: true
 
         app._jsonStringifyOrdered_default_test = function (onError) {
             /*
-            this function will test jsonStringifyOrdered's
-            default handling behavior
+            this function will test jsonStringifyOrdered's default
+            handling behavior
             */
             var data;
             // test various data-type handling behavior
@@ -548,8 +548,8 @@ stupid: true
         // init tests
         app._istanbulMerge_default_test = function (onError) {
             /*
-            this function will test istanbulMerge's
-            default handling behavior
+            this function will test istanbulMerge's default
+            handling behavior
             */
             var coverage1, coverage2, script;
             script = app.utility2.istanbul_lite.instrumentSync(
@@ -585,8 +585,8 @@ stupid: true
 
         app._onFileModifiedRestart_default_test = function (onError) {
             /*
-            this function will test onFileModifiedRestart's
-            watchFile handling behavior
+            this function will test onFileModifiedRestart's watchFile
+            handling behavior
             */
             var file, onParallel;
             file = __dirname + '/package.json';
@@ -748,7 +748,8 @@ stupid: true
             app.utility2.testMock([
                 [app.utility2, {
                     envDict: {
-                        // test $npm_package_name !== 'utility2' handling behavior
+                        // test $npm_package_name !== 'utility2'
+                        // handling behavior
                         npm_package_name: 'undefined',
                         // test exit-after-timeout handling behavior
                         npm_config_timeout_exit: '1',
@@ -833,8 +834,14 @@ stupid: true
                     break;
                 // test 500-internal-server-error handling behavior
                 case '/test/server-error':
-                    // test multiple serverRespondWriteHead callback handling behavior
-                    app.utility2.serverRespondWriteHead(request, response, null, {});
+                    // test multiple serverRespondWriteHead callback
+                    // handling behavior
+                    app.utility2.serverRespondWriteHead(
+                        request,
+                        response,
+                        null,
+                        {}
+                    );
                     onNext(app.utility2.errorDefault);
                     // test multiple-callback error handling behavior
                     onNext(app.utility2.errorDefault);
@@ -869,7 +876,10 @@ stupid: true
             case '.js':
             case '.json':
                 // jslint the file
-                app.utility2.jslint_lite.jslintAndPrint(app.fs.readFileSync(file, 'utf8'), file);
+                app.utility2.jslint_lite.jslintAndPrint(
+                    app.fs.readFileSync(file, 'utf8'),
+                    file
+                );
                 break;
             }
             // if the file is modified, then restart the process

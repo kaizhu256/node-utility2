@@ -345,6 +345,7 @@ stupid: true
 
 
 # todo
+- jslint - 80 col maxlen
 - create function app.utility2.internal
 - allow screen-capture to exit with non-zero exit-code
 - create flamegraph from istanbul coverage
