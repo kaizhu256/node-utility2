@@ -2,7 +2,7 @@
 bitwise: true,
 browser: true,
 maxerr: 4,
-maxlen: 96,
+maxlen: 80,
 node: true,
 nomen: true,
 stupid: true
@@ -660,105 +660,115 @@ return app.utility2.setOverride(testPlatform, -1, {
                 this function will create the test-report
                 after all tests have finished
                 */
-                var separator, testReport, testReportHtml;
-                // restore exit
-                app.utility2.exit = exit;
-                // init new-line separator
-                separator = new Array(56).join('-');
-                // init testReport
-                testReport = app.utility2.testReport;
-                // stop testPlatform timer
-                app._timeElapsedStop(testPlatform);
-                // create testReportHtml
-                testReportHtml = app.utility2.testMerge(testReport, {});
-                // print test-report summary
-                console.log('\n' + separator + '\n' +
-                    testReport.testPlatformList.map(function (testPlatform) {
-                        return '| test-report - ' + testPlatform.name + '\n|' +
-                            ('        ' + testPlatform.timeElapsed + ' ms     ').slice(-16) +
-                            ('        ' + testPlatform.testsFailed + ' failed ').slice(-16) +
-                            ('        ' + testPlatform.testsPassed + ' passed ').slice(-16) +
-                            '     |\n' + separator;
-                    }).join('\n') + '\n');
-                switch (app.modeJs) {
-                case 'browser':
-                    // notify saucelabs of test results
-                    // https://docs.saucelabs.com/reference/rest-api/#js-unit-testing
-                    app.utility2.global.global_test_results = {
-                        coverage: app.utility2.global.__coverage__,
-                        failed: app.utility2.testReport.testsFailed,
-                        testReport: app.utility2.testReport
-                    };
-                    setTimeout(function () {
-                        // call callback with number of tests failed
-                        app.utility2.onErrorExit(app.utility2.testReport.testsFailed);
-                        // throw global_test_results as an error,
-                        // so it can be caught and passed to the phantom js-env
-                        if (app.utility2.modeTest === 'phantom') {
-                            throw new Error('\nphantom\n' + JSON.stringify({
-                                global_test_results: app.utility2.global.global_test_results
-                            }));
-                        }
-                    }, 1000);
-                    break;
-                case 'node':
-                    // create build badge
-                    app.fs.writeFileSync(
-                        app.utility2.envDict.npm_config_dir_build + '/build.badge.svg',
-                        app.utility2['/build/build.badge.svg']
-                            // edit branch name
-                            .replace(
-                                (/0000 00 00 00 00 00/g),
-                                new Date().toISOString().slice(0, 19).replace('T', ' ')
-                            )
-                            // edit branch name
-                            .replace(
-                                (/- master -/g),
-                                '| ' + app.utility2.envDict.CI_BRANCH + ' |'
-                            )
-                            // edit commit id
-                            .replace(
-                                (/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/g),
-                                app.utility2.envDict.CI_COMMIT_ID
-                            )
-                    );
-                    // create test-report.badge.svg
-                    app.fs.writeFileSync(
-                        app.utility2.envDict.npm_config_dir_build + '/test-report.badge.svg',
-                        app.utility2['/build/test-report.badge.svg']
-                            // edit number of tests failed
-                            .replace((/999/g), testReport.testsFailed)
-                            // edit badge color
-                            .replace(
-                                (/d00/g),
-                                // coverage-hack
-                                // cover both fail and pass cases
-                                '0d00'.slice(!!testReport.testsFailed).slice(0, 3)
-                            )
-                    );
-                    // create test-report.html
-                    app.fs.writeFileSync(
-                        app.utility2.envDict.npm_config_dir_build + '/test-report.html',
-                        testReportHtml
-                    );
-                    console.log('created test-report file://' +
-                        app.utility2.envDict.npm_config_dir_build + '/test-report.html');
-                    // create test-report.json
-                    app.fs.writeFileSync(
-                        app.utility2.envDict.npm_config_dir_build + '/test-report.json',
-                        JSON.stringify(app.utility2.testReport)
-                    );
-                    // if any test failed, then exit with non-zero exit-code
-                    setTimeout(function () {
-                        // finalize testReport
-                        app.utility2.testMerge(testReport, {});
-                        console.log('\n' + app.utility2.envDict.MODE_BUILD + ' - ' +
-                            app.utility2.testReport.testsFailed + ' failed tests\n');
-                        // call callback with number of tests failed
-                        app.utility2.onErrorExit(app.utility2.testReport.testsFailed);
-                    }, 1000);
-                    break;
-                }
+
+
+
+/* jslint-indent-begin 16 */
+/*jslint maxlen: 96*/
+var separator, testReport, testReportHtml;
+// restore exit
+app.utility2.exit = exit;
+// init new-line separator
+separator = new Array(56).join('-');
+// init testReport
+testReport = app.utility2.testReport;
+// stop testPlatform timer
+app._timeElapsedStop(testPlatform);
+// create testReportHtml
+testReportHtml = app.utility2.testMerge(testReport, {});
+// print test-report summary
+console.log('\n' + separator + '\n' +
+    testReport.testPlatformList.map(function (testPlatform) {
+        return '| test-report - ' + testPlatform.name + '\n|' +
+            ('        ' + testPlatform.timeElapsed + ' ms     ').slice(-16) +
+            ('        ' + testPlatform.testsFailed + ' failed ').slice(-16) +
+            ('        ' + testPlatform.testsPassed + ' passed ').slice(-16) +
+            '     |\n' + separator;
+    }).join('\n') + '\n');
+switch (app.modeJs) {
+case 'browser':
+    // notify saucelabs of test results
+// https://docs.saucelabs.com/reference/rest-api/#js-unit-testing
+    app.utility2.global.global_test_results = {
+        coverage: app.utility2.global.__coverage__,
+        failed: app.utility2.testReport.testsFailed,
+        testReport: app.utility2.testReport
+    };
+    setTimeout(function () {
+        // call callback with number of tests failed
+        app.utility2.onErrorExit(app.utility2.testReport.testsFailed);
+        // throw global_test_results as an error,
+        // so it can be caught and passed to the phantom js-env
+        if (app.utility2.modeTest === 'phantom') {
+            throw new Error('\nphantom\n' + JSON.stringify({
+                global_test_results: app.utility2.global.global_test_results
+            }));
+        }
+    }, 1000);
+    break;
+case 'node':
+    // create build badge
+    app.fs.writeFileSync(
+        app.utility2.envDict.npm_config_dir_build + '/build.badge.svg',
+        app.utility2['/build/build.badge.svg']
+            // edit branch name
+            .replace(
+                (/0000 00 00 00 00 00/g),
+                new Date().toISOString().slice(0, 19).replace('T', ' ')
+            )
+            // edit branch name
+            .replace(
+                (/- master -/g),
+                '| ' + app.utility2.envDict.CI_BRANCH + ' |'
+            )
+            // edit commit id
+            .replace(
+                (/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/g),
+                app.utility2.envDict.CI_COMMIT_ID
+            )
+    );
+    // create test-report.badge.svg
+    app.fs.writeFileSync(
+        app.utility2.envDict.npm_config_dir_build +
+            '/test-report.badge.svg',
+        app.utility2['/build/test-report.badge.svg']
+            // edit number of tests failed
+            .replace((/999/g), testReport.testsFailed)
+            // edit badge color
+            .replace(
+                (/d00/g),
+                // coverage-hack
+                // cover both fail and pass cases
+                '0d00'.slice(!!testReport.testsFailed).slice(0, 3)
+            )
+    );
+    // create test-report.html
+    app.fs.writeFileSync(
+        app.utility2.envDict.npm_config_dir_build + '/test-report.html',
+        testReportHtml
+    );
+    console.log('created test-report file://' +
+        app.utility2.envDict.npm_config_dir_build + '/test-report.html');
+    // create test-report.json
+    app.fs.writeFileSync(
+        app.utility2.envDict.npm_config_dir_build + '/test-report.json',
+        JSON.stringify(app.utility2.testReport)
+    );
+    // if any test failed, then exit with non-zero exit-code
+    setTimeout(function () {
+        // finalize testReport
+        app.utility2.testMerge(testReport, {});
+        console.log('\n' + app.utility2.envDict.MODE_BUILD + ' - ' +
+            app.utility2.testReport.testsFailed + ' failed tests\n');
+        // call callback with number of tests failed
+        app.utility2.onErrorExit(app.utility2.testReport.testsFailed);
+    }, 1000);
+    break;
+}
+/* jslint-indent-end */
+
+
+
             });
             onParallel.counter += 1;
             // init testReport timer
@@ -777,24 +787,24 @@ return app.utility2.setOverride(testPlatform, -1, {
                     // if testCase already finished,
                     // then fail testCase with error for finishing again
                     if (finished) {
-                        error = error || new Error(
-                            'callback in testCase ' + testCase.name + ' called multiple times'
-                        );
+                        error = error || new Error('callback in testCase ' +
+                            testCase.name +
+                            ' called multiple times');
                     }
                     // if error occurred, then fail testCase
                     if (error) {
-                        console.error('\ntestCase ' + testCase.name + ' failed\n' +
-                            app.utility2.errorStack(error));
-                        testCase.errorStack = testCase.errorStack || app.utility2.errorStack(
-                            error
-                        );
+                        console.error('\ntestCase ' + testCase.name +
+                            ' failed\n' + app.utility2.errorStack(error));
+                        testCase.errorStack = testCase.errorStack ||
+                            app.utility2.errorStack(error);
                         // validate errorStack is non-empty
                         app.utility2.assert(
                             testCase.errorStack,
                             'invalid errorStack ' + testCase.errorStack
                         );
                     }
-                    // if testCase already finished, then do not run finish code again
+                    // if testCase already finished,
+                    // then do not run finish code again
                     if (finished) {
                         return;
                     }
@@ -849,7 +859,11 @@ return app.utility2.setOverride(testPlatform, -1, {
                 app.utility2.nop(match0);
                 return dict[match].map(function (dict) {
                     // recursively format the array fragment
-                    return app.utility2.textFormat(fragment, dict, valueDefault);
+                    return app.utility2.textFormat(
+                        fragment,
+                        dict,
+                        valueDefault
+                    );
                 }).join('');
             };
             rgx = (/\{\{#\S+?\}\}/g);
@@ -860,7 +874,8 @@ return app.utility2.setOverride(testPlatform, -1, {
                     break;
                 }
                 match = match[0].slice(3, -2);
-                // if value is an array, then iteratively format the array fragment with it
+                // if value is an array,
+                // then iteratively format the array fragment with it
                 if (Array.isArray(dict[match])) {
                     template = template.replace(
                         new RegExp('\\{\\{#' +
@@ -905,11 +920,21 @@ return app.utility2.setOverride(testPlatform, -1, {
 
         app.utility2.ajax = function (options, onError) {
             /*
-            this functions performs a brower ajax request with error handling and timeout
+            this function will make an ajax request
+            with error handling and timeout
             */
-            var ajaxProgressDiv, data, error, finished, ii, onEvent, timerTimeout, xhr;
+            var ajaxProgressDiv,
+                data,
+                error,
+                finished,
+                ii,
+                onEvent,
+                timerTimeout,
+                xhr;
             // init ajaxProgressDiv
-            ajaxProgressDiv = document.querySelector('.ajaxProgressDiv') || { style: {} };
+            ajaxProgressDiv =
+                document.querySelector('.ajaxProgressDiv') ||
+                { style: {} };
 
             // init event handling
             onEvent = app.utility2.onErrorWithStack(function (event) {
@@ -925,7 +950,10 @@ return app.utility2.setOverride(testPlatform, -1, {
                     finished = true;
                     // validate xhr is defined in _ajaxProgressList
                     ii = app._ajaxProgressList.indexOf(xhr);
-                    app.utility2.assert(ii >= 0, 'missing xhr in _ajaxProgressList');
+                    app.utility2.assert(
+                        ii >= 0,
+                        'missing xhr in _ajaxProgressList'
+                    );
                     // remove xhr from ajaxProgressList
                     app._ajaxProgressList.splice(ii, 1);
                     // handle abort or error event
@@ -940,10 +968,14 @@ return app.utility2.setOverride(testPlatform, -1, {
                         // handle text data
                         data = xhr.responseText;
                         if (error) {
-                            // add http method / statusCode / url debug info to error.message
-                            error.message = options.method + ' ' + xhr.status + ' - ' +
+                            // add http method/ statusCode / url
+                            // debug-info to error.message
+                            error.message = options.method + ' ' +
+                                xhr.status + ' - ' +
                                 options.url + '\n' +
-                                JSON.stringify(xhr.responseText.slice(0, 256) + '...') +
+                                JSON.stringify(
+                                    xhr.responseText.slice(0, 256) + '...'
+                                ) +
                                 '\n' + error.message;
                             // debug statusCode
                             error.statusCode = xhr.status;
@@ -972,7 +1004,11 @@ return app.utility2.setOverride(testPlatform, -1, {
                     return;
                 }
                 // finish ajaxProgressBar
-                app._ajaxProgressUpdate('100%', 'ajaxProgressBarDivSuccess', 'loaded');
+                app._ajaxProgressUpdate(
+                    '100%',
+                    'ajaxProgressBarDivSuccess',
+                    'loaded'
+                );
             });
             // init xhr
             xhr = new XMLHttpRequest();
@@ -1034,7 +1070,8 @@ return app.utility2.setOverride(testPlatform, -1, {
             */
             var ajaxProgressBarDiv;
             ajaxProgressBarDiv =
-                document.querySelector('.ajaxProgressBarDiv') || { className: '', style: {} };
+                document.querySelector('.ajaxProgressBarDiv') ||
+                { className: '', style: {} };
             ajaxProgressBarDiv.style.width = width;
             ajaxProgressBarDiv.className = ajaxProgressBarDiv.className
                 .replace((/ajaxProgressBarDiv\w+/), type);
@@ -1052,7 +1089,8 @@ return app.utility2.setOverride(testPlatform, -1, {
 
         app.utility2.ajax = function (options, onError) {
             /*
-            this functions runs a node http request with error handling and timeout
+            this function will make an ajax request
+            with error handling and timeout
             */
             var finished,
                 modeNext,
@@ -1146,11 +1184,14 @@ return app.utility2.setOverride(testPlatform, -1, {
                     // cleanup response
                     response.destroy();
                     if (error) {
-                        // add http method / statusCode / url debug info to error.message
+                        // add http method / statusCode / url
+                        // debug-info to error.message
                         error.message = options.method + ' ' +
                             (response && response.statusCode) + ' - ' +
                             options.url + '\n' +
-                            JSON.stringify((responseText || '').slice(0, 256) + '...') +
+                            JSON.stringify(
+                                (responseText || '').slice(0, 256) + '...'
+                            ) +
                             '\n' + error.message;
                         // debug statusCode
                         error.statusCode = response && response.statusCode;
@@ -1163,7 +1204,8 @@ return app.utility2.setOverride(testPlatform, -1, {
 
         app.utility2.onFileModifiedRestart = function (file) {
             /*
-            this function will watche the file and if modified, then restart the process
+            this function will watch the file and if modified,
+            then restart the process
             */
             if (app.utility2.envDict.npm_config_mode_auto_restart &&
                     app.fs.statSync(file).isFile()) {
@@ -1190,7 +1232,8 @@ return app.utility2.setOverride(testPlatform, -1, {
 
         app.utility2.phantomTest = function (options, onError) {
             /*
-            this function will spawn both phantomjs and slimerjs to test options.url
+            this function will spawn both phantomjs and slimerjs processes
+            to test options.url
             */
             var onParallel;
             onParallel = app.utility2.onParallel(onError);
@@ -1198,8 +1241,9 @@ return app.utility2.setOverride(testPlatform, -1, {
             ['phantomjs', 'slimerjs'].forEach(function (argv0) {
                 var optionsCopy;
                 // if slimerjs is not available, then do not use it
-                if (argv0 === 'slimerjs' && (!app.utility2.envDict.npm_config_mode_slimerjs ||
-                    app.utility2.envDict.npm_config_mode_no_slimerjs)) {
+                if (argv0 === 'slimerjs' &&
+                        (!app.utility2.envDict.npm_config_mode_slimerjs ||
+                        app.utility2.envDict.npm_config_mode_no_slimerjs)) {
                     return;
                 }
                 // copy options to create separate phantomjs / slimerjs state
@@ -1218,7 +1262,8 @@ return app.utility2.setOverride(testPlatform, -1, {
 
         app._phantomTestSingle = function (options, onError) {
             /*
-            this function will spawn either phantomjs or slimerjs to test options.url
+            this function will spawn a single phantomjs or slimerjs process
+            to test options.url
             */
             var modeNext, onNext, onParallel, timerTimeout;
             modeNext = 0;
@@ -1235,11 +1280,13 @@ return app.utility2.setOverride(testPlatform, -1, {
                         _testSecret: app.utility2._testSecret,
                         fileCoverage: app.utility2.envDict.npm_config_dir_tmp +
                             '/coverage.' + options.testName + '.json',
-                        fileScreenCapture: (app.utility2.envDict.npm_config_dir_build +
+                        fileScreenCapture: (app.utility2.envDict
+                            .npm_config_dir_build +
                             '/screen-capture.' + options.testName + '.png')
                             .replace((/%/g), '_')
                             .replace((/_2F\.png$/), 'png'),
-                        fileTestReport: app.utility2.envDict.npm_config_dir_tmp +
+                        fileTestReport: app.utility2.envDict
+                            .npm_config_dir_tmp +
                             '/test-report.' + options.testName + '.json',
                         modePhantom: 'testUrl'
                     });
@@ -1252,7 +1299,8 @@ return app.utility2.setOverride(testPlatform, -1, {
                     // coverage-hack - cover utility2 in phantomjs
                     options.argv1 = __dirname + '/index.js';
                     if (app.utility2.global.__coverage__ &&
-                            app.utility2.envDict.npm_package_name === 'utility2') {
+                            app.utility2.envDict.npm_package_name ===
+                            'utility2') {
                         options.argv1 =
                             app.utility2.envDict.npm_config_dir_tmp +
                             '/covered.utility2.js';
@@ -1266,7 +1314,9 @@ return app.utility2.setOverride(testPlatform, -1, {
                     // spawn phantomjs to test a url
                     app.child_process
                         .spawn(
-                            require('phantomjs-lite').__dirname + '/' + options.argv0,
+                            require(
+                                'phantomjs-lite'
+                            ).__dirname + '/' + options.argv0,
                             [
                                 options.argv1,
                                 encodeURIComponent(JSON.stringify(options))
@@ -1302,7 +1352,10 @@ return app.utility2.setOverride(testPlatform, -1, {
                                 // merge test-report
                                 } else if (options.modePhantom === 'testUrl' &&
                                         !options.modeErrorIgnore) {
-                                    app.utility2.testMerge(app.utility2.testReport, data);
+                                    app.utility2.testMerge(
+                                        app.utility2.testReport,
+                                        data
+                                    );
                                 }
                             }
                             onParallel();
@@ -1347,7 +1400,9 @@ return app.utility2.setOverride(testPlatform, -1, {
                 match = (/^(\S+)([\S\s]*?)\n/).exec(script);
                 onError2 = function (error, data) {
                     // debug error
-                    app.utility2._debugReplError = error || app.utility2._debugReplError;
+                    app.utility2._debugReplError =
+                        error ||
+                        app.utility2._debugReplError;
                     onError(error, data);
                 };
                 switch (match && match[1]) {
@@ -1367,13 +1422,21 @@ return app.utility2.setOverride(testPlatform, -1, {
                     app.child_process
                         .spawn(
                             '/bin/sh',
-                            ['-c', '. ' + __dirname + '/index.sh && ' + match[2]],
+                            [
+                                '-c',
+                                '. ' + __dirname + '/index.sh && ' + match[2]
+                            ],
                             { stdio: ['ignore', 1, 2] }
                         )
                         // on shell exit, print return prompt
                         .on('exit', function (exitCode) {
                             console.log('exit-code ' + exitCode);
-                            app._replServer.evalDefault('\n', context, file, onError2);
+                            app._replServer.evalDefault(
+                                '\n',
+                                context,
+                                file,
+                                onError2
+                            );
                         });
                     return;
                 // syntax sugar to grep current dir
@@ -1404,7 +1467,12 @@ return app.utility2.setOverride(testPlatform, -1, {
                         // on shell exit, print return prompt
                         .on('exit', function (exitCode) {
                             console.log('exit-code ' + exitCode);
-                            app._replServer.evalDefault('\n', context, file, onError2);
+                            app._replServer.evalDefault(
+                                '\n',
+                                context,
+                                file,
+                                onError2
+                            );
                         });
                     return;
                 // syntax sugar to print stringified arg
@@ -1414,12 +1482,22 @@ return app.utility2.setOverride(testPlatform, -1, {
                 }
                 // eval modified script
                 app.utility2.testTryCatch(function () {
-                    app._replServer.evalDefault(script, context, file, onError2);
+                    app._replServer.evalDefault(
+                        script,
+                        context,
+                        file,
+                        onError2
+                    );
                 }, onError2);
             };
         };
 
-        app.utility2.serverRespondDefault = function (request, response, statusCode, error) {
+        app.utility2.serverRespondDefault = function (
+            request,
+            response,
+            statusCode,
+            error
+        ) {
             /*
             this function will respond with a default message,
             or error stack for the given statusCode
@@ -1504,7 +1582,7 @@ return app.utility2.setOverride(testPlatform, -1, {
             this function will
             1. create http-server from options.serverMiddlewareList
             2. start http-server on port $npm_config_server_port
-            3. if env var $npm_config_mode_npm_test is defined, then run tests
+            3. if $npm_config_mode_npm_test is defined, then run tests
             */
             var server;
             // if $npm_config_timeout_exit is defined,
@@ -1530,12 +1608,16 @@ return app.utility2.setOverride(testPlatform, -1, {
                         // debug server response
                         app.utility2._debugServerResponse = response;
                         // check if _testSecret is valid
-                        request._testSecretValid = (/\b_testSecret=(\w+)\b/).exec(request.url);
+                        request._testSecretValid = (
+                            /\b_testSecret=(\w+)\b/
+                        ).exec(request.url);
                         request._testSecretValid = request._testSecretValid &&
-                            request._testSecretValid[1] === app.utility2._testSecret;
+                            request._testSecretValid[1] ===
+                            app.utility2._testSecret;
                         // init request.urlPathNormalized
-                        request.urlPathNormalized =
-                            app.path.resolve(app.url.parse(request.url).pathname);
+                        request.urlPathNormalized = app.path.resolve(
+                            app.url.parse(request.url).pathname
+                        );
                         // init Content-Type header
                         contentTypeDict = {
                             '.css': 'text/css; charset=UTF-8',
@@ -1544,19 +1626,27 @@ return app.utility2.setOverride(testPlatform, -1, {
                             '.json': 'application/json; charset=UTF-8',
                             '.txt': 'text/txt; charset=UTF-8'
                         };
-                        app.utility2.serverRespondWriteHead(request, response, null, {
-                            'Content-Type': contentTypeDict[
-                                app.path.extname(request.urlPathNormalized)
-                            ]
-                        });
+                        app.utility2.serverRespondWriteHead(
+                            request,
+                            response,
+                            null,
+                            {
+                                'Content-Type': contentTypeDict[
+                                    app.path.extname(request.urlPathNormalized)
+                                ]
+                            }
+                        );
                         onNext();
                         return;
                     }
                     if (modeNext < options.serverMiddlewareList.length) {
-                        options.serverMiddlewareList[modeNext](request, response, onNext);
+                        options.serverMiddlewareList[
+                            modeNext
+                        ](request, response, onNext);
                         return;
                     }
-                    // if error occurred, then respond with '500 Internal Server Error'
+                    // if error occurred,
+                    // then respond with '500 Internal Server Error',
                     // else respond with '404 Not Found'
                     app.utility2.serverRespondDefault(request, response, error
                         ? 500
@@ -1565,17 +1655,21 @@ return app.utility2.setOverride(testPlatform, -1, {
                 onNext();
             });
             // if $npm_config_server_port is undefined,
-            // then assign it a random integer in the inclusive range 1 to 0xffff
+            // then assign it a random integer
+            // in the inclusive range 1 to 0xffff
             app.utility2.envDict.npm_config_server_port =
                 app.utility2.envDict.npm_config_server_port ||
                 ((Math.random() * 0x10000) | 0x8000).toString();
             // 2. start http-server on port $npm_config_server_port
-            server.listen(app.utility2.envDict.npm_config_server_port, function () {
-                console.log('http-server listening on port ' +
-                    app.utility2.envDict.npm_config_server_port);
-                app.utility2.onReady();
-            });
-            // 3. if env var $npm_config_mode_npm_test is defined, then run tests
+            server.listen(
+                app.utility2.envDict.npm_config_server_port,
+                function () {
+                    console.log('http-server listening on port ' +
+                        app.utility2.envDict.npm_config_server_port);
+                    app.utility2.onReady();
+                }
+            );
+            // 3. if $npm_config_mode_npm_test is defined, then run tests
             app.utility2.onReady.onReady = function () {
                 app.utility2.testRun(options);
             };
@@ -1589,8 +1683,15 @@ return app.utility2.setOverride(testPlatform, -1, {
         app.utility2['/test/test.html'] =
             app.utility2.textFormat(app.fs
                 .readFileSync(__dirname + '/README.md', 'utf8')
-                .replace((/[\S\s]+?(<!DOCTYPE html>[\S\s]+?<\/html>)[\S\s]+/), '$1')
-                .replace((/\\n' \+(\s*?)'/g), '$1'), { envDict: app.utility2.envDict });
+                .replace(
+                    (/[\S\s]+?(<!DOCTYPE html>[\S\s]+?<\/html>)[\S\s]+/),
+                    '$1'
+                )
+                // parse '\' line-continuation
+                .replace((/\\\n/g), '')
+                .replace((/\\n' \+(\s*?)'/g), '$1'), {
+                    envDict: app.utility2.envDict
+                });
     }());
 
 
@@ -1609,7 +1710,8 @@ return app.utility2.setOverride(testPlatform, -1, {
             switch (modeNext) {
             case 1:
                 // init __coverage__
-                app.utility2.global.__coverage__ = app.utility2.global.__coverage__ || {};
+                app.utility2.global.__coverage__ =
+                    app.utility2.global.__coverage__ || {};
                 // init global error handling
                 // http://phantomjs.org/api/phantom/handler/on-error.html
                 app.utility2.global.phantom.onError = onNext;
@@ -1619,7 +1721,8 @@ return app.utility2.setOverride(testPlatform, -1, {
                     -1,
                     JSON.parse(decodeURIComponent(app.utility2.system.args[1]))
                 );
-                // if modeErrorIgnore, then suppress console.error and console.log
+                // if modeErrorIgnore is truthy,
+                // then suppress console.error and console.log
                 if (app.utility2.modeErrorIgnore) {
                     console.error = console.log = app.utility2.nop;
                 }
@@ -1632,12 +1735,18 @@ return app.utility2.setOverride(testPlatform, -1, {
                 // init webpage
                 app.utility2.page = app.utility2.webpage.create();
                 // init webpage clipRect
-                app.utility2.page.clipRect = { height: 768, left: 0, top: 0, width: 1024 };
+                app.utility2.page.clipRect = {
+                    height: 768,
+                    left: 0,
+                    top: 0,
+                    width: 1024
+                };
                 // init webpage viewportSize
                 app.utility2.page.viewportSize = { height: 768, width: 1024 };
                 // init webpage error handling
                 // http://phantomjs.org/api/webpage/handler/on-error.html
-                app.utility2.page.onError = app.utility2.global.phantom.onError;
+                app.utility2.page.onError =
+                    app.utility2.global.phantom.onError;
                 // pipe webpage console.log to stdout
                 app.utility2.page.onConsoleMessage = function () {
                     console.log.apply(console, arguments);
@@ -1645,12 +1754,16 @@ return app.utility2.setOverride(testPlatform, -1, {
                 // open requested webpage
                 app.utility2.page.open(
                     // security - insert _testSecret in url without revealing it
-                    app.utility2.url.replace('{{_testSecret}}', app.utility2._testSecret),
+                    app.utility2.url.replace(
+                        '{{_testSecret}}',
+                        app.utility2._testSecret
+                    ),
                     onNext
                 );
                 break;
             case 2:
-                console.log(app.utility2.argv0 + ' - open ' + (error === 'success'
+                console.log(app.utility2.argv0 + ' - open ' +
+                    (error === 'success'
                     ? 'success'
                     : 'fail') + ' ' + app.utility2.url);
                 switch (app.utility2.modePhantom) {
@@ -1677,7 +1790,9 @@ return app.utility2.setOverride(testPlatform, -1, {
                 // handle test-report callback
                 case 'testUrl':
                     try {
-                        data = (/\nphantom\n(\{"global_test_results":\{[\S\s]+)/).exec(error);
+                        data = (
+                            /\nphantom\n(\{"global_test_results":\{[\S\s]+)/
+                        ).exec(error);
                         data = data && JSON.parse(data[1]).global_test_results;
                     } catch (ignore) {
                     }
@@ -1689,12 +1804,20 @@ return app.utility2.setOverride(testPlatform, -1, {
                             data.coverage
                         );
                         // merge test-report
-                        app.utility2.testMerge(app.utility2.testReport, data.testReport);
+                        app.utility2.testMerge(
+                            app.utility2.testReport,
+                            data.testReport
+                        );
                         // save screen-capture
-                        app.utility2.page.render(app.utility2.fileScreenCapture);
+                        app.utility2.page.render(
+                            app.utility2.fileScreenCapture
+                        );
                         // integrate screen-capture into test-report
                         data.testReport.testPlatformList[0].screenCaptureImg =
-                            app.utility2.fileScreenCapture.replace((/^[\S\s]*?\//), '');
+                            app.utility2.fileScreenCapture.replace(
+                                (/^[\S\s]*?\//),
+                                ''
+                            );
                         // save test-report
                         app.fs.write(
                             app.utility2.fileTestReport,
@@ -1709,8 +1832,8 @@ return app.utility2.setOverride(testPlatform, -1, {
                 // handle webpage error
                 // http://phantomjs.org/api/phantom/handler/on-error.html
                 if (error && typeof error === 'string') {
-                    console.error('\n' +
-                        app.utility2.testName + '\nERROR: ' + error + ' TRACE:');
+                    console.error('\n' + app.utility2.testName + '\nERROR: ' +
+                        error + ' TRACE:');
                     (trace || []).forEach(function (t) {
                         console.error(' -> ' + (t.file || t.sourceURL) + ': ' +
                             t.line + (t.function
@@ -1787,7 +1910,8 @@ return app.utility2.setOverride(testPlatform, -1, {
         app.utility2.exit = app.utility2.nop;
         app.utility2.global = window;
         app.utility2.istanbul_lite = app.istanbul_lite = window.istanbul_lite;
-        // parse any url-search-params that matches 'mode*' or '_testSecret' or 'timeoutDefault'
+        // parse url search-params that matches
+        // 'mode*' or '_testSecret' or 'timeoutDefault'
         location.search.replace(
             (/\b(mode[A-Z]\w+|_testSecret|timeoutDefault)=([\w\-\.\%]+)/g),
             function (match0, key, value) {
@@ -1815,14 +1939,16 @@ return app.utility2.setOverride(testPlatform, -1, {
         app.fs = require('fs');
         app.http = require('http');
         app.https = require('https');
-        app.utility2.istanbul_lite = app.istanbul_lite = require('istanbul-lite');
+        app.utility2.istanbul_lite =
+            app.istanbul_lite = require('istanbul-lite');
         app.utility2.jslint_lite = app.jslint_lite = require('jslint-lite');
         app.path = require('path');
         app.url = require('url');
         // init utility2 properties
         app.utility2.__dirname = __dirname;
         app.utility2.envDict = process.env;
-        app.utility2.envDict.npm_config_dir_build = process.cwd() + '/tmp/build';
+        app.utility2.envDict.npm_config_dir_build =
+            process.cwd() + '/tmp/build';
         app.utility2.envDict.npm_config_dir_tmp = process.cwd() + '/tmp';
         app.utility2.exit = process.exit;
         app.utility2.global = global;
@@ -1923,209 +2049,216 @@ return app.utility2.setOverride(testPlatform, -1, {
 
 
     (function () {
-        /*jslint maxlen: 256*/
-        // init assets
-        app.utility2['/assets/utility2.css'] = String() +
-            '/*csslint\n' +
-                'box-model: false\n' +
-            '*/\n' +
-            '.ajaxProgressBarDiv {\n' +
-                'animation: 2s linear 0s normal none infinite ajaxProgressBarDivAnimation;\n' +
-                '-o-animation: 2s linear 0s normal none infinite ajaxProgressBarDivAnimation;\n' +
-                '-moz-animation: 2s linear 0s normal none infinite ajaxProgressBarDivAnimation;\n' +
-                '-webkit-animation: 2s linear 0s normal none infinite ajaxProgressBarDivAnimation;\n' +
-                'background-image: linear-gradient(\n' +
-                    '45deg,rgba(255,255,255,.25) 25%,\n' +
-                    'transparent 25%,\n' +
-                    'transparent 50%,\n' +
-                    'rgba(255,255,255,.25) 50%,\n' +
-                    'rgba(255,255,255,.25) 75%,\n' +
-                    'transparent 75%,\n' +
-                    'transparent\n' +
-                ');\n' +
-                'background-size: 40px 40px;\n' +
-                'color: #fff;\n' +
-                'font-family: Helvetical Neue, Helvetica, Arial, sans-serif;\n' +
-                'font-size: 12px;\n' +
-                'padding: 2px 0 2px 0;\n' +
-                'text-align: center;\n' +
-                'transition: width .5s ease;\n' +
-                'width: 25%;\n' +
-            '}\n' +
-            '.ajaxProgressBarDivError {\n' +
-                'background-color: #d33;\n' +
-            '}\n' +
-            '.ajaxProgressBarDivLoading {\n' +
-                'background-color: #37b;\n' +
-            '}\n' +
-            '.ajaxProgressBarDivSuccess {\n' +
-                'background-color: #3b3;\n' +
-            '}\n' +
-            '.ajaxProgressDiv {\n' +
-                'background-color: #fff;\n' +
-                'border: 1px solid;\n' +
-                'display: none;\n' +
-                'left: 50%;\n' +
-                'margin: 0 0 0 -50px;\n' +
-                'padding: 5px 5px 5px 5px;\n' +
-                'position: fixed;\n' +
-                'top: 49%;\n' +
-                'width: 100px;\n' +
-                'z-index: 9999;\n' +
-            '}\n' +
-            '@keyframes ajaxProgressBarDivAnimation {\n' +
-                'from { background-position: 40px 0; }\n' +
-                'to { background-position: 0 0; }\n' +
-            '}\n' +
-            '@-o-keyframes ajaxProgressBarDivAnimation {\n' +
-                'from { background-position: 40px 0; }\n' +
-                'to { background-position: 0 0; }\n' +
-            '}\n' +
-            '@-webkit-keyframes ajaxProgressBarDivAnimation {\n' +
-                'from { background-position: 40px 0; }\n' +
-                'to { background-position: 0 0; }\n' +
-            '}\n' +
-            String();
 
 
 
-        // https://img.shields.io/badge/last_build-0000_00_00_00_00_00_UTC_--_master_--_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-0077ff.svg?style=flat
-        /* jslint-ignore-next-line */
-        app.utility2['/build/build.badge.svg'] = '<svg xmlns="http://www.w3.org/2000/svg" width="563" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="563" height="20" fill="#555"/><rect rx="0" x="61" width="502" height="20" fill="#07f"/><path fill="#07f" d="M61 0h4v20h-4z"/><rect rx="0" width="563" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="31.5" y="15" fill="#010101" fill-opacity=".3">last build</text><text x="31.5" y="14">last build</text><text x="311" y="15" fill="#010101" fill-opacity=".3">0000 00 00 00 00 00 UTC - master - aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</text><text x="311" y="14">0000 00 00 00 00 00 UTC - master - aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</text></g></svg>';
+/* jslint-indent-begin 8 */
+/*jslint maxlen: 256*/
+// init assets
+app.utility2['/assets/utility2.css'] = String() +
+    '/*csslint\n' +
+        'box-model: false\n' +
+    '*/\n' +
+    '.ajaxProgressBarDiv {\n' +
+        'animation: 2s linear 0s normal none infinite ajaxProgressBarDivAnimation;\n' +
+        '-o-animation: 2s linear 0s normal none infinite ajaxProgressBarDivAnimation;\n' +
+        '-moz-animation: 2s linear 0s normal none infinite ajaxProgressBarDivAnimation;\n' +
+        '-webkit-animation: 2s linear 0s normal none infinite ajaxProgressBarDivAnimation;\n' +
+        'background-image: linear-gradient(\n' +
+            '45deg,rgba(255,255,255,.25) 25%,\n' +
+            'transparent 25%,\n' +
+            'transparent 50%,\n' +
+            'rgba(255,255,255,.25) 50%,\n' +
+            'rgba(255,255,255,.25) 75%,\n' +
+            'transparent 75%,\n' +
+            'transparent\n' +
+        ');\n' +
+        'background-size: 40px 40px;\n' +
+        'color: #fff;\n' +
+        'font-family: Helvetical Neue, Helvetica, Arial, sans-serif;\n' +
+        'font-size: 12px;\n' +
+        'padding: 2px 0 2px 0;\n' +
+        'text-align: center;\n' +
+        'transition: width .5s ease;\n' +
+        'width: 25%;\n' +
+    '}\n' +
+    '.ajaxProgressBarDivError {\n' +
+        'background-color: #d33;\n' +
+    '}\n' +
+    '.ajaxProgressBarDivLoading {\n' +
+        'background-color: #37b;\n' +
+    '}\n' +
+    '.ajaxProgressBarDivSuccess {\n' +
+        'background-color: #3b3;\n' +
+    '}\n' +
+    '.ajaxProgressDiv {\n' +
+        'background-color: #fff;\n' +
+        'border: 1px solid;\n' +
+        'display: none;\n' +
+        'left: 50%;\n' +
+        'margin: 0 0 0 -50px;\n' +
+        'padding: 5px 5px 5px 5px;\n' +
+        'position: fixed;\n' +
+        'top: 49%;\n' +
+        'width: 100px;\n' +
+        'z-index: 9999;\n' +
+    '}\n' +
+    '@keyframes ajaxProgressBarDivAnimation {\n' +
+        'from { background-position: 40px 0; }\n' +
+        'to { background-position: 0 0; }\n' +
+    '}\n' +
+    '@-o-keyframes ajaxProgressBarDivAnimation {\n' +
+        'from { background-position: 40px 0; }\n' +
+        'to { background-position: 0 0; }\n' +
+    '}\n' +
+    '@-webkit-keyframes ajaxProgressBarDivAnimation {\n' +
+        'from { background-position: 40px 0; }\n' +
+        'to { background-position: 0 0; }\n' +
+    '}\n' +
+    String();
 
 
 
-        // https://img.shields.io/badge/coverage-100.0%-00dd00.svg?style=flat
-        /* jslint-ignore-next-line */
-        app.utility2['/build/coverage.badge.svg'] = '<svg xmlns="http://www.w3.org/2000/svg" width="117" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="117" height="20" fill="#555"/><rect rx="0" x="63" width="54" height="20" fill="#0d0"/><path fill="#0d0" d="M63 0h4v20h-4z"/><rect rx="0" width="117" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="32.5" y="15" fill="#010101" fill-opacity=".3">coverage</text><text x="32.5" y="14">coverage</text><text x="89" y="15" fill="#010101" fill-opacity=".3">100.0%</text><text x="89" y="14">100.0%</text></g></svg>';
+/* jslint-ignore-begin */
+// https://img.shields.io/badge/last_build-0000_00_00_00_00_00_UTC_--_master_--_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-0077ff.svg?style=flat
+app.utility2['/build/build.badge.svg'] = '<svg xmlns="http://www.w3.org/2000/svg" width="563" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="563" height="20" fill="#555"/><rect rx="0" x="61" width="502" height="20" fill="#07f"/><path fill="#07f" d="M61 0h4v20h-4z"/><rect rx="0" width="563" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="31.5" y="15" fill="#010101" fill-opacity=".3">last build</text><text x="31.5" y="14">last build</text><text x="311" y="15" fill="#010101" fill-opacity=".3">0000 00 00 00 00 00 UTC - master - aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</text><text x="311" y="14">0000 00 00 00 00 00 UTC - master - aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</text></g></svg>';
 
 
 
-        // https://img.shields.io/badge/tests_failed-999-dd0000.svg?style=flat
-        /* jslint-ignore-next-line */
-        app.utility2['/build/test-report.badge.svg'] = '<svg xmlns="http://www.w3.org/2000/svg" width="103" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="103" height="20" fill="#555"/><rect rx="0" x="72" width="31" height="20" fill="#d00"/><path fill="#d00" d="M72 0h4v20h-4z"/><rect rx="0" width="103" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="37" y="15" fill="#010101" fill-opacity=".3">tests failed</text><text x="37" y="14">tests failed</text><text x="86.5" y="15" fill="#010101" fill-opacity=".3">999</text><text x="86.5" y="14">999</text></g></svg>';
+// https://img.shields.io/badge/coverage-100.0%-00dd00.svg?style=flat
+app.utility2['/build/coverage.badge.svg'] = '<svg xmlns="http://www.w3.org/2000/svg" width="117" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="117" height="20" fill="#555"/><rect rx="0" x="63" width="54" height="20" fill="#0d0"/><path fill="#0d0" d="M63 0h4v20h-4z"/><rect rx="0" width="117" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="32.5" y="15" fill="#010101" fill-opacity=".3">coverage</text><text x="32.5" y="14">coverage</text><text x="89" y="15" fill="#010101" fill-opacity=".3">100.0%</text><text x="89" y="14">100.0%</text></g></svg>';
 
 
 
-        app.utility2['/test/test-report.html.template'] = String() +
-            '<style>\n' +
-            '.testReportPlatformDiv {\n' +
-                'border: 1px solid;\n' +
-                'border-radius: 5px;\n' +
-                'font-family: Helvetical Neue, Helvetica, Arial, sans-serif;\n' +
-                'margin-top: 20px;\n' +
-                'padding: 0 10px 10px 10px;\n' +
-                'text-align: left;\n' +
-            '}\n' +
-            '.testReportPlatformPre {\n' +
-                'background-color: #fdd;\n' +
-                'border: 1px;\n' +
-                'border-radius: 0 0 5px 5px;\n' +
-                'border-top-style: solid;\n' +
-                'margin-bottom: 0;\n' +
-                'padding: 10px;\n' +
-            '}\n' +
-            '.testReportPlatformPreHidden {\n' +
-                'display: none;\n' +
-            '}\n' +
-            '.testReportPlatformScreenCaptureA {\n' +
-                'border: 1px solid;\n' +
-                'border-color: #000;\n' +
-                'display:block;\n' +
-                'margin: 5px 0 5px 0;\n' +
-                'max-height:256px;\n' +
-                'max-width:320px;\n' +
-                'overflow:hidden;\n' +
-            '}\n' +
-            '.testReportPlatformScreenCaptureImg {\n' +
-                'max-width:320px;\n' +
-            '}\n' +
-            '.testReportPlatformSpan {\n' +
-                'display: inline-block;\n' +
-                'width: 8em;\n' +
-            '}\n' +
-            '.testReportPlatformTable {\n' +
-                'border: 1px;\n' +
-                'border-top-style: solid;\n' +
-                'text-align: left;\n' +
-                'width: 100%;\n' +
-            '}\n' +
-            '.testReportSummaryDiv {\n' +
-                'background-color: #bfb;\n' +
-            '}\n' +
-            '.testReportSummarySpan {\n' +
-                'display: inline-block;\n' +
-                'width: 6.5em;\n' +
-            '}\n' +
-            'tr:nth-child(odd).testReportPlatformTr {\n' +
-                'background-color: #bfb;\n' +
-            '}\n' +
-            '.testReportTestFailed {\n' +
-                'background-color: #f99;\n' +
-            '}\n' +
-            '.testReportTestPending {\n' +
-                'background-color: #99f;\n' +
-            '}\n' +
-            '</style>\n' +
-            '<div class="testReportPlatformDiv testReportSummaryDiv">\n' +
-            '<h2>{{envDict.npm_package_name}} test-report summary</h2>\n' +
-            '<h4>\n' +
-                '<span class="testReportSummarySpan">version</span>-\n' +
-                    '{{envDict.npm_package_version}}<br>\n' +
-                '<span class="testReportSummarySpan">test date</span>- {{date}}<br>\n' +
-                '<span class="testReportSummarySpan">commit info</span>- {{CI_COMMIT_INFO}}<br>\n' +
-            '</h4>\n' +
-            '<table class="testReportPlatformTable">\n' +
-            '<thead><tr>\n' +
-                '<th>total time elapsed</th>\n' +
-                '<th>total tests failed</th>\n' +
-                '<th>total tests passed</th>\n' +
-                '<th>total tests pending</th>\n' +
-            '</tr></thead>\n' +
-            '<tbody><tr>\n' +
-                '<td>{{timeElapsed}} ms</td>\n' +
-                '<td class="{{testsFailedClass}}">{{testsFailed}}</td>\n' +
-                '<td>{{testsPassed}}</td>\n' +
-                '<td>{{testsPending}}</td>\n' +
-            '</tr></tbody>\n' +
-            '</table>\n' +
-            '</div>\n' +
-            '{{#testPlatformList}}\n' +
-            '<div class="testReportPlatformDiv">\n' +
-            '<h4>\n' +
-                '{{testPlatformNumber}}. {{name}}<br>\n' +
-                '{{screenCapture}}\n' +
-                '<span class="testReportPlatformSpan">time elapsed</span>- {{timeElapsed}} ms<br>\n' +
-                '<span class="testReportPlatformSpan">tests failed</span>- {{testsFailed}}<br>\n' +
-                '<span class="testReportPlatformSpan">tests passed</span>- {{testsPassed}}<br>\n' +
-                '<span class="testReportPlatformSpan">tests pending</span>- {{testsPending}}<br>\n' +
-            '</h4>\n' +
-            '<table class="testReportPlatformTable">\n' +
-            '<thead><tr>\n' +
-                '<th>#</th>\n' +
-                '<th>time elapsed</th>\n' +
-                '<th>status</th>\n' +
-                '<th>test case</th>\n' +
-            '</tr></thead>\n' +
-            '<tbody>\n' +
-            '{{#testCaseList}}\n' +
-            '<tr class="testReportPlatformTr">\n' +
-                '<td>{{testCaseNumber}}</td>\n' +
-                '<td>{{timeElapsed}} ms</td>\n' +
-                '<td class="{{testReportTestStatusClass}}">{{status}}</td>\n' +
-                '<td>{{name}}</td>\n' +
-            '</tr>\n' +
-            '{{/testCaseList}}\n' +
-            '</tbody>\n' +
-            '</table>\n' +
-            '<pre class="{{testReportPlatformPreClass}}">\n' +
-            '{{#errorStackList}}\n' +
-            '{{errorStack}}\n' +
-            '{{/errorStackList}}\n' +
-            '</pre>\n' +
-            '</div>\n' +
-            '{{/testPlatformList}}\n' +
-            String();
+// https://img.shields.io/badge/tests_failed-999-dd0000.svg?style=flat
+app.utility2['/build/test-report.badge.svg'] = '<svg xmlns="http://www.w3.org/2000/svg" width="103" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="103" height="20" fill="#555"/><rect rx="0" x="72" width="31" height="20" fill="#d00"/><path fill="#d00" d="M72 0h4v20h-4z"/><rect rx="0" width="103" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="37" y="15" fill="#010101" fill-opacity=".3">tests failed</text><text x="37" y="14">tests failed</text><text x="86.5" y="15" fill="#010101" fill-opacity=".3">999</text><text x="86.5" y="14">999</text></g></svg>';
+/* jslint-ignore-end */
+
+
+
+app.utility2['/test/test-report.html.template'] = String() +
+    '<style>\n' +
+    '.testReportPlatformDiv {\n' +
+        'border: 1px solid;\n' +
+        'border-radius: 5px;\n' +
+        'font-family: Helvetical Neue, Helvetica, Arial, sans-serif;\n' +
+        'margin-top: 20px;\n' +
+        'padding: 0 10px 10px 10px;\n' +
+        'text-align: left;\n' +
+    '}\n' +
+    '.testReportPlatformPre {\n' +
+        'background-color: #fdd;\n' +
+        'border: 1px;\n' +
+        'border-radius: 0 0 5px 5px;\n' +
+        'border-top-style: solid;\n' +
+        'margin-bottom: 0;\n' +
+        'padding: 10px;\n' +
+    '}\n' +
+    '.testReportPlatformPreHidden {\n' +
+        'display: none;\n' +
+    '}\n' +
+    '.testReportPlatformScreenCaptureA {\n' +
+        'border: 1px solid;\n' +
+        'border-color: #000;\n' +
+        'display:block;\n' +
+        'margin: 5px 0 5px 0;\n' +
+        'max-height:256px;\n' +
+        'max-width:320px;\n' +
+        'overflow:hidden;\n' +
+    '}\n' +
+    '.testReportPlatformScreenCaptureImg {\n' +
+        'max-width:320px;\n' +
+    '}\n' +
+    '.testReportPlatformSpan {\n' +
+        'display: inline-block;\n' +
+        'width: 8em;\n' +
+    '}\n' +
+    '.testReportPlatformTable {\n' +
+        'border: 1px;\n' +
+        'border-top-style: solid;\n' +
+        'text-align: left;\n' +
+        'width: 100%;\n' +
+    '}\n' +
+    '.testReportSummaryDiv {\n' +
+        'background-color: #bfb;\n' +
+    '}\n' +
+    '.testReportSummarySpan {\n' +
+        'display: inline-block;\n' +
+        'width: 6.5em;\n' +
+    '}\n' +
+    'tr:nth-child(odd).testReportPlatformTr {\n' +
+        'background-color: #bfb;\n' +
+    '}\n' +
+    '.testReportTestFailed {\n' +
+        'background-color: #f99;\n' +
+    '}\n' +
+    '.testReportTestPending {\n' +
+        'background-color: #99f;\n' +
+    '}\n' +
+    '</style>\n' +
+    '<div class="testReportPlatformDiv testReportSummaryDiv">\n' +
+    '<h2>{{envDict.npm_package_name}} test-report summary</h2>\n' +
+    '<h4>\n' +
+        '<span class="testReportSummarySpan">version</span>-\n' +
+            '{{envDict.npm_package_version}}<br>\n' +
+        '<span class="testReportSummarySpan">test date</span>- {{date}}<br>\n' +
+        '<span class="testReportSummarySpan">commit info</span>- {{CI_COMMIT_INFO}}<br>\n' +
+    '</h4>\n' +
+    '<table class="testReportPlatformTable">\n' +
+    '<thead><tr>\n' +
+        '<th>total time elapsed</th>\n' +
+        '<th>total tests failed</th>\n' +
+        '<th>total tests passed</th>\n' +
+        '<th>total tests pending</th>\n' +
+    '</tr></thead>\n' +
+    '<tbody><tr>\n' +
+        '<td>{{timeElapsed}} ms</td>\n' +
+        '<td class="{{testsFailedClass}}">{{testsFailed}}</td>\n' +
+        '<td>{{testsPassed}}</td>\n' +
+        '<td>{{testsPending}}</td>\n' +
+    '</tr></tbody>\n' +
+    '</table>\n' +
+    '</div>\n' +
+    '{{#testPlatformList}}\n' +
+    '<div class="testReportPlatformDiv">\n' +
+    '<h4>\n' +
+        '{{testPlatformNumber}}. {{name}}<br>\n' +
+        '{{screenCapture}}\n' +
+        '<span class="testReportPlatformSpan">time elapsed</span>- {{timeElapsed}} ms<br>\n' +
+        '<span class="testReportPlatformSpan">tests failed</span>- {{testsFailed}}<br>\n' +
+        '<span class="testReportPlatformSpan">tests passed</span>- {{testsPassed}}<br>\n' +
+        '<span class="testReportPlatformSpan">tests pending</span>- {{testsPending}}<br>\n' +
+    '</h4>\n' +
+    '<table class="testReportPlatformTable">\n' +
+    '<thead><tr>\n' +
+        '<th>#</th>\n' +
+        '<th>time elapsed</th>\n' +
+        '<th>status</th>\n' +
+        '<th>test case</th>\n' +
+    '</tr></thead>\n' +
+    '<tbody>\n' +
+    '{{#testCaseList}}\n' +
+    '<tr class="testReportPlatformTr">\n' +
+        '<td>{{testCaseNumber}}</td>\n' +
+        '<td>{{timeElapsed}} ms</td>\n' +
+        '<td class="{{testReportTestStatusClass}}">{{status}}</td>\n' +
+        '<td>{{name}}</td>\n' +
+    '</tr>\n' +
+    '{{/testCaseList}}\n' +
+    '</tbody>\n' +
+    '</table>\n' +
+    '<pre class="{{testReportPlatformPreClass}}">\n' +
+    '{{#errorStackList}}\n' +
+    '{{errorStack}}\n' +
+    '{{/errorStackList}}\n' +
+    '</pre>\n' +
+    '</div>\n' +
+    '{{/testPlatformList}}\n' +
+    String();
+/* jslint-indent-end */
+
+
+
     }());
     return app;
 }(this))));

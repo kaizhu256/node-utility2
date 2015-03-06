@@ -498,7 +498,10 @@ shReadmePackageJsonExport() {
         (/\n\`\`\`\n{\n *\"_packageJson\": true,\n[\S\s]+?}\n\`\`\`/),
         function (match0) {
             // save script to file
-            require('fs').writeFileSync('$CWD/package.json', match0.slice(5, -3));
+            require('fs').writeFileSync('$CWD/package.json', match0
+                .slice(5, -3)
+                // parse '\' line-continuation
+                .replace((/\\\\\n/g), ''));
         }
     );" || return $?
 }

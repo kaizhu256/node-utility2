@@ -31,16 +31,16 @@ this shared browser / node script will run phantomjs browser-tests
 and browser-coverage on itself
 
 instruction to programmatically test browser and server with coverage
-1. save this js script as example.js
-2. run the shell command:
-      $ npm install phantomjs-lite utility2 &&\
-          node_modules/.bin/utility2 shRun shNpmTest example.js
+    1. save this js script as example.js
+    2. run the shell command:
+          $ npm install phantomjs-lite utility2 \
+              && node_modules/.bin/utility2 shRun shNpmTest example.js
 
 instruction to interactively test server on port 1337 without coverage
-1. save this js script as example.js
-2. run the shell command:
-      $ npm install utility2 && npm_config_server_port=1337 node example.js
-3. open a browser to http://localhost:1337
+    1. save this js script as example.js
+    2. run the shell command:
+          $ npm install utility2 && npm_config_server_port=1337 node example.js
+    3. open a browser to http://localhost:1337
 */
 
 /*jslint
@@ -125,8 +125,7 @@ stupid: true
             }, onError);
         };
         // init assets
-        app['/'] =
-            (String() +
+        app['/'] = (String() +
 
 
 
@@ -222,7 +221,7 @@ stupid: true
 
 
 
-        String()).replace((/\{\{envDict\.\w+?\}\}/g), function (match0) {
+            String()).replace((/\{\{envDict\.\w+?\}\}/g), function (match0) {
             switch (match0) {
             case '{{envDict.npm_package_description}}':
                 return 'this is an example module';
@@ -267,7 +266,7 @@ stupid: true
                 }
             }
         ];
-        // this function will
+        // this test-runner will
         // 1. create http-server from app.serverMiddlewareList
         // 2. start http-server on port $npm_config_server_port
         // 3. if env var $npm_config_mode_npm_test is defined, then run tests
@@ -303,13 +302,14 @@ stupid: true
     "author": "kai zhu <kaizhu256@gmail.com>",
     "bin": { "utility2" : "index.sh" },
     "dependencies": {
-        "istanbul-lite": "2015.3.6-10",
-        "jslint-lite": "2015.3.6-10"
+        "istanbul-lite": "2015.3.6-11",
+        "jslint-lite": "2015.3.6-11"
     },
     "devDependencies": {
         "phantomjs-lite": "^2015.1.4-102"
     },
-    "description": "run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)",
+    "description": "run dynamic browser tests with coverage \
+(via istanbul-lite and phantomjs-lite)",
     "engines": { "node": ">=0.10 <=0.12" },
     "keywords": [
         "browser",
@@ -343,18 +343,20 @@ stupid: true
     "scripts": {
         "build2": "./index.sh shRun shBuild",
         "start": "npm_config_mode_auto_restart=1 ./index.sh shRun node test.js",
-        "test": "./index.sh shRun shReadmePackageJsonExport && npm_config_mode_auto_restart=1 npm_config_mode_auto_restart_child=1 ./index.sh shRun shNpmTest test.js"
+        "test": "./index.sh shRun shReadmePackageJsonExport \
+&& npm_config_mode_auto_restart=1 npm_config_mode_auto_restart_child=1 \
+./index.sh shRun shNpmTest test.js"
     },
-    "version": "2015.3.6-10"
+    "version": "2015.3.6-11"
 }
 ```
 
 
 
 # todo
-- npm publish 2015.3.6-10
+- npm publish 2015.3.6-11
 - jslint - 80 col maxlen
-- create function app.utility2.internal
+- add '\' line continuation for parsing README.md
 - allow screen-capture to exit with non-zero exit-code
 - create flamegraph from istanbul coverage
 - auto-generate help doc from README.md
@@ -382,14 +384,14 @@ shBuild() {
     shRun shNpmTestPublished || return $?
 
     # test example js script
-    MODE_BUILD=testExampleJs\
-    shRunScreenCapture shReadmeTestJs example.js || return $?
+    MODE_BUILD=testExampleJs \
+        shRunScreenCapture shReadmeTestJs example.js || return $?
     # screen-capture example.js coverage
-    MODE_BUILD=testExampleJs shRun shPhantomScreenCapture\
+    MODE_BUILD=testExampleJs shRun shPhantomScreenCapture \
         /tmp/app/tmp/build/coverage.html/app/example.js.html || :
     # copy phantomjs screen-capture to $npm_config_dir_build
-    cp /tmp/app/tmp/build/screen-capture.*.png $npm_config_dir_build ||\
-        return $?
+    cp /tmp/app/tmp/build/screen-capture.*.png $npm_config_dir_build \
+        || return $?
 
     # run npm-test
     MODE_BUILD=npmTest shRunScreenCapture npm test || return $?
@@ -402,10 +404,10 @@ shBuild() {
         [ "$CI_BRANCH" = beta ] ||
         [ "$CI_BRANCH" = master ]
     then
-        local TEST_URL="https://hrku01-utility2-$CI_BRANCH.herokuapp.com" ||\
-            return $?
-        TEST_URL="$TEST_URL?modeTest=phantom&_testSecret={{_testSecret}}" ||\
-            return $?
+        local TEST_URL="https://hrku01-utility2-$CI_BRANCH.herokuapp.com" \
+            || return $?
+        TEST_URL="$TEST_URL?modeTest=phantom&_testSecret={{_testSecret}}" \
+            || return $?
         MODE_BUILD=herokuTest shRun shPhantomTest $TEST_URL || return $?
     fi
 
@@ -424,18 +426,18 @@ shBuildCleanup() {
     # create package-listing
     MODE_BUILD=gitLsTree shRunScreenCapture shGitLsTree || return $?
     # create recent changelog of last 50 commits
-    MODE_BUILD=gitLog shRunScreenCapture git log -50 --pretty="%ai\u000a%B" ||\
-        return $?
+    MODE_BUILD=gitLog shRunScreenCapture git log -50 --pretty="%ai\u000a%B" \
+        || return $?
     # add black border around phantomjs screen-capture
-    shBuildPrint phantomScreenCapture\
+    shBuildPrint phantomScreenCapture \
         "add black border around phantomjs screen-capture" || return $?
-    local FILE_LIST="$(ls\
-        $npm_config_dir_build/screen-capture.*.phantomjs*.png\
-        $npm_config_dir_build/screen-capture.*.slimerjs*.png\
+    local FILE_LIST="$(ls \
+        $npm_config_dir_build/screen-capture.*.phantomjs*.png \
+        $npm_config_dir_build/screen-capture.*.slimerjs*.png \
         2>/dev/null)" || return $?
     if [ "$FILE_LIST" ] && (mogrify --version > /dev/null 2>&1)
     then
-        printf "$FILE_LIST" |\
+        printf "$FILE_LIST" | \
             xargs -n 1 mogrify -frame 1 -mattecolor black || return $?
     fi
 }
