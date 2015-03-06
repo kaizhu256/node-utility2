@@ -373,6 +373,9 @@ stupid: true
             2. return testReport1 in html-format
             */
             var errorStackList, testCaseNumber, testReport;
+            // update coverage-report
+            ((app.istanbul_lite &&
+                app.istanbul_lite.coverageReportCreate) || app.utility2.nop)();
             // 1. merge testReport2 into testReport1
             [testReport1, testReport2].forEach(function (testReport, ii) {
                 ii += 1;
@@ -646,11 +649,6 @@ return app.utility2.setOverride(testPlatform, -1, {
                     // update testReportDiv in browser
                     testReportDiv.innerHTML =
                         app.utility2.testMerge(app.utility2.testReport, {});
-                    // update istanbulInputTextareDiv
-                    if (app.istanbul_lite &&
-                            app.istanbul_lite.coverageReportCreate) {
-                        app.istanbul_lite.coverageReportCreate();
-                    }
                     if (app.utility2.testReport.testsPending === 0) {
                         // cleanup timerInterval
                         clearInterval(timerInterval);
@@ -1788,7 +1786,7 @@ return app.utility2.setOverride(testPlatform, -1, {
         app.utility2.envDict = app.utility2.envDict || {};
         app.utility2.exit = app.utility2.nop;
         app.utility2.global = window;
-        app.utility2.istanbul_lite = window.istanbul_lite;
+        app.utility2.istanbul_lite = app.istanbul_lite = window.istanbul_lite;
         // parse any url-search-params that matches 'mode*' or '_testSecret' or 'timeoutDefault'
         location.search.replace(
             (/\b(mode[A-Z]\w+|_testSecret|timeoutDefault)=([\w\-\.\%]+)/g),
