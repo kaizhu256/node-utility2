@@ -354,8 +354,6 @@ stupid: true
 
 
 # todo
-- npm publish 2015.3.6-13
-- filter out dummy tests in test-report
 - allow screen-capture to exit with non-zero exit-code
 - create flamegraph from istanbul coverage
 - auto-generate help doc from README.md

@@ -340,7 +340,7 @@ stupid: true
                 // suppress console.log
                 [console, { log: app.utility2.nop }],
                 // enforce synchronicity by mocking timers as callCallback
-                [app.utility2.global, {
+                [app.global, {
                     setInterval: callCallback,
                     setTimeout: callCallback
                 }]
@@ -556,11 +556,8 @@ return app.utility2.setOverride(testPlatform, -1, {
     // security - sanitize '<' in text
     name: String(testPlatform.name).replace((/</g), '&lt;'),
     screenCapture: testPlatform.screenCaptureImg
-        ? '<a class="testReportPlatformScreenCaptureA" href="' +
-            testPlatform.screenCaptureImg + '">' +
-            '<img class="testReportPlatformScreenCaptureImg" src="' +
-            testPlatform.screenCaptureImg + '">' +
-            '</a>'
+        ? '<img class="testReportPlatformScreenCaptureImg" src="' +
+            testPlatform.screenCaptureImg + '">'
         : '',
     // map testCaseList
     testCaseList: testPlatform.testCaseList.map(function (testCase) {
@@ -704,8 +701,8 @@ switch (app.modeJs) {
 case 'browser':
     // notify saucelabs of test results
 // https://docs.saucelabs.com/reference/rest-api/#js-unit-testing
-    app.utility2.global.global_test_results = {
-        coverage: app.utility2.global.__coverage__,
+    app.global.global_test_results = {
+        coverage: app.global.__coverage__,
         failed: app.utility2.testReport.testsFailed,
         testReport: app.utility2.testReport
     };
@@ -718,7 +715,7 @@ case 'browser':
         // so it can be caught and passed to the phantom js-env
         if (app.utility2.modeTest === 'phantom') {
             throw new Error('\nphantom\n' + JSON.stringify({
-                global_test_results: app.utility2.global.global_test_results
+                global_test_results: app.global.global_test_results
             }));
         }
     }, 1000);
@@ -1315,7 +1312,7 @@ case 'node':
                     );
                     // coverage-hack - cover utility2 in phantomjs
                     options.argv1 = __dirname + '/index.js';
-                    if (app.utility2.global.__coverage__ &&
+                    if (app.global.__coverage__ &&
                             app.utility2.envDict.npm_package_name ===
                             'utility2') {
                         options.argv1 =
@@ -1363,7 +1360,7 @@ case 'node':
                                 // merge coverage
                                 if (ii === 0) {
                                     app.utility2.istanbulMerge(
-                                        app.utility2.global.__coverage__,
+                                        app.global.__coverage__,
                                         data
                                     );
                                 // merge test-report
@@ -1400,7 +1397,7 @@ case 'node':
             */
             /*jslint evil: true*/
             Object.keys(globalDict).forEach(function (key) {
-                app.utility2.global[key] = globalDict[key];
+                app.global[key] = globalDict[key];
             });
             // start repl server
             app._replServer = require('repl').start({ useGlobal: true });
@@ -1719,19 +1716,25 @@ case 'node':
             return;
         }
 
-        var modeNext, onNext;
+        var coverageSave, data, modeNext, onNext;
+        coverageSave = function (coverage) {
+            // this function will,
+            // if the coverage is defined, then save it to file
+            if (coverage) {
+                app.fs.write(
+                    app.utility2.fileCoverage,
+                    JSON.stringify(coverage)
+                );
+            }
+        };
         modeNext = 0;
         onNext = function (error, trace) {
-            var data;
             modeNext += 1;
             switch (modeNext) {
             case 1:
-                // init __coverage__
-                app.utility2.global.__coverage__ =
-                    app.utility2.global.__coverage__ || {};
                 // init global error handling
                 // http://phantomjs.org/api/phantom/handler/on-error.html
-                app.utility2.global.phantom.onError = onNext;
+                app.global.phantom.onError = onNext;
                 // override utility2 properties
                 app.utility2.setOverride(
                     app.utility2,
@@ -1762,8 +1765,7 @@ case 'node':
                 app.utility2.page.viewportSize = { height: 768, width: 1024 };
                 // init webpage error handling
                 // http://phantomjs.org/api/webpage/handler/on-error.html
-                app.utility2.page.onError =
-                    app.utility2.global.phantom.onError;
+                app.utility2.page.onError = app.global.phantom.onError;
                 // pipe webpage console.log to stdout
                 app.utility2.page.onConsoleMessage = function () {
                     console.log.apply(console, arguments);
@@ -1816,8 +1818,8 @@ case 'node':
                     if (data) {
                         // handle global_test_results passed as error
                         // merge coverage
-                        app.utility2.istanbulMerge(
-                            app.utility2.global.__coverage__,
+                        app.global.__coverage__ = app.utility2.istanbulMerge(
+                            app.global.__coverage__,
                             data.coverage
                         );
                         // merge test-report
@@ -1840,6 +1842,8 @@ case 'node':
                             app.utility2.fileTestReport,
                             JSON.stringify(app.utility2.testReport)
                         );
+                        // coverage-hack - cover no coverage handling behavior
+                        coverageSave();
                         // exit with number of tests failed as exit-code
                         onNext(data.testReport.testsFailed);
                         return;
@@ -1849,11 +1853,11 @@ case 'node':
                 // handle webpage error
                 // http://phantomjs.org/api/phantom/handler/on-error.html
                 if (error && typeof error === 'string') {
-                    console.error('\n' + app.utility2.testName + '\nERROR: ' +
-                        error + ' TRACE:');
+                    console.error('\n' + app.utility2.testName +
+                        '\nERROR: ' + error + ' TRACE:');
                     (trace || []).forEach(function (t) {
-                        console.error(' -> ' + (t.file || t.sourceURL) + ': ' +
-                            t.line + (t.function
+                        console.error(' -> ' + (t.file || t.sourceURL)
+                            + ': ' + t.line + (t.function
                             ? ' (in function ' + t.function + ')'
                             : ''));
                     });
@@ -1867,10 +1871,7 @@ case 'node':
             default:
                 setTimeout(function () {
                     // save coverage before exiting
-                    app.fs.write(
-                        app.utility2.fileCoverage,
-                        JSON.stringify(app.utility2.global.__coverage__)
-                    );
+                    coverageSave(app.global.__coverage__);
                     app.utility2.exit(error);
                 });
             }
@@ -1920,12 +1921,13 @@ case 'node':
 
     // run browser js-env code
     case 'browser':
+        // init global
+        app.global = window;
         // export utility2
         window.utility2 = app.utility2;
         // init utility2 properties
         app.utility2.envDict = app.utility2.envDict || {};
         app.utility2.exit = app.utility2.nop;
-        app.utility2.global = window;
         app.utility2.istanbul_lite = app.istanbul_lite = window.istanbul_lite;
         // parse url search-params that matches
         // 'mode*' or '_testSecret' or 'timeoutDefault'
@@ -1948,6 +1950,8 @@ case 'node':
 
     // run node js-env code
     case 'node':
+        // init global
+        app.global = global;
         // export utility2
         module.exports = app.utility2;
         // require modules
@@ -1968,7 +1972,6 @@ case 'node':
             process.cwd() + '/tmp/build';
         app.utility2.envDict.npm_config_dir_tmp = process.cwd() + '/tmp';
         app.utility2.exit = process.exit;
-        app.utility2.global = global;
         // init _testSecret
         (function () {
             var testSecretCreate;
@@ -1990,6 +1993,8 @@ case 'node':
 
     // run phantom js-env code
     case 'phantom':
+        // init global
+        app.global = self;
         // export utility2
         self.utility2 = app.utility2;
         // require modules
@@ -1999,7 +2004,6 @@ case 'node':
         // init utility2 properties
         app.utility2.envDict = app.utility2.system.env;
         app.utility2.exit = self.phantom.exit;
-        app.utility2.global = self;
         break;
     }
 
@@ -2008,7 +2012,7 @@ case 'node':
     // run shared js-env code
     (function () {
         // init global debug_print
-        app.utility2.global['debug_print'.replace('_p', 'P')] = function (arg) {
+        app.global['debug_print'.replace('_p', 'P')] = function (arg) {
             /*
             this function will both print the arg to stderr and return it,
             and jslint will nag you to remove it if used
@@ -2035,13 +2039,13 @@ case 'node':
                 : app.modeJs === 'node'
                 ? 'node - ' + process.platform + ' ' + process.version + ' - ' +
                     new Date().toISOString()
-                : (app.utility2.global.slimer
+                : (app.global.slimer
                     ? 'slimer - '
                     : 'phantom - ') +
                     app.utility2.system.os.name + ' ' +
-                    app.utility2.global.phantom.version.major + '.' +
-                    app.utility2.global.phantom.version.minor + '.' +
-                    app.utility2.global.phantom.version.patch + ' - ' +
+                    app.global.phantom.version.major + '.' +
+                    app.global.phantom.version.minor + '.' +
+                    app.global.phantom.version.patch + ' - ' +
                     new Date().toISOString(),
             screenCaptureImg: app.utility2.envDict.MODE_BUILD_SCREEN_CAPTURE,
             testCaseList: []
@@ -2174,7 +2178,7 @@ app.utility2['/test/test-report.html.template'] = String() +
     '.testReportPlatformPreHidden {\n' +
         'display: none;\n' +
     '}\n' +
-    '.testReportPlatformScreenCaptureA {\n' +
+    '.testReportPlatformScreenCaptureImg {\n' +
         'border: 1px solid;\n' +
         'border-color: #000;\n' +
         'display:block;\n' +
@@ -2182,9 +2186,6 @@ app.utility2['/test/test-report.html.template'] = String() +
         'max-height:256px;\n' +
         'max-width:320px;\n' +
         'overflow:hidden;\n' +
-    '}\n' +
-    '.testReportPlatformScreenCaptureImg {\n' +
-        'max-width:320px;\n' +
     '}\n' +
     '.testReportPlatformSpan {\n' +
         'display: inline-block;\n' +

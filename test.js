@@ -31,6 +31,10 @@ stupid: true
                     'browser';
             }
         }());
+        // init global
+        app.global = app.modeJs === 'browser'
+            ? window
+            : global;
         // init utility2
         app.utility2 = app.modeJs === 'browser'
             ? window.utility2
@@ -189,9 +193,7 @@ stupid: true
                 } }]
             ], onError, function (onError) {
                 message = '';
-                app.utility2.global[
-                    'debug_print'.replace('_p', 'P')
-                ]('hello');
+                app.global['debug_print'.replace('_p', 'P')]('hello');
                 // validate message
                 app.utility2.assert(
                     message === '\n\n\n' +
