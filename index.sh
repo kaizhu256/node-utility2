@@ -345,7 +345,8 @@ shNpmTestPublished() {
     # this function will run npm-test on the published package
     shBuildPrint npmTestPublished "npm-testing published package $npm_package_name" || return $?
     # init /tmp/app
-    rm -fr /tmp/app /tmp/node_modules && mkdir -p /tmp/app && cd /tmp/app || return $?
+    rm -fr /tmp/app /tmp/node_modules && mkdir -p /tmp/app || return $?
+    cd /tmp/app || return $?
     # npm install package
     npm install $npm_package_name || return $?
     # npm-test package
@@ -401,7 +402,7 @@ shReadmeTestJs() {
     if [ ! "$MODE_OFFLINE" ]
     then
         # init /tmp/app
-        rm -fr /tmp/app /tmp/node_modules && mkdir -p /tmp/app && cd /tmp/app || return $?
+        rm -fr /tmp/app /tmp/node_modules && mkdir -p /tmp/app || return $?
     fi
     # cd /tmp/app
     cd /tmp/app || return $?
@@ -449,13 +450,16 @@ shReadmeTestSh() {
     local FILE=$1 || return $?
     local FILE_BASENAME=$(node -e "console.log(require('path').basename('$FILE'));") || return $?
     shBuildPrint $MODE_BUILD "testing $FILE" || return $?
-    if [ ! "$MODE_OFFLINE" ] && [ "$MODE_BUILD" != "build" ]
+    if [ "$MODE_BUILD" != "build" ]
     then
-        # init /tmp/app
-        rm -fr /tmp/app /tmp/node_modules && mkdir -p /tmp/app && cd /tmp/app || return $?
+        if [ ! "$MODE_OFFLINE" ]
+        then
+            # init /tmp/app
+            rm -fr /tmp/app /tmp/node_modules && mkdir -p /tmp/app || return $?
+        fi
+        # cd /tmp/app
+        cd /tmp/app || return $?
     fi
-    # cd /tmp/app
-    cd /tmp/app || return $?
     # read and parse script from README.md
     node -e "require('fs').readFileSync('$CWD/README.md', 'utf8').replace(
         (/\n\`\`\`\n# $FILE_BASENAME\n[\S\s]+?\n\`\`\`/),
@@ -612,7 +616,7 @@ shHerokuDeploy() {
 shTmpAppCopy() {
     # this function will copy the the bare git repo files to /tmp/app
     # init /tmp/app
-    rm -fr /tmp/app && mkdir -p /tmp/app || return $?
+    rm -fr /tmp/app /tmp/node_modules && mkdir -p /tmp/app || return $?
     # tar / untar repo contents to /tmp/app
     git ls-tree --name-only -r HEAD | xargs tar -czf - | tar -C /tmp/app -xzvf - || return $?
 }

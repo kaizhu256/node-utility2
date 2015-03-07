@@ -1708,13 +1708,11 @@ case 'node':
                 local.utility2.envDict.npm_config_server_port ||
                 ((Math.random() * 0x10000) | 0x8000).toString();
             // 2. start http-server on port $npm_config_server_port
+            console.log('server starting on port ' +
+                local.utility2.envDict.npm_config_server_port);
             server.listen(
                 local.utility2.envDict.npm_config_server_port,
-                function () {
-                    console.log('http-server listening on port ' +
-                        local.utility2.envDict.npm_config_server_port);
-                    local.utility2.onReady();
-                }
+                local.utility2.onReady
             );
             // 3. if $npm_config_mode_npm_test is defined, then run tests
             local.utility2.onReady.onReady = function () {

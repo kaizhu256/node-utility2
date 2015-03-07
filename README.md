@@ -37,7 +37,7 @@ run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
 
 shExampleSh() {
     # 1. npm install utility2
-    #!! npm install utility2 || return $?
+    npm install utility2 || return $?
 
     # 2. start server on port 1337 with interactive testing and coverage
     cd node_modules/utility2 && npm start --server-port=1337 || return $?
@@ -61,8 +61,8 @@ and browser-coverage on itself
 instruction to programmatically test browser and server with coverage
     1. save this js script as example.js
     2. run the shell command:
-          $ npm install phantomjs-lite utility2 \
-              && node_modules/.bin/utility2 shRun shNpmTest example.js
+          $ npm install phantomjs-lite utility2 && \
+              node_modules/.bin/utility2 shRun shNpmTest example.js
 
 instruction to interactively test server on port 1337 without coverage
     1. save this js script as example.js
@@ -82,49 +82,59 @@ instruction to interactively test server on port 1337 without coverage
 
 (function () {
     'use strict';
-    var app;
-    // init app
-    app = {};
-    // init utility2
-    app.utility2 = typeof window === 'object'
-        ? window.utility2
-        : require('utility2');
+    var local;
+
+
+
+    // run shared js-env code
+    (function () {
+        // init local
+        local = {};
+        // init utility2
+        local.utility2 = typeof window === 'object'
+            ? window.utility2
+            : require('utility2');
+        // init istanbul_lite
+        local.istanbul_lite = local.utility2.local.istanbul_lite;
+        // init jslint_lite
+        local.jslint_lite = local.utility2.local.jslint_lite;
+    }());
 
 
 
     // run browser js-env code
     if (typeof window === 'object') {
         // init browser js-env tests
-        app.testCase_ajax_200 = function (onError) {
+        local.testCase_ajax_200 = function (onError) {
             /*
             this function will test ajax's 200 http statusCode handling behavior
             */
             // test '/test/hello'
-            app.utility2.ajax({
+            local.utility2.ajax({
                 url: '/test/hello'
             }, function (error, data) {
-                app.utility2.testTryCatch(function () {
+                local.utility2.testTryCatch(function () {
                     // validate no error occurred
-                    app.utility2.assert(!error, error);
+                    local.utility2.assert(!error, error);
                     // validate data
-                    app.utility2.assert(data === 'hello', data);
+                    local.utility2.assert(data === 'hello', data);
                     onError();
                 }, onError);
             });
         };
-        app.testCase_ajax_404 = function (onError) {
+        local.testCase_ajax_404 = function (onError) {
             /*
             this function will test ajax's 404 http statusCode handling behavior
             */
             // test '/test/undefined'
-            app.utility2.ajax({
+            local.utility2.ajax({
                 url: '/test/undefined'
             }, function (error) {
-                app.utility2.testTryCatch(function () {
+                local.utility2.testTryCatch(function () {
                     // validate error occurred
-                    app.utility2.assert(error instanceof Error, error);
+                    local.utility2.assert(error instanceof Error, error);
                     // validate 404 http statusCode
-                    app.utility2.assert(
+                    local.utility2.assert(
                         error.statusCode === 404,
                         error.statusCode
                     );
@@ -133,27 +143,27 @@ instruction to interactively test server on port 1337 without coverage
             });
         };
         // run test
-        app.utility2.testRun(app, app.utility2.nop);
+        local.utility2.testRun(local, local.utility2.nop);
 
 
 
     // run node js-env code
     } else {
         // require modules
-        app.fs = require('fs');
+        local.fs = require('fs');
         // init node js-env tests
-        app.testCase_phantomTest_default = function (onError) {
+        local.testCase_phantomTest_default = function (onError) {
             /*
             this function will spawn phantomjs to test the test-page
             */
-            app.utility2.phantomTest({
+            local.utility2.phantomTest({
                 url: 'http://localhost:' +
                     process.env.npm_config_server_port +
                     '?modeTest=phantom'
             }, onError);
         };
         // init assets
-        app['/'] = (String() +
+        local['/'] = (String() +
 
 
 
@@ -259,21 +269,21 @@ instruction to interactively test server on port 1337 without coverage
                 return '0.0.1';
             }
         });
-        app['/assets/istanbul-lite.js'] =
-            app.utility2.istanbul_lite['/assets/istanbul-lite.js'];
-        app['/assets/utility2.css'] =
-            app.utility2['/assets/utility2.css'];
-        app['/assets/utility2.js'] =
-            app.utility2['/assets/utility2.js'];
-        app['/test/hello'] =
+        local['/assets/istanbul-lite.js'] =
+            local.utility2.istanbul_lite['/assets/istanbul-lite.js'];
+        local['/assets/utility2.css'] =
+            local.utility2['/assets/utility2.css'];
+        local['/assets/utility2.js'] =
+            local.utility2['/assets/utility2.js'];
+        local['/test/hello'] =
             'hello';
-        app['/test/test.js'] =
-            app.utility2.istanbul_lite.instrumentSync(
-                app.fs.readFileSync(__filename, 'utf8'),
+        local['/test/test.js'] =
+            local.utility2.istanbul_lite.instrumentSync(
+                local.fs.readFileSync(__filename, 'utf8'),
                 __filename
             );
-        // init app.serverMiddlewareList
-        app.serverMiddlewareList = [
+        // init local.serverMiddlewareList
+        local.serverMiddlewareList = [
             function (request, response, next) {
                 /*
                 this function is the main test-middleware
@@ -286,7 +296,7 @@ instruction to interactively test server on port 1337 without coverage
                 case '/assets/utility2.js':
                 case '/test/hello':
                 case '/test/test.js':
-                    response.end(app[request.urlPathNormalized]);
+                    response.end(local[request.urlPathNormalized]);
                     break;
                 // default to next middleware
                 default:
@@ -295,10 +305,21 @@ instruction to interactively test server on port 1337 without coverage
             }
         ];
         // this test-runner will
-        // 1. create http-server from app.serverMiddlewareList
+        // 1. create http-server from local.serverMiddlewareList
         // 2. start http-server on port $npm_config_server_port
         // 3. if env var $npm_config_mode_npm_test is defined, then run tests
-        app.utility2.testRunServer(app, process.exit);
+        local.utility2.testRunServer(local, process.exit);
+        // this internal build-code will screen-capture the server
+        // and then exit
+        if (process.env.MODE_BUILD === 'testExampleSh') {
+            console.log('server stopping on port ' +
+                local.utility2.envDict.npm_config_server_port);
+            require(
+                process.env.npm_config_dir_utility2 + '/index.js'
+            ).phantomScreenCapture({
+                url: 'http://localhost:' + local.serverPort
+            }, process.exit);
+        }
     }
     return;
 }());
@@ -371,21 +392,22 @@ instruction to interactively test server on port 1337 without coverage
     "scripts": {
         "build2": "./index.sh shRun shBuild",
         "start": "npm_config_mode_auto_restart=1 ./index.sh shRun node test.js",
-        "test": "./index.sh shRun shReadmePackageJsonExport \
-&& npm_config_mode_auto_restart=1 npm_config_mode_auto_restart_child=1 \
+        "test": "./index.sh shRun shReadmePackageJsonExport && \
+npm_config_mode_auto_restart=1 npm_config_mode_auto_restart_child=1 \
 ./index.sh shRun shNpmTest test.js"
     },
-    "version": "2015.3.6-13"
+    "version": "2015.3.7-10"
 }
 ```
 
 
 
 # todo
+- npm publish 2015.3.7-10
+- split quickstart into interactive / programmatic examples
 - add testCase for validating _testSecret
 - add taskPool
 - add failed test example
-- split quickstart into interactive / programmatic examples
 - create flamegraph from istanbul coverage
 - auto-generate help doc from README.md
 - add server stress test using phantomjs
@@ -418,8 +440,8 @@ shBuild() {
     MODE_BUILD=testExampleJs shRun shPhantomScreenCapture \
         /tmp/app/tmp/build/coverage.html/app/example.js.html || :
     # copy phantomjs screen-capture to $npm_config_dir_build
-    cp /tmp/app/tmp/build/screen-capture.*.png $npm_config_dir_build \
-        || return $?
+    cp /tmp/app/tmp/build/screen-capture.*.png $npm_config_dir_build || \
+        return $?
 
     # test example shell script
     MODE_BUILD=testExampleSh \
@@ -437,10 +459,10 @@ shBuild() {
         [ "$CI_BRANCH" = beta ] ||
         [ "$CI_BRANCH" = master ]
     then
-        local TEST_URL="https://hrku01-utility2-$CI_BRANCH.herokuapp.com" \
-            || return $?
-        TEST_URL="$TEST_URL?modeTest=phantom&_testSecret={{_testSecret}}" \
-            || return $?
+        local TEST_URL="https://hrku01-utility2-$CI_BRANCH.herokuapp.com" || \
+            return $?
+        TEST_URL="$TEST_URL?modeTest=phantom&_testSecret={{_testSecret}}" || \
+            return $?
         MODE_BUILD=herokuTest shRun shPhantomTest $TEST_URL || return $?
     fi
 
@@ -459,8 +481,8 @@ shBuildCleanup() {
     # create package-listing
     MODE_BUILD=gitLsTree shRunScreenCapture shGitLsTree || return $?
     # create recent changelog of last 50 commits
-    MODE_BUILD=gitLog shRunScreenCapture git log -50 --pretty="%ai\u000a%B" \
-        || return $?
+    MODE_BUILD=gitLog shRunScreenCapture git log -50 --pretty="%ai\u000a%B" || \
+        return $?
     # add black border around phantomjs screen-capture
     shBuildPrint phantomScreenCapture \
         "add black border around phantomjs screen-capture" || return $?
