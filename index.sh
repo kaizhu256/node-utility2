@@ -210,7 +210,7 @@ shInit() {
     # init $CWD
     CWD=$(pwd) || return $?
     # init $PATH with $CWD/node_modules/.bin
-    export PATH=$CWD/node_modules/phantomjs-lite:$CWD/node_modules/.bin:$PATH || return $?
+    export PATH=$CWD/node_modules/.bin:$PATH || return $?
     # init $npm_package_*
     if [ -f package.json ]
     then
@@ -219,7 +219,9 @@ shInit() {
             Object.keys(dict).forEach(function (key) {
                 value = dict[key];
                 if (typeof value === 'string' && value.indexOf('\n') === -1) {
-                    process.stdout.write('export npm_package_' + key + '=' + JSON.stringify(value) + ';');
+                    process.stdout.write(
+                        'export npm_package_' + key + '=' + JSON.stringify(value) + ';'
+                    );
                 }
             });
             value = (/\bgithub\.com\/(.*)\.git\$/).exec(dict.repository && dict.repository.url);
@@ -368,7 +370,9 @@ shPhantomTest() {
     local URL="$1" || return $?
     shBuildPrint ${MODE_BUILD:-phantomTest} "testing $URL with phantomjs" || return $?
     # auto-detect slimerjs
-    if [ ! "$npm_config_mode_slimerjs" ] && (slimerjs undefined > /dev/null 2>&1)
+    if [ ! "$npm_config_mode_no_slimerjs" ] &&
+        [ ! "$npm_config_mode_slimerjs" ] &&
+        (slimerjs undefined > /dev/null 2>&1)
     then
         export npm_config_mode_slimerjs=1 || return $?
     fi

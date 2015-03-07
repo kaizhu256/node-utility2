@@ -28,7 +28,8 @@ run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
 
 # this shell script will
     # 1. npm install utility2
-    # 2. serve a webpage with interactive browser-testing and browser-coverage
+    # 2. serve a webpage that will interactively run
+        browser-tests and browser-coverage on itself
 
 # instruction
     # 1. copy and paste this entire shell script into a console and press enter
@@ -59,14 +60,14 @@ shExampleSh
 /*
     example.js
 
-    this shared browser / node script will run phantomjs browser-tests
-    and browser-coverage on itself
+    this shared browser / node script will programmatically run phantomjs
+    browser-tests and browser-coverage on itself
 
     instruction
         1. save this js script as example.js
         2. run the shell command:
-              $ npm install phantomjs-lite utility2 && \
-                  node_modules/.bin/utility2 shRun shNpmTest example.js
+            $ npm install phantomjs-lite utility2 && \
+                node_modules/.bin/utility2 shRun shNpmTest example.js
 */
 
 /*jslint
@@ -419,14 +420,6 @@ shBuild() {
     export npm_config_mode_slimerjs=1 || return $?
     . ./index.sh && shInit || return $?
 
-    # test example shell script
-    MODE_BUILD=testExampleSh \
-        npm_config_timeout_exit=1000 \
-        shRunScreenCapture shReadmeTestSh example.sh || return $?
-    cp /tmp/app/node_modules/utility2/tmp/build/screen-capture.*.png \
-        $npm_config_dir_build || return $?
-    return
-
     # run npm-test on published package
     shRun shNpmTestPublished || return $?
 
@@ -439,6 +432,13 @@ shBuild() {
     # copy phantomjs screen-capture to $npm_config_dir_build
     cp /tmp/app/tmp/build/screen-capture.*.png $npm_config_dir_build || \
         return $?
+
+    # test example shell script
+    MODE_BUILD=testExampleSh \
+        npm_config_timeout_exit=1000 \
+        shRunScreenCapture shReadmeTestSh example.sh || return $?
+    cp /tmp/app/node_modules/utility2/tmp/build/screen-capture.*.png \
+        $npm_config_dir_build || return $?
 
     # run npm-test
     MODE_BUILD=npmTest shRunScreenCapture npm test || return $?
