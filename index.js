@@ -7,14 +7,14 @@ node: true,
 nomen: true,
 stupid: true
 */
-(function (app) {
+(function (local) {
     'use strict';
 
 
 
     // run shared js-env code
     (function () {
-        app.utility2.assert = function (passed, message) {
+        local.utility2.assert = function (passed, message) {
             /*
                 this function will throw an error if the assertion fails
             */
@@ -26,28 +26,21 @@ stupid: true
                         // if message is an Error object,
                         // then get its stack-trace
                         : message instanceof Error
-                        ? app.utility2.errorStack(message)
+                        ? local.utility2.errorStack(message)
                         // else JSON.stringify message
                         : JSON.stringify(message)
                 );
             }
         };
 
-        app.utility2.internal = function () {
-            /*
-                this function will return this module's internal api
-            */
-            return app;
-        };
-
-        app.utility2.errorStack = function (error) {
+        local.utility2.errorStack = function (error) {
             /*
                 this function will return the error's stack-trace
             */
             return error.stack || error.message || 'undefined';
         };
 
-        app.utility2.istanbulMerge = function (coverage1, coverage2) {
+        local.utility2.istanbulMerge = function (coverage1, coverage2) {
             /*
                 this function will merge coverage2 into coverage1
             */
@@ -90,7 +83,7 @@ stupid: true
             return coverage1;
         };
 
-        app.utility2.jsonCopy = function (value) {
+        local.utility2.jsonCopy = function (value) {
             /*
                 this function will return a deep-copy of the JSON value
             */
@@ -99,7 +92,11 @@ stupid: true
                 : JSON.parse(JSON.stringify(value));
         };
 
-        app.utility2.jsonStringifyOrdered = function (value, replacer, space) {
+        local.utility2.jsonStringifyOrdered = function (
+            value,
+            replacer,
+            space
+        ) {
             /*
                 this function will JSON.stringify the value with dictionaries
                 in sorted order, for testing purposes
@@ -139,7 +136,7 @@ stupid: true
                 : value;
         };
 
-        app.utility2.onErrorDefault = function (error) {
+        local.utility2.onErrorDefault = function (error) {
             /*
                 this function will provide a default error handling callback,
                 which simply prints the error stack or message to stderr
@@ -147,13 +144,13 @@ stupid: true
             // if error is defined, then print the error stack
             if (error) {
                 console.error('\nonErrorDefault - error\n' +
-                    app.utility2.errorStack(error) + '\n');
+                    local.utility2.errorStack(error) + '\n');
             }
         };
 
-        app.utility2.onErrorExit = app.utility2.exit;
+        local.utility2.onErrorExit = local.utility2.exit;
 
-        app.utility2.onErrorWithStack = function (onError) {
+        local.utility2.onErrorWithStack = function (onError) {
             /*
                 this function will return a new callback that calls onError,
                 with the current stack-trace appended to any error
@@ -180,16 +177,16 @@ stupid: true
             };
         };
 
-        app.utility2.onParallel = function (onError, onDebug) {
+        local.utility2.onParallel = function (onError, onDebug) {
             /*
                 this function will return a function that will
                 1. runs async tasks in parallel,
                 2. if counter === 0 or error occured, then call onError
             */
             var self;
-            onDebug = onDebug || app.utility2.nop;
+            onDebug = onDebug || local.utility2.nop;
             self = function (error) {
-                app.utility2.onErrorWithStack(function (error) {
+                local.utility2.onErrorWithStack(function (error) {
                     onDebug(error, self);
                     // if counter === 0 or error already occurred, then return
                     if (self.counter === 0 || self.error) {
@@ -217,23 +214,24 @@ stupid: true
 
         // init onReady
         (function () {
-            app.utility2.onReady = app.utility2.onParallel(function (error) {
-                app.utility2.onReady.onReady(error);
-            });
-            app.utility2.onReady.onReady = app.utility2.onErrorDefault;
-            app.utility2.onReady.counter += 1;
-            setTimeout(app.utility2.onReady);
+            local.utility2.onReady =
+                local.utility2.onParallel(function (error) {
+                    local.utility2.onReady.onReady(error);
+                });
+            local.utility2.onReady.onReady = local.utility2.onErrorDefault;
+            local.utility2.onReady.counter += 1;
+            setTimeout(local.utility2.onReady);
         }());
 
-        app.utility2.onTimeout = function (onError, timeout, message) {
+        local.utility2.onTimeout = function (onError, timeout, message) {
             /*
                 this function will create a timer that will call onError,
                 with a timeout error with full stack-trace
             */
-            onError = app.utility2.onErrorWithStack(onError);
+            onError = local.utility2.onErrorWithStack(onError);
             // validate timeout is an integer
             // in the exclusive range 0 to Infinity
-            app.utility2.assert(
+            local.utility2.assert(
                 (timeout | 0) === timeout && 0 < timeout && timeout < Infinity,
                 'invalid timeout ' + timeout
             );
@@ -245,7 +243,7 @@ stupid: true
             }, timeout);
         };
 
-        app.utility2.setDefault = function (options, depth, defaults) {
+        local.utility2.setDefault = function (options, depth, defaults) {
             /*
                 this function will recursively set default values
                 for unset leaf nodes in the options object
@@ -270,13 +268,18 @@ stupid: true
                         options2 &&
                         typeof options2 === 'object' &&
                         !Array.isArray(options2)) {
-                    app.utility2.setDefault(options2, depth, defaults2);
+                    local.utility2.setDefault(options2, depth, defaults2);
                 }
             });
             return options;
         };
 
-        app.utility2.setOverride = function (options, depth, override, backup) {
+        local.utility2.setOverride = function (
+            options,
+            depth,
+            override,
+            backup
+        ) {
             /*
                 this function will recursively override
                 the options object with the override object,
@@ -302,13 +305,13 @@ stupid: true
                     // 2. set the override item to the options object
                     // if options is envDict,
                     // then override falsey values with empty string
-                    options[key] = options === app.utility2.envDict
+                    options[key] = options === local.utility2.envDict
                         ? override2 || ''
                         : override2;
                     return;
                 }
                 // 3. recurse options[key] and override[key]
-                app.utility2.setOverride(
+                local.utility2.setOverride(
                     options2,
                     depth,
                     override2,
@@ -319,7 +322,7 @@ stupid: true
             return options;
         };
 
-        app.utility2.testMock = function (mockList, onError, testCase) {
+        local.utility2.testMock = function (mockList, onError, testCase) {
             /*
                 this function will mock the objects in mockList
                 while running the testCase
@@ -331,14 +334,14 @@ stupid: true
                 */
                 callback();
                 // return a mock timer object with the unref method
-                return { unref: app.utility2.nop };
+                return { unref: local.utility2.nop };
             };
             // prepend mandatory mocks for async / unsafe functions
             mockList = [
                 // suppress console.log
-                [console, { log: app.utility2.nop }],
+                [console, { log: local.utility2.nop }],
                 // enforce synchronicity by mocking timers as callCallback
-                [app.global, {
+                [local.global, {
                     setInterval: callCallback,
                     setTimeout: callCallback
                 }]
@@ -346,25 +349,25 @@ stupid: true
             onError2 = function (error) {
                 // restore mock[0] from mock[2]
                 mockList.reverse().forEach(function (mock) {
-                    app.utility2.setOverride(mock[0], 1, mock[2], null);
+                    local.utility2.setOverride(mock[0], 1, mock[2], null);
                 });
                 onError(error);
             };
             // run onError callback in mocked objects in a try-catch block
-            app.utility2.testTryCatch(function () {
+            local.utility2.testTryCatch(function () {
                 // mock objects
                 mockList.forEach(function (mock) {
                     mock[2] = {};
                     // backup mock[0] into mock[2]
                     // override mock[0] with mock[1]
-                    app.utility2.setOverride(mock[0], 1, mock[1], mock[2]);
+                    local.utility2.setOverride(mock[0], 1, mock[1], mock[2]);
                 });
                 // run testCase
                 testCase(onError2);
             }, onError2);
         };
 
-        app.utility2.testMerge = function (testReport1, testReport2) {
+        local.utility2.testMerge = function (testReport1, testReport2) {
             /*
                 this function will
                 1. merge testReport2 into testReport1
@@ -374,42 +377,42 @@ stupid: true
             // 1. merge testReport2 into testReport1
             [testReport1, testReport2].forEach(function (testReport, ii) {
                 ii += 1;
-                app.utility2.setDefault(testReport, -1, {
+                local.utility2.setDefault(testReport, -1, {
                     date: new Date().toISOString(),
                     errorStackList: [],
                     testPlatformList: [],
                     timeElapsed: 0
                 });
                 // security - handle malformed testReport
-                app.utility2.assert(
+                local.utility2.assert(
                     testReport && typeof testReport === 'object',
                     ii + ' invalid testReport ' + typeof testReport
                 );
-                app.utility2.assert(
+                local.utility2.assert(
                     typeof testReport.timeElapsed === 'number',
                     ii + ' invalid testReport.timeElapsed ' +
                         typeof testReport.timeElapsed
                 );
                 // security - handle malformed testReport.testPlatformList
                 testReport.testPlatformList.forEach(function (testPlatform) {
-                    app.utility2.setDefault(testPlatform, -1, {
+                    local.utility2.setDefault(testPlatform, -1, {
                         name: 'undefined',
                         testCaseList: [],
                         timeElapsed: 0
                     });
-                    app.utility2.assert(
+                    local.utility2.assert(
                         typeof testPlatform.name === 'string',
                         ii + ' invalid testPlatform.name ' +
                             typeof testPlatform.name
                     );
                     // insert $MODE_BUILD into testPlatform.name
-                    if (app.utility2.envDict.MODE_BUILD) {
+                    if (local.utility2.envDict.MODE_BUILD) {
                         testPlatform.name = testPlatform.name.replace(
                             (/^(browser|node|phantom|slimer)\b/),
-                            app.utility2.envDict.MODE_BUILD + ' - $1'
+                            local.utility2.envDict.MODE_BUILD + ' - $1'
                         );
                     }
-                    app.utility2.assert(
+                    local.utility2.assert(
                         typeof testPlatform.timeElapsed === 'number',
                         ii + ' invalid testPlatform.timeElapsed ' +
                             typeof testPlatform.timeElapsed
@@ -417,22 +420,22 @@ stupid: true
                     // security - handle malformed
                     // testReport.testPlatformList.testCaseList
                     testPlatform.testCaseList.forEach(function (testCase) {
-                        app.utility2.setDefault(testCase, -1, {
+                        local.utility2.setDefault(testCase, -1, {
                             errorStack: '',
                             name: 'undefined',
                             timeElapsed: 0
                         });
-                        app.utility2.assert(
+                        local.utility2.assert(
                             typeof testCase.errorStack === 'string',
                             ii + ' invalid testCase.errorStack ' +
                                 typeof testCase.errorStack
                         );
-                        app.utility2.assert(
+                        local.utility2.assert(
                             typeof testCase.name === 'string',
                             ii + ' invalid testCase.name ' +
                                 typeof testCase.name
                         );
-                        app.utility2.assert(
+                        local.utility2.assert(
                             typeof testCase.timeElapsed === 'number',
                             ii + ' invalid testCase.timeElapsed ' +
                                 typeof testCase.timeElapsed
@@ -505,17 +508,17 @@ stupid: true
             });
             // stop testReport timer
             if (testReport.testsPending === 0) {
-                app._timeElapsedStop(testReport);
+                local._timeElapsedStop(testReport);
             }
             // 2. return testReport1 in html-format
             // json-copy testReport, which will be modified for html templating
-            testReport = app.utility2.jsonCopy(testReport1);
+            testReport = local.utility2.jsonCopy(testReport1);
             // update timeElapsed
-            app._timeElapsedStop(testReport);
+            local._timeElapsedStop(testReport);
             testReport.testPlatformList.forEach(function (testPlatform) {
-                app._timeElapsedStop(testPlatform);
+                local._timeElapsedStop(testPlatform);
                 testPlatform.testCaseList.forEach(function (testCase) {
-                    app._timeElapsedStop(testCase);
+                    local._timeElapsedStop(testCase);
                     testPlatform.timeElapsed = Math.max(
                         testPlatform.timeElapsed,
                         testCase.timeElapsed
@@ -529,13 +532,14 @@ stupid: true
             });
             // create html test-report
             testCaseNumber = 0;
-            return app.utility2.textFormat(
-                app.utility2['/test/test-report.html.template'],
-                app.utility2.setOverride(testReport, -1, {
+            return local.utility2.textFormat(
+                local.utility2['/test/test-report.html.template'],
+                local.utility2.setOverride(testReport, -1, {
                     // security - sanitize '<' in text
-                    CI_COMMIT_INFO: String(app.utility2.envDict.CI_COMMIT_INFO)
-                        .replace((/</g), '&lt;'),
-                    envDict: app.utility2.envDict,
+                    CI_COMMIT_INFO: String(
+                        local.utility2.envDict.CI_COMMIT_INFO
+                    ).replace((/</g), '&lt;'),
+                    envDict: local.utility2.envDict,
                     // map testPlatformList
                     testPlatformList: testReport.testPlatformList
                         .filter(function (testPlatform) {
@@ -549,7 +553,7 @@ stupid: true
 /* jslint-indent-begin 28 */
 /*jslint maxlen: 108*/
 errorStackList = [];
-return app.utility2.setOverride(testPlatform, -1, {
+return local.utility2.setOverride(testPlatform, -1, {
     errorStackList: errorStackList,
     // security - sanitize '<' in text
     name: String(testPlatform.name).replace((/</g), '&lt;'),
@@ -569,7 +573,7 @@ return app.utility2.setOverride(testPlatform, -1, {
                 ).replace((/</g), '&lt;')
             });
         }
-        return app.utility2.setOverride(testCase, -1, {
+        return local.utility2.setOverride(testCase, -1, {
             testCaseNumber: testCaseNumber,
             testReportTestStatusClass: 'testReportTest' +
                 testCase.status[0].toUpperCase() + testCase.status.slice(1)
@@ -593,7 +597,7 @@ return app.utility2.setOverride(testPlatform, -1, {
             );
         };
 
-        app.utility2.testRun = function (options) {
+        local.utility2.testRun = function (options) {
             /*
                 this function will run all tests in testPlatform.testCaseList
             */
@@ -604,53 +608,53 @@ return app.utility2.setOverride(testPlatform, -1, {
                 testReportDiv,
                 timerInterval;
             options = options || {};
-            app.utility2.modeTest =
-                app.utility2.modeTest ||
-                app.utility2.envDict.npm_config_mode_npm_test;
-            if (!(app.utility2.modeTest || options.modeTest)) {
+            local.utility2.modeTest =
+                local.utility2.modeTest ||
+                local.utility2.envDict.npm_config_mode_npm_test;
+            if (!(local.utility2.modeTest || options.modeTest)) {
                 return;
             }
             // init coverageReportCreate
             coverageReportCreate = (
-                app.istanbul_lite && app.istanbul_lite.coverageReportCreate
-            ) || app.utility2.nop;
+                local.istanbul_lite && local.istanbul_lite.coverageReportCreate
+            ) || local.utility2.nop;
             // mock exit
-            exit = app.utility2.exit;
-            app.utility2.exit = app.utility2.nop;
+            exit = local.utility2.exit;
+            local.utility2.exit = local.utility2.nop;
             // init modeTestCase
-            app.utility2.modeTestCase =
-                app.utility2.modeTestCase ||
-                app.utility2.envDict.npm_config_mode_test_case;
+            local.utility2.modeTestCase =
+                local.utility2.modeTestCase ||
+                local.utility2.envDict.npm_config_mode_test_case;
             // reset testPlatform.testCaseList
-            app.utility2.testPlatform.testCaseList.length = 0;
+            local.utility2.testPlatform.testCaseList.length = 0;
             // add tests into testPlatform.testCaseList
             Object.keys(options).forEach(function (key) {
                 // add test-case options[key] to testPlatform.testCaseList
                 if (key.indexOf('testCase_') === 0 &&
-                        (app.utility2.modeTestCase === key ||
-                        (!app.utility2.modeTestCase &&
+                        (local.utility2.modeTestCase === key ||
+                        (!local.utility2.modeTestCase &&
                                 key !== 'testCase_testRun_failure'))) {
-                    app.utility2.testPlatform.testCaseList.push({
+                    local.utility2.testPlatform.testCaseList.push({
                         name: key,
                         onTestCase: options[key]
                     });
                 }
             });
             // visually update test-progress until it finishes
-            if (app.modeJs === 'browser') {
+            if (local.modeJs === 'browser') {
                 // init testReportDiv element
                 testReportDiv =
                     document.querySelector('.testReportDiv') ||
                     { style: {} };
                 testReportDiv.style.display = 'block';
                 testReportDiv.innerHTML =
-                    app.utility2.testMerge(app.utility2.testReport, {});
+                    local.utility2.testMerge(local.utility2.testReport, {});
                 // update test-report status every 1000 ms until finished
                 timerInterval = setInterval(function () {
                     // update testReportDiv in browser
                     testReportDiv.innerHTML =
-                        app.utility2.testMerge(app.utility2.testReport, {});
-                    if (app.utility2.testReport.testsPending === 0) {
+                        local.utility2.testMerge(local.utility2.testReport, {});
+                    if (local.utility2.testReport.testsPending === 0) {
                         // cleanup timerInterval
                         clearInterval(timerInterval);
                     }
@@ -660,7 +664,7 @@ return app.utility2.setOverride(testPlatform, -1, {
                 // update coverageReport
                 coverageReportCreate();
             }
-            onParallel = app.utility2.onParallel(function () {
+            onParallel = local.utility2.onParallel(function () {
                 /*
                     this function will create the test-report
                     after all tests have finished
@@ -672,15 +676,15 @@ return app.utility2.setOverride(testPlatform, -1, {
 /*jslint maxlen: 96*/
 var separator, testReport, testReportHtml;
 // restore exit
-app.utility2.exit = exit;
+local.utility2.exit = exit;
 // init new-line separator
 separator = new Array(56).join('-');
 // init testReport
-testReport = app.utility2.testReport;
+testReport = local.utility2.testReport;
 // stop testPlatform timer
-app._timeElapsedStop(testPlatform);
+local._timeElapsedStop(testPlatform);
 // create testReportHtml
-testReportHtml = app.utility2.testMerge(testReport, {});
+testReportHtml = local.utility2.testMerge(testReport, {});
 // print test-report summary
 console.log('\n' + separator + '\n' + testReport.testPlatformList
     .filter(function (testPlatform) {
@@ -695,34 +699,34 @@ console.log('\n' + separator + '\n' + testReport.testPlatformList
             '     |\n' + separator;
     })
     .join('\n') + '\n');
-switch (app.modeJs) {
+switch (local.modeJs) {
 case 'browser':
     // notify saucelabs of test results
 // https://docs.saucelabs.com/reference/rest-api/#js-unit-testing
-    app.global.global_test_results = {
-        coverage: app.global.__coverage__,
-        failed: app.utility2.testReport.testsFailed,
-        testReport: app.utility2.testReport
+    local.global.global_test_results = {
+        coverage: local.global.__coverage__,
+        failed: local.utility2.testReport.testsFailed,
+        testReport: local.utility2.testReport
     };
     setTimeout(function () {
         // update coverageReport
         coverageReportCreate();
         // call callback with number of tests failed
-        app.utility2.onErrorExit(app.utility2.testReport.testsFailed);
+        local.utility2.onErrorExit(local.utility2.testReport.testsFailed);
         // throw global_test_results as an error,
         // so it can be caught and passed to the phantom js-env
-        if (app.utility2.modeTest === 'phantom') {
+        if (local.utility2.modeTest === 'phantom') {
             throw new Error('\nphantom\n' + JSON.stringify({
-                global_test_results: app.global.global_test_results
+                global_test_results: local.global.global_test_results
             }));
         }
     }, 1000);
     break;
 case 'node':
     // create build badge
-    app.fs.writeFileSync(
-        app.utility2.envDict.npm_config_dir_build + '/build.badge.svg',
-        app.utility2['/build/build.badge.svg']
+    local.fs.writeFileSync(
+        local.utility2.envDict.npm_config_dir_build + '/build.badge.svg',
+        local.utility2['/build/build.badge.svg']
             // edit branch name
             .replace(
                 (/0000 00 00 00 00 00/g),
@@ -731,19 +735,19 @@ case 'node':
             // edit branch name
             .replace(
                 (/- master -/g),
-                '| ' + app.utility2.envDict.CI_BRANCH + ' |'
+                '| ' + local.utility2.envDict.CI_BRANCH + ' |'
             )
             // edit commit id
             .replace(
                 (/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/g),
-                app.utility2.envDict.CI_COMMIT_ID
+                local.utility2.envDict.CI_COMMIT_ID
             )
     );
     // create test-report.badge.svg
-    app.fs.writeFileSync(
-        app.utility2.envDict.npm_config_dir_build +
+    local.fs.writeFileSync(
+        local.utility2.envDict.npm_config_dir_build +
             '/test-report.badge.svg',
-        app.utility2['/build/test-report.badge.svg']
+        local.utility2['/build/test-report.badge.svg']
             // edit number of tests failed
             .replace((/999/g), testReport.testsFailed)
             // edit badge color
@@ -755,25 +759,25 @@ case 'node':
             )
     );
     // create test-report.html
-    app.fs.writeFileSync(
-        app.utility2.envDict.npm_config_dir_build + '/test-report.html',
+    local.fs.writeFileSync(
+        local.utility2.envDict.npm_config_dir_build + '/test-report.html',
         testReportHtml
     );
     console.log('created test-report file://' +
-        app.utility2.envDict.npm_config_dir_build + '/test-report.html');
+        local.utility2.envDict.npm_config_dir_build + '/test-report.html');
     // create test-report.json
-    app.fs.writeFileSync(
-        app.utility2.envDict.npm_config_dir_build + '/test-report.json',
-        JSON.stringify(app.utility2.testReport)
+    local.fs.writeFileSync(
+        local.utility2.envDict.npm_config_dir_build + '/test-report.json',
+        JSON.stringify(local.utility2.testReport)
     );
     // if any test failed, then exit with non-zero exit-code
     setTimeout(function () {
         // finalize testReport
-        app.utility2.testMerge(testReport, {});
-        console.log('\n' + app.utility2.envDict.MODE_BUILD + ' - ' +
-            app.utility2.testReport.testsFailed + ' failed tests\n');
+        local.utility2.testMerge(testReport, {});
+        console.log('\n' + local.utility2.envDict.MODE_BUILD + ' - ' +
+            local.utility2.testReport.testsFailed + ' failed tests\n');
         // call callback with number of tests failed
-        app.utility2.onErrorExit(app.utility2.testReport.testsFailed);
+        local.utility2.onErrorExit(local.utility2.testReport.testsFailed);
     }, 1000);
     break;
 }
@@ -784,9 +788,9 @@ case 'node':
             });
             onParallel.counter += 1;
             // init testReport timer
-            app.utility2.testReport.timeElapsed = Date.now();
+            local.utility2.testReport.timeElapsed = Date.now();
             // init testPlatform
-            testPlatform = app.utility2.testPlatform;
+            testPlatform = local.utility2.testPlatform;
             // init testPlatform timer
             testPlatform.timeElapsed = Date.now();
             // shallow copy testPlatform.testCaseList,
@@ -806,11 +810,11 @@ case 'node':
                     // if error occurred, then fail testCase
                     if (error) {
                         console.error('\ntestCase ' + testCase.name +
-                            ' failed\n' + app.utility2.errorStack(error));
+                            ' failed\n' + local.utility2.errorStack(error));
                         testCase.errorStack = testCase.errorStack ||
-                            app.utility2.errorStack(error);
+                            local.utility2.errorStack(error);
                         // validate errorStack is non-empty
-                        app.utility2.assert(
+                        local.utility2.assert(
                             testCase.errorStack,
                             'invalid errorStack ' + testCase.errorStack
                         );
@@ -823,14 +827,14 @@ case 'node':
                     // finish testCase
                     finished = true;
                     // stop testCase timer
-                    app._timeElapsedStop(testCase);
+                    local._timeElapsedStop(testCase);
                     // if all tests have finished, then create test-report
                     onParallel();
                 };
                 // set timerTimeout
-                timerTimeout = app.utility2.onTimeout(
+                timerTimeout = local.utility2.onTimeout(
                     onError,
-                    app.utility2.timeoutDefault,
+                    local.utility2.timeoutDefault,
                     testCase.name
                 );
                 // increment number of tests remaining
@@ -847,7 +851,7 @@ case 'node':
             onParallel();
         };
 
-        app.utility2.testTryCatch = function (callback, onError) {
+        local.utility2.testTryCatch = function (callback, onError) {
             /*
                 this function will call the callback in a try-catch block,
                 and pass any error caught to onError
@@ -859,7 +863,7 @@ case 'node':
             }
         };
 
-        app.utility2.textFormat = function (template, dict, valueDefault) {
+        local.utility2.textFormat = function (template, dict, valueDefault) {
             /*
                 this function will replace the keys in the template
                 with the key / value pairs provided by the dict
@@ -868,10 +872,10 @@ case 'node':
             dict = dict || {};
             replace = function (match0, fragment) {
                 // jslint-hack
-                app.utility2.nop(match0);
+                local.utility2.nop(match0);
                 return dict[match].map(function (dict) {
                     // recursively format the array fragment
-                    return app.utility2.textFormat(
+                    return local.utility2.textFormat(
                         fragment,
                         dict,
                         valueDefault
@@ -912,7 +916,7 @@ case 'node':
             });
         };
 
-        app._timeElapsedStop = function (options) {
+        local._timeElapsedStop = function (options) {
             /*
                 this function will stop options.timeElapsed
             */
@@ -926,11 +930,11 @@ case 'node':
 
     // run browser js-env code
     (function () {
-        if (app.modeJs !== 'browser') {
+        if (local.modeJs !== 'browser') {
             return;
         }
 
-        app.utility2.ajax = function (options, onError) {
+        local.utility2.ajax = function (options, onError) {
             /*
                 this function will make an ajax request
                 with error handling and timeout
@@ -949,7 +953,7 @@ case 'node':
                 { style: {} };
 
             // init event handling
-            onEvent = app.utility2.onErrorWithStack(function (event) {
+            onEvent = local.utility2.onErrorWithStack(function (event) {
                 switch (event.type) {
                 case 'abort':
                 case 'error':
@@ -957,17 +961,17 @@ case 'node':
                     // cleanup timerTimeout
                     clearTimeout(timerTimeout);
                     // validate finished is falsey
-                    app.utility2.assert(!finished, finished);
+                    local.utility2.assert(!finished, finished);
                     // set finished to true
                     finished = true;
                     // validate xhr is defined in _ajaxProgressList
-                    ii = app._ajaxProgressList.indexOf(xhr);
-                    app.utility2.assert(
+                    ii = local._ajaxProgressList.indexOf(xhr);
+                    local.utility2.assert(
                         ii >= 0,
                         'missing xhr in _ajaxProgressList'
                     );
                     // remove xhr from ajaxProgressList
-                    app._ajaxProgressList.splice(ii, 1);
+                    local._ajaxProgressList.splice(ii, 1);
                     // handle abort or error event
                     if (!error &&
                             (event.type === 'abort' ||
@@ -994,13 +998,13 @@ case 'node':
                         }
                     }
                     // hide _ajaxProgressDiv
-                    if (app._ajaxProgressList.length === 0) {
-                        app._ajaxProgressBarHide = setTimeout(function () {
+                    if (local._ajaxProgressList.length === 0) {
+                        local._ajaxProgressBarHide = setTimeout(function () {
                             // hide ajaxProgressBar
                             ajaxProgressDiv.style.display = 'none';
                             // reset ajaxProgress
-                            app._ajaxProgressState = 0;
-                            app._ajaxProgressUpdate(
+                            local._ajaxProgressState = 0;
+                            local._ajaxProgressUpdate(
                                 '0%',
                                 'ajaxProgressBarDivLoading',
                                 'loading'
@@ -1011,12 +1015,12 @@ case 'node':
                     break;
                 }
                 // increment ajaxProgressBar
-                if (app._ajaxProgressList.length > 0) {
-                    app._ajaxProgressIncrement();
+                if (local._ajaxProgressList.length > 0) {
+                    local._ajaxProgressIncrement();
                     return;
                 }
                 // finish ajaxProgressBar
-                app._ajaxProgressUpdate(
+                local._ajaxProgressUpdate(
                     '100%',
                     'ajaxProgressBarDivSuccess',
                     'loaded'
@@ -1025,25 +1029,28 @@ case 'node':
             // init xhr
             xhr = new XMLHttpRequest();
             // debug xhr
-            app.utility2._debugXhr = xhr;
+            local.utility2._debugXhr = xhr;
             // init event handling
             xhr.addEventListener('abort', onEvent);
             xhr.addEventListener('error', onEvent);
             xhr.addEventListener('load', onEvent);
-            xhr.addEventListener('loadstart', app._ajaxProgressIncrement);
-            xhr.addEventListener('progress', app._ajaxProgressIncrement);
-            xhr.upload.addEventListener('progress', app._ajaxProgressIncrement);
+            xhr.addEventListener('loadstart', local._ajaxProgressIncrement);
+            xhr.addEventListener('progress', local._ajaxProgressIncrement);
+            xhr.upload.addEventListener(
+                'progress',
+                local._ajaxProgressIncrement
+            );
             // set timerTimeout
-            timerTimeout = app.utility2.onTimeout(function (errorTimeout) {
+            timerTimeout = local.utility2.onTimeout(function (errorTimeout) {
                 error = errorTimeout;
                 xhr.abort();
-            }, options.timeout || app.utility2.timeoutDefault, 'ajax');
+            }, options.timeout || local.utility2.timeoutDefault, 'ajax');
             // if ajaxProgressBar is hidden, then display it
-            if (app._ajaxProgressList.length === 0) {
+            if (local._ajaxProgressList.length === 0) {
                 ajaxProgressDiv.style.display = 'block';
             }
             // add xhr to _ajaxProgressList
-            app._ajaxProgressList.push(xhr);
+            local._ajaxProgressList.push(xhr);
             // open url
             xhr.open(options.method || 'GET', options.url);
             // send request headers
@@ -1051,32 +1058,32 @@ case 'node':
                 xhr.setRequestHeader(key, options.headers[key]);
             });
             // clear any pending timer to hide _ajaxProgressDiv
-            clearTimeout(app._ajaxProgressBarHide);
+            clearTimeout(local._ajaxProgressBarHide);
             // send data
             xhr.send(options.data);
         };
 
-        app._ajaxProgressIncrement = function () {
+        local._ajaxProgressIncrement = function () {
             /*
                 this function will increment ajaxProgressBar
             */
             // this algorithm can indefinitely increment the ajaxProgressBar
             // with successively smaller increments without ever reaching 100%
-            app._ajaxProgressState += 1;
-            app._ajaxProgressUpdate(
-                100 - 75 * Math.exp(-0.125 * app._ajaxProgressState) + '%',
+            local._ajaxProgressState += 1;
+            local._ajaxProgressUpdate(
+                100 - 75 * Math.exp(-0.125 * local._ajaxProgressState) + '%',
                 'ajaxProgressBarDivLoading',
                 'loading'
             );
         };
 
         // init list of xhr used in ajaxProgress
-        app._ajaxProgressList = [];
+        local._ajaxProgressList = [];
 
         // init _ajaxProgressState
-        app._ajaxProgressState = 0;
+        local._ajaxProgressState = 0;
 
-        app._ajaxProgressUpdate = function (width, type, label) {
+        local._ajaxProgressUpdate = function (width, type, label) {
             /*
                 this function will visually update ajaxProgressBar
             */
@@ -1095,11 +1102,11 @@ case 'node':
 
     // run node js-env code
     (function () {
-        if (app.modeJs !== 'node') {
+        if (local.modeJs !== 'node') {
             return;
         }
 
-        app.utility2.ajax = function (options, onError) {
+        local.utility2.ajax = function (options, onError) {
             /*
                 this function will make an ajax request
                 with error handling and timeout
@@ -1113,28 +1120,28 @@ case 'node':
                 timerTimeout,
                 urlParsed;
             modeNext = 0;
-            onNext = app.utility2.onErrorWithStack(function (error, data) {
+            onNext = local.utility2.onErrorWithStack(function (error, data) {
                 modeNext = error instanceof Error
                     ? NaN
                     : modeNext + 1;
                 switch (modeNext) {
                 case 1:
                     // set timerTimeout
-                    timerTimeout = app.utility2.onTimeout(
+                    timerTimeout = local.utility2.onTimeout(
                         onNext,
-                        options.timeout || app.utility2.timeoutDefault,
+                        options.timeout || local.utility2.timeoutDefault,
                         'ajax ' + options.url
                     );
                     // init request and response
-                    request = response = { destroy: app.utility2.nop };
+                    request = response = { destroy: local.utility2.nop };
                     // handle implicit localhost
                     if (options.url[0] === '/') {
                         options.url = 'http://localhost:' +
-                            app.utility2.envDict.npm_config_server_port +
+                            local.utility2.envDict.npm_config_server_port +
                             options.url;
                     }
                     // parse options.url
-                    urlParsed = app.url.parse(String(options.url));
+                    urlParsed = local.url.parse(String(options.url));
                     // disable socket pooling
                     options.agent = options.agent || false;
                     // hostname needed for http.request
@@ -1154,21 +1161,21 @@ case 'node':
                         : 0;
                     // make http request
                     request = (urlParsed.protocol === 'https:'
-                        ? app.https
-                        : app.http)
+                        ? local.https
+                        : local.http)
                         .request(options, onNext)
                         // handle error event
                         .on('error', onNext);
                     // debug ajax request
-                    app.utility2._debugAjaxRequest = request;
+                    local.utility2._debugAjaxRequest = request;
                     // send request and/or data
                     request.end(options.data);
                     break;
                 case 2:
                     response = error;
                     // debug ajax response
-                    app.utility2._debugAjaxResponse = response;
-                    app.utility2.streamReadAll(response, onNext);
+                    local.utility2._debugAjaxResponse = response;
+                    local.utility2.streamReadAll(response, onNext);
                     break;
                 case 3:
                     // init responseText
@@ -1214,57 +1221,57 @@ case 'node':
             onNext();
         };
 
-        app.utility2.onFileModifiedRestart = function (file) {
+        local.utility2.onFileModifiedRestart = function (file) {
             /*
                 this function will watch the file,
                 and if modified, then restart the process
             */
-            if (app.utility2.envDict.npm_config_mode_auto_restart &&
-                    app.fs.statSync(file).isFile()) {
-                app.fs.watchFile(file, {
+            if (local.utility2.envDict.npm_config_mode_auto_restart &&
+                    local.fs.statSync(file).isFile()) {
+                local.fs.watchFile(file, {
                     interval: 1000,
                     persistent: false
                 }, function (stat2, stat1) {
                     if (stat2.mtime > stat1.mtime) {
-                        app.utility2.exit(1);
+                        local.utility2.exit(1);
                     }
                 });
             }
         };
 
-        app.utility2.phantomScreenCapture = function (options, onError) {
+        local.utility2.phantomScreenCapture = function (options, onError) {
             /*
                 this function will spawn both phantomjs and slimerjs processes
                 to screen-capture options.url
             */
-            app.utility2.phantomTest(app.utility2.setDefault(options, 1, {
+            local.utility2.phantomTest(local.utility2.setDefault(options, 1, {
                 modePhantom: 'screenCapture',
                 timeoutScreenCapture: 2000
             }), onError);
         };
 
-        app.utility2.phantomTest = function (options, onError) {
+        local.utility2.phantomTest = function (options, onError) {
             /*
                 this function will spawn both phantomjs and slimerjs processes
                 to test options.url
             */
             var onParallel;
-            onParallel = app.utility2.onParallel(onError);
+            onParallel = local.utility2.onParallel(onError);
             onParallel.counter += 1;
             ['phantomjs', 'slimerjs'].forEach(function (argv0) {
                 var optionsCopy;
                 // if slimerjs is not available, then do not use it
                 if (argv0 === 'slimerjs' &&
-                        (!app.utility2.envDict.npm_config_mode_slimerjs ||
-                        app.utility2.envDict.npm_config_mode_no_slimerjs)) {
+                        (!local.utility2.envDict.npm_config_mode_slimerjs ||
+                        local.utility2.envDict.npm_config_mode_no_slimerjs)) {
                     return;
                 }
                 // copy options to create separate phantomjs / slimerjs state
-                optionsCopy = app.utility2.jsonCopy(options);
+                optionsCopy = local.utility2.jsonCopy(options);
                 optionsCopy.argv0 = argv0;
                 // run phantomjs / slimerjs instance
                 onParallel.counter += 1;
-                app._phantomTestSingle(optionsCopy, function (error) {
+                local._phantomTestSingle(optionsCopy, function (error) {
                     // save phantomjs / slimerjs state to options
                     options[argv0] = optionsCopy;
                     onParallel(error);
@@ -1273,7 +1280,7 @@ case 'node':
             onParallel();
         };
 
-        app._phantomTestSingle = function (options, onError) {
+        local._phantomTestSingle = function (options, onError) {
             /*
                 this function will spawn a single phantomjs or slimerjs process
                 to test options.url
@@ -1286,46 +1293,53 @@ case 'node':
                     : modeNext + 1;
                 switch (modeNext) {
                 case 1:
-                    options.testName = app.utility2.envDict.MODE_BUILD +
+                    options.testName = local.utility2.envDict.MODE_BUILD +
                         '.' + options.argv0 + '.' +
-                        encodeURIComponent(app.url.parse(options.url).pathname);
-                    app.utility2.setDefault(options, 1, {
-                        _testSecret: app.utility2._testSecret,
-                        fileCoverage: app.utility2.envDict.npm_config_dir_tmp +
+                        encodeURIComponent(
+                            local.url.parse(options.url).pathname
+                        );
+                    local.utility2.setDefault(options, 1, {
+                        _testSecret: local.utility2._testSecret,
+                        fileCoverage: local.utility2.envDict
+                            .npm_config_dir_tmp +
                             '/coverage.' + options.testName + '.json',
-                        fileScreenCapture: (app.utility2.envDict
+                        fileScreenCapture: (local.utility2.envDict
                             .npm_config_dir_build +
                             '/screen-capture.' + options.testName + '.png')
                             .replace((/%/g), '_')
                             .replace((/_2F\.png$/), 'png'),
-                        fileTestReport: app.utility2.envDict
+                        fileTestReport: local.utility2.envDict
                             .npm_config_dir_tmp +
                             '/test-report.' + options.testName + '.json',
                         modePhantom: 'testUrl'
                     });
                     // set timerTimeout
-                    timerTimeout = app.utility2.onTimeout(
+                    timerTimeout = local.utility2.onTimeout(
                         onNext,
-                        app.utility2.timeoutDefault,
+                        local.utility2.timeoutDefault,
                         options.testName
                     );
                     // coverage-hack - cover utility2 in phantomjs
                     options.argv1 = __dirname + '/index.js';
-                    if (app.global.__coverage__ &&
-                            app.utility2.envDict.npm_package_name ===
+                    if (local.global.__coverage__ &&
+                            local.utility2.envDict.npm_package_name ===
                             'utility2') {
                         options.argv1 =
-                            app.utility2.envDict.npm_config_dir_tmp +
+                            local.utility2.envDict.npm_config_dir_tmp +
                             '/covered.utility2.js';
-                        app.fs.writeFileSync(
+                        local.fs.writeFileSync(
                             options.argv1,
-                            app.istanbul_lite.instrumentInPackage(app.utility2[
-                                '/assets/utility2.js'
-                            ], __dirname + '/index.js', 'utility2')
+                            local.istanbul_lite.instrumentInPackage(
+                                local.utility2[
+                                    '/assets/utility2.js'
+                                ],
+                                __dirname + '/index.js',
+                                'utility2'
+                            )
                         );
                     }
                     // spawn phantomjs to test a url
-                    app.child_process
+                    local.child_process
                         .spawn(
                             require(
                                 'phantomjs-lite'
@@ -1340,7 +1354,7 @@ case 'node':
                     break;
                 case 2:
                     options.exitCode = error;
-                    onParallel = app.utility2.onParallel(onNext);
+                    onParallel = local.utility2.onParallel(onNext);
                     onParallel.counter += 1;
                     // merge coverage and test-report
                     [
@@ -1348,9 +1362,9 @@ case 'node':
                         options.fileTestReport
                     ].forEach(function (file, ii) {
                         onParallel.counter += 1;
-                        app.fs.readFile(file, 'utf8', function (error, data) {
+                        local.fs.readFile(file, 'utf8', function (error, data) {
                             // jslint-hack
-                            app.utility2.nop(error);
+                            local.utility2.nop(error);
                             try {
                                 data = JSON.parse(data);
                             } catch (ignore) {
@@ -1358,15 +1372,15 @@ case 'node':
                             if (data) {
                                 // merge coverage
                                 if (ii === 0) {
-                                    app.utility2.istanbulMerge(
-                                        app.global.__coverage__,
+                                    local.utility2.istanbulMerge(
+                                        local.global.__coverage__,
                                         data
                                     );
                                 // merge test-report
                                 } else if (options.modePhantom === 'testUrl' &&
                                         !options.modeErrorIgnore) {
-                                    app.utility2.testMerge(
-                                        app.utility2.testReport,
+                                    local.utility2.testMerge(
+                                        local.utility2.testReport,
                                         data
                                     );
                                 }
@@ -1390,32 +1404,32 @@ case 'node':
             onNext();
         };
 
-        app.utility2.replStart = function (globalDict) {
+        local.utility2.replStart = function (globalDict) {
             /*
                 this function will start the repl debugger
             */
             /*jslint evil: true*/
             Object.keys(globalDict).forEach(function (key) {
-                app.global[key] = globalDict[key];
+                local.global[key] = globalDict[key];
             });
             // start repl server
-            app._replServer = require('repl').start({ useGlobal: true });
+            local._replServer = require('repl').start({ useGlobal: true });
             // save repl eval function
-            app._replServer.evalDefault = app._replServer.eval;
+            local._replServer.evalDefault = local._replServer.eval;
             // debug error
-            app._replServer.evalDefault('process.domain && ' +
+            local._replServer.evalDefault('process.domain && ' +
                 'process.domain.on("error", function (error) {' +
                 'require("utility2")._debugReplError = error;' +
-                '});\n', null, 'repl', app.utility2.onErrorDefault);
+                '});\n', null, 'repl', local.utility2.onErrorDefault);
             // hook custom repl eval function
-            app._replServer.eval = function (script, context, file, onError) {
+            local._replServer.eval = function (script, context, file, onError) {
                 var match, onError2;
                 match = (/^(\S+)([\S\s]*?)\n/).exec(script);
                 onError2 = function (error, data) {
                     // debug error
-                    app.utility2._debugReplError =
+                    local.utility2._debugReplError =
                         error ||
-                        app.utility2._debugReplError;
+                        local.utility2._debugReplError;
                     onError(error, data);
                 };
                 switch (match && match[1]) {
@@ -1432,7 +1446,7 @@ case 'node':
                         break;
                     }
                     // run async shell command
-                    app.child_process
+                    local.child_process
                         .spawn(
                             '/bin/sh',
                             [
@@ -1444,7 +1458,7 @@ case 'node':
                         // on shell exit, print return prompt
                         .on('exit', function (exitCode) {
                             console.log('exit-code ' + exitCode);
-                            app._replServer.evalDefault(
+                            local._replServer.evalDefault(
                                 '\n',
                                 context,
                                 file,
@@ -1455,7 +1469,7 @@ case 'node':
                 // syntax sugar to grep current dir
                 case 'grep':
                     // run async shell command
-                    app.child_process
+                    local.child_process
                         .spawn(
                             '/bin/sh',
                             ['-c', 'find . -type f | grep -v ' +
@@ -1480,7 +1494,7 @@ case 'node':
                         // on shell exit, print return prompt
                         .on('exit', function (exitCode) {
                             console.log('exit-code ' + exitCode);
-                            app._replServer.evalDefault(
+                            local._replServer.evalDefault(
                                 '\n',
                                 context,
                                 file,
@@ -1494,8 +1508,8 @@ case 'node':
                     break;
                 }
                 // eval modified script
-                app.utility2.testTryCatch(function () {
-                    app._replServer.evalDefault(
+                local.utility2.testTryCatch(function () {
+                    local._replServer.evalDefault(
                         script,
                         context,
                         file,
@@ -1505,7 +1519,7 @@ case 'node':
             };
         };
 
-        app.utility2.serverRespondDefault = function (
+        local.utility2.serverRespondDefault = function (
             request,
             response,
             statusCode,
@@ -1516,24 +1530,29 @@ case 'node':
                 or error stack for the given statusCode
             */
             // set response / statusCode / contentType
-            app.utility2.serverRespondWriteHead(request, response, statusCode, {
-                'Content-Type': 'text/plain; charset=utf-8'
-            });
+            local.utility2.serverRespondWriteHead(
+                request,
+                response,
+                statusCode,
+                { 'Content-Type': 'text/plain; charset=utf-8' }
+            );
             if (error) {
                 // if modeErrorIgnore is undefined in url search params,
                 // then print error.stack to stderr
                 if (!(/\?\S*?\bmodeErrorIgnore=1\b/).test(request.url)) {
-                    app.utility2.onErrorDefault(error);
+                    local.utility2.onErrorDefault(error);
                 }
                 // end response with error.stack
-                response.end(app.utility2.errorStack(error));
+                response.end(local.utility2.errorStack(error));
                 return;
             }
             // end response with default statusCode message
-            response.end(statusCode + ' ' + app.http.STATUS_CODES[statusCode]);
+            response.end(
+                statusCode + ' ' + local.http.STATUS_CODES[statusCode]
+            );
         };
 
-        app.utility2.serverRespondEcho = function (request, response) {
+        local.utility2.serverRespondEcho = function (request, response) {
             /*
                 this function will respond with debug info
             */
@@ -1545,7 +1564,7 @@ case 'node':
             request.pipe(response);
         };
 
-        app.utility2.serverRespondWriteHead = function (
+        local.utility2.serverRespondWriteHead = function (
             request,
             response,
             statusCode,
@@ -1556,7 +1575,7 @@ case 'node':
                 statusCode / headers
             */
             // jslint-hack
-            app.utility2.nop(request);
+            local.utility2.nop(request);
             if (!response.headersSent) {
                 // set response.statusCode
                 if (statusCode) {
@@ -1570,7 +1589,7 @@ case 'node':
             }
         };
 
-        app.utility2.streamReadAll = function (readableStream, onError) {
+        local.utility2.streamReadAll = function (readableStream, onError) {
             /*
                 this function will concat data from the readableStream,
                 and when finished reading, then pass it to onError
@@ -1591,7 +1610,7 @@ case 'node':
                 .on('error', onError);
         };
 
-        app.utility2.testRunServer = function (options) {
+        local.utility2.testRunServer = function (options) {
             /*
                 this function will
                 1. create http-server from options.serverMiddlewareList
@@ -1601,15 +1620,15 @@ case 'node':
             var server;
             // if $npm_config_timeout_exit is defined,
             // then exit this process after $npm_config_timeout_exit ms
-            if (Number(app.utility2.envDict.npm_config_timeout_exit)) {
+            if (Number(local.utility2.envDict.npm_config_timeout_exit)) {
                 setTimeout(
-                    app.utility2.exit,
-                    Number(app.utility2.envDict.npm_config_timeout_exit)
+                    local.utility2.exit,
+                    Number(local.utility2.envDict.npm_config_timeout_exit)
                 // keep timerTimeout from blocking the process from exiting
                 ).unref();
             }
             // 1. create http-server from options.serverMiddlewareList
-            server = app.http.createServer(function (request, response) {
+            server = local.http.createServer(function (request, response) {
                 var contentTypeDict, modeNext, onNext;
                 modeNext = -2;
                 onNext = function (error) {
@@ -1618,19 +1637,19 @@ case 'node':
                         : modeNext + 1;
                     if (modeNext === -1) {
                         // debug server request
-                        app.utility2._debugServerRequest = request;
+                        local.utility2._debugServerRequest = request;
                         // debug server response
-                        app.utility2._debugServerResponse = response;
+                        local.utility2._debugServerResponse = response;
                         // check if _testSecret is valid
                         request._testSecretValid = (
                             /\b_testSecret=(\w+)\b/
                         ).exec(request.url);
                         request._testSecretValid = request._testSecretValid &&
                             request._testSecretValid[1] ===
-                            app.utility2._testSecret;
+                            local.utility2._testSecret;
                         // init request.urlPathNormalized
-                        request.urlPathNormalized = app.path.resolve(
-                            app.url.parse(request.url).pathname
+                        request.urlPathNormalized = local.path.resolve(
+                            local.url.parse(request.url).pathname
                         );
                         // init Content-Type header
                         contentTypeDict = {
@@ -1640,13 +1659,15 @@ case 'node':
                             '.json': 'application/json; charset=UTF-8',
                             '.txt': 'text/txt; charset=UTF-8'
                         };
-                        app.utility2.serverRespondWriteHead(
+                        local.utility2.serverRespondWriteHead(
                             request,
                             response,
                             null,
                             {
                                 'Content-Type': contentTypeDict[
-                                    app.path.extname(request.urlPathNormalized)
+                                    local.path.extname(
+                                        request.urlPathNormalized
+                                    )
                                 ]
                             }
                         );
@@ -1662,7 +1683,7 @@ case 'node':
                     // if error occurred,
                     // then respond with '500 Internal Server Error',
                     // else respond with '404 Not Found'
-                    app.utility2.serverRespondDefault(request, response, error
+                    local.utility2.serverRespondDefault(request, response, error
                         ? 500
                         : 404, error);
                 };
@@ -1671,31 +1692,31 @@ case 'node':
             // if $npm_config_server_port is undefined,
             // then assign it a random integer
             // in the inclusive range 1 to 0xffff
-            app.utility2.envDict.npm_config_server_port =
-                app.utility2.envDict.npm_config_server_port ||
+            local.utility2.envDict.npm_config_server_port =
+                local.utility2.envDict.npm_config_server_port ||
                 ((Math.random() * 0x10000) | 0x8000).toString();
             // 2. start http-server on port $npm_config_server_port
             server.listen(
-                app.utility2.envDict.npm_config_server_port,
+                local.utility2.envDict.npm_config_server_port,
                 function () {
                     console.log('http-server listening on port ' +
-                        app.utility2.envDict.npm_config_server_port);
-                    app.utility2.onReady();
+                        local.utility2.envDict.npm_config_server_port);
+                    local.utility2.onReady();
                 }
             );
             // 3. if $npm_config_mode_npm_test is defined, then run tests
-            app.utility2.onReady.onReady = function () {
-                app.utility2.testRun(options);
+            local.utility2.onReady.onReady = function () {
+                local.utility2.testRun(options);
             };
-            app.utility2.onReady.counter += 1;
+            local.utility2.onReady.counter += 1;
             return server;
         };
 
         // init assets
-        app.utility2['/assets/utility2.js'] =
-            app.fs.readFileSync(__filename, 'utf8');
-        app.utility2['/test/test.html'] =
-            app.utility2.textFormat(app.fs
+        local.utility2['/assets/utility2.js'] =
+            local.fs.readFileSync(__filename, 'utf8');
+        local.utility2['/test/test.html'] =
+            local.utility2.textFormat(local.fs
                 .readFileSync(__dirname + '/README.md', 'utf8')
                 .replace(
                     (/[\S\s]+?(<!DOCTYPE html>[\S\s]+?<\/html>)[\S\s]+/),
@@ -1704,7 +1725,7 @@ case 'node':
                 // parse '\' line-continuation
                 .replace((/\\\n/g), '')
                 .replace((/\\n' \+(\s*?)'/g), '$1'), {
-                    envDict: app.utility2.envDict
+                    envDict: local.utility2.envDict
                 });
     }());
 
@@ -1712,7 +1733,7 @@ case 'node':
 
     // run phantom js-env code
     (function () {
-        if (app.modeJs !== 'phantom') {
+        if (local.modeJs !== 'phantom') {
             return;
         }
 
@@ -1721,8 +1742,8 @@ case 'node':
             // this function will,
             // if coverage is defined, then save coverage to file
             if (coverage) {
-                app.fs.write(
-                    app.utility2.fileCoverage,
+                local.fs.write(
+                    local.utility2.fileCoverage,
                     JSON.stringify(coverage)
                 );
             }
@@ -1734,61 +1755,63 @@ case 'node':
             case 1:
                 // init global error handling
                 // http://phantomjs.org/api/phantom/handler/on-error.html
-                app.global.phantom.onError = onNext;
+                local.global.phantom.onError = onNext;
                 // override utility2 properties
-                app.utility2.setOverride(
-                    app.utility2,
+                local.utility2.setOverride(
+                    local.utility2,
                     -1,
-                    JSON.parse(decodeURIComponent(app.utility2.system.args[1]))
+                    JSON.parse(
+                        decodeURIComponent(local.utility2.system.args[1])
+                    )
                 );
                 // if modeErrorIgnore is truthy,
                 // then suppress console.error and console.log
-                if (app.utility2.modeErrorIgnore) {
-                    console.error = console.log = app.utility2.nop;
+                if (local.utility2.modeErrorIgnore) {
+                    console.error = console.log = local.utility2.nop;
                 }
                 // set timeout for phantom
-                app.utility2.onTimeout(
-                    app.utility2.onErrorExit,
-                    app.utility2.timeoutDefault,
-                    app.utility2.url
+                local.utility2.onTimeout(
+                    local.utility2.onErrorExit,
+                    local.utility2.timeoutDefault,
+                    local.utility2.url
                 );
                 // init webpage
-                app.utility2.page = app.utility2.webpage.create();
+                local.utility2.page = local.utility2.webpage.create();
                 // init webpage clipRect
-                app.utility2.page.clipRect = {
+                local.utility2.page.clipRect = {
                     height: 768,
                     left: 0,
                     top: 0,
                     width: 1024
                 };
                 // init webpage viewportSize
-                app.utility2.page.viewportSize = { height: 768, width: 1024 };
+                local.utility2.page.viewportSize = { height: 768, width: 1024 };
                 // init webpage error handling
                 // http://phantomjs.org/api/webpage/handler/on-error.html
-                app.utility2.page.onError = app.global.phantom.onError;
+                local.utility2.page.onError = local.global.phantom.onError;
                 // pipe webpage console.log to stdout
-                app.utility2.page.onConsoleMessage = function () {
+                local.utility2.page.onConsoleMessage = function () {
                     console.log.apply(console, arguments);
                 };
                 // open requested webpage
-                app.utility2.page.open(
+                local.utility2.page.open(
                     // security - insert _testSecret in url without revealing it
-                    app.utility2.url.replace(
+                    local.utility2.url.replace(
                         '{{_testSecret}}',
-                        app.utility2._testSecret
+                        local.utility2._testSecret
                     ),
                     onNext
                 );
                 break;
             case 2:
-                console.log(app.utility2.argv0 + ' - open ' +
+                console.log(local.utility2.argv0 + ' - open ' +
                     (error === 'success'
                     ? 'success'
-                    : 'fail') + ' ' + app.utility2.url);
-                switch (app.utility2.modePhantom) {
+                    : 'fail') + ' ' + local.utility2.url);
+                switch (local.utility2.modePhantom) {
                 // screen-capture webpage after timeoutScreenCapture ms
                 case 'screenCapture':
-                    setTimeout(onNext, app.utility2.timeoutScreenCapture);
+                    setTimeout(onNext, local.utility2.timeoutScreenCapture);
                     break;
                 case 'testUrl':
                     if (error !== 'success') {
@@ -1798,13 +1821,14 @@ case 'node':
                 }
                 break;
             case 3:
-                switch (app.utility2.modePhantom) {
+                switch (local.utility2.modePhantom) {
                 // screen-capture webpage
                 case 'screenCapture':
                     // save screen-capture
-                    app.utility2.page.render(app.utility2.fileScreenCapture);
+                    local.utility2.page
+                        .render(local.utility2.fileScreenCapture);
                     console.log('created screen-capture file://' +
-                        app.utility2.fileScreenCapture);
+                        local.utility2.fileScreenCapture);
                     break;
                 // handle test-report callback
                 case 'testUrl':
@@ -1818,29 +1842,30 @@ case 'node':
                     if (data) {
                         // handle global_test_results passed as error
                         // merge coverage
-                        app.global.__coverage__ = app.utility2.istanbulMerge(
-                            app.global.__coverage__,
-                            data.coverage
-                        );
+                        local.global.__coverage__ =
+                            local.utility2.istanbulMerge(
+                                local.global.__coverage__,
+                                data.coverage
+                            );
                         // merge test-report
-                        app.utility2.testMerge(
-                            app.utility2.testReport,
+                        local.utility2.testMerge(
+                            local.utility2.testReport,
                             data.testReport
                         );
                         // save screen-capture
-                        app.utility2.page.render(
-                            app.utility2.fileScreenCapture
+                        local.utility2.page.render(
+                            local.utility2.fileScreenCapture
                         );
                         // integrate screen-capture into test-report
                         data.testReport.testPlatformList[0].screenCaptureImg =
-                            app.utility2.fileScreenCapture.replace(
+                            local.utility2.fileScreenCapture.replace(
                                 (/[\S\s]*\//),
                                 ''
                             );
                         // save test-report
-                        app.fs.write(
-                            app.utility2.fileTestReport,
-                            JSON.stringify(app.utility2.testReport)
+                        local.fs.write(
+                            local.utility2.fileTestReport,
+                            JSON.stringify(local.utility2.testReport)
                         );
                         // coverage-hack - cover no coverage handling behavior
                         coverageSave();
@@ -1853,7 +1878,7 @@ case 'node':
                 // handle webpage error
                 // http://phantomjs.org/api/phantom/handler/on-error.html
                 if (error && typeof error === 'string') {
-                    console.error('\n' + app.utility2.testName +
+                    console.error('\n' + local.utility2.testName +
                         '\nERROR: ' + error + ' TRACE:');
                     (trace || []).forEach(function (t) {
                         console.error(' -> ' + (t.file || t.sourceURL)
@@ -1864,15 +1889,15 @@ case 'node':
                     console.error();
                 // handle phantom error
                 } else {
-                    app.utility2.onErrorDefault(error);
+                    local.utility2.onErrorDefault(error);
                 }
                 onNext(!!error);
                 break;
             default:
                 setTimeout(function () {
                     // save coverage before exiting
-                    coverageSave(app.global.__coverage__);
-                    app.utility2.exit(error);
+                    coverageSave(local.global.__coverage__);
+                    local.utility2.exit(error);
                 });
             }
         };
@@ -1880,17 +1905,17 @@ case 'node':
     }());
 }((function (self) {
     'use strict';
-    var app;
+    var local;
 
 
 
     // run shared js-env code
     (function () {
-        // init app
-        app = {};
+        // init local
+        local = {};
         // init utility2
-        app.utility2 = {};
-        app.modeJs = (function () {
+        local.utility2 = { local: local };
+        local.modeJs = (function () {
             try {
                 return self.phantom.version &&
                     typeof require('webpage').create === 'function' &&
@@ -1908,38 +1933,39 @@ case 'node':
                 }
             }
         }());
-        app.utility2.nop = function () {
+        local.utility2.nop = function () {
             /*
                 this function will perform no operation - nop
             */
             return;
         };
     }());
-    switch (app.modeJs) {
+    switch (local.modeJs) {
 
 
 
     // run browser js-env code
     case 'browser':
         // init global
-        app.global = window;
+        local.global = window;
         // export utility2
-        window.utility2 = app.utility2;
+        window.utility2 = local.utility2;
         // init utility2 properties
-        app.utility2.envDict = app.utility2.envDict || {};
-        app.utility2.exit = app.utility2.nop;
-        app.utility2.istanbul_lite = app.istanbul_lite = window.istanbul_lite;
+        local.utility2.envDict = local.utility2.envDict || {};
+        local.utility2.exit = local.utility2.nop;
+        local.istanbul_lite = window.istanbul_lite;
+        local.jslint_lite = window.jslint_lite;
         // parse url search-params that matches
         // 'mode*' or '_testSecret' or 'timeoutDefault'
         location.search.replace(
             (/\b(mode[A-Z]\w+|_testSecret|timeoutDefault)=([\w\-\.\%]+)/g),
             function (match0, key, value) {
                 // jslint-hack
-                app.utility2.nop(match0);
-                app.utility2[key] = value;
+                local.utility2.nop(match0);
+                local.utility2[key] = value;
                 // try to parse value as json object
                 try {
-                    app.utility2[key] = JSON.parse(value);
+                    local.utility2[key] = JSON.parse(value);
                 } catch (ignore) {
                 }
             }
@@ -1951,39 +1977,38 @@ case 'node':
     // run node js-env code
     case 'node':
         // init global
-        app.global = global;
+        local.global = global;
         // export utility2
-        module.exports = app.utility2;
+        module.exports = local.utility2;
         // require modules
-        app.child_process = require('child_process');
-        app.crypto = require('crypto');
-        app.fs = require('fs');
-        app.http = require('http');
-        app.https = require('https');
-        app.utility2.istanbul_lite =
-            app.istanbul_lite = require('istanbul-lite');
-        app.utility2.jslint_lite = app.jslint_lite = require('jslint-lite');
-        app.path = require('path');
-        app.url = require('url');
+        local.child_process = require('child_process');
+        local.crypto = require('crypto');
+        local.fs = require('fs');
+        local.http = require('http');
+        local.https = require('https');
+        local.istanbul_lite = require('istanbul-lite');
+        local.jslint_lite = require('jslint-lite');
+        local.path = require('path');
+        local.url = require('url');
         // init utility2 properties
-        app.utility2.__dirname = __dirname;
-        app.utility2.envDict = process.env;
-        app.utility2.envDict.npm_config_dir_build =
+        local.utility2.__dirname = __dirname;
+        local.utility2.envDict = process.env;
+        local.utility2.envDict.npm_config_dir_build =
             process.cwd() + '/tmp/build';
-        app.utility2.envDict.npm_config_dir_tmp = process.cwd() + '/tmp';
-        app.utility2.exit = process.exit;
+        local.utility2.envDict.npm_config_dir_tmp = process.cwd() + '/tmp';
+        local.utility2.exit = process.exit;
         // init _testSecret
         (function () {
             var testSecretCreate;
             testSecretCreate = function () {
-                app.utility2._testSecret =
-                    app.crypto.randomBytes(32).toString('hex');
+                local.utility2._testSecret =
+                    local.crypto.randomBytes(32).toString('hex');
             };
             // init _testSecret
             testSecretCreate();
-            app.utility2._testSecret =
-                app.utility2.envDict.TEST_SECRET ||
-                app.utility2._testSecret;
+            local.utility2._testSecret =
+                local.utility2.envDict.TEST_SECRET ||
+                local.utility2._testSecret;
             // re-init _testSecret every 60 seconds
             setInterval(testSecretCreate, 60000).unref();
         }());
@@ -1994,16 +2019,16 @@ case 'node':
     // run phantom js-env code
     case 'phantom':
         // init global
-        app.global = self;
+        local.global = self;
         // export utility2
-        self.utility2 = app.utility2;
+        self.utility2 = local.utility2;
         // require modules
-        app.fs = require('fs');
-        app.utility2.system = require('system');
-        app.utility2.webpage = require('webpage');
+        local.fs = require('fs');
+        local.utility2.system = require('system');
+        local.utility2.webpage = require('webpage');
         // init utility2 properties
-        app.utility2.envDict = app.utility2.system.env;
-        app.utility2.exit = self.phantom.exit;
+        local.utility2.envDict = local.utility2.system.env;
+        local.utility2.exit = self.phantom.exit;
         break;
     }
 
@@ -2012,57 +2037,59 @@ case 'node':
     // run shared js-env code
     (function () {
         // init global debug_print
-        app.global['debug_print'.replace('_p', 'P')] = function (arg) {
+        local.global['debug_print'.replace('_p', 'P')] = function (arg) {
             /*
                 this function will both print the arg to stderr and return it
             */
             // debug arguments
-            app.utility2['debug_printArguments'.replace('_p', 'P')] = arguments;
+            local.utility2[
+                'debug_printArguments'.replace('_p', 'P')
+            ] = arguments;
             console.error('\n\n\ndebug_print'.replace('_p', 'P'));
             console.error.apply(console, arguments);
             console.error();
             // return arg for inspection
             return arg;
         };
-        app.utility2.errorDefault = new Error('default error');
+        local.utility2.errorDefault = new Error('default error');
         // http://www.w3.org/TR/html5/forms.html#valid-e-mail-address
-        app.utility2.regexpEmailValidate = new RegExp(
+        local.utility2.regexpEmailValidate = new RegExp(
             '^[a-zA-Z0-9.!#$%&\'*+\\/=?\\^_`{|}~\\-]+@' +
                 '[a-zA-Z0-9](?:[a-zA-Z0-9\\-]{0,61}[a-zA-Z0-9])?' +
                 '(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9\\-]{0,61}[a-zA-Z0-9])?)*$'
         );
-        app.utility2.testPlatform = {
-            name: app.modeJs === 'browser'
+        local.utility2.testPlatform = {
+            name: local.modeJs === 'browser'
                 ? 'browser - ' + navigator.userAgent + ' - ' +
                     new Date().toISOString()
-                : app.modeJs === 'node'
+                : local.modeJs === 'node'
                 ? 'node - ' + process.platform + ' ' + process.version + ' - ' +
                     new Date().toISOString()
-                : (app.global.slimer
+                : (local.global.slimer
                     ? 'slimer - '
                     : 'phantom - ') +
-                    app.utility2.system.os.name + ' ' +
-                    app.global.phantom.version.major + '.' +
-                    app.global.phantom.version.minor + '.' +
-                    app.global.phantom.version.patch + ' - ' +
+                    local.utility2.system.os.name + ' ' +
+                    local.global.phantom.version.major + '.' +
+                    local.global.phantom.version.minor + '.' +
+                    local.global.phantom.version.patch + ' - ' +
                     new Date().toISOString(),
-            screenCaptureImg: app.utility2.envDict.MODE_BUILD_SCREEN_CAPTURE,
+            screenCaptureImg: local.utility2.envDict.MODE_BUILD_SCREEN_CAPTURE,
             testCaseList: []
         };
-        app.utility2.testReport = {
-            testPlatformList: [app.utility2.testPlatform]
+        local.utility2.testReport = {
+            testPlatformList: [local.utility2.testPlatform]
         };
-        app.utility2.textExampleAscii = app.utility2.textExampleAscii ||
+        local.utility2.textExampleAscii = local.utility2.textExampleAscii ||
             '\x00\x01\x02\x03\x04\x05\x06\x07\b\t\n\x0b\f\r\x0e\x0f' +
             '\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f' +
             ' !"#$%&\'()*+,-./0123456789:;<=>?' +
             '@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_' +
             '`abcdefghijklmnopqrstuvwxyz{|}~\x7f';
-        app.utility2.textExampleUri = '!%\'()*-.' +
+        local.utility2.textExampleUri = '!%\'()*-.' +
             '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz~';
-        app.utility2.timeoutDefault =
-            app.utility2.envDict.npm_config_timeout_default ||
-            app.utility2.timeoutDefault ||
+        local.utility2.timeoutDefault =
+            local.utility2.envDict.npm_config_timeout_default ||
+            local.utility2.timeoutDefault ||
             30000;
     }());
 
@@ -2075,7 +2102,7 @@ case 'node':
 /* jslint-indent-begin 8 */
 /*jslint maxlen: 256*/
 // init assets
-app.utility2['/assets/utility2.css'] = String() +
+local.utility2['/assets/utility2.css'] = String() +
     '/*csslint\n' +
         'box-model: false\n' +
     '*/\n' +
@@ -2141,22 +2168,22 @@ app.utility2['/assets/utility2.css'] = String() +
 
 /* jslint-ignore-begin */
 // https://img.shields.io/badge/last_build-0000_00_00_00_00_00_UTC_--_master_--_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-0077ff.svg?style=flat
-app.utility2['/build/build.badge.svg'] = '<svg xmlns="http://www.w3.org/2000/svg" width="563" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="563" height="20" fill="#555"/><rect rx="0" x="61" width="502" height="20" fill="#07f"/><path fill="#07f" d="M61 0h4v20h-4z"/><rect rx="0" width="563" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="31.5" y="15" fill="#010101" fill-opacity=".3">last build</text><text x="31.5" y="14">last build</text><text x="311" y="15" fill="#010101" fill-opacity=".3">0000 00 00 00 00 00 UTC - master - aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</text><text x="311" y="14">0000 00 00 00 00 00 UTC - master - aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</text></g></svg>';
+local.utility2['/build/build.badge.svg'] = '<svg xmlns="http://www.w3.org/2000/svg" width="563" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="563" height="20" fill="#555"/><rect rx="0" x="61" width="502" height="20" fill="#07f"/><path fill="#07f" d="M61 0h4v20h-4z"/><rect rx="0" width="563" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="31.5" y="15" fill="#010101" fill-opacity=".3">last build</text><text x="31.5" y="14">last build</text><text x="311" y="15" fill="#010101" fill-opacity=".3">0000 00 00 00 00 00 UTC - master - aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</text><text x="311" y="14">0000 00 00 00 00 00 UTC - master - aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</text></g></svg>';
 
 
 
 // https://img.shields.io/badge/coverage-100.0%-00dd00.svg?style=flat
-app.utility2['/build/coverage.badge.svg'] = '<svg xmlns="http://www.w3.org/2000/svg" width="117" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="117" height="20" fill="#555"/><rect rx="0" x="63" width="54" height="20" fill="#0d0"/><path fill="#0d0" d="M63 0h4v20h-4z"/><rect rx="0" width="117" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="32.5" y="15" fill="#010101" fill-opacity=".3">coverage</text><text x="32.5" y="14">coverage</text><text x="89" y="15" fill="#010101" fill-opacity=".3">100.0%</text><text x="89" y="14">100.0%</text></g></svg>';
+local.utility2['/build/coverage.badge.svg'] = '<svg xmlns="http://www.w3.org/2000/svg" width="117" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="117" height="20" fill="#555"/><rect rx="0" x="63" width="54" height="20" fill="#0d0"/><path fill="#0d0" d="M63 0h4v20h-4z"/><rect rx="0" width="117" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="32.5" y="15" fill="#010101" fill-opacity=".3">coverage</text><text x="32.5" y="14">coverage</text><text x="89" y="15" fill="#010101" fill-opacity=".3">100.0%</text><text x="89" y="14">100.0%</text></g></svg>';
 
 
 
 // https://img.shields.io/badge/tests_failed-999-dd0000.svg?style=flat
-app.utility2['/build/test-report.badge.svg'] = '<svg xmlns="http://www.w3.org/2000/svg" width="103" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="103" height="20" fill="#555"/><rect rx="0" x="72" width="31" height="20" fill="#d00"/><path fill="#d00" d="M72 0h4v20h-4z"/><rect rx="0" width="103" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="37" y="15" fill="#010101" fill-opacity=".3">tests failed</text><text x="37" y="14">tests failed</text><text x="86.5" y="15" fill="#010101" fill-opacity=".3">999</text><text x="86.5" y="14">999</text></g></svg>';
+local.utility2['/build/test-report.badge.svg'] = '<svg xmlns="http://www.w3.org/2000/svg" width="103" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="103" height="20" fill="#555"/><rect rx="0" x="72" width="31" height="20" fill="#d00"/><path fill="#d00" d="M72 0h4v20h-4z"/><rect rx="0" width="103" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="37" y="15" fill="#010101" fill-opacity=".3">tests failed</text><text x="37" y="14">tests failed</text><text x="86.5" y="15" fill="#010101" fill-opacity=".3">999</text><text x="86.5" y="14">999</text></g></svg>';
 /* jslint-ignore-end */
 
 
 
-app.utility2['/test/test-report.html.template'] = String() +
+local.utility2['/test/test-report.html.template'] = String() +
     '<style>\n' +
     '.testReportPlatformDiv {\n' +
         'border: 1px solid;\n' +
@@ -2277,5 +2304,5 @@ app.utility2['/test/test-report.html.template'] = String() +
 
 
     }());
-    return app;
+    return local;
 }(this))));
