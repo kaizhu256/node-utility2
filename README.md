@@ -47,7 +47,7 @@ shExampleSh
 #### output from shell
 ![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleSh.png)
 #### output from [phantomjs-lite](https://www.npmjs.com/package/phantomjs-lite)
-![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleJs.slimerjs.png)
+![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleSh.slimerjs.png)
 
 
 
@@ -381,13 +381,14 @@ shExampleSh
 npm_config_mode_auto_restart=1 npm_config_mode_auto_restart_child=1 \
 ./index.sh shRun shNpmTest test.js"
     },
-    "version": "2015.3.7-12"
+    "version": "2015.3.7-13"
 }
 ```
 
 
 
 # todo
+- jslint textarea
 - add testCase for validating _testSecret
 - add taskPool
 - add failed test example
