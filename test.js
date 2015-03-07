@@ -636,7 +636,7 @@
                     // test phantom-callback handling behavior
                     '?modeTest=phantom&' +
                     // test _testSecret-validation handling behavior
-                    '_testSecret={{_testSecret}}&'
+                    '_testSecret={{_testSecret}}'
             }, {
                 modeError: true,
                 modeErrorIgnore: true,
