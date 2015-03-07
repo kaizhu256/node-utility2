@@ -5,9 +5,9 @@ shAesDecrypt() {
     # init $IV from first 44 base64-encoded bytes of $TEXT
     local IV=$(printf $TEXT | cut -c1-44 | base64 --decode) || return $?
     # decrypt remaining base64-encoded bytes of $TEXT to stdout using aes-256-cbc
-    printf $TEXT |\
-        cut -c45-9999 |\
-        base64 --decode |\
+    printf $TEXT | \
+        cut -c45-9999 | \
+        base64 --decode | \
         openssl enc -aes-256-cbc -d -K $AES_256_KEY -iv $IV || return $?
 }
 
@@ -36,11 +36,11 @@ shBuildGithubUpload() {
     then
         return
     fi
-    shBuildPrint githubUpload\
+    shBuildPrint githubUpload \
         "uploading build-artifacts to git@github.com:$GITHUB_REPO.git" || return $?
     # clone gh-pages branch
     rm -fr $npm_config_dir_tmp/gh-pages || return $?
-    git clone git@github.com:$GITHUB_REPO.git\
+    git clone git@github.com:$GITHUB_REPO.git \
         --branch=gh-pages --single-branch $npm_config_dir_tmp/gh-pages || return $?
     cd $npm_config_dir_tmp/gh-pages || return $?
     # copy build-artifacts to gh-pages
@@ -120,7 +120,7 @@ shGitLsTree() {
     # this function will list all files committed to HEAD
     git ls-tree --name-only -r HEAD | while read file
     do
-        printf "%10s bytes    $(git log -1 --format="%ai  " -- $file)  $file\n\n"\
+        printf "%10s bytes    $(git log -1 --format="%ai  " -- $file)  $file\n\n" \
             $(ls -ln $file | awk "{print \$5}") || return $?
     done
 }
@@ -240,14 +240,14 @@ shInit() {
     then
         export npm_config_dir_utility2=$CWD || return
     else
-        export npm_config_dir_utility2=$(node -e "console.log(\
-            require('utility2').__dirname\
+        export npm_config_dir_utility2=$(node -e "console.log( \
+            require('utility2').__dirname \
         );") || return $?
     fi
     # init $npm_config_file_istanbul
     if [ ! "$npm_config_file_istanbul" ]
     then
-        export npm_config_file_istanbul=$(cd $npm_config_dir_utility2 &&\
+        export npm_config_file_istanbul=$(cd $npm_config_dir_utility2 && \
             node -e "console.log(require('istanbul-lite').__dirname);")/index.js || return $?
     fi
     # init $GIT_SSH
@@ -263,7 +263,7 @@ shIstanbulCover() {
     then
         node $@
     else
-        npm_config_dir_coverage="$npm_config_dir_build/coverage.html"\
+        npm_config_dir_coverage="$npm_config_dir_build/coverage.html" \
             $npm_config_file_istanbul cover $@ || return $?
     fi
 }
@@ -274,7 +274,7 @@ shIstanbulTest() {
     then
         node $@
     else
-        npm_config_dir_coverage="$npm_config_dir_build/coverage.html"\
+        npm_config_dir_coverage="$npm_config_dir_build/coverage.html" \
             $npm_config_file_istanbul cover $@ || return $?
     fi
 }
@@ -355,7 +355,7 @@ shNpmTestPublished() {
 
 shPhantomScreenCapture() {
     # this function will spawn phantomjs to screen-capture the specified $URL
-    MODE_BUILD=${MODE_BUILD:-phantomScreenCapture} shPhantomTest "$1" ${2-30000} ${3-2000}\
+    MODE_BUILD=${MODE_BUILD:-phantomScreenCapture} shPhantomTest "$1" ${2-30000} ${3-2000} \
         screenCapture || return $?
 }
 
@@ -424,7 +424,7 @@ shReadmeTestJs() {
     local SCRIPT || return $?
     if [ ! "$npm_config_mode_no_jslint" ]
     then
-        SCRIPT="npm install jslint-lite > /dev/null && node_modules/.bin/jslint-lite $FILE" ||\
+        SCRIPT="npm install jslint-lite > /dev/null && node_modules/.bin/jslint-lite $FILE" || \
             return $?
     fi
     if [ "$MODE_OFFLINE" ]
@@ -538,7 +538,8 @@ shRunScreenCapture() {
     # http://www.cnx-software.com/2011/09/22/how-to-convert-a-command-line-result-into-an-image-in-linux/
     # init $npm_config_dir_build
     mkdir -p $npm_config_dir_build/coverage.html || return $?
-    export MODE_BUILD_SCREEN_CAPTURE=screen-capture.${MODE_BUILD-undefined}.png
+    export MODE_BUILD_SCREEN_CAPTURE=screen-capture.${MODE_BUILD-undefined}.png || return $?
+    export npm_config_timeout_exit="$npm_config_timeout_exit" || return $?
     shRun $@ 2>&1 | tee $npm_config_dir_tmp/screen-capture.txt || return $?
     # save $EXIT_CODE and restore $CWD
     shExitCodeSave $(cat $npm_config_file_tmp) || return $?
@@ -554,18 +555,18 @@ shRunScreenCapture() {
             })
             .trimRight()
     );" || return $?
-    if (convert -list font | grep "\bCourier\b" > /dev/null 2>&1) &&\
+    if (convert -list font | grep "\bCourier\b" > /dev/null 2>&1) && \
         (fold package.json > /dev/null 2>&1)
     then
         # word-wrap $npm_config_dir_tmp/screen-capture.txt to 96 characters,
         # and convert to png image
-        fold -w 96 $npm_config_dir_tmp/screen-capture.txt |\
-            convert -background gray25 -border 10 -bordercolor gray25\
-            -depth 4\
-            -fill palegreen -font Courier\
-            -pointsize 12\
-            -quality 90\
-            -type Palette\
+        fold -w 96 $npm_config_dir_tmp/screen-capture.txt | \
+            convert -background gray25 -border 10 -bordercolor gray25 \
+            -depth 4 \
+            -fill palegreen -font Courier \
+            -pointsize 12 \
+            -quality 90 \
+            -type Palette \
             label:@- $npm_config_dir_build/$MODE_BUILD_SCREEN_CAPTURE || return $?
     fi
     return $EXIT_CODE
@@ -625,7 +626,7 @@ shTmpAppCopy() {
 
 shTravisDecryptYml() {
     # this function will decrypt $AES_ENCRYPTED_SH in .travis.yml to stdout
-    perl -ne "print \$1 if /- AES_ENCRYPTED_SH: (.*) # AES_ENCRYPTED_SH\$/" .travis.yml |\
+    perl -ne "print \$1 if /- AES_ENCRYPTED_SH: (.*) # AES_ENCRYPTED_SH\$/" .travis.yml | \
         shAesDecrypt || return $?
 }
 
@@ -636,14 +637,14 @@ shTravisEncrypt() {
     local GITHUB_REPO=$1 || return $?
     local SECRET=$2 || return $?
     # get public rsa key from https://api.travis-ci.org/repos/<owner>/<repo>/key
-    curl -fLSs https://api.travis-ci.org/repos/$GITHUB_REPO/key > $npm_config_file_tmp ||\
+    curl -fLSs https://api.travis-ci.org/repos/$GITHUB_REPO/key > $npm_config_file_tmp || \
         return $?
-    perl -pi -e "s/[^-]+(.+-).+/\$1/; s/\\\\n/\n/g; s/ RSA / /g" $npm_config_file_tmp ||\
+    perl -pi -e "s/[^-]+(.+-).+/\$1/; s/\\\\n/\n/g; s/ RSA / /g" $npm_config_file_tmp || \
         return $?
     # rsa-encrypt $SECRET and print it
-    printf "$SECRET" |\
-        openssl rsautl -encrypt -pubin -inkey $npm_config_file_tmp |\
-        base64 |\
+    printf "$SECRET" | \
+        openssl rsautl -encrypt -pubin -inkey $npm_config_file_tmp | \
+        base64 | \
         tr -d "\n" || return $?
 }
 
@@ -675,13 +676,13 @@ shTravisEncryptYml() {
         return 1
     fi
     printf "# updating .travis.yml with encrypted key\n" || return $?
-    perl -i -pe\
-        "s%(- secure: )(.*)( # AES_256_KEY$)%\$1$AES_256_KEY_ENCRYPTED\$3%"\
+    perl -i -pe \
+        "s%(- secure: )(.*)( # AES_256_KEY$)%\$1$AES_256_KEY_ENCRYPTED\$3%" \
         .travis.yml || return $?
 
     printf "# updating .travis.yml with encrypted script\n" || return $?
-    perl -i -pe\
-        "s%(- AES_ENCRYPTED_SH: )(.*)( # AES_ENCRYPTED_SH$)%\$1$(shAesEncrypt < $FILE)\$3%"\
+    perl -i -pe \
+        "s%(- AES_ENCRYPTED_SH: )(.*)( # AES_ENCRYPTED_SH$)%\$1$(shAesEncrypt < $FILE)\$3%" \
         .travis.yml || return $?
 }
 
