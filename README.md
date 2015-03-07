@@ -354,7 +354,6 @@ stupid: true
 
 
 # todo
-- allow screen-capture to exit with non-zero exit-code
 - create flamegraph from istanbul coverage
 - auto-generate help doc from README.md
 - add server stress test using phantomjs

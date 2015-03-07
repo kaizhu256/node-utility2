@@ -1737,171 +1737,177 @@ case 'node':
             return;
         }
 
-        var coverageSave, data, modeNext, onNext;
-        coverageSave = function (coverage) {
-            // this function will,
-            // if coverage is defined, then save coverage to file
-            if (coverage) {
-                local.fs.write(
-                    local.utility2.fileCoverage,
-                    JSON.stringify(coverage)
-                );
-            }
-        };
-        modeNext = 0;
-        onNext = function (error, trace) {
-            modeNext += 1;
-            switch (modeNext) {
-            case 1:
-                // init global error handling
-                // http://phantomjs.org/api/phantom/handler/on-error.html
-                local.global.phantom.onError = onNext;
-                // override utility2 properties
-                local.utility2.setOverride(
-                    local.utility2,
-                    -1,
-                    JSON.parse(
-                        decodeURIComponent(local.utility2.system.args[1])
-                    )
-                );
-                // if modeErrorIgnore is truthy,
-                // then suppress console.error and console.log
-                if (local.utility2.modeErrorIgnore) {
-                    console.error = console.log = local.utility2.nop;
+        local.coverAndExit = function (coverage, exit, exitCode) {
+            setTimeout(function () {
+                if (coverage) {
+                    local.fs.write(
+                        local.utility2.fileCoverage,
+                        JSON.stringify(coverage)
+                    );
                 }
-                // set timeout for phantom
-                local.utility2.onTimeout(
-                    local.utility2.onErrorExit,
-                    local.utility2.timeoutDefault,
-                    local.utility2.url
-                );
-                // init webpage
-                local.utility2.page = local.utility2.webpage.create();
-                // init webpage clipRect
-                local.utility2.page.clipRect = {
-                    height: 768,
-                    left: 0,
-                    top: 0,
-                    width: 1024
-                };
-                // init webpage viewportSize
-                local.utility2.page.viewportSize = { height: 768, width: 1024 };
-                // init webpage error handling
-                // http://phantomjs.org/api/webpage/handler/on-error.html
-                local.utility2.page.onError = local.global.phantom.onError;
-                // pipe webpage console.log to stdout
-                local.utility2.page.onConsoleMessage = function () {
-                    console.log.apply(console, arguments);
-                };
-                // open requested webpage
-                local.utility2.page.open(
-                    // security - insert _testSecret in url without revealing it
-                    local.utility2.url.replace(
-                        '{{_testSecret}}',
-                        local.utility2._testSecret
-                    ),
-                    onNext
-                );
-                break;
-            case 2:
-                console.log(local.utility2.argv0 + ' - open ' +
-                    (error === 'success'
-                    ? 'success'
-                    : 'fail') + ' ' + local.utility2.url);
-                switch (local.utility2.modePhantom) {
+                exit(exitCode);
+            });
+        };
+
+        local.onError = function (error, trace) {
+            /*
+                this function will run the main error-handler
+                http://phantomjs.org/api/phantom/handler/on-error.html
+            */
+            var data;
+            // handle notification that url has been opened
+            if (error === 'success' && !trace) {
+                console.log(local.utility2.argv0 +
+                    ' - opened ' + local.utility2.url);
+                error = null;
                 // screen-capture webpage after timeoutScreenCapture ms
-                case 'screenCapture':
-                    setTimeout(onNext, local.utility2.timeoutScreenCapture);
-                    break;
-                case 'testUrl':
-                    if (error !== 'success') {
-                        onNext(error, trace);
-                    }
-                    break;
-                }
-                break;
-            case 3:
-                switch (local.utility2.modePhantom) {
-                // screen-capture webpage
-                case 'screenCapture':
-                    // save screen-capture
-                    local.utility2.page
-                        .render(local.utility2.fileScreenCapture);
-                    console.log('created screen-capture file://' +
-                        local.utility2.fileScreenCapture);
-                    break;
-                // handle test-report callback
-                case 'testUrl':
-                    try {
-                        data = (
-                            /\nphantom\n(\{"global_test_results":\{[\S\s]+)/
-                        ).exec(error);
-                        data = data && JSON.parse(data[1]).global_test_results;
-                    } catch (ignore) {
-                    }
-                    if (data) {
-                        // handle global_test_results passed as error
-                        // merge coverage
-                        local.global.__coverage__ =
-                            local.utility2.istanbulMerge(
-                                local.global.__coverage__,
-                                data.coverage
-                            );
-                        // merge test-report
-                        local.utility2.testMerge(
-                            local.utility2.testReport,
-                            data.testReport
-                        );
+                if (local.utility2.modePhantom === 'screenCapture') {
+                    setTimeout(function () {
                         // save screen-capture
-                        local.utility2.page.render(
-                            local.utility2.fileScreenCapture
+                        local.page.render(local.utility2.fileScreenCapture);
+                        console.log(local.utility2.argv0 +
+                            ' - created screen-capture file://' +
+                            local.utility2.fileScreenCapture);
+                        local.coverAndExit(
+                            local.global.__coverage__,
+                            local.utility2.exit,
+                            0
                         );
-                        // integrate screen-capture into test-report
-                        data.testReport.testPlatformList[0].screenCaptureImg =
-                            local.utility2.fileScreenCapture.replace(
-                                (/[\S\s]*\//),
-                                ''
-                            );
-                        // save test-report
-                        local.fs.write(
-                            local.utility2.fileTestReport,
-                            JSON.stringify(local.utility2.testReport)
-                        );
-                        // coverage-hack - cover no coverage handling behavior
-                        coverageSave();
-                        // exit with number of tests failed as exit-code
-                        onNext(data.testReport.testsFailed);
-                        return;
-                    }
-                    break;
+                    }, local.utility2.timeoutScreenCapture);
                 }
-                // handle webpage error
-                // http://phantomjs.org/api/phantom/handler/on-error.html
-                if (error && typeof error === 'string') {
-                    console.error('\n' + local.utility2.testName +
-                        '\nERROR: ' + error + ' TRACE:');
-                    (trace || []).forEach(function (t) {
-                        console.error(' -> ' + (t.file || t.sourceURL)
-                            + ': ' + t.line + (t.function
-                            ? ' (in function ' + t.function + ')'
-                            : ''));
-                    });
-                    console.error();
-                // handle phantom error
-                } else {
-                    local.utility2.onErrorDefault(error);
+                return;
+            }
+            // parse global_test_results
+            try {
+                data = JSON.parse((
+                    /\nphantom\n(\{"global_test_results":\{[\S\s]+)/
+                ).exec(error)[1]).global_test_results;
+            } catch (ignore) {
+            }
+            if (data && data.testReport) {
+                // handle global_test_results passed as error
+                // merge coverage
+                local.global.__coverage__ =
+                    local.utility2.istanbulMerge(
+                        local.global.__coverage__,
+                        data.coverage
+                    );
+                // merge test-report
+                local.utility2.testMerge(
+                    local.utility2.testReport,
+                    data.testReport
+                );
+                // save screen-capture
+                local.page.render(local.utility2.fileScreenCapture);
+                // integrate screen-capture into test-report
+                data.testReport.testPlatformList[0].screenCaptureImg =
+                    local.utility2.fileScreenCapture.replace(
+                        (/[\S\s]*\//),
+                        ''
+                    );
+                // save test-report
+                local.fs.write(
+                    local.utility2.fileTestReport,
+                    JSON.stringify(local.utility2.testReport)
+                );
+                // run phantom self-test
+                if (local.utility2.modePhantomSelfTest) {
+                    // coverage-hack - cover no coverage handling behavior
+                    local.coverAndExit(null, local.utility2.nop);
+                    // disable exit
+                    local.utility2.exit = local.utility2.nop;
+                    // test string error with no trace handling behavior
+                    local.onError('error', null);
+                    // test string error with
+                    // trace-function and trace-sourceUrl handling behavior
+                    local.onError('error', [{
+                        function: true,
+                        sourceUrl: true
+                    }]);
+                    // test default error handling behavior
+                    local.onError(local.utility2.errorDefault);
+                    // restore exit
+                    local.utility2.exit = local.global.phantom.exit;
                 }
-                onNext(!!error);
-                break;
-            default:
-                setTimeout(function () {
-                    // save coverage before exiting
-                    coverageSave(local.global.__coverage__);
-                    local.utility2.exit(error);
+                local.coverAndExit(
+                    local.global.__coverage__,
+                    local.utility2.exit,
+                    data.testReport.testsFailed
+                );
+                return;
+            }
+            // handle webpage error
+            // http://phantomjs.org/api/phantom/handler/on-error.html
+            if (typeof error === 'string') {
+                console.error('\n' + local.utility2.testName +
+                    '\nERROR: ' + error + ' TRACE:');
+                (trace || []).forEach(function (t) {
+                    console.error(' -> ' + (t.file || t.sourceURL)
+                        + ': ' + t.line + (t.function
+                        ? ' (in function ' + t.function + ')'
+                        : ''));
                 });
+                console.error();
+            // handle default error
+            } else {
+                local.utility2.onErrorDefault(error);
+            }
+            if (local.utility2.modePhantom !== 'screenCapture') {
+                local.coverAndExit(
+                    local.global.__coverage__,
+                    local.utility2.exit,
+                    1
+                );
             }
         };
-        onNext();
+
+        // init global error handling
+        // http://phantomjs.org/api/phantom/handler/on-error.html
+        local.global.phantom.onError = local.onError;
+        // override utility2 properties
+        local.utility2.setOverride(
+            local.utility2,
+            -1,
+            JSON.parse(decodeURIComponent(local.system.args[1]))
+        );
+        // if modeErrorIgnore is truthy,
+        // then suppress console.error and console.log
+        if (local.utility2.modeErrorIgnore) {
+            console.error = console.log = local.utility2.nop;
+        }
+        // set timeout for phantom
+        local.utility2.onTimeout(
+            local.utility2.onErrorExit,
+            local.utility2.timeoutDefault,
+            local.utility2.url
+        );
+        // init webpage
+        local.page = local.webpage.create();
+        // init webpage clipRect
+        local.page.clipRect = {
+            height: 768,
+            left: 0,
+            top: 0,
+            width: 1024
+        };
+        // init webpage viewportSize
+        local.page.viewportSize = { height: 768, width: 1024 };
+        // init webpage error handling
+        // http://phantomjs.org/api/webpage/handler/on-error.html
+        local.page.onError = local.onError;
+        // pipe webpage console.log to stdout
+        local.page.onConsoleMessage = function () {
+            console.log.apply(console, arguments);
+        };
+        // open requested webpage
+        local.page.open(
+            // security - insert _testSecret in url without revealing it
+            local.utility2.url.replace(
+                '{{_testSecret}}',
+                local.utility2._testSecret
+            ),
+            local.onError
+        );
     }());
 }((function (self) {
     'use strict';
@@ -2024,10 +2030,10 @@ case 'node':
         self.utility2 = local.utility2;
         // require modules
         local.fs = require('fs');
-        local.utility2.system = require('system');
-        local.utility2.webpage = require('webpage');
+        local.system = require('system');
+        local.webpage = require('webpage');
         // init utility2 properties
-        local.utility2.envDict = local.utility2.system.env;
+        local.utility2.envDict = local.system.env;
         local.utility2.exit = self.phantom.exit;
         break;
     }
@@ -2068,7 +2074,7 @@ case 'node':
                 : (local.global.slimer
                     ? 'slimer - '
                     : 'phantom - ') +
-                    local.utility2.system.os.name + ' ' +
+                    local.system.os.name + ' ' +
                     local.global.phantom.version.major + '.' +
                     local.global.phantom.version.minor + '.' +
                     local.global.phantom.version.patch + ' - ' +

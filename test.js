@@ -649,6 +649,8 @@ stupid: true
                     '/test/script-error.html'
             }, {
                 modeErrorIgnore: true,
+                // run phantom self-test
+                modePhantomSelfTest: true,
                 url: 'http://localhost:' +
                     local.utility2.envDict.npm_config_server_port +
                     // test standalone script handling behavior
@@ -671,10 +673,11 @@ stupid: true
             // test screenCapture handling behavior
             onParallel.counter += 1;
             options = {
+                modeErrorIgnore: true,
                 timeoutScreenCapture: 1,
                 url: 'http://localhost:' +
                     local.utility2.envDict.npm_config_server_port +
-                    '/test/screen-capture'
+                    '/test/script-error.html'
             };
             local.utility2.phantomScreenCapture(options, function (error) {
                 local.utility2.testTryCatch(function () {
