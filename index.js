@@ -16,7 +16,7 @@ stupid: true
     (function () {
         app.utility2.assert = function (passed, message) {
             /*
-            this function will throw an error if the assertion fails
+                this function will throw an error if the assertion fails
             */
             if (!passed) {
                 throw new Error(
@@ -35,21 +35,21 @@ stupid: true
 
         app.utility2.internal = function () {
             /*
-            this function will return this module's internal api
+                this function will return this module's internal api
             */
             return app;
         };
 
         app.utility2.errorStack = function (error) {
             /*
-            this function will return the error's stack-trace
+                this function will return the error's stack-trace
             */
             return error.stack || error.message || 'undefined';
         };
 
         app.utility2.istanbulMerge = function (coverage1, coverage2) {
             /*
-            this function will merge coverage2 into coverage1
+                this function will merge coverage2 into coverage1
             */
             var dict1, dict2;
             coverage1 = coverage1 || {};
@@ -92,7 +92,7 @@ stupid: true
 
         app.utility2.jsonCopy = function (value) {
             /*
-            this function will return a deep-copy of the JSON value
+                this function will return a deep-copy of the JSON value
             */
             return value === undefined
                 ? undefined
@@ -101,14 +101,14 @@ stupid: true
 
         app.utility2.jsonStringifyOrdered = function (value, replacer, space) {
             /*
-            this function will JSON.stringify the value with dictionaries
-            in sorted order, for testing purposes
+                this function will JSON.stringify the value with dictionaries
+                in sorted order, for testing purposes
             */
             var stringifyOrdered;
             stringifyOrdered = function (value) {
                 /*
-                this function will recursively stringify the value,
-                and sort its object-keys along the way
+                    this function will recursively stringify the value,
+                    and sort its object-keys along the way
                 */
                 // if value is an array,
                 // then recursively stringify its elements
@@ -141,8 +141,8 @@ stupid: true
 
         app.utility2.onErrorDefault = function (error) {
             /*
-            this function will provide a default error handling callback,
-            which simply prints the error stack or message to stderr
+                this function will provide a default error handling callback,
+                which simply prints the error stack or message to stderr
             */
             // if error is defined, then print the error stack
             if (error) {
@@ -155,8 +155,8 @@ stupid: true
 
         app.utility2.onErrorWithStack = function (onError) {
             /*
-            this function will return a new callback that calls onError,
-            with the current stack-trace appended to any error
+                this function will return a new callback that calls onError,
+                with the current stack-trace appended to any error
             */
             var errorStack;
             try {
@@ -182,9 +182,9 @@ stupid: true
 
         app.utility2.onParallel = function (onError, onDebug) {
             /*
-            this function will return another function that will
-            1. runs async tasks in parallel,
-            2. call onError only if there's an error, or if its counter === 0
+                this function will return a function that will
+                1. runs async tasks in parallel,
+                2. if counter === 0 or error occured, then call onError
             */
             var self;
             onDebug = onDebug || app.utility2.nop;
@@ -227,9 +227,8 @@ stupid: true
 
         app.utility2.onTimeout = function (onError, timeout, message) {
             /*
-            this function will create a timer
-            that will call onError with a timeout error,
-            with a full stack-trace
+                this function will create a timer that will call onError,
+                with a timeout error with full stack-trace
             */
             onError = app.utility2.onErrorWithStack(onError);
             // validate timeout is an integer
@@ -248,8 +247,8 @@ stupid: true
 
         app.utility2.setDefault = function (options, depth, defaults) {
             /*
-            this function will recursively set default values
-            for unset leaf nodes in the options object
+                this function will recursively set default values
+                for unset leaf nodes in the options object
             */
             depth -= 1;
             Object.keys(defaults).forEach(function (key) {
@@ -279,10 +278,9 @@ stupid: true
 
         app.utility2.setOverride = function (options, depth, override, backup) {
             /*
-            this function will recursively override
-            the options object with the override object,
-            and optionally saves the original options object a backup object,
-            and optionally accepts a depth recursion limit
+                this function will recursively override
+                the options object with the override object,
+                and optionally backup options
             */
             var options2, override2;
             backup = backup || {};
@@ -323,13 +321,13 @@ stupid: true
 
         app.utility2.testMock = function (mockList, onError, testCase) {
             /*
-            this function will mock the objects given in the mockList
-            while running the testCase
+                this function will mock the objects in mockList
+                while running the testCase
             */
             var callCallback, onError2;
             callCallback = function (callback) {
                 /*
-                this function will call the callback
+                    this function will call the callback
                 */
                 callback();
                 // return a mock timer object with the unref method
@@ -368,9 +366,9 @@ stupid: true
 
         app.utility2.testMerge = function (testReport1, testReport2) {
             /*
-            this function will
-            1. merge testReport2 into testReport1
-            2. return testReport1 in html-format
+                this function will
+                1. merge testReport2 into testReport1
+                2. return testReport1 in html-format
             */
             var errorStackList, testCaseNumber, testReport;
             // 1. merge testReport2 into testReport1
@@ -597,7 +595,7 @@ return app.utility2.setOverride(testPlatform, -1, {
 
         app.utility2.testRun = function (options) {
             /*
-            this function will run the tests in testPlatform.testCaseList
+                this function will run all tests in testPlatform.testCaseList
             */
             var coverageReportCreate,
                 exit,
@@ -664,8 +662,8 @@ return app.utility2.setOverride(testPlatform, -1, {
             }
             onParallel = app.utility2.onParallel(function () {
                 /*
-                this function will create the test-report
-                after all tests have finished
+                    this function will create the test-report
+                    after all tests have finished
                 */
 
 
@@ -851,8 +849,8 @@ case 'node':
 
         app.utility2.testTryCatch = function (callback, onError) {
             /*
-            this function will call the callback in a try-catch block,
-                and pass any caught errors to onError
+                this function will call the callback in a try-catch block,
+                and pass any error caught to onError
             */
             try {
                 callback();
@@ -863,8 +861,8 @@ case 'node':
 
         app.utility2.textFormat = function (template, dict, valueDefault) {
             /*
-            this function will replace the keys in given text template
-            with the key / value pairs provided by the dict
+                this function will replace the keys in the template
+                with the key / value pairs provided by the dict
             */
             var match, replace, rgx, value;
             dict = dict || {};
@@ -916,7 +914,7 @@ case 'node':
 
         app._timeElapsedStop = function (options) {
             /*
-            this function will stop options.timeElapsed
+                this function will stop options.timeElapsed
             */
             if (options.timeElapsed > 0xffffffff) {
                 options.timeElapsed = Date.now() - options.timeElapsed;
@@ -934,8 +932,8 @@ case 'node':
 
         app.utility2.ajax = function (options, onError) {
             /*
-            this function will make an ajax request
-            with error handling and timeout
+                this function will make an ajax request
+                with error handling and timeout
             */
             var ajaxProgressDiv,
                 data,
@@ -1060,7 +1058,7 @@ case 'node':
 
         app._ajaxProgressIncrement = function () {
             /*
-            this function will increment the ajaxProgressBar
+                this function will increment ajaxProgressBar
             */
             // this algorithm can indefinitely increment the ajaxProgressBar
             // with successively smaller increments without ever reaching 100%
@@ -1080,7 +1078,7 @@ case 'node':
 
         app._ajaxProgressUpdate = function (width, type, label) {
             /*
-            this function will visually update the ajaxProgressBar
+                this function will visually update ajaxProgressBar
             */
             var ajaxProgressBarDiv;
             ajaxProgressBarDiv =
@@ -1103,8 +1101,8 @@ case 'node':
 
         app.utility2.ajax = function (options, onError) {
             /*
-            this function will make an ajax request
-            with error handling and timeout
+                this function will make an ajax request
+                with error handling and timeout
             */
             var finished,
                 modeNext,
@@ -1218,8 +1216,8 @@ case 'node':
 
         app.utility2.onFileModifiedRestart = function (file) {
             /*
-            this function will watch the file and if modified,
-            then restart the process
+                this function will watch the file,
+                and if modified, then restart the process
             */
             if (app.utility2.envDict.npm_config_mode_auto_restart &&
                     app.fs.statSync(file).isFile()) {
@@ -1236,7 +1234,8 @@ case 'node':
 
         app.utility2.phantomScreenCapture = function (options, onError) {
             /*
-            this function will spawn phantomjs to screen-capture options.url
+                this function will spawn both phantomjs and slimerjs processes
+                to screen-capture options.url
             */
             app.utility2.phantomTest(app.utility2.setDefault(options, 1, {
                 modePhantom: 'screenCapture',
@@ -1246,8 +1245,8 @@ case 'node':
 
         app.utility2.phantomTest = function (options, onError) {
             /*
-            this function will spawn both phantomjs and slimerjs processes
-            to test options.url
+                this function will spawn both phantomjs and slimerjs processes
+                to test options.url
             */
             var onParallel;
             onParallel = app.utility2.onParallel(onError);
@@ -1276,8 +1275,8 @@ case 'node':
 
         app._phantomTestSingle = function (options, onError) {
             /*
-            this function will spawn a single phantomjs or slimerjs process
-            to test options.url
+                this function will spawn a single phantomjs or slimerjs process
+                to test options.url
             */
             var modeNext, onNext, onParallel, timerTimeout;
             modeNext = 0;
@@ -1393,7 +1392,7 @@ case 'node':
 
         app.utility2.replStart = function (globalDict) {
             /*
-            this function will start the repl debugger
+                this function will start the repl debugger
             */
             /*jslint evil: true*/
             Object.keys(globalDict).forEach(function (key) {
@@ -1513,8 +1512,8 @@ case 'node':
             error
         ) {
             /*
-            this function will respond with a default message,
-            or error stack for the given statusCode
+                this function will respond with a default message,
+                or error stack for the given statusCode
             */
             // set response / statusCode / contentType
             app.utility2.serverRespondWriteHead(request, response, statusCode, {
@@ -1536,7 +1535,7 @@ case 'node':
 
         app.utility2.serverRespondEcho = function (request, response) {
             /*
-            this function will respond with debug info
+                this function will respond with debug info
             */
             response.write(request.method + ' ' + request.url +
                 ' HTTP/' + request.httpVersion + '\r\n' +
@@ -1553,7 +1552,8 @@ case 'node':
             headers
         ) {
             /*
-            this function will set the response object's statusCode / headers
+                this function will set the response object's
+                statusCode / headers
             */
             // jslint-hack
             app.utility2.nop(request);
@@ -1572,8 +1572,8 @@ case 'node':
 
         app.utility2.streamReadAll = function (readableStream, onError) {
             /*
-            this function will concat data from the readableStream,
-                and pass it to onError when finished reading
+                this function will concat data from the readableStream,
+                and when finished reading, then pass it to onError
             */
             var chunkList;
             chunkList = [];
@@ -1593,10 +1593,10 @@ case 'node':
 
         app.utility2.testRunServer = function (options) {
             /*
-            this function will
-            1. create http-server from options.serverMiddlewareList
-            2. start http-server on port $npm_config_server_port
-            3. if $npm_config_mode_npm_test is defined, then run tests
+                this function will
+                1. create http-server from options.serverMiddlewareList
+                2. start http-server on port $npm_config_server_port
+                3. if $npm_config_mode_npm_test is defined, then run tests
             */
             var server;
             // if $npm_config_timeout_exit is defined,
@@ -1719,7 +1719,7 @@ case 'node':
         var coverageSave, data, modeNext, onNext;
         coverageSave = function (coverage) {
             // this function will,
-            // if the coverage is defined, then save it to file
+            // if coverage is defined, then save coverage to file
             if (coverage) {
                 app.fs.write(
                     app.utility2.fileCoverage,
@@ -1910,7 +1910,7 @@ case 'node':
         }());
         app.utility2.nop = function () {
             /*
-            this function will perform no operation - nop
+                this function will perform no operation - nop
             */
             return;
         };
@@ -2014,8 +2014,7 @@ case 'node':
         // init global debug_print
         app.global['debug_print'.replace('_p', 'P')] = function (arg) {
             /*
-            this function will both print the arg to stderr and return it,
-            and jslint will nag you to remove it if used
+                this function will both print the arg to stderr and return it
             */
             // debug arguments
             app.utility2['debug_printArguments'.replace('_p', 'P')] = arguments;

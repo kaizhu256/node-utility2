@@ -268,27 +268,6 @@ shIstanbulCover() {
     fi
 }
 
-shIstanbulReport() {
-    # this function will
-    # 1. merge $COVERAGE into $npm_config_dir_build/coverage.html/coverage.json
-    # 2. create $npm_config_dir_build/coverage.html
-    local COVERAGE=$1 || return $?
-    # 1. merge $COVERAGE into $npm_config_dir_build/coverage.html/coverage.json
-    if [ "$COVERAGE" ]
-    then
-        node -e "require('fs').writeFileSync(
-            '$npm_config_dir_build/coverage.html/coverage.json',
-            JSON.stringify(require('$npm_config_dir_utility2').istanbulMerge(
-                require('$npm_config_dir_build/coverage.html/coverage.json'),
-                require('./$COVERAGE')
-            ))
-        );" || return $?
-    fi
-    # 2. create $npm_config_dir_build/coverage.html
-    npm_config_dir_coverage="$npm_config_dir_build/coverage.html"\
-        $npm_config_file_istanbul report || return $?
-}
-
 shIstanbulTest() {
     # this function will run the command $@ with istanbul coverage
     if [ "$npm_config_mode_no_coverage" ] || [ ! "$npm_config_mode_coverage" ]

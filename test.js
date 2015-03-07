@@ -7,9 +7,6 @@ nomen: true,
 stupid: true
 */
 (function () {
-    /*
-    this function will test this module
-    */
     'use strict';
     var app;
 
@@ -43,7 +40,7 @@ stupid: true
         // init tests
         app.testCase_ajax_default = function (onError) {
             /*
-            this function will test ajax's default handling behavior
+                this function will test ajax's default handling behavior
             */
             var onParallel;
             onParallel = app.utility2.onParallel(onError);
@@ -117,7 +114,7 @@ stupid: true
 
         app.testCase_assert_default = function (onError) {
             /*
-            this function will test assert's default handling behavior
+                this function will test assert's default handling behavior
             */
             var error;
             // test assertion passed
@@ -183,7 +180,7 @@ stupid: true
 
         app.testCase_debug_print_default = function (onError) {
             /*
-            this function will test debug_print's default handling behavior
+                this function will test debug_print's default handling behavior
             */
             var message;
             app.utility2.testMock([
@@ -207,7 +204,7 @@ stupid: true
 
         app.testCase_jsonCopy_default = function (onError) {
             /*
-            this function will test jsonCopy's default handling behavior
+                this function will test jsonCopy's default handling behavior
             */
             // test various data-type handling behavior
             [
@@ -230,8 +227,8 @@ stupid: true
 
         app.testCase_jsonStringifyOrdered_default = function (onError) {
             /*
-            this function will test jsonStringifyOrdered's default
-            handling behavior
+                this function will test jsonStringifyOrdered's
+                default handling behavior
             */
             var data;
             // test various data-type handling behavior
@@ -275,7 +272,8 @@ stupid: true
 
         app.testCase_onErrorDefault_default = function (onError) {
             /*
-            this function will test onErrorDefault's default handling behavior
+                this function will test onErrorDefault's
+                default handling behavior
             */
             var message;
             app.utility2.testMock([
@@ -298,7 +296,7 @@ stupid: true
 
         app.testCase_onParallel_default = function (onError) {
             /*
-            this function will test onParallel's default handling behavior
+                this function will test onParallel's default handling behavior
             */
             var onParallel, onParallelError;
             // test onDebug handling behavior
@@ -336,7 +334,7 @@ stupid: true
 
         app.testCase_onTimeout_timeout = function (onError) {
             /*
-            this function will test onTimeout's timeout handling behavior
+                this function will test onTimeout's timeout handling behavior
             */
             var timeElapsed;
             timeElapsed = Date.now();
@@ -359,7 +357,7 @@ stupid: true
 
         app.testCase_setDefault_default = function (onError) {
             /*
-            this function will test setDefault's default handling behavior
+                this function will test setDefault's default handling behavior
             */
             var options;
             // test non-recursive handling behavior
@@ -391,7 +389,7 @@ stupid: true
 
         app.testCase_setOverride_default = function (onError) {
             /*
-            this function will test setOverride's default handling behavior
+                this function will test setOverride's default handling behavior
             */
             var backup, data, options;
             backup = {};
@@ -452,7 +450,7 @@ stupid: true
 
         app.testCase_testRun_failure = function (onError) {
             /*
-            this function will test testRun's failure handling behavior
+                this function will test testRun's failure handling behavior
             */
             // test failure from callback handling behavior
             onError(app.utility2.errorDefault);
@@ -468,7 +466,7 @@ stupid: true
 
         app.testCase_textFormat_default = function (onError) {
             /*
-            this function will test textFormat's default handling behavior
+                this function will test textFormat's default handling behavior
             */
             var data;
             // test undefined valueDefault handling behavior
@@ -550,8 +548,8 @@ stupid: true
         // init tests
         app.testCase_istanbulMerge_default = function (onError) {
             /*
-            this function will test istanbulMerge's default
-            handling behavior
+                this function will test istanbulMerge's
+                default handling behavior
             */
             var coverage1, coverage2, script;
             script = app.utility2.istanbul_lite.instrumentSync(
@@ -594,8 +592,8 @@ stupid: true
 
         app.testCase_onFileModifiedRestart_default = function (onError) {
             /*
-            this function will test onFileModifiedRestart's watchFile
-            handling behavior
+                this function will test onFileModifiedRestart's
+                watchFile handling behavior
             */
             var file, onParallel;
             file = __dirname + '/package.json';
@@ -618,7 +616,7 @@ stupid: true
 
         app.testCase_phantomTest_default = function (onError) {
             /*
-            this function will test phantomTest's default handling behavior
+                this function will test phantomTest's default handling behavior
             */
             var onParallel, options;
             onParallel = app.utility2.onParallel(onError);
@@ -639,19 +637,19 @@ stupid: true
                 modeErrorIgnore: true,
                 url: 'http://localhost:' +
                     app.utility2.envDict.npm_config_server_port +
+                    // test script-error handling behavior
+                    '/test/script-error.html'
+            }, {
+                modeErrorIgnore: true,
+                url: 'http://localhost:' +
+                    app.utility2.envDict.npm_config_server_port +
                     // test standalone script handling behavior
-                    '/test/script.html?' +
+                    '/test/script-standalone.html?' +
                     // test modeTest !== 'phantom' handling behavior
                     'modeTest=phantom2&' +
                     // test single-test-case handling behavior
                     // test testRun's failure handling behavior
                     'modeTestCase=testCase_testRun_failure'
-            }, {
-                modeErrorIgnore: true,
-                url: 'http://localhost:' +
-                    app.utility2.envDict.npm_config_server_port +
-                    // test script-error handling behavior
-                    '/test/script-error.html'
             }].forEach(function (options) {
                 onParallel.counter += 1;
                 app.utility2.phantomTest(options, function (error) {
@@ -717,7 +715,7 @@ stupid: true
 
         app.testCase_replStart_default = function (onError) {
             /*
-            this function will test replStart's default handling behavior
+                this function will test replStart's default handling behavior
             */
             /*jslint evil: true*/
             app.utility2.testMock([
@@ -756,7 +754,7 @@ stupid: true
 
         app.testCase_testRunServer_misc = function (onError) {
             /*
-            this function will test testRunServer's misc handling behavior
+                this function will test testRunServer's misc handling behavior
             */
             app.utility2.testMock([
                 [app.utility2, {
@@ -801,6 +799,13 @@ stupid: true
                 __dirname + '/index.js',
                 'utility2'
             );
+        app['/test/hello'] =
+            'hello';
+        app['/test/script-error.html'] =
+            '<script>syntax error</script>';
+        app['/test/script-standalone.html'] =
+            '<script src="/assets/utility2.js">\n' +
+                '</script><script src="/test/test.js"></script>';
         app['/test/test.js'] =
             app.utility2.istanbul_lite.instrumentInPackage(
                 app.fs.readFileSync(__filename, 'utf8'),
@@ -811,7 +816,7 @@ stupid: true
         app.serverMiddlewareList = [
             function (request, response, onNext) {
                 /*
-                this function is the main test-middleware
+                    this function will run the the test-middleware
                 */
                 switch (request.urlPathNormalized) {
                 // serve assets
@@ -819,6 +824,9 @@ stupid: true
                 case '/assets/istanbul-lite.js':
                 case '/assets/utility2.css':
                 case '/assets/utility2.js':
+                case '/test/hello':
+                case '/test/script-error.html':
+                case '/test/script-standalone.html':
                 case '/test/test.js':
                     response.end(app[request.urlPathNormalized]);
                     break;
@@ -826,24 +834,11 @@ stupid: true
                 case '/test/echo':
                     app.utility2.serverRespondEcho(request, response);
                     break;
-                // test http GET handling behavior
-                case '/test/hello':
-                    response.end('hello');
-                    break;
                 // test timeout handling behavior
                 case '/test/timeout':
                     setTimeout(function () {
                         response.end();
                     }, 1000);
-                    break;
-                // test standalone script handling behavior
-                case '/test/script.html':
-                    response.end('<script src="/assets/utility2.js">' +
-                        '</script><script src="/test/test.js"></script>');
-                    break;
-                // test script-error handling behavior
-                case '/test/script-error.html':
-                    response.end('<script>syntax error</script>');
                     break;
                 // test 500-internal-server-error handling behavior
                 case '/test/server-error':
