@@ -1707,7 +1707,7 @@ case 'node':
             );
             // if $npm_config_timeout_exit is defined,
             // then exit this process after $npm_config_timeout_exit ms
-            if (Number(local.utility2.envDict.npm_config_timeout_exit)) {
+            if (Number(debugPrint(local.utility2.envDict.npm_config_timeout_exit))) {
                 setTimeout(function () {
                     console.log('server stopping on port ' +
                         local.utility2.envDict.npm_config_server_port);

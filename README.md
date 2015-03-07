@@ -393,7 +393,7 @@ npm_config_mode_auto_restart=1 npm_config_mode_auto_restart_child=1 \
 
 # todo
 - npm publish 2015.3.7-11
-- allow '//' comments in package.json in README.md
+- split quickstart into interactive / programmatic examples
 - add testCase for validating _testSecret
 - add taskPool
 - add failed test example
@@ -419,6 +419,14 @@ shBuild() {
     export npm_config_mode_slimerjs=1 || return $?
     . ./index.sh && shInit || return $?
 
+    # test example shell script
+    MODE_BUILD=testExampleSh \
+        npm_config_timeout_exit=1000 \
+        shRunScreenCapture shReadmeTestSh example.sh || return $?
+    cp /tmp/app/node_modules/utility2/tmp/build/screen-capture.*.png \
+        $npm_config_dir_build || return $?
+    return
+
     # run npm-test on published package
     shRun shNpmTestPublished || return $?
 
@@ -431,13 +439,6 @@ shBuild() {
     # copy phantomjs screen-capture to $npm_config_dir_build
     cp /tmp/app/tmp/build/screen-capture.*.png $npm_config_dir_build || \
         return $?
-
-    # test example shell script
-    MODE_BUILD=testExampleSh \
-        npm_config_timeout_exit=1000 \
-        shRunScreenCapture shReadmeTestSh example.sh || return $?
-    cp /tmp/app/node_modules/utility2/tmp/build/screen-capture.*.png \
-        $npm_config_dir_build || return $?
 
     # run npm-test
     MODE_BUILD=npmTest shRunScreenCapture npm test || return $?
