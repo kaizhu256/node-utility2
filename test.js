@@ -1,10 +1,10 @@
 /*jslint
-browser: true,
-maxerr: 4,
-maxlen: 80,
-node: true,
-nomen: true,
-stupid: true
+    browser: true,
+    maxerr: 4,
+    maxlen: 80,
+    node: true,
+    nomen: true,
+    stupid: true
 */
 (function () {
     'use strict';
@@ -629,25 +629,23 @@ stupid: true
             var onParallel, options;
             onParallel = local.utility2.onParallel(onError);
             onParallel.counter += 1;
-            // test default handling behavior
-            onParallel.counter += 1;
-            local.utility2.phantomTest({
+            [{
+                // test default handling behavior
                 url: 'http://localhost:' +
                     local.utility2.envDict.npm_config_server_port +
                     // test phantom-callback handling behavior
                     '?modeTest=phantom&' +
                     // test _testSecret-validation handling behavior
-                    '_testSecret={{_testSecret}}&' +
-                    // test timeoutDefault-override handling behavior
-                    'timeoutDefault=' + local.utility2.timeoutDefault
-            }, onParallel);
-            [{
+                    '_testSecret={{_testSecret}}&'
+            }, {
+                modeError: true,
                 modeErrorIgnore: true,
                 url: 'http://localhost:' +
                     local.utility2.envDict.npm_config_server_port +
                     // test script-error handling behavior
                     '/test/script-error.html'
             }, {
+                modeError: true,
                 modeErrorIgnore: true,
                 // run phantom self-test
                 modePhantomSelfTest: true,
@@ -665,7 +663,15 @@ stupid: true
                 local.utility2.phantomTest(options, function (error) {
                     local.utility2.testTryCatch(function () {
                         // validate error occurred
-                        local.utility2.assert(error instanceof Error, error);
+                        if (options.modeError) {
+                            local.utility2.assert(
+                                error instanceof Error,
+                                error
+                            );
+                        // validate no error occurred
+                        } else {
+                            local.utility2.assert(!error, error);
+                        }
                         onParallel();
                     }, onParallel);
                 });

@@ -21,7 +21,35 @@ run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
 
 
 
-# quickstart
+# quickstart interactive testing example
+#### follow the instruction in this script
+```
+# example.sh
+
+# this shell script will
+    # 1. npm install utility2
+    # 2. start server on port 1337 with interactive testing and coverage
+
+# instruction
+    # 1. copy and paste this entire shell script into a console and press enter
+    # 2. open a browser to http://localhost:1337
+    # 3. edit or paste script in browser to cover and test
+
+shExampleSh() {
+    # 1. npm install utility2
+    #!! npm install utility2 || return $?
+
+    # 2. start server on port 1337 with interactive testing and coverage
+    cd node_modules/utility2 && npm start --server-port=1337 || return $?
+}
+shExampleSh
+```
+#### output from shell
+![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleSh.png)
+
+
+
+# quickstart programmatic testing example
 #### follow the instruction in this script
 ```
 /*
@@ -44,12 +72,12 @@ instruction to interactively test server on port 1337 without coverage
 */
 
 /*jslint
-browser: true,
-maxerr: 4,
-maxlen: 80,
-node: true,
-nomen: true,
-stupid: true
+    browser: true,
+    maxerr: 4,
+    maxlen: 80,
+    node: true,
+    nomen: true,
+    stupid: true
 */
 
 (function () {
@@ -354,6 +382,10 @@ stupid: true
 
 
 # todo
+- add testCase for validating _testSecret
+- add taskPool
+- add failed test example
+- split quickstart into interactive / programmatic examples
 - create flamegraph from istanbul coverage
 - auto-generate help doc from README.md
 - add server stress test using phantomjs
@@ -388,6 +420,11 @@ shBuild() {
     # copy phantomjs screen-capture to $npm_config_dir_build
     cp /tmp/app/tmp/build/screen-capture.*.png $npm_config_dir_build \
         || return $?
+
+    # test example shell script
+    MODE_BUILD=testExampleSh \
+        npm_config_timeout_exit=5000 \
+        shRunScreenCapture shReadmeTestSh example.sh || return $?
 
     # run npm-test
     MODE_BUILD=npmTest shRunScreenCapture npm test || return $?

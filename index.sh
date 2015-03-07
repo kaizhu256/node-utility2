@@ -449,11 +449,13 @@ shReadmeTestSh() {
     local FILE=$1 || return $?
     local FILE_BASENAME=$(node -e "console.log(require('path').basename('$FILE'));") || return $?
     shBuildPrint $MODE_BUILD "testing $FILE" || return $?
-    if [ "$MODE_BUILD" != "build" ]
+    if [ ! "$MODE_OFFLINE" ] && [ "$MODE_BUILD" != "build" ]
     then
         # init /tmp/app
         rm -fr /tmp/app /tmp/node_modules && mkdir -p /tmp/app && cd /tmp/app || return $?
     fi
+    # cd /tmp/app
+    cd /tmp/app || return $?
     # read and parse script from README.md
     node -e "require('fs').readFileSync('$CWD/README.md', 'utf8').replace(
         (/\n\`\`\`\n# $FILE_BASENAME\n[\S\s]+?\n\`\`\`/),
@@ -464,6 +466,8 @@ shReadmeTestSh() {
                 // preserve lineno
                 data.slice(0, index).replace((/.*/g), '') + '\n\n' + match0.slice(5, -3)
             );
+            // print script to stdout
+            console.log(match0.slice(5, -3).trim());
         }
     );" || return $?
     # test $FILE
@@ -501,11 +505,11 @@ shRun() {
             printf "process exited with code $EXIT_CODE\n" || return $?
             # http://en.wikipedia.org/wiki/Unix_signal
             # exit-code 0 - normal exit
-            if [ "$EXIT_CODE" = 0 ] || [ "$EXIT_CODE" = 128 ]\
+            if [ "$EXIT_CODE" = 0 ] || [ "$EXIT_CODE" = 128 ] || \
                 # exit-code 2 - SIGINT
-                [ "$EXIT_CODE" = 2 ] || [ "$EXIT_CODE" = 130 ] ||\
+                [ "$EXIT_CODE" = 2 ] || [ "$EXIT_CODE" = 130 ] || \
                 # exit-code 9 - SIGKILL
-                [ "$EXIT_CODE" = 9 ] || [ "$EXIT_CODE" = 137 ] ||\
+                [ "$EXIT_CODE" = 9 ] || [ "$EXIT_CODE" = 137 ] || \
                 # exit-code 15 - SIGTERM
                 [ "$EXIT_CODE" = 15 ] || [ "$EXIT_CODE" = 143 ]
             then

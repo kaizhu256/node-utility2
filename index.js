@@ -1,11 +1,11 @@
 /*jslint
-bitwise: true,
-browser: true,
-maxerr: 4,
-maxlen: 80,
-node: true,
-nomen: true,
-stupid: true
+    bitwise: true,
+    browser: true,
+    maxerr: 4,
+    maxlen: 80,
+    node: true,
+    nomen: true,
+    stupid: true
 */
 (function (local) {
     'use strict';
@@ -1617,7 +1617,7 @@ case 'node':
                 2. start http-server on port $npm_config_server_port
                 3. if $npm_config_mode_npm_test is defined, then run tests
             */
-            var server;
+            var server, testSecretCreate;
             // if $npm_config_timeout_exit is defined,
             // then exit this process after $npm_config_timeout_exit ms
             if (Number(local.utility2.envDict.npm_config_timeout_exit)) {
@@ -1627,6 +1627,18 @@ case 'node':
                 // keep timerTimeout from blocking the process from exiting
                 ).unref();
             }
+            // init _testSecret
+            testSecretCreate = function () {
+                local.utility2._testSecret =
+                    local.crypto.randomBytes(32).toString('hex');
+            };
+            // init _testSecret
+            testSecretCreate();
+            local.utility2._testSecret =
+                local.utility2.envDict.TEST_SECRET ||
+                local.utility2._testSecret;
+            // re-init _testSecret every 60 seconds
+            setInterval(testSecretCreate, 60000).unref();
             // 1. create http-server from options.serverMiddlewareList
             server = local.http.createServer(function (request, response) {
                 var contentTypeDict, modeNext, onNext;
@@ -1962,9 +1974,9 @@ case 'node':
         local.istanbul_lite = window.istanbul_lite;
         local.jslint_lite = window.jslint_lite;
         // parse url search-params that matches
-        // 'mode*' or '_testSecret' or 'timeoutDefault'
+        // 'mode*' or '_testSecret'
         location.search.replace(
-            (/\b(mode[A-Z]\w+|_testSecret|timeoutDefault)=([\w\-\.\%]+)/g),
+            (/\b(mode[A-Z]\w+|_testSecret)=([\w\-\.\%]+)/g),
             function (match0, key, value) {
                 // jslint-hack
                 local.utility2.nop(match0);
@@ -2003,21 +2015,6 @@ case 'node':
             process.cwd() + '/tmp/build';
         local.utility2.envDict.npm_config_dir_tmp = process.cwd() + '/tmp';
         local.utility2.exit = process.exit;
-        // init _testSecret
-        (function () {
-            var testSecretCreate;
-            testSecretCreate = function () {
-                local.utility2._testSecret =
-                    local.crypto.randomBytes(32).toString('hex');
-            };
-            // init _testSecret
-            testSecretCreate();
-            local.utility2._testSecret =
-                local.utility2.envDict.TEST_SECRET ||
-                local.utility2._testSecret;
-            // re-init _testSecret every 60 seconds
-            setInterval(testSecretCreate, 60000).unref();
-        }());
         break;
 
 
