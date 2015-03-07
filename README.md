@@ -28,8 +28,7 @@ run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
 
 # this shell script will
     # 1. npm install utility2
-    # 2. serve a webpage that will interactively run
-        browser-tests and browser-coverage on itself
+    # 2. serve a webpage that will interactively run browser tests and coverage
 
 # instruction
     # 1. copy and paste this entire shell script into a console and press enter
@@ -39,10 +38,8 @@ run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
 shExampleSh() {
     # 1. npm install utility2
     npm install phantomjs-lite utility2 || return $?
-    # debugPrint
-    cp $npm_config_dir_utility2/* /tmp/app/node_modules/utility2/
 
-    # 2. serve a webpage with interactive browser-testing and browser-coverage
+    # 2. serve a webpage that will interactively run browser tests and coverage
     cd node_modules/utility2 && npm start --server-port=1337 || return $?
 }
 shExampleSh
@@ -61,7 +58,7 @@ shExampleSh
     example.js
 
     this shared browser / node script will programmatically run phantomjs
-    browser-tests and browser-coverage on itself
+    browser tests and coverage on itself
 
     instruction
         1. save this js script as example.js
@@ -93,8 +90,6 @@ shExampleSh
         local.utility2 = typeof window === 'object'
             ? window.utility2
             : require('utility2');
-        // debugPrint
-        local.utility2.local = local.utility2.local || local.utility2.internal();
         // init istanbul_lite
         local.istanbul_lite = local.utility2.local.istanbul_lite;
         // init jslint_lite
@@ -386,15 +381,13 @@ shExampleSh
 npm_config_mode_auto_restart=1 npm_config_mode_auto_restart_child=1 \
 ./index.sh shRun shNpmTest test.js"
     },
-    "version": "2015.3.7-10"
+    "version": "2015.3.7-11"
 }
 ```
 
 
 
 # todo
-- npm publish 2015.3.7-11
-- split quickstart into interactive / programmatic examples
 - add testCase for validating _testSecret
 - add taskPool
 - add failed test example

@@ -475,7 +475,7 @@ shReadmeTestSh() {
                 data.slice(0, index).replace((/.*/g), '') + '\n\n' + match0.slice(5, -3)
             );
             // print script to stdout
-            console.log(match0.slice(5, -3).trim());
+            console.log(match0.slice(5, -3).trimLeft());
         }
     );" || return $?
     # test $FILE
