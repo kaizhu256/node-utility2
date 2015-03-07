@@ -28,7 +28,7 @@ run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
 
 # this shell script will
     # 1. npm install utility2
-    # 2. start server on port 1337 with interactive testing and coverage
+    # 2. serve a webpage with interactive browser-testing and browser-coverage
 
 # instruction
     # 1. copy and paste this entire shell script into a console and press enter
@@ -37,15 +37,19 @@ run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
 
 shExampleSh() {
     # 1. npm install utility2
-    npm install utility2 || return $?
+    npm install phantomjs-lite utility2 || return $?
+    # debugPrint
+    cp $npm_config_dir_utility2/* /tmp/app/node_modules/utility2/
 
-    # 2. start server on port 1337 with interactive testing and coverage
+    # 2. serve a webpage with interactive browser-testing and browser-coverage
     cd node_modules/utility2 && npm start --server-port=1337 || return $?
 }
 shExampleSh
 ```
 #### output from shell
 ![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleSh.png)
+#### output from [phantomjs-lite](https://www.npmjs.com/package/phantomjs-lite)
+![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleJs.slimerjs.png)
 
 
 
@@ -53,22 +57,16 @@ shExampleSh
 #### follow the instruction in this script
 ```
 /*
-example.js
+    example.js
 
-this shared browser / node script will run phantomjs browser-tests
-and browser-coverage on itself
+    this shared browser / node script will run phantomjs browser-tests
+    and browser-coverage on itself
 
-instruction to programmatically test browser and server with coverage
-    1. save this js script as example.js
-    2. run the shell command:
-          $ npm install phantomjs-lite utility2 && \
-              node_modules/.bin/utility2 shRun shNpmTest example.js
-
-instruction to interactively test server on port 1337 without coverage
-    1. save this js script as example.js
-    2. run the shell command:
-          $ npm install utility2 && npm_config_server_port=1337 node example.js
-    3. open a browser to http://localhost:1337
+    instruction
+        1. save this js script as example.js
+        2. run the shell command:
+              $ npm install phantomjs-lite utility2 && \
+                  node_modules/.bin/utility2 shRun shNpmTest example.js
 */
 
 /*jslint
@@ -94,6 +92,8 @@ instruction to interactively test server on port 1337 without coverage
         local.utility2 = typeof window === 'object'
             ? window.utility2
             : require('utility2');
+        // debugPrint
+        local.utility2.local = local.utility2.local || local.utility2.internal();
         // init istanbul_lite
         local.istanbul_lite = local.utility2.local.istanbul_lite;
         // init jslint_lite
@@ -270,7 +270,7 @@ instruction to interactively test server on port 1337 without coverage
             }
         });
         local['/assets/istanbul-lite.js'] =
-            local.utility2.istanbul_lite['/assets/istanbul-lite.js'];
+            local.istanbul_lite['/assets/istanbul-lite.js'];
         local['/assets/utility2.css'] =
             local.utility2['/assets/utility2.css'];
         local['/assets/utility2.js'] =
@@ -278,7 +278,7 @@ instruction to interactively test server on port 1337 without coverage
         local['/test/hello'] =
             'hello';
         local['/test/test.js'] =
-            local.utility2.istanbul_lite.instrumentSync(
+            local.istanbul_lite.instrumentSync(
                 local.fs.readFileSync(__filename, 'utf8'),
                 __filename
             );
@@ -309,17 +309,6 @@ instruction to interactively test server on port 1337 without coverage
         // 2. start http-server on port $npm_config_server_port
         // 3. if env var $npm_config_mode_npm_test is defined, then run tests
         local.utility2.testRunServer(local, process.exit);
-        // this internal build-code will screen-capture the server
-        // and then exit
-        if (process.env.MODE_BUILD === 'testExampleSh') {
-            console.log('server stopping on port ' +
-                local.utility2.envDict.npm_config_server_port);
-            require(
-                process.env.npm_config_dir_utility2 + '/index.js'
-            ).phantomScreenCapture({
-                url: 'http://localhost:' + local.serverPort
-            }, process.exit);
-        }
     }
     return;
 }());
@@ -403,8 +392,8 @@ npm_config_mode_auto_restart=1 npm_config_mode_auto_restart_child=1 \
 
 
 # todo
-- npm publish 2015.3.7-10
-- split quickstart into interactive / programmatic examples
+- npm publish 2015.3.7-11
+- allow '//' comments in package.json in README.md
 - add testCase for validating _testSecret
 - add taskPool
 - add failed test example
@@ -445,8 +434,10 @@ shBuild() {
 
     # test example shell script
     MODE_BUILD=testExampleSh \
-        npm_config_timeout_exit=5000 \
+        npm_config_timeout_exit=1000 \
         shRunScreenCapture shReadmeTestSh example.sh || return $?
+    cp /tmp/app/node_modules/utility2/tmp/build/screen-capture.*.png \
+        $npm_config_dir_build || return $?
 
     # run npm-test
     MODE_BUILD=npmTest shRunScreenCapture npm test || return $?

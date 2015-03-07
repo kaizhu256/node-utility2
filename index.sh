@@ -487,6 +487,8 @@ shReadmePackageJsonExport() {
             // save script to file
             require('fs').writeFileSync('$CWD/package.json', match0
                 .slice(5, -3)
+                // remove '//' comment
+                .replace((/^ *?\\/\\/.*?\n/gm), '')
                 // parse '\' line-continuation
                 .replace((/\\\\\n/g), ''));
         }

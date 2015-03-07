@@ -785,6 +785,9 @@
                         npm_config_server_port: ''
                     }
                 }],
+                [local.utility2, {
+                    phantomScreenCapture: local.utility2.nop
+                }],
                 [local.utility2.local, {
                     http: {
                         createServer: function () {

@@ -1613,20 +1613,11 @@ case 'node':
         local.utility2.testRunServer = function (options) {
             /*
                 this function will
-                1. create http-server from options.serverMiddlewareList
-                2. start http-server on port $npm_config_server_port
+                1. create server from options.serverMiddlewareList
+                2. start server on port $npm_config_server_port
                 3. if $npm_config_mode_npm_test is defined, then run tests
             */
             var server, testSecretCreate;
-            // if $npm_config_timeout_exit is defined,
-            // then exit this process after $npm_config_timeout_exit ms
-            if (Number(local.utility2.envDict.npm_config_timeout_exit)) {
-                setTimeout(
-                    local.utility2.exit,
-                    Number(local.utility2.envDict.npm_config_timeout_exit)
-                // keep timerTimeout from blocking the process from exiting
-                ).unref();
-            }
             // init _testSecret
             testSecretCreate = function () {
                 local.utility2._testSecret =
@@ -1639,7 +1630,7 @@ case 'node':
                 local.utility2._testSecret;
             // re-init _testSecret every 60 seconds
             setInterval(testSecretCreate, 60000).unref();
-            // 1. create http-server from options.serverMiddlewareList
+            // 1. create server from options.serverMiddlewareList
             server = local.http.createServer(function (request, response) {
                 var contentTypeDict, modeNext, onNext;
                 modeNext = -2;
@@ -1707,13 +1698,28 @@ case 'node':
             local.utility2.envDict.npm_config_server_port =
                 local.utility2.envDict.npm_config_server_port ||
                 ((Math.random() * 0x10000) | 0x8000).toString();
-            // 2. start http-server on port $npm_config_server_port
+            // 2. start server on port $npm_config_server_port
             console.log('server starting on port ' +
                 local.utility2.envDict.npm_config_server_port);
             server.listen(
                 local.utility2.envDict.npm_config_server_port,
                 local.utility2.onReady
             );
+            // if $npm_config_timeout_exit is defined,
+            // then exit this process after $npm_config_timeout_exit ms
+            if (Number(local.utility2.envDict.npm_config_timeout_exit)) {
+                setTimeout(function () {
+                    console.log('server stopping on port ' +
+                        local.utility2.envDict.npm_config_server_port);
+                    // screen-capture main-page
+                    local.utility2.phantomScreenCapture({
+                        url: 'http://localhost:' +
+                            local.utility2.envDict.npm_config_server_port
+                    }, local.utility2.exit);
+                }, Number(local.utility2.envDict.npm_config_timeout_exit))
+                    // keep timerTimeout from blocking the process from exiting
+                    .unref();
+            }
             // 3. if $npm_config_mode_npm_test is defined, then run tests
             local.utility2.onReady.onReady = function () {
                 local.utility2.testRun(options);
