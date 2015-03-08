@@ -341,8 +341,8 @@ shExampleSh
     "author": "kai zhu <kaizhu256@gmail.com>",
     "bin": { "utility2" : "index.sh" },
     "dependencies": {
-        "istanbul-lite": "2015.3.7-12",
-        "jslint-lite": "2015.3.7-12"
+        "istanbul-lite": "2015.3.8-11",
+        "jslint-lite": "2015.3.8-11"
     },
     "devDependencies": {
         "phantomjs-lite": "^2015.1.4-102"
@@ -386,13 +386,14 @@ shExampleSh
 npm_config_mode_auto_restart=1 npm_config_mode_auto_restart_child=1 \
 ./index.sh shRun shNpmTest test.js"
     },
-    "version": "2015.3.8-10"
+    "version": "2015.3.8-11"
 }
 ```
 
 
 
 # todo
+- npm publish 2015.3.8-11
 - jslint textarea
 - add testCase for validating _testSecret
 - add taskPool
