@@ -27,8 +27,8 @@ run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
 # example.sh
 
 # this shell script will
-    # 1. npm install utility2
-    # 2. serve a webpage that will interactively run browser tests and coverage
+    # npm install utility2
+    # serve a webpage that will interactively run browser tests with coverage
 
 # instruction
     # 1. copy and paste this entire shell script into a console and press enter
@@ -36,10 +36,10 @@ run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
     # 3. edit or paste script in browser to cover and test
 
 shExampleSh() {
-    # 1. npm install utility2
+    # npm install utility2
     npm install phantomjs-lite utility2 || return $?
 
-    # 2. serve a webpage that will interactively run browser tests and coverage
+    # serve a webpage that will interactively run browser tests with coverage
     cd node_modules/utility2 && npm start --server-port=1337 || return $?
 }
 shExampleSh
@@ -57,8 +57,8 @@ shExampleSh
 /*
     example.js
 
-    this shared browser / node script will programmatically run phantomjs
-    browser tests and coverage on itself
+    this shared browser / node script will programmatically
+    run browser tests with coverage (via istanbul-lite and phantomjs-lite)
 
     instruction
         1. save this js script as example.js
@@ -306,10 +306,7 @@ shExampleSh
                 }
             }
         ];
-        // this test-runner will
-        // 1. create http-server from local.serverMiddlewareList
-        // 2. start http-server on port $npm_config_server_port
-        // 3. if env var $npm_config_mode_npm_test is defined, then run tests
+        // start server and run tests
         local.utility2.testRunServer(local, process.exit);
     }
     return;
@@ -317,7 +314,7 @@ shExampleSh
 ```
 #### output from shell
 ![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleJs.png)
-#### output from [phantomjs-lite](https://www.npmjs.com/package/phantomjs-lite)
+#### output from [test-report.html](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/test-report.html)
 ![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleSh.slimerjs._2Ftmp_2Fapp_2Ftmp_2Fbuild_2Ftest-report.html.png)
 #### output from [istanbul-lite](https://www.npmjs.com/package/istanbul-lite)
 ![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleJs.slimerjs._2Ftmp_2Fapp_2Ftmp_2Fbuild_2Fcoverage.html_2Fapp_2Fexample.js.html.png)
@@ -387,7 +384,7 @@ shExampleSh
 npm_config_mode_auto_restart=1 npm_config_mode_auto_restart_child=1 \
 ./index.sh shRun shNpmTest test.js"
     },
-    "version": "2015.3.7-13"
+    "version": "2015.3.8-10"
 }
 ```
 
