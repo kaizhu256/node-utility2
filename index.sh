@@ -174,7 +174,8 @@ shGrep() {
     FILE_FILTER="$FILE_FILTER|rollup.*\\" || return $?
     FILE_FILTER="$FILE_FILTER|swp\\" || return $?
     FILE_FILTER="$FILE_FILTER|tmp\\)\\b" || return $?
-    find . -type f | grep -v "$FILE_FILTER" | tr "\n" "\000" | xargs -0 grep -in "$1" || return $?
+    find . -type f | grep -v "$FILE_FILTER" | tr "\n" "\000" | xargs -0 grep -in "$1" || \
+        return $?
 }
 
 shInit() {
@@ -237,6 +238,7 @@ shInit() {
     export npm_config_dir_build=$CWD/tmp/build || return $?
     export npm_config_dir_tmp=$CWD/tmp || return $?
     export npm_config_file_tmp=$CWD/tmp/tmpfile || return $?
+    export npm_config_timeout_exit=$npm_config_timeout_exit || return $?
     # init $npm_config_dir_utility2
     if [ "$npm_package_name" = utility2 ]
     then
@@ -452,7 +454,8 @@ shReadmeTestJs() {
 shReadmeTestSh() {
     # this function will test the shell script $FILE in README.md
     local FILE=$1 || return $?
-    local FILE_BASENAME=$(node -e "console.log(require('path').basename('$FILE'));") || return $?
+    local FILE_BASENAME=$(node -e "console.log(require('path').basename('$FILE'));") || \
+        return $?
     shBuildPrint $MODE_BUILD "testing $FILE" || return $?
     if [ "$MODE_BUILD" != "build" ]
     then
@@ -543,7 +546,6 @@ shRunScreenCapture() {
     # init $npm_config_dir_build
     mkdir -p $npm_config_dir_build/coverage.html || return $?
     export MODE_BUILD_SCREEN_CAPTURE=screen-capture.${MODE_BUILD-undefined}.png || return $?
-    export npm_config_timeout_exit="$npm_config_timeout_exit" || return $?
     shRun $@ 2>&1 | tee $npm_config_dir_tmp/screen-capture.txt || return $?
     # save $EXIT_CODE and restore $CWD
     shExitCodeSave $(cat $npm_config_file_tmp) || return $?
@@ -673,7 +675,8 @@ shTravisEncryptYml() {
         printf "export AES_256_KEY=$AES_256_KEY\n\n" || return $?
     fi
     printf "# travis-encrypting \$AES_256_KEY for $GITHUB_REPO\n" || return $?
-    AES_256_KEY_ENCRYPTED=$(shTravisEncrypt $GITHUB_REPO \$AES_256_KEY=$AES_256_KEY) || return $?
+    AES_256_KEY_ENCRYPTED=$(shTravisEncrypt $GITHUB_REPO \$AES_256_KEY=$AES_256_KEY) || \
+        return $?
     # return non-zero exit-code if $AES_256_KEY_ENCRYPTED is empty string
     if [ ! "$AES_256_KEY_ENCRYPTED" ]
     then
@@ -690,8 +693,25 @@ shTravisEncryptYml() {
         .travis.yml || return $?
 }
 
-# if the first argument $1 is shRun, then run the command $@
-if [ "$1" = shRun ] || [ "$1" = shRunScreenCapture ]
-then
-    shInit && $@
-fi
+shMain() {
+    # this function will run the main program
+    if [ ! "$1" ]
+    then
+      return
+    fi
+    local COMMAND="$1" || return $?
+    shift
+    case "$COMMAND" in
+    shRun)
+        shInit && "$COMMAND" $@ || return $?
+        ;;
+    shRunScreenCapture)
+        shInit && "$COMMAND" $@ || return $?
+        ;;
+    test)
+        echo $@
+        shInit && shNpmTest $@ || return $?
+        ;;
+    esac
+}
+shMain $@

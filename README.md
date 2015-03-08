@@ -21,7 +21,7 @@ run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
 
 
 
-# quickstart interactive testing example
+# quickstart interactive example
 #### follow the instruction in this script
 ```
 # example.sh
@@ -51,22 +51,22 @@ shExampleSh
 
 
 
-# quickstart programmatic testing example
+# quickstart programmatic example
 #### follow the instruction in this script
 ```
 /*
-    example.js
+example.js
 
-    this shared browser / node script will programmatically
-    run browser tests with coverage (via istanbul-lite and phantomjs-lite)
+this shared browser / node script will programmatically
+run browser tests with coverage (via istanbul-lite and phantomjs-lite)
 
-    instruction
-        1. save this js script as example.js
-        2. run the shell command:
-            $ npm install phantomjs-lite utility2 && \
-                node_modules/.bin/utility2 shRun shNpmTest example.js
-        3. view test-report in ./tmp/build/test-report.html
-        4. view coverage in ./tmp/build/coverage.html/index.html
+instruction
+    1. save this js script as example.js
+    2. run the shell command:
+        $ npm install phantomjs-lite utility2 && \
+            node_modules/.bin/utility2 shRun shNpmTest example.js
+    3. view test-report in ./tmp/build/test-report.html
+    4. view coverage in ./tmp/build/coverage.html/index.html
 */
 
 /*jslint
@@ -393,7 +393,6 @@ npm_config_mode_auto_restart=1 npm_config_mode_auto_restart_child=1 \
 
 
 # todo
-- npm publish 2015.3.8-11
 - jslint textarea
 - add testCase for validating _testSecret
 - add taskPool

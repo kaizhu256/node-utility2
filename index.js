@@ -1315,7 +1315,7 @@ return local.utility2.setOverride(testPlatform, -1, {
                             .npm_config_dir_build +
                             '/screen-capture.' + options.testName + '.png')
                             .replace((/%/g), '_')
-                            .replace((/_2F\.png$/), 'png'),
+                            .replace((/_2F\.png$/), '.png'),
                         fileTestReport: local.utility2.envDict
                             .npm_config_dir_tmp +
                             '/test-report.' + options.testName + '.json',
@@ -2225,6 +2225,7 @@ local.utility2['/test/test-report.html.template'] = String() +
         'display:block;\n' +
         'margin: 5px 0 5px 0;\n' +
         'max-height:256px;\n' +
+        'max-width:512px;\n' +
     '}\n' +
     '.testReportPlatformSpan {\n' +
         'display: inline-block;\n' +
