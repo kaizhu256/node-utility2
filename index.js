@@ -669,122 +669,130 @@ return local.utility2.setOverride(testPlatform, -1, {
                     this function will create the test-report
                     after all tests have finished
                 */
-
-
-
-/* jslint-indent-begin 16 */
-/*jslint maxlen: 96*/
-var separator, testReport, testReportHtml;
-// restore exit
-local.utility2.exit = exit;
-// init new-line separator
-separator = new Array(56).join('-');
-// init testReport
-testReport = local.utility2.testReport;
-// stop testPlatform timer
-local._timeElapsedStop(testPlatform);
-// create testReportHtml
-testReportHtml = local.utility2.testMerge(testReport, {});
-// print test-report summary
-console.log('\n' + separator + '\n' + testReport.testPlatformList
-    .filter(function (testPlatform) {
-        // if testPlatform has no tests, then filter it out
-        return testPlatform.testCaseList.length;
-    })
-    .map(function (testPlatform) {
-        return '| test-report - ' + testPlatform.name + '\n|' +
-            ('        ' + testPlatform.timeElapsed + ' ms     ').slice(-16) +
-            ('        ' + testPlatform.testsFailed + ' failed ').slice(-16) +
-            ('        ' + testPlatform.testsPassed + ' passed ').slice(-16) +
-            '     |\n' + separator;
-    })
-    .join('\n') + '\n');
-switch (local.modeJs) {
-case 'browser':
-    // notify saucelabs of test results
+                var separator, testReport, testReportHtml;
+                // restore exit
+                local.utility2.exit = exit;
+                // init new-line separator
+                separator = new Array(56).join('-');
+                // init testReport
+                testReport = local.utility2.testReport;
+                // stop testPlatform timer
+                local._timeElapsedStop(testPlatform);
+                // create testReportHtml
+                testReportHtml = local.utility2.testMerge(testReport, {});
+                // print test-report summary
+                console.log('\n' + separator +
+                    '\n' + testReport.testPlatformList
+                    .filter(function (testPlatform) {
+                        // if testPlatform has no tests, then filter it out
+                        return testPlatform.testCaseList.length;
+                    })
+                    .map(function (testPlatform) {
+                        return '| test-report - ' + testPlatform.name + '\n|' +
+                            ('        ' + testPlatform.timeElapsed + ' ms     ')
+                            .slice(-16) +
+                            ('        ' + testPlatform.testsFailed + ' failed ')
+                            .slice(-16) +
+                            ('        ' + testPlatform.testsPassed + ' passed ')
+                            .slice(-16) +
+                            '     |\n' + separator;
+                    })
+                    .join('\n') + '\n');
+                switch (local.modeJs) {
+                case 'browser':
+                    // notify saucelabs of test results
 // https://docs.saucelabs.com/reference/rest-api/#js-unit-testing
-    local.global.global_test_results = {
-        coverage: local.global.__coverage__,
-        failed: local.utility2.testReport.testsFailed,
-        testReport: local.utility2.testReport
-    };
-    setTimeout(function () {
-        // update coverageReport
-        coverageReportCreate();
-        // call callback with number of tests failed
-        local.utility2.onErrorExit(local.utility2.testReport.testsFailed);
-        // throw global_test_results as an error,
-        // so it can be caught and passed to the phantom js-env
-        if (local.utility2.modeTest === 'phantom') {
-            throw new Error('\nphantom\n' + JSON.stringify({
-                global_test_results: local.global.global_test_results
-            }));
-        }
-    }, 1000);
-    break;
-case 'node':
-    // create build badge
-    local.fs.writeFileSync(
-        local.utility2.envDict.npm_config_dir_build + '/build.badge.svg',
-        local.utility2['/build/build.badge.svg']
-            // edit branch name
-            .replace(
-                (/0000 00 00 00 00 00/g),
-                new Date().toISOString().slice(0, 19).replace('T', ' ')
-            )
-            // edit branch name
-            .replace(
-                (/- master -/g),
-                '| ' + local.utility2.envDict.CI_BRANCH + ' |'
-            )
-            // edit commit id
-            .replace(
-                (/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/g),
-                local.utility2.envDict.CI_COMMIT_ID
-            )
-    );
-    // create test-report.badge.svg
-    local.fs.writeFileSync(
-        local.utility2.envDict.npm_config_dir_build +
-            '/test-report.badge.svg',
-        local.utility2['/build/test-report.badge.svg']
-            // edit number of tests failed
-            .replace((/999/g), testReport.testsFailed)
-            // edit badge color
-            .replace(
-                (/d00/g),
-                // coverage-hack
-                // cover both fail and pass cases
-                '0d00'.slice(!!testReport.testsFailed).slice(0, 3)
-            )
-    );
-    // create test-report.html
-    local.fs.writeFileSync(
-        local.utility2.envDict.npm_config_dir_build + '/test-report.html',
-        testReportHtml
-    );
-    console.log('created test-report file://' +
-        local.utility2.envDict.npm_config_dir_build + '/test-report.html');
-    // create test-report.json
-    local.fs.writeFileSync(
-        local.utility2.envDict.npm_config_dir_build + '/test-report.json',
-        JSON.stringify(local.utility2.testReport)
-    );
-    // if any test failed, then exit with non-zero exit-code
-    setTimeout(function () {
-        // finalize testReport
-        local.utility2.testMerge(testReport, {});
-        console.log('\n' + local.utility2.envDict.MODE_BUILD + ' - ' +
-            local.utility2.testReport.testsFailed + ' failed tests\n');
-        // call callback with number of tests failed
-        local.utility2.onErrorExit(local.utility2.testReport.testsFailed);
-    }, 1000);
-    break;
-}
-/* jslint-indent-end */
-
-
-
+                    local.global.global_test_results = {
+                        coverage: local.global.__coverage__,
+                        failed: local.utility2.testReport.testsFailed,
+                        testReport: local.utility2.testReport
+                    };
+                    setTimeout(function () {
+                        // update coverageReport
+                        coverageReportCreate();
+                        // call callback with number of tests failed
+                        local.utility2
+                            .onErrorExit(local.utility2.testReport.testsFailed);
+                        // throw global_test_results as an error,
+                        // so it can be caught and passed to the phantom js-env
+                        if (local.utility2.modeTest === 'phantom') {
+                            throw new Error('\nphantom\n' + JSON.stringify({
+                                global_test_results:
+                                    local.global.global_test_results
+                            }));
+                        }
+                    }, 1000);
+                    break;
+                case 'node':
+                    // create build badge
+                    local.fs.writeFileSync(
+                        local.utility2.envDict.npm_config_dir_build +
+                            '/build.badge.svg',
+                        local.utility2['/build/build.badge.svg']
+                            // edit branch name
+                            .replace(
+                                (/0000 00 00 00 00 00/g),
+                                new Date()
+                                    .toISOString()
+                                    .slice(0, 19)
+                                    .replace('T', ' ')
+                            )
+                            // edit branch name
+                            .replace(
+                                (/- master -/g),
+                                '| ' + local.utility2.envDict.CI_BRANCH + ' |'
+                            )
+                            // edit commit id
+                            .replace(
+                                (/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/g),
+                                local.utility2.envDict.CI_COMMIT_ID
+                            )
+                    );
+                    // create test-report.badge.svg
+                    local.fs.writeFileSync(
+                        local.utility2.envDict.npm_config_dir_build +
+                            '/test-report.badge.svg',
+                        local.utility2['/build/test-report.badge.svg']
+                            // edit number of tests failed
+                            .replace((/999/g), testReport.testsFailed)
+                            // edit badge color
+                            .replace(
+                                (/d00/g),
+                                // coverage-hack
+                                // cover both fail and pass cases
+                                '0d00'
+                                    .slice(!!testReport.testsFailed)
+                                    .slice(0, 3)
+                            )
+                    );
+                    // create test-report.html
+                    local.fs.writeFileSync(
+                        local.utility2.envDict.npm_config_dir_build +
+                            '/test-report.html',
+                        testReportHtml
+                    );
+                    console.log('created test-report file://' +
+                        local.utility2.envDict.npm_config_dir_build +
+                            '/test-report.html');
+                    // create test-report.json
+                    local.fs.writeFileSync(
+                        local.utility2.envDict.npm_config_dir_build +
+                            '/test-report.json',
+                        JSON.stringify(local.utility2.testReport)
+                    );
+                    // if any test failed, then exit with non-zero exit-code
+                    setTimeout(function () {
+                        // finalize testReport
+                        local.utility2.testMerge(testReport, {});
+                        console.log('\n' + local.utility2.envDict.MODE_BUILD +
+                            ' - ' + local.utility2.testReport.testsFailed +
+                            ' failed tests\n');
+                        // call callback with number of tests failed
+                        local.utility2
+                            .onErrorExit(local.utility2.testReport.testsFailed);
+                    }, 1000);
+                    break;
+                }
             });
             onParallel.counter += 1;
             // init testReport timer
@@ -2217,8 +2225,6 @@ local.utility2['/test/test-report.html.template'] = String() +
         'display:block;\n' +
         'margin: 5px 0 5px 0;\n' +
         'max-height:256px;\n' +
-        'max-width:320px;\n' +
-        'overflow:hidden;\n' +
     '}\n' +
     '.testReportPlatformSpan {\n' +
         'display: inline-block;\n' +

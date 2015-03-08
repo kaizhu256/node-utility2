@@ -145,6 +145,10 @@ shExampleSh
 
     // run node js-env code
     } else {
+        // mock package.json env
+        process.env.npm_package_description = 'this is an example module';
+        process.env.npm_package_name = 'example-module';
+        process.env.npm_package_version = '0.0.1';
         // require modules
         local.fs = require('fs');
         // init node js-env tests
@@ -198,9 +202,11 @@ shExampleSh
 '</head>\n' +
 '<body>\n' +
     '<div class="ajaxProgressDiv" style="display: none;">\n' +
-    '<div class="ajaxProgressBarDiv ajaxProgressBarDivLoading">loading</div>\n' +
+    '<div class="ajaxProgressBarDiv ajaxProgressBarDivLoading" \
+>loading</div>\n' +
     '</div>\n' +
-    '<h1>{{envDict.npm_package_name}} [{{envDict.npm_package_version}}]</h1>\n' +
+    '<h1 \
+>{{envDict.npm_package_name}} [{{envDict.npm_package_version}}]</h1>\n' +
     '<h3>{{envDict.npm_package_description}}</h3>\n' +
     '<div>edit or paste script below to cover and test</div>\n' +
 '<textarea class="istanbulInputTextarea">\n' +
@@ -258,11 +264,11 @@ shExampleSh
             String()).replace((/\{\{envDict\.\w+?\}\}/g), function (match0) {
             switch (match0) {
             case '{{envDict.npm_package_description}}':
-                return 'this is an example module';
+                return process.env.npm_package_description;
             case '{{envDict.npm_package_name}}':
-                return 'example-module';
+                return process.env.npm_package_name;
             case '{{envDict.npm_package_version}}':
-                return '0.0.1';
+                return process.env.npm_package_version;
             }
         });
         local['/assets/istanbul-lite.js'] =
@@ -312,7 +318,7 @@ shExampleSh
 #### output from shell
 ![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleJs.png)
 #### output from [phantomjs-lite](https://www.npmjs.com/package/phantomjs-lite)
-![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleJs.slimerjs.png)
+![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleSh.slimerjs._2Ftmp_2Fapp_2Ftmp_2Fbuild_2Ftest-report.html.png)
 #### output from [istanbul-lite](https://www.npmjs.com/package/istanbul-lite)
 ![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleJs.slimerjs._2Ftmp_2Fapp_2Ftmp_2Fbuild_2Fcoverage.html_2Fapp_2Fexample.js.html.png)
 
@@ -422,10 +428,13 @@ shBuild() {
         shRunScreenCapture shReadmeTestJs example.js || return $?
     # screen-capture example.js coverage
     MODE_BUILD=testExampleJs shRun shPhantomScreenCapture \
-        /tmp/app/tmp/build/coverage.html/app/example.js.html || :
+        /tmp/app/tmp/build/coverage.html/app/example.js.html || return $?
     # copy phantomjs screen-capture to $npm_config_dir_build
     cp /tmp/app/tmp/build/screen-capture.*.png $npm_config_dir_build || \
         return $?
+    # screen-capture example.js test-report
+    MODE_BUILD=testExampleSh shRun shPhantomScreenCapture \
+        /tmp/app/tmp/build/test-report.html || return $?
 
     # test example shell script
     MODE_BUILD=testExampleSh \
