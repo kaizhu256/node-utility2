@@ -45,9 +45,9 @@ shExampleSh() {
 shExampleSh
 ```
 #### output from shell
-![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleSh.png)
-#### output from [phantomjs-lite](https://www.npmjs.com/package/phantomjs-lite)
-![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleSh.slimerjs.png)
+[![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleSh.png)](https://travis-ci.org/kaizhu256/node-utility2)
+#### output from phantomjs-lite
+[![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleSh.slimerjs.png)](https://hrku01-utility2-beta.herokuapp.com)
 
 
 
@@ -65,6 +65,8 @@ shExampleSh
         2. run the shell command:
             $ npm install phantomjs-lite utility2 && \
                 node_modules/.bin/utility2 shRun shNpmTest example.js
+        3. view test-report in ./tmp/build/test-report.html
+        4. view coverage in ./tmp/build/coverage.html/index.html
 */
 
 /*jslint
@@ -313,11 +315,11 @@ shExampleSh
 }());
 ```
 #### output from shell
-![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleJs.png)
-#### output from [test-report.html](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/test-report.html)
-![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleSh.slimerjs._2Ftmp_2Fapp_2Ftmp_2Fbuild_2Ftest-report.html.png)
-#### output from [istanbul-lite](https://www.npmjs.com/package/istanbul-lite)
-![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleJs.slimerjs._2Ftmp_2Fapp_2Ftmp_2Fbuild_2Fcoverage.html_2Fapp_2Fexample.js.html.png)
+[![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleJs.png)](https://travis-ci.org/kaizhu256/node-utility2)
+#### output from test-report.html
+[![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleSh.slimerjs._2Ftmp_2Fapp_2Ftmp_2Fbuild_2Ftest-report.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/test-report.html)
+#### output from istanbul-lite
+[![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleJs.slimerjs._2Ftmp_2Fapp_2Ftmp_2Fbuild_2Fcoverage.html_2Fapp_2Fexample.js.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/coverage.html/node-utility2/index.js.html)
 
 
 
@@ -404,7 +406,7 @@ npm_config_mode_auto_restart=1 npm_config_mode_auto_restart_child=1 \
 
 
 # changelog of last 50 commits
-![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.gitLog.png)
+[![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.gitLog.png)](https://github.com/kaizhu256/node-utility2/commits)
 
 
 
