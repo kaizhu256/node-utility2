@@ -316,7 +316,7 @@ instruction
 ```
 #### output from shell
 [![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleJs.png)](https://travis-ci.org/kaizhu256/node-utility2)
-#### output from test-report.html
+#### output from utility2
 [![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleSh.slimerjs._2Ftmp_2Fapp_2Ftmp_2Fbuild_2Ftest-report.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/test-report.html)
 #### output from istanbul-lite
 [![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleJs.slimerjs._2Ftmp_2Fapp_2Ftmp_2Fbuild_2Fcoverage.html_2Fapp_2Fexample.js.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/coverage.html/node-utility2/index.js.html)
@@ -366,6 +366,7 @@ instruction
         "jslint",
         "lightweight",
         "lint",
+        "lite",
         "phantomjs",
         "slimerjs",
         "test",
@@ -477,18 +478,6 @@ shBuildCleanup() {
     # create recent changelog of last 50 commits
     MODE_BUILD=gitLog shRunScreenCapture git log -50 --pretty="%ai\u000a%B" || \
         return $?
-    # add black border around phantomjs screen-capture
-    shBuildPrint phantomScreenCapture \
-        "add black border around phantomjs screen-capture" || return $?
-    local FILE_LIST="$(ls \
-        $npm_config_dir_build/screen-capture.*.phantomjs*.png \
-        $npm_config_dir_build/screen-capture.*.slimerjs*.png \
-        2>/dev/null)" || return $?
-    if [ "$FILE_LIST" ] && (mogrify --version > /dev/null 2>&1)
-    then
-        printf "$FILE_LIST" | \
-            xargs -n 1 mogrify -frame 1 -mattecolor black || return $?
-    fi
 }
 shBuildCleanup || exit $?
 

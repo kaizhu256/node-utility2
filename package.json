@@ -27,6 +27,7 @@
         "jslint",
         "lightweight",
         "lint",
+        "lite",
         "phantomjs",
         "slimerjs",
         "test",

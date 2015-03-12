@@ -1,7 +1,7 @@
 /*jslint
     browser: true,
     maxerr: 4,
-    maxlen: 80,
+    maxlen: 96,
     node: true,
     nomen: true,
     stupid: true

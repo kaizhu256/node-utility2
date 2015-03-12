@@ -2,7 +2,7 @@
     bitwise: true,
     browser: true,
     maxerr: 4,
-    maxlen: 80,
+    maxlen: 96,
     node: true,
     nomen: true,
     stupid: true
@@ -551,7 +551,7 @@
 
 
 /* jslint-indent-begin 28 */
-/*jslint maxlen: 108*/
+/*jslint maxlen: 124*/
 errorStackList = [];
 return local.utility2.setOverride(testPlatform, -1, {
     errorStackList: errorStackList,
@@ -1348,16 +1348,17 @@ return local.utility2.setOverride(testPlatform, -1, {
                     }
                     // spawn phantomjs to test a url
                     local.child_process
-                        .spawn(
-                            require(
-                                'phantomjs-lite'
-                            ).__dirname + '/' + options.argv0,
-                            [
-                                options.argv1,
-                                encodeURIComponent(JSON.stringify(options))
-                            ],
-                            { stdio: 'inherit' }
-                        )
+                        .spawn('/bin/sh', [ '-c',
+                            require('phantomjs-lite').__dirname + '/' + options.argv0 + ' ' +
+                            options.argv1 + ' ' +
+                            encodeURIComponent(JSON.stringify(options)) + '; ' +
+                            'EXIT_CODE=$?; ' +
+                            // add black border around phantomjs screen-capture
+                            '[ -f ' + options.fileScreenCapture + ' ] && ' +
+                            'mogrify -frame 1 -mattecolor black ' +
+                            options.fileScreenCapture + ' 2>/dev/null; ' +
+                            'exit $EXIT_CODE;'
+                            ], { stdio: ['ignore', 1, 2] })
                         .on('exit', onNext);
                     break;
                 case 2:
