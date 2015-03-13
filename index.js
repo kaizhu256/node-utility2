@@ -216,9 +216,11 @@
         (function () {
             local.utility2.onReady =
                 local.utility2.onParallel(function (error) {
-                    local.utility2.onReady.onReady(error);
+                    local.utility2.onReady.onErrorList.forEach(function (onError) {
+                        onError(error);
+                    });
                 });
-            local.utility2.onReady.onReady = local.utility2.onErrorDefault;
+            local.utility2.onReady.onErrorList = [local.utility2.onErrorDefault];
             local.utility2.onReady.counter += 1;
             setTimeout(local.utility2.onReady);
         }());
@@ -274,12 +276,7 @@
             return options;
         };
 
-        local.utility2.setOverride = function (
-            options,
-            depth,
-            override,
-            backup
-        ) {
+        local.utility2.setOverride = function (options, depth, override, backup) {
             /*
                 this function will recursively override
                 the options object with the override object,
@@ -303,21 +300,14 @@
                     // 1. save the options item to the backup object
                     backup[key] = options2;
                     // 2. set the override item to the options object
-                    // if options is envDict,
-                    // then override falsey values with empty string
+                    // if options is envDict, then override falsey value with empty string
                     options[key] = options === local.utility2.envDict
                         ? override2 || ''
                         : override2;
                     return;
                 }
                 // 3. recurse options[key] and override[key]
-                local.utility2.setOverride(
-                    options2,
-                    depth,
-                    override2,
-                    override2,
-                    backup
-                );
+                local.utility2.setOverride(options2, depth, override2, backup[key]);
             });
             return options;
         };
@@ -1730,9 +1720,9 @@ return local.utility2.setOverride(testPlatform, -1, {
                     .unref();
             }
             // 3. if $npm_config_mode_npm_test is defined, then run tests
-            local.utility2.onReady.onReady = function () {
+            local.utility2.onReady.onErrorList.push(function () {
                 local.utility2.testRun(options);
-            };
+            });
             local.utility2.onReady.counter += 1;
             return server;
         };
