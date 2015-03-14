@@ -141,8 +141,6 @@
                 this function will recursively set default values
                 for unset leaf nodes in the options object
             */
-            depth = depth || 1;
-            depth -= 1;
             Object.keys(defaults).forEach(function (key) {
                 var defaults2, options2;
                 defaults2 = defaults[key];
@@ -152,36 +150,31 @@
                     options[key] = defaults2;
                     return;
                 }
-                // if options[key] and defaults[key]
-                // are both non-null and non-array objects,
+                // if options[key] and defaults[key] are both non-null and non-array objects,
                 // then recurse options[key] and defaults[key]
-                if (depth !== 0 &&
+                if (depth && depth !== 1 &&
                         defaults2 &&
                         typeof defaults2 === 'object' &&
                         !Array.isArray(defaults2) &&
                         options2 &&
                         typeof options2 === 'object' &&
                         !Array.isArray(options2)) {
-                    local.utility2.objectDefault(options2, defaults2, depth);
+                    local.utility2.objectDefault(options2, defaults2, depth - 1);
                 }
             });
             return options;
         };
 
-        local.utility2.objectOverride = function (options, override, depth, backup) {
+        local.utility2.objectOverride = function (options, override, depth) {
             /*
                 this function will recursively override
-                the options object with the override object,
-                and optionally backup options
+                the options object with the override object
             */
             var options2, override2;
-            backup = backup || {};
-            depth = depth || 1;
-            depth -= 1;
             Object.keys(override).forEach(function (key) {
                 options2 = options[key];
-                override2 = backup[key] = override[key];
-                if (depth === 0 ||
+                override2 = override[key];
+                if (!depth || depth === 1 ||
                         // override[key] is not a non-null, non-array object
                         !(override2 &&
                         typeof override2 === 'object' &&
@@ -190,17 +183,15 @@
                         !(options2 &&
                         typeof options2 === 'object' &&
                         !Array.isArray(options2))) {
-                    // 1. save the options item to the backup object
-                    backup[key] = options2;
-                    // 2. set the override item to the options object
-                    // if options is envDict, then override falsey value with empty string
+                    // set the override item to the options object
                     options[key] = options === local.utility2.envDict
+                        // if options is envDict, then override falsey value with empty string
                         ? override2 || ''
                         : override2;
                     return;
                 }
-                // 3. recurse options[key] and override[key]
-                local.utility2.objectOverride(options2, override2, depth, backup[key]);
+                // recurse options2 and override2
+                local.utility2.objectOverride(options2, override2, depth - 1);
             });
             return options;
         };
@@ -341,7 +332,7 @@
             onError2 = function (error) {
                 // restore mock[0] from mock[2]
                 mockList.reverse().forEach(function (mock) {
-                    local.utility2.objectOverride(mock[0], mock[2], 1, null);
+                    local.utility2.objectOverride(mock[0], mock[2]);
                 });
                 onError(error);
             };
@@ -351,8 +342,11 @@
                 mockList.forEach(function (mock) {
                     mock[2] = {};
                     // backup mock[0] into mock[2]
+                    Object.keys(mock[1]).forEach(function (key) {
+                        mock[2][key] = mock[0][key];
+                    });
                     // override mock[0] with mock[1]
-                    local.utility2.objectOverride(mock[0], mock[1], 1, mock[2]);
+                    local.utility2.objectOverride(mock[0], mock[1]);
                 });
                 // run testCase
                 testCase(onError2);

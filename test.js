@@ -272,7 +272,9 @@
             // test non-recursive handling behavior
             options = local.utility2.objectDefault(
                 { aa: 1, bb: {}, cc: [] },
-                { aa: 2, bb: { cc: 2 }, cc: [1, 2] }
+                { aa: 2, bb: { cc: 2 }, cc: [1, 2] },
+                // test default depth handling behavior
+                null
             );
             // validate options
             local.utility2.assert(
@@ -299,8 +301,7 @@
             /*
                 this function will test objectOverride's default handling behavior
             */
-            var backup, data, options;
-            backup = {};
+            var data, options;
             // test override handling behavior
             options = local.utility2.objectOverride(
                 {
@@ -316,37 +317,19 @@
                     ee: { ff: { gg: 6 } }
                 },
                 // test depth handling behavior
-                2,
-                // test backup handling behavior
-                backup
+                2
             );
-            // validate backup
-            data = local.utility2.jsonStringifyOrdered(backup);
-            local.utility2.assert(data ===
-                '{"aa":1,"bb":{},"dd":[3,4],' +
-                '"ee":{"ff":{"gg":5,"hh":6}}}', data);
             // validate options
             data = local.utility2.jsonStringifyOrdered(options);
             local.utility2.assert(data ===
                 '{"aa":2,"bb":{"cc":2,"dd":3},"dd":[4,5],' +
                 '"ee":{"ff":{"gg":6}}}', data);
-            // test restore options from backup handling behavior
-            local.utility2.objectOverride(options, backup, -1);
-            // validate backup
-            data = local.utility2.jsonStringifyOrdered(backup);
-            local.utility2.assert(data ===
-                '{"aa":1,"bb":{"dd":3},"dd":[3,4],' +
-                '"ee":{"ff":{"gg":6}}}', data);
-            // validate options
-            data = local.utility2.jsonStringifyOrdered(options);
-            local.utility2.assert(data ===
-                '{"aa":1,"bb":{"cc":2},"dd":[3,4],' +
-                '"ee":{"ff":{"gg":5,"hh":6}}}', data);
             // test override envDict with empty-string handling behavior
             options = local.utility2.objectOverride(
                 local.utility2.envDict,
                 { 'emptyString': null },
-                1
+                // test default depth handling behavior
+                null
             );
             // validate options
             local.utility2.assert(
