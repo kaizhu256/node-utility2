@@ -136,6 +136,75 @@
                 : value;
         };
 
+        local.utility2.objectDefault = function (options, defaults, depth) {
+            /*
+                this function will recursively set default values
+                for unset leaf nodes in the options object
+            */
+            depth = depth || 1;
+            depth -= 1;
+            Object.keys(defaults).forEach(function (key) {
+                var defaults2, options2;
+                defaults2 = defaults[key];
+                options2 = options[key];
+                // set options[key] to default value defaults[key]
+                if (options2 === undefined) {
+                    options[key] = defaults2;
+                    return;
+                }
+                // if options[key] and defaults[key]
+                // are both non-null and non-array objects,
+                // then recurse options[key] and defaults[key]
+                if (depth !== 0 &&
+                        defaults2 &&
+                        typeof defaults2 === 'object' &&
+                        !Array.isArray(defaults2) &&
+                        options2 &&
+                        typeof options2 === 'object' &&
+                        !Array.isArray(options2)) {
+                    local.utility2.objectDefault(options2, defaults2, depth);
+                }
+            });
+            return options;
+        };
+
+        local.utility2.objectOverride = function (options, override, depth, backup) {
+            /*
+                this function will recursively override
+                the options object with the override object,
+                and optionally backup options
+            */
+            var options2, override2;
+            backup = backup || {};
+            depth = depth || 1;
+            depth -= 1;
+            Object.keys(override).forEach(function (key) {
+                options2 = options[key];
+                override2 = backup[key] = override[key];
+                if (depth === 0 ||
+                        // override[key] is not a non-null, non-array object
+                        !(override2 &&
+                        typeof override2 === 'object' &&
+                        !Array.isArray(override2)) ||
+                        // options[key] is not a non-null, non-array object
+                        !(options2 &&
+                        typeof options2 === 'object' &&
+                        !Array.isArray(options2))) {
+                    // 1. save the options item to the backup object
+                    backup[key] = options2;
+                    // 2. set the override item to the options object
+                    // if options is envDict, then override falsey value with empty string
+                    options[key] = options === local.utility2.envDict
+                        ? override2 || ''
+                        : override2;
+                    return;
+                }
+                // 3. recurse options[key] and override[key]
+                local.utility2.objectOverride(options2, override2, depth, backup[key]);
+            });
+            return options;
+        };
+
         local.utility2.onErrorDefault = function (error) {
             /*
                 this function will provide a default error handling callback,
@@ -245,73 +314,6 @@
             }, timeout);
         };
 
-        local.utility2.setDefault = function (options, depth, defaults) {
-            /*
-                this function will recursively set default values
-                for unset leaf nodes in the options object
-            */
-            depth -= 1;
-            Object.keys(defaults).forEach(function (key) {
-                var defaults2, options2;
-                defaults2 = defaults[key];
-                options2 = options[key];
-                // set options[key] to default value defaults[key]
-                if (options2 === undefined) {
-                    options[key] = defaults2;
-                    return;
-                }
-                // if options[key] and defaults[key]
-                // are both non-null and non-array objects,
-                // then recurse options[key] and defaults[key]
-                if (depth !== 0 &&
-                        defaults2 &&
-                        typeof defaults2 === 'object' &&
-                        !Array.isArray(defaults2) &&
-                        options2 &&
-                        typeof options2 === 'object' &&
-                        !Array.isArray(options2)) {
-                    local.utility2.setDefault(options2, depth, defaults2);
-                }
-            });
-            return options;
-        };
-
-        local.utility2.setOverride = function (options, depth, override, backup) {
-            /*
-                this function will recursively override
-                the options object with the override object,
-                and optionally backup options
-            */
-            var options2, override2;
-            backup = backup || {};
-            depth -= 1;
-            Object.keys(override).forEach(function (key) {
-                options2 = options[key];
-                override2 = backup[key] = override[key];
-                if (depth === 0 ||
-                        // override[key] is not a non-null, non-array object
-                        !(override2 &&
-                        typeof override2 === 'object' &&
-                        !Array.isArray(override2)) ||
-                        // options[key] is not a non-null, non-array object
-                        !(options2 &&
-                        typeof options2 === 'object' &&
-                        !Array.isArray(options2))) {
-                    // 1. save the options item to the backup object
-                    backup[key] = options2;
-                    // 2. set the override item to the options object
-                    // if options is envDict, then override falsey value with empty string
-                    options[key] = options === local.utility2.envDict
-                        ? override2 || ''
-                        : override2;
-                    return;
-                }
-                // 3. recurse options[key] and override[key]
-                local.utility2.setOverride(options2, depth, override2, backup[key]);
-            });
-            return options;
-        };
-
         local.utility2.testMock = function (mockList, onError, testCase) {
             /*
                 this function will mock the objects in mockList
@@ -339,7 +341,7 @@
             onError2 = function (error) {
                 // restore mock[0] from mock[2]
                 mockList.reverse().forEach(function (mock) {
-                    local.utility2.setOverride(mock[0], 1, mock[2], null);
+                    local.utility2.objectOverride(mock[0], mock[2], 1, null);
                 });
                 onError(error);
             };
@@ -350,7 +352,7 @@
                     mock[2] = {};
                     // backup mock[0] into mock[2]
                     // override mock[0] with mock[1]
-                    local.utility2.setOverride(mock[0], 1, mock[1], mock[2]);
+                    local.utility2.objectOverride(mock[0], mock[1], 1, mock[2]);
                 });
                 // run testCase
                 testCase(onError2);
@@ -367,12 +369,12 @@
             // 1. merge testReport2 into testReport1
             [testReport1, testReport2].forEach(function (testReport, ii) {
                 ii += 1;
-                local.utility2.setDefault(testReport, -1, {
+                local.utility2.objectDefault(testReport, {
                     date: new Date().toISOString(),
                     errorStackList: [],
                     testPlatformList: [],
                     timeElapsed: 0
-                });
+                }, -1);
                 // security - handle malformed testReport
                 local.utility2.assert(
                     testReport && typeof testReport === 'object',
@@ -385,11 +387,11 @@
                 );
                 // security - handle malformed testReport.testPlatformList
                 testReport.testPlatformList.forEach(function (testPlatform) {
-                    local.utility2.setDefault(testPlatform, -1, {
+                    local.utility2.objectDefault(testPlatform, {
                         name: 'undefined',
                         testCaseList: [],
                         timeElapsed: 0
-                    });
+                    }, -1);
                     local.utility2.assert(
                         typeof testPlatform.name === 'string',
                         ii + ' invalid testPlatform.name ' +
@@ -410,11 +412,11 @@
                     // security - handle malformed
                     // testReport.testPlatformList.testCaseList
                     testPlatform.testCaseList.forEach(function (testCase) {
-                        local.utility2.setDefault(testCase, -1, {
+                        local.utility2.objectDefault(testCase, {
                             errorStack: '',
                             name: 'undefined',
                             timeElapsed: 0
-                        });
+                        }, -1);
                         local.utility2.assert(
                             typeof testCase.errorStack === 'string',
                             ii + ' invalid testCase.errorStack ' +
@@ -524,7 +526,7 @@
             testCaseNumber = 0;
             return local.utility2.textFormat(
                 local.utility2['/test/test-report.html.template'],
-                local.utility2.setOverride(testReport, -1, {
+                local.utility2.objectOverride(testReport, {
                     // security - sanitize '<' in text
                     CI_COMMIT_INFO: String(
                         local.utility2.envDict.CI_COMMIT_INFO
@@ -543,7 +545,7 @@
 /* jslint-indent-begin 28 */
 /*jslint maxlen: 124*/
 errorStackList = [];
-return local.utility2.setOverride(testPlatform, -1, {
+return local.utility2.objectOverride(testPlatform, {
     errorStackList: errorStackList,
     // security - sanitize '<' in text
     name: String(testPlatform.name).replace((/</g), '&lt;'),
@@ -563,11 +565,11 @@ return local.utility2.setOverride(testPlatform, -1, {
                 ).replace((/</g), '&lt;')
             });
         }
-        return local.utility2.setOverride(testCase, -1, {
+        return local.utility2.objectOverride(testCase, {
             testCaseNumber: testCaseNumber,
             testReportTestStatusClass: 'testReportTest' +
                 testCase.status[0].toUpperCase() + testCase.status.slice(1)
-        });
+        }, -1);
     }),
     testReportPlatformPreClass: 'testReportPlatformPre' + (errorStackList.length
         ? ''
@@ -578,11 +580,11 @@ return local.utility2.setOverride(testPlatform, -1, {
 
 
 
-                        }),
+                        }, -1),
                     testsFailedClass: testReport.testsFailed
                         ? 'testReportTestFailed'
                         : 'testReportTestPassed'
-                }),
+                }, -1),
                 'undefined'
             );
         };
@@ -1242,10 +1244,10 @@ return local.utility2.setOverride(testPlatform, -1, {
                 this function will spawn both phantomjs and slimerjs processes
                 to screen-capture options.url
             */
-            local.utility2.phantomTest(local.utility2.setDefault(options, 1, {
+            local.utility2.phantomTest(local.utility2.objectDefault(options, {
                 modePhantom: 'screenCapture',
                 timeoutScreenCapture: 2000
-            }), onError);
+            }, 1), onError);
         };
 
         local.utility2.phantomTest = function (options, onError) {
@@ -1296,7 +1298,7 @@ return local.utility2.setOverride(testPlatform, -1, {
                         encodeURIComponent(
                             local.url.parse(options.url).pathname
                         );
-                    local.utility2.setDefault(options, 1, {
+                    local.utility2.objectDefault(options, {
                         _testSecret: local.utility2._testSecret,
                         fileCoverage: local.utility2.envDict
                             .npm_config_dir_tmp +
@@ -1310,7 +1312,7 @@ return local.utility2.setOverride(testPlatform, -1, {
                             .npm_config_dir_tmp +
                             '/test-report.' + options.testName + '.json',
                         modePhantom: 'testUrl'
-                    });
+                    }, 1);
                     // set timerTimeout
                     timerTimeout = local.utility2.onTimeout(
                         onNext,
@@ -1880,10 +1882,10 @@ return local.utility2.setOverride(testPlatform, -1, {
         // http://phantomjs.org/api/phantom/handler/on-error.html
         local.global.phantom.onError = local.onError;
         // override utility2 properties
-        local.utility2.setOverride(
+        local.utility2.objectOverride(
             local.utility2,
-            -1,
-            JSON.parse(decodeURIComponent(local.system.args[1]))
+            JSON.parse(decodeURIComponent(local.system.args[1])),
+            -1
         );
         // if modeErrorIgnore is truthy,
         // then suppress console.error and console.log

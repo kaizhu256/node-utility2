@@ -237,18 +237,7 @@
             */
             var data;
             // test various data-type handling behavior
-            [
-                undefined,
-                null,
-                false,
-                true,
-                0,
-                1,
-                1.5,
-                'a',
-                {},
-                []
-            ].forEach(function (data) {
+            [undefined, null, false, true, 0, 1, 1.5, 'a', {}, []].forEach(function (data) {
                 local.utility2.assert(
                     local.utility2.jsonStringifyOrdered(data) ===
                         JSON.stringify(data),
@@ -271,6 +260,98 @@
             local.utility2.assert(
                 data === '{"aa":1,"bb":2,"dd":[null],"ee":{"ff":1,"gg":2}}',
                 data
+            );
+            onError();
+        };
+
+        local.testCase_objectDefault_default = function (onError) {
+            /*
+                this function will test objectDefault's default handling behavior
+            */
+            var options;
+            // test non-recursive handling behavior
+            options = local.utility2.objectDefault(
+                { aa: 1, bb: {}, cc: [] },
+                { aa: 2, bb: { cc: 2 }, cc: [1, 2] }
+            );
+            // validate options
+            local.utility2.assert(
+                local.utility2.jsonStringifyOrdered(options) ===
+                    '{"aa":1,"bb":{},"cc":[]}',
+                options
+            );
+            // test recursive handling behavior
+            options = local.utility2.objectDefault(
+                { aa: 1, bb: {}, cc: [] },
+                { aa: 2, bb: { cc: 2 }, cc: [1, 2] },
+                -1
+            );
+            // validate options
+            local.utility2.assert(
+                local.utility2
+                    .jsonStringifyOrdered(options) === '{"aa":1,"bb":{"cc":2},"cc":[]}',
+                options
+            );
+            onError();
+        };
+
+        local.testCase_objectOverride_default = function (onError) {
+            /*
+                this function will test objectOverride's default handling behavior
+            */
+            var backup, data, options;
+            backup = {};
+            // test override handling behavior
+            options = local.utility2.objectOverride(
+                {
+                    aa: 1,
+                    bb: { cc: 2 },
+                    dd: [3, 4],
+                    ee: { ff: { gg: 5, hh: 6 } }
+                },
+                {
+                    aa: 2,
+                    bb: { dd: 3 },
+                    dd: [4, 5],
+                    ee: { ff: { gg: 6 } }
+                },
+                // test depth handling behavior
+                2,
+                // test backup handling behavior
+                backup
+            );
+            // validate backup
+            data = local.utility2.jsonStringifyOrdered(backup);
+            local.utility2.assert(data ===
+                '{"aa":1,"bb":{},"dd":[3,4],' +
+                '"ee":{"ff":{"gg":5,"hh":6}}}', data);
+            // validate options
+            data = local.utility2.jsonStringifyOrdered(options);
+            local.utility2.assert(data ===
+                '{"aa":2,"bb":{"cc":2,"dd":3},"dd":[4,5],' +
+                '"ee":{"ff":{"gg":6}}}', data);
+            // test restore options from backup handling behavior
+            local.utility2.objectOverride(options, backup, -1);
+            // validate backup
+            data = local.utility2.jsonStringifyOrdered(backup);
+            local.utility2.assert(data ===
+                '{"aa":1,"bb":{"dd":3},"dd":[3,4],' +
+                '"ee":{"ff":{"gg":6}}}', data);
+            // validate options
+            data = local.utility2.jsonStringifyOrdered(options);
+            local.utility2.assert(data ===
+                '{"aa":1,"bb":{"cc":2},"dd":[3,4],' +
+                '"ee":{"ff":{"gg":5,"hh":6}}}', data);
+            // test override envDict with empty-string handling behavior
+            options = local.utility2.objectOverride(
+                local.utility2.envDict,
+                { 'emptyString': null },
+                1
+            );
+            // validate options
+            local.utility2.assert(
+                options.emptyString === '',
+                options.emptyString
             );
             onError();
         };
@@ -361,99 +442,6 @@
             // coverage-hack
             // use 1500 ms to cover setInterval test-report refresh in browser
             }, 1500, 'testCase_onTimeout_errorTimeout');
-        };
-
-        local.testCase_setDefault_default = function (onError) {
-            /*
-                this function will test setDefault's default handling behavior
-            */
-            var options;
-            // test non-recursive handling behavior
-            options = local.utility2.setDefault(
-                { aa: 1, bb: {}, cc: [] },
-                1,
-                { aa: 2, bb: { cc: 2 }, cc: [1, 2] }
-            );
-            // validate options
-            local.utility2.assert(
-                local.utility2.jsonStringifyOrdered(options) ===
-                    '{"aa":1,"bb":{},"cc":[]}',
-                options
-            );
-            // test recursive handling behavior
-            options = local.utility2.setDefault(
-                { aa: 1, bb: {}, cc: [] },
-                -1,
-                { aa: 2, bb: { cc: 2 }, cc: [1, 2] }
-            );
-            // validate options
-            local.utility2.assert(
-                local.utility2.jsonStringifyOrdered(options) ===
-                    '{"aa":1,"bb":{"cc":2},"cc":[]}',
-                options
-            );
-            onError();
-        };
-
-        local.testCase_setOverride_default = function (onError) {
-            /*
-                this function will test setOverride's default handling behavior
-            */
-            var backup, data, options;
-            backup = {};
-            // test override handling behavior
-            options = local.utility2.setOverride(
-                {
-                    aa: 1,
-                    bb: { cc: 2 },
-                    dd: [3, 4],
-                    ee: { ff: { gg: 5, hh: 6 } }
-                },
-                // test depth handling behavior
-                2,
-                {
-                    aa: 2,
-                    bb: { dd: 3 },
-                    dd: [4, 5],
-                    ee: { ff: { gg: 6 } }
-                },
-                // test backup handling behavior
-                backup
-            );
-            // validate backup
-            data = local.utility2.jsonStringifyOrdered(backup);
-            local.utility2.assert(data ===
-                '{"aa":1,"bb":{},"dd":[3,4],' +
-                '"ee":{"ff":{"gg":5,"hh":6}}}', data);
-            // validate options
-            data = local.utility2.jsonStringifyOrdered(options);
-            local.utility2.assert(data ===
-                '{"aa":2,"bb":{"cc":2,"dd":3},"dd":[4,5],' +
-                '"ee":{"ff":{"gg":6}}}', data);
-            // test restore options from backup handling behavior
-            local.utility2.setOverride(options, -1, backup);
-            // validate backup
-            data = local.utility2.jsonStringifyOrdered(backup);
-            local.utility2.assert(data ===
-                '{"aa":1,"bb":{"dd":3},"dd":[3,4],' +
-                '"ee":{"ff":{"gg":6}}}', data);
-            // validate options
-            data = local.utility2.jsonStringifyOrdered(options);
-            local.utility2.assert(data ===
-                '{"aa":1,"bb":{"cc":2},"dd":[3,4],' +
-                '"ee":{"ff":{"gg":5,"hh":6}}}', data);
-            // test override envDict with empty-string handling behavior
-            options = local.utility2.setOverride(
-                local.utility2.envDict,
-                1,
-                { 'emptyString': null }
-            );
-            // validate options
-            local.utility2.assert(
-                options.emptyString === '',
-                options.emptyString
-            );
-            onError();
         };
 
         local.testCase_testRun_failure = function (onError) {
