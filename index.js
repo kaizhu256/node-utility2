@@ -92,11 +92,7 @@
                 : JSON.parse(JSON.stringify(value));
         };
 
-        local.utility2.jsonStringifyOrdered = function (
-            value,
-            replacer,
-            space
-        ) {
+        local.utility2.jsonStringifyOrdered = function (value, replacer, space) {
             /*
                 this function will JSON.stringify the value with dictionaries
                 in sorted order, for testing purposes
@@ -118,8 +114,7 @@
                     return '{' + Object.keys(value)
                         .sort()
                         .map(function (key) {
-                            return JSON.stringify(key) + ':' +
-                                stringifyOrdered(value[key]);
+                            return JSON.stringify(key) + ':' + stringifyOrdered(value[key]);
                         })
                         .join(',') + '}';
                 }
@@ -288,6 +283,26 @@
             setTimeout(local.utility2.onReady);
         }());
 
+        local.utility2.onErrorJsonParse = function (onError) {
+            /*
+                this function will return a wrapper function,
+                that will try to JSON.parse the data and pass it to onError
+            */
+            return function (error, data) {
+                if (error) {
+                    onError(error);
+                    return;
+                }
+                try {
+                    data = JSON.parse(data);
+                } catch (errorCaught) {
+                    onError(new Error('JSON.parse failed - ' + errorCaught.message));
+                    return;
+                }
+                onError(null, data);
+            };
+        };
+
         local.utility2.onTimeout = function (onError, timeout, message) {
             /*
                 this function will create a timer that will call onError,
@@ -306,6 +321,26 @@
                     timeout + ' ms - ' +
                     message));
             }, timeout);
+        };
+
+        local.utility2.onTimeoutRequestResponseDestroy = function (
+            onError,
+            timeout,
+            message,
+            request,
+            response
+        ) {
+            /*
+                this function will destroy the request and response object
+                after the given timeout
+            */
+            return local.utility2.onTimeout(function (error) {
+                // cleanup request
+                request.destroy();
+                // cleanup response
+                response.destroy();
+                onError(error);
+            }, timeout, message);
         };
 
         local.utility2.testMock = function (mockList, onError, testCase) {
@@ -565,7 +600,8 @@ return local.utility2.objectOverride(testPlatform, {
         return local.utility2.objectOverride(testCase, {
             testCaseNumber: testCaseNumber,
             testReportTestStatusClass: 'testReportTest' +
-                testCase.status[0].toUpperCase() + testCase.status.slice(1)
+                testCase.status[0].toUpperCase() +
+                testCase.status.slice(1)
         }, -1);
     }),
     testReportPlatformPreClass: 'testReportPlatformPre' + (errorStackList.length
@@ -922,33 +958,20 @@ return local.utility2.objectOverride(testPlatform, {
             }
         };
     }());
+    switch (local.modeJs) {
 
 
 
     // run browser js-env code
-    (function () {
-        if (local.modeJs !== 'browser') {
-            return;
-        }
-
+    case 'browser':
         local.utility2.ajax = function (options, onError) {
             /*
                 this function will make an ajax request
                 with error handling and timeout
             */
-            var ajaxProgressDiv,
-                data,
-                error,
-                finished,
-                ii,
-                onEvent,
-                timerTimeout,
-                xhr;
+            var ajaxProgressDiv, data, error, finished, ii, onEvent, timerTimeout, xhr;
             // init ajaxProgressDiv
-            ajaxProgressDiv =
-                document.querySelector('.ajaxProgressDiv') ||
-                { style: {} };
-
+            ajaxProgressDiv = document.querySelector('.ajaxProgressDiv') || { style: {} };
             // init event handling
             onEvent = local.utility2.onErrorWithStack(function (event) {
                 switch (event.type) {
@@ -963,10 +986,7 @@ return local.utility2.objectOverride(testPlatform, {
                     finished = true;
                     // validate xhr is defined in _ajaxProgressList
                     ii = local._ajaxProgressList.indexOf(xhr);
-                    local.utility2.assert(
-                        ii >= 0,
-                        'missing xhr in _ajaxProgressList'
-                    );
+                    local.utility2.assert(ii >= 0, 'missing xhr in _ajaxProgressList');
                     // remove xhr from ajaxProgressList
                     local._ajaxProgressList.splice(ii, 1);
                     // handle abort or error event
@@ -986,9 +1006,7 @@ return local.utility2.objectOverride(testPlatform, {
                             error.message = options.method + ' ' +
                                 xhr.status + ' - ' +
                                 options.url + '\n' +
-                                JSON.stringify(
-                                    xhr.responseText.slice(0, 256) + '...'
-                                ) +
+                                JSON.stringify(xhr.responseText.slice(0, 256) + '...') +
                                 '\n' + error.message;
                             // debug statusCode
                             error.statusCode = xhr.status;
@@ -1017,26 +1035,19 @@ return local.utility2.objectOverride(testPlatform, {
                     return;
                 }
                 // finish ajaxProgressBar
-                local._ajaxProgressUpdate(
-                    '100%',
-                    'ajaxProgressBarDivSuccess',
-                    'loaded'
-                );
+                local._ajaxProgressUpdate('100%', 'ajaxProgressBarDivSuccess', 'loaded');
             });
             // init xhr
             xhr = new XMLHttpRequest();
             // debug xhr
-            local.utility2._debugXhr = xhr;
+            local._debugXhr = xhr;
             // init event handling
             xhr.addEventListener('abort', onEvent);
             xhr.addEventListener('error', onEvent);
             xhr.addEventListener('load', onEvent);
             xhr.addEventListener('loadstart', local._ajaxProgressIncrement);
             xhr.addEventListener('progress', local._ajaxProgressIncrement);
-            xhr.upload.addEventListener(
-                'progress',
-                local._ajaxProgressIncrement
-            );
+            xhr.upload.addEventListener('progress', local._ajaxProgressIncrement);
             // set timerTimeout
             timerTimeout = local.utility2.onTimeout(function (errorTimeout) {
                 error = errorTimeout;
@@ -1093,16 +1104,12 @@ return local.utility2.objectOverride(testPlatform, {
                 .replace((/ajaxProgressBarDiv\w+/), type);
             ajaxProgressBarDiv.innerHTML = label;
         };
-    }());
+        break;
 
 
 
     // run node js-env code
-    (function () {
-        if (local.modeJs !== 'node') {
-            return;
-        }
-
+    case 'node':
         local.utility2.ajax = function (options, onError) {
             /*
                 this function will make an ajax request
@@ -1123,14 +1130,16 @@ return local.utility2.objectOverride(testPlatform, {
                     : modeNext + 1;
                 switch (modeNext) {
                 case 1:
-                    // set timerTimeout
-                    timerTimeout = local.utility2.onTimeout(
-                        onNext,
-                        options.timeout || local.utility2.timeoutDefault,
-                        'ajax ' + options.url
-                    );
                     // init request and response
                     request = response = { destroy: local.utility2.nop };
+                    // set timerTimeout
+                    timerTimeout = local.utility2.onTimeoutRequestResponseDestroy(
+                        onNext,
+                        options.timeout || local.utility2.timeoutDefault,
+                        'ajax ' + options.url,
+                        request,
+                        response
+                    );
                     // handle implicit localhost
                     if (options.url[0] === '/') {
                         options.url = 'http://localhost:' +
@@ -1159,19 +1168,18 @@ return local.utility2.objectOverride(testPlatform, {
                     // make http request
                     request = (urlParsed.protocol === 'https:'
                         ? local.https
-                        : local.http)
-                        .request(options, onNext)
+                        : local.http).request(options, onNext)
                         // handle error event
                         .on('error', onNext);
                     // debug ajax request
-                    local.utility2._debugAjaxRequest = request;
+                    local._debugAjaxRequest = request;
                     // send request and/or data
                     request.end(options.data);
                     break;
                 case 2:
                     response = error;
                     // debug ajax response
-                    local.utility2._debugAjaxResponse = response;
+                    local._debugAjaxResponse = response;
                     local.utility2.streamReadAll(response, onNext);
                     break;
                 case 3:
@@ -1292,21 +1300,16 @@ return local.utility2.objectOverride(testPlatform, {
                 case 1:
                     options.testName = local.utility2.envDict.MODE_BUILD +
                         '.' + options.argv0 + '.' +
-                        encodeURIComponent(
-                            local.url.parse(options.url).pathname
-                        );
+                        encodeURIComponent(local.url.parse(options.url).pathname);
                     local.utility2.objectDefault(options, {
                         _testSecret: local.utility2._testSecret,
-                        fileCoverage: local.utility2.envDict
-                            .npm_config_dir_tmp +
+                        fileCoverage: local.utility2.envDict.npm_config_dir_tmp +
                             '/coverage.' + options.testName + '.json',
-                        fileScreenCapture: (local.utility2.envDict
-                            .npm_config_dir_build +
+                        fileScreenCapture: (local.utility2.envDict.npm_config_dir_build +
                             '/screen-capture.' + options.testName + '.png')
                             .replace((/%/g), '_')
                             .replace((/_2F\.png$/), '.png'),
-                        fileTestReport: local.utility2.envDict
-                            .npm_config_dir_tmp +
+                        fileTestReport: local.utility2.envDict.npm_config_dir_tmp +
                             '/test-report.' + options.testName + '.json',
                         modePhantom: 'testUrl'
                     }, 1);
@@ -1319,17 +1322,13 @@ return local.utility2.objectOverride(testPlatform, {
                     // coverage-hack - cover utility2 in phantomjs
                     options.argv1 = __dirname + '/index.js';
                     if (local.global.__coverage__ &&
-                            local.utility2.envDict.npm_package_name ===
-                            'utility2') {
-                        options.argv1 =
-                            local.utility2.envDict.npm_config_dir_tmp +
+                            local.utility2.envDict.npm_package_name === 'utility2') {
+                        options.argv1 = local.utility2.envDict.npm_config_dir_tmp +
                             '/covered.utility2.js';
                         local.fs.writeFileSync(
                             options.argv1,
                             local.istanbul_lite.instrumentInPackage(
-                                local.utility2[
-                                    '/assets/utility2.js'
-                                ],
+                                local.utility2['/assets/utility2.js'],
                                 __dirname + '/index.js',
                                 'utility2'
                             )
@@ -1337,7 +1336,7 @@ return local.utility2.objectOverride(testPlatform, {
                     }
                     // spawn phantomjs to test a url
                     local.child_process
-                        .spawn('/bin/sh', [ '-c',
+                        .spawn('/bin/sh', ['-c',
                             require('phantomjs-lite').__dirname + '/' + options.argv0 + ' ' +
                             options.argv1 + ' ' +
                             encodeURIComponent(JSON.stringify(options)) + '; ' +
@@ -1360,31 +1359,29 @@ return local.utility2.objectOverride(testPlatform, {
                         options.fileTestReport
                     ].forEach(function (file, ii) {
                         onParallel.counter += 1;
-                        local.fs.readFile(file, 'utf8', function (error, data) {
-                            // jslint-hack
-                            local.utility2.nop(error);
-                            try {
-                                data = JSON.parse(data);
-                            } catch (ignore) {
-                            }
-                            if (data) {
-                                // merge coverage
-                                if (ii === 0) {
-                                    local.utility2.istanbulMerge(
-                                        local.global.__coverage__,
-                                        data
-                                    );
-                                // merge test-report
-                                } else if (options.modePhantom === 'testUrl' &&
-                                        !options.modeErrorIgnore) {
-                                    local.utility2.testMerge(
-                                        local.utility2.testReport,
-                                        data
-                                    );
+                        local.fs.readFile(
+                            file,
+                            'utf8',
+                            local.utility2.onErrorJsonParse(function (error, data) {
+                                if (!error) {
+                                    // merge coverage
+                                    if (ii === 0) {
+                                        local.utility2.istanbulMerge(
+                                            local.global.__coverage__,
+                                            data
+                                        );
+                                    // merge test-report
+                                    } else if (options.modePhantom === 'testUrl' &&
+                                            !options.modeErrorIgnore) {
+                                        local.utility2.testMerge(
+                                            local.utility2.testReport,
+                                            data
+                                        );
+                                    }
                                 }
-                            }
-                            onParallel();
-                        });
+                                onParallel();
+                            })
+                        );
                     });
                     onParallel();
                     break;
@@ -1425,9 +1422,7 @@ return local.utility2.objectOverride(testPlatform, {
                 match = (/^(\S+)([\S\s]*?)\n/).exec(script);
                 onError2 = function (error, data) {
                     // debug error
-                    local.utility2._debugReplError =
-                        error ||
-                        local.utility2._debugReplError;
+                    local._debugReplError = error || local._debugReplError;
                     onError(error, data);
                 };
                 switch (match && match[1]) {
@@ -1447,21 +1442,13 @@ return local.utility2.objectOverride(testPlatform, {
                     local.child_process
                         .spawn(
                             '/bin/sh',
-                            [
-                                '-c',
-                                '. ' + __dirname + '/index.sh && ' + match[2]
-                            ],
+                            ['-c', '. ' + __dirname + '/index.sh && ' + match[2]],
                             { stdio: ['ignore', 1, 2] }
                         )
                         // on shell exit, print return prompt
                         .on('exit', function (exitCode) {
                             console.log('exit-code ' + exitCode);
-                            local._replServer.evalDefault(
-                                '\n',
-                                context,
-                                file,
-                                onError2
-                            );
+                            local._replServer.evalDefault('\n', context, file, onError2);
                         });
                     return;
                 // syntax sugar to grep current dir
@@ -1492,12 +1479,7 @@ return local.utility2.objectOverride(testPlatform, {
                         // on shell exit, print return prompt
                         .on('exit', function (exitCode) {
                             console.log('exit-code ' + exitCode);
-                            local._replServer.evalDefault(
-                                '\n',
-                                context,
-                                file,
-                                onError2
-                            );
+                            local._replServer.evalDefault('\n', context, file, onError2);
                         });
                     return;
                 // syntax sugar to print stringified arg
@@ -1507,22 +1489,12 @@ return local.utility2.objectOverride(testPlatform, {
                 }
                 // eval modified script
                 local.utility2.testTryCatch(function () {
-                    local._replServer.evalDefault(
-                        script,
-                        context,
-                        file,
-                        onError2
-                    );
+                    local._replServer.evalDefault(script, context, file, onError2);
                 }, onError2);
             };
         };
 
-        local.utility2.serverRespondDefault = function (
-            request,
-            response,
-            statusCode,
-            error
-        ) {
+        local.utility2.serverRespondDefault = function (request, response, statusCode, error) {
             /*
                 this function will respond with a default message,
                 or error stack for the given statusCode
@@ -1569,8 +1541,7 @@ return local.utility2.objectOverride(testPlatform, {
             headers
         ) {
             /*
-                this function will set the response object's
-                statusCode / headers
+                this function will set the response object's statusCode / headers
             */
             // jslint-hack
             local.utility2.nop(request);
@@ -1618,8 +1589,7 @@ return local.utility2.objectOverride(testPlatform, {
             var server, testSecretCreate;
             // init _testSecret
             testSecretCreate = function () {
-                local.utility2._testSecret =
-                    local.crypto.randomBytes(32).toString('hex');
+                local.utility2._testSecret = local.crypto.randomBytes(32).toString('hex');
             };
             // init _testSecret
             testSecretCreate();
@@ -1638,19 +1608,18 @@ return local.utility2.objectOverride(testPlatform, {
                         : modeNext + 1;
                     if (modeNext === -1) {
                         // debug server request
-                        local.utility2._debugServerRequest = request;
+                        local._debugServerRequest = request;
                         // debug server response
-                        local.utility2._debugServerResponse = response;
+                        local._debugServerResponse = response;
                         // check if _testSecret is valid
-                        request._testSecretValid = (
-                            /\b_testSecret=(\w+)\b/
-                        ).exec(request.url);
+                        request._testSecretValid = (/\b_testSecret=(\w+)\b/).exec(request.url);
                         request._testSecretValid = request._testSecretValid &&
-                            request._testSecretValid[1] ===
-                            local.utility2._testSecret;
-                        // init request.urlPathNormalized
-                        request.urlPathNormalized = local.path.resolve(
-                            local.url.parse(request.url).pathname
+                            request._testSecretValid[1] === local.utility2._testSecret;
+                        // init request.urlParsed
+                        request.urlParsed = local.url.parse(request.url, true);
+                        // init request.urlParsed.pathnameNormalized
+                        request.urlParsed.pathnameNormalized = local.path.resolve(
+                            request.urlParsed.pathname
                         );
                         // init Content-Type header
                         contentTypeDict = {
@@ -1660,25 +1629,16 @@ return local.utility2.objectOverride(testPlatform, {
                             '.json': 'application/json; charset=UTF-8',
                             '.txt': 'text/txt; charset=UTF-8'
                         };
-                        local.utility2.serverRespondWriteHead(
-                            request,
-                            response,
-                            null,
-                            {
-                                'Content-Type': contentTypeDict[
-                                    local.path.extname(
-                                        request.urlPathNormalized
-                                    )
-                                ]
-                            }
-                        );
+                        local.utility2.serverRespondWriteHead(request, response, null, {
+                            'Content-Type': contentTypeDict[
+                                local.path.extname(request.urlParsed.pathnameNormalized)
+                            ]
+                        });
                         onNext();
                         return;
                     }
                     if (modeNext < options.serverMiddlewareList.length) {
-                        options.serverMiddlewareList[
-                            modeNext
-                        ](request, response, onNext);
+                        options.serverMiddlewareList[modeNext](request, response, onNext);
                         return;
                     }
                     // if error occurred,
@@ -1725,39 +1685,110 @@ return local.utility2.objectOverride(testPlatform, {
             local.utility2.onReady.counter += 1;
             return server;
         };
+        break;
+    }
 
-        // init assets
-        local.utility2['/assets/utility2.js'] =
-            local.fs.readFileSync(__filename, 'utf8');
-        local.utility2['/test/test.html'] =
-            local.utility2.textFormat(local.fs
-                .readFileSync(__dirname + '/README.md', 'utf8')
-                .replace(
-                    (/[\S\s]+?(<!DOCTYPE html>[\S\s]+?<\/html>)[\S\s]+/),
-                    '$1'
-                )
-                // parse '\' line-continuation
-                .replace((/\\\n/g), '')
-                .replace((/\\n' \+(\s*?)'/g), '$1'), {
-                    envDict: local.utility2.envDict
-                });
+
+
+    // run shared js-env code
+    (function () {
+        // init global debug_print
+        local.global['debug_print'.replace('_p', 'P')] = function (arg) {
+            /*
+                this function will both print the arg to stderr and return it
+            */
+            // debug arguments
+            local.utility2['debug_printArguments'.replace('_p', 'P')] = arguments;
+            console.error('\n\n\ndebug_print'.replace('_p', 'P'));
+            console.error.apply(console, arguments);
+            console.error();
+            // return arg for inspection
+            return arg;
+        };
+        local.utility2.errorDefault = new Error('default error');
+        // http://www.w3.org/TR/html5/forms.html#valid-e-mail-address
+        local.utility2.regexpEmailValidate = new RegExp(
+            '^[a-zA-Z0-9.!#$%&\'*+\\/=?\\^_`{|}~\\-]+@' +
+                '[a-zA-Z0-9](?:[a-zA-Z0-9\\-]{0,61}[a-zA-Z0-9])?' +
+                '(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9\\-]{0,61}[a-zA-Z0-9])?)*$'
+        );
+        local.utility2.testPlatform = {
+            name: local.modeJs === 'browser'
+                ? 'browser - ' + navigator.userAgent + ' - ' +
+                    new Date().toISOString()
+                : local.modeJs === 'node'
+                ? 'node - ' + process.platform + ' ' + process.version + ' - ' +
+                    new Date().toISOString()
+                : (local.global.slimer
+                    ? 'slimer - '
+                    : 'phantom - ') +
+                    local.system.os.name + ' ' +
+                    local.global.phantom.version.major + '.' +
+                    local.global.phantom.version.minor + '.' +
+                    local.global.phantom.version.patch + ' - ' +
+                    new Date().toISOString(),
+            screenCaptureImg: local.utility2.envDict.MODE_BUILD_SCREEN_CAPTURE,
+            testCaseList: []
+        };
+        local.utility2.testReport = { testPlatformList: [local.utility2.testPlatform] };
+        local.utility2.textExampleAscii = local.utility2.textExampleAscii ||
+            '\x00\x01\x02\x03\x04\x05\x06\x07\b\t\n\x0b\f\r\x0e\x0f' +
+            '\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f' +
+            ' !"#$%&\'()*+,-./0123456789:;<=>?' +
+            '@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_' +
+            '`abcdefghijklmnopqrstuvwxyz{|}~\x7f';
+        local.utility2.textExampleUri = '!%\'()*-.' +
+            '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz~';
+        local.utility2.timeoutDefault =
+            local.utility2.envDict.npm_config_timeout_default ||
+            local.utility2.timeoutDefault ||
+            30000;
     }());
+    switch (local.modeJs) {
+
+
+
+    // run browser js-env code
+    case 'browser':
+        // parse url search-params that matches
+        // 'mode*' or '_testSecret'
+        location.search.replace(
+            (/\b(mode[A-Z]\w+|_testSecret)=([\w\-\.\%]+)/g),
+            function (match0, key, value) {
+                // jslint-hack
+                local.utility2.nop(match0);
+                local.utility2[key] = value;
+                // try to parse value as json object
+                try {
+                    local.utility2[key] = JSON.parse(value);
+                } catch (ignore) {
+                }
+            }
+        );
+        break;
+
+
+
+    // run node js-env code
+    case 'node':
+        // init assets
+        local.utility2['/assets/utility2.js'] = local.fs.readFileSync(__filename, 'utf8');
+        local.utility2['/test/test.html'] = local.utility2.textFormat(local.fs
+            .readFileSync(__dirname + '/README.md', 'utf8')
+            .replace((/[\S\s]+?(<!DOCTYPE html>[\S\s]+?<\/html>)[\S\s]+/), '$1')
+            // parse '\' line-continuation
+            .replace((/\\\n/g), '')
+            .replace((/\\n' \+(\s*?)'/g), '$1'), { envDict: local.utility2.envDict });
+        break;
 
 
 
     // run phantom js-env code
-    (function () {
-        if (local.modeJs !== 'phantom') {
-            return;
-        }
-
+    case 'phantom':
         local.coverAndExit = function (coverage, exit, exitCode) {
             setTimeout(function () {
                 if (coverage) {
-                    local.fs.write(
-                        local.utility2.fileCoverage,
-                        JSON.stringify(coverage)
-                    );
+                    local.fs.write(local.utility2.fileCoverage, JSON.stringify(coverage));
                 }
                 exit(exitCode);
             });
@@ -1771,8 +1802,7 @@ return local.utility2.objectOverride(testPlatform, {
             var data;
             // handle notification that url has been opened
             if (error === 'success' && !trace) {
-                console.log(local.utility2.argv0 +
-                    ' - opened ' + local.utility2.url);
+                console.log(local.utility2.argv0 + ' - opened ' + local.utility2.url);
                 error = null;
                 // screen-capture webpage after timeoutScreenCapture ms
                 if (local.utility2.modePhantom === 'screenCapture') {
@@ -1782,43 +1812,30 @@ return local.utility2.objectOverride(testPlatform, {
                         console.log(local.utility2.argv0 +
                             ' - created screen-capture file://' +
                             local.utility2.fileScreenCapture);
-                        local.coverAndExit(
-                            local.global.__coverage__,
-                            local.utility2.exit,
-                            0
-                        );
+                        local.coverAndExit(local.global.__coverage__, local.utility2.exit, 0);
                     }, local.utility2.timeoutScreenCapture);
                 }
                 return;
             }
             // parse global_test_results
             try {
-                data = JSON.parse((
-                    /\nphantom\n(\{"global_test_results":\{[\S\s]+)/
-                ).exec(error)[1]).global_test_results;
+                data = JSON.parse(
+                    (/\nphantom\n(\{"global_test_results":\{[\S\s]+)/).exec(error)[1]
+                ).global_test_results;
             } catch (ignore) {
             }
             if (data && data.testReport) {
                 // handle global_test_results passed as error
                 // merge coverage
                 local.global.__coverage__ =
-                    local.utility2.istanbulMerge(
-                        local.global.__coverage__,
-                        data.coverage
-                    );
+                    local.utility2.istanbulMerge(local.global.__coverage__, data.coverage);
                 // merge test-report
-                local.utility2.testMerge(
-                    local.utility2.testReport,
-                    data.testReport
-                );
+                local.utility2.testMerge(local.utility2.testReport, data.testReport);
                 // save screen-capture
                 local.page.render(local.utility2.fileScreenCapture);
                 // integrate screen-capture into test-report
                 data.testReport.testPlatformList[0].screenCaptureImg =
-                    local.utility2.fileScreenCapture.replace(
-                        (/[\S\s]*\//),
-                        ''
-                    );
+                    local.utility2.fileScreenCapture.replace((/[\S\s]*\//), '');
                 // save test-report
                 local.fs.write(
                     local.utility2.fileTestReport,
@@ -1834,10 +1851,7 @@ return local.utility2.objectOverride(testPlatform, {
                     local.onError('error', null);
                     // test string error with
                     // trace-function and trace-sourceUrl handling behavior
-                    local.onError('error', [{
-                        function: true,
-                        sourceUrl: true
-                    }]);
+                    local.onError('error', [{ function: true, sourceUrl: true }]);
                     // test default error handling behavior
                     local.onError(local.utility2.errorDefault);
                     // restore exit
@@ -1853,8 +1867,7 @@ return local.utility2.objectOverride(testPlatform, {
             // handle webpage error
             // http://phantomjs.org/api/phantom/handler/on-error.html
             if (typeof error === 'string') {
-                console.error('\n' + local.utility2.testName +
-                    '\nERROR: ' + error + ' TRACE:');
+                console.error('\n' + local.utility2.testName + '\nERROR: ' + error + ' TRACE:');
                 (trace || []).forEach(function (t) {
                     console.error(' -> ' + (t.file || t.sourceURL)
                         + ': ' + t.line + (t.function
@@ -1867,11 +1880,7 @@ return local.utility2.objectOverride(testPlatform, {
                 local.utility2.onErrorDefault(error);
             }
             if (local.utility2.modePhantom !== 'screenCapture') {
-                local.coverAndExit(
-                    local.global.__coverage__,
-                    local.utility2.exit,
-                    1
-                );
+                local.coverAndExit(local.global.__coverage__, local.utility2.exit, 1);
             }
         };
 
@@ -1898,12 +1907,7 @@ return local.utility2.objectOverride(testPlatform, {
         // init webpage
         local.page = local.webpage.create();
         // init webpage clipRect
-        local.page.clipRect = {
-            height: 768,
-            left: 0,
-            top: 0,
-            width: 1024
-        };
+        local.page.clipRect = { height: 768, left: 0, top: 0, width: 1024 };
         // init webpage viewportSize
         local.page.viewportSize = { height: 768, width: 1024 };
         // init webpage error handling
@@ -1916,13 +1920,11 @@ return local.utility2.objectOverride(testPlatform, {
         // open requested webpage
         local.page.open(
             // security - insert _testSecret in url without revealing it
-            local.utility2.url.replace(
-                '{{_testSecret}}',
-                local.utility2._testSecret
-            ),
+            local.utility2.url.replace('{{_testSecret}}', local.utility2._testSecret),
             local.onError
         );
-    }());
+        break;
+    }
 }((function (self) {
     'use strict';
     var local;
@@ -1970,26 +1972,12 @@ return local.utility2.objectOverride(testPlatform, {
         local.global = window;
         // export utility2
         window.utility2 = local.utility2;
+        // require modules
+        local.istanbul_lite = window.istanbul_lite;
+        local.jslint_lite = window.jslint_lite;
         // init utility2 properties
         local.utility2.envDict = local.utility2.envDict || {};
         local.utility2.exit = local.utility2.nop;
-        local.istanbul_lite = window.istanbul_lite;
-        local.jslint_lite = window.jslint_lite;
-        // parse url search-params that matches
-        // 'mode*' or '_testSecret'
-        location.search.replace(
-            (/\b(mode[A-Z]\w+|_testSecret)=([\w\-\.\%]+)/g),
-            function (match0, key, value) {
-                // jslint-hack
-                local.utility2.nop(match0);
-                local.utility2[key] = value;
-                // try to parse value as json object
-                try {
-                    local.utility2[key] = JSON.parse(value);
-                } catch (ignore) {
-                }
-            }
-        );
         break;
 
 
@@ -2013,8 +2001,7 @@ return local.utility2.objectOverride(testPlatform, {
         // init utility2 properties
         local.utility2.__dirname = __dirname;
         local.utility2.envDict = process.env;
-        local.utility2.envDict.npm_config_dir_build =
-            process.cwd() + '/tmp/build';
+        local.utility2.envDict.npm_config_dir_build = process.cwd() + '/tmp/build';
         local.utility2.envDict.npm_config_dir_tmp = process.cwd() + '/tmp';
         local.utility2.exit = process.exit;
         break;
@@ -2040,66 +2027,6 @@ return local.utility2.objectOverride(testPlatform, {
 
 
     // run shared js-env code
-    (function () {
-        // init global debug_print
-        local.global['debug_print'.replace('_p', 'P')] = function (arg) {
-            /*
-                this function will both print the arg to stderr and return it
-            */
-            // debug arguments
-            local.utility2[
-                'debug_printArguments'.replace('_p', 'P')
-            ] = arguments;
-            console.error('\n\n\ndebug_print'.replace('_p', 'P'));
-            console.error.apply(console, arguments);
-            console.error();
-            // return arg for inspection
-            return arg;
-        };
-        local.utility2.errorDefault = new Error('default error');
-        // http://www.w3.org/TR/html5/forms.html#valid-e-mail-address
-        local.utility2.regexpEmailValidate = new RegExp(
-            '^[a-zA-Z0-9.!#$%&\'*+\\/=?\\^_`{|}~\\-]+@' +
-                '[a-zA-Z0-9](?:[a-zA-Z0-9\\-]{0,61}[a-zA-Z0-9])?' +
-                '(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9\\-]{0,61}[a-zA-Z0-9])?)*$'
-        );
-        local.utility2.testPlatform = {
-            name: local.modeJs === 'browser'
-                ? 'browser - ' + navigator.userAgent + ' - ' +
-                    new Date().toISOString()
-                : local.modeJs === 'node'
-                ? 'node - ' + process.platform + ' ' + process.version + ' - ' +
-                    new Date().toISOString()
-                : (local.global.slimer
-                    ? 'slimer - '
-                    : 'phantom - ') +
-                    local.system.os.name + ' ' +
-                    local.global.phantom.version.major + '.' +
-                    local.global.phantom.version.minor + '.' +
-                    local.global.phantom.version.patch + ' - ' +
-                    new Date().toISOString(),
-            screenCaptureImg: local.utility2.envDict.MODE_BUILD_SCREEN_CAPTURE,
-            testCaseList: []
-        };
-        local.utility2.testReport = {
-            testPlatformList: [local.utility2.testPlatform]
-        };
-        local.utility2.textExampleAscii = local.utility2.textExampleAscii ||
-            '\x00\x01\x02\x03\x04\x05\x06\x07\b\t\n\x0b\f\r\x0e\x0f' +
-            '\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f' +
-            ' !"#$%&\'()*+,-./0123456789:;<=>?' +
-            '@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_' +
-            '`abcdefghijklmnopqrstuvwxyz{|}~\x7f';
-        local.utility2.textExampleUri = '!%\'()*-.' +
-            '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz~';
-        local.utility2.timeoutDefault =
-            local.utility2.envDict.npm_config_timeout_default ||
-            local.utility2.timeoutDefault ||
-            30000;
-    }());
-
-
-
     (function () {
 
 

@@ -292,7 +292,7 @@ instruction
                 /*
                 this function is the main test-middleware
                 */
-                switch (request.urlPathNormalized) {
+                switch (request.urlParsed.pathnameNormalized) {
                 // serve assets
                 case '/':
                 case '/assets/istanbul-lite.js':
@@ -300,7 +300,7 @@ instruction
                 case '/assets/utility2.js':
                 case '/test/hello':
                 case '/test/test.js':
-                    response.end(local[request.urlPathNormalized]);
+                    response.end(local[request.urlParsed.pathnameNormalized]);
                     break;
                 // default to next middleware
                 default:

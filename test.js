@@ -805,11 +805,11 @@
             );
         // init serverMiddlewareList
         local.serverMiddlewareList = [
-            function (request, response, onNext) {
+            function (request, response, nextMiddleware) {
                 /*
                     this function will run the the test-middleware
                 */
-                switch (request.urlPathNormalized) {
+                switch (request.urlParsed.pathnameNormalized) {
                 // serve assets
                 case '/':
                 case '/assets/istanbul-lite.js':
@@ -819,7 +819,7 @@
                 case '/test/script-error.html':
                 case '/test/script-standalone.html':
                 case '/test/test.js':
-                    response.end(local[request.urlPathNormalized]);
+                    response.end(local[request.urlParsed.pathnameNormalized]);
                     break;
                 // test http POST handling behavior
                 case '/test/echo':
@@ -841,9 +841,9 @@
                         null,
                         {}
                     );
-                    onNext(local.utility2.errorDefault);
+                    nextMiddleware(local.utility2.errorDefault);
                     // test multiple-callback error handling behavior
-                    onNext(local.utility2.errorDefault);
+                    nextMiddleware(local.utility2.errorDefault);
                     // test onErrorDefault handling behavior
                     local.utility2.testMock([
                         // suppress console.error
@@ -862,7 +862,7 @@
                     break;
                 // default to next middleware
                 default:
-                    onNext();
+                    nextMiddleware();
                 }
             }
         ];
