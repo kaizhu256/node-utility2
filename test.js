@@ -1,6 +1,6 @@
 /*jslint
     browser: true,
-    maxerr: 4,
+    maxerr: 8,
     maxlen: 96,
     node: true,
     nomen: true,
@@ -264,13 +264,13 @@
             onError();
         };
 
-        local.testCase_objectDefault_default = function (onError) {
+        local.testCase_objectSetDefault_default = function (onError) {
             /*
-                this function will test objectDefault's default handling behavior
+                this function will test objectSetDefault's default handling behavior
             */
             var options;
             // test non-recursive handling behavior
-            options = local.utility2.objectDefault(
+            options = local.utility2.objectSetDefault(
                 { aa: 1, bb: {}, cc: [] },
                 { aa: 2, bb: { cc: 2 }, cc: [1, 2] },
                 // test default depth handling behavior
@@ -283,7 +283,7 @@
                 options
             );
             // test recursive handling behavior
-            options = local.utility2.objectDefault(
+            options = local.utility2.objectSetDefault(
                 { aa: 1, bb: {}, cc: [] },
                 { aa: 2, bb: { cc: 2 }, cc: [1, 2] },
                 -1
@@ -297,13 +297,13 @@
             onError();
         };
 
-        local.testCase_objectOverride_default = function (onError) {
+        local.testCase_objectSetOverride_default = function (onError) {
             /*
-                this function will test objectOverride's default handling behavior
+                this function will test objectSetOverride's default handling behavior
             */
             var data, options;
             // test override handling behavior
-            options = local.utility2.objectOverride(
+            options = local.utility2.objectSetOverride(
                 {
                     aa: 1,
                     bb: { cc: 2 },
@@ -325,7 +325,7 @@
                 '{"aa":2,"bb":{"cc":2,"dd":3},"dd":[4,5],' +
                 '"ee":{"ff":{"gg":6}}}', data);
             // test override envDict with empty-string handling behavior
-            options = local.utility2.objectOverride(
+            options = local.utility2.objectSetOverride(
                 local.utility2.envDict,
                 { 'emptyString': null },
                 // test default depth handling behavior
@@ -754,10 +754,10 @@
                         npm_config_timeout_exit: '1',
                         // test random $npm_config_server_port handling behavior
                         npm_config_server_port: ''
-                    }
-                }],
-                [local.utility2, {
-                    phantomScreenCapture: local.utility2.nop
+                    },
+                    phantomScreenCapture: local.utility2.nop,
+                    onReady: {},
+                    taskCreateOrSubscribe: local.utility2.nop
                 }],
                 [local.utility2.local, {
                     http: {

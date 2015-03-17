@@ -1,7 +1,7 @@
 /*jslint
     bitwise: true,
     browser: true,
-    maxerr: 4,
+    maxerr: 8,
     maxlen: 96,
     node: true,
     nomen: true,
@@ -14,6 +14,15 @@
 
     // run shared js-env code
     (function () {
+        local._timeElapsedStop = function (options) {
+            /*
+                this function will stop options.timeElapsed
+            */
+            if (options.timeElapsed > 0xffffffff) {
+                options.timeElapsed = Date.now() - options.timeElapsed;
+            }
+        };
+
         local.utility2.assert = function (passed, message) {
             /*
                 this function will throw an error if the assertion fails
@@ -131,7 +140,22 @@
                 : value;
         };
 
-        local.utility2.objectDefault = function (options, defaults, depth) {
+        local.utility2.listShuffle = function (list) {
+            /*
+                this function inplace shuffles the list, via fisher-yates algorithm
+                https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle
+            */
+            var ii, random, swap;
+            for (ii = list.length - 1; ii > 0; ii -= 1) {
+                random = (Math.random() * ii) | 0;
+                swap = list[ii];
+                list[ii] = list[random];
+                list[random] = swap;
+            }
+            return list;
+        };
+
+        local.utility2.objectSetDefault = function (options, defaults, depth) {
             /*
                 this function will recursively set default values
                 for unset leaf nodes in the options object
@@ -156,13 +180,13 @@
                         defaults2 &&
                         typeof defaults2 === 'object' &&
                         !Array.isArray(defaults2)) {
-                    local.utility2.objectDefault(options2, defaults2, depth - 1);
+                    local.utility2.objectSetDefault(options2, defaults2, depth - 1);
                 }
             });
             return options;
         };
 
-        local.utility2.objectOverride = function (options, override, depth) {
+        local.utility2.objectSetOverride = function (options, override, depth) {
             /*
                 this function will recursively override
                 the options object with the override object
@@ -189,9 +213,23 @@
                     return;
                 }
                 // else recurse options2 and override2
-                local.utility2.objectOverride(options2, override2, depth - 1);
+                local.utility2.objectSetOverride(options2, override2, depth - 1);
             });
             return options;
+        };
+
+        local.utility2.objectTraverse = function (element, onSelf) {
+            /*
+                this function will recursively traverse the element,
+                and call onSelf on its properties
+            */
+            onSelf(element);
+            if (element && typeof element === 'object') {
+                Object.keys(element).forEach(function (key) {
+                    local.utility2.objectTraverse(element[key], onSelf);
+                });
+            }
+            return element;
         };
 
         local.utility2.onErrorDefault = function (error) {
@@ -270,19 +308,6 @@
             return self;
         };
 
-        // init onReady
-        (function () {
-            local.utility2.onReady =
-                local.utility2.onParallel(function (error) {
-                    local.utility2.onReady.onErrorList.forEach(function (onError) {
-                        onError(error);
-                    });
-                });
-            local.utility2.onReady.onErrorList = [local.utility2.onErrorDefault];
-            local.utility2.onReady.counter += 1;
-            setTimeout(local.utility2.onReady);
-        }());
-
         local.utility2.onErrorJsonParse = function (onError) {
             /*
                 this function will return a wrapper function,
@@ -343,6 +368,50 @@
             }, timeout, message);
         };
 
+        local.utility2.taskCreateOrSubscribe = function (options, onTask, onError) {
+            /*
+                this function will
+                1. if a task exists for the given options.key, then subscribe to it
+                2. else create a new task
+            */
+            var finished, onError2, resultList, task, timerTimeout;
+            // init _taskDict
+            local._taskDict = local._taskDict || {};
+            // 1. if a task exists for the given options.key, then subscribe to it
+            if (local._taskDict[options.key]) {
+                local._taskDict[options.key]
+                    .onErrorList.push(local.utility2.onErrorWithStack(onError));
+                return;
+            }
+            // 2. else create a new task
+            task = local._taskDict[options.key] = {
+                onErrorList: [local.utility2.onErrorWithStack(onError)]
+            };
+            onError2 = function () {
+                if (finished) {
+                    return;
+                }
+                finished = true;
+                // cleanup timerTimeout
+                clearTimeout(timerTimeout);
+                // remove task from _taskDict,
+                delete local._taskDict[options.key];
+                // pass resultList to all subscribed callbacks
+                resultList = arguments;
+                task.onErrorList.forEach(function (onError) {
+                    onError.apply(null, resultList);
+                });
+            };
+            // set timerTimeout
+            timerTimeout = local.utility2.onTimeout(
+                onError2,
+                options.timeout || local.utility2.timeoutDefault,
+                'taskCreateOrSubscribe ' + options.key
+            );
+            // run task
+            onTask(onError2);
+        };
+
         local.utility2.testMock = function (mockList, onError, testCase) {
             /*
                 this function will mock the objects in mockList
@@ -370,7 +439,7 @@
             onError2 = function (error) {
                 // restore mock[0] from mock[2]
                 mockList.reverse().forEach(function (mock) {
-                    local.utility2.objectOverride(mock[0], mock[2]);
+                    local.utility2.objectSetOverride(mock[0], mock[2]);
                 });
                 onError(error);
             };
@@ -384,7 +453,7 @@
                         mock[2][key] = mock[0][key];
                     });
                     // override mock[0] with mock[1]
-                    local.utility2.objectOverride(mock[0], mock[1]);
+                    local.utility2.objectSetOverride(mock[0], mock[1]);
                 });
                 // run testCase
                 testCase(onError2);
@@ -401,7 +470,7 @@
             // 1. merge testReport2 into testReport1
             [testReport1, testReport2].forEach(function (testReport, ii) {
                 ii += 1;
-                local.utility2.objectDefault(testReport, {
+                local.utility2.objectSetDefault(testReport, {
                     date: new Date().toISOString(),
                     errorStackList: [],
                     testPlatformList: [],
@@ -419,7 +488,7 @@
                 );
                 // security - handle malformed testReport.testPlatformList
                 testReport.testPlatformList.forEach(function (testPlatform) {
-                    local.utility2.objectDefault(testPlatform, {
+                    local.utility2.objectSetDefault(testPlatform, {
                         name: 'undefined',
                         testCaseList: [],
                         timeElapsed: 0
@@ -444,7 +513,7 @@
                     // security - handle malformed
                     // testReport.testPlatformList.testCaseList
                     testPlatform.testCaseList.forEach(function (testCase) {
-                        local.utility2.objectDefault(testCase, {
+                        local.utility2.objectSetDefault(testCase, {
                             errorStack: '',
                             name: 'undefined',
                             timeElapsed: 0
@@ -558,7 +627,7 @@
             testCaseNumber = 0;
             return local.utility2.textFormat(
                 local.utility2['/test/test-report.html.template'],
-                local.utility2.objectOverride(testReport, {
+                local.utility2.objectSetOverride(testReport, {
                     // security - sanitize '<' in text
                     CI_COMMIT_INFO: String(
                         local.utility2.envDict.CI_COMMIT_INFO
@@ -577,7 +646,7 @@
 /* jslint-indent-begin 28 */
 /*jslint maxlen: 124*/
 errorStackList = [];
-return local.utility2.objectOverride(testPlatform, {
+return local.utility2.objectSetOverride(testPlatform, {
     errorStackList: errorStackList,
     // security - sanitize '<' in text
     name: String(testPlatform.name).replace((/</g), '&lt;'),
@@ -597,7 +666,7 @@ return local.utility2.objectOverride(testPlatform, {
                 ).replace((/</g), '&lt;')
             });
         }
-        return local.utility2.objectOverride(testCase, {
+        return local.utility2.objectSetOverride(testCase, {
             testCaseNumber: testCaseNumber,
             testReportTestStatusClass: 'testReportTest' +
                 testCase.status[0].toUpperCase() +
@@ -949,13 +1018,42 @@ return local.utility2.objectOverride(testPlatform, {
             });
         };
 
-        local._timeElapsedStop = function (options) {
+        local.utility2.uuid4 = function () {
             /*
-                this function will stop options.timeElapsed
+                this function will return a random uuid,
+                with form "xxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx"
             */
-            if (options.timeElapsed > 0xffffffff) {
-                options.timeElapsed = Date.now() - options.timeElapsed;
+            // code lifted from http://jsperf.com/uuid4
+            var id, ii;
+            id = '';
+            for (ii = 0; ii < 32; ii += 1) {
+                switch (ii) {
+                case 8:
+                case 20:
+                    id += '-';
+                    id += (Math.random() * 16 | 0).toString(16);
+                    break;
+                case 12:
+                    id += '-';
+                    id += '4';
+                    break;
+                case 16:
+                    id += '-';
+                    id += (Math.random() * 4 | 8).toString(16);
+                    break;
+                default:
+                    id += (Math.random() * 16 | 0).toString(16);
+                }
             }
+            return id;
+        };
+
+        local.utility2.uuidTime = function () {
+            /*
+                this function will return a time-based variant of uuid4,
+                with form "tttttttt-xxxx-4xxx-yxxx-xxxxxxxxxxxx"
+            */
+            return Date.now().toString(16).slice(0, 8) + local.utility2.uuid4().slice(8);
         };
     }());
     switch (local.modeJs) {
@@ -1249,7 +1347,7 @@ return local.utility2.objectOverride(testPlatform, {
                 this function will spawn both phantomjs and slimerjs processes
                 to screen-capture options.url
             */
-            local.utility2.phantomTest(local.utility2.objectDefault(options, {
+            local.utility2.phantomTest(local.utility2.objectSetDefault(options, {
                 modePhantom: 'screenCapture',
                 timeoutScreenCapture: 2000
             }, 1), onError);
@@ -1301,7 +1399,7 @@ return local.utility2.objectOverride(testPlatform, {
                     options.testName = local.utility2.envDict.MODE_BUILD +
                         '.' + options.argv0 + '.' +
                         encodeURIComponent(local.url.parse(options.url).pathname);
-                    local.utility2.objectDefault(options, {
+                    local.utility2.objectSetDefault(options, {
                         _testSecret: local.utility2._testSecret,
                         fileCoverage: local.utility2.envDict.npm_config_dir_tmp +
                             '/coverage.' + options.testName + '.json',
@@ -1589,7 +1687,7 @@ return local.utility2.objectOverride(testPlatform, {
             var server, testSecretCreate;
             // init _testSecret
             testSecretCreate = function () {
-                local.utility2._testSecret = local.crypto.randomBytes(32).toString('hex');
+                local.utility2._testSecret = local.utility2.uuidTime();
             };
             // init _testSecret
             testSecretCreate();
@@ -1679,9 +1777,13 @@ return local.utility2.objectOverride(testPlatform, {
                     .unref();
             }
             // 3. if $npm_config_mode_npm_test is defined, then run tests
-            local.utility2.onReady.onErrorList.push(function () {
-                local.utility2.testRun(options);
-            });
+            local.utility2.taskCreateOrSubscribe(
+                { key: 'utility2.onReady' },
+                null,
+                function () {
+                    local.utility2.testRun(options);
+                }
+            );
             local.utility2.onReady.counter += 1;
             return server;
         };
@@ -1743,6 +1845,16 @@ return local.utility2.objectOverride(testPlatform, {
             local.utility2.envDict.npm_config_timeout_default ||
             local.utility2.timeoutDefault ||
             30000;
+        // init onReady
+        local.utility2.taskCreateOrSubscribe(
+            { key: 'utility2.onReady' },
+            function (onError) {
+                local.utility2.onReady = local.utility2.onParallel(onError);
+                local.utility2.onReady.counter += 1;
+                setTimeout(local.utility2.onReady);
+            },
+            local.utility2.nop
+        );
     }());
     switch (local.modeJs) {
 
@@ -1888,7 +2000,7 @@ return local.utility2.objectOverride(testPlatform, {
         // http://phantomjs.org/api/phantom/handler/on-error.html
         local.global.phantom.onError = local.onError;
         // override utility2 properties
-        local.utility2.objectOverride(
+        local.utility2.objectSetOverride(
             local.utility2,
             JSON.parse(decodeURIComponent(local.system.args[1])),
             -1
@@ -1990,7 +2102,6 @@ return local.utility2.objectOverride(testPlatform, {
         module.exports = local.utility2;
         // require modules
         local.child_process = require('child_process');
-        local.crypto = require('crypto');
         local.fs = require('fs');
         local.http = require('http');
         local.https = require('https');
