@@ -421,51 +421,49 @@
             });
         };
 
-        local.utility2.taskCreateOrSubscribe = function (options, onTask, onError) {
+        local.utility2.taskPoolCreateOrAddCallback = function (taskPool, onTask, onError) {
             /*
                 this function will
-                1. if a task exists for the given options.key, then subscribe to it
-                2. else create a new task
+                1. if taskPoolDict[options.key] is defined, then add onError to its callbackList
+                2. else create a taskPool, that will cleanup itself after onTask finishes
             */
-            var finished, onError2, resultList, task, timerTimeout;
-            // init _taskDict
-            local._taskDict = local._taskDict || {};
-            // 1. if a task exists for the given options.key, then subscribe to it
-            if (local._taskDict[options.key]) {
-                local._taskDict[options.key]
-                    .onErrorList.push(local.utility2.onErrorWithStack(onError));
+            // init taskPoolDict
+            local.utility2.taskPoolDict = local.utility2.taskPoolDict || {};
+            // 1. if taskPoolDict[options.key] is defined, then add onError to its callbackList
+            if (local.utility2.taskPoolDict[taskPool.key]) {
+                local.utility2.taskPoolDict[taskPool.key].callbackList
+                    .push(local.utility2.onErrorWithStack(onError));
                 return;
             }
-            // 2. else create a new task
-            task = local._taskDict[options.key] = {
-                onErrorList: [local.utility2.onErrorWithStack(onError)]
-            };
-            onError2 = function () {
-                if (finished) {
+            // 2. else create a taskPool, that will cleanup itself after onTask finishes
+            local.utility2.taskPoolDict[taskPool.key] = taskPool;
+            taskPool.callbackList = [local.utility2.onErrorWithStack(onError)];
+            taskPool.onFinish = function () {
+                if (taskPool.finished) {
                     return;
                 }
-                finished = true;
+                taskPool.finished = true;
                 // cleanup timerTimeout
-                clearTimeout(timerTimeout);
-                // remove task from _taskDict,
-                delete local._taskDict[options.key];
-                // pass resultList to all subscribed callbacks
-                resultList = arguments;
-                task.onErrorList.forEach(function (onError) {
-                    onError.apply(null, resultList);
+                clearTimeout(taskPool.timerTimeout);
+                // cleanup taskPool
+                delete local.utility2.taskPoolDict[taskPool.key];
+                // pass result to callbacks in callbackList
+                taskPool.result = arguments;
+                taskPool.callbackList.forEach(function (onError) {
+                    onError.apply(null, taskPool.result);
                 });
             };
             // set timerTimeout
-            timerTimeout = local.utility2.onTimeout(
-                onError2,
-                options.timeout || local.utility2.timeoutDefault,
-                'taskCreateOrSubscribe ' + options.key
+            taskPool.timerTimeout = local.utility2.onTimeout(
+                taskPool.onFinish,
+                taskPool.timeout || local.utility2.timeoutDefault,
+                'taskPoolCreateOrAddCallback ' + taskPool.key
             );
             // run task
-            onTask(onError2);
+            onTask(taskPool.onFinish);
         };
 
-        local.utility2.testMock = function (mockList, onError, testCase) {
+        local.utility2.testMock = function (mockList, testCase, onError) {
             /*
                 this function will mock the objects in mockList
                 while running the testCase
@@ -1771,7 +1769,7 @@
                     .unref();
             }
             // 3. if $npm_config_mode_npm_test is defined, then run tests
-            local.utility2.taskCreateOrSubscribe(
+            local.utility2.taskPoolCreateOrAddCallback(
                 { key: 'utility2.onReady' },
                 null,
                 function () {
@@ -1840,7 +1838,7 @@
             local.utility2.timeoutDefault ||
             30000;
         // init onReady
-        local.utility2.taskCreateOrSubscribe(
+        local.utility2.taskPoolCreateOrAddCallback(
             { key: 'utility2.onReady' },
             function (onError) {
                 local.utility2.onReady = local.utility2.onParallel(onError);

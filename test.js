@@ -193,7 +193,7 @@
                 [console, { error: function (arg) {
                     message += (arg || '') + '\n';
                 } }]
-            ], onError, function (onError) {
+            ], function (onError) {
                 message = '';
                 local.global['debug_print'.replace('_p', 'P')]('hello');
                 // validate message
@@ -204,7 +204,7 @@
                     message
                 );
                 onError();
-            });
+            }, onError);
         };
 
         local.testCase_jsonCopy_default = function (onError) {
@@ -350,7 +350,7 @@
                 [console, { error: function (arg) {
                     message = arg;
                 } }]
-            ], onError, function (onError) {
+            ], function (onError) {
                 // test no error handling behavior
                 local.utility2.onErrorDefault();
                 // validate message
@@ -360,7 +360,7 @@
                 // validate message
                 local.utility2.assert(message, message);
                 onError();
-            });
+            }, onError);
         };
 
         local.testCase_onParallel_default = function (onError) {
@@ -691,13 +691,13 @@
                         return { on: local.utility2.nop };
                     } }
                 }]
-            ], onParallel, function (onError) {
+            ], function (onError) {
                 local.utility2.phantomTest({
                     url: 'http://localhost:' +
                         local.utility2.envDict.npm_config_server_port
                 });
                 onError();
-            });
+            }, onParallel);
             onParallel();
         };
 
@@ -716,7 +716,7 @@
                         } };
                     } }
                 }]
-            ], onError, function (onError) {
+            ], function (onError) {
                 [
                     // test shell handling behavior
                     '$ :\n',
@@ -737,7 +737,7 @@
                     );
                 });
                 onError();
-            });
+            }, onError);
         };
 
         local.testCase_testRunServer_misc = function (onError) {
@@ -757,7 +757,7 @@
                     },
                     phantomScreenCapture: local.utility2.nop,
                     onReady: {},
-                    taskCreateOrSubscribe: local.utility2.nop
+                    taskPoolCreateOrAddCallback: local.utility2.nop
                 }],
                 [local.utility2.local, {
                     http: {
@@ -766,7 +766,7 @@
                         }
                     }
                 }]
-            ], onError, function (onError) {
+            ], function (onError) {
                 local.utility2.testRunServer({ serverMiddlewareList: [] });
                 // validate $npm_config_server_port
                 local.utility2.assert(
@@ -774,7 +774,7 @@
                     local.utility2.envDict.npm_config_server_port
                 );
                 onError();
-            });
+            }, onError);
         };
 
         // init assets
@@ -850,7 +850,7 @@
                         [console, { error: local.utility2.nop }],
                         // suppress modeErrorIgnore
                         [request, { url: '' }]
-                    ], local.utility2.nop, function (onError) {
+                    ], function (onError) {
                         local.utility2.serverRespondDefault(
                             request,
                             response,
@@ -858,7 +858,7 @@
                             local.utility2.errorDefault
                         );
                         onError();
-                    });
+                    }, local.utility2.nop);
                     break;
                 // default to next middleware
                 default:
