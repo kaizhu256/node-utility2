@@ -1,11 +1,11 @@
 shAesDecrypt() {
     # this function will decrypt base64-encoded stdin to stdout using aes-256-cbc
-    # save stdin to $TEXT
-    local TEXT=$(cat /dev/stdin) || return $?
-    # init $IV from first 44 base64-encoded bytes of $TEXT
-    local IV=$(printf $TEXT | cut -c1-44 | base64 --decode) || return $?
-    # decrypt remaining base64-encoded bytes of $TEXT to stdout using aes-256-cbc
-    printf $TEXT | \
+    # save stdin to $STRING
+    local STRING=$(cat /dev/stdin) || return $?
+    # init $IV from first 44 base64-encoded bytes of $STRING
+    local IV=$(printf $STRING | cut -c1-44 | base64 --decode) || return $?
+    # decrypt remaining base64-encoded bytes of $STRING to stdout using aes-256-cbc
+    printf $STRING | \
         cut -c45-9999 | \
         base64 --decode | \
         openssl enc -aes-256-cbc -d -K $AES_256_KEY -iv $IV || return $?
@@ -604,7 +604,7 @@ shHerokuDeploy() {
     # init Procfile
     node -e "require('fs').writeFileSync(
         'Procfile',
-        require('$npm_config_dir_utility2').textFormat(
+        require('$npm_config_dir_utility2').stringFormat(
             require('fs').readFileSync('Procfile', 'utf8'), process.env
         )
     );" || return $?

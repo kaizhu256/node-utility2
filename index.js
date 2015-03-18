@@ -368,6 +368,59 @@
             }, timeout, message);
         };
 
+        local.utility2.stringFormat = function (template, dict, valueDefault) {
+            /*
+                this function will replace the keys in the template
+                with the key / value pairs provided by the dict
+            */
+            var match, replace, rgx, value;
+            dict = dict || {};
+            replace = function (match0, fragment) {
+                // jslint-hack
+                local.utility2.nop(match0);
+                return dict[match].map(function (dict) {
+                    // recursively format the array fragment
+                    return local.utility2.stringFormat(
+                        fragment,
+                        dict,
+                        valueDefault
+                    );
+                }).join('');
+            };
+            rgx = (/\{\{#\S+?\}\}/g);
+            while (true) {
+                // search for array fragments in the template
+                match = rgx.exec(template);
+                if (!match) {
+                    break;
+                }
+                match = match[0].slice(3, -2);
+                // if value is an array,
+                // then iteratively format the array fragment with it
+                if (Array.isArray(dict[match])) {
+                    template = template.replace(
+                        new RegExp('\\{\\{#' +
+                            match +
+                            '\\}\\}([\\S\\s]*?)\\{\\{\\/' +
+                            match +
+                            '\\}\\}'),
+                        replace
+                    );
+                }
+            }
+            // search for keys in the template
+            return template.replace((/\{\{\S+?\}\}/g), function (keyList) {
+                value = dict;
+                // iteratively lookup nested values in the dict
+                keyList.slice(2, -2).split('.').forEach(function (key) {
+                    value = value && value[key];
+                });
+                return value === undefined
+                    ? valueDefault || keyList
+                    : value;
+            });
+        };
+
         local.utility2.taskCreateOrSubscribe = function (options, onTask, onError) {
             /*
                 this function will
@@ -625,10 +678,10 @@
             });
             // create html test-report
             testCaseNumber = 0;
-            return local.utility2.textFormat(
+            return local.utility2.stringFormat(
                 local.utility2['/test/test-report.html.template'],
                 local.utility2.objectSetOverride(testReport, {
-                    // security - sanitize '<' in text
+                    // security - sanitize '<' in string
                     CI_COMMIT_INFO: String(
                         local.utility2.envDict.CI_COMMIT_INFO
                     ).replace((/</g), '&lt;'),
@@ -640,48 +693,42 @@
                             return testPlatform.testCaseList.length;
                         })
                         .map(function (testPlatform, ii) {
-
-
-
-/* jslint-indent-begin 28 */
-/*jslint maxlen: 124*/
-errorStackList = [];
-return local.utility2.objectSetOverride(testPlatform, {
-    errorStackList: errorStackList,
-    // security - sanitize '<' in text
-    name: String(testPlatform.name).replace((/</g), '&lt;'),
-    screenCapture: testPlatform.screenCaptureImg
-        ? '<img class="testReportPlatformScreenCaptureImg" src="' +
-            testPlatform.screenCaptureImg + '">'
-        : '',
-    // map testCaseList
-    testCaseList: testPlatform.testCaseList.map(function (testCase) {
-        testCaseNumber += 1;
-        if (testCase.errorStack) {
-            errorStackList.push({
-                errorStack: (
-                    testCaseNumber + '. ' + testCase.name + '\n' +
-                        testCase.errorStack
-                // security - sanitize '<' in text
-                ).replace((/</g), '&lt;')
-            });
-        }
-        return local.utility2.objectSetOverride(testCase, {
-            testCaseNumber: testCaseNumber,
-            testReportTestStatusClass: 'testReportTest' +
-                testCase.status[0].toUpperCase() +
-                testCase.status.slice(1)
-        }, -1);
-    }),
-    testReportPlatformPreClass: 'testReportPlatformPre' + (errorStackList.length
-        ? ''
-        : 'Hidden'),
-    testPlatformNumber: ii + 1
-});
-/* jslint-indent-end */
-
-
-
+                            errorStackList = [];
+                            return local.utility2.objectSetOverride(testPlatform, {
+                                errorStackList: errorStackList,
+                                // security - sanitize '<' in string
+                                name: String(testPlatform.name).replace((/</g), '&lt;'),
+                                screenCapture: testPlatform.screenCaptureImg
+                                    ? '<img class="testReportPlatformScreenCaptureImg" src="' +
+                                        testPlatform.screenCaptureImg + '">'
+                                    : '',
+                                // map testCaseList
+                                testCaseList: testPlatform.testCaseList.map(function (
+                                    testCase
+                                ) {
+                                    testCaseNumber += 1;
+                                    if (testCase.errorStack) {
+                                        errorStackList.push({
+                                            errorStack: (
+                                                testCaseNumber + '. ' + testCase.name + '\n' +
+                                                    testCase.errorStack
+                                            // security - sanitize '<' in string
+                                            ).replace((/</g), '&lt;')
+                                        });
+                                    }
+                                    return local.utility2.objectSetOverride(testCase, {
+                                        testCaseNumber: testCaseNumber,
+                                        testReportTestStatusClass: 'testReportTest' +
+                                            testCase.status[0].toUpperCase() +
+                                            testCase.status.slice(1)
+                                    }, -1);
+                                }),
+                                testReportPlatformPreClass:
+                                    'testReportPlatformPre' + (errorStackList.length
+                                    ? ''
+                                    : 'Hidden'),
+                                testPlatformNumber: ii + 1
+                            });
                         }, -1),
                     testsFailedClass: testReport.testsFailed
                         ? 'testReportTestFailed'
@@ -965,59 +1012,6 @@ return local.utility2.objectSetOverride(testPlatform, {
             }
         };
 
-        local.utility2.textFormat = function (template, dict, valueDefault) {
-            /*
-                this function will replace the keys in the template
-                with the key / value pairs provided by the dict
-            */
-            var match, replace, rgx, value;
-            dict = dict || {};
-            replace = function (match0, fragment) {
-                // jslint-hack
-                local.utility2.nop(match0);
-                return dict[match].map(function (dict) {
-                    // recursively format the array fragment
-                    return local.utility2.textFormat(
-                        fragment,
-                        dict,
-                        valueDefault
-                    );
-                }).join('');
-            };
-            rgx = (/\{\{#\S+?\}\}/g);
-            while (true) {
-                // search for array fragments in the template
-                match = rgx.exec(template);
-                if (!match) {
-                    break;
-                }
-                match = match[0].slice(3, -2);
-                // if value is an array,
-                // then iteratively format the array fragment with it
-                if (Array.isArray(dict[match])) {
-                    template = template.replace(
-                        new RegExp('\\{\\{#' +
-                            match +
-                            '\\}\\}([\\S\\s]*?)\\{\\{\\/' +
-                            match +
-                            '\\}\\}'),
-                        replace
-                    );
-                }
-            }
-            // search for keys in the template
-            return template.replace((/\{\{\S+?\}\}/g), function (keyList) {
-                value = dict;
-                // iteratively lookup nested values in the dict
-                keyList.slice(2, -2).split('.').forEach(function (key) {
-                    value = value && value[key];
-                });
-                return value === undefined
-                    ? valueDefault || keyList
-                    : value;
-            });
-        };
-
         local.utility2.uuid4 = function () {
             /*
                 this function will return a random uuid,
@@ -1096,7 +1090,7 @@ return local.utility2.objectSetOverride(testPlatform, {
                     }
                     // handle completed xhr request
                     if (xhr.readyState === 4) {
-                        // handle text data
+                        // handle string data
                         data = xhr.responseText;
                         if (error) {
                             // add http method/ statusCode / url
@@ -1814,6 +1808,14 @@ return local.utility2.objectSetOverride(testPlatform, {
                 '[a-zA-Z0-9](?:[a-zA-Z0-9\\-]{0,61}[a-zA-Z0-9])?' +
                 '(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9\\-]{0,61}[a-zA-Z0-9])?)*$'
         );
+        local.utility2.stringExampleAscii = local.utility2.stringExampleAscii ||
+            '\x00\x01\x02\x03\x04\x05\x06\x07\b\t\n\x0b\f\r\x0e\x0f' +
+            '\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f' +
+            ' !"#$%&\'()*+,-./0123456789:;<=>?' +
+            '@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_' +
+            '`abcdefghijklmnopqrstuvwxyz{|}~\x7f';
+        local.utility2.stringExampleUri = '!%\'()*-.' +
+            '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz~';
         local.utility2.testPlatform = {
             name: local.modeJs === 'browser'
                 ? 'browser - ' + navigator.userAgent + ' - ' +
@@ -1833,14 +1835,6 @@ return local.utility2.objectSetOverride(testPlatform, {
             testCaseList: []
         };
         local.utility2.testReport = { testPlatformList: [local.utility2.testPlatform] };
-        local.utility2.textExampleAscii = local.utility2.textExampleAscii ||
-            '\x00\x01\x02\x03\x04\x05\x06\x07\b\t\n\x0b\f\r\x0e\x0f' +
-            '\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f' +
-            ' !"#$%&\'()*+,-./0123456789:;<=>?' +
-            '@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_' +
-            '`abcdefghijklmnopqrstuvwxyz{|}~\x7f';
-        local.utility2.textExampleUri = '!%\'()*-.' +
-            '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz~';
         local.utility2.timeoutDefault =
             local.utility2.envDict.npm_config_timeout_default ||
             local.utility2.timeoutDefault ||
@@ -1885,7 +1879,7 @@ return local.utility2.objectSetOverride(testPlatform, {
     case 'node':
         // init assets
         local.utility2['/assets/utility2.js'] = local.fs.readFileSync(__filename, 'utf8');
-        local.utility2['/test/test.html'] = local.utility2.textFormat(local.fs
+        local.utility2['/test/test.html'] = local.utility2.stringFormat(local.fs
             .readFileSync(__dirname + '/README.md', 'utf8')
             .replace((/[\S\s]+?(<!DOCTYPE html>[\S\s]+?<\/html>)[\S\s]+/), '$1')
             // parse '\' line-continuation

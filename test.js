@@ -61,13 +61,13 @@
                 }, onParallel);
             });
             // test http POST handling behavior
-            ['binary', 'text'].forEach(function (resultType) {
+            ['binary', 'string'].forEach(function (resultType) {
                 onParallel.counter += 1;
                 local.utility2.ajax({
                     data: resultType === 'binary' && local.modeJs === 'node'
                         // test binary post handling behavior
                         ? new Buffer('hello')
-                        // test text post handling behavior
+                        // test string post handling behavior
                         : 'hello',
                     // test request header handling behavior
                     headers: { 'X-Header-Hello': 'Hello' },
@@ -84,7 +84,7 @@
                             local.utility2.assert(Buffer.isBuffer(data), data);
                             data = String(data);
                         }
-                        // validate text data
+                        // validate string data
                         local.utility2.assert(data.indexOf('hello') >= 0, data);
                         onParallel();
                     }, onParallel);
@@ -149,7 +149,7 @@
                     error.message
                 );
             });
-            // test assertion failed with text message
+            // test assertion failed with string message
             local.utility2.testTryCatch(function () {
                 local.utility2.assert(false, 'hello');
             }, function (error) {
@@ -427,32 +427,16 @@
             }, 1500, 'testCase_onTimeout_errorTimeout');
         };
 
-        local.testCase_testRun_failure = function (onError) {
+        local.testCase_stringFormat_default = function (onError) {
             /*
-                this function will test testRun's failure handling behavior
-            */
-            // test failure from callback handling behavior
-            onError(local.utility2.errorDefault);
-            // test failure from multiple-callback handling behavior
-            onError();
-            // test failure from ajax handling behavior
-            local.utility2.ajax({
-                url: '/test/undefined?modeErrorIgnore=1'
-            }, onError);
-            // test failure from thrown error handling behavior
-            throw local.utility2.errorDefault;
-        };
-
-        local.testCase_textFormat_default = function (onError) {
-            /*
-                this function will test textFormat's default handling behavior
+                this function will test stringFormat's default handling behavior
             */
             var data;
             // test undefined valueDefault handling behavior
-            data = local.utility2.textFormat('{{aa}}', {}, undefined);
+            data = local.utility2.stringFormat('{{aa}}', {}, undefined);
             local.utility2.assert(data === '{{aa}}', data);
             // test default handling behavior
-            data = local.utility2.textFormat(
+            data = local.utility2.stringFormat(
                 '{{aa}}{{aa}}{{bb}}{{cc}}{{dd}}{{ee.ff}}',
                 {
                     // test string value handling behavior
@@ -470,7 +454,7 @@
             );
             local.utility2.assert(data === 'aaaa1null<undefined>gg', data);
             // test list handling behavior
-            data = local.utility2.textFormat(
+            data = local.utility2.stringFormat(
                 '[{{#list1}}[{{#list2}}{{aa}},{{/list2}}],{{/list1}}]',
                 {
                     list1: [
@@ -487,6 +471,22 @@
                 data
             );
             onError();
+        };
+
+        local.testCase_testRun_failure = function (onError) {
+            /*
+                this function will test testRun's failure handling behavior
+            */
+            // test failure from callback handling behavior
+            onError(local.utility2.errorDefault);
+            // test failure from multiple-callback handling behavior
+            onError();
+            // test failure from ajax handling behavior
+            local.utility2.ajax({
+                url: '/test/undefined?modeErrorIgnore=1'
+            }, onError);
+            // test failure from thrown error handling behavior
+            throw local.utility2.errorDefault;
         };
     }());
     switch (local.modeJs) {
