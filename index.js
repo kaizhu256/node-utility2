@@ -459,14 +459,14 @@
                 taskPool.timeout || local.utility2.timeoutDefault,
                 'taskPoolCreateOrAddCallback ' + taskPool.key
             );
-            // run task
+            // run onTask
             onTask(taskPool.onFinish);
         };
 
-        local.utility2.testMock = function (mockList, testCase, onError) {
+        local.utility2.testMock = function (mockList, onTestCase, onError) {
             /*
                 this function will mock the objects in mockList
-                while running the testCase
+                while running the onTestCase
             */
             var callCallback, onError2;
             callCallback = function (callback) {
@@ -506,8 +506,8 @@
                     // override mock[0] with mock[1]
                     local.utility2.objectSetOverride(mock[0], mock[1]);
                 });
-                // run testCase
-                testCase(onError2);
+                // run onTestCase
+                onTestCase(onError2);
             }, onError2);
         };
 

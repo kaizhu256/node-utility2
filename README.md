@@ -341,8 +341,8 @@ instruction
     "author": "kai zhu <kaizhu256@gmail.com>",
     "bin": { "utility2" : "index.sh" },
     "dependencies": {
-        "istanbul-lite": "2015.3.14-10",
-        "jslint-lite": "2015.3.14-10"
+        "istanbul-lite": "2015.3.19-10",
+        "jslint-lite": "2015.3.19-10"
     },
     "devDependencies": {
         "phantomjs-lite": "^2015.1.4-102"
@@ -387,7 +387,7 @@ instruction
 npm_config_mode_auto_restart=1 npm_config_mode_auto_restart_child=1 \
 ./index.sh shRun shNpmTest test.js"
     },
-    "version": "2015.3.14-10"
+    "version": "2015.3.19-10"
 }
 ```
 
