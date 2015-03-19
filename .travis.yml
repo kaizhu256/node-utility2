@@ -18,7 +18,7 @@ language:
 node_js:
     - "0.12"
 script:
-    - npm run-script build2
+    - npm run-script build-ci
 # http://docs.travis-ci.com/user/workers/container-based-infrastructure
 sudo:
     false

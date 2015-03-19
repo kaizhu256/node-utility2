@@ -22,7 +22,7 @@ shAesEncrypt() {
     openssl enc -aes-256-cbc -K $AES_256_KEY -iv $IV | base64 | tr -d "\n" || return $?
 }
 
-shBuild() {
+shBuildCi() {
     # this function will run the build-script in README.md
     # init $npm_config_dir_build
     mkdir -p $npm_config_dir_build/coverage.html || return $?
@@ -714,4 +714,14 @@ shMain() {
         ;;
     esac
 }
+
+# deprecated functions
+shBuild() {
+    # this function will run the build-script in README.md
+    # init $npm_config_dir_build
+    mkdir -p $npm_config_dir_build/coverage.html || return $?
+    # run shell script from README.md
+    MODE_BUILD=build shReadmeTestSh $npm_config_dir_tmp/build.sh || return $?
+}
+
 shMain $@

@@ -47,7 +47,7 @@ shExampleSh
 #### output from shell
 [![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleSh.png)](https://travis-ci.org/kaizhu256/node-utility2)
 #### output from phantomjs-lite
-[![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleSh.slimerjs.png)](https://hrku01-utility2-beta.herokuapp.com)
+[![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleSh.slimerjs..png)](https://hrku01-utility2-beta.herokuapp.com)
 
 
 
@@ -351,26 +351,15 @@ instruction
 (via istanbul-lite and phantomjs-lite)",
     "engines": { "node": ">=0.10 <=0.12" },
     "keywords": [
-        "browser",
-        "build",
-        "ci",
-        "code",
-        "cover",
-        "coverage",
-        "csslint",
-        "eshint",
-        "eslint",
-        "istanbul",
-        "instrument",
-        "jshint",
-        "jslint",
-        "lightweight",
-        "lint",
-        "lite",
+        "browser", "build",
+        "ci", "code", "cover", "coverage", "csslint",
+        "eshint", "eslint",
+        "instrument", "istanbul",
+        "jshint", "jslint",
+        "lightweight", "lint", "light", "lite",
         "phantomjs",
         "slimerjs",
-        "test",
-        "travis",
+        "test", "travis",
         "web"
     ],
     "license": "MIT",
@@ -381,7 +370,7 @@ instruction
         "url" : "https://github.com/kaizhu256/node-utility2.git"
     },
     "scripts": {
-        "build2": "./index.sh shRun shBuild",
+        "build-ci": "./index.sh shRun shBuildCi",
         "start": "npm_config_mode_auto_restart=1 ./index.sh shRun node test.js",
         "test": "./index.sh shRun shReadmePackageJsonExport && \
 npm_config_mode_auto_restart=1 npm_config_mode_auto_restart_child=1 \
@@ -394,9 +383,9 @@ npm_config_mode_auto_restart=1 npm_config_mode_auto_restart_child=1 \
 
 
 # todo
+- improve slimerjs auto-detection
 - jslint textarea
 - add testCase for validating _testSecret
-- add taskPool
 - add failed test example
 - create flamegraph from istanbul coverage
 - auto-generate help doc from README.md
@@ -415,7 +404,7 @@ npm_config_mode_auto_restart=1 npm_config_mode_auto_restart_child=1 \
 ```
 # build.sh
 # this shell script will run the build process for this package
-shBuild() {
+shBuildCi() {
     # init env
     export npm_config_mode_slimerjs=1 || return $?
     . ./index.sh && shInit || return $?
@@ -440,6 +429,7 @@ shBuild() {
     MODE_BUILD=testExampleSh \
         npm_config_timeout_exit=1000 \
         shRunScreenCapture shReadmeTestSh example.sh || return $?
+    # save screen-capture
     cp /tmp/app/node_modules/utility2/tmp/build/screen-capture.*.png \
         $npm_config_dir_build || return $?
 
@@ -464,7 +454,7 @@ shBuild() {
     # if number of commits > 1024, then squash older commits
     shRun shGitBackupAndSquashAndPush 1024 > /dev/null || return $?
 }
-shBuild
+shBuildCi
 
 # save exit-code
 EXIT_CODE=$?

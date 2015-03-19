@@ -1427,7 +1427,7 @@
                     // spawn phantomjs to test a url
                     local.child_process
                         .spawn('/bin/sh', ['-c',
-                            require('phantomjs-lite').__dirname + '/' + options.argv0 + ' ' +
+                            options.argv0 + ' ' +
                             options.argv1 + ' ' +
                             encodeURIComponent(JSON.stringify(options)) + '; ' +
                             'EXIT_CODE=$?; ' +
@@ -1806,13 +1806,14 @@
                 '[a-zA-Z0-9](?:[a-zA-Z0-9\\-]{0,61}[a-zA-Z0-9])?' +
                 '(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9\\-]{0,61}[a-zA-Z0-9])?)*$'
         );
-        local.utility2.stringExampleAscii = local.utility2.stringExampleAscii ||
+        local.utility2.regexpUriComponentCharset = (/[\w\!\%\'\(\)\*\-\.\~]/);
+        local.utility2.stringAsciiCharset = local.utility2.stringExampleAscii ||
             '\x00\x01\x02\x03\x04\x05\x06\x07\b\t\n\x0b\f\r\x0e\x0f' +
             '\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f' +
             ' !"#$%&\'()*+,-./0123456789:;<=>?' +
             '@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_' +
             '`abcdefghijklmnopqrstuvwxyz{|}~\x7f';
-        local.utility2.stringExampleUri = '!%\'()*-.' +
+        local.utility2.stringUriComponentCharset = '!%\'()*-.' +
             '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz~';
         local.utility2.testPlatform = {
             name: local.modeJs === 'browser'
@@ -1882,6 +1883,7 @@
             .replace((/[\S\s]+?(<!DOCTYPE html>[\S\s]+?<\/html>)[\S\s]+/), '$1')
             // parse '\' line-continuation
             .replace((/\\\n/g), '')
+            // remove "\\n' +" and "'"
             .replace((/\\n' \+(\s*?)'/g), '$1'), { envDict: local.utility2.envDict });
         break;
 
