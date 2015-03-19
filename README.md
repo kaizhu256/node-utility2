@@ -64,7 +64,7 @@ instruction
     1. save this js script as example.js
     2. run the shell command:
         $ npm install phantomjs-lite utility2 && \
-            node_modules/.bin/utility2 shRun shNpmTest example.js
+            node_modules/.bin/utility2 test example.js
     3. view test-report in ./tmp/build/test-report.html
     4. view coverage in ./tmp/build/coverage.html/index.html
 */
@@ -356,7 +356,7 @@ instruction
         "eshint", "eslint",
         "instrument", "istanbul",
         "jshint", "jslint",
-        "lightweight", "lint", "light", "lite",
+        "light", "lightweight", "lint", "lite",
         "phantomjs",
         "slimerjs",
         "test", "travis",
@@ -374,7 +374,7 @@ instruction
         "start": "npm_config_mode_auto_restart=1 ./index.sh shRun node test.js",
         "test": "./index.sh shRun shReadmePackageJsonExport && \
 npm_config_mode_auto_restart=1 npm_config_mode_auto_restart_child=1 \
-./index.sh shRun shNpmTest test.js"
+./index.sh test test.js"
     },
     "version": "2015.3.19-11"
 }
@@ -403,7 +403,7 @@ npm_config_mode_auto_restart=1 npm_config_mode_auto_restart_child=1 \
 # internal build-script
 ```
 # build.sh
-# this shell script will run the build process for this package
+# this shell script will run the build for this package
 shBuildCi() {
     # init env
     export npm_config_mode_slimerjs=1 || return $?
@@ -461,8 +461,6 @@ EXIT_CODE=$?
 
 shBuildCleanup() {
     # this function will cleanup build-artifacts in local build dir
-    # init env
-    . ./index.sh && shInit || return $?
     # create package-listing
     MODE_BUILD=gitLsTree shRunScreenCapture shGitLsTree || return $?
     # create recent changelog of last 50 commits
