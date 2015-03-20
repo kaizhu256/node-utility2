@@ -345,7 +345,7 @@ instruction
         "jslint-lite": "2015.3.19-10"
     },
     "devDependencies": {
-        "phantomjs-lite": "^2015.1.4-102"
+        "phantomjs-lite": "^2015.3.20-10"
     },
     "description": "run dynamic browser tests with coverage \
 (via istanbul-lite and phantomjs-lite)",
