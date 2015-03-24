@@ -22,14 +22,6 @@ shAesEncrypt() {
     openssl enc -aes-256-cbc -K $AES_256_KEY -iv $IV | base64 | tr -d "\n" || return $?
 }
 
-shBuildCi() {
-    # this function will run the build-script in README.md
-    # init $npm_config_dir_build
-    mkdir -p $npm_config_dir_build/coverage.html || return $?
-    # run shell script from README.md
-    MODE_BUILD=build shReadmeTestSh $npm_config_dir_tmp/build.sh || return $?
-}
-
 shBuildGithubUpload() {
     # this function will upload build-artifacts to github
     if [ ! "$CI_BRANCH" ] || [ ! "$GIT_SSH_KEY" ] || [ "$MODE_OFFLINE" ]
@@ -74,7 +66,7 @@ shDateIso() {
 shDebugArgv() {
     # this function will print each element in $@ in a separate line
     local ARG || return $?
-    for ARG in $@
+    for ARG in "$1" "$2" "$3" "$4" "$5" "$6" "$7" "$8"
     do
         printf "'$ARG'\n"
     done
@@ -155,7 +147,9 @@ shGitSquashShift() {
 }
 
 shGrep() {
-    # this function will recursively grep the regex $1 in the current dir
+    # this function will recursively grep $DIR for the $REGEXP
+    local DIR=$1 || return $?
+    local REGEXP=$2 || return $?
     local FILE_FILTER="/\\.\\" || return $?
     FILE_FILTER="$FILE_FILTER|.*\\b\\(\\.\\d\\" || return $?
     FILE_FILTER="$FILE_FILTER|archive\\" || return $?
@@ -174,8 +168,31 @@ shGrep() {
     FILE_FILTER="$FILE_FILTER|rollup.*\\" || return $?
     FILE_FILTER="$FILE_FILTER|swp\\" || return $?
     FILE_FILTER="$FILE_FILTER|tmp\\)\\b" || return $?
-    find . -type f | grep -v "$FILE_FILTER" | tr "\n" "\000" | xargs -0 grep -in "$1" || \
-        return $?
+    find "$DIR" -type f | \
+        grep -v "$FILE_FILTER" | \
+        tr "\n" "\000" | \
+        xargs -0 grep -in "$REGEXP" || return $?
+}
+
+shGrepFileReplace() {
+    # this function will apply the grep-and-replace lines in $FILE
+    local FILE=$1
+    node -e "var local;
+        local = {};
+        local.fs = require('fs');
+        local.fileDict = {};
+        local.fs.readFileSync('$FILE', 'utf8').split('\n').forEach(function (element) {
+            element = (/^(.+?):(\d+?):(.+?)$/).exec(element);
+            if (!element) {
+                return;
+            }
+            local.fileDict[element[1]] = local.fileDict[element[1]] ||
+                local.fs.readFileSync(element[1], 'utf8').split('\n');
+            local.fileDict[element[1]][element[2] - 1] = element[3];
+        });
+        Object.keys(local.fileDict).forEach(function (key) {
+            local.fs.writeFileSync(key, local.fileDict[key].join('\n'));
+        });" || return $?
 }
 
 shInit() {
@@ -244,15 +261,8 @@ shInit() {
     then
         export npm_config_dir_utility2=$CWD || return
     else
-        export npm_config_dir_utility2=$(node -e "console.log( \
-            require('utility2').__dirname \
-        );") || return $?
-    fi
-    # init $npm_config_file_istanbul
-    if [ ! "$npm_config_file_istanbul" ]
-    then
-        export npm_config_file_istanbul=$(cd $npm_config_dir_utility2 && \
-            node -e "console.log(require('istanbul-lite').__dirname);")/index.js || return $?
+        export npm_config_dir_utility2=$(node -e \
+            "console.log(require('utility2').__dirname);") || return $?
     fi
     # init $GIT_SSH
     if [ "$GIT_SSH_KEY" ]
@@ -265,21 +275,27 @@ shIstanbulCover() {
     # this function will run the command $@ with istanbul coverage
     if [ "$npm_config_mode_no_coverage" ]
     then
-        node $@
+        node "$1" "$2" "$3" "$4" "$5" "$6" "$7" "$8" || return $?
     else
+        # init $npm_config_file_istanbul
+        if [ ! "$npm_config_file_istanbul" ]
+        then
+            export npm_config_file_istanbul=$(cd $npm_config_dir_utility2 && \
+                node -e "console.log(require('istanbul-lite').__dirname);")/index.js || \
+                return $?
+        fi
         npm_config_dir_coverage="$npm_config_dir_build/coverage.html" \
-            $npm_config_file_istanbul cover $@ || return $?
+            $npm_config_file_istanbul cover "$1" "$2" "$3" "$4" "$5" "$6" "$7" "$8" || return $?
     fi
 }
 
 shIstanbulTest() {
     # this function will run the command $@ with istanbul coverage
-    if [ "$npm_config_mode_no_coverage" ] || [ ! "$npm_config_mode_coverage" ]
+    if [ ! "$npm_config_mode_coverage" ]
     then
-        node $@
+        node "$1" "$2" "$3" "$4" "$5" "$6" "$7" "$8" || return $?
     else
-        npm_config_dir_coverage="$npm_config_dir_build/coverage.html" \
-            $npm_config_file_istanbul cover $@ || return $?
+        shIstanbulCover "$1" "$2" "$3" "$4" "$5" "$6" "$7" "$8" || return $?
     fi
 }
 
@@ -302,13 +318,13 @@ shNpmTest() {
     # if coverage-mode is disabled, then run npm-test without coverage
     if [ "$npm_config_mode_no_coverage" ]
     then
-        node $@
+        node "$1" "$2" "$3" "$4" "$5" "$6" "$7" "$8"
         return $?
     fi
     # cleanup old coverage
     rm -f $npm_config_dir_build/coverage.html/coverage.* || return $?
     # run npm-test with coverage
-    shIstanbulCover $@
+    shIstanbulCover "$1" "$2" "$3" "$4" "$5" "$6" "$7" "$8"
     # save $EXIT_CODE and restore $CWD
     shExitCodeSave $? || return $?
     # create coverage badge
@@ -340,7 +356,7 @@ shNpmTest() {
         );" || return $?
     if [ "$EXIT_CODE" != 0 ]
     then
-        node $@
+        node "$1" "$2" "$3" "$4" "$5" "$6" "$7" "$8"
     fi
     return $EXIT_CODE
 }
@@ -399,6 +415,14 @@ shPhantomTest() {
             );
             process.exit(!!error);
         });" || return $?
+}
+
+shReadmeBuild() {
+    # this function will run the build-script in README.md
+    # init $npm_config_dir_build
+    mkdir -p $npm_config_dir_build/coverage.html || return $?
+    # run shell script from README.md
+    MODE_BUILD=build shReadmeTestSh $npm_config_dir_tmp/build.sh || return $?
 }
 
 shReadmeTestJs() {
@@ -512,7 +536,7 @@ shRun() {
         do
             printf "(re)starting $@" || return $?
             printf "\n" || return $?
-            $@
+            "$1" "$2" "$3" "$4" "$5" "$6" "$7" "$8"
             # save $EXIT_CODE
             EXIT_CODE=$? || return $?
             printf "process exited with code $EXIT_CODE\n" || return $?
@@ -532,12 +556,70 @@ shRun() {
         done
     # eval argv
     else
-        $@
+        "$1" "$2" "$3" "$4" "$5" "$6" "$7" "$8"
     fi
     # save $EXIT_CODE and restore $CWD
     shExitCodeSave $? || return $?
     # return $EXIT_CODE
     return $EXIT_CODE
+}
+
+shRunNodeWithFileData() {
+    # this function will run the node $SCRIPT using data from $FILE
+    local FILE=$1 || return $?
+    local SCRIPT=$2 || return $?
+    shRunNode "
+        local.dataRaw = local.fs.readFileSync('$FILE');
+        local.data = local.dataRaw.toString('utf8');
+        $SCRIPT
+    " || return $?
+}
+
+shRunNode() {
+    # this function will run the node $SCRIPT
+    local SCRIPT=$1 || return $?
+    node -e "var local;
+        local = {};
+        // require builtin modules
+        ['assert',
+        'buffer',
+        'child_process', 'cluster', 'console', 'constants', 'crypto',
+        'dgram', 'dns', 'domain',
+        'events',
+        'freelist', 'fs',
+        'http', 'https',
+        'module',
+        'net',
+        'os',
+        'path', 'punycode',
+        'querystring',
+        'readline', 'repl',
+        'stream', 'string_decoder', 'sys',
+        'timers', 'tls', 'tty',
+        'url', 'util',
+        'vm',
+        'zlib'].forEach(function (key) {
+            local[key] = require(key);
+        });
+        $SCRIPT
+    " || return $?
+}
+
+shRunNodeStdin() {
+    # this function will run the node $SCRIPT using data from stdin
+    local SCRIPT=$1 || return $?
+    shRunNode "
+        local.dataRaw = [];
+        process.stdin
+            .on('data', function (chunk) {
+                local.dataRaw.push(chunk);
+            })
+            .on('end', function () {
+                local.dataRaw = Buffer.concat(local.dataRaw);
+                local.data = local.dataRaw.toString('utf8');
+                $SCRIPT
+            });
+    " || return $?
 }
 
 shRunScreenCapture() {
@@ -546,7 +628,8 @@ shRunScreenCapture() {
     # init $npm_config_dir_build
     mkdir -p $npm_config_dir_build/coverage.html || return $?
     export MODE_BUILD_SCREEN_CAPTURE=screen-capture.${MODE_BUILD-undefined}.png || return $?
-    shRun $@ 2>&1 | tee $npm_config_dir_tmp/screen-capture.txt || return $?
+    shRun "$1" "$2" "$3" "$4" "$5" "$6" "$7" "$8" 2>&1 | \
+        tee $npm_config_dir_tmp/screen-capture.txt || return $?
     # save $EXIT_CODE and restore $CWD
     shExitCodeSave $(cat $npm_config_file_tmp) || return $?
     # format text-output
@@ -619,7 +702,9 @@ shHerokuDeploy() {
     # wait 10 seconds for heroku to deploy app
     sleep 10 || return $?
     # verify deployed app's main-page returns status-code < 400
-    [ $(curl -Ls -o /dev/null -w "%{http_code}" https://www.google.com) -lt 400 ] || return $?
+    [ $(
+        curl -Ls -o /dev/null -w "%{http_code}" https://$HEROKU_HOSTNAME
+    ) -lt 400 ] || return $?
 }
 
 shTmpAppCopy() {
@@ -703,25 +788,24 @@ shMain() {
     shift
     case "$COMMAND" in
     shRun)
-        shInit && "$COMMAND" $@ || return $?
+        shInit && "$COMMAND" "$1" "$2" "$3" "$4" "$5" "$6" "$7" "$8" || return $?
+        ;;
+    shRunNode)
+        "$COMMAND" "$1" "$2" "$3" "$4" "$5" "$6" "$7" "$8" || return $?
+        ;;
+    shRunNodeWithFileData)
+        "$COMMAND" "$1" "$2" "$3" "$4" "$5" "$6" "$7" "$8" || return $?
+        ;;
+    shRunNodeWithStdinData)
+        "$COMMAND" "$1" "$2" "$3" "$4" "$5" "$6" "$7" "$8" || return $?
         ;;
     shRunScreenCapture)
-        shInit && "$COMMAND" $@ || return $?
+        shInit && "$COMMAND" "$1" "$2" "$3" "$4" "$5" "$6" "$7" "$8" || return $?
         ;;
     test)
-        echo $@
-        shInit && shNpmTest $@ || return $?
+        echo "$1" "$2" "$3" "$4" "$5" "$6" "$7" "$8"
+        shInit && shNpmTest "$1" "$2" "$3" "$4" "$5" "$6" "$7" "$8" || return $?
         ;;
     esac
 }
-
-# deprecated functions
-shBuild() {
-    # this function will run the build-script in README.md
-    # init $npm_config_dir_build
-    mkdir -p $npm_config_dir_build/coverage.html || return $?
-    # run shell script from README.md
-    MODE_BUILD=build shReadmeTestSh $npm_config_dir_tmp/build.sh || return $?
-}
-
-shMain $@
+shMain "$1" "$2" "$3" "$4" "$5" "$6" "$7" "$8"

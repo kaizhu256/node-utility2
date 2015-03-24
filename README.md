@@ -22,7 +22,7 @@ run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
 
 
 # quickstart interactive example
-#### follow the instruction in this script
+#### to run this example, read the instruction inside the script below
 ```
 # example.sh
 
@@ -52,7 +52,7 @@ shExampleSh
 
 
 # quickstart programmatic example
-#### follow the instruction in this script
+#### to run this example, read the instruction inside the script below
 ```
 /*
 example.js
@@ -71,7 +71,7 @@ instruction
 
 /*jslint
     browser: true,
-    maxerr: 4,
+    maxerr: 8,
     maxlen: 80,
     node: true,
     nomen: true,
@@ -370,7 +370,7 @@ instruction
         "url" : "https://github.com/kaizhu256/node-utility2.git"
     },
     "scripts": {
-        "build-ci": "./index.sh shRun shBuildCi",
+        "build-ci": "./index.sh shRun shReadmeBuild",
         "start": "npm_config_mode_auto_restart=1 ./index.sh shRun node test.js",
         "test": "./index.sh shRun shReadmePackageJsonExport && \
 npm_config_mode_auto_restart=1 npm_config_mode_auto_restart_child=1 \
@@ -404,7 +404,7 @@ npm_config_mode_auto_restart=1 npm_config_mode_auto_restart_child=1 \
 ```
 # build.sh
 # this shell script will run the build for this package
-shBuildCi() {
+shBuild() {
     # init env
     export npm_config_mode_slimerjs=1 || return $?
     . ./index.sh && shInit || return $?
@@ -454,7 +454,7 @@ shBuildCi() {
     # if number of commits > 1024, then squash older commits
     shRun shGitBackupAndSquashAndPush 1024 > /dev/null || return $?
 }
-shBuildCi
+shBuild
 
 # save exit-code
 EXIT_CODE=$?

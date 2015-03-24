@@ -164,7 +164,7 @@
                 var defaults2, options2;
                 defaults2 = defaults[key];
                 options2 = options[key];
-                // set options[key] to default value defaults[key]
+                // init options[key] to default value defaults[key]
                 if (options2 === undefined) {
                     options[key] = defaults2;
                     return;
@@ -273,7 +273,7 @@
             };
         };
 
-        local.utility2.onParallel = function (onError, onDebug) {
+        local.utility2.onTaskEnd = function (onError, onDebug) {
             /*
                 this function will return a function that will
                 1. runs async tasks in parallel,
@@ -360,11 +360,11 @@
                 after the given timeout
             */
             return local.utility2.onTimeout(function (error) {
+                onError(error);
                 // cleanup request
                 request.destroy();
                 // cleanup response
                 response.destroy();
-                onError(error);
             }, timeout, message);
         };
 
@@ -453,7 +453,7 @@
                     onError.apply(null, taskPool.result);
                 });
             };
-            // set timerTimeout
+            // init timerTimeout
             taskPool.timerTimeout = local.utility2.onTimeout(
                 taskPool.onFinish,
                 taskPool.timeout || local.utility2.timeoutDefault,
@@ -742,7 +742,7 @@
             */
             var coverageReportCreate,
                 exit,
-                onParallel,
+                onTaskEnd,
                 testPlatform,
                 testReportDiv,
                 timerInterval;
@@ -803,7 +803,7 @@
                 // update coverageReport
                 coverageReportCreate();
             }
-            onParallel = local.utility2.onParallel(function () {
+            onTaskEnd = local.utility2.onTaskEnd(function () {
                 /*
                     this function will create the test-report
                     after all tests have finished
@@ -933,7 +933,7 @@
                     break;
                 }
             });
-            onParallel.counter += 1;
+            onTaskEnd.counter += 1;
             // init testReport timer
             local.utility2.testReport.timeElapsed = Date.now();
             // init testPlatform
@@ -976,16 +976,16 @@
                     // stop testCase timer
                     local._timeElapsedStop(testCase);
                     // if all tests have finished, then create test-report
-                    onParallel();
+                    onTaskEnd();
                 };
-                // set timerTimeout
+                // init timerTimeout
                 timerTimeout = local.utility2.onTimeout(
                     onError,
                     local.utility2.timeoutDefault,
                     testCase.name
                 );
                 // increment number of tests remaining
-                onParallel.counter += 1;
+                onTaskEnd.counter += 1;
                 // run testCase in try-catch block
                 try {
                     // start testCase timer
@@ -995,7 +995,7 @@
                     onError(errorCaught);
                 }
             });
-            onParallel();
+            onTaskEnd();
         };
 
         local.utility2.testTryCatch = function (callback, onError) {
@@ -1072,7 +1072,7 @@
                     clearTimeout(timerTimeout);
                     // validate finished is falsey
                     local.utility2.assert(!finished, finished);
-                    // set finished to true
+                    // init finished to true
                     finished = true;
                     // validate xhr is defined in _ajaxProgressList
                     ii = local._ajaxProgressList.indexOf(xhr);
@@ -1138,7 +1138,7 @@
             xhr.addEventListener('loadstart', local._ajaxProgressIncrement);
             xhr.addEventListener('progress', local._ajaxProgressIncrement);
             xhr.upload.addEventListener('progress', local._ajaxProgressIncrement);
-            // set timerTimeout
+            // init timerTimeout
             timerTimeout = local.utility2.onTimeout(function (errorTimeout) {
                 error = errorTimeout;
                 xhr.abort();
@@ -1222,7 +1222,7 @@
                 case 1:
                     // init request and response
                     request = response = { destroy: local.utility2.nop };
-                    // set timerTimeout
+                    // init timerTimeout
                     timerTimeout = local.utility2.onTimeoutRequestResponseDestroy(
                         onNext,
                         options.timeout || local.utility2.timeoutDefault,
@@ -1350,9 +1350,9 @@
                 this function will spawn both phantomjs and slimerjs processes
                 to test options.url
             */
-            var onParallel;
-            onParallel = local.utility2.onParallel(onError);
-            onParallel.counter += 1;
+            var onTaskEnd;
+            onTaskEnd = local.utility2.onTaskEnd(onError);
+            onTaskEnd.counter += 1;
             ['phantomjs', 'slimerjs'].forEach(function (argv0) {
                 var optionsCopy;
                 // if slimerjs is not available, then do not use it
@@ -1365,14 +1365,14 @@
                 optionsCopy = local.utility2.jsonCopy(options);
                 optionsCopy.argv0 = argv0;
                 // run phantomjs / slimerjs instance
-                onParallel.counter += 1;
+                onTaskEnd.counter += 1;
                 local._phantomTestSingle(optionsCopy, function (error) {
                     // save phantomjs / slimerjs state to options
                     options[argv0] = optionsCopy;
-                    onParallel(error);
+                    onTaskEnd(error);
                 });
             });
-            onParallel();
+            onTaskEnd();
         };
 
         local._phantomTestSingle = function (options, onError) {
@@ -1380,7 +1380,7 @@
                 this function will spawn a single phantomjs or slimerjs process
                 to test options.url
             */
-            var modeNext, onNext, onParallel, timerTimeout;
+            var modeNext, onNext, onTaskEnd, timerTimeout;
             modeNext = 0;
             onNext = function (error) {
                 modeNext = error instanceof Error
@@ -1403,7 +1403,7 @@
                             '/test-report.' + options.testName + '.json',
                         modePhantom: 'testUrl'
                     }, 1);
-                    // set timerTimeout
+                    // init timerTimeout
                     timerTimeout = local.utility2.onTimeout(
                         onNext,
                         local.utility2.timeoutDefault,
@@ -1441,14 +1441,14 @@
                     break;
                 case 2:
                     options.exitCode = error;
-                    onParallel = local.utility2.onParallel(onNext);
-                    onParallel.counter += 1;
+                    onTaskEnd = local.utility2.onTaskEnd(onNext);
+                    onTaskEnd.counter += 1;
                     // merge coverage and test-report
                     [
                         options.fileCoverage,
                         options.fileTestReport
                     ].forEach(function (file, ii) {
-                        onParallel.counter += 1;
+                        onTaskEnd.counter += 1;
                         local.fs.readFile(
                             file,
                             'utf8',
@@ -1469,11 +1469,11 @@
                                         );
                                     }
                                 }
-                                onParallel();
+                                onTaskEnd();
                             })
                         );
                     });
-                    onParallel();
+                    onTaskEnd();
                     break;
                 case 3:
                     onNext(options.exitCode && new Error(
@@ -1589,7 +1589,7 @@
                 this function will respond with a default message,
                 or error stack for the given statusCode
             */
-            // set response / statusCode / contentType
+            // init statusCode and contentType
             local.utility2.serverRespondWriteHead(
                 request,
                 response,
@@ -1636,7 +1636,7 @@
             // jslint-hack
             local.utility2.nop(request);
             if (!response.headersSent) {
-                // set response.statusCode
+                // init response.statusCode
                 if (statusCode) {
                     response.statusCode = statusCode;
                 }
@@ -1701,6 +1701,28 @@
                         local._debugServerRequest = request;
                         // debug server response
                         local._debugServerResponse = response;
+                        // init timerTimeout
+                        request.onTimeout = request.onTimeout || function () {
+                            local.utility2.serverRespondDefault(
+                                request,
+                                response,
+                                500
+                            );
+                        };
+                        request.timerTimeout = local.utility2.onTimeoutRequestResponseDestroy(
+                            function (error) {
+                                local.utility2.onErrorDefault(error);
+                                request.onTimeout(error);
+                            },
+                            local.utility2.timeoutDefault,
+                            'server request-handler',
+                            request,
+                            response
+                        );
+                        // cleanup timerTimeout
+                        response.on('finish', function () {
+                            clearTimeout(request.timerTimeout);
+                        });
                         // check if _testSecret is valid
                         request._testSecretValid = (/\b_testSecret=(\w+)\b/).exec(request.url);
                         request._testSecretValid = request._testSecretValid &&
@@ -1792,7 +1814,7 @@
                 this function will both print the arg to stderr and return it
             */
             // debug arguments
-            local.utility2['debug_printArguments'.replace('_p', 'P')] = arguments;
+            local['_debug_printArguments'.replace('_p', 'P')] = arguments;
             console.error('\n\n\ndebug_print'.replace('_p', 'P'));
             console.error.apply(console, arguments);
             console.error();
@@ -1842,7 +1864,7 @@
         local.utility2.taskPoolCreateOrAddCallback(
             { key: 'utility2.onReady' },
             function (onError) {
-                local.utility2.onReady = local.utility2.onParallel(onError);
+                local.utility2.onReady = local.utility2.onTaskEnd(onError);
                 local.utility2.onReady.counter += 1;
                 setTimeout(local.utility2.onReady);
             },
@@ -2004,8 +2026,8 @@
         if (local.utility2.modeErrorIgnore) {
             console.error = console.log = local.utility2.nop;
         }
-        // set timeout for phantom
-        local.utility2.onTimeout(
+        // init timerTimeout
+        local.timerTimeout = local.utility2.onTimeout(
             local.utility2.onErrorExit,
             local.utility2.timeoutDefault,
             local.utility2.url

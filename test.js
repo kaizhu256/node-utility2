@@ -46,23 +46,23 @@
             /*
                 this function will test ajax's default handling behavior
             */
-            var onParallel;
-            onParallel = local.utility2.onParallel(onError);
-            onParallel.counter += 1;
+            var onTaskEnd;
+            onTaskEnd = local.utility2.onTaskEnd(onError);
+            onTaskEnd.counter += 1;
             // test http GET handling behavior
-            onParallel.counter += 1;
+            onTaskEnd.counter += 1;
             local.utility2.ajax({ url: '/test/hello' }, function (error, data) {
                 local.utility2.testTryCatch(function () {
                     // validate no error occurred
                     local.utility2.assert(!error, error);
                     // validate data
                     local.utility2.assert(data === 'hello', data);
-                    onParallel();
-                }, onParallel);
+                    onTaskEnd();
+                }, onTaskEnd);
             });
             // test http POST handling behavior
             ['binary', 'string'].forEach(function (resultType) {
-                onParallel.counter += 1;
+                onTaskEnd.counter += 1;
                 local.utility2.ajax({
                     data: resultType === 'binary' && local.modeJs === 'node'
                         // test binary post handling behavior
@@ -79,15 +79,14 @@
                         // validate no error occurred
                         local.utility2.assert(!error, error);
                         // validate binary data
-                        if (resultType === 'binary' &&
-                                local.modeJs === 'node') {
+                        if (resultType === 'binary' && local.modeJs === 'node') {
                             local.utility2.assert(Buffer.isBuffer(data), data);
                             data = String(data);
                         }
                         // validate string data
                         local.utility2.assert(data.indexOf('hello') >= 0, data);
-                        onParallel();
-                    }, onParallel);
+                        onTaskEnd();
+                    }, onTaskEnd);
                 });
             });
             [{
@@ -105,16 +104,16 @@
                 timeout: 1,
                 url: 'https://undefined' + Date.now() + Math.random() + '.com'
             }].forEach(function (options) {
-                onParallel.counter += 1;
+                onTaskEnd.counter += 1;
                 local.utility2.ajax(options, function (error) {
                     local.utility2.testTryCatch(function () {
                         // validate error occurred
                         local.utility2.assert(error instanceof Error, error);
-                        onParallel();
-                    }, onParallel);
+                        onTaskEnd();
+                    }, onTaskEnd);
                 });
             });
-            onParallel();
+            onTaskEnd();
         };
 
         local.testCase_assert_default = function (onError) {
@@ -144,10 +143,7 @@
                 // validate error occurred
                 local.utility2.assert(error instanceof Error, error);
                 // validate error.message
-                local.utility2.assert(
-                    error.message === 'undefined',
-                    error.message
-                );
+                local.utility2.assert(error.message === 'undefined', error.message);
             });
             // test assertion failed with string message
             local.utility2.testTryCatch(function () {
@@ -156,10 +152,7 @@
                 // validate error occurred
                 local.utility2.assert(error instanceof Error, error);
                 // validate error-message
-                local.utility2.assert(
-                    error.message === 'hello',
-                    error.message
-                );
+                local.utility2.assert(error.message === 'hello', error.message);
             });
             // test assertion failed with error object
             local.utility2.testTryCatch(function () {
@@ -175,10 +168,7 @@
                 // validate error occurred
                 local.utility2.assert(error instanceof Error, error);
                 // validate error-message
-                local.utility2.assert(
-                    error.message === '{"aa":1}',
-                    error.message
-                );
+                local.utility2.assert(error.message === '{"aa":1}', error.message);
             });
             onError();
         };
@@ -198,9 +188,7 @@
                 local.global['debug_print'.replace('_p', 'P')]('hello');
                 // validate message
                 local.utility2.assert(
-                    message === '\n\n\n' +
-                        'debug_print'.replace('_p', 'P') +
-                        '\nhello\n\n',
+                    message === '\n\n\n' + 'debug_print'.replace('_p', 'P') + '\nhello\n\n',
                     message
                 );
                 onError();
@@ -212,16 +200,7 @@
                 this function will test jsonCopy's default handling behavior
             */
             // test various data-type handling behavior
-            [
-                undefined,
-                null,
-                false,
-                true,
-                0,
-                1,
-                1.5,
-                'a'
-            ].forEach(function (data) {
+            [undefined, null, false, true, 0, 1, 1.5, 'a'].forEach(function (data) {
                 local.utility2.assert(
                     local.utility2.jsonCopy(data) === data,
                     [local.utility2.jsonCopy(data), data]
@@ -239,12 +218,8 @@
             // test various data-type handling behavior
             [undefined, null, false, true, 0, 1, 1.5, 'a', {}, []].forEach(function (data) {
                 local.utility2.assert(
-                    local.utility2.jsonStringifyOrdered(data) ===
-                        JSON.stringify(data),
-                    [
-                            local.utility2.jsonStringifyOrdered(data),
-                            JSON.stringify(data)
-                        ]
+                    local.utility2.jsonStringifyOrdered(data) === JSON.stringify(data),
+                    [local.utility2.jsonStringifyOrdered(data), JSON.stringify(data)]
                 );
             });
             // test data-ordering handling behavior
@@ -278,8 +253,7 @@
             );
             // validate options
             local.utility2.assert(
-                local.utility2.jsonStringifyOrdered(options) ===
-                    '{"aa":1,"bb":{},"cc":[]}',
+                local.utility2.jsonStringifyOrdered(options) === '{"aa":1,"bb":{},"cc":[]}',
                 options
             );
             // test recursive handling behavior
@@ -290,8 +264,8 @@
             );
             // validate options
             local.utility2.assert(
-                local.utility2
-                    .jsonStringifyOrdered(options) === '{"aa":1,"bb":{"cc":2},"cc":[]}',
+                local.utility2.jsonStringifyOrdered(options) ===
+                    '{"aa":1,"bb":{"cc":2},"cc":[]}',
                 options
             );
             onError();
@@ -322,8 +296,7 @@
             // validate options
             data = local.utility2.jsonStringifyOrdered(options);
             local.utility2.assert(data ===
-                '{"aa":2,"bb":{"cc":2,"dd":3},"dd":[4,5],' +
-                '"ee":{"ff":{"gg":6}}}', data);
+                '{"aa":2,"bb":{"cc":2,"dd":3},"dd":[4,5],' + '"ee":{"ff":{"gg":6}}}', data);
             // test override envDict with empty-string handling behavior
             options = local.utility2.objectSetOverride(
                 local.utility2.envDict,
@@ -332,10 +305,7 @@
                 null
             );
             // validate options
-            local.utility2.assert(
-                options.emptyString === '',
-                options.emptyString
-            );
+            local.utility2.assert(options.emptyString === '', options.emptyString);
             onError();
         };
 
@@ -363,16 +333,13 @@
             }, onError);
         };
 
-        local.testCase_onParallel_default = function (onError) {
+        local.testCase_onTaskEnd_default = function (onError) {
             /*
-                this function will test onParallel's default handling behavior
+                this function will test onTaskEnd's default handling behavior
             */
-            var onParallel, onParallelError;
+            var onTaskEnd, onTaskEndError;
             // test onDebug handling behavior
-            onParallel = local.utility2.onParallel(onError, function (
-                error,
-                self
-            ) {
+            onTaskEnd = local.utility2.onTaskEnd(onError, function (error, self) {
                 local.utility2.testTryCatch(function () {
                     // validate no error occurred
                     local.utility2.assert(!error, error);
@@ -380,25 +347,25 @@
                     local.utility2.assert(self.counter >= 0, self);
                 }, onError);
             });
-            onParallel.counter += 1;
-            onParallel.counter += 1;
+            onTaskEnd.counter += 1;
+            onTaskEnd.counter += 1;
             setTimeout(function () {
-                onParallelError = local.utility2.onParallel(function (error) {
+                onTaskEndError = local.utility2.onTaskEnd(function (error) {
                     local.utility2.testTryCatch(function () {
                         // validate error occurred
                         local.utility2.assert(error instanceof Error, error);
-                        onParallel();
-                    }, onParallel);
+                        onTaskEnd();
+                    }, onTaskEnd);
                 });
-                onParallelError.counter += 1;
+                onTaskEndError.counter += 1;
                 // test error handling behavior
-                onParallelError.counter += 1;
-                onParallelError(local.utility2.errorDefault);
+                onTaskEndError.counter += 1;
+                onTaskEndError(local.utility2.errorDefault);
                 // test ignore-after-error handling behavior
-                onParallelError();
+                onTaskEndError();
             });
             // test default handling behavior
-            onParallel();
+            onTaskEnd();
         };
 
         local.testCase_onTimeout_timeout = function (onError) {
@@ -416,10 +383,7 @@
                     // validate timeElapsed passed is greater than timeout
                     // bug - ie might timeout slightly earlier,
                     // so increase timeElapsed by a small amount
-                    local.utility2.assert(
-                        timeElapsed + 100 >= 1000,
-                        timeElapsed
-                    );
+                    local.utility2.assert(timeElapsed + 100 >= 1000, timeElapsed);
                     onError();
                 }, onError);
             // coverage-hack
@@ -482,9 +446,7 @@
             // test failure from multiple-callback handling behavior
             onError();
             // test failure from ajax handling behavior
-            local.utility2.ajax({
-                url: '/test/undefined?modeErrorIgnore=1'
-            }, onError);
+            local.utility2.ajax({ url: '/test/undefined?modeErrorIgnore=1' }, onError);
             // test failure from thrown error handling behavior
             throw local.utility2.errorDefault;
         };
@@ -501,9 +463,8 @@
             // test modeTest !== 'phantom' handling behavior
             if (local.utility2.modeTest === 'phantom2') {
                 setTimeout(function () {
-                    throw new Error('\nphantom\n' + JSON.stringify({
-                        global_test_results: window.global_test_results
-                    }));
+                    throw new Error('\nphantom\n' +
+                        JSON.stringify({ global_test_results: window.global_test_results }));
                 }, 1000);
             }
         };
@@ -574,22 +535,22 @@
                 this function will test onFileModifiedRestart's
                 watchFile handling behavior
             */
-            var file, onParallel;
+            var file, onTaskEnd;
             file = __dirname + '/package.json';
-            onParallel = local.utility2.onParallel(onError);
-            onParallel.counter += 1;
+            onTaskEnd = local.utility2.onTaskEnd(onError);
+            onTaskEnd.counter += 1;
             local.fs.stat(file, function (error, stat) {
                 // test default watchFile handling behavior
-                onParallel.counter += 1;
-                local.fs.utimes(file, stat.atime, new Date(), onParallel);
+                onTaskEnd.counter += 1;
+                local.fs.utimes(file, stat.atime, new Date(), onTaskEnd);
                 // test nop watchFile handling behavior
-                onParallel.counter += 1;
+                onTaskEnd.counter += 1;
                 setTimeout(function () {
-                    local.fs.utimes(file, stat.atime, stat.mtime, onParallel);
+                    local.fs.utimes(file, stat.atime, stat.mtime, onTaskEnd);
                 // coverage-hack
                 // use 1500 ms to cover setInterval watchFile in node
                 }, 1500);
-                onParallel(error);
+                onTaskEnd(error);
             });
         };
 
@@ -597,9 +558,9 @@
             /*
                 this function will test phantomTest's default handling behavior
             */
-            var onParallel, options;
-            onParallel = local.utility2.onParallel(onError);
-            onParallel.counter += 1;
+            var onTaskEnd, options;
+            onTaskEnd = local.utility2.onTaskEnd(onError);
+            onTaskEnd.counter += 1;
             [{
                 // test default handling behavior
                 url: 'http://localhost:' +
@@ -630,25 +591,22 @@
                     // test testRun's failure handling behavior
                     'modeTestCase=testCase_testRun_failure'
             }].forEach(function (options) {
-                onParallel.counter += 1;
+                onTaskEnd.counter += 1;
                 local.utility2.phantomTest(options, function (error) {
                     local.utility2.testTryCatch(function () {
                         // validate error occurred
                         if (options.modeError) {
-                            local.utility2.assert(
-                                error instanceof Error,
-                                error
-                            );
+                            local.utility2.assert(error instanceof Error, error);
                         // validate no error occurred
                         } else {
                             local.utility2.assert(!error, error);
                         }
-                        onParallel();
-                    }, onParallel);
+                        onTaskEnd();
+                    }, onTaskEnd);
                 });
             });
             // test screenCapture handling behavior
-            onParallel.counter += 1;
+            onTaskEnd.counter += 1;
             options = {
                 modeErrorIgnore: true,
                 timeoutScreenCapture: 1,
@@ -663,19 +621,17 @@
                     // validate screen-capture file
                     local.utility2.assert(
                         options.phantomjs.fileScreenCapture &&
-                            local.fs.existsSync(
-                                options.phantomjs.fileScreenCapture
-                            ),
+                            local.fs.existsSync(options.phantomjs.fileScreenCapture),
                         options.phantomjs.fileScreenCapture
                     );
                     // remove screen-capture file,
                     // so it will not interfere with re-test
                     local.fs.unlinkSync(options.phantomjs.fileScreenCapture);
-                    onParallel();
-                }, onParallel);
+                    onTaskEnd();
+                }, onTaskEnd);
             });
             // test misc handling behavior
-            onParallel.counter += 1;
+            onTaskEnd.counter += 1;
             local.utility2.testMock([
                 [local.utility2, {
                     envDict: {
@@ -697,8 +653,8 @@
                         local.utility2.envDict.npm_config_server_port
                 });
                 onError();
-            }, onParallel);
-            onParallel();
+            }, onTaskEnd);
+            onTaskEnd();
         };
 
         local.testCase_replStart_default = function (onError) {
@@ -760,11 +716,9 @@
                     taskPoolCreateOrAddCallback: local.utility2.nop
                 }],
                 [local.utility2.local, {
-                    http: {
-                        createServer: function () {
-                            return { listen: local.utility2.nop };
-                        }
-                    }
+                    http: { createServer: function () {
+                        return { listen: local.utility2.nop };
+                    } }
                 }]
             ], function (onError) {
                 local.utility2.testRunServer({ serverMiddlewareList: [] });
@@ -778,31 +732,23 @@
         };
 
         // init assets
-        local['/'] =
-            local.utility2['/test/test.html'];
-        local['/assets/istanbul-lite.js'] =
-            local.istanbul_lite['/assets/istanbul-lite.js'];
-        local['/assets/utility2.css'] =
-            local.utility2['/assets/utility2.css'];
-        local['/assets/utility2.js'] =
-            local.istanbul_lite.instrumentInPackage(
-                local.utility2['/assets/utility2.js'],
-                __dirname + '/index.js',
-                'utility2'
-            );
-        local['/test/hello'] =
-            'hello';
-        local['/test/script-error.html'] =
-            '<script>syntax error</script>';
-        local['/test/script-standalone.html'] =
-            '<script src="/assets/utility2.js">\n' +
-                '</script><script src="/test/test.js"></script>';
-        local['/test/test.js'] =
-            local.istanbul_lite.instrumentInPackage(
-                local.fs.readFileSync(__filename, 'utf8'),
-                __filename,
-                'utility2'
-            );
+        local['/'] = local.utility2['/test/test.html'];
+        local['/assets/istanbul-lite.js'] = local.istanbul_lite['/assets/istanbul-lite.js'];
+        local['/assets/utility2.css'] = local.utility2['/assets/utility2.css'];
+        local['/assets/utility2.js'] = local.istanbul_lite.instrumentInPackage(
+            local.utility2['/assets/utility2.js'],
+            __dirname + '/index.js',
+            'utility2'
+        );
+        local['/test/hello'] = 'hello';
+        local['/test/script-error.html'] = '<script>syntax error</script>';
+        local['/test/script-standalone.html'] = '<script src="/assets/utility2.js">\n' +
+            '</script><script src="/test/test.js"></script>';
+        local['/test/test.js'] = local.istanbul_lite.instrumentInPackage(
+            local.fs.readFileSync(__filename, 'utf8'),
+            __filename,
+            'utility2'
+        );
         // init serverMiddlewareList
         local.serverMiddlewareList = [
             function (request, response, nextMiddleware) {
@@ -835,12 +781,7 @@
                 case '/test/server-error':
                     // test multiple serverRespondWriteHead callback
                     // handling behavior
-                    local.utility2.serverRespondWriteHead(
-                        request,
-                        response,
-                        null,
-                        {}
-                    );
+                    local.utility2.serverRespondWriteHead(request, response, null, {});
                     nextMiddleware(local.utility2.errorDefault);
                     // test multiple-callback error handling behavior
                     nextMiddleware(local.utility2.errorDefault);
@@ -875,10 +816,7 @@
             case '.js':
             case '.json':
                 // jslint the file
-                local.jslint_lite.jslintAndPrint(
-                    local.fs.readFileSync(file, 'utf8'),
-                    file
-                );
+                local.jslint_lite.jslintAndPrint(local.fs.readFileSync(file, 'utf8'), file);
                 break;
             }
             // if the file is modified, then restart the process
