@@ -275,7 +275,7 @@ shIstanbulCover() {
     # this function will run the command $@ with istanbul coverage
     if [ "$npm_config_mode_no_coverage" ]
     then
-        node "$1" "$2" "$3" "$4" "$5" "$6" "$7" "$8" || return $?
+        node $@ || return $?
     else
         # init $npm_config_file_istanbul
         if [ ! "$npm_config_file_istanbul" ]
@@ -285,7 +285,7 @@ shIstanbulCover() {
                 return $?
         fi
         npm_config_dir_coverage="$npm_config_dir_build/coverage.html" \
-            $npm_config_file_istanbul cover "$1" "$2" "$3" "$4" "$5" "$6" "$7" "$8" || return $?
+            $npm_config_file_istanbul cover $@ || return $?
     fi
 }
 
@@ -293,9 +293,9 @@ shIstanbulTest() {
     # this function will run the command $@ with istanbul coverage
     if [ ! "$npm_config_mode_coverage" ]
     then
-        node "$1" "$2" "$3" "$4" "$5" "$6" "$7" "$8" || return $?
+        node $@ || return $?
     else
-        shIstanbulCover "$1" "$2" "$3" "$4" "$5" "$6" "$7" "$8" || return $?
+        shIstanbulCover $@ || return $?
     fi
 }
 
@@ -318,13 +318,13 @@ shNpmTest() {
     # if coverage-mode is disabled, then run npm-test without coverage
     if [ "$npm_config_mode_no_coverage" ]
     then
-        node "$1" "$2" "$3" "$4" "$5" "$6" "$7" "$8"
+        node $@
         return $?
     fi
     # cleanup old coverage
     rm -f $npm_config_dir_build/coverage.html/coverage.* || return $?
     # run npm-test with coverage
-    shIstanbulCover "$1" "$2" "$3" "$4" "$5" "$6" "$7" "$8"
+    shIstanbulCover $@
     # save $EXIT_CODE and restore $CWD
     shExitCodeSave $? || return $?
     # create coverage badge
@@ -356,7 +356,7 @@ shNpmTest() {
         );" || return $?
     if [ "$EXIT_CODE" != 0 ]
     then
-        node "$1" "$2" "$3" "$4" "$5" "$6" "$7" "$8"
+        node $@
     fi
     return $EXIT_CODE
 }
@@ -536,7 +536,7 @@ shRun() {
         do
             printf "(re)starting $@" || return $?
             printf "\n" || return $?
-            "$1" "$2" "$3" "$4" "$5" "$6" "$7" "$8"
+            $@
             # save $EXIT_CODE
             EXIT_CODE=$? || return $?
             printf "process exited with code $EXIT_CODE\n" || return $?
@@ -556,7 +556,7 @@ shRun() {
         done
     # eval argv
     else
-        "$1" "$2" "$3" "$4" "$5" "$6" "$7" "$8"
+        $@
     fi
     # save $EXIT_CODE and restore $CWD
     shExitCodeSave $? || return $?
@@ -628,7 +628,7 @@ shRunScreenCapture() {
     # init $npm_config_dir_build
     mkdir -p $npm_config_dir_build/coverage.html || return $?
     export MODE_BUILD_SCREEN_CAPTURE=screen-capture.${MODE_BUILD-undefined}.png || return $?
-    shRun "$1" "$2" "$3" "$4" "$5" "$6" "$7" "$8" 2>&1 | \
+    shRun $@ 2>&1 | \
         tee $npm_config_dir_tmp/screen-capture.txt || return $?
     # save $EXIT_CODE and restore $CWD
     shExitCodeSave $(cat $npm_config_file_tmp) || return $?
@@ -788,24 +788,24 @@ shMain() {
     shift
     case "$COMMAND" in
     shRun)
-        shInit && "$COMMAND" "$1" "$2" "$3" "$4" "$5" "$6" "$7" "$8" || return $?
+        shInit && "$COMMAND" $@ || return $?
         ;;
     shRunNode)
-        "$COMMAND" "$1" "$2" "$3" "$4" "$5" "$6" "$7" "$8" || return $?
+        "$COMMAND" $@ || return $?
         ;;
     shRunNodeWithFileData)
-        "$COMMAND" "$1" "$2" "$3" "$4" "$5" "$6" "$7" "$8" || return $?
+        "$COMMAND" $@ || return $?
         ;;
     shRunNodeWithStdinData)
-        "$COMMAND" "$1" "$2" "$3" "$4" "$5" "$6" "$7" "$8" || return $?
+        "$COMMAND" $@ || return $?
         ;;
     shRunScreenCapture)
-        shInit && "$COMMAND" "$1" "$2" "$3" "$4" "$5" "$6" "$7" "$8" || return $?
+        shInit && "$COMMAND" $@ || return $?
         ;;
     test)
-        echo "$1" "$2" "$3" "$4" "$5" "$6" "$7" "$8"
-        shInit && shNpmTest "$1" "$2" "$3" "$4" "$5" "$6" "$7" "$8" || return $?
+        echo $@
+        shInit && shNpmTest $@ || return $?
         ;;
     esac
 }
-shMain "$1" "$2" "$3" "$4" "$5" "$6" "$7" "$8"
+shMain $@

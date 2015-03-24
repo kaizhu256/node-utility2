@@ -906,17 +906,14 @@
                     );
                     // create test-report.html
                     local.fs.writeFileSync(
-                        local.utility2.envDict.npm_config_dir_build +
-                            '/test-report.html',
+                        local.utility2.envDict.npm_config_dir_build + '/test-report.html',
                         testReportHtml
                     );
                     console.log('created test-report file://' +
-                        local.utility2.envDict.npm_config_dir_build +
-                            '/test-report.html');
+                        local.utility2.envDict.npm_config_dir_build + '/test-report.html');
                     // create test-report.json
                     local.fs.writeFileSync(
-                        local.utility2.envDict.npm_config_dir_build +
-                            '/test-report.json',
+                        local.utility2.envDict.npm_config_dir_build + '/test-report.json',
                         JSON.stringify(local.utility2.testReport)
                     );
                     // if any test failed, then exit with non-zero exit-code
