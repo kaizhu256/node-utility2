@@ -341,11 +341,11 @@ instruction
     "author": "kai zhu <kaizhu256@gmail.com>",
     "bin": { "utility2" : "index.sh" },
     "dependencies": {
-        "istanbul-lite": "2015.3.24-10",
-        "jslint-lite": "2015.3.24-10"
+        "istanbul-lite": "2015.3.24-11",
+        "jslint-lite": "2015.3.24-11"
     },
     "devDependencies": {
-        "phantomjs-lite": "^2015.3.20-10"
+        "phantomjs-lite": "^2015.3.24-11"
     },
     "description": "run dynamic browser tests with coverage \
 (via istanbul-lite and phantomjs-lite)",
@@ -376,7 +376,7 @@ instruction
 npm_config_mode_auto_restart=1 npm_config_mode_auto_restart_child=1 \
 ./index.sh test test.js"
     },
-    "version": "2015.3.24-10"
+    "version": "2015.3.24-11"
 }
 ```
 

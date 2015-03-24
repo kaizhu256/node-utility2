@@ -277,7 +277,7 @@
             /*
                 this function will return a function that will
                 1. runs async tasks in parallel,
-                2. if counter === 0 or error occured, then call onError
+                2. if counter === 0 or error occurs, then call onError
             */
             var self;
             onDebug = onDebug || local.utility2.nop;
@@ -805,8 +805,7 @@
             }
             onTaskEnd = local.utility2.onTaskEnd(function () {
                 /*
-                    this function will create the test-report
-                    after all tests have finished
+                    this function will create the test-report after all tests have finished
                 */
                 var separator, testReport, testReportHtml;
                 // restore exit
