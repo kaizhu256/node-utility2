@@ -1312,6 +1312,97 @@
             onNext();
         };
 
+        local.utility2.middlewareError = function (error, request, response) {
+            // if error occurred,
+            // then respond with '500 Internal Server Error',
+            // else respond with '404 Not Found'
+            local.utility2.serverRespondDefault(request, response, error
+                ? 500
+                : 404, error);
+        };
+
+        local.utility2.middlewareGroupCreate = function (middlewareList) {
+            /*
+               this function will return a middleware
+               that will sequentially run the sub-middlewares in middlewareList
+            */
+            var self;
+            self = function (request, response, nextMiddleware) {
+                /*
+                    this function is the main middleware
+                    that will sequentially run the sub-middlewares in middlewareList
+                */
+                var modeNext, onNext;
+                modeNext = -1;
+                onNext = function (error) {
+                    modeNext = error instanceof Error
+                        ? NaN
+                        : modeNext + 1;
+                    // recursively run each sub-middleware in middlewareList
+                    if (modeNext < self.middlewareList.length) {
+                        self.middlewareList[modeNext](request, response, onNext);
+                        return;
+                    }
+                    // default to nextMiddleware
+                    nextMiddleware(error);
+                };
+                onNext();
+            };
+            self.middlewareList = middlewareList;
+            return self;
+        };
+
+        local.utility2.middlewareInit = function (request, response, nextMiddleware) {
+            var contentTypeDict;
+            // debug server request
+            local._debugServerRequest = request;
+            // debug server response
+            local._debugServerResponse = response;
+            // init timerTimeout
+            request.onTimeout = request.onTimeout || function () {
+                local.utility2.serverRespondDefault(request, response, 500);
+            };
+            request.timerTimeout = local.utility2.onTimeoutRequestResponseDestroy(
+                function (error) {
+                    local.utility2.onErrorDefault(error);
+                    request.onTimeout(error);
+                },
+                local.utility2.timeoutDefault,
+                'server request-handler',
+                request,
+                response
+            );
+            // cleanup timerTimeout
+            response.on('finish', function () {
+                clearTimeout(request.timerTimeout);
+            });
+            // check if _testSecret is valid
+            request._testSecretValid = (/\b_testSecret=(\w+)\b/).exec(request.url);
+            request._testSecretValid = request._testSecretValid &&
+                request._testSecretValid[1] === local.utility2._testSecret;
+            // init request.urlParsed
+            request.urlParsed = local.url.parse(request.url, true);
+            // init request.urlParsed.pathnameNormalized
+            request.urlParsed.pathnameNormalized = local.path.resolve(
+                request.urlParsed.pathname
+            );
+            // init Content-Type header
+            contentTypeDict = {
+                '.css': 'text/css; charset=UTF-8',
+                '.html': 'text/html; charset=UTF-8',
+                '.js': 'application/javascript; charset=UTF-8',
+                '.json': 'application/json; charset=UTF-8',
+                '.txt': 'text/txt; charset=UTF-8'
+            };
+            local.utility2.serverRespondWriteHead(request, response, null, {
+                'Content-Type': contentTypeDict[
+                    local.path.extname(request.urlParsed.pathnameNormalized)
+                ]
+            });
+            // run nextMiddleware
+            nextMiddleware();
+        };
+
         local.utility2.onFileModifiedRestart = function (file) {
             /*
                 this function will watch the file,
@@ -1668,7 +1759,7 @@
         local.utility2.testRunServer = function (options) {
             /*
                 this function will
-                1. create server from options.serverMiddlewareList
+                1. create server from options.middleware
                 2. start server on port $npm_config_server_port
                 3. if $npm_config_mode_npm_test is defined, then run tests
             */
@@ -1684,79 +1775,11 @@
                 local.utility2._testSecret;
             // re-init _testSecret every 60 seconds
             setInterval(testSecretCreate, 60000).unref();
-            // 1. create server from options.serverMiddlewareList
+            // 1. create server from options.middleware
             server = local.http.createServer(function (request, response) {
-                var contentTypeDict, modeNext, onNext;
-                modeNext = -2;
-                onNext = function (error) {
-                    modeNext = error instanceof Error
-                        ? NaN
-                        : modeNext + 1;
-                    if (modeNext === -1) {
-                        // debug server request
-                        local._debugServerRequest = request;
-                        // debug server response
-                        local._debugServerResponse = response;
-                        // init timerTimeout
-                        request.onTimeout = request.onTimeout || function () {
-                            local.utility2.serverRespondDefault(
-                                request,
-                                response,
-                                500
-                            );
-                        };
-                        request.timerTimeout = local.utility2.onTimeoutRequestResponseDestroy(
-                            function (error) {
-                                local.utility2.onErrorDefault(error);
-                                request.onTimeout(error);
-                            },
-                            local.utility2.timeoutDefault,
-                            'server request-handler',
-                            request,
-                            response
-                        );
-                        // cleanup timerTimeout
-                        response.on('finish', function () {
-                            clearTimeout(request.timerTimeout);
-                        });
-                        // check if _testSecret is valid
-                        request._testSecretValid = (/\b_testSecret=(\w+)\b/).exec(request.url);
-                        request._testSecretValid = request._testSecretValid &&
-                            request._testSecretValid[1] === local.utility2._testSecret;
-                        // init request.urlParsed
-                        request.urlParsed = local.url.parse(request.url, true);
-                        // init request.urlParsed.pathnameNormalized
-                        request.urlParsed.pathnameNormalized = local.path.resolve(
-                            request.urlParsed.pathname
-                        );
-                        // init Content-Type header
-                        contentTypeDict = {
-                            '.css': 'text/css; charset=UTF-8',
-                            '.html': 'text/html; charset=UTF-8',
-                            '.js': 'application/javascript; charset=UTF-8',
-                            '.json': 'application/json; charset=UTF-8',
-                            '.txt': 'text/txt; charset=UTF-8'
-                        };
-                        local.utility2.serverRespondWriteHead(request, response, null, {
-                            'Content-Type': contentTypeDict[
-                                local.path.extname(request.urlParsed.pathnameNormalized)
-                            ]
-                        });
-                        onNext();
-                        return;
-                    }
-                    if (modeNext < options.serverMiddlewareList.length) {
-                        options.serverMiddlewareList[modeNext](request, response, onNext);
-                        return;
-                    }
-                    // if error occurred,
-                    // then respond with '500 Internal Server Error',
-                    // else respond with '404 Not Found'
-                    local.utility2.serverRespondDefault(request, response, error
-                        ? 500
-                        : 404, error);
-                };
-                onNext();
+                options.middleware(request, response, function (error) {
+                    local.utility2.middlewareError(error, request, response);
+                });
             });
             // if $npm_config_server_port is undefined,
             // then assign it a random integer

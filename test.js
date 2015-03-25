@@ -721,7 +721,11 @@
                     } }
                 }]
             ], function (onError) {
-                local.utility2.testRunServer({ serverMiddlewareList: [] });
+                local.utility2.testRunServer({
+                    middleware: local.utility2.middlewareGroupCreate([
+                        local.utility2.middlewareInit
+                    ])
+                });
                 // validate $npm_config_server_port
                 local.utility2.assert(
                     Number(local.utility2.envDict.npm_config_server_port),
@@ -749,8 +753,9 @@
             __filename,
             'utility2'
         );
-        // init serverMiddlewareList
-        local.serverMiddlewareList = [
+        // init middleware
+        local.middleware = local.utility2.middlewareGroupCreate([
+            local.utility2.middlewareInit,
             function (request, response, nextMiddleware) {
                 /*
                     this function will run the the test-middleware
@@ -801,12 +806,12 @@
                         onError();
                     }, local.utility2.nop);
                     break;
-                // default to next middleware
+                // default to nextMiddleware
                 default:
                     nextMiddleware();
                 }
             }
-        ];
+        ]);
         // run server-test
         local.utility2.testRunServer(local);
         // init dir

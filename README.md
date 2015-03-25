@@ -286,9 +286,10 @@ instruction
                 local.fs.readFileSync(__filename, 'utf8'),
                 __filename
             );
-        // init local.serverMiddlewareList
-        local.serverMiddlewareList = [
-            function (request, response, next) {
+        // init middleware
+        local.middleware = local.utility2.middlewareGroupCreate([
+            local.utility2.middlewareInit,
+            function (request, response, nextMiddleware) {
                 /*
                 this function is the main test-middleware
                 */
@@ -302,12 +303,12 @@ instruction
                 case '/test/test.js':
                     response.end(local[request.urlParsed.pathnameNormalized]);
                     break;
-                // default to next middleware
+                // default to nextMiddleware
                 default:
-                    next();
+                    nextMiddleware();
                 }
             }
-        ];
+        ]);
         // start server and run tests
         local.utility2.testRunServer(local, process.exit);
     }
@@ -412,18 +413,18 @@ shBuild() {
     # run npm-test on published package
     shRun shNpmTestPublished || return $?
 
-    # test example js script
-    MODE_BUILD=testExampleJs \
-        shRunScreenCapture shReadmeTestJs example.js || return $?
-    # screen-capture example.js coverage
-    MODE_BUILD=testExampleJs shRun shPhantomScreenCapture \
-        /tmp/app/tmp/build/coverage.html/app/example.js.html || return $?
-    # copy phantomjs screen-capture to $npm_config_dir_build
-    cp /tmp/app/tmp/build/screen-capture.*.png $npm_config_dir_build || \
-        return $?
-    # screen-capture example.js test-report
-    MODE_BUILD=testExampleSh shRun shPhantomScreenCapture \
-        /tmp/app/tmp/build/test-report.html || return $?
+    #!! # test example js script
+    #!! MODE_BUILD=testExampleJs \
+        #!! shRunScreenCapture shReadmeTestJs example.js || return $?
+    #!! # screen-capture example.js coverage
+    #!! MODE_BUILD=testExampleJs shRun shPhantomScreenCapture \
+        #!! /tmp/app/tmp/build/coverage.html/app/example.js.html || return $?
+    #!! # copy phantomjs screen-capture to $npm_config_dir_build
+    #!! cp /tmp/app/tmp/build/screen-capture.*.png $npm_config_dir_build || \
+        #!! return $?
+    #!! # screen-capture example.js test-report
+    #!! MODE_BUILD=testExampleSh shRun shPhantomScreenCapture \
+        #!! /tmp/app/tmp/build/test-report.html || return $?
 
     # test example shell script
     MODE_BUILD=testExampleSh \
