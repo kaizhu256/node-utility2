@@ -63,7 +63,7 @@ run browser tests with coverage (via istanbul-lite and phantomjs-lite)
 instruction
     1. save this js script as example.js
     2. run the shell command:
-        $ npm install phantomjs-lite utility2 && \
+        $ npm install phantomjs-lite utility2@beta && \
             node_modules/.bin/utility2 test example.js
     3. view test-report in ./tmp/build/test-report.html
     4. view coverage in ./tmp/build/coverage.html/index.html
@@ -377,7 +377,7 @@ instruction
 npm_config_mode_auto_restart=1 npm_config_mode_auto_restart_child=1 \
 ./index.sh test test.js"
     },
-    "version": "2015.3.24-11"
+    "version": "2015.3.25-10"
 }
 ```
 
@@ -413,18 +413,18 @@ shBuild() {
     # run npm-test on published package
     shRun shNpmTestPublished || return $?
 
-    #!! # test example js script
-    #!! MODE_BUILD=testExampleJs \
-        #!! shRunScreenCapture shReadmeTestJs example.js || return $?
-    #!! # screen-capture example.js coverage
-    #!! MODE_BUILD=testExampleJs shRun shPhantomScreenCapture \
-        #!! /tmp/app/tmp/build/coverage.html/app/example.js.html || return $?
-    #!! # copy phantomjs screen-capture to $npm_config_dir_build
-    #!! cp /tmp/app/tmp/build/screen-capture.*.png $npm_config_dir_build || \
-        #!! return $?
-    #!! # screen-capture example.js test-report
-    #!! MODE_BUILD=testExampleSh shRun shPhantomScreenCapture \
-        #!! /tmp/app/tmp/build/test-report.html || return $?
+    # test example js script
+    MODE_BUILD=testExampleJs \
+        shRunScreenCapture shReadmeTestJs example.js || return $?
+    # screen-capture example.js coverage
+    MODE_BUILD=testExampleJs shRun shPhantomScreenCapture \
+        /tmp/app/tmp/build/coverage.html/app/example.js.html || return $?
+    # copy phantomjs screen-capture to $npm_config_dir_build
+    cp /tmp/app/tmp/build/screen-capture.*.png $npm_config_dir_build || \
+        return $?
+    # screen-capture example.js test-report
+    MODE_BUILD=testExampleSh shRun shPhantomScreenCapture \
+        /tmp/app/tmp/build/test-report.html || return $?
 
     # test example shell script
     MODE_BUILD=testExampleSh \
