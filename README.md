@@ -63,7 +63,7 @@ run browser tests with coverage (via istanbul-lite and phantomjs-lite)
 instruction
     1. save this js script as example.js
     2. run the shell command:
-        $ npm install phantomjs-lite utility2@beta && \
+        $ npm install phantomjs-lite utility2@2015.3.25-10 && \
             node_modules/.bin/utility2 test example.js
     3. view test-report in ./tmp/build/test-report.html
     4. view coverage in ./tmp/build/coverage.html/index.html

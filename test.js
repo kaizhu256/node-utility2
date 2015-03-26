@@ -812,6 +812,8 @@
                 }
             }
         ]);
+        // init middleware error-handler
+        local.onMiddlewareError = local.utility2.onMiddlewareError;
         // run server-test
         local.utility2.testRunServer(local);
         // init dir

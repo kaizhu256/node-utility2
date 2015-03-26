@@ -1312,15 +1312,6 @@
             onNext();
         };
 
-        local.utility2.middlewareError = function (error, request, response) {
-            // if error occurred,
-            // then respond with '500 Internal Server Error',
-            // else respond with '404 Not Found'
-            local.utility2.serverRespondDefault(request, response, error
-                ? 500
-                : 404, error);
-        };
-
         local.utility2.middlewareGroupCreate = function (middlewareList) {
             /*
                this function will return a middleware
@@ -1419,6 +1410,15 @@
                     }
                 });
             }
+        };
+
+        local.utility2.onMiddlewareError = function (error, request, response) {
+            // if error occurred,
+            // then respond with '500 Internal Server Error',
+            // else respond with '404 Not Found'
+            local.utility2.serverRespondDefault(request, response, error
+                ? 500
+                : 404, error);
         };
 
         local.utility2.phantomScreenCapture = function (options, onError) {
@@ -1778,7 +1778,7 @@
             // 1. create server from options.middleware
             server = local.http.createServer(function (request, response) {
                 options.middleware(request, response, function (error) {
-                    local.utility2.middlewareError(error, request, response);
+                    options.onMiddlewareError(error, request, response);
                 });
             });
             // if $npm_config_server_port is undefined,
