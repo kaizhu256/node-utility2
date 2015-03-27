@@ -211,36 +211,41 @@ instruction
 >{{envDict.npm_package_name}} [{{envDict.npm_package_version}}]</h1>\n' +
     '<h3>{{envDict.npm_package_description}}</h3>\n' +
     '<div>edit or paste script below to cover and test</div>\n' +
-'<textarea class="istanbulInputTextarea">\n' +
-'window.utility2.testRun({\n' +
+'<textarea class="istanbulInputTextarea jslintInputTextarea">\n' +
+'/*jslint browser: true*/\n' +
+'(function () {\n' +
+    '"use strict";\n' +
+    'window.utility2.testRun({\n' +
 '\n' +
-    'modeTest: true,\n' +
+        'modeTest: true,\n' +
 '\n' +
-    'testCase_ajax_get: function (onError) {\n' +
-        '/*\n' +
-        'this function will test ajax"s GET handling behavior\n' +
-        '*/\n' +
-        '// test main-page "/"\n' +
-        'utility2.ajax({ url: "/" }, function (error, data, xhr) {\n' +
-            'try {\n' +
-                '// validate no error occurred\n' +
-                'utility2.assert(!error, error);\n' +
-                '// validate main-page is non-empty\n' +
-                'if (xhr.status === 200) {\n' +
-                    'utility2.assert(data, data);\n' +
+        'testCase_ajax_get: function (onError) {\n' +
+            '/*\n' +
+            'this function will test ajax"s GET handling behavior\n' +
+            '*/\n' +
+            '// test main-page "/"\n' +
+            'window.utility2.ajax({ url: "/" }, function (error, data, xhr) {\n' +
+                'try {\n' +
+                    '// validate no error occurred\n' +
+                    'window.utility2.assert(!error, error);\n' +
+                    '// validate main-page is non-empty\n' +
+                    'if (xhr.status === 200) {\n' +
+                        'window.utility2.assert(data, data);\n' +
+                    '}\n' +
+                    'onError();\n' +
+                '} catch (errorCaught) {\n' +
+                    'onError(errorCaught);\n' +
                 '}\n' +
-                'onError();\n' +
-            '} catch (error) {\n' +
-                'onError(error);\n' +
-            '}\n' +
-        '});\n' +
-    '}\n' +
-'});\n' +
+            '});\n' +
+        '}\n' +
+    '});\n' +
+'}());\n' +
 '</textarea>\n' +
     '<pre class="jslintOutputPre"></pre>\n' +
     '<div class="testReportDiv"></div>\n' +
     '<div class="istanbulCoverageDiv"></div>\n' +
     '<script src="/assets/istanbul-lite.js"></script>\n' +
+    '<script src="/assets/jslint-lite.js"></script>\n' +
     '<script src="/assets/utility2.js"></script>\n' +
     '<script>\n' +
     'window.utility2 = window.utility2 || {};\n' +
@@ -251,9 +256,13 @@ instruction
     '};\n' +
     'document.querySelector(\n' +
         '".istanbulInputTextarea"\n' +
-    ').addEventListener("keyup", window.istanbul_lite.coverTextarea);\n' +
+    ').addEventListener("keyup", function () {\n' +
+        'window.istanbul_lite.coverTextarea();\n' +
+        'window.jslint_lite.jslintTextarea();\n' +
+    '});\n' +
     'if (!window.utility2.modeTest) {\n' +
         'window.istanbul_lite.coverTextarea();\n' +
+        'window.jslint_lite.jslintTextarea();\n' +
     '}\n' +
     '</script>\n' +
     '<script src="/test/test.js"></script>\n' +
@@ -385,7 +394,6 @@ npm_config_mode_auto_restart=1 npm_config_mode_auto_restart_child=1 \
 
 # todo
 - improve slimerjs auto-detection
-- jslint textarea
 - add testCase for validating _testSecret
 - add failed test example
 - create flamegraph from istanbul coverage

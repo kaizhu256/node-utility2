@@ -743,8 +743,11 @@
             var coverageReportCreate,
                 exit,
                 onTaskEnd,
+                separator,
                 testPlatform,
+                testReport,
                 testReportDiv,
+                testReportHtml,
                 timerInterval;
             options = options || {};
             local.utility2.modeTest =
@@ -754,9 +757,9 @@
                 return;
             }
             // init coverageReportCreate
-            coverageReportCreate = (
-                local.istanbul_lite && local.istanbul_lite.coverageReportCreate
-            ) || local.utility2.nop;
+            coverageReportCreate =
+                (local.istanbul_lite && local.istanbul_lite.coverageReportCreate) ||
+                local.utility2.nop;
             // mock exit
             exit = local.utility2.exit;
             local.utility2.exit = local.utility2.nop;
@@ -764,6 +767,15 @@
             local.utility2.modeTestCase =
                 local.utility2.modeTestCase ||
                 local.utility2.envDict.npm_config_mode_test_case;
+            // init testReport
+            testReport = local.utility2.testReport;
+            // reset testReport
+            local.utility2.objectSetOverride(testReport, {
+                testsFailed: 0,
+                testsPassed: 0,
+                testsPending: 0,
+                timeElapsed: 0
+            });
             // reset testPlatform.testCaseList
             local.utility2.testPlatform.testCaseList.length = 0;
             // add tests into testPlatform.testCaseList
@@ -773,27 +785,21 @@
                         (local.utility2.modeTestCase === key ||
                         (!local.utility2.modeTestCase &&
                                 key !== 'testCase_testRun_failure'))) {
-                    local.utility2.testPlatform.testCaseList.push({
-                        name: key,
-                        onTestCase: options[key]
-                    });
+                    local.utility2.testPlatform.testCaseList
+                        .push({ name: key, onTestCase: options[key] });
                 }
             });
             // visually update test-progress until it finishes
             if (local.modeJs === 'browser') {
                 // init testReportDiv element
-                testReportDiv =
-                    document.querySelector('.testReportDiv') ||
-                    { style: {} };
+                testReportDiv = document.querySelector('.testReportDiv') || { style: {} };
                 testReportDiv.style.display = 'block';
-                testReportDiv.innerHTML =
-                    local.utility2.testMerge(local.utility2.testReport, {});
+                testReportDiv.innerHTML = local.utility2.testMerge(testReport, {});
                 // update test-report status every 1000 ms until finished
                 timerInterval = setInterval(function () {
                     // update testReportDiv in browser
-                    testReportDiv.innerHTML =
-                        local.utility2.testMerge(local.utility2.testReport, {});
-                    if (local.utility2.testReport.testsPending === 0) {
+                    testReportDiv.innerHTML = local.utility2.testMerge(testReport, {});
+                    if (testReport.testsPending === 0) {
                         // cleanup timerInterval
                         clearInterval(timerInterval);
                     }
@@ -807,13 +813,10 @@
                 /*
                     this function will create the test-report after all tests have finished
                 */
-                var separator, testReport, testReportHtml;
                 // restore exit
                 local.utility2.exit = exit;
                 // init new-line separator
                 separator = new Array(56).join('-');
-                // init testReport
-                testReport = local.utility2.testReport;
                 // stop testPlatform timer
                 local._timeElapsedStop(testPlatform);
                 // create testReportHtml
@@ -842,15 +845,14 @@
 // https://docs.saucelabs.com/reference/rest-api/#js-unit-testing
                     local.global.global_test_results = {
                         coverage: local.global.__coverage__,
-                        failed: local.utility2.testReport.testsFailed,
-                        testReport: local.utility2.testReport
+                        failed: testReport.testsFailed,
+                        testReport: testReport
                     };
                     setTimeout(function () {
                         // update coverageReport
                         coverageReportCreate();
                         // call callback with number of tests failed
-                        local.utility2
-                            .onErrorExit(local.utility2.testReport.testsFailed);
+                        local.utility2.onErrorExit(testReport.testsFailed);
                         // throw global_test_results as an error,
                         // so it can be caught and passed to the phantom js-env
                         if (local.utility2.modeTest === 'phantom') {
@@ -896,11 +898,8 @@
                             // edit badge color
                             .replace(
                                 (/d00/g),
-                                // coverage-hack
-                                // cover both fail and pass cases
-                                '0d00'
-                                    .slice(!!testReport.testsFailed)
-                                    .slice(0, 3)
+                                // coverage-hack - cover both fail and pass cases
+                                '0d00'.slice(!!testReport.testsFailed).slice(0, 3)
                             )
                     );
                     // create test-report.html
@@ -913,25 +912,24 @@
                     // create test-report.json
                     local.fs.writeFileSync(
                         local.utility2.envDict.npm_config_dir_build + '/test-report.json',
-                        JSON.stringify(local.utility2.testReport)
+                        JSON.stringify(testReport)
                     );
                     // if any test failed, then exit with non-zero exit-code
                     setTimeout(function () {
                         // finalize testReport
                         local.utility2.testMerge(testReport, {});
                         console.log('\n' + local.utility2.envDict.MODE_BUILD +
-                            ' - ' + local.utility2.testReport.testsFailed +
+                            ' - ' + testReport.testsFailed +
                             ' failed tests\n');
                         // call callback with number of tests failed
-                        local.utility2
-                            .onErrorExit(local.utility2.testReport.testsFailed);
+                        local.utility2.onErrorExit(testReport.testsFailed);
                     }, 1000);
                     break;
                 }
             });
             onTaskEnd.counter += 1;
             // init testReport timer
-            local.utility2.testReport.timeElapsed = Date.now();
+            testReport.timeElapsed = Date.now();
             // init testPlatform
             testPlatform = local.utility2.testPlatform;
             // init testPlatform timer

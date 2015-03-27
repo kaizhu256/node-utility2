@@ -738,6 +738,7 @@
         // init assets
         local['/'] = local.utility2['/test/test.html'];
         local['/assets/istanbul-lite.js'] = local.istanbul_lite['/assets/istanbul-lite.js'];
+        local['/assets/jslint-lite.js'] = local.jslint_lite['/assets/jslint-lite.js'];
         local['/assets/utility2.css'] = local.utility2['/assets/utility2.css'];
         local['/assets/utility2.js'] = local.istanbul_lite.instrumentInPackage(
             local.utility2['/assets/utility2.js'],
@@ -764,6 +765,7 @@
                 // serve assets
                 case '/':
                 case '/assets/istanbul-lite.js':
+                case '/assets/jslint-lite.js':
                 case '/assets/utility2.css':
                 case '/assets/utility2.js':
                 case '/test/hello':
