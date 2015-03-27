@@ -70,7 +70,7 @@
                         // test string post handling behavior
                         : 'hello',
                     // test request header handling behavior
-                    headers: { 'X-Header-Hello': 'Hello' },
+                    headers: { 'X-Header-Test': 'Test' },
                     method: 'POST',
                     resultType: resultType,
                     url: '/test/echo'
@@ -78,13 +78,15 @@
                     local.utility2.testTryCatch(function () {
                         // validate no error occurred
                         local.utility2.assert(!error, error);
+                        // validate test header
+                        local.utility2.assert((/\r\nx-header-test: Test\r\n/).test(data), data);
                         // validate binary data
                         if (resultType === 'binary' && local.modeJs === 'node') {
                             local.utility2.assert(Buffer.isBuffer(data), data);
                             data = String(data);
                         }
                         // validate string data
-                        local.utility2.assert(data.indexOf('hello') >= 0, data);
+                        local.utility2.assert((/\r\nhello$/).test(data), data);
                         onTaskEnd();
                     }, onTaskEnd);
                 });
@@ -529,10 +531,9 @@
             onError();
         };
 
-        local.testCase_onFileModifiedRestart_default = function (onError) {
+        local.testCase_onFileModifiedRestart_watchFile = function (onError) {
             /*
-                this function will test onFileModifiedRestart's
-                watchFile handling behavior
+                this function will test onFileModifiedRestart's watchFile handling behavior
             */
             var file, onTaskEnd;
             file = __dirname + '/package.json';
@@ -652,21 +653,59 @@
             onTaskEnd();
         };
 
+        local.testCase_processSpawnWithTimeout_default = function (onError) {
+            /*
+                this function will test processSpawnWithTimeout's default handling behavior
+            */
+            var childProcess, onTaskEnd;
+            onTaskEnd = local.utility2.onTaskEnd(onError);
+            onTaskEnd.counter += 1;
+            // test default handling behavior
+            onTaskEnd.counter += 1;
+            local.utility2.processSpawnWithTimeout('ls')
+                .on('error', onTaskEnd)
+                .on('exit', function (exitCode, signal) {
+                    // validate exitCode
+                    local.utility2.assert(exitCode === 0, exitCode);
+                    // validate signal
+                    local.utility2.assert(signal === null, signal);
+                    onTaskEnd();
+                });
+            // test timeout handling behavior
+            onTaskEnd.counter += 1;
+            local.utility2.testMock([
+                [local.utility2, { timeoutDefault: 1000 }]
+            ], function (onError) {
+                childProcess = local.utility2.processSpawnWithTimeout('sleep', [5000]);
+                onError();
+            }, local.utility2.nop);
+            childProcess
+                .on('error', onTaskEnd)
+                .on('exit', function (exitCode, signal) {
+                    local.utility2.testTryCatch(function () {
+                        // validate exitCode
+                        local.utility2.assert(exitCode === null, exitCode);
+                        // validate signal
+                        local.utility2.assert(signal === 'SIGKILL', signal);
+                        onTaskEnd();
+                    }, onTaskEnd);
+                });
+            onTaskEnd();
+        };
+
         local.testCase_replStart_default = function (onError) {
             /*
                 this function will test replStart's default handling behavior
             */
             /*jslint evil: true*/
             local.utility2.testMock([
-                [local.utility2, {
-                    processSpawnWithTimeout: function () {
-                        return { on: function (event, callback) {
-                            // jslint-hack
-                            local.utility2.nop(event);
-                            callback();
-                        } };
-                    }
-                }]
+                [local.utility2, { processSpawnWithTimeout: function () {
+                    return { on: function (event, callback) {
+                        // jslint-hack
+                        local.utility2.nop(event);
+                        callback();
+                    } };
+                } }]
             ], function (onError) {
                 [
                     // test shell handling behavior
@@ -753,7 +792,7 @@
             local.utility2.middlewareInit,
             function (request, response, nextMiddleware) {
                 /*
-                    this function will run the the test-middleware
+                    this function will run the test-middleware
                 */
                 switch (request.urlParsed.pathnameNormalized) {
                 // serve assets

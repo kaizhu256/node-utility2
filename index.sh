@@ -708,7 +708,7 @@ shHerokuDeploy() {
 }
 
 shTmpAppCopy() {
-    # this function will copy the the bare git repo files to /tmp/app
+    # this function will copy the bare git repo files to /tmp/app
     # init /tmp/app
     rm -fr /tmp/app /tmp/node_modules && mkdir -p /tmp/app || return $?
     # tar / untar repo contents to /tmp/app

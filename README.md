@@ -300,7 +300,7 @@ instruction
             local.utility2.middlewareInit,
             function (request, response, nextMiddleware) {
                 /*
-                this function is the main test-middleware
+                this will run the test-middleware
                 */
                 switch (request.urlParsed.pathnameNormalized) {
                 // serve assets
@@ -393,6 +393,7 @@ npm_config_mode_auto_restart=1 npm_config_mode_auto_restart_child=1 \
 
 
 # todo
+- use taskGroup for browser event-handling
 - improve slimerjs auto-detection
 - add testCase for validating _testSecret
 - add failed test example

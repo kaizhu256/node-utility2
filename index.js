@@ -140,7 +140,7 @@
 
         local.utility2.listShuffle = function (list) {
             /*
-                this function inplace shuffles the list, via fisher-yates algorithm
+                this function will inplace shuffle the list, via fisher-yates algorithm
                 https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle
             */
             var ii, random, swap;
@@ -459,25 +459,7 @@
                 this function will mock the objects in mockList
                 while running the onTestCase
             */
-            var callCallback, onError2;
-            callCallback = function (callback) {
-                /*
-                    this function will call the callback
-                */
-                callback();
-                // return a mock timer object with the unref method
-                return { unref: local.utility2.nop };
-            };
-            // prepend mandatory mocks for async / unsafe functions
-            mockList = [
-                // suppress console.log
-                [console, { log: local.utility2.nop }],
-                // enforce synchronicity by mocking timers as callCallback
-                [local.global, {
-                    setInterval: callCallback,
-                    setTimeout: callCallback
-                }]
-            ].concat(mockList);
+            var onError2;
             onError2 = function (error) {
                 // restore mock[0] from mock[2]
                 mockList.reverse().forEach(function (mock) {
@@ -1299,7 +1281,7 @@
             var self;
             self = function (request, response, nextMiddleware) {
                 /*
-                    this function is the main middleware
+                    this function will create a middleware,
                     that will sequentially run the sub-middlewares in middlewareList
                 */
                 var modeNext, onNext;
@@ -1559,21 +1541,21 @@
                 this function will run like child_process.spawn,
                 but with auto-timeout after timeoutDefault milliseconds
             */
-            var childProcess, timerTimeout;
+            var childProcess;
             // spawn childProcess
             childProcess = local.child_process.spawn.apply(local.child_process, arguments)
-                // cleanup timerTimeout on exit
+                // kill timerTimeout on exit
                 .on('exit', function () {
                     try {
-                        process.kill(timerTimeout, 9);
+                        process.kill(childProcess.timerTimeout.pid, 9);
                     } catch (ignore) {
                     }
                 });
             // init timerTimeout
-            timerTimeout = local.child_process.spawn('/bin/sh', ['-c', 'sleep ' +
+            childProcess.timerTimeout = local.child_process.spawn('/bin/sh', ['-c', 'sleep ' +
                 // coerce to finite integer
                 ((0.001 * local.utility2.timeoutDefault) | 0) +
-                '; kill ' + childProcess.pid + ' 2>/dev/null'], { stdio: 'ignore' });
+                '; kill -9 ' + childProcess.pid + ' 2>/dev/null'], { stdio: 'ignore' });
             return childProcess;
         };
 
