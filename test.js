@@ -132,7 +132,7 @@
                 // validate error-message
                 local.utility2.assert(error.message === '', error.message);
             });
-            // test assertion failed with error object
+            // test assertion failed with error object,
             // with no error.message and no error.trace
             error = new Error();
             error.message = '';
@@ -386,8 +386,7 @@
                     local.utility2.assert(timeElapsed + 100 >= 1000, timeElapsed);
                     onError();
                 }, onError);
-            // coverage-hack
-            // use 1500 ms to cover setInterval test-report refresh in browser
+            // coverage-hack - use 1500 ms to cover setInterval test-report refresh in browser
             }, 1500, 'testCase_onTimeout_errorTimeout');
         };
 
@@ -547,8 +546,7 @@
                 onTaskEnd.counter += 1;
                 setTimeout(function () {
                     local.fs.utimes(file, stat.atime, stat.mtime, onTaskEnd);
-                // coverage-hack
-                // use 1500 ms to cover setInterval watchFile in node
+                // coverage-hack - use 1500 ms to cover setInterval watchFile in node
                 }, 1500);
                 onTaskEnd(error);
             });
@@ -624,8 +622,7 @@
                             local.fs.existsSync(options.phantomjs.fileScreenCapture),
                         options.phantomjs.fileScreenCapture
                     );
-                    // remove screen-capture file,
-                    // so it will not interfere with re-test
+                    // remove screen-capture file, so it will not interfere with re-test
                     local.fs.unlinkSync(options.phantomjs.fileScreenCapture);
                     onTaskEnd();
                 }, onTaskEnd);
@@ -701,8 +698,7 @@
             local.utility2.testMock([
                 [local.utility2, {
                     envDict: {
-                        // test $npm_package_name !== 'utility2'
-                        // handling behavior
+                        // test $npm_package_name !== 'utility2' handling behavior
                         npm_package_name: 'undefined',
                         // test exit-after-timeout handling behavior
                         npm_config_timeout_exit: '1',
@@ -784,8 +780,7 @@
                     break;
                 // test 500-internal-server-error handling behavior
                 case '/test/server-error':
-                    // test multiple serverRespondWriteHead callback
-                    // handling behavior
+                    // test multiple-callback serverRespondWriteHead handling behavior
                     local.utility2.serverRespondWriteHead(request, response, null, {});
                     nextMiddleware(local.utility2.errorDefault);
                     // test multiple-callback error handling behavior

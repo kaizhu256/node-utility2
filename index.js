@@ -145,6 +145,7 @@
             */
             var ii, random, swap;
             for (ii = list.length - 1; ii > 0; ii -= 1) {
+                // coerce to finite integer
                 random = (Math.random() * ii) | 0;
                 swap = list[ii];
                 list[ii] = list[random];
@@ -332,18 +333,13 @@
                 with a timeout error with full stack-trace
             */
             onError = local.utility2.onErrorWithStack(onError);
-            // validate timeout is an integer
-            // in the exclusive range 0 to Infinity
-            local.utility2.assert(
-                (timeout | 0) === timeout && 0 < timeout && timeout < Infinity,
-                'invalid timeout ' + timeout
-            );
             // create timeout timer
             return setTimeout(function () {
                 onError(new Error('onTimeout - timeout error - ' +
                     timeout + ' ms - ' +
                     message));
-            }, timeout);
+            // coerce to finite integer
+            }, timeout | 0);
         };
 
         local.utility2.onTimeoutRequestResponseDestroy = function (
@@ -393,14 +389,11 @@
                     break;
                 }
                 match = match[0].slice(3, -2);
-                // if value is an array,
-                // then iteratively format the array fragment with it
+                // if value is an array, then iteratively format the array fragment with it
                 if (Array.isArray(dict[match])) {
                     template = template.replace(
-                        new RegExp('\\{\\{#' +
-                            match +
-                            '\\}\\}([\\S\\s]*?)\\{\\{\\/' +
-                            match +
+                        new RegExp('\\{\\{#' + match +
+                            '\\}\\}([\\S\\s]*?)\\{\\{\\/' + match +
                             '\\}\\}'),
                         replace
                     );
@@ -558,8 +551,7 @@
                         ii + ' invalid testPlatform.timeElapsed ' +
                             typeof testPlatform.timeElapsed
                     );
-                    // security - handle malformed
-                    // testReport.testPlatformList.testCaseList
+                    // security - handle malformed testPlatform.testCaseList
                     testPlatform.testCaseList.forEach(function (testCase) {
                         local.utility2.objectSetDefault(testCase, {
                             errorStack: '',
@@ -584,8 +576,7 @@
                     });
                 });
             });
-            // merge testReport2.testPlatformList
-            // into testReport1.testPlatformList
+            // merge testReport2.testPlatformList into testReport1.testPlatformList
             testReport2.testPlatformList.forEach(function (testPlatform2) {
                 // add testPlatform2 to testReport1.testPlatformList
                 testReport1.testPlatformList.push(testPlatform2);
@@ -1007,6 +998,7 @@
                 case 8:
                 case 20:
                     id += '-';
+                    // coerce to finite integer
                     id += (Math.random() * 16 | 0).toString(16);
                     break;
                 case 12:
@@ -1018,6 +1010,7 @@
                     id += (Math.random() * 4 | 8).toString(16);
                     break;
                 default:
+                    // coerce to finite integer
                     id += (Math.random() * 16 | 0).toString(16);
                 }
             }
@@ -1075,8 +1068,7 @@
                         // handle string data
                         data = xhr.responseText;
                         if (error) {
-                            // add http method/ statusCode / url
-                            // debug-info to error.message
+                            // add http method/ statusCode / url debug-info to error.message
                             error.message = options.method + ' ' +
                                 xhr.status + ' - ' +
                                 options.url + '\n' +
@@ -1282,8 +1274,7 @@
                     // cleanup response
                     response.destroy();
                     if (error) {
-                        // add http method / statusCode / url
-                        // debug-info to error.message
+                        // add http method / statusCode / url debug-info to error.message
                         error.message = options.method + ' ' +
                             (response && response.statusCode) + ' - ' +
                             options.url + '\n' +
@@ -1401,8 +1392,7 @@
         };
 
         local.utility2.onMiddlewareError = function (error, request, response) {
-            // if error occurred,
-            // then respond with '500 Internal Server Error',
+            // if error occurred, then respond with '500 Internal Server Error',
             // else respond with '404 Not Found'
             local.utility2.serverRespondDefault(request, response, error
                 ? 500
@@ -1581,6 +1571,7 @@
                 });
             // init timerTimeout
             timerTimeout = local.child_process.spawn('/bin/sh', ['-c', 'sleep ' +
+                // coerce to finite integer
                 ((0.001 * local.utility2.timeoutDefault) | 0) +
                 '; kill ' + childProcess.pid + ' 2>/dev/null'], { stdio: 'ignore' });
             return childProcess;
@@ -1792,10 +1783,10 @@
                 });
             });
             // if $npm_config_server_port is undefined,
-            // then assign it a random integer
-            // in the inclusive range 1 to 0xffff
+            // then assign it a random integer in the inclusive range 0 to 0xffff
             local.utility2.envDict.npm_config_server_port =
                 local.utility2.envDict.npm_config_server_port ||
+                // coerce to finite integer
                 ((Math.random() * 0x10000) | 0x8000).toString();
             // 2. start server on port $npm_config_server_port
             console.log('server starting on port ' +
@@ -1906,8 +1897,7 @@
 
     // run browser js-env code
     case 'browser':
-        // parse url search-params that matches
-        // 'mode*' or '_testSecret'
+        // parse url search-params that match 'mode*' or '_testSecret'
         location.search.replace(
             (/\b(mode[A-Z]\w+|_testSecret)=([\w\-\.\%]+)/g),
             function (match0, key, value) {
@@ -1982,7 +1972,7 @@
             } catch (ignore) {
             }
             if (data && data.testReport) {
-                // handle global_test_results passed as error
+                // handle global_test_results thrown from webpage
                 // merge coverage
                 local.global.__coverage__ =
                     local.utility2.istanbulMerge(local.global.__coverage__, data.coverage);
@@ -2006,8 +1996,8 @@
                     local.utility2.exit = local.utility2.nop;
                     // test string error with no trace handling behavior
                     local.onError('error', null);
-                    // test string error with
-                    // trace-function and trace-sourceUrl handling behavior
+                    // test string error //
+                    // with trace-function and trace-sourceUrl handling behavior
                     local.onError('error', [{ function: true, sourceUrl: true }]);
                     // test default error handling behavior
                     local.onError(local.utility2.errorDefault);
@@ -2021,8 +2011,7 @@
                 );
                 return;
             }
-            // handle webpage error
-            // http://phantomjs.org/api/phantom/handler/on-error.html
+            // handle webpage error - http://phantomjs.org/api/phantom/handler/on-error.html
             if (typeof error === 'string') {
                 console.error('\n' + local.utility2.testName + '\nERROR: ' + error + ' TRACE:');
                 (trace || []).forEach(function (t) {
@@ -2041,8 +2030,7 @@
             }
         };
 
-        // init global error handling
-        // http://phantomjs.org/api/phantom/handler/on-error.html
+        // init global error handling - http://phantomjs.org/api/phantom/handler/on-error.html
         local.global.phantom.onError = local.onError;
         // override utility2 properties
         local.utility2.objectSetOverride(
@@ -2050,8 +2038,7 @@
             JSON.parse(decodeURIComponent(local.system.args[1])),
             -1
         );
-        // if modeErrorIgnore is truthy,
-        // then suppress console.error and console.log
+        // if modeErrorIgnore is truthy, then suppress console.error and console.log
         if (local.utility2.modeErrorIgnore) {
             console.error = console.log = local.utility2.nop;
         }
@@ -2067,8 +2054,7 @@
         local.page.clipRect = { height: 768, left: 0, top: 0, width: 1024 };
         // init webpage viewportSize
         local.page.viewportSize = { height: 768, width: 1024 };
-        // init webpage error handling
-        // http://phantomjs.org/api/webpage/handler/on-error.html
+        // init webpage error handling - http://phantomjs.org/api/webpage/handler/on-error.html
         local.page.onError = local.onError;
         // pipe webpage console.log to stdout
         local.page.onConsoleMessage = function () {
