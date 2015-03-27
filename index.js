@@ -1504,8 +1504,8 @@
                         );
                     }
                     // spawn phantomjs to test a url
-                    local.child_process
-                        .spawn('/bin/sh', ['-c',
+                    local.utility2
+                        .processSpawnWithTimeout('/bin/sh', ['-c',
                             options.argv0 + ' ' +
                             options.argv1 + ' ' +
                             encodeURIComponent(JSON.stringify(options)) + '; ' +
@@ -1568,6 +1568,28 @@
             onNext();
         };
 
+        local.utility2.processSpawnWithTimeout = function () {
+            /*
+                this function will run like child_process.spawn,
+                but with auto-timeout after timeoutDefault milliseconds
+            */
+            var childProcess, timerTimeout;
+            // spawn childProcess
+            childProcess = local.child_process.spawn.apply(local.child_process, arguments)
+                // cleanup timerTimeout on exit
+                .on('exit', function () {
+                    try {
+                        process.kill(timerTimeout, 9);
+                    } catch (ignore) {
+                    }
+                });
+            // init timerTimeout
+            timerTimeout = local.child_process.spawn('/bin/sh', ['-c', 'sleep ' +
+                ((0.001 * local.utility2.timeoutDefault) | 0) +
+                '; kill ' + childProcess.pid + ' 2>/dev/null'], { stdio: 'ignore' });
+            return childProcess;
+        };
+
         local.utility2.replStart = function (globalDict) {
             /*
                 this function will start the repl debugger
@@ -1608,8 +1630,8 @@
                         break;
                     }
                     // run async shell command
-                    local.child_process
-                        .spawn(
+                    local.utility2
+                        .processSpawnWithTimeout(
                             '/bin/sh',
                             ['-c', '. ' + __dirname + '/index.sh && ' + match[2]],
                             { stdio: ['ignore', 1, 2] }
@@ -1623,8 +1645,8 @@
                 // syntax sugar to grep current dir
                 case 'grep':
                     // run async shell command
-                    local.child_process
-                        .spawn(
+                    local.utility2
+                        .processSpawnWithTimeout(
                             '/bin/sh',
                             ['-c', 'find . -type f | grep -v ' +
                                 '"/\\.\\|.*\\b\\(\\.\\d\\|' +

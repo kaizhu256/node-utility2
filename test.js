@@ -640,12 +640,10 @@
                         // test no cover utility2.js handling behavior
                         npm_package_name: 'undefined'
                     },
-                    onTimeout: local.utility2.nop
-                }],
-                [local.utility2.local, {
-                    child_process: { spawn: function () {
+                    onTimeout: local.utility2.nop,
+                    processSpawnWithTimeout: function () {
                         return { on: local.utility2.nop };
-                    } }
+                    }
                 }]
             ], function (onError) {
                 local.utility2.phantomTest({
@@ -663,14 +661,14 @@
             */
             /*jslint evil: true*/
             local.utility2.testMock([
-                [local.utility2.local, {
-                    child_process: { spawn: function () {
+                [local.utility2, {
+                    processSpawnWithTimeout: function () {
                         return { on: function (event, callback) {
                             // jslint-hack
                             local.utility2.nop(event);
                             callback();
                         } };
-                    } }
+                    }
                 }]
             ], function (onError) {
                 [
