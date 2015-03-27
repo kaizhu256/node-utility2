@@ -534,8 +534,7 @@
                 );
                 local.utility2.assert(
                     typeof testReport.timeElapsed === 'number',
-                    ii + ' invalid testReport.timeElapsed ' +
-                        typeof testReport.timeElapsed
+                    ii + ' invalid testReport.timeElapsed ' + typeof testReport.timeElapsed
                 );
                 // security - handle malformed testReport.testPlatformList
                 testReport.testPlatformList.forEach(function (testPlatform) {
@@ -669,10 +668,8 @@
                     );
                 });
                 // update testReport.timeElapsed with testPlatform.timeElapsed
-                testReport.timeElapsed = Math.max(
-                    testReport.timeElapsed,
-                    testPlatform.timeElapsed
-                );
+                testReport.timeElapsed =
+                    Math.max(testReport.timeElapsed, testPlatform.timeElapsed);
             });
             // create html test-report
             testCaseNumber = 0;
@@ -749,66 +746,7 @@
                 testReportDiv,
                 testReportHtml,
                 timerInterval;
-            options = options || {};
-            local.utility2.modeTest =
-                local.utility2.modeTest ||
-                local.utility2.envDict.npm_config_mode_npm_test;
-            if (!(local.utility2.modeTest || options.modeTest)) {
-                return;
-            }
-            // init coverageReportCreate
-            coverageReportCreate =
-                (local.istanbul_lite && local.istanbul_lite.coverageReportCreate) ||
-                local.utility2.nop;
-            // mock exit
-            exit = local.utility2.exit;
-            local.utility2.exit = local.utility2.nop;
-            // init modeTestCase
-            local.utility2.modeTestCase =
-                local.utility2.modeTestCase ||
-                local.utility2.envDict.npm_config_mode_test_case;
-            // init testReport
-            testReport = local.utility2.testReport;
-            // reset testReport
-            local.utility2.objectSetOverride(testReport, {
-                testsFailed: 0,
-                testsPassed: 0,
-                testsPending: 0,
-                timeElapsed: 0
-            });
-            // reset testPlatform.testCaseList
-            local.utility2.testPlatform.testCaseList.length = 0;
-            // add tests into testPlatform.testCaseList
-            Object.keys(options).forEach(function (key) {
-                // add test-case options[key] to testPlatform.testCaseList
-                if (key.indexOf('testCase_') === 0 &&
-                        (local.utility2.modeTestCase === key ||
-                        (!local.utility2.modeTestCase &&
-                                key !== 'testCase_testRun_failure'))) {
-                    local.utility2.testPlatform.testCaseList
-                        .push({ name: key, onTestCase: options[key] });
-                }
-            });
-            // visually update test-progress until it finishes
-            if (local.modeJs === 'browser') {
-                // init testReportDiv element
-                testReportDiv = document.querySelector('.testReportDiv') || { style: {} };
-                testReportDiv.style.display = 'block';
-                testReportDiv.innerHTML = local.utility2.testMerge(testReport, {});
-                // update test-report status every 1000 ms until finished
-                timerInterval = setInterval(function () {
-                    // update testReportDiv in browser
-                    testReportDiv.innerHTML = local.utility2.testMerge(testReport, {});
-                    if (testReport.testsPending === 0) {
-                        // cleanup timerInterval
-                        clearInterval(timerInterval);
-                    }
-                    // update coverageReport
-                    coverageReportCreate();
-                }, 1000);
-                // update coverageReport
-                coverageReportCreate();
-            }
+            // init onTaskEnd
             onTaskEnd = local.utility2.onTaskEnd(function () {
                 /*
                     this function will create the test-report after all tests have finished
@@ -928,12 +866,68 @@
                 }
             });
             onTaskEnd.counter += 1;
+            // init modeTest
+            options = options || {};
+            local.utility2.modeTest =
+                local.utility2.modeTest ||
+                local.utility2.envDict.npm_config_mode_npm_test;
+            if (!(local.utility2.modeTest || options.modeTest)) {
+                return;
+            }
+            // mock exit
+            exit = local.utility2.exit;
+            local.utility2.exit = local.utility2.nop;
+            // init coverageReportCreate
+            coverageReportCreate =
+                (local.istanbul_lite && local.istanbul_lite.coverageReportCreate) ||
+                local.utility2.nop;
+            // init modeTestCase
+            local.utility2.modeTestCase =
+                local.utility2.modeTestCase ||
+                local.utility2.envDict.npm_config_mode_test_case;
+            // init testReport
+            testReport = local.utility2.testReport;
             // init testReport timer
             testReport.timeElapsed = Date.now();
             // init testPlatform
             testPlatform = local.utility2.testPlatform;
             // init testPlatform timer
             testPlatform.timeElapsed = Date.now();
+            // reset testPlatform.testCaseList
+            local.utility2.testPlatform.testCaseList.length = 0;
+            // add tests into testPlatform.testCaseList
+            Object.keys(options).forEach(function (key) {
+                // add test-case options[key] to testPlatform.testCaseList
+                if (key.indexOf('testCase_') === 0 &&
+                        (local.utility2.modeTestCase === key ||
+                        (!local.utility2.modeTestCase && key !== 'testCase_testRun_failure'))) {
+                    local.utility2.testPlatform.testCaseList.push({
+                        name: key,
+                        onTestCase: options[key],
+                        timeElapsed: Date.now()
+                    });
+                }
+            });
+            // visually update test-progress until it finishes
+            if (local.modeJs === 'browser') {
+                // init testReportDiv element
+                testReportDiv = document.querySelector('.testReportDiv') || { style: {} };
+                testReportDiv.style.display = 'block';
+                testReportDiv.innerHTML = local.utility2.testMerge(testReport, {});
+                // update test-report status every 1000 ms until finished
+                timerInterval = setInterval(function () {
+                    // update testReportDiv in browser
+                    testReportDiv.innerHTML = local.utility2.testMerge(testReport, {});
+                    if (testReport.testsPending === 0) {
+                        // cleanup timerInterval
+                        clearInterval(timerInterval);
+                    }
+                    // update coverageReport
+                    coverageReportCreate();
+                }, 1000);
+                // update coverageReport
+                coverageReportCreate();
+            }
             // shallow copy testPlatform.testCaseList,
             // to guard against in-place sort from testMerge
             testPlatform.testCaseList.slice().forEach(function (testCase) {

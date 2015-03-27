@@ -257,12 +257,12 @@ instruction
     'document.querySelector(\n' +
         '".istanbulInputTextarea"\n' +
     ').addEventListener("keyup", function () {\n' +
-        'window.istanbul_lite.coverTextarea();\n' +
         'window.jslint_lite.jslintTextarea();\n' +
+        'window.istanbul_lite.coverTextarea();\n' +
     '});\n' +
     'if (!window.utility2.modeTest) {\n' +
-        'window.istanbul_lite.coverTextarea();\n' +
         'window.jslint_lite.jslintTextarea();\n' +
+        'window.istanbul_lite.coverTextarea();\n' +
     '}\n' +
     '</script>\n' +
     '<script src="/test/test.js"></script>\n' +
