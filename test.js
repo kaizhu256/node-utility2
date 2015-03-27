@@ -213,8 +213,7 @@
 
         local.testCase_jsonStringifyOrdered_default = function (onError) {
             /*
-                this function will test jsonStringifyOrdered's
-                default handling behavior
+                this function will test jsonStringifyOrdered's default handling behavior
             */
             var data;
             // test various data-type handling behavior
@@ -238,6 +237,22 @@
                 data === '{"aa":1,"bb":2,"dd":[null],"ee":{"ff":1,"gg":2}}',
                 data
             );
+            onError();
+        };
+
+        local.testCase_listShuffle_default = function (onError) {
+            /*
+                this function will test listShuffle's default handling behavior
+            */
+            var data, list = '[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]';
+            // validate list before shuffle
+            data = JSON.stringify(JSON.parse(list));
+            local.utility2.assert(data === list, data);
+            // shuffle list
+            data = JSON.stringify(local.utility2.listShuffle(JSON.parse(list)));
+            // validate list after shuffle
+            local.utility2.assert(data.length === list.length, data);
+            local.utility2.assert(data !== list, data);
             onError();
         };
 
@@ -311,10 +326,29 @@
             onError();
         };
 
+        local.testCase_objectTraverse_default = function (onError) {
+            /*
+                this function will test objectTraverse's default handling behavior
+            */
+            var data;
+            data = { aa: null, bb: 2, cc: { dd: 4, ee: [5, 6, 7] } };
+            local.utility2.objectTraverse(data, function (element) {
+                if (element && typeof element === 'object' && !Array.isArray(element)) {
+                    element.zz = true;
+                }
+            });
+            // validate data
+            data = local.utility2.jsonStringifyOrdered(data);
+            local.utility2.assert(
+                data === '{"aa":null,"bb":2,"cc":{"dd":4,"ee":[5,6,7],"zz":true},"zz":true}',
+                data
+            );
+            onError();
+        };
+
         local.testCase_onErrorDefault_default = function (onError) {
             /*
-                this function will test onErrorDefault's
-                default handling behavior
+                this function will test onErrorDefault's default handling behavior
             */
             var message;
             local.utility2.testMock([
@@ -489,8 +523,7 @@
         // init tests
         local.testCase_istanbulMerge_default = function (onError) {
             /*
-                this function will test istanbulMerge's
-                default handling behavior
+                this function will test istanbulMerge's default handling behavior
             */
             var coverage1, coverage2, script;
             script = local.istanbul_lite.instrumentSync(

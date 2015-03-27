@@ -32,7 +32,7 @@
                     // if message is a string, then leave it as is
                     typeof message === 'string'
                         ? message
-                        // if message is an Error object, then get its stack-trace
+                        // if message is an Error object, then get its stack
                         : message instanceof Error
                         ? local.utility2.errorStack(message)
                         // else JSON.stringify message
@@ -43,7 +43,7 @@
 
         local.utility2.errorStack = function (error) {
             /*
-                this function will return the error's stack-trace
+                this function will return the error's stack
             */
             return error.stack || error.message || 'undefined';
         };
@@ -102,8 +102,8 @@
 
         local.utility2.jsonStringifyOrdered = function (value, replacer, space) {
             /*
-                this function will JSON.stringify the value with dictionaries
-                in sorted order, for testing purposes
+                this function will JSON.stringify the value with dictionaries in sorted order,
+                for testing purposes
             */
             var stringifyOrdered;
             stringifyOrdered = function (value) {
@@ -156,8 +156,8 @@
 
         local.utility2.objectSetDefault = function (options, defaults, depth) {
             /*
-                this function will recursively set default values
-                for unset leaf nodes in the options object
+                this function will recursively set default values for unset leaf nodes
+                in the options object
             */
             Object.keys(defaults).forEach(function (key) {
                 var defaults2, options2;
@@ -187,8 +187,8 @@
 
         local.utility2.objectSetOverride = function (options, override, depth) {
             /*
-                this function will recursively override
-                the options object with the override object
+                this function will recursively override the options object
+                with the override object
             */
             var options2, override2;
             Object.keys(override).forEach(function (key) {
@@ -220,7 +220,7 @@
         local.utility2.objectTraverse = function (element, onSelf) {
             /*
                 this function will recursively traverse the element,
-                and call onSelf on its properties
+                and call onSelf on the element's properties
             */
             onSelf(element);
             if (element && typeof element === 'object') {
@@ -234,7 +234,7 @@
         local.utility2.onErrorDefault = function (error) {
             /*
                 this function will provide a default error handling callback,
-                which simply prints the error stack or message to stderr
+                that prints the error.stack or error.message to stderr
             */
             // if error is defined, then print the error stack
             if (error) {
@@ -248,7 +248,7 @@
         local.utility2.onErrorWithStack = function (onError) {
             /*
                 this function will return a new callback that calls onError,
-                with the current stack-trace appended to any error
+                will the caller-stack appended to any errors
             */
             var errorStack;
             try {
@@ -310,7 +310,7 @@
         local.utility2.onErrorJsonParse = function (onError) {
             /*
                 this function will return a wrapper function,
-                that will try to JSON.parse the data and pass it to onError
+                that will JSON.parse the data with error handling
             */
             return function (error, data) {
                 if (error) {
@@ -329,8 +329,8 @@
 
         local.utility2.onTimeout = function (onError, timeout, message) {
             /*
-                this function will create a timer that will call onError,
-                with a timeout error with full stack-trace
+                this function will create a timeout error-handler,
+                that will append the caller-stack to any errors
             */
             onError = local.utility2.onErrorWithStack(onError);
             // create timeout timer
@@ -1184,7 +1184,7 @@
                     timerTimeout = local.utility2.onTimeoutRequestResponseDestroy(
                         onNext,
                         options.timeout || local.utility2.timeoutDefault,
-                        'ajax ' + options.url,
+                        'ajax ' + options.method + ' ' + options.url,
                         request,
                         response
                     );
@@ -1320,13 +1320,18 @@
                     request.onTimeout(error);
                 },
                 local.utility2.timeoutDefault,
-                'server request-handler',
+                'server ' + request.method + ' ' + request.url,
                 request,
                 response
             );
             // cleanup timerTimeout
             response.on('finish', function () {
+                // cleanup timerTimeout
                 clearTimeout(request.timerTimeout);
+                // cleanup request
+                request.destroy();
+                // cleanup response
+                response.destroy();
             });
             // check if _testSecret is valid
             request._testSecretValid = (/\b_testSecret=(\w+)\b/).exec(request.url);
@@ -1785,8 +1790,7 @@
                         local.utility2.envDict.npm_config_server_port);
                     // screen-capture main-page
                     local.utility2.phantomScreenCapture({
-                        url: 'http://localhost:' +
-                            local.utility2.envDict.npm_config_server_port
+                        url: 'http://localhost:' + local.utility2.envDict.npm_config_server_port
                     }, local.utility2.exit);
                 }, Number(local.utility2.envDict.npm_config_timeout_exit))
                     // keep timerTimeout from blocking the process from exiting

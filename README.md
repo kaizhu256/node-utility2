@@ -105,7 +105,7 @@ instruction
         // init browser js-env tests
         local.testCase_ajax_200 = function (onError) {
             /*
-            this function will test ajax's 200 http statusCode handling behavior
+                this function will test ajax's "200 ok" handling behavior
             */
             // test '/test/hello'
             local.utility2.ajax({
@@ -122,7 +122,7 @@ instruction
         };
         local.testCase_ajax_404 = function (onError) {
             /*
-            this function will test ajax's 404 http statusCode handling behavior
+                this function will test ajax's "404 not found" handling behavior
             */
             // test '/test/undefined'
             local.utility2.ajax({
@@ -156,7 +156,7 @@ instruction
         // init node js-env tests
         local.testCase_phantomTest_default = function (onError) {
             /*
-            this function will spawn phantomjs to test the test-page
+                this function will spawn phantomjs to test the test-page
             */
             local.utility2.phantomTest({
                 url: 'http://localhost:' +
@@ -219,16 +219,20 @@ instruction
 '\n' +
         'modeTest: true,\n' +
 '\n' +
-        'testCase_ajax_get: function (onError) {\n' +
+        'testCase_passed_ajax: function (onError) {\n' +
             '/*\n' +
-            'this function will test ajax"s GET handling behavior\n' +
+                'this function will demo a passed ajax test\n' +
             '*/\n' +
-            '// test main-page "/"\n' +
-            'window.utility2.ajax({ url: "/" }, function (error, data, xhr) {\n' +
+            '// test ajax request for main-page "/"\n' +
+            'window.utility2.ajax({\n' +
+                'url: "/"\n' +
+            '}, function (error, data, xhr) {\n' +
                 'try {\n' +
                     '// validate no error occurred\n' +
                     'window.utility2.assert(!error, error);\n' +
-                    '// validate main-page is non-empty\n' +
+                    '// validate non-empty data\n' +
+                    'window.utility2.assert(data && data.length > 0, data);\n' +
+                    '// validate "200 ok" status\n' +
                     'if (xhr.status === 200) {\n' +
                         'window.utility2.assert(data, data);\n' +
                     '}\n' +
@@ -237,6 +241,15 @@ instruction
                     'onError(errorCaught);\n' +
                 '}\n' +
             '});\n' +
+        '},\n' +
+'\n' +
+        'testCase_failed: function (onError) {\n' +
+            '/*\n' +
+                'this function will demo a failed test\n' +
+            '*/\n' +
+            '// purposely fail assertion test\n' +
+            'window.utility2.assert(false, 'failed test example');\n' +
+            'onError();\n' +
         '}\n' +
     '});\n' +
 '}());\n' +
@@ -396,7 +409,6 @@ npm_config_mode_auto_restart=1 npm_config_mode_auto_restart_child=1 \
 - use taskGroup for browser event-handling
 - improve slimerjs auto-detection
 - add testCase for validating _testSecret
-- add failed test example
 - create flamegraph from istanbul coverage
 - auto-generate help doc from README.md
 - add server stress test using phantomjs
