@@ -711,7 +711,7 @@
                     },
                     phantomScreenCapture: local.utility2.nop,
                     onReady: {},
-                    taskPoolCreateOrAddCallback: local.utility2.nop
+                    taskGroupCreateOrAddCallback: local.utility2.nop
                 }],
                 [local.utility2.local, {
                     http: { createServer: function () {

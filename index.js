@@ -32,8 +32,7 @@
                     // if message is a string, then leave it as is
                     typeof message === 'string'
                         ? message
-                        // if message is an Error object,
-                        // then get its stack-trace
+                        // if message is an Error object, then get its stack-trace
                         : message instanceof Error
                         ? local.utility2.errorStack(message)
                         // else JSON.stringify message
@@ -112,8 +111,7 @@
                     this function will recursively stringify the value,
                     and sort its object-keys along the way
                 */
-                // if value is an array,
-                // then recursively stringify its elements
+                // if value is an array, then recursively stringify its elements
                 if (Array.isArray(value)) {
                     return '[' + value.map(stringifyOrdered).join(',') + ']';
                 }
@@ -421,46 +419,46 @@
             });
         };
 
-        local.utility2.taskPoolCreateOrAddCallback = function (taskPool, onTask, onError) {
+        local.utility2.taskGroupCreateOrAddCallback = function (taskGroup, onTask, onError) {
             /*
                 this function will
-                1. if taskPoolDict[options.key] is defined, then add onError to its callbackList
-                2. else create a taskPool, that will cleanup itself after onTask finishes
+                1. if taskGroup is already defined, then add onError to its callbackList
+                2. else create a new taskGroup, that will cleanup itself after onTask ends
             */
-            // init taskPoolDict
-            local.utility2.taskPoolDict = local.utility2.taskPoolDict || {};
-            // 1. if taskPoolDict[options.key] is defined, then add onError to its callbackList
-            if (local.utility2.taskPoolDict[taskPool.key]) {
-                local.utility2.taskPoolDict[taskPool.key].callbackList
+            // init taskGroupDict
+            local.utility2.taskGroupDict = local.utility2.taskGroupDict || {};
+            // 1. if taskGroup is already defined, then add onError to its callbackList
+            if (local.utility2.taskGroupDict[taskGroup.key]) {
+                local.utility2.taskGroupDict[taskGroup.key].callbackList
                     .push(local.utility2.onErrorWithStack(onError));
                 return;
             }
-            // 2. else create a taskPool, that will cleanup itself after onTask finishes
-            local.utility2.taskPoolDict[taskPool.key] = taskPool;
-            taskPool.callbackList = [local.utility2.onErrorWithStack(onError)];
-            taskPool.onFinish = function () {
-                if (taskPool.finished) {
+            // 2. else create a new taskGroup, that will cleanup itself after onTask ends
+            local.utility2.taskGroupDict[taskGroup.key] = taskGroup;
+            taskGroup.callbackList = [local.utility2.onErrorWithStack(onError)];
+            taskGroup.onEnd = function () {
+                if (taskGroup.done) {
                     return;
                 }
-                taskPool.finished = true;
+                taskGroup.done = true;
                 // cleanup timerTimeout
-                clearTimeout(taskPool.timerTimeout);
-                // cleanup taskPool
-                delete local.utility2.taskPoolDict[taskPool.key];
+                clearTimeout(taskGroup.timerTimeout);
+                // cleanup taskGroup
+                delete local.utility2.taskGroupDict[taskGroup.key];
                 // pass result to callbacks in callbackList
-                taskPool.result = arguments;
-                taskPool.callbackList.forEach(function (onError) {
-                    onError.apply(null, taskPool.result);
+                taskGroup.result = arguments;
+                taskGroup.callbackList.forEach(function (onError) {
+                    onError.apply(null, taskGroup.result);
                 });
             };
             // init timerTimeout
-            taskPool.timerTimeout = local.utility2.onTimeout(
-                taskPool.onFinish,
-                taskPool.timeout || local.utility2.timeoutDefault,
-                'taskPoolCreateOrAddCallback ' + taskPool.key
+            taskGroup.timerTimeout = local.utility2.onTimeout(
+                taskGroup.onEnd,
+                taskGroup.timeout || local.utility2.timeoutDefault,
+                'taskGroupCreateOrAddCallback ' + taskGroup.key
             );
             // run onTask
-            onTask(taskPool.onFinish);
+            onTask(taskGroup.onEnd);
         };
 
         local.utility2.testMock = function (mockList, onTestCase, onError) {
@@ -749,7 +747,7 @@
             // init onTaskEnd
             onTaskEnd = local.utility2.onTaskEnd(function () {
                 /*
-                    this function will create the test-report after all tests have finished
+                    this function will create the test-report after all tests have done
                 */
                 // restore exit
                 local.utility2.exit = exit;
@@ -914,7 +912,7 @@
                 testReportDiv = document.querySelector('.testReportDiv') || { style: {} };
                 testReportDiv.style.display = 'block';
                 testReportDiv.innerHTML = local.utility2.testMerge(testReport, {});
-                // update test-report status every 1000 ms until finished
+                // update test-report status every 1000 ms until done
                 timerInterval = setInterval(function () {
                     // update testReportDiv in browser
                     testReportDiv.innerHTML = local.utility2.testMerge(testReport, {});
@@ -931,13 +929,12 @@
             // shallow copy testPlatform.testCaseList,
             // to guard against in-place sort from testMerge
             testPlatform.testCaseList.slice().forEach(function (testCase) {
-                var finished, onError, timerTimeout;
+                var done, onError, timerTimeout;
                 onError = function (error) {
                     // cleanup timerTimeout
                     clearTimeout(timerTimeout);
-                    // if testCase already finished,
-                    // then fail testCase with error for finishing again
-                    if (finished) {
+                    // if testCase already done, then fail testCase with error for ending again
+                    if (done) {
                         error = error || new Error('callback in testCase ' +
                             testCase.name +
                             ' called multiple times');
@@ -954,16 +951,15 @@
                             'invalid errorStack ' + testCase.errorStack
                         );
                     }
-                    // if testCase already finished,
-                    // then do not run finish code again
-                    if (finished) {
+                    // if testCase already done, then do not run finish code again
+                    if (done) {
                         return;
                     }
                     // finish testCase
-                    finished = true;
+                    done = true;
                     // stop testCase timer
                     local._timeElapsedStop(testCase);
-                    // if all tests have finished, then create test-report
+                    // if all tests have done, then create test-report
                     onTaskEnd();
                 };
                 // init timerTimeout
@@ -1047,7 +1043,7 @@
                 this function will make an ajax request
                 with error handling and timeout
             */
-            var ajaxProgressDiv, data, error, finished, ii, onEvent, timerTimeout, xhr;
+            var ajaxProgressDiv, data, done, error, ii, onEvent, timerTimeout, xhr;
             // init ajaxProgressDiv
             ajaxProgressDiv = document.querySelector('.ajaxProgressDiv') || { style: {} };
             // init event handling
@@ -1058,10 +1054,10 @@
                 case 'load':
                     // cleanup timerTimeout
                     clearTimeout(timerTimeout);
-                    // validate finished is falsey
-                    local.utility2.assert(!finished, finished);
-                    // init finished to true
-                    finished = true;
+                    // validate done is falsey
+                    local.utility2.assert(!done, done);
+                    // init done to true
+                    done = true;
                     // validate xhr is defined in _ajaxProgressList
                     ii = local._ajaxProgressList.indexOf(xhr);
                     local.utility2.assert(ii >= 0, 'missing xhr in _ajaxProgressList');
@@ -1193,7 +1189,7 @@
                 this function will make an ajax request
                 with error handling and timeout
             */
-            var finished,
+            var done,
                 modeNext,
                 onNext,
                 request,
@@ -1274,11 +1270,11 @@
                     onNext();
                     break;
                 default:
-                    // if already finished, then ignore error / data
-                    if (finished) {
+                    // if already done, then ignore error / data
+                    if (done) {
                         return;
                     }
-                    finished = true;
+                    done = true;
                     // cleanup timerTimeout
                     clearTimeout(timerTimeout);
                     // cleanup request
@@ -1752,7 +1748,7 @@
         local.utility2.streamReadAll = function (readableStream, onError) {
             /*
                 this function will concat data from the readableStream,
-                and when finished reading, then pass it to onError
+                and when done reading, then pass it to onError
             */
             var chunkList;
             chunkList = [];
@@ -1824,7 +1820,7 @@
                     .unref();
             }
             // 3. if $npm_config_mode_npm_test is defined, then run tests
-            local.utility2.taskPoolCreateOrAddCallback(
+            local.utility2.taskGroupCreateOrAddCallback(
                 { key: 'utility2.onReady' },
                 null,
                 function () {
@@ -1894,7 +1890,7 @@
             local.utility2.timeoutDefault ||
             30000;
         // init onReady
-        local.utility2.taskPoolCreateOrAddCallback(
+        local.utility2.taskGroupCreateOrAddCallback(
             { key: 'utility2.onReady' },
             function (onError) {
                 local.utility2.onReady = local.utility2.onTaskEnd(onError);
