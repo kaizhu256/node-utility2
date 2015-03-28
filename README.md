@@ -219,6 +219,15 @@ instruction
 '\n' +
         'modeTest: true,\n' +
 '\n' +
+        'testCase_failed: function (onError) {\n' +
+            '/*\n' +
+                'this function will demo a failed test\n' +
+            '*/\n' +
+            '// purposely fail assertion test\n' +
+            'window.utility2.assert(false, "failed test example");\n' +
+            'onError();\n' +
+        '},\n' +
+'\n' +
         'testCase_passed_ajax: function (onError) {\n' +
             '/*\n' +
                 'this function will demo a passed ajax test\n' +
@@ -241,15 +250,6 @@ instruction
                     'onError(errorCaught);\n' +
                 '}\n' +
             '});\n' +
-        '},\n' +
-'\n' +
-        'testCase_failed: function (onError) {\n' +
-            '/*\n' +
-                'this function will demo a failed test\n' +
-            '*/\n' +
-            '// purposely fail assertion test\n' +
-            'window.utility2.assert(false, "failed test example");\n' +
-            'onError();\n' +
         '}\n' +
     '});\n' +
 '}());\n' +
@@ -399,7 +399,7 @@ instruction
 npm_config_mode_auto_restart=1 npm_config_mode_auto_restart_child=1 \
 ./index.sh test test.js"
     },
-    "version": "2015.3.25-10"
+    "version": "2015.3.28-10"
 }
 ```
 
