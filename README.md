@@ -22,7 +22,7 @@ run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
 
 
 # quickstart interactive example
-#### to run this example, read the instruction inside the script below
+#### to run this example, follow the instruction in the script below
 ```
 # example.sh
 
@@ -52,7 +52,7 @@ shExampleSh
 
 
 # quickstart programmatic example
-#### to run this example, read the instruction inside the script below
+#### to run this example, follow the instruction in the script below
 ```
 /*
 example.js
@@ -270,8 +270,15 @@ instruction
     'document.querySelector(\n' +
         '".istanbulInputTextarea"\n' +
     ').addEventListener("keyup", function () {\n' +
-        'window.jslint_lite.jslintTextarea();\n' +
-        'window.istanbul_lite.coverTextarea();\n' +
+        'window.utility2.taskGroupCreateOrAddCallback(\n' +
+            '{ key: "testTextarea" },\n' +
+            'function (onError) {\n' +
+                'window.utility2.onErrorExit = onError;\n' +
+                'window.jslint_lite.jslintTextarea();\n' +
+                'window.istanbul_lite.coverTextarea();\n' +
+            '},\n' +
+            'window.utility2.nop\n' +
+        ');\n' +
     '});\n' +
     'if (!window.utility2.modeTest) {\n' +
         'window.jslint_lite.jslintTextarea();\n' +
@@ -406,7 +413,6 @@ npm_config_mode_auto_restart=1 npm_config_mode_auto_restart_child=1 \
 
 
 # todo
-- use taskGroup for browser event-handling
 - improve slimerjs auto-detection
 - add testCase for validating _testSecret
 - create flamegraph from istanbul coverage
