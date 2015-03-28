@@ -248,7 +248,7 @@ instruction
                 'this function will demo a failed test\n' +
             '*/\n' +
             '// purposely fail assertion test\n' +
-            'window.utility2.assert(false, 'failed test example');\n' +
+            'window.utility2.assert(false, "failed test example");\n' +
             'onError();\n' +
         '}\n' +
     '});\n' +

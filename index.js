@@ -1488,7 +1488,7 @@
                             'mogrify -frame 1 -mattecolor black ' +
                             options.fileScreenCapture + ' 2>/dev/null; ' +
                             'exit $EXIT_CODE;'
-                            ], { stdio: ['ignore', 1, 2] })
+                            ], { stdio: options.modeErrorIgnore ? 'ignore' : ['ignore', 1, 2] })
                         .on('exit', onNext);
                     break;
                 case 2:
@@ -1790,6 +1790,7 @@
                         local.utility2.envDict.npm_config_server_port);
                     // screen-capture main-page
                     local.utility2.phantomScreenCapture({
+                        modeErrorIgnore: true,
                         url: 'http://localhost:' + local.utility2.envDict.npm_config_server_port
                     }, local.utility2.exit);
                 }, Number(local.utility2.envDict.npm_config_timeout_exit))
