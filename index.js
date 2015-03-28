@@ -972,7 +972,7 @@
                 this function will return a random uuid,
                 with form "xxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx"
             */
-            // code lifted from http://jsperf.com/uuid4
+            // code derived from http://jsperf.com/uuid4
             var id, ii;
             id = '';
             for (ii = 0; ii < 32; ii += 1) {
