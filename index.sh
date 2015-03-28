@@ -404,6 +404,10 @@ shPhantomTest() {
             timeoutDefault: $TIMEOUT_DEFAULT,
             timeoutScreenCapture: $TIMEOUT_SCREEN_CAPTURE,
             url: '$URL'
+                // format unicode
+                .replace((/\\\\u[0-9a-f]{4}/g), function (match0) {
+                    return String.fromCharCode('0x' + match0.slice(-4));
+                })
         }, function (error) {
             if ('$MODE_PHANTOM' === 'screenCapture') {
                 process.exit();
@@ -564,17 +568,6 @@ shRun() {
     return $EXIT_CODE
 }
 
-shRunNodeWithFileData() {
-    # this function will run the node $SCRIPT using data from $FILE
-    local FILE=$1 || return $?
-    local SCRIPT=$2 || return $?
-    shRunNode "
-        local.dataRaw = local.fs.readFileSync('$FILE');
-        local.data = local.dataRaw.toString('utf8');
-        $SCRIPT
-    " || return $?
-}
-
 shRunNode() {
     # this function will run the node $SCRIPT
     local SCRIPT=$1 || return $?
@@ -622,6 +615,17 @@ shRunNodeStdin() {
     " || return $?
 }
 
+shRunNodeWithFileData() {
+    # this function will run the node $SCRIPT using data from $FILE
+    local FILE=$1 || return $?
+    local SCRIPT=$2 || return $?
+    shRunNode "
+        local.dataRaw = local.fs.readFileSync('$FILE');
+        local.data = local.dataRaw.toString('utf8');
+        $SCRIPT
+    " || return $?
+}
+
 shRunScreenCapture() {
     # this function will run the command $@ and screen-capture the output
     # http://www.cnx-software.com/2011/09/22/how-to-convert-a-command-line-result-into-an-image-in-linux/
@@ -659,6 +663,18 @@ shRunScreenCapture() {
             label:@- $npm_config_dir_build/$MODE_BUILD_SCREEN_CAPTURE || return $?
     fi
     return $EXIT_CODE
+}
+
+shRunWithArgvUrlEncoded() {
+    # this function will first decodeURIComponent $@ before running it
+    node -e "require('child_process')
+        .spawn(
+            process.argv[1],
+            process.argv.slice(2).map(function (element) {
+                return decodeURIComponent(element);
+            })
+        )
+        .on('exit', process.exit);" $@ || return $?
 }
 
 shServerPortRandom() {
@@ -722,7 +738,7 @@ shTravisDecryptYml() {
 }
 
 shTravisEncrypt() {
-    # this function will travis-encrypt github repo $1's secret $2
+    # this function will travis-encrypt $SECRET for the $GITHUB_REPO
     # init $npm_config_dir_build dir
     mkdir -p $npm_config_dir_build/coverage.html || return $?
     local GITHUB_REPO=$1 || return $?
@@ -740,9 +756,9 @@ shTravisEncrypt() {
 }
 
 shTravisEncryptYml() {
-    # this function will encrypt the script $1 to $AES_ENCRYPTED_SH and stores it in .travis.yml
+    # this function will travis-encrypt $FILE to $AES_ENCRYPTED_SH and embed it in .travis.yml
     # init $FILE
-    local FILE=$1/aes-decrypted.$(printf $GITHUB_REPO | perl -pe "s/\//./").sh || return $?
+    local FILE=$1 || return $?
     if [ ! -f "$FILE" ]
     then
         printf "# non-existent file $FILE\n" || return $?
