@@ -219,16 +219,19 @@ instruction
 '\n' +
         'modeTest: true,\n' +
 '\n' +
-        'testCase_failed: function (onError) {\n' +
+        '// comment this code to skip the failed assertion demo\n' +
+        'testCase_failed_assertion_demo: function (onError) {\n' +
             '/*\n' +
-                'this function will demo a failed test\n' +
+                'this function will demo a failed assertion test\n' +
             '*/\n' +
-            '// purposely fail assertion test\n' +
-            'window.utility2.assert(false, "failed test example");\n' +
+            'window.utility2.assert(\n' +
+                'false,\n' +
+                '"this is a failed assertion demo"\n' +
+            ');\n' +
             'onError();\n' +
         '},\n' +
 '\n' +
-        'testCase_passed_ajax: function (onError) {\n' +
+        'testCase_passed_ajax_demo: function (onError) {\n' +
             '/*\n' +
                 'this function will demo a passed ajax test\n' +
             '*/\n' +
@@ -413,7 +416,6 @@ npm_config_mode_auto_restart=1 npm_config_mode_auto_restart_child=1 \
 
 
 # todo
-- improve slimerjs auto-detection
 - add testCase for validating _testSecret
 - create flamegraph from istanbul coverage
 - auto-generate help doc from README.md

@@ -305,12 +305,7 @@ shNpmTest() {
     # init $npm_config_dir_build
     mkdir -p $npm_config_dir_build/coverage.html || return $?
     # auto-detect slimerjs
-    if [ ! "$npm_config_mode_no_slimerjs" ] &&
-        [ ! "$npm_config_mode_slimerjs" ] &&
-        (slimerjs undefined > /dev/null 2>&1)
-    then
-        export npm_config_mode_slimerjs=1 || return $?
-    fi
+    shSlimerDetect || return $?
     # init npm-test-mode
     export npm_config_mode_npm_test=1 || return $?
     # init random server-port
@@ -388,12 +383,7 @@ shPhantomTest() {
     local URL="$1" || return $?
     shBuildPrint ${MODE_BUILD:-phantomTest} "testing $URL with phantomjs" || return $?
     # auto-detect slimerjs
-    if [ ! "$npm_config_mode_no_slimerjs" ] &&
-        [ ! "$npm_config_mode_slimerjs" ] &&
-        (slimerjs undefined > /dev/null 2>&1)
-    then
-        export npm_config_mode_slimerjs=1 || return $?
-    fi
+    shSlimerDetect || return $?
     node -e "var utility2;
         utility2 = require('$npm_config_dir_utility2');
         if ('$MODE_PHANTOM' === 'testUrl') {
@@ -721,6 +711,16 @@ shHerokuDeploy() {
     [ $(
         curl -Ls -o /dev/null -w "%{http_code}" https://$HEROKU_HOSTNAME
     ) -lt 400 ] || return $?
+}
+
+shSlimerDetect() {
+    # this function will auto-detect if slimerjs is installed and usable
+    if [ ! "$npm_config_mode_no_slimerjs" ] &&
+        [ ! "$npm_config_mode_slimerjs" ] &&
+        [ "$(slimerjs $npm_config_dir_utility2/index.js hello)" = "hello" ]
+    then
+        export npm_config_mode_slimerjs=1 || return $?
+    fi
 }
 
 shTmpAppCopy() {

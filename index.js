@@ -2017,6 +2017,12 @@
             }
         };
 
+        // run simple 'hello' test
+        if (local.system.args[1] === 'hello') {
+            console.log('hello');
+            local.utility2.exit();
+            return;
+        }
         // init global error handling - http://phantomjs.org/api/phantom/handler/on-error.html
         local.global.phantom.onError = local.onError;
         // override utility2 properties
