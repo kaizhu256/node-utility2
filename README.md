@@ -341,6 +341,8 @@ instruction
                 }
             }
         ]);
+        // init middleware error-handler
+        local.onMiddlewareError = local.utility2.onMiddlewareError;
         // start server and run tests
         local.utility2.testRunServer(local, process.exit);
     }
