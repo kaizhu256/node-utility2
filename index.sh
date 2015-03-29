@@ -1,9 +1,11 @@
 shAesDecrypt() {
     # this function will decrypt base64-encoded stdin to stdout using aes-256-cbc
+    local STRING || return $?
+    local IV || return $?
     # save stdin to $STRING
-    local STRING=$(cat /dev/stdin) || return $?
+    STRING=$(cat /dev/stdin) || return $?
     # init $IV from first 44 base64-encoded bytes of $STRING
-    local IV=$(printf $STRING | cut -c1-44 | base64 --decode) || return $?
+    IV=$(printf $STRING | cut -c1-44 | base64 --decode) || return $?
     # decrypt remaining base64-encoded bytes of $STRING to stdout using aes-256-cbc
     printf $STRING | \
         cut -c45-9999 | \
@@ -14,8 +16,9 @@ shAesDecrypt() {
 shAesEncrypt() {
     # this function will encrypt stdin to base64-encoded stdout,
     # with a random iv prepended using aes-256-cbc
+    local IV || return $?
     # init $IV from random 16 bytes
-    local IV=$(openssl rand -hex 16) || return $?
+    IV=$(openssl rand -hex 16) || return $?
     # print base64-encoded $IV to stdout
     printf $(printf "$IV " | base64) || return $?
     # encrypt stdin and stream to stdout using aes-256-cbc with base64-encoding
@@ -24,6 +27,7 @@ shAesEncrypt() {
 
 shBuildGithubUpload() {
     # this function will upload build-artifacts to github
+    local DIR || return $?
     if [ ! "$CI_BRANCH" ] || [ ! "$GIT_SSH_KEY" ] || [ "$MODE_OFFLINE" ]
     then
         return
@@ -37,7 +41,7 @@ shBuildGithubUpload() {
     cd $npm_config_dir_tmp/gh-pages || return $?
     # copy build-artifacts to gh-pages
     cp -a $npm_config_dir_build . || return $?
-    local DIR=build..$CI_BRANCH..$CI_HOST || return $?
+    DIR=build..$CI_BRANCH..$CI_HOST || return $?
     rm -fr $DIR && cp -a $npm_config_dir_build $DIR || return $?
     # init .git/config
     printf "\n[user]\nname=nobody\nemail=nobody" >> .git/config || return $?
@@ -53,8 +57,9 @@ shBuildGithubUpload() {
 
 shBuildPrint() {
     # this function will print debug info about the build state
+    local MESSAGE || return $?
+    MESSAGE="$2" || return $?
     export MODE_BUILD=$1 || return $?
-    local MESSAGE="$2" || return $?
     printf "\n[MODE_BUILD=$MODE_BUILD] - $(shDateIso) - $MESSAGE\n\n" || return $?
 }
 
@@ -92,14 +97,17 @@ shGitBackupAndSquashAndPush() {
     # 1. backup current $BRANCH to origin/$BRANCH.backup
     # 2. squash $RANGE to the first commit in $BRANCH
     # 3. push squashed $BRANCH to origin/$BRANCH
-    local COMMIT_LIMIT=$1 || return $?
+    local COMMIT_LIMIT || return $?
+    COMMIT_LIMIT=$1 || return $?
     # if number of commits > $COMMIT_LIMIT
     if [ ! "$COMMIT_LIMIT" ] || [ ! $(git rev-list HEAD --count) -gt $COMMIT_LIMIT ]
     then
         return
     fi
-    local BRANCH=$(git rev-parse --abbrev-ref HEAD) || return $?
-    local RANGE=$(($COMMIT_LIMIT/2)) || return $?
+    local BRANCH || return $?
+    local RANGE || return $?
+    BRANCH=$(git rev-parse --abbrev-ref HEAD) || return $?
+    RANGE=$(($COMMIT_LIMIT/2)) || return $?
     # 1. backup current $BRANCH to origin/$BRANCH.backup
     git push -f origin $BRANCH:$BRANCH.backup || return $?
     # 2. squash $RANGE to the first commit in $BRANCH
@@ -121,8 +129,10 @@ shGitSquashPop() {
     # this function will squash the HEAD to the specified $COMMIT
     # git squash
     # http://stackoverflow.com/questions/5189560/how-can-i-squash-my-last-x-commits-together-using-git
-    local COMMIT=$1 || return $?
-    local MESSAGE="${2-$(git log -1 --pretty=%s)}" || return $?
+    local COMMIT || return $?
+    local MESSAGE || return $?
+    COMMIT=$1 || return $?
+    MESSAGE="${2-$(git log -1 --pretty=%s)}" || return $?
     # commit any uncommitted data
     git commit -am "$MESSAGE" || :
     # reset git to previous $COMMIT
@@ -135,8 +145,10 @@ shGitSquashPop() {
 
 shGitSquashShift() {
     # this function will squash $RANGE to the first commit
-    local BRANCH=$(git rev-parse --abbrev-ref HEAD) || return $?
-    local RANGE=$1 || return $?
+    local BRANCH || return $?
+    local RANGE || return $?
+    BRANCH=$(git rev-parse --abbrev-ref HEAD) || return $?
+    RANGE=$1 || return $?
     git checkout -q HEAD~$RANGE || return $?
     git reset -q $(git rev-list --max-parents=0 HEAD) || return $?
     git add . > /dev/null || return $?
@@ -148,9 +160,12 @@ shGitSquashShift() {
 
 shGrep() {
     # this function will recursively grep $DIR for the $REGEXP
-    local DIR=$1 || return $?
-    local REGEXP=$2 || return $?
-    local FILE_FILTER="/\\.\\" || return $?
+    local DIR || return $?
+    local FILE_FILTER || return $?
+    local REGEXP || return $?
+    DIR=$1 || return $?
+    REGEXP=$2 || return $?
+    FILE_FILTER="/\\.\\" || return $?
     FILE_FILTER="$FILE_FILTER|.*\\b\\(\\.\\d\\" || return $?
     FILE_FILTER="$FILE_FILTER|archive\\" || return $?
     FILE_FILTER="$FILE_FILTER|artifacts\\" || return $?
@@ -176,7 +191,8 @@ shGrep() {
 
 shGrepFileReplace() {
     # this function will apply the grep-and-replace lines in $FILE
-    local FILE=$1
+    local FILE || return $?
+    FILE=$1
     node -e "var local;
         local = {};
         local.fs = require('fs');
@@ -377,10 +393,14 @@ shPhantomScreenCapture() {
 shPhantomTest() {
     # this function will spawn phantomjs to test the specified $URL,
     # and merge it into the existing test-report
-    local MODE_PHANTOM="${4-testUrl}" || return $?
-    local TIMEOUT_DEFAULT="${2-30000}" || return $?
-    local TIMEOUT_SCREEN_CAPTURE="${3-2000}" || return $?
-    local URL="$1" || return $?
+    local MODE_PHANTOM || return $?
+    local TIMEOUT_DEFAULT || return $?
+    local TIMEOUT_SCREEN_CAPTURE || return $?
+    local URL || return $?
+    MODE_PHANTOM="${4-testUrl}" || return $?
+    TIMEOUT_DEFAULT="${2-30000}" || return $?
+    TIMEOUT_SCREEN_CAPTURE="${3-2000}" || return $?
+    URL="$1" || return $?
     shBuildPrint ${MODE_BUILD:-phantomTest} "testing $URL with phantomjs" || return $?
     # auto-detect slimerjs
     shSlimerDetect || return $?
@@ -421,7 +441,9 @@ shReadmeBuild() {
 
 shReadmeTestJs() {
     # this function will test the js script $FILE in README.md
-    local FILE=$1 || return $?
+    local FILE || return $?
+    local SCRIPT || return $?
+    FILE=$1 || return $?
     shBuildPrint $MODE_BUILD "testing $FILE" || return $?
     if [ ! "$MODE_OFFLINE" ]
     then
@@ -445,7 +467,6 @@ shReadmeTestJs() {
         }
     );" || return $?
     # jslint $FILE
-    local SCRIPT || return $?
     if [ ! "$npm_config_mode_no_jslint" ]
     then
         SCRIPT="npm install jslint-lite > /dev/null && node_modules/.bin/jslint-lite $FILE" || \
@@ -471,8 +492,10 @@ shReadmeTestJs() {
 
 shReadmeTestSh() {
     # this function will test the shell script $FILE in README.md
-    local FILE=$1 || return $?
-    local FILE_BASENAME=$(node -e "console.log(require('path').basename('$FILE'));") || \
+    local FILE || return $?
+    local FILE_BASENAME || return $?
+    FILE=$1 || return $?
+    FILE_BASENAME=$(node -e "console.log(require('path').basename('$FILE'));") || \
         return $?
     shBuildPrint $MODE_BUILD "testing $FILE" || return $?
     if [ "$MODE_BUILD" != "build" ]
@@ -560,7 +583,8 @@ shRun() {
 
 shRunNode() {
     # this function will run the node $SCRIPT
-    local SCRIPT=$1 || return $?
+    local SCRIPT || return $?
+    SCRIPT=$1 || return $?
     node -e "var local;
         local = {};
         // require builtin modules
@@ -590,7 +614,8 @@ shRunNode() {
 
 shRunNodeStdin() {
     # this function will run the node $SCRIPT using data from stdin
-    local SCRIPT=$1 || return $?
+    local SCRIPT || return $?
+    SCRIPT=$1 || return $?
     shRunNode "
         local.dataRaw = [];
         process.stdin
@@ -607,8 +632,10 @@ shRunNodeStdin() {
 
 shRunNodeWithFileData() {
     # this function will run the node $SCRIPT using data from $FILE
-    local FILE=$1 || return $?
-    local SCRIPT=$2 || return $?
+    local FILE || return $?
+    local SCRIPT || return $?
+    FILE=$1 || return $?
+    SCRIPT=$2 || return $?
     shRunNode "
         local.dataRaw = local.fs.readFileSync('$FILE');
         local.data = local.dataRaw.toString('utf8');
@@ -675,11 +702,12 @@ shServerPortRandom() {
 
 shHerokuDeploy() {
     # this function will deploy the app to $HEROKU_REPO
+    local HEROKU_REPO || return $?
+    HEROKU_REPO=$1 || return $?
     if [ ! "$GIT_SSH_KEY" ]
     then
         return
     fi
-    local HEROKU_REPO=$1 || return $?
     # init $TEST_SECRET
     export TEST_SECRET=$(openssl rand -hex 32) || return $?
     # init $HEROKU_HOSTNAME
@@ -740,10 +768,12 @@ shTravisDecryptYml() {
 
 shTravisEncrypt() {
     # this function will travis-encrypt $SECRET for the $GITHUB_REPO
+    local GITHUB_REPO || return $?
+    local SECRET || return $?
+    GITHUB_REPO=$1 || return $?
+    SECRET=$2 || return $?
     # init $npm_config_dir_build dir
     mkdir -p $npm_config_dir_build/coverage.html || return $?
-    local GITHUB_REPO=$1 || return $?
-    local SECRET=$2 || return $?
     # get public rsa key from https://api.travis-ci.org/repos/<owner>/<repo>/key
     curl -fLSs https://api.travis-ci.org/repos/$GITHUB_REPO/key > $npm_config_file_tmp || \
         return $?
@@ -758,8 +788,9 @@ shTravisEncrypt() {
 
 shTravisEncryptYml() {
     # this function will travis-encrypt $FILE to $AES_ENCRYPTED_SH and embed it in .travis.yml
-    # init $FILE
-    local FILE=$1 || return $?
+    local AES_256_KEY_ENCRYPTED || return $?
+    local FILE || return $?
+    FILE=$1 || return $?
     if [ ! -f "$FILE" ]
     then
         printf "# non-existent file $FILE\n" || return $?
@@ -797,11 +828,12 @@ shTravisEncryptYml() {
 
 shMain() {
     # this function will run the main program
+    local COMMAND || return $?
     if [ ! "$1" ]
     then
       return
     fi
-    local COMMAND="$1" || return $?
+    COMMAND="$1" || return $?
     shift
     case "$COMMAND" in
     shRun)
