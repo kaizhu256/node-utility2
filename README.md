@@ -63,7 +63,7 @@ run browser tests with coverage (via istanbul-lite and phantomjs-lite)
 instruction
     1. save this js script as example.js
     2. run the shell command:
-        $ npm install phantomjs-lite utility2@2015.3.25-10 && \
+        $ npm install phantomjs-lite utility2 && \
             node_modules/.bin/utility2 test example.js
     3. view test-report in ./tmp/build/test-report.html
     4. view coverage in ./tmp/build/coverage.html/index.html
@@ -378,7 +378,7 @@ instruction
         "jslint-lite": "2015.3.24-11"
     },
     "devDependencies": {
-        "phantomjs-lite": "^2015.3.24-11"
+        "phantomjs-lite": "2015.3.29-13"
     },
     "description": "run dynamic browser tests with coverage \
 (via istanbul-lite and phantomjs-lite)",
@@ -387,12 +387,14 @@ instruction
         "browser", "build",
         "ci", "code", "cover", "coverage", "csslint",
         "eshint", "eslint",
+        "headless",
         "instrument", "istanbul",
         "jshint", "jslint",
         "light", "lightweight", "lint", "lite",
-        "phantomjs",
-        "slimerjs",
-        "test", "travis",
+        "minimal",
+        "phantom", "phantomjs",
+        "slimer", "slimerjs",
+        "test", "travis", "travis-ci",
         "web"
     ],
     "license": "MIT",

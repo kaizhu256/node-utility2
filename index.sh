@@ -662,7 +662,8 @@ shRunWithArgvUrlEncoded() {
             process.argv[1],
             process.argv.slice(2).map(function (element) {
                 return decodeURIComponent(element);
-            })
+            }),
+            { stdio: [0, 1, 2] }
         )
         .on('exit', process.exit);" $@ || return $?
 }
