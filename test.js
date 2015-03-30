@@ -516,9 +516,16 @@
     // run node js-env code
     case 'node':
         // require modules
+        local.child_process = require('child_process');
         local.fs = require('fs');
+        local.http = require('http');
+        local.https = require('https');
+        local.istanbul_lite = require('istanbul-lite');
+        local.jslint_lite = require('jslint-lite');
         local.path = require('path');
+        local.url = require('url');
         local.vm = require('vm');
+        local.zlib = require('zlib');
 
         // init tests
         local.testCase_istanbulMerge_default = function (onError) {
@@ -838,7 +845,18 @@
                 case '/test/script-error.html':
                 case '/test/script-standalone.html':
                 case '/test/test.js':
-                    response.end(local[request.urlParsed.pathnameNormalized]);
+                    local.utility2.middlewareCacheControlLastModified(
+                        request,
+                        response,
+                        function () {
+                            local.utility2.serverRespondDataGzip(
+                                request,
+                                response,
+                                request.urlParsed.pathnameNormalized,
+                                local[request.urlParsed.pathnameNormalized]
+                            );
+                        }
+                    );
                     break;
                 // test http POST handling behavior
                 case '/test/echo':
@@ -852,8 +870,8 @@
                     break;
                 // test 500-internal-server-error handling behavior
                 case '/test/server-error':
-                    // test multiple-callback serverRespondWriteHead handling behavior
-                    local.utility2.serverRespondWriteHead(request, response, null, {});
+                    // test multiple-callback serverRespondSetHead handling behavior
+                    local.utility2.serverRespondSetHead(request, response, null, {});
                     nextMiddleware(local.utility2.errorDefault);
                     // test multiple-callback error handling behavior
                     nextMiddleware(local.utility2.errorDefault);

@@ -1316,6 +1316,7 @@
             };
             request.timerTimeout = local.utility2.onTimeoutRequestResponseDestroy(
                 function (error) {
+                    console.error(request.method + ' ' + request.url);
                     local.utility2.onErrorDefault(error);
                     request.onTimeout(error);
                 },
@@ -1351,7 +1352,7 @@
                 '.json': 'application/json; charset=UTF-8',
                 '.txt': 'text/txt; charset=UTF-8'
             };
-            local.utility2.serverRespondWriteHead(request, response, null, {
+            local.utility2.serverRespondSetHead(request, response, null, {
                 'Content-Type': contentTypeDict[
                     local.path.extname(request.urlParsed.pathnameNormalized)
                 ]
@@ -1552,7 +1553,7 @@
                 // kill timerTimeout on exit
                 .on('exit', function () {
                     try {
-                        process.kill(childProcess.timerTimeout.pid, 9);
+                        process.kill(childProcess.timerTimeout.pid);
                     } catch (ignore) {
                     }
                 });
@@ -1659,13 +1660,63 @@
             };
         };
 
+        local.utility2.middlewareCacheControlLastModified = function (
+            request,
+            response,
+            nextMiddleware
+        ) {
+            /*
+                this function will respond with the data cached by Last-Modified header
+            */
+            // init serverResponseHeaderLastModified
+            local.utility2.serverResponseHeaderLastModified =
+                local.utility2.serverResponseHeaderLastModified ||
+                new Date(Date.now() - process.uptime()).toGMTString();
+            if (request.headers['if-modified-since'] >=
+                    local.utility2.serverResponseHeaderLastModified &&
+                    local.utility2.serverRespondSetHead(request, response, 304, {})) {
+                response.end();
+                return;
+            }
+            local.utility2.serverRespondSetHead(request, response, null, {
+                'Cache-Control': 'public, max-age=31536000',
+                'Last-Modified': local.utility2.serverResponseHeaderLastModified
+            });
+            nextMiddleware();
+        };
+
+        local.utility2.serverRespondDataGzip = function (
+            request,
+            response,
+            cacheKey,
+            data
+        ) {
+            /*
+                this function will respond with the data gzipped
+            */
+            if (response.headersSent ||
+                    !(/\bgzip\b/).test(request.headers['accept-encoding'])) {
+                response.end(data);
+                return;
+            }
+            // init serverRespondDataGzipDict
+            local.utility2.serverRespondDataGzipDict =
+                local.utility2.serverRespondDataGzipDict || {};
+            data = local.utility2.serverRespondDataGzipDict[cacheKey] =
+                local.utility2.serverRespondDataGzipDict[cacheKey] ||
+                local.zlib.gzipSync(data);
+            response.setHeader('content-encoding', 'gzip');
+            response.end(data);
+            return;
+        };
+
         local.utility2.serverRespondDefault = function (request, response, statusCode, error) {
             /*
                 this function will respond with a default message,
                 or error stack for the given statusCode
             */
             // init statusCode and contentType
-            local.utility2.serverRespondWriteHead(
+            local.utility2.serverRespondSetHead(
                 request,
                 response,
                 statusCode,
@@ -1699,7 +1750,7 @@
             request.pipe(response);
         };
 
-        local.utility2.serverRespondWriteHead = function (
+        local.utility2.serverRespondSetHead = function (
             request,
             response,
             statusCode,
@@ -1710,17 +1761,19 @@
             */
             // jslint-hack
             local.utility2.nop(request);
-            if (!response.headersSent) {
-                // init response.statusCode
-                if (statusCode) {
-                    response.statusCode = statusCode;
-                }
-                Object.keys(headers).forEach(function (key) {
-                    if (headers[key]) {
-                        response.setHeader(key, headers[key]);
-                    }
-                });
+            if (response.headersSent) {
+                return;
             }
+            // init response.statusCode
+            if (statusCode) {
+                response.statusCode = statusCode;
+            }
+            Object.keys(headers).forEach(function (key) {
+                if (headers[key]) {
+                    response.setHeader(key, headers[key]);
+                }
+            });
+            return true;
         };
 
         local.utility2.streamReadAll = function (readableStream, onError) {
@@ -2133,6 +2186,7 @@
         local.jslint_lite = require('jslint-lite');
         local.path = require('path');
         local.url = require('url');
+        local.zlib = require('zlib');
         // init utility2 properties
         local.utility2.__dirname = __dirname;
         local.utility2.envDict = process.env;

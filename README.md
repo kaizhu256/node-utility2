@@ -439,6 +439,8 @@ npm_config_mode_auto_restart=1 npm_config_mode_auto_restart_child=1 \
 # build.sh
 # this shell script will run the build for this package
 shBuild() {
+    # this function will run the main build
+    local TEST_URL || return $?
     # init env
     export npm_config_mode_slimerjs=1 || return $?
     . ./index.sh && shInit || return $?
@@ -478,7 +480,7 @@ shBuild() {
         [ "$CI_BRANCH" = beta ] ||
         [ "$CI_BRANCH" = master ]
     then
-        local TEST_URL="https://hrku01-utility2-$CI_BRANCH.herokuapp.com" || \
+        TEST_URL="https://hrku01-utility2-$CI_BRANCH.herokuapp.com" || \
             return $?
         TEST_URL="$TEST_URL?modeTest=phantom&_testSecret={{_testSecret}}" || \
             return $?
