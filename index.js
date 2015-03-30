@@ -1267,10 +1267,36 @@
                         // debug statusCode
                         error.statusCode = response && response.statusCode;
                     }
-                    onError(error, responseText, options);
+                    onError(error, responseText, { status: response.statusCode });
                 }
             });
             onNext();
+        };
+
+        local.utility2.middlewareCacheControlLastModified = function (
+            request,
+            response,
+            nextMiddleware
+        ) {
+            /*
+                this function will respond with the data cached by Last-Modified header
+            */
+            // init serverResponseHeaderLastModified
+            local.utility2.serverResponseHeaderLastModified =
+                local.utility2.serverResponseHeaderLastModified ||
+                // default Last-Modified header to time this server started
+                new Date(Date.now() - process.uptime()).toGMTString();
+            if (request.headers['if-modified-since'] >=
+                    local.utility2.serverResponseHeaderLastModified &&
+                    local.utility2.serverRespondSetHead(request, response, 304, {})) {
+                response.end();
+                return;
+            }
+            local.utility2.serverRespondSetHead(request, response, null, {
+                'Cache-Control': 'no-cache',
+                'Last-Modified': local.utility2.serverResponseHeaderLastModified
+            });
+            nextMiddleware();
         };
 
         local.utility2.middlewareGroupCreate = function (middlewareList) {
@@ -1658,31 +1684,6 @@
                     local._replServer.evalDefault(script, context, file, onError2);
                 }, onError2);
             };
-        };
-
-        local.utility2.middlewareCacheControlLastModified = function (
-            request,
-            response,
-            nextMiddleware
-        ) {
-            /*
-                this function will respond with the data cached by Last-Modified header
-            */
-            // init serverResponseHeaderLastModified
-            local.utility2.serverResponseHeaderLastModified =
-                local.utility2.serverResponseHeaderLastModified ||
-                new Date(Date.now() - process.uptime()).toGMTString();
-            if (request.headers['if-modified-since'] >=
-                    local.utility2.serverResponseHeaderLastModified &&
-                    local.utility2.serverRespondSetHead(request, response, 304, {})) {
-                response.end();
-                return;
-            }
-            local.utility2.serverRespondSetHead(request, response, null, {
-                'Cache-Control': 'public, max-age=31536000',
-                'Last-Modified': local.utility2.serverResponseHeaderLastModified
-            });
-            nextMiddleware();
         };
 
         local.utility2.serverRespondDataGzip = function (

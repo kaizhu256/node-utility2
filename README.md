@@ -420,6 +420,7 @@ npm_config_mode_auto_restart=1 npm_config_mode_auto_restart_child=1 \
 
 
 # todo
+- add analytics tracking
 - add testCase for validating _testSecret
 - create flamegraph from istanbul coverage
 - auto-generate help doc from README.md

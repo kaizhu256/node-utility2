@@ -60,6 +60,22 @@
                     onTaskEnd();
                 }, onTaskEnd);
             });
+            // test http GET 304 cache handling behavior
+            onTaskEnd.counter += 1;
+            local.utility2.ajax({
+                headers: { 'If-Modified-Since': new Date(Date.now() + 0xffff).toGMTString() },
+                url: '/test/hello'
+            }, function (error, data, xhr) {
+                local.utility2.testTryCatch(function () {
+                    // validate no error occurred
+                    local.utility2.assert(!error, error);
+                    // validate 304 http status
+                    local.utility2.assert(xhr.status === 304, JSON.stringify(xhr));
+                    // validate no data
+                    local.utility2.assert(!data, data);
+                    onTaskEnd();
+                }, onTaskEnd);
+            });
             // test http POST handling behavior
             ['binary', 'string'].forEach(function (resultType) {
                 onTaskEnd.counter += 1;
