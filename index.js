@@ -1506,7 +1506,11 @@
                     // spawn phantomjs to test a url
                     local.utility2
                         .processSpawnWithTimeout('/bin/sh', ['-c',
-                            options.argv0 + ' ' +
+                            options.argv0 +
+                            // bug - hack slimerjs to allow heroku https
+                            (options.argv0 === 'slimerjs'
+                            ? ' --ssl-protocol=TLS '
+                            : ' ') +
                             options.argv1 + ' ' +
                             encodeURIComponent(JSON.stringify(options)) + '; ' +
                             'EXIT_CODE=$?; ' +
