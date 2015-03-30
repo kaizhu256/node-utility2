@@ -1281,21 +1281,26 @@
             /*
                 this function will respond with the data cached by Last-Modified header
             */
-            // init serverResponseHeaderLastModified
-            local.utility2.serverResponseHeaderLastModified =
-                local.utility2.serverResponseHeaderLastModified ||
-                // default Last-Modified header to time this server started
-                new Date(Date.now() - process.uptime()).toGMTString();
-            if (request.headers['if-modified-since'] >=
-                    local.utility2.serverResponseHeaderLastModified &&
-                    local.utility2.serverRespondSetHead(request, response, 304, {})) {
-                response.end();
-                return;
+            // do not cache if headers already sent or url has '?' search indicator
+            if (!response.headersSent && request.url.indexOf('?') < 0) {
+                // init serverResponseHeaderLastModified
+                local.utility2.serverResponseHeaderLastModified =
+                    local.utility2.serverResponseHeaderLastModified ||
+                    // default Last-Modified header to server-start-time
+                    new Date(Date.now() - process.uptime()).toGMTString();
+                // respond with 304 if If-Modified-Since is greater than server-start-time
+                if (request.headers['if-modified-since'] >=
+                        local.utility2.serverResponseHeaderLastModified) {
+                    response.statusCode = 304;
+                    response.end();
+                    return;
+                }
+                response.setHeader('Cache-Control', 'no-cache');
+                response.setHeader(
+                    'Last-Modified',
+                    local.utility2.serverResponseHeaderLastModified
+                );
             }
-            local.utility2.serverRespondSetHead(request, response, null, {
-                'Cache-Control': 'no-cache',
-                'Last-Modified': local.utility2.serverResponseHeaderLastModified
-            });
             nextMiddleware();
         };
 
