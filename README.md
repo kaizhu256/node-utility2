@@ -447,6 +447,9 @@ shBuild() {
     export npm_config_mode_slimerjs=1 || return $?
     . ./index.sh && shInit || return $?
 
+    # npm install phantomjs-lite
+    npm install phantomjs-lite || return $?
+
     # run npm-test on published package
     shRun shNpmTestPublished || return $?
 
