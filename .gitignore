@@ -2,5 +2,5 @@
 .DS_Store
 .travis.yml
 Procfile
-node_modules/
-tmp/
+node_modules
+tmp

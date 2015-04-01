@@ -407,7 +407,9 @@
                     value = value && value[key];
                 });
                 return value === undefined
-                    ? valueDefault || keyList
+                    ? (valueDefault === undefined
+                    ? keyList
+                    : valueDefault)
                     : value;
             });
         };
@@ -1975,7 +1977,7 @@
             // parse '\' line-continuation
             .replace((/\\\n/g), '')
             // remove "\\n' +" and "'"
-            .replace((/\\n' \+(\s*?)'/g), '$1'), { envDict: local.utility2.envDict });
+            .replace((/\\n' \+(\s*?)'/g), '$1'), { envDict: local.utility2.envDict }, '');
         break;
 
 

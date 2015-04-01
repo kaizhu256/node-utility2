@@ -243,8 +243,6 @@ shInit() {
     fi
     # init $CWD
     CWD=$(pwd) || return $?
-    # init $PATH with $CWD/node_modules/.bin
-    export PATH=$CWD/node_modules/phantomjs-lite:$CWD/node_modules/.bin:$PATH || return $?
     # init $npm_package_*
     if [ -f package.json ]
     then

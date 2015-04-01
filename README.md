@@ -37,7 +37,7 @@ run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
 
 shExampleSh() {
     # npm install utility2
-    npm install phantomjs-lite utility2 || return $?
+    npm install utility2 || return $?
 
     # serve a webpage that will interactively run browser tests with coverage
     cd node_modules/utility2 && npm start --server-port=1337 || return $?
@@ -201,6 +201,7 @@ instruction
         'display: none;\n' +
     '}\n' +
     '</style>\n' +
+    '{{envDict.npm_config_html_head_extra}}\n' +
 '</head>\n' +
 '<body>\n' +
     '<div class="ajaxProgressDiv" style="display: none;">\n' +
@@ -303,6 +304,8 @@ instruction
                 return process.env.npm_package_name;
             case '{{envDict.npm_package_version}}':
                 return process.env.npm_package_version;
+            default:
+                return '';
             }
         });
         local['/assets/istanbul-lite.js'] =
@@ -378,9 +381,6 @@ instruction
     "dependencies": {
         "istanbul-lite": "2015.3.24-11",
         "jslint-lite": "2015.3.24-11"
-    },
-    "devDependencies": {
-        "phantomjs-lite": "2015.3.29-13"
     },
     "description": "run dynamic browser tests with coverage \
 (via istanbul-lite and phantomjs-lite)",

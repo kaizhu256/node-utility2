@@ -6,9 +6,6 @@
         "istanbul-lite": "2015.3.24-11",
         "jslint-lite": "2015.3.24-11"
     },
-    "devDependencies": {
-        "phantomjs-lite": "2015.3.29-13"
-    },
     "description": "run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)",
     "engines": { "node": ">=0.10 <=0.12" },
     "keywords": [
