@@ -64,6 +64,7 @@ instruction
     1. save this js script as example.js
     2. run the shell command:
         $ npm install phantomjs-lite utility2 && \
+            PATH=node_modules/phantomjs-lite:$PATH && \
             node_modules/.bin/utility2 test example.js
     3. view test-report in ./tmp/build/test-report.html
     4. view coverage in ./tmp/build/coverage.html/index.html
