@@ -477,6 +477,8 @@ shBuild() {
     # run npm-test
     MODE_BUILD=npmTest shRunScreenCapture npm test || return $?
 
+    [ "$(node --version)" \< "v0.12" ] && return
+
     # deploy app to heroku
     shRun shHerokuDeploy hrku01-utility2-$CI_BRANCH || return $?
 
@@ -499,6 +501,7 @@ shBuild
 
 # save exit-code
 EXIT_CODE=$?
+[ "$(node --version)" \< "v0.12" ] && exit $EXIT_CODE
 
 shBuildCleanup() {
     # this function will cleanup build-artifacts in local build dir
@@ -515,12 +518,9 @@ shBuildGithubUploadCleanup() {
     return
 }
 
-if [ "$(node --version)" \> "v0.12" ]
-then
-    # upload build-artifacts to github,
-    # and if number of commits > 16, then squash older commits
-    COMMIT_LIMIT=16 shRun shBuildGithubUpload || exit $?
-fi
+# upload build-artifacts to github,
+# and if number of commits > 16, then squash older commits
+COMMIT_LIMIT=16 shRun shBuildGithubUpload || exit $?
 
 # exit with $EXIT_CODE
 exit $EXIT_CODE

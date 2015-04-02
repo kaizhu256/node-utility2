@@ -1383,7 +1383,7 @@
                 '.html': 'text/html; charset=UTF-8',
                 '.js': 'application/javascript; charset=UTF-8',
                 '.json': 'application/json; charset=UTF-8',
-                '.txt': 'text/txt; charset=UTF-8'
+                '.txt': 'text/plain; charset=UTF-8'
             };
             local.utility2.serverRespondSetHead(request, response, null, {
                 'Content-Type': contentTypeDict[
