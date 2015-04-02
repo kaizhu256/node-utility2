@@ -7,6 +7,9 @@
         "jslint-lite": "2015.3.24-11"
     },
     "description": "run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)",
+    "devDependencies": {
+        "phantomjs-lite": "2015.4.1-12"
+    },
     "engines": { "node": ">=0.10 <=0.12" },
     "keywords": [
         "browser", "build",

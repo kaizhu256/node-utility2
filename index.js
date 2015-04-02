@@ -1615,10 +1615,11 @@
             // save repl eval function
             local._replServer.evalDefault = local._replServer.eval;
             // debug error
-            local._replServer.evalDefault('process.domain && ' +
-                'process.domain.on("error", function (error) {' +
-                'require("utility2")._debugReplError = error;' +
-                '});\n', null, 'repl', local.utility2.onErrorDefault);
+            if (local._replServer._domain) {
+                local._replServer._domain.on('error', function (error) {
+                    local._debugReplError = error;
+                });
+            }
             // hook custom repl eval function
             local._replServer.eval = function (script, context, file, onError) {
                 var match, onError2;
@@ -1697,12 +1698,7 @@
             };
         };
 
-        local.utility2.serverRespondDataGzip = function (
-            request,
-            response,
-            cacheKey,
-            data
-        ) {
+        local.utility2.serverRespondDataGzip = function (request, response, cacheKey, data) {
             /*
                 this function will respond with the data gzipped
             */

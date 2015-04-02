@@ -385,6 +385,9 @@ instruction
     },
     "description": "run dynamic browser tests with coverage \
 (via istanbul-lite and phantomjs-lite)",
+    "devDependencies": {
+        "phantomjs-lite": "2015.4.1-12"
+    },
     "engines": { "node": ">=0.10 <=0.12" },
     "keywords": [
         "browser", "build",
@@ -421,7 +424,6 @@ npm_config_mode_auto_restart=1 npm_config_mode_auto_restart_child=1 \
 
 
 # todo
-- add analytics tracking
 - add testCase for validating _testSecret
 - create flamegraph from istanbul coverage
 - auto-generate help doc from README.md
@@ -443,13 +445,10 @@ npm_config_mode_auto_restart=1 npm_config_mode_auto_restart_child=1 \
 shBuild() {
     # this function will run the main build
     local TEST_URL || return $?
+
     # init env
     export npm_config_mode_slimerjs=1 || return $?
     . ./index.sh && shInit || return $?
-
-    # npm install phantomjs-lite
-    npm install phantomjs-lite || return $?
-    export PATH=$(pwd)/node_modules/phantomjs-lite:$PATH || return $?
 
     # run npm-test on published package
     shRun shNpmTestPublished || return $?

@@ -283,6 +283,8 @@ shInit() {
     then
         export GIT_SSH=$npm_config_dir_utility2/git-ssh.sh || return $?
     fi
+    # init $PATH
+    export PATH=$CWD/node_modules/phantomjs-lite:$PATH || return $?
 }
 
 shIstanbulCover() {
@@ -827,6 +829,8 @@ shTravisEncryptYml() {
 shMain() {
     # this function will run the main program
     local COMMAND || return $?
+    local DIR || return $?
+    local SOURCE || return $?
     if [ ! "$1" ]
     then
       return
@@ -849,8 +853,21 @@ shMain() {
     shRunScreenCapture)
         shInit && "$COMMAND" $@ || return $?
         ;;
+    start)
+        SOURCE="${BASH_SOURCE[0]}"
+        while [ -h "$SOURCE" ]
+        # resolve $SOURCE until the file is no longer a symlink
+        do
+            DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )" || return $?
+            SOURCE="$(readlink "$SOURCE")" || return $?
+            # if $SOURCE was a relative symlink,
+            # we need to resolve it relative to the path where the symlink file was located
+            [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE" || return $?
+        done
+        npm_config_dir_utility2="$( cd -P "$( dirname "$SOURCE" )" && pwd )" || return $?
+        node -e "require('$npm_config_dir_utility2/test.js')" || return $?
+        ;;
     test)
-        echo $@
         shInit && shNpmTest $@ || return $?
         ;;
     esac
