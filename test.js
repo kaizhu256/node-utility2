@@ -861,18 +861,15 @@
                 case '/test/script-error.html':
                 case '/test/script-standalone.html':
                 case '/test/test.js':
-                    local.utility2.middlewareCacheControlLastModified(
-                        request,
-                        response,
-                        function () {
+                    local.utility2
+                        .middlewareCacheControlLastModified(request, response, function () {
                             local.utility2.serverRespondDataGzip(
                                 request,
                                 response,
                                 request.urlParsed.pathnameNormalized,
                                 local[request.urlParsed.pathnameNormalized]
                             );
-                        }
-                    );
+                        });
                     break;
                 // test http POST handling behavior
                 case '/test/echo':
