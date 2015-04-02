@@ -1702,7 +1702,9 @@
             /*
                 this function will respond with the data gzipped
             */
-            if (response.headersSent ||
+            // legacy hack
+            if (!local.zlib.gzipSync ||
+                    response.headersSent ||
                     !(/\bgzip\b/).test(request.headers['accept-encoding'])) {
                 response.end(data);
                 return;
