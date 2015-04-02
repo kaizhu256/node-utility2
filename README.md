@@ -380,7 +380,7 @@ instruction
     "author": "kai zhu <kaizhu256@gmail.com>",
     "bin": { "utility2" : "index.sh" },
     "dependencies": {
-        "istanbul-lite": "2015.4.2-10",
+        "istanbul-lite": "2015.4.2-11",
         "jslint-lite": "2015.3.24-11"
     },
     "description": "run dynamic browser tests with coverage \
@@ -515,9 +515,12 @@ shBuildGithubUploadCleanup() {
     return
 }
 
-# upload build-artifacts to github,
-# and if number of commits > 16, then squash older commits
-COMMIT_LIMIT=16 shRun shBuildGithubUpload || exit $?
+if [ "$(node --version)" \> "v0.12" ]
+then
+    # upload build-artifacts to github,
+    # and if number of commits > 16, then squash older commits
+    COMMIT_LIMIT=16 shRun shBuildGithubUpload || exit $?
+fi
 
 # exit with $EXIT_CODE
 exit $EXIT_CODE

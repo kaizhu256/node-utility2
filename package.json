@@ -3,7 +3,7 @@
     "author": "kai zhu <kaizhu256@gmail.com>",
     "bin": { "utility2" : "index.sh" },
     "dependencies": {
-        "istanbul-lite": "2015.4.2-10",
+        "istanbul-lite": "2015.4.2-11",
         "jslint-lite": "2015.3.24-11"
     },
     "description": "run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)",
