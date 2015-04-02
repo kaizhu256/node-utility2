@@ -417,7 +417,7 @@ instruction
 npm_config_mode_auto_restart=1 npm_config_mode_auto_restart_child=1 \
 ./index.sh test test.js"
     },
-    "version": "2015.4.2-10"
+    "version": "2015.4.2-11"
 }
 ```
 
