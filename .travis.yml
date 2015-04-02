@@ -16,6 +16,7 @@ env:
 language:
     - node_js
 node_js:
+    - "0.10"
     - "0.12"
 script:
     - npm run-script build-ci

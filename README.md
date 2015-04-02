@@ -451,7 +451,7 @@ shBuild() {
     . ./index.sh && shInit || return $?
 
     # run npm-test on published package
-    shRun shNpmTestPublished || return $?
+    #!! shRun shNpmTestPublished || return $?
 
     # test example js script
     MODE_BUILD=testExampleJs \

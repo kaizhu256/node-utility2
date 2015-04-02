@@ -1702,7 +1702,7 @@
             /*
                 this function will respond with the data gzipped
             */
-            // legacy hack
+            // legacy-hack node 0.10 doesn't support zlib.gzipSync
             if (!local.zlib.gzipSync ||
                     response.headersSent ||
                     !(/\bgzip\b/).test(request.headers['accept-encoding'])) {
