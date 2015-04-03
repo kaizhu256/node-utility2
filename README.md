@@ -386,7 +386,7 @@ instruction
     "description": "run dynamic browser tests with coverage \
 (via istanbul-lite and phantomjs-lite)",
     "devDependencies": {
-        "phantomjs-lite": "2015.4.1-12"
+        "phantomjs-lite": "2015.4.3-10"
     },
     "engines": { "node": ">=0.10 <=0.12" },
     "keywords": [

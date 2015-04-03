@@ -1698,28 +1698,6 @@
             };
         };
 
-        local.utility2.serverRespondDataGzip = function (request, response, cacheKey, data) {
-            /*
-                this function will respond with the data gzipped
-            */
-            // legacy-hack node 0.10 doesn't support zlib.gzipSync
-            if (!local.zlib.gzipSync ||
-                    response.headersSent ||
-                    !(/\bgzip\b/).test(request.headers['accept-encoding'])) {
-                response.end(data);
-                return;
-            }
-            // init serverRespondDataGzipDict
-            local.utility2.serverRespondDataGzipDict =
-                local.utility2.serverRespondDataGzipDict || {};
-            data = local.utility2.serverRespondDataGzipDict[cacheKey] =
-                local.utility2.serverRespondDataGzipDict[cacheKey] ||
-                local.zlib.gzipSync(data);
-            response.setHeader('content-encoding', 'gzip');
-            response.end(data);
-            return;
-        };
-
         local.utility2.serverRespondDefault = function (request, response, statusCode, error) {
             /*
                 this function will respond with a default message,
@@ -1758,6 +1736,28 @@
                     return key + ': ' + request.headers[key] + '\r\n';
                 }).join('') + '\r\n');
             request.pipe(response);
+        };
+
+        local.utility2.serverRespondGzipCache = function (request, response, cacheKey, data) {
+            /*
+                this function will respond with auto-cached, gzipped data
+            */
+            // legacy-hack node 0.10 doesn't support zlib.gzipSync
+            if (!local.zlib.gzipSync ||
+                    response.headersSent ||
+                    !(/\bgzip\b/).test(request.headers['accept-encoding'])) {
+                response.end(data);
+                return;
+            }
+            // init serverRespondGzipCacheDict
+            local.utility2.serverRespondGzipCacheDict =
+                local.utility2.serverRespondGzipCacheDict || {};
+            data = local.utility2.serverRespondGzipCacheDict[cacheKey] =
+                local.utility2.serverRespondGzipCacheDict[cacheKey] ||
+                local.zlib.gzipSync(data);
+            response.setHeader('content-encoding', 'gzip');
+            response.end(data);
+            return;
         };
 
         local.utility2.serverRespondSetHead = function (

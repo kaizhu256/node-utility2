@@ -863,7 +863,7 @@
                 case '/test/test.js':
                     local.utility2
                         .middlewareCacheControlLastModified(request, response, function () {
-                            local.utility2.serverRespondDataGzip(
+                            local.utility2.serverRespondGzipCache(
                                 request,
                                 response,
                                 request.urlParsed.pathnameNormalized,
