@@ -417,7 +417,7 @@ instruction
 npm_config_mode_auto_restart=1 npm_config_mode_auto_restart_child=1 \
 ./index.sh test test.js"
     },
-    "version": "2015.4.2-11"
+    "version": "2015.4.9-a"
 }
 ```
 
@@ -451,7 +451,7 @@ shBuild() {
     . ./index.sh && shInit || return $?
 
     # run npm-test on published package
-    #!! shRun shNpmTestPublished || return $?
+    shRun shNpmTestPublished || return $?
 
     # test example js script
     MODE_BUILD=testExampleJs \
