@@ -193,7 +193,8 @@ shGrepFileReplace() {
     # this function will apply the grep-and-replace lines in $FILE
     local FILE || return $?
     FILE=$1
-    node -e "var local;
+    node -e "
+        var local;
         local = {};
         local.fs = require('fs');
         local.fileDict = {};
@@ -208,7 +209,8 @@ shGrepFileReplace() {
         });
         Object.keys(local.fileDict).forEach(function (key) {
             local.fs.writeFileSync(key, local.fileDict[key].join('\n'));
-        });" || return $?
+        });
+    " || return $?
 }
 
 shInit() {
@@ -246,7 +248,8 @@ shInit() {
     # init $npm_package_*
     if [ -f package.json ]
     then
-        eval $(node -e "var dict, value;
+        eval $(node -e "
+            var dict, value;
             dict = require('./package.json');
             Object.keys(dict).forEach(function (key) {
                 value = dict[key];
@@ -259,7 +262,8 @@ shInit() {
             value = (/\bgithub\.com\/(.*)\.git\$/).exec(dict.repository && dict.repository.url);
             if (process.env.GITHUB_REPO === undefined && value) {
                 process.stdout.write('export GITHUB_REPO=' + JSON.stringify(value[1]) + ';');
-            }") || return $?
+            }
+        ") || return $?
     else
         export npm_package_description=undefined || return $?
         export npm_package_name=undefined || return $?
@@ -297,8 +301,9 @@ shIstanbulCover() {
         if [ ! "$npm_config_file_istanbul" ]
         then
             export npm_config_file_istanbul=$(cd $npm_config_dir_utility2 && \
-                node -e "console.log(require('istanbul-lite').__dirname);")/index.js || \
-                return $?
+                node -e "
+                    console.log(require('istanbul-lite').__dirname);
+                ")/index.js || return $?
         fi
         npm_config_dir_coverage="$npm_config_dir_build/coverage.html" \
             $npm_config_file_istanbul cover $@ || return $?
@@ -339,7 +344,8 @@ shNpmTest() {
     # save $EXIT_CODE and restore $CWD
     shExitCodeSave $? || return $?
     # create coverage badge
-    node -e "var coverage, percent;
+    node -e "
+        var coverage, percent;
         coverage = require('$npm_config_dir_build/coverage.html/coverage.json');
         percent = [0, 0];
         Object.keys(coverage).forEach(function (file) {
@@ -364,7 +370,8 @@ shNpmTest() {
                     ('0' + Math.round((100 - percent) * 2.21).toString(16)).slice(-2) +
                         ('0' + Math.round(percent * 2.21).toString(16)).slice(-2) + '00'
                 )
-        );" || return $?
+        );
+    " || return $?
     if [ "$EXIT_CODE" != 0 ]
     then
         node $@
@@ -404,7 +411,8 @@ shPhantomTest() {
     shBuildPrint ${MODE_BUILD:-phantomTest} "testing $URL with phantomjs" || return $?
     # auto-detect slimerjs
     shSlimerDetect || return $?
-    node -e "var utility2;
+    node -e "
+        var utility2;
         utility2 = require('$npm_config_dir_utility2');
         if ('$MODE_PHANTOM' === 'testUrl') {
             utility2.testReport = require('$npm_config_dir_build/test-report.json');
@@ -428,7 +436,8 @@ shPhantomTest() {
                 utility2.testMerge(utility2.testReport, {})
             );
             process.exit(!!error);
-        });" || return $?
+        });
+    " || return $?
 }
 
 shReadmeBuild() {
@@ -453,19 +462,21 @@ shReadmeTestJs() {
     # cd /tmp/app
     cd /tmp/app || return $?
     # read and parse js script from README.md
-    node -e "require('fs').readFileSync('$CWD/README.md', 'utf8').replace(
-        (/\n\`\`\`\n\/\*\n *$FILE\n[\S\s]+?\n\`\`\`/),
-        function (match0, index, data) {
-            // save js script to file
-            require('fs').writeFileSync(
-                '$FILE',
-                // preserve lineno
-                ('$MODE_LINENO_PRESERVE'
-                    ? data.slice(0, index).replace((/.*/g), '') + '\n\n'
-                    : '') + match0.slice(5, -3)
-            );
-        }
-    );" || return $?
+    node -e "
+        require('fs').readFileSync('$CWD/README.md', 'utf8').replace(
+            (/\n\`\`\`\n\/\*\n *$FILE\n[\S\s]+?\n\`\`\`/),
+            function (match0, index, data) {
+                // save js script to file
+                require('fs').writeFileSync(
+                    '$FILE',
+                    // preserve lineno
+                    ('$MODE_LINENO_PRESERVE'
+                        ? data.slice(0, index).replace((/.*/g), '') + '\n\n'
+                        : '') + match0.slice(5, -3)
+                );
+            }
+        );
+    " || return $?
     # jslint $FILE
     if [ ! "$npm_config_mode_no_jslint" ]
     then
@@ -474,18 +485,24 @@ shReadmeTestJs() {
     fi
     if [ "$MODE_OFFLINE" ]
     then
-        SCRIPT=$(node -e "console.log('$SCRIPT'.replace('npm install', 'echo'));") || return $?
+        SCRIPT=$(node -e "
+            console.log('$SCRIPT'.replace('npm install', 'echo'));
+        ") || return $?
     fi
     eval "$SCRIPT" || :
     # test $FILE
-    SCRIPT=$(node -e "console.log(
-        (/\n *\\$ ([\S\s]+?[^\\\\])\n/).exec(
-            require('fs').readFileSync('$FILE', 'utf8')
-        )[1].replace((/\\\\\n */g), ' ')
-    );") || return $?
+    SCRIPT=$(node -e "
+        console.log(
+            (/\n *\\$ ([\S\s]+?[^\\\\])\n/)
+                .exec(require('fs').readFileSync('$FILE', 'utf8'))[1]
+                .replace((/\\\\\n */g), ' ')
+        );
+    ") || return $?
     if [ "$MODE_OFFLINE" ]
     then
-        SCRIPT=$(node -e "console.log('$SCRIPT'.replace('npm install', 'echo'));") || return $?
+        SCRIPT=$(node -e "
+            console.log('$SCRIPT'.replace('npm install', 'echo'));
+        ") || return $?
     fi
     printf "$SCRIPT\n\n" && eval "$SCRIPT" || return $?
 }
@@ -495,8 +512,9 @@ shReadmeTestSh() {
     local FILE || return $?
     local FILE_BASENAME || return $?
     FILE=$1 || return $?
-    FILE_BASENAME=$(node -e "console.log(require('path').basename('$FILE'));") || \
-        return $?
+    FILE_BASENAME=$(node -e "
+        console.log(require('path').basename('$FILE'));
+    ") || return $?
     shBuildPrint $MODE_BUILD "testing $FILE" || return $?
     if [ "$MODE_BUILD" != "build" ]
     then
@@ -509,19 +527,21 @@ shReadmeTestSh() {
         cd /tmp/app || return $?
     fi
     # read and parse script from README.md
-    node -e "require('fs').readFileSync('$CWD/README.md', 'utf8').replace(
-        (/\n\`\`\`\n# $FILE_BASENAME\n[\S\s]+?\n\`\`\`/),
-        function (match0, index, data) {
-            // save script to file
-            require('fs').writeFileSync(
-                '$FILE',
-                // preserve lineno
-                data.slice(0, index).replace((/.*/g), '') + '\n\n' + match0.slice(5, -3)
-            );
-            // print script to stdout
-            console.log(match0.slice(5, -3).trimLeft());
-        }
-    );" || return $?
+    node -e "
+        require('fs').readFileSync('$CWD/README.md', 'utf8').replace(
+            (/\n\`\`\`\n# $FILE_BASENAME\n[\S\s]+?\n\`\`\`/),
+            function (match0, index, data) {
+                // save script to file
+                require('fs').writeFileSync(
+                    '$FILE',
+                    // preserve lineno
+                    data.slice(0, index).replace((/.*/g), '') + '\n\n' + match0.slice(5, -3)
+                );
+                // print script to stdout
+                console.log(match0.slice(5, -3).trimLeft());
+            }
+        );
+    " || return $?
     # test $FILE
     /bin/sh $FILE || return $?
 }
@@ -529,18 +549,23 @@ shReadmeTestSh() {
 shReadmePackageJsonExport() {
     # this function will export the package.json file embedded in README.md
     # read and parse script from README.md
-    node -e "require('fs').readFileSync('$CWD/README.md', 'utf8').replace(
-        (/\n\`\`\`\n{\n *\"_packageJson\": true,\n[\S\s]+?}\n\`\`\`/),
-        function (match0) {
-            // save script to file
-            require('fs').writeFileSync('$CWD/package.json', match0
-                .slice(5, -3)
-                // remove '//' comment
-                .replace((/^ *?\\/\\/.*?\n/gm), '')
-                // parse '\' line-continuation
-                .replace((/\\\\\n/g), ''));
-        }
-    );" || return $?
+    node -e "
+        require('fs').readFileSync('$CWD/README.md', 'utf8').replace(
+            (/\n\`\`\`\n{\n *\"_packageJson\": true,\n[\S\s]+?}\n\`\`\`/),
+            function (match0) {
+                // save script to file
+                require('fs').writeFileSync(
+                    '$CWD/package.json',
+                    match0
+                        .slice(5, -3)
+                        // remove '//' comment
+                        .replace((/^ *?\\/\\/.*?\n/gm), '')
+                        // parse '\' line-continuation
+                        .replace((/\\\\\n/g), '')
+                );
+            }
+        );
+    " || return $?
 }
 
 shRun() {
@@ -585,27 +610,30 @@ shRunNode() {
     # this function will run the node $SCRIPT
     local SCRIPT || return $?
     SCRIPT=$1 || return $?
-    node -e "var local;
+    node -e "
+        var local;
         local = {};
         // require builtin modules
-        ['assert',
-        'buffer',
-        'child_process', 'cluster', 'console', 'constants', 'crypto',
-        'dgram', 'dns', 'domain',
-        'events',
-        'freelist', 'fs',
-        'http', 'https',
-        'module',
-        'net',
-        'os',
-        'path', 'punycode',
-        'querystring',
-        'readline', 'repl',
-        'stream', 'string_decoder', 'sys',
-        'timers', 'tls', 'tty',
-        'url', 'util',
-        'vm',
-        'zlib'].forEach(function (key) {
+        [
+            'assert',
+            'buffer',
+            'child_process', 'cluster', 'console', 'constants', 'crypto',
+            'dgram', 'dns', 'domain',
+            'events',
+            'freelist', 'fs',
+            'http', 'https',
+            'module',
+            'net',
+            'os',
+            'path', 'punycode',
+            'querystring',
+            'readline', 'repl',
+            'stream', 'string_decoder', 'sys',
+            'timers', 'tls', 'tty',
+            'url', 'util',
+            'vm',
+            'zlib'
+        ].forEach(function (key) {
             local[key] = require(key);
         });
         $SCRIPT
@@ -654,17 +682,19 @@ shRunScreenCapture() {
     # save $EXIT_CODE and restore $CWD
     shExitCodeSave $(cat $npm_config_file_tmp) || return $?
     # format text-output
-    node -e "require('fs').writeFileSync(
-        '$npm_config_dir_tmp/screen-capture.txt',
-        require('fs').readFileSync('$npm_config_dir_tmp/screen-capture.txt', 'utf8')
-            // remove ansi escape-code
-            .replace((/\u001b.*?m/g), '')
-            // format unicode
-            .replace((/\\\\u[0-9a-f]{4}/g), function (match0) {
-                return String.fromCharCode('0x' + match0.slice(-4));
-            })
-            .trimRight()
-    );" || return $?
+    node -e "
+        require('fs').writeFileSync(
+            '$npm_config_dir_tmp/screen-capture.txt',
+            require('fs').readFileSync('$npm_config_dir_tmp/screen-capture.txt', 'utf8')
+                // remove ansi escape-code
+                .replace((/\u001b.*?m/g), '')
+                // format unicode
+                .replace((/\\\\u[0-9a-f]{4}/g), function (match0) {
+                    return String.fromCharCode('0x' + match0.slice(-4));
+                })
+                .trimRight()
+        );
+    " || return $?
     if (convert -list font | grep "\bCourier\b" > /dev/null 2>&1) && \
         (fold package.json > /dev/null 2>&1)
     then
@@ -684,15 +714,17 @@ shRunScreenCapture() {
 
 shRunWithArgvUrlEncoded() {
     # this function will first decodeURIComponent $@ before running it
-    node -e "require('child_process')
-        .spawn(
-            process.argv[1],
-            process.argv.slice(2).map(function (element) {
-                return decodeURIComponent(element);
-            }),
-            { stdio: [0, 1, 2] }
-        )
-        .on('exit', process.exit);" $@ || return $?
+    node -e "
+        require('child_process')
+            .spawn(
+                process.argv[1],
+                process.argv.slice(2).map(function (element) {
+                    return decodeURIComponent(element);
+                }),
+                { stdio: [0, 1, 2] }
+            )
+            .on('exit', process.exit);
+    " $@ || return $?
 }
 
 shServerPortRandom() {
@@ -720,12 +752,14 @@ shHerokuDeploy() {
     # init .git/config
     printf "\n[user]\nname=nobody\nemail=nobody\n" > .git/config || return $?
     # init Procfile
-    node -e "require('fs').writeFileSync(
-        'Procfile',
-        require('$npm_config_dir_utility2').stringFormat(
-            require('fs').readFileSync('Procfile', 'utf8'), process.env
-        )
-    );" || return $?
+    node -e "
+        require('fs').writeFileSync(
+            'Procfile',
+            require('$npm_config_dir_utility2').stringFormat(
+                require('fs').readFileSync('Procfile', 'utf8'), process.env
+            )
+        );
+    " || return $?
     # rm .gitignore so we can git add everything
     rm -f .gitignore || return $?
     # git add everything
@@ -854,6 +888,8 @@ shMain() {
         shInit && "$COMMAND" $@ || return $?
         ;;
     start)
+        # http://stackoverflow.com/questions/59895
+        # /can-a-bash-script-tell-what-directory-its-stored-in
         SOURCE="${BASH_SOURCE[0]}"
         while [ -h "$SOURCE" ]
         # resolve $SOURCE until the file is no longer a symlink
@@ -865,7 +901,9 @@ shMain() {
             [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE" || return $?
         done
         npm_config_dir_utility2="$( cd -P "$( dirname "$SOURCE" )" && pwd )" || return $?
-        node -e "require('$npm_config_dir_utility2/test.js')" || return $?
+        npm_config_mode_auto_restart=1 shRun node -e "
+            require('$npm_config_dir_utility2/test.js');
+        " $@ || return $?
         ;;
     test)
         shInit && shNpmTest $@ || return $?

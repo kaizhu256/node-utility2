@@ -380,13 +380,13 @@ instruction
     "author": "kai zhu <kaizhu256@gmail.com>",
     "bin": { "utility2" : "index.sh" },
     "dependencies": {
-        "istanbul-lite": "2015.4.2-11",
-        "jslint-lite": "2015.3.24-11"
+        "istanbul-lite": "2015.4.9-a",
+        "jslint-lite": "2015.4.9-a"
     },
     "description": "run dynamic browser tests with coverage \
 (via istanbul-lite and phantomjs-lite)",
     "devDependencies": {
-        "phantomjs-lite": "2015.4.3-10"
+        "phantomjs-lite": "2015.4.9-a"
     },
     "engines": { "node": ">=0.10 <=0.12" },
     "keywords": [
@@ -414,7 +414,9 @@ instruction
         "build-ci": "./index.sh shRun shReadmeBuild",
         "start": "npm_config_mode_auto_restart=1 ./index.sh shRun node test.js",
         "test": "./index.sh shRun shReadmePackageJsonExport && \
-npm_config_mode_auto_restart=1 npm_config_mode_auto_restart_child=1 \
+export npm_config_start_file=index.js && \
+npm_config_mode_auto_restart=1 \
+npm_config_mode_auto_restart_child=1 \
 ./index.sh test test.js"
     },
     "version": "2015.4.9-a"

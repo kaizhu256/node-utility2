@@ -719,6 +719,14 @@
                 testReportDiv,
                 testReportHtml,
                 timerInterval;
+            // init modeTest
+            options = options || {};
+            local.utility2.modeTest =
+                local.utility2.modeTest ||
+                local.utility2.envDict.npm_config_mode_npm_test;
+            if (!(local.utility2.modeTest || options.modeTest)) {
+                return;
+            }
             // init onTaskEnd
             onTaskEnd = local.utility2.onTaskEnd(function () {
                 /*
@@ -839,14 +847,6 @@
                 }
             });
             onTaskEnd.counter += 1;
-            // init modeTest
-            options = options || {};
-            local.utility2.modeTest =
-                local.utility2.modeTest ||
-                local.utility2.envDict.npm_config_mode_npm_test;
-            if (!(local.utility2.modeTest || options.modeTest)) {
-                return;
-            }
             // mock exit
             exit = local.utility2.exit;
             local.utility2.exit = local.utility2.nop;

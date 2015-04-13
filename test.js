@@ -6,41 +6,13 @@
     nomen: true,
     stupid: true
 */
-(function () {
+(function (local) {
     'use strict';
-    var local;
 
 
 
     // run shared js-env code
     (function () {
-        // init local
-        local = {};
-        local.modeJs = (function () {
-            try {
-                return module.exports &&
-                    typeof process.versions.node === 'string' &&
-                    typeof require('http').createServer === 'function' &&
-                    'node';
-            } catch (errorCaughtNode) {
-                return typeof navigator.userAgent === 'string' &&
-                    typeof document.querySelector('body') === 'object' &&
-                    'browser';
-            }
-        }());
-        // init global
-        local.global = local.modeJs === 'browser'
-            ? window
-            : global;
-        // init utility2
-        local.utility2 = local.modeJs === 'browser'
-            ? window.utility2
-            : require('./index.js');
-        // init istanbul_lite
-        local.istanbul_lite = local.utility2.local.istanbul_lite;
-        // init jslint_lite
-        local.jslint_lite = local.utility2.local.jslint_lite;
-
         // init tests
         local.testCase_ajax_default = function (onError) {
             /*
@@ -506,43 +478,8 @@
 
 
 
-    // run browser js-env code
-    case 'browser':
-        // export local
-        window.local = local;
-        local.utility2.onErrorExit = function () {
-            // test modeTest !== 'phantom' handling behavior
-            if (local.utility2.modeTest === 'phantom2') {
-                setTimeout(function () {
-                    throw new Error('\nphantom\n' +
-                        JSON.stringify({ global_test_results: window.global_test_results }));
-                }, 1000);
-            }
-        };
-        local._modeTest = local.utility2.modeTest;
-        local.utility2.modeTest = null;
-        local.utility2.testRun();
-        local.utility2.modeTest = local._modeTest;
-        // run test
-        local.utility2.testRun(local);
-        break;
-
-
-
     // run node js-env code
     case 'node':
-        // require modules
-        local.child_process = require('child_process');
-        local.fs = require('fs');
-        local.http = require('http');
-        local.https = require('https');
-        local.istanbul_lite = require('istanbul-lite');
-        local.jslint_lite = require('jslint-lite');
-        local.path = require('path');
-        local.url = require('url');
-        local.vm = require('vm');
-        local.zlib = require('zlib');
-
         // init tests
         local.testCase_istanbulMerge_default = function (onError) {
             /*
@@ -823,7 +760,50 @@
                 onError();
             }, onError);
         };
+        break;
+    }
+    switch (local.modeJs) {
 
+
+
+    // run browser js-env code
+    case 'browser':
+        // export local
+        window.local = local;
+        local.utility2.onErrorExit = function () {
+            // test modeTest !== 'phantom' handling behavior
+            if (local.utility2.modeTest === 'phantom2') {
+                setTimeout(function () {
+                    throw new Error('\nphantom\n' +
+                        JSON.stringify({ global_test_results: window.global_test_results }));
+                }, 1000);
+            }
+        };
+        // coverage-hack - cover no modeTest handling behavior
+        local._modeTest = local.utility2.modeTest;
+        local.utility2.modeTest = null;
+        local.utility2.testRun();
+        // restore modeTest
+        local.utility2.modeTest = local._modeTest;
+        // run test
+        local.utility2.testRun(local);
+        break;
+
+
+
+    // run node js-env code
+    case 'node':
+        // require modules
+        local.child_process = require('child_process');
+        local.fs = require('fs');
+        local.http = require('http');
+        local.https = require('https');
+        local.istanbul_lite = require('istanbul-lite');
+        local.jslint_lite = require('jslint-lite');
+        local.path = require('path');
+        local.url = require('url');
+        local.vm = require('vm');
+        local.zlib = require('zlib');
         // init assets
         local['/'] = local.utility2['/test/test.html'];
         local['/assets/istanbul-lite.js'] = local.istanbul_lite['/assets/istanbul-lite.js'];
@@ -915,17 +895,19 @@
         // run server-test
         local.utility2.testRunServer(local);
         // init dir
-        local.fs.readdirSync(__dirname).forEach(function (file) {
-            file = __dirname + '/' + file;
-            switch (local.path.extname(file)) {
-            case '.js':
-            case '.json':
-                // jslint the file
-                local.jslint_lite.jslintAndPrint(local.fs.readFileSync(file, 'utf8'), file);
-                break;
-            }
-            // if the file is modified, then restart the process
-            local.utility2.onFileModifiedRestart(file);
+        [__dirname, process.cwd()].forEach(function (dir) {
+            local.fs.readdirSync(dir).forEach(function (file) {
+                file = dir + '/' + file;
+                switch (local.path.extname(file)) {
+                case '.js':
+                case '.json':
+                    // jslint the file
+                    local.jslint_lite.jslintAndPrint(local.fs.readFileSync(file, 'utf8'), file);
+                    break;
+                }
+                // if the file is modified, then restart the process
+                local.utility2.onFileModifiedRestart(file);
+            });
         });
         // jslint /assets/utility2.css
         local.jslint_lite.jslintAndPrint(
@@ -934,6 +916,55 @@
         );
         // init repl debugger
         local.utility2.replStart({ local: local });
+        // init $npm_config_start_file
+        [
+            // coverage-hack - cover no $npm_config_start_file handling behavior
+            null,
+            process.env.npm_config_start_file
+        ].forEach(function (file) {
+            if (file) {
+                require(process.cwd() + '/' + file);
+            }
+        });
         break;
     }
-}());
+}((function () {
+    'use strict';
+    var local;
+
+
+
+    // run shared js-env code
+    (function () {
+        // init local
+        local = {};
+        // init utility2
+        local.utility2 = { local: local };
+        local.modeJs = (function () {
+            try {
+                return module.exports &&
+                    typeof process.versions.node === 'string' &&
+                    typeof require('http').createServer === 'function' &&
+                    'node';
+            } catch (errorCaughtNode) {
+                return typeof navigator.userAgent === 'string' &&
+                    typeof document.querySelector('body') === 'object' &&
+                    'browser';
+            }
+        }());
+        // init global
+        local.global = local.modeJs === 'browser'
+            ? window
+            : global;
+        // init utility2
+        local.utility2 = local.modeJs === 'browser'
+            ? window.utility2
+            : require('./index.js');
+        // init istanbul_lite
+        local.istanbul_lite = local.utility2.local.istanbul_lite;
+        // init jslint_lite
+        local.jslint_lite = local.utility2.local.jslint_lite;
+
+    }());
+    return local;
+}())));
