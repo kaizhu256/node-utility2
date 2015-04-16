@@ -92,7 +92,7 @@
             }, {
                 // test undefined https host handling behavior
                 timeout: 1,
-                url: 'https://undefined' + Date.now() + Math.random() + '.com'
+                url: 'https://' + local.utility2.uuid4() + '.com'
             }].forEach(function (options) {
                 onTaskEnd.counter += 1;
                 local.utility2.ajax(options, function (error) {
@@ -778,6 +778,33 @@
                 });
                 onError();
             }, onError);
+        };
+
+        local.testCase_taskCacheCreateOrAddCallback_default = function (onError) {
+            /*
+                this function will test taskCacheCreateOrAddCallback's default handling behavior
+            */
+            var key, onTaskEnd;
+            key = local.utility2.uuid4();
+            onTaskEnd = local.utility2.onTaskEnd(onError);
+            onTaskEnd.counter += 1;
+            // test create handling behavior
+            onTaskEnd.counter += 1;
+            local.utility2.taskCacheCreateOrAddCallback(
+                { key: key },
+                function (onError) {
+                    setTimeout(function () {
+                        // test multiple-callback handling behavior
+                        onError();
+                        onError();
+                    });
+                },
+                onTaskEnd
+            );
+            // test addCallback handling behavior
+            onTaskEnd.counter += 1;
+            local.utility2.taskCacheCreateOrAddCallback({ key: key }, null, onTaskEnd);
+            onTaskEnd();
         };
 
         local.testCase_testRunServer_misc = function (onError) {
