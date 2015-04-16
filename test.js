@@ -357,6 +357,36 @@
             }, onError);
         };
 
+        local.testCase_onErrorJsonParse_default = function (onError) {
+            /*
+                this function will test onErrorJsonParse's default handling behavior
+            */
+            var data, error, jsonParse;
+            jsonParse = local.utility2.onErrorJsonParse(function (arg0, arg1) {
+                data = arg1;
+                error = arg0;
+            });
+            // test parse passed handling behavior
+            jsonParse(null, '1');
+            // validate no error occurred
+            local.utility2.assert(!error, error);
+            // validate data
+            local.utility2.assert(data === 1);
+            // test parse failed handling behavior
+            jsonParse(null, 'syntax error');
+            // validate no error occurred
+            local.utility2.assert(error instanceof Error, error);
+            // validate data
+            local.utility2.assert(!data);
+            // test error handling behavior
+            jsonParse(new Error());
+            // validate no error occurred
+            local.utility2.assert(error instanceof Error, error);
+            // validate data
+            local.utility2.assert(!data);
+            onError();
+        };
+
         local.testCase_onTaskEnd_default = function (onError) {
             /*
                 this function will test onTaskEnd's default handling behavior
@@ -732,9 +762,9 @@
                     envDict: {
                         // test $npm_package_name !== 'utility2' handling behavior
                         npm_package_name: 'undefined',
-                        // test exit-after-timeout handling behavior
+                        // test timeout-exit handling behavior
                         npm_config_timeout_exit: '1',
-                        // test random $npm_config_server_port handling behavior
+                        // test $npm_config_server_port handling behavior
                         npm_config_server_port: ''
                     },
                     phantomScreenCapture: local.utility2.nop,
@@ -754,11 +784,27 @@
                 });
                 // validate $npm_config_server_port
                 local.utility2.assert(
-                    Number(local.utility2.envDict.npm_config_server_port),
+                    Number(local.utility2.envDict.npm_config_server_port) > 0,
                     local.utility2.envDict.npm_config_server_port
                 );
                 onError();
             }, onError);
+        };
+
+        local.testCase_uuidTime_default = function (onError) {
+            /*
+                this function will test uuidTime's default handling behavior
+            */
+            var data1, data2;
+            data1 = local.utility2.uuidTime();
+            setTimeout(function () {
+                local.utility2.testTryCatch(function () {
+                    data2 = local.utility2.uuidTime();
+                    // validate data1 < data2
+                    local.utility2.assert(data1 < data2, [data1, data2]);
+                    onError();
+                }, onError);
+            });
         };
         break;
     }

@@ -1817,7 +1817,7 @@
             var server, testSecretCreate;
             // init _testSecret
             testSecretCreate = function () {
-                local.utility2._testSecret = local.utility2.uuidTime();
+                local.utility2._testSecret = local.utility2.uuid4();
             };
             // init _testSecret
             testSecretCreate();
@@ -1878,19 +1878,6 @@
 
     // run shared js-env code
     (function () {
-        // init global debug_print
-        local.global['debug_print'.replace('_p', 'P')] = function (arg) {
-            /*
-                this function will both print the arg to stderr and return it
-            */
-            // debug arguments
-            local['_debug_printArguments'.replace('_p', 'P')] = arguments;
-            console.error('\n\n\ndebug_print'.replace('_p', 'P'));
-            console.error.apply(console, arguments);
-            console.error();
-            // return arg for inspection
-            return arg;
-        };
         local.utility2.errorDefault = new Error('default error');
         // http://www.w3.org/TR/html5/forms.html#valid-e-mail-address
         local.utility2.regexpEmailValidate = new RegExp(
@@ -2046,7 +2033,7 @@
                     local.utility2.exit = local.utility2.nop;
                     // test string error with no trace handling behavior
                     local.onError('error', null);
-                    // test string error //
+                    // test string error
                     // with trace-function and trace-sourceUrl handling behavior
                     local.onError('error', [{ function: true, sourceUrl: true }]);
                     // test default error handling behavior
@@ -2080,48 +2067,60 @@
             }
         };
 
-        // run simple 'hello' test
-        if (local.system.args[1] === 'hello') {
-            console.log('hello');
-            local.utility2.exit();
-            return;
-        }
-        // init global error handling - http://phantomjs.org/api/phantom/handler/on-error.html
-        local.global.phantom.onError = local.onError;
-        // override utility2 properties
-        local.utility2.objectSetOverride(
-            local.utility2,
-            JSON.parse(decodeURIComponent(local.system.args[1])),
-            -1
-        );
-        // if modeErrorIgnore is truthy, then suppress console.error and console.log
-        if (local.utility2.modeErrorIgnore) {
-            console.error = console.log = local.utility2.nop;
-        }
-        // init timerTimeout
-        local.timerTimeout = local.utility2.onTimeout(
-            local.utility2.onErrorExit,
-            local.utility2.timeoutDefault,
-            local.utility2.url
-        );
-        // init webpage
-        local.page = local.webpage.create();
-        // init webpage clipRect
-        local.page.clipRect = { height: 768, left: 0, top: 0, width: 1024 };
-        // init webpage viewportSize
-        local.page.viewportSize = { height: 768, width: 1024 };
-        // init webpage error handling - http://phantomjs.org/api/webpage/handler/on-error.html
-        local.page.onError = local.onError;
-        // pipe webpage console.log to stdout
-        local.page.onConsoleMessage = function () {
-            console.log.apply(console, arguments);
-        };
-        // open requested webpage
-        local.page.open(
-            // security - insert _testSecret in url without revealing it
-            local.utility2.url.replace('{{_testSecret}}', local.utility2._testSecret),
-            local.onError
-        );
+        [
+            {
+                // test 'hello' test
+                system: { args: ['', 'hello'] },
+                global: { console: { log: local.utility2.nop } },
+                utility2: { exit: local.utility2.nop }
+            },
+            local
+        ].forEach(function (local) {
+            // run 'hello' test
+            if (local.system.args[1] === 'hello') {
+                local.global.console.log('hello');
+                local.utility2.exit();
+                return;
+            }
+            // init global error handling
+            // http://phantomjs.org/api/phantom/handler/on-error.html
+            local.global.phantom.onError = local.onError;
+            // override utility2 properties
+            local.utility2.objectSetOverride(
+                local.utility2,
+                JSON.parse(decodeURIComponent(local.system.args[1])),
+                -1
+            );
+            // if modeErrorIgnore is truthy, then suppress console.error and console.log
+            if (local.utility2.modeErrorIgnore) {
+                console.error = console.log = local.utility2.nop;
+            }
+            // init timerTimeout
+            local.timerTimeout = local.utility2.onTimeout(
+                local.utility2.onErrorExit,
+                local.utility2.timeoutDefault,
+                local.utility2.url
+            );
+            // init webpage
+            local.page = local.webpage.create();
+            // init webpage clipRect
+            local.page.clipRect = { height: 768, left: 0, top: 0, width: 1024 };
+            // init webpage viewportSize
+            local.page.viewportSize = { height: 768, width: 1024 };
+            // init webpage error handling
+            // http://phantomjs.org/api/webpage/handler/on-error.html
+            local.page.onError = local.onError;
+            // pipe webpage console.log to stdout
+            local.page.onConsoleMessage = function () {
+                console.log.apply(console, arguments);
+            };
+            // open requested webpage
+            local.page.open(
+                // security - insert _testSecret in url without revealing it
+                local.utility2.url.replace('{{_testSecret}}', local.utility2._testSecret),
+                local.onError
+            );
+        });
         break;
     }
 }((function (self) {
@@ -2134,8 +2133,6 @@
     (function () {
         // init local
         local = {};
-        // init utility2
-        local.utility2 = { local: local };
         local.modeJs = (function () {
             try {
                 return self.phantom.version &&
@@ -2154,12 +2151,33 @@
                 }
             }
         }());
-        local.utility2.nop = function () {
+        // init global
+        local.global = local.modeJs === 'browser'
+            ? window
+            : local.modeJs === 'node'
+            ? global
+            : self;
+        // init global debug_print
+        local.global['debug_print'.replace('_p', 'P')] = function (arg) {
             /*
-                this function will perform no operation - nop
+                this function will both print the arg to stderr and return it
+            */
+            // debug arguments
+            local['_debug_printArguments'.replace('_p', 'P')] = arguments;
+            console.error('\n\n\ndebug_print'.replace('_p', 'P'));
+            console.error.apply(console, arguments);
+            console.error();
+            // return arg for inspection
+            return arg;
+        };
+        local.nop = function () {
+            /*
+                this function will run no operation - nop
             */
             return;
         };
+        // init utility2
+        local.utility2 = { local: local, nop: local.nop };
     }());
     switch (local.modeJs) {
 
@@ -2167,8 +2185,6 @@
 
     // run browser js-env code
     case 'browser':
-        // init global
-        local.global = window;
         // export utility2
         window.utility2 = local.utility2;
         // require modules
@@ -2183,8 +2199,6 @@
 
     // run node js-env code
     case 'node':
-        // init global
-        local.global = global;
         // export utility2
         module.exports = local.utility2;
         // require modules
@@ -2209,8 +2223,6 @@
 
     // run phantom js-env code
     case 'phantom':
-        // init global
-        local.global = self;
         // export utility2
         self.utility2 = local.utility2;
         // require modules
