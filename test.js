@@ -576,6 +576,33 @@
             });
         };
 
+        local.testCase_serverRespondTimeoutDefault_default = function (onError) {
+            /*
+                this function will test serverRespondTimeoutDefault's default handling behavior
+            */
+            local.utility2.testMock([
+                // suppress console.error
+                [console, { error: local.utility2.nop }],
+                [local.utility2, {
+                    // suppress onErrorDefault
+                    onErrorDefault: local.utility2.nop,
+                    // coverage-hack - cover timeout callback handling behavior
+                    onTimeoutRequestResponseDestroy: function (onError) {
+                        onError();
+                    },
+                    serverRespondDefault: local.utility2.nop
+                }]
+            ], function (onError) {
+                local.utility2.serverRespondTimeoutDefault(
+                    {},
+                    {},
+                    // coverage-hack - cover default timeout handling behavior
+                    null
+                );
+                onError();
+            }, onError);
+        };
+
         local.testCase_phantomTest_default = function (onError) {
             /*
                 this function will test phantomTest's default handling behavior
@@ -814,7 +841,7 @@
                     // validate data1
                     local.utility2.assert(local.utility2.regexpUuidValidate.test(data1), data1);
                     // validate data2
-                    local.utility2.assert(local.utility2.regexpUuidValidate.test(data1), data2);
+                    local.utility2.assert(local.utility2.regexpUuidValidate.test(data2), data2);
                     // validate data1 < data2
                     local.utility2.assert(data1 < data2, [data1, data2]);
                     onError();

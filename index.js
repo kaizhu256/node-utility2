@@ -1346,7 +1346,7 @@
             local._debugServerResponse = response;
             // init timerTimeout
             local.utility2
-                .serverRespondTimeout(request, response, local.utility2.timeoutDefault);
+                .serverRespondTimeoutDefault(request, response, local.utility2.timeoutDefault);
             // cleanup timerTimeout
             response.on('finish', function () {
                 // cleanup timerTimeout
@@ -1775,7 +1775,7 @@
             return true;
         };
 
-        local.utility2.serverRespondTimeout = function (request, response, timeout) {
+        local.utility2.serverRespondTimeoutDefault = function (request, response, timeout) {
             /*
                 this function will create a timeout error-handler for the server request
             */
@@ -1788,7 +1788,7 @@
                     local.utility2.onErrorDefault(error);
                     request.onTimeout(error);
                 },
-                timeout,
+                timeout || local.utility2.timeoutDefault,
                 'server ' + request.method + ' ' + request.url,
                 request,
                 response
