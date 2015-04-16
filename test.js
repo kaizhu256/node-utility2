@@ -791,6 +791,17 @@
             }, onError);
         };
 
+        local.testCase_uuid4_default = function (onError) {
+            /*
+                this function will test uuid4's default handling behavior
+            */
+            var data;
+            data = local.utility2.uuidTime();
+            // validate data
+            local.utility2.assert(local.utility2.regexpUuidValidate.test(data), data);
+            onError();
+        };
+
         local.testCase_uuidTime_default = function (onError) {
             /*
                 this function will test uuidTime's default handling behavior
@@ -800,11 +811,15 @@
             setTimeout(function () {
                 local.utility2.testTryCatch(function () {
                     data2 = local.utility2.uuidTime();
+                    // validate data1
+                    local.utility2.assert(local.utility2.regexpUuidValidate.test(data1), data1);
+                    // validate data2
+                    local.utility2.assert(local.utility2.regexpUuidValidate.test(data1), data2);
                     // validate data1 < data2
                     local.utility2.assert(data1 < data2, [data1, data2]);
                     onError();
                 }, onError);
-            });
+            }, 1000);
         };
         break;
     }

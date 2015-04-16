@@ -972,12 +972,12 @@
         local.utility2.uuid4 = function () {
             /*
                 this function will return a random uuid,
-                with form "xxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx"
+                with form "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx"
             */
             // code derived from http://jsperf.com/uuid4
             var id, ii;
-            id = '';
-            for (ii = 0; ii < 32; ii += 1) {
+            id = 0;
+            for (ii = 1; ii < 32; ii += 1) {
                 switch (ii) {
                 case 8:
                 case 20:
@@ -1004,9 +1004,10 @@
         local.utility2.uuidTime = function () {
             /*
                 this function will return a time-based variant of uuid4,
-                with form "tttttttt-xxxx-4xxx-yxxx-xxxxxxxxxxxx"
+                with form "tttttttt-tttx-4xxx-yxxx-xxxxxxxxxxxx"
             */
-            return Date.now().toString(16).slice(0, 8) + local.utility2.uuid4().slice(8);
+            return Date.now().toString(16).replace(/([0-9a-f]{8})/, '$1-') +
+                local.utility2.uuid4().slice(12);
         };
     }());
     switch (local.modeJs) {
@@ -1344,20 +1345,8 @@
             // debug server response
             local._debugServerResponse = response;
             // init timerTimeout
-            request.onTimeout = request.onTimeout || function () {
-                local.utility2.serverRespondDefault(request, response, 500);
-            };
-            request.timerTimeout = local.utility2.onTimeoutRequestResponseDestroy(
-                function (error) {
-                    console.error(request.method + ' ' + request.url);
-                    local.utility2.onErrorDefault(error);
-                    request.onTimeout(error);
-                },
-                local.utility2.timeoutDefault,
-                'server ' + request.method + ' ' + request.url,
-                request,
-                response
-            );
+            local.utility2
+                .serverRespondTimeout(request, response, local.utility2.timeoutDefault);
             // cleanup timerTimeout
             response.on('finish', function () {
                 // cleanup timerTimeout
@@ -1786,6 +1775,26 @@
             return true;
         };
 
+        local.utility2.serverRespondTimeout = function (request, response, timeout) {
+            /*
+                this function will create a timeout error-handler for the server request
+            */
+            request.onTimeout = request.onTimeout || function () {
+                local.utility2.serverRespondDefault(request, response, 500);
+            };
+            request.timerTimeout = local.utility2.onTimeoutRequestResponseDestroy(
+                function (error) {
+                    console.error(request.method + ' ' + request.url);
+                    local.utility2.onErrorDefault(error);
+                    request.onTimeout(error);
+                },
+                timeout,
+                'server ' + request.method + ' ' + request.url,
+                request,
+                response
+            );
+        };
+
         local.utility2.streamReadAll = function (readableStream, onError) {
             /*
                 this function will concat data from the readableStream,
@@ -1886,6 +1895,8 @@
                 '(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9\\-]{0,61}[a-zA-Z0-9])?)*$'
         );
         local.utility2.regexpUriComponentCharset = (/[\w\!\%\'\(\)\*\-\.\~]/);
+        local.utility2.regexpUuidValidate =
+            (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
         local.utility2.stringAsciiCharset = local.utility2.stringExampleAscii ||
             '\x00\x01\x02\x03\x04\x05\x06\x07\b\t\n\x0b\f\r\x0e\x0f' +
             '\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f' +
@@ -2069,7 +2080,7 @@
 
         [
             {
-                // test 'hello' test
+                // coverage-hack - cover 'hello' test
                 system: { args: ['', 'hello'] },
                 global: { console: { log: local.utility2.nop } },
                 utility2: { exit: local.utility2.nop }
