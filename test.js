@@ -739,7 +739,7 @@
                     },
                     phantomScreenCapture: local.utility2.nop,
                     onReady: {},
-                    taskGroupCreateOrAddCallback: local.utility2.nop
+                    taskCacheCreateOrAddCallback: local.utility2.nop
                 }],
                 [local.utility2.local, {
                     http: { createServer: function () {
@@ -964,7 +964,6 @@
         local.istanbul_lite = local.utility2.local.istanbul_lite;
         // init jslint_lite
         local.jslint_lite = local.utility2.local.jslint_lite;
-
     }());
     return local;
 }())));

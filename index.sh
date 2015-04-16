@@ -870,7 +870,7 @@ shMain() {
       return
     fi
     COMMAND="$1" || return $?
-    shift
+    shift || return $?
     case "$COMMAND" in
     shRun)
         shInit && "$COMMAND" $@ || return $?

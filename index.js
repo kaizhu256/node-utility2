@@ -414,46 +414,46 @@
             });
         };
 
-        local.utility2.taskGroupCreateOrAddCallback = function (taskGroup, onTask, onError) {
+        local.utility2.taskCacheCreateOrAddCallback = function (taskCache, onTask, onError) {
             /*
                 this function will
-                1. if taskGroup is already defined, then add onError to its callbackList
-                2. else create a new taskGroup, that will cleanup itself after onTask ends
+                1. if taskCache is already defined, then add onError to its callbackList
+                2. else create a new taskCache, that will cleanup itself after onTask ends
             */
-            // init taskGroupDict
-            local.utility2.taskGroupDict = local.utility2.taskGroupDict || {};
-            // 1. if taskGroup is already defined, then add onError to its callbackList
-            if (local.utility2.taskGroupDict[taskGroup.key]) {
-                local.utility2.taskGroupDict[taskGroup.key].callbackList
+            // init taskCacheDict
+            local.utility2.taskCacheDict = local.utility2.taskCacheDict || {};
+            // 1. if taskCache is already defined, then add onError to its callbackList
+            if (local.utility2.taskCacheDict[taskCache.key]) {
+                local.utility2.taskCacheDict[taskCache.key].callbackList
                     .push(local.utility2.onErrorWithStack(onError));
                 return;
             }
-            // 2. else create a new taskGroup, that will cleanup itself after onTask ends
-            local.utility2.taskGroupDict[taskGroup.key] = taskGroup;
-            taskGroup.callbackList = [local.utility2.onErrorWithStack(onError)];
-            taskGroup.onEnd = function () {
-                if (taskGroup.done) {
+            // 2. else create a new taskCache, that will cleanup itself after onTask ends
+            local.utility2.taskCacheDict[taskCache.key] = taskCache;
+            taskCache.callbackList = [local.utility2.onErrorWithStack(onError)];
+            taskCache.onEnd = function () {
+                if (taskCache.done) {
                     return;
                 }
-                taskGroup.done = true;
+                taskCache.done = true;
                 // cleanup timerTimeout
-                clearTimeout(taskGroup.timerTimeout);
-                // cleanup taskGroup
-                delete local.utility2.taskGroupDict[taskGroup.key];
+                clearTimeout(taskCache.timerTimeout);
+                // cleanup taskCache
+                delete local.utility2.taskCacheDict[taskCache.key];
                 // pass result to callbacks in callbackList
-                taskGroup.result = arguments;
-                taskGroup.callbackList.forEach(function (onError) {
-                    onError.apply(null, taskGroup.result);
+                taskCache.result = arguments;
+                taskCache.callbackList.forEach(function (onError) {
+                    onError.apply(null, taskCache.result);
                 });
             };
             // init timerTimeout
-            taskGroup.timerTimeout = local.utility2.onTimeout(
-                taskGroup.onEnd,
-                taskGroup.timeout || local.utility2.timeoutDefault,
-                'taskGroupCreateOrAddCallback ' + taskGroup.key
+            taskCache.timerTimeout = local.utility2.onTimeout(
+                taskCache.onEnd,
+                taskCache.timeout || local.utility2.timeoutDefault,
+                'taskCacheCreateOrAddCallback ' + taskCache.key
             );
             // run onTask
-            onTask(taskGroup.onEnd);
+            onTask(taskCache.onEnd);
         };
 
         local.utility2.testMock = function (mockList, onTestCase, onError) {
@@ -1861,7 +1861,7 @@
                     .unref();
             }
             // 3. if $npm_config_mode_npm_test is defined, then run tests
-            local.utility2.taskGroupCreateOrAddCallback(
+            local.utility2.taskCacheCreateOrAddCallback(
                 { key: 'utility2.onReady' },
                 null,
                 function () {
@@ -1931,7 +1931,7 @@
             local.utility2.timeoutDefault ||
             30000;
         // init onReady
-        local.utility2.taskGroupCreateOrAddCallback(
+        local.utility2.taskCacheCreateOrAddCallback(
             { key: 'utility2.onReady' },
             function (onError) {
                 local.utility2.onReady = local.utility2.onTaskEnd(onError);
