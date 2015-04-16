@@ -586,7 +586,7 @@
                 [local.utility2, {
                     // suppress onErrorDefault
                     onErrorDefault: local.utility2.nop,
-                    // coverage-hack - cover timeout callback handling behavior
+                    // test timeout callback handling behavior
                     onTimeoutRequestResponseDestroy: function (onError) {
                         onError();
                     },
@@ -596,7 +596,7 @@
                 local.utility2.serverRespondTimeoutDefault(
                     {},
                     {},
-                    // coverage-hack - cover default timeout handling behavior
+                    // test default timeout handling behavior
                     null
                 );
                 onError();
@@ -867,7 +867,7 @@
                 }, 1000);
             }
         };
-        // coverage-hack - cover no modeTest handling behavior
+        // test no modeTest handling behavior
         local._modeTest = local.utility2.modeTest;
         local.utility2.modeTest = null;
         local.utility2.testRun();
@@ -1006,7 +1006,7 @@
         local.utility2.replStart({ local: local });
         // init $npm_config_start_file
         [
-            // coverage-hack - cover no $npm_config_start_file handling behavior
+            // test no $npm_config_start_file handling behavior
             null,
             process.env.npm_config_start_file
         ].forEach(function (file) {

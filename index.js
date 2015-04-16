@@ -1601,21 +1601,32 @@
             });
             // start repl server
             local._replServer = require('repl').start({ useGlobal: true });
+            local._replServer.onError = function (error) {
+                /*
+                    this function will debug repl errors
+                */
+                local._debugReplError = error || local._debugReplError;
+            };
+            // coverage-hack - cover legacy node v0.10 code
+            [
+                null,
+                { on: local.utility2.nop },
+                local._replServer._domain
+            ].forEach(function (domain) {
+                if (domain) {
+                    // debug error
+                    domain.on('error', local._replServer.onError);
+                }
+            });
             // save repl eval function
             local._replServer.evalDefault = local._replServer.eval;
-            // debug error
-            if (local._replServer._domain) {
-                local._replServer._domain.on('error', function (error) {
-                    local._debugReplError = error;
-                });
-            }
             // hook custom repl eval function
             local._replServer.eval = function (script, context, file, onError) {
                 var match, onError2;
                 match = (/^(\S+)([\S\s]*?)\n/).exec(script);
                 onError2 = function (error, data) {
                     // debug error
-                    local._debugReplError = error || local._debugReplError;
+                    local._replServer.onError(error);
                     onError(error, data);
                 };
                 switch (match && match[1]) {
@@ -2038,7 +2049,7 @@
                 );
                 // run phantom self-test
                 if (local.utility2.modePhantomSelfTest) {
-                    // coverage-hack - cover no coverage handling behavior
+                    // test no coverage handling behavior
                     local.coverAndExit(null, local.utility2.nop);
                     // disable exit
                     local.utility2.exit = local.utility2.nop;
