@@ -1053,8 +1053,6 @@
     (function () {
         // init local
         local = {};
-        // init utility2
-        local.utility2 = { local: local };
         local.modeJs = (function () {
             try {
                 return module.exports &&

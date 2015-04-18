@@ -243,8 +243,6 @@
             }
         };
 
-        local.utility2.onErrorExit = local.utility2.exit;
-
         local.utility2.onErrorWithStack = function (onError) {
             /*
                 this function will return a new callback that calls onError,
@@ -1898,7 +1896,18 @@
 
     // run shared js-env code
     (function () {
+        local.utility2.envDict = local.modeJs === 'browser'
+            ? {}
+            : local.modeJs === 'node'
+            ? process.env
+            : require('system').env;
         local.utility2.errorDefault = new Error('default error');
+        local.utility2.exit = local.modeJs === 'browser'
+            ? local.nop
+            : local.modeJs === 'node'
+            ? process.exit
+            : local.global.phantom.exit;
+        local.utility2.onErrorExit = local.utility2.exit;
         // http://www.w3.org/TR/html5/forms.html#valid-e-mail-address
         local.utility2.regexpEmailValidate = new RegExp(
             '^[a-zA-Z0-9.!#$%&\'*+\\/=?\\^_`{|}~\\-]+@' +
@@ -1926,7 +1935,7 @@
                 : (local.global.slimer
                     ? 'slimer - '
                     : 'phantom - ') +
-                    local.system.os.name + ' ' +
+                    require('system').os.name + ' ' +
                     local.global.phantom.version.major + '.' +
                     local.global.phantom.version.minor + '.' +
                     local.global.phantom.version.patch + ' - ' +
@@ -1956,6 +1965,11 @@
 
     // run browser js-env code
     case 'browser':
+        // export utility2
+        window.utility2 = local.utility2;
+        // require modules
+        local.istanbul_lite = window.istanbul_lite;
+        local.jslint_lite = window.jslint_lite;
         // parse url search-params that match 'mode*' or '_testSecret'
         location.search.replace(
             (/\b(mode[A-Z]\w+|_testSecret)=([\w\-\.\%]+)/g),
@@ -1976,6 +1990,22 @@
 
     // run node js-env code
     case 'node':
+        // export utility2
+        module.exports = local.utility2;
+        // require modules
+        local.child_process = require('child_process');
+        local.fs = require('fs');
+        local.http = require('http');
+        local.https = require('https');
+        local.istanbul_lite = require('istanbul-lite');
+        local.jslint_lite = require('jslint-lite');
+        local.path = require('path');
+        local.url = require('url');
+        local.zlib = require('zlib');
+        // init utility2 properties
+        local.utility2.__dirname = __dirname;
+        local.utility2.envDict.npm_config_dir_build = process.cwd() + '/tmp/build';
+        local.utility2.envDict.npm_config_dir_tmp = process.cwd() + '/tmp';
         // init assets
         local.utility2['/assets/utility2.js'] = local.fs.readFileSync(__filename, 'utf8');
         local.utility2['/test/test.html'] = local.utility2.stringFormat(local.fs
@@ -1991,6 +2021,10 @@
 
     // run phantom js-env code
     case 'phantom':
+        // require modules
+        local.fs = require('fs');
+        local.system = require('system');
+        local.webpage = require('webpage');
         local.coverAndExit = function (coverage, exit, exitCode) {
             setTimeout(function () {
                 if (coverage) {
@@ -2200,67 +2234,6 @@
         };
         // init utility2
         local.utility2 = { local: local, nop: local.nop };
-    }());
-    switch (local.modeJs) {
-
-
-
-    // run browser js-env code
-    case 'browser':
-        // export utility2
-        window.utility2 = local.utility2;
-        // require modules
-        local.istanbul_lite = window.istanbul_lite;
-        local.jslint_lite = window.jslint_lite;
-        // init utility2 properties
-        local.utility2.envDict = local.utility2.envDict || {};
-        local.utility2.exit = local.utility2.nop;
-        break;
-
-
-
-    // run node js-env code
-    case 'node':
-        // export utility2
-        module.exports = local.utility2;
-        // require modules
-        local.child_process = require('child_process');
-        local.fs = require('fs');
-        local.http = require('http');
-        local.https = require('https');
-        local.istanbul_lite = require('istanbul-lite');
-        local.jslint_lite = require('jslint-lite');
-        local.path = require('path');
-        local.url = require('url');
-        local.zlib = require('zlib');
-        // init utility2 properties
-        local.utility2.__dirname = __dirname;
-        local.utility2.envDict = process.env;
-        local.utility2.envDict.npm_config_dir_build = process.cwd() + '/tmp/build';
-        local.utility2.envDict.npm_config_dir_tmp = process.cwd() + '/tmp';
-        local.utility2.exit = process.exit;
-        break;
-
-
-
-    // run phantom js-env code
-    case 'phantom':
-        // export utility2
-        self.utility2 = local.utility2;
-        // require modules
-        local.fs = require('fs');
-        local.system = require('system');
-        local.webpage = require('webpage');
-        // init utility2 properties
-        local.utility2.envDict = local.system.env;
-        local.utility2.exit = self.phantom.exit;
-        break;
-    }
-
-
-
-    // run shared js-env code
-    (function () {
 
 
 

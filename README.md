@@ -262,9 +262,9 @@ instruction
     '<pre class="jslintOutputPre"></pre>\n' +
     '<div class="testReportDiv"></div>\n' +
     '<div class="istanbulCoverageDiv"></div>\n' +
+    '<script src="/assets/utility2.js"></script>\n' +
     '<script src="/assets/istanbul-lite.js"></script>\n' +
     '<script src="/assets/jslint-lite.js"></script>\n' +
-    '<script src="/assets/utility2.js"></script>\n' +
     '<script>\n' +
     'window.utility2 = window.utility2 || {};\n' +
     'window.utility2.envDict = {\n' +
