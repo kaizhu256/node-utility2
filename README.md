@@ -275,7 +275,7 @@ instruction
     'document.querySelector(\n' +
         '".istanbulInputTextarea"\n' +
     ').addEventListener("keyup", function () {\n' +
-        'window.utility2.taskGroupCreateOrAddCallback(\n' +
+        'window.utility2.taskCacheCreateOrAddCallback(\n' +
             '{ key: "testTextarea" },\n' +
             'function (onError) {\n' +
                 'window.utility2.onErrorExit = onError;\n' +
@@ -381,7 +381,7 @@ instruction
     "bin": { "utility2" : "index.sh" },
     "dependencies": {
         "istanbul-lite": "2015.4.9-a",
-        "jslint-lite": "2015.4.9-a"
+        "jslint-lite": "2015.4.18-b"
     },
     "description": "run dynamic browser tests with coverage \
 (via istanbul-lite and phantomjs-lite)",
@@ -419,7 +419,7 @@ npm_config_mode_auto_restart=1 \
 npm_config_mode_auto_restart_child=1 \
 ./index.sh test test.js"
     },
-    "version": "2015.4.9-a"
+    "version": "2015.4.18-b"
 }
 ```
 
