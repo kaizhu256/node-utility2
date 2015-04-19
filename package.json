@@ -8,7 +8,7 @@
     },
     "description": "run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)",
     "devDependencies": {
-        "phantomjs-lite": "2015.4.9-a"
+        "phantomjs-lite": "2015.4.18-a"
     },
     "engines": { "node": ">=0.10 <=0.12" },
     "keywords": [

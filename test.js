@@ -42,7 +42,7 @@
                     // validate no error occurred
                     local.utility2.assert(!error, error);
                     // validate 304 http status
-                    local.utility2.assert(xhr.status === 304, JSON.stringify(xhr));
+                    local.utility2.assert(xhr.status === 304, xhr.status);
                     // validate no data
                     local.utility2.assert(!data, data);
                     onTaskEnd();

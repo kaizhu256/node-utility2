@@ -254,19 +254,17 @@
             } catch (errorCaught) {
                 errorStack = errorCaught.stack;
             }
-            return function () {
-                var args;
-                args = arguments;
-                if (args[0]) {
-                    // try to append errorStack to args[0].stack
+            return function (error) {
+                if (error) {
+                    // try to append errorStack to error.stack
                     try {
-                        args[0].stack = args[0].stack
-                            ? args[0].stack + '\n' + errorStack
+                        error.stack = error.stack
+                            ? error.stack + '\n' + errorStack
                             : errorStack;
                     } catch (ignore) {
                     }
                 }
-                onError.apply(null, args);
+                onError.apply(null, arguments);
             };
         };
 
@@ -1016,8 +1014,7 @@
     case 'browser':
         local.utility2.ajax = function (options, onError) {
             /*
-                this function will make an ajax request
-                with error handling and timeout
+                this function will make an ajax request with error handling and timeout
             */
             var ajaxProgressDiv, data, done, error, ii, onEvent, timerTimeout, xhr;
             // init ajaxProgressDiv
@@ -1089,7 +1086,7 @@
             // init xhr
             xhr = new XMLHttpRequest();
             // debug xhr
-            local._debugXhr = xhr;
+            local._debugAjaxXhr = xhr;
             // init event handling
             xhr.addEventListener('abort', onEvent);
             xhr.addEventListener('error', onEvent);
@@ -1118,6 +1115,7 @@
             clearTimeout(local._ajaxProgressBarHide);
             // send data
             xhr.send(options.data);
+            return xhr;
         };
 
         local._ajaxProgressIncrement = function () {
@@ -1161,17 +1159,9 @@
     case 'node':
         local.utility2.ajax = function (options, onError) {
             /*
-                this function will make an ajax request
-                with error handling and timeout
+                this function will make an ajax request with error handling and timeout
             */
-            var done,
-                modeNext,
-                onNext,
-                request,
-                response,
-                responseText,
-                timerTimeout,
-                urlParsed;
+            var done, modeNext, onNext, request, response, timerTimeout, urlParsed, xhr;
             modeNext = 0;
             onNext = local.utility2.onErrorWithStack(function (error, data) {
                 modeNext = error instanceof Error
@@ -1220,25 +1210,48 @@
                         : local.http).request(options, onNext)
                         // handle error event
                         .on('error', onNext);
-                    // debug ajax request
+                    // debug request
                     local._debugAjaxRequest = request;
                     // send request and/or data
                     request.end(options.data);
+                    // init xhr
+                    xhr = options;
+                    // debug xhr
+                    local._debugAjaxXhr = xhr;
+                    // init xhr.abort
+                    xhr.abort = function () {
+                        onNext(new Error('abort'));
+                    };
+                    // init xhr.getAllResponseHeaders
+                    xhr.getAllResponseHeaders = function () {
+                        return response.rawHeaders &&
+                            response.rawHeaders.map(function (element, ii) {
+                                return ii & 1
+                                    ? element + '\r\n'
+                                    : element + ': ';
+                            });
+                    };
+                    // init xhr.getResponseHeader
+                    xhr.getResponseHeader = function (key) {
+                        return response.headers && response.headers[key];
+                    };
                     break;
                 case 2:
                     response = error;
                     // debug ajax response
                     local._debugAjaxResponse = response;
+                    // init xhr.status
+                    xhr.status = response.statusCode;
                     local.utility2.streamReadAll(response, onNext);
                     break;
                 case 3:
-                    // init responseText
-                    responseText = options.resultType === 'binary'
+                    // init xhr.responseText
+                    xhr.responseText = options.resultType === 'binary'
                         ? data
                         : data.toString();
                     // error handling for http statusCode >= 400
                     if (response.statusCode >= 400) {
-                        onNext(new Error(responseText));
+                        onNext(new Error(xhr.responseText));
                         return;
                     }
                     // successful response
@@ -1262,16 +1275,17 @@
                             (response && response.statusCode) + ' - ' +
                             options.url + '\n' +
                             JSON.stringify(
-                                (responseText || '').slice(0, 256) + '...'
+                                (xhr.responseText || '').slice(0, 256) + '...'
                             ) +
                             '\n' + error.message;
                         // debug statusCode
                         error.statusCode = response && response.statusCode;
                     }
-                    onError(error, responseText, { status: response.statusCode });
+                    onError(error, xhr.responseText, xhr);
                 }
             });
             onNext();
+            return xhr;
         };
 
         local.utility2.middlewareCacheControlLastModified = function (
@@ -2207,6 +2221,12 @@
                 }
             }
         }());
+        local.nop = function () {
+            /*
+                this function will run no operation - nop
+            */
+            return;
+        };
         // init global
         local.global = local.modeJs === 'browser'
             ? window
@@ -2225,12 +2245,6 @@
             console.error();
             // return arg for inspection
             return arg;
-        };
-        local.nop = function () {
-            /*
-                this function will run no operation - nop
-            */
-            return;
         };
         // init utility2
         local.utility2 = { local: local, nop: local.nop };

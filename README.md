@@ -297,7 +297,7 @@ instruction
 
 
 
-            String()).replace((/\{\{envDict\.\w+?\}\}/g), function (match0) {
+        String()).replace((/\{\{envDict\.\w+?\}\}/g), function (match0) {
             switch (match0) {
             case '{{envDict.npm_package_description}}':
                 return process.env.npm_package_description;
@@ -386,7 +386,7 @@ instruction
     "description": "run dynamic browser tests with coverage \
 (via istanbul-lite and phantomjs-lite)",
     "devDependencies": {
-        "phantomjs-lite": "2015.4.9-a"
+        "phantomjs-lite": "2015.4.18-a"
     },
     "engines": { "node": ">=0.10 <=0.12" },
     "keywords": [
@@ -479,6 +479,7 @@ shBuild() {
     # run npm-test
     MODE_BUILD=npmTest shRunScreenCapture npm test || return $?
 
+    # do not continue if running legacy node
     [ "$(node --version)" \< "v0.12" ] && return
 
     # deploy app to heroku
@@ -503,6 +504,9 @@ shBuild
 
 # save exit-code
 EXIT_CODE=$?
+[ "$(node --version)" \< "v0.12" ] && exit $EXIT_CODE
+
+# do not continue if running legacy node
 [ "$(node --version)" \< "v0.12" ] && exit $EXIT_CODE
 
 shBuildCleanup() {
