@@ -343,7 +343,7 @@
                 this function will cleanup the request and response objects
             */
             [request, response].forEach(function (socket) {
-                ['end', 'close', 'destroy'].forEach(function (method) {
+                ['end', 'close'].forEach(function (method) {
                     try {
                         socket[method]();
                     } catch (ignore) {
@@ -1164,7 +1164,7 @@
                 switch (modeNext) {
                 case 1:
                     // init request and response
-                    request = response = {};
+                    request = response = { headers: {} };
                     // init timerTimeout
                     timerTimeout = local.utility2.onTimeout(
                         onNext,
@@ -1217,12 +1217,9 @@
                     };
                     // init xhr.getAllResponseHeaders
                     xhr.getAllResponseHeaders = function () {
-                        return response.rawHeaders &&
-                            response.rawHeaders.map(function (element, ii) {
-                                return ii & 1
-                                    ? element + '\r\n'
-                                    : element + ': ';
-                            }).join('');
+                        return Object.keys(response.headers).map(function (key) {
+                            return key + ': ' + response.headers[key] + '\r\n';
+                        }).join('') + '\r\n';
                     };
                     // init xhr.getResponseHeader
                     xhr.getResponseHeader = function (key) {
@@ -1614,17 +1611,12 @@
                 */
                 local._debugReplError = error || local._debugReplError;
             };
-            // coverage-hack - cover legacy node v0.10 code
-            [
-                null,
-                { on: local.utility2.nop },
-                local._replServer._domain
-            ].forEach(function (domain) {
-                if (domain) {
-                    // debug error
-                    domain.on('error', local._replServer.onError);
-                }
-            });
+            // legacy-hack
+            /* istanbul ignore if */
+            if (local.utility2.isNodeLegacy) {
+                local._replServer._domain = { on: local.utility2.nop };
+            }
+            local._replServer._domain.on('error', local._replServer.onError);
             // save repl eval function
             local._replServer.evalDefault = local._replServer.eval;
             // hook custom repl eval function
@@ -1739,11 +1731,9 @@
             */
             response.write(request.method + ' ' + request.url +
                 ' HTTP/' + request.httpVersion + '\r\n' +
-                request.rawHeaders.map(function (element, ii) {
-                    return ii & 1
-                        ? element + '\r\n'
-                        : element + ': ';
-                }).join(''));
+                Object.keys(request.headers).map(function (key) {
+                    return key + ': ' + request.headers[key] + '\r\n';
+                }).join('') + '\r\n');
             request.pipe(response);
         };
 
@@ -1751,9 +1741,13 @@
             /*
                 this function will respond with auto-cached, gzipped data
             */
-            // legacy-hack node 0.10 doesn't support zlib.gzipSync
-            if (!local.zlib.gzipSync ||
-                    response.headersSent ||
+            // legacy-hack
+            /* istanbul ignore if */
+            if (local.utility2.isNodeLegacy) {
+                response.end(data);
+                return;
+            }
+            if (response.headersSent ||
                     !(/\bgzip\b/).test(request.headers['accept-encoding'])) {
                 response.end(data);
                 return;
@@ -2017,6 +2011,8 @@
         local.utility2.__dirname = __dirname;
         local.utility2.envDict.npm_config_dir_build = process.cwd() + '/tmp/build';
         local.utility2.envDict.npm_config_dir_tmp = process.cwd() + '/tmp';
+        // legacy-hack
+        local.utility2.isNodeLegacy = process.version.slice(0, 5) === 'v0.10';
         // init assets
         local.utility2['/assets/utility2.js'] = local.fs.readFileSync(__filename, 'utf8');
         local.utility2['/test/test.html'] = local.utility2.stringFormat(local.fs

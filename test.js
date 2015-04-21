@@ -74,10 +74,10 @@
                         // validate string data
                         local.utility2.assert((/\r\nhello$/).test(data), data);
                         // validate response test header
-                        local.utility2.assert((/^X-Header-Test: Test\r\n/m).test(data), data);
+                        local.utility2.assert((/^X-Header-Test: Test\r\n/im).test(data), data);
                         // validate response test header
                         data = xhr.getAllResponseHeaders();
-                        local.utility2.assert((/^X-Header-Test: Test\r\n/m).test(data), data);
+                        local.utility2.assert((/^X-Header-Test: Test\r\n/im).test(data), data);
                         // validate response test header
                         data = xhr.getResponseHeader('x-header-test');
                         local.utility2.assert(data === 'Test', data);
