@@ -338,24 +338,18 @@
             }, timeout | 0);
         };
 
-        local.utility2.onTimeoutRequestResponseDestroy = function (
-            onError,
-            timeout,
-            message,
-            request,
-            response
-        ) {
+        local.utility2.requestResponseCleanup = function (request, response) {
             /*
-                this function will destroy the request and response object
-                after the given timeout
+                this function will cleanup the request and response objects
             */
-            return local.utility2.onTimeout(function (error) {
-                onError(error);
-                // cleanup request
-                request.destroy();
-                // cleanup response
-                response.destroy();
-            }, timeout, message);
+            [request, response].forEach(function (socket) {
+                ['end', 'close', 'destroy'].forEach(function (method) {
+                    try {
+                        socket[method]();
+                    } catch (ignore) {
+                    }
+                });
+            });
         };
 
         local.utility2.stringFormat = function (template, dict, valueDefault) {
@@ -1048,7 +1042,7 @@
                         // handle string data
                         data = xhr.responseText;
                         if (error) {
-                            // add http method/ statusCode / url debug-info to error.message
+                            // add http method / statusCode / url debug-info to error.message
                             error.message = options.method + ' ' +
                                 xhr.status + ' - ' +
                                 options.url + '\n' +
@@ -1170,14 +1164,12 @@
                 switch (modeNext) {
                 case 1:
                     // init request and response
-                    request = response = { destroy: local.utility2.nop };
+                    request = response = {};
                     // init timerTimeout
-                    timerTimeout = local.utility2.onTimeoutRequestResponseDestroy(
+                    timerTimeout = local.utility2.onTimeout(
                         onNext,
                         options.timeout || local.utility2.timeoutDefault,
-                        'ajax ' + options.method + ' ' + options.url,
-                        request,
-                        response
+                        'ajax ' + options.method + ' ' + options.url
                     );
                     // handle implicit localhost
                     if (options.url[0] === '/') {
@@ -1215,6 +1207,7 @@
                     // send request and/or data
                     request.end(options.data);
                     // init xhr
+                    // http://www.w3.org/TR/XMLHttpRequest
                     xhr = options;
                     // debug xhr
                     local._debugAjaxXhr = xhr;
@@ -1229,12 +1222,18 @@
                                 return ii & 1
                                     ? element + '\r\n'
                                     : element + ': ';
-                            });
+                            }).join('');
                     };
                     // init xhr.getResponseHeader
                     xhr.getResponseHeader = function (key) {
-                        return response.headers && response.headers[key];
+                        return (response.headers && response.headers[key]) || null;
                     };
+                    // init xhr.responseText
+                    xhr.responseText = '';
+                    // init xhr.status
+                    xhr.status = 0;
+                    // init xhr.statusText
+                    xhr.statusText = '';
                     break;
                 case 2:
                     response = error;
@@ -1242,11 +1241,13 @@
                     local._debugAjaxResponse = response;
                     // init xhr.status
                     xhr.status = response.statusCode;
+                    // init xhr.statusText
+                    xhr.statusText = local.http.STATUS_CODES[response.statusCode] || '';
                     local.utility2.streamReadAll(response, onNext);
                     break;
                 case 3:
                     // init xhr.responseText
-                    xhr.responseText = options.resultType === 'binary'
+                    xhr.responseText = options.responseType === 'blob'
                         ? data
                         : data.toString();
                     // error handling for http statusCode >= 400
@@ -1265,21 +1266,17 @@
                     done = true;
                     // cleanup timerTimeout
                     clearTimeout(timerTimeout);
-                    // cleanup request
-                    request.destroy();
-                    // cleanup response
-                    response.destroy();
+                    // cleanup request and response
+                    local.utility2.requestResponseCleanup(request, response);
                     if (error) {
                         // add http method / statusCode / url debug-info to error.message
                         error.message = options.method + ' ' +
-                            (response && response.statusCode) + ' - ' +
+                            xhr.status + ' - ' +
                             options.url + '\n' +
-                            JSON.stringify(
-                                (xhr.responseText || '').slice(0, 256) + '...'
-                            ) +
+                            JSON.stringify(xhr.responseText.slice(0, 256) + '...') +
                             '\n' + error.message;
                         // debug statusCode
-                        error.statusCode = response && response.statusCode;
+                        error.statusCode = xhr.status;
                     }
                     onError(error, xhr.responseText, xhr);
                 }
@@ -1363,10 +1360,8 @@
             response.on('finish', function () {
                 // cleanup timerTimeout
                 clearTimeout(request.timerTimeout);
-                // cleanup request
-                request.destroy();
-                // cleanup response
-                response.destroy();
+                // cleanup request and response
+                local.utility2.requestResponseCleanup(request, response);
             });
             // check if _testSecret is valid
             request._testSecretValid = (/\b_testSecret=(\w+)\b/).exec(request.url);
@@ -1744,9 +1739,11 @@
             */
             response.write(request.method + ' ' + request.url +
                 ' HTTP/' + request.httpVersion + '\r\n' +
-                Object.keys(request.headers).map(function (key) {
-                    return key + ': ' + request.headers[key] + '\r\n';
-                }).join('') + '\r\n');
+                request.rawHeaders.map(function (element, ii) {
+                    return ii & 1
+                        ? element + '\r\n'
+                        : element + ': ';
+                }).join(''));
             request.pipe(response);
         };
 
@@ -1805,16 +1802,16 @@
             request.onTimeout = request.onTimeout || function () {
                 local.utility2.serverRespondDefault(request, response, 500);
             };
-            request.timerTimeout = local.utility2.onTimeoutRequestResponseDestroy(
+            request.timerTimeout = local.utility2.onTimeout(
                 function (error) {
                     console.error(request.method + ' ' + request.url);
                     local.utility2.onErrorDefault(error);
                     request.onTimeout(error);
+                    // cleanup request and response
+                    local.utility2.requestResponseCleanup(request, response);
                 },
                 timeout || local.utility2.timeoutDefault,
-                'server ' + request.method + ' ' + request.url,
-                request,
-                response
+                'server ' + request.method + ' ' + request.url
             );
         };
 

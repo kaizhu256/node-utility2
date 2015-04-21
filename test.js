@@ -49,42 +49,54 @@
                 }, onTaskEnd);
             });
             // test http POST handling behavior
-            ['binary', 'string'].forEach(function (resultType) {
+            ['blob', 'string'].forEach(function (responseType) {
                 onTaskEnd.counter += 1;
                 local.utility2.ajax({
-                    data: resultType === 'binary' && local.modeJs === 'node'
-                        // test binary post handling behavior
+                    data: responseType === 'blob' && local.modeJs === 'node'
+                        // test blob post handling behavior
                         ? new Buffer('hello')
                         // test string post handling behavior
                         : 'hello',
                     // test request header handling behavior
                     headers: { 'X-Header-Test': 'Test' },
                     method: 'POST',
-                    resultType: resultType,
+                    responseType: responseType,
                     url: '/test/echo'
-                }, function (error, data) {
+                }, function (error, data, xhr) {
                     local.utility2.testTryCatch(function () {
                         // validate no error occurred
                         local.utility2.assert(!error, error);
-                        // validate test header
-                        local.utility2.assert((/\r\nx-header-test: Test\r\n/).test(data), data);
-                        // validate binary data
-                        if (resultType === 'binary' && local.modeJs === 'node') {
+                        // validate blob data
+                        if (responseType === 'blob' && local.modeJs === 'node') {
                             local.utility2.assert(Buffer.isBuffer(data), data);
                             data = String(data);
                         }
                         // validate string data
                         local.utility2.assert((/\r\nhello$/).test(data), data);
+                        // validate response test header
+                        local.utility2.assert((/^X-Header-Test: Test\r\n/m).test(data), data);
+                        // validate response test header
+                        data = xhr.getAllResponseHeaders();
+                        local.utility2.assert((/^X-Header-Test: Test\r\n/m).test(data), data);
+                        // validate response test header
+                        data = xhr.getResponseHeader('x-header-test');
+                        local.utility2.assert(data === 'Test', data);
+                        // validate response undefined header
+                        data = xhr.getResponseHeader('x-header-undefined');
+                        local.utility2.assert(data === null, data);
                         onTaskEnd();
                     }, onTaskEnd);
                 });
             });
             [{
                 // test 404-not-found-error handling behavior
-                url: '/test/undefined?modeErrorIgnore=1'
+                url: '/test/error-400?modeErrorIgnore=1'
             }, {
                 // test 500-internal-server-error handling behavior
-                url: '/test/server-error?modeErrorIgnore=1'
+                url: '/test/error-500?modeErrorIgnore=1'
+            }, {
+                // test undefined-error handling behavior
+                url: '/test/error-undefined?modeErrorIgnore=1'
             }, {
                 // test timeout handling behavior
                 timeout: 1,
@@ -103,6 +115,15 @@
                     }, onTaskEnd);
                 });
             });
+            // test xhr.abort handling behavior
+            onTaskEnd.counter += 1;
+            local.utility2.ajax({ url: '/test/timeout' }, function (error) {
+                local.utility2.testTryCatch(function () {
+                    // validate error occurred
+                    local.utility2.assert(error instanceof Error, error);
+                    onTaskEnd();
+                }, onTaskEnd);
+            }).abort();
             onTaskEnd();
         };
 
@@ -587,7 +608,7 @@
                     // suppress onErrorDefault
                     onErrorDefault: local.utility2.nop,
                     // test timeout callback handling behavior
-                    onTimeoutRequestResponseDestroy: function (onError) {
+                    onTimeout: function (onError) {
                         onError();
                     },
                     serverRespondDefault: local.utility2.nop
@@ -968,16 +989,14 @@
                     break;
                 // test http POST handling behavior
                 case '/test/echo':
+                    // test response header handling behavior
+                    local.utility2.serverRespondSetHead(request, response, null, {
+                        'X-Header-Test': 'Test'
+                    });
                     local.utility2.serverRespondEcho(request, response);
                     break;
-                // test timeout handling behavior
-                case '/test/timeout':
-                    setTimeout(function () {
-                        response.end();
-                    }, 1000);
-                    break;
                 // test 500-internal-server-error handling behavior
-                case '/test/server-error':
+                case '/test/error-500':
                     // test multiple-callback serverRespondSetHead handling behavior
                     local.utility2.serverRespondSetHead(request, response, null, {});
                     nextMiddleware(local.utility2.errorDefault);
@@ -998,6 +1017,16 @@
                         );
                         onError();
                     }, local.utility2.nop);
+                    break;
+                // test undefined-error handling behavior
+                case '/test/error-undefined':
+                    local.utility2.serverRespondDefault(request, response, 999);
+                    break;
+                // test timeout handling behavior
+                case '/test/timeout':
+                    setTimeout(function () {
+                        response.end();
+                    }, 1000);
                     break;
                 // default to nextMiddleware
                 default:
