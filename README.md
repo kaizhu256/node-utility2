@@ -291,6 +291,7 @@ instruction
     '}\n' +
     '</script>\n' +
     '<script src="/test/test.js"></script>\n' +
+    '{{envDict.npm_config_html_body_extra}}\n' +
 '</body>\n' +
 '</html>\n' +
 /* jslint-ignore-end */
@@ -311,17 +312,13 @@ instruction
         });
         local['/assets/istanbul-lite.js'] =
             local.istanbul_lite['/assets/istanbul-lite.js'];
-        local['/assets/utility2.css'] =
-            local.utility2['/assets/utility2.css'];
-        local['/assets/utility2.js'] =
-            local.utility2['/assets/utility2.js'];
-        local['/test/hello'] =
-            'hello';
-        local['/test/test.js'] =
-            local.istanbul_lite.instrumentSync(
-                local.fs.readFileSync(__filename, 'utf8'),
-                __filename
-            );
+        local['/assets/utility2.css'] = local.utility2['/assets/utility2.css'];
+        local['/assets/utility2.js'] = local.utility2['/assets/utility2.js'];
+        local['/test/hello'] = 'hello';
+        local['/test/test.js'] = local.istanbul_lite.instrumentSync(
+            local.fs.readFileSync(__filename, 'utf8'),
+            __filename
+        );
         // init middleware
         local.middleware = local.utility2.middlewareGroupCreate([
             local.utility2.middlewareInit,

@@ -225,7 +225,7 @@
                 this function will test jsonStringifyOrdered's default handling behavior
             */
             var data;
-            // test various data-type handling behavior
+            // test data-type handling behavior
             [undefined, null, false, true, 0, 1, 1.5, 'a', {}, []].forEach(function (data) {
                 local.utility2.assert(
                     local.utility2.jsonStringifyOrdered(data) === JSON.stringify(data),
@@ -233,17 +233,22 @@
                 );
             });
             // test data-ordering handling behavior
-            data = local.utility2.jsonStringifyOrdered({
+            data = {
                 // test nested dict handling behavior
-                ee: { gg: 2, ff: 1},
-                // test array handling behavior
-                dd: [undefined],
-                cc: local.utility2.nop,
-                bb: 2,
+                ff: { hh: 2, gg: 1},
+                // test nested array handling behavior
+                ee: [undefined],
+                dd: local.utility2.nop,
+                cc: undefined,
+                bb: null,
                 aa: 1
-            });
+            };
+            // test circular-reference handling behavior
+            data.zz = data;
+            data = local.utility2.jsonStringifyOrdered(data);
             local.utility2.assert(
-                data === '{"aa":1,"bb":2,"dd":[null],"ee":{"ff":1,"gg":2}}',
+                data === '{"aa":1,"bb":null,"ee":[null],"ff":{"gg":1,"hh":2},' +
+                    '"zz":"[Circular]"}',
                 data
             );
             onError();

@@ -105,37 +105,51 @@
                 this function will JSON.stringify the value with dictionaries in sorted order,
                 for testing purposes
             */
-            var stringifyOrdered;
+            var circularList, stringifyOrdered, tmp;
             stringifyOrdered = function (value) {
                 /*
-                    this function will recursively stringify the value,
-                    and sort its object-keys along the way
+                    this function will recursively stringify the value with object-keys sorted,
+                    and circular-references removed
                 */
-                // if value is an array, then recursively stringify its elements
-                if (Array.isArray(value)) {
-                    return '[' + value.map(stringifyOrdered).join(',') + ']';
-                }
                 // if value is an object,
                 // then recursively stringify its items sorted by their keys
                 if (value && typeof value === 'object') {
+                    // remove circular-reference
+                    if (circularList.indexOf(value) >= 0) {
+                        return '"[Circular]"';
+                    }
+                    circularList.push(value);
+                    // if value is an array, then recursively stringify its elements
+                    if (Array.isArray(value)) {
+                        return '[' + value.map(function (element) {
+                            tmp = stringifyOrdered(element);
+                            return typeof tmp === 'string'
+                                ? tmp
+                                : 'null';
+                        }).join(',') + ']';
+                    }
                     return '{' + Object.keys(value)
                         .sort()
                         .map(function (key) {
-                            return JSON.stringify(key) + ':' + stringifyOrdered(value[key]);
+                            tmp = stringifyOrdered(value[key]);
+                            return typeof tmp === 'string'
+                                ? JSON.stringify(key) + ':' + tmp
+                                : undefined;
+                        })
+                        .filter(function (element) {
+                            return typeof element === 'string';
                         })
                         .join(',') + '}';
                 }
                 // else JSON.stringify normally
                 return JSON.stringify(value);
             };
-            value = JSON.stringify(value);
-            return typeof value === 'string'
-                ? JSON.stringify(
-                    JSON.parse(stringifyOrdered(JSON.parse(value))),
-                    replacer,
-                    space
-                )
-                : value;
+            circularList = [];
+            return JSON.stringify(value && typeof value === 'object'
+                ? JSON.parse(stringifyOrdered(value))
+                : value,
+                replacer,
+                space);
         };
 
         local.utility2.listShuffle = function (list) {
