@@ -233,8 +233,7 @@
 
         local.utility2.onErrorDefault = function (error) {
             /*
-                this function will provide a default error handling callback,
-                that prints the error.stack or error.message to stderr
+                this function will print the error.stack or error.message to stderr
             */
             // if error is defined, then print the error stack
             if (error) {
@@ -283,7 +282,7 @@
                     if (self.counter === 0 || self.error) {
                         return;
                     }
-                    // error handling behavior
+                    // handle error
                     if (error) {
                         self.error = error;
                         // ensure counter will decrement to 0
@@ -354,8 +353,7 @@
 
         local.utility2.stringFormat = function (template, dict, valueDefault) {
             /*
-                this function will replace the keys in the template
-                with the key / value pairs provided by the dict
+                this function will replace the keys in the template with the dict's key / value
             */
             var match, replace, rgx, value;
             dict = dict || {};
@@ -1199,8 +1197,9 @@
                     // make http request
                     request = (urlParsed.protocol === 'https:'
                         ? local.https
-                        : local.http).request(options, onNext)
-                        // handle error event
+                        : local.http)
+                        .request(options, onNext)
+                        // handle request-error
                         .on('error', onNext);
                     // debug request
                     local._debugAjaxRequest = request;
@@ -1209,45 +1208,47 @@
                     // init xhr
                     // http://www.w3.org/TR/XMLHttpRequest
                     xhr = options;
-                    // debug xhr
-                    local._debugAjaxXhr = xhr;
-                    // init xhr.abort
                     xhr.abort = function () {
                         onNext(new Error('abort'));
                     };
-                    // init xhr.getAllResponseHeaders
                     xhr.getAllResponseHeaders = function () {
                         return Object.keys(response.headers).map(function (key) {
                             return key + ': ' + response.headers[key] + '\r\n';
                         }).join('') + '\r\n';
                     };
-                    // init xhr.getResponseHeader
                     xhr.getResponseHeader = function (key) {
                         return (response.headers && response.headers[key]) || null;
                     };
-                    // init xhr.responseText
+                    xhr.onreadystatechange = xhr.onreadystatechange || local.utility2.nop;
+                    xhr.readyState = 0;
                     xhr.responseText = '';
-                    // init xhr.status
                     xhr.status = 0;
-                    // init xhr.statusText
                     xhr.statusText = '';
+                    // debug xhr
+                    local._debugAjaxXhr = xhr;
                     break;
                 case 2:
                     response = error;
                     // debug ajax response
                     local._debugAjaxResponse = response;
-                    // init xhr.status
+                    // init xhr
                     xhr.status = response.statusCode;
-                    // init xhr.statusText
                     xhr.statusText = local.http.STATUS_CODES[response.statusCode] || '';
+                    xhr.readyState = 1;
+                    xhr.onreadystatechange();
+                    xhr.readyState = 2;
+                    xhr.onreadystatechange();
+                    xhr.readyState = 3;
+                    xhr.onreadystatechange();
                     local.utility2.streamReadAll(response, onNext);
                     break;
                 case 3:
-                    // init xhr.responseText
+                    // init xhr
+                    xhr.readyState = 4;
                     xhr.responseText = options.responseType === 'blob'
                         ? data
                         : data.toString();
-                    // error handling for http statusCode >= 400
+                    // handle http-error for statusCode >= 400
                     if (response.statusCode >= 400) {
                         onNext(new Error(xhr.responseText));
                         return;
@@ -1275,6 +1276,7 @@
                         // debug statusCode
                         error.statusCode = xhr.status;
                     }
+                    xhr.onreadystatechange();
                     onError(error, xhr.responseText, xhr);
                 }
             });
@@ -2111,7 +2113,8 @@
                 );
                 return;
             }
-            // handle webpage error - http://phantomjs.org/api/phantom/handler/on-error.html
+            // handle webpage-error
+            // http://phantomjs.org/api/phantom/handler/on-error.html
             if (typeof error === 'string') {
                 console.error('\n' + local.utility2.testName + '\nERROR: ' + error + ' TRACE:');
                 (trace || []).forEach(function (t) {
@@ -2121,7 +2124,7 @@
                         : ''));
                 });
                 console.error();
-            // handle default error
+            // handle default-error
             } else {
                 local.utility2.onErrorDefault(error);
             }
