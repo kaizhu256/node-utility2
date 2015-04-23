@@ -416,21 +416,21 @@
             });
         };
 
-        local.utility2.taskCreateOrSubscribe = function (options, onError) {
+        local.utility2.taskRunOrSubscribe = function (options, onError) {
             /*
                 this function will
                 1. if it is undefined, create a task with the given options.key
                 2. subscribe onError to the task
-                3. run onTask with timeout-error-handler, and cleanup task when finished
+                3. run task.onTask with timeout-error-handler, and cleanup task when finished
             */
             var task;
-            // init taskCreateOrSubscribeDict
-            local.utility2.taskCreateOrSubscribeDict =
-                local.utility2.taskCreateOrSubscribeDict || {};
+            // init taskRunOrSubscribeDict
+            local.utility2.taskRunOrSubscribeDict =
+                local.utility2.taskRunOrSubscribeDict || {};
             // 1. if it is undefined, create a task with the given options.key
-            task = local.utility2.taskCreateOrSubscribeDict[options.key];
+            task = local.utility2.taskRunOrSubscribeDict[options.key];
             if (!task) {
-                task = local.utility2.taskCreateOrSubscribeDict[options.key] = {};
+                task = local.utility2.taskRunOrSubscribeDict[options.key] = {};
                 task.callbackList = [];
                 task.onEnd = function () {
                     if (task.done) {
@@ -440,7 +440,7 @@
                     // cleanup timerTimeout
                     clearTimeout(task.timerTimeout);
                     // cleanup task
-                    delete local.utility2.taskCreateOrSubscribeDict[options.key];
+                    delete local.utility2.taskRunOrSubscribeDict[options.key];
                     // pass result to callbacks in callbackList
                     task.result = arguments;
                     task.callbackList.forEach(function (onError) {
@@ -451,18 +451,18 @@
                 task.timerTimeout = local.utility2.onTimeout(
                     task.onEnd,
                     task.timeout || local.utility2.timeoutDefault,
-                    'taskCreateOrSubscribe ' + options.key
+                    'taskRunOrSubscribe ' + options.key
                 );
             }
             // 2. subscribe onError to the task
             if (onError) {
                 task.callbackList.push(local.utility2.onErrorWithStack(onError));
             }
-            // 3. run onTask with timeout-error-handler, and cleanup task when finished
+            // 3. run task.onTask with timeout-error-handler, and cleanup task when finished
             if (!task.onTask && options.onTask) {
                 task.onTask = options.onTask;
                 // run onTask
-                options.onTask(task.onEnd);
+                task.onTask(task.onEnd);
             }
         };
 
@@ -1917,7 +1917,7 @@
                     .unref();
             }
             // 3. if $npm_config_mode_npm_test is defined, then run tests
-            local.utility2.taskCreateOrSubscribe({
+            local.utility2.taskRunOrSubscribe({
                 key: 'utility2.onReady'
             }, function () {
                 local.utility2.testRun(options);
@@ -1985,7 +1985,7 @@
             local.utility2.timeoutDefault ||
             30000;
         // init onReady
-        local.utility2.taskCreateOrSubscribe({
+        local.utility2.taskRunOrSubscribe({
             key: 'utility2.onReady',
             onTask: function (onError) {
                 local.utility2.onReady = local.utility2.onTaskEnd(onError);

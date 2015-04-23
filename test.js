@@ -805,9 +805,9 @@
             }, onError);
         };
 
-        local.testCase_taskCreateOrSubscribe_default = function (onError) {
+        local.testCase_taskRunOrSubscribe_default = function (onError) {
             /*
-                this function will test taskCreateOrSubscribe's default handling behavior
+                this function will test taskRunOrSubscribe's default handling behavior
             */
             var key, onTaskEnd;
             key = local.utility2.uuid4();
@@ -815,7 +815,7 @@
             onTaskEnd.counter += 1;
             // test create handling behavior
             onTaskEnd.counter += 1;
-            local.utility2.taskCreateOrSubscribe({
+            local.utility2.taskRunOrSubscribe({
                 key: key,
                 onTask: function (onError) {
                     setTimeout(function () {
@@ -827,7 +827,7 @@
             }, onTaskEnd);
             // test addCallback handling behavior
             onTaskEnd.counter += 1;
-            local.utility2.taskCreateOrSubscribe({
+            local.utility2.taskRunOrSubscribe({
                 key: key
             }, onTaskEnd);
             onTaskEnd();
@@ -849,7 +849,7 @@
                     },
                     phantomScreenCapture: local.utility2.nop,
                     onReady: {},
-                    taskCreateOrSubscribe: local.utility2.nop
+                    taskRunOrSubscribe: local.utility2.nop
                 }],
                 [local.utility2.local, {
                     http: { createServer: function () {
