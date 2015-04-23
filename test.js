@@ -833,6 +833,57 @@
             onTaskEnd();
         };
 
+        local.testCase_taskRunWithCache_default = function (onError) {
+            /*
+                this function will test taskRunWithCache's default handling behavior
+            */
+            var modeNext, onNext, options;
+            modeNext = 0;
+            onNext = function (error, data) {
+                modeNext = error instanceof Error
+                    ? NaN
+                    : modeNext + 1;
+                switch (modeNext) {
+                case 1:
+                    options = {};
+                    options.cacheDict = 'testCase_taskRunWithCache_default';
+                    options.cacheDir = local.utility2.envDict.npm_config_dir_tmp +
+                        '/cache/testCase_taskRunWithCache_default';
+                    options.onTask = function (onError) {
+                        onError(null, 'hello');
+                    };
+                    // cleanup cache
+                    local.utility2.fsRmR(options.cacheDir, onNext);
+                    break;
+                case 2:
+                    // test no cache handling behavior
+                    local.utility2.taskRunWithCache(options, onNext);
+                    break;
+                case 3:
+                    // validate no error occurred
+                    local.utility2.assert(!error, error);
+                    // validate data
+                    local.utility2.assert(data === 'hello', data);
+                    onNext();
+                    break;
+                case 4:
+                    // test memory-cache handling behavior
+                    local.utility2.taskRunWithCache(options, onNext);
+                    break;
+                case 5:
+                    // validate no error occurred
+                    local.utility2.assert(!error, error);
+                    // validate data
+                    local.utility2.assert(data === 'hello', data);
+                    onNext();
+                    break;
+                default:
+                    onError(error);
+                }
+            };
+            onNext();
+        };
+
         local.testCase_testRunServer_misc = function (onError) {
             /*
                 this function will test testRunServer's misc handling behavior
@@ -1044,19 +1095,17 @@
         // run server-test
         local.utility2.testRunServer(local);
         // init dir
-        [__dirname, process.cwd()].forEach(function (dir) {
-            local.fs.readdirSync(dir).forEach(function (file) {
-                file = dir + '/' + file;
-                switch (local.path.extname(file)) {
-                case '.js':
-                case '.json':
-                    // jslint the file
-                    local.jslint_lite.jslintAndPrint(local.fs.readFileSync(file, 'utf8'), file);
-                    break;
-                }
-                // if the file is modified, then restart the process
-                local.utility2.onFileModifiedRestart(file);
-            });
+        local.fs.readdirSync(process.cwd()).forEach(function (file) {
+            file = process.cwd() + '/' + file;
+            switch (local.path.extname(file)) {
+            case '.js':
+            case '.json':
+                // jslint the file
+                local.jslint_lite.jslintAndPrint(local.fs.readFileSync(file, 'utf8'), file);
+                break;
+            }
+            // if the file is modified, then restart the process
+            local.utility2.onFileModifiedRestart(file);
         });
         // jslint /assets/utility2.css
         local.jslint_lite.jslintAndPrint(

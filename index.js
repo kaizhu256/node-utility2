@@ -466,6 +466,130 @@
             }
         };
 
+        local.utility2.taskRunWithCache = function (options, onError) {
+            /*
+                this function will try to run onError from cache,
+                and auto-update the cache with a background-task
+            */
+            var cacheDict, cacheKey, cacheValue, modeNext, onNext;
+            modeNext = 0;
+            onNext = function (error, data) {
+                if (modeNext < 10) {
+                    cacheValue = !error && data;
+                    if (cacheValue) {
+                        // jump to background-task
+                        modeNext = 10;
+                        // call onError with cacheValue
+                        onError.apply(null, JSON.parse(cacheValue));
+                    }
+                }
+                modeNext += 1;
+                switch (modeNext) {
+                case 1:
+                    cacheDict = encodeURIComponent(options.cacheDict);
+                    cacheKey = encodeURIComponent(options.key);
+                    // read cacheValue from memory-cache
+                    local.utility2.cacheDict[cacheDict] =
+                        local.utility2.cacheDict[cacheDict] || {};
+                    onNext(null, local.utility2.cacheDict[cacheDict][cacheKey]);
+                    return;
+                case 2:
+                    // read cacheValue from file-cache
+                    if (options.cacheDir) {
+                        local.utility2.taskRunOrSubscribe({
+                            key: cacheKey + '.file.read',
+                            onTask: function (onError) {
+                                local.fs.readFile(
+                                    options.cacheDir + '/' + cacheDict + '/' + cacheKey,
+                                    'utf8',
+                                    onError
+                                );
+                            }
+                        }, onNext);
+                        return;
+                    }
+                    onNext();
+                    return;
+                case 3:
+                    // read cacheValue from redis-cache
+                    if (options.cacheRedis) {
+                        local.utility2.taskRunOrSubscribe({
+                            key: cacheKey + '.redis.read',
+                            onTask: function (onError) {
+                                options.cacheRedis
+                                    .hget(cacheDict, cacheKey, function (error, data) {
+                                        onError(error, typeof data === 'string'
+                                            ? decodeURIComponent(data)
+                                            : data);
+                                    });
+                            }
+                        }, onNext);
+                        return;
+                    }
+                    onNext();
+                    return;
+                case 4:
+                    // jump to background-task
+                    modeNext = 10;
+                    onNext();
+                    return;
+                case 11:
+                    // run background-task
+                    setTimeout(
+                        onNext,
+                        // run background-task with lower priority for cache-hit
+                        cacheValue && options.cacheTtl
+                    );
+                    return;
+                case 12:
+                    // run background-task
+                    local.utility2.taskRunOrSubscribe(options, onNext);
+                    return;
+                case 13:
+                    // if cache-miss, call onError with background-task-result
+                    if (!cacheValue) {
+                        setTimeout(onNext);
+                    }
+                    cacheValue = JSON.stringify(Array.prototype.slice.call(arguments));
+                    // write cacheValue to redis-cache
+                    if (options.cacheRedis) {
+                        local.utility2.taskRunOrSubscribe({
+                            key: cacheKey + '.redis.read',
+                            onTask: function () {
+                                options.cacheRedis.hset(
+                                    cacheDict,
+                                    cacheKey,
+                                    encodeURIComponent(cacheValue),
+                                    local.utility2.onErrorDefault
+                                );
+                            }
+                        });
+                    }
+                    // write cacheValue to file-cache
+                    if (options.cacheDir) {
+                        local.utility2.taskRunOrSubscribe({
+                            key: cacheKey + '.file.write',
+                            onTask: function () {
+                                local.utility2.fsMkdirpAndWriteFile(
+                                    options.cacheDir + '/' + cacheDict + '/' + cacheKey,
+                                    cacheValue,
+                                    local.utility2.onErrorDefault
+                                );
+                            }
+                        });
+                    }
+                    // write cacheValue to memory-cache
+                    local.utility2.cacheDict[cacheDict][cacheKey] = cacheValue;
+                    return;
+                case 14:
+                    // call onError with cacheValue
+                    onError.apply(null, JSON.parse(cacheValue));
+                    return;
+                }
+            };
+            onNext();
+        };
+
         local.utility2.testMock = function (mockList, onTestCase, onError) {
             /*
                 this function will mock the objects in mockList
@@ -1411,6 +1535,56 @@
             nextMiddleware();
         };
 
+        local.utility2.fsMkdirpAndWriteFile = function (file, data, onError) {
+            /*
+                this function will write the data to file, and create any necessary dirs
+            */
+            file = local.path.resolve(file);
+            local.fs.writeFile(file, data, function (error, data) {
+                if (error && error.code === 'ENOENT') {
+                    local.utility2.fsMkdirpSync(local.path.dirname(file));
+                    local.fs.writeFile(file, data, onError);
+                    return;
+                }
+                onError(error, data);
+            });
+        };
+
+        local.utility2.fsMkdirpSync = function (dir) {
+            /*
+                this function will synchronously mkdirp the dir
+            */
+            dir = local.path.resolve(dir);
+            try {
+                local.fs.mkdirSync(dir);
+            } catch (errorCaught) {
+                if (errorCaught.code === 'EEXIST') {
+                    return;
+                }
+                dir.split('/').slice(1, -1).reduce(function (dir, element) {
+                    dir = dir + '/' + element;
+                    try {
+                        local.fs.mkdirSync(dir);
+                    } catch (ignore) {
+                    }
+                    return dir;
+                }, '');
+                local.fs.mkdirSync(dir);
+            }
+        };
+
+        local.utility2.fsRmR = function (dir, onError) {
+            /*
+                this function will rm -r the dir
+            */
+            dir = local.path.resolve(dir);
+            local.utility2
+                .processSpawnWithTimeout('rm', ['-r', dir])
+                .on('exit', function () {
+                    onError();
+                });
+        };
+
         local.utility2.onFileModifiedRestart = function (file) {
             /*
                 this function will watch the file,
@@ -1932,6 +2106,7 @@
 
     // run shared js-env code
     (function () {
+        local.utility2.cacheDict = {};
         local.utility2.envDict = local.modeJs === 'browser'
             ? {}
             : local.modeJs === 'node'
