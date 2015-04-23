@@ -275,15 +275,14 @@ instruction
     'document.querySelector(\n' +
         '".istanbulInputTextarea"\n' +
     ').addEventListener("keyup", function () {\n' +
-        'window.utility2.taskCacheCreateOrAddCallback(\n' +
-            '{ key: "testTextarea" },\n' +
-            'function (onError) {\n' +
+        'window.utility2.taskCreateOrSubscribe({\n' +
+            'key: "testTextarea",\n' +
+            'onTask: function (onError) {\n' +
                 'window.utility2.onErrorExit = onError;\n' +
                 'window.jslint_lite.jslintTextarea();\n' +
                 'window.istanbul_lite.coverTextarea();\n' +
-            '},\n' +
-            'window.utility2.nop\n' +
-        ');\n' +
+            '}\n' +
+        '});\n' +
     '});\n' +
     'if (!window.utility2.modeTest) {\n' +
         'window.jslint_lite.jslintTextarea();\n' +
@@ -388,13 +387,10 @@ instruction
     "engines": { "node": ">=0.10 <=0.12" },
     "keywords": [
         "browser", "build",
-        "ci", "code", "cover", "coverage", "csslint",
-        "eshint", "eslint",
-        "headless",
+        "ci", "cover", "coverage", "csslint",
         "instrument", "istanbul",
-        "jshint", "jslint",
-        "light", "lightweight", "lint", "lite",
-        "minimal",
+        "jslint",
+        "lint",
         "phantom", "phantomjs",
         "slimer", "slimerjs",
         "test", "travis", "travis-ci",
@@ -416,7 +412,7 @@ npm_config_mode_auto_restart=1 \
 npm_config_mode_auto_restart_child=1 \
 ./index.sh test test.js"
     },
-    "version": "2015.4.18-b"
+    "version": "2015.4.23-a"
 }
 ```
 
