@@ -116,7 +116,7 @@
                 if (value && typeof value === 'object') {
                     // remove circular-reference
                     if (circularList.indexOf(value) >= 0) {
-                        return '"[Circular]"';
+                        return;
                     }
                     circularList.push(value);
                     // if value is an array, then recursively stringify its elements
@@ -338,13 +338,13 @@
 
         local.utility2.onTimeout = function (onError, timeout, message) {
             /*
-                this function will create a timeout error-handler,
+                this function will create a timeout-error-handler,
                 that will append the caller-stack to any errors
             */
             onError = local.utility2.onErrorWithStack(onError);
             // create timeout timer
             return setTimeout(function () {
-                onError(new Error('onTimeout - timeout error - ' +
+                onError(new Error('onTimeout - timeout-error - ' +
                     timeout + ' ms - ' +
                     message));
             // coerce to finite integer
@@ -416,46 +416,54 @@
             });
         };
 
-        local.utility2.taskCacheCreateOrAddCallback = function (taskCache, onTask, onError) {
+        local.utility2.taskSubscribe = function (options, onError) {
             /*
                 this function will
-                1. if taskCache is already defined, then add onError to its callbackList
-                2. else create a new taskCache, that will cleanup itself after onTask ends
+                1. if it is undefined, create a task with the given options.key
+                2. subscribe onError to the task
+                3. run onTask with timeout-error-handler, and cleanup task when finished
             */
-            // init taskCacheDict
-            local.utility2.taskCacheDict = local.utility2.taskCacheDict || {};
-            // 1. if taskCache is already defined, then add onError to its callbackList
-            if (local.utility2.taskCacheDict[taskCache.key]) {
-                local.utility2.taskCacheDict[taskCache.key].callbackList
-                    .push(local.utility2.onErrorWithStack(onError));
-                return;
+            var task;
+            // init taskSubscribeDict
+            local.utility2.taskSubscribeDict =
+                local.utility2.taskSubscribeDict || {};
+            // 1. if it is undefined, create a task with the given options.key
+            task = local.utility2.taskSubscribeDict[options.key];
+            if (!task) {
+                task = local.utility2.taskSubscribeDict[options.key] = {};
+                task.callbackList = [];
+                task.onEnd = function () {
+                    if (task.done) {
+                        return;
+                    }
+                    task.done = true;
+                    // cleanup timerTimeout
+                    clearTimeout(task.timerTimeout);
+                    // cleanup task
+                    delete local.utility2.taskSubscribeDict[options.key];
+                    // pass result to callbacks in callbackList
+                    task.result = arguments;
+                    task.callbackList.forEach(function (onError) {
+                        onError.apply(null, task.result);
+                    });
+                };
+                // init timerTimeout
+                task.timerTimeout = local.utility2.onTimeout(
+                    task.onEnd,
+                    task.timeout || local.utility2.timeoutDefault,
+                    'taskSubscribe ' + options.key
+                );
             }
-            // 2. else create a new taskCache, that will cleanup itself after onTask ends
-            local.utility2.taskCacheDict[taskCache.key] = taskCache;
-            taskCache.callbackList = [local.utility2.onErrorWithStack(onError)];
-            taskCache.onEnd = function () {
-                if (taskCache.done) {
-                    return;
-                }
-                taskCache.done = true;
-                // cleanup timerTimeout
-                clearTimeout(taskCache.timerTimeout);
-                // cleanup taskCache
-                delete local.utility2.taskCacheDict[taskCache.key];
-                // pass result to callbacks in callbackList
-                taskCache.result = arguments;
-                taskCache.callbackList.forEach(function (onError) {
-                    onError.apply(null, taskCache.result);
-                });
-            };
-            // init timerTimeout
-            taskCache.timerTimeout = local.utility2.onTimeout(
-                taskCache.onEnd,
-                taskCache.timeout || local.utility2.timeoutDefault,
-                'taskCacheCreateOrAddCallback ' + taskCache.key
-            );
-            // run onTask
-            onTask(taskCache.onEnd);
+            // 2. subscribe onError to the task
+            if (onError) {
+                task.callbackList.push(local.utility2.onErrorWithStack(onError));
+            }
+            // 3. run onTask with timeout-error-handler, and cleanup task when finished
+            if (!task.onTask && options.onTask) {
+                task.onTask = options.onTask;
+                // run onTask
+                options.onTask(task.onEnd);
+            }
         };
 
         local.utility2.testMock = function (mockList, onTestCase, onError) {
@@ -1713,6 +1721,19 @@
             };
         };
 
+        local.utility2.serverPortInit = function () {
+            /*
+                this function will init $npm_config_server_port
+            */
+            // if $npm_config_server_port is undefined,
+            // then assign it a random integer in the inclusive range 0 to 0xffff
+            local.utility2.envDict.npm_config_server_port =
+                local.utility2.envDict.npm_config_server_port ||
+                // coerce to finite integer
+                ((Math.random() * 0x10000) | 0x8000).toString();
+            return local.utility2.envDict.npm_config_server_port;
+        };
+
         local.utility2.serverRespondDefault = function (request, response, statusCode, error) {
             /*
                 this function will respond with a default message,
@@ -1807,7 +1828,7 @@
 
         local.utility2.serverRespondTimeoutDefault = function (request, response, timeout) {
             /*
-                this function will create a timeout error-handler for the server request
+                this function will create a timeout-error-handler for the server request
             */
             request.onTimeout = request.onTimeout || function () {
                 local.utility2.serverRespondDefault(request, response, 500);
@@ -1871,12 +1892,8 @@
                     options.onMiddlewareError(error, request, response);
                 });
             });
-            // if $npm_config_server_port is undefined,
-            // then assign it a random integer in the inclusive range 0 to 0xffff
-            local.utility2.envDict.npm_config_server_port =
-                local.utility2.envDict.npm_config_server_port ||
-                // coerce to finite integer
-                ((Math.random() * 0x10000) | 0x8000).toString();
+            // init $npm_config_server_port
+            local.utility2.serverPortInit();
             // 2. start server on port $npm_config_server_port
             console.log('server starting on port ' +
                 local.utility2.envDict.npm_config_server_port);
@@ -1900,13 +1917,11 @@
                     .unref();
             }
             // 3. if $npm_config_mode_npm_test is defined, then run tests
-            local.utility2.taskCacheCreateOrAddCallback(
-                { key: 'utility2.onReady' },
-                null,
-                function () {
-                    local.utility2.testRun(options);
-                }
-            );
+            local.utility2.taskSubscribe({
+                key: 'utility2.onReady'
+            }, function () {
+                local.utility2.testRun(options);
+            });
             local.utility2.onReady.counter += 1;
             return server;
         };
@@ -1970,15 +1985,14 @@
             local.utility2.timeoutDefault ||
             30000;
         // init onReady
-        local.utility2.taskCacheCreateOrAddCallback(
-            { key: 'utility2.onReady' },
-            function (onError) {
+        local.utility2.taskSubscribe({
+            key: 'utility2.onReady',
+            onTask: function (onError) {
                 local.utility2.onReady = local.utility2.onTaskEnd(onError);
                 local.utility2.onReady.counter += 1;
                 setTimeout(local.utility2.onReady);
-            },
-            local.utility2.nop
-        );
+            }
+        });
     }());
     switch (local.modeJs) {
 

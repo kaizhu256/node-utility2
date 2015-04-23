@@ -247,8 +247,7 @@
             data.zz = data;
             data = local.utility2.jsonStringifyOrdered(data);
             local.utility2.assert(
-                data === '{"aa":1,"bb":null,"ee":[null],"ff":{"gg":1,"hh":2},' +
-                    '"zz":"[Circular]"}',
+                data === '{"aa":1,"bb":null,"ee":[null],"ff":{"gg":1,"hh":2}}',
                 data
             );
             onError();
@@ -806,9 +805,9 @@
             }, onError);
         };
 
-        local.testCase_taskCacheCreateOrAddCallback_default = function (onError) {
+        local.testCase_taskSubscribe_default = function (onError) {
             /*
-                this function will test taskCacheCreateOrAddCallback's default handling behavior
+                this function will test taskSubscribe's default handling behavior
             */
             var key, onTaskEnd;
             key = local.utility2.uuid4();
@@ -816,20 +815,21 @@
             onTaskEnd.counter += 1;
             // test create handling behavior
             onTaskEnd.counter += 1;
-            local.utility2.taskCacheCreateOrAddCallback(
-                { key: key },
-                function (onError) {
+            local.utility2.taskSubscribe({
+                key: key,
+                onTask: function (onError) {
                     setTimeout(function () {
                         // test multiple-callback handling behavior
                         onError();
                         onError();
                     });
-                },
-                onTaskEnd
-            );
+                }
+            }, onTaskEnd);
             // test addCallback handling behavior
             onTaskEnd.counter += 1;
-            local.utility2.taskCacheCreateOrAddCallback({ key: key }, null, onTaskEnd);
+            local.utility2.taskSubscribe({
+                key: key
+            }, onTaskEnd);
             onTaskEnd();
         };
 
@@ -849,7 +849,7 @@
                     },
                     phantomScreenCapture: local.utility2.nop,
                     onReady: {},
-                    taskCacheCreateOrAddCallback: local.utility2.nop
+                    taskSubscribe: local.utility2.nop
                 }],
                 [local.utility2.local, {
                     http: { createServer: function () {
