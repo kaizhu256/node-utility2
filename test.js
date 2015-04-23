@@ -515,6 +515,34 @@
             onError();
         };
 
+        local.testCase_taskRunOrSubscribe_default = function (onError) {
+            /*
+                this function will test taskRunOrSubscribe's default handling behavior
+            */
+            var key, onTaskEnd;
+            key = local.utility2.uuid4();
+            onTaskEnd = local.utility2.onTaskEnd(onError);
+            onTaskEnd.counter += 1;
+            // test create handling behavior
+            onTaskEnd.counter += 1;
+            local.utility2.taskRunOrSubscribe({
+                key: key,
+                onTask: function (onError) {
+                    setTimeout(function () {
+                        // test multiple-callback handling behavior
+                        onError();
+                        onError();
+                    });
+                }
+            }, onTaskEnd);
+            // test addCallback handling behavior
+            onTaskEnd.counter += 1;
+            local.utility2.taskRunOrSubscribe({
+                key: key
+            }, onTaskEnd);
+            onTaskEnd();
+        };
+
         local.testCase_testRun_failure = function (onError) {
             /*
                 this function will test testRun's failure handling behavior
@@ -805,80 +833,139 @@
             }, onError);
         };
 
-        local.testCase_taskRunOrSubscribe_default = function (onError) {
-            /*
-                this function will test taskRunOrSubscribe's default handling behavior
-            */
-            var key, onTaskEnd;
-            key = local.utility2.uuid4();
-            onTaskEnd = local.utility2.onTaskEnd(onError);
-            onTaskEnd.counter += 1;
-            // test create handling behavior
-            onTaskEnd.counter += 1;
-            local.utility2.taskRunOrSubscribe({
-                key: key,
-                onTask: function (onError) {
-                    setTimeout(function () {
-                        // test multiple-callback handling behavior
-                        onError();
-                        onError();
-                    });
-                }
-            }, onTaskEnd);
-            // test addCallback handling behavior
-            onTaskEnd.counter += 1;
-            local.utility2.taskRunOrSubscribe({
-                key: key
-            }, onTaskEnd);
-            onTaskEnd();
-        };
-
         local.testCase_taskRunWithCache_default = function (onError) {
             /*
                 this function will test taskRunWithCache's default handling behavior
             */
-            var modeNext, onNext, options;
+            var cacheValue,
+                done,
+                modeNext,
+                onNext,
+                onTaskEnd,
+                options,
+                redisClient,
+                testModeCache,
+                tmp;
             modeNext = 0;
-            onNext = function (error, data) {
+            testModeCache = function (options, modeCacheHit, onError) {
+                local.utility2.taskRunWithCache(options, function (error, data) {
+                    local.utility2.testTryCatch(function () {
+                        // validate no error occurred
+                        local.utility2.assert(!error, error);
+                        // validate data
+                        local.utility2.assert(data === cacheValue, data);
+                        // validate modeCacheHit
+                        local.utility2.assert(
+                            options.modeCacheHit === modeCacheHit,
+                            [options.modeCacheHit, modeCacheHit]
+                        );
+                        onError();
+                    }, onError);
+
+                });
+            };
+            onNext = function (error) {
                 modeNext = error instanceof Error
                     ? NaN
                     : modeNext + 1;
                 switch (modeNext) {
                 case 1:
+                    onTaskEnd = local.utility2.onTaskEnd(onNext);
+                    onTaskEnd.counter += 1;
+                    cacheValue = local.utility2.stringAsciiCharset;
                     options = {};
                     options.cacheDict = 'testCase_taskRunWithCache_default';
-                    options.cacheDir = local.utility2.envDict.npm_config_dir_tmp +
+                    options.key = local.utility2.stringAsciiCharset;
+                    options.modeCacheFile = local.utility2.envDict.npm_config_dir_tmp +
                         '/cache/testCase_taskRunWithCache_default';
+                    options.modeCacheFileHit = 'file';
+                    options.modeCacheMemory = true;
+                    options.modeCacheMemoryHit = 'memory';
                     options.onTask = function (onError) {
-                        onError(null, 'hello');
+                        onError(null, cacheValue);
                     };
-                    // cleanup cache
-                    local.utility2.fsRmR(options.cacheDir, onNext);
+                    // cleanup memory-cache
+                    onTaskEnd.counter += 1;
+                    local.utility2.cacheDict[options.cacheDict] = null;
+                    onTaskEnd();
+                    // cleanup file-cache
+                    onTaskEnd.counter += 1;
+                    local.utility2.fsRmR(options.modeCacheFile, onTaskEnd);
+                    // init redis client
+                    onTaskEnd.counter += 1;
+                    onTaskEnd.counter += 1;
+                    redisClient = require('redis').createClient();
+                    redisClient.on('error', local.utility2.nop);
+                    // cleanup redis-cache
+                    tmp = function (error) {
+                        if (!error) {
+                            options.modeCacheRedis = redisClient;
+                            options.modeCacheRedisHit = 'redis';
+                        }
+                        onTaskEnd();
+                    };
+                    // test no redis handling behavior
+                    tmp(local.utility2.errorDefault);
+                    redisClient.del(encodeURIComponent(options.cacheDict), tmp);
+                    onTaskEnd();
                     break;
+                // test no cache handling behavior
                 case 2:
-                    // test no cache handling behavior
-                    local.utility2.taskRunWithCache(options, onNext);
+                    onTaskEnd.counter += 1;
+                    [
+                        'modeCacheFile',
+                        'modeCacheMemory',
+                        'modeCacheRedis',
+                        'modeCacheUndefined'
+                    ].forEach(function (modeCache) {
+                        var optionsCopy;
+                        optionsCopy = {
+                            cacheDict: options.cacheDict,
+                            key: options.key,
+                            onTask: options.onTask
+                        };
+                        optionsCopy[modeCache] = options[modeCache];
+                        onTaskEnd.counter += 1;
+                        testModeCache(
+                            optionsCopy,
+                            undefined,
+                            local.utility2.onErrorWithStack(onTaskEnd)
+                        );
+                    });
+                    onTaskEnd();
                     break;
+                // test cache handling behavior
                 case 3:
-                    // validate no error occurred
-                    local.utility2.assert(!error, error);
-                    // validate data
-                    local.utility2.assert(data === 'hello', data);
-                    onNext();
-                    break;
-                case 4:
-                    // test memory-cache handling behavior
-                    local.utility2.taskRunWithCache(options, onNext);
-                    break;
-                case 5:
-                    // validate no error occurred
-                    local.utility2.assert(!error, error);
-                    // validate data
-                    local.utility2.assert(data === 'hello', data);
-                    onNext();
+                    onTaskEnd.counter += 1;
+                    [
+                        'modeCacheFile',
+                        'modeCacheMemory',
+                        'modeCacheRedis',
+                        'modeCacheUndefined'
+                    ].forEach(function (modeCache) {
+                        var optionsCopy;
+                        optionsCopy = {
+                            cacheDict: options.cacheDict,
+                            key: options.key,
+                            onTask: options.onTask
+                        };
+                        optionsCopy[modeCache] = options[modeCache];
+                        onTaskEnd.counter += 1;
+                        testModeCache(
+                            optionsCopy,
+                            options[modeCache + 'Hit'],
+                            local.utility2.onErrorWithStack(onTaskEnd)
+                        );
+                    });
+                    onTaskEnd();
                     break;
                 default:
-                    onError(error);
+                    if (!done) {
+                        done = true;
+                        // test error handling behavior
+                        onNext(local.utility2.errorDefault);
+                        onError(error);
+                    }
                 }
             };
             onNext();
@@ -1118,7 +1205,7 @@
         [
             // test no $npm_config_start_file handling behavior
             null,
-            process.env.npm_config_start_file
+            local.utility2.envDict.npm_config_start_file
         ].forEach(function (file) {
             if (file) {
                 require(process.cwd() + '/' + file);

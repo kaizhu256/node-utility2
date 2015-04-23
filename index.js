@@ -471,12 +471,13 @@
                 this function will try to run onError from cache,
                 and auto-update the cache with a background-task
             */
-            var cacheDict, cacheKey, cacheValue, modeNext, onNext;
+            var cacheDict, cacheKey, cacheValue, modeCacheHit, modeNext, onNext;
             modeNext = 0;
             onNext = function (error, data) {
                 if (modeNext < 10) {
                     cacheValue = !error && data;
                     if (cacheValue) {
+                        options.modeCacheHit = modeCacheHit;
                         // jump to background-task
                         modeNext = 10;
                         // call onError with cacheValue
@@ -488,19 +489,25 @@
                 case 1:
                     cacheDict = encodeURIComponent(options.cacheDict);
                     cacheKey = encodeURIComponent(options.key);
-                    // read cacheValue from memory-cache
-                    local.utility2.cacheDict[cacheDict] =
-                        local.utility2.cacheDict[cacheDict] || {};
-                    onNext(null, local.utility2.cacheDict[cacheDict][cacheKey]);
+                    if (options.modeCacheMemory) {
+                        modeCacheHit = 'memory';
+                        // read cacheValue from memory-cache
+                        local.utility2.cacheDict[cacheDict] =
+                            local.utility2.cacheDict[cacheDict] || {};
+                        onNext(null, local.utility2.cacheDict[cacheDict][cacheKey]);
+                        return;
+                    }
+                    onNext();
                     return;
                 case 2:
                     // read cacheValue from file-cache
-                    if (options.cacheDir) {
+                    if (options.modeCacheFile) {
+                        modeCacheHit = 'file';
                         local.utility2.taskRunOrSubscribe({
-                            key: cacheKey + '.file.read',
+                            key: cacheDict + '/' + cacheKey + '/file/read',
                             onTask: function (onError) {
                                 local.fs.readFile(
-                                    options.cacheDir + '/' + cacheDict + '/' + cacheKey,
+                                    options.modeCacheFile + '/' + cacheDict + '/' + cacheKey,
                                     'utf8',
                                     onError
                                 );
@@ -512,11 +519,12 @@
                     return;
                 case 3:
                     // read cacheValue from redis-cache
-                    if (options.cacheRedis) {
+                    if (options.modeCacheRedis) {
+                        modeCacheHit = 'redis';
                         local.utility2.taskRunOrSubscribe({
-                            key: cacheKey + '.redis.read',
+                            key: cacheDict + '/' + cacheKey + '/redis/read',
                             onTask: function (onError) {
-                                options.cacheRedis
+                                options.modeCacheRedis
                                     .hget(cacheDict, cacheKey, function (error, data) {
                                         onError(error, typeof data === 'string'
                                             ? decodeURIComponent(data)
@@ -551,12 +559,29 @@
                         setTimeout(onNext);
                     }
                     cacheValue = JSON.stringify(Array.prototype.slice.call(arguments));
-                    // write cacheValue to redis-cache
-                    if (options.cacheRedis) {
+                    // write cacheValue to memory-cache
+                    if (options.modeCacheMemory) {
+                        local.utility2.cacheDict[cacheDict][cacheKey] = cacheValue;
+                    }
+                    // write cacheValue to file-cache
+                    if (options.modeCacheFile) {
                         local.utility2.taskRunOrSubscribe({
-                            key: cacheKey + '.redis.read',
+                            key: cacheDict + '/' + cacheKey + '/file/write',
                             onTask: function () {
-                                options.cacheRedis.hset(
+                                local.utility2.fsMkdirpAndWriteFile(
+                                    options.modeCacheFile + '/' + cacheDict + '/' + cacheKey,
+                                    cacheValue,
+                                    local.utility2.onErrorDefault
+                                );
+                            }
+                        });
+                    }
+                    // write cacheValue to redis-cache
+                    if (options.modeCacheRedis) {
+                        local.utility2.taskRunOrSubscribe({
+                            key: cacheDict + '/' + cacheKey + '/redis/write',
+                            onTask: function () {
+                                options.modeCacheRedis.hset(
                                     cacheDict,
                                     cacheKey,
                                     encodeURIComponent(cacheValue),
@@ -565,21 +590,6 @@
                             }
                         });
                     }
-                    // write cacheValue to file-cache
-                    if (options.cacheDir) {
-                        local.utility2.taskRunOrSubscribe({
-                            key: cacheKey + '.file.write',
-                            onTask: function () {
-                                local.utility2.fsMkdirpAndWriteFile(
-                                    options.cacheDir + '/' + cacheDict + '/' + cacheKey,
-                                    cacheValue,
-                                    local.utility2.onErrorDefault
-                                );
-                            }
-                        });
-                    }
-                    // write cacheValue to memory-cache
-                    local.utility2.cacheDict[cacheDict][cacheKey] = cacheValue;
                     return;
                 case 14:
                     // call onError with cacheValue
@@ -1540,13 +1550,13 @@
                 this function will write the data to file, and create any necessary dirs
             */
             file = local.path.resolve(file);
-            local.fs.writeFile(file, data, function (error, data) {
+            local.fs.writeFile(file, data, function (error) {
                 if (error && error.code === 'ENOENT') {
                     local.utility2.fsMkdirpSync(local.path.dirname(file));
                     local.fs.writeFile(file, data, onError);
                     return;
                 }
-                onError(error, data);
+                onError(error);
             });
         };
 
