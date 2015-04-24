@@ -471,7 +471,7 @@
                 this function will try to run onError from cache,
                 and auto-update the cache with a background-task
             */
-            var cacheDict, cacheKey, cacheValue, modeCacheHit, modeNext, onNext;
+            var cacheDict, cacheKey, cacheValue, modeCacheHit, modeNext, onNext, onTaskEnd;
             modeNext = 0;
             onNext = function (error, data) {
                 if (modeNext < 10) {
@@ -554,6 +554,9 @@
                     local.utility2.taskRunOrSubscribe(options, onNext);
                     return;
                 case 13:
+                    onTaskEnd = local.utility2.onTaskEnd(options.onCacheWrite ||
+                        local.utility2.onErrorDefault);
+                    onTaskEnd.counter += 1;
                     // if cache-miss, call onError with background-task-result
                     if (!cacheValue) {
                         setTimeout(onNext);
@@ -568,7 +571,7 @@
                         local.utility2.taskRunOrSubscribe({
                             key: cacheDict + '/' + cacheKey + '/file/write',
                             onTask: function () {
-                                local.utility2.fsMkdirpAndWriteFile(
+                                local.utility2.fsWriteFileWithMkdirp(
                                     options.modeCacheFile + '/' + cacheDict + '/' + cacheKey,
                                     cacheValue,
                                     local.utility2.onErrorDefault
@@ -590,6 +593,7 @@
                             }
                         });
                     }
+                    onTaskEnd();
                     return;
                 case 14:
                     // call onError with cacheValue
@@ -1545,54 +1549,41 @@
             nextMiddleware();
         };
 
-        local.utility2.fsMkdirpAndWriteFile = function (file, data, onError) {
+        local.utility2.fsRmr = function (dir, onError) {
+            /*
+                this function will rm -fr the dir
+            */
+            dir = local.path.resolve(dir);
+            local.utility2
+                .processSpawnWithTimeout('rm', ['-fr', dir], { stdio: ['ignore', 1, 2] })
+                .on('exit', function (exitCode) {
+                    onError(exitCode && new Error('rm -fr ' + dir + ' exit-code ' + exitCode));
+                });
+        };
+
+        local.utility2.fsWriteFileWithMkdirp = function (file, data, onError) {
             /*
                 this function will write the data to file, and create any necessary dirs
             */
             file = local.path.resolve(file);
+            // write data to file
             local.fs.writeFile(file, data, function (error) {
                 if (error && error.code === 'ENOENT') {
-                    local.utility2.fsMkdirpSync(local.path.dirname(file));
-                    local.fs.writeFile(file, data, onError);
+                    // mkdir -p file's parent dir
+                    local.utility2
+                        .processSpawnWithTimeout(
+                            'mkdir',
+                            ['-p', local.path.dirname(file)],
+                            { stdio: ['ignore', 1, 2] }
+                        )
+                        .on('exit', function () {
+                            // write data to file
+                            local.fs.writeFile(file, data, onError);
+                        });
                     return;
                 }
                 onError(error);
             });
-        };
-
-        local.utility2.fsMkdirpSync = function (dir) {
-            /*
-                this function will synchronously mkdirp the dir
-            */
-            dir = local.path.resolve(dir);
-            try {
-                local.fs.mkdirSync(dir);
-            } catch (errorCaught) {
-                if (errorCaught.code === 'EEXIST') {
-                    return;
-                }
-                dir.split('/').slice(1, -1).reduce(function (dir, element) {
-                    dir = dir + '/' + element;
-                    try {
-                        local.fs.mkdirSync(dir);
-                    } catch (ignore) {
-                    }
-                    return dir;
-                }, '');
-                local.fs.mkdirSync(dir);
-            }
-        };
-
-        local.utility2.fsRmR = function (dir, onError) {
-            /*
-                this function will rm -r the dir
-            */
-            dir = local.path.resolve(dir);
-            local.utility2
-                .processSpawnWithTimeout('rm', ['-r', dir])
-                .on('exit', function () {
-                    onError();
-                });
         };
 
         local.utility2.onFileModifiedRestart = function (file) {

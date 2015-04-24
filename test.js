@@ -848,6 +848,10 @@
                 tmp;
             modeNext = 0;
             testModeCache = function (options, modeCacheHit, onError) {
+                // test wait-for-cache-write handling behavior
+                if (modeCacheHit !== 'memory') {
+                    options.onCacheWrite = onError;
+                }
                 local.utility2.taskRunWithCache(options, function (error, data) {
                     local.utility2.testTryCatch(function () {
                         // validate no error occurred
@@ -859,7 +863,10 @@
                             options.modeCacheHit === modeCacheHit,
                             [options.modeCacheHit, modeCacheHit]
                         );
-                        onError();
+                        // test no wait-for-cache-write handling behavior
+                        if (modeCacheHit === 'memory') {
+                            onError();
+                        }
                     }, onError);
 
                 });
@@ -876,7 +883,7 @@
                     options = {};
                     options.cacheDict = 'testCase_taskRunWithCache_default.' +
                         local.utility2.envDict.npm_config_mode_legacy_node;
-                    options.key = local.utility2.stringAsciiCharset;
+                    options.key = local.utility2.stringAsciiCharset.slice(0, 8);
                     options.modeCacheFile = local.utility2.envDict.npm_config_dir_tmp +
                         '/cache/test/testCase_taskRunWithCache_default.' +
                         local.utility2.envDict.npm_config_mode_legacy_node;
@@ -887,12 +894,10 @@
                         onError(null, cacheValue);
                     };
                     // cleanup memory-cache
-                    onTaskEnd.counter += 1;
                     local.utility2.cacheDict[options.cacheDict] = null;
-                    onTaskEnd();
                     // cleanup file-cache
                     onTaskEnd.counter += 1;
-                    local.utility2.fsRmR(options.modeCacheFile, onTaskEnd);
+                    local.utility2.fsRmr(options.modeCacheFile, onTaskEnd);
                     // init redis client
                     onTaskEnd.counter += 1;
                     onTaskEnd.counter += 1;
