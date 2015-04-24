@@ -21,6 +21,8 @@ node_js:
 script:
     - npm run-script build-ci
 services:
+  # http://docs.travis-ci.com/user/database-setup/#MongoDB
+  - mongodb
   # http://docs.travis-ci.com/user/database-setup/#Redis
   - redis-server
 # http://docs.travis-ci.com/user/workers/container-based-infrastructure
