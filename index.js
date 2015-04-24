@@ -1821,7 +1821,7 @@
             };
             // legacy-hack
             /* istanbul ignore if */
-            if (local.utility2.isNodeLegacy) {
+            if (local.utility2.envDict.npm_config_mode_node_legacy) {
                 local._replServer._domain = { on: local.utility2.nop };
             }
             local._replServer._domain.on('error', local._replServer.onError);
@@ -1964,7 +1964,7 @@
             */
             // legacy-hack
             /* istanbul ignore if */
-            if (local.utility2.isNodeLegacy) {
+            if (local.utility2.envDict.npm_config_mode_node_legacy) {
                 response.end(data);
                 return;
             }
@@ -2061,7 +2061,7 @@
             var server, testSecretCreate;
             // init _testSecret
             testSecretCreate = function () {
-                local.utility2._testSecret = local.utility2.uuid4();
+                local.utility2._testSecret = local.utility2.uuidTime();
             };
             // init _testSecret
             testSecretCreate();
@@ -2227,7 +2227,9 @@
         local.utility2.envDict.npm_config_dir_build = process.cwd() + '/tmp/build';
         local.utility2.envDict.npm_config_dir_tmp = process.cwd() + '/tmp';
         // legacy-hack
-        local.utility2.isNodeLegacy = process.version.slice(0, 5) === 'v0.10';
+        local.utility2.envDict.npm_config_mode_node_legacy =
+            local.utility2.envDict.npm_config_mode_node_legacy ||
+            process.version.slice(0, 6) < 'v0.12.';
         // init assets
         local.utility2['/assets/utility2.js'] = local.fs.readFileSync(__filename, 'utf8');
         local.utility2['/test/test.html'] = local.utility2.stringFormat(local.fs

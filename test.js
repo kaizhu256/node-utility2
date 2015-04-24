@@ -104,7 +104,7 @@
             }, {
                 // test undefined https host handling behavior
                 timeout: 1,
-                url: 'https://' + local.utility2.uuid4() + '.com'
+                url: 'https://' + local.utility2.uuidTime() + '.com'
             }].forEach(function (options) {
                 onTaskEnd.counter += 1;
                 local.utility2.ajax(options, function (error) {
@@ -520,7 +520,7 @@
                 this function will test taskRunOrSubscribe's default handling behavior
             */
             var key, onTaskEnd;
-            key = local.utility2.uuid4();
+            key = local.utility2.uuidTime();
             onTaskEnd = local.utility2.onTaskEnd(onError);
             onTaskEnd.counter += 1;
             // test create handling behavior
@@ -874,10 +874,12 @@
                     onTaskEnd.counter += 1;
                     cacheValue = local.utility2.stringAsciiCharset;
                     options = {};
-                    options.cacheDict = 'testCase_taskRunWithCache_default';
+                    options.cacheDict = 'testCase_taskRunWithCache_default.' +
+                        local.utility2.envDict.npm_config_mode_node_legacy;
                     options.key = local.utility2.stringAsciiCharset;
                     options.modeCacheFile = local.utility2.envDict.npm_config_dir_tmp +
-                        '/cache/testCase_taskRunWithCache_default';
+                        '/cache/test/testCase_taskRunWithCache_default.' +
+                        local.utility2.envDict.npm_config_mode_node_legacy;
                     options.modeCacheFileHit = 'file';
                     options.modeCacheMemory = true;
                     options.modeCacheMemoryHit = 'memory';
@@ -1014,7 +1016,7 @@
                 this function will test uuid4's default handling behavior
             */
             var data;
-            data = local.utility2.uuidTime();
+            data = local.utility2.uuid4();
             // validate data
             local.utility2.assert(local.utility2.regexpUuidValidate.test(data), data);
             onError();
