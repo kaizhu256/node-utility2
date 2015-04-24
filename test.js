@@ -899,12 +899,12 @@
                 this function will test taskRunWithCache's default handling behavior
             */
             var cacheValue,
+                db,
                 done,
                 modeNext,
                 onNext,
                 onTaskEnd,
                 options,
-                redisClient,
                 testModeCache,
                 tmp;
             modeNext = 0;
@@ -944,7 +944,7 @@
                     options = {};
                     options.cacheDict = 'testCase_taskRunWithCache_default.' +
                         local.utility2.envDict.npm_config_mode_legacy_node;
-                    options.key = local.utility2.stringAsciiCharset.slice(0, 8);
+                    options.key = local.utility2.stringUriComponentCharset;
                     options.modeCacheFile = local.utility2.envDict.npm_config_dir_tmp +
                         '/cache/test/testCase_taskRunWithCache_default/' +
                         local.utility2.envDict.npm_config_mode_legacy_node;
@@ -959,22 +959,51 @@
                     // cleanup file-cache
                     onTaskEnd.counter += 1;
                     local.utility2.fsRmr(options.modeCacheFile, onTaskEnd);
+                    // init mongo client
+                    onTaskEnd.counter += 1;
+                    (function () {
+                        tmp = function (error, db) {
+                            if (!error) {
+                                options.modeCacheMongo = db;
+                                options.modeCacheMongoHit = 'mongo';
+                                // cleanup mongo-cache
+                                onTaskEnd.counter += 1;
+                                db.collection(options.cacheDict).drop(function () {
+                                    onTaskEnd();
+                                });
+                            }
+                            onTaskEnd();
+                        };
+                        // test no mongo handling behavior
+                        onTaskEnd.counter += 1;
+                        tmp(local.utility2.errorDefault);
+                        // test mongo handling behavior
+                        onTaskEnd.counter += 1;
+                        require('mongodb').MongoClient
+                            .connect('mongodb://localhost:27017/test', tmp);
+                        onTaskEnd();
+                    }());
                     // init redis client
                     onTaskEnd.counter += 1;
-                    onTaskEnd.counter += 1;
-                    redisClient = require('redis').createClient();
-                    redisClient.on('error', local.utility2.nop);
-                    // cleanup redis-cache
-                    tmp = function (error) {
-                        if (!error) {
-                            options.modeCacheRedis = redisClient;
-                            options.modeCacheRedisHit = 'redis';
-                        }
+                    (function () {
+                        tmp = function (error) {
+                            if (!error) {
+                                options.modeCacheRedis = db;
+                                options.modeCacheRedisHit = 'redis';
+                            }
+                            onTaskEnd();
+                        };
+                        // test no redis handling behavior
+                        onTaskEnd.counter += 1;
+                        tmp(local.utility2.errorDefault);
+                        // test redis handling behavior
+                        db = require('redis').createClient();
+                        db.on('error', local.utility2.nop);
+                        // cleanup redis-cache
+                        onTaskEnd.counter += 1;
+                        db.del(encodeURIComponent(options.cacheDict), tmp);
                         onTaskEnd();
-                    };
-                    // test no redis handling behavior
-                    tmp(local.utility2.errorDefault);
-                    redisClient.del(encodeURIComponent(options.cacheDict), tmp);
+                    }());
                     onTaskEnd();
                     break;
                 // test no cache handling behavior
@@ -983,6 +1012,7 @@
                     [
                         'modeCacheFile',
                         'modeCacheMemory',
+                        'modeCacheMongo',
                         'modeCacheRedis',
                         'modeCacheUndefined'
                     ].forEach(function (modeCache) {
@@ -1008,6 +1038,7 @@
                     [
                         'modeCacheFile',
                         'modeCacheMemory',
+                        'modeCacheMongo',
                         'modeCacheRedis',
                         'modeCacheUndefined'
                     ].forEach(function (modeCache) {

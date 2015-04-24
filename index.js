@@ -537,6 +537,24 @@
                     onNext();
                     return;
                 case 4:
+                    // read cacheValue from mongo-cache
+                    if (options.modeCacheMongo) {
+                        modeCacheHit = 'mongo';
+                        local.utility2.taskRunOrSubscribe({
+                            key: cacheDict + '/' + cacheKey + '/mongo/read',
+                            onTask: function (onError) {
+                                options.modeCacheMongo.collection(cacheDict).findOne({
+                                    _id: cacheKey
+                                }, function (error, data) {
+                                    onError(error, data && data.value);
+                                });
+                            }
+                        }, onNext);
+                        return;
+                    }
+                    onNext();
+                    return;
+                case 5:
                     // jump to background-task
                     modeNext = 10;
                     onNext();
@@ -568,30 +586,48 @@
                     }
                     // write cacheValue to file-cache
                     if (options.modeCacheFile) {
+                        onTaskEnd.counter += 1;
                         local.utility2.taskRunOrSubscribe({
                             key: cacheDict + '/' + cacheKey + '/file/write',
-                            onTask: function () {
+                            onTask: function (onError) {
                                 local.utility2.fsWriteFileWithMkdirp(
                                     options.modeCacheFile + '/' + cacheDict + '/' + cacheKey,
                                     cacheValue,
-                                    local.utility2.onErrorDefault
+                                    onError
                                 );
                             }
-                        });
+                        }, onTaskEnd);
                     }
                     // write cacheValue to redis-cache
                     if (options.modeCacheRedis) {
+                        onTaskEnd.counter += 1;
                         local.utility2.taskRunOrSubscribe({
                             key: cacheDict + '/' + cacheKey + '/redis/write',
-                            onTask: function () {
+                            onTask: function (onError) {
                                 options.modeCacheRedis.hset(
                                     cacheDict,
                                     cacheKey,
                                     encodeURIComponent(cacheValue),
-                                    local.utility2.onErrorDefault
+                                    onError
                                 );
                             }
-                        });
+                        }, onTaskEnd);
+                    }
+                    // write cacheValue to mongo-cache
+                    if (options.modeCacheMongo) {
+                        onTaskEnd.counter += 1;
+                        modeCacheHit = 'mongo';
+                        local.utility2.taskRunOrSubscribe({
+                            key: cacheDict + '/' + cacheKey + '/mongo/write',
+                            onTask: function (onError) {
+                                options.modeCacheMongo.collection(cacheDict).update(
+                                    { _id: cacheKey },
+                                    { value: cacheValue },
+                                    { upsert: true },
+                                    onError
+                                );
+                            }
+                        }, onTaskEnd);
                     }
                     onTaskEnd();
                     return;

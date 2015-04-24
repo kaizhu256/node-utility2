@@ -383,6 +383,7 @@ instruction
 (via istanbul-lite and phantomjs-lite)",
     "devDependencies": {
         "phantomjs-lite": "2015.4.18-a",
+        "mongodb": "2.0.27",
         "redis": "0.12.1"
     },
     "engines": { "node": ">=0.10 <=0.12" },
