@@ -427,6 +427,7 @@
                 }, onError);
             });
             onTaskEnd.counter += 1;
+            // test multiple-task handling behavior
             onTaskEnd.counter += 1;
             setTimeout(function () {
                 onTaskEndError = local.utility2.onTaskEnd(function (error) {
@@ -564,6 +565,66 @@
     // run node js-env code
     case 'node':
         // init tests
+        local.testCase_fsWriteFileWithMkdirp_default = function (onError) {
+            /*
+                this function will test fsWriteFileWithMkdirp's default handling behavior
+            */
+            var dir, file, modeNext, onNext;
+            modeNext = 0;
+            onNext = function (error, data) {
+                local.utility2.testTryCatch(function () {
+                    modeNext += 1;
+                    switch (modeNext) {
+                    case 1:
+                        dir = local.utility2.envDict.npm_config_dir_tmp +
+                            '/cache/test/testCase_fsWriteFileWithMkdirp_default';
+                        // cleanup file
+                        local.utility2.fsRmr(dir, onNext);
+                        break;
+                    case 2:
+                        // test mkdir -p handling behavior
+                        file = dir + '/aa/bb';
+                        local.utility2.fsWriteFileWithMkdirp(file, 'hello', onNext);
+                        break;
+                    case 3:
+                        // validate no error occurred
+                        local.utility2.assert(!error, error);
+                        // validate data
+                        data = local.fs.readFileSync(file, 'utf8');
+                        local.utility2.assert(data === 'hello');
+                        onNext();
+                        break;
+                    case 4:
+                        // test no mkdir -p handling behavior
+                        file = dir + '/aa/bb';
+                        local.utility2.fsWriteFileWithMkdirp(file, 'hello', onNext);
+                        break;
+                    case 5:
+                        // validate no error occurred
+                        local.utility2.assert(!error, error);
+                        // validate data
+                        data = local.fs.readFileSync(file, 'utf8');
+                        local.utility2.assert(data === 'hello');
+                        onNext();
+                        break;
+                    case 6:
+                        // test error handling behavior
+                        file = dir + '/aa/bb/cc';
+                        local.utility2.fsWriteFileWithMkdirp(file, 'hello', onNext);
+                        break;
+                    case 7:
+                        // validate error occurred
+                        local.utility2.assert(error instanceof Error, error);
+                        onNext();
+                        break;
+                    default:
+                        onError(error);
+                    }
+                }, onError);
+            };
+            onNext();
+        };
+
         local.testCase_istanbulMerge_default = function (onError) {
             /*
                 this function will test istanbulMerge's default handling behavior
@@ -627,33 +688,6 @@
                 }, 1500);
                 onTaskEnd(error);
             });
-        };
-
-        local.testCase_serverRespondTimeoutDefault_default = function (onError) {
-            /*
-                this function will test serverRespondTimeoutDefault's default handling behavior
-            */
-            local.utility2.testMock([
-                // suppress console.error
-                [console, { error: local.utility2.nop }],
-                [local.utility2, {
-                    // suppress onErrorDefault
-                    onErrorDefault: local.utility2.nop,
-                    // test timeout callback handling behavior
-                    onTimeout: function (onError) {
-                        onError();
-                    },
-                    serverRespondDefault: local.utility2.nop
-                }]
-            ], function (onError) {
-                local.utility2.serverRespondTimeoutDefault(
-                    {},
-                    {},
-                    // test default timeout handling behavior
-                    null
-                );
-                onError();
-            }, onError);
         };
 
         local.testCase_phantomTest_default = function (onError) {
@@ -833,6 +867,33 @@
             }, onError);
         };
 
+        local.testCase_serverRespondTimeoutDefault_default = function (onError) {
+            /*
+                this function will test serverRespondTimeoutDefault's default handling behavior
+            */
+            local.utility2.testMock([
+                // suppress console.error
+                [console, { error: local.utility2.nop }],
+                [local.utility2, {
+                    // suppress onErrorDefault
+                    onErrorDefault: local.utility2.nop,
+                    // test timeout callback handling behavior
+                    onTimeout: function (onError) {
+                        onError();
+                    },
+                    serverRespondDefault: local.utility2.nop
+                }]
+            ], function (onError) {
+                local.utility2.serverRespondTimeoutDefault(
+                    {},
+                    {},
+                    // test default timeout handling behavior
+                    null
+                );
+                onError();
+            }, onError);
+        };
+
         local.testCase_taskRunWithCache_default = function (onError) {
             /*
                 this function will test taskRunWithCache's default handling behavior
@@ -885,7 +946,7 @@
                         local.utility2.envDict.npm_config_mode_legacy_node;
                     options.key = local.utility2.stringAsciiCharset.slice(0, 8);
                     options.modeCacheFile = local.utility2.envDict.npm_config_dir_tmp +
-                        '/cache/test/testCase_taskRunWithCache_default.' +
+                        '/cache/test/testCase_taskRunWithCache_default/' +
                         local.utility2.envDict.npm_config_mode_legacy_node;
                     options.modeCacheFileHit = 'file';
                     options.modeCacheMemory = true;

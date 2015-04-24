@@ -1555,9 +1555,13 @@
             */
             dir = local.path.resolve(dir);
             local.utility2
-                .processSpawnWithTimeout('rm', ['-fr', dir], { stdio: ['ignore', 1, 2] })
-                .on('exit', function (exitCode) {
-                    onError(exitCode && new Error('rm -fr ' + dir + ' exit-code ' + exitCode));
+                .processSpawnWithTimeout(
+                    'rm',
+                    ['-fr', dir],
+                    { stdio: ['ignore', 1, 2] }
+                )
+                .on('exit', function () {
+                    onError();
                 });
         };
 
@@ -1569,7 +1573,7 @@
             // write data to file
             local.fs.writeFile(file, data, function (error) {
                 if (error && error.code === 'ENOENT') {
-                    // mkdir -p file's parent dir
+                    // if write failed, then mkdir -p file's parent dir
                     local.utility2
                         .processSpawnWithTimeout(
                             'mkdir',
@@ -1704,21 +1708,24 @@
                     }
                     // spawn phantomjs to test a url
                     local.utility2
-                        .processSpawnWithTimeout('/bin/sh', ['-c',
-                            options.argv0 +
-                            // bug - hack slimerjs to allow heroku https
-                            (options.argv0 === 'slimerjs'
-                            ? ' --ssl-protocol=TLS '
-                            : ' ') +
-                            options.argv1 + ' ' +
-                            encodeURIComponent(JSON.stringify(options)) + '; ' +
-                            'EXIT_CODE=$?; ' +
-                            // add black border around phantomjs screen-capture
-                            '[ -f ' + options.fileScreenCapture + ' ] && ' +
-                            'mogrify -frame 1 -mattecolor black ' +
-                            options.fileScreenCapture + ' 2>/dev/null; ' +
-                            'exit $EXIT_CODE;'
-                            ], { stdio: options.modeErrorIgnore ? 'ignore' : ['ignore', 1, 2] })
+                        .processSpawnWithTimeout(
+                            '/bin/sh',
+                            ['-c',
+                                options.argv0 +
+                                // bug - hack slimerjs to allow heroku https
+                                (options.argv0 === 'slimerjs'
+                                ? ' --ssl-protocol=TLS '
+                                : ' ') +
+                                options.argv1 + ' ' +
+                                encodeURIComponent(JSON.stringify(options)) + '; ' +
+                                'EXIT_CODE=$?; ' +
+                                // add black border around phantomjs screen-capture
+                                '[ -f ' + options.fileScreenCapture + ' ] && ' +
+                                'mogrify -frame 1 -mattecolor black ' +
+                                options.fileScreenCapture + ' 2>/dev/null; ' +
+                                'exit $EXIT_CODE;'],
+                            { stdio: options.modeErrorIgnore ? 'ignore' : ['ignore', 1, 2] }
+                        )
                         .on('exit', onNext);
                     break;
                 case 2:

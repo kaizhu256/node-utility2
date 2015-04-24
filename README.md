@@ -473,7 +473,7 @@ shBuild() {
     # run npm-test
     MODE_BUILD=npmTest shRunScreenCapture npm test || return $?
 
-    # do not continue if running legacy node
+    # do not continue if running legacy-node
     [ "$(node --version)" \< "v0.12" ] && return
 
     # deploy app to heroku
@@ -500,7 +500,7 @@ shBuild
 EXIT_CODE=$?
 [ "$(node --version)" \< "v0.12" ] && exit $EXIT_CODE
 
-# do not continue if running legacy node
+# do not continue if running legacy-node
 [ "$(node --version)" \< "v0.12" ] && exit $EXIT_CODE
 
 shBuildCleanup() {
