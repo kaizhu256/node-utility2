@@ -546,6 +546,7 @@
                                 options.modeCacheMongo.collection(cacheDict).findOne({
                                     _id: cacheKey
                                 }, function (error, data) {
+                                    debugPrint(arguments);
                                     onError(error, data && data.value);
                                 });
                             }
@@ -624,7 +625,10 @@
                                     { _id: cacheKey },
                                     { value: cacheValue },
                                     { upsert: true },
-                                    onError
+                                    function () {
+                                        debugPrint(arguments);
+                                        onError();
+                                    }
                                 );
                             }
                         }, onTaskEnd);
