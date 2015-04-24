@@ -546,7 +546,6 @@
                                 options.modeCacheMongo.collection(cacheDict).findOne({
                                     _id: cacheKey
                                 }, function (error, data) {
-                                    debugPrint(arguments);
                                     onError(error, data && data.value);
                                 });
                             }
@@ -623,12 +622,9 @@
                             onTask: function (onError) {
                                 options.modeCacheMongo.collection(cacheDict).update(
                                     { _id: cacheKey },
-                                    { value: cacheValue },
+                                    { $set: { value: cacheValue } },
                                     { upsert: true },
-                                    function () {
-                                        debugPrint(arguments);
-                                        onError();
-                                    }
+                                    onError
                                 );
                             }
                         }, onTaskEnd);
@@ -1686,6 +1682,8 @@
                 // copy options to create separate phantomjs / slimerjs state
                 optionsCopy = local.utility2.jsonCopy(options);
                 optionsCopy.argv0 = argv0;
+                optionsCopy.timeoutDefault = optionsCopy.timeoutDefault ||
+                    Math.max(local.utility2.timeoutDefault - 5000, 5000);
                 // run phantomjs / slimerjs instance
                 onTaskEnd.counter += 1;
                 local._phantomTestSingle(optionsCopy, function (error) {

@@ -782,8 +782,7 @@
                 }]
             ], function (onError) {
                 local.utility2.phantomTest({
-                    url: 'http://localhost:' +
-                        local.utility2.envDict.npm_config_server_port
+                    url: 'http://localhost:' + local.utility2.envDict.npm_config_server_port
                 });
                 onError();
             }, onTaskEnd);
