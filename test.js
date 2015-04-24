@@ -875,11 +875,11 @@
                     cacheValue = local.utility2.stringAsciiCharset;
                     options = {};
                     options.cacheDict = 'testCase_taskRunWithCache_default.' +
-                        local.utility2.envDict.npm_config_mode_node_legacy;
+                        local.utility2.envDict.npm_config_mode_legacy_node;
                     options.key = local.utility2.stringAsciiCharset;
                     options.modeCacheFile = local.utility2.envDict.npm_config_dir_tmp +
                         '/cache/test/testCase_taskRunWithCache_default.' +
-                        local.utility2.envDict.npm_config_mode_node_legacy;
+                        local.utility2.envDict.npm_config_mode_legacy_node;
                     options.modeCacheFileHit = 'file';
                     options.modeCacheMemory = true;
                     options.modeCacheMemoryHit = 'memory';

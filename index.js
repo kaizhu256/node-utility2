@@ -1821,7 +1821,7 @@
             };
             // legacy-hack
             /* istanbul ignore if */
-            if (local.utility2.envDict.npm_config_mode_node_legacy) {
+            if (local.utility2.envDict.npm_config_mode_legacy_node) {
                 local._replServer._domain = { on: local.utility2.nop };
             }
             local._replServer._domain.on('error', local._replServer.onError);
@@ -1964,7 +1964,7 @@
             */
             // legacy-hack
             /* istanbul ignore if */
-            if (local.utility2.envDict.npm_config_mode_node_legacy) {
+            if (local.utility2.envDict.npm_config_mode_legacy_node) {
                 response.end(data);
                 return;
             }
@@ -2222,14 +2222,16 @@
         local.path = require('path');
         local.url = require('url');
         local.zlib = require('zlib');
+        // legacy-hack
+        /* istanbul ignore if */
+        if (process.version.slice(0, 6) < 'v0.12.') {
+            local.utility2.envDict.npm_config_mode_legacy_node =
+                local.utility2.envDict.npm_config_mode_legacy_node || '1';
+        }
         // init utility2 properties
         local.utility2.__dirname = __dirname;
         local.utility2.envDict.npm_config_dir_build = process.cwd() + '/tmp/build';
         local.utility2.envDict.npm_config_dir_tmp = process.cwd() + '/tmp';
-        // legacy-hack
-        local.utility2.envDict.npm_config_mode_node_legacy =
-            local.utility2.envDict.npm_config_mode_node_legacy ||
-            process.version.slice(0, 6) < 'v0.12.';
         // init assets
         local.utility2['/assets/utility2.js'] = local.fs.readFileSync(__filename, 'utf8');
         local.utility2['/test/test.html'] = local.utility2.stringFormat(local.fs
