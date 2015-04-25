@@ -102,7 +102,7 @@ instruction
 
     // run browser js-env code
     if (typeof window === 'object') {
-        // init browser js-env tests
+        // init tests
         local.testCase_ajax_200 = function (onError) {
             /*
                 this function will test ajax's "200 ok" handling behavior
@@ -125,17 +125,12 @@ instruction
                 this function will test ajax's "404 not found" handling behavior
             */
             // test '/test/undefined'
-            local.utility2.ajax({
-                url: '/test/undefined'
-            }, function (error) {
+            local.utility2.ajax({ url: '/test/undefined' }, function (error) {
                 local.utility2.testTryCatch(function () {
                     // validate error occurred
                     local.utility2.assert(error instanceof Error, error);
                     // validate 404 http statusCode
-                    local.utility2.assert(
-                        error.statusCode === 404,
-                        error.statusCode
-                    );
+                    local.utility2.assert(error.statusCode === 404, error.statusCode);
                     onError();
                 }, onError);
             });
@@ -147,13 +142,7 @@ instruction
 
     // run node js-env code
     } else {
-        // mock package.json env
-        process.env.npm_package_description = 'this is an example module';
-        process.env.npm_package_name = 'example-module';
-        process.env.npm_package_version = '0.0.1';
-        // require modules
-        local.fs = require('fs');
-        // init node js-env tests
+        // init node tests
         local.testCase_phantomTest_default = function (onError) {
             /*
                 this function will spawn phantomjs to test the test-page
@@ -164,6 +153,12 @@ instruction
                     '?modeTest=phantom'
             }, onError);
         };
+        // mock package.json env
+        process.env.npm_package_description = 'this is an example module';
+        process.env.npm_package_name = 'example-module';
+        process.env.npm_package_version = '0.0.1';
+        // require modules
+        local.fs = require('fs');
         // init assets
         local['/'] = (String() +
 
@@ -191,7 +186,7 @@ instruction
     '}\n' +
     'textarea {\n' +
         'font-family: monospace;\n' +
-        'height: 24em;\n' +
+        'height: 32em;\n' +
         'width: 100%;\n' +
     '}\n' +
     '.jslintOutputPre {\n' +
@@ -216,46 +211,44 @@ instruction
 '/*jslint browser: true*/\n' +
 '(function () {\n' +
     '"use strict";\n' +
-    'window.utility2.testRun({\n' +
+    'var testCaseDict;\n' +
+    'testCaseDict = {};\n' +
+    'testCaseDict.modeTest = true;\n' +
 '\n' +
-        'modeTest: true,\n' +
+    '// comment this testCase to disable the failed assertion demo\n' +
+    'testCaseDict.testCase_failed_assertion_demo = function (onError) {\n' +
+        '/*\n' +
+            'this function will demo a failed assertion test\n' +
+        '*/\n' +
+        'window.utility2.assert(false, "this is a failed assertion demo");\n' +
+        'onError();\n' +
+    '};\n' +
 '\n' +
-        '// comment this code to skip the failed assertion demo\n' +
-        'testCase_failed_assertion_demo: function (onError) {\n' +
-            '/*\n' +
-                'this function will demo a failed assertion test\n' +
-            '*/\n' +
-            'window.utility2.assert(\n' +
-                'false,\n' +
-                '"this is a failed assertion demo"\n' +
-            ');\n' +
-            'onError();\n' +
-        '},\n' +
-'\n' +
-        'testCase_passed_ajax_demo: function (onError) {\n' +
-            '/*\n' +
-                'this function will demo a passed ajax test\n' +
-            '*/\n' +
-            '// test ajax request for main-page "/"\n' +
-            'window.utility2.ajax({\n' +
-                'url: "/"\n' +
-            '}, function (error, data, xhr) {\n' +
-                'try {\n' +
-                    '// validate no error occurred\n' +
-                    'window.utility2.assert(!error, error);\n' +
-                    '// validate non-empty data\n' +
-                    'window.utility2.assert(data && data.length > 0, data);\n' +
-                    '// validate "200 ok" status\n' +
-                    'if (xhr.status === 200) {\n' +
-                        'window.utility2.assert(data, data);\n' +
-                    '}\n' +
-                    'onError();\n' +
-                '} catch (errorCaught) {\n' +
-                    'onError(errorCaught);\n' +
+    'testCaseDict.testCase_passed_ajax_demo = function (onError) {\n' +
+        '/*\n' +
+            'this function will demo a passed ajax test\n' +
+        '*/\n' +
+        '// test ajax request for main-page "/"\n' +
+        'window.utility2.ajax({\n' +
+            'url: "/"\n' +
+        '}, function (error, data, xhr) {\n' +
+            'try {\n' +
+                '// validate no error occurred\n' +
+                'window.utility2.assert(!error, error);\n' +
+                '// validate non-empty data\n' +
+                'window.utility2.assert(data && data.length > 0, data);\n' +
+                '// validate "200 ok" status\n' +
+                'if (xhr.status === 200) {\n' +
+                    'window.utility2.assert(data, data);\n' +
                 '}\n' +
-            '});\n' +
-        '}\n' +
-    '});\n' +
+                'onError();\n' +
+            '} catch (errorCaught) {\n' +
+                'onError(errorCaught);\n' +
+            '}\n' +
+        '});\n' +
+    '};\n' +
+'\n' +
+    'window.utility2.testRun(testCaseDict);\n' +
 '}());\n' +
 '</textarea>\n' +
     '<pre class="jslintOutputPre"></pre>\n' +
@@ -274,14 +267,8 @@ instruction
     'document.querySelector(\n' +
         '".istanbulInputTextarea"\n' +
     ').addEventListener("keyup", function () {\n' +
-        'window.utility2.taskRunOrSubscribe({\n' +
-            'key: "testTextarea",\n' +
-            'onTask: function (onError) {\n' +
-                'window.utility2.onErrorExit = onError;\n' +
-                'window.jslint_lite.jslintTextarea();\n' +
-                'window.istanbul_lite.coverTextarea();\n' +
-            '}\n' +
-        '});\n' +
+        'window.jslint_lite.jslintTextarea();\n' +
+        'window.istanbul_lite.coverTextarea();\n' +
     '});\n' +
     'if (!window.utility2.modeTest) {\n' +
         'window.jslint_lite.jslintTextarea();\n' +
@@ -375,7 +362,7 @@ instruction
     "author": "kai zhu <kaizhu256@gmail.com>",
     "bin": { "utility2" : "index.sh" },
     "dependencies": {
-        "istanbul-lite": "2015.4.9-a",
+        "istanbul-lite": "2015.4.24-a",
         "jslint-lite": "2015.4.18-b"
     },
     "description": "run dynamic browser tests with coverage \
@@ -388,9 +375,9 @@ instruction
     "engines": { "node": ">=0.10 <=0.12" },
     "keywords": [
         "browser", "build",
-        "ci", "cover", "coverage", "csslint",
+        "ci", "code", "cover", "coverage", "csslint",
         "instrument", "istanbul",
-        "jslint",
+        "jscoverage", "jslint",
         "lint",
         "phantom", "phantomjs",
         "slimer", "slimerjs",
@@ -413,7 +400,7 @@ npm_config_mode_auto_restart=1 \
 npm_config_mode_auto_restart_child=1 \
 ./index.sh test test.js"
     },
-    "version": "2015.4.23-b"
+    "version": "2015.4.25-a"
 }
 ```
 
@@ -426,6 +413,15 @@ npm_config_mode_auto_restart_child=1 \
 - auto-generate help doc from README.md
 - add server stress test using phantomjs
 - minify /assets/utility2.js in production-mode
+- none
+
+
+
+# change since d4ed89e9
+- npm publish 2015.4.25-a
+- auto-cleanup $npm_config_dir_tmp/*.json before npm test
+- add fsRmrSync
+- fix timeout issue with phantomjs tests by adding var local.utility2.timeExit
 - none
 
 

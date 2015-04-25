@@ -1153,6 +1153,58 @@
             }
         };
 
+        local.utility2.timeoutDefaultInit = function () {
+            /*
+                this function will init timeoutDefault
+            */
+            // init utility2 properties
+            switch (local.modeJs) {
+            case 'browser':
+                location.search.replace(
+                    (/\b(mode[A-Z]\w+|_testSecret|timeExit|timeoutDefault)=([\w\-\.\%]+)/g),
+                    function (match0, key, value) {
+                        // jslint-hack
+                        local.utility2.nop(match0);
+                        local.utility2[key] = value;
+                        // try to parse value as json object
+                        try {
+                            local.utility2[key] = JSON.parse(value);
+                        } catch (ignore) {
+                        }
+                    }
+                );
+                break;
+            case 'node':
+                local.utility2.timeExit =
+                    local.utility2.envDict.npm_config_time_exit;
+                local.utility2.timeoutDefault =
+                    local.utility2.envDict.npm_config_timeout_default;
+                break;
+            case 'phantom':
+                try {
+                    local.utility2.objectSetOverride(
+                        local.utility2,
+                        JSON.parse(decodeURIComponent(local.system.args[1])),
+                        {},
+                        -1
+                    );
+                } catch (ignore) {
+                }
+                break;
+            }
+            // init timeExit
+            if (local.utility2.timeExit) {
+                local.utility2.timeoutDefault = local.utility2.timeExit - Date.now();
+                local.utility2.onTimeout(
+                    local.utility2.onErrorExit,
+                    local.utility2.timeoutDefault + 1000,
+                    'exit'
+                );
+            }
+            // init timeoutDefault
+            local.utility2.timeoutDefault = local.utility2.timeoutDefault || 30000;
+        };
+
         local.utility2.uuid4 = function () {
             /*
                 this function will return a random uuid,
@@ -1589,27 +1641,46 @@
             /*
                 this function will rm -fr the dir
             */
-            dir = local.path.resolve(dir);
+            dir = local.path.resolve(process.cwd(), dir);
             local.utility2
-                .processSpawnWithTimeout(
-                    'rm',
-                    ['-fr', dir],
-                    { stdio: ['ignore', 1, 2] }
-                )
+                .processSpawnWithTimeout('rm', ['-fr', dir], { stdio: ['ignore', 1, 2] })
                 .on('exit', function () {
                     onError();
                 });
         };
 
+        local.utility2.fsRmrSync = function (dir) {
+            /*
+                this function will synchronously rm -fr the dir
+            */
+            dir = local.path.resolve(process.cwd(), dir);
+            // legacy-hack
+            /* istanbul ignore if */
+            if (local.utility2.envDict.npm_config_mode_legacy_node) {
+                var rmrSync;
+                rmrSync = function (dir) {
+                    try {
+                        local.fs.unlinkSync(dir);
+                    } catch (errorCaught) {
+                        local.fs.readdirSync(dir).forEach(function (file) {
+                            rmrSync(dir + '/' + file);
+                        });
+                    }
+                };
+                return;
+            }
+            local.child_process.spawnSync('rm', ['-fr', dir], { stdio: ['ignore', 1, 2] });
+        };
+
         local.utility2.fsWriteFileWithMkdirp = function (file, data, onError) {
             /*
-                this function will write the data to file, and create any necessary dirs
+                this function will write the data to file, and auto-mkdirp parent dir
             */
-            file = local.path.resolve(file);
+            file = local.path.resolve(process.cwd(), file);
             // write data to file
             local.fs.writeFile(file, data, function (error) {
                 if (error && error.code === 'ENOENT') {
-                    // if write failed, then mkdir -p file's parent dir
+                    // if write failed, then mkdirp file's parent dir
                     local.utility2
                         .processSpawnWithTimeout(
                             'mkdir',
@@ -1682,8 +1753,6 @@
                 // copy options to create separate phantomjs / slimerjs state
                 optionsCopy = local.utility2.jsonCopy(options);
                 optionsCopy.argv0 = argv0;
-                optionsCopy.timeoutDefault = optionsCopy.timeoutDefault ||
-                    Math.max(local.utility2.timeoutDefault - 5000, 5000);
                 // run phantomjs / slimerjs instance
                 onTaskEnd.counter += 1;
                 local._phantomTestSingle(optionsCopy, function (error) {
@@ -1711,6 +1780,7 @@
                     options.testName = local.utility2.envDict.MODE_BUILD +
                         '.' + options.argv0 + '.' +
                         encodeURIComponent(local.url.parse(options.url).pathname);
+                    options.timeExit = Date.now() + local.utility2.timeoutDefault;
                     local.utility2.objectSetDefault(options, {
                         _testSecret: local.utility2._testSecret,
                         fileCoverage: local.utility2.envDict.npm_config_dir_tmp +
@@ -2152,12 +2222,21 @@
 
     // run shared js-env code
     (function () {
+        // require system
+        if (local.modeJs === 'phantom') {
+            local.system = require('system');
+        }
+        local.utility2.envDict = local.modeJs === 'browser'
+            ? {}
+            : local.modeJs === 'node'
+            ? process.env
+            : local.system.env;
         local.utility2.cacheDict = {};
         local.utility2.envDict = local.modeJs === 'browser'
             ? {}
             : local.modeJs === 'node'
             ? process.env
-            : require('system').env;
+            : local.system.env;
         local.utility2.errorDefault = new Error('default error');
         local.utility2.exit = local.modeJs === 'browser'
             ? local.nop
@@ -2192,7 +2271,7 @@
                 : (local.global.slimer
                     ? 'slimer - '
                     : 'phantom - ') +
-                    require('system').os.name + ' ' +
+                    local.system.os.name + ' ' +
                     local.global.phantom.version.major + '.' +
                     local.global.phantom.version.minor + '.' +
                     local.global.phantom.version.patch + ' - ' +
@@ -2201,10 +2280,8 @@
             testCaseList: []
         };
         local.utility2.testReport = { testPlatformList: [local.utility2.testPlatform] };
-        local.utility2.timeoutDefault =
-            local.utility2.envDict.npm_config_timeout_default ||
-            local.utility2.timeoutDefault ||
-            30000;
+        // init timeoutDefault
+        local.utility2.timeoutDefaultInit();
         // init onReady
         local.utility2.taskRunOrSubscribe({
             key: 'utility2.onReady',
@@ -2226,20 +2303,6 @@
         // require modules
         local.istanbul_lite = window.istanbul_lite;
         local.jslint_lite = window.jslint_lite;
-        // parse url search-params that match 'mode*' or '_testSecret'
-        location.search.replace(
-            (/\b(mode[A-Z]\w+|_testSecret)=([\w\-\.\%]+)/g),
-            function (match0, key, value) {
-                // jslint-hack
-                local.utility2.nop(match0);
-                local.utility2[key] = value;
-                // try to parse value as json object
-                try {
-                    local.utility2[key] = JSON.parse(value);
-                } catch (ignore) {
-                }
-            }
-        );
         break;
 
 
@@ -2285,7 +2348,6 @@
     case 'phantom':
         // require modules
         local.fs = require('fs');
-        local.system = require('system');
         local.webpage = require('webpage');
         local.coverAndExit = function (coverage, exit, exitCode) {
             setTimeout(function () {
@@ -2404,22 +2466,10 @@
             // init global error handling
             // http://phantomjs.org/api/phantom/handler/on-error.html
             local.global.phantom.onError = local.onError;
-            // override utility2 properties
-            local.utility2.objectSetOverride(
-                local.utility2,
-                JSON.parse(decodeURIComponent(local.system.args[1])),
-                -1
-            );
             // if modeErrorIgnore is truthy, then suppress console.error and console.log
             if (local.utility2.modeErrorIgnore) {
                 console.error = console.log = local.utility2.nop;
             }
-            // init timerTimeout
-            local.timerTimeout = local.utility2.onTimeout(
-                local.utility2.onErrorExit,
-                local.utility2.timeoutDefault,
-                local.utility2.url
-            );
             // init webpage
             local.page = local.webpage.create();
             // init webpage clipRect
@@ -2435,8 +2485,10 @@
             };
             // open requested webpage
             local.page.open(
-                // security - insert _testSecret in url without revealing it
-                local.utility2.url.replace('{{_testSecret}}', local.utility2._testSecret),
+                local.utility2.url
+                    // security - insert _testSecret in url without revealing it
+                    .replace('{{_testSecret}}', local.utility2._testSecret)
+                    .replace('{{timeExit}}', local.utility2.timeExit - 2000),
                 local.onError
             );
         });

@@ -565,9 +565,9 @@
     // run node js-env code
     case 'node':
         // init tests
-        local.testCase_fsWriteFileWithMkdirp_default = function (onError) {
+        local.testCase_fsXxx_default = function (onError) {
             /*
-                this function will test fsWriteFileWithMkdirp's default handling behavior
+                this function will test fsXxx's default handling behavior
             */
             var dir, file, modeNext, onNext;
             modeNext = 0;
@@ -577,44 +577,59 @@
                     switch (modeNext) {
                     case 1:
                         dir = local.utility2.envDict.npm_config_dir_tmp +
-                            '/cache/test/testCase_fsWriteFileWithMkdirp_default';
-                        // cleanup file
-                        local.utility2.fsRmr(dir, onNext);
+                            '/testCase_fsXxx_default';
+                        onNext();
                         break;
                     case 2:
-                        // test mkdir -p handling behavior
-                        file = dir + '/aa/bb';
-                        local.utility2.fsWriteFileWithMkdirp(file, 'hello', onNext);
+                        // test fsRmrSync handling behavior
+                        local.utility2.fsRmrSync(dir);
+                        // validate dir is undefined
+                        local.utility2.assert(!local.fs.existsSync(dir), dir);
+                        onNext();
                         break;
                     case 3:
-                        // validate no error occurred
-                        local.utility2.assert(!error, error);
-                        // validate data
-                        data = local.fs.readFileSync(file, 'utf8');
-                        local.utility2.assert(data === 'hello');
-                        onNext();
+                        // test fsWriteFileWithMkdirp with mkdirp handling behavior
+                        file = dir + '/aa/bb';
+                        local.utility2.fsWriteFileWithMkdirp(file, 'hello1', onNext);
                         break;
                     case 4:
-                        // test no mkdir -p handling behavior
-                        file = dir + '/aa/bb';
-                        local.utility2.fsWriteFileWithMkdirp(file, 'hello', onNext);
-                        break;
-                    case 5:
                         // validate no error occurred
                         local.utility2.assert(!error, error);
                         // validate data
                         data = local.fs.readFileSync(file, 'utf8');
-                        local.utility2.assert(data === 'hello');
+                        local.utility2.assert(data === 'hello1');
                         onNext();
                         break;
+                    case 5:
+                        // test fsWriteFileWithMkdirp with no mkdirp handling behavior
+                        file = dir + '/aa/bb';
+                        local.utility2.fsWriteFileWithMkdirp(file, 'hello2', onNext);
+                        break;
                     case 6:
+                        // validate no error occurred
+                        local.utility2.assert(!error, error);
+                        // validate data
+                        data = local.fs.readFileSync(file, 'utf8');
+                        local.utility2.assert(data === 'hello2');
+                        onNext();
+                        break;
+                    case 7:
                         // test error handling behavior
                         file = dir + '/aa/bb/cc';
                         local.utility2.fsWriteFileWithMkdirp(file, 'hello', onNext);
                         break;
-                    case 7:
+                    case 8:
                         // validate error occurred
                         local.utility2.assert(error instanceof Error, error);
+                        onNext();
+                        break;
+                    case 9:
+                        // test fsRmr handling behavior
+                        local.utility2.fsRmr(dir, onNext);
+                        break;
+                    case 10:
+                        // validate dir is undefined
+                        local.utility2.assert(!local.fs.existsSync(dir), dir);
                         onNext();
                         break;
                     default:
@@ -701,17 +716,20 @@
                 // test default handling behavior
                 url: 'http://localhost:' +
                     local.utility2.envDict.npm_config_server_port +
-                    // test phantom-callback handling behavior
-                    '?modeTest=phantom&' +
+                    '?' +
                     // test _testSecret-validation handling behavior
-                    '_testSecret={{_testSecret}}'
+                    '_testSecret={{_testSecret}}&' +
+                    // test phantom-callback handling behavior
+                    'modeTest=phantom&' +
+                    'timeExit={{timeExit}}'
             }, {
                 modeError: true,
                 modeErrorIgnore: true,
                 url: 'http://localhost:' +
                     local.utility2.envDict.npm_config_server_port +
                     // test script-error handling behavior
-                    '/test/script-error.html'
+                    '/test/script-error.html?' +
+                    'timeExit={{timeExit}}'
             }, {
                 modeError: true,
                 modeErrorIgnore: true,
@@ -725,7 +743,8 @@
                     'modeTest=phantom2&' +
                     // test single-test-case handling behavior
                     // test testRun's failure handling behavior
-                    'modeTestCase=testCase_testRun_failure'
+                    'modeTestCase=testCase_testRun_failure&' +
+                    'timeExit={{timeExit}}'
             }].forEach(function (options) {
                 onTaskEnd.counter += 1;
                 local.utility2.phantomTest(options, function (error) {
@@ -748,7 +767,8 @@
                 timeoutScreenCapture: 1,
                 url: 'http://localhost:' +
                     local.utility2.envDict.npm_config_server_port +
-                    '/test/script-error.html'
+                    '/test/script-error.html?' +
+                    'timeExit={{timeExit}}'
             };
             local.utility2.phantomScreenCapture(options, function (error) {
                 local.utility2.testTryCatch(function () {
@@ -782,7 +802,10 @@
                 }]
             ], function (onError) {
                 local.utility2.phantomTest({
-                    url: 'http://localhost:' + local.utility2.envDict.npm_config_server_port
+                    url: 'http://localhost:' +
+                        local.utility2.envDict.npm_config_server_port +
+                        '?' +
+                        'timeExit={{timeExit}}'
                 });
                 onError();
             }, onTaskEnd);
@@ -945,7 +968,7 @@
                         local.utility2.envDict.npm_config_mode_legacy_node;
                     options.key = local.utility2.stringUriComponentCharset;
                     options.modeCacheFile = local.utility2.envDict.npm_config_dir_tmp +
-                        '/cache/test/testCase_taskRunWithCache_default/' +
+                        '/testCase_taskRunWithCache_default/' +
                         local.utility2.envDict.npm_config_mode_legacy_node;
                     options.modeCacheFileHit = 'file';
                     options.modeCacheMemory = true;
@@ -956,8 +979,7 @@
                     // cleanup memory-cache
                     local.utility2.cacheDict[options.cacheDict] = null;
                     // cleanup file-cache
-                    onTaskEnd.counter += 1;
-                    local.utility2.fsRmr(options.modeCacheFile, onTaskEnd);
+                    local.utility2.fsRmrSync(options.modeCacheFile);
                     // init mongo client
                     onTaskEnd.counter += 1;
                     (function () {
@@ -1080,7 +1102,7 @@
                         npm_package_name: 'undefined',
                         // test timeout-exit handling behavior
                         npm_config_timeout_exit: '1',
-                        // test $npm_config_server_port handling behavior
+                        // test random $npm_config_server_port handling behavior
                         npm_config_server_port: ''
                     },
                     phantomScreenCapture: local.utility2.nop,
@@ -1147,6 +1169,7 @@
     case 'browser':
         // export local
         window.local = local;
+        // init onErorExit
         local.utility2.onErrorExit = function () {
             // test modeTest !== 'phantom' handling behavior
             if (local.utility2.modeTest === 'phantom2') {
