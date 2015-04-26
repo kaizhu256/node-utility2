@@ -43,7 +43,7 @@
                     local.utility2.assert(!error, error);
                     // validate 304 http status
                     local.utility2.assert(xhr.status === 304, xhr.status);
-                    // validate no data
+                    // validate data
                     local.utility2.assert(!data, data);
                     onTaskEnd();
                 }, onTaskEnd);
@@ -396,19 +396,19 @@
             // validate no error occurred
             local.utility2.assert(!error, error);
             // validate data
-            local.utility2.assert(data === 1);
+            local.utility2.assert(data === 1, data);
             // test parse failed handling behavior
             jsonParse(null, 'syntax error');
             // validate no error occurred
             local.utility2.assert(error instanceof Error, error);
             // validate data
-            local.utility2.assert(!data);
+            local.utility2.assert(!data, data);
             // test error handling behavior
             jsonParse(new Error());
             // validate no error occurred
             local.utility2.assert(error instanceof Error, error);
             // validate data
-            local.utility2.assert(!data);
+            local.utility2.assert(!data, data);
             onError();
         };
 
@@ -457,7 +457,7 @@
             local.utility2.onTimeout(function (error) {
                 local.utility2.testTryCatch(function () {
                     // validate error occurred
-                    local.utility2.assert(error instanceof Error);
+                    local.utility2.assert(error instanceof Error, error);
                     // save timeElapsed
                     timeElapsed = Date.now() - timeElapsed;
                     // validate timeElapsed passed is greater than timeout
@@ -583,7 +583,7 @@
                     case 2:
                         // test fsRmrSync handling behavior
                         local.utility2.fsRmrSync(dir);
-                        // validate dir is undefined
+                        // validate no dir exists
                         local.utility2.assert(!local.fs.existsSync(dir), dir);
                         onNext();
                         break;
@@ -597,7 +597,7 @@
                         local.utility2.assert(!error, error);
                         // validate data
                         data = local.fs.readFileSync(file, 'utf8');
-                        local.utility2.assert(data === 'hello1');
+                        local.utility2.assert(data === 'hello1', data);
                         onNext();
                         break;
                     case 5:
@@ -610,7 +610,7 @@
                         local.utility2.assert(!error, error);
                         // validate data
                         data = local.fs.readFileSync(file, 'utf8');
-                        local.utility2.assert(data === 'hello2');
+                        local.utility2.assert(data === 'hello2', data);
                         onNext();
                         break;
                     case 7:
@@ -628,7 +628,7 @@
                         local.utility2.fsRmr(dir, onNext);
                         break;
                     case 10:
-                        // validate dir is undefined
+                        // validate no dir exists
                         local.utility2.assert(!local.fs.existsSync(dir), dir);
                         onNext();
                         break;
@@ -705,9 +705,9 @@
             });
         };
 
-        local.testCase_phantomTest_default = function (onError) {
+        local.testCase_testPage_default = function (onError) {
             /*
-                this function will test phantomTest's default handling behavior
+                this function will test the test-page's default handling behavior
             */
             var onTaskEnd, options;
             onTaskEnd = local.utility2.onTaskEnd(onError);
@@ -737,8 +737,8 @@
                 modePhantomSelfTest: true,
                 url: 'http://localhost:' +
                     local.utility2.envDict.npm_config_server_port +
-                    // test standalone script handling behavior
-                    '/test/script-standalone.html?' +
+                    // test script-only handling behavior
+                    '/test/script-only.html?' +
                     // test modeTest !== 'phantom' handling behavior
                     'modeTest=phantom2&' +
                     // test single-test-case handling behavior
@@ -1216,7 +1216,7 @@
         );
         local['/test/hello'] = 'hello';
         local['/test/script-error.html'] = '<script>syntax error</script>';
-        local['/test/script-standalone.html'] = '<script src="/assets/utility2.js">\n' +
+        local['/test/script-only.html'] = '<script src="/assets/utility2.js">\n' +
             '</script><script src="/test/test.js"></script>';
         local['/test/test.js'] = local.istanbul_lite.instrumentInPackage(
             local.fs.readFileSync(__filename, 'utf8'),
@@ -1230,6 +1230,11 @@
                 /*
                     this function will run the test-middleware
                 */
+                if (request.urlParsed.pathnameNormalized === '/') {
+                    local.utility2.serverRespondHeadSet(request, response, null, {
+                        'Content-Type': 'text/html; charset=UTF-8'
+                    });
+                }
                 switch (request.urlParsed.pathnameNormalized) {
                 // serve assets
                 case '/':
@@ -1239,7 +1244,7 @@
                 case '/assets/utility2.js':
                 case '/test/hello':
                 case '/test/script-error.html':
-                case '/test/script-standalone.html':
+                case '/test/script-only.html':
                 case '/test/test.js':
                     local.utility2
                         .middlewareCacheControlLastModified(request, response, function () {
@@ -1254,15 +1259,15 @@
                 // test http POST handling behavior
                 case '/test/echo':
                     // test response header handling behavior
-                    local.utility2.serverRespondSetHead(request, response, null, {
+                    local.utility2.serverRespondHeadSet(request, response, null, {
                         'X-Header-Test': 'Test'
                     });
                     local.utility2.serverRespondEcho(request, response);
                     break;
                 // test 500-internal-server-error handling behavior
                 case '/test/error-500':
-                    // test multiple-callback serverRespondSetHead handling behavior
-                    local.utility2.serverRespondSetHead(request, response, null, {});
+                    // test multiple-callback serverRespondHeadSet handling behavior
+                    local.utility2.serverRespondHeadSet(request, response, null, {});
                     nextMiddleware(local.utility2.errorDefault);
                     // test multiple-callback error handling behavior
                     nextMiddleware(local.utility2.errorDefault);

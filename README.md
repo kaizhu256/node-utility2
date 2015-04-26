@@ -12,11 +12,12 @@ run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
 |:----------:|:-----------:|:-----------:|:--------:|:---------------:|
 |[master](https://github.com/kaizhu256/node-utility2/tree/master) | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://hrku01-utility2-master.herokuapp.com) | [![test-report](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/test-report.html) | [![istanbul-lite coverage](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/coverage.html/node-utility2/index.html) | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..master..travis-ci.org)|
 |[beta](https://github.com/kaizhu256/node-utility2/tree/beta) | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://hrku01-utility2-beta.herokuapp.com) | [![test-report](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/test-report.html) | [![istanbul-lite coverage](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/coverage.html/node-utility2/index.html) | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..beta..travis-ci.org)|
+|[alpha](https://github.com/kaizhu256/node-utility2/tree/alpha) | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://hrku01-utility2-alpha.herokuapp.com) | [![test-report](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/test-report.html) | [![istanbul-lite coverage](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/coverage.html/node-utility2/index.html) | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..alpha..travis-ci.org)|
 
 
 
 # live test-server
-[![heroku.com test-server](https://kaizhu256.github.io/node-utility2/build/screen-capture.herokuTest.slimerjs.png)](https://hrku01-utility2-beta.herokuapp.com)
+[![heroku.com test-server](https://kaizhu256.github.io/node-utility2/build/screen-capture.herokuTest.slimerjs..png)](https://hrku01-utility2-beta.herokuapp.com)
 
 
 
@@ -130,7 +131,10 @@ instruction
                     // validate error occurred
                     local.utility2.assert(error instanceof Error, error);
                     // validate 404 http statusCode
-                    local.utility2.assert(error.statusCode === 404, error.statusCode);
+                    local.utility2.assert(
+                        error.statusCode === 404,
+                        error.statusCode
+                    );
                     onError();
                 }, onError);
             });
@@ -168,115 +172,115 @@ instruction
 '<!DOCTYPE html>\n' +
 '<html>\n' +
 '<head>\n' +
-    '<meta charset="UTF-8">\n' +
-    '<title>\n' +
-    '{{envDict.npm_package_name}} [{{envDict.npm_package_version}}]\n' +
-    '</title>\n' +
-    '<link rel="stylesheet" href="/assets/utility2.css">\n' +
-    '<style>\n' +
-    '* {\n' +
-        'box-sizing: border-box;\n' +
-    '}\n' +
-    'body {\n' +
-        'background-color: #fff;\n' +
-        'font-family: Helvetical Neue, Helvetica, Arial, sans-serif;\n' +
-    '}\n' +
-    'body > div {\n' +
-        'margin-top: 20px;\n' +
-    '}\n' +
-    'textarea {\n' +
-        'font-family: monospace;\n' +
-        'height: 32em;\n' +
-        'width: 100%;\n' +
-    '}\n' +
-    '.jslintOutputPre {\n' +
-        'color: #f00;\n' +
-    '}\n' +
-    '.testReportDiv {\n' +
-        'display: none;\n' +
-    '}\n' +
-    '</style>\n' +
-    '{{envDict.npm_config_html_head_extra}}\n' +
+'    <meta charset="UTF-8">\n' +
+'    <title>\n' +
+'    {{envDict.npm_package_name}} [{{envDict.npm_package_version}}]\n' +
+'    </title>\n' +
+'    <link rel="stylesheet" href="/assets/utility2.css">\n' +
+'    <style>\n' +
+'    * {\n' +
+'        box-sizing: border-box;\n' +
+'    }\n' +
+'    body {\n' +
+'        background-color: #fff;\n' +
+'        font-family: Helvetical Neue, Helvetica, Arial, sans-serif;\n' +
+'    }\n' +
+'    body > div {\n' +
+'        margin-top: 20px;\n' +
+'    }\n' +
+'    textarea {\n' +
+'        font-family: monospace;\n' +
+'        height: 32em;\n' +
+'        width: 100%;\n' +
+'    }\n' +
+'    .jslintOutputPre {\n' +
+'        color: #f00;\n' +
+'    }\n' +
+'    .testReportDiv {\n' +
+'        display: none;\n' +
+'    }\n' +
+'    </style>\n' +
+'    {{envDict.npm_config_html_head_extra}}\n' +
 '</head>\n' +
 '<body>\n' +
-    '<div class="ajaxProgressDiv" style="display: none;">\n' +
-    '<div class="ajaxProgressBarDiv ajaxProgressBarDivLoading" \
+'    <div class="ajaxProgressDiv" style="display: none;">\n' +
+'    <div class="ajaxProgressBarDiv ajaxProgressBarDivLoading" \
 >loading</div>\n' +
-    '</div>\n' +
-    '<h1 \
+'    </div>\n' +
+'    <h1 \
 >{{envDict.npm_package_name}} [{{envDict.npm_package_version}}]</h1>\n' +
-    '<h3>{{envDict.npm_package_description}}</h3>\n' +
-    '<div>edit or paste script below to cover and test</div>\n' +
+'    <h3>{{envDict.npm_package_description}}</h3>\n' +
+'    <div>edit or paste script below to cover and test</div>\n' +
 '<textarea class="istanbulInputTextarea jslintInputTextarea">\n' +
 '/*jslint browser: true*/\n' +
 '(function () {\n' +
-    '"use strict";\n' +
-    'var testCaseDict;\n' +
-    'testCaseDict = {};\n' +
-    'testCaseDict.modeTest = true;\n' +
+'    "use strict";\n' +
+'    var testCaseDict;\n' +
+'    testCaseDict = {};\n' +
+'    testCaseDict.modeTest = true;\n' +
 '\n' +
-    '// comment this testCase to disable the failed assertion demo\n' +
-    'testCaseDict.testCase_failed_assertion_demo = function (onError) {\n' +
-        '/*\n' +
-            'this function will demo a failed assertion test\n' +
-        '*/\n' +
-        'window.utility2.assert(false, "this is a failed assertion demo");\n' +
-        'onError();\n' +
-    '};\n' +
+'    // comment this testCase to disable the failed assertion demo\n' +
+'    testCaseDict.testCase_failed_assertion_demo = function (onError) {\n' +
+'        /*\n' +
+'            this function will demo a failed assertion test\n' +
+'        */\n' +
+'        window.utility2.assert(false, "this is a failed assertion demo");\n' +
+'        onError();\n' +
+'    };\n' +
 '\n' +
-    'testCaseDict.testCase_passed_ajax_demo = function (onError) {\n' +
-        '/*\n' +
-            'this function will demo a passed ajax test\n' +
-        '*/\n' +
-        '// test ajax request for main-page "/"\n' +
-        'window.utility2.ajax({\n' +
-            'url: "/"\n' +
-        '}, function (error, data, xhr) {\n' +
-            'try {\n' +
-                '// validate no error occurred\n' +
-                'window.utility2.assert(!error, error);\n' +
-                '// validate non-empty data\n' +
-                'window.utility2.assert(data && data.length > 0, data);\n' +
-                '// validate "200 ok" status\n' +
-                'if (xhr.status === 200) {\n' +
-                    'window.utility2.assert(data, data);\n' +
-                '}\n' +
-                'onError();\n' +
-            '} catch (errorCaught) {\n' +
-                'onError(errorCaught);\n' +
-            '}\n' +
-        '});\n' +
-    '};\n' +
+'    testCaseDict.testCase_passed_ajax_demo = function (onError) {\n' +
+'        /*\n' +
+'            this function will demo a passed ajax test\n' +
+'        */\n' +
+'        // test ajax request for main-page "/"\n' +
+'        window.utility2.ajax({\n' +
+'            url: "/"\n' +
+'        }, function (error, data, xhr) {\n' +
+'            try {\n' +
+'                // validate no error occurred\n' +
+'                window.utility2.assert(!error, error);\n' +
+'                // validate non-empty data\n' +
+'                window.utility2.assert(data && data.length > 0, data);\n' +
+'                // validate "200 ok" status\n' +
+'                if (xhr.status === 200) {\n' +
+'                    window.utility2.assert(data, data);\n' +
+'                }\n' +
+'                onError();\n' +
+'            } catch (errorCaught) {\n' +
+'                onError(errorCaught);\n' +
+'            }\n' +
+'        });\n' +
+'    };\n' +
 '\n' +
-    'window.utility2.testRun(testCaseDict);\n' +
+'    window.utility2.testRun(testCaseDict);\n' +
 '}());\n' +
 '</textarea>\n' +
-    '<pre class="jslintOutputPre"></pre>\n' +
-    '<div class="testReportDiv"></div>\n' +
-    '<div class="istanbulCoverageDiv"></div>\n' +
-    '<script src="/assets/istanbul-lite.js"></script>\n' +
-    '<script src="/assets/jslint-lite.js"></script>\n' +
-    '<script src="/assets/utility2.js"></script>\n' +
-    '<script>\n' +
-    'window.utility2 = window.utility2 || {};\n' +
-    'window.utility2.envDict = {\n' +
-        'npm_package_description: "{{envDict.npm_package_description}}",\n' +
-        'npm_package_name: "{{envDict.npm_package_name}}",\n' +
-        'npm_package_version: "{{envDict.npm_package_version}}"\n' +
-    '};\n' +
-    'document.querySelector(\n' +
-        '".istanbulInputTextarea"\n' +
-    ').addEventListener("keyup", function () {\n' +
-        'window.jslint_lite.jslintTextarea();\n' +
-        'window.istanbul_lite.coverTextarea();\n' +
-    '});\n' +
-    'if (!window.utility2.modeTest) {\n' +
-        'window.jslint_lite.jslintTextarea();\n' +
-        'window.istanbul_lite.coverTextarea();\n' +
-    '}\n' +
-    '</script>\n' +
-    '<script src="/test/test.js"></script>\n' +
-    '{{envDict.npm_config_html_body_extra}}\n' +
+'    <pre class="jslintOutputPre"></pre>\n' +
+'    <div class="testReportDiv"></div>\n' +
+'    <div class="istanbulCoverageDiv"></div>\n' +
+'    <script src="/assets/istanbul-lite.js"></script>\n' +
+'    <script src="/assets/jslint-lite.js"></script>\n' +
+'    <script src="/assets/utility2.js"></script>\n' +
+'    <script>\n' +
+'    window.utility2 = window.utility2 || {};\n' +
+'    window.utility2.envDict = {\n' +
+'        npm_package_description: "{{envDict.npm_package_description}}",\n' +
+'        npm_package_name: "{{envDict.npm_package_name}}",\n' +
+'        npm_package_version: "{{envDict.npm_package_version}}"\n' +
+'    };\n' +
+'    document.querySelector(\n' +
+'        ".istanbulInputTextarea"\n' +
+'    ).addEventListener("keyup", function () {\n' +
+'        window.jslint_lite.jslintTextarea();\n' +
+'        window.istanbul_lite.coverTextarea();\n' +
+'    });\n' +
+'    if (!window.utility2.modeTest) {\n' +
+'        window.jslint_lite.jslintTextarea();\n' +
+'        window.istanbul_lite.coverTextarea();\n' +
+'    }\n' +
+'    </script>\n' +
+'    <script src="/test/test.js"></script>\n' +
+'    {{envDict.npm_config_html_body_extra}}\n' +
 '</body>\n' +
 '</html>\n' +
 /* jslint-ignore-end */
@@ -362,8 +366,8 @@ instruction
     "author": "kai zhu <kaizhu256@gmail.com>",
     "bin": { "utility2" : "index.sh" },
     "dependencies": {
-        "istanbul-lite": "2015.4.24-a",
-        "jslint-lite": "2015.4.18-b"
+        "istanbul-lite": "2015.4.26-b",
+        "jslint-lite": "2015.4.26-b"
     },
     "description": "run dynamic browser tests with coverage \
 (via istanbul-lite and phantomjs-lite)",
@@ -400,7 +404,7 @@ npm_config_mode_auto_restart=1 \
 npm_config_mode_auto_restart_child=1 \
 ./index.sh test test.js"
     },
-    "version": "2015.4.25-a"
+    "version": "2015.4.26-b"
 }
 ```
 
@@ -417,11 +421,14 @@ npm_config_mode_auto_restart_child=1 \
 
 
 
-# change since d4ed89e9
-- npm publish 2015.4.25-a
-- auto-cleanup $npm_config_dir_tmp/*.json before npm test
-- add fsRmrSync
-- fix timeout issue with phantomjs tests by adding var local.utility2.timeExit
+# change since e01bcd06
+- npm publish 2015.4.26-b
+- fix w3.org validation for main-page
+- add <a> anchor to screen-capture in test-report
+- add xhr.statusCode
+- fix indentation in textarea of example.js
+- add location.pathname to testPlatform.name
+- fix stale screen-capture in README.md
 - none
 
 

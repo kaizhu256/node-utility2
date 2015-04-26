@@ -323,8 +323,8 @@ shIstanbulTest() {
 shNpmTest() {
     # this function will run npm-test
     shBuildPrint ${MODE_BUILD:-npmTest} "npm-testing $CWD" || return $?
-    # cleanup $npm_config_dir_tmp/*
-    rm $npm_config_dir_tmp/*.json 2&>/dev/null || :
+    # cleanup $npm_config_dir_tmp/*.json
+    rm $npm_config_dir_tmp/*.json > /dev/null 2>&1 || :
     # init $npm_config_dir_build
     mkdir -p $npm_config_dir_build/coverage.html || return $?
     # auto-detect slimerjs

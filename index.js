@@ -851,8 +851,11 @@
                                 // security - sanitize '<' in string
                                 name: String(testPlatform.name).replace((/</g), '&lt;'),
                                 screenCapture: testPlatform.screenCaptureImg
-                                    ? '<img class="testReportPlatformScreenCaptureImg" src="' +
-                                        testPlatform.screenCaptureImg + '">'
+                                    ? '<a href="' + testPlatform.screenCaptureImg + '">' +
+                                        '<img ' +
+                                        'class="testReportPlatformScreenCaptureImg" ' +
+                                        'src="' + testPlatform.screenCaptureImg + '">' +
+                                        '</a><br>'
                                     : '',
                                 // map testCaseList
                                 testCaseList: testPlatform.testCaseList.map(function (
@@ -1261,6 +1264,8 @@
             ajaxProgressDiv = document.querySelector('.ajaxProgressDiv') || { style: {} };
             // init event handling
             onEvent = local.utility2.onErrorWithStack(function (event) {
+                // init statusCode
+                xhr.statusCode = xhr.status;
                 switch (event.type) {
                 case 'abort':
                 case 'error':
@@ -1280,7 +1285,7 @@
                     if (!error &&
                             (event.type === 'abort' ||
                             event.type === 'error' ||
-                            xhr.status >= 400)) {
+                            xhr.statusCode >= 400)) {
                         error = new Error(event.type);
                     }
                     // handle completed xhr request
@@ -1290,12 +1295,12 @@
                         if (error) {
                             // add http method / statusCode / url debug-info to error.message
                             error.message = options.method + ' ' +
-                                xhr.status + ' - ' +
+                                xhr.statusCode + ' - ' +
                                 options.url + '\n' +
                                 JSON.stringify(xhr.responseText.slice(0, 256) + '...') +
                                 '\n' + error.message;
                             // debug statusCode
-                            error.statusCode = xhr.status;
+                            error.statusCode = xhr.statusCode;
                         }
                     }
                     // hide _ajaxProgressDiv
@@ -1470,7 +1475,7 @@
                     xhr.onreadystatechange = xhr.onreadystatechange || local.utility2.nop;
                     xhr.readyState = 0;
                     xhr.responseText = '';
-                    xhr.status = 0;
+                    xhr.status = xhr.statusCode = 0;
                     xhr.statusText = '';
                     // debug xhr
                     local._debugAjaxXhr = xhr;
@@ -1480,7 +1485,7 @@
                     // debug ajax response
                     local._debugAjaxResponse = response;
                     // init xhr
-                    xhr.status = response.statusCode;
+                    xhr.status = xhr.statusCode = response.statusCode;
                     xhr.statusText = local.http.STATUS_CODES[response.statusCode] || '';
                     xhr.readyState = 1;
                     xhr.onreadystatechange();
@@ -1517,12 +1522,12 @@
                     if (error) {
                         // add http method / statusCode / url debug-info to error.message
                         error.message = options.method + ' ' +
-                            xhr.status + ' - ' +
+                            xhr.statusCode + ' - ' +
                             options.url + '\n' +
                             JSON.stringify(xhr.responseText.slice(0, 256) + '...') +
                             '\n' + error.message;
                         // debug statusCode
-                        error.statusCode = xhr.status;
+                        error.statusCode = xhr.statusCode;
                     }
                     xhr.onreadystatechange();
                     onError(error, xhr.responseText, xhr);
@@ -1628,7 +1633,7 @@
                 '.json': 'application/json; charset=UTF-8',
                 '.txt': 'text/plain; charset=UTF-8'
             };
-            local.utility2.serverRespondSetHead(request, response, null, {
+            local.utility2.serverRespondHeadSet(request, response, null, {
                 'Content-Type': contentTypeDict[
                     local.path.extname(request.urlParsed.pathnameNormalized)
                 ]
@@ -2030,7 +2035,7 @@
                 or error stack for the given statusCode
             */
             // init statusCode and contentType
-            local.utility2.serverRespondSetHead(
+            local.utility2.serverRespondHeadSet(
                 request,
                 response,
                 statusCode,
@@ -2090,7 +2095,7 @@
             return;
         };
 
-        local.utility2.serverRespondSetHead = function (
+        local.utility2.serverRespondHeadSet = function (
             request,
             response,
             statusCode,
@@ -2263,7 +2268,9 @@
             '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz~';
         local.utility2.testPlatform = {
             name: local.modeJs === 'browser'
-                ? 'browser - ' + navigator.userAgent + ' - ' +
+                ? 'browser - ' +
+                    location.pathname + ' - ' +
+                    navigator.userAgent + ' - ' +
                     new Date().toISOString()
                 : local.modeJs === 'node'
                 ? 'node - ' + process.platform + ' ' + process.version + ' - ' +
@@ -2660,7 +2667,6 @@ local.utility2['/test/test-report.html.template'] = String() +
     '.testReportPlatformScreenCaptureImg {\n' +
         'border: 1px solid;\n' +
         'border-color: #000;\n' +
-        'display:block;\n' +
         'margin: 5px 0 5px 0;\n' +
         'max-height:256px;\n' +
         'max-width:512px;\n' +
