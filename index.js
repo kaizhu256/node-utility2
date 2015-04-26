@@ -1914,14 +1914,11 @@
             return childProcess;
         };
 
-        local.utility2.replStart = function (globalDict) {
+        local.utility2.replStart = function () {
             /*
                 this function will start the repl debugger
             */
             /*jslint evil: true*/
-            Object.keys(globalDict).forEach(function (key) {
-                local.global[key] = globalDict[key];
-            });
             // start repl server
             local._replServer = require('repl').start({ useGlobal: true });
             local._replServer.onError = function (error) {
