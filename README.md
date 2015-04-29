@@ -109,14 +109,16 @@ instruction
             /*
                 this function will test ajax's "200 ok" handling behavior
             */
+            var data;
             // test '/test/hello'
             local.utility2.ajax({
                 url: '/test/hello'
-            }, function (error, data) {
+            }, function (error, xhr) {
                 local.utility2.testTryCatch(function () {
                     // validate no error occurred
                     local.utility2.assert(!error, error);
                     // validate data
+                    data = xhr.responseText;
                     local.utility2.assert(data === 'hello', data);
                     onError();
                 }, onError);
@@ -233,14 +235,16 @@ instruction
 '        /*\n' +
 '            this function will demo a passed ajax test\n' +
 '        */\n' +
+'        var data;\n' +
 '        // test ajax request for main-page "/"\n' +
 '        window.utility2.ajax({\n' +
 '            url: "/"\n' +
-'        }, function (error, data, xhr) {\n' +
+'        }, function (error, xhr) {\n' +
 '            try {\n' +
 '                // validate no error occurred\n' +
 '                window.utility2.assert(!error, error);\n' +
 '                // validate non-empty data\n' +
+'                data = xhr.responseText;\n' +
 '                window.utility2.assert(data && data.length > 0, data);\n' +
 '                // validate "200 ok" status\n' +
 '                if (xhr.status === 200) {\n' +
@@ -373,9 +377,7 @@ instruction
     "description": "run dynamic browser tests with coverage \
 (via istanbul-lite and phantomjs-lite)",
     "devDependencies": {
-        "phantomjs-lite": "2015.4.26-c",
-        "mongodb": "2.0.27",
-        "redis": "0.12.1"
+        "phantomjs-lite": "2015.4.26-c"
     },
     "engines": { "node": ">=0.10 <=0.12" },
     "keywords": [
@@ -405,14 +407,14 @@ npm_config_mode_auto_restart=1 \
 npm_config_mode_auto_restart_child=1 \
 ./index.sh test test.js"
     },
-    "version": "2015.4.26-c"
+    "version": "2015.4.29-a"
 }
 ```
 
 
 
 # todo
-- add postgres support for taskRunWithCache
+- cleanup taskRunWithCache
 - add testCase for validating _testSecret
 - create flamegraph from istanbul coverage
 - auto-generate help doc from README.md
@@ -422,9 +424,12 @@ npm_config_mode_auto_restart_child=1 \
 
 
 
-# change since 4176af6d
-- npm publish 2015.4.26-c
-- transpose build-status table
+# change since 83b7c0e4
+- npm publish 2015.4.29-a
+- remove redis and mongodb extension from taskRunWithCache
+- fix requestResponseCleanup
+- change ajax callback signature to onError(error, xhr)
+- merge testCase_uuid4_default and testCase_uuidTime_default into testCase_uuidXxx_default
 - none
 
 

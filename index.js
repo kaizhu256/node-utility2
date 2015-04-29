@@ -355,10 +355,10 @@
             /*
                 this function will cleanup the request and response objects
             */
-            [request, response].forEach(function (socket) {
-                ['end', 'close'].forEach(function (method) {
+            [request, response].forEach(function (stream) {
+                ['end', 'finish', 'close', 'abort', 'destroy'].forEach(function (method) {
                     try {
-                        socket[method]();
+                        stream[method]();
                     } catch (ignore) {
                     }
                 });
@@ -471,7 +471,7 @@
                 this function will try to run onError from cache,
                 and auto-update the cache with a background-task
             */
-            var cacheDict, cacheKey, cacheValue, modeCacheHit, modeNext, onNext, onTaskEnd;
+            var cacheDict, cacheKey, cacheValue, modeCacheHit, modeNext, onNext;
             modeNext = 0;
             onNext = function (error, data) {
                 if (modeNext < 10) {
@@ -518,43 +518,6 @@
                     onNext();
                     return;
                 case 3:
-                    // read cacheValue from redis-cache
-                    if (options.modeCacheRedis) {
-                        modeCacheHit = 'redis';
-                        local.utility2.taskRunOrSubscribe({
-                            key: cacheDict + '/' + cacheKey + '/redis/read',
-                            onTask: function (onError) {
-                                options.modeCacheRedis
-                                    .hget(cacheDict, cacheKey, function (error, data) {
-                                        onError(error, typeof data === 'string'
-                                            ? decodeURIComponent(data)
-                                            : data);
-                                    });
-                            }
-                        }, onNext);
-                        return;
-                    }
-                    onNext();
-                    return;
-                case 4:
-                    // read cacheValue from mongo-cache
-                    if (options.modeCacheMongo) {
-                        modeCacheHit = 'mongo';
-                        local.utility2.taskRunOrSubscribe({
-                            key: cacheDict + '/' + cacheKey + '/mongo/read',
-                            onTask: function (onError) {
-                                options.modeCacheMongo.collection(cacheDict).findOne({
-                                    _id: cacheKey
-                                }, function (error, data) {
-                                    onError(error, data && data.value);
-                                });
-                            }
-                        }, onNext);
-                        return;
-                    }
-                    onNext();
-                    return;
-                case 5:
                     // jump to background-task
                     modeNext = 10;
                     onNext();
@@ -572,9 +535,6 @@
                     local.utility2.taskRunOrSubscribe(options, onNext);
                     return;
                 case 13:
-                    onTaskEnd = local.utility2.onTaskEnd(options.onCacheWrite ||
-                        local.utility2.onErrorDefault);
-                    onTaskEnd.counter += 1;
                     // if cache-miss, call onError with background-task-result
                     if (!cacheValue) {
                         setTimeout(onNext);
@@ -586,7 +546,6 @@
                     }
                     // write cacheValue to file-cache
                     if (options.modeCacheFile) {
-                        onTaskEnd.counter += 1;
                         local.utility2.taskRunOrSubscribe({
                             key: cacheDict + '/' + cacheKey + '/file/write',
                             onTask: function (onError) {
@@ -596,40 +555,8 @@
                                     onError
                                 );
                             }
-                        }, onTaskEnd);
+                        }, options.onCacheWrite || local.utility2.onErrorDefault);
                     }
-                    // write cacheValue to redis-cache
-                    if (options.modeCacheRedis) {
-                        onTaskEnd.counter += 1;
-                        local.utility2.taskRunOrSubscribe({
-                            key: cacheDict + '/' + cacheKey + '/redis/write',
-                            onTask: function (onError) {
-                                options.modeCacheRedis.hset(
-                                    cacheDict,
-                                    cacheKey,
-                                    encodeURIComponent(cacheValue),
-                                    onError
-                                );
-                            }
-                        }, onTaskEnd);
-                    }
-                    // write cacheValue to mongo-cache
-                    if (options.modeCacheMongo) {
-                        onTaskEnd.counter += 1;
-                        modeCacheHit = 'mongo';
-                        local.utility2.taskRunOrSubscribe({
-                            key: cacheDict + '/' + cacheKey + '/mongo/write',
-                            onTask: function (onError) {
-                                options.modeCacheMongo.collection(cacheDict).update(
-                                    { _id: cacheKey },
-                                    { $set: { value: cacheValue } },
-                                    { upsert: true },
-                                    onError
-                                );
-                            }
-                        }, onTaskEnd);
-                    }
-                    onTaskEnd();
                     return;
                 case 14:
                     // call onError with cacheValue
@@ -704,8 +631,7 @@
                     }, -1);
                     local.utility2.assert(
                         typeof testPlatform.name === 'string',
-                        ii + ' invalid testPlatform.name ' +
-                            typeof testPlatform.name
+                        ii + ' invalid testPlatform.name ' + typeof testPlatform.name
                     );
                     // insert $MODE_BUILD into testPlatform.name
                     if (local.utility2.envDict.MODE_BUILD) {
@@ -728,18 +654,15 @@
                         }, -1);
                         local.utility2.assert(
                             typeof testCase.errorStack === 'string',
-                            ii + ' invalid testCase.errorStack ' +
-                                typeof testCase.errorStack
+                            ii + ' invalid testCase.errorStack ' + typeof testCase.errorStack
                         );
                         local.utility2.assert(
                             typeof testCase.name === 'string',
-                            ii + ' invalid testCase.name ' +
-                                typeof testCase.name
+                            ii + ' invalid testCase.name ' + typeof testCase.name
                         );
                         local.utility2.assert(
                             typeof testCase.timeElapsed === 'number',
-                            ii + ' invalid testCase.timeElapsed ' +
-                                typeof testCase.timeElapsed
+                            ii + ' invalid testCase.timeElapsed ' + typeof testCase.timeElapsed
                         );
                     });
                 });
@@ -1259,7 +1182,7 @@
             /*
                 this function will make an ajax request with error handling and timeout
             */
-            var ajaxProgressDiv, data, done, error, ii, onEvent, timerTimeout, xhr;
+            var ajaxProgressDiv, done, error, ii, onEvent, timerTimeout, xhr;
             // init ajaxProgressDiv
             ajaxProgressDiv = document.querySelector('.ajaxProgressDiv') || { style: {} };
             // init event handling
@@ -1272,9 +1195,10 @@
                 case 'load':
                     // cleanup timerTimeout
                     clearTimeout(timerTimeout);
-                    // validate done is falsey
-                    local.utility2.assert(!done, done);
-                    // init done to true
+                    // if already done, then ignore error
+                    if (done) {
+                        return;
+                    }
                     done = true;
                     // validate xhr is defined in _ajaxProgressList
                     ii = local._ajaxProgressList.indexOf(xhr);
@@ -1291,14 +1215,15 @@
                     // handle completed xhr request
                     if (xhr.readyState === 4) {
                         // handle string data
-                        data = xhr.responseText;
                         if (error) {
                             // add http method / statusCode / url debug-info to error.message
-                            error.message = options.method + ' ' +
+                            xhr.errorMessage = options.method + ' ' +
                                 xhr.statusCode + ' - ' +
                                 options.url + '\n' +
                                 JSON.stringify(xhr.responseText.slice(0, 256) + '...') +
-                                '\n' + error.message;
+                                '\n';
+                            error.message =  xhr.errorMessage + error.message;
+                            error.stack = xhr.errorMessage + '\n' + error.stack;
                             // debug statusCode
                             error.statusCode = xhr.statusCode;
                         }
@@ -1317,7 +1242,7 @@
                             );
                         }, 1000);
                     }
-                    onError(error, data, xhr);
+                    onError(error, xhr);
                     break;
                 }
                 // increment ajaxProgressBar
@@ -1330,6 +1255,7 @@
             });
             // init xhr
             xhr = new XMLHttpRequest();
+            xhr.url = options.url;
             // debug xhr
             local._debugAjaxXhr = xhr;
             // init event handling
@@ -1493,24 +1419,31 @@
                     xhr.onreadystatechange();
                     xhr.readyState = 3;
                     xhr.onreadystatechange();
+                    if (options.responseType === 'response') {
+                        modeNext = NaN;
+                        xhr.response = response;
+                        request = null;
+                        response = null;
+                        onNext();
+                        return;
+                    }
                     local.utility2.streamReadAll(response, onNext);
                     break;
                 case 3:
                     // init xhr
                     xhr.readyState = 4;
-                    xhr.responseText = options.responseType === 'blob'
-                        ? data
-                        : data.toString();
+                    xhr.response = data;
+                    xhr.responseText =  data.toString();
                     // handle http-error for statusCode >= 400
                     if (response.statusCode >= 400) {
-                        onNext(new Error(xhr.responseText));
+                        onNext(new Error());
                         return;
                     }
                     // successful response
                     onNext();
                     break;
                 default:
-                    // if already done, then ignore error / data
+                    // if already done, then ignore error
                     if (done) {
                         return;
                     }
@@ -1521,16 +1454,18 @@
                     local.utility2.requestResponseCleanup(request, response);
                     if (error) {
                         // add http method / statusCode / url debug-info to error.message
-                        error.message = options.method + ' ' +
+                        xhr.errorMessage = options.method + ' ' +
                             xhr.statusCode + ' - ' +
                             options.url + '\n' +
                             JSON.stringify(xhr.responseText.slice(0, 256) + '...') +
-                            '\n' + error.message;
+                            '\n';
+                        error.message =  xhr.errorMessage + error.message;
+                        error.stack = xhr.errorMessage + '\n' + error.stack;
                         // debug statusCode
                         error.statusCode = xhr.statusCode;
                     }
                     xhr.onreadystatechange();
-                    onError(error, xhr.responseText, xhr);
+                    onError(error, xhr);
                 }
             });
             onNext();
@@ -1612,8 +1547,6 @@
             response.on('finish', function () {
                 // cleanup timerTimeout
                 clearTimeout(request.timerTimeout);
-                // cleanup request and response
-                local.utility2.requestResponseCleanup(request, response);
             });
             // check if _testSecret is valid
             request._testSecretValid = (/\b_testSecret=(\w+)\b/).exec(request.url);
@@ -1642,18 +1575,6 @@
             nextMiddleware();
         };
 
-        local.utility2.fsRmr = function (dir, onError) {
-            /*
-                this function will rm -fr the dir
-            */
-            dir = local.path.resolve(process.cwd(), dir);
-            local.utility2
-                .processSpawnWithTimeout('rm', ['-fr', dir], { stdio: ['ignore', 1, 2] })
-                .on('exit', function () {
-                    onError();
-                });
-        };
-
         local.utility2.fsRmrSync = function (dir) {
             /*
                 this function will synchronously rm -fr the dir
@@ -1667,11 +1588,15 @@
                     try {
                         local.fs.unlinkSync(dir);
                     } catch (errorCaught) {
-                        local.fs.readdirSync(dir).forEach(function (file) {
-                            rmrSync(dir + '/' + file);
-                        });
+                        if (local.fs.existsSync(dir)) {
+                            local.fs.readdirSync(dir).forEach(function (file) {
+                                rmrSync(dir + '/' + file);
+                            });
+                            local.fs.rmdirSync(dir);
+                        }
                     }
                 };
+                rmrSync(dir);
                 return;
             }
             local.child_process.spawnSync('rm', ['-fr', dir], { stdio: ['ignore', 1, 2] });
@@ -1679,7 +1604,7 @@
 
         local.utility2.fsWriteFileWithMkdirp = function (file, data, onError) {
             /*
-                this function will write the data to file, and auto-mkdirp parent dir
+                this function will write the data to file, and auto-mkdirp the parent dir
             */
             file = local.path.resolve(process.cwd(), file);
             // write data to file
@@ -2304,9 +2229,6 @@
     case 'browser':
         // export utility2
         window.utility2 = local.utility2;
-        // require modules
-        local.istanbul_lite = window.istanbul_lite;
-        local.jslint_lite = window.jslint_lite;
         break;
 
 
@@ -2320,10 +2242,9 @@
         local.fs = require('fs');
         local.http = require('http');
         local.https = require('https');
-        local.istanbul_lite = require('istanbul-lite');
-        local.jslint_lite = require('jslint-lite');
         local.path = require('path');
         local.url = require('url');
+        local.vm = require('vm');
         local.zlib = require('zlib');
         // legacy-hack
         /* istanbul ignore if */
@@ -2553,6 +2474,18 @@
         };
         // init utility2
         local.utility2 = { local: local, nop: local.nop };
+        // init istanbul_lite
+        local.istanbul_lite = local.utility2.istanbul_lite = local.modeJs === 'browser'
+            ? window.istanbul_lite
+            : local.modeJs === 'node'
+            ? require('istanbul-lite')
+            : null;
+        // init jslint_lite
+        local.jslint_lite = local.utility2.jslint_lite = local.modeJs === 'browser'
+            ? window.jslint_lite
+            : local.modeJs === 'node'
+            ? require('jslint-lite')
+            : null;
 
 
 

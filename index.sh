@@ -153,7 +153,8 @@ shGitSquashShift() {
     git reset -q $(git rev-list --max-parents=0 HEAD) || return $?
     git add . > /dev/null || return $?
     git commit -m squash || return $?
-    git cherry-pick --strategy=recursive -X theirs $BRANCH~$RANGE..$BRANCH || return $?
+    git cherry-pick -X theirs --allow-empty --strategy=recursive $BRANCH~$RANGE..$BRANCH || \
+        return $?
     git push -f . HEAD:$BRANCH || return $?
     git checkout $BRANCH || return $?
 }

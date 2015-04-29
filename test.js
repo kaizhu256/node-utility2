@@ -18,16 +18,17 @@
             /*
                 this function will test ajax's default handling behavior
             */
-            var onTaskEnd;
+            var data, onTaskEnd;
             onTaskEnd = local.utility2.onTaskEnd(onError);
             onTaskEnd.counter += 1;
             // test http GET handling behavior
             onTaskEnd.counter += 1;
-            local.utility2.ajax({ url: '/test/hello' }, function (error, data) {
+            local.utility2.ajax({ url: '/test/hello' }, function (error, xhr) {
                 local.utility2.testTryCatch(function () {
                     // validate no error occurred
                     local.utility2.assert(!error, error);
                     // validate data
+                    data = xhr.responseText;
                     local.utility2.assert(data === 'hello', data);
                     onTaskEnd();
                 }, onTaskEnd);
@@ -37,19 +38,17 @@
             local.utility2.ajax({
                 headers: { 'If-Modified-Since': new Date(Date.now() + 0xffff).toGMTString() },
                 url: '/test/hello'
-            }, function (error, data, xhr) {
+            }, function (error, xhr) {
                 local.utility2.testTryCatch(function () {
                     // validate no error occurred
                     local.utility2.assert(!error, error);
                     // validate 304 http status
                     local.utility2.assert(xhr.status === 304, xhr.status);
-                    // validate data
-                    local.utility2.assert(!data, data);
                     onTaskEnd();
                 }, onTaskEnd);
             });
             // test http POST handling behavior
-            ['blob', 'string'].forEach(function (responseType) {
+            ['blob', 'response', 'text'].forEach(function (responseType) {
                 onTaskEnd.counter += 1;
                 local.utility2.ajax({
                     data: responseType === 'blob' && local.modeJs === 'node'
@@ -62,16 +61,21 @@
                     method: 'POST',
                     responseType: responseType,
                     url: '/test/echo'
-                }, function (error, data, xhr) {
+                }, function (error, xhr) {
                     local.utility2.testTryCatch(function () {
                         // validate no error occurred
                         local.utility2.assert(!error, error);
-                        // validate blob data
-                        if (responseType === 'blob' && local.modeJs === 'node') {
-                            local.utility2.assert(Buffer.isBuffer(data), data);
-                            data = String(data);
+                        if (responseType === 'response') {
+                            // cleanup response
+                            local.utility2.requestResponseCleanup(null, xhr.response);
+                            // validate response
+                            data = xhr.response;
+                            local.utility2.assert(data, data);
+                            onTaskEnd();
+                            return;
                         }
-                        // validate string data
+                        // validate responseText
+                        data = xhr.responseText;
                         local.utility2.assert((/\r\nhello$/).test(data), data);
                         // validate response test header
                         local.utility2.assert((/^X-Header-Test: Test\r\n/im).test(data), data);
@@ -117,13 +121,16 @@
             });
             // test xhr.abort handling behavior
             onTaskEnd.counter += 1;
-            local.utility2.ajax({ url: '/test/timeout' }, function (error) {
+            data = local.utility2.ajax({ url: '/test/timeout' }, function (error) {
                 local.utility2.testTryCatch(function () {
                     // validate error occurred
                     local.utility2.assert(error instanceof Error, error);
                     onTaskEnd();
                 }, onTaskEnd);
-            }).abort();
+            });
+            data.abort();
+            // test multiple-callback handling behavior
+            data.abort();
             onTaskEnd();
         };
 
@@ -565,9 +572,9 @@
     // run node js-env code
     case 'node':
         // init tests
-        local.testCase_fsXxx_default = function (onError) {
+        local.testCase_fsWriteFileWithMkdirp_default = function (onError) {
             /*
-                this function will test fsXxx's default handling behavior
+                this function will test fsWriteFileWithMkdirp's default handling behavior
             */
             var dir, file, modeNext, onNext;
             modeNext = 0;
@@ -577,22 +584,19 @@
                     switch (modeNext) {
                     case 1:
                         dir = local.utility2.envDict.npm_config_dir_tmp +
-                            '/testCase_fsXxx_default';
-                        onNext();
-                        break;
-                    case 2:
-                        // test fsRmrSync handling behavior
+                            '/testCase_fsWriteFileWithMkdirp_default';
+                        // cleanup dir
                         local.utility2.fsRmrSync(dir);
                         // validate no dir exists
                         local.utility2.assert(!local.fs.existsSync(dir), dir);
                         onNext();
                         break;
-                    case 3:
+                    case 2:
                         // test fsWriteFileWithMkdirp with mkdirp handling behavior
                         file = dir + '/aa/bb';
                         local.utility2.fsWriteFileWithMkdirp(file, 'hello1', onNext);
                         break;
-                    case 4:
+                    case 3:
                         // validate no error occurred
                         local.utility2.assert(!error, error);
                         // validate data
@@ -600,12 +604,12 @@
                         local.utility2.assert(data === 'hello1', data);
                         onNext();
                         break;
-                    case 5:
+                    case 4:
                         // test fsWriteFileWithMkdirp with no mkdirp handling behavior
                         file = dir + '/aa/bb';
                         local.utility2.fsWriteFileWithMkdirp(file, 'hello2', onNext);
                         break;
-                    case 6:
+                    case 5:
                         // validate no error occurred
                         local.utility2.assert(!error, error);
                         // validate data
@@ -613,21 +617,19 @@
                         local.utility2.assert(data === 'hello2', data);
                         onNext();
                         break;
-                    case 7:
+                    case 6:
                         // test error handling behavior
                         file = dir + '/aa/bb/cc';
                         local.utility2.fsWriteFileWithMkdirp(file, 'hello', onNext);
                         break;
-                    case 8:
+                    case 7:
                         // validate error occurred
                         local.utility2.assert(error instanceof Error, error);
                         onNext();
                         break;
-                    case 9:
-                        // test fsRmr handling behavior
-                        local.utility2.fsRmr(dir, onNext);
-                        break;
-                    case 10:
+                    case 8:
+                        // cleanup dir
+                        local.utility2.fsRmrSync(dir);
                         // validate no dir exists
                         local.utility2.assert(!local.fs.existsSync(dir), dir);
                         onNext();
@@ -920,15 +922,7 @@
             /*
                 this function will test taskRunWithCache's default handling behavior
             */
-            var cacheValue,
-                db,
-                done,
-                modeNext,
-                onNext,
-                onTaskEnd,
-                options,
-                testModeCache,
-                tmp;
+            var cacheValue, done, modeNext, onNext, options, testModeCache;
             modeNext = 0;
             testModeCache = function (options, modeCacheHit, onError) {
                 // test wait-for-cache-write handling behavior
@@ -960,8 +954,6 @@
                     : modeNext + 1;
                 switch (modeNext) {
                 case 1:
-                    onTaskEnd = local.utility2.onTaskEnd(onNext);
-                    onTaskEnd.counter += 1;
                     cacheValue = local.utility2.stringAsciiCharset;
                     options = {};
                     options.cacheDict = 'testCase_taskRunWithCache_default.' +
@@ -979,62 +971,17 @@
                     // cleanup memory-cache
                     local.utility2.cacheDict[options.cacheDict] = null;
                     // cleanup file-cache
-                    local.utility2.fsRmrSync(options.modeCacheFile);
-                    // init mongo client
-                    onTaskEnd.counter += 1;
-                    (function () {
-                        tmp = function (error, db) {
-                            if (!error) {
-                                options.modeCacheMongo = db;
-                                options.modeCacheMongoHit = 'mongo';
-                                // cleanup mongo-cache
-                                onTaskEnd.counter += 1;
-                                db.collection(options.cacheDict).drop(function () {
-                                    onTaskEnd();
-                                });
-                            }
-                            onTaskEnd();
-                        };
-                        // test no mongo handling behavior
-                        onTaskEnd.counter += 1;
-                        tmp(local.utility2.errorDefault);
-                        // test mongo handling behavior
-                        onTaskEnd.counter += 1;
-                        require('mongodb').MongoClient
-                            .connect('mongodb://localhost:27017/test', tmp);
-                        onTaskEnd();
-                    }());
-                    // init redis client
-                    onTaskEnd.counter += 1;
-                    (function () {
-                        tmp = function (error) {
-                            if (!error) {
-                                options.modeCacheRedis = db;
-                                options.modeCacheRedisHit = 'redis';
-                            }
-                            onTaskEnd();
-                        };
-                        // test no redis handling behavior
-                        onTaskEnd.counter += 1;
-                        tmp(local.utility2.errorDefault);
-                        // test redis handling behavior
-                        db = require('redis').createClient();
-                        db.on('error', local.utility2.nop);
-                        // cleanup redis-cache
-                        onTaskEnd.counter += 1;
-                        db.del(encodeURIComponent(options.cacheDict), tmp);
-                        onTaskEnd();
-                    }());
-                    onTaskEnd();
+                    local.child_process
+                        .spawn('rm', ['-fr', options.modeCacheFile], { stdio: 'ignore' })
+                        .on('exit', function () {
+                            onNext();
+                        });
                     break;
                 // test no cache handling behavior
                 case 2:
-                    onTaskEnd.counter += 1;
                     [
                         'modeCacheFile',
                         'modeCacheMemory',
-                        'modeCacheMongo',
-                        'modeCacheRedis',
                         'modeCacheUndefined'
                     ].forEach(function (modeCache) {
                         var optionsCopy;
@@ -1044,23 +991,18 @@
                             onTask: options.onTask
                         };
                         optionsCopy[modeCache] = options[modeCache];
-                        onTaskEnd.counter += 1;
                         testModeCache(
                             optionsCopy,
                             undefined,
-                            local.utility2.onErrorWithStack(onTaskEnd)
+                            local.utility2.onErrorWithStack(onNext)
                         );
                     });
-                    onTaskEnd();
                     break;
                 // test cache handling behavior
                 case 3:
-                    onTaskEnd.counter += 1;
                     [
                         'modeCacheFile',
                         'modeCacheMemory',
-                        'modeCacheMongo',
-                        'modeCacheRedis',
                         'modeCacheUndefined'
                     ].forEach(function (modeCache) {
                         var optionsCopy;
@@ -1070,14 +1012,12 @@
                             onTask: options.onTask
                         };
                         optionsCopy[modeCache] = options[modeCache];
-                        onTaskEnd.counter += 1;
                         testModeCache(
                             optionsCopy,
                             options[modeCache + 'Hit'],
-                            local.utility2.onErrorWithStack(onTaskEnd)
+                            local.utility2.onErrorWithStack(onNext)
                         );
                     });
-                    onTaskEnd();
                     break;
                 default:
                     if (!done) {
@@ -1129,22 +1069,16 @@
             }, onError);
         };
 
-        local.testCase_uuid4_default = function (onError) {
+        local.testCase_uuidXxx_default = function (onError) {
             /*
-                this function will test uuid4's default handling behavior
-            */
-            var data;
-            data = local.utility2.uuid4();
-            // validate data
-            local.utility2.assert(local.utility2.regexpUuidValidate.test(data), data);
-            onError();
-        };
-
-        local.testCase_uuidTime_default = function (onError) {
-            /*
-                this function will test uuidTime's default handling behavior
+                this function will test uuidXxx's default handling behavior
             */
             var data1, data2;
+            // test uuid4
+            data1 = local.utility2.uuid4();
+            // validate data1
+            local.utility2.assert(local.utility2.regexpUuidValidate.test(data1), data1);
+            // test uuidTime
             data1 = local.utility2.uuidTime();
             setTimeout(function () {
                 local.utility2.testTryCatch(function () {
@@ -1167,8 +1101,6 @@
 
     // run browser js-env code
     case 'browser':
-        // export local
-        window.local = local;
         // init onErorExit
         local.utility2.onErrorExit = function () {
             // test modeTest !== 'phantom' handling behavior
@@ -1198,8 +1130,6 @@
         local.fs = require('fs');
         local.http = require('http');
         local.https = require('https');
-        local.istanbul_lite = require('istanbul-lite');
-        local.jslint_lite = require('jslint-lite');
         local.path = require('path');
         local.url = require('url');
         local.vm = require('vm');
@@ -1311,6 +1241,8 @@
         // init dir
         local.fs.readdirSync(process.cwd()).forEach(function (file) {
             file = process.cwd() + '/' + file;
+            // if the file is modified, then restart the process
+            local.utility2.onFileModifiedRestart(file);
             switch (local.path.extname(file)) {
             case '.js':
             case '.json':
@@ -1318,8 +1250,6 @@
                 local.jslint_lite.jslintAndPrint(local.fs.readFileSync(file, 'utf8'), file);
                 break;
             }
-            // if the file is modified, then restart the process
-            local.utility2.onFileModifiedRestart(file);
         });
         // jslint /assets/utility2.css
         local.jslint_lite.jslintAndPrint(
@@ -1366,6 +1296,8 @@
         local.global = local.modeJs === 'browser'
             ? window
             : global;
+        // export local
+        local.global.local = local;
         // init utility2
         local.utility2 = local.modeJs === 'browser'
             ? window.utility2
