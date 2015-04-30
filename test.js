@@ -23,7 +23,11 @@
             onTaskEnd.counter += 1;
             // test http GET handling behavior
             onTaskEnd.counter += 1;
-            local.utility2.ajax({ url: '/test/hello' }, function (error, xhr) {
+            local.utility2.ajax({
+                // test debug handling behavior
+                debug: true,
+                url: '/test/hello'
+            }, function (error, xhr) {
                 local.utility2.testTryCatch(function () {
                     // validate no error occurred
                     local.utility2.assert(!error, error);
@@ -77,17 +81,16 @@
                         // validate responseText
                         data = xhr.responseText;
                         local.utility2.assert((/\r\nhello$/).test(data), data);
-                        // validate response test header
+                        // validate responseHeaders
                         local.utility2.assert((/^X-Header-Test: Test\r\n/im).test(data), data);
-                        // validate response test header
                         data = xhr.getAllResponseHeaders();
                         local.utility2.assert((/^X-Header-Test: Test\r\n/im).test(data), data);
-                        // validate response test header
                         data = xhr.getResponseHeader('x-header-test');
                         local.utility2.assert(data === 'Test', data);
-                        // validate response undefined header
                         data = xhr.getResponseHeader('x-header-undefined');
                         local.utility2.assert(data === null, data);
+                        // validate statusCode
+                        local.utility2.assert(xhr.statusCode === 200, xhr.statusCode);
                         onTaskEnd();
                     }, onTaskEnd);
                 });
@@ -950,7 +953,7 @@
             };
             onNext = function (error) {
                 modeNext = error instanceof Error
-                    ? NaN
+                    ? Infinity
                     : modeNext + 1;
                 switch (modeNext) {
                 case 1:

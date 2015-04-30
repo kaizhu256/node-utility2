@@ -471,7 +471,7 @@
                 this function will try to run onError from cache,
                 and auto-update the cache with a background-task
             */
-            var cacheDict, cacheKey, cacheValue, modeCacheHit, modeNext, onNext;
+            var cacheDict, cacheKey, cacheValue, modeCacheHit, modeNext, onCacheWrite, onNext;
             modeNext = 0;
             onNext = function (error, data) {
                 if (modeNext < 10) {
@@ -489,6 +489,7 @@
                 case 1:
                     cacheDict = encodeURIComponent(options.cacheDict);
                     cacheKey = encodeURIComponent(options.key);
+                    onCacheWrite = options.onCacheWrite || local.utility2.onErrorDefault;
                     if (options.modeCacheMemory) {
                         modeCacheHit = 'memory';
                         // read cacheValue from memory-cache
@@ -555,7 +556,7 @@
                                     onError
                                 );
                             }
-                        }, options.onCacheWrite || local.utility2.onErrorDefault);
+                        }, onCacheWrite);
                     }
                     return;
                 case 14:
@@ -1216,13 +1217,12 @@
                     if (xhr.readyState === 4) {
                         // handle string data
                         if (error) {
-                            // add http method / statusCode / url debug-info to error.message
-                            xhr.errorMessage = options.method + ' ' +
+                            // debug method / statusCode / url
+                            xhr.errorMessage = xhr.method + ' ' +
                                 xhr.statusCode + ' - ' +
-                                options.url + '\n' +
-                                JSON.stringify(xhr.responseText.slice(0, 256) + '...') +
-                                '\n';
-                            error.message =  xhr.errorMessage + error.message;
+                                xhr.url + '\n' +
+                                JSON.stringify(xhr.responseText.slice(0, 256) + '...');
+                            error.message =  xhr.errorMessage + '\n' + error.message;
                             error.stack = xhr.errorMessage + '\n' + error.stack;
                             // debug statusCode
                             error.statusCode = xhr.statusCode;
@@ -1242,6 +1242,9 @@
                             );
                         }, 1000);
                     }
+                    if (xhr.debug) {
+                        console.log(xhr);
+                    }
                     onError(error, xhr);
                     break;
                 }
@@ -1255,9 +1258,19 @@
             });
             // init xhr
             xhr = new XMLHttpRequest();
+            xhr.data = options.data;
+            xhr.debug = options.debug;
+            xhr.headers = options.headers || {};
+            xhr.method = options.method || 'GET';
+            xhr.timeout = options.timeout || local.utility2.timeoutDefault;
             xhr.url = options.url;
             // debug xhr
             local._debugAjaxXhr = xhr;
+            // init timerTimeout
+            timerTimeout = local.utility2.onTimeout(function (errorTimeout) {
+                error = errorTimeout;
+                xhr.abort();
+            }, xhr.timeout, 'ajax');
             // init event handling
             xhr.addEventListener('abort', onEvent);
             xhr.addEventListener('error', onEvent);
@@ -1265,11 +1278,6 @@
             xhr.addEventListener('loadstart', local._ajaxProgressIncrement);
             xhr.addEventListener('progress', local._ajaxProgressIncrement);
             xhr.upload.addEventListener('progress', local._ajaxProgressIncrement);
-            // init timerTimeout
-            timerTimeout = local.utility2.onTimeout(function (errorTimeout) {
-                error = errorTimeout;
-                xhr.abort();
-            }, options.timeout || local.utility2.timeoutDefault, 'ajax');
             // if ajaxProgressBar is hidden, then display it
             if (local._ajaxProgressList.length === 0) {
                 ajaxProgressDiv.style.display = 'block';
@@ -1277,15 +1285,15 @@
             // add xhr to _ajaxProgressList
             local._ajaxProgressList.push(xhr);
             // open url
-            xhr.open(options.method || 'GET', options.url);
+            xhr.open(xhr.method, xhr.url);
             // send request headers
-            Object.keys(options.headers || {}).forEach(function (key) {
-                xhr.setRequestHeader(key, options.headers[key]);
+            Object.keys(xhr.headers).forEach(function (key) {
+                xhr.setRequestHeader(key, xhr.headers[key]);
             });
             // clear any pending timer to hide _ajaxProgressDiv
             clearTimeout(local._ajaxProgressBarHide);
             // send data
-            xhr.send(options.data);
+            xhr.send(xhr.data);
             return xhr;
         };
 
@@ -1336,60 +1344,18 @@
             modeNext = 0;
             onNext = local.utility2.onErrorWithStack(function (error, data) {
                 modeNext = error instanceof Error
-                    ? NaN
+                    ? Infinity
                     : modeNext + 1;
                 switch (modeNext) {
                 case 1:
-                    // init request and response
-                    request = response = { headers: {} };
-                    // init timerTimeout
-                    timerTimeout = local.utility2.onTimeout(
-                        onNext,
-                        options.timeout || local.utility2.timeoutDefault,
-                        'ajax ' + options.method + ' ' + options.url
-                    );
-                    // handle implicit localhost
-                    if (options.url[0] === '/') {
-                        options.url = 'http://localhost:' +
-                            local.utility2.envDict.npm_config_server_port +
-                            options.url;
-                    }
-                    // parse options.url
-                    urlParsed = local.url.parse(String(options.url));
-                    // disable socket pooling
-                    options.agent = options.agent || false;
-                    // hostname needed for http.request
-                    options.hostname = urlParsed.hostname;
-                    // path needed for http.request
-                    options.path = urlParsed.path;
-                    // port needed for http.request
-                    options.port = urlParsed.port;
-                    // init headers
-                    options.headers = options.headers || {};
-                    // init Content-Length header
-                    options.headers['Content-Length'] =
-                        typeof options.data === 'string'
-                        ? Buffer.byteLength(options.data)
-                        : Buffer.isBuffer(options.data)
-                        ? options.data.length
-                        : 0;
-                    // make http request
-                    request = (urlParsed.protocol === 'https:'
-                        ? local.https
-                        : local.http)
-                        .request(options, onNext)
-                        // handle request-error
-                        .on('error', onNext);
-                    // debug request
-                    local._debugAjaxRequest = request;
-                    // send request and/or data
-                    request.end(options.data);
                     // init xhr
                     // http://www.w3.org/TR/XMLHttpRequest
                     xhr = options;
                     xhr.abort = function () {
                         onNext(new Error('abort'));
                     };
+                    // disable socket pooling
+                    xhr.agent = xhr.agent || false;
                     xhr.getAllResponseHeaders = function () {
                         return Object.keys(response.headers).map(function (key) {
                             return key + ': ' + response.headers[key] + '\r\n';
@@ -1398,19 +1364,56 @@
                     xhr.getResponseHeader = function (key) {
                         return (response.headers && response.headers[key]) || null;
                     };
+                    xhr.headers = xhr.headers || {};
+                    // init Content-Length header
+                    xhr.headers['Content-Length'] =
+                        typeof xhr.data === 'string'
+                        ? Buffer.byteLength(xhr.data)
+                        : Buffer.isBuffer(xhr.data)
+                        ? xhr.data.length
+                        : 0;
                     xhr.onreadystatechange = xhr.onreadystatechange || local.utility2.nop;
                     xhr.readyState = 0;
                     xhr.responseText = '';
                     xhr.status = xhr.statusCode = 0;
                     xhr.statusText = '';
+                    xhr.timeout = xhr.timeout || local.utility2.timeoutDefault;
+                    // handle implicit localhost
+                    if (xhr.url[0] === '/') {
+                        xhr.url = 'http://localhost:' +
+                            local.utility2.envDict.npm_config_server_port +
+                            xhr.url;
+                    }
+                    // parse url
+                    urlParsed = local.url.parse(String(xhr.url));
+                    xhr.hostname = urlParsed.hostname;
+                    xhr.path = urlParsed.path;
+                    xhr.port = urlParsed.port;
                     // debug xhr
                     local._debugAjaxXhr = xhr;
+                    // init timerTimeout
+                    timerTimeout = local.utility2.onTimeout(
+                        onNext,
+                        xhr.timeout,
+                        'ajax ' + xhr.method + ' ' + xhr.url
+                    );
+                    // init request
+                    request = (urlParsed.protocol === 'https:'
+                        ? local.https
+                        : local.http)
+                        .request(options, onNext)
+                        // handle request-error
+                        .on('error', onNext);
+                    // debug request
+                    local._debugAjaxRequest = request;
+                    // send data
+                    request.end(xhr.data);
                     break;
                 case 2:
                     response = error;
                     // debug ajax response
                     local._debugAjaxResponse = response;
-                    // init xhr
+                    // update xhr
                     xhr.status = xhr.statusCode = response.statusCode;
                     xhr.statusText = local.http.STATUS_CODES[response.statusCode] || '';
                     xhr.readyState = 1;
@@ -1419,8 +1422,13 @@
                     xhr.onreadystatechange();
                     xhr.readyState = 3;
                     xhr.onreadystatechange();
-                    if (options.responseType === 'response') {
-                        modeNext = NaN;
+                    // handle http-error for statusCode >= 400
+                    if (response.statusCode >= 400) {
+                        onNext(new Error());
+                        return;
+                    }
+                    if (xhr.responseType === 'response') {
+                        modeNext = Infinity;
                         xhr.response = response;
                         request = null;
                         response = null;
@@ -1430,20 +1438,14 @@
                     local.utility2.streamReadAll(response, onNext);
                     break;
                 case 3:
-                    // init xhr
+                    // update xhr
                     xhr.readyState = 4;
                     xhr.response = data;
                     xhr.responseText =  data.toString();
-                    // handle http-error for statusCode >= 400
-                    if (response.statusCode >= 400) {
-                        onNext(new Error());
-                        return;
-                    }
-                    // successful response
                     onNext();
                     break;
                 default:
-                    // if already done, then ignore error
+                    // if ajax already done, then do nothing
                     if (done) {
                         return;
                     }
@@ -1453,18 +1455,20 @@
                     // cleanup request and response
                     local.utility2.requestResponseCleanup(request, response);
                     if (error) {
-                        // add http method / statusCode / url debug-info to error.message
-                        xhr.errorMessage = options.method + ' ' +
+                        // debug method / statusCode / url
+                        xhr.errorMessage = xhr.method + ' ' +
                             xhr.statusCode + ' - ' +
-                            options.url + '\n' +
-                            JSON.stringify(xhr.responseText.slice(0, 256) + '...') +
-                            '\n';
-                        error.message =  xhr.errorMessage + error.message;
+                            xhr.url + '\n' +
+                            JSON.stringify(xhr.responseText.slice(0, 256) + '...');
+                        error.message =  xhr.errorMessage + '\n' + error.message;
                         error.stack = xhr.errorMessage + '\n' + error.stack;
                         // debug statusCode
                         error.statusCode = xhr.statusCode;
                     }
                     xhr.onreadystatechange();
+                    if (xhr.debug) {
+                        console.log(xhr);
+                    }
                     onError(error, xhr);
                 }
             });
@@ -1518,7 +1522,7 @@
                 modeNext = -1;
                 onNext = function (error) {
                     modeNext = error instanceof Error
-                        ? NaN
+                        ? Infinity
                         : modeNext + 1;
                     // recursively run each sub-middleware in middlewareList
                     if (modeNext < self.middlewareList.length) {
@@ -1543,11 +1547,6 @@
             // init timerTimeout
             local.utility2
                 .serverRespondTimeoutDefault(request, response, local.utility2.timeoutDefault);
-            // cleanup timerTimeout
-            response.on('finish', function () {
-                // cleanup timerTimeout
-                clearTimeout(request.timerTimeout);
-            });
             // check if _testSecret is valid
             request._testSecretValid = (/\b_testSecret=(\w+)\b/).exec(request.url);
             request._testSecretValid = request._testSecretValid &&
@@ -1703,7 +1702,7 @@
             modeNext = 0;
             onNext = function (error) {
                 modeNext = error instanceof Error
-                    ? NaN
+                    ? Infinity
                     : modeNext + 1;
                 switch (modeNext) {
                 case 1:

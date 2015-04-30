@@ -407,14 +407,13 @@ npm_config_mode_auto_restart=1 \
 npm_config_mode_auto_restart_child=1 \
 ./index.sh test test.js"
     },
-    "version": "2015.4.29-a"
+    "version": "2015.4.30-a"
 }
 ```
 
 
 
 # todo
-- cleanup taskRunWithCache
 - add testCase for validating _testSecret
 - create flamegraph from istanbul coverage
 - auto-generate help doc from README.md
@@ -424,12 +423,11 @@ npm_config_mode_auto_restart_child=1 \
 
 
 
-# change since 83b7c0e4
-- npm publish 2015.4.29-a
-- remove redis and mongodb extension from taskRunWithCache
-- fix requestResponseCleanup
-- change ajax callback signature to onError(error, xhr)
-- merge testCase_uuid4_default and testCase_uuidTime_default into testCase_uuidXxx_default
+# change since 5b72f865
+- npm publish 2015.4.30-a
+- use Infinity instead of NaN as fallback for modeNext
+- fix statusCode error for "response" responseType
+- more revamping of node-ajax to closely model browser-ajax
 - none
 
 
