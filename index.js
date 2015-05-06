@@ -1596,6 +1596,12 @@
                     local.path.extname(request.urlParsed.pathnameNormalized)
                 ]
             });
+            // set main-page content-type to text/html
+            if (request.urlParsed.pathnameNormalized === '/') {
+                local.utility2.serverRespondHeadSet(request, response, null, {
+                    'Content-Type': 'text/html; charset=UTF-8'
+                });
+            }
             // default to nextMiddleware
             nextMiddleware();
         };

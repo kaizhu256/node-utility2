@@ -425,9 +425,8 @@ npm_config_mode_auto_restart_child=1 \
 
 
 
-# change since c7b245ab
-- npm publish 2015.5.6-b
-- enforce jslint errors in shReadmeTestJs
+# change since 55132ce9
+- set main-page content-type to text/html in middlewareInit
 - none
 
 

@@ -45,7 +45,7 @@ shBuildGithubUpload() {
     DIR=build..$CI_BRANCH..$CI_HOST || return $?
     rm -fr $DIR && cp -a $npm_config_dir_build $DIR || return $?
     # init .git/config
-    printf "\n[user]\nname=undefined\nemail=undefined" >> .git/config || return $?
+    printf "\n[user]\nname=nobody\nemail=nobody" >> .git/config || return $?
     # cleanup dir
     shBuildGithubUploadCleanup || return $?
     # update gh-pages
@@ -233,7 +233,7 @@ shHerokuDeploy() {
     # init .git
     git init || return $?
     # init .git/config
-    printf "\n[user]\nname=undefined\nemail=undefined\n" > .git/config || return $?
+    printf "\n[user]\nname=nobody\nemail=nobody\n" > .git/config || return $?
     # init Procfile
     node -e "
         require('fs').writeFileSync(
