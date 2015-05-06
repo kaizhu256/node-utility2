@@ -28,13 +28,14 @@
                 this function will throw an error if the assertion fails
             */
             if (!passed) {
+                // if message is an Error object, then throw it
+                if (message instanceof Error) {
+                    throw message;
+                }
                 throw new Error(
                     // if message is a string, then leave it as is
                     typeof message === 'string'
                         ? message
-                        // if message is an Error object, then get its stack
-                        : message instanceof Error
-                        ? local.utility2.errorStack(message)
                         // else JSON.stringify message
                         : JSON.stringify(message)
                 );
@@ -45,7 +46,7 @@
             /*
                 this function will return the error's stack
             */
-            return error.stack || error.message || 'undefined';
+            return error.message + '\n' + error.stack;
         };
 
         local.utility2.istanbulMerge = function (coverage1, coverage2) {
@@ -184,7 +185,7 @@
                 }
                 // if options2 and defaults2 are both non-null and non-array objects,
                 // then recurse options2 and defaults2
-                if (depth && depth !== 1 &&
+                if (depth > 0 &&
                         // options2 is a non-null and non-array object
                         options2 &&
                         typeof options2 === 'object' &&
@@ -208,38 +209,38 @@
             Object.keys(override).forEach(function (key) {
                 options2 = options[key];
                 override2 = override[key];
-                // if either options2 or override2 is not a non-null and non-array object,
-                // then set options[key] with override[key]
-                if (!depth || depth === 1 ||
-                        // options2 is not a non-null and non-array object
-                        !(options2 &&
+                // if both options2 and override2 are non-null and non-array objects,
+                // then recurse options2 and override2
+                if (depth > 1 &&
+                        // options2 is a non-null and non-array object
+                        (options2 &&
                         typeof options2 === 'object' &&
-                        !Array.isArray(options2)) ||
-                        // override2 is not a non-null and non-array object
-                        !(override2 &&
+                        !Array.isArray(options2)) &&
+                        // override2 is a non-null and non-array object
+                        (override2 &&
                         typeof override2 === 'object' &&
                         !Array.isArray(override2))) {
-                    options[key] = options === local.utility2.envDict
-                        // if options is envDict, then override falsey value with empty string
-                        ? override2 || ''
-                        : override2;
+                    local.utility2.objectSetOverride(options2, override2, depth - 1);
                     return;
                 }
-                // else recurse options2 and override2
-                local.utility2.objectSetOverride(options2, override2, depth - 1);
+                // else set options[key] with override[key]
+                options[key] = options === local.utility2.envDict
+                    // if options is envDict, then override falsey value with empty string
+                    ? override2 || ''
+                    : override2;
             });
             return options;
         };
 
-        local.utility2.objectTraverse = function (element, onSelf) {
+        local.utility2.objectTraverse = function (element, onSelf, depth) {
             /*
                 this function will recursively traverse the element,
                 and call onSelf on the element's properties
             */
             onSelf(element);
-            if (element && typeof element === 'object') {
+            if (depth > 0 && element && typeof element === 'object') {
                 Object.keys(element).forEach(function (key) {
-                    local.utility2.objectTraverse(element[key], onSelf);
+                    local.utility2.objectTraverse(element[key], onSelf, depth - 1);
                 });
             }
             return element;
@@ -466,7 +467,7 @@
             }
         };
 
-        local.utility2.taskRunWithCache = function (options, onError) {
+        local.utility2.taskRunCached = function (options, onError) {
             /*
                 this function will try to run onError from cache,
                 and auto-update the cache with a background-task
@@ -613,7 +614,7 @@
                     errorStackList: [],
                     testPlatformList: [],
                     timeElapsed: 0
-                }, -1);
+                }, 8);
                 // security - handle malformed testReport
                 local.utility2.assert(
                     testReport && typeof testReport === 'object',
@@ -629,7 +630,7 @@
                         name: 'undefined',
                         testCaseList: [],
                         timeElapsed: 0
-                    }, -1);
+                    }, 8);
                     local.utility2.assert(
                         typeof testPlatform.name === 'string',
                         ii + ' invalid testPlatform.name ' + typeof testPlatform.name
@@ -652,7 +653,7 @@
                             errorStack: '',
                             name: 'undefined',
                             timeElapsed: 0
-                        }, -1);
+                        }, 8);
                         local.utility2.assert(
                             typeof testCase.errorStack === 'string',
                             ii + ' invalid testCase.errorStack ' + typeof testCase.errorStack
@@ -800,7 +801,7 @@
                                         testReportTestStatusClass: 'testReportTest' +
                                             testCase.status[0].toUpperCase() +
                                             testCase.status.slice(1)
-                                    }, -1);
+                                    }, 8);
                                 }),
                                 testReportPlatformPreClass:
                                     'testReportPlatformPre' + (errorStackList.length
@@ -808,11 +809,11 @@
                                     : 'Hidden'),
                                 testPlatformNumber: ii + 1
                             });
-                        }, -1),
+                        }, 8),
                     testsFailedClass: testReport.testsFailed
                         ? 'testReportTestFailed'
                         : 'testReportTestPassed'
-                }, -1),
+                }, 8),
                 'undefined'
             );
         };
@@ -962,8 +963,8 @@
             exit = local.utility2.exit;
             local.utility2.exit = local.utility2.nop;
             // init coverageReportCreate
-            coverageReportCreate =
-                (local.istanbul_lite && local.istanbul_lite.coverageReportCreate) ||
+            coverageReportCreate = (local.utility2.istanbul_lite &&
+                local.utility2.istanbul_lite.coverageReportCreate) ||
                 local.utility2.nop;
             // init modeTestCase
             local.utility2.modeTestCase =
@@ -981,7 +982,7 @@
             local.utility2.testPlatform.testCaseList.length = 0;
             // add tests into testPlatform.testCaseList
             Object.keys(options).forEach(function (key) {
-                // add test-case options[key] to testPlatform.testCaseList
+                // add testCase options[key] to testPlatform.testCaseList
                 if (key.indexOf('testCase_') === 0 &&
                         (local.utility2.modeTestCase === key ||
                         (!local.utility2.modeTestCase && key !== 'testCase_testRun_failure'))) {
@@ -1113,7 +1114,7 @@
                         local.utility2,
                         JSON.parse(decodeURIComponent(local.system.args[1])),
                         {},
-                        -1
+                        Infinity
                     );
                 } catch (ignore) {
                 }
@@ -1438,8 +1439,6 @@
                     local.utility2.streamReadAll(response, onNext);
                     break;
                 case 3:
-                    // update xhr
-                    xhr.readyState = 4;
                     xhr.response = data;
                     xhr.responseText =  data.toString();
                     onNext();
@@ -1465,6 +1464,8 @@
                         // debug statusCode
                         error.statusCode = xhr.statusCode;
                     }
+                    // update xhr
+                    xhr.readyState = 4;
                     xhr.onreadystatechange();
                     if (xhr.debug) {
                         console.log(xhr);
@@ -1474,6 +1475,28 @@
             });
             onNext();
             return xhr;
+        };
+
+        local.utility2.middlewareAssetsCached = function (request, response, nextMiddleware) {
+            /*
+                this function will run the assets-middleware
+            */
+            var data;
+            data = local.utility2.cacheDict.assets[request.urlParsed.pathnameNormalized];
+            if (data) {
+                local.utility2
+                    .middlewareCacheControlLastModified(request, response, function () {
+                        local.utility2.serverRespondGzipCached(
+                            request,
+                            response,
+                            request.urlParsed.pathnameNormalized,
+                            data
+                        );
+                    });
+                return;
+            }
+            // default to nextMiddleware
+            nextMiddleware();
         };
 
         local.utility2.middlewareCacheControlLastModified = function (
@@ -1509,13 +1532,13 @@
 
         local.utility2.middlewareGroupCreate = function (middlewareList) {
             /*
-               this function will return a middleware
+               this function will return a super-middleware
                that will sequentially run the sub-middlewares in middlewareList
             */
             var self;
             self = function (request, response, nextMiddleware) {
                 /*
-                    this function will create a middleware,
+                    this function will create a super-middleware,
                     that will sequentially run the sub-middlewares in middlewareList
                 */
                 var modeNext, onNext;
@@ -1539,6 +1562,9 @@
         };
 
         local.utility2.middlewareInit = function (request, response, nextMiddleware) {
+            /*
+                this function will run the init-middleware
+            */
             var contentTypeDict;
             // debug server request
             local._debugServerRequest = request;
@@ -1570,7 +1596,7 @@
                     local.path.extname(request.urlParsed.pathnameNormalized)
                 ]
             });
-            // run nextMiddleware
+            // default to nextMiddleware
             nextMiddleware();
         };
 
@@ -1736,11 +1762,7 @@
                             '/covered.utility2.js';
                         local.fs.writeFileSync(
                             options.argv1,
-                            local.istanbul_lite.instrumentInPackage(
-                                local.utility2['/assets/utility2.js'],
-                                __dirname + '/index.js',
-                                'utility2'
-                            )
+                            local.utility2.cacheDict.assets['/assets/utility2.js']
                         );
                     }
                     // spawn phantomjs to test a url
@@ -1990,7 +2012,7 @@
             request.pipe(response);
         };
 
-        local.utility2.serverRespondGzipCache = function (request, response, cacheKey, data) {
+        local.utility2.serverRespondGzipCached = function (request, response, cacheKey, data) {
             /*
                 this function will respond with auto-cached, gzipped data
             */
@@ -2060,6 +2082,11 @@
                 timeout || local.utility2.timeoutDefault,
                 'server ' + request.method + ' ' + request.url
             );
+            response.on('finish', function () {
+                clearTimeout(request.timerTimeout);
+                // cleanup request and response
+                local.utility2.requestResponseCleanup(request, response);
+            });
         };
 
         local.utility2.streamReadAll = function (readableStream, onError) {
@@ -2113,6 +2140,7 @@
             // 2. start server on port $npm_config_server_port
             console.log('server starting on port ' +
                 local.utility2.envDict.npm_config_server_port);
+            local.utility2.onReady.counter += 1;
             server.listen(
                 local.utility2.envDict.npm_config_server_port,
                 local.utility2.onReady
@@ -2138,7 +2166,6 @@
             }, function () {
                 local.utility2.testRun(options);
             });
-            local.utility2.onReady.counter += 1;
             return server;
         };
         break;
@@ -2157,7 +2184,6 @@
             : local.modeJs === 'node'
             ? process.env
             : local.system.env;
-        local.utility2.cacheDict = {};
         local.utility2.envDict = local.modeJs === 'browser'
             ? {}
             : local.modeJs === 'node'
@@ -2256,14 +2282,29 @@
         local.utility2.envDict.npm_config_dir_build = process.cwd() + '/tmp/build';
         local.utility2.envDict.npm_config_dir_tmp = process.cwd() + '/tmp';
         // init assets
-        local.utility2['/assets/utility2.js'] = local.fs.readFileSync(__filename, 'utf8');
-        local.utility2['/test/test.html'] = local.utility2.stringFormat(local.fs
-            .readFileSync(__dirname + '/README.md', 'utf8')
-            .replace((/[\S\s]+?(<!DOCTYPE html>[\S\s]+?<\/html>)[\S\s]+/), '$1')
-            // parse '\' line-continuation
-            .replace((/\\\n/g), '')
-            // remove "\\n' +" and "'"
-            .replace((/\\n' \+(\s*?)'/g), '$1'), { envDict: local.utility2.envDict }, '');
+        local.utility2.cacheDict.assets['/assets/istanbul-lite.js'] =
+            local.utility2.istanbul_lite['/assets/istanbul-lite.js'];
+        local.utility2.cacheDict.assets['/assets/jslint-lite.js'] =
+            local.utility2.jslint_lite['/assets/jslint-lite.js'];
+        local.utility2.cacheDict.assets['/assets/utility2.js'] = local.fs
+            .readFileSync(__filename, 'utf8');
+        local.utility2.cacheDict.assets['/assets/utility2.js'] = local.utility2.istanbul_lite
+            .instrumentInPackage(
+                local.fs.readFileSync(__filename, 'utf8'),
+                __filename,
+                'utility2'
+            );
+        local.utility2.cacheDict.assets['/test/test.html'] = local.utility2.stringFormat(
+            local.fs
+                .readFileSync(__dirname + '/README.md', 'utf8')
+                .replace((/[\S\s]+?(<!DOCTYPE html>[\S\s]+?<\/html>)[\S\s]+/), '$1')
+                // parse '\' line-continuation
+                .replace((/\\\n/g), '')
+                // remove "\\n' +" and "'"
+                .replace((/\\n' \+(\s*?)'/g), '$1'),
+            { envDict: local.utility2.envDict },
+            ''
+        );
         break;
 
 
@@ -2472,15 +2513,15 @@
             return arg;
         };
         // init utility2
-        local.utility2 = { local: local, nop: local.nop };
+        local.utility2 = { cacheDict: { assets: {} }, local: local, nop: local.nop };
         // init istanbul_lite
-        local.istanbul_lite = local.utility2.istanbul_lite = local.modeJs === 'browser'
+        local.utility2.istanbul_lite = local.modeJs === 'browser'
             ? window.istanbul_lite
             : local.modeJs === 'node'
             ? require('istanbul-lite')
             : null;
         // init jslint_lite
-        local.jslint_lite = local.utility2.jslint_lite = local.modeJs === 'browser'
+        local.utility2.jslint_lite = local.modeJs === 'browser'
             ? window.jslint_lite
             : local.modeJs === 'node'
             ? require('jslint-lite')
@@ -2491,8 +2532,7 @@
 /* jslint-indent-begin 8 */
 /*jslint maxlen: 256*/
 // init assets
-local.utility2['/assets/utility2.css'] = String() +
-    '/*csslint\n' +
+local.utility2.cacheDict.assets['/assets/utility2.css'] = '/*csslint\n' +
         'box-model: false\n' +
     '*/\n' +
     '.ajaxProgressBarDiv {\n' +
@@ -2550,8 +2590,7 @@ local.utility2['/assets/utility2.css'] = String() +
     '@-webkit-keyframes ajaxProgressBarDivAnimation {\n' +
         'from { background-position: 40px 0; }\n' +
         'to { background-position: 0 0; }\n' +
-    '}\n' +
-    String();
+    '}\n';
 
 
 
@@ -2572,8 +2611,7 @@ local.utility2['/build/test-report.badge.svg'] = '<svg xmlns="http://www.w3.org/
 
 
 
-local.utility2['/test/test-report.html.template'] = String() +
-    '<style>\n' +
+local.utility2['/test/test-report.html.template'] = '<style>\n' +
     '.testReportPlatformDiv {\n' +
         'border: 1px solid;\n' +
         'border-radius: 5px;\n' +
@@ -2684,8 +2722,7 @@ local.utility2['/test/test-report.html.template'] = String() +
     '{{/errorStackList}}\n' +
     '</pre>\n' +
     '</div>\n' +
-    '{{/testPlatformList}}\n' +
-    String();
+    '{{/testPlatformList}}\n';
 /* jslint-indent-end */
 
 

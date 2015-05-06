@@ -19,7 +19,23 @@
                 this function will test ajax's default handling behavior
             */
             var data, onTaskEnd;
-            onTaskEnd = local.utility2.onTaskEnd(onError);
+            onTaskEnd = local.utility2.onTaskEnd(function (error) {
+                local.utility2.testTryCatch(function () {
+                    // validate no error occurred
+                    local.utility2.assert(!error, error);
+                    // test xhr.abort handling behavior
+                    data = local.utility2.ajax({ url: '/test/timeout' }, function (error) {
+                        local.utility2.testTryCatch(function () {
+                            // validate error occurred
+                            local.utility2.assert(error instanceof Error, error);
+                            onError();
+                        }, onError);
+                    });
+                    data.abort();
+                    // test multiple-callback handling behavior
+                    data.abort();
+                }, onError);
+            });
             onTaskEnd.counter += 1;
             // test http GET handling behavior
             onTaskEnd.counter += 1;
@@ -122,18 +138,6 @@
                     }, onTaskEnd);
                 });
             });
-            // test xhr.abort handling behavior
-            onTaskEnd.counter += 1;
-            data = local.utility2.ajax({ url: '/test/timeout' }, function (error) {
-                local.utility2.testTryCatch(function () {
-                    // validate error occurred
-                    local.utility2.assert(error instanceof Error, error);
-                    onTaskEnd();
-                }, onTaskEnd);
-            });
-            data.abort();
-            // test multiple-callback handling behavior
-            data.abort();
             onTaskEnd();
         };
 
@@ -141,7 +145,6 @@
             /*
                 this function will test assert's default handling behavior
             */
-            var error;
             // test assertion passed
             local.utility2.assert(true, true);
             // test assertion failed with undefined message
@@ -152,19 +155,6 @@
                 local.utility2.assert(error instanceof Error, error);
                 // validate error-message
                 local.utility2.assert(error.message === '', error.message);
-            });
-            // test assertion failed with error object,
-            // with no error.message and no error.trace
-            error = new Error();
-            error.message = '';
-            error.stack = '';
-            local.utility2.testTryCatch(function () {
-                local.utility2.assert(false, error);
-            }, function (error) {
-                // validate error occurred
-                local.utility2.assert(error instanceof Error, error);
-                // validate error.message
-                local.utility2.assert(error.message === 'undefined', error.message);
             });
             // test assertion failed with string message
             local.utility2.testTryCatch(function () {
@@ -300,7 +290,7 @@
             options = local.utility2.objectSetDefault(
                 { aa: 1, bb: {}, cc: [] },
                 { aa: 2, bb: { cc: 2 }, cc: [1, 2] },
-                -1
+                Infinity
             );
             // validate options
             local.utility2.assert(
@@ -316,7 +306,28 @@
                 this function will test objectSetOverride's default handling behavior
             */
             var data, options;
-            // test override handling behavior
+            // test non-recursive handling behavior
+            options = local.utility2.objectSetOverride(
+                {
+                    aa: 1,
+                    bb: { cc: 2 },
+                    dd: [3, 4],
+                    ee: { ff: { gg: 5, hh: 6 } }
+                },
+                {
+                    aa: 2,
+                    bb: { dd: 3 },
+                    dd: [4, 5],
+                    ee: { ff: { gg: 6 } }
+                },
+                // test default depth handling behavior
+                null
+            );
+            // validate options
+            data = local.utility2.jsonStringifyOrdered(options);
+            local.utility2.assert(data ===
+                '{"aa":2,"bb":{"dd":3},"dd":[4,5],"ee":{"ff":{"gg":6}}}', data);
+            // test recursive handling behavior
             options = local.utility2.objectSetOverride(
                 {
                     aa: 1,
@@ -336,8 +347,8 @@
             // validate options
             data = local.utility2.jsonStringifyOrdered(options);
             local.utility2.assert(data ===
-                '{"aa":2,"bb":{"cc":2,"dd":3},"dd":[4,5],' + '"ee":{"ff":{"gg":6}}}', data);
-            // test override envDict with empty-string handling behavior
+                '{"aa":2,"bb":{"cc":2,"dd":3},"dd":[4,5],"ee":{"ff":{"gg":6}}}', data);
+            // test envDict with empty-string handling behavior
             options = local.utility2.objectSetOverride(
                 local.utility2.envDict,
                 { 'emptyString': null },
@@ -359,7 +370,7 @@
                 if (element && typeof element === 'object' && !Array.isArray(element)) {
                     element.zz = true;
                 }
-            });
+            }, Infinity);
             // validate data
             data = local.utility2.jsonStringifyOrdered(data);
             local.utility2.assert(
@@ -650,7 +661,7 @@
                 this function will test istanbulMerge's default handling behavior
             */
             var coverage1, coverage2, script;
-            script = local.istanbul_lite.instrumentSync(
+            script = local.utility2.istanbul_lite.instrumentSync(
                 '(function () {\nreturn arg ' +
                     '? __coverage__ ' +
                     ': __coverage__;\n}());',
@@ -746,7 +757,7 @@
                     '/test/script-only.html?' +
                     // test modeTest !== 'phantom' handling behavior
                     'modeTest=phantom2&' +
-                    // test single-test-case handling behavior
+                    // test specific testCase handling behavior
                     // test testRun's failure handling behavior
                     'modeTestCase=testCase_testRun_failure&' +
                     'timeExit={{timeExit}}'
@@ -913,7 +924,7 @@
             ], function (onError) {
                 local.utility2.serverRespondTimeoutDefault(
                     {},
-                    {},
+                    { on: local.utility2.nop },
                     // test default timeout handling behavior
                     null
                 );
@@ -921,18 +932,21 @@
             }, onError);
         };
 
-        local.testCase_taskRunWithCache_default = function (onError) {
+        local.testCase_taskRunCached_default = function (onError) {
             /*
-                this function will test taskRunWithCache's default handling behavior
+                this function will test taskRunCached's default handling behavior
             */
-            var cacheValue, done, modeNext, onNext, options, testModeCache;
+            var cacheValue, done, modeNext, onNext, onTestCaseCached, options;
             modeNext = 0;
-            testModeCache = function (options, modeCacheHit, onError) {
+            onTestCaseCached = function (options, modeCacheHit, onError) {
+                /*
+                    this function will run the testCase with the given options
+                */
                 // test wait-for-cache-write handling behavior
                 if (modeCacheHit !== 'memory') {
                     options.onCacheWrite = onError;
                 }
-                local.utility2.taskRunWithCache(options, function (error, data) {
+                local.utility2.taskRunCached(options, function (error, data) {
                     local.utility2.testTryCatch(function () {
                         // validate no error occurred
                         local.utility2.assert(!error, error);
@@ -959,11 +973,11 @@
                 case 1:
                     cacheValue = local.utility2.stringAsciiCharset;
                     options = {};
-                    options.cacheDict = 'testCase_taskRunWithCache_default.' +
+                    options.cacheDict = 'testCase_taskRunCached_default.' +
                         local.utility2.envDict.npm_config_mode_legacy_node;
                     options.key = local.utility2.stringUriComponentCharset;
                     options.modeCacheFile = local.utility2.envDict.npm_config_dir_tmp +
-                        '/testCase_taskRunWithCache_default/' +
+                        '/testCase_taskRunCached_default/' +
                         local.utility2.envDict.npm_config_mode_legacy_node;
                     options.modeCacheFileHit = 'file';
                     options.modeCacheMemory = true;
@@ -994,10 +1008,10 @@
                             onTask: options.onTask
                         };
                         optionsCopy[modeCache] = options[modeCache];
-                        testModeCache(
+                        onTestCaseCached(
                             optionsCopy,
                             undefined,
-                            local.utility2.onErrorWithStack(onNext)
+                            onNext
                         );
                     });
                     break;
@@ -1015,10 +1029,10 @@
                             onTask: options.onTask
                         };
                         optionsCopy[modeCache] = options[modeCache];
-                        testModeCache(
+                        onTestCaseCached(
                             optionsCopy,
                             options[modeCache + 'Hit'],
-                            local.utility2.onErrorWithStack(onNext)
+                            onNext
                         );
                     });
                     break;
@@ -1138,24 +1152,20 @@
         local.vm = require('vm');
         local.zlib = require('zlib');
         // init assets
-        local['/'] = local.utility2['/test/test.html'];
-        local['/assets/istanbul-lite.js'] = local.istanbul_lite['/assets/istanbul-lite.js'];
-        local['/assets/jslint-lite.js'] = local.jslint_lite['/assets/jslint-lite.js'];
-        local['/assets/utility2.css'] = local.utility2['/assets/utility2.css'];
-        local['/assets/utility2.js'] = local.istanbul_lite.instrumentInPackage(
-            local.utility2['/assets/utility2.js'],
-            __dirname + '/index.js',
-            'utility2'
-        );
-        local['/test/hello'] = 'hello';
-        local['/test/script-error.html'] = '<script>syntax error</script>';
-        local['/test/script-only.html'] = '<script src="/assets/utility2.js">\n' +
+        local.utility2.cacheDict.assets['/'] =
+            local.utility2.cacheDict.assets['/test/test.html'];
+        local.utility2.cacheDict.assets['/test/hello'] = 'hello';
+        local.utility2.cacheDict.assets['/test/script-error.html'] =
+            '<script>syntax error</script>';
+        local.utility2.cacheDict.assets['/test/script-only.html'] =
+            '<script src="/assets/utility2.js">\n' +
             '</script><script src="/test/test.js"></script>';
-        local['/test/test.js'] = local.istanbul_lite.instrumentInPackage(
-            local.fs.readFileSync(__filename, 'utf8'),
-            __filename,
-            'utility2'
-        );
+        local.utility2.cacheDict.assets['/test/test.js'] = local.utility2.istanbul_lite
+            .instrumentInPackage(
+                local.fs.readFileSync(__filename, 'utf8'),
+                __filename,
+                'utility2'
+            );
         // init middleware
         local.middleware = local.utility2.middlewareGroupCreate([
             local.utility2.middlewareInit,
@@ -1170,26 +1180,6 @@
                     });
                 }
                 switch (request.urlParsed.pathnameNormalized) {
-                // serve assets
-                case '/':
-                case '/assets/istanbul-lite.js':
-                case '/assets/jslint-lite.js':
-                case '/assets/utility2.css':
-                case '/assets/utility2.js':
-                case '/test/hello':
-                case '/test/script-error.html':
-                case '/test/script-only.html':
-                case '/test/test.js':
-                    local.utility2
-                        .middlewareCacheControlLastModified(request, response, function () {
-                            local.utility2.serverRespondGzipCache(
-                                request,
-                                response,
-                                request.urlParsed.pathnameNormalized,
-                                local[request.urlParsed.pathnameNormalized]
-                            );
-                        });
-                    break;
                 // test http POST handling behavior
                 case '/test/echo':
                     // test response header handling behavior
@@ -1235,7 +1225,8 @@
                 default:
                     nextMiddleware();
                 }
-            }
+            },
+            local.utility2.middlewareAssetsCached
         ]);
         // init middleware error-handler
         local.onMiddlewareError = local.utility2.onMiddlewareError;
@@ -1250,22 +1241,23 @@
             case '.js':
             case '.json':
                 // jslint the file
-                local.jslint_lite.jslintAndPrint(local.fs.readFileSync(file, 'utf8'), file);
+                local.utility2.jslint_lite
+                    .jslintAndPrint(local.fs.readFileSync(file, 'utf8'), file);
                 break;
             }
         });
         // jslint /assets/utility2.css
-        local.jslint_lite.jslintAndPrint(
-            local.utility2['/assets/utility2.css'],
+        local.utility2.jslint_lite.jslintAndPrint(
+            local.utility2.cacheDict.assets['/assets/utility2.css'],
             '/assets/utility2.css'
         );
         // init repl debugger
         local.utility2.replStart();
-        // init $npm_config_start_file
+        // init $npm_config_file_start
         [
-            // test no $npm_config_start_file handling behavior
+            // test no $npm_config_file_start handling behavior
             null,
-            local.utility2.envDict.npm_config_start_file
+            local.utility2.envDict.npm_config_file_start
         ].forEach(function (file) {
             if (file) {
                 require(process.cwd() + '/' + file);
@@ -1305,10 +1297,6 @@
         local.utility2 = local.modeJs === 'browser'
             ? window.utility2
             : require('./index.js');
-        // init istanbul_lite
-        local.istanbul_lite = local.utility2.local.istanbul_lite;
-        // init jslint_lite
-        local.jslint_lite = local.utility2.local.jslint_lite;
     }());
     return local;
 }())));

@@ -52,13 +52,13 @@ shExampleSh
 
 
 
-# quickstart programmatic example
+# quickstart node example
 #### to run this example, follow the instruction in the script below
 ```
 /*
 example.js
 
-this shared browser / node script will programmatically
+this shared browser / node script will
 run browser tests with coverage (via istanbul-lite and phantomjs-lite)
 
 instruction
@@ -402,18 +402,19 @@ instruction
         "build-ci": "./index.sh shRun shReadmeBuild",
         "start": "npm_config_mode_auto_restart=1 ./index.sh shRun node test.js",
         "test": "./index.sh shRun shReadmePackageJsonExport && \
-export npm_config_start_file=index.js && \
+export npm_config_file_start=index.js && \
 npm_config_mode_auto_restart=1 \
 npm_config_mode_auto_restart_child=1 \
 ./index.sh test test.js"
     },
-    "version": "2015.4.30-a"
+    "version": "2015.5.6-a"
 }
 ```
 
 
 
 # todo
+- add middlewareGzip
 - add testCase for validating _testSecret
 - create flamegraph from istanbul coverage
 - auto-generate help doc from README.md
@@ -423,11 +424,15 @@ npm_config_mode_auto_restart_child=1 \
 
 
 
-# change since 5b72f865
-- npm publish 2015.4.30-a
-- use Infinity instead of NaN as fallback for modeNext
-- fix statusCode error for "response" responseType
-- more revamping of node-ajax to closely model browser-ajax
+# change since 649d0a1b
+- npm publish 2015.5.6-a
+- fix xhr.abort() testCase race condition in testCase_ajax_default
+- add middlewareAssetsCached and centralize assets into local.utility2.cacheDict.assets
+- merge local.istanbul_lite and local.jslint_lite into local.utility2
+- remove -1 (Infinity) depth handling behavior for objectSet*
+- fix serverRespondTimeoutDefault
+- add shNodeVersionMinor
+- "utility2 start foo.js" command will auto-run foo.js
 - none
 
 
@@ -476,7 +481,7 @@ shBuild() {
     # run npm-test
     MODE_BUILD=npmTest shRunScreenCapture npm test || return $?
 
-    # do not continue if running legacy-node
+    # if running legacy-node, then do not continue
     [ "$(node --version)" \< "v0.12" ] && return
 
     # deploy app to heroku
@@ -502,9 +507,6 @@ shBuild
 # save exit-code
 EXIT_CODE=$?
 
-# do not continue if running legacy-node
-[ "$(node --version)" \< "v0.12" ] && exit $EXIT_CODE
-
 shBuildCleanup() {
     # this function will cleanup build-artifacts in local build dir
     # create package-listing
@@ -519,6 +521,9 @@ shBuildGithubUploadCleanup() {
     # this function will cleanup build-artifacts in local gh-pages repo
     return
 }
+
+# if running legacy-node, then do not continue
+[ "$(node --version)" \< "v0.12" ] && exit $EXIT_CODE
 
 # upload build-artifacts to github,
 # and if number of commits > 16, then squash older commits

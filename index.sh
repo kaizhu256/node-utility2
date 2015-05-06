@@ -28,7 +28,8 @@ shAesEncrypt() {
 shBuildGithubUpload() {
     # this function will upload build-artifacts to github
     local DIR || return $?
-    if [ ! "$CI_BRANCH" ] || [ ! "$GIT_SSH_KEY" ] || [ "$MODE_OFFLINE" ]
+    if [ ! "$CI_BRANCH" ] || [ "$CI_BRANCH" = undefined ] || \
+        [ ! "$GIT_SSH_KEY" ] || [ "$MODE_OFFLINE" ]
     then
         return
     fi
@@ -214,6 +215,50 @@ shGrepFileReplace() {
     " || return $?
 }
 
+shHerokuDeploy() {
+    # this function will deploy the app to $HEROKU_REPO
+    local HEROKU_REPO || return $?
+    HEROKU_REPO=$1 || return $?
+    if [ ! "$GIT_SSH_KEY" ]
+    then
+        return
+    fi
+    # init $TEST_SECRET
+    export TEST_SECRET=$(openssl rand -hex 32) || return $?
+    # init $HEROKU_HOSTNAME
+    export HEROKU_HOSTNAME=$HEROKU_REPO.herokuapp.com || return $?
+    shBuildPrint testHeroku "deploying to https://$HEROKU_HOSTNAME" || return $?
+    # init clean repo in /tmp/app
+    shTmpAppCopy && cd /tmp/app || return $?
+    # init .git
+    git init || return $?
+    # init .git/config
+    printf "\n[user]\nname=nobody\nemail=nobody\n" > .git/config || return $?
+    # init Procfile
+    node -e "
+        require('fs').writeFileSync(
+            'Procfile',
+            require('$npm_config_dir_utility2').stringFormat(
+                require('fs').readFileSync('Procfile', 'utf8'), process.env
+            )
+        );
+    " || return $?
+    # rm .gitignore so we can git add everything
+    rm -f .gitignore || return $?
+    # git add everything
+    git add . || return $?
+    # git commit
+    git commit -aqm "heroku deploy" || return $?
+    # git push app to heroku
+    git push -f git@heroku.com:$HEROKU_REPO.git HEAD:master || return $?
+    # wait 10 seconds for heroku to deploy app
+    sleep 10 || return $?
+    # verify deployed app's main-page returns status-code < 400
+    [ $(
+        curl -Ls -o /dev/null -w "%{http_code}" https://$HEROKU_HOSTNAME
+    ) -lt 400 ] || return $?
+}
+
 shInit() {
     # this function will init the env
     # init CI_*
@@ -319,6 +364,11 @@ shIstanbulTest() {
     else
         shIstanbulCover $@ || return $?
     fi
+}
+
+shNodeVersionMinor() {
+    # this function will print node version x.y with the patch z stripped
+    printf $(node -e "console.log((/\d+?\.\d+/).exec(process.version)[0])") || return $?
 }
 
 shNpmTest() {
@@ -451,6 +501,28 @@ shReadmeBuild() {
     MODE_BUILD=build shReadmeTestSh $npm_config_dir_tmp/build.sh || return $?
 }
 
+shReadmePackageJsonExport() {
+    # this function will export the package.json file embedded in README.md
+    # read and parse script from README.md
+    node -e "
+        require('fs').readFileSync('$CWD/README.md', 'utf8').replace(
+            (/\n\`\`\`\n{\n *\"_packageJson\": true,\n[\S\s]+?}\n\`\`\`/),
+            function (match0) {
+                // save script to file
+                require('fs').writeFileSync(
+                    '$CWD/package.json',
+                    match0
+                        .slice(5, -3)
+                        // remove '//' comment
+                        .replace((/^ *?\\/\\/.*?\n/gm), '')
+                        // parse '\' line-continuation
+                        .replace((/\\\\\n/g), '')
+                );
+            }
+        );
+    " || return $?
+}
+
 shReadmeTestJs() {
     # this function will test the js script $FILE in README.md
     local FILE || return $?
@@ -547,28 +619,6 @@ shReadmeTestSh() {
     " || return $?
     # test $FILE
     /bin/sh $FILE || return $?
-}
-
-shReadmePackageJsonExport() {
-    # this function will export the package.json file embedded in README.md
-    # read and parse script from README.md
-    node -e "
-        require('fs').readFileSync('$CWD/README.md', 'utf8').replace(
-            (/\n\`\`\`\n{\n *\"_packageJson\": true,\n[\S\s]+?}\n\`\`\`/),
-            function (match0) {
-                // save script to file
-                require('fs').writeFileSync(
-                    '$CWD/package.json',
-                    match0
-                        .slice(5, -3)
-                        // remove '//' comment
-                        .replace((/^ *?\\/\\/.*?\n/gm), '')
-                        // parse '\' line-continuation
-                        .replace((/\\\\\n/g), '')
-                );
-            }
-        );
-    " || return $?
 }
 
 shRun() {
@@ -735,50 +785,6 @@ shServerPortRandom() {
     printf $(($(hexdump -n 2 -e '/2 "%u"' /dev/urandom)|32768))
 }
 
-shHerokuDeploy() {
-    # this function will deploy the app to $HEROKU_REPO
-    local HEROKU_REPO || return $?
-    HEROKU_REPO=$1 || return $?
-    if [ ! "$GIT_SSH_KEY" ]
-    then
-        return
-    fi
-    # init $TEST_SECRET
-    export TEST_SECRET=$(openssl rand -hex 32) || return $?
-    # init $HEROKU_HOSTNAME
-    export HEROKU_HOSTNAME=$HEROKU_REPO.herokuapp.com || return $?
-    shBuildPrint testHeroku "deploying to https://$HEROKU_HOSTNAME" || return $?
-    # init clean repo in /tmp/app
-    shTmpAppCopy && cd /tmp/app || return $?
-    # init .git
-    git init || return $?
-    # init .git/config
-    printf "\n[user]\nname=nobody\nemail=nobody\n" > .git/config || return $?
-    # init Procfile
-    node -e "
-        require('fs').writeFileSync(
-            'Procfile',
-            require('$npm_config_dir_utility2').stringFormat(
-                require('fs').readFileSync('Procfile', 'utf8'), process.env
-            )
-        );
-    " || return $?
-    # rm .gitignore so we can git add everything
-    rm -f .gitignore || return $?
-    # git add everything
-    git add . || return $?
-    # git commit
-    git commit -aqm "heroku deploy" || return $?
-    # git push app to heroku
-    git push -f git@heroku.com:$HEROKU_REPO.git HEAD:master || return $?
-    # wait 10 seconds for heroku to deploy app
-    sleep 10 || return $?
-    # verify deployed app's main-page returns status-code < 400
-    [ $(
-        curl -Ls -o /dev/null -w "%{http_code}" https://$HEROKU_HOSTNAME
-    ) -lt 400 ] || return $?
-}
-
 shSlimerDetect() {
     # this function will auto-detect if slimerjs is installed and usable
     if [ ! "$npm_config_mode_no_slimerjs" ] &&
@@ -814,7 +820,7 @@ shTravisEncrypt() {
     # get public rsa key from https://api.travis-ci.org/repos/<owner>/<repo>/key
     curl -fLSs https://api.travis-ci.org/repos/$GITHUB_REPO/key > $npm_config_file_tmp || \
         return $?
-    perl -pi -e "s/[^-]+(.+-).+/\$1/; s/\\\\n/\n/g; s/ RSA / /g" $npm_config_file_tmp || \
+    perl -i -pe "s/[^-]+(.+-).+/\$1/; s/\\\\n/\n/g; s/ RSA / /g" $npm_config_file_tmp || \
         return $?
     # rsa-encrypt $SECRET and print it
     printf "$SECRET" | \
@@ -904,7 +910,7 @@ shMain() {
             [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE" || return $?
         done
         npm_config_dir_utility2="$( cd -P "$( dirname "$SOURCE" )" && pwd )" || return $?
-        npm_config_mode_auto_restart=1 shRun node -e "
+        npm_config_file_start=$1 npm_config_mode_auto_restart=1 shRun node -e "
             require('$npm_config_dir_utility2/test.js');
         " $@ || return $?
         ;;
