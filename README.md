@@ -94,10 +94,6 @@ instruction
         local.utility2 = typeof window === 'object'
             ? window.utility2
             : require('utility2');
-        // init istanbul_lite
-        local.istanbul_lite = local.utility2.local.istanbul_lite;
-        // init jslint_lite
-        local.jslint_lite = local.utility2.local.jslint_lite;
     }());
 
 
@@ -143,7 +139,7 @@ instruction
             });
         };
         // run test
-        local.utility2.testRun(local, local.utility2.nop);
+        local.utility2.testRun(local);
 
 
 
@@ -305,11 +301,15 @@ instruction
             }
         });
         local['/assets/istanbul-lite.js'] =
-            local.istanbul_lite['/assets/istanbul-lite.js'];
-        local['/assets/utility2.css'] = local.utility2['/assets/utility2.css'];
-        local['/assets/utility2.js'] = local.utility2['/assets/utility2.js'];
+            local.utility2.istanbul_lite['/assets/istanbul-lite.js'];
+        local['/assets/jslint-lite.js'] =
+            local.utility2.jslint_lite['/assets/jslint-lite.js'];
+        local['/assets/utility2.css'] =
+            local.utility2.cacheDict.assets['/assets/utility2.css'];
+        local['/assets/utility2.js'] =
+            local.utility2.cacheDict.assets['/assets/utility2.js'];
         local['/test/hello'] = 'hello';
-        local['/test/test.js'] = local.istanbul_lite.instrumentSync(
+        local['/test/test.js'] = local.utility2.istanbul_lite.instrumentSync(
             local.fs.readFileSync(__filename, 'utf8'),
             __filename
         );
@@ -324,6 +324,7 @@ instruction
                 // serve assets
                 case '/':
                 case '/assets/istanbul-lite.js':
+                case '/assets/jslint-lite.js':
                 case '/assets/utility2.css':
                 case '/assets/utility2.js':
                 case '/test/hello':
@@ -338,8 +339,8 @@ instruction
         ]);
         // init middleware error-handler
         local.onMiddlewareError = local.utility2.onMiddlewareError;
-        // start server and run tests
-        local.utility2.testRunServer(local, process.exit);
+        // run server-test
+        local.utility2.testRunServer(local);
     }
     return;
 }());
@@ -407,7 +408,7 @@ npm_config_mode_auto_restart=1 \
 npm_config_mode_auto_restart_child=1 \
 ./index.sh test test.js"
     },
-    "version": "2015.5.6-a"
+    "version": "2015.5.6-b"
 }
 ```
 
@@ -424,15 +425,9 @@ npm_config_mode_auto_restart_child=1 \
 
 
 
-# change since 649d0a1b
-- npm publish 2015.5.6-a
-- fix xhr.abort() testCase race condition in testCase_ajax_default
-- add middlewareAssetsCached and centralize assets into local.utility2.cacheDict.assets
-- merge local.istanbul_lite and local.jslint_lite into local.utility2
-- remove -1 (Infinity) depth handling behavior for objectSet*
-- fix serverRespondTimeoutDefault
-- add shNodeVersionMinor
-- "utility2 start foo.js" command will auto-run foo.js
+# change since c7b245ab
+- npm publish 2015.5.6-b
+- enforce jslint errors in shReadmeTestJs
 - none
 
 

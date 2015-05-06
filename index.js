@@ -434,6 +434,7 @@
                 task = local.utility2.taskRunOrSubscribeDict[options.key] = {};
                 task.callbackList = [];
                 task.onEnd = function () {
+                    // if already done, then do nothing
                     if (task.done) {
                         return;
                     }
@@ -1038,15 +1039,14 @@
                             'invalid errorStack ' + testCase.errorStack
                         );
                     }
-                    // if testCase already done, then do not run finish code again
+                    // if already done, then do nothing
                     if (done) {
                         return;
                     }
-                    // finish testCase
                     done = true;
                     // stop testCase timer
                     local._timeElapsedStop(testCase);
-                    // if all tests have done, then create test-report
+                    // if all tests are done, then create test-report
                     onTaskEnd();
                 };
                 // init timerTimeout
@@ -1195,13 +1195,13 @@
                 case 'abort':
                 case 'error':
                 case 'load':
-                    // cleanup timerTimeout
-                    clearTimeout(timerTimeout);
-                    // if already done, then ignore error
+                    // if already done, then do nothing
                     if (done) {
                         return;
                     }
                     done = true;
+                    // cleanup timerTimeout
+                    clearTimeout(timerTimeout);
                     // validate xhr is defined in _ajaxProgressList
                     ii = local._ajaxProgressList.indexOf(xhr);
                     local.utility2.assert(ii >= 0, 'missing xhr in _ajaxProgressList');
@@ -1444,7 +1444,7 @@
                     onNext();
                     break;
                 default:
-                    // if ajax already done, then do nothing
+                    // if already done, then do nothing
                     if (done) {
                         return;
                     }

@@ -18,127 +18,159 @@
             /*
                 this function will test ajax's default handling behavior
             */
-            var data, onTaskEnd;
-            onTaskEnd = local.utility2.onTaskEnd(function (error) {
-                local.utility2.testTryCatch(function () {
-                    // validate no error occurred
-                    local.utility2.assert(!error, error);
+            var data, done, modeNext, onNext, onTaskEnd;
+            modeNext = 0;
+            onNext = function (error) {
+                modeNext = error instanceof Error
+                    ? Infinity
+                    : modeNext + 1;
+                switch (modeNext) {
+                case 1:
+                    onTaskEnd = local.utility2.onTaskEnd(onNext);
+                    onTaskEnd.counter += 1;
+                    // test http GET handling behavior
+                    onTaskEnd.counter += 1;
+                    local.utility2.ajax({
+                        // test debug handling behavior
+                        debug: true,
+                        url: '/test/hello'
+                    }, function (error, xhr) {
+                        local.utility2.testTryCatch(function () {
+                            // validate no error occurred
+                            local.utility2.assert(!error, error);
+                            // validate data
+                            data = xhr.responseText;
+                            local.utility2.assert(data === 'hello', data);
+                            onTaskEnd();
+                        }, onTaskEnd);
+                    });
+                    // test http GET 304 cache handling behavior
+                    onTaskEnd.counter += 1;
+                    local.utility2.ajax({
+                        headers: {
+                            'If-Modified-Since': new Date(Date.now() + 0xffff).toGMTString()
+                        },
+                        url: '/test/hello'
+                    }, function (error, xhr) {
+                        local.utility2.testTryCatch(function () {
+                            // validate no error occurred
+                            local.utility2.assert(!error, error);
+                            // validate 304 http status
+                            local.utility2.assert(xhr.status === 304, xhr.status);
+                            onTaskEnd();
+                        }, onTaskEnd);
+                    });
+                    // test http POST handling behavior
+                    ['blob', 'response', 'text'].forEach(function (responseType) {
+                        onTaskEnd.counter += 1;
+                        local.utility2.ajax({
+                            data: responseType === 'blob' && local.modeJs === 'node'
+                                // test blob post handling behavior
+                                ? new Buffer('hello')
+                                // test string post handling behavior
+                                : 'hello',
+                            // test request header handling behavior
+                            headers: { 'X-Header-Test': 'Test' },
+                            method: 'POST',
+                            responseType: responseType,
+                            url: '/test/echo'
+                        }, function (error, xhr) {
+                            local.utility2.testTryCatch(function () {
+                                // validate no error occurred
+                                local.utility2.assert(!error, error);
+                                if (responseType === 'response') {
+                                    // cleanup response
+                                    local.utility2.requestResponseCleanup(null, xhr.response);
+                                    // validate response
+                                    data = xhr.response;
+                                    local.utility2.assert(data, data);
+                                    onTaskEnd();
+                                    return;
+                                }
+                                // validate responseText
+                                data = xhr.responseText;
+                                local.utility2.assert((/\r\nhello$/).test(data), data);
+                                // validate responseHeaders
+                                local.utility2.assert(
+                                    (/^X-Header-Test: Test\r\n/im).test(data),
+                                    data
+                                );
+                                data = xhr.getAllResponseHeaders();
+                                local.utility2.assert(
+                                    (/^X-Header-Test: Test\r\n/im).test(data),
+                                    data
+                                );
+                                data = xhr.getResponseHeader('x-header-test');
+                                local.utility2.assert(data === 'Test', data);
+                                data = xhr.getResponseHeader('x-header-undefined');
+                                local.utility2.assert(data === null, data);
+                                // validate statusCode
+                                local.utility2.assert(xhr.statusCode === 200, xhr.statusCode);
+                                onTaskEnd();
+                            }, onTaskEnd);
+                        });
+                    });
+                    onTaskEnd();
+                    break;
+                case 2:
+                    onTaskEnd.counter += 1;
+                    [{
+                        // test 404-not-found-error handling behavior
+                        url: '/test/error-400?modeErrorIgnore=1'
+                    }, {
+                        // test 500-internal-server-error handling behavior
+                        url: '/test/error-500?modeErrorIgnore=1'
+                    }, {
+                        // test undefined-error handling behavior
+                        url: '/test/error-undefined?modeErrorIgnore=1'
+                    }, {
+                        // test timeout handling behavior
+                        timeout: 1,
+                        url: '/test/timeout'
+                    }, {
+                        // test undefined https host handling behavior
+                        timeout: 1,
+                        url: 'https://' + local.utility2.uuidTime() + '.com'
+                    }].forEach(function (options) {
+                        onTaskEnd.counter += 1;
+                        local.utility2.ajax(options, function (error) {
+                            local.utility2.testTryCatch(function () {
+                                // validate error occurred
+                                local.utility2.assert(error instanceof Error, error);
+                                onTaskEnd();
+                            }, onTaskEnd);
+                        });
+                    });
+                    onTaskEnd();
+                    break;
+                case 3:
                     // test xhr.abort handling behavior
                     data = local.utility2.ajax({ url: '/test/timeout' }, function (error) {
                         local.utility2.testTryCatch(function () {
                             // validate error occurred
                             local.utility2.assert(error instanceof Error, error);
-                            onError();
-                        }, onError);
+                            onNext();
+                        }, onNext);
                     });
                     data.abort();
                     // test multiple-callback handling behavior
                     data.abort();
-                }, onError);
-            });
-            onTaskEnd.counter += 1;
-            // test http GET handling behavior
-            onTaskEnd.counter += 1;
-            local.utility2.ajax({
-                // test debug handling behavior
-                debug: true,
-                url: '/test/hello'
-            }, function (error, xhr) {
-                local.utility2.testTryCatch(function () {
-                    // validate no error occurred
-                    local.utility2.assert(!error, error);
-                    // validate data
-                    data = xhr.responseText;
-                    local.utility2.assert(data === 'hello', data);
-                    onTaskEnd();
-                }, onTaskEnd);
-            });
-            // test http GET 304 cache handling behavior
-            onTaskEnd.counter += 1;
-            local.utility2.ajax({
-                headers: { 'If-Modified-Since': new Date(Date.now() + 0xffff).toGMTString() },
-                url: '/test/hello'
-            }, function (error, xhr) {
-                local.utility2.testTryCatch(function () {
-                    // validate no error occurred
-                    local.utility2.assert(!error, error);
-                    // validate 304 http status
-                    local.utility2.assert(xhr.status === 304, xhr.status);
-                    onTaskEnd();
-                }, onTaskEnd);
-            });
-            // test http POST handling behavior
-            ['blob', 'response', 'text'].forEach(function (responseType) {
-                onTaskEnd.counter += 1;
-                local.utility2.ajax({
-                    data: responseType === 'blob' && local.modeJs === 'node'
-                        // test blob post handling behavior
-                        ? new Buffer('hello')
-                        // test string post handling behavior
-                        : 'hello',
-                    // test request header handling behavior
-                    headers: { 'X-Header-Test': 'Test' },
-                    method: 'POST',
-                    responseType: responseType,
-                    url: '/test/echo'
-                }, function (error, xhr) {
-                    local.utility2.testTryCatch(function () {
+                    break;
+                default:
+                    // if already done, then do nothing
+                    if (!done) {
+                        done = true;
                         // validate no error occurred
-                        local.utility2.assert(!error, error);
-                        if (responseType === 'response') {
-                            // cleanup response
-                            local.utility2.requestResponseCleanup(null, xhr.response);
-                            // validate response
-                            data = xhr.response;
-                            local.utility2.assert(data, data);
-                            onTaskEnd();
-                            return;
-                        }
-                        // validate responseText
-                        data = xhr.responseText;
-                        local.utility2.assert((/\r\nhello$/).test(data), data);
-                        // validate responseHeaders
-                        local.utility2.assert((/^X-Header-Test: Test\r\n/im).test(data), data);
-                        data = xhr.getAllResponseHeaders();
-                        local.utility2.assert((/^X-Header-Test: Test\r\n/im).test(data), data);
-                        data = xhr.getResponseHeader('x-header-test');
-                        local.utility2.assert(data === 'Test', data);
-                        data = xhr.getResponseHeader('x-header-undefined');
-                        local.utility2.assert(data === null, data);
-                        // validate statusCode
-                        local.utility2.assert(xhr.statusCode === 200, xhr.statusCode);
-                        onTaskEnd();
-                    }, onTaskEnd);
-                });
-            });
-            [{
-                // test 404-not-found-error handling behavior
-                url: '/test/error-400?modeErrorIgnore=1'
-            }, {
-                // test 500-internal-server-error handling behavior
-                url: '/test/error-500?modeErrorIgnore=1'
-            }, {
-                // test undefined-error handling behavior
-                url: '/test/error-undefined?modeErrorIgnore=1'
-            }, {
-                // test timeout handling behavior
-                timeout: 1,
-                url: '/test/timeout'
-            }, {
-                // test undefined https host handling behavior
-                timeout: 1,
-                url: 'https://' + local.utility2.uuidTime() + '.com'
-            }].forEach(function (options) {
-                onTaskEnd.counter += 1;
-                local.utility2.ajax(options, function (error) {
-                    local.utility2.testTryCatch(function () {
-                        // validate error occurred
-                        local.utility2.assert(error instanceof Error, error);
-                        onTaskEnd();
-                    }, onTaskEnd);
-                });
-            });
-            onTaskEnd();
+                        onError(error);
+                        // test error handling behavior
+                        onNext(local.utility2.errorDefault);
+                    }
+                }
+            };
+            onNext();
+
+
+
         };
 
         local.testCase_assert_default = function (onError) {
@@ -1037,11 +1069,13 @@
                     });
                     break;
                 default:
+                    // if already done, then do nothing
                     if (!done) {
                         done = true;
+                        // validate no error occurred
+                        onError(error);
                         // test error handling behavior
                         onNext(local.utility2.errorDefault);
-                        onError(error);
                     }
                 }
             };

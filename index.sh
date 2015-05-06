@@ -553,18 +553,10 @@ shReadmeTestJs() {
         );
     " || return $?
     # jslint $FILE
-    if [ ! "$npm_config_mode_no_jslint" ]
+    if [ ! "$MODE_OFFLINE" ] && [ ! "$npm_config_mode_no_jslint" ]
     then
-        SCRIPT="npm install jslint-lite > /dev/null && node_modules/.bin/jslint-lite $FILE" || \
-            return $?
+        npm install jslint-lite && node_modules/.bin/jslint-lite $FILE || return $?
     fi
-    if [ "$MODE_OFFLINE" ]
-    then
-        SCRIPT=$(node -e "
-            console.log('$SCRIPT'.replace('npm install', 'echo'));
-        ") || return $?
-    fi
-    eval "$SCRIPT" || :
     # test $FILE
     SCRIPT=$(node -e "
         console.log(
