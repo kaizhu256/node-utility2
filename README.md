@@ -408,7 +408,7 @@ npm_config_mode_auto_restart=1 \
 npm_config_mode_auto_restart_child=1 \
 ./index.sh test test.js"
     },
-    "version": "2015.5.6-b"
+    "version": "2015.5.6-c"
 }
 ```
 
@@ -426,6 +426,7 @@ npm_config_mode_auto_restart_child=1 \
 
 
 # change since 55132ce9
+- npm publish 2015.5.6-c
 - set main-page content-type to text/html in middlewareInit
 - none
 
