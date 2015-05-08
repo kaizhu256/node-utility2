@@ -1,5 +1,7 @@
 utility2 [![NPM](https://img.shields.io/npm/v/utility2.svg?style=flat-square)](https://www.npmjs.com/package/utility2)
 ========
+
+[![Join the chat at https://gitter.im/kaizhu256/node-utility2](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/kaizhu256/node-utility2?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
 
 
