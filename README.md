@@ -1,8 +1,8 @@
-utility2 [![NPM](https://img.shields.io/npm/v/utility2.svg?style=flat-square)](https://www.npmjs.com/package/utility2) [![Join the chat at https://gitter.im/kaizhu256/node-utility2](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/kaizhu256/node-utility2?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+utility2
 ========
-
-[![Join the chat at https://gitter.im/kaizhu256/node-utility2](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/kaizhu256/node-utility2?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
+
+[![NPM](https://img.shields.io/npm/v/utility2.svg?style=flat-square)](https://www.npmjs.com/package/utility2) [![Join the chat at https://gitter.im/kaizhu256/node-utility2](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/kaizhu256/node-utility2?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 
 
@@ -430,7 +430,7 @@ npm_config_mode_auto_restart=1 \
 npm_config_mode_auto_restart_child=1 \
 ./index.sh test test.js"
     },
-    "version": "2015.5.6-d"
+    "version": "2015.5.6-e"
 }
 ```
 
@@ -447,12 +447,9 @@ npm_config_mode_auto_restart_child=1 \
 
 
 
-# change since b09b39d9
-- npm publish 2015.5.6-d
+# change since 3aed95bd
+- npm publish 2015.5.6-e
 - add gitter integration to README.md
-- fix $npm_config_dir_tmp/covered.utility2.js read/write race condition
-- fix $npm_config_timeout_exit build bug
-- reverse order to alpha => beta => master in build table
 - none
 
 
