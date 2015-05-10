@@ -53,7 +53,7 @@ shBuildGithubUpload() {
     git commit -am "[skip ci] update gh-pages" || return $?
     git push origin gh-pages || return $?
     # if number of commits > $COMMIT_LIMIT, then squash HEAD to the earliest commit
-    shGitBackupAndSquashAndPush $COMMIT_LIMIT > /dev/null || return $?
+    shGitBackupAndSquashAndPush $COMMIT_LIMIT || return $?
 }
 
 shBuildPrint() {
@@ -152,8 +152,8 @@ shGitSquashShift() {
     RANGE=$1 || return $?
     git checkout -q HEAD~$RANGE || return $?
     git reset -q $(git rev-list --max-parents=0 HEAD) || return $?
-    git add . > /dev/null || return $?
-    git commit -m squash || return $?
+    git add . || return $?
+    git commit -m squash || :
     git cherry-pick -X theirs --allow-empty --strategy=recursive $BRANCH~$RANGE..$BRANCH || \
         return $?
     git push -f . HEAD:$BRANCH || return $?
@@ -188,7 +188,7 @@ shGrep() {
     find "$DIR" -type f | \
         grep -v "$FILE_FILTER" | \
         tr "\n" "\000" | \
-        xargs -0 grep -in "$REGEXP" || return $?
+        xargs -0 grep -Iine "$REGEXP" || :
 }
 
 shGrepFileReplace() {
@@ -319,7 +319,6 @@ shInit() {
     export npm_config_dir_build=$CWD/tmp/build || return $?
     export npm_config_dir_tmp=$CWD/tmp || return $?
     export npm_config_file_tmp=$CWD/tmp/tmpfile || return $?
-    export npm_config_timeout_exit=$npm_config_timeout_exit || return $?
     # init $npm_config_dir_utility2
     if [ "$npm_package_name" = utility2 ]
     then
@@ -902,7 +901,9 @@ shMain() {
             [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE" || return $?
         done
         npm_config_dir_utility2="$( cd -P "$( dirname "$SOURCE" )" && pwd )" || return $?
-        npm_config_file_start=$1 npm_config_mode_auto_restart=1 shRun node -e "
+        npm_config_file_start=$1 \
+        npm_config_mode_auto_restart=1 \
+        shRun node -e "
             require('$npm_config_dir_utility2/test.js');
         " $@ || return $?
         ;;

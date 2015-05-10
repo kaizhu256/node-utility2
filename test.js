@@ -1152,7 +1152,7 @@
 
     // run browser js-env code
     case 'browser':
-        // init onErorExit
+        // init onErrorExit
         local.utility2.onErrorExit = function () {
             // test modeTest !== 'phantom' handling behavior
             if (local.utility2.modeTest === 'phantom2') {
@@ -1176,26 +1176,26 @@
 
     // run node js-env code
     case 'node':
-        // require modules
-        local.child_process = require('child_process');
-        local.fs = require('fs');
-        local.http = require('http');
-        local.https = require('https');
-        local.path = require('path');
-        local.url = require('url');
-        local.vm = require('vm');
-        local.zlib = require('zlib');
         // init assets
         local.utility2.cacheDict.assets['/'] =
-            local.utility2.cacheDict.assets['/test/test.html'];
+            local.utility2.cacheDict.assets['/test/test.html'] =
+            local.utility2.stringFormat(local.fs
+                .readFileSync(__dirname + '/README.md', 'utf8')
+                // extract html
+                .replace((/[\S\s]+?(<!DOCTYPE html>[\S\s]+?<\/html>)[\S\s]+/), '$1')
+                // parse '\' line-continuation
+                .replace((/\\\n/g), '')
+                // remove "\\n' +" and "'"
+                .replace((/\\n' \+(\s*?)'/g), '$1'), { envDict: local.utility2.envDict }, '');
         local.utility2.cacheDict.assets['/test/hello'] = 'hello';
         local.utility2.cacheDict.assets['/test/script-error.html'] =
             '<script>syntax error</script>';
         local.utility2.cacheDict.assets['/test/script-only.html'] =
+            '<h1>script-only test</h1>\n' +
             '<script src="/assets/utility2.js">\n' +
             '</script><script src="/test/test.js"></script>';
-        local.utility2.cacheDict.assets['/test/test.js'] = local.utility2.istanbul_lite
-            .instrumentInPackage(
+        local.utility2.cacheDict.assets['/test/test.js'] =
+            local.utility2.istanbul_lite.instrumentInPackage(
                 local.fs.readFileSync(__filename, 'utf8'),
                 __filename,
                 'utility2'
@@ -1266,25 +1266,32 @@
         local.onMiddlewareError = local.utility2.onMiddlewareError;
         // run server-test
         local.utility2.testRunServer(local);
-        // init dir
-        local.fs.readdirSync(process.cwd()).forEach(function (file) {
-            file = process.cwd() + '/' + file;
-            // if the file is modified, then restart the process
-            local.utility2.onFileModifiedRestart(file);
-            switch (local.path.extname(file)) {
-            case '.js':
-            case '.json':
-                // jslint the file
-                local.utility2.jslint_lite
-                    .jslintAndPrint(local.fs.readFileSync(file, 'utf8'), file);
-                break;
-            }
+        // jslint dir
+        [
+            __dirname
+        ].forEach(function (dir) {
+            local.fs.readdirSync(dir).forEach(function (file) {
+                file = dir + '/' + file;
+                // if the file is modified, then restart the process
+                local.utility2.onFileModifiedRestart(file);
+                switch (local.path.extname(file)) {
+                case '.js':
+                case '.json':
+                    // jslint file
+                    local.utility2.jslint_lite
+                        .jslintAndPrint(local.fs.readFileSync(file, 'utf8'), file);
+                    break;
+                }
+            });
         });
-        // jslint /assets/utility2.css
-        local.utility2.jslint_lite.jslintAndPrint(
-            local.utility2.cacheDict.assets['/assets/utility2.css'],
+        // jslint assets
+        [
             '/assets/utility2.css'
-        );
+        ].forEach(function (file) {
+            // jslint file
+            local.utility2.jslint_lite
+                .jslintAndPrint(local.utility2.cacheDict.assets[file], file);
+        });
         // init repl debugger
         local.utility2.replStart();
         // init $npm_config_file_start
@@ -1331,6 +1338,10 @@
         local.utility2 = local.modeJs === 'browser'
             ? window.utility2
             : require('./index.js');
+        // import utility2.local
+        Object.keys(local.utility2.local).forEach(function (key) {
+            local[key] = local[key] || local.utility2.local[key];
+        });
     }());
     return local;
 }())));

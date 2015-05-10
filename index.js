@@ -202,7 +202,7 @@
 
         local.utility2.objectSetOverride = function (options, override, depth) {
             /*
-                this function will recursively override the options object
+                this function will recursively override the options object,
                 with the override object
             */
             var options2, override2;
@@ -260,7 +260,7 @@
         local.utility2.onErrorWithStack = function (onError) {
             /*
                 this function will return a new callback that calls onError,
-                will the caller-stack appended to any errors
+                and append the current stack to any error
             */
             var errorStack;
             try {
@@ -285,7 +285,7 @@
         local.utility2.onTaskEnd = function (onError, onDebug) {
             /*
                 this function will return a function that will
-                1. runs async tasks in parallel,
+                1. runs async tasks in parallel
                 2. if counter === 0 or error occurs, then call onError
             */
             var self;
@@ -340,7 +340,7 @@
         local.utility2.onTimeout = function (onError, timeout, message) {
             /*
                 this function will create a timeout-error-handler,
-                that will append the caller-stack to any errors
+                that will append the current stack to any error
             */
             onError = local.utility2.onErrorWithStack(onError);
             // create timeout timer
@@ -420,7 +420,7 @@
         local.utility2.taskRunOrSubscribe = function (options, onError) {
             /*
                 this function will
-                1. if it is undefined, create a task with the given options.key
+                1. if task is undefined, create new task with the given options.key
                 2. subscribe onError to the task
                 3. run task.onTask with timeout-error-handler, and cleanup task when finished
             */
@@ -428,7 +428,7 @@
             // init taskRunOrSubscribeDict
             local.utility2.taskRunOrSubscribeDict =
                 local.utility2.taskRunOrSubscribeDict || {};
-            // 1. if it is undefined, create a task with the given options.key
+            // 1. if task is undefined, create new task with the given options.key
             task = local.utility2.taskRunOrSubscribeDict[options.key];
             if (!task) {
                 task = local.utility2.taskRunOrSubscribeDict[options.key] = {};
@@ -572,8 +572,7 @@
 
         local.utility2.testMock = function (mockList, onTestCase, onError) {
             /*
-                this function will mock the objects in mockList
-                while running the onTestCase
+                this function will mock the objects in mockList while running the onTestCase
             */
             var onError2;
             onError2 = function (error) {
@@ -737,7 +736,7 @@
                 local._timeElapsedStop(testReport);
             }
             // 2. return testReport1 in html-format
-            // json-copy testReport, which will be modified for html templating
+            // json-copy testReport that will be modified for html templating
             testReport = local.utility2.jsonCopy(testReport1);
             // update timeElapsed
             local._timeElapsedStop(testReport);
@@ -1532,7 +1531,7 @@
 
         local.utility2.middlewareGroupCreate = function (middlewareList) {
             /*
-               this function will return a super-middleware
+               this function will return a super-middleware,
                that will sequentially run the sub-middlewares in middlewareList
             */
             var self;
@@ -1686,7 +1685,7 @@
 
         local.utility2.phantomScreenCapture = function (options, onError) {
             /*
-                this function will spawn both phantomjs and slimerjs processes
+                this function will spawn both phantomjs and slimerjs processes,
                 to screen-capture options.url
             */
             local.utility2.phantomTest(local.utility2.objectSetDefault(options, {
@@ -1697,7 +1696,7 @@
 
         local.utility2.phantomTest = function (options, onError) {
             /*
-                this function will spawn both phantomjs and slimerjs processes
+                this function will spawn both phantomjs and slimerjs processes,
                 to test options.url
             */
             var onTaskEnd;
@@ -1727,7 +1726,7 @@
 
         local._phantomTestSingle = function (options, onError) {
             /*
-                this function will spawn a single phantomjs or slimerjs process
+                this function will spawn a single phantomjs or slimerjs process,
                 to test options.url
             */
             var modeNext, onNext, onTaskEnd, timerTimeout;
@@ -1766,10 +1765,13 @@
                             local.utility2.envDict.npm_package_name === 'utility2') {
                         options.argv1 = local.utility2.envDict.npm_config_dir_tmp +
                             '/covered.utility2.js';
-                        local.fs.writeFileSync(
-                            options.argv1,
-                            local.utility2.cacheDict.assets['/assets/utility2.js']
-                        );
+                        if (!local.utility2.modePhantomCovered) {
+                            local.utility2.modePhantomCovered = true;
+                            local.fs.writeFileSync(
+                                options.argv1,
+                                local.utility2.cacheDict.assets['/assets/utility2.js']
+                            );
+                        }
                     }
                     // spawn phantomjs to test a url
                     local.utility2
@@ -1875,7 +1877,7 @@
             local._replServer = require('repl').start({ useGlobal: true });
             local._replServer.onError = function (error) {
                 /*
-                    this function will debug repl errors
+                    this function will debug any repl-error
                 */
                 local._debugReplError = error || local._debugReplError;
             };
@@ -1921,7 +1923,8 @@
                             console.log('exit-code ' + exitCode);
                             local._replServer.evalDefault('\n', context, file, onError2);
                         });
-                    return;
+                    script = '\n';
+                    break;
                 // syntax sugar to grep current dir
                 case 'grep':
                     // run async shell command
@@ -1952,7 +1955,8 @@
                             console.log('exit-code ' + exitCode);
                             local._replServer.evalDefault('\n', context, file, onError2);
                         });
-                    return;
+                    script = '\n';
+                    break;
                 // syntax sugar to print stringified arg
                 case 'print':
                     script = 'console.log(String(' + match[2] + '))\n';
@@ -2292,25 +2296,12 @@
             local.utility2.istanbul_lite['/assets/istanbul-lite.js'];
         local.utility2.cacheDict.assets['/assets/jslint-lite.js'] =
             local.utility2.jslint_lite['/assets/jslint-lite.js'];
-        local.utility2.cacheDict.assets['/assets/utility2.js'] = local.fs
-            .readFileSync(__filename, 'utf8');
         local.utility2.cacheDict.assets['/assets/utility2.js'] = local.utility2.istanbul_lite
             .instrumentInPackage(
                 local.fs.readFileSync(__filename, 'utf8'),
                 __filename,
                 'utility2'
             );
-        local.utility2.cacheDict.assets['/test/test.html'] = local.utility2.stringFormat(
-            local.fs
-                .readFileSync(__dirname + '/README.md', 'utf8')
-                .replace((/[\S\s]+?(<!DOCTYPE html>[\S\s]+?<\/html>)[\S\s]+/), '$1')
-                // parse '\' line-continuation
-                .replace((/\\\n/g), '')
-                // remove "\\n' +" and "'"
-                .replace((/\\n' \+(\s*?)'/g), '$1'),
-            { envDict: local.utility2.envDict },
-            ''
-        );
         break;
 
 

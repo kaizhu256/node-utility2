@@ -1,4 +1,4 @@
-utility2 [![NPM](https://img.shields.io/npm/v/utility2.svg?style=flat-square)](https://www.npmjs.com/package/utility2)
+utility2 [![NPM](https://img.shields.io/npm/v/utility2.svg?style=flat-square)](https://www.npmjs.com/package/utility2) [![Join the chat at https://gitter.im/kaizhu256/node-utility2](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/kaizhu256/node-utility2?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 ========
 run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
 
@@ -13,16 +13,30 @@ run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
 
 [![build commit status](https://kaizhu256.github.io/node-utility2/build/build.badge.svg)](https://travis-ci.org/kaizhu256/node-utility2)
 
-| git-branch | [master](https://github.com/kaizhu256/node-utility2/tree/master) | [beta](https://github.com/kaizhu256/node-utility2/tree/beta) | [alpha](https://github.com/kaizhu256/node-utility2/tree/alpha)|
-|:--|:--|:--|:--|
-| test-server | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://hrku01-utility2-master.herokuapp.com) | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://hrku01-utility2-beta.herokuapp.com) | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://hrku01-utility2-alpha.herokuapp.com)|
-| test-report | [![test-report](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/test-report.html) | [![test-report](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/test-report.html) | [![test-report](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/test-report.html)|
-| coverage | [![istanbul-lite coverage](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/coverage.html/node-utility2/index.html) | [![istanbul-lite coverage](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/coverage.html/node-utility2/index.html) | [![istanbul-lite coverage](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/coverage.html/node-utility2/index.html)|
-| build-artifacts | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..master..travis-ci.org) | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..beta..travis-ci.org) | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..alpha..travis-ci.org)|
+| git-branch : | [alpha](https://github.com/kaizhu256/node-utility2/tree/alpha) | [beta](https://github.com/kaizhu256/node-utility2/tree/beta) | [master](https://github.com/kaizhu256/node-utility2/tree/master)|
+|--:|:--|:--|:--|
+| test-server : | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://hrku01-utility2-alpha.herokuapp.com) | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://hrku01-utility2-beta.herokuapp.com) | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://hrku01-utility2-master.herokuapp.com)|
+| test-report : | [![test-report](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/test-report.html) | [![test-report](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/test-report.html) | [![test-report](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/test-report.html)|
+| coverage : | [![istanbul-lite coverage](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/coverage.html/node-utility2/index.html) | [![istanbul-lite coverage](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/coverage.html/node-utility2/index.html) | [![istanbul-lite coverage](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/coverage.html/node-utility2/index.html)|
+| build-artifacts : | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..alpha..travis-ci.org) | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..beta..travis-ci.org) | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..master..travis-ci.org)|
+
+#### alpha branch
+- unstable repo
+- commit may be arbitrary
+- commit may be squashed
+
+#### beta branch
+- stable repo
+- commit should be latest npm-published package
+
+#### master branch
+- stable repo
+- commit should be tagged npm-published package
 
 
 
 # quickstart interactive example
+
 #### to run this example, follow the instruction in the script below
 ```
 # example.sh
@@ -45,14 +59,17 @@ shExampleSh() {
 }
 shExampleSh
 ```
+
 #### output from shell
 [![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleSh.png)](https://travis-ci.org/kaizhu256/node-utility2)
+
 #### output from phantomjs-lite
 [![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleSh.slimerjs..png)](https://hrku01-utility2-beta.herokuapp.com)
 
 
 
 # quickstart node example
+
 #### to run this example, follow the instruction in the script below
 ```
 /*
@@ -345,10 +362,13 @@ instruction
     return;
 }());
 ```
+
 #### output from shell
 [![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleJs.png)](https://travis-ci.org/kaizhu256/node-utility2)
+
 #### output from utility2
 [![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleSh.slimerjs._2Ftmp_2Fapp_2Ftmp_2Fbuild_2Ftest-report.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/test-report.html)
+
 #### output from istanbul-lite
 [![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleJs.slimerjs._2Ftmp_2Fapp_2Ftmp_2Fbuild_2Fcoverage.html_2Fapp_2Fexample.js.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/coverage.html/node-utility2/index.js.html)
 
@@ -372,8 +392,8 @@ instruction
     "author": "kai zhu <kaizhu256@gmail.com>",
     "bin": { "utility2" : "index.sh" },
     "dependencies": {
-        "istanbul-lite": "2015.4.26-c",
-        "jslint-lite": "2015.4.26-c"
+        "istanbul-lite": "2015.5.6-a",
+        "jslint-lite": "2015.5.6-a"
     },
     "description": "run dynamic browser tests with coverage \
 (via istanbul-lite and phantomjs-lite)",
@@ -383,10 +403,10 @@ instruction
     "engines": { "node": ">=0.10 <=0.12" },
     "keywords": [
         "browser", "build",
-        "ci", "code", "cover", "coverage", "csslint",
+        "ci", "code", "continuous-integration", "cover", "coverage",
+        "headless", "headless-browser",
         "instrument", "istanbul",
-        "jscoverage", "jslint",
-        "lint",
+        "jscover", "jscoverage",
         "phantom", "phantomjs",
         "slimer", "slimerjs",
         "test", "travis", "travis-ci",
@@ -408,7 +428,7 @@ npm_config_mode_auto_restart=1 \
 npm_config_mode_auto_restart_child=1 \
 ./index.sh test test.js"
     },
-    "version": "2015.5.6-c"
+    "version": "2015.5.6-d"
 }
 ```
 
@@ -425,9 +445,12 @@ npm_config_mode_auto_restart_child=1 \
 
 
 
-# change since 55132ce9
-- npm publish 2015.5.6-c
-- set main-page content-type to text/html in middlewareInit
+# change since b09b39d9
+- npm publish 2015.5.6-d
+- add gitter integration to README.md
+- fix $npm_config_dir_tmp/covered.utility2.js read/write race condition
+- fix $npm_config_timeout_exit build bug
+- reverse order to alpha => beta => master in build table
 - none
 
 
@@ -466,9 +489,10 @@ shBuild() {
         /tmp/app/tmp/build/test-report.html || return $?
 
     # test example shell script
+    export npm_config_timeout_exit=1000 || return $?
     MODE_BUILD=testExampleSh \
-        npm_config_timeout_exit=1000 \
         shRunScreenCapture shReadmeTestSh example.sh || return $?
+    unset npm_config_timeout_exit || return $?
     # save screen-capture
     cp /tmp/app/node_modules/utility2/tmp/build/screen-capture.*.png \
         $npm_config_dir_build || return $?

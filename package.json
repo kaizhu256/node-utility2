@@ -3,8 +3,8 @@
     "author": "kai zhu <kaizhu256@gmail.com>",
     "bin": { "utility2" : "index.sh" },
     "dependencies": {
-        "istanbul-lite": "2015.4.26-c",
-        "jslint-lite": "2015.4.26-c"
+        "istanbul-lite": "2015.5.6-a",
+        "jslint-lite": "2015.5.6-a"
     },
     "description": "run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)",
     "devDependencies": {
@@ -13,10 +13,10 @@
     "engines": { "node": ">=0.10 <=0.12" },
     "keywords": [
         "browser", "build",
-        "ci", "code", "cover", "coverage", "csslint",
+        "ci", "code", "continuous-integration", "cover", "coverage",
+        "headless", "headless-browser",
         "instrument", "istanbul",
-        "jscoverage", "jslint",
-        "lint",
+        "jscover", "jscoverage",
         "phantom", "phantomjs",
         "slimer", "slimerjs",
         "test", "travis", "travis-ci",
@@ -34,5 +34,5 @@
         "start": "npm_config_mode_auto_restart=1 ./index.sh shRun node test.js",
         "test": "./index.sh shRun shReadmePackageJsonExport && export npm_config_file_start=index.js && npm_config_mode_auto_restart=1 npm_config_mode_auto_restart_child=1 ./index.sh test test.js"
     },
-    "version": "2015.5.6-c"
+    "version": "2015.5.6-d"
 }
