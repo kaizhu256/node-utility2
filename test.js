@@ -21,7 +21,7 @@
             var data, done, modeNext, onNext, onTaskEnd;
             modeNext = 0;
             onNext = function (error) {
-                modeNext = error instanceof Error
+                modeNext = error
                     ? Infinity
                     : modeNext + 1;
                 switch (modeNext) {
@@ -136,7 +136,7 @@
                         local.utility2.ajax(options, function (error) {
                             local.utility2.testTryCatch(function () {
                                 // validate error occurred
-                                local.utility2.assert(error instanceof Error, error);
+                                local.utility2.assert(error, error);
                                 onTaskEnd();
                             }, onTaskEnd);
                         });
@@ -148,7 +148,7 @@
                     data = local.utility2.ajax({ url: '/test/timeout' }, function (error) {
                         local.utility2.testTryCatch(function () {
                             // validate error occurred
-                            local.utility2.assert(error instanceof Error, error);
+                            local.utility2.assert(error, error);
                             onNext();
                         }, onNext);
                     });
@@ -184,7 +184,7 @@
                 local.utility2.assert(false);
             }, function (error) {
                 // validate error occurred
-                local.utility2.assert(error instanceof Error, error);
+                local.utility2.assert(error, error);
                 // validate error-message
                 local.utility2.assert(error.message === '', error.message);
             });
@@ -193,7 +193,7 @@
                 local.utility2.assert(false, 'hello');
             }, function (error) {
                 // validate error occurred
-                local.utility2.assert(error instanceof Error, error);
+                local.utility2.assert(error, error);
                 // validate error-message
                 local.utility2.assert(error.message === 'hello', error.message);
             });
@@ -202,14 +202,14 @@
                 local.utility2.assert(false, local.utility2.errorDefault);
             }, function (error) {
                 // validate error occurred
-                local.utility2.assert(error instanceof Error, error);
+                local.utility2.assert(error, error);
             });
             // test assertion failed with json object
             local.utility2.testTryCatch(function () {
                 local.utility2.assert(false, { aa: 1 });
             }, function (error) {
                 // validate error occurred
-                local.utility2.assert(error instanceof Error, error);
+                local.utility2.assert(error, error);
                 // validate error-message
                 local.utility2.assert(error.message === '{"aa":1}', error.message);
             });
@@ -398,11 +398,13 @@
             */
             var data;
             data = { aa: null, bb: 2, cc: { dd: 4, ee: [5, 6, 7] } };
+            // test circular-reference handling behavior
+            data.data = data;
             local.utility2.objectTraverse(data, function (element) {
                 if (element && typeof element === 'object' && !Array.isArray(element)) {
                     element.zz = true;
                 }
-            }, Infinity);
+            });
             // validate data
             data = local.utility2.jsonStringifyOrdered(data);
             local.utility2.assert(
@@ -453,13 +455,13 @@
             // test parse failed handling behavior
             jsonParse(null, 'syntax error');
             // validate no error occurred
-            local.utility2.assert(error instanceof Error, error);
+            local.utility2.assert(error, error);
             // validate data
             local.utility2.assert(!data, data);
             // test error handling behavior
             jsonParse(new Error());
             // validate no error occurred
-            local.utility2.assert(error instanceof Error, error);
+            local.utility2.assert(error, error);
             // validate data
             local.utility2.assert(!data, data);
             onError();
@@ -486,7 +488,7 @@
                 onTaskEndError = local.utility2.onTaskEnd(function (error) {
                     local.utility2.testTryCatch(function () {
                         // validate error occurred
-                        local.utility2.assert(error instanceof Error, error);
+                        local.utility2.assert(error, error);
                         onTaskEnd();
                     }, onTaskEnd);
                 });
@@ -510,7 +512,7 @@
             local.utility2.onTimeout(function (error) {
                 local.utility2.testTryCatch(function () {
                     // validate error occurred
-                    local.utility2.assert(error instanceof Error, error);
+                    local.utility2.assert(error, error);
                     // save timeElapsed
                     timeElapsed = Date.now() - timeElapsed;
                     // validate timeElapsed passed is greater than timeout
@@ -670,7 +672,7 @@
                         break;
                     case 7:
                         // validate error occurred
-                        local.utility2.assert(error instanceof Error, error);
+                        local.utility2.assert(error, error);
                         onNext();
                         break;
                     case 8:
@@ -799,7 +801,7 @@
                     local.utility2.testTryCatch(function () {
                         // validate error occurred
                         if (options.modeError) {
-                            local.utility2.assert(error instanceof Error, error);
+                            local.utility2.assert(error, error);
                         // validate no error occurred
                         } else {
                             local.utility2.assert(!error, error);
@@ -998,7 +1000,7 @@
                 });
             };
             onNext = function (error) {
-                modeNext = error instanceof Error
+                modeNext = error
                     ? Infinity
                     : modeNext + 1;
                 switch (modeNext) {
@@ -1338,6 +1340,8 @@
         local.utility2 = local.modeJs === 'browser'
             ? window.utility2
             : require('./index.js');
+        // init onReady
+        local.utility2.onReadyInit();
         // import utility2.local
         Object.keys(local.utility2.local).forEach(function (key) {
             local[key] = local[key] || local.utility2.local[key];

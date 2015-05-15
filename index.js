@@ -42,13 +42,6 @@
             }
         };
 
-        local.utility2.errorStack = function (error) {
-            /*
-                this function will return the error's stack
-            */
-            return error.message + '\n' + error.stack;
-        };
-
         local.utility2.istanbulMerge = function (coverage1, coverage2) {
             /*
                 this function will merge coverage2 into coverage1
@@ -92,47 +85,47 @@
             return coverage1;
         };
 
-        local.utility2.jsonCopy = function (value) {
+        local.utility2.jsonCopy = function (element) {
             /*
-                this function will return a deep-copy of the JSON value
+                this function will return a deep-copy of the JSON element
             */
-            return value === undefined
+            return element === undefined
                 ? undefined
-                : JSON.parse(JSON.stringify(value));
+                : JSON.parse(JSON.stringify(element));
         };
 
-        local.utility2.jsonStringifyOrdered = function (value, replacer, space) {
+        local.utility2.jsonStringifyOrdered = function (element, replacer, space) {
             /*
-                this function will JSON.stringify the value with dictionaries in sorted order,
+                this function will JSON.stringify the element with dictionaries in sorted order,
                 for testing purposes
             */
-            var circularList, stringifyOrdered, tmp;
-            stringifyOrdered = function (value) {
+            var circularList, stringify, tmp;
+            stringify = function (element) {
                 /*
-                    this function will recursively stringify the value with object-keys sorted,
-                    and circular-references removed
+                    this function will recursively stringify the element,
+                    with object-keys sorted and circular-references removed
                 */
-                // if value is an object,
+                // if element is an object,
                 // then recursively stringify its items sorted by their keys
-                if (value && typeof value === 'object') {
+                if (element && typeof element === 'object') {
                     // remove circular-reference
-                    if (circularList.indexOf(value) >= 0) {
+                    if (circularList.indexOf(element) >= 0) {
                         return;
                     }
-                    circularList.push(value);
-                    // if value is an array, then recursively stringify its elements
-                    if (Array.isArray(value)) {
-                        return '[' + value.map(function (element) {
-                            tmp = stringifyOrdered(element);
+                    circularList.push(element);
+                    // if element is an array, then recursively stringify its elements
+                    if (Array.isArray(element)) {
+                        return '[' + element.map(function (element) {
+                            tmp = stringify(element);
                             return typeof tmp === 'string'
                                 ? tmp
                                 : 'null';
                         }).join(',') + ']';
                     }
-                    return '{' + Object.keys(value)
+                    return '{' + Object.keys(element)
                         .sort()
                         .map(function (key) {
-                            tmp = stringifyOrdered(value[key]);
+                            tmp = stringify(element[key]);
                             return typeof tmp === 'string'
                                 ? JSON.stringify(key) + ':' + tmp
                                 : undefined;
@@ -143,12 +136,12 @@
                         .join(',') + '}';
                 }
                 // else JSON.stringify normally
-                return JSON.stringify(value);
+                return JSON.stringify(element);
             };
             circularList = [];
-            return JSON.stringify(value && typeof value === 'object'
-                ? JSON.parse(stringifyOrdered(value))
-                : value,
+            return JSON.stringify(element && typeof element === 'object'
+                ? JSON.parse(stringify(element))
+                : element,
                 replacer,
                 space);
         };
@@ -232,15 +225,19 @@
             return options;
         };
 
-        local.utility2.objectTraverse = function (element, onSelf, depth) {
+        local.utility2.objectTraverse = function (element, onSelf, circularList) {
             /*
                 this function will recursively traverse the element,
                 and call onSelf on the element's properties
             */
             onSelf(element);
-            if (depth > 0 && element && typeof element === 'object') {
+            circularList = circularList || [];
+            if (element &&
+                    typeof element === 'object' &&
+                    circularList.indexOf(element) === -1) {
+                circularList.push(element);
                 Object.keys(element).forEach(function (key) {
-                    local.utility2.objectTraverse(element[key], onSelf, depth - 1);
+                    local.utility2.objectTraverse(element[key], onSelf, circularList);
                 });
             }
             return element;
@@ -248,12 +245,12 @@
 
         local.utility2.onErrorDefault = function (error) {
             /*
-                this function will print the error.stack or error.message to stderr
+                this function will print error.stack or error.message to stderr
             */
-            // if error is defined, then print the error stack
+            // if error is defined, then print error.stack
             if (error) {
                 console.error('\nonErrorDefault - error\n' +
-                    local.utility2.errorStack(error) + '\n');
+                    error.message + '\n' + error.stack + '\n');
             }
         };
 
@@ -280,6 +277,21 @@
                 }
                 onError.apply(null, arguments);
             };
+        };
+
+        local.utility2.onReadyInit = function () {
+            /*
+                this function will create the deferred task utility2.onReady
+            */
+            // init onReady
+            local.utility2.taskRunOrSubscribe({
+                key: 'utility2.onReady',
+                onTask: function (onError) {
+                    local.utility2.onReady = local.utility2.onTaskEnd(onError);
+                    local.utility2.onReady.counter += 1;
+                    setTimeout(local.utility2.onReady);
+                }
+            });
         };
 
         local.utility2.onTaskEnd = function (onError, onDebug) {
@@ -839,6 +851,15 @@
             if (!(local.utility2.modeTest || options.modeTest)) {
                 return;
             }
+            if (!options.onReady) {
+                options.onReady = function () {
+                    local.utility2.testRun(options);
+                };
+                local.utility2.taskRunOrSubscribe({
+                    key: 'utility2.onReady'
+                }, options.onReady);
+                return;
+            }
             // init onTaskEnd
             onTaskEnd = local.utility2.onTaskEnd(function () {
                 /*
@@ -1028,10 +1049,10 @@
                     }
                     // if error occurred, then fail testCase
                     if (error) {
-                        console.error('\ntestCase ' + testCase.name +
-                            ' failed\n' + local.utility2.errorStack(error));
+                        console.error('\ntestCase ' + testCase.name + ' failed\n' +
+                            error.message + '\n' + error.stack);
                         testCase.errorStack = testCase.errorStack ||
-                            local.utility2.errorStack(error);
+                            error.message + '\n' + error.stack;
                         // validate errorStack is non-empty
                         local.utility2.assert(
                             testCase.errorStack,
@@ -1543,7 +1564,7 @@
                 var modeNext, onNext;
                 modeNext = -1;
                 onNext = function (error) {
-                    modeNext = error instanceof Error
+                    modeNext = error
                         ? Infinity
                         : modeNext + 1;
                     // recursively run each sub-middleware in middlewareList
@@ -1985,7 +2006,7 @@
         local.utility2.serverRespondDefault = function (request, response, statusCode, error) {
             /*
                 this function will respond with a default message,
-                or error stack for the given statusCode
+                or error.stack for the given statusCode
             */
             // init statusCode and contentType
             local.utility2.serverRespondHeadSet(
@@ -1995,13 +2016,16 @@
                 { 'Content-Type': 'text/plain; charset=utf-8' }
             );
             if (error) {
+                error.message = request.method + ' ' + request.url + '\n' + error.message;
+                error.stack = error.message + '\n' + error.stack;
                 // if modeErrorIgnore is undefined in url search params,
                 // then print error.stack to stderr
-                if (!(/\?\S*?\bmodeErrorIgnore=1\b/).test(request.url)) {
+                if (!(local.utility2.envDict.npm_config_mode_npm_test &&
+                        (/\bmodeErrorIgnore=1\b/).test(request.url))) {
                     local.utility2.onErrorDefault(error);
                 }
                 // end response with error.stack
-                response.end(local.utility2.errorStack(error));
+                response.end(error.stack);
                 return;
             }
             // end response with default statusCode message
@@ -2063,8 +2087,8 @@
                 return;
             }
             // init response.statusCode
-            if (statusCode) {
-                response.statusCode = statusCode;
+            if (Number(statusCode)) {
+                response.statusCode = Number(statusCode);
             }
             Object.keys(headers).forEach(function (key) {
                 if (headers[key]) {
@@ -2171,11 +2195,7 @@
                     .unref();
             }
             // 3. if $npm_config_mode_npm_test is defined, then run tests
-            local.utility2.taskRunOrSubscribe({
-                key: 'utility2.onReady'
-            }, function () {
-                local.utility2.testRun(options);
-            });
+            local.utility2.testRun(options);
             return server;
         };
         break;
@@ -2247,14 +2267,7 @@
         // init timeoutDefault
         local.utility2.timeoutDefaultInit();
         // init onReady
-        local.utility2.taskRunOrSubscribe({
-            key: 'utility2.onReady',
-            onTask: function (onError) {
-                local.utility2.onReady = local.utility2.onTaskEnd(onError);
-                local.utility2.onReady.counter += 1;
-                setTimeout(local.utility2.onReady);
-            }
-        });
+        local.utility2.onReadyInit();
     }());
     switch (local.modeJs) {
 

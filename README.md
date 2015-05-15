@@ -147,7 +147,7 @@ instruction
             local.utility2.ajax({ url: '/test/undefined' }, function (error) {
                 local.utility2.testTryCatch(function () {
                     // validate error occurred
-                    local.utility2.assert(error instanceof Error, error);
+                    local.utility2.assert(error, error);
                     // validate 404 http statusCode
                     local.utility2.assert(
                         error.statusCode === 404,
@@ -430,7 +430,7 @@ npm_config_mode_auto_restart=1 \
 npm_config_mode_auto_restart_child=1 \
 ./index.sh test test.js"
     },
-    "version": "2015.5.6-e"
+    "version": "2015.5.15-a"
 }
 ```
 
@@ -447,9 +447,13 @@ npm_config_mode_auto_restart_child=1 \
 
 
 
-# change since 3aed95bd
-- npm publish 2015.5.6-e
-- add gitter integration to README.md
+# change since 25946e50
+- npm publish 2015.5.15-a
+- remove "instanceof Error" check for error validation tests
+- add url method and request debug info to error for serverRespondDefault
+- remove errorStack
+- add circular-reference check to objectTraverse
+- require explicit creation of deferred task utility2.onReady
 - none
 
 
