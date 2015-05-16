@@ -367,15 +367,19 @@
 
         local.utility2.requestResponseCleanup = function (request, response) {
             /*
-                this function will cleanup the request and response objects
+                this function will end or destroy the request and response objects
             */
             [request, response].forEach(function (stream) {
-                ['end', 'finish', 'close', 'abort', 'destroy'].forEach(function (method) {
+                // try to end the stream
+                try {
+                    stream.end();
+                // if error, then try to destroy the stream
+                } catch (errorCaught) {
                     try {
-                        stream[method]();
+                        stream.destroy();
                     } catch (ignore) {
                     }
-                });
+                }
             });
         };
 
@@ -1415,7 +1419,11 @@
                     local._debugAjaxXhr = xhr;
                     // init timerTimeout
                     timerTimeout = local.utility2.onTimeout(
-                        onNext,
+                        function (error) {
+                            // cleanup request and response
+                            local.utility2.requestResponseCleanup(request, response);
+                            onNext(error);
+                        },
                         xhr.timeout,
                         'ajax ' + xhr.method + ' ' + xhr.url
                     );
@@ -1472,8 +1480,6 @@
                     done = true;
                     // cleanup timerTimeout
                     clearTimeout(timerTimeout);
-                    // cleanup request and response
-                    local.utility2.requestResponseCleanup(request, response);
                     if (error) {
                         // debug method / statusCode / url
                         xhr.errorMessage = xhr.method + ' ' +
@@ -2150,8 +2156,6 @@
             );
             response.on('finish', function () {
                 clearTimeout(request.timerTimeout);
-                // cleanup request and response
-                local.utility2.requestResponseCleanup(request, response);
             });
         };
 

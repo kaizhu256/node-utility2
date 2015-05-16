@@ -1,7 +1,6 @@
 *.log
 *~
-.DS_Store
-.travis.yml
+.*
 Procfile
 node_modules
 tmp

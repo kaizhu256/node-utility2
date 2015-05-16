@@ -1,0 +1,10 @@
+startup_message off
+escape ^zz
+defflow off ## turn off ^q term control
+hardstatus alwayslastline
+hardstatus string '%{= bw}%-Lw%{= wk}%50>%n%f* %t%{= bw}%+Lw%< %{= bw}%-=%H %D %Y %M %d %c:%s%{-}'
+shell $SHELL
+## terminfo and termcap for nice 256 color terminal
+attrcolor b ".I" ## allow bold colors - necessary for some reason
+termcapinfo xterm 'Co#256:AB=\E[48;5;%dm:AF=\E[38;5;%dm' ## tell screen how to set colors. AB = background, AF=foreground
+defbce "on" ## erase background with current bg color
