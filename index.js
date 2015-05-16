@@ -5,6 +5,7 @@
     maxlen: 96,
     node: true,
     nomen: true,
+    regexp: true,
     stupid: true
 */
 (function (local) {
@@ -396,7 +397,7 @@
                     );
                 }).join('');
             };
-            rgx = (/\{\{#\S+?\}\}/g);
+            rgx = (/\{\{#[^}]+?\}\}/g);
             while (true) {
                 // search for array fragments in the template
                 match = rgx.exec(template);
@@ -415,7 +416,7 @@
                 }
             }
             // search for keys in the template
-            return template.replace((/\{\{\S+?\}\}/g), function (keyList) {
+            return template.replace((/\{\{[^}]+?\}\}/g), function (keyList) {
                 value = dict;
                 // iteratively lookup nested values in the dict
                 keyList.slice(2, -2).split('.').forEach(function (key) {
@@ -555,11 +556,11 @@
                         setTimeout(onNext);
                     }
                     cacheValue = JSON.stringify(Array.prototype.slice.call(arguments));
-                    // write cacheValue to memory-cache
+                    // save cacheValue to memory-cache
                     if (options.modeCacheMemory) {
                         local.utility2.cacheDict[cacheDict][cacheKey] = cacheValue;
                     }
-                    // write cacheValue to file-cache
+                    // save cacheValue to file-cache
                     if (options.modeCacheFile) {
                         local.utility2.taskRunOrSubscribe({
                             key: cacheDict + '/' + cacheKey + '/file/write',
@@ -1655,13 +1656,13 @@
 
         local.utility2.fsWriteFileWithMkdirp = function (file, data, onError) {
             /*
-                this function will write the data to file, and auto-mkdirp the parent dir
+                this function will save the data to file, and auto-mkdirp the parent dir
             */
             file = local.path.resolve(process.cwd(), file);
-            // write data to file
+            // save data to file
             local.fs.writeFile(file, data, function (error) {
                 if (error && error.code === 'ENOENT') {
-                    // if write failed, then mkdirp file's parent dir
+                    // if save failed, then mkdirp file's parent dir
                     local.utility2
                         .processSpawnWithTimeout(
                             'mkdir',
@@ -1669,7 +1670,7 @@
                             { stdio: ['ignore', 1, 2] }
                         )
                         .on('exit', function () {
-                            // write data to file
+                            // save data to file
                             local.fs.writeFile(file, data, onError);
                         });
                     return;
@@ -1913,7 +1914,7 @@
             // hook custom repl eval function
             local._replServer.eval = function (script, context, file, onError) {
                 var match, onError2;
-                match = (/^(\S+)([\S\s]*?)\n/).exec(script);
+                match = (/^(\S+)(.*?)\n/).exec(script);
                 onError2 = function (error, data) {
                     // debug error
                     local._replServer.onError(error);
@@ -1990,6 +1991,36 @@
             };
         };
 
+        /* istanbul ignore next */
+        local.utility2.requireReadmeExampleJs = function () {
+            /*
+                this function will parse, jslint, save, and require example.js from README.md
+            */
+            var data, file;
+            file = local.utility2.envDict.npm_config_dir_tmp + '/example.js';
+            // parse example.js
+            data = local.fs
+                .readFileSync(process.cwd() + '/README.md', 'utf8')
+                .replace((/([\S\s]+```\n)(\/\*\nexample\.js\n)/), function (
+                    match0,
+                    match1,
+                    match2
+                ) {
+                    // jslint-hack
+                    local.utility2.nop(match0);
+                    return match1.replace((/.+/g), '') + match2;
+                })
+                .replace((/\n```[\S\s]+/), '')
+                // parse '\' line-continuation
+                .replace((/\\\n/g), "' +\n'");
+            // jslint example.js
+            local.utility2.jslint_lite.jslintAndPrint(data, file);
+            // save example.js
+            local.fs.writeFileSync(file, data);
+            // require example.js
+            return require(local.utility2.envDict.npm_config_dir_tmp + '/example.js');
+        };
+
         local.utility2.serverPortInit = function () {
             /*
                 this function will init $npm_config_server_port
@@ -2020,7 +2051,8 @@
                 error.stack = error.message + '\n' + error.stack;
                 // if modeErrorIgnore is undefined in url search params,
                 // then print error.stack to stderr
-                if (!(local.utility2.envDict.npm_config_mode_npm_test &&
+                if (!(local.global.__coverage__ &&
+                        local.utility2.envDict.npm_config_mode_npm_test &&
                         (/\bmodeErrorIgnore=1\b/).test(request.url))) {
                     local.utility2.onErrorDefault(error);
                 }
@@ -2285,6 +2317,7 @@
     case 'node':
         // export utility2
         module.exports = local.utility2;
+        module.exports.__dirname = __dirname;
         // require modules
         local.child_process = require('child_process');
         local.fs = require('fs');
@@ -2301,9 +2334,13 @@
                 local.utility2.envDict.npm_config_mode_legacy_node || '1';
         }
         // init utility2 properties
-        local.utility2.__dirname = __dirname;
-        local.utility2.envDict.npm_config_dir_build = process.cwd() + '/tmp/build';
-        local.utility2.envDict.npm_config_dir_tmp = process.cwd() + '/tmp';
+        local.utility2.objectSetDefault(local.utility2.envDict, {
+            npm_config_dir_build: process.cwd() + '/tmp/build',
+            npm_config_dir_tmp: process.cwd() + '/tmp',
+            npm_package_name: 'example-module',
+            npm_package_description: 'this is an example module',
+            npm_package_version: '0.0.1'
+        });
         // init assets
         local.utility2.cacheDict.assets['/assets/istanbul-lite.js'] =
             local.utility2.istanbul_lite['/assets/istanbul-lite.js'];
@@ -2374,7 +2411,7 @@
                 local.page.render(local.utility2.fileScreenCapture);
                 // integrate screen-capture into test-report
                 data.testReport.testPlatformList[0].screenCaptureImg =
-                    local.utility2.fileScreenCapture.replace((/[\S\s]*\//), '');
+                    local.utility2.fileScreenCapture.replace((/.*\//), '');
                 // save test-report
                 local.fs.write(
                     local.utility2.fileTestReport,

@@ -215,6 +215,21 @@ shGrepFileReplace() {
     " || return $?
 }
 
+shJsonPrettifyFile() {
+    # this function will
+    # 1. read the json-data from $FILE
+    # 2. prettify the json-data
+    # 3. write the prettified json-data back to $FILE
+    local FILE || return $?
+    FILE=$1 || return $?
+    node -e "
+        require('fs').writeFileSync(
+            '$FILE',
+            JSON.stringify(JSON.parse(require('fs').readFileSync('$FILE')), null, 4)
+        );
+    " || return $?
+}
+
 shHerokuDeploy() {
     # this function will deploy the app to $HEROKU_REPO
     local HEROKU_REPO || return $?
@@ -367,7 +382,9 @@ shIstanbulTest() {
 
 shNodeVersionMinor() {
     # this function will print node version x.y with the patch z stripped
-    printf $(node -e "console.log((/\d+?\.\d+/).exec(process.version)[0])") || return $?
+    printf $(node -e "
+        console.log((/\d+?\.\d+/).exec(process.version)[0]);
+    ") || return $?
 }
 
 shNpmTest() {
@@ -377,6 +394,10 @@ shNpmTest() {
     rm $npm_config_dir_tmp/*.json > /dev/null 2>&1 || :
     # init $npm_config_dir_build
     mkdir -p $npm_config_dir_build/coverage.html || return $?
+    # init $npm_config_dir_tmp/node_modules
+    rm -fr $npm_config_dir_tmp/node_modules || return
+    mkdir -p $npm_config_dir_tmp/node_modules || return $?
+    ln -s $CWD $npm_config_dir_tmp/node_modules/$npm_package_name || return $?
     # auto-detect slimerjs
     shSlimerDetect || return $?
     # init npm-test-mode
@@ -650,71 +671,6 @@ shRun() {
     return $EXIT_CODE
 }
 
-shRunNode() {
-    # this function will run the node $SCRIPT
-    local SCRIPT || return $?
-    SCRIPT=$1 || return $?
-    node -e "
-        var local;
-        local = {};
-        // require builtin modules
-        [
-            'assert',
-            'buffer',
-            'child_process', 'cluster', 'console', 'constants', 'crypto',
-            'dgram', 'dns', 'domain',
-            'events',
-            'freelist', 'fs',
-            'http', 'https',
-            'module',
-            'net',
-            'os',
-            'path', 'punycode',
-            'querystring',
-            'readline', 'repl',
-            'stream', 'string_decoder', 'sys',
-            'timers', 'tls', 'tty',
-            'url', 'util',
-            'vm',
-            'zlib'
-        ].forEach(function (key) {
-            local[key] = require(key);
-        });
-        $SCRIPT
-    " || return $?
-}
-
-shRunNodeStdin() {
-    # this function will run the node $SCRIPT using data from stdin
-    local SCRIPT || return $?
-    SCRIPT=$1 || return $?
-    shRunNode "
-        local.dataRaw = [];
-        process.stdin
-            .on('data', function (chunk) {
-                local.dataRaw.push(chunk);
-            })
-            .on('end', function () {
-                local.dataRaw = Buffer.concat(local.dataRaw);
-                local.data = local.dataRaw.toString('utf8');
-                $SCRIPT
-            });
-    " || return $?
-}
-
-shRunNodeWithFileData() {
-    # this function will run the node $SCRIPT using data from $FILE
-    local FILE || return $?
-    local SCRIPT || return $?
-    FILE=$1 || return $?
-    SCRIPT=$2 || return $?
-    shRunNode "
-        local.dataRaw = local.fs.readFileSync('$FILE');
-        local.data = local.dataRaw.toString('utf8');
-        $SCRIPT
-    " || return $?
-}
-
 shRunScreenCapture() {
     # this function will run the command $@ and screen-capture the output
     # http://www.cnx-software.com/2011/09/22/how-to-convert-a-command-line-result-into-an-image-in-linux/
@@ -874,15 +830,6 @@ shMain() {
     case "$COMMAND" in
     shRun)
         shInit && "$COMMAND" $@ || return $?
-        ;;
-    shRunNode)
-        "$COMMAND" $@ || return $?
-        ;;
-    shRunNodeWithFileData)
-        "$COMMAND" $@ || return $?
-        ;;
-    shRunNodeWithStdinData)
-        "$COMMAND" $@ || return $?
         ;;
     shRunScreenCapture)
         shInit && "$COMMAND" $@ || return $?

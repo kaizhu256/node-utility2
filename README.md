@@ -23,17 +23,17 @@ run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
 | build-artifacts : | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..alpha..travis-ci.org) | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..beta..travis-ci.org) | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..master..travis-ci.org)|
 
 #### alpha branch
-- unstable repo
-- commit may be arbitrary
-- commit may be squashed
+- unstable branch
+- HEAD is arbitrary
+- commit history may be rewritten
 
 #### beta branch
-- stable repo
-- commit should be latest npm-published package
+- stable branch
+- HEAD should be latest, npm-published package
 
 #### master branch
-- stable repo
-- commit should be tagged npm-published package
+- stable branch
+- HEAD should be tagged, npm-published package
 
 
 
@@ -394,8 +394,8 @@ instruction
     "author": "kai zhu <kaizhu256@gmail.com>",
     "bin": { "utility2" : "index.sh" },
     "dependencies": {
-        "istanbul-lite": "2015.5.6-a",
-        "jslint-lite": "2015.5.6-a"
+        "istanbul-lite": "^2015.5.6-a",
+        "jslint-lite": "^2015.5.6-a"
     },
     "description": "run dynamic browser tests with coverage \
 (via istanbul-lite and phantomjs-lite)",
@@ -430,13 +430,14 @@ npm_config_mode_auto_restart=1 \
 npm_config_mode_auto_restart_child=1 \
 ./index.sh test test.js"
     },
-    "version": "2015.5.15-a"
+    "version": "2015.5.15-b"
 }
 ```
 
 
 
 # todo
+- add coverage for requireReadmeExampleJs
 - add middlewareGzip
 - add testCase for validating _testSecret
 - create flamegraph from istanbul coverage
@@ -447,13 +448,12 @@ npm_config_mode_auto_restart_child=1 \
 
 
 
-# change since 25946e50
-- npm publish 2015.5.15-a
-- remove "instanceof Error" check for error validation tests
-- add url method and request debug info to error for serverRespondDefault
-- remove errorStack
-- add circular-reference check to objectTraverse
-- require explicit creation of deferred task utility2.onReady
+# change since 714ddbd2
+- npm publish 2015.5.15-b
+- add requireReadmeExampleJs to index.js
+- shNpmTest will auto-create $npm_config_dir_tmp/node_modules/$npm_package_name
+- add shJsonPrettifyFile to index.sh
+- remove shRunNode* from index.sh
 - none
 
 
