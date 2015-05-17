@@ -1,5 +1,4 @@
 {
-    "_packageJson": true,
     "author": "kai zhu <kaizhu256@gmail.com>",
     "bin": { "utility2" : "index.sh" },
     "dependencies": {
@@ -8,7 +7,7 @@
     },
     "description": "run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)",
     "devDependencies": {
-        "phantomjs-lite": "2015.4.26-c"
+        "phantomjs-lite": "^2015.4.26-c"
     },
     "engines": { "node": ">=0.10 <=0.12" },
     "keywords": [
@@ -32,7 +31,7 @@
     "scripts": {
         "build-ci": "./index.sh shRun shReadmeBuild",
         "start": "npm_config_mode_auto_restart=1 ./index.sh shRun node test.js",
-        "test": "./index.sh shRun shReadmePackageJsonExport && export npm_config_file_start=index.js && npm_config_mode_auto_restart=1 npm_config_mode_auto_restart_child=1 ./index.sh test test.js"
+        "test": "./index.sh shRun shReadmeExportPackageJson && export npm_config_file_start=index.js && npm_config_mode_auto_restart=1 npm_config_mode_auto_restart_child=1 ./index.sh test test.js"
     },
-    "version": "2015.5.15-c"
+    "version": "2015.5.15-f"
 }

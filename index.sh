@@ -118,7 +118,7 @@ shGitBackupAndSquashAndPush() {
 }
 
 shGitLsTree() {
-    # this function will list all files committed to HEAD
+    # this function will list all files committed in HEAD
     git ls-tree --name-only -r HEAD | while read file
     do
         printf "%10s bytes    $(git log -1 --format="%ai  " -- $file)  $file\n\n" \
@@ -127,9 +127,9 @@ shGitLsTree() {
 }
 
 shGitSquashPop() {
-    # this function will squash the HEAD to the specified $COMMIT
-    # git squash
-    # http://stackoverflow.com/questions/5189560/how-can-i-squash-my-last-x-commits-together-using-git
+    # this function will squash HEAD to the specified $COMMIT
+    # http://stackoverflow.com/questions/5189560
+    # /how-can-i-squash-my-last-x-commits-together-using-git
     local COMMIT || return $?
     local MESSAGE || return $?
     COMMIT=$1 || return $?
@@ -153,7 +153,7 @@ shGitSquashShift() {
     git checkout -q HEAD~$RANGE || return $?
     git reset -q $(git rev-list --max-parents=0 HEAD) || return $?
     git add . || return $?
-    git commit -m squash || :
+    git commit -m squash > /dev/null || :
     git cherry-pick -X theirs --allow-empty --strategy=recursive $BRANCH~$RANGE..$BRANCH || \
         return $?
     git push -f . HEAD:$BRANCH || return $?
@@ -192,7 +192,7 @@ shGrep() {
 }
 
 shGrepFileReplace() {
-    # this function will apply the grep-and-replace lines in $FILE
+    # this function will save the grep-and-replace lines in $FILE
     local FILE || return $?
     FILE=$1
     node -e "
@@ -215,23 +215,9 @@ shGrepFileReplace() {
     " || return $?
 }
 
-shJsonPrettifyFile() {
-    # this function will
-    # 1. read the json-data from $FILE
-    # 2. prettify the json-data
-    # 3. write the prettified json-data back to $FILE
-    local FILE || return $?
-    FILE=$1 || return $?
-    node -e "
-        require('fs').writeFileSync(
-            '$FILE',
-            JSON.stringify(JSON.parse(require('fs').readFileSync('$FILE')), null, 4)
-        );
-    " || return $?
-}
-
 shHerokuDeploy() {
-    # this function will deploy the app to $HEROKU_REPO
+    # this function will deploy the app to $HEROKU_REPO,
+    # and run a simple curl check for the main-page
     local HEROKU_REPO || return $?
     HEROKU_REPO=$1 || return $?
     if [ ! "$GIT_SSH_KEY" ]
@@ -380,11 +366,39 @@ shIstanbulTest() {
     fi
 }
 
+shJsonFilePrettify() {
+    # this function will
+    # 1. read the json-data from $FILE
+    # 2. prettify the json-data
+    # 3. write the prettified json-data back to $FILE
+    local FILE || return $?
+    FILE=$1 || return $?
+    node -e "
+        require('fs').writeFileSync(
+            '$FILE',
+            JSON.stringify(JSON.parse(require('fs').readFileSync('$FILE')), null, 4)
+        );
+    " || return $?
+}
+
 shNodeVersionMinor() {
-    # this function will print node version x.y with the patch z stripped
+    # this function will print the node major and minor version x.y,
+    # with the patch version z stripped
     printf $(node -e "
         console.log((/\d+?\.\d+/).exec(process.version)[0]);
     ") || return $?
+}
+
+shNpmTestPublished() {
+    # this function will run npm-test on the published package
+    shBuildPrint npmTestPublished "npm-testing published package $npm_package_name" || return $?
+    # init /tmp/app
+    rm -fr /tmp/app /tmp/node_modules && mkdir -p /tmp/app || return $?
+    cd /tmp/app || return $?
+    # npm install package
+    npm install $npm_package_name || return $?
+    # npm-test package
+    cd node_modules/$npm_package_name && npm install && npm test || return $?
 }
 
 shNpmTest() {
@@ -394,10 +408,6 @@ shNpmTest() {
     rm $npm_config_dir_tmp/*.json > /dev/null 2>&1 || :
     # init $npm_config_dir_build
     mkdir -p $npm_config_dir_build/coverage.html || return $?
-    # init $npm_config_dir_tmp/node_modules
-    rm -fr $npm_config_dir_tmp/node_modules || return
-    mkdir -p $npm_config_dir_tmp/node_modules || return $?
-    ln -s $CWD $npm_config_dir_tmp/node_modules/$npm_package_name || return $?
     # auto-detect slimerjs
     shSlimerDetect || return $?
     # init npm-test-mode
@@ -452,18 +462,6 @@ shNpmTest() {
     return $EXIT_CODE
 }
 
-shNpmTestPublished() {
-    # this function will run npm-test on the published package
-    shBuildPrint npmTestPublished "npm-testing published package $npm_package_name" || return $?
-    # init /tmp/app
-    rm -fr /tmp/app /tmp/node_modules && mkdir -p /tmp/app || return $?
-    cd /tmp/app || return $?
-    # npm install package
-    npm install $npm_package_name || return $?
-    # npm-test package
-    cd node_modules/$npm_package_name && npm install && npm test || return $?
-}
-
 shPhantomScreenCapture() {
     # this function will spawn phantomjs to screen-capture the specified $URL
     MODE_BUILD=${MODE_BUILD:-phantomScreenCapture} shPhantomTest "$1" ${2-30000} ${3-2000} \
@@ -472,7 +470,7 @@ shPhantomScreenCapture() {
 
 shPhantomTest() {
     # this function will spawn phantomjs to test the specified $URL,
-    # and merge it into the existing test-report
+    # and merge the test-report into the existing test-report
     local MODE_PHANTOM || return $?
     local TIMEOUT_DEFAULT || return $?
     local TIMEOUT_SCREEN_CAPTURE || return $?
@@ -514,37 +512,52 @@ shPhantomTest() {
 }
 
 shReadmeBuild() {
-    # this function will run the build-script in README.md
+    # this function will run the internal build-script embedded in README.md
     # init $npm_config_dir_build
     mkdir -p $npm_config_dir_build/coverage.html || return $?
     # run shell script from README.md
     MODE_BUILD=build shReadmeTestSh $npm_config_dir_tmp/build.sh || return $?
 }
 
-shReadmePackageJsonExport() {
-    # this function will export the package.json file embedded in README.md
-    # read and parse script from README.md
+shReadmeExportFile() {
+    # this function will extract and save the script $FILE_IN embedded in README.md to $FILE_OUT
+    local FILE_IN || return $?
+    local FILE_OUT || return $?
+    FILE_IN=$1 || return $?
+    FILE_OUT=$2 || return $?
     node -e "
-        require('fs').readFileSync('$CWD/README.md', 'utf8').replace(
-            (/\n\`\`\`\n{\n *\"_packageJson\": true,\n[\S\s]+?}\n\`\`\`/),
-            function (match0) {
-                // save script to file
-                require('fs').writeFileSync(
-                    '$CWD/package.json',
-                    match0
-                        .slice(5, -3)
-                        // remove '//' comment
-                        .replace((/^ *?\\/\\/.*?\n/gm), '')
-                        // parse '\' line-continuation
-                        .replace((/\\\\\n/g), '')
-                );
-            }
+        require('fs').writeFileSync(
+            '$FILE_OUT',
+            require('fs')
+                .readFileSync('$CWD/README.md', 'utf8')
+                .replace((/[\\S\\s]+?\n.*?$FILE_IN\s*?\`\`\`\n/), function (match0) {
+                    // preserve lineno
+                    return match0.replace((/.+/g), '');
+                })
+                .replace((/\n\`\`\`[\\S\\s]+/), '')
+        );
+    " || return $?
+}
+
+shReadmeExportPackageJson() {
+    # this function will extract and save the package.json file embedded in README.md
+    local FILE || return $?
+    shReadmeExportFile package.json $CWD/package.json || return $?
+    node -e "
+        require('fs').writeFileSync(
+            '$CWD/package.json',
+            require('fs')
+                .readFileSync('$CWD/package.json', 'utf8')
+                // parse '\' line-continuation
+                .replace((/\\\\\n/g), '')
+                // remove leading whitespace
+                .trimLeft()
         );
     " || return $?
 }
 
 shReadmeTestJs() {
-    # this function will test the js script $FILE in README.md
+    # this function will extract, save, and test the js script $FILE embedded in README.md
     local FILE || return $?
     local SCRIPT || return $?
     FILE=$1 || return $?
@@ -557,21 +570,7 @@ shReadmeTestJs() {
     # cd /tmp/app
     cd /tmp/app || return $?
     # read and parse js script from README.md
-    node -e "
-        require('fs').readFileSync('$CWD/README.md', 'utf8').replace(
-            (/\n\`\`\`\n\/\*\n *$FILE\n[\S\s]+?\n\`\`\`/),
-            function (match0, index, data) {
-                // save js script to file
-                require('fs').writeFileSync(
-                    '$FILE',
-                    // preserve lineno
-                    ('$MODE_LINENO_PRESERVE'
-                        ? data.slice(0, index).replace((/.*/g), '') + '\n\n'
-                        : '') + match0.slice(5, -3)
-                );
-            }
-        );
-    " || return $?
+    shReadmeExportFile $FILE $FILE || return $?
     # jslint $FILE
     if [ ! "$MODE_OFFLINE" ] && [ ! "$npm_config_mode_no_jslint" ]
     then
@@ -595,7 +594,7 @@ shReadmeTestJs() {
 }
 
 shReadmeTestSh() {
-    # this function will test the shell script $FILE in README.md
+    # this function will extract, save, and test the sh script $FILE embedded in README.md
     local FILE || return $?
     local FILE_BASENAME || return $?
     FILE=$1 || return $?
@@ -614,21 +613,7 @@ shReadmeTestSh() {
         cd /tmp/app || return $?
     fi
     # read and parse script from README.md
-    node -e "
-        require('fs').readFileSync('$CWD/README.md', 'utf8').replace(
-            (/\n\`\`\`\n# $FILE_BASENAME\n[\S\s]+?\n\`\`\`/),
-            function (match0, index, data) {
-                // save script to file
-                require('fs').writeFileSync(
-                    '$FILE',
-                    // preserve lineno
-                    data.slice(0, index).replace((/.*/g), '') + '\n\n' + match0.slice(5, -3)
-                );
-                // print script to stdout
-                console.log(match0.slice(5, -3).trimLeft());
-            }
-        );
-    " || return $?
+    shReadmeExportFile $FILE_BASENAME $FILE || return $?
     # test $FILE
     /bin/sh $FILE || return $?
 }
@@ -673,7 +658,8 @@ shRun() {
 
 shRunScreenCapture() {
     # this function will run the command $@ and screen-capture the output
-    # http://www.cnx-software.com/2011/09/22/how-to-convert-a-command-line-result-into-an-image-in-linux/
+    # http://www.cnx-software.com/2011/09/22
+    # /how-to-convert-a-command-line-result-into-an-image-in-linux/
     # init $npm_config_dir_build
     mkdir -p $npm_config_dir_build/coverage.html || return $?
     export MODE_BUILD_SCREEN_CAPTURE=screen-capture.${MODE_BUILD-undefined}.png || return $?
@@ -710,21 +696,6 @@ shRunScreenCapture() {
             label:@- $npm_config_dir_build/$MODE_BUILD_SCREEN_CAPTURE || return $?
     fi
     return $EXIT_CODE
-}
-
-shRunWithArgvUrlEncoded() {
-    # this function will first decodeURIComponent $@ before running it
-    node -e "
-        require('child_process')
-            .spawn(
-                process.argv[1],
-                process.argv.slice(2).map(function (element) {
-                    return decodeURIComponent(element);
-                }),
-                { stdio: [0, 1, 2] }
-            )
-            .on('exit', process.exit);
-    " $@ || return $?
 }
 
 shServerPortRandom() {

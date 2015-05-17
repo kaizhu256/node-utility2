@@ -40,6 +40,8 @@ run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
 # quickstart interactive example
 
 #### to run this example, follow the instruction in the script below
+- example.sh
+
 ```
 # example.sh
 
@@ -73,6 +75,8 @@ shExampleSh
 # quickstart node example
 
 #### to run this example, follow the instruction in the script below
+- example.js
+
 ```
 /*
 example.js
@@ -390,7 +394,6 @@ instruction
 # package.json
 ```
 {
-    "_packageJson": true,
     "author": "kai zhu <kaizhu256@gmail.com>",
     "bin": { "utility2" : "index.sh" },
     "dependencies": {
@@ -400,7 +403,7 @@ instruction
     "description": "run dynamic browser tests with coverage \
 (via istanbul-lite and phantomjs-lite)",
     "devDependencies": {
-        "phantomjs-lite": "2015.4.26-c"
+        "phantomjs-lite": "^2015.4.26-c"
     },
     "engines": { "node": ">=0.10 <=0.12" },
     "keywords": [
@@ -424,20 +427,19 @@ instruction
     "scripts": {
         "build-ci": "./index.sh shRun shReadmeBuild",
         "start": "npm_config_mode_auto_restart=1 ./index.sh shRun node test.js",
-        "test": "./index.sh shRun shReadmePackageJsonExport && \
+        "test": "./index.sh shRun shReadmeExportPackageJson && \
 export npm_config_file_start=index.js && \
 npm_config_mode_auto_restart=1 \
 npm_config_mode_auto_restart_child=1 \
 ./index.sh test test.js"
     },
-    "version": "2015.5.15-c"
+    "version": "2015.5.15-f"
 }
 ```
 
 
 
 # todo
-- add coverage for requireReadmeExampleJs
 - add middlewareGzip
 - add testCase for validating _testSecret
 - create flamegraph from istanbul coverage
@@ -448,10 +450,12 @@ npm_config_mode_auto_restart_child=1 \
 
 
 
-# change since c2640e75
-- npm publish 2015.5.15-c
-- fix premature socket destroy bug
-- add .bashrc .screenrc .vimrc
+# change since 454871dd
+- npm publish 2015.5.15-f
+- npm publish 2015.5.15-e@alpha
+- revamp index.sh to accommodate swagger-mongodb
+- npm publish 2015.5.15-d@alpha
+- add shell command shReadmeExportFile
 - none
 
 
@@ -462,8 +466,11 @@ npm_config_mode_auto_restart_child=1 \
 
 
 # internal build-script
+- build.sh
+
 ```
 # build.sh
+
 # this shell script will run the build for this package
 shBuild() {
     # this function will run the main build
@@ -495,7 +502,7 @@ shBuild() {
         shRunScreenCapture shReadmeTestSh example.sh || return $?
     unset npm_config_timeout_exit || return $?
     # save screen-capture
-    cp /tmp/app/node_modules/utility2/tmp/build/screen-capture.*.png \
+    cp /tmp/app/node_modules/$npm_package_name/tmp/build/screen-capture.*.png \
         $npm_config_dir_build || return $?
 
     # run npm-test
@@ -505,15 +512,15 @@ shBuild() {
     [ "$(node --version)" \< "v0.12" ] && return
 
     # deploy app to heroku
-    shRun shHerokuDeploy hrku01-utility2-$CI_BRANCH || return $?
+    shRun shHerokuDeploy hrku01-$npm_package_name-$CI_BRANCH || return $?
 
     # test deployed app to heroku
     if [ "$CI_BRANCH" = alpha ] ||
         [ "$CI_BRANCH" = beta ] ||
         [ "$CI_BRANCH" = master ]
     then
-        TEST_URL="https://hrku01-utility2-$CI_BRANCH.herokuapp.com" || \
-            return $?
+        TEST_URL="https://hrku01-$npm_package_name-$CI_BRANCH.herokuapp.com" \
+            || return $?
         TEST_URL="$TEST_URL?modeTest=phantom&_testSecret={{_testSecret}}" || \
             return $?
         MODE_BUILD=herokuTest shRun shPhantomTest $TEST_URL || return $?

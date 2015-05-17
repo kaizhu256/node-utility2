@@ -1691,6 +1691,7 @@
                 and if modified, then restart the process
             */
             if (local.utility2.envDict.npm_config_mode_auto_restart &&
+                    local.fs.existsSync(file) &&
                     local.fs.statSync(file).isFile()) {
                 local.fs.watchFile(file, {
                     interval: 1000,
@@ -1997,36 +1998,6 @@
             };
         };
 
-        /* istanbul ignore next */
-        local.utility2.requireReadmeExampleJs = function () {
-            /*
-                this function will parse, jslint, save, and require example.js from README.md
-            */
-            var data, file;
-            file = local.utility2.envDict.npm_config_dir_tmp + '/example.js';
-            // parse example.js
-            data = local.fs
-                .readFileSync(process.cwd() + '/README.md', 'utf8')
-                .replace((/([\S\s]+```\n)(\/\*\nexample\.js\n)/), function (
-                    match0,
-                    match1,
-                    match2
-                ) {
-                    // jslint-hack
-                    local.utility2.nop(match0);
-                    return match1.replace((/.+/g), '') + match2;
-                })
-                .replace((/\n```[\S\s]+/), '')
-                // parse '\' line-continuation
-                .replace((/\\\n/g), "' +\n'");
-            // jslint example.js
-            local.utility2.jslint_lite.jslintAndPrint(data, file);
-            // save example.js
-            local.fs.writeFileSync(file, data);
-            // require example.js
-            return require(local.utility2.envDict.npm_config_dir_tmp + '/example.js');
-        };
-
         local.utility2.serverPortInit = function () {
             /*
                 this function will init $npm_config_server_port
@@ -2140,17 +2111,15 @@
             /*
                 this function will create a timeout-error-handler for the server request
             */
-            request.onTimeout = request.onTimeout || function () {
-                local.utility2.serverRespondDefault(request, response, 500);
-            };
-            request.timerTimeout = local.utility2.onTimeout(
-                function (error) {
-                    console.error(request.method + ' ' + request.url);
-                    local.utility2.onErrorDefault(error);
-                    request.onTimeout(error);
+            request.onTimeout = request.onTimeout || function (error) {
+                local.utility2.serverRespondDefault(request, response, 500, error);
+                setTimeout(function () {
                     // cleanup request and response
                     local.utility2.requestResponseCleanup(request, response);
-                },
+                }, 1000);
+            };
+            request.timerTimeout = local.utility2.onTimeout(
+                request.onTimeout,
                 timeout || local.utility2.timeoutDefault,
                 'server ' + request.method + ' ' + request.url
             );

@@ -1,6 +1,7 @@
 *.log
 *~
 .*
+example.js
 Procfile
 node_modules
 tmp

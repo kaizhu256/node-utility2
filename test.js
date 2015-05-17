@@ -945,20 +945,15 @@
             */
             local.utility2.testMock([
                 // suppress console.error
-                [console, { error: local.utility2.nop }],
-                [local.utility2, {
-                    // suppress onErrorDefault
-                    onErrorDefault: local.utility2.nop,
-                    // test timeout callback handling behavior
-                    onTimeout: function (onError) {
-                        onError();
-                    },
-                    serverRespondDefault: local.utility2.nop
-                }]
+                [local.utility2, { timeoutDefault: 1000 }]
             ], function (onError) {
                 local.utility2.serverRespondTimeoutDefault(
-                    {},
-                    { on: local.utility2.nop },
+                    {
+                        // test default onTimeout handling behavior
+                        onTimeout: null,
+                        url: '?modeErrorIgnore=1'
+                    },
+                    { end: local.utility2.nop, headersSent: true, on: local.utility2.nop },
                     // test default timeout handling behavior
                     null
                 );
