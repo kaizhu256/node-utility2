@@ -1265,7 +1265,8 @@
         local.utility2.testRunServer(local);
         // jslint dir
         [
-            __dirname
+            __dirname,
+            process.cwd()
         ].forEach(function (dir) {
             local.fs.readdirSync(dir).forEach(function (file) {
                 file = dir + '/' + file;

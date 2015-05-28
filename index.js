@@ -255,6 +255,30 @@
             }
         };
 
+        local.utility2.onErrorExit = function (error) {
+            local.utility2.exit(!!error);
+        };
+
+        local.utility2.onErrorJsonParse = function (onError) {
+            /*
+                this function will return a wrapper function,
+                that will JSON.parse the data with error handling
+            */
+            return function (error, data) {
+                if (error) {
+                    onError(error);
+                    return;
+                }
+                try {
+                    data = JSON.parse(data);
+                } catch (errorCaught) {
+                    onError(new Error('JSON.parse failed - ' + errorCaught.message));
+                    return;
+                }
+                onError(null, data);
+            };
+        };
+
         local.utility2.onErrorWithStack = function (onError) {
             /*
                 this function will return a new callback that calls onError,
@@ -328,26 +352,6 @@
             self.counter = 0;
             // return callback
             return self;
-        };
-
-        local.utility2.onErrorJsonParse = function (onError) {
-            /*
-                this function will return a wrapper function,
-                that will JSON.parse the data with error handling
-            */
-            return function (error, data) {
-                if (error) {
-                    onError(error);
-                    return;
-                }
-                try {
-                    data = JSON.parse(data);
-                } catch (errorCaught) {
-                    onError(new Error('JSON.parse failed - ' + errorCaught.message));
-                    return;
-                }
-                onError(null, data);
-            };
         };
 
         local.utility2.onTimeout = function (onError, timeout, message) {
@@ -868,7 +872,7 @@
             // init onTaskEnd
             onTaskEnd = local.utility2.onTaskEnd(function () {
                 /*
-                    this function will create the test-report after all tests have done
+                    this function will create the test-report after all tests have finished
                 */
                 // restore exit
                 local.utility2.exit = exit;
@@ -899,7 +903,8 @@
                 switch (local.modeJs) {
                 case 'browser':
                     // notify saucelabs of test results
-// https://docs.saucelabs.com/reference/rest-api/#js-unit-testing
+                    // https://docs.saucelabs.com/reference/rest-api/
+                    // #js-unit-testing
                     local.global.global_test_results = {
                         coverage: local.global.__coverage__,
                         failed: testReport.testsFailed,
@@ -1071,7 +1076,7 @@
                     done = true;
                     // stop testCase timer
                     local._timeElapsedStop(testCase);
-                    // if all tests are done, then create test-report
+                    // if all tests have finished, then create test-report
                     onTaskEnd();
                 };
                 // init timerTimeout
@@ -2230,7 +2235,6 @@
             : local.modeJs === 'node'
             ? process.exit
             : local.global.phantom.exit;
-        local.utility2.onErrorExit = local.utility2.exit;
         // http://www.w3.org/TR/html5/forms.html#valid-e-mail-address
         local.utility2.regexpEmailValidate = new RegExp(
             '^[a-zA-Z0-9.!#$%&\'*+\\/=?\\^_`{|}~\\-]+@' +

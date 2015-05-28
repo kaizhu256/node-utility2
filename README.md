@@ -433,13 +433,14 @@ npm_config_mode_auto_restart=1 \
 npm_config_mode_auto_restart_child=1 \
 ./index.sh test test.js"
     },
-    "version": "2015.5.15-f"
+    "version": "2015.5.28-a"
 }
 ```
 
 
 
 # todo
+- rename nextMiddleware to onNextMiddleware
 - add middlewareGzip
 - add testCase for validating _testSecret
 - create flamegraph from istanbul coverage
@@ -450,12 +451,9 @@ npm_config_mode_auto_restart_child=1 \
 
 
 
-# change since 454871dd
-- npm publish 2015.5.15-f
-- npm publish 2015.5.15-e@alpha
-- revamp index.sh to accommodate swagger-mongodb
-- npm publish 2015.5.15-d@alpha
-- add shell command shReadmeExportFile
+# change since 5a354dd9
+- npm publish 2015.5.28-a
+- jslint self during npm test
 - none
 
 
