@@ -56,6 +56,11 @@ shBuildGithubUpload() {
     shGitBackupAndSquashAndPush $COMMIT_LIMIT || return $?
 }
 
+shBuildGithubUploadCleanup() {
+    # this function will cleanup build-artifacts in local gh-pages repo
+    return
+}
+
 shBuildPrint() {
     # this function will print debug info about the build state
     local MESSAGE || return $?
@@ -176,6 +181,7 @@ shGrep() {
     FILE_FILTER="$FILE_FILTER|coverage\\" || return $?
     FILE_FILTER="$FILE_FILTER|docs\\" || return $?
     FILE_FILTER="$FILE_FILTER|external\\" || return $?
+    FILE_FILTER="$FILE_FILTER|fixtures\\" || return $?
     FILE_FILTER="$FILE_FILTER|git_modules\\" || return $?
     FILE_FILTER="$FILE_FILTER|jquery\\" || return $?
     FILE_FILTER="$FILE_FILTER|log\\" || return $?
@@ -353,16 +359,6 @@ shIstanbulCover() {
         fi
         npm_config_dir_coverage="$npm_config_dir_build/coverage.html" \
             $npm_config_file_istanbul cover $@ || return $?
-    fi
-}
-
-shIstanbulTest() {
-    # this function will run the command $@ with istanbul coverage
-    if [ ! "$npm_config_mode_coverage" ]
-    then
-        node $@ || return $?
-    else
-        shIstanbulCover $@ || return $?
     fi
 }
 
@@ -707,7 +703,7 @@ shSlimerDetect() {
     # this function will auto-detect if slimerjs is installed and usable
     if [ ! "$npm_config_mode_no_slimerjs" ] &&
         [ ! "$npm_config_mode_slimerjs" ] &&
-        [ "$(slimerjs $npm_config_dir_utility2/index.js hello)" = "hello" ]
+        [ "$(slimerjs $npm_config_dir_utility2/index.js hello 2>/dev/null)" = "hello" ]
     then
         export npm_config_mode_slimerjs=1 || return $?
     fi
@@ -799,6 +795,9 @@ shMain() {
     COMMAND="$1" || return $?
     shift || return $?
     case "$COMMAND" in
+    grep)
+        shGrep "$1" "$2" || return $?
+        ;;
     shRun)
         shInit && "$COMMAND" $@ || return $?
         ;;
@@ -830,4 +829,4 @@ shMain() {
         ;;
     esac
 }
-shMain $@
+shMain "$1" "$2" "$3" "$4" "$5" "$6" "$7" "$8"

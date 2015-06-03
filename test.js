@@ -18,7 +18,7 @@
             /*
                 this function will test ajax's default handling behavior
             */
-            var data, done, modeNext, onNext, onTaskEnd;
+            var data, done, modeNext, onNext, onParallel;
             modeNext = 0;
             onNext = function (error) {
                 modeNext = error
@@ -26,10 +26,10 @@
                     : modeNext + 1;
                 switch (modeNext) {
                 case 1:
-                    onTaskEnd = local.utility2.onTaskEnd(onNext);
-                    onTaskEnd.counter += 1;
+                    onParallel = local.utility2.onParallel(onNext);
+                    onParallel.counter += 1;
                     // test http GET handling behavior
-                    onTaskEnd.counter += 1;
+                    onParallel.counter += 1;
                     local.utility2.ajax({
                         // test debug handling behavior
                         debug: true,
@@ -41,11 +41,11 @@
                             // validate data
                             data = xhr.responseText;
                             local.utility2.assert(data === 'hello', data);
-                            onTaskEnd();
-                        }, onTaskEnd);
+                            onParallel();
+                        }, onParallel);
                     });
                     // test http GET 304 cache handling behavior
-                    onTaskEnd.counter += 1;
+                    onParallel.counter += 1;
                     local.utility2.ajax({
                         headers: {
                             'If-Modified-Since': new Date(Date.now() + 0xffff).toGMTString()
@@ -57,12 +57,12 @@
                             local.utility2.assert(!error, error);
                             // validate 304 http status
                             local.utility2.assert(xhr.status === 304, xhr.status);
-                            onTaskEnd();
-                        }, onTaskEnd);
+                            onParallel();
+                        }, onParallel);
                     });
                     // test http POST handling behavior
                     ['blob', 'response', 'text'].forEach(function (responseType) {
-                        onTaskEnd.counter += 1;
+                        onParallel.counter += 1;
                         local.utility2.ajax({
                             data: responseType === 'blob' && local.modeJs === 'node'
                                 // test blob post handling behavior
@@ -84,7 +84,7 @@
                                     // validate response
                                     data = xhr.response;
                                     local.utility2.assert(data, data);
-                                    onTaskEnd();
+                                    onParallel();
                                     return;
                                 }
                                 // validate responseText
@@ -106,14 +106,14 @@
                                 local.utility2.assert(data === null, data);
                                 // validate statusCode
                                 local.utility2.assert(xhr.statusCode === 200, xhr.statusCode);
-                                onTaskEnd();
-                            }, onTaskEnd);
+                                onParallel();
+                            }, onParallel);
                         });
                     });
-                    onTaskEnd();
+                    onParallel();
                     break;
                 case 2:
-                    onTaskEnd.counter += 1;
+                    onParallel.counter += 1;
                     [{
                         // test 404-not-found-error handling behavior
                         url: '/test/error-400?modeErrorIgnore=1'
@@ -132,16 +132,16 @@
                         timeout: 1,
                         url: 'https://' + local.utility2.uuidTime() + '.com'
                     }].forEach(function (options) {
-                        onTaskEnd.counter += 1;
+                        onParallel.counter += 1;
                         local.utility2.ajax(options, function (error) {
                             local.utility2.testTryCatch(function () {
                                 // validate error occurred
                                 local.utility2.assert(error, error);
-                                onTaskEnd();
-                            }, onTaskEnd);
+                                onParallel();
+                            }, onParallel);
                         });
                     });
-                    onTaskEnd();
+                    onParallel();
                     break;
                 case 3:
                     // test xhr.abort handling behavior
@@ -467,13 +467,13 @@
             onError();
         };
 
-        local.testCase_onTaskEnd_default = function (onError) {
+        local.testCase_onParallel_default = function (onError) {
             /*
-                this function will test onTaskEnd's default handling behavior
+                this function will test onParallel's default handling behavior
             */
-            var onTaskEnd, onTaskEndError;
+            var onParallel, onParallelError;
             // test onDebug handling behavior
-            onTaskEnd = local.utility2.onTaskEnd(onError, function (error, self) {
+            onParallel = local.utility2.onParallel(onError, function (error, self) {
                 local.utility2.testTryCatch(function () {
                     // validate no error occurred
                     local.utility2.assert(!error, error);
@@ -481,26 +481,26 @@
                     local.utility2.assert(self.counter >= 0, self);
                 }, onError);
             });
-            onTaskEnd.counter += 1;
+            onParallel.counter += 1;
             // test multiple-task handling behavior
-            onTaskEnd.counter += 1;
+            onParallel.counter += 1;
             setTimeout(function () {
-                onTaskEndError = local.utility2.onTaskEnd(function (error) {
+                onParallelError = local.utility2.onParallel(function (error) {
                     local.utility2.testTryCatch(function () {
                         // validate error occurred
                         local.utility2.assert(error, error);
-                        onTaskEnd();
-                    }, onTaskEnd);
+                        onParallel();
+                    }, onParallel);
                 });
-                onTaskEndError.counter += 1;
+                onParallelError.counter += 1;
                 // test error handling behavior
-                onTaskEndError.counter += 1;
-                onTaskEndError(local.utility2.errorDefault);
+                onParallelError.counter += 1;
+                onParallelError(local.utility2.errorDefault);
                 // test ignore-after-error handling behavior
-                onTaskEndError();
+                onParallelError();
             });
             // test default handling behavior
-            onTaskEnd();
+            onParallel();
         };
 
         local.testCase_onTimeout_timeout = function (onError) {
@@ -575,12 +575,12 @@
             /*
                 this function will test taskRunOrSubscribe's default handling behavior
             */
-            var key, onTaskEnd;
+            var key, onParallel;
             key = local.utility2.uuidTime();
-            onTaskEnd = local.utility2.onTaskEnd(onError);
-            onTaskEnd.counter += 1;
+            onParallel = local.utility2.onParallel(onError);
+            onParallel.counter += 1;
             // test create handling behavior
-            onTaskEnd.counter += 1;
+            onParallel.counter += 1;
             local.utility2.taskRunOrSubscribe({
                 key: key,
                 onTask: function (onError) {
@@ -590,13 +590,13 @@
                         onError();
                     });
                 }
-            }, onTaskEnd);
+            }, onParallel);
             // test addCallback handling behavior
-            onTaskEnd.counter += 1;
+            onParallel.counter += 1;
             local.utility2.taskRunOrSubscribe({
                 key: key
-            }, onTaskEnd);
-            onTaskEnd();
+            }, onParallel);
+            onParallel();
         };
 
         local.testCase_testRun_failure = function (onError) {
@@ -737,21 +737,21 @@
             /*
                 this function will test onFileModifiedRestart's watchFile handling behavior
             */
-            var file, onTaskEnd;
+            var file, onParallel;
             file = __dirname + '/package.json';
-            onTaskEnd = local.utility2.onTaskEnd(onError);
-            onTaskEnd.counter += 1;
+            onParallel = local.utility2.onParallel(onError);
+            onParallel.counter += 1;
             local.fs.stat(file, function (error, stat) {
                 // test default watchFile handling behavior
-                onTaskEnd.counter += 1;
-                local.fs.utimes(file, stat.atime, new Date(), onTaskEnd);
+                onParallel.counter += 1;
+                local.fs.utimes(file, stat.atime, new Date(), onParallel);
                 // test nop watchFile handling behavior
-                onTaskEnd.counter += 1;
+                onParallel.counter += 1;
                 setTimeout(function () {
-                    local.fs.utimes(file, stat.atime, stat.mtime, onTaskEnd);
+                    local.fs.utimes(file, stat.atime, stat.mtime, onParallel);
                 // coverage-hack - use 1500 ms to cover setInterval watchFile in node
                 }, 1500);
-                onTaskEnd(error);
+                onParallel(error);
             });
         };
 
@@ -759,9 +759,9 @@
             /*
                 this function will test the test-page's default handling behavior
             */
-            var onTaskEnd, options;
-            onTaskEnd = local.utility2.onTaskEnd(onError);
-            onTaskEnd.counter += 1;
+            var onParallel, options;
+            onParallel = local.utility2.onParallel(onError);
+            onParallel.counter += 1;
             [{
                 // test default handling behavior
                 url: 'http://localhost:' +
@@ -796,7 +796,7 @@
                     'modeTestCase=testCase_testRun_failure&' +
                     'timeExit={{timeExit}}'
             }].forEach(function (options) {
-                onTaskEnd.counter += 1;
+                onParallel.counter += 1;
                 local.utility2.phantomTest(options, function (error) {
                     local.utility2.testTryCatch(function () {
                         // validate error occurred
@@ -806,12 +806,12 @@
                         } else {
                             local.utility2.assert(!error, error);
                         }
-                        onTaskEnd();
-                    }, onTaskEnd);
+                        onParallel();
+                    }, onParallel);
                 });
             });
             // test screenCapture handling behavior
-            onTaskEnd.counter += 1;
+            onParallel.counter += 1;
             options = {
                 modeErrorIgnore: true,
                 timeoutScreenCapture: 1,
@@ -832,11 +832,11 @@
                     );
                     // remove screen-capture file, so it will not interfere with re-test
                     local.fs.unlinkSync(options.phantomjs.fileScreenCapture);
-                    onTaskEnd();
-                }, onTaskEnd);
+                    onParallel();
+                }, onParallel);
             });
             // test misc handling behavior
-            onTaskEnd.counter += 1;
+            onParallel.counter += 1;
             local.utility2.testMock([
                 [local.utility2, {
                     envDict: {
@@ -858,30 +858,30 @@
                         'timeExit={{timeExit}}'
                 });
                 onError();
-            }, onTaskEnd);
-            onTaskEnd();
+            }, onParallel);
+            onParallel();
         };
 
         local.testCase_processSpawnWithTimeout_default = function (onError) {
             /*
                 this function will test processSpawnWithTimeout's default handling behavior
             */
-            var childProcess, onTaskEnd;
-            onTaskEnd = local.utility2.onTaskEnd(onError);
-            onTaskEnd.counter += 1;
+            var childProcess, onParallel;
+            onParallel = local.utility2.onParallel(onError);
+            onParallel.counter += 1;
             // test default handling behavior
-            onTaskEnd.counter += 1;
+            onParallel.counter += 1;
             local.utility2.processSpawnWithTimeout('ls')
-                .on('error', onTaskEnd)
+                .on('error', onParallel)
                 .on('exit', function (exitCode, signal) {
                     // validate exitCode
                     local.utility2.assert(exitCode === 0, exitCode);
                     // validate signal
                     local.utility2.assert(signal === null, signal);
-                    onTaskEnd();
+                    onParallel();
                 });
             // test timeout handling behavior
-            onTaskEnd.counter += 1;
+            onParallel.counter += 1;
             local.utility2.testMock([
                 [local.utility2, { timeoutDefault: 1000 }]
             ], function (onError) {
@@ -889,17 +889,17 @@
                 onError();
             }, local.utility2.nop);
             childProcess
-                .on('error', onTaskEnd)
+                .on('error', onParallel)
                 .on('exit', function (exitCode, signal) {
                     local.utility2.testTryCatch(function () {
                         // validate exitCode
                         local.utility2.assert(exitCode === null, exitCode);
                         // validate signal
                         local.utility2.assert(signal === 'SIGKILL', signal);
-                        onTaskEnd();
-                    }, onTaskEnd);
+                        onParallel();
+                    }, onParallel);
                 });
-            onTaskEnd();
+            onParallel();
         };
 
         local.testCase_replStart_default = function (onError) {

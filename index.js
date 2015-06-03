@@ -304,22 +304,7 @@
             };
         };
 
-        local.utility2.onReadyInit = function () {
-            /*
-                this function will create the deferred task utility2.onReady
-            */
-            // init onReady
-            local.utility2.taskRunOrSubscribe({
-                key: 'utility2.onReady',
-                onTask: function (onError) {
-                    local.utility2.onReady = local.utility2.onTaskEnd(onError);
-                    local.utility2.onReady.counter += 1;
-                    setTimeout(local.utility2.onReady);
-                }
-            });
-        };
-
-        local.utility2.onTaskEnd = function (onError, onDebug) {
+        local.utility2.onParallel = function (onError, onDebug) {
             /*
                 this function will return a function that will
                 1. runs async tasks in parallel
@@ -352,6 +337,21 @@
             self.counter = 0;
             // return callback
             return self;
+        };
+
+        local.utility2.onReadyInit = function () {
+            /*
+                this function will create the deferred task utility2.onReady
+            */
+            // init onReady
+            local.utility2.taskRunOrSubscribe({
+                key: 'utility2.onReady',
+                onTask: function (onError) {
+                    local.utility2.onReady = local.utility2.onParallel(onError);
+                    local.utility2.onReady.counter += 1;
+                    setTimeout(local.utility2.onReady);
+                }
+            });
         };
 
         local.utility2.onTimeout = function (onError, timeout, message) {
@@ -494,17 +494,17 @@
                 this function will try to run onError from cache,
                 and auto-update the cache with a background-task
             */
-            var cacheDict, cacheKey, cacheValue, modeCacheHit, modeNext, onCacheWrite, onNext;
+            var cacheDict, cacheKey, modeCacheHit, modeNext, onCacheWrite, onNext;
             modeNext = 0;
             onNext = function (error, data) {
                 if (modeNext < 10) {
-                    cacheValue = !error && data;
-                    if (cacheValue) {
+                    options.cacheValue = !error && data;
+                    if (options.cacheValue) {
                         options.modeCacheHit = modeCacheHit;
-                        // jump to background-task
+                        // goto to background-task
                         modeNext = 10;
                         // call onError with cacheValue
-                        onError.apply(null, JSON.parse(cacheValue));
+                        onError.apply(null, JSON.parse(options.cacheValue));
                     }
                 }
                 modeNext += 1;
@@ -542,7 +542,7 @@
                     onNext();
                     return;
                 case 3:
-                    // jump to background-task
+                    // goto to background-task
                     modeNext = 10;
                     onNext();
                     return;
@@ -551,7 +551,7 @@
                     setTimeout(
                         onNext,
                         // run background-task with lower priority for cache-hit
-                        cacheValue && options.cacheTtl
+                        options.cacheValue && options.cacheTtl
                     );
                     return;
                 case 12:
@@ -560,13 +560,17 @@
                     return;
                 case 13:
                     // if cache-miss, call onError with background-task-result
-                    if (!cacheValue) {
+                    if (!options.cacheValue) {
                         setTimeout(onNext);
                     }
-                    cacheValue = JSON.stringify(Array.prototype.slice.call(arguments));
+                    options.cacheValue = JSON.stringify(Array.prototype.slice.call(arguments));
+                    // if error occurred, then do not save cacheValue
+                    if (error || !data) {
+                        return;
+                    }
                     // save cacheValue to memory-cache
                     if (options.modeCacheMemory) {
-                        local.utility2.cacheDict[cacheDict][cacheKey] = cacheValue;
+                        local.utility2.cacheDict[cacheDict][cacheKey] = options.cacheValue;
                     }
                     // save cacheValue to file-cache
                     if (options.modeCacheFile) {
@@ -575,7 +579,7 @@
                             onTask: function (onError) {
                                 local.utility2.fsWriteFileWithMkdirp(
                                     options.modeCacheFile + '/' + cacheDict + '/' + cacheKey,
-                                    cacheValue,
+                                    options.cacheValue,
                                     onError
                                 );
                             }
@@ -584,7 +588,7 @@
                     return;
                 case 14:
                     // call onError with cacheValue
-                    onError.apply(null, JSON.parse(cacheValue));
+                    onError.apply(null, JSON.parse(options.cacheValue));
                     return;
                 }
             };
@@ -845,7 +849,7 @@
             */
             var coverageReportCreate,
                 exit,
-                onTaskEnd,
+                onParallel,
                 separator,
                 testPlatform,
                 testReport,
@@ -869,8 +873,8 @@
                 }, options.onReady);
                 return;
             }
-            // init onTaskEnd
-            onTaskEnd = local.utility2.onTaskEnd(function () {
+            // init onParallel
+            onParallel = local.utility2.onParallel(function () {
                 /*
                     this function will create the test-report after all tests have finished
                 */
@@ -989,7 +993,7 @@
                     break;
                 }
             });
-            onTaskEnd.counter += 1;
+            onParallel.counter += 1;
             // mock exit
             exit = local.utility2.exit;
             local.utility2.exit = local.utility2.nop;
@@ -1077,7 +1081,7 @@
                     // stop testCase timer
                     local._timeElapsedStop(testCase);
                     // if all tests have finished, then create test-report
-                    onTaskEnd();
+                    onParallel();
                 };
                 // init timerTimeout
                 timerTimeout = local.utility2.onTimeout(
@@ -1086,7 +1090,7 @@
                     testCase.name
                 );
                 // increment number of tests remaining
-                onTaskEnd.counter += 1;
+                onParallel.counter += 1;
                 // run testCase in try-catch block
                 try {
                     // start testCase timer
@@ -1096,7 +1100,7 @@
                     onError(errorCaught);
                 }
             });
-            onTaskEnd();
+            onParallel();
         };
 
         local.utility2.testTryCatch = function (callback, onError) {
@@ -1733,9 +1737,9 @@
                 this function will spawn both phantomjs and slimerjs processes,
                 to test options.url
             */
-            var onTaskEnd;
-            onTaskEnd = local.utility2.onTaskEnd(onError);
-            onTaskEnd.counter += 1;
+            var onParallel;
+            onParallel = local.utility2.onParallel(onError);
+            onParallel.counter += 1;
             ['phantomjs', 'slimerjs'].forEach(function (argv0) {
                 var optionsCopy;
                 // if slimerjs is not available, then do not use it
@@ -1748,14 +1752,14 @@
                 optionsCopy = local.utility2.jsonCopy(options);
                 optionsCopy.argv0 = argv0;
                 // run phantomjs / slimerjs instance
-                onTaskEnd.counter += 1;
+                onParallel.counter += 1;
                 local._phantomTestSingle(optionsCopy, function (error) {
                     // save phantomjs / slimerjs state to options
                     options[argv0] = optionsCopy;
-                    onTaskEnd(error);
+                    onParallel(error);
                 });
             });
-            onTaskEnd();
+            onParallel();
         };
 
         local._phantomTestSingle = function (options, onError) {
@@ -1763,7 +1767,7 @@
                 this function will spawn a single phantomjs or slimerjs process,
                 to test options.url
             */
-            var modeNext, onNext, onTaskEnd, timerTimeout;
+            var modeNext, onNext, onParallel, timerTimeout;
             modeNext = 0;
             onNext = function (error) {
                 modeNext = error instanceof Error
@@ -1831,14 +1835,14 @@
                     break;
                 case 2:
                     options.exitCode = error;
-                    onTaskEnd = local.utility2.onTaskEnd(onNext);
-                    onTaskEnd.counter += 1;
+                    onParallel = local.utility2.onParallel(onNext);
+                    onParallel.counter += 1;
                     // merge coverage and test-report
                     [
                         options.fileCoverage,
                         options.fileTestReport
                     ].forEach(function (file, ii) {
-                        onTaskEnd.counter += 1;
+                        onParallel.counter += 1;
                         local.fs.readFile(
                             file,
                             'utf8',
@@ -1859,11 +1863,11 @@
                                         );
                                     }
                                 }
-                                onTaskEnd();
+                                onParallel();
                             })
                         );
                     });
-                    onTaskEnd();
+                    onParallel();
                     break;
                 case 3:
                     onNext(options.exitCode && new Error(
@@ -1972,6 +1976,7 @@
                                 'coverage\\|' +
                                 'docs\\|' +
                                 'external\\|' +
+                                'fixtures\\|' +
                                 'git_modules\\|' +
                                 'jquery\\|' +
                                 'log\\|logs\\|' +

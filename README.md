@@ -433,14 +433,13 @@ npm_config_mode_auto_restart=1 \
 npm_config_mode_auto_restart_child=1 \
 ./index.sh test test.js"
     },
-    "version": "2015.5.28-a"
+    "version": "2015.6.1-a"
 }
 ```
 
 
 
 # todo
-- rename nextMiddleware to onNextMiddleware
 - add middlewareGzip
 - add testCase for validating _testSecret
 - create flamegraph from istanbul coverage
@@ -451,9 +450,11 @@ npm_config_mode_auto_restart_child=1 \
 
 
 
-# change since 5a354dd9
-- npm publish 2015.5.28-a
-- jslint self during npm test
+# change since b1136655
+- npm publish 2015.6.1-a
+- rename onTaskEnd to onParallel
+- add utility2 grep command
+- remove unnecessary shRun from shBuild script
 - none
 
 
@@ -479,19 +480,19 @@ shBuild() {
     . ./index.sh && shInit || return $?
 
     # run npm-test on published package
-    shRun shNpmTestPublished || return $?
+    shNpmTestPublished || return $?
 
     # test example js script
     MODE_BUILD=testExampleJs \
         shRunScreenCapture shReadmeTestJs example.js || return $?
     # screen-capture example.js coverage
-    MODE_BUILD=testExampleJs shRun shPhantomScreenCapture \
+    MODE_BUILD=testExampleJs shPhantomScreenCapture \
         /tmp/app/tmp/build/coverage.html/app/example.js.html || return $?
     # copy phantomjs screen-capture to $npm_config_dir_build
     cp /tmp/app/tmp/build/screen-capture.*.png $npm_config_dir_build || \
         return $?
     # screen-capture example.js test-report
-    MODE_BUILD=testExampleSh shRun shPhantomScreenCapture \
+    MODE_BUILD=testExampleSh shPhantomScreenCapture \
         /tmp/app/tmp/build/test-report.html || return $?
 
     # test example shell script
@@ -510,7 +511,7 @@ shBuild() {
     [ "$(node --version)" \< "v0.12" ] && return
 
     # deploy app to heroku
-    shRun shHerokuDeploy hrku01-$npm_package_name-$CI_BRANCH || return $?
+    shHerokuDeploy hrku01-$npm_package_name-$CI_BRANCH || return $?
 
     # test deployed app to heroku
     if [ "$CI_BRANCH" = alpha ] ||
@@ -521,11 +522,11 @@ shBuild() {
             || return $?
         TEST_URL="$TEST_URL?modeTest=phantom&_testSecret={{_testSecret}}" || \
             return $?
-        MODE_BUILD=herokuTest shRun shPhantomTest $TEST_URL || return $?
+        MODE_BUILD=herokuTest shPhantomTest "$TEST_URL" || return $?
     fi
 
     # if number of commits > 1024, then squash older commits
-    shRun shGitBackupAndSquashAndPush 1024 > /dev/null || return $?
+    shGitBackupAndSquashAndPush 1024 > /dev/null || return $?
 }
 shBuild
 
@@ -552,7 +553,7 @@ shBuildGithubUploadCleanup() {
 
 # upload build-artifacts to github,
 # and if number of commits > 16, then squash older commits
-COMMIT_LIMIT=16 shRun shBuildGithubUpload || exit $?
+COMMIT_LIMIT=16 shBuildGithubUpload || exit $?
 
 # exit with $EXIT_CODE
 exit $EXIT_CODE
