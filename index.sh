@@ -526,7 +526,8 @@ shReadmeExportFile() {
             '$FILE_OUT',
             require('fs')
                 .readFileSync('$CWD/README.md', 'utf8')
-                .replace((/[\\S\\s]+?\n.*?$FILE_IN\s*?\`\`\`\n/), function (match0) {
+                // support syntax-highlighting
+                .replace((/[\\S\\s]+?\n.*?$FILE_IN\s*?\`\`\`\\w*?\n/), function (match0) {
                     // preserve lineno
                     return match0.replace((/.+/g), '');
                 })

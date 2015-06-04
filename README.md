@@ -42,7 +42,7 @@ run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
 #### to run this example, follow the instruction in the script below
 - example.sh
 
-```
+```shell
 # example.sh
 
 # this shell script will
@@ -77,7 +77,7 @@ shExampleSh
 #### to run this example, follow the instruction in the script below
 - example.js
 
-```
+```javascript
 /*
 example.js
 
@@ -392,7 +392,7 @@ instruction
 
 
 # package.json
-```
+```json
 {
     "author": "kai zhu <kaizhu256@gmail.com>",
     "bin": { "utility2" : "index.sh" },
@@ -433,7 +433,7 @@ npm_config_mode_auto_restart=1 \
 npm_config_mode_auto_restart_child=1 \
 ./index.sh test test.js"
     },
-    "version": "2015.6.1-a"
+    "version": "2015.6.1-b"
 }
 ```
 
@@ -450,11 +450,9 @@ npm_config_mode_auto_restart_child=1 \
 
 
 
-# change since b1136655
-- npm publish 2015.6.1-a
-- rename onTaskEnd to onParallel
-- add utility2 grep command
-- remove unnecessary shRun from shBuild script
+# change since d27cce09
+- npm publish 2015.6.1-b
+- update README.md with syntax-highlighted code-blocks
 - none
 
 
@@ -467,7 +465,7 @@ npm_config_mode_auto_restart_child=1 \
 # internal build-script
 - build.sh
 
-```
+```shell
 # build.sh
 
 # this shell script will run the build for this package
