@@ -2,12 +2,12 @@
     "author": "kai zhu <kaizhu256@gmail.com>",
     "bin": { "utility2" : "index.sh" },
     "dependencies": {
-        "istanbul-lite": "^2015.5.6-a",
+        "istanbul-lite": "^0.3.14-2015.6.1-a",
         "jslint-lite": "^2015.5.6-a"
     },
     "description": "run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)",
     "devDependencies": {
-        "phantomjs-lite": "^2015.4.26-c"
+        "phantomjs-lite": "^1.9.8-2015.6.1-b"
     },
     "engines": { "node": ">=0.10 <=0.12" },
     "keywords": [
@@ -33,5 +33,5 @@
         "start": "npm_config_mode_auto_restart=1 ./index.sh shRun node test.js",
         "test": "./index.sh shRun shReadmeExportPackageJson && export npm_config_file_start=index.js && npm_config_mode_auto_restart=1 npm_config_mode_auto_restart_child=1 ./index.sh test test.js"
     },
-    "version": "2015.6.1-b"
+    "version": "2015.6.10-a"
 }

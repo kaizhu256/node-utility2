@@ -173,24 +173,21 @@ shGrep() {
     DIR=$1 || return $?
     REGEXP=$2 || return $?
     FILE_FILTER="/\\.\\" || return $?
-    FILE_FILTER="$FILE_FILTER|.*\\b\\(\\.\\d\\" || return $?
-    FILE_FILTER="$FILE_FILTER|archive\\" || return $?
-    FILE_FILTER="$FILE_FILTER|artifacts\\" || return $?
-    FILE_FILTER="$FILE_FILTER|bower_components\\" || return $?
-    FILE_FILTER="$FILE_FILTER|build\\" || return $?
+    FILE_FILTER="$FILE_FILTER|.*\\(\\b\\|_\\)\\(\\.\\d\\" || return $?
+    FILE_FILTER="$FILE_FILTER|archive\\|artifact\\" || return $?
+    FILE_FILTER="$FILE_FILTER|bower_component\\|build\\" || return $?
     FILE_FILTER="$FILE_FILTER|coverage\\" || return $?
-    FILE_FILTER="$FILE_FILTER|docs\\" || return $?
+    FILE_FILTER="$FILE_FILTER|doc\\" || return $?
     FILE_FILTER="$FILE_FILTER|external\\" || return $?
-    FILE_FILTER="$FILE_FILTER|fixtures\\" || return $?
-    FILE_FILTER="$FILE_FILTER|git_modules\\" || return $?
+    FILE_FILTER="$FILE_FILTER|fixture\\" || return $?
+    FILE_FILTER="$FILE_FILTER|git_module\\" || return $?
     FILE_FILTER="$FILE_FILTER|jquery\\" || return $?
     FILE_FILTER="$FILE_FILTER|log\\" || return $?
-    FILE_FILTER="$FILE_FILTER|logs\\" || return $?
-    FILE_FILTER="$FILE_FILTER|min\\" || return $?
-    FILE_FILTER="$FILE_FILTER|node_modules\\" || return $?
+    FILE_FILTER="$FILE_FILTER|min\\|mock\\" || return $?
+    FILE_FILTER="$FILE_FILTER|node_module\\" || return $?
     FILE_FILTER="$FILE_FILTER|rollup.*\\" || return $?
     FILE_FILTER="$FILE_FILTER|swp\\" || return $?
-    FILE_FILTER="$FILE_FILTER|tmp\\)\\b" || return $?
+    FILE_FILTER="$FILE_FILTER|tmp\\)\\(\\b\\|[_s]\\)" || return $?
     find "$DIR" -type f | \
         grep -v "$FILE_FILTER" | \
         tr "\n" "\000" | \
@@ -529,7 +526,7 @@ shReadmeExportFile() {
                 // support syntax-highlighting
                 .replace((/[\\S\\s]+?\n.*?$FILE_IN\s*?\`\`\`\\w*?\n/), function (match0) {
                     // preserve lineno
-                    return match0.replace((/.+/g), '');
+                    return '$MODE_NO_LINENO' ? '' : match0.replace((/.+/g), '');
                 })
                 .replace((/\n\`\`\`[\\S\\s]+/), '')
         );
@@ -539,7 +536,7 @@ shReadmeExportFile() {
 shReadmeExportPackageJson() {
     # this function will extract and save the package.json file embedded in README.md
     local FILE || return $?
-    shReadmeExportFile package.json $CWD/package.json || return $?
+    MODE_NO_LINENO=1 shReadmeExportFile package.json $CWD/package.json || return $?
     node -e "
         require('fs').writeFileSync(
             '$CWD/package.json',
@@ -547,8 +544,6 @@ shReadmeExportPackageJson() {
                 .readFileSync('$CWD/package.json', 'utf8')
                 // parse '\' line-continuation
                 .replace((/\\\\\n/g), '')
-                // remove leading whitespace
-                .trimLeft()
         );
     " || return $?
 }

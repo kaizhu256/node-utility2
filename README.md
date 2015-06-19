@@ -19,7 +19,7 @@ run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
 |--:|:--|:--|:--|
 | test-server : | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://hrku01-utility2-master.herokuapp.com) | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://hrku01-utility2-beta.herokuapp.com) | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://hrku01-utility2-alpha.herokuapp.com)|
 | test-report : | [![test-report](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/test-report.html) | [![test-report](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/test-report.html) | [![test-report](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/test-report.html)|
-| coverage : | [![istanbul-lite coverage](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/coverage.html/node-utility2/index.html) | [![istanbul-lite coverage](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/coverage.html/node-utility2/index.html) | [![istanbul-lite coverage](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/coverage.html/node-utility2/index.html)|
+| coverage : | [![istanbul-lite coverage](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/coverage.html/index.html) | [![istanbul-lite coverage](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/coverage.html/index.html) | [![istanbul-lite coverage](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/coverage.html/index.html)|
 | build-artifacts : | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..master..travis-ci.org) | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..beta..travis-ci.org) | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..alpha..travis-ci.org)|
 
 #### master branch
@@ -126,8 +126,8 @@ instruction
         // init tests
         local.testCase_ajax_200 = function (onError) {
             /*
-                this function will test ajax's "200 ok" handling behavior
-            */
+             * this function will test ajax's "200 ok" handling behavior
+             */
             var data;
             // test '/test/hello'
             local.utility2.ajax({
@@ -145,8 +145,8 @@ instruction
         };
         local.testCase_ajax_404 = function (onError) {
             /*
-                this function will test ajax's "404 not found" handling behavior
-            */
+             * this function will test ajax's "404 not found" handling behavior
+             */
             // test '/test/undefined'
             local.utility2.ajax({ url: '/test/undefined' }, function (error) {
                 local.utility2.testTryCatch(function () {
@@ -171,8 +171,8 @@ instruction
         // init node tests
         local.testCase_phantomTest_default = function (onError) {
             /*
-                this function will spawn phantomjs to test the test-page
-            */
+             * this function will spawn phantomjs to test the test-page
+             */
             local.utility2.phantomTest({
                 url: 'http://localhost:' +
                     process.env.npm_config_server_port +
@@ -244,16 +244,16 @@ instruction
 '    // comment this testCase to disable the failed assertion demo\n' +
 '    testCaseDict.testCase_failed_assertion_demo = function (onError) {\n' +
 '        /*\n' +
-'            this function will demo a failed assertion test\n' +
-'        */\n' +
+'         * this function will demo a failed assertion test\n' +
+'         */\n' +
 '        window.utility2.assert(false, "this is a failed assertion demo");\n' +
 '        onError();\n' +
 '    };\n' +
 '\n' +
 '    testCaseDict.testCase_passed_ajax_demo = function (onError) {\n' +
 '        /*\n' +
-'            this function will demo a passed ajax test\n' +
-'        */\n' +
+'         * this function will demo a passed ajax test\n' +
+'         */\n' +
 '        var data;\n' +
 '        // test ajax request for main-page "/"\n' +
 '        window.utility2.ajax({\n' +
@@ -341,8 +341,8 @@ instruction
             local.utility2.middlewareInit,
             function (request, response, nextMiddleware) {
                 /*
-                this will run the test-middleware
-                */
+                 * this will run the test-middleware
+                 */
                 switch (request.urlParsed.pathnameNormalized) {
                 // serve assets
                 case '/':
@@ -397,13 +397,13 @@ instruction
     "author": "kai zhu <kaizhu256@gmail.com>",
     "bin": { "utility2" : "index.sh" },
     "dependencies": {
-        "istanbul-lite": "^2015.5.6-a",
+        "istanbul-lite": "^0.3.14-2015.6.1-a",
         "jslint-lite": "^2015.5.6-a"
     },
     "description": "run dynamic browser tests with coverage \
 (via istanbul-lite and phantomjs-lite)",
     "devDependencies": {
-        "phantomjs-lite": "^2015.4.26-c"
+        "phantomjs-lite": "^1.9.8-2015.6.1-b"
     },
     "engines": { "node": ">=0.10 <=0.12" },
     "keywords": [
@@ -433,7 +433,7 @@ npm_config_mode_auto_restart=1 \
 npm_config_mode_auto_restart_child=1 \
 ./index.sh test test.js"
     },
-    "version": "2015.6.1-b"
+    "version": "2015.6.10-a"
 }
 ```
 
@@ -450,9 +450,15 @@ npm_config_mode_auto_restart_child=1 \
 
 
 
-# change since d27cce09
-- npm publish 2015.6.1-b
-- update README.md with syntax-highlighted code-blocks
+# change since 0a907a20
+- npm publish 2015.6.10-a
+- add MODE_NO_LINENO env var for shReadmeExportFile
+- rename modeErrorIgnore to modeSilent
+- remove unused testSecret code
+- ignore printing of most errors if in coverage-mode
+- add application/xml Content-Type to middlewareInit
+- update comments
+- update grep
 - none
 
 
@@ -482,6 +488,7 @@ shBuild() {
 
     # test example js script
     MODE_BUILD=testExampleJs \
+    MODE_NO_LINENO=1 \
         shRunScreenCapture shReadmeTestJs example.js || return $?
     # screen-capture example.js coverage
     MODE_BUILD=testExampleJs shPhantomScreenCapture \

@@ -62,6 +62,32 @@ shDockerStopAll() {
     docker stop $(docker ps -aq) || return $?
 }
 
+shEmscriptenInstall() {
+    # this function will install emscripten
+    # https://kripken.github.io/emscripten-site/docs/getting_started/downloads.html
+    local CWD || return $?
+    local EXIT_CODE || return $?
+    CWD=$(pwd) || return $?
+    # Update the package lists
+    apt-get update
+    # Install *gcc* (and related dependencies)
+    apt-get install -y build-essential cmake default-jre git-core python2.7
+    curl https://s3.amazonaws.com/mozilla-games/emscripten/releases/emsdk-portable.tar.gz > \
+        /tmp/emsdk-portable.tar.gz || return $?
+    cd /tmp && tar -xzf emsdk-portable.tar.gz && cd emsdk_portable || return $?
+    # Fetch the latest registry of available tools.
+    ./emsdk update
+    # Download and install the latest SDK tools.
+    ./emsdk install latest
+    # Set up the compiler configuration to point to the "latest" SDK.
+    ./emsdk activate latest
+    # Linux/Mac OS X only: Set the current Emscripten path
+    source ./emsdk_env.sh
+    EXIT_CODE=$? || return $?
+    cd $CWD || return $?
+    return $EXIT_CODE || return $?
+}
+
 shIptablesInstall() {
     # this function will install iptables
     # reset iptables
@@ -147,6 +173,30 @@ shMongodbInstall() {
     service mongod start
 }
 
+shMountData() {
+    # this function will mount data
+    local DIR || return $?
+    for DIR in /mnt /mnt/var/lib/docker /mnt/data /mnt/local /mnt/old
+    do
+        umount $DIR || :
+        mkdir -p $DIR || return $?
+    done
+    # /dev/xvdb /mnt/local auto noatime
+    # /dev/xvdf /mnt/data auto noatime
+    # /mnt/var/lib/docker /var/lib/docker none defaults,bind
+    # mount -a || return $?
+    mount /dev/xvdb /mnt/local -o noatime || :
+    mount /dev/xvdf /mnt/data -o noatime || return $?
+    mkdir -p /var/lib/docker || return $?
+    mount /mnt/data/var/lib/docker /var/lib/docker -o bind || return $?
+    for DIR in /home/ubuntu /root /var/lib/docker
+    do
+        cp -a $DIR $DIR.00 2>/dev/null || :
+        rm -fr $DIR || return $?
+        ln -s /mnt/data/$DIR $DIR || return $?
+    done
+}
+
 shNodejsInstall() {
     # this function will install node.js
     # https://www.digitalocean.com/community/tutorials/how-to-install-node-js-on-an-ubuntu-14-04-server
@@ -156,7 +206,7 @@ shNodejsInstall() {
     fi
     apt-get install -y build-essential libssl-dev python || return $?
     curl https://raw.githubusercontent.com/creationix/nvm/v0.16.1/install.sh | sh || return $?
-    source ~/.profile || return $?
+    source ~/.profile || :
     nvm install 0.12 || return $?
     nvm use 0.12 || return $?
     node --version > /dev/null 2>&1 || return $?

@@ -17,8 +17,8 @@
     (function () {
         local._timeElapsedStop = function (options) {
             /*
-                this function will stop options.timeElapsed
-            */
+             * this function will stop options.timeElapsed
+             */
             if (options.timeElapsed > 0xffffffff) {
                 options.timeElapsed = Date.now() - options.timeElapsed;
             }
@@ -26,8 +26,8 @@
 
         local.utility2.assert = function (passed, message) {
             /*
-                this function will throw an error if the assertion fails
-            */
+             * this function will throw an error if the assertion fails
+             */
             if (!passed) {
                 // if message is an Error object, then throw it
                 if (message instanceof Error) {
@@ -45,8 +45,8 @@
 
         local.utility2.istanbulMerge = function (coverage1, coverage2) {
             /*
-                this function will merge coverage2 into coverage1
-            */
+             * this function will merge coverage2 into coverage1
+             */
             var dict1, dict2;
             coverage1 = coverage1 || {};
             coverage2 = coverage2 || {};
@@ -88,8 +88,8 @@
 
         local.utility2.jsonCopy = function (element) {
             /*
-                this function will return a deep-copy of the JSON element
-            */
+             * this function will return a deep-copy of the JSON element
+             */
             return element === undefined
                 ? undefined
                 : JSON.parse(JSON.stringify(element));
@@ -97,15 +97,15 @@
 
         local.utility2.jsonStringifyOrdered = function (element, replacer, space) {
             /*
-                this function will JSON.stringify the element with dictionaries in sorted order,
-                for testing purposes
-            */
+             * this function will JSON.stringify the element with dictionaries in sorted order,
+             * for testing purposes
+             */
             var circularList, stringify, tmp;
             stringify = function (element) {
                 /*
-                    this function will recursively stringify the element,
-                    with object-keys sorted and circular-references removed
-                */
+                 * this function will recursively stringify the element,
+                 * with object-keys sorted and circular-references removed
+                 */
                 // if element is an object,
                 // then recursively stringify its items sorted by their keys
                 if (element && typeof element === 'object') {
@@ -149,9 +149,9 @@
 
         local.utility2.listShuffle = function (list) {
             /*
-                this function will inplace shuffle the list, via fisher-yates algorithm
-                https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle
-            */
+             * this function will inplace shuffle the list, via fisher-yates algorithm
+             * https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle
+             */
             var ii, random, swap;
             for (ii = list.length - 1; ii > 0; ii -= 1) {
                 // coerce to finite integer
@@ -165,9 +165,9 @@
 
         local.utility2.objectSetDefault = function (options, defaults, depth) {
             /*
-                this function will recursively set default values for unset leaf nodes
-                in the options object
-            */
+             * this function will recursively set default values for unset leaf nodes
+             * in the options object
+             */
             Object.keys(defaults).forEach(function (key) {
                 var defaults2, options2;
                 defaults2 = defaults[key];
@@ -196,9 +196,9 @@
 
         local.utility2.objectSetOverride = function (options, override, depth) {
             /*
-                this function will recursively override the options object,
-                with the override object
-            */
+             * this function will recursively override the options object,
+             * with the override object
+             */
             var options2, override2;
             Object.keys(override).forEach(function (key) {
                 options2 = options[key];
@@ -228,9 +228,9 @@
 
         local.utility2.objectTraverse = function (element, onSelf, circularList) {
             /*
-                this function will recursively traverse the element,
-                and call onSelf on the element's properties
-            */
+             * this function will recursively traverse the element,
+             * and call onSelf on the element's properties
+             */
             onSelf(element);
             circularList = circularList || [];
             if (element &&
@@ -246,10 +246,10 @@
 
         local.utility2.onErrorDefault = function (error) {
             /*
-                this function will print error.stack or error.message to stderr
-            */
+             * this function will print error.stack or error.message to stderr
+             */
             // if error is defined, then print error.stack
-            if (error) {
+            if (error && !local.global.__coverage__) {
                 console.error('\nonErrorDefault - error\n' +
                     error.message + '\n' + error.stack + '\n');
             }
@@ -261,9 +261,9 @@
 
         local.utility2.onErrorJsonParse = function (onError) {
             /*
-                this function will return a wrapper function,
-                that will JSON.parse the data with error handling
-            */
+             * this function will return a wrapper function,
+             * that will JSON.parse the data with error handling
+             */
             return function (error, data) {
                 if (error) {
                     onError(error);
@@ -281,9 +281,9 @@
 
         local.utility2.onErrorWithStack = function (onError) {
             /*
-                this function will return a new callback that calls onError,
-                and append the current stack to any error
-            */
+             * this function will return a new callback that calls onError,
+             * and append the current stack to any error
+             */
             var errorStack;
             try {
                 throw new Error();
@@ -306,10 +306,10 @@
 
         local.utility2.onParallel = function (onError, onDebug) {
             /*
-                this function will return a function that will
-                1. runs async tasks in parallel
-                2. if counter === 0 or error occurs, then call onError
-            */
+             * this function will return a function that will
+             * 1. runs async tasks in parallel
+             * 2. if counter === 0 or error occurs, then call onError
+             */
             var self;
             onDebug = onDebug || local.utility2.nop;
             self = function (error) {
@@ -341,8 +341,8 @@
 
         local.utility2.onReadyInit = function () {
             /*
-                this function will create the deferred task utility2.onReady
-            */
+             * this function will create the deferred task utility2.onReady
+             */
             // init onReady
             local.utility2.taskRunOrSubscribe({
                 key: 'utility2.onReady',
@@ -356,9 +356,9 @@
 
         local.utility2.onTimeout = function (onError, timeout, message) {
             /*
-                this function will create a timeout-error-handler,
-                that will append the current stack to any error
-            */
+             * this function will create a timeout-error-handler,
+             * that will append the current stack to any error
+             */
             onError = local.utility2.onErrorWithStack(onError);
             // create timeout timer
             return setTimeout(function () {
@@ -371,8 +371,8 @@
 
         local.utility2.requestResponseCleanup = function (request, response) {
             /*
-                this function will end or destroy the request and response objects
-            */
+             * this function will end or destroy the request and response objects
+             */
             [request, response].forEach(function (stream) {
                 // try to end the stream
                 try {
@@ -389,8 +389,8 @@
 
         local.utility2.stringFormat = function (template, dict, valueDefault) {
             /*
-                this function will replace the keys in the template with the dict's key / value
-            */
+             * this function will replace the keys in the template with the dict's key / value
+             */
             var match, replace, rgx, value;
             dict = dict || {};
             replace = function (match0, fragment) {
@@ -440,28 +440,17 @@
 
         local.utility2.taskRunCached = function (options, onError) {
             /*
-                this function will try to run onError from cache,
-                and auto-update the cache with a background-task
-            */
-            var cacheDict, cacheKey, modeCacheHit, modeNext, onCacheWrite, onNext;
+             * this function will try to run onError from cache,
+             * and auto-update the cache with a background-task
+             */
+            var cacheDict, cacheKey, modeCacheHit, modeNext, onNext;
             modeNext = 0;
             onNext = function (error, data) {
-                if (modeNext < 10) {
-                    options.cacheValue = !error && data;
-                    if (options.cacheValue) {
-                        options.modeCacheHit = modeCacheHit;
-                        // goto to background-task
-                        modeNext = 10;
-                        // call onError with cacheValue
-                        onError.apply(null, JSON.parse(options.cacheValue));
-                    }
-                }
                 modeNext += 1;
                 switch (modeNext) {
                 case 1:
                     cacheDict = encodeURIComponent(options.cacheDict);
                     cacheKey = encodeURIComponent(options.key);
-                    onCacheWrite = options.onCacheWrite || local.utility2.onErrorDefault;
                     if (options.modeCacheMemory) {
                         modeCacheHit = 'memory';
                         // read cacheValue from memory-cache
@@ -470,9 +459,6 @@
                         onNext(null, local.utility2.cacheDict[cacheDict][cacheKey]);
                         return;
                     }
-                    onNext();
-                    return;
-                case 2:
                     // read cacheValue from file-cache
                     if (options.modeCacheFile) {
                         modeCacheHit = 'file';
@@ -490,24 +476,21 @@
                     }
                     onNext();
                     return;
+                case 2:
+                    options.cacheValue = !error && data;
+                    if (options.cacheValue) {
+                        options.modeCacheHit = modeCacheHit;
+                        // call onError with cacheValue
+                        onError.apply(null, JSON.parse(options.cacheValue));
+                    }
+                    // run background-task with lower priority for cache-hit
+                    setTimeout(onNext, options.cacheValue && options.cacheTtl);
+                    return;
                 case 3:
-                    // goto to background-task
-                    modeNext = 10;
-                    onNext();
-                    return;
-                case 11:
-                    // run background-task
-                    setTimeout(
-                        onNext,
-                        // run background-task with lower priority for cache-hit
-                        options.cacheValue && options.cacheTtl
-                    );
-                    return;
-                case 12:
                     // run background-task
                     local.utility2.taskRunOrSubscribe(options, onNext);
                     return;
-                case 13:
+                case 4:
                     // if cache-miss, call onError with background-task-result
                     if (!options.cacheValue) {
                         setTimeout(onNext);
@@ -532,10 +515,10 @@
                                     onError
                                 );
                             }
-                        }, onCacheWrite);
+                        }, options.onCacheWrite || local.utility2.onErrorDefault);
                     }
                     return;
-                case 14:
+                case 5:
                     // call onError with cacheValue
                     onError.apply(null, JSON.parse(options.cacheValue));
                     return;
@@ -546,11 +529,11 @@
 
         local.utility2.taskRunOrSubscribe = function (options, onError) {
             /*
-                this function will
-                1. if task is undefined, create new task with the given options.key
-                2. subscribe onError to the task
-                3. run task.onTask with timeout-error-handler, and cleanup task when finished
-            */
+             * this function will
+             * 1. if task is undefined, create new task with the given options.key
+             * 2. subscribe onError to the task
+             * 3. run task.onTask with timeout-error-handler, and cleanup task when finished
+             */
             var task;
             // init taskRunOrSubscribeDict
             local.utility2.taskRunOrSubscribeDict =
@@ -597,8 +580,8 @@
 
         local.utility2.testMock = function (mockList, onTestCase, onError) {
             /*
-                this function will mock the objects in mockList while running the onTestCase
-            */
+             * this function will mock the objects in mockList while running the onTestCase
+             */
             var onError2;
             onError2 = function (error) {
                 // restore mock[0] from mock[2]
@@ -626,10 +609,10 @@
 
         local.utility2.testMerge = function (testReport1, testReport2) {
             /*
-                this function will
-                1. merge testReport2 into testReport1
-                2. return testReport1 in html-format
-            */
+             * this function will
+             * 1. merge testReport2 into testReport1
+             * 2. return testReport1 in html-format
+             */
             var errorStackList, testCaseNumber, testReport;
             // 1. merge testReport2 into testReport1
             [testReport1, testReport2].forEach(function (testReport, ii) {
@@ -845,8 +828,8 @@
 
         local.utility2.testRun = function (options) {
             /*
-                this function will run all tests in testPlatform.testCaseList
-            */
+             * this function will run all tests in testPlatform.testCaseList
+             */
             var coverageReportCreate,
                 exit,
                 onParallel,
@@ -876,8 +859,8 @@
             // init onParallel
             onParallel = local.utility2.onParallel(function () {
                 /*
-                    this function will create the test-report after all tests have finished
-                */
+                 * this function will create the test-report after all tests have finished
+                 */
                 // restore exit
                 local.utility2.exit = exit;
                 // init new-line separator
@@ -1105,9 +1088,9 @@
 
         local.utility2.testTryCatch = function (callback, onError) {
             /*
-                this function will call the callback in a try-catch block,
-                and pass any error caught to onError
-            */
+             * this function will call the callback in a try-catch block,
+             * and pass any error caught to onError
+             */
             try {
                 callback();
             } catch (errorCaught) {
@@ -1117,13 +1100,13 @@
 
         local.utility2.timeoutDefaultInit = function () {
             /*
-                this function will init timeoutDefault
-            */
+             * this function will init timeoutDefault
+             */
             // init utility2 properties
             switch (local.modeJs) {
             case 'browser':
                 location.search.replace(
-                    (/\b(mode[A-Z]\w+|_testSecret|timeExit|timeoutDefault)=([\w\-\.\%]+)/g),
+                    (/\b(mode[A-Z]\w+|timeExit|timeoutDefault)=([\w\-\.\%]+)/g),
                     function (match0, key, value) {
                         // jslint-hack
                         local.utility2.nop(match0);
@@ -1169,9 +1152,9 @@
 
         local.utility2.uuid4 = function () {
             /*
-                this function will return a random uuid,
-                with form "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx"
-            */
+             * this function will return a random uuid,
+             * with form "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx"
+             */
             // code derived from http://jsperf.com/uuid4
             var id, ii;
             id = 0;
@@ -1201,9 +1184,9 @@
 
         local.utility2.uuidTime = function () {
             /*
-                this function will return a time-based variant of uuid4,
-                with form "tttttttt-tttx-4xxx-yxxx-xxxxxxxxxxxx"
-            */
+             * this function will return a time-based variant of uuid4,
+             * with form "tttttttt-tttx-4xxx-yxxx-xxxxxxxxxxxx"
+             */
             return Date.now().toString(16).replace(/([0-9a-f]{8})/, '$1-') +
                 local.utility2.uuid4().slice(12);
         };
@@ -1216,8 +1199,8 @@
     case 'browser':
         local.utility2.ajax = function (options, onError) {
             /*
-                this function will make an ajax request with error handling and timeout
-            */
+             * this function will make an ajax request with error handling and timeout
+             */
             var ajaxProgressDiv, done, error, ii, onEvent, timerTimeout, xhr;
             // init ajaxProgressDiv
             ajaxProgressDiv = document.querySelector('.ajaxProgressDiv') || { style: {} };
@@ -1334,8 +1317,8 @@
 
         local._ajaxProgressIncrement = function () {
             /*
-                this function will increment ajaxProgressBar
-            */
+             * this function will increment ajaxProgressBar
+             */
             // this algorithm can indefinitely increment the ajaxProgressBar
             // with successively smaller increments without ever reaching 100%
             local._ajaxProgressState += 1;
@@ -1354,8 +1337,8 @@
 
         local._ajaxProgressUpdate = function (width, type, label) {
             /*
-                this function will visually update ajaxProgressBar
-            */
+             * this function will visually update ajaxProgressBar
+             */
             var ajaxProgressBarDiv;
             ajaxProgressBarDiv =
                 document.querySelector('.ajaxProgressBarDiv') ||
@@ -1373,8 +1356,8 @@
     case 'node':
         local.utility2.ajax = function (options, onError) {
             /*
-                this function will make an ajax request with error handling and timeout
-            */
+             * this function will make an ajax request with error handling and timeout
+             */
             var done, modeNext, onNext, request, response, timerTimeout, urlParsed, xhr;
             modeNext = 0;
             onNext = local.utility2.onErrorWithStack(function (error, data) {
@@ -1515,8 +1498,8 @@
 
         local.utility2.middlewareAssetsCached = function (request, response, nextMiddleware) {
             /*
-                this function will run the assets-middleware
-            */
+             * this function will run the assets-middleware
+             */
             var data;
             data = local.utility2.cacheDict.assets[request.urlParsed.pathnameNormalized];
             if (data) {
@@ -1541,8 +1524,8 @@
             nextMiddleware
         ) {
             /*
-                this function will respond with the data cached by Last-Modified header
-            */
+             * this function will respond with the data cached by Last-Modified header
+             */
             // do not cache if headers already sent or url has '?' search indicator
             if (!response.headersSent && request.url.indexOf('?') < 0) {
                 // init serverResponseHeaderLastModified
@@ -1568,15 +1551,15 @@
 
         local.utility2.middlewareGroupCreate = function (middlewareList) {
             /*
-               this function will return a super-middleware,
-               that will sequentially run the sub-middlewares in middlewareList
-            */
+             * this function will return a super-middleware,
+             * that will sequentially run the sub-middlewares in middlewareList
+             */
             var self;
             self = function (request, response, nextMiddleware) {
                 /*
-                    this function will create a super-middleware,
-                    that will sequentially run the sub-middlewares in middlewareList
-                */
+                 * this function will create a super-middleware,
+                 * that will sequentially run the sub-middlewares in middlewareList
+                 */
                 var modeNext, onNext;
                 modeNext = -1;
                 onNext = function (error) {
@@ -1599,8 +1582,8 @@
 
         local.utility2.middlewareInit = function (request, response, nextMiddleware) {
             /*
-                this function will run the init-middleware
-            */
+             * this function will run the init-middleware
+             */
             var contentTypeDict;
             // debug server request
             local._debugServerRequest = request;
@@ -1609,10 +1592,6 @@
             // init timerTimeout
             local.utility2
                 .serverRespondTimeoutDefault(request, response, local.utility2.timeoutDefault);
-            // check if _testSecret is valid
-            request._testSecretValid = (/\b_testSecret=(\w+)\b/).exec(request.url);
-            request._testSecretValid = request._testSecretValid &&
-                request._testSecretValid[1] === local.utility2._testSecret;
             // init request.urlParsed
             request.urlParsed = local.url.parse(request.url, true);
             // init request.urlParsed.pathnameNormalized
@@ -1625,7 +1604,8 @@
                 '.html': 'text/html; charset=UTF-8',
                 '.js': 'application/javascript; charset=UTF-8',
                 '.json': 'application/json; charset=UTF-8',
-                '.txt': 'text/plain; charset=UTF-8'
+                '.txt': 'text/plain; charset=UTF-8',
+                '.xml': 'application/xml; charset=UTF-8'
             };
             local.utility2.serverRespondHeadSet(request, response, null, {
                 'Content-Type': contentTypeDict[
@@ -1644,8 +1624,8 @@
 
         local.utility2.fsRmrSync = function (dir) {
             /*
-                this function will synchronously rm -fr the dir
-            */
+             * this function will synchronously rm -fr the dir
+             */
             dir = local.path.resolve(process.cwd(), dir);
             // legacy-hack
             /* istanbul ignore if */
@@ -1671,8 +1651,8 @@
 
         local.utility2.fsWriteFileWithMkdirp = function (file, data, onError) {
             /*
-                this function will save the data to file, and auto-mkdirp the parent dir
-            */
+             * this function will save the data to file, and auto-mkdirp the parent dir
+             */
             file = local.path.resolve(process.cwd(), file);
             // save data to file
             local.fs.writeFile(file, data, function (error) {
@@ -1696,9 +1676,9 @@
 
         local.utility2.onFileModifiedRestart = function (file) {
             /*
-                this function will watch the file,
-                and if modified, then restart the process
-            */
+             * this function will watch the file,
+             * and if modified, then restart the process
+             */
             if (local.utility2.envDict.npm_config_mode_auto_restart &&
                     local.fs.existsSync(file) &&
                     local.fs.statSync(file).isFile()) {
@@ -1723,9 +1703,9 @@
 
         local.utility2.phantomScreenCapture = function (options, onError) {
             /*
-                this function will spawn both phantomjs and slimerjs processes,
-                to screen-capture options.url
-            */
+             * this function will spawn both phantomjs and slimerjs processes,
+             * to screen-capture options.url
+             */
             local.utility2.phantomTest(local.utility2.objectSetDefault(options, {
                 modePhantom: 'screenCapture',
                 timeoutScreenCapture: 2000
@@ -1734,9 +1714,9 @@
 
         local.utility2.phantomTest = function (options, onError) {
             /*
-                this function will spawn both phantomjs and slimerjs processes,
-                to test options.url
-            */
+             * this function will spawn both phantomjs and slimerjs processes,
+             * to test options.url
+             */
             var onParallel;
             onParallel = local.utility2.onParallel(onError);
             onParallel.counter += 1;
@@ -1764,9 +1744,9 @@
 
         local._phantomTestSingle = function (options, onError) {
             /*
-                this function will spawn a single phantomjs or slimerjs process,
-                to test options.url
-            */
+             * this function will spawn a single phantomjs or slimerjs process,
+             * to test options.url
+             */
             var modeNext, onNext, onParallel, timerTimeout;
             modeNext = 0;
             onNext = function (error) {
@@ -1780,7 +1760,6 @@
                         encodeURIComponent(local.url.parse(options.url).pathname);
                     options.timeExit = Date.now() + local.utility2.timeoutDefault;
                     local.utility2.objectSetDefault(options, {
-                        _testSecret: local.utility2._testSecret,
                         fileCoverage: local.utility2.envDict.npm_config_dir_tmp +
                             '/coverage.' + options.testName + '.json',
                         fileScreenCapture: (local.utility2.envDict.npm_config_dir_build +
@@ -1816,11 +1795,7 @@
                         .processSpawnWithTimeout(
                             '/bin/sh',
                             ['-c',
-                                options.argv0 +
-                                // bug - hack slimerjs to allow heroku https
-                                (options.argv0 === 'slimerjs'
-                                ? ' --ssl-protocol=TLS '
-                                : ' ') +
+                                options.argv0 + ' ' +
                                 options.argv1 + ' ' +
                                 encodeURIComponent(JSON.stringify(options)) + '; ' +
                                 'EXIT_CODE=$?; ' +
@@ -1829,7 +1804,9 @@
                                 'mogrify -frame 1 -mattecolor black ' +
                                 options.fileScreenCapture + ' 2>/dev/null; ' +
                                 'exit $EXIT_CODE;'],
-                            { stdio: options.modeErrorIgnore ? 'ignore' : ['ignore', 1, 2] }
+                            { stdio: options.modeSilent || local.global.__coverage__
+                                ? 'ignore'
+                                : ['ignore', 1, 2] }
                         )
                         .on('exit', onNext);
                     break;
@@ -1856,7 +1833,7 @@
                                         );
                                     // merge test-report
                                     } else if (options.modePhantom === 'testUrl' &&
-                                            !options.modeErrorIgnore) {
+                                            !options.modeSilent) {
                                         local.utility2.testMerge(
                                             local.utility2.testReport,
                                             data
@@ -1885,9 +1862,9 @@
 
         local.utility2.processSpawnWithTimeout = function () {
             /*
-                this function will run like child_process.spawn,
-                but with auto-timeout after timeoutDefault milliseconds
-            */
+             * this function will run like child_process.spawn,
+             * but with auto-timeout after timeoutDefault milliseconds
+             */
             var childProcess;
             // spawn childProcess
             childProcess = local.child_process.spawn.apply(local.child_process, arguments)
@@ -1908,15 +1885,15 @@
 
         local.utility2.replStart = function () {
             /*
-                this function will start the repl debugger
-            */
+             * this function will start the repl debugger
+             */
             /*jslint evil: true*/
             // start repl server
             local._replServer = require('repl').start({ useGlobal: true });
             local._replServer.onError = function (error) {
                 /*
-                    this function will debug any repl-error
-                */
+                 * this function will debug any repl-error
+                 */
                 local._debugReplError = error || local._debugReplError;
             };
             // legacy-hack
@@ -1970,21 +1947,21 @@
                         .processSpawnWithTimeout(
                             '/bin/sh',
                             ['-c', 'find . -type f | grep -v ' +
-                                '"/\\.\\|.*\\b\\(\\.\\d\\|' +
-                                'archive\\|artifacts\\|' +
-                                'bower_components\\|build\\|' +
+                                '"/\\.\\|.*\\(\\b\\|_\\)\\(\\.\\d\\|' +
+                                'archive\\|artifact\\|' +
+                                'bower_component\\|build\\|' +
                                 'coverage\\|' +
-                                'docs\\|' +
+                                'doc\\|' +
                                 'external\\|' +
-                                'fixtures\\|' +
-                                'git_modules\\|' +
+                                'fixture\\|' +
+                                'git_module\\|' +
                                 'jquery\\|' +
-                                'log\\|logs\\|' +
-                                'min\\|' +
-                                'node_modules\\|' +
+                                'log\\|' +
+                                'min\\|mock\\|' +
+                                'node_module\\|' +
                                 'rollup\\|' +
                                 'swp\\|' +
-                                'tmp\\)\\b" ' +
+                                'tmp\\)\\(\\b\\|[_s]\\)" ' +
                                 '| tr "\\n" "\\000" | xargs -0 grep -in "' +
                                 match[2].trim() + '"'],
                             { stdio: ['ignore', 1, 2] }
@@ -2010,8 +1987,8 @@
 
         local.utility2.serverPortInit = function () {
             /*
-                this function will init $npm_config_server_port
-            */
+             * this function will init $npm_config_server_port
+             */
             // if $npm_config_server_port is undefined,
             // then assign it a random integer in the inclusive range 0 to 0xffff
             local.utility2.envDict.npm_config_server_port =
@@ -2023,9 +2000,9 @@
 
         local.utility2.serverRespondDefault = function (request, response, statusCode, error) {
             /*
-                this function will respond with a default message,
-                or error.stack for the given statusCode
-            */
+             * this function will respond with a default message,
+             * or error.stack for the given statusCode
+             */
             // init statusCode and contentType
             local.utility2.serverRespondHeadSet(
                 request,
@@ -2036,13 +2013,8 @@
             if (error) {
                 error.message = request.method + ' ' + request.url + '\n' + error.message;
                 error.stack = error.message + '\n' + error.stack;
-                // if modeErrorIgnore is undefined in url search params,
-                // then print error.stack to stderr
-                if (!(local.global.__coverage__ &&
-                        local.utility2.envDict.npm_config_mode_npm_test &&
-                        (/\bmodeErrorIgnore=1\b/).test(request.url))) {
-                    local.utility2.onErrorDefault(error);
-                }
+                // print error.stack to stderr
+                local.utility2.onErrorDefault(error);
                 // end response with error.stack
                 response.end(error.stack);
                 return;
@@ -2055,8 +2027,8 @@
 
         local.utility2.serverRespondEcho = function (request, response) {
             /*
-                this function will respond with debug info
-            */
+             * this function will respond with debug info
+             */
             response.write(request.method + ' ' + request.url +
                 ' HTTP/' + request.httpVersion + '\r\n' +
                 Object.keys(request.headers).map(function (key) {
@@ -2067,8 +2039,8 @@
 
         local.utility2.serverRespondGzipCached = function (request, response, cacheKey, data) {
             /*
-                this function will respond with auto-cached, gzipped data
-            */
+             * this function will respond with auto-cached, gzipped data
+             */
             // legacy-hack
             /* istanbul ignore if */
             if (local.utility2.envDict.npm_config_mode_legacy_node) {
@@ -2098,8 +2070,8 @@
             headers
         ) {
             /*
-                this function will set the response object's statusCode / headers
-            */
+             * this function will set the response object's statusCode / headers
+             */
             // jslint-hack
             local.utility2.nop(request);
             if (response.headersSent) {
@@ -2119,8 +2091,8 @@
 
         local.utility2.serverRespondTimeoutDefault = function (request, response, timeout) {
             /*
-                this function will create a timeout-error-handler for the server request
-            */
+             * this function will create a timeout-error-handler for the server request
+             */
             request.onTimeout = request.onTimeout || function (error) {
                 local.utility2.serverRespondDefault(request, response, 500, error);
                 setTimeout(function () {
@@ -2140,9 +2112,9 @@
 
         local.utility2.streamReadAll = function (readableStream, onError) {
             /*
-                this function will concat data from the readableStream,
-                and when done reading, then pass it to onError
-            */
+             * this function will concat data from the readableStream,
+             * and when done reading, then pass it to onError
+             */
             var chunkList;
             chunkList = [];
             // read data from the readableStream
@@ -2161,23 +2133,12 @@
 
         local.utility2.testRunServer = function (options) {
             /*
-                this function will
-                1. create server from options.middleware
-                2. start server on port $npm_config_server_port
-                3. if $npm_config_mode_npm_test is defined, then run tests
-            */
-            var server, testSecretCreate;
-            // init _testSecret
-            testSecretCreate = function () {
-                local.utility2._testSecret = local.utility2.uuidTime();
-            };
-            // init _testSecret
-            testSecretCreate();
-            local.utility2._testSecret =
-                local.utility2.envDict.TEST_SECRET ||
-                local.utility2._testSecret;
-            // re-init _testSecret every 60 seconds
-            setInterval(testSecretCreate, 60000).unref();
+             * this function will
+             * 1. create server from options.middleware
+             * 2. start server on port $npm_config_server_port
+             * 3. if $npm_config_mode_npm_test is defined, then run tests
+             */
+            var server;
             // 1. create server from options.middleware
             server = local.http.createServer(function (request, response) {
                 options.middleware(request, response, function (error) {
@@ -2202,7 +2163,7 @@
                         local.utility2.envDict.npm_config_server_port);
                     // screen-capture main-page
                     local.utility2.phantomScreenCapture({
-                        modeErrorIgnore: true,
+                        modeSilent: true,
                         url: 'http://localhost:' + local.utility2.envDict.npm_config_server_port
                     }, local.utility2.exit);
                 }, Number(local.utility2.envDict.npm_config_timeout_exit))
@@ -2354,9 +2315,9 @@
 
         local.onError = function (error, trace) {
             /*
-                this function will run the main error-handler
-                http://phantomjs.org/api/phantom/handler/on-error.html
-            */
+             * this function will run the main error-handler
+             * http://phantomjs.org/api/phantom/handler/on-error.html
+             */
             var data;
             // handle notification that url has been opened
             if (error === 'success' && !trace) {
@@ -2460,10 +2421,6 @@
             // init global error handling
             // http://phantomjs.org/api/phantom/handler/on-error.html
             local.global.phantom.onError = local.onError;
-            // if modeErrorIgnore is truthy, then suppress console.error and console.log
-            if (local.utility2.modeErrorIgnore) {
-                console.error = console.log = local.utility2.nop;
-            }
             // init webpage
             local.page = local.webpage.create();
             // init webpage clipRect
@@ -2479,10 +2436,7 @@
             };
             // open requested webpage
             local.page.open(
-                local.utility2.url
-                    // security - insert _testSecret in url without revealing it
-                    .replace('{{_testSecret}}', local.utility2._testSecret)
-                    .replace('{{timeExit}}', local.utility2.timeExit - 2000),
+                local.utility2.url.replace('{{timeExit}}', local.utility2.timeExit - 2000),
                 local.onError
             );
         });
@@ -2518,8 +2472,8 @@
         }());
         local.nop = function () {
             /*
-                this function will run no operation - nop
-            */
+             * this function will run no operation - nop
+             */
             return;
         };
         // init global
@@ -2531,8 +2485,8 @@
         // init global debug_print
         local.global['debug_print'.replace('_p', 'P')] = function (arg) {
             /*
-                this function will both print the arg to stderr and return it
-            */
+             * this function will both print the arg to stderr and return it
+             */
             // debug arguments
             local['_debug_printArguments'.replace('_p', 'P')] = arguments;
             console.error('\n\n\ndebug_print'.replace('_p', 'P'));

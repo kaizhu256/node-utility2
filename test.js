@@ -16,9 +16,10 @@
         // init tests
         local.testCase_ajax_default = function (onError) {
             /*
-                this function will test ajax's default handling behavior
-            */
+             * this function will test ajax's default handling behavior
+             */
             var data, done, modeNext, onNext, onParallel;
+            done = 0;
             modeNext = 0;
             onNext = function (error) {
                 modeNext = error
@@ -116,13 +117,13 @@
                     onParallel.counter += 1;
                     [{
                         // test 404-not-found-error handling behavior
-                        url: '/test/error-400?modeErrorIgnore=1'
+                        url: '/test/error-400'
                     }, {
                         // test 500-internal-server-error handling behavior
-                        url: '/test/error-500?modeErrorIgnore=1'
+                        url: '/test/error-500'
                     }, {
                         // test undefined-error handling behavior
-                        url: '/test/error-undefined?modeErrorIgnore=1'
+                        url: '/test/error-undefined'
                     }, {
                         // test timeout handling behavior
                         timeout: 1,
@@ -157,9 +158,10 @@
                     data.abort();
                     break;
                 default:
+                    local.utility2.assert(done <= 1, done);
                     // if already done, then do nothing
                     if (!done) {
-                        done = true;
+                        done += 1;
                         // validate no error occurred
                         onError(error);
                         // test error handling behavior
@@ -175,8 +177,8 @@
 
         local.testCase_assert_default = function (onError) {
             /*
-                this function will test assert's default handling behavior
-            */
+             * this function will test assert's default handling behavior
+             */
             // test assertion passed
             local.utility2.assert(true, true);
             // test assertion failed with undefined message
@@ -218,8 +220,8 @@
 
         local.testCase_debug_print_default = function (onError) {
             /*
-                this function will test debug_print's default handling behavior
-            */
+             * this function will test debug_print's default handling behavior
+             */
             var message;
             local.utility2.testMock([
                 // suppress console.error
@@ -240,8 +242,8 @@
 
         local.testCase_jsonCopy_default = function (onError) {
             /*
-                this function will test jsonCopy's default handling behavior
-            */
+             * this function will test jsonCopy's default handling behavior
+             */
             // test various data-type handling behavior
             [undefined, null, false, true, 0, 1, 1.5, 'a'].forEach(function (data) {
                 local.utility2.assert(
@@ -254,8 +256,8 @@
 
         local.testCase_jsonStringifyOrdered_default = function (onError) {
             /*
-                this function will test jsonStringifyOrdered's default handling behavior
-            */
+             * this function will test jsonStringifyOrdered's default handling behavior
+             */
             var data;
             // test data-type handling behavior
             [undefined, null, false, true, 0, 1, 1.5, 'a', {}, []].forEach(function (data) {
@@ -287,8 +289,8 @@
 
         local.testCase_listShuffle_default = function (onError) {
             /*
-                this function will test listShuffle's default handling behavior
-            */
+             * this function will test listShuffle's default handling behavior
+             */
             var data, list = '[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]';
             // validate list before shuffle
             data = JSON.stringify(JSON.parse(list));
@@ -303,8 +305,8 @@
 
         local.testCase_objectSetDefault_default = function (onError) {
             /*
-                this function will test objectSetDefault's default handling behavior
-            */
+             * this function will test objectSetDefault's default handling behavior
+             */
             var options;
             // test non-recursive handling behavior
             options = local.utility2.objectSetDefault(
@@ -335,8 +337,8 @@
 
         local.testCase_objectSetOverride_default = function (onError) {
             /*
-                this function will test objectSetOverride's default handling behavior
-            */
+             * this function will test objectSetOverride's default handling behavior
+             */
             var data, options;
             // test non-recursive handling behavior
             options = local.utility2.objectSetOverride(
@@ -394,8 +396,8 @@
 
         local.testCase_objectTraverse_default = function (onError) {
             /*
-                this function will test objectTraverse's default handling behavior
-            */
+             * this function will test objectTraverse's default handling behavior
+             */
             var data;
             data = { aa: null, bb: 2, cc: { dd: 4, ee: [5, 6, 7] } };
             // test circular-reference handling behavior
@@ -416,14 +418,15 @@
 
         local.testCase_onErrorDefault_default = function (onError) {
             /*
-                this function will test onErrorDefault's default handling behavior
-            */
+             * this function will test onErrorDefault's default handling behavior
+             */
             var message;
             local.utility2.testMock([
                 // suppress console.error
                 [console, { error: function (arg) {
                     message = arg;
-                } }]
+                } }],
+                [local.global, { __coverage__: null }]
             ], function (onError) {
                 // test no error handling behavior
                 local.utility2.onErrorDefault();
@@ -439,8 +442,8 @@
 
         local.testCase_onErrorJsonParse_default = function (onError) {
             /*
-                this function will test onErrorJsonParse's default handling behavior
-            */
+             * this function will test onErrorJsonParse's default handling behavior
+             */
             var data, error, jsonParse;
             jsonParse = local.utility2.onErrorJsonParse(function (arg0, arg1) {
                 data = arg1;
@@ -469,8 +472,8 @@
 
         local.testCase_onParallel_default = function (onError) {
             /*
-                this function will test onParallel's default handling behavior
-            */
+             * this function will test onParallel's default handling behavior
+             */
             var onParallel, onParallelError;
             // test onDebug handling behavior
             onParallel = local.utility2.onParallel(onError, function (error, self) {
@@ -505,8 +508,8 @@
 
         local.testCase_onTimeout_timeout = function (onError) {
             /*
-                this function will test onTimeout's timeout handling behavior
-            */
+             * this function will test onTimeout's timeout handling behavior
+             */
             var timeElapsed;
             timeElapsed = Date.now();
             local.utility2.onTimeout(function (error) {
@@ -527,8 +530,8 @@
 
         local.testCase_stringFormat_default = function (onError) {
             /*
-                this function will test stringFormat's default handling behavior
-            */
+             * this function will test stringFormat's default handling behavior
+             */
             var data;
             // test undefined valueDefault handling behavior
             data = local.utility2.stringFormat('{{aa}}', {}, undefined);
@@ -573,8 +576,8 @@
 
         local.testCase_taskRunOrSubscribe_default = function (onError) {
             /*
-                this function will test taskRunOrSubscribe's default handling behavior
-            */
+             * this function will test taskRunOrSubscribe's default handling behavior
+             */
             var key, onParallel;
             key = local.utility2.uuidTime();
             onParallel = local.utility2.onParallel(onError);
@@ -601,14 +604,14 @@
 
         local.testCase_testRun_failure = function (onError) {
             /*
-                this function will test testRun's failure handling behavior
-            */
+             * this function will test testRun's failure handling behavior
+             */
             // test failure from callback handling behavior
             onError(local.utility2.errorDefault);
             // test failure from multiple-callback handling behavior
             onError();
             // test failure from ajax handling behavior
-            local.utility2.ajax({ url: '/test/undefined?modeErrorIgnore=1' }, onError);
+            local.utility2.ajax({ url: '/test/undefined' }, onError);
             // test failure from thrown error handling behavior
             throw local.utility2.errorDefault;
         };
@@ -622,8 +625,8 @@
         // init tests
         local.testCase_fsWriteFileWithMkdirp_default = function (onError) {
             /*
-                this function will test fsWriteFileWithMkdirp's default handling behavior
-            */
+             * this function will test fsWriteFileWithMkdirp's default handling behavior
+             */
             var dir, file, modeNext, onNext;
             modeNext = 0;
             onNext = function (error, data) {
@@ -692,8 +695,8 @@
 
         local.testCase_istanbulMerge_default = function (onError) {
             /*
-                this function will test istanbulMerge's default handling behavior
-            */
+             * this function will test istanbulMerge's default handling behavior
+             */
             var coverage1, coverage2, script;
             script = local.utility2.istanbul_lite.instrumentSync(
                 '(function () {\nreturn arg ' +
@@ -735,8 +738,8 @@
 
         local.testCase_onFileModifiedRestart_watchFile = function (onError) {
             /*
-                this function will test onFileModifiedRestart's watchFile handling behavior
-            */
+             * this function will test onFileModifiedRestart's watchFile handling behavior
+             */
             var file, onParallel;
             file = __dirname + '/package.json';
             onParallel = local.utility2.onParallel(onError);
@@ -757,8 +760,8 @@
 
         local.testCase_testPage_default = function (onError) {
             /*
-                this function will test the test-page's default handling behavior
-            */
+             * this function will test the test-page's default handling behavior
+             */
             var onParallel, options;
             onParallel = local.utility2.onParallel(onError);
             onParallel.counter += 1;
@@ -767,14 +770,12 @@
                 url: 'http://localhost:' +
                     local.utility2.envDict.npm_config_server_port +
                     '?' +
-                    // test _testSecret-validation handling behavior
-                    '_testSecret={{_testSecret}}&' +
                     // test phantom-callback handling behavior
                     'modeTest=phantom&' +
                     'timeExit={{timeExit}}'
             }, {
                 modeError: true,
-                modeErrorIgnore: true,
+                modeSilent: true,
                 url: 'http://localhost:' +
                     local.utility2.envDict.npm_config_server_port +
                     // test script-error handling behavior
@@ -782,7 +783,7 @@
                     'timeExit={{timeExit}}'
             }, {
                 modeError: true,
-                modeErrorIgnore: true,
+                modeSilent: true,
                 // run phantom self-test
                 modePhantomSelfTest: true,
                 url: 'http://localhost:' +
@@ -813,7 +814,7 @@
             // test screenCapture handling behavior
             onParallel.counter += 1;
             options = {
-                modeErrorIgnore: true,
+                modeSilent: true,
                 timeoutScreenCapture: 1,
                 url: 'http://localhost:' +
                     local.utility2.envDict.npm_config_server_port +
@@ -849,7 +850,9 @@
                     processSpawnWithTimeout: function () {
                         return { on: local.utility2.nop };
                     }
-                }]
+                }],
+                // test no modeSilent handling behavior
+                [local.global, { __coverage__: null }]
             ], function (onError) {
                 local.utility2.phantomTest({
                     url: 'http://localhost:' +
@@ -864,8 +867,8 @@
 
         local.testCase_processSpawnWithTimeout_default = function (onError) {
             /*
-                this function will test processSpawnWithTimeout's default handling behavior
-            */
+             * this function will test processSpawnWithTimeout's default handling behavior
+             */
             var childProcess, onParallel;
             onParallel = local.utility2.onParallel(onError);
             onParallel.counter += 1;
@@ -904,8 +907,8 @@
 
         local.testCase_replStart_default = function (onError) {
             /*
-                this function will test replStart's default handling behavior
-            */
+             * this function will test replStart's default handling behavior
+             */
             /*jslint evil: true*/
             local.utility2.testMock([
                 [local.utility2, { processSpawnWithTimeout: function () {
@@ -941,8 +944,8 @@
 
         local.testCase_serverRespondTimeoutDefault_default = function (onError) {
             /*
-                this function will test serverRespondTimeoutDefault's default handling behavior
-            */
+             * this function will test serverRespondTimeoutDefault's default handling behavior
+             */
             local.utility2.testMock([
                 // suppress console.error
                 [local.utility2, { timeoutDefault: 1000 }]
@@ -951,7 +954,7 @@
                     {
                         // test default onTimeout handling behavior
                         onTimeout: null,
-                        url: '?modeErrorIgnore=1'
+                        url: ''
                     },
                     { end: local.utility2.nop, headersSent: true, on: local.utility2.nop },
                     // test default timeout handling behavior
@@ -963,18 +966,15 @@
 
         local.testCase_taskRunCached_default = function (onError) {
             /*
-                this function will test taskRunCached's default handling behavior
-            */
-            var cacheValue, done, modeNext, onNext, onTestCaseCached, options;
+             * this function will test taskRunCached's default handling behavior
+             */
+            var cacheValue, done, modeNext, onNext, onParallel, onTestCaseCached, options;
+            done = 0;
             modeNext = 0;
             onTestCaseCached = function (options, modeCacheHit, onError) {
                 /*
-                    this function will run the testCase with the given options
-                */
-                // test wait-for-cache-write handling behavior
-                if (modeCacheHit !== 'memory') {
-                    options.onCacheWrite = onError;
-                }
+                 * this function will run the testCase with the given options
+                 */
                 local.utility2.taskRunCached(options, function (error, data) {
                     local.utility2.testTryCatch(function () {
                         // validate no error occurred
@@ -984,14 +984,12 @@
                         // validate modeCacheHit
                         local.utility2.assert(
                             options.modeCacheHit === modeCacheHit,
-                            [options.modeCacheHit, modeCacheHit]
+                            [options.modeCacheHit, modeCacheHit, modeNext]
                         );
-                        // test no wait-for-cache-write handling behavior
-                        if (modeCacheHit === 'memory') {
+                        if (!options.onCacheWrite) {
                             onError();
                         }
                     }, onError);
-
                 });
             };
             onNext = function (error) {
@@ -1025,6 +1023,8 @@
                     break;
                 // test no cache handling behavior
                 case 2:
+                    onParallel = local.utility2.onParallel(onNext);
+                    onParallel.counter += 1;
                     [
                         'modeCacheFile',
                         'modeCacheMemory',
@@ -1034,18 +1034,18 @@
                         optionsCopy = {
                             cacheDict: options.cacheDict,
                             key: options.key,
+                            onCacheWrite: modeCache === 'modeCacheFile' && onParallel,
                             onTask: options.onTask
                         };
                         optionsCopy[modeCache] = options[modeCache];
-                        onTestCaseCached(
-                            optionsCopy,
-                            undefined,
-                            onNext
-                        );
+                        onParallel.counter += 1;
+                        onTestCaseCached(optionsCopy, undefined, onParallel);
                     });
+                    onParallel();
                     break;
                 // test cache handling behavior
                 case 3:
+                    onParallel.counter += 1;
                     [
                         'modeCacheFile',
                         'modeCacheMemory',
@@ -1055,20 +1055,49 @@
                         optionsCopy = {
                             cacheDict: options.cacheDict,
                             key: options.key,
+                            // test no onCacheWrite handling behavior
+                            onCacheWrite: null,
                             onTask: options.onTask
                         };
                         optionsCopy[modeCache] = options[modeCache];
-                        onTestCaseCached(
-                            optionsCopy,
-                            options[modeCache + 'Hit'],
-                            onNext
-                        );
+                        onParallel.counter += 1;
+                        onTestCaseCached(optionsCopy, options[modeCache + 'Hit'], onParallel);
                     });
+                    onParallel();
+                    break;
+                // test error handling behavior
+                case 4:
+                    onParallel.counter += 1;
+                    [
+                        'modeCacheFile',
+                        'modeCacheMemory',
+                        'modeCacheUndefined'
+                    ].forEach(function (modeCache) {
+                        var optionsCopy;
+                        optionsCopy = {
+                            cacheDict: options.cacheDict,
+                            key: options.key + 'Error',
+                            onTask: function (onError) {
+                                onError(local.utility2.errorDefault);
+                            }
+                        };
+                        optionsCopy[modeCache] = options[modeCache];
+                        onParallel.counter += 1;
+                        local.utility2.taskRunCached(optionsCopy, function (error) {
+                            local.utility2.testTryCatch(function () {
+                                // validate error occurred
+                                local.utility2.assert(error, error);
+                                onParallel();
+                            }, onParallel);
+                        });
+                    });
+                    onParallel();
                     break;
                 default:
+                    local.utility2.assert(done <= 1, done);
                     // if already done, then do nothing
                     if (!done) {
-                        done = true;
+                        done += 1;
                         // validate no error occurred
                         onError(error);
                         // test error handling behavior
@@ -1081,8 +1110,8 @@
 
         local.testCase_testRunServer_misc = function (onError) {
             /*
-                this function will test testRunServer's misc handling behavior
-            */
+             * this function will test testRunServer's misc handling behavior
+             */
             local.utility2.testMock([
                 [local.utility2, {
                     envDict: {
@@ -1119,8 +1148,8 @@
 
         local.testCase_uuidXxx_default = function (onError) {
             /*
-                this function will test uuidXxx's default handling behavior
-            */
+             * this function will test uuidXxx's default handling behavior
+             */
             var data1, data2;
             // test uuid4
             data1 = local.utility2.uuid4();
@@ -1202,8 +1231,8 @@
             local.utility2.middlewareInit,
             function (request, response, nextMiddleware) {
                 /*
-                    this function will run the test-middleware
-                */
+                 * this function will run the test-middleware
+                 */
                 // set main-page content-type to text/html
                 if (request.urlParsed.pathnameNormalized === '/') {
                     local.utility2.serverRespondHeadSet(request, response, null, {
@@ -1229,9 +1258,7 @@
                     // test onErrorDefault handling behavior
                     local.utility2.testMock([
                         // suppress console.error
-                        [console, { error: local.utility2.nop }],
-                        // suppress modeErrorIgnore
-                        [request, { url: '' }]
+                        [console, { error: local.utility2.nop }]
                     ], function (onError) {
                         local.utility2.serverRespondDefault(
                             request,
