@@ -45,22 +45,6 @@
                             onParallel();
                         }, onParallel);
                     });
-                    // test http GET 304 cache handling behavior
-                    onParallel.counter += 1;
-                    local.utility2.ajax({
-                        headers: {
-                            'If-Modified-Since': new Date(Date.now() + 0xffff).toGMTString()
-                        },
-                        url: '/test/hello'
-                    }, function (error, xhr) {
-                        local.utility2.testTryCatch(function () {
-                            // validate no error occurred
-                            local.utility2.assert(!error, error);
-                            // validate 304 http status
-                            local.utility2.assert(xhr.status === 304, xhr.status);
-                            onParallel();
-                        }, onParallel);
-                    });
                     // test http POST handling behavior
                     ['blob', 'response', 'text'].forEach(function (responseType) {
                         onParallel.counter += 1;
@@ -115,6 +99,22 @@
                     break;
                 case 2:
                     onParallel.counter += 1;
+                    // test http GET 304 cache handling behavior
+                    onParallel.counter += 1;
+                    local.utility2.ajax({
+                        headers: {
+                            'If-Modified-Since': new Date(Date.now() + 0xffff).toGMTString()
+                        },
+                        url: '/test/hello'
+                    }, function (error, xhr) {
+                        local.utility2.testTryCatch(function () {
+                            // validate no error occurred
+                            local.utility2.assert(!error, error);
+                            // validate 304 http status
+                            local.utility2.assert(xhr.status === 304, xhr.status);
+                            onParallel();
+                        }, onParallel);
+                    });
                     [{
                         // test 404-not-found-error handling behavior
                         url: '/test/error-400'
@@ -769,18 +769,16 @@
                 // test default handling behavior
                 url: 'http://localhost:' +
                     local.utility2.envDict.npm_config_server_port +
-                    '?' +
                     // test phantom-callback handling behavior
-                    'modeTest=phantom&' +
-                    'timeExit={{timeExit}}'
+                    '?modeTest=phantom&timeExit={{timeExit}}'
             }, {
                 modeError: true,
                 modeSilent: true,
                 url: 'http://localhost:' +
                     local.utility2.envDict.npm_config_server_port +
                     // test script-error handling behavior
-                    '/test/script-error.html?' +
-                    'timeExit={{timeExit}}'
+                    '/test/script-error.html' +
+                    '?timeExit={{timeExit}}'
             }, {
                 modeError: true,
                 modeSilent: true,
@@ -789,9 +787,9 @@
                 url: 'http://localhost:' +
                     local.utility2.envDict.npm_config_server_port +
                     // test script-only handling behavior
-                    '/test/script-only.html?' +
+                    '/test/script-only.html' +
                     // test modeTest !== 'phantom' handling behavior
-                    'modeTest=phantom2&' +
+                    '?modeTest=phantom2&' +
                     // test specific testCase handling behavior
                     // test testRun's failure handling behavior
                     'modeTestCase=testCase_testRun_failure&' +
@@ -857,8 +855,7 @@
                 local.utility2.phantomTest({
                     url: 'http://localhost:' +
                         local.utility2.envDict.npm_config_server_port +
-                        '?' +
-                        'timeExit={{timeExit}}'
+                        '?timeExit={{timeExit}}'
                 });
                 onError();
             }, onParallel);

@@ -433,15 +433,14 @@ npm_config_mode_auto_restart=1 \
 npm_config_mode_auto_restart_child=1 \
 ./index.sh test test.js"
     },
-    "version": "2015.6.10-a"
+    "version": "2015.6.10-b"
 }
 ```
 
 
 
 # todo
-- add middlewareGzip
-- add testCase for validating _testSecret
+- print test-progress during npm test
 - create flamegraph from istanbul coverage
 - auto-generate help doc from README.md
 - add server stress test using phantomjs
@@ -450,15 +449,9 @@ npm_config_mode_auto_restart_child=1 \
 
 
 
-# change since 0a907a20
-- npm publish 2015.6.10-a
-- add MODE_NO_LINENO env var for shReadmeExportFile
-- rename modeErrorIgnore to modeSilent
-- remove unused testSecret code
-- ignore printing of most errors if in coverage-mode
-- add application/xml Content-Type to middlewareInit
-- update comments
-- update grep
+# change since a1054711
+- npm publish 2015.6.10-b
+- merge serverRespondGzip into middlewareAssetsCached
 - none
 
 
@@ -525,13 +518,9 @@ shBuild() {
     then
         TEST_URL="https://hrku01-$npm_package_name-$CI_BRANCH.herokuapp.com" \
             || return $?
-        TEST_URL="$TEST_URL?modeTest=phantom&_testSecret={{_testSecret}}" || \
-            return $?
+        TEST_URL="$TEST_URL?modeTest=phantom&timeExit={{timeExit}}" || return $?
         MODE_BUILD=herokuTest shPhantomTest "$TEST_URL" || return $?
     fi
-
-    # if number of commits > 1024, then squash older commits
-    shGitBackupAndSquashAndPush 1024 > /dev/null || return $?
 }
 shBuild
 

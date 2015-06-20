@@ -443,33 +443,31 @@
              * this function will try to run onError from cache,
              * and auto-update the cache with a background-task
              */
-            var cacheDict, cacheKey, modeCacheHit, modeNext, onNext;
+            var modeCacheHit, modeNext, onNext;
             modeNext = 0;
             onNext = function (error, data) {
                 modeNext += 1;
                 switch (modeNext) {
                 case 1:
-                    cacheDict = encodeURIComponent(options.cacheDict);
-                    cacheKey = encodeURIComponent(options.key);
+                    options.keyFile = options.modeCacheFile + '/' +
+                        encodeURIComponent(options.cacheDict) + '/' +
+                        encodeURIComponent(options.key);
                     if (options.modeCacheMemory) {
                         modeCacheHit = 'memory';
                         // read cacheValue from memory-cache
-                        local.utility2.cacheDict[cacheDict] =
-                            local.utility2.cacheDict[cacheDict] || {};
-                        onNext(null, local.utility2.cacheDict[cacheDict][cacheKey]);
+                        local.utility2.cacheDict[options.cacheDict] =
+                            local.utility2.cacheDict[options.cacheDict] || {};
+                        onNext(null, local.utility2
+                            .cacheDict[options.cacheDict][options.key]);
                         return;
                     }
                     // read cacheValue from file-cache
                     if (options.modeCacheFile) {
                         modeCacheHit = 'file';
                         local.utility2.taskRunOrSubscribe({
-                            key: cacheDict + '/' + cacheKey + '/file/read',
+                            key: options.keyFile + '/file/read',
                             onTask: function (onError) {
-                                local.fs.readFile(
-                                    options.modeCacheFile + '/' + cacheDict + '/' + cacheKey,
-                                    'utf8',
-                                    onError
-                                );
+                                local.fs.readFile(options.keyFile, 'utf8', onError);
                             }
                         }, onNext);
                         return;
@@ -502,15 +500,16 @@
                     }
                     // save cacheValue to memory-cache
                     if (options.modeCacheMemory) {
-                        local.utility2.cacheDict[cacheDict][cacheKey] = options.cacheValue;
+                        local.utility2.cacheDict[options.cacheDict][options.key] =
+                            options.cacheValue;
                     }
                     // save cacheValue to file-cache
                     if (options.modeCacheFile) {
                         local.utility2.taskRunOrSubscribe({
-                            key: cacheDict + '/' + cacheKey + '/file/write',
+                            key: options.keyFile + '/file/write',
                             onTask: function (onError) {
                                 local.utility2.fsWriteFileWithMkdirp(
-                                    options.modeCacheFile + '/' + cacheDict + '/' + cacheKey,
+                                    options.keyFile,
                                     options.cacheValue,
                                     onError
                                 );
@@ -535,13 +534,13 @@
              * 3. run task.onTask with timeout-error-handler, and cleanup task when finished
              */
             var task;
-            // init taskRunOrSubscribeDict
-            local.utility2.taskRunOrSubscribeDict =
-                local.utility2.taskRunOrSubscribeDict || {};
+            // init taskRunOrSubscribe
+            local.utility2.cacheDict.taskRunOrSubscribe =
+                local.utility2.cacheDict.taskRunOrSubscribe || {};
             // 1. if task is undefined, create new task with the given options.key
-            task = local.utility2.taskRunOrSubscribeDict[options.key];
+            task = local.utility2.cacheDict.taskRunOrSubscribe[options.key];
             if (!task) {
-                task = local.utility2.taskRunOrSubscribeDict[options.key] = {};
+                task = local.utility2.cacheDict.taskRunOrSubscribe[options.key] = {};
                 task.callbackList = [];
                 task.onEnd = function () {
                     // if already done, then do nothing
@@ -552,7 +551,7 @@
                     // cleanup timerTimeout
                     clearTimeout(task.timerTimeout);
                     // cleanup task
-                    delete local.utility2.taskRunOrSubscribeDict[options.key];
+                    delete local.utility2.cacheDict.taskRunOrSubscribe[options.key];
                     // pass result to callbacks in callbackList
                     task.result = JSON.stringify(Array.prototype.slice.call(arguments));
                     task.callbackList.forEach(function (onError) {
@@ -1120,8 +1119,7 @@
                 );
                 break;
             case 'node':
-                local.utility2.timeExit =
-                    local.utility2.envDict.npm_config_time_exit;
+                local.utility2.timeExit = local.utility2.envDict.npm_config_time_exit;
                 local.utility2.timeoutDefault =
                     local.utility2.envDict.npm_config_timeout_default;
                 break;
@@ -1500,22 +1498,53 @@
             /*
              * this function will run the assets-middleware
              */
-            var data;
-            data = local.utility2.cacheDict.assets[request.urlParsed.pathnameNormalized];
-            if (data) {
-                local.utility2
-                    .middlewareCacheControlLastModified(request, response, function () {
-                        local.utility2.serverRespondGzipCached(
-                            request,
-                            response,
-                            request.urlParsed.pathnameNormalized,
-                            data
-                        );
-                    });
-                return;
-            }
-            // default to nextMiddleware
-            nextMiddleware();
+            var modeNext, onNext, result;
+            modeNext = 0;
+            onNext = function (error, data) {
+                result = result ||
+                    local.utility2.cacheDict.assets[request.urlParsed.pathnameNormalized];
+                if (error || !result) {
+                    nextMiddleware(error);
+                    return;
+                }
+                modeNext += 1;
+                switch (modeNext) {
+                case 1:
+                    if (response.headersSent ||
+                            !(/\bgzip\b/).test(request.headers['accept-encoding'])) {
+                        modeNext += 1;
+                        onNext();
+                        return;
+                    }
+                    // gzip result
+                    local.utility2.taskRunCached({
+                        cacheDict: 'assetsGzip',
+                        key: request.urlParsed.pathnameNormalized,
+                        modeCacheMemory: true,
+                        onTask: function (onError) {
+                            local.zlib.gzip(result, function (error, data) {
+                                onError(error, (data || new Buffer()).toString('base64'));
+                            });
+                        }
+                    }, onNext);
+                    break;
+                case 2:
+                    // gzip result
+                    result = new Buffer(data, 'base64');
+                    response.setHeader('Content-Encoding', 'gzip');
+                    response.setHeader('Content-Length', result.length);
+                    onNext();
+                    break;
+                case 3:
+                    local.utility2
+                        .middlewareCacheControlLastModified(request, response, onNext);
+                    break;
+                case 4:
+                    response.end(result);
+                    break;
+                }
+            };
+            onNext();
         };
 
         local.utility2.middlewareCacheControlLastModified = function (
@@ -1584,7 +1613,6 @@
             /*
              * this function will run the init-middleware
              */
-            var contentTypeDict;
             // debug server request
             local._debugServerRequest = request;
             // debug server response
@@ -1598,17 +1626,8 @@
             request.urlParsed.pathnameNormalized = local.path.resolve(
                 request.urlParsed.pathname
             );
-            // init Content-Type header
-            contentTypeDict = {
-                '.css': 'text/css; charset=UTF-8',
-                '.html': 'text/html; charset=UTF-8',
-                '.js': 'application/javascript; charset=UTF-8',
-                '.json': 'application/json; charset=UTF-8',
-                '.txt': 'text/plain; charset=UTF-8',
-                '.xml': 'application/xml; charset=UTF-8'
-            };
             local.utility2.serverRespondHeadSet(request, response, null, {
-                'Content-Type': contentTypeDict[
+                'Content-Type': local.utility2.contentTypeDict[
                     local.path.extname(request.urlParsed.pathnameNormalized)
                 ]
             });
@@ -1626,27 +1645,11 @@
             /*
              * this function will synchronously rm -fr the dir
              */
-            dir = local.path.resolve(process.cwd(), dir);
-            // legacy-hack
-            /* istanbul ignore if */
-            if (local.utility2.envDict.npm_config_mode_legacy_node) {
-                var rmrSync;
-                rmrSync = function (dir) {
-                    try {
-                        local.fs.unlinkSync(dir);
-                    } catch (errorCaught) {
-                        if (local.fs.existsSync(dir)) {
-                            local.fs.readdirSync(dir).forEach(function (file) {
-                                rmrSync(dir + '/' + file);
-                            });
-                            local.fs.rmdirSync(dir);
-                        }
-                    }
-                };
-                rmrSync(dir);
-                return;
-            }
-            local.child_process.spawnSync('rm', ['-fr', dir], { stdio: ['ignore', 1, 2] });
+            local.child_process.spawnSync(
+                'rm',
+                ['-fr', local.path.resolve(process.cwd(), dir)],
+                { stdio: ['ignore', 1, 2] }
+            );
         };
 
         local.utility2.fsWriteFileWithMkdirp = function (file, data, onError) {
@@ -2037,32 +2040,6 @@
             request.pipe(response);
         };
 
-        local.utility2.serverRespondGzipCached = function (request, response, cacheKey, data) {
-            /*
-             * this function will respond with auto-cached, gzipped data
-             */
-            // legacy-hack
-            /* istanbul ignore if */
-            if (local.utility2.envDict.npm_config_mode_legacy_node) {
-                response.end(data);
-                return;
-            }
-            if (response.headersSent ||
-                    !(/\bgzip\b/).test(request.headers['accept-encoding'])) {
-                response.end(data);
-                return;
-            }
-            // init serverRespondGzipCacheDict
-            local.utility2.serverRespondGzipCacheDict =
-                local.utility2.serverRespondGzipCacheDict || {};
-            data = local.utility2.serverRespondGzipCacheDict[cacheKey] =
-                local.utility2.serverRespondGzipCacheDict[cacheKey] ||
-                local.zlib.gzipSync(data);
-            response.setHeader('content-encoding', 'gzip');
-            response.end(data);
-            return;
-        };
-
         local.utility2.serverRespondHeadSet = function (
             request,
             response,
@@ -2185,6 +2162,26 @@
         if (local.modeJs === 'phantom') {
             local.system = require('system');
         }
+        local.utility2.contentTypeDict = {
+            // application
+            '.js': 'application/javascript; charset=UTF-8',
+            '.json': 'application/json; charset=UTF-8',
+            '.pdf': 'application/pdf',
+            '.xml': 'application/xml; charset=UTF-8',
+            // image
+            '.bmp': 'image/bmp',
+            '.gif': 'image/gif',
+            '.jpeg': 'image/jpeg',
+            '.jpg': 'image/jpeg',
+            '.png': 'image/png',
+            '.svg': 'image/svg+xml; charset=UTF-8',
+            // text
+            '.css': 'text/css; charset=UTF-8',
+            '.htm': 'text/html; charset=UTF-8',
+            '.html': 'text/html; charset=UTF-8',
+            '.md': 'text/markdown; charset=UTF-8',
+            '.txt': 'text/plain; charset=UTF-8'
+        };
         local.utility2.envDict = local.modeJs === 'browser'
             ? {}
             : local.modeJs === 'node'
@@ -2275,6 +2272,26 @@
         if (process.version.slice(0, 6) < 'v0.12.') {
             local.utility2.envDict.npm_config_mode_legacy_node =
                 local.utility2.envDict.npm_config_mode_legacy_node || '1';
+            local.utility2.fsRmrSync = function (dir) {
+                /*
+                 * this function will synchronously rm -fr the dir
+                 */
+                dir = local.path.resolve(process.cwd(), dir);
+                var rmrSync;
+                rmrSync = function (dir) {
+                    try {
+                        local.fs.unlinkSync(dir);
+                    } catch (errorCaught) {
+                        if (local.fs.existsSync(dir)) {
+                            local.fs.readdirSync(dir).forEach(function (file) {
+                                rmrSync(dir + '/' + file);
+                            });
+                            local.fs.rmdirSync(dir);
+                        }
+                    }
+                };
+                rmrSync(dir);
+            };
         }
         // init utility2 properties
         local.utility2.objectSetDefault(local.utility2.envDict, {
@@ -2423,6 +2440,11 @@
             local.global.phantom.onError = local.onError;
             // init webpage
             local.page = local.webpage.create();
+            // bug - disable gzip compression
+            // https://github.com/ariya/phantomjs/issues/10930
+            if (!local.global.slimer) {
+                local.page.customHeaders = { 'Accept-Encoding': 'identity' };
+            }
             // init webpage clipRect
             local.page.clipRect = { height: 768, left: 0, top: 0, width: 1024 };
             // init webpage viewportSize
