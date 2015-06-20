@@ -443,7 +443,7 @@
              * this function will try to run onError from cache,
              * and auto-update the cache with a background-task
              */
-            var modeCacheHit, modeNext, onNext;
+            var modeCacheHit, modeNext, onNext, onParallel;
             modeNext = 0;
             onNext = function (error, data) {
                 modeNext += 1;
@@ -457,9 +457,12 @@
                         // read cacheValue from memory-cache
                         local.utility2.cacheDict[options.cacheDict] =
                             local.utility2.cacheDict[options.cacheDict] || {};
-                        onNext(null, local.utility2
-                            .cacheDict[options.cacheDict][options.key]);
-                        return;
+                        options.cacheValue =
+                            local.utility2.cacheDict[options.cacheDict][options.key];
+                        if (options.cacheValue) {
+                            onNext(null, options.cacheValue);
+                            return;
+                        }
                     }
                     // read cacheValue from file-cache
                     if (options.modeCacheFile) {
@@ -479,7 +482,10 @@
                     if (options.cacheValue) {
                         options.modeCacheHit = modeCacheHit;
                         // call onError with cacheValue
-                        onError.apply(null, JSON.parse(options.cacheValue));
+                        onError(null, JSON.parse(options.cacheValue));
+                        if (!options.modeCacheUpdate) {
+                            return;
+                        }
                     }
                     // run background-task with lower priority for cache-hit
                     setTimeout(onNext, options.cacheValue && options.cacheTtl);
@@ -489,37 +495,39 @@
                     local.utility2.taskRunOrSubscribe(options, onNext);
                     return;
                 case 4:
-                    // if cache-miss, call onError with background-task-result
-                    if (!options.cacheValue) {
-                        setTimeout(onNext);
+                    onParallel = local.utility2
+                        .onParallel(options.onCacheWrite || local.utility2.onErrorDefault);
+                    onParallel.counter += 1;
+                    // JSON.stringify data to prevent side-effects on cache
+                    options.cacheValue = JSON.stringify(data);
+                    if (!error && options.cacheValue) {
+                        // save cacheValue to memory-cache
+                        if (options.modeCacheMemory) {
+                            onParallel.counter += 1;
+                            local.utility2.cacheDict[options.cacheDict][options.key] =
+                                options.cacheValue;
+                            onParallel();
+                        }
+                        // save cacheValue to file-cache
+                        if (options.modeCacheFile) {
+                            onParallel.counter += 1;
+                            local.utility2.taskRunOrSubscribe({
+                                key: options.keyFile + '/file/write',
+                                onTask: function (onError) {
+                                    local.utility2.fsWriteFileWithMkdirp(
+                                        options.keyFile,
+                                        options.cacheValue,
+                                        onError
+                                    );
+                                }
+                            }, onParallel);
+                        }
                     }
-                    options.cacheValue = JSON.stringify(Array.prototype.slice.call(arguments));
-                    // if error occurred, then do not save cacheValue
-                    if (error || !data) {
-                        return;
+                    // if cache-miss, then call onError with cacheValue
+                    if (!options.modeCacheHit) {
+                        onError(error, options.cacheValue && JSON.parse(options.cacheValue));
                     }
-                    // save cacheValue to memory-cache
-                    if (options.modeCacheMemory) {
-                        local.utility2.cacheDict[options.cacheDict][options.key] =
-                            options.cacheValue;
-                    }
-                    // save cacheValue to file-cache
-                    if (options.modeCacheFile) {
-                        local.utility2.taskRunOrSubscribe({
-                            key: options.keyFile + '/file/write',
-                            onTask: function (onError) {
-                                local.utility2.fsWriteFileWithMkdirp(
-                                    options.keyFile,
-                                    options.cacheValue,
-                                    onError
-                                );
-                            }
-                        }, options.onCacheWrite || local.utility2.onErrorDefault);
-                    }
-                    return;
-                case 5:
-                    // call onError with cacheValue
-                    onError.apply(null, JSON.parse(options.cacheValue));
+                    onParallel();
                     return;
                 }
             };
@@ -1523,7 +1531,7 @@
                         modeCacheMemory: true,
                         onTask: function (onError) {
                             local.zlib.gzip(result, function (error, data) {
-                                onError(error, (data || new Buffer()).toString('base64'));
+                                onError(error, !error && data.toString('base64'));
                             });
                         }
                     }, onNext);
@@ -2440,11 +2448,6 @@
             local.global.phantom.onError = local.onError;
             // init webpage
             local.page = local.webpage.create();
-            // bug - disable gzip compression
-            // https://github.com/ariya/phantomjs/issues/10930
-            if (!local.global.slimer) {
-                local.page.customHeaders = { 'Accept-Encoding': 'identity' };
-            }
             // init webpage clipRect
             local.page.clipRect = { height: 768, left: 0, top: 0, width: 1024 };
             // init webpage viewportSize

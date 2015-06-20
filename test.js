@@ -170,9 +170,6 @@
                 }
             };
             onNext();
-
-
-
         };
 
         local.testCase_assert_default = function (onError) {
@@ -602,6 +599,168 @@
             onParallel();
         };
 
+        local._testCase_taskRunCached_default = function (options, onError) {
+            /*
+             * this function will test taskRunCached's default handling behavior
+             */
+            var cacheValue, modeNext, onNext, onTask, optionsCopy;
+            onTask = function (onError) {
+                onError(null, cacheValue);
+            };
+            modeNext = 0;
+            onNext = function (error, data) {
+                local.utility2.testTryCatch(function () {
+                    modeNext += 1;
+                    switch (modeNext) {
+                    // test no cache handling behavior
+                    case 1:
+                        if (options.modeCacheMemory) {
+                            // cleanup memory-cache
+                            local.utility2.cacheDict[options.cacheDict] = null;
+                        }
+                        if (options.modeCacheFile) {
+                            // cleanup file-cache
+                            local.utility2.fsRmrSync(options.modeCacheFile);
+                        }
+                        cacheValue = 'hello';
+                        optionsCopy = {
+                            cacheDict: options.cacheDict,
+                            key: options.key,
+                            modeCacheFile: options.modeCacheFile,
+                            modeCacheMemory: options.modeCacheMemory,
+                            // test onCacheWrite handling behavior
+                            onCacheWrite: onNext,
+                            onTask: onTask
+                        };
+                        local.utility2.taskRunCached(optionsCopy, onNext);
+                        break;
+                    case 2:
+                        // validate no error occurred
+                        local.utility2.assert(!error, error);
+                        // validate data
+                        local.utility2.assert(data === 'hello', data);
+                        // validate no cache-hit
+                        local.utility2.assert(
+                            !optionsCopy.modeCacheHit,
+                            optionsCopy.modeCacheHit
+                        );
+                        break;
+                    // test cache with update handling behavior
+                    case 3:
+                        cacheValue = 'bye';
+                        optionsCopy = {
+                            cacheDict: options.cacheDict,
+                            key: options.key,
+                            modeCacheFile: options.modeCacheFile,
+                            modeCacheMemory: options.modeCacheMemory,
+                            // test modeCacheUpdate handling behavior
+                            modeCacheUpdate: true,
+                            // test onCacheWrite handling behavior
+                            onCacheWrite: onNext,
+                            onTask: onTask
+                        };
+                        local.utility2.taskRunCached(optionsCopy, onNext);
+                        break;
+                    case 4:
+                        // validate no error occurred
+                        local.utility2.assert(!error, error);
+                        // validate data
+                        local.utility2.assert(data === (optionsCopy.modeCacheHit
+                            ? 'hello'
+                            : 'bye'), [optionsCopy.modeCacheHit, data]);
+                        // validate modeCacheHit
+                        local.utility2.assert(
+                            optionsCopy.modeCacheHit === options.modeCacheHit,
+                            [optionsCopy.modeCacheHit, options.modeCacheHit]
+                        );
+                        break;
+                    // test cache handling behavior
+                    case 5:
+                        optionsCopy = {
+                            cacheDict: options.cacheDict,
+                            key: options.key,
+                            modeCacheFile: options.modeCacheFile,
+                            modeCacheMemory: options.modeCacheMemory,
+                            onTask: onTask
+                        };
+                        local.utility2.taskRunCached(optionsCopy, onNext);
+                        break;
+                    case 6:
+                        // validate no error occurred
+                        local.utility2.assert(!error, error);
+                        // validate data
+                        local.utility2.assert(data === 'bye', data);
+                        // validate modeCacheHit
+                        local.utility2.assert(
+                            optionsCopy.modeCacheHit === options.modeCacheHit,
+                            [optionsCopy.modeCacheHit, options.modeCacheHit]
+                        );
+                        onNext();
+                        break;
+                    // test error handling behavior
+                    case 7:
+                        optionsCopy = {
+                            cacheDict: options.cacheDict,
+                            key: options.key + 'Error',
+                            modeCacheFile: options.modeCacheFile,
+                            modeCacheMemory: options.modeCacheMemory,
+                            onTask: function (onError) {
+                                onError(local.utility2.errorDefault);
+                            }
+                        };
+                        local.utility2.taskRunCached(optionsCopy, onNext);
+                        break;
+                    case 8:
+                        // validate error occurred
+                        local.utility2.assert(error, error);
+                        onNext();
+                        break;
+                    default:
+                        onError(error);
+                    }
+                }, onError);
+            };
+            onNext();
+        };
+
+        local.testCase_taskRunCached_default = function (onError) {
+            /*
+             * this function will test taskRunCached's default handling behavior
+             */
+            var onParallel;
+            onParallel = local.utility2.onParallel(onError);
+            onParallel.counter += 1;
+            // test file-cache handling behavior
+            if (local.modeJs === 'node') {
+                onParallel.counter += 1;
+                local._testCase_taskRunCached_default({
+                    cacheDict: 'testCase_taskRunCached_default',
+                    cacheValue: local.utility2.stringAsciiCharset,
+                    key: 'file',
+                    modeCacheFile: local.utility2.envDict.npm_config_dir_tmp +
+                        '/testCase_taskRunCached_default',
+                    modeCacheHit: 'file'
+                }, onParallel);
+            }
+            // test memory-cache handling behavior
+            onParallel.counter += 1;
+            local._testCase_taskRunCached_default({
+                cacheDict: 'testCase_taskRunCached_default',
+                cacheValue: local.utility2.stringAsciiCharset,
+                key: 'memory',
+                modeCacheHit: 'memory',
+                modeCacheMemory: true
+            }, onParallel);
+            // test undefined-cache handling behavior
+            onParallel.counter += 1;
+            local._testCase_taskRunCached_default({
+                cacheDict: 'testCase_taskRunCached_default',
+                cacheValue: local.utility2.stringAsciiCharset,
+                key: 'undefined'
+            }, onParallel);
+            onParallel();
+        };
+
         local.testCase_testRun_failure = function (onError) {
             /*
              * this function will test testRun's failure handling behavior
@@ -959,150 +1118,6 @@
                 );
                 onError();
             }, onError);
-        };
-
-        local.testCase_taskRunCached_default = function (onError) {
-            /*
-             * this function will test taskRunCached's default handling behavior
-             */
-            var cacheValue, done, modeNext, onNext, onParallel, onTestCaseCached, options;
-            done = 0;
-            modeNext = 0;
-            onTestCaseCached = function (options, modeCacheHit, onError) {
-                /*
-                 * this function will run the testCase with the given options
-                 */
-                local.utility2.taskRunCached(options, function (error, data) {
-                    local.utility2.testTryCatch(function () {
-                        // validate no error occurred
-                        local.utility2.assert(!error, error);
-                        // validate data
-                        local.utility2.assert(data === cacheValue, data);
-                        // validate modeCacheHit
-                        local.utility2.assert(
-                            options.modeCacheHit === modeCacheHit,
-                            [options.modeCacheHit, modeCacheHit, modeNext]
-                        );
-                        if (!options.onCacheWrite) {
-                            onError();
-                        }
-                    }, onError);
-                });
-            };
-            onNext = function (error) {
-                modeNext = error
-                    ? Infinity
-                    : modeNext + 1;
-                switch (modeNext) {
-                case 1:
-                    cacheValue = local.utility2.stringAsciiCharset;
-                    options = {};
-                    options.cacheDict = 'testCase_taskRunCached_default.' +
-                        local.utility2.envDict.npm_config_mode_legacy_node;
-                    options.key = local.utility2.stringUriComponentCharset;
-                    options.modeCacheFile = local.utility2.envDict.npm_config_dir_tmp +
-                        '/testCase_taskRunCached_default/' +
-                        local.utility2.envDict.npm_config_mode_legacy_node;
-                    options.modeCacheFileHit = 'file';
-                    options.modeCacheMemory = true;
-                    options.modeCacheMemoryHit = 'memory';
-                    options.onTask = function (onError) {
-                        onError(null, cacheValue);
-                    };
-                    // cleanup memory-cache
-                    local.utility2.cacheDict[options.cacheDict] = null;
-                    // cleanup file-cache
-                    local.child_process
-                        .spawn('rm', ['-fr', options.modeCacheFile], { stdio: 'ignore' })
-                        .on('exit', function () {
-                            onNext();
-                        });
-                    break;
-                // test no cache handling behavior
-                case 2:
-                    onParallel = local.utility2.onParallel(onNext);
-                    onParallel.counter += 1;
-                    [
-                        'modeCacheFile',
-                        'modeCacheMemory',
-                        'modeCacheUndefined'
-                    ].forEach(function (modeCache) {
-                        var optionsCopy;
-                        optionsCopy = {
-                            cacheDict: options.cacheDict,
-                            key: options.key,
-                            onCacheWrite: modeCache === 'modeCacheFile' && onParallel,
-                            onTask: options.onTask
-                        };
-                        optionsCopy[modeCache] = options[modeCache];
-                        onParallel.counter += 1;
-                        onTestCaseCached(optionsCopy, undefined, onParallel);
-                    });
-                    onParallel();
-                    break;
-                // test cache handling behavior
-                case 3:
-                    onParallel.counter += 1;
-                    [
-                        'modeCacheFile',
-                        'modeCacheMemory',
-                        'modeCacheUndefined'
-                    ].forEach(function (modeCache) {
-                        var optionsCopy;
-                        optionsCopy = {
-                            cacheDict: options.cacheDict,
-                            key: options.key,
-                            // test no onCacheWrite handling behavior
-                            onCacheWrite: null,
-                            onTask: options.onTask
-                        };
-                        optionsCopy[modeCache] = options[modeCache];
-                        onParallel.counter += 1;
-                        onTestCaseCached(optionsCopy, options[modeCache + 'Hit'], onParallel);
-                    });
-                    onParallel();
-                    break;
-                // test error handling behavior
-                case 4:
-                    onParallel.counter += 1;
-                    [
-                        'modeCacheFile',
-                        'modeCacheMemory',
-                        'modeCacheUndefined'
-                    ].forEach(function (modeCache) {
-                        var optionsCopy;
-                        optionsCopy = {
-                            cacheDict: options.cacheDict,
-                            key: options.key + 'Error',
-                            onTask: function (onError) {
-                                onError(local.utility2.errorDefault);
-                            }
-                        };
-                        optionsCopy[modeCache] = options[modeCache];
-                        onParallel.counter += 1;
-                        local.utility2.taskRunCached(optionsCopy, function (error) {
-                            local.utility2.testTryCatch(function () {
-                                // validate error occurred
-                                local.utility2.assert(error, error);
-                                onParallel();
-                            }, onParallel);
-                        });
-                    });
-                    onParallel();
-                    break;
-                default:
-                    local.utility2.assert(done <= 1, done);
-                    // if already done, then do nothing
-                    if (!done) {
-                        done += 1;
-                        // validate no error occurred
-                        onError(error);
-                        // test error handling behavior
-                        onNext(local.utility2.errorDefault);
-                    }
-                }
-            };
-            onNext();
         };
 
         local.testCase_testRunServer_misc = function (onError) {

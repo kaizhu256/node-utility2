@@ -433,7 +433,7 @@ npm_config_mode_auto_restart=1 \
 npm_config_mode_auto_restart_child=1 \
 ./index.sh test test.js"
     },
-    "version": "2015.6.10-b"
+    "version": "2015.6.10-c"
 }
 ```
 
@@ -449,9 +449,9 @@ npm_config_mode_auto_restart_child=1 \
 
 
 
-# change since a1054711
-- npm publish 2015.6.10-b
-- merge serverRespondGzip into middlewareAssetsCached
+# change since 5d99307c
+- npm publish 2015.6.10-c
+- fix middlewareAssetsCached
 - none
 
 
