@@ -1070,6 +1070,13 @@
                     done = true;
                     // stop testCase timer
                     local._timeElapsedStop(testCase);
+                    console.log('[' + local.modeJs + ' test-case ' +
+                        testPlatform.testCaseList.filter(function (testCase) {
+                            return testCase.timeElapsed < 0xffffffff;
+                        }).length + ' of ' +
+                        testPlatform.testCaseList.length + (testCase.errorStack
+                        ? ' failed'
+                        : ' passed') + '] - ' + testCase.name);
                     // if all tests have finished, then create test-report
                     onParallel();
                 };
@@ -1806,7 +1813,11 @@
                         .processSpawnWithTimeout(
                             '/bin/sh',
                             ['-c',
-                                options.argv0 + ' ' +
+                                options.argv0 +
+                                // bug - hack slimerjs to allow heroku https
+                                (options.argv0 === 'slimerjs'
+                                ? ' --ssl-protocol=TLS '
+                                : ' ') +
                                 options.argv1 + ' ' +
                                 encodeURIComponent(JSON.stringify(options)) + '; ' +
                                 'EXIT_CODE=$?; ' +
@@ -2711,7 +2722,7 @@ local.utility2['/test/test-report.html.template'] = '<style>\n' +
         '<th>#</th>\n' +
         '<th>time elapsed</th>\n' +
         '<th>status</th>\n' +
-        '<th>test case</th>\n' +
+        '<th>test-case</th>\n' +
     '</tr></thead>\n' +
     '<tbody>\n' +
     '{{#testCaseList}}\n' +

@@ -433,14 +433,13 @@ npm_config_mode_auto_restart=1 \
 npm_config_mode_auto_restart_child=1 \
 ./index.sh test test.js"
     },
-    "version": "2015.6.10-c"
+    "version": "2015.6.10-d"
 }
 ```
 
 
 
 # todo
-- print test-progress during npm test
 - create flamegraph from istanbul coverage
 - auto-generate help doc from README.md
 - add server stress test using phantomjs
@@ -449,9 +448,10 @@ npm_config_mode_auto_restart_child=1 \
 
 
 
-# change since 5d99307c
-- npm publish 2015.6.10-c
-- fix middlewareAssetsCached
+# change since 4770d421
+- npm publish 2015.6.10-d
+- print test-progress during npm test
+- fix slimerjs https access
 - none
 
 
