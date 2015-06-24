@@ -1092,7 +1092,17 @@
                 try {
                     // start testCase timer
                     testCase.timeElapsed = Date.now();
-                    testCase.onTestCase(onError);
+                    /* istanbul ignore next */
+                    (function () {
+                        if (testCase.onTestCase.length >= 2) {
+                            testCase.onTestCase(null, onError);
+                        // legacy-hack
+                        } else {
+                            console.error('WARNING - missing options param - ' +
+                                testCase.name);
+                            testCase.onTestCase(onError);
+                        }
+                    }());
                 } catch (errorCaught) {
                     onError(errorCaught);
                 }
@@ -2694,7 +2704,7 @@ local.utility2['/test/test-report.html.template'] = '<style>\n' +
     '</h4>\n' +
     '<table class="testReportPlatformTable">\n' +
     '<thead><tr>\n' +
-        '<th>total time elapsed</th>\n' +
+        '<th>total time-elapsed</th>\n' +
         '<th>total tests failed</th>\n' +
         '<th>total tests passed</th>\n' +
         '<th>total tests pending</th>\n' +
@@ -2712,7 +2722,7 @@ local.utility2['/test/test-report.html.template'] = '<style>\n' +
     '<h4>\n' +
         '{{testPlatformNumber}}. {{name}}<br>\n' +
         '{{screenCapture}}\n' +
-        '<span class="testReportPlatformSpan">time elapsed</span>- {{timeElapsed}} ms<br>\n' +
+        '<span class="testReportPlatformSpan">time-elapsed</span>- {{timeElapsed}} ms<br>\n' +
         '<span class="testReportPlatformSpan">tests failed</span>- {{testsFailed}}<br>\n' +
         '<span class="testReportPlatformSpan">tests passed</span>- {{testsPassed}}<br>\n' +
         '<span class="testReportPlatformSpan">tests pending</span>- {{testsPending}}<br>\n' +
@@ -2720,7 +2730,7 @@ local.utility2['/test/test-report.html.template'] = '<style>\n' +
     '<table class="testReportPlatformTable">\n' +
     '<thead><tr>\n' +
         '<th>#</th>\n' +
-        '<th>time elapsed</th>\n' +
+        '<th>time-elapsed</th>\n' +
         '<th>status</th>\n' +
         '<th>test-case</th>\n' +
     '</tr></thead>\n' +

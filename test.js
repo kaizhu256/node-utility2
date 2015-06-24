@@ -14,93 +14,40 @@
     // run shared js-env code
     (function () {
         // init tests
-        local.testCase_ajax_default = function (onError) {
+        local.testCase_ajax_abort = function (options, onError) {
             /*
-             * this function will test ajax's default handling behavior
+             * this function will test ajax's abort handling behavior
              */
-            var data, done, modeNext, onNext, onParallel;
-            done = 0;
-            modeNext = 0;
-            onNext = function (error) {
-                modeNext = error
-                    ? Infinity
-                    : modeNext + 1;
-                switch (modeNext) {
-                case 1:
-                    onParallel = local.utility2.onParallel(onNext);
-                    onParallel.counter += 1;
-                    // test http GET handling behavior
-                    onParallel.counter += 1;
-                    local.utility2.ajax({
-                        // test debug handling behavior
-                        debug: true,
-                        url: '/test/hello'
-                    }, function (error, xhr) {
-                        local.utility2.testTryCatch(function () {
-                            // validate no error occurred
-                            local.utility2.assert(!error, error);
-                            // validate data
-                            data = xhr.responseText;
-                            local.utility2.assert(data === 'hello', data);
-                            onParallel();
-                        }, onParallel);
-                    });
-                    // test http POST handling behavior
-                    ['blob', 'response', 'text'].forEach(function (responseType) {
-                        onParallel.counter += 1;
-                        local.utility2.ajax({
-                            data: responseType === 'blob' && local.modeJs === 'node'
-                                // test blob post handling behavior
-                                ? new Buffer('hello')
-                                // test string post handling behavior
-                                : 'hello',
-                            // test request header handling behavior
-                            headers: { 'X-Header-Test': 'Test' },
-                            method: 'POST',
-                            responseType: responseType,
-                            url: '/test/echo'
-                        }, function (error, xhr) {
-                            local.utility2.testTryCatch(function () {
-                                // validate no error occurred
-                                local.utility2.assert(!error, error);
-                                if (responseType === 'response') {
-                                    // cleanup response
-                                    local.utility2.requestResponseCleanup(null, xhr.response);
-                                    // validate response
-                                    data = xhr.response;
-                                    local.utility2.assert(data, data);
-                                    onParallel();
-                                    return;
-                                }
-                                // validate responseText
-                                data = xhr.responseText;
-                                local.utility2.assert((/\r\nhello$/).test(data), data);
-                                // validate responseHeaders
-                                local.utility2.assert(
-                                    (/^X-Header-Test: Test\r\n/im).test(data),
-                                    data
-                                );
-                                data = xhr.getAllResponseHeaders();
-                                local.utility2.assert(
-                                    (/^X-Header-Test: Test\r\n/im).test(data),
-                                    data
-                                );
-                                data = xhr.getResponseHeader('x-header-test');
-                                local.utility2.assert(data === 'Test', data);
-                                data = xhr.getResponseHeader('x-header-undefined');
-                                local.utility2.assert(data === null, data);
-                                // validate statusCode
-                                local.utility2.assert(xhr.statusCode === 200, xhr.statusCode);
-                                onParallel();
-                            }, onParallel);
-                        });
-                    });
-                    onParallel();
-                    break;
-                case 2:
-                    onParallel.counter += 1;
+            options = local.utility2.ajax({ url: '/test/timeout' }, function (error) {
+                local.utility2.testTryCatch(function () {
+                    // validate error occurred
+                    local.utility2.assert(error, error);
+                    onError();
+                }, onError);
+            });
+            options.abort();
+            // test multiple-callback handling behavior
+            options.abort();
+        };
+
+        local.testCase_ajax_cache = function (options, onError) {
+            /*
+             * this function will test ajax's cache handling behavior
+             */
+            // jslint-hack
+            local.utility2.nop(options);
+            // test http GET handling behavior
+            local.utility2.ajax({
+                // test debug handling behavior
+                debug: true,
+                url: '/test/hello'
+            }, function (error, xhr) {
+                local.utility2.testTryCatch(function () {
+                    // validate no error occurred
+                    local.utility2.assert(!error, error);
+                    // validate responseText
+                    local.utility2.assert(xhr.responseText === 'hello', xhr.responseText);
                     // test http GET 304 cache handling behavior
-                    onParallel.counter += 1;
                     local.utility2.ajax({
                         headers: {
                             'If-Modified-Since': new Date(Date.now() + 0xffff).toGMTString()
@@ -112,70 +59,119 @@
                             local.utility2.assert(!error, error);
                             // validate 304 http status
                             local.utility2.assert(xhr.status === 304, xhr.status);
-                            onParallel();
-                        }, onParallel);
+                            onError();
+                        }, onError);
                     });
-                    [{
-                        // test 404-not-found-error handling behavior
-                        url: '/test/error-400'
-                    }, {
-                        // test 500-internal-server-error handling behavior
-                        url: '/test/error-500'
-                    }, {
-                        // test undefined-error handling behavior
-                        url: '/test/error-undefined'
-                    }, {
-                        // test timeout handling behavior
-                        timeout: 1,
-                        url: '/test/timeout'
-                    }, {
-                        // test undefined https host handling behavior
-                        timeout: 1,
-                        url: 'https://' + local.utility2.uuidTime() + '.com'
-                    }].forEach(function (options) {
-                        onParallel.counter += 1;
-                        local.utility2.ajax(options, function (error) {
-                            local.utility2.testTryCatch(function () {
-                                // validate error occurred
-                                local.utility2.assert(error, error);
-                                onParallel();
-                            }, onParallel);
-                        });
-                    });
-                    onParallel();
-                    break;
-                case 3:
-                    // test xhr.abort handling behavior
-                    data = local.utility2.ajax({ url: '/test/timeout' }, function (error) {
-                        local.utility2.testTryCatch(function () {
-                            // validate error occurred
-                            local.utility2.assert(error, error);
-                            onNext();
-                        }, onNext);
-                    });
-                    data.abort();
-                    // test multiple-callback handling behavior
-                    data.abort();
-                    break;
-                default:
-                    local.utility2.assert(done <= 1, done);
-                    // if already done, then do nothing
-                    if (!done) {
-                        done += 1;
-                        // validate no error occurred
-                        onError(error);
-                        // test error handling behavior
-                        onNext(local.utility2.errorDefault);
-                    }
-                }
-            };
-            onNext();
+                }, onError);
+            });
         };
 
-        local.testCase_assert_default = function (onError) {
+        local.testCase_ajax_error = function (options, onError) {
+            /*
+             * this function will test ajax's error handling behavior
+             */
+            var onParallel;
+            // jslint-hack
+            local.utility2.nop(options);
+            onParallel = local.utility2.onParallel(onError);
+            onParallel.counter += 1;
+            [{
+                // test 404-not-found-error handling behavior
+                url: '/test/error-400'
+            }, {
+                // test 500-internal-server-error handling behavior
+                url: '/test/error-500'
+            }, {
+                // test undefined-error handling behavior
+                url: '/test/error-undefined'
+            }, {
+                // test timeout handling behavior
+                timeout: 1,
+                url: '/test/timeout'
+            }, {
+                // test undefined https host handling behavior
+                timeout: 1,
+                url: 'https://' + local.utility2.uuidTime() + '.com'
+            }].forEach(function (options) {
+                onParallel.counter += 1;
+                local.utility2.ajax(options, function (error) {
+                    local.utility2.testTryCatch(function () {
+                        // validate error occurred
+                        local.utility2.assert(error, error);
+                        onParallel();
+                    }, onParallel);
+                });
+            });
+            onParallel();
+        };
+
+        local.testCase_ajax_post = function (options, onError) {
+            /*
+             * this function will test ajax's post handling behavior
+             */
+            var data, onParallel;
+            // jslint-hack
+            local.utility2.nop(options);
+            onParallel = local.utility2.onParallel(onError);
+            // test http POST handling behavior
+            ['blob', 'response', 'text'].forEach(function (responseType) {
+                onParallel.counter += 1;
+                local.utility2.ajax({
+                    data: responseType === 'blob' && local.modeJs === 'node'
+                        // test blob post handling behavior
+                        ? new Buffer('hello')
+                        // test string post handling behavior
+                        : 'hello',
+                    // test request header handling behavior
+                    headers: { 'X-Header-Test': 'Test' },
+                    method: 'POST',
+                    responseType: responseType,
+                    url: '/test/echo'
+                }, function (error, xhr) {
+                    local.utility2.testTryCatch(function () {
+                        // validate no error occurred
+                        local.utility2.assert(!error, error);
+                        if (responseType === 'response') {
+                            // cleanup response
+                            local.utility2.requestResponseCleanup(null, xhr.response);
+                            // validate response
+                            data = xhr.response;
+                            local.utility2.assert(data, data);
+                            onParallel();
+                            return;
+                        }
+                        // validate responseText
+                        data = xhr.responseText;
+                        local.utility2.assert((/\r\nhello$/).test(data), data);
+                        // validate responseHeaders
+                        local.utility2.assert(
+                            (/^X-Header-Test: Test\r\n/im).test(data),
+                            data
+                        );
+                        data = xhr.getAllResponseHeaders();
+                        local.utility2.assert(
+                            (/^X-Header-Test: Test\r\n/im).test(data),
+                            data
+                        );
+                        data = xhr.getResponseHeader('x-header-test');
+                        local.utility2.assert(data === 'Test', data);
+                        data = xhr.getResponseHeader('x-header-undefined');
+                        local.utility2.assert(data === null, data);
+                        // validate statusCode
+                        local.utility2.assert(xhr.statusCode === 200, xhr.statusCode);
+                        onParallel();
+                    }, onParallel);
+                });
+            });
+            onParallel();
+        };
+
+        local.testCase_assert_default = function (options, onError) {
             /*
              * this function will test assert's default handling behavior
              */
+            // jslint-hack
+            local.utility2.nop(options);
             // test assertion passed
             local.utility2.assert(true, true);
             // test assertion failed with undefined message
@@ -215,32 +211,36 @@
             onError();
         };
 
-        local.testCase_debug_print_default = function (onError) {
+        local.testCase_debug_print_default = function (options, onError) {
             /*
              * this function will test debug_print's default handling behavior
              */
-            var message;
+            var data;
+            // jslint-hack
+            local.utility2.nop(options);
             local.utility2.testMock([
                 // suppress console.error
                 [console, { error: function (arg) {
-                    message += (arg || '') + '\n';
+                    data += (arg || '') + '\n';
                 } }]
             ], function (onError) {
-                message = '';
+                data = '';
                 local.global['debug_print'.replace('_p', 'P')]('hello');
-                // validate message
+                // validate data
                 local.utility2.assert(
-                    message === '\n\n\n' + 'debug_print'.replace('_p', 'P') + '\nhello\n\n',
-                    message
+                    data === '\n\n\n' + 'debug_print'.replace('_p', 'P') + '\nhello\n\n',
+                    data
                 );
                 onError();
             }, onError);
         };
 
-        local.testCase_jsonCopy_default = function (onError) {
+        local.testCase_jsonCopy_default = function (options, onError) {
             /*
              * this function will test jsonCopy's default handling behavior
              */
+            // jslint-hack
+            local.utility2.nop(options);
             // test various data-type handling behavior
             [undefined, null, false, true, 0, 1, 1.5, 'a'].forEach(function (data) {
                 local.utility2.assert(
@@ -251,11 +251,10 @@
             onError();
         };
 
-        local.testCase_jsonStringifyOrdered_default = function (onError) {
+        local.testCase_jsonStringifyOrdered_default = function (options, onError) {
             /*
              * this function will test jsonStringifyOrdered's default handling behavior
              */
-            var data;
             // test data-type handling behavior
             [undefined, null, false, true, 0, 1, 1.5, 'a', {}, []].forEach(function (data) {
                 local.utility2.assert(
@@ -264,7 +263,7 @@
                 );
             });
             // test data-ordering handling behavior
-            data = {
+            options = {
                 // test nested dict handling behavior
                 ff: { hh: 2, gg: 1},
                 // test nested array handling behavior
@@ -275,36 +274,35 @@
                 aa: 1
             };
             // test circular-reference handling behavior
-            data.zz = data;
-            data = local.utility2.jsonStringifyOrdered(data);
+            options.zz = options;
+            options = local.utility2.jsonStringifyOrdered(options);
             local.utility2.assert(
-                data === '{"aa":1,"bb":null,"ee":[null],"ff":{"gg":1,"hh":2}}',
-                data
+                options === '{"aa":1,"bb":null,"ee":[null],"ff":{"gg":1,"hh":2}}',
+                options
             );
             onError();
         };
 
-        local.testCase_listShuffle_default = function (onError) {
+        local.testCase_listShuffle_default = function (options, onError) {
             /*
              * this function will test listShuffle's default handling behavior
              */
-            var data, list = '[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]';
+            var list = '[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]';
             // validate list before shuffle
-            data = JSON.stringify(JSON.parse(list));
-            local.utility2.assert(data === list, data);
+            options = JSON.stringify(JSON.parse(list));
+            local.utility2.assert(options === list, options);
             // shuffle list
-            data = JSON.stringify(local.utility2.listShuffle(JSON.parse(list)));
+            options = JSON.stringify(local.utility2.listShuffle(JSON.parse(list)));
             // validate list after shuffle
-            local.utility2.assert(data.length === list.length, data);
-            local.utility2.assert(data !== list, data);
+            local.utility2.assert(options.length === list.length, options);
+            local.utility2.assert(options !== list, options);
             onError();
         };
 
-        local.testCase_objectSetDefault_default = function (onError) {
+        local.testCase_objectSetDefault_default = function (options, onError) {
             /*
              * this function will test objectSetDefault's default handling behavior
              */
-            var options;
             // test non-recursive handling behavior
             options = local.utility2.objectSetDefault(
                 { aa: 1, bb: {}, cc: [] },
@@ -332,11 +330,10 @@
             onError();
         };
 
-        local.testCase_objectSetOverride_default = function (onError) {
+        local.testCase_objectSetOverride_default = function (options, onError) {
             /*
              * this function will test objectSetOverride's default handling behavior
              */
-            var data, options;
             // test non-recursive handling behavior
             options = local.utility2.objectSetOverride(
                 {
@@ -355,9 +352,9 @@
                 null
             );
             // validate options
-            data = local.utility2.jsonStringifyOrdered(options);
-            local.utility2.assert(data ===
-                '{"aa":2,"bb":{"dd":3},"dd":[4,5],"ee":{"ff":{"gg":6}}}', data);
+            options = local.utility2.jsonStringifyOrdered(options);
+            local.utility2.assert(options ===
+                '{"aa":2,"bb":{"dd":3},"dd":[4,5],"ee":{"ff":{"gg":6}}}', options);
             // test recursive handling behavior
             options = local.utility2.objectSetOverride(
                 {
@@ -376,9 +373,9 @@
                 2
             );
             // validate options
-            data = local.utility2.jsonStringifyOrdered(options);
-            local.utility2.assert(data ===
-                '{"aa":2,"bb":{"cc":2,"dd":3},"dd":[4,5],"ee":{"ff":{"gg":6}}}', data);
+            options = local.utility2.jsonStringifyOrdered(options);
+            local.utility2.assert(options ===
+                '{"aa":2,"bb":{"cc":2,"dd":3},"dd":[4,5],"ee":{"ff":{"gg":6}}}', options);
             // test envDict with empty-string handling behavior
             options = local.utility2.objectSetOverride(
                 local.utility2.envDict,
@@ -391,57 +388,57 @@
             onError();
         };
 
-        local.testCase_objectTraverse_default = function (onError) {
+        local.testCase_objectTraverse_default = function (options, onError) {
             /*
              * this function will test objectTraverse's default handling behavior
              */
-            var data;
-            data = { aa: null, bb: 2, cc: { dd: 4, ee: [5, 6, 7] } };
+            options = { aa: null, bb: 2, cc: { dd: 4, ee: [5, 6, 7] } };
             // test circular-reference handling behavior
-            data.data = data;
-            local.utility2.objectTraverse(data, function (element) {
+            options.data = options;
+            local.utility2.objectTraverse(options, function (element) {
                 if (element && typeof element === 'object' && !Array.isArray(element)) {
                     element.zz = true;
                 }
             });
-            // validate data
-            data = local.utility2.jsonStringifyOrdered(data);
+            // validate options
+            options = local.utility2.jsonStringifyOrdered(options);
             local.utility2.assert(
-                data === '{"aa":null,"bb":2,"cc":{"dd":4,"ee":[5,6,7],"zz":true},"zz":true}',
-                data
+                options === '{"aa":null,"bb":2,"cc":{"dd":4,"ee":[5,6,7],"zz":true},"zz":true}',
+                options
             );
             onError();
         };
 
-        local.testCase_onErrorDefault_default = function (onError) {
+        local.testCase_onErrorDefault_default = function (options, onError) {
             /*
              * this function will test onErrorDefault's default handling behavior
              */
-            var message;
             local.utility2.testMock([
                 // suppress console.error
                 [console, { error: function (arg) {
-                    message = arg;
+                    options = arg;
                 } }],
                 [local.global, { __coverage__: null }]
             ], function (onError) {
                 // test no error handling behavior
                 local.utility2.onErrorDefault();
-                // validate message
-                local.utility2.assert(!message, message);
+                // validate options
+                local.utility2.assert(!options, options);
                 // test error handling behavior
                 local.utility2.onErrorDefault(local.utility2.errorDefault);
-                // validate message
-                local.utility2.assert(message, message);
+                // validate options
+                local.utility2.assert(options, options);
                 onError();
             }, onError);
         };
 
-        local.testCase_onErrorJsonParse_default = function (onError) {
+        local.testCase_onErrorJsonParse_default = function (options, onError) {
             /*
              * this function will test onErrorJsonParse's default handling behavior
              */
             var data, error, jsonParse;
+            // jslint-hack
+            local.utility2.nop(options);
             jsonParse = local.utility2.onErrorJsonParse(function (arg0, arg1) {
                 data = arg1;
                 error = arg0;
@@ -467,11 +464,13 @@
             onError();
         };
 
-        local.testCase_onParallel_default = function (onError) {
+        local.testCase_onParallel_default = function (options, onError) {
             /*
              * this function will test onParallel's default handling behavior
              */
             var onParallel, onParallelError;
+            // jslint-hack
+            local.utility2.nop(options);
             // test onDebug handling behavior
             onParallel = local.utility2.onParallel(onError, function (error, self) {
                 local.utility2.testTryCatch(function () {
@@ -503,11 +502,13 @@
             onParallel();
         };
 
-        local.testCase_onTimeout_timeout = function (onError) {
+        local.testCase_onTimeout_timeout = function (options, onError) {
             /*
              * this function will test onTimeout's timeout handling behavior
              */
             var timeElapsed;
+            // jslint-hack
+            local.utility2.nop(options);
             timeElapsed = Date.now();
             local.utility2.onTimeout(function (error) {
                 local.utility2.testTryCatch(function () {
@@ -516,20 +517,20 @@
                     // save timeElapsed
                     timeElapsed = Date.now() - timeElapsed;
                     // validate timeElapsed passed is greater than timeout
-                    // bug - ie might timeout slightly earlier,
-                    // so increase timeElapsed by a small amount
-                    local.utility2.assert(timeElapsed + 100 >= 1000, timeElapsed);
+                    local.utility2.assert(timeElapsed >= 1500, timeElapsed);
                     onError();
                 }, onError);
             // coverage-hack - use 1500 ms to cover setInterval test-report refresh in browser
             }, 1500, 'testCase_onTimeout_errorTimeout');
         };
 
-        local.testCase_stringFormat_default = function (onError) {
+        local.testCase_stringFormat_default = function (options, onError) {
             /*
              * this function will test stringFormat's default handling behavior
              */
             var data;
+            // jslint-hack
+            local.utility2.nop(options);
             // test undefined valueDefault handling behavior
             data = local.utility2.stringFormat('{{aa}}', {}, undefined);
             local.utility2.assert(data === '{{aa}}', data);
@@ -571,39 +572,42 @@
             onError();
         };
 
-        local.testCase_taskRunOrSubscribe_default = function (onError) {
-            /*
-             * this function will test taskRunOrSubscribe's default handling behavior
-             */
-            var key, onParallel;
-            key = local.utility2.uuidTime();
-            onParallel = local.utility2.onParallel(onError);
-            onParallel.counter += 1;
-            // test create handling behavior
-            onParallel.counter += 1;
-            local.utility2.taskRunOrSubscribe({
-                key: key,
-                onTask: function (onError) {
-                    setTimeout(function () {
-                        // test multiple-callback handling behavior
-                        onError();
-                        onError();
-                    });
-                }
-            }, onParallel);
-            // test addCallback handling behavior
-            onParallel.counter += 1;
-            local.utility2.taskRunOrSubscribe({
-                key: key
-            }, onParallel);
-            onParallel();
-        };
-
-        local._testCase_taskRunCached_default = function (options, onError) {
+        local.testCase_taskRunCached_default = function (options, onError) {
             /*
              * this function will test taskRunCached's default handling behavior
              */
-            var cacheValue, modeNext, onNext, onTask, optionsCopy;
+            var cacheValue, modeNext, onNext, onParallel, onTask, optionsCopy;
+            if (!options) {
+                onParallel = local.utility2.onParallel(onError);
+                onParallel.counter += 1;
+                // test file-cache handling behavior
+                if (local.modeJs === 'node') {
+                    onParallel.counter += 1;
+                    local.testCase_taskRunCached_default({
+                        cacheDict: 'testCase_taskRunCached_default',
+                        key: 'file',
+                        modeCacheFile: local.utility2.envDict.npm_config_dir_tmp +
+                            '/testCase_taskRunCached_default',
+                        modeCacheHit: 'file'
+                    }, onParallel);
+                }
+                // test memory-cache handling behavior
+                onParallel.counter += 1;
+                local.testCase_taskRunCached_default({
+                    cacheDict: 'testCase_taskRunCached_default',
+                    key: 'memory',
+                    modeCacheHit: 'memory',
+                    modeCacheMemory: true
+                }, onParallel);
+                // test undefined-cache handling behavior
+                onParallel.counter += 1;
+                local.testCase_taskRunCached_default({
+                    cacheDict: 'testCase_taskRunCached_default',
+                    key: 'undefined'
+                }, onParallel);
+                onParallel();
+                return;
+            }
             onTask = function (onError) {
                 onError(null, cacheValue);
             };
@@ -667,7 +671,7 @@
                         // validate data
                         local.utility2.assert(data === (optionsCopy.modeCacheHit
                             ? 'hello'
-                            : 'bye'), [optionsCopy.modeCacheHit, data]);
+                            : 'bye'), [data, optionsCopy.modeCacheHit]);
                         // validate modeCacheHit
                         local.utility2.assert(
                             optionsCopy.modeCacheHit === options.modeCacheHit,
@@ -723,48 +727,42 @@
             onNext();
         };
 
-        local.testCase_taskRunCached_default = function (onError) {
+        local.testCase_taskRunOrSubscribe_default = function (options, onError) {
             /*
-             * this function will test taskRunCached's default handling behavior
+             * this function will test taskRunOrSubscribe's default handling behavior
              */
-            var onParallel;
+            var key, onParallel;
+            // jslint-hack
+            local.utility2.nop(options);
+            key = local.utility2.uuidTime();
             onParallel = local.utility2.onParallel(onError);
             onParallel.counter += 1;
-            // test file-cache handling behavior
-            if (local.modeJs === 'node') {
-                onParallel.counter += 1;
-                local._testCase_taskRunCached_default({
-                    cacheDict: 'testCase_taskRunCached_default',
-                    cacheValue: local.utility2.stringAsciiCharset,
-                    key: 'file',
-                    modeCacheFile: local.utility2.envDict.npm_config_dir_tmp +
-                        '/testCase_taskRunCached_default',
-                    modeCacheHit: 'file'
-                }, onParallel);
-            }
-            // test memory-cache handling behavior
+            // test create handling behavior
             onParallel.counter += 1;
-            local._testCase_taskRunCached_default({
-                cacheDict: 'testCase_taskRunCached_default',
-                cacheValue: local.utility2.stringAsciiCharset,
-                key: 'memory',
-                modeCacheHit: 'memory',
-                modeCacheMemory: true
+            local.utility2.taskRunOrSubscribe({
+                key: key,
+                onTask: function (onError) {
+                    setTimeout(function () {
+                        // test multiple-callback handling behavior
+                        onError();
+                        onError();
+                    });
+                }
             }, onParallel);
-            // test undefined-cache handling behavior
+            // test addCallback handling behavior
             onParallel.counter += 1;
-            local._testCase_taskRunCached_default({
-                cacheDict: 'testCase_taskRunCached_default',
-                cacheValue: local.utility2.stringAsciiCharset,
-                key: 'undefined'
+            local.utility2.taskRunOrSubscribe({
+                key: key
             }, onParallel);
             onParallel();
         };
 
-        local.testCase_testRun_failure = function (onError) {
+        local.testCase_testRun_failure = function (options, onError) {
             /*
              * this function will test testRun's failure handling behavior
              */
+            // jslint-hack
+            local.utility2.nop(options);
             // test failure from callback handling behavior
             onError(local.utility2.errorDefault);
             // test failure from multiple-callback handling behavior
@@ -782,11 +780,13 @@
     // run node js-env code
     case 'node':
         // init tests
-        local.testCase_fsWriteFileWithMkdirp_default = function (onError) {
+        local.testCase_fsWriteFileWithMkdirp_default = function (options, onError) {
             /*
              * this function will test fsWriteFileWithMkdirp's default handling behavior
              */
             var dir, file, modeNext, onNext;
+            // jslint-hack
+            local.utility2.nop(options);
             modeNext = 0;
             onNext = function (error, data) {
                 local.utility2.testTryCatch(function () {
@@ -852,12 +852,14 @@
             onNext();
         };
 
-        local.testCase_istanbulMerge_default = function (onError) {
+        local.testCase_istanbulMerge_default = function (options, onError) {
             /*
              * this function will test istanbulMerge's default handling behavior
              */
-            var coverage1, coverage2, script;
-            script = local.utility2.istanbul_lite.instrumentSync(
+            var coverage1, coverage2, data;
+            // jslint-hack
+            local.utility2.nop(options);
+            data = local.utility2.istanbul_lite.instrumentSync(
                 '(function () {\nreturn arg ' +
                     '? __coverage__ ' +
                     ': __coverage__;\n}());',
@@ -865,17 +867,17 @@
             );
             local.utility2.arg = 0;
             // jslint-hack
-            local.utility2.nop(script);
+            local.utility2.nop(data);
 
 
 
             /* jslint-ignore-begin */
             // init coverage1
-            coverage1 = local.vm.runInNewContext(script, { arg: 0 });
+            coverage1 = local.vm.runInNewContext(data, { arg: 0 });
             // validate coverage1
             local.utility2.assert(local.utility2.jsonStringifyOrdered(coverage1) === '{"/test":{"b":{"1":[0,1]},"branchMap":{"1":{"line":2,"locations":[{"end":{"column":25,"line":2},"start":{"column":13,"line":2}},{"end":{"column":40,"line":2},"start":{"column":28,"line":2}}],"type":"cond-expr"}},"f":{"1":1},"fnMap":{"1":{"line":1,"loc":{"end":{"column":13,"line":1},"start":{"column":1,"line":1}},"name":"(anonymous_1)"}},"path":"/test","s":{"1":1,"2":1},"statementMap":{"1":{"end":{"column":5,"line":3},"start":{"column":0,"line":1}},"2":{"end":{"column":41,"line":2},"start":{"column":0,"line":2}}}}}', coverage1);
             // init coverage2
-            coverage2 = local.vm.runInNewContext(script, { arg: 1 });
+            coverage2 = local.vm.runInNewContext(data, { arg: 1 });
             // validate coverage2
             local.utility2.assert(local.utility2.jsonStringifyOrdered(coverage2) === '{"/test":{"b":{"1":[1,0]},"branchMap":{"1":{"line":2,"locations":[{"end":{"column":25,"line":2},"start":{"column":13,"line":2}},{"end":{"column":40,"line":2},"start":{"column":28,"line":2}}],"type":"cond-expr"}},"f":{"1":1},"fnMap":{"1":{"line":1,"loc":{"end":{"column":13,"line":1},"start":{"column":1,"line":1}},"name":"(anonymous_1)"}},"path":"/test","s":{"1":1,"2":1},"statementMap":{"1":{"end":{"column":5,"line":3},"start":{"column":0,"line":1}},"2":{"end":{"column":41,"line":2},"start":{"column":0,"line":2}}}}}', coverage2);
             // merge coverage2 into coverage1
@@ -895,11 +897,13 @@
             onError();
         };
 
-        local.testCase_onFileModifiedRestart_watchFile = function (onError) {
+        local.testCase_onFileModifiedRestart_watchFile = function (options, onError) {
             /*
              * this function will test onFileModifiedRestart's watchFile handling behavior
              */
             var file, onParallel;
+            // jslint-hack
+            local.utility2.nop(options);
             file = __dirname + '/package.json';
             onParallel = local.utility2.onParallel(onError);
             onParallel.counter += 1;
@@ -917,11 +921,158 @@
             });
         };
 
-        local.testCase_testPage_default = function (onError) {
+        local.testCase_processSpawnWithTimeout_default = function (options, onError) {
+            /*
+             * this function will test processSpawnWithTimeout's default handling behavior
+             */
+            var childProcess, onParallel;
+            // jslint-hack
+            local.utility2.nop(options);
+            onParallel = local.utility2.onParallel(onError);
+            onParallel.counter += 1;
+            // test default handling behavior
+            onParallel.counter += 1;
+            local.utility2.processSpawnWithTimeout('ls')
+                .on('error', onParallel)
+                .on('exit', function (exitCode, signal) {
+                    // validate exitCode
+                    local.utility2.assert(exitCode === 0, exitCode);
+                    // validate signal
+                    local.utility2.assert(signal === null, signal);
+                    onParallel();
+                });
+            // test timeout handling behavior
+            onParallel.counter += 1;
+            local.utility2.testMock([
+                [local.utility2, { timeoutDefault: 1000 }]
+            ], function (onError) {
+                childProcess = local.utility2.processSpawnWithTimeout('sleep', [5000]);
+                onError();
+            }, local.utility2.nop);
+            childProcess
+                .on('error', onParallel)
+                .on('exit', function (exitCode, signal) {
+                    local.utility2.testTryCatch(function () {
+                        // validate exitCode
+                        local.utility2.assert(exitCode === null, exitCode);
+                        // validate signal
+                        local.utility2.assert(signal === 'SIGKILL', signal);
+                        onParallel();
+                    }, onParallel);
+                });
+            onParallel();
+        };
+
+        local.testCase_replStart_default = function (options, onError) {
+            /*
+             * this function will test replStart's default handling behavior
+             */
+            /*jslint evil: true*/
+            // jslint-hack
+            local.utility2.nop(options);
+            local.utility2.testMock([
+                [local.utility2, { processSpawnWithTimeout: function () {
+                    return { on: function (event, callback) {
+                        // jslint-hack
+                        local.utility2.nop(event);
+                        callback();
+                    } };
+                } }]
+            ], function (onError) {
+                [
+                    // test shell handling behavior
+                    '$ :\n',
+                    // test git diff handling behavior
+                    '$ git diff\n',
+                    // test git log handling behavior
+                    '$ git log\n',
+                    // test grep handling behavior
+                    'grep \\bhello\\b\n',
+                    // test print handling behavior
+                    'print\n'
+                ].forEach(function (script) {
+                    local.utility2.local._replServer.eval(
+                        script,
+                        null,
+                        'repl',
+                        local.utility2.nop
+                    );
+                });
+                onError();
+            }, onError);
+        };
+
+        local.testCase_serverRespondTimeoutDefault_default = function (options, onError) {
+            /*
+             * this function will test serverRespondTimeoutDefault's default handling behavior
+             */
+            // jslint-hack
+            local.utility2.nop(options);
+            local.utility2.testMock([
+                // suppress console.error
+                [local.utility2, { timeoutDefault: 1000 }]
+            ], function (onError) {
+                local.utility2.serverRespondTimeoutDefault(
+                    {
+                        // test default onTimeout handling behavior
+                        onTimeout: null,
+                        url: ''
+                    },
+                    { end: local.utility2.nop, headersSent: true, on: local.utility2.nop },
+                    // test default timeout handling behavior
+                    null
+                );
+                onError();
+            }, onError);
+        };
+
+        local.testCase_testRunServer_misc = function (options, onError) {
+            /*
+             * this function will test testRunServer's misc handling behavior
+             */
+            // jslint-hack
+            local.utility2.nop(options);
+            local.utility2.testMock([
+                [local.utility2, {
+                    envDict: {
+                        // test $npm_package_name !== 'utility2' handling behavior
+                        npm_package_name: 'undefined',
+                        // test timeout-exit handling behavior
+                        npm_config_timeout_exit: '1',
+                        // test random $npm_config_server_port handling behavior
+                        npm_config_server_port: ''
+                    },
+                    phantomScreenCapture: local.utility2.nop,
+                    onReady: {},
+                    taskRunOrSubscribe: local.utility2.nop
+                }],
+                [local.utility2.local, {
+                    http: { createServer: function () {
+                        return { listen: local.utility2.nop };
+                    } }
+                }]
+            ], function (onError) {
+                local.utility2.testRunServer({
+                    middleware: local.utility2.middlewareGroupCreate([
+                        local.utility2.middlewareInit
+                    ])
+                });
+                // validate $npm_config_server_port
+                local.utility2.assert(
+                    Number(local.utility2.envDict.npm_config_server_port) > 0,
+                    local.utility2.envDict.npm_config_server_port
+                );
+                onError();
+            }, onError);
+        };
+
+        local.testCase_testPage_default = function (options, onError) {
             /*
              * this function will test the test-page's default handling behavior
              */
-            var onParallel, options;
+            var onParallel;
+            // jslint-hack
+            local.utility2.nop(options);
             onParallel = local.utility2.onParallel(onError);
             onParallel.counter += 1;
             [{
@@ -968,33 +1119,15 @@
                     }, onParallel);
                 });
             });
-            // test screenCapture handling behavior
-            onParallel.counter += 1;
-            options = {
-                modeSilent: true,
-                timeoutScreenCapture: 1,
-                url: 'http://localhost:' +
-                    local.utility2.envDict.npm_config_server_port +
-                    '/test/script-error.html?' +
-                    'timeExit={{timeExit}}'
-            };
-            local.utility2.phantomScreenCapture(options, function (error) {
-                local.utility2.testTryCatch(function () {
-                    // validate no error occurred
-                    local.utility2.assert(!error, error);
-                    // validate screen-capture file
-                    local.utility2.assert(
-                        options.phantomjs.fileScreenCapture &&
-                            local.fs.existsSync(options.phantomjs.fileScreenCapture),
-                        options.phantomjs.fileScreenCapture
-                    );
-                    // remove screen-capture file, so it will not interfere with re-test
-                    local.fs.unlinkSync(options.phantomjs.fileScreenCapture);
-                    onParallel();
-                }, onParallel);
-            });
-            // test misc handling behavior
-            onParallel.counter += 1;
+            onParallel();
+        };
+
+        local.testCase_testPage_misc = function (options, onError) {
+            /*
+             * this function will test the test-page's misc handling behavior
+             */
+            // jslint-hack
+            local.utility2.nop(options);
             local.utility2.testMock([
                 [local.utility2, {
                     envDict: {
@@ -1017,163 +1150,56 @@
                         '?timeExit={{timeExit}}'
                 });
                 onError();
-            }, onParallel);
-            onParallel();
+            }, onError);
         };
 
-        local.testCase_processSpawnWithTimeout_default = function (onError) {
+        local.testCase_testPage_screenCapture = function (options, onError) {
             /*
-             * this function will test processSpawnWithTimeout's default handling behavior
+             * this function will test the test-page's screen-capture handling behavior
              */
-            var childProcess, onParallel;
-            onParallel = local.utility2.onParallel(onError);
-            onParallel.counter += 1;
-            // test default handling behavior
-            onParallel.counter += 1;
-            local.utility2.processSpawnWithTimeout('ls')
-                .on('error', onParallel)
-                .on('exit', function (exitCode, signal) {
-                    // validate exitCode
-                    local.utility2.assert(exitCode === 0, exitCode);
-                    // validate signal
-                    local.utility2.assert(signal === null, signal);
-                    onParallel();
-                });
-            // test timeout handling behavior
-            onParallel.counter += 1;
-            local.utility2.testMock([
-                [local.utility2, { timeoutDefault: 1000 }]
-            ], function (onError) {
-                childProcess = local.utility2.processSpawnWithTimeout('sleep', [5000]);
-                onError();
-            }, local.utility2.nop);
-            childProcess
-                .on('error', onParallel)
-                .on('exit', function (exitCode, signal) {
-                    local.utility2.testTryCatch(function () {
-                        // validate exitCode
-                        local.utility2.assert(exitCode === null, exitCode);
-                        // validate signal
-                        local.utility2.assert(signal === 'SIGKILL', signal);
-                        onParallel();
-                    }, onParallel);
-                });
-            onParallel();
-        };
-
-        local.testCase_replStart_default = function (onError) {
-            /*
-             * this function will test replStart's default handling behavior
-             */
-            /*jslint evil: true*/
-            local.utility2.testMock([
-                [local.utility2, { processSpawnWithTimeout: function () {
-                    return { on: function (event, callback) {
-                        // jslint-hack
-                        local.utility2.nop(event);
-                        callback();
-                    } };
-                } }]
-            ], function (onError) {
-                [
-                    // test shell handling behavior
-                    '$ :\n',
-                    // test git diff handling behavior
-                    '$ git diff\n',
-                    // test git log handling behavior
-                    '$ git log\n',
-                    // test grep handling behavior
-                    'grep \\bhello\\b\n',
-                    // test print handling behavior
-                    'print\n'
-                ].forEach(function (script) {
-                    local.utility2.local._replServer.eval(
-                        script,
-                        null,
-                        'repl',
-                        local.utility2.nop
+            options = {
+                modeSilent: true,
+                timeoutScreenCapture: 1,
+                url: 'http://localhost:' +
+                    local.utility2.envDict.npm_config_server_port +
+                    '/test/script-error.html?' +
+                    'timeExit={{timeExit}}'
+            };
+            local.utility2.phantomScreenCapture(options, function (error) {
+                local.utility2.testTryCatch(function () {
+                    // validate no error occurred
+                    local.utility2.assert(!error, error);
+                    // validate screen-capture file
+                    local.utility2.assert(
+                        options.phantomjs.fileScreenCapture &&
+                            local.fs.existsSync(options.phantomjs.fileScreenCapture),
+                        options.phantomjs.fileScreenCapture
                     );
-                });
-                onError();
-            }, onError);
+                    // cleanup screen-capture file
+                    local.fs.unlinkSync(options.phantomjs.fileScreenCapture);
+                    onError();
+                }, onError);
+            });
         };
 
-        local.testCase_serverRespondTimeoutDefault_default = function (onError) {
-            /*
-             * this function will test serverRespondTimeoutDefault's default handling behavior
-             */
-            local.utility2.testMock([
-                // suppress console.error
-                [local.utility2, { timeoutDefault: 1000 }]
-            ], function (onError) {
-                local.utility2.serverRespondTimeoutDefault(
-                    {
-                        // test default onTimeout handling behavior
-                        onTimeout: null,
-                        url: ''
-                    },
-                    { end: local.utility2.nop, headersSent: true, on: local.utility2.nop },
-                    // test default timeout handling behavior
-                    null
-                );
-                onError();
-            }, onError);
-        };
-
-        local.testCase_testRunServer_misc = function (onError) {
-            /*
-             * this function will test testRunServer's misc handling behavior
-             */
-            local.utility2.testMock([
-                [local.utility2, {
-                    envDict: {
-                        // test $npm_package_name !== 'utility2' handling behavior
-                        npm_package_name: 'undefined',
-                        // test timeout-exit handling behavior
-                        npm_config_timeout_exit: '1',
-                        // test random $npm_config_server_port handling behavior
-                        npm_config_server_port: ''
-                    },
-                    phantomScreenCapture: local.utility2.nop,
-                    onReady: {},
-                    taskRunOrSubscribe: local.utility2.nop
-                }],
-                [local.utility2.local, {
-                    http: { createServer: function () {
-                        return { listen: local.utility2.nop };
-                    } }
-                }]
-            ], function (onError) {
-                local.utility2.testRunServer({
-                    middleware: local.utility2.middlewareGroupCreate([
-                        local.utility2.middlewareInit
-                    ])
-                });
-                // validate $npm_config_server_port
-                local.utility2.assert(
-                    Number(local.utility2.envDict.npm_config_server_port) > 0,
-                    local.utility2.envDict.npm_config_server_port
-                );
-                onError();
-            }, onError);
-        };
-
-        local.testCase_uuidXxx_default = function (onError) {
+        local.testCase_uuidXxx_default = function (options, onError) {
             /*
              * this function will test uuidXxx's default handling behavior
              */
             var data1, data2;
-            // test uuid4
+            // jslint-hack
+            local.utility2.nop(options);
+            // test uuid4 handling behavior
             data1 = local.utility2.uuid4();
             // validate data1
             local.utility2.assert(local.utility2.regexpUuidValidate.test(data1), data1);
-            // test uuidTime
+            // test uuidTime handling behavior
             data1 = local.utility2.uuidTime();
+            // validate data1
+            local.utility2.assert(local.utility2.regexpUuidValidate.test(data1), data1);
             setTimeout(function () {
                 local.utility2.testTryCatch(function () {
                     data2 = local.utility2.uuidTime();
-                    // validate data1
-                    local.utility2.assert(local.utility2.regexpUuidValidate.test(data1), data1);
                     // validate data2
                     local.utility2.assert(local.utility2.regexpUuidValidate.test(data2), data2);
                     // validate data1 < data2

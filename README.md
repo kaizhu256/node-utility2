@@ -433,7 +433,7 @@ npm_config_mode_auto_restart=1 \
 npm_config_mode_auto_restart_child=1 \
 ./index.sh test test.js"
     },
-    "version": "2015.6.10-d"
+    "version": "2015.6.12"
 }
 ```
 
@@ -448,10 +448,9 @@ npm_config_mode_auto_restart_child=1 \
 
 
 
-# change since 4770d421
-- npm publish 2015.6.10-d
-- print test-progress during npm test
-- fix slimerjs https access
+# change since 6a69001d
+- npm publish 2015.6.12
+- fix version breakage with latest npm install
 - none
 
 
