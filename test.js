@@ -536,7 +536,7 @@
             local.utility2.assert(data === '{{aa}}', data);
             // test default handling behavior
             data = local.utility2.stringFormat(
-                '{{aa}}{{aa}}{{bb}}{{cc}}{{dd}}{{ee.ff}}',
+                '{{aa}}{{aa json}}{{bb}}{{cc}}{{dd}}{{ee.ff}}',
                 {
                     // test string value handling behavior
                     aa: 'aa',
@@ -551,7 +551,7 @@
                 },
                 '<undefined>'
             );
-            local.utility2.assert(data === 'aaaa1null<undefined>gg', data);
+            local.utility2.assert(data === 'aa"aa"1null<undefined>gg', data);
             // test list handling behavior
             data = local.utility2.stringFormat(
                 '[{{#list1}}[{{#list2}}{{aa}},{{/list2}}],{{/list1}}]',

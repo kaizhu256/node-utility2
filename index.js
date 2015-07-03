@@ -391,7 +391,7 @@
             /*
              * this function will replace the keys in the template with the dict's key / value
              */
-            var match, replace, rgx, value;
+            var argList, match, replace, rgx, value;
             dict = dict || {};
             replace = function (match0, fragment) {
                 // jslint-hack
@@ -424,17 +424,20 @@
                 }
             }
             // search for keys in the template
-            return template.replace((/\{\{[^}]+?\}\}/g), function (keyList) {
+            return template.replace((/\{\{[^}]+?\}\}/g), function (match0) {
+                argList = match0.slice(2, -2).split(' ');
                 value = dict;
                 // iteratively lookup nested values in the dict
-                keyList.slice(2, -2).split('.').forEach(function (key) {
+                argList[0].split('.').forEach(function (key) {
                     value = value && value[key];
                 });
                 return value === undefined
                     ? (valueDefault === undefined
-                    ? keyList
+                    ? match0
                     : valueDefault)
-                    : value;
+                    : (argList[1] === 'json'
+                    ? JSON.stringify(value)
+                    : value);
             });
         };
 

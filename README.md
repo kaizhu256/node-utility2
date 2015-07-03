@@ -124,11 +124,13 @@ instruction
     // run browser js-env code
     if (typeof window === 'object') {
         // init tests
-        local.testCase_ajax_200 = function (onError) {
+        local.testCase_ajax_200 = function (options, onError) {
             /*
              * this function will test ajax's "200 ok" handling behavior
              */
             var data;
+            // jslint-hack
+            local.utility2.nop(options);
             // test '/test/hello'
             local.utility2.ajax({
                 url: '/test/hello'
@@ -143,10 +145,12 @@ instruction
                 }, onError);
             });
         };
-        local.testCase_ajax_404 = function (onError) {
+        local.testCase_ajax_404 = function (options, onError) {
             /*
              * this function will test ajax's "404 not found" handling behavior
              */
+            // jslint-hack
+            local.utility2.nop(options);
             // test '/test/undefined'
             local.utility2.ajax({ url: '/test/undefined' }, function (error) {
                 local.utility2.testTryCatch(function () {
@@ -169,10 +173,12 @@ instruction
     // run node js-env code
     } else {
         // init node tests
-        local.testCase_phantomTest_default = function (onError) {
+        local.testCase_phantomTest_default = function (options, onError) {
             /*
              * this function will spawn phantomjs to test the test-page
              */
+            // jslint-hack
+            local.utility2.nop(options);
             local.utility2.phantomTest({
                 url: 'http://localhost:' +
                     process.env.npm_config_server_port +
@@ -242,19 +248,23 @@ instruction
 '    testCaseDict.modeTest = true;\n' +
 '\n' +
 '    // comment this testCase to disable the failed assertion demo\n' +
-'    testCaseDict.testCase_failed_assertion_demo = function (onError) {\n' +
+'    testCaseDict.testCase_failed_assertion_demo = function (options, onError) {\n' +
 '        /*\n' +
 '         * this function will demo a failed assertion test\n' +
 '         */\n' +
+'        // jslint-hack\n' +
+'        local.utility2.nop(options);\n' +
 '        window.utility2.assert(false, "this is a failed assertion demo");\n' +
 '        onError();\n' +
 '    };\n' +
 '\n' +
-'    testCaseDict.testCase_passed_ajax_demo = function (onError) {\n' +
+'    testCaseDict.testCase_passed_ajax_demo = function (options, onError) {\n' +
 '        /*\n' +
 '         * this function will demo a passed ajax test\n' +
 '         */\n' +
 '        var data;\n' +
+'        // jslint-hack\n' +
+'        local.utility2.nop(options);\n' +
 '        // test ajax request for main-page "/"\n' +
 '        window.utility2.ajax({\n' +
 '            url: "/"\n' +
@@ -397,13 +407,13 @@ instruction
     "author": "kai zhu <kaizhu256@gmail.com>",
     "bin": { "utility2" : "index.sh" },
     "dependencies": {
-        "istanbul-lite": "^0.3.14-2015.6.1-a",
-        "jslint-lite": "^2015.5.6-a"
+        "istanbul-lite": "^2015.6.1",
+        "jslint-lite": "^2015.6.2"
     },
     "description": "run dynamic browser tests with coverage \
 (via istanbul-lite and phantomjs-lite)",
     "devDependencies": {
-        "phantomjs-lite": "^1.9.8-2015.6.1-b"
+        "phantomjs-lite": "^2015.6.1"
     },
     "engines": { "node": ">=0.10 <=0.12" },
     "keywords": [
@@ -433,7 +443,7 @@ npm_config_mode_auto_restart=1 \
 npm_config_mode_auto_restart_child=1 \
 ./index.sh test test.js"
     },
-    "version": "2015.6.12"
+    "version": "2015.7.1"
 }
 ```
 
@@ -448,9 +458,10 @@ npm_config_mode_auto_restart_child=1 \
 
 
 
-# change since 6a69001d
-- npm publish 2015.6.12
-- fix version breakage with latest npm install
+# change since 7176a934
+- npm publish 2015.7.1
+- add JSON.stringify option to utility2.stringFormat
+- add options parameter to testCase's in example.js
 - none
 
 
@@ -467,6 +478,7 @@ npm_config_mode_auto_restart_child=1 \
 # build.sh
 
 # this shell script will run the build for this package
+
 shBuild() {
     # this function will run the main build
     local TEST_URL || return $?

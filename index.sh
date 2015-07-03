@@ -132,7 +132,7 @@ shGitLsTree() {
 }
 
 shGitSquashPop() {
-    # this function will squash HEAD to the specified $COMMIT
+    # this function will squash HEAD to the given $COMMIT
     # http://stackoverflow.com/questions/5189560
     # /how-can-i-squash-my-last-x-commits-together-using-git
     local COMMIT || return $?
@@ -456,13 +456,13 @@ shNpmTest() {
 }
 
 shPhantomScreenCapture() {
-    # this function will spawn phantomjs to screen-capture the specified $URL
+    # this function will spawn phantomjs to screen-capture the given $URL
     MODE_BUILD=${MODE_BUILD:-phantomScreenCapture} shPhantomTest "$1" ${2-30000} ${3-2000} \
         screenCapture || return $?
 }
 
 shPhantomTest() {
-    # this function will spawn phantomjs to test the specified $URL,
+    # this function will spawn phantomjs to test the given $URL,
     # and merge the test-report into the existing test-report
     local MODE_PHANTOM || return $?
     local TIMEOUT_DEFAULT || return $?

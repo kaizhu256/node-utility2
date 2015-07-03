@@ -1,6 +1,6 @@
 shBaseInstall() {
     # this function will install the base
-    # . <(curl https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/.bashrc) && shBaseInstall
+    # curl https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/.bashrc > $HOME/.bashrc && . $HOME/.bashrc && shBaseInstall
     local FILE || return $?
     for FILE in .bashrc .screenrc .vimrc index.sh
     do
