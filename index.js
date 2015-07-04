@@ -1095,17 +1095,7 @@
                 try {
                     // start testCase timer
                     testCase.timeElapsed = Date.now();
-                    /* istanbul ignore next */
-                    (function () {
-                        if (testCase.onTestCase.length >= 2) {
-                            testCase.onTestCase(null, onError);
-                        // legacy-hack
-                        } else {
-                            console.error('WARNING - missing options param - ' +
-                                testCase.name);
-                            testCase.onTestCase(onError);
-                        }
-                    }());
+                    testCase.onTestCase(null, onError);
                 } catch (errorCaught) {
                     onError(errorCaught);
                 }
@@ -1573,6 +1563,22 @@
                 }
             };
             onNext();
+        };
+
+        local.utility2.middlewareBodyGet = function (request, response, nextMiddleware) {
+            /*
+             * this function will read the request-body and save it as request.bodyRaw
+             */
+            // jslint-hack
+            local.utility2.nop(response);
+            if (!request.readable) {
+                nextMiddleware();
+                return;
+            }
+            local.utility2.streamReadAll(request, function (error, data) {
+                request.bodyRaw = request.bodyRaw || data;
+                nextMiddleware(error);
+            });
         };
 
         local.utility2.middlewareCacheControlLastModified = function (
@@ -2119,15 +2125,15 @@
             });
         };
 
-        local.utility2.streamReadAll = function (readableStream, onError) {
+        local.utility2.streamReadAll = function (stream, onError) {
             /*
-             * this function will concat data from the readableStream,
-             * and when done reading, then pass it to onError
+             * this function will concat data from the stream,
+             * and pass it to onError when done reading
              */
             var chunkList;
             chunkList = [];
-            // read data from the readableStream
-            readableStream
+            // read data from the stream
+            stream
                 // on data event, push the buffer chunk to chunkList
                 .on('data', function (chunk) {
                     chunkList.push(chunk);

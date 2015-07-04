@@ -443,7 +443,7 @@ npm_config_mode_auto_restart=1 \
 npm_config_mode_auto_restart_child=1 \
 ./index.sh test test.js"
     },
-    "version": "2015.7.1"
+    "version": "2015.7.2"
 }
 ```
 
@@ -458,10 +458,10 @@ npm_config_mode_auto_restart_child=1 \
 
 
 
-# change since 7176a934
-- npm publish 2015.7.1
-- add JSON.stringify option to utility2.stringFormat
-- add options parameter to testCase's in example.js
+# change since 71924385
+- npm publish 2015.7.2
+- test-cases now all require options param
+- add utility2.middlewareBodyGet
 - none
 
 

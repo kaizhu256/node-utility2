@@ -107,13 +107,30 @@
 
         local.testCase_ajax_post = function (options, onError) {
             /*
-             * this function will test ajax's post handling behavior
+             * this function will test ajax's POST handling behavior
              */
             var data, onParallel;
             // jslint-hack
             local.utility2.nop(options);
             onParallel = local.utility2.onParallel(onError);
-            // test http POST handling behavior
+            onParallel.counter += 1;
+            // test /test/body handling behavior
+            onParallel.counter += 1;
+            local.utility2.ajax({
+                data:  'hello',
+                method: 'POST',
+                url: '/test/body'
+            }, function (error, xhr) {
+                local.utility2.testTryCatch(function () {
+                    // validate no error occurred
+                    local.utility2.assert(!error, error);
+                    // validate responseText
+                    data = xhr.responseText;
+                    local.utility2.assert(data === 'hello', data);
+                    onParallel();
+                }, onParallel);
+            });
+            // test /test/echo handling behavior
             ['blob', 'response', 'text'].forEach(function (responseType) {
                 onParallel.counter += 1;
                 local.utility2.ajax({
@@ -123,7 +140,7 @@
                         // test string post handling behavior
                         : 'hello',
                     // test request header handling behavior
-                    headers: { 'X-Header-Test': 'Test' },
+                    headers: { 'X-Request-Header-Test': 'hello' },
                     method: 'POST',
                     responseType: responseType,
                     url: '/test/echo'
@@ -143,19 +160,17 @@
                         // validate responseText
                         data = xhr.responseText;
                         local.utility2.assert((/\r\nhello$/).test(data), data);
+                        local.utility2
+                            .assert((/\r\nx-request-header-test: hello\r\n/).test(data), data);
                         // validate responseHeaders
-                        local.utility2.assert(
-                            (/^X-Header-Test: Test\r\n/im).test(data),
-                            data
-                        );
                         data = xhr.getAllResponseHeaders();
                         local.utility2.assert(
-                            (/^X-Header-Test: Test\r\n/im).test(data),
+                            (/^X-Response-Header-Test: bye\r\n/im).test(data),
                             data
                         );
-                        data = xhr.getResponseHeader('x-header-test');
-                        local.utility2.assert(data === 'Test', data);
-                        data = xhr.getResponseHeader('x-header-undefined');
+                        data = xhr.getResponseHeader('x-response-header-test');
+                        local.utility2.assert(data === 'bye', data);
+                        data = xhr.getResponseHeader('undefined');
                         local.utility2.assert(data === null, data);
                         // validate statusCode
                         local.utility2.assert(xhr.statusCode === 200, xhr.statusCode);
@@ -1282,9 +1297,20 @@
                 case '/test/echo':
                     // test response header handling behavior
                     local.utility2.serverRespondHeadSet(request, response, null, {
-                        'X-Header-Test': 'Test'
+                        'X-Response-Header-Test': 'bye'
                     });
                     local.utility2.serverRespondEcho(request, response);
+                    break;
+                // test http POST handling behavior
+                case '/test/body':
+                    // test request-body handling behavior
+                    local.utility2.middlewareBodyGet(request, response, function () {
+                        // test request-body race-condition handling behavior
+                        local.utility2
+                            .middlewareBodyGet(request, response, function () {
+                                response.end(request.bodyRaw);
+                            });
+                    });
                     break;
                 // test 500-internal-server-error handling behavior
                 case '/test/error-500':
