@@ -1351,7 +1351,7 @@
             local.utility2.middlewareAssetsCached
         ]);
         // init middleware error-handler
-        local.onMiddlewareError = local.utility2.onMiddlewareError;
+        local.middlewareError = local.utility2.middlewareError;
         // run server-test
         local.utility2.testRunServer(local);
         // jslint dir

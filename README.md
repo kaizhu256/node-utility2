@@ -371,7 +371,7 @@ instruction
             }
         ]);
         // init middleware error-handler
-        local.onMiddlewareError = local.utility2.onMiddlewareError;
+        local.middlewareError = local.utility2.middlewareError;
         // run server-test
         local.utility2.testRunServer(local);
     }
@@ -443,7 +443,7 @@ npm_config_mode_auto_restart=1 \
 npm_config_mode_auto_restart_child=1 \
 ./index.sh test test.js"
     },
-    "version": "2015.7.2"
+    "version": "2015.7.4"
 }
 ```
 
@@ -458,10 +458,9 @@ npm_config_mode_auto_restart_child=1 \
 
 
 
-# change since 71924385
-- npm publish 2015.7.2
-- test-cases now all require options param
-- add utility2.middlewareBodyGet
+# change since 93356138
+- npm publish 2015.7.4
+- deprecate local.onMiddlewareError in favor of local.middlewareError
 - none
 
 
