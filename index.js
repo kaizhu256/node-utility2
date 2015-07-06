@@ -43,6 +43,15 @@
             }
         };
 
+        local.utility2.errorMessagePrepend = function (error, message) {
+            /*
+             * this function will prepend the message to error.message and error.stack
+             */
+            error.message = message + error.message;
+            error.stack = message + error.stack;
+            return error;
+        };
+
         local.utility2.istanbulMerge = function (coverage1, coverage2) {
             /*
              * this function will merge coverage2 into coverage1
@@ -179,7 +188,7 @@
                 }
                 // if options2 and defaults2 are both non-null and non-array objects,
                 // then recurse options2 and defaults2
-                if (depth > 0 &&
+                if (depth > 1 &&
                         // options2 is a non-null and non-array object
                         options2 &&
                         typeof options2 === 'object' &&
@@ -259,7 +268,7 @@
             local.utility2.exit(!!error);
         };
 
-        local.utility2.onErrorJsonParse = function (onError) {
+        local.utility2.onErrorJsonParse = function (onError, modeDebug) {
             /*
              * this function will return a wrapper function,
              * that will JSON.parse the data with error handling
@@ -270,6 +279,9 @@
                     return;
                 }
                 try {
+                    if (modeDebug) {
+                        console.log('JSON.parse - ' + JSON.stringify(data));
+                    }
                     data = JSON.parse(data);
                 } catch (errorCaught) {
                     onError(new Error('JSON.parse failed - ' + errorCaught.message));
@@ -351,6 +363,9 @@
                     local.utility2.onReady.counter += 1;
                     setTimeout(local.utility2.onReady);
                 }
+            }, function (error) {
+                // validate no error occurred
+                local.utility2.assert(!error, error);
             });
         };
 
@@ -563,8 +578,21 @@
                     clearTimeout(task.timerTimeout);
                     // cleanup task
                     delete local.utility2.cacheDict.taskRunOrSubscribe[options.key];
+                    // preserve error.message and error.stack
+                    task.result = JSON.stringify(Array.prototype.slice.call(
+                        arguments
+                    ).map(function (element) {
+                        if (element && (element.message || element.stack)) {
+                            element = local.utility2.objectSetDefault(local.utility2
+                                .jsonCopy(element), {
+                                    message: element.message,
+                                    name: element.name,
+                                    stack: element.stack
+                                });
+                        }
+                        return element;
+                    }));
                     // pass result to callbacks in callbackList
-                    task.result = JSON.stringify(Array.prototype.slice.call(arguments));
                     task.callbackList.forEach(function (onError) {
                         onError.apply(null, JSON.parse(task.result));
                     });
@@ -851,8 +879,7 @@
                 timerInterval;
             // init modeTest
             options = options || {};
-            local.utility2.modeTest =
-                local.utility2.modeTest ||
+            local.utility2.modeTest = local.utility2.modeTest ||
                 local.utility2.envDict.npm_config_mode_npm_test;
             if (!(local.utility2.modeTest || options.modeTest)) {
                 return;
@@ -995,8 +1022,7 @@
                 local.utility2.istanbul_lite.coverageReportCreate) ||
                 local.utility2.nop;
             // init modeTestCase
-            local.utility2.modeTestCase =
-                local.utility2.modeTestCase ||
+            local.utility2.modeTestCase = local.utility2.modeTestCase ||
                 local.utility2.envDict.npm_config_mode_test_case;
             // init testReport
             testReport = local.utility2.testReport;
@@ -1251,15 +1277,12 @@
                     if (xhr.readyState === 4) {
                         // handle string data
                         if (error) {
-                            // debug method / statusCode / url
-                            xhr.errorMessage = xhr.method + ' ' +
-                                xhr.statusCode + ' - ' +
-                                xhr.url + '\n' +
-                                JSON.stringify(xhr.responseText.slice(0, 256) + '...');
-                            error.message =  xhr.errorMessage + '\n' + error.message;
-                            error.stack = xhr.errorMessage + '\n' + error.stack;
                             // debug statusCode
                             error.statusCode = xhr.statusCode;
+                            // debug statusCode / method / url
+                            local.utility2.errorMessagePrepend(error, xhr.statusCode + ' ' +
+                                xhr.method + ' ' + xhr.url + '\n' +
+                                JSON.stringify(xhr.responseText.slice(0, 256) + '...') + '\n');
                         }
                     }
                     // hide _ajaxProgressDiv
@@ -1276,7 +1299,8 @@
                             );
                         }, 1000);
                     }
-                    if (xhr.debug) {
+                    // debug xhr
+                    if (xhr.modeDebug) {
                         console.log(xhr);
                     }
                     onError(error, xhr);
@@ -1293,9 +1317,9 @@
             // init xhr
             xhr = new XMLHttpRequest();
             xhr.data = options.data;
-            xhr.debug = options.debug;
             xhr.headers = options.headers || {};
             xhr.method = options.method || 'GET';
+            xhr.modeDebug = options.modeDebug;
             xhr.timeout = options.timeout || local.utility2.timeoutDefault;
             xhr.url = options.url;
             // debug xhr
@@ -1356,8 +1380,7 @@
              * this function will visually update ajaxProgressBar
              */
             var ajaxProgressBarDiv;
-            ajaxProgressBarDiv =
-                document.querySelector('.ajaxProgressBarDiv') ||
+            ajaxProgressBarDiv = document.querySelector('.ajaxProgressBarDiv') ||
                 { className: '', style: {} };
             ajaxProgressBarDiv.style.width = width;
             ajaxProgressBarDiv.className = ajaxProgressBarDiv.className
@@ -1489,20 +1512,18 @@
                     // cleanup timerTimeout
                     clearTimeout(timerTimeout);
                     if (error) {
-                        // debug method / statusCode / url
-                        xhr.errorMessage = xhr.method + ' ' +
-                            xhr.statusCode + ' - ' +
-                            xhr.url + '\n' +
-                            JSON.stringify(xhr.responseText.slice(0, 256) + '...');
-                        error.message =  xhr.errorMessage + '\n' + error.message;
-                        error.stack = xhr.errorMessage + '\n' + error.stack;
                         // debug statusCode
                         error.statusCode = xhr.statusCode;
+                        // debug statusCode / method / url
+                        local.utility2.errorMessagePrepend(error, xhr.statusCode + ' ' +
+                            xhr.method + ' ' + xhr.url + '\n' +
+                            JSON.stringify(xhr.responseText.slice(0, 256) + '...') + '\n');
                     }
                     // update xhr
                     xhr.readyState = 4;
                     xhr.onreadystatechange();
-                    if (xhr.debug) {
+                    // debug xhr
+                    if (xhr.modeDebug) {
                         console.log(xhr);
                     }
                     onError(error, xhr);
@@ -1808,11 +1829,8 @@
                         modePhantom: 'testUrl'
                     }, 1);
                     // init timerTimeout
-                    timerTimeout = local.utility2.onTimeout(
-                        onNext,
-                        local.utility2.timeoutDefault,
-                        options.testName
-                    );
+                    timerTimeout = local.utility2
+                        .onTimeout(onNext, local.utility2.timeoutDefault, options.testName);
                     // coverage-hack - cover utility2 in phantomjs
                     options.argv1 = __dirname + '/index.js';
                     if (local.global.__coverage__ &&
@@ -2052,8 +2070,9 @@
                 { 'Content-Type': 'text/plain; charset=utf-8' }
             );
             if (error) {
-                error.message = request.method + ' ' + request.url + '\n' + error.message;
-                error.stack = error.message + '\n' + error.stack;
+                // debug statusCode / method / url
+                local.utility2.errorMessagePrepend(error, response.statusCode + ' ' +
+                    request.method + ' ' + request.url + '\n');
                 // print error.stack to stderr
                 local.utility2.onErrorDefault(error);
                 // end response with error.stack
@@ -2156,10 +2175,10 @@
             var server;
             // 1. create server from options.middleware
             server = local.http.createServer(function (request, response) {
+                // legacy-hack
+                options.middlewareError = options.middlewareError ||
+                    options.onMiddlewareError;
                 options.middleware(request, response, function (error) {
-                    // legacy-hack
-                    options.middlewareError = options.middlewareError ||
-                        options.onMiddlewareError;
                     options.middlewareError(error, request, response);
                 });
             });

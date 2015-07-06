@@ -39,7 +39,7 @@
             // test http GET handling behavior
             local.utility2.ajax({
                 // test debug handling behavior
-                debug: true,
+                modeDebug: true,
                 url: '/test/hello'
             }, function (error, xhr) {
                 local.utility2.testTryCatch(function () {
@@ -320,26 +320,28 @@
              */
             // test non-recursive handling behavior
             options = local.utility2.objectSetDefault(
-                { aa: 1, bb: {}, cc: [] },
-                { aa: 2, bb: { cc: 2 }, cc: [1, 2] },
-                // test default depth handling behavior
+                { aa: undefined, bb: { cc: 1 }, cc: { dd: {} }, dd: [1, 1], ee: [1, 1] },
+                { aa: 2, bb: { dd: 2 }, cc: { dd: { ee: 2 } }, dd: [2, 2], ee: { ff: 2 } },
+                // test default-depth handling behavior
                 null
             );
             // validate options
             local.utility2.assert(
-                local.utility2.jsonStringifyOrdered(options) === '{"aa":1,"bb":{},"cc":[]}',
+                local.utility2.jsonStringifyOrdered(options) ===
+                    '{"aa":2,"bb":{"cc":1},"cc":{"dd":{}},"dd":[1,1],"ee":[1,1]}',
                 options
             );
             // test recursive handling behavior
             options = local.utility2.objectSetDefault(
-                { aa: 1, bb: {}, cc: [] },
-                { aa: 2, bb: { cc: 2 }, cc: [1, 2] },
-                Infinity
+                { aa: undefined, bb: { cc: 1 }, cc: { dd: {} }, dd: [1, 1], ee: [1, 1] },
+                { aa: 2, bb: { dd: 2 }, cc: { dd: { ee: 2 } }, dd: [2, 2], ee: { ff: 2 } },
+                // test depth handling behavior
+                2
             );
             // validate options
             local.utility2.assert(
                 local.utility2.jsonStringifyOrdered(options) ===
-                    '{"aa":1,"bb":{"cc":2},"cc":[]}',
+                    '{"aa":2,"bb":{"cc":1,"dd":2},"cc":{"dd":{}},"dd":[1,1],"ee":[1,1]}',
                 options
             );
             onError();
@@ -351,51 +353,31 @@
              */
             // test non-recursive handling behavior
             options = local.utility2.objectSetOverride(
-                {
-                    aa: 1,
-                    bb: { cc: 2 },
-                    dd: [3, 4],
-                    ee: { ff: { gg: 5, hh: 6 } }
-                },
-                {
-                    aa: 2,
-                    bb: { dd: 3 },
-                    dd: [4, 5],
-                    ee: { ff: { gg: 6 } }
-                },
-                // test default depth handling behavior
+                { aa: 1, bb: { cc: 1 }, cc: { dd: 1 }, dd: [1, 1], ee: [1, 1] },
+                { aa: 2, bb: { dd: 2 }, cc: { ee: 2 }, dd: [2, 2], ee: { ff: 2 } },
+                // test default-depth handling behavior
                 null
             );
             // validate options
             options = local.utility2.jsonStringifyOrdered(options);
-            local.utility2.assert(options ===
-                '{"aa":2,"bb":{"dd":3},"dd":[4,5],"ee":{"ff":{"gg":6}}}', options);
+            local.utility2.assert(options === '{"aa":2,"bb":{"dd":2},"cc":{"ee":2},' +
+                '"dd":[2,2],"ee":{"ff":2}}', options);
             // test recursive handling behavior
             options = local.utility2.objectSetOverride(
-                {
-                    aa: 1,
-                    bb: { cc: 2 },
-                    dd: [3, 4],
-                    ee: { ff: { gg: 5, hh: 6 } }
-                },
-                {
-                    aa: 2,
-                    bb: { dd: 3 },
-                    dd: [4, 5],
-                    ee: { ff: { gg: 6 } }
-                },
+                { aa: 1, bb: { cc: 1 }, cc: { dd: 1 }, dd: [1, 1], ee: [1, 1] },
+                { aa: 2, bb: { dd: 2 }, cc: { ee: 2 }, dd: [2, 2], ee: { ff: 2 } },
                 // test depth handling behavior
                 2
             );
             // validate options
             options = local.utility2.jsonStringifyOrdered(options);
-            local.utility2.assert(options ===
-                '{"aa":2,"bb":{"cc":2,"dd":3},"dd":[4,5],"ee":{"ff":{"gg":6}}}', options);
+            local.utility2.assert(options === '{"aa":2,"bb":{"cc":1,"dd":2},' +
+                '"cc":{"dd":1,"ee":2},"dd":[2,2],"ee":{"ff":2}}', options);
             // test envDict with empty-string handling behavior
             options = local.utility2.objectSetOverride(
                 local.utility2.envDict,
                 { 'emptyString': null },
-                // test default depth handling behavior
+                // test default-depth handling behavior
                 null
             );
             // validate options
@@ -451,28 +433,29 @@
             /*
              * this function will test onErrorJsonParse's default handling behavior
              */
-            var data, error, jsonParse;
+            var data, error, onError2;
             // jslint-hack
             local.utility2.nop(options);
-            jsonParse = local.utility2.onErrorJsonParse(function (arg0, arg1) {
+            onError2 = function (arg0, arg1) {
                 data = arg1;
                 error = arg0;
-            });
+            };
             // test parse passed handling behavior
-            jsonParse(null, '1');
+            // test debug handling behavior
+            local.utility2.onErrorJsonParse(onError2, 'modeDebug')(null, '1');
             // validate no error occurred
             local.utility2.assert(!error, error);
             // validate data
             local.utility2.assert(data === 1, data);
             // test parse failed handling behavior
-            jsonParse(null, 'syntax error');
-            // validate no error occurred
+            local.utility2.onErrorJsonParse(onError2)(null, 'syntax error');
+            // validate error occurred
             local.utility2.assert(error, error);
             // validate data
             local.utility2.assert(!data, data);
             // test error handling behavior
-            jsonParse(new Error());
-            // validate no error occurred
+            local.utility2.onErrorJsonParse(onError2)(new Error());
+            // validate error occurred
             local.utility2.assert(error, error);
             // validate data
             local.utility2.assert(!data, data);
@@ -752,19 +735,20 @@
             key = local.utility2.uuidTime();
             onParallel = local.utility2.onParallel(onError);
             onParallel.counter += 1;
-            // test create handling behavior
+            // test onTask handling behavior
             onParallel.counter += 1;
             local.utility2.taskRunOrSubscribe({
                 key: key,
                 onTask: function (onError) {
                     setTimeout(function () {
+                        onError();
                         // test multiple-callback handling behavior
                         onError();
-                        onError();
+                        onParallel();
                     });
                 }
-            }, onParallel);
-            // test addCallback handling behavior
+            });
+            // test subscribe handling behavior
             onParallel.counter += 1;
             local.utility2.taskRunOrSubscribe({
                 key: key
@@ -1350,7 +1334,7 @@
             },
             local.utility2.middlewareAssetsCached
         ]);
-        // init middleware error-handler
+        // init error-middleware
         local.middlewareError = local.utility2.middlewareError;
         // run server-test
         local.utility2.testRunServer(local);

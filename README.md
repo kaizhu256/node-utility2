@@ -27,7 +27,7 @@ run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
 - HEAD should be tagged, npm-published package
 
 #### beta branch
-- stable branch
+- semi-stable branch
 - HEAD should be latest, npm-published package
 
 #### alpha branch
@@ -248,12 +248,15 @@ instruction
 '    testCaseDict.modeTest = true;\n' +
 '\n' +
 '    // comment this testCase to disable the failed assertion demo\n' +
-'    testCaseDict.testCase_failed_assertion_demo = function (options, onError) {\n' +
+'    testCaseDict.testCase_failed_assertion_demo = function (\n' +
+'        options,\n' +
+'        onError\n' +
+'    ) {\n' +
 '        /*\n' +
 '         * this function will demo a failed assertion test\n' +
 '         */\n' +
 '        // jslint-hack\n' +
-'        local.utility2.nop(options);\n' +
+'        window.utility2.nop(options);\n' +
 '        window.utility2.assert(false, "this is a failed assertion demo");\n' +
 '        onError();\n' +
 '    };\n' +
@@ -264,7 +267,7 @@ instruction
 '         */\n' +
 '        var data;\n' +
 '        // jslint-hack\n' +
-'        local.utility2.nop(options);\n' +
+'        window.utility2.nop(options);\n' +
 '        // test ajax request for main-page "/"\n' +
 '        window.utility2.ajax({\n' +
 '            url: "/"\n' +
@@ -370,7 +373,7 @@ instruction
                 }
             }
         ]);
-        // init middleware error-handler
+        // init error-middleware
         local.middlewareError = local.utility2.middlewareError;
         // run server-test
         local.utility2.testRunServer(local);
@@ -443,7 +446,7 @@ npm_config_mode_auto_restart=1 \
 npm_config_mode_auto_restart_child=1 \
 ./index.sh test test.js"
     },
-    "version": "2015.7.4"
+    "version": "2015.7.5"
 }
 ```
 
@@ -458,8 +461,11 @@ npm_config_mode_auto_restart_child=1 \
 
 
 
-# change since 93356138
-- npm publish 2015.7.4
+# change since e64c6c73
+- npm publish 2015.7.5
+- preserve error.message and error.stack in utility2.taskRunOrSubscribe
+- add utility2.errorMessapgePrepend
+- add modeDebug option in utility2.onErrorJsonParse
 - deprecate local.onMiddlewareError in favor of local.middlewareError
 - none
 
