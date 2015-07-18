@@ -16,7 +16,7 @@
         // init tests
         local.testCase_ajax_abort = function (options, onError) {
             /*
-             * this function will test ajax's abort handling behavior
+             * this function will test ajax's abort handling-behavior
              */
             options = local.utility2.ajax({ url: '/test/timeout' }, function (error) {
                 local.utility2.testTryCatch(function () {
@@ -26,19 +26,19 @@
                 }, onError);
             });
             options.abort();
-            // test multiple-callback handling behavior
+            // test multiple-callback handling-behavior
             options.abort();
         };
 
         local.testCase_ajax_cache = function (options, onError) {
             /*
-             * this function will test ajax's cache handling behavior
+             * this function will test ajax's cache handling-behavior
              */
             // jslint-hack
             local.utility2.nop(options);
-            // test http GET handling behavior
+            // test http GET handling-behavior
             local.utility2.ajax({
-                // test debug handling behavior
+                // test debug handling-behavior
                 modeDebug: true,
                 url: '/test/hello'
             }, function (error, xhr) {
@@ -47,7 +47,7 @@
                     local.utility2.assert(!error, error);
                     // validate responseText
                     local.utility2.assert(xhr.responseText === 'hello', xhr.responseText);
-                    // test http GET 304 cache handling behavior
+                    // test http GET 304 cache handling-behavior
                     local.utility2.ajax({
                         headers: {
                             'If-Modified-Since': new Date(Date.now() + 0xffff).toGMTString()
@@ -58,7 +58,7 @@
                             // validate no error occurred
                             local.utility2.assert(!error, error);
                             // validate 304 http status
-                            local.utility2.assert(xhr.status === 304, xhr.status);
+                            local.utility2.assert(xhr.statusCode === 304, xhr.statusCode);
                             onError();
                         }, onError);
                     });
@@ -68,7 +68,7 @@
 
         local.testCase_ajax_error = function (options, onError) {
             /*
-             * this function will test ajax's error handling behavior
+             * this function will test ajax's error handling-behavior
              */
             var onParallel;
             // jslint-hack
@@ -76,20 +76,20 @@
             onParallel = local.utility2.onParallel(onError);
             onParallel.counter += 1;
             [{
-                // test 404-not-found-error handling behavior
+                // test 404-not-found-error handling-behavior
                 url: '/test/error-400'
             }, {
-                // test 500-internal-server-error handling behavior
+                // test 500-internal-server-error handling-behavior
                 url: '/test/error-500'
             }, {
-                // test undefined-error handling behavior
+                // test undefined-error handling-behavior
                 url: '/test/error-undefined'
             }, {
-                // test timeout handling behavior
+                // test timeout handling-behavior
                 timeout: 1,
                 url: '/test/timeout'
             }, {
-                // test undefined https host handling behavior
+                // test undefined https host handling-behavior
                 timeout: 1,
                 url: 'https://' + local.utility2.uuidTime() + '.com'
             }].forEach(function (options) {
@@ -107,83 +107,87 @@
 
         local.testCase_ajax_post = function (options, onError) {
             /*
-             * this function will test ajax's POST handling behavior
+             * this function will test ajax's POST handling-behavior
              */
             var data, onParallel;
             // jslint-hack
             local.utility2.nop(options);
             onParallel = local.utility2.onParallel(onError);
             onParallel.counter += 1;
-            // test /test/body handling behavior
+            // test /test/body handling-behavior
             onParallel.counter += 1;
-            local.utility2.ajax({
-                data:  'hello',
-                method: 'POST',
-                url: '/test/body'
-            }, function (error, xhr) {
-                local.utility2.testTryCatch(function () {
-                    // validate no error occurred
-                    local.utility2.assert(!error, error);
-                    // validate responseText
-                    data = xhr.responseText;
-                    local.utility2.assert(data === 'hello', data);
-                    onParallel();
-                }, onParallel);
-            });
-            // test /test/echo handling behavior
-            ['blob', 'response', 'text'].forEach(function (responseType) {
-                onParallel.counter += 1;
+            ['', 'blob', 'response', 'text'].forEach(function (responseType) {
                 local.utility2.ajax({
                     data: responseType === 'blob' && local.modeJs === 'node'
-                        // test blob post handling behavior
+                        // test blob post handling-behavior
                         ? new Buffer('hello')
-                        // test string post handling behavior
+                        // test string post handling-behavior
                         : 'hello',
-                    // test request header handling behavior
-                    headers: { 'X-Request-Header-Test': 'hello' },
                     method: 'POST',
-                    responseType: responseType,
-                    url: '/test/echo'
+                    // test nodejs response handling behavior
+                    responseType: responseType === 'response' && local.modeJs === 'node'
+                        ? responseType
+                        : '',
+                    url: '/test/body'
                 }, function (error, xhr) {
                     local.utility2.testTryCatch(function () {
                         // validate no error occurred
                         local.utility2.assert(!error, error);
-                        if (responseType === 'response') {
+                        // validate response
+                        switch (responseType) {
+                        case 'blob':
+                        case 'response':
                             // cleanup response
                             local.utility2.requestResponseCleanup(null, xhr.response);
                             // validate response
                             data = xhr.response;
                             local.utility2.assert(data, data);
-                            onParallel();
-                            return;
+                            break;
+                        default:
+                            data = xhr.responseText;
+                            local.utility2.assert(data === 'hello', data);
                         }
-                        // validate responseText
-                        data = xhr.responseText;
-                        local.utility2.assert((/\r\nhello$/).test(data), data);
-                        local.utility2
-                            .assert((/\r\nx-request-header-test: hello\r\n/).test(data), data);
-                        // validate responseHeaders
-                        data = xhr.getAllResponseHeaders();
-                        local.utility2.assert(
-                            (/^X-Response-Header-Test: bye\r\n/im).test(data),
-                            data
-                        );
-                        data = xhr.getResponseHeader('x-response-header-test');
-                        local.utility2.assert(data === 'bye', data);
-                        data = xhr.getResponseHeader('undefined');
-                        local.utility2.assert(data === null, data);
-                        // validate statusCode
-                        local.utility2.assert(xhr.statusCode === 200, xhr.statusCode);
                         onParallel();
                     }, onParallel);
                 });
+            });
+            // test /test/echo handling-behavior
+            local.utility2.ajax({
+                data:  'hello',
+                // test request header handling-behavior
+                headers: { 'X-Request-Header-Test': 'hello' },
+                method: 'POST',
+                url: '/test/echo'
+            }, function (error, xhr) {
+                local.utility2.testTryCatch(function () {
+                    // validate no error occurred
+                    local.utility2.assert(!error, error);
+                    // validate response
+                    data = xhr.responseText;
+                    local.utility2.assert((/\r\nhello$/).test(data), data);
+                    local.utility2
+                        .assert((/\r\nx-request-header-test: hello\r\n/).test(data), data);
+                    // validate responseHeaders
+                    data = xhr.getAllResponseHeaders();
+                    local.utility2.assert(
+                        (/^X-Response-Header-Test: bye\r\n/im).test(data),
+                        data
+                    );
+                    data = xhr.getResponseHeader('x-response-header-test');
+                    local.utility2.assert(data === 'bye', data);
+                    data = xhr.getResponseHeader('undefined');
+                    local.utility2.assert(data === null, data);
+                    // validate statusCode
+                    local.utility2.assert(xhr.statusCode === 200, xhr.statusCode);
+                    onParallel();
+                }, onParallel);
             });
             onParallel();
         };
 
         local.testCase_assert_default = function (options, onError) {
             /*
-             * this function will test assert's default handling behavior
+             * this function will test assert's default handling-behavior
              */
             // jslint-hack
             local.utility2.nop(options);
@@ -228,7 +232,7 @@
 
         local.testCase_debug_print_default = function (options, onError) {
             /*
-             * this function will test debug_print's default handling behavior
+             * this function will test debug_print's default handling-behavior
              */
             var data;
             // jslint-hack
@@ -252,11 +256,11 @@
 
         local.testCase_jsonCopy_default = function (options, onError) {
             /*
-             * this function will test jsonCopy's default handling behavior
+             * this function will test jsonCopy's default handling-behavior
              */
             // jslint-hack
             local.utility2.nop(options);
-            // test various data-type handling behavior
+            // test various data-type handling-behavior
             [undefined, null, false, true, 0, 1, 1.5, 'a'].forEach(function (data) {
                 local.utility2.assert(
                     local.utility2.jsonCopy(data) === data,
@@ -268,27 +272,27 @@
 
         local.testCase_jsonStringifyOrdered_default = function (options, onError) {
             /*
-             * this function will test jsonStringifyOrdered's default handling behavior
+             * this function will test jsonStringifyOrdered's default handling-behavior
              */
-            // test data-type handling behavior
+            // test data-type handling-behavior
             [undefined, null, false, true, 0, 1, 1.5, 'a', {}, []].forEach(function (data) {
                 local.utility2.assert(
                     local.utility2.jsonStringifyOrdered(data) === JSON.stringify(data),
                     [local.utility2.jsonStringifyOrdered(data), JSON.stringify(data)]
                 );
             });
-            // test data-ordering handling behavior
+            // test data-ordering handling-behavior
             options = {
-                // test nested dict handling behavior
+                // test nested dict handling-behavior
                 ff: { hh: 2, gg: 1},
-                // test nested array handling behavior
+                // test nested array handling-behavior
                 ee: [undefined],
                 dd: local.utility2.nop,
                 cc: undefined,
                 bb: null,
                 aa: 1
             };
-            // test circular-reference handling behavior
+            // test circular-reference handling-behavior
             options.zz = options;
             options = local.utility2.jsonStringifyOrdered(options);
             local.utility2.assert(
@@ -300,7 +304,7 @@
 
         local.testCase_listShuffle_default = function (options, onError) {
             /*
-             * this function will test listShuffle's default handling behavior
+             * this function will test listShuffle's default handling-behavior
              */
             var list = '[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]';
             // validate list before shuffle
@@ -316,13 +320,13 @@
 
         local.testCase_objectSetDefault_default = function (options, onError) {
             /*
-             * this function will test objectSetDefault's default handling behavior
+             * this function will test objectSetDefault's default handling-behavior
              */
-            // test non-recursive handling behavior
+            // test non-recursive handling-behavior
             options = local.utility2.objectSetDefault(
                 { aa: undefined, bb: { cc: 1 }, cc: { dd: {} }, dd: [1, 1], ee: [1, 1] },
                 { aa: 2, bb: { dd: 2 }, cc: { dd: { ee: 2 } }, dd: [2, 2], ee: { ff: 2 } },
-                // test default-depth handling behavior
+                // test default-depth handling-behavior
                 null
             );
             // validate options
@@ -331,11 +335,11 @@
                     '{"aa":2,"bb":{"cc":1},"cc":{"dd":{}},"dd":[1,1],"ee":[1,1]}',
                 options
             );
-            // test recursive handling behavior
+            // test recursive handling-behavior
             options = local.utility2.objectSetDefault(
                 { aa: undefined, bb: { cc: 1 }, cc: { dd: {} }, dd: [1, 1], ee: [1, 1] },
                 { aa: 2, bb: { dd: 2 }, cc: { dd: { ee: 2 } }, dd: [2, 2], ee: { ff: 2 } },
-                // test depth handling behavior
+                // test depth handling-behavior
                 2
             );
             // validate options
@@ -349,35 +353,35 @@
 
         local.testCase_objectSetOverride_default = function (options, onError) {
             /*
-             * this function will test objectSetOverride's default handling behavior
+             * this function will test objectSetOverride's default handling-behavior
              */
-            // test non-recursive handling behavior
+            // test non-recursive handling-behavior
             options = local.utility2.objectSetOverride(
                 { aa: 1, bb: { cc: 1 }, cc: { dd: 1 }, dd: [1, 1], ee: [1, 1] },
                 { aa: 2, bb: { dd: 2 }, cc: { ee: 2 }, dd: [2, 2], ee: { ff: 2 } },
-                // test default-depth handling behavior
+                // test default-depth handling-behavior
                 null
             );
             // validate options
             options = local.utility2.jsonStringifyOrdered(options);
             local.utility2.assert(options === '{"aa":2,"bb":{"dd":2},"cc":{"ee":2},' +
                 '"dd":[2,2],"ee":{"ff":2}}', options);
-            // test recursive handling behavior
+            // test recursive handling-behavior
             options = local.utility2.objectSetOverride(
                 { aa: 1, bb: { cc: 1 }, cc: { dd: 1 }, dd: [1, 1], ee: [1, 1] },
                 { aa: 2, bb: { dd: 2 }, cc: { ee: 2 }, dd: [2, 2], ee: { ff: 2 } },
-                // test depth handling behavior
+                // test depth handling-behavior
                 2
             );
             // validate options
             options = local.utility2.jsonStringifyOrdered(options);
             local.utility2.assert(options === '{"aa":2,"bb":{"cc":1,"dd":2},' +
                 '"cc":{"dd":1,"ee":2},"dd":[2,2],"ee":{"ff":2}}', options);
-            // test envDict with empty-string handling behavior
+            // test envDict with empty-string handling-behavior
             options = local.utility2.objectSetOverride(
                 local.utility2.envDict,
                 { 'emptyString': null },
-                // test default-depth handling behavior
+                // test default-depth handling-behavior
                 null
             );
             // validate options
@@ -387,10 +391,10 @@
 
         local.testCase_objectTraverse_default = function (options, onError) {
             /*
-             * this function will test objectTraverse's default handling behavior
+             * this function will test objectTraverse's default handling-behavior
              */
             options = { aa: null, bb: 2, cc: { dd: 4, ee: [5, 6, 7] } };
-            // test circular-reference handling behavior
+            // test circular-reference handling-behavior
             options.data = options;
             local.utility2.objectTraverse(options, function (element) {
                 if (element && typeof element === 'object' && !Array.isArray(element)) {
@@ -408,7 +412,7 @@
 
         local.testCase_onErrorDefault_default = function (options, onError) {
             /*
-             * this function will test onErrorDefault's default handling behavior
+             * this function will test onErrorDefault's default handling-behavior
              */
             local.utility2.testMock([
                 // suppress console.error
@@ -417,11 +421,11 @@
                 } }],
                 [local.global, { __coverage__: null }]
             ], function (onError) {
-                // test no error handling behavior
+                // test no error handling-behavior
                 local.utility2.onErrorDefault();
                 // validate options
                 local.utility2.assert(!options, options);
-                // test error handling behavior
+                // test error handling-behavior
                 local.utility2.onErrorDefault(local.utility2.errorDefault);
                 // validate options
                 local.utility2.assert(options, options);
@@ -431,7 +435,7 @@
 
         local.testCase_onErrorJsonParse_default = function (options, onError) {
             /*
-             * this function will test onErrorJsonParse's default handling behavior
+             * this function will test onErrorJsonParse's default handling-behavior
              */
             var data, error, onError2;
             // jslint-hack
@@ -440,20 +444,20 @@
                 data = arg1;
                 error = arg0;
             };
-            // test parse passed handling behavior
-            // test debug handling behavior
+            // test parse passed handling-behavior
+            // test debug handling-behavior
             local.utility2.onErrorJsonParse(onError2, 'modeDebug')(null, '1');
             // validate no error occurred
             local.utility2.assert(!error, error);
             // validate data
             local.utility2.assert(data === 1, data);
-            // test parse failed handling behavior
+            // test parse failed handling-behavior
             local.utility2.onErrorJsonParse(onError2)(null, 'syntax error');
             // validate error occurred
             local.utility2.assert(error, error);
             // validate data
             local.utility2.assert(!data, data);
-            // test error handling behavior
+            // test error handling-behavior
             local.utility2.onErrorJsonParse(onError2)(new Error());
             // validate error occurred
             local.utility2.assert(error, error);
@@ -464,12 +468,12 @@
 
         local.testCase_onParallel_default = function (options, onError) {
             /*
-             * this function will test onParallel's default handling behavior
+             * this function will test onParallel's default handling-behavior
              */
             var onParallel, onParallelError;
             // jslint-hack
             local.utility2.nop(options);
-            // test onDebug handling behavior
+            // test onDebug handling-behavior
             onParallel = local.utility2.onParallel(onError, function (error, self) {
                 local.utility2.testTryCatch(function () {
                     // validate no error occurred
@@ -479,7 +483,7 @@
                 }, onError);
             });
             onParallel.counter += 1;
-            // test multiple-task handling behavior
+            // test multiple-task handling-behavior
             onParallel.counter += 1;
             setTimeout(function () {
                 onParallelError = local.utility2.onParallel(function (error) {
@@ -490,19 +494,19 @@
                     }, onParallel);
                 });
                 onParallelError.counter += 1;
-                // test error handling behavior
+                // test error handling-behavior
                 onParallelError.counter += 1;
                 onParallelError(local.utility2.errorDefault);
-                // test ignore-after-error handling behavior
+                // test ignore-after-error handling-behavior
                 onParallelError();
             });
-            // test default handling behavior
+            // test default handling-behavior
             onParallel();
         };
 
         local.testCase_onTimeout_timeout = function (options, onError) {
             /*
-             * this function will test onTimeout's timeout handling behavior
+             * this function will test onTimeout's timeout handling-behavior
              */
             var timeElapsed;
             // jslint-hack
@@ -524,40 +528,40 @@
 
         local.testCase_stringFormat_default = function (options, onError) {
             /*
-             * this function will test stringFormat's default handling behavior
+             * this function will test stringFormat's default handling-behavior
              */
             var data;
             // jslint-hack
             local.utility2.nop(options);
-            // test undefined valueDefault handling behavior
+            // test undefined valueDefault handling-behavior
             data = local.utility2.stringFormat('{{aa}}', {}, undefined);
             local.utility2.assert(data === '{{aa}}', data);
-            // test default handling behavior
+            // test default handling-behavior
             data = local.utility2.stringFormat(
                 '{{aa}}{{aa json}}{{bb}}{{cc}}{{dd}}{{ee.ff}}',
                 {
-                    // test string value handling behavior
+                    // test string value handling-behavior
                     aa: 'aa',
-                    // test non-string value handling behavior
+                    // test non-string value handling-behavior
                     bb: 1,
-                    // test null-value handling behavior
+                    // test null-value handling-behavior
                     cc: null,
-                    // test undefined-value handling behavior
+                    // test undefined-value handling-behavior
                     dd: undefined,
-                    // test nested value handling behavior
+                    // test nested value handling-behavior
                     ee: { ff: 'gg' }
                 },
                 '<undefined>'
             );
             local.utility2.assert(data === 'aa"aa"1null<undefined>gg', data);
-            // test list handling behavior
+            // test list handling-behavior
             data = local.utility2.stringFormat(
                 '[{{#list1}}[{{#list2}}{{aa}},{{/list2}}],{{/list1}}]',
                 {
                     list1: [
-                        // test null-value handling behavior
+                        // test null-value handling-behavior
                         null,
-                        // test recursive list handling behavior
+                        // test recursive list handling-behavior
                         { list2: [{ aa: 'bb' }, { aa: 'cc' }] }
                     ]
                 },
@@ -572,13 +576,13 @@
 
         local.testCase_taskRunCached_default = function (options, onError) {
             /*
-             * this function will test taskRunCached's default handling behavior
+             * this function will test taskRunCached's default handling-behavior
              */
             var cacheValue, modeNext, onNext, onParallel, onTask, optionsCopy;
             if (!options) {
                 onParallel = local.utility2.onParallel(onError);
                 onParallel.counter += 1;
-                // test file-cache handling behavior
+                // test file-cache handling-behavior
                 if (local.modeJs === 'node') {
                     onParallel.counter += 1;
                     local.testCase_taskRunCached_default({
@@ -589,7 +593,7 @@
                         modeCacheHit: 'file'
                     }, onParallel);
                 }
-                // test memory-cache handling behavior
+                // test memory-cache handling-behavior
                 onParallel.counter += 1;
                 local.testCase_taskRunCached_default({
                     cacheDict: 'testCase_taskRunCached_default',
@@ -597,7 +601,7 @@
                     modeCacheHit: 'memory',
                     modeCacheMemory: true
                 }, onParallel);
-                // test undefined-cache handling behavior
+                // test undefined-cache handling-behavior
                 onParallel.counter += 1;
                 local.testCase_taskRunCached_default({
                     cacheDict: 'testCase_taskRunCached_default',
@@ -614,7 +618,7 @@
                 local.utility2.testTryCatch(function () {
                     modeNext += 1;
                     switch (modeNext) {
-                    // test no cache handling behavior
+                    // test no cache handling-behavior
                     case 1:
                         if (options.modeCacheMemory) {
                             // cleanup memory-cache
@@ -630,7 +634,7 @@
                             key: options.key,
                             modeCacheFile: options.modeCacheFile,
                             modeCacheMemory: options.modeCacheMemory,
-                            // test onCacheWrite handling behavior
+                            // test onCacheWrite handling-behavior
                             onCacheWrite: onNext,
                             onTask: onTask
                         };
@@ -647,7 +651,7 @@
                             optionsCopy.modeCacheHit
                         );
                         break;
-                    // test cache with update handling behavior
+                    // test cache with update handling-behavior
                     case 3:
                         cacheValue = 'bye';
                         optionsCopy = {
@@ -655,9 +659,9 @@
                             key: options.key,
                             modeCacheFile: options.modeCacheFile,
                             modeCacheMemory: options.modeCacheMemory,
-                            // test modeCacheUpdate handling behavior
+                            // test modeCacheUpdate handling-behavior
                             modeCacheUpdate: true,
-                            // test onCacheWrite handling behavior
+                            // test onCacheWrite handling-behavior
                             onCacheWrite: onNext,
                             onTask: onTask
                         };
@@ -676,7 +680,7 @@
                             [optionsCopy.modeCacheHit, options.modeCacheHit]
                         );
                         break;
-                    // test cache handling behavior
+                    // test cache handling-behavior
                     case 5:
                         optionsCopy = {
                             cacheDict: options.cacheDict,
@@ -699,7 +703,7 @@
                         );
                         onNext();
                         break;
-                    // test error handling behavior
+                    // test error handling-behavior
                     case 7:
                         optionsCopy = {
                             cacheDict: options.cacheDict,
@@ -727,7 +731,7 @@
 
         local.testCase_taskRunOrSubscribe_default = function (options, onError) {
             /*
-             * this function will test taskRunOrSubscribe's default handling behavior
+             * this function will test taskRunOrSubscribe's default handling-behavior
              */
             var key, onParallel;
             // jslint-hack
@@ -735,20 +739,20 @@
             key = local.utility2.uuidTime();
             onParallel = local.utility2.onParallel(onError);
             onParallel.counter += 1;
-            // test onTask handling behavior
+            // test onTask handling-behavior
             onParallel.counter += 1;
             local.utility2.taskRunOrSubscribe({
                 key: key,
                 onTask: function (onError) {
                     setTimeout(function () {
                         onError();
-                        // test multiple-callback handling behavior
+                        // test multiple-callback handling-behavior
                         onError();
                         onParallel();
                     });
                 }
             });
-            // test subscribe handling behavior
+            // test subscribe handling-behavior
             onParallel.counter += 1;
             local.utility2.taskRunOrSubscribe({
                 key: key
@@ -758,17 +762,17 @@
 
         local.testCase_testRun_failure = function (options, onError) {
             /*
-             * this function will test testRun's failure handling behavior
+             * this function will test testRun's failure handling-behavior
              */
             // jslint-hack
             local.utility2.nop(options);
-            // test failure from callback handling behavior
+            // test failure from callback handling-behavior
             onError(local.utility2.errorDefault);
-            // test failure from multiple-callback handling behavior
+            // test failure from multiple-callback handling-behavior
             onError();
-            // test failure from ajax handling behavior
+            // test failure from ajax handling-behavior
             local.utility2.ajax({ url: '/test/undefined' }, onError);
-            // test failure from thrown error handling behavior
+            // test failure from thrown error handling-behavior
             throw local.utility2.errorDefault;
         };
     }());
@@ -781,7 +785,7 @@
         // init tests
         local.testCase_fsWriteFileWithMkdirp_default = function (options, onError) {
             /*
-             * this function will test fsWriteFileWithMkdirp's default handling behavior
+             * this function will test fsWriteFileWithMkdirp's default handling-behavior
              */
             var dir, file, modeNext, onNext;
             // jslint-hack
@@ -801,7 +805,7 @@
                         onNext();
                         break;
                     case 2:
-                        // test fsWriteFileWithMkdirp with mkdirp handling behavior
+                        // test fsWriteFileWithMkdirp with mkdirp handling-behavior
                         file = dir + '/aa/bb';
                         local.utility2.fsWriteFileWithMkdirp(file, 'hello1', onNext);
                         break;
@@ -814,7 +818,7 @@
                         onNext();
                         break;
                     case 4:
-                        // test fsWriteFileWithMkdirp with no mkdirp handling behavior
+                        // test fsWriteFileWithMkdirp with no mkdirp handling-behavior
                         file = dir + '/aa/bb';
                         local.utility2.fsWriteFileWithMkdirp(file, 'hello2', onNext);
                         break;
@@ -827,7 +831,7 @@
                         onNext();
                         break;
                     case 6:
-                        // test error handling behavior
+                        // test error handling-behavior
                         file = dir + '/aa/bb/cc';
                         local.utility2.fsWriteFileWithMkdirp(file, 'hello', onNext);
                         break;
@@ -853,7 +857,7 @@
 
         local.testCase_istanbulMerge_default = function (options, onError) {
             /*
-             * this function will test istanbulMerge's default handling behavior
+             * this function will test istanbulMerge's default handling-behavior
              */
             var coverage1, coverage2, data;
             // jslint-hack
@@ -887,7 +891,7 @@
 
 
 
-            // test null-case handling behavior
+            // test null-case handling-behavior
             coverage1 = null;
             coverage2 = null;
             local.utility2.istanbulMerge(coverage1, coverage2);
@@ -898,7 +902,7 @@
 
         local.testCase_onFileModifiedRestart_watchFile = function (options, onError) {
             /*
-             * this function will test onFileModifiedRestart's watchFile handling behavior
+             * this function will test onFileModifiedRestart's watchFile handling-behavior
              */
             var file, onParallel;
             // jslint-hack
@@ -907,10 +911,10 @@
             onParallel = local.utility2.onParallel(onError);
             onParallel.counter += 1;
             local.fs.stat(file, function (error, stat) {
-                // test default watchFile handling behavior
+                // test default watchFile handling-behavior
                 onParallel.counter += 1;
                 local.fs.utimes(file, stat.atime, new Date(), onParallel);
-                // test nop watchFile handling behavior
+                // test nop watchFile handling-behavior
                 onParallel.counter += 1;
                 setTimeout(function () {
                     local.fs.utimes(file, stat.atime, stat.mtime, onParallel);
@@ -922,14 +926,14 @@
 
         local.testCase_processSpawnWithTimeout_default = function (options, onError) {
             /*
-             * this function will test processSpawnWithTimeout's default handling behavior
+             * this function will test processSpawnWithTimeout's default handling-behavior
              */
             var childProcess, onParallel;
             // jslint-hack
             local.utility2.nop(options);
             onParallel = local.utility2.onParallel(onError);
             onParallel.counter += 1;
-            // test default handling behavior
+            // test default handling-behavior
             onParallel.counter += 1;
             local.utility2.processSpawnWithTimeout('ls')
                 .on('error', onParallel)
@@ -940,7 +944,7 @@
                     local.utility2.assert(signal === null, signal);
                     onParallel();
                 });
-            // test timeout handling behavior
+            // test timeout handling-behavior
             onParallel.counter += 1;
             local.utility2.testMock([
                 [local.utility2, { timeoutDefault: 1000 }]
@@ -964,7 +968,7 @@
 
         local.testCase_replStart_default = function (options, onError) {
             /*
-             * this function will test replStart's default handling behavior
+             * this function will test replStart's default handling-behavior
              */
             /*jslint evil: true*/
             // jslint-hack
@@ -979,15 +983,15 @@
                 } }]
             ], function (onError) {
                 [
-                    // test shell handling behavior
+                    // test shell handling-behavior
                     '$ :\n',
-                    // test git diff handling behavior
+                    // test git diff handling-behavior
                     '$ git diff\n',
-                    // test git log handling behavior
+                    // test git log handling-behavior
                     '$ git log\n',
-                    // test grep handling behavior
+                    // test grep handling-behavior
                     'grep \\bhello\\b\n',
-                    // test print handling behavior
+                    // test print handling-behavior
                     'print\n'
                 ].forEach(function (script) {
                     local.utility2.local._replServer.eval(
@@ -1003,7 +1007,7 @@
 
         local.testCase_serverRespondTimeoutDefault_default = function (options, onError) {
             /*
-             * this function will test serverRespondTimeoutDefault's default handling behavior
+             * this function will test serverRespondTimeoutDefault's default handling-behavior
              */
             // jslint-hack
             local.utility2.nop(options);
@@ -1013,12 +1017,12 @@
             ], function (onError) {
                 local.utility2.serverRespondTimeoutDefault(
                     {
-                        // test default onTimeout handling behavior
+                        // test default onTimeout handling-behavior
                         onTimeout: null,
                         url: ''
                     },
                     { end: local.utility2.nop, headersSent: true, on: local.utility2.nop },
-                    // test default timeout handling behavior
+                    // test default timeout handling-behavior
                     null
                 );
                 onError();
@@ -1027,18 +1031,18 @@
 
         local.testCase_testRunServer_misc = function (options, onError) {
             /*
-             * this function will test testRunServer's misc handling behavior
+             * this function will test testRunServer's misc handling-behavior
              */
             // jslint-hack
             local.utility2.nop(options);
             local.utility2.testMock([
                 [local.utility2, {
                     envDict: {
-                        // test $npm_package_name !== 'utility2' handling behavior
+                        // test $npm_package_name !== 'utility2' handling-behavior
                         npm_package_name: 'undefined',
-                        // test timeout-exit handling behavior
+                        // test timeout-exit handling-behavior
                         npm_config_timeout_exit: '1',
-                        // test random $npm_config_server_port handling behavior
+                        // test random $npm_config_server_port handling-behavior
                         npm_config_server_port: ''
                     },
                     phantomScreenCapture: local.utility2.nop,
@@ -1067,7 +1071,7 @@
 
         local.testCase_testPage_default = function (options, onError) {
             /*
-             * this function will test the test-page's default handling behavior
+             * this function will test the test-page's default handling-behavior
              */
             var onParallel;
             // jslint-hack
@@ -1075,17 +1079,17 @@
             onParallel = local.utility2.onParallel(onError);
             onParallel.counter += 1;
             [{
-                // test default handling behavior
+                // test default handling-behavior
                 url: 'http://localhost:' +
                     local.utility2.envDict.npm_config_server_port +
-                    // test phantom-callback handling behavior
+                    // test phantom-callback handling-behavior
                     '?modeTest=phantom&timeExit={{timeExit}}'
             }, {
                 modeError: true,
                 modeSilent: true,
                 url: 'http://localhost:' +
                     local.utility2.envDict.npm_config_server_port +
-                    // test script-error handling behavior
+                    // test script-error handling-behavior
                     '/test/script-error.html' +
                     '?timeExit={{timeExit}}'
             }, {
@@ -1095,12 +1099,12 @@
                 modePhantomSelfTest: true,
                 url: 'http://localhost:' +
                     local.utility2.envDict.npm_config_server_port +
-                    // test script-only handling behavior
+                    // test script-only handling-behavior
                     '/test/script-only.html' +
-                    // test modeTest !== 'phantom' handling behavior
+                    // test modeTest !== 'phantom' handling-behavior
                     '?modeTest=phantom2&' +
-                    // test specific testCase handling behavior
-                    // test testRun's failure handling behavior
+                    // test specific testCase handling-behavior
+                    // test testRun's failure handling-behavior
                     'modeTestCase=testCase_testRun_failure&' +
                     'timeExit={{timeExit}}'
             }].forEach(function (options) {
@@ -1123,16 +1127,16 @@
 
         local.testCase_testPage_misc = function (options, onError) {
             /*
-             * this function will test the test-page's misc handling behavior
+             * this function will test the test-page's misc handling-behavior
              */
             // jslint-hack
             local.utility2.nop(options);
             local.utility2.testMock([
                 [local.utility2, {
                     envDict: {
-                        // test no slimerjs handling behavior
+                        // test no slimerjs handling-behavior
                         npm_config_mode_no_slimerjs: '1',
-                        // test no cover utility2.js handling behavior
+                        // test no cover utility2.js handling-behavior
                         npm_package_name: 'undefined'
                     },
                     onTimeout: local.utility2.nop,
@@ -1140,7 +1144,7 @@
                         return { on: local.utility2.nop };
                     }
                 }],
-                // test no modeSilent handling behavior
+                // test no modeSilent handling-behavior
                 [local.global, { __coverage__: null }]
             ], function (onError) {
                 local.utility2.phantomTest({
@@ -1154,7 +1158,7 @@
 
         local.testCase_testPage_screenCapture = function (options, onError) {
             /*
-             * this function will test the test-page's screen-capture handling behavior
+             * this function will test the test-page's screen-capture handling-behavior
              */
             options = {
                 modeSilent: true,
@@ -1183,16 +1187,16 @@
 
         local.testCase_uuidXxx_default = function (options, onError) {
             /*
-             * this function will test uuidXxx's default handling behavior
+             * this function will test uuidXxx's default handling-behavior
              */
             var data1, data2;
             // jslint-hack
             local.utility2.nop(options);
-            // test uuid4 handling behavior
+            // test uuid4 handling-behavior
             data1 = local.utility2.uuid4();
             // validate data1
             local.utility2.assert(local.utility2.regexpUuidValidate.test(data1), data1);
-            // test uuidTime handling behavior
+            // test uuidTime handling-behavior
             data1 = local.utility2.uuidTime();
             // validate data1
             local.utility2.assert(local.utility2.regexpUuidValidate.test(data1), data1);
@@ -1217,7 +1221,7 @@
     case 'browser':
         // init onErrorExit
         local.utility2.onErrorExit = function () {
-            // test modeTest !== 'phantom' handling behavior
+            // test modeTest !== 'phantom' handling-behavior
             if (local.utility2.modeTest === 'phantom2') {
                 setTimeout(function () {
                     throw new Error('\nphantom\n' +
@@ -1225,7 +1229,7 @@
                 }, 1000);
             }
         };
-        // test no modeTest handling behavior
+        // test no modeTest handling-behavior
         local._modeTest = local.utility2.modeTest;
         local.utility2.modeTest = null;
         local.utility2.testRun();
@@ -1277,51 +1281,49 @@
                     });
                 }
                 switch (request.urlParsed.pathnameNormalized) {
-                // test http POST handling behavior
+                // test http POST handling-behavior
                 case '/test/echo':
-                    // test response header handling behavior
+                    // test response header handling-behavior
                     local.utility2.serverRespondHeadSet(request, response, null, {
                         'X-Response-Header-Test': 'bye'
                     });
                     local.utility2.serverRespondEcho(request, response);
                     break;
-                // test http POST handling behavior
+                // test http POST handling-behavior
                 case '/test/body':
-                    // test request-body handling behavior
+                    // test request-body handling-behavior
                     local.utility2.middlewareBodyGet(request, response, function () {
-                        // test request-body race-condition handling behavior
+                        // test request-body race-condition handling-behavior
                         local.utility2
                             .middlewareBodyGet(request, response, function () {
                                 response.end(request.bodyRaw);
                             });
                     });
                     break;
-                // test 500-internal-server-error handling behavior
+                // test 500-internal-server-error handling-behavior
                 case '/test/error-500':
-                    // test multiple-callback serverRespondHeadSet handling behavior
+                    // test multiple-callback serverRespondHeadSet handling-behavior
                     local.utility2.serverRespondHeadSet(request, response, null, {});
                     nextMiddleware(local.utility2.errorDefault);
-                    // test multiple-callback error handling behavior
+                    // test multiple-callback error handling-behavior
                     nextMiddleware(local.utility2.errorDefault);
-                    // test onErrorDefault handling behavior
+                    // test onErrorDefault handling-behavior
                     local.utility2.testMock([
                         // suppress console.error
                         [console, { error: local.utility2.nop }]
                     ], function (onError) {
-                        local.utility2.serverRespondDefault(
-                            request,
-                            response,
-                            500,
-                            local.utility2.errorDefault
-                        );
+                        var error;
+                        error = new Error('error');
+                        error.statusCode = 500;
+                        local.middlewareError(error, request, response);
                         onError();
                     }, local.utility2.nop);
                     break;
-                // test undefined-error handling behavior
+                // test undefined-error handling-behavior
                 case '/test/error-undefined':
                     local.utility2.serverRespondDefault(request, response, 999);
                     break;
-                // test timeout handling behavior
+                // test timeout handling-behavior
                 case '/test/timeout':
                     setTimeout(function () {
                         response.end();
@@ -1369,7 +1371,7 @@
         local.utility2.replStart();
         // init $npm_config_file_start
         [
-            // test no $npm_config_file_start handling behavior
+            // test no $npm_config_file_start handling-behavior
             null,
             local.utility2.envDict.npm_config_file_start
         ].forEach(function (file) {

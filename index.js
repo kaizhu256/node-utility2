@@ -1344,6 +1344,7 @@
             local._ajaxProgressList.push(xhr);
             // open url
             xhr.open(xhr.method, xhr.url);
+            xhr.responseType = options.responseType || '';
             // send request headers
             Object.keys(xhr.headers).forEach(function (key) {
                 xhr.setRequestHeader(key, xhr.headers[key]);
@@ -1592,6 +1593,7 @@
              */
             // jslint-hack
             local.utility2.nop(response);
+            // if request has already been read, then skip this middleware
             if (!request.readable) {
                 nextMiddleware();
                 return;
@@ -1736,7 +1738,9 @@
             // if error occurred, then respond with '500 Internal Server Error',
             // else respond with '404 Not Found'
             local.utility2.serverRespondDefault(request, response, error
-                ? 500
+                ? (error.statusCode >= 400 && error.statusCode < 600
+                    ? error.statusCode
+                    : 500)
                 : 404, error);
         };
 
@@ -2175,9 +2179,6 @@
             var server;
             // 1. create server from options.middleware
             server = local.http.createServer(function (request, response) {
-                // legacy-hack
-                options.middlewareError = options.middlewareError ||
-                    options.onMiddlewareError;
                 options.middleware(request, response, function (error) {
                     options.middlewareError(error, request, response);
                 });
@@ -2439,16 +2440,16 @@
                 );
                 // run phantom self-test
                 if (local.utility2.modePhantomSelfTest) {
-                    // test no coverage handling behavior
+                    // test no coverage handling-behavior
                     local.coverAndExit(null, local.utility2.nop);
                     // disable exit
                     local.utility2.exit = local.utility2.nop;
-                    // test string error with no trace handling behavior
+                    // test string error with no trace handling-behavior
                     local.onError('error', null);
                     // test string error
-                    // with trace-function and trace-sourceUrl handling behavior
+                    // with trace-function and trace-sourceUrl handling-behavior
                     local.onError('error', [{ function: true, sourceUrl: true }]);
-                    // test default error handling behavior
+                    // test default error handling-behavior
                     local.onError(local.utility2.errorDefault);
                     // restore exit
                     local.utility2.exit = local.global.phantom.exit;

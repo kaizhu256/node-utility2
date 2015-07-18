@@ -126,7 +126,7 @@ instruction
         // init tests
         local.testCase_ajax_200 = function (options, onError) {
             /*
-             * this function will test ajax's "200 ok" handling behavior
+             * this function will test ajax's "200 ok" handling-behavior
              */
             var data;
             // jslint-hack
@@ -147,7 +147,7 @@ instruction
         };
         local.testCase_ajax_404 = function (options, onError) {
             /*
-             * this function will test ajax's "404 not found" handling behavior
+             * this function will test ajax's "404 not found" handling-behavior
              */
             // jslint-hack
             local.utility2.nop(options);
@@ -279,7 +279,7 @@ instruction
 '                data = xhr.responseText;\n' +
 '                window.utility2.assert(data && data.length > 0, data);\n' +
 '                // validate "200 ok" status\n' +
-'                if (xhr.status === 200) {\n' +
+'                if (xhr.statusCode === 200) {\n' +
 '                    window.utility2.assert(data, data);\n' +
 '                }\n' +
 '                onError();\n' +
@@ -446,13 +446,15 @@ npm_config_mode_auto_restart=1 \
 npm_config_mode_auto_restart_child=1 \
 ./index.sh test test.js"
     },
-    "version": "2015.7.5"
+    "version": "2015.7.6"
 }
 ```
 
 
 
 # todo
+- enable options.responseType param in utility2.ajax for browser
+- add optional $TEST_URL for phantomjs test
 - create flamegraph from istanbul coverage
 - auto-generate help doc from README.md
 - add server stress test using phantomjs
@@ -461,12 +463,10 @@ npm_config_mode_auto_restart_child=1 \
 
 
 
-# change since e64c6c73
-- npm publish 2015.7.5
-- preserve error.message and error.stack in utility2.taskRunOrSubscribe
-- add utility2.errorMessapgePrepend
-- add modeDebug option in utility2.onErrorJsonParse
-- deprecate local.onMiddlewareError in favor of local.middlewareError
+# change since 67869dcb
+- npm publish 2015.7.6
+- enable options.responseType param in utility2.ajax for browser
+- deprecate xhr.status in favor of xhr.statusCode
 - none
 
 
@@ -493,7 +493,7 @@ shBuild() {
     . ./index.sh && shInit || return $?
 
     # run npm-test on published package
-    shNpmTestPublished || return $?
+    shRun shNpmTestPublished || return $?
 
     # test example js script
     MODE_BUILD=testExampleJs \
@@ -525,7 +525,7 @@ shBuild() {
     [ "$(node --version)" \< "v0.12" ] && return
 
     # deploy app to heroku
-    shHerokuDeploy hrku01-$npm_package_name-$CI_BRANCH || return $?
+    shRun shHerokuDeploy hrku01-$npm_package_name-$CI_BRANCH || return $?
 
     # test deployed app to heroku
     if [ "$CI_BRANCH" = alpha ] ||

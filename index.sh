@@ -285,7 +285,7 @@ shInit() {
             fi
         # init default env
         else
-            export CI_BRANCH=undefined || return $?
+            export CI_BRANCH=alpha || return $?
             export CI_COMMIT_ID=$(git rev-parse --verify HEAD) || return $?
             export CI_HOST=localhost || return $?
         fi
