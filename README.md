@@ -7,7 +7,7 @@ run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
 
 
 # live test-server
-[![heroku.com test-server](https://kaizhu256.github.io/node-utility2/build/screen-capture.herokuTest.slimerjs..png)](https://hrku01-utility2-beta.herokuapp.com)
+[![heroku.com test-server](https://kaizhu256.github.io/node-utility2/build/screen-capture.herokuDeploy.slimerjs..png)](https://hrku01-utility2-beta.herokuapp.com)
 
 
 
@@ -446,7 +446,7 @@ npm_config_mode_auto_restart=1 \
 npm_config_mode_auto_restart_child=1 \
 ./index.sh test test.js"
     },
-    "version": "2015.7.6"
+    "version": "2015.7.7"
 }
 ```
 
@@ -463,10 +463,12 @@ npm_config_mode_auto_restart_child=1 \
 
 
 
-# change since 67869dcb
-- npm publish 2015.7.6
-- enable options.responseType param in utility2.ajax for browser
-- deprecate xhr.status in favor of xhr.statusCode
+# change since 924ae22f
+- npm publish 2015.7.7
+- auto-screen-capture deployed heroku main-page
+- add $npm_config_mode_no_phantomjs env param to disable phantomjs
+- merge .bashrc into index.sh
+- change utility2.assert to check for error.stack instead of instanceof Error
 - none
 
 

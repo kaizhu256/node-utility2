@@ -30,7 +30,7 @@
              */
             if (!passed) {
                 // if message is an Error object, then throw it
-                if (message instanceof Error) {
+                if (message && message.stack) {
                     throw message;
                 }
                 throw new Error(
@@ -582,7 +582,7 @@
                     task.result = JSON.stringify(Array.prototype.slice.call(
                         arguments
                     ).map(function (element) {
-                        if (element && (element.message || element.stack)) {
+                        if (element && element.stack) {
                             element = local.utility2.objectSetDefault(local.utility2
                                 .jsonCopy(element), {
                                     message: element.message,
@@ -1784,10 +1784,11 @@
             onParallel.counter += 1;
             ['phantomjs', 'slimerjs'].forEach(function (argv0) {
                 var optionsCopy;
-                // if slimerjs is not available, then do not use it
-                if (argv0 === 'slimerjs' &&
-                        (!local.utility2.envDict.npm_config_mode_slimerjs ||
-                        local.utility2.envDict.npm_config_mode_no_slimerjs)) {
+                // if phantomjs / slimerjs is not available, then do not use it
+                if (local.utility2.envDict['npm_config_mode_no_' + argv0] || (
+                        argv0 === 'slimerjs' &&
+                        !local.utility2.envDict.npm_config_mode_slimerjs
+                    )) {
                     return;
                 }
                 // copy options to create separate phantomjs / slimerjs state

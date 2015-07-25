@@ -124,7 +124,7 @@
                         // test string post handling-behavior
                         : 'hello',
                     method: 'POST',
-                    // test nodejs response handling behavior
+                    // test nodejs response handling-behavior
                     responseType: responseType === 'response' && local.modeJs === 'node'
                         ? responseType
                         : '',
