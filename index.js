@@ -1323,7 +1323,7 @@
             xhr.timeout = options.timeout || local.utility2.timeoutDefault;
             xhr.url = options.url;
             // debug xhr
-            local._debugAjaxXhr = xhr;
+            local.utility2._debugAjaxXhr = xhr;
             // init timerTimeout
             timerTimeout = local.utility2.onTimeout(function (errorTimeout) {
                 error = errorTimeout;
@@ -1448,7 +1448,7 @@
                     xhr.path = urlParsed.path;
                     xhr.port = urlParsed.port;
                     // debug xhr
-                    local._debugAjaxXhr = xhr;
+                    local.utility2._debugAjaxXhr = xhr;
                     // init timerTimeout
                     timerTimeout = local.utility2.onTimeout(
                         function (error) {
@@ -1467,14 +1467,14 @@
                         // handle request-error
                         .on('error', onNext);
                     // debug request
-                    local._debugAjaxRequest = request;
+                    local.utility2._debugAjaxRequest = request;
                     // send data
                     request.end(xhr.data);
                     break;
                 case 2:
                     response = error;
                     // debug ajax response
-                    local._debugAjaxResponse = response;
+                    local.utility2._debugAjaxResponse = response;
                     // update xhr
                     xhr.status = xhr.statusCode = response.statusCode;
                     xhr.statusText = local.http.STATUS_CODES[response.statusCode] || '';
@@ -1593,7 +1593,7 @@
              */
             // jslint-hack
             local.utility2.nop(response);
-            // if request has already been read, then skip this middleware
+            // if request has already been read, then goto nextMiddleware
             if (!request.readable) {
                 nextMiddleware();
                 return;
@@ -1671,9 +1671,9 @@
              * this function will run the init-middleware
              */
             // debug server request
-            local._debugServerRequest = request;
+            local.utility2._debugServerRequest = request;
             // debug server response
-            local._debugServerResponse = response;
+            local.utility2._debugServerResponse = response;
             // init timerTimeout
             local.utility2
                 .serverRespondTimeoutDefault(request, response, local.utility2.timeoutDefault);
@@ -1785,10 +1785,7 @@
             ['phantomjs', 'slimerjs'].forEach(function (argv0) {
                 var optionsCopy;
                 // if phantomjs / slimerjs is not available, then do not use it
-                if (local.utility2.envDict['npm_config_mode_no_' + argv0] || (
-                        argv0 === 'slimerjs' &&
-                        !local.utility2.envDict.npm_config_mode_slimerjs
-                    )) {
+                if (local.utility2.envDict['npm_config_mode_' + argv0] === '0') {
                     return;
                 }
                 // copy options to create separate phantomjs / slimerjs state
@@ -1958,7 +1955,7 @@
                 /*
                  * this function will debug any repl-error
                  */
-                local._debugReplError = error || local._debugReplError;
+                local.utility2._debugReplError = error || local.utility2._debugReplError;
             };
             // legacy-hack
             /* istanbul ignore if */
@@ -2567,12 +2564,22 @@
              * this function will both print the arg to stderr and return it
              */
             // debug arguments
-            local['_debug_printArguments'.replace('_p', 'P')] = arguments;
+            local.utility2['_debug_printArguments'.replace('_p', 'P')] = arguments;
             console.error('\n\n\ndebug_print'.replace('_p', 'P'));
             console.error.apply(console, arguments);
             console.error();
             // return arg for inspection
             return arg;
+        };
+        // init global debug_printCallback
+        local.global['debug_printCallback'.replace('_p', 'P')] = function (onError) {
+            /*
+             * this function will inject debug_print into the onError callback
+             */
+            return function () {
+                local.global['debug_print'.replace('_p', 'P')].apply(null, arguments);
+                onError.apply(null, arguments);
+            };
         };
         // init utility2
         local.utility2 = { cacheDict: { assets: {} }, local: local, nop: local.nop };

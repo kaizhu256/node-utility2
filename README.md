@@ -446,15 +446,13 @@ npm_config_mode_auto_restart=1 \
 npm_config_mode_auto_restart_child=1 \
 ./index.sh test test.js"
     },
-    "version": "2015.7.7"
+    "version": "2015.7.8"
 }
 ```
 
 
 
 # todo
-- enable options.responseType param in utility2.ajax for browser
-- add optional $TEST_URL for phantomjs test
 - create flamegraph from istanbul coverage
 - auto-generate help doc from README.md
 - add server stress test using phantomjs
@@ -463,12 +461,11 @@ npm_config_mode_auto_restart_child=1 \
 
 
 
-# change since 924ae22f
-- npm publish 2015.7.7
-- auto-screen-capture deployed heroku main-page
-- add $npm_config_mode_no_phantomjs env param to disable phantomjs
-- merge .bashrc into index.sh
-- change utility2.assert to check for error.stack instead of instanceof Error
+# change since f84dfc17
+- npm publish 2015.7.8
+- add utility2.debugPrintCallback
+- merge $npm_config_mode_no_phantomjs into $npm_config_mode_phantomjs
+- merge $npm_config_mode_no_slimerjs into $npm_config_mode_slimerjs
 - none
 
 

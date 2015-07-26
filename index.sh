@@ -26,7 +26,7 @@ shAesEncrypt() {
 }
 
 shBaseInit() {
-    # this function will init the base env
+    # this function will init the base bash-login env, and is intended for aws-ec2 setup
     local FILE || return $?
     # init $PATH_BIN
     if [ ! "$PATH_BIN" ]
@@ -49,7 +49,8 @@ $HOME/bin:$HOME/node_modules/.bin:/usr/local/bin:/usr/local/sbin:$PATH || return
 }
 
 shBaseInstall() {
-    # this function will install the base
+    # this function will install .bashrc, .screenrc, .vimrc, and index.sh in $HOME,
+    # and is intended for aws-ec2 setup
     # curl https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/index.sh > $HOME/index.sh && . $HOME/index.sh && shBaseInstall
     local FILE || return $?
     for FILE in .screenrc .vimrc index.sh
@@ -922,11 +923,14 @@ shServerPortRandom() {
 
 shSlimerDetect() {
     # this function will auto-detect if slimerjs is installed and usable
-    if [ ! "$npm_config_mode_no_slimerjs" ] &&
-        [ ! "$npm_config_mode_slimerjs" ] &&
-        [ "$(slimerjs $npm_config_dir_utility2/index.js hello 2>/dev/null)" = "hello" ]
+    if [ ! "$npm_config_mode_slimerjs" ]
     then
-        export npm_config_mode_slimerjs=1 || return $?
+        if [ "$(slimerjs $npm_config_dir_utility2/index.js hello 2>/dev/null)" = "hello" ]
+        then
+            export npm_config_mode_slimerjs=1 || return $?
+        else
+            export npm_config_mode_slimerjs=0 || return $?
+        fi
     fi
 }
 

@@ -244,7 +244,9 @@
                 } }]
             ], function (onError) {
                 data = '';
-                local.global['debug_print'.replace('_p', 'P')]('hello');
+                local.global['debug_printCallback'.replace('_p', 'P')](function (arg) {
+                    return arg;
+                })('hello');
                 // validate data
                 local.utility2.assert(
                     data === '\n\n\n' + 'debug_print'.replace('_p', 'P') + '\nhello\n\n',
@@ -1135,7 +1137,7 @@
                 [local.utility2, {
                     envDict: {
                         // test no slimerjs handling-behavior
-                        npm_config_mode_no_slimerjs: '1',
+                        npm_config_mode_slimerjs: '0',
                         // test no cover utility2.js handling-behavior
                         npm_package_name: 'undefined'
                     },
