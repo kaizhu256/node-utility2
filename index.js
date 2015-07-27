@@ -48,7 +48,11 @@
              * this function will prepend the message to error.message and error.stack
              */
             error.message = message + error.message;
-            error.stack = message + error.stack;
+            // phantomjs-hack - try to prepend message to error.stack
+            try {
+                error.stack = message + error.stack;
+            } catch (ignore) {
+            }
             return error;
         };
 
@@ -304,7 +308,7 @@
             }
             return function (error) {
                 if (error) {
-                    // try to append errorStack to error.stack
+                    // phantomjs-hack - try to append errorStack to error.stack
                     try {
                         error.stack = error.stack
                             ? error.stack + '\n' + errorStack

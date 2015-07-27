@@ -446,7 +446,7 @@ npm_config_mode_auto_restart=1 \
 npm_config_mode_auto_restart_child=1 \
 ./index.sh test test.js"
     },
-    "version": "2015.7.8"
+    "version": "2015.7.9"
 }
 ```
 
@@ -461,11 +461,9 @@ npm_config_mode_auto_restart_child=1 \
 
 
 
-# change since f84dfc17
-- npm publish 2015.7.8
-- add utility2.debugPrintCallback
-- merge $npm_config_mode_no_phantomjs into $npm_config_mode_phantomjs
-- merge $npm_config_mode_no_slimerjs into $npm_config_mode_slimerjs
+# change since 8347d230
+- npm publish 2015.7.9
+- fix utility2.errorMessagePrepend crashing phantomjs
 - none
 
 
