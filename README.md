@@ -446,7 +446,7 @@ npm_config_mode_auto_restart=1 \
 npm_config_mode_auto_restart_child=1 \
 ./index.sh test test.js"
     },
-    "version": "2015.7.9"
+    "version": "2015.7.10"
 }
 ```
 
@@ -461,9 +461,10 @@ npm_config_mode_auto_restart_child=1 \
 
 
 
-# change since 8347d230
-- npm publish 2015.7.9
-- fix utility2.errorMessagePrepend crashing phantomjs
+# change since 4d357a90
+- npm publish 2015.7.10
+- fix shell command shBaseInstall
+- add shell command shDsStoreRm
 - none
 
 

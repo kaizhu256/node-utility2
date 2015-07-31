@@ -60,7 +60,7 @@ shBaseInstall() {
             $HOME/$FILE || return $?
     done
     # create .bashrc
-    printf ". index.sh && shBaseInit" > $HOME/.bashrc
+    printf '. $HOME/index.sh && shBaseInit' > $HOME/.bashrc
     # source .bashrc
     . $HOME/.bashrc || return $?
     # init .ssh/authorized_keys.root
@@ -171,6 +171,13 @@ shDockerStart() {
 shDockerStopAll() {
     # this function will stop all docker containers
     docker stop $(docker ps -aq) || return $?
+}
+
+shDsStoreRm() {
+    # this function will recursively rm .DS_Store from the current dir
+    # http://stackoverflow.com/questions/2016844/bash-recursively-remove-files
+    find . -name "._*" -print0 | xargs -0 rm || return $?
+    find . -name ".DS_Store" -print0 | xargs -0 rm || return $?
 }
 
 shEc2MountData() {
