@@ -461,7 +461,7 @@ npm_config_mode_auto_restart=1 \
 npm_config_mode_auto_restart_child=1 \
 ./index.sh test test.js"
     },
-    "version": "2015.8.1"
+    "version": "2015.8.2"
 }
 ```
 
@@ -475,12 +475,10 @@ npm_config_mode_auto_restart_child=1 \
 
 
 
-# change since c1ca5694
-- npm publish 2015.8.1
-- use svg for text screen-capture
-- add utility2.docApiCreate to auto-create api-doc from index.js
-- integrate example.js into test.js
-- update dependencies
+# change since 2b5fc07d
+- npm publish 2015.8.2
+- add module-alias param to options object in utility2.docApiCreate
+- add utility2.stringHtmlSafe
 - none
 
 
@@ -537,7 +535,7 @@ shBuild() {
 
     # create api-doc
     shDocApiCreate \
-        '{moduleDict:{utility2:require("./index.js")}}' || return $?
+        '{moduleDict:{utility2:{module:require("./index.js")}}}' || return $?
 
     # if running legacy-node, then do not continue
     [ "$(node --version)" \< "v0.12" ] && return

@@ -132,7 +132,7 @@ shDocApiCreate() {
     mkdir -p $npm_config_dir_build/coverage.html || return $?
     node -e "
         var options;
-        options = $1;
+        options = $1$2$3$4$5$6$7$8;
         options.fs = require('fs');
         options.utility2 = require('$npm_config_dir_utility2');
         // init example

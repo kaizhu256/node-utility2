@@ -321,12 +321,12 @@
             local.utility2.nop(options);
             data = local.utility2.docApiCreate({
                 example: local.utility2.testRun.toString().replace((/;/g), ';\n    '),
-                moduleDict: { utility2: local.utility2 }
+                moduleDict: { utility2: { module: local.utility2 } }
             });
             // validate data
             local.utility2.assert(new RegExp('\n' +
                 '<h2><a href="#element.utility2.nop" id="element.utility2.nop">\n' +
-                'function utility2.nop\n' +
+                'function <span class="docApiSignatureSpan">utility2.</span>nop\n' +
                 '<span class="docApiSignatureSpan">\\(\\)</span>\n' +
                 '</a></h2>\n' +
                 '<ul>\n' +

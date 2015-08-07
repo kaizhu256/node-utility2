@@ -47,19 +47,18 @@
             /*
              * this function will create an html api-doc from the given options
              */
-            var element, elementCreate, elementName, module, moduleName, trimLeft;
+            var element, elementCreate, elementName, module, moduleAlias, moduleName, trimLeft;
             elementCreate = function () {
                 element = {};
                 element.id = encodeURIComponent('element.' + moduleName + '.' + elementName);
-                element.name = moduleName + '.' + elementName;
+                element.name = 'function <span class="docApiSignatureSpan">' + moduleName +
+                    '.</span>' + elementName;
                 // init source
                 element.source = trimLeft(module[elementName].toString());
                 if (element.source.length > 4096) {
                     element.source = element.source.slice(0, 4096).trimRight() + ' ...';
                 }
-                element.source = element.source
-                    .replace((/</g), '&lt;')
-                    .replace((/>/g), '&gt;')
+                element.source = local.utility2.stringHtmlSafe(element.source)
                     .replace(
                         (/( *?\/\*[\S\s]*?\*\/\n)/),
                         '<span class="docApiCodeCommentSpan">$1</span>'
@@ -67,16 +66,16 @@
                 // init example
                 element.example = 'none';
                 options.example.replace(
-                    new RegExp('((?:\n.*?){8}\\b)(' + element.name + ')(\\((?:.*?\n){8})'),
+                    new RegExp('((?:\n.*?){8}\\b)(' + moduleAlias + '.' + elementName +
+                        ')(\\((?:.*?\n){8})'),
                     function (match0, match1, match2, match3) {
                         // jslint-hack
                         local.utility2.nop(match0);
-                        element.example = trimLeft(match1
-                            .replace((/</g), '&lt;')
-                            .replace((/>/g), '&gt;') + '<span class="docApiCodeKeywordSpan">' +
-                            match2 + '</span>' + match3
-                            .replace((/</g), '&lt;')
-                            .replace((/>/g), '&gt;')).trimRight();
+                        element.example = '...' + trimLeft(
+                            local.utility2.stringHtmlSafe(match1) +
+                                '<span class="docApiCodeKeywordSpan">' + match2 + '</span>' +
+                                local.utility2.stringHtmlSafe(match3)
+                        ).trimRight() + '\n...';
                     }
                 );
                 element.signature = (/\([\S\s]*?\)/).exec(element.source)[0];
@@ -96,7 +95,9 @@
                 .sort()
                 .map(function (key) {
                     moduleName = key;
-                    module = options.moduleDict[moduleName];
+                    // init alias
+                    moduleAlias = options.moduleDict[moduleName].alias || moduleName;
+                    module = options.moduleDict[moduleName].module;
                     return {
                         elementList: Object.keys(module)
                             .filter(function (key) {
@@ -563,7 +564,7 @@
                         value = encodeURIComponent(value);
                         break;
                     case 'htmlSafe':
-                        value = String(value).replace((/</g), '&lt;').replace((/>/g), '&gt;');
+                        value = local.utility2.stringHtmlSafe(String(value));
                         break;
                     case 'json':
                         value = JSON.stringify(value);
@@ -572,6 +573,14 @@
                 });
                 return String(value);
             });
+        };
+
+        local.utility2.stringHtmlSafe = function (text) {
+            /*
+             * this function will replace '<' to '&lt;' and '>' to '&gt;' in the text,
+             * to make it htmlSafe
+             */
+            return text.replace((/</g), '&lt;').replace((/>/g), '&gt;');
         };
 
         local.utility2.taskRunCached = function (options, onError) {
@@ -2828,7 +2837,7 @@ local.utility2['/doc/doc.html.template'] = '<style>\n' +
     '<li><a href="#{{id}}">module {{name}}</a><ul>\n' +
     '{{#elementList}}\n' +
         '<li><a class="docApiElementLiA" href="#{{id}}">\n' +
-        'function {{name htmlSafe}}\n' +
+        '{{name}}\n' +
         '<span class="docApiSignatureSpan">{{signature}}</span>\n' +
         '</a></li>\n' +
     '{{/elementList}}\n' +
@@ -2840,7 +2849,7 @@ local.utility2['/doc/doc.html.template'] = '<style>\n' +
     '<h1><a href="#{{id}}" id="{{id}}">module {{name}}</a></h1>\n' +
     '{{#elementList}}\n' +
         '<h2><a href="#{{id}}" id="{{id}}">\n' +
-            'function {{name htmlSafe}}\n' +
+            '{{name}}\n' +
             '<span class="docApiSignatureSpan">{{signature}}</span>\n' +
         '</a></h2>\n' +
         '<ul>\n' +
