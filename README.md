@@ -37,6 +37,13 @@ run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
 
 
 
+# documentation
+- [api-doc](https://kaizhu256.github.io/node-utility2/build/doc.api.html)
+
+[![heroku.com test-server](https://kaizhu256.github.io/node-utility2/build/screen-capture.docApiCreate.slimerjs._2Fhome_2Ftravis_2Fbuild_2Fkaizhu256_2Fnode-utility2_2Ftmp_2Fbuild_2Fdoc.api.html.png)](https://kaizhu256.github.io/node-utility2/build/doc.api.html)
+
+
+
 # quickstart interactive example
 
 #### to run this example, follow the instruction in the script below
@@ -65,7 +72,7 @@ shExampleSh
 ```
 
 #### output from shell
-[![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleSh.png)](https://travis-ci.org/kaizhu256/node-utility2)
+[![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleSh.svg)](https://travis-ci.org/kaizhu256/node-utility2)
 
 #### output from phantomjs-lite
 [![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleSh.slimerjs..png)](https://hrku01-utility2-beta.herokuapp.com)
@@ -103,26 +110,14 @@ instruction
     stupid: true
 */
 
-(function () {
+(function (local) {
     'use strict';
-    var local;
-
-
-
-    // run shared js-env code
-    (function () {
-        // init local
-        local = {};
-        // init utility2
-        local.utility2 = typeof window === 'object'
-            ? window.utility2
-            : require('utility2');
-    }());
+    switch (local.modeJs) {
 
 
 
     // run browser js-env code
-    if (typeof window === 'object') {
+    case 'browser':
         // init tests
         local.testCase_ajax_200 = function (options, onError) {
             /*
@@ -166,12 +161,17 @@ instruction
             });
         };
         // run test
-        local.utility2.testRun(local);
+        window.utility2.onReady.counter += 1;
+        setTimeout(function () {
+            window.utility2.testRun(local);
+            window.utility2.onReady();
+        });
+        break;
 
 
 
     // run node js-env code
-    } else {
+    case 'node':
         // init node tests
         local.testCase_phantomTest_default = function (options, onError) {
             /*
@@ -185,6 +185,8 @@ instruction
                     '?modeTest=phantom'
             }, onError);
         };
+        // export local
+        module.exports = local;
         // mock package.json env
         process.env.npm_package_description = 'this is an example module';
         process.env.npm_package_name = 'example-module';
@@ -192,12 +194,8 @@ instruction
         // require modules
         local.fs = require('fs');
         // init assets
-        local['/'] = (String() +
-
-
-
+        local.utility2.cacheDict.assets['/'] = ('<!DOCTYPE html>\n' +
 /* jslint-ignore-begin */
-'<!DOCTYPE html>\n' +
 '<html>\n' +
 '<head>\n' +
 '    <meta charset="UTF-8">\n' +
@@ -316,15 +314,12 @@ instruction
 '        window.istanbul_lite.coverTextarea();\n' +
 '    }\n' +
 '    </script>\n' +
+'    <script src="/assets/example.js"></script>\n' +
 '    <script src="/test/test.js"></script>\n' +
 '    {{envDict.npm_config_html_body_extra}}\n' +
 '</body>\n' +
-'</html>\n' +
 /* jslint-ignore-end */
-
-
-
-        String()).replace((/\{\{envDict\.\w+?\}\}/g), function (match0) {
+        '</html>\n').replace((/\{\{envDict\.\w+?\}\}/g), function (match0) {
             switch (match0) {
             case '{{envDict.npm_package_description}}':
                 return process.env.npm_package_description;
@@ -336,54 +331,73 @@ instruction
                 return '';
             }
         });
-        local['/assets/istanbul-lite.js'] =
+        local.utility2.cacheDict.assets['/assets/example.js'] =
+            local.utility2.istanbul_lite.instrumentSync(
+                local.fs.readFileSync(__dirname + '/example.js', 'utf8'),
+                __dirname + '/example.js'
+            );
+        local.utility2.cacheDict.assets['/assets/istanbul-lite.js'] =
             local.utility2.istanbul_lite['/assets/istanbul-lite.js'];
-        local['/assets/jslint-lite.js'] =
+        local.utility2.cacheDict.assets['/assets/jslint-lite.js'] =
             local.utility2.jslint_lite['/assets/jslint-lite.js'];
-        local['/assets/utility2.css'] =
-            local.utility2.cacheDict.assets['/assets/utility2.css'];
-        local['/assets/utility2.js'] =
-            local.utility2.cacheDict.assets['/assets/utility2.js'];
-        local['/test/hello'] = 'hello';
-        local['/test/test.js'] = local.utility2.istanbul_lite.instrumentSync(
-            local.fs.readFileSync(__filename, 'utf8'),
-            __filename
-        );
+        local.utility2.cacheDict.assets['/test/hello'] = 'hello';
         // init middleware
         local.middleware = local.utility2.middlewareGroupCreate([
             local.utility2.middlewareInit,
-            function (request, response, nextMiddleware) {
-                /*
-                 * this will run the test-middleware
-                 */
-                switch (request.urlParsed.pathnameNormalized) {
-                // serve assets
-                case '/':
-                case '/assets/istanbul-lite.js':
-                case '/assets/jslint-lite.js':
-                case '/assets/utility2.css':
-                case '/assets/utility2.js':
-                case '/test/hello':
-                case '/test/test.js':
-                    response.end(local[request.urlParsed.pathnameNormalized]);
-                    break;
-                // default to nextMiddleware
-                default:
-                    nextMiddleware();
-                }
-            }
+            local.utility2.middlewareAssetsCached
         ]);
         // init error-middleware
         local.middlewareError = local.utility2.middlewareError;
         // run server-test
         local.utility2.testRunServer(local);
+        break;
     }
-    return;
-}());
+}((function () {
+    'use strict';
+    var local;
+
+
+
+    // run shared js-env code
+    (function () {
+        // init local
+        local = {};
+        // init js-env
+        local.modeJs = (function () {
+            try {
+                return module.exports &&
+                    typeof process.versions.node === 'string' &&
+                    typeof require('http').createServer === 'function' &&
+                    'node';
+            } catch (errorCaughtNode) {
+                return typeof navigator.userAgent === 'string' &&
+                    typeof document.querySelector('body') === 'object' &&
+                    'browser';
+            }
+        }());
+        // init global
+        local.global = local.modeJs === 'browser'
+            ? window
+            : global;
+        // export local
+        local.global.local = local;
+        // init utility2
+        local.utility2 = local.modeJs === 'browser'
+            ? window.utility2
+            : require('utility2');
+        // import utility2.local
+        Object.keys(local.utility2.local).forEach(function (key) {
+            local[key] = local[key] || local.utility2.local[key];
+        });
+        // init onReady
+        local.utility2.onReadyInit();
+    }());
+    return local;
+}())));
 ```
 
 #### output from shell
-[![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleJs.png)](https://travis-ci.org/kaizhu256/node-utility2)
+[![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleJs.svg)](https://travis-ci.org/kaizhu256/node-utility2)
 
 #### output from utility2
 [![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleSh.slimerjs._2Ftmp_2Fapp_2Ftmp_2Fbuild_2Ftest-report.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/test-report.html)
@@ -400,7 +414,7 @@ instruction
 
 
 # package-listing
-[![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.gitLsTree.png)](https://github.com/kaizhu256/node-utility2)
+[![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.gitLsTree.svg)](https://github.com/kaizhu256/node-utility2)
 
 
 
@@ -410,13 +424,13 @@ instruction
     "author": "kai zhu <kaizhu256@gmail.com>",
     "bin": { "utility2" : "index.sh" },
     "dependencies": {
-        "istanbul-lite": "^2015.6.1",
-        "jslint-lite": "^2015.6.2"
+        "istanbul-lite": "^2015.6.2",
+        "jslint-lite": "^2015.6.3"
     },
     "description": "run dynamic browser tests with coverage \
 (via istanbul-lite and phantomjs-lite)",
     "devDependencies": {
-        "phantomjs-lite": "^2015.6.1"
+        "phantomjs-lite": "^2015.7.1"
     },
     "engines": { "node": ">=0.10 <=0.12" },
     "keywords": [
@@ -439,6 +453,7 @@ instruction
     },
     "scripts": {
         "build-ci": "./index.sh shRun shReadmeBuild",
+        "postinstall": "./index.sh shRun shReadmeExportPackageJson",
         "start": "npm_config_mode_auto_restart=1 ./index.sh shRun node test.js",
         "test": "./index.sh shRun shReadmeExportPackageJson && \
 export npm_config_file_start=index.js && \
@@ -446,7 +461,7 @@ npm_config_mode_auto_restart=1 \
 npm_config_mode_auto_restart_child=1 \
 ./index.sh test test.js"
     },
-    "version": "2015.7.10"
+    "version": "2015.8.1"
 }
 ```
 
@@ -454,23 +469,24 @@ npm_config_mode_auto_restart_child=1 \
 
 # todo
 - create flamegraph from istanbul coverage
-- auto-generate help doc from README.md
 - add server stress test using phantomjs
 - minify /assets/utility2.js in production-mode
 - none
 
 
 
-# change since 4d357a90
-- npm publish 2015.7.10
-- fix shell command shBaseInstall
-- add shell command shDsStoreRm
+# change since c1ca5694
+- npm publish 2015.8.1
+- use svg for text screen-capture
+- add utility2.docApiCreate to auto-create api-doc from index.js
+- integrate example.js into test.js
+- update dependencies
 - none
 
 
 
 # changelog of last 50 commits
-[![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.gitLog.png)](https://github.com/kaizhu256/node-utility2/commits)
+[![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.gitLog.svg)](https://github.com/kaizhu256/node-utility2/commits)
 
 
 
@@ -495,8 +511,8 @@ shBuild() {
 
     # test example js script
     MODE_BUILD=testExampleJs \
-    MODE_NO_LINENO=1 \
-        shRunScreenCapture shReadmeTestJs example.js || return $?
+    MODE_NO_LINENO=1 shRunScreenCapture \
+        shReadmeTestJs example.js || return $?
     # screen-capture example.js coverage
     MODE_BUILD=testExampleJs shPhantomScreenCapture \
         /tmp/app/tmp/build/coverage.html/app/example.js.html || return $?
@@ -509,8 +525,8 @@ shBuild() {
 
     # test example shell script
     export npm_config_timeout_exit=1000 || return $?
-    MODE_BUILD=testExampleSh \
-        shRunScreenCapture shReadmeTestSh example.sh || return $?
+    MODE_BUILD=testExampleSh shRunScreenCapture \
+        shReadmeTestSh example.sh || return $?
     unset npm_config_timeout_exit || return $?
     # save screen-capture
     cp /tmp/app/node_modules/$npm_package_name/tmp/build/screen-capture.*.png \
@@ -518,6 +534,10 @@ shBuild() {
 
     # run npm-test
     MODE_BUILD=npmTest shRunScreenCapture npm test || return $?
+
+    # create api-doc
+    shDocApiCreate \
+        '{moduleDict:{utility2:require("./index.js")}}' || return $?
 
     # if running legacy-node, then do not continue
     [ "$(node --version)" \< "v0.12" ] && return

@@ -4,6 +4,7 @@
     maxlen: 96,
     node: true,
     nomen: true,
+    regexp: true,
     stupid: true
 */
 (function (local) {
@@ -18,6 +19,10 @@
             /*
              * this function will test ajax's abort handling-behavior
              */
+            if (!options) {
+                onError();
+                return;
+            }
             options = local.utility2.ajax({ url: '/test/timeout' }, function (error) {
                 local.utility2.testTryCatch(function () {
                     // validate error occurred
@@ -36,6 +41,10 @@
              */
             // jslint-hack
             local.utility2.nop(options);
+            if (!options) {
+                onError();
+                return;
+            }
             // test http GET handling-behavior
             local.utility2.ajax({
                 // test debug handling-behavior
@@ -66,11 +75,53 @@
             });
         };
 
+        local.testCase_ajax_default = function (options, onError) {
+            /*
+             * this function will test ajax's default handling-behavior
+             */
+            var modeNext, onNext;
+            // jslint-hack
+            local.utility2.nop(options);
+            modeNext = 0;
+            onNext = function (error) {
+                local.utility2.testTryCatch(function () {
+                    // validate no error occurred
+                    local.utility2.assert(!error, error);
+                    modeNext += 1;
+                    switch (modeNext) {
+                    case 1:
+                        // test ajax's POST handling-behavior
+                        local.testCase_ajax_post({}, onNext);
+                        break;
+                    case 2:
+                        // test ajax's cache handling-behavior
+                        local.testCase_ajax_cache({}, onNext);
+                        break;
+                    case 3:
+                        // test ajax's error handling-behavior
+                        local.testCase_ajax_error({}, onNext);
+                        break;
+                    case 4:
+                        // test ajax's abort handling-behavior
+                        local.testCase_ajax_abort({}, onNext);
+                        break;
+                    default:
+                        onError(error);
+                    }
+                }, onError);
+            };
+            onNext();
+        };
+
         local.testCase_ajax_error = function (options, onError) {
             /*
              * this function will test ajax's error handling-behavior
              */
             var onParallel;
+            if (!options) {
+                onError();
+                return;
+            }
             // jslint-hack
             local.utility2.nop(options);
             onParallel = local.utility2.onParallel(onError);
@@ -112,6 +163,10 @@
             var data, onParallel;
             // jslint-hack
             local.utility2.nop(options);
+            if (!options) {
+                onError();
+                return;
+            }
             onParallel = local.utility2.onParallel(onError);
             onParallel.counter += 1;
             // test /test/body handling-behavior
@@ -254,6 +309,29 @@
                 );
                 onError();
             }, onError);
+        };
+
+        local.testCase_docApiCreate_default = function (options, onError) {
+            /*
+             * this function will test docApiCreate's default handling-behavior
+             */
+            /*jslint evil: true*/
+            var data;
+            // jslint-hack
+            local.utility2.nop(options);
+            data = local.utility2.docApiCreate({
+                example: local.utility2.testRun.toString().replace((/;/g), ';\n    '),
+                moduleDict: { utility2: local.utility2 }
+            });
+            // validate data
+            local.utility2.assert(new RegExp('\n' +
+                '<h2><a href="#element.utility2.nop" id="element.utility2.nop">\n' +
+                'function utility2.nop\n' +
+                '<span class="docApiSignatureSpan">\\(\\)</span>\n' +
+                '</a></h2>\n' +
+                '<ul>\n' +
+                '<li>description and source code<pre class="docApiCodePre">').test(data), data);
+            onError();
         };
 
         local.testCase_jsonCopy_default = function (options, onError) {
@@ -540,10 +618,10 @@
             local.utility2.assert(data === '{{aa}}', data);
             // test default handling-behavior
             data = local.utility2.stringFormat(
-                '{{aa}}{{aa json}}{{bb}}{{cc}}{{dd}}{{ee.ff}}',
+                '{{aa}}{{aa json htmlSafe encodeURIComponent}}{{bb}}{{cc}}{{dd}}{{ee.ff}}',
                 {
                     // test string value handling-behavior
-                    aa: 'aa',
+                    aa: '<aa>',
                     // test non-string value handling-behavior
                     bb: 1,
                     // test null-value handling-behavior
@@ -555,7 +633,8 @@
                 },
                 '<undefined>'
             );
-            local.utility2.assert(data === 'aa"aa"1null<undefined>gg', data);
+            local.utility2
+                .assert(data === '<aa>%22%26lt%3Baa%26gt%3B%221null<undefined>gg', data);
             // test list handling-behavior
             data = local.utility2.stringFormat(
                 '[{{#list1}}[{{#list2}}{{aa}},{{/list2}}],{{/list1}}]',
@@ -1237,8 +1316,6 @@
         local.utility2.testRun();
         // restore modeTest
         local.utility2.modeTest = local._modeTest;
-        // run test
-        local.utility2.testRun(local);
         break;
 
 
@@ -1246,102 +1323,80 @@
     // run node js-env code
     case 'node':
         // init assets
-        local.utility2.cacheDict.assets['/'] =
-            local.utility2.cacheDict.assets['/test/test.html'] =
-            local.utility2.stringFormat(local.fs
-                .readFileSync(__dirname + '/README.md', 'utf8')
-                // extract html
-                .replace((/[\S\s]+?(<!DOCTYPE html>[\S\s]+?<\/html>)[\S\s]+/), '$1')
-                // parse '\' line-continuation
-                .replace((/\\\n/g), '')
-                // remove "\\n' +" and "'"
-                .replace((/\\n' \+(\s*?)'/g), '$1'), { envDict: local.utility2.envDict }, '');
-        local.utility2.cacheDict.assets['/test/hello'] = 'hello';
         local.utility2.cacheDict.assets['/test/script-error.html'] =
             '<script>syntax error</script>';
         local.utility2.cacheDict.assets['/test/script-only.html'] =
             '<h1>script-only test</h1>\n' +
             '<script src="/assets/utility2.js">\n' +
-            '</script><script src="/test/test.js"></script>';
+            '</script><script src="/assets/example.js"></script>\n' +
+            '</script><script src="/test/test.js"></script>\n';
         local.utility2.cacheDict.assets['/test/test.js'] =
             local.utility2.istanbul_lite.instrumentInPackage(
                 local.fs.readFileSync(__filename, 'utf8'),
                 __filename,
                 'utility2'
             );
-        // init middleware
-        local.middleware = local.utility2.middlewareGroupCreate([
-            local.utility2.middlewareInit,
-            function (request, response, nextMiddleware) {
-                /*
-                 * this function will run the test-middleware
-                 */
-                // set main-page content-type to text/html
-                if (request.urlParsed.pathnameNormalized === '/') {
-                    local.utility2.serverRespondHeadSet(request, response, null, {
-                        'Content-Type': 'text/html; charset=UTF-8'
-                    });
-                }
-                switch (request.urlParsed.pathnameNormalized) {
-                // test http POST handling-behavior
-                case '/test/echo':
-                    // test response header handling-behavior
-                    local.utility2.serverRespondHeadSet(request, response, null, {
-                        'X-Response-Header-Test': 'bye'
-                    });
-                    local.utility2.serverRespondEcho(request, response);
-                    break;
-                // test http POST handling-behavior
-                case '/test/body':
-                    // test request-body handling-behavior
-                    local.utility2.middlewareBodyGet(request, response, function () {
-                        // test request-body race-condition handling-behavior
-                        local.utility2
-                            .middlewareBodyGet(request, response, function () {
-                                response.end(request.bodyRaw);
-                            });
-                    });
-                    break;
-                // test 500-internal-server-error handling-behavior
-                case '/test/error-500':
-                    // test multiple-callback serverRespondHeadSet handling-behavior
-                    local.utility2.serverRespondHeadSet(request, response, null, {});
-                    nextMiddleware(local.utility2.errorDefault);
-                    // test multiple-callback error handling-behavior
-                    nextMiddleware(local.utility2.errorDefault);
-                    // test onErrorDefault handling-behavior
-                    local.utility2.testMock([
-                        // suppress console.error
-                        [console, { error: local.utility2.nop }]
-                    ], function (onError) {
-                        var error;
-                        error = new Error('error');
-                        error.statusCode = 500;
-                        local.middlewareError(error, request, response);
-                        onError();
-                    }, local.utility2.nop);
-                    break;
-                // test undefined-error handling-behavior
-                case '/test/error-undefined':
-                    local.utility2.serverRespondDefault(request, response, 999);
-                    break;
-                // test timeout handling-behavior
-                case '/test/timeout':
-                    setTimeout(function () {
-                        response.end();
-                    }, 1000);
-                    break;
-                // default to nextMiddleware
-                default:
-                    nextMiddleware();
-                }
-            },
-            local.utility2.middlewareAssetsCached
-        ]);
+        // init test-middleware
+        local.middleware.middlewareList.push(function (request, response, nextMiddleware) {
+            /*
+             * this function will run the test-middleware
+             */
+            switch (request.urlParsed.pathnameNormalized) {
+            // test http POST handling-behavior
+            case '/test/echo':
+                // test response header handling-behavior
+                local.utility2.serverRespondHeadSet(request, response, null, {
+                    'X-Response-Header-Test': 'bye'
+                });
+                local.utility2.serverRespondEcho(request, response);
+                break;
+            // test http POST handling-behavior
+            case '/test/body':
+                // test request-body handling-behavior
+                local.utility2.middlewareBodyGet(request, response, function () {
+                    // test request-body race-condition handling-behavior
+                    local.utility2
+                        .middlewareBodyGet(request, response, function () {
+                            response.end(request.bodyRaw);
+                        });
+                });
+                break;
+            // test 500-internal-server-error handling-behavior
+            case '/test/error-500':
+                // test multiple-callback serverRespondHeadSet handling-behavior
+                local.utility2.serverRespondHeadSet(request, response, null, {});
+                nextMiddleware(local.utility2.errorDefault);
+                // test multiple-callback error handling-behavior
+                nextMiddleware(local.utility2.errorDefault);
+                // test onErrorDefault handling-behavior
+                local.utility2.testMock([
+                    // suppress console.error
+                    [console, { error: local.utility2.nop }]
+                ], function (onError) {
+                    var error;
+                    error = new Error('error');
+                    error.statusCode = 500;
+                    local.middlewareError(error, request, response);
+                    onError();
+                }, local.utility2.nop);
+                break;
+            // test undefined-error handling-behavior
+            case '/test/error-undefined':
+                local.utility2.serverRespondDefault(request, response, 999);
+                break;
+            // test timeout handling-behavior
+            case '/test/timeout':
+                setTimeout(function () {
+                    response.end();
+                }, 1000);
+                break;
+            // default to nextMiddleware
+            default:
+                nextMiddleware();
+            }
+        });
         // init error-middleware
         local.middlewareError = local.utility2.middlewareError;
-        // run server-test
-        local.utility2.testRunServer(local);
         // jslint dir
         [
             __dirname,
@@ -1393,6 +1448,7 @@
     (function () {
         // init local
         local = {};
+        // init js-env
         local.modeJs = (function () {
             try {
                 return module.exports &&
@@ -1405,22 +1461,43 @@
                     'browser';
             }
         }());
-        // init global
-        local.global = local.modeJs === 'browser'
-            ? window
-            : global;
-        // export local
-        local.global.local = local;
-        // init utility2
-        local.utility2 = local.modeJs === 'browser'
-            ? window.utility2
-            : require('./index.js');
-        // init onReady
-        local.utility2.onReadyInit();
-        // import utility2.local
-        Object.keys(local.utility2.local).forEach(function (key) {
-            local[key] = local[key] || local.utility2.local[key];
-        });
+        switch (local.modeJs) {
+        // re-init local from window.local
+        case 'browser':
+            local = window.local;
+            break;
+        // re-init local from example.js
+        case 'node':
+            [
+                process.cwd(),
+                // test dir !== __dirname handling-behavior
+                ''
+            ].forEach(function (dir) {
+                if (dir !== __dirname) {
+                    local = require(__dirname + '/example.js');
+                    return;
+                }
+                require('fs').writeFileSync(
+                    __dirname + '/example.js',
+                    require('fs').readFileSync(__dirname + '/README.md', 'utf8')
+                        // support syntax-highlighting
+                        .replace((/[\S\s]+?\n.*?example.js\s*?```\w*?\n/), function (match0) {
+                            // preserve lineno
+                            return match0.replace((/.+/g), '');
+                        })
+                        .replace((/\n```[\S\s]+/), '')
+                        // disable mock package.json env
+                        .replace(/(process.env.npm_package_\w+ = )/g, '// $1')
+                        // alias require('$npm_package_name') to require('index.js');
+                        .replace(
+                            "require('" + process.env.npm_package_name + "')",
+                            "require(__dirname + '/index.js')"
+                        )
+                );
+                local = require(__dirname + '/example.js');
+            });
+            break;
+        }
     }());
     return local;
 }())));

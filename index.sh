@@ -61,8 +61,6 @@ shBaseInstall() {
     done
     # create .bashrc
     printf '. $HOME/index.sh && shBaseInit' > $HOME/.bashrc
-    # source .bashrc
-    . $HOME/.bashrc || return $?
     # init .ssh/authorized_keys.root
     if [ -f $HOME/.ssh/authorized_keys.root ]
     then
@@ -128,6 +126,37 @@ shDebugArgv() {
     done
 }
 
+shDocApiCreate() {
+    # this function will create the api-doc
+    # init $npm_config_dir_build
+    mkdir -p $npm_config_dir_build/coverage.html || return $?
+    node -e "
+        var options;
+        options = $1;
+        options.fs = require('fs');
+        options.utility2 = require('$npm_config_dir_utility2');
+        // init example
+        options.example = [
+            'index.js',
+            'test.js',
+            'example.js'
+        ].map(function (file) {
+            file = '$CWD/' + file;
+            return options.fs.readFileSync(file, 'utf8');
+        }).join('\n\n\n\n\n\n\n\n');
+        // create doc.api.html
+        options.fs.writeFileSync(
+            '$npm_config_dir_build/doc.api.html',
+            options.utility2.docApiCreate(options)
+        );
+        process.exit();
+    " || return $?
+    shBuildPrint docApiCreate \
+        "created api-doc file://$npm_config_dir_build/doc.api.html" || return $?
+    # screen-capture api-doc
+    shPhantomScreenCapture file://$npm_config_dir_build/doc.api.html || return $?
+}
+
 shDockerInstall() {
     # this function will install docker
     # http://docs.docker.com/installation/ubuntulinux
@@ -140,6 +169,37 @@ shDockerRestart() {
     # this function will restart the docker container
     shDockerRm $1 || :
     shDockerStart $@ || return $?
+}
+
+shDockerRestartMongodb() {
+    # this function will restart the mongodb docker container
+    # https://registry.hub.docker.com/_/mongo/
+    local DIR || return $?
+    DIR=/mnt/data/mongodb.data.db || return $?
+    mkdir -p $DIR
+    shDockerRm mongodb || :
+    docker run --name mongodb -d -v $DIR:/data/db $@ \
+        mongo  --storageEngine=wiredTiger || return $?
+}
+
+shDockerRestartPptpd() {
+    # this function will restart the pptpd docker container
+    # https://github.com/whuwxl/docker-repos/tree/master/pptpd
+    local FILE || return $?
+    local PASSWORD || return $?
+    local USERNAME || return $?
+    FILE=/mnt/data/pptpd.etc.ppp.chap-secrets || return $?
+    PASSWORD=$2 || return $?
+    USERNAME=$1 || return $?
+    # init /etc/ppp/chap-secrets
+    if [ ! -f $FILE ]
+    then
+        printf "$USERNAME * $PASSWORD *" >> $FILE || return $?
+        chmod 600 $FILE || return $?
+    fi
+    shDockerRm pptpd || :
+    docker run --name pptpd --privileged -d -p 1723:1723 -v $FILE:/etc/ppp/chap-secrets:ro \
+        whuwxl/pptpd || return $?
 }
 
 shDockerRm() {
@@ -178,30 +238,7 @@ shDsStoreRm() {
     # http://stackoverflow.com/questions/2016844/bash-recursively-remove-files
     find . -name "._*" -print0 | xargs -0 rm || return $?
     find . -name ".DS_Store" -print0 | xargs -0 rm || return $?
-}
-
-shEc2MountData() {
-    # this function will mount ec2 data ebs from /dev/xvdf to /mnt/data
-    local DIR || return $?
-    for DIR in /mnt /mnt/var/lib/docker /mnt/data /mnt/local /mnt/old
-    do
-        umount $DIR || :
-        mkdir -p $DIR || return $?
-    done
-    # /dev/xvdb /mnt/local auto noatime
-    # /dev/xvdf /mnt/data auto noatime
-    # /mnt/var/lib/docker /var/lib/docker none defaults,bind
-    # mount -a || return $?
-    mount /dev/xvdb /mnt/local -o noatime || :
-    mount /dev/xvdf /mnt/data -o noatime || return $?
-    mkdir -p /var/lib/docker || return $?
-    mount /mnt/data/var/lib/docker /var/lib/docker -o bind || return $?
-    for DIR in /home/ubuntu /root /var/lib/docker
-    do
-        cp -a $DIR $DIR.00 2>/dev/null || :
-        rm -fr $DIR || return $?
-        ln -s /mnt/data/$DIR $DIR || return $?
-    done
+    find . -name "npm-debug.log" -print0 | xargs -0 rm || return $?
 }
 
 shExitCodeSave() {
@@ -286,6 +323,38 @@ shGitSquashShift() {
     git checkout $BRANCH || return $?
 }
 
+shGithubBranchSquashPop() {
+    # this function will squash the github $REPO-$BRANCH's HEAD to the given $COMMIT
+    local COMMIT || return $?
+    local BRANCH || return $?
+    local MESSAGE || return $?
+    local REPO || return $?
+    COMMIT=$3 || return $?
+    BRANCH=$2 || return $?
+    REPO=$1 || return $?
+    rm -fr /tmp/app || return $?
+    git clone $REPO --branch=$BRANCH --single-branch /tmp/app || return $?
+    cd /tmp/app || return $?
+    shGitSquashPop $COMMIT $MESSAGE || return $?
+    git push -f $REPO $BRANCH || return $?
+}
+
+shGithubBranchSquashShift() {
+    # this function will squash the github $REPO-$BRANCH's $RANGE to the first commit
+    local BRANCH || return $?
+    local MESSAGE || return $?
+    local RANGE || return $?
+    local REPO || return $?
+    BRANCH=$2 || return $?
+    RANGE=$3 || return $?
+    REPO=$1 || return $?
+    rm -fr /tmp/app || return $?
+    git clone $REPO --branch=$BRANCH --single-branch /tmp/app || return $?
+    cd /tmp/app || return $?
+    shGitSquashShift $RANGE $MESSAGE || return $?
+    git push -f $REPO $BRANCH || return $?
+}
+
 shGrep() {
     # this function will recursively grep $DIR for the $REGEXP
     local DIR || return $?
@@ -320,21 +389,21 @@ shGrepFileReplace() {
     local FILE || return $?
     FILE=$1
     node -e "
-        var local;
-        local = {};
-        local.fs = require('fs');
-        local.fileDict = {};
-        local.fs.readFileSync('$FILE', 'utf8').split('\n').forEach(function (element) {
+        var options;
+        options = {};
+        options.fs = require('fs');
+        options.fileDict = {};
+        options.fs.readFileSync('$FILE', 'utf8').split('\n').forEach(function (element) {
             element = (/^(.+?):(\d+?):(.+?)$/).exec(element);
             if (!element) {
                 return;
             }
-            local.fileDict[element[1]] = local.fileDict[element[1]] ||
-                local.fs.readFileSync(element[1], 'utf8').split('\n');
-            local.fileDict[element[1]][element[2] - 1] = element[3];
+            options.fileDict[element[1]] = options.fileDict[element[1]] ||
+                options.fs.readFileSync(element[1], 'utf8').split('\n');
+            options.fileDict[element[1]][element[2] - 1] = element[3];
         });
-        Object.keys(local.fileDict).forEach(function (key) {
-            local.fs.writeFileSync(key, local.fileDict[key].join('\n'));
+        Object.keys(options.fileDict).forEach(function (key) {
+            options.fs.writeFileSync(key, options.fileDict[key].join('\n'));
         });
     " || return $?
 }
@@ -463,8 +532,19 @@ shInit() {
     export PATH=$CWD/node_modules/phantomjs-lite:$PATH || return $?
 }
 
+shIptablesDockerInit() {
+    # this function will create an iptables DOCKER chain
+    # https://github.com/docker/docker/issues/1871
+    iptables -t nat -N DOCKER
+    iptables -t nat -A PREROUTING -m addrtype --dst-type LOCAL -j DOCKER
+    iptables -t nat -A PREROUTING -m addrtype --dst-type LOCAL ! --dst 127.0.0.0/8 -j DOCKER
+    iptables-save > /etc/iptables/rules.v4
+    ip6tables-save > /etc/iptables/rules.v6
+}
+
 shIptablesInit() {
-    # this function will init iptables
+    # this function will init iptables, and is intended for aws-ec2 setup
+
     # reset iptables
     # http://www.cyberciti.biz/tips/linux-iptables-how-to-flush-all-rules.html
     iptables -F
@@ -476,6 +556,7 @@ shIptablesInit() {
     iptables -P INPUT ACCEPT
     iptables -P FORWARD ACCEPT
     iptables -P OUTPUT ACCEPT
+
     # https://wiki.debian.org/iptables
     # Allows all loopback (lo0) traffic and drop all traffic to 127/8 that doesn't use lo0
     iptables -A INPUT -i lo -j ACCEPT
@@ -498,11 +579,8 @@ shIptablesInit() {
     #  remove -m icmp --icmp-type 8 from this line to allow all kinds of icmp:
     #  https://security.stackexchange.com/questions/22711
     iptables -A INPUT -p icmp -m icmp --icmp-type 8 -j ACCEPT
-    # log iptables denied calls (access via 'dmesg' command)
-    iptables -A INPUT -m limit --limit 5/min -j LOG --log-prefix "iptables denied: " --log-level 7
-    # Reject all other inbound - default deny unless explicitly allowed policy:
-    iptables -A INPUT -j REJECT
-    iptables -A FORWARD -j REJECT
+
+    # allow forwarding between docker0 and eth0
     # https://blog.andyet.com/2014/09/11/docker-host-iptables-forwarding
     # Forward chain between docker0 and eth0
     iptables -A FORWARD -i docker0 -o eth0 -j ACCEPT
@@ -510,16 +588,48 @@ shIptablesInit() {
     # IPv6 chain if needed
     ip6tables -A FORWARD -i docker0 -o eth0 -j ACCEPT
     ip6tables -A FORWARD -i eth0 -o docker0 -j ACCEPT
+    # create iptables DOCKER chain
+    # https://github.com/docker/docker/issues/1871
+    iptables -t nat -N DOCKER
+    iptables -t nat -A PREROUTING -m addrtype --dst-type LOCAL -j DOCKER
+    iptables -t nat -A PREROUTING -m addrtype --dst-type LOCAL ! --dst 127.0.0.0/8 -j DOCKER
+
+    # open iptables to pptp
+    # https://wiki.archlinux.org/index.php/PPTP_server#iptables_firewall_configuration
+    # Accept incoming connections to port 1723 (PPTP)
+    iptables -A INPUT -i ppp+ -j ACCEPT
+    iptables -A OUTPUT -o ppp+ -j ACCEPT
+    # Accept incoming connections to port 1723 (PPTP)
+    iptables -A INPUT -p tcp --dport 1723 -j ACCEPT
+    # Accept GRE packets
+    iptables -A INPUT -p 47 -j ACCEPT
+    iptables -A OUTPUT -p 47 -j ACCEPT
+    # Enable IP forwarding
+    iptables -F FORWARD
+    iptables -A FORWARD -j ACCEPT
+    # Enable NAT for eth0 и ppp* interfaces
+    iptables -A POSTROUTING -t nat -o eth0 -j MASQUERADE
+    iptables -A POSTROUTING -t nat -o ppp+ -j MASQUERADE
+
+    # log iptables denied calls (access via 'dmesg' command)
+    iptables -A INPUT -m limit --limit 5/min -j LOG --log-prefix "iptables denied: " \
+        --log-level 7
+    # Reject all other inbound - default deny unless explicitly allowed policy:
+    iptables -A INPUT -j REJECT
+    iptables -A FORWARD -j REJECT
     # iptables --list
     iptables -t nat -L -n -v
     iptables -L -n -v
-    # save iptables
+    # install iptables-persistent
     if [ ! -f /etc/iptables/rules.v4 ]
     then
         apt-get install -y iptables-persistent
     fi
+    # save iptables
     iptables-save > /etc/iptables/rules.v4
     ip6tables-save > /etc/iptables/rules.v6
+    # iptables-restore < /etc/iptables/rules.v4
+    # iptables-restore < /etc/iptables/rules.v6
 }
 
 shIstanbulCover() {
@@ -556,58 +666,33 @@ shJsonFilePrettify() {
     " || return $?
 }
 
-shMongodbInstall() {
-    if (mongod --version > /dev/null 2>&1)
-    then
-        return
-    fi
-    # this function will install mongodb
-    # http://docs.mongodb.org/manual/tutorial/install-mongodb-on-ubuntu/
-    # 1. Import the public key used by the package management system.
-    apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 7F0CEB10
-    # 2. Create a list file for MongoDB.
-    echo "deb http://repo.mongodb.org/apt/ubuntu "$(lsb_release -sc)"/mongodb-org/3.0 multiverse" | tee /etc/apt/sources.list.d/mongodb-org-3.0.list
-    # 3. Reload local package database.
-    apt-get update
-    # 4. Install the MongoDB packages.
-    apt-get install -y mongodb-org
-    # 5. Start MongoDB.
-    service mongod start
-}
-
-shNodeInstall() {
-    # this function will install node.js
-    # https://www.digitalocean.com/community/tutorials/how-to-install-node-js-on-an-ubuntu-14-04-server
-    if (node --version > /dev/null 2>&1)
-    then
-        return
-    fi
-    apt-get install -y build-essential libssl-dev python || return $?
-    curl https://raw.githubusercontent.com/creationix/nvm/v0.16.1/install.sh | sh || return $?
-    source ~/.profile || :
-    nvm install 0.12 || return $?
-    nvm use 0.12 || return $?
-    node --version > /dev/null 2>&1 || return $?
-}
-
-shNodeVersionMinor() {
-    # this function will print the node major and minor version x.y,
-    # with the patch version z stripped
-    printf $(node -e "
-        console.log((/\d+?\.\d+/).exec(process.version)[0]);
-    ") || return $?
-}
-
-shNpmTestPublished() {
-    # this function will run npm-test on the published package
-    shBuildPrint npmTestPublished "npm-testing published package $npm_package_name" || return $?
-    # init /tmp/app
-    rm -fr /tmp/app /tmp/node_modules && mkdir -p /tmp/app || return $?
-    cd /tmp/app || return $?
-    # npm install package
-    npm install $npm_package_name || return $?
-    # npm-test package
-    cd node_modules/$npm_package_name && npm install && npm test || return $?
+shMountData() {
+    # this function will mount /dev/xvdf to /mnt/data, and is intended for aws-ec2 setup
+    local IFS_OLD || return $?
+    local TMP || return $?
+    # mount optional /dev/xvdb
+    mkdir -p /mnt/local || return $?
+    mount /dev/xvdb /mnt/local -o noatime || :
+    # mount data /dev/xvdf
+    mkdir -p /mnt/data || return $?
+    mount /dev/xvdf /mnt/data -o noatime || :
+    # mount bind
+    # http://stackoverflow.com/questions/9713104/loop-over-tuples-in-bash
+    # save IFS
+    IFS_OLD="$IFS" || return $?
+    IFS="," || return $?
+    for TMP in \
+        /mnt/data/root,/root \
+        /mnt/data/tmp,/tmp \
+        /mnt/data/var.lib.docker,/var/lib/docker
+    do
+        set $TMP || return $?
+        mkdir -p $1 $2 || return $?
+        mount $1 $2 -o bind || :
+    done
+    chmod 1777 /tmp || :
+    # restore IFS
+    IFS_OLD="$IFS" || return $?
 }
 
 shNpmTest() {
@@ -671,21 +756,16 @@ shNpmTest() {
     return $EXIT_CODE
 }
 
-shPhantomInstall() {
-    # this function will install phantomjs
-    if ! (phantomjs --version > /dev/null 2>&1 && unzip > /dev/null 2>&1)
-    then
-        apt-get install -y phantomjs unzip || return $?
-    fi
-    shNodeInstall || return $?
-    local CWD || return $?
-    local EXIT_CODE || return $?
-    CWD=$(pwd) || return $?
-    cd $HOME || return $?
-    npm install phantomjs-lite || return $?
-    EXIT_CODE=$? || return $?
-    cd $CWD || return $?
-    return $EXIT_CODE || return $?
+shNpmTestPublished() {
+    # this function will run npm-test on the published package
+    shBuildPrint npmTestPublished "npm-testing published package $npm_package_name" || return $?
+    # init /tmp/app
+    rm -fr /tmp/app /tmp/node_modules && mkdir -p /tmp/app || return $?
+    cd /tmp/app || return $?
+    # npm install package
+    npm install $npm_package_name || return $?
+    # npm-test package
+    cd node_modules/$npm_package_name && npm install && npm test || return $?
 }
 
 shPhantomScreenCapture() {
@@ -887,39 +967,51 @@ shRunScreenCapture() {
     # /how-to-convert-a-command-line-result-into-an-image-in-linux/
     # init $npm_config_dir_build
     mkdir -p $npm_config_dir_build/coverage.html || return $?
-    export MODE_BUILD_SCREEN_CAPTURE=screen-capture.${MODE_BUILD-undefined}.png || return $?
+    export MODE_BUILD_SCREEN_CAPTURE=screen-capture.${MODE_BUILD-undefined}.svg || return $?
     shRun $@ 2>&1 | \
         tee $npm_config_dir_tmp/screen-capture.txt || return $?
     # save $EXIT_CODE and restore $CWD
     shExitCodeSave $(cat $npm_config_file_tmp) || return $?
     # format text-output
     node -e "
-        require('fs').writeFileSync(
-            '$npm_config_dir_tmp/screen-capture.txt',
-            require('fs').readFileSync('$npm_config_dir_tmp/screen-capture.txt', 'utf8')
-                // remove ansi escape-code
-                .replace((/\u001b.*?m/g), '')
-                // format unicode
-                .replace((/\\\\u[0-9a-f]{4}/g), function (match0) {
-                    return String.fromCharCode('0x' + match0.slice(-4));
-                })
-                .trimRight()
-        );
+        var options;
+        options = {};
+        options.fs = require('fs');
+        options.wordwrap = function (line, ii) {
+            if (ii && !line) {
+                return '';
+            }
+            options.yy += 16;
+            return '<tspan x=\"10\" y=\"' + options.yy + '\">' + line
+                .replace((/&/g), '&amp;')
+                .replace((/</g), '&lt;')
+                .replace((/>/g), '&gt;') + '</tspan>\n';
+        };
+        options.yy = 10;
+        options.result = (options.fs
+            .readFileSync('$npm_config_dir_tmp/screen-capture.txt', 'utf8')
+            // remove ansi escape-code
+            .replace((/\u001b.*?m/g), '')
+            // format unicode
+            .replace((/\\\\u[0-9a-f]{4}/g), function (match0) {
+                return String.fromCharCode('0x' + match0.slice(-4));
+            })
+            .trimRight() + '\n')
+            .replace((/(.*)\n/g), function (match0, line) {
+                return line
+                    .replace((/.{0,96}/g), options.wordwrap)
+                    .replace((/(<\/tspan>\n<tspan)/g), '\\\\\$1');
+            });
+        options.result = '<svg height=\"' + (options.yy + 20) +
+            '\" width=\"720\" xmlns=\"http://www.w3.org/2000/svg\">\n' +
+            '<rect height=\"' + (options.yy + 20) +
+                '\" fill=\"#555\" width=\"720\"></rect>\n' +
+            '<text fill=\"#7f7\" font-family=\"Courier New\" font-size=\"12\" ' +
+            'xml:space=\"preserve\">\n' +
+            options.result + '</text>\n</svg>\n';
+        options.fs
+            .writeFileSync('$npm_config_dir_build/$MODE_BUILD_SCREEN_CAPTURE', options.result);
     " || return $?
-    if (convert -list font | grep "\bCourier\b" > /dev/null 2>&1) && \
-        (fold package.json > /dev/null 2>&1)
-    then
-        # word-wrap $npm_config_dir_tmp/screen-capture.txt to 96 characters,
-        # and convert to png image
-        fold -w 96 $npm_config_dir_tmp/screen-capture.txt | \
-            convert -background gray25 -border 10 -bordercolor gray25 \
-            -depth 4 \
-            -fill palegreen -font Courier \
-            -pointsize 12 \
-            -quality 90 \
-            -type Palette \
-            label:@- $npm_config_dir_build/$MODE_BUILD_SCREEN_CAPTURE || return $?
-    fi
     return $EXIT_CODE
 }
 

@@ -43,6 +43,83 @@
             }
         };
 
+        local.utility2.docApiCreate = function (options) {
+            /*
+             * this function will create an html api-doc from the given options
+             */
+            var element, elementCreate, elementName, module, moduleName, trimLeft;
+            elementCreate = function () {
+                element = {};
+                element.id = encodeURIComponent('element.' + moduleName + '.' + elementName);
+                element.name = moduleName + '.' + elementName;
+                // init source
+                element.source = trimLeft(module[elementName].toString());
+                if (element.source.length > 4096) {
+                    element.source = element.source.slice(0, 4096).trimRight() + ' ...';
+                }
+                element.source = element.source
+                    .replace((/</g), '&lt;')
+                    .replace((/>/g), '&gt;')
+                    .replace(
+                        (/( *?\/\*[\S\s]*?\*\/\n)/),
+                        '<span class="docApiCodeCommentSpan">$1</span>'
+                    );
+                // init example
+                element.example = 'none';
+                options.example.replace(
+                    new RegExp('((?:\n.*?){8}\\b)(' + element.name + ')(\\((?:.*?\n){8})'),
+                    function (match0, match1, match2, match3) {
+                        // jslint-hack
+                        local.utility2.nop(match0);
+                        element.example = trimLeft(match1
+                            .replace((/</g), '&lt;')
+                            .replace((/>/g), '&gt;') + '<span class="docApiCodeKeywordSpan">' +
+                            match2 + '</span>' + match3
+                            .replace((/</g), '&lt;')
+                            .replace((/>/g), '&gt;')).trimRight();
+                    }
+                );
+                element.signature = (/\([\S\s]*?\)/).exec(element.source)[0];
+                return element;
+            };
+            trimLeft = function (text) {
+                var _;
+                _ = '';
+                text.trim().replace((/^ */gm), function (match0) {
+                    if (!_ || match0.length < _.length) {
+                        _ = match0;
+                    }
+                });
+                return text.replace(new RegExp('^' + _, 'gm'), '');
+            };
+            options.moduleList = Object.keys(options.moduleDict)
+                .sort()
+                .map(function (key) {
+                    moduleName = key;
+                    module = options.moduleDict[moduleName];
+                    return {
+                        elementList: Object.keys(module)
+                            .filter(function (key) {
+                                return key &&
+                                    key[0] !== '$' &&
+                                    key[0] !== '_' &&
+                                    typeof module[key] === 'function';
+                            })
+                            .sort()
+                            .map(function (key) {
+                                elementName = key;
+                                return elementCreate();
+                            }),
+                        id: 'module.' + moduleName,
+                        name: moduleName
+                    };
+                });
+            return local.utility2.stringFormat(
+                local.utility2['/doc/doc.html.template'],
+                options
+            );
+        };
+
         local.utility2.errorMessagePrepend = function (error, message) {
             /*
              * this function will prepend the message to error.message and error.stack
@@ -54,6 +131,20 @@
             } catch (ignore) {
             }
             return error;
+        };
+
+        local.utility2.exit = function (exitCode) {
+            /*
+             * this function will exit the current process with the given exitCode
+             */
+            switch (local.modeJs) {
+            case 'node':
+                process.exit(exitCode);
+                break;
+            case 'phantom':
+                local.global.phantom.exit(exitCode);
+                break;
+            }
         };
 
         local.utility2.istanbulMerge = function (coverage1, coverage2) {
@@ -176,6 +267,13 @@
             return list;
         };
 
+        local.utility2.nop = function () {
+            /*
+             * this function will run no operation - nop
+             */
+            return;
+        };
+
         local.utility2.objectSetDefault = function (options, defaults, depth) {
             /*
              * this function will recursively set default values for unset leaf nodes
@@ -269,6 +367,10 @@
         };
 
         local.utility2.onErrorExit = function (error) {
+            /*
+             * this function will exit the current process
+             * with a non-zero exit-code if an error occurred
+             */
             local.utility2.exit(!!error);
         };
 
@@ -450,13 +552,25 @@
                 argList[0].split('.').forEach(function (key) {
                     value = value && value[key];
                 });
-                return value === undefined
-                    ? (valueDefault === undefined
-                    ? match0
-                    : valueDefault)
-                    : (argList[1] === 'json'
-                    ? JSON.stringify(value)
-                    : value);
+                if (value === undefined) {
+                    return valueDefault === undefined
+                        ? match0
+                        : valueDefault;
+                }
+                argList.slice(1).forEach(function (arg) {
+                    switch (arg) {
+                    case 'encodeURIComponent':
+                        value = encodeURIComponent(value);
+                        break;
+                    case 'htmlSafe':
+                        value = String(value).replace((/</g), '&lt;').replace((/>/g), '&gt;');
+                        break;
+                    case 'json':
+                        value = JSON.stringify(value);
+                        break;
+                    }
+                });
+                return String(value);
             });
         };
 
@@ -808,10 +922,7 @@
             return local.utility2.stringFormat(
                 local.utility2['/test/test-report.html.template'],
                 local.utility2.objectSetOverride(testReport, {
-                    // security - sanitize '<' in string
-                    CI_COMMIT_INFO: String(
-                        local.utility2.envDict.CI_COMMIT_INFO
-                    ).replace((/</g), '&lt;'),
+                    CI_COMMIT_INFO: local.utility2.envDict.CI_COMMIT_INFO,
                     envDict: local.utility2.envDict,
                     // map testPlatformList
                     testPlatformList: testReport.testPlatformList
@@ -823,8 +934,7 @@
                             errorStackList = [];
                             return local.utility2.objectSetOverride(testPlatform, {
                                 errorStackList: errorStackList,
-                                // security - sanitize '<' in string
-                                name: String(testPlatform.name).replace((/</g), '&lt;'),
+                                name: testPlatform.name,
                                 screenCapture: testPlatform.screenCaptureImg
                                     ? '<a href="' + testPlatform.screenCaptureImg + '">' +
                                         '<img ' +
@@ -839,11 +949,8 @@
                                     testCaseNumber += 1;
                                     if (testCase.errorStack) {
                                         errorStackList.push({
-                                            errorStack: (
-                                                testCaseNumber + '. ' + testCase.name + '\n' +
-                                                    testCase.errorStack
-                                            // security - sanitize '<' in string
-                                            ).replace((/</g), '&lt;')
+                                            errorStack: testCaseNumber + '. ' + testCase.name +
+                                                '\n' + testCase.errorStack
                                         });
                                     }
                                     return local.utility2.objectSetOverride(testCase, {
@@ -903,7 +1010,11 @@
                  * this function will create the test-report after all tests have finished
                  */
                 // restore exit
-                local.utility2.exit = exit;
+                switch (local.modeJs) {
+                case 'node':
+                    process.exit = exit;
+                    break;
+                }
                 // init new-line separator
                 separator = new Array(56).join('-');
                 // stop testPlatform timer
@@ -956,8 +1067,7 @@
                 case 'node':
                     // create build badge
                     local.fs.writeFileSync(
-                        local.utility2.envDict.npm_config_dir_build +
-                            '/build.badge.svg',
+                        local.utility2.envDict.npm_config_dir_build + '/build.badge.svg',
                         local.utility2['/build/build.badge.svg']
                             // edit branch name
                             .replace(
@@ -1019,8 +1129,12 @@
             });
             onParallel.counter += 1;
             // mock exit
-            exit = local.utility2.exit;
-            local.utility2.exit = local.utility2.nop;
+            switch (local.modeJs) {
+            case 'node':
+                exit = process.exit;
+                process.exit = local.utility2.nop;
+                break;
+            }
             // init coverageReportCreate
             coverageReportCreate = (local.utility2.istanbul_lite &&
                 local.utility2.istanbul_lite.coverageReportCreate) ||
@@ -1540,7 +1654,7 @@
 
         local.utility2.middlewareAssetsCached = function (request, response, nextMiddleware) {
             /*
-             * this function will run the assets-middleware
+             * this function will run the cached-assets-middleware
              */
             var modeNext, onNext, result;
             modeNext = 0;
@@ -1704,7 +1818,7 @@
 
         local.utility2.fsRmrSync = function (dir) {
             /*
-             * this function will synchronously rm -fr the dir
+             * this function will synchronously 'rm -fr' the dir
              */
             local.child_process.spawnSync(
                 'rm',
@@ -1739,6 +1853,9 @@
         };
 
         local.utility2.middlewareError = function (error, request, response) {
+            /*
+             * this function will run the error-middleware
+             */
             // if error occurred, then respond with '500 Internal Server Error',
             // else respond with '404 Not Found'
             local.utility2.serverRespondDefault(request, response, error
@@ -2250,17 +2367,7 @@
             : local.modeJs === 'node'
             ? process.env
             : local.system.env;
-        local.utility2.envDict = local.modeJs === 'browser'
-            ? {}
-            : local.modeJs === 'node'
-            ? process.env
-            : local.system.env;
         local.utility2.errorDefault = new Error('default error');
-        local.utility2.exit = local.modeJs === 'browser'
-            ? local.nop
-            : local.modeJs === 'node'
-            ? process.exit
-            : local.global.phantom.exit;
         // http://www.w3.org/TR/html5/forms.html#valid-e-mail-address
         local.utility2.regexpEmailValidate = new RegExp(
             '^[a-zA-Z0-9.!#$%&\'*+\\/=?\\^_`{|}~\\-]+@' +
@@ -2310,7 +2417,7 @@
 
     // run browser js-env code
     case 'browser':
-        // export utility2
+        // init exports
         window.utility2 = local.utility2;
         break;
 
@@ -2318,7 +2425,7 @@
 
     // run node js-env code
     case 'node':
-        // export utility2
+        // init exports
         module.exports = local.utility2;
         module.exports.__dirname = __dirname;
         // require modules
@@ -2398,7 +2505,7 @@
              * this function will run the main error-handler
              * http://phantomjs.org/api/phantom/handler/on-error.html
              */
-            var data;
+            var data, exit;
             // handle notification that url has been opened
             if (error === 'success' && !trace) {
                 console.log(local.utility2.argv0 + ' - opened ' + local.utility2.url);
@@ -2445,7 +2552,8 @@
                     // test no coverage handling-behavior
                     local.coverAndExit(null, local.utility2.nop);
                     // disable exit
-                    local.utility2.exit = local.utility2.nop;
+                    exit = local.global.phantom.exit;
+                    local.global.phantom.exit = local.utility2.nop;
                     // test string error with no trace handling-behavior
                     local.onError('error', null);
                     // test string error
@@ -2454,7 +2562,7 @@
                     // test default error handling-behavior
                     local.onError(local.utility2.errorDefault);
                     // restore exit
-                    local.utility2.exit = local.global.phantom.exit;
+                    local.global.phantom.exit = exit;
                 }
                 local.coverAndExit(
                     local.global.__coverage__,
@@ -2532,6 +2640,7 @@
     (function () {
         // init local
         local = {};
+        // init js-env
         local.modeJs = (function () {
             try {
                 return self.phantom.version &&
@@ -2550,12 +2659,6 @@
                 }
             }
         }());
-        local.nop = function () {
-            /*
-             * this function will run no operation - nop
-             */
-            return;
-        };
         // init global
         local.global = local.modeJs === 'browser'
             ? window
@@ -2586,7 +2689,7 @@
             };
         };
         // init utility2
-        local.utility2 = { cacheDict: { assets: {} }, local: local, nop: local.nop };
+        local.utility2 = { cacheDict: { assets: {} }, local: local };
         // init istanbul_lite
         local.utility2.istanbul_lite = local.modeJs === 'browser'
             ? window.istanbul_lite
@@ -2599,9 +2702,6 @@
             : local.modeJs === 'node'
             ? require('jslint-lite')
             : null;
-
-
-
 /* jslint-indent-begin 8 */
 /*jslint maxlen: 256*/
 // init assets
@@ -2684,6 +2784,76 @@ local.utility2['/build/test-report.badge.svg'] = '<svg xmlns="http://www.w3.org/
 
 
 
+local.utility2['/doc/doc.html.template'] = '<style>\n' +
+    '.docApiDiv {\n' +
+        'font-family: Helvetical Neue, Helvetica, Arial, sans-serif;\n' +
+    '}\n' +
+    '.docApiDiv a {\n' +
+        'color: #55f;\n' +
+        'font-weight: bold;\n' +
+        'text-decoration: none;\n' +
+    '}\n' +
+    '.docApiDiv a:hover {\n' +
+        'text-decoration: underline;\n' +
+    '}\n' +
+    '.docApiSectionDiv {\n' +
+        'border-top: 1px solid;\n' +
+        'margin-top: 20px;\n' +
+    '}\n' +
+    '.docApiCodeCommentSpan {\n' +
+        'background-color: #bbf;\n' +
+        'color: #000;\n' +
+        'display: block;\n' +
+    '}\n' +
+    '.docApiCodeKeywordSpan {\n' +
+        'color: #f00;\n' +
+        'font-weight: bold;\n' +
+    '}\n' +
+    '.docApiCodePre {\n' +
+        'background-color: #eef;\n' +
+        'border: 1px solid;\n' +
+        'border-radius: 5px;\n' +
+        'color: #777;\n' +
+        'padding: 5px;\n' +
+        'white-space: pre-wrap;\n' +
+    '}\n' +
+    '.docApiSignatureSpan {\n' +
+        'color: #777;\n' +
+    '}\n' +
+    '</style>\n' +
+    '<div class="docApiDiv">\n' +
+    '<h1>api documentation</h1>\n' +
+    '<div class="docApiSectionDiv" id="toc"><h1>table of contents</h1><ul>\n' +
+    '{{#moduleList}}\n' +
+    '<li><a href="#{{id}}">module {{name}}</a><ul>\n' +
+    '{{#elementList}}\n' +
+        '<li><a class="docApiElementLiA" href="#{{id}}">\n' +
+        'function {{name htmlSafe}}\n' +
+        '<span class="docApiSignatureSpan">{{signature}}</span>\n' +
+        '</a></li>\n' +
+    '{{/elementList}}\n' +
+    '</ul></li>\n' +
+    '{{/moduleList}}\n' +
+    '</ul></div>\n' +
+    '{{#moduleList}}\n' +
+    '<div class="docApiSectionDiv">\n' +
+    '<h1><a href="#{{id}}" id="{{id}}">module {{name}}</a></h1>\n' +
+    '{{#elementList}}\n' +
+        '<h2><a href="#{{id}}" id="{{id}}">\n' +
+            'function {{name htmlSafe}}\n' +
+            '<span class="docApiSignatureSpan">{{signature}}</span>\n' +
+        '</a></h2>\n' +
+        '<ul>\n' +
+        '<li>description and source code<pre class="docApiCodePre">{{source}}</pre></li>\n' +
+        '<li>example usage<pre class="docApiCodePre">{{example}}</pre></li>\n' +
+        '</ul>\n' +
+    '{{/elementList}}\n' +
+    '</div>\n' +
+    '{{/moduleList}}\n' +
+    '</div>\n';
+
+
+
 local.utility2['/test/test-report.html.template'] = '<style>\n' +
     '.testReportPlatformDiv {\n' +
         'border: 1px solid;\n' +
@@ -2721,14 +2891,7 @@ local.utility2['/test/test-report.html.template'] = '<style>\n' +
         'text-align: left;\n' +
         'width: 100%;\n' +
     '}\n' +
-    '.testReportSummaryDiv {\n' +
-        'background-color: #bfb;\n' +
-    '}\n' +
-    '.testReportSummarySpan {\n' +
-        'display: inline-block;\n' +
-        'width: 6.5em;\n' +
-    '}\n' +
-    'tr:nth-child(odd).testReportPlatformTr {\n' +
+    '.testReportPlatformTr:nth-child(odd) {\n' +
         'background-color: #bfb;\n' +
     '}\n' +
     '.testReportTestFailed {\n' +
@@ -2737,6 +2900,13 @@ local.utility2['/test/test-report.html.template'] = '<style>\n' +
     '.testReportTestPending {\n' +
         'background-color: #99f;\n' +
     '}\n' +
+    '.testReportSummaryDiv {\n' +
+        'background-color: #bfb;\n' +
+    '}\n' +
+    '.testReportSummarySpan {\n' +
+        'display: inline-block;\n' +
+        'width: 6.5em;\n' +
+    '}\n' +
     '</style>\n' +
     '<div class="testReportPlatformDiv testReportSummaryDiv">\n' +
     '<h2>{{envDict.npm_package_name}} test-report summary</h2>\n' +
@@ -2744,7 +2914,8 @@ local.utility2['/test/test-report.html.template'] = '<style>\n' +
         '<span class="testReportSummarySpan">version</span>-\n' +
             '{{envDict.npm_package_version}}<br>\n' +
         '<span class="testReportSummarySpan">test date</span>- {{date}}<br>\n' +
-        '<span class="testReportSummarySpan">commit info</span>- {{CI_COMMIT_INFO}}<br>\n' +
+        '<span class="testReportSummarySpan">commit info</span>-\n' +
+            '{{CI_COMMIT_INFO htmlSafe}}<br>\n' +
     '</h4>\n' +
     '<table class="testReportPlatformTable">\n' +
     '<thead><tr>\n' +
@@ -2764,7 +2935,7 @@ local.utility2['/test/test-report.html.template'] = '<style>\n' +
     '{{#testPlatformList}}\n' +
     '<div class="testReportPlatformDiv">\n' +
     '<h4>\n' +
-        '{{testPlatformNumber}}. {{name}}<br>\n' +
+        '{{testPlatformNumber}}. {{name htmlSafe}}<br>\n' +
         '{{screenCapture}}\n' +
         '<span class="testReportPlatformSpan">time-elapsed</span>- {{timeElapsed}} ms<br>\n' +
         '<span class="testReportPlatformSpan">tests failed</span>- {{testsFailed}}<br>\n' +
@@ -2791,15 +2962,12 @@ local.utility2['/test/test-report.html.template'] = '<style>\n' +
     '</table>\n' +
     '<pre class="{{testReportPlatformPreClass}}">\n' +
     '{{#errorStackList}}\n' +
-    '{{errorStack}}\n' +
+    '{{errorStack htmlSafe}}\n' +
     '{{/errorStackList}}\n' +
     '</pre>\n' +
     '</div>\n' +
     '{{/testPlatformList}}\n';
 /* jslint-indent-end */
-
-
-
     }());
     return local;
 }(this))));
