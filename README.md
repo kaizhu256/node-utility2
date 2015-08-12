@@ -38,6 +38,8 @@ run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
 
 
 # documentation
+- requires imagemagick to be installed on os
+- requires unzip to be installed on os
 - [api-doc](https://kaizhu256.github.io/node-utility2/build/doc.api.html)
 
 [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/build/screen-capture.docApiCreate.slimerjs._2Fhome_2Ftravis_2Fbuild_2Fkaizhu256_2Fnode-utility2_2Ftmp_2Fbuild_2Fdoc.api.html.png)](https://kaizhu256.github.io/node-utility2/build/doc.api.html)
@@ -461,13 +463,16 @@ npm_config_mode_auto_restart=1 \
 npm_config_mode_auto_restart_child=1 \
 ./index.sh test test.js"
     },
-    "version": "2015.8.2"
+    "version": "2015.8.3"
 }
 ```
 
 
 
 # todo
+- merge GIT_SSH logic into shGitRepoBranchCommand
+- integrate shGitRepoBranchCommand into shHerokuDeploy
+- add utility2.middlewareLimit
 - create flamegraph from istanbul coverage
 - add server stress test using phantomjs
 - minify /assets/utility2.js in production-mode
@@ -475,10 +480,10 @@ npm_config_mode_auto_restart_child=1 \
 
 
 
-# change since 2b5fc07d
-- npm publish 2015.8.2
-- add module-alias param to options object in utility2.docApiCreate
-- add utility2.stringHtmlSafe
+# change since a17a4a86
+- npm publish 2015.8.3
+- add shGitRepoBranchCommand
+- add shGitRepoBranchUpdate and merge shBuildGithubUpload into it
 - none
 
 
@@ -558,29 +563,15 @@ shBuild
 
 # save exit-code
 EXIT_CODE=$?
-
-shBuildCleanup() {
-    # this function will cleanup build-artifacts in local build dir
-    # create package-listing
-    MODE_BUILD=gitLsTree shRunScreenCapture shGitLsTree || return $?
-    # create recent changelog of last 50 commits
-    MODE_BUILD=gitLog shRunScreenCapture git log -50 --pretty="%ai\u000a%B" || \
-        return $?
-}
-shBuildCleanup || exit $?
-
-shBuildGithubUploadCleanup() {
-    # this function will cleanup build-artifacts in local gh-pages repo
-    return
-}
-
+# create package-listing
+MODE_BUILD=gitLsTree shRunScreenCapture shGitLsTree || return $?
+# create recent changelog of last 50 commits
+MODE_BUILD=gitLog shRunScreenCapture git log -50 --pretty="%ai\u000a%B" || return $?
 # if running legacy-node, then do not continue
 [ "$(node --version)" \< "v0.12" ] && exit $EXIT_CODE
-
 # upload build-artifacts to github,
 # and if number of commits > 16, then squash older commits
 COMMIT_LIMIT=16 shBuildGithubUpload || exit $?
-
 # exit with $EXIT_CODE
 exit $EXIT_CODE
 ```

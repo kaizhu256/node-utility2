@@ -78,30 +78,14 @@ shBuildGithubUpload() {
     fi
     shBuildPrint githubUpload \
         "uploading build-artifacts to git@github.com:$GITHUB_REPO.git" || return $?
-    # clone gh-pages branch
-    rm -fr $npm_config_dir_tmp/gh-pages || return $?
-    git clone git@github.com:$GITHUB_REPO.git \
-        --branch=gh-pages --single-branch $npm_config_dir_tmp/gh-pages || return $?
-    cd $npm_config_dir_tmp/gh-pages || return $?
-    # copy build-artifacts to gh-pages
-    cp -a $npm_config_dir_build . || return $?
-    DIR=build..$CI_BRANCH..$CI_HOST || return $?
-    rm -fr $DIR && cp -a $npm_config_dir_build $DIR || return $?
-    # init .git/config
-    printf "\n[user]\nname=nobody\nemail=nobody" >> .git/config || return $?
-    # cleanup dir
-    shBuildGithubUploadCleanup || return $?
-    # update gh-pages
-    git add -A || return $?
-    git commit -am "[skip ci] update gh-pages" || return $?
-    git push origin gh-pages || return $?
-    # if number of commits > $COMMIT_LIMIT, then squash HEAD to the earliest commit
-    shGitBackupAndSquashAndPush $COMMIT_LIMIT || return $?
-}
-
-shBuildGithubUploadCleanup() {
-    # this function will cleanup build-artifacts in local gh-pages repo
-    return
+    shGitRepoBranchUpdateLocal() {
+        # this function will locally-update git-repo-branch
+        # copy build-artifacts to gh-pages
+        cp -a $npm_config_dir_build . || return $?
+        DIR=build..$CI_BRANCH..$CI_HOST || return $?
+        rm -fr $DIR && cp -a $npm_config_dir_build $DIR || return $?
+    }
+    shGitRepoBranchCommand update git@github.com:$GITHUB_REPO.git gh-pages || return $?
 }
 
 shBuildPrint() {
@@ -256,30 +240,6 @@ shExitCodeSave() {
     cd $CWD || return $?
 }
 
-shGitBackupAndSquashAndPush() {
-    # this function will, if number of commits > $COMMIT_LIMIT,
-    # 1. backup current $BRANCH to origin/$BRANCH.backup
-    # 2. squash $RANGE to the first commit in $BRANCH
-    # 3. push squashed $BRANCH to origin/$BRANCH
-    local COMMIT_LIMIT || return $?
-    COMMIT_LIMIT=$1 || return $?
-    # if number of commits > $COMMIT_LIMIT
-    if [ ! "$COMMIT_LIMIT" ] || [ ! $(git rev-list HEAD --count) -gt $COMMIT_LIMIT ]
-    then
-        return
-    fi
-    local BRANCH || return $?
-    local RANGE || return $?
-    BRANCH=$(git rev-parse --abbrev-ref HEAD) || return $?
-    RANGE=$(($COMMIT_LIMIT/2)) || return $?
-    # 1. backup current $BRANCH to origin/$BRANCH.backup
-    git push -f origin $BRANCH:$BRANCH.backup || return $?
-    # 2. squash $RANGE to the first commit in $BRANCH
-    shGitSquashShift $RANGE || return $?
-    # 3. push squashed $BRANCH to origin/$BRANCH
-    git push -f origin $BRANCH || return $?
-}
-
 shGitLsTree() {
     # this function will list all files committed in HEAD
     git ls-tree --name-only -r HEAD | while read file
@@ -287,6 +247,94 @@ shGitLsTree() {
         printf "%10s bytes    $(git log -1 --format="%ai  " -- $file)  $file\n\n" \
             $(ls -ln $file | awk "{print \$5}") || return $?
     done
+}
+
+shGitRepoBranchCommand() {
+    # this fuction will copy / move / update git-repo-branch
+    shGitRepoBranchCommandInternal $@
+    # save $EXIT_CODE and restore $CWD
+    shExitCodeSave $? || return $?
+    # reset shGitRepoBranchUpdateLocal
+    shGitRepoBranchUpdateLocal() {
+        # this function will locally-update git-repo-branch
+        return
+    }
+    return $EXIT_CODE
+}
+
+shGitRepoBranchCommandInternal() {
+    # this fuction will copy / move / update git-repo-branch
+    local BRANCH1 || return $?
+    local BRANCH2 || return $?
+    local COMMAND || return $?
+    local MESSAGE || return $?
+    local RANGE || return $?
+    local REPO1 || return $?
+    local REPO2 || return $?
+    # http://superuser.com/questions/897148/shell-cant-shift-that-many-error
+    COMMAND="$1" || return $?
+    shift $(( $# > 0 ? 1 : 0 )) || return $?
+    REPO1=$1 || return $?
+    shift $(( $# > 0 ? 1 : 0 )) || return $?
+    BRANCH1=$1 || return $?
+    shift $(( $# > 0 ? 1 : 0 )) || return $?
+    REPO2=${1-$REPO1} || return $?
+    shift $(( $# > 0 ? 1 : 0 )) || return $?
+    BRANCH2=${1-$BRANCH1} || return $?
+    shift $(( $# > 0 ? 1 : 0 )) || return $?
+    MESSAGE="$@" || return $?
+    # cleanup /tmp/git.repo.branch
+    rm -fr /tmp/git.repo.branch || return $?
+    # init /tmp/git.repo.branch
+    case "$COMMAND" in
+    copyPwd)
+        cp -a $PWD /tmp/git.repo.branch || return $?
+        ;;
+    *)
+        git clone $REPO1 --branch=$BRANCH1 --single-branch /tmp/git.repo.branch || return $?
+        ;;
+    esac
+    cd /tmp/git.repo.branch || return $?
+    # init git
+    git init 2>/dev/null || :
+    git add . || return $?
+    if [ ! "$(git config user.email)" ]
+    then
+        git config user.email nobody || return $?
+        git config user.name nobody || return $?
+    fi
+    case "$COMMAND" in
+    # update git-repo-branch
+    update)
+        shGitRepoBranchUpdateLocal || return $?
+        ;;
+    esac
+    git add . || return $?
+    if [ "$MESSAGE" ]
+    then
+        git commit -am "$MESSAGE" || :
+    else
+        git commit -am "[skip ci]" \
+            -m "$(shDateIso)" \
+            -m "$COMMAND $REPO1#$BRANCH1 to $REPO2#$BRANDH2" \
+            -m "$(uname -a)" || :
+    fi
+    # if number of commits > $COMMIT_LIMIT,
+    # then backup current git-repo-branch to git-repo-branch.backup,
+    # and then squash $RANGE to the first commit in git-repo-branch
+    if [ "$COMMIT_LIMIT" ] && [ $(git rev-list HEAD --count) -gt $COMMIT_LIMIT ]
+    then
+        RANGE=$(($COMMIT_LIMIT/2)) || return $?
+        git push -f $REPO2 $BRANCH2:$BRANCH2.backup || return $?
+        shGitSquashShift $RANGE || return $?
+    fi
+    git push -f $REPO2 $BRANCH1:$BRANCH2 || return $?
+    case "$COMMAND" in
+    # move git-repo-branch1 to git-repo-branch2
+    move)
+        git push $REPO1 :$BRANCH1 || return $?
+        ;;
+    esac
 }
 
 shGitSquashPop() {
@@ -321,38 +369,6 @@ shGitSquashShift() {
         return $?
     git push -f . HEAD:$BRANCH || return $?
     git checkout $BRANCH || return $?
-}
-
-shGithubBranchSquashPop() {
-    # this function will squash the github $REPO-$BRANCH's HEAD to the given $COMMIT
-    local COMMIT || return $?
-    local BRANCH || return $?
-    local MESSAGE || return $?
-    local REPO || return $?
-    COMMIT=$3 || return $?
-    BRANCH=$2 || return $?
-    REPO=$1 || return $?
-    rm -fr /tmp/app || return $?
-    git clone $REPO --branch=$BRANCH --single-branch /tmp/app || return $?
-    cd /tmp/app || return $?
-    shGitSquashPop $COMMIT $MESSAGE || return $?
-    git push -f $REPO $BRANCH || return $?
-}
-
-shGithubBranchSquashShift() {
-    # this function will squash the github $REPO-$BRANCH's $RANGE to the first commit
-    local BRANCH || return $?
-    local MESSAGE || return $?
-    local RANGE || return $?
-    local REPO || return $?
-    BRANCH=$2 || return $?
-    RANGE=$3 || return $?
-    REPO=$1 || return $?
-    rm -fr /tmp/app || return $?
-    git clone $REPO --branch=$BRANCH --single-branch /tmp/app || return $?
-    cd /tmp/app || return $?
-    shGitSquashShift $RANGE $MESSAGE || return $?
-    git push -f $REPO $BRANCH || return $?
 }
 
 shGrep() {
@@ -699,7 +715,7 @@ shNpmTest() {
     # this function will run npm-test
     shBuildPrint ${MODE_BUILD:-npmTest} "npm-testing $CWD" || return $?
     # cleanup $npm_config_dir_tmp/*.json
-    rm $npm_config_dir_tmp/*.json > /dev/null 2>&1 || :
+    rm $npm_config_dir_tmp/*.json 2>/dev/null || :
     # init $npm_config_dir_build
     mkdir -p $npm_config_dir_build/coverage.html || return $?
     # auto-detect slimerjs
@@ -957,7 +973,6 @@ shRun() {
     fi
     # save $EXIT_CODE and restore $CWD
     shExitCodeSave $? || return $?
-    # return $EXIT_CODE
     return $EXIT_CODE
 }
 
@@ -1039,7 +1054,7 @@ shSource() {
 }
 
 shTmpAppCopy() {
-    # this function will copy the bare git repo files to /tmp/app
+    # this function will copy the bare git-repo-branch files to /tmp/app
     # init /tmp/app
     rm -fr /tmp/app /tmp/node_modules && mkdir -p /tmp/app || return $?
     # tar / untar repo contents to /tmp/app

@@ -62,7 +62,8 @@
                     .replace(
                         (/( *?\/\*[\S\s]*?\*\/\n)/),
                         '<span class="docApiCodeCommentSpan">$1</span>'
-                    );
+                    )
+                    .replace((/^function \(/), elementName + ' = function (');
                 // init example
                 element.example = 'none';
                 options.example.replace(
