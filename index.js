@@ -47,14 +47,14 @@
             /*
              * this function will create an html api-doc from the given options
              */
-            var element, elementCreate, elementName, module, moduleAlias, moduleName, trimLeft;
+            var element, elementCreate, elementName, module, moduleName, trimLeft;
             elementCreate = function () {
                 element = {};
                 element.id = encodeURIComponent('element.' + moduleName + '.' + elementName);
                 element.name = 'function <span class="docApiSignatureSpan">' + moduleName +
                     '.</span>' + elementName;
                 // init source
-                element.source = trimLeft(module[elementName].toString());
+                element.source = trimLeft(module.exports[elementName].toString());
                 if (element.source.length > 4096) {
                     element.source = element.source.slice(0, 4096).trimRight() + ' ...';
                 }
@@ -65,20 +65,28 @@
                     )
                     .replace((/^function \(/), elementName + ' = function (');
                 // init example
-                element.example = 'none';
-                options.example.replace(
-                    new RegExp('((?:\n.*?){8}\\b)(' + moduleAlias + '.' + elementName +
-                        ')(\\((?:.*?\n){8})'),
-                    function (match0, match1, match2, match3) {
-                        // jslint-hack
-                        local.utility2.nop(match0);
-                        element.example = '...' + trimLeft(
-                            local.utility2.stringHtmlSafe(match1) +
-                                '<span class="docApiCodeKeywordSpan">' + match2 + '</span>' +
-                                local.utility2.stringHtmlSafe(match3)
-                        ).trimRight() + '\n...';
+                (module.aliasList || [moduleName]).forEach(function (moduleAlias) {
+                    if (!element.example) {
+                        options.example.replace(
+                            new RegExp('((?:\n.*?){8})(' + (moduleAlias === '.'
+                                ? '\\.'
+                                : moduleAlias
+                                ? '\\b' + moduleAlias + '\\.'
+                                : '\\b') + elementName +
+                                ')(\\((?:.*?\n){8})'),
+                            function (match0, match1, match2, match3) {
+                                // jslint-hack
+                                local.utility2.nop(match0);
+                                element.example = '...' + trimLeft(
+                                    local.utility2.stringHtmlSafe(match1) +
+                                        '<span class="docApiCodeKeywordSpan">' + match2 +
+                                        '</span>' + local.utility2.stringHtmlSafe(match3)
+                                ).trimRight() + '\n...';
+                            }
+                        );
                     }
-                );
+                });
+                element.example = element.example || 'n/a';
                 element.signature = (/\([\S\s]*?\)/).exec(element.source)[0];
                 return element;
             };
@@ -97,15 +105,17 @@
                 .map(function (key) {
                     moduleName = key;
                     // init alias
-                    moduleAlias = options.moduleDict[moduleName].alias || moduleName;
-                    module = options.moduleDict[moduleName].module;
+                    module = options.moduleDict[moduleName];
                     return {
-                        elementList: Object.keys(module)
+                        elementList: Object.keys(module.exports)
                             .filter(function (key) {
-                                return key &&
-                                    key[0] !== '$' &&
-                                    key[0] !== '_' &&
-                                    typeof module[key] === 'function';
+                                try {
+                                    return key &&
+                                        key[0] !== '$' &&
+                                        key[0] !== '_' &&
+                                        typeof module.exports[key] === 'function';
+                                } catch (ignore) {
+                                }
                             })
                             .sort()
                             .map(function (key) {
@@ -135,15 +145,47 @@
             return error;
         };
 
+        /* istanbul ignore next */
         local.utility2.exit = function (exitCode) {
             /*
              * this function will exit the current process with the given exitCode
              */
             switch (local.modeJs) {
+            case 'browser':
+                // throw global_test_results as an error,
+                // so it can be caught and passed to the phantom js-env
+                switch (local.utility2.modeTest) {
+                case 'phantom':
+                    throw new Error('\nphantom\n' + JSON.stringify({
+                        global_test_results:
+                            local.global.global_test_results
+                    }) + '\n');
+                }
+                break;
             case 'node':
                 process.exit(exitCode);
                 break;
             case 'phantom':
+                if (local.modeExit) {
+                    return;
+                }
+                local.modeExit = true;
+                // run phantom self-test
+                if (local.utility2.modePhantomSelfTest) {
+                    // test string error with no trace handling-behavior
+                    local.onError('error', null);
+                    // test string error
+                    // with trace-function and trace-sourceUrl handling-behavior
+                    local.onError('error', [{ function: true, sourceUrl: true }]);
+                    // test default error handling-behavior
+                    local.onError(local.utility2.errorDefault);
+                }
+                if (local.global.__coverage__) {
+                    local.fs.write(
+                        local.utility2.fileCoverage,
+                        JSON.stringify(local.global.__coverage__)
+                    );
+                }
                 local.global.phantom.exit(exitCode);
                 break;
             }
@@ -366,14 +408,6 @@
                 console.error('\nonErrorDefault - error\n' +
                     error.message + '\n' + error.stack + '\n');
             }
-        };
-
-        local.utility2.onErrorExit = function (error) {
-            /*
-             * this function will exit the current process
-             * with a non-zero exit-code if an error occurred
-             */
-            local.utility2.exit(!!error);
         };
 
         local.utility2.onErrorJsonParse = function (onError, modeDebug) {
@@ -1063,15 +1097,7 @@
                         // update coverageReport
                         coverageReportCreate();
                         // call callback with number of tests failed
-                        local.utility2.onErrorExit(testReport.testsFailed);
-                        // throw global_test_results as an error,
-                        // so it can be caught and passed to the phantom js-env
-                        if (local.utility2.modeTest === 'phantom') {
-                            throw new Error('\nphantom\n' + JSON.stringify({
-                                global_test_results:
-                                    local.global.global_test_results
-                            }) + '\n');
-                        }
+                        local.utility2.exit(testReport.testsFailed);
                     }, 1000);
                     break;
                 case 'node':
@@ -1132,7 +1158,7 @@
                             ' - ' + testReport.testsFailed +
                             ' failed tests\n');
                         // call callback with number of tests failed
-                        local.utility2.onErrorExit(testReport.testsFailed);
+                        local.utility2.exit(testReport.testsFailed);
                     }, 1000);
                     break;
                 }
@@ -1311,7 +1337,7 @@
             if (local.utility2.timeExit) {
                 local.utility2.timeoutDefault = local.utility2.timeExit - Date.now();
                 local.utility2.onTimeout(
-                    local.utility2.onErrorExit,
+                    local.utility2.exit,
                     local.utility2.timeoutDefault + 1000,
                     'exit'
                 );
@@ -2501,21 +2527,14 @@
         // require modules
         local.fs = require('fs');
         local.webpage = require('webpage');
-        local.coverAndExit = function (coverage, exit, exitCode) {
-            setTimeout(function () {
-                if (coverage) {
-                    local.fs.write(local.utility2.fileCoverage, JSON.stringify(coverage));
-                }
-                exit(exitCode);
-            });
-        };
 
         local.onError = function (error, trace) {
             /*
              * this function will run the main error-handler
              * http://phantomjs.org/api/phantom/handler/on-error.html
              */
-            var data, exit;
+            var data, exitCode;
+            exitCode = 1;
             // handle notification that url has been opened
             if (error === 'success' && !trace) {
                 console.log(local.utility2.argv0 + ' - opened ' + local.utility2.url);
@@ -2528,7 +2547,7 @@
                         console.log(local.utility2.argv0 +
                             ' - created screen-capture file://' +
                             local.utility2.fileScreenCapture);
-                        local.coverAndExit(local.global.__coverage__, local.utility2.exit, 0);
+                        local.utility2.exit(0);
                     }, local.utility2.timeoutScreenCapture);
                 }
                 return;
@@ -2557,33 +2576,10 @@
                     local.utility2.fileTestReport,
                     JSON.stringify(local.utility2.testReport)
                 );
-                // run phantom self-test
-                if (local.utility2.modePhantomSelfTest) {
-                    // test no coverage handling-behavior
-                    local.coverAndExit(null, local.utility2.nop);
-                    // disable exit
-                    exit = local.global.phantom.exit;
-                    local.global.phantom.exit = local.utility2.nop;
-                    // test string error with no trace handling-behavior
-                    local.onError('error', null);
-                    // test string error
-                    // with trace-function and trace-sourceUrl handling-behavior
-                    local.onError('error', [{ function: true, sourceUrl: true }]);
-                    // test default error handling-behavior
-                    local.onError(local.utility2.errorDefault);
-                    // restore exit
-                    local.global.phantom.exit = exit;
-                }
-                local.coverAndExit(
-                    local.global.__coverage__,
-                    local.utility2.exit,
-                    data.testReport.testsFailed
-                );
-                return;
-            }
+                exitCode = data.testReport.testsFailed;
             // handle webpage-error
             // http://phantomjs.org/api/phantom/handler/on-error.html
-            if (typeof error === 'string') {
+            } else if (typeof error === 'string') {
                 console.error('\n' + local.utility2.testName + '\nERROR: ' + error + ' TRACE:');
                 (trace || []).forEach(function (t) {
                     console.error(' -> ' + (t.file || t.sourceURL)
@@ -2597,7 +2593,7 @@
                 local.utility2.onErrorDefault(error);
             }
             if (local.utility2.modePhantom !== 'screenCapture') {
-                local.coverAndExit(local.global.__coverage__, local.utility2.exit, 1);
+                local.utility2.exit(exitCode);
             }
         };
 

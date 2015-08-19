@@ -71,8 +71,7 @@ shBaseInstall() {
 shBuildGithubUpload() {
     # this function will upload build-artifacts to github
     local DIR || return $?
-    if [ ! "$CI_BRANCH" ] || [ "$CI_BRANCH" = undefined ] || \
-        [ ! "$GIT_SSH_KEY" ] || [ "$MODE_OFFLINE" ]
+    if [ ! "$GIT_SSH" ]
     then
         return
     fi
@@ -84,6 +83,7 @@ shBuildGithubUpload() {
         cp -a $npm_config_dir_build . || return $?
         DIR=build..$CI_BRANCH..$CI_HOST || return $?
         rm -fr $DIR && cp -a $npm_config_dir_build $DIR || return $?
+        git add . || return $?
     }
     shGitRepoBranchCommand update git@github.com:$GITHUB_REPO.git gh-pages || return $?
 }
@@ -120,9 +120,30 @@ shDocApiCreate() {
         options.fs = require('fs');
         options.utility2 = require('$npm_config_dir_utility2');
         // init example
-        options.example = options.exampleFileList.map(function (file) {
-            return options.fs.readFileSync('$CWD/' + file, 'utf8');
-        }).join('\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n');
+        options.example = '\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n';
+        options.exampleFileList.forEach(function (file) {
+            var dir;
+            file = '$CWD/' + file;
+            try {
+                // read file
+                options.example += options.fs.readFileSync(file, 'utf8') +
+                    '\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n';
+            } catch (errorCaught) {
+                // read dir
+                dir = file;
+                options.fs.readdirSync(dir).sort().forEach(function (file) {
+                    if (file.slice(-3) === '.js') {
+                        file = dir + '/' + file;
+                        try {
+                            // read file
+                            options.example += options.fs.readFileSync(file, 'utf8') +
+                                '\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n';
+                        } catch (ignore) {
+                        }
+                    }
+                });
+            }
+        });
         // create doc.api.html
         options.fs.writeFileSync(
             '$npm_config_dir_build/doc.api.html',
@@ -250,10 +271,7 @@ shGitRepoBranchCommand() {
     # save $EXIT_CODE and restore $CWD
     shExitCodeSave $? || return $?
     # reset shGitRepoBranchUpdateLocal
-    shGitRepoBranchUpdateLocal() {
-        # this function will locally-update git-repo-branch
-        return
-    }
+    unset -f shGitRepoBranchUpdateLocal || return $?
     return $EXIT_CODE
 }
 
@@ -282,8 +300,14 @@ shGitRepoBranchCommandInternal() {
     rm -fr /tmp/git.repo.branch || return $?
     # init /tmp/git.repo.branch
     case "$COMMAND" in
-    copyPwd)
+    copyPwdA)
         cp -a $PWD /tmp/git.repo.branch || return $?
+        ;;
+    copyPwdLsTree)
+        mkdir -p /tmp/git.repo.branch || return $?
+        git ls-tree --name-only -r HEAD | \
+            xargs tar -czf - | \
+            tar -C /tmp/git.repo.branch -xzvf - || return $?
         ;;
     *)
         git clone $REPO1 --branch=$BRANCH1 --single-branch /tmp/git.repo.branch || return $?
@@ -292,27 +316,24 @@ shGitRepoBranchCommandInternal() {
     cd /tmp/git.repo.branch || return $?
     # init git
     git init 2>/dev/null || :
-    git add . || return $?
     if [ ! "$(git config user.email)" ]
     then
         git config user.email nobody || return $?
         git config user.name nobody || return $?
     fi
-    case "$COMMAND" in
     # update git-repo-branch
-    update)
+    if (type shGitRepoBranchUpdateLocal > /dev/null 2>&1)
+    then
         shGitRepoBranchUpdateLocal || return $?
-        ;;
-    esac
-    git add . || return $?
+    fi
     if [ "$MESSAGE" ]
     then
-        git commit -am "$MESSAGE" || :
+        git commit -am "$MESSAGE" 2>/dev/null || :
     else
         git commit -am "[skip ci]" \
             -m "$(shDateIso)" \
             -m "$COMMAND $REPO1#$BRANCH1 to $REPO2#$BRANDH2" \
-            -m "$(uname -a)" || :
+            -m "$(uname -a)" 2>/dev/null || :
     fi
     # if number of commits > $COMMIT_LIMIT,
     # then backup current git-repo-branch to git-repo-branch.backup,
@@ -424,7 +445,7 @@ shHerokuDeploy() {
     # and run a simple curl check for the main-page
     local HEROKU_REPO || return $?
     HEROKU_REPO=$1 || return $?
-    if [ ! "$GIT_SSH_KEY" ]
+    if [ ! "$GIT_SSH" ]
     then
         return
     fi
@@ -433,29 +454,24 @@ shHerokuDeploy() {
     # init $HEROKU_HOSTNAME
     export HEROKU_HOSTNAME=$HEROKU_REPO.herokuapp.com || return $?
     shBuildPrint herokuDeploy "deploying to https://$HEROKU_HOSTNAME" || return $?
-    # init clean repo in /tmp/app
-    shTmpAppCopy && cd /tmp/app || return $?
-    # init .git
-    git init || return $?
-    # init .git/config
-    printf "\n[user]\nname=nobody\nemail=nobody\n" > .git/config || return $?
-    # init Procfile
-    node -e "
-        require('fs').writeFileSync(
-            'Procfile',
-            require('$npm_config_dir_utility2').stringFormat(
-                require('fs').readFileSync('Procfile', 'utf8'), process.env
-            )
-        );
-    " || return $?
-    # rm .gitignore so we can git add everything
-    rm -f .gitignore || return $?
-    # git add everything
-    git add . || return $?
-    # git commit
-    git commit -aqm "heroku deploy" || return $?
-    # git push app to heroku
-    git push -f git@heroku.com:$HEROKU_REPO.git HEAD:master || return $?
+    # git push $PWD to heroku
+    shGitRepoBranchUpdateLocal() {
+        # init Procfile
+        node -e "
+            require('fs').writeFileSync(
+                'Procfile',
+                require('$npm_config_dir_utility2').stringFormat(
+                    require('fs').readFileSync('Procfile', 'utf8'), process.env
+                )
+            );
+        " || return $?
+        # rm .gitignore so we can git add everything
+        rm -f .gitignore || return $?
+        # git add everything
+        git add . || return $?
+    }
+    shGitRepoBranchCommand copyPwdLsTree local HEAD git@heroku.com:$HEROKU_REPO.git master || \
+        return $?
     # wait 10 seconds for heroku to deploy app
     sleep 10 || return $?
     # verify deployed app's main-page returns status-code < 400
@@ -535,7 +551,7 @@ shInit() {
             "console.log(require('utility2').__dirname);") || return $?
     fi
     # init $GIT_SSH
-    if [ "$GIT_SSH_KEY" ]
+    if [ "$GIT_SSH_KEY" ] && [ ! "$MODE_OFFLINE" ]
     then
         export GIT_SSH=$npm_config_dir_utility2/git-ssh.sh || return $?
     fi
@@ -1046,14 +1062,6 @@ shSlimerDetect() {
 shSource() {
     # this function will source .bashrc
     . $HOME/.bashrc || return $?
-}
-
-shTmpAppCopy() {
-    # this function will copy the bare git-repo-branch files to /tmp/app
-    # init /tmp/app
-    rm -fr /tmp/app /tmp/node_modules && mkdir -p /tmp/app || return $?
-    # tar / untar repo contents to /tmp/app
-    git ls-tree --name-only -r HEAD | xargs tar -czf - | tar -C /tmp/app -xzvf - || return $?
 }
 
 shTravisDecryptYml() {

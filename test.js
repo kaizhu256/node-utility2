@@ -321,7 +321,12 @@
             local.utility2.nop(options);
             data = local.utility2.docApiCreate({
                 example: local.utility2.testRun.toString().replace((/;/g), ';\n    '),
-                moduleDict: { utility2: { module: local.utility2 } }
+                moduleDict: {
+                    // test no aliasList handling-behavior
+                    noAliasList: { exports: { nop: local.utility2.nop } },
+                    // test aliasList handling-behavior
+                    utility2: { aliasList: ['', '.', 'undefined'], exports: local.utility2 }
+                }
             });
             // validate data
             local.utility2.assert(new RegExp('\n' +
@@ -1182,8 +1187,8 @@
                     local.utility2.envDict.npm_config_server_port +
                     // test script-only handling-behavior
                     '/test/script-only.html' +
-                    // test modeTest !== 'phantom' handling-behavior
-                    '?modeTest=phantom2&' +
+                    // test phantom-callback handling-behavior
+                    '?modeTest=phantom&' +
                     // test specific testCase handling-behavior
                     // test testRun's failure handling-behavior
                     'modeTestCase=testCase_testRun_failure&' +
@@ -1300,22 +1305,13 @@
 
     // run browser js-env code
     case 'browser':
-        // init onErrorExit
-        local.utility2.onErrorExit = function () {
-            // test modeTest !== 'phantom' handling-behavior
-            if (local.utility2.modeTest === 'phantom2') {
-                setTimeout(function () {
-                    throw new Error('\nphantom\n' +
-                        JSON.stringify({ global_test_results: window.global_test_results }));
-                }, 1000);
-            }
-        };
         // test no modeTest handling-behavior
-        local._modeTest = local.utility2.modeTest;
-        local.utility2.modeTest = null;
-        local.utility2.testRun();
-        // restore modeTest
-        local.utility2.modeTest = local._modeTest;
+        local.utility2.testMock([
+            [local.utility2, { modeTest: null }]
+        ], function (onError) {
+            local.utility2.testRun();
+            onError();
+        }, local.utility2.nop);
         break;
 
 

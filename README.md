@@ -42,7 +42,7 @@ run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
 - requires unzip to be installed on os
 - [api-doc](https://kaizhu256.github.io/node-utility2/build/doc.api.html)
 
-[![heroku.com test-server](https://kaizhu256.github.io/node-utility2/build/screen-capture.docApiCreate.slimerjs._2Fhome_2Ftravis_2Fbuild_2Fkaizhu256_2Fnode-utility2_2Ftmp_2Fbuild_2Fdoc.api.html.png)](https://kaizhu256.github.io/node-utility2/build/doc.api.html)
+[![api-doc](https://kaizhu256.github.io/node-utility2/build/screen-capture.docApiCreate.slimerjs._2Fhome_2Ftravis_2Fbuild_2Fkaizhu256_2Fnode-utility2_2Ftmp_2Fbuild_2Fdoc.api.html.png)](https://kaizhu256.github.io/node-utility2/build/doc.api.html)
 
 
 
@@ -90,8 +90,8 @@ shExampleSh
 /*
 example.js
 
-this shared browser / node script will
-run browser tests with coverage (via istanbul-lite and phantomjs-lite)
+this shared browser / node script will run browser tests with coverage
+(via istanbul-lite and phantomjs-lite)
 
 instruction
     1. save this js script as example.js
@@ -453,6 +453,11 @@ instruction
     },
     "scripts": {
         "build-ci": "./index.sh shRun shReadmeBuild",
+        "build-doc": "./index.sh shRun shReadmeExportPackageJson && \
+./index.sh shRun shDocApiCreate \"{\
+exampleFileList:['example.js','test.js','index.js'],\
+moduleDict:{utility2:{exports:require('./index.js')}}\
+}\"",
         "postinstall": "./index.sh shRun shReadmeExportPackageJson",
         "start": "npm_config_mode_auto_restart=1 ./index.sh shRun node test.js",
         "test": "./index.sh shRun shReadmeExportPackageJson && \
@@ -461,15 +466,13 @@ npm_config_mode_auto_restart=1 \
 npm_config_mode_auto_restart_child=1 \
 ./index.sh test test.js"
     },
-    "version": "2015.8.4"
+    "version": "2015.8.5"
 }
 ```
 
 
 
 # todo
-- merge GIT_SSH logic into shGitRepoBranchCommand
-- integrate shGitRepoBranchCommand into shHerokuDeploy
 - add utility2.middlewareLimit
 - create flamegraph from istanbul coverage
 - add server stress test using phantomjs
@@ -478,10 +481,12 @@ npm_config_mode_auto_restart_child=1 \
 
 
 
-# change since 4795c7ef
+# change since b45aa22a
 - npm publish 2015.8.5
-- change env param mode_no_* to mode_*=0
-- add options.exampleFileList param to shDocApiCreate
+- add npm-script build-doc
+- add aliasList param for utility2.docApiCreate
+- merge utility2.onErrorExit into utility2.exit
+- integrate shGitRepoBranchCommand into shHerokuDeploy
 - none
 
 
@@ -534,10 +539,7 @@ shBuild() {
     MODE_BUILD=npmTest shRunScreenCapture npm test || return $?
 
     # create api-doc
-    shDocApiCreate "{ \
-        exampleFileList:['example.js','test.js','index.js'], \
-        moduleDict:{utility2:{module:require('./index.js')}} \
-    }" || return $?
+    npm run-script build-doc || return $?
 
     # if running legacy-node, then do not continue
     [ "$(node --version)" \< "v0.12" ] && return
