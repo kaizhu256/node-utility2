@@ -120,14 +120,9 @@ shDocApiCreate() {
         options.fs = require('fs');
         options.utility2 = require('$npm_config_dir_utility2');
         // init example
-        options.example = [
-            'index.js',
-            'test.js',
-            'example.js'
-        ].map(function (file) {
-            file = '$CWD/' + file;
-            return options.fs.readFileSync(file, 'utf8');
-        }).join('\n\n\n\n\n\n\n\n');
+        options.example = options.exampleFileList.map(function (file) {
+            return options.fs.readFileSync('$CWD/' + file, 'utf8');
+        }).join('\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n');
         // create doc.api.html
         options.fs.writeFileSync(
             '$npm_config_dir_build/doc.api.html',
@@ -650,7 +645,7 @@ shIptablesInit() {
 
 shIstanbulCover() {
     # this function will run the command $@ with istanbul coverage
-    if [ "$npm_config_mode_no_coverage" ]
+    if [ "$npm_config_mode_coverage" = 0 ]
     then
         node $@ || return $?
     else
@@ -725,7 +720,7 @@ shNpmTest() {
     # init random server-port
     export npm_config_server_port=$(shServerPortRandom) || return $?
     # if coverage-mode is disabled, then run npm-test without coverage
-    if [ "$npm_config_mode_no_coverage" ]
+    if [ "$npm_config_mode_coverage" = 0 ]
     then
         node $@
         return $?
@@ -855,7 +850,7 @@ shReadmeExportFile() {
                 // support syntax-highlighting
                 .replace((/[\\S\\s]+?\n.*?$FILE_IN\s*?\`\`\`\\w*?\n/), function (match0) {
                     // preserve lineno
-                    return '$MODE_NO_LINENO' ? '' : match0.replace((/.+/g), '');
+                    return '$MODE_LINENO' === '0' ? '' : match0.replace((/.+/g), '');
                 })
                 .replace((/\n\`\`\`[\\S\\s]+/), '')
         );
@@ -865,7 +860,7 @@ shReadmeExportFile() {
 shReadmeExportPackageJson() {
     # this function will extract and save the package.json file embedded in README.md
     local FILE || return $?
-    MODE_NO_LINENO=1 shReadmeExportFile package.json $CWD/package.json || return $?
+    MODE_LINENO=0 shReadmeExportFile package.json $CWD/package.json || return $?
     node -e "
         require('fs').writeFileSync(
             '$CWD/package.json',
@@ -893,7 +888,7 @@ shReadmeTestJs() {
     # read and parse js script from README.md
     shReadmeExportFile $FILE $FILE || return $?
     # jslint $FILE
-    if [ ! "$MODE_OFFLINE" ] && [ ! "$npm_config_mode_no_jslint" ]
+    if [ ! "$MODE_OFFLINE" ] && [ "$npm_config_mode_jslint" != 0 ]
     then
         npm install jslint-lite && node_modules/.bin/jslint-lite $FILE || return $?
     fi

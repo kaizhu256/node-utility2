@@ -1070,7 +1070,7 @@
                             throw new Error('\nphantom\n' + JSON.stringify({
                                 global_test_results:
                                     local.global.global_test_results
-                            }));
+                            }) + '\n');
                         }
                     }, 1000);
                     break;
@@ -2536,7 +2536,7 @@
             // parse global_test_results
             try {
                 data = JSON.parse(
-                    (/\nphantom\n(\{"global_test_results":\{[\S\s]+)/).exec(error)[1]
+                    (/\nphantom\n(\{"global_test_results":\{.*)/).exec(error)[1]
                 ).global_test_results;
             } catch (ignore) {
             }

@@ -106,7 +106,7 @@ instruction
 /*jslint
     browser: true,
     maxerr: 8,
-    maxlen: 80,
+    maxlen: 96,
     node: true,
     nomen: true,
     stupid: true
@@ -232,11 +232,9 @@ instruction
 '</head>\n' +
 '<body>\n' +
 '    <div class="ajaxProgressDiv" style="display: none;">\n' +
-'    <div class="ajaxProgressBarDiv ajaxProgressBarDivLoading" \
->loading</div>\n' +
+'    <div class="ajaxProgressBarDiv ajaxProgressBarDivLoading">loading</div>\n' +
 '    </div>\n' +
-'    <h1 \
->{{envDict.npm_package_name}} [{{envDict.npm_package_version}}]</h1>\n' +
+'    <h1>{{envDict.npm_package_name}} [{{envDict.npm_package_version}}]</h1>\n' +
 '    <h3>{{envDict.npm_package_description}}</h3>\n' +
 '    <div>edit or paste script below to cover and test</div>\n' +
 '<textarea class="istanbulInputTextarea jslintInputTextarea">\n' +
@@ -432,7 +430,7 @@ instruction
     "description": "run dynamic browser tests with coverage \
 (via istanbul-lite and phantomjs-lite)",
     "devDependencies": {
-        "phantomjs-lite": "^2015.7.1"
+        "phantomjs-lite": "^2015.8.2"
     },
     "engines": { "node": ">=0.10 <=0.12" },
     "keywords": [
@@ -463,7 +461,7 @@ npm_config_mode_auto_restart=1 \
 npm_config_mode_auto_restart_child=1 \
 ./index.sh test test.js"
     },
-    "version": "2015.8.3"
+    "version": "2015.8.4"
 }
 ```
 
@@ -480,10 +478,10 @@ npm_config_mode_auto_restart_child=1 \
 
 
 
-# change since a17a4a86
-- npm publish 2015.8.3
-- add shGitRepoBranchCommand
-- add shGitRepoBranchUpdate and merge shBuildGithubUpload into it
+# change since 4795c7ef
+- npm publish 2015.8.5
+- change env param mode_no_* to mode_*=0
+- add options.exampleFileList param to shDocApiCreate
 - none
 
 
@@ -513,23 +511,20 @@ shBuild() {
     shRun shNpmTestPublished || return $?
 
     # test example js script
-    MODE_BUILD=testExampleJs \
-    MODE_NO_LINENO=1 shRunScreenCapture \
+    MODE_BUILD=testExampleJs MODE_LINENO=0 shRunScreenCapture \
         shReadmeTestJs example.js || return $?
     # screen-capture example.js coverage
     MODE_BUILD=testExampleJs shPhantomScreenCapture \
         /tmp/app/tmp/build/coverage.html/app/example.js.html || return $?
     # copy phantomjs screen-capture to $npm_config_dir_build
-    cp /tmp/app/tmp/build/screen-capture.*.png $npm_config_dir_build || \
-        return $?
+    cp /tmp/app/tmp/build/screen-capture.*.png $npm_config_dir_build || return $?
     # screen-capture example.js test-report
     MODE_BUILD=testExampleSh shPhantomScreenCapture \
         /tmp/app/tmp/build/test-report.html || return $?
 
     # test example shell script
     export npm_config_timeout_exit=1000 || return $?
-    MODE_BUILD=testExampleSh shRunScreenCapture \
-        shReadmeTestSh example.sh || return $?
+    MODE_BUILD=testExampleSh shRunScreenCapture shReadmeTestSh example.sh || return $?
     unset npm_config_timeout_exit || return $?
     # save screen-capture
     cp /tmp/app/node_modules/$npm_package_name/tmp/build/screen-capture.*.png \
@@ -539,8 +534,10 @@ shBuild() {
     MODE_BUILD=npmTest shRunScreenCapture npm test || return $?
 
     # create api-doc
-    shDocApiCreate \
-        '{moduleDict:{utility2:{module:require("./index.js")}}}' || return $?
+    shDocApiCreate "{ \
+        exampleFileList:['example.js','test.js','index.js'], \
+        moduleDict:{utility2:{module:require('./index.js')}} \
+    }" || return $?
 
     # if running legacy-node, then do not continue
     [ "$(node --version)" \< "v0.12" ] && return
@@ -553,8 +550,7 @@ shBuild() {
         [ "$CI_BRANCH" = beta ] ||
         [ "$CI_BRANCH" = master ]
     then
-        TEST_URL="https://hrku01-$npm_package_name-$CI_BRANCH.herokuapp.com" \
-            || return $?
+        TEST_URL="https://hrku01-$npm_package_name-$CI_BRANCH.herokuapp.com" || return $?
         TEST_URL="$TEST_URL?modeTest=phantom&timeExit={{timeExit}}" || return $?
         MODE_BUILD=herokuTest shPhantomTest "$TEST_URL" || return $?
     fi
@@ -564,14 +560,12 @@ shBuild
 # save exit-code
 EXIT_CODE=$?
 # create package-listing
-MODE_BUILD=gitLsTree shRunScreenCapture shGitLsTree || return $?
+MODE_BUILD=gitLsTree shRunScreenCapture shGitLsTree || exit $?
 # create recent changelog of last 50 commits
-MODE_BUILD=gitLog shRunScreenCapture git log -50 --pretty="%ai\u000a%B" || return $?
+MODE_BUILD=gitLog shRunScreenCapture git log -50 --pretty="%ai\u000a%B" || exit $?
 # if running legacy-node, then do not continue
 [ "$(node --version)" \< "v0.12" ] && exit $EXIT_CODE
-# upload build-artifacts to github,
-# and if number of commits > 16, then squash older commits
+# upload build-artifacts to github, and if number of commits > 16, then squash older commits
 COMMIT_LIMIT=16 shBuildGithubUpload || exit $?
-# exit with $EXIT_CODE
 exit $EXIT_CODE
 ```
