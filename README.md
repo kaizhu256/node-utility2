@@ -2,7 +2,7 @@ utility2
 ========
 run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
 
-[![NPM](https://img.shields.io/npm/v/utility2.svg?style=flat-square)](https://www.npmjs.com/package/utility2) [![Join the chat at https://gitter.im/kaizhu256/node-utility2](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/kaizhu256/node-utility2?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![NPM](https://img.shields.io/npm/v/utility2.svg?style=flat-square)](https://www.npmjs.com/package/utility2) [![NPM](https://img.shields.io/npm/dm/utility2.svg?style=flat-square)](https://www.npmjs.com/package/utility2) [![Join the chat at https://gitter.im/kaizhu256/node-utility2](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/kaizhu256/node-utility2?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 
 
@@ -11,8 +11,7 @@ run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
 
 
 
-# build-status [![travis-ci.org build-status](https://api.travis-ci.org/kaizhu256/node-utility2.svg)](https://travis-ci.org/kaizhu256/node-utility2) ![codeship.io build-status](https://codeship.com/projects/df8f44c0-2ee3-0132-0af5-6a016ae0b812/status)
-
+# build-status [![travis-ci.org build-status](https://api.travis-ci.org/kaizhu256/node-utility2.svg)](https://travis-ci.org/kaizhu256/node-utility2)
 [![build commit status](https://kaizhu256.github.io/node-utility2/build/build.badge.svg)](https://travis-ci.org/kaizhu256/node-utility2)
 
 | git-branch : | [master](https://github.com/kaizhu256/node-utility2/tree/master) | [beta](https://github.com/kaizhu256/node-utility2/tree/beta) | [alpha](https://github.com/kaizhu256/node-utility2/tree/alpha)|
@@ -38,16 +37,17 @@ run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
 
 
 # documentation
-- requires imagemagick to be installed on os
-- requires unzip to be installed on os
-- [api-doc](https://kaizhu256.github.io/node-utility2/build/doc.api.html)
+#### this package requires
+- darwin or linux os
+- imagemagick installed on os
+- unzip installed on os
 
+#### [api-doc](https://kaizhu256.github.io/node-utility2/build/doc.api.html)
 [![api-doc](https://kaizhu256.github.io/node-utility2/build/screen-capture.docApiCreate.slimerjs._2Fhome_2Ftravis_2Fbuild_2Fkaizhu256_2Fnode-utility2_2Ftmp_2Fbuild_2Fdoc.api.html.png)](https://kaizhu256.github.io/node-utility2/build/doc.api.html)
 
 
 
 # quickstart interactive example
-
 #### to run this example, follow the instruction in the script below
 - example.sh
 
@@ -82,7 +82,6 @@ shExampleSh
 
 
 # quickstart node example
-
 #### to run this example, follow the instruction in the script below
 - example.js
 
@@ -424,8 +423,8 @@ instruction
     "author": "kai zhu <kaizhu256@gmail.com>",
     "bin": { "utility2" : "index.sh" },
     "dependencies": {
-        "istanbul-lite": "^2015.6.2",
-        "jslint-lite": "^2015.6.3"
+        "istanbul-lite": "^2015.8.2",
+        "jslint-lite": "^2015.8.1"
     },
     "description": "run dynamic browser tests with coverage \
 (via istanbul-lite and phantomjs-lite)",
@@ -466,7 +465,7 @@ npm_config_mode_auto_restart=1 \
 npm_config_mode_auto_restart_child=1 \
 ./index.sh test test.js"
     },
-    "version": "2015.8.5"
+    "version": "2015.8.6"
 }
 ```
 
@@ -481,12 +480,10 @@ npm_config_mode_auto_restart_child=1 \
 
 
 
-# change since b45aa22a
-- npm publish 2015.8.5
-- add npm-script build-doc
-- add aliasList param for utility2.docApiCreate
-- merge utility2.onErrorExit into utility2.exit
-- integrate shGitRepoBranchCommand into shHerokuDeploy
+# change since cc8d40b9
+- npm publish 2015.8.6
+- update index.sh build script
+- add simple http assets-server for utility2 start script
 - none
 
 

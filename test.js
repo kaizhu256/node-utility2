@@ -35,6 +35,27 @@
             options.abort();
         };
 
+        local.testCase_ajax_assets = function (options, onError) {
+            /*
+             * this function will test ajax's assets handling-behavior
+             */
+            if (!options) {
+                onError();
+                return;
+            }
+            local.utility2.ajax({ url: '/package.json' }, function (error, xhr) {
+                local.utility2.testTryCatch(function () {
+                    // validate no error occurred
+                    local.utility2.assert(!error, error);
+                    // validate responseText
+                    local.utility2.assert((
+                        /"name": "utility2",/
+                    ).test(xhr.responseText), xhr.responseText);
+                    onError();
+                }, onError);
+            });
+        };
+
         local.testCase_ajax_cache = function (options, onError) {
             /*
              * this function will test ajax's cache handling-behavior
@@ -90,18 +111,22 @@
                     modeNext += 1;
                     switch (modeNext) {
                     case 1:
+                        // test ajax's assets handling-behavior
+                        local.testCase_ajax_assets({}, onNext);
+                        break;
+                    case 2:
                         // test ajax's POST handling-behavior
                         local.testCase_ajax_post({}, onNext);
                         break;
-                    case 2:
+                    case 3:
                         // test ajax's cache handling-behavior
                         local.testCase_ajax_cache({}, onNext);
                         break;
-                    case 3:
+                    case 4:
                         // test ajax's error handling-behavior
                         local.testCase_ajax_error({}, onNext);
                         break;
-                    case 4:
+                    case 5:
                         // test ajax's abort handling-behavior
                         local.testCase_ajax_abort({}, onNext);
                         break;
@@ -1386,9 +1411,19 @@
                     response.end();
                 }, 1000);
                 break;
-            // default to nextMiddleware
             default:
-                nextMiddleware();
+                local.fs.readFile(
+                    process.cwd() + request.urlParsed.pathnameNormalized,
+                    function (error, data) {
+                        // default to nextMiddleware
+                        if (error) {
+                            nextMiddleware();
+                            return;
+                        }
+                        // serve file asset
+                        response.end(data);
+                    }
+                );
             }
         });
         // init error-middleware
@@ -1405,9 +1440,16 @@
                 switch (local.path.extname(file)) {
                 case '.js':
                 case '.json':
-                    // jslint file
-                    local.utility2.jslint_lite
-                        .jslintAndPrint(local.fs.readFileSync(file, 'utf8'), file);
+                    [
+                        // coverage-hack - cover $npm_config_mode_jslint === 0
+                        '0',
+                        local.utility2.envDict.npm_config_mode_jslint
+                    ].forEach(function (modeJslint) {
+                        if (modeJslint !== '0') {
+                            local.utility2.jslint_lite
+                                .jslintAndPrint(local.fs.readFileSync(file, 'utf8'), file);
+                        }
+                    });
                     break;
                 }
             });

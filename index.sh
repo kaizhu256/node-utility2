@@ -166,24 +166,25 @@ shDockerInstall() {
 }
 
 shDockerRestart() {
-    # this function will restart the docker container
+    # this function will restart the docker-container
     shDockerRm $1 || :
     shDockerStart $@ || return $?
 }
 
 shDockerRestartMongodb() {
-    # this function will restart the mongodb docker container
+    # this function will restart the mongodb docker-container
     # https://registry.hub.docker.com/_/mongo/
     local DIR || return $?
     DIR=/mnt/data/mongodb.data.db || return $?
-    mkdir -p $DIR
+    mkdir -p $DIR || return $?
     shDockerRm mongodb || :
-    docker run --name mongodb -d -v $DIR:/data/db $@ \
+    docker run --name mongodb -d \
+        -v /root:/root $@ -v $DIR:/data/db $@
         mongo  --storageEngine=wiredTiger || return $?
 }
 
 shDockerRestartPptpd() {
-    # this function will restart the pptpd docker container
+    # this function will restart the pptpd docker-container
     # https://github.com/whuwxl/docker-repos/tree/master/pptpd
     local FILE || return $?
     local PASSWORD || return $?
@@ -198,18 +199,32 @@ shDockerRestartPptpd() {
         chmod 600 $FILE || return $?
     fi
     shDockerRm pptpd || :
-    docker run --name pptpd --privileged -d -p 1723:1723 -v $FILE:/etc/ppp/chap-secrets:ro \
+    docker run --name pptpd --privileged -d -p 1723:1723
+        -v /root:/root -v $FILE:/etc/ppp/chap-secrets:ro \
         whuwxl/pptpd || return $?
 }
 
+shDockerRestartTransmission() {
+    # this function will restart the transmission docker-container
+    # https://hub.docker.com/r/dperson/transmission/
+    local DIR || return $?
+    DIR=/mnt/data/downloads || return $?
+    mkdir -p $DIR || return $?
+    shDockerRm transmission || :
+    docker run --name transmission -d -e TRPASSWD=admin -e TRUSER=admin -e TZ=EST5EDT \
+        -p 9091:9091 \
+        -v /root:/root -v $DIR:/var/lib/transmission-daemon \
+        dperson/transmission || return $?
+}
+
 shDockerRm() {
-    # this function will stop and rm the docker container $IMAGE:$NAME
+    # this function will stop and rm the docker-container $IMAGE:$NAME
     docker stop $@ || :
     docker rm $@ || return $?
 }
 
 shDockerSh() {
-    # this function will run sh in the docker container $image:$name
+    # this function will run sh in the docker-container $image:$name
     local NAME || return $?
     NAME=$1 || return $?
     docker start $NAME || return $?
@@ -217,19 +232,20 @@ shDockerSh() {
 }
 
 shDockerStart() {
-    # this function will start the docker container $image:$name
+    # this function will start the docker-container $image:$name
     local IMAGE || return $?
     local NAME || return $?
     NAME=$1 || return $?
     shift || return $?
     IMAGE=$1 || return $?
     shift || return $?
-    docker run -e debian_chroot=$NAME --name $NAME -v /mnt/data:/mnt/data -dt $@ $IMAGE sh || \
-        return $?
+    docker run --name $NAME -dt -e debian_chroot=$NAME \
+        -v /root:/root -v /mnt/data:/mnt/data \
+        $@ $IMAGE sh || return $?
 }
 
 shDockerStopAll() {
-    # this function will stop all docker containers
+    # this function will stop all docker-containers
     docker stop $(docker ps -aq) || return $?
 }
 
@@ -487,10 +503,10 @@ shInit() {
     # init CI_*
     if [ -d .git ]
     then
-        # init codeship.io env
+        # init codeship.com env
         if [ "$CI_NAME" = "codeship" ]
         then
-            export CI_HOST=codeship.io || return $?
+            export CI_HOST=codeship.com || return $?
         # init travis-ci.org env
         elif [ "$TRAVIS" ]
         then

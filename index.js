@@ -68,11 +68,11 @@
                 (module.aliasList || [moduleName]).forEach(function (moduleAlias) {
                     if (!element.example) {
                         options.example.replace(
-                            new RegExp('((?:\n.*?){8})(' + (moduleAlias === '.'
+                            new RegExp('((?:\n.*?){8}' + (moduleAlias === '.'
                                 ? '\\.'
                                 : moduleAlias
-                                ? '\\b' + moduleAlias + '\\.'
-                                : '\\b') + elementName +
+                                ? '\\b' + moduleAlias + '(?:\\([^\\)].*?\\)){0,1}\\.'
+                                : '\\b') + ')(' + elementName +
                                 ')(\\((?:.*?\n){8})'),
                             function (match0, match1, match2, match3) {
                                 // jslint-hack
