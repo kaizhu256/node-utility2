@@ -2,7 +2,7 @@ utility2
 ========
 run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
 
-[![NPM](https://img.shields.io/npm/v/utility2.svg?style=flat-square)](https://www.npmjs.com/package/utility2) [![NPM](https://img.shields.io/npm/dm/utility2.svg?style=flat-square)](https://www.npmjs.com/package/utility2) [![Join the chat at https://gitter.im/kaizhu256/node-utility2](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/kaizhu256/node-utility2?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![NPM](https://img.shields.io/npm/v/utility2.svg?style=flat-square)](https://www.npmjs.com/package/utility2) [![NPM](https://img.shields.io/npm/dm/utility2.svg?style=flat-square)](https://www.npmjs.com/package/utility2) [![NPM](https://img.shields.io/npm/dm/istanbul-lite.svg?style=flat-square)](https://www.npmjs.org/package/istanbul-lite) [![Join the chat at https://gitter.im/kaizhu256/node-utility2](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/kaizhu256/node-utility2?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 
 
@@ -423,15 +423,15 @@ instruction
     "author": "kai zhu <kaizhu256@gmail.com>",
     "bin": { "utility2" : "index.sh" },
     "dependencies": {
-        "istanbul-lite": "^2015.8.2",
-        "jslint-lite": "^2015.8.1"
+        "istanbul-lite": "^2015.9.1",
+        "jslint-lite": "^2015.9.1"
     },
     "description": "run dynamic browser tests with coverage \
 (via istanbul-lite and phantomjs-lite)",
     "devDependencies": {
         "phantomjs-lite": "^2015.8.2"
     },
-    "engines": { "node": ">=0.10 <=0.12" },
+    "engines": { "node": ">=0.12" },
     "keywords": [
         "browser", "build",
         "ci", "code", "continuous-integration", "cover", "coverage",
@@ -465,7 +465,7 @@ npm_config_mode_auto_restart=1 \
 npm_config_mode_auto_restart_child=1 \
 ./index.sh test test.js"
     },
-    "version": "2015.8.6"
+    "version": "2015.9.1"
 }
 ```
 
@@ -480,10 +480,10 @@ npm_config_mode_auto_restart_child=1 \
 
 
 
-# change since cc8d40b9
-- npm publish 2015.8.6
-- update index.sh build script
-- add simple http assets-server for utility2 start script
+# change since 758c698c
+- npm publish 2015.9.1
+- upgrade to nodejs v4
+- add .gitconfig
 - none
 
 
@@ -539,7 +539,7 @@ shBuild() {
     npm run-script build-doc || return $?
 
     # if running legacy-node, then do not continue
-    [ "$(node --version)" \< "v0.12" ] && return
+    [ "$(node --version)" \< "v4.0" ] && return
 
     # deploy app to heroku
     shRun shHerokuDeploy hrku01-$npm_package_name-$CI_BRANCH || return $?
@@ -563,7 +563,7 @@ MODE_BUILD=gitLsTree shRunScreenCapture shGitLsTree || exit $?
 # create recent changelog of last 50 commits
 MODE_BUILD=gitLog shRunScreenCapture git log -50 --pretty="%ai\u000a%B" || exit $?
 # if running legacy-node, then do not continue
-[ "$(node --version)" \< "v0.12" ] && exit $EXIT_CODE
+[ "$(node --version)" \< "v4.0" ] && exit $EXIT_CODE
 # upload build-artifacts to github, and if number of commits > 16, then squash older commits
 COMMIT_LIMIT=16 shBuildGithubUpload || exit $?
 exit $EXIT_CODE

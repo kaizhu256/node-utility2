@@ -179,8 +179,8 @@ shDockerRestartMongodb() {
     mkdir -p $DIR || return $?
     shDockerRm mongodb || :
     docker run --name mongodb -d \
-        -v /root:/root $@ -v $DIR:/data/db $@
-        mongo  --storageEngine=wiredTiger || return $?
+        -v /root:/root $@ -v $DIR:/data/db $@ \
+        mongo --storageEngine=wiredTiger || return $?
 }
 
 shDockerRestartPptpd() {
@@ -199,7 +199,7 @@ shDockerRestartPptpd() {
         chmod 600 $FILE || return $?
     fi
     shDockerRm pptpd || :
-    docker run --name pptpd --privileged -d -p 1723:1723
+    docker run --name pptpd --privileged -d -p 1723:1723 \
         -v /root:/root -v $FILE:/etc/ppp/chap-secrets:ro \
         whuwxl/pptpd || return $?
 }

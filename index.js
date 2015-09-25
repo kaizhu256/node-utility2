@@ -126,10 +126,8 @@
                         name: moduleName
                     };
                 });
-            return local.utility2.stringFormat(
-                local.utility2['/doc/doc.html.template'],
-                options
-            );
+            return local.utility2
+                .stringFormat(local.utility2['/doc/doc.html.template'], options);
         };
 
         local.utility2.errorMessagePrepend = function (error, message) {
@@ -555,11 +553,7 @@
                 local.utility2.nop(match0);
                 return dict[match].map(function (dict) {
                     // recursively format the array fragment
-                    return local.utility2.stringFormat(
-                        fragment,
-                        dict,
-                        valueDefault
-                    );
+                    return local.utility2.stringFormat(fragment, dict, valueDefault);
                 }).join('');
             };
             rgx = (/\{\{#[^}]+?\}\}/g);
@@ -2114,11 +2108,6 @@
                  */
                 local.utility2._debugReplError = error || local.utility2._debugReplError;
             };
-            // legacy-hack
-            /* istanbul ignore if */
-            if (local.utility2.envDict.npm_config_mode_legacy_node) {
-                local._replServer._domain = { on: local.utility2.nop };
-            }
             local._replServer._domain.on('error', local._replServer.onError);
             // save repl eval function
             local._replServer.evalDefault = local._replServer.eval;
@@ -2473,32 +2462,6 @@
         local.url = require('url');
         local.vm = require('vm');
         local.zlib = require('zlib');
-        // legacy-hack
-        /* istanbul ignore if */
-        if (process.version.slice(0, 6) < 'v0.12.') {
-            local.utility2.envDict.npm_config_mode_legacy_node =
-                local.utility2.envDict.npm_config_mode_legacy_node || '1';
-            local.utility2.fsRmrSync = function (dir) {
-                /*
-                 * this function will synchronously rm -fr the dir
-                 */
-                dir = local.path.resolve(process.cwd(), dir);
-                var rmrSync;
-                rmrSync = function (dir) {
-                    try {
-                        local.fs.unlinkSync(dir);
-                    } catch (errorCaught) {
-                        if (local.fs.existsSync(dir)) {
-                            local.fs.readdirSync(dir).forEach(function (file) {
-                                rmrSync(dir + '/' + file);
-                            });
-                            local.fs.rmdirSync(dir);
-                        }
-                    }
-                };
-                rmrSync(dir);
-            };
-        }
         // init utility2 properties
         local.utility2.objectSetDefault(local.utility2.envDict, {
             npm_config_dir_build: process.cwd() + '/tmp/build',
