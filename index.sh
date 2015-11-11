@@ -32,8 +32,13 @@ shBaseInit() {
     if [ ! "$PATH_BIN" ]
     then
         export PATH_BIN=\
-$HOME/bin:$HOME/node_modules/.bin:/usr/local/bin:/usr/local/sbin:$PATH || return $?
-        export PATH=$PATH_BIN || return $?
+$HOME/bin:$HOME/node_modules/.bin:/usr/local/bin:/usr/local/sbin || return $?
+        export PATH="$PATH_BIN:$PATH" || return $?
+    fi
+    # init $PATH_EMSCRIPTEN
+    if [ "$PATH_EMSCRIPTEN" = "" ]; then
+        export PATH_EMSCRIPTEN=$HOME/src/emsdk_portable/emscripten/latest || return $?
+        export PATH="$PATH_EMSCRIPTEN:$PATH" || return $?
     fi
     # init index.sh and .bashrc2
     for FILE in $HOME/index.sh $HOME/.bashrc2
@@ -165,6 +170,35 @@ shDockerInstall() {
     docker run hello-world || return $?
 }
 
+shDockerInstallWork() {
+    # this function will create a docker work container
+    # create docker container
+    if [ ! "$debian_chroot" ]
+    then
+        docker pull node:latest || return $?
+        shDockerRestart work node || return $?
+        docker exec work sh $HOME/index.sh shDockerInstallWork || return $?
+        return
+    fi
+    # run install script inside docker container
+    apt-get update || return $?
+    apt-get install -y \
+        apt-file \
+        aptitude \
+        build-essential \
+        chromium-inspector \
+        cmake \
+        default-jre \
+        less \
+        screen \
+        sudo \
+        unzip \
+        vim-nox \
+        xvfb || return $?
+    apt-file update || return $?
+    apt-get clean || return $?
+}
+
 shDockerRestart() {
     # this function will restart the docker-container
     shDockerRm $1 || :
@@ -175,12 +209,85 @@ shDockerRestartMongodb() {
     # this function will restart the mongodb docker-container
     # https://registry.hub.docker.com/_/mongo/
     local DIR || return $?
-    DIR=/mnt/data/mongodb.data.db || return $?
+    DIR=/root/mongodb.data.db || return $?
     mkdir -p $DIR || return $?
     shDockerRm mongodb || :
     docker run --name mongodb -d \
-        -v /root:/root $@ -v $DIR:/data/db $@ \
-        mongo --storageEngine=wiredTiger || return $?
+        -v /root:/root -v $DIR:/data/db \
+        $@ mongo --storageEngine=wiredTiger || return $?
+}
+
+shDockerRestartNginx() {
+    # this function will restart the nginx docker-container
+    local FILE || return $?
+    # init /root/etc.nginx.htpasswd
+    FILE=/root/etc.nginx.htpasswd || return $?
+    if [ ! -f $FILE ]
+    then
+        printf "foo:$(openssl passwd -crypt bar)" > $FILE || return $?
+    fi
+    # init /root/etc.nginx.nginx.conf
+    # https://www.nginx.com/resources/wiki/start/topics/examples/full/#nginx-conf
+    FILE=/root/etc.nginx.nginx.conf || return $?
+    if [ ! -f $FILE ]
+    then
+        printf '
+user nginx;
+events {
+    worker_connections 1024;
+}
+http {
+    default_type application/octet-stream;
+    include /etc/nginx/mime.types;
+    log_format main '"'"'$remote_addr - $remote_user [$time_local]  $status '"'"'
+        '"'"'"$request" $body_bytes_sent "$http_referer" '"'"'
+        '"'"'"$http_user_agent" "$http_x_forwarded_for"'"'"';
+    sendfile on;
+    tcp_nopush on;
+    # http server
+    server {
+        listen 80;
+        # redirect to https
+        location / {
+            rewrite ^ https://$host$request_uri permanent;
+        }
+    }
+    # https server
+    # https://www.nginx.com/resources/wiki/start/topics/examples/SSL-Offloader/#sslproxy-conf
+    server {
+        listen 443;
+        root /root/usr.share.nginx.html;
+        ssl_certificate /root/etc.nginx.ssl.pem;
+        ssl_certificate_key /root/etc.nginx.ssl.key;
+        ssl on;
+        ssl_prefer_server_ciphers on;
+        ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
+        location / {
+            index index.html index.htm;
+        }
+        location /private {
+            auth_basic on;
+            auth_basic_user_file /root/etc.nginx.htpasswd;
+            autoindex on;
+        }
+    }
+}' > $FILE || return $?
+    fi
+    # init /root/etc.nginx.ssl
+    # http://superuser.com/questions/226192/openssl-without-prompt
+    FILE=/root/etc.nginx.ssl || return $?
+    if [ ! -f $FILE.pem ]
+    then
+        openssl req -days 365 -keyout $FILE.key -new -newkey rsa:4096 -nodes -out $FILE.pem \
+            -subj "/C=AU" -x509 || return $?
+    fi
+    # init /root/usr.share.nginx.html
+    mkdir -p /root/usr.share.nginx.html || return $?
+    shDockerRm nginx || :
+    # https://registry.hub.docker.com/_/nginx/
+    docker run --name nginx -d -p 80:80 -p 443:443 \
+        -v /root:/root -v /root/etc.nginx.nginx.conf:/etc/nginx/nginx.conf:ro \
+        nginx || return $?
 }
 
 shDockerRestartPptpd() {
@@ -189,7 +296,7 @@ shDockerRestartPptpd() {
     local FILE || return $?
     local PASSWORD || return $?
     local USERNAME || return $?
-    FILE=/mnt/data/pptpd.etc.ppp.chap-secrets || return $?
+    FILE=/root/pptpd.etc.ppp.chap-secrets || return $?
     PASSWORD=$2 || return $?
     USERNAME=$1 || return $?
     # init /etc/ppp/chap-secrets
@@ -208,7 +315,7 @@ shDockerRestartTransmission() {
     # this function will restart the transmission docker-container
     # https://hub.docker.com/r/dperson/transmission/
     local DIR || return $?
-    DIR=/mnt/data/downloads || return $?
+    DIR=/root/downloads || return $?
     mkdir -p $DIR || return $?
     shDockerRm transmission || :
     docker run --name transmission -d -e TRPASSWD=admin -e TRUSER=admin -e TZ=EST5EDT \
@@ -240,7 +347,7 @@ shDockerStart() {
     IMAGE=$1 || return $?
     shift || return $?
     docker run --name $NAME -dt -e debian_chroot=$NAME \
-        -v /root:/root -v /mnt/data:/mnt/data \
+        -v /root:/root \
         $@ $IMAGE sh || return $?
 }
 
@@ -503,12 +610,8 @@ shInit() {
     # init CI_*
     if [ -d .git ]
     then
-        # init codeship.com env
-        if [ "$CI_NAME" = "codeship" ]
-        then
-            export CI_HOST=codeship.com || return $?
         # init travis-ci.org env
-        elif [ "$TRAVIS" ]
+        if [ "$TRAVIS" ]
         then
             export CI_BRANCH=$TRAVIS_BRANCH || return $?
             export CI_COMMIT_ID=$TRAVIS_COMMIT || return $?
@@ -690,7 +793,7 @@ shIstanbulCover() {
                 ")/index.js || return $?
         fi
         npm_config_dir_coverage="$npm_config_dir_build/coverage.html" \
-            $npm_config_file_istanbul cover $@ || return $?
+            node $npm_config_file_istanbul cover $@ || return $?
     fi
 }
 
@@ -710,24 +813,22 @@ shJsonFilePrettify() {
 }
 
 shMountData() {
-    # this function will mount /dev/xvdf to /mnt/data, and is intended for aws-ec2 setup
+    # this function will mount /dev/xvdf to /root, and is intended for aws-ec2 setup
     local IFS_OLD || return $?
     local TMP || return $?
     # mount optional /dev/xvdb
     mkdir -p /mnt/local || return $?
     mount /dev/xvdb /mnt/local -o noatime || :
     # mount data /dev/xvdf
-    mkdir -p /mnt/data || return $?
-    mount /dev/xvdf /mnt/data -o noatime || :
+    mount /dev/xvdf /root -o noatime || :
     # mount bind
     # http://stackoverflow.com/questions/9713104/loop-over-tuples-in-bash
     # save IFS
     IFS_OLD="$IFS" || return $?
     IFS="," || return $?
     for TMP in \
-        /mnt/data/root,/root \
-        /mnt/data/tmp,/tmp \
-        /mnt/data/var.lib.docker,/var/lib/docker
+        /root/tmp,/tmp \
+        /root/var.lib.docker,/var/lib/docker
     do
         set $TMP || return $?
         mkdir -p $1 $2 || return $?
@@ -750,11 +851,14 @@ shNpmTest() {
     # init npm-test-mode
     export npm_config_mode_npm_test=1 || return $?
     # init random server-port
-    export npm_config_server_port=$(shServerPortRandom) || return $?
+    if [ $npm_config_server_port = "" ]
+    then
+        export npm_config_server_port=$(shServerPortRandom) || return $?
+    fi
     # if coverage-mode is disabled, then run npm-test without coverage
     if [ "$npm_config_mode_coverage" = 0 ]
     then
-        node $@
+        shIstanbulCover $@
         return $?
     fi
     # cleanup old coverage
@@ -794,7 +898,7 @@ shNpmTest() {
     " || return $?
     if [ "$EXIT_CODE" != 0 ]
     then
-        node $@
+        npm_config_mode_coverage=0 shIstanbulCover $@
     fi
     return $EXIT_CODE
 }
@@ -1153,11 +1257,14 @@ shUbuntuInit() {
     # for examples
 
     # If not running interactively, don't do anything
-    [ -z "$PS1" ] && return
+    case $- in
+        *i*) ;;
+          *) return;;
+    esac
 
-    # don't put duplicate lines in the history. See bash(1) for more options
-    # ... or force ignoredups and ignorespace
-    HISTCONTROL=ignoredups:ignorespace
+    # don't put duplicate lines or lines starting with space in the history.
+    # See bash(1) for more options
+    HISTCONTROL=ignoreboth
 
     # append to the history file, don't overwrite it
     shopt -s histappend
@@ -1170,11 +1277,15 @@ shUbuntuInit() {
     # update the values of LINES and COLUMNS.
     shopt -s checkwinsize
 
+    # If set, the pattern "**" used in a pathname expansion context will
+    # match all files and zero or more directories and subdirectories.
+    #shopt -s globstar
+
     # make less more friendly for non-text input files, see lesspipe(1)
-    [ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
+    # [ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
 
     # set variable identifying the chroot you work in (used in the prompt below)
-    if [ -z "$debian_chroot" ] && [ -r /etc/debian_chroot ]; then
+    if [ -z "${debian_chroot:-}" ] && [ -r /etc/debian_chroot ]; then
         debian_chroot=$(cat /etc/debian_chroot)
     fi
 
@@ -1232,6 +1343,10 @@ shUbuntuInit() {
     alias la='ls -A'
     alias l='ls -CF'
 
+    # Add an "alert" alias for long running commands.  Use like so:
+    #   sleep 10; alert
+    alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
+
     # Alias definitions.
     # You may want to put all your additions into a separate file like
     # ~/.bash_aliases, instead of adding them here directly.
@@ -1244,9 +1359,13 @@ shUbuntuInit() {
     # enable programmable completion features (you don't need to enable
     # this, if it's already enabled in /etc/bash.bashrc and /etc/profile
     # sources /etc/bash.bashrc).
-    #if [ -f /etc/bash_completion ] && ! shopt -oq posix; then
-    #    . /etc/bash_completion
-    #fi
+    if ! shopt -oq posix; then
+      if [ -f /usr/share/bash-completion/bash_completion ]; then
+        . /usr/share/bash-completion/bash_completion
+      elif [ -f /etc/bash_completion ]; then
+        . /etc/bash_completion
+      fi
+    fi
 }
 
 shMain() {
@@ -1269,6 +1388,9 @@ shMain() {
         ;;
     shRunScreenCapture)
         shInit && "$COMMAND" $@ || return $?
+        ;;
+    shDockerInstallWork)
+        shDockerInstallWork || return $?
         ;;
     start)
         # http://stackoverflow.com/questions/59895

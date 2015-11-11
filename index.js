@@ -148,6 +148,9 @@
             /*
              * this function will exit the current process with the given exitCode
              */
+            exitCode = !exitCode || Number(exitCode) === 0
+                ? 0
+                : Number(exitCode) || 1;
             switch (local.modeJs) {
             case 'browser':
                 // throw global_test_results as an error,
@@ -155,8 +158,7 @@
                 switch (local.utility2.modeTest) {
                 case 'phantom':
                     throw new Error('\nphantom\n' + JSON.stringify({
-                        global_test_results:
-                            local.global.global_test_results
+                        global_test_results: local.global.global_test_results
                     }) + '\n');
                 }
                 break;
@@ -1320,7 +1322,6 @@
                     local.utility2.objectSetOverride(
                         local.utility2,
                         JSON.parse(decodeURIComponent(local.system.args[1])),
-                        {},
                         Infinity
                     );
                 } catch (ignore) {
@@ -2510,7 +2511,7 @@
                         console.log(local.utility2.argv0 +
                             ' - created screen-capture file://' +
                             local.utility2.fileScreenCapture);
-                        local.utility2.exit(0);
+                        local.utility2.exit();
                     }, local.utility2.timeoutScreenCapture);
                 }
                 return;
@@ -2620,6 +2621,8 @@
                     return module.exports &&
                         typeof process.versions.node === 'string' &&
                         typeof require('http').createServer === 'function' &&
+                        (!process.versions.electron ||
+                            typeof require('app').getAppPath() === 'string') &&
                         'node';
                 } catch (errorCaughtNode) {
                     return typeof navigator.userAgent === 'string' &&
