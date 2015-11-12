@@ -1,6 +1,6 @@
 utility2
 ========
-run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
+run dynamic browser tests with coverage (via istanbul and phantomjs-lite)
 
 [![NPM](https://img.shields.io/npm/v/utility2.svg?style=flat-square)](https://www.npmjs.com/package/utility2) [![NPM](https://img.shields.io/npm/dm/utility2.svg?style=flat-square)](https://www.npmjs.com/package/utility2) [![Join the chat at https://gitter.im/kaizhu256/node-utility2](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/kaizhu256/node-utility2?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
@@ -18,7 +18,7 @@ run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)
 |--:|:--|:--|:--|
 | test-server : | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://hrku01-utility2-master.herokuapp.com) | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://hrku01-utility2-beta.herokuapp.com) | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://hrku01-utility2-alpha.herokuapp.com)|
 | test-report : | [![test-report](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/test-report.html) | [![test-report](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/test-report.html) | [![test-report](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/test-report.html)|
-| coverage : | [![istanbul-lite coverage](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/coverage.html/index.html) | [![istanbul-lite coverage](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/coverage.html/index.html) | [![istanbul-lite coverage](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/coverage.html/index.html)|
+| coverage : | [![istanbul coverage](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/coverage.html/index.html) | [![istanbul coverage](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/coverage.html/index.html) | [![istanbul coverage](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/coverage.html/index.html)|
 | build-artifacts : | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..master..travis-ci.org) | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..beta..travis-ci.org) | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..alpha..travis-ci.org)|
 
 #### master branch
@@ -90,7 +90,7 @@ shExampleSh
 example.js
 
 this shared browser / node script will run browser tests with coverage
-(via istanbul-lite and phantomjs-lite)
+(via istanbul and phantomjs-lite)
 
 instruction
     1. save this js script as example.js
@@ -292,25 +292,46 @@ instruction
 '    <pre class="jslintOutputPre"></pre>\n' +
 '    <div class="testReportDiv"></div>\n' +
 '    <div class="istanbulCoverageDiv"></div>\n' +
-'    <script src="/assets/istanbul-lite.js"></script>\n' +
-'    <script src="/assets/jslint-lite.js"></script>\n' +
+'    <script src="/assets/utility2.lib.istanbul.js"></script>\n' +
+'    <script src="/assets/utility2.lib.jslint.js"></script>\n' +
 '    <script src="/assets/utility2.js"></script>\n' +
 '    <script>\n' +
-'    window.utility2 = window.utility2 || {};\n' +
 '    window.utility2.envDict = {\n' +
 '        npm_package_description: "{{envDict.npm_package_description}}",\n' +
 '        npm_package_name: "{{envDict.npm_package_name}}",\n' +
 '        npm_package_version: "{{envDict.npm_package_version}}"\n' +
 '    };\n' +
-'    document.querySelector(\n' +
-'        ".istanbulInputTextarea"\n' +
-'    ).addEventListener("keyup", function () {\n' +
-'        window.jslint_lite.jslintTextarea();\n' +
-'        window.istanbul_lite.coverTextarea();\n' +
-'    });\n' +
+'    window.testRun = function () {\n' +
+'        // jslint .jslintInputTextarea\n' +
+'        window.utility2.jslint.jslintAndPrint(\n' +
+'            (document.querySelector(".jslintInputTextarea") || {}).value || "",\n' +
+'            "jslintInputTextarea.js"\n' +
+'        );\n' +
+'        (document.querySelector(".jslintOutputPre") || {})\n' +
+'            .textContent = window.utility2.jslint.errorText\n' +
+'            .replace((/\\u001b\\[\\d+m/g), "")\n' +
+'            .trim();\n' +
+'        // cleanup __coverage__\n' +
+'        try {\n' +
+'            delete window.__coverage__["/istanbulInputTextarea.js"];\n' +
+'        } catch (ignore) {\n' +
+'        }\n' +
+'        try {\n' +
+'            eval(window.utility2.istanbul.instrumentSync(\n' +
+'                document.querySelector(".istanbulInputTextarea").value,\n' +
+'                "/istanbulInputTextarea.js"\n' +
+'            ));\n' +
+'            window.utility2.istanbul.coverageReportCreate();\n' +
+'        } catch (errorCaught) {\n' +
+'            document.querySelector(".istanbulCoverageDiv").innerHTML =\n' +
+'                "<pre>" + errorCaught.stack.replace((/</g), "&lt") + "</pre>";\n' +
+'        }\n' +
+'    };\n' +
+'    document\n' +
+'        .querySelector(".istanbulInputTextarea")\n' +
+'        .addEventListener("keyup", window.testRun);\n' +
 '    if (!window.utility2.modeTest) {\n' +
-'        window.jslint_lite.jslintTextarea();\n' +
-'        window.istanbul_lite.coverTextarea();\n' +
+'        window.testRun();\n' +
 '    }\n' +
 '    </script>\n' +
 '    <script src="/assets/example.js"></script>\n' +
@@ -331,14 +352,10 @@ instruction
             }
         });
         local.utility2.cacheDict.assets['/assets/example.js'] =
-            local.utility2.istanbul_lite.instrumentSync(
+            local.utility2.istanbul.instrumentSync(
                 local.fs.readFileSync(__dirname + '/example.js', 'utf8'),
                 __dirname + '/example.js'
             );
-        local.utility2.cacheDict.assets['/assets/istanbul-lite.js'] =
-            local.utility2.istanbul_lite['/assets/istanbul-lite.js'];
-        local.utility2.cacheDict.assets['/assets/jslint-lite.js'] =
-            local.utility2.jslint_lite['/assets/jslint-lite.js'];
         local.utility2.cacheDict.assets['/test/hello'] = 'hello';
         // init middleware
         local.middleware = local.utility2.middlewareGroupCreate([
@@ -401,15 +418,13 @@ instruction
 #### output from utility2
 [![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleSh.slimerjs._2Ftmp_2Fapp_2Ftmp_2Fbuild_2Ftest-report.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/test-report.html)
 
-#### output from istanbul-lite
+#### output from istanbul
 [![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleJs.slimerjs._2Ftmp_2Fapp_2Ftmp_2Fbuild_2Fcoverage.html_2Fapp_2Fexample.js.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/coverage.html/node-utility2/index.js.html)
 
 
 
 # npm-dependencies
-- [istanbul-lite](https://www.npmjs.com/package/istanbul-lite)
-- [jslint-lite](https://www.npmjs.com/package/jslint-lite)
-
+- none
 
 
 # package-listing
@@ -421,13 +436,13 @@ instruction
 ```json
 {
     "author": "kai zhu <kaizhu256@gmail.com>",
-    "bin": { "utility2" : "index.sh" },
-    "dependencies": {
-        "istanbul-lite": "^2015.9.1",
-        "jslint-lite": "^2015.9.1"
+    "bin": {
+        "utility2" : "index.sh",
+        "utility2-istanbul" : "lib.istanbul.js",
+        "utility2-jslint" : "lib.jslint.js"
     },
     "description": "run dynamic browser tests with coverage \
-(via istanbul-lite and phantomjs-lite)",
+(via istanbul and phantomjs-lite)",
     "devDependencies": {
         "phantomjs-lite": "^2015.8.2"
     },
@@ -465,7 +480,7 @@ npm_config_mode_auto_restart=1 \
 npm_config_mode_auto_restart_child=1 \
 ./index.sh test test.js"
     },
-    "version": "2015.10.1"
+    "version": "2015.10.2"
 }
 ```
 
@@ -480,12 +495,11 @@ npm_config_mode_auto_restart_child=1 \
 
 
 
-# change since 5adba390
-- npm publish 2015.10.1
-- allow env var $npm_config_server_port to be overridden in shNpmTest shell command
-- merge /mnt/data into /mnt/data/root for amazon ec2 deploy and docker
-- update shUbuntuInit
-- add shell command shDockerInstallWork
+# change since ee2b7efa
+- npm publish 2015.10.2
+- update travis legacy build to use nodejs 4.2
+- remove istanbul-lite dependency
+- remove jslint-lite dependency
 - none
 
 
@@ -541,7 +555,7 @@ shBuild() {
     npm run-script build-doc || return $?
 
     # if running legacy-node, then do not continue
-    [ "$(node --version)" \< "v4.0" ] && return
+    [ "$(node --version)" \< "v5.0" ] && return
 
     # deploy app to heroku
     shRun shHerokuDeploy hrku01-$npm_package_name-$CI_BRANCH || return $?

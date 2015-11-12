@@ -1,11 +1,11 @@
 {
     "author": "kai zhu <kaizhu256@gmail.com>",
-    "bin": { "utility2" : "index.sh" },
-    "dependencies": {
-        "istanbul-lite": "^2015.9.1",
-        "jslint-lite": "^2015.9.1"
+    "bin": {
+        "utility2" : "index.sh",
+        "utility2-istanbul" : "lib.istanbul.js",
+        "utility2-jslint" : "lib.jslint.js"
     },
-    "description": "run dynamic browser tests with coverage (via istanbul-lite and phantomjs-lite)",
+    "description": "run dynamic browser tests with coverage (via istanbul and phantomjs-lite)",
     "devDependencies": {
         "phantomjs-lite": "^2015.8.2"
     },
@@ -35,5 +35,5 @@
         "start": "npm_config_mode_auto_restart=1 ./index.sh shRun node test.js",
         "test": "./index.sh shRun shReadmeExportPackageJson && export npm_config_file_start=index.js && npm_config_mode_auto_restart=1 npm_config_mode_auto_restart_child=1 ./index.sh test test.js"
     },
-    "version": "2015.10.1"
+    "version": "2015.10.2"
 }

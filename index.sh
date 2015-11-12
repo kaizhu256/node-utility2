@@ -784,16 +784,8 @@ shIstanbulCover() {
     then
         node $@ || return $?
     else
-        # init $npm_config_file_istanbul
-        if [ ! "$npm_config_file_istanbul" ]
-        then
-            export npm_config_file_istanbul=$(cd $npm_config_dir_utility2 && \
-                node -e "
-                    console.log(require('istanbul-lite').__dirname);
-                ")/index.js || return $?
-        fi
         npm_config_dir_coverage="$npm_config_dir_build/coverage.html" \
-            node $npm_config_file_istanbul cover $@ || return $?
+            node $npm_config_dir_utility2/lib.istanbul.js cover $@ || return $?
     fi
 }
 
@@ -851,7 +843,7 @@ shNpmTest() {
     # init npm-test-mode
     export npm_config_mode_npm_test=1 || return $?
     # init random server-port
-    if [ $npm_config_server_port = "" ]
+    if [ "$npm_config_server_port" = "" ]
     then
         export npm_config_server_port=$(shServerPortRandom) || return $?
     fi
@@ -1026,7 +1018,7 @@ shReadmeTestJs() {
     # jslint $FILE
     if [ ! "$MODE_OFFLINE" ] && [ "$npm_config_mode_jslint" != 0 ]
     then
-        npm install jslint-lite && node_modules/.bin/jslint-lite $FILE || return $?
+        $npm_config_dir_utility2/lib.jslint.js $FILE || return $?
     fi
     # test $FILE
     SCRIPT=$(node -e "
@@ -1393,22 +1385,7 @@ shMain() {
         shDockerInstallWork || return $?
         ;;
     start)
-        # http://stackoverflow.com/questions/59895
-        # /can-a-bash-script-tell-what-directory-its-stored-in
-        SOURCE="${BASH_SOURCE[0]}"
-        while [ -h "$SOURCE" ]
-        # resolve $SOURCE until the file is no longer a symlink
-        do
-            DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )" || return $?
-            SOURCE="$(readlink "$SOURCE")" || return $?
-            # if $SOURCE was a relative symlink,
-            # we need to resolve it relative to the path where the symlink file was located
-            [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE" || return $?
-        done
-        npm_config_dir_utility2="$( cd -P "$( dirname "$SOURCE" )" && pwd )" || return $?
-        npm_config_file_start=$1 \
-        npm_config_mode_auto_restart=1 \
-        shRun node -e "
+        shInit && npm_config_file_start=$1 npm_config_mode_auto_restart=1 shRun node -e "
             require('$npm_config_dir_utility2/test.js');
         " $@ || return $?
         ;;

@@ -364,6 +364,61 @@
             onError();
         };
 
+        local.testCase_jslintAndPrint_default = function (options, onError) {
+            /*
+             * this function will test jslintAndPrint's default handling-behavior
+             */
+            // jslint-hack
+            local.utility2.nop(options);
+            local.utility2.testMock([
+                // suppress console.error
+                [console, { error: local.utility2.nop }]
+            ], function (onError) {
+                // test csslint passed handling-behavior
+                local.utility2.jslint.jslintAndPrint(
+                    'body { font: normal; }',
+                    'passed.css'
+                );
+                // validate no error occurred
+                local.utility2.assert(
+                    !local.utility2.jslint.errorText,
+                    local.utility2.jslint.errorText
+                );
+                // test csslint failed handling-behavior
+                local.utility2.jslint.jslintAndPrint('syntax error', 'failed.css');
+                // validate error occurred
+                local.utility2.assert(
+                    local.utility2.jslint.errorText,
+                    local.utility2.jslint.errorText
+                );
+                // test jslint passed handling-behavior
+                local.utility2.jslint.jslintAndPrint('{}', 'passed.js');
+                // validate no error occurred
+                local.utility2.assert(
+                    !local.utility2.jslint.errorText,
+                    local.utility2.jslint.errorText
+                );
+                // test jslint failed handling-behavior
+                local.utility2.jslint.jslintAndPrint('syntax error', 'failed.js');
+                // validate error occurred
+                local.utility2.assert(
+                    local.utility2.jslint.errorText,
+                    local.utility2.jslint.errorText
+                );
+                // test /* jslint-ignore-begin */ ... /* jslint-ignore-end */
+                // handling-behavior
+                local.utility2.jslint.jslintAndPrint('/* jslint-ignore-begin */\n' +
+                    'syntax error\n' +
+                    '/* jslint-ignore-end */\n', 'passed.js');
+                // validate no error occurred
+                local.utility2.assert(
+                    !local.utility2.jslint.errorText,
+                    local.utility2.jslint.errorText
+                );
+                onError();
+            }, onError);
+        };
+
         local.testCase_jsonCopy_default = function (options, onError) {
             /*
              * this function will test jsonCopy's default handling-behavior
@@ -973,7 +1028,7 @@
             var coverage1, coverage2, data;
             // jslint-hack
             local.utility2.nop(options);
-            data = local.utility2.istanbul_lite.instrumentSync(
+            data = local.utility2.istanbul.instrumentSync(
                 '(function () {\nreturn arg ' +
                     '? __coverage__ ' +
                     ': __coverage__;\n}());',
@@ -1352,7 +1407,7 @@
             '</script><script src="/assets/example.js"></script>\n' +
             '</script><script src="/test/test.js"></script>\n';
         local.utility2.cacheDict.assets['/test/test.js'] =
-            local.utility2.istanbul_lite.instrumentInPackage(
+            local.utility2.istanbul.instrumentInPackage(
                 local.fs.readFileSync(__filename, 'utf8'),
                 __filename,
                 'utility2'
@@ -1430,7 +1485,6 @@
         local.middlewareError = local.utility2.middlewareError;
         // jslint dir
         [
-            __dirname,
             process.cwd()
         ].forEach(function (dir) {
             local.fs.readdirSync(dir).forEach(function (file) {
@@ -1446,7 +1500,7 @@
                         local.utility2.envDict.npm_config_mode_jslint
                     ].forEach(function (modeJslint) {
                         if (modeJslint !== '0') {
-                            local.utility2.jslint_lite
+                            local.utility2.jslint
                                 .jslintAndPrint(local.fs.readFileSync(file, 'utf8'), file);
                         }
                     });
@@ -1459,8 +1513,7 @@
             '/assets/utility2.css'
         ].forEach(function (file) {
             // jslint file
-            local.utility2.jslint_lite
-                .jslintAndPrint(local.utility2.cacheDict.assets[file], file);
+            local.utility2.jslint.jslintAndPrint(local.utility2.cacheDict.assets[file], file);
         });
         // init repl debugger
         local.utility2.replStart();

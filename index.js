@@ -1168,8 +1168,8 @@
                 break;
             }
             // init coverageReportCreate
-            coverageReportCreate = (local.utility2.istanbul_lite &&
-                local.utility2.istanbul_lite.coverageReportCreate) ||
+            coverageReportCreate = (local.utility2.istanbul &&
+                local.utility2.istanbul.coverageReportCreate) ||
                 local.utility2.nop;
             // init modeTestCase
             local.utility2.modeTestCase = local.utility2.modeTestCase ||
@@ -2472,14 +2472,22 @@
             npm_package_version: '0.0.1'
         });
         // init assets
-        local.utility2.cacheDict.assets['/assets/istanbul-lite.js'] =
-            local.utility2.istanbul_lite['/assets/istanbul-lite.js'];
-        local.utility2.cacheDict.assets['/assets/jslint-lite.js'] =
-            local.utility2.jslint_lite['/assets/jslint-lite.js'];
-        local.utility2.cacheDict.assets['/assets/utility2.js'] = local.utility2.istanbul_lite
-            .instrumentInPackage(
+        local.utility2.cacheDict.assets['/assets/utility2.js'] =
+            local.utility2.istanbul.instrumentInPackage(
                 local.fs.readFileSync(__filename, 'utf8'),
                 __filename,
+                'utility2'
+            );
+        local.utility2.cacheDict.assets['/assets/utility2.lib.istanbul.js'] =
+            local.utility2.istanbul.instrumentInPackage(
+                '//' + local.fs.readFileSync(__dirname + '/lib.istanbul.js', 'utf8'),
+                __dirname + '/lib.istanbul.js',
+                'utility2'
+            );
+        local.utility2.cacheDict.assets['/assets/utility2.lib.jslint.js'] =
+            local.utility2.istanbul.instrumentInPackage(
+                '//' + local.fs.readFileSync(__dirname + '/lib.jslint.js', 'utf8'),
+                __dirname + '/lib.jslint.js',
                 'utility2'
             );
         break;
@@ -2621,8 +2629,6 @@
                     return module.exports &&
                         typeof process.versions.node === 'string' &&
                         typeof require('http').createServer === 'function' &&
-                        (!process.versions.electron ||
-                            typeof require('app').getAppPath() === 'string') &&
                         'node';
                 } catch (errorCaughtNode) {
                     return typeof navigator.userAgent === 'string' &&
@@ -2662,17 +2668,17 @@
         };
         // init utility2
         local.utility2 = { cacheDict: { assets: {} }, local: local };
-        // init istanbul_lite
-        local.utility2.istanbul_lite = local.modeJs === 'browser'
-            ? window.istanbul_lite
+        // init istanbul
+        local.utility2.istanbul = local.modeJs === 'browser'
+            ? window.utility2_istanbul
             : local.modeJs === 'node'
-            ? require('istanbul-lite')
+            ? require('./lib.istanbul.js')
             : null;
-        // init jslint_lite
-        local.utility2.jslint_lite = local.modeJs === 'browser'
-            ? window.jslint_lite
+        // init jslint
+        local.utility2.jslint = local.modeJs === 'browser'
+            ? window.utility2_jslint
             : local.modeJs === 'node'
-            ? require('jslint-lite')
+            ? require('./lib.jslint.js')
             : null;
 /* jslint-indent-begin 8 */
 /*jslint maxlen: 256*/
