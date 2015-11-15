@@ -303,7 +303,7 @@ instruction
 '    };\n' +
 '    window.testRun = function () {\n' +
 '        // jslint .jslintInputTextarea\n' +
-'        window.utility2.jslint.jslintAndPrint(\n' +
+'        window.utility2.jslintAndPrint(\n' +
 '            (document.querySelector(".jslintInputTextarea") || {}).value || "",\n' +
 '            "jslintInputTextarea.js"\n' +
 '        );\n' +
@@ -317,11 +317,11 @@ instruction
 '        } catch (ignore) {\n' +
 '        }\n' +
 '        try {\n' +
-'            eval(window.utility2.istanbul.instrumentSync(\n' +
+'            eval(window.utility2.istanbulInstrumentSync(\n' +
 '                document.querySelector(".istanbulInputTextarea").value,\n' +
 '                "/istanbulInputTextarea.js"\n' +
 '            ));\n' +
-'            window.utility2.istanbul.coverageReportCreate();\n' +
+'            window.utility2.istanbulCoverageReportCreate();\n' +
 '        } catch (errorCaught) {\n' +
 '            document.querySelector(".istanbulCoverageDiv").innerHTML =\n' +
 '                "<pre>" + errorCaught.stack.replace((/</g), "&lt") + "</pre>";\n' +
@@ -352,7 +352,7 @@ instruction
             }
         });
         local.utility2.cacheDict.assets['/assets/example.js'] =
-            local.utility2.istanbul.instrumentSync(
+            local.utility2.istanbulInstrumentSync(
                 local.fs.readFileSync(__dirname + '/example.js', 'utf8'),
                 __dirname + '/example.js'
             );
@@ -470,17 +470,22 @@ instruction
         "build-doc": "./index.sh shRun shReadmeExportPackageJson && \
 ./index.sh shRun shDocApiCreate \"{\
 exampleFileList:['example.js','test.js','index.js'],\
-moduleDict:{utility2:{exports:require('./index.js')}}\
+moduleDict:{\
+utility2:{exports:require('./index.js')},\
+'utility2.istanbul':{exports:require('./index.js').istanbul},\
+'utility2.jslint':{exports:require('./index.js').jslint}\
+}\
 }\"",
         "postinstall": "./index.sh shRun shReadmeExportPackageJson",
         "start": "npm_config_mode_auto_restart=1 ./index.sh shRun node test.js",
-        "test": "./index.sh shRun shReadmeExportPackageJson && \
+        "test": "rm -fr tmp/build/coverage.html/aa &&\
+./index.sh shRun shReadmeExportPackageJson && \
 export npm_config_file_start=index.js && \
 npm_config_mode_auto_restart=1 \
 npm_config_mode_auto_restart_child=1 \
 ./index.sh test test.js"
     },
-    "version": "2015.10.2"
+    "version": "2015.10.3"
 }
 ```
 
@@ -495,11 +500,10 @@ npm_config_mode_auto_restart_child=1 \
 
 
 
-# change since ee2b7efa
-- npm publish 2015.10.2
-- update travis legacy build to use nodejs 4.2
-- remove istanbul-lite dependency
-- remove jslint-lite dependency
+# change since 511fcc80
+- npm publish 2015.10.3
+- improve code coverage
+- simplify istanbul coverage code
 - none
 
 
@@ -579,7 +583,7 @@ MODE_BUILD=gitLsTree shRunScreenCapture shGitLsTree || exit $?
 # create recent changelog of last 50 commits
 MODE_BUILD=gitLog shRunScreenCapture git log -50 --pretty="%ai\u000a%B" || exit $?
 # if running legacy-node, then do not continue
-[ "$(node --version)" \< "v4.0" ] && exit $EXIT_CODE
+[ "$(node --version)" \< "v5.0" ] && exit $EXIT_CODE
 # upload build-artifacts to github, and if number of commits > 16, then squash older commits
 COMMIT_LIMIT=16 shBuildGithubUpload || exit $?
 exit $EXIT_CODE

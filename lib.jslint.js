@@ -13627,8 +13627,7 @@ klass:              do {
                 if (!errorList.length) {
                     return script;
                 }
-                local.errorText =
-                    '\n\u001b[1m' + file + '\u001b[22m\n';
+                local.errorText = '\n\u001b[1m' + file + '\u001b[22m\n';
                 errorList
                     .filter(function (error) {
                         return error;
@@ -13694,9 +13693,7 @@ klass:              do {
                     });
             }
             // print error to stderr
-            if (local.errorText) {
-                console.error(local.errorText);
-            }
+            console.error(local.errorText);
             return script;
         };
     }());

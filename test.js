@@ -19,10 +19,6 @@
             /*
              * this function will test ajax's abort handling-behavior
              */
-            if (!options) {
-                onError();
-                return;
-            }
             options = local.utility2.ajax({ url: '/test/timeout' }, function (error) {
                 local.utility2.testTryCatch(function () {
                     // validate error occurred
@@ -39,18 +35,15 @@
             /*
              * this function will test ajax's assets handling-behavior
              */
-            if (!options) {
-                onError();
-                return;
-            }
+            // jslint-hack
+            local.utility2.nop(options);
             local.utility2.ajax({ url: '/package.json' }, function (error, xhr) {
                 local.utility2.testTryCatch(function () {
                     // validate no error occurred
                     local.utility2.assert(!error, error);
                     // validate responseText
-                    local.utility2.assert((
-                        /"name": "utility2",/
-                    ).test(xhr.responseText), xhr.responseText);
+                    local.utility2.assert((/"name": "utility2",/)
+                        .test(xhr.responseText), xhr.responseText);
                     onError();
                 }, onError);
             });
@@ -62,10 +55,6 @@
              */
             // jslint-hack
             local.utility2.nop(options);
-            if (!options) {
-                onError();
-                return;
-            }
             // test http GET handling-behavior
             local.utility2.ajax({
                 // test debug handling-behavior
@@ -96,57 +85,11 @@
             });
         };
 
-        local.testCase_ajax_default = function (options, onError) {
-            /*
-             * this function will test ajax's default handling-behavior
-             */
-            var modeNext, onNext;
-            // jslint-hack
-            local.utility2.nop(options);
-            modeNext = 0;
-            onNext = function (error) {
-                local.utility2.testTryCatch(function () {
-                    // validate no error occurred
-                    local.utility2.assert(!error, error);
-                    modeNext += 1;
-                    switch (modeNext) {
-                    case 1:
-                        // test ajax's assets handling-behavior
-                        local.testCase_ajax_assets({}, onNext);
-                        break;
-                    case 2:
-                        // test ajax's POST handling-behavior
-                        local.testCase_ajax_post({}, onNext);
-                        break;
-                    case 3:
-                        // test ajax's cache handling-behavior
-                        local.testCase_ajax_cache({}, onNext);
-                        break;
-                    case 4:
-                        // test ajax's error handling-behavior
-                        local.testCase_ajax_error({}, onNext);
-                        break;
-                    case 5:
-                        // test ajax's abort handling-behavior
-                        local.testCase_ajax_abort({}, onNext);
-                        break;
-                    default:
-                        onError(error);
-                    }
-                }, onError);
-            };
-            onNext();
-        };
-
         local.testCase_ajax_error = function (options, onError) {
             /*
              * this function will test ajax's error handling-behavior
              */
             var onParallel;
-            if (!options) {
-                onError();
-                return;
-            }
             // jslint-hack
             local.utility2.nop(options);
             onParallel = local.utility2.onParallel(onError);
@@ -188,10 +131,6 @@
             var data, onParallel;
             // jslint-hack
             local.utility2.nop(options);
-            if (!options) {
-                onError();
-                return;
-            }
             onParallel = local.utility2.onParallel(onError);
             onParallel.counter += 1;
             // test /test/body handling-behavior
@@ -310,6 +249,75 @@
             onError();
         };
 
+        local.testCase_istanbulInstrumentSync_default = function (options, onError) {
+            /*
+             * this function will test istanbulInstrumentSync's default handling-behavior
+             */
+            var data;
+            // jslint-hack
+            local.utility2.nop(options);
+            data = local.utility2.istanbulInstrumentSync('1', 'test.js');
+            // validate data
+            local.utility2.assert(data.indexOf('.s[\'1\']++;1;\n') >= 0, data);
+            onError();
+        };
+
+        local.testCase_istanbulCoverageReportCreate_default = function (options, onError) {
+            /*
+             * this function will test istanbulCoverageReportCreate's default handling-behavior
+             */
+            // jslint-hack
+            local.utility2.nop(options);
+            local.utility2.testMock([
+                // suppress console.log
+                [console, { log: local.utility2.nop }]
+            ], function (onError) {
+                /*jslint evil: true*/
+                // test path handling-behavior
+                ['/', local.utility2.__dirname].forEach(function (dir) {
+                    ['aa.js', 'aa/bb.js'].forEach(function (path) {
+                        // cover path
+                        eval(local.utility2.istanbulInstrumentSync(
+                            // test skip handling-behavior
+                            'null',
+                            dir + '/' + path
+                        ));
+                    });
+                });
+                // create report with covered path
+                local.utility2.istanbulCoverageReportCreate();
+                // reset coverage
+                Object.keys(local.global.__coverage__).forEach(function (key) {
+                    if ((/aa.js|bb.js/).test(key)) {
+                        delete local.global.__coverage__[key];
+                    }
+                });
+                // test file-content handling-behavior
+                [
+                    // test no-content handling-behavior
+                    '',
+                    // test uncovereed-code handling-behavior
+                    'null && null',
+                    // test trailing-whitespace handling-behavior
+                    'null ',
+                    // test skip handling-behavior
+                    '/* istanbul ignore next */\nnull && null'
+                ].forEach(function (content) {
+                    // cover path
+                    eval(local.utility2.istanbulInstrumentSync(content, 'aa.js'));
+                    // create report with covered content
+                    local.utility2.istanbulCoverageReportCreate();
+                    // reset coverage
+                    Object.keys(local.global.__coverage__).forEach(function (key) {
+                        if ((/aa.js|bb.js/).test(key)) {
+                            delete local.global.__coverage__[key];
+                        }
+                    });
+                });
+                onError();
+            }, onError);
+        };
+
         local.testCase_debug_print_default = function (options, onError) {
             /*
              * this function will test debug_print's default handling-behavior
@@ -375,7 +383,7 @@
                 [console, { error: local.utility2.nop }]
             ], function (onError) {
                 // test csslint passed handling-behavior
-                local.utility2.jslint.jslintAndPrint(
+                local.utility2.jslintAndPrint(
                     'body { font: normal; }',
                     'passed.css'
                 );
@@ -385,21 +393,21 @@
                     local.utility2.jslint.errorText
                 );
                 // test csslint failed handling-behavior
-                local.utility2.jslint.jslintAndPrint('syntax error', 'failed.css');
+                local.utility2.jslintAndPrint('syntax error', 'failed.css');
                 // validate error occurred
                 local.utility2.assert(
                     local.utility2.jslint.errorText,
                     local.utility2.jslint.errorText
                 );
                 // test jslint passed handling-behavior
-                local.utility2.jslint.jslintAndPrint('{}', 'passed.js');
+                local.utility2.jslintAndPrint('{}', 'passed.js');
                 // validate no error occurred
                 local.utility2.assert(
                     !local.utility2.jslint.errorText,
                     local.utility2.jslint.errorText
                 );
                 // test jslint failed handling-behavior
-                local.utility2.jslint.jslintAndPrint('syntax error', 'failed.js');
+                local.utility2.jslintAndPrint('syntax error', 'failed.js');
                 // validate error occurred
                 local.utility2.assert(
                     local.utility2.jslint.errorText,
@@ -407,7 +415,7 @@
                 );
                 // test /* jslint-ignore-begin */ ... /* jslint-ignore-end */
                 // handling-behavior
-                local.utility2.jslint.jslintAndPrint('/* jslint-ignore-begin */\n' +
+                local.utility2.jslintAndPrint('/* jslint-ignore-begin */\n' +
                     'syntax error\n' +
                     '/* jslint-ignore-end */\n', 'passed.js');
                 // validate no error occurred
@@ -1021,14 +1029,14 @@
             onNext();
         };
 
-        local.testCase_istanbulMerge_default = function (options, onError) {
+        local.testCase_istanbulCoverageMerge_default = function (options, onError) {
             /*
-             * this function will test istanbulMerge's default handling-behavior
+             * this function will test istanbulCoverageMerge's default handling-behavior
              */
             var coverage1, coverage2, data;
             // jslint-hack
             local.utility2.nop(options);
-            data = local.utility2.istanbul.instrumentSync(
+            data = local.utility2.istanbulInstrumentSync(
                 '(function () {\nreturn arg ' +
                     '? __coverage__ ' +
                     ': __coverage__;\n}());',
@@ -1050,7 +1058,7 @@
             // validate coverage2
             local.utility2.assert(local.utility2.jsonStringifyOrdered(coverage2) === '{"/test":{"b":{"1":[1,0]},"branchMap":{"1":{"line":2,"locations":[{"end":{"column":25,"line":2},"start":{"column":13,"line":2}},{"end":{"column":40,"line":2},"start":{"column":28,"line":2}}],"type":"cond-expr"}},"code":["(function () {","return arg ? __coverage__ : __coverage__;","}());"],"f":{"1":1},"fnMap":{"1":{"line":1,"loc":{"end":{"column":13,"line":1},"start":{"column":1,"line":1}},"name":"(anonymous_1)"}},"path":"/test","s":{"1":1,"2":1},"statementMap":{"1":{"end":{"column":5,"line":3},"start":{"column":0,"line":1}},"2":{"end":{"column":41,"line":2},"start":{"column":0,"line":2}}}}}', coverage2);
             // merge coverage2 into coverage1
-            local.utility2.istanbulMerge(coverage1, coverage2);
+            local.utility2.istanbulCoverageMerge(coverage1, coverage2);
             // validate merged coverage1
             local.utility2.assert(local.utility2.jsonStringifyOrdered(coverage1) === '{"/test":{"b":{"1":[1,1]},"branchMap":{"1":{"line":2,"locations":[{"end":{"column":25,"line":2},"start":{"column":13,"line":2}},{"end":{"column":40,"line":2},"start":{"column":28,"line":2}}],"type":"cond-expr"}},"code":["(function () {","return arg ? __coverage__ : __coverage__;","}());"],"f":{"1":2},"fnMap":{"1":{"line":1,"loc":{"end":{"column":13,"line":1},"start":{"column":1,"line":1}},"name":"(anonymous_1)"}},"path":"/test","s":{"1":2,"2":2},"statementMap":{"1":{"end":{"column":5,"line":3},"start":{"column":0,"line":1}},"2":{"end":{"column":41,"line":2},"start":{"column":0,"line":2}}}}}', coverage1);
             /* jslint-ignore-end */
@@ -1060,9 +1068,27 @@
             // test null-case handling-behavior
             coverage1 = null;
             coverage2 = null;
-            local.utility2.istanbulMerge(coverage1, coverage2);
+            local.utility2.istanbulCoverageMerge(coverage1, coverage2);
             // validate merged coverage1
             local.utility2.assert(coverage1 === null, coverage1);
+            onError();
+        };
+
+        local.testCase_istanbulInstrumentInPackage_default = function (options, onError) {
+            /*
+             * this function will test istanbulInstrumentInPackage's default handling-behavior
+             */
+            var data;
+            // jslint-hack
+            local.utility2.nop(options);
+            // test instrument handling-behavior
+            data = local.utility2.istanbulInstrumentInPackage('1', '', '');
+            // validate data
+            local.utility2.assert(data === '1', data);
+            // test no instrument handling-behavior
+            data = local.utility2.istanbulInstrumentInPackage('1', '', 'utility2');
+            // validate data
+            local.utility2.assert(data.indexOf('.s[\'1\']++;1;\n') >= 0, data);
             onError();
         };
 
@@ -1407,7 +1433,7 @@
             '</script><script src="/assets/example.js"></script>\n' +
             '</script><script src="/test/test.js"></script>\n';
         local.utility2.cacheDict.assets['/test/test.js'] =
-            local.utility2.istanbul.instrumentInPackage(
+            local.utility2.istanbulInstrumentInPackage(
                 local.fs.readFileSync(__filename, 'utf8'),
                 __filename,
                 'utility2'
@@ -1464,7 +1490,7 @@
             case '/test/timeout':
                 setTimeout(function () {
                     response.end();
-                }, 1000);
+                }, 4000);
                 break;
             default:
                 local.fs.readFile(
@@ -1513,7 +1539,7 @@
             '/assets/utility2.css'
         ].forEach(function (file) {
             // jslint file
-            local.utility2.jslint.jslintAndPrint(local.utility2.cacheDict.assets[file], file);
+            local.utility2.jslintAndPrint(local.utility2.cacheDict.assets[file], file);
         });
         // init repl debugger
         local.utility2.replStart();

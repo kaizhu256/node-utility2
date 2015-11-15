@@ -784,8 +784,7 @@ shIstanbulCover() {
     then
         node $@ || return $?
     else
-        npm_config_dir_coverage="$npm_config_dir_build/coverage.html" \
-            node $npm_config_dir_utility2/lib.istanbul.js cover $@ || return $?
+        node $npm_config_dir_utility2/lib.istanbul.js cover $@ || return $?
     fi
 }
 

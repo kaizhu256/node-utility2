@@ -191,7 +191,7 @@
             }
         };
 
-        local.utility2.istanbulMerge = function (coverage1, coverage2) {
+        local.utility2.istanbulCoverageMerge = function (coverage1, coverage2) {
             /*
              * this function will merge coverage2 into coverage1
              */
@@ -232,6 +232,45 @@
                 });
             });
             return coverage1;
+        };
+
+        local.utility2.istanbulCoverageReportCreate = function () {
+            /*
+             * this function will
+             * 1. print coverage in text-format to stdout
+             * 2. write coverage in html-format to filesystem
+             * 3. return coverage in html-format as single document
+             */
+            return ((local.utility2.istanbul && local.utility2.istanbul.coverageReportCreate) ||
+                local.utility2.nop)();
+        };
+
+        local.utility2.istanbulInstrumentInPackage = function (code, file, packageName) {
+            /*
+             * this function will cover the code only if packageName === $npm_package_name
+             */
+            return local.global.__coverage__ &&
+                packageName &&
+                packageName === local.utility2.envDict.npm_package_name
+                ? local.utility2.istanbulInstrumentSync(code, file)
+                : code;
+        };
+
+        local.utility2.istanbulInstrumentSync = function (code, file) {
+            /*
+             * this function will
+             * 1. normalize the file
+             * 2. save code to codeDict[file] for future html-report
+             * 3. return instrumented code
+             */
+            return local.utility2.istanbul.instrumentSync(code, file);
+        };
+
+        local.utility2.jslintAndPrint = function (script, file) {
+            /*
+             * this function will jslint / csslint the script and print any errors to stderr
+             */
+            return local.utility2.jslint.jslintAndPrint(script, file);
         };
 
         local.utility2.jsonCopy = function (element) {
@@ -309,13 +348,6 @@
                 list[random] = swap;
             }
             return list;
-        };
-
-        local.utility2.nop = function () {
-            /*
-             * this function will run no operation - nop
-             */
-            return;
         };
 
         local.utility2.objectSetDefault = function (options, defaults, depth) {
@@ -1019,8 +1051,7 @@
             /*
              * this function will run all tests in testPlatform.testCaseList
              */
-            var coverageReportCreate,
-                exit,
+            var exit,
                 onParallel,
                 separator,
                 testPlatform,
@@ -1091,7 +1122,7 @@
                     };
                     setTimeout(function () {
                         // update coverageReport
-                        coverageReportCreate();
+                        local.utility2.istanbulCoverageReportCreate();
                         // call callback with number of tests failed
                         local.utility2.exit(testReport.testsFailed);
                     }, 1000);
@@ -1167,10 +1198,6 @@
                 process.exit = local.utility2.nop;
                 break;
             }
-            // init coverageReportCreate
-            coverageReportCreate = (local.utility2.istanbul &&
-                local.utility2.istanbul.coverageReportCreate) ||
-                local.utility2.nop;
             // init modeTestCase
             local.utility2.modeTestCase = local.utility2.modeTestCase ||
                 local.utility2.envDict.npm_config_mode_test_case;
@@ -1212,10 +1239,10 @@
                         clearInterval(timerInterval);
                     }
                     // update coverageReport
-                    coverageReportCreate();
+                    local.utility2.istanbulCoverageReportCreate();
                 }, 1000);
                 // update coverageReport
-                coverageReportCreate();
+                local.utility2.istanbulCoverageReportCreate();
             }
             // shallow copy testPlatform.testCaseList,
             // to guard against in-place sort from testMerge
@@ -2040,7 +2067,7 @@
                                 if (!error) {
                                     // merge coverage
                                     if (ii === 0) {
-                                        local.utility2.istanbulMerge(
+                                        local.utility2.istanbulCoverageMerge(
                                             local.global.__coverage__,
                                             data
                                         );
@@ -2473,19 +2500,19 @@
         });
         // init assets
         local.utility2.cacheDict.assets['/assets/utility2.js'] =
-            local.utility2.istanbul.instrumentInPackage(
+            local.utility2.istanbulInstrumentInPackage(
                 local.fs.readFileSync(__filename, 'utf8'),
                 __filename,
                 'utility2'
             );
         local.utility2.cacheDict.assets['/assets/utility2.lib.istanbul.js'] =
-            local.utility2.istanbul.instrumentInPackage(
+            local.utility2.istanbulInstrumentInPackage(
                 '//' + local.fs.readFileSync(__dirname + '/lib.istanbul.js', 'utf8'),
                 __dirname + '/lib.istanbul.js',
                 'utility2'
             );
         local.utility2.cacheDict.assets['/assets/utility2.lib.jslint.js'] =
-            local.utility2.istanbul.instrumentInPackage(
+            local.utility2.istanbulInstrumentInPackage(
                 '//' + local.fs.readFileSync(__dirname + '/lib.jslint.js', 'utf8'),
                 __dirname + '/lib.jslint.js',
                 'utility2'
@@ -2534,8 +2561,8 @@
             if (data && data.testReport) {
                 // handle global_test_results thrown from webpage
                 // merge coverage
-                local.global.__coverage__ =
-                    local.utility2.istanbulMerge(local.global.__coverage__, data.coverage);
+                local.global.__coverage__ = local.utility2
+                    .istanbulCoverageMerge(local.global.__coverage__, data.coverage);
                 // merge test-report
                 local.utility2.testMerge(local.utility2.testReport, data.testReport);
                 // save screen-capture
@@ -2569,18 +2596,12 @@
             }
         };
 
-        [
-            {
-                // coverage-hack - cover 'hello' test
-                system: { args: ['', 'hello'] },
-                global: { console: { log: local.utility2.nop } },
-                utility2: { exit: local.utility2.nop }
-            },
-            local
-        ].forEach(function (local) {
+        // run the cli
+        local.cliRun = function () {
+            /* istanbul ignore next */
             // run 'hello' test
             if (local.system.args[1] === 'hello') {
-                local.global.console.log('hello');
+                console.log('hello');
                 local.utility2.exit();
                 return;
             }
@@ -2590,9 +2611,9 @@
             // init webpage
             local.page = local.webpage.create();
             // init webpage clipRect
-            local.page.clipRect = { height: 768, left: 0, top: 0, width: 1024 };
+            local.page.clipRect = { height: 766, left: 0, top: 0, width: 1022 };
             // init webpage viewportSize
-            local.page.viewportSize = { height: 768, width: 1024 };
+            local.page.viewportSize = { height: 766, width: 1022 };
             // init webpage error handling
             // http://phantomjs.org/api/webpage/handler/on-error.html
             local.page.onError = local.onError;
@@ -2605,7 +2626,8 @@
                 local.utility2.url.replace('{{timeExit}}', local.utility2.timeExit - 2000),
                 local.onError
             );
-        });
+        };
+        local.cliRun();
         break;
     }
 }((function (self) {
@@ -2614,6 +2636,7 @@
 
 
 
+    /* istanbul ignore next */
     // run shared js-env code
     (function () {
         // init local
@@ -2668,12 +2691,28 @@
         };
         // init utility2
         local.utility2 = { cacheDict: { assets: {} }, local: local };
+        local.utility2.nop = function () {
+            /*
+             * this function will run no operation - nop
+             */
+            return;
+        };
         // init istanbul
         local.utility2.istanbul = local.modeJs === 'browser'
             ? window.utility2_istanbul
             : local.modeJs === 'node'
             ? require('./lib.istanbul.js')
             : null;
+        // cover istanbul
+        if (local.modeJs === 'node' &&
+                local.global.__coverage__ &&
+                process.env.npm_package_name === 'utility2') {
+            delete require.cache[__dirname + '/lib.istanbul.js'];
+            local.utility2.istanbul2 = require('./lib.istanbul.js');
+            local.utility2.istanbul.coverageReportCreate =
+                local.utility2.istanbul2.coverageReportCreate;
+            local.utility2.istanbul2.codeDict = local.utility2.istanbul.codeDict;
+        }
         // init jslint
         local.utility2.jslint = local.modeJs === 'browser'
             ? window.utility2_jslint
