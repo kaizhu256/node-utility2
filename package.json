@@ -33,7 +33,7 @@
         "build-doc": "./index.sh shRun shReadmeExportPackageJson && ./index.sh shRun shDocApiCreate \"{exampleFileList:['example.js','test.js','index.js'],moduleDict:{utility2:{exports:require('./index.js')},'utility2.istanbul':{exports:require('./index.js').istanbul},'utility2.jslint':{exports:require('./index.js').jslint}}}\"",
         "postinstall": "./index.sh shRun shReadmeExportPackageJson",
         "start": "npm_config_mode_auto_restart=1 ./index.sh shRun node test.js",
-        "test": "rm -fr tmp/build/coverage.html/aa &&./index.sh shRun shReadmeExportPackageJson && export npm_config_file_start=index.js && npm_config_mode_auto_restart=1 npm_config_mode_auto_restart_child=1 ./index.sh test test.js"
+        "test": "./index.sh shRun shReadmeExportPackageJson && export npm_config_file_start=index.js && npm_config_mode_auto_restart=1 npm_config_mode_auto_restart_child=1 ./index.sh test test.js"
     },
-    "version": "2015.10.3"
+    "version": "2015.11.2"
 }

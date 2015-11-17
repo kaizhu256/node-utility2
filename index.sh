@@ -572,22 +572,11 @@ shHerokuDeploy() {
     then
         return
     fi
-    # init $TEST_SECRET
-    export TEST_SECRET=$(openssl rand -hex 32) || return $?
     # init $HEROKU_HOSTNAME
     export HEROKU_HOSTNAME=$HEROKU_REPO.herokuapp.com || return $?
     shBuildPrint herokuDeploy "deploying to https://$HEROKU_HOSTNAME" || return $?
     # git push $PWD to heroku
     shGitRepoBranchUpdateLocal() {
-        # init Procfile
-        node -e "
-            require('fs').writeFileSync(
-                'Procfile',
-                require('$npm_config_dir_utility2').stringFormat(
-                    require('fs').readFileSync('Procfile', 'utf8'), process.env
-                )
-            );
-        " || return $?
         # rm .gitignore so we can git add everything
         rm -f .gitignore || return $?
         # git add everything
@@ -841,10 +830,10 @@ shNpmTest() {
     shSlimerDetect || return $?
     # init npm-test-mode
     export npm_config_mode_npm_test=1 || return $?
-    # init random server-port
-    if [ "$npm_config_server_port" = "" ]
+    # init random $PORT
+    if [ "$PORT" = "" ]
     then
-        export npm_config_server_port=$(shServerPortRandom) || return $?
+        export PORT=$(shServerPortRandom) || return $?
     fi
     # if coverage-mode is disabled, then run npm-test without coverage
     if [ "$npm_config_mode_coverage" = 0 ]
@@ -1153,7 +1142,7 @@ shRunScreenCapture() {
 }
 
 shServerPortRandom() {
-    # this function will print a random port in the inclusive range 0x1000 to 0xffff
+    # this function will print a random port in the inclusive range 0x8000 to 0xffff
     printf $(($(hexdump -n 2 -e '/2 "%u"' /dev/urandom)|32768))
 }
 

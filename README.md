@@ -68,7 +68,7 @@ shExampleSh() {
     npm install utility2 || return $?
 
     # serve a webpage that will interactively run browser tests with coverage
-    cd node_modules/utility2 && npm start --server-port=1337 || return $?
+    cd node_modules/utility2 && PORT=1337 npm start || return $?
 }
 shExampleSh
 ```
@@ -153,10 +153,7 @@ instruction
                     // validate error occurred
                     local.utility2.assert(error, error);
                     // validate 404 http statusCode
-                    local.utility2.assert(
-                        error.statusCode === 404,
-                        error.statusCode
-                    );
+                    local.utility2.assert(error.statusCode === 404, error.statusCode);
                     onError();
                 }, onError);
             });
@@ -181,9 +178,7 @@ instruction
             // jslint-hack
             local.utility2.nop(options);
             local.utility2.phantomTest({
-                url: 'http://localhost:' +
-                    process.env.npm_config_server_port +
-                    '?modeTest=phantom'
+                url: 'http://localhost:' + process.env.PORT + '?modeTest=phantom'
             }, onError);
         };
         // export local
@@ -286,7 +281,9 @@ instruction
 '        });\n' +
 '    };\n' +
 '\n' +
-'    window.utility2.testRun(testCaseDict);\n' +
+'    if (!window.utility2.modeTest) {\n' +
+'       window.utility2.testRun(testCaseDict);\n' +
+'    }\n' +
 '}());\n' +
 '</textarea>\n' +
 '    <pre class="jslintOutputPre"></pre>\n' +
@@ -478,20 +475,20 @@ utility2:{exports:require('./index.js')},\
 }\"",
         "postinstall": "./index.sh shRun shReadmeExportPackageJson",
         "start": "npm_config_mode_auto_restart=1 ./index.sh shRun node test.js",
-        "test": "rm -fr tmp/build/coverage.html/aa &&\
-./index.sh shRun shReadmeExportPackageJson && \
+        "test": "./index.sh shRun shReadmeExportPackageJson && \
 export npm_config_file_start=index.js && \
 npm_config_mode_auto_restart=1 \
 npm_config_mode_auto_restart_child=1 \
 ./index.sh test test.js"
     },
-    "version": "2015.10.3"
+    "version": "2015.11.2"
 }
 ```
 
 
 
 # todo
+- migrate from phantomjs / slimerjs to electron
 - add utility2.middlewareLimit
 - create flamegraph from istanbul coverage
 - add server stress test using phantomjs
@@ -500,10 +497,10 @@ npm_config_mode_auto_restart_child=1 \
 
 
 
-# change since 511fcc80
-- npm publish 2015.10.3
-- improve code coverage
-- simplify istanbul coverage code
+# change since eda2a702
+- npm publish 2015.11.2
+- remove Procfile, as it is now optional in heroku
+- rename env var $npm_config_server_port to $PORT
 - none
 
 

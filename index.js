@@ -1615,7 +1615,7 @@
                     // handle implicit localhost
                     if (xhr.url[0] === '/') {
                         xhr.url = 'http://localhost:' +
-                            local.utility2.envDict.npm_config_server_port +
+                            local.utility2.envDict.PORT +
                             xhr.url;
                     }
                     // parse url
@@ -2222,15 +2222,15 @@
 
         local.utility2.serverPortInit = function () {
             /*
-             * this function will init $npm_config_server_port
+             * this function will init $PORT
              */
-            // if $npm_config_server_port is undefined,
+            // if $PORT is undefined,
             // then assign it a random integer in the inclusive range 0 to 0xffff
-            local.utility2.envDict.npm_config_server_port =
-                local.utility2.envDict.npm_config_server_port ||
+            local.utility2.envDict.PORT =
+                local.utility2.envDict.PORT ||
                 // coerce to finite integer
                 ((Math.random() * 0x10000) | 0x8000).toString();
-            return local.utility2.envDict.npm_config_server_port;
+            return local.utility2.envDict.PORT;
         };
 
         local.utility2.serverRespondDefault = function (request, response, statusCode, error) {
@@ -2345,7 +2345,7 @@
             /*
              * this function will
              * 1. create server from options.middleware
-             * 2. start server on port $npm_config_server_port
+             * 2. start server on port $PORT
              * 3. if $npm_config_mode_npm_test is defined, then run tests
              */
             var server;
@@ -2355,14 +2355,14 @@
                     options.middlewareError(error, request, response);
                 });
             });
-            // init $npm_config_server_port
+            // init $PORT
             local.utility2.serverPortInit();
-            // 2. start server on port $npm_config_server_port
+            // 2. start server on port $PORT
             console.log('server starting on port ' +
-                local.utility2.envDict.npm_config_server_port);
+                local.utility2.envDict.PORT);
             local.utility2.onReady.counter += 1;
             server.listen(
-                local.utility2.envDict.npm_config_server_port,
+                local.utility2.envDict.PORT,
                 local.utility2.onReady
             );
             // if $npm_config_timeout_exit is defined,
@@ -2370,11 +2370,11 @@
             if (Number(local.utility2.envDict.npm_config_timeout_exit)) {
                 setTimeout(function () {
                     console.log('server stopping on port ' +
-                        local.utility2.envDict.npm_config_server_port);
+                        local.utility2.envDict.PORT);
                     // screen-capture main-page
                     local.utility2.phantomScreenCapture({
                         modeSilent: true,
-                        url: 'http://localhost:' + local.utility2.envDict.npm_config_server_port
+                        url: 'http://localhost:' + local.utility2.envDict.PORT
                     }, local.utility2.exit);
                 }, Number(local.utility2.envDict.npm_config_timeout_exit))
                     // keep timerTimeout from blocking the process from exiting

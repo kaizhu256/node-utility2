@@ -273,6 +273,8 @@
                 [console, { log: local.utility2.nop }]
             ], function (onError) {
                 /*jslint evil: true*/
+                // cleanup old coverage
+                (local.utility2.fsRmrSync || local.utility2.nop)('tmp/build/coverage.html/aa');
                 // test path handling-behavior
                 ['/', local.utility2.__dirname].forEach(function (dir) {
                     ['aa.js', 'aa/bb.js'].forEach(function (path) {
@@ -1234,8 +1236,8 @@
                         npm_package_name: 'undefined',
                         // test timeout-exit handling-behavior
                         npm_config_timeout_exit: '1',
-                        // test random $npm_config_server_port handling-behavior
-                        npm_config_server_port: ''
+                        // test random $PORT handling-behavior
+                        PORT: ''
                     },
                     phantomScreenCapture: local.utility2.nop,
                     onReady: {},
@@ -1252,18 +1254,18 @@
                         local.utility2.middlewareInit
                     ])
                 });
-                // validate $npm_config_server_port
+                // validate $PORT
                 local.utility2.assert(
-                    Number(local.utility2.envDict.npm_config_server_port) > 0,
-                    local.utility2.envDict.npm_config_server_port
+                    Number(local.utility2.envDict.PORT) > 0,
+                    local.utility2.envDict.PORT
                 );
                 onError();
             }, onError);
         };
 
-        local.testCase_testPage_default = function (options, onError) {
+        local.testCase_testPage_error = function (options, onError) {
             /*
-             * this function will test the test-page's default handling-behavior
+             * this function will test the test-page's error handling-behavior
              */
             var onParallel;
             // jslint-hack
@@ -1271,26 +1273,18 @@
             onParallel = local.utility2.onParallel(onError);
             onParallel.counter += 1;
             [{
-                // test default handling-behavior
-                url: 'http://localhost:' +
-                    local.utility2.envDict.npm_config_server_port +
-                    // test phantom-callback handling-behavior
-                    '?modeTest=phantom&timeExit={{timeExit}}'
-            }, {
-                modeError: true,
                 modeSilent: true,
                 url: 'http://localhost:' +
-                    local.utility2.envDict.npm_config_server_port +
+                    local.utility2.envDict.PORT +
                     // test script-error handling-behavior
                     '/test/script-error.html' +
                     '?timeExit={{timeExit}}'
             }, {
-                modeError: true,
                 modeSilent: true,
                 // run phantom self-test
                 modePhantomSelfTest: true,
                 url: 'http://localhost:' +
-                    local.utility2.envDict.npm_config_server_port +
+                    local.utility2.envDict.PORT +
                     // test script-only handling-behavior
                     '/test/script-only.html' +
                     // test phantom-callback handling-behavior
@@ -1304,12 +1298,7 @@
                 local.utility2.phantomTest(options, function (error) {
                     local.utility2.testTryCatch(function () {
                         // validate error occurred
-                        if (options.modeError) {
-                            local.utility2.assert(error, error);
-                        // validate no error occurred
-                        } else {
-                            local.utility2.assert(!error, error);
-                        }
+                        local.utility2.assert(error, error);
                         onParallel();
                     }, onParallel);
                 });
@@ -1341,7 +1330,7 @@
             ], function (onError) {
                 local.utility2.phantomTest({
                     url: 'http://localhost:' +
-                        local.utility2.envDict.npm_config_server_port +
+                        local.utility2.envDict.PORT +
                         '?timeExit={{timeExit}}'
                 });
                 onError();
@@ -1356,7 +1345,7 @@
                 modeSilent: true,
                 timeoutScreenCapture: 1,
                 url: 'http://localhost:' +
-                    local.utility2.envDict.npm_config_server_port +
+                    local.utility2.envDict.PORT +
                     '/test/script-error.html?' +
                     'timeExit={{timeExit}}'
             };
