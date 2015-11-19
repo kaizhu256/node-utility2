@@ -43,6 +43,197 @@
             }
         };
 
+        /* istanbul ignore next */
+        local.utility2.browserTest = function (options, onError) {
+            /*
+             * this function will spawn an electron process to test options.url
+             */
+            var error2, modeNext, onNext, onParallel, timerTimeout;
+            modeNext = options.modeNext || 0;
+            onNext = function (error, data) {
+                modeNext = error instanceof Error
+                    ? Infinity
+                    : modeNext + 1;
+                switch (modeNext) {
+                // run node code
+                case 1:
+                    options.testName = local.utility2.envDict.MODE_BUILD + '.browser.' +
+                        encodeURIComponent(local.url.parse(options.url).pathname);
+                    local.utility2.objectSetDefault(options, {
+                        fileCoverage: local.utility2.envDict.npm_config_dir_tmp +
+                            '/coverage.' + options.testName + '.json',
+                        fileScreenCapture: (local.utility2.envDict.npm_config_dir_build +
+                            '/screen-capture.' + options.testName + '.png')
+                            .replace((/%/g), '_')
+                            .replace((/_2F\.png$/), '.png'),
+                        fileTestReport: local.utility2.envDict.npm_config_dir_tmp +
+                            '/test-report.' + options.testName + '.json',
+                        modeBrowserTest: 'test',
+                        testName: local.utility2.envDict.MODE_BUILD + '.browser.' +
+                            encodeURIComponent(local.url.parse(options.url).pathname),
+                        timeExit: Date.now() + local.utility2.timeoutDefault
+                    }, 1);
+                    // init timerTimeout
+                    timerTimeout = local.utility2
+                        .onTimeout(onNext, local.utility2.timeoutDefault, options.testName);
+                    // init file urlBrowser
+                    options.modeNext = 20;
+                    options.urlBrowser = local.utility2.envDict.npm_config_dir_tmp +
+                        '/electron.' + local.utility2.uuidTime() + '.html';
+                    local.utility2.fsMkdirpSync(local.utility2.envDict.npm_config_dir_build);
+                    local.fs.writeFileSync(options.urlBrowser, '<style>body {' +
+                            'border: 1px solid black;' +
+                            'margin: 0px;' +
+                        '}</style>' +
+                        '<webview id=webview src="' +
+                        options.url.replace('{{timeExit}}', options.timeExit) +
+                        '" style="' +
+                            'display: inline-block;' +
+                            'height: 100%;' +
+                            'overflow: hidden;' +
+                            'width: 100%;' +
+                        '"></webview>' +
+                        '<script>(' + local.utility2.browserTest
+                            .toString()
+                            .replace((/<\//g), '<\\/')
+                            // uncover
+                            .replace((/\b__cov_.*?\+\+/g), '0') +
+                        '(' + JSON.stringify(options) + '))</script>');
+                    // spawn electron to test a url
+                    options.modeNext = 10;
+                    local.utility2.processSpawnWithTimeout('electron', [
+                        __filename,
+                        'browserTest',
+                        encodeURIComponent(JSON.stringify(options)),
+                        '--disable-overlay-scrollbar',
+                        '--enable-logging'
+                    ], { stdio: options.modeSilent || local.global.__coverage__
+                        ? 'ignore'
+                        : ['ignore', 1, 2]
+                        }).once('exit', onNext);
+                    break;
+                case 2:
+                    console.log('electron exit-code ' + error);
+                    // merge browser coverage
+                    data = null;
+                    try {
+                        data = JSON.parse(local.fs.readFileSync(options.fileCoverage, 'utf8'));
+                    } catch (ignore) {
+                    }
+                    if (data) {
+                        local.utility2.istanbulCoverageMerge(local.global.__coverage__, data);
+                    }
+                    if (options.modeBrowserTest !== 'test') {
+                        modeNext = Infinity;
+                        onNext();
+                        return;
+                    }
+                    // merge browser test-report
+                    try {
+                        data = JSON.parse(local.fs
+                            .readFileSync(options.fileTestReport, 'utf8'));
+                    } catch (errorCaught) {
+                        onNext(errorCaught);
+                        return;
+                    }
+                    if (!options.modeTestReportIgnore) {
+                        local.utility2.testMerge(local.utility2.testReport, data);
+                        local.fs.writeFileSync(
+                            local.utility2.envDict.npm_config_dir_build + '/test-report.html',
+                            local.utility2.testMerge(local.utility2.testReport, {})
+                        );
+                    }
+                    onNext(data.testsFailed && new Error(data.testsFailed));
+                    break;
+                // run electron-node code
+                case 11:
+                    // handle uncaughtexception
+                    process.once('uncaughtException', onNext);
+                    // wait for app to be ready
+                    require('app').once('ready', onNext);
+                    break;
+                case 12:
+                    options.BrowserWindow = require('browser-window');
+                    local.utility2.objectSetDefault(
+                        options,
+                        { height: 768, width: 1024, x: 0, y: 0 }
+                    );
+                    // init browserWindow
+                    options.browserWindow = new options.BrowserWindow(options);
+                    options.browserWindow.once('page-title-updated', onNext);
+                    // load url in browserWindow
+                    options.browserWindow.loadURL('file://' + options.urlBrowser);
+                    break;
+                case 13:
+                    console.log('electron - opened ' + options.url);
+                    onParallel = local.utility2.onParallel(onNext);
+                    if (options.modeBrowserTest === 'test') {
+                        onParallel.counter += 1;
+                        options.browserWindow.once('page-title-updated', onParallel);
+                    }
+                    onParallel.counter += 1;
+                    setTimeout(function () {
+                        options.browserWindow.capturePage(options, function (data) {
+                            local.fs.writeFileSync(options.fileScreenCapture, data.toPng());
+                            console.log('electron - created screen-capture file://' +
+                                options.fileScreenCapture);
+                            onParallel();
+                        });
+                    }, options.timeoutScreenCapture || 2000);
+                    break;
+                // run electron-browser code
+                case 21:
+                    options.fs = require('fs');
+                    options.webview = document.getElementById('webview');
+                    options.webview
+                        .addEventListener('did-get-response-details', function () {
+                            document.title = 'opened ' + location.href;
+                        });
+                    options.webview.addEventListener('console-message', function (event) {
+                        try {
+                            options.global_test_results = event.message
+                                .indexOf('{"global_test_results":{') === 0 &&
+                                JSON.parse(event.message).global_test_results;
+                            if (options.global_test_results.testReport) {
+                                // merge screen-capture into test-report
+                                options.global_test_results.testReport.testPlatformList[
+                                    0
+                                ].screenCaptureImg =
+                                    options.fileScreenCapture.replace((/.*\//), '');
+                                // save browser test-report
+                                options.fs.writeFileSync(
+                                    options.fileTestReport,
+                                    JSON.stringify(options.global_test_results.testReport)
+                                );
+                                // save browser coverage
+                                if (options.global_test_results.coverage) {
+                                    require('fs').writeFileSync(
+                                        options.fileCoverage,
+                                        JSON.stringify(options.global_test_results.coverage)
+                                    );
+                                }
+                                document.title = 'testReport written';
+                                return;
+                            }
+                        } catch (errorCaught) {
+                            console.error(errorCaught.stack);
+                        }
+                        console.log(event.message);
+                    });
+                    break;
+                default:
+                    if (error2) {
+                        return;
+                    }
+                    error2 = true;
+                    // cleanup timerTimeout
+                    clearTimeout(timerTimeout);
+                    onError(error);
+                }
+            };
+            onNext();
+        };
+
         local.utility2.docApiCreate = function (options) {
             /*
              * this function will create an html api-doc from the given options
@@ -135,11 +326,7 @@
              * this function will prepend the message to error.message and error.stack
              */
             error.message = message + error.message;
-            // phantomjs-hack - try to prepend message to error.stack
-            try {
-                error.stack = message + error.stack;
-            } catch (ignore) {
-            }
+            error.stack = message + error.stack;
             return error;
         };
 
@@ -153,40 +340,16 @@
                 : Number(exitCode) || 1;
             switch (local.modeJs) {
             case 'browser':
-                // throw global_test_results as an error,
-                // so it can be caught and passed to the phantom js-env
                 switch (local.utility2.modeTest) {
-                case 'phantom':
-                    throw new Error('\nphantom\n' + JSON.stringify({
+                case 'consoleLogResult':
+                    console.log(JSON.stringify({
                         global_test_results: local.global.global_test_results
-                    }) + '\n');
+                    }));
+                    break;
                 }
                 break;
             case 'node':
                 process.exit(exitCode);
-                break;
-            case 'phantom':
-                if (local.modeExit) {
-                    return;
-                }
-                local.modeExit = true;
-                // run phantom self-test
-                if (local.utility2.modePhantomSelfTest) {
-                    // test string error with no trace handling-behavior
-                    local.onError('error', null);
-                    // test string error
-                    // with trace-function and trace-sourceUrl handling-behavior
-                    local.onError('error', [{ function: true, sourceUrl: true }]);
-                    // test default error handling-behavior
-                    local.onError(local.utility2.errorDefault);
-                }
-                if (local.global.__coverage__) {
-                    local.fs.write(
-                        local.utility2.fileCoverage,
-                        JSON.stringify(local.global.__coverage__)
-                    );
-                }
-                local.global.phantom.exit(exitCode);
                 break;
             }
         };
@@ -254,23 +417,6 @@
                 packageName === local.utility2.envDict.npm_package_name
                 ? local.utility2.istanbulInstrumentSync(code, file)
                 : code;
-        };
-
-        local.utility2.istanbulInstrumentSync = function (code, file) {
-            /*
-             * this function will
-             * 1. normalize the file
-             * 2. save code to codeDict[file] for future html-report
-             * 3. return instrumented code
-             */
-            return local.utility2.istanbul.instrumentSync(code, file);
-        };
-
-        local.utility2.jslintAndPrint = function (script, file) {
-            /*
-             * this function will jslint / csslint the script and print any errors to stderr
-             */
-            return local.utility2.jslint.jslintAndPrint(script, file);
         };
 
         local.utility2.jsonCopy = function (element) {
@@ -478,13 +624,9 @@
             }
             return function (error) {
                 if (error) {
-                    // phantomjs-hack - try to append errorStack to error.stack
-                    try {
-                        error.stack = error.stack
-                            ? error.stack + '\n' + errorStack
-                            : errorStack;
-                    } catch (ignore) {
-                    }
+                    error.stack = error.stack
+                        ? error.stack + '\n' + errorStack
+                        : errorStack;
                 }
                 onError.apply(null, arguments);
             };
@@ -874,7 +1016,7 @@
                     // insert $MODE_BUILD into testPlatform.name
                     if (local.utility2.envDict.MODE_BUILD) {
                         testPlatform.name = testPlatform.name.replace(
-                            (/^(browser|node|phantom|slimer)\b/),
+                            (/^(browser|node)\b/),
                             local.utility2.envDict.MODE_BUILD + ' - $1'
                         );
                     }
@@ -1070,9 +1212,7 @@
                 options.onReady = function () {
                     local.utility2.testRun(options);
                 };
-                local.utility2.taskRunOrSubscribe({
-                    key: 'utility2.onReady'
-                }, options.onReady);
+                local.utility2.taskRunOrSubscribe({ key: 'utility2.onReady' }, options.onReady);
                 return;
             }
             // init onParallel
@@ -1093,8 +1233,7 @@
                 // create testReportHtml
                 testReportHtml = local.utility2.testMerge(testReport, {});
                 // print test-report summary
-                console.log('\n' + separator +
-                    '\n' + testReport.testPlatformList
+                console.log('\n' + separator + '\n' + testReport.testPlatformList
                     .filter(function (testPlatform) {
                         // if testPlatform has no tests, then filter it out
                         return testPlatform.testCaseList.length;
@@ -1106,8 +1245,7 @@
                             ('        ' + testPlatform.testsFailed + ' failed ')
                             .slice(-16) +
                             ('        ' + testPlatform.testsPassed + ' passed ')
-                            .slice(-16) +
-                            '     |\n' + separator;
+                            .slice(-16) + '     |\n' + separator;
                     })
                     .join('\n') + '\n');
                 switch (local.modeJs) {
@@ -1135,10 +1273,7 @@
                             // edit branch name
                             .replace(
                                 (/0000 00 00 00 00 00/g),
-                                new Date()
-                                    .toISOString()
-                                    .slice(0, 19)
-                                    .replace('T', ' ')
+                                new Date().toISOString().slice(0, 19).replace('T', ' ')
                             )
                             // edit branch name
                             .replace(
@@ -1153,8 +1288,7 @@
                     );
                     // create test-report.badge.svg
                     local.fs.writeFileSync(
-                        local.utility2.envDict.npm_config_dir_build +
-                            '/test-report.badge.svg',
+                        local.utility2.envDict.npm_config_dir_build + '/test-report.badge.svg',
                         local.utility2['/build/test-report.badge.svg']
                             // edit number of tests failed
                             .replace((/999/g), testReport.testsFailed)
@@ -1182,8 +1316,7 @@
                         // finalize testReport
                         local.utility2.testMerge(testReport, {});
                         console.log('\n' + local.utility2.envDict.MODE_BUILD +
-                            ' - ' + testReport.testsFailed +
-                            ' failed tests\n');
+                            ' - ' + testReport.testsFailed + ' failed tests\n');
                         // call callback with number of tests failed
                         local.utility2.exit(testReport.testsFailed);
                     }, 1000);
@@ -1254,8 +1387,7 @@
                     // if testCase already done, then fail testCase with error for ending again
                     if (done) {
                         error = error || new Error('callback in testCase ' +
-                            testCase.name +
-                            ' called multiple times');
+                            testCase.name + ' called multiple times');
                     }
                     // if error occurred, then fail testCase
                     if (error) {
@@ -1264,10 +1396,8 @@
                         testCase.errorStack = testCase.errorStack ||
                             error.message + '\n' + error.stack;
                         // validate errorStack is non-empty
-                        local.utility2.assert(
-                            testCase.errorStack,
-                            'invalid errorStack ' + testCase.errorStack
-                        );
+                        local.utility2.assert(testCase.errorStack, 'invalid errorStack ' +
+                            testCase.errorStack);
                     }
                     // if already done, then do nothing
                     if (done) {
@@ -1279,8 +1409,8 @@
                     console.log('[' + local.modeJs + ' test-case ' +
                         testPlatform.testCaseList.filter(function (testCase) {
                             return testCase.timeElapsed < 0xffffffff;
-                        }).length + ' of ' +
-                        testPlatform.testCaseList.length + (testCase.errorStack
+                        }).length + ' of ' + testPlatform.testCaseList.length +
+                        (testCase.errorStack
                         ? ' failed'
                         : ' passed') + '] - ' + testCase.name);
                     // if all tests have finished, then create test-report
@@ -1344,28 +1474,18 @@
                 local.utility2.timeoutDefault =
                     local.utility2.envDict.npm_config_timeout_default;
                 break;
-            case 'phantom':
-                try {
-                    local.utility2.objectSetOverride(
-                        local.utility2,
-                        JSON.parse(decodeURIComponent(local.system.args[1])),
-                        Infinity
-                    );
-                } catch (ignore) {
-                }
-                break;
             }
             // init timeExit
             if (local.utility2.timeExit) {
                 local.utility2.timeoutDefault = local.utility2.timeExit - Date.now();
                 local.utility2.onTimeout(
                     local.utility2.exit,
-                    local.utility2.timeoutDefault + 1000,
+                    local.utility2.timeoutDefault,
                     'exit'
                 );
             }
             // init timeoutDefault
-            local.utility2.timeoutDefault = local.utility2.timeoutDefault || 30000;
+            local.utility2.timeoutDefault = local.utility2.timeoutDefault || 60000;
         };
 
         local.utility2.uuid4 = function () {
@@ -1375,8 +1495,8 @@
              */
             // code derived from http://jsperf.com/uuid4
             var id, ii;
-            id = 0;
-            for (ii = 1; ii < 32; ii += 1) {
+            id = '';
+            for (ii = 0; ii < 32; ii += 1) {
                 switch (ii) {
                 case 8:
                 case 20:
@@ -1405,7 +1525,7 @@
              * this function will return a time-based variant of uuid4,
              * with form "tttttttt-tttx-4xxx-yxxx-xxxxxxxxxxxx"
              */
-            return Date.now().toString(16).replace(/([0-9a-f]{8})/, '$1-') +
+            return Date.now().toString(16).replace((/(.{8})/), '$1-') +
                 local.utility2.uuid4().slice(12);
         };
     }());
@@ -1479,7 +1599,7 @@
                     if (xhr.modeDebug) {
                         console.log(xhr);
                     }
-                    onError(error, xhr);
+                    onError(error, xhr, onEvent);
                     break;
                 }
                 // increment ajaxProgressBar
@@ -1496,6 +1616,7 @@
             xhr.headers = options.headers || {};
             xhr.method = options.method || 'GET';
             xhr.modeDebug = options.modeDebug;
+            xhr.onEvent = onEvent;
             xhr.timeout = options.timeout || local.utility2.timeoutDefault;
             xhr.url = options.url;
             // debug xhr
@@ -1885,6 +2006,17 @@
             );
         };
 
+        local.utility2.fsMkdirpSync = function (dir) {
+            /*
+             * this function will synchronously 'mkdir -p' the dir
+             */
+            local.child_process.spawnSync(
+                'mkdir',
+                ['-p', local.path.resolve(process.cwd(), dir)],
+                { stdio: ['ignore', 1, 2] }
+            );
+        };
+
         local.utility2.fsWriteFileWithMkdirp = function (file, data, onError) {
             /*
              * this function will save the data to file, and auto-mkdirp the parent dir
@@ -1940,164 +2072,6 @@
                     }
                 });
             }
-        };
-
-        local.utility2.phantomScreenCapture = function (options, onError) {
-            /*
-             * this function will spawn both phantomjs and slimerjs processes,
-             * to screen-capture options.url
-             */
-            local.utility2.phantomTest(local.utility2.objectSetDefault(options, {
-                modePhantom: 'screenCapture',
-                timeoutScreenCapture: 2000
-            }, 1), onError);
-        };
-
-        local.utility2.phantomTest = function (options, onError) {
-            /*
-             * this function will spawn both phantomjs and slimerjs processes,
-             * to test options.url
-             */
-            var onParallel;
-            onParallel = local.utility2.onParallel(onError);
-            onParallel.counter += 1;
-            ['phantomjs', 'slimerjs'].forEach(function (argv0) {
-                var optionsCopy;
-                // if phantomjs / slimerjs is not available, then do not use it
-                if (local.utility2.envDict['npm_config_mode_' + argv0] === '0') {
-                    return;
-                }
-                // copy options to create separate phantomjs / slimerjs state
-                optionsCopy = local.utility2.jsonCopy(options);
-                optionsCopy.argv0 = argv0;
-                // run phantomjs / slimerjs instance
-                onParallel.counter += 1;
-                local._phantomTestSingle(optionsCopy, function (error) {
-                    // save phantomjs / slimerjs state to options
-                    options[argv0] = optionsCopy;
-                    onParallel(error);
-                });
-            });
-            onParallel();
-        };
-
-        local._phantomTestSingle = function (options, onError) {
-            /*
-             * this function will spawn a single phantomjs or slimerjs process,
-             * to test options.url
-             */
-            var modeNext, onNext, onParallel, timerTimeout;
-            modeNext = 0;
-            onNext = function (error) {
-                modeNext = error instanceof Error
-                    ? Infinity
-                    : modeNext + 1;
-                switch (modeNext) {
-                case 1:
-                    options.testName = local.utility2.envDict.MODE_BUILD +
-                        '.' + options.argv0 + '.' +
-                        encodeURIComponent(local.url.parse(options.url).pathname);
-                    options.timeExit = Date.now() + local.utility2.timeoutDefault;
-                    local.utility2.objectSetDefault(options, {
-                        fileCoverage: local.utility2.envDict.npm_config_dir_tmp +
-                            '/coverage.' + options.testName + '.json',
-                        fileScreenCapture: (local.utility2.envDict.npm_config_dir_build +
-                            '/screen-capture.' + options.testName + '.png')
-                            .replace((/%/g), '_')
-                            .replace((/_2F\.png$/), '.png'),
-                        fileTestReport: local.utility2.envDict.npm_config_dir_tmp +
-                            '/test-report.' + options.testName + '.json',
-                        modePhantom: 'testUrl'
-                    }, 1);
-                    // init timerTimeout
-                    timerTimeout = local.utility2
-                        .onTimeout(onNext, local.utility2.timeoutDefault, options.testName);
-                    // coverage-hack - cover utility2 in phantomjs
-                    options.argv1 = __dirname + '/index.js';
-                    if (local.global.__coverage__ &&
-                            local.utility2.envDict.npm_package_name === 'utility2') {
-                        options.argv1 = local.utility2.envDict.npm_config_dir_tmp +
-                            '/covered.utility2.js';
-                        if (!local.utility2.modePhantomCovered) {
-                            local.utility2.modePhantomCovered = true;
-                            local.fs.writeFileSync(
-                                options.argv1,
-                                local.utility2.cacheDict.assets['/assets/utility2.js']
-                            );
-                        }
-                    }
-                    // spawn phantomjs to test a url
-                    local.utility2
-                        .processSpawnWithTimeout(
-                            '/bin/sh',
-                            ['-c',
-                                options.argv0 +
-                                // bug - hack slimerjs to allow heroku https
-                                (options.argv0 === 'slimerjs'
-                                ? ' --ssl-protocol=TLS '
-                                : ' ') +
-                                options.argv1 + ' ' +
-                                encodeURIComponent(JSON.stringify(options)) + '; ' +
-                                'EXIT_CODE=$?; ' +
-                                // add black border around phantomjs screen-capture
-                                '[ -f ' + options.fileScreenCapture + ' ] && ' +
-                                'mogrify -frame 1 -mattecolor black ' +
-                                options.fileScreenCapture + ' 2>/dev/null; ' +
-                                'exit $EXIT_CODE;'],
-                            { stdio: options.modeSilent || local.global.__coverage__
-                                ? 'ignore'
-                                : ['ignore', 1, 2] }
-                        )
-                        .on('exit', onNext);
-                    break;
-                case 2:
-                    options.exitCode = error;
-                    onParallel = local.utility2.onParallel(onNext);
-                    onParallel.counter += 1;
-                    // merge coverage and test-report
-                    [
-                        options.fileCoverage,
-                        options.fileTestReport
-                    ].forEach(function (file, ii) {
-                        onParallel.counter += 1;
-                        local.fs.readFile(
-                            file,
-                            'utf8',
-                            local.utility2.onErrorJsonParse(function (error, data) {
-                                if (!error) {
-                                    // merge coverage
-                                    if (ii === 0) {
-                                        local.utility2.istanbulCoverageMerge(
-                                            local.global.__coverage__,
-                                            data
-                                        );
-                                    // merge test-report
-                                    } else if (options.modePhantom === 'testUrl' &&
-                                            !options.modeSilent) {
-                                        local.utility2.testMerge(
-                                            local.utility2.testReport,
-                                            data
-                                        );
-                                    }
-                                }
-                                onParallel();
-                            })
-                        );
-                    });
-                    onParallel();
-                    break;
-                case 3:
-                    onNext(options.exitCode && new Error(
-                        options.argv0 + ' exit-code ' + options.exitCode
-                    ));
-                    break;
-                default:
-                    // cleanup timerTimeout
-                    clearTimeout(timerTimeout);
-                    onError(error);
-                }
-            };
-            onNext();
         };
 
         local.utility2.processSpawnWithTimeout = function () {
@@ -2358,24 +2332,22 @@
             // init $PORT
             local.utility2.serverPortInit();
             // 2. start server on port $PORT
-            console.log('server starting on port ' +
-                local.utility2.envDict.PORT);
+            console.log('server starting on port ' + local.utility2.envDict.PORT);
             local.utility2.onReady.counter += 1;
-            server.listen(
-                local.utility2.envDict.PORT,
-                local.utility2.onReady
-            );
+            server.listen(local.utility2.envDict.PORT, local.utility2.onReady);
             // if $npm_config_timeout_exit is defined,
             // then exit this process after $npm_config_timeout_exit ms
             if (Number(local.utility2.envDict.npm_config_timeout_exit)) {
                 setTimeout(function () {
-                    console.log('server stopping on port ' +
-                        local.utility2.envDict.PORT);
                     // screen-capture main-page
-                    local.utility2.phantomScreenCapture({
+                    local.utility2.browserTest({
+                        modeBrowserTest: 'screenCapture',
                         modeSilent: true,
                         url: 'http://localhost:' + local.utility2.envDict.PORT
-                    }, local.utility2.exit);
+                    }, function (error) {
+                        console.log('server stopping on port ' + local.utility2.envDict.PORT);
+                        local.utility2.exit(error);
+                    });
                 }, Number(local.utility2.envDict.npm_config_timeout_exit))
                     // keep timerTimeout from blocking the process from exiting
                     .unref();
@@ -2391,10 +2363,6 @@
 
     // run shared js-env code
     (function () {
-        // require system
-        if (local.modeJs === 'phantom') {
-            local.system = require('system');
-        }
         local.utility2.contentTypeDict = {
             // application
             '.js': 'application/javascript; charset=UTF-8',
@@ -2417,9 +2385,7 @@
         };
         local.utility2.envDict = local.modeJs === 'browser'
             ? {}
-            : local.modeJs === 'node'
-            ? process.env
-            : local.system.env;
+            : process.env;
         local.utility2.errorDefault = new Error('default error');
         // http://www.w3.org/TR/html5/forms.html#valid-e-mail-address
         local.utility2.regexpEmailValidate = new RegExp(
@@ -2444,16 +2410,7 @@
                     location.pathname + ' - ' +
                     navigator.userAgent + ' - ' +
                     new Date().toISOString()
-                : local.modeJs === 'node'
-                ? 'node - ' + process.platform + ' ' + process.version + ' - ' +
-                    new Date().toISOString()
-                : (local.global.slimer
-                    ? 'slimer - '
-                    : 'phantom - ') +
-                    local.system.os.name + ' ' +
-                    local.global.phantom.version.major + '.' +
-                    local.global.phantom.version.minor + '.' +
-                    local.global.phantom.version.patch + ' - ' +
+                : 'node - ' + process.platform + ' ' + process.version + ' - ' +
                     new Date().toISOString(),
             screenCaptureImg: local.utility2.envDict.MODE_BUILD_SCREEN_CAPTURE,
             testCaseList: []
@@ -2517,126 +2474,36 @@
                 __dirname + '/lib.jslint.js',
                 'utility2'
             );
-        break;
-
-
-
-    // run phantom js-env code
-    case 'phantom':
-        // require modules
-        local.fs = require('fs');
-        local.webpage = require('webpage');
-
-        local.onError = function (error, trace) {
-            /*
-             * this function will run the main error-handler
-             * http://phantomjs.org/api/phantom/handler/on-error.html
-             */
-            var data, exitCode;
-            exitCode = 1;
-            // handle notification that url has been opened
-            if (error === 'success' && !trace) {
-                console.log(local.utility2.argv0 + ' - opened ' + local.utility2.url);
-                error = null;
-                // screen-capture webpage after timeoutScreenCapture ms
-                if (local.utility2.modePhantom === 'screenCapture') {
-                    setTimeout(function () {
-                        // save screen-capture
-                        local.page.render(local.utility2.fileScreenCapture);
-                        console.log(local.utility2.argv0 +
-                            ' - created screen-capture file://' +
-                            local.utility2.fileScreenCapture);
-                        local.utility2.exit();
-                    }, local.utility2.timeoutScreenCapture);
-                }
-                return;
-            }
-            // parse global_test_results
-            try {
-                data = JSON.parse(
-                    (/\nphantom\n(\{"global_test_results":\{.*)/).exec(error)[1]
-                ).global_test_results;
-            } catch (ignore) {
-            }
-            if (data && data.testReport) {
-                // handle global_test_results thrown from webpage
-                // merge coverage
-                local.global.__coverage__ = local.utility2
-                    .istanbulCoverageMerge(local.global.__coverage__, data.coverage);
-                // merge test-report
-                local.utility2.testMerge(local.utility2.testReport, data.testReport);
-                // save screen-capture
-                local.page.render(local.utility2.fileScreenCapture);
-                // integrate screen-capture into test-report
-                data.testReport.testPlatformList[0].screenCaptureImg =
-                    local.utility2.fileScreenCapture.replace((/.*\//), '');
-                // save test-report
-                local.fs.write(
-                    local.utility2.fileTestReport,
-                    JSON.stringify(local.utility2.testReport)
-                );
-                exitCode = data.testReport.testsFailed;
-            // handle webpage-error
-            // http://phantomjs.org/api/phantom/handler/on-error.html
-            } else if (typeof error === 'string') {
-                console.error('\n' + local.utility2.testName + '\nERROR: ' + error + ' TRACE:');
-                (trace || []).forEach(function (t) {
-                    console.error(' -> ' + (t.file || t.sourceURL)
-                        + ': ' + t.line + (t.function
-                        ? ' (in function ' + t.function + ')'
-                        : ''));
-                });
-                console.error();
-            // handle default-error
-            } else {
-                local.utility2.onErrorDefault(error);
-            }
-            if (local.utility2.modePhantom !== 'screenCapture') {
-                local.utility2.exit(exitCode);
-            }
-        };
-
+        /* istanbul ignore next */
         // run the cli
         local.cliRun = function () {
-            /* istanbul ignore next */
-            // run 'hello' test
-            if (local.system.args[1] === 'hello') {
-                console.log('hello');
-                local.utility2.exit();
+            if (module !== require.main) {
                 return;
             }
-            // init global error handling
-            // http://phantomjs.org/api/phantom/handler/on-error.html
-            local.global.phantom.onError = local.onError;
-            // init webpage
-            local.page = local.webpage.create();
-            // init webpage clipRect
-            local.page.clipRect = { height: 766, left: 0, top: 0, width: 1022 };
-            // init webpage viewportSize
-            local.page.viewportSize = { height: 766, width: 1022 };
-            // init webpage error handling
-            // http://phantomjs.org/api/webpage/handler/on-error.html
-            local.page.onError = local.onError;
-            // pipe webpage console.log to stdout
-            local.page.onConsoleMessage = function () {
-                console.log.apply(console, arguments);
-            };
-            // open requested webpage
-            local.page.open(
-                local.utility2.url.replace('{{timeExit}}', local.utility2.timeExit - 2000),
-                local.onError
-            );
+            switch (process.argv[2]) {
+            case 'browserTest':
+                local.utility2.objectSetOverride(
+                    local.utility2,
+                    JSON.parse(decodeURIComponent(process.argv[3]))
+                );
+                local.utility2.browserTest(
+                    JSON.parse(decodeURIComponent(process.argv[3])),
+                    local.utility2.exit
+                );
+                // init timeoutDefault
+                local.utility2.timeoutDefaultInit();
+                break;
+            }
         };
         local.cliRun();
         break;
     }
-}((function (self) {
+}((function () {
     'use strict';
     var local;
 
 
 
-    /* istanbul ignore next */
     // run shared js-env code
     (function () {
         // init local
@@ -2644,28 +2511,20 @@
         // init js-env
         local.modeJs = (function () {
             try {
-                return self.phantom.version &&
-                    typeof require('webpage').create === 'function' &&
-                    'phantom';
-            } catch (errorCaughtPhantom) {
-                try {
-                    return module.exports &&
-                        typeof process.versions.node === 'string' &&
-                        typeof require('http').createServer === 'function' &&
-                        'node';
-                } catch (errorCaughtNode) {
-                    return typeof navigator.userAgent === 'string' &&
-                        typeof document.querySelector('body') === 'object' &&
-                        'browser';
-                }
+                return module.exports &&
+                    typeof process.versions.node === 'string' &&
+                    typeof require('http').createServer === 'function' &&
+                    'node';
+            } catch (errorCaughtNode) {
+                return typeof navigator.userAgent === 'string' &&
+                    typeof document.querySelector('body') === 'object' &&
+                    'browser';
             }
         }());
         // init global
         local.global = local.modeJs === 'browser'
             ? window
-            : local.modeJs === 'node'
-            ? global
-            : self;
+            : global;
         // init global debug_print
         local.global['debug_print'.replace('_p', 'P')] = function (arg) {
             /*
@@ -2700,25 +2559,15 @@
         // init istanbul
         local.utility2.istanbul = local.modeJs === 'browser'
             ? window.utility2_istanbul
-            : local.modeJs === 'node'
-            ? require('./lib.istanbul.js')
-            : null;
-        // cover istanbul
-        if (local.modeJs === 'node' &&
-                local.global.__coverage__ &&
-                process.env.npm_package_name === 'utility2') {
-            delete require.cache[__dirname + '/lib.istanbul.js'];
-            local.utility2.istanbul2 = require('./lib.istanbul.js');
-            local.utility2.istanbul.coverageReportCreate =
-                local.utility2.istanbul2.coverageReportCreate;
-            local.utility2.istanbul2.codeDict = local.utility2.istanbul.codeDict;
-        }
+            : require('./lib.istanbul.js');
+        local.utility2.istanbulInstrumentSync = (local.utility2.istanbul &&
+            local.utility2.istanbul.instrumentSync) || local.utility2.nop;
         // init jslint
         local.utility2.jslint = local.modeJs === 'browser'
             ? window.utility2_jslint
-            : local.modeJs === 'node'
-            ? require('./lib.jslint.js')
-            : null;
+            : require('./lib.jslint.js');
+        local.utility2.jslintAndPrint = (local.utility2.jslint &&
+            local.utility2.jslint.jslintAndPrint) || local.utility2.nop;
 /* jslint-indent-begin 8 */
 /*jslint maxlen: 256*/
 // init assets

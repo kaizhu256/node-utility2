@@ -73,12 +73,45 @@ shBaseInstall() {
     fi
 }
 
+shBrowserScreenCapture() {
+    # this function will spawn electron to screen-capture the given $URL
+    MODE_BUILD=${MODE_BUILD:-browserScreenCapture} shBrowserTest "$1" ${2-60000} ${3-2000} \
+        screenCapture || return $?
+}
+
+shBrowserTest() {
+    # this function will spawn electron to test the given $URL,
+    # and merge the test-report into the existing test-report
+    # export DISPLAY=:99.0 && Xvfb $DISPLAY &
+    local MODE_BROWSER_TEST || return $?
+    local TIMEOUT_DEFAULT || return $?
+    local TIMEOUT_SCREEN_CAPTURE || return $?
+    local URL || return $?
+    MODE_BROWSER_TEST="${4-test}" || return $?
+    TIMEOUT_DEFAULT="${2-60000}" || return $?
+    TIMEOUT_SCREEN_CAPTURE="${3-2000}" || return $?
+    URL="$1" || return $?
+    shBuildPrint ${MODE_BUILD:-electonTest} "testing $URL with electron" || return $?
+    node $npm_config_dir_utility2/index.js browserTest $(node -e "
+        console.log(encodeURIComponent(JSON.stringify({
+            modeBrowserTest: '$MODE_BROWSER_TEST',
+            timeoutDefault: $TIMEOUT_DEFAULT,
+            timeoutScreenCapture: $TIMEOUT_SCREEN_CAPTURE,
+            url: '$URL'
+                // format unicode
+                .replace((/\\\\u[0-9a-f]{4}/g), function (match0) {
+                    return String.fromCharCode('0x' + match0.slice(-4));
+                })
+        })));
+    ") || return $?
+}
+
 shBuildGithubUpload() {
     # this function will upload build-artifacts to github
     local DIR || return $?
     if [ ! "$GIT_SSH" ]
     then
-        return
+        return $?
     fi
     shBuildPrint githubUpload \
         "uploading build-artifacts to git@github.com:$GITHUB_REPO.git" || return $?
@@ -159,13 +192,13 @@ shDocApiCreate() {
     shBuildPrint docApiCreate \
         "created api-doc file://$npm_config_dir_build/doc.api.html" || return $?
     # screen-capture api-doc
-    shPhantomScreenCapture file://$npm_config_dir_build/doc.api.html || return $?
+    shBrowserScreenCapture file://$npm_config_dir_build/doc.api.html || return $?
 }
 
 shDockerInstall() {
     # this function will install docker
     # http://docs.docker.com/installation/ubuntulinux
-    wget -qO- https://get.docker.com/ | sh || return $?
+    wget -qO- https://get.docker.com/ | /bin/sh || return $?
     # test docker
     docker run hello-world || return $?
 }
@@ -177,8 +210,8 @@ shDockerInstallWork() {
     then
         docker pull node:latest || return $?
         shDockerRestart work node || return $?
-        docker exec work sh $HOME/index.sh shDockerInstallWork || return $?
-        return
+        docker exec work /bin/sh $HOME/index.sh shDockerInstallWork || return $?
+        return $?
     fi
     # run install script inside docker container
     apt-get update || return $?
@@ -194,6 +227,7 @@ shDockerInstallWork() {
         sudo \
         unzip \
         vim-nox \
+        x11-apps \
         xvfb || return $?
     apt-file update || return $?
     apt-get clean || return $?
@@ -331,11 +365,11 @@ shDockerRm() {
 }
 
 shDockerSh() {
-    # this function will run sh in the docker-container $image:$name
+    # this function will run /bin/bash in the docker-container $image:$name
     local NAME || return $?
     NAME=$1 || return $?
     docker start $NAME || return $?
-    docker exec -it $NAME sh || return $?
+    docker exec -it $NAME /bin/bash || return $?
 }
 
 shDockerStart() {
@@ -348,7 +382,7 @@ shDockerStart() {
     shift || return $?
     docker run --name $NAME -dt -e debian_chroot=$NAME \
         -v /root:/root \
-        $@ $IMAGE sh || return $?
+        $@ $IMAGE /bin/bash || return $?
 }
 
 shDockerStopAll() {
@@ -570,7 +604,7 @@ shHerokuDeploy() {
     HEROKU_REPO=$1 || return $?
     if [ ! "$GIT_SSH" ]
     then
-        return
+        return $?
     fi
     # init $HEROKU_HOSTNAME
     export HEROKU_HOSTNAME=$HEROKU_REPO.herokuapp.com || return $?
@@ -591,7 +625,7 @@ shHerokuDeploy() {
         curl -Ls -o /dev/null -w "%{http_code}" https://$HEROKU_HOSTNAME
     ) -lt 400 ] || return $?
     # screen-capture deployed server
-    shPhantomScreenCapture https://$HEROKU_HOSTNAME || return $?
+    shBrowserScreenCapture https://$HEROKU_HOSTNAME || return $?
 }
 
 shInit() {
@@ -653,7 +687,7 @@ shInit() {
     # init $npm_config_dir_utility2
     if [ "$npm_package_name" = utility2 ]
     then
-        export npm_config_dir_utility2=$CWD || return
+        export npm_config_dir_utility2=$CWD || return $?
     else
         export npm_config_dir_utility2=$(node -e \
             "console.log(require('utility2').__dirname);") || return $?
@@ -664,7 +698,7 @@ shInit() {
         export GIT_SSH=$npm_config_dir_utility2/git-ssh.sh || return $?
     fi
     # init $PATH
-    export PATH=$CWD/node_modules/phantomjs-lite:$PATH || return $?
+    export PATH=$CWD/node_modules/.bin:$PATH || return $?
 }
 
 shIptablesDockerInit() {
@@ -823,11 +857,11 @@ shNpmTest() {
     # this function will run npm-test
     shBuildPrint ${MODE_BUILD:-npmTest} "npm-testing $CWD" || return $?
     # cleanup $npm_config_dir_tmp/*.json
-    rm $npm_config_dir_tmp/*.json 2>/dev/null || :
+    rm -f $npm_config_dir_tmp/*.json || return $?
+    # cleanup old electron pages
+    rm -f $npm_config_dir_tmp/electron.*.html || return $?
     # init $npm_config_dir_build
     mkdir -p $npm_config_dir_build/coverage.html || return $?
-    # auto-detect slimerjs
-    shSlimerDetect || return $?
     # init npm-test-mode
     export npm_config_mode_npm_test=1 || return $?
     # init random $PORT
@@ -842,7 +876,7 @@ shNpmTest() {
         return $?
     fi
     # cleanup old coverage
-    rm -f $npm_config_dir_build/coverage.html/coverage.* || return $?
+    rm -f $npm_config_dir_build/coverage.html/coverage.*.json || return $?
     # run npm-test with coverage
     shIstanbulCover $@
     # save $EXIT_CODE and restore $CWD
@@ -893,55 +927,6 @@ shNpmTestPublished() {
     npm install $npm_package_name || return $?
     # npm-test package
     cd node_modules/$npm_package_name && npm install && npm test || return $?
-}
-
-shPhantomScreenCapture() {
-    # this function will spawn phantomjs to screen-capture the given $URL
-    MODE_BUILD=${MODE_BUILD:-phantomScreenCapture} shPhantomTest "$1" ${2-30000} ${3-2000} \
-        screenCapture || return $?
-}
-
-shPhantomTest() {
-    # this function will spawn phantomjs to test the given $URL,
-    # and merge the test-report into the existing test-report
-    local MODE_PHANTOM || return $?
-    local TIMEOUT_DEFAULT || return $?
-    local TIMEOUT_SCREEN_CAPTURE || return $?
-    local URL || return $?
-    MODE_PHANTOM="${4-testUrl}" || return $?
-    TIMEOUT_DEFAULT="${2-30000}" || return $?
-    TIMEOUT_SCREEN_CAPTURE="${3-2000}" || return $?
-    URL="$1" || return $?
-    shBuildPrint ${MODE_BUILD:-phantomTest} "testing $URL with phantomjs" || return $?
-    # auto-detect slimerjs
-    shSlimerDetect || return $?
-    node -e "
-        var utility2;
-        utility2 = require('$npm_config_dir_utility2');
-        if ('$MODE_PHANTOM' === 'testUrl') {
-            utility2.testReport = require('$npm_config_dir_build/test-report.json');
-        }
-        utility2.phantomTest({
-            modePhantom: '$MODE_PHANTOM',
-            timeoutDefault: $TIMEOUT_DEFAULT,
-            timeoutScreenCapture: $TIMEOUT_SCREEN_CAPTURE,
-            url: '$URL'
-                // format unicode
-                .replace((/\\\\u[0-9a-f]{4}/g), function (match0) {
-                    return String.fromCharCode('0x' + match0.slice(-4));
-                })
-        }, function (error) {
-            if ('$MODE_PHANTOM' === 'screenCapture') {
-                process.exit();
-                return;
-            }
-            require('fs').writeFileSync(
-                '$npm_config_dir_build/test-report.html',
-                utility2.testMerge(utility2.testReport, {})
-            );
-            process.exit(!!error);
-        });
-    " || return $?
 }
 
 shReadmeBuild() {
@@ -1026,7 +1011,7 @@ shReadmeTestJs() {
 }
 
 shReadmeTestSh() {
-    # this function will extract, save, and test the sh script $FILE embedded in README.md
+    # this function will extract, save, and test the shell script $FILE embedded in README.md
     local FILE || return $?
     local FILE_BASENAME || return $?
     FILE=$1 || return $?
@@ -1144,19 +1129,6 @@ shRunScreenCapture() {
 shServerPortRandom() {
     # this function will print a random port in the inclusive range 0x8000 to 0xffff
     printf $(($(hexdump -n 2 -e '/2 "%u"' /dev/urandom)|32768))
-}
-
-shSlimerDetect() {
-    # this function will auto-detect if slimerjs is installed and usable
-    if [ ! "$npm_config_mode_slimerjs" ]
-    then
-        if [ "$(slimerjs $npm_config_dir_utility2/index.js hello 2>/dev/null)" = "hello" ]
-        then
-            export npm_config_mode_slimerjs=1 || return $?
-        else
-            export npm_config_mode_slimerjs=0 || return $?
-        fi
-    fi
 }
 
 shSource() {
@@ -1355,7 +1327,7 @@ shMain() {
     local SOURCE || return $?
     if [ ! "$1" ]
     then
-      return
+      return $?
     fi
     COMMAND="$1" || return $?
     shift || return $?

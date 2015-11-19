@@ -1,13 +1,13 @@
 utility2
 ========
-run dynamic browser tests with coverage (via istanbul and phantomjs-lite)
+run dynamic browser tests with coverage (via istanbul and electron)
 
 [![NPM](https://img.shields.io/npm/v/utility2.svg?style=flat-square)](https://www.npmjs.com/package/utility2) [![NPM](https://img.shields.io/npm/dm/utility2.svg?style=flat-square)](https://www.npmjs.com/package/utility2) [![Join the chat at https://gitter.im/kaizhu256/node-utility2](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/kaizhu256/node-utility2?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 
 
 # live test-server
-[![heroku.com test-server](https://kaizhu256.github.io/node-utility2/build/screen-capture.herokuDeploy.slimerjs..png)](https://hrku01-utility2-beta.herokuapp.com)
+[![heroku.com test-server](https://kaizhu256.github.io/node-utility2/build/screen-capture.herokuDeploy.browser..png)](https://hrku01-utility2-beta.herokuapp.com)
 
 
 
@@ -43,7 +43,7 @@ run dynamic browser tests with coverage (via istanbul and phantomjs-lite)
 - unzip installed on os
 
 #### [api-doc](https://kaizhu256.github.io/node-utility2/build/doc.api.html)
-[![api-doc](https://kaizhu256.github.io/node-utility2/build/screen-capture.docApiCreate.slimerjs._2Fhome_2Ftravis_2Fbuild_2Fkaizhu256_2Fnode-utility2_2Ftmp_2Fbuild_2Fdoc.api.html.png)](https://kaizhu256.github.io/node-utility2/build/doc.api.html)
+[![api-doc](https://kaizhu256.github.io/node-utility2/build/screen-capture.docApiCreate.browser._2Fhome_2Ftravis_2Fbuild_2Fkaizhu256_2Fnode-utility2_2Ftmp_2Fbuild_2Fdoc.api.html.png)](https://kaizhu256.github.io/node-utility2/build/doc.api.html)
 
 
 
@@ -65,7 +65,7 @@ run dynamic browser tests with coverage (via istanbul and phantomjs-lite)
 
 shExampleSh() {
     # npm install utility2
-    npm install utility2 || return $?
+    npm install github:kaizhu256/node-utility2#alpha || return $?
 
     # serve a webpage that will interactively run browser tests with coverage
     cd node_modules/utility2 && PORT=1337 npm start || return $?
@@ -76,8 +76,8 @@ shExampleSh
 #### output from shell
 [![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleSh.svg)](https://travis-ci.org/kaizhu256/node-utility2)
 
-#### output from phantomjs-lite
-[![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleSh.slimerjs..png)](https://hrku01-utility2-beta.herokuapp.com)
+#### output from electron
+[![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleSh.browser..png)](https://hrku01-utility2-beta.herokuapp.com)
 
 
 
@@ -90,13 +90,13 @@ shExampleSh
 example.js
 
 this shared browser / node script will run browser tests with coverage
-(via istanbul and phantomjs-lite)
+(via istanbul and electron)
 
 instruction
     1. save this js script as example.js
     2. run the shell command:
-        $ npm install phantomjs-lite utility2 && \
-            PATH=$(pwd)/node_modules/phantomjs-lite:$PATH && \
+        $ npm install electron-prebuilt github:kaizhu256/node-utility2#alpha && \
+            PATH=$(pwd)/node_modules/.bin:$PATH && \
             node_modules/.bin/utility2 test example.js
     3. view test-report in ./tmp/build/test-report.html
     4. view coverage in ./tmp/build/coverage.html/index.html
@@ -171,14 +171,14 @@ instruction
     // run node js-env code
     case 'node':
         // init node tests
-        local.testCase_phantomTest_default = function (options, onError) {
+        local.testCase_browserTest_default = function (options, onError) {
             /*
-             * this function will spawn phantomjs to test the test-page
+             * this function will spawn electron to test the test-page
              */
             // jslint-hack
             local.utility2.nop(options);
-            local.utility2.phantomTest({
-                url: 'http://localhost:' + process.env.PORT + '?modeTest=phantom'
+            local.utility2.browserTest({
+                url: 'http://localhost:' + process.env.PORT + '?modeTest=consoleLogResult'
             }, onError);
         };
         // export local
@@ -282,7 +282,7 @@ instruction
 '    };\n' +
 '\n' +
 '    if (!window.utility2.modeTest) {\n' +
-'       window.utility2.testRun(testCaseDict);\n' +
+'        window.utility2.testRun(testCaseDict);\n' +
 '    }\n' +
 '}());\n' +
 '</textarea>\n' +
@@ -333,7 +333,6 @@ instruction
 '    </script>\n' +
 '    <script src="/assets/example.js"></script>\n' +
 '    <script src="/test/test.js"></script>\n' +
-'    {{envDict.npm_config_html_body_extra}}\n' +
 '</body>\n' +
 /* jslint-ignore-end */
         '</html>\n').replace((/\{\{envDict\.\w+?\}\}/g), function (match0) {
@@ -413,10 +412,10 @@ instruction
 [![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleJs.svg)](https://travis-ci.org/kaizhu256/node-utility2)
 
 #### output from utility2
-[![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleSh.slimerjs._2Ftmp_2Fapp_2Ftmp_2Fbuild_2Ftest-report.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/test-report.html)
+[![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleSh.browser._2Ftmp_2Fapp_2Ftmp_2Fbuild_2Ftest-report.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/test-report.html)
 
 #### output from istanbul
-[![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleJs.slimerjs._2Ftmp_2Fapp_2Ftmp_2Fbuild_2Fcoverage.html_2Fapp_2Fexample.js.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/coverage.html/node-utility2/index.js.html)
+[![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleJs.browser._2Ftmp_2Fapp_2Ftmp_2Fbuild_2Fcoverage.html_2Fapp_2Fexample.js.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/coverage.html/node-utility2/index.js.html)
 
 
 
@@ -439,14 +438,16 @@ instruction
         "utility2-jslint" : "lib.jslint.js"
     },
     "description": "run dynamic browser tests with coverage \
-(via istanbul and phantomjs-lite)",
+(via istanbul and electron)",
     "devDependencies": {
-        "phantomjs-lite": "^2015.8.2"
+        "electron-prebuilt": "^0.35.0"
     },
     "engines": { "node": ">=0.12" },
     "keywords": [
+        "atom", "atom-shell",
         "browser", "build",
         "ci", "code", "continuous-integration", "cover", "coverage",
+        "electron",
         "headless", "headless-browser",
         "instrument", "istanbul",
         "jscover", "jscoverage",
@@ -481,14 +482,15 @@ npm_config_mode_auto_restart=1 \
 npm_config_mode_auto_restart_child=1 \
 ./index.sh test test.js"
     },
-    "version": "2015.11.2"
+    "version": "2015.11.3"
 }
 ```
 
 
 
 # todo
-- migrate from phantomjs / slimerjs to electron
+- migrate travis-ci build to custom docker container
+- create electron-prebuilt-lite devDependency
 - add utility2.middlewareLimit
 - create flamegraph from istanbul coverage
 - add server stress test using phantomjs
@@ -497,10 +499,12 @@ npm_config_mode_auto_restart_child=1 \
 
 
 
-# change since eda2a702
-- npm publish 2015.11.2
-- remove Procfile, as it is now optional in heroku
-- rename env var $npm_config_server_port to $PORT
+# change since bc7b64b3
+- npm publish 2015.11.3
+- #### MAJOR BREAKING CHANGE #### migrate from phantomjs/slimerjs to electron
+- create Dockerfile
+- add modeTestReportIgnore option to utility2.browserTest
+- change utility2.timeoutDefault value from 30000 to 60000
 - none
 
 
@@ -533,12 +537,10 @@ shBuild() {
     MODE_BUILD=testExampleJs MODE_LINENO=0 shRunScreenCapture \
         shReadmeTestJs example.js || return $?
     # screen-capture example.js coverage
-    MODE_BUILD=testExampleJs shPhantomScreenCapture \
+    MODE_BUILD=testExampleJs shBrowserScreenCapture \
         /tmp/app/tmp/build/coverage.html/app/example.js.html || return $?
-    # copy phantomjs screen-capture to $npm_config_dir_build
-    cp /tmp/app/tmp/build/screen-capture.*.png $npm_config_dir_build || return $?
     # screen-capture example.js test-report
-    MODE_BUILD=testExampleSh shPhantomScreenCapture \
+    MODE_BUILD=testExampleSh shBrowserScreenCapture \
         /tmp/app/tmp/build/test-report.html || return $?
 
     # test example shell script
@@ -556,7 +558,7 @@ shBuild() {
     npm run-script build-doc || return $?
 
     # if running legacy-node, then do not continue
-    [ "$(node --version)" \< "v5.0" ] && return
+    ([ "$(node --version)" \< "v5.0" ] && return) || :
 
     # deploy app to heroku
     shRun shHerokuDeploy hrku01-$npm_package_name-$CI_BRANCH || return $?
@@ -567,8 +569,8 @@ shBuild() {
         [ "$CI_BRANCH" = master ]
     then
         TEST_URL="https://hrku01-$npm_package_name-$CI_BRANCH.herokuapp.com" || return $?
-        TEST_URL="$TEST_URL?modeTest=phantom&timeExit={{timeExit}}" || return $?
-        MODE_BUILD=herokuTest shPhantomTest "$TEST_URL" || return $?
+        TEST_URL="$TEST_URL?modeTest=consoleLogResult&timeExit={{timeExit}}" || return $?
+        MODE_BUILD=herokuTest shBrowserTest "$TEST_URL" || return $?
     fi
 }
 shBuild
@@ -580,7 +582,7 @@ MODE_BUILD=gitLsTree shRunScreenCapture shGitLsTree || exit $?
 # create recent changelog of last 50 commits
 MODE_BUILD=gitLog shRunScreenCapture git log -50 --pretty="%ai\u000a%B" || exit $?
 # if running legacy-node, then do not continue
-[ "$(node --version)" \< "v5.0" ] && exit $EXIT_CODE
+([ "$(node --version)" \< "v5.0" ] && exit $EXIT_CODE) || :
 # upload build-artifacts to github, and if number of commits > 16, then squash older commits
 COMMIT_LIMIT=16 shBuildGithubUpload || exit $?
 exit $EXIT_CODE

@@ -5,14 +5,16 @@
         "utility2-istanbul" : "lib.istanbul.js",
         "utility2-jslint" : "lib.jslint.js"
     },
-    "description": "run dynamic browser tests with coverage (via istanbul and phantomjs-lite)",
+    "description": "run dynamic browser tests with coverage (via istanbul and electron)",
     "devDependencies": {
-        "phantomjs-lite": "^2015.8.2"
+        "electron-prebuilt": "^0.35.0"
     },
     "engines": { "node": ">=0.12" },
     "keywords": [
+        "atom", "atom-shell",
         "browser", "build",
         "ci", "code", "continuous-integration", "cover", "coverage",
+        "electron",
         "headless", "headless-browser",
         "instrument", "istanbul",
         "jscover", "jscoverage",
@@ -35,5 +37,5 @@
         "start": "npm_config_mode_auto_restart=1 ./index.sh shRun node test.js",
         "test": "./index.sh shRun shReadmeExportPackageJson && export npm_config_file_start=index.js && npm_config_mode_auto_restart=1 npm_config_mode_auto_restart_child=1 ./index.sh test test.js"
     },
-    "version": "2015.11.2"
+    "version": "2015.11.3"
 }

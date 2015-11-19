@@ -26,6 +26,10 @@
                     onError();
                 }, onError);
             });
+            // test multiple-callback handling-behavior
+            if (options.onEvent) {
+                options.onEvent({ type: 'abort' });
+            }
             options.abort();
             // test multiple-callback handling-behavior
             options.abort();
@@ -1045,34 +1049,30 @@
                 'test'
             );
             local.utility2.arg = 0;
-            // jslint-hack
-            local.utility2.nop(data);
-
-
-
-            /* jslint-ignore-begin */
-            // init coverage1
-            coverage1 = local.vm.runInNewContext(data, { arg: 0 });
-            // validate coverage1
-            local.utility2.assert(local.utility2.jsonStringifyOrdered(coverage1) === '{"/test":{"b":{"1":[0,1]},"branchMap":{"1":{"line":2,"locations":[{"end":{"column":25,"line":2},"start":{"column":13,"line":2}},{"end":{"column":40,"line":2},"start":{"column":28,"line":2}}],"type":"cond-expr"}},"code":["(function () {","return arg ? __coverage__ : __coverage__;","}());"],"f":{"1":1},"fnMap":{"1":{"line":1,"loc":{"end":{"column":13,"line":1},"start":{"column":1,"line":1}},"name":"(anonymous_1)"}},"path":"/test","s":{"1":1,"2":1},"statementMap":{"1":{"end":{"column":5,"line":3},"start":{"column":0,"line":1}},"2":{"end":{"column":41,"line":2},"start":{"column":0,"line":2}}}}}', coverage1);
-            // init coverage2
-            coverage2 = local.vm.runInNewContext(data, { arg: 1 });
-            // validate coverage2
-            local.utility2.assert(local.utility2.jsonStringifyOrdered(coverage2) === '{"/test":{"b":{"1":[1,0]},"branchMap":{"1":{"line":2,"locations":[{"end":{"column":25,"line":2},"start":{"column":13,"line":2}},{"end":{"column":40,"line":2},"start":{"column":28,"line":2}}],"type":"cond-expr"}},"code":["(function () {","return arg ? __coverage__ : __coverage__;","}());"],"f":{"1":1},"fnMap":{"1":{"line":1,"loc":{"end":{"column":13,"line":1},"start":{"column":1,"line":1}},"name":"(anonymous_1)"}},"path":"/test","s":{"1":1,"2":1},"statementMap":{"1":{"end":{"column":5,"line":3},"start":{"column":0,"line":1}},"2":{"end":{"column":41,"line":2},"start":{"column":0,"line":2}}}}}', coverage2);
-            // merge coverage2 into coverage1
-            local.utility2.istanbulCoverageMerge(coverage1, coverage2);
-            // validate merged coverage1
-            local.utility2.assert(local.utility2.jsonStringifyOrdered(coverage1) === '{"/test":{"b":{"1":[1,1]},"branchMap":{"1":{"line":2,"locations":[{"end":{"column":25,"line":2},"start":{"column":13,"line":2}},{"end":{"column":40,"line":2},"start":{"column":28,"line":2}}],"type":"cond-expr"}},"code":["(function () {","return arg ? __coverage__ : __coverage__;","}());"],"f":{"1":2},"fnMap":{"1":{"line":1,"loc":{"end":{"column":13,"line":1},"start":{"column":1,"line":1}},"name":"(anonymous_1)"}},"path":"/test","s":{"1":2,"2":2},"statementMap":{"1":{"end":{"column":5,"line":3},"start":{"column":0,"line":1}},"2":{"end":{"column":41,"line":2},"start":{"column":0,"line":2}}}}}', coverage1);
-            /* jslint-ignore-end */
-
-
-
             // test null-case handling-behavior
             coverage1 = null;
             coverage2 = null;
             local.utility2.istanbulCoverageMerge(coverage1, coverage2);
             // validate merged coverage1
             local.utility2.assert(coverage1 === null, coverage1);
+            // init coverage1
+            coverage1 = local.vm.runInNewContext(data, { arg: 0 });
+            /* jslint-ignore-begin */
+            // validate coverage1
+            local.utility2.assert(local.utility2.jsonStringifyOrdered(coverage1) === '{"/test":{"b":{"1":[0,1]},"branchMap":{"1":{"line":2,"locations":[{"end":{"column":25,"line":2},"start":{"column":13,"line":2}},{"end":{"column":40,"line":2},"start":{"column":28,"line":2}}],"type":"cond-expr"}},"code":["(function () {","return arg ? __coverage__ : __coverage__;","}());"],"f":{"1":1},"fnMap":{"1":{"line":1,"loc":{"end":{"column":13,"line":1},"start":{"column":1,"line":1}},"name":"(anonymous_1)"}},"path":"/test","s":{"1":1,"2":1},"statementMap":{"1":{"end":{"column":5,"line":3},"start":{"column":0,"line":1}},"2":{"end":{"column":41,"line":2},"start":{"column":0,"line":2}}}}}', coverage1);
+            // test merge-create handling-behavior
+            coverage1 = local.utility2.istanbulCoverageMerge({}, coverage1);
+            // validate coverage1
+            local.utility2.assert(local.utility2.jsonStringifyOrdered(coverage1) === '{"/test":{"b":{"1":[0,1]},"branchMap":{"1":{"line":2,"locations":[{"end":{"column":25,"line":2},"start":{"column":13,"line":2}},{"end":{"column":40,"line":2},"start":{"column":28,"line":2}}],"type":"cond-expr"}},"code":["(function () {","return arg ? __coverage__ : __coverage__;","}());"],"f":{"1":1},"fnMap":{"1":{"line":1,"loc":{"end":{"column":13,"line":1},"start":{"column":1,"line":1}},"name":"(anonymous_1)"}},"path":"/test","s":{"1":1,"2":1},"statementMap":{"1":{"end":{"column":5,"line":3},"start":{"column":0,"line":1}},"2":{"end":{"column":41,"line":2},"start":{"column":0,"line":2}}}}}', coverage1);
+            // init coverage2
+            coverage2 = local.vm.runInNewContext(data, { arg: 1 });
+            // validate coverage2
+            local.utility2.assert(local.utility2.jsonStringifyOrdered(coverage2) === '{"/test":{"b":{"1":[1,0]},"branchMap":{"1":{"line":2,"locations":[{"end":{"column":25,"line":2},"start":{"column":13,"line":2}},{"end":{"column":40,"line":2},"start":{"column":28,"line":2}}],"type":"cond-expr"}},"code":["(function () {","return arg ? __coverage__ : __coverage__;","}());"],"f":{"1":1},"fnMap":{"1":{"line":1,"loc":{"end":{"column":13,"line":1},"start":{"column":1,"line":1}},"name":"(anonymous_1)"}},"path":"/test","s":{"1":1,"2":1},"statementMap":{"1":{"end":{"column":5,"line":3},"start":{"column":0,"line":1}},"2":{"end":{"column":41,"line":2},"start":{"column":0,"line":2}}}}}', coverage2);
+            // test merge-update handling-behavior
+            local.utility2.istanbulCoverageMerge(coverage1, coverage2);
+            // validate merged coverage1
+            local.utility2.assert(local.utility2.jsonStringifyOrdered(coverage1) === '{"/test":{"b":{"1":[1,1]},"branchMap":{"1":{"line":2,"locations":[{"end":{"column":25,"line":2},"start":{"column":13,"line":2}},{"end":{"column":40,"line":2},"start":{"column":28,"line":2}}],"type":"cond-expr"}},"code":["(function () {","return arg ? __coverage__ : __coverage__;","}());"],"f":{"1":2},"fnMap":{"1":{"line":1,"loc":{"end":{"column":13,"line":1},"start":{"column":1,"line":1}},"name":"(anonymous_1)"}},"path":"/test","s":{"1":2,"2":2},"statementMap":{"1":{"end":{"column":5,"line":3},"start":{"column":0,"line":1}},"2":{"end":{"column":41,"line":2},"start":{"column":0,"line":2}}}}}', coverage1);
+            /* jslint-ignore-end */
             onError();
         };
 
@@ -1239,7 +1239,7 @@
                         // test random $PORT handling-behavior
                         PORT: ''
                     },
-                    phantomScreenCapture: local.utility2.nop,
+                    browserTest: local.utility2.nop,
                     onReady: {},
                     taskRunOrSubscribe: local.utility2.nop
                 }],
@@ -1267,100 +1267,25 @@
             /*
              * this function will test the test-page's error handling-behavior
              */
-            var onParallel;
             // jslint-hack
             local.utility2.nop(options);
-            onParallel = local.utility2.onParallel(onError);
-            onParallel.counter += 1;
-            [{
+            local.utility2.browserTest({
                 modeSilent: true,
-                url: 'http://localhost:' +
-                    local.utility2.envDict.PORT +
-                    // test script-error handling-behavior
-                    '/test/script-error.html' +
-                    '?timeExit={{timeExit}}'
-            }, {
-                modeSilent: true,
-                // run phantom self-test
-                modePhantomSelfTest: true,
+                modeTestReportIgnore: true,
                 url: 'http://localhost:' +
                     local.utility2.envDict.PORT +
                     // test script-only handling-behavior
                     '/test/script-only.html' +
                     // test phantom-callback handling-behavior
-                    '?modeTest=phantom&' +
+                    '?modeTest=consoleLogResult&' +
                     // test specific testCase handling-behavior
                     // test testRun's failure handling-behavior
                     'modeTestCase=testCase_testRun_failure&' +
                     'timeExit={{timeExit}}'
-            }].forEach(function (options) {
-                onParallel.counter += 1;
-                local.utility2.phantomTest(options, function (error) {
-                    local.utility2.testTryCatch(function () {
-                        // validate error occurred
-                        local.utility2.assert(error, error);
-                        onParallel();
-                    }, onParallel);
-                });
-            });
-            onParallel();
-        };
-
-        local.testCase_testPage_misc = function (options, onError) {
-            /*
-             * this function will test the test-page's misc handling-behavior
-             */
-            // jslint-hack
-            local.utility2.nop(options);
-            local.utility2.testMock([
-                [local.utility2, {
-                    envDict: {
-                        // test no slimerjs handling-behavior
-                        npm_config_mode_slimerjs: '0',
-                        // test no cover utility2.js handling-behavior
-                        npm_package_name: 'undefined'
-                    },
-                    onTimeout: local.utility2.nop,
-                    processSpawnWithTimeout: function () {
-                        return { on: local.utility2.nop };
-                    }
-                }],
-                // test no modeSilent handling-behavior
-                [local.global, { __coverage__: null }]
-            ], function (onError) {
-                local.utility2.phantomTest({
-                    url: 'http://localhost:' +
-                        local.utility2.envDict.PORT +
-                        '?timeExit={{timeExit}}'
-                });
-                onError();
-            }, onError);
-        };
-
-        local.testCase_testPage_screenCapture = function (options, onError) {
-            /*
-             * this function will test the test-page's screen-capture handling-behavior
-             */
-            options = {
-                modeSilent: true,
-                timeoutScreenCapture: 1,
-                url: 'http://localhost:' +
-                    local.utility2.envDict.PORT +
-                    '/test/script-error.html?' +
-                    'timeExit={{timeExit}}'
-            };
-            local.utility2.phantomScreenCapture(options, function (error) {
+            }, function (error) {
                 local.utility2.testTryCatch(function () {
-                    // validate no error occurred
-                    local.utility2.assert(!error, error);
-                    // validate screen-capture file
-                    local.utility2.assert(
-                        options.phantomjs.fileScreenCapture &&
-                            local.fs.existsSync(options.phantomjs.fileScreenCapture),
-                        options.phantomjs.fileScreenCapture
-                    );
-                    // cleanup screen-capture file
-                    local.fs.unlinkSync(options.phantomjs.fileScreenCapture);
+                    // validate error occurred
+                    local.utility2.assert(error, error);
                     onError();
                 }, onError);
             });
@@ -1414,13 +1339,11 @@
     // run node js-env code
     case 'node':
         // init assets
-        local.utility2.cacheDict.assets['/test/script-error.html'] =
-            '<script>syntax error</script>';
         local.utility2.cacheDict.assets['/test/script-only.html'] =
             '<h1>script-only test</h1>\n' +
-            '<script src="/assets/utility2.js">\n' +
-            '</script><script src="/assets/example.js"></script>\n' +
-            '</script><script src="/test/test.js"></script>\n';
+            '<script src="/assets/utility2.js"></script>\n' +
+            '<script src="/assets/example.js"></script>\n' +
+            '<script src="/test/test.js"></script>\n';
         local.utility2.cacheDict.assets['/test/test.js'] =
             local.utility2.istanbulInstrumentInPackage(
                 local.fs.readFileSync(__filename, 'utf8'),
@@ -1572,17 +1495,10 @@
         case 'browser':
             local = window.local;
             break;
+        /* istanbul ignore next */
         // re-init local from example.js
         case 'node':
-            [
-                process.cwd(),
-                // test dir !== __dirname handling-behavior
-                ''
-            ].forEach(function (dir) {
-                if (dir !== __dirname) {
-                    local = require(__dirname + '/example.js');
-                    return;
-                }
+            if (process.cwd() === __dirname) {
                 require('fs').writeFileSync(
                     __dirname + '/example.js',
                     require('fs').readFileSync(__dirname + '/README.md', 'utf8')
@@ -1601,7 +1517,16 @@
                         )
                 );
                 local = require(__dirname + '/example.js');
-            });
+                // coverage-hack - cover istanbul
+                if (local.global.__coverage__) {
+                    delete require.cache[__dirname + '/lib.istanbul.js'];
+                    local.utility2.istanbul2 = require('./lib.istanbul.js');
+                    local.utility2.istanbul.coverageReportCreate =
+                        local.utility2.istanbul2.coverageReportCreate;
+                    local.utility2.istanbul2.codeDict = local.utility2.istanbul.codeDict;
+                }
+            }
+            local = require(__dirname + '/example.js');
             break;
         }
     }());
