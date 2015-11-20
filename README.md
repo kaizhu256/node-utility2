@@ -96,7 +96,7 @@ instruction
     2. run the shell command:
         $ npm install electron-prebuilt-lite utility2 && \
             PATH=$(pwd)/node_modules/.bin:$PATH && \
-            node_modules/.bin/utility2 test example.js
+            node_modules/.bin/utility2 test node example.js
     3. view test-report in ./tmp/build/test-report.html
     4. view coverage in ./tmp/build/coverage.html/index.html
 */
@@ -437,7 +437,7 @@ instruction
     "description": "run dynamic browser tests with coverage \
 (via istanbul and electron)",
     "devDependencies": {
-        "electron-prebuilt-lite": "2015.10.3"
+        "electron-prebuilt-lite": "2015.10.4"
     },
     "engines": { "node": ">=0.12" },
     "keywords": [
@@ -480,7 +480,7 @@ npm_config_mode_auto_restart=1 \
 npm_config_mode_auto_restart_child=1 \
 ./index.sh test node test.js"
     },
-    "version": "2015.11.4"
+    "version": "2015.11.5"
 }
 ```
 
@@ -488,9 +488,7 @@ npm_config_mode_auto_restart_child=1 \
 
 # todo
 - integrate shDocApiCreate node code into index.js
-- change root to $USER in index.sh
 - migrate travis-ci build to custom docker container
-- create electron-prebuilt-lite devDependency
 - add utility2.middlewareLimit
 - create flamegraph from istanbul coverage
 - add server stress test using electron
@@ -499,11 +497,9 @@ npm_config_mode_auto_restart_child=1 \
 
 
 
-# change since 11e9404e
-- npm publish 2015.11.4
-- change shIstanbulCover to require explict npm_config_mode_coverage flag
-- change devDependency from electron-prebuilt to electron-prebuilt-lite
-- explicitly require node or electron command in "utility2 test" command
+# change since cb9242ee
+- npm publish 2015.11.5
+- update devDependencies to electron-prebuilt-lite @ 2015.10.4
 - none
 
 

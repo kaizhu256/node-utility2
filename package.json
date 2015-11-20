@@ -7,7 +7,7 @@
     },
     "description": "run dynamic browser tests with coverage (via istanbul and electron)",
     "devDependencies": {
-        "electron-prebuilt-lite": "2015.10.3"
+        "electron-prebuilt-lite": "2015.10.4"
     },
     "engines": { "node": ">=0.12" },
     "keywords": [
@@ -38,5 +38,5 @@
         "start": "npm_config_mode_auto_restart=1 ./index.sh shRun shIstanbulCover node test.js",
         "test": "./index.sh shRun shReadmeExportPackageJson && export npm_config_file_start=index.js && npm_config_mode_auto_restart=1 npm_config_mode_auto_restart_child=1 ./index.sh test node test.js"
     },
-    "version": "2015.11.4"
+    "version": "2015.11.5"
 }
