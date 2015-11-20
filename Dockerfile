@@ -21,11 +21,11 @@ RUN apt-get update && \
         x11-apps \
         xvfb && \
     apt-get clean && \
-    rm -fr \
+    (rm -fr \
         /tmp/* \
         /tmp/.* \
         /var/lib/apt/lists/* \
         /var/lib/apt/lists/.* \
         /var/tmp/* \
         /var/tmp/.* \
-        2>/dev/null || :
+        2>/dev/null || :)

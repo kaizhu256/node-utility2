@@ -48,7 +48,7 @@
             /*
              * this function will spawn an electron process to test options.url
              */
-            var error2, modeNext, onNext, onParallel, timerTimeout;
+            var done, modeNext, onNext, onParallel, timerTimeout;
             modeNext = options.modeNext || 0;
             onNext = function (error, data) {
                 modeNext = error instanceof Error
@@ -84,6 +84,7 @@
                     local.fs.writeFileSync(options.urlBrowser, '<style>body {' +
                             'border: 1px solid black;' +
                             'margin: 0px;' +
+                            'overflow: hidden;' +
                         '}</style>' +
                         '<webview id=webview src="' +
                         options.url.replace('{{timeExit}}', options.timeExit) +
@@ -99,7 +100,7 @@
                             // uncover
                             .replace((/\b__cov_.*?\+\+/g), '0') +
                         '(' + JSON.stringify(options) + '))</script>');
-                    // spawn electron to test a url
+                    // spawn an electron process to test a url
                     options.modeNext = 10;
                     local.utility2.processSpawnWithTimeout('electron', [
                         __filename,
@@ -149,14 +150,14 @@
                 case 11:
                     // handle uncaughtexception
                     process.once('uncaughtException', onNext);
-                    // wait for app to be ready
+                    // wait for electron to init
                     require('app').once('ready', onNext);
                     break;
                 case 12:
                     options.BrowserWindow = require('browser-window');
                     local.utility2.objectSetDefault(
                         options,
-                        { height: 768, width: 1024, x: 0, y: 0 }
+                        { frame: false, height: 768, width: 1024, x: 0, y: 0 }
                     );
                     // init browserWindow
                     options.browserWindow = new options.BrowserWindow(options);
@@ -222,10 +223,10 @@
                     });
                     break;
                 default:
-                    if (error2) {
+                    if (done) {
                         return;
                     }
-                    error2 = true;
+                    done = true;
                     // cleanup timerTimeout
                     clearTimeout(timerTimeout);
                     onError(error);

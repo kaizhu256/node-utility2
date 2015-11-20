@@ -1281,6 +1281,7 @@
                     // test specific testCase handling-behavior
                     // test testRun's failure handling-behavior
                     'modeTestCase=testCase_testRun_failure&' +
+                    // test timeExit handling-behavior
                     'timeExit={{timeExit}}'
             }, function (error) {
                 local.utility2.testTryCatch(function () {

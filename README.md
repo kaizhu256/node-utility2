@@ -39,7 +39,6 @@ run dynamic browser tests with coverage (via istanbul and electron)
 # documentation
 #### this package requires
 - darwin or linux os
-- imagemagick installed on os
 - unzip installed on os
 
 #### [api-doc](https://kaizhu256.github.io/node-utility2/build/doc.api.html)
@@ -65,7 +64,7 @@ run dynamic browser tests with coverage (via istanbul and electron)
 
 shExampleSh() {
     # npm install utility2
-    npm install github:kaizhu256/node-utility2#alpha || return $?
+    npm install utility2 || return $?
 
     # serve a webpage that will interactively run browser tests with coverage
     cd node_modules/utility2 && PORT=1337 npm start || return $?
@@ -95,7 +94,7 @@ this shared browser / node script will run browser tests with coverage
 instruction
     1. save this js script as example.js
     2. run the shell command:
-        $ npm install electron-prebuilt github:kaizhu256/node-utility2#alpha && \
+        $ npm install electron-prebuilt-lite utility2 && \
             PATH=$(pwd)/node_modules/.bin:$PATH && \
             node_modules/.bin/utility2 test example.js
     3. view test-report in ./tmp/build/test-report.html
@@ -111,8 +110,46 @@ instruction
     stupid: true
 */
 
-(function (local) {
+(function () {
     'use strict';
+    var local;
+
+
+
+    // run shared js-env code
+    (function () {
+        // init local
+        local = {};
+        // init js-env
+        local.modeJs = (function () {
+            try {
+                return module.exports &&
+                    typeof process.versions.node === 'string' &&
+                    typeof require('http').createServer === 'function' &&
+                    'node';
+            } catch (errorCaughtNode) {
+                return typeof navigator.userAgent === 'string' &&
+                    typeof document.querySelector('body') === 'object' &&
+                    'browser';
+            }
+        }());
+        // init global
+        local.global = local.modeJs === 'browser'
+            ? window
+            : global;
+        // export local
+        local.global.local = local;
+        // init utility2
+        local.utility2 = local.modeJs === 'browser'
+            ? window.utility2
+            : require('utility2');
+        // import utility2.local
+        Object.keys(local.utility2.local).forEach(function (key) {
+            local[key] = local[key] || local.utility2.local[key];
+        });
+        // init onReady
+        local.utility2.onReadyInit();
+    }());
     switch (local.modeJs) {
 
 
@@ -173,7 +210,7 @@ instruction
         // init node tests
         local.testCase_browserTest_default = function (options, onError) {
             /*
-             * this function will spawn electron to test the test-page
+             * this function will spawn an electron process to test the test-page
              */
             // jslint-hack
             local.utility2.nop(options);
@@ -348,9 +385,10 @@ instruction
             }
         });
         local.utility2.cacheDict.assets['/assets/example.js'] =
-            local.utility2.istanbulInstrumentSync(
+            local.utility2.istanbulInstrumentInPackage(
                 local.fs.readFileSync(__dirname + '/example.js', 'utf8'),
-                __dirname + '/example.js'
+                __dirname + '/example.js',
+                'utility2'
             );
         local.utility2.cacheDict.assets['/test/hello'] = 'hello';
         // init middleware
@@ -364,48 +402,7 @@ instruction
         local.utility2.testRunServer(local);
         break;
     }
-}((function () {
-    'use strict';
-    var local;
-
-
-
-    // run shared js-env code
-    (function () {
-        // init local
-        local = {};
-        // init js-env
-        local.modeJs = (function () {
-            try {
-                return module.exports &&
-                    typeof process.versions.node === 'string' &&
-                    typeof require('http').createServer === 'function' &&
-                    'node';
-            } catch (errorCaughtNode) {
-                return typeof navigator.userAgent === 'string' &&
-                    typeof document.querySelector('body') === 'object' &&
-                    'browser';
-            }
-        }());
-        // init global
-        local.global = local.modeJs === 'browser'
-            ? window
-            : global;
-        // export local
-        local.global.local = local;
-        // init utility2
-        local.utility2 = local.modeJs === 'browser'
-            ? window.utility2
-            : require('utility2');
-        // import utility2.local
-        Object.keys(local.utility2.local).forEach(function (key) {
-            local[key] = local[key] || local.utility2.local[key];
-        });
-        // init onReady
-        local.utility2.onReadyInit();
-    }());
-    return local;
-}())));
+}());
 ```
 
 #### output from shell
@@ -440,7 +437,7 @@ instruction
     "description": "run dynamic browser tests with coverage \
 (via istanbul and electron)",
     "devDependencies": {
-        "electron-prebuilt": "^0.35.0"
+        "electron-prebuilt-lite": "2015.10.3"
     },
     "engines": { "node": ">=0.12" },
     "keywords": [
@@ -474,37 +471,39 @@ utility2:{exports:require('./index.js')},\
 'utility2.jslint':{exports:require('./index.js').jslint}\
 }\
 }\"",
+        "env": "env",
         "postinstall": "./index.sh shRun shReadmeExportPackageJson",
-        "start": "npm_config_mode_auto_restart=1 ./index.sh shRun node test.js",
+        "start": "npm_config_mode_auto_restart=1 ./index.sh shRun shIstanbulCover node test.js",
         "test": "./index.sh shRun shReadmeExportPackageJson && \
 export npm_config_file_start=index.js && \
 npm_config_mode_auto_restart=1 \
 npm_config_mode_auto_restart_child=1 \
-./index.sh test test.js"
+./index.sh test node test.js"
     },
-    "version": "2015.11.3"
+    "version": "2015.11.4"
 }
 ```
 
 
 
 # todo
+- integrate shDocApiCreate node code into index.js
+- change root to $USER in index.sh
 - migrate travis-ci build to custom docker container
 - create electron-prebuilt-lite devDependency
 - add utility2.middlewareLimit
 - create flamegraph from istanbul coverage
-- add server stress test using phantomjs
+- add server stress test using electron
 - minify /assets/utility2.js in production-mode
 - none
 
 
 
-# change since bc7b64b3
-- npm publish 2015.11.3
-- #### MAJOR BREAKING CHANGE #### migrate from phantomjs/slimerjs to electron
-- create Dockerfile
-- add modeTestReportIgnore option to utility2.browserTest
-- change utility2.timeoutDefault value from 30000 to 60000
+# change since 11e9404e
+- npm publish 2015.11.4
+- change shIstanbulCover to require explict npm_config_mode_coverage flag
+- change devDependency from electron-prebuilt to electron-prebuilt-lite
+- explicitly require node or electron command in "utility2 test" command
 - none
 
 

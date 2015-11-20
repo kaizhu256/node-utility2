@@ -19,7 +19,7 @@ node_js:
     - "4.2"
     - "node"
 script:
-    - npm run-script build-ci
+    - npm run-script build-ci --unsafe-perm=true
 # http://docs.travis-ci.com/user/workers/container-based-infrastructure
 sudo:
     false

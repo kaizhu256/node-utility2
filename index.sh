@@ -1,7 +1,6 @@
 shAesDecrypt() {
     # this function will decrypt base64-encoded stdin to stdout using aes-256-cbc
-    local STRING || return $?
-    local IV || return $?
+    local IV STRING || return $?
     # save stdin to $STRING
     STRING=$(cat /dev/stdin) || return $?
     # init $IV from first 44 base64-encoded bytes of $STRING
@@ -36,7 +35,7 @@ $HOME/bin:$HOME/node_modules/.bin:/usr/local/bin:/usr/local/sbin || return $?
         export PATH="$PATH_BIN:$PATH" || return $?
     fi
     # init $PATH_EMSCRIPTEN
-    if [ "$PATH_EMSCRIPTEN" = "" ]; then
+    if [ ! "$PATH_EMSCRIPTEN" ]; then
         export PATH_EMSCRIPTEN=$HOME/src/emsdk_portable/emscripten/latest || return $?
         export PATH="$PATH_EMSCRIPTEN:$PATH" || return $?
     fi
@@ -44,7 +43,7 @@ $HOME/bin:$HOME/node_modules/.bin:/usr/local/bin:/usr/local/sbin || return $?
     for FILE in $HOME/index.sh $HOME/.bashrc2
     do
         # source $FILE
-        if [ -f $FILE ]
+        if [ -f "$FILE" ]
         then
             . $FILE || return $?
         fi
@@ -67,26 +66,22 @@ shBaseInstall() {
     # create .bashrc
     printf '. $HOME/index.sh && shBaseInit' > $HOME/.bashrc
     # init .ssh/authorized_keys.root
-    if [ -f $HOME/.ssh/authorized_keys.root ]
+    if [ -f "$HOME/.ssh/authorized_keys.root" ]
     then
         mv $HOME/.ssh/authorized_keys.root $HOME/.ssh/authorized_keys || return $?
     fi
 }
 
 shBrowserScreenCapture() {
-    # this function will spawn electron to screen-capture the given $URL
+    # this function will spawn an electron process to screen-capture the given $URL
     MODE_BUILD=${MODE_BUILD:-browserScreenCapture} shBrowserTest "$1" ${2-60000} ${3-2000} \
         screenCapture || return $?
 }
 
 shBrowserTest() {
-    # this function will spawn electron to test the given $URL,
+    # this function will spawn an electron process to test the given $URL,
     # and merge the test-report into the existing test-report
-    # export DISPLAY=:99.0 && Xvfb $DISPLAY &
-    local MODE_BROWSER_TEST || return $?
-    local TIMEOUT_DEFAULT || return $?
-    local TIMEOUT_SCREEN_CAPTURE || return $?
-    local URL || return $?
+    local MODE_BROWSER_TEST TIMEOUT_DEFAULT TIMEOUT_SCREEN_CAPTURE URL || return $?
     MODE_BROWSER_TEST="${4-test}" || return $?
     TIMEOUT_DEFAULT="${2-60000}" || return $?
     TIMEOUT_SCREEN_CAPTURE="${3-2000}" || return $?
@@ -243,11 +238,11 @@ shDockerRestartMongodb() {
     # this function will restart the mongodb docker-container
     # https://registry.hub.docker.com/_/mongo/
     local DIR || return $?
-    DIR=/root/mongodb.data.db || return $?
+    DIR=/$HOME/mongodb.data.db || return $?
     mkdir -p $DIR || return $?
     shDockerRm mongodb || :
     docker run --name mongodb -d \
-        -v /root:/root -v $DIR:/data/db \
+        -v /$HOME:/root -v $DIR:/data/db \
         $@ mongo --storageEngine=wiredTiger || return $?
 }
 
@@ -256,14 +251,14 @@ shDockerRestartNginx() {
     local FILE || return $?
     # init /root/etc.nginx.htpasswd
     FILE=/root/etc.nginx.htpasswd || return $?
-    if [ ! -f $FILE ]
+    if [ ! -f "$FILE" ]
     then
         printf "foo:$(openssl passwd -crypt bar)" > $FILE || return $?
     fi
     # init /root/etc.nginx.nginx.conf
     # https://www.nginx.com/resources/wiki/start/topics/examples/full/#nginx-conf
     FILE=/root/etc.nginx.nginx.conf || return $?
-    if [ ! -f $FILE ]
+    if [ ! -f "$FILE" ]
     then
         printf '
 user nginx;
@@ -310,7 +305,7 @@ http {
     # init /root/etc.nginx.ssl
     # http://superuser.com/questions/226192/openssl-without-prompt
     FILE=/root/etc.nginx.ssl || return $?
-    if [ ! -f $FILE.pem ]
+    if [ ! -f "$FILE.pem" ]
     then
         openssl req -days 365 -keyout $FILE.key -new -newkey rsa:4096 -nodes -out $FILE.pem \
             -subj "/C=AU" -x509 || return $?
@@ -320,28 +315,26 @@ http {
     shDockerRm nginx || :
     # https://registry.hub.docker.com/_/nginx/
     docker run --name nginx -d -p 80:80 -p 443:443 \
-        -v /root:/root -v /root/etc.nginx.nginx.conf:/etc/nginx/nginx.conf:ro \
+        -v /$HOME:/root -v /root/etc.nginx.nginx.conf:/etc/nginx/nginx.conf:ro \
         nginx || return $?
 }
 
 shDockerRestartPptpd() {
     # this function will restart the pptpd docker-container
     # https://github.com/whuwxl/docker-repos/tree/master/pptpd
-    local FILE || return $?
-    local PASSWORD || return $?
-    local USERNAME || return $?
-    FILE=/root/pptpd.etc.ppp.chap-secrets || return $?
+    local FILE PASSWORD USERNAME || return $?
+    FILE=/$HOME/pptpd.etc.ppp.chap-secrets || return $?
     PASSWORD=$2 || return $?
     USERNAME=$1 || return $?
     # init /etc/ppp/chap-secrets
-    if [ ! -f $FILE ]
+    if [ ! -f "$FILE" ]
     then
         printf "$USERNAME * $PASSWORD *" >> $FILE || return $?
         chmod 600 $FILE || return $?
     fi
     shDockerRm pptpd || :
     docker run --name pptpd --privileged -d -p 1723:1723 \
-        -v /root:/root -v $FILE:/etc/ppp/chap-secrets:ro \
+        -v /$HOME:/root -v $FILE:/etc/ppp/chap-secrets:ro \
         whuwxl/pptpd || return $?
 }
 
@@ -349,12 +342,12 @@ shDockerRestartTransmission() {
     # this function will restart the transmission docker-container
     # https://hub.docker.com/r/dperson/transmission/
     local DIR || return $?
-    DIR=/root/downloads || return $?
+    DIR=/$HOME/downloads || return $?
     mkdir -p $DIR || return $?
     shDockerRm transmission || :
     docker run --name transmission -d -e TRPASSWD=admin -e TRUSER=admin -e TZ=EST5EDT \
         -p 9091:9091 \
-        -v /root:/root -v $DIR:/var/lib/transmission-daemon \
+        -v /$HOME:/root -v $DIR:/var/lib/transmission-daemon \
         dperson/transmission || return $?
 }
 
@@ -374,14 +367,13 @@ shDockerSh() {
 
 shDockerStart() {
     # this function will start the docker-container $image:$name
-    local IMAGE || return $?
-    local NAME || return $?
+    local IMAGE NAME || return $?
     NAME=$1 || return $?
     shift || return $?
     IMAGE=$1 || return $?
     shift || return $?
     docker run --name $NAME -dt -e debian_chroot=$NAME \
-        -v /root:/root \
+        -v /$HOME:/root \
         $@ $IMAGE /bin/bash || return $?
 }
 
@@ -405,7 +397,7 @@ shExitCodeSave() {
     then
         EXIT_CODE=$1 || return $?
     fi
-    if [ -d $npm_config_dir_tmp ]
+    if [ -d "$npm_config_dir_tmp" ]
     then
         printf "$EXIT_CODE" > $npm_config_file_tmp || return $?
     fi
@@ -434,13 +426,7 @@ shGitRepoBranchCommand() {
 
 shGitRepoBranchCommandInternal() {
     # this fuction will copy / move / update git-repo-branch
-    local BRANCH1 || return $?
-    local BRANCH2 || return $?
-    local COMMAND || return $?
-    local MESSAGE || return $?
-    local RANGE || return $?
-    local REPO1 || return $?
-    local REPO2 || return $?
+    local BRANCH1 BRANCH2 COMMAND MESSAGE RANGE REPO1 REPO2 || return $?
     # http://superuser.com/questions/897148/shell-cant-shift-that-many-error
     COMMAND="$1" || return $?
     shift $(( $# > 0 ? 1 : 0 )) || return $?
@@ -495,7 +481,7 @@ shGitRepoBranchCommandInternal() {
     # if number of commits > $COMMIT_LIMIT,
     # then backup current git-repo-branch to git-repo-branch.backup,
     # and then squash $RANGE to the first commit in git-repo-branch
-    if [ "$COMMIT_LIMIT" ] && [ $(git rev-list HEAD --count) -gt $COMMIT_LIMIT ]
+    if [ "$COMMIT_LIMIT" ] && [ "$(git rev-list HEAD --count)" -gt "$COMMIT_LIMIT" ]
     then
         RANGE=$(($COMMIT_LIMIT/2)) || return $?
         git push -f $REPO2 $BRANCH2:$BRANCH2.backup || return $?
@@ -514,8 +500,7 @@ shGitSquashPop() {
     # this function will squash HEAD to the given $COMMIT
     # http://stackoverflow.com/questions/5189560
     # /how-can-i-squash-my-last-x-commits-together-using-git
-    local COMMIT || return $?
-    local MESSAGE || return $?
+    local COMMIT MESSAGE || return $?
     COMMIT=$1 || return $?
     MESSAGE="${2-$(git log -1 --pretty=%s)}" || return $?
     # commit any uncommitted data
@@ -530,8 +515,7 @@ shGitSquashPop() {
 
 shGitSquashShift() {
     # this function will squash $RANGE to the first commit
-    local BRANCH || return $?
-    local RANGE || return $?
+    local BRANCH RANGE || return $?
     BRANCH=$(git rev-parse --abbrev-ref HEAD) || return $?
     RANGE=$1 || return $?
     git checkout -q HEAD~$RANGE || return $?
@@ -546,13 +530,10 @@ shGitSquashShift() {
 
 shGrep() {
     # this function will recursively grep $DIR for the $REGEXP
-    local DIR || return $?
-    local FILE_FILTER || return $?
-    local REGEXP || return $?
+    local DIR FILE_FILTER REGEXP || return $?
     DIR=$1 || return $?
     REGEXP=$2 || return $?
-    FILE_FILTER="/\\.\\" || return $?
-    FILE_FILTER="$FILE_FILTER|.*\\(\\b\\|_\\)\\(\\.\\d\\" || return $?
+    FILE_FILTER="$FILE_FILTER/\\.\\|.*\\(\\b\\|_\\)\\(\\.\\d\\" || return $?
     FILE_FILTER="$FILE_FILTER|archive\\|artifact\\" || return $?
     FILE_FILTER="$FILE_FILTER|bower_component\\|build\\" || return $?
     FILE_FILTER="$FILE_FILTER|coverage\\" || return $?
@@ -803,12 +784,15 @@ shIptablesInit() {
 
 shIstanbulCover() {
     # this function will run the command $@ with istanbul coverage
-    if [ "$npm_config_mode_coverage" = 0 ]
+    local COMMAND || return $?
+    if [ ! "$npm_config_mode_coverage" ]
     then
-        node $@ || return $?
-    else
-        node $npm_config_dir_utility2/lib.istanbul.js cover $@ || return $?
+        $@
+        return $?
     fi
+    COMMAND="$1" || return $?
+    shift || return $?
+    "$COMMAND" $npm_config_dir_utility2/lib.istanbul.js cover $@ || return $?
 }
 
 shJsonFilePrettify() {
@@ -828,8 +812,7 @@ shJsonFilePrettify() {
 
 shMountData() {
     # this function will mount /dev/xvdf to /root, and is intended for aws-ec2 setup
-    local IFS_OLD || return $?
-    local TMP || return $?
+    local IFS_OLD TMP || return $?
     # mount optional /dev/xvdb
     mkdir -p /mnt/local || return $?
     mount /dev/xvdb /mnt/local -o noatime || :
@@ -865,20 +848,20 @@ shNpmTest() {
     # init npm-test-mode
     export npm_config_mode_npm_test=1 || return $?
     # init random $PORT
-    if [ "$PORT" = "" ]
+    if [ ! "$PORT" ]
     then
         export PORT=$(shServerPortRandom) || return $?
     fi
     # if coverage-mode is disabled, then run npm-test without coverage
     if [ "$npm_config_mode_coverage" = 0 ]
     then
-        shIstanbulCover $@
+        $@
         return $?
     fi
     # cleanup old coverage
     rm -f $npm_config_dir_build/coverage.html/coverage.*.json || return $?
     # run npm-test with coverage
-    shIstanbulCover $@
+    npm_config_mode_coverage=1 shIstanbulCover $@
     # save $EXIT_CODE and restore $CWD
     shExitCodeSave $? || return $?
     # create coverage badge
@@ -912,7 +895,7 @@ shNpmTest() {
     " || return $?
     if [ "$EXIT_CODE" != 0 ]
     then
-        npm_config_mode_coverage=0 shIstanbulCover $@
+        $@
     fi
     return $EXIT_CODE
 }
@@ -939,8 +922,7 @@ shReadmeBuild() {
 
 shReadmeExportFile() {
     # this function will extract and save the script $FILE_IN embedded in README.md to $FILE_OUT
-    local FILE_IN || return $?
-    local FILE_OUT || return $?
+    local FILE_IN FILE_OUT || return $?
     FILE_IN=$1 || return $?
     FILE_OUT=$2 || return $?
     node -e "
@@ -975,8 +957,7 @@ shReadmeExportPackageJson() {
 
 shReadmeTestJs() {
     # this function will extract, save, and test the js script $FILE embedded in README.md
-    local FILE || return $?
-    local SCRIPT || return $?
+    local FILE SCRIPT || return $?
     FILE=$1 || return $?
     shBuildPrint $MODE_BUILD "testing $FILE" || return $?
     if [ ! "$MODE_OFFLINE" ]
@@ -1012,8 +993,7 @@ shReadmeTestJs() {
 
 shReadmeTestSh() {
     # this function will extract, save, and test the shell script $FILE embedded in README.md
-    local FILE || return $?
-    local FILE_BASENAME || return $?
+    local FILE FILE_BASENAME || return $?
     FILE=$1 || return $?
     FILE_BASENAME=$(node -e "
         console.log(require('path').basename('$FILE'));
@@ -1144,8 +1124,7 @@ shTravisDecryptYml() {
 
 shTravisEncrypt() {
     # this function will travis-encrypt $SECRET for the $GITHUB_REPO
-    local GITHUB_REPO || return $?
-    local SECRET || return $?
+    local GITHUB_REPO SECRET || return $?
     GITHUB_REPO=$1 || return $?
     SECRET=$2 || return $?
     # init $npm_config_dir_build dir
@@ -1164,8 +1143,7 @@ shTravisEncrypt() {
 
 shTravisEncryptYml() {
     # this function will travis-encrypt $FILE to $AES_ENCRYPTED_SH and embed it in .travis.yml
-    local AES_256_KEY_ENCRYPTED || return $?
-    local FILE || return $?
+    local AES_256_KEY_ENCRYPTED FILE || return $?
     FILE=$1 || return $?
     if [ ! -f "$FILE" ]
     then
@@ -1320,11 +1298,13 @@ shUbuntuInit() {
     fi
 }
 
+shXvfbInit() {
+    printf 'export DISPLAY=:99.0 && (Xvfb $DISPLAY &)\n' || return $?
+}
+
 shMain() {
     # this function will run the main program
-    local COMMAND || return $?
-    local DIR || return $?
-    local SOURCE || return $?
+    local COMMAND DIR SOURCE || return $?
     if [ ! "$1" ]
     then
       return $?
