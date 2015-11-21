@@ -96,7 +96,7 @@ instruction
     2. run the shell command:
         $ npm install electron-prebuilt-lite utility2 && \
             PATH=$(pwd)/node_modules/.bin:$PATH && \
-            node_modules/.bin/utility2 test node example.js
+            npm_config_mode_coverage=1 node_modules/.bin/utility2 test node example.js
     3. view test-report in ./tmp/build/test-report.html
     4. view coverage in ./tmp/build/coverage.html/index.html
 */
@@ -328,6 +328,7 @@ instruction
 '    <div class="istanbulCoverageDiv"></div>\n' +
 '    <script src="/assets/utility2.lib.istanbul.js"></script>\n' +
 '    <script src="/assets/utility2.lib.jslint.js"></script>\n' +
+'    <script src="/assets/utility2.lib.uglifyjs.js"></script>\n' +
 '    <script src="/assets/utility2.js"></script>\n' +
 '    <script>\n' +
 '    window.utility2.envDict = {\n' +
@@ -385,7 +386,7 @@ instruction
             }
         });
         local.utility2.cacheDict.assets['/assets/example.js'] =
-            local.utility2.istanbulInstrumentInPackage(
+            local.utility2.istanbulInstrumentSync(
                 local.fs.readFileSync(__dirname + '/example.js', 'utf8'),
                 __dirname + '/example.js',
                 'utility2'
@@ -468,38 +469,43 @@ exampleFileList:['example.js','test.js','index.js'],\
 moduleDict:{\
 utility2:{exports:require('./index.js')},\
 'utility2.istanbul':{exports:require('./index.js').istanbul},\
-'utility2.jslint':{exports:require('./index.js').jslint}\
+'utility2.jslint':{exports:require('./index.js').jslint},\
+'utility2.jslint':{exports:require('./index.js').uglifyjs}\
 }\
 }\"",
         "env": "env",
-        "postinstall": "./index.sh shRun shReadmeExportPackageJson",
+        "postinstall": "./index.sh shRun shReadmeExportPackageJson && \
+./index.sh shRun shReadmeExportFile example.js example.js",
         "start": "npm_config_mode_auto_restart=1 ./index.sh shRun shIstanbulCover node test.js",
         "test": "./index.sh shRun shReadmeExportPackageJson && \
-export npm_config_file_start=index.js && \
 npm_config_mode_auto_restart=1 \
 npm_config_mode_auto_restart_child=1 \
 ./index.sh test node test.js"
     },
-    "version": "2015.11.5"
+    "version": "2015.11.6"
 }
 ```
 
 
 
 # todo
-- integrate shDocApiCreate node code into index.js
 - migrate travis-ci build to custom docker container
 - add utility2.middlewareLimit
 - create flamegraph from istanbul coverage
 - add server stress test using electron
-- minify /assets/utility2.js in production-mode
 - none
 
 
 
-# change since cb9242ee
-- npm publish 2015.11.5
-- update devDependencies to electron-prebuilt-lite @ 2015.10.4
+# change since 24d90987
+- npm publish 2015.11.6
+- coverage-mode must now be explicitly set with env var $npm_config_mode_coverage
+- minify assets on heroku demo server
+- minify /assets/utility2.js in production-mode
+- minify /assets/utility2.lib.istanbul.js in production-mode
+- minify /assets/utility2.lib.jslint.js in production-mode
+- minify /assets/utility2.lib.uglifyjs.js in production-mode
+- add file lib.uglifyjs.js
 - none
 
 
@@ -547,13 +553,13 @@ shBuild() {
         $npm_config_dir_build || return $?
 
     # run npm-test
-    MODE_BUILD=npmTest shRunScreenCapture npm test || return $?
+    MODE_BUILD=npmTest shRunScreenCapture npm test --mode-coverage || return $?
 
     # create api-doc
     npm run-script build-doc || return $?
 
     # if running legacy-node, then do not continue
-    ([ "$(node --version)" \< "v5.0" ] && return) || :
+    [ "$(node --version)" \< "v5.0" ] && exit
 
     # deploy app to heroku
     shRun shHerokuDeploy hrku01-$npm_package_name-$CI_BRANCH || return $?
@@ -576,8 +582,6 @@ EXIT_CODE=$?
 MODE_BUILD=gitLsTree shRunScreenCapture shGitLsTree || exit $?
 # create recent changelog of last 50 commits
 MODE_BUILD=gitLog shRunScreenCapture git log -50 --pretty="%ai\u000a%B" || exit $?
-# if running legacy-node, then do not continue
-([ "$(node --version)" \< "v5.0" ] && exit $EXIT_CODE) || :
 # upload build-artifacts to github, and if number of commits > 16, then squash older commits
 COMMIT_LIMIT=16 shBuildGithubUpload || exit $?
 exit $EXIT_CODE

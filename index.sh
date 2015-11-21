@@ -1,15 +1,17 @@
+#/bin/sh
+
 shAesDecrypt() {
     # this function will decrypt base64-encoded stdin to stdout using aes-256-cbc
     local IV STRING || return $?
     # save stdin to $STRING
-    STRING=$(cat /dev/stdin) || return $?
+    STRING="$(cat /dev/stdin)" || return $?
     # init $IV from first 44 base64-encoded bytes of $STRING
-    IV=$(printf $STRING | cut -c1-44 | base64 --decode) || return $?
+    IV="$(printf $STRING | cut -c1-44 | base64 --decode)" || return $?
     # decrypt remaining base64-encoded bytes of $STRING to stdout using aes-256-cbc
-    printf $STRING | \
+    printf "$STRING" | \
         cut -c45-9999 | \
         base64 --decode | \
-        openssl enc -aes-256-cbc -d -K $AES_256_KEY -iv $IV || return $?
+        openssl enc -aes-256-cbc -d -K "$AES_256_KEY" -iv "$IV" || return $?
 }
 
 shAesEncrypt() {
@@ -17,35 +19,35 @@ shAesEncrypt() {
     # with a random iv prepended using aes-256-cbc
     local IV || return $?
     # init $IV from random 16 bytes
-    IV=$(openssl rand -hex 16) || return $?
+    IV="$(openssl rand -hex 16)" || return $?
     # print base64-encoded $IV to stdout
-    printf $(printf "$IV " | base64) || return $?
+    printf "$(printf "$IV" | base64)" || return $?
     # encrypt stdin and stream to stdout using aes-256-cbc with base64-encoding
-    openssl enc -aes-256-cbc -K $AES_256_KEY -iv $IV | base64 | tr -d "\n" || return $?
+    openssl enc -aes-256-cbc -K "$AES_256_KEY" -iv "$IV" | base64 | tr -d "\n" || return $?
 }
 
 shBaseInit() {
     # this function will init the base bash-login env, and is intended for aws-ec2 setup
     local FILE || return $?
     # init $PATH_BIN
-    if [ ! "$PATH_BIN" ]
+    if [ "$PATH_BIN" = "" ]
     then
         export PATH_BIN=\
-$HOME/bin:$HOME/node_modules/.bin:/usr/local/bin:/usr/local/sbin || return $?
+"$HOME/bin:$HOME/node_modules/.bin:/usr/local/bin:/usr/local/sbin" || return $?
         export PATH="$PATH_BIN:$PATH" || return $?
     fi
     # init $PATH_EMSCRIPTEN
-    if [ ! "$PATH_EMSCRIPTEN" ]; then
-        export PATH_EMSCRIPTEN=$HOME/src/emsdk_portable/emscripten/latest || return $?
+    if [ "$PATH_EMSCRIPTEN" = "" ]; then
+        export PATH_EMSCRIPTEN="$HOME/src/emsdk_portable/emscripten/latest" || return $?
         export PATH="$PATH_EMSCRIPTEN:$PATH" || return $?
     fi
     # init index.sh and .bashrc2
-    for FILE in $HOME/index.sh $HOME/.bashrc2
+    for FILE in "$HOME/index.sh" "$HOME/.bashrc2"
     do
         # source $FILE
         if [ -f "$FILE" ]
         then
-            . $FILE || return $?
+            . "$FILE" || return $?
         fi
     done
     # init ubuntu .bashrc
@@ -59,23 +61,22 @@ shBaseInstall() {
     local FILE || return $?
     for FILE in .screenrc .vimrc index.sh
     do
-        curl -s \
-            https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/$FILE > \
-            $HOME/$FILE || return $?
+        curl -s "https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/$FILE" > \
+            "$HOME/$FILE" || return $?
     done
     # create .bashrc
-    printf '. $HOME/index.sh && shBaseInit' > $HOME/.bashrc
+    printf '. $HOME/index.sh && shBaseInit' > "$HOME/.bashrc"
     # init .ssh/authorized_keys.root
     if [ -f "$HOME/.ssh/authorized_keys.root" ]
     then
-        mv $HOME/.ssh/authorized_keys.root $HOME/.ssh/authorized_keys || return $?
+        mv "$HOME/.ssh/authorized_keys.root" "$HOME/.ssh/authorized_keys" || return $?
     fi
 }
 
 shBrowserScreenCapture() {
     # this function will spawn an electron process to screen-capture the given $URL
-    MODE_BUILD=${MODE_BUILD:-browserScreenCapture} shBrowserTest "$1" ${2-60000} ${3-2000} \
-        screenCapture || return $?
+    MODE_BUILD="${MODE_BUILD:-browserScreenCapture}" shBrowserTest "$1" "${2-60000}" \
+        "${3-2000}" screenCapture || return $?
 }
 
 shBrowserTest() {
@@ -86,7 +87,7 @@ shBrowserTest() {
     TIMEOUT_DEFAULT="${2-60000}" || return $?
     TIMEOUT_SCREEN_CAPTURE="${3-2000}" || return $?
     URL="$1" || return $?
-    shBuildPrint ${MODE_BUILD:-electonTest} "testing $URL with electron" || return $?
+    shBuildPrint "${MODE_BUILD:-electonTest}" "testing $URL with electron" || return $?
     node $npm_config_dir_utility2/index.js browserTest $(node -e "
         console.log(encodeURIComponent(JSON.stringify({
             modeBrowserTest: '$MODE_BROWSER_TEST',
@@ -104,7 +105,7 @@ shBrowserTest() {
 shBuildGithubUpload() {
     # this function will upload build-artifacts to github
     local DIR || return $?
-    if [ ! "$GIT_SSH" ]
+    if [ "$GIT_SSH" = "" ]
     then
         return $?
     fi
@@ -113,19 +114,19 @@ shBuildGithubUpload() {
     shGitRepoBranchUpdateLocal() {
         # this function will locally-update git-repo-branch
         # copy build-artifacts to gh-pages
-        cp -a $npm_config_dir_build . || return $?
-        DIR=build..$CI_BRANCH..$CI_HOST || return $?
-        rm -fr $DIR && cp -a $npm_config_dir_build $DIR || return $?
+        cp -a "$npm_config_dir_build" . || return $?
+        DIR="build..$CI_BRANCH..$CI_HOST" || return $?
+        rm -fr "$DIR" && cp -a "$npm_config_dir_build" "$DIR" || return $?
         git add . || return $?
     }
-    shGitRepoBranchCommand update git@github.com:$GITHUB_REPO.git gh-pages || return $?
+    shGitRepoBranchCommand update "git@github.com:$GITHUB_REPO.git" gh-pages || return $?
 }
 
 shBuildPrint() {
     # this function will print debug info about the build state
     local MESSAGE || return $?
     MESSAGE="$2" || return $?
-    export MODE_BUILD=$1 || return $?
+    export MODE_BUILD="$1" || return $?
     printf "\n[MODE_BUILD=$MODE_BUILD] - $(shDateIso) - $MESSAGE\n\n" || return $?
 }
 
@@ -146,7 +147,7 @@ shDebugArgv() {
 shDocApiCreate() {
     # this function will create the api-doc
     # init $npm_config_dir_build
-    mkdir -p $npm_config_dir_build/coverage.html || return $?
+    mkdir -p "$npm_config_dir_build/coverage.html" || return $?
     node -e "
         var options;
         options = $1$2$3$4$5$6$7$8;
@@ -187,7 +188,7 @@ shDocApiCreate() {
     shBuildPrint docApiCreate \
         "created api-doc file://$npm_config_dir_build/doc.api.html" || return $?
     # screen-capture api-doc
-    shBrowserScreenCapture file://$npm_config_dir_build/doc.api.html || return $?
+    shBrowserScreenCapture "file://$npm_config_dir_build/doc.api.html" || return $?
 }
 
 shDockerInstall() {
@@ -198,39 +199,9 @@ shDockerInstall() {
     docker run hello-world || return $?
 }
 
-shDockerInstallWork() {
-    # this function will create a docker work container
-    # create docker container
-    if [ ! "$debian_chroot" ]
-    then
-        docker pull node:latest || return $?
-        shDockerRestart work node || return $?
-        docker exec work /bin/sh $HOME/index.sh shDockerInstallWork || return $?
-        return $?
-    fi
-    # run install script inside docker container
-    apt-get update || return $?
-    apt-get install -y \
-        apt-file \
-        aptitude \
-        build-essential \
-        chromium-inspector \
-        cmake \
-        default-jre \
-        less \
-        screen \
-        sudo \
-        unzip \
-        vim-nox \
-        x11-apps \
-        xvfb || return $?
-    apt-file update || return $?
-    apt-get clean || return $?
-}
-
 shDockerRestart() {
     # this function will restart the docker-container
-    shDockerRm $1 || :
+    shDockerRm "$1" || :
     shDockerStart $@ || return $?
 }
 
@@ -360,21 +331,21 @@ shDockerRm() {
 shDockerSh() {
     # this function will run /bin/bash in the docker-container $image:$name
     local NAME || return $?
-    NAME=$1 || return $?
-    docker start $NAME || return $?
-    docker exec -it $NAME /bin/bash || return $?
+    NAME="$1" || return $?
+    docker start "$NAME" || return $?
+    docker exec -it "$NAME" /bin/bash || return $?
 }
 
 shDockerStart() {
     # this function will start the docker-container $image:$name
     local IMAGE NAME || return $?
-    NAME=$1 || return $?
+    NAME="$1" || return $?
     shift || return $?
-    IMAGE=$1 || return $?
+    IMAGE="$1" || return $?
     shift || return $?
-    docker run --name $NAME -dt -e debian_chroot=$NAME \
-        -v /$HOME:/root \
-        $@ $IMAGE /bin/bash || return $?
+    docker run --name "$NAME" -dt -e debian_chroot="$NAME" \
+        -v /"$HOME:/root" \
+        $@ "$IMAGE" /bin/bash || return $?
 }
 
 shDockerStopAll() {
@@ -393,24 +364,24 @@ shDsStoreRm() {
 shExitCodeSave() {
     # this function will save the global $EXIT_CODE and restore the global $CWD
     # save $EXIT_CODE
-    if [ ! "$EXIT_CODE" ] || [ "$EXIT_CODE" = 0 ]
+    if [ "$EXIT_CODE" = "" ] || [ "$EXIT_CODE" = 0 ]
     then
-        EXIT_CODE=$1 || return $?
+        EXIT_CODE="$1" || return $?
     fi
     if [ -d "$npm_config_dir_tmp" ]
     then
-        printf "$EXIT_CODE" > $npm_config_file_tmp || return $?
+        printf "$EXIT_CODE" > "$npm_config_file_tmp" || return $?
     fi
     # restore $CWD
-    cd $CWD || return $?
+    cd "$CWD" || return $?
 }
 
 shGitLsTree() {
     # this function will list all files committed in HEAD
     git ls-tree --name-only -r HEAD | while read file
     do
-        printf "%10s bytes    $(git log -1 --format="%ai  " -- $file)  $file\n\n" \
-            $(ls -ln $file | awk "{print \$5}") || return $?
+        printf "%10s bytes    $(git log -1 --format="%ai  " -- "$file")  $file\n\n" \
+            "$(ls -ln "$file" | awk "{print \$5}")" || return $?
     done
 }
 
@@ -421,7 +392,7 @@ shGitRepoBranchCommand() {
     shExitCodeSave $? || return $?
     # reset shGitRepoBranchUpdateLocal
     unset -f shGitRepoBranchUpdateLocal || return $?
-    return $EXIT_CODE
+    return "$EXIT_CODE"
 }
 
 shGitRepoBranchCommandInternal() {
@@ -430,13 +401,13 @@ shGitRepoBranchCommandInternal() {
     # http://superuser.com/questions/897148/shell-cant-shift-that-many-error
     COMMAND="$1" || return $?
     shift $(( $# > 0 ? 1 : 0 )) || return $?
-    REPO1=$1 || return $?
+    REPO1="$1" || return $?
     shift $(( $# > 0 ? 1 : 0 )) || return $?
-    BRANCH1=$1 || return $?
+    BRANCH1="$1" || return $?
     shift $(( $# > 0 ? 1 : 0 )) || return $?
-    REPO2=${1-$REPO1} || return $?
+    REPO2="${1-$REPO1}" || return $?
     shift $(( $# > 0 ? 1 : 0 )) || return $?
-    BRANCH2=${1-$BRANCH1} || return $?
+    BRANCH2="${1-$BRANCH1}" || return $?
     shift $(( $# > 0 ? 1 : 0 )) || return $?
     MESSAGE="$@" || return $?
     # cleanup /tmp/git.repo.branch
@@ -444,7 +415,7 @@ shGitRepoBranchCommandInternal() {
     # init /tmp/git.repo.branch
     case "$COMMAND" in
     copyPwdA)
-        cp -a $PWD /tmp/git.repo.branch || return $?
+        cp -a "$PWD" /tmp/git.repo.branch || return $?
         ;;
     copyPwdLsTree)
         mkdir -p /tmp/git.repo.branch || return $?
@@ -453,13 +424,13 @@ shGitRepoBranchCommandInternal() {
             tar -C /tmp/git.repo.branch -xzvf - || return $?
         ;;
     *)
-        git clone $REPO1 --branch=$BRANCH1 --single-branch /tmp/git.repo.branch || return $?
+        git clone "$REPO1" "--branch=$BRANCH1" --single-branch /tmp/git.repo.branch || return $?
         ;;
     esac
     cd /tmp/git.repo.branch || return $?
     # init git
     git init 2>/dev/null || :
-    if [ ! "$(git config user.email)" ]
+    if [ "$(git config user.email)" = "" ]
     then
         git config user.email nobody || return $?
         git config user.name nobody || return $?
@@ -483,15 +454,15 @@ shGitRepoBranchCommandInternal() {
     # and then squash $RANGE to the first commit in git-repo-branch
     if [ "$COMMIT_LIMIT" ] && [ "$(git rev-list HEAD --count)" -gt "$COMMIT_LIMIT" ]
     then
-        RANGE=$(($COMMIT_LIMIT/2)) || return $?
-        git push -f $REPO2 $BRANCH2:$BRANCH2.backup || return $?
-        shGitSquashShift $RANGE || return $?
+        RANGE="$(($COMMIT_LIMIT/2))" || return $?
+        git push -f "$REPO2" "$BRANCH2:$BRANCH2.backup" || return $?
+        shGitSquashShift "$RANGE" || return $?
     fi
-    git push -f $REPO2 $BRANCH1:$BRANCH2 || return $?
+    git push -f "$REPO2" "$BRANCH1:$BRANCH2" || return $?
     case "$COMMAND" in
     # move git-repo-branch1 to git-repo-branch2
     move)
-        git push $REPO1 :$BRANCH1 || return $?
+        git push "$REPO1" :"$BRANCH1" || return $?
         ;;
     esac
 }
@@ -501,12 +472,12 @@ shGitSquashPop() {
     # http://stackoverflow.com/questions/5189560
     # /how-can-i-squash-my-last-x-commits-together-using-git
     local COMMIT MESSAGE || return $?
-    COMMIT=$1 || return $?
+    COMMIT="$1" || return $?
     MESSAGE="${2-$(git log -1 --pretty=%s)}" || return $?
     # commit any uncommitted data
     git commit -am "$MESSAGE" || :
     # reset git to previous $COMMIT
-    git reset --hard $COMMIT || return $?
+    git reset --hard "$COMMIT" || return $?
     # reset files to current HEAD
     git merge --squash HEAD@{1} || return $?
     # commit HEAD immediately after previous $COMMIT
@@ -516,16 +487,16 @@ shGitSquashPop() {
 shGitSquashShift() {
     # this function will squash $RANGE to the first commit
     local BRANCH RANGE || return $?
-    BRANCH=$(git rev-parse --abbrev-ref HEAD) || return $?
-    RANGE=$1 || return $?
-    git checkout -q HEAD~$RANGE || return $?
-    git reset -q $(git rev-list --max-parents=0 HEAD) || return $?
+    BRANCH="$(git rev-parse --abbrev-ref HEAD)" || return $?
+    RANGE="$1" || return $?
+    git checkout -q "HEAD~$RANGE" || return $?
+    git reset -q "$(git rev-list --max-parents=0 HEAD)" || return $?
     git add . || return $?
     git commit -m squash > /dev/null || :
-    git cherry-pick -X theirs --allow-empty --strategy=recursive $BRANCH~$RANGE..$BRANCH || \
+    git cherry-pick -X theirs --allow-empty --strategy=recursive "$BRANCH~$RANGE..$BRANCH" || \
         return $?
-    git push -f . HEAD:$BRANCH || return $?
-    git checkout $BRANCH || return $?
+    git push -f . "HEAD:$BRANCH" || return $?
+    git checkout "$BRANCH" || return $?
 }
 
 shGrep() {
@@ -583,7 +554,7 @@ shHerokuDeploy() {
     # and run a simple curl check for the main-page
     local HEROKU_REPO || return $?
     HEROKU_REPO=$1 || return $?
-    if [ ! "$GIT_SSH" ]
+    if [ "$GIT_SSH" = "" ]
     then
         return $?
     fi
@@ -628,7 +599,7 @@ shInit() {
         # init default env
         else
             export CI_BRANCH=alpha || return $?
-            export CI_COMMIT_ID=$(git rev-parse --verify HEAD) || return $?
+            export CI_COMMIT_ID="$(git rev-parse --verify HEAD)" || return $?
             export CI_HOST=localhost || return $?
         fi
         # init $CI_COMMIT_*
@@ -636,7 +607,7 @@ shInit() {
         export CI_COMMIT_INFO="$CI_COMMIT_ID - $CI_COMMIT_MESSAGE" || return $?
     fi
     # init $CWD
-    CWD=$(pwd) || return $?
+    CWD="$(pwd)" || return $?
     # init $npm_package_*
     if [ -f package.json ]
     then
@@ -666,13 +637,7 @@ shInit() {
     export npm_config_dir_tmp=$CWD/tmp || return $?
     export npm_config_file_tmp=$CWD/tmp/tmpfile || return $?
     # init $npm_config_dir_utility2
-    if [ "$npm_package_name" = utility2 ]
-    then
-        export npm_config_dir_utility2=$CWD || return $?
-    else
-        export npm_config_dir_utility2=$(node -e \
-            "console.log(require('utility2').__dirname);") || return $?
-    fi
+    shInitNpmConfigDirUtility2 || return $?
     # init $GIT_SSH
     if [ "$GIT_SSH_KEY" ] && [ ! "$MODE_OFFLINE" ]
     then
@@ -680,6 +645,41 @@ shInit() {
     fi
     # init $PATH
     export PATH=$CWD/node_modules/.bin:$PATH || return $?
+}
+
+shInitNpmConfigDirUtility2() {
+    # this function will get the absolute dir for the
+    # this function will init $npm_config_dir_utility2
+    local DIR SOURCE || return $?
+    # init $npm_config_dir_utility2
+    if [ "$npm_package_name" = utility2 ]
+    then
+        export npm_config_dir_utility2=$CWD || return $?
+    else
+        export npm_config_dir_utility2=$(node -e \
+            "console.log(require('utility2').__dirname);" 2>/dev/null) || return $?
+    fi
+    if [ ! -d "$npm_config_dir_utility2" ]
+    then
+        export npm_config_dir_utility2="$(dirname "$(readlink -f "$0" 2>/dev/null)")" || \
+            return $?
+    fi
+    if [ ! -d "$npm_config_dir_utility2" ]
+    then
+        # http://stackoverflow.com/questions/59895
+        # /can-a-bash-script-tell-what-directory-its-stored-in
+        SOURCE="$0" || return $?
+        # resolve $SOURCE until the file is no longer a symlink
+        while [ -h "$SOURCE" ]; do
+          DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )" || return $?
+          SOURCE="$(readlink "$SOURCE")" || return $?
+          # if $SOURCE was a relative symlink,
+          # we need to resolve it relative to the path where the symlink file was located
+          [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE" || :
+        done
+        DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+        export npm_config_dir_utility2="$DIR" || return $?
+    fi
 }
 
 shIptablesDockerInit() {
@@ -785,7 +785,7 @@ shIptablesInit() {
 shIstanbulCover() {
     # this function will run the command $@ with istanbul coverage
     local COMMAND || return $?
-    if [ ! "$npm_config_mode_coverage" ]
+    if [ "$npm_config_mode_coverage" = "" ]
     then
         $@
         return $?
@@ -823,9 +823,7 @@ shMountData() {
     # save IFS
     IFS_OLD="$IFS" || return $?
     IFS="," || return $?
-    for TMP in \
-        /root/tmp,/tmp \
-        /root/var.lib.docker,/var/lib/docker
+    for TMP in /root/tmp,/tmp /root/var.lib.docker,/var/lib/docker
     do
         set $TMP || return $?
         mkdir -p $1 $2 || return $?
@@ -838,7 +836,7 @@ shMountData() {
 
 shNpmTest() {
     # this function will run npm-test
-    shBuildPrint ${MODE_BUILD:-npmTest} "npm-testing $CWD" || return $?
+    shBuildPrint "${MODE_BUILD:-npmTest}" "npm-testing $CWD" || return $?
     # cleanup $npm_config_dir_tmp/*.json
     rm -f $npm_config_dir_tmp/*.json || return $?
     # cleanup old electron pages
@@ -848,12 +846,12 @@ shNpmTest() {
     # init npm-test-mode
     export npm_config_mode_npm_test=1 || return $?
     # init random $PORT
-    if [ ! "$PORT" ]
+    if [ "$PORT" = "" ]
     then
-        export PORT=$(shServerPortRandom) || return $?
+        export PORT="$(shServerPortRandom)" || return $?
     fi
     # if coverage-mode is disabled, then run npm-test without coverage
-    if [ "$npm_config_mode_coverage" = 0 ]
+    if [ "$npm_config_mode_coverage" = "" ]
     then
         $@
         return $?
@@ -861,7 +859,7 @@ shNpmTest() {
     # cleanup old coverage
     rm -f $npm_config_dir_build/coverage.html/coverage.*.json || return $?
     # run npm-test with coverage
-    npm_config_mode_coverage=1 shIstanbulCover $@
+    shIstanbulCover $@
     # save $EXIT_CODE and restore $CWD
     shExitCodeSave $? || return $?
     # create coverage badge
@@ -895,7 +893,7 @@ shNpmTest() {
     " || return $?
     if [ "$EXIT_CODE" != 0 ]
     then
-        $@
+        npm_config_mode_coverage="" $@
     fi
     return $EXIT_CODE
 }
@@ -905,11 +903,14 @@ shNpmTestPublished() {
     shBuildPrint npmTestPublished "npm-testing published package $npm_package_name" || return $?
     # init /tmp/app
     rm -fr /tmp/app /tmp/node_modules && mkdir -p /tmp/app || return $?
+    # cd /tmp/app
     cd /tmp/app || return $?
-    # npm install package
+    # npm-install package
     npm install $npm_package_name || return $?
+    cd node_modules/$npm_package_name || return $?
+    npm install || return $?
     # npm-test package
-    cd node_modules/$npm_package_name && npm install && npm test || return $?
+    npm_config_mode_coverage=1 npm test || return $?
 }
 
 shReadmeBuild() {
@@ -960,7 +961,7 @@ shReadmeTestJs() {
     local FILE SCRIPT || return $?
     FILE=$1 || return $?
     shBuildPrint $MODE_BUILD "testing $FILE" || return $?
-    if [ ! "$MODE_OFFLINE" ]
+    if [ "$MODE_OFFLINE" = "" ]
     then
         # init /tmp/app
         rm -fr /tmp/app /tmp/node_modules && mkdir -p /tmp/app || return $?
@@ -970,7 +971,7 @@ shReadmeTestJs() {
     # read and parse js script from README.md
     shReadmeExportFile $FILE $FILE || return $?
     # jslint $FILE
-    if [ ! "$MODE_OFFLINE" ] && [ "$npm_config_mode_jslint" != 0 ]
+    if [ "$MODE_OFFLINE" = "" ] && [ "$npm_config_mode_jslint" != 0 ]
     then
         $npm_config_dir_utility2/lib.jslint.js $FILE || return $?
     fi
@@ -1001,7 +1002,7 @@ shReadmeTestSh() {
     shBuildPrint $MODE_BUILD "testing $FILE" || return $?
     if [ "$MODE_BUILD" != "build" ]
     then
-        if [ ! "$MODE_OFFLINE" ]
+        if [ "$MODE_OFFLINE" = "" ]
         then
             # init /tmp/app
             rm -fr /tmp/app /tmp/node_modules && mkdir -p /tmp/app || return $?
@@ -1058,11 +1059,10 @@ shRunScreenCapture() {
     # /how-to-convert-a-command-line-result-into-an-image-in-linux/
     # init $npm_config_dir_build
     mkdir -p $npm_config_dir_build/coverage.html || return $?
-    export MODE_BUILD_SCREEN_CAPTURE=screen-capture.${MODE_BUILD-undefined}.svg || return $?
-    shRun $@ 2>&1 | \
-        tee $npm_config_dir_tmp/screen-capture.txt || return $?
+    export MODE_BUILD_SCREEN_CAPTURE="screen-capture.${MODE_BUILD-undefined}.svg" || return $?
+    shRun $@ 2>&1 | tee $npm_config_dir_tmp/screen-capture.txt || return $?
     # save $EXIT_CODE and restore $CWD
-    shExitCodeSave $(cat $npm_config_file_tmp) || return $?
+    shExitCodeSave "$(cat $npm_config_file_tmp)" || return $?
     # format text-output
     node -e "
         var options;
@@ -1108,7 +1108,7 @@ shRunScreenCapture() {
 
 shServerPortRandom() {
     # this function will print a random port in the inclusive range 0x8000 to 0xffff
-    printf $(($(hexdump -n 2 -e '/2 "%u"' /dev/urandom)|32768))
+    printf "$(($(hexdump -n 2 -e '/2 "%u"' /dev/urandom)|32768))"
 }
 
 shSource() {
@@ -1152,20 +1152,20 @@ shTravisEncryptYml() {
     fi
     printf "# sourcing file $FILE\n" || return $?
     . $FILE || return $?
-    if [ ! "$AES_256_KEY" ]
+    if [ "$AES_256_KEY" = "" ]
     then
         printf "# no \$AES_256_KEY detected in env - creating new AES_256_KEY\n" || return $?
-        AES_256_KEY=$(openssl rand -hex 32) || return $?
+        AES_256_KEY="$(openssl rand -hex 32)" || return $?
         printf "# created new \$AES_256_KEY for encrypting data.\n" || return $?
         printf "# you may want to copy the following to your .bashrc script\n" || return $?
         printf "# so you can run builds locally:\n" || return $?
         printf "export AES_256_KEY=$AES_256_KEY\n\n" || return $?
     fi
     printf "# travis-encrypting \$AES_256_KEY for $GITHUB_REPO\n" || return $?
-    AES_256_KEY_ENCRYPTED=$(shTravisEncrypt $GITHUB_REPO \$AES_256_KEY=$AES_256_KEY) || \
+    AES_256_KEY_ENCRYPTED="$(shTravisEncrypt $GITHUB_REPO \$AES_256_KEY=$AES_256_KEY)" || \
         return $?
     # return non-zero exit-code if $AES_256_KEY_ENCRYPTED is empty string
-    if [ ! "$AES_256_KEY_ENCRYPTED" ]
+    if [ "$AES_256_KEY_ENCRYPTED" = "" ]
     then
         return 1
     fi
@@ -1298,14 +1298,15 @@ shUbuntuInit() {
     fi
 }
 
-shXvfbInit() {
-    printf 'export DISPLAY=:99.0 && (Xvfb $DISPLAY &)\n' || return $?
+shXvfbStart() {
+    export DISPLAY=:99.0 || return $?
+    (Xvfb $DISPLAY &) > /dev/null 2>&1 || :
 }
 
 shMain() {
     # this function will run the main program
-    local COMMAND DIR SOURCE || return $?
-    if [ ! "$1" ]
+    local COMMAND || return $?
+    if [ "$1" = "" ]
     then
       return $?
     fi
@@ -1325,12 +1326,18 @@ shMain() {
         shDockerInstallWork || return $?
         ;;
     start)
-        shInit && npm_config_file_start=$1 npm_config_mode_auto_restart=1 shRun node -e "
+        shInit && npm_config_mode_auto_restart=1 shRun node -e "
             require('$npm_config_dir_utility2/test.js');
         " $@ || return $?
         ;;
     test)
         shInit && shNpmTest $@ || return $?
+        ;;
+    utility2Dirname)
+        shInit && printf "$npm_config_dir_utility2" || return $?
+        ;;
+    *)
+        "$COMMAND" $@ || return $?
         ;;
     esac
 }

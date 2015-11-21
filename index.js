@@ -8,13 +8,71 @@
     regexp: true,
     stupid: true
 */
-(function (local) {
+(function () {
     'use strict';
+    var local;
 
 
 
     // run shared js-env code
     (function () {
+        // init local
+        local = {};
+        // init js-env
+        local.modeJs = (function () {
+            try {
+                return module.exports &&
+                    typeof process.versions.node === 'string' &&
+                    typeof require('http').createServer === 'function' &&
+                    'node';
+            } catch (errorCaughtNode) {
+                return typeof navigator.userAgent === 'string' &&
+                    typeof document.querySelector('body') === 'object' &&
+                    'browser';
+            }
+        }());
+        // init global
+        local.global = local.modeJs === 'browser'
+            ? window
+            : global;
+        // init global debug_print
+        local.global['debug_print'.replace('_p', 'P')] = function (arg) {
+            /*
+             * this function will both print the arg to stderr and return it
+             */
+            // debug arguments
+            local.utility2['_debug_printArguments'.replace('_p', 'P')] = arguments;
+            console.error('\n\n\ndebug_print'.replace('_p', 'P'));
+            console.error.apply(console, arguments);
+            console.error();
+            // return arg for inspection
+            return arg;
+        };
+        // init global debug_printCallback
+        local.global['debug_printCallback'.replace('_p', 'P')] = function (onError) {
+            /*
+             * this function will inject debug_print into the onError callback
+             */
+            return function () {
+                local.global['debug_print'.replace('_p', 'P')].apply(null, arguments);
+                onError.apply(null, arguments);
+            };
+        };
+        // init utility2
+        local.utility2 = { cacheDict: { assets: {} }, local: local };
+        // init istanbul
+        local.utility2.istanbul = local.modeJs === 'browser'
+            ? window.utility2_istanbul
+            : require('./lib.istanbul.js');
+        // init jslint
+        local.utility2.jslint = local.modeJs === 'browser'
+            ? window.utility2_jslint
+            : require('./lib.jslint.js');
+        // init uglifyjs
+        local.utility2.uglifyjs = local.modeJs === 'browser'
+            ? window.utility2_uglifyjs
+            : require('./lib.uglifyjs.js');
+
         local._timeElapsedStop = function (options) {
             /*
              * this function will stop options.timeElapsed
@@ -59,6 +117,8 @@
                 case 1:
                     options.testName = local.utility2.envDict.MODE_BUILD + '.browser.' +
                         encodeURIComponent(local.url.parse(options.url).pathname);
+                    options.timeoutDefault = options.timeoutDefault ||
+                        local.utility2.timeoutDefault;
                     local.utility2.objectSetDefault(options, {
                         fileCoverage: local.utility2.envDict.npm_config_dir_tmp +
                             '/coverage.' + options.testName + '.json',
@@ -71,11 +131,11 @@
                         modeBrowserTest: 'test',
                         testName: local.utility2.envDict.MODE_BUILD + '.browser.' +
                             encodeURIComponent(local.url.parse(options.url).pathname),
-                        timeExit: Date.now() + local.utility2.timeoutDefault
+                        timeExit: Date.now() + options.timeoutDefault
                     }, 1);
                     // init timerTimeout
                     timerTimeout = local.utility2
-                        .onTimeout(onNext, local.utility2.timeoutDefault, options.testName);
+                        .onTimeout(onNext, options.timeoutDefault, options.testName);
                     // init file urlBrowser
                     options.modeNext = 20;
                     options.urlBrowser = local.utility2.envDict.npm_config_dir_tmp +
@@ -322,6 +382,13 @@
                 .stringFormat(local.utility2['/doc/doc.html.template'], options);
         };
 
+        local.utility2.echo = function (arg) {
+            /*
+             * this function will return the arg
+             */
+            return arg;
+        };
+
         local.utility2.errorMessagePrepend = function (error, message) {
             /*
              * this function will prepend the message to error.message and error.stack
@@ -420,6 +487,12 @@
                 : code;
         };
 
+        local.utility2.istanbulInstrumentSync = (local.utility2.istanbul &&
+            local.utility2.istanbul.instrumentSync) || local.utility2.echo;
+
+        local.utility2.jslintAndPrint = (local.utility2.jslint &&
+            local.utility2.jslint.jslintAndPrint) || local.utility2.echo;
+
         local.utility2.jsonCopy = function (element) {
             /*
              * this function will return a deep-copy of the JSON element
@@ -495,6 +568,13 @@
                 list[random] = swap;
             }
             return list;
+        };
+
+        local.utility2.nop = function () {
+            /*
+             * this function will run no operation - nop
+             */
+            return;
         };
 
         local.utility2.objectSetDefault = function (options, defaults, depth) {
@@ -1489,6 +1569,19 @@
             local.utility2.timeoutDefault = local.utility2.timeoutDefault || 60000;
         };
 
+        local.utility2.uglify = (local.utility2.uglifyjs &&
+            local.utility2.uglifyjs.uglify) || local.utility2.echo;
+
+        local.utility2.uglifyIfProduction = function (code) {
+            /*
+             * this function will uglify the js-code,
+             * if $npm_config_production is true
+             */
+            return local.utility2.envDict.npm_config_production
+                ? local.utility2.uglify(code)
+                : code;
+        };
+
         local.utility2.uuid4 = function () {
             /*
              * this function will return a random uuid,
@@ -2027,12 +2120,11 @@
             local.fs.writeFile(file, data, function (error) {
                 if (error && error.code === 'ENOENT') {
                     // if save failed, then mkdirp file's parent dir
-                    local.utility2
-                        .processSpawnWithTimeout(
-                            'mkdir',
-                            ['-p', local.path.dirname(file)],
-                            { stdio: ['ignore', 1, 2] }
-                        )
+                    local.utility2.processSpawnWithTimeout(
+                        'mkdir',
+                        ['-p', local.path.dirname(file)],
+                        { stdio: ['ignore', 1, 2] }
+                    )
                         .on('exit', function () {
                             // save data to file
                             local.fs.writeFile(file, data, onError);
@@ -2093,8 +2185,9 @@
             // init timerTimeout
             childProcess.timerTimeout = local.child_process.spawn('/bin/sh', ['-c', 'sleep ' +
                 // coerce to finite integer
-                ((0.001 * local.utility2.timeoutDefault) | 0) +
-                '; kill -9 ' + childProcess.pid + ' 2>/dev/null'], { stdio: 'ignore' });
+                (((0.001 * local.utility2.timeoutDefault) | 0) +
+                // add extra 2 seconds
+                2) + '; kill -9 ' + childProcess.pid + ' 2>/dev/null'], { stdio: 'ignore' });
             return childProcess;
         };
 
@@ -2137,12 +2230,11 @@
                         break;
                     }
                     // run async shell command
-                    local.utility2
-                        .processSpawnWithTimeout(
-                            '/bin/sh',
-                            ['-c', '. ' + __dirname + '/index.sh && ' + match[2]],
-                            { stdio: ['ignore', 1, 2] }
-                        )
+                    local.utility2.processSpawnWithTimeout(
+                        '/bin/sh',
+                        ['-c', '. ' + __dirname + '/index.sh && ' + match[2]],
+                        { stdio: ['ignore', 1, 2] }
+                    )
                         // on shell exit, print return prompt
                         .on('exit', function (exitCode) {
                             console.log('exit-code ' + exitCode);
@@ -2153,29 +2245,28 @@
                 // syntax sugar to grep current dir
                 case 'grep':
                     // run async shell command
-                    local.utility2
-                        .processSpawnWithTimeout(
-                            '/bin/sh',
-                            ['-c', 'find . -type f | grep -v ' +
-                                '"/\\.\\|.*\\(\\b\\|_\\)\\(\\.\\d\\|' +
-                                'archive\\|artifact\\|' +
-                                'bower_component\\|build\\|' +
-                                'coverage\\|' +
-                                'doc\\|' +
-                                'external\\|' +
-                                'fixture\\|' +
-                                'git_module\\|' +
-                                'jquery\\|' +
-                                'log\\|' +
-                                'min\\|mock\\|' +
-                                'node_module\\|' +
-                                'rollup\\|' +
-                                'swp\\|' +
-                                'tmp\\)\\(\\b\\|[_s]\\)" ' +
-                                '| tr "\\n" "\\000" | xargs -0 grep -in "' +
-                                match[2].trim() + '"'],
-                            { stdio: ['ignore', 1, 2] }
-                        )
+                    local.utility2.processSpawnWithTimeout(
+                        '/bin/sh',
+                        ['-c', 'find . -type f | grep -v ' +
+                            '"/\\.\\|.*\\(\\b\\|_\\)\\(\\.\\d\\|' +
+                            'archive\\|artifact\\|' +
+                            'bower_component\\|build\\|' +
+                            'coverage\\|' +
+                            'doc\\|' +
+                            'external\\|' +
+                            'fixture\\|' +
+                            'git_module\\|' +
+                            'jquery\\|' +
+                            'log\\|' +
+                            'min\\|mock\\|' +
+                            'node_module\\|' +
+                            'rollup\\|' +
+                            'swp\\|' +
+                            'tmp\\)\\(\\b\\|[_s]\\)" ' +
+                            '| tr "\\n" "\\000" | xargs -0 grep -in "' +
+                            match[2].trim() + '"'],
+                        { stdio: ['ignore', 1, 2] }
+                    )
                         // on shell exit, print return prompt
                         .on('exit', function (exitCode) {
                             console.log('exit-code ' + exitCode);
@@ -2364,211 +2455,6 @@
 
     // run shared js-env code
     (function () {
-        local.utility2.contentTypeDict = {
-            // application
-            '.js': 'application/javascript; charset=UTF-8',
-            '.json': 'application/json; charset=UTF-8',
-            '.pdf': 'application/pdf',
-            '.xml': 'application/xml; charset=UTF-8',
-            // image
-            '.bmp': 'image/bmp',
-            '.gif': 'image/gif',
-            '.jpeg': 'image/jpeg',
-            '.jpg': 'image/jpeg',
-            '.png': 'image/png',
-            '.svg': 'image/svg+xml; charset=UTF-8',
-            // text
-            '.css': 'text/css; charset=UTF-8',
-            '.htm': 'text/html; charset=UTF-8',
-            '.html': 'text/html; charset=UTF-8',
-            '.md': 'text/markdown; charset=UTF-8',
-            '.txt': 'text/plain; charset=UTF-8'
-        };
-        local.utility2.envDict = local.modeJs === 'browser'
-            ? {}
-            : process.env;
-        local.utility2.errorDefault = new Error('default error');
-        // http://www.w3.org/TR/html5/forms.html#valid-e-mail-address
-        local.utility2.regexpEmailValidate = new RegExp(
-            '^[a-zA-Z0-9.!#$%&\'*+\\/=?\\^_`{|}~\\-]+@' +
-                '[a-zA-Z0-9](?:[a-zA-Z0-9\\-]{0,61}[a-zA-Z0-9])?' +
-                '(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9\\-]{0,61}[a-zA-Z0-9])?)*$'
-        );
-        local.utility2.regexpUriComponentCharset = (/[\w\!\%\'\(\)\*\-\.\~]/);
-        local.utility2.regexpUuidValidate =
-            (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
-        local.utility2.stringAsciiCharset = local.utility2.stringExampleAscii ||
-            '\x00\x01\x02\x03\x04\x05\x06\x07\b\t\n\x0b\f\r\x0e\x0f' +
-            '\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f' +
-            ' !"#$%&\'()*+,-./0123456789:;<=>?' +
-            '@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_' +
-            '`abcdefghijklmnopqrstuvwxyz{|}~\x7f';
-        local.utility2.stringUriComponentCharset = '!%\'()*-.' +
-            '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz~';
-        local.utility2.testPlatform = {
-            name: local.modeJs === 'browser'
-                ? 'browser - ' +
-                    location.pathname + ' - ' +
-                    navigator.userAgent + ' - ' +
-                    new Date().toISOString()
-                : 'node - ' + process.platform + ' ' + process.version + ' - ' +
-                    new Date().toISOString(),
-            screenCaptureImg: local.utility2.envDict.MODE_BUILD_SCREEN_CAPTURE,
-            testCaseList: []
-        };
-        local.utility2.testReport = { testPlatformList: [local.utility2.testPlatform] };
-        // init timeoutDefault
-        local.utility2.timeoutDefaultInit();
-        // init onReady
-        local.utility2.onReadyInit();
-    }());
-    switch (local.modeJs) {
-
-
-
-    // run browser js-env code
-    case 'browser':
-        // init exports
-        window.utility2 = local.utility2;
-        break;
-
-
-
-    // run node js-env code
-    case 'node':
-        // init exports
-        module.exports = local.utility2;
-        module.exports.__dirname = __dirname;
-        // require modules
-        local.child_process = require('child_process');
-        local.fs = require('fs');
-        local.http = require('http');
-        local.https = require('https');
-        local.path = require('path');
-        local.url = require('url');
-        local.vm = require('vm');
-        local.zlib = require('zlib');
-        // init utility2 properties
-        local.utility2.objectSetDefault(local.utility2.envDict, {
-            npm_config_dir_build: process.cwd() + '/tmp/build',
-            npm_config_dir_tmp: process.cwd() + '/tmp',
-            npm_package_name: 'example-module',
-            npm_package_description: 'this is an example module',
-            npm_package_version: '0.0.1'
-        });
-        // init assets
-        local.utility2.cacheDict.assets['/assets/utility2.js'] =
-            local.utility2.istanbulInstrumentInPackage(
-                local.fs.readFileSync(__filename, 'utf8'),
-                __filename,
-                'utility2'
-            );
-        local.utility2.cacheDict.assets['/assets/utility2.lib.istanbul.js'] =
-            local.utility2.istanbulInstrumentInPackage(
-                '//' + local.fs.readFileSync(__dirname + '/lib.istanbul.js', 'utf8'),
-                __dirname + '/lib.istanbul.js',
-                'utility2'
-            );
-        local.utility2.cacheDict.assets['/assets/utility2.lib.jslint.js'] =
-            local.utility2.istanbulInstrumentInPackage(
-                '//' + local.fs.readFileSync(__dirname + '/lib.jslint.js', 'utf8'),
-                __dirname + '/lib.jslint.js',
-                'utility2'
-            );
-        /* istanbul ignore next */
-        // run the cli
-        local.cliRun = function () {
-            if (module !== require.main) {
-                return;
-            }
-            switch (process.argv[2]) {
-            case 'browserTest':
-                local.utility2.objectSetOverride(
-                    local.utility2,
-                    JSON.parse(decodeURIComponent(process.argv[3]))
-                );
-                local.utility2.browserTest(
-                    JSON.parse(decodeURIComponent(process.argv[3])),
-                    local.utility2.exit
-                );
-                // init timeoutDefault
-                local.utility2.timeoutDefaultInit();
-                break;
-            }
-        };
-        local.cliRun();
-        break;
-    }
-}((function () {
-    'use strict';
-    var local;
-
-
-
-    // run shared js-env code
-    (function () {
-        // init local
-        local = {};
-        // init js-env
-        local.modeJs = (function () {
-            try {
-                return module.exports &&
-                    typeof process.versions.node === 'string' &&
-                    typeof require('http').createServer === 'function' &&
-                    'node';
-            } catch (errorCaughtNode) {
-                return typeof navigator.userAgent === 'string' &&
-                    typeof document.querySelector('body') === 'object' &&
-                    'browser';
-            }
-        }());
-        // init global
-        local.global = local.modeJs === 'browser'
-            ? window
-            : global;
-        // init global debug_print
-        local.global['debug_print'.replace('_p', 'P')] = function (arg) {
-            /*
-             * this function will both print the arg to stderr and return it
-             */
-            // debug arguments
-            local.utility2['_debug_printArguments'.replace('_p', 'P')] = arguments;
-            console.error('\n\n\ndebug_print'.replace('_p', 'P'));
-            console.error.apply(console, arguments);
-            console.error();
-            // return arg for inspection
-            return arg;
-        };
-        // init global debug_printCallback
-        local.global['debug_printCallback'.replace('_p', 'P')] = function (onError) {
-            /*
-             * this function will inject debug_print into the onError callback
-             */
-            return function () {
-                local.global['debug_print'.replace('_p', 'P')].apply(null, arguments);
-                onError.apply(null, arguments);
-            };
-        };
-        // init utility2
-        local.utility2 = { cacheDict: { assets: {} }, local: local };
-        local.utility2.nop = function () {
-            /*
-             * this function will run no operation - nop
-             */
-            return;
-        };
-        // init istanbul
-        local.utility2.istanbul = local.modeJs === 'browser'
-            ? window.utility2_istanbul
-            : require('./lib.istanbul.js');
-        local.utility2.istanbulInstrumentSync = (local.utility2.istanbul &&
-            local.utility2.istanbul.instrumentSync) || local.utility2.nop;
-        // init jslint
-        local.utility2.jslint = local.modeJs === 'browser'
-            ? window.utility2_jslint
-            : require('./lib.jslint.js');
-        local.utility2.jslintAndPrint = (local.utility2.jslint &&
-            local.utility2.jslint.jslintAndPrint) || local.utility2.nop;
 /* jslint-indent-begin 8 */
 /*jslint maxlen: 256*/
 // init assets
@@ -2835,6 +2721,139 @@ local.utility2['/test/test-report.html.template'] = '<style>\n' +
     '</div>\n' +
     '{{/testPlatformList}}\n';
 /* jslint-indent-end */
+        local.utility2.contentTypeDict = {
+            // application
+            '.js': 'application/javascript; charset=UTF-8',
+            '.json': 'application/json; charset=UTF-8',
+            '.pdf': 'application/pdf',
+            '.xml': 'application/xml; charset=UTF-8',
+            // image
+            '.bmp': 'image/bmp',
+            '.gif': 'image/gif',
+            '.jpeg': 'image/jpeg',
+            '.jpg': 'image/jpeg',
+            '.png': 'image/png',
+            '.svg': 'image/svg+xml; charset=UTF-8',
+            // text
+            '.css': 'text/css; charset=UTF-8',
+            '.htm': 'text/html; charset=UTF-8',
+            '.html': 'text/html; charset=UTF-8',
+            '.md': 'text/markdown; charset=UTF-8',
+            '.txt': 'text/plain; charset=UTF-8'
+        };
+        local.utility2.envDict = local.modeJs === 'browser'
+            ? {}
+            : process.env;
+        local.utility2.errorDefault = new Error('default error');
+        // http://www.w3.org/TR/html5/forms.html#valid-e-mail-address
+        local.utility2.regexpEmailValidate = new RegExp(
+            '^[a-zA-Z0-9.!#$%&\'*+\\/=?\\^_`{|}~\\-]+@' +
+                '[a-zA-Z0-9](?:[a-zA-Z0-9\\-]{0,61}[a-zA-Z0-9])?' +
+                '(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9\\-]{0,61}[a-zA-Z0-9])?)*$'
+        );
+        local.utility2.regexpUriComponentCharset = (/[\w\!\%\'\(\)\*\-\.\~]/);
+        local.utility2.regexpUuidValidate =
+            (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
+        local.utility2.stringAsciiCharset = local.utility2.stringExampleAscii ||
+            '\x00\x01\x02\x03\x04\x05\x06\x07\b\t\n\x0b\f\r\x0e\x0f' +
+            '\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f' +
+            ' !"#$%&\'()*+,-./0123456789:;<=>?' +
+            '@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_' +
+            '`abcdefghijklmnopqrstuvwxyz{|}~\x7f';
+        local.utility2.stringUriComponentCharset = '!%\'()*-.' +
+            '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz~';
+        local.utility2.testPlatform = {
+            name: local.modeJs === 'browser'
+                ? 'browser - ' +
+                    location.pathname + ' - ' +
+                    navigator.userAgent + ' - ' +
+                    new Date().toISOString()
+                : 'node - ' + process.platform + ' ' + process.version + ' - ' +
+                    new Date().toISOString(),
+            screenCaptureImg: local.utility2.envDict.MODE_BUILD_SCREEN_CAPTURE,
+            testCaseList: []
+        };
+        local.utility2.testReport = { testPlatformList: [local.utility2.testPlatform] };
+        // init timeoutDefault
+        local.utility2.timeoutDefaultInit();
+        // init onReady
+        local.utility2.onReadyInit();
     }());
-    return local;
-}(this))));
+    switch (local.modeJs) {
+
+
+
+    // run browser js-env code
+    case 'browser':
+        // init exports
+        window.utility2 = local.utility2;
+        break;
+
+
+
+    // run node js-env code
+    case 'node':
+        // init exports
+        module.exports = local.utility2;
+        module.exports.__dirname = __dirname;
+        // require modules
+        local.child_process = require('child_process');
+        local.fs = require('fs');
+        local.http = require('http');
+        local.https = require('https');
+        local.path = require('path');
+        local.url = require('url');
+        local.vm = require('vm');
+        local.zlib = require('zlib');
+        // init utility2 properties
+        local.utility2.objectSetDefault(local.utility2.envDict, {
+            npm_config_dir_build: process.cwd() + '/tmp/build',
+            npm_config_dir_tmp: process.cwd() + '/tmp',
+            npm_package_name: 'example-module',
+            npm_package_description: 'this is an example module',
+            npm_package_version: '0.0.1'
+        });
+        // init assets
+        local.utility2.cacheDict.assets['/assets/utility2.js'] =
+            local.utility2.uglifyIfProduction(
+                local.utility2.istanbulInstrumentInPackage(
+                    local.fs.readFileSync(__filename, 'utf8'),
+                    __filename,
+                    'utility2'
+                )
+            );
+        ['istanbul', 'jslint', 'uglifyjs'].forEach(function (key) {
+            local.utility2.cacheDict.assets['/assets/utility2.lib.' + key + '.js'] =
+                local.utility2.uglifyIfProduction(
+                    local.utility2.istanbulInstrumentInPackage(
+                        '//' + local.fs.readFileSync(__dirname + '/lib.' + key + '.js', 'utf8'),
+                        __dirname + '/lib.' + key + '.js',
+                        'utility2'
+                    )
+                );
+        });
+        /* istanbul ignore next */
+        // run the cli
+        local.cliRun = function () {
+            if (module !== require.main) {
+                return;
+            }
+            switch (process.argv[2]) {
+            case 'browserTest':
+                local.utility2.objectSetOverride(
+                    local.utility2,
+                    JSON.parse(decodeURIComponent(process.argv[3]))
+                );
+                local.utility2.browserTest(
+                    JSON.parse(decodeURIComponent(process.argv[3])),
+                    local.utility2.exit
+                );
+                // init timeoutDefault
+                local.utility2.timeoutDefaultInit();
+                break;
+            }
+        };
+        local.cliRun();
+        break;
+    }
+}());

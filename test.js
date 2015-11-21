@@ -253,6 +253,70 @@
             onError();
         };
 
+        local.testCase_debug_print_default = function (options, onError) {
+            /*
+             * this function will test debug_print's default handling-behavior
+             */
+            var data;
+            // jslint-hack
+            local.utility2.nop(options);
+            local.utility2.testMock([
+                // suppress console.error
+                [console, { error: function (arg) {
+                    data += (arg || '') + '\n';
+                } }]
+            ], function (onError) {
+                data = '';
+                local.global['debug_printCallback'.replace('_p', 'P')](
+                    local.utility2.echo
+                )('hello');
+                // validate data
+                local.utility2.assert(
+                    data === '\n\n\n' + 'debug_print'.replace('_p', 'P') + '\nhello\n\n',
+                    data
+                );
+                onError();
+            }, onError);
+        };
+
+        local.testCase_docApiCreate_default = function (options, onError) {
+            /*
+             * this function will test docApiCreate's default handling-behavior
+             */
+            /*jslint evil: true*/
+            var data;
+            // jslint-hack
+            local.utility2.nop(options);
+            data = local.utility2.docApiCreate({
+                example: local.utility2.testRun.toString().replace((/;/g), ';\n    '),
+                moduleDict: {
+                    // test no aliasList handling-behavior
+                    noAliasList: { exports: { nop: local.utility2.nop } },
+                    // test aliasList handling-behavior
+                    utility2: { aliasList: ['', '.', 'undefined'], exports: local.utility2 }
+                }
+            });
+            // validate data
+            local.utility2.assert(new RegExp('\n' +
+                '<h2><a href="#element.utility2.nop" id="element.utility2.nop">\n' +
+                'function <span class="docApiSignatureSpan">utility2.</span>nop\n' +
+                '<span class="docApiSignatureSpan">\\(\\)</span>\n' +
+                '</a></h2>\n' +
+                '<ul>\n' +
+                '<li>description and source code<pre class="docApiCodePre">').test(data), data);
+            onError();
+        };
+
+        local.testCase_echo_default = function (options, onError) {
+            /*
+             * this function will test echo's default handling-behavior
+             */
+            // jslint-hack
+            local.utility2.nop(options);
+            local.utility2.assert(local.utility2.echo(1) === 1);
+            onError();
+        };
+
         local.testCase_istanbulInstrumentSync_default = function (options, onError) {
             /*
              * this function will test istanbulInstrumentSync's default handling-behavior
@@ -322,60 +386,6 @@
                 });
                 onError();
             }, onError);
-        };
-
-        local.testCase_debug_print_default = function (options, onError) {
-            /*
-             * this function will test debug_print's default handling-behavior
-             */
-            var data;
-            // jslint-hack
-            local.utility2.nop(options);
-            local.utility2.testMock([
-                // suppress console.error
-                [console, { error: function (arg) {
-                    data += (arg || '') + '\n';
-                } }]
-            ], function (onError) {
-                data = '';
-                local.global['debug_printCallback'.replace('_p', 'P')](function (arg) {
-                    return arg;
-                })('hello');
-                // validate data
-                local.utility2.assert(
-                    data === '\n\n\n' + 'debug_print'.replace('_p', 'P') + '\nhello\n\n',
-                    data
-                );
-                onError();
-            }, onError);
-        };
-
-        local.testCase_docApiCreate_default = function (options, onError) {
-            /*
-             * this function will test docApiCreate's default handling-behavior
-             */
-            /*jslint evil: true*/
-            var data;
-            // jslint-hack
-            local.utility2.nop(options);
-            data = local.utility2.docApiCreate({
-                example: local.utility2.testRun.toString().replace((/;/g), ';\n    '),
-                moduleDict: {
-                    // test no aliasList handling-behavior
-                    noAliasList: { exports: { nop: local.utility2.nop } },
-                    // test aliasList handling-behavior
-                    utility2: { aliasList: ['', '.', 'undefined'], exports: local.utility2 }
-                }
-            });
-            // validate data
-            local.utility2.assert(new RegExp('\n' +
-                '<h2><a href="#element.utility2.nop" id="element.utility2.nop">\n' +
-                'function <span class="docApiSignatureSpan">utility2.</span>nop\n' +
-                '<span class="docApiSignatureSpan">\\(\\)</span>\n' +
-                '</a></h2>\n' +
-                '<ul>\n' +
-                '<li>description and source code<pre class="docApiCodePre">').test(data), data);
-            onError();
         };
 
         local.testCase_jslintAndPrint_default = function (options, onError) {
@@ -955,6 +965,44 @@
             // test failure from thrown error handling-behavior
             throw local.utility2.errorDefault;
         };
+
+        local.testCase_uglify_default = function (options, onError) {
+            /*
+             * this function will test uglify's default handling-behavior
+             */
+            var data;
+            // jslint-hack
+            local.utility2.nop(options);
+            data = local.utility2.uglify('aa = 1');
+            // validate data
+            local.utility2.assert(data === 'aa=1', data);
+            onError();
+        };
+
+        local.testCase_uglifyIfProduction_default = function (options, onError) {
+            /*
+             * this function will test uglify's default handling-behavior
+             */
+            var data;
+            // jslint-hack
+            local.utility2.nop(options);
+            local.utility2.testMock([
+                // suppress console.error
+                [local.utility2.envDict, { npm_config_production: '' }]
+            ], function (onError) {
+                // test no production-mode handling-behavior
+                local.utility2.envDict.npm_config_production = '';
+                data = local.utility2.uglifyIfProduction('aa = 1');
+                // validate data
+                local.utility2.assert(data === 'aa = 1', data);
+                // test production-mode handling-behavior
+                local.utility2.envDict.npm_config_production = '1';
+                data = local.utility2.uglifyIfProduction('aa = 1');
+                // validate data
+                local.utility2.assert(data === 'aa=1', data);
+                onError();
+            }, onError);
+        };
     }());
     switch (local.modeJs) {
 
@@ -1272,6 +1320,7 @@
             local.utility2.browserTest({
                 modeSilent: true,
                 modeTestReportIgnore: true,
+                timeoutDefault: local.utility2.timeoutDefault - 1000,
                 url: 'http://localhost:' +
                     local.utility2.envDict.PORT +
                     // test script-only handling-behavior
@@ -1428,21 +1477,22 @@
         ].forEach(function (dir) {
             local.fs.readdirSync(dir).forEach(function (file) {
                 file = dir + '/' + file;
+                switch (file) {
+                case __dirname + '/example.js':
+                case __dirname + '/package.json':
+                    break;
                 // if the file is modified, then restart the process
-                local.utility2.onFileModifiedRestart(file);
+                default:
+                    local.utility2.onFileModifiedRestart(file);
+                    break;
+                }
                 switch (local.path.extname(file)) {
+                // jslint file
+                case '.css':
                 case '.js':
                 case '.json':
-                    [
-                        // coverage-hack - cover $npm_config_mode_jslint === 0
-                        '0',
-                        local.utility2.envDict.npm_config_mode_jslint
-                    ].forEach(function (modeJslint) {
-                        if (modeJslint !== '0') {
-                            local.utility2.jslint
-                                .jslintAndPrint(local.fs.readFileSync(file, 'utf8'), file);
-                        }
-                    });
+                    local.utility2.jslint
+                        .jslintAndPrint(local.fs.readFileSync(file, 'utf8'), file);
                     break;
                 }
             });
@@ -1456,16 +1506,6 @@
         });
         // init repl debugger
         local.utility2.replStart();
-        // init $npm_config_file_start
-        [
-            // test no $npm_config_file_start handling-behavior
-            null,
-            local.utility2.envDict.npm_config_file_start
-        ].forEach(function (file) {
-            if (file) {
-                require(process.cwd() + '/' + file);
-            }
-        });
         break;
     }
 }((function () {
@@ -1499,7 +1539,7 @@
         /* istanbul ignore next */
         // re-init local from example.js
         case 'node':
-            if (process.cwd() === __dirname) {
+            if (__dirname === process.cwd()) {
                 require('fs').writeFileSync(
                     __dirname + '/example.js',
                     require('fs').readFileSync(__dirname + '/README.md', 'utf8')
@@ -1515,6 +1555,10 @@
                         .replace(
                             "require('" + process.env.npm_package_name + "')",
                             "require(__dirname + '/index.js')"
+                        )
+                        .replace(
+                            'local.utility2.istanbulInstrumentSync',
+                            'local.utility2.istanbulInstrumentInPackage'
                         )
                 );
                 local = require(__dirname + '/example.js');

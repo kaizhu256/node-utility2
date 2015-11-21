@@ -13719,26 +13719,26 @@ klass:              do {
         local.path = require('path');
         /* istanbul ignore next */
         // run the cli
-        local.cliRun = function (options) {
+        local.cliRun = function () {
             /*
              * this function will run the cli
              */
-            if (module === require.main || (options && options.run)) {
-                // jslint files in cli
-                process.argv.slice(2).forEach(function (arg) {
-                    if (arg[0] !== '-') {
-                        local.jslintAndPrint(
-                            local.fs.readFileSync(local.path.resolve(arg), 'utf8'),
-                            arg
-                        );
-                    }
-                });
-                // if error occurred, then exit with non-zero code
-                process.exit(local.errorCounter);
+            if (module !== require.main) {
+                return;
             }
+            // jslint files in cli
+            process.argv.slice(2).forEach(function (arg) {
+                if (arg[0] !== '-') {
+                    local.jslintAndPrint(
+                        local.fs.readFileSync(local.path.resolve(arg), 'utf8'),
+                        arg
+                    );
+                }
+            });
+            // if error occurred, then exit with non-zero code
+            process.exit(local.errorCounter);
         };
         local.cliRun();
         break;
     }
-    return local;
 }());
