@@ -8147,6 +8147,11 @@ local.watermarks = {
     lines: [ 50, 80 ],
     statements: [ 50, 80 ]
 };
+
+
+
+// https://img.shields.io/badge/coverage-100.0%-00dd00.svg?style=flat
+local['coverage.badge.svg'] = '<svg xmlns="http://www.w3.org/2000/svg" width="117" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="117" height="20" fill="#555"/><rect rx="0" x="63" width="54" height="20" fill="#0d0"/><path fill="#0d0" d="M63 0h4v20h-4z"/><rect rx="0" width="117" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="32.5" y="15" fill="#010101" fill-opacity=".3">coverage</text><text x="32.5" y="14">coverage</text><text x="89" y="15" fill="#010101" fill-opacity=".3">100.0%</text><text x="89" y="14">100.0%</text></g></svg>';
 /* jslint-ignore-end */
 
 
@@ -8785,12 +8790,9 @@ local.watermarks = {
             line = new Array(nameWidth + 1).join('-') +
                 '-|----------|----------|----------|----------|----------------|\n';
             // init coverageReportText
-            options.coverageReportText = line + local.reportTextFill(
-                'File',
-                nameWidth,
-                false,
-                0
-            ) + ' |  % Stmts | % Branch |  % Funcs |  % Lines |Uncovered Lines |\n' + line;
+            options.coverageReportText = line +
+                local.reportTextFill('File', nameWidth, false, 0) +
+                ' |  % Stmts | % Branch |  % Funcs |  % Lines |Uncovered Lines |\n' + line;
             // walk tree
             tmp = function (node, level) {
                 var tableRow, uncoveredLines;
@@ -8885,7 +8887,7 @@ local.watermarks = {
                 return '';
             }
             // init coverage
-            options = { coverage: {} };
+            options = local.options = { coverage: {} };
             // filter undefined file from coverage
             tmp = local.global.__coverage__;
             Object.keys(tmp).forEach(function (key) {
@@ -8907,14 +8909,35 @@ local.watermarks = {
             // write coverage.json
             local.fsWriteFileSync(
                 options.dir + '/coverage.json',
-                JSON.stringify(local.global.__coverage__)
+                JSON.stringify(options.coverage)
+            );
+            // write metrics.json
+            local.fsWriteFileSync(
+                options.dir + '/metrics.json',
+                JSON.stringify(options.metrics)
             );
             // write html-report
             local.reportHtmlCreate(options, options.summary, options.dir);
             // write base.css
             local.fsWriteFileSync(options.dir + '/base.css', local['/assets/base.css']);
+            // write coverage.badge.svg
+            local.fsWriteFileSync(local.path.dirname(
+                options.dir
+            ) + '/coverage.badge.svg', local[
+                'coverage.badge.svg'
+            ]
+                // edit coverage badge percent
+                .replace((/100.0/g), options.summary.metrics.lines.pct)
+                // edit coverage badge color
+                .replace((/0d0/g), ('0' +
+                    Math.round((100 - options.summary.metrics.lines.pct) * 2.21)
+                    .toString(16)).slice(-2) +
+                    ('0' +
+                    Math.round(options.summary.metrics.lines.pct * 2.21)
+                    .toString(16)).slice(-2) +
+                    '00'));
             if (local.modeJs === 'node') {
-                console.log('created coverage file://' + options.dir + '/index.html');
+                console.log('node - created coverage file://' + options.dir + '/index.html\n');
             }
             // 3. return coverage in html-format as a single document
             tmp = '<style>\n' + local['/assets/base.css']
@@ -8946,9 +8969,7 @@ local.watermarks = {
                 '<h2>coverage</h2>\n' + [
                     '/index.html'
                 ]
-                .concat(
-                    Object.keys(local.fsWriteFileDict).sort()
-                )
+                .concat(Object.keys(local.fsWriteFileDict).sort())
                 .map(function (key, ii) {
                     return ii === 0 || key.slice(-8) === '.js.html'
                         ? '<div class="istanbulCoverageDivDiv">\n' +

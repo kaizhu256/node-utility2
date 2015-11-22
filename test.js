@@ -398,11 +398,15 @@
                 // suppress console.error
                 [console, { error: local.utility2.nop }]
             ], function (onError) {
-                // test csslint passed handling-behavior
-                local.utility2.jslintAndPrint(
-                    'body { font: normal; }',
-                    'passed.css'
+                // test empty script handling-behavior
+                local.utility2.jslintAndPrint('', 'empty.css');
+                // validate no error occurred
+                local.utility2.assert(
+                    !local.utility2.jslint.errorText,
+                    local.utility2.jslint.errorText
                 );
+                // test csslint passed handling-behavior
+                local.utility2.jslintAndPrint('body { font: normal; }', 'passed.css');
                 // validate no error occurred
                 local.utility2.assert(
                     !local.utility2.jslint.errorText,
@@ -1149,7 +1153,7 @@
             var file, onParallel;
             // jslint-hack
             local.utility2.nop(options);
-            file = __dirname + '/package.json';
+            file = __filename;
             onParallel = local.utility2.onParallel(onError);
             onParallel.counter += 1;
             local.fs.stat(file, function (error, stat) {
@@ -1318,8 +1322,9 @@
             // jslint-hack
             local.utility2.nop(options);
             local.utility2.browserTest({
+                modeCoverageMerge: true,
                 modeSilent: true,
-                modeTestReportIgnore: true,
+                modeTestIgnore: true,
                 timeoutDefault: local.utility2.timeoutDefault - 1000,
                 url: 'http://localhost:' +
                     local.utility2.envDict.PORT +
@@ -1452,7 +1457,7 @@
             case '/test/timeout':
                 setTimeout(function () {
                     response.end();
-                }, 4000);
+                }, 5000);
                 break;
             default:
                 local.fs.readFile(
@@ -1479,7 +1484,6 @@
                 file = dir + '/' + file;
                 switch (file) {
                 case __dirname + '/example.js':
-                case __dirname + '/package.json':
                     break;
                 // if the file is modified, then restart the process
                 default:
@@ -1567,6 +1571,7 @@
                     delete require.cache[__dirname + '/lib.istanbul.js'];
                     local.utility2.istanbul2 = require('./lib.istanbul.js');
                     local.utility2.istanbul.coverageReportCreate =
+                        local.utility2.istanbulCoverageReportCreate =
                         local.utility2.istanbul2.coverageReportCreate;
                     local.utility2.istanbul2.codeDict = local.utility2.istanbul.codeDict;
                 }

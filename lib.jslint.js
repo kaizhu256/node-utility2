@@ -13615,6 +13615,9 @@ klass:              do {
              * this function will jslint / csslint the script and print any errors to stderr
              */
             var errorList, lineno;
+            if (!script.length) {
+                return script;
+            }
             // cleanup errors
             local.errorCounter = 0;
             local.errorText = '';

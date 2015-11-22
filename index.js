@@ -106,8 +106,13 @@
             /*
              * this function will spawn an electron process to test options.url
              */
-            var done, modeNext, onNext, onParallel, timerTimeout;
-            modeNext = options.modeNext || 0;
+            var done, file, modeNext, onNext, onParallel, timerTimeout;
+            if (local.modeJs === 'node') {
+                local.utility2.objectSetDefault(options, local.utility2.envDict);
+                options.timeoutDefault = options.timeoutDefault ||
+                    local.utility2.timeoutDefault;
+            }
+            modeNext = Number(options.modeNext || 0);
             onNext = function (error, data) {
                 modeNext = error instanceof Error
                     ? Infinity
@@ -115,32 +120,40 @@
                 switch (modeNext) {
                 // run node code
                 case 1:
-                    options.testName = local.utility2.envDict.MODE_BUILD + '.browser.' +
+                    // init options
+                    options.testName = options.MODE_BUILD + '.browser.' +
                         encodeURIComponent(local.url.parse(options.url).pathname);
-                    options.timeoutDefault = options.timeoutDefault ||
-                        local.utility2.timeoutDefault;
                     local.utility2.objectSetDefault(options, {
-                        fileCoverage: local.utility2.envDict.npm_config_dir_tmp +
+                        fileCoverage: options.npm_config_dir_tmp +
                             '/coverage.' + options.testName + '.json',
-                        fileScreenCapture: (local.utility2.envDict.npm_config_dir_build +
+                        fileScreenCapture: (options.npm_config_dir_build +
                             '/screen-capture.' + options.testName + '.png')
                             .replace((/%/g), '_')
                             .replace((/_2F\.png$/), '.png'),
-                        fileTestReport: local.utility2.envDict.npm_config_dir_tmp +
+                        fileTestReport: options.npm_config_dir_tmp +
                             '/test-report.' + options.testName + '.json',
                         modeBrowserTest: 'test',
-                        testName: local.utility2.envDict.MODE_BUILD + '.browser.' +
-                            encodeURIComponent(local.url.parse(options.url).pathname),
                         timeExit: Date.now() + options.timeoutDefault
                     }, 1);
                     // init timerTimeout
                     timerTimeout = local.utility2
                         .onTimeout(onNext, options.timeoutDefault, options.testName);
+                    // get previous testReport
+                    if (options.modeTestAppend) {
+                        try {
+                            data = null;
+                            file = options.npm_config_dir_build + '/test-report.json';
+                            data = JSON.parse(local.fs.readFileSync(file, 'utf8'));
+                            console.log('\nbrowserTest - loaded test-report ' + file + '\n');
+                        } catch (ignore) {
+                        }
+                        local.utility2.testMerge(local.utility2.testReport, data || {});
+                    }
                     // init file urlBrowser
                     options.modeNext = 20;
-                    options.urlBrowser = local.utility2.envDict.npm_config_dir_tmp +
+                    options.urlBrowser = options.npm_config_dir_tmp +
                         '/electron.' + local.utility2.uuidTime() + '.html';
-                    local.utility2.fsMkdirpSync(local.utility2.envDict.npm_config_dir_build);
+                    local.utility2.fsMkdirpSync(options.npm_config_dir_build);
                     local.fs.writeFileSync(options.urlBrowser, '<style>body {' +
                             'border: 1px solid black;' +
                             'margin: 0px;' +
@@ -154,35 +167,44 @@
                             'overflow: hidden;' +
                             'width: 100%;' +
                         '"></webview>' +
-                        '<script>(' + local.utility2.browserTest
+                        '<script>window.local = {}; (' + local.utility2.browserTest
                             .toString()
                             .replace((/<\//g), '<\\/')
                             // uncover
                             .replace((/\b__cov_.*?\+\+/g), '0') +
                         '(' + JSON.stringify(options) + '))</script>');
+                    console.log('\nbrowserTest - created electron entry-page ' +
+                        options.urlBrowser + '\n');
                     // spawn an electron process to test a url
                     options.modeNext = 10;
                     local.utility2.processSpawnWithTimeout('electron', [
                         __filename,
                         'browserTest',
-                        encodeURIComponent(JSON.stringify(options)),
                         '--disable-overlay-scrollbar',
                         '--enable-logging'
-                    ], { stdio: options.modeSilent || local.global.__coverage__
-                        ? 'ignore'
-                        : ['ignore', 1, 2]
-                        }).once('exit', onNext);
+                    ], {
+                        env: local.utility2.jsonCopy(options),
+                        stdio: options.modeSilent || local.global.__coverage__
+                            ? 'ignore'
+                            : ['ignore', 1, 2]
+                    }).once('exit', onNext);
                     break;
                 case 2:
-                    console.log('electron exit-code ' + error);
+                    console.log('\nbrowserTest - exit-code ' + error + '\n');
                     // merge browser coverage
-                    data = null;
-                    try {
-                        data = JSON.parse(local.fs.readFileSync(options.fileCoverage, 'utf8'));
-                    } catch (ignore) {
-                    }
-                    if (data) {
-                        local.utility2.istanbulCoverageMerge(local.global.__coverage__, data);
+                    if (options.modeCoverageMerge) {
+                        try {
+                            data = null;
+                            data = JSON
+                                .parse(local.fs.readFileSync(options.fileCoverage, 'utf8'));
+                            console.log('\nbrowserTest - read coverage from ' +
+                                options.fileCoverage + '\n');
+                        } catch (ignore) {
+                        }
+                        if (data) {
+                            local.utility2
+                                .istanbulCoverageMerge(local.global.__coverage__, data);
+                        }
                     }
                     if (options.modeBrowserTest !== 'test') {
                         modeNext = Infinity;
@@ -191,20 +213,27 @@
                     }
                     // merge browser test-report
                     try {
-                        data = JSON.parse(local.fs
-                            .readFileSync(options.fileTestReport, 'utf8'));
+                        data = null;
+                        data = JSON.parse(local.fs.readFileSync(options
+                            .fileTestReport, 'utf8'));
+                        console.log('\nbrowserTest - loaded test-result from ' +
+                            options.fileTestReport + '\n');
                     } catch (errorCaught) {
                         onNext(errorCaught);
                         return;
                     }
-                    if (!options.modeTestReportIgnore) {
+                    if (!options.modeTestIgnore) {
                         local.utility2.testMerge(local.utility2.testReport, data);
+                    }
+                    if (options.modeTestAppend) {
+                        file = options.npm_config_dir_build + '/test-report.html';
                         local.fs.writeFileSync(
-                            local.utility2.envDict.npm_config_dir_build + '/test-report.html',
+                            file,
                             local.utility2.testMerge(local.utility2.testReport, {})
                         );
+                        console.log('\nbrowserTest - appended extra tests to ' + file + '\n');
                     }
-                    onNext(data.testsFailed && new Error(data.testsFailed));
+                    onNext(data && data.testsFailed && new Error(data.testsFailed));
                     break;
                 // run electron-node code
                 case 11:
@@ -226,7 +255,7 @@
                     options.browserWindow.loadURL('file://' + options.urlBrowser);
                     break;
                 case 13:
-                    console.log('electron - opened ' + options.url);
+                    console.log('\nbrowserTest - opened url ' + options.url + '\n');
                     onParallel = local.utility2.onParallel(onNext);
                     if (options.modeBrowserTest === 'test') {
                         onParallel.counter += 1;
@@ -236,11 +265,11 @@
                     setTimeout(function () {
                         options.browserWindow.capturePage(options, function (data) {
                             local.fs.writeFileSync(options.fileScreenCapture, data.toPng());
-                            console.log('electron - created screen-capture file://' +
-                                options.fileScreenCapture);
+                            console.log('\nbrowserTest - created screen-capture file://' +
+                                options.fileScreenCapture + '\n');
                             onParallel();
                         });
-                    }, options.timeoutScreenCapture || 2000);
+                    }, Number(options.timeoutScreenCapture || 2000));
                     break;
                 // run electron-browser code
                 case 21:
@@ -465,16 +494,8 @@
             return coverage1;
         };
 
-        local.utility2.istanbulCoverageReportCreate = function () {
-            /*
-             * this function will
-             * 1. print coverage in text-format to stdout
-             * 2. write coverage in html-format to filesystem
-             * 3. return coverage in html-format as single document
-             */
-            return ((local.utility2.istanbul && local.utility2.istanbul.coverageReportCreate) ||
-                local.utility2.nop)();
-        };
+        local.utility2.istanbulCoverageReportCreate = (local.utility2.istanbul &&
+            local.utility2.istanbul.coverageReportCreate) || local.utility2.echo;
 
         local.utility2.istanbulInstrumentInPackage = function (code, file, packageName) {
             /*
@@ -587,7 +608,7 @@
                 defaults2 = defaults[key];
                 options2 = options[key];
                 // init options[key] to default value defaults[key]
-                if (options2 === undefined) {
+                if (!options2) {
                     options[key] = defaults2;
                     return;
                 }
@@ -1194,6 +1215,26 @@
             if (testReport.testsPending === 0) {
                 local._timeElapsedStop(testReport);
             }
+            // create build.badge.svg
+            testReport.buildBadgeSvg = local.utility2['/build/build.badge.svg']
+                // edit branch name
+                .replace((/0000-00-00 00:00:00/g),
+                    new Date().toISOString().slice(0, 19).replace('T', ' '))
+                // edit branch name
+                .replace((/- master -/g), '| ' + local.utility2.envDict.CI_BRANCH + ' |')
+                // edit commit id
+                .replace((/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/g),
+                    local.utility2.envDict.CI_COMMIT_ID);
+            // create test-report.badge.svg
+            testReport.testReportBadgeSvg = local.utility2['/build/test-report.badge.svg']
+                // edit number of tests failed
+                .replace((/999/g), testReport.testsFailed)
+                // edit badge color
+                .replace(
+                    (/d00/g),
+                    // coverage-hack - cover both fail and pass cases
+                    '0d00'.slice(!!testReport.testsFailed).slice(0, 3)
+                );
             // 2. return testReport1 in html-format
             // json-copy testReport that will be modified for html templating
             testReport = local.utility2.jsonCopy(testReport1);
@@ -1347,51 +1388,28 @@
                     }, 1000);
                     break;
                 case 'node':
-                    // create build badge
+                    // create build.badge.svg
                     local.fs.writeFileSync(
                         local.utility2.envDict.npm_config_dir_build + '/build.badge.svg',
-                        local.utility2['/build/build.badge.svg']
-                            // edit branch name
-                            .replace(
-                                (/0000 00 00 00 00 00/g),
-                                new Date().toISOString().slice(0, 19).replace('T', ' ')
-                            )
-                            // edit branch name
-                            .replace(
-                                (/- master -/g),
-                                '| ' + local.utility2.envDict.CI_BRANCH + ' |'
-                            )
-                            // edit commit id
-                            .replace(
-                                (/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/g),
-                                local.utility2.envDict.CI_COMMIT_ID
-                            )
+                        testReport.buildBadgeSvg
                     );
                     // create test-report.badge.svg
                     local.fs.writeFileSync(
                         local.utility2.envDict.npm_config_dir_build + '/test-report.badge.svg',
-                        local.utility2['/build/test-report.badge.svg']
-                            // edit number of tests failed
-                            .replace((/999/g), testReport.testsFailed)
-                            // edit badge color
-                            .replace(
-                                (/d00/g),
-                                // coverage-hack - cover both fail and pass cases
-                                '0d00'.slice(!!testReport.testsFailed).slice(0, 3)
-                            )
+                        testReport.testReportBadgeSvg
                     );
                     // create test-report.html
                     local.fs.writeFileSync(
                         local.utility2.envDict.npm_config_dir_build + '/test-report.html',
                         testReportHtml
                     );
-                    console.log('created test-report file://' +
-                        local.utility2.envDict.npm_config_dir_build + '/test-report.html');
                     // create test-report.json
                     local.fs.writeFileSync(
                         local.utility2.envDict.npm_config_dir_build + '/test-report.json',
                         JSON.stringify(testReport)
                     );
+                    console.log('node - created test-report file://' +
+                        local.utility2.envDict.npm_config_dir_build + '/test-report.html\n');
                     // if any test failed, then exit with non-zero exit-code
                     setTimeout(function () {
                         // finalize testReport
@@ -1552,11 +1570,12 @@
                 break;
             case 'node':
                 local.utility2.timeExit = local.utility2.envDict.npm_config_time_exit;
-                local.utility2.timeoutDefault =
-                    local.utility2.envDict.npm_config_timeout_default;
+                local.utility2.timeoutDefault = local.utility2.envDict
+                    .npm_config_timeout_default;
                 break;
             }
             // init timeExit
+            local.utility2.timeExit = Number(local.utility2.timeExit);
             if (local.utility2.timeExit) {
                 local.utility2.timeoutDefault = local.utility2.timeExit - Date.now();
                 local.utility2.onTimeout(
@@ -1566,7 +1585,7 @@
                 );
             }
             // init timeoutDefault
-            local.utility2.timeoutDefault = local.utility2.timeoutDefault || 60000;
+            local.utility2.timeoutDefault = Number(local.utility2.timeoutDefault || 60000);
         };
 
         local.utility2.uglify = (local.utility2.uglifyjs &&
@@ -2182,11 +2201,11 @@
                     } catch (ignore) {
                     }
                 });
-            // init timerTimeout
+            // init failsafe timerTimeout
             childProcess.timerTimeout = local.child_process.spawn('/bin/sh', ['-c', 'sleep ' +
                 // coerce to finite integer
                 (((0.001 * local.utility2.timeoutDefault) | 0) +
-                // add extra 2 seconds
+                // add 2 second delay to failsafe timerTimeout
                 2) + '; kill -9 ' + childProcess.pid + ' 2>/dev/null'], { stdio: 'ignore' });
             return childProcess;
         };
@@ -2434,7 +2453,6 @@
                     // screen-capture main-page
                     local.utility2.browserTest({
                         modeBrowserTest: 'screenCapture',
-                        modeSilent: true,
                         url: 'http://localhost:' + local.utility2.envDict.PORT
                     }, function (error) {
                         console.log('server stopping on port ' + local.utility2.envDict.PORT);
@@ -2522,12 +2540,7 @@ local.utility2.cacheDict.assets['/assets/utility2.css'] = '/*csslint\n' +
 
 /* jslint-ignore-begin */
 // https://img.shields.io/badge/last_build-0000_00_00_00_00_00_UTC_--_master_--_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-0077ff.svg?style=flat
-local.utility2['/build/build.badge.svg'] = '<svg xmlns="http://www.w3.org/2000/svg" width="563" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="563" height="20" fill="#555"/><rect rx="0" x="61" width="502" height="20" fill="#07f"/><path fill="#07f" d="M61 0h4v20h-4z"/><rect rx="0" width="563" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="31.5" y="15" fill="#010101" fill-opacity=".3">last build</text><text x="31.5" y="14">last build</text><text x="311" y="15" fill="#010101" fill-opacity=".3">0000 00 00 00 00 00 UTC - master - aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</text><text x="311" y="14">0000 00 00 00 00 00 UTC - master - aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</text></g></svg>';
-
-
-
-// https://img.shields.io/badge/coverage-100.0%-00dd00.svg?style=flat
-local.utility2['/build/coverage.badge.svg'] = '<svg xmlns="http://www.w3.org/2000/svg" width="117" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="117" height="20" fill="#555"/><rect rx="0" x="63" width="54" height="20" fill="#0d0"/><path fill="#0d0" d="M63 0h4v20h-4z"/><rect rx="0" width="117" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="32.5" y="15" fill="#010101" fill-opacity=".3">coverage</text><text x="32.5" y="14">coverage</text><text x="89" y="15" fill="#010101" fill-opacity=".3">100.0%</text><text x="89" y="14">100.0%</text></g></svg>';
+local.utility2['/build/build.badge.svg'] = '<svg xmlns="http://www.w3.org/2000/svg" width="563" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="563" height="20" fill="#555"/><rect rx="0" x="61" width="502" height="20" fill="#07f"/><path fill="#07f" d="M61 0h4v20h-4z"/><rect rx="0" width="563" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="31.5" y="15" fill="#010101" fill-opacity=".3">last build</text><text x="31.5" y="14">last build</text><text x="311" y="15" fill="#010101" fill-opacity=".3">0000-00-00 00:00:00 UTC - master - aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</text><text x="311" y="14">0000-00-00 00:00:00 UTC - master - aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</text></g></svg>';
 
 
 
@@ -2840,16 +2853,7 @@ local.utility2['/test/test-report.html.template'] = '<style>\n' +
             }
             switch (process.argv[2]) {
             case 'browserTest':
-                local.utility2.objectSetOverride(
-                    local.utility2,
-                    JSON.parse(decodeURIComponent(process.argv[3]))
-                );
-                local.utility2.browserTest(
-                    JSON.parse(decodeURIComponent(process.argv[3])),
-                    local.utility2.exit
-                );
-                // init timeoutDefault
-                local.utility2.timeoutDefaultInit();
+                local.utility2.browserTest({}, local.utility2.exit);
                 break;
             }
         };

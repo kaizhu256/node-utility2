@@ -94,7 +94,7 @@ this shared browser / node script will run browser tests with coverage
 instruction
     1. save this js script as example.js
     2. run the shell command:
-        $ npm install electron-prebuilt-lite utility2 && \
+        $ npm install electron-lite utility2 && \
             PATH=$(pwd)/node_modules/.bin:$PATH && \
             npm_config_mode_coverage=1 node_modules/.bin/utility2 test node example.js
     3. view test-report in ./tmp/build/test-report.html
@@ -215,6 +215,7 @@ instruction
             // jslint-hack
             local.utility2.nop(options);
             local.utility2.browserTest({
+                modeCoverageMerge: true,
                 url: 'http://localhost:' + process.env.PORT + '?modeTest=consoleLogResult'
             }, onError);
         };
@@ -438,9 +439,9 @@ instruction
     "description": "run dynamic browser tests with coverage \
 (via istanbul and electron)",
     "devDependencies": {
-        "electron-prebuilt-lite": "2015.10.4"
+        "electron-lite": "2015.10.5"
     },
-    "engines": { "node": ">=0.12" },
+    "engines": { "node": ">=4.2" },
     "keywords": [
         "atom", "atom-shell",
         "browser", "build",
@@ -482,14 +483,15 @@ npm_config_mode_auto_restart=1 \
 npm_config_mode_auto_restart_child=1 \
 ./index.sh test node test.js"
     },
-    "version": "2015.11.6"
+    "version": "2015.11.7"
 }
 ```
 
 
 
 # todo
-- migrate travis-ci build to custom docker container
+- deprecate electron-prebuilt-lite
+- integrate badges into test-report
 - add utility2.middlewareLimit
 - create flamegraph from istanbul coverage
 - add server stress test using electron
@@ -497,15 +499,11 @@ npm_config_mode_auto_restart_child=1 \
 
 
 
-# change since 24d90987
-- npm publish 2015.11.6
-- coverage-mode must now be explicitly set with env var $npm_config_mode_coverage
-- minify assets on heroku demo server
-- minify /assets/utility2.js in production-mode
-- minify /assets/utility2.lib.istanbul.js in production-mode
-- minify /assets/utility2.lib.jslint.js in production-mode
-- minify /assets/utility2.lib.uglifyjs.js in production-mode
-- add file lib.uglifyjs.js
+# change since 7401180b
+- npm publish 2015.11.7
+- append heroku test to test-report during build
+- change devDependency electron-prebuilt-lite to electron-lite
+- fix heroku testReport not merging into previous testReport
 - none
 
 
@@ -528,7 +526,6 @@ shBuild() {
     local TEST_URL || return $?
 
     # init env
-    export npm_config_mode_slimerjs=1 || return $?
     . ./index.sh && shInit || return $?
 
     # run npm-test on published package
@@ -538,11 +535,11 @@ shBuild() {
     MODE_BUILD=testExampleJs MODE_LINENO=0 shRunScreenCapture \
         shReadmeTestJs example.js || return $?
     # screen-capture example.js coverage
-    MODE_BUILD=testExampleJs shBrowserScreenCapture \
-        /tmp/app/tmp/build/coverage.html/app/example.js.html || return $?
+    MODE_BUILD=testExampleJs modeBrowserTest=screenCapture \
+        url=/tmp/app/tmp/build/coverage.html/app/example.js.html shBrowserTest || return $?
     # screen-capture example.js test-report
-    MODE_BUILD=testExampleSh shBrowserScreenCapture \
-        /tmp/app/tmp/build/test-report.html || return $?
+    MODE_BUILD=testExampleSh modeBrowserTest=screenCapture \
+        url=/tmp/app/tmp/build/test-report.html shBrowserTest || return $?
 
     # test example shell script
     export npm_config_timeout_exit=1000 || return $?
@@ -571,7 +568,8 @@ shBuild() {
     then
         TEST_URL="https://hrku01-$npm_package_name-$CI_BRANCH.herokuapp.com" || return $?
         TEST_URL="$TEST_URL?modeTest=consoleLogResult&timeExit={{timeExit}}" || return $?
-        MODE_BUILD=herokuTest shBrowserTest "$TEST_URL" || return $?
+        MODE_BUILD=herokuTest modeBrowserTest=test modeTestAppend=1 \
+            url="$TEST_URL" shBrowserTest || return $?
     fi
 }
 shBuild

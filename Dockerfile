@@ -1,5 +1,6 @@
 FROM node
 MAINTAINER kai zhu <kaizhu256@gmail.com>
+# install apt packages
 RUN apt-get update && \
     apt-get install -y \
         apt-file \
@@ -19,8 +20,11 @@ RUN apt-get update && \
         unzip \
         vim-nox \
         x11-apps \
-        xvfb && \
-    apt-get clean && \
+        xvfb
+# install docker
+RUN wget -qO- https://get.docker.com/ | /bin/sh
+# cleanup
+RUN apt-get clean && \
     (rm -fr \
         /tmp/* \
         /tmp/.* \
@@ -28,4 +32,4 @@ RUN apt-get update && \
         /var/lib/apt/lists/.* \
         /var/tmp/* \
         /var/tmp/.* \
-        2>/dev/null || :)
+        2>/dev/null || true)

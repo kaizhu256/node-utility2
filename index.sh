@@ -41,6 +41,23 @@ shBaseInit() {
         export PATH_EMSCRIPTEN="$HOME/src/emsdk_portable/emscripten/latest" || return $?
         export PATH="$PATH_EMSCRIPTEN:$PATH" || return $?
     fi
+    # init $PATH_OS
+    case $(uname) in
+    Darwin)
+        if [ "$PATH_OS" = "" ]
+        then
+            export PATH_OS="$HOME/bin/darwin" || return $?
+            export PATH="$PATH_OS:$PATH" || return $?
+        fi
+        ;;
+    Linux)
+        if [ "$PATH_OS" = "" ]
+        then
+            export PATH_OS="$HOME/bin/linux" || return $?
+            export PATH="$PATH_OS:$PATH" || return $?
+        fi
+        ;;
+    esac
     # init index.sh and .bashrc2
     for FILE in "$HOME/index.sh" "$HOME/.bashrc2"
     do
@@ -73,33 +90,20 @@ shBaseInstall() {
     fi
 }
 
-shBrowserScreenCapture() {
-    # this function will spawn an electron process to screen-capture the given $URL
-    MODE_BUILD="${MODE_BUILD:-browserScreenCapture}" shBrowserTest "$1" "${2-60000}" \
-        "${3-2000}" screenCapture || return $?
-}
-
 shBrowserTest() {
     # this function will spawn an electron process to test the given $URL,
     # and merge the test-report into the existing test-report
-    local MODE_BROWSER_TEST TIMEOUT_DEFAULT TIMEOUT_SCREEN_CAPTURE URL || return $?
-    MODE_BROWSER_TEST="${4-test}" || return $?
-    TIMEOUT_DEFAULT="${2-60000}" || return $?
-    TIMEOUT_SCREEN_CAPTURE="${3-2000}" || return $?
-    URL="$1" || return $?
-    shBuildPrint "${MODE_BUILD:-electonTest}" "testing $URL with electron" || return $?
-    node $npm_config_dir_utility2/index.js browserTest $(node -e "
-        console.log(encodeURIComponent(JSON.stringify({
-            modeBrowserTest: '$MODE_BROWSER_TEST',
-            timeoutDefault: $TIMEOUT_DEFAULT,
-            timeoutScreenCapture: $TIMEOUT_SCREEN_CAPTURE,
-            url: '$URL'
-                // format unicode
-                .replace((/\\\\u[0-9a-f]{4}/g), function (match0) {
-                    return String.fromCharCode('0x' + match0.slice(-4));
-                })
-        })));
-    ") || return $?
+    shBuildPrint "${MODE_BUILD:-electronTest}" \
+        "electron.${modeBrowserTest} - $url" || return $?
+    node -e "
+        require('$npm_config_dir_utility2/index.js').browserTest({
+            modeBrowserTest: '$modeBrowserTest',
+            modeTestAppend: '$modeTestAppend',
+            timeoutDefault: '$timeoutDefault',
+            timeoutScreenCapture: '$timeoutScreenCapture',
+            url: '$url'
+        }, process.exit);
+    " || return $?
 }
 
 shBuildGithubUpload() {
@@ -188,7 +192,8 @@ shDocApiCreate() {
     shBuildPrint docApiCreate \
         "created api-doc file://$npm_config_dir_build/doc.api.html" || return $?
     # screen-capture api-doc
-    shBrowserScreenCapture "file://$npm_config_dir_build/doc.api.html" || return $?
+    modeBrowserTest=screenCapture \
+        url="file://$npm_config_dir_build/doc.api.html" shBrowserTest || return $?
 }
 
 shDockerInstall() {
@@ -201,7 +206,7 @@ shDockerInstall() {
 
 shDockerRestart() {
     # this function will restart the docker-container
-    shDockerRm "$1" || :
+    shDockerRm "$1" || true
     shDockerStart $@ || return $?
 }
 
@@ -209,11 +214,12 @@ shDockerRestartMongodb() {
     # this function will restart the mongodb docker-container
     # https://registry.hub.docker.com/_/mongo/
     local DIR || return $?
-    DIR=/$HOME/mongodb.data.db || return $?
-    mkdir -p $DIR || return $?
-    shDockerRm mongodb || :
+    DIR="$HOME/docker/mongodb.data.db" || return $?
+    mkdir -p "$DIR" || return $?
+    shDockerRm mongodb || true
     docker run --name mongodb -d \
-        -v /$HOME:/root -v $DIR:/data/db \
+        -p 27017:27017 \
+        -v "$HOME:/root" -v "$DIR:/data/db" \
         $@ mongo --storageEngine=wiredTiger || return $?
 }
 
@@ -271,22 +277,22 @@ http {
             autoindex on;
         }
     }
-}' > $FILE || return $?
+}' > "$FILE" || return $?
     fi
     # init /root/etc.nginx.ssl
     # http://superuser.com/questions/226192/openssl-without-prompt
     FILE=/root/etc.nginx.ssl || return $?
     if [ ! -f "$FILE.pem" ]
     then
-        openssl req -days 365 -keyout $FILE.key -new -newkey rsa:4096 -nodes -out $FILE.pem \
+        openssl req -days 365 -keyout "$FILE.key" -new -newkey rsa:4096 -nodes -out "$FILE.pem" \
             -subj "/C=AU" -x509 || return $?
     fi
     # init /root/usr.share.nginx.html
     mkdir -p /root/usr.share.nginx.html || return $?
-    shDockerRm nginx || :
+    shDockerRm nginx || true
     # https://registry.hub.docker.com/_/nginx/
     docker run --name nginx -d -p 80:80 -p 443:443 \
-        -v /$HOME:/root -v /root/etc.nginx.nginx.conf:/etc/nginx/nginx.conf:ro \
+        -v "$HOME:/root" -v /root/etc.nginx.nginx.conf:/etc/nginx/nginx.conf:ro \
         nginx || return $?
 }
 
@@ -294,18 +300,18 @@ shDockerRestartPptpd() {
     # this function will restart the pptpd docker-container
     # https://github.com/whuwxl/docker-repos/tree/master/pptpd
     local FILE PASSWORD USERNAME || return $?
-    FILE=/$HOME/pptpd.etc.ppp.chap-secrets || return $?
-    PASSWORD=$2 || return $?
-    USERNAME=$1 || return $?
+    FILE="$HOME/pptpd.etc.ppp.chap-secrets" || return $?
+    PASSWORD="$2" || return $?
+    USERNAME="$1" || return $?
     # init /etc/ppp/chap-secrets
     if [ ! -f "$FILE" ]
     then
-        printf "$USERNAME * $PASSWORD *" >> $FILE || return $?
-        chmod 600 $FILE || return $?
+        printf "$USERNAME * $PASSWORD *" >> "$FILE" || return $?
+        chmod 600 "$FILE" || return $?
     fi
-    shDockerRm pptpd || :
+    shDockerRm pptpd || true
     docker run --name pptpd --privileged -d -p 1723:1723 \
-        -v /$HOME:/root -v $FILE:/etc/ppp/chap-secrets:ro \
+        -v "$HOME:/root" -v "$FILE:/etc/ppp/chap-secrets:ro" \
         whuwxl/pptpd || return $?
 }
 
@@ -313,18 +319,18 @@ shDockerRestartTransmission() {
     # this function will restart the transmission docker-container
     # https://hub.docker.com/r/dperson/transmission/
     local DIR || return $?
-    DIR=/$HOME/downloads || return $?
-    mkdir -p $DIR || return $?
-    shDockerRm transmission || :
+    DIR="$HOME/downloads" || return $?
+    mkdir -p "$DIR" || return $?
+    shDockerRm transmission || true
     docker run --name transmission -d -e TRPASSWD=admin -e TRUSER=admin -e TZ=EST5EDT \
         -p 9091:9091 \
-        -v /$HOME:/root -v $DIR:/var/lib/transmission-daemon \
+        -v "$HOME:/root" -v "$DIR:/var/lib/transmission-daemon" \
         dperson/transmission || return $?
 }
 
 shDockerRm() {
     # this function will stop and rm the docker-container $IMAGE:$NAME
-    docker stop $@ || :
+    docker stop $@ || true
     docker rm $@ || return $?
 }
 
@@ -344,7 +350,7 @@ shDockerStart() {
     IMAGE="$1" || return $?
     shift || return $?
     docker run --name "$NAME" -dt -e debian_chroot="$NAME" \
-        -v /"$HOME:/root" \
+        -v "$HOME:/root" \
         $@ "$IMAGE" /bin/bash || return $?
 }
 
@@ -359,6 +365,13 @@ shDsStoreRm() {
     find . -name "._*" -print0 | xargs -0 rm || return $?
     find . -name ".DS_Store" -print0 | xargs -0 rm || return $?
     find . -name "npm-debug.log" -print0 | xargs -0 rm || return $?
+}
+
+shDuList () {
+    # this function will run du, and create a list of all child dir in $DIR sorted by size
+    local DIR || return $?
+    DIR=$1 || return $?
+    du -ms $DIR/* | sort -nr || return $?
 }
 
 shExitCodeSave() {
@@ -405,9 +418,9 @@ shGitRepoBranchCommandInternal() {
     shift $(( $# > 0 ? 1 : 0 )) || return $?
     BRANCH1="$1" || return $?
     shift $(( $# > 0 ? 1 : 0 )) || return $?
-    REPO2="${1-$REPO1}" || return $?
+    REPO2="${1:-$REPO1}" || return $?
     shift $(( $# > 0 ? 1 : 0 )) || return $?
-    BRANCH2="${1-$BRANCH1}" || return $?
+    BRANCH2="${1:-$BRANCH1}" || return $?
     shift $(( $# > 0 ? 1 : 0 )) || return $?
     MESSAGE="$@" || return $?
     # cleanup /tmp/git.repo.branch
@@ -429,7 +442,7 @@ shGitRepoBranchCommandInternal() {
     esac
     cd /tmp/git.repo.branch || return $?
     # init git
-    git init 2>/dev/null || :
+    git init 2>/dev/null || true
     if [ "$(git config user.email)" = "" ]
     then
         git config user.email nobody || return $?
@@ -442,12 +455,12 @@ shGitRepoBranchCommandInternal() {
     fi
     if [ "$MESSAGE" ]
     then
-        git commit -am "$MESSAGE" 2>/dev/null || :
+        git commit -am "$MESSAGE" 2>/dev/null || true
     else
         git commit -am "[skip ci]" \
             -m "$(shDateIso)" \
             -m "$COMMAND $REPO1#$BRANCH1 to $REPO2#$BRANDH2" \
-            -m "$(uname -a)" 2>/dev/null || :
+            -m "$(uname -a)" 2>/dev/null || true
     fi
     # if number of commits > $COMMIT_LIMIT,
     # then backup current git-repo-branch to git-repo-branch.backup,
@@ -473,9 +486,9 @@ shGitSquashPop() {
     # /how-can-i-squash-my-last-x-commits-together-using-git
     local COMMIT MESSAGE || return $?
     COMMIT="$1" || return $?
-    MESSAGE="${2-$(git log -1 --pretty=%s)}" || return $?
+    MESSAGE="${2:-$(git log -1 --pretty=%s)}" || return $?
     # commit any uncommitted data
-    git commit -am "$MESSAGE" || :
+    git commit -am "$MESSAGE" || true
     # reset git to previous $COMMIT
     git reset --hard "$COMMIT" || return $?
     # reset files to current HEAD
@@ -492,7 +505,7 @@ shGitSquashShift() {
     git checkout -q "HEAD~$RANGE" || return $?
     git reset -q "$(git rev-list --max-parents=0 HEAD)" || return $?
     git add . || return $?
-    git commit -m squash > /dev/null || :
+    git commit -m squash > /dev/null || true
     git cherry-pick -X theirs --allow-empty --strategy=recursive "$BRANCH~$RANGE..$BRANCH" || \
         return $?
     git push -f . "HEAD:$BRANCH" || return $?
@@ -522,7 +535,7 @@ shGrep() {
     find "$DIR" -type f | \
         grep -v "$FILE_FILTER" | \
         tr "\n" "\000" | \
-        xargs -0 grep -Iine "$REGEXP" || :
+        xargs -0 grep -Iine "$REGEXP" || true
 }
 
 shGrepFileReplace() {
@@ -577,7 +590,7 @@ shHerokuDeploy() {
         curl -Ls -o /dev/null -w "%{http_code}" https://$HEROKU_HOSTNAME
     ) -lt 400 ] || return $?
     # screen-capture deployed server
-    shBrowserScreenCapture https://$HEROKU_HOSTNAME || return $?
+    modeBrowserTest=screenCapture url="https://$HEROKU_HOSTNAME" shBrowserTest || return $?
 }
 
 shInit() {
@@ -675,7 +688,7 @@ shInitNpmConfigDirUtility2() {
           SOURCE="$(readlink "$SOURCE")" || return $?
           # if $SOURCE was a relative symlink,
           # we need to resolve it relative to the path where the symlink file was located
-          [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE" || :
+          [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE" || true
         done
         DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
         export npm_config_dir_utility2="$DIR" || return $?
@@ -815,9 +828,9 @@ shMountData() {
     local IFS_OLD TMP || return $?
     # mount optional /dev/xvdb
     mkdir -p /mnt/local || return $?
-    mount /dev/xvdb /mnt/local -o noatime || :
+    mount /dev/xvdb /mnt/local -o noatime || true
     # mount data /dev/xvdf
-    mount /dev/xvdf /root -o noatime || :
+    mount /dev/xvdf /root -o noatime || true
     # mount bind
     # http://stackoverflow.com/questions/9713104/loop-over-tuples-in-bash
     # save IFS
@@ -827,9 +840,9 @@ shMountData() {
     do
         set $TMP || return $?
         mkdir -p $1 $2 || return $?
-        mount $1 $2 -o bind || :
+        mount $1 $2 -o bind || true
     done
-    chmod 1777 /tmp || :
+    chmod 1777 /tmp || true
     # restore IFS
     IFS_OLD="$IFS" || return $?
 }
@@ -862,35 +875,7 @@ shNpmTest() {
     shIstanbulCover $@
     # save $EXIT_CODE and restore $CWD
     shExitCodeSave $? || return $?
-    # create coverage badge
-    node -e "
-        var coverage, percent;
-        coverage = require('$npm_config_dir_build/coverage.html/coverage.json');
-        percent = [0, 0];
-        Object.keys(coverage).forEach(function (file) {
-            file = coverage[file];
-            Object.keys(file.s).forEach(function (key) {
-                percent[0] += file.s[key] || file.statementMap[key].skip
-                    ? 1
-                    : 0;
-                percent[1] += 1;
-            });
-        });
-        percent = Math.floor((100000 * percent[0] / percent[1] + 5) / 10) / 100;
-        require('fs').writeFileSync(
-            '$npm_config_dir_build/coverage.badge.svg',
-            // https://img.shields.io/badge/coverage-100.0%-00dd00.svg?style=flat
-            '"'<svg xmlns="http://www.w3.org/2000/svg" width="117" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="117" height="20" fill="#555"/><rect rx="0" x="63" width="54" height="20" fill="#0d0"/><path fill="#0d0" d="M63 0h4v20h-4z"/><rect rx="0" width="117" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="32.5" y="15" fill="#010101" fill-opacity=".3">coverage</text><text x="32.5" y="14">coverage</text><text x="89" y="15" fill="#010101" fill-opacity=".3">100.0%</text><text x="89" y="14">100.0%</text></g></svg>'"'
-                // edit coverage badge percent
-                .replace((/100.0/g), percent)
-                // edit coverage badge color
-                .replace(
-                    (/0d0/g),
-                    ('0' + Math.round((100 - percent) * 2.21).toString(16)).slice(-2) +
-                        ('0' + Math.round(percent * 2.21).toString(16)).slice(-2) + '00'
-                )
-        );
-    " || return $?
+    # debug covered-test by re-running it uncovered
     if [ "$EXIT_CODE" != 0 ]
     then
         npm_config_mode_coverage="" $@
@@ -1059,7 +1044,7 @@ shRunScreenCapture() {
     # /how-to-convert-a-command-line-result-into-an-image-in-linux/
     # init $npm_config_dir_build
     mkdir -p $npm_config_dir_build/coverage.html || return $?
-    export MODE_BUILD_SCREEN_CAPTURE="screen-capture.${MODE_BUILD-undefined}.svg" || return $?
+    export MODE_BUILD_SCREEN_CAPTURE="screen-capture.${MODE_BUILD:-undefined}.svg" || return $?
     shRun $@ 2>&1 | tee $npm_config_dir_tmp/screen-capture.txt || return $?
     # save $EXIT_CODE and restore $CWD
     shExitCodeSave "$(cat $npm_config_file_tmp)" || return $?
@@ -1300,7 +1285,7 @@ shUbuntuInit() {
 
 shXvfbStart() {
     export DISPLAY=:99.0 || return $?
-    (Xvfb $DISPLAY &) > /dev/null 2>&1 || :
+    (Xvfb $DISPLAY &) > /dev/null 2>&1 || true
 }
 
 shMain() {
@@ -1321,9 +1306,6 @@ shMain() {
         ;;
     shRunScreenCapture)
         shInit && "$COMMAND" $@ || return $?
-        ;;
-    shDockerInstallWork)
-        shDockerInstallWork || return $?
         ;;
     start)
         shInit && npm_config_mode_auto_restart=1 shRun node -e "
