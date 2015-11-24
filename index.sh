@@ -142,7 +142,7 @@ shDateIso() {
 shDebugArgv() {
     # this function will print each element in $@ in a separate line
     local ARG || return $?
-    for ARG in "$1" "$2" "$3" "$4" "$5" "$6" "$7" "$8"
+    for ARG in "$@"
     do
         printf "'$ARG'\n"
     done
@@ -154,7 +154,7 @@ shDocApiCreate() {
     mkdir -p "$npm_config_dir_build/coverage.html" || return $?
     node -e "
         var options;
-        options = $1$2$3$4$5$6$7$8;
+        options = "$@";
         options.fs = require('fs');
         options.utility2 = require('$npm_config_dir_utility2');
         // init example
@@ -207,7 +207,7 @@ shDockerInstall() {
 shDockerRestart() {
     # this function will restart the docker-container
     shDockerRm "$1" || true
-    shDockerStart $@ || return $?
+    shDockerStart "$@" || return $?
 }
 
 shDockerRestartMongodb() {
@@ -220,7 +220,7 @@ shDockerRestartMongodb() {
     docker run --name mongodb -d \
         -p 27017:27017 \
         -v "$HOME:/root" -v "$DIR:/data/db" \
-        $@ mongo --storageEngine=wiredTiger || return $?
+        "$@" mongo --storageEngine=wiredTiger || return $?
 }
 
 shDockerRestartNginx() {
@@ -330,8 +330,8 @@ shDockerRestartTransmission() {
 
 shDockerRm() {
     # this function will stop and rm the docker-container $IMAGE:$NAME
-    docker stop $@ || true
-    docker rm $@ || return $?
+    docker stop "$@" || true
+    docker rm "$@" || return $?
 }
 
 shDockerSh() {
@@ -351,7 +351,7 @@ shDockerStart() {
     shift || return $?
     docker run --name "$NAME" -dt -e debian_chroot="$NAME" \
         -v "$HOME:/root" \
-        $@ "$IMAGE" /bin/bash || return $?
+        "$@" "$IMAGE" /bin/bash || return $?
 }
 
 shDockerStopAll() {
@@ -400,7 +400,7 @@ shGitLsTree() {
 
 shGitRepoBranchCommand() {
     # this fuction will copy / move / update git-repo-branch
-    shGitRepoBranchCommandInternal $@
+    shGitRepoBranchCommandInternal "$@"
     # save $EXIT_CODE and restore $CWD
     shExitCodeSave $? || return $?
     # reset shGitRepoBranchUpdateLocal
@@ -800,12 +800,12 @@ shIstanbulCover() {
     local COMMAND || return $?
     if [ "$npm_config_mode_coverage" = "" ]
     then
-        $@
+        "$@"
         return $?
     fi
     COMMAND="$1" || return $?
     shift || return $?
-    "$COMMAND" $npm_config_dir_utility2/lib.istanbul.js cover $@ || return $?
+    "$COMMAND" $npm_config_dir_utility2/lib.istanbul.js cover "$@" || return $?
 }
 
 shJsonFilePrettify() {
@@ -866,19 +866,19 @@ shNpmTest() {
     # if coverage-mode is disabled, then run npm-test without coverage
     if [ "$npm_config_mode_coverage" = "" ]
     then
-        $@
+        "$@"
         return $?
     fi
     # cleanup old coverage
     rm -f $npm_config_dir_build/coverage.html/coverage.*.json || return $?
     # run npm-test with coverage
-    shIstanbulCover $@
+    shIstanbulCover "$@"
     # save $EXIT_CODE and restore $CWD
     shExitCodeSave $? || return $?
     # debug covered-test by re-running it uncovered
     if [ "$EXIT_CODE" != 0 ]
     then
-        npm_config_mode_coverage="" $@
+        npm_config_mode_coverage="" "$@"
     fi
     return $EXIT_CODE
 }
@@ -1009,9 +1009,9 @@ shRun() {
         export npm_config_mode_auto_restart_child=1
         while true
         do
-            printf "(re)starting $@" || return $?
+            printf "(re)starting $*" || return $?
             printf "\n" || return $?
-            $@
+            "$@"
             # save $EXIT_CODE
             EXIT_CODE=$? || return $?
             printf "process exited with code $EXIT_CODE\n" || return $?
@@ -1031,7 +1031,7 @@ shRun() {
         done
     # eval argv
     else
-        $@
+        "$@"
     fi
     # save $EXIT_CODE and restore $CWD
     shExitCodeSave $? || return $?
@@ -1045,7 +1045,7 @@ shRunScreenCapture() {
     # init $npm_config_dir_build
     mkdir -p $npm_config_dir_build/coverage.html || return $?
     export MODE_BUILD_SCREEN_CAPTURE="screen-capture.${MODE_BUILD:-undefined}.svg" || return $?
-    shRun $@ 2>&1 | tee $npm_config_dir_tmp/screen-capture.txt || return $?
+    shRun "$@" 2>&1 | tee $npm_config_dir_tmp/screen-capture.txt || return $?
     # save $EXIT_CODE and restore $CWD
     shExitCodeSave "$(cat $npm_config_file_tmp)" || return $?
     # format text-output
@@ -1302,25 +1302,25 @@ shMain() {
         shGrep "$1" "$2" || return $?
         ;;
     shRun)
-        shInit && "$COMMAND" $@ || return $?
+        shInit && "$COMMAND" "$@" || return $?
         ;;
     shRunScreenCapture)
-        shInit && "$COMMAND" $@ || return $?
+        shInit && "$COMMAND" "$@" || return $?
         ;;
     start)
         shInit && npm_config_mode_auto_restart=1 shRun node -e "
             require('$npm_config_dir_utility2/test.js');
-        " $@ || return $?
+        " "$@" || return $?
         ;;
     test)
-        shInit && shNpmTest $@ || return $?
+        shInit && shNpmTest "$@" || return $?
         ;;
     utility2Dirname)
         shInit && printf "$npm_config_dir_utility2" || return $?
         ;;
     *)
-        "$COMMAND" $@ || return $?
+        "$COMMAND" "$@" || return $?
         ;;
     esac
 }
-shMain "$1" "$2" "$3" "$4" "$5" "$6" "$7" "$8"
+shMain "$@"

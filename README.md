@@ -207,7 +207,7 @@ instruction
 
     // run node js-env code
     case 'node':
-        // init node tests
+        // init tests
         local.testCase_browserTest_default = function (options, onError) {
             /*
              * this function will spawn an electron process to test the test-page
@@ -483,7 +483,7 @@ npm_config_mode_auto_restart=1 \
 npm_config_mode_auto_restart_child=1 \
 ./index.sh test node test.js"
     },
-    "version": "2015.11.7"
+    "version": "2015.11.8"
 }
 ```
 
@@ -499,11 +499,9 @@ npm_config_mode_auto_restart_child=1 \
 
 
 
-# change since 7401180b
-- npm publish 2015.11.7
-- append heroku test to test-report during build
-- change devDependency electron-prebuilt-lite to electron-lite
-- fix heroku testReport not merging into previous testReport
+# change since 5f519e00
+- npm publish 2015.11.8
+- fix If-Modified-Since bug in utility2.middlewareCacheControlLastModified
 - none
 
 

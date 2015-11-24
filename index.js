@@ -72,7 +72,12 @@
         local.utility2.uglifyjs = local.modeJs === 'browser'
             ? window.utility2_uglifyjs
             : require('./lib.uglifyjs.js');
+    }());
 
+
+
+    // run shared js-env code
+    (function () {
         local._timeElapsedStop = function (options) {
             /*
              * this function will stop options.timeElapsed
@@ -2026,11 +2031,9 @@
             if (!response.headersSent && request.url.indexOf('?') < 0) {
                 // init serverResponseHeaderLastModified
                 local.utility2.serverResponseHeaderLastModified =
-                    local.utility2.serverResponseHeaderLastModified ||
-                    // default Last-Modified header to server-start-time
-                    new Date(Date.now() - process.uptime()).toGMTString();
-                // respond with 304 if If-Modified-Since is greater than server-start-time
-                if (request.headers['if-modified-since'] >=
+                    local.utility2.serverResponseHeaderLastModified || new Date();
+                // respond with 304 If-Modified-Since serverResponseHeaderLastModified
+                if (new Date(request.headers['if-modified-since']) >=
                         local.utility2.serverResponseHeaderLastModified) {
                     response.statusCode = 304;
                     response.end();
@@ -2039,7 +2042,7 @@
                 response.setHeader('Cache-Control', 'no-cache');
                 response.setHeader(
                     'Last-Modified',
-                    local.utility2.serverResponseHeaderLastModified
+                    local.utility2.serverResponseHeaderLastModified.toGMTString()
                 );
             }
             nextMiddleware();

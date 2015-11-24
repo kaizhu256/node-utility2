@@ -7,8 +7,75 @@
     regexp: true,
     stupid: true
 */
-(function (local) {
+(function () {
     'use strict';
+    var local;
+
+
+
+    // run shared js-env code
+    (function () {
+        // init local
+        local = {};
+        // init js-env
+        local.modeJs = (function () {
+            try {
+                return module.exports &&
+                    typeof process.versions.node === 'string' &&
+                    typeof require('http').createServer === 'function' &&
+                    'node';
+            } catch (errorCaughtNode) {
+                return typeof navigator.userAgent === 'string' &&
+                    typeof document.querySelector('body') === 'object' &&
+                    'browser';
+            }
+        }());
+        switch (local.modeJs) {
+        // re-init local from window.local
+        case 'browser':
+            local = window.local;
+            break;
+        /* istanbul ignore next */
+        // re-init local from example.js
+        case 'node':
+            if (__dirname === process.cwd()) {
+                require('fs').writeFileSync(
+                    __dirname + '/example.js',
+                    require('fs').readFileSync(__dirname + '/README.md', 'utf8')
+                        // support syntax-highlighting
+                        .replace((/[\S\s]+?\n.*?example.js\s*?```\w*?\n/), function (match0) {
+                            // preserve lineno
+                            return match0.replace((/.+/g), '');
+                        })
+                        .replace((/\n```[\S\s]+/), '')
+                        // disable mock package.json env
+                        .replace(/(process.env.npm_package_\w+ = )/g, '// $1')
+                        // alias require('$npm_package_name') to require('index.js');
+                        .replace(
+                            "require('" + process.env.npm_package_name + "')",
+                            "require(__dirname + '/index.js')"
+                        )
+                        // coverage-hack
+                        .replace(
+                            'local.utility2.istanbulInstrumentSync',
+                            'local.utility2.istanbulInstrumentInPackage'
+                        )
+                );
+                local = require(__dirname + '/example.js');
+                // coverage-hack - cover istanbul
+                if (local.global.__coverage__) {
+                    delete require.cache[__dirname + '/lib.istanbul.js'];
+                    local.utility2.istanbul2 = require('./lib.istanbul.js');
+                    local.utility2.istanbul.coverageReportCreate =
+                        local.utility2.istanbulCoverageReportCreate =
+                        local.utility2.istanbul2.coverageReportCreate;
+                    local.utility2.istanbul2.codeDict = local.utility2.istanbul.codeDict;
+                }
+            }
+            local = require(__dirname + '/example.js');
+            break;
+        }
+    }());
 
 
 
@@ -761,10 +828,8 @@
                 },
                 '<undefined>'
             );
-            local.utility2.assert(
-                data === '[[<undefined><undefined>,<undefined>],[bb,cc,],]',
-                data
-            );
+            local.utility2
+                .assert(data === '[[<undefined><undefined>,<undefined>],[bb,cc,],]', data);
             onError();
         };
 
@@ -1476,7 +1541,7 @@
         });
         // init error-middleware
         local.middlewareError = local.utility2.middlewareError;
-        // jslint dir
+        // debug dir
         [
             process.cwd()
         ].forEach(function (dir) {
@@ -1495,8 +1560,7 @@
                 case '.css':
                 case '.js':
                 case '.json':
-                    local.utility2.jslint
-                        .jslintAndPrint(local.fs.readFileSync(file, 'utf8'), file);
+                    local.utility2.jslintAndPrint(local.fs.readFileSync(file, 'utf8'), file);
                     break;
                 }
             });
@@ -1512,73 +1576,4 @@
         local.utility2.replStart();
         break;
     }
-}((function () {
-    'use strict';
-    var local;
-
-
-
-    // run shared js-env code
-    (function () {
-        // init local
-        local = {};
-        // init js-env
-        local.modeJs = (function () {
-            try {
-                return module.exports &&
-                    typeof process.versions.node === 'string' &&
-                    typeof require('http').createServer === 'function' &&
-                    'node';
-            } catch (errorCaughtNode) {
-                return typeof navigator.userAgent === 'string' &&
-                    typeof document.querySelector('body') === 'object' &&
-                    'browser';
-            }
-        }());
-        switch (local.modeJs) {
-        // re-init local from window.local
-        case 'browser':
-            local = window.local;
-            break;
-        /* istanbul ignore next */
-        // re-init local from example.js
-        case 'node':
-            if (__dirname === process.cwd()) {
-                require('fs').writeFileSync(
-                    __dirname + '/example.js',
-                    require('fs').readFileSync(__dirname + '/README.md', 'utf8')
-                        // support syntax-highlighting
-                        .replace((/[\S\s]+?\n.*?example.js\s*?```\w*?\n/), function (match0) {
-                            // preserve lineno
-                            return match0.replace((/.+/g), '');
-                        })
-                        .replace((/\n```[\S\s]+/), '')
-                        // disable mock package.json env
-                        .replace(/(process.env.npm_package_\w+ = )/g, '// $1')
-                        // alias require('$npm_package_name') to require('index.js');
-                        .replace(
-                            "require('" + process.env.npm_package_name + "')",
-                            "require(__dirname + '/index.js')"
-                        )
-                        .replace(
-                            'local.utility2.istanbulInstrumentSync',
-                            'local.utility2.istanbulInstrumentInPackage'
-                        )
-                );
-                local = require(__dirname + '/example.js');
-                // coverage-hack - cover istanbul
-                if (local.global.__coverage__) {
-                    delete require.cache[__dirname + '/lib.istanbul.js'];
-                    local.utility2.istanbul2 = require('./lib.istanbul.js');
-                    local.utility2.istanbul.coverageReportCreate =
-                        local.utility2.istanbulCoverageReportCreate =
-                        local.utility2.istanbul2.coverageReportCreate;
-                    local.utility2.istanbul2.codeDict = local.utility2.istanbul.codeDict;
-                }
-            }
-            local = require(__dirname + '/example.js');
-            break;
-        }
-    }());
-    return local;
-}())));
+}());

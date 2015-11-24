@@ -38,5 +38,5 @@
         "start": "npm_config_mode_auto_restart=1 ./index.sh shRun shIstanbulCover node test.js",
         "test": "./index.sh shRun shReadmeExportPackageJson && npm_config_mode_auto_restart=1 npm_config_mode_auto_restart_child=1 ./index.sh test node test.js"
     },
-    "version": "2015.11.7"
+    "version": "2015.11.8"
 }
