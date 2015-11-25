@@ -434,7 +434,8 @@ instruction
     "bin": {
         "utility2" : "index.sh",
         "utility2-istanbul" : "lib.istanbul.js",
-        "utility2-jslint" : "lib.jslint.js"
+        "utility2-jslint" : "lib.jslint.js",
+        "utility2-uglifyjs" : "lib.uglifyjs.js"
     },
     "description": "run dynamic browser tests with coverage \
 (via istanbul and electron)",
@@ -483,7 +484,7 @@ npm_config_mode_auto_restart=1 \
 npm_config_mode_auto_restart_child=1 \
 ./index.sh test node test.js"
     },
-    "version": "2015.11.8"
+    "version": "2015.11.10"
 }
 ```
 
@@ -499,9 +500,11 @@ npm_config_mode_auto_restart_child=1 \
 
 
 
-# change since 5f519e00
-- npm publish 2015.11.8
+# change since 343f3c30
+- npm publish 2015.11.10
+- increase timeoutScreenCapture default value to 5000 ms in browesrTest
 - fix If-Modified-Since bug in utility2.middlewareCacheControlLastModified
+- add bin utility2-uglifyjs to package.json
 - none
 
 

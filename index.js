@@ -274,7 +274,7 @@
                                 options.fileScreenCapture + '\n');
                             onParallel();
                         });
-                    }, Number(options.timeoutScreenCapture || 2000));
+                    }, Number(options.timeoutScreenCapture || 5000));
                     break;
                 // run electron-browser code
                 case 21:
@@ -1984,7 +1984,7 @@
                     }, onNext);
                     break;
                 case 2:
-                    // gzip result
+                    // set gzip header
                     result = new Buffer(data, 'base64');
                     response.setHeader('Content-Encoding', 'gzip');
                     response.setHeader('Content-Length', result.length);
@@ -2031,7 +2031,9 @@
             if (!response.headersSent && request.url.indexOf('?') < 0) {
                 // init serverResponseHeaderLastModified
                 local.utility2.serverResponseHeaderLastModified =
-                    local.utility2.serverResponseHeaderLastModified || new Date();
+                    local.utility2.serverResponseHeaderLastModified ||
+                    // resolve to 1000 ms
+                    new Date(Math.floor(Date.now() / 1000) * 1000);
                 // respond with 304 If-Modified-Since serverResponseHeaderLastModified
                 if (new Date(request.headers['if-modified-since']) >=
                         local.utility2.serverResponseHeaderLastModified) {
@@ -2314,8 +2316,7 @@
              */
             // if $PORT is undefined,
             // then assign it a random integer in the inclusive range 0 to 0xffff
-            local.utility2.envDict.PORT =
-                local.utility2.envDict.PORT ||
+            local.utility2.envDict.PORT = local.utility2.envDict.PORT ||
                 // coerce to finite integer
                 ((Math.random() * 0x10000) | 0x8000).toString();
             return local.utility2.envDict.PORT;
