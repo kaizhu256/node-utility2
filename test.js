@@ -55,7 +55,7 @@
                             "require('" + process.env.npm_package_name + "')",
                             "require(__dirname + '/index.js')"
                         )
-                        // coverage-hack
+                        // coverage-hack - conditionally cover example.js
                         .replace(
                             'local.utility2.istanbulInstrumentSync',
                             'local.utility2.istanbulInstrumentInPackage'
@@ -380,8 +380,27 @@
              */
             // jslint-hack
             local.utility2.nop(options);
-            local.utility2.assert(local.utility2.echo(1) === 1);
+            local.utility2.assert(local.utility2.echo('hello') === 'hello');
             onError();
+        };
+
+        local.testCase_exit_default = function (options, onError) {
+            /*
+             * this function will exit's default handling-behavior
+             */
+            // jslint-hack
+            local.utility2.nop(options);
+            // test exit's default handling-behavior
+            local.utility2.testMock([
+                // suppress console.log
+                [console, { log: local.utility2.nop }],
+                // test modeTest === 'consoleLogResult' handling-behavior
+                [local.utility2, { modeTest: 'consoleLogResult' }]
+            ], function (onError) {
+                // test invalid exit-code handling-behavior
+                local.utility2.exit('invalid exit-code');
+                onError();
+            }, onError);
         };
 
         local.testCase_istanbulInstrumentSync_default = function (options, onError) {
@@ -833,9 +852,9 @@
             onError();
         };
 
-        local.testCase_taskRunCached_default = function (options, onError) {
+        local.testCase_taskCallbackAndUpdateCached_default = function (options, onError) {
             /*
-             * this function will test taskRunCached's default handling-behavior
+             * this function will test taskCallbackAndUpdateCached's default handling-behavior
              */
             var cacheValue, modeNext, onNext, onParallel, onTask, optionsCopy;
             if (!options) {
@@ -844,26 +863,26 @@
                 // test file-cache handling-behavior
                 if (local.modeJs === 'node') {
                     onParallel.counter += 1;
-                    local.testCase_taskRunCached_default({
-                        cacheDict: 'testCase_taskRunCached_default',
+                    local.testCase_taskCallbackAndUpdateCached_default({
+                        cacheDict: 'testCase_taskCallbackAndUpdateCached_default',
                         key: 'file',
                         modeCacheFile: local.utility2.envDict.npm_config_dir_tmp +
-                            '/testCase_taskRunCached_default',
+                            '/testCase_taskCallbackAndUpdateCached_default',
                         modeCacheHit: 'file'
                     }, onParallel);
                 }
                 // test memory-cache handling-behavior
                 onParallel.counter += 1;
-                local.testCase_taskRunCached_default({
-                    cacheDict: 'testCase_taskRunCached_default',
+                local.testCase_taskCallbackAndUpdateCached_default({
+                    cacheDict: 'testCase_taskCallbackAndUpdateCached_default',
                     key: 'memory',
                     modeCacheHit: 'memory',
                     modeCacheMemory: true
                 }, onParallel);
                 // test undefined-cache handling-behavior
                 onParallel.counter += 1;
-                local.testCase_taskRunCached_default({
-                    cacheDict: 'testCase_taskRunCached_default',
+                local.testCase_taskCallbackAndUpdateCached_default({
+                    cacheDict: 'testCase_taskCallbackAndUpdateCached_default',
                     key: 'undefined'
                 }, onParallel);
                 onParallel();
@@ -894,10 +913,9 @@
                             modeCacheFile: options.modeCacheFile,
                             modeCacheMemory: options.modeCacheMemory,
                             // test onCacheWrite handling-behavior
-                            onCacheWrite: onNext,
-                            onTask: onTask
+                            onCacheWrite: onNext
                         };
-                        local.utility2.taskRunCached(optionsCopy, onNext);
+                        local.utility2.taskCallbackAndUpdateCached(optionsCopy, onNext, onTask);
                         break;
                     case 2:
                         // validate no error occurred
@@ -921,10 +939,9 @@
                             // test modeCacheUpdate handling-behavior
                             modeCacheUpdate: true,
                             // test onCacheWrite handling-behavior
-                            onCacheWrite: onNext,
-                            onTask: onTask
+                            onCacheWrite: onNext
                         };
-                        local.utility2.taskRunCached(optionsCopy, onNext);
+                        local.utility2.taskCallbackAndUpdateCached(optionsCopy, onNext, onTask);
                         break;
                     case 4:
                         // validate no error occurred
@@ -945,10 +962,9 @@
                             cacheDict: options.cacheDict,
                             key: options.key,
                             modeCacheFile: options.modeCacheFile,
-                            modeCacheMemory: options.modeCacheMemory,
-                            onTask: onTask
+                            modeCacheMemory: options.modeCacheMemory
                         };
-                        local.utility2.taskRunCached(optionsCopy, onNext);
+                        local.utility2.taskCallbackAndUpdateCached(optionsCopy, onNext, onTask);
                         break;
                     case 6:
                         // validate no error occurred
@@ -968,12 +984,15 @@
                             cacheDict: options.cacheDict,
                             key: options.key + 'Error',
                             modeCacheFile: options.modeCacheFile,
-                            modeCacheMemory: options.modeCacheMemory,
-                            onTask: function (onError) {
+                            modeCacheMemory: options.modeCacheMemory
+                        };
+                        local.utility2.taskCallbackAndUpdateCached(
+                            optionsCopy,
+                            onNext,
+                            function (onError) {
                                 onError(local.utility2.errorDefault);
                             }
-                        };
-                        local.utility2.taskRunCached(optionsCopy, onNext);
+                        );
                         break;
                     case 8:
                         // validate error occurred
@@ -988,35 +1007,41 @@
             onNext();
         };
 
-        local.testCase_taskRunOrSubscribe_default = function (options, onError) {
+        local.testCase_taskUpsert_multipleCallback = function (options, onError) {
             /*
-             * this function will test taskRunOrSubscribe's default handling-behavior
+             * this function will test taskUpsert's multiple-callback handling-behavior
              */
-            var key, onParallel;
-            // jslint-hack
-            local.utility2.nop(options);
-            key = local.utility2.uuidTime();
-            onParallel = local.utility2.onParallel(onError);
-            onParallel.counter += 1;
-            // test onTask handling-behavior
-            onParallel.counter += 1;
-            local.utility2.taskRunOrSubscribe({
-                key: key,
-                onTask: function (onError) {
-                    setTimeout(function () {
-                        onError();
-                        // test multiple-callback handling-behavior
-                        onError();
-                        onParallel();
-                    });
-                }
+            options = {
+                counterCallback: 0,
+                key: 'testCase_taskUpsert_multiCallback'
+            };
+            local.utility2.taskCallbackAdd(options, function () {
+                options.counterCallback += 1;
             });
-            // test subscribe handling-behavior
-            onParallel.counter += 1;
-            local.utility2.taskRunOrSubscribe({
-                key: key
-            }, onParallel);
-            onParallel();
+            local.utility2.taskUpsert(options, function (onError) {
+                // test multiple-callback handling-behavior
+                onError();
+                onError();
+            });
+            // validate counterCallback incremented once
+            local.utility2.assert(options.counterCallback === 1, options);
+            onError();
+        };
+
+        local.testCase_testRun_nop = function (options, onError) {
+            /*
+             * this function will test testRun's nop handling-behavior
+             */
+            options = {};
+            local.utility2.testMock([
+                // test testRun's no modeTest handling-behavior
+                [local.utility2, { envDict: {}, modeTest: null }]
+            ], function (onError) {
+                local.utility2.testRun(options);
+                // validate no options.onReady
+                local.utility2.assert(!options.onReady, options);
+                onError();
+            }, onError);
         };
 
         local.testCase_testRun_failure = function (options, onError) {
@@ -1305,12 +1330,8 @@
                     // test print handling-behavior
                     'print\n'
                 ].forEach(function (script) {
-                    local.utility2.local._replServer.eval(
-                        script,
-                        null,
-                        'repl',
-                        local.utility2.nop
-                    );
+                    local.utility2.local._replServer
+                        .eval(script, null, 'repl', local.utility2.nop);
                 });
                 onError();
             }, onError);
@@ -1335,46 +1356,6 @@
                     { end: local.utility2.nop, headersSent: true, on: local.utility2.nop },
                     // test default timeout handling-behavior
                     null
-                );
-                onError();
-            }, onError);
-        };
-
-        local.testCase_testRunServer_misc = function (options, onError) {
-            /*
-             * this function will test testRunServer's misc handling-behavior
-             */
-            // jslint-hack
-            local.utility2.nop(options);
-            local.utility2.testMock([
-                [local.utility2, {
-                    envDict: {
-                        // test $npm_package_name !== 'utility2' handling-behavior
-                        npm_package_name: 'undefined',
-                        // test timeout-exit handling-behavior
-                        npm_config_timeout_exit: '1',
-                        // test random $PORT handling-behavior
-                        PORT: ''
-                    },
-                    browserTest: local.utility2.nop,
-                    onReady: {},
-                    taskRunOrSubscribe: local.utility2.nop
-                }],
-                [local.utility2.local, {
-                    http: { createServer: function () {
-                        return { listen: local.utility2.nop };
-                    } }
-                }]
-            ], function (onError) {
-                local.utility2.testRunServer({
-                    middleware: local.utility2.middlewareGroupCreate([
-                        local.utility2.middlewareInit
-                    ])
-                });
-                // validate $PORT
-                local.utility2.assert(
-                    Number(local.utility2.envDict.PORT) > 0,
-                    local.utility2.envDict.PORT
                 );
                 onError();
             }, onError);
@@ -1411,6 +1392,47 @@
             });
         };
 
+        local.testCase_testRunServer_exit = function (options, onError) {
+            /*
+             * this function will test testRunServer's exit handling-behavior
+             */
+            // jslint-hack
+            local.utility2.nop(options);
+            // test testRunServer's $npm_config_timeout_exit handling-behavior
+            local.utility2.testMock([
+                // suppress console.log
+                [console, { log: local.utility2.nop }],
+                // have setTimeout call immediately
+                [local.global, { setTimeout: function (onError) {
+                    onError();
+                } }],
+                [local.utility2, {
+                    envDict: {
+                        // test $npm_package_name !== 'utility2' handling-behavior
+                        npm_package_name: 'undefined',
+                        // test timeout-exit handling-behavior
+                        npm_config_timeout_exit: '1'
+                    },
+                    browserTest: function (options, onError) {
+                        // jslint-hack
+                        local.utility2.nop(options);
+                        onError();
+                    },
+                    exit: null,
+                    onReady: {},
+                    testRun: local.utility2.nop
+                }],
+                [local.utility2.local, { http: { createServer: function () {
+                    return { listen: local.utility2.nop };
+                } } }]
+            ], function (onError) {
+                // test exit handling-behavior
+                local.utility2.exit = onError;
+                local.utility2.testRunServer({ middleware: local.utility2
+                    .middlewareGroupCreate([local.utility2.middlewareInit]) });
+            }, onError);
+        };
+
         local.testCase_uuidXxx_default = function (options, onError) {
             /*
              * this function will test uuidXxx's default handling-behavior
@@ -1445,13 +1467,6 @@
 
     // run browser js-env code
     case 'browser':
-        // test no modeTest handling-behavior
-        local.utility2.testMock([
-            [local.utility2, { modeTest: null }]
-        ], function (onError) {
-            local.utility2.testRun();
-            onError();
-        }, local.utility2.nop);
         break;
 
 

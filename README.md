@@ -95,8 +95,8 @@ instruction
     1. save this js script as example.js
     2. run the shell command:
         $ npm install electron-lite utility2 && \
-            PATH=$(pwd)/node_modules/.bin:$PATH && \
-            npm_config_mode_coverage=1 node_modules/.bin/utility2 test node example.js
+            PATH="$(pwd)/node_modules/.bin:$PATH" && \
+            PORT=1337 npm_config_mode_coverage=1 node_modules/.bin/utility2 test node example.js
     3. view test-report in ./tmp/build/test-report.html
     4. view coverage in ./tmp/build/coverage.html/index.html
 */
@@ -367,7 +367,7 @@ instruction
 '        .querySelector(".istanbulInputTextarea")\n' +
 '        .addEventListener("keyup", window.testRun);\n' +
 '    if (!window.utility2.modeTest) {\n' +
-'        window.testRun();\n' +
+'        window.testRun({});\n' +
 '    }\n' +
 '    </script>\n' +
 '    <script src="/assets/example.js"></script>\n' +
@@ -440,7 +440,7 @@ instruction
     "description": "run dynamic browser tests with coverage \
 (via istanbul and electron)",
     "devDependencies": {
-        "electron-lite": "2015.10.5"
+        "electron-lite": "2015.11.1"
     },
     "engines": { "node": ">=4.2" },
     "keywords": [
@@ -472,27 +472,28 @@ moduleDict:{\
 utility2:{exports:require('./index.js')},\
 'utility2.istanbul':{exports:require('./index.js').istanbul},\
 'utility2.jslint':{exports:require('./index.js').jslint},\
-'utility2.jslint':{exports:require('./index.js').uglifyjs}\
+'utility2.uglify':{exports:require('./index.js').uglifyjs}\
 }\
 }\"",
         "env": "env",
         "postinstall": "./index.sh shRun shReadmeExportPackageJson && \
 ./index.sh shRun shReadmeExportFile example.js example.js",
-        "start": "npm_config_mode_auto_restart=1 ./index.sh shRun shIstanbulCover node test.js",
+        "start": "PORT=${PORT:-8080} \
+        npm_config_mode_auto_restart=1 \
+./index.sh shRun shIstanbulCover node test.js",
         "test": "./index.sh shRun shReadmeExportPackageJson && \
 npm_config_mode_auto_restart=1 \
 npm_config_mode_auto_restart_child=1 \
+PORT=$(./index.sh shServerPortRandom) \
 ./index.sh test node test.js"
     },
-    "version": "2015.11.10"
+    "version": "2015.11.11"
 }
 ```
 
 
 
 # todo
-- deprecate electron-prebuilt-lite
-- integrate badges into test-report
 - add utility2.middlewareLimit
 - create flamegraph from istanbul coverage
 - add server stress test using electron
@@ -500,11 +501,11 @@ npm_config_mode_auto_restart_child=1 \
 
 
 
-# change since 343f3c30
-- npm publish 2015.11.10
-- increase timeoutScreenCapture default value to 5000 ms in browesrTest
-- fix If-Modified-Since bug in utility2.middlewareCacheControlLastModified
-- add bin utility2-uglifyjs to package.json
+# change since 781827a7
+- npm publish 2015.11.11
+- remove magical utility2.serverPortInit and explicitly require $PORT env to be set
+- rename taskRunCached to taskCallbackAndUpdateCached
+- split taskRunOrSubscribe into taskCallbackAdd and taskUpsert
 - none
 
 
@@ -547,8 +548,8 @@ shBuild() {
     MODE_BUILD=testExampleSh shRunScreenCapture shReadmeTestSh example.sh || return $?
     unset npm_config_timeout_exit || return $?
     # save screen-capture
-    cp /tmp/app/node_modules/$npm_package_name/tmp/build/screen-capture.*.png \
-        $npm_config_dir_build || return $?
+    cp "/tmp/app/node_modules/$npm_package_name/tmp/build/"screen-capture.*.png \
+        "$npm_config_dir_build" || return $?
 
     # run npm-test
     MODE_BUILD=npmTest shRunScreenCapture npm test --mode-coverage || return $?
@@ -560,7 +561,7 @@ shBuild() {
     [ "$(node --version)" \< "v5.0" ] && exit
 
     # deploy app to heroku
-    shRun shHerokuDeploy hrku01-$npm_package_name-$CI_BRANCH || return $?
+    shRun shHerokuDeploy "hrku01-$npm_package_name-$CI_BRANCH" || return $?
 
     # test deployed app to heroku
     if [ "$CI_BRANCH" = alpha ] ||
@@ -569,7 +570,7 @@ shBuild() {
     then
         TEST_URL="https://hrku01-$npm_package_name-$CI_BRANCH.herokuapp.com" || return $?
         TEST_URL="$TEST_URL?modeTest=consoleLogResult&timeExit={{timeExit}}" || return $?
-        MODE_BUILD=herokuTest modeBrowserTest=test modeTestAppend=1 \
+        MODE_BUILD=herokuTest modeBrowserTest=test modeTestAdd=1 \
             url="$TEST_URL" shBrowserTest || return $?
     fi
 }
@@ -583,5 +584,5 @@ MODE_BUILD=gitLsTree shRunScreenCapture shGitLsTree || exit $?
 MODE_BUILD=gitLog shRunScreenCapture git log -50 --pretty="%ai\u000a%B" || exit $?
 # upload build-artifacts to github, and if number of commits > 16, then squash older commits
 COMMIT_LIMIT=16 shBuildGithubUpload || exit $?
-exit $EXIT_CODE
+exit "$EXIT_CODE"
 ```

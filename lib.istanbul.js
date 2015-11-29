@@ -9003,7 +9003,7 @@ local['coverage.badge.svg'] = '<svg xmlns="http://www.w3.org/2000/svg" width="11
                 return;
             }
             switch (process.argv[2]) {
-            // run cover command
+            // transparently adds coverage information to a node command
             case 'cover':
                 local.module = require('module');
                 // add coverage hook to require
@@ -9034,6 +9034,11 @@ local['coverage.badge.svg'] = '<svg xmlns="http://www.w3.org/2000/svg" width="11
                     local.coverageReportCreate();
                 });
                 local.module.runMain();
+                break;
+            // instrument a file and print result to stdout
+            case 'instrument':
+                process.stdout.write(local.instrumentSync(local
+                    .fsReadFileSync(process.argv[3]), process.argv[3]));
                 break;
             }
         };

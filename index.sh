@@ -42,7 +42,7 @@ shBaseInit() {
         export PATH="$PATH_EMSCRIPTEN:$PATH" || return $?
     fi
     # init $PATH_OS
-    case $(uname) in
+    case "$(uname)" in
     Darwin)
         if [ "$PATH_OS" = "" ]
         then
@@ -98,7 +98,7 @@ shBrowserTest() {
     node -e "
         require('$npm_config_dir_utility2/index.js').browserTest({
             modeBrowserTest: '$modeBrowserTest',
-            modeTestAppend: '$modeTestAppend',
+            modeTestAdd: '$modeTestAdd',
             timeoutDefault: '$timeoutDefault',
             timeoutScreenCapture: '$timeoutScreenCapture',
             url: '$url'
@@ -187,7 +187,6 @@ shDocApiCreate() {
             '$npm_config_dir_build/doc.api.html',
             options.utility2.docApiCreate(options)
         );
-        process.exit();
     " || return $?
     shBuildPrint docApiCreate \
         "created api-doc file://$npm_config_dir_build/doc.api.html" || return $?
@@ -208,19 +207,6 @@ shDockerRestart() {
     # this function will restart the docker-container
     shDockerRm "$1" || true
     shDockerStart "$@" || return $?
-}
-
-shDockerRestartMongodb() {
-    # this function will restart the mongodb docker-container
-    # https://registry.hub.docker.com/_/mongo/
-    local DIR || return $?
-    DIR="$HOME/docker/mongodb.data.db" || return $?
-    mkdir -p "$DIR" || return $?
-    shDockerRm mongodb || true
-    docker run --name mongodb -d \
-        -p 27017:27017 \
-        -v "$HOME:/root" -v "$DIR:/data/db" \
-        "$@" mongo --storageEngine=wiredTiger || return $?
 }
 
 shDockerRestartNginx() {
@@ -245,7 +231,7 @@ events {
 http {
     default_type application/octet-stream;
     include /etc/nginx/mime.types;
-    log_format main '"'"'$remote_addr - $remote_user [$time_local]  $status '"'"'
+    log_format main '"'"'$remote_addr - $remote_user [$time_local] $status '"'"'
         '"'"'"$request" $body_bytes_sent "$http_referer" '"'"'
         '"'"'"$http_user_agent" "$http_x_forwarded_for"'"'"';
     sendfile on;
@@ -368,10 +354,8 @@ shDsStoreRm() {
 }
 
 shDuList () {
-    # this function will run du, and create a list of all child dir in $DIR sorted by size
-    local DIR || return $?
-    DIR=$1 || return $?
-    du -ms $DIR/* | sort -nr || return $?
+    # this function will run du, and create a list of all child dir in $1 sorted by size
+    du -ms $1/* | sort -nr || return $?
 }
 
 shExitCodeSave() {
@@ -515,8 +499,8 @@ shGitSquashShift() {
 shGrep() {
     # this function will recursively grep $DIR for the $REGEXP
     local DIR FILE_FILTER REGEXP || return $?
-    DIR=$1 || return $?
-    REGEXP=$2 || return $?
+    DIR="$1" || return $?
+    REGEXP="$2" || return $?
     FILE_FILTER="$FILE_FILTER/\\.\\|.*\\(\\b\\|_\\)\\(\\.\\d\\" || return $?
     FILE_FILTER="$FILE_FILTER|archive\\|artifact\\" || return $?
     FILE_FILTER="$FILE_FILTER|bower_component\\|build\\" || return $?
@@ -566,13 +550,13 @@ shHerokuDeploy() {
     # this function will deploy the app to $HEROKU_REPO,
     # and run a simple curl check for the main-page
     local HEROKU_REPO || return $?
-    HEROKU_REPO=$1 || return $?
+    HEROKU_REPO="$1" || return $?
     if [ "$GIT_SSH" = "" ]
     then
         return $?
     fi
     # init $HEROKU_HOSTNAME
-    export HEROKU_HOSTNAME=$HEROKU_REPO.herokuapp.com || return $?
+    export HEROKU_HOSTNAME="$HEROKU_REPO.herokuapp.com" || return $?
     shBuildPrint herokuDeploy "deploying to https://$HEROKU_HOSTNAME" || return $?
     # git push $PWD to heroku
     shGitRepoBranchUpdateLocal() {
@@ -581,8 +565,8 @@ shHerokuDeploy() {
         # git add everything
         git add . || return $?
     }
-    shGitRepoBranchCommand copyPwdLsTree local HEAD git@heroku.com:$HEROKU_REPO.git master || \
-        return $?
+    shGitRepoBranchCommand copyPwdLsTree local HEAD "git@heroku.com:$HEROKU_REPO.git" master \
+        || return $?
     # wait 10 seconds for heroku to deploy app
     sleep 10 || return $?
     # verify deployed app's main-page returns status-code < 400
@@ -601,8 +585,8 @@ shInit() {
         # init travis-ci.org env
         if [ "$TRAVIS" ]
         then
-            export CI_BRANCH=$TRAVIS_BRANCH || return $?
-            export CI_COMMIT_ID=$TRAVIS_COMMIT || return $?
+            export CI_BRANCH="$TRAVIS_BRANCH" || return $?
+            export CI_COMMIT_ID="$TRAVIS_COMMIT" || return $?
             export CI_HOST=travis-ci.org || return $?
             # decrypt and exec encrypted data
             if [ "$AES_256_KEY" ]
@@ -646,18 +630,18 @@ shInit() {
         export npm_package_version=undefined || return $?
     fi
     # init $npm_config_*
-    export npm_config_dir_build=$CWD/tmp/build || return $?
-    export npm_config_dir_tmp=$CWD/tmp || return $?
-    export npm_config_file_tmp=$CWD/tmp/tmpfile || return $?
+    export npm_config_dir_build="$CWD/tmp/build" || return $?
+    export npm_config_dir_tmp="$CWD/tmp" || return $?
+    export npm_config_file_tmp="$CWD/tmp/tmpfile" || return $?
     # init $npm_config_dir_utility2
     shInitNpmConfigDirUtility2 || return $?
     # init $GIT_SSH
     if [ "$GIT_SSH_KEY" ] && [ ! "$MODE_OFFLINE" ]
     then
-        export GIT_SSH=$npm_config_dir_utility2/git-ssh.sh || return $?
+        export GIT_SSH="$npm_config_dir_utility2/git-ssh.sh" || return $?
     fi
     # init $PATH
-    export PATH=$CWD/node_modules/.bin:$PATH || return $?
+    export PATH="$CWD/node_modules/.bin:$PATH" || return $?
 }
 
 shInitNpmConfigDirUtility2() {
@@ -667,10 +651,10 @@ shInitNpmConfigDirUtility2() {
     # init $npm_config_dir_utility2
     if [ "$npm_package_name" = utility2 ]
     then
-        export npm_config_dir_utility2=$CWD || return $?
+        export npm_config_dir_utility2="$CWD" || return $?
     else
-        export npm_config_dir_utility2=$(node -e \
-            "console.log(require('utility2').__dirname);" 2>/dev/null) || return $?
+        export npm_config_dir_utility2="$(node -e \
+            "console.log(require('utility2').__dirname);" 2>/dev/null)" || return $?
     fi
     if [ ! -d "$npm_config_dir_utility2" ]
     then
@@ -814,7 +798,7 @@ shJsonFilePrettify() {
     # 2. prettify the json-data
     # 3. write the prettified json-data back to $FILE
     local FILE || return $?
-    FILE=$1 || return $?
+    FILE="$1" || return $?
     node -e "
         require('fs').writeFileSync(
             '$FILE',
@@ -838,9 +822,9 @@ shMountData() {
     IFS="," || return $?
     for TMP in /root/tmp,/tmp /root/var.lib.docker,/var/lib/docker
     do
-        set $TMP || return $?
-        mkdir -p $1 $2 || return $?
-        mount $1 $2 -o bind || true
+        set "$TMP" || return $?
+        mkdir -p "$1" "$2" || return $?
+        mount "$1" "$2" -o bind || true
     done
     chmod 1777 /tmp || true
     # restore IFS
@@ -851,18 +835,13 @@ shNpmTest() {
     # this function will run npm-test
     shBuildPrint "${MODE_BUILD:-npmTest}" "npm-testing $CWD" || return $?
     # cleanup $npm_config_dir_tmp/*.json
-    rm -f $npm_config_dir_tmp/*.json || return $?
+    rm -f "$npm_config_dir_tmp/"*.json || return $?
     # cleanup old electron pages
-    rm -f $npm_config_dir_tmp/electron.*.html || return $?
+    rm -f "$npm_config_dir_tmp/"electron.*.html || return $?
     # init $npm_config_dir_build
-    mkdir -p $npm_config_dir_build/coverage.html || return $?
+    mkdir -p "$npm_config_dir_build/coverage.html" || return $?
     # init npm-test-mode
     export npm_config_mode_npm_test=1 || return $?
-    # init random $PORT
-    if [ "$PORT" = "" ]
-    then
-        export PORT="$(shServerPortRandom)" || return $?
-    fi
     # if coverage-mode is disabled, then run npm-test without coverage
     if [ "$npm_config_mode_coverage" = "" ]
     then
@@ -870,7 +849,7 @@ shNpmTest() {
         return $?
     fi
     # cleanup old coverage
-    rm -f $npm_config_dir_build/coverage.html/coverage.*.json || return $?
+    rm -f "$npm_config_dir_build/coverage.html/"coverage.*.json || return $?
     # run npm-test with coverage
     shIstanbulCover "$@"
     # save $EXIT_CODE and restore $CWD
@@ -880,7 +859,7 @@ shNpmTest() {
     then
         npm_config_mode_coverage="" "$@"
     fi
-    return $EXIT_CODE
+    return "$EXIT_CODE"
 }
 
 shNpmTestPublished() {
@@ -891,8 +870,8 @@ shNpmTestPublished() {
     # cd /tmp/app
     cd /tmp/app || return $?
     # npm-install package
-    npm install $npm_package_name || return $?
-    cd node_modules/$npm_package_name || return $?
+    npm install "$npm_package_name" || return $?
+    cd "node_modules/$npm_package_name" || return $?
     npm install || return $?
     # npm-test package
     npm_config_mode_coverage=1 npm test || return $?
@@ -901,16 +880,16 @@ shNpmTestPublished() {
 shReadmeBuild() {
     # this function will run the internal build-script embedded in README.md
     # init $npm_config_dir_build
-    mkdir -p $npm_config_dir_build/coverage.html || return $?
+    mkdir -p "$npm_config_dir_build/coverage.html" || return $?
     # run shell script from README.md
-    MODE_BUILD=build shReadmeTestSh $npm_config_dir_tmp/build.sh || return $?
+    MODE_BUILD=build shReadmeTestSh "$npm_config_dir_tmp/build.sh" || return $?
 }
 
 shReadmeExportFile() {
     # this function will extract and save the script $FILE_IN embedded in README.md to $FILE_OUT
     local FILE_IN FILE_OUT || return $?
-    FILE_IN=$1 || return $?
-    FILE_OUT=$2 || return $?
+    FILE_IN="$1" || return $?
+    FILE_OUT="$2" || return $?
     node -e "
         require('fs').writeFileSync(
             '$FILE_OUT',
@@ -929,7 +908,7 @@ shReadmeExportFile() {
 shReadmeExportPackageJson() {
     # this function will extract and save the package.json file embedded in README.md
     local FILE || return $?
-    MODE_LINENO=0 shReadmeExportFile package.json $CWD/package.json || return $?
+    MODE_LINENO=0 shReadmeExportFile package.json "$CWD/package.json" || return $?
     node -e "
         require('fs').writeFileSync(
             '$CWD/package.json',
@@ -944,8 +923,8 @@ shReadmeExportPackageJson() {
 shReadmeTestJs() {
     # this function will extract, save, and test the js script $FILE embedded in README.md
     local FILE SCRIPT || return $?
-    FILE=$1 || return $?
-    shBuildPrint $MODE_BUILD "testing $FILE" || return $?
+    FILE="$1" || return $?
+    shBuildPrint "$MODE_BUILD" "testing $FILE" || return $?
     if [ "$MODE_OFFLINE" = "" ]
     then
         # init /tmp/app
@@ -954,25 +933,25 @@ shReadmeTestJs() {
     # cd /tmp/app
     cd /tmp/app || return $?
     # read and parse js script from README.md
-    shReadmeExportFile $FILE $FILE || return $?
+    shReadmeExportFile "$FILE" "$FILE" || return $?
     # jslint $FILE
     if [ "$MODE_OFFLINE" = "" ] && [ "$npm_config_mode_jslint" != 0 ]
     then
-        $npm_config_dir_utility2/lib.jslint.js $FILE || return $?
+        "$npm_config_dir_utility2/lib.jslint.js" "$FILE" || return $?
     fi
     # test $FILE
-    SCRIPT=$(node -e "
+    SCRIPT="$(node -e "
         console.log(
             (/\n *\\$ ([\S\s]+?[^\\\\])\n/)
                 .exec(require('fs').readFileSync('$FILE', 'utf8'))[1]
                 .replace((/\\\\\n */g), ' ')
         );
-    ") || return $?
+    ")" || return $?
     if [ "$MODE_OFFLINE" ]
     then
-        SCRIPT=$(node -e "
+        SCRIPT="$(node -e "
             console.log('$SCRIPT'.replace('npm install', 'echo'));
-        ") || return $?
+        ")" || return $?
     fi
     printf "$SCRIPT\n\n" && eval "$SCRIPT" || return $?
 }
@@ -980,11 +959,11 @@ shReadmeTestJs() {
 shReadmeTestSh() {
     # this function will extract, save, and test the shell script $FILE embedded in README.md
     local FILE FILE_BASENAME || return $?
-    FILE=$1 || return $?
-    FILE_BASENAME=$(node -e "
+    FILE="$1" || return $?
+    FILE_BASENAME="$(node -e "
         console.log(require('path').basename('$FILE'));
-    ") || return $?
-    shBuildPrint $MODE_BUILD "testing $FILE" || return $?
+    ")" || return $?
+    shBuildPrint "$MODE_BUILD" "testing $FILE" || return $?
     if [ "$MODE_BUILD" != "build" ]
     then
         if [ "$MODE_OFFLINE" = "" ]
@@ -996,9 +975,13 @@ shReadmeTestSh() {
         cd /tmp/app || return $?
     fi
     # read and parse script from README.md
-    shReadmeExportFile $FILE_BASENAME $FILE || return $?
+    shReadmeExportFile "$FILE_BASENAME" "$FILE" || return $?
+    # display file
+    node -e "
+        console.log(require('fs').readFileSync('$FILE', 'utf8').trimLeft());
+    " || return $?
     # test $FILE
-    /bin/sh $FILE || return $?
+    /bin/sh "$FILE" || return $?
 }
 
 shRun() {
@@ -1013,7 +996,7 @@ shRun() {
             printf "\n" || return $?
             "$@"
             # save $EXIT_CODE
-            EXIT_CODE=$? || return $?
+            EXIT_CODE="$?" || return $?
             printf "process exited with code $EXIT_CODE\n" || return $?
             # http://en.wikipedia.org/wiki/Unix_signal
             # exit-code 0 - normal exit
@@ -1035,7 +1018,7 @@ shRun() {
     fi
     # save $EXIT_CODE and restore $CWD
     shExitCodeSave $? || return $?
-    return $EXIT_CODE
+    return "$EXIT_CODE"
 }
 
 shRunScreenCapture() {
@@ -1043,7 +1026,7 @@ shRunScreenCapture() {
     # http://www.cnx-software.com/2011/09/22
     # /how-to-convert-a-command-line-result-into-an-image-in-linux/
     # init $npm_config_dir_build
-    mkdir -p $npm_config_dir_build/coverage.html || return $?
+    mkdir -p "$npm_config_dir_build/coverage.html" || return $?
     export MODE_BUILD_SCREEN_CAPTURE="screen-capture.${MODE_BUILD:-undefined}.svg" || return $?
     shRun "$@" 2>&1 | tee $npm_config_dir_tmp/screen-capture.txt || return $?
     # save $EXIT_CODE and restore $CWD
@@ -1088,7 +1071,7 @@ shRunScreenCapture() {
         options.fs
             .writeFileSync('$npm_config_dir_build/$MODE_BUILD_SCREEN_CAPTURE', options.result);
     " || return $?
-    return $EXIT_CODE
+    return "$EXIT_CODE"
 }
 
 shServerPortRandom() {
@@ -1098,7 +1081,7 @@ shServerPortRandom() {
 
 shSource() {
     # this function will source .bashrc
-    . $HOME/.bashrc || return $?
+    . "$HOME/.bashrc" || return $?
 }
 
 shTravisDecryptYml() {
@@ -1110,18 +1093,18 @@ shTravisDecryptYml() {
 shTravisEncrypt() {
     # this function will travis-encrypt $SECRET for the $GITHUB_REPO
     local GITHUB_REPO SECRET || return $?
-    GITHUB_REPO=$1 || return $?
-    SECRET=$2 || return $?
+    GITHUB_REPO="$1" || return $?
+    SECRET="$2" || return $?
     # init $npm_config_dir_build dir
-    mkdir -p $npm_config_dir_build/coverage.html || return $?
+    mkdir -p "$npm_config_dir_build/coverage.html" || return $?
     # get public rsa key from https://api.travis-ci.org/repos/<owner>/<repo>/key
-    curl -fLSs https://api.travis-ci.org/repos/$GITHUB_REPO/key > $npm_config_file_tmp || \
+    curl -fLSs "https://api.travis-ci.org/repos/$GITHUB_REPO/key" > "$npm_config_file_tmp" || \
         return $?
-    perl -i -pe "s/[^-]+(.+-).+/\$1/; s/\\\\n/\n/g; s/ RSA / /g" $npm_config_file_tmp || \
+    perl -i -pe "s/[^-]+(.+-).+/\$1/; s/\\\\n/\n/g; s/ RSA / /g" "$npm_config_file_tmp" || \
         return $?
     # rsa-encrypt $SECRET and print it
     printf "$SECRET" | \
-        openssl rsautl -encrypt -pubin -inkey $npm_config_file_tmp | \
+        openssl rsautl -encrypt -pubin -inkey "$npm_config_file_tmp" | \
         base64 | \
         tr -d "\n" || return $?
 }
@@ -1129,14 +1112,14 @@ shTravisEncrypt() {
 shTravisEncryptYml() {
     # this function will travis-encrypt $FILE to $AES_ENCRYPTED_SH and embed it in .travis.yml
     local AES_256_KEY_ENCRYPTED FILE || return $?
-    FILE=$1 || return $?
+    FILE="$1" || return $?
     if [ ! -f "$FILE" ]
     then
         printf "# non-existent file $FILE\n" || return $?
         return 1
     fi
     printf "# sourcing file $FILE\n" || return $?
-    . $FILE || return $?
+    . "$FILE" || return $?
     if [ "$AES_256_KEY" = "" ]
     then
         printf "# no \$AES_256_KEY detected in env - creating new AES_256_KEY\n" || return $?
@@ -1285,7 +1268,7 @@ shUbuntuInit() {
 
 shXvfbStart() {
     export DISPLAY=:99.0 || return $?
-    (Xvfb $DISPLAY &) > /dev/null 2>&1 || true
+    (Xvfb "$DISPLAY" &) > /dev/null 2>&1 || true
 }
 
 shMain() {
@@ -1306,6 +1289,9 @@ shMain() {
         ;;
     shRunScreenCapture)
         shInit && "$COMMAND" "$@" || return $?
+        ;;
+    shServerPortRandom)
+        shServerPortRandom || return $?
         ;;
     start)
         shInit && npm_config_mode_auto_restart=1 shRun node -e "
