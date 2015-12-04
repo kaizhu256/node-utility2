@@ -1012,20 +1012,45 @@
              * this function will test taskUpsert's multiple-callback handling-behavior
              */
             options = {
-                counterCallback: 0,
+                counter: 0,
                 key: 'testCase_taskUpsert_multiCallback'
             };
             local.utility2.taskCallbackAdd(options, function () {
-                options.counterCallback += 1;
+                options.counter += 1;
             });
             local.utility2.taskUpsert(options, function (onError) {
                 // test multiple-callback handling-behavior
                 onError();
                 onError();
             });
-            // validate counterCallback incremented once
-            local.utility2.assert(options.counterCallback === 1, options);
+            // validate counter incremented once
+            local.utility2.assert(options.counter === 1, options);
             onError();
+        };
+
+        local.testCase_taskUpsert_upsert = function (options, onError) {
+            /*
+             * this function will test taskUpsert's upsert handling-behavior
+             */
+            options = {
+                counter: 0,
+                key: 'testCase_taskUpsert_upsert'
+            };
+            local.utility2.taskCallbackAdd(options, local.utility2.nop);
+            // test upsert handling-behavior
+            [null, null].forEach(function () {
+                local.utility2.taskUpsert(options, function (onError) {
+                    options.counter += 1;
+                    setTimeout(onError);
+                });
+            });
+            // validate counter incremented once
+            setTimeout(function () {
+                local.utility2.testTryCatch(function () {
+                    local.utility2.assert(options.counter === 1, options);
+                    onError();
+                }, onError);
+            });
         };
 
         local.testCase_testRun_nop = function (options, onError) {

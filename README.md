@@ -147,8 +147,6 @@ instruction
         Object.keys(local.utility2.local).forEach(function (key) {
             local[key] = local[key] || local.utility2.local[key];
         });
-        // init onReady
-        local.utility2.onReadyInit();
     }());
     switch (local.modeJs) {
 
@@ -486,7 +484,7 @@ npm_config_mode_auto_restart=1 \
 npm_config_mode_auto_restart_child=1 \
 ./index.sh test node test.js"
     },
-    "version": "2015.11.12"
+    "version": "2015.11.13"
 }
 ```
 
@@ -502,9 +500,9 @@ npm_config_mode_auto_restart_child=1 \
 
 
 
-# change since 39f2aa53
-- npm publish 2015.11.12
-- uglify lib.jslint.js and lib.uglifyjs.js
+# change since f4b196c3
+- npm publish 2015.11.13
+- remove utility2.onReadyInit
 - none
 
 

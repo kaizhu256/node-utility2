@@ -59,7 +59,7 @@
             };
         };
         // init utility2
-        local.utility2 = { cacheDict: { assets: {} }, local: local };
+        local.utility2 = { cacheDict: { assets: {}, taskUpsert: {} }, local: local };
         // init istanbul
         local.utility2.istanbul = local.modeJs === 'browser'
             ? window.utility2_istanbul
@@ -771,22 +771,6 @@
             return self;
         };
 
-        local.utility2.onReadyInit = function () {
-            /*
-             * this function will create the deferred task utility2.onReady
-             */
-            // init onReady
-            local.utility2.taskCallbackAdd({ key: 'utility2.onReady' }, function (error) {
-                // validate no error occurred
-                local.utility2.assert(!error, error);
-            });
-            local.utility2.taskUpsert({ key: 'utility2.onReady' }, function (onError) {
-                local.utility2.onReady = local.utility2.onParallel(onError);
-                local.utility2.onReady.counter += 1;
-                setTimeout(local.utility2.onReady);
-            });
-        };
-
         local.utility2.onTimeout = function (onError, timeout, message) {
             /*
              * this function will create a timeout-error-handler,
@@ -891,8 +875,6 @@
              * this function will add the callback onError to the task named options.key
              */
             var task;
-            // init taskUpsert
-            local.utility2.cacheDict.taskUpsert = local.utility2.cacheDict.taskUpsert || {};
             // init task
             task = local.utility2.cacheDict.taskUpsert[options.key] =
                 local.utility2.cacheDict.taskUpsert[options.key] || {
@@ -1337,6 +1319,8 @@
                     local.utility2.testRun(options);
                 };
                 local.utility2.taskCallbackAdd({ key: 'utility2.onReady' }, options.onReady);
+                local.utility2.onReady.counter += 1;
+                setTimeout(local.utility2.onReady);
                 return;
             }
             // init onParallel
@@ -2774,7 +2758,17 @@ local.utility2['/test/test-report.html.template'] = '<style>\n' +
         // init timeoutDefault
         local.utility2.timeoutDefaultInit();
         // init onReady
-        local.utility2.onReadyInit();
+        local.utility2.taskCallbackAdd({ key: 'utility2.onReady' }, function (error) {
+            // validate no error occurred
+            local.utility2.assert(!error, error);
+        });
+        local.utility2.onReady = local.utility2.onParallel(function (error) {
+            local.utility2.taskUpsert({ key: 'utility2.onReady' }, function (onError) {
+                onError(error);
+            });
+        });
+        local.utility2.onReady.counter += 1;
+        setTimeout(local.utility2.onReady);
     }());
     switch (local.modeJs) {
 
