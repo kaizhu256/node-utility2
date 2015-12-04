@@ -1589,6 +1589,17 @@
         });
         // init repl debugger
         local.utility2.replStart();
+        /* istanbul ignore next */
+        // run the cli
+        local.cliRun = function () {
+            if (module !== require.main) {
+                return;
+            }
+            if (process.argv[2]) {
+                require(local.path.resolve(process.cwd(), process.argv[2]));
+            }
+        };
+        local.cliRun();
         break;
     }
 }());

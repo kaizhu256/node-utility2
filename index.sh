@@ -1294,9 +1294,8 @@ shMain() {
         shServerPortRandom || return $?
         ;;
     start)
-        shInit && npm_config_mode_auto_restart=1 shRun node -e "
-            require('$npm_config_dir_utility2/test.js');
-        " "$@" || return $?
+        shInit && npm_config_mode_auto_restart=1 shRun node \
+            "$npm_config_dir_utility2/test.js" "$@" || return $?
         ;;
     test)
         shInit && shNpmTest "$@" || return $?

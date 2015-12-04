@@ -1,4 +1,4 @@
-FROM node
+FROM node:latest
 MAINTAINER kai zhu <kaizhu256@gmail.com>
 # install apt packages
 RUN apt-get update && \
@@ -12,7 +12,7 @@ RUN apt-get update && \
         default-jre \
         iptables \
         less \
-        nginx \
+        nginx-extras \
         pptpd \
         screen \
         sudo \
@@ -21,8 +21,6 @@ RUN apt-get update && \
         vim-nox \
         x11-apps \
         xvfb
-# install docker
-RUN wget -qO- https://get.docker.com/ | /bin/sh
 # cleanup
 RUN apt-get clean && \
     (rm -fr \

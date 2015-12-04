@@ -835,12 +835,8 @@
                 }).join('');
             };
             rgx = (/\{\{#[^}]+?\}\}/g);
-            while (true) {
-                // search for array fragments in the template
-                match = rgx.exec(template);
-                if (!match) {
-                    break;
-                }
+            // search for array fragments in the template
+            for (match = rgx.exec(template); match; match = rgx.exec(template)) {
                 match = match[0].slice(3, -2);
                 // if value is an array, then iteratively format the array fragment with it
                 if (Array.isArray(dict[match])) {

@@ -470,30 +470,31 @@ instruction
 exampleFileList:['example.js','test.js','index.js'],\
 moduleDict:{\
 utility2:{exports:require('./index.js')},\
-'utility2.istanbul':{exports:require('./index.js').istanbul},\
-'utility2.jslint':{exports:require('./index.js').jslint},\
-'utility2.uglify':{exports:require('./index.js').uglifyjs}\
+'utility2.istanbul':{aliasList:['istanbul'],exports:require('./index.js').istanbul},\
+'utility2.jslint':{aliasList:['jslint'],exports:require('./index.js').jslint},\
+'utility2.uglifyjs':{aliasList:['uglifyjs'],exports:require('./index.js').uglifyjs}\
 }\
 }\"",
         "env": "env",
         "postinstall": "./index.sh shRun shReadmeExportPackageJson && \
 ./index.sh shRun shReadmeExportFile example.js example.js",
-        "start": "PORT=${PORT:-8080} \
-        npm_config_mode_auto_restart=1 \
+        "start": "PORT=${PORT:-8080} npm_config_mode_auto_restart=1 \
 ./index.sh shRun shIstanbulCover node test.js",
         "test": "./index.sh shRun shReadmeExportPackageJson && \
+PORT=$(./index.sh shServerPortRandom) \
 npm_config_mode_auto_restart=1 \
 npm_config_mode_auto_restart_child=1 \
-PORT=$(./index.sh shServerPortRandom) \
 ./index.sh test node test.js"
     },
-    "version": "2015.11.11"
+    "version": "2015.11.12"
 }
 ```
 
 
 
 # todo
+- make istanbulCoverageMerge more robust
+- uglify lib.istanbul.js
 - add utility2.middlewareLimit
 - create flamegraph from istanbul coverage
 - add server stress test using electron
@@ -501,11 +502,9 @@ PORT=$(./index.sh shServerPortRandom) \
 
 
 
-# change since 781827a7
-- npm publish 2015.11.11
-- remove magical utility2.serverPortInit and explicitly require $PORT env to be set
-- rename taskRunCached to taskCallbackAndUpdateCached
-- split taskRunOrSubscribe into taskCallbackAdd and taskUpsert
+# change since 39f2aa53
+- npm publish 2015.11.12
+- uglify lib.jslint.js and lib.uglifyjs.js
 - none
 
 
