@@ -420,13 +420,15 @@
             /*
              * this function will test istanbulCoverageReportCreate's default handling-behavior
              */
-            // jslint-hack
-            local.utility2.nop(options);
             local.utility2.testMock([
                 // suppress console.log
                 [console, { log: local.utility2.nop }]
             ], function (onError) {
                 /*jslint evil: true*/
+                // test no coverage handling-behavior
+                local.utility2.istanbulCoverageReportCreate({});
+                options = {};
+                options.coverage = local.global.__coverage__mock = {};
                 // cleanup old coverage
                 (local.utility2.fsRmrSync || local.utility2.nop)('tmp/build/coverage.html/aa');
                 // test path handling-behavior
@@ -436,21 +438,16 @@
                         eval(local.utility2.istanbulInstrumentSync(
                             // test skip handling-behavior
                             'null',
-                            dir + '/' + path
+                            dir + '/' + path,
+                            '__coverage__mock'
                         ));
                     });
                 });
                 // create report with covered path
-                local.utility2.istanbulCoverageReportCreate();
-                // reset coverage
-                Object.keys(local.global.__coverage__).forEach(function (key) {
-                    if ((/aa.js|bb.js/).test(key)) {
-                        delete local.global.__coverage__[key];
-                    }
-                });
+                local.utility2.istanbulCoverageReportCreate(options);
                 // test file-content handling-behavior
                 [
-                    // test no-content handling-behavior
+                    // test no content handling-behavior
                     '',
                     // test uncovereed-code handling-behavior
                     'null && null',
@@ -459,16 +456,16 @@
                     // test skip handling-behavior
                     '/* istanbul ignore next */\nnull && null'
                 ].forEach(function (content) {
+                    options = {};
+                    options.coverage = local.global.__coverage__mock = {};
                     // cover path
-                    eval(local.utility2.istanbulInstrumentSync(content, 'aa.js'));
+                    eval(local.utility2.istanbulInstrumentSync(
+                        content,
+                        'aa.js',
+                        '__coverage__mock'
+                    ));
                     // create report with covered content
-                    local.utility2.istanbulCoverageReportCreate();
-                    // reset coverage
-                    Object.keys(local.global.__coverage__).forEach(function (key) {
-                        if ((/aa.js|bb.js/).test(key)) {
-                            delete local.global.__coverage__[key];
-                        }
-                    });
+                    local.utility2.istanbulCoverageReportCreate(options);
                 });
                 onError();
             }, onError);

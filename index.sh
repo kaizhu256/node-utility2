@@ -96,6 +96,7 @@ shBrowserTest() {
     shBuildPrint "${MODE_BUILD:-electronTest}" \
         "electron.${modeBrowserTest} - $url" || return $?
     node -e "
+        'use strict';
         require('$npm_config_dir_utility2/index.js').browserTest({
             modeBrowserTest: '$modeBrowserTest',
             modeTestAdd: '$modeTestAdd',
@@ -153,6 +154,7 @@ shDocApiCreate() {
     # init $npm_config_dir_build
     mkdir -p "$npm_config_dir_build/coverage.html" || return $?
     node -e "
+        'use strict';
         var options;
         options = "$@";
         options.fs = require('fs');
@@ -527,6 +529,7 @@ shGrepFileReplace() {
     local FILE || return $?
     FILE=$1
     node -e "
+        'use strict';
         var options;
         options = {};
         options.fs = require('fs');
@@ -609,6 +612,7 @@ shInit() {
     if [ -f package.json ]
     then
         eval $(node -e "
+            'use strict';
             var dict, value;
             dict = require('./package.json');
             Object.keys(dict).forEach(function (key) {
@@ -653,8 +657,10 @@ shInitNpmConfigDirUtility2() {
     then
         export npm_config_dir_utility2="$CWD" || return $?
     else
-        export npm_config_dir_utility2="$(node -e \
-            "console.log(require('utility2').__dirname);" 2>/dev/null)" || return $?
+        export npm_config_dir_utility2="$(node -e "
+            'use strict';
+            console.log(require('utility2').__dirname);
+        " 2>/dev/null)" || return $?
     fi
     if [ ! -d "$npm_config_dir_utility2" ]
     then
@@ -800,6 +806,7 @@ shJsonFilePrettify() {
     local FILE || return $?
     FILE="$1" || return $?
     node -e "
+        'use strict';
         require('fs').writeFileSync(
             '$FILE',
             JSON.stringify(JSON.parse(require('fs').readFileSync('$FILE')), null, 4)
@@ -886,36 +893,25 @@ shReadmeBuild() {
 }
 
 shReadmeExportFile() {
-    # this function will extract and save the script $FILE_IN embedded in README.md to $FILE_OUT
-    local FILE_IN FILE_OUT || return $?
-    FILE_IN="$1" || return $?
-    FILE_OUT="$2" || return $?
+    # this function will extract and save the script $1 embedded in README.md to $2
     node -e "
+        'use strict';
         require('fs').writeFileSync(
-            '$FILE_OUT',
+            '$2',
             require('fs')
                 .readFileSync('$CWD/README.md', 'utf8')
                 // support syntax-highlighting
-                .replace((/[\\S\\s]+?\n.*?$FILE_IN\s*?\`\`\`\\w*?\n/), function (match0) {
+                .replace((/[\\S\\s]+?\n.*?$1\s*?\`\`\`\\w*?\n/), function (match0) {
                     // preserve lineno
-                    return '$MODE_LINENO' === '0' ? '' : match0.replace((/.+/g), '');
+                    return '$MODE_LINENO' === '0'
+                        ? ''
+                        : match0.replace((/.+/g), '');
                 })
                 .replace((/\n\`\`\`[\\S\\s]+/), '')
-        );
-    " || return $?
-}
-
-shReadmeExportPackageJson() {
-    # this function will extract and save the package.json file embedded in README.md
-    local FILE || return $?
-    MODE_LINENO=0 shReadmeExportFile package.json "$CWD/package.json" || return $?
-    node -e "
-        require('fs').writeFileSync(
-            '$CWD/package.json',
-            require('fs')
-                .readFileSync('$CWD/package.json', 'utf8')
                 // parse '\' line-continuation
-                .replace((/\\\\\n/g), '')
+                .replace((/(?:.*\\\\\n)+.*/g), function (match0) {
+                    return match0.replace((/\\\\\n/g), '') + match0.replace((/.+/g), '');
+                })
         );
     " || return $?
 }
@@ -941,15 +937,13 @@ shReadmeTestJs() {
     fi
     # test $FILE
     SCRIPT="$(node -e "
-        console.log(
-            (/\n *\\$ ([\S\s]+?[^\\\\])\n/)
-                .exec(require('fs').readFileSync('$FILE', 'utf8'))[1]
-                .replace((/\\\\\n */g), ' ')
-        );
+        'use strict';
+        console.log((/\n *\\$ (.*)/).exec(require('fs').readFileSync('$FILE', 'utf8'))[1]);
     ")" || return $?
     if [ "$MODE_OFFLINE" ]
     then
         SCRIPT="$(node -e "
+            'use strict';
             console.log('$SCRIPT'.replace('npm install', 'echo'));
         ")" || return $?
     fi
@@ -961,6 +955,7 @@ shReadmeTestSh() {
     local FILE FILE_BASENAME || return $?
     FILE="$1" || return $?
     FILE_BASENAME="$(node -e "
+        'use strict';
         console.log(require('path').basename('$FILE'));
     ")" || return $?
     shBuildPrint "$MODE_BUILD" "testing $FILE" || return $?
@@ -978,6 +973,7 @@ shReadmeTestSh() {
     shReadmeExportFile "$FILE_BASENAME" "$FILE" || return $?
     # display file
     node -e "
+        'use strict';
         console.log(require('fs').readFileSync('$FILE', 'utf8').trimLeft());
     " || return $?
     # test $FILE
@@ -1033,6 +1029,7 @@ shRunScreenCapture() {
     shExitCodeSave "$(cat $npm_config_file_tmp)" || return $?
     # format text-output
     node -e "
+        'use strict';
         var options;
         options = {};
         options.fs = require('fs');

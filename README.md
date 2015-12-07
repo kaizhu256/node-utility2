@@ -355,7 +355,8 @@ instruction
 '                document.querySelector(".istanbulInputTextarea").value,\n' +
 '                "/istanbulInputTextarea.js"\n' +
 '            ));\n' +
-'            window.utility2.istanbulCoverageReportCreate();\n' +
+'            window.utility2\n' +
+'                .istanbulCoverageReportCreate({ coverage: window.__coverage__ });\n' +
 '        } catch (errorCaught) {\n' +
 '            document.querySelector(".istanbulCoverageDiv").innerHTML =\n' +
 '                "<pre>" + errorCaught.stack.replace((/</g), "&lt") + "</pre>";\n' +
@@ -438,7 +439,7 @@ instruction
     "description": "run dynamic browser tests with coverage \
 (via istanbul and electron)",
     "devDependencies": {
-        "electron-lite": "2015.11.1"
+        "electron-lite": "2015.11.2"
     },
     "engines": { "node": ">=4.2" },
     "keywords": [
@@ -463,8 +464,7 @@ instruction
     },
     "scripts": {
         "build-ci": "./index.sh shRun shReadmeBuild",
-        "build-doc": "./index.sh shRun shReadmeExportPackageJson && \
-./index.sh shRun shDocApiCreate \"{\
+        "build-doc": "./index.sh shRun shDocApiCreate \"{\
 exampleFileList:['example.js','test.js','index.js'],\
 moduleDict:{\
 utility2:{exports:require('./index.js')},\
@@ -474,25 +474,25 @@ utility2:{exports:require('./index.js')},\
 }\
 }\"",
         "env": "env",
-        "postinstall": "./index.sh shRun shReadmeExportPackageJson && \
-./index.sh shRun shReadmeExportFile example.js example.js",
+        "postinstall": "./index.sh shRun shReadmeExportFile example.js example.js",
         "start": "PORT=${PORT:-8080} npm_config_mode_auto_restart=1 \
 ./index.sh shRun shIstanbulCover node test.js",
-        "test": "./index.sh shRun shReadmeExportPackageJson && \
+        "test": "MODE_LINENO=0 \
+./index.sh shRun shReadmeExportFile package.json package.json && \
 PORT=$(./index.sh shServerPortRandom) \
 npm_config_mode_auto_restart=1 \
 npm_config_mode_auto_restart_child=1 \
 ./index.sh test node test.js"
     },
-    "version": "2015.11.13"
+    "version": "2015.11.14"
 }
 ```
 
 
 
 # todo
+- directly require embedded example.js from README.md
 - make istanbulCoverageMerge more robust
-- uglify lib.istanbul.js
 - add utility2.middlewareLimit
 - create flamegraph from istanbul coverage
 - add server stress test using electron
@@ -500,9 +500,10 @@ npm_config_mode_auto_restart_child=1 \
 
 
 
-# change since f4b196c3
-- npm publish 2015.11.13
-- remove utility2.onReadyInit
+# change since 5aa80caa
+- npm publish 2015.11.14
+- uglify lib.istanbul.js
+- parse ajax's request stream, regardless of http status-code
 - none
 
 
@@ -537,7 +538,7 @@ shBuild() {
     MODE_BUILD=testExampleJs modeBrowserTest=screenCapture \
         url=/tmp/app/tmp/build/coverage.html/app/example.js.html shBrowserTest || return $?
     # screen-capture example.js test-report
-    MODE_BUILD=testExampleSh modeBrowserTest=screenCapture \
+    MODE_BUILD=testExampleJs modeBrowserTest=screenCapture \
         url=/tmp/app/tmp/build/test-report.html shBrowserTest || return $?
 
     # test example shell script

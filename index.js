@@ -1368,7 +1368,9 @@
                     };
                     setTimeout(function () {
                         // update coverageReport
-                        local.utility2.istanbulCoverageReportCreate();
+                        local.utility2.istanbulCoverageReportCreate({
+                            coverage: local.global.__coverage__
+                        });
                         // exit with number of tests failed
                         local.utility2.exit(testReport.testsFailed);
                     }, 1000);
@@ -1457,10 +1459,14 @@
                         clearInterval(timerInterval);
                     }
                     // update coverageReport
-                    local.utility2.istanbulCoverageReportCreate();
+                    local.utility2.istanbulCoverageReportCreate({
+                        coverage: local.global.__coverage__
+                    });
                 }, 1000);
                 // update coverageReport
-                local.utility2.istanbulCoverageReportCreate();
+                local.utility2.istanbulCoverageReportCreate({
+                    coverage: local.global.__coverage__
+                });
             }
             // shallow copy testPlatform.testCaseList,
             // to guard against in-place sort from testMerge
@@ -1820,8 +1826,7 @@
                     };
                     xhr.headers = xhr.headers || {};
                     // init Content-Length header
-                    xhr.headers['Content-Length'] =
-                        typeof xhr.data === 'string'
+                    xhr.headers['Content-Length'] = typeof xhr.data === 'string'
                         ? Buffer.byteLength(xhr.data)
                         : Buffer.isBuffer(xhr.data)
                         ? xhr.data.length
@@ -1878,11 +1883,6 @@
                     xhr.onreadystatechange();
                     xhr.readyState = 3;
                     xhr.onreadystatechange();
-                    // handle http-error for statusCode >= 400
-                    if (response.statusCode >= 400) {
-                        onNext(new Error());
-                        return;
-                    }
                     if (xhr.responseType === 'response') {
                         modeNext = Infinity;
                         xhr.response = response;
@@ -1906,7 +1906,9 @@
                     done = true;
                     // cleanup timerTimeout
                     clearTimeout(timerTimeout);
-                    if (error) {
+                    // handle http-error for statusCode >= 400
+                    if (error || (response && response.statusCode >= 400)) {
+                        error = error || new Error(response.statusCode);
                         // debug statusCode
                         error.statusCode = xhr.statusCode;
                         // debug statusCode / method / url

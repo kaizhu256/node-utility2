@@ -7,8 +7,9 @@
         "utility2-uglifyjs" : "lib.uglifyjs.js"
     },
     "description": "run dynamic browser tests with coverage (via istanbul and electron)",
+
     "devDependencies": {
-        "electron-lite": "2015.11.1"
+        "electron-lite": "2015.11.2"
     },
     "engines": { "node": ">=4.2" },
     "keywords": [
@@ -33,11 +34,25 @@
     },
     "scripts": {
         "build-ci": "./index.sh shRun shReadmeBuild",
-        "build-doc": "./index.sh shRun shReadmeExportPackageJson && ./index.sh shRun shDocApiCreate \"{exampleFileList:['example.js','test.js','index.js'],moduleDict:{utility2:{exports:require('./index.js')},'utility2.istanbul':{aliasList:['istanbul'],exports:require('./index.js').istanbul},'utility2.jslint':{aliasList:['jslint'],exports:require('./index.js').jslint},'utility2.uglifyjs':{aliasList:['uglifyjs'],exports:require('./index.js').uglifyjs}}}\"",
+        "build-doc": "./index.sh shRun shDocApiCreate \"{exampleFileList:['example.js','test.js','index.js'],moduleDict:{utility2:{exports:require('./index.js')},'utility2.istanbul':{aliasList:['istanbul'],exports:require('./index.js').istanbul},'utility2.jslint':{aliasList:['jslint'],exports:require('./index.js').jslint},'utility2.uglifyjs':{aliasList:['uglifyjs'],exports:require('./index.js').uglifyjs}}}\"",
+
+
+
+
+
+
+
+
         "env": "env",
-        "postinstall": "./index.sh shRun shReadmeExportPackageJson && ./index.sh shRun shReadmeExportFile example.js example.js",
+        "postinstall": "./index.sh shRun shReadmeExportFile example.js example.js",
         "start": "PORT=${PORT:-8080} npm_config_mode_auto_restart=1 ./index.sh shRun shIstanbulCover node test.js",
-        "test": "./index.sh shRun shReadmeExportPackageJson && PORT=$(./index.sh shServerPortRandom) npm_config_mode_auto_restart=1 npm_config_mode_auto_restart_child=1 ./index.sh test node test.js"
+
+        "test": "MODE_LINENO=0 ./index.sh shRun shReadmeExportFile package.json package.json && PORT=$(./index.sh shServerPortRandom) npm_config_mode_auto_restart=1 npm_config_mode_auto_restart_child=1 ./index.sh test node test.js"
+
+
+
+
+
     },
-    "version": "2015.11.13"
+    "version": "2015.11.14"
 }
