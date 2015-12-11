@@ -38,41 +38,40 @@
         /* istanbul ignore next */
         // re-init local from example.js
         case 'node':
-            if (__dirname === process.cwd()) {
-                require('fs').writeFileSync(
-                    __dirname + '/example.js',
-                    require('fs').readFileSync(__dirname + '/README.md', 'utf8')
-                        // support syntax-highlighting
-                        .replace((/[\S\s]+?\n.*?example.js\s*?```\w*?\n/), function (match0) {
-                            // preserve lineno
-                            return match0.replace((/.+/g), '');
-                        })
-                        .replace((/\n```[\S\s]+/), '')
-                        // disable mock package.json env
-                        .replace(/(process.env.npm_package_\w+ = )/g, '// $1')
-                        // alias require('$npm_package_name') to require('index.js');
-                        .replace(
-                            "require('" + process.env.npm_package_name + "')",
-                            "require(__dirname + '/index.js')"
-                        )
-                        // coverage-hack - conditionally cover example.js
-                        .replace(
-                            'local.utility2.istanbulInstrumentSync',
-                            'local.utility2.istanbulInstrumentInPackage'
-                        )
-                );
-                local = require(__dirname + '/example.js');
-                // coverage-hack - cover istanbul
-                if (local.global.__coverage__) {
-                    delete require.cache[__dirname + '/lib.istanbul.js'];
-                    local.utility2.istanbul2 = require('./lib.istanbul.js');
-                    local.utility2.istanbul.coverageReportCreate =
-                        local.utility2.istanbulCoverageReportCreate =
-                        local.utility2.istanbul2.coverageReportCreate;
-                    local.utility2.istanbul2.codeDict = local.utility2.istanbul.codeDict;
-                }
+            local.script = require('fs').readFileSync(__dirname + '/README.md', 'utf8')
+                // support syntax-highlighting
+                .replace((/[\S\s]+?\n.*?example.js\s*?```\w*?\n/), function (match0) {
+                    // preserve lineno
+                    return match0.replace((/.+/g), '');
+                })
+                .replace((/\n```[\S\s]+/), '')
+                // disable mock package.json env
+                .replace(/(process.env.npm_package_\w+ = )/g, '// $1')
+                // alias require('$npm_package_name') to require('index.js');
+                .replace(
+                    "require('" + process.env.npm_package_name + "')",
+                    "require(__dirname + '/index.js')"
+                )
+                // coverage-hack - do not cover example.js
+                .replace('local.utility2.istanbulInstrumentSync', 'local.utility2.echo');
+            // require example.js
+            local = require('./index.js')
+                .requireFromScript(__dirname + '/example.js', local.script
+                    .replace(
+                        "local.fs.readFileSync(__dirname + '/example.js', 'utf8')",
+                        JSON.stringify(local.script)
+                    ));
+            // coverage-hack - cover requireFromScript's cache handling behavior
+            local.utility2.requireFromScript(__dirname + '/example.js');
+            // coverage-hack - cover istanbul
+            if (local.global.__coverage__) {
+                delete require.cache[__dirname + '/lib.istanbul.js'];
+                local.utility2.istanbul2 = require('./lib.istanbul.js');
+                local.utility2.istanbul.coverageReportCreate =
+                    local.utility2.istanbulCoverageReportCreate =
+                    local.utility2.istanbul2.coverageReportCreate;
+                local.utility2.istanbul2.codeDict = local.utility2.istanbul.codeDict;
             }
-            local = require(__dirname + '/example.js');
             break;
         }
     }());
@@ -1247,15 +1246,19 @@
             var data;
             // jslint-hack
             local.utility2.nop(options);
-            // test instrument handling-behavior
-            data = local.utility2.istanbulInstrumentInPackage('1', '', '');
-            // validate data
-            local.utility2.assert(data === '1', data);
-            // test no instrument handling-behavior
-            data = local.utility2.istanbulInstrumentInPackage('1', '', 'utility2');
-            // validate data
-            local.utility2.assert(data.indexOf('.s[\'1\']++;1;\n') >= 0, data);
-            onError();
+            local.utility2.testMock([
+                [local.global, { __coverage__: {} }]
+            ], function (onError) {
+                // test no instrument handling-behavior
+                data = local.utility2.istanbulInstrumentInPackage('1', '', '');
+                // validate data
+                local.utility2.assert(data === '1', data);
+                // test instrument handling-behavior
+                data = local.utility2.istanbulInstrumentInPackage('1', '', 'utility2');
+                // validate data
+                local.utility2.assert(data.indexOf('.s[\'1\']++;1;\n') >= 0, data);
+                onError();
+            }, onError);
         };
 
         local.testCase_onFileModifiedRestart_watchFile = function (options, onError) {
@@ -1391,6 +1394,7 @@
             local.utility2.nop(options);
             local.utility2.browserTest({
                 modeCoverageMerge: true,
+                // test browserTest's modeSilent handling-behavior
                 modeSilent: true,
                 modeTestIgnore: true,
                 timeoutDefault: local.utility2.timeoutDefault - 1000,
@@ -1440,7 +1444,6 @@
                         local.utility2.nop(options);
                         onError();
                     },
-                    exit: null,
                     onReady: {},
                     testRun: local.utility2.nop
                 }],
@@ -1449,9 +1452,9 @@
                 } } }]
             ], function (onError) {
                 // test exit handling-behavior
-                local.utility2.exit = onError;
                 local.utility2.testRunServer({ middleware: local.utility2
                     .middlewareGroupCreate([local.utility2.middlewareInit]) });
+                onError();
             }, onError);
         };
 
@@ -1584,14 +1587,8 @@
         ].forEach(function (dir) {
             local.fs.readdirSync(dir).forEach(function (file) {
                 file = dir + '/' + file;
-                switch (file) {
-                case __dirname + '/example.js':
-                    break;
                 // if the file is modified, then restart the process
-                default:
-                    local.utility2.onFileModifiedRestart(file);
-                    break;
-                }
+                local.utility2.onFileModifiedRestart(file);
                 switch (local.path.extname(file)) {
                 // jslint file
                 case '.css':

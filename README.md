@@ -386,6 +386,7 @@ instruction
             }
         });
         local.utility2.cacheDict.assets['/assets/example.js'] =
+            // cover example.js
             local.utility2.istanbulInstrumentSync(
                 local.fs.readFileSync(__dirname + '/example.js', 'utf8'),
                 __dirname + '/example.js',
@@ -464,17 +465,19 @@ instruction
     },
     "scripts": {
         "build-ci": "./index.sh shRun shReadmeBuild",
-        "build-doc": "./index.sh shRun shDocApiCreate \"{\
-exampleFileList:['example.js','test.js','index.js'],\
+        "build-doc": "MODE_LINENO=0 \
+./index.sh shRun shReadmeExportFile package.json package.json && \
+./index.sh shRun shDocApiCreate \"module.exports={\
+exampleFileList:['README.md','test.js','index.js',\
+'lib.istanbul.js','lib.jslint.js','lib.uglifyjs.js'],\
 moduleDict:{\
 utility2:{exports:require('./index.js')},\
-'utility2.istanbul':{aliasList:['istanbul'],exports:require('./index.js').istanbul},\
-'utility2.jslint':{aliasList:['jslint'],exports:require('./index.js').jslint},\
-'utility2.uglifyjs':{aliasList:['uglifyjs'],exports:require('./index.js').uglifyjs}\
+'utility2.istanbul':{aliasList:['istanbul','local'],exports:require('./index.js').istanbul},\
+'utility2.jslint':{aliasList:['jslint','local'],exports:require('./index.js').jslint},\
+'utility2.uglifyjs':{aliasList:['uglifyjs','local'],exports:require('./index.js').uglifyjs}\
 }\
 }\"",
         "env": "env",
-        "postinstall": "./index.sh shRun shReadmeExportFile example.js example.js",
         "start": "PORT=${PORT:-8080} npm_config_mode_auto_restart=1 \
 ./index.sh shRun shIstanbulCover node test.js",
         "test": "MODE_LINENO=0 \
@@ -484,13 +487,14 @@ npm_config_mode_auto_restart=1 \
 npm_config_mode_auto_restart_child=1 \
 ./index.sh test node test.js"
     },
-    "version": "2015.11.14"
+    "version": "2015.11.15"
 }
 ```
 
 
 
 # todo
+- npm publish 2015.11.15
 - directly require embedded example.js from README.md
 - make istanbulCoverageMerge more robust
 - add utility2.middlewareLimit
@@ -500,10 +504,13 @@ npm_config_mode_auto_restart_child=1 \
 
 
 
-# change since 5aa80caa
-- npm publish 2015.11.14
-- uglify lib.istanbul.js
-- parse ajax's request stream, regardless of http status-code
+# change since 702c054f
+- create coverage-summary.json file, when coverage is enabled
+- remove magical auto-silent browserTest, when coverage is enabled
+- fix missing test-report for node-env
+- remove npm postinstall script
+- add function utility2.requireFromScript
+- revamp docApiCreate
 - none
 
 

@@ -149,7 +149,7 @@
                             data = null;
                             file = options.npm_config_dir_build + '/test-report.json';
                             data = JSON.parse(local.fs.readFileSync(file, 'utf8'));
-                            console.log('\nbrowserTest - loaded test-report ' + file + '\n');
+                            console.log('\nbrowserTest - adding to test-report ' + file + '\n');
                         } catch (ignore) {
                         }
                         local.utility2.testMerge(local.utility2.testReport, data || {});
@@ -189,26 +189,27 @@
                         '--enable-logging'
                     ], {
                         env: local.utility2.jsonCopy(options),
-                        stdio: options.modeSilent || local.global.__coverage__
+                        stdio: options.modeSilent
                             ? 'ignore'
                             : ['ignore', 1, 2]
                     }).once('exit', onNext);
                     break;
                 case 2:
-                    console.log('\nbrowserTest - exit-code ' + error + '\n');
+                    console.log('\nbrowserTest - exit-code ' + error + ' - ' + options.url +
+                        '\n');
                     // merge browser coverage
                     if (options.modeCoverageMerge) {
                         try {
                             data = null;
                             data = JSON
                                 .parse(local.fs.readFileSync(options.fileCoverage, 'utf8'));
-                            console.log('\nbrowserTest - read coverage from ' +
-                                options.fileCoverage + '\n');
                         } catch (ignore) {
                         }
                         if (data) {
                             local.utility2
                                 .istanbulCoverageMerge(local.global.__coverage__, data);
+                            console.log('\nbrowserTest - merged coverage from ' +
+                                options.fileCoverage + '\n');
                         }
                     }
                     if (options.modeBrowserTest !== 'test') {
@@ -221,7 +222,7 @@
                         data = null;
                         data = JSON.parse(local.fs.readFileSync(options
                             .fileTestReport, 'utf8'));
-                        console.log('\nbrowserTest - loaded test-result from ' +
+                        console.log('\nbrowserTest - merging test-report from ' +
                             options.fileTestReport + '\n');
                     } catch (errorCaught) {
                         onNext(errorCaught);
@@ -251,7 +252,7 @@
                     options.BrowserWindow = require('browser-window');
                     local.utility2.objectSetDefault(
                         options,
-                        { frame: true, height: 768, width: 1024, x: 0, y: 0 }
+                        { frame: false, height: 768, width: 1024, x: 0, y: 0 }
                     );
                     // init browserWindow
                     options.browserWindow = new options.BrowserWindow(options);
@@ -381,14 +382,19 @@
                 return element;
             };
             trimLeft = function (text) {
-                var _;
-                _ = '';
+                var tmp;
+                tmp = '';
                 text.trim().replace((/^ */gm), function (match0) {
-                    if (!_ || match0.length < _.length) {
-                        _ = match0;
+                    if (!tmp || match0.length < tmp.length) {
+                        tmp = match0;
                     }
                 });
-                return text.replace(new RegExp('^' + _, 'gm'), '');
+                text = text.replace(new RegExp('^' + tmp, 'gm'), '');
+                // enforce 128 character column limit
+                while ((/^.{128}[^\\\n]/m).test(text)) {
+                    text = text.replace((/^(.{128})([^\\\n]+)/gm), '$1\\\n$2');
+                }
+                return text;
             };
             options.moduleList = Object.keys(options.moduleDict)
                 .sort()
@@ -1394,9 +1400,9 @@
                     // create test-report.json
                     local.fs.writeFileSync(
                         local.utility2.envDict.npm_config_dir_build + '/test-report.json',
-                        JSON.stringify(testReport)
+                        JSON.stringify(testReport, null, 4)
                     );
-                    console.log('node - created test-report file://' +
+                    console.log('created test-report file://' +
                         local.utility2.envDict.npm_config_dir_build + '/test-report.html\n');
                     // if any test failed, then exit with non-zero exit-code
                     setTimeout(function () {
@@ -1426,18 +1432,18 @@
             // init testReport timer
             testReport.timeElapsed = Date.now();
             // init testPlatform
-            testPlatform = local.utility2.testPlatform;
+            testPlatform = local.utility2.testReport.testPlatformList[0];
             // init testPlatform timer
             testPlatform.timeElapsed = Date.now();
             // reset testPlatform.testCaseList
-            local.utility2.testPlatform.testCaseList.length = 0;
+            testPlatform.testCaseList.length = 0;
             // add tests into testPlatform.testCaseList
             Object.keys(options).forEach(function (key) {
                 // add testCase options[key] to testPlatform.testCaseList
                 if (key.indexOf('testCase_') === 0 &&
                         (local.utility2.modeTestCase === key ||
                         (!local.utility2.modeTestCase && key !== 'testCase_testRun_failure'))) {
-                    local.utility2.testPlatform.testCaseList.push({
+                    testPlatform.testCaseList.push({
                         name: key,
                         onTestCase: options[key],
                         timeElapsed: Date.now()
@@ -2291,6 +2297,25 @@
             };
         };
 
+        local.utility2.requireFromScript = function (file, script) {
+            /*
+             * this function will
+             * 1. create a new module with the given file
+             * 2. load module with the given script
+             * 3. return module.exports
+             */
+            var module;
+            if (require.cache[file]) {
+                return require.cache[file].exports;
+            }
+            // 1. create a new module with the given file
+            module = require.cache[file] = new local.Module(file);
+            // 2. load module with the given script
+            module._compile(script, file);
+            // 3. return module.exports
+            return module.exports;
+        };
+
         local.utility2.serverRespondDefault = function (request, response, statusCode, error) {
             /*
              * this function will respond with a default message,
@@ -2745,7 +2770,7 @@ local.utility2['/test/test-report.html.template'] = '<style>\n' +
             '`abcdefghijklmnopqrstuvwxyz{|}~\x7f';
         local.utility2.stringUriComponentCharset = '!%\'()*-.' +
             '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz~';
-        local.utility2.testPlatform = {
+        local.utility2.testReport = { testPlatformList: [{
             name: local.modeJs === 'browser'
                 ? 'browser - ' +
                     location.pathname + ' - ' +
@@ -2755,8 +2780,7 @@ local.utility2['/test/test-report.html.template'] = '<style>\n' +
                     new Date().toISOString(),
             screenCaptureImg: local.utility2.envDict.MODE_BUILD_SCREEN_CAPTURE,
             testCaseList: []
-        };
-        local.utility2.testReport = { testPlatformList: [local.utility2.testPlatform] };
+        }] };
         // init timeoutDefault
         local.utility2.timeoutDefaultInit();
         // init onReady
@@ -2790,6 +2814,7 @@ local.utility2['/test/test-report.html.template'] = '<style>\n' +
         module.exports = local.utility2;
         module.exports.__dirname = __dirname;
         // require modules
+        local.Module = require('module');
         local.child_process = require('child_process');
         local.fs = require('fs');
         local.http = require('http');
@@ -2827,13 +2852,47 @@ local.utility2['/test/test-report.html.template'] = '<style>\n' +
         });
         /* istanbul ignore next */
         // run the cli
-        local.cliRun = function () {
+        local.cliRun = function (options) {
             if (module !== require.main) {
                 return;
             }
             switch (process.argv[2]) {
             case 'browserTest':
                 local.utility2.browserTest({}, local.utility2.exit);
+                break;
+            case 'docApiCreate':
+                options = local.utility2.requireFromScript('docApiCreate', process.argv[3]);
+                // init example
+                options.example = '\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n';
+                options.exampleFileList.forEach(function (file) {
+                    var dir;
+                    file = process.cwd() + '/' + file;
+                    try {
+                        // read file
+                        options.example += local.fs.readFileSync(file, 'utf8') +
+                            '\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n';
+                    } catch (errorCaught) {
+                        // read dir
+                        dir = file;
+                        local.fs.readdirSync(dir).sort().forEach(function (file) {
+                            if (file.slice(-3) === '.js') {
+                                file = dir + '/' + file;
+                                try {
+                                    // read file
+                                    options.example += local.fs.readFileSync(file, 'utf8') +
+                                        '\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n';
+                                } catch (ignore) {
+                                }
+                            }
+                        });
+                    }
+                });
+                // create doc.api.html
+                local.utility2.fsWriteFileWithMkdirp(
+                    local.utility2.envDict.npm_config_dir_build + '/doc.api.html',
+                    local.utility2.docApiCreate(options),
+                    process.exit
+                );
                 break;
             }
         };

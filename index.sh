@@ -151,45 +151,7 @@ shDebugArgv() {
 
 shDocApiCreate() {
     # this function will create the api-doc
-    # init $npm_config_dir_build
-    mkdir -p "$npm_config_dir_build/coverage.html" || return $?
-    node -e "
-        'use strict';
-        var options;
-        options = "$@";
-        options.fs = require('fs');
-        options.utility2 = require('$npm_config_dir_utility2');
-        // init example
-        options.example = '\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n';
-        options.exampleFileList.forEach(function (file) {
-            var dir;
-            file = '$CWD/' + file;
-            try {
-                // read file
-                options.example += options.fs.readFileSync(file, 'utf8') +
-                    '\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n';
-            } catch (errorCaught) {
-                // read dir
-                dir = file;
-                options.fs.readdirSync(dir).sort().forEach(function (file) {
-                    if (file.slice(-3) === '.js') {
-                        file = dir + '/' + file;
-                        try {
-                            // read file
-                            options.example += options.fs.readFileSync(file, 'utf8') +
-                                '\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n';
-                        } catch (ignore) {
-                        }
-                    }
-                });
-            }
-        });
-        // create doc.api.html
-        options.fs.writeFileSync(
-            '$npm_config_dir_build/doc.api.html',
-            options.utility2.docApiCreate(options)
-        );
-    " || return $?
+    node "$npm_config_dir_utility2/index.js" docApiCreate "$@" || return $?
     shBuildPrint docApiCreate \
         "created api-doc file://$npm_config_dir_build/doc.api.html" || return $?
     # screen-capture api-doc

@@ -1022,7 +1022,6 @@ local['coverage.badge.svg'] = '<svg xmlns="http://www.w3.org/2000/svg" width="11
                 // add coverage hook to require
                 local._moduleExtensionsJs = local.module._extensions['.js'];
                 local.module._extensions['.js'] = function (module, file) {
-                    file = local.path.resolve(file);
                     if (typeof file === 'string' &&
                             file.indexOf(process.cwd()) === 0 &&
                             file.indexOf(process.cwd() + '/node_modules/') !== 0 &&
@@ -1079,12 +1078,6 @@ local['coverage.badge.svg'] = '<svg xmlns="http://www.w3.org/2000/svg" width="11
                     'node';
             }
         }());
-        local.nop = function () {
-            /*
-             * this function will run no operation - nop
-             */
-            return;
-        };
         // init global
         local.global = local.modeJs === 'browser'
             ? window
@@ -1113,6 +1106,9 @@ local['coverage.badge.svg'] = '<svg xmlns="http://www.w3.org/2000/svg" width="11
             // 2. write coverage in html-format to filesystem
             new local.HtmlReport(options).writeReport(options.collector);
             options.writer.writeFile('', local.nop);
+            // write coverage-summary.json
+            local.fsWriteFileWithMkdirpSync(options.dir +
+                '/coverage-summary.json', JSON.stringify(local.coverageReportSummary, null, 4));
             // write coverage.json
             local.fsWriteFileWithMkdirpSync(options.dir +
                 '/coverage.json', JSON.stringify(options.coverage));
@@ -1142,13 +1138,29 @@ local['coverage.badge.svg'] = '<svg xmlns="http://www.w3.org/2000/svg" width="11
         };
         local.fs = {
             readFileSync: function (file) {
-                return local[file.slice(-8)];
+                // return head.txt or foot.txt
+                file = local[file.slice(-8)];
+                if (local.modeJs === 'browser') {
+                    file = file
+                        .replace((/\bhtml\b/g), 'x-istanbul-html')
+                        .replace((/<style>[\S\s]+?<\/style>/), function (match0) {
+                            return match0
+                                .replace((/\S.*?\{/g), function (match0) {
+                                    return 'x-istanbul-html ' + match0
+                                        .replace((/,/g), ', x-istanbul-html ');
+                                });
+                        });
+                }
+                return file;
             },
             readdirSync: function () {
                 return [];
             }
         };
         local.fsWriteFileWithMkdirpSync = function (file, data) {
+            /*
+             * this function will synchronously 'mkdir -p' and write the data to file
+             */
             if (!local._fs || !file) {
                 return;
             }
@@ -1181,6 +1193,12 @@ local['coverage.badge.svg'] = '<svg xmlns="http://www.w3.org/2000/svg" width="11
                 noAutoWrap: true
             })
                 .instrumentSync(code, file);
+        };
+        local.nop = function () {
+            /*
+             * this function will run no operation - nop
+             */
+            return;
         };
         local.util = { inherits: local.nop };
     }());
