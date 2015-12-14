@@ -17,7 +17,7 @@
     (function () {
         // init local
         local = {};
-        // init js-env
+        // init modeJs
         local.modeJs = (function () {
             try {
                 return module.exports &&
@@ -93,11 +93,8 @@
                 }, onError);
             });
             // test multiple-callback handling-behavior
-            if (options.onEvent) {
-                options.onEvent({ type: 'abort' });
-            }
+            options.onEvent({ type: 'abort' });
             options.abort();
-            // test multiple-callback handling-behavior
             options.abort();
         };
 
@@ -127,8 +124,6 @@
             local.utility2.nop(options);
             // test http GET handling-behavior
             local.utility2.ajax({
-                // test debug handling-behavior
-                modeDebug: true,
                 url: '/test/hello'
             }, function (error, xhr) {
                 local.utility2.testTryCatch(function () {
@@ -180,7 +175,7 @@
             }, {
                 // test undefined https host handling-behavior
                 timeout: 1,
-                url: 'https://' + local.utility2.uuidTime() + '.com'
+                url: 'https://' + local.utility2.uuidTimeCreate() + '.com'
             }].forEach(function (options) {
                 onParallel.counter += 1;
                 local.utility2.ajax(options, function (error) {
@@ -429,7 +424,9 @@
                 options = {};
                 options.coverage = local.global.__coverage__mock = {};
                 // cleanup old coverage
-                (local.utility2.fsRmrSync || local.utility2.nop)('tmp/build/coverage.html/aa');
+                if (local.modeJs === 'node') {
+                    local.utility2.fsRmrSync('tmp/build/coverage.html/aa');
+                }
                 // test path handling-behavior
                 ['/', local.utility2.__dirname].forEach(function (dir) {
                     ['aa.js', 'aa/bb.js'].forEach(function (path) {
@@ -791,6 +788,9 @@
                 local.utility2.testTryCatch(function () {
                     // validate error occurred
                     local.utility2.assert(error, error);
+                    // validate error message
+                    local.utility2.assert(error.message
+                        .indexOf('testCase_onTimeout_errorTimeout') >= 0, error);
                     // save timeElapsed
                     timeElapsed = Date.now() - timeElapsed;
                     // validate timeElapsed passed is greater than timeout
@@ -798,7 +798,9 @@
                     onError();
                 }, onError);
             // coverage-hack - use 1500 ms to cover setInterval test-report refresh in browser
-            }, 1500, 'testCase_onTimeout_errorTimeout');
+            }, 1500, function () {
+                return 'testCase_onTimeout_errorTimeout';
+            });
         };
 
         local.testCase_stringFormat_default = function (options, onError) {
@@ -1466,16 +1468,16 @@
             // jslint-hack
             local.utility2.nop(options);
             // test uuid4 handling-behavior
-            data1 = local.utility2.uuid4();
+            data1 = local.utility2.uuid4Create();
             // validate data1
             local.utility2.assert(local.utility2.regexpUuidValidate.test(data1), data1);
             // test uuidTime handling-behavior
-            data1 = local.utility2.uuidTime();
+            data1 = local.utility2.uuidTimeCreate();
             // validate data1
             local.utility2.assert(local.utility2.regexpUuidValidate.test(data1), data1);
             setTimeout(function () {
                 local.utility2.testTryCatch(function () {
-                    data2 = local.utility2.uuidTime();
+                    data2 = local.utility2.uuidTimeCreate();
                     // validate data2
                     local.utility2.assert(local.utility2.regexpUuidValidate.test(data2), data2);
                     // validate data1 < data2
@@ -1487,12 +1489,6 @@
         break;
     }
     switch (local.modeJs) {
-
-
-
-    // run browser js-env code
-    case 'browser':
-        break;
 
 
 
@@ -1526,13 +1522,12 @@
                 break;
             // test http POST handling-behavior
             case '/test/body':
-                // test request-body handling-behavior
-                local.utility2.middlewareBodyGet(request, response, function () {
-                    // test request-body race-condition handling-behavior
-                    local.utility2
-                        .middlewareBodyGet(request, response, function () {
-                            response.end(request.bodyRaw);
-                        });
+                // test request-body-read handling-behavior
+                local.utility2.middlewareBodyRead(request, response, function () {
+                    // test multiple request-body-read handling-behavior
+                    local.utility2.middlewareBodyRead(request, response, function () {
+                        response.end(request.bodyRaw);
+                    });
                 });
                 break;
             // test 500-internal-server-error handling-behavior

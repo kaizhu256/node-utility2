@@ -18,7 +18,7 @@
     (function () {
         // init local
         local = {};
-        // init js-env
+        // init modeJs
         local.modeJs = (function () {
             try {
                 return module.exports &&
@@ -35,7 +35,7 @@
         local.global = local.modeJs === 'browser'
             ? window
             : global;
-        // init global debug_print
+        // init global.debug_print
         local.global['debug_print'.replace('_p', 'P')] = function (arg) {
             /*
              * this function will both print the arg to stderr and return it
@@ -48,7 +48,7 @@
             // return arg for inspection
             return arg;
         };
-        // init global debug_printCallback
+        // init global.debug_printCallback
         local.global['debug_printCallback'.replace('_p', 'P')] = function (onError) {
             /*
              * this function will inject debug_print into the callback onError
@@ -78,6 +78,38 @@
 
     // run shared js-env code
     (function () {
+        local._ajaxProgressIncrement = function () {
+            /*
+             * this function will increment ajaxProgressBar
+             */
+            // this algorithm can indefinitely increment the ajaxProgressBar
+            // with successively smaller increments without ever reaching 100%
+            local._ajaxProgressState += 1;
+            local._ajaxProgressUpdate(
+                100 - 75 * Math.exp(-0.125 * local._ajaxProgressState) + '%',
+                'ajaxProgressBarDivLoading',
+                'loading'
+            );
+        };
+
+        // init list of xhr used in ajaxProgress
+        local._ajaxProgressList = [];
+
+        // init _ajaxProgressState
+        local._ajaxProgressState = 0;
+
+        local._ajaxProgressUpdate = function (width, type, label) {
+            /*
+             * this function will visually update ajaxProgressBar
+             */
+            var ajaxProgressBarDiv;
+            ajaxProgressBarDiv = document.querySelector('.ajaxProgressBarDiv');
+            ajaxProgressBarDiv.style.width = width;
+            ajaxProgressBarDiv.className = ajaxProgressBarDiv.className
+                .replace((/ajaxProgressBarDiv\w+/), type);
+            ajaxProgressBarDiv.innerHTML = label;
+        };
+
         local._timeElapsedStop = function (options) {
             /*
              * this function will stop options.timeElapsed
@@ -85,6 +117,135 @@
             if (options.timeElapsed > 0xffffffff) {
                 options.timeElapsed = Date.now() - options.timeElapsed;
             }
+        };
+
+        // init XMLHttpRequest
+        local.utility2.XMLHttpRequest = local.global.XMLHttpRequest;
+
+        local.utility2.ajax = function (options, onError) {
+            /*
+             * this function will send an ajax request with error handling and timeout
+             */
+            var ajaxProgressDiv, ii, timerTimeout, xhr;
+            // init xhr
+            xhr = new local.utility2.XMLHttpRequest();
+            xhr.data = options.data;
+            xhr.headers = {};
+            Object.keys(options.headers || {}).forEach(function (key) {
+                xhr.headers[key.toLowerCase()] = options.headers[key];
+            });
+            xhr.method = options.method || 'GET';
+            xhr.responseType = options.responseType || '';
+            xhr.timeout = options.timeout || local.utility2.timeoutDefault;
+            xhr.url = options.url;
+            // debug xhr
+            local.utility2._debugAjaxXhr = xhr;
+            // init timerTimeout
+            timerTimeout = local.utility2.onTimeout(function (errorTimeout) {
+                xhr.error = errorTimeout;
+                xhr.abort();
+                // cleanup requestStream and responseStream
+                local.utility2
+                    .requestResponseCleanup(xhr.requestStream, xhr.responseStream);
+            }, xhr.timeout, 'ajax ' + xhr.method + ' ' + xhr.url);
+            // init event handling
+            xhr.onEvent = local.utility2.onErrorWithStack(function (event) {
+                // init statusCode
+                xhr.statusCode = xhr.status;
+                switch (event.type) {
+                case 'abort':
+                case 'error':
+                case 'load':
+                    // if already done, then do nothing
+                    if (xhr.done) {
+                        return;
+                    }
+                    xhr.done = true;
+                    // cleanup timerTimeout
+                    clearTimeout(timerTimeout);
+                    if (ajaxProgressDiv) {
+                        // validate xhr is defined in _ajaxProgressList
+                        ii = local._ajaxProgressList.indexOf(xhr);
+                        local.utility2.assert(ii >= 0, 'missing xhr in _ajaxProgressList');
+                        // remove xhr from ajaxProgressList
+                        local._ajaxProgressList.splice(ii, 1);
+                        // hide _ajaxProgressDiv
+                        if (local._ajaxProgressList.length === 0) {
+                            local._ajaxProgressBarHide = setTimeout(function () {
+                                // hide ajaxProgressBar
+                                ajaxProgressDiv.style.display = 'none';
+                                // reset ajaxProgress
+                                local._ajaxProgressState = 0;
+                                local._ajaxProgressUpdate(
+                                    '0%',
+                                    'ajaxProgressBarDivLoading',
+                                    'loading'
+                                );
+                            }, 1000);
+                        }
+                    }
+                    // handle abort or error event
+                    if (!xhr.error &&
+                            (event.type === 'abort' ||
+                            event.type === 'error' ||
+                            xhr.statusCode >= 400)) {
+                        xhr.error = new Error(event.type);
+                    }
+                    // handle completed xhr request
+                    if (xhr.readyState === 4) {
+                        // handle string data
+                        if (xhr.error) {
+                            // debug statusCode
+                            xhr.error.statusCode = xhr.statusCode;
+                            // debug statusCode / method / url
+                            local.utility2.errorMessagePrepend(xhr.error, xhr.statusCode + ' ' +
+                                xhr.method + ' ' + xhr.url + '\n' +
+                                JSON.stringify(xhr.responseText.slice(0, 256) + '...') + '\n');
+                        }
+                    }
+                    // debug xhr
+                    local.utility2._debugXhr = xhr;
+                    onError(xhr.error, xhr, xhr.onEvent);
+                    break;
+                }
+                if (ajaxProgressDiv) {
+                    // increment ajaxProgressBar
+                    if (local._ajaxProgressList.length > 0) {
+                        local._ajaxProgressIncrement();
+                        return;
+                    }
+                    // update ajaxProgressBar to done
+                    local._ajaxProgressUpdate('100%', 'ajaxProgressBarDivSuccess', 'loaded');
+                }
+            });
+            xhr.addEventListener('abort', xhr.onEvent);
+            xhr.addEventListener('error', xhr.onEvent);
+            xhr.addEventListener('load', xhr.onEvent);
+            // init ajaxProgressDiv
+            ajaxProgressDiv = local.modeJs === 'browser' &&
+                document.querySelector('.ajaxProgressDiv');
+            if (ajaxProgressDiv) {
+                xhr.addEventListener('loadstart', local._ajaxProgressIncrement);
+                xhr.addEventListener('progress', local._ajaxProgressIncrement);
+                xhr.upload.addEventListener('progress', local._ajaxProgressIncrement);
+                // if ajaxProgressBar is hidden, then display it
+                if (local._ajaxProgressList.length === 0) {
+                    ajaxProgressDiv.style.display = 'block';
+                }
+                // add xhr to _ajaxProgressList
+                local._ajaxProgressList.push(xhr);
+                // clear any timer to hide ajaxProgressDiv
+                clearTimeout(local._ajaxProgressBarHide);
+            }
+            // open url
+            xhr.open(xhr.method, xhr.url);
+            // set request-headers
+            Object.keys(xhr.headers).forEach(function (key) {
+                xhr.setRequestHeader(key, xhr.headers[key]);
+            });
+            // send data
+            xhr.send(xhr.data);
+            return xhr;
         };
 
         local.utility2.assert = function (passed, message) {
@@ -157,7 +318,7 @@
                     // init file urlBrowser
                     options.modeNext = 20;
                     options.urlBrowser = options.npm_config_dir_tmp +
-                        '/electron.' + local.utility2.uuidTime() + '.html';
+                        '/electron.' + local.utility2.uuidTimeCreate() + '.html';
                     local.utility2.fsMkdirpSync(options.npm_config_dir_build);
                     local.fs.writeFileSync(options.urlBrowser, '<style>body {' +
                             'border: 1px solid black;' +
@@ -175,7 +336,7 @@
                         '<script>window.local = {}; (' + local.utility2.browserTest
                             .toString()
                             .replace((/<\//g), '<\\/')
-                            // uncover
+                            // coverage-hack - uncover
                             .replace((/\b__cov_.*?\+\+/g), '0') +
                         '(' + JSON.stringify(options) + '))</script>');
                     console.log('\nbrowserTest - created electron entry-page ' +
@@ -465,6 +626,52 @@
             }
         };
 
+        local.utility2.fsMkdirpSync = function (dir) {
+            /*
+             * this function will synchronously 'mkdir -p' the dir
+             */
+            local.child_process.spawnSync(
+                'mkdir',
+                ['-p', local.path.resolve(process.cwd(), dir)],
+                { stdio: ['ignore', 1, 2] }
+            );
+        };
+
+        local.utility2.fsRmrSync = function (dir) {
+            /*
+             * this function will synchronously 'rm -fr' the dir
+             */
+            local.child_process.spawnSync(
+                'rm',
+                ['-fr', local.path.resolve(process.cwd(), dir)],
+                { stdio: ['ignore', 1, 2] }
+            );
+        };
+
+        local.utility2.fsWriteFileWithMkdirp = function (file, data, onError) {
+            /*
+             * this function will save the data to file, and auto-mkdirp the parent dir
+             */
+            file = local.path.resolve(process.cwd(), file);
+            // save data to file
+            local.fs.writeFile(file, data, function (error) {
+                if (error && error.code === 'ENOENT') {
+                    // if save failed, then mkdirp file's parent dir
+                    local.utility2.processSpawnWithTimeout(
+                        'mkdir',
+                        ['-p', local.path.dirname(file)],
+                        { stdio: ['ignore', 1, 2] }
+                    )
+                        .on('exit', function () {
+                            // save data to file
+                            local.fs.writeFile(file, data, onError);
+                        });
+                    return;
+                }
+                onError(error);
+            });
+        };
+
         local.utility2.istanbulCoverageMerge = function (coverage1, coverage2) {
             /*
              * this function will merge coverage2 into coverage1
@@ -508,6 +715,7 @@
             return coverage1;
         };
 
+        // init istanbulCoverageReportCreate
         local.utility2.istanbulCoverageReportCreate = (local.utility2.istanbul &&
             local.utility2.istanbul.coverageReportCreate) || local.utility2.echo;
 
@@ -522,9 +730,11 @@
                 : code;
         };
 
+        // init istanbulInstrumentSync
         local.utility2.istanbulInstrumentSync = (local.utility2.istanbul &&
             local.utility2.istanbul.instrumentSync) || local.utility2.echo;
 
+        // init jslintAndPrint
         local.utility2.jslintAndPrint = (local.utility2.jslint &&
             local.utility2.jslint.jslintAndPrint) || local.utility2.echo;
 
@@ -603,6 +813,183 @@
                 list[random] = swap;
             }
             return list;
+        };
+
+        local.utility2.middlewareAssetsCached = function (request, response, nextMiddleware) {
+            /*
+             * this function will run the cached-assets-middleware
+             */
+            var modeNext, onNext, result;
+            modeNext = 0;
+            onNext = function (error, data) {
+                result = result ||
+                    local.utility2.cacheDict.assets[request.urlParsed.pathnameNormalized];
+                if (error || !result) {
+                    nextMiddleware(error);
+                    return;
+                }
+                modeNext += 1;
+                switch (modeNext) {
+                case 1:
+                    // skip gzip
+                    if (response.headersSent ||
+                            !(/\bgzip\b/).test(request.headers['accept-encoding'])) {
+                        modeNext += 1;
+                        onNext();
+                        return;
+                    }
+                    // gzip and cache result
+                    local.utility2.taskCallbackAndUpdateCached({
+                        cacheDict: 'assetsGzip',
+                        key: request.urlParsed.pathnameNormalized,
+                        modeCacheMemory: true
+                    }, onNext, function (onError) {
+                        local.zlib.gzip(result, function (error, data) {
+                            onError(error, !error && data.toString('base64'));
+                        });
+                    });
+                    break;
+                case 2:
+                    // set gzip header
+                    result = new Buffer(data, 'base64');
+                    response.setHeader('Content-Encoding', 'gzip');
+                    response.setHeader('Content-Length', result.length);
+                    onNext();
+                    break;
+                case 3:
+                    local.utility2
+                        .middlewareCacheControlLastModified(request, response, onNext);
+                    break;
+                case 4:
+                    response.end(result);
+                    break;
+                }
+            };
+            onNext();
+        };
+
+        local.utility2.middlewareBodyRead = function (request, response, nextMiddleware) {
+            /*
+             * this function will read the request-body and save it as request.bodyRaw
+             */
+            // jslint-hack
+            local.utility2.nop(response);
+            // if request is already read, then goto nextMiddleware
+            if (!request.readable) {
+                nextMiddleware();
+                return;
+            }
+            local.utility2.streamReadAll(request, function (error, data) {
+                request.bodyRaw = request.bodyRaw || data;
+                nextMiddleware(error);
+            });
+        };
+
+        local.utility2.middlewareCacheControlLastModified = function (
+            request,
+            response,
+            nextMiddleware
+        ) {
+            /*
+             * this function will respond with the data cached by Last-Modified header
+             */
+            // do not cache if headers already sent or url has '?' search indicator
+            if (!response.headersSent && request.url.indexOf('?') < 0) {
+                // init serverResponseHeaderLastModified
+                local.utility2.serverResponseHeaderLastModified =
+                    local.utility2.serverResponseHeaderLastModified ||
+                    // resolve to 1000 ms
+                    new Date(new Date(Math.floor(Date.now() / 1000) * 1000).toGMTString());
+                // respond with 304 If-Modified-Since serverResponseHeaderLastModified
+                if (new Date(request.headers['if-modified-since']) >=
+                        local.utility2.serverResponseHeaderLastModified) {
+                    response.statusCode = 304;
+                    response.end();
+                    return;
+                }
+                response.setHeader('Cache-Control', 'no-cache');
+                response.setHeader(
+                    'Last-Modified',
+                    local.utility2.serverResponseHeaderLastModified.toGMTString()
+                );
+            }
+            nextMiddleware();
+        };
+
+        local.utility2.middlewareError = function (error, request, response) {
+            /*
+             * this function will run the error-middleware
+             */
+            // if error occurred, then respond with '500 Internal Server Error',
+            // else respond with '404 Not Found'
+            local.utility2.serverRespondDefault(request, response, error
+                ? (error.statusCode >= 400 && error.statusCode < 600
+                    ? error.statusCode
+                    : 500)
+                : 404, error);
+        };
+
+        local.utility2.middlewareGroupCreate = function (middlewareList) {
+            /*
+             * this function will return a super-middleware,
+             * that will sequentially run the sub-middlewares in middlewareList
+             */
+            var self;
+            self = function (request, response, nextMiddleware) {
+                /*
+                 * this function will create a super-middleware,
+                 * that will sequentially run the sub-middlewares in middlewareList
+                 */
+                var modeNext, onNext;
+                modeNext = -1;
+                onNext = function (error) {
+                    modeNext = error
+                        ? Infinity
+                        : modeNext + 1;
+                    // recursively run each sub-middleware in middlewareList
+                    if (modeNext < self.middlewareList.length) {
+                        self.middlewareList[modeNext](request, response, onNext);
+                        return;
+                    }
+                    // default to nextMiddleware
+                    nextMiddleware(error);
+                };
+                onNext();
+            };
+            self.middlewareList = middlewareList;
+            return self;
+        };
+
+        local.utility2.middlewareInit = function (request, response, nextMiddleware) {
+            /*
+             * this function will run the init-middleware
+             */
+            // debug server request
+            local.utility2._debugServerRequest = request;
+            // debug server response
+            local.utility2._debugServerResponse = response;
+            // init timerTimeout
+            local.utility2
+                .serverRespondTimeoutDefault(request, response, local.utility2.timeoutDefault);
+            // init request.urlParsed
+            request.urlParsed = local.url.parse(request.url, true);
+            // init request.urlParsed.pathnameNormalized
+            request.urlParsed.pathnameNormalized = local.path.resolve(
+                request.urlParsed.pathname
+            );
+            local.utility2.serverRespondHeadSet(request, response, null, {
+                'Content-Type': local.utility2.contentTypeDict[
+                    local.path.extname(request.urlParsed.pathnameNormalized)
+                ]
+            });
+            // set main-page content-type to text/html
+            if (request.urlParsed.pathnameNormalized === '/') {
+                local.utility2.serverRespondHeadSet(request, response, null, {
+                    'Content-Type': 'text/html; charset=UTF-8'
+                });
+            }
+            // default to nextMiddleware
+            nextMiddleware();
         };
 
         local.utility2.nop = function () {
@@ -742,6 +1129,25 @@
             };
         };
 
+        local.utility2.onFileModifiedRestart = function (file) {
+            /*
+             * this function will watch the file,
+             * and if modified, then restart the process
+             */
+            if (local.utility2.envDict.npm_config_mode_auto_restart &&
+                    local.fs.existsSync(file) &&
+                    local.fs.statSync(file).isFile()) {
+                local.fs.watchFile(file, {
+                    interval: 1000,
+                    persistent: false
+                }, function (stat2, stat1) {
+                    if (stat2.mtime > stat1.mtime) {
+                        local.utility2.exit(1);
+                    }
+                });
+            }
+        };
+
         local.utility2.onParallel = function (onError, onDebug) {
             /*
              * this function will return a function that will
@@ -786,10 +1192,130 @@
             // create timeout timer
             return setTimeout(function () {
                 onError(new Error('onTimeout - timeout-error - ' +
-                    timeout + ' ms - ' +
-                    message));
+                    timeout + ' ms - ' + (typeof message === 'function'
+                    ? message()
+                    : message)));
             // coerce to finite integer
             }, timeout | 0);
+        };
+
+        local.utility2.processSpawnWithTimeout = function () {
+            /*
+             * this function will run like child_process.spawn,
+             * but with auto-timeout after timeoutDefault milliseconds
+             */
+            var childProcess;
+            // spawn childProcess
+            childProcess = local.child_process.spawn.apply(local.child_process, arguments)
+                // kill timerTimeout on exit
+                .on('exit', function () {
+                    try {
+                        process.kill(childProcess.timerTimeout.pid);
+                    } catch (ignore) {
+                    }
+                });
+            // init failsafe timerTimeout
+            childProcess.timerTimeout = local.child_process.spawn('/bin/sh', ['-c', 'sleep ' +
+                // coerce to finite integer
+                (((0.001 * local.utility2.timeoutDefault) | 0) +
+                // add 2 second delay to failsafe timerTimeout
+                2) + '; kill -9 ' + childProcess.pid + ' 2>/dev/null'], { stdio: 'ignore' });
+            return childProcess;
+        };
+
+        local.utility2.replStart = function () {
+            /*
+             * this function will start the repl debugger
+             */
+            /*jslint evil: true*/
+            // start repl server
+            local._replServer = require('repl').start({ useGlobal: true });
+            local._replServer.onError = function (error) {
+                /*
+                 * this function will debug any repl-error
+                 */
+                local.utility2._debugReplError = error || local.utility2._debugReplError;
+            };
+            local._replServer._domain.on('error', local._replServer.onError);
+            // save repl eval function
+            local._replServer.evalDefault = local._replServer.eval;
+            // hook custom repl eval function
+            local._replServer.eval = function (script, context, file, onError) {
+                var match, onError2;
+                match = (/^(\S+)(.*?)\n/).exec(script);
+                onError2 = function (error, data) {
+                    // debug error
+                    local._replServer.onError(error);
+                    onError(error, data);
+                };
+                switch (match && match[1]) {
+                // syntax sugar to run async shell command
+                case '$':
+                    switch (match[2]) {
+                    // syntax sugar to run git diff
+                    case ' git diff':
+                        match[2] = ' git diff --color | cat';
+                        break;
+                    // syntax sugar to run git log
+                    case ' git log':
+                        match[2] = ' git log -n 4 | cat';
+                        break;
+                    }
+                    // run async shell command
+                    local.utility2.processSpawnWithTimeout(
+                        '/bin/sh',
+                        ['-c', '. ' + __dirname + '/index.sh && ' + match[2]],
+                        { stdio: ['ignore', 1, 2] }
+                    )
+                        // on shell exit, print return prompt
+                        .on('exit', function (exitCode) {
+                            console.log('exit-code ' + exitCode);
+                            local._replServer.evalDefault('\n', context, file, onError2);
+                        });
+                    script = '\n';
+                    break;
+                // syntax sugar to grep current dir
+                case 'grep':
+                    // run async shell command
+                    local.utility2.processSpawnWithTimeout(
+                        '/bin/sh',
+                        ['-c', 'find . -type f | grep -v ' +
+                            '"/\\.\\|.*\\(\\b\\|_\\)\\(\\.\\d\\|' +
+                            'archive\\|artifact\\|' +
+                            'bower_component\\|build\\|' +
+                            'coverage\\|' +
+                            'doc\\|' +
+                            'external\\|' +
+                            'fixture\\|' +
+                            'git_module\\|' +
+                            'jquery\\|' +
+                            'log\\|' +
+                            'min\\|mock\\|' +
+                            'node_module\\|' +
+                            'rollup\\|' +
+                            'swp\\|' +
+                            'tmp\\)\\(\\b\\|[_s]\\)" ' +
+                            '| tr "\\n" "\\000" | xargs -0 grep -in "' +
+                            match[2].trim() + '"'],
+                        { stdio: ['ignore', 1, 2] }
+                    )
+                        // on shell exit, print return prompt
+                        .on('exit', function (exitCode) {
+                            console.log('exit-code ' + exitCode);
+                            local._replServer.evalDefault('\n', context, file, onError2);
+                        });
+                    script = '\n';
+                    break;
+                // syntax sugar to print stringified arg
+                case 'print':
+                    script = 'console.log(String(' + match[2] + '))\n';
+                    break;
+                }
+                // eval modified script
+                local.utility2.testTryCatch(function () {
+                    local._replServer.evalDefault(script, context, file, onError2);
+                }, onError2);
+            };
         };
 
         local.utility2.requestResponseCleanup = function (request, response) {
@@ -808,6 +1334,133 @@
                     }
                 }
             });
+        };
+
+        local.utility2.requireFromScript = function (file, script) {
+            /*
+             * this function will
+             * 1. create a new module with the given file
+             * 2. load module with the given script
+             * 3. return module.exports
+             */
+            var module;
+            if (require.cache[file]) {
+                return require.cache[file].exports;
+            }
+            // 1. create a new module with the given file
+            module = require.cache[file] = new local.Module(file);
+            // 2. load module with the given script
+            module._compile(script, file);
+            // 3. return module.exports
+            return module.exports;
+        };
+
+        local.utility2.serverRespondDefault = function (request, response, statusCode, error) {
+            /*
+             * this function will respond with a default message,
+             * or error.stack for the given statusCode
+             */
+            // init statusCode and contentType
+            local.utility2.serverRespondHeadSet(
+                request,
+                response,
+                statusCode,
+                { 'Content-Type': 'text/plain; charset=utf-8' }
+            );
+            if (error) {
+                // debug statusCode / method / url
+                local.utility2.errorMessagePrepend(error, response.statusCode + ' ' +
+                    request.method + ' ' + request.url + '\n');
+                // print error.stack to stderr
+                local.utility2.onErrorDefault(error);
+                // end response with error.stack
+                response.end(error.stack);
+                return;
+            }
+            // end response with default statusCode message
+            response.end(
+                statusCode + ' ' + local.http.STATUS_CODES[statusCode]
+            );
+        };
+
+        local.utility2.serverRespondEcho = function (request, response) {
+            /*
+             * this function will respond with debug info
+             */
+            response.write(request.method + ' ' + request.url +
+                ' HTTP/' + request.httpVersion + '\r\n' +
+                Object.keys(request.headers).map(function (key) {
+                    return key + ': ' + request.headers[key] + '\r\n';
+                }).join('') + '\r\n');
+            request.pipe(response);
+        };
+
+        local.utility2.serverRespondHeadSet = function (
+            request,
+            response,
+            statusCode,
+            headers
+        ) {
+            /*
+             * this function will set the response object's statusCode / headers
+             */
+            // jslint-hack
+            local.utility2.nop(request);
+            if (response.headersSent) {
+                return;
+            }
+            // init response.statusCode
+            if (Number(statusCode)) {
+                response.statusCode = Number(statusCode);
+            }
+            Object.keys(headers).forEach(function (key) {
+                if (headers[key]) {
+                    response.setHeader(key, headers[key]);
+                }
+            });
+            return true;
+        };
+
+        local.utility2.serverRespondTimeoutDefault = function (request, response, timeout) {
+            /*
+             * this function will create a timeout-error-handler for the server request
+             */
+            request.onTimeout = request.onTimeout || function (error) {
+                local.utility2.serverRespondDefault(request, response, 500, error);
+                setTimeout(function () {
+                    // cleanup request and response
+                    local.utility2.requestResponseCleanup(request, response);
+                }, 1000);
+            };
+            request.timerTimeout = local.utility2.onTimeout(
+                request.onTimeout,
+                timeout || local.utility2.timeoutDefault,
+                'server ' + request.method + ' ' + request.url
+            );
+            response.on('finish', function () {
+                clearTimeout(request.timerTimeout);
+            });
+        };
+
+        local.utility2.streamReadAll = function (stream, onError) {
+            /*
+             * this function will concat data from the stream,
+             * and pass it to onError when done reading
+             */
+            var chunkList;
+            chunkList = [];
+            // read data from the stream
+            stream
+                // on data event, push the buffer chunk to chunkList
+                .on('data', function (chunk) {
+                    chunkList.push(chunk);
+                })
+                // on end event, pass concatenated read buffer to onError
+                .on('end', function () {
+                    onError(null, Buffer.concat(chunkList));
+                })
+                // on error event, pass error to onError
+                .on('error', onError);
         };
 
         local.utility2.stringFormat = function (template, dict, valueDefault) {
@@ -1533,6 +2186,44 @@
             onParallel();
         };
 
+        local.utility2.testRunServer = function (options) {
+            /*
+             * this function will
+             * 1. create server from options.middleware
+             * 2. start server on options.port
+             * 3. if $npm_config_mode_npm_test is defined, then run tests
+             */
+            var server;
+            // 1. create server from options.middleware
+            server = local.http.createServer(function (request, response) {
+                options.middleware(request, response, function (error) {
+                    options.middlewareError(error, request, response);
+                });
+            });
+            // 2. start server on options.port
+            options.port = options.port || local.utility2.envDict.PORT;
+            console.log('server starting on port ' + options.port);
+            local.utility2.onReady.counter += 1;
+            server.listen(options.port, local.utility2.onReady);
+            // if $npm_config_timeout_exit is defined,
+            // then exit this process after $npm_config_timeout_exit ms
+            if (Number(local.utility2.envDict.npm_config_timeout_exit)) {
+                setTimeout(function () {
+                    // screen-capture main-page
+                    local.utility2.browserTest({
+                        modeBrowserTest: 'screenCapture',
+                        url: 'http://localhost:' + options.port
+                    }, function (error) {
+                        console.log('server stopping on port ' + options.port);
+                        local.utility2.exit(error);
+                    });
+                }, Number(local.utility2.envDict.npm_config_timeout_exit));
+            }
+            // 3. if $npm_config_mode_npm_test is defined, then run tests
+            local.utility2.testRun(options);
+            return server;
+        };
+
         local.utility2.testTryCatch = function (callback, onError) {
             /*
              * this function will run the callback in a try-catch block,
@@ -1599,7 +2290,7 @@
                 : code;
         };
 
-        local.utility2.uuid4 = function () {
+        local.utility2.uuid4Create = function () {
             /*
              * this function will return a random uuid,
              * with form "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx"
@@ -1631,835 +2322,147 @@
             return id;
         };
 
-        local.utility2.uuidTime = function () {
+        local.utility2.uuidTimeCreate = function () {
             /*
              * this function will return a time-based variant of uuid4,
              * with form "tttttttt-tttx-4xxx-yxxx-xxxxxxxxxxxx"
              */
             return Date.now().toString(16).replace((/(.{8})/), '$1-') +
-                local.utility2.uuid4().slice(12);
+                local.utility2.uuid4Create().slice(12);
         };
     }());
     switch (local.modeJs) {
 
 
 
-    // run browser js-env code
-    case 'browser':
-        local.utility2.ajax = function (options, onError) {
-            /*
-             * this function will make an ajax request with error handling and timeout
-             */
-            var ajaxProgressDiv, done, error, ii, onEvent, timerTimeout, xhr;
-            // init ajaxProgressDiv
-            ajaxProgressDiv = document.querySelector('.ajaxProgressDiv') || { style: {} };
-            // init event handling
-            onEvent = local.utility2.onErrorWithStack(function (event) {
-                // init statusCode
-                xhr.statusCode = xhr.status;
-                switch (event.type) {
-                case 'abort':
-                case 'error':
-                case 'load':
-                    // if already done, then do nothing
-                    if (done) {
-                        return;
-                    }
-                    done = true;
-                    // cleanup timerTimeout
-                    clearTimeout(timerTimeout);
-                    // validate xhr is defined in _ajaxProgressList
-                    ii = local._ajaxProgressList.indexOf(xhr);
-                    local.utility2.assert(ii >= 0, 'missing xhr in _ajaxProgressList');
-                    // remove xhr from ajaxProgressList
-                    local._ajaxProgressList.splice(ii, 1);
-                    // handle abort or error event
-                    if (!error &&
-                            (event.type === 'abort' ||
-                            event.type === 'error' ||
-                            xhr.statusCode >= 400)) {
-                        error = new Error(event.type);
-                    }
-                    // handle completed xhr request
-                    if (xhr.readyState === 4) {
-                        // handle string data
-                        if (error) {
-                            // debug statusCode
-                            error.statusCode = xhr.statusCode;
-                            // debug statusCode / method / url
-                            local.utility2.errorMessagePrepend(error, xhr.statusCode + ' ' +
-                                xhr.method + ' ' + xhr.url + '\n' +
-                                JSON.stringify(xhr.responseText.slice(0, 256) + '...') + '\n');
-                        }
-                    }
-                    // hide _ajaxProgressDiv
-                    if (local._ajaxProgressList.length === 0) {
-                        local._ajaxProgressBarHide = setTimeout(function () {
-                            // hide ajaxProgressBar
-                            ajaxProgressDiv.style.display = 'none';
-                            // reset ajaxProgress
-                            local._ajaxProgressState = 0;
-                            local._ajaxProgressUpdate(
-                                '0%',
-                                'ajaxProgressBarDivLoading',
-                                'loading'
-                            );
-                        }, 1000);
-                    }
-                    // debug xhr
-                    if (xhr.modeDebug) {
-                        console.log(xhr);
-                    }
-                    onError(error, xhr, onEvent);
-                    break;
-                }
-                // increment ajaxProgressBar
-                if (local._ajaxProgressList.length > 0) {
-                    local._ajaxProgressIncrement();
-                    return;
-                }
-                // update ajaxProgressBar to done
-                local._ajaxProgressUpdate('100%', 'ajaxProgressBarDivSuccess', 'loaded');
-            });
-            // init xhr
-            xhr = new XMLHttpRequest();
-            xhr.data = options.data;
-            xhr.headers = options.headers || {};
-            xhr.method = options.method || 'GET';
-            xhr.modeDebug = options.modeDebug;
-            xhr.onEvent = onEvent;
-            xhr.timeout = options.timeout || local.utility2.timeoutDefault;
-            xhr.url = options.url;
-            // debug xhr
-            local.utility2._debugAjaxXhr = xhr;
-            // init timerTimeout
-            timerTimeout = local.utility2.onTimeout(function (errorTimeout) {
-                error = errorTimeout;
-                xhr.abort();
-            }, xhr.timeout, 'ajax');
-            // init event handling
-            xhr.addEventListener('abort', onEvent);
-            xhr.addEventListener('error', onEvent);
-            xhr.addEventListener('load', onEvent);
-            xhr.addEventListener('loadstart', local._ajaxProgressIncrement);
-            xhr.addEventListener('progress', local._ajaxProgressIncrement);
-            xhr.upload.addEventListener('progress', local._ajaxProgressIncrement);
-            // if ajaxProgressBar is hidden, then display it
-            if (local._ajaxProgressList.length === 0) {
-                ajaxProgressDiv.style.display = 'block';
-            }
-            // add xhr to _ajaxProgressList
-            local._ajaxProgressList.push(xhr);
-            // open url
-            xhr.open(xhr.method, xhr.url);
-            xhr.responseType = options.responseType || '';
-            // send request headers
-            Object.keys(xhr.headers).forEach(function (key) {
-                xhr.setRequestHeader(key, xhr.headers[key]);
-            });
-            // clear any pending timer to hide _ajaxProgressDiv
-            clearTimeout(local._ajaxProgressBarHide);
-            // send data
-            xhr.send(xhr.data);
-            return xhr;
-        };
-
-        local._ajaxProgressIncrement = function () {
-            /*
-             * this function will increment ajaxProgressBar
-             */
-            // this algorithm can indefinitely increment the ajaxProgressBar
-            // with successively smaller increments without ever reaching 100%
-            local._ajaxProgressState += 1;
-            local._ajaxProgressUpdate(
-                100 - 75 * Math.exp(-0.125 * local._ajaxProgressState) + '%',
-                'ajaxProgressBarDivLoading',
-                'loading'
-            );
-        };
-
-        // init list of xhr used in ajaxProgress
-        local._ajaxProgressList = [];
-
-        // init _ajaxProgressState
-        local._ajaxProgressState = 0;
-
-        local._ajaxProgressUpdate = function (width, type, label) {
-            /*
-             * this function will visually update ajaxProgressBar
-             */
-            var ajaxProgressBarDiv;
-            ajaxProgressBarDiv = document.querySelector('.ajaxProgressBarDiv') ||
-                { className: '', style: {} };
-            ajaxProgressBarDiv.style.width = width;
-            ajaxProgressBarDiv.className = ajaxProgressBarDiv.className
-                .replace((/ajaxProgressBarDiv\w+/), type);
-            ajaxProgressBarDiv.innerHTML = label;
-        };
-        break;
-
-
-
     // run node js-env code
     case 'node':
-        local.utility2.ajax = function (options, onError) {
+        // init XMLHttpRequest
+        local.utility2.XMLHttpRequest = function () {
             /*
-             * this function will make an ajax request with error handling and timeout
+             * this function will construct the xhr-connection
              */
-            var done, modeNext, onNext, request, response, timerTimeout, urlParsed, xhr;
-            modeNext = 0;
-            onNext = local.utility2.onErrorWithStack(function (error, data) {
-                modeNext = error instanceof Error
-                    ? Infinity
-                    : modeNext + 1;
-                switch (modeNext) {
-                case 1:
-                    // init xhr
-                    // http://www.w3.org/TR/XMLHttpRequest
-                    xhr = options;
-                    xhr.abort = function () {
-                        onNext(new Error('abort'));
-                    };
-                    // disable socket pooling
-                    xhr.agent = xhr.agent || false;
-                    xhr.getAllResponseHeaders = function () {
-                        return Object.keys(response.headers).map(function (key) {
-                            return key + ': ' + response.headers[key] + '\r\n';
-                        }).join('') + '\r\n';
-                    };
-                    xhr.getResponseHeader = function (key) {
-                        return (response.headers && response.headers[key]) || null;
-                    };
-                    xhr.headers = xhr.headers || {};
-                    // init Content-Length header
-                    xhr.headers['Content-Length'] = typeof xhr.data === 'string'
-                        ? Buffer.byteLength(xhr.data)
-                        : Buffer.isBuffer(xhr.data)
-                        ? xhr.data.length
-                        : 0;
-                    xhr.onreadystatechange = xhr.onreadystatechange || local.utility2.nop;
-                    xhr.readyState = 0;
-                    xhr.responseText = '';
-                    xhr.status = xhr.statusCode = 0;
-                    xhr.statusText = '';
-                    xhr.timeout = xhr.timeout || local.utility2.timeoutDefault;
-                    // handle implicit localhost
-                    if (xhr.url[0] === '/') {
-                        xhr.url = 'http://localhost:' + local.utility2.envDict.PORT + xhr.url;
-                    }
-                    // parse url
-                    urlParsed = local.url.parse(String(xhr.url));
-                    xhr.hostname = urlParsed.hostname;
-                    xhr.path = urlParsed.path;
-                    xhr.port = urlParsed.port;
-                    // debug xhr
-                    local.utility2._debugAjaxXhr = xhr;
-                    // init timerTimeout
-                    timerTimeout = local.utility2.onTimeout(
-                        function (error) {
-                            // cleanup request and response
-                            local.utility2.requestResponseCleanup(request, response);
-                            onNext(error);
-                        },
-                        xhr.timeout,
-                        'ajax ' + xhr.method + ' ' + xhr.url
-                    );
-                    // init request
-                    request = (urlParsed.protocol === 'https:'
-                        ? local.https
-                        : local.http)
-                        .request(options, onNext)
-                        // handle request-error
-                        .on('error', onNext);
-                    // debug request
-                    local.utility2._debugAjaxRequest = request;
-                    // send data
-                    request.end(xhr.data);
-                    break;
-                case 2:
-                    response = error;
-                    // debug ajax response
-                    local.utility2._debugAjaxResponse = response;
-                    // update xhr
-                    xhr.status = xhr.statusCode = response.statusCode;
-                    xhr.statusText = local.http.STATUS_CODES[response.statusCode] || '';
-                    xhr.readyState = 1;
-                    xhr.onreadystatechange();
-                    xhr.readyState = 2;
-                    xhr.onreadystatechange();
-                    xhr.readyState = 3;
-                    xhr.onreadystatechange();
-                    if (xhr.responseType === 'response') {
-                        modeNext = Infinity;
-                        xhr.response = response;
-                        request = null;
-                        response = null;
-                        onNext();
-                        return;
-                    }
-                    local.utility2.streamReadAll(response, onNext);
-                    break;
-                case 3:
-                    xhr.response = data;
-                    xhr.responseText =  data.toString();
-                    onNext();
-                    break;
-                default:
-                    // if already done, then do nothing
-                    if (done) {
-                        return;
-                    }
-                    done = true;
-                    // cleanup timerTimeout
-                    clearTimeout(timerTimeout);
-                    // handle http-error for statusCode >= 400
-                    if (error || (response && response.statusCode >= 400)) {
-                        error = error || new Error(response.statusCode);
-                        // debug statusCode
-                        error.statusCode = xhr.statusCode;
-                        // debug statusCode / method / url
-                        local.utility2.errorMessagePrepend(error, xhr.statusCode + ' ' +
-                            xhr.method + ' ' + xhr.url + '\n' +
-                            JSON.stringify(xhr.responseText.slice(0, 256) + '...') + '\n');
-                    }
-                    // update xhr
-                    xhr.readyState = 4;
-                    xhr.onreadystatechange();
-                    // debug xhr
-                    if (xhr.modeDebug) {
-                        console.log(xhr);
-                    }
-                    onError(error, xhr);
-                }
-            });
-            onNext();
-            return xhr;
+            return;
         };
 
-        local.utility2.middlewareAssetsCached = function (request, response, nextMiddleware) {
+        local.utility2.XMLHttpRequest.prototype.abort = function () {
             /*
-             * this function will run the cached-assets-middleware
+             * this function will abort the xhr-connection
              */
-            var modeNext, onNext, result;
-            modeNext = 0;
-            onNext = function (error, data) {
-                result = result ||
-                    local.utility2.cacheDict.assets[request.urlParsed.pathnameNormalized];
-                if (error || !result) {
-                    nextMiddleware(error);
-                    return;
-                }
-                modeNext += 1;
-                switch (modeNext) {
-                case 1:
-                    // skip gzip
-                    if (response.headersSent ||
-                            !(/\bgzip\b/).test(request.headers['accept-encoding'])) {
-                        modeNext += 1;
-                        onNext();
-                        return;
-                    }
-                    // gzip and cache result
-                    local.utility2.taskCallbackAndUpdateCached({
-                        cacheDict: 'assetsGzip',
-                        key: request.urlParsed.pathnameNormalized,
-                        modeCacheMemory: true
-                    }, onNext, function (onError) {
-                        local.zlib.gzip(result, function (error, data) {
-                            onError(error, !error && data.toString('base64'));
-                        });
-                    });
-                    break;
-                case 2:
-                    // set gzip header
-                    result = new Buffer(data, 'base64');
-                    response.setHeader('Content-Encoding', 'gzip');
-                    response.setHeader('Content-Length', result.length);
-                    onNext();
-                    break;
-                case 3:
-                    local.utility2
-                        .middlewareCacheControlLastModified(request, response, onNext);
-                    break;
-                case 4:
-                    response.end(result);
-                    break;
-                }
-            };
-            onNext();
+            this.onError(new Error('abort'));
         };
 
-        local.utility2.middlewareBodyGet = function (request, response, nextMiddleware) {
+        local.utility2.XMLHttpRequest.prototype.upload = {
+            addEventListener: local.utility2.nop
+        };
+
+        local.utility2.XMLHttpRequest.prototype.addEventListener = function (type, onError) {
             /*
-             * this function will read the request-body and save it as request.bodyRaw
+             * this function will add event listeners to the xhr-connection
              */
-            // jslint-hack
-            local.utility2.nop(response);
-            // if request has already been read, then goto nextMiddleware
-            if (!request.readable) {
-                nextMiddleware();
+            this.onLoadList = this.onLoadList || [];
+            switch (type) {
+            case 'abort':
+            case 'error':
+            case 'load':
+                this.onLoadList.push(onError);
+                break;
+            }
+        };
+
+        local.utility2.XMLHttpRequest.prototype.onError = function (error, data) {
+            /*
+             * this function will handle the error and data passed back to the xhr-connection
+             */
+            var xhr;
+            xhr = this;
+            if (xhr.done) {
                 return;
             }
-            local.utility2.streamReadAll(request, function (error, data) {
-                request.bodyRaw = request.bodyRaw || data;
-                nextMiddleware(error);
+            xhr.error = error;
+            xhr.response = data;
+            xhr.responseText = (data && data.toString()) || '';
+            // update xhr
+            xhr.readyState = 4;
+            xhr.onreadystatechange();
+            // handle data
+            xhr.onLoadList.forEach(function (onError) {
+                onError({ type: error
+                    ? 'error'
+                    : 'load' });
             });
         };
 
-        local.utility2.middlewareCacheControlLastModified = function (
-            request,
-            response,
-            nextMiddleware
-        ) {
+        local.utility2.XMLHttpRequest.prototype.onResponse = function (responseStream) {
             /*
-             * this function will respond with the data cached by Last-Modified header
+             * this function will handle the responseStream from the xhr-connection
              */
-            // do not cache if headers already sent or url has '?' search indicator
-            if (!response.headersSent && request.url.indexOf('?') < 0) {
-                // init serverResponseHeaderLastModified
-                local.utility2.serverResponseHeaderLastModified =
-                    local.utility2.serverResponseHeaderLastModified ||
-                    // resolve to 1000 ms
-                    new Date(new Date(Math.floor(Date.now() / 1000) * 1000).toGMTString());
-                // respond with 304 If-Modified-Since serverResponseHeaderLastModified
-                if (new Date(request.headers['if-modified-since']) >=
-                        local.utility2.serverResponseHeaderLastModified) {
-                    response.statusCode = 304;
-                    response.end();
-                    return;
-                }
-                response.setHeader('Cache-Control', 'no-cache');
-                response.setHeader(
-                    'Last-Modified',
-                    local.utility2.serverResponseHeaderLastModified.toGMTString()
-                );
-            }
-            nextMiddleware();
-        };
-
-        local.utility2.middlewareGroupCreate = function (middlewareList) {
-            /*
-             * this function will return a super-middleware,
-             * that will sequentially run the sub-middlewares in middlewareList
-             */
-            var self;
-            self = function (request, response, nextMiddleware) {
-                /*
-                 * this function will create a super-middleware,
-                 * that will sequentially run the sub-middlewares in middlewareList
-                 */
-                var modeNext, onNext;
-                modeNext = -1;
-                onNext = function (error) {
-                    modeNext = error
-                        ? Infinity
-                        : modeNext + 1;
-                    // recursively run each sub-middleware in middlewareList
-                    if (modeNext < self.middlewareList.length) {
-                        self.middlewareList[modeNext](request, response, onNext);
-                        return;
-                    }
-                    // default to nextMiddleware
-                    nextMiddleware(error);
-                };
-                onNext();
-            };
-            self.middlewareList = middlewareList;
-            return self;
-        };
-
-        local.utility2.middlewareInit = function (request, response, nextMiddleware) {
-            /*
-             * this function will run the init-middleware
-             */
-            // debug server request
-            local.utility2._debugServerRequest = request;
-            // debug server response
-            local.utility2._debugServerResponse = response;
-            // init timerTimeout
-            local.utility2
-                .serverRespondTimeoutDefault(request, response, local.utility2.timeoutDefault);
-            // init request.urlParsed
-            request.urlParsed = local.url.parse(request.url, true);
-            // init request.urlParsed.pathnameNormalized
-            request.urlParsed.pathnameNormalized = local.path.resolve(
-                request.urlParsed.pathname
-            );
-            local.utility2.serverRespondHeadSet(request, response, null, {
-                'Content-Type': local.utility2.contentTypeDict[
-                    local.path.extname(request.urlParsed.pathnameNormalized)
-                ]
-            });
-            // set main-page content-type to text/html
-            if (request.urlParsed.pathnameNormalized === '/') {
-                local.utility2.serverRespondHeadSet(request, response, null, {
-                    'Content-Type': 'text/html; charset=UTF-8'
-                });
-            }
-            // default to nextMiddleware
-            nextMiddleware();
-        };
-
-        local.utility2.fsRmrSync = function (dir) {
-            /*
-             * this function will synchronously 'rm -fr' the dir
-             */
-            local.child_process.spawnSync(
-                'rm',
-                ['-fr', local.path.resolve(process.cwd(), dir)],
-                { stdio: ['ignore', 1, 2] }
-            );
-        };
-
-        local.utility2.fsMkdirpSync = function (dir) {
-            /*
-             * this function will synchronously 'mkdir -p' the dir
-             */
-            local.child_process.spawnSync(
-                'mkdir',
-                ['-p', local.path.resolve(process.cwd(), dir)],
-                { stdio: ['ignore', 1, 2] }
-            );
-        };
-
-        local.utility2.fsWriteFileWithMkdirp = function (file, data, onError) {
-            /*
-             * this function will save the data to file, and auto-mkdirp the parent dir
-             */
-            file = local.path.resolve(process.cwd(), file);
-            // save data to file
-            local.fs.writeFile(file, data, function (error) {
-                if (error && error.code === 'ENOENT') {
-                    // if save failed, then mkdirp file's parent dir
-                    local.utility2.processSpawnWithTimeout(
-                        'mkdir',
-                        ['-p', local.path.dirname(file)],
-                        { stdio: ['ignore', 1, 2] }
-                    )
-                        .on('exit', function () {
-                            // save data to file
-                            local.fs.writeFile(file, data, onError);
-                        });
-                    return;
-                }
-                onError(error);
-            });
-        };
-
-        local.utility2.middlewareError = function (error, request, response) {
-            /*
-             * this function will run the error-middleware
-             */
-            // if error occurred, then respond with '500 Internal Server Error',
-            // else respond with '404 Not Found'
-            local.utility2.serverRespondDefault(request, response, error
-                ? (error.statusCode >= 400 && error.statusCode < 600
-                    ? error.statusCode
-                    : 500)
-                : 404, error);
-        };
-
-        local.utility2.onFileModifiedRestart = function (file) {
-            /*
-             * this function will watch the file,
-             * and if modified, then restart the process
-             */
-            if (local.utility2.envDict.npm_config_mode_auto_restart &&
-                    local.fs.existsSync(file) &&
-                    local.fs.statSync(file).isFile()) {
-                local.fs.watchFile(file, {
-                    interval: 1000,
-                    persistent: false
-                }, function (stat2, stat1) {
-                    if (stat2.mtime > stat1.mtime) {
-                        local.utility2.exit(1);
-                    }
-                });
-            }
-        };
-
-        local.utility2.processSpawnWithTimeout = function () {
-            /*
-             * this function will run like child_process.spawn,
-             * but with auto-timeout after timeoutDefault milliseconds
-             */
-            var childProcess;
-            // spawn childProcess
-            childProcess = local.child_process.spawn.apply(local.child_process, arguments)
-                // kill timerTimeout on exit
-                .on('exit', function () {
-                    try {
-                        process.kill(childProcess.timerTimeout.pid);
-                    } catch (ignore) {
-                    }
-                });
-            // init failsafe timerTimeout
-            childProcess.timerTimeout = local.child_process.spawn('/bin/sh', ['-c', 'sleep ' +
-                // coerce to finite integer
-                (((0.001 * local.utility2.timeoutDefault) | 0) +
-                // add 2 second delay to failsafe timerTimeout
-                2) + '; kill -9 ' + childProcess.pid + ' 2>/dev/null'], { stdio: 'ignore' });
-            return childProcess;
-        };
-
-        local.utility2.replStart = function () {
-            /*
-             * this function will start the repl debugger
-             */
-            /*jslint evil: true*/
-            // start repl server
-            local._replServer = require('repl').start({ useGlobal: true });
-            local._replServer.onError = function (error) {
-                /*
-                 * this function will debug any repl-error
-                 */
-                local.utility2._debugReplError = error || local.utility2._debugReplError;
-            };
-            local._replServer._domain.on('error', local._replServer.onError);
-            // save repl eval function
-            local._replServer.evalDefault = local._replServer.eval;
-            // hook custom repl eval function
-            local._replServer.eval = function (script, context, file, onError) {
-                var match, onError2;
-                match = (/^(\S+)(.*?)\n/).exec(script);
-                onError2 = function (error, data) {
-                    // debug error
-                    local._replServer.onError(error);
-                    onError(error, data);
-                };
-                switch (match && match[1]) {
-                // syntax sugar to run async shell command
-                case '$':
-                    switch (match[2]) {
-                    // syntax sugar to run git diff
-                    case ' git diff':
-                        match[2] = ' git diff --color | cat';
-                        break;
-                    // syntax sugar to run git log
-                    case ' git log':
-                        match[2] = ' git log -n 4 | cat';
-                        break;
-                    }
-                    // run async shell command
-                    local.utility2.processSpawnWithTimeout(
-                        '/bin/sh',
-                        ['-c', '. ' + __dirname + '/index.sh && ' + match[2]],
-                        { stdio: ['ignore', 1, 2] }
-                    )
-                        // on shell exit, print return prompt
-                        .on('exit', function (exitCode) {
-                            console.log('exit-code ' + exitCode);
-                            local._replServer.evalDefault('\n', context, file, onError2);
-                        });
-                    script = '\n';
-                    break;
-                // syntax sugar to grep current dir
-                case 'grep':
-                    // run async shell command
-                    local.utility2.processSpawnWithTimeout(
-                        '/bin/sh',
-                        ['-c', 'find . -type f | grep -v ' +
-                            '"/\\.\\|.*\\(\\b\\|_\\)\\(\\.\\d\\|' +
-                            'archive\\|artifact\\|' +
-                            'bower_component\\|build\\|' +
-                            'coverage\\|' +
-                            'doc\\|' +
-                            'external\\|' +
-                            'fixture\\|' +
-                            'git_module\\|' +
-                            'jquery\\|' +
-                            'log\\|' +
-                            'min\\|mock\\|' +
-                            'node_module\\|' +
-                            'rollup\\|' +
-                            'swp\\|' +
-                            'tmp\\)\\(\\b\\|[_s]\\)" ' +
-                            '| tr "\\n" "\\000" | xargs -0 grep -in "' +
-                            match[2].trim() + '"'],
-                        { stdio: ['ignore', 1, 2] }
-                    )
-                        // on shell exit, print return prompt
-                        .on('exit', function (exitCode) {
-                            console.log('exit-code ' + exitCode);
-                            local._replServer.evalDefault('\n', context, file, onError2);
-                        });
-                    script = '\n';
-                    break;
-                // syntax sugar to print stringified arg
-                case 'print':
-                    script = 'console.log(String(' + match[2] + '))\n';
-                    break;
-                }
-                // eval modified script
-                local.utility2.testTryCatch(function () {
-                    local._replServer.evalDefault(script, context, file, onError2);
-                }, onError2);
-            };
-        };
-
-        local.utility2.requireFromScript = function (file, script) {
-            /*
-             * this function will
-             * 1. create a new module with the given file
-             * 2. load module with the given script
-             * 3. return module.exports
-             */
-            var module;
-            if (require.cache[file]) {
-                return require.cache[file].exports;
-            }
-            // 1. create a new module with the given file
-            module = require.cache[file] = new local.Module(file);
-            // 2. load module with the given script
-            module._compile(script, file);
-            // 3. return module.exports
-            return module.exports;
-        };
-
-        local.utility2.serverRespondDefault = function (request, response, statusCode, error) {
-            /*
-             * this function will respond with a default message,
-             * or error.stack for the given statusCode
-             */
-            // init statusCode and contentType
-            local.utility2.serverRespondHeadSet(
-                request,
-                response,
-                statusCode,
-                { 'Content-Type': 'text/plain; charset=utf-8' }
-            );
-            if (error) {
-                // debug statusCode / method / url
-                local.utility2.errorMessagePrepend(error, response.statusCode + ' ' +
-                    request.method + ' ' + request.url + '\n');
-                // print error.stack to stderr
-                local.utility2.onErrorDefault(error);
-                // end response with error.stack
-                response.end(error.stack);
+            var xhr;
+            xhr = this;
+            xhr.responseStream = responseStream;
+            // update xhr
+            xhr.status = xhr.statusCode = xhr.responseStream.statusCode;
+            xhr.statusText = local.http.STATUS_CODES[xhr.responseStream.statusCode] || '';
+            xhr.readyState = 1;
+            xhr.onreadystatechange();
+            xhr.readyState = 2;
+            xhr.onreadystatechange();
+            xhr.readyState = 3;
+            xhr.onreadystatechange();
+            if (xhr.responseType === 'response') {
+                xhr.onError(null, xhr.responseStream);
                 return;
             }
-            // end response with default statusCode message
-            response.end(
-                statusCode + ' ' + local.http.STATUS_CODES[statusCode]
-            );
+            local.utility2.streamReadAll(xhr.responseStream, xhr.onError.bind(xhr));
         };
 
-        local.utility2.serverRespondEcho = function (request, response) {
-            /*
-             * this function will respond with debug info
-             */
-            response.write(request.method + ' ' + request.url +
-                ' HTTP/' + request.httpVersion + '\r\n' +
-                Object.keys(request.headers).map(function (key) {
-                    return key + ': ' + request.headers[key] + '\r\n';
-                }).join('') + '\r\n');
-            request.pipe(response);
-        };
+        // init onreadystatechange
+        local.utility2.XMLHttpRequest.prototype.onreadystatechange = local.utility2.nop;
 
-        local.utility2.serverRespondHeadSet = function (
-            request,
-            response,
-            statusCode,
-            headers
-        ) {
+        local.utility2.XMLHttpRequest.prototype.open = function (method, url) {
             /*
-             * this function will set the response object's statusCode / headers
+             * this function will init and open the xhr-connection
              */
-            // jslint-hack
-            local.utility2.nop(request);
-            if (response.headersSent) {
-                return;
+            var xhr;
+            xhr = this;
+            // disable socket pooling
+            xhr.agent = xhr.agent || false;
+            xhr.method = method;
+            xhr.readyState = 0;
+            xhr.responseText = '';
+            xhr.status = xhr.statusCode = 0;
+            xhr.statusText = '';
+            xhr.url = url;
+            // handle implicit localhost
+            if (xhr.url[0] === '/') {
+                xhr.url = 'http://localhost:' + local.utility2.envDict.PORT + xhr.url;
             }
-            // init response.statusCode
-            if (Number(statusCode)) {
-                response.statusCode = Number(statusCode);
-            }
-            Object.keys(headers).forEach(function (key) {
-                if (headers[key]) {
-                    response.setHeader(key, headers[key]);
-                }
-            });
-            return true;
+            // parse url
+            xhr.urlParsed = local.url.parse(String(xhr.url));
+            xhr.hostname = xhr.urlParsed.hostname;
+            xhr.path = xhr.urlParsed.path;
+            xhr.port = xhr.urlParsed.port;
+            // debug xhr
+            local.utility2._debugAjaxXhr = xhr;
+            // init requestStream
+            xhr.requestStream = (xhr.urlParsed.protocol === 'https:'
+                ? local.https
+                : local.http).request(xhr, xhr.onResponse.bind(xhr))
+                // handle request-error
+                .on('error', xhr.onError.bind(xhr));
         };
 
-        local.utility2.serverRespondTimeoutDefault = function (request, response, timeout) {
+        local.utility2.XMLHttpRequest.prototype.send = function (data) {
             /*
-             * this function will create a timeout-error-handler for the server request
+             * this function will send the data through the xhr object
              */
-            request.onTimeout = request.onTimeout || function (error) {
-                local.utility2.serverRespondDefault(request, response, 500, error);
-                setTimeout(function () {
-                    // cleanup request and response
-                    local.utility2.requestResponseCleanup(request, response);
-                }, 1000);
-            };
-            request.timerTimeout = local.utility2.onTimeout(
-                request.onTimeout,
-                timeout || local.utility2.timeoutDefault,
-                'server ' + request.method + ' ' + request.url
-            );
-            response.on('finish', function () {
-                clearTimeout(request.timerTimeout);
-            });
+            this.data = data;
+            // send data
+            this.requestStream.end(this.data);
         };
 
-        local.utility2.streamReadAll = function (stream, onError) {
-            /*
-             * this function will concat data from the stream,
-             * and pass it to onError when done reading
-             */
-            var chunkList;
-            chunkList = [];
-            // read data from the stream
-            stream
-                // on data event, push the buffer chunk to chunkList
-                .on('data', function (chunk) {
-                    chunkList.push(chunk);
-                })
-                // on end event, pass concatenated read buffer to onError
-                .on('end', function () {
-                    onError(null, Buffer.concat(chunkList));
-                })
-                // on error event, pass error to onError
-                .on('error', onError);
-        };
-
-        local.utility2.testRunServer = function (options) {
-            /*
-             * this function will
-             * 1. create server from options.middleware
-             * 2. start server on options.port
-             * 3. if $npm_config_mode_npm_test is defined, then run tests
-             */
-            var server;
-            // 1. create server from options.middleware
-            server = local.http.createServer(function (request, response) {
-                options.middleware(request, response, function (error) {
-                    options.middlewareError(error, request, response);
-                });
-            });
-            // 2. start server on options.port
-            options.port = options.port || local.utility2.envDict.PORT;
-            console.log('server starting on port ' + options.port);
-            local.utility2.onReady.counter += 1;
-            server.listen(options.port, local.utility2.onReady);
-            // if $npm_config_timeout_exit is defined,
-            // then exit this process after $npm_config_timeout_exit ms
-            if (Number(local.utility2.envDict.npm_config_timeout_exit)) {
-                setTimeout(function () {
-                    // screen-capture main-page
-                    local.utility2.browserTest({
-                        modeBrowserTest: 'screenCapture',
-                        url: 'http://localhost:' + options.port
-                    }, function (error) {
-                        console.log('server stopping on port ' + options.port);
-                        local.utility2.exit(error);
-                    });
-                }, Number(local.utility2.envDict.npm_config_timeout_exit));
-            }
-            // 3. if $npm_config_mode_npm_test is defined, then run tests
-            local.utility2.testRun(options);
-            return server;
+        local.utility2.XMLHttpRequest.prototype.setRequestHeader = function (key, value) {
+            this.headers[key.toLowerCase()] = value;
         };
         break;
     }
@@ -2784,11 +2787,11 @@ local.utility2['/test/test-report.html.template'] = '<style>\n' +
         // init timeoutDefault
         local.utility2.timeoutDefaultInit();
         // init onReady
-        local.utility2.taskCallbackAdd({ key: 'utility2.onReady' }, function (error) {
-            // validate no error occurred
-            local.utility2.assert(!error, error);
-        });
         local.utility2.onReady = local.utility2.onParallel(function (error) {
+            local.utility2.taskCallbackAdd({ key: 'utility2.onReady' }, function (error) {
+                // validate no error occurred
+                local.utility2.assert(!error, error);
+            });
             local.utility2.taskUpsert({ key: 'utility2.onReady' }, function (onError) {
                 onError(error);
             });
@@ -2804,6 +2807,79 @@ local.utility2['/test/test-report.html.template'] = '<style>\n' +
     case 'browser':
         // init exports
         window.utility2 = local.utility2;
+        // require modules
+        local.http = {};
+        local.http.createServer = function (serverRequestHandler) {
+            return { listen: function (port, onError) {
+                // jslint-hack
+                local.utility2.nop(port);
+                local.utility2.serverRequestHandler = serverRequestHandler;
+                onError();
+            } };
+        };
+        local.http.STATUS_CODES = {
+            100: 'Continue',
+            101: 'Switching Protocols',
+            102: 'Processing',
+            200: 'OK',
+            201: 'Created',
+            202: 'Accepted',
+            203: 'Non-Authoritative Information',
+            204: 'No Content',
+            205: 'Reset Content',
+            206: 'Partial Content',
+            207: 'Multi-Status',
+            208: 'Already Reported',
+            226: 'IM Used',
+            300: 'Multiple Choices',
+            301: 'Moved Permanently',
+            302: 'Found',
+            303: 'See Other',
+            304: 'Not Modified',
+            305: 'Use Proxy',
+            307: 'Temporary Redirect',
+            308: 'Permanent Redirect',
+            400: 'Bad Request',
+            401: 'Unauthorized',
+            402: 'Payment Required',
+            403: 'Forbidden',
+            404: 'Not Found',
+            405: 'Method Not Allowed',
+            406: 'Not Acceptable',
+            407: 'Proxy Authentication Required',
+            408: 'Request Timeout',
+            409: 'Conflict',
+            410: 'Gone',
+            411: 'Length Required',
+            412: 'Precondition Failed',
+            413: 'Payload Too Large',
+            414: 'URI Too Long',
+            415: 'Unsupported Media Type',
+            416: 'Range Not Satisfiable',
+            417: 'Expectation Failed',
+            418: 'I\'m a teapot',
+            421: 'Misdirected Request',
+            422: 'Unprocessable Entity',
+            423: 'Locked',
+            424: 'Failed Dependency',
+            425: 'Unordered Collection',
+            426: 'Upgrade Required',
+            428: 'Precondition Required',
+            429: 'Too Many Requests',
+            431: 'Request Header Fields Too Large',
+            500: 'Internal Server Error',
+            501: 'Not Implemented',
+            502: 'Bad Gateway',
+            503: 'Service Unavailable',
+            504: 'Gateway Timeout',
+            505: 'HTTP Version Not Supported',
+            506: 'Variant Also Negotiates',
+            507: 'Insufficient Storage',
+            508: 'Loop Detected',
+            509: 'Bandwidth Limit Exceeded',
+            510: 'Not Extended',
+            511: 'Network Authentication Required'
+        };
         break;
 
 

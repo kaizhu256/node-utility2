@@ -605,7 +605,7 @@ n].skipped})};return t.forEach(function(e){r(e)}),n.forEach(function(t){e[t].pct
 // https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/common/defaults.js
 // utility2-uglifyjs https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/report/common/defaults.js
 module.exports={watermarks:function(){return{statements:[50,80],lines:[50,80],functions:[50,80],branches:[50,80]}},classFor:function(e,t,n){var r=n[e],i=t[e].pct;return i>=r[1]?"high":i>=r[0]?"medium":"low"},colorize:function(e,t){if(process.stdout.isTTY)switch(
-t){case"low":e=""+e+"";break;case"medium":e=""+e+"";break;case"high":e=""+e+""}return e}}
+t){case"low":e="\x1B[91m"+e+"\x1B[0m";break;case"medium":e="\x1B[93m"+e+"\x1B[0m";break;case"high":e="\x1B[92m"+e+"\x1B[0m"}return e}}
 /* jslint-ignore-end */
         local['./common/defaults'] = module.exports;
     }());

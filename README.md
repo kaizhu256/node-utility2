@@ -120,7 +120,7 @@ instruction
     (function () {
         // init local
         local = {};
-        // init js-env
+        // init modeJs
         local.modeJs = (function () {
             try {
                 return module.exports &&
@@ -411,10 +411,10 @@ instruction
 [![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleJs.svg)](https://travis-ci.org/kaizhu256/node-utility2)
 
 #### output from utility2
-[![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleSh.browser._2Ftmp_2Fapp_2Ftmp_2Fbuild_2Ftest-report.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/test-report.html)
+[![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleSh.browser._2Ftmp_2Fapp_2Ftmp_2Fbuild_2Ftest-report.html.png)](https://kaizhu256.github.io/node-utility2/build/test-report.html)
 
 #### output from istanbul
-[![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleJs.browser._2Ftmp_2Fapp_2Ftmp_2Fbuild_2Fcoverage.html_2Fapp_2Fexample.js.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/coverage.html/node-utility2/index.js.html)
+[![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleJs.browser._2Ftmp_2Fapp_2Ftmp_2Fbuild_2Fcoverage.html_2Fapp_2Fexample.js.html.png)](https://kaizhu256.github.io/node-utility2/build/coverage.html/node-utility2/index.js.html)
 
 
 
@@ -487,15 +487,14 @@ npm_config_mode_auto_restart=1 \
 npm_config_mode_auto_restart_child=1 \
 ./index.sh test node test.js"
     },
-    "version": "2015.11.15"
+    "version": "2015.11.16"
 }
 ```
 
 
 
 # todo
-- npm publish 2015.11.15
-- directly require embedded example.js from README.md
+- port testRunServer to client-side
 - make istanbulCoverageMerge more robust
 - add utility2.middlewareLimit
 - create flamegraph from istanbul coverage
@@ -504,13 +503,16 @@ npm_config_mode_auto_restart_child=1 \
 
 
 
-# change since 702c054f
-- create coverage-summary.json file, when coverage is enabled
-- remove magical auto-silent browserTest, when coverage is enabled
-- fix missing test-report for node-env
-- remove npm postinstall script
-- add function utility2.requireFromScript
-- revamp docApiCreate
+# change since 38f7b2e1
+- npm publish 2015.11.16
+- in process of porting utility2.testRunServer to the browser
+- rename utility2.uuid4 -> utility2.uuid4Create
+- rename utility2.uuidTime -> utility2.uuidTimeCreate and rename u
+- move most code from node js-env to shared js-env
+- create shared utility2.ajax code using nodejs emulation of XMLHTTPRequest
+- rename utility2.middlewareBodyGet to utility2.middlewareBodyRead
+- fix text coverage-report not printing colors
+- add optional callback message to onTimeout
 - none
 
 
@@ -565,14 +567,13 @@ shBuild() {
     # if running legacy-node, then do not continue
     [ "$(node --version)" \< "v5.0" ] && exit
 
-    # deploy app to heroku
-    shRun shHerokuDeploy "hrku01-$npm_package_name-$CI_BRANCH" || return $?
-
-    # test deployed app to heroku
     if [ "$CI_BRANCH" = alpha ] ||
         [ "$CI_BRANCH" = beta ] ||
         [ "$CI_BRANCH" = master ]
     then
+        # deploy app to heroku
+        shRun shHerokuDeploy "hrku01-$npm_package_name-$CI_BRANCH" || return $?
+        # test deployed app to heroku
         TEST_URL="https://hrku01-$npm_package_name-$CI_BRANCH.herokuapp.com" || return $?
         TEST_URL="$TEST_URL?modeTest=consoleLogResult&timeExit={{timeExit}}" || return $?
         MODE_BUILD=herokuTest modeBrowserTest=test modeTestAdd=1 \
