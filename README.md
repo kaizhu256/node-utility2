@@ -123,30 +123,38 @@ instruction
         // init modeJs
         local.modeJs = (function () {
             try {
+                return typeof navigator.userAgent === 'string' &&
+                    typeof document.querySelector('body') === 'object' &&
+                    typeof XMLHttpRequest.prototype.open === 'function' &&
+                    'browser';
+            } catch (errorCaughtBrowser) {
                 return module.exports &&
                     typeof process.versions.node === 'string' &&
                     typeof require('http').createServer === 'function' &&
                     'node';
-            } catch (errorCaughtNode) {
-                return typeof navigator.userAgent === 'string' &&
-                    typeof document.querySelector('body') === 'object' &&
-                    'browser';
             }
         }());
+        // init utility2
+        local = local.modeJs === 'browser'
+            ? window.utility2.local
+            : require('utility2').local;
         // init global
         local.global = local.modeJs === 'browser'
             ? window
             : global;
         // export local
         local.global.local = local;
-        // init utility2
-        local.utility2 = local.modeJs === 'browser'
-            ? window.utility2
-            : require('utility2');
-        // import utility2.local
-        Object.keys(local.utility2.local).forEach(function (key) {
-            local[key] = local[key] || local.utility2.local[key];
-        });
+        // init middleware
+        local.middleware = local.utility2.middlewareGroupCreate([
+            local.utility2.middlewareInit,
+            local.utility2.middlewareAssetsCached
+        ]);
+        // init error-middleware
+        local.middlewareError = local.utility2.middlewareError;
+        // run server-test
+        local.utility2.testRunServer(local);
+        // init assets
+        local.utility2.cacheDict.assets['/test/hello'] = 'hello';
     }());
     switch (local.modeJs) {
 
@@ -156,9 +164,9 @@ instruction
     case 'browser':
         // init tests
         local.testCase_ajax_200 = function (options, onError) {
-            /*
-             * this function will test ajax's "200 ok" handling-behavior
-             */
+        /*
+         * this function will test ajax's "200 ok" handling-behavior
+         */
             var data;
             // jslint-hack
             local.utility2.nop(options);
@@ -177,9 +185,9 @@ instruction
             });
         };
         local.testCase_ajax_404 = function (options, onError) {
-            /*
-             * this function will test ajax's "404 not found" handling-behavior
-             */
+        /*
+         * this function will test ajax's "404 not found" handling-behavior
+         */
             // jslint-hack
             local.utility2.nop(options);
             // test '/test/undefined'
@@ -193,12 +201,6 @@ instruction
                 }, onError);
             });
         };
-        // run test
-        window.utility2.onReady.counter += 1;
-        setTimeout(function () {
-            window.utility2.testRun(local);
-            window.utility2.onReady();
-        });
         break;
 
 
@@ -207,9 +209,9 @@ instruction
     case 'node':
         // init tests
         local.testCase_browserTest_default = function (options, onError) {
-            /*
-             * this function will spawn an electron process to test the test-page
-             */
+        /*
+         * this function will spawn an electron process to test the test-page
+         */
             // jslint-hack
             local.utility2.nop(options);
             local.utility2.browserTest({
@@ -223,8 +225,6 @@ instruction
         process.env.npm_package_description = 'this is an example module';
         process.env.npm_package_name = 'example-module';
         process.env.npm_package_version = '0.0.1';
-        // require modules
-        local.fs = require('fs');
         // init assets
         local.utility2.cacheDict.assets['/'] = ('<!DOCTYPE html>\n' +
 /* jslint-ignore-begin */
@@ -280,9 +280,9 @@ instruction
 '        options,\n' +
 '        onError\n' +
 '    ) {\n' +
-'        /*\n' +
-'         * this function will demo a failed assertion test\n' +
-'         */\n' +
+'    /*\n' +
+'     * this function will demo a failed assertion test\n' +
+'     */\n' +
 '        // jslint-hack\n' +
 '        window.utility2.nop(options);\n' +
 '        window.utility2.assert(false, "this is a failed assertion demo");\n' +
@@ -290,9 +290,9 @@ instruction
 '    };\n' +
 '\n' +
 '    testCaseDict.testCase_passed_ajax_demo = function (options, onError) {\n' +
-'        /*\n' +
-'         * this function will demo a passed ajax test\n' +
-'         */\n' +
+'    /*\n' +
+'     * this function will demo a passed ajax test\n' +
+'     */\n' +
 '        var data;\n' +
 '        // jslint-hack\n' +
 '        window.utility2.nop(options);\n' +
@@ -328,9 +328,11 @@ instruction
 '    <script src="/assets/utility2.lib.istanbul.js"></script>\n' +
 '    <script src="/assets/utility2.lib.jslint.js"></script>\n' +
 '    <script src="/assets/utility2.lib.uglifyjs.js"></script>\n' +
+'    <script src="/assets/utility2.lib.url.js"></script>\n' +
 '    <script src="/assets/utility2.js"></script>\n' +
 '    <script>\n' +
 '    window.utility2.envDict = {\n' +
+'        PORT: "{{envDict.PORT}}",\n' +
 '        npm_package_description: "{{envDict.npm_package_description}}",\n' +
 '        npm_package_name: "{{envDict.npm_package_name}}",\n' +
 '        npm_package_version: "{{envDict.npm_package_version}}"\n' +
@@ -375,6 +377,8 @@ instruction
 /* jslint-ignore-end */
         '</html>\n').replace((/\{\{envDict\.\w+?\}\}/g), function (match0) {
             switch (match0) {
+            case '{{envDict.PORT}}':
+                return process.env.PORT;
             case '{{envDict.npm_package_description}}':
                 return process.env.npm_package_description;
             case '{{envDict.npm_package_name}}':
@@ -392,16 +396,6 @@ instruction
                 __dirname + '/example.js',
                 'utility2'
             );
-        local.utility2.cacheDict.assets['/test/hello'] = 'hello';
-        // init middleware
-        local.middleware = local.utility2.middlewareGroupCreate([
-            local.utility2.middlewareInit,
-            local.utility2.middlewareAssetsCached
-        ]);
-        // init error-middleware
-        local.middlewareError = local.utility2.middlewareError;
-        // run server-test
-        local.utility2.testRunServer(local);
         break;
     }
 }());
@@ -487,14 +481,14 @@ npm_config_mode_auto_restart=1 \
 npm_config_mode_auto_restart_child=1 \
 ./index.sh test node test.js"
     },
-    "version": "2015.11.16"
+    "version": "2015.12.1"
 }
 ```
 
 
 
 # todo
-- port testRunServer to client-side
+- migrate live-test-server from heroku to github, with browser emulation of server
 - make istanbulCoverageMerge more robust
 - add utility2.middlewareLimit
 - create flamegraph from istanbul coverage
@@ -503,16 +497,18 @@ npm_config_mode_auto_restart_child=1 \
 
 
 
-# change since 38f7b2e1
-- npm publish 2015.11.16
-- in process of porting utility2.testRunServer to the browser
-- rename utility2.uuid4 -> utility2.uuid4Create
-- rename utility2.uuidTime -> utility2.uuidTimeCreate and rename u
-- move most code from node js-env to shared js-env
-- create shared utility2.ajax code using nodejs emulation of XMLHTTPRequest
-- rename utility2.middlewareBodyGet to utility2.middlewareBodyRead
-- fix text coverage-report not printing colors
-- add optional callback message to onTimeout
+# change since 3b7491d7
+- npm publish 2015.12.1
+- emulate testRunServer to run in browser
+- emulate server middlewares to run in browser
+- emulate http.request, http.IncomingMessage, and http.ServerResponse in browser
+- add utility2 properties serverLocalHost, serverLocalRequestHandler, serverLocalUrlTest
+- fix covered-lines not updating in subsequent coverageReportCreate calls
+- merge local object from example.js into utility2
+- fix timerInterval refresh in browser test
+- change indentation of function comments - shift them left by 4 spaces
+- add /* istanbul ignore all */ comment-flag to disable code-coverage
+- add lib.url.js
 - none
 
 
@@ -531,7 +527,7 @@ npm_config_mode_auto_restart_child=1 \
 # this shell script will run the build for this package
 
 shBuild() {
-    # this function will run the main build
+# this function will run the main build
     local TEST_URL || return $?
 
     # init env

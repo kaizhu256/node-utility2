@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* istanbul ignore all */
 /*jslint
     browser: true,
     maxerr: 8,
@@ -18,16 +19,18 @@
     (function () {
         // init local
         local = {};
+        // init modeJs
         local.modeJs = (function () {
             try {
+                return typeof navigator.userAgent === 'string' &&
+                    typeof document.querySelector('body') === 'object' &&
+                    typeof XMLHttpRequest.prototype.open === 'function' &&
+                    'browser';
+            } catch (errorCaughtBrowser) {
                 return module.exports &&
                     typeof process.versions.node === 'string' &&
                     typeof require('http').createServer === 'function' &&
                     'node';
-            } catch (errorCaughtNode) {
-                return typeof navigator.userAgent === 'string' &&
-                    typeof document.querySelector('body') === 'object' &&
-                    'browser';
             }
         }());
     }());
@@ -238,9 +241,9 @@ f){}}else n[1]=n[1].substr(0,2);return i?i.call(n,n):null}throw u}}}(),DOT_CALL_
 
 
         local.uglify = function (code) {
-            /*
-             * this function will uglify the js-code
-             */
+        /*
+         * this function will uglify the js-code
+         */
             var ast;
             // parse code and get the initial AST
             ast = local.parse(code
@@ -278,9 +281,9 @@ f){}}else n[1]=n[1].substr(0,2);return i?i.call(n,n):null}throw u}}}(),DOT_CALL_
         /* istanbul ignore next */
         // run the cli
         local.cliRun = function () {
-            /*
-             * this function will run the cli
-             */
+        /*
+         * this function will run the cli
+         */
             var chunkList, onError;
             if (module !== require.main) {
                 return;

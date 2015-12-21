@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* istanbul ignore all */
 /*jslint
     browser: true,
     maxerr: 8,
@@ -434,9 +435,9 @@ t=0,n=this.children.length;t<n;++t)r=this.children[t],r instanceof k?e+=r.toStri
             };
         };
         local.handlebars.replace = function (template, dict, withPrefix) {
-            /*
-             * this function will replace the keys in the template with the dict's key / value
-             */
+        /*
+         * this function will replace the keys in the template with the dict's key / value
+         */
             var value;
             // search for keys in the template
             return template.replace((/\{\{.+?\}\}/g), function (match0) {
@@ -460,6 +461,8 @@ t=0,n=this.children.length;t<n;++t)r=this.children[t],r instanceof k?e+=r.toStri
         local.collectorCreate = function (options) {
             return {
                 fileCoverageFor: function (file) {
+                    // remove derived info
+                    delete options.coverage[file].l;
                     return options.coverage[file];
                 },
                 files: function () {
@@ -661,7 +664,7 @@ local['head.txt'] = '\
         }\n\
         div.header {\n\
             z-index: 100;\n\
-            position: static;\n\
+            position: fixed;\n\
             top: 0;\n\
             border-bottom: 1px solid #666;\n\
             width: 100%;\n\
@@ -670,7 +673,7 @@ local['head.txt'] = '\
             border-top: 1px solid #666;\n\
         }\n\
         div.body {\n\
-            margin-top: 0;\n\
+            margin-top: 10em;\n\
         }\n\
         div.meta {\n\
             font-size: 90%;\n\
@@ -1009,9 +1012,10 @@ local['coverage.badge.svg'] = '<svg xmlns="http://www.w3.org/2000/svg" width="11
         /* istanbul ignore next */
         // run the cli
         local.cliRun = function () {
-            /*
-             * this function will run the cli
-             */
+        /*
+         * this function will run the cli
+         */
+            var data;
             if (module !== local.require.main) {
                 return;
             }
@@ -1024,16 +1028,14 @@ local['coverage.badge.svg'] = '<svg xmlns="http://www.w3.org/2000/svg" width="11
                 local.module._extensions['.js'] = function (module, file) {
                     if (typeof file === 'string' &&
                             file.indexOf(process.cwd()) === 0 &&
-                            file.indexOf(process.cwd() + '/node_modules/') !== 0 &&
-                            !new RegExp(process.env.npm_config_mode_cover_regexp_exclude ||
-                                '[^\\S\\s]').test(file) &&
-                            new RegExp(process.env.npm_config_mode_cover_regexp_include)
-                                .test(file)) {
-                        module._compile(local.instrumentSync(local._fs
-                            .readFileSync(file, 'utf8'), file), file);
-                    } else {
-                        local._moduleExtensionsJs(module, file);
+                            file.indexOf(process.cwd() + '/node_modules/') !== 0) {
+                        data = local._fs.readFileSync(file, 'utf8');
+                        if (!(/^\/\* istanbul ignore all \*\/$/m).test(data)) {
+                            module._compile(local.instrumentSync(data, file), file);
+                            return;
+                        }
                     }
+                    local._moduleExtensionsJs(module, file);
                 };
                 // init process.argv
                 process.argv.splice(1, 2);
@@ -1066,10 +1068,12 @@ local['coverage.badge.svg'] = '<svg xmlns="http://www.w3.org/2000/svg" width="11
     (function () {
         // init local
         local = {};
+        // init modeJs
         local.modeJs = (function () {
             try {
                 return typeof navigator.userAgent === 'string' &&
                     typeof document.querySelector('body') === 'object' &&
+                    typeof XMLHttpRequest.prototype.open === 'function' &&
                     'browser';
             } catch (errorCaughtBrowser) {
                 return module.exports &&
@@ -1086,12 +1090,12 @@ local['coverage.badge.svg'] = '<svg xmlns="http://www.w3.org/2000/svg" width="11
         local['./package.json'] = {};
         local.codeDict = local.codeDict || {};
         local.coverageReportCreate = function (options) {
-            /*
-             * this function will
-             * 1. print coverage in text-format to stdout
-             * 2. write coverage in html-format to filesystem
-             * 3. return coverage in html-format as single document
-             */
+        /*
+         * this function will
+         * 1. print coverage in text-format to stdout
+         * 2. write coverage in html-format to filesystem
+         * 3. return coverage in html-format as single document
+         */
             if (!options.coverage) {
                 return '';
             }
@@ -1149,7 +1153,9 @@ local['coverage.badge.svg'] = '<svg xmlns="http://www.w3.org/2000/svg" width="11
                                     return 'x-istanbul-html ' + match0
                                         .replace((/,/g), ', x-istanbul-html ');
                                 });
-                        });
+                        })
+                        .replace('position: fixed;', 'position: static;')
+                        .replace('margin-top: 10em;', 'margin-top: 0;');
                 }
                 return file;
             },
@@ -1158,9 +1164,9 @@ local['coverage.badge.svg'] = '<svg xmlns="http://www.w3.org/2000/svg" width="11
             }
         };
         local.fsWriteFileWithMkdirpSync = function (file, data) {
-            /*
-             * this function will synchronously 'mkdir -p' and write the data to file
-             */
+        /*
+         * this function will synchronously 'mkdir -p' and write the data to file
+         */
             if (!local._fs || !file) {
                 return;
             }
@@ -1176,12 +1182,12 @@ local['coverage.badge.svg'] = '<svg xmlns="http://www.w3.org/2000/svg" width="11
             }
         };
         local.instrumentSync = function (code, file, coverageVariable) {
-            /*
-             * this function will
-             * 1. normalize the file
-             * 2. save code to codeDict[file] for future html-report
-             * 3. return instrumented code
-             */
+        /*
+         * this function will
+         * 1. normalize the file
+         * 2. save code to codeDict[file] for future html-report
+         * 3. return instrumented code
+         */
             // 1. normalize the file
             file = local.path.resolve('/', file);
             // 2. save code to codeDict[file] for future html-report
@@ -1195,9 +1201,9 @@ local['coverage.badge.svg'] = '<svg xmlns="http://www.w3.org/2000/svg" width="11
                 .instrumentSync(code, file);
         };
         local.nop = function () {
-            /*
-             * this function will run no operation - nop
-             */
+        /*
+         * this function will run no operation - nop
+         */
             return;
         };
         local.util = { inherits: local.nop };

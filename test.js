@@ -20,14 +20,15 @@
         // init modeJs
         local.modeJs = (function () {
             try {
+                return typeof navigator.userAgent === 'string' &&
+                    typeof document.querySelector('body') === 'object' &&
+                    typeof XMLHttpRequest.prototype.open === 'function' &&
+                    'browser';
+            } catch (errorCaughtBrowser) {
                 return module.exports &&
                     typeof process.versions.node === 'string' &&
                     typeof require('http').createServer === 'function' &&
                     'node';
-            } catch (errorCaughtNode) {
-                return typeof navigator.userAgent === 'string' &&
-                    typeof document.querySelector('body') === 'object' &&
-                    'browser';
             }
         }());
         switch (local.modeJs) {
@@ -81,10 +82,26 @@
     // run shared js-env code
     (function () {
         // init tests
+        local._testCase_testRun_failure = function (options, onError) {
+        /*
+         * this function will test testRun's failure handling-behavior
+         */
+            // jslint-hack
+            local.utility2.nop(options);
+            // test failure from callback handling-behavior
+            onError(local.utility2.errorDefault);
+            // test failure from multiple-callback handling-behavior
+            onError();
+            // test failure from ajax handling-behavior
+            local.utility2.ajax({ url: '/test/undefined' }, onError);
+            // test failure from thrown error handling-behavior
+            throw local.utility2.errorDefault;
+        };
+
         local.testCase_ajax_abort = function (options, onError) {
-            /*
-             * this function will test ajax's abort handling-behavior
-             */
+        /*
+         * this function will test ajax's abort handling-behavior
+         */
             options = local.utility2.ajax({ url: '/test/timeout' }, function (error) {
                 local.utility2.testTryCatch(function () {
                     // validate error occurred
@@ -99,9 +116,9 @@
         };
 
         local.testCase_ajax_assets = function (options, onError) {
-            /*
-             * this function will test ajax's assets handling-behavior
-             */
+        /*
+         * this function will test ajax's assets handling-behavior
+         */
             // jslint-hack
             local.utility2.nop(options);
             local.utility2.ajax({ url: '/package.json' }, function (error, xhr) {
@@ -117,9 +134,9 @@
         };
 
         local.testCase_ajax_cache = function (options, onError) {
-            /*
-             * this function will test ajax's cache handling-behavior
-             */
+        /*
+         * this function will test ajax's cache handling-behavior
+         */
             // jslint-hack
             local.utility2.nop(options);
             // test http GET handling-behavior
@@ -151,9 +168,9 @@
         };
 
         local.testCase_ajax_error = function (options, onError) {
-            /*
-             * this function will test ajax's error handling-behavior
-             */
+        /*
+         * this function will test ajax's error handling-behavior
+         */
             var onParallel;
             // jslint-hack
             local.utility2.nop(options);
@@ -161,7 +178,7 @@
             onParallel.counter += 1;
             [{
                 // test 404-not-found-error handling-behavior
-                url: '/test/error-400'
+                url: '/test/error-404'
             }, {
                 // test 500-internal-server-error handling-behavior
                 url: '/test/error-500'
@@ -190,9 +207,9 @@
         };
 
         local.testCase_ajax_post = function (options, onError) {
-            /*
-             * this function will test ajax's POST handling-behavior
-             */
+        /*
+         * this function will test ajax's POST handling-behavior
+         */
             var data, onParallel;
             // jslint-hack
             local.utility2.nop(options);
@@ -270,9 +287,9 @@
         };
 
         local.testCase_assert_default = function (options, onError) {
-            /*
-             * this function will test assert's default handling-behavior
-             */
+        /*
+         * this function will test assert's default handling-behavior
+         */
             // jslint-hack
             local.utility2.nop(options);
             // test assertion passed
@@ -315,9 +332,9 @@
         };
 
         local.testCase_debug_print_default = function (options, onError) {
-            /*
-             * this function will test debug_print's default handling-behavior
-             */
+        /*
+         * this function will test debug_print's default handling-behavior
+         */
             var data;
             // jslint-hack
             local.utility2.nop(options);
@@ -341,9 +358,9 @@
         };
 
         local.testCase_docApiCreate_default = function (options, onError) {
-            /*
-             * this function will test docApiCreate's default handling-behavior
-             */
+        /*
+         * this function will test docApiCreate's default handling-behavior
+         */
             /*jslint evil: true*/
             var data;
             // jslint-hack
@@ -369,9 +386,9 @@
         };
 
         local.testCase_echo_default = function (options, onError) {
-            /*
-             * this function will test echo's default handling-behavior
-             */
+        /*
+         * this function will test echo's default handling-behavior
+         */
             // jslint-hack
             local.utility2.nop(options);
             local.utility2.assert(local.utility2.echo('hello') === 'hello');
@@ -379,9 +396,9 @@
         };
 
         local.testCase_exit_default = function (options, onError) {
-            /*
-             * this function will exit's default handling-behavior
-             */
+        /*
+         * this function will exit's default handling-behavior
+         */
             // jslint-hack
             local.utility2.nop(options);
             // test exit's default handling-behavior
@@ -398,9 +415,9 @@
         };
 
         local.testCase_istanbulInstrumentSync_default = function (options, onError) {
-            /*
-             * this function will test istanbulInstrumentSync's default handling-behavior
-             */
+        /*
+         * this function will test istanbulInstrumentSync's default handling-behavior
+         */
             var data;
             // jslint-hack
             local.utility2.nop(options);
@@ -411,9 +428,9 @@
         };
 
         local.testCase_istanbulCoverageReportCreate_default = function (options, onError) {
-            /*
-             * this function will test istanbulCoverageReportCreate's default handling-behavior
-             */
+        /*
+         * this function will test istanbulCoverageReportCreate's default handling-behavior
+         */
             local.utility2.testMock([
                 // suppress console.log
                 [console, { log: local.utility2.nop }]
@@ -468,9 +485,9 @@
         };
 
         local.testCase_jslintAndPrint_default = function (options, onError) {
-            /*
-             * this function will test jslintAndPrint's default handling-behavior
-             */
+        /*
+         * this function will test jslintAndPrint's default handling-behavior
+         */
             // jslint-hack
             local.utility2.nop(options);
             local.utility2.testMock([
@@ -527,9 +544,9 @@
         };
 
         local.testCase_jsonCopy_default = function (options, onError) {
-            /*
-             * this function will test jsonCopy's default handling-behavior
-             */
+        /*
+         * this function will test jsonCopy's default handling-behavior
+         */
             // jslint-hack
             local.utility2.nop(options);
             // test various data-type handling-behavior
@@ -543,9 +560,9 @@
         };
 
         local.testCase_jsonStringifyOrdered_default = function (options, onError) {
-            /*
-             * this function will test jsonStringifyOrdered's default handling-behavior
-             */
+        /*
+         * this function will test jsonStringifyOrdered's default handling-behavior
+         */
             // test data-type handling-behavior
             [undefined, null, false, true, 0, 1, 1.5, 'a', {}, []].forEach(function (data) {
                 local.utility2.assert(
@@ -575,9 +592,9 @@
         };
 
         local.testCase_listShuffle_default = function (options, onError) {
-            /*
-             * this function will test listShuffle's default handling-behavior
-             */
+        /*
+         * this function will test listShuffle's default handling-behavior
+         */
             var list = '[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]';
             // validate list before shuffle
             options = JSON.stringify(JSON.parse(list));
@@ -591,9 +608,9 @@
         };
 
         local.testCase_objectSetDefault_default = function (options, onError) {
-            /*
-             * this function will test objectSetDefault's default handling-behavior
-             */
+        /*
+         * this function will test objectSetDefault's default handling-behavior
+         */
             // test non-recursive handling-behavior
             options = local.utility2.objectSetDefault(
                 { aa: undefined, bb: { cc: 1 }, cc: { dd: {} }, dd: [1, 1], ee: [1, 1] },
@@ -624,9 +641,9 @@
         };
 
         local.testCase_objectSetOverride_default = function (options, onError) {
-            /*
-             * this function will test objectSetOverride's default handling-behavior
-             */
+        /*
+         * this function will test objectSetOverride's default handling-behavior
+         */
             // test non-recursive handling-behavior
             options = local.utility2.objectSetOverride(
                 { aa: 1, bb: { cc: 1 }, cc: { dd: 1 }, dd: [1, 1], ee: [1, 1] },
@@ -662,9 +679,9 @@
         };
 
         local.testCase_objectTraverse_default = function (options, onError) {
-            /*
-             * this function will test objectTraverse's default handling-behavior
-             */
+        /*
+         * this function will test objectTraverse's default handling-behavior
+         */
             options = { aa: null, bb: 2, cc: { dd: 4, ee: [5, 6, 7] } };
             // test circular-reference handling-behavior
             options.data = options;
@@ -683,9 +700,9 @@
         };
 
         local.testCase_onErrorDefault_default = function (options, onError) {
-            /*
-             * this function will test onErrorDefault's default handling-behavior
-             */
+        /*
+         * this function will test onErrorDefault's default handling-behavior
+         */
             local.utility2.testMock([
                 // suppress console.error
                 [console, { error: function (arg) {
@@ -706,9 +723,9 @@
         };
 
         local.testCase_onErrorJsonParse_default = function (options, onError) {
-            /*
-             * this function will test onErrorJsonParse's default handling-behavior
-             */
+        /*
+         * this function will test onErrorJsonParse's default handling-behavior
+         */
             var data, error, onError2;
             // jslint-hack
             local.utility2.nop(options);
@@ -739,9 +756,9 @@
         };
 
         local.testCase_onParallel_default = function (options, onError) {
-            /*
-             * this function will test onParallel's default handling-behavior
-             */
+        /*
+         * this function will test onParallel's default handling-behavior
+         */
             var onParallel, onParallelError;
             // jslint-hack
             local.utility2.nop(options);
@@ -777,9 +794,9 @@
         };
 
         local.testCase_onTimeout_timeout = function (options, onError) {
-            /*
-             * this function will test onTimeout's timeout handling-behavior
-             */
+        /*
+         * this function will test onTimeout's timeout handling-behavior
+         */
             var timeElapsed;
             // jslint-hack
             local.utility2.nop(options);
@@ -804,9 +821,9 @@
         };
 
         local.testCase_stringFormat_default = function (options, onError) {
-            /*
-             * this function will test stringFormat's default handling-behavior
-             */
+        /*
+         * this function will test stringFormat's default handling-behavior
+         */
             var data;
             // jslint-hack
             local.utility2.nop(options);
@@ -851,9 +868,9 @@
         };
 
         local.testCase_taskCallbackAndUpdateCached_default = function (options, onError) {
-            /*
-             * this function will test taskCallbackAndUpdateCached's default handling-behavior
-             */
+        /*
+         * this function will test taskCallbackAndUpdateCached's default handling-behavior
+         */
             var cacheValue, modeNext, onNext, onParallel, onTask, optionsCopy;
             if (!options) {
                 onParallel = local.utility2.onParallel(onError);
@@ -1006,9 +1023,9 @@
         };
 
         local.testCase_taskUpsert_multipleCallback = function (options, onError) {
-            /*
-             * this function will test taskUpsert's multiple-callback handling-behavior
-             */
+        /*
+         * this function will test taskUpsert's multiple-callback handling-behavior
+         */
             options = {
                 counter: 0,
                 key: 'testCase_taskUpsert_multiCallback'
@@ -1027,9 +1044,9 @@
         };
 
         local.testCase_taskUpsert_upsert = function (options, onError) {
-            /*
-             * this function will test taskUpsert's upsert handling-behavior
-             */
+        /*
+         * this function will test taskUpsert's upsert handling-behavior
+         */
             options = {
                 counter: 0,
                 key: 'testCase_taskUpsert_upsert'
@@ -1052,9 +1069,9 @@
         };
 
         local.testCase_testRun_nop = function (options, onError) {
-            /*
-             * this function will test testRun's nop handling-behavior
-             */
+        /*
+         * this function will test testRun's nop handling-behavior
+         */
             options = {};
             local.utility2.testMock([
                 // test testRun's no modeTest handling-behavior
@@ -1067,26 +1084,10 @@
             }, onError);
         };
 
-        local.testCase_testRun_failure = function (options, onError) {
-            /*
-             * this function will test testRun's failure handling-behavior
-             */
-            // jslint-hack
-            local.utility2.nop(options);
-            // test failure from callback handling-behavior
-            onError(local.utility2.errorDefault);
-            // test failure from multiple-callback handling-behavior
-            onError();
-            // test failure from ajax handling-behavior
-            local.utility2.ajax({ url: '/test/undefined' }, onError);
-            // test failure from thrown error handling-behavior
-            throw local.utility2.errorDefault;
-        };
-
         local.testCase_uglify_default = function (options, onError) {
-            /*
-             * this function will test uglify's default handling-behavior
-             */
+        /*
+         * this function will test uglify's default handling-behavior
+         */
             var data;
             // jslint-hack
             local.utility2.nop(options);
@@ -1097,9 +1098,9 @@
         };
 
         local.testCase_uglifyIfProduction_default = function (options, onError) {
-            /*
-             * this function will test uglify's default handling-behavior
-             */
+        /*
+         * this function will test uglify's default handling-behavior
+         */
             var data;
             // jslint-hack
             local.utility2.nop(options);
@@ -1129,9 +1130,9 @@
     case 'node':
         // init tests
         local.testCase_fsWriteFileWithMkdirp_default = function (options, onError) {
-            /*
-             * this function will test fsWriteFileWithMkdirp's default handling-behavior
-             */
+        /*
+         * this function will test fsWriteFileWithMkdirp's default handling-behavior
+         */
             var dir, file, modeNext, onNext;
             // jslint-hack
             local.utility2.nop(options);
@@ -1201,9 +1202,9 @@
         };
 
         local.testCase_istanbulCoverageMerge_default = function (options, onError) {
-            /*
-             * this function will test istanbulCoverageMerge's default handling-behavior
-             */
+        /*
+         * this function will test istanbulCoverageMerge's default handling-behavior
+         */
             var coverage1, coverage2, data;
             // jslint-hack
             local.utility2.nop(options);
@@ -1242,9 +1243,9 @@
         };
 
         local.testCase_istanbulInstrumentInPackage_default = function (options, onError) {
-            /*
-             * this function will test istanbulInstrumentInPackage's default handling-behavior
-             */
+        /*
+         * this function will test istanbulInstrumentInPackage's default handling-behavior
+         */
             var data;
             // jslint-hack
             local.utility2.nop(options);
@@ -1264,9 +1265,9 @@
         };
 
         local.testCase_onFileModifiedRestart_watchFile = function (options, onError) {
-            /*
-             * this function will test onFileModifiedRestart's watchFile handling-behavior
-             */
+        /*
+         * this function will test onFileModifiedRestart's watchFile handling-behavior
+         */
             var file, onParallel;
             // jslint-hack
             local.utility2.nop(options);
@@ -1288,9 +1289,9 @@
         };
 
         local.testCase_processSpawnWithTimeout_default = function (options, onError) {
-            /*
-             * this function will test processSpawnWithTimeout's default handling-behavior
-             */
+        /*
+         * this function will test processSpawnWithTimeout's default handling-behavior
+         */
             var childProcess, onParallel;
             // jslint-hack
             local.utility2.nop(options);
@@ -1330,9 +1331,9 @@
         };
 
         local.testCase_replStart_default = function (options, onError) {
-            /*
-             * this function will test replStart's default handling-behavior
-             */
+        /*
+         * this function will test replStart's default handling-behavior
+         */
             /*jslint evil: true*/
             // jslint-hack
             local.utility2.nop(options);
@@ -1365,9 +1366,9 @@
         };
 
         local.testCase_serverRespondTimeoutDefault_default = function (options, onError) {
-            /*
-             * this function will test serverRespondTimeoutDefault's default handling-behavior
-             */
+        /*
+         * this function will test serverRespondTimeoutDefault's default handling-behavior
+         */
             // jslint-hack
             local.utility2.nop(options);
             local.utility2.testMock([
@@ -1389,9 +1390,9 @@
         };
 
         local.testCase_testPage_error = function (options, onError) {
-            /*
-             * this function will test the test-page's error handling-behavior
-             */
+        /*
+         * this function will test the test-page's error handling-behavior
+         */
             // jslint-hack
             local.utility2.nop(options);
             local.utility2.browserTest({
@@ -1408,7 +1409,7 @@
                     '?modeTest=consoleLogResult&' +
                     // test specific testCase handling-behavior
                     // test testRun's failure handling-behavior
-                    'modeTestCase=testCase_testRun_failure&' +
+                    'modeTestCase=_testCase_testRun_failure&' +
                     // test timeExit handling-behavior
                     'timeExit={{timeExit}}'
             }, function (error) {
@@ -1421,9 +1422,9 @@
         };
 
         local.testCase_testRunServer_exit = function (options, onError) {
-            /*
-             * this function will test testRunServer's exit handling-behavior
-             */
+        /*
+         * this function will test testRunServer's exit handling-behavior
+         */
             // jslint-hack
             local.utility2.nop(options);
             // test testRunServer's $npm_config_timeout_exit handling-behavior
@@ -1447,6 +1448,9 @@
                         onError();
                     },
                     onReady: {},
+                    serverLocalDict: {},
+                    serverLocalHost: '',
+                    serverLocalUrlTest: local.utility2.nop,
                     testRun: local.utility2.nop
                 }],
                 [local.utility2.local, { http: { createServer: function () {
@@ -1461,9 +1465,9 @@
         };
 
         local.testCase_uuidXxx_default = function (options, onError) {
-            /*
-             * this function will test uuidXxx's default handling-behavior
-             */
+        /*
+         * this function will test uuidXxx's default handling-behavior
+         */
             var data1, data2;
             // jslint-hack
             local.utility2.nop(options);
@@ -1488,29 +1492,36 @@
         };
         break;
     }
-    switch (local.modeJs) {
 
 
 
-    // run node js-env code
-    case 'node':
+    // run shared js-env code
+    (function () {
         // init assets
         local.utility2.cacheDict.assets['/test/script-only.html'] =
             '<h1>script-only test</h1>\n' +
+            '<script src="/assets/utility2.lib.url.js"></script>\n' +
             '<script src="/assets/utility2.js"></script>\n' +
+            '<script>window.utility2.envDict.PORT = "' + local.utility2.envDict.PORT +
+                '";</script>\n' +
             '<script src="/assets/example.js"></script>\n' +
             '<script src="/test/test.js"></script>\n';
-        local.utility2.cacheDict.assets['/test/test.js'] =
-            local.utility2.istanbulInstrumentInPackage(
-                local.fs.readFileSync(__filename, 'utf8'),
-                __filename,
-                'utility2'
-            );
+        local.utility2.serverLocalUrlTest = function (url) {
+            switch (local.url.parse(url).pathname) {
+            case '/test/echo':
+            case '/test/body':
+            case '/test/error-500':
+            case '/test/error-undefined':
+            case '/test/hello':
+            case '/test/timeout':
+                return true;
+            }
+        };
         // init test-middleware
         local.middleware.middlewareList.push(function (request, response, nextMiddleware) {
-            /*
-             * this function will run the test-middleware
-             */
+        /*
+         * this function will run the test-middleware
+         */
             switch (request.urlParsed.pathnameNormalized) {
             // test http POST handling-behavior
             case '/test/echo':
@@ -1526,7 +1537,8 @@
                 local.utility2.middlewareBodyRead(request, response, function () {
                     // test multiple request-body-read handling-behavior
                     local.utility2.middlewareBodyRead(request, response, function () {
-                        response.end(request.bodyRaw);
+                        response.write(request.bodyRaw);
+                        response.end();
                     });
                 });
                 break;
@@ -1574,8 +1586,20 @@
                 );
             }
         });
-        // init error-middleware
-        local.middlewareError = local.utility2.middlewareError;
+    }());
+    switch (local.modeJs) {
+
+
+
+    // run node js-env code
+    case 'node':
+        // init assets
+        local.utility2.cacheDict.assets['/test/test.js'] = local.utility2
+            .istanbulInstrumentInPackage(
+                local.fs.readFileSync(__filename, 'utf8'),
+                __filename,
+                'utility2'
+            );
         // debug dir
         [
             process.cwd()

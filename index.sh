@@ -1,7 +1,7 @@
 #/bin/sh
 
 shAesDecrypt() {
-    # this function will decrypt base64-encoded stdin to stdout using aes-256-cbc
+# this function will decrypt base64-encoded stdin to stdout using aes-256-cbc
     local IV STRING || return $?
     # save stdin to $STRING
     STRING="$(cat /dev/stdin)" || return $?
@@ -15,8 +15,8 @@ shAesDecrypt() {
 }
 
 shAesEncrypt() {
-    # this function will encrypt stdin to base64-encoded stdout,
-    # with a random iv prepended using aes-256-cbc
+# this function will encrypt stdin to base64-encoded stdout,
+# with a random iv prepended using aes-256-cbc
     local IV || return $?
     # init $IV from random 16 bytes
     IV="$(openssl rand -hex 16)" || return $?
@@ -27,7 +27,7 @@ shAesEncrypt() {
 }
 
 shBaseInit() {
-    # this function will init the base bash-login env, and is intended for aws-ec2 setup
+# this function will init the base bash-login env, and is intended for aws-ec2 setup
     local FILE || return $?
     # init $PATH_BIN
     if [ "$PATH_BIN" = "" ]
@@ -72,9 +72,9 @@ shBaseInit() {
 }
 
 shBaseInstall() {
-    # this function will install .bashrc, .screenrc, .vimrc, and index.sh in $HOME,
-    # and is intended for aws-ec2 setup
-    # curl https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/index.sh > $HOME/index.sh && . $HOME/index.sh && shBaseInstall
+# this function will install .bashrc, .screenrc, .vimrc, and index.sh in $HOME,
+# and is intended for aws-ec2 setup
+# curl https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/index.sh > $HOME/index.sh && . $HOME/index.sh && shBaseInstall
     local FILE || return $?
     for FILE in .screenrc .vimrc index.sh
     do
@@ -91,8 +91,8 @@ shBaseInstall() {
 }
 
 shBrowserTest() {
-    # this function will spawn an electron process to test the given $URL,
-    # and merge the test-report into the existing test-report
+# this function will spawn an electron process to test the given $URL,
+# and merge the test-report into the existing test-report
     shBuildPrint "${MODE_BUILD:-electronTest}" \
         "electron.${modeBrowserTest} - $url" || return $?
     node -e "
@@ -108,7 +108,7 @@ shBrowserTest() {
 }
 
 shBuildGithubUpload() {
-    # this function will upload build-artifacts to github
+# this function will upload build-artifacts to github
     local DIR || return $?
     if [ "$GIT_SSH" = "" ]
     then
@@ -128,7 +128,7 @@ shBuildGithubUpload() {
 }
 
 shBuildPrint() {
-    # this function will print debug info about the build state
+# this function will print debug info about the build state
     local MESSAGE || return $?
     MESSAGE="$2" || return $?
     export MODE_BUILD="$1" || return $?
@@ -136,12 +136,12 @@ shBuildPrint() {
 }
 
 shDateIso() {
-    # this function will print the current date in ISO format
+# this function will print the current date in ISO format
     date -u "+%Y-%m-%dT%H:%M:%SZ"
 }
 
 shDebugArgv() {
-    # this function will print each element in $@ in a separate line
+# this function will print each element in $@ in a separate line
     local ARG || return $?
     for ARG in "$@"
     do
@@ -150,7 +150,7 @@ shDebugArgv() {
 }
 
 shDocApiCreate() {
-    # this function will create the api-doc
+# this function will create the api-doc
     node "$npm_config_dir_utility2/index.js" docApiCreate "$@" || return $?
     shBuildPrint docApiCreate \
         "created api-doc file://$npm_config_dir_build/doc.api.html" || return $?
@@ -160,21 +160,21 @@ shDocApiCreate() {
 }
 
 shDockerInstall() {
-    # this function will install docker
-    # http://docs.docker.com/installation/ubuntulinux
+# http://docs.docker.com/installation/ubuntulinux
+# this function will install docker
     wget -qO- https://get.docker.com/ | /bin/sh || return $?
     # test docker
     docker run hello-world || return $?
 }
 
 shDockerRestart() {
-    # this function will restart the docker-container
+# this function will restart the docker-container
     shDockerRm "$1" || true
     shDockerStart "$@" || return $?
 }
 
 shDockerRestartNginx() {
-    # this function will restart the nginx docker-container
+# this function will restart the nginx docker-container
     local FILE || return $?
     # init /root/etc.nginx.htpasswd
     FILE=/root/etc.nginx.htpasswd || return $?
@@ -247,8 +247,8 @@ http {
 }
 
 shDockerRestartPptpd() {
-    # this function will restart the pptpd docker-container
-    # https://github.com/whuwxl/docker-repos/tree/master/pptpd
+# https://github.com/whuwxl/docker-repos/tree/master/pptpd
+# this function will restart the pptpd docker-container
     local FILE PASSWORD USERNAME || return $?
     FILE="$HOME/pptpd.etc.ppp.chap-secrets" || return $?
     PASSWORD="$2" || return $?
@@ -266,8 +266,8 @@ shDockerRestartPptpd() {
 }
 
 shDockerRestartTransmission() {
-    # this function will restart the transmission docker-container
-    # https://hub.docker.com/r/dperson/transmission/
+# https://hub.docker.com/r/dperson/transmission/
+# this function will restart the transmission docker-container
     local DIR || return $?
     DIR="$HOME/downloads" || return $?
     mkdir -p "$DIR" || return $?
@@ -279,13 +279,13 @@ shDockerRestartTransmission() {
 }
 
 shDockerRm() {
-    # this function will stop and rm the docker-container $IMAGE:$NAME
+# this function will stop and rm the docker-container $IMAGE:$NAME
     docker stop "$@" || true
     docker rm "$@" || return $?
 }
 
 shDockerSh() {
-    # this function will run /bin/bash in the docker-container $image:$name
+# this function will run /bin/bash in the docker-container $image:$name
     local NAME || return $?
     NAME="$1" || return $?
     docker start "$NAME" || return $?
@@ -293,7 +293,7 @@ shDockerSh() {
 }
 
 shDockerStart() {
-    # this function will start the docker-container $image:$name
+# this function will start the docker-container $image:$name
     local IMAGE NAME || return $?
     NAME="$1" || return $?
     shift || return $?
@@ -305,26 +305,26 @@ shDockerStart() {
 }
 
 shDockerStopAll() {
-    # this function will stop all docker-containers
+# this function will stop all docker-containers
     docker stop $(docker ps -aq) || return $?
 }
 
 shDsStoreRm() {
-    # this function will recursively rm .DS_Store from the current dir
-    # http://stackoverflow.com/questions/2016844/bash-recursively-remove-files
+# http://stackoverflow.com/questions/2016844/bash-recursively-remove-files
+# this function will recursively rm .DS_Store from the current dir
     find . -name "._*" -print0 | xargs -0 rm || return $?
     find . -name ".DS_Store" -print0 | xargs -0 rm || return $?
     find . -name "npm-debug.log" -print0 | xargs -0 rm || return $?
 }
 
 shDuList () {
-    # this function will run du, and create a list of all child dir in $1 sorted by size
+# this function will run du, and create a list of all child dir in $1 sorted by size
     du -ms $1/* | sort -nr || return $?
 }
 
 shExitCodeSave() {
-    # this function will save the global $EXIT_CODE and restore the global $CWD
-    # save $EXIT_CODE
+# this function will save the global $EXIT_CODE and restore the global $CWD
+# save $EXIT_CODE
     if [ "$EXIT_CODE" = "" ] || [ "$EXIT_CODE" = 0 ]
     then
         EXIT_CODE="$1" || return $?
@@ -338,7 +338,7 @@ shExitCodeSave() {
 }
 
 shGitLsTree() {
-    # this function will list all files committed in HEAD
+# this function will list all files committed in HEAD
     git ls-tree --name-only -r HEAD | while read file
     do
         printf "%10s bytes    $(git log -1 --format="%ai  " -- "$file")  $file\n\n" \
@@ -347,7 +347,7 @@ shGitLsTree() {
 }
 
 shGitRepoBranchCommand() {
-    # this fuction will copy / move / update git-repo-branch
+# this fuction will copy / move / update git-repo-branch
     shGitRepoBranchCommandInternal "$@"
     # save $EXIT_CODE and restore $CWD
     shExitCodeSave $? || return $?
@@ -357,7 +357,7 @@ shGitRepoBranchCommand() {
 }
 
 shGitRepoBranchCommandInternal() {
-    # this fuction will copy / move / update git-repo-branch
+# this fuction will copy / move / update git-repo-branch
     local BRANCH1 BRANCH2 COMMAND MESSAGE RANGE REPO1 REPO2 || return $?
     # http://superuser.com/questions/897148/shell-cant-shift-that-many-error
     COMMAND="$1" || return $?
@@ -429,9 +429,9 @@ shGitRepoBranchCommandInternal() {
 }
 
 shGitSquashPop() {
-    # this function will squash HEAD to the given $COMMIT
-    # http://stackoverflow.com/questions/5189560
-    # /how-can-i-squash-my-last-x-commits-together-using-git
+# http://stackoverflow.com/questions/5189560
+# this function will squash HEAD to the given $COMMIT
+# /how-can-i-squash-my-last-x-commits-together-using-git
     local COMMIT MESSAGE || return $?
     COMMIT="$1" || return $?
     MESSAGE="${2:-$(git log -1 --pretty=%s)}" || return $?
@@ -446,7 +446,7 @@ shGitSquashPop() {
 }
 
 shGitSquashShift() {
-    # this function will squash $RANGE to the first commit
+# this function will squash $RANGE to the first commit
     local BRANCH RANGE || return $?
     BRANCH="$(git rev-parse --abbrev-ref HEAD)" || return $?
     RANGE="$1" || return $?
@@ -461,7 +461,7 @@ shGitSquashShift() {
 }
 
 shGrep() {
-    # this function will recursively grep $DIR for the $REGEXP
+# this function will recursively grep $DIR for the $REGEXP
     local DIR FILE_FILTER REGEXP || return $?
     DIR="$1" || return $?
     REGEXP="$2" || return $?
@@ -487,7 +487,7 @@ shGrep() {
 }
 
 shGrepFileReplace() {
-    # this function will save the grep-and-replace lines in $FILE
+# this function will save the grep-and-replace lines in $FILE
     local FILE || return $?
     FILE=$1
     node -e "
@@ -512,8 +512,8 @@ shGrepFileReplace() {
 }
 
 shHerokuDeploy() {
-    # this function will deploy the app to $HEROKU_REPO,
-    # and run a simple curl check for the main-page
+# this function will deploy the app to $HEROKU_REPO,
+# and run a simple curl check for the main-page
     local HEROKU_REPO || return $?
     HEROKU_REPO="$1" || return $?
     if [ "$GIT_SSH" = "" ]
@@ -543,8 +543,8 @@ shHerokuDeploy() {
 }
 
 shInit() {
-    # this function will init the env
-    # init CI_*
+# this function will init the env
+# init CI_*
     if [ -d .git ]
     then
         # init travis-ci.org env
@@ -611,8 +611,8 @@ shInit() {
 }
 
 shInitNpmConfigDirUtility2() {
-    # this function will get the absolute dir for the
-    # this function will init $npm_config_dir_utility2
+# this function will get the absolute dir for the
+# this function will init $npm_config_dir_utility2
     local DIR SOURCE || return $?
     # init $npm_config_dir_utility2
     if [ "$npm_package_name" = utility2 ]
@@ -648,8 +648,8 @@ shInitNpmConfigDirUtility2() {
 }
 
 shIptablesDockerInit() {
-    # this function will create an iptables DOCKER chain
-    # https://github.com/docker/docker/issues/1871
+# https://github.com/docker/docker/issues/1871
+# this function will create an iptables DOCKER chain
     iptables -t nat -N DOCKER
     iptables -t nat -A PREROUTING -m addrtype --dst-type LOCAL -j DOCKER
     iptables -t nat -A PREROUTING -m addrtype --dst-type LOCAL ! --dst 127.0.0.0/8 -j DOCKER
@@ -658,8 +658,7 @@ shIptablesDockerInit() {
 }
 
 shIptablesInit() {
-    # this function will init iptables, and is intended for aws-ec2 setup
-
+# this function will init iptables, and is intended for aws-ec2 setup
     # reset iptables
     # http://www.cyberciti.biz/tips/linux-iptables-how-to-flush-all-rules.html
     iptables -F
@@ -748,7 +747,7 @@ shIptablesInit() {
 }
 
 shIstanbulCover() {
-    # this function will run the command $@ with istanbul coverage
+# this function will run the command $@ with istanbul coverage
     local COMMAND || return $?
     if [ "$npm_config_mode_coverage" = "" ]
     then
@@ -761,10 +760,10 @@ shIstanbulCover() {
 }
 
 shJsonFilePrettify() {
-    # this function will
-    # 1. read the json-data from $FILE
-    # 2. prettify the json-data
-    # 3. write the prettified json-data back to $FILE
+# this function will
+# 1. read the json-data from $FILE
+# 2. prettify the json-data
+# 3. write the prettified json-data back to $FILE
     local FILE || return $?
     FILE="$1" || return $?
     node -e "
@@ -777,7 +776,7 @@ shJsonFilePrettify() {
 }
 
 shMountData() {
-    # this function will mount /dev/xvdf to /root, and is intended for aws-ec2 setup
+# this function will mount /dev/xvdf to /root, and is intended for aws-ec2 setup
     local IFS_OLD TMP || return $?
     # mount optional /dev/xvdb
     mkdir -p /mnt/local || return $?
@@ -801,7 +800,7 @@ shMountData() {
 }
 
 shNpmTest() {
-    # this function will run npm-test
+# this function will run npm-test
     shBuildPrint "${MODE_BUILD:-npmTest}" "npm-testing $CWD" || return $?
     # cleanup $npm_config_dir_tmp/*.json
     rm -f "$npm_config_dir_tmp/"*.json || return $?
@@ -832,7 +831,7 @@ shNpmTest() {
 }
 
 shNpmTestPublished() {
-    # this function will run npm-test on the published package
+# this function will run npm-test on the published package
     shBuildPrint npmTestPublished "npm-testing published package $npm_package_name" || return $?
     # init /tmp/app
     rm -fr /tmp/app /tmp/node_modules && mkdir -p /tmp/app || return $?
@@ -847,15 +846,15 @@ shNpmTestPublished() {
 }
 
 shReadmeBuild() {
-    # this function will run the internal build-script embedded in README.md
-    # init $npm_config_dir_build
+# this function will run the internal build-script embedded in README.md
+# init $npm_config_dir_build
     mkdir -p "$npm_config_dir_build/coverage.html" || return $?
     # run shell script from README.md
     MODE_BUILD=build shReadmeTestSh "$npm_config_dir_tmp/build.sh" || return $?
 }
 
 shReadmeExportFile() {
-    # this function will extract and save the script $1 embedded in README.md to $2
+# this function will extract and save the script $1 embedded in README.md to $2
     node -e "
         'use strict';
         require('fs').writeFileSync(
@@ -879,7 +878,7 @@ shReadmeExportFile() {
 }
 
 shReadmeTestJs() {
-    # this function will extract, save, and test the js script $FILE embedded in README.md
+# this function will extract, save, and test the js script $FILE embedded in README.md
     local FILE SCRIPT || return $?
     FILE="$1" || return $?
     shBuildPrint "$MODE_BUILD" "testing $FILE" || return $?
@@ -913,7 +912,7 @@ shReadmeTestJs() {
 }
 
 shReadmeTestSh() {
-    # this function will extract, save, and test the shell script $FILE embedded in README.md
+# this function will extract, save, and test the shell script $FILE embedded in README.md
     local FILE FILE_BASENAME || return $?
     FILE="$1" || return $?
     FILE_BASENAME="$(node -e "
@@ -943,7 +942,7 @@ shReadmeTestSh() {
 }
 
 shRun() {
-    # this function will run the command $@ and restore $CWD on exit
+# this function will run the command $@ and restore $CWD on exit
     # eval argv and auto-restart on non-zero exit, unless exited by SIGINT
     if [ "$npm_config_mode_auto_restart" ] && [ ! "$npm_config_mode_auto_restart_child" ]
     then
@@ -980,9 +979,9 @@ shRun() {
 }
 
 shRunScreenCapture() {
-    # this function will run the command $@ and screen-capture the output
-    # http://www.cnx-software.com/2011/09/22
-    # /how-to-convert-a-command-line-result-into-an-image-in-linux/
+# http://www.cnx-software.com/2011/09/22
+# /how-to-convert-a-command-line-result-into-an-image-in-linux/
+# this function will run the command $@ and screen-capture the output
     # init $npm_config_dir_build
     mkdir -p "$npm_config_dir_build/coverage.html" || return $?
     export MODE_BUILD_SCREEN_CAPTURE="screen-capture.${MODE_BUILD:-undefined}.svg" || return $?
@@ -1034,23 +1033,23 @@ shRunScreenCapture() {
 }
 
 shServerPortRandom() {
-    # this function will print a random port in the inclusive range 0x8000 to 0xffff
+# this function will print a random port in the inclusive range 0x8000 to 0xffff
     printf "$(($(hexdump -n 2 -e '/2 "%u"' /dev/urandom)|32768))"
 }
 
 shSource() {
-    # this function will source .bashrc
+# this function will source .bashrc
     . "$HOME/.bashrc" || return $?
 }
 
 shTravisDecryptYml() {
-    # this function will decrypt $AES_ENCRYPTED_SH in .travis.yml to stdout
+# this function will decrypt $AES_ENCRYPTED_SH in .travis.yml to stdout
     perl -ne "print \$1 if /- AES_ENCRYPTED_SH: (.*) # AES_ENCRYPTED_SH\$/" .travis.yml | \
         shAesDecrypt || return $?
 }
 
 shTravisEncrypt() {
-    # this function will travis-encrypt $SECRET for the $GITHUB_REPO
+# this function will travis-encrypt $SECRET for the $GITHUB_REPO
     local GITHUB_REPO SECRET || return $?
     GITHUB_REPO="$1" || return $?
     SECRET="$2" || return $?
@@ -1069,7 +1068,7 @@ shTravisEncrypt() {
 }
 
 shTravisEncryptYml() {
-    # this function will travis-encrypt $FILE to $AES_ENCRYPTED_SH and embed it in .travis.yml
+# this function will travis-encrypt $FILE to $AES_ENCRYPTED_SH and embed it in .travis.yml
     local AES_256_KEY_ENCRYPTED FILE || return $?
     FILE="$1" || return $?
     if [ ! -f "$FILE" ]
@@ -1108,7 +1107,7 @@ shTravisEncryptYml() {
 }
 
 shUbuntuInit() {
-    # this function will init ubuntu's default .bashrc
+# this function will init ubuntu's default .bashrc
     # ~/.bashrc: executed by bash(1) for non-login shells.
     # see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
     # for examples
@@ -1226,12 +1225,13 @@ shUbuntuInit() {
 }
 
 shXvfbStart() {
+# this function will start xvfb
     export DISPLAY=:99.0 || return $?
     (Xvfb "$DISPLAY" &) > /dev/null 2>&1 || true
 }
 
 shMain() {
-    # this function will run the main program
+# this function will run the main program
     local COMMAND || return $?
     if [ "$1" = "" ]
     then

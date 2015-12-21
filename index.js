@@ -21,14 +21,15 @@
         // init modeJs
         local.modeJs = (function () {
             try {
+                return typeof navigator.userAgent === 'string' &&
+                    typeof document.querySelector('body') === 'object' &&
+                    typeof XMLHttpRequest.prototype.open === 'function' &&
+                    'browser';
+            } catch (errorCaughtBrowser) {
                 return module.exports &&
                     typeof process.versions.node === 'string' &&
                     typeof require('http').createServer === 'function' &&
                     'node';
-            } catch (errorCaughtNode) {
-                return typeof navigator.userAgent === 'string' &&
-                    typeof document.querySelector('body') === 'object' &&
-                    'browser';
             }
         }());
         // init global
@@ -37,9 +38,9 @@
             : global;
         // init global.debug_print
         local.global['debug_print'.replace('_p', 'P')] = function (arg) {
-            /*
-             * this function will both print the arg to stderr and return it
-             */
+        /*
+         * this function will both print the arg to stderr and return it
+         */
             // debug arguments
             local.utility2['_debug_printArguments'.replace('_p', 'P')] = arguments;
             console.error('\n\n\ndebug_print'.replace('_p', 'P'));
@@ -50,9 +51,9 @@
         };
         // init global.debug_printCallback
         local.global['debug_printCallback'.replace('_p', 'P')] = function (onError) {
-            /*
-             * this function will inject debug_print into the callback onError
-             */
+        /*
+         * this function will inject debug_print into the callback onError
+         */
             return function () {
                 local.global['debug_print'.replace('_p', 'P')].apply(null, arguments);
                 onError.apply(null, arguments);
@@ -60,17 +61,23 @@
         };
         // init utility2
         local.utility2 = { cacheDict: { assets: {}, taskUpsert: {} }, local: local };
+        local.utility2.nop = function () {
+        /*
+         * this function will run no operation - nop
+         */
+            return;
+        };
         // init istanbul
         local.utility2.istanbul = local.modeJs === 'browser'
-            ? window.utility2_istanbul
+            ? local.global.utility2_istanbul
             : require('./lib.istanbul.js');
         // init jslint
         local.utility2.jslint = local.modeJs === 'browser'
-            ? window.utility2_jslint
+            ? local.global.utility2_jslint
             : require('./lib.jslint.js');
         // init uglifyjs
         local.utility2.uglifyjs = local.modeJs === 'browser'
-            ? window.utility2_uglifyjs
+            ? local.global.utility2_uglifyjs
             : require('./lib.uglifyjs.js');
     }());
 
@@ -79,9 +86,9 @@
     // run shared js-env code
     (function () {
         local._ajaxProgressIncrement = function () {
-            /*
-             * this function will increment ajaxProgressBar
-             */
+        /*
+         * this function will increment ajaxProgressBar
+         */
             // this algorithm can indefinitely increment the ajaxProgressBar
             // with successively smaller increments without ever reaching 100%
             local._ajaxProgressState += 1;
@@ -99,9 +106,9 @@
         local._ajaxProgressState = 0;
 
         local._ajaxProgressUpdate = function (width, type, label) {
-            /*
-             * this function will visually update ajaxProgressBar
-             */
+        /*
+         * this function will visually update ajaxProgressBar
+         */
             var ajaxProgressBarDiv;
             ajaxProgressBarDiv = document.querySelector('.ajaxProgressBarDiv');
             ajaxProgressBarDiv.style.width = width;
@@ -110,36 +117,432 @@
             ajaxProgressBarDiv.innerHTML = label;
         };
 
-        local._timeElapsedStop = function (options) {
+        // init _http module
+        local._http = {};
+
+        // init _http.IncomingMessage
+        local._http.IncomingMessage = function (xhr) {
+        /*
+         * https://nodejs.org/api/all.html#all_http_incomingmessage
+         * An IncomingMessage object is created by http.Server or http.ClientRequest
+         * and passed as the first argument to the 'request' and 'response' event respectively
+         */
+            this.headers = {};
+            this.method = xhr.method;
+            this.onEvent = document.createDocumentFragment('onEvent');
+            this.readable = true;
+            this.url = xhr.url;
+        };
+
+        local._http.IncomingMessage.prototype.addListener = function (event, onEvent) {
+        /*
+         * https://nodejs.org/api/all.html#all_emitter_addlistener_event_listener
+         * Adds a listener to the end of the listeners array for the specified event
+         */
+            this.onEvent.addEventListener(event, function (event) {
+                onEvent(event.data);
+            });
+            if (this.readable && event === 'end') {
+                this.readable = null;
+                this.emit('data', this.data);
+                this.emit('end');
+            }
+            return this;
+        };
+
+        local._http.IncomingMessage.prototype.emit = function (event, data) {
+        /*
+         * https://nodejs.org/api/all.html#all_emitter_emit_event_arg1_arg2
+         * Calls each of the listeners in order with the supplied arguments
+         */
+            event = new local.global.Event(event);
+            event.data = data;
+            this.onEvent.dispatchEvent(event);
+        };
+
+        // https://nodejs.org/api/all.html#all_emitter_on_event_listener
+        local._http.IncomingMessage.prototype.on =
+            local._http.IncomingMessage.prototype.addListener;
+
+        // init _http.ServerResponse
+        local._http.ServerResponse = function (onResponse) {
+        /*
+         * https://nodejs.org/api/all.html#all_class_http_serverresponse
+         * This object is created internally by a HTTP server--not by the user
+         */
+            this.data = '';
+            this.headers = {};
+            this.onEvent = document.createDocumentFragment('onEvent');
+            this.onResponse = onResponse;
+        };
+
+        // https://nodejs.org/api/all.html#all_emitter_addlistener_event_listener
+        local._http.ServerResponse.prototype.addListener =
+            local._http.IncomingMessage.prototype.addListener;
+
+        // https://nodejs.org/api/all.html#all_emitter_emit_event_arg1_arg2
+        local._http.ServerResponse.prototype.emit =
+            local._http.IncomingMessage.prototype.emit;
+
+        local._http.ServerResponse.prototype.end = function (data) {
+        /* https://nodejs.org/api/all.html#all_response_end_data_encoding_callback
+         * This method signals to the server that all of the response headers
+         * and body have been sent
+         */
+            // emit writable events
+            this.data += data || '';
+            this.emit('finish');
+            // emit readable events
+            this.onResponse(this);
+            this.emit('data', this.data);
+            this.emit('end');
+        };
+
+        // https://nodejs.org/api/all.html#all_emitter_on_event_listener
+        local._http.ServerResponse.prototype.on =
+            local._http.IncomingMessage.prototype.addListener;
+
+        local._http.IncomingMessage.prototype.pipe = function (writable) {
+        /*
+         * https://nodejs.org/api/all.html#all_readable_pipe_destination_options
+         * This method pulls all the data out of a readable stream, and writes it to the
+         * supplied destination, automatically managing the flow so that the destination is not
+         * overwhelmed by a fast readable stream
+         */
+            this.on('data', function (chunk) {
+                writable.write(chunk);
+            });
+            this.on('end', function () {
+                writable.end();
+            });
+            return writable;
+        };
+
+        // https://nodejs.org/api/all.html#all_response_setheader_name_value
+        local._http.ServerResponse.prototype.setHeader = function (key, value) {
+            this.headers[key.toLowerCase()] = value;
+        };
+
+        local._http.ServerResponse.prototype.write = function (data) {
+        /*
+         * https://nodejs.org/api/all.html#all_response_write_chunk_encoding_callback
+         * This sends a chunk of the response body
+         */
+            this.data += data;
+        };
+
+        local._http.STATUS_CODES = {
+            100: 'Continue',
+            101: 'Switching Protocols',
+            102: 'Processing',
+            200: 'OK',
+            201: 'Created',
+            202: 'Accepted',
+            203: 'Non-Authoritative Information',
+            204: 'No Content',
+            205: 'Reset Content',
+            206: 'Partial Content',
+            207: 'Multi-Status',
+            208: 'Already Reported',
+            226: 'IM Used',
+            300: 'Multiple Choices',
+            301: 'Moved Permanently',
+            302: 'Found',
+            303: 'See Other',
+            304: 'Not Modified',
+            305: 'Use Proxy',
+            307: 'Temporary Redirect',
+            308: 'Permanent Redirect',
+            400: 'Bad Request',
+            401: 'Unauthorized',
+            402: 'Payment Required',
+            403: 'Forbidden',
+            404: 'Not Found',
+            405: 'Method Not Allowed',
+            406: 'Not Acceptable',
+            407: 'Proxy Authentication Required',
+            408: 'Request Timeout',
+            409: 'Conflict',
+            410: 'Gone',
+            411: 'Length Required',
+            412: 'Precondition Failed',
+            413: 'Payload Too Large',
+            414: 'URI Too Long',
+            415: 'Unsupported Media Type',
+            416: 'Range Not Satisfiable',
+            417: 'Expectation Failed',
+            418: 'I\'m a teapot',
+            421: 'Misdirected Request',
+            422: 'Unprocessable Entity',
+            423: 'Locked',
+            424: 'Failed Dependency',
+            425: 'Unordered Collection',
+            426: 'Upgrade Required',
+            428: 'Precondition Required',
+            429: 'Too Many Requests',
+            431: 'Request Header Fields Too Large',
+            500: 'Internal Server Error',
+            501: 'Not Implemented',
+            502: 'Bad Gateway',
+            503: 'Service Unavailable',
+            504: 'Gateway Timeout',
+            505: 'HTTP Version Not Supported',
+            506: 'Variant Also Negotiates',
+            507: 'Insufficient Storage',
+            508: 'Loop Detected',
+            509: 'Bandwidth Limit Exceeded',
+            510: 'Not Extended',
+            511: 'Network Authentication Required'
+        };
+
+        // init _http.XMLHttpRequest
+        local._http.XMLHttpRequest = function () {
+        /*
+         * https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest#XMLHttpRequest()
+         * The constructor initiates an XMLHttpRequest
+         */
+            var xhr;
+            xhr = this;
+            ['onError', 'onResponse'].forEach(function (key) {
+                xhr[key] = xhr[key].bind(xhr);
+            });
+            xhr.headers = {};
+            xhr.onLoadList = [];
+            // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/readyState
+            xhr.readyState = 0;
+            // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/response
+            xhr.response = null;
+            // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/responseText
+            xhr.responseText = '';
+            // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/responseType
+            xhr.responseType = '';
+            // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/status
+            xhr.status = xhr.statusCode = 0;
+            // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/statusText
+            xhr.statusText = '';
+            // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/timeout
+            xhr.timeout = local.utility2.timeoutDefault;
+        };
+
+        local._http.XMLHttpRequest.prototype.abort = function () {
+        /*
+         * https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest#abort()
+         * Aborts the request if it has already been sent
+         */
+            this.onError(new Error('abort'));
+        };
+
+        // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/upload
+        local._http.XMLHttpRequest.prototype.upload = {
+            addEventListener: local.utility2.nop
+        };
+
+        local._http.XMLHttpRequest.prototype.addEventListener = function (event, onError) {
+        /*
+         * this function will add event listeners to the xhr-connection
+         */
+            switch (event) {
+            case 'abort':
+            case 'error':
+            case 'load':
+                this.onLoadList.push(onError);
+                break;
+            }
+        };
+
+        local._http.XMLHttpRequest.prototype.getAllResponseHeaders = function () {
+        /*
+         * https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest
+         * #getAllResponseHeaders()
+         * Returns all the response headers, separated by CRLF, as a string,
+         * or null if no response has been received
+         */
+            var xhr;
+            xhr = this;
+            return Object.keys(xhr.responseStream.headers).map(function (key) {
+                return key + ': ' + xhr.responseStream.headers[key] + '\r\n';
+            }).join('') + '\r\n';
+        };
+
+        local._http.XMLHttpRequest.prototype.getResponseHeader = function (key) {
+        /*
+         * https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest#getResponseHeader()
+         * Returns the string containing the text of the specified header,
+         * or null if either the response has not yet been received
+         * or the header doesn't exist in the response
+         */
+            return (this.responseStream.headers && this.responseStream.headers[key]) || null;
+        };
+
+        local._http.XMLHttpRequest.prototype.onError = function (error, data) {
+        /*
+         * this function will handle the error and data passed back to the xhr-connection
+         */
+            if (this.done) {
+                return;
+            }
+            this.error = error;
+            this.response = data;
+            this.responseText = (data && data.toString()) || '';
+            // update xhr
+            this.readyState = 4;
+            this.onreadystatechange();
+            // handle data
+            this.onLoadList.forEach(function (onError) {
+                onError({ type: error
+                    ? 'error'
+                    : 'load' });
+            });
+        };
+
+        local._http.XMLHttpRequest.prototype.onResponse = function (responseStream) {
+        /*
+         * this function will handle the responseStream from the xhr-connection
+         */
+            this.responseStream = responseStream;
+            // update xhr
+            this.status = this.statusCode = this.responseStream.statusCode;
+            this.statusText = local.http.STATUS_CODES[this.responseStream.statusCode] || '';
+            this.readyState = 1;
+            this.onreadystatechange();
+            this.readyState = 2;
+            this.onreadystatechange();
+            this.readyState = 3;
+            this.onreadystatechange();
+            if (this.responseType === 'response') {
+                this.onError(null, this.responseStream);
+                return;
+            }
+            local.utility2.streamReadAll(this.responseStream, this.onError);
+        };
+
+        // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/onreadystatechange
+        local._http.XMLHttpRequest.prototype.onreadystatechange = local.utility2.nop;
+
+        local._http.XMLHttpRequest.prototype.open = function (method, url) {
+        /*
+         * https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest#open()
+         * Initializes a request
+         */
+            this.method = method;
+            this.url = url;
+            // parse url
+            this.urlParsed = local.url.parse(String(this.url));
+            this.hostname = this.urlParsed.hostname;
+            this.path = this.urlParsed.path;
+            this.port = this.urlParsed.port;
+            // init requestStream
+            this.requestStream = (this.urlParsed.protocol === 'https:'
+                ? local.https
+                : local.http).request(this, this.onResponse)
+                // handle request-error
+                .on('error', this.onError);
+        };
+
+        // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest#overrideMimeType()
+        local._http.XMLHttpRequest.prototype.overrideMimeType = local.utility2.nop;
+
+        local._http.XMLHttpRequest.prototype.send = function (data) {
+        /*
+         * https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest#send()
+         * Sends the request
+         */
+            this.data = data;
+            // send data
+            this.requestStream.end(this.data);
+        };
+
+        local._http.XMLHttpRequest.prototype.setRequestHeader = function (key, value) {
+        /*
+         * https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest#setRequestHeader()
+         * Sets the value of an HTTP request header
+         */
+            key = key.toLowerCase();
+            this.headers[key] = value;
+            this.requestStream.setHeader(key, value);
+        };
+
+        local._http.createServer = function () {
             /*
-             * this function will stop options.timeElapsed
+             * https://nodejs.org/api/all.html#all_http_createserver_requestlistener
+             * Returns a new instance of http.Server
              */
+            return { listen: function (port, onError) {
+            /*
+             * https://nodejs.org/api/all.html#all_server_listen_handle_callback
+             * This will cause the server to accept connections on the specified handle,
+             * but it is presumed that the file descriptor or handle has already been bound
+             * to a port or domain socket
+             */
+                // jslint-hack
+                local.utility2.nop(port);
+                onError();
+            } };
+        };
+
+        local._http.request = function (xhr, onResponse) {
+            var serverRequest, serverResponse;
+            serverRequest = new local._http.IncomingMessage(xhr);
+            serverResponse = new local._http.ServerResponse(onResponse);
+            serverRequest.urlParsed = local.url.parse(xhr.url);
+            return {
+                end: function (data) {
+                    serverRequest.data = data;
+                    local.utility2.serverLocalRequestHandler(serverRequest, serverResponse);
+                },
+                on: function () {
+                    return this;
+                },
+                setHeader: function (key, value) {
+                    serverRequest.headers[key.toLowerCase()] = value;
+                }
+            };
+        };
+
+        local._timeElapsedStop = function (options) {
+        /*
+         * this function will stop options.timeElapsed
+         */
             if (options.timeElapsed > 0xffffffff) {
                 options.timeElapsed = Date.now() - options.timeElapsed;
             }
         };
 
-        // init XMLHttpRequest
-        local.utility2.XMLHttpRequest = local.global.XMLHttpRequest;
-
         local.utility2.ajax = function (options, onError) {
-            /*
-             * this function will send an ajax request with error handling and timeout
-             */
+        /*
+         * this function will send an ajax request with error handling and timeout
+         */
             var ajaxProgressDiv, ii, timerTimeout, xhr;
+            // handle implicit localhost
+            if (options.url[0] === '/' && local.utility2.serverLocalHost) {
+                options.url = local.utility2.serverLocalHost + options.url;
+            }
+            // init modeServerLocal
+            if (local.modeJs === 'browser' &&
+                    !options.modeServerLocal &&
+                    options.url.indexOf(local.utility2.serverLocalHost) === 0 &&
+                    local.utility2.serverLocalUrlTest &&
+                    local.utility2.serverLocalUrlTest(options.url)) {
+                options.modeServerLocal = true;
+                xhr = new local._http.XMLHttpRequest();
+            }
             // init xhr
-            xhr = new local.utility2.XMLHttpRequest();
-            xhr.data = options.data;
+            xhr = xhr || (local.modeJs === 'browser'
+                ? new local.global.XMLHttpRequest()
+                : new local._http.XMLHttpRequest());
+            // debug xhr
+            local._debugXhr = xhr;
+            // init options
+            local.utility2.objectSetOverride(xhr, options);
+            // init headers
             xhr.headers = {};
             Object.keys(options.headers || {}).forEach(function (key) {
                 xhr.headers[key.toLowerCase()] = options.headers[key];
             });
-            xhr.method = options.method || 'GET';
-            xhr.responseType = options.responseType || '';
-            xhr.timeout = options.timeout || local.utility2.timeoutDefault;
-            xhr.url = options.url;
-            // debug xhr
-            local.utility2._debugAjaxXhr = xhr;
+            // init method
+            xhr.method = xhr.method || 'GET';
+            // init timeout
+            xhr.timeout = xhr.timeout || local.utility2.timeoutDefault;
             // init timerTimeout
             timerTimeout = local.utility2.onTimeout(function (errorTimeout) {
                 xhr.error = errorTimeout;
@@ -198,13 +601,12 @@
                             // debug statusCode
                             xhr.error.statusCode = xhr.statusCode;
                             // debug statusCode / method / url
-                            local.utility2.errorMessagePrepend(xhr.error, xhr.statusCode + ' ' +
+                            local.utility2.errorMessagePrepend(xhr.error, local.modeJs + ' - ' +
+                                xhr.statusCode + ' ' +
                                 xhr.method + ' ' + xhr.url + '\n' +
                                 JSON.stringify(xhr.responseText.slice(0, 256) + '...') + '\n');
                         }
                     }
-                    // debug xhr
-                    local.utility2._debugXhr = xhr;
                     onError(xhr.error, xhr, xhr.onEvent);
                     break;
                 }
@@ -249,9 +651,9 @@
         };
 
         local.utility2.assert = function (passed, message) {
-            /*
-             * this function will throw an error if the assertion fails
-             */
+        /*
+         * this function will throw an error if the assertion fails
+         */
             if (!passed) {
                 // if message is an Error object, then throw it
                 if (message && message.stack) {
@@ -269,9 +671,9 @@
 
         /* istanbul ignore next */
         local.utility2.browserTest = function (options, onError) {
-            /*
-             * this function will spawn an electron process to test options.url
-             */
+        /*
+         * this function will spawn an electron process to test options.url
+         */
             var done, file, modeNext, onNext, onParallel, timerTimeout;
             if (local.modeJs === 'node') {
                 local.utility2.objectSetDefault(options, local.utility2.envDict);
@@ -496,9 +898,9 @@
         };
 
         local.utility2.docApiCreate = function (options) {
-            /*
-             * this function will create an html api-doc from the given options
-             */
+        /*
+         * this function will create an html api-doc from the given options
+         */
             var element, elementCreate, elementName, module, moduleName, trimLeft;
             elementCreate = function () {
                 element = {};
@@ -588,25 +990,25 @@
         };
 
         local.utility2.echo = function (arg) {
-            /*
-             * this function will return the arg
-             */
+        /*
+         * this function will return the arg
+         */
             return arg;
         };
 
         local.utility2.errorMessagePrepend = function (error, message) {
-            /*
-             * this function will prepend the message to error.message and error.stack
-             */
+        /*
+         * this function will prepend the message to error.message and error.stack
+         */
             error.message = message + error.message;
             error.stack = message + error.stack;
             return error;
         };
 
         local.utility2.exit = function (exitCode) {
-            /*
-             * this function will exit the current process with the given exitCode
-             */
+        /*
+         * this function will exit the current process with the given exitCode
+         */
             exitCode = !exitCode || Number(exitCode) === 0
                 ? 0
                 : Number(exitCode) || 1;
@@ -627,9 +1029,9 @@
         };
 
         local.utility2.fsMkdirpSync = function (dir) {
-            /*
-             * this function will synchronously 'mkdir -p' the dir
-             */
+        /*
+         * this function will synchronously 'mkdir -p' the dir
+         */
             local.child_process.spawnSync(
                 'mkdir',
                 ['-p', local.path.resolve(process.cwd(), dir)],
@@ -638,9 +1040,9 @@
         };
 
         local.utility2.fsRmrSync = function (dir) {
-            /*
-             * this function will synchronously 'rm -fr' the dir
-             */
+        /*
+         * this function will synchronously 'rm -fr' the dir
+         */
             local.child_process.spawnSync(
                 'rm',
                 ['-fr', local.path.resolve(process.cwd(), dir)],
@@ -649,9 +1051,9 @@
         };
 
         local.utility2.fsWriteFileWithMkdirp = function (file, data, onError) {
-            /*
-             * this function will save the data to file, and auto-mkdirp the parent dir
-             */
+        /*
+         * this function will save the data to file, and auto-mkdirp the parent dir
+         */
             file = local.path.resolve(process.cwd(), file);
             // save data to file
             local.fs.writeFile(file, data, function (error) {
@@ -673,9 +1075,9 @@
         };
 
         local.utility2.istanbulCoverageMerge = function (coverage1, coverage2) {
-            /*
-             * this function will merge coverage2 into coverage1
-             */
+        /*
+         * this function will merge coverage2 into coverage1
+         */
             var dict1, dict2;
             coverage1 = coverage1 || {};
             coverage2 = coverage2 || {};
@@ -720,12 +1122,13 @@
             local.utility2.istanbul.coverageReportCreate) || local.utility2.echo;
 
         local.utility2.istanbulInstrumentInPackage = function (code, file, packageName) {
-            /*
-             * this function will cover the code only if packageName === $npm_package_name
-             */
+        /*
+         * this function will cover the code only if packageName === $npm_package_name
+         */
             return local.global.__coverage__ &&
                 packageName &&
-                packageName === local.utility2.envDict.npm_package_name
+                packageName === local.utility2.envDict.npm_package_name &&
+                !(/^\/\* istanbul ignore all \*\/$/m).test(code)
                 ? local.utility2.istanbulInstrumentSync(code, file)
                 : code;
         };
@@ -739,25 +1142,25 @@
             local.utility2.jslint.jslintAndPrint) || local.utility2.echo;
 
         local.utility2.jsonCopy = function (element) {
-            /*
-             * this function will return a deep-copy of the JSON element
-             */
+        /*
+         * this function will return a deep-copy of the JSON element
+         */
             return element === undefined
                 ? undefined
                 : JSON.parse(JSON.stringify(element));
         };
 
         local.utility2.jsonStringifyOrdered = function (element, replacer, space) {
-            /*
-             * this function will JSON.stringify the element with dictionaries in sorted order,
-             * for testing purposes
-             */
+        /*
+         * this function will JSON.stringify the element with dictionaries in sorted order,
+         * for testing purposes
+         */
             var circularList, stringify, tmp;
             stringify = function (element) {
-                /*
-                 * this function will recursively stringify the element,
-                 * with object-keys sorted and circular-references removed
-                 */
+            /*
+             * this function will recursively stringify the element,
+             * with object-keys sorted and circular-references removed
+             */
                 // if element is an object,
                 // then recursively stringify its items sorted by their keys
                 if (element && typeof element === 'object') {
@@ -800,10 +1203,10 @@
         };
 
         local.utility2.listShuffle = function (list) {
-            /*
-             * this function will inplace shuffle the list, via fisher-yates algorithm
-             * https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle
-             */
+        /*
+         * https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle
+         * this function will inplace shuffle the list, via fisher-yates algorithm
+         */
             var ii, random, swap;
             for (ii = list.length - 1; ii > 0; ii -= 1) {
                 // coerce to finite integer
@@ -816,9 +1219,9 @@
         };
 
         local.utility2.middlewareAssetsCached = function (request, response, nextMiddleware) {
-            /*
-             * this function will run the cached-assets-middleware
-             */
+        /*
+         * this function will run the cached-assets-middleware
+         */
             var modeNext, onNext, result;
             modeNext = 0;
             onNext = function (error, data) {
@@ -869,9 +1272,9 @@
         };
 
         local.utility2.middlewareBodyRead = function (request, response, nextMiddleware) {
-            /*
-             * this function will read the request-body and save it as request.bodyRaw
-             */
+        /*
+         * this function will read the request-body and save it as request.bodyRaw
+         */
             // jslint-hack
             local.utility2.nop(response);
             // if request is already read, then goto nextMiddleware
@@ -890,9 +1293,9 @@
             response,
             nextMiddleware
         ) {
-            /*
-             * this function will respond with the data cached by Last-Modified header
-             */
+        /*
+         * this function will respond with the data cached by Last-Modified header
+         */
             // do not cache if headers already sent or url has '?' search indicator
             if (!response.headersSent && request.url.indexOf('?') < 0) {
                 // init serverResponseHeaderLastModified
@@ -917,9 +1320,9 @@
         };
 
         local.utility2.middlewareError = function (error, request, response) {
-            /*
-             * this function will run the error-middleware
-             */
+        /*
+         * this function will run the error-middleware
+         */
             // if error occurred, then respond with '500 Internal Server Error',
             // else respond with '404 Not Found'
             local.utility2.serverRespondDefault(request, response, error
@@ -930,16 +1333,12 @@
         };
 
         local.utility2.middlewareGroupCreate = function (middlewareList) {
-            /*
-             * this function will return a super-middleware,
-             * that will sequentially run the sub-middlewares in middlewareList
-             */
+        /*
+         * this function will return a middleware-group,
+         * that will sequentially run the middlewares in middlewareList
+         */
             var self;
             self = function (request, response, nextMiddleware) {
-                /*
-                 * this function will create a super-middleware,
-                 * that will sequentially run the sub-middlewares in middlewareList
-                 */
                 var modeNext, onNext;
                 modeNext = -1;
                 onNext = function (error) {
@@ -961,26 +1360,30 @@
         };
 
         local.utility2.middlewareInit = function (request, response, nextMiddleware) {
-            /*
-             * this function will run the init-middleware
-             */
+        /*
+         * this function will run the init-middleware
+         */
             // debug server request
-            local.utility2._debugServerRequest = request;
+            local._debugServerRequest = request;
             // debug server response
-            local.utility2._debugServerResponse = response;
+            local._debugServerResponse = response;
             // init timerTimeout
             local.utility2
                 .serverRespondTimeoutDefault(request, response, local.utility2.timeoutDefault);
             // init request.urlParsed
             request.urlParsed = local.url.parse(request.url, true);
             // init request.urlParsed.pathnameNormalized
-            request.urlParsed.pathnameNormalized = local.path.resolve(
-                request.urlParsed.pathname
-            );
+            request.urlParsed.pathnameNormalized = request.urlParsed.pathname
+                .replace((/\/\/+/g), '\/')
+                .replace((/[^\/]+\/\.\.\//g), '')
+                .replace((/(.)\/$/), '$1');
+            // init content-type
+            request.urlParsed.contentType = (/.\.[^\.].*/).exec(request.urlParsed.pathname);
+            request.urlParsed.contentType = local.utility2.contentTypeDict[
+                request.urlParsed.contentType && request.urlParsed.contentType[0].slice(1)
+            ];
             local.utility2.serverRespondHeadSet(request, response, null, {
-                'Content-Type': local.utility2.contentTypeDict[
-                    local.path.extname(request.urlParsed.pathnameNormalized)
-                ]
+                'Content-Type': request.urlParsed.contentType
             });
             // set main-page content-type to text/html
             if (request.urlParsed.pathnameNormalized === '/') {
@@ -992,18 +1395,11 @@
             nextMiddleware();
         };
 
-        local.utility2.nop = function () {
-            /*
-             * this function will run no operation - nop
-             */
-            return;
-        };
-
         local.utility2.objectSetDefault = function (options, defaults, depth) {
-            /*
-             * this function will recursively set default values for unset leaf nodes
-             * in the options object
-             */
+        /*
+         * this function will recursively set default values for unset leaf nodes
+         * in the options object
+         */
             Object.keys(defaults).forEach(function (key) {
                 var defaults2, options2;
                 defaults2 = defaults[key];
@@ -1031,10 +1427,9 @@
         };
 
         local.utility2.objectSetOverride = function (options, override, depth) {
-            /*
-             * this function will recursively override the options object,
-             * with the override object
-             */
+        /*
+         * this function will recursively override the options object, with the override object
+         */
             var options2, override2;
             Object.keys(override).forEach(function (key) {
                 options2 = options[key];
@@ -1063,10 +1458,10 @@
         };
 
         local.utility2.objectTraverse = function (element, onSelf, circularList) {
-            /*
-             * this function will recursively traverse the element,
-             * and run onSelf with the element's properties
-             */
+        /*
+         * this function will recursively traverse the element,
+         * and run onSelf with the element's properties
+         */
             onSelf(element);
             circularList = circularList || [];
             if (element &&
@@ -1081,9 +1476,9 @@
         };
 
         local.utility2.onErrorDefault = function (error) {
-            /*
-             * this function will print error.stack or error.message to stderr
-             */
+        /*
+         * this function will print error.stack or error.message to stderr
+         */
             // if error is defined, then print error.stack
             if (error && !local.global.__coverage__) {
                 console.error('\nonErrorDefault - error\n' +
@@ -1092,10 +1487,10 @@
         };
 
         local.utility2.onErrorJsonParse = function (onError, modeDebug) {
-            /*
-             * this function will return a wrapper function,
-             * that will JSON.parse the data with error handling
-             */
+        /*
+         * this function will return a wrapper function,
+         * that will JSON.parse the data with error handling
+         */
             return function (error, data) {
                 if (error) {
                     onError(error);
@@ -1115,10 +1510,10 @@
         };
 
         local.utility2.onErrorWithStack = function (onError) {
-            /*
-             * this function will return a new callback that calls onError,
-             * and add the current stack to any error encountered
-             */
+        /*
+         * this function will return a new callback that calls onError,
+         * and add the current stack to any error encountered
+         */
             return function (error) {
                 if (error) {
                     error.stack = error.stack
@@ -1130,10 +1525,9 @@
         };
 
         local.utility2.onFileModifiedRestart = function (file) {
-            /*
-             * this function will watch the file,
-             * and if modified, then restart the process
-             */
+        /*
+         * this function will watch the file, and if modified, then restart the process
+         */
             if (local.utility2.envDict.npm_config_mode_auto_restart &&
                     local.fs.existsSync(file) &&
                     local.fs.statSync(file).isFile()) {
@@ -1149,11 +1543,11 @@
         };
 
         local.utility2.onParallel = function (onError, onDebug) {
-            /*
-             * this function will return a function that will
-             * 1. runs async tasks in parallel
-             * 2. if counter === 0 or error occurs, then run callback onError
-             */
+        /*
+         * this function will return a function that will
+         * 1. runs async tasks in parallel
+         * 2. if counter === 0 or error occurs, then run callback onError
+         */
             var self;
             onDebug = onDebug || local.utility2.nop;
             self = function (error) {
@@ -1184,10 +1578,10 @@
         };
 
         local.utility2.onTimeout = function (onError, timeout, message) {
-            /*
-             * this function will create a timeout-error-handler,
-             * that will append the current stack to any error encountered
-             */
+        /*
+         * this function will create a timeout-error-handler,
+         * that will append the current stack to any error encountered
+         */
             onError = local.utility2.onErrorWithStack(onError);
             // create timeout timer
             return setTimeout(function () {
@@ -1200,10 +1594,10 @@
         };
 
         local.utility2.processSpawnWithTimeout = function () {
-            /*
-             * this function will run like child_process.spawn,
-             * but with auto-timeout after timeoutDefault milliseconds
-             */
+        /*
+         * this function will run like child_process.spawn,
+         * but with auto-timeout after timeoutDefault milliseconds
+         */
             var childProcess;
             // spawn childProcess
             childProcess = local.child_process.spawn.apply(local.child_process, arguments)
@@ -1224,17 +1618,17 @@
         };
 
         local.utility2.replStart = function () {
-            /*
-             * this function will start the repl debugger
-             */
+        /*
+         * this function will start the repl debugger
+         */
             /*jslint evil: true*/
             // start repl server
             local._replServer = require('repl').start({ useGlobal: true });
             local._replServer.onError = function (error) {
-                /*
-                 * this function will debug any repl-error
-                 */
-                local.utility2._debugReplError = error || local.utility2._debugReplError;
+            /*
+             * this function will debug any repl-error
+             */
+                local._debugReplError = error || local._debugReplError;
             };
             local._replServer._domain.on('error', local._replServer.onError);
             // save repl eval function
@@ -1319,9 +1713,9 @@
         };
 
         local.utility2.requestResponseCleanup = function (request, response) {
-            /*
-             * this function will end or destroy the request and response objects
-             */
+        /*
+         * this function will end or destroy the request and response objects
+         */
             [request, response].forEach(function (stream) {
                 // try to end the stream
                 try {
@@ -1337,12 +1731,12 @@
         };
 
         local.utility2.requireFromScript = function (file, script) {
-            /*
-             * this function will
-             * 1. create a new module with the given file
-             * 2. load module with the given script
-             * 3. return module.exports
-             */
+        /*
+         * this function will
+         * 1. create a new module with the given file
+         * 2. load module with the given script
+         * 3. return module.exports
+         */
             var module;
             if (require.cache[file]) {
                 return require.cache[file].exports;
@@ -1356,10 +1750,10 @@
         };
 
         local.utility2.serverRespondDefault = function (request, response, statusCode, error) {
-            /*
-             * this function will respond with a default message,
-             * or error.stack for the given statusCode
-             */
+        /*
+         * this function will respond with a default message,
+         * or error.stack for the given statusCode
+         */
             // init statusCode and contentType
             local.utility2.serverRespondHeadSet(
                 request,
@@ -1384,9 +1778,9 @@
         };
 
         local.utility2.serverRespondEcho = function (request, response) {
-            /*
-             * this function will respond with debug info
-             */
+        /*
+         * this function will respond with debug info
+         */
             response.write(request.method + ' ' + request.url +
                 ' HTTP/' + request.httpVersion + '\r\n' +
                 Object.keys(request.headers).map(function (key) {
@@ -1401,9 +1795,9 @@
             statusCode,
             headers
         ) {
-            /*
-             * this function will set the response object's statusCode / headers
-             */
+        /*
+         * this function will set the response object's statusCode / headers
+         */
             // jslint-hack
             local.utility2.nop(request);
             if (response.headersSent) {
@@ -1422,9 +1816,9 @@
         };
 
         local.utility2.serverRespondTimeoutDefault = function (request, response, timeout) {
-            /*
-             * this function will create a timeout-error-handler for the server request
-             */
+        /*
+         * this function will create a timeout-error-handler for the server request
+         */
             request.onTimeout = request.onTimeout || function (error) {
                 local.utility2.serverRespondDefault(request, response, 500, error);
                 setTimeout(function () {
@@ -1443,10 +1837,10 @@
         };
 
         local.utility2.streamReadAll = function (stream, onError) {
-            /*
-             * this function will concat data from the stream,
-             * and pass it to onError when done reading
-             */
+        /*
+         * this function will concat data from the stream,
+         * and pass it to onError when done reading
+         */
             var chunkList;
             chunkList = [];
             // read data from the stream
@@ -1457,16 +1851,18 @@
                 })
                 // on end event, pass concatenated read buffer to onError
                 .on('end', function () {
-                    onError(null, Buffer.concat(chunkList));
+                    onError(null, local.modeJs === 'browser'
+                        ? chunkList[0]
+                        : Buffer.concat(chunkList));
                 })
                 // on error event, pass error to onError
                 .on('error', onError);
         };
 
         local.utility2.stringFormat = function (template, dict, valueDefault) {
-            /*
-             * this function will replace the keys in the template with the dict's key / value
-             */
+        /*
+         * this function will replace the keys in the template with the dict's key / value
+         */
             var argList, match, replace, rgx, value;
             dict = dict || {};
             replace = function (match0, fragment) {
@@ -1522,17 +1918,17 @@
         };
 
         local.utility2.stringHtmlSafe = function (text) {
-            /*
-             * this function will replace '<' to '&lt;' and '>' to '&gt;' in the text,
-             * to make it htmlSafe
-             */
+        /*
+         * this function will replace '<' to '&lt;' and '>' to '&gt;' in the text,
+         * to make it htmlSafe
+         */
             return text.replace((/</g), '&lt;').replace((/>/g), '&gt;');
         };
 
         local.utility2.taskCallbackAdd = function (options, onError) {
-            /*
-             * this function will add the callback onError to the task named options.key
-             */
+        /*
+         * this function will add the callback onError to the task named options.key
+         */
             var task;
             // init task
             task = local.utility2.cacheDict.taskUpsert[options.key] =
@@ -1544,10 +1940,10 @@
         };
 
         local.utility2.taskCallbackAndUpdateCached = function (options, onError, onTask) {
-            /*
-             * this function will run callback onError from cache,
-             * and auto-update the cache with background-task onTask
-             */
+        /*
+         * this function will run callback onError from cache,
+         * and auto-update the cache with background-task onTask
+         */
             var modeCacheHit, modeNext, onNext, onParallel;
             modeNext = 0;
             onNext = function (error, data) {
@@ -1645,9 +2041,9 @@
         };
 
         local.utility2.taskUpsert = function (options, onTask) {
-            /*
-             * this function will upsert the task named options.key
-             */
+        /*
+         * this function will upsert the task named options.key
+         */
             var task;
             task = local.utility2.cacheDict.taskUpsert[options.key];
             // if task is defined, then return
@@ -1695,9 +2091,9 @@
         };
 
         local.utility2.testMock = function (mockList, onTestCase, onError) {
-            /*
-             * this function will mock the objects in mockList while running the onTestCase
-             */
+        /*
+         * this function will mock the objects in mockList while running the onTestCase
+         */
             var onError2;
             onError2 = function (error) {
                 // restore mock[0] from mock[2]
@@ -1724,11 +2120,11 @@
         };
 
         local.utility2.testMerge = function (testReport1, testReport2) {
-            /*
-             * this function will
-             * 1. merge testReport2 into testReport1
-             * 2. return testReport1 in html-format
-             */
+        /*
+         * this function will
+         * 1. merge testReport2 into testReport1
+         * 2. return testReport1 in html-format
+         */
             var errorStackList, testCaseNumber, testReport;
             // 1. merge testReport2 into testReport1
             [testReport1, testReport2].forEach(function (testReport, ii) {
@@ -1956,9 +2352,9 @@
         };
 
         local.utility2.testRun = function (options) {
-            /*
-             * this function will run all tests in testPlatform.testCaseList
-             */
+        /*
+         * this function will run all tests in testPlatform.testCaseList
+         */
             var exit,
                 onParallel,
                 separator,
@@ -1984,15 +2380,9 @@
             }
             // init onParallel
             onParallel = local.utility2.onParallel(function () {
-                /*
-                 * this function will create the test-report after all tests are done
-                 */
-                // restore exit
-                switch (local.modeJs) {
-                case 'node':
-                    process.exit = exit;
-                    break;
-                }
+            /*
+             * this function will create the test-report after all tests are done
+             */
                 // init new-line separator
                 separator = new Array(56).join('-');
                 // stop testPlatform timer
@@ -2066,6 +2456,8 @@
                         // exit with number of tests failed
                         local.utility2.exit(testReport.testsFailed);
                     }, 1000);
+                    // restore exit
+                    process.exit = exit;
                     break;
                 }
             });
@@ -2093,9 +2485,8 @@
             // add tests into testPlatform.testCaseList
             Object.keys(options).forEach(function (key) {
                 // add testCase options[key] to testPlatform.testCaseList
-                if (key.indexOf('testCase_') === 0 &&
-                        (local.utility2.modeTestCase === key ||
-                        (!local.utility2.modeTestCase && key !== 'testCase_testRun_failure'))) {
+                if ((local.utility2.modeTestCase && local.utility2.modeTestCase === key) ||
+                        (!local.utility2.modeTestCase && key.indexOf('testCase_') === 0)) {
                     testPlatform.testCaseList.push({
                         name: key,
                         onTestCase: options[key],
@@ -2187,21 +2578,24 @@
         };
 
         local.utility2.testRunServer = function (options) {
-            /*
-             * this function will
-             * 1. create server from options.middleware
-             * 2. start server on options.port
-             * 3. if $npm_config_mode_npm_test is defined, then run tests
-             */
-            var server;
+        /*
+         * this function will
+         * 1. create server from options.middleware
+         * 2. start server on options.port
+         * 3. if $npm_config_mode_npm_test is defined, then run tests
+         */
+            var requestHandler, server;
             // 1. create server from options.middleware
-            server = local.http.createServer(function (request, response) {
+            requestHandler = function (request, response) {
                 options.middleware(request, response, function (error) {
                     options.middlewareError(error, request, response);
                 });
-            });
+            };
+            server = local.http.createServer(requestHandler);
             // 2. start server on options.port
             options.port = options.port || local.utility2.envDict.PORT;
+            local.utility2.serverLocalHost = 'http://localhost:' + options.port;
+            local.utility2.serverLocalRequestHandler = requestHandler;
             console.log('server starting on port ' + options.port);
             local.utility2.onReady.counter += 1;
             server.listen(options.port, local.utility2.onReady);
@@ -2212,7 +2606,7 @@
                     // screen-capture main-page
                     local.utility2.browserTest({
                         modeBrowserTest: 'screenCapture',
-                        url: 'http://localhost:' + options.port
+                        url: local.utility2.serverLocalHost
                     }, function (error) {
                         console.log('server stopping on port ' + options.port);
                         local.utility2.exit(error);
@@ -2225,10 +2619,10 @@
         };
 
         local.utility2.testTryCatch = function (callback, onError) {
-            /*
-             * this function will run the callback in a try-catch block,
-             * and pass any errorCaught to onError
-             */
+        /*
+         * this function will run the callback in a try-catch block,
+         * and pass any errorCaught to onError
+         */
             try {
                 callback();
             } catch (errorCaught) {
@@ -2237,9 +2631,9 @@
         };
 
         local.utility2.timeoutDefaultInit = function () {
-            /*
-             * this function will init timeoutDefault
-             */
+        /*
+         * this function will init timeoutDefault
+         */
             // init utility2 properties
             switch (local.modeJs) {
             case 'browser':
@@ -2281,20 +2675,19 @@
             local.utility2.uglifyjs.uglify) || local.utility2.echo;
 
         local.utility2.uglifyIfProduction = function (code) {
-            /*
-             * this function will uglify the js-code,
-             * if $npm_config_production is true
-             */
+        /*
+         * this function will uglify the js-code, if $npm_config_production is true
+         */
             return local.utility2.envDict.npm_config_production
                 ? local.utility2.uglify(code)
                 : code;
         };
 
         local.utility2.uuid4Create = function () {
-            /*
-             * this function will return a random uuid,
-             * with form "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx"
-             */
+        /*
+         * this function will return a random uuid,
+         * with form "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx"
+         */
             // code derived from http://jsperf.com/uuid4
             var id, ii;
             id = '';
@@ -2323,149 +2716,14 @@
         };
 
         local.utility2.uuidTimeCreate = function () {
-            /*
-             * this function will return a time-based variant of uuid4,
-             * with form "tttttttt-tttx-4xxx-yxxx-xxxxxxxxxxxx"
-             */
+        /*
+         * this function will return a time-based variant of uuid4,
+         * with form "tttttttt-tttx-4xxx-yxxx-xxxxxxxxxxxx"
+         */
             return Date.now().toString(16).replace((/(.{8})/), '$1-') +
                 local.utility2.uuid4Create().slice(12);
         };
     }());
-    switch (local.modeJs) {
-
-
-
-    // run node js-env code
-    case 'node':
-        // init XMLHttpRequest
-        local.utility2.XMLHttpRequest = function () {
-            /*
-             * this function will construct the xhr-connection
-             */
-            return;
-        };
-
-        local.utility2.XMLHttpRequest.prototype.abort = function () {
-            /*
-             * this function will abort the xhr-connection
-             */
-            this.onError(new Error('abort'));
-        };
-
-        local.utility2.XMLHttpRequest.prototype.upload = {
-            addEventListener: local.utility2.nop
-        };
-
-        local.utility2.XMLHttpRequest.prototype.addEventListener = function (type, onError) {
-            /*
-             * this function will add event listeners to the xhr-connection
-             */
-            this.onLoadList = this.onLoadList || [];
-            switch (type) {
-            case 'abort':
-            case 'error':
-            case 'load':
-                this.onLoadList.push(onError);
-                break;
-            }
-        };
-
-        local.utility2.XMLHttpRequest.prototype.onError = function (error, data) {
-            /*
-             * this function will handle the error and data passed back to the xhr-connection
-             */
-            var xhr;
-            xhr = this;
-            if (xhr.done) {
-                return;
-            }
-            xhr.error = error;
-            xhr.response = data;
-            xhr.responseText = (data && data.toString()) || '';
-            // update xhr
-            xhr.readyState = 4;
-            xhr.onreadystatechange();
-            // handle data
-            xhr.onLoadList.forEach(function (onError) {
-                onError({ type: error
-                    ? 'error'
-                    : 'load' });
-            });
-        };
-
-        local.utility2.XMLHttpRequest.prototype.onResponse = function (responseStream) {
-            /*
-             * this function will handle the responseStream from the xhr-connection
-             */
-            var xhr;
-            xhr = this;
-            xhr.responseStream = responseStream;
-            // update xhr
-            xhr.status = xhr.statusCode = xhr.responseStream.statusCode;
-            xhr.statusText = local.http.STATUS_CODES[xhr.responseStream.statusCode] || '';
-            xhr.readyState = 1;
-            xhr.onreadystatechange();
-            xhr.readyState = 2;
-            xhr.onreadystatechange();
-            xhr.readyState = 3;
-            xhr.onreadystatechange();
-            if (xhr.responseType === 'response') {
-                xhr.onError(null, xhr.responseStream);
-                return;
-            }
-            local.utility2.streamReadAll(xhr.responseStream, xhr.onError.bind(xhr));
-        };
-
-        // init onreadystatechange
-        local.utility2.XMLHttpRequest.prototype.onreadystatechange = local.utility2.nop;
-
-        local.utility2.XMLHttpRequest.prototype.open = function (method, url) {
-            /*
-             * this function will init and open the xhr-connection
-             */
-            var xhr;
-            xhr = this;
-            // disable socket pooling
-            xhr.agent = xhr.agent || false;
-            xhr.method = method;
-            xhr.readyState = 0;
-            xhr.responseText = '';
-            xhr.status = xhr.statusCode = 0;
-            xhr.statusText = '';
-            xhr.url = url;
-            // handle implicit localhost
-            if (xhr.url[0] === '/') {
-                xhr.url = 'http://localhost:' + local.utility2.envDict.PORT + xhr.url;
-            }
-            // parse url
-            xhr.urlParsed = local.url.parse(String(xhr.url));
-            xhr.hostname = xhr.urlParsed.hostname;
-            xhr.path = xhr.urlParsed.path;
-            xhr.port = xhr.urlParsed.port;
-            // debug xhr
-            local.utility2._debugAjaxXhr = xhr;
-            // init requestStream
-            xhr.requestStream = (xhr.urlParsed.protocol === 'https:'
-                ? local.https
-                : local.http).request(xhr, xhr.onResponse.bind(xhr))
-                // handle request-error
-                .on('error', xhr.onError.bind(xhr));
-        };
-
-        local.utility2.XMLHttpRequest.prototype.send = function (data) {
-            /*
-             * this function will send the data through the xhr object
-             */
-            this.data = data;
-            // send data
-            this.requestStream.end(this.data);
-        };
-
-        local.utility2.XMLHttpRequest.prototype.setRequestHeader = function (key, value) {
-            this.headers[key.toLowerCase()] = value;
-        };
-        break;
-    }
 
 
 
@@ -2806,80 +3064,10 @@ local.utility2['/test/test-report.html.template'] = '<style>\n' +
     // run browser js-env code
     case 'browser':
         // init exports
-        window.utility2 = local.utility2;
+        local.global.utility2 = local.utility2;
         // require modules
-        local.http = {};
-        local.http.createServer = function (serverRequestHandler) {
-            return { listen: function (port, onError) {
-                // jslint-hack
-                local.utility2.nop(port);
-                local.utility2.serverRequestHandler = serverRequestHandler;
-                onError();
-            } };
-        };
-        local.http.STATUS_CODES = {
-            100: 'Continue',
-            101: 'Switching Protocols',
-            102: 'Processing',
-            200: 'OK',
-            201: 'Created',
-            202: 'Accepted',
-            203: 'Non-Authoritative Information',
-            204: 'No Content',
-            205: 'Reset Content',
-            206: 'Partial Content',
-            207: 'Multi-Status',
-            208: 'Already Reported',
-            226: 'IM Used',
-            300: 'Multiple Choices',
-            301: 'Moved Permanently',
-            302: 'Found',
-            303: 'See Other',
-            304: 'Not Modified',
-            305: 'Use Proxy',
-            307: 'Temporary Redirect',
-            308: 'Permanent Redirect',
-            400: 'Bad Request',
-            401: 'Unauthorized',
-            402: 'Payment Required',
-            403: 'Forbidden',
-            404: 'Not Found',
-            405: 'Method Not Allowed',
-            406: 'Not Acceptable',
-            407: 'Proxy Authentication Required',
-            408: 'Request Timeout',
-            409: 'Conflict',
-            410: 'Gone',
-            411: 'Length Required',
-            412: 'Precondition Failed',
-            413: 'Payload Too Large',
-            414: 'URI Too Long',
-            415: 'Unsupported Media Type',
-            416: 'Range Not Satisfiable',
-            417: 'Expectation Failed',
-            418: 'I\'m a teapot',
-            421: 'Misdirected Request',
-            422: 'Unprocessable Entity',
-            423: 'Locked',
-            424: 'Failed Dependency',
-            425: 'Unordered Collection',
-            426: 'Upgrade Required',
-            428: 'Precondition Required',
-            429: 'Too Many Requests',
-            431: 'Request Header Fields Too Large',
-            500: 'Internal Server Error',
-            501: 'Not Implemented',
-            502: 'Bad Gateway',
-            503: 'Service Unavailable',
-            504: 'Gateway Timeout',
-            505: 'HTTP Version Not Supported',
-            506: 'Variant Also Negotiates',
-            507: 'Insufficient Storage',
-            508: 'Loop Detected',
-            509: 'Bandwidth Limit Exceeded',
-            510: 'Not Extended',
-            511: 'Network Authentication Required'
-        };
+        local.http = local._http;
+        local.url = local.global.utility2_url;
         break;
 
 
@@ -2916,11 +3104,12 @@ local.utility2['/test/test-report.html.template'] = '<style>\n' +
                     'utility2'
                 )
             );
-        ['istanbul', 'jslint', 'uglifyjs'].forEach(function (key) {
+        ['istanbul', 'jslint', 'uglifyjs', 'url'].forEach(function (key) {
             local.utility2.cacheDict.assets['/assets/utility2.lib.' + key + '.js'] =
                 local.utility2.uglifyIfProduction(
                     local.utility2.istanbulInstrumentInPackage(
-                        '//' + local.fs.readFileSync(__dirname + '/lib.' + key + '.js', 'utf8'),
+                        local.fs.readFileSync(__dirname + '/lib.' + key + '.js', 'utf8')
+                            .replace((/^#!/), '//'),
                         __dirname + '/lib.' + key + '.js',
                         'utility2'
                     )

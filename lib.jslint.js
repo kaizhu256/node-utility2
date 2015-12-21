@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* istanbul ignore all */
 /*jslint
     browser: true,
     maxerr: 8,
@@ -17,16 +18,18 @@
     (function () {
         // init local
         local = {};
+        // init modeJs
         local.modeJs = (function () {
             try {
+                return typeof navigator.userAgent === 'string' &&
+                    typeof document.querySelector('body') === 'object' &&
+                    typeof XMLHttpRequest.prototype.open === 'function' &&
+                    'browser';
+            } catch (errorCaughtBrowser) {
                 return module.exports &&
                     typeof process.versions.node === 'string' &&
                     typeof require('http').createServer === 'function' &&
                     'node';
-            } catch (errorCaughtNode) {
-                return typeof navigator.userAgent === 'string' &&
-                    typeof document.querySelector('body') === 'object' &&
-                    'browser';
             }
         }());
     }());
@@ -628,9 +631,9 @@ function(e){var t,n,r=[],i;if(e.errors.length){e.json&&r.push("<cite>JSON: bad.<
     // run shared js-env code
     (function () {
         local.jslintAndPrint = function (script, file) {
-            /*
-             * this function will jslint / csslint the script and print any errors to stderr
-             */
+        /*
+         * this function will jslint / csslint the script and print any errors to stderr
+         */
             var errorList, lineno;
             if (!script.length) {
                 return script;
@@ -740,9 +743,9 @@ function(e){var t,n,r=[],i;if(e.errors.length){e.json&&r.push("<cite>JSON: bad.<
         /* istanbul ignore next */
         // run the cli
         local.cliRun = function () {
-            /*
-             * this function will run the cli
-             */
+        /*
+         * this function will run the cli
+         */
             if (module !== require.main) {
                 return;
             }
