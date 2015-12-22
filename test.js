@@ -121,7 +121,7 @@
          */
             // jslint-hack
             local.utility2.nop(options);
-            local.utility2.ajax({ url: '/package.json' }, function (error, xhr) {
+            local.utility2.ajax({ url: 'package.json' }, function (error, xhr) {
                 local.utility2.testTryCatch(function () {
                     // validate no error occurred
                     local.utility2.assert(!error, error);
@@ -129,40 +129,6 @@
                     local.utility2.assert((/"name": "utility2",/)
                         .test(xhr.responseText), xhr.responseText);
                     onError();
-                }, onError);
-            });
-        };
-
-        local.testCase_ajax_cache = function (options, onError) {
-        /*
-         * this function will test ajax's cache handling-behavior
-         */
-            // jslint-hack
-            local.utility2.nop(options);
-            // test http GET handling-behavior
-            local.utility2.ajax({
-                url: '/test/hello'
-            }, function (error, xhr) {
-                local.utility2.testTryCatch(function () {
-                    // validate no error occurred
-                    local.utility2.assert(!error, error);
-                    // validate responseText
-                    local.utility2.assert(xhr.responseText === 'hello', xhr.responseText);
-                    // test http GET 304 cache handling-behavior
-                    local.utility2.ajax({
-                        headers: {
-                            'If-Modified-Since': new Date(Date.now() + 0xffff).toGMTString()
-                        },
-                        url: '/test/hello'
-                    }, function (error, xhr) {
-                        local.utility2.testTryCatch(function () {
-                            // validate no error occurred
-                            local.utility2.assert(!error, error);
-                            // validate 304 http status
-                            local.utility2.assert(xhr.statusCode === 304, xhr.statusCode);
-                            onError();
-                        }, onError);
-                    });
                 }, onError);
             });
         };
@@ -1129,6 +1095,98 @@
     // run node js-env code
     case 'node':
         // init tests
+        local.testCase_ajax_cache = function (options, onError) {
+        /*
+         * this function will test ajax's cache handling-behavior
+         */
+            // jslint-hack
+            local.utility2.nop(options);
+            // test http GET handling-behavior
+            local.utility2.ajax({
+                url: 'assets/hello'
+            }, function (error, xhr) {
+                local.utility2.testTryCatch(function () {
+                    // validate no error occurred
+                    local.utility2.assert(!error, error);
+                    // validate responseText
+                    local.utility2.assert(xhr.responseText === 'hello', xhr.responseText);
+                    // test http GET 304 cache handling-behavior
+                    local.utility2.ajax({
+                        headers: {
+                            'If-Modified-Since': new Date(Date.now() + 0xffff).toGMTString()
+                        },
+                        url: 'assets/hello'
+                    }, function (error, xhr) {
+                        local.utility2.testTryCatch(function () {
+                            // validate no error occurred
+                            local.utility2.assert(!error, error);
+                            // validate 304 http status
+                            local.utility2.assert(xhr.statusCode === 304, xhr.statusCode);
+                            onError();
+                        }, onError);
+                    });
+                }, onError);
+            });
+        };
+
+        local.testCase_assets_build = function (options, onError) {
+        /*
+         * this function will test assets' build handling-behavior
+         */
+            var onParallel;
+            // jslint-hack
+            local.utility2.nop(options);
+            onParallel = local.utility2.onParallel(onError);
+            onParallel.counter += 1;
+            [{
+                file: '/index.html',
+                url: '/'
+            }, {
+                file: '/assets/example.js',
+                url: '/assets/example.js'
+            }, {
+                file: '/assets/hello',
+                url: '/assets/hello'
+            }, {
+                file: '/assets/test.js',
+                url: '/assets/test.js'
+            }, {
+                file: '/assets/utility2.css',
+                url: '/assets/utility2.css'
+            }, {
+                file: '/assets/utility2.js',
+                url: '/assets/utility2.js'
+            }, {
+                file: '/assets/utility2.lib.istanbul.js',
+                url: '/assets/utility2.lib.istanbul.js'
+            }, {
+                file: '/assets/utility2.lib.jslint.js',
+                url: '/assets/utility2.lib.jslint.js'
+            }, {
+                file: '/assets/utility2.lib.uglifyjs.js',
+                url: '/assets/utility2.lib.uglifyjs.js'
+            }, {
+                file: '/assets/utility2.lib.url.js',
+                url: '/assets/utility2.lib.url.js'
+            }, {
+                file: '/package.json',
+                url: '/package.json'
+            }].forEach(function (element) {
+                onParallel.counter += 1;
+                local.utility2.ajax({ url: element.url }, function (error, xhr) {
+                    // validate no error occurred
+                    onParallel.counter += 1;
+                    onParallel(error);
+                    local.utility2.fsWriteFileWithMkdirp(
+                        local.utility2.envDict.npm_config_dir_build + element.file,
+                        xhr.responseText,
+                        onParallel
+                    );
+                });
+            });
+            onParallel();
+        };
+
         local.testCase_fsWriteFileWithMkdirp_default = function (options, onError) {
         /*
          * this function will test fsWriteFileWithMkdirp's default handling-behavior
@@ -1401,10 +1459,9 @@
                 modeSilent: true,
                 modeTestIgnore: true,
                 timeoutDefault: local.utility2.timeoutDefault - 1000,
-                url: 'http://localhost:' +
-                    local.utility2.envDict.PORT +
+                url: local.utility2.serverLocalHost +
                     // test script-only handling-behavior
-                    '/test/script-only.html' +
+                    '/script-only.html' +
                     // test phantom-callback handling-behavior
                     '?modeTest=consoleLogResult&' +
                     // test specific testCase handling-behavior
@@ -1448,8 +1505,8 @@
                         onError();
                     },
                     onReady: {},
-                    serverLocalDict: {},
                     serverLocalHost: '',
+                    serverLocalRequestHandler: local.utility2.nop,
                     serverLocalUrlTest: local.utility2.nop,
                     testRun: local.utility2.nop
                 }],
@@ -1498,23 +1555,21 @@
     // run shared js-env code
     (function () {
         // init assets
-        local.utility2.cacheDict.assets['/test/script-only.html'] =
+        local.utility2.cacheDict.assets['/script-only.html'] =
             '<h1>script-only test</h1>\n' +
-            '<script src="/assets/utility2.lib.url.js"></script>\n' +
-            '<script src="/assets/utility2.js"></script>\n' +
-            '<script>window.utility2.envDict.PORT = "' + local.utility2.envDict.PORT +
-                '";</script>\n' +
-            '<script src="/assets/example.js"></script>\n' +
-            '<script src="/test/test.js"></script>\n';
+            '<script src="assets/utility2.lib.url.js"></script>\n' +
+            '<script src="assets/utility2.js"></script>\n' +
+            '<script src="assets/example.js"></script>\n' +
+            '<script src="assets/test.js"></script>\n';
         local.utility2.serverLocalUrlTest = function (url) {
             switch (local.url.parse(url).pathname) {
+            case '/assets/hello':
             case '/test/echo':
             case '/test/body':
             case '/test/error-500':
             case '/test/error-undefined':
-            case '/test/hello':
             case '/test/timeout':
-                return true;
+                return local.modeJs === 'browser';
             }
         };
         // init test-middleware
@@ -1594,7 +1649,7 @@
     // run node js-env code
     case 'node':
         // init assets
-        local.utility2.cacheDict.assets['/test/test.js'] = local.utility2
+        local.utility2.cacheDict.assets['/assets/test.js'] = local.utility2
             .istanbulInstrumentInPackage(
                 local.fs.readFileSync(__filename, 'utf8'),
                 __filename,

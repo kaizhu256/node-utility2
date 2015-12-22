@@ -461,12 +461,12 @@ t=0,n=this.children.length;t<n;++t)r=this.children[t],r instanceof k?e+=r.toStri
         local.collectorCreate = function (options) {
             return {
                 fileCoverageFor: function (file) {
-                    // remove derived info
-                    delete options.coverage[file].l;
                     return options.coverage[file];
                 },
                 files: function () {
                     return Object.keys(options.coverage).filter(function (key) {
+                        // remove derived info
+                        delete options.coverage[key].l;
                         return local.codeDict[key];
                     });
                 }
@@ -798,7 +798,7 @@ local['head.txt'] = '\
             margin-left: 0.5em;\n\
         }\n\
         div.coverage-summary .yui3-datatable-sort-indicator {\n\
-            background: url("https://yui-s.yahooapis.com/3.6.0/build/datatable-sort/assets/skins/sam/sort-arrow-sprite.png") no-repeat scroll 0 0 transparent;\n\
+            background: no-repeat scroll 0 0 transparent;\n\
         }\n\
         div.coverage-summary .yui3-datatable-sorted .yui3-datatable-sort-indicator {\n\
             background-position: 0 -20px;\n\

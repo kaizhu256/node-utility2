@@ -154,7 +154,7 @@ instruction
         // run server-test
         local.utility2.testRunServer(local);
         // init assets
-        local.utility2.cacheDict.assets['/test/hello'] = 'hello';
+        local.utility2.cacheDict.assets['/assets/hello'] = 'hello';
     }());
     switch (local.modeJs) {
 
@@ -170,9 +170,9 @@ instruction
             var data;
             // jslint-hack
             local.utility2.nop(options);
-            // test '/test/hello'
+            // test 'assets/hello'
             local.utility2.ajax({
-                url: '/test/hello'
+                url: 'assets/hello'
             }, function (error, xhr) {
                 local.utility2.testTryCatch(function () {
                     // validate no error occurred
@@ -234,7 +234,7 @@ instruction
 '    <title>\n' +
 '    {{envDict.npm_package_name}} [{{envDict.npm_package_version}}]\n' +
 '    </title>\n' +
-'    <link rel="stylesheet" href="/assets/utility2.css">\n' +
+'    <link rel="stylesheet" href="assets/utility2.css">\n' +
 '    <style>\n' +
 '    * {\n' +
 '        box-sizing: border-box;\n' +
@@ -325,14 +325,13 @@ instruction
 '    <pre class="jslintOutputPre"></pre>\n' +
 '    <div class="testReportDiv"></div>\n' +
 '    <div class="istanbulCoverageDiv"></div>\n' +
-'    <script src="/assets/utility2.lib.istanbul.js"></script>\n' +
-'    <script src="/assets/utility2.lib.jslint.js"></script>\n' +
-'    <script src="/assets/utility2.lib.uglifyjs.js"></script>\n' +
-'    <script src="/assets/utility2.lib.url.js"></script>\n' +
-'    <script src="/assets/utility2.js"></script>\n' +
+'    <script src="assets/utility2.lib.istanbul.js"></script>\n' +
+'    <script src="assets/utility2.lib.jslint.js"></script>\n' +
+'    <script src="assets/utility2.lib.uglifyjs.js"></script>\n' +
+'    <script src="assets/utility2.lib.url.js"></script>\n' +
+'    <script src="assets/utility2.js"></script>\n' +
 '    <script>\n' +
 '    window.utility2.envDict = {\n' +
-'        PORT: "{{envDict.PORT}}",\n' +
 '        npm_package_description: "{{envDict.npm_package_description}}",\n' +
 '        npm_package_name: "{{envDict.npm_package_name}}",\n' +
 '        npm_package_version: "{{envDict.npm_package_version}}"\n' +
@@ -371,14 +370,12 @@ instruction
 '        window.testRun({});\n' +
 '    }\n' +
 '    </script>\n' +
-'    <script src="/assets/example.js"></script>\n' +
-'    <script src="/test/test.js"></script>\n' +
+'    <script src="assets/example.js"></script>\n' +
+'    <script src="assets/test.js"></script>\n' +
 '</body>\n' +
 /* jslint-ignore-end */
         '</html>\n').replace((/\{\{envDict\.\w+?\}\}/g), function (match0) {
             switch (match0) {
-            case '{{envDict.PORT}}':
-                return process.env.PORT;
             case '{{envDict.npm_package_description}}':
                 return process.env.npm_package_description;
             case '{{envDict.npm_package_name}}':
@@ -431,8 +428,7 @@ instruction
         "utility2-jslint" : "lib.jslint.js",
         "utility2-uglifyjs" : "lib.uglifyjs.js"
     },
-    "description": "run dynamic browser tests with coverage \
-(via istanbul and electron)",
+    "description": "run dynamic browser tests with coverage (via istanbul and electron)",
     "devDependencies": {
         "electron-lite": "2015.11.2"
     },
@@ -461,15 +457,15 @@ instruction
         "build-ci": "./index.sh shRun shReadmeBuild",
         "build-doc": "MODE_LINENO=0 \
 ./index.sh shRun shReadmeExportFile package.json package.json && \
-./index.sh shRun shDocApiCreate \"module.exports={\
-exampleFileList:['README.md','test.js','index.js',\
-'lib.istanbul.js','lib.jslint.js','lib.uglifyjs.js'],\
-moduleDict:{\
-utility2:{exports:require('./index.js')},\
-'utility2.istanbul':{aliasList:['istanbul','local'],exports:require('./index.js').istanbul},\
-'utility2.jslint':{aliasList:['jslint','local'],exports:require('./index.js').jslint},\
-'utility2.uglifyjs':{aliasList:['uglifyjs','local'],exports:require('./index.js').uglifyjs}\
-}\
+./index.sh shRun shDocApiCreate \"module.exports={ \
+exampleFileList:['README.md','test.js','index.js', \
+'lib.istanbul.js','lib.jslint.js','lib.uglifyjs.js'], \
+moduleDict:{ \
+utility2:{exports:require('./index.js')}, \
+'utility2.istanbul':{aliasList:['istanbul','local'],exports:require('./index.js').istanbul}, \
+'utility2.jslint':{aliasList:['jslint','local'],exports:require('./index.js').jslint}, \
+'utility2.uglifyjs':{aliasList:['uglifyjs','local'],exports:require('./index.js').uglifyjs} \
+} \
 }\"",
         "env": "env",
         "start": "PORT=${PORT:-8080} npm_config_mode_auto_restart=1 \
@@ -481,14 +477,16 @@ npm_config_mode_auto_restart=1 \
 npm_config_mode_auto_restart_child=1 \
 ./index.sh test node test.js"
     },
-    "version": "2015.12.1"
+    "version": "2015.12.2"
 }
 ```
 
 
 
 # todo
+- replace lib.url.js with URL api
 - migrate live-test-server from heroku to github, with browser emulation of server
+- add shTestReportCreate command
 - make istanbulCoverageMerge more robust
 - add utility2.middlewareLimit
 - create flamegraph from istanbul coverage
@@ -497,18 +495,14 @@ npm_config_mode_auto_restart_child=1 \
 
 
 
-# change since 3b7491d7
-- npm publish 2015.12.1
-- emulate testRunServer to run in browser
-- emulate server middlewares to run in browser
-- emulate http.request, http.IncomingMessage, and http.ServerResponse in browser
-- add utility2 properties serverLocalHost, serverLocalRequestHandler, serverLocalUrlTest
-- fix covered-lines not updating in subsequent coverageReportCreate calls
-- merge local object from example.js into utility2
-- fix timerInterval refresh in browser test
-- change indentation of function comments - shift them left by 4 spaces
-- add /* istanbul ignore all */ comment-flag to disable code-coverage
-- add lib.url.js
+# change since 8ee43b15
+- npm publish 2015.12.2
+- fix build-ci exiting before shBuildGithubUpload
+- fix shBrowserTest passing even when tests fail
+- fix line-coverage in html-coverage-report
+- change asset file urls from absolute to relative locations
+- revert timeoutDefault back to 30000 ms
+- revamp ajax url-resolution
 - none
 
 
@@ -560,8 +554,14 @@ shBuild() {
     # create api-doc
     npm run-script build-doc || return $?
 
+    #!! # deploy app to gh-pages
+    #!! MODE_BUILD=assetsBuild npm test || return $?
+
     # if running legacy-node, then do not continue
-    [ "$(node --version)" \< "v5.0" ] && exit
+    if [ "$(node --version)" \< "v5.0" ]
+    then
+        exit
+    fi
 
     if [ "$CI_BRANCH" = alpha ] ||
         [ "$CI_BRANCH" = beta ] ||

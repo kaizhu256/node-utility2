@@ -513,14 +513,30 @@
          * this function will send an ajax request with error handling and timeout
          */
             var ajaxProgressDiv, ii, timerTimeout, xhr;
-            // handle implicit localhost
-            if (options.url[0] === '/' && local.utility2.serverLocalHost) {
-                options.url = local.utility2.serverLocalHost + options.url;
+            // resolve url
+            switch (local.modeJs) {
+            case 'browser':
+                // resolve absolute path
+                if (options.url[0] === '/') {
+                    options.url = location.protocol + '//' + location.host + options.url;
+                // resolve relative path
+                } else if (!(/^\w+?:\/\//).test(options.url)) {
+                    options.url = location.protocol + '//' + location.host +
+                        location.pathname.replace((/\/[^\/]*?$/), '') + '/' + options.url;
+                }
+                break;
+            case 'node':
+                // resolve absolute path
+                if (options.url[0] === '/') {
+                    options.url = local.utility2.serverLocalHost + options.url;
+                // resolve relative path
+                } else if (!(/^\w+?:\/\//).test(options.url)) {
+                    options.url = local.utility2.serverLocalHost + '/' + options.url;
+                }
+                break;
             }
             // init modeServerLocal
-            if (local.modeJs === 'browser' &&
-                    !options.modeServerLocal &&
-                    options.url.indexOf(local.utility2.serverLocalHost) === 0 &&
+            if (options.url.indexOf(local.utility2.serverLocalHost) === 0 &&
                     local.utility2.serverLocalUrlTest &&
                     local.utility2.serverLocalUrlTest(options.url)) {
                 options.modeServerLocal = true;
@@ -2594,7 +2610,9 @@
             server = local.http.createServer(requestHandler);
             // 2. start server on options.port
             options.port = options.port || local.utility2.envDict.PORT;
-            local.utility2.serverLocalHost = 'http://localhost:' + options.port;
+            local.utility2.serverLocalHost = local.modeJs === 'browser'
+                ? location.protocol + '//' + location.host
+                : 'http://localhost:' + options.port;
             local.utility2.serverLocalRequestHandler = requestHandler;
             console.log('server starting on port ' + options.port);
             local.utility2.onReady.counter += 1;
@@ -2668,7 +2686,7 @@
                 );
             }
             // init timeoutDefault
-            local.utility2.timeoutDefault = Number(local.utility2.timeoutDefault || 60000);
+            local.utility2.timeoutDefault = Number(local.utility2.timeoutDefault || 30000);
         };
 
         local.utility2.uglify = (local.utility2.uglifyjs &&
@@ -3067,6 +3085,7 @@ local.utility2['/test/test-report.html.template'] = '<style>\n' +
         local.global.utility2 = local.utility2;
         // require modules
         local.http = local._http;
+        local.https = local._http;
         local.url = local.global.utility2_url;
         break;
 

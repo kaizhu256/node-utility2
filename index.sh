@@ -103,7 +103,9 @@ shBrowserTest() {
             timeoutDefault: '$timeoutDefault',
             timeoutScreenCapture: '$timeoutScreenCapture',
             url: '$url'
-        }, process.exit);
+        }, function (error) {
+            process.exit(error && 1);
+        });
     " || return $?
 }
 
@@ -322,21 +324,6 @@ shDuList () {
     du -ms $1/* | sort -nr || return $?
 }
 
-shExitCodeSave() {
-# this function will save the global $EXIT_CODE and restore the global $CWD
-# save $EXIT_CODE
-    if [ "$EXIT_CODE" = "" ] || [ "$EXIT_CODE" = 0 ]
-    then
-        EXIT_CODE="$1" || return $?
-    fi
-    if [ -d "$npm_config_dir_tmp" ]
-    then
-        printf "$EXIT_CODE" > "$npm_config_file_tmp" || return $?
-    fi
-    # restore $CWD
-    cd "$CWD" || return $?
-}
-
 shGitLsTree() {
 # this function will list all files committed in HEAD
     git ls-tree --name-only -r HEAD | while read file
@@ -348,9 +335,9 @@ shGitLsTree() {
 
 shGitRepoBranchCommand() {
 # this fuction will copy / move / update git-repo-branch
-    shGitRepoBranchCommandInternal "$@"
-    # save $EXIT_CODE and restore $CWD
-    shExitCodeSave $? || return $?
+    local EXIT_CODE || return $?
+    EXIT_CODE=0 || return $?
+    (shGitRepoBranchCommandInternal "$@") || EXIT_CODE=$?
     # reset shGitRepoBranchUpdateLocal
     unset -f shGitRepoBranchUpdateLocal || return $?
     return "$EXIT_CODE"
@@ -801,6 +788,8 @@ shMountData() {
 
 shNpmTest() {
 # this function will run npm-test
+    local EXIT_CODE || return $?
+    EXIT_CODE=0 || return $?
     shBuildPrint "${MODE_BUILD:-npmTest}" "npm-testing $CWD" || return $?
     # cleanup $npm_config_dir_tmp/*.json
     rm -f "$npm_config_dir_tmp/"*.json || return $?
@@ -819,9 +808,7 @@ shNpmTest() {
     # cleanup old coverage
     rm -f "$npm_config_dir_build/coverage.html/"coverage.*.json || return $?
     # run npm-test with coverage
-    shIstanbulCover "$@"
-    # save $EXIT_CODE and restore $CWD
-    shExitCodeSave $? || return $?
+    (shIstanbulCover "$@") || EXIT_CODE=$?
     # debug covered-test by re-running it uncovered
     if [ "$EXIT_CODE" != 0 ]
     then
@@ -942,7 +929,9 @@ shReadmeTestSh() {
 }
 
 shRun() {
-# this function will run the command $@ and restore $CWD on exit
+# this function will run the command $@ with auto-restart
+    local EXIT_CODE || return $?
+    EXIT_CODE=0 || return $?
     # eval argv and auto-restart on non-zero exit, unless exited by SIGINT
     if [ "$npm_config_mode_auto_restart" ] && [ ! "$npm_config_mode_auto_restart_child" ]
     then
@@ -951,9 +940,7 @@ shRun() {
         do
             printf "(re)starting $*" || return $?
             printf "\n" || return $?
-            "$@"
-            # save $EXIT_CODE
-            EXIT_CODE="$?" || return $?
+            ("$@") || EXIT_CODE=$?
             printf "process exited with code $EXIT_CODE\n" || return $?
             # http://en.wikipedia.org/wiki/Unix_signal
             # exit-code 0 - normal exit
@@ -969,25 +956,28 @@ shRun() {
             fi
             sleep 1 || return $?
         done
+        return "$EXIT_CODE"
     # eval argv
     else
-        "$@"
+        "$@" || return $?
     fi
-    # save $EXIT_CODE and restore $CWD
-    shExitCodeSave $? || return $?
-    return "$EXIT_CODE"
 }
 
 shRunScreenCapture() {
 # http://www.cnx-software.com/2011/09/22
 # /how-to-convert-a-command-line-result-into-an-image-in-linux/
 # this function will run the command $@ and screen-capture the output
+    local EXIT_CODE || return $?
+    EXIT_CODE=0 || return $?
     # init $npm_config_dir_build
     mkdir -p "$npm_config_dir_build/coverage.html" || return $?
     export MODE_BUILD_SCREEN_CAPTURE="screen-capture.${MODE_BUILD:-undefined}.svg" || return $?
-    shRun "$@" 2>&1 | tee $npm_config_dir_tmp/screen-capture.txt || return $?
-    # save $EXIT_CODE and restore $CWD
-    shExitCodeSave "$(cat $npm_config_file_tmp)" || return $?
+    (shRun "$@" 2>&1; printf $? > "$npm_config_file_tmp") | \
+        tee "$npm_config_dir_tmp/screen-capture.txt" || return $?
+    # save $EXIT_CODE
+    EXIT_CODE="$(cat "$npm_config_file_tmp")" || return $?
+    # restore $CWD
+    cd $CWD || return $?
     # format text-output
     node -e "
         'use strict';
