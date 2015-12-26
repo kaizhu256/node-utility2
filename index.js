@@ -690,7 +690,7 @@
         /*
          * this function will spawn an electron process to test options.url
          */
-            var done, file, modeNext, onNext, onParallel, timerTimeout;
+            var done, modeNext, onNext, onParallel, timerTimeout;
             if (local.modeJs === 'node') {
                 local.utility2.objectSetDefault(options, local.utility2.envDict);
                 options.timeoutDefault = options.timeoutDefault ||
@@ -708,13 +708,13 @@
                     options.testName = options.MODE_BUILD + '.browser.' +
                         encodeURIComponent(local.url.parse(options.url).pathname);
                     local.utility2.objectSetDefault(options, {
-                        fileCoverage: options.npm_config_dir_tmp +
+                        fileCoverage: local.utility2.envDict.npm_config_dir_tmp +
                             '/coverage.' + options.testName + '.json',
-                        fileScreenCapture: (options.npm_config_dir_build +
+                        fileScreenCapture: (local.utility2.envDict.npm_config_dir_build +
                             '/screen-capture.' + options.testName + '.png')
                             .replace((/%/g), '_')
                             .replace((/_2F\.png$/), '.png'),
-                        fileTestReport: options.npm_config_dir_tmp +
+                        fileTestReport: local.utility2.envDict.npm_config_dir_tmp +
                             '/test-report.' + options.testName + '.json',
                         modeBrowserTest: 'test',
                         timeExit: Date.now() + options.timeoutDefault
@@ -722,22 +722,11 @@
                     // init timerTimeout
                     timerTimeout = local.utility2
                         .onTimeout(onNext, options.timeoutDefault, options.testName);
-                    // get previous testReport
-                    if (options.modeTestAdd) {
-                        try {
-                            data = null;
-                            file = options.npm_config_dir_build + '/test-report.json';
-                            data = JSON.parse(local.fs.readFileSync(file, 'utf8'));
-                            console.log('\nbrowserTest - adding to test-report ' + file + '\n');
-                        } catch (ignore) {
-                        }
-                        local.utility2.testMerge(local.utility2.testReport, data || {});
-                    }
                     // init file urlBrowser
                     options.modeNext = 20;
-                    options.urlBrowser = options.npm_config_dir_tmp +
+                    options.urlBrowser = local.utility2.envDict.npm_config_dir_tmp +
                         '/electron.' + local.utility2.uuidTimeCreate() + '.html';
-                    local.utility2.fsMkdirpSync(options.npm_config_dir_build);
+                    local.utility2.fsMkdirpSync(local.utility2.envDict.npm_config_dir_build);
                     local.fs.writeFileSync(options.urlBrowser, '<style>body {' +
                             'border: 1px solid black;' +
                             'margin: 0px;' +
@@ -808,16 +797,13 @@
                         return;
                     }
                     if (!options.modeTestIgnore) {
-                        local.utility2.testMerge(local.utility2.testReport, data);
+                        local.utility2.testReportMerge(local.utility2.testReport, data);
                     }
-                    if (options.modeTestAdd) {
-                        file = options.npm_config_dir_build + '/test-report.html';
-                        local.fs.writeFileSync(
-                            file,
-                            local.utility2.testMerge(local.utility2.testReport, {})
-                        );
-                        console.log('\nbrowserTest - added extra tests to ' + file + '\n');
-                    }
+                    // create test-report.json
+                    local.fs.writeFileSync(
+                        local.utility2.envDict.npm_config_dir_build + '/test-report.json',
+                        JSON.stringify(local.utility2.testReport, null, 4)
+                    );
                     onNext(data && data.testsFailed && new Error(data.testsFailed));
                     break;
                 // run electron-node code
@@ -2135,7 +2121,64 @@
             }, onError2);
         };
 
-        local.utility2.testMerge = function (testReport1, testReport2) {
+        local.utility2.testReportCreate = function (testReport) {
+        /*
+         * this function will create test-report artifacts
+         */
+            // print test-report summary
+            console.log('\n' + new Array(56).join('-') + '\n' + testReport.testPlatformList
+                .filter(function (testPlatform) {
+                    // if testPlatform has no tests, then filter it out
+                    return testPlatform.testCaseList.length;
+                })
+                .map(function (testPlatform) {
+                    return '| test-report - ' + testPlatform.name + '\n|' +
+                        ('        ' + testPlatform.timeElapsed + ' ms     ')
+                        .slice(-16) +
+                        ('        ' + testPlatform.testsFailed + ' failed ')
+                        .slice(-16) +
+                        ('        ' + testPlatform.testsPassed + ' passed ')
+                        .slice(-16) + '     |\n' + new Array(56).join('-');
+                })
+                .join('\n') + '\n');
+            // create test-report.html
+            local.fs.writeFileSync(
+                local.utility2.envDict.npm_config_dir_build + '/test-report.html',
+                local.utility2.testReportMerge(testReport, {})
+            );
+            // create build.badge.svg
+            local.fs.writeFileSync(local.utility2.envDict.npm_config_dir_build +
+                '/build.badge.svg', local.utility2['/build/build.badge.svg']
+                // edit branch name
+                .replace((/0000-00-00 00:00:00/g),
+                    new Date().toISOString().slice(0, 19).replace('T', ' '))
+                // edit branch name
+                .replace((/- master -/g), '| ' + local.utility2.envDict.CI_BRANCH + ' |')
+                // edit commit id
+                .replace((/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/g),
+                    local.utility2.envDict.CI_COMMIT_ID));
+            // create test-report.badge.svg
+            local.fs.writeFileSync(local.utility2.envDict.npm_config_dir_build +
+                '/test-report.badge.svg', local
+                .utility2['/build/test-report.badge.svg']
+                // edit number of tests failed
+                .replace((/999/g), testReport.testsFailed)
+                // edit badge color
+                .replace(
+                    (/d00/g),
+                    // coverage-hack - cover both fail and pass cases
+                    '0d00'.slice(!!testReport.testsFailed).slice(0, 3)
+                ));
+            console.log('created test-report file://' +
+                local.utility2.envDict.npm_config_dir_build + '/test-report.html\n');
+            // if any test failed, then exit with non-zero exit-code
+            console.log('\n' + local.utility2.envDict.MODE_BUILD +
+                ' - ' + testReport.testsFailed + ' failed tests\n');
+            // exit with number of tests failed
+            local.utility2.exit(testReport.testsFailed);
+        };
+
+        local.utility2.testReportMerge = function (testReport1, testReport2) {
         /*
          * this function will
          * 1. merge testReport2 into testReport1
@@ -2271,26 +2314,6 @@
             if (testReport.testsPending === 0) {
                 local._timeElapsedStop(testReport);
             }
-            // create build.badge.svg
-            testReport.buildBadgeSvg = local.utility2['/build/build.badge.svg']
-                // edit branch name
-                .replace((/0000-00-00 00:00:00/g),
-                    new Date().toISOString().slice(0, 19).replace('T', ' '))
-                // edit branch name
-                .replace((/- master -/g), '| ' + local.utility2.envDict.CI_BRANCH + ' |')
-                // edit commit id
-                .replace((/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/g),
-                    local.utility2.envDict.CI_COMMIT_ID);
-            // create test-report.badge.svg
-            testReport.testReportBadgeSvg = local.utility2['/build/test-report.badge.svg']
-                // edit number of tests failed
-                .replace((/999/g), testReport.testsFailed)
-                // edit badge color
-                .replace(
-                    (/d00/g),
-                    // coverage-hack - cover both fail and pass cases
-                    '0d00'.slice(!!testReport.testsFailed).slice(0, 3)
-                );
             // 2. return testReport1 in html-format
             // json-copy testReport that will be modified for html templating
             testReport = local.utility2.jsonCopy(testReport1);
@@ -2373,11 +2396,9 @@
          */
             var exit,
                 onParallel,
-                separator,
                 testPlatform,
                 testReport,
                 testReportDiv,
-                testReportHtml,
                 timerInterval;
             // init modeTest
             local.utility2.modeTest = local.utility2.modeTest ||
@@ -2399,28 +2420,10 @@
             /*
              * this function will create the test-report after all tests are done
              */
-                // init new-line separator
-                separator = new Array(56).join('-');
                 // stop testPlatform timer
                 local._timeElapsedStop(testPlatform);
-                // create testReportHtml
-                testReportHtml = local.utility2.testMerge(testReport, {});
-                // print test-report summary
-                console.log('\n' + separator + '\n' + testReport.testPlatformList
-                    .filter(function (testPlatform) {
-                        // if testPlatform has no tests, then filter it out
-                        return testPlatform.testCaseList.length;
-                    })
-                    .map(function (testPlatform) {
-                        return '| test-report - ' + testPlatform.name + '\n|' +
-                            ('        ' + testPlatform.timeElapsed + ' ms     ')
-                            .slice(-16) +
-                            ('        ' + testPlatform.testsFailed + ' failed ')
-                            .slice(-16) +
-                            ('        ' + testPlatform.testsPassed + ' passed ')
-                            .slice(-16) + '     |\n' + separator;
-                    })
-                    .join('\n') + '\n');
+                // finalize testReport
+                local.utility2.testReportMerge(testReport, {});
                 switch (local.modeJs) {
                 case 'browser':
                     // notify saucelabs of test results
@@ -2431,51 +2434,28 @@
                         failed: testReport.testsFailed,
                         testReport: testReport
                     };
-                    setTimeout(function () {
-                        // update coverageReport
-                        local.utility2.istanbulCoverageReportCreate({
-                            coverage: local.global.__coverage__
-                        });
-                        // exit with number of tests failed
-                        local.utility2.exit(testReport.testsFailed);
-                    }, 1000);
                     break;
                 case 'node':
-                    // create build.badge.svg
-                    local.fs.writeFileSync(
-                        local.utility2.envDict.npm_config_dir_build + '/build.badge.svg',
-                        testReport.buildBadgeSvg
-                    );
-                    // create test-report.badge.svg
-                    local.fs.writeFileSync(
-                        local.utility2.envDict.npm_config_dir_build + '/test-report.badge.svg',
-                        testReport.testReportBadgeSvg
-                    );
-                    // create test-report.html
-                    local.fs.writeFileSync(
-                        local.utility2.envDict.npm_config_dir_build + '/test-report.html',
-                        testReportHtml
-                    );
                     // create test-report.json
                     local.fs.writeFileSync(
                         local.utility2.envDict.npm_config_dir_build + '/test-report.json',
                         JSON.stringify(testReport, null, 4)
                     );
-                    console.log('created test-report file://' +
-                        local.utility2.envDict.npm_config_dir_build + '/test-report.html\n');
-                    // if any test failed, then exit with non-zero exit-code
-                    setTimeout(function () {
-                        // finalize testReport
-                        local.utility2.testMerge(testReport, {});
-                        console.log('\n' + local.utility2.envDict.MODE_BUILD +
-                            ' - ' + testReport.testsFailed + ' failed tests\n');
-                        // exit with number of tests failed
-                        local.utility2.exit(testReport.testsFailed);
-                    }, 1000);
                     // restore exit
                     process.exit = exit;
                     break;
                 }
+                setTimeout(function () {
+                    if (local.modeJs === 'browser') {
+                        // update coverageReport
+                        local.utility2.istanbulCoverageReportCreate({
+                            coverage: local.global.__coverage__
+                        });
+                    }
+                    // exit with number of tests failed
+                    local.utility2.exit(testReport.testsFailed);
+                // coverage-hack - wait 1000 ms for timerInterval
+                }, 1000);
             });
             onParallel.counter += 1;
             // mock exit
@@ -2511,31 +2491,24 @@
                 }
             });
             // visually update test-progress until done
+            // init testReportDiv element
             if (local.modeJs === 'browser') {
-                // init testReportDiv element
-                testReportDiv = document.querySelector('.testReportDiv') || { style: {} };
-                testReportDiv.style.display = 'block';
-                testReportDiv.innerHTML = local.utility2.testMerge(testReport, {});
-                // update test-report status every 1000 ms until done
-                timerInterval = setInterval(function () {
-                    // update testReportDiv in browser
-                    testReportDiv.innerHTML = local.utility2.testMerge(testReport, {});
-                    if (testReport.testsPending === 0) {
-                        // cleanup timerInterval
-                        clearInterval(timerInterval);
-                    }
-                    // update coverageReport
-                    local.utility2.istanbulCoverageReportCreate({
-                        coverage: local.global.__coverage__
-                    });
-                }, 1000);
-                // update coverageReport
-                local.utility2.istanbulCoverageReportCreate({
-                    coverage: local.global.__coverage__
-                });
+                testReportDiv = document.querySelector('.testReportDiv');
             }
+            testReportDiv = testReportDiv || { style: {} };
+            testReportDiv.style.display = 'block';
+            testReportDiv.innerHTML = local.utility2.testReportMerge(testReport, {});
+            // update test-report status every 1000 ms until done
+            timerInterval = setInterval(function () {
+                // update testReportDiv in browser
+                testReportDiv.innerHTML = local.utility2.testReportMerge(testReport, {});
+                if (testReport.testsPending === 0) {
+                    // cleanup timerInterval
+                    clearInterval(timerInterval);
+                }
+            }, 1000);
             // shallow copy testPlatform.testCaseList,
-            // to guard against in-place sort from testMerge
+            // to guard against in-place sort from testReportMerge
             testPlatform.testCaseList.slice().forEach(function (testCase) {
                 var done, onError, timerTimeout;
                 onError = function (error) {
@@ -2598,7 +2571,7 @@
          * this function will
          * 1. create server from options.middleware
          * 2. start server on options.port
-         * 3. if $npm_config_mode_npm_test is defined, then run tests
+         * 3. run tests
          */
             var requestHandler, server;
             // 1. create server from options.middleware
@@ -2631,7 +2604,7 @@
                     });
                 }, Number(local.utility2.envDict.npm_config_timeout_exit));
             }
-            // 3. if $npm_config_mode_npm_test is defined, then run tests
+            // 3. run tests
             local.utility2.testRun(options);
             return server;
         };
@@ -3137,6 +3110,19 @@ local.utility2['/test/test-report.html.template'] = '<style>\n' +
         /* istanbul ignore next */
         // run the cli
         local.cliRun = function (options) {
+        /*
+         * this function will run the cli
+         */
+            // merge previous test-report
+            if (local.utility2.envDict.npm_config_file_test_report_merge) {
+                local.utility2.testReportMerge(
+                    local.utility2.testReport,
+                    JSON.parse(local.fs.readFileSync(
+                        local.utility2.envDict.npm_config_file_test_report_merge,
+                        'utf8'
+                    ))
+                );
+            }
             if (module !== require.main) {
                 return;
             }
@@ -3175,7 +3161,7 @@ local.utility2['/test/test-report.html.template'] = '<style>\n' +
                 local.utility2.fsWriteFileWithMkdirp(
                     local.utility2.envDict.npm_config_dir_build + '/doc.api.html',
                     local.utility2.docApiCreate(options),
-                    process.exit
+                    local.utility2.exit
                 );
                 break;
             }

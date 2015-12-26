@@ -95,18 +95,23 @@ shBrowserTest() {
 # and merge the test-report into the existing test-report
     shBuildPrint "${MODE_BUILD:-electronTest}" \
         "electron.${modeBrowserTest} - $url" || return $?
+    # run browser-test
     node -e "
         'use strict';
         require('$npm_config_dir_utility2/index.js').browserTest({
             modeBrowserTest: '$modeBrowserTest',
-            modeTestAdd: '$modeTestAdd',
             timeoutDefault: '$timeoutDefault',
             timeoutScreenCapture: '$timeoutScreenCapture',
             url: '$url'
         }, function (error) {
             process.exit(error && 1);
         });
-    " || return $?
+    " || true
+    if [ "$modeBrowserTest" = test ]
+    then
+        # create test-report artifacts
+        shTestReportCreate || return $?
+    fi
 }
 
 shBuildGithubUpload() {
@@ -171,22 +176,22 @@ shDockerInstall() {
 
 shDockerRestart() {
 # this function will restart the docker-container
-    shDockerRm "$1" || true
+    shDockerRm "$1" || return $?
     shDockerStart "$@" || return $?
 }
 
 shDockerRestartNginx() {
 # this function will restart the nginx docker-container
     local FILE || return $?
-    # init /root/etc.nginx.htpasswd
-    FILE=/root/etc.nginx.htpasswd || return $?
+    # init $HOME/docker.etc.nginx.htpasswd
+    FILE="$HOME/docker.etc.nginx.htpasswd" || return $?
     if [ ! -f "$FILE" ]
     then
         printf "foo:$(openssl passwd -crypt bar)" > $FILE || return $?
     fi
-    # init /root/etc.nginx.nginx.conf
+    # init $HOME/docker.etc.nginx.nginx.conf
     # https://www.nginx.com/resources/wiki/start/topics/examples/full/#nginx-conf
-    FILE=/root/etc.nginx.nginx.conf || return $?
+    FILE="$HOME/docker.etc.nginx.nginx.conf" || return $?
     if [ ! -f "$FILE" ]
     then
         printf '
@@ -214,9 +219,9 @@ http {
     # https://www.nginx.com/resources/wiki/start/topics/examples/SSL-Offloader/#sslproxy-conf
     server {
         listen 443;
-        root /root/usr.share.nginx.html;
-        ssl_certificate /root/etc.nginx.ssl.pem;
-        ssl_certificate_key /root/etc.nginx.ssl.key;
+        root /root/docker.usr.share.nginx.html;
+        ssl_certificate /root/docker.etc.nginx.ssl.pem;
+        ssl_certificate_key /root/docker.etc.nginx.ssl.key;
         ssl on;
         ssl_prefer_server_ciphers on;
         ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
@@ -225,46 +230,44 @@ http {
         }
         location /private {
             auth_basic on;
-            auth_basic_user_file /root/etc.nginx.htpasswd;
+            auth_basic_user_file /root/docker.etc.nginx.htpasswd;
             autoindex on;
         }
     }
 }' > "$FILE" || return $?
     fi
-    # init /root/etc.nginx.ssl
+    # init $HOME/docker.etc.nginx.ssl
     # http://superuser.com/questions/226192/openssl-without-prompt
-    FILE=/root/etc.nginx.ssl || return $?
+    FILE="$HOME/docker.etc.nginx.ssl" || return $?
     if [ ! -f "$FILE.pem" ]
     then
-        openssl req -days 365 -keyout "$FILE.key" -new -newkey rsa:4096 -nodes -out "$FILE.pem" \
-            -subj "/C=AU" -x509 || return $?
+        openssl req -days 365 -keyout "$FILE.key" -new -newkey rsa:4096 -nodes \
+            -out "$FILE.pem" -subj "/C=AU" -x509 || return $?
     fi
-    # init /root/usr.share.nginx.html
-    mkdir -p /root/usr.share.nginx.html || return $?
-    shDockerRm nginx || true
+    # init $HOME/docker.usr.share.nginx.html
+    mkdir -p "$HOME/docker.usr.share.nginx.html" || return $?
+    shDockerRm nginx || return $?
     # https://registry.hub.docker.com/_/nginx/
     docker run --name nginx -d -p 80:80 -p 443:443 \
-        -v "$HOME:/root" -v /root/etc.nginx.nginx.conf:/etc/nginx/nginx.conf:ro \
+        -v "$HOME:/root" -v "$HOME/docker.etc.nginx.nginx.conf:/etc/nginx/nginx.conf:ro" \
         nginx || return $?
 }
 
-shDockerRestartPptpd() {
-# https://github.com/whuwxl/docker-repos/tree/master/pptpd
-# this function will restart the pptpd docker-container
-    local FILE PASSWORD USERNAME || return $?
-    FILE="$HOME/pptpd.etc.ppp.chap-secrets" || return $?
-    PASSWORD="$2" || return $?
-    USERNAME="$1" || return $?
+shDockerRestartPptp() {
+# https://github.com/mobtitude/docker-vpn-pptp
+# this function will restart the pptp docker-container
+    local FILE || return $?
+    FILE="$HOME/docker.pptp.etc.ppp.chap-secrets" || return $?
     # init /etc/ppp/chap-secrets
     if [ ! -f "$FILE" ]
     then
-        printf "$USERNAME * $PASSWORD *" >> "$FILE" || return $?
+        printf "foo * bar *" > "$FILE" || return $?
         chmod 600 "$FILE" || return $?
     fi
-    shDockerRm pptpd || true
-    docker run --name pptpd --privileged -d -p 1723:1723 \
+    shDockerRm pptp || return $?
+    docker run --name pptp --privileged -d -p 1723:1723 \
         -v "$HOME:/root" -v "$FILE:/etc/ppp/chap-secrets:ro" \
-        whuwxl/pptpd || return $?
+        mobtitude/vpn-pptp || return $?
 }
 
 shDockerRestartTransmission() {
@@ -273,7 +276,7 @@ shDockerRestartTransmission() {
     local DIR || return $?
     DIR="$HOME/downloads" || return $?
     mkdir -p "$DIR" || return $?
-    shDockerRm transmission || true
+    shDockerRm transmission || return $?
     docker run --name transmission -d -e TRPASSWD=admin -e TRUSER=admin -e TZ=EST5EDT \
         -p 9091:9091 \
         -v "$HOME:/root" -v "$DIR:/var/lib/transmission-daemon" \
@@ -283,7 +286,7 @@ shDockerRestartTransmission() {
 shDockerRm() {
 # this function will stop and rm the docker-container $IMAGE:$NAME
     docker stop "$@" || true
-    docker rm "$@" || return $?
+    docker rm "$@" || true
 }
 
 shDockerSh() {
@@ -470,7 +473,7 @@ shGrep() {
     find "$DIR" -type f | \
         grep -v "$FILE_FILTER" | \
         tr "\n" "\000" | \
-        xargs -0 grep -Iine "$REGEXP" || true
+        xargs -0 grep -Iine "$REGEXP" || return $?
 }
 
 shGrepFileReplace() {
@@ -765,9 +768,6 @@ shJsonFilePrettify() {
 shMountData() {
 # this function will mount /dev/xvdf to /root, and is intended for aws-ec2 setup
     local IFS_OLD TMP || return $?
-    # mount optional /dev/xvdb
-    mkdir -p /mnt/local || return $?
-    mount /dev/xvdb /mnt/local -o noatime || true
     # mount data /dev/xvdf
     mount /dev/xvdf /root -o noatime || true
     # mount bind
@@ -777,17 +777,17 @@ shMountData() {
     IFS="," || return $?
     for TMP in /root/tmp,/tmp /root/var.lib.docker,/var/lib/docker
     do
-        set "$TMP" || return $?
+        set $TMP || return $?
         mkdir -p "$1" "$2" || return $?
         mount "$1" "$2" -o bind || true
     done
-    chmod 1777 /tmp || true
+    chmod 1777 /tmp || return $?
     # restore IFS
     IFS_OLD="$IFS" || return $?
 }
 
 shNpmTest() {
-# this function will run npm-test
+# this function will run npm-test with coverage and create test-report
     local EXIT_CODE || return $?
     EXIT_CODE=0 || return $?
     shBuildPrint "${MODE_BUILD:-npmTest}" "npm-testing $CWD" || return $?
@@ -799,22 +799,30 @@ shNpmTest() {
     mkdir -p "$npm_config_dir_build/coverage.html" || return $?
     # init npm-test-mode
     export npm_config_mode_npm_test=1 || return $?
-    # if coverage-mode is disabled, then run npm-test without coverage
+    # run npm-test without coverage
     if [ "$npm_config_mode_coverage" = "" ]
     then
-        "$@"
-        return $?
-    fi
-    # cleanup old coverage
-    rm -f "$npm_config_dir_build/coverage.html/"coverage.*.json || return $?
+        "$@" || EXIT_CODE=$?
     # run npm-test with coverage
-    (shIstanbulCover "$@") || EXIT_CODE=$?
-    # debug covered-test by re-running it uncovered
-    if [ "$EXIT_CODE" != 0 ]
-    then
-        npm_config_mode_coverage="" "$@"
+    else
+        # cleanup old coverage
+        rm -f "$npm_config_dir_build/coverage.html/"coverage.*.json || return $?
+        # run npm-test with coverage
+        (shIstanbulCover "$@") || EXIT_CODE=$?
+        # debug covered-test by re-running it uncovered
+        if [ "$EXIT_CODE" != 0 ]
+        then
+            # save test-report
+            cp "$npm_config_dir_build/test-report.json" \
+                "$npm_config_dir_build/test-report.json.00" || return $?
+            npm_config_mode_coverage="" "$@" || true
+            # restore test-report
+            mv "$npm_config_dir_build/test-report.json.00" \
+                "$npm_config_dir_build/test-report.json" || return $?
+        fi
     fi
-    return "$EXIT_CODE"
+    # create test-report artifacts
+    shTestReportCreate || return $?
 }
 
 shNpmTestPublished() {
@@ -830,6 +838,15 @@ shNpmTestPublished() {
     npm install || return $?
     # npm-test package
     npm_config_mode_coverage=1 npm test || return $?
+}
+
+shTestReportCreate() {
+# this function will create test-report artifacts
+    node -e "
+        'use strict';
+        require('$npm_config_dir_utility2/index.js')
+            .testReportCreate(require('$npm_config_dir_build/test-report.json'));
+    " || return $?
 }
 
 shReadmeBuild() {

@@ -7,7 +7,7 @@ run dynamic browser tests with coverage (via istanbul and electron)
 
 
 # live test-server
-[![heroku.com test-server](https://kaizhu256.github.io/node-utility2/build/screen-capture.herokuDeploy.browser..png)](https://hrku01-utility2-beta.herokuapp.com)
+[![github.com test-server](https://kaizhu256.github.io/node-utility2/build/screen-capture.githubDeploy.browser..png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/index.html)
 
 
 
@@ -16,7 +16,7 @@ run dynamic browser tests with coverage (via istanbul and electron)
 
 | git-branch : | [master](https://github.com/kaizhu256/node-utility2/tree/master) | [beta](https://github.com/kaizhu256/node-utility2/tree/beta) | [alpha](https://github.com/kaizhu256/node-utility2/tree/alpha)|
 |--:|:--|:--|:--|
-| test-server : | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://hrku01-utility2-master.herokuapp.com) | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://hrku01-utility2-beta.herokuapp.com) | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://hrku01-utility2-alpha.herokuapp.com)|
+| test-server : | [![github.com test-server](https://kaizhu256.github.io/node-utility2/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/app/index.html) | [![github.com test-server](https://kaizhu256.github.io/node-utility2/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/index.html) | [![github.com test-server](https://kaizhu256.github.io/node-utility2/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/app/index.html)|
 | test-report : | [![test-report](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/test-report.html) | [![test-report](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/test-report.html) | [![test-report](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/test-report.html)|
 | coverage : | [![istanbul coverage](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/coverage.html/index.html) | [![istanbul coverage](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/coverage.html/index.html) | [![istanbul coverage](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/coverage.html/index.html)|
 | build-artifacts : | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..master..travis-ci.org) | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..beta..travis-ci.org) | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..alpha..travis-ci.org)|
@@ -76,7 +76,7 @@ shExampleSh
 [![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleSh.svg)](https://travis-ci.org/kaizhu256/node-utility2)
 
 #### output from electron
-[![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleSh.browser..png)](https://hrku01-utility2-beta.herokuapp.com)
+[![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleSh.browser..png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/index.html)
 
 
 
@@ -477,16 +477,15 @@ npm_config_mode_auto_restart=1 \
 npm_config_mode_auto_restart_child=1 \
 ./index.sh test node test.js"
     },
-    "version": "2015.12.2"
+    "version": "2015.12.3"
 }
 ```
 
 
 
 # todo
+- add remote build cleanup command
 - replace lib.url.js with URL api
-- migrate live-test-server from heroku to github, with browser emulation of server
-- add shTestReportCreate command
 - make istanbulCoverageMerge more robust
 - add utility2.middlewareLimit
 - create flamegraph from istanbul coverage
@@ -495,14 +494,11 @@ npm_config_mode_auto_restart_child=1 \
 
 
 
-# change since 8ee43b15
-- npm publish 2015.12.2
-- fix build-ci exiting before shBuildGithubUpload
-- fix shBrowserTest passing even when tests fail
-- fix line-coverage in html-coverage-report
-- change asset file urls from absolute to relative locations
-- revert timeoutDefault back to 30000 ms
-- revamp ajax url-resolution
+# change since 9b0f2bd4
+- npm publish 2015.12.3
+- migrate live-test-server from heroku to github, with browser emulation of server
+- emulate nodejs-express-like server in browser
+- add function utility2.testReportCreate to create test-report artifacts
 - none
 
 
@@ -554,26 +550,24 @@ shBuild() {
     # create api-doc
     npm run-script build-doc || return $?
 
-    #!! # deploy app to gh-pages
-    #!! MODE_BUILD=assetsBuild npm test || return $?
-
     # if running legacy-node, then do not continue
-    if [ "$(node --version)" \< "v5.0" ]
-    then
-        exit
-    fi
+    [ "$(node --version)" \< "v5.0" ] && exit || true
 
     if [ "$CI_BRANCH" = alpha ] ||
         [ "$CI_BRANCH" = beta ] ||
         [ "$CI_BRANCH" = master ]
     then
-        # deploy app to heroku
-        shRun shHerokuDeploy "hrku01-$npm_package_name-$CI_BRANCH" || return $?
-        # test deployed app to heroku
-        TEST_URL="https://hrku01-$npm_package_name-$CI_BRANCH.herokuapp.com" || return $?
-        TEST_URL="$TEST_URL?modeTest=consoleLogResult&timeExit={{timeExit}}" || return $?
-        MODE_BUILD=herokuTest modeBrowserTest=test modeTestAdd=1 \
-            url="$TEST_URL" shBrowserTest || return $?
+        # deploy app to gh-pages
+        export npm_config_file_test_report_merge="$npm_config_dir_build/test-report.json" || \
+            return $?
+        MODE_BUILD=githubDeploy npm test > /dev/null 2>&1 || return $?
+        COMMIT_LIMIT=16 shBuildGithubUpload || return $?
+        sleep 10 || return $?
+        # test deployed app to gh-pages
+        MODE_BUILD=githubTest modeBrowserTest=test \
+        url="http://kaizhu256.github.io/node-utility2/build..$CI_BRANCH..travis-ci.org\
+/app/index.html?modeTest=consoleLogResult&timeExit={{timeExit}}" \
+        shBrowserTest || return $?
     fi
 }
 shBuild

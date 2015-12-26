@@ -36,7 +36,6 @@
         case 'browser':
             local = window.local;
             break;
-        /* istanbul ignore next */
         // re-init local from example.js
         case 'node':
             local.script = require('fs').readFileSync(__dirname + '/README.md', 'utf8')
@@ -65,14 +64,12 @@
             // coverage-hack - cover requireFromScript's cache handling behavior
             local.utility2.requireFromScript(__dirname + '/example.js');
             // coverage-hack - cover istanbul
-            if (local.global.__coverage__) {
-                delete require.cache[__dirname + '/lib.istanbul.js'];
-                local.utility2.istanbul2 = require('./lib.istanbul.js');
-                local.utility2.istanbul.coverageReportCreate =
-                    local.utility2.istanbulCoverageReportCreate =
-                    local.utility2.istanbul2.coverageReportCreate;
-                local.utility2.istanbul2.codeDict = local.utility2.istanbul.codeDict;
-            }
+            delete require.cache[__dirname + '/lib.istanbul.js'];
+            local.utility2.istanbul2 = require('./lib.istanbul.js');
+            local.utility2.istanbul.coverageReportCreate =
+                local.utility2.istanbulCoverageReportCreate =
+                local.utility2.istanbul2.coverageReportCreate;
+            local.utility2.istanbul2.codeDict = local.utility2.istanbul.codeDict;
             break;
         }
     }());
@@ -1129,9 +1126,9 @@
             });
         };
 
-        local.testCase_assets_build = function (options, onError) {
+        local.testCase_build_assets = function (options, onError) {
         /*
-         * this function will test assets' build handling-behavior
+         * this function will test build's asset handling-behavior
          */
             var onParallel;
             // jslint-hack
@@ -1178,7 +1175,7 @@
                     onParallel.counter += 1;
                     onParallel(error);
                     local.utility2.fsWriteFileWithMkdirp(
-                        local.utility2.envDict.npm_config_dir_build + element.file,
+                        local.utility2.envDict.npm_config_dir_build + '/app' + element.file,
                         xhr.responseText,
                         onParallel
                     );
@@ -1478,6 +1475,24 @@
             });
         };
 
+        local.testCase_testReportCreate_default = function (options, onError) {
+        /*
+         * this function will test testReport's default handling-behavior
+         */
+            // jslint-hack
+            local.utility2.nop(options);
+            // test testRunServer's $npm_config_timeout_exit handling-behavior
+            local.utility2.testMock([
+                // suppress console.log
+                [console, { log: local.utility2.nop }],
+                [local.utility2, { exit: local.utility2.nop }]
+            ], function (onError) {
+                // test exit handling-behavior
+                local.utility2.testReportCreate(local.utility2.testReport);
+                onError();
+            }, onError);
+        };
+
         local.testCase_testRunServer_exit = function (options, onError) {
         /*
          * this function will test testRunServer's exit handling-behavior
@@ -1493,16 +1508,16 @@
                     onError();
                 } }],
                 [local.utility2, {
+                    browserTest: function (options, onError) {
+                        // jslint-hack
+                        local.utility2.nop(options);
+                        onError();
+                    },
                     envDict: {
                         // test $npm_package_name !== 'utility2' handling-behavior
                         npm_package_name: 'undefined',
                         // test timeout-exit handling-behavior
                         npm_config_timeout_exit: '1'
-                    },
-                    browserTest: function (options, onError) {
-                        // jslint-hack
-                        local.utility2.nop(options);
-                        onError();
                     },
                     onReady: {},
                     serverLocalHost: '',
