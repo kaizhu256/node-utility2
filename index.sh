@@ -37,7 +37,8 @@ shBaseInit() {
         export PATH="$PATH_BIN:$PATH" || return $?
     fi
     # init $PATH_EMSCRIPTEN
-    if [ "$PATH_EMSCRIPTEN" = "" ]; then
+    if [ "$PATH_EMSCRIPTEN" = "" ]
+    then
         export PATH_EMSCRIPTEN="$HOME/src/emsdk_portable/emscripten/latest" || return $?
         export PATH="$PATH_EMSCRIPTEN:$PATH" || return $?
     fi
@@ -121,17 +122,22 @@ shBuildGithubUpload() {
     then
         return $?
     fi
-    shBuildPrint githubUpload \
+    shBuildPrint "${MODE_BUILD:-githubUpload}" \
         "uploading build-artifacts to git@github.com:$GITHUB_REPO.git" || return $?
     shGitRepoBranchUpdateLocal() {
-        # this function will locally-update git-repo-branch
+    # this function will locally-update git-repo-branch
+        # run $BUILD_GITHUB_UPLOAD_PRE_SH
+        if [ "$BUILD_GITHUB_UPLOAD_PRE_SH" ]
+        then
+            $BUILD_GITHUB_UPLOAD_PRE_SH || return $?
+        fi
         # copy build-artifacts to gh-pages
         cp -a "$npm_config_dir_build" . || return $?
         DIR="build..$CI_BRANCH..$CI_HOST" || return $?
         rm -fr "$DIR" && cp -a "$npm_config_dir_build" "$DIR" || return $?
         git add . || return $?
     }
-    shGitRepoBranchCommand update "git@github.com:$GITHUB_REPO.git" gh-pages || return $?
+    (shGitRepoBranchCommand update "git@github.com:$GITHUB_REPO.git" gh-pages) || return $?
 }
 
 shBuildPrint() {
@@ -162,8 +168,9 @@ shDocApiCreate() {
     shBuildPrint docApiCreate \
         "created api-doc file://$npm_config_dir_build/doc.api.html" || return $?
     # screen-capture api-doc
-    modeBrowserTest=screenCapture \
-        url="file://$npm_config_dir_build/doc.api.html" shBrowserTest || return $?
+    (export modeBrowserTest=screenCapture &&
+        export url="file://$npm_config_dir_build/doc.api.html" &&
+        shBrowserTest) || return $?
 }
 
 shDockerInstall() {
@@ -338,17 +345,8 @@ shGitLsTree() {
 
 shGitRepoBranchCommand() {
 # this fuction will copy / move / update git-repo-branch
-    local EXIT_CODE || return $?
+    local BRANCH1 BRANCH2 COMMAND EXIT_CODE MESSAGE RANGE REPO1 REPO2 || return $?
     EXIT_CODE=0 || return $?
-    (shGitRepoBranchCommandInternal "$@") || EXIT_CODE=$?
-    # reset shGitRepoBranchUpdateLocal
-    unset -f shGitRepoBranchUpdateLocal || return $?
-    return "$EXIT_CODE"
-}
-
-shGitRepoBranchCommandInternal() {
-# this fuction will copy / move / update git-repo-branch
-    local BRANCH1 BRANCH2 COMMAND MESSAGE RANGE REPO1 REPO2 || return $?
     # http://superuser.com/questions/897148/shell-cant-shift-that-many-error
     COMMAND="$1" || return $?
     shift $(( $# > 0 ? 1 : 0 )) || return $?
@@ -389,7 +387,10 @@ shGitRepoBranchCommandInternal() {
     # update git-repo-branch
     if (type shGitRepoBranchUpdateLocal > /dev/null 2>&1)
     then
-        shGitRepoBranchUpdateLocal || return $?
+        shGitRepoBranchUpdateLocal || EXIT_CODE=$?
+        # reset shGitRepoBranchUpdateLocal
+        unset -f shGitRepoBranchUpdateLocal || return $?
+        [ "$EXIT_CODE" = 0 ] || return "$EXIT_CODE"
     fi
     if [ "$MESSAGE" ]
     then
@@ -448,6 +449,28 @@ shGitSquashShift() {
         return $?
     git push -f . "HEAD:$BRANCH" || return $?
     git checkout "$BRANCH" || return $?
+}
+
+shGithubDeploy() {
+# this function will deploy the app to $GITHUB_REPO
+# and run a simple curl check for the main-page
+    if [ "$GIT_SSH" = "" ]
+    then
+        return $?
+    fi
+    shBuildPrint githubDeploy "deploying to $TEST_URL" || return $?
+    # build app
+    npm test --mode-test-case=testCase_build_assets || return $?
+    # upload app
+    shBuildGithubUpload || return $?
+    # wait 10 seconds for github to deploy app
+    sleep 10 || return $?
+    # verify deployed app's main-page returns status-code < 400
+    [ $(curl -Ls -o /dev/null -w "%{http_code}" "$TEST_URL") -lt 400 ] || return $?
+    # screen-capture deployed app
+    (export modeBrowserTest=screenCapture &&
+        export url="$TEST_URL" &&
+        shBrowserTest) || return $?
 }
 
 shGrep() {
@@ -520,7 +543,7 @@ shHerokuDeploy() {
         # git add everything
         git add . || return $?
     }
-    shGitRepoBranchCommand copyPwdLsTree local HEAD "git@heroku.com:$HEROKU_REPO.git" master \
+    (shGitRepoBranchCommand copyPwdLsTree local HEAD "git@heroku.com:$HEROKU_REPO.git" master) \
         || return $?
     # wait 10 seconds for heroku to deploy app
     sleep 10 || return $?
@@ -529,7 +552,9 @@ shHerokuDeploy() {
         curl -Ls -o /dev/null -w "%{http_code}" https://$HEROKU_HOSTNAME
     ) -lt 400 ] || return $?
     # screen-capture deployed server
-    modeBrowserTest=screenCapture url="https://$HEROKU_HOSTNAME" shBrowserTest || return $?
+    (export modeBrowserTest=screenCapture &&
+        export url="https://$HEROKU_HOSTNAME" &&
+        shBrowserTest) || return $?
 }
 
 shInit() {
@@ -837,7 +862,7 @@ shNpmTestPublished() {
     cd "node_modules/$npm_package_name" || return $?
     npm install || return $?
     # npm-test package
-    npm_config_mode_coverage=1 npm test || return $?
+    npm test || return $?
 }
 
 shTestReportCreate() {
@@ -854,7 +879,8 @@ shReadmeBuild() {
 # init $npm_config_dir_build
     mkdir -p "$npm_config_dir_build/coverage.html" || return $?
     # run shell script from README.md
-    MODE_BUILD=build shReadmeTestSh "$npm_config_dir_tmp/build.sh" || return $?
+    (export MODE_BUILD=build &&
+        shReadmeTestSh "$npm_config_dir_tmp/build.sh") || return $?
 }
 
 shReadmeExportFile() {
@@ -976,7 +1002,7 @@ shRun() {
         return "$EXIT_CODE"
     # eval argv
     else
-        "$@" || return $?
+        ("$@") || return $?
     fi
 }
 
@@ -993,8 +1019,6 @@ shRunScreenCapture() {
         tee "$npm_config_dir_tmp/screen-capture.txt" || return $?
     # save $EXIT_CODE
     EXIT_CODE="$(cat "$npm_config_file_tmp")" || return $?
-    # restore $CWD
-    cd $CWD || return $?
     # format text-output
     node -e "
         'use strict';
@@ -1260,8 +1284,8 @@ shMain() {
         shServerPortRandom || return $?
         ;;
     start)
-        shInit && npm_config_mode_auto_restart=1 shRun node \
-            "$npm_config_dir_utility2/test.js" "$@" || return $?
+        shInit && (export npm_config_mode_auto_restart=1 &&
+            shRun node "$npm_config_dir_utility2/test.js" "$@") || return $?
         ;;
     test)
         shInit && shNpmTest "$@" || return $?

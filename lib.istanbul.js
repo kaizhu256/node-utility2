@@ -1112,7 +1112,7 @@ local['coverage.badge.svg'] = '<svg xmlns="http://www.w3.org/2000/svg" width="11
             options.writer.writeFile('', local.nop);
             // write coverage-summary.json
             local.fsWriteFileWithMkdirpSync(options.dir +
-                '/coverage-summary.json', JSON.stringify(local.coverageReportSummary, null, 4));
+                '/coverage-summary.json', JSON.stringify(local.coverageReportSummary));
             // write coverage.json
             local.fsWriteFileWithMkdirpSync(options.dir +
                 '/coverage.json', JSON.stringify(options.coverage));

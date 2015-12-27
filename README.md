@@ -7,7 +7,7 @@ run dynamic browser tests with coverage (via istanbul and electron)
 
 
 # live test-server
-[![github.com test-server](https://kaizhu256.github.io/node-utility2/build/screen-capture.githubDeploy.browser..png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/index.html)
+[![github.com test-server](https://kaizhu256.github.io/node-utility2/build/screen-capture.githubDeploy.browser._2Fnode-utility2_2Fbuild..alpha..travis-ci.org_2Fapp_2Findex.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/index.html)
 
 
 
@@ -67,7 +67,7 @@ shExampleSh() {
     npm install utility2 || return $?
 
     # serve a webpage that will interactively run browser tests with coverage
-    cd node_modules/utility2 && PORT=1337 npm start || return $?
+    cd node_modules/utility2 && export PORT=1337 && npm start || return $?
 }
 shExampleSh
 ```
@@ -95,8 +95,10 @@ instruction
     1. save this js script as example.js
     2. run the shell command:
         $ npm install electron-lite utility2 && \
-            PATH="$(pwd)/node_modules/.bin:$PATH" && \
-            PORT=1337 npm_config_mode_coverage=1 node_modules/.bin/utility2 test node example.js
+            export PATH="$(pwd)/node_modules/.bin:$PATH" && \
+            export PORT=1337 && \
+            export npm_config_mode_coverage=1 && \
+            node_modules/.bin/utility2 test node example.js
     3. view test-report in ./tmp/build/test-report.html
     4. view coverage in ./tmp/build/coverage.html/index.html
 */
@@ -390,8 +392,7 @@ instruction
             // cover example.js
             local.utility2.istanbulInstrumentSync(
                 local.fs.readFileSync(__dirname + '/example.js', 'utf8'),
-                __dirname + '/example.js',
-                'utility2'
+                __dirname + '/example.js'
             );
         break;
     }
@@ -402,7 +403,7 @@ instruction
 [![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleJs.svg)](https://travis-ci.org/kaizhu256/node-utility2)
 
 #### output from utility2
-[![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleSh.browser._2Ftmp_2Fapp_2Ftmp_2Fbuild_2Ftest-report.html.png)](https://kaizhu256.github.io/node-utility2/build/test-report.html)
+[![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleJs.browser._2Ftmp_2Fapp_2Ftmp_2Fbuild_2Ftest-report.html.png)](https://kaizhu256.github.io/node-utility2/build/test-report.html)
 
 #### output from istanbul
 [![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleJs.browser._2Ftmp_2Fapp_2Ftmp_2Fbuild_2Fcoverage.html_2Fapp_2Fexample.js.html.png)](https://kaizhu256.github.io/node-utility2/build/coverage.html/node-utility2/index.js.html)
@@ -455,7 +456,7 @@ instruction
     },
     "scripts": {
         "build-ci": "./index.sh shRun shReadmeBuild",
-        "build-doc": "MODE_LINENO=0 \
+        "build-doc": "export MODE_LINENO=0 && \
 ./index.sh shRun shReadmeExportFile package.json package.json && \
 ./index.sh shRun shDocApiCreate \"module.exports={ \
 exampleFileList:['README.md','test.js','index.js', \
@@ -468,23 +469,23 @@ utility2:{exports:require('./index.js')}, \
 } \
 }\"",
         "env": "env",
-        "start": "PORT=${PORT:-8080} npm_config_mode_auto_restart=1 \
+        "start": "export PORT=${PORT:-8080} && \
+export npm_config_mode_auto_restart=1 && \
 ./index.sh shRun shIstanbulCover node test.js",
-        "test": "MODE_LINENO=0 \
+        "test": "export MODE_LINENO=0 && \
 ./index.sh shRun shReadmeExportFile package.json package.json && \
-PORT=$(./index.sh shServerPortRandom) \
-npm_config_mode_auto_restart=1 \
-npm_config_mode_auto_restart_child=1 \
+export PORT=$(./index.sh shServerPortRandom) && \
+export npm_config_mode_auto_restart=1 && \
+export npm_config_mode_auto_restart_child=1 && \
 ./index.sh test node test.js"
     },
-    "version": "2015.12.3"
+    "version": "2015.12.4"
 }
 ```
 
 
 
 # todo
-- add remote build cleanup command
 - replace lib.url.js with URL api
 - make istanbulCoverageMerge more robust
 - add utility2.middlewareLimit
@@ -494,11 +495,13 @@ npm_config_mode_auto_restart_child=1 \
 
 
 
-# change since 9b0f2bd4
-- npm publish 2015.12.3
-- migrate live-test-server from heroku to github, with browser emulation of server
-- emulate nodejs-express-like server in browser
-- add function utility2.testReportCreate to create test-report artifacts
+# change since 18deb1ff
+- npm publish 2015.12.4
+- add shell command shGithubDeploy
+- add remote build cleanup ability in shBuildGithubUpload
+- revamp setting inline env variables in shell commands
+- fix browser coverage in example.js demo
+- fix coverage artifacts
 - none
 
 
@@ -524,28 +527,35 @@ shBuild() {
     . ./index.sh && shInit || return $?
 
     # run npm-test on published package
-    shRun shNpmTestPublished || return $?
+    (export npm_config_mode_coverage=1 &&
+        shNpmTestPublished) || return $?
 
     # test example js script
-    MODE_BUILD=testExampleJs MODE_LINENO=0 shRunScreenCapture \
-        shReadmeTestJs example.js || return $?
+    (export MODE_BUILD=testExampleJs &&
+        export MODE_LINENO=0 &&
+        shRunScreenCapture shReadmeTestJs example.js) || return $?
     # screen-capture example.js coverage
-    MODE_BUILD=testExampleJs modeBrowserTest=screenCapture \
-        url=/tmp/app/tmp/build/coverage.html/app/example.js.html shBrowserTest || return $?
+    (export MODE_BUILD=testExampleJs &&
+        export modeBrowserTest=screenCapture &&
+        export url=/tmp/app/tmp/build/coverage.html/app/example.js.html &&
+        shBrowserTest) || return $?
     # screen-capture example.js test-report
-    MODE_BUILD=testExampleJs modeBrowserTest=screenCapture \
-        url=/tmp/app/tmp/build/test-report.html shBrowserTest || return $?
+    (export MODE_BUILD=testExampleJs &&
+        export modeBrowserTest=screenCapture &&
+        export url=/tmp/app/tmp/build/test-report.html &&
+        shBrowserTest) || return $?
 
     # test example shell script
-    export npm_config_timeout_exit=1000 || return $?
-    MODE_BUILD=testExampleSh shRunScreenCapture shReadmeTestSh example.sh || return $?
-    unset npm_config_timeout_exit || return $?
+    (export MODE_BUILD=testExampleSh &&
+        export npm_config_timeout_exit=1000 &&
+        shRunScreenCapture shReadmeTestSh example.sh) || return $?
     # save screen-capture
     cp "/tmp/app/node_modules/$npm_package_name/tmp/build/"screen-capture.*.png \
         "$npm_config_dir_build" || return $?
 
     # run npm-test
-    MODE_BUILD=npmTest shRunScreenCapture npm test --mode-coverage || return $?
+    (export MODE_BUILD=npmTest &&
+        shRunScreenCapture npm test --mode-coverage) || return $?
 
     # create api-doc
     npm run-script build-doc || return $?
@@ -557,17 +567,17 @@ shBuild() {
         [ "$CI_BRANCH" = beta ] ||
         [ "$CI_BRANCH" = master ]
     then
-        # deploy app to gh-pages
+        export TEST_URL="https://$(printf "$GITHUB_REPO" | \
+            perl -pe 's/\//.github.io\//')/build..$CI_BRANCH..travis-ci.org/app/index.html" &&
         export npm_config_file_test_report_merge="$npm_config_dir_build/test-report.json" || \
             return $?
-        MODE_BUILD=githubDeploy npm test > /dev/null 2>&1 || return $?
-        COMMIT_LIMIT=16 shBuildGithubUpload || return $?
-        sleep 10 || return $?
+        # deploy app to gh-pages
+        shGithubDeploy || return $?
         # test deployed app to gh-pages
-        MODE_BUILD=githubTest modeBrowserTest=test \
-        url="http://kaizhu256.github.io/node-utility2/build..$CI_BRANCH..travis-ci.org\
-/app/index.html?modeTest=consoleLogResult&timeExit={{timeExit}}" \
-        shBrowserTest || return $?
+        (export MODE_BUILD=githubTest &&
+            export modeBrowserTest=test &&
+            export url="$TEST_URL?modeTest=consoleLogResult&timeExit={{timeExit}}" &&
+            shBrowserTest) || return $?
     fi
 }
 shBuild
@@ -575,10 +585,15 @@ shBuild
 # save exit-code
 EXIT_CODE=$?
 # create package-listing
-MODE_BUILD=gitLsTree shRunScreenCapture shGitLsTree || exit $?
+(export MODE_BUILD=gitLsTree &&
+    shRunScreenCapture shGitLsTree) || exit $?
 # create recent changelog of last 50 commits
-MODE_BUILD=gitLog shRunScreenCapture git log -50 --pretty="%ai\u000a%B" || exit $?
+(export MODE_BUILD=gitLog &&
+    shRunScreenCapture git log -50 --pretty="%ai\u000a%B") || exit $?
 # upload build-artifacts to github, and if number of commits > 16, then squash older commits
-COMMIT_LIMIT=16 shBuildGithubUpload || exit $?
+# export BUILD_GITHUB_UPLOAD_PRE_SH="rm -fr build" || exit $?
+(export COMMIT_LIMIT=16 &&
+    export MODE_BUILD=githubUpload &&
+    shBuildGithubUpload) || exit $?
 exit "$EXIT_CODE"
 ```

@@ -705,7 +705,7 @@
                 // run node code
                 case 1:
                     // init options
-                    options.testName = options.MODE_BUILD + '.browser.' +
+                    options.testName = local.utility2.envDict.MODE_BUILD + '.browser.' +
                         encodeURIComponent(local.url.parse(options.url).pathname);
                     local.utility2.objectSetDefault(options, {
                         fileCoverage: local.utility2.envDict.npm_config_dir_tmp +
@@ -802,7 +802,7 @@
                     // create test-report.json
                     local.fs.writeFileSync(
                         local.utility2.envDict.npm_config_dir_build + '/test-report.json',
-                        JSON.stringify(local.utility2.testReport, null, 4)
+                        JSON.stringify(local.utility2.testReport)
                     );
                     onNext(data && data.testsFailed && new Error(data.testsFailed));
                     break;
@@ -2439,7 +2439,7 @@
                     // create test-report.json
                     local.fs.writeFileSync(
                         local.utility2.envDict.npm_config_dir_build + '/test-report.json',
-                        JSON.stringify(testReport, null, 4)
+                        JSON.stringify(testReport)
                     );
                     // restore exit
                     process.exit = exit;

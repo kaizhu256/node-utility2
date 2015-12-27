@@ -33,7 +33,7 @@
     },
     "scripts": {
         "build-ci": "./index.sh shRun shReadmeBuild",
-        "build-doc": "MODE_LINENO=0 ./index.sh shRun shReadmeExportFile package.json package.json && ./index.sh shRun shDocApiCreate \"module.exports={ exampleFileList:['README.md','test.js','index.js', 'lib.istanbul.js','lib.jslint.js','lib.uglifyjs.js'], moduleDict:{ utility2:{exports:require('./index.js')}, 'utility2.istanbul':{aliasList:['istanbul','local'],exports:require('./index.js').istanbul}, 'utility2.jslint':{aliasList:['jslint','local'],exports:require('./index.js').jslint}, 'utility2.uglifyjs':{aliasList:['uglifyjs','local'],exports:require('./index.js').uglifyjs} } }\"",
+        "build-doc": "export MODE_LINENO=0 && ./index.sh shRun shReadmeExportFile package.json package.json && ./index.sh shRun shDocApiCreate \"module.exports={ exampleFileList:['README.md','test.js','index.js', 'lib.istanbul.js','lib.jslint.js','lib.uglifyjs.js'], moduleDict:{ utility2:{exports:require('./index.js')}, 'utility2.istanbul':{aliasList:['istanbul','local'],exports:require('./index.js').istanbul}, 'utility2.jslint':{aliasList:['jslint','local'],exports:require('./index.js').jslint}, 'utility2.uglifyjs':{aliasList:['uglifyjs','local'],exports:require('./index.js').uglifyjs} } }\"",
 
 
 
@@ -46,14 +46,15 @@
 
 
         "env": "env",
-        "start": "PORT=${PORT:-8080} npm_config_mode_auto_restart=1 ./index.sh shRun shIstanbulCover node test.js",
+        "start": "export PORT=${PORT:-8080} && export npm_config_mode_auto_restart=1 && ./index.sh shRun shIstanbulCover node test.js",
 
-        "test": "MODE_LINENO=0 ./index.sh shRun shReadmeExportFile package.json package.json && PORT=$(./index.sh shServerPortRandom) npm_config_mode_auto_restart=1 npm_config_mode_auto_restart_child=1 ./index.sh test node test.js"
+
+        "test": "export MODE_LINENO=0 && ./index.sh shRun shReadmeExportFile package.json package.json && export PORT=$(./index.sh shServerPortRandom) && export npm_config_mode_auto_restart=1 && export npm_config_mode_auto_restart_child=1 && ./index.sh test node test.js"
 
 
 
 
 
     },
-    "version": "2015.12.3"
+    "version": "2015.12.4"
 }
