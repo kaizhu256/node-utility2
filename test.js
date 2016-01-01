@@ -54,13 +54,16 @@
                 )
                 // coverage-hack - do not cover example.js
                 .replace('local.utility2.istanbulInstrumentSync', 'local.utility2.echo');
+            local.utility2 = require('./index.js');
             // require example.js
-            local = require('./index.js')
-                .requireFromScript(__dirname + '/example.js', local.script
+            local = local.utility2.requireFromScript(
+                __dirname + '/example.js',
+                local.utility2.jslintAndPrint(local.script, __dirname + '/example.js')
                     .replace(
                         "local.fs.readFileSync(__dirname + '/example.js', 'utf8')",
                         JSON.stringify(local.script)
-                    ));
+                    )
+            );
             // coverage-hack - cover requireFromScript's cache handling behavior
             local.utility2.requireFromScript(__dirname + '/example.js');
             // coverage-hack - cover istanbul
@@ -1163,9 +1166,6 @@
                 file: '/assets/utility2.lib.uglifyjs.js',
                 url: '/assets/utility2.lib.uglifyjs.js'
             }, {
-                file: '/assets/utility2.lib.url.js',
-                url: '/assets/utility2.lib.url.js'
-            }, {
                 file: '/package.json',
                 url: '/package.json'
             }].forEach(function (element) {
@@ -1572,10 +1572,10 @@
         // init assets
         local.utility2.cacheDict.assets['/script-only.html'] =
             '<h1>script-only test</h1>\n' +
-            '<script src="assets/utility2.lib.url.js"></script>\n' +
             '<script src="assets/utility2.js"></script>\n' +
             '<script src="assets/example.js"></script>\n' +
             '<script src="assets/test.js"></script>\n';
+        // init serverLocal
         local.utility2.serverLocalUrlTest = function (url) {
             switch (local.url.parse(url).pathname) {
             case '/assets/hello':

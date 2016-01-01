@@ -109,6 +109,7 @@ instruction
     maxlen: 96,
     node: true,
     nomen: true,
+    regexp: true,
     stupid: true
 */
 
@@ -228,166 +229,166 @@ instruction
         process.env.npm_package_name = 'example-module';
         process.env.npm_package_version = '0.0.1';
         // init assets
-        local.utility2.cacheDict.assets['/'] = ('<!DOCTYPE html>\n' +
-/* jslint-ignore-begin */
-'<html>\n' +
-'<head>\n' +
-'    <meta charset="UTF-8">\n' +
-'    <title>\n' +
-'    {{envDict.npm_package_name}} [{{envDict.npm_package_version}}]\n' +
-'    </title>\n' +
-'    <link rel="stylesheet" href="assets/utility2.css">\n' +
-'    <style>\n' +
-'    * {\n' +
-'        box-sizing: border-box;\n' +
-'    }\n' +
-'    body {\n' +
-'        background-color: #fff;\n' +
-'        font-family: Helvetical Neue, Helvetica, Arial, sans-serif;\n' +
-'    }\n' +
-'    body > div {\n' +
-'        margin-top: 20px;\n' +
-'    }\n' +
-'    textarea {\n' +
-'        font-family: monospace;\n' +
-'        height: 32em;\n' +
-'        width: 100%;\n' +
-'    }\n' +
-'    .jslintOutputPre {\n' +
-'        color: #f00;\n' +
-'    }\n' +
-'    .testReportDiv {\n' +
-'        display: none;\n' +
-'    }\n' +
-'    </style>\n' +
-'    {{envDict.npm_config_html_head_extra}}\n' +
-'</head>\n' +
-'<body>\n' +
-'    <div class="ajaxProgressDiv" style="display: none;">\n' +
-'    <div class="ajaxProgressBarDiv ajaxProgressBarDivLoading">loading</div>\n' +
-'    </div>\n' +
-'    <h1>{{envDict.npm_package_name}} [{{envDict.npm_package_version}}]</h1>\n' +
-'    <h3>{{envDict.npm_package_description}}</h3>\n' +
-'    <div>edit or paste script below to cover and test</div>\n' +
-'<textarea class="istanbulInputTextarea jslintInputTextarea">\n' +
-'/*jslint browser: true*/\n' +
-'(function () {\n' +
-'    "use strict";\n' +
-'    var testCaseDict;\n' +
-'    testCaseDict = {};\n' +
-'    testCaseDict.modeTest = true;\n' +
-'\n' +
-'    // comment this testCase to disable the failed assertion demo\n' +
-'    testCaseDict.testCase_failed_assertion_demo = function (\n' +
-'        options,\n' +
-'        onError\n' +
-'    ) {\n' +
-'    /*\n' +
-'     * this function will demo a failed assertion test\n' +
-'     */\n' +
-'        // jslint-hack\n' +
-'        window.utility2.nop(options);\n' +
-'        window.utility2.assert(false, "this is a failed assertion demo");\n' +
-'        onError();\n' +
-'    };\n' +
-'\n' +
-'    testCaseDict.testCase_passed_ajax_demo = function (options, onError) {\n' +
-'    /*\n' +
-'     * this function will demo a passed ajax test\n' +
-'     */\n' +
-'        var data;\n' +
-'        // jslint-hack\n' +
-'        window.utility2.nop(options);\n' +
-'        // test ajax request for main-page "/"\n' +
-'        window.utility2.ajax({\n' +
-'            url: "/"\n' +
-'        }, function (error, xhr) {\n' +
-'            try {\n' +
-'                // validate no error occurred\n' +
-'                window.utility2.assert(!error, error);\n' +
-'                // validate non-empty data\n' +
-'                data = xhr.responseText;\n' +
-'                window.utility2.assert(data && data.length > 0, data);\n' +
-'                // validate "200 ok" status\n' +
-'                if (xhr.statusCode === 200) {\n' +
-'                    window.utility2.assert(data, data);\n' +
-'                }\n' +
-'                onError();\n' +
-'            } catch (errorCaught) {\n' +
-'                onError(errorCaught);\n' +
-'            }\n' +
-'        });\n' +
-'    };\n' +
-'\n' +
-'    if (!window.utility2.modeTest) {\n' +
-'        window.utility2.testRun(testCaseDict);\n' +
-'    }\n' +
-'}());\n' +
-'</textarea>\n' +
-'    <pre class="jslintOutputPre"></pre>\n' +
-'    <div class="testReportDiv"></div>\n' +
-'    <div class="istanbulCoverageDiv"></div>\n' +
-'    <script src="assets/utility2.lib.istanbul.js"></script>\n' +
-'    <script src="assets/utility2.lib.jslint.js"></script>\n' +
-'    <script src="assets/utility2.lib.uglifyjs.js"></script>\n' +
-'    <script src="assets/utility2.lib.url.js"></script>\n' +
-'    <script src="assets/utility2.js"></script>\n' +
-'    <script>\n' +
-'    window.utility2.envDict = {\n' +
-'        npm_package_description: "{{envDict.npm_package_description}}",\n' +
-'        npm_package_name: "{{envDict.npm_package_name}}",\n' +
-'        npm_package_version: "{{envDict.npm_package_version}}"\n' +
-'    };\n' +
-'    window.testRun = function () {\n' +
-'        // jslint .jslintInputTextarea\n' +
-'        window.utility2.jslintAndPrint(\n' +
-'            (document.querySelector(".jslintInputTextarea") || {}).value || "",\n' +
-'            "jslintInputTextarea.js"\n' +
-'        );\n' +
-'        (document.querySelector(".jslintOutputPre") || {})\n' +
-'            .textContent = window.utility2.jslint.errorText\n' +
-'            .replace((/\\u001b\\[\\d+m/g), "")\n' +
-'            .trim();\n' +
-'        // cleanup __coverage__\n' +
-'        try {\n' +
-'            delete window.__coverage__["/istanbulInputTextarea.js"];\n' +
-'        } catch (ignore) {\n' +
-'        }\n' +
-'        try {\n' +
-'            eval(window.utility2.istanbulInstrumentSync(\n' +
-'                document.querySelector(".istanbulInputTextarea").value,\n' +
-'                "/istanbulInputTextarea.js"\n' +
-'            ));\n' +
-'            window.utility2\n' +
-'                .istanbulCoverageReportCreate({ coverage: window.__coverage__ });\n' +
-'        } catch (errorCaught) {\n' +
-'            document.querySelector(".istanbulCoverageDiv").innerHTML =\n' +
-'                "<pre>" + errorCaught.stack.replace((/</g), "&lt") + "</pre>";\n' +
-'        }\n' +
-'    };\n' +
-'    document\n' +
-'        .querySelector(".istanbulInputTextarea")\n' +
-'        .addEventListener("keyup", window.testRun);\n' +
-'    if (!window.utility2.modeTest) {\n' +
-'        window.testRun({});\n' +
-'    }\n' +
-'    </script>\n' +
-'    <script src="assets/example.js"></script>\n' +
-'    <script src="assets/test.js"></script>\n' +
-'</body>\n' +
-/* jslint-ignore-end */
-        '</html>\n').replace((/\{\{envDict\.\w+?\}\}/g), function (match0) {
-            switch (match0) {
-            case '{{envDict.npm_package_description}}':
-                return process.env.npm_package_description;
-            case '{{envDict.npm_package_name}}':
-                return process.env.npm_package_name;
-            case '{{envDict.npm_package_version}}':
-                return process.env.npm_package_version;
-            default:
-                return '';
-            }
-        });
+        /* jslint-ignore-begin */
+        local.utility2.cacheDict.assets['/'] = '<!DOCTYPE html>\n\
+<html>\n\
+<head>\n\
+    <meta charset="UTF-8">\n\
+    <title>\n\
+    {{envDict.npm_package_name}} [{{envDict.npm_package_version}}]\n\
+    </title>\n\
+    <link href="assets/utility2.css" rel="stylesheet">\n\
+    <style>\n\
+    * {\n\
+        box-sizing: border-box;\n\
+    }\n\
+    body {\n\
+        background-color: #fff;\n\
+        font-family: Helvetical Neue, Helvetica, Arial, sans-serif;\n\
+    }\n\
+    body > div {\n\
+        margin-top: 20px;\n\
+    }\n\
+    textarea {\n\
+        font-family: monospace;\n\
+        height: 32em;\n\
+        width: 100%;\n\
+    }\n\
+    .jslintOutputPre {\n\
+        color: #f00;\n\
+    }\n\
+    .testReportDiv {\n\
+        display: none;\n\
+    }\n\
+    </style>\n\
+</head>\n\
+<body>\n\
+    <div class="ajaxProgressDiv" style="display: none;">\n\
+    <div class="ajaxProgressBarDiv ajaxProgressBarDivLoading">loading</div>\n\
+    </div>\n\
+    <h1>{{envDict.npm_package_name}} [{{envDict.npm_package_version}}]</h1>\n\
+    <h3>{{envDict.npm_package_description}}</h3>\n\
+    <div>edit or paste script below to cover and test</div>\n\
+<textarea class="istanbulInputTextarea jslintInputTextarea">\n\
+/*jslint browser: true*/\n\
+(function () {\n\
+    "use strict";\n\
+    var testCaseDict;\n\
+    testCaseDict = {};\n\
+    testCaseDict.modeTest = true;\n\
+\n\
+    // comment this testCase to disable the failed assertion demo\n\
+    testCaseDict.testCase_failed_assertion_demo = function (\n\
+        options,\n\
+        onError\n\
+    ) {\n\
+    /*\n\
+     * this function will demo a failed assertion test\n\
+     */\n\
+        // jslint-hack\n\
+        window.utility2.nop(options);\n\
+        window.utility2.assert(false, "this is a failed assertion demo");\n\
+        onError();\n\
+    };\n\
+\n\
+    testCaseDict.testCase_passed_ajax_demo = function (options, onError) {\n\
+    /*\n\
+     * this function will demo a passed ajax test\n\
+     */\n\
+        var data;\n\
+        // jslint-hack\n\
+        window.utility2.nop(options);\n\
+        // test ajax request for main-page "/"\n\
+        window.utility2.ajax({\n\
+            url: "/"\n\
+        }, function (error, xhr) {\n\
+            try {\n\
+                // validate no error occurred\n\
+                window.utility2.assert(!error, error);\n\
+                // validate non-empty data\n\
+                data = xhr.responseText;\n\
+                window.utility2.assert(data && data.length > 0, data);\n\
+                // validate "200 ok" status\n\
+                if (xhr.statusCode === 200) {\n\
+                    window.utility2.assert(data, data);\n\
+                }\n\
+                onError();\n\
+            } catch (errorCaught) {\n\
+                onError(errorCaught);\n\
+            }\n\
+        });\n\
+    };\n\
+\n\
+    if (!window.utility2.modeTest) {\n\
+        window.utility2.testRun(testCaseDict);\n\
+    }\n\
+}());\n\
+</textarea>\n\
+    <pre class="jslintOutputPre"></pre>\n\
+    <div class="testReportDiv"></div>\n\
+    <div class="istanbulCoverageDiv"></div>\n\
+    <script src="assets/utility2.lib.istanbul.js"></script>\n\
+    <script src="assets/utility2.lib.jslint.js"></script>\n\
+    <script src="assets/utility2.lib.uglifyjs.js"></script>\n\
+    <script src="assets/utility2.js"></script>\n\
+    <script src="assets/example.js"></script>\n\
+    <script src="assets/test.js"></script>\n\
+    <script>\n\
+    window.utility2.envDict = {\n\
+        npm_package_description: "{{envDict.npm_package_description}}",\n\
+        npm_package_name: "{{envDict.npm_package_name}}",\n\
+        npm_package_version: "{{envDict.npm_package_version}}"\n\
+    };\n\
+    window.testRun = function () {\n\
+        // jslint .jslintInputTextarea\n\
+        window.utility2.jslintAndPrint(\n\
+            (document.querySelector(".jslintInputTextarea") || {}).value || "",\n\
+            "jslintInputTextarea.js"\n\
+        );\n\
+        (document.querySelector(".jslintOutputPre") || {})\n\
+            .textContent = window.utility2.jslint.errorText\n\
+            .replace((/\\u001b\\[\\d+m/g), "")\n\
+            .trim();\n\
+        // cleanup __coverage__\n\
+        try {\n\
+            delete window.__coverage__["/istanbulInputTextarea.js"];\n\
+        } catch (ignore) {\n\
+        }\n\
+        try {\n\
+            eval(window.utility2.istanbulInstrumentSync(\n\
+                document.querySelector(".istanbulInputTextarea").value,\n\
+                "/istanbulInputTextarea.js"\n\
+            ));\n\
+            window.utility2\n\
+                .istanbulCoverageReportCreate({ coverage: window.__coverage__ });\n\
+        } catch (errorCaught) {\n\
+            document.querySelector(".istanbulCoverageDiv").innerHTML =\n\
+                "<pre>" + errorCaught.stack.replace((/</g), "&lt") + "</pre>";\n\
+        }\n\
+    };\n\
+    document\n\
+        .querySelector(".istanbulInputTextarea")\n\
+        .addEventListener("keyup", window.testRun);\n\
+    if (!window.utility2.modeTest) {\n\
+        window.testRun({});\n\
+    }\n\
+    </script>\n\
+</body>\n\
+</html>';
+        /* jslint-ignore-end */
+        local.utility2.cacheDict.assets['/'] = local.utility2.cacheDict.assets['/']
+            .replace((/\{\{envDict\.\w+?\}\}/g), function (match0) {
+                switch (match0) {
+                case '{{envDict.npm_package_description}}':
+                    return process.env.npm_package_description;
+                case '{{envDict.npm_package_name}}':
+                    return process.env.npm_package_name;
+                case '{{envDict.npm_package_version}}':
+                    return process.env.npm_package_version;
+                default:
+                    return '';
+                }
+            });
         local.utility2.cacheDict.assets['/assets/example.js'] =
             // cover example.js
             local.utility2.istanbulInstrumentSync(
@@ -476,7 +477,6 @@ export npm_config_mode_auto_restart=1 && \
 ./index.sh shRun shReadmeExportFile package.json package.json && \
 export PORT=$(./index.sh shServerPortRandom) && \
 export npm_config_mode_auto_restart=1 && \
-export npm_config_mode_auto_restart_child=1 && \
 ./index.sh test node test.js"
     },
     "version": "2015.12.4"
@@ -486,8 +486,6 @@ export npm_config_mode_auto_restart_child=1 && \
 
 
 # todo
-- replace lib.url.js with URL api
-- make istanbulCoverageMerge more robust
 - add utility2.middlewareLimit
 - create flamegraph from istanbul coverage
 - add server stress test using electron
@@ -495,13 +493,10 @@ export npm_config_mode_auto_restart_child=1 && \
 
 
 
-# change since 18deb1ff
-- npm publish 2015.12.4
-- add shell command shGithubDeploy
-- add remote build cleanup ability in shBuildGithubUpload
-- revamp setting inline env variables in shell commands
-- fix browser coverage in example.js demo
-- fix coverage artifacts
+# change since 1d1d544e
+- make auto-restart signal handling more robust
+- replace lib.url.js with browser's builtin URL api
+- add optional override command to shDockerSh and shDockerStart
 - none
 
 
@@ -568,7 +563,8 @@ shBuild() {
         [ "$CI_BRANCH" = master ]
     then
         export TEST_URL="https://$(printf "$GITHUB_REPO" | \
-            perl -pe 's/\//.github.io\//')/build..$CI_BRANCH..travis-ci.org/app/index.html" &&
+            perl -pe 's/\//.github.io\//')/build..$CI_BRANCH..travis-ci.org/app/index.html" || \
+            return $?
         export npm_config_file_test_report_merge="$npm_config_dir_build/test-report.json" || \
             return $?
         # deploy app to gh-pages

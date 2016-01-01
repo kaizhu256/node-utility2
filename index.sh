@@ -298,22 +298,24 @@ shDockerRm() {
 
 shDockerSh() {
 # this function will run /bin/bash in the docker-container $image:$name
-    local NAME || return $?
+    local COMMAND NAME || return $?
+    COMMAND="${2-/bin/bash}" || return $?
     NAME="$1" || return $?
     docker start "$NAME" || return $?
-    docker exec -it "$NAME" /bin/bash || return $?
+    docker exec -it "$NAME" "$COMMAND" || return $?
 }
 
 shDockerStart() {
 # this function will start the docker-container $image:$name
-    local IMAGE NAME || return $?
+    local COMMAND IMAGE NAME || return $?
     NAME="$1" || return $?
     shift || return $?
     IMAGE="$1" || return $?
     shift || return $?
+    COMMAND="${1-/bin/bash}" || return $?
     docker run --name "$NAME" -dt -e debian_chroot="$NAME" \
         -v "$HOME:/root" \
-        "$@" "$IMAGE" /bin/bash || return $?
+        "$IMAGE" "$COMMAND" || return $?
 }
 
 shDockerStopAll() {
@@ -496,7 +498,7 @@ shGrep() {
     find "$DIR" -type f | \
         grep -v "$FILE_FILTER" | \
         tr "\n" "\000" | \
-        xargs -0 grep -Iine "$REGEXP" || return $?
+        xargs -0 grep -Iine "$REGEXP" || true
 }
 
 shGrepFileReplace() {
@@ -987,13 +989,7 @@ shRun() {
             printf "process exited with code $EXIT_CODE\n" || return $?
             # http://en.wikipedia.org/wiki/Unix_signal
             # exit-code 0 - normal exit
-            if [ "$EXIT_CODE" = 0 ] || [ "$EXIT_CODE" = 128 ] || \
-                # exit-code 2 - SIGINT
-                [ "$EXIT_CODE" = 2 ] || [ "$EXIT_CODE" = 130 ] || \
-                # exit-code 9 - SIGKILL
-                [ "$EXIT_CODE" = 9 ] || [ "$EXIT_CODE" = 137 ] || \
-                # exit-code 15 - SIGTERM
-                [ "$EXIT_CODE" = 15 ] || [ "$EXIT_CODE" = 143 ]
+            if [ "$EXIT_CODE" != 77 ]
             then
                 break || return $?
             fi

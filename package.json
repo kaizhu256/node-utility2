@@ -49,8 +49,7 @@
         "start": "export PORT=${PORT:-8080} && export npm_config_mode_auto_restart=1 && ./index.sh shRun shIstanbulCover node test.js",
 
 
-        "test": "export MODE_LINENO=0 && ./index.sh shRun shReadmeExportFile package.json package.json && export PORT=$(./index.sh shServerPortRandom) && export npm_config_mode_auto_restart=1 && export npm_config_mode_auto_restart_child=1 && ./index.sh test node test.js"
-
+        "test": "export MODE_LINENO=0 && ./index.sh shRun shReadmeExportFile package.json package.json && export PORT=$(./index.sh shServerPortRandom) && export npm_config_mode_auto_restart=1 && ./index.sh test node test.js"
 
 
 

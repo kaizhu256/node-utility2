@@ -12,16 +12,185 @@
 (function (local) {
     'use strict';
     var __dirname, process, require;
-    __dirname = '';
-    // jslint-hack
-    local.nop(__dirname);
-    process = local.process;
-    require = function (key) {
-        try {
-            return local[key] || local.require(key);
-        } catch (ignore) {
-        }
-    };
+
+
+
+    // run shared js-env code
+    (function () {
+        local.nop = function () {
+        /*
+         * this function will run no operation - nop
+         */
+            return;
+        };
+        // jslint-hack
+        local.nop(__dirname);
+        // init var
+        __dirname = '';
+        process = local.modeJs === 'browser'
+            ? {
+                cwd: function () {
+                    return '';
+                },
+                stdout: {}
+            }
+            : local.process;
+        require = function (key) {
+            try {
+                return local[key] || local.require(key);
+            } catch (ignore) {
+            }
+        };
+        // init global
+        local.global = local.modeJs === 'browser'
+            ? window
+            : global;
+        // init local properties
+        local['./package.json'] = {};
+        local.codeDict = local.codeDict || {};
+        local.coverageReportCreate = function (options) {
+        /*
+         * this function will
+         * 1. print coverage in text-format to stdout
+         * 2. write coverage in html-format to filesystem
+         * 3. return coverage in html-format as single document
+         */
+            if (!options.coverage) {
+                return '';
+            }
+            options.collector = local.collectorCreate(options);
+            options.dir = process.cwd() + '/tmp/build/coverage.html';
+            options.sourceStore = {};
+            options.writer = local.writerCreate(options);
+            // 1. print coverage in text-format to stdout
+            if (local.modeJs === 'node') {
+                new local.TextReport(options).writeReport(options.collector);
+            }
+            // 2. write coverage in html-format to filesystem
+            new local.HtmlReport(options).writeReport(options.collector);
+            options.writer.writeFile('', local.nop);
+            // write coverage-summary.json
+            local.fsWriteFileWithMkdirpSync(options.dir +
+                '/coverage-summary.json', JSON.stringify(local.coverageReportSummary));
+            // write coverage.json
+            local.fsWriteFileWithMkdirpSync(options.dir +
+                '/coverage.json', JSON.stringify(options.coverage));
+            // write coverage.badge.svg
+            options.pct = local.coverageReportSummary.root.metrics.lines.pct;
+            local.fsWriteFileWithMkdirpSync(local.path.dirname(options.dir) +
+                '/coverage.badge.svg', local['coverage.badge.svg']
+                // edit coverage badge percent
+                .replace((/100.0/g), options.pct)
+                // edit coverage badge color
+                .replace(
+                    (/0d0/g),
+                    ('0' + Math.round((100 - options.pct) * 2.21).toString(16)).slice(-2) +
+                        ('0' + Math.round(options.pct * 2.21).toString(16)).slice(-2) + '00'
+                ));
+            console.log('created coverage file://' + options.dir + '/index.html');
+            // 3. return coverage in html-format as a single document
+            // update coverageReport
+            if (local.modeJs === 'browser') {
+                try {
+                    document.querySelector('.istanbulCoverageDiv').innerHTML = options
+                        .coverageReportHtml;
+                } catch (ignore) {
+                }
+            }
+            return options.coverageReportHtml;
+        };
+        local.fs = {
+            readFileSync: function (file) {
+                // return head.txt or foot.txt
+                file = local[file.slice(-8)];
+                if (local.modeJs === 'browser') {
+                    file = file
+                        .replace((/\bhtml\b/g), 'x-istanbul-html')
+                        .replace((/<style>[\S\s]+?<\/style>/), function (match0) {
+                            return match0
+                                .replace((/\S.*?\{/g), function (match0) {
+                                    return 'x-istanbul-html ' + match0
+                                        .replace((/,/g), ', x-istanbul-html ');
+                                });
+                        })
+                        .replace('position: fixed;', 'position: static;')
+                        .replace('margin-top: 10em;', 'margin-top: 0;');
+                }
+                return file;
+            },
+            readdirSync: function () {
+                return [];
+            }
+        };
+        local.fsWriteFileWithMkdirpSync = function (file, data) {
+        /*
+         * this function will synchronously 'mkdir -p' and write the data to file
+         */
+            if (!local._fs || !file) {
+                return;
+            }
+            try {
+                local._fs.writeFileSync(file, data);
+            } catch (errorCaught) {
+                require('child_process').spawnSync(
+                    'mkdir',
+                    ['-p', local.path.dirname(file)],
+                    { stdio: ['ignore', 1, 2] }
+                );
+                local._fs.writeFileSync(file, data);
+            }
+        };
+        local.instrumentSync = function (code, file, coverageVariable) {
+        /*
+         * this function will
+         * 1. normalize the file
+         * 2. save code to codeDict[file] for future html-report
+         * 3. return instrumented code
+         */
+            // 1. normalize the file
+            file = local.path.resolve('/', file);
+            // 2. save code to codeDict[file] for future html-report
+            local.codeDict[file] = code;
+            // 3. return instrumented code
+            return new local.Instrumenter({
+                coverageVariable: coverageVariable,
+                embedSource: true,
+                noAutoWrap: true
+            })
+                .instrumentSync(code, file);
+        };
+        local.util = { inherits: local.nop };
+    }());
+    switch (local.modeJs) {
+
+
+
+    // run browser js-env code
+    case 'browser':
+        // init exports
+        local.global.utility2_istanbul = local;
+        // init local properties
+        local.path = {
+            dirname: function (file) {
+                return file.replace((/\/[\w\-\.]+?$/), '');
+            },
+            resolve: function () {
+                return arguments[arguments.length - 1];
+            }
+        };
+        break;
+
+
+
+    // run node js-env code
+    case 'node':
+        // init exports
+        module.exports = local;
+        // init local properties
+        local._fs = local.require('fs');
+        local.path = local.require('path');
+        break;
+    }
 
 
 
@@ -1058,193 +1227,26 @@ local['coverage.badge.svg'] = '<svg xmlns="http://www.w3.org/2000/svg" width="11
         local.cliRun();
         break;
     }
-}((function () {
-    'use strict';
-    var local;
-
-
-
-    // run shared js-env code
-    (function () {
-        // init local
-        local = {};
-        // init modeJs
-        local.modeJs = (function () {
-            try {
-                return typeof navigator.userAgent === 'string' &&
-                    typeof document.querySelector('body') === 'object' &&
-                    typeof XMLHttpRequest.prototype.open === 'function' &&
-                    'browser';
-            } catch (errorCaughtBrowser) {
-                return module.exports &&
-                    typeof process.versions.node === 'string' &&
-                    typeof require('http').createServer === 'function' &&
-                    'node';
-            }
-        }());
-        // init global
-        local.global = local.modeJs === 'browser'
-            ? window
-            : global;
-        // init local properties
-        local['./package.json'] = {};
-        local.codeDict = local.codeDict || {};
-        local.coverageReportCreate = function (options) {
-        /*
-         * this function will
-         * 1. print coverage in text-format to stdout
-         * 2. write coverage in html-format to filesystem
-         * 3. return coverage in html-format as single document
-         */
-            if (!options.coverage) {
-                return '';
-            }
-            options.collector = local.collectorCreate(options);
-            options.dir = local.process.cwd() + '/tmp/build/coverage.html';
-            options.sourceStore = {};
-            options.writer = local.writerCreate(options);
-            // 1. print coverage in text-format to stdout
-            if (local.modeJs === 'node') {
-                new local.TextReport(options).writeReport(options.collector);
-            }
-            // 2. write coverage in html-format to filesystem
-            new local.HtmlReport(options).writeReport(options.collector);
-            options.writer.writeFile('', local.nop);
-            // write coverage-summary.json
-            local.fsWriteFileWithMkdirpSync(options.dir +
-                '/coverage-summary.json', JSON.stringify(local.coverageReportSummary));
-            // write coverage.json
-            local.fsWriteFileWithMkdirpSync(options.dir +
-                '/coverage.json', JSON.stringify(options.coverage));
-            // write coverage.badge.svg
-            options.pct = local.coverageReportSummary.root.metrics.lines.pct;
-            local.fsWriteFileWithMkdirpSync(local.path.dirname(options.dir) +
-                '/coverage.badge.svg', local['coverage.badge.svg']
-                // edit coverage badge percent
-                .replace((/100.0/g), options.pct)
-                // edit coverage badge color
-                .replace(
-                    (/0d0/g),
-                    ('0' + Math.round((100 - options.pct) * 2.21).toString(16)).slice(-2) +
-                        ('0' + Math.round(options.pct * 2.21).toString(16)).slice(-2) + '00'
-                ));
-            console.log('created coverage file://' + options.dir + '/index.html');
-            // 3. return coverage in html-format as a single document
-            // update coverageReport
-            if (local.modeJs === 'browser') {
-                try {
-                    document.querySelector('.istanbulCoverageDiv').innerHTML = options
-                        .coverageReportHtml;
-                } catch (ignore) {
-                }
-            }
-            return options.coverageReportHtml;
-        };
-        local.fs = {
-            readFileSync: function (file) {
-                // return head.txt or foot.txt
-                file = local[file.slice(-8)];
-                if (local.modeJs === 'browser') {
-                    file = file
-                        .replace((/\bhtml\b/g), 'x-istanbul-html')
-                        .replace((/<style>[\S\s]+?<\/style>/), function (match0) {
-                            return match0
-                                .replace((/\S.*?\{/g), function (match0) {
-                                    return 'x-istanbul-html ' + match0
-                                        .replace((/,/g), ', x-istanbul-html ');
-                                });
-                        })
-                        .replace('position: fixed;', 'position: static;')
-                        .replace('margin-top: 10em;', 'margin-top: 0;');
-                }
-                return file;
-            },
-            readdirSync: function () {
-                return [];
-            }
-        };
-        local.fsWriteFileWithMkdirpSync = function (file, data) {
-        /*
-         * this function will synchronously 'mkdir -p' and write the data to file
-         */
-            if (!local._fs || !file) {
-                return;
-            }
-            try {
-                local._fs.writeFileSync(file, data);
-            } catch (errorCaught) {
-                require('child_process').spawnSync(
-                    'mkdir',
-                    ['-p', local.path.dirname(file)],
-                    { stdio: ['ignore', 1, 2] }
-                );
-                local._fs.writeFileSync(file, data);
-            }
-        };
-        local.instrumentSync = function (code, file, coverageVariable) {
-        /*
-         * this function will
-         * 1. normalize the file
-         * 2. save code to codeDict[file] for future html-report
-         * 3. return instrumented code
-         */
-            // 1. normalize the file
-            file = local.path.resolve('/', file);
-            // 2. save code to codeDict[file] for future html-report
-            local.codeDict[file] = code;
-            // 3. return instrumented code
-            return new local.Instrumenter({
-                coverageVariable: coverageVariable,
-                embedSource: true,
-                noAutoWrap: true
-            })
-                .instrumentSync(code, file);
-        };
-        local.nop = function () {
-        /*
-         * this function will run no operation - nop
-         */
-            return;
-        };
-        local.util = { inherits: local.nop };
-    }());
-    switch (local.modeJs) {
-
-
-
-    // run browser js-env code
-    case 'browser':
-        // export istanbul
-        local.global.utility2_istanbul = local;
-        // init local properties
-        local.path = {
-            dirname: function (file) {
-                return file.replace((/\/[\w\-\.]+?$/), '');
-            },
-            resolve: function () {
-                return arguments[arguments.length - 1];
-            }
-        };
-        local.process = {
-            cwd: function () {
-                return '';
-            },
-            stdout: {}
-        };
-        break;
-
-
-
-    // run node js-env code
-    case 'node':
-        // export istanbul
-        module.exports = local;
-        // init local properties
-        local._fs = require('fs');
-        local.path = require('path');
-        local.process = process;
-        local.require = require;
-        break;
-    }
-    return local;
-}())));
+}({
+    // init modeJs
+    modeJs: (function () {
+        'use strict';
+        try {
+            return typeof navigator.userAgent === 'string' &&
+                typeof document.querySelector('body') === 'object' &&
+                typeof XMLHttpRequest.prototype.open === 'function' &&
+                'browser';
+        } catch (errorCaughtBrowser) {
+            return module.exports &&
+                typeof process.versions.node === 'string' &&
+                typeof require('http').createServer === 'function' &&
+                'node';
+        }
+    }()),
+    process: typeof process === 'object'
+        ? process
+        : null,
+    require: typeof require === 'function'
+        ? require
+        : null
+}));

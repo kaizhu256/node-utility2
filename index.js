@@ -499,6 +499,33 @@
             };
         };
 
+        /* istanbul ignore next */
+        // init _querystring module
+        local._querystring = (function () {
+            var exports, require;
+            local.utility2.nop(require);
+            exports = {};
+            require = function () { return {}; };
+            // jslint-hack
+/* jslint-ignore-begin */
+// https://github.com/nodejs/node/blob/v4.2.3/lib/querystring.js
+// utility2-uglifyjs https://raw.githubusercontent.com/nodejs/node/v4.2.3/lib/querystring.js
+"use strict";function charCode(e){return e.charCodeAt(0)}function decodeStr(e,t){try{return t(e)}catch(n){return QueryString.unescape(e,!0)}}const QueryString=exports,Buffer=require("buffer").Buffer;QueryString.unescapeBuffer=function(e,t){var n=new Buffer(
+e.length),r="CHAR",i,s,o;for(var u=0,a=0;u<=e.length;u++){var f=e.charCodeAt(u);switch(r){case"CHAR":switch(f){case charCode("%"):i=0,s=0,r="HEX0";break;case charCode("+"):t&&(f=charCode(" "));default:n[a++]=f}break;case"HEX0":r="HEX1",o=f;if(charCode("0")<=
+f&&f<=charCode("9"))i=f-charCode("0");else if(charCode("a")<=f&&f<=charCode("f"))i=f-charCode("a")+10;else{if(!(charCode("A")<=f&&f<=charCode("F"))){n[a++]=charCode("%"),n[a++]=f,r="CHAR";break}i=f-charCode("A")+10}break;case"HEX1":r="CHAR";if(charCode("0")<=
+f&&f<=charCode("9"))s=f-charCode("0");else if(charCode("a")<=f&&f<=charCode("f"))s=f-charCode("a")+10;else{if(!(charCode("A")<=f&&f<=charCode("F"))){n[a++]=charCode("%"),n[a++]=o,n[a++]=f;break}s=f-charCode("A")+10}n[a++]=16*i+s}}return n.slice(0,a-1)},QueryString
+.unescape=function(e,t){try{return decodeURIComponent(e)}catch(n){return QueryString.unescapeBuffer(e,t).toString()}};var hexTable=new Array(256);for(var i=0;i<256;++i)hexTable[i]="%"+((i<16?"0":"")+i.toString(16)).toUpperCase();QueryString.escape=function(
+e){e=""+e;var t=e.length,n="",r,i;if(t===0)return e;for(r=0;r<t;++r){i=e.charCodeAt(r);if(i===33||i===45||i===46||i===95||i===126||i>=39&&i<=42||i>=48&&i<=57||i>=65&&i<=90||i>=97&&i<=122){n+=e[r];continue}if(i<128){n+=hexTable[i];continue}if(i<2048){n+=hexTable
+[192|i>>6]+hexTable[128|i&63];continue}if(i<55296||i>=57344){n+=hexTable[224|i>>12]+hexTable[128|i>>6&63]+hexTable[128|i&63];continue}++r,i=65536+((i&1023)<<10|e.charCodeAt(r)&1023),n+=hexTable[240|i>>18]+hexTable[128|i>>12&63]+hexTable[128|i>>6&63]+hexTable
+[128|i&63]}return n};var stringifyPrimitive=function(e){return typeof e=="string"?e:typeof e=="number"&&isFinite(e)?""+e:typeof e=="boolean"?e?"true":"false":""};QueryString.stringify=QueryString.encode=function(e,t,n,r){t=t||"&",n=n||"=";var i=QueryString.
+escape;r&&typeof r.encodeURIComponent=="function"&&(i=r.encodeURIComponent);if(e!==null&&typeof e=="object"){var s=Object.keys(e),o=s.length,u=o-1,a="";for(var f=0;f<o;++f){var l=s[f],c=e[l],h=i(stringifyPrimitive(l))+n;if(Array.isArray(c)){var p=c.length,d=
+p-1;for(var v=0;v<p;++v)a+=h+i(stringifyPrimitive(c[v])),v<d&&(a+=t);p&&f<u&&(a+=t)}else a+=h+i(stringifyPrimitive(c)),f<u&&(a+=t)}return a}return""},QueryString.parse=QueryString.decode=function(e,t,n,r){t=t||"&",n=n||"=";var i={};if(typeof e!="string"||e.
+length===0)return i;var s=/\+/g;e=e.split(t);var o=1e3;r&&typeof r.maxKeys=="number"&&(o=r.maxKeys);var u=e.length;o>0&&u>o&&(u=o);var a=QueryString.unescape;r&&typeof r.decodeURIComponent=="function"&&(a=r.decodeURIComponent);var f=[];for(var l=0;l<u;++l){
+var c=e[l].replace(s,"%20"),h=c.indexOf(n),p,d;h>=0?(p=decodeStr(c.substring(0,h),a),d=decodeStr(c.substring(h+1),a)):(p=decodeStr(c,a),d=""),f.indexOf(p)===-1?(i[p]=d,f.push(p)):Array.isArray(i[p])?i[p].push(d):i[p]=[i[p],d]}return i}
+/* jslint-ignore-end */
+            return exports;
+        }());
+
         local._timeElapsedStop = function (options) {
         /*
          * this function will stop options.timeElapsed
@@ -1098,9 +1125,7 @@
                     case 'b':
                         Object.keys(dict2).forEach(function (key) {
                             dict2[key].forEach(function (count, ii) {
-                                dict1[key][ii] = dict1[key][ii]
-                                    ? dict1[key][ii] + count
-                                    : count;
+                                dict1[key][ii] += count;
                             });
                         });
                         break;
@@ -1108,9 +1133,7 @@
                     case 'f':
                     case 's':
                         Object.keys(dict2).forEach(function (key) {
-                            dict1[key] = dict1[key]
-                                ? dict1[key] + dict2[key]
-                                : dict2[key];
+                            dict1[key] += dict2[key];
                         });
                         break;
                     }
@@ -1538,7 +1561,7 @@
                     persistent: false
                 }, function (stat2, stat1) {
                     if (stat2.mtime > stat1.mtime) {
-                        local.utility2.exit(1);
+                        local.utility2.exit(77);
                     }
                 });
             }
@@ -3059,7 +3082,15 @@ local.utility2['/test/test-report.html.template'] = '<style>\n' +
         // require modules
         local.http = local._http;
         local.https = local._http;
-        local.url = local.global.utility2_url;
+        local.querystring = local._querystring;
+        local.url = { parse: function (url, parseQueryString) {
+            var urlParsed;
+            urlParsed = new local.global.URL(url);
+            if (parseQueryString) {
+                urlParsed.query = local.querystring.parse(urlParsed.query);
+            }
+            return urlParsed;
+        } };
         break;
 
 
@@ -3096,7 +3127,7 @@ local.utility2['/test/test-report.html.template'] = '<style>\n' +
                     'utility2'
                 )
             );
-        ['istanbul', 'jslint', 'uglifyjs', 'url'].forEach(function (key) {
+        ['istanbul', 'jslint', 'uglifyjs'].forEach(function (key) {
             local.utility2.cacheDict.assets['/assets/utility2.lib.' + key + '.js'] =
                 local.utility2.uglifyIfProduction(
                     local.utility2.istanbulInstrumentInPackage(
