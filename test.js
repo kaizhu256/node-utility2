@@ -48,6 +48,7 @@
                 // disable mock package.json env
                 .replace(/(process.env.npm_package_\w+ = )/g, '// $1')
                 // alias require('$npm_package_name') to require('index.js');
+                .replace("require('utility2')", 'module.utility2')
                 .replace(
                     "require('" + process.env.npm_package_name + "')",
                     "require(__dirname + '/index.js')"
@@ -143,6 +144,9 @@
             onParallel = local.utility2.onParallel(onError);
             onParallel.counter += 1;
             [{
+                // test 404-index.html handling-behavior
+                url: '/assets/undefined/'
+            }, {
                 // test 404-not-found-error handling-behavior
                 url: '/test/error-404'
             }, {
@@ -686,39 +690,6 @@
                 local.utility2.assert(options, options);
                 onError();
             }, onError);
-        };
-
-        local.testCase_onErrorJsonParse_default = function (options, onError) {
-        /*
-         * this function will test onErrorJsonParse's default handling-behavior
-         */
-            var data, error, onError2;
-            // jslint-hack
-            local.utility2.nop(options);
-            onError2 = function (arg0, arg1) {
-                data = arg1;
-                error = arg0;
-            };
-            // test parse passed handling-behavior
-            // test debug handling-behavior
-            local.utility2.onErrorJsonParse(onError2, 'modeDebug')(null, '1');
-            // validate no error occurred
-            local.utility2.assert(!error, error);
-            // validate data
-            local.utility2.assert(data === 1, data);
-            // test parse failed handling-behavior
-            local.utility2.onErrorJsonParse(onError2)(null, 'syntax error');
-            // validate error occurred
-            local.utility2.assert(error, error);
-            // validate data
-            local.utility2.assert(!data, data);
-            // test error handling-behavior
-            local.utility2.onErrorJsonParse(onError2)(new Error());
-            // validate error occurred
-            local.utility2.assert(error, error);
-            // validate data
-            local.utility2.assert(!data, data);
-            onError();
         };
 
         local.testCase_onParallel_default = function (options, onError) {
@@ -1642,18 +1613,19 @@
                 }, 5000);
                 break;
             default:
-                local.fs.readFile(
-                    process.cwd() + request.urlParsed.pathnameNormalized,
-                    function (error, data) {
-                        // default to nextMiddleware
-                        if (error) {
-                            nextMiddleware();
-                            return;
-                        }
-                        // serve file asset
-                        response.end(data);
+                request.urlFile = process.cwd() + request.urlParsed.pathnameNormalized;
+                if (request.urlFile[request.urlFile.length - 1] === '/') {
+                    request.urlFile += 'index.html';
+                }
+                local.fs.readFile(request.urlFile, function (error, data) {
+                    // default to nextMiddleware
+                    if (error) {
+                        nextMiddleware();
+                        return;
                     }
-                );
+                    // serve file asset
+                    response.end(data);
+                });
             }
         });
     }());
@@ -1672,6 +1644,7 @@
             );
         // debug dir
         [
+            __dirname,
             process.cwd()
         ].forEach(function (dir) {
             local.fs.readdirSync(dir).forEach(function (file) {

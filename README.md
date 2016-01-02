@@ -479,13 +479,16 @@ export PORT=$(./index.sh shServerPortRandom) && \
 export npm_config_mode_auto_restart=1 && \
 ./index.sh test node test.js"
     },
-    "version": "2015.12.4"
+    "version": "2015.12.5"
 }
 ```
 
 
 
 # todo
+- npm publish 2015.12.5
+- add ajax binary data retrieval
+- create simple file server middleware
 - add utility2.middlewareLimit
 - create flamegraph from istanbul coverage
 - add server stress test using electron
@@ -493,10 +496,9 @@ export npm_config_mode_auto_restart=1 && \
 
 
 
-# change since 1d1d544e
-- make auto-restart signal handling more robust
-- replace lib.url.js with browser's builtin URL api
-- add optional override command to shDockerSh and shDockerStart
+# change since 6aaf19d0
+- add auto index.html lookup for dir asset
+- remove function utility2.onErrorJsonParse
 - none
 
 
