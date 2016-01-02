@@ -308,11 +308,9 @@ shDockerSh() {
 shDockerStart() {
 # this function will start the docker-container $image:$name
     local COMMAND IMAGE NAME || return $?
+    COMMAND="${3-/bin/bash}" || return $?
+    IMAGE="$2" || return $?
     NAME="$1" || return $?
-    shift || return $?
-    IMAGE="$1" || return $?
-    shift || return $?
-    COMMAND="${1-/bin/bash}" || return $?
     docker run --name "$NAME" -dt -e debian_chroot="$NAME" \
         -v "$HOME:/root" \
         "$IMAGE" "$COMMAND" || return $?

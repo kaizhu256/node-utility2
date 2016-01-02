@@ -486,7 +486,6 @@ export npm_config_mode_auto_restart=1 && \
 
 
 # todo
-- npm publish 2015.12.5
 - add ajax binary data retrieval
 - create simple file server middleware
 - add utility2.middlewareLimit
@@ -496,9 +495,8 @@ export npm_config_mode_auto_restart=1 && \
 
 
 
-# change since 6aaf19d0
-- add auto index.html lookup for dir asset
-- remove function utility2.onErrorJsonParse
+# change since 1ee22244
+- npm publish 2015.12.5
 - none
 
 
