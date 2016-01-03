@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /* istanbul ignore all */
 /*jslint
+    bitwise: true,
     browser: true,
     maxerr: 8,
     maxlen: 96,
@@ -634,8 +635,8 @@ function(e){var t,n,r=[],i;if(e.errors.length){e.json&&r.push("<cite>JSON: bad.<
         /*
          * this function will jslint / csslint the script and print any errors to stderr
          */
-            var errorList, lineno;
-            if (!script.length) {
+            var errorList, lineno, scriptParsed;
+            if (!script.length || (/^\/\* jslint-ignore-all \*\/$/m).test(script)) {
                 return script;
             }
             // cleanup errors
@@ -643,9 +644,39 @@ function(e){var t,n,r=[],i;if(e.errors.length){e.json&&r.push("<cite>JSON: bad.<
             local.errorText = '';
             // init lineno
             lineno = 0;
+            // parse script
+            scriptParsed = script
+                // comment shebang
+                .replace((/^#!/), '//')
+                // indent text-block
+                // /* jslint-indent-begin */ ... /* jslint-indent-end */
+                .replace(
+/* jslint-indent-begin 20 */
+(function () {
+    /*jslint maxlen: 256*/
+    return (/^ *?\/\* jslint-indent-begin (\d+?) \*\/$[\S\s]+?^ *?\/\* jslint-indent-end \*\/$/gm);
+}()),
+/* jslint-indent-end */
+                    function (match0, match1) {
+                        return match0.replace(
+                            (/(^ *\S)/gm),
+                            new Array(Number(match1) + 1).join(' ') + '$1'
+                        );
+                    }
+                )
+                // ignore text-block
+                // /* jslint-ignore-begin */ ... /* jslint-ignore-end */
+                .replace(
+/* jslint-ignore-begin */
+(/^ *?\/\* jslint-ignore-begin \*\/$[\S\s]+?^ *?\/\* jslint-ignore-end \*\/$/gm),
+/* jslint-ignore-end */
+                    function (match0) {
+                        return match0.replace((/[\S\s]*?$/gm), '');
+                    }
+                );
             // csslint script
             if (file.slice(-4) === '.css') {
-                errorList = local.CSSLint.verify(script).messages;
+                errorList = local.CSSLint.verify(scriptParsed).messages;
                 // if error occurred, then print colorized error messages
                 if (!errorList.length) {
                     return script;
@@ -667,35 +698,7 @@ function(e){var t,n,r=[],i;if(e.errors.length){e.json&&r.push("<cite>JSON: bad.<
                     });
             // jslint script
             } else {
-                if (local.JSLINT(script
-                        // comment shebang
-                        .replace((/^#!/), '//')
-                        // indent text-block
-                        // /* jslint-indent-begin */ ... /* jslint-indent-end */
-                        .replace(
-/* jslint-indent-begin 28 */
-(function () {
-    /*jslint maxlen: 256*/
-    return (/^ *?\/\* jslint-indent-begin (\d+?) \*\/$[\S\s]+?^ *?\/\* jslint-indent-end \*\/$/gm);
-}()),
-/* jslint-indent-end */
-                            function (match0, match1) {
-                                return match0.replace(
-                                    (/(^ *\S)/gm),
-                                    new Array(Number(match1) + 1).join(' ') + '$1'
-                                );
-                            }
-                        )
-                        // ignore text-block
-                        // /* jslint-ignore-begin */ ... /* jslint-ignore-end */
-                        .replace(
-/* jslint-ignore-begin */
-(/^ *?\/\* jslint-ignore-begin \*\/$[\S\s]+?^ *?\/\* jslint-ignore-end \*\/$/gm),
-/* jslint-ignore-end */
-                            function (match0) {
-                                return match0.replace((/[\S\s]*?$/gm), '');
-                            }
-                        ))) {
+                if (local.JSLINT(scriptParsed)) {
                     return script;
                 }
                 // if error occurred, then print colorized error messages

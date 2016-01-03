@@ -427,9 +427,9 @@
             this.method = method;
             this.url = url;
             // parse url
-            this.urlParsed = local.url.parse(String(this.url));
+            this.urlParsed = local.utility2.urlParse(String(this.url));
             this.hostname = this.urlParsed.hostname;
-            this.path = this.urlParsed.path;
+            this.path = this.urlParsed.pathname + this.urlParsed.search;
             this.port = this.urlParsed.port;
             // init requestStream
             this.requestStream = (this.urlParsed.protocol === 'https:'
@@ -484,7 +484,7 @@
             var serverRequest, serverResponse;
             serverRequest = new local._http.IncomingMessage(xhr);
             serverResponse = new local._http.ServerResponse(onResponse);
-            serverRequest.urlParsed = local.url.parse(xhr.url);
+            serverRequest.urlParsed = local.utility2.urlParse(xhr.url);
             return {
                 end: function (data) {
                     serverRequest.data = data;
@@ -513,32 +513,8 @@
          * this function will send an ajax request with error handling and timeout
          */
             var ajaxProgressDiv, ii, timerTimeout, xhr;
-            // resolve url
-            switch (local.modeJs) {
-            case 'browser':
-                // resolve absolute path
-                if (options.url[0] === '/') {
-                    options.url = location.protocol + '//' + location.host + options.url;
-                // resolve relative path
-                } else if (!(/^\w+?:\/\//).test(options.url)) {
-                    options.url = location.protocol + '//' + location.host +
-                        location.pathname.replace((/\/[^\/]*?$/), '') + '/' + options.url;
-                }
-                break;
-            case 'node':
-                // resolve absolute path
-                if (options.url[0] === '/') {
-                    options.url = local.utility2.serverLocalHost + options.url;
-                // resolve relative path
-                } else if (!(/^\w+?:\/\//).test(options.url)) {
-                    options.url = local.utility2.serverLocalHost + '/' + options.url;
-                }
-                break;
-            }
             // init modeServerLocal
-            if (options.url.indexOf(local.utility2.serverLocalHost) === 0 &&
-                    local.utility2.serverLocalUrlTest &&
-                    local.utility2.serverLocalUrlTest(options.url)) {
+            if (local.utility2.serverLocalUrlTest(options.url)) {
                 options.modeServerLocal = true;
                 xhr = new local._http.XMLHttpRequest();
             }
@@ -547,7 +523,7 @@
                 ? new local.global.XMLHttpRequest()
                 : new local._http.XMLHttpRequest());
             // debug xhr
-            local._debugXhr = xhr;
+            local.utility2._debugXhr = xhr;
             // init options
             local.utility2.objectSetOverride(xhr, options);
             // init headers
@@ -564,8 +540,7 @@
                 xhr.error = errorTimeout;
                 xhr.abort();
                 // cleanup requestStream and responseStream
-                local.utility2
-                    .requestResponseCleanup(xhr.requestStream, xhr.responseStream);
+                local.utility2.requestResponseCleanup(xhr.requestStream, xhr.responseStream);
             }, xhr.timeout, 'ajax ' + xhr.method + ' ' + xhr.url);
             // init event handling
             xhr.onEvent = local.utility2.onErrorWithStack(function (event) {
@@ -706,7 +681,7 @@
                 case 1:
                     // init options
                     options.testName = local.utility2.envDict.MODE_BUILD + '.browser.' +
-                        encodeURIComponent(local.url.parse(options.url).pathname);
+                        encodeURIComponent(local.utility2.urlParse(options.url).pathname);
                     local.utility2.objectSetDefault(options, {
                         fileCoverage: local.utility2.envDict.npm_config_dir_tmp +
                             '/coverage.' + options.testName + '.json',
@@ -720,8 +695,11 @@
                         timeExit: Date.now() + options.timeoutDefault
                     }, 1);
                     // init timerTimeout
-                    timerTimeout = local.utility2
-                        .onTimeout(onNext, options.timeoutDefault, options.testName);
+                    timerTimeout = local.utility2.onTimeout(
+                        onNext,
+                        options.timeoutDefault,
+                        options.testName
+                    );
                     // init file urlBrowser
                     options.modeNext = 20;
                     options.urlBrowser = local.utility2.envDict.npm_config_dir_tmp +
@@ -769,13 +747,16 @@
                     if (options.modeCoverageMerge) {
                         try {
                             data = null;
-                            data = JSON
-                                .parse(local.fs.readFileSync(options.fileCoverage, 'utf8'));
+                            data = JSON.parse(
+                                local.fs.readFileSync(options.fileCoverage, 'utf8')
+                            );
                         } catch (ignore) {
                         }
                         if (data) {
-                            local.utility2
-                                .istanbulCoverageMerge(local.global.__coverage__, data);
+                            local.utility2.istanbulCoverageMerge(
+                                local.global.__coverage__,
+                                data
+                            );
                             console.log('\nbrowserTest - merged coverage from ' +
                                 options.fileCoverage + '\n');
                         }
@@ -788,8 +769,10 @@
                     // merge browser test-report
                     try {
                         data = null;
-                        data = JSON.parse(local.fs.readFileSync(options
-                            .fileTestReport, 'utf8'));
+                        data = JSON.parse(local.fs.readFileSync(
+                            options.fileTestReport,
+                            'utf8'
+                        ));
                         console.log('\nbrowserTest - merging test-report from ' +
                             options.fileTestReport + '\n');
                     } catch (errorCaught) {
@@ -850,10 +833,9 @@
                 case 21:
                     options.fs = require('fs');
                     options.webview = document.getElementById('webview');
-                    options.webview
-                        .addEventListener('did-get-response-details', function () {
-                            document.title = 'opened ' + location.href;
-                        });
+                    options.webview.addEventListener('did-get-response-details', function () {
+                        document.title = 'opened ' + location.href;
+                    });
                     options.webview.addEventListener('console-message', function (event) {
                         try {
                             options.global_test_results = event.message
@@ -972,8 +954,8 @@
                             .filter(function (key) {
                                 try {
                                     return key &&
-                                        key[0] !== '$' &&
                                         key[0] !== '_' &&
+                                        !(/\W/).test(key) &&
                                         typeof module.exports[key] === 'function';
                                 } catch (ignore) {
                                 }
@@ -987,8 +969,10 @@
                         name: moduleName
                     };
                 });
-            return local.utility2
-                .stringFormat(local.utility2['/doc/doc.html.template'], options);
+            return local.utility2.stringFormat(
+                local.utility2['/doc/doc.html.template'],
+                options
+            );
         };
 
         local.utility2.echo = function (arg) {
@@ -1223,8 +1207,7 @@
             var modeNext, onNext, result;
             modeNext = 0;
             onNext = function (error, data) {
-                result = result ||
-                    local.utility2.cacheDict.assets[request.urlParsed.pathnameNormalized];
+                result = result || local.utility2.cacheDict.assets[request.urlParsed.pathname];
                 if (error || !result) {
                     nextMiddleware(error);
                     return;
@@ -1242,8 +1225,7 @@
                     // gzip and cache result
                     local.utility2.taskCallbackAndUpdateCached({
                         cacheDict: 'assetsGzip',
-                        key: request.urlParsed.pathnameNormalized,
-                        modeCacheMemory: true
+                        key: request.urlParsed.pathname
                     }, onNext, function (onError) {
                         local.zlib.gzip(result, function (error, data) {
                             onError(error, !error && data.toString('base64'));
@@ -1258,8 +1240,11 @@
                     onNext();
                     break;
                 case 3:
-                    local.utility2
-                        .middlewareCacheControlLastModified(request, response, onNext);
+                    local.utility2.middlewareCacheControlLastModified(
+                        request,
+                        response,
+                        onNext
+                    );
                     break;
                 case 4:
                     response.end(result);
@@ -1330,6 +1315,39 @@
                 : 404, error);
         };
 
+        local.utility2.middlewareFileServer = function (request, response, nextMiddleware) {
+        /*
+         * this function will run the file-server-middleware
+         */
+            if (request.method !== 'GET' || local.modeJs === 'browser') {
+                nextMiddleware();
+                return;
+            }
+            request.urlFile = (process.cwd() + request.urlParsed.pathname
+                // security - disable parent directory lookup
+                .replace((/.*\/\.\.\//g), '/'))
+                // replace trailing '/' with '/index.html'
+                .replace((/\/$/), '/index.html');
+            // serve file from cache
+            local.utility2.taskCallbackAndUpdateCached({
+                cacheDict: 'middlewareFileServer',
+                key: request.urlFile
+            }, function (error, data) {
+                // default to nextMiddleware
+                if (error) {
+                    nextMiddleware();
+                    return;
+                }
+                // serve file from cache
+                response.end(new Buffer(data, 'base64'));
+            // run background-task to re-cache file
+            }, function (onError) {
+                local.fs.readFile(request.urlFile, function (error, data) {
+                    onError(error, data && data.toString('base64'));
+                });
+            });
+        };
+
         local.utility2.middlewareGroupCreate = function (middlewareList) {
         /*
          * this function will return a middleware-group,
@@ -1361,21 +1379,18 @@
         /*
          * this function will run the init-middleware
          */
-            // debug server request
-            local._debugServerRequest = request;
-            // debug server response
-            local._debugServerResponse = response;
+            // debug server-request
+            local.utility2._debugServerRequest = request;
+            // debug server-response
+            local.utility2._debugServerResponse = response;
             // init timerTimeout
-            local.utility2
-                .serverRespondTimeoutDefault(request, response, local.utility2.timeoutDefault);
+            local.utility2.serverRespondTimeoutDefault(
+                request,
+                response,
+                local.utility2.timeoutDefault
+            );
             // init request.urlParsed
-            request.urlParsed = local.url.parse(request.url, true);
-            // init request.urlParsed.pathnameNormalized
-            request.urlParsed.pathnameNormalized = request.urlParsed.pathname
-                // security - disable parent directory lookup
-                .replace((/.*\/\.\.\//g), '/')
-                // remove repeating '/'
-                .replace((/\/\/+/g), '\/');
+            request.urlParsed = local.utility2.urlParse(request.url);
             // init content-type
             request.urlParsed.contentType = (/.\.[^\.].*/).exec(request.urlParsed.pathname);
             request.urlParsed.contentType = local.utility2.contentTypeDict[
@@ -1385,7 +1400,7 @@
                 'Content-Type': request.urlParsed.contentType
             });
             // set main-page content-type to text/html
-            if (request.urlParsed.pathnameNormalized === '/') {
+            if (request.urlParsed.pathname === '/') {
                 local.utility2.serverRespondHeadSet(request, response, null, {
                     'Content-Type': 'text/html; charset=UTF-8'
                 });
@@ -1604,7 +1619,7 @@
             /*
              * this function will debug any repl-error
              */
-                local._debugReplError = error || local._debugReplError;
+                local.utility2._debugReplError = error || local.utility2._debugReplError;
             };
             local._replServer._domain.on('error', local._replServer.onError);
             // save repl eval function
@@ -1726,6 +1741,8 @@
             return module.exports;
         };
 
+        local.utility2.serverLocalUrlTest = local.utility2.nop;
+
         local.utility2.serverRespondDefault = function (request, response, statusCode, error) {
         /*
          * this function will respond with a default message,
@@ -1794,7 +1811,7 @@
 
         local.utility2.serverRespondTimeoutDefault = function (request, response, timeout) {
         /*
-         * this function will create a timeout-error-handler for the server request
+         * this function will create a timeout-error-handler for the server-request
          */
             request.onTimeout = request.onTimeout || function (error) {
                 local.utility2.serverRespondDefault(request, response, 500, error);
@@ -1921,97 +1938,48 @@
          * this function will run callback onError from cache,
          * and auto-update the cache with background-task onTask
          */
-            var modeCacheHit, modeNext, onNext, onParallel;
+            var modeNext, onNext;
             modeNext = 0;
             onNext = function (error, data) {
                 modeNext += 1;
                 switch (modeNext) {
                 case 1:
-                    options.keyFile = options.modeCacheFile + '/' +
-                        encodeURIComponent(options.cacheDict) + '/' +
-                        encodeURIComponent(options.key);
-                    if (options.modeCacheMemory) {
-                        modeCacheHit = 'memory';
-                        // read cacheValue from memory-cache
-                        local.utility2.cacheDict[options.cacheDict] =
-                            local.utility2.cacheDict[options.cacheDict] || {};
-                        options.cacheValue =
-                            local.utility2.cacheDict[options.cacheDict][options.key];
-                        if (options.cacheValue) {
-                            onNext(null, options.cacheValue);
-                            return;
-                        }
-                    }
-                    // read cacheValue from file-cache
-                    if (options.modeCacheFile) {
-                        modeCacheHit = 'file';
-                        local.utility2.taskCallbackAdd({
-                            key: options.keyFile + '/file/read'
-                        }, onNext);
-                        local.utility2.taskUpsert({
-                            key: options.keyFile + '/file/read'
-                        }, function (onError) {
-                            local.fs.readFile(options.keyFile, 'utf8', onError);
-                        });
-                        return;
-                    }
-                    onNext();
-                    return;
-                case 2:
-                    options.cacheValue = !error && data;
+                    // read cacheValue from memory-cache
+                    local.utility2.cacheDict[options.cacheDict] =
+                        local.utility2.cacheDict[options.cacheDict] || {};
+                    options.cacheValue =
+                        local.utility2.cacheDict[options.cacheDict][options.key];
                     if (options.cacheValue) {
-                        options.modeCacheHit = modeCacheHit;
+                        options.modeCacheHit = true;
                         // run callback onError with cacheValue
                         onError(null, JSON.parse(options.cacheValue));
                         if (!options.modeCacheUpdate) {
-                            return;
+                            break;
                         }
                     }
                     // run background-task with lower priority for cache-hit
-                    setTimeout(onNext, options.cacheValue && options.cacheTtl);
-                    return;
-                case 3:
+                    setTimeout(onNext, options.modeCacheHit && options.cacheTtl);
+                    break;
+                case 2:
+                    // handle next cache-hit
                     local.utility2.taskCallbackAdd(options, onNext);
-                    // run background-task
+                    // run background-task to update cache
                     local.utility2.taskUpsert(options, onTask);
-                    return;
-                case 4:
-                    onParallel = local.utility2
-                        .onParallel(options.onCacheWrite || local.utility2.onErrorDefault);
-                    onParallel.counter += 1;
+                    break;
+                case 3:
                     // JSON.stringify data to prevent side-effects on cache
                     options.cacheValue = JSON.stringify(data);
                     if (!error && options.cacheValue) {
                         // save cacheValue to memory-cache
-                        if (options.modeCacheMemory) {
-                            onParallel.counter += 1;
-                            local.utility2.cacheDict[options.cacheDict][options.key] =
-                                options.cacheValue;
-                            onParallel();
-                        }
-                        // save cacheValue to file-cache
-                        if (options.modeCacheFile) {
-                            onParallel.counter += 1;
-                            local.utility2.taskCallbackAdd({
-                                key: options.keyFile + '/file/write'
-                            }, onParallel);
-                            local.utility2.taskUpsert({
-                                key: options.keyFile + '/file/write'
-                            }, function (onError) {
-                                local.utility2.fsWriteFileWithMkdirp(
-                                    options.keyFile,
-                                    options.cacheValue,
-                                    onError
-                                );
-                            });
-                        }
+                        local.utility2.cacheDict[options.cacheDict][options.key] =
+                            options.cacheValue;
                     }
                     // if cache-miss, then run callback onError with cacheValue
                     if (!options.modeCacheHit) {
                         onError(error, options.cacheValue && JSON.parse(options.cacheValue));
                     }
-                    onParallel();
-                    return;
+                    (options.onCacheWrite || local.utility2.nop)();
+                    break;
                 }
             };
             onNext();
@@ -2041,12 +2009,13 @@
                 task.result = JSON.stringify(Array.prototype.slice.call(arguments)
                     .map(function (element) {
                         if (element && element.stack) {
-                            element = local.utility2.objectSetDefault(local.utility2
-                                .jsonCopy(element), {
-                                    message: element.message,
-                                    name: element.name,
-                                    stack: element.stack
-                                });
+                            element = local.utility2.objectSetDefault(local.utility2.jsonCopy(
+                                element
+                            ), {
+                                message: element.message,
+                                name: element.name,
+                                stack: element.stack
+                            });
                         }
                         return element;
                     }));
@@ -2134,8 +2103,7 @@
                     local.utility2.envDict.CI_COMMIT_ID));
             // create test-report.badge.svg
             local.fs.writeFileSync(local.utility2.envDict.npm_config_dir_build +
-                '/test-report.badge.svg', local
-                .utility2['/build/test-report.badge.svg']
+                '/test-report.badge.svg', local.utility2['/build/test-report.badge.svg']
                 // edit number of tests failed
                 .replace((/999/g), testReport.testsFailed)
                 // edit badge color
@@ -2619,8 +2587,8 @@
                 break;
             case 'node':
                 local.utility2.timeExit = local.utility2.envDict.npm_config_time_exit;
-                local.utility2.timeoutDefault = local.utility2.envDict
-                    .npm_config_timeout_default;
+                local.utility2.timeoutDefault =
+                    local.utility2.envDict.npm_config_timeout_default;
                 break;
             }
             // init timeExit
@@ -2647,6 +2615,60 @@
             return local.utility2.envDict.npm_config_production
                 ? local.utility2.uglify(code)
                 : code;
+        };
+
+        local.utility2.urlParse = function (url) {
+        /*
+         * this function will parse the url according to
+         * https://developer.mozilla.org/en/docs/Web/API
+         */
+            var urlParsed;
+            // resolve host-less url
+            urlParsed = {};
+            try {
+                switch (local.modeJs) {
+                case 'browser':
+                    // resolve absolute path
+                    if (url[0] === '/') {
+                        url = location.protocol + '//' + location.host + url;
+                    // resolve relative path
+                    } else if (!(/^\w+?:\/\//).test(url)) {
+                        url = location.protocol + '//' + location.host +
+                            location.pathname.replace((/\/[^\/]*?$/), '') + '/' + url;
+                    }
+                    urlParsed = new local.global.URL(url);
+                    break;
+                case 'node':
+                    // resolve absolute path
+                    if (url[0] === '/') {
+                        url = local.utility2.serverLocalHost + url;
+                    // resolve relative path
+                    } else if (!(/^\w+?:\/\//).test(url)) {
+                        url = local.utility2.serverLocalHost + '/' + url;
+                    }
+                    urlParsed = local.url.parse(url);
+                    break;
+                }
+                urlParsed.query = {};
+                urlParsed.search.slice(1).replace((/[^&]+/g), function (item) {
+                    item = item.split('=');
+                    urlParsed.query[decodeURIComponent(item[0])] =
+                        decodeURIComponent(item.slice(1).join('='));
+                });
+            } catch (ignore) {
+            }
+            // https://developer.mozilla.org/en/docs/Web/API/URL#Properties
+            return {
+                hash: urlParsed.hash || '',
+                host: urlParsed.host || '',
+                hostname: urlParsed.hostname || '',
+                href: urlParsed.href || '',
+                pathname: urlParsed.pathname || '',
+                port: urlParsed.port || '',
+                protocol: urlParsed.protocol || '',
+                query: urlParsed.query || {},
+                search: urlParsed.search || ''
+            };
         };
 
         local.utility2.uuid4Create = function () {
@@ -2698,68 +2720,6 @@
 /* jslint-indent-begin 8 */
 /*jslint maxlen: 256*/
 // init assets
-local.utility2.cacheDict.assets['/assets/utility2.css'] = '/*csslint\n' +
-        'box-model: false\n' +
-    '*/\n' +
-    '.ajaxProgressBarDiv {\n' +
-        'animation: 2s linear 0s normal none infinite ajaxProgressBarDivAnimation;\n' +
-        '-o-animation: 2s linear 0s normal none infinite ajaxProgressBarDivAnimation;\n' +
-        '-moz-animation: 2s linear 0s normal none infinite ajaxProgressBarDivAnimation;\n' +
-        '-webkit-animation: 2s linear 0s normal none infinite ajaxProgressBarDivAnimation;\n' +
-        'background-image: linear-gradient(\n' +
-            '45deg,rgba(255,255,255,.25) 25%,\n' +
-            'transparent 25%,\n' +
-            'transparent 50%,\n' +
-            'rgba(255,255,255,.25) 50%,\n' +
-            'rgba(255,255,255,.25) 75%,\n' +
-            'transparent 75%,\n' +
-            'transparent\n' +
-        ');\n' +
-        'background-size: 40px 40px;\n' +
-        'color: #fff;\n' +
-        'font-family: Helvetical Neue, Helvetica, Arial, sans-serif;\n' +
-        'font-size: 12px;\n' +
-        'padding: 2px 0 2px 0;\n' +
-        'text-align: center;\n' +
-        'transition: width .5s ease;\n' +
-        'width: 25%;\n' +
-    '}\n' +
-    '.ajaxProgressBarDivError {\n' +
-        'background-color: #d33;\n' +
-    '}\n' +
-    '.ajaxProgressBarDivLoading {\n' +
-        'background-color: #37b;\n' +
-    '}\n' +
-    '.ajaxProgressBarDivSuccess {\n' +
-        'background-color: #3b3;\n' +
-    '}\n' +
-    '.ajaxProgressDiv {\n' +
-        'background-color: #fff;\n' +
-        'border: 1px solid;\n' +
-        'display: none;\n' +
-        'left: 50%;\n' +
-        'margin: 0 0 0 -50px;\n' +
-        'padding: 5px 5px 5px 5px;\n' +
-        'position: fixed;\n' +
-        'top: 49%;\n' +
-        'width: 100px;\n' +
-        'z-index: 9999;\n' +
-    '}\n' +
-    '@keyframes ajaxProgressBarDivAnimation {\n' +
-        'from { background-position: 40px 0; }\n' +
-        'to { background-position: 0 0; }\n' +
-    '}\n' +
-    '@-o-keyframes ajaxProgressBarDivAnimation {\n' +
-        'from { background-position: 40px 0; }\n' +
-        'to { background-position: 0 0; }\n' +
-    '}\n' +
-    '@-webkit-keyframes ajaxProgressBarDivAnimation {\n' +
-        'from { background-position: 40px 0; }\n' +
-        'to { background-position: 0 0; }\n' +
-    '}\n';
-
-
-
 /* jslint-ignore-begin */
 // https://img.shields.io/badge/last_build-0000_00_00_00_00_00_UTC_--_master_--_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-0077ff.svg?style=flat
 local.utility2['/build/build.badge.svg'] = '<svg xmlns="http://www.w3.org/2000/svg" width="563" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="563" height="20" fill="#555"/><rect rx="0" x="61" width="502" height="20" fill="#07f"/><path fill="#07f" d="M61 0h4v20h-4z"/><rect rx="0" width="563" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="31.5" y="15" fill="#010101" fill-opacity=".3">last build</text><text x="31.5" y="14">last build</text><text x="311" y="15" fill="#010101" fill-opacity=".3">0000-00-00 00:00:00 UTC - master - aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</text><text x="311" y="14">0000-00-00 00:00:00 UTC - master - aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</text></g></svg>';
@@ -3034,39 +2994,6 @@ local.utility2['/test/test-report.html.template'] = '<style>\n' +
         // require modules
         local.http = local._http;
         local.https = local._http;
-        /* istanbul ignore next */
-        local.querystring = (function () {
-            var exports, require;
-            local.utility2.nop(require);
-            exports = {};
-            require = function () { return {}; };
-            // jslint-hack
-/* jslint-ignore-begin */
-// https://github.com/nodejs/node/blob/v4.2.3/lib/querystring.js
-// utility2-uglifyjs https://raw.githubusercontent.com/nodejs/node/v4.2.3/lib/querystring.js
-"use strict";function charCode(e){return e.charCodeAt(0)}function decodeStr(e,t){try{return t(e)}catch(n){return QueryString.unescape(e,!0)}}const QueryString=exports,Buffer=require("buffer").Buffer;QueryString.unescapeBuffer=function(e,t){var n=new Buffer(
-e.length),r="CHAR",i,s,o;for(var u=0,a=0;u<=e.length;u++){var f=e.charCodeAt(u);switch(r){case"CHAR":switch(f){case charCode("%"):i=0,s=0,r="HEX0";break;case charCode("+"):t&&(f=charCode(" "));default:n[a++]=f}break;case"HEX0":r="HEX1",o=f;if(charCode("0")<=
-f&&f<=charCode("9"))i=f-charCode("0");else if(charCode("a")<=f&&f<=charCode("f"))i=f-charCode("a")+10;else{if(!(charCode("A")<=f&&f<=charCode("F"))){n[a++]=charCode("%"),n[a++]=f,r="CHAR";break}i=f-charCode("A")+10}break;case"HEX1":r="CHAR";if(charCode("0")<=
-f&&f<=charCode("9"))s=f-charCode("0");else if(charCode("a")<=f&&f<=charCode("f"))s=f-charCode("a")+10;else{if(!(charCode("A")<=f&&f<=charCode("F"))){n[a++]=charCode("%"),n[a++]=o,n[a++]=f;break}s=f-charCode("A")+10}n[a++]=16*i+s}}return n.slice(0,a-1)},QueryString
-.unescape=function(e,t){try{return decodeURIComponent(e)}catch(n){return QueryString.unescapeBuffer(e,t).toString()}};var hexTable=new Array(256);for(var i=0;i<256;++i)hexTable[i]="%"+((i<16?"0":"")+i.toString(16)).toUpperCase();QueryString.escape=function(
-e){e=""+e;var t=e.length,n="",r,i;if(t===0)return e;for(r=0;r<t;++r){i=e.charCodeAt(r);if(i===33||i===45||i===46||i===95||i===126||i>=39&&i<=42||i>=48&&i<=57||i>=65&&i<=90||i>=97&&i<=122){n+=e[r];continue}if(i<128){n+=hexTable[i];continue}if(i<2048){n+=hexTable
-[192|i>>6]+hexTable[128|i&63];continue}if(i<55296||i>=57344){n+=hexTable[224|i>>12]+hexTable[128|i>>6&63]+hexTable[128|i&63];continue}++r,i=65536+((i&1023)<<10|e.charCodeAt(r)&1023),n+=hexTable[240|i>>18]+hexTable[128|i>>12&63]+hexTable[128|i>>6&63]+hexTable
-[128|i&63]}return n};var stringifyPrimitive=function(e){return typeof e=="string"?e:typeof e=="number"&&isFinite(e)?""+e:typeof e=="boolean"?e?"true":"false":""};QueryString.stringify=QueryString.encode=function(e,t,n,r){t=t||"&",n=n||"=";var i=QueryString.
-escape;r&&typeof r.encodeURIComponent=="function"&&(i=r.encodeURIComponent);if(e!==null&&typeof e=="object"){var s=Object.keys(e),o=s.length,u=o-1,a="";for(var f=0;f<o;++f){var l=s[f],c=e[l],h=i(stringifyPrimitive(l))+n;if(Array.isArray(c)){var p=c.length,d=
-p-1;for(var v=0;v<p;++v)a+=h+i(stringifyPrimitive(c[v])),v<d&&(a+=t);p&&f<u&&(a+=t)}else a+=h+i(stringifyPrimitive(c)),f<u&&(a+=t)}return a}return""},QueryString.parse=QueryString.decode=function(e,t,n,r){t=t||"&",n=n||"=";var i={};if(typeof e!="string"||e.
-length===0)return i;var s=/\+/g;e=e.split(t);var o=1e3;r&&typeof r.maxKeys=="number"&&(o=r.maxKeys);var u=e.length;o>0&&u>o&&(u=o);var a=QueryString.unescape;r&&typeof r.decodeURIComponent=="function"&&(a=r.decodeURIComponent);var f=[];for(var l=0;l<u;++l){
-var c=e[l].replace(s,"%20"),h=c.indexOf(n),p,d;h>=0?(p=decodeStr(c.substring(0,h),a),d=decodeStr(c.substring(h+1),a)):(p=decodeStr(c,a),d=""),f.indexOf(p)===-1?(i[p]=d,f.push(p)):Array.isArray(i[p])?i[p].push(d):i[p]=[i[p],d]}return i}
-/* jslint-ignore-end */
-            return exports;
-        }());
-        local.url = { parse: function (url, parseQueryString) {
-            var urlParsed;
-            urlParsed = new local.global.URL(url);
-            if (parseQueryString) {
-                urlParsed.query = local.querystring.parse(urlParsed.query);
-            }
-            return urlParsed;
-        } };
         break;
 
 
@@ -3103,6 +3030,8 @@ var c=e[l].replace(s,"%20"),h=c.indexOf(n),p,d;h>=0?(p=decodeStr(c.substring(0,h
                     'utility2'
                 )
             );
+        local.utility2.cacheDict.assets['/assets/utility2.css'] =
+            local.fs.readFileSync(__dirname + '/index.css', 'utf8');
         ['istanbul', 'jslint', 'uglifyjs'].forEach(function (key) {
             local.utility2.cacheDict.assets['/assets/utility2.lib.' + key + '.js'] =
                 local.utility2.uglifyIfProduction(

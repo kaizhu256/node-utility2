@@ -1,1 +1,59 @@
-/* this css script is currently used for coverage */
+/*csslint
+    box-model: false
+*/
+.ajaxProgressBarDiv {
+    animation: 2s linear 0s normal none infinite ajaxProgressBarDivAnimation;
+    -o-animation: 2s linear 0s normal none infinite ajaxProgressBarDivAnimation;
+    -moz-animation: 2s linear 0s normal none infinite ajaxProgressBarDivAnimation;
+    -webkit-animation: 2s linear 0s normal none infinite ajaxProgressBarDivAnimation;
+    background-image: linear-gradient(
+    45deg,rgba(255,255,255,.25) 25%,
+    transparent 25%,
+    transparent 50%,
+    rgba(255,255,255,.25) 50%,
+    rgba(255,255,255,.25) 75%,
+    transparent 75%,
+    transparent
+    );
+    background-size: 40px 40px;
+    color: #fff;
+    font-family: Helvetical Neue, Helvetica, Arial, sans-serif;
+    font-size: 12px;
+    padding: 2px 0 2px 0;
+    text-align: center;
+    transition: width .5s ease;
+    width: 25%;
+}
+.ajaxProgressBarDivError {
+    background-color: #d33;
+}
+.ajaxProgressBarDivLoading {
+    background-color: #37b;
+}
+.ajaxProgressBarDivSuccess {
+    background-color: #3b3;
+}
+.ajaxProgressDiv {
+    background-color: #fff;
+    border: 1px solid;
+    display: none;
+    left: 50%;
+    margin: 0 0 0 -50px;
+    padding: 5px 5px 5px 5px;
+    position: fixed;
+    top: 49%;
+    width: 100px;
+    z-index: 9999;
+}
+@keyframes ajaxProgressBarDivAnimation {
+    from { background-position: 40px 0; }
+    to { background-position: 0 0; }
+}
+@-o-keyframes ajaxProgressBarDivAnimation {
+    from { background-position: 40px 0; }
+    to { background-position: 0 0; }
+}
+@-webkit-keyframes ajaxProgressBarDivAnimation {
+    from { background-position: 40px 0; }
+    to { background-position: 0 0; }
+}

@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /* istanbul ignore all */
 /*jslint
+    bitwise: true,
     browser: true,
     maxerr: 8,
     maxlen: 96,

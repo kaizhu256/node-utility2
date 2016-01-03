@@ -39,7 +39,6 @@ run dynamic browser tests with coverage (via istanbul and electron)
 # documentation
 #### this package requires
 - darwin or linux os
-- unzip installed on os
 
 #### [api-doc](https://kaizhu256.github.io/node-utility2/build/doc.api.html)
 [![api-doc](https://kaizhu256.github.io/node-utility2/build/screen-capture.docApiCreate.browser._2Fhome_2Ftravis_2Fbuild_2Fkaizhu256_2Fnode-utility2_2Ftmp_2Fbuild_2Fdoc.api.html.png)](https://kaizhu256.github.io/node-utility2/build/doc.api.html)
@@ -104,6 +103,7 @@ instruction
 */
 
 /*jslint
+    bitwise: true,
     browser: true,
     maxerr: 8,
     maxlen: 96,
@@ -345,8 +345,8 @@ instruction
             (document.querySelector(".jslintInputTextarea") || {}).value || "",\n\
             "jslintInputTextarea.js"\n\
         );\n\
-        (document.querySelector(".jslintOutputPre") || {})\n\
-            .textContent = window.utility2.jslint.errorText\n\
+        (document.querySelector(".jslintOutputPre") || {}).textContent =\n\
+            window.utility2.jslint.errorText\n\
             .replace((/\\u001b\\[\\d+m/g), "")\n\
             .trim();\n\
         // cleanup __coverage__\n\
@@ -359,15 +359,13 @@ instruction
                 document.querySelector(".istanbulInputTextarea").value,\n\
                 "/istanbulInputTextarea.js"\n\
             ));\n\
-            window.utility2\n\
-                .istanbulCoverageReportCreate({ coverage: window.__coverage__ });\n\
+            window.utility2.istanbulCoverageReportCreate({ coverage: window.__coverage__ });\n\
         } catch (errorCaught) {\n\
             document.querySelector(".istanbulCoverageDiv").innerHTML =\n\
                 "<pre>" + errorCaught.stack.replace((/</g), "&lt") + "</pre>";\n\
         }\n\
     };\n\
-    document\n\
-        .querySelector(".istanbulInputTextarea")\n\
+    document.querySelector(".istanbulInputTextarea")\n\
         .addEventListener("keyup", window.testRun);\n\
     if (!window.utility2.modeTest) {\n\
         window.testRun({});\n\
@@ -479,15 +477,13 @@ export PORT=$(./index.sh shServerPortRandom) && \
 export npm_config_mode_auto_restart=1 && \
 ./index.sh test node test.js"
     },
-    "version": "2015.12.5"
+    "version": "2015.12.6"
 }
 ```
 
 
 
 # todo
-- add ajax binary data retrieval
-- create simple file server middleware
 - add utility2.middlewareLimit
 - create flamegraph from istanbul coverage
 - add server stress test using electron
@@ -495,8 +491,13 @@ export npm_config_mode_auto_restart=1 && \
 
 
 
-# change since 1ee22244
-- npm publish 2015.12.5
+# change since 837baf27
+- npm publish 2015.12.6
+- create middleware utility2.middlewareFileServer with auto-background-cache
+- remove unused file-caching feature in utility2.taskCallbackAndUpdateCached
+- add /* jslint-ignore-all */ comment-flag to disable jslint
+- remove property request.urlParsed.pathnameNormalized
+- replace function url.parse with function utility2.urlParse
 - none
 
 
@@ -562,16 +563,16 @@ shBuild() {
         [ "$CI_BRANCH" = beta ] ||
         [ "$CI_BRANCH" = master ]
     then
-        export TEST_URL="https://$(printf "$GITHUB_REPO" | \
+        TEST_URL="https://$(printf "$GITHUB_REPO" | \
             perl -pe 's/\//.github.io\//')/build..$CI_BRANCH..travis-ci.org/app/index.html" || \
             return $?
-        export npm_config_file_test_report_merge="$npm_config_dir_build/test-report.json" || \
-            return $?
         # deploy app to gh-pages
-        shGithubDeploy || return $?
+        (export npm_config_file_test_report_merge="$npm_config_dir_build/test-report.json" &&
+            shGithubDeploy) || return $?
         # test deployed app to gh-pages
         (export MODE_BUILD=githubTest &&
             export modeBrowserTest=test &&
+            export npm_config_file_test_report_merge="$npm_config_dir_build/test-report.json" &&
             export url="$TEST_URL?modeTest=consoleLogResult&timeExit={{timeExit}}" &&
             shBrowserTest) || return $?
     fi
@@ -586,8 +587,9 @@ EXIT_CODE=$?
 # create recent changelog of last 50 commits
 (export MODE_BUILD=gitLog &&
     shRunScreenCapture git log -50 --pretty="%ai\u000a%B") || exit $?
-# upload build-artifacts to github, and if number of commits > 16, then squash older commits
+# cleanup remote build dir
 # export BUILD_GITHUB_UPLOAD_PRE_SH="rm -fr build" || exit $?
+# upload build-artifacts to github, and if number of commits > 16, then squash older commits
 (export COMMIT_LIMIT=16 &&
     export MODE_BUILD=githubUpload &&
     shBuildGithubUpload) || exit $?

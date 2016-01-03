@@ -833,17 +833,11 @@ shNpmTest() {
         # cleanup old coverage
         rm -f "$npm_config_dir_build/coverage.html/"coverage.*.json || return $?
         # run npm-test with coverage
-        (shIstanbulCover "$@") || EXIT_CODE=$?
+        shIstanbulCover "$@" || EXIT_CODE=$?
         # debug covered-test by re-running it uncovered
         if [ "$EXIT_CODE" != 0 ]
         then
-            # save test-report
-            cp "$npm_config_dir_build/test-report.json" \
-                "$npm_config_dir_build/test-report.json.00" || return $?
             npm_config_mode_coverage="" "$@" || true
-            # restore test-report
-            mv "$npm_config_dir_build/test-report.json.00" \
-                "$npm_config_dir_build/test-report.json" || return $?
         fi
     fi
     # create test-report artifacts

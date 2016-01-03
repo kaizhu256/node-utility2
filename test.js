@@ -1,4 +1,5 @@
 /*jslint
+    bitwise: true,
     browser: true,
     maxerr: 8,
     maxlen: 96,
@@ -144,9 +145,6 @@
             onParallel = local.utility2.onParallel(onError);
             onParallel.counter += 1;
             [{
-                // test 404-index.html handling-behavior
-                url: '/assets/undefined/'
-            }, {
                 // test 404-not-found-error handling-behavior
                 url: '/test/error-404'
             }, {
@@ -236,8 +234,8 @@
                     // validate response
                     data = xhr.responseText;
                     local.utility2.assert((/\r\nhello$/).test(data), data);
-                    local.utility2
-                        .assert((/\r\nx-request-header-test: hello\r\n/).test(data), data);
+                    local.utility2.assert((/\r\nx-request-header-test: hello\r\n/)
+                        .test(data), data);
                     // validate responseHeaders
                     data = xhr.getAllResponseHeaders();
                     local.utility2.assert(
@@ -784,8 +782,10 @@
                 },
                 '<undefined>'
             );
-            local.utility2
-                .assert(data === '<aa>%22%26lt%3Baa%26gt%3B%221null<undefined>gg', data);
+            local.utility2.assert(
+                data === '<aa>%22%26lt%3Baa%26gt%3B%221null<undefined>gg',
+                data
+            );
             // test list handling-behavior
             data = local.utility2.stringFormat(
                 '[{{#list1}}[{{#list2}}{{aa}},{{/list2}}],{{/list1}}]',
@@ -799,8 +799,10 @@
                 },
                 '<undefined>'
             );
-            local.utility2
-                .assert(data === '[[<undefined><undefined>,<undefined>],[bb,cc,],]', data);
+            local.utility2.assert(
+                data === '[[<undefined><undefined>,<undefined>],[bb,cc,],]',
+                data
+            );
             onError();
         };
 
@@ -808,41 +810,7 @@
         /*
          * this function will test taskCallbackAndUpdateCached's default handling-behavior
          */
-            var cacheValue, modeNext, onNext, onParallel, onTask, optionsCopy;
-            if (!options) {
-                onParallel = local.utility2.onParallel(onError);
-                onParallel.counter += 1;
-                // test file-cache handling-behavior
-                if (local.modeJs === 'node') {
-                    onParallel.counter += 1;
-                    local.testCase_taskCallbackAndUpdateCached_default({
-                        cacheDict: 'testCase_taskCallbackAndUpdateCached_default',
-                        key: 'file',
-                        modeCacheFile: local.utility2.envDict.npm_config_dir_tmp +
-                            '/testCase_taskCallbackAndUpdateCached_default',
-                        modeCacheHit: 'file'
-                    }, onParallel);
-                }
-                // test memory-cache handling-behavior
-                onParallel.counter += 1;
-                local.testCase_taskCallbackAndUpdateCached_default({
-                    cacheDict: 'testCase_taskCallbackAndUpdateCached_default',
-                    key: 'memory',
-                    modeCacheHit: 'memory',
-                    modeCacheMemory: true
-                }, onParallel);
-                // test undefined-cache handling-behavior
-                onParallel.counter += 1;
-                local.testCase_taskCallbackAndUpdateCached_default({
-                    cacheDict: 'testCase_taskCallbackAndUpdateCached_default',
-                    key: 'undefined'
-                }, onParallel);
-                onParallel();
-                return;
-            }
-            onTask = function (onError) {
-                onError(null, cacheValue);
-            };
+            var cacheValue, modeNext, onNext, onTask, optionsCopy;
             modeNext = 0;
             onNext = function (error, data) {
                 local.utility2.testTryCatch(function () {
@@ -850,20 +818,19 @@
                     switch (modeNext) {
                     // test no cache handling-behavior
                     case 1:
-                        if (options.modeCacheMemory) {
-                            // cleanup memory-cache
-                            local.utility2.cacheDict[options.cacheDict] = null;
-                        }
-                        if (options.modeCacheFile) {
-                            // cleanup file-cache
-                            local.utility2.fsRmrSync(options.modeCacheFile);
-                        }
+                        onTask = function (onError) {
+                            onError(null, cacheValue);
+                        };
+                        options = {
+                            cacheDict: 'testCase_taskCallbackAndUpdateCached_default',
+                            key: 'memory'
+                        };
+                        // cleanup memory-cache
+                        local.utility2.cacheDict[options.cacheDict] = null;
                         cacheValue = 'hello';
                         optionsCopy = {
                             cacheDict: options.cacheDict,
                             key: options.key,
-                            modeCacheFile: options.modeCacheFile,
-                            modeCacheMemory: options.modeCacheMemory,
                             // test onCacheWrite handling-behavior
                             onCacheWrite: onNext
                         };
@@ -886,8 +853,6 @@
                         optionsCopy = {
                             cacheDict: options.cacheDict,
                             key: options.key,
-                            modeCacheFile: options.modeCacheFile,
-                            modeCacheMemory: options.modeCacheMemory,
                             // test modeCacheUpdate handling-behavior
                             modeCacheUpdate: true,
                             // test onCacheWrite handling-behavior
@@ -899,22 +864,18 @@
                         // validate no error occurred
                         local.utility2.assert(!error, error);
                         // validate data
-                        local.utility2.assert(data === (optionsCopy.modeCacheHit
-                            ? 'hello'
-                            : 'bye'), [data, optionsCopy.modeCacheHit]);
+                        local.utility2.assert(data === 'hello', data);
                         // validate modeCacheHit
                         local.utility2.assert(
-                            optionsCopy.modeCacheHit === options.modeCacheHit,
-                            [optionsCopy.modeCacheHit, options.modeCacheHit]
+                            optionsCopy.modeCacheHit === true,
+                            optionsCopy.modeCacheHit
                         );
                         break;
                     // test cache handling-behavior
                     case 5:
                         optionsCopy = {
                             cacheDict: options.cacheDict,
-                            key: options.key,
-                            modeCacheFile: options.modeCacheFile,
-                            modeCacheMemory: options.modeCacheMemory
+                            key: options.key
                         };
                         local.utility2.taskCallbackAndUpdateCached(optionsCopy, onNext, onTask);
                         break;
@@ -925,8 +886,8 @@
                         local.utility2.assert(data === 'bye', data);
                         // validate modeCacheHit
                         local.utility2.assert(
-                            optionsCopy.modeCacheHit === options.modeCacheHit,
-                            [optionsCopy.modeCacheHit, options.modeCacheHit]
+                            optionsCopy.modeCacheHit === true,
+                            optionsCopy.modeCacheHit
                         );
                         onNext();
                         break;
@@ -934,9 +895,7 @@
                     case 7:
                         optionsCopy = {
                             cacheDict: options.cacheDict,
-                            key: options.key + 'Error',
-                            modeCacheFile: options.modeCacheFile,
-                            modeCacheMemory: options.modeCacheMemory
+                            key: options.key + 'Error'
                         };
                         local.utility2.taskCallbackAndUpdateCached(
                             optionsCopy,
@@ -1031,6 +990,47 @@
             data = local.utility2.uglify('aa = 1');
             // validate data
             local.utility2.assert(data === 'aa=1', data);
+            onError();
+        };
+
+        local.testCase_urlParse_default = function (options, onError) {
+        /*
+         * this function will test urlParse's default handling-behavior
+         */
+            var data;
+            // jslint-hack
+            local.utility2.nop(options);
+            // test default handling-behavior
+            data = local.utility2.urlParse('https://localhost:80/foo' +
+                '?aa=1&bb%20cc=dd%20=ee&aa=2#zz=1');
+            // validate data
+            local.utility2.assert(local.utility2.jsonStringifyOrdered(data) ===
+                local.utility2.jsonStringifyOrdered({
+                    hash: '#zz=1',
+                    host: 'localhost:80',
+                    hostname: 'localhost',
+                    href: 'https://localhost:80/foo?aa=1&bb%20cc=dd%20=ee&aa=2#zz=1',
+                    pathname: '/foo',
+                    port: '80',
+                    protocol: 'https:',
+                    query: { aa: '2', 'bb cc': 'dd =ee' },
+                    search: '?aa=1&bb%20cc=dd%20=ee&aa=2'
+                }), data);
+            // test error handling-behavior
+            data = local.utility2.urlParse(null);
+            // validate data
+            local.utility2.assert(local.utility2.jsonStringifyOrdered(data) ===
+                local.utility2.jsonStringifyOrdered({
+                    hash: '',
+                    host: '',
+                    hostname: '',
+                    href: '',
+                    pathname: '',
+                    port: '',
+                    protocol: '',
+                    query: {},
+                    search: ''
+                }), data);
             onError();
         };
 
@@ -1147,7 +1147,7 @@
                     onParallel(error);
                     local.utility2.fsWriteFileWithMkdirp(
                         local.utility2.envDict.npm_config_dir_build + '/app' + element.file,
-                        xhr.responseText,
+                        xhr.response,
                         onParallel
                     );
                 });
@@ -1384,8 +1384,12 @@
                     // test print handling-behavior
                     'print\n'
                 ].forEach(function (script) {
-                    local.utility2.local._replServer
-                        .eval(script, null, 'repl', local.utility2.nop);
+                    local.utility2.local._replServer.eval(
+                        script,
+                        null,
+                        'repl',
+                        local.utility2.nop
+                    );
                 });
                 onError();
             }, onError);
@@ -1501,8 +1505,8 @@
                 } } }]
             ], function (onError) {
                 // test exit handling-behavior
-                local.utility2.testRunServer({ middleware: local.utility2
-                    .middlewareGroupCreate([local.utility2.middlewareInit]) });
+                local.utility2.testRunServer({ middleware:
+                    local.utility2.middlewareGroupCreate([local.utility2.middlewareInit]) });
                 onError();
             }, onError);
         };
@@ -1548,22 +1552,15 @@
             '<script src="assets/test.js"></script>\n';
         // init serverLocal
         local.utility2.serverLocalUrlTest = function (url) {
-            switch (local.url.parse(url).pathname) {
-            case '/assets/hello':
-            case '/test/echo':
-            case '/test/body':
-            case '/test/error-500':
-            case '/test/error-undefined':
-            case '/test/timeout':
-                return local.modeJs === 'browser';
-            }
+            url = local.utility2.urlParse(url).pathname;
+            return local.modeJs === 'browser' && url.indexOf('/test/') === 0;
         };
         // init test-middleware
         local.middleware.middlewareList.push(function (request, response, nextMiddleware) {
         /*
          * this function will run the test-middleware
          */
-            switch (request.urlParsed.pathnameNormalized) {
+            switch (request.urlParsed.pathname) {
             // test http POST handling-behavior
             case '/test/echo':
                 // test response header handling-behavior
@@ -1612,20 +1609,9 @@
                     response.end();
                 }, 5000);
                 break;
+            // serve file
             default:
-                request.urlFile = process.cwd() + request.urlParsed.pathnameNormalized;
-                if (request.urlFile[request.urlFile.length - 1] === '/') {
-                    request.urlFile += 'index.html';
-                }
-                local.fs.readFile(request.urlFile, function (error, data) {
-                    // default to nextMiddleware
-                    if (error) {
-                        nextMiddleware();
-                        return;
-                    }
-                    // serve file asset
-                    response.end(data);
-                });
+                local.utility2.middlewareFileServer(request, response, nextMiddleware);
             }
         });
     }());
@@ -1636,8 +1622,8 @@
     // run node js-env code
     case 'node':
         // init assets
-        local.utility2.cacheDict.assets['/assets/test.js'] = local.utility2
-            .istanbulInstrumentInPackage(
+        local.utility2.cacheDict.assets['/assets/test.js'] =
+            local.utility2.istanbulInstrumentInPackage(
                 local.fs.readFileSync(__filename, 'utf8'),
                 __filename,
                 'utility2'
@@ -1660,13 +1646,6 @@
                     break;
                 }
             });
-        });
-        // jslint assets
-        [
-            '/assets/utility2.css'
-        ].forEach(function (file) {
-            // jslint file
-            local.utility2.jslintAndPrint(local.utility2.cacheDict.assets[file], file);
         });
         // init repl debugger
         local.utility2.replStart();
