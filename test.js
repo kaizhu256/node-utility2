@@ -14,7 +14,7 @@
 
 
 
-    // run shared js-env code
+    // run shared js-env code - pre-init
     (function () {
         // init local
         local = {};
@@ -81,7 +81,7 @@
 
 
 
-    // run shared js-env code
+    // run shared js-env code - function
     (function () {
         // init tests
         local._testCase_testRun_failure = function (options, onError) {
@@ -344,12 +344,13 @@
             });
             // validate data
             local.utility2.assert(new RegExp('\n' +
-                '<h2><a href="#element.utility2.nop" id="element.utility2.nop">\n' +
-                'function <span class="docApiSignatureSpan">utility2.</span>nop\n' +
-                '<span class="docApiSignatureSpan">\\(\\)</span>\n' +
-                '</a></h2>\n' +
-                '<ul>\n' +
-                '<li>description and source code<pre class="docApiCodePre">').test(data), data);
+                ' *?<h2><a href="#element.utility2.nop" id="element.utility2.nop">\n' +
+                ' *?function <span class="docApiSignatureSpan">utility2.</span>nop\n' +
+                ' *?<span class="docApiSignatureSpan">\\(\\)</span>\n' +
+                ' *?</a></h2>\n' +
+                ' *?<ul>\n' +
+                ' *?<li>description and source code<pre class="docApiCodePre">')
+                .test(data), data);
             onError();
         };
 
@@ -1000,38 +1001,47 @@
             var data;
             // jslint-hack
             local.utility2.nop(options);
-            // test default handling-behavior
-            data = local.utility2.urlParse('https://localhost:80/foo' +
-                '?aa=1&bb%20cc=dd%20=ee&aa=2#zz=1');
-            // validate data
-            local.utility2.assert(local.utility2.jsonStringifyOrdered(data) ===
-                local.utility2.jsonStringifyOrdered({
-                    hash: '#zz=1',
-                    host: 'localhost:80',
-                    hostname: 'localhost',
-                    href: 'https://localhost:80/foo?aa=1&bb%20cc=dd%20=ee&aa=2#zz=1',
-                    pathname: '/foo',
-                    port: '80',
-                    protocol: 'https:',
-                    query: { aa: '2', 'bb cc': 'dd =ee' },
-                    search: '?aa=1&bb%20cc=dd%20=ee&aa=2'
-                }), data);
-            // test error handling-behavior
-            data = local.utility2.urlParse(null);
-            // validate data
-            local.utility2.assert(local.utility2.jsonStringifyOrdered(data) ===
-                local.utility2.jsonStringifyOrdered({
-                    hash: '',
-                    host: '',
-                    hostname: '',
-                    href: '',
-                    pathname: '',
-                    port: '',
-                    protocol: '',
-                    query: {},
-                    search: ''
-                }), data);
-            onError();
+            local.utility2.testMock([
+                [local.utility2, {
+                    // test default PORT handling-behavior
+                    envDict: {},
+                    // test init-serverLocalHost handling-behavior
+                    serverLocalHost: ''
+                }]
+            ], function (onError) {
+                // test default handling-behavior
+                data = local.utility2.urlParse('https://localhost:80/foo' +
+                    '?aa=1&bb%20cc=dd%20=ee&aa=2#zz=1');
+                // validate data
+                local.utility2.assert(local.utility2.jsonStringifyOrdered(data) ===
+                    local.utility2.jsonStringifyOrdered({
+                        hash: '#zz=1',
+                        host: 'localhost:80',
+                        hostname: 'localhost',
+                        href: 'https://localhost:80/foo?aa=1&bb%20cc=dd%20=ee&aa=2#zz=1',
+                        pathname: '/foo',
+                        port: '80',
+                        protocol: 'https:',
+                        query: { aa: '2', 'bb cc': 'dd =ee' },
+                        search: '?aa=1&bb%20cc=dd%20=ee&aa=2'
+                    }), data);
+                // test error handling-behavior
+                data = local.utility2.urlParse(null);
+                // validate data
+                local.utility2.assert(local.utility2.jsonStringifyOrdered(data) ===
+                    local.utility2.jsonStringifyOrdered({
+                        hash: '',
+                        host: '',
+                        hostname: '',
+                        href: '',
+                        pathname: '',
+                        port: '',
+                        protocol: '',
+                        query: {},
+                        search: ''
+                    }), data);
+                onError();
+            }, onError);
         };
 
         local.testCase_uglifyIfProduction_default = function (options, onError) {
@@ -1063,7 +1073,7 @@
 
 
 
-    // run node js-env code
+    // run node js-env code - function
     case 'node':
         // init tests
         local.testCase_ajax_cache = function (options, onError) {
@@ -1542,7 +1552,7 @@
 
 
 
-    // run shared js-env code
+    // run shared js-env code - post-init
     (function () {
         // init assets
         local.utility2.cacheDict.assets['/script-only.html'] =
@@ -1619,7 +1629,7 @@
 
 
 
-    // run node js-env code
+    // run node js-env code - post-init
     case 'node':
         // init assets
         local.utility2.cacheDict.assets['/assets/test.js'] =

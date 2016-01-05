@@ -263,7 +263,7 @@ instruction
     </style>\n\
 </head>\n\
 <body>\n\
-    <div class="ajaxProgressDiv" style="display: none;">\n\
+    <div class="ajaxProgressDiv" style="display: block;">\n\
     <div class="ajaxProgressBarDiv ajaxProgressBarDivLoading">loading</div>\n\
     </div>\n\
     <h1>{{envDict.npm_package_name}} [{{envDict.npm_package_version}}]</h1>\n\
@@ -477,7 +477,7 @@ export PORT=$(./index.sh shServerPortRandom) && \
 export npm_config_mode_auto_restart=1 && \
 ./index.sh test node test.js"
     },
-    "version": "2015.12.6"
+    "version": "2015.12.7"
 }
 ```
 
@@ -491,13 +491,10 @@ export npm_config_mode_auto_restart=1 && \
 
 
 
-# change since 837baf27
-- npm publish 2015.12.6
-- create middleware utility2.middlewareFileServer with auto-background-cache
-- remove unused file-caching feature in utility2.taskCallbackAndUpdateCached
-- add /* jslint-ignore-all */ comment-flag to disable jslint
-- remove property request.urlParsed.pathnameNormalized
-- replace function url.parse with function utility2.urlParse
+# change since 97d30384
+- npm publish 2015.12.7
+- integrate initialization of utility2.serverLocalHost into urlParse
+- add initial loading icon
 - none
 
 

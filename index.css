@@ -3,9 +3,6 @@
 */
 .ajaxProgressBarDiv {
     animation: 2s linear 0s normal none infinite ajaxProgressBarDivAnimation;
-    -o-animation: 2s linear 0s normal none infinite ajaxProgressBarDivAnimation;
-    -moz-animation: 2s linear 0s normal none infinite ajaxProgressBarDivAnimation;
-    -webkit-animation: 2s linear 0s normal none infinite ajaxProgressBarDivAnimation;
     background-image: linear-gradient(
     45deg,rgba(255,255,255,.25) 25%,
     transparent 25%,
@@ -46,14 +43,6 @@
     z-index: 9999;
 }
 @keyframes ajaxProgressBarDivAnimation {
-    from { background-position: 40px 0; }
-    to { background-position: 0 0; }
-}
-@-o-keyframes ajaxProgressBarDivAnimation {
-    from { background-position: 40px 0; }
-    to { background-position: 0 0; }
-}
-@-webkit-keyframes ajaxProgressBarDivAnimation {
     from { background-position: 40px 0; }
     to { background-position: 0 0; }
 }

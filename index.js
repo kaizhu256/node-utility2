@@ -14,7 +14,7 @@
 
 
 
-    // run shared js-env code
+    // run shared js-env code - pre-init
     (function () {
         // init local
         local = {};
@@ -79,11 +79,204 @@
         local.utility2.uglifyjs = local.modeJs === 'browser'
             ? local.global.utility2_uglifyjs
             : require('./lib.uglifyjs.js');
+        // init assets
+/* jslint-ignore-begin */
+// https://img.shields.io/badge/last_build-0000_00_00_00_00_00_UTC_--_master_--_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-0077ff.svg?style=flat
+local.utility2['/build/build.badge.svg'] = '<svg xmlns="http://www.w3.org/2000/svg" width="563" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="563" height="20" fill="#555"/><rect rx="0" x="61" width="502" height="20" fill="#07f"/><path fill="#07f" d="M61 0h4v20h-4z"/><rect rx="0" width="563" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="31.5" y="15" fill="#010101" fill-opacity=".3">last build</text><text x="31.5" y="14">last build</text><text x="311" y="15" fill="#010101" fill-opacity=".3">0000-00-00 00:00:00 UTC - master - aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</text><text x="311" y="14">0000-00-00 00:00:00 UTC - master - aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</text></g></svg>';
+
+
+
+// https://img.shields.io/badge/tests_failed-999-dd0000.svg?style=flat
+local.utility2['/build/test-report.badge.svg'] = '<svg xmlns="http://www.w3.org/2000/svg" width="103" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="103" height="20" fill="#555"/><rect rx="0" x="72" width="31" height="20" fill="#d00"/><path fill="#d00" d="M72 0h4v20h-4z"/><rect rx="0" width="103" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="37" y="15" fill="#010101" fill-opacity=".3">tests failed</text><text x="37" y="14">tests failed</text><text x="86.5" y="15" fill="#010101" fill-opacity=".3">999</text><text x="86.5" y="14">999</text></g></svg>';
+local.utility2['/doc/doc.html.template'] = '<style>\n\
+.docApiDiv {\n\
+    font-family: Helvetical Neue, Helvetica, Arial, sans-serif;\n\
+}\n\
+.docApiDiv a {\n\
+    color: #55f;\n\
+    font-weight: bold;\n\
+    text-decoration: none;\n\
+}\n\
+.docApiDiv a:hover {\n\
+    text-decoration: underline;\n\
+}\n\
+.docApiSectionDiv {\n\
+    border-top: 1px solid;\n\
+    margin-top: 20px;\n\
+}\n\
+.docApiCodeCommentSpan {\n\
+    background-color: #bbf;\n\
+    color: #000;\n\
+    display: block;\n\
+}\n\
+.docApiCodeKeywordSpan {\n\
+    color: #f00;\n\
+    font-weight: bold;\n\
+}\n\
+.docApiCodePre {\n\
+    background-color: #eef;\n\
+    border: 1px solid;\n\
+    border-radius: 5px;\n\
+    color: #777;\n\
+    padding: 5px;\n\
+    white-space: pre-wrap;\n\
+}\n\
+.docApiSignatureSpan {\n\
+    color: #777;\n\
+}\n\
+</style>\n\
+<div class="docApiDiv">\n\
+<h1>api documentation</h1>\n\
+<div class="docApiSectionDiv" id="toc"><h1>table of contents</h1><ul>\n\
+{{#moduleList}}\n\
+<li><a href="#{{id}}">module {{name}}</a><ul>\n\
+{{#elementList}}\n\
+    <li><a class="docApiElementLiA" href="#{{id}}">\n\
+    {{name}}\n\
+    <span class="docApiSignatureSpan">{{signature}}</span>\n\
+    </a></li>\n\
+{{/elementList}}\n\
+</ul></li>\n\
+{{/moduleList}}\n\
+</ul></div>\n\
+{{#moduleList}}\n\
+<div class="docApiSectionDiv">\n\
+<h1><a href="#{{id}}" id="{{id}}">module {{name}}</a></h1>\n\
+{{#elementList}}\n\
+    <h2><a href="#{{id}}" id="{{id}}">\n\
+        {{name}}\n\
+        <span class="docApiSignatureSpan">{{signature}}</span>\n\
+    </a></h2>\n\
+    <ul>\n\
+    <li>description and source code<pre class="docApiCodePre">{{source}}</pre></li>\n\
+    <li>example usage<pre class="docApiCodePre">{{example}}</pre></li>\n\
+    </ul>\n\
+{{/elementList}}\n\
+</div>\n\
+{{/moduleList}}\n\
+</div>';
+
+
+
+local.utility2['/test/test-report.html.template'] = '<style>\n\
+.testReportPlatformDiv {\n\
+    border: 1px solid;\n\
+    border-radius: 5px;\n\
+    font-family: Helvetical Neue, Helvetica, Arial, sans-serif;\n\
+    margin-top: 20px;\n\
+    padding: 0 10px 10px 10px;\n\
+    text-align: left;\n\
+}\n\
+.testReportPlatformPre {\n\
+    background-color: #fdd;\n\
+    border: 1px;\n\
+    border-radius: 0 0 5px 5px;\n\
+    border-top-style: solid;\n\
+    margin-bottom: 0;\n\
+    padding: 10px;\n\
+}\n\
+.testReportPlatformPreHidden {\n\
+    display: none;\n\
+}\n\
+.testReportPlatformScreenCaptureImg {\n\
+    border: 1px solid;\n\
+    border-color: #000;\n\
+    margin: 5px 0 5px 0;\n\
+    max-height:256px;\n\
+    max-width:512px;\n\
+}\n\
+.testReportPlatformSpan {\n\
+    display: inline-block;\n\
+    width: 8em;\n\
+}\n\
+.testReportPlatformTable {\n\
+    border: 1px;\n\
+    border-top-style: solid;\n\
+    text-align: left;\n\
+    width: 100%;\n\
+}\n\
+.testReportPlatformTr:nth-child(odd) {\n\
+    background-color: #bfb;\n\
+}\n\
+.testReportTestFailed {\n\
+    background-color: #f99;\n\
+}\n\
+.testReportTestPending {\n\
+    background-color: #99f;\n\
+}\n\
+.testReportSummaryDiv {\n\
+    background-color: #bfb;\n\
+}\n\
+.testReportSummarySpan {\n\
+    display: inline-block;\n\
+    width: 6.5em;\n\
+}\n\
+</style>\n\
+<div class="testReportPlatformDiv testReportSummaryDiv">\n\
+<h2>{{envDict.npm_package_name}} test-report summary</h2>\n\
+<h4>\n\
+    <span class="testReportSummarySpan">version</span>-\n\
+        {{envDict.npm_package_version}}<br>\n\
+    <span class="testReportSummarySpan">test date</span>- {{date}}<br>\n\
+    <span class="testReportSummarySpan">commit info</span>-\n\
+        {{CI_COMMIT_INFO htmlSafe}}<br>\n\
+</h4>\n\
+<table class="testReportPlatformTable">\n\
+<thead><tr>\n\
+    <th>total time-elapsed</th>\n\
+    <th>total tests failed</th>\n\
+    <th>total tests passed</th>\n\
+    <th>total tests pending</th>\n\
+</tr></thead>\n\
+<tbody><tr>\n\
+    <td>{{timeElapsed}} ms</td>\n\
+    <td class="{{testsFailedClass}}">{{testsFailed}}</td>\n\
+    <td>{{testsPassed}}</td>\n\
+    <td>{{testsPending}}</td>\n\
+</tr></tbody>\n\
+</table>\n\
+</div>\n\
+{{#testPlatformList}}\n\
+<div class="testReportPlatformDiv">\n\
+<h4>\n\
+    {{testPlatformNumber}}. {{name htmlSafe}}<br>\n\
+    {{screenCapture}}\n\
+    <span class="testReportPlatformSpan">time-elapsed</span>- {{timeElapsed}} ms<br>\n\
+    <span class="testReportPlatformSpan">tests failed</span>- {{testsFailed}}<br>\n\
+    <span class="testReportPlatformSpan">tests passed</span>- {{testsPassed}}<br>\n\
+    <span class="testReportPlatformSpan">tests pending</span>- {{testsPending}}<br>\n\
+</h4>\n\
+<table class="testReportPlatformTable">\n\
+<thead><tr>\n\
+    <th>#</th>\n\
+    <th>time-elapsed</th>\n\
+    <th>status</th>\n\
+    <th>test-case</th>\n\
+</tr></thead>\n\
+<tbody>\n\
+{{#testCaseList}}\n\
+<tr class="testReportPlatformTr">\n\
+    <td>{{testCaseNumber}}</td>\n\
+    <td>{{timeElapsed}} ms</td>\n\
+    <td class="{{testReportTestStatusClass}}">{{status}}</td>\n\
+    <td>{{name}}</td>\n\
+</tr>\n\
+{{/testCaseList}}\n\
+</tbody>\n\
+</table>\n\
+<pre class="{{testReportPlatformPreClass}}">\n\
+{{#errorStackList}}\n\
+{{errorStack htmlSafe}}\n\
+{{/errorStackList}}\n\
+</pre>\n\
+</div>\n\
+{{/testPlatformList}}';
+/* jslint-ignore-end */
     }());
 
 
 
-    // run shared js-env code
+    // run shared js-env code - function
     (function () {
         local._ajaxProgressIncrement = function () {
         /*
@@ -514,8 +707,8 @@
          */
             var ajaxProgressDiv, ii, timerTimeout, xhr;
             // init modeServerLocal
-            if (local.utility2.serverLocalUrlTest(options.url)) {
-                options.modeServerLocal = true;
+            if (local.utility2.serverLocalUrlTest &&
+                    local.utility2.serverLocalUrlTest(options.url)) {
                 xhr = new local._http.XMLHttpRequest();
             }
             // init xhr
@@ -1741,8 +1934,6 @@
             return module.exports;
         };
 
-        local.utility2.serverLocalUrlTest = local.utility2.nop;
-
         local.utility2.serverRespondDefault = function (request, response, statusCode, error) {
         /*
          * this function will respond with a default message,
@@ -2526,9 +2717,6 @@
             server = local.http.createServer(requestHandler);
             // 2. start server on options.port
             options.port = options.port || local.utility2.envDict.PORT;
-            local.utility2.serverLocalHost = local.modeJs === 'browser'
-                ? location.protocol + '//' + location.host
-                : 'http://localhost:' + options.port;
             local.utility2.serverLocalRequestHandler = requestHandler;
             console.log('server starting on port ' + options.port);
             local.utility2.onReady.counter += 1;
@@ -2628,17 +2816,21 @@
             try {
                 switch (local.modeJs) {
                 case 'browser':
+                    local.utility2.serverLocalHost = local.utility2.serverLocalHost ||
+                        location.protocol + '//' + location.host;
                     // resolve absolute path
                     if (url[0] === '/') {
-                        url = location.protocol + '//' + location.host + url;
+                        url = local.utility2.serverLocalHost + url;
                     // resolve relative path
                     } else if (!(/^\w+?:\/\//).test(url)) {
-                        url = location.protocol + '//' + location.host +
+                        url = local.utility2.serverLocalHost +
                             location.pathname.replace((/\/[^\/]*?$/), '') + '/' + url;
                     }
                     urlParsed = new local.global.URL(url);
                     break;
                 case 'node':
+                    local.utility2.serverLocalHost = local.utility2.serverLocalHost ||
+                        'http://localhost:' + (local.utility2.envDict.PORT || '80');
                     // resolve absolute path
                     if (url[0] === '/') {
                         url = local.utility2.serverLocalHost + url;
@@ -2715,207 +2907,8 @@
 
 
 
-    // run shared js-env code
+    // run shared js-env code - post-init
     (function () {
-/* jslint-indent-begin 8 */
-/*jslint maxlen: 256*/
-// init assets
-/* jslint-ignore-begin */
-// https://img.shields.io/badge/last_build-0000_00_00_00_00_00_UTC_--_master_--_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-0077ff.svg?style=flat
-local.utility2['/build/build.badge.svg'] = '<svg xmlns="http://www.w3.org/2000/svg" width="563" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="563" height="20" fill="#555"/><rect rx="0" x="61" width="502" height="20" fill="#07f"/><path fill="#07f" d="M61 0h4v20h-4z"/><rect rx="0" width="563" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="31.5" y="15" fill="#010101" fill-opacity=".3">last build</text><text x="31.5" y="14">last build</text><text x="311" y="15" fill="#010101" fill-opacity=".3">0000-00-00 00:00:00 UTC - master - aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</text><text x="311" y="14">0000-00-00 00:00:00 UTC - master - aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</text></g></svg>';
-
-
-
-// https://img.shields.io/badge/tests_failed-999-dd0000.svg?style=flat
-local.utility2['/build/test-report.badge.svg'] = '<svg xmlns="http://www.w3.org/2000/svg" width="103" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="103" height="20" fill="#555"/><rect rx="0" x="72" width="31" height="20" fill="#d00"/><path fill="#d00" d="M72 0h4v20h-4z"/><rect rx="0" width="103" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="37" y="15" fill="#010101" fill-opacity=".3">tests failed</text><text x="37" y="14">tests failed</text><text x="86.5" y="15" fill="#010101" fill-opacity=".3">999</text><text x="86.5" y="14">999</text></g></svg>';
-/* jslint-ignore-end */
-
-
-
-local.utility2['/doc/doc.html.template'] = '<style>\n' +
-    '.docApiDiv {\n' +
-        'font-family: Helvetical Neue, Helvetica, Arial, sans-serif;\n' +
-    '}\n' +
-    '.docApiDiv a {\n' +
-        'color: #55f;\n' +
-        'font-weight: bold;\n' +
-        'text-decoration: none;\n' +
-    '}\n' +
-    '.docApiDiv a:hover {\n' +
-        'text-decoration: underline;\n' +
-    '}\n' +
-    '.docApiSectionDiv {\n' +
-        'border-top: 1px solid;\n' +
-        'margin-top: 20px;\n' +
-    '}\n' +
-    '.docApiCodeCommentSpan {\n' +
-        'background-color: #bbf;\n' +
-        'color: #000;\n' +
-        'display: block;\n' +
-    '}\n' +
-    '.docApiCodeKeywordSpan {\n' +
-        'color: #f00;\n' +
-        'font-weight: bold;\n' +
-    '}\n' +
-    '.docApiCodePre {\n' +
-        'background-color: #eef;\n' +
-        'border: 1px solid;\n' +
-        'border-radius: 5px;\n' +
-        'color: #777;\n' +
-        'padding: 5px;\n' +
-        'white-space: pre-wrap;\n' +
-    '}\n' +
-    '.docApiSignatureSpan {\n' +
-        'color: #777;\n' +
-    '}\n' +
-    '</style>\n' +
-    '<div class="docApiDiv">\n' +
-    '<h1>api documentation</h1>\n' +
-    '<div class="docApiSectionDiv" id="toc"><h1>table of contents</h1><ul>\n' +
-    '{{#moduleList}}\n' +
-    '<li><a href="#{{id}}">module {{name}}</a><ul>\n' +
-    '{{#elementList}}\n' +
-        '<li><a class="docApiElementLiA" href="#{{id}}">\n' +
-        '{{name}}\n' +
-        '<span class="docApiSignatureSpan">{{signature}}</span>\n' +
-        '</a></li>\n' +
-    '{{/elementList}}\n' +
-    '</ul></li>\n' +
-    '{{/moduleList}}\n' +
-    '</ul></div>\n' +
-    '{{#moduleList}}\n' +
-    '<div class="docApiSectionDiv">\n' +
-    '<h1><a href="#{{id}}" id="{{id}}">module {{name}}</a></h1>\n' +
-    '{{#elementList}}\n' +
-        '<h2><a href="#{{id}}" id="{{id}}">\n' +
-            '{{name}}\n' +
-            '<span class="docApiSignatureSpan">{{signature}}</span>\n' +
-        '</a></h2>\n' +
-        '<ul>\n' +
-        '<li>description and source code<pre class="docApiCodePre">{{source}}</pre></li>\n' +
-        '<li>example usage<pre class="docApiCodePre">{{example}}</pre></li>\n' +
-        '</ul>\n' +
-    '{{/elementList}}\n' +
-    '</div>\n' +
-    '{{/moduleList}}\n' +
-    '</div>\n';
-
-
-
-local.utility2['/test/test-report.html.template'] = '<style>\n' +
-    '.testReportPlatformDiv {\n' +
-        'border: 1px solid;\n' +
-        'border-radius: 5px;\n' +
-        'font-family: Helvetical Neue, Helvetica, Arial, sans-serif;\n' +
-        'margin-top: 20px;\n' +
-        'padding: 0 10px 10px 10px;\n' +
-        'text-align: left;\n' +
-    '}\n' +
-    '.testReportPlatformPre {\n' +
-        'background-color: #fdd;\n' +
-        'border: 1px;\n' +
-        'border-radius: 0 0 5px 5px;\n' +
-        'border-top-style: solid;\n' +
-        'margin-bottom: 0;\n' +
-        'padding: 10px;\n' +
-    '}\n' +
-    '.testReportPlatformPreHidden {\n' +
-        'display: none;\n' +
-    '}\n' +
-    '.testReportPlatformScreenCaptureImg {\n' +
-        'border: 1px solid;\n' +
-        'border-color: #000;\n' +
-        'margin: 5px 0 5px 0;\n' +
-        'max-height:256px;\n' +
-        'max-width:512px;\n' +
-    '}\n' +
-    '.testReportPlatformSpan {\n' +
-        'display: inline-block;\n' +
-        'width: 8em;\n' +
-    '}\n' +
-    '.testReportPlatformTable {\n' +
-        'border: 1px;\n' +
-        'border-top-style: solid;\n' +
-        'text-align: left;\n' +
-        'width: 100%;\n' +
-    '}\n' +
-    '.testReportPlatformTr:nth-child(odd) {\n' +
-        'background-color: #bfb;\n' +
-    '}\n' +
-    '.testReportTestFailed {\n' +
-        'background-color: #f99;\n' +
-    '}\n' +
-    '.testReportTestPending {\n' +
-        'background-color: #99f;\n' +
-    '}\n' +
-    '.testReportSummaryDiv {\n' +
-        'background-color: #bfb;\n' +
-    '}\n' +
-    '.testReportSummarySpan {\n' +
-        'display: inline-block;\n' +
-        'width: 6.5em;\n' +
-    '}\n' +
-    '</style>\n' +
-    '<div class="testReportPlatformDiv testReportSummaryDiv">\n' +
-    '<h2>{{envDict.npm_package_name}} test-report summary</h2>\n' +
-    '<h4>\n' +
-        '<span class="testReportSummarySpan">version</span>-\n' +
-            '{{envDict.npm_package_version}}<br>\n' +
-        '<span class="testReportSummarySpan">test date</span>- {{date}}<br>\n' +
-        '<span class="testReportSummarySpan">commit info</span>-\n' +
-            '{{CI_COMMIT_INFO htmlSafe}}<br>\n' +
-    '</h4>\n' +
-    '<table class="testReportPlatformTable">\n' +
-    '<thead><tr>\n' +
-        '<th>total time-elapsed</th>\n' +
-        '<th>total tests failed</th>\n' +
-        '<th>total tests passed</th>\n' +
-        '<th>total tests pending</th>\n' +
-    '</tr></thead>\n' +
-    '<tbody><tr>\n' +
-        '<td>{{timeElapsed}} ms</td>\n' +
-        '<td class="{{testsFailedClass}}">{{testsFailed}}</td>\n' +
-        '<td>{{testsPassed}}</td>\n' +
-        '<td>{{testsPending}}</td>\n' +
-    '</tr></tbody>\n' +
-    '</table>\n' +
-    '</div>\n' +
-    '{{#testPlatformList}}\n' +
-    '<div class="testReportPlatformDiv">\n' +
-    '<h4>\n' +
-        '{{testPlatformNumber}}. {{name htmlSafe}}<br>\n' +
-        '{{screenCapture}}\n' +
-        '<span class="testReportPlatformSpan">time-elapsed</span>- {{timeElapsed}} ms<br>\n' +
-        '<span class="testReportPlatformSpan">tests failed</span>- {{testsFailed}}<br>\n' +
-        '<span class="testReportPlatformSpan">tests passed</span>- {{testsPassed}}<br>\n' +
-        '<span class="testReportPlatformSpan">tests pending</span>- {{testsPending}}<br>\n' +
-    '</h4>\n' +
-    '<table class="testReportPlatformTable">\n' +
-    '<thead><tr>\n' +
-        '<th>#</th>\n' +
-        '<th>time-elapsed</th>\n' +
-        '<th>status</th>\n' +
-        '<th>test-case</th>\n' +
-    '</tr></thead>\n' +
-    '<tbody>\n' +
-    '{{#testCaseList}}\n' +
-    '<tr class="testReportPlatformTr">\n' +
-        '<td>{{testCaseNumber}}</td>\n' +
-        '<td>{{timeElapsed}} ms</td>\n' +
-        '<td class="{{testReportTestStatusClass}}">{{status}}</td>\n' +
-        '<td>{{name}}</td>\n' +
-    '</tr>\n' +
-    '{{/testCaseList}}\n' +
-    '</tbody>\n' +
-    '</table>\n' +
-    '<pre class="{{testReportPlatformPreClass}}">\n' +
-    '{{#errorStackList}}\n' +
-    '{{errorStack htmlSafe}}\n' +
-    '{{/errorStackList}}\n' +
-    '</pre>\n' +
-    '</div>\n' +
-    '{{/testPlatformList}}\n';
-/* jslint-indent-end */
         local.utility2.contentTypeDict = {
             // application
             '.js': 'application/javascript; charset=UTF-8',
@@ -2968,6 +2961,8 @@ local.utility2['/test/test-report.html.template'] = '<style>\n' +
             screenCaptureImg: local.utility2.envDict.MODE_BUILD_SCREEN_CAPTURE,
             testCaseList: []
         }] };
+        // init serverLocalHost
+        local.utility2.urlParse('');
         // init timeoutDefault
         local.utility2.timeoutDefaultInit();
         // init onReady
@@ -2975,6 +2970,14 @@ local.utility2['/test/test-report.html.template'] = '<style>\n' +
             local.utility2.taskCallbackAdd({ key: 'utility2.onReady' }, function (error) {
                 // validate no error occurred
                 local.utility2.assert(!error, error);
+                try {
+                    if (local.modeJs === 'browser' &&
+                            document.querySelector('.ajaxProgressDiv').style.display ===
+                            'block') {
+                        local.utility2.ajax({ url: "" }, window.utility2.nop);
+                    }
+                } catch (ignore) {
+                }
             });
             local.utility2.taskUpsert({ key: 'utility2.onReady' }, function (onError) {
                 onError(error);
@@ -2987,7 +2990,7 @@ local.utility2['/test/test-report.html.template'] = '<style>\n' +
 
 
 
-    // run browser js-env code
+    // run browser js-env code - post-init
     case 'browser':
         // init exports
         local.global.utility2 = local.utility2;
@@ -2998,7 +3001,7 @@ local.utility2['/test/test-report.html.template'] = '<style>\n' +
 
 
 
-    // run node js-env code
+    // run node js-env code - post-init
     case 'node':
         // init exports
         module.exports = local.utility2;
