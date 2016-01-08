@@ -126,7 +126,7 @@
             local.utility2.ajax({ url: 'package.json' }, function (error, xhr) {
                 local.utility2.testTryCatch(function () {
                     // validate no error occurred
-                    local.utility2.assert(!error, error);
+                    local.utility2.assert(!error && xhr.status === 200, [error, xhr.status]);
                     // validate responseText
                     local.utility2.assert((/"name": "utility2",/)
                         .test(xhr.responseText), xhr.responseText);
@@ -201,7 +201,10 @@
                 }, function (error, xhr) {
                     local.utility2.testTryCatch(function () {
                         // validate no error occurred
-                        local.utility2.assert(!error, error);
+                        local.utility2.assert(
+                            !error && xhr.status === 200,
+                            [error, xhr.status]
+                        );
                         // validate response
                         switch (responseType) {
                         case 'blob':
@@ -230,7 +233,7 @@
             }, function (error, xhr) {
                 local.utility2.testTryCatch(function () {
                     // validate no error occurred
-                    local.utility2.assert(!error, error);
+                    local.utility2.assert(!error && xhr.status === 200, [error, xhr.status]);
                     // validate response
                     data = xhr.responseText;
                     local.utility2.assert((/\r\nhello$/).test(data), data);

@@ -8,7 +8,7 @@
     },
     "description": "run dynamic browser tests with coverage (via istanbul and electron)",
     "devDependencies": {
-        "electron-lite": "2015.11.2"
+        "electron-lite": "2015.12.3"
     },
     "engines": { "node": ">=4.2" },
     "keywords": [
@@ -55,5 +55,5 @@
 
 
     },
-    "version": "2015.12.7"
+    "version": "2015.12.8"
 }

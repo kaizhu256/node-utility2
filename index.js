@@ -367,6 +367,7 @@ local.utility2['/test/test-report.html.template'] = '<style>\n\
             this.headers = {};
             this.onEvent = document.createDocumentFragment('onEvent');
             this.onResponse = onResponse;
+            this.statusCode = 200;
         };
 
         // https://nodejs.org/api/all.html#all_emitter_addlistener_event_listener

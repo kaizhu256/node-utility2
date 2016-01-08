@@ -1,26 +1,22 @@
 FROM node:latest
 MAINTAINER kai zhu <kaizhu256@gmail.com>
-# install apt packages
+# apt-get install packages
 RUN apt-get update && \
     apt-get install -y \
-        apt-file \
-        aptitude \
-        build-essential \
-        ca-certificates \
-        chromium-inspector \
-        cmake \
-        default-jre \
-        iptables \
+        busybox \
+        chromium \
+        gconf2 \
         less \
         nginx-extras \
-        pptpd \
-        screen \
-        sudo \
-        transmission-daemon \
-        unzip \
-        vim-nox \
-        x11-apps \
+        vim \
         xvfb
+# npm test utility2
+RUN export DISPLAY=:99.0 && (Xvfb "$DISPLAY" &) && \
+    cd /tmp && \
+    npm install "kaizhu256/node-utility2#alpha" && \
+    cd node_modules/utility2 && \
+    npm install --unsafe-perm && \
+    npm test --mode-coverage
 # cleanup
 RUN apt-get clean && \
     (rm -fr \

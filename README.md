@@ -430,7 +430,7 @@ instruction
     },
     "description": "run dynamic browser tests with coverage (via istanbul and electron)",
     "devDependencies": {
-        "electron-lite": "2015.11.2"
+        "electron-lite": "2015.12.3"
     },
     "engines": { "node": ">=4.2" },
     "keywords": [
@@ -477,7 +477,7 @@ export PORT=$(./index.sh shServerPortRandom) && \
 export npm_config_mode_auto_restart=1 && \
 ./index.sh test node test.js"
     },
-    "version": "2015.12.7"
+    "version": "2015.12.8"
 }
 ```
 
@@ -491,10 +491,12 @@ export npm_config_mode_auto_restart=1 && \
 
 
 
-# change since 97d30384
-- npm publish 2015.12.7
-- integrate initialization of utility2.serverLocalHost into urlParse
-- add initial loading icon
+# change since f2f000c3
+- npm publish 2015.12.8
+- fix Dockerfile to pass npm test
+- update electron-lite devDependency to remove unzip dependency
+- shell command shTestReportCreate will use a default test-report.json if one doesn't exist
+- default localServer's serverResponse.statusCode to 200
 - none
 
 

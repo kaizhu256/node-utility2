@@ -863,8 +863,13 @@ shTestReportCreate() {
 # this function will create test-report artifacts
     node -e "
         'use strict';
-        require('$npm_config_dir_utility2/index.js')
-            .testReportCreate(require('$npm_config_dir_build/test-report.json'));
+        var testReport;
+        try {
+            testReport = require('$npm_config_dir_build/test-report.json');
+        } catch (errorCaught) {
+            testReport = {testPlatformList:[]};
+        }
+        require('$npm_config_dir_utility2/index.js').testReportCreate(testReport);
     " || return $?
 }
 
@@ -1053,7 +1058,15 @@ shRunScreenCapture() {
 
 shServerPortRandom() {
 # this function will print a random port in the inclusive range 0x8000 to 0xffff
-    printf "$(($(hexdump -n 2 -e '/2 "%u"' /dev/urandom)|32768))"
+    local HEXDUMP || return $?
+    if (busybox > /dev/null 2>&1)
+    then
+        HEXDUMP="busybox hexdump" || return $?
+    else
+        HEXDUMP=hexdump || return $?
+    fi
+    # https://wiki.ubuntu.com/DashAsBinSh#A.24RANDOM
+    printf "$(($($HEXDUMP -n 2 -e '/2 "%u"' /dev/urandom)|32768))" || return $?
 }
 
 shSource() {
