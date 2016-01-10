@@ -12,20 +12,20 @@
 */
 (function (local) {
     'use strict';
-    var __dirname, process, require;
+    var __dirname, nop, process, require;
+    nop = function () {
+    /*
+     * this function will do nothing
+     */
+        return;
+    };
+    // jslint-hack
+    nop(__dirname);
 
 
 
     // run shared js-env code
     (function () {
-        local.nop = function () {
-        /*
-         * this function will run no operation - nop
-         */
-            return;
-        };
-        // jslint-hack
-        local.nop(__dirname);
         // init var
         __dirname = '';
         process = local.modeJs === 'browser'
@@ -69,7 +69,7 @@
             }
             // 2. write coverage in html-format to filesystem
             new local.HtmlReport(options).writeReport(options.collector);
-            options.writer.writeFile('', local.nop);
+            options.writer.writeFile('', nop);
             // write coverage-summary.json
             local.fsWriteFileWithMkdirpSync(options.dir +
                 '/coverage-summary.json', JSON.stringify(local.coverageReportSummary));
@@ -160,7 +160,7 @@
             })
                 .instrumentSync(code, file);
         };
-        local.util = { inherits: local.nop };
+        local.util = { inherits: nop };
     }());
     switch (local.modeJs) {
 
@@ -200,7 +200,7 @@
     (function () {
         var exports;
         // jslint-hack
-        local.nop(exports);
+        nop(exports);
         exports = local.esprima = {};
 /* jslint-ignore-begin */
 // https://github.com/jquery/esprima/blob/1.2/esprima.js
@@ -358,7 +358,7 @@ type:i.DoWhileStatement,body:e,test:t}},createEmptyStatement:function(){return{t
     (function () {
         var exports;
         // jslint-hack
-        local.nop(exports);
+        nop(exports);
         exports = local.estraverse = {};
 /* jslint-ignore-begin */
 // https://github.com/estools/estraverse/blob/1.9.3/estraverse.js
@@ -433,7 +433,7 @@ e.NonAsciiIdentifierPart.test(String.fromCharCode(t))}var e,t;e={NonAsciiIdentif
     (function () {
         var exports;
         // jslint-hack
-        local.nop(exports);
+        nop(exports);
         exports = local.escodegen = {};
 /* jslint-ignore-begin */
 // https://github.com/estools/escodegen/blob/1.0.1/escodegen.js
@@ -549,7 +549,7 @@ t=0,n=this.children.length;t<n;++t)r=this.children[t],r instanceof k?e+=r.toStri
                     (/\{\{#with (.+?)\}\}([\S\s]+?)\{\{\/with\}\}/g),
                     function (match0, match1, match2) {
                         // jslint-hack
-                        local.nop(match0);
+                        nop(match0);
                         return local.handlebars.replace(match2, dict, match1 + '.');
                     }
                 );
@@ -670,7 +670,7 @@ e?i.len+=t:r.splice(o,0,{pos:e,len:t}),s},wrap:function(e,t,n,r,i){return this.i
     (function () {
         var escodegen, esprima, module, window;
         // jslint-hack
-        local.nop(escodegen, esprima, module, window);
+        nop(escodegen, esprima, module, window);
         escodegen = local.escodegen;
         esprima = local.esprima;
         module = undefined;
@@ -746,7 +746,7 @@ e.consequent),e.alternate=f.sequence(i,e.alternate)},maybeAddSkip:function(e){re
     (function () {
         var module, window;
         // jslint-hack
-        local.nop(module);
+        nop(module);
         module = undefined;
         window = local;
 /* jslint-ignore-begin */
@@ -789,7 +789,7 @@ t){case"low":e="\x1B[91m"+e+"\x1B[0m";break;case"medium":e="\x1B[93m"+e+"\x1B[0m
     (function () {
         // https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/index.js
         local['./index'] = {
-            call: local.nop,
+            call: nop,
             mix: function (klass, prototype) {
                 klass.prototype = prototype;
             }

@@ -1,30 +1,28 @@
 #/bin/sh
 
-shAesDecrypt() {
+shAesDecrypt() {(set -e
 # this function will decrypt base64-encoded stdin to stdout using aes-256-cbc
-    local IV STRING || return $?
     # save stdin to $STRING
-    STRING="$(cat /dev/stdin)" || return $?
+    STRING="$(cat /dev/stdin)"
     # init $IV from first 44 base64-encoded bytes of $STRING
-    IV="$(printf $STRING | cut -c1-44 | base64 --decode)" || return $?
+    IV="$(printf "$STRING" | cut -c1-44 | base64 --decode)"
     # decrypt remaining base64-encoded bytes of $STRING to stdout using aes-256-cbc
     printf "$STRING" | \
         cut -c45-9999 | \
         base64 --decode | \
-        openssl enc -aes-256-cbc -d -K "$AES_256_KEY" -iv "$IV" || return $?
-}
+        openssl enc -aes-256-cbc -d -K "$AES_256_KEY" -iv "$IV"
+)}
 
-shAesEncrypt() {
+shAesEncrypt() {(set -e
 # this function will encrypt stdin to base64-encoded stdout,
 # with a random iv prepended using aes-256-cbc
-    local IV || return $?
     # init $IV from random 16 bytes
-    IV="$(openssl rand -hex 16)" || return $?
+    IV="$(openssl rand -hex 16)"
     # print base64-encoded $IV to stdout
-    printf "$(printf "$IV" | base64)" || return $?
+    printf "$(printf "$IV" | base64)"
     # encrypt stdin and stream to stdout using aes-256-cbc with base64-encoding
-    openssl enc -aes-256-cbc -K "$AES_256_KEY" -iv "$IV" | base64 | tr -d "\n" || return $?
-}
+    openssl enc -aes-256-cbc -K "$AES_256_KEY" -iv "$IV" | base64 | tr -d "\n"
+)}
 
 shBaseInit() {
 # this function will init the base bash-login env, and is intended for aws-ec2 setup
@@ -70,32 +68,33 @@ shBaseInit() {
     done
     # init ubuntu .bashrc
     shUbuntuInit || return $?
+    # init custom alias
+    alias lld="ls -adlF" || return $?
 }
 
-shBaseInstall() {
+shBaseInstall() {(set -e
 # this function will install .bashrc, .screenrc, .vimrc, and index.sh in $HOME,
 # and is intended for aws-ec2 setup
 # curl https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/index.sh > $HOME/index.sh && . $HOME/index.sh && shBaseInstall
-    local FILE || return $?
     for FILE in .screenrc .vimrc index.sh
     do
         curl -s "https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/$FILE" > \
-            "$HOME/$FILE" || return $?
+            "$HOME/$FILE"
     done
     # create .bashrc
     printf '. $HOME/index.sh && shBaseInit' > "$HOME/.bashrc"
     # init .ssh/authorized_keys.root
     if [ -f "$HOME/.ssh/authorized_keys.root" ]
     then
-        mv "$HOME/.ssh/authorized_keys.root" "$HOME/.ssh/authorized_keys" || return $?
+        mv "$HOME/.ssh/authorized_keys.root" "$HOME/.ssh/authorized_keys"
     fi
-}
+)}
 
-shBrowserTest() {
+shBrowserTest() {(set -e
 # this function will spawn an electron process to test the given $URL,
 # and merge the test-report into the existing test-report
     shBuildPrint "${MODE_BUILD:-electronTest}" \
-        "electron.${modeBrowserTest} - $url" || return $?
+        "electron.${modeBrowserTest} - $url"
     # run browser-test
     node -e "
         'use strict';
@@ -111,34 +110,51 @@ shBrowserTest() {
     if [ "$modeBrowserTest" = test ]
     then
         # create test-report artifacts
-        shTestReportCreate || return $?
+        shTestReportCreate
     fi
-}
+)}
 
-shBuildGithubUpload() {
+shBuildGithubUpload() {(set -e
 # this function will upload build-artifacts to github
-    local DIR || return $?
     if [ "$GIT_SSH" = "" ]
     then
-        return $?
+        return
     fi
     shBuildPrint "${MODE_BUILD:-githubUpload}" \
-        "uploading build-artifacts to git@github.com:$GITHUB_REPO.git" || return $?
+        "uploading build-artifacts to git@github.com:$GITHUB_REPO.git"
     shGitRepoBranchUpdateLocal() {
     # this function will locally-update git-repo-branch
         # run $BUILD_GITHUB_UPLOAD_PRE_SH
         if [ "$BUILD_GITHUB_UPLOAD_PRE_SH" ]
         then
-            $BUILD_GITHUB_UPLOAD_PRE_SH || return $?
+            $BUILD_GITHUB_UPLOAD_PRE_SH
         fi
         # copy build-artifacts to gh-pages
-        cp -a "$npm_config_dir_build" . || return $?
-        DIR="build..$CI_BRANCH..$CI_HOST" || return $?
-        rm -fr "$DIR" && cp -a "$npm_config_dir_build" "$DIR" || return $?
-        git add . || return $?
+        cp -a "$npm_config_dir_build" .
+        DIR="build..$CI_BRANCH..$CI_HOST"
+        rm -fr "$DIR" && cp -a "$npm_config_dir_build" "$DIR"
+        git add .
     }
-    (shGitRepoBranchCommand update "git@github.com:$GITHUB_REPO.git" gh-pages) || return $?
-}
+    (shGitRepoBranchCommand update "git@github.com:$GITHUB_REPO.git" gh-pages)
+)}
+
+shBuildInsideDocker() {(set -e
+# this function will run the build inside docker
+    export npm_config_unsafe_perm=1
+    # install index.sh
+    curl https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/index.sh > \
+        $HOME/index.sh
+    . $HOME/index.sh
+    shBaseInstall
+    # start xvfb
+    shXvfbStart
+    # npm install
+    npm install
+    # npm test
+    npm test --mode-coverage
+    # cleanup
+    rm -fr /tmp/* /tmp/.* 2>/dev/null || true
+)}
 
 shBuildPrint() {
 # this function will print debug info about the build state
@@ -148,200 +164,232 @@ shBuildPrint() {
     printf "\n[MODE_BUILD=$MODE_BUILD] - $(shDateIso) - $MESSAGE\n\n" || return $?
 }
 
-shDateIso() {
+shDateIso() {(set -e
 # this function will print the current date in ISO format
     date -u "+%Y-%m-%dT%H:%M:%SZ"
-}
+)}
 
-shDebugArgv() {
+shDebugArgv() {(set -e
 # this function will print each element in $@ in a separate line
-    local ARG || return $?
     for ARG in "$@"
     do
         printf "'$ARG'\n"
     done
-}
+)}
 
-shDocApiCreate() {
+shDocApiCreate() {(set -e
 # this function will create the api-doc
-    node "$npm_config_dir_utility2/index.js" docApiCreate "$@" || return $?
+    node "$npm_config_dir_utility2/index.js" docApiCreate "$@"
     shBuildPrint docApiCreate \
-        "created api-doc file://$npm_config_dir_build/doc.api.html" || return $?
+        "created api-doc file://$npm_config_dir_build/doc.api.html"
     # screen-capture api-doc
-    (export modeBrowserTest=screenCapture &&
-        export url="file://$npm_config_dir_build/doc.api.html" &&
-        shBrowserTest) || return $?
-}
+    export modeBrowserTest=screenCapture
+    export url="file://$npm_config_dir_build/doc.api.html"
+    shBrowserTest
+)}
 
-shDockerInstall() {
+shDockerCopyDirFromContainer() {(set -e
+# http://stackoverflow.com/questions/25292198
+# /docker-how-can-i-copy-a-file-from-an-image-to-a-host
+# this function will copy the $DIR_FROM from the docker image $IMAGE to $DIR_TO
+    DIR_FROM="$1"
+    DIR_TO="$2"
+    CONTAINER="$3"
+    docker cp "$CONTAINER:$DIR_FROM" - | tar -C "$DIR_TO" -xzf - || true
+)}
+
+shDockerCopyDirFromImage() {(set -e
+# http://stackoverflow.com/questions/25292198
+# /docker-how-can-i-copy-a-file-from-an-image-to-a-host
+# this function will copy the $DIR_FROM from the docker image $IMAGE to $DIR_TO
+    DIR_FROM="$1"
+    DIR_TO="$2"
+    IMAGE="$3"
+    CONTAINER="$(docker create "$IMAGE")"
+    docker cp "$CONTAINER:$DIR_FROM" - | tar -C "$DIR_TO" -xzf - || true
+    docker rm -v "$CONTAINER"
+)}
+
+shDockerInstall() {(set -e
 # http://docs.docker.com/installation/ubuntulinux
 # this function will install docker
-    wget -qO- https://get.docker.com/ | /bin/sh || return $?
+    mkdir -p $HOME/docker
+    wget -qO- https://get.docker.com/ | /bin/sh
     # test docker
-    docker run hello-world || return $?
-}
+    docker run hello-world
+)}
 
-shDockerRestart() {
+shDockerRestart() {(set -e
 # this function will restart the docker-container
-    shDockerRm "$1" || return $?
-    shDockerStart "$@" || return $?
-}
+    shDockerRm "$1"
+    shDockerStart "$@"
+)}
 
-shDockerRestartNginx() {
+shDockerRestartNginx() {(set -e
 # this function will restart the nginx docker-container
-    local FILE || return $?
-    # init $HOME/docker.etc.nginx.htpasswd
-    FILE="$HOME/docker.etc.nginx.htpasswd" || return $?
+    # init $HOME/docker/etc.nginx.htpasswd.private
+    FILE="$HOME/docker/etc.nginx.htpasswd.private"
     if [ ! -f "$FILE" ]
     then
-        printf "foo:$(openssl passwd -crypt bar)" > $FILE || return $?
+        printf "foo:$(openssl passwd -crypt bar)" > $FILE
     fi
-    # init $HOME/docker.etc.nginx.nginx.conf
+    # init $HOME/docker/etc.nginx.htpasswd.share
+    FILE="$HOME/docker/etc.nginx.htpasswd.share"
+    if [ ! -f "$FILE" ]
+    then
+        printf "foo:$(openssl passwd -crypt bar)" > $FILE
+    fi
+    # init $HOME/docker/etc.nginx.conf.d.default.conf
     # https://www.nginx.com/resources/wiki/start/topics/examples/full/#nginx-conf
-    FILE="$HOME/docker.etc.nginx.nginx.conf" || return $?
-    if [ ! -f "$FILE" ]
+    FILE="$HOME/docker/etc.nginx.conf.d/default.conf"
+    #!! if [ -f "$FILE" ]
+    if [ "$FILE" ]
     then
+        mkdir -p "$HOME/docker/etc.nginx.conf.d"
         printf '
-user nginx;
-events {
-    worker_connections 1024;
+# http server
+server {
+    listen 80;
+    # redirect to https
+    location / {
+        rewrite ^ https://$host$request_uri permanent;
+    }
 }
-http {
-    default_type application/octet-stream;
-    include /etc/nginx/mime.types;
-    log_format main '"'"'$remote_addr - $remote_user [$time_local] $status '"'"'
-        '"'"'"$request" $body_bytes_sent "$http_referer" '"'"'
-        '"'"'"$http_user_agent" "$http_x_forwarded_for"'"'"';
-    sendfile on;
-    tcp_nopush on;
-    # http server
-    server {
-        listen 80;
-        # redirect to https
-        location / {
-            rewrite ^ https://$host$request_uri permanent;
-        }
+# https server
+# https://www.nginx.com/resources/wiki/start/topics/examples/SSL-Offloader/#sslproxy-conf
+server {
+    listen 443;
+    root /root/docker/usr.share.nginx.html;
+    ssl_certificate /root/docker/etc.nginx.ssl.pem;
+    ssl_certificate_key /root/docker/etc.nginx.ssl.key;
+    ssl on;
+    ssl_prefer_server_ciphers on;
+    ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
+    location / {
+        index index.html index.htm;
     }
-    # https server
-    # https://www.nginx.com/resources/wiki/start/topics/examples/SSL-Offloader/#sslproxy-conf
-    server {
-        listen 443;
-        root /root/docker.usr.share.nginx.html;
-        ssl_certificate /root/docker.etc.nginx.ssl.pem;
-        ssl_certificate_key /root/docker.etc.nginx.ssl.key;
-        ssl on;
-        ssl_prefer_server_ciphers on;
-        ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
-        location / {
-            index index.html index.htm;
-        }
-        location /private {
-            auth_basic on;
-            auth_basic_user_file /root/docker.etc.nginx.htpasswd;
-            autoindex on;
-        }
+    location /private {
+        auth_basic on;
+        auth_basic_user_file /root/docker/etc.nginx.htpasswd.private;
+        autoindex on;
     }
-}' > "$FILE" || return $?
+    location /share {
+        auth_basic on;
+        auth_basic_user_file /root/docker/etc.nginx.htpasswd.share;
+        autoindex on;
+    }
+}
+' > "$FILE"
     fi
-    # init $HOME/docker.etc.nginx.ssl
+    # init $HOME/docker/etc.nginx.ssl
     # http://superuser.com/questions/226192/openssl-without-prompt
-    FILE="$HOME/docker.etc.nginx.ssl" || return $?
+    FILE="$HOME/docker/etc.nginx.ssl"
     if [ ! -f "$FILE.pem" ]
     then
         openssl req -days 365 -keyout "$FILE.key" -new -newkey rsa:4096 -nodes \
-            -out "$FILE.pem" -subj "/C=AU" -x509 || return $?
+            -out "$FILE.pem" -subj "/C=AU" -x509
     fi
-    # init $HOME/docker.usr.share.nginx.html
-    mkdir -p "$HOME/docker.usr.share.nginx.html" || return $?
-    shDockerRm nginx || return $?
+    # init $HOME/docker/usr.share.nginx.html
+    mkdir -p "$HOME/docker/usr.share.nginx.html"
+    shDockerRm nginx
     # https://registry.hub.docker.com/_/nginx/
     docker run --name nginx -d -p 80:80 -p 443:443 \
-        -v "$HOME:/root" -v "$HOME/docker.etc.nginx.nginx.conf:/etc/nginx/nginx.conf:ro" \
-        nginx || return $?
-}
+        -v "$HOME:/root:ro" \
+        -v "$HOME/docker/etc.nginx.conf.d:/etc/nginx/conf.d:ro" \
+        -v "$HOME/docker/etc.nginx.conf.d/default.conf:/etc/nginx/conf.d/default.conf:ro" \
+        nginx
+)}
 
-shDockerRestartPptp() {
+shDockerRestartPptp() {(set -e
 # https://github.com/mobtitude/docker-vpn-pptp
 # this function will restart the pptp docker-container
-    local FILE || return $?
-    FILE="$HOME/docker.pptp.etc.ppp.chap-secrets" || return $?
+    FILE="$HOME/docker/pptp.etc.ppp.chap-secrets"
     # init /etc/ppp/chap-secrets
     if [ ! -f "$FILE" ]
     then
-        printf "foo * bar *" > "$FILE" || return $?
-        chmod 600 "$FILE" || return $?
+        printf "foo * bar *" > "$FILE"
+        chmod 600 "$FILE"
     fi
-    shDockerRm pptp || return $?
+    shDockerRm pptp
     docker run --name pptp --privileged -d -p 1723:1723 \
         -v "$HOME:/root" -v "$FILE:/etc/ppp/chap-secrets:ro" \
-        mobtitude/vpn-pptp || return $?
-}
+        mobtitude/vpn-pptp
+)}
 
-shDockerRestartTransmission() {
+shDockerRestartTransmission() {(set -e
 # https://hub.docker.com/r/dperson/transmission/
 # this function will restart the transmission docker-container
-    local DIR || return $?
-    DIR="$HOME/downloads" || return $?
-    mkdir -p "$DIR" || return $?
-    shDockerRm transmission || return $?
+    DIR="$HOME/downloads"
+    mkdir -p "$DIR"
+    shDockerRm transmission
     docker run --name transmission -d -e TRPASSWD=admin -e TRUSER=admin -e TZ=EST5EDT \
         -p 9091:9091 \
         -v "$HOME:/root" -v "$DIR:/var/lib/transmission-daemon" \
-        dperson/transmission || return $?
-}
+        dperson/transmission
+)}
 
-shDockerRm() {
+shDockerRm() {(set -e
 # this function will stop and rm the docker-container $IMAGE:$NAME
     docker stop "$@" || true
-    docker rm "$@" || true
-}
+    docker rm -v "$@" || true
+)}
 
-shDockerSh() {
+shDockerRmAll() {(set -e
+# this function will stop and rm all docker-containers
+    shDockerRm $(docker ps -aq)
+)}
+
+shDockerRmiUntagged() {(set -e
+# this function will rm all untagged docker images
+    docker rmi $(docker images -qf dangling=true) 2>/dev/null || true
+)}
+
+shDockerSh() {(set -e
 # this function will run /bin/bash in the docker-container $image:$name
-    local COMMAND NAME || return $?
-    COMMAND="${2-/bin/bash}" || return $?
-    NAME="$1" || return $?
-    docker start "$NAME" || return $?
-    docker exec -it "$NAME" "$COMMAND" || return $?
-}
+    COMMAND="${2-/bin/bash}"
+    NAME="$1"
+    docker start "$NAME"
+    docker exec -it "$NAME" "$COMMAND"
+)}
 
-shDockerStart() {
+shDockerStart() {(set -e
 # this function will start the docker-container $image:$name
-    local COMMAND IMAGE NAME || return $?
-    COMMAND="${3-/bin/bash}" || return $?
-    IMAGE="$2" || return $?
-    NAME="$1" || return $?
-    docker run --name "$NAME" -dt -e debian_chroot="$NAME" \
-        -v "$HOME:/root" \
-        "$IMAGE" "$COMMAND" || return $?
-}
+    COMMAND="$3"
+    IMAGE="$2"
+    NAME="$1"
+    if [ "$COMMAND" ]
+    then
+        docker run --name "$NAME" -dt -e debian_chroot="$NAME" \
+            -v "$HOME:/root" \
+            "$IMAGE" "$COMMAND"
+    else
+        docker run --name "$NAME" -dt -e debian_chroot="$NAME" \
+            -v "$HOME:/root" \
+            "$IMAGE"
+    fi
+)}
 
-shDockerStopAll() {
-# this function will stop all docker-containers
-    docker stop $(docker ps -aq) || return $?
-}
-
-shDsStoreRm() {
+shDsStoreRm() {(set -e
 # http://stackoverflow.com/questions/2016844/bash-recursively-remove-files
 # this function will recursively rm .DS_Store from the current dir
-    find . -name "._*" -print0 | xargs -0 rm || return $?
-    find . -name ".DS_Store" -print0 | xargs -0 rm || return $?
-    find . -name "npm-debug.log" -print0 | xargs -0 rm || return $?
-}
+    find . -name "._*" -print0 | xargs -0 rm
+    find . -name ".DS_Store" -print0 | xargs -0 rm
+    find . -name "npm-debug.log" -print0 | xargs -0 rm
+)}
 
-shDuList () {
+shDuList() {(set -e
 # this function will run du, and create a list of all child dir in $1 sorted by size
-    du -ms $1/* | sort -nr || return $?
-}
+    du -ms $1/* | sort -nr
+)}
 
-shGitLsTree() {
+shGitLsTree() {(set -e
 # this function will list all files committed in HEAD
     git ls-tree --name-only -r HEAD | while read file
     do
         printf "%10s bytes    $(git log -1 --format="%ai  " -- "$file")  $file\n\n" \
-            "$(ls -ln "$file" | awk "{print \$5}")" || return $?
+            "$(ls -ln "$file" | awk "{print \$5}")"
     done
-}
+)}
 
 shGitRepoBranchCommand() {
 # this fuction will copy / move / update git-repo-branch
@@ -370,7 +418,7 @@ shGitRepoBranchCommand() {
         mkdir -p /tmp/git.repo.branch || return $?
         git ls-tree --name-only -r HEAD | \
             xargs tar -czf - | \
-            tar -C /tmp/git.repo.branch -xzvf - || return $?
+            tar -C /tmp/git.repo.branch -xvzf - || return $?
         ;;
     *)
         git clone "$REPO1" "--branch=$BRANCH1" --single-branch /tmp/git.repo.branch || return $?
@@ -419,89 +467,84 @@ shGitRepoBranchCommand() {
     esac
 }
 
-shGitSquashPop() {
+shGitSquashPop() {(set -e
 # http://stackoverflow.com/questions/5189560
 # this function will squash HEAD to the given $COMMIT
 # /how-can-i-squash-my-last-x-commits-together-using-git
-    local COMMIT MESSAGE || return $?
-    COMMIT="$1" || return $?
-    MESSAGE="${2:-$(git log -1 --pretty=%s)}" || return $?
+    COMMIT="$1"
+    MESSAGE="${2:-$(git log -1 --pretty=%s)}"
     # commit any uncommitted data
     git commit -am "$MESSAGE" || true
     # reset git to previous $COMMIT
-    git reset --hard "$COMMIT" || return $?
+    git reset --hard "$COMMIT"
     # reset files to current HEAD
-    git merge --squash HEAD@{1} || return $?
+    git merge --squash HEAD@{1}
     # commit HEAD immediately after previous $COMMIT
-    git commit -am "$MESSAGE" || return $?
-}
+    git commit -am "$MESSAGE"
+)}
 
-shGitSquashShift() {
+shGitSquashShift() {(set -e
 # this function will squash $RANGE to the first commit
-    local BRANCH RANGE || return $?
-    BRANCH="$(git rev-parse --abbrev-ref HEAD)" || return $?
-    RANGE="$1" || return $?
-    git checkout -q "HEAD~$RANGE" || return $?
-    git reset -q "$(git rev-list --max-parents=0 HEAD)" || return $?
-    git add . || return $?
+    BRANCH="$(git rev-parse --abbrev-ref HEAD)"
+    RANGE="$1"
+    git checkout -q "HEAD~$RANGE"
+    git reset -q "$(git rev-list --max-parents=0 HEAD)"
+    git add .
     git commit -m squash > /dev/null || true
-    git cherry-pick -X theirs --allow-empty --strategy=recursive "$BRANCH~$RANGE..$BRANCH" || \
-        return $?
-    git push -f . "HEAD:$BRANCH" || return $?
-    git checkout "$BRANCH" || return $?
-}
+    git cherry-pick -X theirs --allow-empty --strategy=recursive "$BRANCH~$RANGE..$BRANCH"
+    git push -f . "HEAD:$BRANCH"
+    git checkout "$BRANCH"
+)}
 
-shGithubDeploy() {
+shGithubDeploy() {(set -e
 # this function will deploy the app to $GITHUB_REPO
 # and run a simple curl check for the main-page
     if [ "$GIT_SSH" = "" ]
     then
-        return $?
+        return
     fi
-    shBuildPrint githubDeploy "deploying to $TEST_URL" || return $?
+    shBuildPrint githubDeploy "deploying to $TEST_URL"
     # build app
-    npm test --mode-test-case=testCase_build_assets || return $?
+    npm test --mode-test-case=testCase_build_assets
     # upload app
-    shBuildGithubUpload || return $?
+    shBuildGithubUpload
     # wait 10 seconds for github to deploy app
-    sleep 10 || return $?
+    sleep 10
     # verify deployed app's main-page returns status-code < 400
-    [ $(curl -Ls -o /dev/null -w "%{http_code}" "$TEST_URL") -lt 400 ] || return $?
+    [ $(curl -Ls -o /dev/null -w "%{http_code}" "$TEST_URL") -lt 400 ]
     # screen-capture deployed app
-    (export modeBrowserTest=screenCapture &&
-        export url="$TEST_URL" &&
-        shBrowserTest) || return $?
-}
+    export modeBrowserTest=screenCapture
+    export url="$TEST_URL"
+    shBrowserTest
+)}
 
-shGrep() {
+shGrep() {(set -e
 # this function will recursively grep $DIR for the $REGEXP
-    local DIR FILE_FILTER REGEXP || return $?
-    DIR="$1" || return $?
-    REGEXP="$2" || return $?
-    FILE_FILTER="$FILE_FILTER/\\.\\|.*\\(\\b\\|_\\)\\(\\.\\d\\" || return $?
-    FILE_FILTER="$FILE_FILTER|archive\\|artifact\\" || return $?
-    FILE_FILTER="$FILE_FILTER|bower_component\\|build\\" || return $?
-    FILE_FILTER="$FILE_FILTER|coverage\\" || return $?
-    FILE_FILTER="$FILE_FILTER|doc\\" || return $?
-    FILE_FILTER="$FILE_FILTER|external\\" || return $?
-    FILE_FILTER="$FILE_FILTER|fixture\\" || return $?
-    FILE_FILTER="$FILE_FILTER|git_module\\" || return $?
-    FILE_FILTER="$FILE_FILTER|jquery\\" || return $?
-    FILE_FILTER="$FILE_FILTER|log\\" || return $?
-    FILE_FILTER="$FILE_FILTER|min\\|mock\\" || return $?
-    FILE_FILTER="$FILE_FILTER|node_module\\" || return $?
-    FILE_FILTER="$FILE_FILTER|rollup.*\\" || return $?
-    FILE_FILTER="$FILE_FILTER|swp\\" || return $?
-    FILE_FILTER="$FILE_FILTER|tmp\\)\\(\\b\\|[_s]\\)" || return $?
+    DIR="$1"
+    REGEXP="$2"
+    FILE_FILTER="$FILE_FILTER/\\.\\|.*\\(\\b\\|_\\)\\(\\.\\d\\"
+    FILE_FILTER="$FILE_FILTER|archive\\|artifact\\"
+    FILE_FILTER="$FILE_FILTER|bower_component\\|build\\"
+    FILE_FILTER="$FILE_FILTER|coverage\\"
+    FILE_FILTER="$FILE_FILTER|doc\\"
+    FILE_FILTER="$FILE_FILTER|external\\"
+    FILE_FILTER="$FILE_FILTER|fixture\\"
+    FILE_FILTER="$FILE_FILTER|git_module\\"
+    FILE_FILTER="$FILE_FILTER|jquery\\"
+    FILE_FILTER="$FILE_FILTER|log\\"
+    FILE_FILTER="$FILE_FILTER|min\\|mock\\"
+    FILE_FILTER="$FILE_FILTER|node_module\\"
+    FILE_FILTER="$FILE_FILTER|rollup.*\\"
+    FILE_FILTER="$FILE_FILTER|swp\\"
+    FILE_FILTER="$FILE_FILTER|tmp\\)\\(\\b\\|[_s]\\)"
     find "$DIR" -type f | \
         grep -v "$FILE_FILTER" | \
         tr "\n" "\000" | \
         xargs -0 grep -Iine "$REGEXP" || true
-}
+)}
 
-shGrepFileReplace() {
+shGrepFileReplace() {(set -e
 # this function will save the grep-and-replace lines in $FILE
-    local FILE || return $?
     FILE=$1
     node -e "
         'use strict';
@@ -521,41 +564,44 @@ shGrepFileReplace() {
         Object.keys(options.fileDict).forEach(function (key) {
             options.fs.writeFileSync(key, options.fileDict[key].join('\n'));
         });
-    " || return $?
-}
+    "
+)}
 
-shHerokuDeploy() {
+shHerokuDeploy() {(set -e
 # this function will deploy the app to $HEROKU_REPO,
 # and run a simple curl check for the main-page
-    local HEROKU_REPO || return $?
-    HEROKU_REPO="$1" || return $?
+    HEROKU_REPO="$1"
     if [ "$GIT_SSH" = "" ]
     then
-        return $?
+        return
     fi
     # init $HEROKU_HOSTNAME
-    export HEROKU_HOSTNAME="$HEROKU_REPO.herokuapp.com" || return $?
-    shBuildPrint herokuDeploy "deploying to https://$HEROKU_HOSTNAME" || return $?
+    export HEROKU_HOSTNAME="$HEROKU_REPO.herokuapp.com"
+    shBuildPrint herokuDeploy "deploying to https://$HEROKU_HOSTNAME"
     # git push $PWD to heroku
     shGitRepoBranchUpdateLocal() {
         # rm .gitignore so we can git add everything
-        rm -f .gitignore || return $?
+        rm -f .gitignore
         # git add everything
-        git add . || return $?
+        git add .
     }
-    (shGitRepoBranchCommand copyPwdLsTree local HEAD "git@heroku.com:$HEROKU_REPO.git" master) \
-        || return $?
+    (shGitRepoBranchCommand copyPwdLsTree local HEAD "git@heroku.com:$HEROKU_REPO.git" master)
     # wait 10 seconds for heroku to deploy app
-    sleep 10 || return $?
+    sleep 10
     # verify deployed app's main-page returns status-code < 400
     [ $(
         curl -Ls -o /dev/null -w "%{http_code}" https://$HEROKU_HOSTNAME
-    ) -lt 400 ] || return $?
+    ) -lt 400 ]
     # screen-capture deployed server
-    (export modeBrowserTest=screenCapture &&
-        export url="https://$HEROKU_HOSTNAME" &&
-        shBrowserTest) || return $?
-}
+    export modeBrowserTest=screenCapture
+    export url="https://$HEROKU_HOSTNAME"
+    shBrowserTest
+)}
+
+shHtpasswdCreate() {(set -e
+# this function will create and print htpasswd to stdout
+    printf "$1:$(openssl passwd -crypt "$2")"
+)}
 
 shInit() {
 # this function will init the env
@@ -641,8 +687,7 @@ shInitNpmConfigDirUtility2() {
     fi
     if [ ! -d "$npm_config_dir_utility2" ]
     then
-        export npm_config_dir_utility2="$(dirname "$(readlink -f "$0" 2>/dev/null)")" || \
-            return $?
+        export npm_config_dir_utility2="$(dirname "$(readlink -f "$0" 2>/dev/null)")"
     fi
     if [ ! -d "$npm_config_dir_utility2" ]
     then
@@ -662,7 +707,7 @@ shInitNpmConfigDirUtility2() {
     fi
 }
 
-shIptablesDockerInit() {
+shIptablesDockerInit() {(set -e
 # https://github.com/docker/docker/issues/1871
 # this function will create an iptables DOCKER chain
     iptables -t nat -N DOCKER
@@ -670,9 +715,9 @@ shIptablesDockerInit() {
     iptables -t nat -A PREROUTING -m addrtype --dst-type LOCAL ! --dst 127.0.0.0/8 -j DOCKER
     iptables-save > /etc/iptables/rules.v4
     ip6tables-save > /etc/iptables/rules.v6
-}
+)}
 
-shIptablesInit() {
+shIptablesInit() {(set -e
 # this function will init iptables, and is intended for aws-ec2 setup
     # reset iptables
     # http://www.cyberciti.biz/tips/linux-iptables-how-to-flush-all-rules.html
@@ -759,107 +804,98 @@ shIptablesInit() {
     ip6tables-save > /etc/iptables/rules.v6
     # iptables-restore < /etc/iptables/rules.v4
     # iptables-restore < /etc/iptables/rules.v6
-}
+)}
 
-shIstanbulCover() {
+shIstanbulCover() {(set -e
 # this function will run the command $@ with istanbul coverage
-    local COMMAND || return $?
     if [ "$npm_config_mode_coverage" = "" ]
     then
         "$@"
-        return $?
+        return
     fi
-    COMMAND="$1" || return $?
-    shift || return $?
-    "$COMMAND" $npm_config_dir_utility2/lib.istanbul.js cover "$@" || return $?
-}
+    COMMAND="$1"
+    shift
+    "$COMMAND" $npm_config_dir_utility2/lib.istanbul.js cover "$@"
+)}
 
-shJsonFilePrettify() {
+shJsonFilePrettify() {(set -e
 # this function will
 # 1. read the json-data from $FILE
 # 2. prettify the json-data
 # 3. write the prettified json-data back to $FILE
-    local FILE || return $?
-    FILE="$1" || return $?
+    FILE="$1"
     node -e "
         'use strict';
         require('fs').writeFileSync(
             '$FILE',
             JSON.stringify(JSON.parse(require('fs').readFileSync('$FILE')), null, 4)
         );
-    " || return $?
-}
+    "
+)}
 
-shMountData() {
+shMountData() {(set -e
 # this function will mount /dev/xvdf to /root, and is intended for aws-ec2 setup
-    local IFS_OLD TMP || return $?
     # mount data /dev/xvdf
     mount /dev/xvdf /root -o noatime || true
     # mount bind
     # http://stackoverflow.com/questions/9713104/loop-over-tuples-in-bash
-    # save IFS
-    IFS_OLD="$IFS" || return $?
-    IFS="," || return $?
+    IFS=","
     for TMP in /root/tmp,/tmp /root/var.lib.docker,/var/lib/docker
     do
-        set $TMP || return $?
-        mkdir -p "$1" "$2" || return $?
+        set $TMP
+        mkdir -p "$1" "$2"
         mount "$1" "$2" -o bind || true
     done
-    chmod 1777 /tmp || return $?
-    # restore IFS
-    IFS_OLD="$IFS" || return $?
-}
+    chmod 1777 /tmp
+)}
 
-shNpmTest() {
+shNpmTest() {(set -e
 # this function will run npm-test with coverage and create test-report
-    local EXIT_CODE || return $?
-    EXIT_CODE=0 || return $?
-    shBuildPrint "${MODE_BUILD:-npmTest}" "npm-testing $CWD" || return $?
+    shBuildPrint "${MODE_BUILD:-npmTest}" "npm-testing $CWD"
     # cleanup $npm_config_dir_tmp/*.json
-    rm -f "$npm_config_dir_tmp/"*.json || return $?
+    rm -f "$npm_config_dir_tmp/"*.json
     # cleanup old electron pages
-    rm -f "$npm_config_dir_tmp/"electron.*.html || return $?
+    rm -f "$npm_config_dir_tmp/"electron.*.html
     # init $npm_config_dir_build
-    mkdir -p "$npm_config_dir_build/coverage.html" || return $?
+    mkdir -p "$npm_config_dir_build/coverage.html"
     # init npm-test-mode
-    export npm_config_mode_npm_test=1 || return $?
+    export npm_config_mode_npm_test=1
     # run npm-test without coverage
     if [ "$npm_config_mode_coverage" = "" ]
     then
-        "$@" || EXIT_CODE=$?
+        "$@"
     # run npm-test with coverage
     else
         # cleanup old coverage
-        rm -f "$npm_config_dir_build/coverage.html/"coverage.*.json || return $?
+        rm -f "$npm_config_dir_build/coverage.html/"coverage.*.json
         # run npm-test with coverage
-        shIstanbulCover "$@" || EXIT_CODE=$?
-        # debug covered-test by re-running it uncovered
-        if [ "$EXIT_CODE" != 0 ]
+        shIstanbulCover "$@"
+        # if $? != 0, then debug covered-test by re-running it uncovered
+        if [ "$?" != 0 ]
         then
             npm_config_mode_coverage="" "$@" || true
         fi
     fi
     # create test-report artifacts
-    shTestReportCreate || return $?
-}
+    shTestReportCreate
+)}
 
-shNpmTestPublished() {
+shNpmTestPublished() {(set -e
 # this function will run npm-test on the published package
-    shBuildPrint npmTestPublished "npm-testing published package $npm_package_name" || return $?
+    shBuildPrint npmTestPublished "npm-testing published package $npm_package_name"
     # init /tmp/app
-    rm -fr /tmp/app /tmp/node_modules && mkdir -p /tmp/app || return $?
+    rm -fr /tmp/app /tmp/node_modules && mkdir -p /tmp/app
     # cd /tmp/app
-    cd /tmp/app || return $?
+    cd /tmp/app
     # npm-install package
-    npm install "$npm_package_name" || return $?
-    cd "node_modules/$npm_package_name" || return $?
-    npm install || return $?
+    npm install "$npm_package_name"
+    cd "node_modules/$npm_package_name"
+    npm install
     # npm-test package
-    npm test || return $?
-}
+    npm test
+)}
 
-shTestReportCreate() {
+shTestReportCreate() {(set -e
 # this function will create test-report artifacts
     node -e "
         'use strict';
@@ -870,19 +906,19 @@ shTestReportCreate() {
             testReport = {testPlatformList:[]};
         }
         require('$npm_config_dir_utility2/index.js').testReportCreate(testReport);
-    " || return $?
-}
+    "
+)}
 
-shReadmeBuild() {
+shReadmeBuild() {(set -e
 # this function will run the internal build-script embedded in README.md
 # init $npm_config_dir_build
-    mkdir -p "$npm_config_dir_build/coverage.html" || return $?
+    mkdir -p "$npm_config_dir_build/coverage.html"
     # run shell script from README.md
-    (export MODE_BUILD=build &&
-        shReadmeTestSh "$npm_config_dir_tmp/build.sh") || return $?
-}
+    export MODE_BUILD=build
+    shReadmeTestSh "$npm_config_dir_tmp/build.sh"
+)}
 
-shReadmeExportFile() {
+shReadmeExportFile() {(set -e
 # this function will extract and save the script $1 embedded in README.md to $2
     node -e "
         'use strict';
@@ -903,115 +939,111 @@ shReadmeExportFile() {
                     return match0.replace((/\\\\\n/g), '') + match0.replace((/.+/g), '');
                 })
         );
-    " || return $?
-}
+    "
+)}
 
-shReadmeTestJs() {
+shReadmeTestJs() {(set -e
 # this function will extract, save, and test the js script $FILE embedded in README.md
-    local FILE SCRIPT || return $?
-    FILE="$1" || return $?
-    shBuildPrint "$MODE_BUILD" "testing $FILE" || return $?
+    FILE="$1"
+    shBuildPrint "$MODE_BUILD" "testing $FILE"
     if [ "$MODE_OFFLINE" = "" ]
     then
         # init /tmp/app
-        rm -fr /tmp/app /tmp/node_modules && mkdir -p /tmp/app || return $?
+        rm -fr /tmp/app /tmp/node_modules && mkdir -p /tmp/app
     fi
     # cd /tmp/app
-    cd /tmp/app || return $?
+    cd /tmp/app
     # read and parse js script from README.md
-    shReadmeExportFile "$FILE" "$FILE" || return $?
+    shReadmeExportFile "$FILE" "$FILE"
     # jslint $FILE
     if [ "$MODE_OFFLINE" = "" ] && [ "$npm_config_mode_jslint" != 0 ]
     then
-        "$npm_config_dir_utility2/lib.jslint.js" "$FILE" || return $?
+        "$npm_config_dir_utility2/lib.jslint.js" "$FILE"
     fi
     # test $FILE
     SCRIPT="$(node -e "
         'use strict';
         console.log((/\n *\\$ (.*)/).exec(require('fs').readFileSync('$FILE', 'utf8'))[1]);
-    ")" || return $?
+    ")"
     if [ "$MODE_OFFLINE" ]
     then
         SCRIPT="$(node -e "
             'use strict';
             console.log('$SCRIPT'.replace('npm install', 'echo'));
-        ")" || return $?
+        ")"
     fi
-    printf "$SCRIPT\n\n" && eval "$SCRIPT" || return $?
-}
+    printf "$SCRIPT\n\n" && eval "$SCRIPT"
+)}
 
-shReadmeTestSh() {
+shReadmeTestSh() {(set -e
 # this function will extract, save, and test the shell script $FILE embedded in README.md
-    local FILE FILE_BASENAME || return $?
-    FILE="$1" || return $?
+    FILE="$1"
     FILE_BASENAME="$(node -e "
         'use strict';
         console.log(require('path').basename('$FILE'));
-    ")" || return $?
-    shBuildPrint "$MODE_BUILD" "testing $FILE" || return $?
+    ")"
+    shBuildPrint "$MODE_BUILD" "testing $FILE"
     if [ "$MODE_BUILD" != "build" ]
     then
         if [ "$MODE_OFFLINE" = "" ]
         then
             # init /tmp/app
-            rm -fr /tmp/app /tmp/node_modules && mkdir -p /tmp/app || return $?
+            rm -fr /tmp/app /tmp/node_modules && mkdir -p /tmp/app
         fi
         # cd /tmp/app
-        cd /tmp/app || return $?
+        cd /tmp/app
     fi
     # read and parse script from README.md
-    shReadmeExportFile "$FILE_BASENAME" "$FILE" || return $?
+    shReadmeExportFile "$FILE_BASENAME" "$FILE"
     # display file
     node -e "
         'use strict';
         console.log(require('fs').readFileSync('$FILE', 'utf8').trimLeft());
-    " || return $?
+    "
     # test $FILE
-    /bin/sh "$FILE" || return $?
-}
+    /bin/sh "$FILE"
+)}
 
-shRun() {
+shRun() {(set -e
 # this function will run the command $@ with auto-restart
-    local EXIT_CODE || return $?
-    EXIT_CODE=0 || return $?
+    EXIT_CODE=0
     # eval argv and auto-restart on non-zero exit, unless exited by SIGINT
     if [ "$npm_config_mode_auto_restart" ] && [ ! "$npm_config_mode_auto_restart_child" ]
     then
         export npm_config_mode_auto_restart_child=1
         while true
         do
-            printf "(re)starting $*" || return $?
-            printf "\n" || return $?
-            ("$@") || EXIT_CODE=$?
-            printf "process exited with code $EXIT_CODE\n" || return $?
+            printf "(re)starting $*"
+            printf "\n"
+            "$@" || EXIT_CODE=$?
+            printf "process exited with code $EXIT_CODE\n"
             # http://en.wikipedia.org/wiki/Unix_signal
             # exit-code 0 - normal exit
             if [ "$EXIT_CODE" != 77 ]
             then
-                break || return $?
+                break
             fi
-            sleep 1 || return $?
+            sleep 1
         done
         return "$EXIT_CODE"
     # eval argv
     else
-        ("$@") || return $?
+        "$@"
     fi
-}
+)}
 
-shRunScreenCapture() {
+shRunScreenCapture() {(set -e
 # http://www.cnx-software.com/2011/09/22
 # /how-to-convert-a-command-line-result-into-an-image-in-linux/
 # this function will run the command $@ and screen-capture the output
-    local EXIT_CODE || return $?
-    EXIT_CODE=0 || return $?
+    EXIT_CODE=0
     # init $npm_config_dir_build
-    mkdir -p "$npm_config_dir_build/coverage.html" || return $?
-    export MODE_BUILD_SCREEN_CAPTURE="screen-capture.${MODE_BUILD:-undefined}.svg" || return $?
+    mkdir -p "$npm_config_dir_build/coverage.html"
+    export MODE_BUILD_SCREEN_CAPTURE="screen-capture.${MODE_BUILD:-undefined}.svg"
     (shRun "$@" 2>&1; printf $? > "$npm_config_file_tmp") | \
-        tee "$npm_config_dir_tmp/screen-capture.txt" || return $?
+        tee "$npm_config_dir_tmp/screen-capture.txt"
     # save $EXIT_CODE
-    EXIT_CODE="$(cat "$npm_config_file_tmp")" || return $?
+    EXIT_CODE="$(cat "$npm_config_file_tmp")"
     # format text-output
     node -e "
         'use strict';
@@ -1052,91 +1084,84 @@ shRunScreenCapture() {
             options.result + '</text>\n</svg>\n';
         options.fs
             .writeFileSync('$npm_config_dir_build/$MODE_BUILD_SCREEN_CAPTURE', options.result);
-    " || return $?
+    "
     return "$EXIT_CODE"
-}
+)}
 
-shServerPortRandom() {
+shServerPortRandom() {(set -e
+# https://wiki.ubuntu.com/DashAsBinSh#A.24RANDOM
 # this function will print a random port in the inclusive range 0x8000 to 0xffff
-    local HEXDUMP || return $?
     if (busybox > /dev/null 2>&1)
     then
-        HEXDUMP="busybox hexdump" || return $?
+        HEXDUMP="busybox hexdump"
     else
-        HEXDUMP=hexdump || return $?
+        HEXDUMP=hexdump
     fi
-    # https://wiki.ubuntu.com/DashAsBinSh#A.24RANDOM
-    printf "$(($($HEXDUMP -n 2 -e '/2 "%u"' /dev/urandom)|32768))" || return $?
-}
+    printf "$(($($HEXDUMP -n 2 -e '/2 "%u"' /dev/urandom)|32768))"
+)}
 
 shSource() {
 # this function will source .bashrc
     . "$HOME/.bashrc" || return $?
 }
 
-shTravisDecryptYml() {
+shTravisDecryptYml() {(set -e
 # this function will decrypt $AES_ENCRYPTED_SH in .travis.yml to stdout
     perl -ne "print \$1 if /- AES_ENCRYPTED_SH: (.*) # AES_ENCRYPTED_SH\$/" .travis.yml | \
-        shAesDecrypt || return $?
-}
+        shAesDecrypt
+)}
 
-shTravisEncrypt() {
+shTravisEncrypt() {(set -e
 # this function will travis-encrypt $SECRET for the $GITHUB_REPO
-    local GITHUB_REPO SECRET || return $?
-    GITHUB_REPO="$1" || return $?
-    SECRET="$2" || return $?
+    GITHUB_REPO="$1"
+    SECRET="$2"
     # init $npm_config_dir_build dir
-    mkdir -p "$npm_config_dir_build/coverage.html" || return $?
+    mkdir -p "$npm_config_dir_build/coverage.html"
     # get public rsa key from https://api.travis-ci.org/repos/<owner>/<repo>/key
-    curl -fLSs "https://api.travis-ci.org/repos/$GITHUB_REPO/key" > "$npm_config_file_tmp" || \
-        return $?
-    perl -i -pe "s/[^-]+(.+-).+/\$1/; s/\\\\n/\n/g; s/ RSA / /g" "$npm_config_file_tmp" || \
-        return $?
+    curl -fLSs "https://api.travis-ci.org/repos/$GITHUB_REPO/key" > "$npm_config_file_tmp"
+    perl -i -pe "s/[^-]+(.+-).+/\$1/; s/\\\\n/\n/g; s/ RSA / /g" "$npm_config_file_tmp"
     # rsa-encrypt $SECRET and print it
     printf "$SECRET" | \
         openssl rsautl -encrypt -pubin -inkey "$npm_config_file_tmp" | \
         base64 | \
-        tr -d "\n" || return $?
-}
+        tr -d "\n"
+)}
 
-shTravisEncryptYml() {
+shTravisEncryptYml() {(set -e
 # this function will travis-encrypt $FILE to $AES_ENCRYPTED_SH and embed it in .travis.yml
-    local AES_256_KEY_ENCRYPTED FILE || return $?
-    FILE="$1" || return $?
+    FILE="$1"
     if [ ! -f "$FILE" ]
     then
-        printf "# non-existent file $FILE\n" || return $?
+        printf "# non-existent file $FILE\n"
         return 1
     fi
-    printf "# sourcing file $FILE\n" || return $?
-    . "$FILE" || return $?
+    printf "# sourcing file $FILE\n"
+    . "$FILE"
     if [ "$AES_256_KEY" = "" ]
     then
-        printf "# no \$AES_256_KEY detected in env - creating new AES_256_KEY\n" || return $?
-        AES_256_KEY="$(openssl rand -hex 32)" || return $?
-        printf "# created new \$AES_256_KEY for encrypting data.\n" || return $?
-        printf "# you may want to copy the following to your .bashrc script\n" || return $?
-        printf "# so you can run builds locally:\n" || return $?
-        printf "export AES_256_KEY=$AES_256_KEY\n\n" || return $?
+        printf "# no \$AES_256_KEY detected in env - creating new AES_256_KEY\n"
+        AES_256_KEY="$(openssl rand -hex 32)"
+        printf "# created new \$AES_256_KEY for encrypting data.\n"
+        printf "# you may want to copy the following to your .bashrc script\n"
+        printf "# so you can run builds locally:\n"
+        printf "export AES_256_KEY=$AES_256_KEY\n\n"
     fi
-    printf "# travis-encrypting \$AES_256_KEY for $GITHUB_REPO\n" || return $?
-    AES_256_KEY_ENCRYPTED="$(shTravisEncrypt $GITHUB_REPO \$AES_256_KEY=$AES_256_KEY)" || \
-        return $?
+    printf "# travis-encrypting \$AES_256_KEY for $GITHUB_REPO\n"
+    AES_256_KEY_ENCRYPTED="$(shTravisEncrypt $GITHUB_REPO \$AES_256_KEY=$AES_256_KEY)"
     # return non-zero exit-code if $AES_256_KEY_ENCRYPTED is empty string
     if [ "$AES_256_KEY_ENCRYPTED" = "" ]
     then
         return 1
     fi
-    printf "# updating .travis.yml with encrypted key\n" || return $?
+    printf "# updating .travis.yml with encrypted key\n"
     perl -i -pe \
         "s%(- secure: )(.*)( # AES_256_KEY$)%\$1$AES_256_KEY_ENCRYPTED\$3%" \
-        .travis.yml || return $?
-
-    printf "# updating .travis.yml with encrypted script\n" || return $?
+        .travis.yml
+    printf "# updating .travis.yml with encrypted script\n"
     perl -i -pe \
         "s%(- AES_ENCRYPTED_SH: )(.*)( # AES_ENCRYPTED_SH$)%\$1$(shAesEncrypt < $FILE)\$3%" \
-        .travis.yml || return $?
-}
+        .travis.yml
+)}
 
 shUbuntuInit() {
 # this function will init ubuntu's default .bashrc
@@ -1259,7 +1284,8 @@ shUbuntuInit() {
 shXvfbStart() {
 # this function will start xvfb
     export DISPLAY=:99.0 || return $?
-    (Xvfb "$DISPLAY" &) > /dev/null 2>&1 || true
+    rm -f /tmp/.X99-lock || return $?
+    (Xvfb "$DISPLAY" &) 2>/dev/null || true
 }
 
 shMain() {
@@ -1276,23 +1302,20 @@ shMain() {
         shGrep "$1" "$2" || return $?
         ;;
     shRun)
-        shInit && "$COMMAND" "$@" || return $?
+        (shInit && "$COMMAND" "$@") || return $?
         ;;
     shRunScreenCapture)
-        shInit && "$COMMAND" "$@" || return $?
-        ;;
-    shServerPortRandom)
-        shServerPortRandom || return $?
+        (shInit && "$COMMAND" "$@") || return $?
         ;;
     start)
-        shInit && (export npm_config_mode_auto_restart=1 &&
+        (shInit && export npm_config_mode_auto_restart=1 &&
             shRun node "$npm_config_dir_utility2/test.js" "$@") || return $?
         ;;
     test)
-        shInit && shNpmTest "$@" || return $?
+        (shInit && shNpmTest "$@") || return $?
         ;;
     utility2Dirname)
-        shInit && printf "$npm_config_dir_utility2" || return $?
+        (shInit && printf "$npm_config_dir_utility2") || return $?
         ;;
     *)
         "$COMMAND" "$@" || return $?

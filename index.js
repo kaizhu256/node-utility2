@@ -63,7 +63,7 @@
         local.utility2 = { cacheDict: { assets: {}, taskUpsert: {} }, local: local };
         local.utility2.nop = function () {
         /*
-         * this function will run no operation - nop
+         * this function will do nothing
          */
             return;
         };

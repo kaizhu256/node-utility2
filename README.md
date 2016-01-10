@@ -61,13 +61,13 @@ run dynamic browser tests with coverage (via istanbul and electron)
     # 2. open a browser to http://localhost:1337
     # 3. edit or paste script in browser to cover and test
 
-shExampleSh() {
+shExampleSh() {(set -e
     # npm install utility2
-    npm install utility2 || return $?
+    npm install utility2
 
     # serve a webpage that will interactively run browser tests with coverage
-    cd node_modules/utility2 && export PORT=1337 && npm start || return $?
-}
+    cd node_modules/utility2 && export PORT=1337 && npm start
+)}
 shExampleSh
 ```
 
@@ -477,13 +477,15 @@ export PORT=$(./index.sh shServerPortRandom) && \
 export npm_config_mode_auto_restart=1 && \
 ./index.sh test node test.js"
     },
-    "version": "2015.12.8"
+    "version": "2015.12.9"
 }
 ```
 
 
 
 # todo
+- replace perl with sed in index.sh
+- migrate to docker build in travis
 - add utility2.middlewareLimit
 - create flamegraph from istanbul coverage
 - add server stress test using electron
@@ -491,12 +493,11 @@ export npm_config_mode_auto_restart=1 && \
 
 
 
-# change since f2f000c3
-- npm publish 2015.12.8
-- fix Dockerfile to pass npm test
-- update electron-lite devDependency to remove unzip dependency
-- shell command shTestReportCreate will use a default test-report.json if one doesn't exist
-- default localServer's serverResponse.statusCode to 200
+# change since 6982e4a0
+- npm publish 2015.12.9
+- revamp index.sh with 'set -e' coding-style instead of '|| return $?'
+- experiment with automated docker builds @ https://hub.docker.com/r/kaizhu256/node-utility2/
+- add files .dockerignore, Dockerfile.base
 - none
 
 
@@ -514,46 +515,45 @@ export npm_config_mode_auto_restart=1 && \
 
 # this shell script will run the build for this package
 
-shBuild() {
+shBuild() {(set -e
 # this function will run the main build
-    local TEST_URL || return $?
-
     # init env
-    . ./index.sh && shInit || return $?
+    . ./index.sh && shInit
 
+    (set -e
     # run npm-test on published package
     (export npm_config_mode_coverage=1 &&
-        shNpmTestPublished) || return $?
+        shNpmTestPublished)
 
     # test example js script
     (export MODE_BUILD=testExampleJs &&
         export MODE_LINENO=0 &&
-        shRunScreenCapture shReadmeTestJs example.js) || return $?
+        shRunScreenCapture shReadmeTestJs example.js)
     # screen-capture example.js coverage
     (export MODE_BUILD=testExampleJs &&
         export modeBrowserTest=screenCapture &&
         export url=/tmp/app/tmp/build/coverage.html/app/example.js.html &&
-        shBrowserTest) || return $?
+        shBrowserTest)
     # screen-capture example.js test-report
     (export MODE_BUILD=testExampleJs &&
         export modeBrowserTest=screenCapture &&
         export url=/tmp/app/tmp/build/test-report.html &&
-        shBrowserTest) || return $?
+        shBrowserTest)
 
     # test example shell script
     (export MODE_BUILD=testExampleSh &&
         export npm_config_timeout_exit=1000 &&
-        shRunScreenCapture shReadmeTestSh example.sh) || return $?
+        shRunScreenCapture shReadmeTestSh example.sh)
     # save screen-capture
     cp "/tmp/app/node_modules/$npm_package_name/tmp/build/"screen-capture.*.png \
-        "$npm_config_dir_build" || return $?
+        "$npm_config_dir_build"
 
     # run npm-test
     (export MODE_BUILD=npmTest &&
-        shRunScreenCapture npm test --mode-coverage) || return $?
+        shRunScreenCapture npm test --mode-coverage)
 
     # create api-doc
-    npm run-script build-doc || return $?
+    npm run-script build-doc
 
     # if running legacy-node, then do not continue
     [ "$(node --version)" \< "v5.0" ] && exit || true
@@ -563,34 +563,41 @@ shBuild() {
         [ "$CI_BRANCH" = master ]
     then
         TEST_URL="https://$(printf "$GITHUB_REPO" | \
-            perl -pe 's/\//.github.io\//')/build..$CI_BRANCH..travis-ci.org/app/index.html" || \
-            return $?
+            perl -pe 's/\//.github.io\//')/build..$CI_BRANCH..travis-ci.org/app/index.html"
         # deploy app to gh-pages
         (export npm_config_file_test_report_merge="$npm_config_dir_build/test-report.json" &&
-            shGithubDeploy) || return $?
+            shGithubDeploy)
         # test deployed app to gh-pages
         (export MODE_BUILD=githubTest &&
             export modeBrowserTest=test &&
             export npm_config_file_test_report_merge="$npm_config_dir_build/test-report.json" &&
             export url="$TEST_URL?modeTest=consoleLogResult&timeExit={{timeExit}}" &&
-            shBrowserTest) || return $?
+            shBrowserTest)
     fi
-}
+    )
+
+    # save exit-code
+    EXIT_CODE=$?
+
+    # create package-listing
+    (export MODE_BUILD=gitLsTree &&
+        shRunScreenCapture shGitLsTree) || exit $?
+
+    # create recent changelog of last 50 commits
+    (export MODE_BUILD=gitLog &&
+        shRunScreenCapture git log -50 --pretty="%ai\u000a%B") || exit $?
+
+    # cleanup remote build dir
+    # export BUILD_GITHUB_UPLOAD_PRE_SH="rm -fr build" || exit $?
+
+    # upload build-artifacts to github, and if number of commits > 16, then squash older commits
+    (export COMMIT_LIMIT=16 &&
+        export MODE_BUILD=githubUpload &&
+        shBuildGithubUpload) || exit $?
+
+    # return exit-code
+    return "$EXIT_CODE"
+)}
 shBuild
 
-# save exit-code
-EXIT_CODE=$?
-# create package-listing
-(export MODE_BUILD=gitLsTree &&
-    shRunScreenCapture shGitLsTree) || exit $?
-# create recent changelog of last 50 commits
-(export MODE_BUILD=gitLog &&
-    shRunScreenCapture git log -50 --pretty="%ai\u000a%B") || exit $?
-# cleanup remote build dir
-# export BUILD_GITHUB_UPLOAD_PRE_SH="rm -fr build" || exit $?
-# upload build-artifacts to github, and if number of commits > 16, then squash older commits
-(export COMMIT_LIMIT=16 &&
-    export MODE_BUILD=githubUpload &&
-    shBuildGithubUpload) || exit $?
-exit "$EXIT_CODE"
 ```
