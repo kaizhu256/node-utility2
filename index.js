@@ -1612,6 +1612,9 @@ local.utility2['/test/test-report.html.template'] = '<style>\n\
                 var defaults2, options2;
                 defaults2 = defaults[key];
                 options2 = options[key];
+                if (defaults2 === undefined) {
+                    return;
+                }
                 // init options[key] to default value defaults[key]
                 if (!options2) {
                     options[key] = defaults2;
@@ -1634,33 +1637,36 @@ local.utility2['/test/test-report.html.template'] = '<style>\n\
             return options;
         };
 
-        local.utility2.objectSetOverride = function (options, override, depth) {
+        local.utility2.objectSetOverride = function (options, overrides, depth) {
         /*
-         * this function will recursively override the options object, with the override object
+         * this function will recursively override the options object, with the overrides object
          */
-            var options2, override2;
-            Object.keys(override).forEach(function (key) {
+            var options2, overrides2;
+            Object.keys(overrides).forEach(function (key) {
                 options2 = options[key];
-                override2 = override[key];
-                // if both options2 and override2 are non-null and non-array objects,
-                // then recurse options2 and override2
+                overrides2 = overrides[key];
+                if (overrides2 === undefined) {
+                    return;
+                }
+                // if both options2 and overrides2 are non-null and non-array objects,
+                // then recurse options2 and overrides2
                 if (depth > 1 &&
                         // options2 is a non-null and non-array object
                         (options2 &&
                         typeof options2 === 'object' &&
                         !Array.isArray(options2)) &&
-                        // override2 is a non-null and non-array object
-                        (override2 &&
-                        typeof override2 === 'object' &&
-                        !Array.isArray(override2))) {
-                    local.utility2.objectSetOverride(options2, override2, depth - 1);
+                        // overrides2 is a non-null and non-array object
+                        (overrides2 &&
+                        typeof overrides2 === 'object' &&
+                        !Array.isArray(overrides2))) {
+                    local.utility2.objectSetOverride(options2, overrides2, depth - 1);
                     return;
                 }
-                // else set options[key] with override[key]
+                // else set options[key] with overrides[key]
                 options[key] = options === local.utility2.envDict
-                    // if options is envDict, then override falsey value with empty string
-                    ? override2 || ''
-                    : override2;
+                    // if options is envDict, then overrides falsey value with empty string
+                    ? overrides2 || ''
+                    : overrides2;
             });
             return options;
         };

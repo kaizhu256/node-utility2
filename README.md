@@ -477,7 +477,7 @@ export PORT=$(./index.sh shServerPortRandom) && \
 export npm_config_mode_auto_restart=1 && \
 ./index.sh test node test.js"
     },
-    "version": "2015.12.9"
+    "version": "2015.12.10"
 }
 ```
 
@@ -493,11 +493,10 @@ export npm_config_mode_auto_restart=1 && \
 
 
 
-# change since 6982e4a0
-- npm publish 2015.12.9
-- revamp index.sh with 'set -e' coding-style instead of '|| return $?'
-- experiment with automated docker builds @ https://hub.docker.com/r/kaizhu256/node-utility2/
-- add files .dockerignore, Dockerfile.base
+# change since 5f8b09f7
+- npm publish 2015.12.10
+- change behavior of functions objectSetDefault and objectSetOverride, so that they do not default or override with the value 'undefined'
+- fix shell command shIstanbulCover always passing test in no-coverage-mode
 - none
 
 
@@ -581,22 +580,25 @@ shBuild() {(set -e
 
     # create package-listing
     (export MODE_BUILD=gitLsTree &&
-        shRunScreenCapture shGitLsTree) || exit $?
+        shRunScreenCapture shGitLsTree)
 
     # create recent changelog of last 50 commits
     (export MODE_BUILD=gitLog &&
-        shRunScreenCapture git log -50 --pretty="%ai\u000a%B") || exit $?
+        shRunScreenCapture git log -50 --pretty="%ai\u000a%B")
+
+    # if running legacy-node, then do not continue
+    [ "$(node --version)" \< "v5.0" ] && exit || true
 
     # cleanup remote build dir
-    # export BUILD_GITHUB_UPLOAD_PRE_SH="rm -fr build" || exit $?
+    # export BUILD_GITHUB_UPLOAD_PRE_SH="rm -fr build"
 
     # upload build-artifacts to github, and if number of commits > 16, then squash older commits
     (export COMMIT_LIMIT=16 &&
         export MODE_BUILD=githubUpload &&
-        shBuildGithubUpload) || exit $?
+        shBuildGithubUpload)
 
-    # return exit-code
-    return "$EXIT_CODE"
+    # exit exit-code
+    exit "$EXIT_CODE"
 )}
 shBuild
 

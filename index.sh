@@ -118,7 +118,7 @@ shBuildGithubUpload() {(set -e
 # this function will upload build-artifacts to github
     if [ "$GIT_SSH" = "" ]
     then
-        return
+        exit
     fi
     shBuildPrint "${MODE_BUILD:-githubUpload}" \
         "uploading build-artifacts to git@github.com:$GITHUB_REPO.git"
@@ -438,7 +438,7 @@ shGitRepoBranchCommand() {
         shGitRepoBranchUpdateLocal || EXIT_CODE=$?
         # reset shGitRepoBranchUpdateLocal
         unset -f shGitRepoBranchUpdateLocal || return $?
-        [ "$EXIT_CODE" = 0 ] || return "$EXIT_CODE"
+        [ "$EXIT_CODE" = 0 ] || exit "$EXIT_CODE"
     fi
     if [ "$MESSAGE" ]
     then
@@ -501,7 +501,7 @@ shGithubDeploy() {(set -e
 # and run a simple curl check for the main-page
     if [ "$GIT_SSH" = "" ]
     then
-        return
+        exit
     fi
     shBuildPrint githubDeploy "deploying to $TEST_URL"
     # build app
@@ -573,7 +573,7 @@ shHerokuDeploy() {(set -e
     HEROKU_REPO="$1"
     if [ "$GIT_SSH" = "" ]
     then
-        return
+        exit
     fi
     # init $HEROKU_HOSTNAME
     export HEROKU_HOSTNAME="$HEROKU_REPO.herokuapp.com"
@@ -600,7 +600,7 @@ shHerokuDeploy() {(set -e
 
 shHtpasswdCreate() {(set -e
 # this function will create and print htpasswd to stdout
-    printf "$1:$(openssl passwd -crypt "$2")"
+    printf "$1:$(openssl passwd -apr1 "$2")"
 )}
 
 shInit() {
@@ -811,7 +811,7 @@ shIstanbulCover() {(set -e
     if [ "$npm_config_mode_coverage" = "" ]
     then
         "$@"
-        return
+        exit $?
     fi
     COMMAND="$1"
     shift
@@ -1025,7 +1025,7 @@ shRun() {(set -e
             fi
             sleep 1
         done
-        return "$EXIT_CODE"
+        exit "$EXIT_CODE"
     # eval argv
     else
         "$@"
@@ -1085,7 +1085,7 @@ shRunScreenCapture() {(set -e
         options.fs
             .writeFileSync('$npm_config_dir_build/$MODE_BUILD_SCREEN_CAPTURE', options.result);
     "
-    return "$EXIT_CODE"
+    exit "$EXIT_CODE"
 )}
 
 shServerPortRandom() {(set -e

@@ -583,9 +583,20 @@
         /*
          * this function will test objectSetDefault's default handling-behavior
          */
+            // test falsey handling-behavior
+            ['', 0, false, null, undefined].forEach(function (aa) {
+                ['', 0, false, null, undefined].forEach(function (bb) {
+                    local.utility2.assert(local.utility2.objectSetDefault(
+                        { data: aa },
+                        { data: bb }
+                    ).data === (bb === undefined
+                        ? aa
+                        : bb));
+                });
+            });
             // test non-recursive handling-behavior
             options = local.utility2.objectSetDefault(
-                { aa: undefined, bb: { cc: 1 }, cc: { dd: {} }, dd: [1, 1], ee: [1, 1] },
+                { aa: 0, bb: { cc: 1 }, cc: { dd: {} }, dd: [1, 1], ee: [1, 1] },
                 { aa: 2, bb: { dd: 2 }, cc: { dd: { ee: 2 } }, dd: [2, 2], ee: { ff: 2 } },
                 // test default-depth handling-behavior
                 null
@@ -598,7 +609,7 @@
             );
             // test recursive handling-behavior
             options = local.utility2.objectSetDefault(
-                { aa: undefined, bb: { cc: 1 }, cc: { dd: {} }, dd: [1, 1], ee: [1, 1] },
+                { aa: 0, bb: { cc: 1 }, cc: { dd: {} }, dd: [1, 1], ee: [1, 1] },
                 { aa: 2, bb: { dd: 2 }, cc: { dd: { ee: 2 } }, dd: [2, 2], ee: { ff: 2 } },
                 // test depth handling-behavior
                 2
@@ -616,6 +627,17 @@
         /*
          * this function will test objectSetOverride's default handling-behavior
          */
+            // test falsey handling-behavior
+            ['', 0, false, null, undefined].forEach(function (aa) {
+                ['', 0, false, null, undefined].forEach(function (bb) {
+                    local.utility2.assert(local.utility2.objectSetOverride(
+                        { data: aa },
+                        { data: bb }
+                    ).data === (bb === undefined
+                        ? aa
+                        : bb));
+                });
+            });
             // test non-recursive handling-behavior
             options = local.utility2.objectSetOverride(
                 { aa: 1, bb: { cc: 1 }, cc: { dd: 1 }, dd: [1, 1], ee: [1, 1] },
