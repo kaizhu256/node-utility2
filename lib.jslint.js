@@ -7,6 +7,7 @@
     maxlen: 96,
     node: true,
     nomen: true,
+    regexp: true,
     stupid: true
 */
 (function () {
@@ -635,7 +636,7 @@ function(e){var t,n,r=[],i;if(e.errors.length){e.json&&r.push("<cite>JSON: bad.<
         /*
          * this function will jslint / csslint the script and print any errors to stderr
          */
-            var errorList, lineno, scriptParsed;
+            var lineno, scriptParsed;
             if (!script.length || (/^\/\* jslint-ignore-all \*\/$/m).test(script)) {
                 return script;
             }
@@ -671,18 +672,27 @@ function(e){var t,n,r=[],i;if(e.errors.length){e.json&&r.push("<cite>JSON: bad.<
 (/^ *?\/\* jslint-ignore-begin \*\/$[\S\s]+?^ *?\/\* jslint-ignore-end \*\/$/gm),
 /* jslint-ignore-end */
                     function (match0) {
-                        return match0.replace((/[\S\s]*?$/gm), '');
+                        return match0.replace((/.*/g), '');
+                    }
+                )
+                // ignore next-line
+                // /* jslint-ignore-begin */ ... /* jslint-ignore-end */
+                .replace(
+/* jslint-ignore-next-line */
+(/^ *?\/\* jslint-ignore-next-line \*\/\n.*/gm),
+                    function (match0) {
+                        return match0.replace((/.*/g), '');
                     }
                 );
             // csslint script
             if (file.slice(-4) === '.css') {
-                errorList = local.CSSLint.verify(scriptParsed).messages;
+                local.CSSLint.errors = local.CSSLint.verify(scriptParsed).messages;
                 // if error occurred, then print colorized error messages
-                if (!errorList.length) {
+                if (!local.CSSLint.errors.length) {
                     return script;
                 }
                 local.errorText = '\n\u001b[1m' + file + '\u001b[22m\n';
-                errorList
+                local.CSSLint.errors
                     .filter(function (error) {
                         return error;
                     })
@@ -691,7 +701,8 @@ function(e){var t,n,r=[],i;if(e.errors.length){e.json&&r.push("<cite>JSON: bad.<
                         lineno += 1;
                         local.errorText +=
                             (' #' + String(lineno) + ' ').slice(-4) +
-                            '\u001b[33m' + error.type + ' - ' + error.message +
+                            '\u001b[33m' + error.type + ' - ' + error.message + '\n    ' +
+                            error.rule.desc +
                             '\u001b[39m\n    ' + String(error.evidence).trim() +
                             '\u001b[90m \/\/ line ' + error.line +
                             ', col ' + error.col + '\u001b[39m\n';

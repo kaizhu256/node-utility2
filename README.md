@@ -63,7 +63,7 @@ run dynamic browser tests with coverage (via istanbul and electron)
 
 shExampleSh() {(set -e
     # npm install utility2
-    npm install utility2
+    npm install "utility2"
 
     # serve a webpage that will interactively run browser tests with coverage
     cd node_modules/utility2 && export PORT=1337 && npm start
@@ -93,7 +93,7 @@ this shared browser / node script will run browser tests with coverage
 instruction
     1. save this js script as example.js
     2. run the shell command:
-        $ npm install electron-lite utility2 && \
+        $ npm install electron-lite "utility2" && \
             export PATH="$(pwd)/node_modules/.bin:$PATH" && \
             export PORT=1337 && \
             export npm_config_mode_coverage=1 && \
@@ -157,7 +157,7 @@ instruction
         // run server-test
         local.utility2.testRunServer(local);
         // init assets
-        local.utility2.cacheDict.assets['/assets/hello'] = 'hello';
+        local.utility2.cacheDict.assets['/assets.hello'] = 'hello';
     }());
     switch (local.modeJs) {
 
@@ -173,9 +173,9 @@ instruction
             var data;
             // jslint-hack
             local.utility2.nop(options);
-            // test 'assets/hello'
+            // test 'assets.hello'
             local.utility2.ajax({
-                url: 'assets/hello'
+                url: 'assets.hello'
             }, function (error, xhr) {
                 local.utility2.testTryCatch(function () {
                     // validate no error occurred
@@ -233,40 +233,40 @@ instruction
         local.utility2.cacheDict.assets['/'] = '<!DOCTYPE html>\n\
 <html>\n\
 <head>\n\
-    <meta charset="UTF-8">\n\
-    <title>\n\
-    {{envDict.npm_package_name}} [{{envDict.npm_package_version}}]\n\
-    </title>\n\
-    <link href="assets/utility2.css" rel="stylesheet">\n\
-    <style>\n\
-    * {\n\
-        box-sizing: border-box;\n\
-    }\n\
-    body {\n\
-        background-color: #fff;\n\
-        font-family: Helvetical Neue, Helvetica, Arial, sans-serif;\n\
-    }\n\
-    body > div {\n\
-        margin-top: 20px;\n\
-    }\n\
-    textarea {\n\
-        font-family: monospace;\n\
-        height: 32em;\n\
-        width: 100%;\n\
-    }\n\
-    .jslintOutputPre {\n\
-        color: #f00;\n\
-    }\n\
-    .testReportDiv {\n\
-        display: none;\n\
-    }\n\
-    </style>\n\
+<meta charset="UTF-8">\n\
+<title>\n\
+{{envDict.npm_package_name}} @ {{envDict.npm_package_version}}\n\
+</title>\n\
+<link href="assets.utility2.css" rel="stylesheet">\n\
+<style>\n\
+* {\n\
+    box-sizing: border-box;\n\
+}\n\
+body {\n\
+    background-color: #fff;\n\
+    font-family: Helvetical Neue, Helvetica, Arial, sans-serif;\n\
+}\n\
+body > div {\n\
+    margin-top: 20px;\n\
+}\n\
+textarea {\n\
+    font-family: monospace;\n\
+    height: 32em;\n\
+    width: 100%;\n\
+}\n\
+.jslintOutputPre {\n\
+    color: #f00;\n\
+}\n\
+.testReportDiv {\n\
+    display: none;\n\
+}\n\
+</style>\n\
 </head>\n\
 <body>\n\
     <div class="ajaxProgressDiv" style="display: block;">\n\
     <div class="ajaxProgressBarDiv ajaxProgressBarDivLoading">loading</div>\n\
     </div>\n\
-    <h1>{{envDict.npm_package_name}} [{{envDict.npm_package_version}}]</h1>\n\
+    <h1>{{envDict.npm_package_name}} @ {{envDict.npm_package_version}}</h1>\n\
     <h3>{{envDict.npm_package_description}}</h3>\n\
     <div>edit or paste script below to cover and test</div>\n\
 <textarea class="istanbulInputTextarea jslintInputTextarea">\n\
@@ -327,50 +327,50 @@ instruction
     <pre class="jslintOutputPre"></pre>\n\
     <div class="testReportDiv"></div>\n\
     <div class="istanbulCoverageDiv"></div>\n\
-    <script src="assets/utility2.lib.istanbul.js"></script>\n\
-    <script src="assets/utility2.lib.jslint.js"></script>\n\
-    <script src="assets/utility2.lib.uglifyjs.js"></script>\n\
-    <script src="assets/utility2.js"></script>\n\
-    <script src="assets/example.js"></script>\n\
-    <script src="assets/test.js"></script>\n\
-    <script>\n\
-    window.utility2.envDict = {\n\
-        npm_package_description: "{{envDict.npm_package_description}}",\n\
-        npm_package_name: "{{envDict.npm_package_name}}",\n\
-        npm_package_version: "{{envDict.npm_package_version}}"\n\
-    };\n\
-    window.testRun = function () {\n\
-        // jslint .jslintInputTextarea\n\
-        window.utility2.jslintAndPrint(\n\
-            (document.querySelector(".jslintInputTextarea") || {}).value || "",\n\
-            "jslintInputTextarea.js"\n\
-        );\n\
-        (document.querySelector(".jslintOutputPre") || {}).textContent =\n\
-            window.utility2.jslint.errorText\n\
-            .replace((/\\u001b\\[\\d+m/g), "")\n\
-            .trim();\n\
-        // cleanup __coverage__\n\
-        try {\n\
-            delete window.__coverage__["/istanbulInputTextarea.js"];\n\
-        } catch (ignore) {\n\
-        }\n\
-        try {\n\
-            eval(window.utility2.istanbulInstrumentSync(\n\
-                document.querySelector(".istanbulInputTextarea").value,\n\
-                "/istanbulInputTextarea.js"\n\
-            ));\n\
-            window.utility2.istanbulCoverageReportCreate({ coverage: window.__coverage__ });\n\
-        } catch (errorCaught) {\n\
-            document.querySelector(".istanbulCoverageDiv").innerHTML =\n\
-                "<pre>" + errorCaught.stack.replace((/</g), "&lt") + "</pre>";\n\
-        }\n\
-    };\n\
-    document.querySelector(".istanbulInputTextarea")\n\
-        .addEventListener("keyup", window.testRun);\n\
-    if (!window.utility2.modeTest) {\n\
-        window.testRun({});\n\
+<script src="assets.utility2.lib.istanbul.js"></script>\n\
+<script src="assets.utility2.lib.jslint.js"></script>\n\
+<script src="assets.utility2.lib.uglifyjs.js"></script>\n\
+<script src="assets.utility2.js"></script>\n\
+<script src="assets.example.js"></script>\n\
+<script src="assets.test.js"></script>\n\
+<script>\n\
+window.utility2.envDict = {\n\
+    npm_package_description: "{{envDict.npm_package_description}}",\n\
+    npm_package_name: "{{envDict.npm_package_name}}",\n\
+    npm_package_version: "{{envDict.npm_package_version}}"\n\
+};\n\
+window.testRun = function () {\n\
+    // jslint .jslintInputTextarea\n\
+    window.utility2.jslintAndPrint(\n\
+        (document.querySelector(".jslintInputTextarea") || {}).value || "",\n\
+        "jslintInputTextarea.js"\n\
+    );\n\
+    (document.querySelector(".jslintOutputPre") || {}).textContent =\n\
+        window.utility2.jslint.errorText\n\
+        .replace((/\\u001b\\[\\d+m/g), "")\n\
+        .trim();\n\
+    // cleanup __coverage__\n\
+    try {\n\
+        delete window.__coverage__["/istanbulInputTextarea.js"];\n\
+    } catch (ignore) {\n\
     }\n\
-    </script>\n\
+    try {\n\
+        eval(window.utility2.istanbulInstrumentSync(\n\
+            document.querySelector(".istanbulInputTextarea").value,\n\
+            "/istanbulInputTextarea.js"\n\
+        ));\n\
+        window.utility2.istanbulCoverageReportCreate({ coverage: window.__coverage__ });\n\
+    } catch (errorCaught) {\n\
+        document.querySelector(".istanbulCoverageDiv").innerHTML =\n\
+            "<pre>" + errorCaught.stack.replace((/</g), "&lt") + "</pre>";\n\
+    }\n\
+};\n\
+document.querySelector(".istanbulInputTextarea")\n\
+    .addEventListener("keyup", window.testRun);\n\
+if (!window.utility2.modeTest) {\n\
+    window.testRun({});\n\
+}\n\
+</script>\n\
 </body>\n\
 </html>';
         /* jslint-ignore-end */
@@ -387,7 +387,7 @@ instruction
                     return '';
                 }
             });
-        local.utility2.cacheDict.assets['/assets/example.js'] =
+        local.utility2.cacheDict.assets['/assets.example.js'] =
             // cover example.js
             local.utility2.istanbulInstrumentSync(
                 local.fs.readFileSync(__dirname + '/example.js', 'utf8'),
@@ -477,7 +477,7 @@ export PORT=$(./index.sh shServerPortRandom) && \
 export npm_config_mode_auto_restart=1 && \
 ./index.sh test node test.js"
     },
-    "version": "2015.12.10"
+    "version": "2015.12.11"
 }
 ```
 
@@ -493,10 +493,10 @@ export npm_config_mode_auto_restart=1 && \
 
 
 
-# change since 5f8b09f7
-- npm publish 2015.12.10
-- change behavior of functions objectSetDefault and objectSetOverride, so that they do not default or override with the value 'undefined'
-- fix shell command shIstanbulCover always passing test in no-coverage-mode
+# change since 7c73de40
+- npm publish 2015.12.11
+- add /* jslint-ignore-next-line */ comment-flag
+- rename assets/* to assets.*
 - none
 
 

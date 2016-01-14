@@ -841,7 +841,7 @@ local.utility2['/test/test-report.html.template'] = '<style>\n\
          */
             if (!passed) {
                 // if message is an Error object, then throw it
-                if (message && message.stack) {
+                if (message && message.message) {
                     throw message;
                 }
                 throw new Error(
@@ -1585,10 +1585,10 @@ local.utility2['/test/test-report.html.template'] = '<style>\n\
             );
             // init request.urlParsed
             request.urlParsed = local.utility2.urlParse(request.url);
-            // init content-type
-            request.urlParsed.contentType = (/.\.[^\.].*/).exec(request.urlParsed.pathname);
+            // init response-header content-type
+            request.urlParsed.contentType = (/\.[^\.]*$/).exec(request.urlParsed.pathname);
             request.urlParsed.contentType = local.utility2.contentTypeDict[
-                request.urlParsed.contentType && request.urlParsed.contentType[0].slice(1)
+                request.urlParsed.contentType && request.urlParsed.contentType[0]
             ];
             local.utility2.serverRespondHeadSet(request, response, null, {
                 'Content-Type': request.urlParsed.contentType
@@ -3032,7 +3032,7 @@ local.utility2['/test/test-report.html.template'] = '<style>\n\
             npm_package_version: '0.0.1'
         });
         // init assets
-        local.utility2.cacheDict.assets['/assets/utility2.js'] =
+        local.utility2.cacheDict.assets['/assets.utility2.js'] =
             local.utility2.uglifyIfProduction(
                 local.utility2.istanbulInstrumentInPackage(
                     local.fs.readFileSync(__filename, 'utf8'),
@@ -3040,10 +3040,10 @@ local.utility2['/test/test-report.html.template'] = '<style>\n\
                     'utility2'
                 )
             );
-        local.utility2.cacheDict.assets['/assets/utility2.css'] =
+        local.utility2.cacheDict.assets['/assets.utility2.css'] =
             local.fs.readFileSync(__dirname + '/index.css', 'utf8');
         ['istanbul', 'jslint', 'uglifyjs'].forEach(function (key) {
-            local.utility2.cacheDict.assets['/assets/utility2.lib.' + key + '.js'] =
+            local.utility2.cacheDict.assets['/assets.utility2.lib.' + key + '.js'] =
                 local.utility2.uglifyIfProduction(
                     local.utility2.istanbulInstrumentInPackage(
                         local.fs.readFileSync(__dirname + '/lib.' + key + '.js', 'utf8')

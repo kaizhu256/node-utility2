@@ -195,7 +195,7 @@ shDockerCopyDirFromContainer() {(set -e
     DIR_FROM="$1"
     DIR_TO="$2"
     CONTAINER="$3"
-    docker cp "$CONTAINER:$DIR_FROM" - | tar -C "$DIR_TO" -xzf - || true
+    docker cp "$CONTAINER:$DIR_FROM" "$DIR_TO" || true
 )}
 
 shDockerCopyDirFromImage() {(set -e
@@ -206,7 +206,7 @@ shDockerCopyDirFromImage() {(set -e
     DIR_TO="$2"
     IMAGE="$3"
     CONTAINER="$(docker create "$IMAGE")"
-    docker cp "$CONTAINER:$DIR_FROM" - | tar -C "$DIR_TO" -xzf - || true
+    docker cp "$CONTAINER:$DIR_FROM" "$DIR_TO" || true
     docker rm -v "$CONTAINER"
 )}
 

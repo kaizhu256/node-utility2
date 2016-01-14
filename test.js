@@ -1109,7 +1109,7 @@
             local.utility2.nop(options);
             // test http GET handling-behavior
             local.utility2.ajax({
-                url: 'assets/hello'
+                url: 'assets.hello'
             }, function (error, xhr) {
                 local.utility2.testTryCatch(function () {
                     // validate no error occurred
@@ -1121,7 +1121,7 @@
                         headers: {
                             'If-Modified-Since': new Date(Date.now() + 0xffff).toGMTString()
                         },
-                        url: 'assets/hello'
+                        url: 'assets.hello'
                     }, function (error, xhr) {
                         local.utility2.testTryCatch(function () {
                             // validate no error occurred
@@ -1148,29 +1148,29 @@
                 file: '/index.html',
                 url: '/'
             }, {
-                file: '/assets/example.js',
-                url: '/assets/example.js'
+                file: '/assets.example.js',
+                url: '/assets.example.js'
             }, {
-                file: '/assets/hello',
-                url: '/assets/hello'
+                file: '/assets.hello',
+                url: '/assets.hello'
             }, {
-                file: '/assets/test.js',
-                url: '/assets/test.js'
+                file: '/assets.test.js',
+                url: '/assets.test.js'
             }, {
-                file: '/assets/utility2.css',
-                url: '/assets/utility2.css'
+                file: '/assets.utility2.css',
+                url: '/assets.utility2.css'
             }, {
-                file: '/assets/utility2.js',
-                url: '/assets/utility2.js'
+                file: '/assets.utility2.js',
+                url: '/assets.utility2.js'
             }, {
-                file: '/assets/utility2.lib.istanbul.js',
-                url: '/assets/utility2.lib.istanbul.js'
+                file: '/assets.utility2.lib.istanbul.js',
+                url: '/assets.utility2.lib.istanbul.js'
             }, {
-                file: '/assets/utility2.lib.jslint.js',
-                url: '/assets/utility2.lib.jslint.js'
+                file: '/assets.utility2.lib.jslint.js',
+                url: '/assets.utility2.lib.jslint.js'
             }, {
-                file: '/assets/utility2.lib.uglifyjs.js',
-                url: '/assets/utility2.lib.uglifyjs.js'
+                file: '/assets.utility2.lib.uglifyjs.js',
+                url: '/assets.utility2.lib.uglifyjs.js'
             }, {
                 file: '/package.json',
                 url: '/package.json'
@@ -1582,9 +1582,9 @@
         // init assets
         local.utility2.cacheDict.assets['/script-only.html'] =
             '<h1>script-only test</h1>\n' +
-            '<script src="assets/utility2.js"></script>\n' +
-            '<script src="assets/example.js"></script>\n' +
-            '<script src="assets/test.js"></script>\n';
+            '<script src="assets.utility2.js"></script>\n' +
+            '<script src="assets.example.js"></script>\n' +
+            '<script src="assets.test.js"></script>\n';
         // init serverLocal
         local.utility2.serverLocalUrlTest = function (url) {
             url = local.utility2.urlParse(url).pathname;
@@ -1657,7 +1657,7 @@
     // run node js-env code - post-init
     case 'node':
         // init assets
-        local.utility2.cacheDict.assets['/assets/test.js'] =
+        local.utility2.cacheDict.assets['/assets.test.js'] =
             local.utility2.istanbulInstrumentInPackage(
                 local.fs.readFileSync(__filename, 'utf8'),
                 __filename,
