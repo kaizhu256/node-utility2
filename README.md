@@ -63,7 +63,7 @@ run dynamic browser tests with coverage (via istanbul and electron)
 
 shExampleSh() {(set -e
     # npm install utility2
-    npm install "utility2"
+    npm install utility2
 
     # serve a webpage that will interactively run browser tests with coverage
     cd node_modules/utility2 && export PORT=1337 && npm start
@@ -93,7 +93,7 @@ this shared browser / node script will run browser tests with coverage
 instruction
     1. save this js script as example.js
     2. run the shell command:
-        $ npm install electron-lite "utility2" && \
+        $ npm install electron-lite utility2 && \
             export PATH="$(pwd)/node_modules/.bin:$PATH" && \
             export PORT=1337 && \
             export npm_config_mode_coverage=1 && \
@@ -137,14 +137,14 @@ instruction
                     'node';
             }
         }());
-        // init utility2
-        local = local.modeJs === 'browser'
-            ? window.utility2.local
-            : require('utility2').local;
         // init global
         local.global = local.modeJs === 'browser'
             ? window
             : global;
+        // init utility2
+        local = local.modeJs === 'browser'
+            ? window.utility2.local
+            : require('utility2').local;
         // export local
         local.global.local = local;
         // init middleware
@@ -423,10 +423,10 @@ if (!window.utility2.modeTest) {\n\
 {
     "author": "kai zhu <kaizhu256@gmail.com>",
     "bin": {
-        "utility2" : "index.sh",
-        "utility2-istanbul" : "lib.istanbul.js",
-        "utility2-jslint" : "lib.jslint.js",
-        "utility2-uglifyjs" : "lib.uglifyjs.js"
+        "utility2": "index.sh",
+        "utility2-istanbul": "lib.istanbul.js",
+        "utility2-jslint": "lib.jslint.js",
+        "utility2-uglifyjs": "lib.uglifyjs.js"
     },
     "description": "run dynamic browser tests with coverage (via istanbul and electron)",
     "devDependencies": {
@@ -449,9 +449,9 @@ if (!window.utility2.modeTest) {\n\
     "license": "MIT",
     "name": "utility2",
     "os": ["darwin", "linux"],
-    "repository" : {
-        "type" : "git",
-        "url" : "https://github.com/kaizhu256/node-utility2.git"
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/kaizhu256/node-utility2.git"
     },
     "scripts": {
         "build-ci": "./index.sh shRun shReadmeBuild",
@@ -477,7 +477,7 @@ export PORT=$(./index.sh shServerPortRandom) && \
 export npm_config_mode_auto_restart=1 && \
 ./index.sh test node test.js"
     },
-    "version": "2015.12.11"
+    "version": "2015.12.12"
 }
 ```
 
@@ -493,10 +493,9 @@ export npm_config_mode_auto_restart=1 && \
 
 
 
-# change since 7c73de40
-- npm publish 2015.12.11
-- add /* jslint-ignore-next-line */ comment-flag
-- rename assets/* to assets.*
+# change since c747e6b1
+- npm publish 2015.12.12
+- update shell command shMountData
 - none
 
 

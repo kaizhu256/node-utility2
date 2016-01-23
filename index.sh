@@ -462,7 +462,7 @@ shGitRepoBranchCommand() {
     case "$COMMAND" in
     # move git-repo-branch1 to git-repo-branch2
     move)
-        git push "$REPO1" :"$BRANCH1" || return $?
+        git push "$REPO1":"$BRANCH1" || return $?
         ;;
     esac
 }
@@ -834,13 +834,15 @@ shJsonFilePrettify() {(set -e
 )}
 
 shMountData() {(set -e
-# this function will mount /dev/xvdf to /root, and is intended for aws-ec2 setup
-    # mount data /dev/xvdf
-    mount /dev/xvdf /root -o noatime || true
+# this function will mount $1 to /mnt/data, and is intended for aws-ec2 setup
+    # mount data $1
+    mkdir -p /mnt/data
+    mount "$1" /mnt/data -o noatime || true
+    mount "$1" /mnt/data -o noatime || true
     # mount bind
     # http://stackoverflow.com/questions/9713104/loop-over-tuples-in-bash
     IFS=","
-    for TMP in /root/tmp,/tmp /root/var.lib.docker,/var/lib/docker
+    for TMP in /mnt/data,/root /mnt/data/tmp,/tmp /mnt/data/var.lib.docker,/var/lib/docker
     do
         set $TMP
         mkdir -p "$1" "$2"

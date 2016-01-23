@@ -1,10 +1,10 @@
 {
     "author": "kai zhu <kaizhu256@gmail.com>",
     "bin": {
-        "utility2" : "index.sh",
-        "utility2-istanbul" : "lib.istanbul.js",
-        "utility2-jslint" : "lib.jslint.js",
-        "utility2-uglifyjs" : "lib.uglifyjs.js"
+        "utility2": "index.sh",
+        "utility2-istanbul": "lib.istanbul.js",
+        "utility2-jslint": "lib.jslint.js",
+        "utility2-uglifyjs": "lib.uglifyjs.js"
     },
     "description": "run dynamic browser tests with coverage (via istanbul and electron)",
     "devDependencies": {
@@ -27,9 +27,9 @@
     "license": "MIT",
     "name": "utility2",
     "os": ["darwin", "linux"],
-    "repository" : {
-        "type" : "git",
-        "url" : "https://github.com/kaizhu256/node-utility2.git"
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/kaizhu256/node-utility2.git"
     },
     "scripts": {
         "build-ci": "./index.sh shRun shReadmeBuild",
@@ -55,5 +55,5 @@
 
 
     },
-    "version": "2015.12.11"
+    "version": "2015.12.12"
 }
