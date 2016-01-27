@@ -135,6 +135,26 @@
             });
         };
 
+        local.testCase_ajax_json = function (options, onError) {
+        /*
+         * this function will test ajax's json handling-behavior
+         */
+            // jslint-hack
+            local.utility2.nop(options);
+            local.utility2.ajax({
+                modeJsonParseResponseText: true,
+                url: '/test/json'
+            }, function (error, xhr) {
+                local.utility2.testTryCatch(function () {
+                    // validate no error occurred
+                    local.utility2.assert(!error && xhr.status === 200, [error, xhr.status]);
+                    // validate responseJson
+                    local.utility2.assert(xhr.responseJson === 'hello', xhr.responseJson);
+                    onError();
+                }, onError);
+            });
+        };
+
         local.testCase_ajax_error = function (options, onError) {
         /*
          * this function will test ajax's error handling-behavior
@@ -145,6 +165,10 @@
             onParallel = local.utility2.onParallel(onError);
             onParallel.counter += 1;
             [{
+                // test JSON.parse error
+                modeJsonParseResponseText: true,
+                url: '/assets.hello'
+            }, {
                 // test 404-not-found-error handling-behavior
                 url: '/test/error-404'
             }, {
@@ -1637,6 +1661,10 @@
             // test undefined-error handling-behavior
             case '/test/error-undefined':
                 local.utility2.serverRespondDefault(request, response, 999);
+                break;
+            // test undefined-error handling-behavior
+            case '/test/json':
+                response.end('"hello"');
                 break;
             // test timeout handling-behavior
             case '/test/timeout':

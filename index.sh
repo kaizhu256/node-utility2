@@ -382,6 +382,22 @@ shDuList() {(set -e
     du -ms $1/* | sort -nr
 )}
 
+shGitGc() {(set -e
+# http://stackoverflow.com/questions/3797907/how-to-remove-unused-objects-from-a-git-repository
+# this function will gc unreachable .git objects
+    # git remote rm origin || true
+    # git branch -D in || true
+    # (cd .git && rm -rf refs/remotes/ refs/original/ *_HEAD logs/)
+    # git for-each-ref --format="%(refname)" refs/original/ | xargs -n1 --no-run-if-empty git update-ref -d
+    git \
+        -c gc.reflogExpire=0 \
+        -c gc.reflogExpireUnreachable=0 \
+        -c gc.rerereresolved=0 \
+        -c gc.rerereunresolved=0 \
+        -c gc.pruneExpire=now \
+        gc "$@"
+)}
+
 shGitLsTree() {(set -e
 # this function will list all files committed in HEAD
     git ls-tree --name-only -r HEAD | while read file
@@ -1109,7 +1125,7 @@ shSource() {
 
 shTravisDecryptYml() {(set -e
 # this function will decrypt $AES_ENCRYPTED_SH in .travis.yml to stdout
-    perl -ne "print \$1 if /- AES_ENCRYPTED_SH: (.*) # AES_ENCRYPTED_SH\$/" .travis.yml | \
+    sed -n "s/.* - AES_ENCRYPTED_SH: \(.*\) # AES_ENCRYPTED_SH\$/\\1/p" .travis.yml | \
         shAesDecrypt
 )}
 
@@ -1120,8 +1136,12 @@ shTravisEncrypt() {(set -e
     # init $npm_config_dir_build dir
     mkdir -p "$npm_config_dir_build/coverage.html"
     # get public rsa key from https://api.travis-ci.org/repos/<owner>/<repo>/key
-    curl -fLSs "https://api.travis-ci.org/repos/$GITHUB_REPO/key" > "$npm_config_file_tmp"
-    perl -i -pe "s/[^-]+(.+-).+/\$1/; s/\\\\n/\n/g; s/ RSA / /g" "$npm_config_file_tmp"
+    curl -s "https://api.travis-ci.org/repos/$GITHUB_REPO/key" | \
+        sed -n \
+            -e "s/.*\(-----BEGIN PUBLIC KEY-----.*-----END PUBLIC KEY-----\).*/\\1/" \
+            -e "s/\\\\n/%/gp" | \
+        tr "%" "\n" > \
+        "$npm_config_file_tmp"
     # rsa-encrypt $SECRET and print it
     printf "$SECRET" | \
         openssl rsautl -encrypt -pubin -inkey "$npm_config_file_tmp" | \
@@ -1131,6 +1151,7 @@ shTravisEncrypt() {(set -e
 
 shTravisEncryptYml() {(set -e
 # this function will travis-encrypt $FILE to $AES_ENCRYPTED_SH and embed it in .travis.yml
+    shInit
     FILE="$1"
     if [ ! -f "$FILE" ]
     then
@@ -1155,13 +1176,10 @@ shTravisEncryptYml() {(set -e
     then
         return 1
     fi
-    printf "# updating .travis.yml with encrypted key\n"
-    perl -i -pe \
-        "s%(- secure: )(.*)( # AES_256_KEY$)%\$1$AES_256_KEY_ENCRYPTED\$3%" \
-        .travis.yml
-    printf "# updating .travis.yml with encrypted script\n"
-    perl -i -pe \
-        "s%(- AES_ENCRYPTED_SH: )(.*)( # AES_ENCRYPTED_SH$)%\$1$(shAesEncrypt < $FILE)\$3%" \
+    printf "# updating .travis.yml with encrypted key and encrypted script\n"
+    sed -in \
+        -e "s%\(- secure: \).*\( # AES_256_KEY$\)%\\1$AES_256_KEY_ENCRYPTED\\2%" \
+-e "s%\(- AES_ENCRYPTED_SH: \).*\( # AES_ENCRYPTED_SH$\)%\\1$(shAesEncrypt < $FILE)\\2%" \
         .travis.yml
 )}
 

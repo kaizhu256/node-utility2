@@ -44,8 +44,8 @@
         // jslint-hack
         CSSLint = null;
         JSLINT = null;
-/* jslint-ignore-begin */
 // init lib csslint
+/* jslint-ignore-begin */
 // https://github.com/CSSLint/csslint/blob/v0.10.0/release/csslint.js
 // utility2-uglifyjs https://raw.githubusercontent.com/CSSLint/csslint/v0.10.0/release/csslint.js
 var exports=exports||{},CSSLint=function(){function Reporter(e,t){this.messages=[],this.stats=[],this.lines=e,this.ruleset=t}var parserlib={};(function(){function e(){this._listeners={}}function t(e){this._input=e.replace(/\n\r?/g,"\n"),this._line=1,this._col=1
@@ -429,12 +429,13 @@ e.messages,i=[],s={error:0,failure:0},o=function(e){return!!e&&"name"in e?"net.c
 e.col+'" severity="'+e.type+'"'+' reason="'+s(e.message)+'" evidence="'+s(e.evidence)+'"/>')}),i.push("</file>")),i.join("")}}),CSSLint.addFormatter({id:"text",name:"Plain Text",startFormat:function(){return""},endFormat:function(){return""},formatResults:function(
 e,t,n){var r=e.messages,i="";n=n||{};if(r.length===0)return n.quiet?"":"\n\ncsslint: No errors in "+t+".";i="\n\ncsslint: There are "+r.length+" problems in "+t+".";var s=t.lastIndexOf("/"),o=t;return s===-1&&(s=t.lastIndexOf("\\")),s>-1&&(o=t.substring(s+1
 )),CSSLint.Util.forEach(r,function(e,t){i=i+"\n\n"+o,e.rollup?(i+="\n"+(t+1)+": "+e.type,i+="\n"+e.message):(i+="\n"+(t+1)+": "+e.type+" at line "+e.line+", col "+e.col,i+="\n"+e.message,i+="\n"+e.evidence)}),i}}),CSSLint}()
+/* jslint-ignore-end */
 
 
 
 // init lib jslint
+/* jslint-ignore-begin */
 // https://github.com/douglascrockford/JSLint/blob/394bf291bfa3881bb9827b9fc7b7d1112d83f313/jslint.js
-// jslint.js
 // utility2-uglifyjs https://raw.githubusercontent.com/douglascrockford/JSLint/394bf291bfa3881bb9827b9fc7b7d1112d83f313/jslint.js
 var JSLINT=function(){"use strict";function e(e,t){var n,r=e.length,i=Object.create(null);for(n=0;n<r;n+=1)i[e[n]]=t;return i}function it(e){return v[e]||"\\u"+("0000"+e.charCodeAt().toString(16)).slice(-4)}function st(e){Object.keys(e).forEach(function(t){
 _[t]=e[t]})}function ot(){M.browser&&(st(o),M.browser=!1),M.closure&&st(a),M.couch&&(st(c),M.couch=!1),M.devel&&(st(p),M.devel=!1),M.node&&(st(k),M.node=!1,L=!0),M.rhino&&(st(I),M.rhino=!1)}function ut(e){return e||(e=O),e.id==="(number)"?e.number:e.string}

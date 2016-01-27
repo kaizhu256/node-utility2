@@ -477,14 +477,14 @@ export PORT=$(./index.sh shServerPortRandom) && \
 export npm_config_mode_auto_restart=1 && \
 ./index.sh test node test.js"
     },
-    "version": "2015.12.12"
+    "version": "2016.12.13"
 }
 ```
 
 
 
 # todo
-- replace perl with sed in index.sh
+- migrate to jslint-es6 and istanbul-es6
 - migrate to docker build in travis
 - add utility2.middlewareLimit
 - create flamegraph from istanbul coverage
@@ -493,9 +493,13 @@ export npm_config_mode_auto_restart=1 && \
 
 
 
-# change since c747e6b1
-- npm publish 2015.12.12
-- update shell command shMountData
+# change since 3188db16
+- npm publish 2016.12.13
+- console.log file modified in utility2.onFileModifiedRestart
+- fix utility2.onErrorWithStack not preserving calling stack trace
+- add utility2.ajax option 'modeJsonParseResponseText' to JSON.parse(responseText) as 'responseJson'
+- replace perl with sed in index.sh
+- add shell command shGitGc
 - none
 
 
@@ -561,7 +565,7 @@ shBuild() {(set -e
         [ "$CI_BRANCH" = master ]
     then
         TEST_URL="https://$(printf "$GITHUB_REPO" | \
-            perl -pe 's/\//.github.io\//')/build..$CI_BRANCH..travis-ci.org/app/index.html"
+            sed 's/\//.github.io\//')/build..$CI_BRANCH..travis-ci.org/app/index.html"
         # deploy app to gh-pages
         (export npm_config_file_test_report_merge="$npm_config_dir_build/test-report.json" &&
             shGithubDeploy)

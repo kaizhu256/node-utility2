@@ -707,6 +707,7 @@ local.utility2['/test/test-report.html.template'] = '<style>\n\
          * this function will send an ajax request with error handling and timeout
          */
             var ajaxProgressDiv, ii, timerTimeout, xhr;
+            onError = local.utility2.onErrorWithStack(onError);
             // init modeServerLocal
             if (local.utility2.serverLocalUrlTest &&
                     local.utility2.serverLocalUrlTest(options.url)) {
@@ -737,7 +738,7 @@ local.utility2['/test/test-report.html.template'] = '<style>\n\
                 local.utility2.requestResponseCleanup(xhr.requestStream, xhr.responseStream);
             }, xhr.timeout, 'ajax ' + xhr.method + ' ' + xhr.url);
             // init event handling
-            xhr.onEvent = local.utility2.onErrorWithStack(function (event) {
+            xhr.onEvent = function (event) {
                 // init statusCode
                 xhr.statusCode = xhr.status;
                 switch (event.type) {
@@ -781,6 +782,14 @@ local.utility2['/test/test-report.html.template'] = '<style>\n\
                     }
                     // handle completed xhr request
                     if (xhr.readyState === 4) {
+                        // JSON.parse responseText
+                        if (!xhr.error && xhr.modeJsonParseResponseText) {
+                            try {
+                                xhr.responseJson = JSON.parse(xhr.responseText);
+                            } catch (errorCaught) {
+                                xhr.error = errorCaught;
+                            }
+                        }
                         // handle string data
                         if (xhr.error) {
                             // debug statusCode
@@ -788,7 +797,7 @@ local.utility2['/test/test-report.html.template'] = '<style>\n\
                             // debug statusCode / method / url
                             local.utility2.errorMessagePrepend(xhr.error, local.modeJs + ' - ' +
                                 xhr.statusCode + ' ' +
-                                xhr.method + ' ' + xhr.url + '\n' +
+                                xhr.method + ' ' + xhr.url + '\n    ' +
                                 JSON.stringify(xhr.responseText.slice(0, 256) + '...') + '\n');
                         }
                     }
@@ -804,7 +813,7 @@ local.utility2['/test/test-report.html.template'] = '<style>\n\
                     // update ajaxProgressBar to done
                     local._ajaxProgressUpdate('100%', 'ajaxProgressBarDivSuccess', 'loaded');
                 }
-            });
+            };
             xhr.addEventListener('abort', xhr.onEvent);
             xhr.addEventListener('error', xhr.onEvent);
             xhr.addEventListener('load', xhr.onEvent);
@@ -1705,11 +1714,11 @@ local.utility2['/test/test-report.html.template'] = '<style>\n\
          * this function will return a new callback that calls onError,
          * and add the current stack to any error encountered
          */
+            var stack;
+            stack = new Error().stack;
             return function (error) {
                 if (error) {
-                    error.stack = error.stack
-                        ? error.stack + '\n' + new Error().stack
-                        : new Error().stack;
+                    error.stack = error.stack + '\n' + stack;
                 }
                 onError.apply(null, arguments);
             };
@@ -1727,6 +1736,7 @@ local.utility2['/test/test-report.html.template'] = '<style>\n\
                     persistent: false
                 }, function (stat2, stat1) {
                     if (stat2.mtime > stat1.mtime) {
+                        console.log('file modified - ' + file);
                         local.utility2.exit(77);
                     }
                 });
@@ -1740,27 +1750,26 @@ local.utility2['/test/test-report.html.template'] = '<style>\n\
          * 2. if counter === 0 or error occurs, then run callback onError
          */
             var self;
+            onError = local.utility2.onErrorWithStack(onError);
             onDebug = onDebug || local.utility2.nop;
             self = function (error) {
-                local.utility2.onErrorWithStack(function (error) {
-                    onDebug(error, self);
-                    // if counter === 0 or error already occurred, then return
-                    if (self.counter === 0 || self.error) {
-                        return;
-                    }
-                    // handle error
-                    if (error) {
-                        self.error = error;
-                        // ensure counter will decrement to 0
-                        self.counter = 1;
-                    }
-                    // decrement counter
-                    self.counter -= 1;
-                    // if counter === 0, then run callback onError with error
-                    if (self.counter === 0) {
-                        onError(error);
-                    }
-                })(error);
+                onDebug(error, self);
+                // if counter === 0 or error already occurred, then return
+                if (self.counter === 0 || self.error) {
+                    return;
+                }
+                // handle error
+                if (error) {
+                    self.error = error;
+                    // ensure counter will decrement to 0
+                    self.counter = 1;
+                }
+                // decrement counter
+                self.counter -= 1;
+                // if counter === 0, then run callback onError with error
+                if (self.counter === 0) {
+                    onError(error);
+                }
             };
             // init counter
             self.counter = 0;
@@ -2122,13 +2131,14 @@ local.utility2['/test/test-report.html.template'] = '<style>\n\
          * this function will add the callback onError to the task named options.key
          */
             var task;
+            onError = local.utility2.onErrorWithStack(onError);
             // init task
             task = local.utility2.cacheDict.taskUpsert[options.key] =
                 local.utility2.cacheDict.taskUpsert[options.key] || {
                     callbackList: []
                 };
             // add callback onError to the task
-            task.callbackList.push(local.utility2.onErrorWithStack(onError));
+            task.callbackList.push(onError);
         };
 
         local.utility2.taskCallbackAndUpdateCached = function (options, onError, onTask) {
