@@ -677,7 +677,7 @@ function(e){var t,n,r=[],i;if(e.errors.length){e.json&&r.push("<cite>JSON: bad.<
                     }
                 )
                 // ignore next-line
-                // /* jslint-ignore-begin */ ... /* jslint-ignore-end */
+                // /* jslint-ignore-next-line */
                 .replace(
 /* jslint-ignore-next-line */
 (/^ *?\/\* jslint-ignore-next-line \*\/\n.*/gm),
@@ -710,6 +710,12 @@ function(e){var t,n,r=[],i;if(e.errors.length){e.json&&r.push("<cite>JSON: bad.<
                     });
             // jslint script
             } else {
+                scriptParsed = scriptParsed
+                    // handle es6 generator
+                    // https://developer.mozilla.org
+                    // /en-US/docs/Web/JavaScript/Reference/Global_Objects/Generator
+                    .replace((/\bfunction\*/g), 'function')
+                    .replace((/ yield /g), ' this.yield = ');
                 if (local.JSLINT(scriptParsed)) {
                     return script;
                 }

@@ -477,14 +477,14 @@ export PORT=$(./index.sh shServerPortRandom) && \
 export npm_config_mode_auto_restart=1 && \
 ./index.sh test node test.js"
     },
-    "version": "2016.12.13"
+    "version": "2016.1.1"
 }
 ```
 
 
 
 # todo
-- migrate to jslint-es6 and istanbul-es6
+- add es6 support in jslint
 - migrate to docker build in travis
 - add utility2.middlewareLimit
 - create flamegraph from istanbul coverage
@@ -493,13 +493,11 @@ export npm_config_mode_auto_restart=1 && \
 
 
 
-# change since 3188db16
-- npm publish 2016.12.13
-- console.log file modified in utility2.onFileModifiedRestart
-- fix utility2.onErrorWithStack not preserving calling stack trace
-- add utility2.ajax option 'modeJsonParseResponseText' to JSON.parse(responseText) as 'responseJson'
-- replace perl with sed in index.sh
-- add shell command shGitGc
+# change since 5294cf0d
+- npm publish 2016.1.1
+- npm unpublish previous incorrect version 2016.12.13
+- added es6 support in istanbul
+- added es6-generator support in jslint
 - none
 
 

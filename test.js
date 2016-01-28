@@ -391,6 +391,34 @@
             onError();
         };
 
+        local.testCase_es6_generator = function (options, onError) {
+        /*
+         * this function will test es6's generator handling-behavior
+         */
+            options = {};
+            options.generatorCreate = function* () {
+                var result;
+                result = yield arguments;
+                yield result;
+                yield this;
+            };
+            options.generator = options.generatorCreate(1);
+            options.data = local.utility2.jsonStringifyOrdered(options.generator.next(2));
+            local.utility2.assert(options.data ===
+                '{"done":false,"value":{"0":1}}', options.data);
+            options.data = local.utility2.jsonStringifyOrdered(options.generator.next(2));
+            local.utility2.assert(options.data ===
+                '{"done":false,"value":2}', options.data);
+            options.data = local.utility2.jsonStringifyOrdered(options.generator.next(2));
+            local.utility2.assert(options.data ===
+                '{"done":false,"value":{"data":"{\\"done\\":false,\\"value\\":2}",' +
+                '"generator":{}}}', options.data);
+            options.data = local.utility2.jsonStringifyOrdered(options.generator.next(2));
+            local.utility2.assert(options.data ===
+                '{"done":true}', options.data);
+            onError();
+        };
+
         local.testCase_exit_default = function (options, onError) {
         /*
          * this function will exit's default handling-behavior
