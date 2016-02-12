@@ -193,8 +193,8 @@ instruction
          */
             // jslint-hack
             local.utility2.nop(options);
-            // test '/test/undefined'
-            local.utility2.ajax({ url: '/test/undefined' }, function (error) {
+            // test '/test.undefined'
+            local.utility2.ajax({ url: '/test.undefined' }, function (error) {
                 local.utility2.testTryCatch(function () {
                     // validate error occurred
                     local.utility2.assert(error, error);
@@ -327,6 +327,7 @@ textarea {\n\
     <pre class="jslintOutputPre"></pre>\n\
     <div class="testReportDiv"></div>\n\
     <div class="istanbulCoverageDiv"></div>\n\
+<script src="assets.utility2.lib.bcrypt.js"></script>\n\
 <script src="assets.utility2.lib.istanbul.js"></script>\n\
 <script src="assets.utility2.lib.jslint.js"></script>\n\
 <script src="assets.utility2.lib.uglifyjs.js"></script>\n\
@@ -424,6 +425,7 @@ if (!window.utility2.modeTest) {\n\
     "author": "kai zhu <kaizhu256@gmail.com>",
     "bin": {
         "utility2": "index.sh",
+        "utility2-bcrypt": "lib.bcrypt.js",
         "utility2-istanbul": "lib.istanbul.js",
         "utility2-jslint": "lib.jslint.js",
         "utility2-uglifyjs": "lib.uglifyjs.js"
@@ -459,9 +461,10 @@ if (!window.utility2.modeTest) {\n\
 ./index.sh shRun shReadmeExportFile package.json package.json && \
 ./index.sh shRun shDocApiCreate \"module.exports={ \
 exampleFileList:['README.md','test.js','index.js', \
-'lib.istanbul.js','lib.jslint.js','lib.uglifyjs.js'], \
+'lib.bcrypt.js','lib.istanbul.js','lib.jslint.js','lib.uglifyjs.js'], \
 moduleDict:{ \
 utility2:{exports:require('./index.js')}, \
+'utility2.bcrypt':{aliasList:['bcrypt','local'],exports:require('./index.js').bcrypt}, \
 'utility2.istanbul':{aliasList:['istanbul','local'],exports:require('./index.js').istanbul}, \
 'utility2.jslint':{aliasList:['jslint','local'],exports:require('./index.js').jslint}, \
 'utility2.uglifyjs':{aliasList:['uglifyjs','local'],exports:require('./index.js').uglifyjs} \
@@ -477,7 +480,7 @@ export PORT=$(./index.sh shServerPortRandom) && \
 export npm_config_mode_auto_restart=1 && \
 ./index.sh test node test.js"
     },
-    "version": "2016.1.1"
+    "version": "2016.1.2"
 }
 ```
 
@@ -493,11 +496,10 @@ export npm_config_mode_auto_restart=1 && \
 
 
 
-# change since 5294cf0d
-- npm publish 2016.1.1
-- npm unpublish previous incorrect version 2016.12.13
-- added es6 support in istanbul
-- added es6-generator support in jslint
+# change since 9ce530ca
+- npm publish 2016.1.2
+- fix shNpmTestPublished bug - https://github.com/npm/npm/issues/10686
+- add file /lib.bcrypt.js and functions utility2.bcryptHashCreate and utility2.bcryptPasswordValidate
 - none
 
 

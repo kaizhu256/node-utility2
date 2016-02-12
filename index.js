@@ -67,6 +67,10 @@
          */
             return;
         };
+        // init bcrypt
+        local.utility2.bcrypt = local.modeJs === 'browser'
+            ? local.global.utility2_bcrypt
+            : require('./lib.bcrypt.js');
         // init istanbul
         local.utility2.istanbul = local.modeJs === 'browser'
             ? local.global.utility2_istanbul
@@ -88,7 +92,7 @@ local.utility2['/build/build.badge.svg'] = '<svg xmlns="http://www.w3.org/2000/s
 
 // https://img.shields.io/badge/tests_failed-999-dd0000.svg?style=flat
 local.utility2['/build/test-report.badge.svg'] = '<svg xmlns="http://www.w3.org/2000/svg" width="103" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="103" height="20" fill="#555"/><rect rx="0" x="72" width="31" height="20" fill="#d00"/><path fill="#d00" d="M72 0h4v20h-4z"/><rect rx="0" width="103" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="37" y="15" fill="#010101" fill-opacity=".3">tests failed</text><text x="37" y="14">tests failed</text><text x="86.5" y="15" fill="#010101" fill-opacity=".3">999</text><text x="86.5" y="14">999</text></g></svg>';
-local.utility2['/doc/doc.html.template'] = '<style>\n\
+local.utility2['/doc.api.html.template'] = '<style>\n\
 .docApiDiv {\n\
     font-family: Helvetical Neue, Helvetica, Arial, sans-serif;\n\
 }\n\
@@ -158,7 +162,7 @@ local.utility2['/doc/doc.html.template'] = '<style>\n\
 
 
 
-local.utility2['/test/test-report.html.template'] = '<style>\n\
+local.utility2['/test-report.html.template'] = '<style>\n\
 .testReportPlatformDiv {\n\
     border: 1px solid;\n\
     border-radius: 5px;\n\
@@ -863,6 +867,20 @@ local.utility2['/test/test-report.html.template'] = '<style>\n\
             }
         };
 
+        local.utility2.bcryptHashCreate = function (password, cost) {
+        /*
+         * this function will create a bcrypt-hash from the password and cost
+         */
+            return local.utility2.bcrypt.hashSync(password, cost);
+        };
+
+        local.utility2.bcryptPasswordValidate = function (password, hash) {
+        /*
+         * this function will validate the password against the bcrypt-hash
+         */
+            return local.utility2.bcrypt.compareSync(password, hash);
+        };
+
         /* istanbul ignore next */
         local.utility2.browserTest = function (options, onError) {
         /*
@@ -1173,7 +1191,7 @@ local.utility2['/test/test-report.html.template'] = '<style>\n\
                     };
                 });
             return local.utility2.stringFormat(
-                local.utility2['/doc/doc.html.template'],
+                local.utility2['/doc.api.html.template'],
                 options
             );
         };
@@ -1382,9 +1400,7 @@ local.utility2['/test/test-report.html.template'] = '<style>\n\
             circularList = [];
             return JSON.stringify(element && typeof element === 'object'
                 ? JSON.parse(stringify(element))
-                : element,
-                replacer,
-                space);
+                : element, replacer, space);
         };
 
         local.utility2.listShuffle = function (list) {
@@ -2486,7 +2502,7 @@ local.utility2['/test/test-report.html.template'] = '<style>\n\
             // create html test-report
             testCaseNumber = 0;
             return local.utility2.stringFormat(
-                local.utility2['/test/test-report.html.template'],
+                local.utility2['/test-report.html.template'],
                 local.utility2.objectSetOverride(testReport, {
                     CI_COMMIT_INFO: local.utility2.envDict.CI_COMMIT_INFO,
                     envDict: local.utility2.envDict,
@@ -3052,7 +3068,7 @@ local.utility2['/test/test-report.html.template'] = '<style>\n\
             );
         local.utility2.cacheDict.assets['/assets.utility2.css'] =
             local.fs.readFileSync(__dirname + '/index.css', 'utf8');
-        ['istanbul', 'jslint', 'uglifyjs'].forEach(function (key) {
+        ['bcrypt', 'istanbul', 'jslint', 'uglifyjs'].forEach(function (key) {
             local.utility2.cacheDict.assets['/assets.utility2.lib.' + key + '.js'] =
                 local.utility2.uglifyIfProduction(
                     local.utility2.istanbulInstrumentInPackage(

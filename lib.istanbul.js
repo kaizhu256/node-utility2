@@ -24,7 +24,7 @@
 
 
 
-    // run shared js-env code
+    // run shared js-env code - init
     (function () {
         // init var
         __dirname = '';
@@ -166,7 +166,7 @@
 
 
 
-    // run browser js-env code
+    // run browser js-env code - init
     case 'browser':
         // init exports
         local.global.utility2_istanbul = local;
@@ -183,7 +183,7 @@
 
 
 
-    // run node js-env code
+    // run node js-env code - init
     case 'node':
         // init exports
         module.exports = local;
@@ -1287,7 +1287,7 @@ local['coverage.badge.svg'] = '<svg xmlns="http://www.w3.org/2000/svg" width="11
 
 
 
-    // run node js-env code
+    // run node js-env code - post-init
     case 'node':
         /* istanbul ignore next */
         // run the cli

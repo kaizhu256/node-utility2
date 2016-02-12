@@ -526,7 +526,7 @@ shGithubDeploy() {(set -e
     shBuildGithubUpload
     # wait 10 seconds for github to deploy app
     sleep 10
-    # verify deployed app's main-page returns status-code < 400
+    # verify deployed app''s main-page returns status-code < 400
     [ $(curl -Ls -o /dev/null -w "%{http_code}" "$TEST_URL") -lt 400 ]
     # screen-capture deployed app
     export modeBrowserTest=screenCapture
@@ -586,7 +586,6 @@ shGrepFileReplace() {(set -e
 shHerokuDeploy() {(set -e
 # this function will deploy the app to $HEROKU_REPO,
 # and run a simple curl check for the main-page
-    HEROKU_REPO="$1"
     if [ "$GIT_SSH" = "" ]
     then
         exit
@@ -604,7 +603,7 @@ shHerokuDeploy() {(set -e
     (shGitRepoBranchCommand copyPwdLsTree local HEAD "git@heroku.com:$HEROKU_REPO.git" master)
     # wait 10 seconds for heroku to deploy app
     sleep 10
-    # verify deployed app's main-page returns status-code < 400
+    # verify deployed app''s main-page returns status-code < 400
     [ $(
         curl -Ls -o /dev/null -w "%{http_code}" https://$HEROKU_HOSTNAME
     ) -lt 400 ]
@@ -748,7 +747,7 @@ shIptablesInit() {(set -e
     iptables -P OUTPUT ACCEPT
 
     # https://wiki.debian.org/iptables
-    # Allows all loopback (lo0) traffic and drop all traffic to 127/8 that doesn't use lo0
+    # Allows all loopback (lo0) traffic and drop all traffic to 127/8 that doesn''t use lo0
     iptables -A INPUT -i lo -j ACCEPT
     iptables -A INPUT ! -i lo -d 127.0.0.0/8 -j REJECT
     # Accepts all established inbound connections
@@ -908,6 +907,8 @@ shNpmTestPublished() {(set -e
     # npm-install package
     npm install "$npm_package_name"
     cd "node_modules/$npm_package_name"
+    # fix bug - https://github.com/npm/npm/issues/10686
+    sed -in -e 's/ "_requiredBy":/ "_requiredBy_":/' package.json
     npm install
     # npm-test package
     npm test

@@ -95,7 +95,7 @@
             // test failure from multiple-callback handling-behavior
             onError();
             // test failure from ajax handling-behavior
-            local.utility2.ajax({ url: '/test/undefined' }, onError);
+            local.utility2.ajax({ url: '/test.undefined' }, onError);
             // test failure from thrown error handling-behavior
             throw local.utility2.errorDefault;
         };
@@ -104,7 +104,7 @@
         /*
          * this function will test ajax's abort handling-behavior
          */
-            options = local.utility2.ajax({ url: '/test/timeout' }, function (error) {
+            options = local.utility2.ajax({ url: '/test.timeout' }, function (error) {
                 local.utility2.testTryCatch(function () {
                     // validate error occurred
                     local.utility2.assert(error, error);
@@ -143,7 +143,7 @@
             local.utility2.nop(options);
             local.utility2.ajax({
                 modeJsonParseResponseText: true,
-                url: '/test/json'
+                url: '/test.json'
             }, function (error, xhr) {
                 local.utility2.testTryCatch(function () {
                     // validate no error occurred
@@ -170,17 +170,17 @@
                 url: '/assets.hello'
             }, {
                 // test 404-not-found-error handling-behavior
-                url: '/test/error-404'
+                url: '/test.error-404'
             }, {
                 // test 500-internal-server-error handling-behavior
-                url: '/test/error-500'
+                url: '/test.error-500'
             }, {
                 // test undefined-error handling-behavior
-                url: '/test/error-undefined'
+                url: '/test.error-undefined'
             }, {
                 // test timeout handling-behavior
                 timeout: 1,
-                url: '/test/timeout'
+                url: '/test.timeout'
             }, {
                 // test undefined https host handling-behavior
                 timeout: 1,
@@ -207,7 +207,7 @@
             local.utility2.nop(options);
             onParallel = local.utility2.onParallel(onError);
             onParallel.counter += 1;
-            // test /test/body handling-behavior
+            // test /test.body handling-behavior
             onParallel.counter += 1;
             ['', 'blob', 'response', 'text'].forEach(function (responseType) {
                 local.utility2.ajax({
@@ -221,7 +221,7 @@
                     responseType: responseType === 'response' && local.modeJs === 'node'
                         ? responseType
                         : '',
-                    url: '/test/body'
+                    url: '/test.body'
                 }, function (error, xhr) {
                     local.utility2.testTryCatch(function () {
                         // validate no error occurred
@@ -247,13 +247,13 @@
                     }, onParallel);
                 });
             });
-            // test /test/echo handling-behavior
+            // test /test.echo handling-behavior
             local.utility2.ajax({
                 data:  'hello',
                 // test request header handling-behavior
                 headers: { 'X-Request-Header-Test': 'hello' },
                 method: 'POST',
-                url: '/test/echo'
+                url: '/test.echo'
             }, function (error, xhr) {
                 local.utility2.testTryCatch(function () {
                     // validate no error occurred
@@ -323,6 +323,21 @@
                 // validate error-message
                 local.utility2.assert(error.message === '{"aa":1}', error.message);
             });
+            onError();
+        };
+
+        local.testCase_bcrypt_default = function (options, onError) {
+        /*
+         * this function will test bcrypt's default handling-behavior
+         */
+            // jslint-hack
+            local.utility2.nop(options);
+            options = {};
+            options.password = 'hello';
+            options.hash = local.utility2.bcryptHashCreate(options.password, 8);
+            options.data =
+                local.utility2.bcryptPasswordValidate(options.password, options.hash);
+            local.utility2.assert(options.data, options.data);
             onError();
         };
 
@@ -1215,6 +1230,9 @@
                 file: '/assets.utility2.js',
                 url: '/assets.utility2.js'
             }, {
+                file: '/assets.utility2.lib.bcrypt.js',
+                url: '/assets.utility2.lib.bcrypt.js'
+            }, {
                 file: '/assets.utility2.lib.istanbul.js',
                 url: '/assets.utility2.lib.istanbul.js'
             }, {
@@ -1640,7 +1658,7 @@
         // init serverLocal
         local.utility2.serverLocalUrlTest = function (url) {
             url = local.utility2.urlParse(url).pathname;
-            return local.modeJs === 'browser' && url.indexOf('/test/') === 0;
+            return local.modeJs === 'browser' && url.indexOf('/test.') === 0;
         };
         // init test-middleware
         local.middleware.middlewareList.push(function (request, response, nextMiddleware) {
@@ -1649,7 +1667,7 @@
          */
             switch (request.urlParsed.pathname) {
             // test http POST handling-behavior
-            case '/test/echo':
+            case '/test.echo':
                 // test response header handling-behavior
                 local.utility2.serverRespondHeadSet(request, response, null, {
                     'X-Response-Header-Test': 'bye'
@@ -1657,7 +1675,7 @@
                 local.utility2.serverRespondEcho(request, response);
                 break;
             // test http POST handling-behavior
-            case '/test/body':
+            case '/test.body':
                 // test request-body-read handling-behavior
                 local.utility2.middlewareBodyRead(request, response, function () {
                     // test multiple request-body-read handling-behavior
@@ -1668,7 +1686,7 @@
                 });
                 break;
             // test 500-internal-server-error handling-behavior
-            case '/test/error-500':
+            case '/test.error-500':
                 // test multiple-callback serverRespondHeadSet handling-behavior
                 local.utility2.serverRespondHeadSet(request, response, null, {});
                 nextMiddleware(local.utility2.errorDefault);
@@ -1687,15 +1705,15 @@
                 }, local.utility2.nop);
                 break;
             // test undefined-error handling-behavior
-            case '/test/error-undefined':
+            case '/test.error-undefined':
                 local.utility2.serverRespondDefault(request, response, 999);
                 break;
             // test undefined-error handling-behavior
-            case '/test/json':
+            case '/test.json':
                 response.end('"hello"');
                 break;
             // test timeout handling-behavior
-            case '/test/timeout':
+            case '/test.timeout':
                 setTimeout(function () {
                     response.end();
                 }, 5000);
