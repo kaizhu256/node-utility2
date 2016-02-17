@@ -13,19 +13,19 @@
 (function (local) {
     'use strict';
     var __dirname, nop, process, require;
-    nop = function () {
-    /*
-     * this function will do nothing
-     */
-        return;
-    };
-    // jslint-hack
-    nop(__dirname);
 
 
 
     // run shared js-env code - init
     (function () {
+        nop = function () {
+        /*
+         * this function will do nothing
+         */
+            return;
+        };
+        // jslint-hack
+        nop(__dirname);
         // init var
         __dirname = '';
         process = local.modeJs === 'browser'

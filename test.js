@@ -52,7 +52,7 @@
                 .replace("require('utility2')", 'module.utility2')
                 .replace(
                     "require('" + process.env.npm_package_name + "')",
-                    "require(__dirname + '/index.js')"
+                    "require('./index.js')"
                 )
                 // coverage-hack - do not cover example.js
                 .replace('local.utility2.istanbulInstrumentSync', 'local.utility2.echo');
@@ -1103,19 +1103,19 @@
             ], function (onError) {
                 // test default handling-behavior
                 data = local.utility2.urlParse('https://localhost:80/foo' +
-                    '?aa=1&bb%20cc=dd%20=ee&aa=2#zz=1');
+                    '?aa=1&bb%20cc=dd%20=ee&aa=2&aa#zz=1');
                 // validate data
                 local.utility2.assert(local.utility2.jsonStringifyOrdered(data) ===
                     local.utility2.jsonStringifyOrdered({
                         hash: '#zz=1',
                         host: 'localhost:80',
                         hostname: 'localhost',
-                        href: 'https://localhost:80/foo?aa=1&bb%20cc=dd%20=ee&aa=2#zz=1',
+                        href: 'https://localhost:80/foo?aa=1&bb%20cc=dd%20=ee&aa=2&aa#zz=1',
                         pathname: '/foo',
                         port: '80',
                         protocol: 'https:',
-                        query: { aa: '2', 'bb cc': 'dd =ee' },
-                        search: '?aa=1&bb%20cc=dd%20=ee&aa=2'
+                        query: { aa: ['1', '2', ''], 'bb cc': 'dd =ee' },
+                        search: '?aa=1&bb%20cc=dd%20=ee&aa=2&aa'
                     }), data);
                 // test error handling-behavior
                 data = local.utility2.urlParse(null);

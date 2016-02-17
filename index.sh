@@ -123,7 +123,7 @@ shBuildGithubUpload() {(set -e
     shBuildPrint "${MODE_BUILD:-githubUpload}" \
         "uploading build-artifacts to git@github.com:$GITHUB_REPO.git"
     shGitRepoBranchUpdateLocal() {
-    # this function will locally-update git-repo-branch
+    # this function will local-update git-repo-branch
         # run $BUILD_GITHUB_UPLOAD_PRE_SH
         if [ "$BUILD_GITHUB_UPLOAD_PRE_SH" ]
         then
@@ -907,7 +907,8 @@ shNpmTestPublished() {(set -e
     # npm-install package
     npm install "$npm_package_name"
     cd "node_modules/$npm_package_name"
-    # fix bug - https://github.com/npm/npm/issues/10686
+    # https://github.com/npm/npm/issues/10686
+    # workaround for issue - Cannot read property 'target' of null #10686
     sed -in -e 's/ "_requiredBy":/ "_requiredBy_":/' package.json
     npm install
     # npm-test package
@@ -1165,9 +1166,7 @@ shTravisEncryptYml() {(set -e
     then
         printf "# no \$AES_256_KEY detected in env - creating new AES_256_KEY\n"
         AES_256_KEY="$(openssl rand -hex 32)"
-        printf "# created new \$AES_256_KEY for encrypting data.\n"
-        printf "# you may want to copy the following to your .bashrc script\n"
-        printf "# so you can run builds locally:\n"
+        printf "# created new \$AES_256_KEY for encrypting data:\n"
         printf "export AES_256_KEY=$AES_256_KEY\n\n"
     fi
     printf "# travis-encrypting \$AES_256_KEY for $GITHUB_REPO\n"

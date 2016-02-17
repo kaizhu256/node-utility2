@@ -230,7 +230,7 @@ instruction
         process.env.npm_package_version = '0.0.1';
         // init assets
         /* jslint-ignore-begin */
-        local.utility2.cacheDict.assets['/'] = '<!DOCTYPE html>\n\
+        local.utility2.cacheDict.assets['/'] = '<!doctype html>\n\
 <html>\n\
 <head>\n\
 <meta charset="UTF-8">\n\
@@ -480,7 +480,7 @@ export PORT=$(./index.sh shServerPortRandom) && \
 export npm_config_mode_auto_restart=1 && \
 ./index.sh test node test.js"
     },
-    "version": "2016.1.2"
+    "version": "2016.1.3"
 }
 ```
 
@@ -496,10 +496,12 @@ export npm_config_mode_auto_restart=1 && \
 
 
 
-# change since 9ce530ca
-- npm publish 2016.1.2
-- fix shNpmTestPublished bug - https://github.com/npm/npm/issues/10686
-- add file /lib.bcrypt.js and functions utility2.bcryptHashCreate and utility2.bcryptPasswordValidate
+# change since d5c3ed81
+- npm publish 2016.1.3
+- directly JSON.stringify objects if they have the .toJSON method in utility2.jsonStringifyOrdered
+- parse repeating query param as an array in utility2.urlParse, like url.parse
+- save error from utility2.assert as utility2._debugAssertError
+- call sub-middlewares in utility2.middlewareGroupCreate in a try-catch block
 - none
 
 
@@ -604,5 +606,4 @@ shBuild() {(set -e
     exit "$EXIT_CODE"
 )}
 shBuild
-
 ```

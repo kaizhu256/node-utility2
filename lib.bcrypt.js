@@ -13,17 +13,17 @@
 (function () {
     'use strict';
     var local, nop;
-    nop = function () {
-    /*
-     * this function will do nothing
-     */
-        return;
-    };
 
 
 
     // run shared js-env code
     (function () {
+        nop = function () {
+        /*
+         * this function will do nothing
+         */
+            return;
+        };
         // init local
         local = {};
         // init modeJs

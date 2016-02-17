@@ -786,8 +786,8 @@ local.utility2['/test-report.html.template'] = '<style>\n\
                     }
                     // handle completed xhr request
                     if (xhr.readyState === 4) {
-                        // JSON.parse responseText
                         if (!xhr.error && xhr.modeJsonParseResponseText) {
+                            // JSON.parse responseText in a try-catch block
                             try {
                                 xhr.responseJson = JSON.parse(xhr.responseText);
                             } catch (errorCaught) {
@@ -852,19 +852,21 @@ local.utility2['/test-report.html.template'] = '<style>\n\
         /*
          * this function will throw an error if the assertion fails
          */
-            if (!passed) {
-                // if message is an Error object, then throw it
-                if (message && message.message) {
-                    throw message;
-                }
-                throw new Error(
-                    // if message is a string, then leave it as is
-                    typeof message === 'string'
-                        ? message
-                        // else JSON.stringify message
-                        : JSON.stringify(message)
-                );
+            var error;
+            if (passed) {
+                return;
             }
+            error = message && message.message
+                // message is an Error object
+                ? message
+                : new Error(typeof message === 'string'
+                    // if message is a string, then leave it as is
+                    ? message
+                    // else JSON.stringify message
+                    : JSON.stringify(message));
+            // debug error
+            local.utility2._debugAssertError = error;
+            throw error;
         };
 
         local.utility2.bcryptHashCreate = function (password, cost) {
@@ -1366,7 +1368,7 @@ local.utility2['/test-report.html.template'] = '<style>\n\
              */
                 // if element is an object,
                 // then recursively stringify its items sorted by their keys
-                if (element && typeof element === 'object') {
+                if (element && typeof element === 'object' && !element.toJSON) {
                     // remove circular-reference
                     if (circularList.indexOf(element) >= 0) {
                         return;
@@ -1582,7 +1584,10 @@ local.utility2['/test-report.html.template'] = '<style>\n\
                         : modeNext + 1;
                     // recursively run each sub-middleware in middlewareList
                     if (modeNext < self.middlewareList.length) {
-                        self.middlewareList[modeNext](request, response, onNext);
+                        // call sub-middleware in a try-catch block
+                        local.utility2.testTryCatch(function () {
+                            self.middlewareList[modeNext](request, response, onNext);
+                        }, onNext);
                         return;
                     }
                     // default to nextMiddleware
@@ -1921,7 +1926,7 @@ local.utility2['/test-report.html.template'] = '<style>\n\
                     script = 'console.log(String(' + match[2] + '))\n';
                     break;
                 }
-                // eval modified script
+                // eval modified script in a try-catch block
                 local.utility2.testTryCatch(function () {
                     local._replServer.evalDefault(script, context, file, onError2);
                 }, onError2);
@@ -2272,9 +2277,9 @@ local.utility2['/test-report.html.template'] = '<style>\n\
                 });
                 onError(error);
             };
-            // run callback onError with mocked objects in a try-catch block
+            // call onError with mock-objects in a try-catch block
             local.utility2.testTryCatch(function () {
-                // mock objects
+                // mock-objects
                 mockList.forEach(function (mock) {
                     mock[2] = {};
                     // backup mock[0] into mock[2]
@@ -2561,12 +2566,7 @@ local.utility2['/test-report.html.template'] = '<style>\n\
         /*
          * this function will run all tests in testPlatform.testCaseList
          */
-            var exit,
-                onParallel,
-                testPlatform,
-                testReport,
-                testReportDiv,
-                timerInterval;
+            var exit, onParallel, testPlatform, testReport, testReportDiv, timerInterval;
             // init modeTest
             local.utility2.modeTest = local.utility2.modeTest ||
                 local.utility2.envDict.npm_config_mode_npm_test;
@@ -2721,7 +2721,7 @@ local.utility2['/test-report.html.template'] = '<style>\n\
                 );
                 // increment number of tests remaining
                 onParallel.counter += 1;
-                // run testCase in try-catch block
+                // run testCase in a try-catch block
                 try {
                     // start testCase timer
                     testCase.timeElapsed = Date.now();
@@ -2844,9 +2844,9 @@ local.utility2['/test-report.html.template'] = '<style>\n\
          * https://developer.mozilla.org/en/docs/Web/API
          */
             var urlParsed;
-            // resolve host-less url
             urlParsed = {};
-            try {
+            local.utility2.testTryCatch(function () {
+                // resolve host-less url
                 switch (local.modeJs) {
                 case 'browser':
                     local.utility2.serverLocalHost = local.utility2.serverLocalHost ||
@@ -2874,14 +2874,23 @@ local.utility2['/test-report.html.template'] = '<style>\n\
                     urlParsed = local.url.parse(url);
                     break;
                 }
+                // init query
                 urlParsed.query = {};
                 urlParsed.search.slice(1).replace((/[^&]+/g), function (item) {
                     item = item.split('=');
-                    urlParsed.query[decodeURIComponent(item[0])] =
-                        decodeURIComponent(item.slice(1).join('='));
+                    item[0] = decodeURIComponent(item[0]);
+                    item[1] = decodeURIComponent(item.slice(1).join('='));
+                    // parse repeating query-param as an array
+                    if (urlParsed.query[item[0]]) {
+                        if (!Array.isArray(urlParsed.query[item[0]])) {
+                            urlParsed.query[item[0]] = [urlParsed.query[item[0]]];
+                        }
+                        urlParsed.query[item[0]].push(item[1]);
+                    } else {
+                        urlParsed.query[item[0]] = item[1];
+                    }
                 });
-            } catch (ignore) {
-            }
+            }, local.utility2.nop);
             // https://developer.mozilla.org/en/docs/Web/API/URL#Properties
             return {
                 hash: urlParsed.hash || '',
@@ -3081,10 +3090,11 @@ local.utility2['/test-report.html.template'] = '<style>\n\
         });
         /* istanbul ignore next */
         // run the cli
-        local.cliRun = function (options) {
+        local.cliRun = function () {
         /*
          * this function will run the cli
          */
+            var options;
             // merge previous test-report
             if (local.utility2.envDict.npm_config_file_test_report_merge) {
                 local.utility2.testReportMerge(

@@ -715,7 +715,7 @@ function(e){var t,n,r=[],i;if(e.errors.length){e.json&&r.push("<cite>JSON: bad.<
                     // https://developer.mozilla.org
                     // /en-US/docs/Web/JavaScript/Reference/Global_Objects/Generator
                     .replace((/\bfunction\*/g), 'function')
-                    .replace((/ yield /g), ' this.yield = ');
+                    .replace((/ yield /g), ' this.y = ');
                 if (local.JSLINT(scriptParsed)) {
                     return script;
                 }
