@@ -135,26 +135,6 @@
             });
         };
 
-        local.testCase_ajax_json = function (options, onError) {
-        /*
-         * this function will test ajax's json handling-behavior
-         */
-            // jslint-hack
-            local.utility2.nop(options);
-            local.utility2.ajax({
-                modeJsonParseResponseText: true,
-                url: '/test.json'
-            }, function (error, xhr) {
-                local.utility2.testTryCatch(function () {
-                    // validate no error occurred
-                    local.utility2.assert(!error && xhr.status === 200, [error, xhr.status]);
-                    // validate responseJson
-                    local.utility2.assert(xhr.responseJson === 'hello', xhr.responseJson);
-                    onError();
-                }, onError);
-            });
-        };
-
         local.testCase_ajax_error = function (options, onError) {
         /*
          * this function will test ajax's error handling-behavior
@@ -196,6 +176,26 @@
                 });
             });
             onParallel();
+        };
+
+        local.testCase_ajax_json = function (options, onError) {
+        /*
+         * this function will test ajax's json handling-behavior
+         */
+            // jslint-hack
+            local.utility2.nop(options);
+            local.utility2.ajax({
+                modeJsonParseResponseText: true,
+                url: '/test.json'
+            }, function (error, xhr) {
+                local.utility2.testTryCatch(function () {
+                    // validate no error occurred
+                    local.utility2.assert(!error && xhr.status === 200, [error, xhr.status]);
+                    // validate responseJson
+                    local.utility2.assert(xhr.responseJson === 'hello', xhr.responseJson);
+                    onError();
+                }, onError);
+            });
         };
 
         local.testCase_ajax_post = function (options, onError) {
@@ -453,19 +453,6 @@
             }, onError);
         };
 
-        local.testCase_istanbulInstrumentSync_default = function (options, onError) {
-        /*
-         * this function will test istanbulInstrumentSync's default handling-behavior
-         */
-            var data;
-            // jslint-hack
-            local.utility2.nop(options);
-            data = local.utility2.istanbulInstrumentSync('1', 'test.js');
-            // validate data
-            local.utility2.assert(data.indexOf('.s[\'1\']++;1;\n') >= 0, data);
-            onError();
-        };
-
         local.testCase_istanbulCoverageReportCreate_default = function (options, onError) {
         /*
          * this function will test istanbulCoverageReportCreate's default handling-behavior
@@ -521,6 +508,19 @@
                 });
                 onError();
             }, onError);
+        };
+
+        local.testCase_istanbulInstrumentSync_default = function (options, onError) {
+        /*
+         * this function will test istanbulInstrumentSync's default handling-behavior
+         */
+            var data;
+            // jslint-hack
+            local.utility2.nop(options);
+            data = local.utility2.istanbulInstrumentSync('1', 'test.js');
+            // validate data
+            local.utility2.assert(data.indexOf('.s[\'1\']++;1;\n') >= 0, data);
+            onError();
         };
 
         local.testCase_jslintAndPrint_default = function (options, onError) {
@@ -643,6 +643,17 @@
             // validate list after shuffle
             local.utility2.assert(options.length === list.length, options);
             local.utility2.assert(options !== list, options);
+            onError();
+        };
+
+        local.testCase_objectGetFirstElement_default = function (options, onError) {
+        /*
+         * this function will test objectGetFirstElement's default handling-behavior
+         */
+            // jslint-hack
+            options = { aa: true };
+            options = local.utility2.objectGetFirstElement(options);
+            local.utility2.assert(options === true, options);
             onError();
         };
 
@@ -1086,6 +1097,31 @@
             onError();
         };
 
+        local.testCase_uglifyIfProduction_default = function (options, onError) {
+        /*
+         * this function will test uglify's default handling-behavior
+         */
+            var data;
+            // jslint-hack
+            local.utility2.nop(options);
+            local.utility2.testMock([
+                // suppress console.error
+                [local.utility2.envDict, { npm_config_production: '' }]
+            ], function (onError) {
+                // test no production-mode handling-behavior
+                local.utility2.envDict.npm_config_production = '';
+                data = local.utility2.uglifyIfProduction('aa = 1');
+                // validate data
+                local.utility2.assert(data === 'aa = 1', data);
+                // test production-mode handling-behavior
+                local.utility2.envDict.npm_config_production = '1';
+                data = local.utility2.uglifyIfProduction('aa = 1');
+                // validate data
+                local.utility2.assert(data === 'aa=1', data);
+                onError();
+            }, onError);
+        };
+
         local.testCase_urlParse_default = function (options, onError) {
         /*
          * this function will test urlParse's default handling-behavior
@@ -1132,31 +1168,6 @@
                         query: {},
                         search: ''
                     }), data);
-                onError();
-            }, onError);
-        };
-
-        local.testCase_uglifyIfProduction_default = function (options, onError) {
-        /*
-         * this function will test uglify's default handling-behavior
-         */
-            var data;
-            // jslint-hack
-            local.utility2.nop(options);
-            local.utility2.testMock([
-                // suppress console.error
-                [local.utility2.envDict, { npm_config_production: '' }]
-            ], function (onError) {
-                // test no production-mode handling-behavior
-                local.utility2.envDict.npm_config_production = '';
-                data = local.utility2.uglifyIfProduction('aa = 1');
-                // validate data
-                local.utility2.assert(data === 'aa = 1', data);
-                // test production-mode handling-behavior
-                local.utility2.envDict.npm_config_production = '1';
-                data = local.utility2.uglifyIfProduction('aa = 1');
-                // validate data
-                local.utility2.assert(data === 'aa=1', data);
                 onError();
             }, onError);
         };
@@ -1650,7 +1661,7 @@
     // run shared js-env code - post-init
     (function () {
         // init assets
-        local.utility2.cacheDict.assets['/script-only.html'] =
+        local.utility2.assetsDict['/script-only.html'] =
             '<h1>script-only test</h1>\n' +
             '<script src="assets.utility2.js"></script>\n' +
             '<script src="assets.example.js"></script>\n' +
@@ -1731,7 +1742,7 @@
     // run node js-env code - post-init
     case 'node':
         // init assets
-        local.utility2.cacheDict.assets['/assets.test.js'] =
+        local.utility2.assetsDict['/assets.test.js'] =
             local.utility2.istanbulInstrumentInPackage(
                 local.fs.readFileSync(__filename, 'utf8'),
                 __filename,

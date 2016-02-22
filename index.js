@@ -59,40 +59,40 @@
                 onError.apply(null, arguments);
             };
         };
-        // init utility2
-        local.utility2 = { cacheDict: { assets: {}, taskUpsert: {} }, local: local };
+        // init lib utility2
+        local.utility2 = { assetsDict: {}, cacheDict: {}, local: local, taskUpsertDict: {} };
         local.utility2.nop = function () {
         /*
          * this function will do nothing
          */
             return;
         };
-        // init bcrypt
+        // init lib bcrypt
         local.utility2.bcrypt = local.modeJs === 'browser'
             ? local.global.utility2_bcrypt
             : require('./lib.bcrypt.js');
-        // init istanbul
+        // init lib istanbul
         local.utility2.istanbul = local.modeJs === 'browser'
             ? local.global.utility2_istanbul
             : require('./lib.istanbul.js');
-        // init jslint
+        // init lib jslint
         local.utility2.jslint = local.modeJs === 'browser'
             ? local.global.utility2_jslint
             : require('./lib.jslint.js');
-        // init uglifyjs
+        // init lib uglifyjs
         local.utility2.uglifyjs = local.modeJs === 'browser'
             ? local.global.utility2_uglifyjs
             : require('./lib.uglifyjs.js');
-        // init assets
+        // init templates
 /* jslint-ignore-begin */
 // https://img.shields.io/badge/last_build-0000_00_00_00_00_00_UTC_--_master_--_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-0077ff.svg?style=flat
-local.utility2['/build/build.badge.svg'] = '<svg xmlns="http://www.w3.org/2000/svg" width="563" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="563" height="20" fill="#555"/><rect rx="0" x="61" width="502" height="20" fill="#07f"/><path fill="#07f" d="M61 0h4v20h-4z"/><rect rx="0" width="563" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="31.5" y="15" fill="#010101" fill-opacity=".3">last build</text><text x="31.5" y="14">last build</text><text x="311" y="15" fill="#010101" fill-opacity=".3">0000-00-00 00:00:00 UTC - master - aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</text><text x="311" y="14">0000-00-00 00:00:00 UTC - master - aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</text></g></svg>';
+local.utility2.templateBuildBadgeSvg =
+'<svg xmlns="http://www.w3.org/2000/svg" width="563" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="563" height="20" fill="#555"/><rect rx="0" x="61" width="502" height="20" fill="#07f"/><path fill="#07f" d="M61 0h4v20h-4z"/><rect rx="0" width="563" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="31.5" y="15" fill="#010101" fill-opacity=".3">last build</text><text x="31.5" y="14">last build</text><text x="311" y="15" fill="#010101" fill-opacity=".3">0000-00-00 00:00:00 UTC - master - aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</text><text x="311" y="14">0000-00-00 00:00:00 UTC - master - aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</text></g></svg>';
 
 
 
-// https://img.shields.io/badge/tests_failed-999-dd0000.svg?style=flat
-local.utility2['/build/test-report.badge.svg'] = '<svg xmlns="http://www.w3.org/2000/svg" width="103" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="103" height="20" fill="#555"/><rect rx="0" x="72" width="31" height="20" fill="#d00"/><path fill="#d00" d="M72 0h4v20h-4z"/><rect rx="0" width="103" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="37" y="15" fill="#010101" fill-opacity=".3">tests failed</text><text x="37" y="14">tests failed</text><text x="86.5" y="15" fill="#010101" fill-opacity=".3">999</text><text x="86.5" y="14">999</text></g></svg>';
-local.utility2['/doc.api.html.template'] = '<style>\n\
+local.utility2.templateDocApiHtml = '\
+<style>\n\
 .docApiDiv {\n\
     font-family: Helvetical Neue, Helvetica, Arial, sans-serif;\n\
 }\n\
@@ -158,11 +158,19 @@ local.utility2['/doc.api.html.template'] = '<style>\n\
 {{/elementList}}\n\
 </div>\n\
 {{/moduleList}}\n\
-</div>';
+</div>\n\
+';
 
 
 
-local.utility2['/test-report.html.template'] = '<style>\n\
+// https://img.shields.io/badge/tests_failed-999-dd0000.svg?style=flat
+local.utility2.templateTestReportBadgeSvg =
+'<svg xmlns="http://www.w3.org/2000/svg" width="103" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="103" height="20" fill="#555"/><rect rx="0" x="72" width="31" height="20" fill="#d00"/><path fill="#d00" d="M72 0h4v20h-4z"/><rect rx="0" width="103" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="37" y="15" fill="#010101" fill-opacity=".3">tests failed</text><text x="37" y="14">tests failed</text><text x="86.5" y="15" fill="#010101" fill-opacity=".3">999</text><text x="86.5" y="14">999</text></g></svg>';
+
+
+
+local.utility2.templateTestReportHtml = '\
+<style>\n\
 .testReportPlatformDiv {\n\
     border: 1px solid;\n\
     border-radius: 5px;\n\
@@ -274,7 +282,8 @@ local.utility2['/test-report.html.template'] = '<style>\n\
 {{/errorStackList}}\n\
 </pre>\n\
 </div>\n\
-{{/testPlatformList}}';
+{{/testPlatformList}}\n\
+';
 /* jslint-ignore-end */
     }());
 
@@ -314,7 +323,7 @@ local.utility2['/test-report.html.template'] = '<style>\n\
             ajaxProgressBarDiv.innerHTML = label;
         };
 
-        // init _http module
+        // init lib _http
         local._http = {};
 
         // init _http.IncomingMessage
@@ -361,6 +370,22 @@ local.utility2['/test-report.html.template'] = '<style>\n\
         local._http.IncomingMessage.prototype.on =
             local._http.IncomingMessage.prototype.addListener;
 
+        local._http.IncomingMessage.prototype.pipe = function (writable) {
+        /*
+         * https://nodejs.org/api/all.html#all_readable_pipe_destination_options
+         * This method pulls all the data out of a readable stream, and writes it to the
+         * supplied destination, automatically managing the flow so that the destination is not
+         * overwhelmed by a fast readable stream
+         */
+            this.on('data', function (chunk) {
+                writable.write(chunk);
+            });
+            this.on('end', function () {
+                writable.end();
+            });
+            return writable;
+        };
+
         // init _http.ServerResponse
         local._http.ServerResponse = function (onResponse) {
         /*
@@ -399,22 +424,6 @@ local.utility2['/test-report.html.template'] = '<style>\n\
         // https://nodejs.org/api/all.html#all_emitter_on_event_listener
         local._http.ServerResponse.prototype.on =
             local._http.IncomingMessage.prototype.addListener;
-
-        local._http.IncomingMessage.prototype.pipe = function (writable) {
-        /*
-         * https://nodejs.org/api/all.html#all_readable_pipe_destination_options
-         * This method pulls all the data out of a readable stream, and writes it to the
-         * supplied destination, automatically managing the flow so that the destination is not
-         * overwhelmed by a fast readable stream
-         */
-            this.on('data', function (chunk) {
-                writable.write(chunk);
-            });
-            this.on('end', function () {
-                writable.end();
-            });
-            return writable;
-        };
 
         // https://nodejs.org/api/all.html#all_response_setheader_name_value
         local._http.ServerResponse.prototype.setHeader = function (key, value) {
@@ -528,11 +537,6 @@ local.utility2['/test-report.html.template'] = '<style>\n\
          * Aborts the request if it has already been sent
          */
             this.onError(new Error('abort'));
-        };
-
-        // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/upload
-        local._http.XMLHttpRequest.prototype.upload = {
-            addEventListener: local.utility2.nop
         };
 
         local._http.XMLHttpRequest.prototype.addEventListener = function (event, onError) {
@@ -658,6 +662,11 @@ local.utility2['/test-report.html.template'] = '<style>\n\
             key = key.toLowerCase();
             this.headers[key] = value;
             this.requestStream.setHeader(key, value);
+        };
+
+        // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/upload
+        local._http.XMLHttpRequest.prototype.upload = {
+            addEventListener: local.utility2.nop
         };
 
         local._http.createServer = function () {
@@ -1192,10 +1201,7 @@ local.utility2['/test-report.html.template'] = '<style>\n\
                         name: moduleName
                     };
                 });
-            return local.utility2.stringFormat(
-                local.utility2['/doc.api.html.template'],
-                options
-            );
+            return local.utility2.stringFormat(local.utility2.templateDocApiHtml, options);
         };
 
         local.utility2.echo = function (arg) {
@@ -1368,7 +1374,9 @@ local.utility2['/test-report.html.template'] = '<style>\n\
              */
                 // if element is an object,
                 // then recursively stringify its items sorted by their keys
-                if (element && typeof element === 'object' && !element.toJSON) {
+                if (element &&
+                        typeof element === 'object' &&
+                        typeof element.toJSON !== 'function') {
                     // remove circular-reference
                     if (circularList.indexOf(element) >= 0) {
                         return;
@@ -1413,7 +1421,7 @@ local.utility2['/test-report.html.template'] = '<style>\n\
             var ii, random, swap;
             for (ii = list.length - 1; ii > 0; ii -= 1) {
                 // coerce to finite integer
-                random = (Math.random() * ii) | 0;
+                random = (Math.random() * (ii + 1)) | 0;
                 swap = list[ii];
                 list[ii] = list[random];
                 list[random] = swap;
@@ -1428,7 +1436,7 @@ local.utility2['/test-report.html.template'] = '<style>\n\
             var modeNext, onNext, result;
             modeNext = 0;
             onNext = function (error, data) {
-                result = result || local.utility2.cacheDict.assets[request.urlParsed.pathname];
+                result = result || local.utility2.assetsDict[request.urlParsed.pathname];
                 if (error || !result) {
                     nextMiddleware(error);
                     return;
@@ -1631,6 +1639,13 @@ local.utility2['/test-report.html.template'] = '<style>\n\
             }
             // default to nextMiddleware
             nextMiddleware();
+        };
+
+        local.utility2.objectGetFirstElement = function (options) {
+        /*
+         * this function will get the first element of the object
+         */
+            return options[Object.keys(options)[0]];
         };
 
         local.utility2.objectSetDefault = function (options, defaults, depth) {
@@ -2154,8 +2169,8 @@ local.utility2['/test-report.html.template'] = '<style>\n\
             var task;
             onError = local.utility2.onErrorWithStack(onError);
             // init task
-            task = local.utility2.cacheDict.taskUpsert[options.key] =
-                local.utility2.cacheDict.taskUpsert[options.key] || {
+            task = local.utility2.taskUpsertDict[options.key] =
+                local.utility2.taskUpsertDict[options.key] || {
                     callbackList: []
                 };
             // add callback onError to the task
@@ -2219,7 +2234,7 @@ local.utility2['/test-report.html.template'] = '<style>\n\
          * this function will upsert the task named options.key
          */
             var task;
-            task = local.utility2.cacheDict.taskUpsert[options.key];
+            task = local.utility2.taskUpsertDict[options.key];
             // if task is defined, then return
             if (task.onTask) {
                 return task;
@@ -2233,7 +2248,7 @@ local.utility2['/test-report.html.template'] = '<style>\n\
                 // cleanup timerTimeout
                 clearTimeout(task.timerTimeout);
                 // cleanup task
-                delete local.utility2.cacheDict.taskUpsert[options.key];
+                delete local.utility2.taskUpsertDict[options.key];
                 // preserve error.message and error.stack
                 task.result = JSON.stringify(Array.prototype.slice.call(arguments)
                     .map(function (element) {
@@ -2321,7 +2336,7 @@ local.utility2['/test-report.html.template'] = '<style>\n\
             );
             // create build.badge.svg
             local.fs.writeFileSync(local.utility2.envDict.npm_config_dir_build +
-                '/build.badge.svg', local.utility2['/build/build.badge.svg']
+                '/build.badge.svg', local.utility2.templateBuildBadgeSvg
                 // edit branch name
                 .replace((/0000-00-00 00:00:00/g),
                     new Date().toISOString().slice(0, 19).replace('T', ' '))
@@ -2332,7 +2347,7 @@ local.utility2['/test-report.html.template'] = '<style>\n\
                     local.utility2.envDict.CI_COMMIT_ID));
             // create test-report.badge.svg
             local.fs.writeFileSync(local.utility2.envDict.npm_config_dir_build +
-                '/test-report.badge.svg', local.utility2['/build/test-report.badge.svg']
+                '/test-report.badge.svg', local.utility2.templateTestReportBadgeSvg
                 // edit number of tests failed
                 .replace((/999/g), testReport.testsFailed)
                 // edit badge color
@@ -2507,7 +2522,7 @@ local.utility2['/test-report.html.template'] = '<style>\n\
             // create html test-report
             testCaseNumber = 0;
             return local.utility2.stringFormat(
-                local.utility2['/test-report.html.template'],
+                local.utility2.templateTestReportHtml,
                 local.utility2.objectSetOverride(testReport, {
                     CI_COMMIT_INFO: local.utility2.envDict.CI_COMMIT_INFO,
                     envDict: local.utility2.envDict,
@@ -3067,7 +3082,7 @@ local.utility2['/test-report.html.template'] = '<style>\n\
             npm_package_version: '0.0.1'
         });
         // init assets
-        local.utility2.cacheDict.assets['/assets.utility2.js'] =
+        local.utility2.assetsDict['/assets.utility2.js'] =
             local.utility2.uglifyIfProduction(
                 local.utility2.istanbulInstrumentInPackage(
                     local.fs.readFileSync(__filename, 'utf8'),
@@ -3075,10 +3090,10 @@ local.utility2['/test-report.html.template'] = '<style>\n\
                     'utility2'
                 )
             );
-        local.utility2.cacheDict.assets['/assets.utility2.css'] =
+        local.utility2.assetsDict['/assets.utility2.css'] =
             local.fs.readFileSync(__dirname + '/index.css', 'utf8');
         ['bcrypt', 'istanbul', 'jslint', 'uglifyjs'].forEach(function (key) {
-            local.utility2.cacheDict.assets['/assets.utility2.lib.' + key + '.js'] =
+            local.utility2.assetsDict['/assets.utility2.lib.' + key + '.js'] =
                 local.utility2.uglifyIfProduction(
                     local.utility2.istanbulInstrumentInPackage(
                         local.fs.readFileSync(__dirname + '/lib.' + key + '.js', 'utf8')

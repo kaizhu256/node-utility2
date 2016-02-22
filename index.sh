@@ -242,8 +242,7 @@ shDockerRestartNginx() {(set -e
     # init $HOME/docker/etc.nginx.conf.d.default.conf
     # https://www.nginx.com/resources/wiki/start/topics/examples/full/#nginx-conf
     FILE="$HOME/docker/etc.nginx.conf.d/default.conf"
-    #!! if [ -f "$FILE" ]
-    if [ "$FILE" ]
+    if [ ! -f "$FILE" ]
     then
         mkdir -p "$HOME/docker/etc.nginx.conf.d"
         printf '
