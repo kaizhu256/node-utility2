@@ -121,35 +121,14 @@
         /*
          * this function will test ajax's assets handling-behavior
          */
-            // jslint-hack
-            local.utility2.nop(options);
-            local.utility2.ajax({ url: 'package.json' }, function (error, xhr) {
+            options = { url: 'package.json' };
+            local.utility2.ajax(options, function (error, xhr) {
                 local.utility2.testTryCatch(function () {
                     // validate no error occurred
                     local.utility2.assert(!error && xhr.status === 200, [error, xhr.status]);
                     // validate responseText
                     local.utility2.assert((/"name": "utility2",/)
                         .test(xhr.responseText), xhr.responseText);
-                    onError();
-                }, onError);
-            });
-        };
-
-        local.testCase_ajax_json = function (options, onError) {
-        /*
-         * this function will test ajax's json handling-behavior
-         */
-            // jslint-hack
-            local.utility2.nop(options);
-            local.utility2.ajax({
-                modeJsonParseResponseText: true,
-                url: '/test.json'
-            }, function (error, xhr) {
-                local.utility2.testTryCatch(function () {
-                    // validate no error occurred
-                    local.utility2.assert(!error && xhr.status === 200, [error, xhr.status]);
-                    // validate responseJson
-                    local.utility2.assert(xhr.responseJson === 'hello', xhr.responseJson);
                     onError();
                 }, onError);
             });
@@ -192,19 +171,34 @@
                         // validate error occurred
                         local.utility2.assert(error, error);
                         onParallel();
-                    }, onParallel);
+                    }, onError);
                 });
             });
             onParallel();
+        };
+
+        local.testCase_ajax_json = function (options, onError) {
+        /*
+         * this function will test ajax's json handling-behavior
+         */
+            options = { modeJsonParseResponseText: true, url: '/test.json' };
+            local.utility2.ajax(options, function (error, xhr) {
+                local.utility2.testTryCatch(function () {
+                    // validate no error occurred
+                    local.utility2.assert(!error && xhr.status === 200, [error, xhr.status]);
+                    // validate responseJson
+                    local.utility2.assert(xhr.responseJson === 'hello', xhr.responseJson);
+                    onError();
+                }, onError);
+            });
         };
 
         local.testCase_ajax_post = function (options, onError) {
         /*
          * this function will test ajax's POST handling-behavior
          */
-            var data, onParallel;
-            // jslint-hack
-            local.utility2.nop(options);
+            var onParallel;
+            options = {};
             onParallel = local.utility2.onParallel(onError);
             onParallel.counter += 1;
             // test /test.body handling-behavior
@@ -236,15 +230,15 @@
                             // cleanup response
                             local.utility2.requestResponseCleanup(null, xhr.response);
                             // validate response
-                            data = xhr.response;
-                            local.utility2.assert(data, data);
+                            options.data = xhr.response;
+                            local.utility2.assert(options.data, options.data);
                             break;
                         default:
-                            data = xhr.responseText;
-                            local.utility2.assert(data === 'hello', data);
+                            options.data = xhr.responseText;
+                            local.utility2.assert(options.data === 'hello', options.data);
                         }
                         onParallel();
-                    }, onParallel);
+                    }, onError);
                 });
             });
             // test /test.echo handling-behavior
@@ -259,20 +253,20 @@
                     // validate no error occurred
                     local.utility2.assert(!error && xhr.status === 200, [error, xhr.status]);
                     // validate response
-                    data = xhr.responseText;
-                    local.utility2.assert((/\r\nhello$/).test(data), data);
+                    options.data = xhr.responseText;
+                    local.utility2.assert((/\r\nhello$/).test(options.data), options.data);
                     local.utility2.assert((/\r\nx-request-header-test: hello\r\n/)
-                        .test(data), data);
+                        .test(options.data), options.data);
                     // validate responseHeaders
-                    data = xhr.getAllResponseHeaders();
+                    options.data = xhr.getAllResponseHeaders();
                     local.utility2.assert(
-                        (/^X-Response-Header-Test: bye\r\n/im).test(data),
-                        data
+                        (/^X-Response-Header-Test: bye\r\n/im).test(options.data),
+                        options.data
                     );
-                    data = xhr.getResponseHeader('x-response-header-test');
-                    local.utility2.assert(data === 'bye', data);
-                    data = xhr.getResponseHeader('undefined');
-                    local.utility2.assert(data === null, data);
+                    options.data = xhr.getResponseHeader('x-response-header-test');
+                    local.utility2.assert(options.data === 'bye', options.data);
+                    options.data = xhr.getResponseHeader('undefined');
+                    local.utility2.assert(options.data === null, options.data);
                     // validate statusCode
                     local.utility2.assert(xhr.statusCode === 200, xhr.statusCode);
                     onParallel();
@@ -330,14 +324,51 @@
         /*
          * this function will test bcrypt's default handling-behavior
          */
-            // jslint-hack
-            local.utility2.nop(options);
             options = {};
             options.password = 'hello';
             options.hash = local.utility2.bcryptHashCreate(options.password, 8);
             options.data =
                 local.utility2.bcryptPasswordValidate(options.password, options.hash);
             local.utility2.assert(options.data, options.data);
+            onError();
+        };
+
+        local.testCase_cryptojs_default = function (options, onError) {
+        /*
+         * this function will test cryptojs's default handling-behavior
+         */
+            // jslint-hack
+            local.utility2.nop(options);
+            [{
+                // test string handling-behavior
+                key: 'secret',
+                message: 'hello'
+            }, {
+                // test binary-data handling-behavior
+                key: local.modeJs === 'browser'
+                    ? [115, 101, 99, 114, 101, 116]
+                    : new Buffer('secret'),
+                message: local.modeJs === 'browser'
+                    ? [104, 101, 108, 108, 111]
+                    : new Buffer('hello')
+            }].forEach(function (options) {
+                // test buffer handling-behavior
+                if (local.modeJs === 'node') {
+                    options.key = new Buffer(options.key);
+                    options.message = new Buffer(options.message);
+                }
+                // test cryptojsHmacSha256HashCreate handling-behavior
+                options.hash =
+                    local.utility2.cryptojsHmacSha256HashCreate(options.key, options.message);
+                local.utility2.assert(options.hash ===
+                    '88aab3ede8d3adf94d26ab90d3bafd4a2083070c3bcce9c014ee04a443847c0b',
+                    options.hash);
+                // test cryptojsSha256HashCreate handling-behavior
+                options.hash = local.utility2.cryptojsSha256HashCreate(options.message);
+                local.utility2.assert(options.hash ===
+                    '2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824',
+                    options.hash);
+            });
             onError();
         };
 
@@ -453,19 +484,6 @@
             }, onError);
         };
 
-        local.testCase_istanbulInstrumentSync_default = function (options, onError) {
-        /*
-         * this function will test istanbulInstrumentSync's default handling-behavior
-         */
-            var data;
-            // jslint-hack
-            local.utility2.nop(options);
-            data = local.utility2.istanbulInstrumentSync('1', 'test.js');
-            // validate data
-            local.utility2.assert(data.indexOf('.s[\'1\']++;1;\n') >= 0, data);
-            onError();
-        };
-
         local.testCase_istanbulCoverageReportCreate_default = function (options, onError) {
         /*
          * this function will test istanbulCoverageReportCreate's default handling-behavior
@@ -521,6 +539,19 @@
                 });
                 onError();
             }, onError);
+        };
+
+        local.testCase_istanbulInstrumentSync_default = function (options, onError) {
+        /*
+         * this function will test istanbulInstrumentSync's default handling-behavior
+         */
+            var data;
+            // jslint-hack
+            local.utility2.nop(options);
+            data = local.utility2.istanbulInstrumentSync('1', 'test.js');
+            // validate data
+            local.utility2.assert(data.indexOf('.s[\'1\']++;1;\n') >= 0, data);
+            onError();
         };
 
         local.testCase_jslintAndPrint_default = function (options, onError) {
@@ -643,6 +674,17 @@
             // validate list after shuffle
             local.utility2.assert(options.length === list.length, options);
             local.utility2.assert(options !== list, options);
+            onError();
+        };
+
+        local.testCase_objectGetFirstElement_default = function (options, onError) {
+        /*
+         * this function will test objectGetFirstElement's default handling-behavior
+         */
+            // jslint-hack
+            options = { aa: true };
+            options = local.utility2.objectGetFirstElement(options);
+            local.utility2.assert(options === true, options);
             onError();
         };
 
@@ -1015,10 +1057,7 @@
         /*
          * this function will test taskUpsert's multiple-callback handling-behavior
          */
-            options = {
-                counter: 0,
-                key: 'testCase_taskUpsert_multiCallback'
-            };
+            options = { counter: 0, key: 'testCase_taskUpsert_multiCallback' };
             local.utility2.taskCallbackAdd(options, function () {
                 options.counter += 1;
             });
@@ -1036,11 +1075,7 @@
         /*
          * this function will test taskUpsert's upsert handling-behavior
          */
-            options = {
-                counter: 0,
-                key: 'testCase_taskUpsert_upsert'
-            };
-            local.utility2.taskCallbackAdd(options, local.utility2.nop);
+            options = { counter: 0, key: 'testCase_taskUpsert_upsert' };
             // test upsert handling-behavior
             [null, null].forEach(function () {
                 local.utility2.taskUpsert(options, function (onError) {
@@ -1084,6 +1119,31 @@
             // validate data
             local.utility2.assert(data === 'aa=1', data);
             onError();
+        };
+
+        local.testCase_uglifyIfProduction_default = function (options, onError) {
+        /*
+         * this function will test uglify's default handling-behavior
+         */
+            var data;
+            // jslint-hack
+            local.utility2.nop(options);
+            local.utility2.testMock([
+                // suppress console.error
+                [local.utility2.envDict, { npm_config_production: '' }]
+            ], function (onError) {
+                // test no production-mode handling-behavior
+                local.utility2.envDict.npm_config_production = '';
+                data = local.utility2.uglifyIfProduction('aa = 1');
+                // validate data
+                local.utility2.assert(data === 'aa = 1', data);
+                // test production-mode handling-behavior
+                local.utility2.envDict.npm_config_production = '1';
+                data = local.utility2.uglifyIfProduction('aa = 1');
+                // validate data
+                local.utility2.assert(data === 'aa=1', data);
+                onError();
+            }, onError);
         };
 
         local.testCase_urlParse_default = function (options, onError) {
@@ -1132,31 +1192,6 @@
                         query: {},
                         search: ''
                     }), data);
-                onError();
-            }, onError);
-        };
-
-        local.testCase_uglifyIfProduction_default = function (options, onError) {
-        /*
-         * this function will test uglify's default handling-behavior
-         */
-            var data;
-            // jslint-hack
-            local.utility2.nop(options);
-            local.utility2.testMock([
-                // suppress console.error
-                [local.utility2.envDict, { npm_config_production: '' }]
-            ], function (onError) {
-                // test no production-mode handling-behavior
-                local.utility2.envDict.npm_config_production = '';
-                data = local.utility2.uglifyIfProduction('aa = 1');
-                // validate data
-                local.utility2.assert(data === 'aa = 1', data);
-                // test production-mode handling-behavior
-                local.utility2.envDict.npm_config_production = '1';
-                data = local.utility2.uglifyIfProduction('aa = 1');
-                // validate data
-                local.utility2.assert(data === 'aa=1', data);
                 onError();
             }, onError);
         };
@@ -1221,6 +1256,9 @@
                 file: '/assets.hello',
                 url: '/assets.hello'
             }, {
+                file: '/assets.script-only.html',
+                url: '/assets.script-only.html'
+            }, {
                 file: '/assets.test.js',
                 url: '/assets.test.js'
             }, {
@@ -1232,6 +1270,9 @@
             }, {
                 file: '/assets.utility2.lib.bcrypt.js',
                 url: '/assets.utility2.lib.bcrypt.js'
+            }, {
+                file: '/assets.utility2.lib.cryptojs.js',
+                url: '/assets.utility2.lib.cryptojs.js'
             }, {
                 file: '/assets.utility2.lib.istanbul.js',
                 url: '/assets.utility2.lib.istanbul.js'
@@ -1486,6 +1527,8 @@
                     '$ git log\n',
                     // test grep handling-behavior
                     'grep \\bhello\\b\n',
+                    // test keys handling-behavior
+                    'keys {}\n',
                     // test print handling-behavior
                     'print\n'
                 ].forEach(function (script) {
@@ -1538,7 +1581,7 @@
                 timeoutDefault: local.utility2.timeoutDefault - 1000,
                 url: local.utility2.serverLocalHost +
                     // test script-only handling-behavior
-                    '/script-only.html' +
+                    '/assets.script-only.html' +
                     // test phantom-callback handling-behavior
                     '?modeTest=consoleLogResult&' +
                     // test specific testCase handling-behavior
@@ -1620,24 +1663,34 @@
         /*
          * this function will test uuidXxx's default handling-behavior
          */
-            var data1, data2;
-            // jslint-hack
-            local.utility2.nop(options);
+            options = {};
             // test uuid4 handling-behavior
-            data1 = local.utility2.uuid4Create();
+            options.data1 = local.utility2.uuid4Create();
             // validate data1
-            local.utility2.assert(local.utility2.regexpUuidValidate.test(data1), data1);
+            local.utility2.assert(
+                local.utility2.regexpUuidValidate.test(options.data1),
+                options.data1
+            );
             // test uuidTime handling-behavior
-            data1 = local.utility2.uuidTimeCreate();
+            options.data1 = local.utility2.uuidTimeCreate();
             // validate data1
-            local.utility2.assert(local.utility2.regexpUuidValidate.test(data1), data1);
+            local.utility2.assert(
+                local.utility2.regexpUuidValidate.test(options.data1),
+                options.data1
+            );
             setTimeout(function () {
                 local.utility2.testTryCatch(function () {
-                    data2 = local.utility2.uuidTimeCreate();
+                    options.data2 = local.utility2.uuidTimeCreate();
                     // validate data2
-                    local.utility2.assert(local.utility2.regexpUuidValidate.test(data2), data2);
+                    local.utility2.assert(
+                        local.utility2.regexpUuidValidate.test(options.data2),
+                        options.data2
+                    );
                     // validate data1 < data2
-                    local.utility2.assert(data1 < data2, [data1, data2]);
+                    local.utility2.assert(
+                        options.data1 < options.data2,
+                        [options.data1, options.data2]
+                    );
                     onError();
                 }, onError);
             }, 1000);
@@ -1650,7 +1703,16 @@
     // run shared js-env code - post-init
     (function () {
         // init assets
-        local.utility2.cacheDict.assets['/script-only.html'] =
+        local.utility2.assetsDict['/'] = local.utility2.stringFormat(
+            local.utility2.templateIndexHtml,
+            {
+                envDict: local.utility2.envDict,
+                // add script assets.test.js
+                scriptExtra: '</script><script src="assets.test.js"></script>'
+            },
+            ''
+        );
+        local.utility2.assetsDict['/assets.script-only.html'] =
             '<h1>script-only test</h1>\n' +
             '<script src="assets.utility2.js"></script>\n' +
             '<script src="assets.example.js"></script>\n' +
@@ -1731,7 +1793,7 @@
     // run node js-env code - post-init
     case 'node':
         // init assets
-        local.utility2.cacheDict.assets['/assets.test.js'] =
+        local.utility2.assetsDict['/assets.test.js'] =
             local.utility2.istanbulInstrumentInPackage(
                 local.fs.readFileSync(__filename, 'utf8'),
                 __filename,

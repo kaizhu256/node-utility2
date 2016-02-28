@@ -18,6 +18,7 @@
     font-size: 12px;
     padding: 2px 0 2px 0;
     text-align: center;
+    text-shadow: 0 0 5px #007;
     transition: width .5s ease;
     width: 25%;
 }

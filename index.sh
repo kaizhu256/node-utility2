@@ -242,8 +242,7 @@ shDockerRestartNginx() {(set -e
     # init $HOME/docker/etc.nginx.conf.d.default.conf
     # https://www.nginx.com/resources/wiki/start/topics/examples/full/#nginx-conf
     FILE="$HOME/docker/etc.nginx.conf.d/default.conf"
-    #!! if [ -f "$FILE" ]
-    if [ "$FILE" ]
+    if [ ! -f "$FILE" ]
     then
         mkdir -p "$HOME/docker/etc.nginx.conf.d"
         printf '
@@ -833,6 +832,23 @@ shIstanbulCover() {(set -e
     "$COMMAND" $npm_config_dir_utility2/lib.istanbul.js cover "$@"
 )}
 
+shJsonFileNormalize() {(set -e
+# this function will
+# 1. read the json-data from $FILE
+# 2. normalize the json-data
+# 3. write the normalizedd json-data back to $FILE
+    FILE="$1"
+    node -e "
+        'use strict';
+        require('fs').writeFileSync(
+            '$FILE',
+            require('utility2').jsonStringifyOrdered(JSON.parse(
+                require('fs').readFileSync('$FILE')
+            ), null, 4)
+        );
+    "
+)}
+
 shJsonFilePrettify() {(set -e
 # this function will
 # 1. read the json-data from $FILE
@@ -868,6 +884,7 @@ shMountData() {(set -e
 
 shNpmTest() {(set -e
 # this function will run npm-test with coverage and create test-report
+    EXIT_CODE=0
     shBuildPrint "${MODE_BUILD:-npmTest}" "npm-testing $CWD"
     # cleanup $npm_config_dir_tmp/*.json
     rm -f "$npm_config_dir_tmp/"*.json
@@ -880,13 +897,13 @@ shNpmTest() {(set -e
     # run npm-test without coverage
     if [ "$npm_config_mode_coverage" = "" ]
     then
-        "$@"
+        "$@" || EXIT_CODE=$?
     # run npm-test with coverage
     else
         # cleanup old coverage
         rm -f "$npm_config_dir_build/coverage.html/"coverage.*.json
         # run npm-test with coverage
-        shIstanbulCover "$@"
+        shIstanbulCover "$@" || EXIT_CODE=$?
         # if $? != 0, then debug covered-test by re-running it uncovered
         if [ "$?" != 0 ]
         then
@@ -894,7 +911,8 @@ shNpmTest() {(set -e
         fi
     fi
     # create test-report artifacts
-    shTestReportCreate
+    shTestReportCreate || EXIT_CODE=$?
+    exit "$EXIT_CODE"
 )}
 
 shNpmTestPublished() {(set -e
@@ -923,7 +941,7 @@ shTestReportCreate() {(set -e
         try {
             testReport = require('$npm_config_dir_build/test-report.json');
         } catch (errorCaught) {
-            testReport = {testPlatformList:[]};
+            testReport = { testPlatformList:[] };
         }
         require('$npm_config_dir_utility2/index.js').testReportCreate(testReport);
     "
@@ -1062,7 +1080,6 @@ shRunScreenCapture() {(set -e
     export MODE_BUILD_SCREEN_CAPTURE="screen-capture.${MODE_BUILD:-undefined}.svg"
     (shRun "$@" 2>&1; printf $? > "$npm_config_file_tmp") | \
         tee "$npm_config_dir_tmp/screen-capture.txt"
-    # save $EXIT_CODE
     EXIT_CODE="$(cat "$npm_config_file_tmp")"
     # format text-output
     node -e "

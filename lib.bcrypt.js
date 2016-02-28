@@ -47,6 +47,7 @@
     }());
 
 
+
 // init lib bcrypt
     (function () {
         var define;
@@ -106,6 +107,9 @@ Date.now=Date.now||function(){return+new Date};var I=[608135816,2242054355,32044
 /* jslint-ignore-end */
     }());
     switch (local.modeJs) {
+
+
+
     // run browser js-env code - post-init
     case 'browser':
         // init exports

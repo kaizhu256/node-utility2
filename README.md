@@ -119,7 +119,7 @@ instruction
 
 
 
-    // run shared js-env code
+    // run shared js-env code - pre-init
     (function () {
         // init local
         local = {};
@@ -157,7 +157,7 @@ instruction
         // run server-test
         local.utility2.testRunServer(local);
         // init assets
-        local.utility2.cacheDict.assets['/assets.hello'] = 'hello';
+        local.utility2.assetsDict['/assets.hello'] = 'hello';
     }());
     switch (local.modeJs) {
 
@@ -230,8 +230,9 @@ instruction
         process.env.npm_package_version = '0.0.1';
         // init assets
         /* jslint-ignore-begin */
-        local.utility2.cacheDict.assets['/'] = '<!doctype html>\n\
-<html>\n\
+        local.utility2.templateIndexHtml = '\
+<!doctype html>\n\
+<html lang="en">\n\
 <head>\n\
 <meta charset="UTF-8">\n\
 <title>\n\
@@ -264,7 +265,7 @@ textarea {\n\
 </head>\n\
 <body>\n\
     <div class="ajaxProgressDiv" style="display: block;">\n\
-    <div class="ajaxProgressBarDiv ajaxProgressBarDivLoading">loading</div>\n\
+        <div class="ajaxProgressBarDiv ajaxProgressBarDivLoading">loading</div>\n\
     </div>\n\
     <h1>{{envDict.npm_package_name}} @ {{envDict.npm_package_version}}</h1>\n\
     <h3>{{envDict.npm_package_description}}</h3>\n\
@@ -328,12 +329,13 @@ textarea {\n\
     <div class="testReportDiv"></div>\n\
     <div class="istanbulCoverageDiv"></div>\n\
 <script src="assets.utility2.lib.bcrypt.js"></script>\n\
+<script src="assets.utility2.lib.cryptojs.js"></script>\n\
 <script src="assets.utility2.lib.istanbul.js"></script>\n\
 <script src="assets.utility2.lib.jslint.js"></script>\n\
 <script src="assets.utility2.lib.uglifyjs.js"></script>\n\
 <script src="assets.utility2.js"></script>\n\
 <script src="assets.example.js"></script>\n\
-<script src="assets.test.js"></script>\n\
+{{scriptExtra}}\n\
 <script>\n\
 window.utility2.envDict = {\n\
     npm_package_description: "{{envDict.npm_package_description}}",\n\
@@ -350,11 +352,12 @@ window.testRun = function () {\n\
         window.utility2.jslint.errorText\n\
         .replace((/\\u001b\\[\\d+m/g), "")\n\
         .trim();\n\
-    // cleanup __coverage__\n\
+    // try to cleanup __coverage__\n\
     try {\n\
         delete window.__coverage__["/istanbulInputTextarea.js"];\n\
     } catch (ignore) {\n\
     }\n\
+    // try to eval input-code\n\
     try {\n\
         eval(window.utility2.istanbulInstrumentSync(\n\
             document.querySelector(".istanbulInputTextarea").value,\n\
@@ -373,9 +376,10 @@ if (!window.utility2.modeTest) {\n\
 }\n\
 </script>\n\
 </body>\n\
-</html>';
+</html>\n\
+';
         /* jslint-ignore-end */
-        local.utility2.cacheDict.assets['/'] = local.utility2.cacheDict.assets['/']
+        local.utility2.assetsDict['/'] = local.utility2.templateIndexHtml
             .replace((/\{\{envDict\.\w+?\}\}/g), function (match0) {
                 switch (match0) {
                 case '{{envDict.npm_package_description}}':
@@ -387,8 +391,9 @@ if (!window.utility2.modeTest) {\n\
                 default:
                     return '';
                 }
-            });
-        local.utility2.cacheDict.assets['/assets.example.js'] =
+            })
+            .replace('{{scriptExtra}}', '');
+        local.utility2.assetsDict['/assets.example.js'] =
             // cover example.js
             local.utility2.istanbulInstrumentSync(
                 local.fs.readFileSync(__dirname + '/example.js', 'utf8'),
@@ -426,6 +431,7 @@ if (!window.utility2.modeTest) {\n\
     "bin": {
         "utility2": "index.sh",
         "utility2-bcrypt": "lib.bcrypt.js",
+        "utility2-cryptojs": "lib.cryptojs.js",
         "utility2-istanbul": "lib.istanbul.js",
         "utility2-jslint": "lib.jslint.js",
         "utility2-uglifyjs": "lib.uglifyjs.js"
@@ -461,10 +467,11 @@ if (!window.utility2.modeTest) {\n\
 ./index.sh shRun shReadmeExportFile package.json package.json && \
 ./index.sh shRun shDocApiCreate \"module.exports={ \
 exampleFileList:['README.md','test.js','index.js', \
-'lib.bcrypt.js','lib.istanbul.js','lib.jslint.js','lib.uglifyjs.js'], \
+'lib.bcrypt.js','lib.cryptojs.js','lib.istanbul.js','lib.jslint.js','lib.uglifyjs.js'], \
 moduleDict:{ \
 utility2:{exports:require('./index.js')}, \
 'utility2.bcrypt':{aliasList:['bcrypt','local'],exports:require('./index.js').bcrypt}, \
+'utility2.cryptojs':{aliasList:['cryptojs','local'],exports:require('./index.js').cryptojs}, \
 'utility2.istanbul':{aliasList:['istanbul','local'],exports:require('./index.js').istanbul}, \
 'utility2.jslint':{aliasList:['jslint','local'],exports:require('./index.js').jslint}, \
 'utility2.uglifyjs':{aliasList:['uglifyjs','local'],exports:require('./index.js').uglifyjs} \
@@ -480,7 +487,7 @@ export PORT=$(./index.sh shServerPortRandom) && \
 export npm_config_mode_auto_restart=1 && \
 ./index.sh test node test.js"
     },
-    "version": "2016.1.3"
+    "version": "2016.1.5"
 }
 ```
 
@@ -496,12 +503,14 @@ export npm_config_mode_auto_restart=1 && \
 
 
 
-# change since d5c3ed81
-- npm publish 2016.1.3
-- directly JSON.stringify objects if they have the .toJSON method in utility2.jsonStringifyOrdered
-- parse repeating query param as an array in utility2.urlParse, like url.parse
-- save error from utility2.assert as utility2._debugAssertError
-- call sub-middlewares in utility2.middlewareGroupCreate in a try-catch block
+# change since 7e89cd32
+- npm publish 2016.1.5
+- add file lib.cryptojs.js and functions utility2.cryptojsHmacSha256HashCreate and utility2.cryptojsSha256HashCreate
+- fix shNpmTest passing if nodejs crashes
+- add repl syntax sugar 'key <object>' to list object's keys in sorted order
+- add shell command shJsonFileNormalize
+- fix incomplete stack-trace in utility2.testTryCatch
+- replace most try-catch blocks with utility2.testTryCatch
 - none
 
 
