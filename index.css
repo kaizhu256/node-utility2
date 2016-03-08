@@ -19,7 +19,7 @@
     padding: 2px 0 2px 0;
     text-align: center;
     text-shadow: 0 0 5px #007;
-    transition: width .5s ease;
+    transition: width 1s ease-in-out;
     width: 25%;
 }
 .ajaxProgressBarDivError {
@@ -33,11 +33,11 @@
 }
 .ajaxProgressDiv {
     background-color: #fff;
-    border: 1px solid;
+    box-shadow: 0 0 1px 1px #333;
     display: none;
     left: 50%;
     margin: 0 0 0 -50px;
-    padding: 5px 5px 5px 5px;
+    padding: 4px 4px 4px 4px;
     position: fixed;
     top: 49%;
     width: 100px;

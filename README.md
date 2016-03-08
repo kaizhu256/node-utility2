@@ -6,7 +6,34 @@ run dynamic browser tests with coverage (via istanbul and electron)
 
 
 
+# todo
+- npm publish 2016.1.6
+- add es6 support in jslint
+- migrate to docker build in travis
+- add utility2.middlewareLimit
+- create flamegraph from istanbul coverage
+- add server stress test using electron
+- none
+
+
+
+# change since 4e211804
+- rename utility2.testTryCatch to utility2.tryCatchOnError
+- fix shell-command shNpmTest failing to re-run covered tests with no coverage
+- rename utility2.stringFormat to utility2.templateRender and add conditional templating
+- add functions utility2.cryptojsAesDecrypt, utility2.cryptojsAesEncrypt, utility2.jwtHs256Decode, utility2.jwtHs256Encode, utility2.listGetElementRandom, local.utility2.profile, local.utility2.profileSync
+- replace option modeJsonParseResponseText with modeJson in utility2.ajax
+- utility2.docApiCreate now generates docs for non-functions as well
+- add repl sugar keys
+- simplify build with shell command shBuildCiDefault
+- shell command shNpmTest defaults to NODE_ENV=test
+- none
+
+
+
 # live test-server
+- [https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/index.html](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/index.html)
+
 [![github.com test-server](https://kaizhu256.github.io/node-utility2/build/screen-capture.githubDeploy.browser._2Fnode-utility2_2Fbuild..alpha..travis-ci.org_2Fapp_2Findex.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/index.html)
 
 
@@ -40,7 +67,9 @@ run dynamic browser tests with coverage (via istanbul and electron)
 #### this package requires
 - darwin or linux os
 
-#### [api-doc](https://kaizhu256.github.io/node-utility2/build/doc.api.html)
+#### api-doc
+- [https://kaizhu256.github.io/node-utility2/build/doc.api.html](https://kaizhu256.github.io/node-utility2/build/doc.api.html)
+
 [![api-doc](https://kaizhu256.github.io/node-utility2/build/screen-capture.docApiCreate.browser._2Fhome_2Ftravis_2Fbuild_2Fkaizhu256_2Fnode-utility2_2Ftmp_2Fbuild_2Fdoc.api.html.png)](https://kaizhu256.github.io/node-utility2/build/doc.api.html)
 
 
@@ -71,15 +100,17 @@ shExampleSh() {(set -e
 shExampleSh
 ```
 
-#### output from shell
-[![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleSh.svg)](https://travis-ci.org/kaizhu256/node-utility2)
-
 #### output from electron
-[![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleSh.browser..png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/index.html)
+![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleSh.browser..png)
+
+#### output from shell
+![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleSh.svg)
 
 
 
 # quickstart node example
+![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleJs.browser._2Ftmp_2Fapp_2Ftmp_2Fbuild_2Ftest-report.html.png)
+
 #### to run this example, follow the instruction in the script below
 - example.js
 
@@ -177,14 +208,16 @@ instruction
             local.utility2.ajax({
                 url: 'assets.hello'
             }, function (error, xhr) {
-                local.utility2.testTryCatch(function () {
+                try {
                     // validate no error occurred
                     local.utility2.assert(!error, error);
                     // validate data
                     data = xhr.responseText;
                     local.utility2.assert(data === 'hello', data);
                     onError();
-                }, onError);
+                } catch (errorCaught) {
+                    onError(errorCaught);
+                }
             });
         };
         local.testCase_ajax_404 = function (options, onError) {
@@ -195,13 +228,15 @@ instruction
             local.utility2.nop(options);
             // test '/test.undefined'
             local.utility2.ajax({ url: '/test.undefined' }, function (error) {
-                local.utility2.testTryCatch(function () {
+                try {
                     // validate error occurred
                     local.utility2.assert(error, error);
                     // validate 404 http statusCode
                     local.utility2.assert(error.statusCode === 404, error.statusCode);
                     onError();
-                }, onError);
+                } catch (errorCaught) {
+                    onError(errorCaught);
+                }
             });
         };
         break;
@@ -337,11 +372,9 @@ textarea {\n\
 <script src="assets.example.js"></script>\n\
 {{scriptExtra}}\n\
 <script>\n\
-window.utility2.envDict = {\n\
-    npm_package_description: "{{envDict.npm_package_description}}",\n\
-    npm_package_name: "{{envDict.npm_package_name}}",\n\
-    npm_package_version: "{{envDict.npm_package_version}}"\n\
-};\n\
+window.utility2.envDict.npm_package_description = "{{envDict.npm_package_description}}";\n\
+window.utility2.envDict.npm_package_name = "{{envDict.npm_package_name}}";\n\
+window.utility2.envDict.npm_package_version = "{{envDict.npm_package_version}};"\n\
 window.testRun = function () {\n\
     // jslint .jslintInputTextarea\n\
     window.utility2.jslintAndPrint(\n\
@@ -404,14 +437,14 @@ if (!window.utility2.modeTest) {\n\
 }());
 ```
 
-#### output from shell
-[![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleJs.svg)](https://travis-ci.org/kaizhu256/node-utility2)
-
 #### output from utility2
-[![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleJs.browser._2Ftmp_2Fapp_2Ftmp_2Fbuild_2Ftest-report.html.png)](https://kaizhu256.github.io/node-utility2/build/test-report.html)
+![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleJs.browser._2Ftmp_2Fapp_2Ftmp_2Fbuild_2Ftest-report.html.png)
 
 #### output from istanbul
-[![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleJs.browser._2Ftmp_2Fapp_2Ftmp_2Fbuild_2Fcoverage.html_2Fapp_2Fexample.js.html.png)](https://kaizhu256.github.io/node-utility2/build/coverage.html/node-utility2/index.js.html)
+![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleJs.browser._2Ftmp_2Fapp_2Ftmp_2Fbuild_2Fcoverage.html_2Fapp_2Fexample.js.html.png)
+
+#### output from shell
+![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleJs.svg)
 
 
 
@@ -431,16 +464,15 @@ if (!window.utility2.modeTest) {\n\
     "bin": {
         "utility2": "index.sh",
         "utility2-bcrypt": "lib.bcrypt.js",
-        "utility2-cryptojs": "lib.cryptojs.js",
         "utility2-istanbul": "lib.istanbul.js",
         "utility2-jslint": "lib.jslint.js",
         "utility2-uglifyjs": "lib.uglifyjs.js"
     },
     "description": "run dynamic browser tests with coverage (via istanbul and electron)",
     "devDependencies": {
-        "electron-lite": "2015.12.3"
+        "electron-lite": "2015.12.4"
     },
-    "engines": { "node": ">=4.2" },
+    "engines": { "node": ">=4.0" },
     "keywords": [
         "atom", "atom-shell",
         "browser", "build",
@@ -485,33 +517,12 @@ export npm_config_mode_auto_restart=1 && \
 ./index.sh shRun shReadmeExportFile package.json package.json && \
 export PORT=$(./index.sh shServerPortRandom) && \
 export npm_config_mode_auto_restart=1 && \
-./index.sh test node test.js"
+./index.sh test node test.js",
+        "test-published": "./index.sh shRun shNpmTestPublished"
     },
-    "version": "2016.1.5"
+    "version": "2016.1.6"
 }
 ```
-
-
-
-# todo
-- add es6 support in jslint
-- migrate to docker build in travis
-- add utility2.middlewareLimit
-- create flamegraph from istanbul coverage
-- add server stress test using electron
-- none
-
-
-
-# change since 7e89cd32
-- npm publish 2016.1.5
-- add file lib.cryptojs.js and functions utility2.cryptojsHmacSha256HashCreate and utility2.cryptojsSha256HashCreate
-- fix shNpmTest passing if nodejs crashes
-- add repl syntax sugar 'key <object>' to list object's keys in sorted order
-- add shell command shJsonFileNormalize
-- fix incomplete stack-trace in utility2.testTryCatch
-- replace most try-catch blocks with utility2.testTryCatch
-- none
 
 
 
@@ -528,16 +539,8 @@ export npm_config_mode_auto_restart=1 && \
 
 # this shell script will run the build for this package
 
-shBuild() {(set -e
-# this function will run the main build
-    # init env
-    . ./index.sh && shInit
-
-    (set -e
-    # run npm-test on published package
-    (export npm_config_mode_coverage=1 &&
-        shNpmTestPublished)
-
+shBuildCiTestPre() {(set -e
+# this function will run the pre-test build
     # test example js script
     (export MODE_BUILD=testExampleJs &&
         export MODE_LINENO=0 &&
@@ -560,59 +563,43 @@ shBuild() {(set -e
     # save screen-capture
     cp "/tmp/app/node_modules/$npm_package_name/tmp/build/"screen-capture.*.png \
         "$npm_config_dir_build"
+)}
 
-    # run npm-test
-    (export MODE_BUILD=npmTest &&
-        shRunScreenCapture npm test --mode-coverage)
-
-    # create api-doc
-    npm run-script build-doc
-
-    # if running legacy-node, then do not continue
+shBuildCiTestPost() {(set -e
+# this function will run the post-test build
+    # if running legacy-node, then exit
     [ "$(node --version)" \< "v5.0" ] && exit || true
-
+    # if branch is not alpha, beta, or master, then exit
     if [ "$CI_BRANCH" = alpha ] ||
         [ "$CI_BRANCH" = beta ] ||
         [ "$CI_BRANCH" = master ]
     then
-        TEST_URL="https://$(printf "$GITHUB_REPO" | \
-            sed 's/\//.github.io\//')/build..$CI_BRANCH..travis-ci.org/app/index.html"
-        # deploy app to gh-pages
-        (export npm_config_file_test_report_merge="$npm_config_dir_build/test-report.json" &&
-            shGithubDeploy)
-        # test deployed app to gh-pages
-        (export MODE_BUILD=githubTest &&
-            export modeBrowserTest=test &&
-            export npm_config_file_test_report_merge="$npm_config_dir_build/test-report.json" &&
-            export url="$TEST_URL?modeTest=consoleLogResult&timeExit={{timeExit}}" &&
-            shBrowserTest)
+        exit
     fi
-    )
-
-    # save exit-code
-    EXIT_CODE=$?
-
-    # create package-listing
-    (export MODE_BUILD=gitLsTree &&
-        shRunScreenCapture shGitLsTree)
-
-    # create recent changelog of last 50 commits
-    (export MODE_BUILD=gitLog &&
-        shRunScreenCapture git log -50 --pretty="%ai\u000a%B")
-
-    # if running legacy-node, then do not continue
-    [ "$(node --version)" \< "v5.0" ] && exit || true
-
-    # cleanup remote build dir
-    # export BUILD_GITHUB_UPLOAD_PRE_SH="rm -fr build"
-
-    # upload build-artifacts to github, and if number of commits > 16, then squash older commits
-    (export COMMIT_LIMIT=16 &&
-        export MODE_BUILD=githubUpload &&
-        shBuildGithubUpload)
-
-    # exit exit-code
-    exit "$EXIT_CODE"
+    TEST_URL="https://$(printf "$GITHUB_REPO" | \
+        sed 's/\//.github.io\//')/build..$CI_BRANCH..travis-ci.org/app/index.html"
+    # deploy app to gh-pages
+    (export npm_config_file_test_report_merge="$npm_config_dir_build/test-report.json" &&
+        shGithubDeploy)
+    # test deployed app to gh-pages
+    (export MODE_BUILD=githubTest &&
+        export modeBrowserTest=test &&
+        export npm_config_file_test_report_merge="$npm_config_dir_build/test-report.json" &&
+        export url="$TEST_URL?modeTest=consoleLogResult&timeExit={{timeExit}}" &&
+        shBrowserTest)
 )}
+
+shBuild() {
+# this function will run the main build
+    set -e
+    # init env
+    . ./index.sh && shInit
+    # cleanup github-gh-pages dir
+    # export BUILD_GITHUB_UPLOAD_PRE_SH="rm -fr build"
+    # init github-gh-pages commit-limit
+    export COMMIT_LIMIT=16
+    # run default build
+    shBuildCiDefault
+}
 shBuild
 ```

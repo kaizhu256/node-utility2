@@ -105,7 +105,7 @@
          * this function will test ajax's abort handling-behavior
          */
             options = local.utility2.ajax({ url: '/test.timeout' }, function (error) {
-                local.utility2.testTryCatch(function () {
+                local.utility2.tryCatchOnError(function () {
                     // validate error occurred
                     local.utility2.assert(error, error);
                     onError();
@@ -123,7 +123,7 @@
          */
             options = { url: 'package.json' };
             local.utility2.ajax(options, function (error, xhr) {
-                local.utility2.testTryCatch(function () {
+                local.utility2.tryCatchOnError(function () {
                     // validate no error occurred
                     local.utility2.assert(!error && xhr.status === 200, [error, xhr.status]);
                     // validate responseText
@@ -145,7 +145,7 @@
             onParallel.counter += 1;
             [{
                 // test JSON.parse error
-                modeJsonParseResponseText: true,
+                modeJson: true,
                 url: '/assets.hello'
             }, {
                 // test 404-not-found-error handling-behavior
@@ -167,7 +167,7 @@
             }].forEach(function (options) {
                 onParallel.counter += 1;
                 local.utility2.ajax(options, function (error) {
-                    local.utility2.testTryCatch(function () {
+                    local.utility2.tryCatchOnError(function () {
                         // validate error occurred
                         local.utility2.assert(error, error);
                         onParallel();
@@ -181,9 +181,9 @@
         /*
          * this function will test ajax's json handling-behavior
          */
-            options = { modeJsonParseResponseText: true, url: '/test.json' };
+            options = { modeJson: true, url: '/test.json' };
             local.utility2.ajax(options, function (error, xhr) {
-                local.utility2.testTryCatch(function () {
+                local.utility2.tryCatchOnError(function () {
                     // validate no error occurred
                     local.utility2.assert(!error && xhr.status === 200, [error, xhr.status]);
                     // validate responseJson
@@ -217,7 +217,7 @@
                         : '',
                     url: '/test.body'
                 }, function (error, xhr) {
-                    local.utility2.testTryCatch(function () {
+                    local.utility2.tryCatchOnError(function () {
                         // validate no error occurred
                         local.utility2.assert(
                             !error && xhr.status === 200,
@@ -249,7 +249,7 @@
                 method: 'POST',
                 url: '/test.echo'
             }, function (error, xhr) {
-                local.utility2.testTryCatch(function () {
+                local.utility2.tryCatchOnError(function () {
                     // validate no error occurred
                     local.utility2.assert(!error && xhr.status === 200, [error, xhr.status]);
                     // validate response
@@ -284,7 +284,7 @@
             // test assertion passed
             local.utility2.assert(true, true);
             // test assertion failed with undefined message
-            local.utility2.testTryCatch(function () {
+            local.utility2.tryCatchOnError(function () {
                 local.utility2.assert(false);
             }, function (error) {
                 // validate error occurred
@@ -293,7 +293,7 @@
                 local.utility2.assert(error.message === '', error.message);
             });
             // test assertion failed with string message
-            local.utility2.testTryCatch(function () {
+            local.utility2.tryCatchOnError(function () {
                 local.utility2.assert(false, 'hello');
             }, function (error) {
                 // validate error occurred
@@ -302,14 +302,14 @@
                 local.utility2.assert(error.message === 'hello', error.message);
             });
             // test assertion failed with error object
-            local.utility2.testTryCatch(function () {
+            local.utility2.tryCatchOnError(function () {
                 local.utility2.assert(false, local.utility2.errorDefault);
             }, function (error) {
                 // validate error occurred
                 local.utility2.assert(error, error);
             });
             // test assertion failed with json object
-            local.utility2.testTryCatch(function () {
+            local.utility2.tryCatchOnError(function () {
                 local.utility2.assert(false, { aa: 1 });
             }, function (error) {
                 // validate error occurred
@@ -325,6 +325,9 @@
          * this function will test bcrypt's default handling-behavior
          */
             options = {};
+            // test null-case handling-behavior
+            options.data = local.utility2.bcryptPasswordValidate();
+            local.utility2.assert(options.data === false, options.data);
             options.password = 'hello';
             options.hash = local.utility2.bcryptHashCreate(options.password, 8);
             options.data =
@@ -337,38 +340,27 @@
         /*
          * this function will test cryptojs's default handling-behavior
          */
-            // jslint-hack
-            local.utility2.nop(options);
-            [{
-                // test string handling-behavior
-                key: 'secret',
-                message: 'hello'
-            }, {
-                // test binary-data handling-behavior
-                key: local.modeJs === 'browser'
-                    ? [115, 101, 99, 114, 101, 116]
-                    : new Buffer('secret'),
-                message: local.modeJs === 'browser'
-                    ? [104, 101, 108, 108, 111]
-                    : new Buffer('hello')
-            }].forEach(function (options) {
-                // test buffer handling-behavior
-                if (local.modeJs === 'node') {
-                    options.key = new Buffer(options.key);
-                    options.message = new Buffer(options.message);
-                }
-                // test cryptojsHmacSha256HashCreate handling-behavior
-                options.hash =
-                    local.utility2.cryptojsHmacSha256HashCreate(options.key, options.message);
-                local.utility2.assert(options.hash ===
-                    '88aab3ede8d3adf94d26ab90d3bafd4a2083070c3bcce9c014ee04a443847c0b',
-                    options.hash);
-                // test cryptojsSha256HashCreate handling-behavior
-                options.hash = local.utility2.cryptojsSha256HashCreate(options.message);
-                local.utility2.assert(options.hash ===
-                    '2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824',
-                    options.hash);
-            });
+            options = {};
+            // test cryptojsAesDecrypt's handling-behavior
+            options.data = local.utility2.cryptojsAesDecrypt(
+                // test cryptojsAesEncrypt's handling-behavior
+                local.utility2.cryptojsAesEncrypt('hello', 'secret'),
+                'secret'
+            );
+            local.utility2.assert(options.data === 'hello', options.data);
+            // test cryptojsHashHmacSha256Create handling-behavior
+            options.data = local.utility2.cryptojsHashHmacSha256Create(
+                'hello',
+                'secret'
+            );
+            local.utility2.assert(options.data ===
+                'iKqz7ejTrflNJquQ07r9SiCDBww7zOnAFO4EpEOEfAs=',
+                options.data);
+            // test cryptojsHashSha256Create handling-behavior
+            options.data = local.utility2.cryptojsHashSha256Create('hello');
+            local.utility2.assert(options.data ===
+                'LPJNul+wow4m6DsqxbninhsWHlwfp0JecwQzYpOLmCQ=',
+                options.data);
             onError();
         };
 
@@ -376,23 +368,22 @@
         /*
          * this function will test debug_print's default handling-behavior
          */
-            var data;
-            // jslint-hack
-            local.utility2.nop(options);
+            options = {};
             local.utility2.testMock([
                 // suppress console.error
                 [console, { error: function (arg) {
-                    data += (arg || '') + '\n';
+                    options.data += (arg || '') + '\n';
                 } }]
             ], function (onError) {
-                data = '';
+                options.data = '';
                 local.global['debug_printCallback'.replace('_p', 'P')](
                     local.utility2.echo
                 )('hello');
                 // validate data
                 local.utility2.assert(
-                    data === '\n\n\n' + 'debug_print'.replace('_p', 'P') + '\nhello\n\n',
-                    data
+                    options.data === '\n\n\n' + 'debug_print'.replace('_p', 'P') +
+                        '\nhello\n\n',
+                    options.data
                 );
                 onError();
             }, onError);
@@ -403,12 +394,12 @@
          * this function will test docApiCreate's default handling-behavior
          */
             /*jslint evil: true*/
-            var data;
-            // jslint-hack
-            local.utility2.nop(options);
-            data = local.utility2.docApiCreate({
+            options = {};
+            options.data = local.utility2.docApiCreate({
                 example: local.utility2.testRun.toString().replace((/;/g), ';\n    '),
                 moduleDict: {
+                    // test module.exports is a function handling-behavior
+                    function: { exports: local.utility2.nop.bind(null) },
                     // test no aliasList handling-behavior
                     noAliasList: { exports: { nop: local.utility2.nop } },
                     // test aliasList handling-behavior
@@ -421,9 +412,10 @@
                 ' *?function <span class="docApiSignatureSpan">utility2.</span>nop\n' +
                 ' *?<span class="docApiSignatureSpan">\\(\\)</span>\n' +
                 ' *?</a></h2>\n' +
+                ' *?\n' +
                 ' *?<ul>\n' +
                 ' *?<li>description and source code<pre class="docApiCodePre">')
-                .test(data), data);
+                .test(options.data), options.data);
             onError();
         };
 
@@ -482,6 +474,23 @@
                 local.utility2.exit('invalid exit-code');
                 onError();
             }, onError);
+        };
+
+        local.testCase_isNullOrUndefined_default = function (options, onError) {
+        /*
+         * this function will test isNullOrUndefined's default handling-behavior
+         */
+            options = {};
+            options.data = local.utility2.isNullOrUndefined(null);
+            // validate data
+            local.utility2.assert(options.data === true, options.data);
+            options.data = local.utility2.isNullOrUndefined(undefined);
+            // validate data
+            local.utility2.assert(options.data === true, options.data);
+            options.data = local.utility2.isNullOrUndefined(false);
+            // validate data
+            local.utility2.assert(options.data === false, options.data);
+            onError();
         };
 
         local.testCase_istanbulCoverageReportCreate_default = function (options, onError) {
@@ -661,30 +670,82 @@
             onError();
         };
 
+        local.testCase_jwtHs256_default = function (options, onError) {
+        /*
+         * this function will test jwtHs256's default handling-behavior
+         */
+            options = {};
+            options.payload = { sub: '1234567890', name: 'John Doe', admin: true };
+            options.token = local.utility2.jwtHs256Encode(options.payload, 'secret');
+            // validate encoded token
+            local.utility2.assert(options.token === 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.' +
+                'eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.' +
+                'TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ', options.token);
+            options.payload = local.utility2.jwtHs256Decode(options.token, 'secret');
+            // validate decoded payload
+            local.utility2.assert(JSON.stringify(options.payload) ===
+                '{"sub":"1234567890","name":"John Doe","admin":true}', options.payload);
+            onError();
+        };
+
+        local.testCase_listGetElementRandom_default = function (options, onError) {
+        /*
+         * this function will test listGetRandom's default handling-behavior
+         */
+            options = {};
+            // init list
+            options.list = ['aa', 'bb', 'cc'];
+            options.elementDict = {};
+            // get 100 random elements from list
+            for (options.ii = 0; options.ii < 100; options.ii += 1) {
+                options.elementDict[local.utility2.listGetElementRandom(options.list)] = true;
+            }
+            // validate all elements were retrieved from list
+            local.utility2.assert(JSON.stringify(Object.keys(options.elementDict).sort()) ===
+                JSON.stringify(options.list), options);
+            onError();
+        };
+
         local.testCase_listShuffle_default = function (options, onError) {
         /*
          * this function will test listShuffle's default handling-behavior
          */
-            var list = '[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]';
-            // validate list before shuffle
-            options = JSON.stringify(JSON.parse(list));
-            local.utility2.assert(options === list, options);
-            // shuffle list
-            options = JSON.stringify(local.utility2.listShuffle(JSON.parse(list)));
-            // validate list after shuffle
-            local.utility2.assert(options.length === list.length, options);
-            local.utility2.assert(options !== list, options);
+            options = {};
+            // init list
+            options.list = '[0,1]';
+            // shuffle list 100 times
+            for (options.ii = 0; options.ii < 100; options.ii += 1) {
+                options.listShuffled =
+                    JSON.stringify(local.utility2.listShuffle(JSON.parse(options.list)));
+                // validate shuffled list
+                local.utility2.assert(options.listShuffled.length ===
+                    options.list.length, options);
+                options.changed = options.changed || options.listShuffled !== options.list;
+            }
+            // validate list changed at least once during the shuffle
+            local.utility2.assert(options.changed, options);
             onError();
         };
 
-        local.testCase_objectGetFirstElement_default = function (options, onError) {
+        local.testCase_objectGetElementFirst_default = function (options, onError) {
         /*
-         * this function will test objectGetFirstElement's default handling-behavior
+         * this function will test objectGetElementFirst's default handling-behavior
          */
-            // jslint-hack
-            options = { aa: true };
-            options = local.utility2.objectGetFirstElement(options);
-            local.utility2.assert(options === true, options);
+            options = { aa: 1, bb: 2 };
+            options = JSON.stringify(local.utility2.objectGetElementFirst(options));
+            local.utility2.assert(options === '{"key":"aa","value":1}', options);
+            onError();
+        };
+
+        local.testCase_objectKeysTypeOf_default = function (options, onError) {
+        /*
+         * this function will test objectKeysTypeOf's default handling-behavior
+         */
+            options =
+                { aa: true, bb: local.utility2.nop, cc: 0, dd: null, ee: '', ff: undefined };
+            options = local.utility2.objectKeysTypeof(options);
+            local.utility2.assert(options === 'boolean aa\nfunction bb\n' +
+                'number cc\nobject dd\nstring ee\nundefined ff', options);
             onError();
         };
 
@@ -834,7 +895,7 @@
             local.utility2.nop(options);
             // test onDebug handling-behavior
             onParallel = local.utility2.onParallel(onError, function (error, self) {
-                local.utility2.testTryCatch(function () {
+                local.utility2.tryCatchOnError(function () {
                     // validate no error occurred
                     local.utility2.assert(!error, error);
                     // validate self
@@ -846,7 +907,7 @@
             onParallel.counter += 1;
             setTimeout(function () {
                 onParallelError = local.utility2.onParallel(function (error) {
-                    local.utility2.testTryCatch(function () {
+                    local.utility2.tryCatchOnError(function () {
                         // validate error occurred
                         local.utility2.assert(error, error);
                         onParallel();
@@ -872,7 +933,7 @@
             local.utility2.nop(options);
             timeElapsed = Date.now();
             local.utility2.onTimeout(function (error) {
-                local.utility2.testTryCatch(function () {
+                local.utility2.tryCatchOnError(function () {
                     // validate error occurred
                     local.utility2.assert(error, error);
                     // validate error message
@@ -890,55 +951,30 @@
             });
         };
 
-        local.testCase_stringFormat_default = function (options, onError) {
+        local.testCase_profileXxx_default = function (options, onError) {
         /*
-         * this function will test stringFormat's default handling-behavior
+         * this function will test profileXxx's default handling-behavior
          */
-            var data;
-            // jslint-hack
-            local.utility2.nop(options);
-            // test undefined valueDefault handling-behavior
-            data = local.utility2.stringFormat('{{aa}}', {}, undefined);
-            local.utility2.assert(data === '{{aa}}', data);
-            // test default handling-behavior
-            data = local.utility2.stringFormat(
-                '{{aa}}{{aa json htmlSafe encodeURIComponent}}{{bb}}{{cc}}{{dd}}{{ee.ff}}',
-                {
-                    // test string value handling-behavior
-                    aa: '<aa>',
-                    // test non-string value handling-behavior
-                    bb: 1,
-                    // test null-value handling-behavior
-                    cc: null,
-                    // test undefined-value handling-behavior
-                    dd: undefined,
-                    // test nested value handling-behavior
-                    ee: { ff: 'gg' }
-                },
-                '<undefined>'
-            );
-            local.utility2.assert(
-                data === '<aa>%22%26lt%3Baa%26gt%3B%221null<undefined>gg',
-                data
-            );
-            // test list handling-behavior
-            data = local.utility2.stringFormat(
-                '[{{#list1}}[{{#list2}}{{aa}},{{/list2}}],{{/list1}}]',
-                {
-                    list1: [
-                        // test null-value handling-behavior
-                        null,
-                        // test recursive list handling-behavior
-                        { list2: [{ aa: 'bb' }, { aa: 'cc' }] }
-                    ]
-                },
-                '<undefined>'
-            );
-            local.utility2.assert(
-                data === '[[<undefined><undefined>,<undefined>],[bb,cc,],]',
-                data
-            );
-            onError();
+            options = {};
+            // test profileSync's handling-behavior
+            options.timeElapsed = local.utility2.profileSync(function () {
+                return;
+            });
+            // validate timeElapsed
+            local.utility2.assert(0 <= options.timeElapsed &&
+                options.timeElapsed < 1000, options.timeElapsed);
+            // test profile's async handling-behavior
+            local.utility2.profile(function (onError) {
+                setTimeout(onError);
+            }, function (error, timeElapsed) {
+                // validate no error occurred
+                local.utility2.assert(!error, error);
+                options.timeElapsed = timeElapsed;
+                // validate timeElapsed
+                local.utility2.assert(0 <= options.timeElapsed &&
+                    options.timeElapsed < 1000, options.timeElapsed);
+                onError();
+            });
         };
 
         local.testCase_taskCallbackAndUpdateCached_default = function (options, onError) {
@@ -948,7 +984,7 @@
             var cacheValue, modeNext, onNext, onTask, optionsCopy;
             modeNext = 0;
             onNext = function (error, data) {
-                local.utility2.testTryCatch(function () {
+                local.utility2.tryCatchOnError(function () {
                     modeNext += 1;
                     switch (modeNext) {
                     // test no cache handling-behavior
@@ -1085,11 +1121,64 @@
             });
             // validate counter incremented once
             setTimeout(function () {
-                local.utility2.testTryCatch(function () {
+                local.utility2.tryCatchOnError(function () {
                     local.utility2.assert(options.counter === 1, options);
                     onError();
                 }, onError);
             });
+        };
+
+        local.testCase_templateRender_default = function (options, onError) {
+        /*
+         * this function will test templateRender's default handling-behavior
+         */
+            var data;
+            // jslint-hack
+            local.utility2.nop(options);
+            // test undefined valueDefault handling-behavior
+            data = local.utility2.templateRender('{{aa}}', {}, undefined);
+            local.utility2.assert(data === '{{aa}}', data);
+            // test default handling-behavior
+            data = local.utility2.templateRender(
+                '{{aa}} {{aa json htmlSafe encodeURIComponent}} {{bb}} {{cc}} {{dd}} {{ee.ff}}',
+                {
+                    // test string value handling-behavior
+                    aa: '<aa>',
+                    // test non-string value handling-behavior
+                    bb: 1,
+                    // test null-value handling-behavior
+                    cc: null,
+                    // test undefined-value handling-behavior
+                    dd: undefined,
+                    // test nested value handling-behavior
+                    ee: { ff: 'gg' }
+                },
+                '<undefined>'
+            );
+            local.utility2.assert(
+                data === '<aa> %22%26lt%3Baa%26gt%3B%22 1 null <undefined> gg',
+                data
+            );
+            // test list handling-behavior
+            data = local.utility2.templateRender(
+                '[{{#list1}}[{{#list2}}{{aa}}.{{bb}}, {{/list2}}], {{/list1}}]',
+                {
+                    list1: [
+                        // test null-value handling-behavior
+                        null,
+                        // test recursive list handling-behavior
+                        { list2: [{ aa: 1 }, { aa: 2 }] },
+                        // test recursive non-list handling-behavior
+                        { list2: { aa: 1, bb: 2 } }
+                    ]
+                },
+                'undefined'
+            );
+            local.utility2.assert(
+                data === '[[undefined], [1.undefined, 2.undefined, ], [1.2, ], ]',
+                data
+            );
+            onError();
         };
 
         local.testCase_testRun_nop = function (options, onError) {
@@ -1213,7 +1302,7 @@
             local.utility2.ajax({
                 url: 'assets.hello'
             }, function (error, xhr) {
-                local.utility2.testTryCatch(function () {
+                local.utility2.tryCatchOnError(function () {
                     // validate no error occurred
                     local.utility2.assert(!error, error);
                     // validate responseText
@@ -1225,7 +1314,7 @@
                         },
                         url: 'assets.hello'
                     }, function (error, xhr) {
-                        local.utility2.testTryCatch(function () {
+                        local.utility2.tryCatchOnError(function () {
                             // validate no error occurred
                             local.utility2.assert(!error, error);
                             // validate 304 http status
@@ -1285,14 +1374,14 @@
             }, {
                 file: '/package.json',
                 url: '/package.json'
-            }].forEach(function (element) {
+            }].forEach(function (options) {
                 onParallel.counter += 1;
-                local.utility2.ajax({ url: element.url }, function (error, xhr) {
+                local.utility2.ajax(options, function (error, xhr) {
                     // validate no error occurred
                     onParallel.counter += 1;
                     onParallel(error);
                     local.utility2.fsWriteFileWithMkdirp(
-                        local.utility2.envDict.npm_config_dir_build + '/app' + element.file,
+                        local.utility2.envDict.npm_config_dir_build + '/app' + options.file,
                         xhr.response,
                         onParallel
                     );
@@ -1310,7 +1399,7 @@
             local.utility2.nop(options);
             modeNext = 0;
             onNext = function (error, data) {
-                local.utility2.testTryCatch(function () {
+                local.utility2.tryCatchOnError(function () {
                     modeNext += 1;
                     switch (modeNext) {
                     case 1:
@@ -1491,7 +1580,7 @@
             childProcess
                 .on('error', onParallel)
                 .on('exit', function (exitCode, signal) {
-                    local.utility2.testTryCatch(function () {
+                    local.utility2.tryCatchOnError(function () {
                         // validate exitCode
                         local.utility2.assert(exitCode === null, exitCode);
                         // validate signal
@@ -1571,9 +1660,7 @@
         /*
          * this function will test the test-page's error handling-behavior
          */
-            // jslint-hack
-            local.utility2.nop(options);
-            local.utility2.browserTest({
+            options = {
                 modeCoverageMerge: true,
                 // test browserTest's modeSilent handling-behavior
                 modeSilent: true,
@@ -1589,8 +1676,9 @@
                     'modeTestCase=_testCase_testRun_failure&' +
                     // test timeExit handling-behavior
                     'timeExit={{timeExit}}'
-            }, function (error) {
-                local.utility2.testTryCatch(function () {
+            };
+            local.utility2.browserTest(options, function (error) {
+                local.utility2.tryCatchOnError(function () {
                     // validate error occurred
                     local.utility2.assert(error, error);
                     onError();
@@ -1679,7 +1767,7 @@
                 options.data1
             );
             setTimeout(function () {
-                local.utility2.testTryCatch(function () {
+                local.utility2.tryCatchOnError(function () {
                     options.data2 = local.utility2.uuidTimeCreate();
                     // validate data2
                     local.utility2.assert(
@@ -1703,12 +1791,12 @@
     // run shared js-env code - post-init
     (function () {
         // init assets
-        local.utility2.assetsDict['/'] = local.utility2.stringFormat(
+        local.utility2.assetsDict['/'] = local.utility2.templateRender(
             local.utility2.templateIndexHtml,
             {
                 envDict: local.utility2.envDict,
                 // add script assets.test.js
-                scriptExtra: '</script><script src="assets.test.js"></script>'
+                scriptExtra: '<script src="assets.test.js"></script>'
             },
             ''
         );

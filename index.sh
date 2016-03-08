@@ -114,6 +114,46 @@ shBrowserTest() {(set -e
     fi
 )}
 
+shBuildCiDefault() {(set -e
+# this function will run the default build-ci
+    (set -e
+        # run pre-test build
+        if (type shBuildCiTestPre > /dev/null 2>&1)
+        then
+            shBuildCiTestPre
+        fi
+        # run npm-test on published package
+        (export MODE_BUILD=npmTestPublished &&
+            shRunScreenCapture npm run test-published --mode-coverage)
+        # run npm-test
+        (export MODE_BUILD=npmTest &&
+            shRunScreenCapture npm test --mode-coverage)
+        # run post-test build
+        if (type shBuildCiTestPost > /dev/null 2>&1)
+        then
+            shBuildCiTestPost
+        fi
+        # create api-doc
+        npm run build-doc
+    )
+    # save exit-code
+    EXIT_CODE=$?
+    # create package-listing
+    (export MODE_BUILD=gitLsTree &&
+        shRunScreenCapture shGitLsTree)
+    # create recent changelog of last 50 commits
+    (export MODE_BUILD=gitLog &&
+        shRunScreenCapture git log -50 --pretty="%ai\u000a%B")
+    # if running legacy-node, then do not continue
+    [ "$(node --version)" \< "v5.0" ] && exit || true
+    # upload build-artifacts to github, and if number of commits > $COMMIT_LIMIT,
+    # then squash older commits
+    (export MODE_BUILD=githubUpload &&
+        shBuildGithubUpload)
+    # exit exit-code
+    exit "$EXIT_CODE"
+)}
+
 shBuildGithubUpload() {(set -e
 # this function will upload build-artifacts to github
     if [ "$GIT_SSH" = "" ]
@@ -239,8 +279,8 @@ shDockerRestartNginx() {(set -e
     then
         printf "foo:$(openssl passwd -crypt bar)" > $FILE
     fi
-    # init $HOME/docker/etc.nginx.conf.d.default.conf
     # https://www.nginx.com/resources/wiki/start/topics/examples/full/#nginx-conf
+    # init $HOME/docker/etc.nginx.conf.d.default.conf
     FILE="$HOME/docker/etc.nginx.conf.d/default.conf"
     if [ ! -f "$FILE" ]
     then
@@ -254,8 +294,8 @@ server {
         rewrite ^ https://$host$request_uri permanent;
     }
 }
-# https server
 # https://www.nginx.com/resources/wiki/start/topics/examples/SSL-Offloader/#sslproxy-conf
+# https server
 server {
     listen 443;
     root /root/docker/usr.share.nginx.html;
@@ -280,8 +320,8 @@ server {
 }
 ' > "$FILE"
     fi
-    # init $HOME/docker/etc.nginx.ssl
     # http://superuser.com/questions/226192/openssl-without-prompt
+    # init $HOME/docker/etc.nginx.ssl
     FILE="$HOME/docker/etc.nginx.ssl"
     if [ ! -f "$FILE.pem" ]
     then
@@ -345,6 +385,7 @@ shDockerRmiUntagged() {(set -e
 
 shDockerSh() {(set -e
 # this function will run /bin/bash in the docker-container $image:$name
+    # http://www.gnu.org/software/bash/manual/html_node/Shell-Parameter-Expansion.html
     COMMAND="${2-/bin/bash}"
     NAME="$1"
     docker start "$NAME"
@@ -525,8 +566,15 @@ shGithubDeploy() {(set -e
     shBuildGithubUpload
     # wait 10 seconds for github to deploy app
     sleep 10
-    # verify deployed app''s main-page returns status-code < 400
-    [ $(curl -Ls -o /dev/null -w "%{http_code}" "$TEST_URL") -lt 400 ]
+    # verify deployed app's main-page returns status-code < 400
+    # '
+    if [ $(curl -Ls -o /dev/null -w "%{http_code}" "$TEST_URL") -lt 400 ]
+    then
+        shBuildPrint githubDeploy "curl test passed for $TEST_URL"
+    else
+        shBuildPrint githubDeploy "curl test failed for $TEST_URL"
+        exit 1
+    fi
     # screen-capture deployed app
     export modeBrowserTest=screenCapture
     export url="$TEST_URL"
@@ -602,10 +650,17 @@ shHerokuDeploy() {(set -e
     (shGitRepoBranchCommand copyPwdLsTree local HEAD "git@heroku.com:$HEROKU_REPO.git" master)
     # wait 10 seconds for heroku to deploy app
     sleep 10
-    # verify deployed app''s main-page returns status-code < 400
-    [ $(
+    # verify deployed app's main-page returns status-code < 400
+    # '
+    if [ $(
         curl -Ls -o /dev/null -w "%{http_code}" https://$HEROKU_HOSTNAME
     ) -lt 400 ]
+    then
+        shBuildPrint herokuDeploy "curl test passed for https://$HEROKU_HOSTNAME"
+    else
+        shBuildPrint herokuDeploy "curl test failed for https://$HEROKU_HOSTNAME"
+        exit 1
+    fi
     # screen-capture deployed server
     export modeBrowserTest=screenCapture
     export url="https://$HEROKU_HOSTNAME"
@@ -733,8 +788,8 @@ shIptablesDockerInit() {(set -e
 
 shIptablesInit() {(set -e
 # this function will init iptables, and is intended for aws-ec2 setup
-    # reset iptables
     # http://www.cyberciti.biz/tips/linux-iptables-how-to-flush-all-rules.html
+    # reset iptables
     iptables -F
     iptables -X
     iptables -t nat -F
@@ -746,7 +801,8 @@ shIptablesInit() {(set -e
     iptables -P OUTPUT ACCEPT
 
     # https://wiki.debian.org/iptables
-    # Allows all loopback (lo0) traffic and drop all traffic to 127/8 that doesn''t use lo0
+    # Allows all loopback (lo0) traffic and drop all traffic to 127/8 that doesn't use lo0
+    # '
     iptables -A INPUT -i lo -j ACCEPT
     iptables -A INPUT ! -i lo -d 127.0.0.0/8 -j REJECT
     # Accepts all established inbound connections
@@ -768,22 +824,22 @@ shIptablesInit() {(set -e
     #  https://security.stackexchange.com/questions/22711
     iptables -A INPUT -p icmp -m icmp --icmp-type 8 -j ACCEPT
 
-    # allow forwarding between docker0 and eth0
     # https://blog.andyet.com/2014/09/11/docker-host-iptables-forwarding
+    # allow forwarding between docker0 and eth0
     # Forward chain between docker0 and eth0
     iptables -A FORWARD -i docker0 -o eth0 -j ACCEPT
     iptables -A FORWARD -i eth0 -o docker0 -j ACCEPT
     # IPv6 chain if needed
     ip6tables -A FORWARD -i docker0 -o eth0 -j ACCEPT
     ip6tables -A FORWARD -i eth0 -o docker0 -j ACCEPT
-    # create iptables DOCKER chain
     # https://github.com/docker/docker/issues/1871
+    # create iptables DOCKER chain
     iptables -t nat -N DOCKER
     iptables -t nat -A PREROUTING -m addrtype --dst-type LOCAL -j DOCKER
     iptables -t nat -A PREROUTING -m addrtype --dst-type LOCAL ! --dst 127.0.0.0/8 -j DOCKER
 
-    # open iptables to pptp
     # https://wiki.archlinux.org/index.php/PPTP_server#iptables_firewall_configuration
+    # open iptables to pptp
     # Accept incoming connections to port 1723 (PPTP)
     iptables -A INPUT -i ppp+ -j ACCEPT
     iptables -A OUTPUT -o ppp+ -j ACCEPT
@@ -893,6 +949,7 @@ shNpmTest() {(set -e
     # init $npm_config_dir_build
     mkdir -p "$npm_config_dir_build/coverage.html"
     # init npm-test-mode
+    export NODE_ENV="${NODE_ENV:-test}"
     export npm_config_mode_npm_test=1
     # run npm-test without coverage
     if [ "$npm_config_mode_coverage" = "" ]
@@ -904,8 +961,8 @@ shNpmTest() {(set -e
         rm -f "$npm_config_dir_build/coverage.html/"coverage.*.json
         # run npm-test with coverage
         shIstanbulCover "$@" || EXIT_CODE=$?
-        # if $? != 0, then debug covered-test by re-running it uncovered
-        if [ "$?" != 0 ]
+        # if $EXIT_CODE != 0, then debug covered-test by re-running it uncovered
+        if [ "$EXIT_CODE" != 0 ]
         then
             npm_config_mode_coverage="" "$@" || true
         fi
@@ -926,25 +983,11 @@ shNpmTestPublished() {(set -e
     npm install "$npm_package_name"
     cd "node_modules/$npm_package_name"
     # https://github.com/npm/npm/issues/10686
-    # workaround for issue - Cannot read property 'target' of null #10686
+    # bug workaround - Cannot read property 'target' of null #10686
     sed -in -e 's/ "_requiredBy":/ "_requiredBy_":/' package.json
     npm install
     # npm-test package
     npm test
-)}
-
-shTestReportCreate() {(set -e
-# this function will create test-report artifacts
-    node -e "
-        'use strict';
-        var testReport;
-        try {
-            testReport = require('$npm_config_dir_build/test-report.json');
-        } catch (errorCaught) {
-            testReport = { testPlatformList:[] };
-        }
-        require('$npm_config_dir_utility2/index.js').testReportCreate(testReport);
-    "
 )}
 
 shReadmeBuild() {(set -e
@@ -1056,11 +1099,12 @@ shRun() {(set -e
             "$@" || EXIT_CODE=$?
             printf "process exited with code $EXIT_CODE\n"
             # http://en.wikipedia.org/wiki/Unix_signal
-            # exit-code 0 - normal exit
+            # if $EXIT_CODE != 77, then exit process
             if [ "$EXIT_CODE" != 77 ]
             then
                 break
             fi
+            # else restart process after 1 second
             sleep 1
         done
         exit "$EXIT_CODE"
@@ -1141,6 +1185,20 @@ shSource() {
 # this function will source .bashrc
     . "$HOME/.bashrc" || return $?
 }
+
+shTestReportCreate() {(set -e
+# this function will create test-report artifacts
+    node -e "
+        'use strict';
+        var testReport;
+        try {
+            testReport = require('$npm_config_dir_build/test-report.json');
+        } catch (errorCaught) {
+            testReport = { testPlatformList:[] };
+        }
+        require('$npm_config_dir_utility2/index.js').testReportCreate(testReport);
+    "
+)}
 
 shTravisDecryptYml() {(set -e
 # this function will decrypt $AES_ENCRYPTED_SH in .travis.yml to stdout

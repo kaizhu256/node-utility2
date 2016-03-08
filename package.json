@@ -3,16 +3,15 @@
     "bin": {
         "utility2": "index.sh",
         "utility2-bcrypt": "lib.bcrypt.js",
-        "utility2-cryptojs": "lib.cryptojs.js",
         "utility2-istanbul": "lib.istanbul.js",
         "utility2-jslint": "lib.jslint.js",
         "utility2-uglifyjs": "lib.uglifyjs.js"
     },
     "description": "run dynamic browser tests with coverage (via istanbul and electron)",
     "devDependencies": {
-        "electron-lite": "2015.12.3"
+        "electron-lite": "2015.12.4"
     },
-    "engines": { "node": ">=4.2" },
+    "engines": { "node": ">=4.0" },
     "keywords": [
         "atom", "atom-shell",
         "browser", "build",
@@ -53,11 +52,12 @@
         "start": "export PORT=${PORT:-8080} && export npm_config_mode_auto_restart=1 && ./index.sh shRun shIstanbulCover node test.js",
 
 
-        "test": "export MODE_LINENO=0 && ./index.sh shRun shReadmeExportFile package.json package.json && export PORT=$(./index.sh shServerPortRandom) && export npm_config_mode_auto_restart=1 && ./index.sh test node test.js"
+        "test": "export MODE_LINENO=0 && ./index.sh shRun shReadmeExportFile package.json package.json && export PORT=$(./index.sh shServerPortRandom) && export npm_config_mode_auto_restart=1 && ./index.sh test node test.js",
 
 
 
 
+        "test-published": "./index.sh shRun shNpmTestPublished"
     },
-    "version": "2016.1.5"
+    "version": "2016.1.6"
 }

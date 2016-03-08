@@ -155,10 +155,12 @@ local.utility2.templateDocApiHtml = '\
         {{name}}\n\
         <span class="docApiSignatureSpan">{{signature}}</span>\n\
     </a></h2>\n\
-    <ul>\n\
-    <li>description and source code<pre class="docApiCodePre">{{source}}</pre></li>\n\
-    <li>example usage<pre class="docApiCodePre">{{example}}</pre></li>\n\
-    </ul>\n\
+    {{#extra}}\n\
+        <ul>\n\
+        <li>description and source code<pre class="docApiCodePre">{{source}}</pre></li>\n\
+        <li>example usage<pre class="docApiCodePre">{{example}}</pre></li>\n\
+        </ul>\n\
+    {{/extra}}\n\
 {{/elementList}}\n\
 </div>\n\
 {{/moduleList}}\n\
@@ -725,7 +727,7 @@ local.utility2.templateTestReportHtml = '\
 
         local.utility2.ajax = function (options, onError) {
         /*
-         * this function will send an ajax request with error handling and timeout
+         * this function will send an ajax-request with error-handling and timeout
          */
             var ajaxProgressDiv, ii, timerTimeout, xhr;
             onError = local.utility2.onErrorWithStack(onError);
@@ -803,12 +805,12 @@ local.utility2.templateTestReportHtml = '\
                     }
                     // handle completed xhr request
                     if (xhr.readyState === 4) {
-                        if (!xhr.error && xhr.modeJsonParseResponseText) {
-                            // try to JSON.parse string
-                            local.utility2.testTryCatch(function () {
+                        if (xhr.modeJson) {
+                            // try to JSON.parse the string
+                            local.utility2.tryCatchOnError(function () {
                                 xhr.responseJson = JSON.parse(xhr.responseText);
                             }, function (error) {
-                                xhr.error = error;
+                                xhr.error = xhr.error || error;
                             });
                         }
                         // handle string data
@@ -888,7 +890,7 @@ local.utility2.templateTestReportHtml = '\
 
         local.utility2.bcryptHashCreate = function (password, cost) {
         /*
-         * this function will create a bcrypt-hash from the password and cost
+         * this function will create a bcrypt-hash from the password and cost (default = 10)
          */
             return local.utility2.bcrypt.hashSync(password, cost);
         };
@@ -897,7 +899,7 @@ local.utility2.templateTestReportHtml = '\
         /*
          * this function will validate the password against the bcrypt-hash
          */
-            return local.utility2.bcrypt.compareSync(password, hash);
+            return local.utility2.bcrypt.compareSync(password || '', hash || '');
         };
 
         /* istanbul ignore next */
@@ -985,14 +987,13 @@ local.utility2.templateTestReportHtml = '\
                         '\n');
                     // merge browser coverage
                     if (options.modeCoverageMerge) {
-                        // try to JSON.parse string
-                        local.utility2.testTryCatch(function () {
-                            data = null;
+                        // try to JSON.parse the string
+                        local.utility2.tryCatchOnError(function () {
                             data = JSON.parse(
                                 local.fs.readFileSync(options.fileCoverage, 'utf8')
                             );
                         }, local.utility2.nop);
-                        if (data) {
+                        if (!local.utility2.tryCatchErrorCaught) {
                             local.utility2.istanbulCoverageMerge(
                                 local.global.__coverage__,
                                 data
@@ -1007,18 +1008,18 @@ local.utility2.templateTestReportHtml = '\
                         return;
                     }
                     // merge browser test-report
-                    try {
-                        data = null;
+                    local.utility2.tryCatchOnError(function () {
                         data = JSON.parse(local.fs.readFileSync(
                             options.fileTestReport,
                             'utf8'
                         ));
-                        console.log('\nbrowserTest - merging test-report from ' +
-                            options.fileTestReport + '\n');
-                    } catch (errorCaught) {
-                        onNext(errorCaught);
+                    }, local.utility2.nop);
+                    if (local.utility2.tryCatchErrorCaught) {
+                        onNext(local.utility2.tryCatchErrorCaught);
                         return;
                     }
+                    console.log('\nbrowserTest - merging test-report from ' +
+                        options.fileTestReport + '\n');
                     if (!options.modeTestIgnore) {
                         local.utility2.testReportMerge(local.utility2.testReport, data);
                     }
@@ -1121,13 +1122,39 @@ local.utility2.templateTestReportHtml = '\
             onNext();
         };
 
-        // init cryptojsHmacSha256HashCreate
-        local.utility2.cryptojsHmacSha256HashCreate = local.utility2.cryptojs &&
-            local.utility2.cryptojs.hmacSha256HashCreate;
+        local.utility2.cryptojsAesDecrypt = function (data, secret) {
+        /*
+         * this function will aes-decrypt the cipherParams data
+         */
+            return local.utility2.cryptojs.enc.Utf8.stringify(
+                local.utility2.cryptojs.AES.decrypt(data, secret)
+            );
+        };
 
-        // init cryptojsSha256HashCreate
-        local.utility2.cryptojsSha256HashCreate = local.utility2.cryptojs &&
-            local.utility2.cryptojs.sha256HashCreate;
+        local.utility2.cryptojsAesEncrypt = function (data, secret) {
+        /*
+         * this function will aes-encrypt the data into a cipherParams string
+         */
+            return local.utility2.cryptojs.AES.encrypt(data, secret).toString();
+        };
+
+        local.utility2.cryptojsHashHmacSha256Create = function (data, secret) {
+        /*
+         * this function will return the base64 hmac-sha256 hash of the data and secret
+         */
+            return local.utility2.cryptojs.enc.Base64.stringify(
+                local.utility2.cryptojs.HmacSHA256(data, secret)
+            );
+        };
+
+        local.utility2.cryptojsHashSha256Create = function (data) {
+        /*
+         * this function will return the base64 sha-256 hash of the data
+         */
+            return local.utility2.cryptojs.enc.Base64.stringify(
+                local.utility2.cryptojs.SHA256(data)
+            );
+        };
 
         local.utility2.docApiCreate = function (options) {
         /*
@@ -1137,8 +1164,13 @@ local.utility2.templateTestReportHtml = '\
             elementCreate = function () {
                 element = {};
                 element.id = encodeURIComponent('element.' + moduleName + '.' + elementName);
-                element.name = 'function <span class="docApiSignatureSpan">' + moduleName +
-                    '.</span>' + elementName;
+                element.typeof = typeof module.exports[elementName];
+                element.name = element.typeof + ' <span class="docApiSignatureSpan">' +
+                    moduleName + '.</span>' + elementName;
+                if (element.typeof !== 'function') {
+                    return element;
+                }
+                element.extra = element;
                 // init source
                 element.source = trimLeft(module.exports[elementName].toString());
                 if (element.source.length > 4096) {
@@ -1150,6 +1182,8 @@ local.utility2.templateTestReportHtml = '\
                         '<span class="docApiCodeCommentSpan">$1</span>'
                     )
                     .replace((/^function \(/), elementName + ' = function (');
+                // init signature
+                element.signature = (/\([\S\s]*?\)/).exec(element.source)[0];
                 // init example
                 (module.aliasList || [moduleName]).forEach(function (moduleAlias) {
                     if (!element.example) {
@@ -1173,7 +1207,6 @@ local.utility2.templateTestReportHtml = '\
                     }
                 });
                 element.example = element.example || 'n/a';
-                element.signature = (/\([\S\s]*?\)/).exec(element.source)[0];
                 return element;
             };
             trimLeft = function (text) {
@@ -1197,24 +1230,33 @@ local.utility2.templateTestReportHtml = '\
                     moduleName = key;
                     // init alias
                     module = options.moduleDict[moduleName];
+                    // if module.exports is a function, then document it as a function
+                    if (typeof module.exports === 'function') {
+                        module.exports[moduleName.split('.').slice(-1)[0]] = module.exports;
+                    }
                     return {
                         elementList: Object.keys(module.exports)
                             .filter(function (key) {
-                                return key &&
-                                    key[0] !== '_' &&
-                                    !(/\W/).test(key) &&
-                                    typeof module.exports[key] === 'function';
+                                return key && key[0] !== '_' && !(/\W/).test(key);
                             })
-                            .sort()
                             .map(function (key) {
                                 elementName = key;
                                 return elementCreate();
+                            })
+                            .sort(function (aa, bb) {
+                                return aa.name < bb.name
+                                    ? -1
+                                    : 1;
                             }),
                         id: 'module.' + moduleName,
                         name: moduleName
                     };
                 });
-            return local.utility2.stringFormat(local.utility2.templateDocApiHtml, options);
+            return local.utility2.templateRender(
+                local.utility2.templateDocApiHtml,
+                options,
+                ''
+            );
         };
 
         local.utility2.echo = function (arg) {
@@ -1302,6 +1344,13 @@ local.utility2.templateTestReportHtml = '\
             });
         };
 
+        local.utility2.isNullOrUndefined = function (arg) {
+        /*
+         * this function will test if the arg is null or undefined
+         */
+            return arg === null || arg === undefined;
+        };
+
         local.utility2.istanbulCoverageMerge = function (coverage1, coverage2) {
         /*
          * this function will merge coverage2 into coverage1
@@ -1385,8 +1434,7 @@ local.utility2.templateTestReportHtml = '\
              * this function will recursively stringify the element,
              * with object-keys sorted and circular-references removed
              */
-                // if element is an object,
-                // then recursively stringify its items sorted by their keys
+                // if element is an object, then recurse with its items, sorted by their keys
                 if (element &&
                         typeof element === 'object' &&
                         typeof element.toJSON !== 'function') {
@@ -1395,7 +1443,7 @@ local.utility2.templateTestReportHtml = '\
                         return;
                     }
                     circularList.push(element);
-                    // if element is an array, then recursively stringify its elements
+                    // if element is an array, then recurse with its elements
                     if (Array.isArray(element)) {
                         return '[' + element.map(function (element) {
                             tmp = stringify(element);
@@ -1424,6 +1472,53 @@ local.utility2.templateTestReportHtml = '\
             return JSON.stringify(element && typeof element === 'object'
                 ? JSON.parse(stringify(element))
                 : element, replacer, space);
+        };
+
+        local.utility2.jwtHs256Decode = function (token, secret) {
+        /*
+         * https://jwt.io/
+         * this function will return the payload from the hs256-encoded json-web-token,
+         * with the given secret
+         */
+            local.utility2.tryCatchOnError(function () {
+                token = token.split('.');
+                // validate header
+                local.utility2.assert(
+                    token[0] === 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9',
+                    token
+                );
+                // validate signature
+                local.utility2.assert(local.utility2.cryptojsHashHmacSha256Create(
+                    token[0] + '.' + token[1],
+                    secret
+                ).replace((/\=/g), '') === token[2]);
+                token = JSON.parse(local.modeJs === 'browser'
+                    ? local.global.atob(token[1])
+                    : new Buffer(token[1], 'base64'));
+            }, local.utility2.nop);
+            // return decoded payload
+            return token;
+        };
+
+        local.utility2.jwtHs256Encode = function (payload, secret) {
+        /*
+         * https://jwt.io/
+         * this function will return a hs256-encoded json-web-token of the payload,
+         * with the given secret
+         */
+            var token;
+            token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.' + (local.modeJs === 'browser'
+                ? local.global.btoa(JSON.stringify(payload))
+                : new Buffer(JSON.stringify(payload)).toString('base64')).replace((/\=/g), '');
+            return token + '.' +
+                local.utility2.cryptojsHashHmacSha256Create(token, secret).replace((/\=/g), '');
+        };
+
+        local.utility2.listGetElementRandom = function (list) {
+        /*
+         * this function will return a random element from the list
+         */
+            return list[Math.floor(list.length * Math.random())];
         };
 
         local.utility2.listShuffle = function (list) {
@@ -1466,7 +1561,7 @@ local.utility2.templateTestReportHtml = '\
                     }
                     // gzip and cache result
                     local.utility2.taskCallbackAndUpdateCached({
-                        cacheDict: 'assetsGzip',
+                        cacheDict: 'middlewareAssetsCachedGzip',
                         key: request.urlParsed.pathname
                     }, onNext, function (onError) {
                         local.zlib.gzip(result, function (error, data) {
@@ -1611,10 +1706,10 @@ local.utility2.templateTestReportHtml = '\
                     modeNext = error
                         ? Infinity
                         : modeNext + 1;
-                    // recursively run each sub-middleware in middlewareList
+                    // recurse with next middleware in middlewareList
                     if (modeNext < self.middlewareList.length) {
                         // call sub-middleware in a try-catch block
-                        local.utility2.testTryCatch(function () {
+                        local.utility2.tryCatchOnError(function () {
                             self.middlewareList[modeNext](request, response, onNext);
                         }, onNext);
                         return;
@@ -1662,97 +1757,111 @@ local.utility2.templateTestReportHtml = '\
             nextMiddleware();
         };
 
-        local.utility2.objectGetFirstElement = function (options) {
+        local.utility2.objectGetElementFirst = function (arg) {
         /*
-         * this function will get the first element of the object
+         * this function will get the first element of the arg
          */
-            return options[Object.keys(options)[0]];
+            var item;
+            item = {};
+            item.key = Object.keys(arg)[0];
+            item.value = arg[item.key];
+            return item;
         };
 
-        local.utility2.objectSetDefault = function (options, defaults, depth) {
+        local.utility2.objectKeysTypeof = function (arg) {
+        /*
+         * this function will return a list of the arg's keys, sorted by item-type
+         */
+            return Object.keys(arg).map(function (key) {
+                return typeof arg[key] + ' ' + key;
+            }).sort().join('\n');
+        };
+
+        local.utility2.objectSetDefault = function (arg, defaults, depth) {
         /*
          * this function will recursively set default values for unset leaf nodes
-         * in the options object
+         * in the arg
          */
             Object.keys(defaults).forEach(function (key) {
-                var defaults2, options2;
+                var arg2, defaults2;
+                arg2 = arg[key];
                 defaults2 = defaults[key];
-                options2 = options[key];
                 if (defaults2 === undefined) {
                     return;
                 }
-                // init options[key] to default value defaults[key]
-                if (!options2) {
-                    options[key] = defaults2;
+                // init arg[key] to default value defaults[key]
+                if (!arg2) {
+                    arg[key] = defaults2;
                     return;
                 }
-                // if options2 and defaults2 are both non-null and non-array objects,
-                // then recurse options2 and defaults2
+                // if arg2 and defaults2 are both non-null and non-array objects,
+                // then recurse with arg2 and defaults2
                 if (depth > 1 &&
-                        // options2 is a non-null and non-array object
-                        options2 &&
-                        typeof options2 === 'object' &&
-                        !Array.isArray(options2) &&
+                        // arg2 is a non-null and non-array object
+                        arg2 &&
+                        typeof arg2 === 'object' &&
+                        !Array.isArray(arg2) &&
                         // defaults2 is a non-null and non-array object
                         defaults2 &&
                         typeof defaults2 === 'object' &&
                         !Array.isArray(defaults2)) {
-                    local.utility2.objectSetDefault(options2, defaults2, depth - 1);
+                    local.utility2.objectSetDefault(arg2, defaults2, depth - 1);
                 }
             });
-            return options;
+            return arg;
         };
 
-        local.utility2.objectSetOverride = function (options, overrides, depth) {
+        local.utility2.objectSetOverride = function (arg, overrides, depth) {
         /*
-         * this function will recursively override the options object, with the overrides object
+         * this function will recursively override the arg, with the overrides-object
          */
-            var options2, overrides2;
+            var arg2, overrides2;
             Object.keys(overrides).forEach(function (key) {
-                options2 = options[key];
+                arg2 = arg[key];
                 overrides2 = overrides[key];
                 if (overrides2 === undefined) {
                     return;
                 }
-                // if both options2 and overrides2 are non-null and non-array objects,
-                // then recurse options2 and overrides2
+                // if both arg2 and overrides2 are non-null and non-array objects,
+                // then recurse with arg2 and overrides2
                 if (depth > 1 &&
-                        // options2 is a non-null and non-array object
-                        (options2 &&
-                        typeof options2 === 'object' &&
-                        !Array.isArray(options2)) &&
+                        // arg2 is a non-null and non-array object
+                        (arg2 &&
+                        typeof arg2 === 'object' &&
+                        !Array.isArray(arg2)) &&
                         // overrides2 is a non-null and non-array object
                         (overrides2 &&
                         typeof overrides2 === 'object' &&
                         !Array.isArray(overrides2))) {
-                    local.utility2.objectSetOverride(options2, overrides2, depth - 1);
+                    local.utility2.objectSetOverride(arg2, overrides2, depth - 1);
                     return;
                 }
-                // else set options[key] with overrides[key]
-                options[key] = options === local.utility2.envDict
-                    // if options is envDict, then overrides falsey value with empty string
+                // else set arg[key] with overrides[key]
+                arg[key] = arg === local.utility2.envDict
+                    // if arg is envDict, then overrides falsey value with empty string
                     ? overrides2 || ''
                     : overrides2;
             });
-            return options;
+            return arg;
         };
 
-        local.utility2.objectTraverse = function (element, onSelf, circularList) {
+        local.utility2.objectTraverse = function (arg, onSelf, circularList) {
         /*
-         * this function will recursively traverse the element,
-         * and run onSelf with the element's properties
+         * this function will recursively traverse the arg,
+         * and run onSelf with the arg's properties
          */
-            onSelf(element);
+            onSelf(arg);
             circularList = circularList || [];
-            if (element &&
-                    typeof element === 'object' &&
-                    circularList.indexOf(element) === -1) {
-                circularList.push(element);
-                Object.keys(element).forEach(function (key) {
-                    local.utility2.objectTraverse(element[key], onSelf, circularList);
+            if (arg &&
+                    typeof arg === 'object' &&
+                    circularList.indexOf(arg) === -1) {
+                circularList.push(arg);
+                Object.keys(arg).forEach(function (key) {
+                    // recurse with arg[key]
+                    local.utility2.objectTraverse(arg[key], onSelf, circularList);
                 });
             }
-            return element;
+            return arg;
         };
 
         local.utility2.onErrorDefault = function (error) {
@@ -1775,6 +1884,7 @@ local.utility2.templateTestReportHtml = '\
             stack = new Error().stack;
             return function (error) {
                 if (error) {
+                    // save current-stack to error.stack
                     error.stack = error.stack + '\n' + stack;
                 }
                 onError.apply(null, arguments);
@@ -1850,6 +1960,31 @@ local.utility2.templateTestReportHtml = '\
             }, timeout | 0);
         };
 
+        local.utility2.profile = function (task, onError) {
+        /*
+         * this function will profile the async task in milliseconds
+         */
+            var timeStart;
+            timeStart = Date.now();
+            // run async task
+            task(function (error) {
+                // call onError with difference in milliseconds between Date.now() and timeStart
+                onError(error, Date.now() - timeStart);
+            });
+        };
+
+        local.utility2.profileSync = function (task) {
+        /*
+         * this function will profile the sync task in milliseconds
+         */
+            var timeStart;
+            timeStart = Date.now();
+            // run sync task
+            task();
+            // return difference in milliseconds between Date.now() and timeStart
+            return Date.now() - timeStart;
+        };
+
         local.utility2.processSpawnWithTimeout = function () {
         /*
          * this function will run like child_process.spawn,
@@ -1860,7 +1995,7 @@ local.utility2.templateTestReportHtml = '\
             childProcess = local.child_process.spawn.apply(local.child_process, arguments)
                 // kill timerTimeout on exit
                 .on('exit', function () {
-                    local.utility2.testTryCatch(function () {
+                    local.utility2.tryCatchOnError(function () {
                         process.kill(childProcess.timerTimeout.pid);
                     }, local.utility2.nop);
                 });
@@ -1924,10 +2059,6 @@ local.utility2.templateTestReportHtml = '\
                         });
                     script = '\n';
                     break;
-                // syntax sugar to list object's keys in sorted order
-                case 'keys':
-                    script = 'Object.keys(' + match[2] + ').sort()\n';
-                    break;
                 // syntax sugar to grep current dir
                 case 'grep':
                     // run async shell command
@@ -1960,13 +2091,19 @@ local.utility2.templateTestReportHtml = '\
                         });
                     script = '\n';
                     break;
+                // syntax sugar to list object's keys, sorted by item-type
+                case 'keys':
+                    script = 'console.log(Object.keys(' + match[2] + ').map(function (key) {' +
+                        'return typeof ' + match[2] + '[key] + " " + key;' +
+                        '}).sort().join("\\n"))\n';
+                    break;
                 // syntax sugar to print stringified arg
                 case 'print':
                     script = 'console.log(String(' + match[2] + '))\n';
                     break;
                 }
                 // eval modified script in a try-catch block
-                local.utility2.testTryCatch(function () {
+                local.utility2.tryCatchOnError(function () {
                     local._replServer.evalDefault(script, context, file, onError2);
                 }, onError2);
             };
@@ -1978,11 +2115,11 @@ local.utility2.templateTestReportHtml = '\
          */
             [request, response].forEach(function (stream) {
                 // try to end the stream
-                local.utility2.testTryCatch(function () {
+                local.utility2.tryCatchOnError(function () {
                     stream.end();
-                // if error, then try to destroy the stream
                 }, function () {
-                    local.utility2.testTryCatch(function () {
+                    // if error, then try to destroy the stream
+                    local.utility2.tryCatchOnError(function () {
                         stream.destroy();
                     }, local.utility2.nop);
                 });
@@ -2119,64 +2256,6 @@ local.utility2.templateTestReportHtml = '\
                 .on('error', onError);
         };
 
-        local.utility2.stringFormat = function (template, dict, valueDefault) {
-        /*
-         * this function will replace the keys in the template with the dict's key / value
-         */
-            var argList, match, replace, rgx, value;
-            dict = dict || {};
-            replace = function (match0, fragment) {
-                // jslint-hack
-                local.utility2.nop(match0);
-                return dict[match].map(function (dict) {
-                    // recursively format the array fragment
-                    return local.utility2.stringFormat(fragment, dict, valueDefault);
-                }).join('');
-            };
-            rgx = (/\{\{#[^}]+?\}\}/g);
-            // search for array fragments in the template
-            for (match = rgx.exec(template); match; match = rgx.exec(template)) {
-                match = match[0].slice(3, -2);
-                // if value is an array, then iteratively format the array fragment with it
-                if (Array.isArray(dict[match])) {
-                    template = template.replace(
-                        new RegExp('\\{\\{#' + match +
-                            '\\}\\}([\\S\\s]*?)\\{\\{\\/' + match +
-                            '\\}\\}'),
-                        replace
-                    );
-                }
-            }
-            // search for keys in the template
-            return template.replace((/\{\{[^}]+?\}\}/g), function (match0) {
-                argList = match0.slice(2, -2).split(' ');
-                value = dict;
-                // iteratively lookup nested values in the dict
-                argList[0].split('.').forEach(function (key) {
-                    value = value && value[key];
-                });
-                if (value === undefined) {
-                    return valueDefault === undefined
-                        ? match0
-                        : valueDefault;
-                }
-                argList.slice(1).forEach(function (arg) {
-                    switch (arg) {
-                    case 'encodeURIComponent':
-                        value = encodeURIComponent(value);
-                        break;
-                    case 'htmlSafe':
-                        value = local.utility2.stringHtmlSafe(String(value));
-                        break;
-                    case 'json':
-                        value = JSON.stringify(value);
-                        break;
-                    }
-                });
-                return String(value);
-            });
-        };
-
         local.utility2.stringHtmlSafe = function (text) {
         /*
          * this function will replace '<' to '&lt;' and '>' to '&gt;' in the text,
@@ -2304,6 +2383,69 @@ local.utility2.templateTestReportHtml = '\
             return task;
         };
 
+        local.utility2.templateRender = function (template, dict, valueDefault) {
+        /*
+         * this function will replace the keys in the template with the dict's key / value
+         */
+            var argList, match, renderDefault, replace, rgx, value;
+            dict = dict || {};
+            renderDefault = function (match0) {
+                return valueDefault === undefined
+                    ? match0
+                    : valueDefault;
+            };
+            replace = function (match0, fragment) {
+                // if value is an array, then iteratively format the array fragment with it
+                if (Array.isArray(dict[match])) {
+                    return dict[match].map(function (dict) {
+                        // recurse with fragment and dict
+                        return local.utility2.templateRender(fragment, dict, valueDefault);
+                    }).join('');
+                }
+                if (dict[match] && typeof dict[match] === 'object') {
+                    return local.utility2.templateRender(fragment, dict[match], valueDefault);
+                }
+                return renderDefault(match0);
+            };
+            rgx = (/\{\{#[^}]+?\}\}/g);
+            // search for array fragments in the template
+            for (match = rgx.exec(template); match; match = rgx.exec(template)) {
+                match = match[0].slice(3, -2);
+                template = template.replace(
+                    new RegExp('\\{\\{#' + match +
+                        '\\}\\}([\\S\\s]*?)\\{\\{\\/' + match +
+                        '\\}\\}'),
+                    replace
+                );
+            }
+            // search for keys in the template
+            return template.replace((/\{\{[^}]+?\}\}/g), function (match0) {
+                argList = match0.slice(2, -2).split(' ');
+                value = dict;
+                // iteratively lookup nested values in the dict
+                argList[0].split('.').forEach(function (key) {
+                    value = value && value[key];
+                });
+                if (value === undefined) {
+                    return renderDefault(match0);
+                }
+                argList.slice(1).forEach(function (arg) {
+                    switch (arg) {
+                    case 'encodeURIComponent':
+                        value = encodeURIComponent(value);
+                        break;
+                    case 'htmlSafe':
+                        value = local.utility2.stringHtmlSafe(String(value));
+                        break;
+                    case 'json':
+                        value = JSON.stringify(value);
+                        break;
+                    }
+                });
+                return String(value);
+            });
+        };
+
         local.utility2.testMock = function (mockList, onTestCase, onError) {
         /*
          * this function will mock the objects in mockList while running the onTestCase
@@ -2317,7 +2459,7 @@ local.utility2.templateTestReportHtml = '\
                 onError(error);
             };
             // call onError with mock-objects in a try-catch block
-            local.utility2.testTryCatch(function () {
+            local.utility2.tryCatchOnError(function () {
                 // mock-objects
                 mockList.forEach(function (mock) {
                     mock[2] = {};
@@ -2545,7 +2687,7 @@ local.utility2.templateTestReportHtml = '\
             });
             // create html test-report
             testCaseNumber = 0;
-            return local.utility2.stringFormat(
+            return local.utility2.templateRender(
                 local.utility2.templateTestReportHtml,
                 local.utility2.objectSetOverride(testReport, {
                     CI_COMMIT_INFO: local.utility2.envDict.CI_COMMIT_INFO,
@@ -2761,13 +2903,11 @@ local.utility2.templateTestReportHtml = '\
                 // increment number of tests remaining
                 onParallel.counter += 1;
                 // run testCase in a try-catch block
-                local.utility2.testTryCatch(function () {
+                local.utility2.tryCatchOnError(function () {
                     // start testCase timer
                     testCase.timeElapsed = Date.now();
                     testCase.onTestCase(null, onError);
-                }, function (error) {
-                    onError(error);
-                });
+                }, onError);
             });
             onParallel();
         };
@@ -2812,19 +2952,6 @@ local.utility2.templateTestReportHtml = '\
             return server;
         };
 
-        local.utility2.testTryCatch = function (callback, onError) {
-        /*
-         * this function will run the callback in a try-catch block,
-         * and pass any errorCaught to onError
-         */
-            onError = local.utility2.onErrorWithStack(onError);
-            try {
-                callback();
-            } catch (errorCaught) {
-                onError(errorCaught);
-            }
-        };
-
         local.utility2.timeoutDefaultInit = function () {
         /*
          * this function will init timeoutDefault
@@ -2838,8 +2965,8 @@ local.utility2.templateTestReportHtml = '\
                         // jslint-hack
                         local.utility2.nop(match0);
                         local.utility2[key] = value;
-                        // try to JSON.parse string
-                        local.utility2.testTryCatch(function () {
+                        // try to JSON.parse the string
+                        local.utility2.tryCatchOnError(function () {
                             local.utility2[key] = JSON.parse(value);
                         }, local.utility2.nop);
                     }
@@ -2865,6 +2992,24 @@ local.utility2.templateTestReportHtml = '\
             local.utility2.timeoutDefault = Number(local.utility2.timeoutDefault || 30000);
         };
 
+        local.utility2.tryCatchOnError = function (task, onError) {
+        /*
+         * this function will try to run the task in a try-catch block,
+         * else call onError with the errorCaught
+         */
+            var stack;
+            stack = new Error().stack;
+            try {
+                task();
+                local.utility2.tryCatchErrorCaught = null;
+            } catch (errorCaught) {
+                // save current-stack to errorCaught.stack
+                errorCaught.stack = errorCaught.stack + '\n' + stack;
+                onError(errorCaught);
+                local.utility2.tryCatchErrorCaught = errorCaught;
+            }
+        };
+
         local.utility2.uglify = (local.utility2.uglifyjs &&
             local.utility2.uglifyjs.uglify) || local.utility2.echo;
 
@@ -2879,12 +3024,12 @@ local.utility2.templateTestReportHtml = '\
 
         local.utility2.urlParse = function (url) {
         /*
-         * this function will parse the url according to
-         * https://developer.mozilla.org/en/docs/Web/API
+         * https://developer.mozilla.org/en-US/docs/Web/API/URL
+         * this function will parse the url according to the above spec, plus a query param
          */
             var urlParsed;
             urlParsed = {};
-            local.utility2.testTryCatch(function () {
+            local.utility2.tryCatchOnError(function () {
                 // resolve host-less url
                 switch (local.modeJs) {
                 case 'browser':
@@ -3052,13 +3197,12 @@ local.utility2.templateTestReportHtml = '\
                 // validate no error occurred
                 local.utility2.assert(!error, error);
                 // hide ajaxProgressDiv
-                local.utility2.testTryCatch(function () {
-                    if (local.modeJs === 'browser' &&
-                            document.querySelector('.ajaxProgressDiv').style.display !==
-                            'none') {
-                        local.utility2.ajax({ url: "" }, window.utility2.nop);
-                    }
-                }, local.utility2.nop);
+                if (local.modeJs === 'browser' &&
+                        document.querySelector('.ajaxProgressDiv') &&
+                        document.querySelector('.ajaxProgressDiv').style.display !==
+                        'none') {
+                    local.utility2.ajax({ url: "" }, local.utility2.nop);
+                }
             });
             local.utility2.taskUpsert({ key: 'utility2.onReady' }, function (onError) {
                 onError(error);
@@ -3159,17 +3303,17 @@ local.utility2.templateTestReportHtml = '\
                     var dir;
                     file = process.cwd() + '/' + file;
                     // try to read the file
-                    local.utility2.testTryCatch(function () {
+                    local.utility2.tryCatchOnError(function () {
                         options.example += local.fs.readFileSync(file, 'utf8') +
                             '\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n';
-                    // try to read the dir
                     }, function () {
+                        // try to read the dir
                         dir = file;
                         local.fs.readdirSync(dir).sort().forEach(function (file) {
                             if (file.slice(-3) === '.js') {
                                 file = dir + '/' + file;
                                 // try to read the file
-                                local.utility2.testTryCatch(function () {
+                                local.utility2.tryCatchOnError(function () {
                                     options.example += local.fs.readFileSync(file, 'utf8') +
                                         '\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n';
                                 }, local.utility2.nop);
