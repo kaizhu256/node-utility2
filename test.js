@@ -186,8 +186,8 @@
                 local.utility2.tryCatchOnError(function () {
                     // validate no error occurred
                     local.utility2.assert(!error && xhr.status === 200, [error, xhr.status]);
-                    // validate responseJson
-                    local.utility2.assert(xhr.responseJson === 'hello', xhr.responseJson);
+                    // validate responseJSON
+                    local.utility2.assert(xhr.responseJSON === 'hello', xhr.responseJSON);
                     onError();
                 }, onError);
             });

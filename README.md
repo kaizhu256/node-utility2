@@ -2,12 +2,11 @@ utility2
 ========
 run dynamic browser tests with coverage (via istanbul and electron)
 
-[![NPM](https://img.shields.io/npm/v/utility2.svg?style=flat-square)](https://www.npmjs.com/package/utility2) [![NPM](https://img.shields.io/npm/dm/utility2.svg?style=flat-square)](https://www.npmjs.com/package/utility2) [![Join the chat at https://gitter.im/kaizhu256/node-utility2](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/kaizhu256/node-utility2?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![NPM](https://img.shields.io/npm/v/utility2.svg?style=flat-square)](https://www.npmjs.com/package/utility2) [![NPM](https://img.shields.io/npm/dm/utility2.svg?style=flat-square)](https://www.npmjs.com/package/utility2)
 
 
 
 # todo
-- npm publish 2016.1.6
 - add es6 support in jslint
 - migrate to docker build in travis
 - add utility2.middlewareLimit
@@ -17,16 +16,10 @@ run dynamic browser tests with coverage (via istanbul and electron)
 
 
 
-# change since 4e211804
-- rename utility2.testTryCatch to utility2.tryCatchOnError
-- fix shell-command shNpmTest failing to re-run covered tests with no coverage
-- rename utility2.stringFormat to utility2.templateRender and add conditional templating
-- add functions utility2.cryptojsAesDecrypt, utility2.cryptojsAesEncrypt, utility2.jwtHs256Decode, utility2.jwtHs256Encode, utility2.listGetElementRandom, local.utility2.profile, local.utility2.profileSync
-- replace option modeJsonParseResponseText with modeJson in utility2.ajax
-- utility2.docApiCreate now generates docs for non-functions as well
-- add repl sugar keys
-- simplify build with shell command shBuildCiDefault
-- shell command shNpmTest defaults to NODE_ENV=test
+# change since 46520c88
+- npm publish 2016.1.6
+- in function utility2.ajax, rename xhr.responseJson to xhr.responseJSON
+- add conversion '&' to '&amp;' in function utility2.stringHtmlSafe
 - none
 
 

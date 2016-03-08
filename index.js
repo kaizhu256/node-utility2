@@ -808,7 +808,7 @@ local.utility2.templateTestReportHtml = '\
                         if (xhr.modeJson) {
                             // try to JSON.parse the string
                             local.utility2.tryCatchOnError(function () {
-                                xhr.responseJson = JSON.parse(xhr.responseText);
+                                xhr.responseJSON = JSON.parse(xhr.responseText);
                             }, function (error) {
                                 xhr.error = xhr.error || error;
                             });
@@ -2258,10 +2258,13 @@ local.utility2.templateTestReportHtml = '\
 
         local.utility2.stringHtmlSafe = function (text) {
         /*
-         * this function will replace '<' to '&lt;' and '>' to '&gt;' in the text,
-         * to make it htmlSafe
+         * this function will replace '&' to '&amp;', '<' to '&lt;',
+         * and '>' to '&gt;' in the text to make it htmlSafe
          */
-            return text.replace((/</g), '&lt;').replace((/>/g), '&gt;');
+            return text
+                .replace((/&/g), '&amp;')
+                .replace((/</g), '&lt;')
+                .replace((/>/g), '&gt;');
         };
 
         local.utility2.taskCallbackAdd = function (options, onError) {
@@ -3159,12 +3162,9 @@ local.utility2.templateTestReportHtml = '\
             ? {}
             : process.env;
         local.utility2.errorDefault = new Error('default error');
-        // http://www.w3.org/TR/html5/forms.html#valid-e-mail-address
-        local.utility2.regexpEmailValidate = new RegExp(
-            '^[a-zA-Z0-9.!#$%&\'*+\\/=?\\^_`{|}~\\-]+@' +
-                '[a-zA-Z0-9](?:[a-zA-Z0-9\\-]{0,61}[a-zA-Z0-9])?' +
-                '(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9\\-]{0,61}[a-zA-Z0-9])?)*$'
-        );
+        // http://www.w3.org/TR/html5/forms.html
+        /* jslint-ignore-next-line */
+        local.utility2.regexpEmailValidate = (/^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/);
         local.utility2.regexpUriComponentCharset = (/[\w\!\%\'\(\)\*\-\.\~]/);
         local.utility2.regexpUuidValidate =
             (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
