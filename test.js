@@ -341,10 +341,10 @@
          * this function will test cryptojs's default handling-behavior
          */
             options = {};
-            // test cryptojsAesDecrypt's handling-behavior
-            options.data = local.utility2.cryptojsAesDecrypt(
-                // test cryptojsAesEncrypt's handling-behavior
-                local.utility2.cryptojsAesEncrypt('hello', 'secret'),
+            // test cryptojsCipherAes256Decrypt's handling-behavior
+            options.data = local.utility2.cryptojsCipherAes256Decrypt(
+                // test cryptojsCipherAes256Encrypt's handling-behavior
+                local.utility2.cryptojsCipherAes256Encrypt('hello', 'secret'),
                 'secret'
             );
             local.utility2.assert(options.data === 'hello', options.data);
@@ -401,20 +401,26 @@
                     // test module.exports is a function handling-behavior
                     function: { exports: local.utility2.nop.bind(null) },
                     // test no aliasList handling-behavior
-                    noAliasList: { exports: { nop: local.utility2.nop } },
+                    noAliasList: { exports: local.utility2 },
                     // test aliasList handling-behavior
                     utility2: { aliasList: ['', '.', 'undefined'], exports: local.utility2 }
                 }
             });
             // validate data
             local.utility2.assert(new RegExp('\n' +
-                ' *?<h2><a href="#element.utility2.nop" id="element.utility2.nop">\n' +
+                ' *?<h2>\n' +
+                ' *?<a href="#element.utility2.nop" id="element.utility2.nop">\n' +
                 ' *?function <span class="docApiSignatureSpan">utility2.</span>nop\n' +
                 ' *?<span class="docApiSignatureSpan">\\(\\)</span>\n' +
-                ' *?</a></h2>\n' +
-                ' *?\n' +
+                ' *?</a>\n' +
+                ' *?</h2>\n' +
                 ' *?<ul>\n' +
                 ' *?<li>description and source code<pre class="docApiCodePre">')
+                .test(options.data), options.data);
+            local.utility2.assert(new RegExp('\n' +
+                ' *?<span class="docApiSignatureSpan">' +
+                    'object <span class="docApiSignatureSpan">noAliasList.</span>errorDefault' +
+                    '</span>\n')
                 .test(options.data), options.data);
             onError();
         };
@@ -1159,25 +1165,29 @@
                 data === '<aa> %22%26lt%3Baa%26gt%3B%22 1 null <undefined> gg',
                 data
             );
-            // test list handling-behavior
-            data = local.utility2.templateRender(
-                '[{{#list1}}[{{#list2}}{{aa}}.{{bb}}, {{/list2}}], {{/list1}}]',
+            // test partial-list handling-behavior
+            data = local.utility2.templateRender('[{{#list list1}}list1(' +
+                '{{aa}} - ' +
+                '[{{#list list2}}list2(' +
+                    '{{bb}}, ' +
+                    '{{#if bb}}if{{/if bb}}, ' +
+                    '{{#unless bb}}unless{{/unless bb}}' +
+                ') - {{/list list2}}]' +
+                '), {{/list list1}}]',
                 {
                     list1: [
                         // test null-value handling-behavior
                         null,
-                        // test recursive list handling-behavior
-                        { list2: [{ aa: 1 }, { aa: 2 }] },
-                        // test recursive non-list handling-behavior
-                        { list2: { aa: 1, bb: 2 } }
+                        // test recursive-list handling-behavior
+                        { aa: 'aa', list2: [{ bb: 'bb' }, { bb: null }] }
                     ]
                 },
-                'undefined'
-            );
-            local.utility2.assert(
-                data === '[[undefined], [1.undefined, 2.undefined, ], [1.2, ], ]',
-                data
-            );
+                '<undefined>'
+                );
+            local.utility2.assert(data === '[list1(<undefined> - [<undefined>]), list1(' +
+                'aa - ' +
+                '[list2(bb, if, <undefined>) - list2(null, <undefined>, unless) - ' +
+                ']), ]', data);
             onError();
         };
 
@@ -1368,6 +1378,9 @@
             }, {
                 file: '/assets.utility2.lib.jslint.js',
                 url: '/assets.utility2.lib.jslint.js'
+            }, {
+                file: '/assets.utility2.lib.stringview.js',
+                url: '/assets.utility2.lib.stringview.js'
             }, {
                 file: '/assets.utility2.lib.uglifyjs.js',
                 url: '/assets.utility2.lib.uglifyjs.js'

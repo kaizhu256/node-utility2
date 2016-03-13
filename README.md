@@ -7,6 +7,7 @@ run dynamic browser tests with coverage (via istanbul and electron)
 
 
 # todo
+- auto-decrypt/auto-encrypt encrypted property in utility2.jwtDecode/utility2.jwtEncode
 - add es6 support in jslint
 - migrate to docker build in travis
 - add utility2.middlewareLimit
@@ -16,10 +17,10 @@ run dynamic browser tests with coverage (via istanbul and electron)
 
 
 
-# change since 46520c88
-- npm publish 2016.1.6
-- in function utility2.ajax, rename xhr.responseJson to xhr.responseJSON
-- add conversion '&' to '&amp;' in function utility2.stringHtmlSafe
+# change since d5d563b9
+- npm publish 2016.1.7
+- add file lib.stringview.js and function utility2.StringView
+- add handlebars-like helpers #list, #if, #unless to utility2.templateRender
 - none
 
 
@@ -360,6 +361,7 @@ textarea {\n\
 <script src="assets.utility2.lib.cryptojs.js"></script>\n\
 <script src="assets.utility2.lib.istanbul.js"></script>\n\
 <script src="assets.utility2.lib.jslint.js"></script>\n\
+<script src="assets.utility2.lib.stringview.js"></script>\n\
 <script src="assets.utility2.lib.uglifyjs.js"></script>\n\
 <script src="assets.utility2.js"></script>\n\
 <script src="assets.example.js"></script>\n\
@@ -369,6 +371,9 @@ window.utility2.envDict.npm_package_description = "{{envDict.npm_package_descrip
 window.utility2.envDict.npm_package_name = "{{envDict.npm_package_name}}";\n\
 window.utility2.envDict.npm_package_version = "{{envDict.npm_package_version}};"\n\
 window.testRun = function () {\n\
+    if (window.utility2.modeTest) {\n\
+        return;\n\
+    }\n\
     // jslint .jslintInputTextarea\n\
     window.utility2.jslintAndPrint(\n\
         (document.querySelector(".jslintInputTextarea") || {}).value || "",\n\
@@ -397,9 +402,7 @@ window.testRun = function () {\n\
 };\n\
 document.querySelector(".istanbulInputTextarea")\n\
     .addEventListener("keyup", window.testRun);\n\
-if (!window.utility2.modeTest) {\n\
-    window.testRun({});\n\
-}\n\
+window.testRun({});\n\
 </script>\n\
 </body>\n\
 </html>\n\
@@ -492,13 +495,18 @@ if (!window.utility2.modeTest) {\n\
 ./index.sh shRun shReadmeExportFile package.json package.json && \
 ./index.sh shRun shDocApiCreate \"module.exports={ \
 exampleFileList:['README.md','test.js','index.js', \
-'lib.bcrypt.js','lib.cryptojs.js','lib.istanbul.js','lib.jslint.js','lib.uglifyjs.js'], \
+'lib.bcrypt.js','lib.cryptojs.js','lib.istanbul.js','lib.jslint.js','lib.stringview.js', \
+'lib.uglifyjs.js'], \
 moduleDict:{ \
 utility2:{exports:require('./index.js')}, \
 'utility2.bcrypt':{aliasList:['bcrypt','local'],exports:require('./index.js').bcrypt}, \
 'utility2.cryptojs':{aliasList:['cryptojs','local'],exports:require('./index.js').cryptojs}, \
 'utility2.istanbul':{aliasList:['istanbul','local'],exports:require('./index.js').istanbul}, \
 'utility2.jslint':{aliasList:['jslint','local'],exports:require('./index.js').jslint}, \
+'utility2.StringView':{aliasList:['StringView','local'], \
+exports:require('./index.js').StringView}, \
+'utility2.StringView.prototype':{aliasList:['StringView'], \
+exports:require('./index.js').StringView.prototype}, \
 'utility2.uglifyjs':{aliasList:['uglifyjs','local'],exports:require('./index.js').uglifyjs} \
 } \
 }\"",
@@ -513,7 +521,7 @@ export npm_config_mode_auto_restart=1 && \
 ./index.sh test node test.js",
         "test-published": "./index.sh shRun shNpmTestPublished"
     },
-    "version": "2016.1.6"
+    "version": "2016.1.7"
 }
 ```
 
@@ -563,9 +571,9 @@ shBuildCiTestPost() {(set -e
     # if running legacy-node, then exit
     [ "$(node --version)" \< "v5.0" ] && exit || true
     # if branch is not alpha, beta, or master, then exit
-    if [ "$CI_BRANCH" = alpha ] ||
+    if !([ "$CI_BRANCH" = alpha ] ||
         [ "$CI_BRANCH" = beta ] ||
-        [ "$CI_BRANCH" = master ]
+        [ "$CI_BRANCH" = master ])
     then
         exit
     fi

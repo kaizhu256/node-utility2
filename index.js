@@ -83,6 +83,10 @@
         local.utility2.jslint = local.modeJs === 'browser'
             ? local.global.utility2_jslint
             : require('./lib.jslint.js');
+        // init lib StringView
+        local.utility2.StringView = local.modeJs === 'browser'
+            ? local.global.utility2_stringview
+            : require('./lib.stringview.js');
         // init lib uglifyjs
         local.utility2.uglifyjs = local.modeJs === 'browser'
             ? local.global.utility2_uglifyjs
@@ -131,39 +135,49 @@ local.utility2.templateDocApiHtml = '\
 }\n\
 .docApiSignatureSpan {\n\
     color: #777;\n\
+    font-weight: bold;\n\
 }\n\
 </style>\n\
 <div class="docApiDiv">\n\
-<h1>api documentation</h1>\n\
-<div class="docApiSectionDiv" id="toc"><h1>table of contents</h1><ul>\n\
-{{#moduleList}}\n\
+<h1>api documentation ({{envDict.npm_package_name}} @ {{envDict.npm_package_version}})</h1>\n\
+<div class="docApiSectionDiv"><a href="#"><h1>table of contents</h1></a><ul>\n\
+{{#list moduleList}}\n\
 <li><a href="#{{id}}">module {{name}}</a><ul>\n\
-{{#elementList}}\n\
-    <li><a class="docApiElementLiA" href="#{{id}}">\n\
-    {{name}}\n\
-    <span class="docApiSignatureSpan">{{signature}}</span>\n\
-    </a></li>\n\
-{{/elementList}}\n\
-</ul></li>\n\
-{{/moduleList}}\n\
-</ul></div>\n\
-{{#moduleList}}\n\
-<div class="docApiSectionDiv">\n\
-<h1><a href="#{{id}}" id="{{id}}">module {{name}}</a></h1>\n\
-{{#elementList}}\n\
-    <h2><a href="#{{id}}" id="{{id}}">\n\
+{{#list elementList}}\n\
+    <li>\n\
+    {{#unless source}}\n\
+        <span class="docApiSignatureSpan">{{name}}</span>\n\
+    {{/unless source}}\n\
+    {{#if source}}\n\
+        <a class="docApiElementLiA" href="#{{id}}">\n\
         {{name}}\n\
         <span class="docApiSignatureSpan">{{signature}}</span>\n\
-    </a></h2>\n\
-    {{#extra}}\n\
+        </a>\n\
+    {{/if source}}\n\
+    </li>\n\
+{{/list elementList}}\n\
+</ul></li>\n\
+{{/list moduleList}}\n\
+</ul></div>\n\
+{{#list moduleList}}\n\
+<div class="docApiSectionDiv">\n\
+<h1><a href="#{{id}}" id="{{id}}">module {{name}}</a></h1>\n\
+{{#list elementList}}\n\
+    {{#if source}}\n\
+        <h2>\n\
+            <a href="#{{id}}" id="{{id}}">\n\
+            {{name}}\n\
+            <span class="docApiSignatureSpan">{{signature}}</span>\n\
+            </a>\n\
+        </h2>\n\
         <ul>\n\
         <li>description and source code<pre class="docApiCodePre">{{source}}</pre></li>\n\
         <li>example usage<pre class="docApiCodePre">{{example}}</pre></li>\n\
         </ul>\n\
-    {{/extra}}\n\
-{{/elementList}}\n\
+    {{/if source}}\n\
+{{/list elementList}}\n\
 </div>\n\
-{{/moduleList}}\n\
+{{/list moduleList}}\n\
 </div>\n\
 ';
 
@@ -258,7 +272,7 @@ local.utility2.templateTestReportHtml = '\
 </tr></tbody>\n\
 </table>\n\
 </div>\n\
-{{#testPlatformList}}\n\
+{{#list testPlatformList}}\n\
 <div class="testReportPlatformDiv">\n\
 <h4>\n\
     {{testPlatformNumber}}. {{name htmlSafe}}<br>\n\
@@ -276,23 +290,23 @@ local.utility2.templateTestReportHtml = '\
     <th>test-case</th>\n\
 </tr></thead>\n\
 <tbody>\n\
-{{#testCaseList}}\n\
+{{#list testCaseList}}\n\
 <tr class="testReportPlatformTr">\n\
     <td>{{testCaseNumber}}</td>\n\
     <td>{{timeElapsed}} ms</td>\n\
     <td class="{{testReportTestStatusClass}}">{{status}}</td>\n\
     <td>{{name}}</td>\n\
 </tr>\n\
-{{/testCaseList}}\n\
+{{/list testCaseList}}\n\
 </tbody>\n\
 </table>\n\
 <pre class="{{testReportPlatformPreClass}}">\n\
-{{#errorStackList}}\n\
+{{#list errorStackList}}\n\
 {{errorStack htmlSafe}}\n\
-{{/errorStackList}}\n\
+{{/list errorStackList}}\n\
 </pre>\n\
 </div>\n\
-{{/testPlatformList}}\n\
+{{/list testPlatformList}}\n\
 ';
 /* jslint-ignore-end */
     }());
@@ -1122,7 +1136,7 @@ local.utility2.templateTestReportHtml = '\
             onNext();
         };
 
-        local.utility2.cryptojsAesDecrypt = function (data, secret) {
+        local.utility2.cryptojsCipherAes256Decrypt = function (data, secret) {
         /*
          * this function will aes-decrypt the cipherParams data
          */
@@ -1131,7 +1145,7 @@ local.utility2.templateTestReportHtml = '\
             );
         };
 
-        local.utility2.cryptojsAesEncrypt = function (data, secret) {
+        local.utility2.cryptojsCipherAes256Encrypt = function (data, secret) {
         /*
          * this function will aes-encrypt the data into a cipherParams string
          */
@@ -1170,20 +1184,22 @@ local.utility2.templateTestReportHtml = '\
                 if (element.typeof !== 'function') {
                     return element;
                 }
-                element.extra = element;
                 // init source
                 element.source = trimLeft(module.exports[elementName].toString());
                 if (element.source.length > 4096) {
                     element.source = element.source.slice(0, 4096).trimRight() + ' ...';
                 }
                 element.source = local.utility2.stringHtmlSafe(element.source)
+                    .replace((/\([\S\s]*?\)/), function (match0) {
+                        // init signature
+                        element.signature = match0.replace((/ *?\/\*[\S\s]*?\*\/ */g), '');
+                        return element.signature;
+                    })
                     .replace(
                         (/( *?\/\*[\S\s]*?\*\/\n)/),
                         '<span class="docApiCodeCommentSpan">$1</span>'
                     )
                     .replace((/^function \(/), elementName + ' = function (');
-                // init signature
-                element.signature = (/\([\S\s]*?\)/).exec(element.source)[0];
                 // init example
                 (module.aliasList || [moduleName]).forEach(function (moduleAlias) {
                     if (!element.example) {
@@ -1252,6 +1268,7 @@ local.utility2.templateTestReportHtml = '\
                         name: moduleName
                     };
                 });
+            options.envDict = local.utility2.envDict;
             return local.utility2.templateRender(
                 local.utility2.templateDocApiHtml,
                 options,
@@ -2390,35 +2407,50 @@ local.utility2.templateTestReportHtml = '\
         /*
          * this function will replace the keys in the template with the dict's key / value
          */
-            var argList, match, renderDefault, replace, rgx, value;
+            var argList, match, renderDefault, renderPartial, rgx, value;
             dict = dict || {};
             renderDefault = function (match0) {
                 return valueDefault === undefined
                     ? match0
                     : valueDefault;
             };
-            replace = function (match0, fragment) {
-                // if value is an array, then iteratively format the array fragment with it
-                if (Array.isArray(dict[match])) {
-                    return dict[match].map(function (dict) {
-                        // recurse with fragment and dict
-                        return local.utility2.templateRender(fragment, dict, valueDefault);
-                    }).join('');
+            renderPartial = function (match0, helper, key, partial) {
+                // jslint-hack
+                local.utility2.nop(match0);
+                switch (helper) {
+                case 'if':
+                    if (dict[key]) {
+                        // recurse with partial
+                        return local.utility2.templateRender(partial, dict, valueDefault);
+                    }
+                    break;
+                case 'list':
+                    if (Array.isArray(dict[key])) {
+                        return dict[key].map(function (dict) {
+                            // recurse with partial
+                            return local.utility2.templateRender(partial, dict, valueDefault);
+                        }).join('');
+                    }
+                    break;
+                case 'unless':
+                    if (!dict[key]) {
+                        // recurse with partial
+                        return local.utility2.templateRender(partial, dict, valueDefault);
+                    }
+                    break;
                 }
-                if (dict[match] && typeof dict[match] === 'object') {
-                    return local.utility2.templateRender(fragment, dict[match], valueDefault);
-                }
+                // render default
                 return renderDefault(match0);
             };
-            rgx = (/\{\{#[^}]+?\}\}/g);
-            // search for array fragments in the template
+            // render partials
+            rgx = (/\{\{#(\w+) ([^}]+?)\}\}/g);
             for (match = rgx.exec(template); match; match = rgx.exec(template)) {
-                match = match[0].slice(3, -2);
+                rgx.lastIndex += 1 - match[0].length;
                 template = template.replace(
-                    new RegExp('\\{\\{#' + match +
-                        '\\}\\}([\\S\\s]*?)\\{\\{\\/' + match +
+                    new RegExp('\\{\\{#(' + match[1] + ') (' + match[2] +
+                        ')\\}\\}([\\S\\s]*?)\\{\\{/' + match[1] + ' ' + match[2] +
                         '\\}\\}'),
-                    replace
+                    renderPartial
                 );
             }
             // search for keys in the template
@@ -3260,7 +3292,14 @@ local.utility2.templateTestReportHtml = '\
             );
         local.utility2.assetsDict['/assets.utility2.css'] =
             local.fs.readFileSync(__dirname + '/index.css', 'utf8');
-        ['bcrypt', 'cryptojs', 'istanbul', 'jslint', 'uglifyjs'].forEach(function (key) {
+        [
+            'bcrypt',
+            'cryptojs',
+            'istanbul',
+            'jslint',
+            'stringview',
+            'uglifyjs'
+        ].forEach(function (key) {
             local.utility2.assetsDict['/assets.utility2.lib.' + key + '.js'] =
                 local.utility2.uglifyIfProduction(
                     local.utility2.istanbulInstrumentInPackage(

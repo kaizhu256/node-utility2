@@ -34,7 +34,12 @@
     },
     "scripts": {
         "build-ci": "./index.sh shRun shReadmeBuild",
-        "build-doc": "export MODE_LINENO=0 && ./index.sh shRun shReadmeExportFile package.json package.json && ./index.sh shRun shDocApiCreate \"module.exports={ exampleFileList:['README.md','test.js','index.js', 'lib.bcrypt.js','lib.cryptojs.js','lib.istanbul.js','lib.jslint.js','lib.uglifyjs.js'], moduleDict:{ utility2:{exports:require('./index.js')}, 'utility2.bcrypt':{aliasList:['bcrypt','local'],exports:require('./index.js').bcrypt}, 'utility2.cryptojs':{aliasList:['cryptojs','local'],exports:require('./index.js').cryptojs}, 'utility2.istanbul':{aliasList:['istanbul','local'],exports:require('./index.js').istanbul}, 'utility2.jslint':{aliasList:['jslint','local'],exports:require('./index.js').jslint}, 'utility2.uglifyjs':{aliasList:['uglifyjs','local'],exports:require('./index.js').uglifyjs} } }\"",
+        "build-doc": "export MODE_LINENO=0 && ./index.sh shRun shReadmeExportFile package.json package.json && ./index.sh shRun shDocApiCreate \"module.exports={ exampleFileList:['README.md','test.js','index.js', 'lib.bcrypt.js','lib.cryptojs.js','lib.istanbul.js','lib.jslint.js','lib.stringview.js', 'lib.uglifyjs.js'], moduleDict:{ utility2:{exports:require('./index.js')}, 'utility2.bcrypt':{aliasList:['bcrypt','local'],exports:require('./index.js').bcrypt}, 'utility2.cryptojs':{aliasList:['cryptojs','local'],exports:require('./index.js').cryptojs}, 'utility2.istanbul':{aliasList:['istanbul','local'],exports:require('./index.js').istanbul}, 'utility2.jslint':{aliasList:['jslint','local'],exports:require('./index.js').jslint}, 'utility2.StringView':{aliasList:['StringView','local'], exports:require('./index.js').StringView}, 'utility2.StringView.prototype':{aliasList:['StringView'], exports:require('./index.js').StringView.prototype}, 'utility2.uglifyjs':{aliasList:['uglifyjs','local'],exports:require('./index.js').uglifyjs} } }\"",
+
+
+
+
+
 
 
 
@@ -59,5 +64,5 @@
 
         "test-published": "./index.sh shRun shNpmTestPublished"
     },
-    "version": "2016.1.6"
+    "version": "2016.1.7"
 }
