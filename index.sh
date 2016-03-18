@@ -561,7 +561,8 @@ shGithubDeploy() {(set -e
     fi
     shBuildPrint githubDeploy "deploying to $TEST_URL"
     # build app
-    npm test --mode-test-case=testCase_build_assets
+    (export NODE_ENV=production &&
+        npm test --mode-test-case=testCase_build_assets)
     # upload app
     shBuildGithubUpload
     # wait 10 seconds for github to deploy app

@@ -7,20 +7,22 @@ run dynamic browser tests with coverage (via istanbul and electron)
 
 
 # todo
-- auto-decrypt/auto-encrypt encrypted property in utility2.jwtDecode/utility2.jwtEncode
+- rename var data to result in test.js
 - add es6 support in jslint
-- migrate to docker build in travis
 - add utility2.middlewareLimit
-- create flamegraph from istanbul coverage
 - add server stress test using electron
 - none
 
 
 
-# change since d5d563b9
-- npm publish 2016.1.7
-- add file lib.stringview.js and function utility2.StringView
-- add handlebars-like helpers #list, #if, #unless to utility2.templateRender
+# change since 1aca3e2b
+- npm publish 2016.1.8
+- use production env in shGithubDeploy
+- add element-numbering in api-doc
+- fix ajaxProgressDiv flicker when loading page
+- add rolled-up asset /assets.utility2.rollup.js
+- add class utility2.FormData to allow form-upload to serverLocal
+- add function utility2.domElementQuerySelectorAll, utility2.blobRead, utility2.bufferConcat, utility2.bufferIndexOfSubBuffer
 - none
 
 
@@ -503,6 +505,10 @@ utility2:{exports:require('./index.js')}, \
 'utility2.cryptojs':{aliasList:['cryptojs','local'],exports:require('./index.js').cryptojs}, \
 'utility2.istanbul':{aliasList:['istanbul','local'],exports:require('./index.js').istanbul}, \
 'utility2.jslint':{aliasList:['jslint','local'],exports:require('./index.js').jslint}, \
+'utility2.FormData':{aliasList:['FormData','local'], \
+exports:require('./index.js').FormData}, \
+'utility2.FormData.prototype':{aliasList:['data'], \
+exports:require('./index.js').FormData.prototype}, \
 'utility2.StringView':{aliasList:['StringView','local'], \
 exports:require('./index.js').StringView}, \
 'utility2.StringView.prototype':{aliasList:['StringView'], \
@@ -521,7 +527,7 @@ export npm_config_mode_auto_restart=1 && \
 ./index.sh test node test.js",
         "test-published": "./index.sh shRun shNpmTestPublished"
     },
-    "version": "2016.1.7"
+    "version": "2016.1.8"
 }
 ```
 

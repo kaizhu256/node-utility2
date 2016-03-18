@@ -88,14 +88,13 @@
         /*
          * this function will test testRun's failure handling-behavior
          */
-            // jslint-hack
-            local.utility2.nop(options);
             // test failure from callback handling-behavior
             onError(local.utility2.errorDefault);
             // test failure from multiple-callback handling-behavior
             onError();
             // test failure from ajax handling-behavior
-            local.utility2.ajax({ url: '/test.undefined' }, onError);
+            options = { url: '/test.undefined' };
+            local.utility2.ajax(options, onError);
             // test failure from thrown error handling-behavior
             throw local.utility2.errorDefault;
         };
@@ -139,8 +138,6 @@
          * this function will test ajax's error handling-behavior
          */
             var onParallel;
-            // jslint-hack
-            local.utility2.nop(options);
             onParallel = local.utility2.onParallel(onError);
             onParallel.counter += 1;
             [{
@@ -164,7 +161,8 @@
                 // test undefined https host handling-behavior
                 timeout: 1,
                 url: 'https://' + local.utility2.uuidTimeCreate() + '.com'
-            }].forEach(function (options) {
+            }].forEach(function (_) {
+                options = _;
                 onParallel.counter += 1;
                 local.utility2.ajax(options, function (error) {
                     local.utility2.tryCatchOnError(function () {
@@ -230,12 +228,12 @@
                             // cleanup response
                             local.utility2.requestResponseCleanup(null, xhr.response);
                             // validate response
-                            options.data = xhr.response;
-                            local.utility2.assert(options.data, options.data);
+                            options.result = xhr.response;
+                            local.utility2.assert(options.result, options);
                             break;
                         default:
-                            options.data = xhr.responseText;
-                            local.utility2.assert(options.data === 'hello', options.data);
+                            options.result = xhr.responseText;
+                            local.utility2.assert(options.result === 'hello', options);
                         }
                         onParallel();
                     }, onError);
@@ -279,8 +277,7 @@
         /*
          * this function will test assert's default handling-behavior
          */
-            // jslint-hack
-            local.utility2.nop(options);
+            options = {};
             // test assertion passed
             local.utility2.assert(true, true);
             // test assertion failed with undefined message
@@ -310,7 +307,8 @@
             });
             // test assertion failed with json object
             local.utility2.tryCatchOnError(function () {
-                local.utility2.assert(false, { aa: 1 });
+                options = { aa: 1 };
+                local.utility2.assert(false, options);
             }, function (error) {
                 // validate error occurred
                 local.utility2.assert(error, error);
@@ -326,13 +324,42 @@
          */
             options = {};
             // test null-case handling-behavior
-            options.data = local.utility2.bcryptPasswordValidate();
-            local.utility2.assert(options.data === false, options.data);
+            options.result = local.utility2.bcryptPasswordValidate();
+            local.utility2.assert(options.result === false, options);
+            // test default handling-behavior
             options.password = 'hello';
             options.hash = local.utility2.bcryptHashCreate(options.password, 8);
-            options.data =
+            options.result =
                 local.utility2.bcryptPasswordValidate(options.password, options.hash);
-            local.utility2.assert(options.data, options.data);
+            local.utility2.assert(options.result, options);
+            onError();
+        };
+
+        local.testCase_bufferIndexOfSubBuffer_default = function (options, onError) {
+        /*
+         * this function will test bufferIndexOfSubBuffer's default handling-behavior
+         */
+            [
+                { buffer: '', subBuffer: '', validate: 0 },
+                { buffer: '', subBuffer: 'aa', validate: -1 },
+                { buffer: 'aa', subBuffer: '', validate: 0 },
+                { buffer: 'aa', subBuffer: 'aa', validate: 0 },
+                { buffer: 'aa', subBuffer: 'bb', validate: -1 },
+                { buffer: 'aaaa', subBuffer: 'aa', validate: 0 },
+                { buffer: 'aabb', subBuffer: 'aa', validate: 0 },
+                { buffer: 'aabb', subBuffer: 'bb', validate: 2 },
+                { buffer: 'aabbaa', subBuffer: 'aa', validate: 0 },
+                { buffer: 'aabbaa', subBuffer: 'bb', validate: 2 },
+                { buffer: 'aabbaa', subBuffer: 'ba', validate: 3 }
+            ].forEach(function (_) {
+                options = _;
+                options.result = local.utility2.bufferIndexOfSubBuffer(
+                    new local.utility2.StringView(options.buffer).rawData,
+                    new local.utility2.StringView(options.subBuffer).rawData,
+                    options.fromIndex
+                );
+                local.utility2.assert(options.result === options.validate, options);
+            });
             onError();
         };
 
@@ -467,15 +494,14 @@
         /*
          * this function will exit's default handling-behavior
          */
-            // jslint-hack
-            local.utility2.nop(options);
-            // test exit's default handling-behavior
-            local.utility2.testMock([
+            options = [
                 // suppress console.log
                 [console, { log: local.utility2.nop }],
                 // test modeTest === 'consoleLogResult' handling-behavior
                 [local.utility2, { modeTest: 'consoleLogResult' }]
-            ], function (onError) {
+            ];
+            // test exit's default handling-behavior
+            local.utility2.testMock(options, function (onError) {
                 // test invalid exit-code handling-behavior
                 local.utility2.exit('invalid exit-code');
                 onError();
@@ -573,12 +599,11 @@
         /*
          * this function will test jslintAndPrint's default handling-behavior
          */
-            // jslint-hack
-            local.utility2.nop(options);
-            local.utility2.testMock([
+            options = [
                 // suppress console.error
                 [console, { error: local.utility2.nop }]
-            ], function (onError) {
+            ];
+            local.utility2.testMock(options, function (onError) {
                 // test empty script handling-behavior
                 local.utility2.jslintAndPrint('', 'empty.css');
                 // validate no error occurred
@@ -676,9 +701,9 @@
             onError();
         };
 
-        local.testCase_jwtHs256_default = function (options, onError) {
+        local.testCase_jwtHs256Xxx_default = function (options, onError) {
         /*
-         * this function will test jwtHs256's default handling-behavior
+         * this function will test jwtHs256Xxx's default handling-behavior
          */
             options = {};
             options.payload = { sub: '1234567890', name: 'John Doe', admin: true };
@@ -1162,7 +1187,7 @@
                 '<undefined>'
             );
             local.utility2.assert(
-                data === '<aa> %22%26lt%3Baa%26gt%3B%22 1 null <undefined> gg',
+                data === '<aa> %26quot%3B%26lt%3Baa%26gt%3B%26quot%3B 1 null <undefined> gg',
                 data
             );
             // test partial-list handling-behavior
@@ -1224,23 +1249,21 @@
         /*
          * this function will test uglify's default handling-behavior
          */
-            var data;
-            // jslint-hack
-            local.utility2.nop(options);
+            options = {};
             local.utility2.testMock([
                 // suppress console.error
                 [local.utility2.envDict, { npm_config_production: '' }]
             ], function (onError) {
                 // test no production-mode handling-behavior
                 local.utility2.envDict.npm_config_production = '';
-                data = local.utility2.uglifyIfProduction('aa = 1');
-                // validate data
-                local.utility2.assert(data === 'aa = 1', data);
+                options.result = local.utility2.uglifyIfProduction('aa = 1');
+                // validate result
+                local.utility2.assert(options.result === 'aa = 1', options);
                 // test production-mode handling-behavior
                 local.utility2.envDict.npm_config_production = '1';
-                data = local.utility2.uglifyIfProduction('aa = 1');
-                // validate data
-                local.utility2.assert(data === 'aa=1', data);
+                options.result = local.utility2.uglifyIfProduction('aa = 1');
+                // validate result
+                local.utility2.assert(options.result === 'aa=1', options);
                 onError();
             }, onError);
         };
@@ -1249,9 +1272,7 @@
         /*
          * this function will test urlParse's default handling-behavior
          */
-            var data;
-            // jslint-hack
-            local.utility2.nop(options);
+            options = {};
             local.utility2.testMock([
                 [local.utility2, {
                     // test default PORT handling-behavior
@@ -1261,10 +1282,10 @@
                 }]
             ], function (onError) {
                 // test default handling-behavior
-                data = local.utility2.urlParse('https://localhost:80/foo' +
+                options.result = local.utility2.urlParse('https://localhost:80/foo' +
                     '?aa=1&bb%20cc=dd%20=ee&aa=2&aa#zz=1');
-                // validate data
-                local.utility2.assert(local.utility2.jsonStringifyOrdered(data) ===
+                // validate result
+                local.utility2.assert(local.utility2.jsonStringifyOrdered(options.result) ===
                     local.utility2.jsonStringifyOrdered({
                         hash: '#zz=1',
                         host: 'localhost:80',
@@ -1275,11 +1296,11 @@
                         protocol: 'https:',
                         query: { aa: ['1', '2', ''], 'bb cc': 'dd =ee' },
                         search: '?aa=1&bb%20cc=dd%20=ee&aa=2&aa'
-                    }), data);
+                    }), options);
                 // test error handling-behavior
-                data = local.utility2.urlParse(null);
-                // validate data
-                local.utility2.assert(local.utility2.jsonStringifyOrdered(data) ===
+                options.result = local.utility2.urlParse(null);
+                // validate result
+                local.utility2.assert(local.utility2.jsonStringifyOrdered(options.result) ===
                     local.utility2.jsonStringifyOrdered({
                         hash: '',
                         host: '',
@@ -1290,12 +1311,210 @@
                         protocol: '',
                         query: {},
                         search: ''
-                    }), data);
+                    }), options);
                 onError();
             }, onError);
         };
+
+        local.testCase_uuidXxx_default = function (options, onError) {
+        /*
+         * this function will test uuidXxx's default handling-behavior
+         */
+            options = {};
+            // test uuid4 handling-behavior
+            options.data1 = local.utility2.uuid4Create();
+            // validate data1
+            local.utility2.assert(
+                local.utility2.regexpUuidValidate.test(options.data1),
+                options.data1
+            );
+            // test uuidTime handling-behavior
+            options.data1 = local.utility2.uuidTimeCreate();
+            // validate data1
+            local.utility2.assert(
+                local.utility2.regexpUuidValidate.test(options.data1),
+                options.data1
+            );
+            setTimeout(function () {
+                local.utility2.tryCatchOnError(function () {
+                    options.data2 = local.utility2.uuidTimeCreate();
+                    // validate data2
+                    local.utility2.assert(
+                        local.utility2.regexpUuidValidate.test(options.data2),
+                        options.data2
+                    );
+                    // validate data1 < data2
+                    local.utility2.assert(
+                        options.data1 < options.data2,
+                        [options.data1, options.data2]
+                    );
+                    onError();
+                }, onError);
+            }, 1000);
+        };
     }());
     switch (local.modeJs) {
+
+
+
+    // run browser js-env code - function
+    case 'browser':
+        local.testCase_FormData_default = function (options, onError) {
+        /*
+         * this function will test FormData's default handling-behavior
+         */
+            options = {};
+            options.blob1 = new local.global.Blob(['hello\u1234bye']);
+            options.blob2 = new local.global.Blob(['hello\u1234bye'], {
+                type: 'text/plain; charset=utf-8'
+            });
+            options.data = new local.utility2.FormData();
+            options.data.append('text1', 'hello\u1234bye');
+            // test file-upload handling-behavior
+            options.data.append('file1', options.blob1);
+            // test file-upload and filename handling-behavior
+            options.data.append('file2', options.blob2, 'filename2.txt');
+            options.method = 'POST';
+            options.url = '/test.echo';
+            local.utility2.ajax(options, function (error, xhr) {
+                local.utility2.tryCatchOnError(function () {
+                    // validate no error occurred
+                    local.utility2.assert(!error, error);
+                    // validate responseText
+                    local.utility2.assert(xhr.responseText.indexOf(
+                        '\r\nContent-Disposition: form-data; ' +
+                            'name="text1"\r\n\r\nhello\u1234bye\r\n'
+                    ) >= 0, xhr.responseText);
+                    local.utility2.assert(xhr.responseText.indexOf(
+                        '\r\nContent-Disposition: form-data; ' +
+                            'name="file1"\r\n\r\nhello\u1234bye\r\n'
+                    ) >= 0, xhr.responseText);
+                    local.utility2.assert(xhr.responseText.indexOf(
+                        '\r\nContent-Disposition: form-data; name="file2"; ' +
+                            'filename="filename2.txt"\r\nContent-Type: text/plain; ' +
+                            'charset=utf-8\r\n\r\nhello\u1234bye\r\n'
+                    ) >= 0, xhr.responseText);
+                    onError();
+                }, onError);
+            });
+        };
+
+        local.testCase_FormData_error = function (options, onError) {
+        /*
+         * this function will test FormData's error handling-behavior
+         */
+            local.utility2.testMock([
+                [local.utility2.FormData.prototype, { read: function (onError) {
+                    onError(local.utility2.errorDefault);
+                } }]
+            ], function (onError) {
+                options = {};
+                options.data = new local.utility2.FormData();
+                options.method = 'POST';
+                options.url = '/test.echo';
+                local.utility2.ajax(options, function (error) {
+                    local.utility2.tryCatchOnError(function () {
+                        // validate error occurred
+                        local.utility2.assert(error, error);
+                        onError();
+                    }, onError);
+                });
+            }, onError);
+        };
+
+        local.testCase_FormData_nullCase = function (options, onError) {
+        /*
+         * this function will test FormData's null-case handling-behavior
+         */
+            options = {};
+            options.data = new local.utility2.FormData();
+            options.method = 'POST';
+            options.url = '/test.echo';
+            local.utility2.ajax(options, function (error, xhr) {
+                local.utility2.tryCatchOnError(function () {
+                    // validate no error occurred
+                    local.utility2.assert(!error, error);
+                    // validate responseText
+                    local.utility2.assert(
+                        (/\r\n\r\n$/).test(xhr.responseText),
+                        xhr.responseText
+                    );
+                    onError();
+                }, onError);
+            });
+        };
+
+        local.testCase_blobRead_default = function (options, onError) {
+        /*
+         * this function will test blobRead's default handling-behavior
+         */
+            var onParallel;
+            options = {};
+            options.blob = new local.global.Blob(['hello\u1234bye'], {
+                type: 'text/plain; charset=utf-8'
+            });
+            onParallel = local.utility2.onParallel(onError);
+            onParallel.counter += 1;
+            [null, 'dataURL', 'text'].forEach(function (encoding) {
+                onParallel.counter += 1;
+                local.utility2.blobRead(options.blob, encoding, function (error, data) {
+                    local.utility2.tryCatchOnError(function () {
+                        // validate no error occurred
+                        local.utility2.assert(!error, error);
+                        // validate data
+                        switch (encoding) {
+                        case 'dataURL':
+                            local.utility2.assert(data ===
+                                'data:text/plain; charset=utf-8;base64,aGVsbG/hiLRieWU=', data);
+                            break;
+                        case 'text':
+                            local.utility2.assert(data === 'hello\u1234bye', data);
+                            break;
+                        default:
+                            data = new local.utility2.StringView(data).toString();
+                            local.utility2.assert(data === 'hello\u1234bye', data);
+                        }
+                        onParallel();
+                    }, onError);
+                });
+            });
+            onParallel();
+        };
+
+        local.testCase_blobRead_error = function (options, onError) {
+        /*
+         * this function will test blobRead's error handling-behavior
+         */
+            options = [
+                [local.global.FileReader.prototype, { readAsArrayBuffer: function () {
+                    this.onabort({ type: 'abort' });
+                    this.onerror({ type: 'error' });
+                } }]
+            ];
+            local.utility2.testMock(options, function (onError) {
+                local.utility2.blobRead(null, null, function (error) {
+                    // validate error occurred
+                    local.utility2.assert(error, error);
+                });
+                onError();
+            }, onError);
+        };
+
+        local.testCase_domElementQuerySelectorAll_default = function (options, onError) {
+        /*
+         * this function will test domElementQuerySelectorAll's default handling-behavior
+         */
+            options = {};
+            [
+                document,
+                [document]
+            ].forEach(function (element) {
+                options.result = local.utility2.domElementQuerySelectorAll(element, 'body')[0];
+                local.utility2.assert(options.result === document.body);
+            });
+            onError();
+        };
+        break;
 
 
 
@@ -1366,6 +1585,9 @@
             }, {
                 file: '/assets.utility2.js',
                 url: '/assets.utility2.js'
+            }, {
+                file: '/assets.utility2.rollup.js',
+                url: '/assets.utility2.rollup.js'
             }, {
                 file: '/assets.utility2.lib.bcrypt.js',
                 url: '/assets.utility2.lib.bcrypt.js'
@@ -1759,43 +1981,6 @@
                 onError();
             }, onError);
         };
-
-        local.testCase_uuidXxx_default = function (options, onError) {
-        /*
-         * this function will test uuidXxx's default handling-behavior
-         */
-            options = {};
-            // test uuid4 handling-behavior
-            options.data1 = local.utility2.uuid4Create();
-            // validate data1
-            local.utility2.assert(
-                local.utility2.regexpUuidValidate.test(options.data1),
-                options.data1
-            );
-            // test uuidTime handling-behavior
-            options.data1 = local.utility2.uuidTimeCreate();
-            // validate data1
-            local.utility2.assert(
-                local.utility2.regexpUuidValidate.test(options.data1),
-                options.data1
-            );
-            setTimeout(function () {
-                local.utility2.tryCatchOnError(function () {
-                    options.data2 = local.utility2.uuidTimeCreate();
-                    // validate data2
-                    local.utility2.assert(
-                        local.utility2.regexpUuidValidate.test(options.data2),
-                        options.data2
-                    );
-                    // validate data1 < data2
-                    local.utility2.assert(
-                        options.data1 < options.data2,
-                        [options.data1, options.data2]
-                    );
-                    onError();
-                }, onError);
-            }, 1000);
-        };
         break;
     }
 
@@ -1815,6 +2000,7 @@
         );
         local.utility2.assetsDict['/assets.script-only.html'] =
             '<h1>script-only test</h1>\n' +
+            '<script src="assets.utility2.lib.stringview.js"></script>' +
             '<script src="assets.utility2.js"></script>\n' +
             '<script src="assets.example.js"></script>\n' +
             '<script src="assets.test.js"></script>\n';
@@ -1879,7 +2065,7 @@
             case '/test.timeout':
                 setTimeout(function () {
                     response.end();
-                }, 5000);
+                }, 2000);
                 break;
             // serve file
             default:

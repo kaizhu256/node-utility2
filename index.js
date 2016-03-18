@@ -142,7 +142,7 @@ local.utility2.templateDocApiHtml = '\
 <h1>api documentation ({{envDict.npm_package_name}} @ {{envDict.npm_package_version}})</h1>\n\
 <div class="docApiSectionDiv"><a href="#"><h1>table of contents</h1></a><ul>\n\
 {{#list moduleList}}\n\
-<li><a href="#{{id}}">module {{name}}</a><ul>\n\
+<li><a href="#{{id}}">module {{name}}</a><ol>\n\
 {{#list elementList}}\n\
     <li>\n\
     {{#unless source}}\n\
@@ -156,7 +156,7 @@ local.utility2.templateDocApiHtml = '\
     {{/if source}}\n\
     </li>\n\
 {{/list elementList}}\n\
-</ul></li>\n\
+</ol></li>\n\
 {{/list moduleList}}\n\
 </ul></div>\n\
 {{#list moduleList}}\n\
@@ -172,7 +172,7 @@ local.utility2.templateDocApiHtml = '\
         </h2>\n\
         <ul>\n\
         <li>description and source code<pre class="docApiCodePre">{{source}}</pre></li>\n\
-        <li>example usage<pre class="docApiCodePre">{{example}}</pre></li>\n\
+        <li>example<pre class="docApiCodePre">{{example}}</pre></li>\n\
         </ul>\n\
     {{/if source}}\n\
 {{/list elementList}}\n\
@@ -358,6 +358,7 @@ local.utility2.templateTestReportHtml = '\
          * and passed as the first argument to the 'request' and 'response' event respectively
          */
             this.headers = {};
+            this.httpVersion = '1.1';
             this.method = xhr.method;
             this.onEvent = document.createDocumentFragment('onEvent');
             this.readable = true;
@@ -416,7 +417,7 @@ local.utility2.templateTestReportHtml = '\
          * https://nodejs.org/api/all.html#all_class_http_serverresponse
          * This object is created internally by a HTTP server--not by the user
          */
-            this.data = '';
+            this.chunkList = [];
             this.headers = {};
             this.onEvent = document.createDocumentFragment('onEvent');
             this.onResponse = onResponse;
@@ -437,11 +438,11 @@ local.utility2.templateTestReportHtml = '\
          * and body have been sent
          */
             // emit writable events
-            this.data += data || '';
+            this.chunkList.push(data || '');
             this.emit('finish');
             // emit readable events
             this.onResponse(this);
-            this.emit('data', this.data);
+            this.emit('data', local.utility2.bufferConcat(this.chunkList));
             this.emit('end');
         };
 
@@ -459,7 +460,7 @@ local.utility2.templateTestReportHtml = '\
          * https://nodejs.org/api/all.html#all_response_write_chunk_encoding_callback
          * This sends a chunk of the response body
          */
-            this.data += data;
+            this.chunkList.push(data);
         };
 
         local._http.STATUS_CODES = {
@@ -609,7 +610,7 @@ local.utility2.templateTestReportHtml = '\
             }
             this.error = error;
             this.response = data;
-            this.responseText = (data && data.toString()) || '';
+            this.responseText = new local.utility2.StringView(data || '').toString();
             // update xhr
             this.readyState = 4;
             this.onreadystatechange();
@@ -739,6 +740,103 @@ local.utility2.templateTestReportHtml = '\
             }
         };
 
+        // init lib FormData
+        local.utility2.FormData = function () {
+        /*
+         * https://xhr.spec.whatwg.org/#dom-formdata
+         * The FormData(form) constructor must run these steps:
+         * 1. Let fd be a new FormData object.
+         * 2. If form is given, set fd's entries to the result
+         *    of constructing the form data set for form.
+         * 3. Return fd.
+         */
+            this.entryList = [];
+        };
+
+        local.utility2.FormData.prototype.append = function (name, value, filename) {
+        /*
+         * https://xhr.spec.whatwg.org/#dom-formdata-append
+         * The append(name, value, filename) method, when invoked, must run these steps:
+         * 1. If the filename argument is given, set value to a new File object
+         *    whose contents are value and name is filename.
+         * 2. Append a new entry whose name is name, and value is value,
+         *    to context object's list of entries.
+         */
+            if (filename) {
+                local.utility2.assert(value instanceof local.global.Blob, typeof value);
+                value.name = filename;
+            }
+            this.entryList.push({ name: name, value: value });
+        };
+
+        local.utility2.FormData.prototype.read = function (onError) {
+        /*
+         * https://tools.ietf.org/html/rfc7578
+         * this function will read from formData as a buffer, e.g.
+         * --Boundary\r\n
+         * Content-Disposition: form-data; name="key"\r\n
+         * \r\n
+         * value\r\n
+         * --Boundary\r\n
+         * Content-Disposition: form-data; name="input1"; filename="file1.png"\r\n
+         * Content-Type: image/jpeg\r\n
+         * \r\n
+         * <data1>\r\n
+         * --Boundary\r\n
+         * Content-Disposition: form-data; name="input2"; filename="file2.png"\r\n
+         * Content-Type: image/jpeg\r\n
+         * \r\n
+         * <data2>\r\n
+         * --Boundary--\r\n
+         */
+            var boundary, onParallel, result;
+            // handle null-case
+            if (this.entryList.length === 0) {
+                onError(null, new local.global.Uint8Array(0));
+                return;
+            }
+            // init boundary
+            boundary = '--' + local.utility2.uuidTimeCreate();
+            // init result
+            result = [];
+            onParallel = local.utility2.onParallel(function (error) {
+                // add closing boundary
+                result.push([boundary + '--\r\n']);
+                // concatenate result
+                onError(error, !error && local.utility2.bufferConcat(
+                    Array.prototype.concat.apply([], result)
+                ));
+            });
+            onParallel.counter += 1;
+            this.entryList.forEach(function (element, ii) {
+                var value;
+                value = element.value;
+                if (!(value instanceof local.global.Blob)) {
+                    result[ii] = [boundary + '\r\nContent-Disposition: form-data; name="' +
+                        element.name + '"\r\n\r\n', value, '\r\n'];
+                    return;
+                }
+                // read from blob in parallel
+                onParallel.counter += 1;
+                local.utility2.blobRead(value, 'binary', function (error, data) {
+                    result[ii] = !error && [boundary +
+                        '\r\nContent-Disposition: form-data; name="' + element.name + '"' +
+                        // read param filename
+                        (value && value.name
+                            ? '; filename="' + value.name + '"'
+                            : '') +
+                        '\r\n' +
+                        // read param Content-Type
+                        (value && value.type
+                            ? 'Content-Type: ' + value.type + '\r\n'
+                            : '') +
+                        '\r\n', data, '\r\n'];
+                    onParallel(error);
+                });
+            });
+            onParallel();
+        };
+
         local.utility2.ajax = function (options, onError) {
         /*
          * this function will send an ajax-request with error-handling and timeout
@@ -768,8 +866,8 @@ local.utility2.templateTestReportHtml = '\
             // init timeout
             xhr.timeout = xhr.timeout || local.utility2.timeoutDefault;
             // init timerTimeout
-            timerTimeout = local.utility2.onTimeout(function (errorTimeout) {
-                xhr.error = errorTimeout;
+            timerTimeout = local.utility2.onTimeout(function (error) {
+                xhr.error = xhr.error || error;
                 xhr.abort();
                 // cleanup requestStream and responseStream
                 local.utility2.requestResponseCleanup(xhr.requestStream, xhr.responseStream);
@@ -789,6 +887,13 @@ local.utility2.templateTestReportHtml = '\
                     xhr.done = true;
                     // cleanup timerTimeout
                     clearTimeout(timerTimeout);
+                    // cleanup requestStream and responseStream
+                    setTimeout(function () {
+                        local.utility2.requestResponseCleanup(
+                            xhr.requestStream,
+                            xhr.responseStream
+                        );
+                    });
                     if (ajaxProgressDiv) {
                         // validate xhr is defined in _ajaxProgressList
                         ii = local._ajaxProgressList.indexOf(xhr);
@@ -798,6 +903,10 @@ local.utility2.templateTestReportHtml = '\
                         // hide _ajaxProgressDiv
                         if (local._ajaxProgressList.length === 0) {
                             local._ajaxProgressBarHide = setTimeout(function () {
+                                /* istanbul ignore next */
+                                if (local._ajaxProgressList.length) {
+                                    return;
+                                }
                                 // hide ajaxProgressBar
                                 ajaxProgressDiv.style.display = 'none';
                                 // reset ajaxProgress
@@ -807,7 +916,7 @@ local.utility2.templateTestReportHtml = '\
                                     'ajaxProgressBarDivLoading',
                                     'loading'
                                 );
-                            }, 1000);
+                            }, 1500);
                         }
                     }
                     // handle abort or error event
@@ -876,8 +985,21 @@ local.utility2.templateTestReportHtml = '\
             Object.keys(xhr.headers).forEach(function (key) {
                 xhr.setRequestHeader(key, xhr.headers[key]);
             });
-            // send data
-            xhr.send(xhr.data);
+            if (xhr.data instanceof local.utility2.local.utility2.FormData) {
+                // handle formData
+                xhr.data.read(function (error, data) {
+                    if (error) {
+                        xhr.error = xhr.error || error;
+                        xhr.abort();
+                        return;
+                    }
+                    // send data
+                    xhr.send(data);
+                });
+            } else {
+                // send data
+                xhr.send(xhr.data);
+            }
             return xhr;
         };
 
@@ -914,6 +1036,45 @@ local.utility2.templateTestReportHtml = '\
          * this function will validate the password against the bcrypt-hash
          */
             return local.utility2.bcrypt.compareSync(password || '', hash || '');
+        };
+
+        local.utility2.blobRead = function (blob, options, onError) {
+        /*
+         * this function will read the blob as a buffer
+         */
+            var done, reader;
+            reader = new local.global.FileReader();
+            reader.onabort = reader.onerror = reader.onload = function (event) {
+                if (done) {
+                    return;
+                }
+                done = true;
+                switch (event.type) {
+                case 'abort':
+                case 'error':
+                    onError(new Error('blobRead - ' + event.type));
+                    break;
+                case 'load':
+                    onError(null, reader.result instanceof local.global.ArrayBuffer
+                        // convert ArrayBuffer to Uint8Array
+                        ? new local.global.Uint8Array(reader.result)
+                        : reader.result);
+                    break;
+                }
+            };
+            switch (options && (options.encoding || options)) {
+            // readAsDataURL
+            case 'dataURL':
+                reader.readAsDataURL(blob);
+                break;
+            // readAsText
+            case 'text':
+                reader.readAsText(blob);
+                break;
+            // readAsArrayBuffer
+            default:
+                reader.readAsArrayBuffer(blob);
+            }
         };
 
         /* istanbul ignore next */
@@ -1136,6 +1297,47 @@ local.utility2.templateTestReportHtml = '\
             onNext();
         };
 
+        local.utility2.bufferConcat = function (bufferList) {
+        /*
+         * this function is the browser-version of node's Buffer.concat for Uint8Array
+         */
+            var byteLength, ii, jj, result;
+            byteLength = 0;
+            bufferList = bufferList.map(function (element) {
+                if (typeof element.byteLength !== 'number') {
+                    element = new local.utility2.StringView(element).rawData;
+                }
+                byteLength += element.byteLength;
+                return element;
+            });
+            result = new local.global.Uint8Array(byteLength);
+            ii = 0;
+            bufferList.forEach(function (element) {
+                for (jj = 0; jj < element.byteLength; ii += 1, jj += 1) {
+                    result[ii] = element[jj];
+                }
+            });
+            return result;
+        };
+
+        local.utility2.bufferIndexOfSubBuffer = function (buffer, subBuffer, fromIndex) {
+        /*
+         * this function will search the buffer for the indexOf-like position of the subBuffer
+         */
+            var ii, jj, kk;
+            for (ii = fromIndex || 0; ii < buffer.length; ii += 1) {
+                for (jj = 0, kk = ii; jj < subBuffer.length; jj += 1, kk += 1) {
+                    if (subBuffer[jj] !== buffer[kk]) {
+                        break;
+                    }
+                }
+                if (jj === subBuffer.length) {
+                    return kk - jj;
+                }
+            }
+            return subBuffer.length && -1;
+        };
+
         local.utility2.cryptojsCipherAes256Decrypt = function (data, secret) {
         /*
          * this function will aes-decrypt the cipherParams data
@@ -1154,7 +1356,7 @@ local.utility2.templateTestReportHtml = '\
 
         local.utility2.cryptojsHashHmacSha256Create = function (data, secret) {
         /*
-         * this function will return the base64 hmac-sha256 hash of the data and secret
+         * this function will return the base64 hmac-sha256 hash of the string data and secret
          */
             return local.utility2.cryptojs.enc.Base64.stringify(
                 local.utility2.cryptojs.HmacSHA256(data, secret)
@@ -1163,7 +1365,7 @@ local.utility2.templateTestReportHtml = '\
 
         local.utility2.cryptojsHashSha256Create = function (data) {
         /*
-         * this function will return the base64 sha-256 hash of the data
+         * this function will return the base64 sha-256 hash of the string data
          */
             return local.utility2.cryptojs.enc.Base64.stringify(
                 local.utility2.cryptojs.SHA256(data)
@@ -1274,6 +1476,15 @@ local.utility2.templateTestReportHtml = '\
                 options,
                 ''
             );
+        };
+
+        local.utility2.domElementQuerySelectorAll = function (element, selectors) {
+        /*
+         * this function will return the list of selected dom-elements as a javascript array;
+         */
+            return Array.prototype.slice.call((element.length === 1
+                ? element[0]
+                : element).querySelectorAll(selectors));
         };
 
         local.utility2.echo = function (arg) {
@@ -1977,6 +2188,29 @@ local.utility2.templateTestReportHtml = '\
             }, timeout | 0);
         };
 
+        local.utility2.processSpawnWithTimeout = function () {
+        /*
+         * this function will run like child_process.spawn,
+         * but with auto-timeout after timeoutDefault milliseconds
+         */
+            var childProcess;
+            // spawn childProcess
+            childProcess = local.child_process.spawn.apply(local.child_process, arguments)
+                // kill timerTimeout on exit
+                .on('exit', function () {
+                    local.utility2.tryCatchOnError(function () {
+                        process.kill(childProcess.timerTimeout.pid);
+                    }, local.utility2.nop);
+                });
+            // init failsafe timerTimeout
+            childProcess.timerTimeout = local.child_process.spawn('/bin/sh', ['-c', 'sleep ' +
+                // coerce to finite integer
+                (((0.001 * local.utility2.timeoutDefault) | 0) +
+                // add 2 second delay to failsafe timerTimeout
+                2) + '; kill -9 ' + childProcess.pid + ' 2>/dev/null'], { stdio: 'ignore' });
+            return childProcess;
+        };
+
         local.utility2.profile = function (task, onError) {
         /*
          * this function will profile the async task in milliseconds
@@ -2000,29 +2234,6 @@ local.utility2.templateTestReportHtml = '\
             task();
             // return difference in milliseconds between Date.now() and timeStart
             return Date.now() - timeStart;
-        };
-
-        local.utility2.processSpawnWithTimeout = function () {
-        /*
-         * this function will run like child_process.spawn,
-         * but with auto-timeout after timeoutDefault milliseconds
-         */
-            var childProcess;
-            // spawn childProcess
-            childProcess = local.child_process.spawn.apply(local.child_process, arguments)
-                // kill timerTimeout on exit
-                .on('exit', function () {
-                    local.utility2.tryCatchOnError(function () {
-                        process.kill(childProcess.timerTimeout.pid);
-                    }, local.utility2.nop);
-                });
-            // init failsafe timerTimeout
-            childProcess.timerTimeout = local.child_process.spawn('/bin/sh', ['-c', 'sleep ' +
-                // coerce to finite integer
-                (((0.001 * local.utility2.timeoutDefault) | 0) +
-                // add 2 second delay to failsafe timerTimeout
-                2) + '; kill -9 ' + childProcess.pid + ' 2>/dev/null'], { stdio: 'ignore' });
-            return childProcess;
         };
 
         local.utility2.replStart = function () {
@@ -2281,7 +2492,10 @@ local.utility2.templateTestReportHtml = '\
             return text
                 .replace((/&/g), '&amp;')
                 .replace((/</g), '&lt;')
-                .replace((/>/g), '&gt;');
+                .replace((/>/g), '&gt;')
+                .replace((/"/g), '&quot;')
+                .replace((/'/g), '&#x27;')
+                .replace((/`/g), '&#x60;');
         };
 
         local.utility2.taskCallbackAdd = function (options, onError) {
@@ -3127,7 +3341,7 @@ local.utility2.templateTestReportHtml = '\
         local.utility2.uuid4Create = function () {
         /*
          * this function will return a random uuid,
-         * with form "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx"
+         * with format "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx"
          */
             // code derived from http://jsperf.com/uuid4
             var id, ii;
@@ -3158,8 +3372,8 @@ local.utility2.templateTestReportHtml = '\
 
         local.utility2.uuidTimeCreate = function () {
         /*
-         * this function will return a time-based variant of uuid4,
-         * with form "tttttttt-tttx-4xxx-yxxx-xxxxxxxxxxxx"
+         * this function will return a time-based version of uuid4,
+         * with format "tttttttt-tttx-4xxx-yxxx-xxxxxxxxxxxx"
          */
             return Date.now().toString(16).replace((/(.{8})/), '$1-') +
                 local.utility2.uuid4Create().slice(12);
@@ -3282,16 +3496,6 @@ local.utility2.templateTestReportHtml = '\
             npm_package_version: '0.0.1'
         });
         // init assets
-        local.utility2.assetsDict['/assets.utility2.js'] =
-            local.utility2.uglifyIfProduction(
-                local.utility2.istanbulInstrumentInPackage(
-                    local.fs.readFileSync(__filename, 'utf8'),
-                    __filename,
-                    'utility2'
-                )
-            );
-        local.utility2.assetsDict['/assets.utility2.css'] =
-            local.fs.readFileSync(__dirname + '/index.css', 'utf8');
         [
             'bcrypt',
             'cryptojs',
@@ -3310,6 +3514,26 @@ local.utility2.templateTestReportHtml = '\
                     )
                 );
         });
+        local.utility2.assetsDict['/assets.utility2.css'] =
+            local.fs.readFileSync(__dirname + '/index.css', 'utf8');
+        local.utility2.assetsDict['/assets.utility2.js'] =
+            local.utility2.uglifyIfProduction(
+                local.utility2.istanbulInstrumentInPackage(
+                    local.fs.readFileSync(__filename, 'utf8'),
+                    __filename,
+                    'utility2'
+                )
+            );
+        local.utility2.assetsDict['/assets.utility2.rollup.js'] = [
+            '/assets.utility2.lib.bcrypt.js',
+            '/assets.utility2.lib.crypto.js',
+            '/assets.utility2.lib.stringview.js',
+            '/assets.utility2.js'
+        ]
+            .map(function (key) {
+                return local.utility2.assetsDict[key];
+            })
+            .join('\n');
         /* istanbul ignore next */
         // run the cli
         local.cliRun = function () {
