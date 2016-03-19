@@ -763,7 +763,6 @@ local.utility2.templateTestReportHtml = '\
          *    to context object's list of entries.
          */
             if (filename) {
-                local.utility2.assert(value instanceof local.global.Blob, typeof value);
                 value.name = filename;
             }
             this.entryList.push({ name: name, value: value });
@@ -3533,7 +3532,7 @@ local.utility2.templateTestReportHtml = '\
             .map(function (key) {
                 return local.utility2.assetsDict[key];
             })
-            .join('\n');
+            .join(';\n');
         /* istanbul ignore next */
         // run the cli
         local.cliRun = function () {

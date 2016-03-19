@@ -7,6 +7,7 @@ run dynamic browser tests with coverage (via istanbul and electron)
 
 
 # todo
+- merge utility2.StringView and node's Buffer into utility2.Buffer
 - rename var data to result in test.js
 - add es6 support in jslint
 - add utility2.middlewareLimit
@@ -15,14 +16,10 @@ run dynamic browser tests with coverage (via istanbul and electron)
 
 
 
-# change since 1aca3e2b
-- npm publish 2016.1.8
-- use production env in shGithubDeploy
-- add element-numbering in api-doc
-- fix ajaxProgressDiv flicker when loading page
-- add rolled-up asset /assets.utility2.rollup.js
-- add class utility2.FormData to allow form-upload to serverLocal
-- add function utility2.domElementQuerySelectorAll, utility2.blobRead, utility2.bufferConcat, utility2.bufferIndexOfSubBuffer
+# change since 42b19ef3
+- npm publish 2016.1.9
+- fix syntax error in assets.utility2.rollup.js
+- fix testCase_ajax_error sometimes timing out
 - none
 
 
@@ -222,8 +219,8 @@ instruction
          */
             // jslint-hack
             local.utility2.nop(options);
-            // test '/test.undefined'
-            local.utility2.ajax({ url: '/test.undefined' }, function (error) {
+            // test '/undefined'
+            local.utility2.ajax({ url: '/undefined' }, function (error) {
                 try {
                     // validate error occurred
                     local.utility2.assert(error, error);
@@ -527,7 +524,7 @@ export npm_config_mode_auto_restart=1 && \
 ./index.sh test node test.js",
         "test-published": "./index.sh shRun shNpmTestPublished"
     },
-    "version": "2016.1.8"
+    "version": "2016.1.9"
 }
 ```
 

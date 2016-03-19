@@ -93,7 +93,7 @@
             // test failure from multiple-callback handling-behavior
             onError();
             // test failure from ajax handling-behavior
-            options = { url: '/test.undefined' };
+            options = { url: '/undefined' };
             local.utility2.ajax(options, onError);
             // test failure from thrown error handling-behavior
             throw local.utility2.errorDefault;
@@ -158,9 +158,9 @@
                 timeout: 1,
                 url: '/test.timeout'
             }, {
-                // test undefined https host handling-behavior
+                // test undefined https-url handling-behavior
                 timeout: 1,
-                url: 'https://' + local.utility2.uuidTimeCreate() + '.com'
+                url: 'https://localhost/undefined'
             }].forEach(function (_) {
                 options = _;
                 onParallel.counter += 1;
