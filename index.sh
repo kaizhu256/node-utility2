@@ -963,7 +963,7 @@ shNpmTest() {(set -e
         # run npm-test with coverage
         shIstanbulCover "$@" || EXIT_CODE=$?
         # if $EXIT_CODE != 0, then debug covered-test by re-running it uncovered
-        if [ "$EXIT_CODE" != 0 ]
+        if [ "$EXIT_CODE" != 0 ] && [ "$EXIT_CODE" != 130 ]
         then
             npm_config_mode_coverage="" "$@" || true
         fi

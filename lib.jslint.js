@@ -38,16 +38,12 @@
 
 
 
-    /* istanbul ignore next */
-    (function () {
-        var CSSLint, JSLINT;
-        // jslint-hack
-        CSSLint = null;
-        JSLINT = null;
+/* istanbul ignore next */
 // init lib csslint
 /* jslint-ignore-begin */
 // https://github.com/CSSLint/csslint/blob/v0.10.0/release/csslint.js
 // utility2-uglifyjs https://raw.githubusercontent.com/CSSLint/csslint/v0.10.0/release/csslint.js
+(function () { var CSSLint, JSLINT;
 var exports=exports||{},CSSLint=function(){function Reporter(e,t){this.messages=[],this.stats=[],this.lines=e,this.ruleset=t}var parserlib={};(function(){function e(){this._listeners={}}function t(e){this._input=e.replace(/\n\r?/g,"\n"),this._line=1,this._col=1
 ,this._cursor=0}function n(e,t,n){this.col=n,this.line=t,this.message=e}function r(e,t,n,r){this.col=n,this.line=t,this.text=e,this.type=r}function i(e,n){this._reader=e?new t(e.toString()):null,this._token=null,this._tokenData=n,this._lt=[],this._ltIndex=0
 ,this._ltIndexCache=[]}e.prototype={constructor:e,addListener:function(e,t){this._listeners[e]||(this._listeners[e]=[]),this._listeners[e].push(t)},fire:function(e){typeof e=="string"&&(e={type:e}),typeof e.target!="undefined"&&(e.target=this);if(typeof e.type=="undefined"
@@ -624,10 +620,8 @@ function(e){var t,n,r=[],i;if(e.errors.length){e.json&&r.push("<cite>JSON: bad.<
 ,o.var),u("exception",o.exception),u("closure",o.closure),u("outer",o.outer),u("global",o.global),u("label",o.label),s.push("</dl>")}return s.join("")},S.properties_report=function(e){if(!e)return"";var t,n,r=Object.keys(e).sort(),i="   ",s,o=!1,u=["/*properties"
 ];for(t=0;t<r.length;t+=1)n=r[t],e[n]>0&&(o&&(i+=","),s=G.test(n)?n:"'"+n.replace(et,it)+"'",i.length+s.length>=80?(u.push(i),i="    "):i+=" ",i+=s,o=!0);return u.push(i,"*/\n"),u.join("\n")},S.color=function(e){var t,n=1,r,i,s=[],o,u=e.tokens[0];while(u&&u
 .id!=="(end)"){t=u.from,i=u.line,o=u.thru,r=u.function.level;do o=u.thru,u=e.tokens[n],n+=1;while(u&&u.line===i&&u.from-o<5&&r===u.function.level);s.push({line:i,level:r,from:t,thru:o})}return s},S.jslint=S,S.edition="2014-07-08",S}()
+local.CSSLint = CSSLint; local.JSLINT = JSLINT; }());
 /* jslint-ignore-end */
-        local.CSSLint = CSSLint;
-        local.JSLINT = JSLINT;
-    }());
 
 
 

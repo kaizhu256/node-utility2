@@ -6,21 +6,28 @@ run dynamic browser tests with coverage (via istanbul and electron)
 
 
 
-# todo
-- merge utility2.StringView and node's Buffer into utility2.Buffer
+# documentation
+#### todo
 - rename var data to result in test.js
 - add es6 support in jslint
 - add utility2.middlewareLimit
 - add server stress test using electron
 - none
 
-
-
-# change since 42b19ef3
-- npm publish 2016.1.9
-- fix syntax error in assets.utility2.rollup.js
-- fix testCase_ajax_error sometimes timing out
+#### change since ed10b33f
+- npm publish 2016.2.1
+- allow interrupting of covered-npm-test without re-running uncovered-npm-test
+- add function utility2.bufferCreate, utility2.bufferToNodeBuffer, utility2.bufferToString, utility2.stringFromBase64, utility2.stringToBase64, utility2.timeElapsedStart, utility2.timeElapsedStop
+- remove lib.stringview.js
 - none
+
+#### this package requires
+- darwin or linux os
+
+#### api-doc
+- [https://kaizhu256.github.io/node-utility2/build/doc.api.html](https://kaizhu256.github.io/node-utility2/build/doc.api.html)
+
+[![api-doc](https://kaizhu256.github.io/node-utility2/build/screen-capture.docApiCreate.browser._2Fhome_2Ftravis_2Fbuild_2Fkaizhu256_2Fnode-utility2_2Ftmp_2Fbuild_2Fdoc.api.html.png)](https://kaizhu256.github.io/node-utility2/build/doc.api.html)
 
 
 
@@ -53,17 +60,6 @@ run dynamic browser tests with coverage (via istanbul and electron)
 - unstable branch
 - HEAD is arbitrary
 - commit history may be rewritten
-
-
-
-# documentation
-#### this package requires
-- darwin or linux os
-
-#### api-doc
-- [https://kaizhu256.github.io/node-utility2/build/doc.api.html](https://kaizhu256.github.io/node-utility2/build/doc.api.html)
-
-[![api-doc](https://kaizhu256.github.io/node-utility2/build/screen-capture.docApiCreate.browser._2Fhome_2Ftravis_2Fbuild_2Fkaizhu256_2Fnode-utility2_2Ftmp_2Fbuild_2Fdoc.api.html.png)](https://kaizhu256.github.io/node-utility2/build/doc.api.html)
 
 
 
@@ -360,11 +356,12 @@ textarea {\n\
 <script src="assets.utility2.lib.cryptojs.js"></script>\n\
 <script src="assets.utility2.lib.istanbul.js"></script>\n\
 <script src="assets.utility2.lib.jslint.js"></script>\n\
-<script src="assets.utility2.lib.stringview.js"></script>\n\
 <script src="assets.utility2.lib.uglifyjs.js"></script>\n\
 <script src="assets.utility2.js"></script>\n\
+<script>window.utility2.onReady.counter += 1;</script>\n\
 <script src="assets.example.js"></script>\n\
 {{scriptExtra}}\n\
+<script>window.utility2.onReady();</script>\n\
 <script>\n\
 window.utility2.envDict.npm_package_description = "{{envDict.npm_package_description}}";\n\
 window.utility2.envDict.npm_package_name = "{{envDict.npm_package_name}}";\n\
@@ -447,6 +444,7 @@ window.testRun({});\n\
 - none
 
 
+
 # package-listing
 [![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.gitLsTree.svg)](https://github.com/kaizhu256/node-utility2)
 
@@ -494,8 +492,7 @@ window.testRun({});\n\
 ./index.sh shRun shReadmeExportFile package.json package.json && \
 ./index.sh shRun shDocApiCreate \"module.exports={ \
 exampleFileList:['README.md','test.js','index.js', \
-'lib.bcrypt.js','lib.cryptojs.js','lib.istanbul.js','lib.jslint.js','lib.stringview.js', \
-'lib.uglifyjs.js'], \
+'lib.bcrypt.js','lib.cryptojs.js','lib.istanbul.js','lib.jslint.js','lib.uglifyjs.js'], \
 moduleDict:{ \
 utility2:{exports:require('./index.js')}, \
 'utility2.bcrypt':{aliasList:['bcrypt','local'],exports:require('./index.js').bcrypt}, \
@@ -506,10 +503,6 @@ utility2:{exports:require('./index.js')}, \
 exports:require('./index.js').FormData}, \
 'utility2.FormData.prototype':{aliasList:['data'], \
 exports:require('./index.js').FormData.prototype}, \
-'utility2.StringView':{aliasList:['StringView','local'], \
-exports:require('./index.js').StringView}, \
-'utility2.StringView.prototype':{aliasList:['StringView'], \
-exports:require('./index.js').StringView.prototype}, \
 'utility2.uglifyjs':{aliasList:['uglifyjs','local'],exports:require('./index.js').uglifyjs} \
 } \
 }\"",
@@ -524,7 +517,7 @@ export npm_config_mode_auto_restart=1 && \
 ./index.sh test node test.js",
         "test-published": "./index.sh shRun shNpmTestPublished"
     },
-    "version": "2016.1.9"
+    "version": "2016.2.1"
 }
 ```
 

@@ -12,18 +12,12 @@
 */
 (function () {
     'use strict';
-    var local, nop;
+    var local;
 
 
 
     // run shared js-env code
     (function () {
-        nop = function () {
-        /*
-         * this function will do nothing
-         */
-            return;
-        };
         // init local
         local = {};
         // init modeJs
@@ -48,18 +42,11 @@
 
 
 
-// init lib bcrypt
-    (function () {
-        var define;
-        define = function (_, factory) {
-            // jslint-hack
-            nop(_);
-            local.bcrypt = factory();
-        };
-        define.amd = true;
 /* istanbul ignore next */
+// init lib bcrypt
 /* jslint-ignore-begin */
 // https://github.com/dcodeIO/bcrypt.js/blob/2.3.0/dist/bcrypt.min.js
+(function () { var define; define = function (_, factory) { local.bcrypt = factory(); }; define.amd = true;
 (function(){/*
  bcrypt.js (c) 2013 Daniel Wirtz <dcode@dcode.io>
  Released under the Apache License, Version 2.0
@@ -104,8 +91,8 @@ Date.now=Date.now||function(){return+new Date};var I=[608135816,2242054355,32044
 3885187036,3141171499,876946877,2693282273,1372485963,791857591,2686433993,3759982718,3167212022,3472953795,2716379847,445679433,3561995674,3504004811,3574258232,54117162,3331405415,2381918588,3769707343,4154350007,1140177722,4074052095,668550556,3214352940,367459370,261225585,2610173221,4209349473,3468074219,3265815641,314222801,3066103646,3808782860,282218597,3406013506,3773591054,379116347,1285071038,846784868,2669647154,3771962079,3550491691,2305946142,453669953,1268987020,3317592352,3279303384,
 3744833421,2610507566,3859509063,266596637,3847019092,517658769,3462560207,3443424879,370717030,4247526661,2224018117,4143653529,4112773975,2788324899,2477274417,1456262402,2901442914,1517677493,1846949527,2295493580,3734397586,2176403920,1280348187,1908823572,3871786941,846861322,1172426758,3287448474,3383383037,1655181056,3139813346,901632758,1897031941,2986607138,3066810236,3447102507,1393639104,373351379,950779232,625454576,3124240540,4148612726,2007998917,544563296,2244738638,2330496472,2058025392,
 1291430526,424198748,50039436,29584100,3605783033,2429876329,2791104160,1057563949,3255363231,3075367218,3463963227,1469046755,985887462],E=[1332899944,1700884034,1701343084,1684370003,1668446532,1869963892];l.encodeBase64=v;l.decodeBase64=B;return l}"function"===typeof define&&define.amd?define([],w):"function"===typeof require&&"object"===typeof module&&module&&module.exports?module.exports=w():(this.dcodeIO=this.dcodeIO||{}).bcrypt=w();})();
+}());
 /* jslint-ignore-end */
-    }());
     switch (local.modeJs) {
 
 

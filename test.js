@@ -201,11 +201,11 @@
             onParallel.counter += 1;
             // test /test.body handling-behavior
             onParallel.counter += 1;
-            ['', 'blob', 'response', 'text'].forEach(function (responseType) {
+            ['', 'buffer', 'response', 'text'].forEach(function (responseType) {
                 local.utility2.ajax({
-                    data: responseType === 'blob' && local.modeJs === 'node'
-                        // test blob post handling-behavior
-                        ? new Buffer('hello')
+                    data: responseType === 'buffer'
+                        // test buffer post handling-behavior
+                        ? local.utility2.bufferCreate('hello')
                         // test string post handling-behavior
                         : 'hello',
                     method: 'POST',
@@ -223,7 +223,7 @@
                         );
                         // validate response
                         switch (responseType) {
-                        case 'blob':
+                        case 'buffer':
                         case 'response':
                             // cleanup response
                             local.utility2.requestResponseCleanup(null, xhr.response);
@@ -335,6 +335,33 @@
             onError();
         };
 
+        local.testCase_bufferCreate_default = function (options, onError) {
+        /*
+         * this function will test bufferCreate's default handling-behavior
+         */
+            var ii;
+            options = {};
+            options.text1 = '';
+            for (ii = 0; ii < 0x10000; ii += 1) {
+                options.text1 += String.fromCodePoint(ii);
+            }
+            for (ii = 0x10000; ii < 0x110000; ii += 0x100) {
+                options.text1 += String.fromCodePoint(ii);
+            }
+            // test utf8 handling-behavior
+            options.bff1 = local.utility2.bufferCreate(options.text1);
+            options.text2 = local.utility2.bufferToString(options.bff1);
+            local.utility2.assert(options.text2 ===
+                local.utility2.bufferToString(options.text2));
+            // test base64 handling-behavior
+            options.text3 = local.utility2.bufferToString(local.utility2.bufferCreate(
+                local.utility2.bufferToString(options.bff1, 'base64'),
+                'base64'
+            ));
+            local.utility2.assert(options.text2 === options.text3);
+            onError();
+        };
+
         local.testCase_bufferIndexOfSubBuffer_default = function (options, onError) {
         /*
          * this function will test bufferIndexOfSubBuffer's default handling-behavior
@@ -354,8 +381,8 @@
             ].forEach(function (_) {
                 options = _;
                 options.result = local.utility2.bufferIndexOfSubBuffer(
-                    new local.utility2.StringView(options.buffer).rawData,
-                    new local.utility2.StringView(options.subBuffer).rawData,
+                    local.utility2.bufferCreate(options.buffer),
+                    local.utility2.bufferCreate(options.subBuffer),
                     options.fromIndex
                 );
                 local.utility2.assert(options.result === options.validate, options);
@@ -959,10 +986,7 @@
         /*
          * this function will test onTimeout's timeout handling-behavior
          */
-            var timeElapsed;
-            // jslint-hack
-            local.utility2.nop(options);
-            timeElapsed = Date.now();
+            options = local.utility2.timeElapsedStart();
             local.utility2.onTimeout(function (error) {
                 local.utility2.tryCatchOnError(function () {
                     // validate error occurred
@@ -971,9 +995,9 @@
                     local.utility2.assert(error.message
                         .indexOf('testCase_onTimeout_errorTimeout') >= 0, error);
                     // save timeElapsed
-                    timeElapsed = Date.now() - timeElapsed;
+                    local.utility2.timeElapsedStop(options);
                     // validate timeElapsed passed is greater than timeout
-                    local.utility2.assert(timeElapsed >= 1500, timeElapsed);
+                    local.utility2.assert(options.timeElapsed >= 1500, options);
                     onError();
                 }, onError);
             // coverage-hack - use 1500 ms to cover setInterval test-report refresh in browser
@@ -1471,7 +1495,7 @@
                             local.utility2.assert(data === 'hello\u1234bye', data);
                             break;
                         default:
-                            data = new local.utility2.StringView(data).toString();
+                            data = local.utility2.bufferToString(data);
                             local.utility2.assert(data === 'hello\u1234bye', data);
                         }
                         onParallel();
@@ -1600,9 +1624,6 @@
             }, {
                 file: '/assets.utility2.lib.jslint.js',
                 url: '/assets.utility2.lib.jslint.js'
-            }, {
-                file: '/assets.utility2.lib.stringview.js',
-                url: '/assets.utility2.lib.stringview.js'
             }, {
                 file: '/assets.utility2.lib.uglifyjs.js',
                 url: '/assets.utility2.lib.uglifyjs.js'
@@ -1856,7 +1877,7 @@
                     // test print handling-behavior
                     'print\n'
                 ].forEach(function (script) {
-                    local.utility2.local._replServer.eval(
+                    local.utility2.local.utility2.replServer.eval(
                         script,
                         null,
                         'repl',
@@ -2000,10 +2021,11 @@
         );
         local.utility2.assetsDict['/assets.script-only.html'] =
             '<h1>script-only test</h1>\n' +
-            '<script src="assets.utility2.lib.stringview.js"></script>' +
             '<script src="assets.utility2.js"></script>\n' +
+            '<script>window.utility2.onReady.counter += 1;</script>\n' +
             '<script src="assets.example.js"></script>\n' +
-            '<script src="assets.test.js"></script>\n';
+            '<script src="assets.test.js"></script>\n' +
+            '<script>window.utility2.onReady();</script>\n';
         // init serverLocal
         local.utility2.serverLocalUrlTest = function (url) {
             url = local.utility2.urlParse(url).pathname;
@@ -2115,6 +2137,10 @@
             }
             if (process.argv[2]) {
                 require(local.path.resolve(process.cwd(), process.argv[2]));
+            }
+            // test .sandbox.js
+            if (local.fs.existsSync(process.cwd() + '/.sandbox.js')) {
+                require(process.cwd() + '/.sandbox.js');
             }
         };
         local.cliRun();

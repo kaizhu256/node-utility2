@@ -60,7 +60,14 @@
             };
         };
         // init lib utility2
-        local.utility2 = { assetsDict: {}, cacheDict: {}, local: local, taskUpsertDict: {} };
+        local.utility2 = {
+            ajaxProgressList: [],
+            ajaxProgressState: 0,
+            assetsDict: {},
+            cacheDict: {},
+            local: local,
+            taskUpsertDict: {}
+        };
         local.utility2.nop = function () {
         /*
          * this function will do nothing
@@ -83,10 +90,6 @@
         local.utility2.jslint = local.modeJs === 'browser'
             ? local.global.utility2_jslint
             : require('./lib.jslint.js');
-        // init lib StringView
-        local.utility2.StringView = local.modeJs === 'browser'
-            ? local.global.utility2_stringview
-            : require('./lib.stringview.js');
         // init lib uglifyjs
         local.utility2.uglifyjs = local.modeJs === 'browser'
             ? local.global.utility2_uglifyjs
@@ -315,38 +318,6 @@ local.utility2.templateTestReportHtml = '\
 
     // run shared js-env code - function
     (function () {
-        local._ajaxProgressIncrement = function () {
-        /*
-         * this function will increment ajaxProgressBar
-         */
-            // this algorithm can indefinitely increment the ajaxProgressBar
-            // with successively smaller increments without ever reaching 100%
-            local._ajaxProgressState += 1;
-            local._ajaxProgressUpdate(
-                100 - 75 * Math.exp(-0.125 * local._ajaxProgressState) + '%',
-                'ajaxProgressBarDivLoading',
-                'loading'
-            );
-        };
-
-        // init list of xhr used in ajaxProgress
-        local._ajaxProgressList = [];
-
-        // init _ajaxProgressState
-        local._ajaxProgressState = 0;
-
-        local._ajaxProgressUpdate = function (width, type, label) {
-        /*
-         * this function will visually update ajaxProgressBar
-         */
-            var ajaxProgressBarDiv;
-            ajaxProgressBarDiv = document.querySelector('.ajaxProgressBarDiv');
-            ajaxProgressBarDiv.style.width = width;
-            ajaxProgressBarDiv.className = ajaxProgressBarDiv.className
-                .replace((/ajaxProgressBarDiv\w+/), type);
-            ajaxProgressBarDiv.innerHTML = label;
-        };
-
         // init lib _http
         local._http = {};
 
@@ -610,7 +581,9 @@ local.utility2.templateTestReportHtml = '\
             }
             this.error = error;
             this.response = data;
-            this.responseText = new local.utility2.StringView(data || '').toString();
+            if (data && data !== this.responseStream) {
+                this.responseText = local.utility2.bufferToString(data);
+            }
             // update xhr
             this.readyState = 4;
             this.onreadystatechange();
@@ -731,23 +704,15 @@ local.utility2.templateTestReportHtml = '\
             };
         };
 
-        local._timeElapsedStop = function (options) {
-        /*
-         * this function will stop options.timeElapsed
-         */
-            if (options.timeElapsed > 0xffffffff) {
-                options.timeElapsed = Date.now() - options.timeElapsed;
-            }
-        };
-
         // init lib FormData
         local.utility2.FormData = function () {
         /*
+         * this function will instantiate a serverLocal-compatible version of FormData
          * https://xhr.spec.whatwg.org/#dom-formdata
          * The FormData(form) constructor must run these steps:
          * 1. Let fd be a new FormData object.
          * 2. If form is given, set fd's entries to the result
-         *    of constructing the form data set for form.
+         *    of constructing the form data set for form. (not implemented)
          * 3. Return fd.
          */
             this.entryList = [];
@@ -791,7 +756,7 @@ local.utility2.templateTestReportHtml = '\
             var boundary, onParallel, result;
             // handle null-case
             if (this.entryList.length === 0) {
-                onError(null, new local.global.Uint8Array(0));
+                onError(null, local.utility2.bufferCreate());
                 return;
             }
             // init boundary
@@ -894,27 +859,22 @@ local.utility2.templateTestReportHtml = '\
                         );
                     });
                     if (ajaxProgressDiv) {
-                        // validate xhr is defined in _ajaxProgressList
-                        ii = local._ajaxProgressList.indexOf(xhr);
-                        local.utility2.assert(ii >= 0, 'missing xhr in _ajaxProgressList');
+                        // validate xhr is defined in ajaxProgressList
+                        ii = local.utility2.ajaxProgressList.indexOf(xhr);
+                        local.utility2.assert(ii >= 0, 'missing xhr in ajaxProgressList');
                         // remove xhr from ajaxProgressList
-                        local._ajaxProgressList.splice(ii, 1);
-                        // hide _ajaxProgressDiv
-                        if (local._ajaxProgressList.length === 0) {
-                            local._ajaxProgressBarHide = setTimeout(function () {
+                        local.utility2.ajaxProgressList.splice(ii, 1);
+                        // hide ajaxProgressDiv
+                        if (local.utility2.ajaxProgressList.length === 0) {
+                            local.utility2.ajaxProgressBarHide = setTimeout(function () {
                                 /* istanbul ignore next */
-                                if (local._ajaxProgressList.length) {
+                                if (local.utility2.ajaxProgressList.length) {
                                     return;
                                 }
                                 // hide ajaxProgressBar
                                 ajaxProgressDiv.style.display = 'none';
                                 // reset ajaxProgress
-                                local._ajaxProgressState = 0;
-                                local._ajaxProgressUpdate(
-                                    '0%',
-                                    'ajaxProgressBarDivLoading',
-                                    'loading'
-                                );
+                                local.utility2.ajaxProgressUpdate('0%');
                             }, 1500);
                         }
                     }
@@ -951,12 +911,12 @@ local.utility2.templateTestReportHtml = '\
                 }
                 if (ajaxProgressDiv) {
                     // increment ajaxProgressBar
-                    if (local._ajaxProgressList.length > 0) {
-                        local._ajaxProgressIncrement();
+                    if (local.utility2.ajaxProgressList.length > 0) {
+                        local.utility2.ajaxProgressUpdate();
                         return;
                     }
                     // update ajaxProgressBar to done
-                    local._ajaxProgressUpdate('100%', 'ajaxProgressBarDivSuccess', 'loaded');
+                    local.utility2.ajaxProgressUpdate('100%');
                 }
             };
             xhr.addEventListener('abort', xhr.onEvent);
@@ -966,17 +926,17 @@ local.utility2.templateTestReportHtml = '\
             ajaxProgressDiv = local.modeJs === 'browser' &&
                 document.querySelector('.ajaxProgressDiv');
             if (ajaxProgressDiv) {
-                xhr.addEventListener('loadstart', local._ajaxProgressIncrement);
-                xhr.addEventListener('progress', local._ajaxProgressIncrement);
-                xhr.upload.addEventListener('progress', local._ajaxProgressIncrement);
+                xhr.addEventListener('loadstart', local.utility2.ajaxProgressUpdate);
+                xhr.addEventListener('progress', local.utility2.ajaxProgressUpdate);
+                xhr.upload.addEventListener('progress', local.utility2.ajaxProgressUpdate);
                 // if ajaxProgressBar is hidden, then display it
-                if (local._ajaxProgressList.length === 0) {
+                if (local.utility2.ajaxProgressList.length === 0) {
                     ajaxProgressDiv.style.display = 'block';
                 }
-                // add xhr to _ajaxProgressList
-                local._ajaxProgressList.push(xhr);
+                // add xhr to ajaxProgressList
+                local.utility2.ajaxProgressList.push(xhr);
                 // clear any timer to hide ajaxProgressDiv
-                clearTimeout(local._ajaxProgressBarHide);
+                clearTimeout(local.utility2.ajaxProgressBarHide);
             }
             // open url
             xhr.open(xhr.method, xhr.url);
@@ -997,9 +957,41 @@ local.utility2.templateTestReportHtml = '\
                 });
             } else {
                 // send data
-                xhr.send(xhr.data);
+                xhr.send(local.utility2.bufferToNodeBuffer(xhr.data));
             }
             return xhr;
+        };
+
+        local.utility2.ajaxProgressUpdate = function (width) {
+        /*
+         * this function will increment ajaxProgressBar by the given width
+         */
+            var ajaxProgressBarDiv;
+            ajaxProgressBarDiv = document.querySelector('.ajaxProgressBarDiv');
+            switch (width) {
+            case '0%':
+                local.utility2.ajaxProgressState = 0;
+                ajaxProgressBarDiv.innerHTML = 'loading';
+                ajaxProgressBarDiv.className = ajaxProgressBarDiv.className
+                    .replace((/ajaxProgressBarDiv\w+/), 'ajaxProgressBarDivLoading');
+                ajaxProgressBarDiv.style.width = width;
+                break;
+            case '100%':
+                ajaxProgressBarDiv.innerHTML = 'loaded';
+                ajaxProgressBarDiv.className = ajaxProgressBarDiv.className
+                    .replace((/ajaxProgressBarDiv\w+/), 'ajaxProgressBarDivSuccess');
+                ajaxProgressBarDiv.style.width = width;
+                break;
+            default:
+                ajaxProgressBarDiv.innerHTML = 'loading';
+                ajaxProgressBarDiv.className = ajaxProgressBarDiv.className
+                    .replace((/ajaxProgressBarDiv\w+/), 'ajaxProgressBarDivLoading');
+                // this algorithm will indefinitely increment the ajaxProgressBar
+                // with successively smaller increments without ever reaching 100%
+                local.utility2.ajaxProgressState += 1;
+                ajaxProgressBarDiv.style.width =
+                    100 - 75 * Math.exp(-0.125 * local.utility2.ajaxProgressState) + '%';
+            }
         };
 
         local.utility2.assert = function (passed, message) {
@@ -1037,9 +1029,13 @@ local.utility2.templateTestReportHtml = '\
             return local.utility2.bcrypt.compareSync(password || '', hash || '');
         };
 
-        local.utility2.blobRead = function (blob, options, onError) {
+        local.utility2.blobRead = function (blob, encoding, onError) {
         /*
-         * this function will read the blob as a buffer
+         * this function will read from the blob with the given encoding
+         * possible encodings are:
+         * - Uint8Array (default)
+         * - dataURL
+         * - text
          */
             var done, reader;
             reader = new local.global.FileReader();
@@ -1056,12 +1052,12 @@ local.utility2.templateTestReportHtml = '\
                 case 'load':
                     onError(null, reader.result instanceof local.global.ArrayBuffer
                         // convert ArrayBuffer to Uint8Array
-                        ? new local.global.Uint8Array(reader.result)
+                        ? local.utility2.bufferCreate(reader.result)
                         : reader.result);
                     break;
                 }
             };
-            switch (options && (options.encoding || options)) {
+            switch (encoding) {
             // readAsDataURL
             case 'dataURL':
                 reader.readAsDataURL(blob);
@@ -1247,7 +1243,7 @@ local.utility2.templateTestReportHtml = '\
                 // run electron-browser code
                 case 21:
                     options.fs = require('fs');
-                    options.webview = document.getElementById('webview');
+                    options.webview = document.querySelector('#webview');
                     options.webview.addEventListener('did-get-response-details', function () {
                         document.title = 'opened ' + location.href;
                     });
@@ -1296,45 +1292,142 @@ local.utility2.templateTestReportHtml = '\
             onNext();
         };
 
+        /* jslint-ignore-begin */
+        local.utility2._bufferFromBase64 = function (text) {
+        /*
+         * https://gist.github.com/wang-bin/7332335
+         * this function will convert the base64-encoded text to a Uint8Array
+         */
+            var de = new Uint8Array(text.length); //3/4
+            var u = 0, q = '', x = '', c;
+            var map64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+            for (var r=0; c=text[x++]; ~c&&(u=q%4?u*64+c:c,q++%4)?de[r++]=(255&u>>(-2*q&6)):0)
+                c = map64.indexOf(c);
+            return de.subarray(0, r);
+        };
+        /* jslint-ignore-end */
+
+        local.utility2._bufferToBase64 = function (bff) {
+        /*
+         * https://developer.mozilla.org/en-US/Add-ons/Code_snippets/StringView#The_code
+         * this function will convert the Uint8Array bff to a base64-encoded text
+         */
+            var ii, mod3, text, uint24, uint6ToB64;
+            text = '';
+            uint24 = 0;
+            uint6ToB64 = function (uint6) {
+                return uint6 < 26
+                    ? uint6 + 65
+                    : uint6 < 52
+                    ? uint6 + 71
+                    : uint6 < 62
+                    ? uint6 - 4
+                    : uint6 === 62
+                    ? 43
+                    : 47;
+            };
+            for (ii = 0; ii < bff.length; ii += 1) {
+                mod3 = ii % 3;
+                uint24 |= bff[ii] << (16 >>> mod3 & 24);
+                if (mod3 === 2 || bff.length - ii === 1) {
+                    text += String.fromCharCode(
+                        uint6ToB64(uint24 >>> 18 & 63),
+                        uint6ToB64(uint24 >>> 12 & 63),
+                        uint6ToB64(uint24 >>> 6 & 63),
+                        uint6ToB64(uint24 & 63)
+                    );
+                    uint24 = 0;
+                }
+            }
+            return text.replace(/A(?=A$|$)/g, '=');
+        };
+
         local.utility2.bufferConcat = function (bufferList) {
         /*
          * this function is the browser-version of node's Buffer.concat for Uint8Array
          */
-            var byteLength, ii, jj, result;
-            byteLength = 0;
-            bufferList = bufferList.map(function (element) {
-                if (typeof element.byteLength !== 'number') {
-                    element = new local.utility2.StringView(element).rawData;
-                }
-                byteLength += element.byteLength;
-                return element;
-            });
-            result = new local.global.Uint8Array(byteLength);
+            var ii, jj, length, result;
+            length = 0;
+            bufferList = bufferList
+                .filter(function (element) {
+                    return element;
+                })
+                .map(function (element) {
+                    if (!(element instanceof local.global.Uint8Array)) {
+                        element = local.utility2.bufferCreate(element);
+                    }
+                    length += element.length;
+                    return element;
+                });
+            result = local.utility2.bufferCreate(length);
             ii = 0;
             bufferList.forEach(function (element) {
-                for (jj = 0; jj < element.byteLength; ii += 1, jj += 1) {
+                for (jj = 0; jj < element.length; ii += 1, jj += 1) {
                     result[ii] = element[jj];
                 }
             });
             return result;
         };
 
-        local.utility2.bufferIndexOfSubBuffer = function (buffer, subBuffer, fromIndex) {
+        local.utility2.bufferCreate = function (text, encoding) {
         /*
-         * this function will search the buffer for the indexOf-like position of the subBuffer
+         * this function will create a Uint8Array from the text,
+         * with either 'utf8' (default) or 'base64' encoding
+         */
+            if (typeof text === 'string') {
+                if (encoding === 'base64') {
+                    return local.utility2._bufferFromBase64(text);
+                }
+                return local.modeJs === 'browser'
+                    ? new local.global.TextEncoder('utf-8').encode(text)
+                    : new local.global.Uint8Array(new Buffer(text));
+            }
+            return new local.global.Uint8Array(text);
+        };
+
+        local.utility2.bufferIndexOfSubBuffer = function (bff, subBff, fromIndex) {
+        /*
+         * this function will search bff for the indexOf-like position of the subBff
          */
             var ii, jj, kk;
-            for (ii = fromIndex || 0; ii < buffer.length; ii += 1) {
-                for (jj = 0, kk = ii; jj < subBuffer.length; jj += 1, kk += 1) {
-                    if (subBuffer[jj] !== buffer[kk]) {
+            for (ii = fromIndex || 0; ii < bff.length; ii += 1) {
+                for (jj = 0, kk = ii; jj < subBff.length; jj += 1, kk += 1) {
+                    if (subBff[jj] !== bff[kk]) {
                         break;
                     }
                 }
-                if (jj === subBuffer.length) {
+                if (jj === subBff.length) {
                     return kk - jj;
                 }
             }
-            return subBuffer.length && -1;
+            return subBff.length && -1;
+        };
+
+        local.utility2.bufferToNodeBuffer = function (bff) {
+        /*
+         * this function will convert the Uint8Array instance to a node Buffer instance
+         */
+            if (local.modeJs === 'node' &&
+                    bff instanceof local.global.Uint8Array && (!Buffer.isBuffer(bff))) {
+                Object.setPrototypeOf(bff, Buffer.prototype);
+            }
+            return bff;
+        };
+
+        local.utility2.bufferToString = function (bff, encoding) {
+        /*
+         * this function will convert the Uint8Array bff to a string,
+         * with either 'utf8' (default) or 'base64' encoding
+         */
+            if (typeof bff === 'string') {
+                return bff;
+            }
+            if (encoding === 'base64') {
+                return local.utility2._bufferToBase64(bff);
+            }
+            return local.modeJs === 'browser'
+                ? new local.global.TextDecoder('utf-8').decode(bff)
+                : new Buffer(bff).toString();
         };
 
         local.utility2.cryptojsCipherAes256Decrypt = function (data, secret) {
@@ -1355,7 +1448,8 @@ local.utility2.templateTestReportHtml = '\
 
         local.utility2.cryptojsHashHmacSha256Create = function (data, secret) {
         /*
-         * this function will return the base64 hmac-sha256 hash of the string data and secret
+         * this function will return the base64-encoded hmac-sha256 hash
+         * of the string data and secret
          */
             return local.utility2.cryptojs.enc.Base64.stringify(
                 local.utility2.cryptojs.HmacSHA256(data, secret)
@@ -1364,7 +1458,7 @@ local.utility2.templateTestReportHtml = '\
 
         local.utility2.cryptojsHashSha256Create = function (data) {
         /*
-         * this function will return the base64 sha-256 hash of the string data
+         * this function will return the base64-encoded sha-256 hash of the string data
          */
             return local.utility2.cryptojs.enc.Base64.stringify(
                 local.utility2.cryptojs.SHA256(data)
@@ -1551,6 +1645,7 @@ local.utility2.templateTestReportHtml = '\
         /*
          * this function will save the data to file, and auto-mkdirp the parent dir
          */
+            data = local.utility2.bufferToNodeBuffer(data);
             file = local.path.resolve(process.cwd(), file);
             // save data to file
             local.fs.writeFile(file, data, function (error) {
@@ -1719,9 +1814,7 @@ local.utility2.templateTestReportHtml = '\
                     token[0] + '.' + token[1],
                     secret
                 ).replace((/\=/g), '') === token[2]);
-                token = JSON.parse(local.modeJs === 'browser'
-                    ? local.global.atob(token[1])
-                    : new Buffer(token[1], 'base64'));
+                token = JSON.parse(local.utility2.stringFromBase64(token[1]));
             }, local.utility2.nop);
             // return decoded payload
             return token;
@@ -1734,11 +1827,10 @@ local.utility2.templateTestReportHtml = '\
          * with the given secret
          */
             var token;
-            token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.' + (local.modeJs === 'browser'
-                ? local.global.btoa(JSON.stringify(payload))
-                : new Buffer(JSON.stringify(payload)).toString('base64')).replace((/\=/g), '');
-            return token + '.' +
-                local.utility2.cryptojsHashHmacSha256Create(token, secret).replace((/\=/g), '');
+            token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.' +
+                local.utility2.stringToBase64(JSON.stringify(payload));
+            return token + '.' + local.utility2.cryptojsHashHmacSha256Create(token, secret)
+                .replace((/\=/g), '');
         };
 
         local.utility2.listGetElementRandom = function (list) {
@@ -1798,7 +1890,7 @@ local.utility2.templateTestReportHtml = '\
                     break;
                 case 2:
                     // set gzip header
-                    result = new Buffer(data, 'base64');
+                    result = local.utility2.bufferCreate(data, 'base64');
                     response.setHeader('Content-Encoding', 'gzip');
                     response.setHeader('Content-Length', result.length);
                     onNext();
@@ -1911,11 +2003,11 @@ local.utility2.templateTestReportHtml = '\
                     'Content-Type': request.urlParsed.contentType
                 });
                 // serve file from cache
-                response.end(new Buffer(data, 'base64'));
+                response.end(local.utility2.bufferCreate(data, 'base64'));
             // run background-task to re-cache file
             }, function (onError) {
                 local.fs.readFile(request.urlFile, function (error, data) {
-                    onError(error, data && data.toString('base64'));
+                    onError(error, data && local.utility2.bufferToString(data, 'base64'));
                 });
             });
         };
@@ -1980,6 +2072,15 @@ local.utility2.templateTestReportHtml = '\
                     'Content-Type': 'text/html; charset=UTF-8'
                 });
             }
+            // init response.end and response.write to accept Uint8Array instance
+            ['end', 'write'].forEach(function (key) {
+                response['_' + key] = response['_' + key] || response[key];
+                response[key] = function () {
+                    /* jslint-ignore-next-line */
+                    arguments[0] = local.utility2.bufferToNodeBuffer(arguments[0]);
+                    response['_' + key].apply(response, arguments);
+                };
+            });
             // default to nextMiddleware
             nextMiddleware();
         };
@@ -2241,23 +2342,23 @@ local.utility2.templateTestReportHtml = '\
          */
             /*jslint evil: true*/
             // start repl server
-            local._replServer = require('repl').start({ useGlobal: true });
-            local._replServer.onError = function (error) {
+            local.utility2.replServer = require('repl').start({ useGlobal: true });
+            local.utility2.replServer.onError = function (error) {
             /*
              * this function will debug any repl-error
              */
                 local.utility2._debugReplError = error || local.utility2._debugReplError;
             };
-            local._replServer._domain.on('error', local._replServer.onError);
+            local.utility2.replServer._domain.on('error', local.utility2.replServer.onError);
             // save repl eval function
-            local._replServer.evalDefault = local._replServer.eval;
+            local.utility2.replServer.evalDefault = local.utility2.replServer.eval;
             // hook custom repl eval function
-            local._replServer.eval = function (script, context, file, onError) {
+            local.utility2.replServer.eval = function (script, context, file, onError) {
                 var match, onError2;
                 match = (/^(\S+)(.*?)\n/).exec(script);
                 onError2 = function (error, data) {
                     // debug error
-                    local._replServer.onError(error);
+                    local.utility2.replServer.onError(error);
                     onError(error, data);
                 };
                 switch (match && match[1]) {
@@ -2282,7 +2383,12 @@ local.utility2.templateTestReportHtml = '\
                         // on shell exit, print return prompt
                         .on('exit', function (exitCode) {
                             console.log('exit-code ' + exitCode);
-                            local._replServer.evalDefault('\n', context, file, onError2);
+                            local.utility2.replServer.evalDefault(
+                                '\n',
+                                context,
+                                file,
+                                onError2
+                            );
                         });
                     script = '\n';
                     break;
@@ -2314,7 +2420,12 @@ local.utility2.templateTestReportHtml = '\
                         // on shell exit, print return prompt
                         .on('exit', function (exitCode) {
                             console.log('exit-code ' + exitCode);
-                            local._replServer.evalDefault('\n', context, file, onError2);
+                            local.utility2.replServer.evalDefault(
+                                '\n',
+                                context,
+                                file,
+                                onError2
+                            );
                         });
                     script = '\n';
                     break;
@@ -2331,7 +2442,7 @@ local.utility2.templateTestReportHtml = '\
                 }
                 // eval modified script in a try-catch block
                 local.utility2.tryCatchOnError(function () {
-                    local._replServer.evalDefault(script, context, file, onError2);
+                    local.utility2.replServer.evalDefault(script, context, file, onError2);
                 }, onError2);
             };
         };
@@ -2477,10 +2588,17 @@ local.utility2.templateTestReportHtml = '\
                 .on('end', function () {
                     onError(null, local.modeJs === 'browser'
                         ? chunkList[0]
-                        : Buffer.concat(chunkList));
+                        : local.utility2.bufferConcat(chunkList));
                 })
                 // on error event, pass error to onError
                 .on('error', onError);
+        };
+
+        local.utility2.stringFromBase64 = function (text) {
+        /*
+         * this function will convert the base64-encoded text to text
+         */
+            return local.utility2.bufferToString(local.utility2.bufferCreate(text, 'base64'));
         };
 
         local.utility2.stringHtmlSafe = function (text) {
@@ -2495,6 +2613,13 @@ local.utility2.templateTestReportHtml = '\
                 .replace((/"/g), '&quot;')
                 .replace((/'/g), '&#x27;')
                 .replace((/`/g), '&#x60;');
+        };
+
+        local.utility2.stringToBase64 = function (text) {
+        /*
+         * this function will convert the text to base64-encoded text
+         */
+            return local.utility2.bufferToString(local.utility2.bufferCreate(text), 'base64');
         };
 
         local.utility2.taskCallbackAdd = function (options, onError) {
@@ -2800,6 +2925,7 @@ local.utility2.templateTestReportHtml = '\
                     testReport && typeof testReport === 'object',
                     ii + ' invalid testReport ' + typeof testReport
                 );
+                // validate timeElapsed
                 local.utility2.assert(
                     typeof testReport.timeElapsed === 'number',
                     ii + ' invalid testReport.timeElapsed ' + typeof testReport.timeElapsed
@@ -2822,6 +2948,7 @@ local.utility2.templateTestReportHtml = '\
                             local.utility2.envDict.MODE_BUILD + ' - $1'
                         );
                     }
+                    // validate timeElapsed
                     local.utility2.assert(
                         typeof testPlatform.timeElapsed === 'number',
                         ii + ' invalid testPlatform.timeElapsed ' +
@@ -2842,6 +2969,7 @@ local.utility2.templateTestReportHtml = '\
                             typeof testCase.name === 'string',
                             ii + ' invalid testCase.name ' + typeof testCase.name
                         );
+                        // validate timeElapsed
                         local.utility2.assert(
                             typeof testCase.timeElapsed === 'number',
                             ii + ' invalid testCase.timeElapsed ' + typeof testCase.timeElapsed
@@ -2855,9 +2983,7 @@ local.utility2.templateTestReportHtml = '\
                 testReport1.testPlatformList.push(testPlatform2);
             });
             // update testReport1.timeElapsed
-            if (testReport1.timeElapsed < 0xffffffff) {
-                testReport1.timeElapsed += testReport2.timeElapsed;
-            }
+            testReport1.timeElapsed += testReport2.timeElapsed;
             testReport = testReport1;
             testReport.testsFailed = 0;
             testReport.testsPassed = 0;
@@ -2867,19 +2993,19 @@ local.utility2.templateTestReportHtml = '\
                 testPlatform.testsPassed = 0;
                 testPlatform.testsPending = 0;
                 testPlatform.testCaseList.forEach(function (testCase) {
+                    switch (testCase.status) {
                     // update failed tests
-                    if (testCase.errorStack) {
-                        testCase.status = 'failed';
+                    case 'failed':
                         testPlatform.testsFailed += 1;
                         testReport.testsFailed += 1;
+                        break;
                     // update passed tests
-                    } else if (testCase.timeElapsed < 0xffffffff) {
-                        testCase.status = 'passed';
+                    case 'passed':
                         testPlatform.testsPassed += 1;
                         testReport.testsPassed += 1;
+                        break;
                     // update pending tests
-                    } else {
-                        testCase.status = 'pending';
+                    default:
                         testPlatform.testsPending += 1;
                         testReport.testsPending += 1;
                     }
@@ -2913,17 +3039,19 @@ local.utility2.templateTestReportHtml = '\
             });
             // stop testReport timer
             if (testReport.testsPending === 0) {
-                local._timeElapsedStop(testReport);
+                local.utility2.timeElapsedStop(testReport);
             }
             // 2. return testReport1 in html-format
             // json-copy testReport that will be modified for html templating
             testReport = local.utility2.jsonCopy(testReport1);
             // update timeElapsed
-            local._timeElapsedStop(testReport);
+            local.utility2.timeElapsedStop(testReport);
             testReport.testPlatformList.forEach(function (testPlatform) {
-                local._timeElapsedStop(testPlatform);
+                local.utility2.timeElapsedStop(testPlatform);
                 testPlatform.testCaseList.forEach(function (testCase) {
-                    local._timeElapsedStop(testCase);
+                    if (!testCase.done) {
+                        local.utility2.timeElapsedStop(testCase);
+                    }
                     testPlatform.timeElapsed = Math.max(
                         testPlatform.timeElapsed,
                         testCase.timeElapsed
@@ -3017,7 +3145,7 @@ local.utility2.templateTestReportHtml = '\
              * this function will create the test-report after all tests are done
              */
                 // stop testPlatform timer
-                local._timeElapsedStop(testPlatform);
+                local.utility2.timeElapsedStop(testPlatform);
                 // finalize testReport
                 local.utility2.testReportMerge(testReport, {});
                 switch (local.modeJs) {
@@ -3067,11 +3195,11 @@ local.utility2.templateTestReportHtml = '\
             // init testReport
             testReport = local.utility2.testReport;
             // init testReport timer
-            testReport.timeElapsed = Date.now();
+            local.utility2.timeElapsedStart(testReport);
             // init testPlatform
             testPlatform = local.utility2.testReport.testPlatformList[0];
             // init testPlatform timer
-            testPlatform.timeElapsed = Date.now();
+            local.utility2.timeElapsedStart(testPlatform);
             // reset testPlatform.testCaseList
             testPlatform.testCaseList.length = 0;
             // add tests into testPlatform.testCaseList
@@ -3081,8 +3209,8 @@ local.utility2.templateTestReportHtml = '\
                         (!local.utility2.modeTestCase && key.indexOf('testCase_') === 0)) {
                     testPlatform.testCaseList.push({
                         name: key,
-                        onTestCase: options[key],
-                        timeElapsed: Date.now()
+                        status: 'pending',
+                        onTestCase: options[key]
                     });
                 }
             });
@@ -3106,17 +3234,18 @@ local.utility2.templateTestReportHtml = '\
             // shallow copy testPlatform.testCaseList,
             // to guard against in-place sort from testReportMerge
             testPlatform.testCaseList.slice().forEach(function (testCase) {
-                var done, onError, timerTimeout;
+                var onError, timerTimeout;
                 onError = function (error) {
                     // cleanup timerTimeout
                     clearTimeout(timerTimeout);
                     // if testCase already done, then fail testCase with error for ending again
-                    if (done) {
+                    if (testCase.done) {
                         error = error || new Error('callback in testCase ' +
                             testCase.name + ' called multiple times');
                     }
                     // if error occurred, then fail testCase
                     if (error) {
+                        testCase.status = 'failed';
                         console.error('\ntestCase ' + testCase.name + ' failed\n' +
                             error.message + '\n' + error.stack);
                         testCase.errorStack = testCase.errorStack ||
@@ -3126,19 +3255,20 @@ local.utility2.templateTestReportHtml = '\
                             testCase.errorStack);
                     }
                     // if already done, then do nothing
-                    if (done) {
+                    if (testCase.done) {
                         return;
                     }
-                    done = true;
+                    testCase.done = true;
+                    if (testCase.status === 'pending') {
+                        testCase.status = 'passed';
+                    }
                     // stop testCase timer
-                    local._timeElapsedStop(testCase);
+                    local.utility2.timeElapsedStop(testCase);
                     console.log('[' + local.modeJs + ' test-case ' +
                         testPlatform.testCaseList.filter(function (testCase) {
-                            return testCase.timeElapsed < 0xffffffff;
-                        }).length + ' of ' + testPlatform.testCaseList.length +
-                        (testCase.errorStack
-                        ? ' failed'
-                        : ' passed') + '] - ' + testCase.name);
+                            return testCase.done;
+                        }).length + ' of ' + testPlatform.testCaseList.length + ' ' +
+                        testCase.status + '] - ' + testCase.name);
                     // if all tests are done, then create test-report
                     onParallel();
                 };
@@ -3153,7 +3283,7 @@ local.utility2.templateTestReportHtml = '\
                 // run testCase in a try-catch block
                 local.utility2.tryCatchOnError(function () {
                     // start testCase timer
-                    testCase.timeElapsed = Date.now();
+                    local.utility2.timeElapsedStart(testCase);
                     testCase.onTestCase(null, onError);
                 }, onError);
             });
@@ -3198,6 +3328,24 @@ local.utility2.templateTestReportHtml = '\
             // 3. run tests
             local.utility2.testRun(options);
             return server;
+        };
+
+        local.utility2.timeElapsedStart = function (options) {
+        /*
+         * this function will start options.timeElapsed
+         */
+            options = options || {};
+            options.timeStart = options.timeStart || Date.now();
+            return options;
+        };
+
+        local.utility2.timeElapsedStop = function (options) {
+        /*
+         * this function will stop options.timeElapsed
+         */
+            options = local.utility2.timeElapsedStart(options);
+            options.timeElapsed = Date.now() - options.timeStart;
+            return options;
         };
 
         local.utility2.timeoutDefaultInit = function () {
@@ -3500,7 +3648,6 @@ local.utility2.templateTestReportHtml = '\
             'cryptojs',
             'istanbul',
             'jslint',
-            'stringview',
             'uglifyjs'
         ].forEach(function (key) {
             local.utility2.assetsDict['/assets.utility2.lib.' + key + '.js'] =
@@ -3526,7 +3673,6 @@ local.utility2.templateTestReportHtml = '\
         local.utility2.assetsDict['/assets.utility2.rollup.js'] = [
             '/assets.utility2.lib.bcrypt.js',
             '/assets.utility2.lib.crypto.js',
-            '/assets.utility2.lib.stringview.js',
             '/assets.utility2.js'
         ]
             .map(function (key) {
