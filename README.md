@@ -8,17 +8,17 @@ run dynamic browser tests with coverage (via istanbul and electron)
 
 # documentation
 #### todo
-- rename var data to result in test.js
 - add es6 support in jslint
 - add utility2.middlewareLimit
 - add server stress test using electron
 - none
 
-#### change since ed10b33f
-- npm publish 2016.2.1
-- allow interrupting of covered-npm-test without re-running uncovered-npm-test
-- add function utility2.bufferCreate, utility2.bufferToNodeBuffer, utility2.bufferToString, utility2.stringFromBase64, utility2.stringToBase64, utility2.timeElapsedStart, utility2.timeElapsedStop
-- remove lib.stringview.js
+#### change since 20d9678e
+- npm publish 2016.2.2
+- remove modeJson and responseJSON properties from utility2.ajax request
+- add function utility2.bufferCreateIfNotBuffer
+- cover example.js
+- add class utility2.Blob to emulate multipart/form-data file-upload in nodejs
 - none
 
 #### this package requires
@@ -190,42 +190,36 @@ instruction
         /*
          * this function will test ajax's "200 ok" handling-behavior
          */
-            var data;
-            // jslint-hack
-            local.utility2.nop(options);
-            // test 'assets.hello'
+            options = {};
+            // test ajax-path 'assets.hello'
             local.utility2.ajax({
                 url: 'assets.hello'
             }, function (error, xhr) {
-                try {
+                local.utility2.tryCatchOnError(function () {
                     // validate no error occurred
                     local.utility2.assert(!error, error);
                     // validate data
-                    data = xhr.responseText;
-                    local.utility2.assert(data === 'hello', data);
+                    options.data = xhr.responseText;
+                    local.utility2.assert(options.data === 'hello', options.data);
                     onError();
-                } catch (errorCaught) {
-                    onError(errorCaught);
-                }
+                }, onError);
             });
         };
         local.testCase_ajax_404 = function (options, onError) {
         /*
          * this function will test ajax's "404 not found" handling-behavior
          */
-            // jslint-hack
-            local.utility2.nop(options);
-            // test '/undefined'
+            options = {};
+            // test ajax-path '/undefined'
             local.utility2.ajax({ url: '/undefined' }, function (error) {
-                try {
+                local.utility2.tryCatchOnError(function () {
                     // validate error occurred
                     local.utility2.assert(error, error);
+                    options.statusCode = error.statusCode;
                     // validate 404 http statusCode
-                    local.utility2.assert(error.statusCode === 404, error.statusCode);
+                    local.utility2.assert(options.statusCode === 404, options.statusCode);
                     onError();
-                } catch (errorCaught) {
-                    onError(errorCaught);
-                }
+                }, onError);
             });
         };
         break;
@@ -239,12 +233,11 @@ instruction
         /*
          * this function will spawn an electron process to test the test-page
          */
-            // jslint-hack
-            local.utility2.nop(options);
-            local.utility2.browserTest({
+            options = {
                 modeCoverageMerge: true,
                 url: 'http://localhost:' + process.env.PORT + '?modeTest=consoleLogResult'
-            }, onError);
+            };
+            local.utility2.browserTest(options, onError);
         };
         // export local
         module.exports = local;
@@ -253,6 +246,9 @@ instruction
         process.env.npm_package_name = 'example-module';
         process.env.npm_package_version = '0.0.1';
         // init assets
+        /* istanbul ignore next */
+        local.utility2.assetsDict['/assets.example.js'] = local.global.assetsExampleJs ||
+            local.fs.readFileSync(__filename, 'utf8');
         /* jslint-ignore-begin */
         local.utility2.templateIndexHtml = '\
 <!doctype html>\n\
@@ -321,12 +317,9 @@ textarea {\n\
      * this function will demo a passed ajax test\n\
      */\n\
         var data;\n\
-        // jslint-hack\n\
-        window.utility2.nop(options);\n\
+        options = { url: "/" };\n\
         // test ajax request for main-page "/"\n\
-        window.utility2.ajax({\n\
-            url: "/"\n\
-        }, function (error, xhr) {\n\
+        window.utility2.ajax(options, function (error, xhr) {\n\
             try {\n\
                 // validate no error occurred\n\
                 window.utility2.assert(!error, error);\n\
@@ -413,17 +406,9 @@ window.testRun({});\n\
                     return process.env.npm_package_name;
                 case '{{envDict.npm_package_version}}':
                     return process.env.npm_package_version;
-                default:
-                    return '';
                 }
             })
             .replace('{{scriptExtra}}', '');
-        local.utility2.assetsDict['/assets.example.js'] =
-            // cover example.js
-            local.utility2.istanbulInstrumentSync(
-                local.fs.readFileSync(__dirname + '/example.js', 'utf8'),
-                __dirname + '/example.js'
-            );
         break;
     }
 }());
@@ -517,7 +502,7 @@ export npm_config_mode_auto_restart=1 && \
 ./index.sh test node test.js",
         "test-published": "./index.sh shRun shNpmTestPublished"
     },
-    "version": "2016.2.1"
+    "version": "2016.2.2"
 }
 ```
 

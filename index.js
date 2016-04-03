@@ -704,10 +704,21 @@ local.utility2.templateTestReportHtml = '\
             };
         };
 
+        // init lib Blob
+        local.utility2.Blob = local.modeJs === 'browser'
+            ? local.global.Blob
+            : function (array, options) {
+              /*
+               * this function will create a node-compatible Blob instance
+               */
+                this.bff = local.utility2.bufferConcat(array);
+                this.type = options && options.type;
+            };
+
         // init lib FormData
         local.utility2.FormData = function () {
         /*
-         * this function will instantiate a serverLocal-compatible version of FormData
+         * this function will create a serverLocal-compatible FormData instance
          * https://xhr.spec.whatwg.org/#dom-formdata
          * The FormData(form) constructor must run these steps:
          * 1. Let fd be a new FormData object.
@@ -768,6 +779,7 @@ local.utility2.templateTestReportHtml = '\
                 result.push([boundary + '--\r\n']);
                 // concatenate result
                 onError(error, !error && local.utility2.bufferConcat(
+                    // flatten result
                     Array.prototype.concat.apply([], result)
                 ));
             });
@@ -775,7 +787,7 @@ local.utility2.templateTestReportHtml = '\
             this.entryList.forEach(function (element, ii) {
                 var value;
                 value = element.value;
-                if (!(value instanceof local.global.Blob)) {
+                if (!(value instanceof local.utility2.Blob)) {
                     result[ii] = [boundary + '\r\nContent-Disposition: form-data; name="' +
                         element.name + '"\r\n\r\n', value, '\r\n'];
                     return;
@@ -805,7 +817,7 @@ local.utility2.templateTestReportHtml = '\
         /*
          * this function will send an ajax-request with error-handling and timeout
          */
-            var ajaxProgressDiv, ii, timerTimeout, xhr;
+            var ajaxProgressDiv, ii, timerTimeout, tmp, xhr;
             onError = local.utility2.onErrorWithStack(onError);
             // init modeServerLocal
             if (local.utility2.serverLocalUrlTest &&
@@ -887,23 +899,19 @@ local.utility2.templateTestReportHtml = '\
                     }
                     // handle completed xhr request
                     if (xhr.readyState === 4) {
-                        if (xhr.modeJson) {
-                            // try to JSON.parse the string
-                            local.utility2.tryCatchOnError(function () {
-                                xhr.responseJSON = JSON.parse(xhr.responseText);
-                            }, function (error) {
-                                xhr.error = xhr.error || error;
-                            });
-                        }
                         // handle string data
                         if (xhr.error) {
                             // debug statusCode
                             xhr.error.statusCode = xhr.statusCode;
                             // debug statusCode / method / url
-                            local.utility2.errorMessagePrepend(xhr.error, local.modeJs + ' - ' +
-                                xhr.statusCode + ' ' +
-                                xhr.method + ' ' + xhr.url + '\n    ' +
-                                JSON.stringify(xhr.responseText.slice(0, 256) + '...') + '\n');
+                            tmp = local.modeJs + ' - ' + xhr.statusCode + ' ' + xhr.method +
+                                ' ' + xhr.url + '\n';
+                            // try to debug responseText
+                            local.utility2.tryCatchOnError(function () {
+                                tmp += '    ' + JSON.stringify(xhr.responseText.slice(0, 256) +
+                                    '...') + '\n';
+                            }, local.utility2.nop);
+                            local.utility2.errorMessagePrepend(xhr.error, tmp);
                         }
                     }
                     onError(xhr.error, xhr, xhr.onEvent);
@@ -944,16 +952,16 @@ local.utility2.templateTestReportHtml = '\
             Object.keys(xhr.headers).forEach(function (key) {
                 xhr.setRequestHeader(key, xhr.headers[key]);
             });
-            if (xhr.data instanceof local.utility2.local.utility2.FormData) {
+            if (xhr.data instanceof local.utility2.FormData) {
                 // handle formData
                 xhr.data.read(function (error, data) {
                     if (error) {
                         xhr.error = xhr.error || error;
-                        xhr.abort();
+                        xhr.onEvent({ type: 'error' });
                         return;
                     }
                     // send data
-                    xhr.send(data);
+                    xhr.send(local.utility2.bufferToNodeBuffer(data));
                 });
             } else {
                 // send data
@@ -1037,7 +1045,25 @@ local.utility2.templateTestReportHtml = '\
          * - dataURL
          * - text
          */
-            var done, reader;
+            var data, done, reader;
+            if (local.modeJs === 'node') {
+                switch (encoding) {
+                // readAsDataURL
+                case 'dataURL':
+                    data = 'data:' + (blob.type || '') + ';base64,' +
+                        local.utility2.bufferToString(blob.bff, 'base64');
+                    break;
+                // readAsText
+                case 'text':
+                    data = local.utility2.bufferToString(blob.bff);
+                    break;
+                // readAsArrayBuffer
+                default:
+                    data = local.utility2.bufferCreate(blob.bff);
+                }
+                onError(null, data);
+                return;
+            }
             reader = new local.global.FileReader();
             reader.onabort = reader.onerror = reader.onload = function (event) {
                 if (done) {
@@ -1177,7 +1203,7 @@ local.utility2.templateTestReportHtml = '\
                         onNext();
                         return;
                     }
-                    // merge browser test-report
+                    // try to merge browser test-report
                     local.utility2.tryCatchOnError(function () {
                         data = JSON.parse(local.fs.readFileSync(
                             options.fileTestReport,
@@ -1350,12 +1376,15 @@ local.utility2.templateTestReportHtml = '\
             length = 0;
             bufferList = bufferList
                 .filter(function (element) {
-                    return element;
+                    return element || element === 0;
                 })
                 .map(function (element) {
-                    if (!(element instanceof local.global.Uint8Array)) {
-                        element = local.utility2.bufferCreate(element);
+                    // convert number to string
+                    if (typeof element === 'number') {
+                        element = String(element);
                     }
+                    // convert non-Uint8Array to Uint8Array
+                    element = local.utility2.bufferCreateIfNotBuffer(element);
                     length += element.length;
                     return element;
                 });
@@ -1380,9 +1409,19 @@ local.utility2.templateTestReportHtml = '\
                 }
                 return local.modeJs === 'browser'
                     ? new local.global.TextEncoder('utf-8').encode(text)
-                    : new local.global.Uint8Array(new Buffer(text));
+                    : new Buffer(text);
             }
             return new local.global.Uint8Array(text);
+        };
+
+        local.utility2.bufferCreateIfNotBuffer = function (text, encoding) {
+        /*
+         * this function will create a Uint8Array from the text with the given encoding,
+         * if it is not already a Uint8Array
+         */
+            return text instanceof local.global.Uint8Array
+                ? text
+                : local.utility2.bufferCreate(text, encoding);
         };
 
         local.utility2.bufferIndexOfSubBuffer = function (bff, subBff, fromIndex) {
@@ -1422,6 +1461,7 @@ local.utility2.templateTestReportHtml = '\
             if (typeof bff === 'string') {
                 return bff;
             }
+            bff = local.utility2.bufferCreateIfNotBuffer(bff);
             if (encoding === 'base64') {
                 return local.utility2._bufferToBase64(bff);
             }
@@ -2027,7 +2067,7 @@ local.utility2.templateTestReportHtml = '\
                         : modeNext + 1;
                     // recurse with next middleware in middlewareList
                     if (modeNext < self.middlewareList.length) {
-                        // call sub-middleware in a try-catch block
+                        // try to call the sub-middleware
                         local.utility2.tryCatchOnError(function () {
                             self.middlewareList[modeNext](request, response, onNext);
                         }, onNext);
@@ -2296,8 +2336,8 @@ local.utility2.templateTestReportHtml = '\
             var childProcess;
             // spawn childProcess
             childProcess = local.child_process.spawn.apply(local.child_process, arguments)
-                // kill timerTimeout on exit
                 .on('exit', function () {
+                    // try to kill timerTimeout on exit
                     local.utility2.tryCatchOnError(function () {
                         process.kill(childProcess.timerTimeout.pid);
                     }, local.utility2.nop);
@@ -2440,7 +2480,7 @@ local.utility2.templateTestReportHtml = '\
                     script = 'console.log(String(' + match[2] + '))\n';
                     break;
                 }
-                // eval modified script in a try-catch block
+                // try to eval modified script
                 local.utility2.tryCatchOnError(function () {
                     local.utility2.replServer.evalDefault(script, context, file, onError2);
                 }, onError2);
@@ -2753,8 +2793,6 @@ local.utility2.templateTestReportHtml = '\
                     : valueDefault;
             };
             renderPartial = function (match0, helper, key, partial) {
-                // jslint-hack
-                local.utility2.nop(match0);
                 switch (helper) {
                 case 'if':
                     if (dict[key]) {
@@ -2831,7 +2869,7 @@ local.utility2.templateTestReportHtml = '\
                 });
                 onError(error);
             };
-            // call onError with mock-objects in a try-catch block
+            // try to call onError with mock-objects
             local.utility2.tryCatchOnError(function () {
                 // mock-objects
                 mockList.forEach(function (mock) {
@@ -3018,22 +3056,16 @@ local.utility2.templateTestReportHtml = '\
                     : 'passed';
                 // sort testCaseList by status and name
                 testPlatform.testCaseList.sort(function (arg1, arg2) {
-                    arg1 = arg1.status
-                        .replace('passed', 'z') + arg1.name.toLowerCase();
-                    arg2 = arg2.status
-                        .replace('passed', 'z') + arg2.name.toLowerCase();
-                    return arg1 <= arg2
+                    return arg1.status.replace('passed', 'z') + arg1.name <
+                        arg2.status.replace('passed', 'z') + arg2.name
                         ? -1
                         : 1;
                 });
             });
             // sort testPlatformList by status and name
             testReport.testPlatformList.sort(function (arg1, arg2) {
-                arg1 = arg1.status
-                    .replace('passed', 'z') + arg1.name.toLowerCase();
-                arg2 = arg2.status
-                    .replace('passed', 'z') + arg2.name.toLowerCase();
-                return arg1 <= arg2
+                return arg1.status.replace('passed', 'z') + arg1.name <
+                    arg2.status.replace('passed', 'z') + arg2.name
                     ? -1
                     : 1;
             });
@@ -3280,7 +3312,7 @@ local.utility2.templateTestReportHtml = '\
                 );
                 // increment number of tests remaining
                 onParallel.counter += 1;
-                // run testCase in a try-catch block
+                // try to run testCase
                 local.utility2.tryCatchOnError(function () {
                     // start testCase timer
                     local.utility2.timeElapsedStart(testCase);
@@ -3425,6 +3457,7 @@ local.utility2.templateTestReportHtml = '\
          */
             var urlParsed;
             urlParsed = {};
+            // try to parse the url
             local.utility2.tryCatchOnError(function () {
                 // resolve host-less url
                 switch (local.modeJs) {

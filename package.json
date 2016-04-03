@@ -63,5 +63,5 @@
 
         "test-published": "./index.sh shRun shNpmTestPublished"
     },
-    "version": "2016.2.1"
+    "version": "2016.2.2"
 }

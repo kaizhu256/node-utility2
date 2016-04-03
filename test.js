@@ -39,7 +39,8 @@
             break;
         // re-init local from example.js
         case 'node':
-            local.script = require('fs').readFileSync(__dirname + '/README.md', 'utf8')
+            local = require('./index.js').local;
+            local._script = local.fs.readFileSync(__dirname + '/README.md', 'utf8')
                 // support syntax-highlighting
                 .replace((/[\S\s]+?\n.*?example.js\s*?```\w*?\n/), function (match0) {
                     // preserve lineno
@@ -53,19 +54,18 @@
                 .replace(
                     "require('" + process.env.npm_package_name + "')",
                     "require('./index.js')"
-                )
-                // coverage-hack - do not cover example.js
-                .replace('local.utility2.istanbulInstrumentSync', 'local.utility2.echo');
-            local.utility2 = require('./index.js');
-            // require example.js
-            local = local.utility2.requireFromScript(
+                );
+            // jslint example.js
+            local.utility2.jslintAndPrint(local._script, __dirname + '/example.js');
+            // cover example.js
+            local._script = local.utility2.istanbulInstrumentInPackage(
+                local._script,
                 __dirname + '/example.js',
-                local.utility2.jslintAndPrint(local.script, __dirname + '/example.js')
-                    .replace(
-                        "local.fs.readFileSync(__dirname + '/example.js', 'utf8')",
-                        JSON.stringify(local.script)
-                    )
+                'utility2'
             );
+            local.global.assetsExampleJs = local._script;
+            // require example.js
+            local = local.utility2.requireFromScript(__dirname + '/example.js', local._script);
             // coverage-hack - cover requireFromScript's cache handling behavior
             local.utility2.requireFromScript(__dirname + '/example.js');
             // coverage-hack - cover istanbul
@@ -97,6 +97,91 @@
             local.utility2.ajax(options, onError);
             // test failure from thrown error handling-behavior
             throw local.utility2.errorDefault;
+        };
+
+        local.testCase_FormData_default = function (options, onError) {
+        /*
+         * this function will test FormData's default handling-behavior
+         */
+            options = {};
+            options.blob1 = new local.utility2.Blob(['hello', 'bye', '\u1234 ', 0]);
+            options.blob2 = new local.utility2.Blob(['hello', 'bye', '\u1234 ', 0], {
+                type: 'text/plain; charset=utf-8'
+            });
+            options.data = new local.utility2.FormData();
+            options.data.append('text1', 'hellobye\u1234 0');
+            // test file-upload handling-behavior
+            options.data.append('file1', options.blob1);
+            // test file-upload and filename handling-behavior
+            options.data.append('file2', options.blob2, 'filename2.txt');
+            options.method = 'POST';
+            options.url = '/test.echo';
+            local.utility2.ajax(options, function (error, xhr) {
+                local.utility2.tryCatchOnError(function () {
+                    // validate no error occurred
+                    local.utility2.assert(!error, error);
+                    // validate responseText
+                    local.utility2.assert(xhr.responseText.indexOf(
+                        '\r\nContent-Disposition: form-data; ' +
+                            'name="text1"\r\n\r\nhellobye\u1234 0\r\n'
+                    ) >= 0, xhr.responseText);
+                    local.utility2.assert(xhr.responseText.indexOf(
+                        '\r\nContent-Disposition: form-data; ' +
+                            'name="file1"\r\n\r\nhellobye\u1234 0\r\n'
+                    ) >= 0, xhr.responseText);
+                    local.utility2.assert(xhr.responseText.indexOf(
+                        '\r\nContent-Disposition: form-data; name="file2"; ' +
+                            'filename="filename2.txt"\r\nContent-Type: text/plain; ' +
+                            'charset=utf-8\r\n\r\nhellobye\u1234 0\r\n'
+                    ) >= 0, xhr.responseText);
+                    onError();
+                }, onError);
+            });
+        };
+
+        local.testCase_FormData_error = function (options, onError) {
+        /*
+         * this function will test FormData's error handling-behavior
+         */
+            local.utility2.testMock([
+                [local.utility2.FormData.prototype, { read: function (onError) {
+                    onError(local.utility2.errorDefault);
+                } }]
+            ], function (onError) {
+                options = {};
+                options.data = new local.utility2.FormData();
+                options.method = 'POST';
+                options.url = '/test.echo';
+                local.utility2.ajax(options, function (error) {
+                    local.utility2.tryCatchOnError(function () {
+                        // validate error occurred
+                        local.utility2.assert(error, error);
+                        onError();
+                    }, onError);
+                });
+            }, onError);
+        };
+
+        local.testCase_FormData_nullCase = function (options, onError) {
+        /*
+         * this function will test FormData's null-case handling-behavior
+         */
+            options = {};
+            options.data = new local.utility2.FormData();
+            options.method = 'POST';
+            options.url = '/test.echo';
+            local.utility2.ajax(options, function (error, xhr) {
+                local.utility2.tryCatchOnError(function () {
+                    // validate no error occurred
+                    local.utility2.assert(!error, error);
+                    // validate responseText
+                    local.utility2.assert(
+                        (/\r\n\r\n$/).test(xhr.responseText),
+                        xhr.responseText
+                    );
+                    onError();
+                }, onError);
+            });
         };
 
         local.testCase_ajax_abort = function (options, onError) {
@@ -141,10 +226,6 @@
             onParallel = local.utility2.onParallel(onError);
             onParallel.counter += 1;
             [{
-                // test JSON.parse error
-                modeJson: true,
-                url: '/assets.hello'
-            }, {
                 // test 404-not-found-error handling-behavior
                 url: '/test.error-404'
             }, {
@@ -173,22 +254,6 @@
                 });
             });
             onParallel();
-        };
-
-        local.testCase_ajax_json = function (options, onError) {
-        /*
-         * this function will test ajax's json handling-behavior
-         */
-            options = { modeJson: true, url: '/test.json' };
-            local.utility2.ajax(options, function (error, xhr) {
-                local.utility2.tryCatchOnError(function () {
-                    // validate no error occurred
-                    local.utility2.assert(!error && xhr.status === 200, [error, xhr.status]);
-                    // validate responseJSON
-                    local.utility2.assert(xhr.responseJSON === 'hello', xhr.responseJSON);
-                    onError();
-                }, onError);
-            });
         };
 
         local.testCase_ajax_post = function (options, onError) {
@@ -228,12 +293,12 @@
                             // cleanup response
                             local.utility2.requestResponseCleanup(null, xhr.response);
                             // validate response
-                            options.result = xhr.response;
-                            local.utility2.assert(options.result, options);
+                            options.data = xhr.response;
+                            local.utility2.assert(options.data, options);
                             break;
                         default:
-                            options.result = xhr.responseText;
-                            local.utility2.assert(options.result === 'hello', options);
+                            options.data = xhr.responseText;
+                            local.utility2.assert(options.data === 'hello', options);
                         }
                         onParallel();
                     }, onError);
@@ -324,15 +389,62 @@
          */
             options = {};
             // test null-case handling-behavior
-            options.result = local.utility2.bcryptPasswordValidate();
-            local.utility2.assert(options.result === false, options);
+            options.data = local.utility2.bcryptPasswordValidate();
+            local.utility2.assert(options.data === false, options);
             // test default handling-behavior
             options.password = 'hello';
             options.hash = local.utility2.bcryptHashCreate(options.password, 8);
-            options.result =
+            options.data =
                 local.utility2.bcryptPasswordValidate(options.password, options.hash);
-            local.utility2.assert(options.result, options);
+            local.utility2.assert(options.data, options);
             onError();
+        };
+
+        local.testCase_blobRead_default = function (options, onError) {
+        /*
+         * this function will test blobRead's default handling-behavior
+         */
+            var onParallel;
+            onParallel = local.utility2.onParallel(onError);
+            onParallel.counter += 1;
+            options = {};
+            [
+                new local.utility2.Blob(['hello', 'bye', '\u1234 ', 0]),
+                new local.utility2.Blob(['hello', 'bye', '\u1234 ', 0], {
+                    type: 'text/plain; charset=utf-8'
+                })
+            ].forEach(function (blob, ii) {
+                options.blob = blob;
+                [null, 'dataURL', 'text'].forEach(function (encoding) {
+                    onParallel.counter += 1;
+                    local.utility2.blobRead(options.blob, encoding, function (error, data) {
+                        local.utility2.tryCatchOnError(function () {
+                            // validate no error occurred
+                            local.utility2.assert(!error, error);
+                            // validate data
+                            switch (encoding) {
+                            case 'dataURL':
+                                if (ii === 0) {
+                                    local.utility2.assert(data ===
+                                        'data:;base64,aGVsbG9ieWXhiLQgMA==', data);
+                                    break;
+                                }
+                                local.utility2.assert(data === 'data:text/plain; ' +
+                                    'charset=utf-8;base64,aGVsbG9ieWXhiLQgMA==', data);
+                                break;
+                            case 'text':
+                                local.utility2.assert(data === 'hellobye\u1234 0', data);
+                                break;
+                            default:
+                                data = local.utility2.bufferToString(data);
+                                local.utility2.assert(data === 'hellobye\u1234 0', data);
+                            }
+                            onParallel();
+                        }, onError);
+                    });
+                });
+            });
+            onParallel();
         };
 
         local.testCase_bufferCreate_default = function (options, onError) {
@@ -380,12 +492,12 @@
                 { buffer: 'aabbaa', subBuffer: 'ba', validate: 3 }
             ].forEach(function (_) {
                 options = _;
-                options.result = local.utility2.bufferIndexOfSubBuffer(
+                options.data = local.utility2.bufferIndexOfSubBuffer(
                     local.utility2.bufferCreate(options.buffer),
                     local.utility2.bufferCreate(options.subBuffer),
                     options.fromIndex
                 );
-                local.utility2.assert(options.result === options.validate, options);
+                local.utility2.assert(options.data === options.validate, options);
             });
             onError();
         };
@@ -613,12 +725,10 @@
         /*
          * this function will test istanbulInstrumentSync's default handling-behavior
          */
-            var data;
-            // jslint-hack
-            local.utility2.nop(options);
-            data = local.utility2.istanbulInstrumentSync('1', 'test.js');
+            options = {};
+            options.data = local.utility2.istanbulInstrumentSync('1', 'test.js');
             // validate data
-            local.utility2.assert(data.indexOf('.s[\'1\']++;1;\n') >= 0, data);
+            local.utility2.assert(options.data.indexOf('.s[\'1\']++;1;\n') >= 0, options);
             onError();
         };
 
@@ -1280,14 +1390,14 @@
             ], function (onError) {
                 // test no production-mode handling-behavior
                 local.utility2.envDict.npm_config_production = '';
-                options.result = local.utility2.uglifyIfProduction('aa = 1');
-                // validate result
-                local.utility2.assert(options.result === 'aa = 1', options);
+                options.data = local.utility2.uglifyIfProduction('aa = 1');
+                // validate data
+                local.utility2.assert(options.data === 'aa = 1', options);
                 // test production-mode handling-behavior
                 local.utility2.envDict.npm_config_production = '1';
-                options.result = local.utility2.uglifyIfProduction('aa = 1');
-                // validate result
-                local.utility2.assert(options.result === 'aa=1', options);
+                options.data = local.utility2.uglifyIfProduction('aa = 1');
+                // validate data
+                local.utility2.assert(options.data === 'aa=1', options);
                 onError();
             }, onError);
         };
@@ -1306,10 +1416,10 @@
                 }]
             ], function (onError) {
                 // test default handling-behavior
-                options.result = local.utility2.urlParse('https://localhost:80/foo' +
+                options.data = local.utility2.urlParse('https://localhost:80/foo' +
                     '?aa=1&bb%20cc=dd%20=ee&aa=2&aa#zz=1');
-                // validate result
-                local.utility2.assert(local.utility2.jsonStringifyOrdered(options.result) ===
+                // validate data
+                local.utility2.assert(local.utility2.jsonStringifyOrdered(options.data) ===
                     local.utility2.jsonStringifyOrdered({
                         hash: '#zz=1',
                         host: 'localhost:80',
@@ -1322,9 +1432,9 @@
                         search: '?aa=1&bb%20cc=dd%20=ee&aa=2&aa'
                     }), options);
                 // test error handling-behavior
-                options.result = local.utility2.urlParse(null);
-                // validate result
-                local.utility2.assert(local.utility2.jsonStringifyOrdered(options.result) ===
+                options.data = local.utility2.urlParse(null);
+                // validate data
+                local.utility2.assert(local.utility2.jsonStringifyOrdered(options.data) ===
                     local.utility2.jsonStringifyOrdered({
                         hash: '',
                         host: '',
@@ -1383,128 +1493,6 @@
 
     // run browser js-env code - function
     case 'browser':
-        local.testCase_FormData_default = function (options, onError) {
-        /*
-         * this function will test FormData's default handling-behavior
-         */
-            options = {};
-            options.blob1 = new local.global.Blob(['hello\u1234bye']);
-            options.blob2 = new local.global.Blob(['hello\u1234bye'], {
-                type: 'text/plain; charset=utf-8'
-            });
-            options.data = new local.utility2.FormData();
-            options.data.append('text1', 'hello\u1234bye');
-            // test file-upload handling-behavior
-            options.data.append('file1', options.blob1);
-            // test file-upload and filename handling-behavior
-            options.data.append('file2', options.blob2, 'filename2.txt');
-            options.method = 'POST';
-            options.url = '/test.echo';
-            local.utility2.ajax(options, function (error, xhr) {
-                local.utility2.tryCatchOnError(function () {
-                    // validate no error occurred
-                    local.utility2.assert(!error, error);
-                    // validate responseText
-                    local.utility2.assert(xhr.responseText.indexOf(
-                        '\r\nContent-Disposition: form-data; ' +
-                            'name="text1"\r\n\r\nhello\u1234bye\r\n'
-                    ) >= 0, xhr.responseText);
-                    local.utility2.assert(xhr.responseText.indexOf(
-                        '\r\nContent-Disposition: form-data; ' +
-                            'name="file1"\r\n\r\nhello\u1234bye\r\n'
-                    ) >= 0, xhr.responseText);
-                    local.utility2.assert(xhr.responseText.indexOf(
-                        '\r\nContent-Disposition: form-data; name="file2"; ' +
-                            'filename="filename2.txt"\r\nContent-Type: text/plain; ' +
-                            'charset=utf-8\r\n\r\nhello\u1234bye\r\n'
-                    ) >= 0, xhr.responseText);
-                    onError();
-                }, onError);
-            });
-        };
-
-        local.testCase_FormData_error = function (options, onError) {
-        /*
-         * this function will test FormData's error handling-behavior
-         */
-            local.utility2.testMock([
-                [local.utility2.FormData.prototype, { read: function (onError) {
-                    onError(local.utility2.errorDefault);
-                } }]
-            ], function (onError) {
-                options = {};
-                options.data = new local.utility2.FormData();
-                options.method = 'POST';
-                options.url = '/test.echo';
-                local.utility2.ajax(options, function (error) {
-                    local.utility2.tryCatchOnError(function () {
-                        // validate error occurred
-                        local.utility2.assert(error, error);
-                        onError();
-                    }, onError);
-                });
-            }, onError);
-        };
-
-        local.testCase_FormData_nullCase = function (options, onError) {
-        /*
-         * this function will test FormData's null-case handling-behavior
-         */
-            options = {};
-            options.data = new local.utility2.FormData();
-            options.method = 'POST';
-            options.url = '/test.echo';
-            local.utility2.ajax(options, function (error, xhr) {
-                local.utility2.tryCatchOnError(function () {
-                    // validate no error occurred
-                    local.utility2.assert(!error, error);
-                    // validate responseText
-                    local.utility2.assert(
-                        (/\r\n\r\n$/).test(xhr.responseText),
-                        xhr.responseText
-                    );
-                    onError();
-                }, onError);
-            });
-        };
-
-        local.testCase_blobRead_default = function (options, onError) {
-        /*
-         * this function will test blobRead's default handling-behavior
-         */
-            var onParallel;
-            options = {};
-            options.blob = new local.global.Blob(['hello\u1234bye'], {
-                type: 'text/plain; charset=utf-8'
-            });
-            onParallel = local.utility2.onParallel(onError);
-            onParallel.counter += 1;
-            [null, 'dataURL', 'text'].forEach(function (encoding) {
-                onParallel.counter += 1;
-                local.utility2.blobRead(options.blob, encoding, function (error, data) {
-                    local.utility2.tryCatchOnError(function () {
-                        // validate no error occurred
-                        local.utility2.assert(!error, error);
-                        // validate data
-                        switch (encoding) {
-                        case 'dataURL':
-                            local.utility2.assert(data ===
-                                'data:text/plain; charset=utf-8;base64,aGVsbG/hiLRieWU=', data);
-                            break;
-                        case 'text':
-                            local.utility2.assert(data === 'hello\u1234bye', data);
-                            break;
-                        default:
-                            data = local.utility2.bufferToString(data);
-                            local.utility2.assert(data === 'hello\u1234bye', data);
-                        }
-                        onParallel();
-                    }, onError);
-                });
-            });
-            onParallel();
-        };
-
         local.testCase_blobRead_error = function (options, onError) {
         /*
          * this function will test blobRead's error handling-behavior
@@ -1533,8 +1521,8 @@
                 document,
                 [document]
             ].forEach(function (element) {
-                options.result = local.utility2.domElementQuerySelectorAll(element, 'body')[0];
-                local.utility2.assert(options.result === document.body);
+                options.data = local.utility2.domElementQuerySelectorAll(element, 'body')[0];
+                local.utility2.assert(options.data === document.body);
             });
             onError();
         };
@@ -1570,7 +1558,7 @@
                         local.utility2.tryCatchOnError(function () {
                             // validate no error occurred
                             local.utility2.assert(!error, error);
-                            // validate 304 http status
+                            // validate statusCode
                             local.utility2.assert(xhr.statusCode === 304, xhr.statusCode);
                             onError();
                         }, onError);
@@ -1877,7 +1865,7 @@
                     // test print handling-behavior
                     'print\n'
                 ].forEach(function (script) {
-                    local.utility2.local.utility2.replServer.eval(
+                    local.utility2.replServer.eval(
                         script,
                         null,
                         'repl',
@@ -2078,10 +2066,6 @@
             // test undefined-error handling-behavior
             case '/test.error-undefined':
                 local.utility2.serverRespondDefault(request, response, 999);
-                break;
-            // test undefined-error handling-behavior
-            case '/test.json':
-                response.end('"hello"');
                 break;
             // test timeout handling-behavior
             case '/test.timeout':
