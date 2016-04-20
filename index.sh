@@ -34,12 +34,6 @@ shBaseInit() {
 "$HOME/bin:$HOME/node_modules/.bin:/usr/local/bin:/usr/local/sbin" || return $?
         export PATH="$PATH_BIN:$PATH" || return $?
     fi
-    # init $PATH_EMSCRIPTEN
-    if [ "$PATH_EMSCRIPTEN" = "" ]
-    then
-        export PATH_EMSCRIPTEN="$HOME/src/emsdk_portable/emscripten/latest" || return $?
-        export PATH="$PATH_EMSCRIPTEN:$PATH" || return $?
-    fi
     # init $PATH_OS
     case "$(uname)" in
     Darwin)
@@ -72,23 +66,25 @@ shBaseInit() {
     alias lld="ls -adlF" || return $?
 }
 
-shBaseInstall() {(set -e
+shBaseInstall() {
 # this function will install .bashrc, .screenrc, .vimrc, and index.sh in $HOME,
 # and is intended for aws-ec2 setup
 # curl https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/index.sh > $HOME/index.sh && . $HOME/index.sh && shBaseInstall
     for FILE in .screenrc .vimrc index.sh
     do
         curl -s "https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/$FILE" > \
-            "$HOME/$FILE"
+            "$HOME/$FILE" || return $?
     done
     # create .bashrc
-    printf '. $HOME/index.sh && shBaseInit' > "$HOME/.bashrc"
+    printf '. $HOME/index.sh && shBaseInit' > "$HOME/.bashrc" || return $?
     # init .ssh/authorized_keys.root
     if [ -f "$HOME/.ssh/authorized_keys.root" ]
     then
-        mv "$HOME/.ssh/authorized_keys.root" "$HOME/.ssh/authorized_keys"
+        mv "$HOME/.ssh/authorized_keys.root" "$HOME/.ssh/authorized_keys" || return $?
     fi
-)}
+    # source .bashrc
+    . "$HOME/.bashrc" || return $?
+}
 
 shBrowserTest() {(set -e
 # this function will spawn an electron process to test the given $URL,
@@ -181,19 +177,21 @@ shBuildGithubUpload() {(set -e
 shBuildInsideDocker() {(set -e
 # this function will run the build inside docker
     export npm_config_unsafe_perm=1
-    # install index.sh
+    # source index.sh
     curl https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/index.sh > \
-        $HOME/index.sh
-    . $HOME/index.sh
-    shBaseInstall
+        /tmp/index.sh
+    . /tmp/index.sh
     # start xvfb
     shXvfbStart
+    # https://github.com/npm/npm/issues/10686
+    # bug workaround - Cannot read property 'target' of null #10686
+    sed -in -e 's/ "_requiredBy":/ "_requiredBy_":/' package.json
     # npm install
     npm install
     # npm test
     npm test --mode-coverage
-    # cleanup
-    rm -fr /tmp/* /tmp/.* 2>/dev/null || true
+    # cleanup build
+    shDockerBuildCleanup
 )}
 
 shBuildPrint() {
@@ -228,10 +226,25 @@ shDocApiCreate() {(set -e
     shBrowserTest
 )}
 
+shDockerBuildCleanup() {(set -e
+# this function will cleanup the docker build
+    rm -fr \
+        "$HOME/.npm" \
+        /tmp/.* \
+        /tmp/* \
+        /var/cache/apt \
+        /var/lib/apt/lists \
+        /var/log/.* \
+        /var/log/* \
+        /var/tmp/.* \
+        /var/tmp/* \
+        2>/dev/null || true
+)}
+
 shDockerCopyDirFromContainer() {(set -e
 # http://stackoverflow.com/questions/25292198
 # /docker-how-can-i-copy-a-file-from-an-image-to-a-host
-# this function will copy the $DIR_FROM from the docker image $IMAGE to $DIR_TO
+# this function will copy the $DIR_FROM from the docker $CONTAINER to $DIR_TO
     DIR_FROM="$1"
     DIR_TO="$2"
     CONTAINER="$3"
@@ -241,7 +254,7 @@ shDockerCopyDirFromContainer() {(set -e
 shDockerCopyDirFromImage() {(set -e
 # http://stackoverflow.com/questions/25292198
 # /docker-how-can-i-copy-a-file-from-an-image-to-a-host
-# this function will copy the $DIR_FROM from the docker image $IMAGE to $DIR_TO
+# this function will copy the $DIR_FROM from the docker $IMAGE to $DIR_TO
     DIR_FROM="$1"
     DIR_TO="$2"
     IMAGE="$3"
@@ -368,9 +381,15 @@ shDockerRestartTransmission() {(set -e
 )}
 
 shDockerRm() {(set -e
-# this function will stop and rm the docker-container $IMAGE:$NAME
+# this function will stop and rm the docker-containers $@
     docker stop "$@" || true
     docker rm -v "$@" || true
+)}
+
+shDockerRmSince() {(set -e
+# this function will stop and rm all docker-containers since $NAME
+    NAME="$1"
+    shDockerRm $(docker ps -aq --since="$NAME")
 )}
 
 shDockerRmAll() {(set -e
@@ -384,7 +403,7 @@ shDockerRmiUntagged() {(set -e
 )}
 
 shDockerSh() {(set -e
-# this function will run /bin/bash in the docker-container $image:$name
+# this function will run /bin/bash in the docker-container $NAME
     # http://www.gnu.org/software/bash/manual/html_node/Shell-Parameter-Expansion.html
     COMMAND="${2-/bin/bash}"
     NAME="$1"
@@ -420,6 +439,34 @@ shDsStoreRm() {(set -e
 shDuList() {(set -e
 # this function will run du, and create a list of all child dir in $1 sorted by size
     du -ms $1/* | sort -nr
+)}
+
+shEmscriptenInit() {
+# this function will init emscripten
+    export PATH_EMSCRIPTEN="/emsdk:\
+/emsdk/clang/fastcomp/build_master_64/bin:\
+/emsdk/emscripten/master:\
+/emsdk/node/4.1.1_64bit/bin"
+    export PATH="$PATH_EMSCRIPTEN:$PATH"
+    emsdk activate
+}
+
+shFileTrimLeft() {(set -e
+# this function will inline trimLeft the $FILE
+    FILE="$1"
+    node -e "
+        'use strict';
+        require('fs').writeFileSync(
+            '$FILE',
+            require('fs').readFileSync('$FILE', 'utf8').trimLeft()
+        );
+        process.stdout.write('$FILE');
+    "
+)}
+
+shGitDiffNameStatus() {(set -e
+# this function will only show the name-status of git diff $@
+    git diff --name-status $@
 )}
 
 shGitGc() {(set -e
@@ -923,6 +970,11 @@ shJsonFilePrettify() {(set -e
 
 shMountData() {(set -e
 # this function will mount $1 to /mnt/data, and is intended for aws-ec2 setup
+# $ shMountData /dev/sdc
+# /dev/sdc /mnt/data ext4 defaults,noatime 0 0
+# /mnt/data /root none bind
+# /mnt/data/tmp /tmp none bind
+# /mnt/data/var.lib.docker /var/lib/docker none bind
     # mount data $1
     mkdir -p /mnt/data
     mount "$1" /mnt/data -o noatime || true
@@ -986,6 +1038,7 @@ shNpmTestPublished() {(set -e
     # https://github.com/npm/npm/issues/10686
     # bug workaround - Cannot read property 'target' of null #10686
     sed -in -e 's/ "_requiredBy":/ "_requiredBy_":/' package.json
+    # npm install
     npm install
     # npm-test package
     npm test
@@ -995,31 +1048,33 @@ shReadmeBuild() {(set -e
 # this function will run the internal build-script embedded in README.md
 # init $npm_config_dir_build
     mkdir -p "$npm_config_dir_build/coverage.html"
+    # export scripts from README.md
+    shReadmeExportScripts
     # run shell script from README.md
     export MODE_BUILD=build
-    shReadmeTestSh "$npm_config_dir_tmp/build.sh"
+    shReadmeTestSh "$npm_config_dir_tmp/README.build.sh"
 )}
 
-shReadmeExportFile() {(set -e
-# this function will extract and save the script $1 embedded in README.md to $2
+shReadmeExportScripts() {(set -e
+# this function will extract and save the scripts embedded in README.md to tmp/
+    mkdir -p tmp
     node -e "
         'use strict';
-        require('fs').writeFileSync(
-            '$2',
-            require('fs')
-                .readFileSync('$CWD/README.md', 'utf8')
-                // support syntax-highlighting
-                .replace((/[\\S\\s]+?\n.*?$1\s*?\`\`\`\\w*?\n/), function (match0) {
+        require('fs').readFileSync('README.md', 'utf8').replace(
+            // support syntax-highlighting
+            (/\`\`\`\\w*?(\n[\\S\\s]*?(\w.*?)[\n\"][\\S\\s]+?)\n\`\`\`/g),
+            function (match0, match1, match2, ii, text) {
+                require('fs').writeFileSync(
+                    'tmp/README.' + match2,
                     // preserve lineno
-                    return '$MODE_LINENO' === '0'
-                        ? ''
-                        : match0.replace((/.+/g), '');
-                })
-                .replace((/\n\`\`\`[\\S\\s]+/), '')
-                // parse '\' line-continuation
-                .replace((/(?:.*\\\\\n)+.*/g), function (match0) {
-                    return match0.replace((/\\\\\n/g), '') + match0.replace((/.+/g), '');
-                })
+                    text.slice(0, ii).replace((/.+/g), '') + match1
+                        // parse '\' line-continuation
+                        .replace((/(?:.*\\\\\n)+.*/g), function (match0) {
+                            return match0.replace((/\\\\\n/g), '') +
+                                match0.replace((/.+/g), '');
+                        })
+                );
+            }
         );
     "
 )}
@@ -1036,7 +1091,7 @@ shReadmeTestJs() {(set -e
     # cd /tmp/app
     cd /tmp/app
     # read and parse js script from README.md
-    shReadmeExportFile "$FILE" "$FILE"
+    cp "$npm_config_dir_tmp/README.$FILE" "$FILE"
     # jslint $FILE
     if [ "$MODE_OFFLINE" = "" ] && [ "$npm_config_mode_jslint" != 0 ]
     then
@@ -1076,7 +1131,7 @@ shReadmeTestSh() {(set -e
         cd /tmp/app
     fi
     # read and parse script from README.md
-    shReadmeExportFile "$FILE_BASENAME" "$FILE"
+    cp "$npm_config_dir_tmp/README.$FILE_BASENAME" "$FILE"
     # display file
     node -e "
         'use strict';
@@ -1216,7 +1271,8 @@ shTravisEncrypt() {(set -e
     # get public rsa key from https://api.travis-ci.org/repos/<owner>/<repo>/key
     curl -s "https://api.travis-ci.org/repos/$GITHUB_REPO/key" | \
         sed -n \
-            -e "s/.*\(-----BEGIN PUBLIC KEY-----.*-----END PUBLIC KEY-----\).*/\\1/" \
+            -e "s/.*-----BEGIN [RSA ]*PUBLIC KEY-----\(.*\)-----END [RSA ]*PUBLIC KEY-----.*/\
+-----BEGIN PUBLIC KEY-----\\1-----END PUBLIC KEY-----/" \
             -e "s/\\\\n/%/gp" | \
         tr "%" "\n" > \
         "$npm_config_file_tmp"

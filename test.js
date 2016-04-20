@@ -266,16 +266,16 @@
             onParallel.counter += 1;
             // test /test.body handling-behavior
             onParallel.counter += 1;
-            ['', 'buffer', 'response', 'text'].forEach(function (responseType) {
+            ['', 'arraybuffer', 'stream', 'text'].forEach(function (responseType) {
                 local.utility2.ajax({
-                    data: responseType === 'buffer'
+                    data: responseType === 'arraybuffer'
                         // test buffer post handling-behavior
                         ? local.utility2.bufferCreate('hello')
                         // test string post handling-behavior
                         : 'hello',
                     method: 'POST',
                     // test nodejs response handling-behavior
-                    responseType: responseType === 'response' && local.modeJs === 'node'
+                    responseType: responseType === 'stream' && local.modeJs === 'node'
                         ? responseType
                         : '',
                     url: '/test.body'
@@ -288,8 +288,8 @@
                         );
                         // validate response
                         switch (responseType) {
-                        case 'buffer':
-                        case 'response':
+                        case 'arraybuffer':
+                        case 'stream':
                             // cleanup response
                             local.utility2.requestResponseCleanup(null, xhr.response);
                             // validate response
@@ -297,6 +297,7 @@
                             local.utility2.assert(options.data, options);
                             break;
                         default:
+                            // validate response
                             options.data = xhr.responseText;
                             local.utility2.assert(options.data === 'hello', options);
                         }

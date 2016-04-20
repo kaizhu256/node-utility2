@@ -13,12 +13,12 @@ run dynamic browser tests with coverage (via istanbul and electron)
 - add server stress test using electron
 - none
 
-#### change since 20d9678e
-- npm publish 2016.2.2
-- remove modeJson and responseJSON properties from utility2.ajax request
-- add function utility2.bufferCreateIfNotBuffer
-- cover example.js
-- add class utility2.Blob to emulate multipart/form-data file-upload in nodejs
+#### change since 72ef9e05
+- npm publish 2016.3.1
+- build and push docker images in travis
+- replace shell function shReadmeExportFile with shReadmeExportScripts
+- add shell function shFileTrimLeft
+- rename utility2.ajax's options.responseType 'response' to 'stream'
 - none
 
 #### this package requires
@@ -66,7 +66,6 @@ run dynamic browser tests with coverage (via istanbul and electron)
 # quickstart interactive example
 #### to run this example, follow the instruction in the script below
 - example.sh
-
 ```shell
 # example.sh
 
@@ -102,7 +101,6 @@ shExampleSh
 
 #### to run this example, follow the instruction in the script below
 - example.js
-
 ```javascript
 /*
 example.js
@@ -438,6 +436,7 @@ window.testRun({});\n\
 # package.json
 ```json
 {
+    "package.json": true,
     "author": "kai zhu <kaizhu256@gmail.com>",
     "bin": {
         "utility2": "index.sh",
@@ -448,7 +447,7 @@ window.testRun({});\n\
     },
     "description": "run dynamic browser tests with coverage (via istanbul and electron)",
     "devDependencies": {
-        "electron-lite": "2015.12.4"
+        "electron-lite": "2016.3.2"
     },
     "engines": { "node": ">=4.0" },
     "keywords": [
@@ -473,21 +472,26 @@ window.testRun({});\n\
     },
     "scripts": {
         "build-ci": "./index.sh shRun shReadmeBuild",
-        "build-doc": "export MODE_LINENO=0 && \
-./index.sh shRun shReadmeExportFile package.json package.json && \
+        "build-doc": ". ./index.sh && \
+shReadmeExportScripts && \
+cp $(shFileTrimLeft tmp/README.package.json) package.json && \
 ./index.sh shRun shDocApiCreate \"module.exports={ \
 exampleFileList:['README.md','test.js','index.js', \
 'lib.bcrypt.js','lib.cryptojs.js','lib.istanbul.js','lib.jslint.js','lib.uglifyjs.js'], \
 moduleDict:{ \
 utility2:{exports:require('./index.js')}, \
-'utility2.bcrypt':{aliasList:['bcrypt','local'],exports:require('./index.js').bcrypt}, \
-'utility2.cryptojs':{aliasList:['cryptojs','local'],exports:require('./index.js').cryptojs}, \
-'utility2.istanbul':{aliasList:['istanbul','local'],exports:require('./index.js').istanbul}, \
-'utility2.jslint':{aliasList:['jslint','local'],exports:require('./index.js').jslint}, \
+'utility2.Blob':{aliasList:['Blob','local'], \
+exports:require('./index.js').Blob}, \
+'utility2.Blob.prototype':{aliasList:['data'], \
+exports:require('./index.js').Blob.prototype}, \
 'utility2.FormData':{aliasList:['FormData','local'], \
 exports:require('./index.js').FormData}, \
 'utility2.FormData.prototype':{aliasList:['data'], \
 exports:require('./index.js').FormData.prototype}, \
+'utility2.bcrypt':{aliasList:['bcrypt','local'],exports:require('./index.js').bcrypt}, \
+'utility2.cryptojs':{aliasList:['cryptojs','local'],exports:require('./index.js').cryptojs}, \
+'utility2.istanbul':{aliasList:['istanbul','local'],exports:require('./index.js').istanbul}, \
+'utility2.jslint':{aliasList:['jslint','local'],exports:require('./index.js').jslint}, \
 'utility2.uglifyjs':{aliasList:['uglifyjs','local'],exports:require('./index.js').uglifyjs} \
 } \
 }\"",
@@ -495,14 +499,15 @@ exports:require('./index.js').FormData.prototype}, \
         "start": "export PORT=${PORT:-8080} && \
 export npm_config_mode_auto_restart=1 && \
 ./index.sh shRun shIstanbulCover node test.js",
-        "test": "export MODE_LINENO=0 && \
-./index.sh shRun shReadmeExportFile package.json package.json && \
+        "test": ". ./index.sh && \
+shReadmeExportScripts && \
+cp $(shFileTrimLeft tmp/README.package.json) package.json && \
 export PORT=$(./index.sh shServerPortRandom) && \
 export npm_config_mode_auto_restart=1 && \
 ./index.sh test node test.js",
         "test-published": "./index.sh shRun shNpmTestPublished"
     },
-    "version": "2016.2.2"
+    "version": "2016.3.1"
 }
 ```
 
@@ -514,8 +519,115 @@ export npm_config_mode_auto_restart=1 && \
 
 
 # internal build-script
-- build.sh
+- Dockerfile.base
+```shell
+# Dockerfile.base
+# https://hub.docker.com/_/node/
+FROM node:5.10.1
+MAINTAINER kai zhu <kaizhu256@gmail.com>
+# chdir
+WORKDIR /tmp
+# copy index.sh
+COPY ["index.sh", "/index.sh"]
+# apt-get install packages
+RUN . /index.sh && \
+    apt-get update && \
+    apt-get install -y \
+        busybox \
+        chromium \
+        gconf2 \
+        less \
+        libnotify4 \
+        vim \
+        xvfb && \
+    shDockerBuildCleanup
+# cache electron-lite
+RUN . /index.sh && \
+    npm install electron-lite && \
+    cp /tmp/electron-*.zip / && \
+    shDockerBuildCleanup
+# npm test utility2
+RUN . /index.sh && \
+    npm install utility2 && \
+    cd node_modules/utility2 && \
+    shBuildInsideDocker
+# npm test utility2#alpha
+RUN . /index.sh && \
+    npm install "kaizhu256/node-utility2#alpha" && \
+    cd node_modules/utility2 && \
+    shBuildInsideDocker
+```
 
+- Dockerfile.build
+```shell
+# Dockerfile.build
+FROM kaizhu256/node-utility2:base
+MAINTAINER kai zhu <kaizhu256@gmail.com>
+# apt-get install packages
+RUN . /index.sh && \
+    apt-get update && \
+    apt-get install -y \
+        build-essential \
+        cmake \
+        default-jre && \
+    apt-get clean && \
+    shDockerBuildCleanup
+```
+
+- Dockerfile.emscripten.base
+```shell
+# Dockerfile.emscripten.base
+FROM debian:latest
+MAINTAINER kai zhu <kaizhu256@gmail.com>
+# apt-get install packages
+# https://kripken.github.io/emscripten-site/docs
+# /building_from_source/building_emscripten_from_source_using_the_sdk.html
+# build emsdk @ 1.36.0
+RUN apt-get update && \
+    APT_PACKAGE_LIST="\
+        build-essential \
+        cmake \
+        default-jre \
+        git \
+        python \
+    " && \
+    apt-get install -y $APT_PACKAGE_LIST && \
+    apt-get clean && \
+    (rm -fr \
+        /tmp/* \
+        /tmp/.* \
+        /var/lib/apt/lists/* \
+        /var/lib/apt/lists/.* \
+        /var/tmp/* \
+        /var/tmp/.* \
+        2>/dev/null || true) && \
+    cd / && \
+    git clone https://github.com/juj/emsdk.git --branch=master --single-branch && \
+    cd /emsdk && \
+    ./emsdk install -j2 sdk-master-64bit && \
+    find . -name ".git" -print0 | xargs -0 rm -fr && \
+    find . -name "src" -print0 | xargs -0 rm -fr && \
+    apt-get purge -y --auto-remove $APT_PACKAGE_LIST $(apt-mark showauto)
+# chdir
+WORKDIR /emsdk
+```
+
+- Dockerfile.utility2
+```shell
+# Dockerfile.utility2
+FROM kaizhu256/node-utility2:base
+MAINTAINER kai zhu <kaizhu256@gmail.com>
+# copy app to docker container
+COPY ["./", "/usr/src/app"]
+# chdir
+WORKDIR /usr/src/app
+# run build
+RUN ./index.sh shBuildInsideDocker
+# docker run --name utility2 -dt -p 8080:8080 kaizhu256/node-utility2:alpha
+CMD ["/bin/bash", "-c", "npm start --mode-docker"]
+```
+
+- build.sh
 ```shell
 # build.sh
 
@@ -525,7 +637,7 @@ shBuildCiTestPre() {(set -e
 # this function will run the pre-test build
     # test example js script
     (export MODE_BUILD=testExampleJs &&
-        export MODE_LINENO=0 &&
+        shFileTrimLeft tmp/README.example.js &&
         shRunScreenCapture shReadmeTestJs example.js)
     # screen-capture example.js coverage
     (export MODE_BUILD=testExampleJs &&
@@ -551,13 +663,6 @@ shBuildCiTestPost() {(set -e
 # this function will run the post-test build
     # if running legacy-node, then exit
     [ "$(node --version)" \< "v5.0" ] && exit || true
-    # if branch is not alpha, beta, or master, then exit
-    if !([ "$CI_BRANCH" = alpha ] ||
-        [ "$CI_BRANCH" = beta ] ||
-        [ "$CI_BRANCH" = master ])
-    then
-        exit
-    fi
     TEST_URL="https://$(printf "$GITHUB_REPO" | \
         sed 's/\//.github.io\//')/build..$CI_BRANCH..travis-ci.org/app/index.html"
     # deploy app to gh-pages
@@ -580,8 +685,40 @@ shBuild() {
     # export BUILD_GITHUB_UPLOAD_PRE_SH="rm -fr build"
     # init github-gh-pages commit-limit
     export COMMIT_LIMIT=16
-    # run default build
-    shBuildCiDefault
+    # if branch is alpha, beta, or master, then run default build
+    if [ "$CI_BRANCH" = alpha ] ||
+        [ "$CI_BRANCH" = beta ] ||
+        [ "$CI_BRANCH" = master ]
+    then
+        shBuildCiDefault
+    fi
+    # if running legacy-node, then exit
+    [ "$(node --version)" \< "v5.0" ] && exit || true
+    # docker init
+    case "$CI_BRANCH" in
+    alpha)
+        export DOCKER_TAG=alpha
+        cp tmp/README.Dockerfile.utility2 "tmp/README.Dockerfile.$DOCKER_TAG"
+        ;;
+    beta)
+        export DOCKER_TAG=latest
+        cp tmp/README.Dockerfile.utility2 "tmp/README.Dockerfile.$DOCKER_TAG"
+        ;;
+    *)
+        export DOCKER_TAG="$(printf "$CI_BRANCH" | sed -e "s/docker.//")"
+        # if $DOCKER_TAG is not unique from $CI_BRANCH, then exit
+        [ "$DOCKER_TAG" = "$CI_BRANCH" ] && exit || true
+        ;;
+    esac
+    # docker build
+    docker build -f "tmp/README.Dockerfile.$DOCKER_TAG" -t "$GITHUB_REPO:$DOCKER_TAG" .
+    # https://docs.travis-ci.com/user/docker/#Pushing-a-Docker-Image-to-a-Registry
+    # docker push
+    if [ "$DOCKER_PASSWORD" ]
+    then
+        docker login -e="$DOCKER_EMAIL" -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
+        docker push "$GITHUB_REPO:$DOCKER_TAG"
+    fi
 }
 shBuild
 ```

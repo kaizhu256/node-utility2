@@ -1,4 +1,5 @@
 {
+    "package.json": true,
     "author": "kai zhu <kaizhu256@gmail.com>",
     "bin": {
         "utility2": "index.sh",
@@ -9,7 +10,7 @@
     },
     "description": "run dynamic browser tests with coverage (via istanbul and electron)",
     "devDependencies": {
-        "electron-lite": "2015.12.4"
+        "electron-lite": "2016.3.2"
     },
     "engines": { "node": ">=4.0" },
     "keywords": [
@@ -34,7 +35,12 @@
     },
     "scripts": {
         "build-ci": "./index.sh shRun shReadmeBuild",
-        "build-doc": "export MODE_LINENO=0 && ./index.sh shRun shReadmeExportFile package.json package.json && ./index.sh shRun shDocApiCreate \"module.exports={ exampleFileList:['README.md','test.js','index.js', 'lib.bcrypt.js','lib.cryptojs.js','lib.istanbul.js','lib.jslint.js','lib.uglifyjs.js'], moduleDict:{ utility2:{exports:require('./index.js')}, 'utility2.bcrypt':{aliasList:['bcrypt','local'],exports:require('./index.js').bcrypt}, 'utility2.cryptojs':{aliasList:['cryptojs','local'],exports:require('./index.js').cryptojs}, 'utility2.istanbul':{aliasList:['istanbul','local'],exports:require('./index.js').istanbul}, 'utility2.jslint':{aliasList:['jslint','local'],exports:require('./index.js').jslint}, 'utility2.FormData':{aliasList:['FormData','local'], exports:require('./index.js').FormData}, 'utility2.FormData.prototype':{aliasList:['data'], exports:require('./index.js').FormData.prototype}, 'utility2.uglifyjs':{aliasList:['uglifyjs','local'],exports:require('./index.js').uglifyjs} } }\"",
+        "build-doc": ". ./index.sh && shReadmeExportScripts && cp $(shFileTrimLeft tmp/README.package.json) package.json && ./index.sh shRun shDocApiCreate \"module.exports={ exampleFileList:['README.md','test.js','index.js', 'lib.bcrypt.js','lib.cryptojs.js','lib.istanbul.js','lib.jslint.js','lib.uglifyjs.js'], moduleDict:{ utility2:{exports:require('./index.js')}, 'utility2.Blob':{aliasList:['Blob','local'], exports:require('./index.js').Blob}, 'utility2.Blob.prototype':{aliasList:['data'], exports:require('./index.js').Blob.prototype}, 'utility2.FormData':{aliasList:['FormData','local'], exports:require('./index.js').FormData}, 'utility2.FormData.prototype':{aliasList:['data'], exports:require('./index.js').FormData.prototype}, 'utility2.bcrypt':{aliasList:['bcrypt','local'],exports:require('./index.js').bcrypt}, 'utility2.cryptojs':{aliasList:['cryptojs','local'],exports:require('./index.js').cryptojs}, 'utility2.istanbul':{aliasList:['istanbul','local'],exports:require('./index.js').istanbul}, 'utility2.jslint':{aliasList:['jslint','local'],exports:require('./index.js').jslint}, 'utility2.uglifyjs':{aliasList:['uglifyjs','local'],exports:require('./index.js').uglifyjs} } }\"",
+
+
+
+
+
 
 
 
@@ -56,12 +62,13 @@
         "start": "export PORT=${PORT:-8080} && export npm_config_mode_auto_restart=1 && ./index.sh shRun shIstanbulCover node test.js",
 
 
-        "test": "export MODE_LINENO=0 && ./index.sh shRun shReadmeExportFile package.json package.json && export PORT=$(./index.sh shServerPortRandom) && export npm_config_mode_auto_restart=1 && ./index.sh test node test.js",
+        "test": ". ./index.sh && shReadmeExportScripts && cp $(shFileTrimLeft tmp/README.package.json) package.json && export PORT=$(./index.sh shServerPortRandom) && export npm_config_mode_auto_restart=1 && ./index.sh test node test.js",
+
 
 
 
 
         "test-published": "./index.sh shRun shNpmTestPublished"
     },
-    "version": "2016.2.2"
+    "version": "2016.3.1"
 }

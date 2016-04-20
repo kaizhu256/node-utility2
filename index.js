@@ -96,6 +96,13 @@
             : require('./lib.uglifyjs.js');
         // init templates
 /* jslint-ignore-begin */
+// http://www.w3.org/TR/html5/forms.html
+local.utility2.regexpEmailValidate = (
+/^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/
+);
+
+
+
 // https://img.shields.io/badge/last_build-0000_00_00_00_00_00_UTC_--_master_--_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-0077ff.svg?style=flat
 local.utility2.templateBuildBadgeSvg =
 '<svg xmlns="http://www.w3.org/2000/svg" width="563" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="563" height="20" fill="#555"/><rect rx="0" x="61" width="502" height="20" fill="#07f"/><path fill="#07f" d="M61 0h4v20h-4z"/><rect rx="0" width="563" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="31.5" y="15" fill="#010101" fill-opacity=".3">last build</text><text x="31.5" y="14">last build</text><text x="311" y="15" fill="#010101" fill-opacity=".3">0000-00-00 00:00:00 UTC - master - aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</text><text x="311" y="14">0000-00-00 00:00:00 UTC - master - aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</text></g></svg>';
@@ -581,7 +588,8 @@ local.utility2.templateTestReportHtml = '\
             }
             this.error = error;
             this.response = data;
-            if (data && data !== this.responseStream) {
+            // init responseText
+            if (!this.responseType || this.responseType === 'text') {
                 this.responseText = local.utility2.bufferToString(data);
             }
             // update xhr
@@ -609,7 +617,7 @@ local.utility2.templateTestReportHtml = '\
             this.onreadystatechange();
             this.readyState = 3;
             this.onreadystatechange();
-            if (this.responseType === 'response') {
+            if (this.responseType === 'stream') {
                 this.onError(null, this.responseStream);
                 return;
             }
@@ -1145,15 +1153,16 @@ local.utility2.templateTestReportHtml = '\
                     local.utility2.fsMkdirpSync(local.utility2.envDict.npm_config_dir_build);
                     local.fs.writeFileSync(options.urlBrowser, '<style>body {' +
                             'border: 1px solid black;' +
-                            'margin: 0px;' +
-                            'overflow: hidden;' +
+                            'margin: 0;' +
+                            'padding: 0;' +
                         '}</style>' +
-                        '<webview id=webview src="' +
+                        '<webview id=webview1 src="' +
                         options.url.replace('{{timeExit}}', options.timeExit) +
                         '" style="' +
-                            'display: inline-block;' +
+                            'border: none;' +
                             'height: 100%;' +
-                            'overflow: hidden;' +
+                            'margin: 0;' +
+                            'padding: 0;' +
                             'width: 100%;' +
                         '"></webview>' +
                         '<script>window.local = {}; (' + local.utility2.browserTest
@@ -1269,11 +1278,11 @@ local.utility2.templateTestReportHtml = '\
                 // run electron-browser code
                 case 21:
                     options.fs = require('fs');
-                    options.webview = document.querySelector('#webview');
-                    options.webview.addEventListener('did-get-response-details', function () {
+                    options.webview1 = document.querySelector('#webview1');
+                    options.webview1.addEventListener('did-get-response-details', function () {
                         document.title = 'opened ' + location.href;
                     });
-                    options.webview.addEventListener('console-message', function (event) {
+                    options.webview1.addEventListener('console-message', function (event) {
                         try {
                             options.global_test_results = event.message
                                 .indexOf('{"global_test_results":{') === 0 &&
@@ -1561,6 +1570,9 @@ local.utility2.templateTestReportHtml = '\
                 return element;
             };
             trimLeft = function (text) {
+                /*
+                 * this function will normalize the whitespace around the text
+                 */
                 var tmp;
                 tmp = '';
                 text.trim().replace((/^ */gm), function (match0) {
@@ -2116,9 +2128,10 @@ local.utility2.templateTestReportHtml = '\
             ['end', 'write'].forEach(function (key) {
                 response['_' + key] = response['_' + key] || response[key];
                 response[key] = function () {
-                    /* jslint-ignore-next-line */
-                    arguments[0] = local.utility2.bufferToNodeBuffer(arguments[0]);
-                    response['_' + key].apply(response, arguments);
+                    var args;
+                    args = Array.prototype.slice.call(arguments);
+                    args[0] = local.utility2.bufferToNodeBuffer(args[0]);
+                    response['_' + key].apply(response, args);
                 };
             });
             // default to nextMiddleware
@@ -3588,9 +3601,6 @@ local.utility2.templateTestReportHtml = '\
             ? {}
             : process.env;
         local.utility2.errorDefault = new Error('default error');
-        // http://www.w3.org/TR/html5/forms.html
-        /* jslint-ignore-next-line */
-        local.utility2.regexpEmailValidate = (/^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/);
         local.utility2.regexpUriComponentCharset = (/[\w\!\%\'\(\)\*\-\.\~]/);
         local.utility2.regexpUuidValidate =
             (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
