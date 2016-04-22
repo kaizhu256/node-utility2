@@ -1,6 +1,6 @@
 utility2
 ========
-run dynamic browser tests with coverage (via istanbul and electron)
+this package will run dynamic browser tests with coverage (via istanbul and electron)
 
 [![NPM](https://img.shields.io/npm/v/utility2.svg?style=flat-square)](https://www.npmjs.com/package/utility2) [![NPM](https://img.shields.io/npm/dm/utility2.svg?style=flat-square)](https://www.npmjs.com/package/utility2)
 
@@ -13,12 +13,10 @@ run dynamic browser tests with coverage (via istanbul and electron)
 - add server stress test using electron
 - none
 
-#### change since 72ef9e05
-- npm publish 2016.3.1
-- build and push docker images in travis
-- replace shell function shReadmeExportFile with shReadmeExportScripts
-- add shell function shFileTrimLeft
-- rename utility2.ajax's options.responseType 'response' to 'stream'
+#### change since 88a5117e
+- npm publish 2016.3.2
+- merge various docker builds into alpha branch
+- replace $CWD and $(pwd) with $PWD in index.sh
 - none
 
 #### this package requires
@@ -445,9 +443,10 @@ window.testRun({});\n\
         "utility2-jslint": "lib.jslint.js",
         "utility2-uglifyjs": "lib.uglifyjs.js"
     },
-    "description": "run dynamic browser tests with coverage (via istanbul and electron)",
+    "description": "this package will run dynamic browser tests with coverage \
+(via istanbul and electron)",
     "devDependencies": {
-        "electron-lite": "2016.3.2"
+        "electron-lite": "2016.3.3"
     },
     "engines": { "node": ">=4.0" },
     "keywords": [
@@ -507,7 +506,7 @@ export npm_config_mode_auto_restart=1 && \
 ./index.sh test node test.js",
         "test-published": "./index.sh shRun shNpmTestPublished"
     },
-    "version": "2016.3.1"
+    "version": "2016.3.2"
 }
 ```
 
@@ -515,116 +514,57 @@ export npm_config_mode_auto_restart=1 && \
 
 # changelog of last 50 commits
 [![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.gitLog.svg)](https://github.com/kaizhu256/node-utility2/commits)
+```
 
-
-
-# internal build-script
-- Dockerfile.base
+- Dockerfile.emscripten
 ```shell
-# Dockerfile.base
-# https://hub.docker.com/_/node/
-FROM node:5.10.1
+# Dockerfile.emscripten
+# docker build -f tmp/README.Dockerfile.emscripten -t emscripten .
+FROM kaizhu256/node-utility2:latest
 MAINTAINER kai zhu <kaizhu256@gmail.com>
-# chdir
+# https://kripken.github.io/emscripten-site/docs
+# /building_from_source/building_emscripten_from_source_using_the_sdk.html
+# build emscripten @ 1.36.0
+RUN cd / && \
+    git clone https://github.com/juj/emsdk.git --branch=master --single-branch && \
+    cd /emsdk && \
+    ./emsdk install -j2 --shallow sdk-master-64bit && \
+    ./emsdk activate && \
+    find . -name ".git" -print0 | xargs -0 rm -fr && \
+    find . -name "src" -print0 | xargs -0 rm -fr
+```
+
+- Dockerfile.latest
+```shell
+# Dockerfile.latest
+# https://hub.docker.com/_/node/
+FROM node:latest
+MAINTAINER kai zhu <kaizhu256@gmail.com>
+VOLUME [ \
+  "/mnt", \
+  "/root", \
+  "/tmp", \
+  "/var/cache", \
+  "/var/lib/apt/lists", \
+  "/var/log", \
+  "/var/tmp" \
+]
 WORKDIR /tmp
-# copy index.sh
-COPY ["index.sh", "/index.sh"]
-# apt-get install packages
-RUN . /index.sh && \
-    apt-get update && \
+# cache apt-get
+RUN apt-get update && \
     apt-get install -y \
         busybox \
         chromium \
+        cmake \
+        default-jre \
         gconf2 \
         less \
         libnotify4 \
         vim \
-        xvfb && \
-    shDockerBuildCleanup
+        xvfb
 # cache electron-lite
-RUN . /index.sh && \
-    npm install electron-lite && \
-    cp /tmp/electron-*.zip / && \
-    shDockerBuildCleanup
-# npm test utility2
-RUN . /index.sh && \
-    npm install utility2 && \
-    cd node_modules/utility2 && \
-    shBuildInsideDocker
-# npm test utility2#alpha
-RUN . /index.sh && \
-    npm install "kaizhu256/node-utility2#alpha" && \
-    cd node_modules/utility2 && \
-    shBuildInsideDocker
-```
-
-- Dockerfile.build
-```shell
-# Dockerfile.build
-FROM kaizhu256/node-utility2:base
-MAINTAINER kai zhu <kaizhu256@gmail.com>
-# apt-get install packages
-RUN . /index.sh && \
-    apt-get update && \
-    apt-get install -y \
-        build-essential \
-        cmake \
-        default-jre && \
-    apt-get clean && \
-    shDockerBuildCleanup
-```
-
-- Dockerfile.emscripten.base
-```shell
-# Dockerfile.emscripten.base
-FROM debian:latest
-MAINTAINER kai zhu <kaizhu256@gmail.com>
-# apt-get install packages
-# https://kripken.github.io/emscripten-site/docs
-# /building_from_source/building_emscripten_from_source_using_the_sdk.html
-# build emsdk @ 1.36.0
-RUN apt-get update && \
-    APT_PACKAGE_LIST="\
-        build-essential \
-        cmake \
-        default-jre \
-        git \
-        python \
-    " && \
-    apt-get install -y $APT_PACKAGE_LIST && \
-    apt-get clean && \
-    (rm -fr \
-        /tmp/* \
-        /tmp/.* \
-        /var/lib/apt/lists/* \
-        /var/lib/apt/lists/.* \
-        /var/tmp/* \
-        /var/tmp/.* \
-        2>/dev/null || true) && \
-    cd / && \
-    git clone https://github.com/juj/emsdk.git --branch=master --single-branch && \
-    cd /emsdk && \
-    ./emsdk install -j2 sdk-master-64bit && \
-    find . -name ".git" -print0 | xargs -0 rm -fr && \
-    find . -name "src" -print0 | xargs -0 rm -fr && \
-    apt-get purge -y --auto-remove $APT_PACKAGE_LIST $(apt-mark showauto)
-# chdir
-WORKDIR /emsdk
-```
-
-- Dockerfile.utility2
-```shell
-# Dockerfile.utility2
-FROM kaizhu256/node-utility2:base
-MAINTAINER kai zhu <kaizhu256@gmail.com>
-# copy app to docker container
-COPY ["./", "/usr/src/app"]
-# chdir
-WORKDIR /usr/src/app
-# run build
-RUN ./index.sh shBuildInsideDocker
-# docker run --name utility2 -dt -p 8080:8080 kaizhu256/node-utility2:alpha
-CMD ["/bin/bash", "-c", "npm start --mode-docker"]
+RUN npm install electron-lite && \
+    cp /tmp/electron-*.zip /
 ```
 
 - build.sh
@@ -674,11 +614,15 @@ shBuildCiTestPost() {(set -e
         export npm_config_file_test_report_merge="$npm_config_dir_build/test-report.json" &&
         export url="$TEST_URL?modeTest=consoleLogResult&timeExit={{timeExit}}" &&
         shBrowserTest)
+    # docker build
+    if [ "$TRAVIS" ] && [ "$CI_BRANCH" = alpha ]
+    then
+        (CI_BRANCH=docker.latest npm run build-ci)
+    fi
 )}
 
-shBuild() {
+shBuild() {(set -e
 # this function will run the main build
-    set -e
     # init env
     . ./index.sh && shInit
     # cleanup github-gh-pages dir
@@ -692,26 +636,37 @@ shBuild() {
     then
         shBuildCiDefault
     fi
+    docker --version 2>/dev/null || exit
     # if running legacy-node, then exit
-    [ "$(node --version)" \< "v5.0" ] && exit || true
-    # docker init
+    [ "$TRAVIS" ] && [ "$(node --version)" \< "v5.0" ] && exit || true
+    export DOCKER_TAG="$(printf "$CI_BRANCH" | sed -e "s/docker.//")"
+    # if $DOCKER_TAG is not unique from $CI_BRANCH, then exit
+    [ "$DOCKER_TAG" = "$CI_BRANCH" ] && exit || true
+    # docker pull
+    docker pull "$GITHUB_REPO:$DOCKER_TAG" || true
+    # docker build
+    (printf "0" > "$npm_config_file_tmp" &&
+        docker build -f "tmp/README.Dockerfile.$DOCKER_TAG" -t "$GITHUB_REPO:$DOCKER_TAG" . ||
+        printf $? > "$npm_config_file_tmp") | tee "tmp/build/build.$CI_BRANCH.log"
+    EXIT_CODE="$(cat "$npm_config_file_tmp")"
+    [ "$EXIT_CODE" != 0 ] && exit "$EXIT_CODE" || true
+    # docker test
     case "$CI_BRANCH" in
-    alpha)
-        export DOCKER_TAG=alpha
-        cp tmp/README.Dockerfile.utility2 "tmp/README.Dockerfile.$DOCKER_TAG"
-        ;;
-    beta)
-        export DOCKER_TAG=latest
-        cp tmp/README.Dockerfile.utility2 "tmp/README.Dockerfile.$DOCKER_TAG"
-        ;;
-    *)
-        export DOCKER_TAG="$(printf "$CI_BRANCH" | sed -e "s/docker.//")"
-        # if $DOCKER_TAG is not unique from $CI_BRANCH, then exit
-        [ "$DOCKER_TAG" = "$CI_BRANCH" ] && exit || true
+    docker.latest)
+        # npm test utility2
+        for PACKAGE in utility2 "kaizhu256/node-utility2#alpha"
+        do
+            docker run "$GITHUB_REPO:$DOCKER_TAG" /bin/bash -c "set -e
+                curl https://raw.githubusercontent.com\
+/kaizhu256/node-utility2/alpha/index.sh > /tmp/index.sh
+                . /tmp/index.sh
+                npm install '$PACKAGE'
+                cd node_modules/utility2
+                shBuildInsideDocker
+            "
+        done
         ;;
     esac
-    # docker build
-    docker build -f "tmp/README.Dockerfile.$DOCKER_TAG" -t "$GITHUB_REPO:$DOCKER_TAG" .
     # https://docs.travis-ci.com/user/docker/#Pushing-a-Docker-Image-to-a-Registry
     # docker push
     if [ "$DOCKER_PASSWORD" ]
@@ -719,6 +674,6 @@ shBuild() {
         docker login -e="$DOCKER_EMAIL" -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
         docker push "$GITHUB_REPO:$DOCKER_TAG"
     fi
-}
+)}
 shBuild
 ```

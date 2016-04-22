@@ -5,9 +5,8 @@ before_install:
 branches:
     only:
     - alpha
+    - docker.latest
     - beta
-    - docker.base
-    - docker.build
     - master
 env:
     global:

@@ -190,6 +190,8 @@ shBuildInsideDocker() {(set -e
     npm install
     # npm test
     npm test --mode-coverage
+    # cleanup tmp
+    rm -fr tmp
     # cleanup build
     shDockerBuildCleanup
 )}
@@ -229,7 +231,7 @@ shDocApiCreate() {(set -e
 shDockerBuildCleanup() {(set -e
 # this function will cleanup the docker build
     rm -fr \
-        "$HOME/.npm" \
+        /root/.npm \
         /tmp/.* \
         /tmp/* \
         /var/cache/apt \
@@ -241,25 +243,17 @@ shDockerBuildCleanup() {(set -e
         2>/dev/null || true
 )}
 
-shDockerCopyDirFromContainer() {(set -e
+shDockerCopyFromImage() {(set -e
 # http://stackoverflow.com/questions/25292198
 # /docker-how-can-i-copy-a-file-from-an-image-to-a-host
-# this function will copy the $DIR_FROM from the docker $CONTAINER to $DIR_TO
-    DIR_FROM="$1"
-    DIR_TO="$2"
-    CONTAINER="$3"
-    docker cp "$CONTAINER:$DIR_FROM" "$DIR_TO" || true
-)}
-
-shDockerCopyDirFromImage() {(set -e
-# http://stackoverflow.com/questions/25292198
-# /docker-how-can-i-copy-a-file-from-an-image-to-a-host
-# this function will copy the $DIR_FROM from the docker $IMAGE to $DIR_TO
-    DIR_FROM="$1"
-    DIR_TO="$2"
+# this function will copy the $FILE_FROM from the docker $IMAGE to $FILE_TO
+    FILE_FROM="$1"
+    FILE_TO="$2"
     IMAGE="$3"
+    # create $CONTAINER from $IMAGE
     CONTAINER="$(docker create "$IMAGE")"
-    docker cp "$CONTAINER:$DIR_FROM" "$DIR_TO" || true
+    docker cp "$CONTAINER:$FILE_FROM" "$FILE_TO"
+    # cleanup $CONTAINER
     docker rm -v "$CONTAINER"
 )}
 
@@ -399,13 +393,13 @@ shDockerRmAll() {(set -e
 
 shDockerRmiUntagged() {(set -e
 # this function will rm all untagged docker images
-    docker rmi $(docker images -qf dangling=true) 2>/dev/null || true
+    docker rmi $(docker images -aqf dangling=true) 2>/dev/null || true
 )}
 
 shDockerSh() {(set -e
 # this function will run /bin/bash in the docker-container $NAME
     # http://www.gnu.org/software/bash/manual/html_node/Shell-Parameter-Expansion.html
-    COMMAND="${2-/bin/bash}"
+    COMMAND="${2:-/bin/bash}"
     NAME="$1"
     docker start "$NAME"
     docker exec -it "$NAME" "$COMMAND"
@@ -728,7 +722,7 @@ shInit() {
         # init travis-ci.org env
         if [ "$TRAVIS" ]
         then
-            export CI_BRANCH="$TRAVIS_BRANCH" || return $?
+            export CI_BRANCH="${CI_BRANCH:-$TRAVIS_BRANCH}" || return $?
             export CI_COMMIT_ID="$TRAVIS_COMMIT" || return $?
             export CI_HOST=travis-ci.org || return $?
             # decrypt and exec encrypted data
@@ -738,7 +732,7 @@ shInit() {
             fi
         # init default env
         else
-            export CI_BRANCH=alpha || return $?
+            export CI_BRANCH="${CI_BRANCH:-alpha}" || return $?
             export CI_COMMIT_ID="$(git rev-parse --verify HEAD)" || return $?
             export CI_HOST=localhost || return $?
         fi
@@ -746,8 +740,6 @@ shInit() {
         export CI_COMMIT_MESSAGE="$(git log -1 --pretty=%s)" || return $?
         export CI_COMMIT_INFO="$CI_COMMIT_ID - $CI_COMMIT_MESSAGE" || return $?
     fi
-    # init $CWD
-    CWD="$(pwd)" || return $?
     # init $npm_package_*
     if [ -f package.json ]
     then
@@ -774,9 +766,9 @@ shInit() {
         export npm_package_version=undefined || return $?
     fi
     # init $npm_config_*
-    export npm_config_dir_build="$CWD/tmp/build" || return $?
-    export npm_config_dir_tmp="$CWD/tmp" || return $?
-    export npm_config_file_tmp="$CWD/tmp/tmpfile" || return $?
+    export npm_config_dir_build="$PWD/tmp/build" || return $?
+    export npm_config_dir_tmp="$PWD/tmp" || return $?
+    export npm_config_file_tmp="$PWD/tmp/tmpfile" || return $?
     # init $npm_config_dir_utility2
     shInitNpmConfigDirUtility2 || return $?
     # init $GIT_SSH
@@ -785,7 +777,7 @@ shInit() {
         export GIT_SSH="$npm_config_dir_utility2/git-ssh.sh" || return $?
     fi
     # init $PATH
-    export PATH="$CWD/node_modules/.bin:$PATH" || return $?
+    export PATH="$PWD/node_modules/.bin:$PATH" || return $?
 }
 
 shInitNpmConfigDirUtility2() {
@@ -795,7 +787,7 @@ shInitNpmConfigDirUtility2() {
     # init $npm_config_dir_utility2
     if [ "$npm_package_name" = utility2 ]
     then
-        export npm_config_dir_utility2="$CWD" || return $?
+        export npm_config_dir_utility2="$PWD" || return $?
     else
         export npm_config_dir_utility2="$(node -e "
             'use strict';
@@ -994,7 +986,7 @@ shMountData() {(set -e
 shNpmTest() {(set -e
 # this function will run npm-test with coverage and create test-report
     EXIT_CODE=0
-    shBuildPrint "${MODE_BUILD:-npmTest}" "npm-testing $CWD"
+    shBuildPrint "${MODE_BUILD:-npmTest}" "npm-testing $PWD"
     # cleanup $npm_config_dir_tmp/*.json
     rm -f "$npm_config_dir_tmp/"*.json
     # cleanup old electron pages
@@ -1115,10 +1107,6 @@ shReadmeTestJs() {(set -e
 shReadmeTestSh() {(set -e
 # this function will extract, save, and test the shell script $FILE embedded in README.md
     FILE="$1"
-    FILE_BASENAME="$(node -e "
-        'use strict';
-        console.log(require('path').basename('$FILE'));
-    ")"
     shBuildPrint "$MODE_BUILD" "testing $FILE"
     if [ "$MODE_BUILD" != "build" ]
     then
@@ -1129,9 +1117,9 @@ shReadmeTestSh() {(set -e
         fi
         # cd /tmp/app
         cd /tmp/app
+        # read and parse script from README.md
+        cp "$npm_config_dir_tmp/README.$FILE" "$FILE"
     fi
-    # read and parse script from README.md
-    cp "$npm_config_dir_tmp/README.$FILE_BASENAME" "$FILE"
     # display file
     node -e "
         'use strict';
@@ -1178,7 +1166,9 @@ shRunScreenCapture() {(set -e
     # init $npm_config_dir_build
     mkdir -p "$npm_config_dir_build/coverage.html"
     export MODE_BUILD_SCREEN_CAPTURE="screen-capture.${MODE_BUILD:-undefined}.svg"
-    (shRun "$@" 2>&1; printf $? > "$npm_config_file_tmp") | \
+    (printf "0" > "$npm_config_file_tmp" &&
+        shRun "$@" 2>&1 ||
+        printf $? > "$npm_config_file_tmp") | \
         tee "$npm_config_dir_tmp/screen-capture.txt"
     EXIT_CODE="$(cat "$npm_config_file_tmp")"
     # format text-output
