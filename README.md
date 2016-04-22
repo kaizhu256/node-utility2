@@ -13,10 +13,9 @@ this package will run dynamic browser tests with coverage (via istanbul and elec
 - add server stress test using electron
 - none
 
-#### change since 88a5117e
-- npm publish 2016.3.2
-- merge various docker builds into alpha branch
-- replace $CWD and $(pwd) with $PWD in index.sh
+#### change since 8764ff1b
+- npm publish 2016.3.3
+- fix README.md
 - none
 
 #### this package requires
@@ -506,7 +505,7 @@ export npm_config_mode_auto_restart=1 && \
 ./index.sh test node test.js",
         "test-published": "./index.sh shRun shNpmTestPublished"
     },
-    "version": "2016.3.2"
+    "version": "2016.3.3"
 }
 ```
 
@@ -514,8 +513,10 @@ export npm_config_mode_auto_restart=1 && \
 
 # changelog of last 50 commits
 [![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.gitLog.svg)](https://github.com/kaizhu256/node-utility2/commits)
-```
 
+
+
+# internal build-script
 - Dockerfile.emscripten
 ```shell
 # Dockerfile.emscripten
