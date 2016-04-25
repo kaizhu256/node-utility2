@@ -694,22 +694,29 @@ local.utility2.templateTestReportHtml = '\
         };
 
         local._http.request = function (xhr, onResponse) {
-            var serverRequest, serverResponse;
-            serverRequest = new local._http.IncomingMessage(xhr);
-            serverResponse = new local._http.ServerResponse(onResponse);
-            serverRequest.urlParsed = local.utility2.urlParse(xhr.url);
-            return {
-                end: function (data) {
-                    serverRequest.data = data;
-                    local.utility2.serverLocalRequestHandler(serverRequest, serverResponse);
-                },
-                on: function () {
-                    return this;
-                },
-                setHeader: function (key, value) {
-                    serverRequest.headers[key.toLowerCase()] = value;
+            var self;
+            self = {};
+            self.end = function (data) {
+                // do not run more than once
+                if (self.ended) {
+                    return;
                 }
+                self.ended = true;
+                self.serverRequest.data = data;
+                local.utility2.serverLocalRequestHandler(
+                    self.serverRequest,
+                    self.serverResponse
+                );
             };
+            self.on = function () {
+                return self;
+            };
+            self.serverRequest = new local._http.IncomingMessage(xhr);
+            self.serverResponse = new local._http.ServerResponse(onResponse);
+            self.setHeader = function (key, value) {
+                self.serverRequest.headers[key.toLowerCase()] = value;
+            };
+            return self;
         };
 
         // init lib Blob
@@ -864,7 +871,7 @@ local.utility2.templateTestReportHtml = '\
                 case 'abort':
                 case 'error':
                 case 'load':
-                    // if already done, then do nothing
+                    // do not run more than once
                     if (xhr.done) {
                         return;
                     }
@@ -3715,7 +3722,7 @@ local.utility2.templateTestReportHtml = '\
             );
         local.utility2.assetsDict['/assets.utility2.rollup.js'] = [
             '/assets.utility2.lib.bcrypt.js',
-            '/assets.utility2.lib.crypto.js',
+            '/assets.utility2.lib.cryptojs.js',
             '/assets.utility2.js'
         ]
             .map(function (key) {

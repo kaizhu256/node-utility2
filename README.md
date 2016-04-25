@@ -13,9 +13,10 @@ this package will run dynamic browser tests with coverage (via istanbul and elec
 - add server stress test using electron
 - none
 
-#### change since 8764ff1b
-- npm publish 2016.3.3
-- fix README.md
+#### change since 753a3c06
+- npm publish 2016.3.4
+- prevent _http.request from running utility2.serverLocalRequestHandler more than once
+- fix missing lib.cryptojs.js in /assets.utility2.rollup.js
 - none
 
 #### this package requires
@@ -505,7 +506,7 @@ export npm_config_mode_auto_restart=1 && \
 ./index.sh test node test.js",
         "test-published": "./index.sh shRun shNpmTestPublished"
     },
-    "version": "2016.3.3"
+    "version": "2016.3.4"
 }
 ```
 
@@ -618,7 +619,8 @@ shBuildCiTestPost() {(set -e
     # docker build
     if [ "$TRAVIS" ] && [ "$CI_BRANCH" = alpha ]
     then
-        (CI_BRANCH=docker.latest npm run build-ci)
+        # (CI_BRANCH=docker.latest npm run build-ci)
+        :
     fi
 )}
 
