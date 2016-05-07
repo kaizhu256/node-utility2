@@ -631,19 +631,19 @@ local.CSSLint = CSSLint; local.JSLINT = JSLINT; }());
         /*
          * this function will jslint / csslint the script and print any errors to stderr
          */
-            var lineno, scriptParsed;
+            var ignoreDict, lineno, scriptParsed;
             if (!script.length || (/^\/\* jslint-ignore-all \*\/$/m).test(script)) {
                 return script;
             }
             // cleanup errors
             local.errorCounter = 0;
             local.errorText = '';
+            // init ignoreDict
+            ignoreDict = {};
             // init lineno
             lineno = 0;
             // parse script
             scriptParsed = script
-                // comment shebang
-                .replace((/^#!/), '//')
                 // indent text-block
                 // /* jslint-indent-begin */ ... /* jslint-indent-end */
                 .replace(
@@ -681,7 +681,17 @@ local.CSSLint = CSSLint; local.JSLINT = JSLINT; }());
                 );
             // csslint script
             if (file.slice(-4) === '.css') {
-                local.CSSLint.errors = local.CSSLint.verify(scriptParsed).messages;
+                scriptParsed = scriptParsed.replace(new RegExp([
+                    // handle flexbox
+                    ' display: flex;',
+                    ' flex: .*'
+                ].join('|'), 'g'), function () {
+                    return ' background: url(' + Math.random() + ');';
+                });
+                local.CSSLint.errors = local.CSSLint.verify(scriptParsed).messages
+                    .filter(function (error) {
+                        return !ignoreDict[error.rule.id];
+                    });
                 // if error occurred, then print colorized error messages
                 if (!local.CSSLint.errors.length) {
                     return script;
@@ -696,8 +706,8 @@ local.CSSLint = CSSLint; local.JSLINT = JSLINT; }());
                         lineno += 1;
                         local.errorText +=
                             (' #' + String(lineno) + ' ').slice(-4) +
-                            '\u001b[33m' + error.type + ' - ' + error.message + '\n    ' +
-                            error.rule.desc +
+                            '\u001b[33m' + error.type + ' - ' + error.rule.id +
+                            ' - ' + error.message + '\n    ' + error.rule.desc +
                             '\u001b[39m\n    ' + String(error.evidence).trim() +
                             '\u001b[90m \/\/ line ' + error.line +
                             ', col ' + error.col + '\u001b[39m\n';
@@ -705,6 +715,8 @@ local.CSSLint = CSSLint; local.JSLINT = JSLINT; }());
             // jslint script
             } else {
                 scriptParsed = scriptParsed
+                    // comment shebang
+                    .replace((/^#!/), '//')
                     // handle es6 generator
                     // https://developer.mozilla.org
                     // /en-US/docs/Web/JavaScript/Reference/Global_Objects/Generator

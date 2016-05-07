@@ -2,7 +2,7 @@ utility2
 ========
 this package will run dynamic browser tests with coverage (via istanbul and electron)
 
-[![NPM](https://img.shields.io/npm/v/utility2.svg?style=flat-square)](https://www.npmjs.com/package/utility2) [![NPM](https://img.shields.io/npm/dm/utility2.svg?style=flat-square)](https://www.npmjs.com/package/utility2)
+[![NPM](https://img.shields.io/npm/v/utility2.svg?style=flat-square)](https://www.npmjs.com/package/utility2) [![NPM](https://img.shields.io/npm/dm/utility2.svg?style=flat-square)](https://www.npmjs.com/package/utility2) [![travis-ci.org build-status](https://api.travis-ci.org/kaizhu256/node-utility2.svg)](https://travis-ci.org/kaizhu256/node-utility2)
 
 
 
@@ -13,10 +13,13 @@ this package will run dynamic browser tests with coverage (via istanbul and elec
 - add server stress test using electron
 - none
 
-#### change since 753a3c06
-- npm publish 2016.3.4
-- prevent _http.request from running utility2.serverLocalRequestHandler more than once
-- fix missing lib.cryptojs.js in /assets.utility2.rollup.js
+#### change since 6ac8a3af
+- npm publish 2016.3.5
+- fix utility2.FormData.prototype.append from crashing when it tries to set value.name to a browser file-object
+- improve performance of utility2.tryCatchOnError
+- function utility2.jslintAndPrint - add css support for flexbox
+- add function utility2.assertJsonEqual and utility2.assertJsonNotEqual
+- use handlebars-like syntax each/if/unless in utility2.templateRender
 - none
 
 #### this package requires
@@ -261,7 +264,7 @@ instruction
 }\n\
 body {\n\
     background-color: #fff;\n\
-    font-family: Helvetical Neue, Helvetica, Arial, sans-serif;\n\
+    font-family: Helvetica Neue, Helvetica, Arial, sans-serif;\n\
 }\n\
 body > div {\n\
     margin-top: 20px;\n\
@@ -286,7 +289,7 @@ textarea {\n\
     <h1>{{envDict.npm_package_name}} @ {{envDict.npm_package_version}}</h1>\n\
     <h3>{{envDict.npm_package_description}}</h3>\n\
     <div>edit or paste script below to cover and test</div>\n\
-<textarea class="istanbulInputTextarea jslintInputTextarea">\n\
+<textarea class="istanbulInputTextarea jslintInputTextarea jsonStringifyInputTextarea">\n\
 /*jslint browser: true*/\n\
 (function () {\n\
     "use strict";\n\
@@ -338,6 +341,7 @@ textarea {\n\
     }\n\
 }());\n\
 </textarea>\n\
+    <pre class="jsonStringifyPre"></pre>\n\
     <pre class="jslintOutputPre"></pre>\n\
     <div class="testReportDiv"></div>\n\
     <div class="istanbulCoverageDiv"></div>\n\
@@ -359,13 +363,22 @@ window.testRun = function () {\n\
     if (window.utility2.modeTest) {\n\
         return;\n\
     }\n\
+    // try to JSON.stringify .jsonStringifyInputTextarea\n\
+    try {\n\
+        document.querySelector(".jsonStringifyPre").textContent = JSON.stringify(\n\
+            JSON.parse(document.querySelector(".jsonStringifyInputTextarea").value),\n\
+            null,\n\
+            4\n\
+        );\n\
+    } catch (ignore) {\n\
+    }\n\
     // jslint .jslintInputTextarea\n\
-    window.utility2.jslintAndPrint(\n\
-        (document.querySelector(".jslintInputTextarea") || {}).value || "",\n\
+    window.utility2_jslint.jslintAndPrint(\n\
+        document.querySelector(".jslintInputTextarea").value,\n\
         "jslintInputTextarea.js"\n\
     );\n\
-    (document.querySelector(".jslintOutputPre") || {}).textContent =\n\
-        window.utility2.jslint.errorText\n\
+    document.querySelector(".jslintOutputPre").textContent =\n\
+        window.utility2_jslint.errorText\n\
         .replace((/\\u001b\\[\\d+m/g), "")\n\
         .trim();\n\
     // try to cleanup __coverage__\n\
@@ -375,11 +388,13 @@ window.testRun = function () {\n\
     }\n\
     // try to eval input-code\n\
     try {\n\
-        eval(window.utility2.istanbulInstrumentSync(\n\
+        eval(window.utility2_istanbul.instrumentSync(\n\
             document.querySelector(".istanbulInputTextarea").value,\n\
             "/istanbulInputTextarea.js"\n\
         ));\n\
-        window.utility2.istanbulCoverageReportCreate({ coverage: window.__coverage__ });\n\
+        window.utility2_istanbul.coverageReportCreate({\n\
+            coverage: window.__coverage__\n\
+        });\n\
     } catch (errorCaught) {\n\
         document.querySelector(".istanbulCoverageDiv").innerHTML =\n\
             "<pre>" + errorCaught.stack.replace((/</g), "&lt") + "</pre>";\n\
@@ -506,7 +521,7 @@ export npm_config_mode_auto_restart=1 && \
 ./index.sh test node test.js",
         "test-published": "./index.sh shRun shNpmTestPublished"
     },
-    "version": "2016.3.4"
+    "version": "2016.3.5"
 }
 ```
 

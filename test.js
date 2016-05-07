@@ -175,10 +175,8 @@
                     // validate no error occurred
                     local.utility2.assert(!error, error);
                     // validate responseText
-                    local.utility2.assert(
-                        (/\r\n\r\n$/).test(xhr.responseText),
-                        xhr.responseText
-                    );
+                    local.utility2.assert((/\r\n\r\n$/)
+                        .test(xhr.responseText), xhr.responseText);
                     onError();
                 }, onError);
             });
@@ -209,7 +207,9 @@
             local.utility2.ajax(options, function (error, xhr) {
                 local.utility2.tryCatchOnError(function () {
                     // validate no error occurred
-                    local.utility2.assert(!error && xhr.status === 200, [error, xhr.status]);
+                    local.utility2.assert(!error, error);
+                    // validate statusCode
+                    local.utility2.assertJsonEqual(xhr.statusCode, 200);
                     // validate responseText
                     local.utility2.assert((/"name": "utility2",/)
                         .test(xhr.responseText), xhr.responseText);
@@ -282,10 +282,9 @@
                 }, function (error, xhr) {
                     local.utility2.tryCatchOnError(function () {
                         // validate no error occurred
-                        local.utility2.assert(
-                            !error && xhr.status === 200,
-                            [error, xhr.status]
-                        );
+                        local.utility2.assert(!error, error);
+                        // validate statusCode
+                        local.utility2.assertJsonEqual(xhr.statusCode, 200);
                         // validate response
                         switch (responseType) {
                         case 'arraybuffer':
@@ -297,9 +296,9 @@
                             local.utility2.assert(options.data, options);
                             break;
                         default:
-                            // validate response
+                            // validate responseText
                             options.data = xhr.responseText;
-                            local.utility2.assert(options.data === 'hello', options);
+                            local.utility2.assertJsonEqual(options.data, 'hello');
                         }
                         onParallel();
                     }, onError);
@@ -315,7 +314,9 @@
             }, function (error, xhr) {
                 local.utility2.tryCatchOnError(function () {
                     // validate no error occurred
-                    local.utility2.assert(!error && xhr.status === 200, [error, xhr.status]);
+                    local.utility2.assert(!error, error);
+                    // validate statusCode
+                    local.utility2.assertJsonEqual(xhr.statusCode, 200);
                     // validate response
                     options.data = xhr.responseText;
                     local.utility2.assert((/\r\nhello$/).test(options.data), options.data);
@@ -323,25 +324,21 @@
                         .test(options.data), options.data);
                     // validate responseHeaders
                     options.data = xhr.getAllResponseHeaders();
-                    local.utility2.assert(
-                        (/^X-Response-Header-Test: bye\r\n/im).test(options.data),
-                        options.data
-                    );
+                    local.utility2.assert((/^X-Response-Header-Test: bye\r\n/im)
+                        .test(options.data), options.data);
                     options.data = xhr.getResponseHeader('x-response-header-test');
-                    local.utility2.assert(options.data === 'bye', options.data);
+                    local.utility2.assertJsonEqual(options.data, 'bye');
                     options.data = xhr.getResponseHeader('undefined');
-                    local.utility2.assert(options.data === null, options.data);
-                    // validate statusCode
-                    local.utility2.assert(xhr.statusCode === 200, xhr.statusCode);
+                    local.utility2.assertJsonEqual(options.data, null);
                     onParallel();
                 }, onParallel);
             });
             onParallel();
         };
 
-        local.testCase_assert_default = function (options, onError) {
+        local.testCase_assertXxx_default = function (options, onError) {
         /*
-         * this function will test assert's default handling-behavior
+         * this function will test assertXxx's default handling-behavior
          */
             options = {};
             // test assertion passed
@@ -353,7 +350,7 @@
                 // validate error occurred
                 local.utility2.assert(error, error);
                 // validate error-message
-                local.utility2.assert(error.message === '', error.message);
+                local.utility2.assertJsonEqual(error.message, '');
             });
             // test assertion failed with string message
             local.utility2.tryCatchOnError(function () {
@@ -362,7 +359,7 @@
                 // validate error occurred
                 local.utility2.assert(error, error);
                 // validate error-message
-                local.utility2.assert(error.message === 'hello', error.message);
+                local.utility2.assertJsonEqual(error.message, 'hello');
             });
             // test assertion failed with error object
             local.utility2.tryCatchOnError(function () {
@@ -379,7 +376,19 @@
                 // validate error occurred
                 local.utility2.assert(error, error);
                 // validate error-message
-                local.utility2.assert(error.message === '{"aa":1}', error.message);
+                local.utility2.assertJsonEqual(error.message, '{"aa":1}');
+            });
+            options.list = ['', 0, false, null, undefined];
+            options.list.forEach(function (aa, ii) {
+                options.list.forEach(function (bb, jj) {
+                    if (ii === jj) {
+                        // test assertJsonEqual's handling-behavior
+                        local.utility2.assertJsonEqual(aa, bb);
+                    } else {
+                        // test assertJsonNotEqual's handling-behavior
+                        local.utility2.assertJsonNotEqual(aa, bb);
+                    }
+                });
             });
             onError();
         };
@@ -391,7 +400,7 @@
             options = {};
             // test null-case handling-behavior
             options.data = local.utility2.bcryptPasswordValidate();
-            local.utility2.assert(options.data === false, options);
+            local.utility2.assertJsonEqual(options.data, false);
             // test default handling-behavior
             options.password = 'hello';
             options.hash = local.utility2.bcryptHashCreate(options.password, 8);
@@ -426,19 +435,25 @@
                             switch (encoding) {
                             case 'dataURL':
                                 if (ii === 0) {
-                                    local.utility2.assert(data ===
-                                        'data:;base64,aGVsbG9ieWXhiLQgMA==', data);
+                                    local.utility2.assertJsonEqual(
+                                        data,
+                                        'data:;base64,aGVsbG9ieWXhiLQgMA=='
+                                    );
                                     break;
                                 }
-                                local.utility2.assert(data === 'data:text/plain; ' +
-                                    'charset=utf-8;base64,aGVsbG9ieWXhiLQgMA==', data);
+                                local.utility2.assertJsonEqual(
+                                    data,
+                                    'data:text/plain; charset=utf-8;base64,aGVsbG9ieWXhiLQgMA=='
+                                );
                                 break;
                             case 'text':
-                                local.utility2.assert(data === 'hellobye\u1234 0', data);
+                                local.utility2.assertJsonEqual(data, 'hellobye\u1234 0');
                                 break;
                             default:
-                                data = local.utility2.bufferToString(data);
-                                local.utility2.assert(data === 'hellobye\u1234 0', data);
+                                local.utility2.assertJsonEqual(
+                                    local.utility2.bufferToString(data),
+                                    'hellobye\u1234 0'
+                                );
                             }
                             onParallel();
                         }, onError);
@@ -464,14 +479,16 @@
             // test utf8 handling-behavior
             options.bff1 = local.utility2.bufferCreate(options.text1);
             options.text2 = local.utility2.bufferToString(options.bff1);
-            local.utility2.assert(options.text2 ===
-                local.utility2.bufferToString(options.text2));
+            local.utility2.assertJsonEqual(
+                options.text2,
+                local.utility2.bufferToString(options.text2)
+            );
             // test base64 handling-behavior
             options.text3 = local.utility2.bufferToString(local.utility2.bufferCreate(
                 local.utility2.bufferToString(options.bff1, 'base64'),
                 'base64'
             ));
-            local.utility2.assert(options.text2 === options.text3);
+            local.utility2.assertJsonEqual(options.text2, options.text3);
             onError();
         };
 
@@ -498,7 +515,7 @@
                     local.utility2.bufferCreate(options.subBuffer),
                     options.fromIndex
                 );
-                local.utility2.assert(options.data === options.validate, options);
+                local.utility2.assertJsonEqual(options.data, options.validate);
             });
             onError();
         };
@@ -514,20 +531,22 @@
                 local.utility2.cryptojsCipherAes256Encrypt('hello', 'secret'),
                 'secret'
             );
-            local.utility2.assert(options.data === 'hello', options.data);
+            local.utility2.assertJsonEqual(options.data, 'hello');
             // test cryptojsHashHmacSha256Create handling-behavior
             options.data = local.utility2.cryptojsHashHmacSha256Create(
                 'hello',
                 'secret'
             );
-            local.utility2.assert(options.data ===
-                'iKqz7ejTrflNJquQ07r9SiCDBww7zOnAFO4EpEOEfAs=',
-                options.data);
+            local.utility2.assertJsonEqual(
+                options.data,
+                'iKqz7ejTrflNJquQ07r9SiCDBww7zOnAFO4EpEOEfAs='
+            );
             // test cryptojsHashSha256Create handling-behavior
             options.data = local.utility2.cryptojsHashSha256Create('hello');
-            local.utility2.assert(options.data ===
-                'LPJNul+wow4m6DsqxbninhsWHlwfp0JecwQzYpOLmCQ=',
-                options.data);
+            local.utility2.assertJsonEqual(
+                options.data,
+                'LPJNul+wow4m6DsqxbninhsWHlwfp0JecwQzYpOLmCQ='
+            );
             onError();
         };
 
@@ -547,10 +566,9 @@
                     local.utility2.echo
                 )('hello');
                 // validate data
-                local.utility2.assert(
-                    options.data === '\n\n\n' + 'debug_print'.replace('_p', 'P') +
-                        '\nhello\n\n',
-                    options.data
+                local.utility2.assertJsonEqual(
+                    options.data,
+                    '\n\n\ndebug_print\nhello\n\n'.replace('_p', 'P')
                 );
                 onError();
             }, onError);
@@ -596,9 +614,9 @@
         /*
          * this function will test echo's default handling-behavior
          */
-            // jslint-hack
-            local.utility2.nop(options);
-            local.utility2.assert(local.utility2.echo('hello') === 'hello');
+            options = {};
+            options.data = local.utility2.echo('hello');
+            local.utility2.assertJsonEqual(options.data, 'hello');
             onError();
         };
 
@@ -614,19 +632,21 @@
                 yield this;
             };
             options.generator = options.generatorCreate(1);
-            options.data = local.utility2.jsonStringifyOrdered(options.generator.next(2));
-            local.utility2.assert(options.data ===
-                '{"done":false,"value":{"0":1}}', options.data);
-            options.data = local.utility2.jsonStringifyOrdered(options.generator.next(2));
-            local.utility2.assert(options.data ===
-                '{"done":false,"value":2}', options.data);
-            options.data = local.utility2.jsonStringifyOrdered(options.generator.next(2));
-            local.utility2.assert(options.data ===
-                '{"done":false,"value":{"data":"{\\"done\\":false,\\"value\\":2}",' +
-                '"generator":{}}}', options.data);
-            options.data = local.utility2.jsonStringifyOrdered(options.generator.next(2));
-            local.utility2.assert(options.data ===
-                '{"done":true}', options.data);
+            local.utility2.assertJsonEqual(options.generator.next(2), {
+                done: false,
+                value: { 0: 1 }
+            });
+            local.utility2.assertJsonEqual(options.generator.next(2), {
+                done: false,
+                value: 2
+            });
+            local.utility2.assertJsonEqual(options.generator.next(2), {
+                done: false,
+                value: { generator: {} }
+            });
+            local.utility2.assertJsonEqual(options.generator.next(2), {
+                done: true
+            });
             onError();
         };
 
@@ -655,13 +675,13 @@
             options = {};
             options.data = local.utility2.isNullOrUndefined(null);
             // validate data
-            local.utility2.assert(options.data === true, options.data);
+            local.utility2.assertJsonEqual(options.data, true);
             options.data = local.utility2.isNullOrUndefined(undefined);
             // validate data
-            local.utility2.assert(options.data === true, options.data);
+            local.utility2.assertJsonEqual(options.data, true);
             options.data = local.utility2.isNullOrUndefined(false);
             // validate data
-            local.utility2.assert(options.data === false, options.data);
+            local.utility2.assertJsonEqual(options.data, false);
             onError();
         };
 
@@ -795,14 +815,11 @@
         /*
          * this function will test jsonCopy's default handling-behavior
          */
-            // jslint-hack
-            local.utility2.nop(options);
+            options = {};
             // test various data-type handling-behavior
-            [undefined, null, false, true, 0, 1, 1.5, 'a'].forEach(function (data) {
-                local.utility2.assert(
-                    local.utility2.jsonCopy(data) === data,
-                    [local.utility2.jsonCopy(data), data]
-                );
+            [undefined, null, false, true, 0, 1, 1.5, 'a'].forEach(function (element) {
+                options.data = local.utility2.jsonCopy(element);
+                local.utility2.assertJsonEqual(options.data, element);
             });
             onError();
         };
@@ -811,12 +828,12 @@
         /*
          * this function will test jsonStringifyOrdered's default handling-behavior
          */
+            options = {};
             // test data-type handling-behavior
             [undefined, null, false, true, 0, 1, 1.5, 'a', {}, []].forEach(function (data) {
-                local.utility2.assert(
-                    local.utility2.jsonStringifyOrdered(data) === JSON.stringify(data),
-                    [local.utility2.jsonStringifyOrdered(data), JSON.stringify(data)]
-                );
+                options.aa = local.utility2.jsonStringifyOrdered(data);
+                options.bb = JSON.stringify(data);
+                local.utility2.assertJsonEqual(options.aa, options.bb);
             });
             // test data-ordering handling-behavior
             options = {
@@ -831,10 +848,9 @@
             };
             // test circular-reference handling-behavior
             options.zz = options;
-            options = local.utility2.jsonStringifyOrdered(options);
-            local.utility2.assert(
-                options === '{"aa":1,"bb":null,"ee":[null],"ff":{"gg":1,"hh":2}}',
-                options
+            local.utility2.assertJsonEqual(
+                options,
+                { aa: 1, bb: null, ee: [ null ], ff: { gg: 1, hh: 2 } }
             );
             onError();
         };
@@ -847,13 +863,18 @@
             options.payload = { sub: '1234567890', name: 'John Doe', admin: true };
             options.token = local.utility2.jwtHs256Encode(options.payload, 'secret');
             // validate encoded token
-            local.utility2.assert(options.token === 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.' +
-                'eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.' +
-                'TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ', options.token);
+            local.utility2.assertJsonEqual(
+                options.token,
+                'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.' +
+                    'eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.' +
+                    'TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ'
+            );
             options.payload = local.utility2.jwtHs256Decode(options.token, 'secret');
             // validate decoded payload
-            local.utility2.assert(JSON.stringify(options.payload) ===
-                '{"sub":"1234567890","name":"John Doe","admin":true}', options.payload);
+            local.utility2.assertJsonEqual(
+                options.payload,
+                { admin: true, name: 'John Doe', sub: '1234567890' }
+            );
             onError();
         };
 
@@ -870,8 +891,10 @@
                 options.elementDict[local.utility2.listGetElementRandom(options.list)] = true;
             }
             // validate all elements were retrieved from list
-            local.utility2.assert(JSON.stringify(Object.keys(options.elementDict).sort()) ===
-                JSON.stringify(options.list), options);
+            local.utility2.assertJsonEqual(
+                Object.keys(options.elementDict).sort(),
+                options.list
+            );
             onError();
         };
 
@@ -887,8 +910,10 @@
                 options.listShuffled =
                     JSON.stringify(local.utility2.listShuffle(JSON.parse(options.list)));
                 // validate shuffled list
-                local.utility2.assert(options.listShuffled.length ===
-                    options.list.length, options);
+                local.utility2.assertJsonEqual(
+                    options.listShuffled.length,
+                    options.list.length
+                );
                 options.changed = options.changed || options.listShuffled !== options.list;
             }
             // validate list changed at least once during the shuffle
@@ -901,8 +926,10 @@
          * this function will test objectGetElementFirst's default handling-behavior
          */
             options = { aa: 1, bb: 2 };
-            options = JSON.stringify(local.utility2.objectGetElementFirst(options));
-            local.utility2.assert(options === '{"key":"aa","value":1}', options);
+            local.utility2.assertJsonEqual(
+                local.utility2.objectGetElementFirst(options),
+                { key: 'aa', value: 1 }
+            );
             onError();
         };
 
@@ -913,8 +940,10 @@
             options =
                 { aa: true, bb: local.utility2.nop, cc: 0, dd: null, ee: '', ff: undefined };
             options = local.utility2.objectKeysTypeof(options);
-            local.utility2.assert(options === 'boolean aa\nfunction bb\n' +
-                'number cc\nobject dd\nstring ee\nundefined ff', options);
+            local.utility2.assertJsonEqual(
+                options,
+                'boolean aa\nfunction bb\nnumber cc\nobject dd\nstring ee\nundefined ff'
+            );
             onError();
         };
 
@@ -925,12 +954,12 @@
             // test falsey handling-behavior
             ['', 0, false, null, undefined].forEach(function (aa) {
                 ['', 0, false, null, undefined].forEach(function (bb) {
-                    local.utility2.assert(local.utility2.objectSetDefault(
-                        { data: aa },
-                        { data: bb }
-                    ).data === (bb === undefined
-                        ? aa
-                        : bb));
+                    local.utility2.assertJsonEqual(
+                        local.utility2.objectSetDefault({ data: aa }, { data: bb }).data,
+                        bb === undefined
+                            ? aa
+                            : bb
+                    );
                 });
             });
             // test non-recursive handling-behavior
@@ -941,10 +970,9 @@
                 null
             );
             // validate options
-            local.utility2.assert(
-                local.utility2.jsonStringifyOrdered(options) ===
-                    '{"aa":2,"bb":{"cc":1},"cc":{"dd":{}},"dd":[1,1],"ee":[1,1]}',
-                options
+            local.utility2.assertJsonEqual(
+                options,
+                { aa: 2, bb: { cc: 1 }, cc: { dd: {} }, dd: [1, 1], ee: [1, 1] }
             );
             // test recursive handling-behavior
             options = local.utility2.objectSetDefault(
@@ -954,10 +982,9 @@
                 2
             );
             // validate options
-            local.utility2.assert(
-                local.utility2.jsonStringifyOrdered(options) ===
-                    '{"aa":2,"bb":{"cc":1,"dd":2},"cc":{"dd":{}},"dd":[1,1],"ee":[1,1]}',
-                options
+            local.utility2.assertJsonEqual(
+                options,
+                { aa: 2, bb: { cc: 1, dd: 2 }, cc: { dd: {} }, dd: [1, 1], ee: [1, 1] }
             );
             onError();
         };
@@ -969,12 +996,12 @@
             // test falsey handling-behavior
             ['', 0, false, null, undefined].forEach(function (aa) {
                 ['', 0, false, null, undefined].forEach(function (bb) {
-                    local.utility2.assert(local.utility2.objectSetOverride(
-                        { data: aa },
-                        { data: bb }
-                    ).data === (bb === undefined
-                        ? aa
-                        : bb));
+                    local.utility2.assertJsonEqual(
+                        local.utility2.objectSetOverride({ data: aa }, { data: bb }).data,
+                        bb === undefined
+                            ? aa
+                            : bb
+                    );
                 });
             });
             // test non-recursive handling-behavior
@@ -985,9 +1012,10 @@
                 null
             );
             // validate options
-            options = local.utility2.jsonStringifyOrdered(options);
-            local.utility2.assert(options === '{"aa":2,"bb":{"dd":2},"cc":{"ee":2},' +
-                '"dd":[2,2],"ee":{"ff":2}}', options);
+            local.utility2.assertJsonEqual(
+                options,
+                { aa: 2, bb: { dd: 2 }, cc: { ee: 2 }, dd: [2, 2], ee: { ff: 2 } }
+            );
             // test recursive handling-behavior
             options = local.utility2.objectSetOverride(
                 { aa: 1, bb: { cc: 1 }, cc: { dd: 1 }, dd: [1, 1], ee: [1, 1] },
@@ -996,9 +1024,10 @@
                 2
             );
             // validate options
-            options = local.utility2.jsonStringifyOrdered(options);
-            local.utility2.assert(options === '{"aa":2,"bb":{"cc":1,"dd":2},' +
-                '"cc":{"dd":1,"ee":2},"dd":[2,2],"ee":{"ff":2}}', options);
+            local.utility2.assertJsonEqual(
+                options,
+                { aa: 2, bb: { cc: 1, dd: 2 }, cc: { dd: 1, ee: 2 }, dd: [2, 2], ee: { ff: 2 } }
+            );
             // test envDict with empty-string handling-behavior
             options = local.utility2.objectSetOverride(
                 local.utility2.envDict,
@@ -1007,7 +1036,7 @@
                 null
             );
             // validate options
-            local.utility2.assert(options.emptyString === '', options.emptyString);
+            local.utility2.assertJsonEqual(options.emptyString, '');
             onError();
         };
 
@@ -1024,10 +1053,9 @@
                 }
             });
             // validate options
-            options = local.utility2.jsonStringifyOrdered(options);
-            local.utility2.assert(
-                options === '{"aa":null,"bb":2,"cc":{"dd":4,"ee":[5,6,7],"zz":true},"zz":true}',
-                options
+            local.utility2.assertJsonEqual(
+                options,
+                { aa: null, bb: 2, cc: { dd: 4, ee: [5, 6, 7], zz: true }, zz: true }
             );
             onError();
         };
@@ -1177,7 +1205,7 @@
                         // validate no error occurred
                         local.utility2.assert(!error, error);
                         // validate data
-                        local.utility2.assert(data === 'hello', data);
+                        local.utility2.assertJsonEqual(data, 'hello');
                         // validate no cache-hit
                         local.utility2.assert(
                             !optionsCopy.modeCacheHit,
@@ -1201,11 +1229,11 @@
                         // validate no error occurred
                         local.utility2.assert(!error, error);
                         // validate data
-                        local.utility2.assert(data === 'hello', data);
+                        local.utility2.assertJsonEqual(data, 'hello');
                         // validate modeCacheHit
-                        local.utility2.assert(
-                            optionsCopy.modeCacheHit === true,
-                            optionsCopy.modeCacheHit
+                        local.utility2.assertJsonEqual(
+                            optionsCopy.modeCacheHit,
+                            true
                         );
                         break;
                     // test cache handling-behavior
@@ -1220,11 +1248,11 @@
                         // validate no error occurred
                         local.utility2.assert(!error, error);
                         // validate data
-                        local.utility2.assert(data === 'bye', data);
+                        local.utility2.assertJsonEqual(data, 'bye');
                         // validate modeCacheHit
-                        local.utility2.assert(
-                            optionsCopy.modeCacheHit === true,
-                            optionsCopy.modeCacheHit
+                        local.utility2.assertJsonEqual(
+                            optionsCopy.modeCacheHit,
+                            true
                         );
                         onNext();
                         break;
@@ -1269,7 +1297,7 @@
                 onError();
             });
             // validate counter incremented once
-            local.utility2.assert(options.counter === 1, options);
+            local.utility2.assertJsonEqual(options.counter, 1);
             onError();
         };
 
@@ -1288,7 +1316,7 @@
             // validate counter incremented once
             setTimeout(function () {
                 local.utility2.tryCatchOnError(function () {
-                    local.utility2.assert(options.counter === 1, options);
+                    local.utility2.assertJsonEqual(options.counter, 1);
                     onError();
                 }, onError);
             });
@@ -1298,16 +1326,15 @@
         /*
          * this function will test templateRender's default handling-behavior
          */
-            var data;
-            // jslint-hack
-            local.utility2.nop(options);
+            options = {};
             // test undefined valueDefault handling-behavior
-            data = local.utility2.templateRender('{{aa}}', {}, undefined);
-            local.utility2.assert(data === '{{aa}}', data);
+            options.data = local.utility2.templateRender('{{aa}}', {});
+            local.utility2.assertJsonEqual(options.data, '{{aa}}');
             // test default handling-behavior
-            data = local.utility2.templateRender(
-                '{{aa}} {{aa json htmlSafe encodeURIComponent}} {{bb}} {{cc}} {{dd}} {{ee.ff}}',
-                {
+            options.data = local.utility2.templateRender('{{aa}} ' +
+                '{{aa jsonStringify htmlSafe encodeURIComponent decodeURIComponent ' +
+                'trim trimLeft trimRight}} ' +
+                '{{bb}} {{cc}} {{dd}} {{ee.ff}}', {
                     // test string value handling-behavior
                     aa: '<aa>',
                     // test non-string value handling-behavior
@@ -1318,36 +1345,61 @@
                     dd: undefined,
                     // test nested value handling-behavior
                     ee: { ff: 'gg' }
-                },
-                '<undefined>'
+                });
+            local.utility2.assertJsonEqual(
+                options.data,
+                '<aa> &quot;&lt;aa&gt;&quot; 1 null {{dd}} gg'
             );
-            local.utility2.assert(
-                data === '<aa> %26quot%3B%26lt%3Baa%26gt%3B%26quot%3B 1 null <undefined> gg',
-                data
-            );
-            // test partial-list handling-behavior
-            data = local.utility2.templateRender('[{{#list list1}}list1(' +
-                '{{aa}} - ' +
-                '[{{#list list2}}list2(' +
-                    '{{bb}}, ' +
-                    '{{#if bb}}if{{/if bb}}, ' +
-                    '{{#unless bb}}unless{{/unless bb}}' +
-                ') - {{/list list2}}]' +
-                '), {{/list list1}}]',
-                {
+            // test partial handling-behavior
+            options.data = local.utility2.templateRender('{{#undefined aa}}\n' +
+                'list1{{#each list1}}\n' +
+                '    aa - {{aa}}\n' +
+                '    list2{{#each list2}}\n' +
+                '        bb - {{bb}}\n' +
+                '        {{#if bb}}\n' +
+                '        if\n' +
+                '        {{#unless bb}}\n' +
+                '        else\n' +
+                '        {{/if bb}}\n' +
+                '        {{#unless bb}}\n' +
+                '        unless\n' +
+                '        {{/unless bb}}\n' +
+                '    {{/each list2}}\n' +
+                '{{/each list1}}\n' +
+                '{{/undefined aa}}\n', {
                     list1: [
                         // test null-value handling-behavior
                         null,
-                        // test recursive-list handling-behavior
-                        { aa: 'aa', list2: [{ bb: 'bb' }, { bb: null }] }
+                        {
+                            aa: 'aa',
+                            // test recursive-list handling-behavior
+                            list2: [{ bb: 'bb' }, { bb: null }]
+                        }
                     ]
-                },
-                '<undefined>'
-                );
-            local.utility2.assert(data === '[list1(<undefined> - [<undefined>]), list1(' +
-                'aa - ' +
-                '[list2(bb, if, <undefined>) - list2(null, <undefined>, unless) - ' +
-                ']), ]', data);
+                });
+            local.utility2.assertJsonEqual(options.data, '{{#undefined aa}}\n' +
+                'list1\n' +
+                '    aa - {{aa}}\n' +
+                '    list2\n' +
+                '\n' +
+                '    aa - aa\n' +
+                '    list2\n' +
+                '        bb - bb\n' +
+                '        \n' +
+                '        if\n' +
+                '        \n' +
+                '        \n' +
+                '    \n' +
+                '        bb - null\n' +
+                '        \n' +
+                '        else\n' +
+                '        \n' +
+                '        \n' +
+                '        unless\n' +
+                '        \n' +
+                '    \n' +
+                '\n' +
+                '{{/undefined aa}}\n');
             onError();
         };
 
@@ -1371,12 +1423,10 @@
         /*
          * this function will test uglify's default handling-behavior
          */
-            var data;
-            // jslint-hack
-            local.utility2.nop(options);
-            data = local.utility2.uglify('aa = 1');
+            options = {};
+            options.data = local.utility2.uglify('aa = 1');
             // validate data
-            local.utility2.assert(data === 'aa=1', data);
+            local.utility2.assertJsonEqual(options.data, 'aa=1');
             onError();
         };
 
@@ -1393,12 +1443,12 @@
                 local.utility2.envDict.npm_config_production = '';
                 options.data = local.utility2.uglifyIfProduction('aa = 1');
                 // validate data
-                local.utility2.assert(options.data === 'aa = 1', options);
+                local.utility2.assertJsonEqual(options.data, 'aa = 1');
                 // test production-mode handling-behavior
                 local.utility2.envDict.npm_config_production = '1';
                 options.data = local.utility2.uglifyIfProduction('aa = 1');
                 // validate data
-                local.utility2.assert(options.data === 'aa=1', options);
+                local.utility2.assertJsonEqual(options.data, 'aa=1');
                 onError();
             }, onError);
         };
@@ -1407,46 +1457,41 @@
         /*
          * this function will test urlParse's default handling-behavior
          */
-            options = {};
-            local.utility2.testMock([
+            options = [
                 [local.utility2, {
                     // test default PORT handling-behavior
                     envDict: {},
                     // test init-serverLocalHost handling-behavior
                     serverLocalHost: ''
                 }]
-            ], function (onError) {
+            ];
+            local.utility2.testMock(options, function (onError) {
                 // test default handling-behavior
-                options.data = local.utility2.urlParse('https://localhost:80/foo' +
-                    '?aa=1&bb%20cc=dd%20=ee&aa=2&aa#zz=1');
-                // validate data
-                local.utility2.assert(local.utility2.jsonStringifyOrdered(options.data) ===
-                    local.utility2.jsonStringifyOrdered({
-                        hash: '#zz=1',
-                        host: 'localhost:80',
-                        hostname: 'localhost',
-                        href: 'https://localhost:80/foo?aa=1&bb%20cc=dd%20=ee&aa=2&aa#zz=1',
-                        pathname: '/foo',
-                        port: '80',
-                        protocol: 'https:',
-                        query: { aa: ['1', '2', ''], 'bb cc': 'dd =ee' },
-                        search: '?aa=1&bb%20cc=dd%20=ee&aa=2&aa'
-                    }), options);
+                local.utility2.assertJsonEqual(local.utility2.urlParse(
+                    'https://localhost:80/foo?aa=1&bb%20cc=dd%20=ee&aa=2&aa#zz=1'
+                ), {
+                    hash: '#zz=1',
+                    host: 'localhost:80',
+                    hostname: 'localhost',
+                    href: 'https://localhost:80/foo?aa=1&bb%20cc=dd%20=ee&aa=2&aa#zz=1',
+                    pathname: '/foo',
+                    port: '80',
+                    protocol: 'https:',
+                    query: { aa: ['1', '2', ''], 'bb cc': 'dd =ee' },
+                    search: '?aa=1&bb%20cc=dd%20=ee&aa=2&aa'
+                });
                 // test error handling-behavior
-                options.data = local.utility2.urlParse(null);
-                // validate data
-                local.utility2.assert(local.utility2.jsonStringifyOrdered(options.data) ===
-                    local.utility2.jsonStringifyOrdered({
-                        hash: '',
-                        host: '',
-                        hostname: '',
-                        href: '',
-                        pathname: '',
-                        port: '',
-                        protocol: '',
-                        query: {},
-                        search: ''
-                    }), options);
+                local.utility2.assertJsonEqual(local.utility2.urlParse(null), {
+                    hash: '',
+                    host: '',
+                    hostname: '',
+                    href: '',
+                    pathname: '',
+                    port: '',
+                    protocol: '',
+                    query: {},
+                    search: ''
+                });
                 onError();
             }, onError);
         };
@@ -1459,25 +1504,19 @@
             // test uuid4 handling-behavior
             options.data1 = local.utility2.uuid4Create();
             // validate data1
-            local.utility2.assert(
-                local.utility2.regexpUuidValidate.test(options.data1),
-                options.data1
-            );
+            local.utility2.assert(local.utility2.regexpUuidValidate
+                .test(options.data1), options.data1);
             // test uuidTime handling-behavior
             options.data1 = local.utility2.uuidTimeCreate();
             // validate data1
-            local.utility2.assert(
-                local.utility2.regexpUuidValidate.test(options.data1),
-                options.data1
-            );
+            local.utility2.assert(local.utility2.regexpUuidValidate
+                .test(options.data1), options.data1);
             setTimeout(function () {
                 local.utility2.tryCatchOnError(function () {
                     options.data2 = local.utility2.uuidTimeCreate();
                     // validate data2
-                    local.utility2.assert(
-                        local.utility2.regexpUuidValidate.test(options.data2),
-                        options.data2
-                    );
+                    local.utility2.assert(local.utility2.regexpUuidValidate
+                        .test(options.data2), options.data2);
                     // validate data1 < data2
                     local.utility2.assert(
                         options.data1 < options.data2,
@@ -1513,16 +1552,32 @@
             }, onError);
         };
 
-        local.testCase_domElementQuerySelectorAll_default = function (options, onError) {
+        local.testCase_domFragmentRender_default = function (options, onError) {
         /*
-         * this function will test domElementQuerySelectorAll's default handling-behavior
+         * this function will test domFragmentRender's default handling-behavior
+         */
+            options = {};
+            options.data = local.utility2.domFragmentRender('<div>{{value}}</div>', {
+                value: 'hello'
+            });
+            local.utility2.assertJsonEqual(
+                options.data.children[0].outerHTML,
+                '<div>hello</div>'
+            );
+            onError();
+        };
+
+        local.testCase_domQuerySelectorAll_default = function (options, onError) {
+        /*
+         * this function will test domQuerySelectorAll's default handling-behavior
          */
             options = {};
             [
                 document,
+                // test jQuery handling-behavior
                 [document]
             ].forEach(function (element) {
-                options.data = local.utility2.domElementQuerySelectorAll(element, 'body')[0];
+                options.data = local.utility2.domQuerySelectorAll(element, 'body')[0];
                 local.utility2.assert(options.data === document.body);
             });
             onError();
@@ -1548,7 +1603,7 @@
                     // validate no error occurred
                     local.utility2.assert(!error, error);
                     // validate responseText
-                    local.utility2.assert(xhr.responseText === 'hello', xhr.responseText);
+                    local.utility2.assertJsonEqual(xhr.responseText, 'hello');
                     // test http GET 304 cache handling-behavior
                     local.utility2.ajax({
                         headers: {
@@ -1560,7 +1615,7 @@
                             // validate no error occurred
                             local.utility2.assert(!error, error);
                             // validate statusCode
-                            local.utility2.assert(xhr.statusCode === 304, xhr.statusCode);
+                            local.utility2.assertJsonEqual(xhr.statusCode, 304);
                             onError();
                         }, onError);
                     });
@@ -1666,7 +1721,7 @@
                         local.utility2.assert(!error, error);
                         // validate data
                         data = local.fs.readFileSync(file, 'utf8');
-                        local.utility2.assert(data === 'hello1', data);
+                        local.utility2.assertJsonEqual(data, 'hello1');
                         onNext();
                         break;
                     case 4:
@@ -1679,7 +1734,7 @@
                         local.utility2.assert(!error, error);
                         // validate data
                         data = local.fs.readFileSync(file, 'utf8');
-                        local.utility2.assert(data === 'hello2', data);
+                        local.utility2.assertJsonEqual(data, 'hello2');
                         onNext();
                         break;
                     case 6:
@@ -1711,10 +1766,8 @@
         /*
          * this function will test istanbulCoverageMerge's default handling-behavior
          */
-            var coverage1, coverage2, data;
-            // jslint-hack
-            local.utility2.nop(options);
-            data = local.utility2.istanbulInstrumentSync(
+            options = {};
+            options.data = local.utility2.istanbulInstrumentSync(
                 '(function () {\nreturn arg ' +
                     '? __coverage__ ' +
                     ': __coverage__;\n}());',
@@ -1722,29 +1775,37 @@
             );
             local.utility2.arg = 0;
             // test null-case handling-behavior
-            coverage1 = null;
-            coverage2 = null;
-            local.utility2.istanbulCoverageMerge(coverage1, coverage2);
-            // validate merged coverage1
-            local.utility2.assert(coverage1 === null, coverage1);
-            // init coverage1
-            coverage1 = local.vm.runInNewContext(data, { arg: 0 });
-            /* jslint-ignore-begin */
-            // validate coverage1
-            local.utility2.assert(local.utility2.jsonStringifyOrdered(coverage1) === '{"/test":{"b":{"1":[0,1]},"branchMap":{"1":{"line":2,"locations":[{"end":{"column":25,"line":2},"start":{"column":13,"line":2}},{"end":{"column":40,"line":2},"start":{"column":28,"line":2}}],"type":"cond-expr"}},"code":["(function () {","return arg ? __coverage__ : __coverage__;","}());"],"f":{"1":1},"fnMap":{"1":{"line":1,"loc":{"end":{"column":13,"line":1},"start":{"column":1,"line":1}},"name":"(anonymous_1)"}},"path":"/test","s":{"1":1,"2":1},"statementMap":{"1":{"end":{"column":5,"line":3},"start":{"column":0,"line":1}},"2":{"end":{"column":41,"line":2},"start":{"column":0,"line":2}}}}}', coverage1);
-            // test merge-create handling-behavior
-            coverage1 = local.utility2.istanbulCoverageMerge({}, coverage1);
-            // validate coverage1
-            local.utility2.assert(local.utility2.jsonStringifyOrdered(coverage1) === '{"/test":{"b":{"1":[0,1]},"branchMap":{"1":{"line":2,"locations":[{"end":{"column":25,"line":2},"start":{"column":13,"line":2}},{"end":{"column":40,"line":2},"start":{"column":28,"line":2}}],"type":"cond-expr"}},"code":["(function () {","return arg ? __coverage__ : __coverage__;","}());"],"f":{"1":1},"fnMap":{"1":{"line":1,"loc":{"end":{"column":13,"line":1},"start":{"column":1,"line":1}},"name":"(anonymous_1)"}},"path":"/test","s":{"1":1,"2":1},"statementMap":{"1":{"end":{"column":5,"line":3},"start":{"column":0,"line":1}},"2":{"end":{"column":41,"line":2},"start":{"column":0,"line":2}}}}}', coverage1);
-            // init coverage2
-            coverage2 = local.vm.runInNewContext(data, { arg: 1 });
-            // validate coverage2
-            local.utility2.assert(local.utility2.jsonStringifyOrdered(coverage2) === '{"/test":{"b":{"1":[1,0]},"branchMap":{"1":{"line":2,"locations":[{"end":{"column":25,"line":2},"start":{"column":13,"line":2}},{"end":{"column":40,"line":2},"start":{"column":28,"line":2}}],"type":"cond-expr"}},"code":["(function () {","return arg ? __coverage__ : __coverage__;","}());"],"f":{"1":1},"fnMap":{"1":{"line":1,"loc":{"end":{"column":13,"line":1},"start":{"column":1,"line":1}},"name":"(anonymous_1)"}},"path":"/test","s":{"1":1,"2":1},"statementMap":{"1":{"end":{"column":5,"line":3},"start":{"column":0,"line":1}},"2":{"end":{"column":41,"line":2},"start":{"column":0,"line":2}}}}}', coverage2);
-            // test merge-update handling-behavior
-            local.utility2.istanbulCoverageMerge(coverage1, coverage2);
-            // validate merged coverage1
-            local.utility2.assert(local.utility2.jsonStringifyOrdered(coverage1) === '{"/test":{"b":{"1":[1,1]},"branchMap":{"1":{"line":2,"locations":[{"end":{"column":25,"line":2},"start":{"column":13,"line":2}},{"end":{"column":40,"line":2},"start":{"column":28,"line":2}}],"type":"cond-expr"}},"code":["(function () {","return arg ? __coverage__ : __coverage__;","}());"],"f":{"1":2},"fnMap":{"1":{"line":1,"loc":{"end":{"column":13,"line":1},"start":{"column":1,"line":1}},"name":"(anonymous_1)"}},"path":"/test","s":{"1":2,"2":2},"statementMap":{"1":{"end":{"column":5,"line":3},"start":{"column":0,"line":1}},"2":{"end":{"column":41,"line":2},"start":{"column":0,"line":2}}}}}', coverage1);
-            /* jslint-ignore-end */
+            options.coverage1 = null;
+            options.coverage2 = null;
+            local.utility2.istanbulCoverageMerge(options.coverage1, options.coverage2);
+            // validate merged options.coverage1
+            local.utility2.assertJsonEqual(options.coverage1, null);
+            // init options.coverage1
+            options.coverage1 = local.vm.runInNewContext(options.data, { arg: 0 });
+/* jslint-ignore-begin */
+// validate options.coverage1
+local.utility2.assertJsonEqual(options.coverage1,
+{"/test":{"b":{"1":[0,1]},"branchMap":{"1":{"line":2,"locations":[{"end":{"column":25,"line":2},"start":{"column":13,"line":2}},{"end":{"column":40,"line":2},"start":{"column":28,"line":2}}],"type":"cond-expr"}},"code":["(function () {","return arg ? __coverage__ : __coverage__;","}());"],"f":{"1":1},"fnMap":{"1":{"line":1,"loc":{"end":{"column":13,"line":1},"start":{"column":1,"line":1}},"name":"(anonymous_1)"}},"path":"/test","s":{"1":1,"2":1},"statementMap":{"1":{"end":{"column":5,"line":3},"start":{"column":0,"line":1}},"2":{"end":{"column":41,"line":2},"start":{"column":0,"line":2}}}}}
+);
+// test merge-create handling-behavior
+options.coverage1 = local.utility2.istanbulCoverageMerge({}, options.coverage1);
+// validate options.coverage1
+local.utility2.assertJsonEqual(options.coverage1,
+{"/test":{"b":{"1":[0,1]},"branchMap":{"1":{"line":2,"locations":[{"end":{"column":25,"line":2},"start":{"column":13,"line":2}},{"end":{"column":40,"line":2},"start":{"column":28,"line":2}}],"type":"cond-expr"}},"code":["(function () {","return arg ? __coverage__ : __coverage__;","}());"],"f":{"1":1},"fnMap":{"1":{"line":1,"loc":{"end":{"column":13,"line":1},"start":{"column":1,"line":1}},"name":"(anonymous_1)"}},"path":"/test","s":{"1":1,"2":1},"statementMap":{"1":{"end":{"column":5,"line":3},"start":{"column":0,"line":1}},"2":{"end":{"column":41,"line":2},"start":{"column":0,"line":2}}}}}
+);
+// init options.coverage2
+options.coverage2 = local.vm.runInNewContext(options.data, { arg: 1 });
+// validate options.coverage2
+local.utility2.assertJsonEqual(options.coverage2,
+{"/test":{"b":{"1":[1,0]},"branchMap":{"1":{"line":2,"locations":[{"end":{"column":25,"line":2},"start":{"column":13,"line":2}},{"end":{"column":40,"line":2},"start":{"column":28,"line":2}}],"type":"cond-expr"}},"code":["(function () {","return arg ? __coverage__ : __coverage__;","}());"],"f":{"1":1},"fnMap":{"1":{"line":1,"loc":{"end":{"column":13,"line":1},"start":{"column":1,"line":1}},"name":"(anonymous_1)"}},"path":"/test","s":{"1":1,"2":1},"statementMap":{"1":{"end":{"column":5,"line":3},"start":{"column":0,"line":1}},"2":{"end":{"column":41,"line":2},"start":{"column":0,"line":2}}}}}
+);
+// test merge-update handling-behavior
+local.utility2.istanbulCoverageMerge(options.coverage1, options.coverage2);
+// validate merged options.coverage1
+local.utility2.assertJsonEqual(options.coverage1,
+{"/test":{"b":{"1":[1,1]},"branchMap":{"1":{"line":2,"locations":[{"end":{"column":25,"line":2},"start":{"column":13,"line":2}},{"end":{"column":40,"line":2},"start":{"column":28,"line":2}}],"type":"cond-expr"}},"code":["(function () {","return arg ? __coverage__ : __coverage__;","}());"],"f":{"1":2},"fnMap":{"1":{"line":1,"loc":{"end":{"column":13,"line":1},"start":{"column":1,"line":1}},"name":"(anonymous_1)"}},"path":"/test","s":{"1":2,"2":2},"statementMap":{"1":{"end":{"column":5,"line":3},"start":{"column":0,"line":1}},"2":{"end":{"column":41,"line":2},"start":{"column":0,"line":2}}}}}
+);
+/* jslint-ignore-end */
             onError();
         };
 
@@ -1752,20 +1813,18 @@
         /*
          * this function will test istanbulInstrumentInPackage's default handling-behavior
          */
-            var data;
-            // jslint-hack
-            local.utility2.nop(options);
+            options = {};
             local.utility2.testMock([
                 [local.global, { __coverage__: {} }]
             ], function (onError) {
                 // test no instrument handling-behavior
-                data = local.utility2.istanbulInstrumentInPackage('1', '', '');
+                options.data = local.utility2.istanbulInstrumentInPackage('1', '', '');
                 // validate data
-                local.utility2.assert(data === '1', data);
+                local.utility2.assertJsonEqual(options.data, '1', options);
                 // test instrument handling-behavior
-                data = local.utility2.istanbulInstrumentInPackage('1', '', 'utility2');
+                options.data = local.utility2.istanbulInstrumentInPackage('1', '', 'utility2');
                 // validate data
-                local.utility2.assert(data.indexOf('.s[\'1\']++;1;\n') >= 0, data);
+                local.utility2.assert(options.data.indexOf('.s[\'1\']++;1;\n') >= 0, options);
                 onError();
             }, onError);
         };
@@ -1774,20 +1833,19 @@
         /*
          * this function will test onFileModifiedRestart's watchFile handling-behavior
          */
-            var file, onParallel;
-            // jslint-hack
-            local.utility2.nop(options);
-            file = __filename;
+            var onParallel;
+            options = {};
+            options.file = __filename;
             onParallel = local.utility2.onParallel(onError);
             onParallel.counter += 1;
-            local.fs.stat(file, function (error, stat) {
+            local.fs.stat(options.file, function (error, stat) {
                 // test default watchFile handling-behavior
                 onParallel.counter += 1;
-                local.fs.utimes(file, stat.atime, new Date(), onParallel);
+                local.fs.utimes(options.file, stat.atime, new Date(), onParallel);
                 // test nop watchFile handling-behavior
                 onParallel.counter += 1;
                 setTimeout(function () {
-                    local.fs.utimes(file, stat.atime, stat.mtime, onParallel);
+                    local.fs.utimes(options.file, stat.atime, stat.mtime, onParallel);
                 // coverage-hack - use 1500 ms to cover setInterval watchFile in node
                 }, 1500);
                 onParallel(error);
@@ -1798,9 +1856,8 @@
         /*
          * this function will test processSpawnWithTimeout's default handling-behavior
          */
-            var childProcess, onParallel;
-            // jslint-hack
-            local.utility2.nop(options);
+            var onParallel;
+            options = {};
             onParallel = local.utility2.onParallel(onError);
             onParallel.counter += 1;
             // test default handling-behavior
@@ -1809,9 +1866,9 @@
                 .on('error', onParallel)
                 .on('exit', function (exitCode, signal) {
                     // validate exitCode
-                    local.utility2.assert(exitCode === 0, exitCode);
+                    local.utility2.assertJsonEqual(exitCode, 0);
                     // validate signal
-                    local.utility2.assert(signal === null, signal);
+                    local.utility2.assertJsonEqual(signal, null);
                     onParallel();
                 });
             // test timeout handling-behavior
@@ -1819,17 +1876,17 @@
             local.utility2.testMock([
                 [local.utility2, { timeoutDefault: 1000 }]
             ], function (onError) {
-                childProcess = local.utility2.processSpawnWithTimeout('sleep', [5000]);
+                options.childProcess = local.utility2.processSpawnWithTimeout('sleep', [5000]);
                 onError();
             }, local.utility2.nop);
-            childProcess
+            options.childProcess
                 .on('error', onParallel)
                 .on('exit', function (exitCode, signal) {
                     local.utility2.tryCatchOnError(function () {
                         // validate exitCode
-                        local.utility2.assert(exitCode === null, exitCode);
+                        local.utility2.assertJsonEqual(exitCode, null);
                         // validate signal
-                        local.utility2.assert(signal === 'SIGKILL', signal);
+                        local.utility2.assertJsonEqual(signal, 'SIGKILL');
                         onParallel();
                     }, onParallel);
                 });
@@ -1841,9 +1898,7 @@
          * this function will test replStart's default handling-behavior
          */
             /*jslint evil: true*/
-            // jslint-hack
-            local.utility2.nop(options);
-            local.utility2.testMock([
+            options = [
                 [local.utility2, { processSpawnWithTimeout: function () {
                     return { on: function (event, callback) {
                         // jslint-hack
@@ -1851,7 +1906,8 @@
                         callback();
                     } };
                 } }]
-            ], function (onError) {
+            ];
+            local.utility2.testMock(options, function (onError) {
                 [
                     // test shell handling-behavior
                     '$ :\n',
@@ -1881,12 +1937,11 @@
         /*
          * this function will test serverRespondTimeoutDefault's default handling-behavior
          */
-            // jslint-hack
-            local.utility2.nop(options);
-            local.utility2.testMock([
+            options = [
                 // suppress console.error
                 [local.utility2, { timeoutDefault: 1000 }]
-            ], function (onError) {
+            ];
+            local.utility2.testMock(options, function (onError) {
                 local.utility2.serverRespondTimeoutDefault(
                     {
                         // test default onTimeout handling-behavior
@@ -1935,14 +1990,13 @@
         /*
          * this function will test testReport's default handling-behavior
          */
-            // jslint-hack
-            local.utility2.nop(options);
-            // test testRunServer's $npm_config_timeout_exit handling-behavior
-            local.utility2.testMock([
+            options = [
                 // suppress console.log
                 [console, { log: local.utility2.nop }],
                 [local.utility2, { exit: local.utility2.nop }]
-            ], function (onError) {
+            ];
+            // test testRunServer's $npm_config_timeout_exit handling-behavior
+            local.utility2.testMock(options, function (onError) {
                 // test exit handling-behavior
                 local.utility2.testReportCreate(local.utility2.testReport);
                 onError();
@@ -1953,10 +2007,7 @@
         /*
          * this function will test testRunServer's exit handling-behavior
          */
-            // jslint-hack
-            local.utility2.nop(options);
-            // test testRunServer's $npm_config_timeout_exit handling-behavior
-            local.utility2.testMock([
+            options = [
                 // suppress console.log
                 [console, { log: local.utility2.nop }],
                 // have setTimeout call immediately
@@ -1984,7 +2035,9 @@
                 [local.utility2.local, { http: { createServer: function () {
                     return { listen: local.utility2.nop };
                 } } }]
-            ], function (onError) {
+            ];
+            // test testRunServer's $npm_config_timeout_exit handling-behavior
+            local.utility2.testMock(options, function (onError) {
                 // test exit handling-behavior
                 local.utility2.testRunServer({ middleware:
                     local.utility2.middlewareGroupCreate([local.utility2.middlewareInit]) });
@@ -2005,8 +2058,7 @@
                 envDict: local.utility2.envDict,
                 // add script assets.test.js
                 scriptExtra: '<script src="assets.test.js"></script>'
-            },
-            ''
+            }
         );
         local.utility2.assetsDict['/assets.script-only.html'] =
             '<h1>script-only test</h1>\n' +

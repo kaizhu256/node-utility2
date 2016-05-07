@@ -944,7 +944,7 @@ local['head.txt'] = '\
             font-size: 10pt;\n\
         }\n\
         pre {\n\
-            font-family: Consolas, Menlo, Monaco, monospace;\n\
+            font-family: Menlo, Monaco, Consolas, Courier New, monospace;\n\
             margin: 0;\n\
             padding: 0;\n\
             line-height: 14px;\n\

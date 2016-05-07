@@ -112,7 +112,7 @@ local.utility2.templateBuildBadgeSvg =
 local.utility2.templateDocApiHtml = '\
 <style>\n\
 .docApiDiv {\n\
-    font-family: Helvetical Neue, Helvetica, Arial, sans-serif;\n\
+    font-family: Helvetica Neue, Helvetica, Arial, sans-serif;\n\
 }\n\
 .docApiDiv a {\n\
     color: #55f;\n\
@@ -151,43 +151,42 @@ local.utility2.templateDocApiHtml = '\
 <div class="docApiDiv">\n\
 <h1>api documentation ({{envDict.npm_package_name}} @ {{envDict.npm_package_version}})</h1>\n\
 <div class="docApiSectionDiv"><a href="#"><h1>table of contents</h1></a><ul>\n\
-{{#list moduleList}}\n\
-<li><a href="#{{id}}">module {{name}}</a><ol>\n\
-{{#list elementList}}\n\
-    <li>\n\
-    {{#unless source}}\n\
-        <span class="docApiSignatureSpan">{{name}}</span>\n\
-    {{/unless source}}\n\
-    {{#if source}}\n\
-        <a class="docApiElementLiA" href="#{{id}}">\n\
-        {{name}}\n\
-        <span class="docApiSignatureSpan">{{signature}}</span>\n\
-        </a>\n\
-    {{/if source}}\n\
-    </li>\n\
-{{/list elementList}}\n\
-</ol></li>\n\
-{{/list moduleList}}\n\
-</ul></div>\n\
-{{#list moduleList}}\n\
-<div class="docApiSectionDiv">\n\
-<h1><a href="#{{id}}" id="{{id}}">module {{name}}</a></h1>\n\
-{{#list elementList}}\n\
-    {{#if source}}\n\
-        <h2>\n\
-            <a href="#{{id}}" id="{{id}}">\n\
+{{#each moduleList}}\n\
+    <li><a href="#{{id}}">module {{name}}</a><ol>\n\
+    {{#each elementList}}\n\
+        <li>\n\
+        {{#if source}}\n\
+            <a class="docApiElementLiA" href="#{{id}}">\n\
             {{name}}\n\
             <span class="docApiSignatureSpan">{{signature}}</span>\n\
             </a>\n\
-        </h2>\n\
-        <ul>\n\
-        <li>description and source code<pre class="docApiCodePre">{{source}}</pre></li>\n\
-        <li>example<pre class="docApiCodePre">{{example}}</pre></li>\n\
-        </ul>\n\
-    {{/if source}}\n\
-{{/list elementList}}\n\
-</div>\n\
-{{/list moduleList}}\n\
+        {{#unless source}}\n\
+            <span class="docApiSignatureSpan">{{name}}</span>\n\
+        {{/if source}}\n\
+        </li>\n\
+    {{/each elementList}}\n\
+    </ol></li>\n\
+{{/each moduleList}}\n\
+</ul></div>\n\
+{{#each moduleList}}\n\
+    <div class="docApiSectionDiv">\n\
+    <h1><a href="#{{id}}" id="{{id}}">module {{name}}</a></h1>\n\
+    {{#each elementList}}\n\
+        {{#if source}}\n\
+            <h2>\n\
+                <a href="#{{id}}" id="{{id}}">\n\
+                {{name}}\n\
+                <span class="docApiSignatureSpan">{{signature}}</span>\n\
+                </a>\n\
+            </h2>\n\
+            <ul>\n\
+            <li>description and source code<pre class="docApiCodePre">{{source}}</pre></li>\n\
+            <li>example<pre class="docApiCodePre">{{example}}</pre></li>\n\
+            </ul>\n\
+        {{/if source}}\n\
+    {{/each elementList}}\n\
+    </div>\n\
+{{/each moduleList}}\n\
 </div>\n\
 ';
 
@@ -208,7 +207,7 @@ local.utility2.templateTestReportHtml = '\
 .testReportPlatformDiv {\n\
     border: 1px solid;\n\
     border-radius: 5px;\n\
-    font-family: Helvetical Neue, Helvetica, Arial, sans-serif;\n\
+    font-family: Helvetica Neue, Helvetica, Arial, sans-serif;\n\
     margin-top: 20px;\n\
     padding: 0 10px 10px 10px;\n\
     text-align: left;\n\
@@ -220,6 +219,7 @@ local.utility2.templateTestReportHtml = '\
     border-top-style: solid;\n\
     margin-bottom: 0;\n\
     padding: 10px;\n\
+    white-space: pre-wrap;\n\
 }\n\
 .testReportPlatformPreHidden {\n\
     display: none;\n\
@@ -265,7 +265,11 @@ local.utility2.templateTestReportHtml = '\
         {{envDict.npm_package_version}}<br>\n\
     <span class="testReportSummarySpan">test date</span>- {{date}}<br>\n\
     <span class="testReportSummarySpan">commit info</span>-\n\
+        {{#if CI_COMMIT_INFO}}\n\
         {{CI_COMMIT_INFO htmlSafe}}<br>\n\
+        {{#unless CI_COMMIT_INFO}}\n\
+        undefined<br>\n\
+        {{/if CI_COMMIT_INFO}}\n\
 </h4>\n\
 <table class="testReportPlatformTable">\n\
 <thead><tr>\n\
@@ -282,7 +286,7 @@ local.utility2.templateTestReportHtml = '\
 </tr></tbody>\n\
 </table>\n\
 </div>\n\
-{{#list testPlatformList}}\n\
+{{#each testPlatformList}}\n\
 <div class="testReportPlatformDiv">\n\
 <h4>\n\
     {{testPlatformNumber}}. {{name htmlSafe}}<br>\n\
@@ -300,23 +304,23 @@ local.utility2.templateTestReportHtml = '\
     <th>test-case</th>\n\
 </tr></thead>\n\
 <tbody>\n\
-{{#list testCaseList}}\n\
+{{#each testCaseList}}\n\
 <tr class="testReportPlatformTr">\n\
     <td>{{testCaseNumber}}</td>\n\
     <td>{{timeElapsed}} ms</td>\n\
     <td class="{{testReportTestStatusClass}}">{{status}}</td>\n\
     <td>{{name}}</td>\n\
 </tr>\n\
-{{/list testCaseList}}\n\
+{{/each testCaseList}}\n\
 </tbody>\n\
 </table>\n\
 <pre class="{{testReportPlatformPreClass}}">\n\
-{{#list errorStackList}}\n\
+{{#each errorStackList}}\n\
 {{errorStack htmlSafe}}\n\
-{{/list errorStackList}}\n\
+{{/each errorStackList}}\n\
 </pre>\n\
 </div>\n\
-{{/list testPlatformList}}\n\
+{{/each testPlatformList}}\n\
 ';
 /* jslint-ignore-end */
     }());
@@ -724,7 +728,7 @@ local.utility2.templateTestReportHtml = '\
             ? local.global.Blob
             : function (array, options) {
               /*
-               * this function will create a node-compatible Blob instance
+               * this function will return a node-compatible Blob instance
                */
                 this.bff = local.utility2.bufferConcat(array);
                 this.type = options && options.type;
@@ -733,7 +737,7 @@ local.utility2.templateTestReportHtml = '\
         // init lib FormData
         local.utility2.FormData = function () {
         /*
-         * this function will create a serverLocal-compatible FormData instance
+         * this function will return a serverLocal-compatible FormData instance
          * https://xhr.spec.whatwg.org/#dom-formdata
          * The FormData(form) constructor must run these steps:
          * 1. Let fd be a new FormData object.
@@ -754,7 +758,10 @@ local.utility2.templateTestReportHtml = '\
          *    to context object's list of entries.
          */
             if (filename) {
-                value.name = filename;
+                // try to set value.name to filename
+                local.utility2.tryCatchOnError(function () {
+                    value.name = filename;
+                }, local.utility2.nop);
             }
             this.entryList.push({ name: name, value: value });
         };
@@ -1019,7 +1026,7 @@ local.utility2.templateTestReportHtml = '\
 
         local.utility2.assert = function (passed, message) {
         /*
-         * this function will throw an error if the assertion fails
+         * this function will assert the value passed is truthy, else throw the error message
          */
             var error;
             if (passed) {
@@ -1038,9 +1045,29 @@ local.utility2.templateTestReportHtml = '\
             throw error;
         };
 
+        local.utility2.assertJsonEqual = function (aa, bb) {
+        /*
+         * this function will assert
+         * utility2.jsonStringifyOrdered(aa) === JSON.stringify(bb)
+         */
+            aa = local.utility2.jsonStringifyOrdered(aa);
+            bb = JSON.stringify(bb);
+            local.utility2.assert(aa === bb, [aa, bb]);
+        };
+
+        local.utility2.assertJsonNotEqual = function (aa, bb) {
+        /*
+         * this function will assert
+         * utility2.jsonStringifyOrdered(aa) !== JSON.stringify(bb)
+         */
+            aa = local.utility2.jsonStringifyOrdered(aa);
+            bb = JSON.stringify(bb);
+            local.utility2.assert(aa !== bb, [aa, bb]);
+        };
+
         local.utility2.bcryptHashCreate = function (password, cost) {
         /*
-         * this function will create a bcrypt-hash from the password and cost (default = 10)
+         * this function will return a bcrypt-hash from the password and cost (default = 10)
          */
             return local.utility2.bcrypt.hashSync(password, cost);
         };
@@ -1416,7 +1443,7 @@ local.utility2.templateTestReportHtml = '\
 
         local.utility2.bufferCreate = function (text, encoding) {
         /*
-         * this function will create a Uint8Array from the text,
+         * this function will return a Uint8Array from the text,
          * with either 'utf8' (default) or 'base64' encoding
          */
             if (typeof text === 'string') {
@@ -1432,7 +1459,7 @@ local.utility2.templateTestReportHtml = '\
 
         local.utility2.bufferCreateIfNotBuffer = function (text, encoding) {
         /*
-         * this function will create a Uint8Array from the text with the given encoding,
+         * this function will return a Uint8Array from the text with the given encoding,
          * if it is not already a Uint8Array
          */
             return text instanceof local.global.Uint8Array
@@ -1523,7 +1550,7 @@ local.utility2.templateTestReportHtml = '\
 
         local.utility2.docApiCreate = function (options) {
         /*
-         * this function will create an html api-doc from the given options
+         * this function will return an html api-doc from the given options
          */
             var element, elementCreate, elementName, module, moduleName, trimLeft;
             elementCreate = function () {
@@ -1625,16 +1652,27 @@ local.utility2.templateTestReportHtml = '\
             options.envDict = local.utility2.envDict;
             return local.utility2.templateRender(
                 local.utility2.templateDocApiHtml,
-                options,
-                ''
+                options
             );
         };
 
-        local.utility2.domElementQuerySelectorAll = function (element, selectors) {
+        local.utility2.domFragmentRender = function (template, dict) {
         /*
-         * this function will return the list of selected dom-elements as a javascript array;
+         * this function will return a dom-fragment rendered from the givent template and dict
+         */
+            var tmp;
+            tmp = document.createElement('template');
+            tmp.innerHTML = local.utility2.templateRender(template, dict);
+            return tmp.content;
+        };
+
+        local.utility2.domQuerySelectorAll = function (element, selectors) {
+        /*
+         * this function will return the list of query-selected dom-elements,
+         * as a javascript array
          */
             return Array.prototype.slice.call((element.length === 1
+                // handle jQuery element
                 ? element[0]
                 : element).querySelectorAll(selectors));
         };
@@ -1861,6 +1899,7 @@ local.utility2.templateTestReportHtml = '\
          * this function will return the payload from the hs256-encoded json-web-token,
          * with the given secret
          */
+            // try to decode the token
             local.utility2.tryCatchOnError(function () {
                 token = token.split('.');
                 // validate header
@@ -2086,7 +2125,7 @@ local.utility2.templateTestReportHtml = '\
                         : modeNext + 1;
                     // recurse with next middleware in middlewareList
                     if (modeNext < self.middlewareList.length) {
-                        // try to call the sub-middleware
+                        // try to run the sub-middleware
                         local.utility2.tryCatchOnError(function () {
                             self.middlewareList[modeNext](request, response, onNext);
                         }, onNext);
@@ -2334,7 +2373,7 @@ local.utility2.templateTestReportHtml = '\
 
         local.utility2.onTimeout = function (onError, timeout, message) {
         /*
-         * this function will create a timeout-error-handler,
+         * this function will return a timeout-error-handler,
          * that will append the current stack to any error encountered
          */
             onError = local.utility2.onErrorWithStack(onError);
@@ -2357,7 +2396,7 @@ local.utility2.templateTestReportHtml = '\
             // spawn childProcess
             childProcess = local.child_process.spawn.apply(local.child_process, arguments)
                 .on('exit', function () {
-                    // try to kill timerTimeout on exit
+                    // try to kill timerTimeout childProcess
                     local.utility2.tryCatchOnError(function () {
                         process.kill(childProcess.timerTimeout.pid);
                     }, local.utility2.nop);
@@ -2500,7 +2539,7 @@ local.utility2.templateTestReportHtml = '\
                     script = 'console.log(String(' + match[2] + '))\n';
                     break;
                 }
-                // try to eval modified script
+                // try to eval the script
                 local.utility2.tryCatchOnError(function () {
                     local.utility2.replServer.evalDefault(script, context, file, onError2);
                 }, onError2);
@@ -2612,7 +2651,7 @@ local.utility2.templateTestReportHtml = '\
 
         local.utility2.serverRespondTimeoutDefault = function (request, response, timeout) {
         /*
-         * this function will create a timeout-error-handler for the server-request
+         * this function will return a timeout-error-handler for the server-request
          */
             request.onTimeout = request.onTimeout || function (error) {
                 local.utility2.serverRespondDefault(request, response, 500, error);
@@ -2801,42 +2840,48 @@ local.utility2.templateTestReportHtml = '\
             return task;
         };
 
-        local.utility2.templateRender = function (template, dict, valueDefault) {
+        local.utility2.templateRender = function (template, dict) {
         /*
-         * this function will replace the keys in the template with the dict's key / value
+         * this function will render the template with the given dict
          */
-            var argList, match, renderDefault, renderPartial, rgx, value;
+            var argList, getValue, match, renderPartial, rgx, value;
             dict = dict || {};
-            renderDefault = function (match0) {
-                return valueDefault === undefined
-                    ? match0
-                    : valueDefault;
+            getValue = function (key) {
+                argList = key.split(' ');
+                value = dict;
+                // iteratively lookup nested values in the dict
+                argList[0].split('.').forEach(function (key) {
+                    value = value && value[key];
+                });
+                return value;
             };
             renderPartial = function (match0, helper, key, partial) {
                 switch (helper) {
-                case 'if':
-                    if (dict[key]) {
-                        // recurse with partial
-                        return local.utility2.templateRender(partial, dict, valueDefault);
-                    }
-                    break;
-                case 'list':
-                    if (Array.isArray(dict[key])) {
-                        return dict[key].map(function (dict) {
+                case 'each':
+                    value = getValue(key);
+                    return Array.isArray(value)
+                        ? value.map(function (dict) {
                             // recurse with partial
-                            return local.utility2.templateRender(partial, dict, valueDefault);
-                        }).join('');
-                    }
-                    break;
+                            return local.utility2.templateRender(partial, dict);
+                        }).join('')
+                        : '';
+                case 'if':
+                    partial = partial.split('{{#unless ' + key + '}}');
+                    partial = getValue(key)
+                        ? partial[0]
+                        // handle 'unless' case
+                        : partial.slice(1).join('{{#unless ' + key + '}}');
+                    // recurse with partial
+                    return local.utility2.templateRender(partial, dict);
                 case 'unless':
-                    if (!dict[key]) {
+                    return getValue(key)
+                        ? ''
                         // recurse with partial
-                        return local.utility2.templateRender(partial, dict, valueDefault);
-                    }
-                    break;
+                        : local.utility2.templateRender(partial, dict);
+                default:
+                    // recurse with partial
+                    return match0[0] + local.utility2.templateRender(match0.slice(1), dict);
                 }
-                // render default
-                return renderDefault(match0);
             };
             // render partials
             rgx = (/\{\{#(\w+) ([^}]+?)\}\}/g);
@@ -2851,25 +2896,32 @@ local.utility2.templateTestReportHtml = '\
             }
             // search for keys in the template
             return template.replace((/\{\{[^}]+?\}\}/g), function (match0) {
-                argList = match0.slice(2, -2).split(' ');
-                value = dict;
-                // iteratively lookup nested values in the dict
-                argList[0].split('.').forEach(function (key) {
-                    value = value && value[key];
-                });
+                getValue(match0.slice(2, -2));
                 if (value === undefined) {
-                    return renderDefault(match0);
+                    return match0;
                 }
                 argList.slice(1).forEach(function (arg) {
                     switch (arg) {
+                    case 'decodeURIComponent':
+                        value = decodeURIComponent(value);
+                        break;
                     case 'encodeURIComponent':
                         value = encodeURIComponent(value);
                         break;
                     case 'htmlSafe':
                         value = local.utility2.stringHtmlSafe(String(value));
                         break;
-                    case 'json':
+                    case 'jsonStringify':
                         value = JSON.stringify(value);
+                        break;
+                    case 'trim':
+                        value = value.trim();
+                        break;
+                    case 'trimLeft':
+                        value = value.trimLeft();
+                        break;
+                    case 'trimRight':
+                        value = value.trimRight();
                         break;
                     }
                 });
@@ -3166,8 +3218,7 @@ local.utility2.templateTestReportHtml = '\
                     testsFailedClass: testReport.testsFailed
                         ? 'testReportTestFailed'
                         : 'testReportTestPassed'
-                }, 8),
-                'undefined'
+                }, 8)
             );
         };
 
@@ -3408,11 +3459,11 @@ local.utility2.templateTestReportHtml = '\
             switch (local.modeJs) {
             case 'browser':
                 location.search.replace(
-                    (/\b(mode[A-Z]\w+|timeExit|timeoutDefault)=([\w\-\.\%]+)/g),
+                    (/\b(NODE_ENV|mode[A-Z]\w+|timeExit|timeoutDefault)=([\w\-\.\%]+)/g),
                     function (match0, key, value) {
                         // jslint-hack
                         local.utility2.nop(match0);
-                        local.utility2[key] = value;
+                        local.utility2[key] = local.utility2.envDict[key] = value;
                         // try to JSON.parse the string
                         local.utility2.tryCatchOnError(function () {
                             local.utility2[key] = JSON.parse(value);
@@ -3445,14 +3496,10 @@ local.utility2.templateTestReportHtml = '\
          * this function will try to run the task in a try-catch block,
          * else call onError with the errorCaught
          */
-            var stack;
-            stack = new Error().stack;
             try {
                 task();
                 local.utility2.tryCatchErrorCaught = null;
             } catch (errorCaught) {
-                // save current-stack to errorCaught.stack
-                errorCaught.stack = errorCaught.stack + '\n' + stack;
                 onError(errorCaught);
                 local.utility2.tryCatchErrorCaught = errorCaught;
             }
