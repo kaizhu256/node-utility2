@@ -714,6 +714,23 @@ shHtpasswdCreate() {(set -e
     printf "$1:$(openssl passwd -apr1 "$2")"
 )}
 
+shHttpFileServer() {(set -e
+# this function will run a simple node http-file-server on port $PORT
+node -e "
+    'use strict';
+    require('http').createServer(function (request, response) {
+        require('fs').readFile(
+            process.cwd() + require('url').parse(request.url).pathname,
+            function (error, data) {
+                response.end(error
+                    ? error.stack
+                    : data);
+            }
+        );
+    }).listen(process.env.PORT);
+"
+)}
+
 shInit() {
 # this function will init the env
 # init CI_*

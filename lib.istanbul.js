@@ -115,7 +115,7 @@
                                 });
                         })
                         .replace('position: fixed;', 'position: static;')
-                        .replace('margin-top: 10em;', 'margin-top: 0;');
+                        .replace('margin-top: 10rem;', 'margin-top: 0;');
                 }
                 return file;
             },
@@ -915,7 +915,7 @@ local['head.txt'] = '\
         }\n\
         div.header, div.footer {\n\
             background: #eee;\n\
-            padding: 1em;\n\
+            padding: 1rem;\n\
         }\n\
         div.header {\n\
             z-index: 100;\n\
@@ -928,7 +928,7 @@ local['head.txt'] = '\
             border-top: 1px solid #666;\n\
         }\n\
         div.body {\n\
-            margin-top: 10em;\n\
+            margin-top: 10rem;\n\
         }\n\
         div.meta {\n\
             font-size: 90%;\n\
@@ -944,6 +944,7 @@ local['head.txt'] = '\
             font-size: 10pt;\n\
         }\n\
         pre {\n\
+            border-top: 1px solid #666;\n\
             font-family: Menlo, Monaco, Consolas, Courier New, monospace;\n\
             margin: 0;\n\
             padding: 0;\n\

@@ -16,6 +16,8 @@
 
     // run shared js-env code - pre-init
     (function () {
+        // init Error.stackTraceLimit
+        Error.stackTraceLimit = Infinity;
         // init local
         local = {};
         // init modeJs
@@ -620,36 +622,6 @@
             onError();
         };
 
-        local.testCase_es6_generator = function (options, onError) {
-        /*
-         * this function will test es6's generator handling-behavior
-         */
-            options = {};
-            options.generatorCreate = function* () {
-                var result;
-                result = yield arguments;
-                yield result;
-                yield this;
-            };
-            options.generator = options.generatorCreate(1);
-            local.utility2.assertJsonEqual(options.generator.next(2), {
-                done: false,
-                value: { 0: 1 }
-            });
-            local.utility2.assertJsonEqual(options.generator.next(2), {
-                done: false,
-                value: 2
-            });
-            local.utility2.assertJsonEqual(options.generator.next(2), {
-                done: false,
-                value: { generator: {} }
-            });
-            local.utility2.assertJsonEqual(options.generator.next(2), {
-                done: true
-            });
-            onError();
-        };
-
         local.testCase_exit_default = function (options, onError) {
         /*
          * this function will exit's default handling-behavior
@@ -884,16 +856,16 @@
          */
             options = {};
             // init list
-            options.list = ['aa', 'bb', 'cc'];
+            options.list = ['aa', 'bb', 'cc', 'dd'];
             options.elementDict = {};
             // get 100 random elements from list
-            for (options.ii = 0; options.ii < 100; options.ii += 1) {
+            for (options.ii = 0; options.ii < 1024; options.ii += 1) {
                 options.elementDict[local.utility2.listGetElementRandom(options.list)] = true;
             }
             // validate all elements were retrieved from list
             local.utility2.assertJsonEqual(
                 Object.keys(options.elementDict).sort(),
-                options.list
+                ['aa', 'bb', 'cc', 'dd']
             );
             onError();
         };
@@ -1332,8 +1304,7 @@
             local.utility2.assertJsonEqual(options.data, '{{aa}}');
             // test default handling-behavior
             options.data = local.utility2.templateRender('{{aa}} ' +
-                '{{aa jsonStringify htmlSafe encodeURIComponent decodeURIComponent ' +
-                'trim trimLeft trimRight}} ' +
+                '{{aa jsonStringify htmlSafe encodeURIComponent decodeURIComponent trim}} ' +
                 '{{bb}} {{cc}} {{dd}} {{ee.ff}}', {
                     // test string value handling-behavior
                     aa: '<aa>',
@@ -1550,6 +1521,36 @@
                 });
                 onError();
             }, onError);
+        };
+
+        local.testCase_cookieXxx_default = function (options, onError) {
+        /*
+         * this function will test cookieXxx's default handling-behavior
+         */
+            options = {};
+            // test cookieRemoveAll handling-behavior
+            local.utility2.cookieRemoveAll();
+            // validate data
+            options.data = local.utility2.cookieDict().aa;
+            local.utility2.assertJsonEqual(options.data, undefined);
+            // test cookieSet handling-behavior
+            local.utility2.cookieSet('aa', 'bb', 1000);
+            // validate data
+            options.data = local.utility2.cookieDict().aa;
+            local.utility2.assertJsonEqual(options.data, 'bb');
+            // test cookieRemove handling-behavior
+            local.utility2.cookieRemove('aa');
+            // validate data
+            options.data = local.utility2.cookieDict().aa;
+            local.utility2.assertJsonEqual(options.data, undefined);
+            // test cookieSet handling-behavior
+            local.utility2.cookieSet('aa', 'bb', 1000);
+            // test cookieRemoveAll handling-behavior
+            local.utility2.cookieRemoveAll();
+            // validate data
+            options.data = local.utility2.cookieDict().aa;
+            local.utility2.assertJsonEqual(options.data, undefined);
+            onError();
         };
 
         local.testCase_domFragmentRender_default = function (options, onError) {

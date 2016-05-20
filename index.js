@@ -659,9 +659,13 @@ local.utility2.templateTestReportHtml = '\
          * https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest#send()
          * Sends the request
          */
-            this.data = data;
-            // send data
-            this.requestStream.end(this.data);
+            var self;
+            self = this;
+            self.data = data;
+            // asynchronously send data
+            setTimeout(function () {
+                self.requestStream.end(self.data);
+            });
         };
 
         local._http.XMLHttpRequest.prototype.setRequestHeader = function (key, value) {
@@ -1511,6 +1515,50 @@ local.utility2.templateTestReportHtml = '\
             return local.modeJs === 'browser'
                 ? new local.global.TextDecoder('utf-8').decode(bff)
                 : new Buffer(bff).toString();
+        };
+
+        local.utility2.cookieDict = function () {
+        /*
+         * this function will return a dict of all cookies
+         */
+            var result;
+            result = {};
+            document.cookie.replace((/(\w+)=([^;]*)/g), function (match0, match1, match2) {
+                // jslint-hack
+                local.utility2.nop(match0);
+                result[match1] = match2;
+            });
+            return result;
+        };
+
+        local.utility2.cookieRemove = function (name) {
+        /*
+         * this function will remove the cookie with the given name
+         */
+            document.cookie = name + '=; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+        };
+
+        local.utility2.cookieRemoveAll = function () {
+        /*
+         * this function will remove all cookies
+         */
+            document.cookie.replace((/(\w+)=/g), function (match0, match1) {
+                // jslint-hack
+                local.utility2.nop(match0);
+                document.cookie = match1 + '=; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+            });
+        };
+
+        local.utility2.cookieSet = function (name, value, expiresOffset) {
+        /*
+         * this function will set the cookie with the given name, value,
+         * and expiresOffset (in ms)
+         */
+            var tmp;
+            tmp = name + '=' + value + '; expires=' +
+                new Date(Date.now() + expiresOffset).toUTCString();
+            document.cookie = tmp;
+            return tmp;
         };
 
         local.utility2.cryptojsCipherAes256Decrypt = function (data, secret) {
@@ -2914,14 +2962,8 @@ local.utility2.templateTestReportHtml = '\
                     case 'jsonStringify':
                         value = JSON.stringify(value);
                         break;
-                    case 'trim':
-                        value = value.trim();
-                        break;
-                    case 'trimLeft':
-                        value = value.trimLeft();
-                        break;
-                    case 'trimRight':
-                        value = value.trimRight();
+                    default:
+                        value = value[arg]();
                         break;
                     }
                 });
@@ -3497,11 +3539,11 @@ local.utility2.templateTestReportHtml = '\
          * else call onError with the errorCaught
          */
             try {
-                task();
                 local.utility2.tryCatchErrorCaught = null;
+                task();
             } catch (errorCaught) {
-                onError(errorCaught);
                 local.utility2.tryCatchErrorCaught = errorCaught;
+                onError(errorCaught);
             }
         };
 

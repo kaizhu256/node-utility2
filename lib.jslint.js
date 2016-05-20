@@ -716,12 +716,7 @@ local.CSSLint = CSSLint; local.JSLINT = JSLINT; }());
             } else {
                 scriptParsed = scriptParsed
                     // comment shebang
-                    .replace((/^#!/), '//')
-                    // handle es6 generator
-                    // https://developer.mozilla.org
-                    // /en-US/docs/Web/JavaScript/Reference/Global_Objects/Generator
-                    .replace((/\bfunction\*/g), 'function')
-                    .replace((/ yield /g), ' this.y = ');
+                    .replace((/^#!/), '//');
                 if (local.JSLINT(scriptParsed)) {
                     return script;
                 }

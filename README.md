@@ -8,22 +8,21 @@ this package will run dynamic browser tests with coverage (via istanbul and elec
 
 # documentation
 #### todo
-- add es6 support in jslint
 - add utility2.middlewareLimit
 - add server stress test using electron
 - none
 
-#### change since 6ac8a3af
-- npm publish 2016.3.5
-- fix utility2.FormData.prototype.append from crashing when it tries to set value.name to a browser file-object
-- improve performance of utility2.tryCatchOnError
-- function utility2.jslintAndPrint - add css support for flexbox
-- add function utility2.assertJsonEqual and utility2.assertJsonNotEqual
-- use handlebars-like syntax each/if/unless in utility2.templateRender
+#### change since f9acd5bd
+- npm publish 2016.3.6
+- jslint - remove hacky es6 generator support
+- add shell function shHttpFileServer
+- add functions utility2.cookieDict, utility2.cookieRemove, utility2.cookieRemoveAll, utility2.cookieSet
+- allow argument for arbitrary string method in utility2.templateRender
 - none
 
 #### this package requires
 - darwin or linux os
+- chromium-based browser or firefox browser
 
 #### api-doc
 - [https://kaizhu256.github.io/node-utility2/build/doc.api.html](https://kaizhu256.github.io/node-utility2/build/doc.api.html)
@@ -521,7 +520,7 @@ export npm_config_mode_auto_restart=1 && \
 ./index.sh test node test.js",
         "test-published": "./index.sh shRun shNpmTestPublished"
     },
-    "version": "2016.3.5"
+    "version": "2016.3.6"
 }
 ```
 
