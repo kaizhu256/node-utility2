@@ -12,12 +12,9 @@ this package will run dynamic browser tests with coverage (via istanbul and elec
 - add server stress test using electron
 - none
 
-#### change since f9acd5bd
-- npm publish 2016.3.6
-- jslint - remove hacky es6 generator support
-- add shell function shHttpFileServer
-- add functions utility2.cookieDict, utility2.cookieRemove, utility2.cookieRemoveAll, utility2.cookieSet
-- allow argument for arbitrary string method in utility2.templateRender
+#### change since 3a01ad73
+- npm publish 2016.4.1
+- update electron-lite devDependency
 - none
 
 #### this package requires
@@ -460,7 +457,7 @@ window.testRun({});\n\
     "description": "this package will run dynamic browser tests with coverage \
 (via istanbul and electron)",
     "devDependencies": {
-        "electron-lite": "2016.3.3"
+        "electron-lite": "2016.4.3"
     },
     "engines": { "node": ">=4.0" },
     "keywords": [
@@ -520,7 +517,7 @@ export npm_config_mode_auto_restart=1 && \
 ./index.sh test node test.js",
         "test-published": "./index.sh shRun shNpmTestPublished"
     },
-    "version": "2016.3.6"
+    "version": "2016.4.1"
 }
 ```
 

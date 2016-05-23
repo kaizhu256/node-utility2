@@ -684,7 +684,8 @@ local.CSSLint = CSSLint; local.JSLINT = JSLINT; }());
                 scriptParsed = scriptParsed.replace(new RegExp([
                     // handle flexbox
                     ' display: flex;',
-                    ' flex: .*'
+                    ' flex: .+?;',
+                    ' flex-.+?: .+?;'
                 ].join('|'), 'g'), function () {
                     return ' background: url(' + Math.random() + ');';
                 });

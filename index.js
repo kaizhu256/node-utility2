@@ -1278,10 +1278,10 @@ local.utility2.templateTestReportHtml = '\
                     // handle uncaughtexception
                     process.once('uncaughtException', onNext);
                     // wait for electron to init
-                    require('app').once('ready', onNext);
+                    require('electron').app.once('ready', onNext);
                     break;
                 case 12:
-                    options.BrowserWindow = require('browser-window');
+                    options.BrowserWindow = require('electron').BrowserWindow;
                     local.utility2.objectSetDefault(
                         options,
                         { frame: false, height: 768, width: 1024, x: 0, y: 0 }

@@ -11,7 +11,7 @@
     "description": "this package will run dynamic browser tests with coverage (via istanbul and electron)",
 
     "devDependencies": {
-        "electron-lite": "2016.3.3"
+        "electron-lite": "2016.4.3"
     },
     "engines": { "node": ">=4.0" },
     "keywords": [
@@ -71,5 +71,5 @@
 
         "test-published": "./index.sh shRun shNpmTestPublished"
     },
-    "version": "2016.3.6"
+    "version": "2016.4.1"
 }
