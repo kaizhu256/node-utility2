@@ -909,13 +909,32 @@
         /*
          * this function will test objectKeysTypeOf's default handling-behavior
          */
-            options =
-                { aa: true, bb: local.utility2.nop, cc: 0, dd: null, ee: '', ff: undefined };
+            options = {
+                aa: true,
+                bb: local.utility2.nop,
+                cc: 0,
+                dd: null,
+                ee: '',
+                ff: undefined
+            };
             options = local.utility2.objectKeysTypeof(options);
             local.utility2.assertJsonEqual(
                 options,
                 'boolean aa\nfunction bb\nnumber cc\nobject dd\nstring ee\nundefined ff'
             );
+            onError();
+        };
+
+        local.testCase_objectLiteralize_default = function (options, onError) {
+        /*
+         * this function will test objectLiteralize's default handling-behavior
+         */
+            options = local.utility2.objectLiteralize({
+                '': '$[]',
+                '$[]1': [1, { '$[]2': [2, 3] }]
+            });
+            // validate options
+            local.utility2.assertJsonEqual(options, { 1: { 2: 3 }, '': '$[]' });
             onError();
         };
 
@@ -1384,8 +1403,8 @@
                 [local.utility2, { envDict: {}, modeTest: null }]
             ], function (onError) {
                 local.utility2.testRun(options);
-                // validate no options.onReady
-                local.utility2.assert(!options.onReady, options);
+                // validate no options.onReadyAfter
+                local.utility2.assert(!options.onReadyAfter, options);
                 onError();
             }, onError);
         };
@@ -2027,7 +2046,7 @@ local.utility2.assertJsonEqual(options.coverage1,
                         // test timeout-exit handling-behavior
                         npm_config_timeout_exit: '1'
                     },
-                    onReady: {},
+                    onReadyBefore: {},
                     serverLocalHost: '',
                     serverLocalRequestHandler: local.utility2.nop,
                     serverLocalUrlTest: local.utility2.nop,
@@ -2064,10 +2083,10 @@ local.utility2.assertJsonEqual(options.coverage1,
         local.utility2.assetsDict['/assets.script-only.html'] =
             '<h1>script-only test</h1>\n' +
             '<script src="assets.utility2.js"></script>\n' +
-            '<script>window.utility2.onReady.counter += 1;</script>\n' +
+            '<script>window.utility2.onReadyBefore.counter += 1;</script>\n' +
             '<script src="assets.example.js"></script>\n' +
             '<script src="assets.test.js"></script>\n' +
-            '<script>window.utility2.onReady();</script>\n';
+            '<script>window.utility2.onReadyBefore();</script>\n';
         // init serverLocal
         local.utility2.serverLocalUrlTest = function (url) {
             url = local.utility2.urlParse(url).pathname;

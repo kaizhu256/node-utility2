@@ -96,7 +96,7 @@
             : require('./lib.uglifyjs.js');
         // init templates
 /* jslint-ignore-begin */
-// http://www.w3.org/TR/html5/forms.html
+// https://www.w3.org/TR/html5/forms.html#valid-e-mail-address
 local.utility2.regexpEmailValidate = (
 /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/
 );
@@ -153,40 +153,40 @@ local.utility2.templateDocApiHtml = '\
 <div class="docApiSectionDiv"><a href="#"><h1>table of contents</h1></a><ul>\n\
 {{#each moduleList}}\n\
     <li><a href="#{{id}}">module {{name}}</a><ol>\n\
-    {{#each elementList}}\n\
+        {{#each elementList}}\n\
         <li>\n\
-        {{#if source}}\n\
+            {{#if source}}\n\
             <a class="docApiElementLiA" href="#{{id}}">\n\
             {{name}}\n\
             <span class="docApiSignatureSpan">{{signature}}</span>\n\
             </a>\n\
-        {{#unless source}}\n\
+            {{#unless source}}\n\
             <span class="docApiSignatureSpan">{{name}}</span>\n\
         {{/if source}}\n\
         </li>\n\
-    {{/each elementList}}\n\
+        {{/each elementList}}\n\
     </ol></li>\n\
 {{/each moduleList}}\n\
 </ul></div>\n\
-{{#each moduleList}}\n\
+    {{#each moduleList}}\n\
     <div class="docApiSectionDiv">\n\
     <h1><a href="#{{id}}" id="{{id}}">module {{name}}</a></h1>\n\
-    {{#each elementList}}\n\
+        {{#each elementList}}\n\
         {{#if source}}\n\
-            <h2>\n\
-                <a href="#{{id}}" id="{{id}}">\n\
-                {{name}}\n\
-                <span class="docApiSignatureSpan">{{signature}}</span>\n\
-                </a>\n\
-            </h2>\n\
-            <ul>\n\
-            <li>description and source code<pre class="docApiCodePre">{{source}}</pre></li>\n\
-            <li>example<pre class="docApiCodePre">{{example}}</pre></li>\n\
-            </ul>\n\
+        <h2>\n\
+            <a href="#{{id}}" id="{{id}}">\n\
+            {{name}}\n\
+            <span class="docApiSignatureSpan">{{signature}}</span>\n\
+            </a>\n\
+        </h2>\n\
+        <ul>\n\
+        <li>description and source code<pre class="docApiCodePre">{{source}}</pre></li>\n\
+        <li>example usage<pre class="docApiCodePre">{{example}}</pre></li>\n\
+        </ul>\n\
         {{/if source}}\n\
-    {{/each elementList}}\n\
+        {{/each elementList}}\n\
     </div>\n\
-{{/each moduleList}}\n\
+    {{/each moduleList}}\n\
 </div>\n\
 ';
 
@@ -342,7 +342,7 @@ local.utility2.templateTestReportHtml = '\
             this.headers = {};
             this.httpVersion = '1.1';
             this.method = xhr.method;
-            this.onEvent = document.createDocumentFragment('onEvent');
+            this.onEvent = document.createDocumentFragment();
             this.readable = true;
             this.url = xhr.url;
         };
@@ -401,7 +401,7 @@ local.utility2.templateTestReportHtml = '\
          */
             this.chunkList = [];
             this.headers = {};
-            this.onEvent = document.createDocumentFragment('onEvent');
+            this.onEvent = document.createDocumentFragment();
             this.onResponse = onResponse;
             this.statusCode = 200;
         };
@@ -2252,6 +2252,24 @@ local.utility2.templateTestReportHtml = '\
             }).sort().join('\n');
         };
 
+        local.utility2.objectLiteralize = function (arg) {
+        /*
+         * this function will traverse arg, and replace every encounter of the magical key '$[]'
+         * with its object literal [key, value]
+         */
+            local.utility2.objectTraverse(arg, function (element) {
+                if (element && typeof element === 'object' && !Array.isArray(element)) {
+                    Object.keys(element).forEach(function (key) {
+                        if (key.indexOf('$[]') === 0) {
+                            element[element[key][0]] = element[key][1];
+                            delete element[key];
+                        }
+                    });
+                }
+            });
+            return arg;
+        };
+
         local.utility2.objectSetDefault = function (arg, defaults, depth) {
         /*
          * this function will recursively set default values for unset leaf nodes
@@ -3275,13 +3293,10 @@ local.utility2.templateTestReportHtml = '\
             if (!(local.utility2.modeTest || options.modeTest)) {
                 return;
             }
-            if (!options.onReady) {
-                options.onReady = function () {
+            if (!options.onReadyAfter) {
+                options.onReadyAfter = local.utility2.onReadyAfter(function () {
                     local.utility2.testRun(options);
-                };
-                local.utility2.taskCallbackAdd({ key: 'utility2.onReady' }, options.onReady);
-                local.utility2.onReady.counter += 1;
-                setTimeout(local.utility2.onReady);
+                });
                 return;
             }
             // init onParallel
@@ -3454,8 +3469,8 @@ local.utility2.templateTestReportHtml = '\
             options.port = options.port || local.utility2.envDict.PORT;
             local.utility2.serverLocalRequestHandler = requestHandler;
             console.log('server starting on port ' + options.port);
-            local.utility2.onReady.counter += 1;
-            server.listen(options.port, local.utility2.onReady);
+            local.utility2.onReadyBefore.counter += 1;
+            server.listen(options.port, local.utility2.onReadyBefore);
             // if $npm_config_timeout_exit is defined,
             // then exit this process after $npm_config_timeout_exit ms
             if (Number(local.utility2.envDict.npm_config_timeout_exit)) {
@@ -3630,7 +3645,7 @@ local.utility2.templateTestReportHtml = '\
         local.utility2.uuid4Create = function () {
         /*
          * this function will return a random uuid,
-         * with format "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx"
+         * with format 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'
          */
             // code derived from http://jsperf.com/uuid4
             var id, ii;
@@ -3662,7 +3677,7 @@ local.utility2.templateTestReportHtml = '\
         local.utility2.uuidTimeCreate = function () {
         /*
          * this function will return a time-based version of uuid4,
-         * with format "tttttttt-tttx-4xxx-yxxx-xxxxxxxxxxxx"
+         * with format 'tttttttt-tttx-4xxx-yxxx-xxxxxxxxxxxx'
          */
             return Date.now().toString(16).replace((/(.{8})/), '$1-') +
                 local.utility2.uuid4Create().slice(12);
@@ -3723,25 +3738,62 @@ local.utility2.templateTestReportHtml = '\
         local.utility2.urlParse('');
         // init timeoutDefault
         local.utility2.timeoutDefaultInit();
-        // init onReady
-        local.utility2.onReady = local.utility2.onParallel(function (error) {
-            local.utility2.taskCallbackAdd({ key: 'utility2.onReady' }, function (error) {
+        // init onReadyAfter
+        local.utility2.onReadyAfter = function (onError) {
+        /*
+         * this function will call onError when onReadyBefore.counter === 0
+         */
+            local.utility2.taskCallbackAdd({ key: 'utility2.onReadyAfter' }, onError);
+            local.utility2.onReadyBefore.counter += 1;
+            local.utility2.onResetAfter(local.utility2.onReadyBefore);
+            return onError;
+        };
+        // init onReadyBefore
+        local.utility2.onReadyBefore = local.utility2.onParallel(function (error) {
+        /*
+         * this function will keep track of onReadyBefore.counter
+         */
+            local.utility2.taskCallbackAdd({ key: 'utility2.onReadyAfter' }, function (error) {
                 // validate no error occurred
                 local.utility2.assert(!error, error);
-                // hide ajaxProgressDiv
-                if (local.modeJs === 'browser' &&
-                        document.querySelector('.ajaxProgressDiv') &&
-                        document.querySelector('.ajaxProgressDiv').style.display !==
-                        'none') {
-                    local.utility2.ajax({ url: "" }, local.utility2.nop);
-                }
             });
-            local.utility2.taskUpsert({ key: 'utility2.onReady' }, function (onError) {
+            local.utility2.taskUpsert({ key: 'utility2.onReadyAfter' }, function (onError) {
                 onError(error);
             });
         });
-        local.utility2.onReady.counter += 1;
-        setTimeout(local.utility2.onReady);
+        // init onResetAfter
+        local.utility2.onResetAfter = function (onError) {
+        /*
+         * this function will call onError when onResetBefore.counter === 0
+         */
+            local.utility2.taskCallbackAdd({ key: 'utility2.onResetAfter' }, onError);
+            local.utility2.onResetBefore.counter += 1;
+            setTimeout(local.utility2.onResetBefore);
+            return onError;
+        };
+        // init onResetBefore
+        local.utility2.onResetBefore = local.utility2.onParallel(function (error) {
+        /*
+         * this function will keep track of onResetBefore.counter
+         */
+            local.utility2.taskCallbackAdd({ key: 'utility2.onResetAfter' }, function (error) {
+                // validate no error occurred
+                local.utility2.assert(!error, error);
+            });
+            local.utility2.taskUpsert({ key: 'utility2.onResetAfter' }, function (onError) {
+                onError(error);
+            });
+        });
+        local.utility2.onResetAfter(local.utility2.nop);
+        local.utility2.onReadyAfter(function () {
+            // hide ajaxProgressDiv
+            if (local.modeJs === 'browser' &&
+                    document.querySelector('.ajaxProgressDiv') &&
+                    document.querySelector('.ajaxProgressDiv').style.display !==
+                    'none') {
+                local.utility2.ajax({ url: '' }, local.utility2.nop);
+            }
+        });
     }());
     switch (local.modeJs) {
 

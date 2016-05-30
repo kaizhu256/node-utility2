@@ -12,9 +12,10 @@ this package will run dynamic browser tests with coverage (via istanbul and elec
 - add server stress test using electron
 - none
 
-#### change since 3a01ad73
-- npm publish 2016.4.1
-- update electron-lite devDependency
+#### change since b41248a5
+- npm publish 2016.4.2
+- add functions utility2.objectLiteral, utility2.onResetAfter, utility2.onResetBefore
+- split function utility2.onReady into utility2.onReadyBefore and utility2.onReadyAfter
 - none
 
 #### this package requires
@@ -347,10 +348,10 @@ textarea {\n\
 <script src="assets.utility2.lib.jslint.js"></script>\n\
 <script src="assets.utility2.lib.uglifyjs.js"></script>\n\
 <script src="assets.utility2.js"></script>\n\
-<script>window.utility2.onReady.counter += 1;</script>\n\
+<script>window.utility2.onReadyBefore.counter += 1;</script>\n\
 <script src="assets.example.js"></script>\n\
 {{scriptExtra}}\n\
-<script>window.utility2.onReady();</script>\n\
+<script>window.utility2.onReadyBefore();</script>\n\
 <script>\n\
 window.utility2.envDict.npm_package_description = "{{envDict.npm_package_description}}";\n\
 window.utility2.envDict.npm_package_name = "{{envDict.npm_package_name}}";\n\
@@ -517,7 +518,7 @@ export npm_config_mode_auto_restart=1 && \
 ./index.sh test node test.js",
         "test-published": "./index.sh shRun shNpmTestPublished"
     },
-    "version": "2016.4.1"
+    "version": "2016.4.2"
 }
 ```
 
