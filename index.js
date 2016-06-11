@@ -8,30 +8,18 @@
     regexp: true,
     stupid: true
 */
-(function () {
+(function (local) {
     'use strict';
-    var local;
+    var require;
 
 
 
     // run shared js-env code - pre-init
     (function () {
-        // init local
-        local = {};
-        // init modeJs
-        local.modeJs = (function () {
-            try {
-                return typeof navigator.userAgent === 'string' &&
-                    typeof document.querySelector('body') === 'object' &&
-                    typeof XMLHttpRequest.prototype.open === 'function' &&
-                    'browser';
-            } catch (errorCaughtBrowser) {
-                return module.exports &&
-                    typeof process.versions.node === 'string' &&
-                    typeof require('http').createServer === 'function' &&
-                    'node';
-            }
-        }());
+        // init require
+        require = function (key) {
+            return local[key] || local.require2(key);
+        };
         // init global
         local.global = local.modeJs === 'browser'
             ? window
@@ -96,6 +84,68 @@
             : require('./lib.uglifyjs.js');
         // init templates
 /* jslint-ignore-begin */
+local.utility2.assetsDict['/assets.utility2.rollup.begin.js'] = '\
+/* utility2.rollup.js begin */\n\
+/*jslint\n\
+    bitwise: true,\n\
+    browser: true,\n\
+    maxerr: 8,\n\
+    maxlen: 96,\n\
+    node: true,\n\
+    nomen: true,\n\
+    regexp: true,\n\
+    stupid: true\n\
+*/\n\
+(function () {\n\
+    "use strict";\n\
+    if (typeof module === "object") {\n\
+        module.isRollup = true;\n\
+    }\n\
+}());\n\
+';
+
+
+
+local.utility2.assetsDict['/assets.utility2.rollup.content.js'] = '\
+(function () {\n\
+    "use strict";\n\
+    var local;\n\
+    (function () {\n\
+        if (typeof module === "object") {\n\
+            module.isRollup = true;\n\
+        }\n\
+        local = {};\n\
+        local.modeJs = (function () {\n\
+            try {\n\
+                return typeof navigator.userAgent === "string" &&\n\
+                    typeof document.querySelector("body") === "object" &&\n\
+                    typeof XMLHttpRequest.prototype.open === "function" &&\n\
+                    "browser";\n\
+            } catch (errorCaughtBrowser) {\n\
+                return module.exports &&\n\
+                    typeof process.versions.node === "string" &&\n\
+                    typeof require("http").createServer === "function" &&\n\
+                    "node";\n\
+            }\n\
+        }());\n\
+        local = local.modeJs === "browser"\n\
+            ? window.utility2.local\n\
+            : module;\n\
+/* jslint-ignore-begin */\n\
+/* utility2.rollup.js content */\n\
+/* jslint-ignore-end */\n\
+    }());\n\
+}());\n\
+';
+
+
+
+local.utility2.assetsDict['/assets.utility2.rollup.end.js'] = '\
+/* utility2.rollup.js end */\n\
+';
+
+
+
 // https://www.w3.org/TR/html5/forms.html#valid-e-mail-address
 local.utility2.regexpEmailValidate = (
 /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/
@@ -138,7 +188,6 @@ local.utility2.templateDocApiHtml = '\
 .docApiCodePre {\n\
     background-color: #eef;\n\
     border: 1px solid;\n\
-    border-radius: 5px;\n\
     color: #777;\n\
     padding: 5px;\n\
     white-space: pre-wrap;\n\
@@ -206,7 +255,6 @@ local.utility2.templateTestReportHtml = '\
 <style>\n\
 .testReportPlatformDiv {\n\
     border: 1px solid;\n\
-    border-radius: 5px;\n\
     font-family: Helvetica Neue, Helvetica, Arial, sans-serif;\n\
     margin-top: 20px;\n\
     padding: 0 10px 10px 10px;\n\
@@ -215,7 +263,6 @@ local.utility2.templateTestReportHtml = '\
 .testReportPlatformPre {\n\
     background-color: #fdd;\n\
     border: 1px;\n\
-    border-radius: 0 0 5px 5px;\n\
     border-top-style: solid;\n\
     margin-bottom: 0;\n\
     padding: 10px;\n\
@@ -259,7 +306,16 @@ local.utility2.templateTestReportHtml = '\
 }\n\
 </style>\n\
 <div class="testReportPlatformDiv testReportSummaryDiv">\n\
-<h2>{{envDict.npm_package_name}} test-report summary</h2>\n\
+<h1>\n\
+    <a\n\
+        {{#if envDict.npm_package_homepage}}\n\
+        href="{{envDict.npm_package_homepage}}"\n\
+        {{/if envDict.npm_package_homepage}}\n\
+    >\n\
+        {{envDict.npm_package_name}} @ {{envDict.npm_package_version}}\n\
+    </a>\n\
+</h1>\n\
+<h2>test-report summary</h2>\n\
 <h4>\n\
     <span class="testReportSummarySpan">version</span>-\n\
         {{envDict.npm_package_version}}<br>\n\
@@ -290,7 +346,11 @@ local.utility2.templateTestReportHtml = '\
 <div class="testReportPlatformDiv">\n\
 <h4>\n\
     {{testPlatformNumber}}. {{name htmlSafe}}<br>\n\
-    {{screenCapture}}\n\
+    {{#if screenCaptureImg}}\n\
+    <a href="{{screenCaptureImg}}">\n\
+        <img class="testReportPlatformScreenCaptureImg" src="{{screenCaptureImg}}">\n\
+    </a>\n\
+    {{/if screenCaptureImg}}\n\
     <span class="testReportPlatformSpan">time-elapsed</span>- {{timeElapsed}} ms<br>\n\
     <span class="testReportPlatformSpan">tests failed</span>- {{testsFailed}}<br>\n\
     <span class="testReportPlatformSpan">tests passed</span>- {{testsPassed}}<br>\n\
@@ -323,6 +383,10 @@ local.utility2.templateTestReportHtml = '\
 {{/each testPlatformList}}\n\
 ';
 /* jslint-ignore-end */
+        // init assets
+        local.utility2.assetsDict['/assets.example.js'] = '';
+        local.utility2.assetsDict['/assets.test.js'] = '';
+        local.utility2.assetsDict['/favicon.ico'] = '';
     }());
 
 
@@ -580,7 +644,9 @@ local.utility2.templateTestReportHtml = '\
          * or null if either the response has not yet been received
          * or the header doesn't exist in the response
          */
-            return (this.responseStream.headers && this.responseStream.headers[key]) || null;
+            return (this.responseStream &&
+                this.responseStream.headers &&
+                this.responseStream.headers[key]) || null;
         };
 
         local._http.XMLHttpRequest.prototype.onError = function (error, data) {
@@ -1892,8 +1958,8 @@ local.utility2.templateTestReportHtml = '\
 
         local.utility2.jsonStringifyOrdered = function (element, replacer, space) {
         /*
-         * this function will JSON.stringify the element with dictionaries in sorted order,
-         * for testing purposes
+         * this function will JSON.stringify the element,
+         * with object-keys sorted and circular-references removed
          */
             var circularList, stringify, tmp;
             stringify = function (element) {
@@ -1905,7 +1971,7 @@ local.utility2.templateTestReportHtml = '\
                 if (element &&
                         typeof element === 'object' &&
                         typeof element.toJSON !== 'function') {
-                    // remove circular-reference
+                    // ignore circular-reference
                     if (circularList.indexOf(element) >= 0) {
                         return;
                     }
@@ -2004,13 +2070,13 @@ local.utility2.templateTestReportHtml = '\
 
         local.utility2.middlewareAssetsCached = function (request, response, nextMiddleware) {
         /*
-         * this function will run the cached-assets-middleware
+         * this function will run the middleware that will serve cached-assets
          */
             var modeNext, onNext, result;
             modeNext = 0;
             onNext = function (error, data) {
                 result = result || local.utility2.assetsDict[request.urlParsed.pathname];
-                if (error || !result) {
+                if (error || result === undefined) {
                     nextMiddleware(error);
                     return;
                 }
@@ -2058,7 +2124,8 @@ local.utility2.templateTestReportHtml = '\
 
         local.utility2.middlewareBodyRead = function (request, response, nextMiddleware) {
         /*
-         * this function will read the request-body and save it as request.bodyRaw
+         * this function will run the middleware that will
+         * read and save the request-body to request.bodyRaw
          */
             // jslint-hack
             local.utility2.nop(response);
@@ -2079,10 +2146,10 @@ local.utility2.templateTestReportHtml = '\
             nextMiddleware
         ) {
         /*
-         * this function will respond with the data cached by Last-Modified header
+         * this function will run the middleware that will update the Last-Modified header
          */
             // do not cache if headers already sent or url has '?' search indicator
-            if (!response.headersSent && request.url.indexOf('?') < 0) {
+            if (!(response.headersSent || request.url.indexOf('?') >= 0)) {
                 // init serverResponseHeaderLastModified
                 local.utility2.serverResponseHeaderLastModified =
                     local.utility2.serverResponseHeaderLastModified ||
@@ -2106,7 +2173,7 @@ local.utility2.templateTestReportHtml = '\
 
         local.utility2.middlewareError = function (error, request, response) {
         /*
-         * this function will run the error-middleware
+         * this function will run the middleware that will handle errors
          */
             // if error occurred, then respond with '500 Internal Server Error',
             // else respond with '404 Not Found'
@@ -2119,7 +2186,7 @@ local.utility2.templateTestReportHtml = '\
 
         local.utility2.middlewareFileServer = function (request, response, nextMiddleware) {
         /*
-         * this function will run the file-server-middleware
+         * this function will run the middleware that will serve files
          */
             if (request.method !== 'GET' || local.modeJs === 'browser') {
                 nextMiddleware();
@@ -2160,8 +2227,8 @@ local.utility2.templateTestReportHtml = '\
 
         local.utility2.middlewareGroupCreate = function (middlewareList) {
         /*
-         * this function will return a middleware-group,
-         * that will sequentially run the middlewares in middlewareList
+         * this function will create a middleware that will
+         * sequentially run the sub-middlewares in middlewareList
          */
             var self;
             self = function (request, response, nextMiddleware) {
@@ -2190,7 +2257,7 @@ local.utility2.templateTestReportHtml = '\
 
         local.utility2.middlewareInit = function (request, response, nextMiddleware) {
         /*
-         * this function will run the init-middleware
+         * this function will run the middleware that will init the request and response
          */
             // debug server-request
             local.utility2._debugServerRequest = request;
@@ -2229,6 +2296,36 @@ local.utility2.templateTestReportHtml = '\
                 };
             });
             // default to nextMiddleware
+            nextMiddleware();
+        };
+
+        local.utility2.middlewareJsonpStateGet = function (request, response, nextMiddleware) {
+        /*
+         * this function will run the middleware that will
+         * serve the browser-state wrapped in the given request.jsonp-callback
+         */
+            var isRequest, state;
+            isRequest = request.urlParsed &&
+                request.urlParsed.pathname === '/jsonp.utility2.stateGet';
+            state = { utility2: { envDict: {} } };
+            if (request.stateGet || isRequest) {
+                [
+                    'npm_package_description',
+                    'npm_package_homepage',
+                    'npm_package_name',
+                    'npm_package_version'
+                ].forEach(function (key) {
+                    state.utility2.envDict[key] = local.utility2.envDict[key];
+                });
+                if (request.stateGet) {
+                    return state;
+                }
+            }
+            if (isRequest) {
+                response.end(request.urlParsed.query.callback + '(' + JSON.stringify(state) +
+                    ');');
+                return;
+            }
             nextMiddleware();
         };
 
@@ -2506,6 +2603,9 @@ local.utility2.templateTestReportHtml = '\
          * this function will start the repl debugger
          */
             /*jslint evil: true*/
+            if (local.utility2.replServer) {
+                return;
+            }
             // start repl server
             local.utility2.replServer = require('repl').start({ useGlobal: true });
             local.utility2.replServer.onError = function (error) {
@@ -2542,7 +2642,7 @@ local.utility2.templateTestReportHtml = '\
                     // run async shell command
                     local.utility2.processSpawnWithTimeout(
                         '/bin/sh',
-                        ['-c', '. ' + __dirname + '/index.sh && ' + match[2]],
+                        ['-c', match[2]],
                         { stdio: ['ignore', 1, 2] }
                     )
                         // on shell exit, print return prompt
@@ -2637,11 +2737,11 @@ local.utility2.templateTestReportHtml = '\
          * 3. return module.exports
          */
             var module;
-            if (require.cache[file]) {
-                return require.cache[file].exports;
+            if (local.require2.cache[file]) {
+                return local.require2.cache[file].exports;
             }
             // 1. create a new module with the given file
-            module = require.cache[file] = new local.Module(file);
+            module = local.require2.cache[file] = new local.Module(file);
             module.utility2 = local.utility2;
             // 2. load module with the given script
             module._compile(script, file);
@@ -2734,6 +2834,13 @@ local.utility2.templateTestReportHtml = '\
             response.on('finish', function () {
                 clearTimeout(request.timerTimeout);
             });
+        };
+
+        local.utility2.stateInit = function (options) {
+        /*
+         * this function will init the state-options
+         */
+            local.utility2.objectSetOverride(local, options, 10);
         };
 
         local.utility2.streamReadAll = function (stream, onError) {
@@ -3243,13 +3350,7 @@ local.utility2.templateTestReportHtml = '\
                             return local.utility2.objectSetOverride(testPlatform, {
                                 errorStackList: errorStackList,
                                 name: testPlatform.name,
-                                screenCapture: testPlatform.screenCaptureImg
-                                    ? '<a href="' + testPlatform.screenCaptureImg + '">' +
-                                        '<img ' +
-                                        'class="testReportPlatformScreenCaptureImg" ' +
-                                        'src="' + testPlatform.screenCaptureImg + '">' +
-                                        '</a><br>'
-                                    : '',
+                                screenCaptureImg: testPlatform.screenCaptureImg,
                                 // map testCaseList
                                 testCaseList: testPlatform.testCaseList.map(function (
                                     testCase
@@ -3466,6 +3567,7 @@ local.utility2.templateTestReportHtml = '\
             };
             server = local.http.createServer(requestHandler);
             // 2. start server on options.port
+            local.utility2.envDict.PORT = local.utility2.envDict.PORT || '8081';
             options.port = options.port || local.utility2.envDict.PORT;
             local.utility2.serverLocalRequestHandler = requestHandler;
             console.log('server starting on port ' + options.port);
@@ -3708,6 +3810,7 @@ local.utility2.templateTestReportHtml = '\
             '.md': 'text/markdown; charset=UTF-8',
             '.txt': 'text/plain; charset=UTF-8'
         };
+        // init envDict
         local.utility2.envDict = local.modeJs === 'browser'
             ? {}
             : process.env;
@@ -3794,6 +3897,8 @@ local.utility2.templateTestReportHtml = '\
                 local.utility2.ajax({ url: '' }, local.utility2.nop);
             }
         });
+        // init state
+        local.utility2.stateInit({});
     }());
     switch (local.modeJs) {
 
@@ -3813,7 +3918,7 @@ local.utility2.templateTestReportHtml = '\
     // run node js-env code - post-init
     case 'node':
         // init exports
-        module.exports = local.utility2;
+        module.exports = module.utility2 = local.utility2;
         module.exports.__dirname = __dirname;
         // require modules
         local.Module = require('module');
@@ -3825,58 +3930,84 @@ local.utility2.templateTestReportHtml = '\
         local.url = require('url');
         local.vm = require('vm');
         local.zlib = require('zlib');
-        // init utility2 properties
+        // init envDict
         local.utility2.objectSetDefault(local.utility2.envDict, {
             npm_config_dir_build: process.cwd() + '/tmp/build',
-            npm_config_dir_tmp: process.cwd() + '/tmp',
-            npm_package_name: 'example-module',
-            npm_package_description: 'this is an example module',
-            npm_package_version: '0.0.1'
+            npm_config_dir_tmp: process.cwd() + '/tmp'
         });
+        /* istanbul ignore next */
+        if (module.isRollup) {
+            break;
+        }
         // init assets
         [
-            'bcrypt',
-            'cryptojs',
-            'istanbul',
-            'jslint',
-            'uglifyjs'
+            'index.css',
+            'index.js',
+            'lib.bcrypt.js',
+            'lib.cryptojs.js',
+            'lib.istanbul.js',
+            'lib.jslint.js',
+            'lib.uglifyjs.js'
         ].forEach(function (key) {
-            local.utility2.assetsDict['/assets.utility2.lib.' + key + '.js'] =
-                local.utility2.uglifyIfProduction(
+            switch (key) {
+            case 'index.css':
+                local.utility2.assetsDict['/assets.utility2.css'] =
+                    local.fs.readFileSync(__dirname + '/' + key, 'utf8');
+                break;
+            case 'index.js':
+                local.utility2.assetsDict['/assets.utility2.js'] =
                     local.utility2.istanbulInstrumentInPackage(
-                        local.fs.readFileSync(__dirname + '/lib.' + key + '.js', 'utf8')
+                        local.fs.readFileSync(__dirname + '/' + key, 'utf8')
                             .replace((/^#!/), '//'),
-                        __dirname + '/lib.' + key + '.js',
+                        __dirname + '/' + key,
                         'utility2'
-                    )
-                );
+                    );
+                break;
+            case 'lib.bcrypt.js':
+            case 'lib.cryptojs.js':
+            case 'lib.istanbul.js':
+            case 'lib.jslint.js':
+            case 'lib.uglifyjs.js':
+                local.utility2.assetsDict['/assets.utility2.' + key] =
+                    local.utility2.istanbulInstrumentInPackage(
+                        local.fs.readFileSync(__dirname + '/' + key, 'utf8')
+                            .replace((/^#!/), '//'),
+                        __dirname + '/' + key,
+                        'utility2'
+                    );
+                break;
+            }
         });
-        local.utility2.assetsDict['/assets.utility2.css'] =
-            local.fs.readFileSync(__dirname + '/index.css', 'utf8');
-        local.utility2.assetsDict['/assets.utility2.js'] =
-            local.utility2.uglifyIfProduction(
-                local.utility2.istanbulInstrumentInPackage(
-                    local.fs.readFileSync(__filename, 'utf8'),
-                    __filename,
-                    'utility2'
-                )
-            );
         local.utility2.assetsDict['/assets.utility2.rollup.js'] = [
+            '/assets.utility2.rollup.begin.js',
             '/assets.utility2.lib.bcrypt.js',
             '/assets.utility2.lib.cryptojs.js',
-            '/assets.utility2.js'
-        ]
-            .map(function (key) {
-                return local.utility2.assetsDict[key];
-            })
-            .join(';\n');
+            '/assets.utility2.lib.istanbul.js',
+            '/assets.utility2.lib.jslint.js',
+            '/assets.utility2.lib.uglifyjs.js',
+            '/assets.utility2.js',
+            '/assets.utility2.css',
+            '/assets.utility2.rollup.end.js'
+        ].map(function (key) {
+            switch (local.path.extname(key)) {
+            case '.js':
+                return '// ' + key + '\n' + local.utility2.assetsDict[key];
+            default:
+                return '// ' + key + '\n' +
+                    local.utility2.assetsDict['/assets.utility2.rollup.content.js']
+                    .replace(
+                        '/* utility2.rollup.js content */',
+                        'local.utility2.assetsDict[' + JSON.stringify(key) + '] = ' +
+                            JSON.stringify(local.utility2.assetsDict[key])
+                    );
+            }
+        }).join('\n\n\n\n');
         /* istanbul ignore next */
         // run the cli
         local.cliRun = function () {
         /*
          * this function will run the cli
          */
-            var options;
             // merge previous test-report
             if (local.utility2.envDict.npm_config_file_test_report_merge) {
                 local.utility2.testReportMerge(
@@ -3887,49 +4018,44 @@ local.utility2.templateTestReportHtml = '\
                     ))
                 );
             }
-            if (module !== require.main) {
+            if (module !== local.require2.main) {
                 return;
             }
             switch (process.argv[2]) {
             case 'browserTest':
                 local.utility2.browserTest({}, local.utility2.exit);
                 break;
-            case 'docApiCreate':
-                options = local.utility2.requireFromScript('docApiCreate', process.argv[3]);
-                // init example
-                options.example = '\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n';
-                options.exampleFileList.forEach(function (file) {
-                    var dir;
-                    file = process.cwd() + '/' + file;
-                    // try to read the file
-                    local.utility2.tryCatchOnError(function () {
-                        options.example += local.fs.readFileSync(file, 'utf8') +
-                            '\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n';
-                    }, function () {
-                        // try to read the dir
-                        dir = file;
-                        local.fs.readdirSync(dir).sort().forEach(function (file) {
-                            if (file.slice(-3) === '.js') {
-                                file = dir + '/' + file;
-                                // try to read the file
-                                local.utility2.tryCatchOnError(function () {
-                                    options.example += local.fs.readFileSync(file, 'utf8') +
-                                        '\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n';
-                                }, local.utility2.nop);
-                            }
-                        });
-                    });
-                });
-                // create doc.api.html
-                local.utility2.fsWriteFileWithMkdirp(
-                    local.utility2.envDict.npm_config_dir_build + '/doc.api.html',
-                    local.utility2.docApiCreate(options),
-                    local.utility2.exit
-                );
-                break;
             }
         };
         local.cliRun();
         break;
     }
-}());
+}(
+    (function () {
+        'use strict';
+        var local;
+        // init local
+        local = {};
+        // init modeJs
+        local.modeJs = (function () {
+            try {
+                return typeof navigator.userAgent === 'string' &&
+                    typeof document.querySelector('body') === 'object' &&
+                    typeof XMLHttpRequest.prototype.open === 'function' &&
+                    'browser';
+            } catch (errorCaughtBrowser) {
+                return module.exports &&
+                    typeof process.versions.node === 'string' &&
+                    typeof require('http').createServer === 'function' &&
+                    'node';
+            }
+        }());
+        // init module
+        if (local.modeJs === 'node') {
+            local = module;
+            local.modeJs = 'node';
+            local.require2 = require;
+        }
+        return local;
+    }())
+));

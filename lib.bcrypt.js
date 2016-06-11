@@ -16,7 +16,7 @@
 
 
 
-    // run shared js-env code
+    // run shared js-env code - pre-init
     (function () {
         // init local
         local = {};
@@ -42,7 +42,6 @@
 
 
 
-/* istanbul ignore next */
 // init lib bcrypt
 /* jslint-ignore-begin */
 // https://github.com/dcodeIO/bcrypt.js/blob/2.3.0/dist/bcrypt.min.js
@@ -108,8 +107,10 @@ Date.now=Date.now||function(){return+new Date};var I=[608135816,2242054355,32044
     // run node js-env code - post-init
     case 'node':
         // init exports
-        module.exports = local.bcrypt;
-        /* istanbul ignore next */
+        module.exports = module['./lib.bcrypt.js'] = local.bcrypt;
+        if (module.isRollup) {
+            break;
+        }
         // run the cli
         local.cliRun = function () {
         /*

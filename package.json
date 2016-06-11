@@ -11,9 +11,10 @@
     "description": "this package will run dynamic browser tests with coverage (via istanbul and electron)",
 
     "devDependencies": {
-        "electron-lite": "2016.4.3"
+        "electron-lite": "2016.5.1"
     },
     "engines": { "node": ">=4.0" },
+    "homepage": "https://github.com/kaizhu256/node-utility2",
     "keywords": [
         "atom", "atom-shell",
         "browser", "build",
@@ -35,35 +36,27 @@
         "url": "https://github.com/kaizhu256/node-utility2.git"
     },
     "scripts": {
+        "build-app": "npm test --mode-test-case=testCase_build_app",
         "build-ci": "./index.sh shRun shReadmeBuild",
-        "build-doc": ". ./index.sh && shReadmeExportScripts && cp $(shFileTrimLeft tmp/README.package.json) package.json && ./index.sh shRun shDocApiCreate \"module.exports={ exampleFileList:['README.md','test.js','index.js', 'lib.bcrypt.js','lib.cryptojs.js','lib.istanbul.js','lib.jslint.js','lib.uglifyjs.js'], moduleDict:{ utility2:{exports:require('./index.js')}, 'utility2.Blob':{aliasList:['Blob','local'], exports:require('./index.js').Blob}, 'utility2.Blob.prototype':{aliasList:['data'], exports:require('./index.js').Blob.prototype}, 'utility2.FormData':{aliasList:['FormData','local'], exports:require('./index.js').FormData}, 'utility2.FormData.prototype':{aliasList:['data'], exports:require('./index.js').FormData.prototype}, 'utility2.bcrypt':{aliasList:['bcrypt','local'],exports:require('./index.js').bcrypt}, 'utility2.cryptojs':{aliasList:['cryptojs','local'],exports:require('./index.js').cryptojs}, 'utility2.istanbul':{aliasList:['istanbul','local'],exports:require('./index.js').istanbul}, 'utility2.jslint':{aliasList:['jslint','local'],exports:require('./index.js').jslint}, 'utility2.uglifyjs':{aliasList:['uglifyjs','local'],exports:require('./index.js').uglifyjs} } }\"",
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        "build-doc": "npm test --mode-test-case=testCase_build_doc",
         "env": "env",
+        "example.js": ". ./index.sh && shInit && shReadmeExportScripts && cp $(shFileTrimLeft tmp/README.package.json) package.json && shFileTrimLeft tmp/README.example.js && unset npm_package_homepage && unset npm_package_description && unset npm_package_name && unset npm_package_version && shRunScreenCapture shReadmeTestJs example.js",
+
+
+
+
+
+
+
+
+        "example.sh": ". ./index.sh && shInit && shReadmeExportScripts && cp $(shFileTrimLeft tmp/README.package.json) package.json && shRunScreenCapture shReadmeTestSh example.sh",
+
+
+
         "start": "export PORT=${PORT:-8080} && export npm_config_mode_auto_restart=1 && ./index.sh shRun shIstanbulCover node test.js",
 
 
-        "test": ". ./index.sh && shReadmeExportScripts && cp $(shFileTrimLeft tmp/README.package.json) package.json && export PORT=$(./index.sh shServerPortRandom) && export npm_config_mode_auto_restart=1 && ./index.sh test node test.js",
+        "test": ". ./index.sh && shInit && shReadmeExportScripts && cp $(shFileTrimLeft tmp/README.package.json) package.json && export PORT=$(./index.sh shServerPortRandom) && export npm_config_mode_auto_restart=1 && ./index.sh test node test.js",
 
 
 
@@ -71,5 +64,5 @@
 
         "test-published": "./index.sh shRun shNpmTestPublished"
     },
-    "version": "2016.4.2"
+    "version": "2016.5.1"
 }

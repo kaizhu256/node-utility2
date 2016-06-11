@@ -16,7 +16,7 @@
 
 
 
-    // run shared js-env code
+    // run shared js-env code - pre-init
     (function () {
         // init local
         local = {};
@@ -38,8 +38,7 @@
 
 
 
-    /* istanbul ignore next */
-    // run shared js-env code
+    // run shared js-env code - post-init
     (function () {
         var exports, require;
         // init exports
@@ -263,7 +262,7 @@ f){}}else n[1]=n[1].substr(0,2);return i?i.call(n,n):null}throw u}}}(),DOT_CALL_
 
 
 
-    // run browser js-env code
+    // run browser js-env code - post-init
     case 'browser':
         // export uglifyjs
         window.utility2_uglifyjs = local;
@@ -271,15 +270,17 @@ f){}}else n[1]=n[1].substr(0,2);return i?i.call(n,n):null}throw u}}}(),DOT_CALL_
 
 
 
-    // run node js-env code
+    // run node js-env code - post-init
     case 'node':
         // export uglifyjs
-        module.exports = local;
+        module.exports = module['./lib.uglifyjs.js'] = local;
         module.exports.__dirname = __dirname;
         // require modules
         local.fs = require('fs');
         local.path = require('path');
-        /* istanbul ignore next */
+        if (module.isRollup) {
+            break;
+        }
         // run the cli
         local.cliRun = function () {
         /*
@@ -289,7 +290,6 @@ f){}}else n[1]=n[1].substr(0,2);return i?i.call(n,n):null}throw u}}}(),DOT_CALL_
             if (module !== require.main) {
                 return;
             }
-
             if ((/^(?:http|https):\/\//).test(process.argv[2])) {
                 // uglify url
                 onError = function (error) {

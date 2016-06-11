@@ -8,14 +8,18 @@ this package will run dynamic browser tests with coverage (via istanbul and elec
 
 # documentation
 #### todo
+- api-doc - fix utility2.FormData missing example usage
+- add socket-io to repl-server
 - add utility2.middlewareLimit
 - add server stress test using electron
 - none
 
-#### change since b41248a5
-- npm publish 2016.4.2
-- add functions utility2.objectLiteral, utility2.onResetAfter, utility2.onResetBefore
-- split function utility2.onReady into utility2.onReadyBefore and utility2.onReadyAfter
+#### change since c4d1abb0
+- npm publish 2016.5.1
+- add standalone-app download-link in test-page
+- add homepage-link in test-page, test-report, coverage-report
+- move shell function shDocApiCreate to javascript function testCase_build_doc
+- add function utility2.middlewareJsonpStateGet, utility2.stateInit
 - none
 
 #### this package requires
@@ -73,7 +77,7 @@ this package will run dynamic browser tests with coverage (via istanbul and elec
 
 # instruction
     # 1. copy and paste this entire shell script into a console and press enter
-    # 2. open a browser to http://localhost:1337
+    # 2. open a browser to http://localhost:8081
     # 3. edit or paste script in browser to cover and test
 
 shExampleSh() {(set -e
@@ -81,7 +85,7 @@ shExampleSh() {(set -e
     npm install utility2
 
     # serve a webpage that will interactively run browser tests with coverage
-    cd node_modules/utility2 && export PORT=1337 && npm start
+    cd node_modules/utility2 && export PORT=8081 && npm start
 )}
 shExampleSh
 ```
@@ -111,7 +115,7 @@ instruction
     2. run the shell command:
         $ npm install electron-lite utility2 && \
             export PATH="$(pwd)/node_modules/.bin:$PATH" && \
-            export PORT=1337 && \
+            export PORT=8081 && \
             export npm_config_mode_coverage=1 && \
             node_modules/.bin/utility2 test node example.js
     3. view test-report in ./tmp/build/test-report.html
@@ -153,20 +157,26 @@ instruction
                     'node';
             }
         }());
-        // init global
-        local.global = local.modeJs === 'browser'
-            ? window
-            : global;
-        // init utility2
+        /* istanbul ignore next */
+        // init local
         local = local.modeJs === 'browser'
             ? window.utility2.local
+            : module.isRollup
+            ? module
             : require('utility2').local;
         // export local
         local.global.local = local;
+        // init envDict
+        local.utility2.objectSetDefault(local.utility2.envDict, {
+            npm_package_description: 'undefined module',
+            npm_package_name: 'undefined',
+            npm_package_version: '0.0.1'
+        });
         // init middleware
         local.middleware = local.utility2.middlewareGroupCreate([
             local.utility2.middlewareInit,
-            local.utility2.middlewareAssetsCached
+            local.utility2.middlewareAssetsCached,
+            local.utility2.middlewareJsonpStateGet
         ]);
         // init error-middleware
         local.middlewareError = local.utility2.middlewareError;
@@ -179,7 +189,7 @@ instruction
 
 
 
-    // run browser js-env code
+    // run browser js-env code - post-init
     case 'browser':
         // init tests
         local.testCase_ajax_200 = function (options, onError) {
@@ -222,25 +232,22 @@ instruction
 
 
 
-    // run node js-env code
+    // run node js-env code - post-init
     case 'node':
         // init tests
-        local.testCase_browserTest_default = function (options, onError) {
+        local.testCase_webpage_default = function (options, onError) {
         /*
-         * this function will spawn an electron process to test the test-page
+         * this function will test the webpage's default handling-behavior
          */
             options = {
                 modeCoverageMerge: true,
-                url: 'http://localhost:' + process.env.PORT + '?modeTest=consoleLogResult'
+                url: 'http://localhost:' + local.utility2.envDict.PORT +
+                    '?modeTest=consoleLogResult'
             };
             local.utility2.browserTest(options, onError);
         };
         // export local
         module.exports = local;
-        // mock package.json env
-        process.env.npm_package_description = 'this is an example module';
-        process.env.npm_package_name = 'example-module';
-        process.env.npm_package_version = '0.0.1';
         // init assets
         /* istanbul ignore next */
         local.utility2.assetsDict['/assets.example.js'] = local.global.assetsExampleJs ||
@@ -263,12 +270,12 @@ body {\n\
     background-color: #fff;\n\
     font-family: Helvetica Neue, Helvetica, Arial, sans-serif;\n\
 }\n\
-body > div {\n\
-    margin-top: 20px;\n\
+body > * {\n\
+    margin-bottom: 1rem;\n\
 }\n\
 textarea {\n\
     font-family: monospace;\n\
-    height: 32em;\n\
+    height: 32rem;\n\
     width: 100%;\n\
 }\n\
 .jslintOutputPre {\n\
@@ -283,8 +290,17 @@ textarea {\n\
     <div class="ajaxProgressDiv" style="display: block;">\n\
         <div class="ajaxProgressBarDiv ajaxProgressBarDivLoading">loading</div>\n\
     </div>\n\
-    <h1>{{envDict.npm_package_name}} @ {{envDict.npm_package_version}}</h1>\n\
+    <h1>\n\
+        <a\n\
+            {{#if envDict.npm_package_homepage}}\n\
+            href="{{envDict.npm_package_homepage}}"\n\
+            {{/if envDict.npm_package_homepage}}\n\
+        >\n\
+            {{envDict.npm_package_name}} @ {{envDict.npm_package_version}}\n\
+        </a>\n\
+    </h1>\n\
     <h3>{{envDict.npm_package_description}}</h3>\n\
+    <h4><a href="assets.app.js">download standalone app</a></h4>\n\
     <div>edit or paste script below to cover and test</div>\n\
 <textarea class="istanbulInputTextarea jslintInputTextarea jsonStringifyInputTextarea">\n\
 /*jslint browser: true*/\n\
@@ -342,20 +358,22 @@ textarea {\n\
     <pre class="jslintOutputPre"></pre>\n\
     <div class="testReportDiv"></div>\n\
     <div class="istanbulCoverageDiv"></div>\n\
+{{#if isRollup}}\n\
+<script src="assets.app.js"></script>\n\
+{{#unless isRollup}}\n\
 <script src="assets.utility2.lib.bcrypt.js"></script>\n\
 <script src="assets.utility2.lib.cryptojs.js"></script>\n\
 <script src="assets.utility2.lib.istanbul.js"></script>\n\
 <script src="assets.utility2.lib.jslint.js"></script>\n\
 <script src="assets.utility2.lib.uglifyjs.js"></script>\n\
 <script src="assets.utility2.js"></script>\n\
+<script src="jsonp.utility2.stateGet?callback=window.utility2.stateInit"></script>\n\
 <script>window.utility2.onReadyBefore.counter += 1;</script>\n\
 <script src="assets.example.js"></script>\n\
-{{scriptExtra}}\n\
+<script src="assets.test.js"></script>\n\
 <script>window.utility2.onReadyBefore();</script>\n\
+{{/if isRollup}}\n\
 <script>\n\
-window.utility2.envDict.npm_package_description = "{{envDict.npm_package_description}}";\n\
-window.utility2.envDict.npm_package_name = "{{envDict.npm_package_name}}";\n\
-window.utility2.envDict.npm_package_version = "{{envDict.npm_package_version}};"\n\
 window.testRun = function () {\n\
     if (window.utility2.modeTest) {\n\
         return;\n\
@@ -405,18 +423,10 @@ window.testRun({});\n\
 </html>\n\
 ';
         /* jslint-ignore-end */
-        local.utility2.assetsDict['/'] = local.utility2.templateIndexHtml
-            .replace((/\{\{envDict\.\w+?\}\}/g), function (match0) {
-                switch (match0) {
-                case '{{envDict.npm_package_description}}':
-                    return process.env.npm_package_description;
-                case '{{envDict.npm_package_name}}':
-                    return process.env.npm_package_name;
-                case '{{envDict.npm_package_version}}':
-                    return process.env.npm_package_version;
-                }
-            })
-            .replace('{{scriptExtra}}', '');
+        local.utility2.assetsDict['/'] = local.utility2.templateRender(
+            local.utility2.templateIndexHtml,
+            { envDict: local.utility2.envDict }
+        );
         break;
     }
 }());
@@ -458,9 +468,10 @@ window.testRun({});\n\
     "description": "this package will run dynamic browser tests with coverage \
 (via istanbul and electron)",
     "devDependencies": {
-        "electron-lite": "2016.4.3"
+        "electron-lite": "2016.5.1"
     },
     "engines": { "node": ">=4.0" },
+    "homepage": "https://github.com/kaizhu256/node-utility2",
     "keywords": [
         "atom", "atom-shell",
         "browser", "build",
@@ -482,43 +493,35 @@ window.testRun({});\n\
         "url": "https://github.com/kaizhu256/node-utility2.git"
     },
     "scripts": {
+        "build-app": "npm test --mode-test-case=testCase_build_app",
         "build-ci": "./index.sh shRun shReadmeBuild",
-        "build-doc": ". ./index.sh && \
-shReadmeExportScripts && \
-cp $(shFileTrimLeft tmp/README.package.json) package.json && \
-./index.sh shRun shDocApiCreate \"module.exports={ \
-exampleFileList:['README.md','test.js','index.js', \
-'lib.bcrypt.js','lib.cryptojs.js','lib.istanbul.js','lib.jslint.js','lib.uglifyjs.js'], \
-moduleDict:{ \
-utility2:{exports:require('./index.js')}, \
-'utility2.Blob':{aliasList:['Blob','local'], \
-exports:require('./index.js').Blob}, \
-'utility2.Blob.prototype':{aliasList:['data'], \
-exports:require('./index.js').Blob.prototype}, \
-'utility2.FormData':{aliasList:['FormData','local'], \
-exports:require('./index.js').FormData}, \
-'utility2.FormData.prototype':{aliasList:['data'], \
-exports:require('./index.js').FormData.prototype}, \
-'utility2.bcrypt':{aliasList:['bcrypt','local'],exports:require('./index.js').bcrypt}, \
-'utility2.cryptojs':{aliasList:['cryptojs','local'],exports:require('./index.js').cryptojs}, \
-'utility2.istanbul':{aliasList:['istanbul','local'],exports:require('./index.js').istanbul}, \
-'utility2.jslint':{aliasList:['jslint','local'],exports:require('./index.js').jslint}, \
-'utility2.uglifyjs':{aliasList:['uglifyjs','local'],exports:require('./index.js').uglifyjs} \
-} \
-}\"",
+        "build-doc": "npm test --mode-test-case=testCase_build_doc",
         "env": "env",
+        "example.js": "\
+. ./index.sh && shInit && shReadmeExportScripts && \
+cp $(shFileTrimLeft tmp/README.package.json) package.json && \
+shFileTrimLeft tmp/README.example.js && \
+unset npm_package_homepage && \
+unset npm_package_description && \
+unset npm_package_name && \
+unset npm_package_version && \
+shRunScreenCapture shReadmeTestJs example.js",
+        "example.sh": "\
+. ./index.sh && shInit && shReadmeExportScripts && \
+cp $(shFileTrimLeft tmp/README.package.json) package.json && \
+shRunScreenCapture shReadmeTestSh example.sh",
         "start": "export PORT=${PORT:-8080} && \
 export npm_config_mode_auto_restart=1 && \
 ./index.sh shRun shIstanbulCover node test.js",
-        "test": ". ./index.sh && \
-shReadmeExportScripts && \
+        "test": "\
+. ./index.sh && shInit && shReadmeExportScripts && \
 cp $(shFileTrimLeft tmp/README.package.json) package.json && \
 export PORT=$(./index.sh shServerPortRandom) && \
 export npm_config_mode_auto_restart=1 && \
 ./index.sh test node test.js",
         "test-published": "./index.sh shRun shNpmTestPublished"
     },
-    "version": "2016.4.2"
+    "version": "2016.5.1"
 }
 ```
 
@@ -591,8 +594,7 @@ shBuildCiTestPre() {(set -e
 # this function will run the pre-test build
     # test example js script
     (export MODE_BUILD=testExampleJs &&
-        shFileTrimLeft tmp/README.example.js &&
-        shRunScreenCapture shReadmeTestJs example.js)
+        npm run example.js)
     # screen-capture example.js coverage
     (export MODE_BUILD=testExampleJs &&
         export modeBrowserTest=screenCapture &&
@@ -607,8 +609,8 @@ shBuildCiTestPre() {(set -e
     # test example shell script
     (export MODE_BUILD=testExampleSh &&
         export npm_config_timeout_exit=1000 &&
-        shRunScreenCapture shReadmeTestSh example.sh)
-    # save screen-capture
+        npm run example.sh)
+    # screen-capture example.sh webpage
     cp "/tmp/app/node_modules/$npm_package_name/tmp/build/"screen-capture.*.png \
         "$npm_config_dir_build"
 )}
@@ -620,12 +622,11 @@ shBuildCiTestPost() {(set -e
     TEST_URL="https://$(printf "$GITHUB_REPO" | \
         sed 's/\//.github.io\//')/build..$CI_BRANCH..travis-ci.org/app/index.html"
     # deploy app to gh-pages
-    (export npm_config_file_test_report_merge="$npm_config_dir_build/test-report.json" &&
+    (export MODE_BUILD=githubTest &&
         shGithubDeploy)
     # test deployed app to gh-pages
     (export MODE_BUILD=githubTest &&
         export modeBrowserTest=test &&
-        export npm_config_file_test_report_merge="$npm_config_dir_build/test-report.json" &&
         export url="$TEST_URL?modeTest=consoleLogResult&timeExit={{timeExit}}" &&
         shBrowserTest)
     # docker build
@@ -641,7 +642,7 @@ shBuild() {(set -e
     # init env
     . ./index.sh && shInit
     # cleanup github-gh-pages dir
-    # export BUILD_GITHUB_UPLOAD_PRE_SH="rm -fr build"
+    export BUILD_GITHUB_UPLOAD_PRE_SH="rm -fr build"
     # init github-gh-pages commit-limit
     export COMMIT_LIMIT=16
     # if branch is alpha, beta, or master, then run default build

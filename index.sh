@@ -121,6 +121,13 @@ shBuildCiDefault() {(set -e
         # run npm-test on published package
         (export MODE_BUILD=npmTestPublished &&
             shRunScreenCapture npm run test-published --mode-coverage)
+        # screen-capture published package webpage
+        cp "/tmp/app/node_modules/$npm_package_name/tmp/build/screen-capture.*.png" \
+            "$npm_config_dir_build" 2>/dev/null || true
+        # init test-report.json
+        cp "/tmp/app/node_modules/$npm_package_name/tmp/build/test-report.json" \
+            "$npm_config_dir_build"
+        export npm_config_file_test_report_merge="$npm_config_dir_build/test-report.json"
         # run npm-test
         (export MODE_BUILD=npmTest &&
             shRunScreenCapture npm test --mode-coverage)
@@ -130,7 +137,8 @@ shBuildCiDefault() {(set -e
             shBuildCiTestPost
         fi
         # create api-doc
-        npm run build-doc
+        (export MODE_BUILD=docApiCreate &&
+            npm run build-doc)
     )
     # save exit-code
     EXIT_CODE=$?
@@ -215,17 +223,6 @@ shDebugArgv() {(set -e
     do
         printf "'$ARG'\n"
     done
-)}
-
-shDocApiCreate() {(set -e
-# this function will create the api-doc
-    node "$npm_config_dir_utility2/index.js" docApiCreate "$@"
-    shBuildPrint docApiCreate \
-        "created api-doc file://$npm_config_dir_build/doc.api.html"
-    # screen-capture api-doc
-    export modeBrowserTest=screenCapture
-    export url="file://$npm_config_dir_build/doc.api.html"
-    shBrowserTest
 )}
 
 shDockerBuildCleanup() {(set -e
@@ -603,7 +600,7 @@ shGithubDeploy() {(set -e
     shBuildPrint githubDeploy "deploying to $TEST_URL"
     # build app
     (export NODE_ENV=production &&
-        npm test --mode-test-case=testCase_build_assets)
+        npm run build-app)
     # upload app
     shBuildGithubUpload
     # wait 10 seconds for github to deploy app
@@ -778,9 +775,7 @@ shInit() {
             }
         ") || return $?
     else
-        export npm_package_description=undefined || return $?
         export npm_package_name=undefined || return $?
-        export npm_package_version=undefined || return $?
     fi
     # init $npm_config_*
     export npm_config_dir_build="$PWD/tmp/build" || return $?

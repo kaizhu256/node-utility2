@@ -18,16 +18,14 @@
 
     // run shared js-env code - init
     (function () {
+        // init var
+        __dirname = '';
         nop = function () {
         /*
          * this function will do nothing
          */
             return;
         };
-        // jslint-hack
-        nop(__dirname);
-        // init var
-        __dirname = '';
         process = local.modeJs === 'browser'
             ? {
                 cwd: function () {
@@ -38,10 +36,12 @@
             : local.process;
         require = function (key) {
             try {
-                return local[key] || local.require(key);
+                return local[key] || local.require2(key);
             } catch (ignore) {
             }
         };
+        // jslint-hack
+        nop(__dirname);
         // init global
         local.global = local.modeJs === 'browser'
             ? window
@@ -115,7 +115,24 @@
                                 });
                         })
                         .replace('position: fixed;', 'position: static;')
-                        .replace('margin-top: 10rem;', 'margin-top: 0;');
+                        .replace('margin-top: 170px;', 'margin-top: 10px;');
+                }
+                if (local.modeJs === 'node' && process.env.npm_package_homepage) {
+                    file = file
+                        .replace(
+                            '{{envDict.npm_package_homepage}}',
+                            process.env.npm_package_homepage
+                        )
+                        .replace(
+                            '{{envDict.npm_package_name}}',
+                            process.env.npm_package_name
+                        )
+                        .replace(
+                            '{{envDict.npm_package_version}}',
+                            process.env.npm_package_version
+                        );
+                } else {
+                    file = file.replace((/<h1 [\S\s]*<\/h1>/), '<h1>&nbsp;</h1>');
                 }
                 return file;
             },
@@ -189,10 +206,10 @@
     // run node js-env code - init
     case 'node':
         // init exports
-        module.exports = local;
+        module.exports = module['./lib.istanbul.js'] = local;
         // init local properties
-        local._fs = local.require('fs');
-        local.path = local.require('path');
+        local._fs = local.require2('fs');
+        local.path = local.require2('path');
         break;
     }
 
@@ -915,9 +932,11 @@ local['head.txt'] = '\
         }\n\
         div.header, div.footer {\n\
             background: #eee;\n\
-            padding: 1rem;\n\
+            padding: 1em;\n\
         }\n\
         div.header {\n\
+            height: 160px;\n\
+            padding: 0 1em 0 1em;\n\
             z-index: 100;\n\
             position: fixed;\n\
             top: 0;\n\
@@ -928,7 +947,7 @@ local['head.txt'] = '\
             border-top: 1px solid #666;\n\
         }\n\
         div.body {\n\
-            margin-top: 10rem;\n\
+            margin-top: 170px;\n\
         }\n\
         div.meta {\n\
             font-size: 90%;\n\
@@ -944,7 +963,6 @@ local['head.txt'] = '\
             font-size: 10pt;\n\
         }\n\
         pre {\n\
-            border-top: 1px solid #666;\n\
             font-family: Menlo, Monaco, Consolas, Courier New, monospace;\n\
             margin: 0;\n\
             padding: 0;\n\
@@ -1096,6 +1114,11 @@ local['head.txt'] = '\
 </head>\n\
 <body>\n\
 <div class="header {{reportClass}}">\n\
+    <h1 style="font-weight: bold;">\n\
+        <a href="{{envDict.npm_package_homepage}}">\n\
+            {{envDict.npm_package_name}} @ {{envDict.npm_package_version}}\n\
+        </a>\n\
+    </h1>\n\
     <h1>Code coverage report for <span class="entity">{{entity}}</span></h1>\n\
     <h2>\n\
         {{#with metrics.statements}}\n\
@@ -1261,13 +1284,17 @@ local.templateCoverageBadgeSvg =
     // run node js-env code - post-init
     case 'node':
         /* istanbul ignore next */
+        if (module.isRollup) {
+            break;
+        }
+        /* istanbul ignore next */
         // run the cli
         local.cliRun = function () {
         /*
          * this function will run the cli
          */
             var data;
-            if (module !== local.require.main) {
+            if (module !== local.require2.main) {
                 return;
             }
             switch (process.argv[2]) {
@@ -1309,26 +1336,31 @@ local.templateCoverageBadgeSvg =
         local.cliRun();
         break;
     }
-}({
-    // init modeJs
-    modeJs: (function () {
+}(
+    (function () {
         'use strict';
-        try {
-            return typeof navigator.userAgent === 'string' &&
-                typeof document.querySelector('body') === 'object' &&
-                typeof XMLHttpRequest.prototype.open === 'function' &&
-                'browser';
-        } catch (errorCaughtBrowser) {
-            return module.exports &&
-                typeof process.versions.node === 'string' &&
-                typeof require('http').createServer === 'function' &&
-                'node';
+        var local;
+        // init local
+        local = {};
+        // init modeJs
+        local.modeJs = (function () {
+            try {
+                return typeof navigator.userAgent === 'string' &&
+                    typeof document.querySelector('body') === 'object' &&
+                    typeof XMLHttpRequest.prototype.open === 'function' &&
+                    'browser';
+            } catch (errorCaughtBrowser) {
+                return module.exports &&
+                    typeof process.versions.node === 'string' &&
+                    typeof require('http').createServer === 'function' &&
+                    'node';
+            }
+        }());
+        // init module
+        if (local.modeJs === 'node') {
+            local.process = process;
+            local.require2 = require;
         }
-    }()),
-    process: typeof process === 'object'
-        ? process
-        : null,
-    require: typeof require === 'function'
-        ? require
-        : null
-}));
+        return local;
+    }())
+));

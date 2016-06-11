@@ -16,7 +16,7 @@
 
 
 
-    // run shared js-env code
+    // run shared js-env code - pre-init
     (function () {
         // init local
         local = {};
@@ -38,7 +38,6 @@
 
 
 
-/* istanbul ignore next */
 // init lib csslint
 /* jslint-ignore-begin */
 // https://github.com/CSSLint/csslint/blob/v0.10.0/release/csslint.js
@@ -625,7 +624,7 @@ local.CSSLint = CSSLint; local.JSLINT = JSLINT; }());
 
 
 
-    // run shared js-env code
+    // run shared js-env code - function
     (function () {
         local.jslintAndPrint = function (script, file) {
         /*
@@ -747,7 +746,7 @@ local.CSSLint = CSSLint; local.JSLINT = JSLINT; }());
 
 
 
-    // run browser js-env code
+    // run browser js-env code - post-init
     case 'browser':
         // export jslint
         window.utility2_jslint = local;
@@ -755,15 +754,17 @@ local.CSSLint = CSSLint; local.JSLINT = JSLINT; }());
 
 
 
-    // run node js-env code
+    // run node js-env code - post-init
     case 'node':
         // export jslint
-        module.exports = local;
+        module.exports = module['./lib.jslint.js'] = local;
         module.exports.__dirname = __dirname;
         // require modules
         local.fs = require('fs');
         local.path = require('path');
-        /* istanbul ignore next */
+        if (module.isRollup) {
+            break;
+        }
         // run the cli
         local.cliRun = function () {
         /*

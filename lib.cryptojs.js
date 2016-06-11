@@ -15,7 +15,7 @@
 
 
 
-    // run shared js-env code
+    // run shared js-env code - pre-init
     (function () {
         // init local
         local = {};
@@ -40,7 +40,6 @@
 
 
 
-/* istanbul ignore next */
 // init lib cryptojs.aes
 /* jslint-ignore-begin */
 // https://github.com/kaizhu256/crypto-js/blob/3.1.2/build/rollups/aes.js
@@ -129,7 +128,7 @@ CryptoJS.global = local.global; CryptoJS.modeJs = local.modeJs; local = CryptoJS
     // run node js-env code - post-init
     case 'node':
         // init exports
-        module.exports = local;
+        module.exports = module['./lib.cryptojs.js'] = local;
         break;
     }
 }());

@@ -41,6 +41,11 @@
             break;
         // re-init local from example.js
         case 'node':
+            /* istanbul ignore next */
+            if (module.isRollup) {
+                local = module;
+                break;
+            }
             local = require('./index.js').local;
             local._script = local.fs.readFileSync(__dirname + '/README.md', 'utf8')
                 // support syntax-highlighting
@@ -49,14 +54,8 @@
                     return match0.replace((/.+/g), '');
                 })
                 .replace((/\n```[\S\s]+/), '')
-                // disable mock package.json env
-                .replace(/(process.env.npm_package_\w+ = )/g, '// $1')
                 // alias require('$npm_package_name') to require('index.js');
-                .replace("require('utility2')", 'module.utility2')
-                .replace(
-                    "require('" + process.env.npm_package_name + "')",
-                    "require('./index.js')"
-                );
+                .replace("require('utility2')", 'module.utility2');
             // jslint example.js
             local.utility2.jslintAndPrint(local._script, __dirname + '/example.js');
             // cover example.js
@@ -68,7 +67,7 @@
             local.global.assetsExampleJs = local._script;
             // require example.js
             local = local.utility2.requireFromScript(__dirname + '/example.js', local._script);
-            // coverage-hack - cover requireFromScript's cache handling behavior
+            // coverage-hack - test requireFromScript's cache handling-behavior
             local.utility2.requireFromScript(__dirname + '/example.js');
             // coverage-hack - cover istanbul
             delete require.cache[__dirname + '/lib.istanbul.js'];
@@ -79,6 +78,24 @@
             local.utility2.istanbul2.codeDict = local.utility2.istanbul.codeDict;
             break;
         }
+        // init templates
+/* jslint-ignore-begin */
+local.utility2.assetsDict['/assets.app.begin.js'] = '\
+/*\n\
+app.js\n\
+\n\
+this standalone script will serve a webpage\n\
+that will interactively run browser tests with coverage\n\
+\n\
+instruction\n\
+    1. save this script as app.js\n\
+    2. run the shell command:\n\
+        $ PORT=8081 node app.js\n\
+    3. open a browser to http://localhost:8081\n\
+    4. edit or paste script in browser to cover and test\n\
+*/\n\
+';
+/* jslint-ignore-end */
     }());
 
 
@@ -372,8 +389,7 @@
             });
             // test assertion failed with json object
             local.utility2.tryCatchOnError(function () {
-                options = { aa: 1 };
-                local.utility2.assert(false, options);
+                local.utility2.assert(false, { aa: 1 });
             }, function (error) {
                 // validate error occurred
                 local.utility2.assert(error, error);
@@ -1130,7 +1146,7 @@
                     local.utility2.assert(options.timeElapsed >= 1500, options);
                     onError();
                 }, onError);
-            // coverage-hack - use 1500 ms to cover setInterval test-report refresh in browser
+            // coverage-hack - use 1500 ms to cover setInterval
             }, 1500, function () {
                 return 'testCase_onTimeout_errorTimeout';
             });
@@ -1643,18 +1659,17 @@
             });
         };
 
-        local.testCase_build_assets = function (options, onError) {
+        local.testCase_build_app = function (options, onError) {
         /*
-         * this function will test build's asset handling-behavior
+         * this function will test build's app handling-behavior
          */
             var onParallel;
-            // jslint-hack
-            local.utility2.nop(options);
             onParallel = local.utility2.onParallel(onError);
             onParallel.counter += 1;
-            [{
-                file: '/index.html',
-                url: '/'
+            options = {};
+            options = [{
+                file: '/assets.app.js',
+                url: '/assets.app.js'
             }, {
                 file: '/assets.example.js',
                 url: '/assets.example.js'
@@ -1692,13 +1707,17 @@
                 file: '/assets.utility2.lib.uglifyjs.js',
                 url: '/assets.utility2.lib.uglifyjs.js'
             }, {
+                file: '/index.html',
+                url: '/index.html'
+            }, {
                 file: '/package.json',
                 url: '/package.json'
-            }].forEach(function (options) {
+            }];
+            options.forEach(function (options) {
                 onParallel.counter += 1;
                 local.utility2.ajax(options, function (error, xhr) {
-                    // validate no error occurred
                     onParallel.counter += 1;
+                    // validate no error occurred
                     onParallel(error);
                     local.utility2.fsWriteFileWithMkdirp(
                         local.utility2.envDict.npm_config_dir_build + '/app' + options.file,
@@ -1710,57 +1729,145 @@
             onParallel();
         };
 
+        local.testCase_build_doc = function (options, onError) {
+        /*
+         * this function will test build's doc handling-behavior
+         */
+            var modeNext, onNext;
+            modeNext = 0;
+            onNext = function (error) {
+                local.utility2.tryCatchOnError(function () {
+                    // validate no error occurred
+                    local.utility2.assert(!error, error);
+                    modeNext += 1;
+                    switch (modeNext) {
+                    case 1:
+                        options = {};
+                        options.example = [
+                            'README.md',
+                            'test.js',
+                            'index.js',
+                            'lib.bcrypt.js',
+                            'lib.cryptojs.js',
+                            'lib.istanbul.js',
+                            'lib.jslint.js',
+                            'lib.uglifyjs.js'
+                        ].map(function (file) {
+                            return '\n\n\n\n\n\n\n\n' +
+                                local.fs.readFileSync(file, 'utf8') +
+                                '\n\n\n\n\n\n\n\n';
+                        }).join('');
+                        options.moduleDict = {
+                            utility2: { exports: local.utility2 },
+                            'utility2.Blob': {
+                                aliasList: ['Blob', 'local'],
+                                exports: local.utility2.Blob
+                            },
+                            'utility2.Blob.prototype': {
+                                aliasList: ['data'],
+                                exports: local.utility2.Blob.prototype
+                            },
+                            'utility2.FormData': {
+                                aliasList: ['FormData', 'local'],
+                                exports: local.utility2.FormData
+                            },
+                            'utility2.FormData.prototype': {
+                                aliasList: ['data'],
+                                exports: local.utility2.FormData.prototype
+                            },
+                            'utility2.bcrypt': {
+                                aliasList: ['bcrypt', 'local'],
+                                exports: local.utility2.bcrypt
+                            },
+                            'utility2.cryptojs': {
+                                aliasList: ['cryptojs', 'local'],
+                                exports: local.utility2.cryptojs
+                            },
+                            'utility2.istanbul': {
+                                aliasList: ['istanbul', 'local'],
+                                exports: local.utility2.istanbul
+                            },
+                            'utility2.jslint': {
+                                aliasList: ['jslint', 'local'],
+                                exports: local.utility2.jslint
+                            },
+                            'utility2.uglifyjs': {
+                                aliasList: ['uglifyjs', 'local'],
+                                exports: local.utility2.uglifyjs
+                            }
+                        };
+                        // create doc.api.html
+                        local.utility2.fsWriteFileWithMkdirp(
+                            local.utility2.envDict.npm_config_dir_build + '/doc.api.html',
+                            local.utility2.docApiCreate(options),
+                            onNext
+                        );
+                        break;
+                    case 2:
+                        local.utility2.browserTest({
+                            modeBrowserTest: 'screenCapture',
+                            url: 'file://' + local.utility2.envDict.npm_config_dir_build +
+                                '/doc.api.html'
+                        }, onNext);
+                        break;
+                    default:
+                        onError(error);
+                    }
+                }, onError);
+            };
+            onNext();
+        };
+
         local.testCase_fsWriteFileWithMkdirp_default = function (options, onError) {
         /*
          * this function will test fsWriteFileWithMkdirp's default handling-behavior
          */
-            var dir, file, modeNext, onNext;
-            // jslint-hack
-            local.utility2.nop(options);
+            var modeNext, onNext;
+            options = {};
             modeNext = 0;
             onNext = function (error, data) {
                 local.utility2.tryCatchOnError(function () {
                     modeNext += 1;
                     switch (modeNext) {
                     case 1:
-                        dir = local.utility2.envDict.npm_config_dir_tmp +
+                        options.dir = local.utility2.envDict.npm_config_dir_tmp +
                             '/testCase_fsWriteFileWithMkdirp_default';
                         // cleanup dir
-                        local.utility2.fsRmrSync(dir);
+                        local.utility2.fsRmrSync(options.dir);
                         // validate no dir exists
-                        local.utility2.assert(!local.fs.existsSync(dir), dir);
+                        local.utility2.assert(!local.fs.existsSync(options.dir), options.dir);
                         onNext();
                         break;
                     case 2:
                         // test fsWriteFileWithMkdirp with mkdirp handling-behavior
-                        file = dir + '/aa/bb';
-                        local.utility2.fsWriteFileWithMkdirp(file, 'hello1', onNext);
+                        options.file = options.dir + '/aa/bb';
+                        local.utility2.fsWriteFileWithMkdirp(options.file, 'hello1', onNext);
                         break;
                     case 3:
                         // validate no error occurred
                         local.utility2.assert(!error, error);
                         // validate data
-                        data = local.fs.readFileSync(file, 'utf8');
+                        data = local.fs.readFileSync(options.file, 'utf8');
                         local.utility2.assertJsonEqual(data, 'hello1');
                         onNext();
                         break;
                     case 4:
                         // test fsWriteFileWithMkdirp with no mkdirp handling-behavior
-                        file = dir + '/aa/bb';
-                        local.utility2.fsWriteFileWithMkdirp(file, 'hello2', onNext);
+                        options.file = options.dir + '/aa/bb';
+                        local.utility2.fsWriteFileWithMkdirp(options.file, 'hello2', onNext);
                         break;
                     case 5:
                         // validate no error occurred
                         local.utility2.assert(!error, error);
                         // validate data
-                        data = local.fs.readFileSync(file, 'utf8');
+                        data = local.fs.readFileSync(options.file, 'utf8');
                         local.utility2.assertJsonEqual(data, 'hello2');
                         onNext();
                         break;
                     case 6:
                         // test error handling-behavior
-                        file = dir + '/aa/bb/cc';
-                        local.utility2.fsWriteFileWithMkdirp(file, 'hello', onNext);
+                        options.file = options.dir + '/aa/bb/cc';
+                        local.utility2.fsWriteFileWithMkdirp(options.file, 'hello', onNext);
                         break;
                     case 7:
                         // validate error occurred
@@ -1769,9 +1876,9 @@
                         break;
                     case 8:
                         // cleanup dir
-                        local.utility2.fsRmrSync(dir);
+                        local.utility2.fsRmrSync(options.dir);
                         // validate no dir exists
-                        local.utility2.assert(!local.fs.existsSync(dir), dir);
+                        local.utility2.assert(!local.fs.existsSync(options.dir), options.dir);
                         onNext();
                         break;
                     default:
@@ -1866,7 +1973,7 @@ local.utility2.assertJsonEqual(options.coverage1,
                 onParallel.counter += 1;
                 setTimeout(function () {
                     local.fs.utimes(options.file, stat.atime, stat.mtime, onParallel);
-                // coverage-hack - use 1500 ms to cover setInterval watchFile in node
+                // coverage-hack - use 1500 ms to cover setInterval
                 }, 1500);
                 onParallel(error);
             });
@@ -1918,6 +2025,9 @@ local.utility2.assertJsonEqual(options.coverage1,
          * this function will test replStart's default handling-behavior
          */
             /*jslint evil: true*/
+            // coverage-hack - test replStart's muliple-call handling-behavior
+            local.utility2.replStart();
+            local.utility2.replStart();
             options = [
                 [local.utility2, { processSpawnWithTimeout: function () {
                     return { on: function (event, callback) {
@@ -1976,9 +2086,9 @@ local.utility2.assertJsonEqual(options.coverage1,
             }, onError);
         };
 
-        local.testCase_testPage_error = function (options, onError) {
+        local.testCase_webpage_error = function (options, onError) {
         /*
-         * this function will test the test-page's error handling-behavior
+         * this function will test the webpage's error handling-behavior
          */
             options = {
                 modeCoverageMerge: true,
@@ -2071,22 +2181,6 @@ local.utility2.assertJsonEqual(options.coverage1,
 
     // run shared js-env code - post-init
     (function () {
-        // init assets
-        local.utility2.assetsDict['/'] = local.utility2.templateRender(
-            local.utility2.templateIndexHtml,
-            {
-                envDict: local.utility2.envDict,
-                // add script assets.test.js
-                scriptExtra: '<script src="assets.test.js"></script>'
-            }
-        );
-        local.utility2.assetsDict['/assets.script-only.html'] =
-            '<h1>script-only test</h1>\n' +
-            '<script src="assets.utility2.js"></script>\n' +
-            '<script>window.utility2.onReadyBefore.counter += 1;</script>\n' +
-            '<script src="assets.example.js"></script>\n' +
-            '<script src="assets.test.js"></script>\n' +
-            '<script>window.utility2.onReadyBefore();</script>\n';
         // init serverLocal
         local.utility2.serverLocalUrlTest = function (url) {
             url = local.utility2.urlParse(url).pathname;
@@ -2158,13 +2252,75 @@ local.utility2.assertJsonEqual(options.coverage1,
 
     // run node js-env code - post-init
     case 'node':
+        // init repl debugger
+        local.utility2.replStart();
         // init assets
+        local.utility2.assetsDict['/'] = local.utility2.assetsDict['/index.html'] =
+            local.utility2.templateRender(
+                local.utility2.templateIndexHtml,
+                {
+                    envDict: local.utility2.envDict,
+                    isRollup: module.isRollup || local.utility2.envDict.npm_config_production
+                }
+            );
+        /* istanbul ignore next */
+        if (module.isRollup) {
+            local.utility2.assetsDict['/assets.app.js'] =
+                local.fs.readFileSync(__filename, 'utf8');
+            local.global.module = module;
+            break;
+        }
+        local.utility2.assetsDict['/assets.script-only.html'] =
+            '<h1>script-only test</h1>\n' +
+            '<script src="assets.utility2.js"></script>\n' +
+            '<script>window.utility2.onReadyBefore.counter += 1;</script>\n' +
+            '<script src="assets.example.js"></script>\n' +
+            '<script src="assets.test.js"></script>\n' +
+            '<script>window.utility2.onReadyBefore();</script>\n';
         local.utility2.assetsDict['/assets.test.js'] =
             local.utility2.istanbulInstrumentInPackage(
                 local.fs.readFileSync(__filename, 'utf8'),
                 __filename,
                 'utility2'
             );
+        local.utility2.assetsDict['/assets.app.js'] = [
+            '/assets.app.begin.js',
+            '/assets.utility2.rollup.js',
+            'local.utility2.stateInit',
+            '/assets.example.js',
+            '/assets.test.js'
+        ].map(function (key) {
+            switch (key) {
+            case '/assets.app.begin.js':
+                return local.utility2.assetsDict[key];
+            case 'local.utility2.stateInit':
+                return '// ' + key + '\n' +
+                    local.utility2.assetsDict['/assets.utility2.rollup.content.js']
+                    .replace(
+                        '/* utility2.rollup.js content */',
+                        key + '(' + JSON.stringify(
+                            local.utility2.middlewareJsonpStateGet({ stateGet: true })
+                        ) + ');'
+                    );
+            default:
+                return '// ' + key + '\n' + local.utility2.assetsDict[key];
+            }
+        }).join('\n\n\n\n');
+        /* istanbul ignore next */
+        // run the cli
+        local.cliRun = function () {
+            if (module !== require.main) {
+                return;
+            }
+            if (process.argv[2]) {
+                require(local.path.resolve(process.cwd(), process.argv[2]));
+            }
+            // test .sandbox.js
+            if (local.fs.existsSync(process.cwd() + '/.sandbox.js')) {
+                require(process.cwd() + '/.sandbox.js');
+            }
+        };
+        local.cliRun();
         // debug dir
         [
             __dirname,
@@ -2184,23 +2340,6 @@ local.utility2.assertJsonEqual(options.coverage1,
                 }
             });
         });
-        // init repl debugger
-        local.utility2.replStart();
-        /* istanbul ignore next */
-        // run the cli
-        local.cliRun = function () {
-            if (module !== require.main) {
-                return;
-            }
-            if (process.argv[2]) {
-                require(local.path.resolve(process.cwd(), process.argv[2]));
-            }
-            // test .sandbox.js
-            if (local.fs.existsSync(process.cwd() + '/.sandbox.js')) {
-                require(process.cwd() + '/.sandbox.js');
-            }
-        };
-        local.cliRun();
         break;
     }
 }());
