@@ -602,11 +602,15 @@ instruction\n\
                 example: local.utility2.testRun.toString().replace((/;/g), ';\n    '),
                 moduleDict: {
                     // test module.exports is a function handling-behavior
-                    function: { exports: local.utility2.nop.bind(null) },
-                    // test no aliasList handling-behavior
-                    noAliasList: { exports: local.utility2 },
+                    function: {
+                        aliasList: [],
+                        exports: local.utility2.nop.bind(null)
+                    },
                     // test aliasList handling-behavior
-                    utility2: { aliasList: ['', '.', 'undefined'], exports: local.utility2 }
+                    utility2: {
+                        aliasList: ['', '.', 'undefined', 'utility2'],
+                        exports: local.utility2
+                    }
                 }
             });
             // validate data
@@ -619,11 +623,6 @@ instruction\n\
                 ' *?</h2>\n' +
                 ' *?<ul>\n' +
                 ' *?<li>description and source code<pre class="docApiCodePre">')
-                .test(options.data), options.data);
-            local.utility2.assert(new RegExp('\n' +
-                ' *?<span class="docApiSignatureSpan">' +
-                    'object <span class="docApiSignatureSpan">noAliasList.</span>errorDefault' +
-                    '</span>\n')
                 .test(options.data), options.data);
             onError();
         };
@@ -1758,21 +1757,24 @@ instruction\n\
                                 '\n\n\n\n\n\n\n\n';
                         }).join('');
                         options.moduleDict = {
-                            utility2: { exports: local.utility2 },
+                            utility2: {
+                                aliasList: ['utility2', 'local'],
+                                exports: local.utility2
+                            },
                             'utility2.Blob': {
-                                aliasList: ['Blob', 'local'],
+                                aliasList: ['utility2'],
                                 exports: local.utility2.Blob
                             },
                             'utility2.Blob.prototype': {
-                                aliasList: ['data'],
+                                aliasList: ['Blob', 'data'],
                                 exports: local.utility2.Blob.prototype
                             },
                             'utility2.FormData': {
-                                aliasList: ['FormData', 'local'],
+                                aliasList: ['utility2'],
                                 exports: local.utility2.FormData
                             },
                             'utility2.FormData.prototype': {
-                                aliasList: ['data'],
+                                aliasList: ['FormData', 'data'],
                                 exports: local.utility2.FormData.prototype
                             },
                             'utility2.bcrypt': {

@@ -776,6 +776,7 @@ shInit() {
         ") || return $?
     else
         export npm_package_name=undefined || return $?
+        export npm_package_version=0.0.1 || return $?
     fi
     # init $npm_config_*
     export npm_config_dir_build="$PWD/tmp/build" || return $?

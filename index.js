@@ -198,7 +198,15 @@ local.utility2.templateDocApiHtml = '\
 }\n\
 </style>\n\
 <div class="docApiDiv">\n\
-<h1>api documentation ({{envDict.npm_package_name}} @ {{envDict.npm_package_version}})</h1>\n\
+<h1>api documentation\n\
+    <a\n\
+        {{#if envDict.npm_package_homepage}}\n\
+        href="{{envDict.npm_package_homepage}}"\n\
+        {{/if envDict.npm_package_homepage}}\n\
+    >\n\
+        ({{envDict.npm_package_name}} @ {{envDict.npm_package_version}})\n\
+    </a>\n\
+</h1>\n\
 <div class="docApiSectionDiv"><a href="#"><h1>table of contents</h1></a><ul>\n\
 {{#each moduleList}}\n\
     <li><a href="#{{id}}">module {{name}}</a><ol>\n\
@@ -253,59 +261,58 @@ local.utility2.templateTestReportBadgeSvg =
 
 local.utility2.templateTestReportHtml = '\
 <style>\n\
+/*csslint\n\
+    adjoining-classes: false\n\
+*/\n\
 .testReportPlatformDiv {\n\
-    border: 1px solid;\n\
+    border: 1px solid black;\n\
     font-family: Helvetica Neue, Helvetica, Arial, sans-serif;\n\
     margin-top: 20px;\n\
     padding: 0 10px 10px 10px;\n\
     text-align: left;\n\
 }\n\
-.testReportPlatformPre {\n\
+.testReportPlatformDiv .displayNone {\n\
+    display: none;\n\
+}\n\
+.testReportPlatformDiv img {\n\
+    border: 1px solid black;\n\
+    margin: 5px 0 5px 0;\n\
+    max-height: 256px;\n\
+    max-width: 512px;\n\
+}\n\
+.testReportPlatformDiv pre {\n\
     background-color: #fdd;\n\
-    border: 1px;\n\
-    border-top-style: solid;\n\
+    border-top: 1px solid black;\n\
     margin-bottom: 0;\n\
     padding: 10px;\n\
     white-space: pre-wrap;\n\
 }\n\
-.testReportPlatformPreHidden {\n\
-    display: none;\n\
-}\n\
-.testReportPlatformScreenCaptureImg {\n\
-    border: 1px solid;\n\
-    border-color: #000;\n\
-    margin: 5px 0 5px 0;\n\
-    max-height:256px;\n\
-    max-width:512px;\n\
-}\n\
-.testReportPlatformSpan {\n\
+.testReportPlatformDiv span {\n\
     display: inline-block;\n\
-    width: 8em;\n\
+    width: 8rem;\n\
 }\n\
-.testReportPlatformTable {\n\
-    border: 1px;\n\
-    border-top-style: solid;\n\
+.testReportPlatformDiv.summary {\n\
+    background-color: #bfb;\n\
+}\n\
+.testReportPlatformDiv table {\n\
+    border-top: 1px solid black;\n\
     text-align: left;\n\
     width: 100%;\n\
 }\n\
-.testReportPlatformTr:nth-child(odd) {\n\
+.testReportPlatformDiv table > tbody > tr:nth-child(odd) {\n\
     background-color: #bfb;\n\
 }\n\
-.testReportTestFailed {\n\
+.testReportPlatformDiv .testFailed {\n\
     background-color: #f99;\n\
 }\n\
-.testReportTestPending {\n\
+.testReportPlatformDiv .testPending {\n\
     background-color: #99f;\n\
 }\n\
-.testReportSummaryDiv {\n\
-    background-color: #bfb;\n\
-}\n\
-.testReportSummarySpan {\n\
-    display: inline-block;\n\
-    width: 6.5em;\n\
+.testReportPlatformDiv .textDecorationNone {\n\
+    text-decoration: none;\n\
 }\n\
 </style>\n\
-<div class="testReportPlatformDiv testReportSummaryDiv">\n\
+<div class="testReportPlatformDiv summary">\n\
 <h1>\n\
     <a\n\
         {{#if envDict.npm_package_homepage}}\n\
@@ -317,26 +324,28 @@ local.utility2.templateTestReportHtml = '\
 </h1>\n\
 <h2>test-report summary</h2>\n\
 <h4>\n\
-    <span class="testReportSummarySpan">version</span>-\n\
+    <span>version</span>-\n\
         {{envDict.npm_package_version}}<br>\n\
-    <span class="testReportSummarySpan">test date</span>- {{date}}<br>\n\
-    <span class="testReportSummarySpan">commit info</span>-\n\
-        {{#if CI_COMMIT_INFO}}\n\
-        {{CI_COMMIT_INFO htmlSafe}}<br>\n\
-        {{#unless CI_COMMIT_INFO}}\n\
+    <span>test date</span>- {{date}}<br>\n\
+    <span>commit info</span>-\n\
+        {{#if envDict.CI_COMMIT_INFO}}\n\
+        {{envDict.CI_COMMIT_INFO htmlSafe}}<br>\n\
+        {{#unless envDict.CI_COMMIT_INFO}}\n\
         undefined<br>\n\
-        {{/if CI_COMMIT_INFO}}\n\
+        {{/if envDict.CI_COMMIT_INFO}}\n\
 </h4>\n\
-<table class="testReportPlatformTable">\n\
-<thead><tr>\n\
-    <th>total time-elapsed</th>\n\
-    <th>total tests failed</th>\n\
-    <th>total tests passed</th>\n\
-    <th>total tests pending</th>\n\
-</tr></thead>\n\
+<table>\n\
+<thead>\n\
+    <tr>\n\
+        <th>total time-elapsed</th>\n\
+        <th>total tests failed</th>\n\
+        <th>total tests passed</th>\n\
+        <th>total tests pending</th>\n\
+    </tr>\n\
+</thead>\n\
 <tbody><tr>\n\
     <td>{{timeElapsed}} ms</td>\n\
-    <td class="{{testsFailedClass}}">{{testsFailed}}</td>\n\
+    <td class="{{testStatusClass}}">{{testsFailed}}</td>\n\
     <td>{{testsPassed}}</td>\n\
     <td>{{testsPending}}</td>\n\
 </tr></tbody>\n\
@@ -347,16 +356,16 @@ local.utility2.templateTestReportHtml = '\
 <h4>\n\
     {{testPlatformNumber}}. {{name htmlSafe}}<br>\n\
     {{#if screenCaptureImg}}\n\
-    <a href="{{screenCaptureImg}}">\n\
-        <img class="testReportPlatformScreenCaptureImg" src="{{screenCaptureImg}}">\n\
-    </a>\n\
+    <a class="textDecorationNone" href="{{screenCaptureImg}}">\n\
+        <img src="{{screenCaptureImg}}">\n\
+    </a><br>\n\
     {{/if screenCaptureImg}}\n\
-    <span class="testReportPlatformSpan">time-elapsed</span>- {{timeElapsed}} ms<br>\n\
-    <span class="testReportPlatformSpan">tests failed</span>- {{testsFailed}}<br>\n\
-    <span class="testReportPlatformSpan">tests passed</span>- {{testsPassed}}<br>\n\
-    <span class="testReportPlatformSpan">tests pending</span>- {{testsPending}}<br>\n\
+    <span>time-elapsed</span>- {{timeElapsed}} ms<br>\n\
+    <span>tests failed</span>- {{testsFailed}}<br>\n\
+    <span>tests passed</span>- {{testsPassed}}<br>\n\
+    <span>tests pending</span>- {{testsPending}}<br>\n\
 </h4>\n\
-<table class="testReportPlatformTable">\n\
+<table>\n\
 <thead><tr>\n\
     <th>#</th>\n\
     <th>time-elapsed</th>\n\
@@ -365,7 +374,7 @@ local.utility2.templateTestReportHtml = '\
 </tr></thead>\n\
 <tbody>\n\
 {{#each testCaseList}}\n\
-<tr class="testReportPlatformTr">\n\
+<tr>\n\
     <td>{{testCaseNumber}}</td>\n\
     <td>{{timeElapsed}} ms</td>\n\
     <td class="{{testReportTestStatusClass}}">{{status}}</td>\n\
@@ -374,7 +383,7 @@ local.utility2.templateTestReportHtml = '\
 {{/each testCaseList}}\n\
 </tbody>\n\
 </table>\n\
-<pre class="{{testReportPlatformPreClass}}">\n\
+<pre class="{{preClass}}">\n\
 {{#each errorStackList}}\n\
 {{errorStack htmlSafe}}\n\
 {{/each errorStackList}}\n\
@@ -1666,13 +1675,19 @@ local.utility2.templateTestReportHtml = '\
         /*
          * this function will return an html api-doc from the given options
          */
-            var element, elementCreate, elementName, module, moduleName, trimLeft;
+            var element, elementCreate, elementName, module, moduleName, moduleName2, trimLeft;
             elementCreate = function () {
+                moduleName2 = moduleName.split('.');
+                // handle case where module.exports is a function
+                if (moduleName2.slice(-1)[0] === elementName) {
+                    moduleName2.pop();
+                }
+                moduleName2 = moduleName2.join('.');
                 element = {};
                 element.id = encodeURIComponent('element.' + moduleName + '.' + elementName);
                 element.typeof = typeof module.exports[elementName];
                 element.name = element.typeof + ' <span class="docApiSignatureSpan">' +
-                    moduleName + '.</span>' + elementName;
+                    moduleName2 + '.</span>' + elementName;
                 if (element.typeof !== 'function') {
                     return element;
                 }
@@ -1693,26 +1708,25 @@ local.utility2.templateTestReportHtml = '\
                     )
                     .replace((/^function \(/), elementName + ' = function (');
                 // init example
-                (module.aliasList || [moduleName]).forEach(function (moduleAlias) {
-                    if (!element.example) {
-                        options.example.replace(
-                            new RegExp('((?:\n.*?){8}' + (moduleAlias === '.'
-                                ? '\\.'
-                                : moduleAlias
-                                ? '\\b' + moduleAlias + '(?:\\([^\\)].*?\\)){0,1}\\.'
-                                : '\\b') + ')(' + elementName +
-                                ')(\\((?:.*?\n){8})'),
-                            function (match0, match1, match2, match3) {
-                                // jslint-hack
-                                local.utility2.nop(match0);
-                                element.example = '...' + trimLeft(
-                                    local.utility2.stringHtmlSafe(match1) +
-                                        '<span class="docApiCodeKeywordSpan">' + match2 +
-                                        '</span>' + local.utility2.stringHtmlSafe(match3)
-                                ).trimRight() + '\n...';
-                            }
-                        );
-                    }
+                module.aliasList.some(function (moduleAlias) {
+                    options.example.replace(
+                        new RegExp('((?:\n.*?){8}' + (moduleAlias === '.'
+                            ? '\\.'
+                            : moduleAlias
+                            ? '\\b' + moduleAlias + '(?:\\([^\\)].*?\\)){0,1}\\.'
+                            : '\\b') + ')(' + elementName +
+                            ')(\\((?:.*?\n){8})'),
+                        function (match0, match1, match2, match3) {
+                            // jslint-hack
+                            local.utility2.nop(match0);
+                            element.example = '...' + trimLeft(
+                                local.utility2.stringHtmlSafe(match1) +
+                                    '<span class="docApiCodeKeywordSpan">' + match2 +
+                                    '</span>' + local.utility2.stringHtmlSafe(match3)
+                            ).trimRight() + '\n...';
+                        }
+                    );
+                    return element.example;
                 });
                 element.example = element.example || 'n/a';
                 return element;
@@ -1741,7 +1755,7 @@ local.utility2.templateTestReportHtml = '\
                     moduleName = key;
                     // init alias
                     module = options.moduleDict[moduleName];
-                    // if module.exports is a function, then document it as a function
+                    // handle case where module.exports is a function
                     if (typeof module.exports === 'function') {
                         module.exports[moduleName.split('.').slice(-1)[0]] = module.exports;
                     }
@@ -3337,7 +3351,6 @@ local.utility2.templateTestReportHtml = '\
             return local.utility2.templateRender(
                 local.utility2.templateTestReportHtml,
                 local.utility2.objectSetOverride(testReport, {
-                    CI_COMMIT_INFO: local.utility2.envDict.CI_COMMIT_INFO,
                     envDict: local.utility2.envDict,
                     // map testPlatformList
                     testPlatformList: testReport.testPlatformList
@@ -3364,21 +3377,20 @@ local.utility2.templateTestReportHtml = '\
                                     }
                                     return local.utility2.objectSetOverride(testCase, {
                                         testCaseNumber: testCaseNumber,
-                                        testReportTestStatusClass: 'testReportTest' +
+                                        testReportTestStatusClass: 'test' +
                                             testCase.status[0].toUpperCase() +
                                             testCase.status.slice(1)
                                     }, 8);
                                 }),
-                                testReportPlatformPreClass:
-                                    'testReportPlatformPre' + (errorStackList.length
+                                preClass: errorStackList.length
                                     ? ''
-                                    : 'Hidden'),
+                                    : 'displayNone',
                                 testPlatformNumber: ii + 1
                             });
                         }, 8),
-                    testsFailedClass: testReport.testsFailed
-                        ? 'testReportTestFailed'
-                        : 'testReportTestPassed'
+                    testStatusClass: testReport.testsFailed
+                        ? 'testFailed'
+                        : 'testPassed'
                 }, 8)
             );
         };
@@ -3899,6 +3911,17 @@ local.utility2.templateTestReportHtml = '\
         });
         // init state
         local.utility2.stateInit({});
+        // jslint templates
+        [
+            local.utility2.templateDocApiHtml,
+            local.utility2.templateTestReportHtml
+        ].forEach(function (element) {
+            element.replace((/<style>([\S\s]*?)<\/style>/g), function (match0, match1) {
+                // jslint-hack
+                local.utility2.nop(match0);
+                local.utility2.jslintAndPrint(match1, 'test.css');
+            });
+        });
     }());
     switch (local.modeJs) {
 

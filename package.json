@@ -40,11 +40,7 @@
         "build-ci": "./index.sh shRun shReadmeBuild",
         "build-doc": "npm test --mode-test-case=testCase_build_doc",
         "env": "env",
-        "example.js": ". ./index.sh && shInit && shReadmeExportScripts && cp $(shFileTrimLeft tmp/README.package.json) package.json && shFileTrimLeft tmp/README.example.js && unset npm_package_homepage && unset npm_package_description && unset npm_package_name && unset npm_package_version && shRunScreenCapture shReadmeTestJs example.js",
-
-
-
-
+        "example.js": ". ./index.sh && shInit && shReadmeExportScripts && cp $(shFileTrimLeft tmp/README.package.json) package.json && shFileTrimLeft tmp/README.example.js && shRunScreenCapture shReadmeTestJs example.js",
 
 
 
@@ -64,5 +60,5 @@
 
         "test-published": "./index.sh shRun shNpmTestPublished"
     },
-    "version": "2016.5.1"
+    "version": "2016.5.3"
 }

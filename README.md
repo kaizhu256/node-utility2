@@ -8,18 +8,15 @@ this package will run dynamic browser tests with coverage (via istanbul and elec
 
 # documentation
 #### todo
-- api-doc - fix utility2.FormData missing example usage
 - add socket-io to repl-server
 - add utility2.middlewareLimit
 - add server stress test using electron
 - none
 
-#### change since c4d1abb0
-- npm publish 2016.5.1
-- add standalone-app download-link in test-page
-- add homepage-link in test-page, test-report, coverage-report
-- move shell function shDocApiCreate to javascript function testCase_build_doc
-- add function utility2.middlewareJsonpStateGet, utility2.stateInit
+#### change since c0a94961
+- npm publish 2016.5.3
+- add homepage-link in api-doc
+- fix test-report styling
 - none
 
 #### this package requires
@@ -501,10 +498,6 @@ window.testRun({});\n\
 . ./index.sh && shInit && shReadmeExportScripts && \
 cp $(shFileTrimLeft tmp/README.package.json) package.json && \
 shFileTrimLeft tmp/README.example.js && \
-unset npm_package_homepage && \
-unset npm_package_description && \
-unset npm_package_name && \
-unset npm_package_version && \
 shRunScreenCapture shReadmeTestJs example.js",
         "example.sh": "\
 . ./index.sh && shInit && shReadmeExportScripts && \
@@ -521,7 +514,7 @@ export npm_config_mode_auto_restart=1 && \
 ./index.sh test node test.js",
         "test-published": "./index.sh shRun shNpmTestPublished"
     },
-    "version": "2016.5.1"
+    "version": "2016.5.3"
 }
 ```
 
