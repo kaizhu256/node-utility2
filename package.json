@@ -9,9 +9,8 @@
         "utility2-uglifyjs": "lib.uglifyjs.js"
     },
     "description": "this package will run dynamic browser tests with coverage (via istanbul and electron)",
-
     "devDependencies": {
-        "electron-lite": "2016.5.1"
+        "electron-lite": "kaizhu256/node-electron-lite#alpha"
     },
     "engines": { "node": ">=4.0" },
     "homepage": "https://github.com/kaizhu256/node-utility2",
@@ -40,25 +39,28 @@
         "build-ci": "./index.sh shRun shReadmeBuild",
         "build-doc": "npm test --mode-test-case=testCase_build_doc",
         "env": "env",
-        "example.js": ". ./index.sh && shInit && shReadmeExportScripts && cp $(shFileTrimLeft tmp/README.package.json) package.json && shFileTrimLeft tmp/README.example.js && shRunScreenCapture shReadmeTestJs example.js",
+        "example.js": ". ./index.sh && shInit && shReadmeExportScripts && shFileTrimLeft tmp/README.example.js && shRunScreenCapture shReadmeTestJs example.js",
+
+
+
+        "example.sh": ". ./index.sh && shInit && shReadmeExportScripts && shRunScreenCapture shReadmeTestSh example.sh",
+
+
+        "start": "export PORT=${PORT:-8080} && if [ -f assets.app.js ]; then node assets.app.js; return; fi && export npm_config_mode_auto_restart=1 && ./index.sh shRun shIstanbulCover node test.js",
 
 
 
 
-        "example.sh": ". ./index.sh && shInit && shReadmeExportScripts && cp $(shFileTrimLeft tmp/README.package.json) package.json && shRunScreenCapture shReadmeTestSh example.sh",
+        "start-heroku": "export npm_config_mode_backend=1 && npm start ",
 
 
 
-        "start": "export PORT=${PORT:-8080} && export npm_config_mode_auto_restart=1 && ./index.sh shRun shIstanbulCover node test.js",
-
-
-        "test": ". ./index.sh && shInit && shReadmeExportScripts && cp $(shFileTrimLeft tmp/README.package.json) package.json && export PORT=$(./index.sh shServerPortRandom) && export npm_config_mode_auto_restart=1 && ./index.sh test node test.js",
-
+        "test": ". ./index.sh && shInit && shReadmeExportScripts && export PORT=$(./index.sh shServerPortRandom) && export npm_config_mode_auto_restart=1 && ./index.sh test node test.js",
 
 
 
 
         "test-published": "./index.sh shRun shNpmTestPublished"
     },
-    "version": "2016.5.3"
+    "version": "2016.5.4"
 }

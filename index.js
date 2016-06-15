@@ -62,28 +62,78 @@
          */
             return;
         };
-        // init lib bcrypt
-        local.utility2.bcrypt = local.modeJs === 'browser'
-            ? local.global.utility2_bcrypt
-            : require('./lib.bcrypt.js');
-        // init lib cryptojs
-        local.utility2.cryptojs = local.modeJs === 'browser'
-            ? local.global.utility2_cryptojs
-            : require('./lib.cryptojs.js');
-        // init lib istanbul
-        local.utility2.istanbul = local.modeJs === 'browser'
-            ? local.global.utility2_istanbul
-            : require('./lib.istanbul.js');
-        // init lib jslint
-        local.utility2.jslint = local.modeJs === 'browser'
-            ? local.global.utility2_jslint
-            : require('./lib.jslint.js');
-        // init lib uglifyjs
-        local.utility2.uglifyjs = local.modeJs === 'browser'
-            ? local.global.utility2_uglifyjs
-            : require('./lib.uglifyjs.js');
+        // init lib
+        [
+            'bcrypt',
+            'cryptojs',
+            'istanbul',
+            'jslint',
+            'nedb',
+            'uglifyjs'
+        ].forEach(function (key) {
+            // init lib bcrypt
+            local.utility2[key === 'nedb'
+                ? 'Nedb'
+                : key] = local.modeJs === 'browser'
+                ? local.global['utility2_' + key]
+                : require('./lib.' + key + '.js');
+        });
         // init templates
 /* jslint-ignore-begin */
+local.utility2.assetsDict['/assets.utility2.css'] = '\
+/*csslint\n\
+    box-model: false\n\
+*/\n\
+.ajaxProgressBarDiv {\n\
+    animation: 2s linear 0s normal none infinite ajaxProgressBarDivAnimation;\n\
+    background-image: linear-gradient(\n\
+    45deg,rgba(255,255,255,.25) 25%,\n\
+    transparent 25%,\n\
+    transparent 50%,\n\
+    rgba(255,255,255,.25) 50%,\n\
+    rgba(255,255,255,.25) 75%,\n\
+    transparent 75%,\n\
+    transparent\n\
+    );\n\
+    background-size: 40px 40px;\n\
+    color: #fff;\n\
+    font-family: Helvetica Neue, Helvetica, Arial, sans-serif;\n\
+    font-size: 12px;\n\
+    padding: 2px 0 2px 0;\n\
+    text-align: center;\n\
+    text-shadow: 0 0 5px #007;\n\
+    transition: width 1s ease-in-out;\n\
+    width: 25%;\n\
+}\n\
+.ajaxProgressBarDivError {\n\
+    background-color: #d33;\n\
+}\n\
+.ajaxProgressBarDivLoading {\n\
+    background-color: #37b;\n\
+}\n\
+.ajaxProgressBarDivSuccess {\n\
+    background-color: #3b3;\n\
+}\n\
+.ajaxProgressDiv {\n\
+    background-color: #fff;\n\
+    box-shadow: 0 0 1px 1px #333;\n\
+    display: none;\n\
+    left: 50%;\n\
+    margin: 0 0 0 -50px;\n\
+    padding: 4px 4px 4px 4px;\n\
+    position: fixed;\n\
+    top: 49%;\n\
+    width: 100px;\n\
+    z-index: 9999;\n\
+}\n\
+@keyframes ajaxProgressBarDivAnimation {\n\
+    from { background-position: 40px 0; }\n\
+    to { background-position: 0 0; }\n\
+}\n\
+';
+
+
+
 local.utility2.assetsDict['/assets.utility2.rollup.begin.js'] = '\
 /* utility2.rollup.js begin */\n\
 /*jslint\n\
@@ -164,12 +214,12 @@ local.utility2.templateDocApiHtml = '\
 .docApiDiv {\n\
     font-family: Helvetica Neue, Helvetica, Arial, sans-serif;\n\
 }\n\
-.docApiDiv a {\n\
-    color: #55f;\n\
+.docApiDiv a[href] {\n\
+    color: #33f;\n\
     font-weight: bold;\n\
     text-decoration: none;\n\
 }\n\
-.docApiDiv a:hover {\n\
+.docApiDiv a[href]:hover {\n\
     text-decoration: underline;\n\
 }\n\
 .docApiSectionDiv {\n\
@@ -203,9 +253,7 @@ local.utility2.templateDocApiHtml = '\
         {{#if envDict.npm_package_homepage}}\n\
         href="{{envDict.npm_package_homepage}}"\n\
         {{/if envDict.npm_package_homepage}}\n\
-    >\n\
-        ({{envDict.npm_package_name}} @ {{envDict.npm_package_version}})\n\
-    </a>\n\
+    >({{envDict.npm_package_name}} @ {{envDict.npm_package_version}})</a>\n\
 </h1>\n\
 <div class="docApiSectionDiv"><a href="#"><h1>table of contents</h1></a><ul>\n\
 {{#each moduleList}}\n\
@@ -308,9 +356,6 @@ local.utility2.templateTestReportHtml = '\
 .testReportPlatformDiv .testPending {\n\
     background-color: #99f;\n\
 }\n\
-.testReportPlatformDiv .textDecorationNone {\n\
-    text-decoration: none;\n\
-}\n\
 </style>\n\
 <div class="testReportPlatformDiv summary">\n\
 <h1>\n\
@@ -318,9 +363,7 @@ local.utility2.templateTestReportHtml = '\
         {{#if envDict.npm_package_homepage}}\n\
         href="{{envDict.npm_package_homepage}}"\n\
         {{/if envDict.npm_package_homepage}}\n\
-    >\n\
-        {{envDict.npm_package_name}} @ {{envDict.npm_package_version}}\n\
-    </a>\n\
+    >{{envDict.npm_package_name}} @ {{envDict.npm_package_version}}</a>\n\
 </h1>\n\
 <h2>test-report summary</h2>\n\
 <h4>\n\
@@ -356,9 +399,7 @@ local.utility2.templateTestReportHtml = '\
 <h4>\n\
     {{testPlatformNumber}}. {{name htmlSafe}}<br>\n\
     {{#if screenCaptureImg}}\n\
-    <a class="textDecorationNone" href="{{screenCaptureImg}}">\n\
-        <img src="{{screenCaptureImg}}">\n\
-    </a><br>\n\
+    <a href="{{screenCaptureImg}}"><img src="{{screenCaptureImg}}"></a><br>\n\
     {{/if screenCaptureImg}}\n\
     <span>time-elapsed</span>- {{timeElapsed}} ms<br>\n\
     <span>tests failed</span>- {{testsFailed}}<br>\n\
@@ -921,7 +962,7 @@ local.utility2.templateTestReportHtml = '\
             var ajaxProgressDiv, ii, timerTimeout, tmp, xhr;
             onError = local.utility2.onErrorWithStack(onError);
             // init modeServerLocal
-            if (local.utility2.serverLocalUrlTest &&
+            if (!local.utility2.envDict.npm_config_mode_backend &&
                     local.utility2.serverLocalUrlTest(options.url)) {
                 xhr = new local._http.XMLHttpRequest();
             }
@@ -1675,19 +1716,21 @@ local.utility2.templateTestReportHtml = '\
         /*
          * this function will return an html api-doc from the given options
          */
-            var element, elementCreate, elementName, module, moduleName, moduleName2, trimLeft;
+            var element, elementCreate, elementName, module, tmp, trimLeft;
             elementCreate = function () {
-                moduleName2 = moduleName.split('.');
-                // handle case where module.exports is a function
-                if (moduleName2.slice(-1)[0] === elementName) {
-                    moduleName2.pop();
-                }
-                moduleName2 = moduleName2.join('.');
                 element = {};
-                element.id = encodeURIComponent('element.' + moduleName + '.' + elementName);
+                element.moduleName = module.name.split('.');
+                // handle case where module.exports is a function
+                if (element.moduleName.slice(-1)[0] === elementName) {
+                    element.moduleName.pop();
+                }
+                element.moduleName = element.moduleName.join('.');
+                element.id = encodeURIComponent('element.' + module.name + '.' + elementName);
                 element.typeof = typeof module.exports[elementName];
-                element.name = element.typeof + ' <span class="docApiSignatureSpan">' +
-                    moduleName2 + '.</span>' + elementName;
+                element.name = (element.typeof + ' <span class="docApiSignatureSpan">' +
+                    element.moduleName + '.</span>' + elementName)
+                    // handle case where module.exports is a function
+                    .replace('>.<', '');
                 if (element.typeof !== 'function') {
                     return element;
                 }
@@ -1708,17 +1751,20 @@ local.utility2.templateTestReportHtml = '\
                     )
                     .replace((/^function \(/), elementName + ' = function (');
                 // init example
-                module.aliasList.some(function (moduleAlias) {
-                    options.example.replace(
-                        new RegExp('((?:\n.*?){8}' + (moduleAlias === '.'
-                            ? '\\.'
-                            : moduleAlias
-                            ? '\\b' + moduleAlias + '(?:\\([^\\)].*?\\)){0,1}\\.'
-                            : '\\b') + ')(' + elementName +
-                            ')(\\((?:.*?\n){8})'),
+                [
+                    '\\b' + element.moduleName,
+                    '\\.',
+                    '\\b'
+                ].some(function (prefix) {
+                    module.example.replace(
+                        new RegExp('((?:\n.*?){8}' +
+                            prefix + ')(' + elementName + ')(\\((?:.*?\n){8})'),
                         function (match0, match1, match2, match3) {
                             // jslint-hack
                             local.utility2.nop(match0);
+                            if ((/\b(?:JSON\.|function )$/).test(match1)) {
+                                return;
+                            }
                             element.example = '...' + trimLeft(
                                 local.utility2.stringHtmlSafe(match1) +
                                     '<span class="docApiCodeKeywordSpan">' + match2 +
@@ -1735,7 +1781,6 @@ local.utility2.templateTestReportHtml = '\
                 /*
                  * this function will normalize the whitespace around the text
                  */
-                var tmp;
                 tmp = '';
                 text.trim().replace((/^ */gm), function (match0) {
                     if (!tmp || match0.length < tmp.length) {
@@ -1752,12 +1797,15 @@ local.utility2.templateTestReportHtml = '\
             options.moduleList = Object.keys(options.moduleDict)
                 .sort()
                 .map(function (key) {
-                    moduleName = key;
-                    // init alias
-                    module = options.moduleDict[moduleName];
+                    module = local.utility2.objectSetDefault(options.moduleDict[key], {
+                        example: '',
+                        name: key
+                    });
                     // handle case where module.exports is a function
                     if (typeof module.exports === 'function') {
-                        module.exports[moduleName.split('.').slice(-1)[0]] = module.exports;
+                        tmp = module.exports;
+                        module.exports = {};
+                        module.exports[module.name.split('.').slice(-1)[0]] = tmp;
                     }
                     return {
                         elementList: Object.keys(module.exports)
@@ -1773,8 +1821,8 @@ local.utility2.templateTestReportHtml = '\
                                     ? -1
                                     : 1;
                             }),
-                        id: 'module.' + moduleName,
-                        name: moduleName
+                        id: 'module.' + module.name,
+                        name: module.name
                     };
                 });
             options.envDict = local.utility2.envDict;
@@ -1842,6 +1890,8 @@ local.utility2.templateTestReportHtml = '\
                 process.exit(exitCode);
                 break;
             }
+            // reset modeTest
+            local.utility2.modeTest = null;
         };
 
         local.utility2.fsMkdirpSync = function (dir) {
@@ -1960,6 +2010,46 @@ local.utility2.templateTestReportHtml = '\
         // init jslintAndPrint
         local.utility2.jslintAndPrint = (local.utility2.jslint &&
             local.utility2.jslint.jslintAndPrint) || local.utility2.echo;
+
+        local.utility2.jslintAndPrintIfNotCoverage = function (script, file) {
+        /*
+         * this function will jslint the script if there is no coverage
+         */
+            return (local.utility2.envDict.NODE_ENV === 'production' ||
+                    local.global.__coverage__) &&
+                    file.slice(-3) === '.js'
+                ? script
+                : local.utility2.jslintAndPrint(script, file);
+        };
+
+        local.utility2.jslintAndPrintHtml = function (script, file) {
+        /*
+         * this function will jalint and csslint the html script
+         */
+            // csslint <style> tag
+            script.replace(
+                (/<style>([\S\s]+?)<\/style>/g),
+                function (match0, match1, ii, text) {
+                    // jslint-hack
+                    local.utility2.nop(match0);
+                    // preserve lineno
+                    match1 = text.slice(0, ii).replace((/.+/g), '') + match1;
+                    local.utility2.jslintAndPrint(match1, file + '.css');
+                }
+            );
+            // jslint <script> tag
+            script.replace(
+                (/<script>([\S\s]+?)<\/script>/g),
+                function (match0, match1, ii, text) {
+                    // jslint-hack
+                    local.utility2.nop(match0);
+                    // preserve lineno
+                    match1 = text.slice(0, ii).replace((/.+/g), '') + match1;
+                    local.utility2.jslintAndPrint(match1, file + '.js');
+                }
+            );
+            return script;
+        };
 
         local.utility2.jsonCopy = function (element) {
         /*
@@ -2336,6 +2426,11 @@ local.utility2.templateTestReportHtml = '\
                 }
             }
             if (isRequest) {
+                [
+                    'npm_config_mode_backend'
+                ].forEach(function (key) {
+                    state.utility2.envDict[key] = local.utility2.envDict[key];
+                });
                 response.end(request.urlParsed.query.callback + '(' + JSON.stringify(state) +
                     ');');
                 return;
@@ -2743,24 +2838,49 @@ local.utility2.templateTestReportHtml = '\
             });
         };
 
-        local.utility2.requireFromScript = function (file, script) {
+        local.utility2.requireExampleJsFromReadme = function (options) {
         /*
-         * this function will
-         * 1. create a new module with the given file
-         * 2. load module with the given script
-         * 3. return module.exports
+         * this function will require and export example.js embedded in README.md
          */
-            var module;
+            var file, module, script;
+            file = options.__dirname + '/example.js';
             if (local.require2.cache[file]) {
-                return local.require2.cache[file].exports;
+                return local.require2.cache[file];
             }
-            // 1. create a new module with the given file
+            // read script from README.md
+            local.fs.readFileSync(options.__dirname + '/README.md', 'utf8')
+                .replace(
+                    (/```\w*?(\n[\W\s]*?example.js[\n\"][\S\s]+?)\n```/),
+                    function (match0, match1, ii, text) {
+                        // jslint-hack
+                        local.utility2.nop(match0);
+                        // preserve lineno
+                        script = text.slice(0, ii).replace((/.+/g), '') + match1;
+                    }
+                );
+            // alias require('$npm_package_name') to require('index.js');
+            script = script
+                .replace("require('utility2')", 'module.utility2')
+                .replace(
+                    "require('" + local.utility2.envDict.npm_package_name + "')",
+                    "require('./index.js')"
+                );
+            // jslint script
+            local.utility2.jslintAndPrint(script, file);
+            // cover script
+            script = local.utility2.istanbulInstrumentInPackage(
+                script,
+                file,
+                local.utility2.envDict.npm_package_name
+            );
+            // init module
             module = local.require2.cache[file] = new local.Module(file);
             module.utility2 = local.utility2;
-            // 2. load module with the given script
+            // load script into module
             module._compile(script, file);
-            // 3. return module.exports
-            return module.exports;
+            // init assets.example.js
+            module.exports.utility2.assetsDict['/assets.example.js'] = script;
+            return module;
         };
 
         local.utility2.serverRespondDefault = function (request, response, statusCode, error) {
@@ -2849,6 +2969,8 @@ local.utility2.templateTestReportHtml = '\
                 clearTimeout(request.timerTimeout);
             });
         };
+
+        local.utility2.serverLocalUrlTest = local.utility2.nop;
 
         local.utility2.stateInit = function (options) {
         /*
@@ -3504,8 +3626,8 @@ local.utility2.templateTestReportHtml = '\
                     clearInterval(timerInterval);
                 }
             }, 1000);
-            // shallow copy testPlatform.testCaseList,
-            // to guard against in-place sort from testReportMerge
+            // shallow-copy testPlatform.testCaseList to prevent side-effects
+            // from in-place sort from testReportMerge
             testPlatform.testCaseList.slice().forEach(function (testCase) {
                 var onError, timerTimeout;
                 onError = function (error) {
@@ -3681,9 +3803,10 @@ local.utility2.templateTestReportHtml = '\
 
         local.utility2.uglifyIfProduction = function (code) {
         /*
-         * this function will uglify the js-code, if $npm_config_production is true
+         * this function will, if $NODE_ENV === production, then uglify the js-code
+         *
          */
-            return local.utility2.envDict.npm_config_production
+            return local.utility2.envDict.NODE_ENV === 'production'
                 ? local.utility2.uglify(code)
                 : code;
         };
@@ -3911,17 +4034,6 @@ local.utility2.templateTestReportHtml = '\
         });
         // init state
         local.utility2.stateInit({});
-        // jslint templates
-        [
-            local.utility2.templateDocApiHtml,
-            local.utility2.templateTestReportHtml
-        ].forEach(function (element) {
-            element.replace((/<style>([\S\s]*?)<\/style>/g), function (match0, match1) {
-                // jslint-hack
-                local.utility2.nop(match0);
-                local.utility2.jslintAndPrint(match1, 'test.css');
-            });
-        });
     }());
     switch (local.modeJs) {
 
@@ -3964,18 +4076,21 @@ local.utility2.templateTestReportHtml = '\
         }
         // init assets
         [
-            'index.css',
+            'assets.utility2.css',
             'index.js',
+            'index.sh',
             'lib.bcrypt.js',
             'lib.cryptojs.js',
             'lib.istanbul.js',
             'lib.jslint.js',
-            'lib.uglifyjs.js'
+            'lib.nedb.js',
+            'lib.uglifyjs.js',
+            'templateDocApiHtml',
+            'templateTestReportHtml'
         ].forEach(function (key) {
             switch (key) {
-            case 'index.css':
-                local.utility2.assetsDict['/assets.utility2.css'] =
-                    local.fs.readFileSync(__dirname + '/' + key, 'utf8');
+            case 'assets.utility2.css':
+                local.utility2.jslintAndPrint(local.utility2.assetsDict['/' + key], key);
                 break;
             case 'index.js':
                 local.utility2.assetsDict['/assets.utility2.js'] =
@@ -3986,10 +4101,18 @@ local.utility2.templateTestReportHtml = '\
                         'utility2'
                     );
                 break;
+            case 'index.sh':
+                local.utility2.jslintAndPrintHtml(
+                    local.fs.readFileSync(__dirname + '/' + key, 'utf8')
+                        .replace((/^#!/), '//'),
+                    __dirname + '/' + key
+                );
+                break;
             case 'lib.bcrypt.js':
             case 'lib.cryptojs.js':
             case 'lib.istanbul.js':
             case 'lib.jslint.js':
+            case 'lib.nedb.js':
             case 'lib.uglifyjs.js':
                 local.utility2.assetsDict['/assets.utility2.' + key] =
                     local.utility2.istanbulInstrumentInPackage(
@@ -3999,6 +4122,10 @@ local.utility2.templateTestReportHtml = '\
                         'utility2'
                     );
                 break;
+            case 'templateDocApiHtml':
+            case 'templateTestReportHtml':
+                local.utility2.jslintAndPrintHtml(local.utility2[key], key);
+                break;
             }
         });
         local.utility2.assetsDict['/assets.utility2.rollup.js'] = [
@@ -4007,6 +4134,7 @@ local.utility2.templateTestReportHtml = '\
             '/assets.utility2.lib.cryptojs.js',
             '/assets.utility2.lib.istanbul.js',
             '/assets.utility2.lib.jslint.js',
+            '/assets.utility2.lib.nedb.js',
             '/assets.utility2.lib.uglifyjs.js',
             '/assets.utility2.js',
             '/assets.utility2.css',

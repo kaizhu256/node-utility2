@@ -46,29 +46,13 @@
                 local = module;
                 break;
             }
-            local = require('./index.js').local;
-            local._script = local.fs.readFileSync(__dirname + '/README.md', 'utf8')
-                // support syntax-highlighting
-                .replace((/[\S\s]+?\n.*?example.js\s*?```\w*?\n/), function (match0) {
-                    // preserve lineno
-                    return match0.replace((/.+/g), '');
-                })
-                .replace((/\n```[\S\s]+/), '')
-                // alias require('$npm_package_name') to require('index.js');
-                .replace("require('utility2')", 'module.utility2');
-            // jslint example.js
-            local.utility2.jslintAndPrint(local._script, __dirname + '/example.js');
-            // cover example.js
-            local._script = local.utility2.istanbulInstrumentInPackage(
-                local._script,
-                __dirname + '/example.js',
-                'utility2'
-            );
-            local.global.assetsExampleJs = local._script;
-            // require example.js
-            local = local.utility2.requireFromScript(__dirname + '/example.js', local._script);
-            // coverage-hack - test requireFromScript's cache handling-behavior
-            local.utility2.requireFromScript(__dirname + '/example.js');
+            local = require('./index.js').requireExampleJsFromReadme({
+                __dirname: __dirname
+            }).exports;
+            // coverage-hack - test requireExampleJsFromReadme's cache handling-behavior
+            local.utility2.requireExampleJsFromReadme({
+                __dirname: __dirname
+            });
             // coverage-hack - cover istanbul
             delete require.cache[__dirname + '/lib.istanbul.js'];
             local.utility2.istanbul2 = require('./lib.istanbul.js');
@@ -254,10 +238,6 @@ instruction\n\
                 // test undefined-error handling-behavior
                 url: '/test.error-undefined'
             }, {
-                // test timeout handling-behavior
-                timeout: 1,
-                url: '/test.timeout'
-            }, {
                 // test undefined https-url handling-behavior
                 timeout: 1,
                 url: 'https://localhost/undefined'
@@ -353,6 +333,22 @@ instruction\n\
                 }, onParallel);
             });
             onParallel();
+        };
+
+        local.testCase_ajax_timeout = function (options, onError) {
+        /*
+         * this function will test ajax's timeout handling-behavior
+         */
+            options = { timeout: 1, url: '/test.timeout' };
+            setTimeout(function () {
+                local.utility2.ajax(options, function (error) {
+                    local.utility2.tryCatchOnError(function () {
+                        // validate error occurred
+                        local.utility2.assert(error, error);
+                        onError();
+                    }, onError);
+                });
+            }, 1000);
         };
 
         local.testCase_assertXxx_default = function (options, onError) {
@@ -599,16 +595,15 @@ instruction\n\
             /*jslint evil: true*/
             options = {};
             options.data = local.utility2.docApiCreate({
-                example: local.utility2.testRun.toString().replace((/;/g), ';\n    '),
                 moduleDict: {
                     // test module.exports is a function handling-behavior
                     function: {
-                        aliasList: [],
+                        example: '',
                         exports: local.utility2.nop.bind(null)
                     },
-                    // test aliasList handling-behavior
+                    // test default handling-behavior
                     utility2: {
-                        aliasList: ['', '.', 'undefined', 'utility2'],
+                        example: local.utility2.testRun.toString().replace((/;/g), ';\n    '),
                         exports: local.utility2
                     }
                 }
@@ -1442,15 +1437,15 @@ instruction\n\
             options = {};
             local.utility2.testMock([
                 // suppress console.error
-                [local.utility2.envDict, { npm_config_production: '' }]
+                [local.utility2.envDict, { NODE_ENV: '' }]
             ], function (onError) {
                 // test no production-mode handling-behavior
-                local.utility2.envDict.npm_config_production = '';
+                local.utility2.envDict.NODE_ENV = '';
                 options.data = local.utility2.uglifyIfProduction('aa = 1');
                 // validate data
                 local.utility2.assertJsonEqual(options.data, 'aa = 1');
                 // test production-mode handling-behavior
-                local.utility2.envDict.npm_config_production = '1';
+                local.utility2.envDict.NODE_ENV = 'production';
                 options.data = local.utility2.uglifyIfProduction('aa = 1');
                 // validate data
                 local.utility2.assertJsonEqual(options.data, 'aa=1');
@@ -1670,6 +1665,9 @@ instruction\n\
                 file: '/assets.app.js',
                 url: '/assets.app.js'
             }, {
+                file: '/assets.app.min.js',
+                url: '/assets.app.min.js'
+            }, {
                 file: '/assets.example.js',
                 url: '/assets.example.js'
             }, {
@@ -1703,6 +1701,9 @@ instruction\n\
                 file: '/assets.utility2.lib.jslint.js',
                 url: '/assets.utility2.lib.jslint.js'
             }, {
+                file: '/assets.utility2.lib.nedb.js',
+                url: '/assets.utility2.lib.nedb.js'
+            }, {
                 file: '/assets.utility2.lib.uglifyjs.js',
                 url: '/assets.utility2.lib.uglifyjs.js'
             }, {
@@ -1718,6 +1719,23 @@ instruction\n\
                     onParallel.counter += 1;
                     // validate no error occurred
                     onParallel(error);
+                    switch (local.path.extname(options.file)) {
+                    case '.css':
+                    case '.js':
+                    case '.json':
+                        local.utility2.jslintAndPrintIfNotCoverage(
+                            xhr.responseText,
+                            options.file
+                        );
+                        // validate no error occurred
+                        local.utility2.tryCatchOnError(function () {
+                            local.utility2.assert(
+                                !local.utility2.jslint.errorText,
+                                local.utility2.jslint.errorText
+                            );
+                        }, onError);
+                        break;
+                    }
                     local.utility2.fsWriteFileWithMkdirp(
                         local.utility2.envDict.npm_config_dir_build + '/app' + options.file,
                         xhr.response,
@@ -1742,62 +1760,74 @@ instruction\n\
                     switch (modeNext) {
                     case 1:
                         options = {};
-                        options.example = [
-                            'README.md',
-                            'test.js',
-                            'index.js',
-                            'lib.bcrypt.js',
-                            'lib.cryptojs.js',
-                            'lib.istanbul.js',
-                            'lib.jslint.js',
-                            'lib.uglifyjs.js'
-                        ].map(function (file) {
-                            return '\n\n\n\n\n\n\n\n' +
-                                local.fs.readFileSync(file, 'utf8') +
-                                '\n\n\n\n\n\n\n\n';
-                        }).join('');
                         options.moduleDict = {
                             utility2: {
-                                aliasList: ['utility2', 'local'],
+                                exampleList: [],
                                 exports: local.utility2
                             },
                             'utility2.Blob': {
-                                aliasList: ['utility2'],
+                                exampleList: [],
                                 exports: local.utility2.Blob
                             },
                             'utility2.Blob.prototype': {
-                                aliasList: ['Blob', 'data'],
+                                exampleList: [],
                                 exports: local.utility2.Blob.prototype
                             },
                             'utility2.FormData': {
-                                aliasList: ['utility2'],
+                                exampleList: [],
                                 exports: local.utility2.FormData
                             },
                             'utility2.FormData.prototype': {
-                                aliasList: ['FormData', 'data'],
+                                exampleList: [],
                                 exports: local.utility2.FormData.prototype
                             },
                             'utility2.bcrypt': {
-                                aliasList: ['bcrypt', 'local'],
+                                exampleList: ['lib.bcrypt.js'],
                                 exports: local.utility2.bcrypt
                             },
                             'utility2.cryptojs': {
-                                aliasList: ['cryptojs', 'local'],
+                                exampleList: ['lib.cryptojs.js'],
                                 exports: local.utility2.cryptojs
                             },
                             'utility2.istanbul': {
-                                aliasList: ['istanbul', 'local'],
+                                exampleList: ['lib.istanbul.js'],
                                 exports: local.utility2.istanbul
                             },
                             'utility2.jslint': {
-                                aliasList: ['jslint', 'local'],
+                                exampleList: ['lib.jslint.js'],
                                 exports: local.utility2.jslint
                             },
+                            'utility2.Nedb': {
+                                exampleList: ['lib.nedb.js'],
+                                exports: local.utility2.Nedb
+                            },
+                            'utility2.Nedb.prototype': {
+                                exampleList: ['lib.nedb.js'],
+                                exports: local.utility2.Nedb.prototype
+                            },
+                            'utility2.Nedb.storage': {
+                                exampleList: ['lib.nedb.js'],
+                                exports: local.utility2.Nedb.storage
+                            },
                             'utility2.uglifyjs': {
-                                aliasList: ['uglifyjs', 'local'],
+                                exampleList: ['lib.uglifyjs.js'],
                                 exports: local.utility2.uglifyjs
                             }
                         };
+                        Object.keys(options.moduleDict).forEach(function (key) {
+                            options.moduleDict[key].example =
+                                options.moduleDict[key].exampleList
+                                .concat([
+                                    'README.md',
+                                    'test.js',
+                                    'index.js'
+                                ])
+                                .map(function (file) {
+                                    return '\n\n\n\n\n\n\n\n' +
+                                        local.fs.readFileSync(file, 'utf8') +
+                                        '\n\n\n\n\n\n\n\n';
+                                }).join('');
+                        });
                         // create doc.api.html
                         local.utility2.fsWriteFileWithMkdirp(
                             local.utility2.envDict.npm_config_dir_build + '/doc.api.html',
@@ -2183,11 +2213,6 @@ local.utility2.assertJsonEqual(options.coverage1,
 
     // run shared js-env code - post-init
     (function () {
-        // init serverLocal
-        local.utility2.serverLocalUrlTest = function (url) {
-            url = local.utility2.urlParse(url).pathname;
-            return local.modeJs === 'browser' && url.indexOf('/test.') === 0;
-        };
         // init test-middleware
         local.middleware.middlewareList.push(function (request, response, nextMiddleware) {
         /*
@@ -2247,6 +2272,11 @@ local.utility2.assertJsonEqual(options.coverage1,
                 local.utility2.middlewareFileServer(request, response, nextMiddleware);
             }
         });
+        // init serverLocal
+        local.utility2.serverLocalUrlTest = function (url) {
+            url = local.utility2.urlParse(url).pathname;
+            return local.modeJs === 'browser' && url.indexOf('/test.') === 0;
+        };
     }());
     switch (local.modeJs) {
 
@@ -2258,16 +2288,14 @@ local.utility2.assertJsonEqual(options.coverage1,
         local.utility2.replStart();
         // init assets
         local.utility2.assetsDict['/'] = local.utility2.assetsDict['/index.html'] =
-            local.utility2.templateRender(
-                local.utility2.templateIndexHtml,
-                {
-                    envDict: local.utility2.envDict,
-                    isRollup: module.isRollup || local.utility2.envDict.npm_config_production
-                }
-            );
+            local.utility2.templateRender(local.utility2.templateIndexHtml, {
+                envDict: local.utility2.envDict,
+                isRollup: module.isRollup || local.utility2.envDict.NODE_ENV === 'production'
+            });
         /* istanbul ignore next */
         if (module.isRollup) {
             local.utility2.assetsDict['/assets.app.js'] =
+                local.utility2.assetsDict['/assets.app.min.js'] =
                 local.fs.readFileSync(__filename, 'utf8');
             local.global.module = module;
             break;
@@ -2308,6 +2336,8 @@ local.utility2.assertJsonEqual(options.coverage1,
                 return '// ' + key + '\n' + local.utility2.assetsDict[key];
             }
         }).join('\n\n\n\n');
+        local.utility2.assetsDict['/assets.app.min.js'] =
+            local.utility2.uglifyIfProduction(local.utility2.assetsDict['/assets.app.js']);
         /* istanbul ignore next */
         // run the cli
         local.cliRun = function () {

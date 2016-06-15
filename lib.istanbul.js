@@ -177,8 +177,7 @@
                 coverageVariable: coverageVariable,
                 embedSource: true,
                 noAutoWrap: true
-            })
-                .instrumentSync(code, file);
+            }).instrumentSync(code, file);
         };
         local.util = { inherits: nop };
     }());
@@ -1115,9 +1114,7 @@ local['head.txt'] = '\
 <body>\n\
 <div class="header {{reportClass}}">\n\
     <h1 style="font-weight: bold;">\n\
-        <a href="{{envDict.npm_package_homepage}}">\n\
-            {{envDict.npm_package_name}} @ {{envDict.npm_package_version}}\n\
-        </a>\n\
+        <a href="{{envDict.npm_package_homepage}}">{{envDict.npm_package_name}} @ {{envDict.npm_package_version}}</a>\n\
     </h1>\n\
     <h1>Code coverage report for <span class="entity">{{entity}}</span></h1>\n\
     <h2>\n\

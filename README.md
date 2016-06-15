@@ -2,21 +2,36 @@ utility2
 ========
 this package will run dynamic browser tests with coverage (via istanbul and electron)
 
-[![NPM](https://img.shields.io/npm/v/utility2.svg?style=flat-square)](https://www.npmjs.com/package/utility2) [![NPM](https://img.shields.io/npm/dm/utility2.svg?style=flat-square)](https://www.npmjs.com/package/utility2) [![travis-ci.org build-status](https://api.travis-ci.org/kaizhu256/node-utility2.svg)](https://travis-ci.org/kaizhu256/node-utility2)
+[![travis-ci.org build-status](https://api.travis-ci.org/kaizhu256/node-utility2.svg)](https://travis-ci.org/kaizhu256/node-utility2)
+
+[![NPM](https://nodei.co/npm/utility2.png?downloads=true)](https://www.npmjs.com/package/utility2)
+
+[![package-listing](https://kaizhu256.github.io/node-utility2/build/screen-capture.gitLsTree.svg)](https://github.com/kaizhu256/node-utility2)
 
 
 
 # documentation
 #### todo
+- add test for build-app
+- merge github-crud into this package
 - add socket-io to repl-server
 - add utility2.middlewareLimit
 - add server stress test using electron
 - none
 
-#### change since c0a94961
-- npm publish 2016.5.3
-- add homepage-link in api-doc
-- fix test-report styling
+#### change since 5a1c9f58
+- npm publish 2016.5.4
+- deploy standalone app to heroku test-server
+- add file lib.nedb.js
+- add 'run internal test' button in webpage
+- add env var npm_config_mode_backend to disable utility2.serverLocalUrlTest
+- add download link for example.js and example.sh in README.md
+- add minified asset assets.app.min.js
+- prevent side-effects in function utility2.docApiCreate
+- template README.md with package.json
+- add function utility2.jslintAndPrintHtml
+- replace function utility2.requireFromScript with utility2.requireExampleJsFromReadme
+- fix missing screen-capture of npmTestPublished
 - none
 
 #### this package requires
@@ -42,7 +57,8 @@ this package will run dynamic browser tests with coverage (via istanbul and elec
 
 | git-branch : | [master](https://github.com/kaizhu256/node-utility2/tree/master) | [beta](https://github.com/kaizhu256/node-utility2/tree/beta) | [alpha](https://github.com/kaizhu256/node-utility2/tree/alpha)|
 |--:|:--|:--|:--|
-| test-server : | [![github.com test-server](https://kaizhu256.github.io/node-utility2/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/app/index.html) | [![github.com test-server](https://kaizhu256.github.io/node-utility2/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/index.html) | [![github.com test-server](https://kaizhu256.github.io/node-utility2/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/app/index.html)|
+| test-server 1 : | [![github.com test-server](https://kaizhu256.github.io/node-utility2/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/app/index.html) | [![github.com test-server](https://kaizhu256.github.io/node-utility2/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/index.html) | [![github.com test-server](https://kaizhu256.github.io/node-utility2/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/app/index.html)|
+| test-server 2 : | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://hrku01-utility2-master.herokuapp.com) | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://hrku01-utility2-beta.herokuapp.com) | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://hrku01-utility2-alpha.herokuapp.com)|
 | test-report : | [![test-report](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/test-report.html) | [![test-report](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/test-report.html) | [![test-report](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/test-report.html)|
 | coverage : | [![istanbul coverage](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/coverage.html/index.html) | [![istanbul coverage](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/coverage.html/index.html) | [![istanbul coverage](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/coverage.html/index.html)|
 | build-artifacts : | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..master..travis-ci.org) | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..beta..travis-ci.org) | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..alpha..travis-ci.org)|
@@ -64,7 +80,7 @@ this package will run dynamic browser tests with coverage (via istanbul and elec
 
 # quickstart interactive example
 #### to run this example, follow the instruction in the script below
-- example.sh
+- [example.sh](https://kaizhu256.github.io/node-utility2/build/example.sh)
 ```shell
 # example.sh
 
@@ -99,7 +115,7 @@ shExampleSh
 ![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleJs.browser._2Ftmp_2Fapp_2Ftmp_2Fbuild_2Ftest-report.html.png)
 
 #### to run this example, follow the instruction in the script below
-- example.js
+- [example.js](https://kaizhu256.github.io/node-utility2/build/example.js)
 ```javascript
 /*
 example.js
@@ -225,6 +241,62 @@ instruction
                 }, onError);
             });
         };
+        /* istanbul ignore next */
+        local.testRun = function (event) {
+            if (local.utility2.modeTest) {
+                return;
+            }
+            switch (event && event.currentTarget.id) {
+            case 'testRunButton1':
+                local.modeTest = true;
+                local.utility2.testRun(local);
+                break;
+            default:
+                // try to JSON.stringify .jsonStringifyInputTextarea
+                try {
+                    document.querySelector('.jsonStringifyPre').textContent = JSON.stringify(
+                        JSON.parse(document.querySelector('.jsonStringifyInputTextarea').value),
+                        null,
+                        4
+                    );
+                } catch (ignore) {
+                }
+                // jslint .jslintInputTextarea
+                local.utility2.jslint.jslintAndPrint(
+                    document.querySelector('.jslintInputTextarea').value,
+                    'jslintInputTextarea.js'
+                );
+                document.querySelector('.jslintOutputPre').textContent =
+                    local.utility2.jslint.errorText
+                    .replace((/\u001b\[\d+m/g), '')
+                    .trim();
+                // try to cleanup __coverage__
+                try {
+                    delete local.global.__coverage__['/istanbulInputTextarea.js'];
+                } catch (ignore) {
+                }
+                // try to eval input-code
+                try {
+                    /*jslint evil: true*/
+                    eval(local.utility2.istanbul.instrumentSync(
+                        document.querySelector('.istanbulInputTextarea').value,
+                        '/istanbulInputTextarea.js'
+                    ));
+                    local.utility2.istanbul.coverageReportCreate({
+                        coverage: window.__coverage__
+                    });
+                } catch (errorCaught) {
+                    document.querySelector('.istanbulCoverageDiv').innerHTML =
+                        '<pre>' + errorCaught.stack.replace((/</g), '&lt') + '</pre>';
+                }
+            }
+        };
+        // init event-handling
+        document.querySelector('.istanbulInputTextarea')
+            .addEventListener('keyup', local.testRun);
+        document.querySelector('#testRunButton1').addEventListener('click', local.testRun);
+        // run tests
+        local.testRun();
         break;
 
 
@@ -246,9 +318,10 @@ instruction
         // export local
         module.exports = local;
         // init assets
-        /* istanbul ignore next */
-        local.utility2.assetsDict['/assets.example.js'] = local.global.assetsExampleJs ||
-            local.fs.readFileSync(__filename, 'utf8');
+        local.utility2.tryCatchOnError(function () {
+            local.utility2.assetsDict['/assets.example.js'] =
+                local.fs.readFileSync(__filename, 'utf8');
+        }, local.utility2.nop);
         /* jslint-ignore-begin */
         local.utility2.templateIndexHtml = '\
 <!doctype html>\n\
@@ -260,6 +333,10 @@ instruction
 </title>\n\
 <link href="assets.utility2.css" rel="stylesheet">\n\
 <style>\n\
+/*csslint\n\
+    box-sizing: false,\n\
+    universal-selector: false\n\
+*/\n\
 * {\n\
     box-sizing: border-box;\n\
 }\n\
@@ -292,12 +369,15 @@ textarea {\n\
             {{#if envDict.npm_package_homepage}}\n\
             href="{{envDict.npm_package_homepage}}"\n\
             {{/if envDict.npm_package_homepage}}\n\
-        >\n\
-            {{envDict.npm_package_name}} @ {{envDict.npm_package_version}}\n\
-        </a>\n\
+            target="_blank"\n\
+        >{{envDict.npm_package_name}} @ {{envDict.npm_package_version}}</a>\n\
+        {{#if envDict.NODE_ENV}}\n\
+        (NODE_ENV={{envDict.NODE_ENV}})\n\
+        {{/if envDict.NODE_ENV}}\n\
     </h1>\n\
     <h3>{{envDict.npm_package_description}}</h3>\n\
-    <h4><a href="assets.app.js">download standalone app</a></h4>\n\
+    <h4><a download href="assets.app.js">download standalone app</a></h4>\n\
+    <button id="testRunButton1">run internal test</button><br>\n\
     <div>edit or paste script below to cover and test</div>\n\
 <textarea class="istanbulInputTextarea jslintInputTextarea jsonStringifyInputTextarea">\n\
 /*jslint browser: true*/\n\
@@ -355,67 +435,29 @@ textarea {\n\
     <pre class="jslintOutputPre"></pre>\n\
     <div class="testReportDiv"></div>\n\
     <div class="istanbulCoverageDiv"></div>\n\
-{{#if isRollup}}\n\
-<script src="assets.app.js"></script>\n\
-{{#unless isRollup}}\n\
-<script src="assets.utility2.lib.bcrypt.js"></script>\n\
-<script src="assets.utility2.lib.cryptojs.js"></script>\n\
-<script src="assets.utility2.lib.istanbul.js"></script>\n\
-<script src="assets.utility2.lib.jslint.js"></script>\n\
-<script src="assets.utility2.lib.uglifyjs.js"></script>\n\
-<script src="assets.utility2.js"></script>\n\
-<script src="jsonp.utility2.stateGet?callback=window.utility2.stateInit"></script>\n\
-<script>window.utility2.onReadyBefore.counter += 1;</script>\n\
-<script src="assets.example.js"></script>\n\
-<script src="assets.test.js"></script>\n\
-<script>window.utility2.onReadyBefore();</script>\n\
-{{/if isRollup}}\n\
+    {{#if isRollup}}\n\
+    <script src="assets.app.min.js"></script>\n\
+    <script src="jsonp.utility2.stateGet?callback=window.utility2.stateInit"></script>\n\
+    {{#unless isRollup}}\n\
+    <script src="assets.utility2.lib.bcrypt.js"></script>\n\
+    <script src="assets.utility2.lib.cryptojs.js"></script>\n\
+    <script src="assets.utility2.lib.istanbul.js"></script>\n\
+    <script src="assets.utility2.lib.jslint.js"></script>\n\
+    <script src="assets.utility2.lib.nedb.js"></script>\n\
+    <script src="assets.utility2.lib.uglifyjs.js"></script>\n\
+    <script src="assets.utility2.js"></script>\n\
+    <script src="jsonp.utility2.stateGet?callback=window.utility2.stateInit"></script>\n\
 <script>\n\
-window.testRun = function () {\n\
-    if (window.utility2.modeTest) {\n\
-        return;\n\
-    }\n\
-    // try to JSON.stringify .jsonStringifyInputTextarea\n\
-    try {\n\
-        document.querySelector(".jsonStringifyPre").textContent = JSON.stringify(\n\
-            JSON.parse(document.querySelector(".jsonStringifyInputTextarea").value),\n\
-            null,\n\
-            4\n\
-        );\n\
-    } catch (ignore) {\n\
-    }\n\
-    // jslint .jslintInputTextarea\n\
-    window.utility2_jslint.jslintAndPrint(\n\
-        document.querySelector(".jslintInputTextarea").value,\n\
-        "jslintInputTextarea.js"\n\
-    );\n\
-    document.querySelector(".jslintOutputPre").textContent =\n\
-        window.utility2_jslint.errorText\n\
-        .replace((/\\u001b\\[\\d+m/g), "")\n\
-        .trim();\n\
-    // try to cleanup __coverage__\n\
-    try {\n\
-        delete window.__coverage__["/istanbulInputTextarea.js"];\n\
-    } catch (ignore) {\n\
-    }\n\
-    // try to eval input-code\n\
-    try {\n\
-        eval(window.utility2_istanbul.instrumentSync(\n\
-            document.querySelector(".istanbulInputTextarea").value,\n\
-            "/istanbulInputTextarea.js"\n\
-        ));\n\
-        window.utility2_istanbul.coverageReportCreate({\n\
-            coverage: window.__coverage__\n\
-        });\n\
-    } catch (errorCaught) {\n\
-        document.querySelector(".istanbulCoverageDiv").innerHTML =\n\
-            "<pre>" + errorCaught.stack.replace((/</g), "&lt") + "</pre>";\n\
-    }\n\
-};\n\
-document.querySelector(".istanbulInputTextarea")\n\
-    .addEventListener("keyup", window.testRun);\n\
-window.testRun({});\n\
+/*jslint browser: true*/\n\
+window.utility2.onReadyBefore.counter += 1;\n\
 </script>\n\
+    <script src="assets.example.js"></script>\n\
+    <script src="assets.test.js"></script>\n\
+<script>\n\
+/*jslint browser: true*/\n\
+window.utility2.onReadyBefore();\n\
+</script>\n\
+    {{/if isRollup}}\n\
 </body>\n\
 </html>\n\
 ';
@@ -445,11 +487,6 @@ window.testRun({});\n\
 
 
 
-# package-listing
-[![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.gitLsTree.svg)](https://github.com/kaizhu256/node-utility2)
-
-
-
 # package.json
 ```json
 {
@@ -462,10 +499,9 @@ window.testRun({});\n\
         "utility2-jslint": "lib.jslint.js",
         "utility2-uglifyjs": "lib.uglifyjs.js"
     },
-    "description": "this package will run dynamic browser tests with coverage \
-(via istanbul and electron)",
+    "description": "{{packageJson.description}}",
     "devDependencies": {
-        "electron-lite": "2016.5.1"
+        "electron-lite": "kaizhu256/node-electron-lite#alpha"
     },
     "engines": { "node": ">=4.0" },
     "homepage": "https://github.com/kaizhu256/node-utility2",
@@ -496,25 +532,28 @@ window.testRun({});\n\
         "env": "env",
         "example.js": "\
 . ./index.sh && shInit && shReadmeExportScripts && \
-cp $(shFileTrimLeft tmp/README.package.json) package.json && \
 shFileTrimLeft tmp/README.example.js && \
 shRunScreenCapture shReadmeTestJs example.js",
         "example.sh": "\
 . ./index.sh && shInit && shReadmeExportScripts && \
-cp $(shFileTrimLeft tmp/README.package.json) package.json && \
 shRunScreenCapture shReadmeTestSh example.sh",
-        "start": "export PORT=${PORT:-8080} && \
+        "start": "\
+export PORT=${PORT:-8080} && \
+if [ -f assets.app.js ]; then node assets.app.js; return; fi && \
 export npm_config_mode_auto_restart=1 && \
 ./index.sh shRun shIstanbulCover node test.js",
+        "start-heroku": "\
+export npm_config_mode_backend=1 && \
+npm start \
+",
         "test": "\
 . ./index.sh && shInit && shReadmeExportScripts && \
-cp $(shFileTrimLeft tmp/README.package.json) package.json && \
 export PORT=$(./index.sh shServerPortRandom) && \
 export npm_config_mode_auto_restart=1 && \
 ./index.sh test node test.js",
         "test-published": "./index.sh shRun shNpmTestPublished"
     },
-    "version": "2016.5.3"
+    "version": "2016.5.4"
 }
 ```
 
@@ -587,45 +626,56 @@ shBuildCiTestPre() {(set -e
 # this function will run the pre-test build
     # test example js script
     (export MODE_BUILD=testExampleJs &&
-        npm run example.js)
+        npm run example.js) || return $?
     # screen-capture example.js coverage
     (export MODE_BUILD=testExampleJs &&
         export modeBrowserTest=screenCapture &&
         export url=/tmp/app/tmp/build/coverage.html/app/example.js.html &&
-        shBrowserTest)
+        shBrowserTest) || return $?
     # screen-capture example.js test-report
     (export MODE_BUILD=testExampleJs &&
         export modeBrowserTest=screenCapture &&
         export url=/tmp/app/tmp/build/test-report.html &&
-        shBrowserTest)
-
+        shBrowserTest) || return $?
     # test example shell script
     (export MODE_BUILD=testExampleSh &&
         export npm_config_timeout_exit=1000 &&
-        npm run example.sh)
-    # screen-capture example.sh webpage
-    cp "/tmp/app/node_modules/$npm_package_name/tmp/build/"screen-capture.*.png \
-        "$npm_config_dir_build"
+        npm run example.sh) || return $?
 )}
 
 shBuildCiTestPost() {(set -e
 # this function will run the post-test build
-    # if running legacy-node, then exit
-    [ "$(node --version)" \< "v5.0" ] && exit || true
-    TEST_URL="https://$(printf "$GITHUB_REPO" | \
-        sed 's/\//.github.io\//')/build..$CI_BRANCH..travis-ci.org/app/index.html"
+    # if running legacy-node, then return
+    [ "$(node --version)" \< "v5.0" ] && return || true
+    export NODE_ENV=production
     # deploy app to gh-pages
-    (export MODE_BUILD=githubTest &&
-        shGithubDeploy)
+    export TEST_URL="https://$(printf "$GITHUB_REPO" | \
+        sed 's/\//.github.io\//')/build..$CI_BRANCH..travis-ci.org/app/index.html"
+    (export MODE_BUILD=githubDeploy &&
+        shGithubDeploy) || return $?
     # test deployed app to gh-pages
     (export MODE_BUILD=githubTest &&
         export modeBrowserTest=test &&
         export url="$TEST_URL?modeTest=consoleLogResult&timeExit={{timeExit}}" &&
-        shBrowserTest)
+        shBrowserTest) || return $?
+    # deploy app to heroku
+    export HEROKU_REPO="hrku01-$npm_package_name-$CI_BRANCH"
+    export TEST_URL="https://$HEROKU_REPO.herokuapp.com"
+    shGitRepoBranchUpdateLocal() {(set -e
+    # this function will local-update git-repo-branch
+        cp "$npm_config_dir_build/app/assets.app.js" .
+    )}
+    (export MODE_BUILD=herokuDeploy &&
+        shHerokuDeploy) || return $?
+    # test deployed app to heroku
+    (export MODE_BUILD=herokuTest &&
+        export modeBrowserTest=test &&
+        export url="$TEST_URL?modeTest=consoleLogResult&timeExit={{timeExit}}" &&
+        shBrowserTest) || return $?
     # docker build
     if [ "$TRAVIS" ] && [ "$CI_BRANCH" = alpha ]
     then
-        # (CI_BRANCH=docker.latest npm run build-ci)
+        # (CI_BRANCH=docker.latest npm run build-ci) || return $?
         :
     fi
 )}
@@ -645,12 +695,12 @@ shBuild() {(set -e
     then
         shBuildCiDefault
     fi
-    docker --version 2>/dev/null || exit
-    # if running legacy-node, then exit
-    [ "$TRAVIS" ] && [ "$(node --version)" \< "v5.0" ] && exit || true
+    docker --version 2>/dev/null || return
+    # if running legacy-node, then return
+    [ "$TRAVIS" ] && [ "$(node --version)" \< "v5.0" ] && return || true
     export DOCKER_TAG="$(printf "$CI_BRANCH" | sed -e "s/docker.//")"
-    # if $DOCKER_TAG is not unique from $CI_BRANCH, then exit
-    [ "$DOCKER_TAG" = "$CI_BRANCH" ] && exit || true
+    # if $DOCKER_TAG is not unique from $CI_BRANCH, then return
+    [ "$DOCKER_TAG" = "$CI_BRANCH" ] && return || true
     # docker pull
     docker pull "$GITHUB_REPO:$DOCKER_TAG" || true
     # docker build
@@ -658,7 +708,7 @@ shBuild() {(set -e
         docker build -f "tmp/README.Dockerfile.$DOCKER_TAG" -t "$GITHUB_REPO:$DOCKER_TAG" . ||
         printf $? > "$npm_config_file_tmp") | tee "tmp/build/build.$CI_BRANCH.log"
     EXIT_CODE="$(cat "$npm_config_file_tmp")"
-    [ "$EXIT_CODE" != 0 ] && exit "$EXIT_CODE" || true
+    [ "$EXIT_CODE" != 0 ] && return "$EXIT_CODE" || true
     # docker test
     case "$CI_BRANCH" in
     docker.latest)
