@@ -1,4 +1,3 @@
-/* istanbul ignore all */
 /*jslint
     bitwise: true,
     browser: true,

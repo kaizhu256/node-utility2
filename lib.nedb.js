@@ -1,7 +1,7 @@
 /*
  * nedb-lite.js
  *
- * this package is a standalone, single-script version of nedb @ 1.8.0
+ * this package is a standalone, single-script version of nedb v1.8.0
  * that runs in both browser and nodejs, with zero npm-dependencies
  *
  * browser example:
@@ -19,7 +19,6 @@
 
 
 
-/* istanbul ignore all */
 /*jslint
     browser: true,
     maxerr: 8,

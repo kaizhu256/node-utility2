@@ -1,3 +1,4 @@
+/* istanbul instrument in package utility2 */
 /*jslint
     bitwise: true,
     browser: true,
@@ -47,7 +48,9 @@
                 break;
             }
             local = require('./index.js').requireExampleJsFromReadme({
-                __dirname: __dirname
+                __dirname: __dirname,
+                moduleExports: require('./index.js'),
+                moduleName: 'utility2'
             }).exports;
             // coverage-hack - test requireExampleJsFromReadme's cache handling-behavior
             local.utility2.requireExampleJsFromReadme({
@@ -59,6 +62,9 @@
             local.utility2.istanbul.coverageReportCreate =
                 local.utility2.istanbulCoverageReportCreate =
                 local.utility2.istanbul2.coverageReportCreate;
+            local.utility2.istanbul.instrumentInPackage =
+                local.utility2.istanbulInstrumentInPackage =
+                local.utility2.istanbul2.instrumentInPackage;
             local.utility2.istanbul2.codeDict = local.utility2.istanbul.codeDict;
             break;
         }
@@ -1968,26 +1974,6 @@ local.utility2.assertJsonEqual(options.coverage1,
             onError();
         };
 
-        local.testCase_istanbulInstrumentInPackage_default = function (options, onError) {
-        /*
-         * this function will test istanbulInstrumentInPackage's default handling-behavior
-         */
-            options = {};
-            local.utility2.testMock([
-                [local.global, { __coverage__: {} }]
-            ], function (onError) {
-                // test no instrument handling-behavior
-                options.data = local.utility2.istanbulInstrumentInPackage('1', '', '');
-                // validate data
-                local.utility2.assertJsonEqual(options.data, '1', options);
-                // test instrument handling-behavior
-                options.data = local.utility2.istanbulInstrumentInPackage('1', '', 'utility2');
-                // validate data
-                local.utility2.assert(options.data.indexOf('.s[\'1\']++;1;\n') >= 0, options);
-                onError();
-            }, onError);
-        };
-
         local.testCase_onFileModifiedRestart_watchFile = function (options, onError) {
         /*
          * this function will test onFileModifiedRestart's watchFile handling-behavior
@@ -2301,17 +2287,17 @@ local.utility2.assertJsonEqual(options.coverage1,
             break;
         }
         local.utility2.assetsDict['/assets.script-only.html'] =
-            '<h1>script-only test</h1>\n' +
-            '<script src="assets.utility2.js"></script>\n' +
-            '<script>window.utility2.onReadyBefore.counter += 1;</script>\n' +
-            '<script src="assets.example.js"></script>\n' +
-            '<script src="assets.test.js"></script>\n' +
-            '<script>window.utility2.onReadyBefore();</script>\n';
+            // coverage-hack - test no-instrument handling-behavior
+            local.utility2.istanbulInstrumentInPackage('<h1>script-only test</h1>\n' +
+                '<script src="assets.utility2.js"></script>\n' +
+                '<script>window.utility2.onReadyBefore.counter += 1;</script>\n' +
+                '<script src="assets.example.js"></script>\n' +
+                '<script src="assets.test.js"></script>\n' +
+                '<script>window.utility2.onReadyBefore();</script>\n');
         local.utility2.assetsDict['/assets.test.js'] =
             local.utility2.istanbulInstrumentInPackage(
                 local.fs.readFileSync(__filename, 'utf8'),
-                __filename,
-                'utility2'
+                __filename
             );
         local.utility2.assetsDict['/assets.app.js'] = [
             '/assets.app.begin.js',

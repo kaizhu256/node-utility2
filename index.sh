@@ -105,7 +105,7 @@ shBrowserTest() {(set -e
     stupid: true
 */
 'use strict';
-require('$npm_config_dir_utility2/index.js').browserTest({
+require('$npm_config_dir_utility2').browserTest({
     modeBrowserTest: '$modeBrowserTest',
     timeoutDefault: '$timeoutDefault',
     timeoutScreenCapture: '$timeoutScreenCapture',
@@ -791,7 +791,7 @@ require('http').createServer(function (request, response) {
 
 shInit() {
 # this function will init the env
-# init CI_*
+    # init CI_*
     if [ -d .git ]
     then
         # init travis-ci.org env
@@ -814,6 +814,68 @@ shInit() {
         # init $CI_COMMIT_*
         export CI_COMMIT_MESSAGE="$(git log -1 --pretty=%s)" || return $?
         export CI_COMMIT_INFO="$CI_COMMIT_ID - $CI_COMMIT_MESSAGE" || return $?
+    fi
+    # extract and save the scripts embedded in README.md to tmp/
+    if [ -f README.md ]
+    then
+        mkdir -p tmp
+        node -e "
+// <script>
+/*jslint
+    bitwise: true,
+    browser: true,
+    maxerr: 8,
+    maxlen: 96,
+    node: true,
+    nomen: true,
+    regexp: true,
+    stupid: true
+*/
+'use strict';
+var local;
+local = {};
+local.fs = require('fs');
+local.nop = function () {
+    return;
+};
+local.readme = local.fs.readFileSync('README.md', 'utf8');
+local.packageJson = {};
+local.packageJson.description = local.readme.split('\n')[2];
+[
+    (/\`\`\`\\w*?(\n[\\W\\s]*?(package.json)[\n\"][\\S\\s]+?)\n\`\`\`/g),
+    (/\`\`\`\\w*?(\n[\\W\\s]*?(\w.*?)[\n\"][\\S\\s]+?)\n\`\`\`/g)
+].forEach(function (rgx) {
+    local.readme.replace(rgx, function (match0, match1, match2, ii, text) {
+        // jslint-hack
+        local.nop(match0);
+        // preserve lineno
+        match1 = text.slice(0, ii).replace((/.+/g), '') + match1
+            // parse '\' line-continuation
+            .replace((/(?:.*\\\\\n)+.*/g), function (match0) {
+                return match0.replace((/\\\\\n/g), '') + match0.replace((/.+/g), '');
+            });
+        // trim json-file
+        if (match2.slice(-5) === '.json') {
+            match1 = match1.trim();
+        }
+        // handle package.json
+        if (match2 === 'package.json') {
+            match1 = match1
+                .replace((/\{\{packageJson\.description\}\}/g), local.packageJson.description);
+            local.packageJson = JSON.parse(match1);
+            local.readme = local.readme
+                .replace((/\{\{packageJson\.([^}]+?)\}\}/g), function (match0, match1) {
+                    // jslint-hack
+                    local.nop(match0);
+                    return local.packageJson[match1];
+                });
+            local.fs.writeFileSync('package.json', match1);
+        }
+        local.fs.writeFileSync('tmp/README.' + match2, match1);
+    });
+});
+// </script>
+"
     fi
     # init $npm_package_*
     if [ -f package.json ]
@@ -853,6 +915,8 @@ if (process.env.GITHUB_REPO === undefined && value) {
     export npm_config_dir_build="$PWD/tmp/build" || return $?
     export npm_config_dir_tmp="$PWD/tmp" || return $?
     export npm_config_file_tmp="$PWD/tmp/tmpfile" || return $?
+    # init $npm_config_dir_build dir
+    mkdir -p "$npm_config_dir_build/coverage.html"
     # init $npm_config_dir_utility2
     shInitNpmConfigDirUtility2 || return $?
     # init $GIT_SSH
@@ -865,7 +929,6 @@ if (process.env.GITHUB_REPO === undefined && value) {
 }
 
 shInitNpmConfigDirUtility2() {
-# this function will get the absolute dir for the
 # this function will init $npm_config_dir_utility2
     local DIR SOURCE || return $?
     # init $npm_config_dir_utility2
@@ -892,7 +955,8 @@ console.log(require('utility2').__dirname);
     fi
     if [ ! -d "$npm_config_dir_utility2" ]
     then
-        export npm_config_dir_utility2="$(dirname "$(readlink -f "$0" 2>/dev/null)")"
+        export npm_config_dir_utility2="$(dirname "$(readlink -f "$0" 2>/dev/null)")" ||
+            return $?
     fi
     if [ ! -d "$npm_config_dir_utility2" ]
     then
@@ -1120,8 +1184,6 @@ shNpmTest() {(set -e
     rm -f "$npm_config_dir_tmp/"*.json
     # cleanup old electron pages
     rm -f "$npm_config_dir_tmp/"electron.*.html
-    # init $npm_config_dir_build
-    mkdir -p "$npm_config_dir_build/coverage.html"
     # init npm-test-mode
     export NODE_ENV="${NODE_ENV:-test}"
     export npm_config_mode_npm_test=1
@@ -1173,75 +1235,9 @@ shNpmTestPublished() {(set -e
 
 shReadmeBuild() {(set -e
 # this function will run the internal build-script embedded in README.md
-# init $npm_config_dir_build
-    mkdir -p "$npm_config_dir_build/coverage.html"
-    # export scripts from README.md
-    shReadmeExportScripts
     # run shell script from README.md
     export MODE_BUILD=build
     shReadmeTestSh "$npm_config_dir_tmp/README.build.sh"
-)}
-
-shReadmeExportScripts() {(set -e
-# this function will extract and save the scripts embedded in README.md to tmp/
-    mkdir -p tmp
-    node -e "
-// <script>
-/*jslint
-    bitwise: true,
-    browser: true,
-    maxerr: 8,
-    maxlen: 96,
-    node: true,
-    nomen: true,
-    regexp: true,
-    stupid: true
-*/
-'use strict';
-var local;
-local = {};
-local.fs = require('fs');
-local.nop = function () {
-    return;
-};
-local.readme = local.fs.readFileSync('README.md', 'utf8');
-local.packageJson = {};
-local.packageJson.description = local.readme.split('\n')[2];
-[
-    (/\`\`\`\\w*?(\n[\\W\\s]*?(package.json)[\n\"][\\S\\s]+?)\n\`\`\`/g),
-    (/\`\`\`\\w*?(\n[\\W\\s]*?(\w.*?)[\n\"][\\S\\s]+?)\n\`\`\`/g)
-].forEach(function (rgx) {
-    local.readme.replace(rgx, function (match0, match1, match2, ii, text) {
-        // jslint-hack
-        local.nop(match0);
-        // preserve lineno
-        match1 = text.slice(0, ii).replace((/.+/g), '') + match1
-            // parse '\' line-continuation
-            .replace((/(?:.*\\\\\n)+.*/g), function (match0) {
-                return match0.replace((/\\\\\n/g), '') + match0.replace((/.+/g), '');
-            });
-        // trim json-file
-        if (match2.slice(-5) === '.json') {
-            match1 = match1.trim();
-        }
-        // handle package.json
-        if (match2 === 'package.json') {
-            match1 = match1
-                .replace((/\{\{packageJson\.description\}\}/g), local.packageJson.description);
-            local.packageJson = JSON.parse(match1);
-            local.readme = local.readme
-                .replace((/\{\{packageJson\.([^}]+?)\}\}/g), function (match0, match1) {
-                    // jslint-hack
-                    local.nop(match0);
-                    return local.packageJson[match1];
-                });
-            local.fs.writeFileSync('package.json', match1);
-        }
-        local.fs.writeFileSync('tmp/README.' + match2, match1);
-    });
-});
-// </script>
-"
 )}
 
 shReadmeTestJs() {(set -e
@@ -1364,8 +1360,6 @@ shRunScreenCapture() {(set -e
 # /how-to-convert-a-command-line-result-into-an-image-in-linux/
 # this function will run the command $@ and screen-capture the output
     EXIT_CODE=0
-    # init $npm_config_dir_build
-    mkdir -p "$npm_config_dir_build/coverage.html"
     export MODE_BUILD_SCREEN_CAPTURE="screen-capture.${MODE_BUILD:-undefined}.svg"
     (printf "0" > "$npm_config_file_tmp" &&
         shRun "$@" 2>&1 ||
@@ -1482,27 +1476,6 @@ shTravisDecryptYml() {(set -e
         shAesDecrypt
 )}
 
-shTravisEncrypt() {(set -e
-# this function will travis-encrypt $SECRET for the $GITHUB_REPO
-    GITHUB_REPO="$1"
-    SECRET="$2"
-    # init $npm_config_dir_build dir
-    mkdir -p "$npm_config_dir_build/coverage.html"
-    # get public rsa key from https://api.travis-ci.org/repos/<owner>/<repo>/key
-    curl -s "https://api.travis-ci.org/repos/$GITHUB_REPO/key" | \
-        sed -n \
-            -e "s/.*-----BEGIN [RSA ]*PUBLIC KEY-----\(.*\)-----END [RSA ]*PUBLIC KEY-----.*/\
------BEGIN PUBLIC KEY-----\\1-----END PUBLIC KEY-----/" \
-            -e "s/\\\\n/%/gp" | \
-        tr "%" "\n" > \
-        "$npm_config_file_tmp"
-    # rsa-encrypt $SECRET and print it
-    printf "$SECRET" | \
-        openssl rsautl -encrypt -pubin -inkey "$npm_config_file_tmp" | \
-        base64 | \
-        tr -d "\n"
-)}
-
 shTravisEncryptYml() {(set -e
 # this function will travis-encrypt $FILE to $AES_ENCRYPTED_SH and embed it in .travis.yml
     shInit
@@ -1522,7 +1495,19 @@ shTravisEncryptYml() {(set -e
         printf "export AES_256_KEY=$AES_256_KEY\n\n"
     fi
     printf "# travis-encrypting \$AES_256_KEY for $GITHUB_REPO\n"
-    AES_256_KEY_ENCRYPTED="$(shTravisEncrypt $GITHUB_REPO \$AES_256_KEY=$AES_256_KEY)"
+    # get public rsa key from https://api.travis-ci.org/repos/<owner>/<repo>/key
+    curl -s "https://api.travis-ci.org/repos/$GITHUB_REPO/key" | \
+        sed -n \
+            -e "s/.*-----BEGIN [RSA ]*PUBLIC KEY-----\(.*\)-----END [RSA ]*PUBLIC KEY-----.*/\
+-----BEGIN PUBLIC KEY-----\\1-----END PUBLIC KEY-----/" \
+            -e "s/\\\\n/%/gp" | \
+        tr "%" "\n" > \
+        "$npm_config_file_tmp"
+    # rsa-encrypt $AES_256_KEY
+    AES_256_KEY_ENCRYPTED="$(printf "$AES_256_KEY" | \
+        openssl rsautl -encrypt -pubin -inkey "$npm_config_file_tmp" | \
+        base64 | \
+        tr -d "\n")"
     # return non-zero exit-code if $AES_256_KEY_ENCRYPTED is empty string
     if [ ! "$AES_256_KEY_ENCRYPTED" ]
     then

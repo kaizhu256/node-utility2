@@ -1,3 +1,4 @@
+/* istanbul instrument in package utility2 */
 /*jslint
     bitwise: true,
     browser: true,
@@ -253,7 +254,7 @@ local.utility2.templateDocApiHtml = '\
         {{#if envDict.npm_package_homepage}}\n\
         href="{{envDict.npm_package_homepage}}"\n\
         {{/if envDict.npm_package_homepage}}\n\
-    >({{envDict.npm_package_name}} @ {{envDict.npm_package_version}})</a>\n\
+    >({{envDict.npm_package_name}} v{{envDict.npm_package_version}})</a>\n\
 </h1>\n\
 <div class="docApiSectionDiv"><a href="#"><h1>table of contents</h1></a><ul>\n\
 {{#each moduleList}}\n\
@@ -363,7 +364,7 @@ local.utility2.templateTestReportHtml = '\
         {{#if envDict.npm_package_homepage}}\n\
         href="{{envDict.npm_package_homepage}}"\n\
         {{/if envDict.npm_package_homepage}}\n\
-    >{{envDict.npm_package_name}} @ {{envDict.npm_package_version}}</a>\n\
+    >{{envDict.npm_package_name}} v{{envDict.npm_package_version}}</a>\n\
 </h1>\n\
 <h2>test-report summary</h2>\n\
 <h4>\n\
@@ -1991,17 +1992,9 @@ local.utility2.templateTestReportHtml = '\
         local.utility2.istanbulCoverageReportCreate = (local.utility2.istanbul &&
             local.utility2.istanbul.coverageReportCreate) || local.utility2.echo;
 
-        local.utility2.istanbulInstrumentInPackage = function (code, file, packageName) {
-        /*
-         * this function will cover the code only if packageName === $npm_package_name
-         */
-            return local.global.__coverage__ &&
-                packageName &&
-                packageName === local.utility2.envDict.npm_package_name &&
-                !(/^\/\* istanbul ignore all \*\/$/m).test(code)
-                ? local.utility2.istanbulInstrumentSync(code, file)
-                : code;
-        };
+        // init istanbulInstrumentInPackage
+        local.utility2.istanbulInstrumentInPackage = (local.utility2.istanbul &&
+            local.utility2.istanbul.instrumentInPackage) || local.utility2.echo;
 
         // init istanbulInstrumentSync
         local.utility2.istanbulInstrumentSync = (local.utility2.istanbul &&
@@ -2858,24 +2851,19 @@ local.utility2.templateTestReportHtml = '\
                         script = text.slice(0, ii).replace((/.+/g), '') + match1;
                     }
                 );
-            // alias require('$npm_package_name') to require('index.js');
+            // alias require(<options.moduleName>) to module.moduleExports;
             script = script
-                .replace("require('utility2')", 'module.utility2')
                 .replace(
-                    "require('" + local.utility2.envDict.npm_package_name + "')",
-                    "require('./index.js')"
+                    "require('" + options.moduleName + "')",
+                    'module.moduleExports'
                 );
             // jslint script
             local.utility2.jslintAndPrint(script, file);
             // cover script
-            script = local.utility2.istanbulInstrumentInPackage(
-                script,
-                file,
-                local.utility2.envDict.npm_package_name
-            );
+            script = local.utility2.istanbulInstrumentInPackage(script, file);
             // init module
             module = local.require2.cache[file] = new local.Module(file);
-            module.utility2 = local.utility2;
+            module.moduleExports = options.moduleExports;
             // load script into module
             module._compile(script, file);
             // init assets.example.js
@@ -4053,7 +4041,7 @@ local.utility2.templateTestReportHtml = '\
     // run node js-env code - post-init
     case 'node':
         // init exports
-        module.exports = module.utility2 = local.utility2;
+        module.exports = local.utility2;
         module.exports.__dirname = __dirname;
         // require modules
         local.Module = require('module');
@@ -4097,8 +4085,7 @@ local.utility2.templateTestReportHtml = '\
                     local.utility2.istanbulInstrumentInPackage(
                         local.fs.readFileSync(__dirname + '/' + key, 'utf8')
                             .replace((/^#!/), '//'),
-                        __dirname + '/' + key,
-                        'utility2'
+                        __dirname + '/' + key
                     );
                 break;
             case 'index.sh':
@@ -4118,8 +4105,7 @@ local.utility2.templateTestReportHtml = '\
                     local.utility2.istanbulInstrumentInPackage(
                         local.fs.readFileSync(__dirname + '/' + key, 'utf8')
                             .replace((/^#!/), '//'),
-                        __dirname + '/' + key,
-                        'utility2'
+                        __dirname + '/' + key
                     );
                 break;
             case 'templateDocApiHtml':
@@ -4160,7 +4146,10 @@ local.utility2.templateTestReportHtml = '\
          * this function will run the cli
          */
             // merge previous test-report
-            if (local.utility2.envDict.npm_config_file_test_report_merge) {
+            if (local.utility2.envDict.npm_config_file_test_report_merge &&
+                    local.fs.existsSync(
+                        local.utility2.envDict.npm_config_file_test_report_merge
+                    )) {
                 local.utility2.testReportMerge(
                     local.utility2.testReport,
                     JSON.parse(local.fs.readFileSync(

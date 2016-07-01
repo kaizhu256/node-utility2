@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* istanbul ignore all */
+/* istanbul instrument in package istanbul-lite */
 /*jslint
     bitwise: true,
     browser: true,
@@ -160,6 +160,21 @@
                 // re-write to the file
                 local._fs.writeFileSync(file, data);
             }
+        };
+        local.instrumentInPackage = function (code, file) {
+        /*
+         * this function will instrument the code
+         * only if if the macro /\* istanbul instrument in package $npm_package_name *\/
+         * exists in the code
+         */
+            return process.env.npm_config_mode_coverage && (
+                code.indexOf('/* istanbul instrument in package ' +
+                    process.env.npm_package_name + ' */') >= 0 ||
+                    code.indexOf('/* istanbul instrument in package ' +
+                        process.env.npm_config_mode_coverage + ' */') >= 0
+            )
+                ? local.instrumentSync(code, file)
+                : code;
         };
         local.instrumentSync = function (code, file, coverageVariable) {
         /*
@@ -1114,7 +1129,7 @@ local['head.txt'] = '\
 <body>\n\
 <div class="header {{reportClass}}">\n\
     <h1 style="font-weight: bold;">\n\
-        <a href="{{envDict.npm_package_homepage}}">{{envDict.npm_package_name}} @ {{envDict.npm_package_version}}</a>\n\
+        <a href="{{envDict.npm_package_homepage}}">{{envDict.npm_package_name}} v{{envDict.npm_package_version}}</a>\n\
     </h1>\n\
     <h1>Code coverage report for <span class="entity">{{entity}}</span></h1>\n\
     <h2>\n\
@@ -1290,7 +1305,6 @@ local.templateCoverageBadgeSvg =
         /*
          * this function will run the cli
          */
-            var data;
             if (module !== local.require2.main) {
                 return;
             }
@@ -1304,11 +1318,11 @@ local.templateCoverageBadgeSvg =
                     if (typeof file === 'string' &&
                             file.indexOf(process.cwd()) === 0 &&
                             file.indexOf(process.cwd() + '/node_modules/') !== 0) {
-                        data = local._fs.readFileSync(file, 'utf8');
-                        if (!(/^\/\* istanbul ignore all \*\/$/m).test(data)) {
-                            module._compile(local.instrumentSync(data, file), file);
-                            return;
-                        }
+                        module._compile(local.instrumentInPackage(
+                            local._fs.readFileSync(file, 'utf8'),
+                            file
+                        ), file);
+                        return;
                     }
                     local._moduleExtensionsJs(module, file);
                 };

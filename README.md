@@ -19,19 +19,11 @@ this package will run dynamic browser tests with coverage (via istanbul and elec
 - add server stress test using electron
 - none
 
-#### change since 5a1c9f58
-- npm publish 2016.5.4
-- deploy standalone app to heroku test-server
-- add file lib.nedb.js
-- add 'run internal test' button in webpage
-- add env var npm_config_mode_backend to disable utility2.serverLocalUrlTest
-- add download link for example.js and example.sh in README.md
-- add minified asset assets.app.min.js
-- prevent side-effects in function utility2.docApiCreate
-- template README.md with package.json
-- add function utility2.jslintAndPrintHtml
-- replace function utility2.requireFromScript with utility2.requireExampleJsFromReadme
-- fix missing screen-capture of npmTestPublished
+#### change since 9519e4b5
+- npm publish 2016.5.5
+- explicitly require the macro /* istanbul instrument in package ... */ for a file to be covered
+- generalize utility2.requireExampleJsFromReadme
+- merge shell function shReadmeExportScripts into shInit
 - none
 
 #### this package requires
@@ -135,6 +127,7 @@ instruction
     4. view coverage in ./tmp/build/coverage.html/index.html
 */
 
+/* istanbul instrument in package utility2 */
 /*jslint
     bitwise: true,
     browser: true,
@@ -254,11 +247,14 @@ instruction
             default:
                 // try to JSON.stringify .jsonStringifyInputTextarea
                 try {
-                    document.querySelector('.jsonStringifyPre').textContent = JSON.stringify(
-                        JSON.parse(document.querySelector('.jsonStringifyInputTextarea').value),
-                        null,
-                        4
-                    );
+                    document.querySelector('.jsonStringifyPre').textContent =
+                        local.utility2.jsonStringifyOrdered(
+                            JSON.parse(
+                                document.querySelector('.jsonStringifyInputTextarea').value
+                            ),
+                            null,
+                            4
+                        );
                 } catch (ignore) {
                 }
                 // jslint .jslintInputTextarea
@@ -329,7 +325,7 @@ instruction
 <head>\n\
 <meta charset="UTF-8">\n\
 <title>\n\
-{{envDict.npm_package_name}} @ {{envDict.npm_package_version}}\n\
+{{envDict.npm_package_name}} v{{envDict.npm_package_version}}\n\
 </title>\n\
 <link href="assets.utility2.css" rel="stylesheet">\n\
 <style>\n\
@@ -370,7 +366,7 @@ textarea {\n\
             href="{{envDict.npm_package_homepage}}"\n\
             {{/if envDict.npm_package_homepage}}\n\
             target="_blank"\n\
-        >{{envDict.npm_package_name}} @ {{envDict.npm_package_version}}</a>\n\
+        >{{envDict.npm_package_name}} v{{envDict.npm_package_version}}</a>\n\
         {{#if envDict.NODE_ENV}}\n\
         (NODE_ENV={{envDict.NODE_ENV}})\n\
         {{/if envDict.NODE_ENV}}\n\
@@ -482,11 +478,6 @@ window.utility2.onReadyBefore();\n\
 
 
 
-# npm-dependencies
-- none
-
-
-
 # package.json
 ```json
 {
@@ -531,12 +522,11 @@ window.utility2.onReadyBefore();\n\
         "build-doc": "npm test --mode-test-case=testCase_build_doc",
         "env": "env",
         "example.js": "\
-. ./index.sh && shInit && shReadmeExportScripts && \
+. ./index.sh && \
+shInit && \
 shFileTrimLeft tmp/README.example.js && \
 shRunScreenCapture shReadmeTestJs example.js",
-        "example.sh": "\
-. ./index.sh && shInit && shReadmeExportScripts && \
-shRunScreenCapture shReadmeTestSh example.sh",
+        "example.sh": "./index.sh shRunScreenCapture shReadmeTestSh example.sh",
         "start": "\
 export PORT=${PORT:-8080} && \
 if [ -f assets.app.js ]; then node assets.app.js; return; fi && \
@@ -547,13 +537,12 @@ export npm_config_mode_backend=1 && \
 npm start \
 ",
         "test": "\
-. ./index.sh && shInit && shReadmeExportScripts && \
 export PORT=$(./index.sh shServerPortRandom) && \
 export npm_config_mode_auto_restart=1 && \
 ./index.sh test node test.js",
         "test-published": "./index.sh shRun shNpmTestPublished"
     },
-    "version": "2016.5.4"
+    "version": "2016.5.5"
 }
 ```
 
@@ -573,7 +562,7 @@ FROM kaizhu256/node-utility2:latest
 MAINTAINER kai zhu <kaizhu256@gmail.com>
 # https://kripken.github.io/emscripten-site/docs
 # /building_from_source/building_emscripten_from_source_using_the_sdk.html
-# build emscripten @ 1.36.0
+# build emscripten v1.36.0
 RUN cd / && \
     git clone https://github.com/juj/emsdk.git --branch=master --single-branch && \
     cd /emsdk && \
@@ -672,12 +661,6 @@ shBuildCiTestPost() {(set -e
         export modeBrowserTest=test &&
         export url="$TEST_URL?modeTest=consoleLogResult&timeExit={{timeExit}}" &&
         shBrowserTest) || return $?
-    # docker build
-    if [ "$TRAVIS" ] && [ "$CI_BRANCH" = alpha ]
-    then
-        # (CI_BRANCH=docker.latest npm run build-ci) || return $?
-        :
-    fi
 )}
 
 shBuild() {(set -e
@@ -695,6 +678,7 @@ shBuild() {(set -e
     then
         shBuildCiDefault
     fi
+    # docker build
     docker --version 2>/dev/null || return
     # if running legacy-node, then return
     [ "$TRAVIS" ] && [ "$(node --version)" \< "v5.0" ] && return || true

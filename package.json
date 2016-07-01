@@ -39,13 +39,12 @@
         "build-ci": "./index.sh shRun shReadmeBuild",
         "build-doc": "npm test --mode-test-case=testCase_build_doc",
         "env": "env",
-        "example.js": ". ./index.sh && shInit && shReadmeExportScripts && shFileTrimLeft tmp/README.example.js && shRunScreenCapture shReadmeTestJs example.js",
+        "example.js": ". ./index.sh && shInit && shFileTrimLeft tmp/README.example.js && shRunScreenCapture shReadmeTestJs example.js",
 
 
 
-        "example.sh": ". ./index.sh && shInit && shReadmeExportScripts && shRunScreenCapture shReadmeTestSh example.sh",
 
-
+        "example.sh": "./index.sh shRunScreenCapture shReadmeTestSh example.sh",
         "start": "export PORT=${PORT:-8080} && if [ -f assets.app.js ]; then node assets.app.js; return; fi && export npm_config_mode_auto_restart=1 && ./index.sh shRun shIstanbulCover node test.js",
 
 
@@ -55,12 +54,11 @@
 
 
 
-        "test": ". ./index.sh && shInit && shReadmeExportScripts && export PORT=$(./index.sh shServerPortRandom) && export npm_config_mode_auto_restart=1 && ./index.sh test node test.js",
-
+        "test": "export PORT=$(./index.sh shServerPortRandom) && export npm_config_mode_auto_restart=1 && ./index.sh test node test.js",
 
 
 
         "test-published": "./index.sh shRun shNpmTestPublished"
     },
-    "version": "2016.5.4"
+    "version": "2016.5.5"
 }
