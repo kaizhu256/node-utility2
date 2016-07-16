@@ -796,9 +796,10 @@ local['../util/insertion-text'] = module.exports; }());
 /* jslint-ignore-begin */
 // https://github.com/gotwarlost/istanbul/blob/v0.3.20/lib/instrumenter.js
 // utility2-uglifyjs https://raw.githubusercontent.com/gotwarlost/istanbul/v0.3.20/lib/instrumenter.js
+// replace '(t?"":r)' with 'Math.random().toString(16).slice(2)'
 (function () { var escodegen, esprima, module, window; escodegen = local.escodegen; esprima = local.esprima; module = undefined; window = local;
 (function(e){"use strict";function p(e,t){var n,r;return s!==null?(n=s.createHash("md5"),n.update(e),r=n.digest("base64"),r=r.replace(new RegExp("=","g"),"").replace(new RegExp("\\+","g"),"_").replace(new RegExp("/","g"),"$")):(window.__cov_seq=window.__cov_seq||0
-,window.__cov_seq+=1,r=window.__cov_seq),"__cov_"+(t?"":r)}function d(e,t){h(t)||(t=[t]),Array.prototype.push.apply(e,t)}function v(e,t,n,r){this.walkMap=e,this.preprocessor=t,this.scope=n,this.debug=r,this.debug&&(this.level=0,this.seq=!0)}function m(e,n){
+,window.__cov_seq+=1,r=window.__cov_seq),"__cov_"+Math.random().toString(16).slice(2)}function d(e,t){h(t)||(t=[t]),Array.prototype.push.apply(e,t)}function v(e,t,n,r){this.walkMap=e,this.preprocessor=t,this.scope=n,this.debug=r,this.debug&&(this.level=0,this.seq=!0)}function m(e,n){
 var r=e.type,i,s,o=t[r],u=!!e.loc||e.type===t.Program.name,a=u?n.walkMap[r]:null,f,l,c,p,v,m,g,y,b,w,E;if(!t[r]){console.error(e),console.error("Unsupported node type:"+r);return}o=t[r].children;if(e.walking)throw new Error("Infinite regress: Custom walkers may NOT call walker.apply(node)"
 );e.walking=!0,m=n.apply(e,n.preprocessor),i=m.preprocessor,i&&(delete m.preprocessor,m=n.apply(e,i));if(h(a))for(c=0;c<a.length;c+=1){E=c===a.length-1,m=n.apply(m,a[c]);if(m.type!==r&&!E)throw new Error("Only the last walker is allowed to change the node type: [type was: "+
 r+" ]")}else a&&(m=n.apply(e,a));for(f=0;f<o.length;f+=1){p=o[f],v=e[p];if(v&&!v.skipWalk){b={node:e,property:p};if(h(v)){g=[];for(l=0;l<v.length;l+=1)y=v[l],b.index=l,y?(w=n.apply(y,null,b),h(w.prepend)&&(d(g,w.prepend),delete w.prepend)):w=undefined,d(g,w

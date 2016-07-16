@@ -20,10 +20,9 @@ this package will run dynamic browser tests with coverage (via istanbul and elec
 - add server stress test using electron
 - none
 
-#### change since ea851a90
-- npm publish 2016.6.1
-- replace lib bcrypt with sjcl.misc.scrypt
-- replace lib cryptojs with sjcl
+#### change since 4ef09021
+- npm publish 2016.6.2
+- fix coverage-key collision bug in istanbul instrumenter
 - none
 
 #### this package requires
@@ -537,7 +536,7 @@ export npm_config_mode_auto_restart=1 && \
 ./index.sh test node test.js",
         "test-published": "./index.sh shRun shNpmTestPublished"
     },
-    "version": "2016.6.1"
+    "version": "2016.6.2"
 }
 ```
 
