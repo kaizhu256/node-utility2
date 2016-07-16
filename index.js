@@ -65,14 +65,12 @@
         };
         // init lib
         [
-            'bcrypt',
-            'cryptojs',
             'istanbul',
             'jslint',
             'nedb',
+            'sjcl',
             'uglifyjs'
         ].forEach(function (key) {
-            // init lib bcrypt
             local.utility2[key === 'nedb'
                 ? 'Nedb'
                 : key] = local.modeJs === 'browser'
@@ -1186,20 +1184,6 @@ local.utility2.templateTestReportHtml = '\
             local.utility2.assert(aa !== bb, [aa, bb]);
         };
 
-        local.utility2.bcryptHashCreate = function (password, cost) {
-        /*
-         * this function will return a bcrypt-hash from the password and cost (default = 10)
-         */
-            return local.utility2.bcrypt.hashSync(password, cost);
-        };
-
-        local.utility2.bcryptPasswordValidate = function (password, hash) {
-        /*
-         * this function will validate the password against the bcrypt-hash
-         */
-            return local.utility2.bcrypt.compareSync(password || '', hash || '');
-        };
-
         local.utility2.blobRead = function (blob, encoding, onError) {
         /*
          * this function will read from the blob with the given encoding
@@ -1678,41 +1662,6 @@ local.utility2.templateTestReportHtml = '\
             return tmp;
         };
 
-        local.utility2.cryptojsCipherAes256Decrypt = function (data, secret) {
-        /*
-         * this function will aes-decrypt the cipherParams data
-         */
-            return local.utility2.cryptojs.enc.Utf8.stringify(
-                local.utility2.cryptojs.AES.decrypt(data, secret)
-            );
-        };
-
-        local.utility2.cryptojsCipherAes256Encrypt = function (data, secret) {
-        /*
-         * this function will aes-encrypt the data into a cipherParams string
-         */
-            return local.utility2.cryptojs.AES.encrypt(data, secret).toString();
-        };
-
-        local.utility2.cryptojsHashHmacSha256Create = function (data, secret) {
-        /*
-         * this function will return the base64-encoded hmac-sha256 hash
-         * of the string data and secret
-         */
-            return local.utility2.cryptojs.enc.Base64.stringify(
-                local.utility2.cryptojs.HmacSHA256(data, secret)
-            );
-        };
-
-        local.utility2.cryptojsHashSha256Create = function (data) {
-        /*
-         * this function will return the base64-encoded sha-256 hash of the string data
-         */
-            return local.utility2.cryptojs.enc.Base64.stringify(
-                local.utility2.cryptojs.SHA256(data)
-            );
-        };
-
         local.utility2.docApiCreate = function (options) {
         /*
          * this function will return an html api-doc from the given options
@@ -1879,13 +1828,9 @@ local.utility2.templateTestReportHtml = '\
                 : Number(exitCode) || 1;
             switch (local.modeJs) {
             case 'browser':
-                switch (local.utility2.modeTest) {
-                case 'consoleLogResult':
-                    console.log(JSON.stringify({
-                        global_test_results: local.global.global_test_results
-                    }));
-                    break;
-                }
+                console.log(JSON.stringify({
+                    global_test_results: local.global.global_test_results
+                }));
                 break;
             case 'node':
                 process.exit(exitCode);
@@ -2104,12 +2049,12 @@ local.utility2.templateTestReportHtml = '\
                 : element, replacer, space);
         };
 
-        local.utility2.jwtHs256Decode = function (token, secret) {
+        local.utility2.jwtHs256Decode = function (password, token) {
         /*
          * https://jwt.io/
-         * this function will return the payload from the hs256-encoded json-web-token,
-         * with the given secret
+         * this function will decode the json-web-token with the given password
          */
+            var data;
             // try to decode the token
             local.utility2.tryCatchOnError(function () {
                 token = token.split('.');
@@ -2119,26 +2064,26 @@ local.utility2.templateTestReportHtml = '\
                     token
                 );
                 // validate signature
-                local.utility2.assert(local.utility2.cryptojsHashHmacSha256Create(
-                    token[0] + '.' + token[1],
-                    secret
+                token[3] = JSON.parse(local.utility2.stringFromBase64(token[1]));
+                local.utility2.assert(local.utility2.sjclHashHmacSha256Create(
+                    password,
+                    token[0] + '.' + token[1]
                 ).replace((/\=/g), '') === token[2]);
-                token = JSON.parse(local.utility2.stringFromBase64(token[1]));
-            }, local.utility2.nop);
-            // return decoded payload
-            return token;
+                data = token[3];
+            }, local.utility2.onErrorDefault);
+            // return decoded data
+            return data;
         };
 
-        local.utility2.jwtHs256Encode = function (payload, secret) {
+        local.utility2.jwtHs256Encode = function (password, data) {
         /*
          * https://jwt.io/
-         * this function will return a hs256-encoded json-web-token of the payload,
-         * with the given secret
+         * this function will encode the data into a json-web-token with the given password
          */
             var token;
             token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.' +
-                local.utility2.stringToBase64(JSON.stringify(payload));
-            return token + '.' + local.utility2.cryptojsHashHmacSha256Create(token, secret)
+                local.utility2.stringToBase64(JSON.stringify(data));
+            return (token + '.' + local.utility2.sjclHashHmacSha256Create(password, token))
                 .replace((/\=/g), '');
         };
 
@@ -2866,6 +2811,8 @@ local.utility2.templateTestReportHtml = '\
             module.moduleExports = options.moduleExports;
             // load script into module
             module._compile(script, file);
+            // init utility2
+            module.exports.utility2 = local.utility2;
             // init assets.example.js
             module.exports.utility2.assetsDict['/assets.example.js'] = script;
             return module;
@@ -2959,6 +2906,91 @@ local.utility2.templateTestReportHtml = '\
         };
 
         local.utility2.serverLocalUrlTest = local.utility2.nop;
+
+        local.utility2.sjclCipherAes128Decrypt = function (password, encrypted) {
+        /*
+         * this function will aes-decrypt the encrypted-data with the given password
+         */
+            var decrypted;
+            local.utility2.tryCatchOnError(function () {
+                encrypted = encrypted.split('.');
+                decrypted = local.utility2.sjcl.decrypt(password, JSON.stringify({
+                    ct: encrypted[2],
+                    iter: 128,
+                    iv: encrypted[1],
+                    mode: 'gcm',
+                    salt: encrypted[0]
+                }));
+            }, local.utility2.nop);
+            return decrypted;
+        };
+
+        local.utility2.sjclCipherAes128Encrypt = function (password, decrypted) {
+        /*
+         * this function will aes-encrypt the decrypted-data with the given password
+         */
+            var options;
+            options = { iter: 128, mode: 'gcm' };
+            options = JSON.parse(local.utility2.sjcl.encrypt(password, decrypted, options));
+            return options.salt + '.' + options.iv + '.' + options.ct;
+        };
+
+        local.utility2.sjclHashHmacSha256Create = function (password, data) {
+        /*
+         * this function will return the base64-encoded hmac-sha256 hash
+         * of the data with the given password
+         */
+            return local.utility2.sjcl.codec.base64.fromBits(
+                new local.utility2.sjcl.misc.hmac(
+                    local.utility2.sjcl.codec.utf8String.toBits(password)
+                ).encrypt(data)
+            );
+        };
+
+        local.utility2.sjclHashScryptCreate = function (password, options) {
+        /*
+         * https://github.com/wg/scrypt
+         * this function will return the scrypt-hash of the password
+         * with the given options (default = $s0$10801)
+         * e.g. $s0$e0801$epIxT/h6HbbwHaehFnh/bw==$7H0vsXlY8UxxyW/BWx/9GuY7jEvGjT71GFd6O4SZND0=
+         */
+            // init options
+            options = (options || '$s0$10801').split('$');
+            // init salt
+            if (!options[3]) {
+                options[3] = local.utility2.sjcl.codec.base64.fromBits(
+                    local.utility2.sjcl.random.randomWords(4, 0)
+                );
+            }
+            // init hash
+            options[4] = local.utility2.sjcl.codec.base64.fromBits(
+                local.utility2.sjcl.misc.scrypt(
+                    password || '',
+                    local.utility2.sjcl.codec.base64.toBits(options[3]),
+                    Math.pow(2, parseInt(options[2].slice(0, 1), 16)),
+                    parseInt(options[2].slice(1, 2), 16),
+                    parseInt(options[2].slice(3, 4), 16)
+                )
+            );
+            return options.slice(0, 5).join('$');
+        };
+
+        local.utility2.sjclHashScryptValidate = function (password, hash) {
+        /*
+         * https://github.com/wg/scrypt
+         * this function will validate the password against the scrypt-hash
+         */
+            return local.utility2.sjclHashScryptCreate(password, hash) === hash;
+        };
+
+        local.utility2.sjclHashSha256Create = function (data) {
+        /*
+         * this function will return the base64-encoded sha-256 hash of the string data
+         */
+            return local.utility2.sjcl.codec.base64.fromBits(
+                local.utility2.sjcl.hash.sha256.hash(data)
+            );
+        };
 
         local.utility2.stateInit = function (options) {
         /*
@@ -4067,11 +4099,10 @@ local.utility2.templateTestReportHtml = '\
             'assets.utility2.css',
             'index.js',
             'index.sh',
-            'lib.bcrypt.js',
-            'lib.cryptojs.js',
             'lib.istanbul.js',
             'lib.jslint.js',
             'lib.nedb.js',
+            'lib.sjcl.js',
             'lib.uglifyjs.js',
             'templateDocApiHtml',
             'templateTestReportHtml'
@@ -4095,11 +4126,10 @@ local.utility2.templateTestReportHtml = '\
                     __dirname + '/' + key
                 );
                 break;
-            case 'lib.bcrypt.js':
-            case 'lib.cryptojs.js':
             case 'lib.istanbul.js':
             case 'lib.jslint.js':
             case 'lib.nedb.js':
+            case 'lib.sjcl.js':
             case 'lib.uglifyjs.js':
                 local.utility2.assetsDict['/assets.utility2.' + key] =
                     local.utility2.istanbulInstrumentInPackage(
@@ -4116,11 +4146,10 @@ local.utility2.templateTestReportHtml = '\
         });
         local.utility2.assetsDict['/assets.utility2.rollup.js'] = [
             '/assets.utility2.rollup.begin.js',
-            '/assets.utility2.lib.bcrypt.js',
-            '/assets.utility2.lib.cryptojs.js',
             '/assets.utility2.lib.istanbul.js',
             '/assets.utility2.lib.jslint.js',
             '/assets.utility2.lib.nedb.js',
+            '/assets.utility2.lib.sjcl.js',
             '/assets.utility2.lib.uglifyjs.js',
             '/assets.utility2.js',
             '/assets.utility2.css',

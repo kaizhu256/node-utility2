@@ -413,23 +413,6 @@ instruction\n\
             onError();
         };
 
-        local.testCase_bcrypt_default = function (options, onError) {
-        /*
-         * this function will test bcrypt's default handling-behavior
-         */
-            options = {};
-            // test null-case handling-behavior
-            options.data = local.utility2.bcryptPasswordValidate();
-            local.utility2.assertJsonEqual(options.data, false);
-            // test default handling-behavior
-            options.password = 'hello';
-            options.hash = local.utility2.bcryptHashCreate(options.password, 8);
-            options.data =
-                local.utility2.bcryptPasswordValidate(options.password, options.hash);
-            local.utility2.assert(options.data, options);
-            onError();
-        };
-
         local.testCase_blobRead_default = function (options, onError) {
         /*
          * this function will test blobRead's default handling-behavior
@@ -540,36 +523,6 @@ instruction\n\
             onError();
         };
 
-        local.testCase_cryptojs_default = function (options, onError) {
-        /*
-         * this function will test cryptojs's default handling-behavior
-         */
-            options = {};
-            // test cryptojsCipherAes256Decrypt's handling-behavior
-            options.data = local.utility2.cryptojsCipherAes256Decrypt(
-                // test cryptojsCipherAes256Encrypt's handling-behavior
-                local.utility2.cryptojsCipherAes256Encrypt('hello', 'secret'),
-                'secret'
-            );
-            local.utility2.assertJsonEqual(options.data, 'hello');
-            // test cryptojsHashHmacSha256Create handling-behavior
-            options.data = local.utility2.cryptojsHashHmacSha256Create(
-                'hello',
-                'secret'
-            );
-            local.utility2.assertJsonEqual(
-                options.data,
-                'iKqz7ejTrflNJquQ07r9SiCDBww7zOnAFO4EpEOEfAs='
-            );
-            // test cryptojsHashSha256Create handling-behavior
-            options.data = local.utility2.cryptojsHashSha256Create('hello');
-            local.utility2.assertJsonEqual(
-                options.data,
-                'LPJNul+wow4m6DsqxbninhsWHlwfp0JecwQzYpOLmCQ='
-            );
-            onError();
-        };
-
         local.testCase_debug_print_default = function (options, onError) {
         /*
          * this function will test debug_print's default handling-behavior
@@ -644,9 +597,7 @@ instruction\n\
          */
             options = [
                 // suppress console.log
-                [console, { log: local.utility2.nop }],
-                // test modeTest === 'consoleLogResult' handling-behavior
-                [local.utility2, { modeTest: 'consoleLogResult' }]
+                [console, { log: local.utility2.nop }]
             ];
             // test exit's default handling-behavior
             local.utility2.testMock(options, function (onError) {
@@ -848,19 +799,23 @@ instruction\n\
          * this function will test jwtHs256Xxx's default handling-behavior
          */
             options = {};
-            options.payload = { sub: '1234567890', name: 'John Doe', admin: true };
-            options.token = local.utility2.jwtHs256Encode(options.payload, 'secret');
+            // use canonical example at https://jwt.io/
+            options.data = { sub: '1234567890', name: 'John Doe', admin: true };
+            options.token = local.utility2.jwtHs256Encode('secret', options.data);
             // validate encoded token
             local.utility2.assertJsonEqual(
                 options.token,
-                'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.' +
-                    'eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.' +
-                    'TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ'
+                'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9' +
+                    '.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9' +
+                    '.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ'
             );
-            options.payload = local.utility2.jwtHs256Decode(options.token, 'secret');
-            // validate decoded payload
+            // test decoding-failed handling-behavior
+            options.data = local.utility2.jwtHs256Decode('invalid', options.token);
+            local.utility2.assertJsonEqual(options.data, undefined);
+            options.data = local.utility2.jwtHs256Decode('secret', options.token);
+            // validate decoded data
             local.utility2.assertJsonEqual(
-                options.payload,
+                options.data,
                 { admin: true, name: 'John Doe', sub: '1234567890' }
             );
             onError();
@@ -1176,6 +1131,80 @@ instruction\n\
                     options.timeElapsed < 1000, options.timeElapsed);
                 onError();
             });
+        };
+
+        local.testCase_sjclCipherAes128Xxx_default = function (options, onError) {
+        /*
+         * this function will test sjclCipherAes128Xxx's default handling-behavior
+         */
+            options = {};
+            options.encrypted = local.utility2.sjclCipherAes128Encrypt('password', 'hello');
+            // test sjclCipherAes128Decrypt's fail handling-behavior
+            options.decrypted = local.utility2.sjclCipherAes128Decrypt(
+                'invalid',
+                options.encrypted
+            );
+            local.utility2.assertJsonEqual(options.decrypted, undefined);
+            // test sjclCipherAes128Decrypt's pass handling-behavior
+            options.decrypted = local.utility2.sjclCipherAes128Decrypt(
+                'password',
+                options.encrypted
+            );
+            local.utility2.assertJsonEqual(options.decrypted, 'hello');
+            onError();
+        };
+
+        local.testCase_sjclHashHmacSha256Xxx_default = function (options, onError) {
+        /*
+         * this function will test sjclHashHmacSha256Xxx's default handling-behavior
+         */
+            options = {};
+            options.data = local.utility2.sjclHashHmacSha256Create('password', 'hello');
+            local.utility2.assertJsonEqual(
+                options.data,
+                'euYV5phWfl4VEt2BQOdAvU1l36TbGV2AyjJ95jArSmM='
+            );
+            onError();
+        };
+
+        local.testCase_sjclHashScryptXxx_default = function (options, onError) {
+        /*
+         * this function will test sjclHashScryptXxx's default handling-behavior
+         */
+            options = {};
+            // test sjclHashScryptCreate's null-case handling-behavior
+            options.data = local.utility2.sjclHashScryptCreate();
+            local.utility2.assertJsonEqual(options.data.slice(0, 10), '$s0$10801$');
+            // https://github.com/wg/scrypt
+            // test sjclHashScryptValidate's fail handling-behavior
+            options.data = local.utility2.sjclHashScryptValidate(
+                'password',
+                '$s0$80801$epIxT/h6HbbwHaehFnh/bw==' +
+                    '$l/guDhz2Q0v/D93gq0K0qtSX6FWP8pH5maAJkbIcRaEA'
+            );
+            local.utility2.assertJsonEqual(options.data, false);
+            // https://github.com/wg/scrypt
+            // test sjclHashScryptValidate's pass handling-behavior
+            options.data = local.utility2.sjclHashScryptValidate(
+                'password',
+                '$s0$80801$epIxT/h6HbbwHaehFnh/bw==' +
+                    '$l/guDhz2Q0v/D93gq0K0qtSX6FWP8pH5maAJkbIcRaE='
+            );
+            local.utility2.assertJsonEqual(options.data, true);
+            onError();
+        };
+
+        local.testCase_sjclHashSha256Xxx_default = function (options, onError) {
+        /*
+         * this function will test sjclHashSha256Xxx's default handling-behavior
+         */
+            options = {};
+            options.data = local.utility2.sjclHashSha256Create('hello');
+            local.utility2.assertJsonEqual(
+                options.data,
+                'LPJNul+wow4m6DsqxbninhsWHlwfp0JecwQzYpOLmCQ='
+            );
+            onError();
         };
 
         local.testCase_taskCallbackAndUpdateCached_default = function (options, onError) {
@@ -1695,12 +1724,6 @@ instruction\n\
                 file: '/assets.utility2.rollup.js',
                 url: '/assets.utility2.rollup.js'
             }, {
-                file: '/assets.utility2.lib.bcrypt.js',
-                url: '/assets.utility2.lib.bcrypt.js'
-            }, {
-                file: '/assets.utility2.lib.cryptojs.js',
-                url: '/assets.utility2.lib.cryptojs.js'
-            }, {
                 file: '/assets.utility2.lib.istanbul.js',
                 url: '/assets.utility2.lib.istanbul.js'
             }, {
@@ -1709,6 +1732,9 @@ instruction\n\
             }, {
                 file: '/assets.utility2.lib.nedb.js',
                 url: '/assets.utility2.lib.nedb.js'
+            }, {
+                file: '/assets.utility2.lib.sjcl.js',
+                url: '/assets.utility2.lib.sjcl.js'
             }, {
                 file: '/assets.utility2.lib.uglifyjs.js',
                 url: '/assets.utility2.lib.uglifyjs.js'
@@ -1787,14 +1813,6 @@ instruction\n\
                                 exampleList: [],
                                 exports: local.utility2.FormData.prototype
                             },
-                            'utility2.bcrypt': {
-                                exampleList: ['lib.bcrypt.js'],
-                                exports: local.utility2.bcrypt
-                            },
-                            'utility2.cryptojs': {
-                                exampleList: ['lib.cryptojs.js'],
-                                exports: local.utility2.cryptojs
-                            },
                             'utility2.istanbul': {
                                 exampleList: ['lib.istanbul.js'],
                                 exports: local.utility2.istanbul
@@ -1814,6 +1832,10 @@ instruction\n\
                             'utility2.Nedb.storage': {
                                 exampleList: ['lib.nedb.js'],
                                 exports: local.utility2.Nedb.storage
+                            },
+                            'utility2.sjcl': {
+                                exampleList: ['lib.sjcl.js'],
+                                exports: local.utility2.sjcl
                             },
                             'utility2.uglifyjs': {
                                 exampleList: ['lib.uglifyjs.js'],
@@ -2117,8 +2139,8 @@ local.utility2.assertJsonEqual(options.coverage1,
                 url: local.utility2.serverLocalHost +
                     // test script-only handling-behavior
                     '/assets.script-only.html' +
-                    // test phantom-callback handling-behavior
-                    '?modeTest=consoleLogResult&' +
+                    // test electron-callback handling-behavior
+                    '?modeTest=1&' +
                     // test specific testCase handling-behavior
                     // test testRun's failure handling-behavior
                     'modeTestCase=_testCase_testRun_failure&' +

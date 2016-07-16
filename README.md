@@ -12,6 +12,7 @@ this package will run dynamic browser tests with coverage (via istanbul and elec
 
 # documentation
 #### todo
+- replace jwt salt with proper nonce
 - add test for build-app
 - merge github-crud into this package
 - add socket-io to repl-server
@@ -19,11 +20,10 @@ this package will run dynamic browser tests with coverage (via istanbul and elec
 - add server stress test using electron
 - none
 
-#### change since 9519e4b5
-- npm publish 2016.5.5
-- explicitly require the macro /* istanbul instrument in package ... */ for a file to be covered
-- generalize utility2.requireExampleJsFromReadme
-- merge shell function shReadmeExportScripts into shInit
+#### change since ea851a90
+- npm publish 2016.6.1
+- replace lib bcrypt with sjcl.misc.scrypt
+- replace lib cryptojs with sjcl
 - none
 
 #### this package requires
@@ -307,7 +307,7 @@ instruction
             options = {
                 modeCoverageMerge: true,
                 url: 'http://localhost:' + local.utility2.envDict.PORT +
-                    '?modeTest=consoleLogResult'
+                    '?modeTest=1'
             };
             local.utility2.browserTest(options, onError);
         };
@@ -350,9 +350,6 @@ textarea {\n\
 }\n\
 .jslintOutputPre {\n\
     color: #f00;\n\
-}\n\
-.testReportDiv {\n\
-    display: none;\n\
 }\n\
 </style>\n\
 </head>\n\
@@ -429,17 +426,16 @@ textarea {\n\
 </textarea>\n\
     <pre class="jsonStringifyPre"></pre>\n\
     <pre class="jslintOutputPre"></pre>\n\
-    <div class="testReportDiv"></div>\n\
+    <div class="testReportDiv" style="display: none;"></div>\n\
     <div class="istanbulCoverageDiv"></div>\n\
     {{#if isRollup}}\n\
     <script src="assets.app.min.js"></script>\n\
     <script src="jsonp.utility2.stateGet?callback=window.utility2.stateInit"></script>\n\
     {{#unless isRollup}}\n\
-    <script src="assets.utility2.lib.bcrypt.js"></script>\n\
-    <script src="assets.utility2.lib.cryptojs.js"></script>\n\
     <script src="assets.utility2.lib.istanbul.js"></script>\n\
     <script src="assets.utility2.lib.jslint.js"></script>\n\
     <script src="assets.utility2.lib.nedb.js"></script>\n\
+    <script src="assets.utility2.lib.sjcl.js"></script>\n\
     <script src="assets.utility2.lib.uglifyjs.js"></script>\n\
     <script src="assets.utility2.js"></script>\n\
     <script src="jsonp.utility2.stateGet?callback=window.utility2.stateInit"></script>\n\
@@ -485,7 +481,6 @@ window.utility2.onReadyBefore();\n\
     "author": "kai zhu <kaizhu256@gmail.com>",
     "bin": {
         "utility2": "index.sh",
-        "utility2-bcrypt": "lib.bcrypt.js",
         "utility2-istanbul": "lib.istanbul.js",
         "utility2-jslint": "lib.jslint.js",
         "utility2-uglifyjs": "lib.uglifyjs.js"
@@ -542,7 +537,7 @@ export npm_config_mode_auto_restart=1 && \
 ./index.sh test node test.js",
         "test-published": "./index.sh shRun shNpmTestPublished"
     },
-    "version": "2016.5.5"
+    "version": "2016.6.1"
 }
 ```
 
@@ -645,7 +640,7 @@ shBuildCiTestPost() {(set -e
     # test deployed app to gh-pages
     (export MODE_BUILD=githubTest &&
         export modeBrowserTest=test &&
-        export url="$TEST_URL?modeTest=consoleLogResult&timeExit={{timeExit}}" &&
+        export url="$TEST_URL?modeTest=1&timeExit={{timeExit}}" &&
         shBrowserTest) || return $?
     # deploy app to heroku
     export HEROKU_REPO="hrku01-$npm_package_name-$CI_BRANCH"
@@ -659,7 +654,7 @@ shBuildCiTestPost() {(set -e
     # test deployed app to heroku
     (export MODE_BUILD=herokuTest &&
         export modeBrowserTest=test &&
-        export url="$TEST_URL?modeTest=consoleLogResult&timeExit={{timeExit}}" &&
+        export url="$TEST_URL?modeTest=1&timeExit={{timeExit}}" &&
         shBrowserTest) || return $?
 )}
 

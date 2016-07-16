@@ -931,6 +931,10 @@ if (process.env.GITHUB_REPO === undefined && value) {
 shInitNpmConfigDirUtility2() {
 # this function will init $npm_config_dir_utility2
     local DIR SOURCE || return $?
+    if [ "$npm_config_dir_utility2" ]
+    then
+        return
+    fi
     # init $npm_config_dir_utility2
     if [ "$npm_package_name" = utility2 ]
     then
