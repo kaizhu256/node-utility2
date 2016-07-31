@@ -20,11 +20,9 @@ this package will run dynamic browser tests with coverage (via istanbul and elec
 - add server stress test using electron
 - none
 
-#### change since 67f013d7
-- npm publish 2016.7.1
-- allow packages that don't depend on utility2 to be built by it
-- fix shell function shTravisEncryptYml
-- rename debugPrint to debugInline
+#### change since 8c95e8d0
+- npm publish 2016.7.2
+- fix code-coverage in example.js
 - none
 
 #### this package requires
@@ -122,7 +120,7 @@ instruction
         $ npm install electron-lite utility2 && \
             export PATH="$(pwd)/node_modules/.bin:$PATH" && \
             export PORT=8081 && \
-            export npm_config_mode_coverage=1 && \
+            export npm_config_mode_coverage=utility2 && \
             node_modules/.bin/utility2 test node example.js
     3. view test-report in ./tmp/build/test-report.html
     4. view coverage in ./tmp/build/coverage.html/index.html
@@ -538,7 +536,7 @@ export npm_config_mode_auto_restart=1 && \
         "test-all": "npm test --mode-coverage=all",
         "test-published": "./index.sh shRun shNpmTestPublished"
     },
-    "version": "2016.7.1"
+    "version": "2016.7.2"
 }
 ```
 
