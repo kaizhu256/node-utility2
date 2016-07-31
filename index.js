@@ -25,26 +25,26 @@
         local.global = local.modeJs === 'browser'
             ? window
             : global;
-        // init global.debug_print
-        local.global['debug_print'.replace('_p', 'P')] = function (arg) {
+        // init global.debug_inline
+        local.global['debug_inline'.replace('_i', 'I')] = function (arg) {
         /*
          * this function will both print the arg to stderr and return it
          */
             // debug arguments
-            local.utility2['_debug_printArguments'.replace('_p', 'P')] = arguments;
-            console.error('\n\n\ndebug_print'.replace('_p', 'P'));
+            local.utility2['_debug_inlineArguments'.replace('_i', 'I')] = arguments;
+            console.error('\n\n\ndebug_inline'.replace('_i', 'I'));
             console.error.apply(console, arguments);
             console.error();
             // return arg for inspection
             return arg;
         };
-        // init global.debug_printCallback
-        local.global['debug_printCallback'.replace('_p', 'P')] = function (onError) {
+        // init global.debug_inlineCallback
+        local.global['debug_inlineCallback'.replace('_i', 'I')] = function (onError) {
         /*
-         * this function will inject debug_print into the callback onError
+         * this function will inject debug_inline into the callback onError
          */
             return function () {
-                local.global['debug_print'.replace('_p', 'P')].apply(null, arguments);
+                local.global['debug_inline'.replace('_i', 'I')].apply(null, arguments);
                 onError.apply(null, arguments);
             };
         };
@@ -2070,7 +2070,7 @@ local.utility2.templateTestReportHtml = '\
                     token[0] + '.' + token[1]
                 ).replace((/\=/g), '') === token[2]);
                 data = token[3];
-            }, local.utility2.onErrorDefault);
+            }, local.utility2.nop);
             // return decoded data
             return data;
         };
@@ -2082,7 +2082,7 @@ local.utility2.templateTestReportHtml = '\
          */
             var token;
             token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.' +
-                local.utility2.stringToBase64(JSON.stringify(data));
+                local.utility2.stringToBase64(JSON.stringify(data)).replace((/\=/g), '');
             return (token + '.' + local.utility2.sjclHashHmacSha256Create(password, token))
                 .replace((/\=/g), '');
         };
@@ -2796,12 +2796,11 @@ local.utility2.templateTestReportHtml = '\
                         script = text.slice(0, ii).replace((/.+/g), '') + match1;
                     }
                 );
-            // alias require(<options.moduleName>) to module.moduleExports;
             script = script
-                .replace(
-                    "require('" + options.moduleName + "')",
-                    'module.moduleExports'
-                );
+                // alias require(<options.moduleName>) to module.moduleExports;
+                .replace("require('" + options.moduleName + "')", 'module.moduleExports')
+                // uncomment utility2-comment
+                .replace((/<!-- utility2-comment\b([\S\s]+?)\butility2-comment -->/g), '$1');
             // jslint script
             local.utility2.jslintAndPrint(script, file);
             // cover script
@@ -2813,8 +2812,19 @@ local.utility2.templateTestReportHtml = '\
             module._compile(script, file);
             // init utility2
             module.exports.utility2 = local.utility2;
-            // init assets.example.js
-            module.exports.utility2.assetsDict['/assets.example.js'] = script;
+            // init assets
+            local.utility2.assetsDict['/assets.example.js'] = script;
+            local.utility2.assetsDict['/assets.test.js'] =
+                local.utility2.istanbulInstrumentInPackage(
+                    local.fs.readFileSync(process.cwd() + '/test.js', 'utf8'),
+                    process.cwd() + '/test.js'
+                );
+            local.utility2.assetsDict['/'] = local.utility2.assetsDict['/index.html'] =
+                local.utility2.templateRender(module.exports.templateIndexHtml, {
+                    envDict: local.utility2.envDict,
+                    isRollup: module.isRollup ||
+                        local.utility2.envDict.NODE_ENV === 'production'
+                });
             return module;
         };
 
@@ -3709,10 +3719,18 @@ local.utility2.templateTestReportHtml = '\
         /*
          * this function will
          * 1. create server from options.middleware
-         * 2. start server on options.port
+         * 2. start server on local.utility2.envDict.PORT
          * 3. run tests
          */
             var requestHandler, server;
+            local.utility2.objectSetDefault(options, {
+                middleware: local.utility2.middlewareGroupCreate([
+                    local.utility2.middlewareInit,
+                    local.utility2.middlewareAssetsCached,
+                    local.utility2.middlewareJsonpStateGet
+                ]),
+                middlewareError: local.utility2.middlewareError
+            });
             // 1. create server from options.middleware
             requestHandler = function (request, response) {
                 options.middleware(request, response, function (error) {
@@ -3720,27 +3738,12 @@ local.utility2.templateTestReportHtml = '\
                 });
             };
             server = local.http.createServer(requestHandler);
-            // 2. start server on options.port
+            // 2. start server on local.utility2.envDict.PORT
             local.utility2.envDict.PORT = local.utility2.envDict.PORT || '8081';
-            options.port = options.port || local.utility2.envDict.PORT;
             local.utility2.serverLocalRequestHandler = requestHandler;
-            console.log('server starting on port ' + options.port);
+            console.log('server starting on port ' + local.utility2.envDict.PORT);
             local.utility2.onReadyBefore.counter += 1;
-            server.listen(options.port, local.utility2.onReadyBefore);
-            // if $npm_config_timeout_exit is defined,
-            // then exit this process after $npm_config_timeout_exit ms
-            if (Number(local.utility2.envDict.npm_config_timeout_exit)) {
-                setTimeout(function () {
-                    // screen-capture main-page
-                    local.utility2.browserTest({
-                        modeBrowserTest: 'screenCapture',
-                        url: local.utility2.serverLocalHost
-                    }, function (error) {
-                        console.log('server stopping on port ' + options.port);
-                        local.utility2.exit(error);
-                    });
-                }, Number(local.utility2.envDict.npm_config_timeout_exit));
-            }
+            server.listen(local.utility2.envDict.PORT, local.utility2.onReadyBefore);
             // 3. run tests
             local.utility2.testRun(options);
             return server;
@@ -3785,20 +3788,17 @@ local.utility2.templateTestReportHtml = '\
                 );
                 break;
             case 'node':
-                local.utility2.timeExit = local.utility2.envDict.npm_config_time_exit;
                 local.utility2.timeoutDefault =
                     local.utility2.envDict.npm_config_timeout_default;
                 break;
             }
             // init timeExit
-            local.utility2.timeExit = Number(local.utility2.timeExit);
+            local.utility2.timeExit = Number(local.utility2.timeExit) ||
+                Number(Date.now() + Number(local.utility2.envDict.npm_config_timeout_exit)) ||
+                Number(local.utility2.envDict.npm_config_time_exit);
             if (local.utility2.timeExit) {
                 local.utility2.timeoutDefault = local.utility2.timeExit - Date.now();
-                local.utility2.onTimeout(
-                    local.utility2.exit,
-                    local.utility2.timeoutDefault,
-                    'exit'
-                );
+                setTimeout(local.utility2.exit, local.utility2.timeoutDefault);
             }
             // init timeoutDefault
             local.utility2.timeoutDefault = Number(local.utility2.timeoutDefault || 30000);

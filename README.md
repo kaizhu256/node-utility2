@@ -20,9 +20,11 @@ this package will run dynamic browser tests with coverage (via istanbul and elec
 - add server stress test using electron
 - none
 
-#### change since 4ef09021
-- npm publish 2016.6.2
-- fix coverage-key collision bug in istanbul instrumenter
+#### change since 67f013d7
+- npm publish 2016.7.1
+- allow packages that don't depend on utility2 to be built by it
+- fix shell function shTravisEncryptYml
+- rename debugPrint to debugInline
 - none
 
 #### this package requires
@@ -115,7 +117,7 @@ this shared browser / node script will run browser tests with coverage
 (via istanbul and electron)
 
 instruction
-    1. save this js script as example.js
+    1. save this script as example.js
     2. run the shell command:
         $ npm install electron-lite utility2 && \
             export PATH="$(pwd)/node_modules/.bin:$PATH" && \
@@ -177,15 +179,7 @@ instruction
             npm_package_name: 'undefined',
             npm_package_version: '0.0.1'
         });
-        // init middleware
-        local.middleware = local.utility2.middlewareGroupCreate([
-            local.utility2.middlewareInit,
-            local.utility2.middlewareAssetsCached,
-            local.utility2.middlewareJsonpStateGet
-        ]);
-        // init error-middleware
-        local.middlewareError = local.utility2.middlewareError;
-        // run server-test
+        // run test-server
         local.utility2.testRunServer(local);
         // init assets
         local.utility2.assetsDict['/assets.hello'] = 'hello';
@@ -244,38 +238,36 @@ instruction
                 local.utility2.testRun(local);
                 break;
             default:
-                // try to JSON.stringify .jsonStringifyInputTextarea
+                // try to JSON.stringify #inputTextarea1
                 try {
-                    document.querySelector('.jsonStringifyPre').textContent =
+                    document.querySelector('#outputPreJsonStringify1').textContent =
                         local.utility2.jsonStringifyOrdered(
-                            JSON.parse(
-                                document.querySelector('.jsonStringifyInputTextarea').value
-                            ),
+                            JSON.parse(document.querySelector('#inputTextarea1').value),
                             null,
                             4
                         );
                 } catch (ignore) {
                 }
-                // jslint .jslintInputTextarea
+                // jslint #inputTextarea1
                 local.utility2.jslint.jslintAndPrint(
-                    document.querySelector('.jslintInputTextarea').value,
-                    'jslintInputTextarea.js'
+                    document.querySelector('#inputTextarea1').value,
+                    'inputTextarea1.js'
                 );
-                document.querySelector('.jslintOutputPre').textContent =
+                document.querySelector('#outputPreJslint1').textContent =
                     local.utility2.jslint.errorText
                     .replace((/\u001b\[\d+m/g), '')
                     .trim();
                 // try to cleanup __coverage__
                 try {
-                    delete local.global.__coverage__['/istanbulInputTextarea.js'];
+                    delete local.global.__coverage__['/inputTextarea1.js'];
                 } catch (ignore) {
                 }
                 // try to eval input-code
                 try {
                     /*jslint evil: true*/
                     eval(local.utility2.istanbul.instrumentSync(
-                        document.querySelector('.istanbulInputTextarea').value,
-                        '/istanbulInputTextarea.js'
+                        document.querySelector('#inputTextarea1').value,
+                        '/inputTextarea1.js'
                     ));
                     local.utility2.istanbul.coverageReportCreate({
                         coverage: window.__coverage__
@@ -287,9 +279,16 @@ instruction
             }
         };
         // init event-handling
-        document.querySelector('.istanbulInputTextarea')
-            .addEventListener('keyup', local.testRun);
-        document.querySelector('#testRunButton1').addEventListener('click', local.testRun);
+        [
+            '#inputTextarea1',
+            '#testRunButton1'
+        ].forEach(function (element) {
+            if (element.indexOf('#inputTextarea') === 0) {
+                document.querySelector(element).addEventListener('keyup', local.testRun);
+                return;
+            }
+            document.querySelector(element).addEventListener('click', local.testRun);
+        });
         // run tests
         local.testRun();
         break;
@@ -305,8 +304,7 @@ instruction
          */
             options = {
                 modeCoverageMerge: true,
-                url: 'http://localhost:' + local.utility2.envDict.PORT +
-                    '?modeTest=1'
+                url: local.utility2.serverLocalHost + '?modeTest=1'
             };
             local.utility2.browserTest(options, onError);
         };
@@ -318,7 +316,7 @@ instruction
                 local.fs.readFileSync(__filename, 'utf8');
         }, local.utility2.nop);
         /* jslint-ignore-begin */
-        local.utility2.templateIndexHtml = '\
+        local.templateIndexHtml = '\
 <!doctype html>\n\
 <html lang="en">\n\
 <head>\n\
@@ -330,6 +328,7 @@ instruction
 <style>\n\
 /*csslint\n\
     box-sizing: false,\n\
+    ids: false,\n\
     universal-selector: false\n\
 */\n\
 * {\n\
@@ -342,13 +341,13 @@ body {\n\
 body > * {\n\
     margin-bottom: 1rem;\n\
 }\n\
+#outputPreJslint1 {\n\
+    color: #f00;\n\
+}\n\
 textarea {\n\
     font-family: monospace;\n\
     height: 32rem;\n\
     width: 100%;\n\
-}\n\
-.jslintOutputPre {\n\
-    color: #f00;\n\
 }\n\
 </style>\n\
 </head>\n\
@@ -371,8 +370,10 @@ textarea {\n\
     <h4><a download href="assets.app.js">download standalone app</a></h4>\n\
     <button id="testRunButton1">run internal test</button><br>\n\
     <div>edit or paste script below to cover and test</div>\n\
-<textarea class="istanbulInputTextarea jslintInputTextarea jsonStringifyInputTextarea">\n\
-/*jslint browser: true*/\n\
+<textarea id="inputTextarea1">\n\
+/*jslint\n\
+    browser: true\n\
+*/\n\
 (function () {\n\
     "use strict";\n\
     var testCaseDict;\n\
@@ -423,8 +424,8 @@ textarea {\n\
     }\n\
 }());\n\
 </textarea>\n\
-    <pre class="jsonStringifyPre"></pre>\n\
-    <pre class="jslintOutputPre"></pre>\n\
+    <pre id="outputPreJsonStringify1"></pre>\n\
+    <pre id="outputPreJslint1"></pre>\n\
     <div class="testReportDiv" style="display: none;"></div>\n\
     <div class="istanbulCoverageDiv"></div>\n\
     {{#if isRollup}}\n\
@@ -454,7 +455,7 @@ window.utility2.onReadyBefore();\n\
 ';
         /* jslint-ignore-end */
         local.utility2.assetsDict['/'] = local.utility2.templateRender(
-            local.utility2.templateIndexHtml,
+            local.templateIndexHtml,
             { envDict: local.utility2.envDict }
         );
         break;
@@ -534,9 +535,10 @@ npm start \
 export PORT=$(./index.sh shServerPortRandom) && \
 export npm_config_mode_auto_restart=1 && \
 ./index.sh test node test.js",
+        "test-all": "npm test --mode-coverage=all",
         "test-published": "./index.sh shRun shNpmTestPublished"
     },
-    "version": "2016.6.2"
+    "version": "2016.7.1"
 }
 ```
 
@@ -622,7 +624,8 @@ shBuildCiTestPre() {(set -e
         shBrowserTest) || return $?
     # test example shell script
     (export MODE_BUILD=testExampleSh &&
-        export npm_config_timeout_exit=1000 &&
+        export PORT=8081 &&
+        export npm_config_timeout_exit=15000 &&
         npm run example.sh) || return $?
 )}
 

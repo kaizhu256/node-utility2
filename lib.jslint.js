@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* istanbul instrument in package all */
 /*jslint
     bitwise: true,
     browser: true,
@@ -37,6 +38,7 @@
 
 
 
+/* istanbul ignore next */
 // init lib csslint
 /* jslint-ignore-begin */
 // https://github.com/CSSLint/csslint/blob/v0.10.0/release/csslint.js
@@ -427,6 +429,7 @@ e,t,n){var r=e.messages,i="";n=n||{};if(r.length===0)return n.quiet?"":"\n\ncssl
 
 
 
+/* istanbul ignore next */
 // init lib jslint
 /* jslint-ignore-begin */
 // https://github.com/douglascrockford/JSLint/blob/394bf291bfa3881bb9827b9fc7b7d1112d83f313/jslint.js
@@ -761,9 +764,11 @@ local.CSSLint = CSSLint; local.JSLINT = JSLINT; }());
         // require modules
         local.fs = require('fs');
         local.path = require('path');
+        /* istanbul ignore next */
         if (module.isRollup) {
             break;
         }
+        /* istanbul ignore next */
         // run the cli
         local.cliRun = function () {
         /*

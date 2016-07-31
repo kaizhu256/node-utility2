@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* istanbul instrument in package istanbul-lite */
+/* istanbul instrument in package all */
 /*jslint
     bitwise: true,
     browser: true,
@@ -161,6 +161,7 @@
                 local._fs.writeFileSync(file, data);
             }
         };
+        /* istanbul ignore next */
         local.instrumentInPackage = function (code, file) {
         /*
          * this function will instrument the code

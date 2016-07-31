@@ -21,7 +21,7 @@ shAesEncrypt() {(set -e
     # print base64-encoded $IV to stdout
     printf "$(printf "$IV" | base64)"
     # encrypt stdin and stream to stdout using aes-256-cbc with base64-encoding
-    openssl enc -aes-256-cbc -K "$AES_256_KEY" -iv "$IV" | base64 | tr -d "\n"
+    openssl enc -aes-256-cbc -K "$AES_256_KEY" -iv "$IV" | base64 | tr -d "\n="
 )}
 
 shBaseInit() {
@@ -199,6 +199,7 @@ shBuildInsideDocker() {(set -e
     # https://github.com/npm/npm/issues/10686
     # bug workaround - Cannot read property 'target' of null #10686
     sed -in -e 's/  "_requiredBy":/  "_requiredBy_":/' package.json
+    rm -f package.jsonn
     # npm install
     npm install
     # npm test
@@ -443,6 +444,14 @@ shEmscriptenInit() {
     export PATH="$PATH_EMSCRIPTEN:$PATH"
     emsdk activate
 }
+
+shFileTrimTrailingWhitespace() {(set -e
+# this function will trim trailing whitespaces from the file
+    # find . -type file -print0 | xargs -0 sed -i -e 's/[ ]\{1,\}$//'
+    # find . -type file -print0 | xargs -0 sed -i '' -e 's/[ ]\{1,\}$//'
+    sed -in -e 's/[ ]\{1,\}$//' "$1"
+    rm -f "$1n"
+)}
 
 shFileTrimLeft() {(set -e
 # this function will inline trimLeft the $FILE
@@ -1226,6 +1235,7 @@ shNpmTestPublished() {(set -e
     # https://github.com/npm/npm/issues/10686
     # bug workaround - Cannot read property 'target' of null #10686
     sed -in -e 's/  "_requiredBy":/  "_requiredBy_":/' package.json
+    rm -f package.jsonn
     # npm install
     npm install
     # npm-test package
@@ -1277,6 +1287,14 @@ shReadmeTestJs() {(set -e
 console.log((/\n *\\$ (.*)/).exec(require('fs').readFileSync('$FILE', 'utf8'))[1]);
 // </script>
     ")"
+    # screen-capture server
+    if [ "$npm_config_timeout_exit" ] && [ "$PORT" ]
+    then
+        (sleep 5 &&
+            export modeBrowserTest=screenCapture &&
+            export url="http://localhost:$PORT" &&
+            shBrowserTest) &
+    fi
     printf "$SCRIPT\n\n" && eval "$SCRIPT"
     EXIT_CODE=$?
     # save screen-capture
@@ -1316,6 +1334,14 @@ shReadmeTestSh() {(set -e
 console.log(require('fs').readFileSync('$FILE', 'utf8').trimLeft());
 // </script>
     "
+    # screen-capture server
+    if [ "$npm_config_timeout_exit" ] && [ "$PORT" ]
+    then
+        (sleep 5 &&
+            export modeBrowserTest=screenCapture &&
+            export url="http://localhost:$PORT" &&
+            shBrowserTest) &
+    fi
     # test $FILE
     /bin/sh "$FILE"
     EXIT_CODE=$?
@@ -1508,10 +1534,10 @@ shTravisEncryptYml() {(set -e
         tr "%" "\n" > \
         "$npm_config_file_tmp"
     # rsa-encrypt $AES_256_KEY
-    AES_256_KEY_ENCRYPTED="$(printf "$AES_256_KEY" | \
+    AES_256_KEY_ENCRYPTED="$(printf "AES_256_KEY=$AES_256_KEY" | \
         openssl rsautl -encrypt -pubin -inkey "$npm_config_file_tmp" | \
         base64 | \
-        tr -d "\n")"
+        tr -d "\n=")"
     # return non-zero exit-code if $AES_256_KEY_ENCRYPTED is empty string
     if [ ! "$AES_256_KEY_ENCRYPTED" ]
     then
@@ -1522,6 +1548,7 @@ shTravisEncryptYml() {(set -e
         -e "s%\(- secure: \).*\( # AES_256_KEY$\)%\\1$AES_256_KEY_ENCRYPTED\\2%" \
 -e "s%\(- AES_ENCRYPTED_SH: \).*\( # AES_ENCRYPTED_SH$\)%\\1$(shAesEncrypt < $FILE)\\2%" \
         .travis.yml
+    rm -f .travis.ymln
 )}
 
 shUbuntuInit() {

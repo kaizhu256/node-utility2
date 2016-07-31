@@ -523,9 +523,9 @@ instruction\n\
             onError();
         };
 
-        local.testCase_debug_print_default = function (options, onError) {
+        local.testCase_debug_inline_default = function (options, onError) {
         /*
-         * this function will test debug_print's default handling-behavior
+         * this function will test debug_inline's default handling-behavior
          */
             options = {};
             local.utility2.testMock([
@@ -535,13 +535,13 @@ instruction\n\
                 } }]
             ], function (onError) {
                 options.data = '';
-                local.global['debug_printCallback'.replace('_p', 'P')](
+                local.global['debug_inlineCallback'.replace('_i', 'I')](
                     local.utility2.echo
                 )('hello');
                 // validate data
                 local.utility2.assertJsonEqual(
                     options.data,
-                    '\n\n\ndebug_print\nhello\n\n'.replace('_p', 'P')
+                    '\n\n\ndebug_inline\nhello\n\n'.replace('_i', 'I')
                 );
                 onError();
             }, onError);
@@ -710,6 +710,13 @@ instruction\n\
                 );
                 // test csslint passed handling-behavior
                 local.utility2.jslintAndPrint('body { font: normal; }', 'passed.css');
+                // validate no error occurred
+                local.utility2.assert(
+                    !local.utility2.jslint.errorText,
+                    local.utility2.jslint.errorText
+                );
+                // test csslint flexbox handling-behavior
+                local.utility2.jslintAndPrint('body { display: flex; }', 'passed.css');
                 // validate no error occurred
                 local.utility2.assert(
                     !local.utility2.jslint.errorText,
@@ -2165,52 +2172,9 @@ local.utility2.assertJsonEqual(options.coverage1,
                 [console, { log: local.utility2.nop }],
                 [local.utility2, { exit: local.utility2.nop }]
             ];
-            // test testRunServer's $npm_config_timeout_exit handling-behavior
             local.utility2.testMock(options, function (onError) {
                 // test exit handling-behavior
                 local.utility2.testReportCreate(local.utility2.testReport);
-                onError();
-            }, onError);
-        };
-
-        local.testCase_testRunServer_exit = function (options, onError) {
-        /*
-         * this function will test testRunServer's exit handling-behavior
-         */
-            options = [
-                // suppress console.log
-                [console, { log: local.utility2.nop }],
-                // have setTimeout call immediately
-                [local.global, { setTimeout: function (onError) {
-                    onError();
-                } }],
-                [local.utility2, {
-                    browserTest: function (options, onError) {
-                        // jslint-hack
-                        local.utility2.nop(options);
-                        onError();
-                    },
-                    envDict: {
-                        // test $npm_package_name !== 'utility2' handling-behavior
-                        npm_package_name: 'undefined',
-                        // test timeout-exit handling-behavior
-                        npm_config_timeout_exit: '1'
-                    },
-                    onReadyBefore: {},
-                    serverLocalHost: '',
-                    serverLocalRequestHandler: local.utility2.nop,
-                    serverLocalUrlTest: local.utility2.nop,
-                    testRun: local.utility2.nop
-                }],
-                [local.utility2.local, { http: { createServer: function () {
-                    return { listen: local.utility2.nop };
-                } } }]
-            ];
-            // test testRunServer's $npm_config_timeout_exit handling-behavior
-            local.utility2.testMock(options, function (onError) {
-                // test exit handling-behavior
-                local.utility2.testRunServer({ middleware:
-                    local.utility2.middlewareGroupCreate([local.utility2.middlewareInit]) });
                 onError();
             }, onError);
         };
@@ -2294,12 +2258,6 @@ local.utility2.assertJsonEqual(options.coverage1,
     case 'node':
         // init repl debugger
         local.utility2.replStart();
-        // init assets
-        local.utility2.assetsDict['/'] = local.utility2.assetsDict['/index.html'] =
-            local.utility2.templateRender(local.utility2.templateIndexHtml, {
-                envDict: local.utility2.envDict,
-                isRollup: module.isRollup || local.utility2.envDict.NODE_ENV === 'production'
-            });
         /* istanbul ignore next */
         if (module.isRollup) {
             local.utility2.assetsDict['/assets.app.js'] =
@@ -2308,19 +2266,13 @@ local.utility2.assertJsonEqual(options.coverage1,
             local.global.module = module;
             break;
         }
-        local.utility2.assetsDict['/assets.script-only.html'] =
-            // coverage-hack - test no-instrument handling-behavior
-            local.utility2.istanbulInstrumentInPackage('<h1>script-only test</h1>\n' +
+        // init assets
+        local.utility2.assetsDict['/assets.script-only.html'] = '<h1>script-only test</h1>\n' +
                 '<script src="assets.utility2.js"></script>\n' +
                 '<script>window.utility2.onReadyBefore.counter += 1;</script>\n' +
                 '<script src="assets.example.js"></script>\n' +
                 '<script src="assets.test.js"></script>\n' +
-                '<script>window.utility2.onReadyBefore();</script>\n');
-        local.utility2.assetsDict['/assets.test.js'] =
-            local.utility2.istanbulInstrumentInPackage(
-                local.fs.readFileSync(__filename, 'utf8'),
-                __filename
-            );
+                '<script>window.utility2.onReadyBefore();</script>\n';
         local.utility2.assetsDict['/assets.app.js'] = [
             '/assets.app.begin.js',
             '/assets.utility2.rollup.js',
@@ -2354,10 +2306,6 @@ local.utility2.assertJsonEqual(options.coverage1,
             }
             if (process.argv[2]) {
                 require(local.path.resolve(process.cwd(), process.argv[2]));
-            }
-            // test .sandbox.js
-            if (local.fs.existsSync(process.cwd() + '/.sandbox.js')) {
-                require(process.cwd() + '/.sandbox.js');
             }
         };
         local.cliRun();

@@ -30,7 +30,7 @@ set showmatch
 set smartcase
 set softtabstop=2
 set statusline=%l\ %c\ %F%m%r%h%w\ %y\ %p%%
-set tabstop=2
+set tabstop=4
 syntax on
 
 if !exists(":Vimrc")
