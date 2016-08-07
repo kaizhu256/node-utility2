@@ -71,5 +71,5 @@
         "test-all": "npm test --mode-coverage=all",
         "test-published": "./index.sh shRun shNpmTestPublished"
     },
-    "version": "2016.7.3"
+    "version": "2016.7.4"
 }

@@ -18,12 +18,9 @@ this package will run dynamic browser tests with coverage (via istanbul and elec
 - add server stress test using electron
 - none
 
-#### change since 016d92f2
-- npm publish 2016.7.3
-- deploy standalone-app to heroku
-- allow repl-server to be accessed remotely via tcp
-- add coverage option to command 'utility2 start'
-- rename functions in jslint, stateInit, tasks
+#### change since 8dc2cf2e
+- npm publish 2016.7.4
+- fix example.js quickstart demo
 - none
 
 #### this package requires
@@ -122,7 +119,7 @@ instruction
             export PATH="$(pwd)/node_modules/.bin:$PATH" && \
             export PORT=8081 && \
             export npm_config_mode_coverage=utility2 && \
-            node_modules/.bin/utility2 test node example.js
+            node_modules/.bin/utility2 test example.js
     3. view test-report in ./tmp/build/test-report.html
     4. view coverage in ./tmp/build/coverage.html/index.html
 */
@@ -541,7 +538,7 @@ export npm_config_mode_auto_restart=1 && \
         "test-all": "npm test --mode-coverage=all",
         "test-published": "./index.sh shRun shNpmTestPublished"
     },
-    "version": "2016.7.3"
+    "version": "2016.7.4"
 }
 ```
 
