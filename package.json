@@ -44,21 +44,32 @@
 
 
         "example.sh": "./index.sh shRunScreenCapture shReadmeTestSh example.sh",
-        "start": "export PORT=${PORT:-8080} && if [ -f assets.app.js ]; then node assets.app.js; return; fi && export npm_config_mode_auto_restart=1 && ./index.sh shRun shIstanbulCover node test.js",
+        "start": "export PORT=${PORT:-8080} && if [ -f assets.app.js ]; then node assets.app.js; return; fi && export npm_config_mode_auto_restart=1 && ./index.sh shRun shIstanbulCover test.js",
 
 
 
 
-        "start-heroku": "export npm_config_mode_backend=1 && npm start ",
+        "start-example": "./index.sh shRun && cp tmp/README.example.js example.js && export PORT=8081 && node example.js ",
 
 
 
-        "test": "export PORT=$(./index.sh shServerPortRandom) && export npm_config_mode_auto_restart=1 && ./index.sh test node test.js",
+
+
+        "start-heroku": "export npm_config_mode_backend=1 && node assets.app.js ",
+
+
+
+        "start-standalone": "npm run build-app && node tmp/build/app/assets.app.js ",
+
+
+
+        "test": "export PORT=$(./index.sh shServerPortRandom) && export PORT_REPL=$(./index.sh shServerPortRandom) && export npm_config_mode_auto_restart=1 && ./index.sh test test.js",
+
 
 
 
         "test-all": "npm test --mode-coverage=all",
         "test-published": "./index.sh shRun shNpmTestPublished"
     },
-    "version": "2016.7.2"
+    "version": "2016.7.3"
 }

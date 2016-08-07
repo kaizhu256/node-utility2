@@ -1303,11 +1303,11 @@ local.templateCoverageBadgeSvg =
         }
         /* istanbul ignore next */
         // run the cli
-        local.cliRun = function () {
+        local.cliRun = function (options) {
         /*
          * this function will run the cli
          */
-            if (module !== local.require2.main) {
+            if (module !== local.require2.main && !(options && options.runMain)) {
                 return;
             }
             switch (process.argv[2]) {
@@ -1341,8 +1341,10 @@ local.templateCoverageBadgeSvg =
             // instrument a file and print result to stdout
             case 'instrument':
                 process.argv[3] = local.path.resolve(process.cwd(), process.argv[3]);
-                process.stdout.write(local.instrumentSync(local._fs
-                    .readFileSync(process.argv[3], 'utf8'), process.argv[3]));
+                process.stdout.write(local.instrumentSync(
+                    local._fs.readFileSync(process.argv[3], 'utf8'),
+                    process.argv[3]
+                ));
                 break;
             }
         };

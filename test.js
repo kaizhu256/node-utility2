@@ -42,20 +42,20 @@
             break;
         // re-init local from example.js
         case 'node':
+            local = (module.utility2 ||
+                require(__dirname + '/index.js')).requireExampleJsFromReadme({
+                __dirname: __dirname,
+                module: module,
+                moduleExports: __dirname + '/index.js',
+                moduleName: 'utility2'
+            });
             /* istanbul ignore next */
-            if (module.isRollup) {
-                local = module;
+            if (module.isRollup || process.cwd() !== __dirname) {
+                if (module.isRollup) {
+                    local = module;
+                }
                 break;
             }
-            local = require('./index.js').requireExampleJsFromReadme({
-                __dirname: __dirname,
-                moduleExports: require('./index.js'),
-                moduleName: 'utility2'
-            }).exports;
-            // coverage-hack - test requireExampleJsFromReadme's cache handling-behavior
-            local.utility2.requireExampleJsFromReadme({
-                __dirname: __dirname
-            });
             // coverage-hack - cover istanbul
             delete require.cache[__dirname + '/lib.istanbul.js'];
             local.utility2.istanbul2 = require('./lib.istanbul.js');
@@ -68,24 +68,8 @@
             local.utility2.istanbul2.codeDict = local.utility2.istanbul.codeDict;
             break;
         }
-        // init templates
-/* jslint-ignore-begin */
-local.utility2.assetsDict['/assets.app.begin.js'] = '\
-/*\n\
-app.js\n\
-\n\
-this standalone script will serve a webpage\n\
-that will interactively run browser tests with coverage\n\
-\n\
-instruction\n\
-    1. save this script as app.js\n\
-    2. run the shell command:\n\
-        $ PORT=8081 node app.js\n\
-    3. open a browser to http://localhost:8081\n\
-    4. edit or paste script in browser to cover and test\n\
-*/\n\
-';
-/* jslint-ignore-end */
+        // init jslint
+        local.jslint = local.utility2.jslint;
     }());
 
 
@@ -698,61 +682,95 @@ instruction\n\
          */
             options = [
                 // suppress console.error
-                [console, { error: local.utility2.nop }]
+                [console, { error: local.utility2.nop }],
+                [local.jslint, { errorText: '' }]
             ];
             local.utility2.testMock(options, function (onError) {
                 // test empty script handling-behavior
-                local.utility2.jslintAndPrint('', 'empty.css');
+                local.jslint.jslintAndPrint('', 'empty.css');
                 // validate no error occurred
-                local.utility2.assert(
-                    !local.utility2.jslint.errorText,
-                    local.utility2.jslint.errorText
-                );
-                // test csslint passed handling-behavior
-                local.utility2.jslintAndPrint('body { font: normal; }', 'passed.css');
-                // validate no error occurred
-                local.utility2.assert(
-                    !local.utility2.jslint.errorText,
-                    local.utility2.jslint.errorText
-                );
-                // test csslint flexbox handling-behavior
-                local.utility2.jslintAndPrint('body { display: flex; }', 'passed.css');
-                // validate no error occurred
-                local.utility2.assert(
-                    !local.utility2.jslint.errorText,
-                    local.utility2.jslint.errorText
-                );
+                local.utility2.assert(!local.jslint.errorText, local.jslint.errorText);
                 // test csslint failed handling-behavior
-                local.utility2.jslintAndPrint('syntax error', 'failed.css');
+                local.jslint.jslintAndPrint('syntax error', 'failed.css');
                 // validate error occurred
-                local.utility2.assert(
-                    local.utility2.jslint.errorText,
-                    local.utility2.jslint.errorText
-                );
-                // test jslint passed handling-behavior
-                local.utility2.jslintAndPrint('{}', 'passed.js');
+                local.utility2.assert(local.jslint.errorText, local.jslint.errorText);
+                // test csslint passed handling-behavior
+                local.jslint.jslintAndPrint('body { font: normal; }', 'passed.css');
                 // validate no error occurred
-                local.utility2.assert(
-                    !local.utility2.jslint.errorText,
-                    local.utility2.jslint.errorText
-                );
+                local.utility2.assert(!local.jslint.errorText, local.jslint.errorText);
+                // test csslint flexbox handling-behavior
+                local.jslint.jslintAndPrint('body { display: flex; }', 'passed.css');
+                // validate no error occurred
+                local.utility2.assert(!local.jslint.errorText, local.jslint.errorText);
                 // test jslint failed handling-behavior
-                local.utility2.jslintAndPrint('syntax error', 'failed.js');
+                local.jslint.jslintAndPrint('syntax error', 'failed.js');
                 // validate error occurred
-                local.utility2.assert(
-                    local.utility2.jslint.errorText,
-                    local.utility2.jslint.errorText
-                );
+                local.utility2.assert(local.jslint.errorText, local.jslint.errorText);
+                // test jslint passed handling-behavior
+                local.jslint.jslintAndPrint('{}', 'passed.js');
+                // validate no error occurred
+                local.utility2.assert(!local.jslint.errorText, local.jslint.errorText);
+                // test /* jslint-indent-begin */ ... /* jslint-indent-end */
+                // handling-behavior
+                local.jslint.jslintAndPrint('(function () {\n' +
+                    '    "use strict";\n' +
+                    '/* jslint-indent-begin 4 */\n' +
+                    'String();\n' +
+                    '/* jslint-indent-end */\n' +
+                    '}());\n', 'passed.js');
+                // validate no error occurred
+                local.utility2.assert(!local.jslint.errorText, local.jslint.errorText);
                 // test /* jslint-ignore-begin */ ... /* jslint-ignore-end */
                 // handling-behavior
-                local.utility2.jslintAndPrint('/* jslint-ignore-begin */\n' +
+                local.jslint.jslintAndPrint('/* jslint-ignore-begin */\n' +
                     'syntax error\n' +
                     '/* jslint-ignore-end */\n', 'passed.js');
                 // validate no error occurred
-                local.utility2.assert(
-                    !local.utility2.jslint.errorText,
-                    local.utility2.jslint.errorText
+                local.utility2.assert(!local.jslint.errorText, local.jslint.errorText);
+                // test /* jslint-ignore-next-line */ ...
+                // handling-behavior
+                local.jslint.jslintAndPrint('/* jslint-ignore-next-line */\n' +
+                    'syntax error\n', 'passed.js');
+                // validate no error occurred
+                local.utility2.assert(!local.jslint.errorText, local.jslint.errorText);
+                onError();
+            }, onError);
+        };
+
+        local.testCase_jslintAndPrintConditional_default = function (options, onError) {
+        /*
+         * this function will test jslintAndPrintConditional's default handling-behavior
+         */
+            options = [
+                // suppress console.error
+                [console, { error: local.utility2.nop }],
+                [local.jslint, { errorText: '' }],
+                [local.global, { coverage: null }],
+                [local.utility2.envDict, { NODE_ENV: '' }]
+            ];
+            local.utility2.testMock(options, function (onError) {
+                // test no csslint handling-behavior
+                local.utility2.jslintAndPrintConditional('no csslint', 'empty.css');
+                // validate no error occurred
+                local.utility2.assert(!local.jslint.errorText, local.jslint.errorText);
+                // test csslint passed handling-behavior
+                local.utility2.jslintAndPrintConditional(
+                    '/*csslint*/\nbody { font: normal; }',
+                    'passed.css'
                 );
+                // validate no error occurred
+                local.utility2.assert(!local.jslint.errorText, local.jslint.errorText);
+                // test no jslint handling-behavior
+                local.utility2.jslintAndPrintConditional('no jslint', 'empty.js');
+                // validate no error occurred
+                local.utility2.assert(!local.jslint.errorText, local.jslint.errorText);
+                // test jslint passed handling-behavior
+                local.utility2.jslintAndPrintConditional(
+                    '/*jslint node: true*/\nconsole.log("hello");',
+                    'passed.js'
+                );
+                // validate no error occurred
+                local.utility2.assert(!local.jslint.errorText, local.jslint.errorText);
                 onError();
             }, onError);
         };
@@ -1214,9 +1232,9 @@ instruction\n\
             onError();
         };
 
-        local.testCase_taskCallbackAndUpdateCached_default = function (options, onError) {
+        local.testCase_taskOnErrorAddCached_default = function (options, onError) {
         /*
-         * this function will test taskCallbackAndUpdateCached's default handling-behavior
+         * this function will test taskOnErrorAddCached's default handling-behavior
          */
             var cacheValue, modeNext, onNext, onTask, optionsCopy;
             modeNext = 0;
@@ -1230,7 +1248,7 @@ instruction\n\
                             onError(null, cacheValue);
                         };
                         options = {
-                            cacheDict: 'testCase_taskCallbackAndUpdateCached_default',
+                            cacheDict: 'testCase_taskOnErrorAddCached_default',
                             key: 'memory'
                         };
                         // cleanup memory-cache
@@ -1242,7 +1260,7 @@ instruction\n\
                             // test onCacheWrite handling-behavior
                             onCacheWrite: onNext
                         };
-                        local.utility2.taskCallbackAndUpdateCached(optionsCopy, onNext, onTask);
+                        local.utility2.taskOnErrorAddCached(optionsCopy, onNext, onTask);
                         break;
                     case 2:
                         // validate no error occurred
@@ -1266,7 +1284,7 @@ instruction\n\
                             // test onCacheWrite handling-behavior
                             onCacheWrite: onNext
                         };
-                        local.utility2.taskCallbackAndUpdateCached(optionsCopy, onNext, onTask);
+                        local.utility2.taskOnErrorAddCached(optionsCopy, onNext, onTask);
                         break;
                     case 4:
                         // validate no error occurred
@@ -1285,7 +1303,7 @@ instruction\n\
                             cacheDict: options.cacheDict,
                             key: options.key
                         };
-                        local.utility2.taskCallbackAndUpdateCached(optionsCopy, onNext, onTask);
+                        local.utility2.taskOnErrorAddCached(optionsCopy, onNext, onTask);
                         break;
                     case 6:
                         // validate no error occurred
@@ -1305,7 +1323,7 @@ instruction\n\
                             cacheDict: options.cacheDict,
                             key: options.key + 'Error'
                         };
-                        local.utility2.taskCallbackAndUpdateCached(
+                        local.utility2.taskOnErrorAddCached(
                             optionsCopy,
                             onNext,
                             function (onError) {
@@ -1326,15 +1344,15 @@ instruction\n\
             onNext();
         };
 
-        local.testCase_taskUpsert_multipleCallback = function (options, onError) {
+        local.testCase_taskOnTaskUpsert_multipleCallback = function (options, onError) {
         /*
-         * this function will test taskUpsert's multiple-callback handling-behavior
+         * this function will test taskOnTaskUpsert's multiple-callback handling-behavior
          */
-            options = { counter: 0, key: 'testCase_taskUpsert_multiCallback' };
-            local.utility2.taskCallbackAdd(options, function () {
+            options = { counter: 0, key: 'testCase_taskOnTaskUpsert_multiCallback' };
+            local.utility2.taskOnErrorAdd(options, function () {
                 options.counter += 1;
             });
-            local.utility2.taskUpsert(options, function (onError) {
+            local.utility2.taskOnTaskUpsert(options, function (onError) {
                 // test multiple-callback handling-behavior
                 onError();
                 onError();
@@ -1344,14 +1362,14 @@ instruction\n\
             onError();
         };
 
-        local.testCase_taskUpsert_upsert = function (options, onError) {
+        local.testCase_taskOnTaskUpsert_upsert = function (options, onError) {
         /*
-         * this function will test taskUpsert's upsert handling-behavior
+         * this function will test taskOnTaskUpsert's upsert handling-behavior
          */
-            options = { counter: 0, key: 'testCase_taskUpsert_upsert' };
+            options = { counter: 0, key: 'testCase_taskOnTaskUpsert_upsert' };
             // test upsert handling-behavior
             [null, null].forEach(function () {
-                local.utility2.taskUpsert(options, function (onError) {
+                local.utility2.taskOnTaskUpsert(options, function (onError) {
                     options.counter += 1;
                     setTimeout(onError);
                 });
@@ -1762,7 +1780,7 @@ instruction\n\
                     case '.css':
                     case '.js':
                     case '.json':
-                        local.utility2.jslintAndPrintIfNotCoverage(
+                        local.utility2.jslintAndPrintConditional(
                             xhr.responseText,
                             options.file
                         );
@@ -2067,6 +2085,28 @@ local.utility2.assertJsonEqual(options.coverage1,
             onParallel();
         };
 
+        local.testCase_requireExampleJsFromReadme_rollup = function (options, onError) {
+        /*
+         * this function will test requireExampleJsFromReadme's rollup handling-behavior
+         */
+            options = [
+                [local.utility2, { assetsDict: {} }]
+            ];
+            options.module = {
+                exports: { templateIndexHtml: '' },
+                isRollup: true
+            };
+            local.utility2.testMock(options, function (onError) {
+                options.data = local.utility2.requireExampleJsFromReadme(options);
+                // validate data
+                local.utility2.assertJsonEqual(options.data, {
+                    exports: { templateIndexHtml: '' },
+                    isRollup: true
+                });
+                onError();
+            }, onError);
+        };
+
         local.testCase_replStart_default = function (options, onError) {
         /*
          * this function will test replStart's default handling-behavior
@@ -2108,6 +2148,31 @@ local.utility2.assertJsonEqual(options.coverage1,
                 });
                 onError();
             }, onError);
+        };
+
+        local.testCase_replStart_tcp = function (options, onError) {
+        /*
+         * this function will test replStart's tcp handling-behavior
+         */
+            options = {};
+            options.data = '';
+            options.input = Math.random();
+            options.socket = local.net.createConnection(local.utility2.envDict.PORT_REPL);
+            options.socket.on('data', function (data) {
+            /*
+             * this function will concat data to options.data
+             */
+                options.data += data;
+            });
+            options.socket.setEncoding('utf8');
+            options.socket.on('end', function () {
+                local.utility2.tryCatchOnError(function () {
+                    // validate data
+                    local.utility2.assert(options.data.indexOf(options.input) >= 0);
+                    onError();
+                }, onError);
+            });
+            options.socket.end(options.input + '\n');
         };
 
         local.testCase_serverRespondTimeoutDefault_default = function (options, onError) {
@@ -2260,36 +2325,40 @@ local.utility2.assertJsonEqual(options.coverage1,
         local.utility2.replStart();
         /* istanbul ignore next */
         if (module.isRollup) {
-            local.utility2.assetsDict['/assets.app.js'] =
-                local.utility2.assetsDict['/assets.app.min.js'] =
-                local.fs.readFileSync(__filename, 'utf8');
-            local.global.module = module;
             break;
         }
         // init assets
-        local.utility2.assetsDict['/assets.script-only.html'] = '<h1>script-only test</h1>\n' +
-                '<script src="assets.utility2.js"></script>\n' +
-                '<script>window.utility2.onReadyBefore.counter += 1;</script>\n' +
-                '<script src="assets.example.js"></script>\n' +
-                '<script src="assets.test.js"></script>\n' +
-                '<script>window.utility2.onReadyBefore();</script>\n';
         local.utility2.assetsDict['/assets.app.js'] = [
-            '/assets.app.begin.js',
+            'header',
             '/assets.utility2.rollup.js',
             'local.utility2.stateInit',
             '/assets.example.js',
             '/assets.test.js'
         ].map(function (key) {
             switch (key) {
-            case '/assets.app.begin.js':
-                return local.utility2.assetsDict[key];
+/* jslint-ignore-begin */
+case 'header':
+return '\
+/*\n\
+app.js\n\
+\n' + local.utility2.envDict.npm_package_description + '\n\
+\n\
+instruction\n\
+    1. save this script as app.js\n\
+    2. run the shell command:\n\
+        $ PORT=8081 node app.js\n\
+    3. open a browser to http://localhost:8081\n\
+    4. edit or paste script in browser to cover and test\n\
+*/\n\
+';
+/* jslint-ignore-end */
             case 'local.utility2.stateInit':
                 return '// ' + key + '\n' +
                     local.utility2.assetsDict['/assets.utility2.rollup.content.js']
                     .replace(
                         '/* utility2.rollup.js content */',
                         key + '(' + JSON.stringify(
-                            local.utility2.middlewareJsonpStateGet({ stateGet: true })
+                            local.utility2.middlewareJsonpStateInit({ stateInit: true })
                         ) + ');'
                     );
             default:
@@ -2298,36 +2367,35 @@ local.utility2.assertJsonEqual(options.coverage1,
         }).join('\n\n\n\n');
         local.utility2.assetsDict['/assets.app.min.js'] =
             local.utility2.uglifyIfProduction(local.utility2.assetsDict['/assets.app.js']);
+        local.utility2.assetsDict['/assets.script-only.html'] = '<h1>script-only test</h1>\n' +
+                '<script src="assets.utility2.js"></script>\n' +
+                '<script>window.utility2.onReadyBefore.counter += 1;</script>\n' +
+                '<script src="assets.example.js"></script>\n' +
+                '<script src="assets.test.js"></script>\n' +
+                '<script>window.utility2.onReadyBefore();</script>\n';
         /* istanbul ignore next */
         // run the cli
         local.cliRun = function () {
+        /*
+         * this function will run the cli
+         */
             if (module !== require.main) {
                 return;
             }
             if (process.argv[2]) {
-                require(local.path.resolve(process.cwd(), process.argv[2]));
+                // start with coverage
+                if (local.utility2.envDict.npm_config_mode_coverage) {
+                    process.argv.splice(1, 1, __dirname + '/lib.istanbul.js', 'cover');
+                    local.utility2.istanbul.cliRun({ runMain: true });
+                    return;
+                }
+                // start
+                process.argv.splice(1, 1);
+                process.argv[1] = local.path.resolve(process.cwd(), process.argv[1]);
+                local.Module.runMain();
             }
         };
         local.cliRun();
-        // debug dir
-        [
-            __dirname,
-            process.cwd()
-        ].forEach(function (dir) {
-            local.fs.readdirSync(dir).forEach(function (file) {
-                file = dir + '/' + file;
-                // if the file is modified, then restart the process
-                local.utility2.onFileModifiedRestart(file);
-                switch (local.path.extname(file)) {
-                // jslint file
-                case '.css':
-                case '.js':
-                case '.json':
-                    local.utility2.jslintAndPrint(local.fs.readFileSync(file, 'utf8'), file);
-                    break;
-                }
-            });
-        });
         break;
     }
 }());

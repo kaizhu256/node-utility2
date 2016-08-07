@@ -770,7 +770,7 @@ shHtpasswdCreate() {(set -e
 )}
 
 shHttpFileServer() {(set -e
-# this function will run a simple node http-file-server on port $PORT
+# this function will run a simple node http-file-server on http-port $PORT
     node -e "
 // <script>
 /*jslint
@@ -1093,12 +1093,10 @@ shIstanbulCover() {(set -e
 # this function will run the command $@ with istanbul coverage
     if [ ! "$npm_config_mode_coverage" ]
     then
-        "$@"
+        node "$@"
         return $?
     fi
-    COMMAND="$1"
-    shift
-    "$COMMAND" $npm_config_dir_utility2/lib.istanbul.js cover "$@"
+    node $npm_config_dir_utility2/lib.istanbul.js cover "$@"
 )}
 
 shJsonFileNormalize() {(set -e
@@ -1203,7 +1201,7 @@ shNpmTest() {(set -e
     # run npm-test without coverage
     if [ ! "$npm_config_mode_coverage" ]
     then
-        "$@" || EXIT_CODE=$?
+        node "$@" || EXIT_CODE=$?
     # run npm-test with coverage
     else
         # cleanup old coverage
@@ -1213,7 +1211,7 @@ shNpmTest() {(set -e
         # if $EXIT_CODE != 0, then debug covered-test by re-running it uncovered
         if [ "$EXIT_CODE" != 0 ] && [ "$EXIT_CODE" != 130 ]
         then
-            npm_config_mode_coverage="" "$@" || true
+            npm_config_mode_coverage="" node "$@" || true
         fi
     fi
     # create test-report artifacts
@@ -1349,6 +1347,32 @@ console.log(require('fs').readFileSync('$FILE', 'utf8').trimLeft());
     cp "/tmp/app/node_modules/$npm_package_name/tmp/build/"screen-capture.*.png \
         "$npm_config_dir_build" 2>/dev/null || true
     return "$EXIT_CODE"
+)}
+
+shReplClient() {(set -e
+# https://gist.github.com/TooTallNate/2209310
+# this function will connect the repl-client to tcp-port $1
+    node -e "
+// <script>
+/*jslint
+    bitwise: true,
+    browser: true,
+    maxerr: 8,
+    maxlen: 96,
+    node: true,
+    nomen: true,
+    regexp: true,
+    stupid: true
+*/
+'use strict';
+var socket;
+console.log('node repl-client connecting to tcp-port ' + process.argv[1]);
+socket = require('net').connect(process.argv[1]);
+process.stdin.pipe(socket);
+socket.pipe(process.stdout);
+socket.on('end', process.exit);
+// </script>
+    " $1
 )}
 
 shReturn1() {(set -e

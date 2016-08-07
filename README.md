@@ -13,16 +13,17 @@ this package will run dynamic browser tests with coverage (via istanbul and elec
 # documentation
 #### todo
 - replace jwt salt with proper nonce
-- add test for build-app
 - merge github-crud into this package
-- add socket-io to repl-server
 - add utility2.middlewareLimit
 - add server stress test using electron
 - none
 
-#### change since 8c95e8d0
-- npm publish 2016.7.2
-- fix code-coverage in example.js
+#### change since 016d92f2
+- npm publish 2016.7.3
+- deploy standalone-app to heroku
+- allow repl-server to be accessed remotely via tcp
+- add coverage option to command 'utility2 start'
+- rename functions in jslint, stateInit, tasks
 - none
 
 #### this package requires
@@ -163,7 +164,7 @@ instruction
             }
         }());
         /* istanbul ignore next */
-        // init local
+        // re-init local
         local = local.modeJs === 'browser'
             ? window.utility2.local
             : module.isRollup
@@ -428,7 +429,6 @@ textarea {\n\
     <div class="istanbulCoverageDiv"></div>\n\
     {{#if isRollup}}\n\
     <script src="assets.app.min.js"></script>\n\
-    <script src="jsonp.utility2.stateGet?callback=window.utility2.stateInit"></script>\n\
     {{#unless isRollup}}\n\
     <script src="assets.utility2.lib.istanbul.js"></script>\n\
     <script src="assets.utility2.lib.jslint.js"></script>\n\
@@ -436,17 +436,11 @@ textarea {\n\
     <script src="assets.utility2.lib.sjcl.js"></script>\n\
     <script src="assets.utility2.lib.uglifyjs.js"></script>\n\
     <script src="assets.utility2.js"></script>\n\
-    <script src="jsonp.utility2.stateGet?callback=window.utility2.stateInit"></script>\n\
-<script>\n\
-/*jslint browser: true*/\n\
-window.utility2.onReadyBefore.counter += 1;\n\
-</script>\n\
+    <script src="jsonp.utility2.stateInit?callback=window.utility2.stateInit"></script>\n\
+    <script >window.utility2.onReadyBefore.counter += 1;</script>\n\
     <script src="assets.example.js"></script>\n\
     <script src="assets.test.js"></script>\n\
-<script>\n\
-/*jslint browser: true*/\n\
-window.utility2.onReadyBefore();\n\
-</script>\n\
+    <script >window.utility2.onReadyBefore();</script>\n\
     {{/if isRollup}}\n\
 </body>\n\
 </html>\n\
@@ -524,19 +518,30 @@ shRunScreenCapture shReadmeTestJs example.js",
 export PORT=${PORT:-8080} && \
 if [ -f assets.app.js ]; then node assets.app.js; return; fi && \
 export npm_config_mode_auto_restart=1 && \
-./index.sh shRun shIstanbulCover node test.js",
+./index.sh shRun shIstanbulCover test.js",
+        "start-example": "\
+./index.sh shRun && \
+cp tmp/README.example.js example.js && \
+export PORT=8081 && \
+node example.js \
+",
         "start-heroku": "\
 export npm_config_mode_backend=1 && \
-npm start \
+node assets.app.js \
+",
+        "start-standalone": "\
+npm run build-app && \
+node tmp/build/app/assets.app.js \
 ",
         "test": "\
 export PORT=$(./index.sh shServerPortRandom) && \
+export PORT_REPL=$(./index.sh shServerPortRandom) && \
 export npm_config_mode_auto_restart=1 && \
-./index.sh test node test.js",
+./index.sh test test.js",
         "test-all": "npm test --mode-coverage=all",
         "test-published": "./index.sh shRun shNpmTestPublished"
     },
-    "version": "2016.7.2"
+    "version": "2016.7.3"
 }
 ```
 

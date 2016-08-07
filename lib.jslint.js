@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 /* istanbul instrument in package all */
+/* istanbul instrument in package jslint-lite */
 /*jslint
     bitwise: true,
     browser: true,
@@ -34,6 +35,7 @@
                     'node';
             }
         }());
+        local.local = local.jslint = local;
     }());
 
 
@@ -633,12 +635,13 @@ local.CSSLint = CSSLint; local.JSLINT = JSLINT; }());
          * this function will jslint / csslint the script and print any errors to stderr
          */
             var ignoreDict, lineno, scriptParsed;
-            if (!script.length || (/^\/\* jslint-ignore-all \*\/$/m).test(script)) {
-                return script;
-            }
             // cleanup errors
             local.errorCounter = 0;
             local.errorText = '';
+            // do nothing for empty script
+            if (!script.length) {
+                return script;
+            }
             // init ignoreDict
             ignoreDict = {};
             // init lineno
@@ -759,22 +762,18 @@ local.CSSLint = CSSLint; local.JSLINT = JSLINT; }());
     // run node js-env code - post-init
     case 'node':
         // export jslint
-        module.exports = module['./lib.jslint.js'] = local;
+        module.exports = module['./lib.jslint.js'] = module.jslint = local;
         module.exports.__dirname = __dirname;
         // require modules
         local.fs = require('fs');
         local.path = require('path');
-        /* istanbul ignore next */
-        if (module.isRollup) {
-            break;
-        }
         /* istanbul ignore next */
         // run the cli
         local.cliRun = function () {
         /*
          * this function will run the cli
          */
-            if (module !== require.main) {
+            if (module !== require.main || module.isRollup) {
                 return;
             }
             // jslint files

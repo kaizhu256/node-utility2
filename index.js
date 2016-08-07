@@ -55,7 +55,7 @@
             assetsDict: {},
             cacheDict: {},
             local: local,
-            taskUpsertDict: {}
+            taskOnTaskDict: {}
         };
         local.utility2.nop = function () {
         /*
@@ -1307,7 +1307,7 @@ local.utility2.templateTestReportHtml = '\
                         '<script>window.local = {}; (' + local.utility2.browserTest
                             .toString()
                             .replace((/<\//g), '<\\/')
-                            // coverage-hack - uncover
+                            // coverage-hack - un-instrument
                             .replace((/\b__cov_.*?\+\+/g), '0') +
                         '(' + JSON.stringify(options) + '))</script>');
                     console.log('\nbrowserTest - created electron entry-page ' +
@@ -1949,15 +1949,33 @@ local.utility2.templateTestReportHtml = '\
         local.utility2.jslintAndPrint = (local.utility2.jslint &&
             local.utility2.jslint.jslintAndPrint) || local.utility2.echo;
 
-        local.utility2.jslintAndPrintIfNotCoverage = function (script, file) {
+        local.utility2.jslintAndPrintConditional = function (script, file) {
         /*
-         * this function will jslint the script if there is no coverage
+         * this function will jslint / csslint the script and print any errors to stderr,
+         * conditionally
          */
-            return (local.utility2.envDict.NODE_ENV === 'production' ||
-                    local.global.__coverage__) &&
-                    file.slice(-3) === '.js'
-                ? script
-                : local.utility2.jslintAndPrint(script, file);
+            var extname;
+            // cleanup errors
+            local.utility2.jslint.errorCounter = 0;
+            local.utility2.jslint.errorText = '';
+            extname = (/\.\w+$/).exec(file);
+            extname = extname && extname[0];
+            switch (extname) {
+            case '.css':
+                if (script.indexOf('/*csslint') < 0) {
+                    return script;
+                }
+                break;
+            /* istanbul ignore next */
+            case '.js':
+                if (local.utility2.envDict.NODE_ENV === 'production' ||
+                        local.global.__coverage__ ||
+                        script.indexOf('/*jslint') < 0) {
+                    return script;
+                }
+                break;
+            }
+            return local.utility2.jslintAndPrint(script, file);
         };
 
         local.utility2.jslintAndPrintHtml = function (script, file) {
@@ -2133,7 +2151,7 @@ local.utility2.templateTestReportHtml = '\
                         return;
                     }
                     // gzip and cache result
-                    local.utility2.taskCallbackAndUpdateCached({
+                    local.utility2.taskOnErrorAddCached({
                         cacheDict: 'middlewareAssetsCachedGzip',
                         key: request.urlParsed.pathname
                     }, onNext, function (onError) {
@@ -2240,7 +2258,7 @@ local.utility2.templateTestReportHtml = '\
                 // replace trailing '/' with '/index.html'
                 .replace((/\/$/), '/index.html');
             // serve file from cache
-            local.utility2.taskCallbackAndUpdateCached({
+            local.utility2.taskOnErrorAddCached({
                 cacheDict: 'middlewareFileServer',
                 key: request.urlFile
             }, function (error, data) {
@@ -2341,34 +2359,25 @@ local.utility2.templateTestReportHtml = '\
             nextMiddleware();
         };
 
-        local.utility2.middlewareJsonpStateGet = function (request, response, nextMiddleware) {
+        local.utility2.middlewareJsonpStateInit = function (request, response, nextMiddleware) {
         /*
          * this function will run the middleware that will
          * serve the browser-state wrapped in the given request.jsonp-callback
          */
-            var isRequest, state;
-            isRequest = request.urlParsed &&
-                request.urlParsed.pathname === '/jsonp.utility2.stateGet';
-            state = { utility2: { envDict: {} } };
-            if (request.stateGet || isRequest) {
-                [
-                    'npm_package_description',
-                    'npm_package_homepage',
-                    'npm_package_name',
-                    'npm_package_version'
-                ].forEach(function (key) {
-                    state.utility2.envDict[key] = local.utility2.envDict[key];
-                });
-                if (request.stateGet) {
+            var state;
+            if (request.stateInit || (request.urlParsed &&
+                    request.urlParsed.pathname === '/jsonp.utility2.stateInit')) {
+                state = { utility2: { envDict: {
+                    NODE_ENV: local.utility2.envDict.NODE_ENV,
+                    npm_config_mode_backend: local.utility2.envDict.npm_config_mode_backend,
+                    npm_package_description: local.utility2.envDict.npm_package_description,
+                    npm_package_homepage: local.utility2.envDict.npm_package_homepage,
+                    npm_package_name: local.utility2.envDict.npm_package_name,
+                    npm_package_version: local.utility2.envDict.npm_package_version
+                } } };
+                if (request.stateInit) {
                     return state;
                 }
-            }
-            if (isRequest) {
-                [
-                    'npm_config_mode_backend'
-                ].forEach(function (key) {
-                    state.utility2.envDict[key] = local.utility2.envDict[key];
-                });
                 response.end(request.urlParsed.query.callback + '(' + JSON.stringify(state) +
                     ');');
                 return;
@@ -2649,28 +2658,29 @@ local.utility2.templateTestReportHtml = '\
         /*
          * this function will start the repl debugger
          */
+            var self;
             /*jslint evil: true*/
             if (local.utility2.replServer) {
                 return;
             }
-            // start repl server
-            local.utility2.replServer = require('repl').start({ useGlobal: true });
-            local.utility2.replServer.onError = function (error) {
+            // start replServer
+            self = local.utility2.replServer = local.repl.start({ useGlobal: true });
+            self.onError = function (error) {
             /*
              * this function will debug any repl-error
              */
                 local.utility2._debugReplError = error || local.utility2._debugReplError;
             };
-            local.utility2.replServer._domain.on('error', local.utility2.replServer.onError);
+            self._domain.on('error', self.onError);
             // save repl eval function
-            local.utility2.replServer.evalDefault = local.utility2.replServer.eval;
+            self.evalDefault = self.eval;
             // hook custom repl eval function
-            local.utility2.replServer.eval = function (script, context, file, onError) {
+            self.eval = function (script, context, file, onError) {
                 var match, onError2;
                 match = (/^(\S+)(.*?)\n/).exec(script);
                 onError2 = function (error, data) {
                     // debug error
-                    local.utility2.replServer.onError(error);
+                    self.onError(error);
                     onError(error, data);
                 };
                 switch (match && match[1]) {
@@ -2695,7 +2705,7 @@ local.utility2.templateTestReportHtml = '\
                         // on shell exit, print return prompt
                         .on('exit', function (exitCode) {
                             console.log('exit-code ' + exitCode);
-                            local.utility2.replServer.evalDefault(
+                            self.evalDefault(
                                 '\n',
                                 context,
                                 file,
@@ -2732,7 +2742,7 @@ local.utility2.templateTestReportHtml = '\
                         // on shell exit, print return prompt
                         .on('exit', function (exitCode) {
                             console.log('exit-code ' + exitCode);
-                            local.utility2.replServer.evalDefault(
+                            self.evalDefault(
                                 '\n',
                                 context,
                                 file,
@@ -2754,9 +2764,45 @@ local.utility2.templateTestReportHtml = '\
                 }
                 // try to eval the script
                 local.utility2.tryCatchOnError(function () {
-                    local.utility2.replServer.evalDefault(script, context, file, onError2);
+                    self.evalDefault(script, context, file, onError2);
                 }, onError2);
             };
+            self.socket = {
+                end: local.utility2.nop,
+                on: local.utility2.nop,
+                write: local.utility2.nop
+            };
+            self.socketInit = function (socket) {
+                // cleanup previous socket
+                self.socket.end();
+                // init socket
+                self.socket = socket;
+                self.socket.on('data', function (chunk) {
+                    process.stdin.push(chunk);
+                });
+                self.socket.setKeepAlive(true);
+            };
+            // init process.stdout
+            process.stdout._write2 = process.stdout._write2 || process.stdout._write;
+            process.stdout._write = function (chunk, encoding, callback) {
+                process.stdout._write2(chunk, encoding, callback);
+                if (self.socket.readable) {
+                    self.socket.write(chunk, encoding);
+                }
+            };
+            // start tcp-server
+            self.serverTcp = local.net.createServer(self.socketInit);
+            [
+                // coverage-hack - test no tcp-server handling-behavior
+                null,
+                local.utility2.envDict.PORT_REPL
+            ].forEach(function (port) {
+                if (!port) {
+                    return;
+                }
+                console.log('repl-server listening on tcp-port ' + port);
+                self.serverTcp.listen(port);
+            });
         };
 
         local.utility2.requestResponseCleanup = function (request, response) {
@@ -2781,10 +2827,19 @@ local.utility2.templateTestReportHtml = '\
          * this function will require and export example.js embedded in README.md
          */
             var file, module, script;
-            file = options.__dirname + '/example.js';
-            if (local.require2.cache[file]) {
-                return local.require2.cache[file];
+            if (options.module.isRollup) {
+                // init assets
+                local.utility2.assetsDict['/'] = local.utility2.assetsDict['/index.html'] =
+                    local.utility2.templateRender(options.module.exports.templateIndexHtml, {
+                        envDict: local.utility2.envDict,
+                        isRollup: true
+                    });
+                local.utility2.assetsDict['/assets.app.js'] =
+                    local.utility2.assetsDict['/assets.app.min.js'] =
+                    local.fs.readFileSync(__filename, 'utf8');
+                return options.module;
             }
+            file = options.__dirname + '/example.js';
             // read script from README.md
             local.fs.readFileSync(options.__dirname + '/README.md', 'utf8')
                 .replace(
@@ -2807,25 +2862,53 @@ local.utility2.templateTestReportHtml = '\
             script = local.utility2.istanbulInstrumentInPackage(script, file);
             // init module
             module = local.require2.cache[file] = new local.Module(file);
-            module.moduleExports = options.moduleExports;
+            module.moduleExports = require(options.moduleExports);
             // load script into module
             module._compile(script, file);
-            // init utility2
+            // init exports
             module.exports.utility2 = local.utility2;
+            module.exports[options.moduleName] = module.moduleExports;
             // init assets
             local.utility2.assetsDict['/assets.example.js'] = script;
-            local.utility2.assetsDict['/assets.test.js'] =
-                local.utility2.istanbulInstrumentInPackage(
-                    local.fs.readFileSync(process.cwd() + '/test.js', 'utf8'),
-                    process.cwd() + '/test.js'
-                );
+            local.utility2.assetsDict['/assets.test.js'] = '';
+            local.utility2.tryCatchOnError(function () {
+                local.utility2.assetsDict['/assets.test.js'] =
+                    local.utility2.istanbulInstrumentInPackage(
+                        local.fs.readFileSync(process.cwd() + '/test.js', 'utf8'),
+                        process.cwd() + '/test.js'
+                    );
+            }, local.utility2.nop);
             local.utility2.assetsDict['/'] = local.utility2.assetsDict['/index.html'] =
-                local.utility2.templateRender(module.exports.templateIndexHtml, {
-                    envDict: local.utility2.envDict,
-                    isRollup: module.isRollup ||
-                        local.utility2.envDict.NODE_ENV === 'production'
+                local.utility2.jslintAndPrintHtml(
+                    local.utility2.templateRender(module.exports.templateIndexHtml, {
+                        envDict: local.utility2.envDict,
+                        isRollup: module.isRollup ||
+                            local.utility2.envDict.NODE_ENV === 'production'
+                    })
+                );
+            // debug dir
+            [
+                __dirname,
+                process.cwd()
+            ].forEach(function (dir) {
+                local.fs.readdirSync(dir).forEach(function (file) {
+                    file = dir + '/' + file;
+                    // if the file is modified, then restart the process
+                    local.utility2.onFileModifiedRestart(file);
+                    switch (local.path.extname(file)) {
+                    case '.css':
+                    case '.js':
+                    case '.json':
+                        // jslint file
+                        local.utility2.jslintAndPrintConditional(
+                            local.fs.readFileSync(file, 'utf8'),
+                            file
+                        );
+                        break;
+                    }
                 });
-            return module;
+            });
+            return module.exports;
         };
 
         local.utility2.serverRespondDefault = function (request, response, statusCode, error) {
@@ -3060,29 +3143,33 @@ local.utility2.templateTestReportHtml = '\
             return local.utility2.bufferToString(local.utility2.bufferCreate(text), 'base64');
         };
 
-        local.utility2.taskCallbackAdd = function (options, onError) {
+        local.utility2.taskOnErrorAdd = function (options, onError) {
         /*
          * this function will add the callback onError to the task named options.key
          */
             var task;
             onError = local.utility2.onErrorWithStack(onError);
             // init task
-            task = local.utility2.taskUpsertDict[options.key] =
-                local.utility2.taskUpsertDict[options.key] || { callbackList: [] };
+            task = local.utility2.taskOnTaskDict[options.key] =
+                local.utility2.taskOnTaskDict[options.key] || { onErrorList: [] };
             // add callback onError to the task
-            task.callbackList.push(onError);
+            task.onErrorList.push(onError);
         };
 
-        local.utility2.taskCallbackAndUpdateCached = function (options, onError, onTask) {
+        local.utility2.taskOnErrorAddCached = function (options, onError, onTask) {
         /*
-         * this function will run the callback onError from cache,
-         * and auto-update the cache with background-task onTask
+         * this function will
+         * 1. if cache-hit, then call onError with cacheValue
+         * 2. run onTask in background
+         * 3. save onTask's result to cache
+         * 4. if cache-miss, then call onError with onTask's result
          */
             var modeNext, onNext;
             modeNext = 0;
             onNext = function (error, data) {
                 modeNext += 1;
                 switch (modeNext) {
+                //  1. if cache-hit, then call onError with cacheValue
                 case 1:
                     onError = local.utility2.onErrorWithStack(onError);
                     // read cacheValue from memory-cache
@@ -3091,8 +3178,8 @@ local.utility2.templateTestReportHtml = '\
                     options.cacheValue =
                         local.utility2.cacheDict[options.cacheDict][options.key];
                     if (options.cacheValue) {
+                        // call onError with cacheValue
                         options.modeCacheHit = true;
-                        // run callback onError with cacheValue
                         onError(null, JSON.parse(options.cacheValue));
                         if (!options.modeCacheUpdate) {
                             break;
@@ -3101,21 +3188,20 @@ local.utility2.templateTestReportHtml = '\
                     // run background-task with lower priority for cache-hit
                     setTimeout(onNext, options.modeCacheHit && options.cacheTtl);
                     break;
+                // 2. run onTask in background
                 case 2:
-                    // handle next cache-hit
-                    local.utility2.taskCallbackAdd(options, onNext);
-                    // run background-task to update cache
-                    local.utility2.taskUpsert(options, onTask);
+                    local.utility2.taskOnErrorAdd(options, onNext);
+                    local.utility2.taskOnTaskUpsert(options, onTask);
                     break;
                 case 3:
+                    // 3. save onTask's result to cache
                     // JSON.stringify data to prevent side-effects on cache
                     options.cacheValue = JSON.stringify(data);
                     if (!error && options.cacheValue) {
-                        // save cacheValue to memory-cache
                         local.utility2.cacheDict[options.cacheDict][options.key] =
                             options.cacheValue;
                     }
-                    // if cache-miss, then run callback onError with cacheValue
+                    // 4. if cache-miss, then call onError with onTask's result
                     if (!options.modeCacheHit) {
                         onError(error, options.cacheValue && JSON.parse(options.cacheValue));
                     }
@@ -3126,14 +3212,14 @@ local.utility2.templateTestReportHtml = '\
             onNext();
         };
 
-        local.utility2.taskUpsert = function (options, onTask) {
+        local.utility2.taskOnTaskUpsert = function (options, onTask) {
         /*
-         * this function will upsert the task named options.key
+         * this function will upsert the task onTask named options.key
          */
             var task;
             // init task
-            task = local.utility2.taskUpsertDict[options.key] =
-                local.utility2.taskUpsertDict[options.key] || { callbackList: [] };
+            task = local.utility2.taskOnTaskDict[options.key] =
+                local.utility2.taskOnTaskDict[options.key] || { onErrorList: [] };
             // if task is defined, then return
             if (task.onTask) {
                 return task;
@@ -3147,7 +3233,7 @@ local.utility2.templateTestReportHtml = '\
                 // cleanup timerTimeout
                 clearTimeout(task.timerTimeout);
                 // cleanup task
-                delete local.utility2.taskUpsertDict[options.key];
+                delete local.utility2.taskOnTaskDict[options.key];
                 // preserve error.message and error.stack
                 task.result = JSON.stringify(Array.prototype.slice.call(arguments)
                     .map(function (element) {
@@ -3162,8 +3248,8 @@ local.utility2.templateTestReportHtml = '\
                         }
                         return element;
                     }));
-                // pass result to callbacks in callbackList
-                task.callbackList.forEach(function (onError) {
+                // pass result to callbacks in onErrorList
+                task.onErrorList.forEach(function (onError) {
                     onError.apply(null, JSON.parse(task.result));
                 });
             };
@@ -3171,7 +3257,7 @@ local.utility2.templateTestReportHtml = '\
             task.timerTimeout = local.utility2.onTimeout(
                 task.onDone,
                 options.timeout || local.utility2.timeoutDefault,
-                'taskUpsert ' + options.key
+                'taskOnTaskUpsert ' + options.key
             );
             task.onTask = onTask;
             // run onTask
@@ -3727,7 +3813,7 @@ local.utility2.templateTestReportHtml = '\
                 middleware: local.utility2.middlewareGroupCreate([
                     local.utility2.middlewareInit,
                     local.utility2.middlewareAssetsCached,
-                    local.utility2.middlewareJsonpStateGet
+                    local.utility2.middlewareJsonpStateInit
                 ]),
                 middlewareError: local.utility2.middlewareError
             });
@@ -3741,7 +3827,7 @@ local.utility2.templateTestReportHtml = '\
             // 2. start server on local.utility2.envDict.PORT
             local.utility2.envDict.PORT = local.utility2.envDict.PORT || '8081';
             local.utility2.serverLocalRequestHandler = requestHandler;
-            console.log('server starting on port ' + local.utility2.envDict.PORT);
+            console.log('server listening on http-port ' + local.utility2.envDict.PORT);
             local.utility2.onReadyBefore.counter += 1;
             server.listen(local.utility2.envDict.PORT, local.utility2.onReadyBefore);
             // 3. run tests
@@ -4001,7 +4087,7 @@ local.utility2.templateTestReportHtml = '\
         /*
          * this function will call onError when onReadyBefore.counter === 0
          */
-            local.utility2.taskCallbackAdd({ key: 'utility2.onReadyAfter' }, onError);
+            local.utility2.taskOnErrorAdd({ key: 'utility2.onReadyAfter' }, onError);
             local.utility2.onReadyBefore.counter += 1;
             local.utility2.onResetAfter(local.utility2.onReadyBefore);
             return onError;
@@ -4011,11 +4097,13 @@ local.utility2.templateTestReportHtml = '\
         /*
          * this function will keep track of onReadyBefore.counter
          */
-            local.utility2.taskCallbackAdd({ key: 'utility2.onReadyAfter' }, function (error) {
+            local.utility2.taskOnErrorAdd({ key: 'utility2.onReadyAfter' }, function (error) {
                 // validate no error occurred
                 local.utility2.assert(!error, error);
             });
-            local.utility2.taskUpsert({ key: 'utility2.onReadyAfter' }, function (onError) {
+            local.utility2.taskOnTaskUpsert({
+                key: 'utility2.onReadyAfter'
+            }, function (onError) {
                 onError(error);
             });
         });
@@ -4024,7 +4112,7 @@ local.utility2.templateTestReportHtml = '\
         /*
          * this function will call onError when onResetBefore.counter === 0
          */
-            local.utility2.taskCallbackAdd({ key: 'utility2.onResetAfter' }, onError);
+            local.utility2.taskOnErrorAdd({ key: 'utility2.onResetAfter' }, onError);
             local.utility2.onResetBefore.counter += 1;
             setTimeout(local.utility2.onResetBefore);
             return onError;
@@ -4034,11 +4122,13 @@ local.utility2.templateTestReportHtml = '\
         /*
          * this function will keep track of onResetBefore.counter
          */
-            local.utility2.taskCallbackAdd({ key: 'utility2.onResetAfter' }, function (error) {
+            local.utility2.taskOnErrorAdd({ key: 'utility2.onResetAfter' }, function (error) {
                 // validate no error occurred
                 local.utility2.assert(!error, error);
             });
-            local.utility2.taskUpsert({ key: 'utility2.onResetAfter' }, function (onError) {
+            local.utility2.taskOnTaskUpsert({
+                key: 'utility2.onResetAfter'
+            }, function (onError) {
                 onError(error);
             });
         });
@@ -4081,7 +4171,10 @@ local.utility2.templateTestReportHtml = '\
         local.fs = require('fs');
         local.http = require('http');
         local.https = require('https');
+        local.net = require('net');
         local.path = require('path');
+        local.repl = require('repl');
+        local.stream = require('stream');
         local.url = require('url');
         local.vm = require('vm');
         local.zlib = require('zlib');
@@ -4134,7 +4227,11 @@ local.utility2.templateTestReportHtml = '\
                 local.utility2.assetsDict['/assets.utility2.' + key] =
                     local.utility2.istanbulInstrumentInPackage(
                         local.fs.readFileSync(__dirname + '/' + key, 'utf8')
-                            .replace((/^#!/), '//'),
+                            .replace((/^#!/), '//')
+                            .replace(
+                                (/(\bistanbul instrument in package .*-lite\b)/),
+                                '!$1'
+                            ),
                         __dirname + '/' + key
                     );
                 break;
