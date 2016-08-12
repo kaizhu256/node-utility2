@@ -17,8 +17,8 @@ env:
 language:
     - node_js
 node_js:
-    # - "4"
-    - "node"
+    # - 4
+    - node
 script:
     - npm run build-ci
 services:

@@ -50,15 +50,13 @@
                 moduleName: 'utility2'
             });
             /* istanbul ignore next */
-            if (module.isRollup || process.cwd() !== __dirname) {
-                if (module.isRollup) {
-                    local = module;
-                }
+            if (module.isRollup) {
+                local = module;
                 break;
             }
             // coverage-hack - cover istanbul
-            delete require.cache[__dirname + '/lib.istanbul.js'];
-            local.utility2.istanbul2 = require('./lib.istanbul.js');
+            require.cache[__dirname + '/lib.istanbul.js'] = null;
+            local.utility2.istanbul2 = require(__dirname + '/lib.istanbul.js');
             local.utility2.istanbul.coverageReportCreate =
                 local.utility2.istanbulCoverageReportCreate =
                 local.utility2.istanbul2.coverageReportCreate;
@@ -68,7 +66,8 @@
             local.utility2.istanbul2.codeDict = local.utility2.istanbul.codeDict;
             break;
         }
-        // init jslint
+        // require modules
+        local.istanbul = local.utility2.istanbul;
         local.jslint = local.utility2.jslint;
     }());
 
@@ -618,7 +617,7 @@
             ], function (onError) {
                 /*jslint evil: true*/
                 // test no coverage handling-behavior
-                local.utility2.istanbulCoverageReportCreate({});
+                local.istanbul.coverageReportCreate({});
                 options = {};
                 options.coverage = local.global.__coverage__mock = {};
                 // cleanup old coverage
@@ -629,7 +628,7 @@
                 ['/', local.utility2.__dirname].forEach(function (dir) {
                     ['aa.js', 'aa/bb.js'].forEach(function (path) {
                         // cover path
-                        eval(local.utility2.istanbulInstrumentSync(
+                        eval(local.istanbul.instrumentSync(
                             // test skip handling-behavior
                             'null',
                             dir + '/' + path,
@@ -638,7 +637,7 @@
                     });
                 });
                 // create report with covered path
-                local.utility2.istanbulCoverageReportCreate(options);
+                local.istanbul.coverageReportCreate(options);
                 // test file-content handling-behavior
                 [
                     // test no content handling-behavior
@@ -653,13 +652,13 @@
                     options = {};
                     options.coverage = local.global.__coverage__mock = {};
                     // cover path
-                    eval(local.utility2.istanbulInstrumentSync(
+                    eval(local.istanbul.instrumentSync(
                         content,
                         'aa.js',
                         '__coverage__mock'
                     ));
                     // create report with covered content
-                    local.utility2.istanbulCoverageReportCreate(options);
+                    local.istanbul.coverageReportCreate(options);
                 });
                 onError();
             }, onError);
@@ -670,7 +669,7 @@
          * this function will test istanbulInstrumentSync's default handling-behavior
          */
             options = {};
-            options.data = local.utility2.istanbulInstrumentSync('1', 'test.js');
+            options.data = local.istanbul.instrumentSync('1', 'test.js');
             // validate data
             local.utility2.assert(options.data.indexOf('.s[\'1\']++;1;\n') >= 0, options);
             onError();
@@ -710,16 +709,6 @@
                 local.jslint.jslintAndPrint('{}', 'passed.js');
                 // validate no error occurred
                 local.utility2.assert(!local.jslint.errorText, local.jslint.errorText);
-                // test /* jslint-indent-begin */ ... /* jslint-indent-end */
-                // handling-behavior
-                local.jslint.jslintAndPrint('(function () {\n' +
-                    '    "use strict";\n' +
-                    '/* jslint-indent-begin 4 */\n' +
-                    'String();\n' +
-                    '/* jslint-indent-end */\n' +
-                    '}());\n', 'passed.js');
-                // validate no error occurred
-                local.utility2.assert(!local.jslint.errorText, local.jslint.errorText);
                 // test /* jslint-ignore-begin */ ... /* jslint-ignore-end */
                 // handling-behavior
                 local.jslint.jslintAndPrint('/* jslint-ignore-begin */\n' +
@@ -733,6 +722,16 @@
                     'syntax error\n', 'passed.js');
                 // validate no error occurred
                 local.utility2.assert(!local.jslint.errorText, local.jslint.errorText);
+                // test /* jslint-indent-begin */ ... /* jslint-indent-end */
+                // handling-behavior
+                local.jslint.jslintAndPrint('(function () {\n' +
+                    '    "use strict";\n' +
+                    '/* jslint-indent-begin 4 */\n' +
+                    'String();\n' +
+                    '/* jslint-indent-end */\n' +
+                    '}());\n', 'passed.js');
+                // validate no error occurred
+                local.utility2.assert(!local.jslint.errorText, local.jslint.errorText);
                 onError();
             }, onError);
         };
@@ -744,9 +743,7 @@
             options = [
                 // suppress console.error
                 [console, { error: local.utility2.nop }],
-                [local.jslint, { errorText: '' }],
-                [local.global, { coverage: null }],
-                [local.utility2.envDict, { NODE_ENV: '' }]
+                [local.jslint, { errorText: '' }]
             ];
             local.utility2.testMock(options, function (onError) {
                 // test no csslint handling-behavior
@@ -1353,8 +1350,8 @@
                 options.counter += 1;
             });
             local.utility2.taskOnTaskUpsert(options, function (onError) {
-                // test multiple-callback handling-behavior
                 onError();
+                // test multiple-callback handling-behavior
                 onError();
             });
             // validate counter incremented once
@@ -2112,8 +2109,8 @@ local.utility2.assertJsonEqual(options.coverage1,
          * this function will test replStart's default handling-behavior
          */
             /*jslint evil: true*/
-            // coverage-hack - test replStart's muliple-call handling-behavior
             local.utility2.replStart();
+            // coverage-hack - test replStart's muliple-call handling-behavior
             local.utility2.replStart();
             options = [
                 [local.utility2, { processSpawnWithTimeout: function () {
@@ -2168,10 +2165,15 @@ local.utility2.assertJsonEqual(options.coverage1,
             options.socket.on('end', function () {
                 local.utility2.tryCatchOnError(function () {
                     // validate data
-                    local.utility2.assert(options.data.indexOf(options.input) >= 0);
+                    local.utility2.assert(
+                        options.data.indexOf(options.input) >= 0,
+                        JSON.stringify([options.data, options.input])
+                    );
                     onError();
                 }, onError);
             });
+            options.socket.write(options.input + '\n');
+            // test error-handling behavior
             options.socket.end(options.input + '\n');
         };
 
@@ -2319,12 +2321,13 @@ local.utility2.assertJsonEqual(options.coverage1,
 
 
 
+    /* istanbul ignore next */
     // run node js-env code - post-init
     case 'node':
         // init repl debugger
         local.utility2.replStart();
-        /* istanbul ignore next */
-        if (module.isRollup) {
+        // run the cli
+        if (module !== require.main || module.isRollup) {
             break;
         }
         // init assets
@@ -2373,29 +2376,18 @@ instruction\n\
                 '<script src="assets.example.js"></script>\n' +
                 '<script src="assets.test.js"></script>\n' +
                 '<script>window.utility2.onReadyBefore();</script>\n';
-        /* istanbul ignore next */
-        // run the cli
-        local.cliRun = function () {
-        /*
-         * this function will run the cli
-         */
-            if (module !== require.main) {
+        if (process.argv[2]) {
+            // start with coverage
+            if (local.utility2.envDict.npm_config_mode_coverage) {
+                process.argv.splice(1, 1, __dirname + '/lib.istanbul.js', 'cover');
+                local.utility2.istanbul.cliRun({ runMain: true });
                 return;
             }
-            if (process.argv[2]) {
-                // start with coverage
-                if (local.utility2.envDict.npm_config_mode_coverage) {
-                    process.argv.splice(1, 1, __dirname + '/lib.istanbul.js', 'cover');
-                    local.utility2.istanbul.cliRun({ runMain: true });
-                    return;
-                }
-                // start
-                process.argv.splice(1, 1);
-                process.argv[1] = local.path.resolve(process.cwd(), process.argv[1]);
-                local.Module.runMain();
-            }
-        };
-        local.cliRun();
+            // start
+            process.argv.splice(1, 1);
+            process.argv[1] = local.path.resolve(process.cwd(), process.argv[1]);
+            local.Module.runMain();
+        }
         break;
     }
 }());

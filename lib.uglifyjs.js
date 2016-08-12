@@ -277,47 +277,34 @@ f){}}else n[1]=n[1].substr(0,2);return i?i.call(n,n):null}throw u}}}(),DOT_CALL_
         // require modules
         local.fs = require('fs');
         local.path = require('path');
-        if (module.isRollup) {
+        // run the cli
+        if (module !== require.main || module.isRollup) {
             break;
         }
-        // run the cli
-        local.cliRun = function () {
-        /*
-         * this function will run the cli
-         */
-            var chunkList, onError;
-            if (module !== require.main) {
-                return;
-            }
-            if ((/^(?:http|https):\/\//).test(process.argv[2])) {
-                // uglify url
-                onError = function (error) {
-                    throw error;
-                };
-                require('https').request(require('url').parse(
-                    process.argv[2]
-                ), function (response) {
-                    chunkList = [];
-                    response
-                        .on('data', function (chunk) {
-                            chunkList.push(chunk);
-                        })
-                        .on('end', function () {
-                            console.log(local.uglify(Buffer.concat(chunkList).toString()));
-                        })
-                        .on('error', onError);
-                })
-                    .on('error', onError)
-                    .end();
-                return;
-            }
-            // uglify file
-            console.log(
-                local.uglify(local.fs
-                    .readFileSync(local.path.resolve(process.cwd(), process.argv[2]), 'utf8'))
-            );
-        };
-        local.cliRun();
+        if ((/^(?:http|https):\/\//).test(process.argv[2])) {
+            // uglify url
+            require(process.argv[2].indexOf('https') === 0
+                ? 'https'
+                : 'http').request(require('url').parse(
+                process.argv[2]
+            ), function (response) {
+                local.chunkList = [];
+                response
+                    .on('data', function (chunk) {
+                        local.chunkList.push(chunk);
+                    })
+                    .on('end', function () {
+                        console.log(local.uglify(Buffer.concat(local.chunkList).toString()));
+                    });
+            })
+                .end();
+            break;
+        }
+        // uglify file
+        console.log(local.uglify(local.fs.readFileSync(
+            local.path.resolve(process.cwd(), process.argv[2]),
+            'utf8'
+        )));
         break;
     }
 }());

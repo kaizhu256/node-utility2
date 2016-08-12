@@ -1,6 +1,6 @@
 utility2
 ========
-this package will run dynamic browser tests with coverage (via istanbul and electron)
+this package will run dynamic browser tests with coverage (via electron and istanbul)
 
 [![travis-ci.org build-status](https://api.travis-ci.org/kaizhu256/node-utility2.svg)](https://travis-ci.org/kaizhu256/node-utility2)
 
@@ -10,17 +10,27 @@ this package will run dynamic browser tests with coverage (via istanbul and elec
 
 
 
+# live test-server
+- [https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/index.html](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/index.html)
+
+[![github.com test-server](https://kaizhu256.github.io/node-utility2/build/screen-capture.githubDeploy.browser._2Fnode-utility2_2Fbuild..alpha..travis-ci.org_2Fapp_2Findex.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/index.html)
+
+
+
 # documentation
 #### todo
+- move nedb api from swagger-lite to here
 - replace jwt salt with proper nonce
 - merge github-crud into this package
 - add utility2.middlewareLimit
 - add server stress test using electron
 - none
 
-#### change since 8dc2cf2e
-- npm publish 2016.7.4
-- fix example.js quickstart demo
+#### change since aea2fe24
+- npm publish 2016.7.5
+- handle repl-server-error
+- display instrumented-code in web-ui
+- strip base64 '=' padding from local.utility2.sjclCipherAes128Encrypt
 - none
 
 #### this package requires
@@ -31,13 +41,6 @@ this package will run dynamic browser tests with coverage (via istanbul and elec
 - [https://kaizhu256.github.io/node-utility2/build/doc.api.html](https://kaizhu256.github.io/node-utility2/build/doc.api.html)
 
 [![api-doc](https://kaizhu256.github.io/node-utility2/build/screen-capture.docApiCreate.browser._2Fhome_2Ftravis_2Fbuild_2Fkaizhu256_2Fnode-utility2_2Ftmp_2Fbuild_2Fdoc.api.html.png)](https://kaizhu256.github.io/node-utility2/build/doc.api.html)
-
-
-
-# live test-server
-- [https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/index.html](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/index.html)
-
-[![github.com test-server](https://kaizhu256.github.io/node-utility2/build/screen-capture.githubDeploy.browser._2Fnode-utility2_2Fbuild..alpha..travis-ci.org_2Fapp_2Findex.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/index.html)
 
 
 
@@ -109,7 +112,7 @@ shExampleSh
 /*
 example.js
 
-this shared browser / node script will run browser tests with coverage
+this script will run browser tests with coverage
 (via istanbul and electron)
 
 instruction
@@ -167,6 +170,9 @@ instruction
             : module.isRollup
             ? module
             : require('utility2').local;
+        // require modules
+        local.istanbul = local.utility2.istanbul;
+        local.jslint = local.utility2.jslint;
         // export local
         local.global.local = local;
         // init envDict
@@ -245,12 +251,12 @@ instruction
                 } catch (ignore) {
                 }
                 // jslint #inputTextarea1
-                local.utility2.jslint.jslintAndPrint(
+                local.jslint.jslintAndPrint(
                     document.querySelector('#inputTextarea1').value,
                     'inputTextarea1.js'
                 );
                 document.querySelector('#outputPreJslint1').textContent =
-                    local.utility2.jslint.errorText
+                    local.jslint.errorText
                     .replace((/\u001b\[\d+m/g), '')
                     .trim();
                 // try to cleanup __coverage__
@@ -258,16 +264,19 @@ instruction
                     delete local.global.__coverage__['/inputTextarea1.js'];
                 } catch (ignore) {
                 }
-                // try to eval input-code
+                // try to cover and eval input-code
                 try {
                     /*jslint evil: true*/
-                    eval(local.utility2.istanbul.instrumentSync(
-                        document.querySelector('#inputTextarea1').value,
-                        '/inputTextarea1.js'
-                    ));
-                    local.utility2.istanbul.coverageReportCreate({
-                        coverage: window.__coverage__
-                    });
+                    document.querySelector('#outputTextareaIstanbul1').value =
+                        local.istanbul.instrumentSync(
+                            document.querySelector('#inputTextarea1').value,
+                            '/inputTextarea1.js'
+                        );
+                    eval(document.querySelector('#outputTextareaIstanbul1').value);
+                    document.querySelector('.istanbulCoverageDiv').innerHTML =
+                        local.istanbul.coverageReportCreate({
+                            coverage: window.__coverage__
+                        });
                 } catch (errorCaught) {
                     document.querySelector('.istanbulCoverageDiv').innerHTML =
                         '<pre>' + errorCaught.stack.replace((/</g), '&lt') + '</pre>';
@@ -279,7 +288,7 @@ instruction
             '#inputTextarea1',
             '#testRunButton1'
         ].forEach(function (element) {
-            if (element.indexOf('#inputTextarea') === 0) {
+            if (element.indexOf('#inputTextarea1') === 0) {
                 document.querySelector(element).addEventListener('keyup', local.testRun);
                 return;
             }
@@ -420,6 +429,8 @@ textarea {\n\
     }\n\
 }());\n\
 </textarea>\n\
+    <div>instrumented code</div>\n\
+    <textarea id="outputTextareaIstanbul1" readonly></textarea>\n\
     <pre id="outputPreJsonStringify1"></pre>\n\
     <pre id="outputPreJslint1"></pre>\n\
     <div class="testReportDiv" style="display: none;"></div>\n\
@@ -501,44 +512,22 @@ textarea {\n\
         "url": "https://github.com/kaizhu256/node-utility2.git"
     },
     "scripts": {
-        "build-app": "npm test --mode-test-case=testCase_build_app",
         "build-ci": "./index.sh shRun shReadmeBuild",
-        "build-doc": "npm test --mode-test-case=testCase_build_doc",
         "env": "env",
-        "example.js": "\
-. ./index.sh && \
-shInit && \
-shFileTrimLeft tmp/README.example.js && \
-shRunScreenCapture shReadmeTestJs example.js",
         "example.sh": "./index.sh shRunScreenCapture shReadmeTestSh example.sh",
         "start": "\
 export PORT=${PORT:-8080} && \
 if [ -f assets.app.js ]; then node assets.app.js; return; fi && \
 export npm_config_mode_auto_restart=1 && \
 ./index.sh shRun shIstanbulCover test.js",
-        "start-example": "\
-./index.sh shRun && \
-cp tmp/README.example.js example.js && \
-export PORT=8081 && \
-node example.js \
-",
-        "start-heroku": "\
-export npm_config_mode_backend=1 && \
-node assets.app.js \
-",
-        "start-standalone": "\
-npm run build-app && \
-node tmp/build/app/assets.app.js \
-",
         "test": "\
 export PORT=$(./index.sh shServerPortRandom) && \
 export PORT_REPL=$(./index.sh shServerPortRandom) && \
 export npm_config_mode_auto_restart=1 && \
 ./index.sh test test.js",
-        "test-all": "npm test --mode-coverage=all",
-        "test-published": "./index.sh shRun shNpmTestPublished"
+        "test-all": "npm test --mode-coverage=all"
     },
-    "version": "2016.7.4"
+    "version": "2016.7.5"
 }
 ```
 
@@ -609,9 +598,10 @@ RUN npm install electron-lite && \
 
 shBuildCiTestPre() {(set -e
 # this function will run the pre-test build
-    # test example js script
+    # test example.js
     (export MODE_BUILD=testExampleJs &&
-        npm run example.js) || return $?
+        shFileTrimLeft tmp/README.example.js &&
+        shRunScreenCapture shReadmeTestJs example.js) || return $?
     # screen-capture example.js coverage
     (export MODE_BUILD=testExampleJs &&
         export modeBrowserTest=screenCapture &&
@@ -622,11 +612,14 @@ shBuildCiTestPre() {(set -e
         export modeBrowserTest=screenCapture &&
         export url=/tmp/app/tmp/build/test-report.html &&
         shBrowserTest) || return $?
-    # test example shell script
+    # test example.sh
     (export MODE_BUILD=testExampleSh &&
         export PORT=8081 &&
         export npm_config_timeout_exit=15000 &&
         npm run example.sh) || return $?
+    # test published-package
+    (export MODE_BUILD=npmTestPublished &&
+        shRunScreenCapture shNpmTestPublished) || return $?
 )}
 
 shBuildCiTestPost() {(set -e
@@ -650,6 +643,7 @@ shBuildCiTestPost() {(set -e
     shGitRepoBranchUpdateLocal() {(set -e
     # this function will local-update git-repo-branch
         cp "$npm_config_dir_build/app/assets.app.js" .
+        printf "web: npm_config_mode_backend=1 node assets.app.js" > Procfile
     )}
     (export MODE_BUILD=herokuDeploy &&
         shHerokuDeploy) || return $?
@@ -665,7 +659,7 @@ shBuild() {(set -e
     # init env
     . ./index.sh && shInit
     # cleanup github-gh-pages dir
-    export BUILD_GITHUB_UPLOAD_PRE_SH="rm -fr build"
+    # export BUILD_GITHUB_UPLOAD_PRE_SH="rm -fr build"
     # init github-gh-pages commit-limit
     export COMMIT_LIMIT=16
     # if branch is alpha, beta, or master, then run default build

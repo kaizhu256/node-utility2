@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 /* istanbul instrument in package all */
+/* istanbul instrument in package istanbul-lite */
 /*jslint
     bitwise: true,
     browser: true,
@@ -90,13 +91,9 @@
                 ));
             console.log('created coverage file://' + options.dir + '/index.html');
             // 3. return coverage in html-format as a single document
-            // update coverageReport
-            if (local.modeJs === 'browser') {
-                try {
-                    document.querySelector('.istanbulCoverageDiv').innerHTML = options
-                        .coverageReportHtml;
-                } catch (ignore) {
-                }
+            if (local.modeJs === 'browser' && document.querySelector('.istanbulCoverageDiv')) {
+                document.querySelector('.istanbulCoverageDiv').innerHTML =
+                    options.coverageReportHtml;
             }
             return options.coverageReportHtml;
         };
@@ -1298,16 +1295,13 @@ local.templateCoverageBadgeSvg =
     // run node js-env code - post-init
     case 'node':
         /* istanbul ignore next */
-        if (module.isRollup) {
-            break;
-        }
-        /* istanbul ignore next */
         // run the cli
         local.cliRun = function (options) {
         /*
          * this function will run the cli
          */
-            if (module !== local.require2.main && !(options && options.runMain)) {
+            if ((module !== local.require2.main || module.isRollup) &&
+                    !(options && options.runMain)) {
                 return;
             }
             switch (process.argv[2]) {
@@ -1371,8 +1365,10 @@ local.templateCoverageBadgeSvg =
                     'node';
             }
         }());
+        local.local = local.istanbul = local;
         // init module
         if (local.modeJs === 'node') {
+            local.__dirname = __dirname;
             local.process = process;
             local.require2 = require;
         }

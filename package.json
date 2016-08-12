@@ -7,7 +7,7 @@
         "utility2-jslint": "lib.jslint.js",
         "utility2-uglifyjs": "lib.uglifyjs.js"
     },
-    "description": "this package will run dynamic browser tests with coverage (via istanbul and electron)",
+    "description": "this package will run dynamic browser tests with coverage (via electron and istanbul)",
     "devDependencies": {
         "electron-lite": "kaizhu256/node-electron-lite#alpha"
     },
@@ -34,32 +34,11 @@
         "url": "https://github.com/kaizhu256/node-utility2.git"
     },
     "scripts": {
-        "build-app": "npm test --mode-test-case=testCase_build_app",
         "build-ci": "./index.sh shRun shReadmeBuild",
-        "build-doc": "npm test --mode-test-case=testCase_build_doc",
         "env": "env",
-        "example.js": ". ./index.sh && shInit && shFileTrimLeft tmp/README.example.js && shRunScreenCapture shReadmeTestJs example.js",
-
-
-
-
         "example.sh": "./index.sh shRunScreenCapture shReadmeTestSh example.sh",
         "start": "export PORT=${PORT:-8080} && if [ -f assets.app.js ]; then node assets.app.js; return; fi && export npm_config_mode_auto_restart=1 && ./index.sh shRun shIstanbulCover test.js",
 
-
-
-
-        "start-example": "./index.sh shRun && cp tmp/README.example.js example.js && export PORT=8081 && node example.js ",
-
-
-
-
-
-        "start-heroku": "export npm_config_mode_backend=1 && node assets.app.js ",
-
-
-
-        "start-standalone": "npm run build-app && node tmp/build/app/assets.app.js ",
 
 
 
@@ -68,8 +47,7 @@
 
 
 
-        "test-all": "npm test --mode-coverage=all",
-        "test-published": "./index.sh shRun shNpmTestPublished"
+        "test-all": "npm test --mode-coverage=all"
     },
-    "version": "2016.7.4"
+    "version": "2016.7.5"
 }

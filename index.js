@@ -49,14 +49,7 @@
             };
         };
         // init lib utility2
-        local.utility2 = {
-            ajaxProgressList: [],
-            ajaxProgressState: 0,
-            assetsDict: {},
-            cacheDict: {},
-            local: local,
-            taskOnTaskDict: {}
-        };
+        local.utility2 = { assetsDict: {}, local: local };
         local.utility2.nop = function () {
         /*
          * this function will do nothing
@@ -608,6 +601,7 @@ local.utility2.templateTestReportHtml = '\
             428: 'Precondition Required',
             429: 'Too Many Requests',
             431: 'Request Header Fields Too Large',
+            451: 'Unavailable For Legal Reasons',
             500: 'Internal Server Error',
             501: 'Not Implemented',
             502: 'Bad Gateway',
@@ -2720,21 +2714,25 @@ local.utility2.templateTestReportHtml = '\
                     local.utility2.processSpawnWithTimeout(
                         '/bin/sh',
                         ['-c', 'find . -type f | grep -v ' +
-                            '"/\\.\\|.*\\(\\b\\|_\\)\\(\\.\\d\\|' +
-                            'archive\\|artifact\\|' +
-                            'bower_component\\|build\\|' +
-                            'coverage\\|' +
-                            'doc\\|' +
-                            'external\\|' +
-                            'fixture\\|' +
-                            'git_module\\|' +
-                            'jquery\\|' +
-                            'log\\|' +
-                            'min\\|mock\\|' +
-                            'node_module\\|' +
-                            'rollup\\|' +
-                            'swp\\|' +
-                            'tmp\\)\\(\\b\\|[_s]\\)" ' +
+/* jslint-ignore-begin */
+'"\
+/\\.\\|.*\\(\\b\\|_\\)\\(\\.\\d\\|\
+archive\\|artifact\\|\
+bower_component\\|build\\|\
+coverage\\|\
+doc\\|\
+external\\|\
+fixture\\|\
+git_module\\|\
+jquery\\|\
+log\\|\
+min\\|mock\\|\
+node_module\\|\
+rollup\\|\
+swp\\|\
+tmp\\)\\(\\b\\|[_s]\\)\
+" ' +
+/* jslint-ignore-end */
                             '| tr "\\n" "\\000" | xargs -0 grep -in "' +
                             match[2].trim() + '"'],
                         { stdio: ['ignore', 1, 2] }
@@ -2772,16 +2770,6 @@ local.utility2.templateTestReportHtml = '\
                 on: local.utility2.nop,
                 write: local.utility2.nop
             };
-            self.socketInit = function (socket) {
-                // cleanup previous socket
-                self.socket.end();
-                // init socket
-                self.socket = socket;
-                self.socket.on('data', function (chunk) {
-                    process.stdin.push(chunk);
-                });
-                self.socket.setKeepAlive(true);
-            };
             // init process.stdout
             process.stdout._write2 = process.stdout._write2 || process.stdout._write;
             process.stdout._write = function (chunk, encoding, callback) {
@@ -2791,7 +2779,13 @@ local.utility2.templateTestReportHtml = '\
                 }
             };
             // start tcp-server
-            self.serverTcp = local.net.createServer(self.socketInit);
+            self.serverTcp = local.net.createServer(function (socket) {
+                // init socket
+                self.socket = socket;
+                self.socket.on('data', self.write.bind(self));
+                self.socket.on('error', local.utility2.onErrorDefault);
+                self.socket.setKeepAlive(true);
+            });
             [
                 // coverage-hack - test no tcp-server handling-behavior
                 null,
@@ -2869,6 +2863,13 @@ local.utility2.templateTestReportHtml = '\
             module.exports.utility2 = local.utility2;
             module.exports[options.moduleName] = module.moduleExports;
             // init assets
+            local.utility2.assetsDict[
+                '/assets.' + local.utility2.envDict.npm_package_name + '.js'
+            ] = local.utility2.istanbulInstrumentInPackage(
+                local.fs.readFileSync(process.cwd() + '/index.js', 'utf8')
+                    .replace((/^#!/), '//'),
+                process.cwd() + '/index.js'
+            );
             local.utility2.assetsDict['/assets.example.js'] = script;
             local.utility2.assetsDict['/assets.test.js'] = '';
             local.utility2.tryCatchOnError(function () {
@@ -3025,7 +3026,8 @@ local.utility2.templateTestReportHtml = '\
             var options;
             options = { iter: 128, mode: 'gcm' };
             options = JSON.parse(local.utility2.sjcl.encrypt(password, decrypted, options));
-            return options.salt + '.' + options.iv + '.' + options.ct;
+            return (options.salt + '.' + options.iv + '.' + options.ct)
+                .replace((/\=/g), '');
         };
 
         local.utility2.sjclHashHmacSha256Create = function (password, data) {
@@ -3808,7 +3810,6 @@ local.utility2.templateTestReportHtml = '\
          * 2. start server on local.utility2.envDict.PORT
          * 3. run tests
          */
-            var requestHandler, server;
             local.utility2.objectSetDefault(options, {
                 middleware: local.utility2.middlewareGroupCreate([
                     local.utility2.middlewareInit,
@@ -3818,21 +3819,24 @@ local.utility2.templateTestReportHtml = '\
                 middlewareError: local.utility2.middlewareError
             });
             // 1. create server from options.middleware
-            requestHandler = function (request, response) {
+            local.utility2.serverLocalRequestHandler = function (request, response) {
                 options.middleware(request, response, function (error) {
                     options.middlewareError(error, request, response);
                 });
             };
-            server = local.http.createServer(requestHandler);
+            local.utility2.server = local.http.createServer(
+                local.utility2.serverLocalRequestHandler
+            );
             // 2. start server on local.utility2.envDict.PORT
             local.utility2.envDict.PORT = local.utility2.envDict.PORT || '8081';
-            local.utility2.serverLocalRequestHandler = requestHandler;
             console.log('server listening on http-port ' + local.utility2.envDict.PORT);
             local.utility2.onReadyBefore.counter += 1;
-            server.listen(local.utility2.envDict.PORT, local.utility2.onReadyBefore);
+            local.utility2.server.listen(
+                local.utility2.envDict.PORT,
+                local.utility2.onReadyBefore
+            );
             // 3. run tests
             local.utility2.testRun(options);
-            return server;
         };
 
         local.utility2.timeElapsedStart = function (options) {
@@ -3851,43 +3855,6 @@ local.utility2.templateTestReportHtml = '\
             options = local.utility2.timeElapsedStart(options);
             options.timeElapsed = Date.now() - options.timeStart;
             return options;
-        };
-
-        local.utility2.timeoutDefaultInit = function () {
-        /*
-         * this function will init timeoutDefault
-         */
-            // init utility2 properties
-            switch (local.modeJs) {
-            case 'browser':
-                location.search.replace(
-                    (/\b(NODE_ENV|mode[A-Z]\w+|timeExit|timeoutDefault)=([\w\-\.\%]+)/g),
-                    function (match0, key, value) {
-                        // jslint-hack
-                        local.utility2.nop(match0);
-                        local.utility2[key] = local.utility2.envDict[key] = value;
-                        // try to JSON.parse the string
-                        local.utility2.tryCatchOnError(function () {
-                            local.utility2[key] = JSON.parse(value);
-                        }, local.utility2.nop);
-                    }
-                );
-                break;
-            case 'node':
-                local.utility2.timeoutDefault =
-                    local.utility2.envDict.npm_config_timeout_default;
-                break;
-            }
-            // init timeExit
-            local.utility2.timeExit = Number(local.utility2.timeExit) ||
-                Number(Date.now() + Number(local.utility2.envDict.npm_config_timeout_exit)) ||
-                Number(local.utility2.envDict.npm_config_time_exit);
-            if (local.utility2.timeExit) {
-                local.utility2.timeoutDefault = local.utility2.timeExit - Date.now();
-                setTimeout(local.utility2.exit, local.utility2.timeoutDefault);
-            }
-            // init timeoutDefault
-            local.utility2.timeoutDefault = Number(local.utility2.timeoutDefault || 30000);
         };
 
         local.utility2.tryCatchOnError = function (task, onError) {
@@ -4031,6 +3998,9 @@ local.utility2.templateTestReportHtml = '\
 
     // run shared js-env code - post-init
     (function () {
+        local.utility2.ajaxProgressList = [];
+        local.utility2.ajaxProgressState = 0;
+        local.utility2.cacheDict = {};
         local.utility2.contentTypeDict = {
             // application
             '.js': 'application/javascript; charset=UTF-8',
@@ -4051,7 +4021,6 @@ local.utility2.templateTestReportHtml = '\
             '.md': 'text/markdown; charset=UTF-8',
             '.txt': 'text/plain; charset=UTF-8'
         };
-        // init envDict
         local.utility2.envDict = local.modeJs === 'browser'
             ? {}
             : process.env;
@@ -4067,6 +4036,7 @@ local.utility2.templateTestReportHtml = '\
             '`abcdefghijklmnopqrstuvwxyz{|}~\x7f';
         local.utility2.stringUriComponentCharset = '!%\'()*-.' +
             '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz~';
+        local.utility2.taskOnTaskDict = {};
         local.utility2.testReport = { testPlatformList: [{
             name: local.modeJs === 'browser'
                 ? 'browser - ' +
@@ -4081,7 +4051,35 @@ local.utility2.templateTestReportHtml = '\
         // init serverLocalHost
         local.utility2.urlParse('');
         // init timeoutDefault
-        local.utility2.timeoutDefaultInit();
+        switch (local.modeJs) {
+        case 'browser':
+            location.search.replace(
+                (/\b(NODE_ENV|mode[A-Z]\w+|timeExit|timeoutDefault)=([\w\-\.\%]+)/g),
+                function (match0, key, value) {
+                    // jslint-hack
+                    local.utility2.nop(match0);
+                    local.utility2[key] = local.utility2.envDict[key] = value;
+                    // try to JSON.parse the string
+                    local.utility2.tryCatchOnError(function () {
+                        local.utility2[key] = JSON.parse(value);
+                    }, local.utility2.nop);
+                }
+            );
+            break;
+        case 'node':
+            local.utility2.timeoutDefault = local.utility2.envDict.npm_config_timeout_default;
+            break;
+        }
+        // init timeExit
+        local.utility2.timeExit = Number(local.utility2.timeExit) ||
+            Number(Date.now() + Number(local.utility2.envDict.npm_config_timeout_exit)) ||
+            Number(local.utility2.envDict.npm_config_time_exit);
+        if (local.utility2.timeExit) {
+            local.utility2.timeoutDefault = local.utility2.timeExit - Date.now();
+            setTimeout(local.utility2.exit, local.utility2.timeoutDefault);
+        }
+        // re-init timeoutDefault
+        local.utility2.timeoutDefault = Number(local.utility2.timeoutDefault || 30000);
         // init onReadyAfter
         local.utility2.onReadyAfter = function (onError) {
         /*
@@ -4160,6 +4158,7 @@ local.utility2.templateTestReportHtml = '\
 
 
 
+    /* istanbul ignore next */
     // run node js-env code - post-init
     case 'node':
         // init exports
@@ -4183,7 +4182,6 @@ local.utility2.templateTestReportHtml = '\
             npm_config_dir_build: process.cwd() + '/tmp/build',
             npm_config_dir_tmp: process.cwd() + '/tmp'
         });
-        /* istanbul ignore next */
         if (module.isRollup) {
             break;
         }
@@ -4265,35 +4263,28 @@ local.utility2.templateTestReportHtml = '\
                     );
             }
         }).join('\n\n\n\n');
-        /* istanbul ignore next */
+        // merge previous test-report
+        if (local.utility2.envDict.npm_config_file_test_report_merge &&
+                local.fs.existsSync(
+                    local.utility2.envDict.npm_config_file_test_report_merge
+                )) {
+            local.utility2.testReportMerge(
+                local.utility2.testReport,
+                JSON.parse(local.fs.readFileSync(
+                    local.utility2.envDict.npm_config_file_test_report_merge,
+                    'utf8'
+                ))
+            );
+        }
         // run the cli
-        local.cliRun = function () {
-        /*
-         * this function will run the cli
-         */
-            // merge previous test-report
-            if (local.utility2.envDict.npm_config_file_test_report_merge &&
-                    local.fs.existsSync(
-                        local.utility2.envDict.npm_config_file_test_report_merge
-                    )) {
-                local.utility2.testReportMerge(
-                    local.utility2.testReport,
-                    JSON.parse(local.fs.readFileSync(
-                        local.utility2.envDict.npm_config_file_test_report_merge,
-                        'utf8'
-                    ))
-                );
-            }
-            if (module !== local.require2.main) {
-                return;
-            }
-            switch (process.argv[2]) {
-            case 'browserTest':
-                local.utility2.browserTest({}, local.utility2.exit);
-                break;
-            }
-        };
-        local.cliRun();
+        if (module !== local.require2.main) {
+            break;
+        }
+        switch (process.argv[2]) {
+        case 'browserTest':
+            local.utility2.browserTest({}, local.utility2.exit);
+            break;
+        }
         break;
     }
 }(

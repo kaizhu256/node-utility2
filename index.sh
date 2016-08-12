@@ -21,7 +21,7 @@ shAesEncrypt() {(set -e
     # print base64-encoded $IV to stdout
     printf "$(printf "$IV" | base64)"
     # encrypt stdin and stream to stdout using aes-256-cbc with base64-encoding
-    openssl enc -aes-256-cbc -K "$AES_256_KEY" -iv "$IV" | base64 | tr -d "\n="
+    openssl enc -aes-256-cbc -K "$AES_256_KEY" -iv "$IV" | base64 | tr -d "\n"
 )}
 
 shBaseInit() {
@@ -122,6 +122,16 @@ require('$npm_config_dir_utility2').browserTest({
     fi
 )}
 
+shBuildApp() {(set -e
+# this function will build the app
+    npm test --mode-test-case=testCase_build_app
+)}
+
+shBuildDoc() {(set -e
+# this function will build the doc
+    npm test --mode-test-case=testCase_build_doc
+)}
+
 shBuildCiDefault() {(set -e
 # this function will run the default build-ci
     # run pre-test build
@@ -129,9 +139,6 @@ shBuildCiDefault() {(set -e
     then
         shBuildCiTestPre || return $?
     fi
-    # run npm-test on published-package
-    (export MODE_BUILD=npmTestPublished &&
-        shRunScreenCapture npm run test-published --mode-coverage) || return $?
     # init test-report.json
     cp "/tmp/app/node_modules/$npm_package_name/tmp/build/test-report.json" \
         "$npm_config_dir_build" > /dev/null 2>&1 || true
@@ -146,7 +153,7 @@ shBuildCiDefault() {(set -e
     fi
     # create api-doc
     (export MODE_BUILD=docApiCreate &&
-        npm run build-doc) || return $?
+        shBuildDoc) || return $?
     # create package-listing
     (export MODE_BUILD=gitLsTree &&
         shRunScreenCapture shGitLsTree) || return $?
@@ -651,8 +658,7 @@ shGithubDeploy() {(set -e
     export MODE_BUILD=githubDeploy
     shBuildPrint "deploying to $TEST_URL"
     # build app
-    # build app
-    npm run build-app
+    shBuildApp
     # upload app
     shBuildGithubUpload
     # wait 10 seconds for app to deploy
@@ -676,21 +682,23 @@ shGrep() {(set -e
 # this function will recursively grep $DIR for the $REGEXP
     DIR="$1"
     REGEXP="$2"
-    FILE_FILTER="$FILE_FILTER/\\.\\|.*\\(\\b\\|_\\)\\(\\.\\d\\"
-    FILE_FILTER="$FILE_FILTER|archive\\|artifact\\"
-    FILE_FILTER="$FILE_FILTER|bower_component\\|build\\"
-    FILE_FILTER="$FILE_FILTER|coverage\\"
-    FILE_FILTER="$FILE_FILTER|doc\\"
-    FILE_FILTER="$FILE_FILTER|external\\"
-    FILE_FILTER="$FILE_FILTER|fixture\\"
-    FILE_FILTER="$FILE_FILTER|git_module\\"
-    FILE_FILTER="$FILE_FILTER|jquery\\"
-    FILE_FILTER="$FILE_FILTER|log\\"
-    FILE_FILTER="$FILE_FILTER|min\\|mock\\"
-    FILE_FILTER="$FILE_FILTER|node_module\\"
-    FILE_FILTER="$FILE_FILTER|rollup.*\\"
-    FILE_FILTER="$FILE_FILTER|swp\\"
-    FILE_FILTER="$FILE_FILTER|tmp\\)\\(\\b\\|[_s]\\)"
+    FILE_FILTER="\
+/\\.\\|.*\\(\\b\\|_\\)\\(\\.\\d\\|\
+archive\\|artifact\\|\
+bower_component\\|build\\|\
+coverage\\|\
+doc\\|\
+external\\|\
+fixture\\|\
+git_module\\|\
+jquery\\|\
+log\\|\
+min\\|mock\\|\
+node_module\\|\
+rollup\\|\
+swp\\|\
+tmp\\)\\(\\b\\|[_s]\\)\
+"
     find "$DIR" -type f | \
         grep -v "$FILE_FILTER" | \
         tr "\n" "\000" | \
@@ -743,7 +751,7 @@ shHerokuDeploy() {(set -e
     export MODE_BUILD=herokuDeploy
     shBuildPrint "deploying to $TEST_URL"
     # build app
-    npm run build-app
+    shBuildApp
     # upload app
     (shGitRepoBranchCommand copyPwdLsTree local HEAD "git@heroku.com:$HEROKU_REPO.git" master) \
         || return $?
@@ -1178,12 +1186,26 @@ shMountData() {(set -e
     chmod 1777 /tmp
 )}
 
-shNpmPublishForce() {(set -e
+shNpmPublish() {(set -e
 # this function will run npm-publish with a clean repo
     shInit
     shGitRepoBranchCommand copyPwdLsTree
     cd /tmp/git.repo.branch
     npm publish
+)}
+
+shNpmStartExampleJs() {(set -e
+# this function will extract and run example.js from README.md
+    shInit
+    cp tmp/README.example.js example.js
+    export PORT=8081
+    node example.js
+)}
+
+shNpmStartStandalone() {(set -e
+# this function will build and start the standalone app assets.app.js
+    shBuildApp
+    node tmp/build/app/assets.app.js
 )}
 
 shNpmTest() {(set -e
@@ -1237,7 +1259,7 @@ shNpmTestPublished() {(set -e
     # npm install
     npm install
     # npm-test package
-    npm test
+    npm test --mode-coverage
     EXIT_CODE=$?
     # save screen-capture
     cp "/tmp/app/node_modules/$npm_package_name/tmp/build/"screen-capture.*.png \
@@ -1253,7 +1275,7 @@ shReadmeBuild() {(set -e
 )}
 
 shReadmeTestJs() {(set -e
-# this function will extract, save, and test the js script $FILE embedded in README.md
+# this function will extract, save, and test the script $FILE embedded in README.md
     FILE="$1"
     shBuildPrint "testing $FILE"
     # init /tmp/app
@@ -1288,12 +1310,15 @@ console.log((/\n *\\$ (.*)/).exec(require('fs').readFileSync('$FILE', 'utf8'))[1
     # screen-capture server
     if [ "$npm_config_timeout_exit" ] && [ "$PORT" ]
     then
-        (sleep 5 &&
+        (sleep 10 &&
             export modeBrowserTest=screenCapture &&
             export url="http://localhost:$PORT" &&
             shBrowserTest) &
     fi
-    printf "$SCRIPT\n\n" && eval "$SCRIPT"
+    printf "$SCRIPT\n\n"
+    export PORT=8081
+    export npm_config_timeout_exit=30000
+    eval "$SCRIPT"
     EXIT_CODE=$?
     # save screen-capture
     cp "/tmp/app/node_modules/$npm_package_name/tmp/build/"screen-capture.*.png \
@@ -1561,7 +1586,7 @@ shTravisEncryptYml() {(set -e
     AES_256_KEY_ENCRYPTED="$(printf "AES_256_KEY=$AES_256_KEY" | \
         openssl rsautl -encrypt -pubin -inkey "$npm_config_file_tmp" | \
         base64 | \
-        tr -d "\n=")"
+        tr -d "\n")"
     # return non-zero exit-code if $AES_256_KEY_ENCRYPTED is empty string
     if [ ! "$AES_256_KEY_ENCRYPTED" ]
     then

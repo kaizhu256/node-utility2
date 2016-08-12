@@ -759,6 +759,7 @@ local.CSSLint = CSSLint; local.JSLINT = JSLINT; }());
 
 
 
+    /* istanbul ignore next */
     // run node js-env code - post-init
     case 'node':
         // export jslint
@@ -767,28 +768,21 @@ local.CSSLint = CSSLint; local.JSLINT = JSLINT; }());
         // require modules
         local.fs = require('fs');
         local.path = require('path');
-        /* istanbul ignore next */
         // run the cli
-        local.cliRun = function () {
-        /*
-         * this function will run the cli
-         */
-            if (module !== require.main || module.isRollup) {
-                return;
+        if (module !== require.main || module.isRollup) {
+            break;
+        }
+        // jslint files
+        process.argv.slice(2).forEach(function (arg) {
+            if (arg[0] !== '-') {
+                local.jslintAndPrint(
+                    local.fs.readFileSync(local.path.resolve(arg), 'utf8'),
+                    arg
+                );
             }
-            // jslint files
-            process.argv.slice(2).forEach(function (arg) {
-                if (arg[0] !== '-') {
-                    local.jslintAndPrint(
-                        local.fs.readFileSync(local.path.resolve(arg), 'utf8'),
-                        arg
-                    );
-                }
-            });
-            // if error occurred, then exit with non-zero code
-            process.exit(local.errorCounter);
-        };
-        local.cliRun();
+        });
+        // if error occurred, then exit with non-zero code
+        process.exit(local.errorCounter);
         break;
     }
 }());
