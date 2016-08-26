@@ -70,59 +70,13 @@
                 ? local.global['utility2_' + key]
                 : require('./lib.' + key + '.js');
         });
-        // init templates
+        // init assets and templates
 /* jslint-ignore-begin */
-local.utility2.assetsDict['/assets.utility2.css'] = '\
-/*csslint\n\
-    box-model: false\n\
-*/\n\
-.ajaxProgressBarDiv {\n\
-    animation: 2s linear 0s normal none infinite ajaxProgressBarDivAnimation;\n\
-    background-image: linear-gradient(\n\
-    45deg,rgba(255,255,255,.25) 25%,\n\
-    transparent 25%,\n\
-    transparent 50%,\n\
-    rgba(255,255,255,.25) 50%,\n\
-    rgba(255,255,255,.25) 75%,\n\
-    transparent 75%,\n\
-    transparent\n\
-    );\n\
-    background-size: 40px 40px;\n\
-    color: #fff;\n\
-    font-family: Helvetica Neue, Helvetica, Arial, sans-serif;\n\
-    font-size: 12px;\n\
-    padding: 2px 0 2px 0;\n\
-    text-align: center;\n\
-    text-shadow: 0 0 5px #007;\n\
-    transition: width 1s ease-in-out;\n\
-    width: 25%;\n\
-}\n\
-.ajaxProgressBarDivError {\n\
-    background-color: #d33;\n\
-}\n\
-.ajaxProgressBarDivLoading {\n\
-    background-color: #37b;\n\
-}\n\
-.ajaxProgressBarDivSuccess {\n\
-    background-color: #3b3;\n\
-}\n\
-.ajaxProgressDiv {\n\
-    background-color: #fff;\n\
-    box-shadow: 0 0 1px 1px #333;\n\
-    display: none;\n\
-    left: 50%;\n\
-    margin: 0 0 0 -50px;\n\
-    padding: 4px 4px 4px 4px;\n\
-    position: fixed;\n\
-    top: 49%;\n\
-    width: 100px;\n\
-    z-index: 9999;\n\
-}\n\
-@keyframes ajaxProgressBarDivAnimation {\n\
-    from { background-position: 40px 0; }\n\
-    to { background-position: 0 0; }\n\
-}\n\
-';
+local.utility2.assetsDict['/assets.example.js'] = '';
+
+
+
+local.utility2.assetsDict['/assets.test.js'] = '';
 
 
 
@@ -185,6 +139,10 @@ local.utility2.assetsDict['/assets.utility2.rollup.content.js'] = '\
 local.utility2.assetsDict['/assets.utility2.rollup.end.js'] = '\
 /* utility2.rollup.js end */\n\
 ';
+
+
+
+local.utility2.assetsDict['/favicon.ico'] = '';
 
 
 
@@ -425,10 +383,6 @@ local.utility2.templateTestReportHtml = '\
 {{/each testPlatformList}}\n\
 ';
 /* jslint-ignore-end */
-        // init assets
-        local.utility2.assetsDict['/assets.example.js'] = '';
-        local.utility2.assetsDict['/assets.test.js'] = '';
-        local.utility2.assetsDict['/favicon.ico'] = '';
     }());
 
 
@@ -675,7 +629,8 @@ local.utility2.templateTestReportHtml = '\
          */
             var xhr;
             xhr = this;
-            return Object.keys(xhr.responseStream.headers).map(function (key) {
+            return Object.keys((xhr.responseStream &&
+                xhr.responseStream.headers) || {}).map(function (key) {
                 return key + ': ' + xhr.responseStream.headers[key] + '\r\n';
             }).join('') + '\r\n';
         };
@@ -952,7 +907,7 @@ local.utility2.templateTestReportHtml = '\
         /*
          * this function will send an ajax-request with error-handling and timeout
          */
-            var ajaxProgressDiv, ii, timerTimeout, tmp, xhr;
+            var timerTimeout, tmp, xhr;
             onError = local.utility2.onErrorWithStack(onError);
             // init modeServerLocal
             if (!local.utility2.envDict.npm_config_mode_backend &&
@@ -1005,26 +960,11 @@ local.utility2.templateTestReportHtml = '\
                             xhr.responseStream
                         );
                     });
-                    if (ajaxProgressDiv) {
-                        // validate xhr is defined in ajaxProgressList
-                        ii = local.utility2.ajaxProgressList.indexOf(xhr);
-                        local.utility2.assert(ii >= 0, 'missing xhr in ajaxProgressList');
-                        // remove xhr from ajaxProgressList
-                        local.utility2.ajaxProgressList.splice(ii, 1);
-                        // hide ajaxProgressDiv
-                        if (local.utility2.ajaxProgressList.length === 0) {
-                            local.utility2.ajaxProgressBarHide = setTimeout(function () {
-                                /* istanbul ignore next */
-                                if (local.utility2.ajaxProgressList.length) {
-                                    return;
-                                }
-                                // hide ajaxProgressBar
-                                ajaxProgressDiv.style.display = 'none';
-                                // reset ajaxProgress
-                                local.utility2.ajaxProgressUpdate('0%');
-                            }, 1500);
-                        }
-                    }
+                    // decrement ajaxProgressCounter
+                    local.utility2.ajaxProgressCounter = Math.max(
+                        local.utility2.ajaxProgressCounter - 1,
+                        0
+                    );
                     // handle abort or error event
                     if (!xhr.error &&
                             (event.type === 'abort' ||
@@ -1052,35 +992,16 @@ local.utility2.templateTestReportHtml = '\
                     onError(xhr.error, xhr, xhr.onEvent);
                     break;
                 }
-                if (ajaxProgressDiv) {
-                    // increment ajaxProgressBar
-                    if (local.utility2.ajaxProgressList.length > 0) {
-                        local.utility2.ajaxProgressUpdate();
-                        return;
-                    }
-                    // update ajaxProgressBar to done
-                    local.utility2.ajaxProgressUpdate('100%');
-                }
+                local.utility2.ajaxProgressUpdate();
             };
+            // increment ajaxProgressCounter
+            local.utility2.ajaxProgressCounter += 1;
             xhr.addEventListener('abort', xhr.onEvent);
             xhr.addEventListener('error', xhr.onEvent);
             xhr.addEventListener('load', xhr.onEvent);
-            // init ajaxProgressDiv
-            ajaxProgressDiv = local.modeJs === 'browser' &&
-                document.querySelector('.ajaxProgressDiv');
-            if (ajaxProgressDiv) {
-                xhr.addEventListener('loadstart', local.utility2.ajaxProgressUpdate);
-                xhr.addEventListener('progress', local.utility2.ajaxProgressUpdate);
-                xhr.upload.addEventListener('progress', local.utility2.ajaxProgressUpdate);
-                // if ajaxProgressBar is hidden, then display it
-                if (local.utility2.ajaxProgressList.length === 0) {
-                    ajaxProgressDiv.style.display = 'block';
-                }
-                // add xhr to ajaxProgressList
-                local.utility2.ajaxProgressList.push(xhr);
-                // clear any timer to hide ajaxProgressDiv
-                clearTimeout(local.utility2.ajaxProgressBarHide);
-            }
+            xhr.addEventListener('loadstart', local.utility2.ajaxProgressUpdate);
+            xhr.addEventListener('progress', local.utility2.ajaxProgressUpdate);
+            xhr.upload.addEventListener('progress', local.utility2.ajaxProgressUpdate);
             // open url
             xhr.open(xhr.method, xhr.url);
             // set request-headers
@@ -1105,27 +1026,33 @@ local.utility2.templateTestReportHtml = '\
             return xhr;
         };
 
-        local.utility2.ajaxProgressUpdate = function (width) {
+        local.utility2.ajaxProgressShow = function () {
         /*
-         * this function will increment ajaxProgressBar by the given width
+         * this function will show ajaxProgress
+         */
+            local.utility2.ajaxProgressCounter += 1;
+            local.utility2.ajaxProgressUpdate();
+            local.utility2.ajaxProgressCounter -= 1;
+            local.utility2.timerTimeoutAjaxProgressHide =
+                setTimeout(local.utility2.ajaxProgressUpdate, local.utility2.timeoutDefault);
+        };
+
+        local.utility2.ajaxProgressUpdate = function () {
+        /*
+         * this function will update ajaxProgress
          */
             var ajaxProgressBarDiv;
-            ajaxProgressBarDiv = document.querySelector('.ajaxProgressBarDiv');
-            switch (width) {
-            case '0%':
-                local.utility2.ajaxProgressState = 0;
-                ajaxProgressBarDiv.innerHTML = 'loading';
-                ajaxProgressBarDiv.className = ajaxProgressBarDiv.className
-                    .replace((/ajaxProgressBarDiv\w+/), 'ajaxProgressBarDivLoading');
-                ajaxProgressBarDiv.style.width = width;
-                break;
-            case '100%':
-                ajaxProgressBarDiv.innerHTML = 'loaded';
-                ajaxProgressBarDiv.className = ajaxProgressBarDiv.className
-                    .replace((/ajaxProgressBarDiv\w+/), 'ajaxProgressBarDivSuccess');
-                ajaxProgressBarDiv.style.width = width;
-                break;
-            default:
+            ajaxProgressBarDiv = local.modeJs === 'browser' &&
+                document.querySelector('.ajaxProgressBarDiv');
+            if (!ajaxProgressBarDiv) {
+                return;
+            }
+            // show ajaxProgressDiv
+            ajaxProgressBarDiv.parentNode.style.display = 'block';
+            // cleanup timerTimeout
+            clearTimeout(local.utility2.timerTimeoutAjaxProgressHide);
+            // increment ajaxProgress
+            if (local.utility2.ajaxProgressCounter) {
                 ajaxProgressBarDiv.innerHTML = 'loading';
                 ajaxProgressBarDiv.className = ajaxProgressBarDiv.className
                     .replace((/ajaxProgressBarDiv\w+/), 'ajaxProgressBarDivLoading');
@@ -1134,27 +1061,41 @@ local.utility2.templateTestReportHtml = '\
                 local.utility2.ajaxProgressState += 1;
                 ajaxProgressBarDiv.style.width =
                     100 - 75 * Math.exp(-0.125 * local.utility2.ajaxProgressState) + '%';
+                return;
             }
+            // finish ajaxProgress
+            ajaxProgressBarDiv.innerHTML = 'loaded';
+            ajaxProgressBarDiv.className = ajaxProgressBarDiv.className
+                .replace((/ajaxProgressBarDiv\w+/), 'ajaxProgressBarDivLoaded');
+            ajaxProgressBarDiv.style.width = '100%';
+            // hide ajaxProgress
+            local.utility2.timerTimeoutAjaxProgressHide = setTimeout(function () {
+                ajaxProgressBarDiv.parentNode.style.display = 'none';
+                // reset ajaxProgress
+                local.utility2.ajaxProgressState = 0;
+                ajaxProgressBarDiv.innerHTML = 'loading';
+                ajaxProgressBarDiv.className = ajaxProgressBarDiv.className
+                    .replace((/ajaxProgressBarDiv\w+/), 'ajaxProgressBarDivLoading');
+                ajaxProgressBarDiv.style.width = '0%';
+            }, 1500);
         };
 
         local.utility2.assert = function (passed, message) {
         /*
-         * this function will assert the value passed is truthy, else throw the error message
+         * this function will assert passed is truthy, else throw the error message
          */
             var error;
             if (passed) {
                 return;
             }
             error = message && message.message
-                // message is an Error object
+                // if message is an error-object, then leave it as is
                 ? message
                 : new Error(typeof message === 'string'
                     // if message is a string, then leave it as is
                     ? message
                     // else JSON.stringify message
                     : JSON.stringify(message));
-            // debug error
-            local.utility2._debugAssertError = error;
             throw error;
         };
 
@@ -1656,6 +1597,138 @@ local.utility2.templateTestReportHtml = '\
             return tmp;
         };
 
+        // init dbExport
+        local.utility2.dbExport = local.utility2.Nedb && local.utility2.Nedb.dbExport;
+
+        // init dbImport
+        local.utility2.dbImport = local.utility2.Nedb && local.utility2.Nedb.dbImport;
+
+        local.utility2.dbReset = function () {
+        /*
+         * this function will reset nedb's file-state and memory-state
+         */
+            local.utility2.onResetBefore.counter += 1;
+            // visual notification
+            local.utility2.ajaxProgressShow();
+            local.utility2.onResetAfter(function (error) {
+                // validate no error occurred
+                local.utility2.assert(!error, error);
+                local.utility2.onReadyBefore.counter += 1;
+                local.utility2.dbSeedListUpsert(
+                    local.utility2.dbSeedList,
+                    local.utility2.onReadyBefore
+                );
+            });
+            // reset nedb backend
+            if (local.modeJs === 'browser' &&
+                    local.utility2.envDict.npm_config_mode_backend) {
+                local.utility2.onResetBefore.counter += 1;
+                local.utility2.ajax({ url: '/dbReset' }, function (error, xhr) {
+                    // jslint-hack
+                    local.utility2.nop(error);
+                    // debug xhr
+                    local.utility2._debugXhrdbReset = xhr;
+                    local.utility2.onResetBefore();
+                });
+            }
+            // reset nedb local-persistence
+            if (local.utility2.Nedb) {
+                local.utility2.onResetBefore.counter += 1;
+                local.utility2.Nedb.dbReset(local.utility2.onResetBefore);
+            }
+            local.utility2.onResetBefore();
+        };
+
+        // init dbTableCreate
+        local.utility2.dbTableCreate = local.utility2.Nedb && local.utility2.Nedb.dbTableCreate;
+
+        // init dbTableDrop
+        local.utility2.dbTableDrop = local.utility2.Nedb && local.utility2.Nedb.dbTableDrop;
+
+        local.utility2.dbSeedListUpsert = function (optionsList, onError) {
+        /*
+         * this function will serially upsert optionsList[ii].dbRowList
+         */
+            var modeNext, modeNextList, onNext, onNextList, onParallel, options, self;
+            onNext = function (error) {
+                modeNext = error
+                    ? Infinity
+                    : modeNext + 1;
+                switch (modeNext) {
+                case 1:
+                    local.utility2.objectSetDefault(options, {
+                        dbRowList: [],
+                        ensureIndexList: [],
+                        removeIndexList: []
+                    });
+                    // init dbTable
+                    self = local.utility2.dbTableCreate(options, onNext);
+                    break;
+                case 2:
+                    onParallel = local.utility2.onParallel(onNext);
+                    onParallel.counter += 1;
+                    // removeIndex
+                    [
+                        'createdAt',
+                        'id',
+                        'updatedAt'
+                    ]
+                        .concat(options.ensureIndexList)
+                        .concat(options.removeIndexList)
+                        .forEach(function (index) {
+                            onParallel.counter += 1;
+                            self.removeIndex(index, onParallel);
+                        });
+                    onParallel();
+                    break;
+                case 3:
+                    onParallel.counter += 1;
+                    // ensureIndex
+                    [{
+                        fieldName: 'createdAt'
+                    }, {
+                        fieldName: 'id',
+                        unique: true
+                    }, {
+                        fieldName: 'updatedAt'
+                    }]
+                        .concat(options.ensureIndexList)
+                        .forEach(function (index) {
+                            onParallel.counter += 1;
+                            self.ensureIndex(index, onParallel);
+                        });
+                    onParallel();
+                    break;
+                case 4:
+                    onParallel.counter += 1;
+                    // upsert dbRow
+                    options.dbRowList.forEach(function (dbRow) {
+                        onParallel.counter += 1;
+                        self.update({ id: dbRow.id }, dbRow, { upsert: true }, onParallel);
+                    });
+                    onParallel();
+                    break;
+                default:
+                    onNextList(error);
+                }
+            };
+            modeNextList = -1;
+            onNextList = function (error) {
+                modeNextList = error
+                    ? Infinity
+                    : modeNextList + 1;
+                // recursively run each sub-middleware in middlewareList
+                if (modeNextList < optionsList.length) {
+                    modeNext = 0;
+                    options = optionsList[modeNextList];
+                    onNext(options.error);
+                    return;
+                }
+                onError(error);
+            };
+            onNextList();
+        };
+
         local.utility2.docApiCreate = function (options) {
         /*
          * this function will return an html api-doc from the given options
@@ -1750,6 +1823,9 @@ local.utility2.templateTestReportHtml = '\
                         tmp = module.exports;
                         module.exports = {};
                         module.exports[module.name.split('.').slice(-1)[0]] = tmp;
+                        Object.keys(tmp).forEach(function (key) {
+                            module.exports[key] = tmp[key];
+                        });
                     }
                     return {
                         elementList: Object.keys(module.exports)
@@ -1984,7 +2060,7 @@ local.utility2.templateTestReportHtml = '\
                     local.utility2.nop(match0);
                     // preserve lineno
                     match1 = text.slice(0, ii).replace((/.+/g), '') + match1;
-                    local.utility2.jslintAndPrint(match1, file + '.css');
+                    local.utility2.jslintAndPrintConditional(match1, file + '.css');
                 }
             );
             // jslint <script> tag
@@ -1995,7 +2071,7 @@ local.utility2.templateTestReportHtml = '\
                     local.utility2.nop(match0);
                     // preserve lineno
                     match1 = text.slice(0, ii).replace((/.+/g), '') + match1;
-                    local.utility2.jslintAndPrint(match1, file + '.js');
+                    local.utility2.jslintAndPrintConditional(match1, file + '.js');
                 }
             );
             return script;
@@ -2018,10 +2094,10 @@ local.utility2.templateTestReportHtml = '\
             var circularList, stringify, tmp;
             stringify = function (element) {
             /*
-             * this function will recursively stringify the element,
+             * this function will recursively JSON.stringify the element,
              * with object-keys sorted and circular-references removed
              */
-                // if element is an object, then recurse with its items, sorted by their keys
+                // if element is an object, then recurse its items with object-keys sorted
                 if (element &&
                         typeof element === 'object' &&
                         typeof element.toJSON !== 'function') {
@@ -2030,7 +2106,7 @@ local.utility2.templateTestReportHtml = '\
                         return;
                     }
                     circularList.push(element);
-                    // if element is an array, then recurse with its elements
+                    // if element is an array, then recurse its elements
                     if (Array.isArray(element)) {
                         return '[' + element.map(function (element) {
                             tmp = stringify(element);
@@ -2040,6 +2116,7 @@ local.utility2.templateTestReportHtml = '\
                         }).join(',') + ']';
                     }
                     return '{' + Object.keys(element)
+                        // sort object-keys
                         .sort()
                         .map(function (key) {
                             tmp = stringify(element[key]);
@@ -2052,7 +2129,7 @@ local.utility2.templateTestReportHtml = '\
                         })
                         .join(',') + '}';
                 }
-                // else JSON.stringify normally
+                // else JSON.stringify as normal
                 return JSON.stringify(element);
             };
             circularList = [];
@@ -2145,7 +2222,7 @@ local.utility2.templateTestReportHtml = '\
                         return;
                     }
                     // gzip and cache result
-                    local.utility2.taskOnErrorAddCached({
+                    local.utility2.taskOnErrorPushCached({
                         cacheDict: 'middlewareAssetsCachedGzip',
                         key: request.urlParsed.pathname
                     }, onNext, function (onError) {
@@ -2252,7 +2329,7 @@ local.utility2.templateTestReportHtml = '\
                 // replace trailing '/' with '/index.html'
                 .replace((/\/$/), '/index.html');
             // serve file from cache
-            local.utility2.taskOnErrorAddCached({
+            local.utility2.taskOnErrorPushCached({
                 cacheDict: 'middlewareFileServer',
                 key: request.urlFile
             }, function (error, data) {
@@ -2554,14 +2631,14 @@ local.utility2.templateTestReportHtml = '\
         /*
          * this function will return a function that will
          * 1. runs async tasks in parallel
-         * 2. if counter === 0 or error occurs, then run callback onError
+         * 2. if counter === 0 or error occurred, then call onError with error
          */
             var self;
             onError = local.utility2.onErrorWithStack(onError);
             onDebug = onDebug || local.utility2.nop;
             self = function (error) {
                 onDebug(error, self);
-                // if counter === 0 or error already occurred, then return
+                // if previously counter === 0 or error occurred, then return
                 if (self.counter === 0 || self.error) {
                     return;
                 }
@@ -2573,7 +2650,7 @@ local.utility2.templateTestReportHtml = '\
                 }
                 // decrement counter
                 self.counter -= 1;
-                // if counter === 0, then run callback onError with error
+                // if counter === 0, then call onError with error
                 if (self.counter === 0) {
                     onError(error);
                 }
@@ -2829,8 +2906,11 @@ tmp\\)\\(\\b\\|[_s]\\)\
                         isRollup: true
                     });
                 local.utility2.assetsDict['/assets.app.js'] =
-                    local.utility2.assetsDict['/assets.app.min.js'] =
                     local.fs.readFileSync(__filename, 'utf8');
+                local.utility2.assetsDict['/assets.app.min.js'] =
+                    local.utility2.uglifyIfProduction(
+                        local.utility2.assetsDict['/assets.app.js']
+                    );
                 return options.module;
             }
             file = options.__dirname + '/example.js';
@@ -2846,8 +2926,11 @@ tmp\\)\\(\\b\\|[_s]\\)\
                     }
                 );
             script = script
-                // alias require(<options.moduleName>) to module.moduleExports;
-                .replace("require('" + options.moduleName + "')", 'module.moduleExports')
+                // alias require($npm_package_name) to module.moduleExports;
+                .replace(
+                    "require('" + local.utility2.envDict.npm_package_name + "')",
+                    'module.moduleExports'
+                )
                 // uncomment utility2-comment
                 .replace((/<!-- utility2-comment\b([\S\s]+?)\butility2-comment -->/g), '$1');
             // jslint script
@@ -2856,13 +2939,16 @@ tmp\\)\\(\\b\\|[_s]\\)\
             script = local.utility2.istanbulInstrumentInPackage(script, file);
             // init module
             module = local.require2.cache[file] = new local.Module(file);
-            module.moduleExports = require(options.moduleExports);
+            module.moduleExports = require(options.__dirname + '/index.js');
             // load script into module
             module._compile(script, file);
             // init exports
             module.exports.utility2 = local.utility2;
-            module.exports[options.moduleName] = module.moduleExports;
+            module.exports[local.utility2.envDict.npm_package_name] = module.moduleExports;
             // init assets
+            local.utility2.assetsDict[
+                '/assets.' + local.utility2.envDict.npm_package_name + '.css'
+            ] = local.fs.readFileSync(process.cwd() + '/index.css', 'utf8');
             local.utility2.assetsDict[
                 '/assets.' + local.utility2.envDict.npm_package_name + '.js'
             ] = local.utility2.istanbulInstrumentInPackage(
@@ -2995,6 +3081,7 @@ tmp\\)\\(\\b\\|[_s]\\)\
                 'server ' + request.method + ' ' + request.url
             );
             response.on('finish', function () {
+                // cleanup timerTimeout
                 clearTimeout(request.timerTimeout);
             });
         };
@@ -3145,20 +3232,20 @@ tmp\\)\\(\\b\\|[_s]\\)\
             return local.utility2.bufferToString(local.utility2.bufferCreate(text), 'base64');
         };
 
-        local.utility2.taskOnErrorAdd = function (options, onError) {
+        local.utility2.taskOnErrorPush = function (options, onError) {
         /*
-         * this function will add the callback onError to the task named options.key
+         * this function will push the callback onError to the task named options.key
          */
             var task;
             onError = local.utility2.onErrorWithStack(onError);
             // init task
             task = local.utility2.taskOnTaskDict[options.key] =
                 local.utility2.taskOnTaskDict[options.key] || { onErrorList: [] };
-            // add callback onError to the task
+            // push callback onError to the task
             task.onErrorList.push(onError);
         };
 
-        local.utility2.taskOnErrorAddCached = function (options, onError, onTask) {
+        local.utility2.taskOnErrorPushCached = function (options, onError, onTask) {
         /*
          * this function will
          * 1. if cache-hit, then call onError with cacheValue
@@ -3192,7 +3279,7 @@ tmp\\)\\(\\b\\|[_s]\\)\
                     break;
                 // 2. run onTask in background
                 case 2:
-                    local.utility2.taskOnErrorAdd(options, onNext);
+                    local.utility2.taskOnErrorPush(options, onNext);
                     local.utility2.taskOnTaskUpsert(options, onTask);
                     break;
                 case 3:
@@ -3642,11 +3729,13 @@ tmp\\)\\(\\b\\|[_s]\\)\
             var exit, onParallel, testPlatform, testReport, testReportDiv, timerInterval;
             // init modeTest
             local.utility2.modeTest = local.utility2.modeTest ||
-                local.utility2.envDict.npm_config_mode_npm_test;
+                local.utility2.envDict.npm_config_mode_test;
             if (!(local.utility2.modeTest || options.modeTest)) {
                 return;
             }
             if (!options.onReadyAfter) {
+                // reset nedb
+                local.utility2.dbReset();
                 options.onReadyAfter = local.utility2.onReadyAfter(function () {
                     local.utility2.testRun(options);
                 });
@@ -3727,7 +3816,7 @@ tmp\\)\\(\\b\\|[_s]\\)\
                     });
                 }
             });
-            // visually update test-progress until done
+            // visual notification - update test-progress until done
             // init testReportDiv element
             if (local.modeJs === 'browser') {
                 testReportDiv = document.querySelector('.testReportDiv');
@@ -3810,6 +3899,7 @@ tmp\\)\\(\\b\\|[_s]\\)\
          * 2. start server on local.utility2.envDict.PORT
          * 3. run tests
          */
+            local.utility2.onReadyBefore.counter += 1;
             local.utility2.objectSetDefault(options, {
                 middleware: local.utility2.middlewareGroupCreate([
                     local.utility2.middlewareInit,
@@ -3837,6 +3927,7 @@ tmp\\)\\(\\b\\|[_s]\\)\
             );
             // 3. run tests
             local.utility2.testRun(options);
+            local.utility2.onReadyBefore();
         };
 
         local.utility2.timeElapsedStart = function (options) {
@@ -3998,7 +4089,7 @@ tmp\\)\\(\\b\\|[_s]\\)\
 
     // run shared js-env code - post-init
     (function () {
-        local.utility2.ajaxProgressList = [];
+        local.utility2.ajaxProgressCounter = 0;
         local.utility2.ajaxProgressState = 0;
         local.utility2.cacheDict = {};
         local.utility2.contentTypeDict = {
@@ -4021,6 +4112,7 @@ tmp\\)\\(\\b\\|[_s]\\)\
             '.md': 'text/markdown; charset=UTF-8',
             '.txt': 'text/plain; charset=UTF-8'
         };
+        local.utility2.dbSeedList = [];
         local.utility2.envDict = local.modeJs === 'browser'
             ? {}
             : process.env;
@@ -4085,8 +4177,8 @@ tmp\\)\\(\\b\\|[_s]\\)\
         /*
          * this function will call onError when onReadyBefore.counter === 0
          */
-            local.utility2.taskOnErrorAdd({ key: 'utility2.onReadyAfter' }, onError);
             local.utility2.onReadyBefore.counter += 1;
+            local.utility2.taskOnErrorPush({ key: 'utility2.onReadyAfter' }, onError);
             local.utility2.onResetAfter(local.utility2.onReadyBefore);
             return onError;
         };
@@ -4095,7 +4187,7 @@ tmp\\)\\(\\b\\|[_s]\\)\
         /*
          * this function will keep track of onReadyBefore.counter
          */
-            local.utility2.taskOnErrorAdd({ key: 'utility2.onReadyAfter' }, function (error) {
+            local.utility2.taskOnErrorPush({ key: 'utility2.onReadyAfter' }, function (error) {
                 // validate no error occurred
                 local.utility2.assert(!error, error);
             });
@@ -4110,8 +4202,10 @@ tmp\\)\\(\\b\\|[_s]\\)\
         /*
          * this function will call onError when onResetBefore.counter === 0
          */
-            local.utility2.taskOnErrorAdd({ key: 'utility2.onResetAfter' }, onError);
             local.utility2.onResetBefore.counter += 1;
+            // visual notification - onResetAfter
+            local.utility2.ajaxProgressUpdate();
+            local.utility2.taskOnErrorPush({ key: 'utility2.onResetAfter' }, onError);
             setTimeout(local.utility2.onResetBefore);
             return onError;
         };
@@ -4120,7 +4214,7 @@ tmp\\)\\(\\b\\|[_s]\\)\
         /*
          * this function will keep track of onResetBefore.counter
          */
-            local.utility2.taskOnErrorAdd({ key: 'utility2.onResetAfter' }, function (error) {
+            local.utility2.taskOnErrorPush({ key: 'utility2.onResetAfter' }, function (error) {
                 // validate no error occurred
                 local.utility2.assert(!error, error);
             });
@@ -4130,16 +4224,7 @@ tmp\\)\\(\\b\\|[_s]\\)\
                 onError(error);
             });
         });
-        local.utility2.onResetAfter(local.utility2.nop);
-        local.utility2.onReadyAfter(function () {
-            // hide ajaxProgressDiv
-            if (local.modeJs === 'browser' &&
-                    document.querySelector('.ajaxProgressDiv') &&
-                    document.querySelector('.ajaxProgressDiv').style.display !==
-                    'none') {
-                local.utility2.ajax({ url: '' }, local.utility2.nop);
-            }
-        });
+        local.utility2.onReadyAfter(local.utility2.nop);
         // init state
         local.utility2.stateInit({});
     }());
@@ -4187,7 +4272,7 @@ tmp\\)\\(\\b\\|[_s]\\)\
         }
         // init assets
         [
-            'assets.utility2.css',
+            'index.css',
             'index.js',
             'index.sh',
             'lib.istanbul.js',
@@ -4199,8 +4284,9 @@ tmp\\)\\(\\b\\|[_s]\\)\
             'templateTestReportHtml'
         ].forEach(function (key) {
             switch (key) {
-            case 'assets.utility2.css':
-                local.utility2.jslintAndPrint(local.utility2.assetsDict['/' + key], key);
+            case 'index.css':
+                local.utility2.assetsDict['/assets.utility2.css'] =
+                    local.fs.readFileSync(__dirname + '/' + key, 'utf8');
                 break;
             case 'index.js':
                 local.utility2.assetsDict['/assets.utility2.js'] =

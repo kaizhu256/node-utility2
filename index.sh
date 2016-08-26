@@ -1219,7 +1219,7 @@ shNpmTest() {(set -e
     rm -f "$npm_config_dir_tmp/"electron.*.html
     # init npm-test-mode
     export NODE_ENV="${NODE_ENV:-test}"
-    export npm_config_mode_npm_test=1
+    export npm_config_mode_test=1
     # run npm-test without coverage
     if [ ! "$npm_config_mode_coverage" ]
     then
@@ -1307,17 +1307,14 @@ shReadmeTestJs() {(set -e
 console.log((/\n *\\$ (.*)/).exec(require('fs').readFileSync('$FILE', 'utf8'))[1]);
 // </script>
     ")"
-    # screen-capture server
-    if [ "$npm_config_timeout_exit" ] && [ "$PORT" ]
-    then
-        (sleep 10 &&
-            export modeBrowserTest=screenCapture &&
-            export url="http://localhost:$PORT" &&
-            shBrowserTest) &
-    fi
-    printf "$SCRIPT\n\n"
     export PORT=8081
     export npm_config_timeout_exit=30000
+    # screen-capture server
+    (sleep 10 &&
+        export modeBrowserTest=screenCapture &&
+        export url="http://localhost:$PORT" &&
+        shBrowserTest) &
+    printf "$SCRIPT\n\n"
     eval "$SCRIPT"
     EXIT_CODE=$?
     # save screen-capture
@@ -1357,14 +1354,13 @@ shReadmeTestSh() {(set -e
 console.log(require('fs').readFileSync('$FILE', 'utf8').trimLeft());
 // </script>
     "
+    export PORT=8081
+    export npm_config_timeout_exit=30000
     # screen-capture server
-    if [ "$npm_config_timeout_exit" ] && [ "$PORT" ]
-    then
-        (sleep 5 &&
-            export modeBrowserTest=screenCapture &&
-            export url="http://localhost:$PORT" &&
-            shBrowserTest) &
-    fi
+    (sleep 10 &&
+        export modeBrowserTest=screenCapture &&
+        export url="http://localhost:$PORT" &&
+        shBrowserTest) &
     # test $FILE
     /bin/sh "$FILE"
     EXIT_CODE=$?

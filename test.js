@@ -45,9 +45,7 @@
             local = (module.utility2 ||
                 require(__dirname + '/index.js')).requireExampleJsFromReadme({
                 __dirname: __dirname,
-                module: module,
-                moduleExports: __dirname + '/index.js',
-                moduleName: 'utility2'
+                module: module
             });
             /* istanbul ignore next */
             if (module.isRollup) {
@@ -233,10 +231,14 @@
             }].forEach(function (_) {
                 options = _;
                 onParallel.counter += 1;
-                local.utility2.ajax(options, function (error) {
+                local.utility2.ajax(options, function (error, xhr) {
                     local.utility2.tryCatchOnError(function () {
                         // validate error occurred
                         local.utility2.assert(error, error);
+                        // test getAllResponseHeaders' null handling-behavior
+                        xhr.getAllResponseHeaders();
+                        // test getResponseHeader' null handling-behavior
+                        xhr.getResponseHeader('undefined');
                         onParallel();
                     }, onError);
                 });
@@ -504,6 +506,85 @@
                 local.utility2.assertJsonEqual(options.data, options.validate);
             });
             onError();
+        };
+
+        local.testCase_dbReset_ajax = function (options, onError) {
+        /*
+         * this function will test dbReset's ajax handling-behavior
+         */
+            options = [
+                [local.utility2, {
+                    _debugXhrdbReset: null,
+                    Nedb: null,
+                    ajax: function (options, onError) {
+                        // jslint-hack
+                        local.utility2.nop(options);
+                        onError();
+                    },
+                    envDict: { npm_config_mode_backend: true },
+                    onResetAfter: local.utility2.nop,
+                    onResetBefore: null
+                }]
+            ];
+            local.utility2.testMock(options, function (onError) {
+                local.utility2.onResetBefore = onError;
+                local.utility2.dbReset();
+            }, onError);
+        };
+
+        local.testCase_dbReset_default = function (options, onError) {
+        /*
+         * this function will test dbReset's default handling-behavior
+         */
+            var modeNext, onNext;
+            modeNext = 0;
+            onNext = function (error) {
+                local.utility2.tryCatchOnError(function () {
+                    modeNext += 1;
+                    switch (modeNext) {
+                    case 1:
+                        options = [{
+                            name: 'testCase_dbReset_default1'
+                        }, {
+                            dbRowList: [{ id: 0 }],
+                            ensureIndexList: [{ fieldName: 'id', unique: true }],
+                            name: 'testCase_dbReset_default2',
+                            removeIndexList: ['id'],
+                            reset: true
+                        }];
+                        local.utility2.dbSeedList = options;
+                        onNext();
+                        break;
+                    // reset nedb
+                    case 2:
+                        local.utility2.dbReset();
+                        local.utility2.onReadyAfter(onNext);
+                        break;
+                    // re-reset nedb
+                    case 3:
+                        local.utility2.dbReset();
+                        local.utility2.onReadyAfter(onNext);
+                        break;
+                    default:
+                        onError(error);
+                    }
+                }, onError);
+            };
+            onNext();
+        };
+
+        local.testCase_dbSeedListUpsert_error = function (options, onError) {
+        /*
+         * this function will test dbSeedListUpsert's error handling-behavior
+         */
+            options = [{ error: local.utility2.errorDefault }];
+            local.utility2.dbSeedListUpsert(options, function (error) {
+                local.utility2.tryCatchOnError(function () {
+                    // validate error occurred
+                    local.utility2.assert(error, error);
+                    onError();
+                }, onError);
+            });
         };
 
         local.testCase_debug_inline_default = function (options, onError) {
@@ -801,7 +882,7 @@
                 // test nested dict handling-behavior
                 ff: { hh: 2, gg: 1},
                 // test nested array handling-behavior
-                ee: [undefined],
+                ee: [1, null, undefined],
                 dd: local.utility2.nop,
                 cc: undefined,
                 bb: null,
@@ -811,7 +892,7 @@
             options.zz = options;
             local.utility2.assertJsonEqual(
                 options,
-                { aa: 1, bb: null, ee: [ null ], ff: { gg: 1, hh: 2 } }
+                { aa: 1, bb: null, ee: [ 1, null, null ], ff: { gg: 1, hh: 2 } }
             );
             onError();
         };
@@ -1229,9 +1310,9 @@
             onError();
         };
 
-        local.testCase_taskOnErrorAddCached_default = function (options, onError) {
+        local.testCase_taskOnErrorPushCached_default = function (options, onError) {
         /*
-         * this function will test taskOnErrorAddCached's default handling-behavior
+         * this function will test taskOnErrorPushCached's default handling-behavior
          */
             var cacheValue, modeNext, onNext, onTask, optionsCopy;
             modeNext = 0;
@@ -1245,7 +1326,7 @@
                             onError(null, cacheValue);
                         };
                         options = {
-                            cacheDict: 'testCase_taskOnErrorAddCached_default',
+                            cacheDict: 'testCase_taskOnErrorPushCached_default',
                             key: 'memory'
                         };
                         // cleanup memory-cache
@@ -1257,7 +1338,7 @@
                             // test onCacheWrite handling-behavior
                             onCacheWrite: onNext
                         };
-                        local.utility2.taskOnErrorAddCached(optionsCopy, onNext, onTask);
+                        local.utility2.taskOnErrorPushCached(optionsCopy, onNext, onTask);
                         break;
                     case 2:
                         // validate no error occurred
@@ -1281,7 +1362,7 @@
                             // test onCacheWrite handling-behavior
                             onCacheWrite: onNext
                         };
-                        local.utility2.taskOnErrorAddCached(optionsCopy, onNext, onTask);
+                        local.utility2.taskOnErrorPushCached(optionsCopy, onNext, onTask);
                         break;
                     case 4:
                         // validate no error occurred
@@ -1300,7 +1381,7 @@
                             cacheDict: options.cacheDict,
                             key: options.key
                         };
-                        local.utility2.taskOnErrorAddCached(optionsCopy, onNext, onTask);
+                        local.utility2.taskOnErrorPushCached(optionsCopy, onNext, onTask);
                         break;
                     case 6:
                         // validate no error occurred
@@ -1320,7 +1401,7 @@
                             cacheDict: options.cacheDict,
                             key: options.key + 'Error'
                         };
-                        local.utility2.taskOnErrorAddCached(
+                        local.utility2.taskOnErrorPushCached(
                             optionsCopy,
                             onNext,
                             function (onError) {
@@ -1346,7 +1427,7 @@
          * this function will test taskOnTaskUpsert's multiple-callback handling-behavior
          */
             options = { counter: 0, key: 'testCase_taskOnTaskUpsert_multiCallback' };
-            local.utility2.taskOnErrorAdd(options, function () {
+            local.utility2.taskOnErrorPush(options, function () {
                 options.counter += 1;
             });
             local.utility2.taskOnTaskUpsert(options, function (onError) {
@@ -1737,11 +1818,19 @@
                 file: '/assets.test.js',
                 url: '/assets.test.js'
             }, {
-                file: '/assets.utility2.css',
-                url: '/assets.utility2.css'
+                file: '/assets.' + local.utility2.envDict.npm_package_name + '.css',
+                url: '/assets.' + local.utility2.envDict.npm_package_name + '.css'
             }, {
-                file: '/assets.utility2.js',
-                url: '/assets.utility2.js'
+                file: '/assets.' + local.utility2.envDict.npm_package_name + '.js',
+                url: '/assets.' + local.utility2.envDict.npm_package_name + '.js'
+            }, {
+                file: '/assets.' + local.utility2.envDict.npm_package_name + '.min.js',
+                transform: function (data) {
+                    return local.utility2.uglifyIfProduction(
+                        local.utility2.bufferToString(data)
+                    );
+                },
+                url: '/assets.' + local.utility2.envDict.npm_package_name + '.js'
             }, {
                 file: '/assets.utility2.rollup.js',
                 url: '/assets.utility2.rollup.js'
@@ -1792,7 +1881,7 @@
                     }
                     local.utility2.fsWriteFileWithMkdirp(
                         local.utility2.envDict.npm_config_dir_build + '/app' + options.file,
-                        xhr.response,
+                        (options.transform || local.utility2.echo)(xhr.response),
                         onParallel
                     );
                 });
@@ -1846,6 +1935,22 @@
                             'utility2.Nedb': {
                                 exampleList: ['lib.nedb.js'],
                                 exports: local.utility2.Nedb
+                            },
+                            'utility2.Nedb.customUtils': {
+                                exampleList: ['lib.nedb.js'],
+                                exports: local.utility2.Nedb.customUtils
+                            },
+                            'utility2.Nedb.model': {
+                                exampleList: ['lib.nedb.js'],
+                                exports: local.utility2.Nedb.model
+                            },
+                            'utility2.Nedb.persistence': {
+                                exampleList: ['lib.nedb.js'],
+                                exports: local.utility2.Nedb.persistence
+                            },
+                            'utility2.Nedb.persistence.prototype': {
+                                exampleList: ['lib.nedb.js'],
+                                exports: local.utility2.Nedb.persistence.prototype
                             },
                             'utility2.Nedb.prototype': {
                                 exampleList: ['lib.nedb.js'],
@@ -2343,13 +2448,13 @@ local.utility2.assertJsonEqual(options.coverage1,
 case 'header':
 return '\
 /*\n\
-app.js\n\
+assets.app.js\n\
 \n' + local.utility2.envDict.npm_package_description + '\n\
 \n\
 instruction\n\
-    1. save this script as app.js\n\
+    1. save this script as assets.app.js\n\
     2. run the shell command:\n\
-        $ PORT=8081 node app.js\n\
+        $ PORT=8081 node assets.app.js\n\
     3. open a browser to http://localhost:8081\n\
     4. edit or paste script in browser to cover and test\n\
 */\n\

@@ -19,18 +19,16 @@ this package will run dynamic browser tests with coverage (via electron and ista
 
 # documentation
 #### todo
-- move nedb api from swagger-lite to here
-- replace jwt salt with proper nonce
+- add decryption / encryption to jwt
 - merge github-crud into this package
 - add utility2.middlewareLimit
 - add server stress test using electron
 - none
 
-#### change since aea2fe24
-- npm publish 2016.7.5
-- handle repl-server-error
-- display instrumented-code in web-ui
-- strip base64 '=' padding from local.utility2.sjclCipherAes128Encrypt
+#### change since cd5e4448
+- npm publish 2016.8.1
+- migrate nedb-api from swagger-lite to utility2
+- add functions utility2.db*
 - none
 
 #### this package requires
@@ -288,11 +286,15 @@ instruction
             '#inputTextarea1',
             '#testRunButton1'
         ].forEach(function (element) {
-            if (element.indexOf('#inputTextarea1') === 0) {
-                document.querySelector(element).addEventListener('keyup', local.testRun);
-                return;
+            element = document.querySelector(element);
+            switch (element && element.id) {
+            case 'inputTextarea1':
+                element.addEventListener('keyup', local.testRun);
+                break;
+            case 'testRunButton1':
+                element.addEventListener('click', local.testRun);
+                break;
             }
-            document.querySelector(element).addEventListener('click', local.testRun);
         });
         // run tests
         local.testRun();
@@ -351,8 +353,11 @@ body > * {\n\
 }\n\
 textarea {\n\
     font-family: monospace;\n\
-    height: 32rem;\n\
+    height: 16rem;\n\
     width: 100%;\n\
+}\n\
+textarea[readonly] {\n\
+    background-color: #ddd;\n\
 }\n\
 </style>\n\
 </head>\n\
@@ -374,7 +379,7 @@ textarea {\n\
     <h3>{{envDict.npm_package_description}}</h3>\n\
     <h4><a download href="assets.app.js">download standalone app</a></h4>\n\
     <button id="testRunButton1">run internal test</button><br>\n\
-    <div>edit or paste script below to cover and test</div>\n\
+    <label>edit or paste script below to cover and test</label>\n\
 <textarea id="inputTextarea1">\n\
 /*jslint\n\
     browser: true\n\
@@ -429,11 +434,12 @@ textarea {\n\
     }\n\
 }());\n\
 </textarea>\n\
-    <div>instrumented code</div>\n\
+    <label>instrumented code</label>\n\
     <textarea id="outputTextareaIstanbul1" readonly></textarea>\n\
     <pre id="outputPreJsonStringify1"></pre>\n\
     <pre id="outputPreJslint1"></pre>\n\
     <div class="testReportDiv" style="display: none;"></div>\n\
+    <h2>coverage-report</h2>\n\
     <div class="istanbulCoverageDiv"></div>\n\
     {{#if isRollup}}\n\
     <script src="assets.app.min.js"></script>\n\
@@ -445,10 +451,10 @@ textarea {\n\
     <script src="assets.utility2.lib.uglifyjs.js"></script>\n\
     <script src="assets.utility2.js"></script>\n\
     <script src="jsonp.utility2.stateInit?callback=window.utility2.stateInit"></script>\n\
-    <script >window.utility2.onReadyBefore.counter += 1;</script>\n\
+    <script>window.utility2.onResetBefore.counter += 1;</script>\n\
     <script src="assets.example.js"></script>\n\
     <script src="assets.test.js"></script>\n\
-    <script >window.utility2.onReadyBefore();</script>\n\
+    <script>window.utility2.onResetBefore();</script>\n\
     {{/if isRollup}}\n\
 </body>\n\
 </html>\n\
@@ -527,7 +533,7 @@ export npm_config_mode_auto_restart=1 && \
 ./index.sh test test.js",
         "test-all": "npm test --mode-coverage=all"
     },
-    "version": "2016.7.5"
+    "version": "2016.8.1"
 }
 ```
 
@@ -614,8 +620,6 @@ shBuildCiTestPre() {(set -e
         shBrowserTest) || return $?
     # test example.sh
     (export MODE_BUILD=testExampleSh &&
-        export PORT=8081 &&
-        export npm_config_timeout_exit=15000 &&
         npm run example.sh) || return $?
     # test published-package
     (export MODE_BUILD=npmTestPublished &&

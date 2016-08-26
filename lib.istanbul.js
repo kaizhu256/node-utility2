@@ -144,7 +144,7 @@
             if (!local._fs || !file) {
                 return;
             }
-            // try to write to the file
+            // try to write to file
             try {
                 local._fs.writeFileSync(file, data);
             } catch (errorCaught) {
@@ -154,7 +154,7 @@
                     ['-p', local.path.dirname(file)],
                     { stdio: ['ignore', 1, 2] }
                 );
-                // re-write to the file
+                // re-write to file
                 local._fs.writeFileSync(file, data);
             }
         };
@@ -979,10 +979,7 @@ local['head.txt'] = '\
             font-family: Menlo, Monaco, Consolas, Courier New, monospace;\n\
             margin: 0;\n\
             padding: 0;\n\
-            line-height: 14px;\n\
             font-size: 14px;\n\
-            -moz-tab-size: 2;\n\
-            -o-tab-size:  2;\n\
             tab-size: 2;\n\
         }\n\
 \n\
@@ -1073,9 +1070,8 @@ local['head.txt'] = '\
         div.coverage-summary td.abs { text-align: right; font-size: 90%; color: #444; border-right: 1px solid #666; }\n\
         div.coverage-summary td.file { text-align: right; border-left: 1px solid #666; white-space: nowrap;  }\n\
         div.coverage-summary td.pic { min-width: 120px !important;  }\n\
-        div.coverage-summary a:link { text-decoration: none; color: #000; }\n\
-        div.coverage-summary a:visited { text-decoration: none; color: #333; }\n\
-        div.coverage-summary a:hover { text-decoration: underline; }\n\
+        div.coverage-summary a:link { color: #000; }\n\
+        div.coverage-summary a:visited { color: #333; }\n\
         div.coverage-summary tfoot td { border-top: 1px solid #666; }\n\
 \n\
         div.coverage-summary .yui3-datatable-sort-indicator, div.coverage-summary .dummy-sort-indicator {\n\
