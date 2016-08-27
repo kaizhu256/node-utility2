@@ -1650,7 +1650,7 @@ local.utility2.templateTestReportHtml = '\
          * this function will serially upsert optionsList[ii].dbRowList
          */
             var modeNext, modeNextList, onNext, onNextList, onParallel, options, self;
-            onNext = function (error) {
+            onNext = function (error, data) {
                 modeNext = error
                     ? Infinity
                     : modeNext + 1;
@@ -1662,9 +1662,10 @@ local.utility2.templateTestReportHtml = '\
                         removeIndexList: []
                     });
                     // init dbTable
-                    self = local.utility2.dbTableCreate(options, onNext);
+                    local.utility2.dbTableCreate(options, onNext);
                     break;
                 case 2:
+                    self = data;
                     onParallel = local.utility2.onParallel(onNext);
                     onParallel.counter += 1;
                     // removeIndex
@@ -1726,7 +1727,7 @@ local.utility2.templateTestReportHtml = '\
                 }
                 onError(error);
             };
-            onNextList();
+            local.utility2.onResetAfter(onNextList);
         };
 
         local.utility2.docApiCreate = function (options) {

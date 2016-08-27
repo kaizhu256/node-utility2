@@ -1,6 +1,6 @@
 utility2
 ========
-this package will run dynamic browser tests with coverage (via electron and istanbul)
+this package will run dynamic browser-tests with coverage (via electron and istanbul)
 
 [![travis-ci.org build-status](https://api.travis-ci.org/kaizhu256/node-utility2.svg)](https://travis-ci.org/kaizhu256/node-utility2)
 
@@ -10,7 +10,7 @@ this package will run dynamic browser tests with coverage (via electron and ista
 
 
 
-# live test-server
+# live demo
 - [https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/index.html](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/index.html)
 
 [![github.com test-server](https://kaizhu256.github.io/node-utility2/build/screen-capture.githubDeploy.browser._2Fnode-utility2_2Fbuild..alpha..travis-ci.org_2Fapp_2Findex.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/index.html)
@@ -19,16 +19,16 @@ this package will run dynamic browser tests with coverage (via electron and ista
 
 # documentation
 #### todo
+- allow secure remote db export / import / reset to backend
 - add decryption / encryption to jwt
 - merge github-crud into this package
 - add utility2.middlewareLimit
 - add server stress test using electron
 - none
 
-#### change since cd5e4448
-- npm publish 2016.8.1
-- migrate nedb-api from swagger-lite to utility2
-- add functions utility2.db*
+#### change since 58d19ef8
+- npm publish 2016.8.2
+- ensure utility2.dbSeedListUpsert runs after utility2.onResetAfter
 - none
 
 #### this package requires
@@ -47,8 +47,8 @@ this package will run dynamic browser tests with coverage (via electron and ista
 
 | git-branch : | [master](https://github.com/kaizhu256/node-utility2/tree/master) | [beta](https://github.com/kaizhu256/node-utility2/tree/beta) | [alpha](https://github.com/kaizhu256/node-utility2/tree/alpha)|
 |--:|:--|:--|:--|
-| test-server 1 : | [![github.com test-server](https://kaizhu256.github.io/node-utility2/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/app/index.html) | [![github.com test-server](https://kaizhu256.github.io/node-utility2/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/index.html) | [![github.com test-server](https://kaizhu256.github.io/node-utility2/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/app/index.html)|
-| test-server 2 : | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://hrku01-utility2-master.herokuapp.com) | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://hrku01-utility2-beta.herokuapp.com) | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://hrku01-utility2-alpha.herokuapp.com)|
+| test-server-1 : | [![github.com test-server](https://kaizhu256.github.io/node-utility2/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/app/index.html) | [![github.com test-server](https://kaizhu256.github.io/node-utility2/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/index.html) | [![github.com test-server](https://kaizhu256.github.io/node-utility2/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/app/index.html)|
+| test-server-2 : | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://hrku01-utility2-master.herokuapp.com) | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://hrku01-utility2-beta.herokuapp.com) | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://hrku01-utility2-alpha.herokuapp.com)|
 | test-report : | [![test-report](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/test-report.html) | [![test-report](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/test-report.html) | [![test-report](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/test-report.html)|
 | coverage : | [![istanbul coverage](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/coverage.html/index.html) | [![istanbul coverage](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/coverage.html/index.html) | [![istanbul coverage](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/coverage.html/index.html)|
 | build-artifacts : | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..master..travis-ci.org) | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..beta..travis-ci.org) | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..alpha..travis-ci.org)|
@@ -76,7 +76,7 @@ this package will run dynamic browser tests with coverage (via electron and ista
 
 # this shell script will
     # npm install utility2
-    # serve a webpage that will interactively run browser tests with coverage
+    # serve a webpage that will interactively run browser-tests with coverage
 
 # instruction
     # 1. copy and paste this entire shell script into a console and press enter
@@ -87,7 +87,7 @@ shExampleSh() {(set -e
     # npm install utility2
     npm install utility2
 
-    # serve a webpage that will interactively run browser tests with coverage
+    # serve a webpage that will interactively run browser-tests with coverage
     cd node_modules/utility2 && export PORT=8081 && npm start
 )}
 shExampleSh
@@ -101,7 +101,7 @@ shExampleSh
 
 
 
-# quickstart node example
+# quickstart automated example
 ![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleJs.browser._2Ftmp_2Fapp_2Ftmp_2Fbuild_2Ftest-report.html.png)
 
 #### to run this example, follow the instruction in the script below
@@ -110,7 +110,7 @@ shExampleSh
 /*
 example.js
 
-this script will run browser tests with coverage
+this script will run automated browser-tests with coverage
 (via istanbul and electron)
 
 instruction
@@ -533,7 +533,7 @@ export npm_config_mode_auto_restart=1 && \
 ./index.sh test test.js",
         "test-all": "npm test --mode-coverage=all"
     },
-    "version": "2016.8.1"
+    "version": "2016.8.2"
 }
 ```
 
