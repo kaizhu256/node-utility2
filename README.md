@@ -19,6 +19,7 @@ this package will run dynamic browser-tests with coverage (via electron and ista
 
 # documentation
 #### todo
+- replace loading spinner with thin line at top
 - allow secure remote db export / import / reset to backend
 - add decryption / encryption to jwt
 - merge github-crud into this package
@@ -26,9 +27,12 @@ this package will run dynamic browser-tests with coverage (via electron and ista
 - add server stress test using electron
 - none
 
-#### change since 58d19ef8
-- npm publish 2016.8.2
-- ensure utility2.dbSeedListUpsert runs after utility2.onResetAfter
+#### change since b92e4f0f
+- npm publish 2016.9.1
+- revamp lib.nedb.js
+- reset onReadyAfter for testRun
+- add function utility2.onNext
+- streamline test.js
 - none
 
 #### this package requires
@@ -167,6 +171,9 @@ instruction
             ? window.utility2.local
             : module.isRollup
             ? module
+            : process.env.npm_config_mode_start
+            // jslint-hack
+            ? module && module.moduleExports.local
             : require('utility2').local;
         // require modules
         local.istanbul = local.utility2.istanbul;
@@ -328,6 +335,7 @@ instruction
 <html lang="en">\n\
 <head>\n\
 <meta charset="UTF-8">\n\
+<meta name="viewport" content="width=device-width, initial-scale=1">\n\
 <title>\n\
 {{envDict.npm_package_name}} v{{envDict.npm_package_version}}\n\
 </title>\n\
@@ -343,7 +351,7 @@ instruction
 }\n\
 body {\n\
     background-color: #fff;\n\
-    font-family: Helvetica Neue, Helvetica, Arial, sans-serif;\n\
+    font-family: Arial, Helvetica, sans-serif;\n\
 }\n\
 body > * {\n\
     margin-bottom: 1rem;\n\
@@ -533,7 +541,7 @@ export npm_config_mode_auto_restart=1 && \
 ./index.sh test test.js",
         "test-all": "npm test --mode-coverage=all"
     },
-    "version": "2016.8.2"
+    "version": "2016.9.1"
 }
 ```
 

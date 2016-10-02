@@ -162,7 +162,7 @@ local.utility2.templateBuildBadgeSvg =
 local.utility2.templateDocApiHtml = '\
 <style>\n\
 .docApiDiv {\n\
-    font-family: Helvetica Neue, Helvetica, Arial, sans-serif;\n\
+    font-family: Arial, Helvetica, sans-serif;\n\
 }\n\
 .docApiDiv a[href] {\n\
     color: #33f;\n\
@@ -264,7 +264,7 @@ local.utility2.templateTestReportHtml = '\
 */\n\
 .testReportPlatformDiv {\n\
     border: 1px solid black;\n\
-    font-family: Helvetica Neue, Helvetica, Arial, sans-serif;\n\
+    font-family: Arial, Helvetica, sans-serif;\n\
     margin-top: 20px;\n\
     padding: 0 10px 10px 10px;\n\
     text-align: left;\n\
@@ -826,7 +826,7 @@ local.utility2.templateTestReportHtml = '\
          *    to context object's list of entries.
          */
             if (filename) {
-                // try to set value.name to filename
+                // bug - chromium cannot assign name to Blob instance
                 local.utility2.tryCatchOnError(function () {
                     value.name = filename;
                 }, local.utility2.nop);
@@ -1082,7 +1082,7 @@ local.utility2.templateTestReportHtml = '\
 
         local.utility2.assert = function (passed, message) {
         /*
-         * this function will assert passed is truthy, else throw the error message
+         * this function will throw the error message if passed is falsey
          */
             var error;
             if (passed) {
@@ -1453,7 +1453,7 @@ local.utility2.templateTestReportHtml = '\
 
         local.utility2.bufferConcat = function (bufferList) {
         /*
-         * this function is the browser-version of node's Buffer.concat for Uint8Array
+         * this function will emulate node's Buffer.concat for Uint8Array in the browser
          */
             var ii, jj, length, result;
             length = 0;
@@ -1649,24 +1649,25 @@ local.utility2.templateTestReportHtml = '\
         /*
          * this function will serially upsert optionsList[ii].dbRowList
          */
-            var modeNext, modeNextList, onNext, onNextList, onParallel, options, self;
-            onNext = function (error, data) {
-                modeNext = error
-                    ? Infinity
-                    : modeNext + 1;
-                switch (modeNext) {
+            var onParallel, options, self;
+            options = {};
+            local.utility2.onNext(options, function (error, data) {
+                switch (options.modeNext) {
                 case 1:
-                    local.utility2.objectSetDefault(options, {
+                    local.utility2.objectSetDefault(optionsList[optionsList.modeNext], {
                         dbRowList: [],
                         ensureIndexList: [],
                         removeIndexList: []
                     });
                     // init dbTable
-                    local.utility2.dbTableCreate(options, onNext);
+                    local.utility2.dbTableCreate(
+                        optionsList[optionsList.modeNext],
+                        options.onNext
+                    );
                     break;
                 case 2:
                     self = data;
-                    onParallel = local.utility2.onParallel(onNext);
+                    onParallel = local.utility2.onParallel(options.onNext);
                     onParallel.counter += 1;
                     // removeIndex
                     [
@@ -1674,8 +1675,8 @@ local.utility2.templateTestReportHtml = '\
                         'id',
                         'updatedAt'
                     ]
-                        .concat(options.ensureIndexList)
-                        .concat(options.removeIndexList)
+                        .concat(optionsList[optionsList.modeNext].ensureIndexList)
+                        .concat(optionsList[optionsList.modeNext].removeIndexList)
                         .forEach(function (index) {
                             onParallel.counter += 1;
                             self.removeIndex(index, onParallel);
@@ -1693,7 +1694,7 @@ local.utility2.templateTestReportHtml = '\
                     }, {
                         fieldName: 'updatedAt'
                     }]
-                        .concat(options.ensureIndexList)
+                        .concat(optionsList[optionsList.modeNext].ensureIndexList)
                         .forEach(function (index) {
                             onParallel.counter += 1;
                             self.ensureIndex(index, onParallel);
@@ -1703,31 +1704,27 @@ local.utility2.templateTestReportHtml = '\
                 case 4:
                     onParallel.counter += 1;
                     // upsert dbRow
-                    options.dbRowList.forEach(function (dbRow) {
+                    optionsList[optionsList.modeNext].dbRowList.forEach(function (dbRow) {
                         onParallel.counter += 1;
                         self.update({ id: dbRow.id }, dbRow, { upsert: true }, onParallel);
                     });
                     onParallel();
                     break;
                 default:
-                    onNextList(error);
+                    optionsList.onNext(error);
                 }
-            };
-            modeNextList = -1;
-            onNextList = function (error) {
-                modeNextList = error
-                    ? Infinity
-                    : modeNextList + 1;
+            });
+            local.utility2.onNext(optionsList, function (error) {
                 // recursively run each sub-middleware in middlewareList
-                if (modeNextList < optionsList.length) {
-                    modeNext = 0;
-                    options = optionsList[modeNextList];
-                    onNext(options.error);
+                if (optionsList.modeNext < optionsList.length) {
+                    options.modeNext = 0;
+                    options.onNext();
                     return;
                 }
                 onError(error);
-            };
-            local.utility2.onResetAfter(onNextList);
+            });
+            optionsList.modeNext = -1;
+            local.utility2.onResetAfter(optionsList.onNext);
         };
 
         local.utility2.docApiCreate = function (options) {
@@ -2080,7 +2077,7 @@ local.utility2.templateTestReportHtml = '\
 
         local.utility2.jsonCopy = function (element) {
         /*
-         * this function will return a deep-copy of the JSON element
+         * this function will return a deep-copy of the JSON-element
          */
             return element === undefined
                 ? undefined
@@ -2204,54 +2201,55 @@ local.utility2.templateTestReportHtml = '\
         /*
          * this function will run the middleware that will serve cached-assets
          */
-            var modeNext, onNext, result;
-            modeNext = 0;
-            onNext = function (error, data) {
-                result = result || local.utility2.assetsDict[request.urlParsed.pathname];
-                if (error || result === undefined) {
+            var options;
+            options = {};
+            local.utility2.onNext(options, function (error, data) {
+                options.result = options.result ||
+                    local.utility2.assetsDict[request.urlParsed.pathname];
+                if (options.result === undefined) {
                     nextMiddleware(error);
                     return;
                 }
-                modeNext += 1;
-                switch (modeNext) {
+                switch (options.modeNext) {
                 case 1:
                     // skip gzip
                     if (response.headersSent ||
                             !(/\bgzip\b/).test(request.headers['accept-encoding'])) {
-                        modeNext += 1;
-                        onNext();
+                        options.modeNext += 1;
+                        options.onNext();
                         return;
                     }
                     // gzip and cache result
                     local.utility2.taskOnErrorPushCached({
                         cacheDict: 'middlewareAssetsCachedGzip',
                         key: request.urlParsed.pathname
-                    }, onNext, function (onError) {
-                        local.zlib.gzip(result, function (error, data) {
+                    }, options.onNext, function (onError) {
+                        local.zlib.gzip(options.result, function (error, data) {
                             onError(error, !error && data.toString('base64'));
                         });
                     });
                     break;
                 case 2:
                     // set gzip header
-                    result = local.utility2.bufferCreate(data, 'base64');
+                    options.result = local.utility2.bufferCreate(data, 'base64');
                     response.setHeader('Content-Encoding', 'gzip');
-                    response.setHeader('Content-Length', result.length);
-                    onNext();
+                    response.setHeader('Content-Length', options.result.length);
+                    options.onNext();
                     break;
                 case 3:
                     local.utility2.middlewareCacheControlLastModified(
                         request,
                         response,
-                        onNext
+                        options.onNext
                     );
                     break;
                 case 4:
-                    response.end(result);
+                    response.end(options.result);
                     break;
                 }
-            };
-            onNext();
+            });
+            options.modeNext = 0;
+            options.onNext();
         };
 
         local.utility2.middlewareBodyRead = function (request, response, nextMiddleware) {
@@ -2364,24 +2362,24 @@ local.utility2.templateTestReportHtml = '\
          */
             var self;
             self = function (request, response, nextMiddleware) {
-                var modeNext, onNext;
-                modeNext = -1;
-                onNext = function (error) {
-                    modeNext = error
-                        ? Infinity
-                        : modeNext + 1;
+                var options;
+                options = {};
+                local.utility2.onNext(options, function (error) {
                     // recurse with next middleware in middlewareList
-                    if (modeNext < self.middlewareList.length) {
-                        // try to run the sub-middleware
-                        local.utility2.tryCatchOnError(function () {
-                            self.middlewareList[modeNext](request, response, onNext);
-                        }, onNext);
+                    if (options.modeNext < self.middlewareList.length) {
+                        // run the sub-middleware
+                        self.middlewareList[options.modeNext](
+                            request,
+                            response,
+                            options.onNext
+                        );
                         return;
                     }
                     // default to nextMiddleware
                     nextMiddleware(error);
-                };
-                onNext();
+                });
+                options.modeNext = -1;
+                options.onNext();
             };
             self.middlewareList = middlewareList;
             return self;
@@ -2497,8 +2495,7 @@ local.utility2.templateTestReportHtml = '\
 
         local.utility2.objectSetDefault = function (arg, defaults, depth) {
         /*
-         * this function will recursively set default values for unset leaf nodes
-         * in the arg
+         * this function will recursively set defaults for undefined-items in the arg
          */
             Object.keys(defaults).forEach(function (key) {
                 var arg2, defaults2;
@@ -2531,7 +2528,7 @@ local.utility2.templateTestReportHtml = '\
 
         local.utility2.objectSetOverride = function (arg, overrides, depth) {
         /*
-         * this function will recursively override the arg, with the overrides-object
+         * this function will recursively set overrides for items the arg
          */
             var arg2, overrides2;
             Object.keys(overrides).forEach(function (key) {
@@ -2595,11 +2592,11 @@ local.utility2.templateTestReportHtml = '\
 
         local.utility2.onErrorWithStack = function (onError) {
         /*
-         * this function will return a new callback that calls onError,
-         * and add the current stack to any error encountered
+         * this function will return a new callback that will call onError,
+         * with the current errorStack appended to any errors
          */
             var stack;
-            stack = new Error().stack;
+            stack = new Error().stack.replace((/(.*?)\n.*?$/m), '$1');
             return function (error) {
                 if (error) {
                     // save current-stack to error.stack
@@ -2628,10 +2625,33 @@ local.utility2.templateTestReportHtml = '\
             }
         };
 
+        local.utility2.onNext = function (options, onError) {
+        /*
+         * this function will wrap onError inside the recursive function onNext
+         */
+            var stack;
+            stack = new Error().stack.replace((/(.*?)\n.*?$/m), '$1');
+            options.onNext = function (error, data) {
+                try {
+                    if (error) {
+                        error.stack = error.stack + '\n' + stack;
+                        options.modeNext = Infinity;
+                    } else {
+                        options.modeNext += 1;
+                    }
+                    onError.apply(null, arguments);
+                } catch (errorCaught) {
+                    errorCaught.stack = errorCaught.stack + '\n' + stack;
+                    (options.tryCatch || options.onNext)(errorCaught, data);
+                }
+            };
+            return options;
+        };
+
         local.utility2.onParallel = function (onError, onDebug) {
         /*
          * this function will return a function that will
-         * 1. runs async tasks in parallel
+         * 1. run async tasks in parallel
          * 2. if counter === 0 or error occurred, then call onError with error
          */
             var self;
@@ -2947,16 +2967,20 @@ tmp\\)\\(\\b\\|[_s]\\)\
             module.exports.utility2 = local.utility2;
             module.exports[local.utility2.envDict.npm_package_name] = module.moduleExports;
             // init assets
-            local.utility2.assetsDict[
-                '/assets.' + local.utility2.envDict.npm_package_name + '.css'
-            ] = local.fs.readFileSync(process.cwd() + '/index.css', 'utf8');
-            local.utility2.assetsDict[
-                '/assets.' + local.utility2.envDict.npm_package_name + '.js'
-            ] = local.utility2.istanbulInstrumentInPackage(
-                local.fs.readFileSync(process.cwd() + '/index.js', 'utf8')
-                    .replace((/^#!/), '//'),
-                process.cwd() + '/index.js'
-            );
+            local.utility2.tryCatchOnError(function () {
+                local.utility2.assetsDict[
+                    '/assets.' + local.utility2.envDict.npm_package_name + '.css'
+                ] = local.fs.readFileSync(process.cwd() + '/index.css', 'utf8');
+            }, local.utility2.nop);
+            local.utility2.tryCatchOnError(function () {
+                local.utility2.assetsDict[
+                    '/assets.' + local.utility2.envDict.npm_package_name + '.js'
+                ] = local.utility2.istanbulInstrumentInPackage(
+                    local.fs.readFileSync(process.cwd() + '/index.js', 'utf8')
+                        .replace((/^#!/), '//'),
+                    process.cwd() + '/index.js'
+                );
+            }, local.utility2.nop);
             local.utility2.assetsDict['/assets.example.js'] = script;
             local.utility2.assetsDict['/assets.test.js'] = '';
             local.utility2.tryCatchOnError(function () {
@@ -3254,14 +3278,10 @@ tmp\\)\\(\\b\\|[_s]\\)\
          * 3. save onTask's result to cache
          * 4. if cache-miss, then call onError with onTask's result
          */
-            var modeNext, onNext;
-            modeNext = 0;
-            onNext = function (error, data) {
-                modeNext += 1;
-                switch (modeNext) {
+            local.utility2.onNext(options, function (error, data) {
+                switch (options.modeNext) {
                 //  1. if cache-hit, then call onError with cacheValue
                 case 1:
-                    onError = local.utility2.onErrorWithStack(onError);
                     // read cacheValue from memory-cache
                     local.utility2.cacheDict[options.cacheDict] =
                         local.utility2.cacheDict[options.cacheDict] || {};
@@ -3276,14 +3296,14 @@ tmp\\)\\(\\b\\|[_s]\\)\
                         }
                     }
                     // run background-task with lower priority for cache-hit
-                    setTimeout(onNext, options.modeCacheHit && options.cacheTtl);
+                    setTimeout(options.onNext, options.modeCacheHit && options.cacheTtl);
                     break;
                 // 2. run onTask in background
                 case 2:
-                    local.utility2.taskOnErrorPush(options, onNext);
+                    local.utility2.taskOnErrorPush(options, options.onNext);
                     local.utility2.taskOnTaskUpsert(options, onTask);
                     break;
-                case 3:
+                default:
                     // 3. save onTask's result to cache
                     // JSON.stringify data to prevent side-effects on cache
                     options.cacheValue = JSON.stringify(data);
@@ -3298,8 +3318,9 @@ tmp\\)\\(\\b\\|[_s]\\)\
                     (options.onCacheWrite || local.utility2.nop)();
                     break;
                 }
-            };
-            onNext();
+            });
+            options.modeNext = 0;
+            options.onNext();
         };
 
         local.utility2.taskOnTaskUpsert = function (options, onTask) {
@@ -3742,6 +3763,7 @@ tmp\\)\\(\\b\\|[_s]\\)\
                 });
                 return;
             }
+            options.onReadyAfter = null;
             // init onParallel
             onParallel = local.utility2.onParallel(function () {
             /*

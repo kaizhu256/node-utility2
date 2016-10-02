@@ -67,6 +67,7 @@
         // require modules
         local.istanbul = local.utility2.istanbul;
         local.jslint = local.utility2.jslint;
+        local.uglifyjs = local.utility2.uglifyjs;
     }());
 
 
@@ -107,25 +108,23 @@
             options.method = 'POST';
             options.url = '/test.echo';
             local.utility2.ajax(options, function (error, xhr) {
-                local.utility2.tryCatchOnError(function () {
-                    // validate no error occurred
-                    local.utility2.assert(!error, error);
-                    // validate responseText
-                    local.utility2.assert(xhr.responseText.indexOf(
-                        '\r\nContent-Disposition: form-data; ' +
-                            'name="text1"\r\n\r\nhellobye\u1234 0\r\n'
-                    ) >= 0, xhr.responseText);
-                    local.utility2.assert(xhr.responseText.indexOf(
-                        '\r\nContent-Disposition: form-data; ' +
-                            'name="file1"\r\n\r\nhellobye\u1234 0\r\n'
-                    ) >= 0, xhr.responseText);
-                    local.utility2.assert(xhr.responseText.indexOf(
-                        '\r\nContent-Disposition: form-data; name="file2"; ' +
-                            'filename="filename2.txt"\r\nContent-Type: text/plain; ' +
-                            'charset=utf-8\r\n\r\nhellobye\u1234 0\r\n'
-                    ) >= 0, xhr.responseText);
-                    onError();
-                }, onError);
+                // validate no error occurred
+                local.utility2.assert(!error, error);
+                // validate responseText
+                local.utility2.assert(xhr.responseText.indexOf(
+                    '\r\nContent-Disposition: form-data; ' +
+                        'name="text1"\r\n\r\nhellobye\u1234 0\r\n'
+                ) >= 0, xhr.responseText);
+                local.utility2.assert(xhr.responseText.indexOf(
+                    '\r\nContent-Disposition: form-data; ' +
+                        'name="file1"\r\n\r\nhellobye\u1234 0\r\n'
+                ) >= 0, xhr.responseText);
+                local.utility2.assert(xhr.responseText.indexOf(
+                    '\r\nContent-Disposition: form-data; name="file2"; ' +
+                        'filename="filename2.txt"\r\nContent-Type: text/plain; ' +
+                        'charset=utf-8\r\n\r\nhellobye\u1234 0\r\n'
+                ) >= 0, xhr.responseText);
+                onError();
             });
         };
 
@@ -143,11 +142,9 @@
                 options.method = 'POST';
                 options.url = '/test.echo';
                 local.utility2.ajax(options, function (error) {
-                    local.utility2.tryCatchOnError(function () {
-                        // validate error occurred
-                        local.utility2.assert(error, error);
-                        onError();
-                    }, onError);
+                    // validate error occurred
+                    local.utility2.assert(error, error);
+                    onError();
                 });
             }, onError);
         };
@@ -161,14 +158,11 @@
             options.method = 'POST';
             options.url = '/test.echo';
             local.utility2.ajax(options, function (error, xhr) {
-                local.utility2.tryCatchOnError(function () {
-                    // validate no error occurred
-                    local.utility2.assert(!error, error);
-                    // validate responseText
-                    local.utility2.assert((/\r\n\r\n$/)
-                        .test(xhr.responseText), xhr.responseText);
-                    onError();
-                }, onError);
+                // validate no error occurred
+                local.utility2.assert(!error, error);
+                // validate responseText
+                local.utility2.assert((/\r\n\r\n$/).test(xhr.responseText), xhr.responseText);
+                onError();
             });
         };
 
@@ -177,11 +171,9 @@
          * this function will test ajax's abort handling-behavior
          */
             options = local.utility2.ajax({ url: '/test.timeout' }, function (error) {
-                local.utility2.tryCatchOnError(function () {
-                    // validate error occurred
-                    local.utility2.assert(error, error);
-                    onError();
-                }, onError);
+                // validate error occurred
+                local.utility2.assert(error, error);
+                onError();
             });
             // test multiple-callback handling-behavior
             options.onEvent({ type: 'abort' });
@@ -195,16 +187,14 @@
          */
             options = { url: 'package.json' };
             local.utility2.ajax(options, function (error, xhr) {
-                local.utility2.tryCatchOnError(function () {
-                    // validate no error occurred
-                    local.utility2.assert(!error, error);
-                    // validate statusCode
-                    local.utility2.assertJsonEqual(xhr.statusCode, 200);
-                    // validate responseText
-                    local.utility2.assert((/"name": "utility2",/)
-                        .test(xhr.responseText), xhr.responseText);
-                    onError();
-                }, onError);
+                // validate no error occurred
+                local.utility2.assert(!error, error);
+                // validate statusCode
+                local.utility2.assertJsonEqual(xhr.statusCode, 200);
+                // validate responseText
+                local.utility2.assert((/"name": "utility2",/)
+                    .test(xhr.responseText), xhr.responseText);
+                onError();
             });
         };
 
@@ -232,15 +222,13 @@
                 options = _;
                 onParallel.counter += 1;
                 local.utility2.ajax(options, function (error, xhr) {
-                    local.utility2.tryCatchOnError(function () {
-                        // validate error occurred
-                        local.utility2.assert(error, error);
-                        // test getAllResponseHeaders' null handling-behavior
-                        xhr.getAllResponseHeaders();
-                        // test getResponseHeader' null handling-behavior
-                        xhr.getResponseHeader('undefined');
-                        onParallel();
-                    }, onError);
+                    // validate error occurred
+                    local.utility2.assert(error, error);
+                    // test getAllResponseHeaders' null handling-behavior
+                    xhr.getAllResponseHeaders();
+                    // test getResponseHeader' null handling-behavior
+                    xhr.getResponseHeader('undefined');
+                    onParallel();
                 });
             });
             onParallel();
@@ -270,28 +258,26 @@
                         : '',
                     url: '/test.body'
                 }, function (error, xhr) {
-                    local.utility2.tryCatchOnError(function () {
-                        // validate no error occurred
-                        local.utility2.assert(!error, error);
-                        // validate statusCode
-                        local.utility2.assertJsonEqual(xhr.statusCode, 200);
+                    // validate no error occurred
+                    local.utility2.assert(!error, error);
+                    // validate statusCode
+                    local.utility2.assertJsonEqual(xhr.statusCode, 200);
+                    // validate response
+                    switch (responseType) {
+                    case 'arraybuffer':
+                    case 'stream':
+                        // cleanup response
+                        local.utility2.requestResponseCleanup(null, xhr.response);
                         // validate response
-                        switch (responseType) {
-                        case 'arraybuffer':
-                        case 'stream':
-                            // cleanup response
-                            local.utility2.requestResponseCleanup(null, xhr.response);
-                            // validate response
-                            options.data = xhr.response;
-                            local.utility2.assert(options.data, options);
-                            break;
-                        default:
-                            // validate responseText
-                            options.data = xhr.responseText;
-                            local.utility2.assertJsonEqual(options.data, 'hello');
-                        }
-                        onParallel();
-                    }, onError);
+                        options.data = xhr.response;
+                        local.utility2.assert(options.data, options);
+                        break;
+                    default:
+                        // validate responseText
+                        options.data = xhr.responseText;
+                        local.utility2.assertJsonEqual(options.data, 'hello');
+                    }
+                    onParallel();
                 });
             });
             // test /test.echo handling-behavior
@@ -302,26 +288,24 @@
                 method: 'POST',
                 url: '/test.echo'
             }, function (error, xhr) {
-                local.utility2.tryCatchOnError(function () {
-                    // validate no error occurred
-                    local.utility2.assert(!error, error);
-                    // validate statusCode
-                    local.utility2.assertJsonEqual(xhr.statusCode, 200);
-                    // validate response
-                    options.data = xhr.responseText;
-                    local.utility2.assert((/\r\nhello$/).test(options.data), options.data);
-                    local.utility2.assert((/\r\nx-request-header-test: hello\r\n/)
-                        .test(options.data), options.data);
-                    // validate responseHeaders
-                    options.data = xhr.getAllResponseHeaders();
-                    local.utility2.assert((/^X-Response-Header-Test: bye\r\n/im)
-                        .test(options.data), options.data);
-                    options.data = xhr.getResponseHeader('x-response-header-test');
-                    local.utility2.assertJsonEqual(options.data, 'bye');
-                    options.data = xhr.getResponseHeader('undefined');
-                    local.utility2.assertJsonEqual(options.data, null);
-                    onParallel();
-                }, onParallel);
+                // validate no error occurred
+                local.utility2.assert(!error, error);
+                // validate statusCode
+                local.utility2.assertJsonEqual(xhr.statusCode, 200);
+                // validate response
+                options.data = xhr.responseText;
+                local.utility2.assert((/\r\nhello$/).test(options.data), options.data);
+                local.utility2.assert((/\r\nx-request-header-test: hello\r\n/)
+                    .test(options.data), options.data);
+                // validate responseHeaders
+                options.data = xhr.getAllResponseHeaders();
+                local.utility2.assert((/^X-Response-Header-Test: bye\r\n/im)
+                    .test(options.data), options.data);
+                options.data = xhr.getResponseHeader('x-response-header-test');
+                local.utility2.assertJsonEqual(options.data, 'bye');
+                options.data = xhr.getResponseHeader('undefined');
+                local.utility2.assertJsonEqual(options.data, null);
+                onParallel();
             });
             onParallel();
         };
@@ -333,11 +317,9 @@
             options = { timeout: 1, url: '/test.timeout' };
             setTimeout(function () {
                 local.utility2.ajax(options, function (error) {
-                    local.utility2.tryCatchOnError(function () {
-                        // validate error occurred
-                        local.utility2.assert(error, error);
-                        onError();
-                    }, onError);
+                    // validate error occurred
+                    local.utility2.assert(error, error);
+                    onError();
                 });
             }, 1000);
         };
@@ -416,35 +398,33 @@
                 [null, 'dataURL', 'text'].forEach(function (encoding) {
                     onParallel.counter += 1;
                     local.utility2.blobRead(options.blob, encoding, function (error, data) {
-                        local.utility2.tryCatchOnError(function () {
-                            // validate no error occurred
-                            local.utility2.assert(!error, error);
-                            // validate data
-                            switch (encoding) {
-                            case 'dataURL':
-                                if (ii === 0) {
-                                    local.utility2.assertJsonEqual(
-                                        data,
-                                        'data:;base64,aGVsbG9ieWXhiLQgMA=='
-                                    );
-                                    break;
-                                }
+                        // validate no error occurred
+                        local.utility2.assert(!error, error);
+                        // validate data
+                        switch (encoding) {
+                        case 'dataURL':
+                            if (ii === 0) {
                                 local.utility2.assertJsonEqual(
                                     data,
-                                    'data:text/plain; charset=utf-8;base64,aGVsbG9ieWXhiLQgMA=='
+                                    'data:;base64,aGVsbG9ieWXhiLQgMA=='
                                 );
                                 break;
-                            case 'text':
-                                local.utility2.assertJsonEqual(data, 'hellobye\u1234 0');
-                                break;
-                            default:
-                                local.utility2.assertJsonEqual(
-                                    local.utility2.bufferToString(data),
-                                    'hellobye\u1234 0'
-                                );
                             }
-                            onParallel();
-                        }, onError);
+                            local.utility2.assertJsonEqual(
+                                data,
+                                'data:text/plain; charset=utf-8;base64,aGVsbG9ieWXhiLQgMA=='
+                            );
+                            break;
+                        case 'text':
+                            local.utility2.assertJsonEqual(data, 'hellobye\u1234 0');
+                            break;
+                        default:
+                            local.utility2.assertJsonEqual(
+                                local.utility2.bufferToString(data),
+                                'hellobye\u1234 0'
+                            );
+                        }
+                        onParallel();
                     });
                 });
             });
@@ -536,55 +516,37 @@
         /*
          * this function will test dbReset's default handling-behavior
          */
-            var modeNext, onNext;
-            modeNext = 0;
-            onNext = function (error) {
-                local.utility2.tryCatchOnError(function () {
-                    modeNext += 1;
-                    switch (modeNext) {
-                    case 1:
-                        options = [{
-                            name: 'testCase_dbReset_default1'
-                        }, {
-                            dbRowList: [{ id: 0 }],
-                            ensureIndexList: [{ fieldName: 'id', unique: true }],
-                            name: 'testCase_dbReset_default2',
-                            removeIndexList: ['id'],
-                            reset: true
-                        }];
-                        local.utility2.dbSeedList = options;
-                        onNext();
-                        break;
-                    // reset nedb
-                    case 2:
-                        local.utility2.dbReset();
-                        local.utility2.onReadyAfter(onNext);
-                        break;
-                    // re-reset nedb
-                    case 3:
-                        local.utility2.dbReset();
-                        local.utility2.onReadyAfter(onNext);
-                        break;
-                    default:
-                        onError(error);
-                    }
-                }, onError);
-            };
-            onNext();
-        };
-
-        local.testCase_dbSeedListUpsert_error = function (options, onError) {
-        /*
-         * this function will test dbSeedListUpsert's error handling-behavior
-         */
-            options = [{ error: local.utility2.errorDefault }];
-            local.utility2.dbSeedListUpsert(options, function (error) {
-                local.utility2.tryCatchOnError(function () {
-                    // validate error occurred
-                    local.utility2.assert(error, error);
-                    onError();
-                }, onError);
+            options = {};
+            local.utility2.onNext(options, function (error) {
+                switch (options.modeNext) {
+                case 1:
+                    local.utility2.dbSeedList = [{
+                        name: 'testCase_dbReset_default1'
+                    }, {
+                        dbRowList: [{ id: 0 }],
+                        ensureIndexList: [{ fieldName: 'id', unique: true }],
+                        name: 'testCase_dbReset_default2',
+                        removeIndexList: ['id'],
+                        reset: true
+                    }];
+                    options.onNext();
+                    break;
+                // reset nedb
+                case 2:
+                    local.utility2.dbReset();
+                    local.utility2.onReadyAfter(options.onNext);
+                    break;
+                // re-reset nedb
+                case 3:
+                    local.utility2.dbReset();
+                    local.utility2.onReadyAfter(options.onNext);
+                    break;
+                default:
+                    onError(error);
+                }
             });
+            options.modeNext = 0;
+            options.onNext();
         };
 
         local.testCase_debug_inline_default = function (options, onError) {
@@ -1148,6 +1110,32 @@
             }, onError);
         };
 
+        local.testCase_onNext_error = function (options, onError) {
+        /*
+         * this function will test onNext's error handling-behavior
+         */
+
+            var onParallel;
+            onParallel = local.utility2.onParallel(onError);
+            onParallel.counter += 1;
+            options = {};
+            local.utility2.onNext(options, function (error) {
+                switch (options.modeNext) {
+                // test try-catch handling-behavior
+                case 1:
+                    throw local.utility2.errorDefault;
+                default:
+                    // validate error occurred
+                    local.utility2.assert(error, error);
+                    onParallel();
+                }
+            });
+            options.modeNext = 0;
+            onParallel.counter += 1;
+            options.onNext();
+            onParallel();
+        };
+
         local.testCase_onParallel_default = function (options, onError) {
         /*
          * this function will test onParallel's default handling-behavior
@@ -1157,23 +1145,19 @@
             local.utility2.nop(options);
             // test onDebug handling-behavior
             onParallel = local.utility2.onParallel(onError, function (error, self) {
-                local.utility2.tryCatchOnError(function () {
-                    // validate no error occurred
-                    local.utility2.assert(!error, error);
-                    // validate self
-                    local.utility2.assert(self.counter >= 0, self);
-                }, onError);
+                // validate no error occurred
+                local.utility2.assert(!error, error);
+                // validate self
+                local.utility2.assert(self.counter >= 0, self);
             });
             onParallel.counter += 1;
             // test multiple-task handling-behavior
             onParallel.counter += 1;
             setTimeout(function () {
                 onParallelError = local.utility2.onParallel(function (error) {
-                    local.utility2.tryCatchOnError(function () {
-                        // validate error occurred
-                        local.utility2.assert(error, error);
-                        onParallel();
-                    }, onParallel);
+                    // validate error occurred
+                    local.utility2.assert(error, error);
+                    onParallel();
                 });
                 onParallelError.counter += 1;
                 // test error handling-behavior
@@ -1192,18 +1176,16 @@
          */
             options = local.utility2.timeElapsedStart();
             local.utility2.onTimeout(function (error) {
-                local.utility2.tryCatchOnError(function () {
-                    // validate error occurred
-                    local.utility2.assert(error, error);
-                    // validate error message
-                    local.utility2.assert(error.message
-                        .indexOf('testCase_onTimeout_errorTimeout') >= 0, error);
-                    // save timeElapsed
-                    local.utility2.timeElapsedStop(options);
-                    // validate timeElapsed passed is greater than timeout
-                    local.utility2.assert(options.timeElapsed >= 1500, options);
-                    onError();
-                }, onError);
+                // validate error occurred
+                local.utility2.assert(error, error);
+                // validate error message
+                local.utility2.assert(error.message
+                    .indexOf('testCase_onTimeout_errorTimeout') >= 0, error);
+                // save timeElapsed
+                local.utility2.timeElapsedStop(options);
+                // validate timeElapsed passed is greater than timeout
+                local.utility2.assert(options.timeElapsed >= 1500, options);
+                onError();
             // coverage-hack - use 1500 ms to cover setInterval
             }, 1500, function () {
                 return 'testCase_onTimeout_errorTimeout';
@@ -1314,112 +1296,80 @@
         /*
          * this function will test taskOnErrorPushCached's default handling-behavior
          */
-            var cacheValue, modeNext, onNext, onTask, optionsCopy;
-            modeNext = 0;
-            onNext = function (error, data) {
-                local.utility2.tryCatchOnError(function () {
-                    modeNext += 1;
-                    switch (modeNext) {
-                    // test no cache handling-behavior
-                    case 1:
-                        onTask = function (onError) {
-                            onError(null, cacheValue);
-                        };
-                        options = {
-                            cacheDict: 'testCase_taskOnErrorPushCached_default',
-                            key: 'memory'
-                        };
-                        // cleanup memory-cache
-                        local.utility2.cacheDict[options.cacheDict] = null;
-                        cacheValue = 'hello';
-                        optionsCopy = {
-                            cacheDict: options.cacheDict,
-                            key: options.key,
-                            // test onCacheWrite handling-behavior
-                            onCacheWrite: onNext
-                        };
-                        local.utility2.taskOnErrorPushCached(optionsCopy, onNext, onTask);
-                        break;
-                    case 2:
-                        // validate no error occurred
-                        local.utility2.assert(!error, error);
-                        // validate data
-                        local.utility2.assertJsonEqual(data, 'hello');
-                        // validate no cache-hit
-                        local.utility2.assert(
-                            !optionsCopy.modeCacheHit,
-                            optionsCopy.modeCacheHit
-                        );
-                        break;
-                    // test cache with update handling-behavior
-                    case 3:
-                        cacheValue = 'bye';
-                        optionsCopy = {
-                            cacheDict: options.cacheDict,
-                            key: options.key,
-                            // test modeCacheUpdate handling-behavior
-                            modeCacheUpdate: true,
-                            // test onCacheWrite handling-behavior
-                            onCacheWrite: onNext
-                        };
-                        local.utility2.taskOnErrorPushCached(optionsCopy, onNext, onTask);
-                        break;
-                    case 4:
-                        // validate no error occurred
-                        local.utility2.assert(!error, error);
-                        // validate data
-                        local.utility2.assertJsonEqual(data, 'hello');
-                        // validate modeCacheHit
-                        local.utility2.assertJsonEqual(
-                            optionsCopy.modeCacheHit,
-                            true
-                        );
-                        break;
-                    // test cache handling-behavior
-                    case 5:
-                        optionsCopy = {
-                            cacheDict: options.cacheDict,
-                            key: options.key
-                        };
-                        local.utility2.taskOnErrorPushCached(optionsCopy, onNext, onTask);
-                        break;
-                    case 6:
-                        // validate no error occurred
-                        local.utility2.assert(!error, error);
-                        // validate data
-                        local.utility2.assertJsonEqual(data, 'bye');
-                        // validate modeCacheHit
-                        local.utility2.assertJsonEqual(
-                            optionsCopy.modeCacheHit,
-                            true
-                        );
-                        onNext();
-                        break;
-                    // test error handling-behavior
-                    case 7:
-                        optionsCopy = {
-                            cacheDict: options.cacheDict,
-                            key: options.key + 'Error'
-                        };
-                        local.utility2.taskOnErrorPushCached(
-                            optionsCopy,
-                            onNext,
-                            function (onError) {
-                                onError(local.utility2.errorDefault);
-                            }
-                        );
-                        break;
-                    case 8:
-                        // validate error occurred
-                        local.utility2.assert(error, error);
-                        onNext();
-                        break;
-                    default:
-                        onError(error);
-                    }
-                }, onError);
-            };
-            onNext();
+            var cacheValue, onTask, optionsCopy;
+            options = {};
+            local.utility2.onNext(options, function (error, data) {
+                switch (options.modeNext) {
+                // test no cache handling-behavior
+                case 1:
+                    onTask = function (onError) {
+                        onError(null, cacheValue);
+                    };
+                    options.cacheDict = 'testCase_taskOnErrorPushCached_default';
+                    options.key = 'memory';
+                    // cleanup memory-cache
+                    local.utility2.cacheDict[options.cacheDict] = null;
+                    cacheValue = 'hello';
+                    optionsCopy = {
+                        cacheDict: options.cacheDict,
+                        key: options.key,
+                        // test onCacheWrite handling-behavior
+                        onCacheWrite: options.onNext
+                    };
+                    local.utility2.taskOnErrorPushCached(optionsCopy, options.onNext, onTask);
+                    break;
+                case 2:
+                    // validate data
+                    local.utility2.assertJsonEqual(data, 'hello');
+                    // validate no cache-hit
+                    local.utility2.assert(!optionsCopy.modeCacheHit, optionsCopy.modeCacheHit);
+                    break;
+                // test cache with update handling-behavior
+                case 3:
+                    cacheValue = 'bye';
+                    optionsCopy = {
+                        cacheDict: options.cacheDict,
+                        key: options.key,
+                        // test modeCacheUpdate handling-behavior
+                        modeCacheUpdate: true,
+                        // test onCacheWrite handling-behavior
+                        onCacheWrite: options.onNext
+                    };
+                    local.utility2.taskOnErrorPushCached(optionsCopy, options.onNext, onTask);
+                    break;
+                case 4:
+                    // validate data
+                    local.utility2.assertJsonEqual(data, 'hello');
+                    // validate modeCacheHit
+                    local.utility2.assertJsonEqual(
+                        optionsCopy.modeCacheHit,
+                        true
+                    );
+                    break;
+                // test cache handling-behavior
+                case 5:
+                    optionsCopy = {
+                        cacheDict: options.cacheDict,
+                        key: options.key
+                    };
+                    local.utility2.taskOnErrorPushCached(optionsCopy, options.onNext, onTask);
+                    break;
+                case 6:
+                    // validate data
+                    local.utility2.assertJsonEqual(data, 'bye');
+                    // validate modeCacheHit
+                    local.utility2.assertJsonEqual(
+                        optionsCopy.modeCacheHit,
+                        true
+                    );
+                    options.onNext();
+                    break;
+                default:
+                    onError(error);
+                }
+            });
+            options.modeNext = 0;
+            options.onNext();
         };
 
         local.testCase_taskOnTaskUpsert_multipleCallback = function (options, onError) {
@@ -1454,10 +1404,8 @@
             });
             // validate counter incremented once
             setTimeout(function () {
-                local.utility2.tryCatchOnError(function () {
-                    local.utility2.assertJsonEqual(options.counter, 1);
-                    onError();
-                }, onError);
+                local.utility2.assertJsonEqual(options.counter, 1);
+                onError();
             });
         };
 
@@ -1562,7 +1510,7 @@
          * this function will test uglify's default handling-behavior
          */
             options = {};
-            options.data = local.utility2.uglify('aa = 1');
+            options.data = local.uglifyjs.uglify('aa = 1');
             // validate data
             local.utility2.assertJsonEqual(options.data, 'aa=1');
             onError();
@@ -1650,18 +1598,16 @@
             local.utility2.assert(local.utility2.regexpUuidValidate
                 .test(options.data1), options.data1);
             setTimeout(function () {
-                local.utility2.tryCatchOnError(function () {
-                    options.data2 = local.utility2.uuidTimeCreate();
-                    // validate data2
-                    local.utility2.assert(local.utility2.regexpUuidValidate
-                        .test(options.data2), options.data2);
-                    // validate data1 < data2
-                    local.utility2.assert(
-                        options.data1 < options.data2,
-                        [options.data1, options.data2]
-                    );
-                    onError();
-                }, onError);
+                options.data2 = local.utility2.uuidTimeCreate();
+                // validate data2
+                local.utility2.assert(local.utility2.regexpUuidValidate
+                    .test(options.data2), options.data2);
+                // validate data1 < data2
+                local.utility2.assert(
+                    options.data1 < options.data2,
+                    [options.data1, options.data2]
+                );
+                onError();
             }, 1000);
         };
     }());
@@ -1761,34 +1707,37 @@
         /*
          * this function will test ajax's cache handling-behavior
          */
-            // jslint-hack
-            local.utility2.nop(options);
-            // test http GET handling-behavior
-            local.utility2.ajax({
-                url: 'assets.hello'
-            }, function (error, xhr) {
-                local.utility2.tryCatchOnError(function () {
-                    // validate no error occurred
-                    local.utility2.assert(!error, error);
+            options = {};
+            local.utility2.onNext(options, function (error, data) {
+                switch (options.modeNext) {
+                case 1:
+                    // test http GET handling-behavior
+                    local.utility2.ajax({
+                        url: 'assets.hello'
+                    }, options.onNext);
+                    break;
+                case 2:
                     // validate responseText
-                    local.utility2.assertJsonEqual(xhr.responseText, 'hello');
+                    local.utility2.assertJsonEqual(data.responseText, 'hello');
                     // test http GET 304 cache handling-behavior
                     local.utility2.ajax({
                         headers: {
                             'If-Modified-Since': new Date(Date.now() + 0xffff).toGMTString()
                         },
                         url: 'assets.hello'
-                    }, function (error, xhr) {
-                        local.utility2.tryCatchOnError(function () {
-                            // validate no error occurred
-                            local.utility2.assert(!error, error);
-                            // validate statusCode
-                            local.utility2.assertJsonEqual(xhr.statusCode, 304);
-                            onError();
-                        }, onError);
-                    });
-                }, onError);
+                    }, options.onNext);
+                    break;
+                case 3:
+                    // validate statusCode
+                    local.utility2.assertJsonEqual(data.statusCode, 304);
+                    options.onNext();
+                    break;
+                default:
+                    onError(error);
+                }
             });
+            options.modeNext = 0;
+            options.onNext();
         };
 
         local.testCase_build_app = function (options, onError) {
@@ -1871,12 +1820,10 @@
                             options.file
                         );
                         // validate no error occurred
-                        local.utility2.tryCatchOnError(function () {
-                            local.utility2.assert(
-                                !local.utility2.jslint.errorText,
-                                local.utility2.jslint.errorText
-                            );
-                        }, onError);
+                        local.utility2.assert(
+                            !local.utility2.jslint.errorText,
+                            local.utility2.jslint.errorText
+                        );
                         break;
                     }
                     local.utility2.fsWriteFileWithMkdirp(
@@ -1893,187 +1840,180 @@
         /*
          * this function will test build's doc handling-behavior
          */
-            var modeNext, onNext;
-            modeNext = 0;
-            onNext = function (error) {
-                local.utility2.tryCatchOnError(function () {
-                    // validate no error occurred
-                    local.utility2.assert(!error, error);
-                    modeNext += 1;
-                    switch (modeNext) {
-                    case 1:
-                        options = {};
-                        options.moduleDict = {
-                            utility2: {
-                                exampleList: [],
-                                exports: local.utility2
-                            },
-                            'utility2.Blob': {
-                                exampleList: [],
-                                exports: local.utility2.Blob
-                            },
-                            'utility2.Blob.prototype': {
-                                exampleList: [],
-                                exports: local.utility2.Blob.prototype
-                            },
-                            'utility2.FormData': {
-                                exampleList: [],
-                                exports: local.utility2.FormData
-                            },
-                            'utility2.FormData.prototype': {
-                                exampleList: [],
-                                exports: local.utility2.FormData.prototype
-                            },
-                            'utility2.istanbul': {
-                                exampleList: ['lib.istanbul.js'],
-                                exports: local.utility2.istanbul
-                            },
-                            'utility2.jslint': {
-                                exampleList: ['lib.jslint.js'],
-                                exports: local.utility2.jslint
-                            },
-                            'utility2.Nedb': {
-                                exampleList: ['lib.nedb.js'],
-                                exports: local.utility2.Nedb
-                            },
-                            'utility2.Nedb.customUtils': {
-                                exampleList: ['lib.nedb.js'],
-                                exports: local.utility2.Nedb.customUtils
-                            },
-                            'utility2.Nedb.model': {
-                                exampleList: ['lib.nedb.js'],
-                                exports: local.utility2.Nedb.model
-                            },
-                            'utility2.Nedb.persistence': {
-                                exampleList: ['lib.nedb.js'],
-                                exports: local.utility2.Nedb.persistence
-                            },
-                            'utility2.Nedb.persistence.prototype': {
-                                exampleList: ['lib.nedb.js'],
-                                exports: local.utility2.Nedb.persistence.prototype
-                            },
-                            'utility2.Nedb.prototype': {
-                                exampleList: ['lib.nedb.js'],
-                                exports: local.utility2.Nedb.prototype
-                            },
-                            'utility2.Nedb.storage': {
-                                exampleList: ['lib.nedb.js'],
-                                exports: local.utility2.Nedb.storage
-                            },
-                            'utility2.sjcl': {
-                                exampleList: ['lib.sjcl.js'],
-                                exports: local.utility2.sjcl
-                            },
-                            'utility2.uglifyjs': {
-                                exampleList: ['lib.uglifyjs.js'],
-                                exports: local.utility2.uglifyjs
-                            }
-                        };
-                        Object.keys(options.moduleDict).forEach(function (key) {
-                            options.moduleDict[key].example =
-                                options.moduleDict[key].exampleList
-                                .concat([
-                                    'README.md',
-                                    'test.js',
-                                    'index.js'
-                                ])
-                                .map(function (file) {
-                                    return '\n\n\n\n\n\n\n\n' +
-                                        local.fs.readFileSync(file, 'utf8') +
-                                        '\n\n\n\n\n\n\n\n';
-                                }).join('');
-                        });
-                        // create doc.api.html
-                        local.utility2.fsWriteFileWithMkdirp(
-                            local.utility2.envDict.npm_config_dir_build + '/doc.api.html',
-                            local.utility2.docApiCreate(options),
-                            onNext
-                        );
-                        break;
-                    case 2:
-                        local.utility2.browserTest({
-                            modeBrowserTest: 'screenCapture',
-                            url: 'file://' + local.utility2.envDict.npm_config_dir_build +
-                                '/doc.api.html'
-                        }, onNext);
-                        break;
-                    default:
-                        onError(error);
-                    }
-                }, onError);
-            };
-            onNext();
+            options = {};
+            local.utility2.onNext(options, function (error) {
+                switch (options.modeNext) {
+                case 1:
+                    options.moduleDict = {
+                        utility2: {
+                            exampleList: [],
+                            exports: local.utility2
+                        },
+                        'utility2.Blob': {
+                            exampleList: [],
+                            exports: local.utility2.Blob
+                        },
+                        'utility2.Blob.prototype': {
+                            exampleList: [],
+                            exports: local.utility2.Blob.prototype
+                        },
+                        'utility2.FormData': {
+                            exampleList: [],
+                            exports: local.utility2.FormData
+                        },
+                        'utility2.FormData.prototype': {
+                            exampleList: [],
+                            exports: local.utility2.FormData.prototype
+                        },
+                        'utility2.istanbul': {
+                            exampleList: ['lib.istanbul.js'],
+                            exports: local.utility2.istanbul
+                        },
+                        'utility2.jslint': {
+                            exampleList: ['lib.jslint.js'],
+                            exports: local.utility2.jslint
+                        },
+                        'utility2.Nedb': {
+                            exampleList: ['lib.nedb.js'],
+                            exports: local.utility2.Nedb
+                        },
+                        'utility2.Nedb.customUtils': {
+                            exampleList: ['lib.nedb.js'],
+                            exports: local.utility2.Nedb.customUtils
+                        },
+                        'utility2.Nedb.model': {
+                            exampleList: ['lib.nedb.js'],
+                            exports: local.utility2.Nedb.model
+                        },
+                        'utility2.Nedb.persistence': {
+                            exampleList: ['lib.nedb.js'],
+                            exports: local.utility2.Nedb.persistence
+                        },
+                        'utility2.Nedb.persistence.prototype': {
+                            exampleList: ['lib.nedb.js'],
+                            exports: local.utility2.Nedb.persistence.prototype
+                        },
+                        'utility2.Nedb.prototype': {
+                            exampleList: ['lib.nedb.js'],
+                            exports: local.utility2.Nedb.prototype
+                        },
+                        'utility2.sjcl': {
+                            exampleList: ['lib.sjcl.js'],
+                            exports: local.utility2.sjcl
+                        },
+                        'utility2.uglifyjs': {
+                            exampleList: ['lib.uglifyjs.js'],
+                            exports: local.utility2.uglifyjs
+                        }
+                    };
+                    Object.keys(options.moduleDict).forEach(function (key) {
+                        options.moduleDict[key].example =
+                            options.moduleDict[key].exampleList
+                            .concat([
+                                'README.md',
+                                'test.js',
+                                'index.js'
+                            ])
+                            .map(function (file) {
+                                return '\n\n\n\n\n\n\n\n' +
+                                    local.fs.readFileSync(file, 'utf8') +
+                                    '\n\n\n\n\n\n\n\n';
+                            }).join('');
+                    });
+                    // create doc.api.html
+                    local.utility2.fsWriteFileWithMkdirp(
+                        local.utility2.envDict.npm_config_dir_build + '/doc.api.html',
+                        local.utility2.docApiCreate(options),
+                        options.onNext
+                    );
+                    break;
+                case 2:
+                    local.utility2.browserTest({
+                        modeBrowserTest: 'screenCapture',
+                        url: 'file://' + local.utility2.envDict.npm_config_dir_build +
+                            '/doc.api.html'
+                    }, options.onNext);
+                    break;
+                default:
+                    onError(error);
+                }
+            });
+            options.modeNext = 0;
+            options.onNext();
         };
 
         local.testCase_fsWriteFileWithMkdirp_default = function (options, onError) {
         /*
          * this function will test fsWriteFileWithMkdirp's default handling-behavior
          */
-            var modeNext, onNext;
             options = {};
-            modeNext = 0;
-            onNext = function (error, data) {
-                local.utility2.tryCatchOnError(function () {
-                    modeNext += 1;
-                    switch (modeNext) {
-                    case 1:
-                        options.dir = local.utility2.envDict.npm_config_dir_tmp +
-                            '/testCase_fsWriteFileWithMkdirp_default';
-                        // cleanup dir
-                        local.utility2.fsRmrSync(options.dir);
-                        // validate no dir exists
-                        local.utility2.assert(!local.fs.existsSync(options.dir), options.dir);
-                        onNext();
-                        break;
-                    case 2:
-                        // test fsWriteFileWithMkdirp with mkdirp handling-behavior
-                        options.file = options.dir + '/aa/bb';
-                        local.utility2.fsWriteFileWithMkdirp(options.file, 'hello1', onNext);
-                        break;
-                    case 3:
-                        // validate no error occurred
-                        local.utility2.assert(!error, error);
-                        // validate data
-                        data = local.fs.readFileSync(options.file, 'utf8');
-                        local.utility2.assertJsonEqual(data, 'hello1');
-                        onNext();
-                        break;
-                    case 4:
-                        // test fsWriteFileWithMkdirp with no mkdirp handling-behavior
-                        options.file = options.dir + '/aa/bb';
-                        local.utility2.fsWriteFileWithMkdirp(options.file, 'hello2', onNext);
-                        break;
-                    case 5:
-                        // validate no error occurred
-                        local.utility2.assert(!error, error);
-                        // validate data
-                        data = local.fs.readFileSync(options.file, 'utf8');
-                        local.utility2.assertJsonEqual(data, 'hello2');
-                        onNext();
-                        break;
-                    case 6:
-                        // test error handling-behavior
-                        options.file = options.dir + '/aa/bb/cc';
-                        local.utility2.fsWriteFileWithMkdirp(options.file, 'hello', onNext);
-                        break;
-                    case 7:
-                        // validate error occurred
-                        local.utility2.assert(error, error);
-                        onNext();
-                        break;
-                    case 8:
-                        // cleanup dir
-                        local.utility2.fsRmrSync(options.dir);
-                        // validate no dir exists
-                        local.utility2.assert(!local.fs.existsSync(options.dir), options.dir);
-                        onNext();
-                        break;
-                    default:
-                        onError(error);
-                    }
-                }, onError);
-            };
-            onNext();
+            local.utility2.onNext(options, function (error, data) {
+                switch (options.modeNext) {
+                case 1:
+                    options.dir = local.utility2.envDict.npm_config_dir_tmp +
+                        '/testCase_fsWriteFileWithMkdirp_default';
+                    // cleanup dir
+                    local.utility2.fsRmrSync(options.dir);
+                    // validate no dir exists
+                    local.utility2.assert(!local.fs.existsSync(options.dir), options.dir);
+                    options.onNext();
+                    break;
+                case 2:
+                    // test fsWriteFileWithMkdirp with mkdirp handling-behavior
+                    options.file = options.dir + '/aa/bb';
+                    local.utility2.fsWriteFileWithMkdirp(
+                        options.file,
+                        'hello1',
+                        options.onNext
+                    );
+                    break;
+                case 3:
+                    // validate data
+                    data = local.fs.readFileSync(options.file, 'utf8');
+                    local.utility2.assertJsonEqual(data, 'hello1');
+                    options.onNext();
+                    break;
+                case 4:
+                    // test fsWriteFileWithMkdirp with no mkdirp handling-behavior
+                    options.file = options.dir + '/aa/bb';
+                    local.utility2.fsWriteFileWithMkdirp(
+                        options.file,
+                        'hello2',
+                        options.onNext
+                    );
+                    break;
+                case 5:
+                    // validate data
+                    data = local.fs.readFileSync(options.file, 'utf8');
+                    local.utility2.assertJsonEqual(data, 'hello2');
+                    options.onNext();
+                    break;
+                case 6:
+                    // test error handling-behavior
+                    options.file = options.dir + '/aa/bb/cc';
+                    local.utility2.fsWriteFileWithMkdirp(
+                        options.file,
+                        'hello',
+                        function (error) {
+                            // validate error occurred
+                            local.utility2.assert(error, error);
+                            options.onNext();
+                        }
+                    );
+                    break;
+                case 7:
+                    // cleanup dir
+                    local.utility2.fsRmrSync(options.dir);
+                    // validate no dir exists
+                    local.utility2.assert(!local.fs.existsSync(options.dir), options.dir);
+                    options.onNext();
+                    break;
+                default:
+                    onError(error);
+                }
+            });
+            options.modeNext = 0;
+            options.onNext();
         };
 
         local.testCase_istanbulCoverageMerge_default = function (options, onError) {
@@ -2176,13 +2116,11 @@ local.utility2.assertJsonEqual(options.coverage1,
             options.childProcess
                 .on('error', onParallel)
                 .on('exit', function (exitCode, signal) {
-                    local.utility2.tryCatchOnError(function () {
-                        // validate exitCode
-                        local.utility2.assertJsonEqual(exitCode, null);
-                        // validate signal
-                        local.utility2.assertJsonEqual(signal, 'SIGKILL');
-                        onParallel();
-                    }, onParallel);
+                    // validate exitCode
+                    local.utility2.assertJsonEqual(exitCode, null);
+                    // validate signal
+                    local.utility2.assertJsonEqual(signal, 'SIGKILL');
+                    onParallel();
                 });
             onParallel();
         };
@@ -2268,14 +2206,12 @@ local.utility2.assertJsonEqual(options.coverage1,
             });
             options.socket.setEncoding('utf8');
             options.socket.on('end', function () {
-                local.utility2.tryCatchOnError(function () {
-                    // validate data
-                    local.utility2.assert(
-                        options.data.indexOf(options.input) >= 0,
-                        JSON.stringify([options.data, options.input])
-                    );
-                    onError();
-                }, onError);
+                // validate data
+                local.utility2.assert(
+                    options.data.indexOf(options.input) >= 0,
+                    JSON.stringify([options.data, options.input])
+                );
+                onError();
             });
             options.socket.write(options.input + '\n');
             // test error-handling behavior
@@ -2327,11 +2263,9 @@ local.utility2.assertJsonEqual(options.coverage1,
                     'timeExit={{timeExit}}'
             };
             local.utility2.browserTest(options, function (error) {
-                local.utility2.tryCatchOnError(function () {
-                    // validate error occurred
-                    local.utility2.assert(error, error);
-                    onError();
-                }, onError);
+                // validate error occurred
+                local.utility2.assert(error, error);
+                onError();
             });
         };
 

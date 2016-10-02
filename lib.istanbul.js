@@ -17,7 +17,7 @@
 
 
 
-    // run shared js-env code - init
+    // run shared js-env code - pre-init
     (function () {
         // init var
         __dirname = '';
@@ -198,11 +198,9 @@
 
 
 
-    // run browser js-env code - init
+    // run browser js-env code - pre-init
     case 'browser':
-        // init exports
-        local.global.utility2_istanbul = local;
-        // init local properties
+        // require modules
         local.path = {
             dirname: function (file) {
                 return file.replace((/\/[\w\-\.]+?$/), '');
@@ -211,17 +209,19 @@
                 return arguments[arguments.length - 1];
             }
         };
+        // init exports
+        local.global.utility2_istanbul = local;
         break;
 
 
 
-    // run node js-env code - init
+    // run node js-env code - pre-init
     case 'node':
-        // init exports
-        module.exports = module['./lib.istanbul.js'] = local;
-        // init local properties
+        // require modules
         local._fs = local.require2('fs');
         local.path = local.require2('path');
+        // init exports
+        module.exports = module['./lib.istanbul.js'] = local;
         break;
     }
 
@@ -940,7 +940,7 @@ local['head.txt'] = '\
             margin:0; padding: 0;\n\
         }\n\
         body {\n\
-            font-family: Helvetica Neue, Helvetica,Arial;\n\
+            font-family: Arial, Helvetica;\n\
             font-size: 10pt;\n\
         }\n\
         div.header, div.footer {\n\

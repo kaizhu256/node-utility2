@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+/* istanbul instrument in package all */
+/* istanbul instrument in package uglifyjs-lite */
 /*jslint
     bitwise: true,
     browser: true,
@@ -33,10 +35,12 @@
                     'node';
             }
         }());
+        local.local = local.uglifyjs = local;
     }());
 
 
 
+    /* istanbul ignore next */
     // run shared js-env code - post-init
     (function () {
         var exports, require;
@@ -263,20 +267,21 @@ f){}}else n[1]=n[1].substr(0,2);return i?i.call(n,n):null}throw u}}}(),DOT_CALL_
 
     // run browser js-env code - post-init
     case 'browser':
-        // export uglifyjs
+        // init exports
         window.utility2_uglifyjs = local;
         break;
 
 
 
+    /* istanbul ignore next */
     // run node js-env code - post-init
     case 'node':
-        // export uglifyjs
-        module.exports = module['./lib.uglifyjs.js'] = local;
-        module.exports.__dirname = __dirname;
         // require modules
         local.fs = require('fs');
         local.path = require('path');
+        // init exports
+        module.exports = module['./lib.uglifyjs.js'] = module.uglifyjs = local;
+        module.exports.__dirname = __dirname;
         // run the cli
         if (module !== require.main || module.isRollup) {
             break;

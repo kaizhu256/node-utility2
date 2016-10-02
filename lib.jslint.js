@@ -762,7 +762,7 @@ local.CSSLint = CSSLint; local.JSLINT = JSLINT; }());
     /* istanbul ignore next */
     // run node js-env code - post-init
     case 'node':
-        // export jslint
+        // init exports
         module.exports = module['./lib.jslint.js'] = module.jslint = local;
         module.exports.__dirname = __dirname;
         // require modules

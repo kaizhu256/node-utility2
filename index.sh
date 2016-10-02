@@ -1741,7 +1741,7 @@ shMain() {
         (shInit && "$COMMAND" "$@") || return $?
         ;;
     start)
-        (shInit && export npm_config_mode_auto_restart=1 &&
+        (shInit && export npm_config_mode_auto_restart=1 && export npm_config_mode_start=1 &&
             shRun node "$npm_config_dir_utility2/test.js" "$@") || return $?
         ;;
     test)

@@ -49,5 +49,5 @@
 
         "test-all": "npm test --mode-coverage=all"
     },
-    "version": "2016.8.2"
+    "version": "2016.9.1"
 }
