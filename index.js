@@ -58,17 +58,19 @@
         };
         // init lib
         [
+            'db',
             'istanbul',
             'jslint',
-            'nedb',
             'sjcl',
             'uglifyjs'
         ].forEach(function (key) {
-            local.utility2[key === 'nedb'
-                ? 'Nedb'
-                : key] = local.modeJs === 'browser'
-                ? local.global['utility2_' + key]
-                : require('./lib.' + key + '.js');
+            try {
+                local[key] = local.utility2[key] = local.modeJs === 'browser'
+                    ? local.global['utility2_' + key]
+                    : require('./lib.' + key + '.js');
+            } catch (ignore) {
+            }
+            local[key] = local.utility2[key] = local.utility2[key] || {};
         });
         // init assets and templates
 /* jslint-ignore-begin */
@@ -989,7 +991,7 @@ local.utility2.templateTestReportHtml = '\
                             local.utility2.errorMessagePrepend(xhr.error, tmp);
                         }
                     }
-                    onError(xhr.error, xhr, xhr.onEvent);
+                    onError(xhr.error, xhr);
                     break;
                 }
                 local.utility2.ajaxProgressUpdate();
@@ -1272,7 +1274,7 @@ local.utility2.templateTestReportHtml = '\
                                 local.fs.readFileSync(options.fileCoverage, 'utf8')
                             );
                         }, local.utility2.nop);
-                        if (!local.utility2.tryCatchErrorCaught) {
+                        if (!local.utility2._debugTryCatchErrorCaught) {
                             local.utility2.istanbulCoverageMerge(
                                 local.global.__coverage__,
                                 data
@@ -1293,8 +1295,8 @@ local.utility2.templateTestReportHtml = '\
                             'utf8'
                         ));
                     }, local.utility2.nop);
-                    if (local.utility2.tryCatchErrorCaught) {
-                        onNext(local.utility2.tryCatchErrorCaught);
+                    if (local.utility2._debugTryCatchErrorCaught) {
+                        onNext(local.utility2._debugTryCatchErrorCaught);
                         return;
                     }
                     console.log('\nbrowserTest - merging test-report from ' +
@@ -1597,15 +1599,9 @@ local.utility2.templateTestReportHtml = '\
             return tmp;
         };
 
-        // init dbExport
-        local.utility2.dbExport = local.utility2.Nedb && local.utility2.Nedb.dbExport;
-
-        // init dbImport
-        local.utility2.dbImport = local.utility2.Nedb && local.utility2.Nedb.dbImport;
-
         local.utility2.dbReset = function () {
         /*
-         * this function will reset nedb's file-state and memory-state
+         * this function will reset db's file-state and memory-state
          */
             local.utility2.onResetBefore.counter += 1;
             // visual notification
@@ -1619,7 +1615,7 @@ local.utility2.templateTestReportHtml = '\
                     local.utility2.onReadyBefore
                 );
             });
-            // reset nedb backend
+            // reset db backend
             if (local.modeJs === 'browser' &&
                     local.utility2.envDict.npm_config_mode_backend) {
                 local.utility2.onResetBefore.counter += 1;
@@ -1631,19 +1627,13 @@ local.utility2.templateTestReportHtml = '\
                     local.utility2.onResetBefore();
                 });
             }
-            // reset nedb local-persistence
-            if (local.utility2.Nedb) {
+            // reset db local-persistence
+            if (local.db.dbClear) {
                 local.utility2.onResetBefore.counter += 1;
-                local.utility2.Nedb.dbReset(local.utility2.onResetBefore);
+                local.db.dbClear(local.utility2.onResetBefore);
             }
             local.utility2.onResetBefore();
         };
-
-        // init dbTableCreate
-        local.utility2.dbTableCreate = local.utility2.Nedb && local.utility2.Nedb.dbTableCreate;
-
-        // init dbTableDrop
-        local.utility2.dbTableDrop = local.utility2.Nedb && local.utility2.Nedb.dbTableDrop;
 
         local.utility2.dbSeedListUpsert = function (optionsList, onError) {
         /*
@@ -1655,58 +1645,36 @@ local.utility2.templateTestReportHtml = '\
                 switch (options.modeNext) {
                 case 1:
                     local.utility2.objectSetDefault(optionsList[optionsList.modeNext], {
-                        dbRowList: [],
-                        ensureIndexList: [],
-                        removeIndexList: []
+                        dbIndexCreateList: [],
+                        dbIndexRemoveList: [],
+                        dbRowList: []
                     });
-                    // init dbTable
-                    local.utility2.dbTableCreate(
+                    // create dbTable
+                    local.db.dbTableCreate(
                         optionsList[optionsList.modeNext],
                         options.onNext
                     );
                     break;
                 case 2:
                     self = data;
+                    // remove dbIndex
+                    optionsList[
+                        optionsList.modeNext
+                    ].dbIndexRemoveList.forEach(function (index) {
+                        self.dbIndexRemove(index, onParallel);
+                    });
+                    // create dbIndex
+                    optionsList[
+                        optionsList.modeNext
+                    ].dbIndexCreateList.forEach(function (index) {
+                        self.dbIndexCreate(index);
+                    });
+                    // upsert dbRow
                     onParallel = local.utility2.onParallel(options.onNext);
                     onParallel.counter += 1;
-                    // removeIndex
-                    [
-                        'createdAt',
-                        'id',
-                        'updatedAt'
-                    ]
-                        .concat(optionsList[optionsList.modeNext].ensureIndexList)
-                        .concat(optionsList[optionsList.modeNext].removeIndexList)
-                        .forEach(function (index) {
-                            onParallel.counter += 1;
-                            self.removeIndex(index, onParallel);
-                        });
-                    onParallel();
-                    break;
-                case 3:
-                    onParallel.counter += 1;
-                    // ensureIndex
-                    [{
-                        fieldName: 'createdAt'
-                    }, {
-                        fieldName: 'id',
-                        unique: true
-                    }, {
-                        fieldName: 'updatedAt'
-                    }]
-                        .concat(optionsList[optionsList.modeNext].ensureIndexList)
-                        .forEach(function (index) {
-                            onParallel.counter += 1;
-                            self.ensureIndex(index, onParallel);
-                        });
-                    onParallel();
-                    break;
-                case 4:
-                    onParallel.counter += 1;
-                    // upsert dbRow
                     optionsList[optionsList.modeNext].dbRowList.forEach(function (dbRow) {
                         onParallel.counter += 1;
-                        self.update({ id: dbRow.id }, dbRow, { upsert: true }, onParallel);
+                        self.crudUpdate({ id: dbRow.id }, dbRow, { upsert: true }, onParallel);
                     });
                     onParallel();
                     break;
@@ -1757,7 +1725,9 @@ local.utility2.templateTestReportHtml = '\
                 element.source = local.utility2.stringHtmlSafe(element.source)
                     .replace((/\([\S\s]*?\)/), function (match0) {
                         // init signature
-                        element.signature = match0.replace((/ *?\/\*[\S\s]*?\*\/ */g), '');
+                        element.signature = match0
+                            .replace((/ *?\/\*[\S\s]*?\*\/ */g), '')
+                            .replace((/ /g), '&nbsp;');
                         return element.signature;
                     })
                     .replace(
@@ -1828,7 +1798,9 @@ local.utility2.templateTestReportHtml = '\
                     return {
                         elementList: Object.keys(module.exports)
                             .filter(function (key) {
-                                return key && key[0] !== '_' && !(/\W/).test(key);
+                                return key && key[0] !== '_' &&
+                                    !(/\W/).test(key) &&
+                                    key.indexOf('testCase_') !== 0;
                             })
                             .map(function (key) {
                                 elementName = key;
@@ -2002,20 +1974,20 @@ local.utility2.templateTestReportHtml = '\
         };
 
         // init istanbulCoverageReportCreate
-        local.utility2.istanbulCoverageReportCreate = (local.utility2.istanbul &&
-            local.utility2.istanbul.coverageReportCreate) || local.utility2.echo;
+        local.utility2.istanbulCoverageReportCreate =
+            local.utility2.istanbul.coverageReportCreate || local.utility2.echo;
 
         // init istanbulInstrumentInPackage
-        local.utility2.istanbulInstrumentInPackage = (local.utility2.istanbul &&
-            local.utility2.istanbul.instrumentInPackage) || local.utility2.echo;
+        local.utility2.istanbulInstrumentInPackage =
+            local.utility2.istanbul.instrumentInPackage || local.utility2.echo;
 
         // init istanbulInstrumentSync
-        local.utility2.istanbulInstrumentSync = (local.utility2.istanbul &&
-            local.utility2.istanbul.instrumentSync) || local.utility2.echo;
+        local.utility2.istanbulInstrumentSync =
+            local.utility2.istanbul.instrumentSync || local.utility2.echo;
 
         // init jslintAndPrint
-        local.utility2.jslintAndPrint = (local.utility2.jslint &&
-            local.utility2.jslint.jslintAndPrint) || local.utility2.echo;
+        local.utility2.jslintAndPrint =
+            local.utility2.jslint.jslintAndPrint || local.utility2.echo;
 
         local.utility2.jslintAndPrintConditional = function (script, file) {
         /*
@@ -2075,13 +2047,13 @@ local.utility2.templateTestReportHtml = '\
             return script;
         };
 
-        local.utility2.jsonCopy = function (element) {
+        local.utility2.jsonCopy = function (arg) {
         /*
-         * this function will return a deep-copy of the JSON-element
+         * this function will return a deep-copy of the JSON-arg
          */
-            return element === undefined
+            return arg === undefined
                 ? undefined
-                : JSON.parse(JSON.stringify(element));
+                : JSON.parse(JSON.stringify(arg));
         };
 
         local.utility2.jsonStringifyOrdered = function (element, replacer, space) {
@@ -2497,6 +2469,8 @@ local.utility2.templateTestReportHtml = '\
         /*
          * this function will recursively set defaults for undefined-items in the arg
          */
+            arg = arg || {};
+            defaults = defaults || {};
             Object.keys(defaults).forEach(function (key) {
                 var arg2, defaults2;
                 arg2 = arg[key];
@@ -2530,8 +2504,10 @@ local.utility2.templateTestReportHtml = '\
         /*
          * this function will recursively set overrides for items the arg
          */
-            var arg2, overrides2;
+            arg = arg || {};
+            overrides = overrides || {};
             Object.keys(overrides).forEach(function (key) {
+                var arg2, overrides2;
                 arg2 = arg[key];
                 overrides2 = overrides[key];
                 if (overrides2 === undefined) {
@@ -2569,7 +2545,7 @@ local.utility2.templateTestReportHtml = '\
             circularList = circularList || [];
             if (arg &&
                     typeof arg === 'object' &&
-                    circularList.indexOf(arg) === -1) {
+                    circularList.indexOf(arg) < 0) {
                 circularList.push(arg);
                 Object.keys(arg).forEach(function (key) {
                     // recurse with arg[key]
@@ -2593,16 +2569,16 @@ local.utility2.templateTestReportHtml = '\
         local.utility2.onErrorWithStack = function (onError) {
         /*
          * this function will return a new callback that will call onError,
-         * with the current errorStack appended to any errors
+         * and append the current stack to any error
          */
             var stack;
             stack = new Error().stack.replace((/(.*?)\n.*?$/m), '$1');
-            return function (error) {
-                if (error) {
-                    // save current-stack to error.stack
-                    error.stack = error.stack + '\n' + stack;
+            return function (error, data, meta) {
+                if (error && String(error.stack).indexOf(stack.split('\n')[2]) < 0) {
+                    // append the current stack to error.stack
+                    error.stack += '\n' + stack;
                 }
-                onError.apply(null, arguments);
+                onError(error, data, meta);
             };
         };
 
@@ -2627,24 +2603,24 @@ local.utility2.templateTestReportHtml = '\
 
         local.utility2.onNext = function (options, onError) {
         /*
-         * this function will wrap onError inside the recursive function onNext
+         * this function will wrap onError inside the recursive function options.onNext,
+         * and append the current stack to any error
          */
-            var stack;
-            stack = new Error().stack.replace((/(.*?)\n.*?$/m), '$1');
-            options.onNext = function (error, data) {
+            options.onNext = local.utility2.onErrorWithStack(function (error, data, meta) {
                 try {
-                    if (error) {
-                        error.stack = error.stack + '\n' + stack;
-                        options.modeNext = Infinity;
-                    } else {
-                        options.modeNext += 1;
-                    }
-                    onError.apply(null, arguments);
+                    options.modeNext = error
+                        ? Infinity
+                        : options.modeNext + 1;
+                    onError(error, data, meta);
                 } catch (errorCaught) {
-                    errorCaught.stack = errorCaught.stack + '\n' + stack;
-                    (options.tryCatch || options.onNext)(errorCaught, data);
+                    // throw errorCaught to break infinite recursion-loop
+                    if (options.errorCaught) {
+                        throw options.errorCaught;
+                    }
+                    options.errorCaught = errorCaught;
+                    options.onNext(errorCaught, data, meta);
                 }
-            };
+            });
             return options;
         };
 
@@ -2850,8 +2826,8 @@ tmp\\)\\(\\b\\|[_s]\\)\
                 // syntax sugar to list object's keys, sorted by item-type
                 case 'keys':
                     script = 'console.log(Object.keys(' + match[2] + ').map(function (key) {' +
-                        'return typeof ' + match[2] + '[key] + " " + key;' +
-                        '}).sort().join("\\n"))\n';
+                        'return typeof ' + match[2] + '[key] + " " + key + "\\n";' +
+                        '}).sort().join("") + Object.keys(' + match[2] + ').length)\n';
                     break;
                 // syntax sugar to print stringified arg
                 case 'print':
@@ -2884,14 +2860,10 @@ tmp\\)\\(\\b\\|[_s]\\)\
                 self.socket.on('error', local.utility2.onErrorDefault);
                 self.socket.setKeepAlive(true);
             });
+            // coverage-hack - test no tcp-server handling-behavior
             [
-                // coverage-hack - test no tcp-server handling-behavior
-                null,
                 local.utility2.envDict.PORT_REPL
-            ].forEach(function (port) {
-                if (!port) {
-                    return;
-                }
+            ].filter(local.utility2.echo).forEach(function (port) {
                 console.log('repl-server listening on tcp-port ' + port);
                 self.serverTcp.listen(port);
             });
@@ -2967,29 +2939,22 @@ tmp\\)\\(\\b\\|[_s]\\)\
             module.exports.utility2 = local.utility2;
             module.exports[local.utility2.envDict.npm_package_name] = module.moduleExports;
             // init assets
-            local.utility2.tryCatchOnError(function () {
-                local.utility2.assetsDict[
-                    '/assets.' + local.utility2.envDict.npm_package_name + '.css'
-                ] = local.fs.readFileSync(process.cwd() + '/index.css', 'utf8');
-            }, local.utility2.nop);
-            local.utility2.tryCatchOnError(function () {
-                local.utility2.assetsDict[
-                    '/assets.' + local.utility2.envDict.npm_package_name + '.js'
-                ] = local.utility2.istanbulInstrumentInPackage(
-                    local.fs.readFileSync(process.cwd() + '/index.js', 'utf8')
-                        .replace((/^#!/), '//'),
-                    process.cwd() + '/index.js'
-                );
-            }, local.utility2.nop);
+            local.utility2.assetsDict[
+                '/assets.' + local.utility2.envDict.npm_package_name + '.css'
+            ] = local.utility2.tryCatchReadFile(process.cwd() + '/index.css', 'utf8');
+            local.utility2.assetsDict[
+                '/assets.' + local.utility2.envDict.npm_package_name + '.js'
+            ] = local.utility2.istanbulInstrumentInPackage(
+                local.utility2.tryCatchReadFile(process.cwd() + '/index.js', 'utf8')
+                    .replace((/^#!/), '//'),
+                process.cwd() + '/index.js'
+            );
             local.utility2.assetsDict['/assets.example.js'] = script;
-            local.utility2.assetsDict['/assets.test.js'] = '';
-            local.utility2.tryCatchOnError(function () {
-                local.utility2.assetsDict['/assets.test.js'] =
-                    local.utility2.istanbulInstrumentInPackage(
-                        local.fs.readFileSync(process.cwd() + '/test.js', 'utf8'),
-                        process.cwd() + '/test.js'
-                    );
-            }, local.utility2.nop);
+            local.utility2.assetsDict['/assets.test.js'] =
+                local.utility2.istanbulInstrumentInPackage(
+                    local.utility2.tryCatchReadFile(process.cwd() + '/test.js', 'utf8'),
+                    process.cwd() + '/test.js'
+                );
             local.utility2.assetsDict['/'] = local.utility2.assetsDict['/index.html'] =
                 local.utility2.jslintAndPrintHtml(
                     local.utility2.templateRender(module.exports.templateIndexHtml, {
@@ -3756,7 +3721,7 @@ tmp\\)\\(\\b\\|[_s]\\)\
                 return;
             }
             if (!options.onReadyAfter) {
-                // reset nedb
+                // reset db
                 local.utility2.dbReset();
                 options.onReadyAfter = local.utility2.onReadyAfter(function () {
                     local.utility2.testRun(options);
@@ -3971,22 +3936,34 @@ tmp\\)\\(\\b\\|[_s]\\)\
             return options;
         };
 
-        local.utility2.tryCatchOnError = function (task, onError) {
+        local.utility2.tryCatchOnError = function (fnc, onError) {
         /*
-         * this function will try to run the task in a try-catch block,
+         * this function will try to run the fnc in a try-catch block,
          * else call onError with the errorCaught
          */
             try {
-                local.utility2.tryCatchErrorCaught = null;
-                task();
+                local.utility2._debugTryCatchErrorCaught = null;
+                return fnc();
             } catch (errorCaught) {
-                local.utility2.tryCatchErrorCaught = errorCaught;
-                onError(errorCaught);
+                local.utility2._debugTryCatchErrorCaught = errorCaught;
+                return onError(errorCaught);
             }
         };
 
-        local.utility2.uglify = (local.utility2.uglifyjs &&
-            local.utility2.uglifyjs.uglify) || local.utility2.echo;
+        local.utility2.tryCatchReadFile = function (file, options) {
+        /*
+         * this function will try to read the file or return an empty string
+         */
+            var data;
+            data = '';
+            try {
+                data = local.fs.readFileSync(file, options);
+            } catch (ignore) {
+            }
+            return data;
+        };
+
+        local.utility2.uglify = local.utility2.uglifyjs.uglify || local.utility2.echo;
 
         local.utility2.uglifyIfProduction = function (code) {
         /*
@@ -4152,6 +4129,7 @@ tmp\\)\\(\\b\\|[_s]\\)\
         local.utility2.stringUriComponentCharset = '!%\'()*-.' +
             '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz~';
         local.utility2.taskOnTaskDict = {};
+        local.utility2.testCaseDict = local.utility2.objectSetDefault({}, local);
         local.utility2.testReport = { testPlatformList: [{
             name: local.modeJs === 'browser'
                 ? 'browser - ' +
@@ -4300,7 +4278,7 @@ tmp\\)\\(\\b\\|[_s]\\)\
             'index.sh',
             'lib.istanbul.js',
             'lib.jslint.js',
-            'lib.nedb.js',
+            'lib.db.js',
             'lib.sjcl.js',
             'lib.uglifyjs.js',
             'templateDocApiHtml',
@@ -4309,31 +4287,31 @@ tmp\\)\\(\\b\\|[_s]\\)\
             switch (key) {
             case 'index.css':
                 local.utility2.assetsDict['/assets.utility2.css'] =
-                    local.fs.readFileSync(__dirname + '/' + key, 'utf8');
+                    local.utility2.tryCatchReadFile(__dirname + '/' + key, 'utf8');
                 break;
             case 'index.js':
                 local.utility2.assetsDict['/assets.utility2.js'] =
                     local.utility2.istanbulInstrumentInPackage(
-                        local.fs.readFileSync(__dirname + '/' + key, 'utf8')
+                        local.utility2.tryCatchReadFile(__dirname + '/' + key, 'utf8')
                             .replace((/^#!/), '//'),
                         __dirname + '/' + key
                     );
                 break;
             case 'index.sh':
                 local.utility2.jslintAndPrintHtml(
-                    local.fs.readFileSync(__dirname + '/' + key, 'utf8')
+                    local.utility2.tryCatchReadFile(__dirname + '/' + key, 'utf8')
                         .replace((/^#!/), '//'),
                     __dirname + '/' + key
                 );
                 break;
             case 'lib.istanbul.js':
             case 'lib.jslint.js':
-            case 'lib.nedb.js':
+            case 'lib.db.js':
             case 'lib.sjcl.js':
             case 'lib.uglifyjs.js':
                 local.utility2.assetsDict['/assets.utility2.' + key] =
                     local.utility2.istanbulInstrumentInPackage(
-                        local.fs.readFileSync(__dirname + '/' + key, 'utf8')
+                        local.utility2.tryCatchReadFile(__dirname + '/' + key, 'utf8')
                             .replace((/^#!/), '//')
                             .replace(
                                 (/(\bistanbul instrument in package .*-lite\b)/),
@@ -4352,7 +4330,7 @@ tmp\\)\\(\\b\\|[_s]\\)\
             '/assets.utility2.rollup.begin.js',
             '/assets.utility2.lib.istanbul.js',
             '/assets.utility2.lib.jslint.js',
-            '/assets.utility2.lib.nedb.js',
+            '/assets.utility2.lib.db.js',
             '/assets.utility2.lib.sjcl.js',
             '/assets.utility2.lib.uglifyjs.js',
             '/assets.utility2.js',
@@ -4372,6 +4350,17 @@ tmp\\)\\(\\b\\|[_s]\\)\
                     );
             }
         }).join('\n\n\n\n');
+        // init testCaseDict
+        local.utility2.tryCatchReadFile(local.utility2.__dirname + '/test.js', 'utf8').replace(
+            (/\/\/ run shared js-env code - function[\S\s]+?\n {4}\}\(\)\);/),
+            function (match0, ii, text) {
+                // preserve lineno
+                match0 = text.slice(0, ii).replace((/.+/g), '') + match0;
+                local.vm.runInNewContext(match0, local.utility2.objectSetDefault({
+                    local: local.utility2.testCaseDict
+                }, local.global));
+            }
+        );
         // merge previous test-report
         if (local.utility2.envDict.npm_config_file_test_report_merge &&
                 local.fs.existsSync(

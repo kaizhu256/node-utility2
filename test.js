@@ -18,7 +18,7 @@
     // run shared js-env code - pre-init
     (function () {
         // init Error.stackTraceLimit
-        Error.stackTraceLimit = Infinity;
+        Error.stackTraceLimit = 20;
         // init local
         local = {};
         // init modeJs
@@ -493,9 +493,9 @@
          * this function will test dbReset's ajax handling-behavior
          */
             options = [
+                [local, { db: {} }],
                 [local.utility2, {
                     _debugXhrdbReset: null,
-                    Nedb: null,
                     ajax: function (options, onError) {
                         // jslint-hack
                         local.utility2.nop(options);
@@ -523,20 +523,20 @@
                     local.utility2.dbSeedList = [{
                         name: 'testCase_dbReset_default1'
                     }, {
+                        dbIndexCreateList: [{ fieldName: 'id', unique: true }],
+                        dbIndexRemoveList: ['id'],
                         dbRowList: [{ id: 0 }],
-                        ensureIndexList: [{ fieldName: 'id', unique: true }],
                         name: 'testCase_dbReset_default2',
-                        removeIndexList: ['id'],
                         reset: true
                     }];
                     options.onNext();
                     break;
-                // reset nedb
+                // reset db
                 case 2:
                     local.utility2.dbReset();
                     local.utility2.onReadyAfter(options.onNext);
                     break;
-                // re-reset nedb
+                // re-reset db
                 case 3:
                     local.utility2.dbReset();
                     local.utility2.onReadyAfter(options.onNext);
@@ -584,7 +584,10 @@
                     // test module.exports is a function handling-behavior
                     function: {
                         example: '',
-                        exports: local.utility2.nop.bind(null)
+                        exports: local.utility2.objectSetDefault(
+                            local.utility2.nop.bind(null),
+                            { aa: 1 }
+                        )
                     },
                     // test default handling-behavior
                     utility2: {
@@ -890,12 +893,13 @@
         /*
          * this function will test listGetRandom's default handling-behavior
          */
+            var ii;
             options = {};
             // init list
             options.list = ['aa', 'bb', 'cc', 'dd'];
             options.elementDict = {};
             // get 100 random elements from list
-            for (options.ii = 0; options.ii < 1024; options.ii += 1) {
+            for (ii = 0; ii < 1024; ii += 1) {
                 options.elementDict[local.utility2.listGetElementRandom(options.list)] = true;
             }
             // validate all elements were retrieved from list
@@ -910,11 +914,12 @@
         /*
          * this function will test listShuffle's default handling-behavior
          */
+            var ii;
             options = {};
             // init list
             options.list = '[0,1]';
             // shuffle list 100 times
-            for (options.ii = 0; options.ii < 100; options.ii += 1) {
+            for (ii = 0; ii < 100; ii += 1) {
                 options.listShuffled =
                     JSON.stringify(local.utility2.listShuffle(JSON.parse(options.list)));
                 // validate shuffled list
@@ -978,6 +983,9 @@
         /*
          * this function will test objectSetDefault's default handling-behavior
          */
+            // tset null handling behavior
+            local.utility2.objectSetDefault();
+            local.utility2.objectSetDefault({});
             // test falsey handling-behavior
             ['', 0, false, null, undefined].forEach(function (aa) {
                 ['', 0, false, null, undefined].forEach(function (bb) {
@@ -1020,6 +1028,9 @@
         /*
          * this function will test objectSetOverride's default handling-behavior
          */
+            // tset null handling behavior
+            local.utility2.objectSetOverride();
+            local.utility2.objectSetOverride({});
             // test falsey handling-behavior
             ['', 0, false, null, undefined].forEach(function (aa) {
                 ['', 0, false, null, undefined].forEach(function (bb) {
@@ -1115,25 +1126,18 @@
          * this function will test onNext's error handling-behavior
          */
 
-            var onParallel;
-            onParallel = local.utility2.onParallel(onError);
-            onParallel.counter += 1;
             options = {};
-            local.utility2.onNext(options, function (error) {
-                switch (options.modeNext) {
-                // test try-catch handling-behavior
-                case 1:
-                    throw local.utility2.errorDefault;
-                default:
-                    // validate error occurred
-                    local.utility2.assert(error, error);
-                    onParallel();
-                }
+            local.utility2.onNext(options, function () {
+                throw local.utility2.errorDefault;
             });
             options.modeNext = 0;
-            onParallel.counter += 1;
-            options.onNext();
-            onParallel();
+            local.utility2.tryCatchOnError(function () {
+                options.onNext();
+            }, function (error) {
+                // validate error occurred
+                local.utility2.assert(error, error);
+                onError();
+            });
         };
 
         local.testCase_onParallel_default = function (options, onError) {
@@ -1749,6 +1753,23 @@
             onParallel.counter += 1;
             options = {};
             options = [{
+                file: '/assets.' + local.utility2.envDict.npm_package_name + '.css',
+                url: '/assets.' + local.utility2.envDict.npm_package_name + '.css'
+            }, {
+                file: '/assets.' + local.utility2.envDict.npm_package_name + '.js',
+                url: '/assets.' + local.utility2.envDict.npm_package_name + '.js'
+            }, {
+                file: '/assets.' + local.utility2.envDict.npm_package_name + '.rollup.js',
+                url: '/assets.' + local.utility2.envDict.npm_package_name + '.rollup.js'
+            }, {
+                file: '/assets.' + local.utility2.envDict.npm_package_name + '.min.js',
+                transform: function (data) {
+                    return local.utility2.uglifyIfProduction(
+                        local.utility2.bufferToString(data)
+                    );
+                },
+                url: '/assets.' + local.utility2.envDict.npm_package_name + '.js'
+            }, {
                 file: '/assets.app.js',
                 url: '/assets.app.js'
             }, {
@@ -1767,31 +1788,14 @@
                 file: '/assets.test.js',
                 url: '/assets.test.js'
             }, {
-                file: '/assets.' + local.utility2.envDict.npm_package_name + '.css',
-                url: '/assets.' + local.utility2.envDict.npm_package_name + '.css'
-            }, {
-                file: '/assets.' + local.utility2.envDict.npm_package_name + '.js',
-                url: '/assets.' + local.utility2.envDict.npm_package_name + '.js'
-            }, {
-                file: '/assets.' + local.utility2.envDict.npm_package_name + '.min.js',
-                transform: function (data) {
-                    return local.utility2.uglifyIfProduction(
-                        local.utility2.bufferToString(data)
-                    );
-                },
-                url: '/assets.' + local.utility2.envDict.npm_package_name + '.js'
-            }, {
-                file: '/assets.utility2.rollup.js',
-                url: '/assets.utility2.rollup.js'
+                file: '/assets.utility2.lib.db.js',
+                url: '/assets.utility2.lib.db.js'
             }, {
                 file: '/assets.utility2.lib.istanbul.js',
                 url: '/assets.utility2.lib.istanbul.js'
             }, {
                 file: '/assets.utility2.lib.jslint.js',
                 url: '/assets.utility2.lib.jslint.js'
-            }, {
-                file: '/assets.utility2.lib.nedb.js',
-                url: '/assets.utility2.lib.nedb.js'
             }, {
                 file: '/assets.utility2.lib.sjcl.js',
                 url: '/assets.utility2.lib.sjcl.js'
@@ -1873,29 +1877,21 @@
                             exampleList: ['lib.jslint.js'],
                             exports: local.utility2.jslint
                         },
-                        'utility2.Nedb': {
-                            exampleList: ['lib.nedb.js'],
-                            exports: local.utility2.Nedb
+                        'utility2.db': {
+                            exampleList: ['lib.db.js'],
+                            exports: local.utility2.db
                         },
-                        'utility2.Nedb.customUtils': {
-                            exampleList: ['lib.nedb.js'],
-                            exports: local.utility2.Nedb.customUtils
+                        'utility2.db._DbIndex.prototype': {
+                            exampleList: ['lib.db.js'],
+                            exports: local.utility2.db._DbIndex.prototype
                         },
-                        'utility2.Nedb.model': {
-                            exampleList: ['lib.nedb.js'],
-                            exports: local.utility2.Nedb.model
+                        'utility2.db._DbTable.prototype': {
+                            exampleList: ['lib.db.js'],
+                            exports: local.utility2.db._DbTable.prototype
                         },
-                        'utility2.Nedb.persistence': {
-                            exampleList: ['lib.nedb.js'],
-                            exports: local.utility2.Nedb.persistence
-                        },
-                        'utility2.Nedb.persistence.prototype': {
-                            exampleList: ['lib.nedb.js'],
-                            exports: local.utility2.Nedb.persistence.prototype
-                        },
-                        'utility2.Nedb.prototype': {
-                            exampleList: ['lib.nedb.js'],
-                            exports: local.utility2.Nedb.prototype
+                        'utility2.db._DbTree.prototype': {
+                            exampleList: ['lib.db.js'],
+                            exports: local.utility2.db._DbTree.prototype
                         },
                         'utility2.sjcl': {
                             exampleList: ['lib.sjcl.js'],
@@ -2283,6 +2279,20 @@ local.utility2.assertJsonEqual(options.coverage1,
                 local.utility2.testReportCreate(local.utility2.testReport);
                 onError();
             }, onError);
+        };
+
+        local.testCase_indexJs_standalone = function (options, onError) {
+        /*
+         * this function will test index.js's standalone handling-behavior
+         */
+            options = {};
+            options.data = local.fs.readFileSync('./index.js', 'utf8').replace(
+                '/* istanbul instrument in package utility2 */',
+                ''
+            );
+            local.fs.writeFileSync('./tmp/index.js', options.data);
+            require('./tmp/index.js');
+            onError();
         };
         break;
     }

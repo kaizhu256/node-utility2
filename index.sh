@@ -432,9 +432,9 @@ shDockerStart() {(set -e
 shDsStoreRm() {(set -e
 # http://stackoverflow.com/questions/2016844/bash-recursively-remove-files
 # this function will recursively rm .DS_Store from the current dir
-    find . -name "._*" -print0 | xargs -0 rm
-    find . -name ".DS_Store" -print0 | xargs -0 rm
-    find . -name "npm-debug.log" -print0 | xargs -0 rm
+    find . -name "._*" -print0 | xargs -0 rm || true
+    find . -name ".DS_Store" -print0 | xargs -0 rm || true
+    find . -name "npm-debug.log" -print0 | xargs -0 rm || true
 )}
 
 shDuList() {(set -e

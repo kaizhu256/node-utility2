@@ -1361,6 +1361,10 @@ local.templateCoverageBadgeSvg =
                     'node';
             }
         }());
+        // init global
+        local.global = local.modeJs === 'browser'
+            ? window
+            : global;
         local.local = local.istanbul = local;
         // init module
         if (local.modeJs === 'node') {

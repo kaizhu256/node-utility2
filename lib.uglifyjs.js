@@ -35,13 +35,17 @@
                     'node';
             }
         }());
+        // init global
+        local.global = local.modeJs === 'browser'
+            ? window
+            : global;
         local.local = local.uglifyjs = local;
     }());
 
 
 
     /* istanbul ignore next */
-    // run shared js-env code - post-init
+    // run shared js-env code - function
     (function () {
         var exports, require;
         // init exports
@@ -243,11 +247,24 @@ f){}}else n[1]=n[1].substr(0,2);return i?i.call(n,n):null}throw u}}}(),DOT_CALL_
 
 
 
-        local.uglify = function (code) {
+        local.uglify = function (code, file) {
         /*
          * this function will uglify the js-code
          */
             var ast;
+            // uglify css
+            if ((file || '').slice(-4) === '.css') {
+                return code
+                    // remove comment /**/
+                    .replace((/\/*[\S\s]*?\*\//g), '')
+                    // remove comment //
+                    .replace((/\/\/.*/g), '')
+                    // remove whitespace
+                    .replace((/ {2,}/g), ' ')
+                    .replace((/\s*?([\n,:;{}])\s*/g), '$1')
+                    .replace((/\n/g), '')
+                    .trim();
+            }
             // parse code and get the initial AST
             ast = local.parse(code
                 .trim()

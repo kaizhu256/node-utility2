@@ -35,6 +35,10 @@
                     'node';
             }
         }());
+        // init global
+        local.global = local.modeJs === 'browser'
+            ? window
+            : global;
         local.local = local.jslint = local;
     }());
 
@@ -753,7 +757,7 @@ local.CSSLint = CSSLint; local.JSLINT = JSLINT; }());
 
     // run browser js-env code - post-init
     case 'browser':
-        // export jslint
+        // init exports
         window.utility2_jslint = local;
         break;
 
@@ -762,12 +766,12 @@ local.CSSLint = CSSLint; local.JSLINT = JSLINT; }());
     /* istanbul ignore next */
     // run node js-env code - post-init
     case 'node':
-        // init exports
-        module.exports = module['./lib.jslint.js'] = module.jslint = local;
-        module.exports.__dirname = __dirname;
         // require modules
         local.fs = require('fs');
         local.path = require('path');
+        // init exports
+        module.exports = module['./lib.jslint.js'] = module.jslint = local;
+        module.exports.__dirname = __dirname;
         // run the cli
         if (module !== require.main || module.isRollup) {
             break;

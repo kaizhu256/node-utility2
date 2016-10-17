@@ -19,7 +19,8 @@ this package will run dynamic browser-tests with coverage (via electron and ista
 
 # documentation
 #### todo
-- replace loading spinner with thin line at top
+- rename .ajaxProgressDiv -> #ajaxProgressDiv1, .testReportDiv -> #testReportDiv1
+- replace loading spinner with topbar
 - allow secure remote db export / import / reset to backend
 - add decryption / encryption to jwt
 - merge github-crud into this package
@@ -27,12 +28,14 @@ this package will run dynamic browser-tests with coverage (via electron and ista
 - add server stress test using electron
 - none
 
-#### change since b92e4f0f
-- npm publish 2016.9.1
-- revamp lib.nedb.js
-- reset onReadyAfter for testRun
-- add function utility2.onNext
-- streamline test.js
+#### change since f6764112
+- npm publish 2016.10.1
+- migrate from lib.nedb.js to lib.db.js
+- make index.js a standalone script
+- add property utility2.testCaseDict
+- cull testCase_xxx properties in function docApiCreate
+- auto-default null / undefined arguments to empty object {} in utility2.objectSetDefault and utility2.objectSetOverride
+- prevent potential infinite recursion bug in function utility2.onNext
 - none
 
 #### this package requires
@@ -245,6 +248,9 @@ instruction
                 local.utility2.testRun(local);
                 break;
             default:
+                if (!document.querySelector('#inputTextarea1')) {
+                    return;
+                }
                 // try to JSON.stringify #inputTextarea1
                 try {
                     document.querySelector('#outputPreJsonStringify1').textContent =
@@ -289,19 +295,12 @@ instruction
             }
         };
         // init event-handling
-        [
-            '#inputTextarea1',
-            '#testRunButton1'
-        ].forEach(function (element) {
-            element = document.querySelector(element);
-            switch (element && element.id) {
-            case 'inputTextarea1':
-                element.addEventListener('keyup', local.testRun);
-                break;
-            case 'testRunButton1':
-                element.addEventListener('click', local.testRun);
-                break;
-            }
+        ['click', 'keyup'].forEach(function (event) {
+            Array.prototype.slice.call(
+                document.querySelectorAll('.on' + event)
+            ).forEach(function (element) {
+                element.addEventListener(event, local.testRun);
+            });
         });
         // run tests
         local.testRun();
@@ -380,15 +379,12 @@ textarea[readonly] {\n\
             {{/if envDict.npm_package_homepage}}\n\
             target="_blank"\n\
         >{{envDict.npm_package_name}} v{{envDict.npm_package_version}}</a>\n\
-        {{#if envDict.NODE_ENV}}\n\
-        (NODE_ENV={{envDict.NODE_ENV}})\n\
-        {{/if envDict.NODE_ENV}}\n\
     </h1>\n\
     <h3>{{envDict.npm_package_description}}</h3>\n\
     <h4><a download href="assets.app.js">download standalone app</a></h4>\n\
-    <button id="testRunButton1">run internal test</button><br>\n\
+    <button class="onclick" id="testRunButton1">run internal test</button><br>\n\
     <label>edit or paste script below to cover and test</label>\n\
-<textarea id="inputTextarea1">\n\
+<textarea class="onkeyup" id="inputTextarea1">\n\
 /*jslint\n\
     browser: true\n\
 */\n\
@@ -454,7 +450,7 @@ textarea[readonly] {\n\
     {{#unless isRollup}}\n\
     <script src="assets.utility2.lib.istanbul.js"></script>\n\
     <script src="assets.utility2.lib.jslint.js"></script>\n\
-    <script src="assets.utility2.lib.nedb.js"></script>\n\
+    <script src="assets.utility2.lib.db.js"></script>\n\
     <script src="assets.utility2.lib.sjcl.js"></script>\n\
     <script src="assets.utility2.lib.uglifyjs.js"></script>\n\
     <script src="assets.utility2.js"></script>\n\
@@ -541,7 +537,7 @@ export npm_config_mode_auto_restart=1 && \
 ./index.sh test test.js",
         "test-all": "npm test --mode-coverage=all"
     },
-    "version": "2016.9.1"
+    "version": "2016.10.1"
 }
 ```
 
