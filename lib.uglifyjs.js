@@ -275,7 +275,7 @@ f){}}else n[1]=n[1].substr(0,2);return i?i.call(n,n):null}throw u}}}(),DOT_CALL_
             // get an AST with compression optimizations
             ast = local.ast_squeeze(ast);
             // compressed code here
-            return local.split_lines(local.gen_code(ast, { ascii_only: true }), 256);
+            return local.split_lines(local.gen_code(ast, { ascii_only: true }), 80);
         };
     }());
     switch (local.modeJs) {

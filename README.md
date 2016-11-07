@@ -1,12 +1,18 @@
 utility2
 ========
-this package will run dynamic browser-tests with coverage (via electron and istanbul)
+this zero-dependency package will run dynamic browser-tests with coverage (via electron and istanbul)
 
 [![travis-ci.org build-status](https://api.travis-ci.org/kaizhu256/node-utility2.svg)](https://travis-ci.org/kaizhu256/node-utility2)
 
 [![NPM](https://nodei.co/npm/utility2.png?downloads=true)](https://www.npmjs.com/package/utility2)
 
 [![package-listing](https://kaizhu256.github.io/node-utility2/build/screen-capture.gitLsTree.svg)](https://github.com/kaizhu256/node-utility2)
+
+
+
+# cdn download
+- [http://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/assets.utility2.js](http://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/assets.utility2.js)
+- [http://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/assets.utility2.min.js](http://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/assets.utility2.min.js)
 
 
 
@@ -18,9 +24,14 @@ this package will run dynamic browser-tests with coverage (via electron and ista
 
 
 # documentation
+#### api-doc
+- [https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/doc.api.html](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/doc.api.html)
+
+[![api-doc](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/screen-capture.docApiCreate.browser._2Fhome_2Ftravis_2Fbuild_2Fkaizhu256_2Fnode-utility2_2Ftmp_2Fbuild_2Fdoc.api.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/doc.api.html)
+
 #### todo
-- rename .ajaxProgressDiv -> #ajaxProgressDiv1, .testReportDiv -> #testReportDiv1
-- replace loading spinner with topbar
+- make replStart standalone
+- add es6-syntax support and test
 - allow secure remote db export / import / reset to backend
 - add decryption / encryption to jwt
 - merge github-crud into this package
@@ -28,24 +39,25 @@ this package will run dynamic browser-tests with coverage (via electron and ista
 - add server stress test using electron
 - none
 
-#### change since f6764112
-- npm publish 2016.10.1
-- migrate from lib.nedb.js to lib.db.js
-- make index.js a standalone script
-- add property utility2.testCaseDict
-- cull testCase_xxx properties in function docApiCreate
-- auto-default null / undefined arguments to empty object {} in utility2.objectSetDefault and utility2.objectSetOverride
-- prevent potential infinite recursion bug in function utility2.onNext
+#### change since e98bf073
+- npm publish 2016.10.2
+- decouple lib.db.js from utility2's init
+- replace loading spinner with topbar
+- fix utility2.errorDefault getting its stack prepended
+- rename .ajaxProgressDiv -> #ajaxProgressDiv1, .testReportDiv -> #testReportDiv1
+- merge functions utility2.taskOnTaskUpsert and utility2.taskOnErrorPush -> utility2.taskCreate
+- change signature of function utility2.taskCreateCached
+- remove functions utility2.ajaxProgressShow, utility2.dbReset
+- README.md - add cdn-download links
+- README.md - replace alpha api-doc with beta api-doc
 - none
 
 #### this package requires
 - darwin or linux os
 - chromium-based browser or firefox browser
 
-#### api-doc
-- [https://kaizhu256.github.io/node-utility2/build/doc.api.html](https://kaizhu256.github.io/node-utility2/build/doc.api.html)
-
-[![api-doc](https://kaizhu256.github.io/node-utility2/build/screen-capture.docApiCreate.browser._2Fhome_2Ftravis_2Fbuild_2Fkaizhu256_2Fnode-utility2_2Ftmp_2Fbuild_2Fdoc.api.html.png)](https://kaizhu256.github.io/node-utility2/build/doc.api.html)
+#### additional info
+- this version does not support es6-syntax or higher
 
 
 
@@ -279,6 +291,8 @@ instruction
                 try {
                     /*jslint evil: true*/
                     document.querySelector('#outputTextareaIstanbul1').value =
+                        document.querySelector('#outputTextarea2').value = '';
+                    document.querySelector('#outputTextareaIstanbul1').value =
                         local.istanbul.instrumentSync(
                             document.querySelector('#inputTextarea1').value,
                             '/inputTextarea1.js'
@@ -289,11 +303,25 @@ instruction
                             coverage: window.__coverage__
                         });
                 } catch (errorCaught) {
-                    document.querySelector('.istanbulCoverageDiv').innerHTML =
-                        '<pre>' + errorCaught.stack.replace((/</g), '&lt') + '</pre>';
+                    document.querySelector('#outputTextarea2').value += '\n' +
+                        errorCaught.stack + '\n';
                 }
             }
         };
+        /* istanbul ignore next */
+        // log stderr and stdout to #outputTextarea2
+        ['error', 'log'].forEach(function (key) {
+            console['_' + key] = console[key];
+            console[key] = function () {
+                console['_' + key].apply(console, arguments);
+                (document.querySelector('#outputTextarea2') || { value: '' }).value +=
+                    Array.prototype.slice.call(arguments).map(function (arg) {
+                        return typeof arg === 'string'
+                            ? arg
+                            : JSON.stringify(arg, null, 4);
+                    }).join(' ') + '\n';
+            };
+        });
         // init event-handling
         ['click', 'keyup'].forEach(function (event) {
             Array.prototype.slice.call(
@@ -349,14 +377,15 @@ instruction
     box-sizing: border-box;\n\
 }\n\
 body {\n\
-    background-color: #fff;\n\
+    background: #fff;\n\
     font-family: Arial, Helvetica, sans-serif;\n\
+    margin: 1rem;\n\
 }\n\
 body > * {\n\
     margin-bottom: 1rem;\n\
 }\n\
 #outputPreJslint1 {\n\
-    color: #f00;\n\
+    color: #d00;\n\
 }\n\
 textarea {\n\
     font-family: monospace;\n\
@@ -364,15 +393,13 @@ textarea {\n\
     width: 100%;\n\
 }\n\
 textarea[readonly] {\n\
-    background-color: #ddd;\n\
+    background: #ddd;\n\
 }\n\
 </style>\n\
 </head>\n\
 <body>\n\
-    <div class="ajaxProgressDiv" style="display: block;">\n\
-        <div class="ajaxProgressBarDiv ajaxProgressBarDivLoading">loading</div>\n\
-    </div>\n\
     <h1>\n\
+        <div id="ajaxProgressDiv1" style="background: #d00; height: 2px; left: 0; margin: 0; padding: 0; position: fixed; top: 0; transition: background 0.5s, width 1.5s; width: 25%;"></div>\n\
         <a\n\
             {{#if envDict.npm_package_homepage}}\n\
             href="{{envDict.npm_package_homepage}}"\n\
@@ -382,7 +409,6 @@ textarea[readonly] {\n\
     </h1>\n\
     <h3>{{envDict.npm_package_description}}</h3>\n\
     <h4><a download href="assets.app.js">download standalone app</a></h4>\n\
-    <button class="onclick" id="testRunButton1">run internal test</button><br>\n\
     <label>edit or paste script below to cover and test</label>\n\
 <textarea class="onkeyup" id="inputTextarea1">\n\
 /*jslint\n\
@@ -440,9 +466,12 @@ textarea[readonly] {\n\
 </textarea>\n\
     <label>instrumented code</label>\n\
     <textarea id="outputTextareaIstanbul1" readonly></textarea>\n\
+    <label>stderr and stdout</label>\n\
+    <textarea id="outputTextarea2" readonly></textarea>\n\
     <pre id="outputPreJsonStringify1"></pre>\n\
     <pre id="outputPreJslint1"></pre>\n\
-    <div class="testReportDiv" style="display: none;"></div>\n\
+    <button class="onclick" id="testRunButton1">run internal test</button><br>\n\
+    <div id="testReportDiv1" style="display: none;"></div>\n\
     <h2>coverage-report</h2>\n\
     <div class="istanbulCoverageDiv"></div>\n\
     {{#if isRollup}}\n\
@@ -537,7 +566,7 @@ export npm_config_mode_auto_restart=1 && \
 ./index.sh test test.js",
         "test-all": "npm test --mode-coverage=all"
     },
-    "version": "2016.10.1"
+    "version": "2016.10.2"
 }
 ```
 

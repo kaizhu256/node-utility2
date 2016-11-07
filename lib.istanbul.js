@@ -1303,6 +1303,14 @@ local.templateCoverageBadgeSvg =
             switch (process.argv[2]) {
             // transparently adds coverage information to a node command
             case 'cover':
+                try {
+                    process.env.npm_package_name = process.env.npm_package_name || JSON.parse(
+                        local._fs.readFileSync(process.cwd() + '/package.json', 'utf8')
+                    ).name;
+                } catch (ignore) {
+                }
+                process.env.npm_config_mode_coverage = process.env.npm_config_mode_coverage ||
+                    process.env.npm_package_name || 'all';
                 local.module = require('module');
                 // add coverage hook to require
                 local._moduleExtensionsJs = local.module._extensions['.js'];

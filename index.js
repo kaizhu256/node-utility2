@@ -179,16 +179,16 @@ local.utility2.templateDocApiHtml = '\
     margin-top: 20px;\n\
 }\n\
 .docApiCodeCommentSpan {\n\
-    background-color: #bbf;\n\
+    background: #bbf;\n\
     color: #000;\n\
     display: block;\n\
 }\n\
 .docApiCodeKeywordSpan {\n\
-    color: #f00;\n\
+    color: #d00;\n\
     font-weight: bold;\n\
 }\n\
 .docApiCodePre {\n\
-    background-color: #eef;\n\
+    background: #eef;\n\
     border: 1px solid;\n\
     color: #777;\n\
     padding: 5px;\n\
@@ -281,7 +281,7 @@ local.utility2.templateTestReportHtml = '\
     max-width: 512px;\n\
 }\n\
 .testReportPlatformDiv pre {\n\
-    background-color: #fdd;\n\
+    background: #fdd;\n\
     border-top: 1px solid black;\n\
     margin-bottom: 0;\n\
     padding: 10px;\n\
@@ -292,7 +292,7 @@ local.utility2.templateTestReportHtml = '\
     width: 8rem;\n\
 }\n\
 .testReportPlatformDiv.summary {\n\
-    background-color: #bfb;\n\
+    background: #bfb;\n\
 }\n\
 .testReportPlatformDiv table {\n\
     border-top: 1px solid black;\n\
@@ -300,13 +300,13 @@ local.utility2.templateTestReportHtml = '\
     width: 100%;\n\
 }\n\
 .testReportPlatformDiv table > tbody > tr:nth-child(odd) {\n\
-    background-color: #bfb;\n\
+    background: #bfb;\n\
 }\n\
 .testReportPlatformDiv .testFailed {\n\
-    background-color: #f99;\n\
+    background: #f99;\n\
 }\n\
 .testReportPlatformDiv .testPending {\n\
-    background-color: #99f;\n\
+    background: #99f;\n\
 }\n\
 </style>\n\
 <div class="testReportPlatformDiv summary">\n\
@@ -963,10 +963,7 @@ local.utility2.templateTestReportHtml = '\
                         );
                     });
                     // decrement ajaxProgressCounter
-                    local.utility2.ajaxProgressCounter = Math.max(
-                        local.utility2.ajaxProgressCounter - 1,
-                        0
-                    );
+                    local.utility2.ajaxProgressCounter -= 1;
                     // handle abort or error event
                     if (!xhr.error &&
                             (event.type === 'abort' ||
@@ -1028,57 +1025,47 @@ local.utility2.templateTestReportHtml = '\
             return xhr;
         };
 
-        local.utility2.ajaxProgressShow = function () {
-        /*
-         * this function will show ajaxProgress
-         */
-            local.utility2.ajaxProgressCounter += 1;
-            local.utility2.ajaxProgressUpdate();
-            local.utility2.ajaxProgressCounter -= 1;
-            local.utility2.timerTimeoutAjaxProgressHide =
-                setTimeout(local.utility2.ajaxProgressUpdate, local.utility2.timeoutDefault);
-        };
-
         local.utility2.ajaxProgressUpdate = function () {
         /*
          * this function will update ajaxProgress
          */
-            var ajaxProgressBarDiv;
-            ajaxProgressBarDiv = local.modeJs === 'browser' &&
-                document.querySelector('.ajaxProgressBarDiv');
-            if (!ajaxProgressBarDiv) {
+            var ajaxProgressDiv1;
+            ajaxProgressDiv1 = local.modeJs === 'browser' &&
+                document.querySelector('#ajaxProgressDiv1');
+            if (!ajaxProgressDiv1) {
                 return;
             }
-            // show ajaxProgressDiv
-            ajaxProgressBarDiv.parentNode.style.display = 'block';
+            // init ajaxProgressDiv1StyleBackground
+            local.utility2.ajaxProgressDiv1StyleBackground =
+                local.utility2.ajaxProgressDiv1StyleBackground ||
+                ajaxProgressDiv1.style.background;
+            // show ajaxProgress
+            if (ajaxProgressDiv1.style.background === 'transparent') {
+                ajaxProgressDiv1.style.background =
+                    local.utility2.ajaxProgressDiv1StyleBackground;
+            }
             // cleanup timerTimeout
             clearTimeout(local.utility2.timerTimeoutAjaxProgressHide);
             // increment ajaxProgress
-            if (local.utility2.ajaxProgressCounter) {
-                ajaxProgressBarDiv.innerHTML = 'loading';
-                ajaxProgressBarDiv.className = ajaxProgressBarDiv.className
-                    .replace((/ajaxProgressBarDiv\w+/), 'ajaxProgressBarDivLoading');
+            if (local.utility2.ajaxProgressCounter > 0) {
                 // this algorithm will indefinitely increment the ajaxProgressBar
                 // with successively smaller increments without ever reaching 100%
                 local.utility2.ajaxProgressState += 1;
-                ajaxProgressBarDiv.style.width =
+                ajaxProgressDiv1.style.width =
                     100 - 75 * Math.exp(-0.125 * local.utility2.ajaxProgressState) + '%';
                 return;
             }
             // finish ajaxProgress
-            ajaxProgressBarDiv.innerHTML = 'loaded';
-            ajaxProgressBarDiv.className = ajaxProgressBarDiv.className
-                .replace((/ajaxProgressBarDiv\w+/), 'ajaxProgressBarDivLoaded');
-            ajaxProgressBarDiv.style.width = '100%';
+            ajaxProgressDiv1.style.width = '100%';
             // hide ajaxProgress
             local.utility2.timerTimeoutAjaxProgressHide = setTimeout(function () {
-                ajaxProgressBarDiv.parentNode.style.display = 'none';
+                ajaxProgressDiv1.style.background = 'transparent';
                 // reset ajaxProgress
-                local.utility2.ajaxProgressState = 0;
-                ajaxProgressBarDiv.innerHTML = 'loading';
-                ajaxProgressBarDiv.className = ajaxProgressBarDiv.className
-                    .replace((/ajaxProgressBarDiv\w+/), 'ajaxProgressBarDivLoading');
-                ajaxProgressBarDiv.style.width = '0%';
+                setTimeout(function () {
+                    local.utility2.ajaxProgressCounter = 0;
+                    local.utility2.ajaxProgressState = 0;
+                    ajaxProgressDiv1.style.width = '25%';
+                }, 500);
             }, 1500);
         };
 
@@ -1385,7 +1372,7 @@ local.utility2.templateTestReportHtml = '\
                                 return;
                             }
                         } catch (errorCaught) {
-                            console.error(errorCaught.stack);
+                            console.error(errorCaught);
                         }
                         console.log(event.message);
                     });
@@ -1599,102 +1586,6 @@ local.utility2.templateTestReportHtml = '\
             return tmp;
         };
 
-        local.utility2.dbReset = function () {
-        /*
-         * this function will reset db's file-state and memory-state
-         */
-            local.utility2.onResetBefore.counter += 1;
-            // visual notification
-            local.utility2.ajaxProgressShow();
-            local.utility2.onResetAfter(function (error) {
-                // validate no error occurred
-                local.utility2.assert(!error, error);
-                local.utility2.onReadyBefore.counter += 1;
-                local.utility2.dbSeedListUpsert(
-                    local.utility2.dbSeedList,
-                    local.utility2.onReadyBefore
-                );
-            });
-            // reset db backend
-            if (local.modeJs === 'browser' &&
-                    local.utility2.envDict.npm_config_mode_backend) {
-                local.utility2.onResetBefore.counter += 1;
-                local.utility2.ajax({ url: '/dbReset' }, function (error, xhr) {
-                    // jslint-hack
-                    local.utility2.nop(error);
-                    // debug xhr
-                    local.utility2._debugXhrdbReset = xhr;
-                    local.utility2.onResetBefore();
-                });
-            }
-            // reset db local-persistence
-            if (local.db.dbClear) {
-                local.utility2.onResetBefore.counter += 1;
-                local.db.dbClear(local.utility2.onResetBefore);
-            }
-            local.utility2.onResetBefore();
-        };
-
-        local.utility2.dbSeedListUpsert = function (optionsList, onError) {
-        /*
-         * this function will serially upsert optionsList[ii].dbRowList
-         */
-            var onParallel, options, self;
-            options = {};
-            local.utility2.onNext(options, function (error, data) {
-                switch (options.modeNext) {
-                case 1:
-                    local.utility2.objectSetDefault(optionsList[optionsList.modeNext], {
-                        dbIndexCreateList: [],
-                        dbIndexRemoveList: [],
-                        dbRowList: []
-                    });
-                    // create dbTable
-                    local.db.dbTableCreate(
-                        optionsList[optionsList.modeNext],
-                        options.onNext
-                    );
-                    break;
-                case 2:
-                    self = data;
-                    // remove dbIndex
-                    optionsList[
-                        optionsList.modeNext
-                    ].dbIndexRemoveList.forEach(function (index) {
-                        self.dbIndexRemove(index, onParallel);
-                    });
-                    // create dbIndex
-                    optionsList[
-                        optionsList.modeNext
-                    ].dbIndexCreateList.forEach(function (index) {
-                        self.dbIndexCreate(index);
-                    });
-                    // upsert dbRow
-                    onParallel = local.utility2.onParallel(options.onNext);
-                    onParallel.counter += 1;
-                    optionsList[optionsList.modeNext].dbRowList.forEach(function (dbRow) {
-                        onParallel.counter += 1;
-                        self.crudUpdate({ id: dbRow.id }, dbRow, { upsert: true }, onParallel);
-                    });
-                    onParallel();
-                    break;
-                default:
-                    optionsList.onNext(error);
-                }
-            });
-            local.utility2.onNext(optionsList, function (error) {
-                // recursively run each sub-middleware in middlewareList
-                if (optionsList.modeNext < optionsList.length) {
-                    options.modeNext = 0;
-                    options.onNext();
-                    return;
-                }
-                onError(error);
-            });
-            optionsList.modeNext = -1;
-            local.utility2.onResetAfter(optionsList.onNext);
-        };
-
         local.utility2.docApiCreate = function (options) {
         /*
          * this function will return an html api-doc from the given options
@@ -1727,7 +1618,7 @@ local.utility2.templateTestReportHtml = '\
                         // init signature
                         element.signature = match0
                             .replace((/ *?\/\*[\S\s]*?\*\/ */g), '')
-                            .replace((/ /g), '&nbsp;');
+                            .replace((/,/g), ',\n');
                         return element.signature;
                     })
                     .replace(
@@ -2192,14 +2083,14 @@ local.utility2.templateTestReportHtml = '\
                         return;
                     }
                     // gzip and cache result
-                    local.utility2.taskOnErrorPushCached({
+                    local.utility2.taskCreateCached({
                         cacheDict: 'middlewareAssetsCachedGzip',
                         key: request.urlParsed.pathname
-                    }, options.onNext, function (onError) {
+                    }, function (onError) {
                         local.zlib.gzip(options.result, function (error, data) {
                             onError(error, !error && data.toString('base64'));
                         });
-                    });
+                    }, options.onNext);
                     break;
                 case 2:
                     // set gzip header
@@ -2300,9 +2191,14 @@ local.utility2.templateTestReportHtml = '\
                 // replace trailing '/' with '/index.html'
                 .replace((/\/$/), '/index.html');
             // serve file from cache
-            local.utility2.taskOnErrorPushCached({
+            local.utility2.taskCreateCached({
                 cacheDict: 'middlewareFileServer',
                 key: request.urlFile
+            // run background-task to re-cache file
+            }, function (onError) {
+                local.fs.readFile(request.urlFile, function (error, data) {
+                    onError(error, data && local.utility2.bufferToString(data, 'base64'));
+                });
             }, function (error, data) {
                 // default to nextMiddleware
                 if (error) {
@@ -2319,11 +2215,6 @@ local.utility2.templateTestReportHtml = '\
                 });
                 // serve file from cache
                 response.end(local.utility2.bufferCreate(data, 'base64'));
-            // run background-task to re-cache file
-            }, function (onError) {
-                local.fs.readFile(request.urlFile, function (error, data) {
-                    onError(error, data && local.utility2.bufferToString(data, 'base64'));
-                });
             });
         };
 
@@ -2574,7 +2465,9 @@ local.utility2.templateTestReportHtml = '\
             var stack;
             stack = new Error().stack.replace((/(.*?)\n.*?$/m), '$1');
             return function (error, data, meta) {
-                if (error && String(error.stack).indexOf(stack.split('\n')[2]) < 0) {
+                if (error &&
+                        error !== local.utility2.errorDefault &&
+                        String(error.stack).indexOf(stack.split('\n')[2]) < 0) {
                     // append the current stack to error.stack
                     error.stack += '\n' + stack;
                 }
@@ -2726,20 +2619,27 @@ local.utility2.templateTestReportHtml = '\
         /*
          * this function will start the repl debugger
          */
-            var self;
             /*jslint evil: true*/
-            if (local.utility2.replServer) {
+            var self;
+            if (global.utility2_serverRepl1) {
                 return;
             }
             // start replServer
-            self = local.utility2.replServer = local.repl.start({ useGlobal: true });
+            self = global.utility2_serverRepl1 = require('repl').start({ useGlobal: true });
+            self.nop = function () {
+            /*
+             * this function will do nothing
+             */
+                return;
+            };
             self.onError = function (error) {
             /*
              * this function will debug any repl-error
              */
-                local.utility2._debugReplError = error || local.utility2._debugReplError;
+                // debug error
+                global.utility2_debugReplError = error;
+                console.error(error);
             };
-            self._domain.on('error', self.onError);
             // save repl eval function
             self.evalDefault = self.eval;
             // hook custom repl eval function
@@ -2748,7 +2648,7 @@ local.utility2.templateTestReportHtml = '\
                 match = (/^(\S+)(.*?)\n/).exec(script);
                 onError2 = function (error, data) {
                     // debug error
-                    self.onError(error);
+                    global.utility2_debugReplError = error || global.utility2_debugReplError;
                     onError(error, data);
                 };
                 switch (match && match[1]) {
@@ -2765,7 +2665,7 @@ local.utility2.templateTestReportHtml = '\
                         break;
                     }
                     // run async shell command
-                    local.utility2.processSpawnWithTimeout(
+                    require('child_process').spawn(
                         '/bin/sh',
                         ['-c', match[2]],
                         { stdio: ['ignore', 1, 2] }
@@ -2785,7 +2685,7 @@ local.utility2.templateTestReportHtml = '\
                 // syntax sugar to grep current dir
                 case 'grep':
                     // run async shell command
-                    local.utility2.processSpawnWithTimeout(
+                    require('child_process').spawn(
                         '/bin/sh',
                         ['-c', 'find . -type f | grep -v ' +
 /* jslint-ignore-begin */
@@ -2834,39 +2734,36 @@ tmp\\)\\(\\b\\|[_s]\\)\
                     script = 'console.log(String(' + match[2] + '))\n';
                     break;
                 }
-                // try to eval the script
-                local.utility2.tryCatchOnError(function () {
-                    self.evalDefault(script, context, file, onError2);
-                }, onError2);
+                // eval the script
+                self.evalDefault(script, context, file, onError2);
             };
-            self.socket = {
-                end: local.utility2.nop,
-                on: local.utility2.nop,
-                write: local.utility2.nop
-            };
+            self.socket = { end: self.nop, on: self.nop, write: self.nop };
             // init process.stdout
-            process.stdout._write2 = process.stdout._write2 || process.stdout._write;
+            process.stdout._writeDefault = process.stdout._writeDefault ||
+                process.stdout._write;
             process.stdout._write = function (chunk, encoding, callback) {
-                process.stdout._write2(chunk, encoding, callback);
+                process.stdout._writeDefault(chunk, encoding, callback);
                 if (self.socket.readable) {
                     self.socket.write(chunk, encoding);
                 }
             };
             // start tcp-server
-            self.serverTcp = local.net.createServer(function (socket) {
+            global.utility2_serverReplTcp1 = require('net').createServer(function (socket) {
                 // init socket
                 self.socket = socket;
                 self.socket.on('data', self.write.bind(self));
-                self.socket.on('error', local.utility2.onErrorDefault);
+                self.socket.on('error', self.onError);
                 self.socket.setKeepAlive(true);
             });
             // coverage-hack - test no tcp-server handling-behavior
-            [
-                local.utility2.envDict.PORT_REPL
-            ].filter(local.utility2.echo).forEach(function (port) {
-                console.log('repl-server listening on tcp-port ' + port);
-                self.serverTcp.listen(port);
-            });
+            [process.env.PORT_REPL]
+                .filter(function (port) {
+                    return port;
+                })
+                .forEach(function (port) {
+                    console.log('repl-server listening on tcp-port ' + port);
+                    global.utility2_serverReplTcp1.listen(port);
+                });
         };
 
         local.utility2.requestResponseCleanup = function (request, response) {
@@ -2910,7 +2807,7 @@ tmp\\)\\(\\b\\|[_s]\\)\
             // read script from README.md
             local.fs.readFileSync(options.__dirname + '/README.md', 'utf8')
                 .replace(
-                    (/```\w*?(\n[\W\s]*?example.js[\n\"][\S\s]+?)\n```/),
+                    (/```\w*?(\n[\W\s]*?(?:build.js|example.js)[\n\"][\S\s]+?)\n```/),
                     function (match0, match1, ii, text) {
                         // jslint-hack
                         local.utility2.nop(match0);
@@ -3222,82 +3119,22 @@ tmp\\)\\(\\b\\|[_s]\\)\
             return local.utility2.bufferToString(local.utility2.bufferCreate(text), 'base64');
         };
 
-        local.utility2.taskOnErrorPush = function (options, onError) {
+        local.utility2.taskCreate = function (options, onTask, onError) {
         /*
-         * this function will push the callback onError to the task named options.key
+         * this function will create the task onTask named options.key, if it does not exist,
+         * and push onError to its onErrorList
          */
             var task;
-            onError = local.utility2.onErrorWithStack(onError);
             // init task
             task = local.utility2.taskOnTaskDict[options.key] =
                 local.utility2.taskOnTaskDict[options.key] || { onErrorList: [] };
             // push callback onError to the task
-            task.onErrorList.push(onError);
-        };
-
-        local.utility2.taskOnErrorPushCached = function (options, onError, onTask) {
-        /*
-         * this function will
-         * 1. if cache-hit, then call onError with cacheValue
-         * 2. run onTask in background
-         * 3. save onTask's result to cache
-         * 4. if cache-miss, then call onError with onTask's result
-         */
-            local.utility2.onNext(options, function (error, data) {
-                switch (options.modeNext) {
-                //  1. if cache-hit, then call onError with cacheValue
-                case 1:
-                    // read cacheValue from memory-cache
-                    local.utility2.cacheDict[options.cacheDict] =
-                        local.utility2.cacheDict[options.cacheDict] || {};
-                    options.cacheValue =
-                        local.utility2.cacheDict[options.cacheDict][options.key];
-                    if (options.cacheValue) {
-                        // call onError with cacheValue
-                        options.modeCacheHit = true;
-                        onError(null, JSON.parse(options.cacheValue));
-                        if (!options.modeCacheUpdate) {
-                            break;
-                        }
-                    }
-                    // run background-task with lower priority for cache-hit
-                    setTimeout(options.onNext, options.modeCacheHit && options.cacheTtl);
-                    break;
-                // 2. run onTask in background
-                case 2:
-                    local.utility2.taskOnErrorPush(options, options.onNext);
-                    local.utility2.taskOnTaskUpsert(options, onTask);
-                    break;
-                default:
-                    // 3. save onTask's result to cache
-                    // JSON.stringify data to prevent side-effects on cache
-                    options.cacheValue = JSON.stringify(data);
-                    if (!error && options.cacheValue) {
-                        local.utility2.cacheDict[options.cacheDict][options.key] =
-                            options.cacheValue;
-                    }
-                    // 4. if cache-miss, then call onError with onTask's result
-                    if (!options.modeCacheHit) {
-                        onError(error, options.cacheValue && JSON.parse(options.cacheValue));
-                    }
-                    (options.onCacheWrite || local.utility2.nop)();
-                    break;
-                }
-            });
-            options.modeNext = 0;
-            options.onNext();
-        };
-
-        local.utility2.taskOnTaskUpsert = function (options, onTask) {
-        /*
-         * this function will upsert the task onTask named options.key
-         */
-            var task;
-            // init task
-            task = local.utility2.taskOnTaskDict[options.key] =
-                local.utility2.taskOnTaskDict[options.key] || { onErrorList: [] };
+            if (onError) {
+                onError = local.utility2.onErrorWithStack(onError);
+                task.onErrorList.push(onError);
+            }
             // if task is defined, then return
-            if (task.onTask) {
+            if (!onTask || task.onTask) {
                 return task;
             }
             task.onDone = function () {
@@ -3333,12 +3170,64 @@ tmp\\)\\(\\b\\|[_s]\\)\
             task.timerTimeout = local.utility2.onTimeout(
                 task.onDone,
                 options.timeout || local.utility2.timeoutDefault,
-                'taskOnTaskUpsert ' + options.key
+                'taskCreate ' + options.key
             );
             task.onTask = onTask;
             // run onTask
             task.onTask(task.onDone);
             return task;
+        };
+
+        local.utility2.taskCreateCached = function (options, onTask, onError) {
+        /*
+         * this function will
+         * 1. if cache-hit, then call onError with cacheValue
+         * 2. run onTask in background
+         * 3. save onTask's result to cache
+         * 4. if cache-miss, then call onError with onTask's result
+         */
+            local.utility2.onNext(options, function (error, data) {
+                switch (options.modeNext) {
+                //  1. if cache-hit, then call onError with cacheValue
+                case 1:
+                    // read cacheValue from memory-cache
+                    local.utility2.cacheDict[options.cacheDict] =
+                        local.utility2.cacheDict[options.cacheDict] || {};
+                    options.cacheValue =
+                        local.utility2.cacheDict[options.cacheDict][options.key];
+                    if (options.cacheValue) {
+                        // call onError with cacheValue
+                        options.modeCacheHit = true;
+                        onError(null, JSON.parse(options.cacheValue));
+                        if (!options.modeCacheUpdate) {
+                            break;
+                        }
+                    }
+                    // run background-task with lower priority for cache-hit
+                    setTimeout(options.onNext, options.modeCacheHit && options.cacheTtl);
+                    break;
+                // 2. run onTask in background
+                case 2:
+                    local.utility2.taskCreate(options, onTask, options.onNext);
+                    break;
+                default:
+                    // 3. save onTask's result to cache
+                    // JSON.stringify data to prevent side-effects on cache
+                    options.cacheValue = JSON.stringify(data);
+                    if (!error && options.cacheValue) {
+                        local.utility2.cacheDict[options.cacheDict][options.key] =
+                            options.cacheValue;
+                    }
+                    // 4. if cache-miss, then call onError with onTask's result
+                    if (!options.modeCacheHit) {
+                        onError(error, options.cacheValue && JSON.parse(options.cacheValue));
+                    }
+                    (options.onCacheWrite || local.utility2.nop)();
+                    break;
+                }
+            });
+            options.modeNext = 0;
+            options.onNext();
         };
 
         local.utility2.templateRender = function (template, dict) {
@@ -3713,18 +3602,20 @@ tmp\\)\\(\\b\\|[_s]\\)\
         /*
          * this function will run all tests in testPlatform.testCaseList
          */
-            var exit, onParallel, testPlatform, testReport, testReportDiv, timerInterval;
+            var exit, onParallel, testPlatform, testReport, testReportDiv1, timerInterval;
             // init modeTest
             local.utility2.modeTest = local.utility2.modeTest ||
                 local.utility2.envDict.npm_config_mode_test;
             if (!(local.utility2.modeTest || options.modeTest)) {
                 return;
             }
+            // visual notification - testRun
+            local.utility2.ajaxProgressUpdate();
             if (!options.onReadyAfter) {
-                // reset db
-                local.utility2.dbReset();
                 options.onReadyAfter = local.utility2.onReadyAfter(function () {
-                    local.utility2.testRun(options);
+                    setTimeout(function () {
+                        local.utility2.testRun(options);
+                    });
                 });
                 return;
             }
@@ -3734,6 +3625,7 @@ tmp\\)\\(\\b\\|[_s]\\)\
             /*
              * this function will create the test-report after all tests are done
              */
+                local.utility2.ajaxProgressUpdate();
                 // stop testPlatform timer
                 local.utility2.timeElapsedStop(testPlatform);
                 // finalize testReport
@@ -3805,17 +3697,17 @@ tmp\\)\\(\\b\\|[_s]\\)\
                 }
             });
             // visual notification - update test-progress until done
-            // init testReportDiv element
+            // init testReportDiv1 element
             if (local.modeJs === 'browser') {
-                testReportDiv = document.querySelector('.testReportDiv');
+                testReportDiv1 = document.querySelector('#testReportDiv1');
             }
-            testReportDiv = testReportDiv || { style: {} };
-            testReportDiv.style.display = 'block';
-            testReportDiv.innerHTML = local.utility2.testReportMerge(testReport, {});
+            testReportDiv1 = testReportDiv1 || { style: {} };
+            testReportDiv1.style.display = 'block';
+            testReportDiv1.innerHTML = local.utility2.testReportMerge(testReport, {});
             // update test-report status every 1000 ms until done
             timerInterval = setInterval(function () {
-                // update testReportDiv in browser
-                testReportDiv.innerHTML = local.utility2.testReportMerge(testReport, {});
+                // update testReportDiv1 in browser
+                testReportDiv1.innerHTML = local.utility2.testReportMerge(testReport, {});
                 if (testReport.testsPending === 0) {
                     // cleanup timerInterval
                     clearInterval(timerInterval);
@@ -3902,14 +3794,14 @@ tmp\\)\\(\\b\\|[_s]\\)\
                     options.middlewareError(error, request, response);
                 });
             };
-            local.utility2.server = local.http.createServer(
+            local.global.utility2_serverHttp1 = local.http.createServer(
                 local.utility2.serverLocalRequestHandler
             );
             // 2. start server on local.utility2.envDict.PORT
             local.utility2.envDict.PORT = local.utility2.envDict.PORT || '8081';
             console.log('server listening on http-port ' + local.utility2.envDict.PORT);
             local.utility2.onReadyBefore.counter += 1;
-            local.utility2.server.listen(
+            local.global.utility2_serverHttp1.listen(
                 local.utility2.envDict.PORT,
                 local.utility2.onReadyBefore
             );
@@ -4112,7 +4004,6 @@ tmp\\)\\(\\b\\|[_s]\\)\
             '.md': 'text/markdown; charset=UTF-8',
             '.txt': 'text/plain; charset=UTF-8'
         };
-        local.utility2.dbSeedList = [];
         local.utility2.envDict = local.modeJs === 'browser'
             ? {}
             : process.env;
@@ -4120,7 +4011,7 @@ tmp\\)\\(\\b\\|[_s]\\)\
         local.utility2.regexpUriComponentCharset = (/[\w\!\%\'\(\)\*\-\.\~]/);
         local.utility2.regexpUuidValidate =
             (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
-        local.utility2.stringAsciiCharset = local.utility2.stringExampleAscii ||
+        local.utility2.stringAsciiCharset =
             '\x00\x01\x02\x03\x04\x05\x06\x07\b\t\n\x0b\f\r\x0e\x0f' +
             '\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f' +
             ' !"#$%&\'()*+,-./0123456789:;<=>?' +
@@ -4179,7 +4070,7 @@ tmp\\)\\(\\b\\|[_s]\\)\
          * this function will call onError when onReadyBefore.counter === 0
          */
             local.utility2.onReadyBefore.counter += 1;
-            local.utility2.taskOnErrorPush({ key: 'utility2.onReadyAfter' }, onError);
+            local.utility2.taskCreate({ key: 'utility2.onReadyAfter' }, null, onError);
             local.utility2.onResetAfter(local.utility2.onReadyBefore);
             return onError;
         };
@@ -4188,14 +4079,11 @@ tmp\\)\\(\\b\\|[_s]\\)\
         /*
          * this function will keep track of onReadyBefore.counter
          */
-            local.utility2.taskOnErrorPush({ key: 'utility2.onReadyAfter' }, function (error) {
+            local.utility2.taskCreate({ key: 'utility2.onReadyAfter' }, function (onError) {
+                onError(error);
+            }, function (error) {
                 // validate no error occurred
                 local.utility2.assert(!error, error);
-            });
-            local.utility2.taskOnTaskUpsert({
-                key: 'utility2.onReadyAfter'
-            }, function (onError) {
-                onError(error);
             });
         });
         // init onResetAfter
@@ -4206,7 +4094,7 @@ tmp\\)\\(\\b\\|[_s]\\)\
             local.utility2.onResetBefore.counter += 1;
             // visual notification - onResetAfter
             local.utility2.ajaxProgressUpdate();
-            local.utility2.taskOnErrorPush({ key: 'utility2.onResetAfter' }, onError);
+            local.utility2.taskCreate({ key: 'utility2.onResetAfter' }, null, onError);
             setTimeout(local.utility2.onResetBefore);
             return onError;
         };
@@ -4215,14 +4103,13 @@ tmp\\)\\(\\b\\|[_s]\\)\
         /*
          * this function will keep track of onResetBefore.counter
          */
-            local.utility2.taskOnErrorPush({ key: 'utility2.onResetAfter' }, function (error) {
-                // validate no error occurred
-                local.utility2.assert(!error, error);
-            });
-            local.utility2.taskOnTaskUpsert({
+            local.utility2.taskCreate({
                 key: 'utility2.onResetAfter'
             }, function (onError) {
                 onError(error);
+            }, function (error) {
+                // validate no error occurred
+                local.utility2.assert(!error, error);
             });
         });
         local.utility2.onReadyAfter(local.utility2.nop);

@@ -8,13 +8,19 @@
  *     <script src="assets.db-lite.js"></script>
  *     <script>
  *     var dbTable1 = window.db_lite.dbTableCreate({ name: "dbTable1" });
- *     dbTable1.crudInsertMany([{ field1: 'hello', field2: 'world'}], console.log.bind(console));
+ *     dbTable1.crudInsertMany([{
+ *         field1: 'hello',
+ *         field2: 'world'
+ *     }], console.log.bind(console));
  *     </script>
  *
  * node example:
  *     var db = require('./assets.db-lite.js');
  *     var dbTable1 = window.db_lite.dbTableCreate({ name: "dbTable1" });
- *     dbTable1.crudInsertMany([{ field1: 'hello', field2: 'world'}], console.log.bind(console));
+ *     dbTable1.crudInsertMany([{
+ *         field1: 'hello',
+ *         field2: 'world'
+ *     }], console.log.bind(console));
  */
 
 

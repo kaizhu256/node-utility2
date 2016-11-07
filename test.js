@@ -324,6 +324,30 @@
             }, 1000);
         };
 
+        local.testCase_ajaxProgressUpdate_misc = function (options, onError) {
+        /*
+         * this function will test ajaxProgressUpdate's misc handling-behavior
+         */
+            options = {};
+            options.ajaxProgressDiv1 = local.modeJs === 'browser' &&
+                document.querySelector('#ajaxProgressDiv1');
+            if (!options.ajaxProgressDiv1) {
+                onError();
+                return;
+            }
+            local.utility2.testMock([
+                // test testRun's no modeTest handling-behavior
+                [local.global, { setTimeout: function (fnc) {
+                    fnc();
+                } }]
+            ], function (onError) {
+                options.ajaxProgressDiv1.style.background = 'transparent';
+                local.utility2.ajaxProgressCounter = 0;
+                local.utility2.ajaxProgressUpdate();
+                onError();
+            }, onError);
+        };
+
         local.testCase_assertXxx_default = function (options, onError) {
         /*
          * this function will test assertXxx's default handling-behavior
@@ -435,14 +459,13 @@
         /*
          * this function will test bufferCreate's default handling-behavior
          */
-            var ii;
             options = {};
             options.text1 = '';
-            for (ii = 0; ii < 0x10000; ii += 1) {
-                options.text1 += String.fromCodePoint(ii);
+            for (options.ii = 0; options.ii < 0x10000; options.ii += 1) {
+                options.text1 += String.fromCodePoint(options.ii);
             }
-            for (ii = 0x10000; ii < 0x110000; ii += 0x100) {
-                options.text1 += String.fromCodePoint(ii);
+            for (options.ii = 0x10000; options.ii < 0x110000; options.ii += 0x100) {
+                options.text1 += String.fromCodePoint(options.ii);
             }
             // test utf8 handling-behavior
             options.bff1 = local.utility2.bufferCreate(options.text1);
@@ -486,67 +509,6 @@
                 local.utility2.assertJsonEqual(options.data, options.validate);
             });
             onError();
-        };
-
-        local.testCase_dbReset_ajax = function (options, onError) {
-        /*
-         * this function will test dbReset's ajax handling-behavior
-         */
-            options = [
-                [local, { db: {} }],
-                [local.utility2, {
-                    _debugXhrdbReset: null,
-                    ajax: function (options, onError) {
-                        // jslint-hack
-                        local.utility2.nop(options);
-                        onError();
-                    },
-                    envDict: { npm_config_mode_backend: true },
-                    onResetAfter: local.utility2.nop,
-                    onResetBefore: null
-                }]
-            ];
-            local.utility2.testMock(options, function (onError) {
-                local.utility2.onResetBefore = onError;
-                local.utility2.dbReset();
-            }, onError);
-        };
-
-        local.testCase_dbReset_default = function (options, onError) {
-        /*
-         * this function will test dbReset's default handling-behavior
-         */
-            options = {};
-            local.utility2.onNext(options, function (error) {
-                switch (options.modeNext) {
-                case 1:
-                    local.utility2.dbSeedList = [{
-                        name: 'testCase_dbReset_default1'
-                    }, {
-                        dbIndexCreateList: [{ fieldName: 'id', unique: true }],
-                        dbIndexRemoveList: ['id'],
-                        dbRowList: [{ id: 0 }],
-                        name: 'testCase_dbReset_default2',
-                        reset: true
-                    }];
-                    options.onNext();
-                    break;
-                // reset db
-                case 2:
-                    local.utility2.dbReset();
-                    local.utility2.onReadyAfter(options.onNext);
-                    break;
-                // re-reset db
-                case 3:
-                    local.utility2.dbReset();
-                    local.utility2.onReadyAfter(options.onNext);
-                    break;
-                default:
-                    onError(error);
-                }
-            });
-            options.modeNext = 0;
-            options.onNext();
         };
 
         local.testCase_debug_inline_default = function (options, onError) {
@@ -601,7 +563,7 @@
                 ' *?<h2>\n' +
                 ' *?<a href="#element.utility2.nop" id="element.utility2.nop">\n' +
                 ' *?function <span class="docApiSignatureSpan">utility2.</span>nop\n' +
-                ' *?<span class="docApiSignatureSpan">\\(\\)</span>\n' +
+                ' *?<span class="docApiSignatureSpan">\\(\\s*?\\)</span>\n' +
                 ' *?</a>\n' +
                 ' *?</h2>\n' +
                 ' *?<ul>\n' +
@@ -893,13 +855,12 @@
         /*
          * this function will test listGetRandom's default handling-behavior
          */
-            var ii;
             options = {};
             // init list
             options.list = ['aa', 'bb', 'cc', 'dd'];
             options.elementDict = {};
             // get 100 random elements from list
-            for (ii = 0; ii < 1024; ii += 1) {
+            for (options.ii = 0; options.ii < 1024; options.ii += 1) {
                 options.elementDict[local.utility2.listGetElementRandom(options.list)] = true;
             }
             // validate all elements were retrieved from list
@@ -914,12 +875,11 @@
         /*
          * this function will test listShuffle's default handling-behavior
          */
-            var ii;
             options = {};
             // init list
             options.list = '[0,1]';
             // shuffle list 100 times
-            for (ii = 0; ii < 100; ii += 1) {
+            for (options.ii = 0; options.ii < 100; options.ii += 1) {
                 options.listShuffled =
                     JSON.stringify(local.utility2.listShuffle(JSON.parse(options.list)));
                 // validate shuffled list
@@ -1296,9 +1256,9 @@
             onError();
         };
 
-        local.testCase_taskOnErrorPushCached_default = function (options, onError) {
+        local.testCase_taskCreateCached_default = function (options, onError) {
         /*
-         * this function will test taskOnErrorPushCached's default handling-behavior
+         * this function will test taskCreateCached's default handling-behavior
          */
             var cacheValue, onTask, optionsCopy;
             options = {};
@@ -1309,7 +1269,7 @@
                     onTask = function (onError) {
                         onError(null, cacheValue);
                     };
-                    options.cacheDict = 'testCase_taskOnErrorPushCached_default';
+                    options.cacheDict = 'testCase_taskCreateCached_default';
                     options.key = 'memory';
                     // cleanup memory-cache
                     local.utility2.cacheDict[options.cacheDict] = null;
@@ -1320,7 +1280,7 @@
                         // test onCacheWrite handling-behavior
                         onCacheWrite: options.onNext
                     };
-                    local.utility2.taskOnErrorPushCached(optionsCopy, options.onNext, onTask);
+                    local.utility2.taskCreateCached(optionsCopy, onTask, options.onNext);
                     break;
                 case 2:
                     // validate data
@@ -1339,7 +1299,7 @@
                         // test onCacheWrite handling-behavior
                         onCacheWrite: options.onNext
                     };
-                    local.utility2.taskOnErrorPushCached(optionsCopy, options.onNext, onTask);
+                    local.utility2.taskCreateCached(optionsCopy, onTask, options.onNext);
                     break;
                 case 4:
                     // validate data
@@ -1356,7 +1316,7 @@
                         cacheDict: options.cacheDict,
                         key: options.key
                     };
-                    local.utility2.taskOnErrorPushCached(optionsCopy, options.onNext, onTask);
+                    local.utility2.taskCreateCached(optionsCopy, onTask, options.onNext);
                     break;
                 case 6:
                     // validate data
@@ -1376,32 +1336,31 @@
             options.onNext();
         };
 
-        local.testCase_taskOnTaskUpsert_multipleCallback = function (options, onError) {
+        local.testCase_taskCreate_multipleCallback = function (options, onError) {
         /*
-         * this function will test taskOnTaskUpsert's multiple-callback handling-behavior
+         * this function will test taskCreate's multiple-callback handling-behavior
          */
-            options = { counter: 0, key: 'testCase_taskOnTaskUpsert_multiCallback' };
-            local.utility2.taskOnErrorPush(options, function () {
-                options.counter += 1;
-            });
-            local.utility2.taskOnTaskUpsert(options, function (onError) {
+            options = { counter: 0, key: 'testCase_taskCreate_multiCallback' };
+            local.utility2.taskCreate(options, function (onError) {
                 onError();
                 // test multiple-callback handling-behavior
                 onError();
+            }, function () {
+                options.counter += 1;
             });
             // validate counter incremented once
             local.utility2.assertJsonEqual(options.counter, 1);
             onError();
         };
 
-        local.testCase_taskOnTaskUpsert_upsert = function (options, onError) {
+        local.testCase_taskCreate_upsert = function (options, onError) {
         /*
-         * this function will test taskOnTaskUpsert's upsert handling-behavior
+         * this function will test taskCreate's upsert handling-behavior
          */
-            options = { counter: 0, key: 'testCase_taskOnTaskUpsert_upsert' };
+            options = { counter: 0, key: 'testCase_taskCreate_upsert' };
             // test upsert handling-behavior
             [null, null].forEach(function () {
-                local.utility2.taskOnTaskUpsert(options, function (onError) {
+                local.utility2.taskCreate(options, function (onError) {
                     options.counter += 1;
                     setTimeout(onError);
                 });
@@ -2152,13 +2111,17 @@ local.utility2.assertJsonEqual(options.coverage1,
             // coverage-hack - test replStart's muliple-call handling-behavior
             local.utility2.replStart();
             options = [
-                [local.utility2, { processSpawnWithTimeout: function () {
+                // suppress console.error
+                [console, { error: local.utility2.nop }],
+                [local.child_process, { spawn: function () {
                     return { on: function (event, callback) {
                         // jslint-hack
                         local.utility2.nop(event);
                         callback();
                     } };
-                } }]
+                } }],
+                // suppress process.stdout
+                [process.stdout, { write: local.utility2.nop }]
             ];
             local.utility2.testMock(options, function (onError) {
                 [
@@ -2173,15 +2136,20 @@ local.utility2.assertJsonEqual(options.coverage1,
                     // test keys handling-behavior
                     'keys {}\n',
                     // test print handling-behavior
-                    'print\n'
+                    'print\n',
+                    // test error handling-behavior
+                    'undefined()\n'
                 ].forEach(function (script) {
-                    local.utility2.replServer.eval(
+                    local.global.utility2_serverRepl1.eval(
                         script,
                         null,
                         'repl',
                         local.utility2.nop
                     );
                 });
+                // coverage-hack
+                local.global.utility2_serverRepl1.nop();
+                local.global.utility2_serverRepl1.onError(local.utility2.errorDefault);
                 onError();
             }, onError);
         };
@@ -2211,7 +2179,7 @@ local.utility2.assertJsonEqual(options.coverage1,
             });
             options.socket.write(options.input + '\n');
             // test error-handling behavior
-            options.socket.end(options.input + '\n');
+            options.socket.end('undefined()\n');
         };
 
         local.testCase_serverRespondTimeoutDefault_default = function (options, onError) {
@@ -2219,7 +2187,6 @@ local.utility2.assertJsonEqual(options.coverage1,
          * this function will test serverRespondTimeoutDefault's default handling-behavior
          */
             options = [
-                // suppress console.error
                 [local.utility2, { timeoutDefault: 1000 }]
             ];
             local.utility2.testMock(options, function (onError) {

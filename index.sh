@@ -859,8 +859,8 @@ local.readme = local.fs.readFileSync('README.md', 'utf8');
 local.packageJson = {};
 local.packageJson.description = local.readme.split('\n')[2];
 [
-    (/\`\`\`\\w*?(\n[\\W\\s]*?(package.json)[\n\"][\\S\\s]+?)\n\`\`\`/g),
-    (/\`\`\`\\w*?(\n[\\W\\s]*?(\w.*?)[\n\"][\\S\\s]+?)\n\`\`\`/g)
+    (/\`\`\`json(\n[\\W\\s]*?(package.json)[\n\"][\\S\\s]+?)\n\`\`\`/g),
+    (/\`\`\`\\w*?(\n[\\W\\s]*?(\w\S*?)[\n\"][\\S\\s]+?)\n\`\`\`/g)
 ].forEach(function (rgx) {
     local.readme.replace(rgx, function (match0, match1, match2, ii, text) {
         // jslint-hack
