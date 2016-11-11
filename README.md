@@ -30,7 +30,6 @@ this zero-dependency package will run dynamic browser-tests with coverage (via e
 [![api-doc](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/screen-capture.docApiCreate.browser._2Fhome_2Ftravis_2Fbuild_2Fkaizhu256_2Fnode-utility2_2Ftmp_2Fbuild_2Fdoc.api.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/doc.api.html)
 
 #### todo
-- make replStart standalone
 - add es6-syntax support and test
 - allow secure remote db export / import / reset to backend
 - add decryption / encryption to jwt
@@ -39,17 +38,12 @@ this zero-dependency package will run dynamic browser-tests with coverage (via e
 - add server stress test using electron
 - none
 
-#### change since e98bf073
-- npm publish 2016.10.2
-- decouple lib.db.js from utility2's init
-- replace loading spinner with topbar
-- fix utility2.errorDefault getting its stack prepended
-- rename .ajaxProgressDiv -> #ajaxProgressDiv1, .testReportDiv -> #testReportDiv1
-- merge functions utility2.taskOnTaskUpsert and utility2.taskOnErrorPush -> utility2.taskCreate
-- change signature of function utility2.taskCreateCached
-- remove functions utility2.ajaxProgressShow, utility2.dbReset
-- README.md - add cdn-download links
-- README.md - replace alpha api-doc with beta api-doc
+#### change since 1e294556
+- npm publish 2016.10.3
+- coverage - add env-variable npm_config_mode_coverage_append to allow appending coverage to previous reports
+- coverage - change behavior of npm_config_mode_coverage=all to cover all files
+- function utility2.replStart - make it a standalone function
+- function utility2.uglify - prefer uglifying code with 80-column-width
 - none
 
 #### this package requires
@@ -129,7 +123,7 @@ shExampleSh
 /*
 example.js
 
-this script will run automated browser-tests with coverage
+this script will demo automated browser-tests with coverage
 (via istanbul and electron)
 
 instruction
@@ -566,7 +560,7 @@ export npm_config_mode_auto_restart=1 && \
 ./index.sh test test.js",
         "test-all": "npm test --mode-coverage=all"
     },
-    "version": "2016.10.2"
+    "version": "2016.10.3"
 }
 ```
 

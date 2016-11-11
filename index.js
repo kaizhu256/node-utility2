@@ -1825,44 +1825,9 @@ local.utility2.templateTestReportHtml = '\
             return arg === null || arg === undefined;
         };
 
-        local.utility2.istanbulCoverageMerge = function (coverage1, coverage2) {
-        /*
-         * this function will merge coverage2 into coverage1
-         */
-            var dict1, dict2;
-            coverage1 = coverage1 || {};
-            coverage2 = coverage2 || {};
-            Object.keys(coverage2).forEach(function (file) {
-                // if file is undefined in coverage1, then add it
-                if (!coverage1[file]) {
-                    coverage1[file] = coverage2[file];
-                    return;
-                }
-                // merge file from coverage2 into coverage1
-                ['b', 'f', 's'].forEach(function (key) {
-                    dict1 = coverage1[file][key];
-                    dict2 = coverage2[file][key];
-                    switch (key) {
-                    // increment coverage for branch lines
-                    case 'b':
-                        Object.keys(dict2).forEach(function (key) {
-                            dict2[key].forEach(function (count, ii) {
-                                dict1[key][ii] += count;
-                            });
-                        });
-                        break;
-                    // increment coverage for function and statement lines
-                    case 'f':
-                    case 's':
-                        Object.keys(dict2).forEach(function (key) {
-                            dict1[key] += dict2[key];
-                        });
-                        break;
-                    }
-                });
-            });
-            return coverage1;
-        };
+        // init istanbulCoverageMerge
+        local.utility2.istanbulCoverageMerge =
+            local.utility2.istanbul.coverageMerge || local.utility2.echo;
 
         // init istanbulCoverageReportCreate
         local.utility2.istanbulCoverageReportCreate =

@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-/* istanbul instrument in package all */
 /* istanbul instrument in package istanbul-lite */
 /*jslint
     bitwise: true,
@@ -50,6 +49,44 @@
         // init local properties
         local['./package.json'] = {};
         local.codeDict = local.codeDict || {};
+        local.coverageMerge = function (coverage1, coverage2) {
+        /*
+         * this function will merge coverage2 into coverage1
+         */
+            var dict1, dict2;
+            coverage1 = coverage1 || {};
+            coverage2 = coverage2 || {};
+            Object.keys(coverage2).forEach(function (file) {
+                // if file is undefined in coverage1, then add it
+                if (!coverage1[file]) {
+                    coverage1[file] = coverage2[file];
+                    return;
+                }
+                // merge file from coverage2 into coverage1
+                ['b', 'f', 's'].forEach(function (key) {
+                    dict1 = coverage1[file][key];
+                    dict2 = coverage2[file][key];
+                    switch (key) {
+                    // increment coverage for branch lines
+                    case 'b':
+                        Object.keys(dict2).forEach(function (key) {
+                            dict2[key].forEach(function (count, ii) {
+                                dict1[key][ii] += count;
+                            });
+                        });
+                        break;
+                    // increment coverage for function and statement lines
+                    case 'f':
+                    case 's':
+                        Object.keys(dict2).forEach(function (key) {
+                            dict1[key] += dict2[key];
+                        });
+                        break;
+                    }
+                });
+            });
+            return coverage1;
+        };
         local.coverageReportCreate = function (options) {
         /*
          * this function will
@@ -64,6 +101,18 @@
             options.dir = process.cwd() + '/tmp/build/coverage.html';
             options.sourceStore = {};
             options.writer = local.writerCreate(options);
+            // merge previous coverage
+            if (local.modeJs === 'node' && process.env.npm_config_mode_coverage_append) {
+                try {
+                    local.coverageMerge(
+                        options.coverage,
+                        JSON.parse(
+                            local._fs.readFileSync(options.dir + '/coverage.json', 'utf8')
+                        )
+                    );
+                } catch (ignore) {
+                }
+            }
             // 1. print coverage in text-format to stdout
             if (local.modeJs === 'node') {
                 new local.TextReport(options).writeReport(options.collector);
@@ -72,23 +121,29 @@
             new local.HtmlReport(options).writeReport(options.collector);
             options.writer.writeFile('', nop);
             // write coverage-summary.json
-            local.fsWriteFileWithMkdirpSync(options.dir +
-                '/coverage-summary.json', JSON.stringify(local.coverageReportSummary));
+            local.fsWriteFileWithMkdirpSync(
+                options.dir + '/coverage-summary.json',
+                JSON.stringify(local.coverageReportSummary)
+            );
             // write coverage.json
-            local.fsWriteFileWithMkdirpSync(options.dir +
-                '/coverage.json', JSON.stringify(options.coverage));
+            local.fsWriteFileWithMkdirpSync(
+                options.dir + '/coverage.json',
+                JSON.stringify(options.coverage)
+            );
             // write coverage.badge.svg
             options.pct = local.coverageReportSummary.root.metrics.lines.pct;
-            local.fsWriteFileWithMkdirpSync(local.path.dirname(options.dir) +
-                '/coverage.badge.svg', local.templateCoverageBadgeSvg
-                // edit coverage badge percent
-                .replace((/100.0/g), options.pct)
-                // edit coverage badge color
-                .replace(
-                    (/0d0/g),
-                    ('0' + Math.round((100 - options.pct) * 2.21).toString(16)).slice(-2) +
-                        ('0' + Math.round(options.pct * 2.21).toString(16)).slice(-2) + '00'
-                ));
+            local.fsWriteFileWithMkdirpSync(
+                local.path.dirname(options.dir) + '/coverage.badge.svg',
+                local.templateCoverageBadgeSvg
+                    // edit coverage badge percent
+                    .replace((/100.0/g), options.pct)
+                    // edit coverage badge color
+                    .replace(
+                        (/0d0/g),
+                        ('0' + Math.round((100 - options.pct) * 2.21).toString(16)).slice(-2) +
+                            ('0' + Math.round(options.pct * 2.21).toString(16)).slice(-2) + '00'
+                    )
+            );
             console.log('created coverage file://' + options.dir + '/index.html');
             // 3. return coverage in html-format as a single document
             if (local.modeJs === 'browser' && document.querySelector('.istanbulCoverageDiv')) {
@@ -166,8 +221,9 @@
          * exists in the code
          */
             return process.env.npm_config_mode_coverage && (
+                process.env.npm_config_mode_coverage === 'all' ||
                 code.indexOf('/* istanbul instrument in package ' +
-                    process.env.npm_package_name + ' */') >= 0 ||
+                        process.env.npm_package_name + ' */') >= 0 ||
                     code.indexOf('/* istanbul instrument in package ' +
                         process.env.npm_config_mode_coverage + ' */') >= 0
             )
@@ -219,6 +275,7 @@
     case 'node':
         // require modules
         local._fs = local.require2('fs');
+        local.module = require('module');
         local.path = local.require2('path');
         // init exports
         module.exports = module['./lib.istanbul.js'] = local;
@@ -1311,7 +1368,6 @@ local.templateCoverageBadgeSvg =
                 }
                 process.env.npm_config_mode_coverage = process.env.npm_config_mode_coverage ||
                     process.env.npm_package_name || 'all';
-                local.module = require('module');
                 // add coverage hook to require
                 local._moduleExtensionsJs = local.module._extensions['.js'];
                 local.module._extensions['.js'] = function (module, file) {
@@ -1334,6 +1390,7 @@ local.templateCoverageBadgeSvg =
                 process.on('exit', function () {
                     local.coverageReportCreate({ coverage: local.global.__coverage__ });
                 });
+                // re-run cli
                 local.module.runMain();
                 break;
             // instrument a file and print result to stdout
@@ -1343,6 +1400,20 @@ local.templateCoverageBadgeSvg =
                     local._fs.readFileSync(process.argv[3], 'utf8'),
                     process.argv[3]
                 ));
+                break;
+            // cover a node command only when npm_config_mode_coverage is set
+            case 'test':
+                if (process.env.npm_config_mode_coverage) {
+                    process.argv[2] = 'cover';
+                    // re-run cli
+                    local.cliRun(options);
+                    return;
+                }
+                // init process.argv
+                process.argv.splice(1, 2);
+                process.argv[1] = local.path.resolve(process.cwd(), process.argv[1]);
+                // re-run cli
+                local.module.runMain();
                 break;
             }
         };

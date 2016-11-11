@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-/* istanbul instrument in package all */
 /* istanbul instrument in package uglifyjs-lite */
 /*jslint
     bitwise: true,
@@ -275,7 +274,7 @@ f){}}else n[1]=n[1].substr(0,2);return i?i.call(n,n):null}throw u}}}(),DOT_CALL_
             // get an AST with compression optimizations
             ast = local.ast_squeeze(ast);
             // compressed code here
-            return local.split_lines(local.gen_code(ast, { ascii_only: true }), 80);
+            return local.split_lines(local.gen_code(ast, { ascii_only: true }), 79);
         };
     }());
     switch (local.modeJs) {
