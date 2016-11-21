@@ -54,14 +54,16 @@
             }
             // coverage-hack - cover istanbul
             require.cache[__dirname + '/lib.istanbul.js'] = null;
-            local.utility2.istanbul2 = require(__dirname + '/lib.istanbul.js');
+            local.utility2.istanbul = require(__dirname + '/lib.istanbul.js');
+            local.utility2.istanbul.coverageMerge =
+                local.utility2.istanbulCoverageMerge =
+                local.utility2.istanbul.coverageMerge;
             local.utility2.istanbul.coverageReportCreate =
                 local.utility2.istanbulCoverageReportCreate =
-                local.utility2.istanbul2.coverageReportCreate;
+                local.utility2.istanbul.coverageReportCreate;
             local.utility2.istanbul.instrumentInPackage =
                 local.utility2.istanbulInstrumentInPackage =
-                local.utility2.istanbul2.instrumentInPackage;
-            local.utility2.istanbul2.codeDict = local.utility2.istanbul.codeDict;
+                local.utility2.istanbul.instrumentInPackage;
             break;
         }
         // require modules
@@ -95,12 +97,12 @@
          * this function will test FormData's default handling-behavior
          */
             options = {};
-            options.blob1 = new local.utility2.Blob(['hello', 'bye', '\u1234 ', 0]);
-            options.blob2 = new local.utility2.Blob(['hello', 'bye', '\u1234 ', 0], {
+            options.blob1 = new local.utility2.Blob(['aa', 'bb', '\u1234 ', 0]);
+            options.blob2 = new local.utility2.Blob(['aa', 'bb', '\u1234 ', 0], {
                 type: 'text/plain; charset=utf-8'
             });
             options.data = new local.utility2.FormData();
-            options.data.append('text1', 'hellobye\u1234 0');
+            options.data.append('text1', 'aabb\u1234 0');
             // test file-upload handling-behavior
             options.data.append('file1', options.blob1);
             // test file-upload and filename handling-behavior
@@ -113,16 +115,16 @@
                 // validate responseText
                 local.utility2.assert(xhr.responseText.indexOf(
                     '\r\nContent-Disposition: form-data; ' +
-                        'name="text1"\r\n\r\nhellobye\u1234 0\r\n'
+                        'name="text1"\r\n\r\naabb\u1234 0\r\n'
                 ) >= 0, xhr.responseText);
                 local.utility2.assert(xhr.responseText.indexOf(
                     '\r\nContent-Disposition: form-data; ' +
-                        'name="file1"\r\n\r\nhellobye\u1234 0\r\n'
+                        'name="file1"\r\n\r\naabb\u1234 0\r\n'
                 ) >= 0, xhr.responseText);
                 local.utility2.assert(xhr.responseText.indexOf(
                     '\r\nContent-Disposition: form-data; name="file2"; ' +
                         'filename="filename2.txt"\r\nContent-Type: text/plain; ' +
-                        'charset=utf-8\r\n\r\nhellobye\u1234 0\r\n'
+                        'charset=utf-8\r\n\r\naabb\u1234 0\r\n'
                 ) >= 0, xhr.responseText);
                 onError();
             });
@@ -164,6 +166,30 @@
                 local.utility2.assert((/\r\n\r\n$/).test(xhr.responseText), xhr.responseText);
                 onError();
             });
+        };
+
+        local.testCase_ajaxProgressUpdate_misc = function (options, onError) {
+        /*
+         * this function will test ajaxProgressUpdate's misc handling-behavior
+         */
+            options = {};
+            options.ajaxProgressDiv1 = local.modeJs === 'browser' &&
+                document.querySelector('#ajaxProgressDiv1');
+            if (!options.ajaxProgressDiv1) {
+                onError();
+                return;
+            }
+            local.utility2.testMock([
+                // test testRun's no modeTest handling-behavior
+                [local.global, { setTimeout: function (fnc) {
+                    fnc();
+                } }]
+            ], function (onError) {
+                options.ajaxProgressDiv1.style.background = 'transparent';
+                local.utility2.ajaxProgressCounter = 0;
+                local.utility2.ajaxProgressUpdate();
+                onError();
+            }, onError);
         };
 
         local.testCase_ajax_abort = function (options, onError) {
@@ -248,9 +274,9 @@
                 local.utility2.ajax({
                     data: responseType === 'arraybuffer'
                         // test buffer post handling-behavior
-                        ? local.utility2.bufferCreate('hello')
+                        ? local.utility2.bufferCreate('aa')
                         // test string post handling-behavior
-                        : 'hello',
+                        : 'aa',
                     method: 'POST',
                     // test nodejs response handling-behavior
                     responseType: responseType === 'stream' && local.modeJs === 'node'
@@ -275,16 +301,16 @@
                     default:
                         // validate responseText
                         options.data = xhr.responseText;
-                        local.utility2.assertJsonEqual(options.data, 'hello');
+                        local.utility2.assertJsonEqual(options.data, 'aa');
                     }
                     onParallel();
                 });
             });
             // test /test.echo handling-behavior
             local.utility2.ajax({
-                data:  'hello',
+                data:  'aa',
                 // test request header handling-behavior
-                headers: { 'X-Request-Header-Test': 'hello' },
+                headers: { 'X-Request-Header-Test': 'aa' },
                 method: 'POST',
                 url: '/test.echo'
             }, function (error, xhr) {
@@ -294,15 +320,15 @@
                 local.utility2.assertJsonEqual(xhr.statusCode, 200);
                 // validate response
                 options.data = xhr.responseText;
-                local.utility2.assert((/\r\nhello$/).test(options.data), options.data);
-                local.utility2.assert((/\r\nx-request-header-test: hello\r\n/)
+                local.utility2.assert((/\r\naa$/).test(options.data), options.data);
+                local.utility2.assert((/\r\nx-request-header-test: aa\r\n/)
                     .test(options.data), options.data);
                 // validate responseHeaders
                 options.data = xhr.getAllResponseHeaders();
-                local.utility2.assert((/^X-Response-Header-Test: bye\r\n/im)
+                local.utility2.assert((/^X-Response-Header-Test: bb\r\n/im)
                     .test(options.data), options.data);
                 options.data = xhr.getResponseHeader('x-response-header-test');
-                local.utility2.assertJsonEqual(options.data, 'bye');
+                local.utility2.assertJsonEqual(options.data, 'bb');
                 options.data = xhr.getResponseHeader('undefined');
                 local.utility2.assertJsonEqual(options.data, null);
                 onParallel();
@@ -324,30 +350,6 @@
             }, 1000);
         };
 
-        local.testCase_ajaxProgressUpdate_misc = function (options, onError) {
-        /*
-         * this function will test ajaxProgressUpdate's misc handling-behavior
-         */
-            options = {};
-            options.ajaxProgressDiv1 = local.modeJs === 'browser' &&
-                document.querySelector('#ajaxProgressDiv1');
-            if (!options.ajaxProgressDiv1) {
-                onError();
-                return;
-            }
-            local.utility2.testMock([
-                // test testRun's no modeTest handling-behavior
-                [local.global, { setTimeout: function (fnc) {
-                    fnc();
-                } }]
-            ], function (onError) {
-                options.ajaxProgressDiv1.style.background = 'transparent';
-                local.utility2.ajaxProgressCounter = 0;
-                local.utility2.ajaxProgressUpdate();
-                onError();
-            }, onError);
-        };
-
         local.testCase_assertXxx_default = function (options, onError) {
         /*
          * this function will test assertXxx's default handling-behavior
@@ -366,12 +368,12 @@
             });
             // test assertion failed with string message
             local.utility2.tryCatchOnError(function () {
-                local.utility2.assert(false, 'hello');
+                local.utility2.assert(false, 'aa');
             }, function (error) {
                 // validate error occurred
                 local.utility2.assert(error, error);
                 // validate error-message
-                local.utility2.assertJsonEqual(error.message, 'hello');
+                local.utility2.assertJsonEqual(error.message, 'aa');
             });
             // test assertion failed with error object
             local.utility2.tryCatchOnError(function () {
@@ -413,8 +415,8 @@
             onParallel.counter += 1;
             options = {};
             [
-                new local.utility2.Blob(['hello', 'bye', '\u1234 ', 0]),
-                new local.utility2.Blob(['hello', 'bye', '\u1234 ', 0], {
+                new local.utility2.Blob(['aa', 'bb', '\u1234 ', 0]),
+                new local.utility2.Blob(['aa', 'bb', '\u1234 ', 0], {
                     type: 'text/plain; charset=utf-8'
                 })
             ].forEach(function (blob, ii) {
@@ -430,22 +432,22 @@
                             if (ii === 0) {
                                 local.utility2.assertJsonEqual(
                                     data,
-                                    'data:;base64,aGVsbG9ieWXhiLQgMA=='
+                                    'data:;base64,YWFiYuGItCAw'
                                 );
                                 break;
                             }
                             local.utility2.assertJsonEqual(
                                 data,
-                                'data:text/plain; charset=utf-8;base64,aGVsbG9ieWXhiLQgMA=='
+                                'data:text/plain; charset=utf-8;base64,YWFiYuGItCAw'
                             );
                             break;
                         case 'text':
-                            local.utility2.assertJsonEqual(data, 'hellobye\u1234 0');
+                            local.utility2.assertJsonEqual(data, 'aabb\u1234 0');
                             break;
                         default:
                             local.utility2.assertJsonEqual(
                                 local.utility2.bufferToString(data),
-                                'hellobye\u1234 0'
+                                'aabb\u1234 0'
                             );
                         }
                         onParallel();
@@ -525,11 +527,11 @@
                 options.data = '';
                 local.global['debug_inlineCallback'.replace('_i', 'I')](
                     local.utility2.echo
-                )('hello');
+                )('aa');
                 // validate data
                 local.utility2.assertJsonEqual(
                     options.data,
-                    '\n\n\ndebug_inline\nhello\n\n'.replace('_i', 'I')
+                    '\n\n\ndebug_inline\naa\n\n'.replace('_i', 'I')
                 );
                 onError();
             }, onError);
@@ -577,8 +579,8 @@
          * this function will test echo's default handling-behavior
          */
             options = {};
-            options.data = local.utility2.echo('hello');
-            local.utility2.assertJsonEqual(options.data, 'hello');
+            options.data = local.utility2.echo('aa');
+            local.utility2.assertJsonEqual(options.data, 'aa');
             onError();
         };
 
@@ -619,54 +621,64 @@
         /*
          * this function will test istanbulCoverageReportCreate's default handling-behavior
          */
-            local.utility2.testMock([
-                // suppress console.log
-                [console, { log: local.utility2.nop }]
-            ], function (onError) {
+            options = [
+                [local.istanbul, { coverageMerge: local.utility2.echo }],
+                // test $npm_config_mode_coverage_append handling-behavior
+                [local.utility2.envDict, { npm_config_mode_coverage_append: '1' }]
+            ];
+            local.utility2.envDict.npm_config_mode_coverage_append = '';
+            local.utility2.testMock(options, function (onError) {
                 /*jslint evil: true*/
-                // test no coverage handling-behavior
-                local.istanbul.coverageReportCreate({});
-                options = {};
-                options.coverage = local.global.__coverage__mock = {};
                 // cleanup old coverage
                 if (local.modeJs === 'node') {
                     local.utility2.fsRmrSync('tmp/build/coverage.html/aa');
                 }
                 // test path handling-behavior
                 ['/', local.utility2.__dirname].forEach(function (dir) {
-                    ['aa.js', 'aa/bb.js'].forEach(function (path) {
-                        // cover path
+                    [
+                        'zz.js',
+                        'aa/zz.js',
+                        'aa/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb/zz.js'
+                    ].forEach(function (file) {
+                        // cover file
                         eval(local.istanbul.instrumentSync(
                             // test skip handling-behavior
                             'null',
-                            dir + '/' + path,
-                            '__coverage__mock'
+                            dir + '/' + file
                         ));
                     });
                 });
                 // create report with covered path
-                local.istanbul.coverageReportCreate(options);
+                local.istanbul.coverageReportCreate();
                 // test file-content handling-behavior
                 [
                     // test no content handling-behavior
                     '',
                     // test uncovereed-code handling-behavior
-                    'null && null',
+                    'null && null && null',
                     // test trailing-whitespace handling-behavior
                     'null ',
                     // test skip handling-behavior
                     '/* istanbul ignore next */\nnull && null'
                 ].forEach(function (content) {
-                    options = {};
-                    options.coverage = local.global.__coverage__mock = {};
+                    // cleanup
+                    local.utility2.tryCatchOnError(function () {
+                        Object.keys(local.global.__coverage__).forEach(function (file) {
+                            if (file.indexOf('zz.js') >= 0) {
+                                local.global.__coverage__[file] = null;
+                            }
+                        });
+                    }, local.utility2.nop);
                     // cover path
-                    eval(local.istanbul.instrumentSync(
-                        content,
-                        'aa.js',
-                        '__coverage__mock'
-                    ));
+                    eval(local.istanbul.instrumentSync(content, 'zz.js'));
                     // create report with covered content
-                    local.istanbul.coverageReportCreate(options);
+                    local.istanbul.coverageReportCreate();
+                });
+                // cleanup
+                Object.keys(local.global.__coverage__).forEach(function (file) {
+                    if (file.indexOf('zz.js') >= 0) {
+                        local.global.__coverage__[file] = null;
+                    }
                 });
                 onError();
             }, onError);
@@ -679,8 +691,44 @@
             options = {};
             options.data = local.istanbul.instrumentSync('1', 'test.js');
             // validate data
-            local.utility2.assert(options.data.indexOf('.s[\'1\']++;1;\n') >= 0, options);
+            local.utility2.assert(options.data.indexOf(".s['1']++;1;\n") >= 0, options);
             onError();
+        };
+
+        local.testCase_jslintAndPrintConditional_default = function (options, onError) {
+        /*
+         * this function will test jslintAndPrintConditional's default handling-behavior
+         */
+            options = [
+                // suppress console.error
+                [console, { error: local.utility2.nop }],
+                [local.jslint, { errorText: '' }]
+            ];
+            local.utility2.testMock(options, function (onError) {
+                // test no csslint handling-behavior
+                local.utility2.jslintAndPrintConditional('no csslint', 'empty.css');
+                // validate no error occurred
+                local.utility2.assert(!local.jslint.errorText, local.jslint.errorText);
+                // test csslint passed handling-behavior
+                local.utility2.jslintAndPrintConditional(
+                    '/*csslint*/\nbody { font: normal; }',
+                    'passed.css'
+                );
+                // validate no error occurred
+                local.utility2.assert(!local.jslint.errorText, local.jslint.errorText);
+                // test no jslint handling-behavior
+                local.utility2.jslintAndPrintConditional('no jslint', 'empty.js');
+                // validate no error occurred
+                local.utility2.assert(!local.jslint.errorText, local.jslint.errorText);
+                // test jslint passed handling-behavior
+                local.utility2.jslintAndPrintConditional(
+                    '/*jslint node: true*/\nconsole.log("aa");',
+                    'passed.js'
+                );
+                // validate no error occurred
+                local.utility2.assert(!local.jslint.errorText, local.jslint.errorText);
+                onError();
+            }, onError);
         };
 
         local.testCase_jslintAndPrint_default = function (options, onError) {
@@ -738,42 +786,6 @@
                     'String();\n' +
                     '/* jslint-indent-end */\n' +
                     '}());\n', 'passed.js');
-                // validate no error occurred
-                local.utility2.assert(!local.jslint.errorText, local.jslint.errorText);
-                onError();
-            }, onError);
-        };
-
-        local.testCase_jslintAndPrintConditional_default = function (options, onError) {
-        /*
-         * this function will test jslintAndPrintConditional's default handling-behavior
-         */
-            options = [
-                // suppress console.error
-                [console, { error: local.utility2.nop }],
-                [local.jslint, { errorText: '' }]
-            ];
-            local.utility2.testMock(options, function (onError) {
-                // test no csslint handling-behavior
-                local.utility2.jslintAndPrintConditional('no csslint', 'empty.css');
-                // validate no error occurred
-                local.utility2.assert(!local.jslint.errorText, local.jslint.errorText);
-                // test csslint passed handling-behavior
-                local.utility2.jslintAndPrintConditional(
-                    '/*csslint*/\nbody { font: normal; }',
-                    'passed.css'
-                );
-                // validate no error occurred
-                local.utility2.assert(!local.jslint.errorText, local.jslint.errorText);
-                // test no jslint handling-behavior
-                local.utility2.jslintAndPrintConditional('no jslint', 'empty.js');
-                // validate no error occurred
-                local.utility2.assert(!local.jslint.errorText, local.jslint.errorText);
-                // test jslint passed handling-behavior
-                local.utility2.jslintAndPrintConditional(
-                    '/*jslint node: true*/\nconsole.log("hello");',
-                    'passed.js'
-                );
                 // validate no error occurred
                 local.utility2.assert(!local.jslint.errorText, local.jslint.errorText);
                 onError();
@@ -891,6 +903,35 @@
             }
             // validate list changed at least once during the shuffle
             local.utility2.assert(options.changed, options);
+            onError();
+        };
+
+        local.testCase_normalizeXxx_default = function (options, onError) {
+        /*
+         * this function will test normalizeXxx's default handling-behavior
+         */
+            options = {};
+            // test normalizeDict handling-behavior
+            options.data = local.utility2.normalizeDict({ aa: 1 });
+            local.utility2.assertJsonEqual(options.data, { aa: 1 });
+            options.data = local.utility2.normalizeDict(null);
+            local.utility2.assertJsonEqual(options.data, {});
+            options.data = local.utility2.normalizeDict([]);
+            local.utility2.assertJsonEqual(options.data, {});
+            // test normalizeList handling-behavior
+            options.data = local.utility2.normalizeList([1]);
+            local.utility2.assertJsonEqual(options.data, [1]);
+            options.data = local.utility2.normalizeList(null);
+            local.utility2.assertJsonEqual(options.data, []);
+            options.data = local.utility2.normalizeList({});
+            local.utility2.assertJsonEqual(options.data, []);
+            // test normalizeText handling-behavior
+            options.data = local.utility2.normalizeText('aa');
+            local.utility2.assertJsonEqual(options.data, 'aa');
+            options.data = local.utility2.normalizeText(null);
+            local.utility2.assertJsonEqual(options.data, '');
+            options.data = local.utility2.normalizeText({});
+            local.utility2.assertJsonEqual(options.data, '');
             onError();
         };
 
@@ -1187,7 +1228,7 @@
          * this function will test sjclCipherAes128Xxx's default handling-behavior
          */
             options = {};
-            options.encrypted = local.utility2.sjclCipherAes128Encrypt('password', 'hello');
+            options.encrypted = local.utility2.sjclCipherAes128Encrypt('password', 'aa');
             // test sjclCipherAes128Decrypt's fail handling-behavior
             options.decrypted = local.utility2.sjclCipherAes128Decrypt(
                 'invalid',
@@ -1199,7 +1240,7 @@
                 'password',
                 options.encrypted
             );
-            local.utility2.assertJsonEqual(options.decrypted, 'hello');
+            local.utility2.assertJsonEqual(options.decrypted, 'aa');
             onError();
         };
 
@@ -1208,10 +1249,10 @@
          * this function will test sjclHashHmacSha256Xxx's default handling-behavior
          */
             options = {};
-            options.data = local.utility2.sjclHashHmacSha256Create('password', 'hello');
+            options.data = local.utility2.sjclHashHmacSha256Create('password', 'aa');
             local.utility2.assertJsonEqual(
                 options.data,
-                'euYV5phWfl4VEt2BQOdAvU1l36TbGV2AyjJ95jArSmM='
+                'VmlfoTFvqZbSJSwCUzquEt5DNQsHSzaVYJ1zr1G8A04='
             );
             onError();
         };
@@ -1248,10 +1289,10 @@
          * this function will test sjclHashSha256Xxx's default handling-behavior
          */
             options = {};
-            options.data = local.utility2.sjclHashSha256Create('hello');
+            options.data = local.utility2.sjclHashSha256Create('aa');
             local.utility2.assertJsonEqual(
                 options.data,
-                'LPJNul+wow4m6DsqxbninhsWHlwfp0JecwQzYpOLmCQ='
+                'lhtt0+3jy47LqsvWjeBAzXjrLtWIkTDM60xJJo6k1QY='
             );
             onError();
         };
@@ -1273,7 +1314,7 @@
                     options.key = 'memory';
                     // cleanup memory-cache
                     local.utility2.cacheDict[options.cacheDict] = null;
-                    cacheValue = 'hello';
+                    cacheValue = 'aa';
                     optionsCopy = {
                         cacheDict: options.cacheDict,
                         key: options.key,
@@ -1284,13 +1325,13 @@
                     break;
                 case 2:
                     // validate data
-                    local.utility2.assertJsonEqual(data, 'hello');
+                    local.utility2.assertJsonEqual(data, 'aa');
                     // validate no cache-hit
                     local.utility2.assert(!optionsCopy.modeCacheHit, optionsCopy.modeCacheHit);
                     break;
                 // test cache with update handling-behavior
                 case 3:
-                    cacheValue = 'bye';
+                    cacheValue = 'bb';
                     optionsCopy = {
                         cacheDict: options.cacheDict,
                         key: options.key,
@@ -1303,7 +1344,7 @@
                     break;
                 case 4:
                     // validate data
-                    local.utility2.assertJsonEqual(data, 'hello');
+                    local.utility2.assertJsonEqual(data, 'aa');
                     // validate modeCacheHit
                     local.utility2.assertJsonEqual(
                         optionsCopy.modeCacheHit,
@@ -1320,7 +1361,7 @@
                     break;
                 case 6:
                     // validate data
-                    local.utility2.assertJsonEqual(data, 'bye');
+                    local.utility2.assertJsonEqual(data, 'bb');
                     // validate modeCacheHit
                     local.utility2.assertJsonEqual(
                         optionsCopy.modeCacheHit,
@@ -1468,17 +1509,6 @@
             }, onError);
         };
 
-        local.testCase_uglify_default = function (options, onError) {
-        /*
-         * this function will test uglify's default handling-behavior
-         */
-            options = {};
-            options.data = local.uglifyjs.uglify('aa = 1');
-            // validate data
-            local.utility2.assertJsonEqual(options.data, 'aa=1');
-            onError();
-        };
-
         local.testCase_uglifyIfProduction_default = function (options, onError) {
         /*
          * this function will test uglify's default handling-behavior
@@ -1500,6 +1530,17 @@
                 local.utility2.assertJsonEqual(options.data, 'aa=1');
                 onError();
             }, onError);
+        };
+
+        local.testCase_uglify_default = function (options, onError) {
+        /*
+         * this function will test uglify's default handling-behavior
+         */
+            options = {};
+            options.data = local.uglifyjs.uglify('aa = 1');
+            // validate data
+            local.utility2.assertJsonEqual(options.data, 'aa=1');
+            onError();
         };
 
         local.testCase_urlParse_default = function (options, onError) {
@@ -1573,6 +1614,12 @@
                 onError();
             }, 1000);
         };
+
+        // init serverLocal
+        local.utility2.serverLocalUrlTest = function (url) {
+            url = local.utility2.urlParse(url).pathname;
+            return local.modeJs === 'browser' && url.indexOf('/test.') === 0;
+        };
     }());
     switch (local.modeJs) {
 
@@ -1635,11 +1682,11 @@
          */
             options = {};
             options.data = local.utility2.domFragmentRender('<div>{{value}}</div>', {
-                value: 'hello'
+                value: 'aa'
             });
             local.utility2.assertJsonEqual(
                 options.data.children[0].outerHTML,
-                '<div>hello</div>'
+                '<div>aa</div>'
             );
             onError();
         };
@@ -1708,6 +1755,11 @@
          * this function will test build's app handling-behavior
          */
             var onParallel;
+            /* istanbul ignore next */
+            if (local.utility2.envDict.npm_config_mode_coverage === 'all') {
+                onError();
+                return;
+            }
             onParallel = local.utility2.onParallel(onError);
             onParallel.counter += 1;
             options = {};
@@ -1840,17 +1892,9 @@
                             exampleList: ['lib.db.js'],
                             exports: local.utility2.db
                         },
-                        'utility2.db._DbIndex.prototype': {
-                            exampleList: ['lib.db.js'],
-                            exports: local.utility2.db._DbIndex.prototype
-                        },
                         'utility2.db._DbTable.prototype': {
                             exampleList: ['lib.db.js'],
                             exports: local.utility2.db._DbTable.prototype
-                        },
-                        'utility2.db._DbTree.prototype': {
-                            exampleList: ['lib.db.js'],
-                            exports: local.utility2.db._DbTree.prototype
                         },
                         'utility2.sjcl': {
                             exampleList: ['lib.sjcl.js'],
@@ -1918,14 +1962,14 @@
                     options.file = options.dir + '/aa/bb';
                     local.utility2.fsWriteFileWithMkdirp(
                         options.file,
-                        'hello1',
+                        'aa1',
                         options.onNext
                     );
                     break;
                 case 3:
                     // validate data
                     data = local.fs.readFileSync(options.file, 'utf8');
-                    local.utility2.assertJsonEqual(data, 'hello1');
+                    local.utility2.assertJsonEqual(data, 'aa1');
                     options.onNext();
                     break;
                 case 4:
@@ -1933,14 +1977,14 @@
                     options.file = options.dir + '/aa/bb';
                     local.utility2.fsWriteFileWithMkdirp(
                         options.file,
-                        'hello2',
+                        'aa2',
                         options.onNext
                     );
                     break;
                 case 5:
                     // validate data
                     data = local.fs.readFileSync(options.file, 'utf8');
-                    local.utility2.assertJsonEqual(data, 'hello2');
+                    local.utility2.assertJsonEqual(data, 'aa2');
                     options.onNext();
                     break;
                 case 6:
@@ -1948,7 +1992,7 @@
                     options.file = options.dir + '/aa/bb/cc';
                     local.utility2.fsWriteFileWithMkdirp(
                         options.file,
-                        'hello',
+                        'aa',
                         function (error) {
                             // validate error occurred
                             local.utility2.assert(error, error);
@@ -1969,6 +2013,67 @@
             });
             options.modeNext = 0;
             options.onNext();
+        };
+
+        local.testCase_indexJs_standalone = function (options, onError) {
+        /*
+         * this function will test index.js's standalone handling-behavior
+         */
+            options = {};
+            options.data = local.fs.readFileSync('./index.js', 'utf8').replace(
+                '/* istanbul instrument in package utility2 */',
+                ''
+            );
+            local.fs.writeFileSync('./tmp/index.js', options.data);
+            require('./tmp/index.js');
+            onError();
+        };
+
+        local.testCase_istanbulCoverageMerge_default = function (options, onError) {
+        /*
+         * this function will test istanbulCoverageMerge's default handling-behavior
+         */
+            options = {};
+            options.data = local.utility2.istanbulInstrumentSync(
+                '(function () {\nreturn arg ' +
+                    '? __coverage__ ' +
+                    ': __coverage__;\n}());',
+                'test'
+            );
+            local.utility2.arg = 0;
+            // test null-case handling-behavior
+            options.coverage1 = null;
+            options.coverage2 = null;
+            local.utility2.istanbulCoverageMerge(options.coverage1, options.coverage2);
+            // validate merged options.coverage1
+            local.utility2.assertJsonEqual(options.coverage1, null);
+            // init options.coverage1
+            options.coverage1 = local.vm.runInNewContext(options.data, { arg: 0 });
+/* jslint-ignore-begin */
+// validate options.coverage1
+local.utility2.assertJsonEqual(options.coverage1,
+{"/test":{"b":{"1":[0,1]},"branchMap":{"1":{"line":2,"locations":[{"end":{"column":25,"line":2},"start":{"column":13,"line":2}},{"end":{"column":40,"line":2},"start":{"column":28,"line":2}}],"type":"cond-expr"}},"code":["(function () {","return arg ? __coverage__ : __coverage__;","}());"],"f":{"1":1},"fnMap":{"1":{"line":1,"loc":{"end":{"column":13,"line":1},"start":{"column":1,"line":1}},"name":"(anonymous_1)"}},"path":"/test","s":{"1":1,"2":1},"statementMap":{"1":{"end":{"column":5,"line":3},"start":{"column":0,"line":1}},"2":{"end":{"column":41,"line":2},"start":{"column":0,"line":2}}}}}
+);
+// test merge-create handling-behavior
+options.coverage1 = local.utility2.istanbulCoverageMerge({}, options.coverage1);
+// validate options.coverage1
+local.utility2.assertJsonEqual(options.coverage1,
+{"/test":{"b":{"1":[0,1]},"branchMap":{"1":{"line":2,"locations":[{"end":{"column":25,"line":2},"start":{"column":13,"line":2}},{"end":{"column":40,"line":2},"start":{"column":28,"line":2}}],"type":"cond-expr"}},"code":["(function () {","return arg ? __coverage__ : __coverage__;","}());"],"f":{"1":1},"fnMap":{"1":{"line":1,"loc":{"end":{"column":13,"line":1},"start":{"column":1,"line":1}},"name":"(anonymous_1)"}},"path":"/test","s":{"1":1,"2":1},"statementMap":{"1":{"end":{"column":5,"line":3},"start":{"column":0,"line":1}},"2":{"end":{"column":41,"line":2},"start":{"column":0,"line":2}}}}}
+);
+// init options.coverage2
+options.coverage2 = local.vm.runInNewContext(options.data, { arg: 1 });
+// validate options.coverage2
+local.utility2.assertJsonEqual(options.coverage2,
+{"/test":{"b":{"1":[1,0]},"branchMap":{"1":{"line":2,"locations":[{"end":{"column":25,"line":2},"start":{"column":13,"line":2}},{"end":{"column":40,"line":2},"start":{"column":28,"line":2}}],"type":"cond-expr"}},"code":["(function () {","return arg ? __coverage__ : __coverage__;","}());"],"f":{"1":1},"fnMap":{"1":{"line":1,"loc":{"end":{"column":13,"line":1},"start":{"column":1,"line":1}},"name":"(anonymous_1)"}},"path":"/test","s":{"1":1,"2":1},"statementMap":{"1":{"end":{"column":5,"line":3},"start":{"column":0,"line":1}},"2":{"end":{"column":41,"line":2},"start":{"column":0,"line":2}}}}}
+);
+// test merge-update handling-behavior
+local.utility2.istanbulCoverageMerge(options.coverage1, options.coverage2);
+// validate merged options.coverage1
+local.utility2.assertJsonEqual(options.coverage1,
+{"/test":{"b":{"1":[1,1]},"branchMap":{"1":{"line":2,"locations":[{"end":{"column":25,"line":2},"start":{"column":13,"line":2}},{"end":{"column":40,"line":2},"start":{"column":28,"line":2}}],"type":"cond-expr"}},"code":["(function () {","return arg ? __coverage__ : __coverage__;","}());"],"f":{"1":2},"fnMap":{"1":{"line":1,"loc":{"end":{"column":13,"line":1},"start":{"column":1,"line":1}},"name":"(anonymous_1)"}},"path":"/test","s":{"1":2,"2":2},"statementMap":{"1":{"end":{"column":5,"line":3},"start":{"column":0,"line":1}},"2":{"end":{"column":41,"line":2},"start":{"column":0,"line":2}}}}}
+);
+/* jslint-ignore-end */
+            onError();
         };
 
         local.testCase_onFileModifiedRestart_watchFile = function (options, onError) {
@@ -2033,28 +2138,6 @@
             onParallel();
         };
 
-        local.testCase_requireExampleJsFromReadme_rollup = function (options, onError) {
-        /*
-         * this function will test requireExampleJsFromReadme's rollup handling-behavior
-         */
-            options = [
-                [local.utility2, { assetsDict: {} }]
-            ];
-            options.module = {
-                exports: { templateIndexHtml: '' },
-                isRollup: true
-            };
-            local.utility2.testMock(options, function (onError) {
-                options.data = local.utility2.requireExampleJsFromReadme(options);
-                // validate data
-                local.utility2.assertJsonEqual(options.data, {
-                    exports: { templateIndexHtml: '' },
-                    isRollup: true
-                });
-                onError();
-            }, onError);
-        };
-
         local.testCase_replStart_default = function (options, onError) {
         /*
          * this function will test replStart's default handling-behavior
@@ -2085,7 +2168,7 @@
                     // test git log handling-behavior
                     '$ git log\n',
                     // test grep handling-behavior
-                    'grep \\bhello\\b\n',
+                    'grep \\baa\\b\n',
                     // test keys handling-behavior
                     'keys {}\n',
                     // test print handling-behavior
@@ -2135,6 +2218,28 @@
             options.socket.end('undefined()\n');
         };
 
+        local.testCase_requireExampleJsFromReadme_rollup = function (options, onError) {
+        /*
+         * this function will test requireExampleJsFromReadme's rollup handling-behavior
+         */
+            options = [
+                [local.utility2, { assetsDict: {} }]
+            ];
+            options.module = {
+                exports: { templateIndexHtml: '' },
+                isRollup: true
+            };
+            local.utility2.testMock(options, function (onError) {
+                options.data = local.utility2.requireExampleJsFromReadme(options);
+                // validate data
+                local.utility2.assertJsonEqual(options.data, {
+                    exports: { templateIndexHtml: '' },
+                    isRollup: true
+                });
+                onError();
+            }, onError);
+        };
+
         local.testCase_serverRespondTimeoutDefault_default = function (options, onError) {
         /*
          * this function will test serverRespondTimeoutDefault's default handling-behavior
@@ -2153,6 +2258,22 @@
                     // test default timeout handling-behavior
                     null
                 );
+                onError();
+            }, onError);
+        };
+
+        local.testCase_testReportCreate_default = function (options, onError) {
+        /*
+         * this function will test testReport's default handling-behavior
+         */
+            options = [
+                // suppress console.log
+                [console, { log: local.utility2.nop }],
+                [local.utility2, { exit: local.utility2.nop }]
+            ];
+            local.utility2.testMock(options, function (onError) {
+                // test exit handling-behavior
+                local.utility2.testReportCreate(local.utility2.testReport);
                 onError();
             }, onError);
         };
@@ -2184,36 +2305,6 @@
                 onError();
             });
         };
-
-        local.testCase_testReportCreate_default = function (options, onError) {
-        /*
-         * this function will test testReport's default handling-behavior
-         */
-            options = [
-                // suppress console.log
-                [console, { log: local.utility2.nop }],
-                [local.utility2, { exit: local.utility2.nop }]
-            ];
-            local.utility2.testMock(options, function (onError) {
-                // test exit handling-behavior
-                local.utility2.testReportCreate(local.utility2.testReport);
-                onError();
-            }, onError);
-        };
-
-        local.testCase_indexJs_standalone = function (options, onError) {
-        /*
-         * this function will test index.js's standalone handling-behavior
-         */
-            options = {};
-            options.data = local.fs.readFileSync('./index.js', 'utf8').replace(
-                '/* istanbul instrument in package utility2 */',
-                ''
-            );
-            local.fs.writeFileSync('./tmp/index.js', options.data);
-            require('./tmp/index.js');
-            onError();
-        };
         break;
     }
 
@@ -2231,7 +2322,7 @@
             case '/test.echo':
                 // test response header handling-behavior
                 local.utility2.serverRespondHeadSet(request, response, null, {
-                    'X-Response-Header-Test': 'bye'
+                    'X-Response-Header-Test': 'bb'
                 });
                 local.utility2.serverRespondEcho(request, response);
                 break;
@@ -2280,11 +2371,6 @@
                 local.utility2.middlewareFileServer(request, response, nextMiddleware);
             }
         });
-        // init serverLocal
-        local.utility2.serverLocalUrlTest = function (url) {
-            url = local.utility2.urlParse(url).pathname;
-            return local.modeJs === 'browser' && url.indexOf('/test.') === 0;
-        };
     }());
     switch (local.modeJs) {
 

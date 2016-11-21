@@ -455,58 +455,6 @@ local.utility2.templateTestReportHtml = '\
             return writable;
         };
 
-        // init _http.ServerResponse
-        local._http.ServerResponse = function (onResponse) {
-        /*
-         * https://nodejs.org/api/all.html#all_class_http_serverresponse
-         * This object is created internally by a HTTP server--not by the user
-         */
-            this.chunkList = [];
-            this.headers = {};
-            this.onEvent = document.createDocumentFragment();
-            this.onResponse = onResponse;
-            this.statusCode = 200;
-        };
-
-        // https://nodejs.org/api/all.html#all_emitter_addlistener_event_listener
-        local._http.ServerResponse.prototype.addListener =
-            local._http.IncomingMessage.prototype.addListener;
-
-        // https://nodejs.org/api/all.html#all_emitter_emit_event_arg1_arg2
-        local._http.ServerResponse.prototype.emit =
-            local._http.IncomingMessage.prototype.emit;
-
-        local._http.ServerResponse.prototype.end = function (data) {
-        /* https://nodejs.org/api/all.html#all_response_end_data_encoding_callback
-         * This method signals to the server that all of the response headers
-         * and body have been sent
-         */
-            // emit writable events
-            this.chunkList.push(data || '');
-            this.emit('finish');
-            // emit readable events
-            this.onResponse(this);
-            this.emit('data', local.utility2.bufferConcat(this.chunkList));
-            this.emit('end');
-        };
-
-        // https://nodejs.org/api/all.html#all_emitter_on_event_listener
-        local._http.ServerResponse.prototype.on =
-            local._http.IncomingMessage.prototype.addListener;
-
-        // https://nodejs.org/api/all.html#all_response_setheader_name_value
-        local._http.ServerResponse.prototype.setHeader = function (key, value) {
-            this.headers[key.toLowerCase()] = value;
-        };
-
-        local._http.ServerResponse.prototype.write = function (data) {
-        /*
-         * https://nodejs.org/api/all.html#all_response_write_chunk_encoding_callback
-         * This sends a chunk of the response body
-         */
-            this.chunkList.push(data);
-        };
-
         local._http.STATUS_CODES = {
             100: 'Continue',
             101: 'Switching Protocols',
@@ -570,6 +518,58 @@ local.utility2.templateTestReportHtml = '\
             509: 'Bandwidth Limit Exceeded',
             510: 'Not Extended',
             511: 'Network Authentication Required'
+        };
+
+        // init _http.ServerResponse
+        local._http.ServerResponse = function (onResponse) {
+        /*
+         * https://nodejs.org/api/all.html#all_class_http_serverresponse
+         * This object is created internally by a HTTP server--not by the user
+         */
+            this.chunkList = [];
+            this.headers = {};
+            this.onEvent = document.createDocumentFragment();
+            this.onResponse = onResponse;
+            this.statusCode = 200;
+        };
+
+        // https://nodejs.org/api/all.html#all_emitter_addlistener_event_listener
+        local._http.ServerResponse.prototype.addListener =
+            local._http.IncomingMessage.prototype.addListener;
+
+        // https://nodejs.org/api/all.html#all_emitter_emit_event_arg1_arg2
+        local._http.ServerResponse.prototype.emit =
+            local._http.IncomingMessage.prototype.emit;
+
+        local._http.ServerResponse.prototype.end = function (data) {
+        /* https://nodejs.org/api/all.html#all_response_end_data_encoding_callback
+         * This method signals to the server that all of the response headers
+         * and body have been sent
+         */
+            // emit writable events
+            this.chunkList.push(data || '');
+            this.emit('finish');
+            // emit readable events
+            this.onResponse(this);
+            this.emit('data', local.utility2.bufferConcat(this.chunkList));
+            this.emit('end');
+        };
+
+        // https://nodejs.org/api/all.html#all_emitter_on_event_listener
+        local._http.ServerResponse.prototype.on =
+            local._http.IncomingMessage.prototype.addListener;
+
+        // https://nodejs.org/api/all.html#all_response_setheader_name_value
+        local._http.ServerResponse.prototype.setHeader = function (key, value) {
+            this.headers[key.toLowerCase()] = value;
+        };
+
+        local._http.ServerResponse.prototype.write = function (data) {
+        /*
+         * https://nodejs.org/api/all.html#all_response_write_chunk_encoding_callback
+         * This sends a chunk of the response body
+         */
+            this.chunkList.push(data);
         };
 
         // init _http.XMLHttpRequest
@@ -1372,7 +1372,7 @@ local.utility2.templateTestReportHtml = '\
                                 return;
                             }
                         } catch (errorCaught) {
-                            console.error(errorCaught);
+                            console.error(errorCaught.stack);
                         }
                         console.log(event.message);
                     });
@@ -1388,56 +1388,6 @@ local.utility2.templateTestReportHtml = '\
                 }
             };
             onNext();
-        };
-
-        /* jslint-ignore-begin */
-        local.utility2._bufferFromBase64 = function (text) {
-        /*
-         * https://gist.github.com/wang-bin/7332335
-         * this function will convert the base64-encoded text to a Uint8Array
-         */
-            var de = new Uint8Array(text.length); //3/4
-            var u = 0, q = '', x = '', c;
-            var map64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-            for (var r=0; c=text[x++]; ~c&&(u=q%4?u*64+c:c,q++%4)?de[r++]=(255&u>>(-2*q&6)):0)
-                c = map64.indexOf(c);
-            return de.subarray(0, r);
-        };
-        /* jslint-ignore-end */
-
-        local.utility2._bufferToBase64 = function (bff) {
-        /*
-         * https://developer.mozilla.org/en-US/Add-ons/Code_snippets/StringView#The_code
-         * this function will convert the Uint8Array bff to a base64-encoded text
-         */
-            var ii, mod3, text, uint24, uint6ToB64;
-            text = '';
-            uint24 = 0;
-            uint6ToB64 = function (uint6) {
-                return uint6 < 26
-                    ? uint6 + 65
-                    : uint6 < 52
-                    ? uint6 + 71
-                    : uint6 < 62
-                    ? uint6 - 4
-                    : uint6 === 62
-                    ? 43
-                    : 47;
-            };
-            for (ii = 0; ii < bff.length; ii += 1) {
-                mod3 = ii % 3;
-                uint24 |= bff[ii] << (16 >>> mod3 & 24);
-                if (mod3 === 2 || bff.length - ii === 1) {
-                    text += String.fromCharCode(
-                        uint6ToB64(uint24 >>> 18 & 63),
-                        uint6ToB64(uint24 >>> 12 & 63),
-                        uint6ToB64(uint24 >>> 6 & 63),
-                        uint6ToB64(uint24 & 63)
-                    );
-                    uint24 = 0;
-                }
-            }
-            return text.replace(/A(?=A$|$)/g, '=');
         };
 
         local.utility2.bufferConcat = function (bufferList) {
@@ -1477,7 +1427,7 @@ local.utility2.templateTestReportHtml = '\
          */
             if (typeof text === 'string') {
                 if (encoding === 'base64') {
-                    return local.utility2._bufferFromBase64(text);
+                    return local.utility2.bufferFromBase64(text);
                 }
                 return local.modeJs === 'browser'
                     ? new local.global.TextEncoder('utf-8').encode(text)
@@ -1496,6 +1446,21 @@ local.utility2.templateTestReportHtml = '\
                 : local.utility2.bufferCreate(text, encoding);
         };
 
+        /* jslint-ignore-begin */
+        local.utility2.bufferFromBase64 = function (text) {
+        /*
+         * https://gist.github.com/wang-bin/7332335
+         * this function will convert the base64-encoded text to a Uint8Array
+         */
+            var de = new Uint8Array(text.length); //3/4
+            var u = 0, q = '', x = '', c;
+            var map64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+            for (var r=0; c=text[x++]; ~c&&(u=q%4?u*64+c:c,q++%4)?de[r++]=(255&u>>(-2*q&6)):0)
+                c = map64.indexOf(c);
+            return de.subarray(0, r);
+        };
+        /* jslint-ignore-end */
+
         local.utility2.bufferIndexOfSubBuffer = function (bff, subBff, fromIndex) {
         /*
          * this function will search bff for the indexOf-like position of the subBff
@@ -1512,6 +1477,41 @@ local.utility2.templateTestReportHtml = '\
                 }
             }
             return subBff.length && -1;
+        };
+
+        local.utility2.bufferToBase64 = function (bff) {
+        /*
+         * https://developer.mozilla.org/en-US/Add-ons/Code_snippets/StringView#The_code
+         * this function will convert the Uint8Array bff to a base64-encoded text
+         */
+            var ii, mod3, text, uint24, uint6ToB64;
+            text = '';
+            uint24 = 0;
+            uint6ToB64 = function (uint6) {
+                return uint6 < 26
+                    ? uint6 + 65
+                    : uint6 < 52
+                    ? uint6 + 71
+                    : uint6 < 62
+                    ? uint6 - 4
+                    : uint6 === 62
+                    ? 43
+                    : 47;
+            };
+            for (ii = 0; ii < bff.length; ii += 1) {
+                mod3 = ii % 3;
+                uint24 |= bff[ii] << (16 >>> mod3 & 24);
+                if (mod3 === 2 || bff.length - ii === 1) {
+                    text += String.fromCharCode(
+                        uint6ToB64(uint24 >>> 18 & 63),
+                        uint6ToB64(uint24 >>> 12 & 63),
+                        uint6ToB64(uint24 >>> 6 & 63),
+                        uint6ToB64(uint24 & 63)
+                    );
+                    uint24 = 0;
+                }
+            }
+            return text.replace(/A(?=A$|$)/g, '=');
         };
 
         local.utility2.bufferToNodeBuffer = function (bff) {
@@ -1535,7 +1535,7 @@ local.utility2.templateTestReportHtml = '\
             }
             bff = local.utility2.bufferCreateIfNotBuffer(bff);
             if (encoding === 'base64') {
-                return local.utility2._bufferToBase64(bff);
+                return local.utility2.bufferToBase64(bff);
             }
             return local.modeJs === 'browser'
                 ? new local.global.TextDecoder('utf-8').decode(bff)
@@ -1698,9 +1698,9 @@ local.utility2.templateTestReportHtml = '\
                                 return elementCreate();
                             })
                             .sort(function (aa, bb) {
-                                return aa.name < bb.name
-                                    ? -1
-                                    : 1;
+                                return aa.name > bb.name
+                                    ? 1
+                                    : -1;
                             }),
                         id: 'module.' + module.name,
                         name: module.name
@@ -1728,7 +1728,7 @@ local.utility2.templateTestReportHtml = '\
          * this function will return the list of query-selected dom-elements,
          * as a javascript array
          */
-            return Array.prototype.slice.call((element.length === 1
+            return Array.from((element.length === 1
                 // handle jQuery element
                 ? element[0]
                 : element).querySelectorAll(selectors));
@@ -1824,6 +1824,10 @@ local.utility2.templateTestReportHtml = '\
          */
             return arg === null || arg === undefined;
         };
+
+        // init istanbulCoverageMerge
+        local.utility2.istanbulCoverageMerge =
+            local.utility2.istanbul.coverageMerge || local.utility2.echo;
 
         // init istanbulCoverageMerge
         local.utility2.istanbulCoverageMerge =
@@ -2248,7 +2252,7 @@ local.utility2.templateTestReportHtml = '\
                 response['_' + key] = response['_' + key] || response[key];
                 response[key] = function () {
                     var args;
-                    args = Array.prototype.slice.call(arguments);
+                    args = Array.from(arguments);
                     args[0] = local.utility2.bufferToNodeBuffer(args[0]);
                     response['_' + key].apply(response, args);
                 };
@@ -2281,6 +2285,33 @@ local.utility2.templateTestReportHtml = '\
                 return;
             }
             nextMiddleware();
+        };
+
+        local.utility2.normalizeDict = function (dict) {
+        /*
+         * this function will normalize the dict
+         */
+            return dict && typeof dict === 'object' && !Array.isArray(dict)
+                ? dict
+                : {};
+        };
+
+        local.utility2.normalizeList = function (list) {
+        /*
+         * this function will normalize the list
+         */
+            return Array.isArray(list)
+                ? list
+                : [];
+        };
+
+        local.utility2.normalizeText = function (text) {
+        /*
+         * this function will normalize the text
+         */
+            return typeof text === 'string'
+                ? text
+                : '';
         };
 
         local.utility2.objectGetElementFirst = function (arg) {
@@ -2350,6 +2381,7 @@ local.utility2.templateTestReportHtml = '\
                         defaults2 &&
                         typeof defaults2 === 'object' &&
                         !Array.isArray(defaults2)) {
+                    // recurse
                     local.utility2.objectSetDefault(arg2, defaults2, depth - 1);
                 }
             });
@@ -2516,6 +2548,55 @@ local.utility2.templateTestReportHtml = '\
             return self;
         };
 
+        local.utility2.onReadyAfter = function (onError) {
+        /*
+         * this function will call onError when onReadyBefore.counter === 0
+         */
+            local.utility2.onReadyBefore.counter += 1;
+            local.utility2.taskCreate({ key: 'utility2.onReadyAfter' }, null, onError);
+            local.utility2.onResetAfter(local.utility2.onReadyBefore);
+            return onError;
+        };
+
+        local.utility2.onReadyBefore = local.utility2.onParallel(function (error) {
+        /*
+         * this function will keep track of onReadyBefore.counter
+         */
+            local.utility2.taskCreate({
+                key: 'utility2.onReadyAfter'
+            }, function (onError) {
+                onError(error);
+            }, function (error) {
+                // validate no error occurred
+                local.utility2.assert(!error, error);
+            });
+        });
+
+        local.utility2.onResetAfter = function (onError) {
+        /*
+         * this function will call onError when onResetBefore.counter === 0
+         */
+            local.utility2.onResetBefore.counter += 1;
+            // visual notification - onResetAfter
+            local.utility2.ajaxProgressUpdate();
+            local.utility2.taskCreate({ key: 'utility2.onResetAfter' }, null, onError);
+            setTimeout(local.utility2.onResetBefore);
+            return onError;
+        };
+
+        local.utility2.onResetBefore = local.utility2.onParallel(function (error) {
+        /*
+         * this function will keep track of onResetBefore.counter
+         */
+            local.utility2.taskCreate({
+                key: 'utility2.onResetAfter'
+            }, function (onError) {
+                onError(error);
+            }, function (error) {
+                // validate no error occurred
+                local.utility2.assert(!error, error);
+            });
+        });
         local.utility2.onTimeout = function (onError, timeout, message) {
         /*
          * this function will return a timeout-error-handler,
@@ -2603,7 +2684,7 @@ local.utility2.templateTestReportHtml = '\
              */
                 // debug error
                 global.utility2_debugReplError = error;
-                console.error(error);
+                console.error(error.stack);
             };
             // save repl eval function
             self.evalDefault = self.eval;
@@ -2850,6 +2931,8 @@ tmp\\)\\(\\b\\|[_s]\\)\
             return module.exports;
         };
 
+        local.utility2.serverLocalUrlTest = local.utility2.nop;
+
         local.utility2.serverRespondDefault = function (request, response, statusCode, error) {
         /*
          * this function will respond with a default message,
@@ -2937,8 +3020,6 @@ tmp\\)\\(\\b\\|[_s]\\)\
                 clearTimeout(request.timerTimeout);
             });
         };
-
-        local.utility2.serverLocalUrlTest = local.utility2.nop;
 
         local.utility2.sjclCipherAes128Decrypt = function (password, encrypted) {
         /*
@@ -3113,16 +3194,17 @@ tmp\\)\\(\\b\\|[_s]\\)\
                 // cleanup task
                 delete local.utility2.taskOnTaskDict[options.key];
                 // preserve error.message and error.stack
-                task.result = JSON.stringify(Array.prototype.slice.call(arguments)
+                task.result = JSON.stringify(Array.from(arguments)
                     .map(function (element) {
                         if (element && element.stack) {
-                            element = local.utility2.objectSetDefault(local.utility2.jsonCopy(
-                                element
-                            ), {
-                                message: element.message,
-                                name: element.name,
-                                stack: element.stack
-                            });
+                            element = local.utility2.objectSetDefault(
+                                local.utility2.jsonCopy(element),
+                                {
+                                    message: element.message,
+                                    name: element.name,
+                                    stack: element.stack
+                                }
+                            );
                         }
                         return element;
                     }));
@@ -3477,18 +3559,18 @@ tmp\\)\\(\\b\\|[_s]\\)\
                     : 'passed';
                 // sort testCaseList by status and name
                 testPlatform.testCaseList.sort(function (arg1, arg2) {
-                    return arg1.status.replace('passed', 'z') + arg1.name <
+                    return arg1.status.replace('passed', 'z') + arg1.name >
                         arg2.status.replace('passed', 'z') + arg2.name
-                        ? -1
-                        : 1;
+                        ? 1
+                        : -1;
                 });
             });
             // sort testPlatformList by status and name
             testReport.testPlatformList.sort(function (arg1, arg2) {
-                return arg1.status.replace('passed', 'z') + arg1.name <
+                return arg1.status.replace('passed', 'z') + arg1.name >
                     arg2.status.replace('passed', 'z') + arg2.name
-                    ? -1
-                    : 1;
+                    ? 1
+                    : -1;
             });
             // stop testReport timer
             if (testReport.testsPending === 0) {
@@ -3574,17 +3656,20 @@ tmp\\)\\(\\b\\|[_s]\\)\
             if (!(local.utility2.modeTest || options.modeTest)) {
                 return;
             }
-            // visual notification - testRun
-            local.utility2.ajaxProgressUpdate();
-            if (!options.onReadyAfter) {
-                options.onReadyAfter = local.utility2.onReadyAfter(function () {
-                    setTimeout(function () {
+            if (!options.testRunBefore) {
+                options.testRunTimer = options.testRunTimer || setTimeout(function () {
+                    local.utility2.testRunBefore();
+                    local.utility2.onReadyAfter(function () {
+                        options.testRunBefore = true;
                         local.utility2.testRun(options);
                     });
                 });
                 return;
             }
-            options.onReadyAfter = null;
+            // reset testRunBefore
+            options.testRunBefore = options.testRunTimer = null;
+            // visual notification - testRun
+            local.utility2.ajaxProgressUpdate();
             // init onParallel
             onParallel = local.utility2.onParallel(function () {
             /*
@@ -3736,6 +3821,8 @@ tmp\\)\\(\\b\\|[_s]\\)\
             });
             onParallel();
         };
+
+        local.utility2.testRunBefore = local.utility2.nop;
 
         local.utility2.testRunServer = function (options) {
         /*
@@ -4029,54 +4116,6 @@ tmp\\)\\(\\b\\|[_s]\\)\
         }
         // re-init timeoutDefault
         local.utility2.timeoutDefault = Number(local.utility2.timeoutDefault || 30000);
-        // init onReadyAfter
-        local.utility2.onReadyAfter = function (onError) {
-        /*
-         * this function will call onError when onReadyBefore.counter === 0
-         */
-            local.utility2.onReadyBefore.counter += 1;
-            local.utility2.taskCreate({ key: 'utility2.onReadyAfter' }, null, onError);
-            local.utility2.onResetAfter(local.utility2.onReadyBefore);
-            return onError;
-        };
-        // init onReadyBefore
-        local.utility2.onReadyBefore = local.utility2.onParallel(function (error) {
-        /*
-         * this function will keep track of onReadyBefore.counter
-         */
-            local.utility2.taskCreate({ key: 'utility2.onReadyAfter' }, function (onError) {
-                onError(error);
-            }, function (error) {
-                // validate no error occurred
-                local.utility2.assert(!error, error);
-            });
-        });
-        // init onResetAfter
-        local.utility2.onResetAfter = function (onError) {
-        /*
-         * this function will call onError when onResetBefore.counter === 0
-         */
-            local.utility2.onResetBefore.counter += 1;
-            // visual notification - onResetAfter
-            local.utility2.ajaxProgressUpdate();
-            local.utility2.taskCreate({ key: 'utility2.onResetAfter' }, null, onError);
-            setTimeout(local.utility2.onResetBefore);
-            return onError;
-        };
-        // init onResetBefore
-        local.utility2.onResetBefore = local.utility2.onParallel(function (error) {
-        /*
-         * this function will keep track of onResetBefore.counter
-         */
-            local.utility2.taskCreate({
-                key: 'utility2.onResetAfter'
-            }, function (onError) {
-                onError(error);
-            }, function (error) {
-                // validate no error occurred
-                local.utility2.assert(!error, error);
-            });
-        });
         local.utility2.onReadyAfter(local.utility2.nop);
         // init state
         local.utility2.stateInit({});

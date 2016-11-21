@@ -11,8 +11,8 @@ this zero-dependency package will run dynamic browser-tests with coverage (via e
 
 
 # cdn download
-- [http://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/assets.utility2.js](http://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/assets.utility2.js)
-- [http://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/assets.utility2.min.js](http://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/assets.utility2.min.js)
+- [http://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/assets.utility2.rollup.js](http://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/assets.utility2.rollup.js)
+- [http://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/assets.utility2.min.rollup.js](http://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/assets.utility2.min.rollup.js)
 
 
 
@@ -30,7 +30,6 @@ this zero-dependency package will run dynamic browser-tests with coverage (via e
 [![api-doc](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/screen-capture.docApiCreate.browser._2Fhome_2Ftravis_2Fbuild_2Fkaizhu256_2Fnode-utility2_2Ftmp_2Fbuild_2Fdoc.api.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/doc.api.html)
 
 #### todo
-- add es6-syntax support and test
 - allow secure remote db export / import / reset to backend
 - add decryption / encryption to jwt
 - merge github-crud into this package
@@ -38,20 +37,17 @@ this zero-dependency package will run dynamic browser-tests with coverage (via e
 - add server stress test using electron
 - none
 
-#### change since 1e294556
-- npm publish 2016.10.3
-- coverage - add env-variable npm_config_mode_coverage_append to allow appending coverage to previous reports
-- coverage - change behavior of npm_config_mode_coverage=all to cover all files
-- function utility2.replStart - make it a standalone function
-- function utility2.uglify - prefer uglifying code with 80-column-width
+#### change since 1aa51473
+- npm publish 2016.10.4
+- add es6-syntax support for code-coverage
+- add functions utility2.normalizeDict and utility2.normalizeList
+- coverage - globalize local.codeDict to global.__coverageCodeDict__
+- coverage - add in-file config-var /* istanbul ignore all */ to ignore the file
 - none
 
 #### this package requires
 - darwin or linux os
 - chromium-based browser or firefox browser
-
-#### additional info
-- this version does not support es6-syntax or higher
 
 
 
@@ -250,10 +246,13 @@ instruction
             }
             switch (event && event.currentTarget.id) {
             case 'testRunButton1':
+                // run tests
                 local.modeTest = true;
                 local.utility2.testRun(local);
                 break;
             default:
+                // reset stdout
+                document.querySelector('#outputTextarea2').value = '';
                 if (!document.querySelector('#inputTextarea1')) {
                     return;
                 }
@@ -284,8 +283,7 @@ instruction
                 // try to cover and eval input-code
                 try {
                     /*jslint evil: true*/
-                    document.querySelector('#outputTextareaIstanbul1').value =
-                        document.querySelector('#outputTextarea2').value = '';
+                    document.querySelector('#outputTextareaIstanbul1').value = '';
                     document.querySelector('#outputTextareaIstanbul1').value =
                         local.istanbul.instrumentSync(
                             document.querySelector('#inputTextarea1').value,
@@ -297,9 +295,11 @@ instruction
                             coverage: window.__coverage__
                         });
                 } catch (errorCaught) {
-                    document.querySelector('#outputTextarea2').value += '\n' +
-                        errorCaught.stack + '\n';
+                    console.error(errorCaught.stack);
                 }
+                // scroll stdout to bottom
+                document.querySelector('#outputTextarea2').scrollTop =
+                    document.querySelector('#outputTextarea2').scrollHeight;
             }
         };
         /* istanbul ignore next */
@@ -309,7 +309,7 @@ instruction
             console[key] = function () {
                 console['_' + key].apply(console, arguments);
                 (document.querySelector('#outputTextarea2') || { value: '' }).value +=
-                    Array.prototype.slice.call(arguments).map(function (arg) {
+                    Array.from(arguments).map(function (arg) {
                         return typeof arg === 'string'
                             ? arg
                             : JSON.stringify(arg, null, 4);
@@ -318,9 +318,7 @@ instruction
         });
         // init event-handling
         ['click', 'keyup'].forEach(function (event) {
-            Array.prototype.slice.call(
-                document.querySelectorAll('.on' + event)
-            ).forEach(function (element) {
+            Array.from(document.querySelectorAll('.on' + event)).forEach(function (element) {
                 element.addEventListener(event, local.testRun);
             });
         });
@@ -360,7 +358,6 @@ instruction
 <title>\n\
 {{envDict.npm_package_name}} v{{envDict.npm_package_version}}\n\
 </title>\n\
-<link href="assets.utility2.css" rel="stylesheet">\n\
 <style>\n\
 /*csslint\n\
     box-sizing: false,\n\
@@ -560,7 +557,7 @@ export npm_config_mode_auto_restart=1 && \
 ./index.sh test test.js",
         "test-all": "npm test --mode-coverage=all"
     },
-    "version": "2016.10.3"
+    "version": "2016.10.4"
 }
 ```
 

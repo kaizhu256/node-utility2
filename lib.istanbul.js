@@ -42,13 +42,16 @@
         };
         // jslint-hack
         nop(__dirname);
-        // init global
-        local.global = local.modeJs === 'browser'
-            ? window
-            : global;
         // init local properties
         local['./package.json'] = {};
-        local.codeDict = local.codeDict || {};
+        /* istanbul ignore next */
+        local.global.__coverageCodeDict__ = local.global.__coverageCodeDict__ || {};
+    }());
+
+
+
+    // run shared js-env code - function
+    (function () {
         local.coverageMerge = function (coverage1, coverage2) {
         /*
          * this function will merge coverage2 into coverage1
@@ -57,6 +60,9 @@
             coverage1 = coverage1 || {};
             coverage2 = coverage2 || {};
             Object.keys(coverage2).forEach(function (file) {
+                if (!coverage2[file]) {
+                    return;
+                }
                 // if file is undefined in coverage1, then add it
                 if (!coverage1[file]) {
                     coverage1[file] = coverage2[file];
@@ -87,32 +93,50 @@
             });
             return coverage1;
         };
-        local.coverageReportCreate = function (options) {
+
+        local.coverageReportCreate = function () {
         /*
          * this function will
          * 1. print coverage in text-format to stdout
          * 2. write coverage in html-format to filesystem
          * 3. return coverage in html-format as single document
          */
-            if (!options.coverage) {
+            var options;
+            /* istanbul ignore next */
+            if (!local.global.__coverage__) {
                 return '';
             }
-            options.collector = local.collectorCreate(options);
+            options = {};
             options.dir = process.cwd() + '/tmp/build/coverage.html';
-            options.sourceStore = {};
-            options.writer = local.writerCreate(options);
             // merge previous coverage
             if (local.modeJs === 'node' && process.env.npm_config_mode_coverage_append) {
+                console.log('appending coverage to file://' + options.dir + '/coverage.json');
                 try {
                     local.coverageMerge(
-                        options.coverage,
+                        local.global.__coverage__,
                         JSON.parse(
                             local._fs.readFileSync(options.dir + '/coverage.json', 'utf8')
                         )
                     );
                 } catch (ignore) {
                 }
+                try {
+                    options.coverageCodeDict = JSON.parse(local._fs.readFileSync(
+                        options.dir + '/coverage.code-dict.json',
+                        'utf8'
+                    ));
+                    Object.keys(options.coverageCodeDict).forEach(function (key) {
+                        local.global.__coverageCodeDict__[key] =
+                            local.global.__coverageCodeDict__[key] ||
+                            options.coverageCodeDict[key];
+                    });
+                } catch (ignore) {
+                }
             }
+            // init options
+            options.collector = local.collectorCreate();
+            options.sourceStore = {};
+            options.writer = local.writerCreate(options);
             // 1. print coverage in text-format to stdout
             if (local.modeJs === 'node') {
                 new local.TextReport(options).writeReport(options.collector);
@@ -120,15 +144,15 @@
             // 2. write coverage in html-format to filesystem
             new local.HtmlReport(options).writeReport(options.collector);
             options.writer.writeFile('', nop);
-            // write coverage-summary.json
-            local.fsWriteFileWithMkdirpSync(
-                options.dir + '/coverage-summary.json',
-                JSON.stringify(local.coverageReportSummary)
-            );
             // write coverage.json
             local.fsWriteFileWithMkdirpSync(
                 options.dir + '/coverage.json',
-                JSON.stringify(options.coverage)
+                JSON.stringify(local.global.__coverage__)
+            );
+            // write coverage.code-dict.json
+            local.fsWriteFileWithMkdirpSync(
+                options.dir + '/coverage.code-dict.json',
+                JSON.stringify(local.global.__coverageCodeDict__)
             );
             // write coverage.badge.svg
             options.pct = local.coverageReportSummary.root.metrics.lines.pct;
@@ -152,6 +176,7 @@
             }
             return options.coverageReportHtml;
         };
+
         local.fs = {
             readFileSync: function (file) {
                 // return head.txt or foot.txt
@@ -192,6 +217,7 @@
                 return [];
             }
         };
+
         local.fsWriteFileWithMkdirpSync = function (file, data) {
         /*
          * this function will synchronously 'mkdir -p' and write the data to file
@@ -213,6 +239,7 @@
                 local._fs.writeFileSync(file, data);
             }
         };
+
         /* istanbul ignore next */
         local.instrumentInPackage = function (code, file) {
         /*
@@ -220,30 +247,31 @@
          * only if if the macro /\* istanbul instrument in package $npm_package_name *\/
          * exists in the code
          */
-            return process.env.npm_config_mode_coverage && (
-                process.env.npm_config_mode_coverage === 'all' ||
-                code.indexOf('/* istanbul instrument in package ' +
-                        process.env.npm_package_name + ' */') >= 0 ||
+            return process.env.npm_config_mode_coverage &&
+                code.indexOf('/* istanbul ignore all */\n') < 0 && (
+                    process.env.npm_config_mode_coverage === 'all' ||
                     code.indexOf('/* istanbul instrument in package ' +
-                        process.env.npm_config_mode_coverage + ' */') >= 0
-            )
+                            process.env.npm_package_name + ' */\n') >= 0 ||
+                    code.indexOf('/* istanbul instrument in package ' +
+                            process.env.npm_config_mode_coverage + ' */\n') >= 0
+                )
                 ? local.instrumentSync(code, file)
                 : code;
         };
-        local.instrumentSync = function (code, file, coverageVariable) {
+
+        local.instrumentSync = function (code, file) {
         /*
          * this function will
          * 1. normalize the file
-         * 2. save code to codeDict[file] for future html-report
+         * 2. save code to __coverageCodeDict__[file] for future html-report
          * 3. return instrumented code
          */
             // 1. normalize the file
             file = local.path.resolve('/', file);
-            // 2. save code to codeDict[file] for future html-report
-            local.codeDict[file] = code;
+            // 2. save code to __coverageCodeDict__[file] for future html-report
+            local.global.__coverageCodeDict__[file] = code;
             // 3. return instrumented code
             return new local.Instrumenter({
-                coverageVariable: coverageVariable,
                 embedSource: true,
                 noAutoWrap: true
             }).instrumentSync(code, file);
@@ -812,16 +840,19 @@ e.Program&&!y&&d===""&&i.charAt(i.length-1)==="\n"&&(r=S?ot(r).replaceRight(/\s+
     // init lib istanbul.collector
     (function () {
         // https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/collector.js
-        local.collectorCreate = function (options) {
+        local.collectorCreate = function () {
             return {
                 fileCoverageFor: function (file) {
-                    return options.coverage[file];
+                    return local.global.__coverage__[file];
                 },
                 files: function () {
-                    return Object.keys(options.coverage).filter(function (key) {
-                        // remove derived info
-                        delete options.coverage[key].l;
-                        return local.codeDict[key];
+                    return Object.keys(local.global.__coverage__).filter(function (key) {
+                        if (local.global.__coverage__[key] &&
+                                local.global.__coverageCodeDict__[key]) {
+                            // reset derived info
+                            local.global.__coverage__[key].l = null;
+                            return true;
+                        }
                     });
                 }
             };
@@ -1421,6 +1452,7 @@ local.templateCoverageBadgeSvg =
         break;
     }
 }(
+    // run shared js-env code - pre-init
     (function () {
         'use strict';
         var local;

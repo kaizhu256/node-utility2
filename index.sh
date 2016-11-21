@@ -452,6 +452,41 @@ shEmscriptenInit() {
     emsdk activate
 }
 
+shFileKeySort() {(set -e
+# this function sort the keys in the file
+    FILE="$1"
+    node -e "
+// <script>
+/*jslint
+    bitwise: true,
+    browser: true,
+    maxerr: 8,
+    maxlen: 96,
+    node: true,
+    nomen: true,
+    regexp: true,
+    stupid: true
+*/
+'use strict';
+console.log('var aa = [' + require('fs').readFileSync('$FILE', 'utf8')
+/* jslint-ignore-begin */
+    .replace((/\\n{2,}/gm), '\\n')
+    .replace((/^ {8}(\\w[^ \']*?) = .*?$/gm), '\`\'\$1\',')
+    .replace((/\\n[^\`].*?$/gm), '')
+    .replace((/^\W.*/), '')
+    .replace((/\`/g), '') + '];\n\
+var bb = aa.slice().sort();\n\
+aa.forEach(function (aa, ii) {\n\
+    console.log(ii, aa === bb[ii], aa, bb[ii]);\n\
+});\n\
+JSON.stringify(aa) === JSON.stringify(bb)\n\
+'
+/* jslint-ignore-end */
+    );
+// </script>
+    "
+)}
+
 shFileTrimTrailingWhitespace() {(set -e
 # this function will trim trailing whitespaces from the file
     # find . -type file -print0 | xargs -0 sed -i -e 's/[ ]\{1,\}$//'
@@ -661,8 +696,8 @@ shGithubDeploy() {(set -e
     shBuildApp
     # upload app
     shBuildGithubUpload
-    # wait 10 seconds for app to deploy
-    sleep 10
+    # wait 15 seconds for app to deploy
+    sleep 15
     # verify deployed app's main-page returns status-code < 400
     # '
     if [ $(curl -Ls -o /dev/null -w "%{http_code}" "$TEST_URL") -lt 400 ]
@@ -755,8 +790,8 @@ shHerokuDeploy() {(set -e
     # upload app
     (shGitRepoBranchCommand copyPwdLsTree local HEAD "git@heroku.com:$HEROKU_REPO.git" master) \
         || return $?
-    # wait 10 seconds for app to deploy
-    sleep 10
+    # wait 15 seconds for app to deploy
+    sleep 15
     # verify deployed app's main-page returns status-code < 400
     # '
     if [ $(curl -Ls -o /dev/null -w "%{http_code}" "$TEST_URL") -lt 400 ]
@@ -1310,7 +1345,7 @@ console.log((/\n *\\$ (.*)/).exec(require('fs').readFileSync('$FILE', 'utf8'))[1
     export PORT=8081
     export npm_config_timeout_exit=30000
     # screen-capture server
-    (sleep 10 &&
+    (sleep 15 &&
         export modeBrowserTest=screenCapture &&
         export url="http://localhost:$PORT" &&
         shBrowserTest) &
@@ -1357,7 +1392,7 @@ console.log(require('fs').readFileSync('$FILE', 'utf8').trimLeft());
     export PORT=8081
     export npm_config_timeout_exit=30000
     # screen-capture server
-    (sleep 10 &&
+    (sleep 15 &&
         export modeBrowserTest=screenCapture &&
         export url="http://localhost:$PORT" &&
         shBrowserTest) &
