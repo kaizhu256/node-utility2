@@ -17,21 +17,19 @@
 
     // run shared js-env code - pre-init
     (function () {
+        // init lib
+        local.local = local.utility2 = local.global.utility2 = local;
         // init require
         require = function (key) {
             return local[key] || local.require2(key);
         };
-        // init global
-        local.global = local.modeJs === 'browser'
-            ? window
-            : global;
         // init global.debug_inline
         local.global['debug_inline'.replace('_i', 'I')] = function (arg) {
         /*
          * this function will both print the arg to stderr and return it
          */
             // debug arguments
-            local.utility2['_debug_inlineArguments'.replace('_i', 'I')] = arguments;
+            local['_debug_inlineArguments'.replace('_i', 'I')] = arguments;
             console.error('\n\n\ndebug_inline'.replace('_i', 'I'));
             console.error.apply(console, arguments);
             console.error();
@@ -48,9 +46,7 @@
                 onError.apply(null, arguments);
             };
         };
-        // init lib utility2
-        local.utility2 = { assetsDict: {}, local: local };
-        local.utility2.nop = function () {
+        local.nop = function () {
         /*
          * this function will do nothing
          */
@@ -65,24 +61,25 @@
             'uglifyjs'
         ].forEach(function (key) {
             try {
-                local[key] = local.utility2[key] = local.modeJs === 'browser'
+                local[key] = local.modeJs === 'browser'
                     ? local.global['utility2_' + key]
                     : require('./lib.' + key + '.js');
             } catch (ignore) {
             }
-            local[key] = local.utility2[key] = local.utility2[key] || {};
+            local[key] = local[key] || {};
         });
         // init assets and templates
+        local.assetsDict = {};
 /* jslint-ignore-begin */
-local.utility2.assetsDict['/assets.example.js'] = '';
+local.assetsDict['/assets.example.js'] = '';
 
 
 
-local.utility2.assetsDict['/assets.test.js'] = '';
+local.assetsDict['/assets.test.js'] = '';
 
 
 
-local.utility2.assetsDict['/assets.utility2.rollup.begin.js'] = '\
+local.assetsDict['/assets.utility2.rollup.begin.js'] = '\
 /* utility2.rollup.js begin */\n\
 /*jslint\n\
     bitwise: true,\n\
@@ -96,72 +93,92 @@ local.utility2.assetsDict['/assets.utility2.rollup.begin.js'] = '\
 */\n\
 (function () {\n\
     "use strict";\n\
-    if (typeof module === "object") {\n\
-        module.isRollup = true;\n\
-    }\n\
+    var local;\n\
+    local = {};\n\
+    local.modeJs = (function () {\n\
+        try {\n\
+            return typeof navigator.userAgent === "string" &&\n\
+                typeof document.querySelector("body") === "object" &&\n\
+                typeof XMLHttpRequest.prototype.open === "function" &&\n\
+                "browser";\n\
+        } catch (errorCaughtBrowser) {\n\
+            return module.exports &&\n\
+                typeof process.versions.node === "string" &&\n\
+                typeof require("http").createServer === "function" &&\n\
+                "node";\n\
+        }\n\
+    }());\n\
+    local.global = local.modeJs === "browser"\n\
+        ? window\n\
+        : global;\n\
+    local.local = local.global.utility2_rollup = local.global.utility2_rollup_old || local;\n\
 }());\n\
 ';
 
 
 
-local.utility2.assetsDict['/assets.utility2.rollup.content.js'] = '\
+local.assetsDict['/assets.utility2.rollup.content.js'] = '\
 (function () {\n\
     "use strict";\n\
     var local;\n\
-    (function () {\n\
-        if (typeof module === "object") {\n\
-            module.isRollup = true;\n\
-        }\n\
-        local = {};\n\
-        local.modeJs = (function () {\n\
-            try {\n\
-                return typeof navigator.userAgent === "string" &&\n\
-                    typeof document.querySelector("body") === "object" &&\n\
-                    typeof XMLHttpRequest.prototype.open === "function" &&\n\
-                    "browser";\n\
-            } catch (errorCaughtBrowser) {\n\
-                return module.exports &&\n\
-                    typeof process.versions.node === "string" &&\n\
-                    typeof require("http").createServer === "function" &&\n\
-                    "node";\n\
-            }\n\
-        }());\n\
-        local = local.modeJs === "browser"\n\
-            ? window.utility2.local\n\
-            : module;\n\
+    local = (typeof window === "object" && window && window.utility2_rollup) ||\n\
+        global.utility2_rollup;\n\
+    local.local = local;\n\
 /* jslint-ignore-begin */\n\
 /* utility2.rollup.js content */\n\
 /* jslint-ignore-end */\n\
-    }());\n\
 }());\n\
 ';
 
 
 
-local.utility2.assetsDict['/assets.utility2.rollup.end.js'] = '\
+local.assetsDict['/assets.utility2.rollup.end.js'] = '\
+(function () {\n\
+    "use strict";\n\
+    var local;\n\
+    local = {};\n\
+    local.modeJs = (function () {\n\
+        try {\n\
+            return typeof navigator.userAgent === "string" &&\n\
+                typeof document.querySelector("body") === "object" &&\n\
+                typeof XMLHttpRequest.prototype.open === "function" &&\n\
+                "browser";\n\
+        } catch (errorCaughtBrowser) {\n\
+            return module.exports &&\n\
+                typeof process.versions.node === "string" &&\n\
+                typeof require("http").createServer === "function" &&\n\
+                "node";\n\
+        }\n\
+    }());\n\
+    local.global = local.modeJs === "browser"\n\
+        ? window\n\
+        : global;\n\
+    local.global.utility2_rollup_old = local.global.utility2_rollup;\n\
+    local.global.utility2_rollup = null;\n\
+}());\n\
 /* utility2.rollup.js end */\n\
 ';
 
 
 
-local.utility2.assetsDict['/favicon.ico'] = '';
+local.assetsDict['/favicon.ico'] = '';
 
 
 
 // https://www.w3.org/TR/html5/forms.html#valid-e-mail-address
-local.utility2.regexpEmailValidate = (
+local.regexpEmailValidate = (
 /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/
 );
 
 
 
 // https://img.shields.io/badge/last_build-0000_00_00_00_00_00_UTC_--_master_--_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-0077ff.svg?style=flat
-local.utility2.templateBuildBadgeSvg =
+local.templateBuildBadgeSvg =
 '<svg xmlns="http://www.w3.org/2000/svg" width="563" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="563" height="20" fill="#555"/><rect rx="0" x="61" width="502" height="20" fill="#07f"/><path fill="#07f" d="M61 0h4v20h-4z"/><rect rx="0" width="563" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="31.5" y="15" fill="#010101" fill-opacity=".3">last build</text><text x="31.5" y="14">last build</text><text x="311" y="15" fill="#010101" fill-opacity=".3">0000-00-00 00:00:00 UTC - master - aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</text><text x="311" y="14">0000-00-00 00:00:00 UTC - master - aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</text></g></svg>';
 
 
 
-local.utility2.templateDocApiHtml = '\
+local.templateDocApiHtml = '\
 <style>\n\
 .docApiDiv {\n\
     font-family: Arial, Helvetica, sans-serif;\n\
@@ -202,10 +219,10 @@ local.utility2.templateDocApiHtml = '\
 <div class="docApiDiv">\n\
 <h1>api documentation\n\
     <a\n\
-        {{#if envDict.npm_package_homepage}}\n\
-        href="{{envDict.npm_package_homepage}}"\n\
-        {{/if envDict.npm_package_homepage}}\n\
-    >({{envDict.npm_package_name}} v{{envDict.npm_package_version}})</a>\n\
+        {{#if env.npm_package_homepage}}\n\
+        href="{{env.npm_package_homepage}}"\n\
+        {{/if env.npm_package_homepage}}\n\
+    >({{env.npm_package_name}} v{{env.npm_package_version}})</a>\n\
 </h1>\n\
 <div class="docApiSectionDiv"><a href="#"><h1>table of contents</h1></a><ul>\n\
 {{#each moduleList}}\n\
@@ -249,17 +266,17 @@ local.utility2.templateDocApiHtml = '\
 
 
 
-local.utility2.templateIndexHtml = '';
+local.templateIndexHtml = '';
 
 
 
 // https://img.shields.io/badge/tests_failed-999-dd0000.svg?style=flat
-local.utility2.templateTestReportBadgeSvg =
+local.templateTestReportBadgeSvg =
 '<svg xmlns="http://www.w3.org/2000/svg" width="103" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="103" height="20" fill="#555"/><rect rx="0" x="72" width="31" height="20" fill="#d00"/><path fill="#d00" d="M72 0h4v20h-4z"/><rect rx="0" width="103" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="37" y="15" fill="#010101" fill-opacity=".3">tests failed</text><text x="37" y="14">tests failed</text><text x="86.5" y="15" fill="#010101" fill-opacity=".3">999</text><text x="86.5" y="14">999</text></g></svg>';
 
 
 
-local.utility2.templateTestReportHtml = '\
+local.templateTestReportHtml = '\
 <style>\n\
 /*csslint\n\
     adjoining-classes: false\n\
@@ -312,22 +329,22 @@ local.utility2.templateTestReportHtml = '\
 <div class="testReportPlatformDiv summary">\n\
 <h1>\n\
     <a\n\
-        {{#if envDict.npm_package_homepage}}\n\
-        href="{{envDict.npm_package_homepage}}"\n\
-        {{/if envDict.npm_package_homepage}}\n\
-    >{{envDict.npm_package_name}} v{{envDict.npm_package_version}}</a>\n\
+        {{#if env.npm_package_homepage}}\n\
+        href="{{env.npm_package_homepage}}"\n\
+        {{/if env.npm_package_homepage}}\n\
+    >{{env.npm_package_name}} v{{env.npm_package_version}}</a>\n\
 </h1>\n\
 <h2>test-report summary</h2>\n\
 <h4>\n\
     <span>version</span>-\n\
-        {{envDict.npm_package_version}}<br>\n\
+        {{env.npm_package_version}}<br>\n\
     <span>test date</span>- {{date}}<br>\n\
     <span>commit info</span>-\n\
-        {{#if envDict.CI_COMMIT_INFO}}\n\
-        {{envDict.CI_COMMIT_INFO htmlSafe}}<br>\n\
-        {{#unless envDict.CI_COMMIT_INFO}}\n\
+        {{#if env.CI_COMMIT_INFO}}\n\
+        {{env.CI_COMMIT_INFO htmlSafe}}<br>\n\
+        {{#unless env.CI_COMMIT_INFO}}\n\
         undefined<br>\n\
-        {{/if envDict.CI_COMMIT_INFO}}\n\
+        {{/if env.CI_COMMIT_INFO}}\n\
 </h4>\n\
 <table>\n\
 <thead>\n\
@@ -391,6 +408,119 @@ local.utility2.templateTestReportHtml = '\
 
     // run shared js-env code - function
     (function () {
+        // init lib Blob
+        local.Blob = local.modeJs === 'browser'
+            ? local.global.Blob
+            : function (array, options) {
+              /*
+               * this function will return a node-compatible Blob instance
+               */
+                this.bff = local.bufferConcat(array);
+                this.type = options && options.type;
+            };
+
+        // init lib FormData
+        local.FormData = function () {
+        /*
+         * this function will return a serverLocal-compatible FormData instance
+         * https://xhr.spec.whatwg.org/#dom-formdata
+         * The FormData(form) constructor must run these steps:
+         * 1. Let fd be a new FormData object.
+         * 2. If form is given, set fd's entries to the result
+         *    of constructing the form data set for form. (not implemented)
+         * 3. Return fd.
+         */
+            this.entryList = [];
+        };
+
+        local.FormData.prototype.append = function (name, value, filename) {
+        /*
+         * https://xhr.spec.whatwg.org/#dom-formdata-append
+         * The append(name, value, filename) method, when invoked, must run these steps:
+         * 1. If the filename argument is given, set value to a new File object
+         *    whose contents are value and name is filename.
+         * 2. Append a new entry whose name is name, and value is value,
+         *    to context object's list of entries.
+         */
+            if (filename) {
+                // bug-workaround - chromium cannot assign name to Blob instance
+                local.tryCatchOnError(function () {
+                    value.name = filename;
+                }, local.nop);
+            }
+            this.entryList.push({ name: name, value: value });
+        };
+
+        local.FormData.prototype.read = function (onError) {
+        /*
+         * https://tools.ietf.org/html/rfc7578
+         * this function will read from formData as a buffer, e.g.
+         * --Boundary\r\n
+         * Content-Disposition: form-data; name="key"\r\n
+         * \r\n
+         * value\r\n
+         * --Boundary\r\n
+         * Content-Disposition: form-data; name="input1"; filename="file1.png"\r\n
+         * Content-Type: image/jpeg\r\n
+         * \r\n
+         * <data1>\r\n
+         * --Boundary\r\n
+         * Content-Disposition: form-data; name="input2"; filename="file2.png"\r\n
+         * Content-Type: image/jpeg\r\n
+         * \r\n
+         * <data2>\r\n
+         * --Boundary--\r\n
+         */
+            var boundary, onParallel, result;
+            // handle null-case
+            if (this.entryList.length === 0) {
+                onError(null, local.bufferCreate());
+                return;
+            }
+            // init boundary
+            boundary = '--' + local.uuidTimeCreate();
+            // init result
+            result = [];
+            onParallel = local.onParallel(function (error) {
+                // add closing boundary
+                result.push([boundary + '--\r\n']);
+                // concatenate result
+                onError(
+                    error,
+                    // flatten result
+                    !error && local.bufferConcat(Array.prototype.concat.apply([], result))
+                );
+            });
+            onParallel.counter += 1;
+            this.entryList.forEach(function (element, ii) {
+                var value;
+                value = element.value;
+                if (!(value instanceof local.Blob)) {
+                    result[ii] = [boundary + '\r\nContent-Disposition: form-data; name="' +
+                        element.name + '"\r\n\r\n', value, '\r\n'];
+                    return;
+                }
+                // read from blob in parallel
+                onParallel.counter += 1;
+                local.blobRead(value, 'binary', function (error, data) {
+                    result[ii] = !error && [boundary +
+                        '\r\nContent-Disposition: form-data; name="' + element.name + '"' +
+                        // read param filename
+                        (value && value.name
+                            ? '; filename="' + value.name + '"'
+                            : '') +
+                        '\r\n' +
+                        // read param Content-Type
+                        (value && value.type
+                            ? 'Content-Type: ' + value.type + '\r\n'
+                            : '') +
+                        '\r\n', data, '\r\n'];
+                    onParallel(error);
+                });
+            });
+            onParallel();
+        };
+
         // init lib _http
         local._http = {};
 
@@ -551,7 +681,7 @@ local.utility2.templateTestReportHtml = '\
             this.emit('finish');
             // emit readable events
             this.onResponse(this);
-            this.emit('data', local.utility2.bufferConcat(this.chunkList));
+            this.emit('data', local.bufferConcat(this.chunkList));
             this.emit('end');
         };
 
@@ -598,7 +728,7 @@ local.utility2.templateTestReportHtml = '\
             // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/statusText
             xhr.statusText = '';
             // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/timeout
-            xhr.timeout = local.utility2.timeoutDefault;
+            xhr.timeout = local.timeoutDefault;
         };
 
         local._http.XMLHttpRequest.prototype.abort = function () {
@@ -660,7 +790,7 @@ local.utility2.templateTestReportHtml = '\
             this.response = data;
             // init responseText
             if (!this.responseType || this.responseType === 'text') {
-                this.responseText = local.utility2.bufferToString(data);
+                this.responseText = local.bufferToString(data);
             }
             // update xhr
             this.readyState = 4;
@@ -691,11 +821,11 @@ local.utility2.templateTestReportHtml = '\
                 this.onError(null, this.responseStream);
                 return;
             }
-            local.utility2.streamReadAll(this.responseStream, this.onError);
+            local.streamReadAll(this.responseStream, this.onError);
         };
 
         // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/onreadystatechange
-        local._http.XMLHttpRequest.prototype.onreadystatechange = local.utility2.nop;
+        local._http.XMLHttpRequest.prototype.onreadystatechange = local.nop;
 
         local._http.XMLHttpRequest.prototype.open = function (method, url) {
         /*
@@ -705,7 +835,7 @@ local.utility2.templateTestReportHtml = '\
             this.method = method;
             this.url = url;
             // parse url
-            this.urlParsed = local.utility2.urlParse(String(this.url));
+            this.urlParsed = local.urlParse(String(this.url));
             this.hostname = this.urlParsed.hostname;
             this.path = this.urlParsed.pathname + this.urlParsed.search;
             this.port = this.urlParsed.port;
@@ -718,7 +848,7 @@ local.utility2.templateTestReportHtml = '\
         };
 
         // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest#overrideMimeType()
-        local._http.XMLHttpRequest.prototype.overrideMimeType = local.utility2.nop;
+        local._http.XMLHttpRequest.prototype.overrideMimeType = local.nop;
 
         local._http.XMLHttpRequest.prototype.send = function (data) {
         /*
@@ -745,9 +875,7 @@ local.utility2.templateTestReportHtml = '\
         };
 
         // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/upload
-        local._http.XMLHttpRequest.prototype.upload = {
-            addEventListener: local.utility2.nop
-        };
+        local._http.XMLHttpRequest.prototype.upload = { addEventListener: local.nop };
 
         local._http.createServer = function () {
             /*
@@ -762,7 +890,7 @@ local.utility2.templateTestReportHtml = '\
              * to a port or domain socket
              */
                 // jslint-hack
-                local.utility2.nop(port);
+                local.nop(port);
                 onError();
             } };
         };
@@ -777,10 +905,7 @@ local.utility2.templateTestReportHtml = '\
                 }
                 self.ended = true;
                 self.serverRequest.data = data;
-                local.utility2.serverLocalRequestHandler(
-                    self.serverRequest,
-                    self.serverResponse
-                );
+                local.serverLocalRequestHandler(self.serverRequest, self.serverResponse);
             };
             self.on = function () {
                 return self;
@@ -793,127 +918,14 @@ local.utility2.templateTestReportHtml = '\
             return self;
         };
 
-        // init lib Blob
-        local.utility2.Blob = local.modeJs === 'browser'
-            ? local.global.Blob
-            : function (array, options) {
-              /*
-               * this function will return a node-compatible Blob instance
-               */
-                this.bff = local.utility2.bufferConcat(array);
-                this.type = options && options.type;
-            };
-
-        // init lib FormData
-        local.utility2.FormData = function () {
-        /*
-         * this function will return a serverLocal-compatible FormData instance
-         * https://xhr.spec.whatwg.org/#dom-formdata
-         * The FormData(form) constructor must run these steps:
-         * 1. Let fd be a new FormData object.
-         * 2. If form is given, set fd's entries to the result
-         *    of constructing the form data set for form. (not implemented)
-         * 3. Return fd.
-         */
-            this.entryList = [];
-        };
-
-        local.utility2.FormData.prototype.append = function (name, value, filename) {
-        /*
-         * https://xhr.spec.whatwg.org/#dom-formdata-append
-         * The append(name, value, filename) method, when invoked, must run these steps:
-         * 1. If the filename argument is given, set value to a new File object
-         *    whose contents are value and name is filename.
-         * 2. Append a new entry whose name is name, and value is value,
-         *    to context object's list of entries.
-         */
-            if (filename) {
-                // bug - chromium cannot assign name to Blob instance
-                local.utility2.tryCatchOnError(function () {
-                    value.name = filename;
-                }, local.utility2.nop);
-            }
-            this.entryList.push({ name: name, value: value });
-        };
-
-        local.utility2.FormData.prototype.read = function (onError) {
-        /*
-         * https://tools.ietf.org/html/rfc7578
-         * this function will read from formData as a buffer, e.g.
-         * --Boundary\r\n
-         * Content-Disposition: form-data; name="key"\r\n
-         * \r\n
-         * value\r\n
-         * --Boundary\r\n
-         * Content-Disposition: form-data; name="input1"; filename="file1.png"\r\n
-         * Content-Type: image/jpeg\r\n
-         * \r\n
-         * <data1>\r\n
-         * --Boundary\r\n
-         * Content-Disposition: form-data; name="input2"; filename="file2.png"\r\n
-         * Content-Type: image/jpeg\r\n
-         * \r\n
-         * <data2>\r\n
-         * --Boundary--\r\n
-         */
-            var boundary, onParallel, result;
-            // handle null-case
-            if (this.entryList.length === 0) {
-                onError(null, local.utility2.bufferCreate());
-                return;
-            }
-            // init boundary
-            boundary = '--' + local.utility2.uuidTimeCreate();
-            // init result
-            result = [];
-            onParallel = local.utility2.onParallel(function (error) {
-                // add closing boundary
-                result.push([boundary + '--\r\n']);
-                // concatenate result
-                onError(error, !error && local.utility2.bufferConcat(
-                    // flatten result
-                    Array.prototype.concat.apply([], result)
-                ));
-            });
-            onParallel.counter += 1;
-            this.entryList.forEach(function (element, ii) {
-                var value;
-                value = element.value;
-                if (!(value instanceof local.utility2.Blob)) {
-                    result[ii] = [boundary + '\r\nContent-Disposition: form-data; name="' +
-                        element.name + '"\r\n\r\n', value, '\r\n'];
-                    return;
-                }
-                // read from blob in parallel
-                onParallel.counter += 1;
-                local.utility2.blobRead(value, 'binary', function (error, data) {
-                    result[ii] = !error && [boundary +
-                        '\r\nContent-Disposition: form-data; name="' + element.name + '"' +
-                        // read param filename
-                        (value && value.name
-                            ? '; filename="' + value.name + '"'
-                            : '') +
-                        '\r\n' +
-                        // read param Content-Type
-                        (value && value.type
-                            ? 'Content-Type: ' + value.type + '\r\n'
-                            : '') +
-                        '\r\n', data, '\r\n'];
-                    onParallel(error);
-                });
-            });
-            onParallel();
-        };
-
-        local.utility2.ajax = function (options, onError) {
+        local.ajax = function (options, onError) {
         /*
          * this function will send an ajax-request with error-handling and timeout
          */
             var timerTimeout, tmp, xhr;
-            onError = local.utility2.onErrorWithStack(onError);
+            onError = local.onErrorWithStack(onError);
             // init modeServerLocal
-            if (!local.utility2.envDict.npm_config_mode_backend &&
-                    local.utility2.serverLocalUrlTest(options.url)) {
+            if (!local.env.npm_config_mode_backend && local.serverLocalUrlTest(options.url)) {
                 xhr = new local._http.XMLHttpRequest();
             }
             // init xhr
@@ -921,9 +933,9 @@ local.utility2.templateTestReportHtml = '\
                 ? new local.global.XMLHttpRequest()
                 : new local._http.XMLHttpRequest());
             // debug xhr
-            local.utility2._debugXhr = xhr;
+            local._debugXhr = xhr;
             // init options
-            local.utility2.objectSetOverride(xhr, options);
+            local.objectSetOverride(xhr, options);
             // init headers
             xhr.headers = {};
             Object.keys(options.headers || {}).forEach(function (key) {
@@ -932,13 +944,13 @@ local.utility2.templateTestReportHtml = '\
             // init method
             xhr.method = xhr.method || 'GET';
             // init timeout
-            xhr.timeout = xhr.timeout || local.utility2.timeoutDefault;
+            xhr.timeout = xhr.timeout || local.timeoutDefault;
             // init timerTimeout
-            timerTimeout = local.utility2.onTimeout(function (error) {
+            timerTimeout = local.onTimeout(function (error) {
                 xhr.error = xhr.error || error;
                 xhr.abort();
                 // cleanup requestStream and responseStream
-                local.utility2.requestResponseCleanup(xhr.requestStream, xhr.responseStream);
+                local.requestResponseCleanup(xhr.requestStream, xhr.responseStream);
             }, xhr.timeout, 'ajax ' + xhr.method + ' ' + xhr.url);
             // init event handling
             xhr.onEvent = function (event) {
@@ -957,13 +969,10 @@ local.utility2.templateTestReportHtml = '\
                     clearTimeout(timerTimeout);
                     // cleanup requestStream and responseStream
                     setTimeout(function () {
-                        local.utility2.requestResponseCleanup(
-                            xhr.requestStream,
-                            xhr.responseStream
-                        );
+                        local.requestResponseCleanup(xhr.requestStream, xhr.responseStream);
                     });
                     // decrement ajaxProgressCounter
-                    local.utility2.ajaxProgressCounter -= 1;
+                    local.ajaxProgressCounter -= 1;
                     // handle abort or error event
                     if (!xhr.error &&
                             (event.type === 'abort' ||
@@ -981,33 +990,33 @@ local.utility2.templateTestReportHtml = '\
                             tmp = local.modeJs + ' - ' + xhr.statusCode + ' ' + xhr.method +
                                 ' ' + xhr.url + '\n';
                             // try to debug responseText
-                            local.utility2.tryCatchOnError(function () {
+                            local.tryCatchOnError(function () {
                                 tmp += '    ' + JSON.stringify(xhr.responseText.slice(0, 256) +
                                     '...') + '\n';
-                            }, local.utility2.nop);
-                            local.utility2.errorMessagePrepend(xhr.error, tmp);
+                            }, local.nop);
+                            local.errorMessagePrepend(xhr.error, tmp);
                         }
                     }
                     onError(xhr.error, xhr);
                     break;
                 }
-                local.utility2.ajaxProgressUpdate();
+                local.ajaxProgressUpdate();
             };
             // increment ajaxProgressCounter
-            local.utility2.ajaxProgressCounter += 1;
+            local.ajaxProgressCounter += 1;
             xhr.addEventListener('abort', xhr.onEvent);
             xhr.addEventListener('error', xhr.onEvent);
             xhr.addEventListener('load', xhr.onEvent);
-            xhr.addEventListener('loadstart', local.utility2.ajaxProgressUpdate);
-            xhr.addEventListener('progress', local.utility2.ajaxProgressUpdate);
-            xhr.upload.addEventListener('progress', local.utility2.ajaxProgressUpdate);
+            xhr.addEventListener('loadstart', local.ajaxProgressUpdate);
+            xhr.addEventListener('progress', local.ajaxProgressUpdate);
+            xhr.upload.addEventListener('progress', local.ajaxProgressUpdate);
             // open url
             xhr.open(xhr.method, xhr.url);
             // set request-headers
             Object.keys(xhr.headers).forEach(function (key) {
                 xhr.setRequestHeader(key, xhr.headers[key]);
             });
-            if (xhr.data instanceof local.utility2.FormData) {
+            if (xhr.data instanceof local.FormData) {
                 // handle formData
                 xhr.data.read(function (error, data) {
                     if (error) {
@@ -1016,16 +1025,16 @@ local.utility2.templateTestReportHtml = '\
                         return;
                     }
                     // send data
-                    xhr.send(local.utility2.bufferToNodeBuffer(data));
+                    xhr.send(local.bufferToNodeBuffer(data));
                 });
             } else {
                 // send data
-                xhr.send(local.utility2.bufferToNodeBuffer(xhr.data));
+                xhr.send(local.bufferToNodeBuffer(xhr.data));
             }
             return xhr;
         };
 
-        local.utility2.ajaxProgressUpdate = function () {
+        local.ajaxProgressUpdate = function () {
         /*
          * this function will update ajaxProgress
          */
@@ -1036,40 +1045,38 @@ local.utility2.templateTestReportHtml = '\
                 return;
             }
             // init ajaxProgressDiv1StyleBackground
-            local.utility2.ajaxProgressDiv1StyleBackground =
-                local.utility2.ajaxProgressDiv1StyleBackground ||
+            local.ajaxProgressDiv1StyleBackground = local.ajaxProgressDiv1StyleBackground ||
                 ajaxProgressDiv1.style.background;
             // show ajaxProgress
             if (ajaxProgressDiv1.style.background === 'transparent') {
-                ajaxProgressDiv1.style.background =
-                    local.utility2.ajaxProgressDiv1StyleBackground;
+                ajaxProgressDiv1.style.background = local.ajaxProgressDiv1StyleBackground;
             }
             // cleanup timerTimeout
-            clearTimeout(local.utility2.timerTimeoutAjaxProgressHide);
+            clearTimeout(local.timerTimeoutAjaxProgressHide);
             // increment ajaxProgress
-            if (local.utility2.ajaxProgressCounter > 0) {
+            if (local.ajaxProgressCounter > 0) {
                 // this algorithm will indefinitely increment the ajaxProgressBar
                 // with successively smaller increments without ever reaching 100%
-                local.utility2.ajaxProgressState += 1;
+                local.ajaxProgressState += 1;
                 ajaxProgressDiv1.style.width =
-                    100 - 75 * Math.exp(-0.125 * local.utility2.ajaxProgressState) + '%';
+                    100 - 75 * Math.exp(-0.125 * local.ajaxProgressState) + '%';
                 return;
             }
             // finish ajaxProgress
             ajaxProgressDiv1.style.width = '100%';
             // hide ajaxProgress
-            local.utility2.timerTimeoutAjaxProgressHide = setTimeout(function () {
+            local.timerTimeoutAjaxProgressHide = setTimeout(function () {
                 ajaxProgressDiv1.style.background = 'transparent';
                 // reset ajaxProgress
                 setTimeout(function () {
-                    local.utility2.ajaxProgressCounter = 0;
-                    local.utility2.ajaxProgressState = 0;
+                    local.ajaxProgressCounter = 0;
+                    local.ajaxProgressState = 0;
                     ajaxProgressDiv1.style.width = '25%';
                 }, 500);
             }, 1500);
         };
 
-        local.utility2.assert = function (passed, message) {
+        local.assert = function (passed, message) {
         /*
          * this function will throw the error message if passed is falsey
          */
@@ -1088,27 +1095,53 @@ local.utility2.templateTestReportHtml = '\
             throw error;
         };
 
-        local.utility2.assertJsonEqual = function (aa, bb) {
+        local.assertJsonEqual = function (aa, bb) {
         /*
          * this function will assert
          * utility2.jsonStringifyOrdered(aa) === JSON.stringify(bb)
          */
-            aa = local.utility2.jsonStringifyOrdered(aa);
+            aa = local.jsonStringifyOrdered(aa);
             bb = JSON.stringify(bb);
-            local.utility2.assert(aa === bb, [aa, bb]);
+            local.assert(aa === bb, [aa, bb]);
         };
 
-        local.utility2.assertJsonNotEqual = function (aa, bb) {
+        local.assertJsonNotEqual = function (aa, bb) {
         /*
          * this function will assert
          * utility2.jsonStringifyOrdered(aa) !== JSON.stringify(bb)
          */
-            aa = local.utility2.jsonStringifyOrdered(aa);
+            aa = local.jsonStringifyOrdered(aa);
             bb = JSON.stringify(bb);
-            local.utility2.assert(aa !== bb, [aa, bb]);
+            local.assert(aa !== bb, [aa, bb]);
         };
 
-        local.utility2.blobRead = function (blob, encoding, onError) {
+        local.assetsWrite = function (file, data) {
+        /*
+         * this function will write the data to the asset-file,
+         * and if $NODE_ENV === production, create an uglified asset-file as well
+         *
+         */
+            local.assetsDict[file] = data;
+            // create uglified asset-file
+            file = file.split('.');
+            switch (typeof data === 'string' &&
+                file.length >= 2 &&
+                file[file.length - 2] !== 'min' &&
+                file[file.length - 1]) {
+            // case 'css':
+            case 'js':
+                file.splice(-1, 0, 'min');
+                file = file.join('.');
+                local.tryCatchOnError(function () {
+                    local.assetsDict[file] = local.env.NODE_ENV === 'production'
+                        ? local.uglify(data)
+                        : data;
+                }, local.nop);
+                break;
+            }
+        };
+
+        local.blobRead = function (blob, encoding, onError) {
         /*
          * this function will read from the blob with the given encoding
          * possible encodings are:
@@ -1122,15 +1155,15 @@ local.utility2.templateTestReportHtml = '\
                 // readAsDataURL
                 case 'dataURL':
                     data = 'data:' + (blob.type || '') + ';base64,' +
-                        local.utility2.bufferToString(blob.bff, 'base64');
+                        local.bufferToString(blob.bff, 'base64');
                     break;
                 // readAsText
                 case 'text':
-                    data = local.utility2.bufferToString(blob.bff);
+                    data = local.bufferToString(blob.bff);
                     break;
                 // readAsArrayBuffer
                 default:
-                    data = local.utility2.bufferCreate(blob.bff);
+                    data = local.bufferCreate(blob.bff);
                 }
                 onError(null, data);
                 return;
@@ -1149,7 +1182,7 @@ local.utility2.templateTestReportHtml = '\
                 case 'load':
                     onError(null, reader.result instanceof local.global.ArrayBuffer
                         // convert ArrayBuffer to Uint8Array
-                        ? local.utility2.bufferCreate(reader.result)
+                        ? local.bufferCreate(reader.result)
                         : reader.result);
                     break;
                 }
@@ -1170,15 +1203,14 @@ local.utility2.templateTestReportHtml = '\
         };
 
         /* istanbul ignore next */
-        local.utility2.browserTest = function (options, onError) {
+        local.browserTest = function (options, onError) {
         /*
          * this function will spawn an electron process to test options.url
          */
             var done, modeNext, onNext, onParallel, timerTimeout;
             if (local.modeJs === 'node') {
-                local.utility2.objectSetDefault(options, local.utility2.envDict);
-                options.timeoutDefault = options.timeoutDefault ||
-                    local.utility2.timeoutDefault;
+                local.objectSetDefault(options, local.env);
+                options.timeoutDefault = options.timeoutDefault || local.timeoutDefault;
             }
             modeNext = Number(options.modeNext || 0);
             onNext = function (error, data) {
@@ -1189,32 +1221,31 @@ local.utility2.templateTestReportHtml = '\
                 // run node code
                 case 1:
                     // init options
-                    options.testName = local.utility2.envDict.MODE_BUILD + '.browser.' +
-                        encodeURIComponent(local.utility2.urlParse(options.url).pathname);
-                    local.utility2.objectSetDefault(options, {
-                        fileCoverage: local.utility2.envDict.npm_config_dir_tmp +
+                    options.testName = local.env.MODE_BUILD + '.browser.' +
+                        encodeURIComponent(local.urlParse(options.url).pathname);
+                    local.objectSetDefault(options, {
+                        fileCoverage: local.env.npm_config_dir_tmp +
                             '/coverage.' + options.testName + '.json',
-                        fileScreenCapture: (local.utility2.envDict.npm_config_dir_build +
+                        fileScreenCapture: (local.env.npm_config_dir_build +
                             '/screen-capture.' + options.testName + '.png')
                             .replace((/%/g), '_')
                             .replace((/_2F\.png$/), '.png'),
-                        fileTestReport: local.utility2.envDict.npm_config_dir_tmp +
+                        fileTestReport: local.env.npm_config_dir_tmp +
                             '/test-report.' + options.testName + '.json',
                         modeBrowserTest: 'test',
                         timeExit: Date.now() + options.timeoutDefault
                     }, 1);
                     // init timerTimeout
-                    timerTimeout = local.utility2.onTimeout(
+                    timerTimeout = local.onTimeout(
                         onNext,
                         options.timeoutDefault,
                         options.testName
                     );
                     // init file urlBrowser
                     options.modeNext = 20;
-                    options.urlBrowser = local.utility2.envDict.npm_config_dir_tmp +
-                        '/electron.' + local.utility2.uuidTimeCreate() + '.html';
-                    local.utility2.fsMkdirpSync(local.utility2.envDict.npm_config_dir_build);
-                    local.fs.writeFileSync(options.urlBrowser, '<style>body {' +
+                    options.urlBrowser = local.env.npm_config_dir_tmp +
+                        '/electron.' + local.uuidTimeCreate() + '.html';
+                    local.fsWriteFileWithMkdirpSync(options.urlBrowser, '<style>body {' +
                             'border: 1px solid black;' +
                             'margin: 0;' +
                             'padding: 0;' +
@@ -1228,7 +1259,7 @@ local.utility2.templateTestReportHtml = '\
                             'padding: 0;' +
                             'width: 100%;' +
                         '"></webview>' +
-                        '<script>window.local = {}; (' + local.utility2.browserTest
+                        '<script>window.local = {}; (' + local.browserTest
                             .toString()
                             .replace((/<\//g), '<\\/')
                             // coverage-hack - un-instrument
@@ -1238,13 +1269,13 @@ local.utility2.templateTestReportHtml = '\
                         options.urlBrowser + '\n');
                     // spawn an electron process to test a url
                     options.modeNext = 10;
-                    local.utility2.processSpawnWithTimeout('electron', [
+                    local.processSpawnWithTimeout('electron', [
                         __filename,
                         'browserTest',
                         '--disable-overlay-scrollbar',
                         '--enable-logging'
                     ], {
-                        env: local.utility2.jsonCopy(options),
+                        env: local.jsonCopy(options),
                         stdio: options.modeSilent
                             ? 'ignore'
                             : ['ignore', 1, 2]
@@ -1256,16 +1287,13 @@ local.utility2.templateTestReportHtml = '\
                     // merge browser coverage
                     if (options.modeCoverageMerge) {
                         // try to JSON.parse the string
-                        local.utility2.tryCatchOnError(function () {
+                        local.tryCatchOnError(function () {
                             data = JSON.parse(
                                 local.fs.readFileSync(options.fileCoverage, 'utf8')
                             );
-                        }, local.utility2.nop);
-                        if (!local.utility2._debugTryCatchErrorCaught) {
-                            local.utility2.istanbulCoverageMerge(
-                                local.global.__coverage__,
-                                data
-                            );
+                        }, local.nop);
+                        if (!local._debugTryCatchErrorCaught) {
+                            local.istanbulCoverageMerge(local.global.__coverage__, data);
                             console.log('\nbrowserTest - merged coverage from ' +
                                 options.fileCoverage + '\n');
                         }
@@ -1276,25 +1304,24 @@ local.utility2.templateTestReportHtml = '\
                         return;
                     }
                     // try to merge browser test-report
-                    local.utility2.tryCatchOnError(function () {
-                        data = JSON.parse(local.fs.readFileSync(
-                            options.fileTestReport,
-                            'utf8'
-                        ));
-                    }, local.utility2.nop);
-                    if (local.utility2._debugTryCatchErrorCaught) {
-                        onNext(local.utility2._debugTryCatchErrorCaught);
+                    local.tryCatchOnError(function () {
+                        data = JSON.parse(
+                            local.fs.readFileSync(options.fileTestReport, 'utf8')
+                        );
+                    }, local.nop);
+                    if (local._debugTryCatchErrorCaught) {
+                        onNext(local._debugTryCatchErrorCaught);
                         return;
                     }
                     console.log('\nbrowserTest - merging test-report from ' +
                         options.fileTestReport + '\n');
                     if (!options.modeTestIgnore) {
-                        local.utility2.testReportMerge(local.utility2.testReport, data);
+                        local.testReportMerge(local.testReport, data);
                     }
                     // create test-report.json
                     local.fs.writeFileSync(
-                        local.utility2.envDict.npm_config_dir_build + '/test-report.json',
-                        JSON.stringify(local.utility2.testReport)
+                        local.env.npm_config_dir_build + '/test-report.json',
+                        JSON.stringify(local.testReport)
                     );
                     onNext(data && data.testsFailed && new Error(data.testsFailed));
                     break;
@@ -1307,7 +1334,7 @@ local.utility2.templateTestReportHtml = '\
                     break;
                 case 12:
                     options.BrowserWindow = require('electron').BrowserWindow;
-                    local.utility2.objectSetDefault(
+                    local.objectSetDefault(
                         options,
                         { frame: false, height: 768, width: 1024, x: 0, y: 0 }
                     );
@@ -1319,7 +1346,7 @@ local.utility2.templateTestReportHtml = '\
                     break;
                 case 13:
                     console.log('\nbrowserTest - opened url ' + options.url + '\n');
-                    onParallel = local.utility2.onParallel(onNext);
+                    onParallel = local.onParallel(onNext);
                     onParallel.counter += 1;
                     if (options.modeBrowserTest === 'test') {
                         onParallel.counter += 1;
@@ -1390,7 +1417,7 @@ local.utility2.templateTestReportHtml = '\
             onNext();
         };
 
-        local.utility2.bufferConcat = function (bufferList) {
+        local.bufferConcat = function (bufferList) {
         /*
          * this function will emulate node's Buffer.concat for Uint8Array in the browser
          */
@@ -1406,11 +1433,11 @@ local.utility2.templateTestReportHtml = '\
                         element = String(element);
                     }
                     // convert non-Uint8Array to Uint8Array
-                    element = local.utility2.bufferCreateIfNotBuffer(element);
+                    element = local.bufferCreateIfNotBuffer(element);
                     length += element.length;
                     return element;
                 });
-            result = local.utility2.bufferCreate(length);
+            result = local.bufferCreate(length);
             ii = 0;
             bufferList.forEach(function (element) {
                 for (jj = 0; jj < element.length; ii += 1, jj += 1) {
@@ -1420,34 +1447,52 @@ local.utility2.templateTestReportHtml = '\
             return result;
         };
 
-        local.utility2.bufferCreate = function (text, encoding) {
+        local.bufferCreate = function (text, encoding) {
         /*
          * this function will return a Uint8Array from the text,
          * with either 'utf8' (default) or 'base64' encoding
          */
             if (typeof text === 'string') {
                 if (encoding === 'base64') {
-                    return local.utility2.bufferFromBase64(text);
+                    return local.bufferFromBase64(text);
                 }
-                return local.modeJs === 'browser'
-                    ? new local.global.TextEncoder('utf-8').encode(text)
-                    : new Buffer(text);
+                if (local.modeJs === 'node') {
+                    return new Buffer(text);
+                }
+                if (local.global.TextEncoder) {
+                    return new local.global.TextEncoder('utf-8').encode(text);
+                }
+// bug-workaround - TextEncoder.encode polyfill
+/* jslint-ignore-begin */
+// utility2-uglifyjs https://github.com/feross/buffer/blob/v4.9.1/index.js#L1670
+/* istanbul ignore next */
+function utf8ToBytes(e,t){t=t||Infinity;var n,r=e.length,i=null,s=[];for(var o=0
+;o<r;++o){n=e.charCodeAt(o);if(n>55295&&n<57344){if(!i){if(n>56319){(t-=3)>-1&&s
+.push(239,191,189);continue}if(o+1===r){(t-=3)>-1&&s.push(239,191,189);continue}
+i=n;continue}if(n<56320){(t-=3)>-1&&s.push(239,191,189),i=n;continue}n=(i-55296<<10|
+n-56320)+65536}else i&&(t-=3)>-1&&s.push(239,191,189);i=null;if(n<128){if((t-=1)<0
+)break;s.push(n)}else if(n<2048){if((t-=2)<0)break;s.push(n>>6|192,n&63|128)}else if(
+n<65536){if((t-=3)<0)break;s.push(n>>12|224,n>>6&63|128,n&63|128)}else{if(!(n<1114112
+))throw new Error("Invalid code point");if((t-=4)<0)break;s.push(n>>18|240,n>>12&63|128
+,n>>6&63|128,n&63|128)}}return s}
+return new local.global.Uint8Array(utf8ToBytes(text));
+/* jslint-ignore-end */
             }
             return new local.global.Uint8Array(text);
         };
 
-        local.utility2.bufferCreateIfNotBuffer = function (text, encoding) {
+        local.bufferCreateIfNotBuffer = function (text, encoding) {
         /*
          * this function will return a Uint8Array from the text with the given encoding,
          * if it is not already a Uint8Array
          */
             return text instanceof local.global.Uint8Array
                 ? text
-                : local.utility2.bufferCreate(text, encoding);
+                : local.bufferCreate(text, encoding);
         };
 
         /* jslint-ignore-begin */
-        local.utility2.bufferFromBase64 = function (text) {
+        local.bufferFromBase64 = function (text) {
         /*
          * https://gist.github.com/wang-bin/7332335
          * this function will convert the base64-encoded text to a Uint8Array
@@ -1461,7 +1506,7 @@ local.utility2.templateTestReportHtml = '\
         };
         /* jslint-ignore-end */
 
-        local.utility2.bufferIndexOfSubBuffer = function (bff, subBff, fromIndex) {
+        local.bufferIndexOfSubBuffer = function (bff, subBff, fromIndex) {
         /*
          * this function will search bff for the indexOf-like position of the subBff
          */
@@ -1479,7 +1524,7 @@ local.utility2.templateTestReportHtml = '\
             return subBff.length && -1;
         };
 
-        local.utility2.bufferToBase64 = function (bff) {
+        local.bufferToBase64 = function (bff) {
         /*
          * https://developer.mozilla.org/en-US/Add-ons/Code_snippets/StringView#The_code
          * this function will convert the Uint8Array bff to a base64-encoded text
@@ -1514,7 +1559,7 @@ local.utility2.templateTestReportHtml = '\
             return text.replace(/A(?=A$|$)/g, '=');
         };
 
-        local.utility2.bufferToNodeBuffer = function (bff) {
+        local.bufferToNodeBuffer = function (bff) {
         /*
          * this function will convert the Uint8Array instance to a node Buffer instance
          */
@@ -1525,7 +1570,7 @@ local.utility2.templateTestReportHtml = '\
             return bff;
         };
 
-        local.utility2.bufferToString = function (bff, encoding) {
+        local.bufferToString = function (bff, encoding) {
         /*
          * this function will convert the Uint8Array bff to a string,
          * with either 'utf8' (default) or 'base64' encoding
@@ -1533,16 +1578,164 @@ local.utility2.templateTestReportHtml = '\
             if (typeof bff === 'string') {
                 return bff;
             }
-            bff = local.utility2.bufferCreateIfNotBuffer(bff);
+            bff = local.bufferCreateIfNotBuffer(bff);
             if (encoding === 'base64') {
-                return local.utility2.bufferToBase64(bff);
+                return local.bufferToBase64(bff);
             }
-            return local.modeJs === 'browser'
-                ? new local.global.TextDecoder('utf-8').decode(bff)
-                : new Buffer(bff).toString();
+            if (local.modeJs === 'node') {
+                return new Buffer(bff).toString();
+            }
+            if (local.global.TextDecoder) {
+                return new local.global.TextDecoder('utf-8').decode(bff);
+            }
+// bug-workaround - TextDecoder.decode polyfill
+/* jslint-ignore-begin */
+// http://stackoverflow.com/questions/17191945/conversion-between-utf-8-arraybuffer-and-string
+function Utf8ArrayToStr(e){var t,n,r,i,s,o;t="",r=e.length,n=0;while(n<r){i=e[n++
+];switch(i>>4){case 0:case 1:case 2:case 3:case 4:case 5:case 6:case 7:t+=String
+.fromCharCode(i);break;case 12:case 13:s=e[n++],t+=String.fromCharCode((i&31)<<6|
+s&63);break;case 14:s=e[n++],o=e[n++],t+=String.fromCharCode((i&15)<<12|(s&63)<<6|
+(o&63)<<0)}}return t}
+return Utf8ArrayToStr(bff);
+/* jslint-ignore-end */
         };
 
-        local.utility2.cookieDict = function () {
+        local.buildApp = function (optionsList, onError) {
+        /*
+         * this function will build the app
+         */
+            var onParallel;
+            /* istanbul ignore next */
+            if (local.env.npm_config_mode_coverage === 'all') {
+                onError();
+                return;
+            }
+            onParallel = local.onParallel(onError);
+            onParallel.counter += 1;
+            optionsList = optionsList.concat({
+                file: '/assets.' + local.env.npm_package_nameAlias + '.css',
+                url: '/assets.' + local.env.npm_package_nameAlias + '.css'
+            }, {
+                file: '/assets.' + local.env.npm_package_nameAlias + '.js',
+                url: '/assets.' + local.env.npm_package_nameAlias + '.js'
+            }, {
+                file: '/assets.app.js',
+                url: '/assets.app.js'
+            }, {
+                file: '/assets.example.js',
+                url: '/assets.example.js'
+            }, {
+                file: '/assets.test.js',
+                url: '/assets.test.js'
+            }, {
+                file: '/assets.utility2.rollup.js',
+                url: '/assets.utility2.rollup.js'
+            }, {
+                file: '/index.html',
+                url: '/index.html'
+            }, {
+                file: '/jsonp.utility2.stateInit',
+                url: '/jsonp.utility2.stateInit?callback=window.utility2.stateInit'
+            });
+            optionsList.forEach(function (options) {
+                // get uglified file
+                switch (local.path.extname(options.file)) {
+                case '.css':
+                case '.js':
+                    optionsList.push({
+                        file: options.file.replace((/(\.\w+$)/), '.min$1'),
+                        url: options.url.replace((/(\.\w+$)/), '.min$1')
+                    });
+                    break;
+                }
+            });
+            optionsList.forEach(function (options) {
+                onParallel.counter += 1;
+                local.ajax(options, function (error, xhr) {
+                    if (error && (/\.min\.(?:css|js)$/).test(options.file)) {
+                        onParallel();
+                        return;
+                    }
+                    // validate no error occurred
+                    local.assert(!error, error);
+                    switch (local.path.extname(options.file)) {
+                    case '.css':
+                    case '.js':
+                    case '.json':
+                        local.jslintAndPrintConditional(xhr.responseText, options.file);
+                        // validate no error occurred
+                        local.assert(!local.jslint.errorText, local.jslint.errorText);
+                        break;
+                    }
+                    local.fsWriteFileWithMkdirpSync(
+                        local.env.npm_config_dir_build + '/app' + options.file,
+                        new Buffer(xhr.response)
+                    );
+                    onParallel();
+                });
+            });
+            // test assets.app.js
+            onParallel.counter += 1;
+            local.fs.writeFileSync(
+                local.env.npm_config_dir_tmp + '/assets.app.js',
+                local.assetsDict['/assets.app.js']
+            );
+            local.processSpawnWithTimeout(
+                process.argv[0],
+                ['assets.app.js'],
+                {
+                    cwd: local.env.npm_config_dir_tmp,
+                    env: {
+                        PORT: (Math.random() * 0x10000) | 0x8000,
+                        npm_config_timeout_exit: 5000
+                    },
+                    stdio: ['ignore', 1, 2]
+                }
+            )
+                .once('error', onParallel)
+                .once('exit', function (exitCode) {
+                    // validate exitCode
+                    local.assert(!exitCode, exitCode);
+                    onParallel();
+                });
+            onParallel();
+        };
+
+        local.buildDoc = function (options, onError) {
+        /*
+         * this function will build the doc
+         */
+            local.objectSetDefault(options, local.objectLiteralize({
+                exampleFileList: ['README.md', 'test.js', local.env.npm_package_main + '.js'],
+                moduleDict: {
+                    '$[]': [local.env.npm_package_nameAlias, {
+                        exampleFileList: [],
+                        exports: global.utility2_moduleExports
+                    }]
+                }
+            }), 2);
+            Object.keys(options.moduleDict).forEach(function (key) {
+                options.moduleDict[key].example =
+                    options.moduleDict[key].exampleFileList
+                    .concat(options.exampleFileList)
+                    .map(function (file) {
+                        return '\n\n\n\n\n\n\n\n' +
+                            local.fs.readFileSync(process.cwd() + '/' + file, 'utf8') +
+                            '\n\n\n\n\n\n\n\n';
+                    }).join('');
+            });
+            // create doc.api.html
+            local.fsWriteFileWithMkdirpSync(
+                local.env.npm_config_dir_build + '/doc.api.html',
+                local.docApiCreate(options)
+            );
+            local.browserTest({
+                modeBrowserTest: 'screenCapture',
+                url: 'file://' + local.env.npm_config_dir_build + '/doc.api.html'
+            }, onError);
+        };
+
+        local.cookieDict = function () {
         /*
          * this function will return a dict of all cookies
          */
@@ -1550,31 +1743,31 @@ local.utility2.templateTestReportHtml = '\
             result = {};
             document.cookie.replace((/(\w+)=([^;]*)/g), function (match0, match1, match2) {
                 // jslint-hack
-                local.utility2.nop(match0);
+                local.nop(match0);
                 result[match1] = match2;
             });
             return result;
         };
 
-        local.utility2.cookieRemove = function (name) {
+        local.cookieRemove = function (name) {
         /*
          * this function will remove the cookie with the given name
          */
             document.cookie = name + '=; expires=Thu, 01 Jan 1970 00:00:00 GMT';
         };
 
-        local.utility2.cookieRemoveAll = function () {
+        local.cookieRemoveAll = function () {
         /*
          * this function will remove all cookies
          */
             document.cookie.replace((/(\w+)=/g), function (match0, match1) {
                 // jslint-hack
-                local.utility2.nop(match0);
+                local.nop(match0);
                 document.cookie = match1 + '=; expires=Thu, 01 Jan 1970 00:00:00 GMT';
             });
         };
 
-        local.utility2.cookieSet = function (name, value, expiresOffset) {
+        local.cookieSet = function (name, value, expiresOffset) {
         /*
          * this function will set the cookie with the given name, value,
          * and expiresOffset (in ms)
@@ -1586,7 +1779,7 @@ local.utility2.templateTestReportHtml = '\
             return tmp;
         };
 
-        local.utility2.docApiCreate = function (options) {
+        local.docApiCreate = function (options) {
         /*
          * this function will return an html api-doc from the given options
          */
@@ -1613,7 +1806,7 @@ local.utility2.templateTestReportHtml = '\
                 if (element.source.length > 4096) {
                     element.source = element.source.slice(0, 4096).trimRight() + ' ...';
                 }
-                element.source = local.utility2.stringHtmlSafe(element.source)
+                element.source = local.stringHtmlSafe(element.source)
                     .replace((/\([\S\s]*?\)/), function (match0) {
                         // init signature
                         element.signature = match0
@@ -1637,15 +1830,13 @@ local.utility2.templateTestReportHtml = '\
                             prefix + ')(' + elementName + ')(\\((?:.*?\n){8})'),
                         function (match0, match1, match2, match3) {
                             // jslint-hack
-                            local.utility2.nop(match0);
+                            local.nop(match0);
                             if ((/\b(?:JSON\.|function )$/).test(match1)) {
                                 return;
                             }
-                            element.example = '...' + trimLeft(
-                                local.utility2.stringHtmlSafe(match1) +
-                                    '<span class="docApiCodeKeywordSpan">' + match2 +
-                                    '</span>' + local.utility2.stringHtmlSafe(match3)
-                            ).trimRight() + '\n...';
+                            element.example = '...' + trimLeft(local.stringHtmlSafe(match1) +
+                                '<span class="docApiCodeKeywordSpan">' + match2 + '</span>' +
+                                local.stringHtmlSafe(match3)).trimRight() + '\n...';
                         }
                     );
                     return element.example;
@@ -1673,7 +1864,7 @@ local.utility2.templateTestReportHtml = '\
             options.moduleList = Object.keys(options.moduleDict)
                 .sort()
                 .map(function (key) {
-                    module = local.utility2.objectSetDefault(options.moduleDict[key], {
+                    module = local.objectSetDefault(options.moduleDict[key], {
                         example: '',
                         name: key
                     });
@@ -1691,7 +1882,9 @@ local.utility2.templateTestReportHtml = '\
                             .filter(function (key) {
                                 return key && key[0] !== '_' &&
                                     !(/\W/).test(key) &&
-                                    key.indexOf('testCase_') !== 0;
+                                    key.indexOf('testCase_') !== 0 &&
+                                    (module.exports === local || module.exports[key] !==
+                                        local.global.utility2_apiDict[key]);
                             })
                             .map(function (key) {
                                 elementName = key;
@@ -1706,27 +1899,24 @@ local.utility2.templateTestReportHtml = '\
                         name: module.name
                     };
                 });
-            options.envDict = local.utility2.envDict;
-            return local.utility2.templateRender(
-                local.utility2.templateDocApiHtml,
-                options
-            );
+            options.env = local.env;
+            return local.templateRender(local.templateDocApiHtml, options);
         };
 
-        local.utility2.domFragmentRender = function (template, dict) {
+        local.domFragmentRender = function (template, dict) {
         /*
          * this function will return a dom-fragment rendered from the givent template and dict
          */
             var tmp;
             tmp = document.createElement('template');
-            tmp.innerHTML = local.utility2.templateRender(template, dict);
+            tmp.innerHTML = local.templateRender(template, dict);
             return tmp.content;
         };
 
-        local.utility2.domQuerySelectorAll = function (element, selectors) {
+        local.domQuerySelectorAll = function (element, selectors) {
         /*
          * this function will return the list of query-selected dom-elements,
-         * as a javascript array
+         * as a javascript-array
          */
             return Array.from((element.length === 1
                 // handle jQuery element
@@ -1734,14 +1924,14 @@ local.utility2.templateTestReportHtml = '\
                 : element).querySelectorAll(selectors));
         };
 
-        local.utility2.echo = function (arg) {
+        local.echo = function (arg) {
         /*
          * this function will return the arg
          */
             return arg;
         };
 
-        local.utility2.errorMessagePrepend = function (error, message) {
+        local.errorMessagePrepend = function (error, message) {
         /*
          * this function will prepend the message to error.message and error.stack
          */
@@ -1750,7 +1940,7 @@ local.utility2.templateTestReportHtml = '\
             return error;
         };
 
-        local.utility2.exit = function (exitCode) {
+        local.exit = function (exitCode) {
         /*
          * this function will exit the current process with the given exitCode
          */
@@ -1768,21 +1958,10 @@ local.utility2.templateTestReportHtml = '\
                 break;
             }
             // reset modeTest
-            local.utility2.modeTest = null;
+            local.modeTest = null;
         };
 
-        local.utility2.fsMkdirpSync = function (dir) {
-        /*
-         * this function will synchronously 'mkdir -p' the dir
-         */
-            local.child_process.spawnSync(
-                'mkdir',
-                ['-p', local.path.resolve(process.cwd(), dir)],
-                { stdio: ['ignore', 1, 2] }
-            );
-        };
-
-        local.utility2.fsRmrSync = function (dir) {
+        local.fsRmrSync = function (dir) {
         /*
          * this function will synchronously 'rm -fr' the dir
          */
@@ -1793,32 +1972,26 @@ local.utility2.templateTestReportHtml = '\
             );
         };
 
-        local.utility2.fsWriteFileWithMkdirp = function (file, data, onError) {
+        local.fsWriteFileWithMkdirpSync = function (file, data) {
         /*
-         * this function will save the data to file, and auto-mkdirp the parent dir
+         * this function will synchronously 'mkdir -p' and write the data to file
          */
-            data = local.utility2.bufferToNodeBuffer(data);
-            file = local.path.resolve(process.cwd(), file);
-            // save data to file
-            local.fs.writeFile(file, data, function (error) {
-                if (error && error.code === 'ENOENT') {
-                    // if save failed, then mkdirp file's parent dir
-                    local.utility2.processSpawnWithTimeout(
-                        'mkdir',
-                        ['-p', local.path.dirname(file)],
-                        { stdio: ['ignore', 1, 2] }
-                    )
-                        .on('exit', function () {
-                            // save data to file
-                            local.fs.writeFile(file, data, onError);
-                        });
-                    return;
-                }
-                onError(error);
-            });
+            // try to write to file
+            try {
+                require('fs').writeFileSync(file, data);
+            } catch (errorCaught) {
+                // mkdir -p
+                require('child_process').spawnSync(
+                    'mkdir',
+                    ['-p', require('path').dirname(file)],
+                    { stdio: ['ignore', 1, 2] }
+                );
+                // re-write to file
+                require('fs').writeFileSync(file, data);
+            }
         };
 
-        local.utility2.isNullOrUndefined = function (arg) {
+        local.isNullOrUndefined = function (arg) {
         /*
          * this function will test if the arg is null or undefined
          */
@@ -1826,59 +1999,52 @@ local.utility2.templateTestReportHtml = '\
         };
 
         // init istanbulCoverageMerge
-        local.utility2.istanbulCoverageMerge =
-            local.utility2.istanbul.coverageMerge || local.utility2.echo;
+        local.istanbulCoverageMerge = local.istanbul.coverageMerge || local.echo;
 
         // init istanbulCoverageMerge
-        local.utility2.istanbulCoverageMerge =
-            local.utility2.istanbul.coverageMerge || local.utility2.echo;
+        local.istanbulCoverageMerge = local.istanbul.coverageMerge || local.echo;
 
         // init istanbulCoverageReportCreate
-        local.utility2.istanbulCoverageReportCreate =
-            local.utility2.istanbul.coverageReportCreate || local.utility2.echo;
+        local.istanbulCoverageReportCreate = local.istanbul.coverageReportCreate || local.echo;
 
         // init istanbulInstrumentInPackage
-        local.utility2.istanbulInstrumentInPackage =
-            local.utility2.istanbul.instrumentInPackage || local.utility2.echo;
+        local.istanbulInstrumentInPackage = local.istanbul.instrumentInPackage || local.echo;
 
         // init istanbulInstrumentSync
-        local.utility2.istanbulInstrumentSync =
-            local.utility2.istanbul.instrumentSync || local.utility2.echo;
+        local.istanbulInstrumentSync = local.istanbul.instrumentSync || local.echo;
 
         // init jslintAndPrint
-        local.utility2.jslintAndPrint =
-            local.utility2.jslint.jslintAndPrint || local.utility2.echo;
+        local.jslintAndPrint = local.jslint.jslintAndPrint || local.echo;
 
-        local.utility2.jslintAndPrintConditional = function (script, file) {
+        local.jslintAndPrintConditional = function (script, file, mode) {
         /*
          * this function will jslint / csslint the script and print any errors to stderr,
          * conditionally
          */
             var extname;
             // cleanup errors
-            local.utility2.jslint.errorCounter = 0;
-            local.utility2.jslint.errorText = '';
+            local.jslint.errorCounter = 0;
+            local.jslint.errorText = '';
             extname = (/\.\w+$/).exec(file);
             extname = extname && extname[0];
             switch (extname) {
             case '.css':
-                if (script.indexOf('/*csslint') < 0) {
+                if (script.indexOf('/*csslint') < 0 && mode !== 'force') {
                     return script;
                 }
                 break;
-            /* istanbul ignore next */
             case '.js':
-                if (local.utility2.envDict.NODE_ENV === 'production' ||
-                        local.global.__coverage__ ||
-                        script.indexOf('/*jslint') < 0) {
+                if ((script.indexOf('/*jslint') < 0 ||
+                        local.env.NODE_ENV === 'production' ||
+                        local.global.__coverage__) && mode !== 'force') {
                     return script;
                 }
                 break;
             }
-            return local.utility2.jslintAndPrint(script, file);
+            return local.jslintAndPrint(script, file);
         };
 
-        local.utility2.jslintAndPrintHtml = function (script, file) {
+        local.jslintAndPrintHtml = function (script, file) {
         /*
          * this function will jalint and csslint the html script
          */
@@ -1887,10 +2053,10 @@ local.utility2.templateTestReportHtml = '\
                 (/<style>([\S\s]+?)<\/style>/g),
                 function (match0, match1, ii, text) {
                     // jslint-hack
-                    local.utility2.nop(match0);
+                    local.nop(match0);
                     // preserve lineno
                     match1 = text.slice(0, ii).replace((/.+/g), '') + match1;
-                    local.utility2.jslintAndPrintConditional(match1, file + '.css');
+                    local.jslintAndPrintConditional(match1, file + '.css');
                 }
             );
             // jslint <script> tag
@@ -1898,16 +2064,16 @@ local.utility2.templateTestReportHtml = '\
                 (/<script>([\S\s]+?)<\/script>/g),
                 function (match0, match1, ii, text) {
                     // jslint-hack
-                    local.utility2.nop(match0);
+                    local.nop(match0);
                     // preserve lineno
                     match1 = text.slice(0, ii).replace((/.+/g), '') + match1;
-                    local.utility2.jslintAndPrintConditional(match1, file + '.js');
+                    local.jslintAndPrintConditional(match1, file + '.js');
                 }
             );
             return script;
         };
 
-        local.utility2.jsonCopy = function (arg) {
+        local.jsonCopy = function (arg) {
         /*
          * this function will return a deep-copy of the JSON-arg
          */
@@ -1916,7 +2082,7 @@ local.utility2.templateTestReportHtml = '\
                 : JSON.parse(JSON.stringify(arg));
         };
 
-        local.utility2.jsonStringifyOrdered = function (element, replacer, space) {
+        local.jsonStringifyOrdered = function (element, replacer, space) {
         /*
          * this function will JSON.stringify the element,
          * with object-keys sorted and circular-references removed
@@ -1950,9 +2116,9 @@ local.utility2.templateTestReportHtml = '\
                         .sort()
                         .map(function (key) {
                             tmp = stringify(element[key]);
-                            return typeof tmp === 'string'
-                                ? JSON.stringify(key) + ':' + tmp
-                                : undefined;
+                            if (typeof tmp === 'string') {
+                                return JSON.stringify(key) + ':' + tmp;
+                            }
                         })
                         .filter(function (element) {
                             return typeof element === 'string';
@@ -1968,52 +2134,47 @@ local.utility2.templateTestReportHtml = '\
                 : element, replacer, space);
         };
 
-        local.utility2.jwtHs256Decode = function (password, token) {
+        local.jwtHs256Decode = function (password, token) {
         /*
          * https://jwt.io/
          * this function will decode the json-web-token with the given password
          */
             var data;
             // try to decode the token
-            local.utility2.tryCatchOnError(function () {
+            local.tryCatchOnError(function () {
                 token = token.split('.');
                 // validate header
-                local.utility2.assert(
-                    token[0] === 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9',
-                    token
-                );
+                local.assert(token[0] === 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9', token);
                 // validate signature
-                token[3] = JSON.parse(local.utility2.stringFromBase64(token[1]));
-                local.utility2.assert(local.utility2.sjclHashHmacSha256Create(
-                    password,
-                    token[0] + '.' + token[1]
-                ).replace((/\=/g), '') === token[2]);
+                token[3] = JSON.parse(local.stringFromBase64(token[1]));
+                local.assert(local.sjclHashHmacSha256Create(password, token[0] + '.' + token[1])
+                    .replace((/\=/g), '') === token[2]);
                 data = token[3];
-            }, local.utility2.nop);
+            }, local.nop);
             // return decoded data
             return data;
         };
 
-        local.utility2.jwtHs256Encode = function (password, data) {
+        local.jwtHs256Encode = function (password, data) {
         /*
          * https://jwt.io/
          * this function will encode the data into a json-web-token with the given password
          */
             var token;
             token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.' +
-                local.utility2.stringToBase64(JSON.stringify(data)).replace((/\=/g), '');
-            return (token + '.' + local.utility2.sjclHashHmacSha256Create(password, token))
+                local.stringToBase64(JSON.stringify(data)).replace((/\=/g), '');
+            return (token + '.' + local.sjclHashHmacSha256Create(password, token))
                 .replace((/\=/g), '');
         };
 
-        local.utility2.listGetElementRandom = function (list) {
+        local.listGetElementRandom = function (list) {
         /*
          * this function will return a random element from the list
          */
             return list[Math.floor(list.length * Math.random())];
         };
 
-        local.utility2.listShuffle = function (list) {
+        local.listShuffle = function (list) {
         /*
          * https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle
          * this function will inplace shuffle the list, via fisher-yates algorithm
@@ -2029,15 +2190,14 @@ local.utility2.templateTestReportHtml = '\
             return list;
         };
 
-        local.utility2.middlewareAssetsCached = function (request, response, nextMiddleware) {
+        local.middlewareAssetsCached = function (request, response, nextMiddleware) {
         /*
          * this function will run the middleware that will serve cached-assets
          */
             var options;
             options = {};
-            local.utility2.onNext(options, function (error, data) {
-                options.result = options.result ||
-                    local.utility2.assetsDict[request.urlParsed.pathname];
+            local.onNext(options, function (error, data) {
+                options.result = options.result || local.assetsDict[request.urlParsed.pathname];
                 if (options.result === undefined) {
                     nextMiddleware(error);
                     return;
@@ -2052,7 +2212,7 @@ local.utility2.templateTestReportHtml = '\
                         return;
                     }
                     // gzip and cache result
-                    local.utility2.taskCreateCached({
+                    local.taskCreateCached({
                         cacheDict: 'middlewareAssetsCachedGzip',
                         key: request.urlParsed.pathname
                     }, function (onError) {
@@ -2063,17 +2223,13 @@ local.utility2.templateTestReportHtml = '\
                     break;
                 case 2:
                     // set gzip header
-                    options.result = local.utility2.bufferCreate(data, 'base64');
+                    options.result = local.bufferCreate(data, 'base64');
                     response.setHeader('Content-Encoding', 'gzip');
                     response.setHeader('Content-Length', options.result.length);
                     options.onNext();
                     break;
                 case 3:
-                    local.utility2.middlewareCacheControlLastModified(
-                        request,
-                        response,
-                        options.onNext
-                    );
+                    local.middlewareCacheControlLastModified(request, response, options.onNext);
                     break;
                 case 4:
                     response.end(options.result);
@@ -2084,25 +2240,25 @@ local.utility2.templateTestReportHtml = '\
             options.onNext();
         };
 
-        local.utility2.middlewareBodyRead = function (request, response, nextMiddleware) {
+        local.middlewareBodyRead = function (request, response, nextMiddleware) {
         /*
          * this function will run the middleware that will
          * read and save the request-body to request.bodyRaw
          */
             // jslint-hack
-            local.utility2.nop(response);
+            local.nop(response);
             // if request is already read, then goto nextMiddleware
             if (!request.readable) {
                 nextMiddleware();
                 return;
             }
-            local.utility2.streamReadAll(request, function (error, data) {
+            local.streamReadAll(request, function (error, data) {
                 request.bodyRaw = request.bodyRaw || data;
                 nextMiddleware(error);
             });
         };
 
-        local.utility2.middlewareCacheControlLastModified = function (
+        local.middlewareCacheControlLastModified = function (
             request,
             response,
             nextMiddleware
@@ -2113,13 +2269,13 @@ local.utility2.templateTestReportHtml = '\
             // do not cache if headers already sent or url has '?' search indicator
             if (!(response.headersSent || request.url.indexOf('?') >= 0)) {
                 // init serverResponseHeaderLastModified
-                local.utility2.serverResponseHeaderLastModified =
-                    local.utility2.serverResponseHeaderLastModified ||
+                local.serverResponseHeaderLastModified =
+                    local.serverResponseHeaderLastModified ||
                     // resolve to 1000 ms
                     new Date(new Date(Math.floor(Date.now() / 1000) * 1000).toGMTString());
                 // respond with 304 If-Modified-Since serverResponseHeaderLastModified
                 if (new Date(request.headers['if-modified-since']) >=
-                        local.utility2.serverResponseHeaderLastModified) {
+                        local.serverResponseHeaderLastModified) {
                     response.statusCode = 304;
                     response.end();
                     return;
@@ -2127,26 +2283,26 @@ local.utility2.templateTestReportHtml = '\
                 response.setHeader('Cache-Control', 'no-cache');
                 response.setHeader(
                     'Last-Modified',
-                    local.utility2.serverResponseHeaderLastModified.toGMTString()
+                    local.serverResponseHeaderLastModified.toGMTString()
                 );
             }
             nextMiddleware();
         };
 
-        local.utility2.middlewareError = function (error, request, response) {
+        local.middlewareError = function (error, request, response) {
         /*
          * this function will run the middleware that will handle errors
          */
             // if error occurred, then respond with '500 Internal Server Error',
             // else respond with '404 Not Found'
-            local.utility2.serverRespondDefault(request, response, error
+            local.serverRespondDefault(request, response, error
                 ? (error.statusCode >= 400 && error.statusCode < 600
                     ? error.statusCode
                     : 500)
                 : 404, error);
         };
 
-        local.utility2.middlewareFileServer = function (request, response, nextMiddleware) {
+        local.middlewareFileServer = function (request, response, nextMiddleware) {
         /*
          * this function will run the middleware that will serve files
          */
@@ -2160,13 +2316,13 @@ local.utility2.templateTestReportHtml = '\
                 // replace trailing '/' with '/index.html'
                 .replace((/\/$/), '/index.html');
             // serve file from cache
-            local.utility2.taskCreateCached({
+            local.taskCreateCached({
                 cacheDict: 'middlewareFileServer',
                 key: request.urlFile
             // run background-task to re-cache file
             }, function (onError) {
                 local.fs.readFile(request.urlFile, function (error, data) {
-                    onError(error, data && local.utility2.bufferToString(data, 'base64'));
+                    onError(error, data && local.bufferToString(data, 'base64'));
                 });
             }, function (error, data) {
                 // default to nextMiddleware
@@ -2176,18 +2332,18 @@ local.utility2.templateTestReportHtml = '\
                 }
                 // init response-header content-type
                 request.urlParsed.contentType = (/\.[^\.]*$/).exec(request.urlParsed.pathname);
-                request.urlParsed.contentType = local.utility2.contentTypeDict[
+                request.urlParsed.contentType = local.contentTypeDict[
                     request.urlParsed.contentType && request.urlParsed.contentType[0]
                 ];
-                local.utility2.serverRespondHeadSet(request, response, null, {
+                local.serverRespondHeadSet(request, response, null, {
                     'Content-Type': request.urlParsed.contentType
                 });
                 // serve file from cache
-                response.end(local.utility2.bufferCreate(data, 'base64'));
+                response.end(local.bufferCreate(data, 'base64'));
             });
         };
 
-        local.utility2.middlewareGroupCreate = function (middlewareList) {
+        local.middlewareGroupCreate = function (middlewareList) {
         /*
          * this function will create a middleware that will
          * sequentially run the sub-middlewares in middlewareList
@@ -2196,7 +2352,7 @@ local.utility2.templateTestReportHtml = '\
             self = function (request, response, nextMiddleware) {
                 var options;
                 options = {};
-                local.utility2.onNext(options, function (error) {
+                local.onNext(options, function (error) {
                     // recurse with next middleware in middlewareList
                     if (options.modeNext < self.middlewareList.length) {
                         // run the sub-middleware
@@ -2217,33 +2373,29 @@ local.utility2.templateTestReportHtml = '\
             return self;
         };
 
-        local.utility2.middlewareInit = function (request, response, nextMiddleware) {
+        local.middlewareInit = function (request, response, nextMiddleware) {
         /*
          * this function will run the middleware that will init the request and response
          */
             // debug server-request
-            local.utility2._debugServerRequest = request;
+            local._debugServerRequest = request;
             // debug server-response
-            local.utility2._debugServerResponse = response;
+            local._debugServerResponse = response;
             // init timerTimeout
-            local.utility2.serverRespondTimeoutDefault(
-                request,
-                response,
-                local.utility2.timeoutDefault
-            );
+            local.serverRespondTimeoutDefault(request, response, local.timeoutDefault);
             // init request.urlParsed
-            request.urlParsed = local.utility2.urlParse(request.url);
+            request.urlParsed = local.urlParse(request.url);
             // init response-header content-type
             request.urlParsed.contentType = (/\.[^\.]*$/).exec(request.urlParsed.pathname);
-            request.urlParsed.contentType = local.utility2.contentTypeDict[
+            request.urlParsed.contentType = local.contentTypeDict[
                 request.urlParsed.contentType && request.urlParsed.contentType[0]
             ];
-            local.utility2.serverRespondHeadSet(request, response, null, {
+            local.serverRespondHeadSet(request, response, null, {
                 'Content-Type': request.urlParsed.contentType
             });
             // set main-page content-type to text/html
             if (request.urlParsed.pathname === '/') {
-                local.utility2.serverRespondHeadSet(request, response, null, {
+                local.serverRespondHeadSet(request, response, null, {
                     'Content-Type': 'text/html; charset=UTF-8'
                 });
             }
@@ -2253,7 +2405,7 @@ local.utility2.templateTestReportHtml = '\
                 response[key] = function () {
                     var args;
                     args = Array.from(arguments);
-                    args[0] = local.utility2.bufferToNodeBuffer(args[0]);
+                    args[0] = local.bufferToNodeBuffer(args[0]);
                     response['_' + key].apply(response, args);
                 };
             });
@@ -2261,21 +2413,23 @@ local.utility2.templateTestReportHtml = '\
             nextMiddleware();
         };
 
-        local.utility2.middlewareJsonpStateInit = function (request, response, nextMiddleware) {
+        local.middlewareJsonpStateInit = function (request, response, nextMiddleware) {
         /*
          * this function will run the middleware that will
-         * serve the browser-state wrapped in the given request.jsonp-callback
+         * serve the browser-state wrapped in the given jsonp-callback
          */
             var state;
             if (request.stateInit || (request.urlParsed &&
                     request.urlParsed.pathname === '/jsonp.utility2.stateInit')) {
-                state = { utility2: { envDict: {
-                    NODE_ENV: local.utility2.envDict.NODE_ENV,
-                    npm_config_mode_backend: local.utility2.envDict.npm_config_mode_backend,
-                    npm_package_description: local.utility2.envDict.npm_package_description,
-                    npm_package_homepage: local.utility2.envDict.npm_package_homepage,
-                    npm_package_name: local.utility2.envDict.npm_package_name,
-                    npm_package_version: local.utility2.envDict.npm_package_version
+                state = { utility2: { env: {
+                    NODE_ENV: local.env.NODE_ENV,
+                    npm_config_mode_backend: local.env.npm_config_mode_backend,
+                    npm_config_mode_rollup: local.env.npm_config_mode_rollup,
+                    npm_package_description: local.env.npm_package_description,
+                    npm_package_homepage: local.env.npm_package_homepage,
+                    npm_package_name: local.env.npm_package_name,
+                    npm_package_nameAlias: local.env.npm_package_nameAlias,
+                    npm_package_version: local.env.npm_package_version
                 } } };
                 if (request.stateInit) {
                     return state;
@@ -2287,7 +2441,7 @@ local.utility2.templateTestReportHtml = '\
             nextMiddleware();
         };
 
-        local.utility2.normalizeDict = function (dict) {
+        local.normalizeDict = function (dict) {
         /*
          * this function will normalize the dict
          */
@@ -2296,7 +2450,7 @@ local.utility2.templateTestReportHtml = '\
                 : {};
         };
 
-        local.utility2.normalizeList = function (list) {
+        local.normalizeList = function (list) {
         /*
          * this function will normalize the list
          */
@@ -2305,7 +2459,7 @@ local.utility2.templateTestReportHtml = '\
                 : [];
         };
 
-        local.utility2.normalizeText = function (text) {
+        local.normalizeText = function (text) {
         /*
          * this function will normalize the text
          */
@@ -2314,7 +2468,7 @@ local.utility2.templateTestReportHtml = '\
                 : '';
         };
 
-        local.utility2.objectGetElementFirst = function (arg) {
+        local.objectGetElementFirst = function (arg) {
         /*
          * this function will get the first element of the arg
          */
@@ -2325,7 +2479,7 @@ local.utility2.templateTestReportHtml = '\
             return item;
         };
 
-        local.utility2.objectKeysTypeof = function (arg) {
+        local.objectKeysTypeof = function (arg) {
         /*
          * this function will return a list of the arg's keys, sorted by item-type
          */
@@ -2334,12 +2488,12 @@ local.utility2.templateTestReportHtml = '\
             }).sort().join('\n');
         };
 
-        local.utility2.objectLiteralize = function (arg) {
+        local.objectLiteralize = function (arg) {
         /*
          * this function will traverse arg, and replace every encounter of the magical key '$[]'
          * with its object literal [key, value]
          */
-            local.utility2.objectTraverse(arg, function (element) {
+            local.objectTraverse(arg, function (element) {
                 if (element && typeof element === 'object' && !Array.isArray(element)) {
                     Object.keys(element).forEach(function (key) {
                         if (key.indexOf('$[]') === 0) {
@@ -2352,7 +2506,7 @@ local.utility2.templateTestReportHtml = '\
             return arg;
         };
 
-        local.utility2.objectSetDefault = function (arg, defaults, depth) {
+        local.objectSetDefault = function (arg, defaults, depth) {
         /*
          * this function will recursively set defaults for undefined-items in the arg
          */
@@ -2382,13 +2536,13 @@ local.utility2.templateTestReportHtml = '\
                         typeof defaults2 === 'object' &&
                         !Array.isArray(defaults2)) {
                     // recurse
-                    local.utility2.objectSetDefault(arg2, defaults2, depth - 1);
+                    local.objectSetDefault(arg2, defaults2, depth - 1);
                 }
             });
             return arg;
         };
 
-        local.utility2.objectSetOverride = function (arg, overrides, depth) {
+        local.objectSetOverride = function (arg, overrides, depth) {
         /*
          * this function will recursively set overrides for items the arg
          */
@@ -2412,19 +2566,19 @@ local.utility2.templateTestReportHtml = '\
                         (overrides2 &&
                         typeof overrides2 === 'object' &&
                         !Array.isArray(overrides2))) {
-                    local.utility2.objectSetOverride(arg2, overrides2, depth - 1);
+                    local.objectSetOverride(arg2, overrides2, depth - 1);
                     return;
                 }
                 // else set arg[key] with overrides[key]
-                arg[key] = arg === local.utility2.envDict
-                    // if arg is envDict, then overrides falsey value with empty string
+                arg[key] = arg === local.env
+                    // if arg is env, then overrides falsey value with empty string
                     ? overrides2 || ''
                     : overrides2;
             });
             return arg;
         };
 
-        local.utility2.objectTraverse = function (arg, onSelf, circularList) {
+        local.objectTraverse = function (arg, onSelf, circularList) {
         /*
          * this function will recursively traverse the arg,
          * and run onSelf with the arg's properties
@@ -2437,24 +2591,22 @@ local.utility2.templateTestReportHtml = '\
                 circularList.push(arg);
                 Object.keys(arg).forEach(function (key) {
                     // recurse with arg[key]
-                    local.utility2.objectTraverse(arg[key], onSelf, circularList);
+                    local.objectTraverse(arg[key], onSelf, circularList);
                 });
             }
             return arg;
         };
 
-        local.utility2.onErrorDefault = function (error) {
+        local.onErrorDefault = function (error) {
         /*
-         * this function will print error.stack or error.message to stderr
+         * this function will if error exists, then print error.stack to stderr
          */
-            // if error is defined, then print error.stack
             if (error && !local.global.__coverage__) {
-                console.error('\nonErrorDefault - error\n' +
-                    error.message + '\n' + error.stack + '\n');
+                console.error(error.stack);
             }
         };
 
-        local.utility2.onErrorWithStack = function (onError) {
+        local.onErrorWithStack = function (onError) {
         /*
          * this function will return a new callback that will call onError,
          * and append the current stack to any error
@@ -2463,7 +2615,7 @@ local.utility2.templateTestReportHtml = '\
             stack = new Error().stack.replace((/(.*?)\n.*?$/m), '$1');
             return function (error, data, meta) {
                 if (error &&
-                        error !== local.utility2.errorDefault &&
+                        error !== local.errorDefault &&
                         String(error.stack).indexOf(stack.split('\n')[2]) < 0) {
                     // append the current stack to error.stack
                     error.stack += '\n' + stack;
@@ -2472,11 +2624,11 @@ local.utility2.templateTestReportHtml = '\
             };
         };
 
-        local.utility2.onFileModifiedRestart = function (file) {
+        local.onFileModifiedRestart = function (file) {
         /*
          * this function will watch the file, and if modified, then restart the process
          */
-            if (local.utility2.envDict.npm_config_mode_auto_restart &&
+            if (local.env.npm_config_mode_auto_restart &&
                     local.fs.existsSync(file) &&
                     local.fs.statSync(file).isFile()) {
                 local.fs.watchFile(file, {
@@ -2485,18 +2637,18 @@ local.utility2.templateTestReportHtml = '\
                 }, function (stat2, stat1) {
                     if (stat2.mtime > stat1.mtime) {
                         console.log('file modified - ' + file);
-                        local.utility2.exit(77);
+                        local.exit(77);
                     }
                 });
             }
         };
 
-        local.utility2.onNext = function (options, onError) {
+        local.onNext = function (options, onError) {
         /*
          * this function will wrap onError inside the recursive function options.onNext,
          * and append the current stack to any error
          */
-            options.onNext = local.utility2.onErrorWithStack(function (error, data, meta) {
+            options.onNext = local.onErrorWithStack(function (error, data, meta) {
                 try {
                     options.modeNext = error
                         ? Infinity
@@ -2514,15 +2666,15 @@ local.utility2.templateTestReportHtml = '\
             return options;
         };
 
-        local.utility2.onParallel = function (onError, onDebug) {
+        local.onParallel = function (onError, onDebug) {
         /*
          * this function will return a function that will
          * 1. run async tasks in parallel
          * 2. if counter === 0 or error occurred, then call onError with error
          */
             var self;
-            onError = local.utility2.onErrorWithStack(onError);
-            onDebug = onDebug || local.utility2.nop;
+            onError = local.onErrorWithStack(onError);
+            onDebug = onDebug || local.nop;
             self = function (error) {
                 onDebug(error, self);
                 // if previously counter === 0 or error occurred, then return
@@ -2548,61 +2700,61 @@ local.utility2.templateTestReportHtml = '\
             return self;
         };
 
-        local.utility2.onReadyAfter = function (onError) {
+        local.onReadyAfter = function (onError) {
         /*
          * this function will call onError when onReadyBefore.counter === 0
          */
-            local.utility2.onReadyBefore.counter += 1;
-            local.utility2.taskCreate({ key: 'utility2.onReadyAfter' }, null, onError);
-            local.utility2.onResetAfter(local.utility2.onReadyBefore);
+            local.onReadyBefore.counter += 1;
+            local.taskCreate({ key: 'utility2.onReadyAfter' }, null, onError);
+            local.onResetAfter(local.onReadyBefore);
             return onError;
         };
 
-        local.utility2.onReadyBefore = local.utility2.onParallel(function (error) {
+        local.onReadyBefore = local.onParallel(function (error) {
         /*
          * this function will keep track of onReadyBefore.counter
          */
-            local.utility2.taskCreate({
+            local.taskCreate({
                 key: 'utility2.onReadyAfter'
             }, function (onError) {
                 onError(error);
             }, function (error) {
                 // validate no error occurred
-                local.utility2.assert(!error, error);
+                local.assert(!error, error);
             });
         });
 
-        local.utility2.onResetAfter = function (onError) {
+        local.onResetAfter = function (onError) {
         /*
          * this function will call onError when onResetBefore.counter === 0
          */
-            local.utility2.onResetBefore.counter += 1;
+            local.onResetBefore.counter += 1;
             // visual notification - onResetAfter
-            local.utility2.ajaxProgressUpdate();
-            local.utility2.taskCreate({ key: 'utility2.onResetAfter' }, null, onError);
-            setTimeout(local.utility2.onResetBefore);
+            local.ajaxProgressUpdate();
+            local.taskCreate({ key: 'utility2.onResetAfter' }, null, onError);
+            setTimeout(local.onResetBefore);
             return onError;
         };
 
-        local.utility2.onResetBefore = local.utility2.onParallel(function (error) {
+        local.onResetBefore = local.onParallel(function (error) {
         /*
          * this function will keep track of onResetBefore.counter
          */
-            local.utility2.taskCreate({
+            local.taskCreate({
                 key: 'utility2.onResetAfter'
             }, function (onError) {
                 onError(error);
             }, function (error) {
                 // validate no error occurred
-                local.utility2.assert(!error, error);
+                local.assert(!error, error);
             });
         });
-        local.utility2.onTimeout = function (onError, timeout, message) {
+        local.onTimeout = function (onError, timeout, message) {
         /*
          * this function will return a timeout-error-handler,
          * that will append the current stack to any error encountered
          */
-            onError = local.utility2.onErrorWithStack(onError);
+            onError = local.onErrorWithStack(onError);
             // create timeout timer
             return setTimeout(function () {
                 onError(new Error('onTimeout - timeout-error - ' +
@@ -2613,7 +2765,7 @@ local.utility2.templateTestReportHtml = '\
             }, timeout | 0);
         };
 
-        local.utility2.processSpawnWithTimeout = function () {
+        local.processSpawnWithTimeout = function () {
         /*
          * this function will run like child_process.spawn,
          * but with auto-timeout after timeoutDefault milliseconds
@@ -2623,20 +2775,20 @@ local.utility2.templateTestReportHtml = '\
             childProcess = local.child_process.spawn.apply(local.child_process, arguments)
                 .on('exit', function () {
                     // try to kill timerTimeout childProcess
-                    local.utility2.tryCatchOnError(function () {
+                    local.tryCatchOnError(function () {
                         process.kill(childProcess.timerTimeout.pid);
-                    }, local.utility2.nop);
+                    }, local.nop);
                 });
             // init failsafe timerTimeout
             childProcess.timerTimeout = local.child_process.spawn('/bin/sh', ['-c', 'sleep ' +
                 // coerce to finite integer
-                (((0.001 * local.utility2.timeoutDefault) | 0) +
+                (((0.001 * local.timeoutDefault) | 0) +
                 // add 2 second delay to failsafe timerTimeout
                 2) + '; kill -9 ' + childProcess.pid + ' 2>/dev/null'], { stdio: 'ignore' });
             return childProcess;
         };
 
-        local.utility2.profile = function (task, onError) {
+        local.profile = function (task, onError) {
         /*
          * this function will profile the async task in milliseconds
          */
@@ -2649,7 +2801,7 @@ local.utility2.templateTestReportHtml = '\
             });
         };
 
-        local.utility2.profileSync = function (task) {
+        local.profileSync = function (task) {
         /*
          * this function will profile the sync task in milliseconds
          */
@@ -2661,7 +2813,7 @@ local.utility2.templateTestReportHtml = '\
             return Date.now() - timeStart;
         };
 
-        local.utility2.replStart = function () {
+        local.replStart = function () {
         /*
          * this function will start the repl debugger
          */
@@ -2801,126 +2953,48 @@ tmp\\)\\(\\b\\|[_s]\\)\
                 self.socket.on('error', self.onError);
                 self.socket.setKeepAlive(true);
             });
-            // coverage-hack - test no tcp-server handling-behavior
-            [process.env.PORT_REPL]
-                .filter(function (port) {
-                    return port;
-                })
-                .forEach(function (port) {
-                    console.log('repl-server listening on tcp-port ' + port);
-                    global.utility2_serverReplTcp1.listen(port);
-                });
+            local.runIfTrue(process.env.PORT_REPL, function () {
+                console.log('repl-server listening on tcp-port ' + process.env.PORT_REPL);
+                global.utility2_serverReplTcp1.listen(process.env.PORT_REPL);
+            });
         };
 
-        local.utility2.requestResponseCleanup = function (request, response) {
+        local.requestResponseCleanup = function (request, response) {
         /*
          * this function will end or destroy the request and response objects
          */
             [request, response].forEach(function (stream) {
                 // try to end the stream
-                local.utility2.tryCatchOnError(function () {
+                local.tryCatchOnError(function () {
                     stream.end();
                 }, function () {
                     // if error, then try to destroy the stream
-                    local.utility2.tryCatchOnError(function () {
+                    local.tryCatchOnError(function () {
                         stream.destroy();
-                    }, local.utility2.nop);
+                    }, local.nop);
                 });
             });
         };
 
-        local.utility2.requireExampleJsFromReadme = function (options) {
+        local.requireExampleJsFromReadme = function () {
         /*
          * this function will require and export example.js embedded in README.md
          */
-            var file, module, script;
-            if (options.module.isRollup) {
-                // init assets
-                local.utility2.assetsDict['/'] = local.utility2.assetsDict['/index.html'] =
-                    local.utility2.templateRender(options.module.exports.templateIndexHtml, {
-                        envDict: local.utility2.envDict,
-                        isRollup: true
-                    });
-                local.utility2.assetsDict['/assets.app.js'] =
-                    local.fs.readFileSync(__filename, 'utf8');
-                local.utility2.assetsDict['/assets.app.min.js'] =
-                    local.utility2.uglifyIfProduction(
-                        local.utility2.assetsDict['/assets.app.js']
-                    );
-                return options.module;
-            }
-            file = options.__dirname + '/example.js';
-            // read script from README.md
-            local.fs.readFileSync(options.__dirname + '/README.md', 'utf8')
-                .replace(
-                    (/```\w*?(\n[\W\s]*?(?:build.js|example.js)[\n\"][\S\s]+?)\n```/),
-                    function (match0, match1, ii, text) {
-                        // jslint-hack
-                        local.utility2.nop(match0);
-                        // preserve lineno
-                        script = text.slice(0, ii).replace((/.+/g), '') + match1;
-                    }
-                );
-            script = script
-                // alias require($npm_package_name) to module.moduleExports;
-                .replace(
-                    "require('" + local.utility2.envDict.npm_package_name + "')",
-                    'module.moduleExports'
-                )
-                // uncomment utility2-comment
-                .replace((/<!-- utility2-comment\b([\S\s]+?)\butility2-comment -->/g), '$1');
-            // jslint script
-            local.utility2.jslintAndPrint(script, file);
-            // cover script
-            script = local.utility2.istanbulInstrumentInPackage(script, file);
-            // init module
-            module = local.require2.cache[file] = new local.Module(file);
-            module.moduleExports = require(options.__dirname + '/index.js');
-            // load script into module
-            module._compile(script, file);
-            // init exports
-            module.exports.utility2 = local.utility2;
-            module.exports[local.utility2.envDict.npm_package_name] = module.moduleExports;
-            // init assets
-            local.utility2.assetsDict[
-                '/assets.' + local.utility2.envDict.npm_package_name + '.css'
-            ] = local.utility2.tryCatchReadFile(process.cwd() + '/index.css', 'utf8');
-            local.utility2.assetsDict[
-                '/assets.' + local.utility2.envDict.npm_package_name + '.js'
-            ] = local.utility2.istanbulInstrumentInPackage(
-                local.utility2.tryCatchReadFile(process.cwd() + '/index.js', 'utf8')
-                    .replace((/^#!/), '//'),
-                process.cwd() + '/index.js'
-            );
-            local.utility2.assetsDict['/assets.example.js'] = script;
-            local.utility2.assetsDict['/assets.test.js'] =
-                local.utility2.istanbulInstrumentInPackage(
-                    local.utility2.tryCatchReadFile(process.cwd() + '/test.js', 'utf8'),
-                    process.cwd() + '/test.js'
-                );
-            local.utility2.assetsDict['/'] = local.utility2.assetsDict['/index.html'] =
-                local.utility2.jslintAndPrintHtml(
-                    local.utility2.templateRender(module.exports.templateIndexHtml, {
-                        envDict: local.utility2.envDict,
-                        isRollup: module.isRollup ||
-                            local.utility2.envDict.NODE_ENV === 'production'
-                    })
-                );
+            var fileExampleJs, fileMain, module, script;
+            // init repl debugger
+            local.replStart();
             // debug dir
-            [
-                __dirname,
-                process.cwd()
-            ].forEach(function (dir) {
+            [__dirname, process.cwd()].forEach(function (dir) {
                 local.fs.readdirSync(dir).forEach(function (file) {
                     file = dir + '/' + file;
                     // if the file is modified, then restart the process
-                    local.utility2.onFileModifiedRestart(file);
+                    local.onFileModifiedRestart(file);
                     switch (local.path.extname(file)) {
                     case '.css':
                     case '.js':
                     case '.json':
                         // jslint file
-                        local.utility2.jslintAndPrintConditional(
+                        local.jslintAndPrintConditional(
                             local.fs.readFileSync(file, 'utf8'),
                             file
                         );
@@ -2928,18 +3002,156 @@ tmp\\)\\(\\b\\|[_s]\\)\
                     }
                 });
             });
+            // init npm_package_nameAlias
+            local.env.npm_package_nameAlias = local.env.npm_package_nameAlias ||
+                local.env.npm_package_name;
+            if (local.env.npm_config_mode_start || local.global.utility2_rollup) {
+                // init exports
+                local.global.local = local;
+                // init assets
+                local.assetsDict['/'] = local.assetsDict['/index.html'] = local.templateRender(
+                    local.templateIndexHtml,
+                    { env: local.env, isRollup: true }
+                );
+                local.assetsWrite('/assets.app.js', local.fs.readFileSync(__filename, 'utf8'));
+                local[local.env.npm_package_nameAlias] = local;
+                return local;
+            }
+            fileExampleJs = process.cwd() + '/example.js';
+            fileMain = process.cwd() + '/' + local.env.npm_package_main;
+            // read script from README.md
+            local.fs.readFileSync(process.cwd() + '/README.md', 'utf8').replace(
+                (/```\w*?(\n[\W\s]*?example.js[\n\"][\S\s]+?)\n```/),
+                function (match0, match1, ii, text) {
+                    // jslint-hack
+                    local.nop(match0);
+                    // preserve lineno
+                    script = text.slice(0, ii).replace((/.+/g), '') + match1;
+                }
+            );
+            global.utility2_moduleExports = require(fileMain + '.js');
+            script = script
+                // alias require($npm_package_name) to utility2_moduleExports;
+                .replace(
+                    "require('" + local.env.npm_package_name + "')",
+                    'global.utility2_moduleExports'
+                )
+                // uncomment utility2-comment
+                .replace((/<!-- utility2-comment\b([\S\s]+?)\butility2-comment -->/g), '$1');
+            // jslint script
+            local.jslintAndPrint(script, fileExampleJs);
+            // cover script
+            script = local.istanbulInstrumentInPackage(script, fileExampleJs);
+            // init module
+            module = local.require2.cache[fileExampleJs] = new local.Module(fileExampleJs);
+            // load script into module
+            module._compile(script, fileExampleJs);
+            // init exports
+            module.exports.utility2 = local;
+            module.exports[local.env.npm_package_nameAlias] = global.utility2_moduleExports;
+            // init assets
+            local.assetsWrite(
+                '/assets.' + local.env.npm_package_nameAlias + '.css',
+                local.tryCatchReadFile(fileMain + '.css', 'utf8')
+            );
+            local.assetsWrite(
+                '/assets.' + local.env.npm_package_nameAlias + '.js',
+                local.istanbulInstrumentInPackage(
+                    local.fs.readFileSync(fileMain + '.js', 'utf8').replace((/^#!/), '//'),
+                    fileMain + '.js'
+                )
+            );
+            local.assetsWrite('/assets.example.js', script);
+            local.assetsWrite('/assets.test.js', local.istanbulInstrumentInPackage(
+                local.fs.readFileSync(process.cwd() + '/test.js', 'utf8'),
+                process.cwd() + '/test.js'
+            ));
+            local.assetsDict['/'] = local.assetsDict['/index.html'] = local.jslintAndPrintHtml(
+                local.templateRender(module.exports.templateIndexHtml, {
+                    env: local.env,
+                    isRollup: local.global.utility2_rollup ||
+                        local.env.NODE_ENV === 'production'
+                })
+            );
+            local.assetsWrite('/assets.app.js', [
+                'header',
+                '/assets.utility2.rollup.js',
+                '/assets.utility2.rollup.begin.js',
+                'local.stateInit',
+                '/assets.lib.js',
+                '/assets.example.js',
+                '/assets.test.js',
+                '/assets.utility2.rollup.end.js'
+            ].map(function (key) {
+                script = local.assetsDict[key];
+                switch (key) {
+/* jslint-ignore-begin */
+case 'header':
+return '\
+/*\n\
+assets.app.js\n\
+\n' + local.env.npm_package_description + '\n\
+\n\
+instruction\n\
+    1. save this script as assets.app.js\n\
+    2. run the shell command:\n\
+        $ PORT=8081 node assets.app.js\n\
+    3. run the browser-demo on http://localhost:8081\n\
+*/\n\
+';
+/* jslint-ignore-end */
+                case 'local.stateInit':
+                    script = local.assetsDict['/assets.utility2.rollup.content.js'].replace(
+                        '/* utility2.rollup.js content */',
+                        key + '(' + JSON.stringify(
+                            local.middlewareJsonpStateInit({ stateInit: true })
+                        ) + ');'
+                    );
+                    break;
+                case '/assets.lib.js':
+                    script = local.assetsDict[
+                        '/assets.' + local.env.npm_package_nameAlias + '.js'
+                    ];
+                    local.runIfTrue(local.assetsDict[
+                        '/assets.' + local.env.npm_package_nameAlias + '.rollup.js'
+                    ], function () {
+                        script = '';
+                    });
+                    break;
+                case '/assets.utility2.rollup.js':
+                    local.runIfTrue(local.assetsDict[
+                        '/assets.' + local.env.npm_package_nameAlias + '.rollup.js'
+                    ], function () {
+                        script = local.assetsDict[
+                            '/assets.' + local.env.npm_package_nameAlias + '.rollup.js'
+                        ];
+                    });
+                    break;
+                }
+                return '// ' + key + '\n' + script;
+            }).join('\n\n\n\n'));
+            local.objectSetDefault(module.exports, local);
             return module.exports;
         };
 
-        local.utility2.serverLocalUrlTest = local.utility2.nop;
+        local.runIfTrue = function (condition, fnc) {
+        /*
+         * this function will run the fnc if condition is truthy
+         */
+            if (condition) {
+                fnc();
+            }
+        };
 
-        local.utility2.serverRespondDefault = function (request, response, statusCode, error) {
+        local.serverLocalUrlTest = local.nop;
+
+        local.serverRespondDefault = function (request, response, statusCode, error) {
         /*
          * this function will respond with a default message,
          * or error.stack for the given statusCode
          */
             // init statusCode and contentType
-            local.utility2.serverRespondHeadSet(
+            local.serverRespondHeadSet(
                 request,
                 response,
                 statusCode,
@@ -2947,10 +3159,12 @@ tmp\\)\\(\\b\\|[_s]\\)\
             );
             if (error) {
                 // debug statusCode / method / url
-                local.utility2.errorMessagePrepend(error, response.statusCode + ' ' +
-                    request.method + ' ' + request.url + '\n');
+                local.errorMessagePrepend(
+                    error,
+                    response.statusCode + ' ' + request.method + ' ' + request.url + '\n'
+                );
                 // print error.stack to stderr
-                local.utility2.onErrorDefault(error);
+                local.onErrorDefault(error);
                 // end response with error.stack
                 response.end(error.stack);
                 return;
@@ -2961,7 +3175,7 @@ tmp\\)\\(\\b\\|[_s]\\)\
             );
         };
 
-        local.utility2.serverRespondEcho = function (request, response) {
+        local.serverRespondEcho = function (request, response) {
         /*
          * this function will respond with debug info
          */
@@ -2973,17 +3187,12 @@ tmp\\)\\(\\b\\|[_s]\\)\
             request.pipe(response);
         };
 
-        local.utility2.serverRespondHeadSet = function (
-            request,
-            response,
-            statusCode,
-            headers
-        ) {
+        local.serverRespondHeadSet = function (request, response, statusCode, headers) {
         /*
          * this function will set the response object's statusCode / headers
          */
             // jslint-hack
-            local.utility2.nop(request);
+            local.nop(request);
             if (response.headersSent) {
                 return;
             }
@@ -2999,20 +3208,20 @@ tmp\\)\\(\\b\\|[_s]\\)\
             return true;
         };
 
-        local.utility2.serverRespondTimeoutDefault = function (request, response, timeout) {
+        local.serverRespondTimeoutDefault = function (request, response, timeout) {
         /*
          * this function will return a timeout-error-handler for the server-request
          */
             request.onTimeout = request.onTimeout || function (error) {
-                local.utility2.serverRespondDefault(request, response, 500, error);
+                local.serverRespondDefault(request, response, 500, error);
                 setTimeout(function () {
                     // cleanup request and response
-                    local.utility2.requestResponseCleanup(request, response);
+                    local.requestResponseCleanup(request, response);
                 }, 1000);
             };
-            request.timerTimeout = local.utility2.onTimeout(
+            request.timerTimeout = local.onTimeout(
                 request.onTimeout,
-                timeout || local.utility2.timeoutDefault,
+                timeout || local.timeoutDefault,
                 'server ' + request.method + ' ' + request.url
             );
             response.on('finish', function () {
@@ -3021,48 +3230,46 @@ tmp\\)\\(\\b\\|[_s]\\)\
             });
         };
 
-        local.utility2.sjclCipherAes128Decrypt = function (password, encrypted) {
+        local.sjclCipherAes128Decrypt = function (password, encrypted) {
         /*
          * this function will aes-decrypt the encrypted-data with the given password
          */
             var decrypted;
-            local.utility2.tryCatchOnError(function () {
+            local.tryCatchOnError(function () {
                 encrypted = encrypted.split('.');
-                decrypted = local.utility2.sjcl.decrypt(password, JSON.stringify({
+                decrypted = local.sjcl.decrypt(password, JSON.stringify({
                     ct: encrypted[2],
                     iter: 128,
                     iv: encrypted[1],
                     mode: 'gcm',
                     salt: encrypted[0]
                 }));
-            }, local.utility2.nop);
+            }, local.nop);
             return decrypted;
         };
 
-        local.utility2.sjclCipherAes128Encrypt = function (password, decrypted) {
+        local.sjclCipherAes128Encrypt = function (password, decrypted) {
         /*
          * this function will aes-encrypt the decrypted-data with the given password
          */
             var options;
             options = { iter: 128, mode: 'gcm' };
-            options = JSON.parse(local.utility2.sjcl.encrypt(password, decrypted, options));
-            return (options.salt + '.' + options.iv + '.' + options.ct)
-                .replace((/\=/g), '');
+            options = JSON.parse(local.sjcl.encrypt(password, decrypted, options));
+            return (options.salt + '.' + options.iv + '.' + options.ct).replace((/\=/g), '');
         };
 
-        local.utility2.sjclHashHmacSha256Create = function (password, data) {
+        local.sjclHashHmacSha256Create = function (password, data) {
         /*
          * this function will return the base64-encoded hmac-sha256 hash
          * of the data with the given password
          */
-            return local.utility2.sjcl.codec.base64.fromBits(
-                new local.utility2.sjcl.misc.hmac(
-                    local.utility2.sjcl.codec.utf8String.toBits(password)
-                ).encrypt(data)
+            return local.sjcl.codec.base64.fromBits(
+                new local.sjcl.misc.hmac(local.sjcl.codec.utf8String.toBits(password))
+                    .encrypt(data)
             );
         };
 
-        local.utility2.sjclHashScryptCreate = function (password, options) {
+        local.sjclHashScryptCreate = function (password, options) {
         /*
          * https://github.com/wg/scrypt
          * this function will return the scrypt-hash of the password
@@ -3073,15 +3280,15 @@ tmp\\)\\(\\b\\|[_s]\\)\
             options = (options || '$s0$10801').split('$');
             // init salt
             if (!options[3]) {
-                options[3] = local.utility2.sjcl.codec.base64.fromBits(
-                    local.utility2.sjcl.random.randomWords(4, 0)
+                options[3] = local.sjcl.codec.base64.fromBits(
+                    local.sjcl.random.randomWords(4, 0)
                 );
             }
             // init hash
-            options[4] = local.utility2.sjcl.codec.base64.fromBits(
-                local.utility2.sjcl.misc.scrypt(
+            options[4] = local.sjcl.codec.base64.fromBits(
+                local.sjcl.misc.scrypt(
                     password || '',
-                    local.utility2.sjcl.codec.base64.toBits(options[3]),
+                    local.sjcl.codec.base64.toBits(options[3]),
                     Math.pow(2, parseInt(options[2].slice(0, 1), 16)),
                     parseInt(options[2].slice(1, 2), 16),
                     parseInt(options[2].slice(3, 4), 16)
@@ -3090,31 +3297,29 @@ tmp\\)\\(\\b\\|[_s]\\)\
             return options.slice(0, 5).join('$');
         };
 
-        local.utility2.sjclHashScryptValidate = function (password, hash) {
+        local.sjclHashScryptValidate = function (password, hash) {
         /*
          * https://github.com/wg/scrypt
          * this function will validate the password against the scrypt-hash
          */
-            return local.utility2.sjclHashScryptCreate(password, hash) === hash;
+            return local.sjclHashScryptCreate(password, hash) === hash;
         };
 
-        local.utility2.sjclHashSha256Create = function (data) {
+        local.sjclHashSha256Create = function (data) {
         /*
          * this function will return the base64-encoded sha-256 hash of the string data
          */
-            return local.utility2.sjcl.codec.base64.fromBits(
-                local.utility2.sjcl.hash.sha256.hash(data)
-            );
+            return local.sjcl.codec.base64.fromBits(local.sjcl.hash.sha256.hash(data));
         };
 
-        local.utility2.stateInit = function (options) {
+        local.stateInit = function (options) {
         /*
          * this function will init the state-options
          */
-            local.utility2.objectSetOverride(local, options, 10);
+            local.objectSetOverride(local, options, 10);
         };
 
-        local.utility2.streamReadAll = function (stream, onError) {
+        local.streamReadAll = function (stream, onError) {
         /*
          * this function will concat data from the stream,
          * and pass it to onError when done reading
@@ -3131,20 +3336,20 @@ tmp\\)\\(\\b\\|[_s]\\)\
                 .on('end', function () {
                     onError(null, local.modeJs === 'browser'
                         ? chunkList[0]
-                        : local.utility2.bufferConcat(chunkList));
+                        : local.bufferConcat(chunkList));
                 })
                 // on error event, pass error to onError
                 .on('error', onError);
         };
 
-        local.utility2.stringFromBase64 = function (text) {
+        local.stringFromBase64 = function (text) {
         /*
          * this function will convert the base64-encoded text to text
          */
-            return local.utility2.bufferToString(local.utility2.bufferCreate(text, 'base64'));
+            return local.bufferToString(local.bufferCreate(text, 'base64'));
         };
 
-        local.utility2.stringHtmlSafe = function (text) {
+        local.stringHtmlSafe = function (text) {
         /*
          * this function will replace '&' to '&amp;', '<' to '&lt;',
          * and '>' to '&gt;' in the text to make it htmlSafe
@@ -3158,28 +3363,28 @@ tmp\\)\\(\\b\\|[_s]\\)\
                 .replace((/`/g), '&#x60;');
         };
 
-        local.utility2.stringToBase64 = function (text) {
+        local.stringToBase64 = function (text) {
         /*
          * this function will convert the text to base64-encoded text
          */
-            return local.utility2.bufferToString(local.utility2.bufferCreate(text), 'base64');
+            return local.bufferToString(local.bufferCreate(text), 'base64');
         };
 
-        local.utility2.taskCreate = function (options, onTask, onError) {
+        local.taskCreate = function (options, onTask, onError) {
         /*
          * this function will create the task onTask named options.key, if it does not exist,
          * and push onError to its onErrorList
          */
             var task;
             // init task
-            task = local.utility2.taskOnTaskDict[options.key] =
-                local.utility2.taskOnTaskDict[options.key] || { onErrorList: [] };
+            task = local.taskOnTaskDict[options.key] = local.taskOnTaskDict[options.key] ||
+                { onErrorList: [] };
             // push callback onError to the task
             if (onError) {
-                onError = local.utility2.onErrorWithStack(onError);
+                onError = local.onErrorWithStack(onError);
                 task.onErrorList.push(onError);
             }
-            // if task is defined, then return
+            // if task exists, then return it
             if (!onTask || task.onTask) {
                 return task;
             }
@@ -3192,19 +3397,16 @@ tmp\\)\\(\\b\\|[_s]\\)\
                 // cleanup timerTimeout
                 clearTimeout(task.timerTimeout);
                 // cleanup task
-                delete local.utility2.taskOnTaskDict[options.key];
+                delete local.taskOnTaskDict[options.key];
                 // preserve error.message and error.stack
                 task.result = JSON.stringify(Array.from(arguments)
                     .map(function (element) {
                         if (element && element.stack) {
-                            element = local.utility2.objectSetDefault(
-                                local.utility2.jsonCopy(element),
-                                {
-                                    message: element.message,
-                                    name: element.name,
-                                    stack: element.stack
-                                }
-                            );
+                            element = local.objectSetDefault(local.jsonCopy(element), {
+                                message: element.message,
+                                name: element.name,
+                                stack: element.stack
+                            });
                         }
                         return element;
                     }));
@@ -3214,9 +3416,9 @@ tmp\\)\\(\\b\\|[_s]\\)\
                 });
             };
             // init timerTimeout
-            task.timerTimeout = local.utility2.onTimeout(
+            task.timerTimeout = local.onTimeout(
                 task.onDone,
-                options.timeout || local.utility2.timeoutDefault,
+                options.timeout || local.timeoutDefault,
                 'taskCreate ' + options.key
             );
             task.onTask = onTask;
@@ -3225,7 +3427,7 @@ tmp\\)\\(\\b\\|[_s]\\)\
             return task;
         };
 
-        local.utility2.taskCreateCached = function (options, onTask, onError) {
+        local.taskCreateCached = function (options, onTask, onError) {
         /*
          * this function will
          * 1. if cache-hit, then call onError with cacheValue
@@ -3233,15 +3435,14 @@ tmp\\)\\(\\b\\|[_s]\\)\
          * 3. save onTask's result to cache
          * 4. if cache-miss, then call onError with onTask's result
          */
-            local.utility2.onNext(options, function (error, data) {
+            local.onNext(options, function (error, data) {
                 switch (options.modeNext) {
                 //  1. if cache-hit, then call onError with cacheValue
                 case 1:
                     // read cacheValue from memory-cache
-                    local.utility2.cacheDict[options.cacheDict] =
-                        local.utility2.cacheDict[options.cacheDict] || {};
-                    options.cacheValue =
-                        local.utility2.cacheDict[options.cacheDict][options.key];
+                    local.cacheDict[options.cacheDict] = local.cacheDict[options.cacheDict] ||
+                        {};
+                    options.cacheValue = local.cacheDict[options.cacheDict][options.key];
                     if (options.cacheValue) {
                         // call onError with cacheValue
                         options.modeCacheHit = true;
@@ -3255,21 +3456,20 @@ tmp\\)\\(\\b\\|[_s]\\)\
                     break;
                 // 2. run onTask in background
                 case 2:
-                    local.utility2.taskCreate(options, onTask, options.onNext);
+                    local.taskCreate(options, onTask, options.onNext);
                     break;
                 default:
                     // 3. save onTask's result to cache
                     // JSON.stringify data to prevent side-effects on cache
                     options.cacheValue = JSON.stringify(data);
                     if (!error && options.cacheValue) {
-                        local.utility2.cacheDict[options.cacheDict][options.key] =
-                            options.cacheValue;
+                        local.cacheDict[options.cacheDict][options.key] = options.cacheValue;
                     }
                     // 4. if cache-miss, then call onError with onTask's result
                     if (!options.modeCacheHit) {
                         onError(error, options.cacheValue && JSON.parse(options.cacheValue));
                     }
-                    (options.onCacheWrite || local.utility2.nop)();
+                    (options.onCacheWrite || local.nop)();
                     break;
                 }
             });
@@ -3277,7 +3477,7 @@ tmp\\)\\(\\b\\|[_s]\\)\
             options.onNext();
         };
 
-        local.utility2.templateRender = function (template, dict) {
+        local.templateRender = function (template, dict) {
         /*
          * this function will render the template with the given dict
          */
@@ -3299,7 +3499,7 @@ tmp\\)\\(\\b\\|[_s]\\)\
                     return Array.isArray(value)
                         ? value.map(function (dict) {
                             // recurse with partial
-                            return local.utility2.templateRender(partial, dict);
+                            return local.templateRender(partial, dict);
                         }).join('')
                         : '';
                 case 'if':
@@ -3309,15 +3509,15 @@ tmp\\)\\(\\b\\|[_s]\\)\
                         // handle 'unless' case
                         : partial.slice(1).join('{{#unless ' + key + '}}');
                     // recurse with partial
-                    return local.utility2.templateRender(partial, dict);
+                    return local.templateRender(partial, dict);
                 case 'unless':
                     return getValue(key)
                         ? ''
                         // recurse with partial
-                        : local.utility2.templateRender(partial, dict);
+                        : local.templateRender(partial, dict);
                 default:
                     // recurse with partial
-                    return match0[0] + local.utility2.templateRender(match0.slice(1), dict);
+                    return match0[0] + local.templateRender(match0.slice(1), dict);
                 }
             };
             // render partials
@@ -3346,7 +3546,7 @@ tmp\\)\\(\\b\\|[_s]\\)\
                         value = encodeURIComponent(value);
                         break;
                     case 'htmlSafe':
-                        value = local.utility2.stringHtmlSafe(String(value));
+                        value = local.stringHtmlSafe(String(value));
                         break;
                     case 'jsonStringify':
                         value = JSON.stringify(value);
@@ -3360,7 +3560,7 @@ tmp\\)\\(\\b\\|[_s]\\)\
             });
         };
 
-        local.utility2.testMock = function (mockList, onTestCase, onError) {
+        local.testMock = function (mockList, onTestCase, onError) {
         /*
          * this function will mock the objects in mockList while running the onTestCase
          */
@@ -3368,12 +3568,12 @@ tmp\\)\\(\\b\\|[_s]\\)\
             onError2 = function (error) {
                 // restore mock[0] from mock[2]
                 mockList.reverse().forEach(function (mock) {
-                    local.utility2.objectSetOverride(mock[0], mock[2]);
+                    local.objectSetOverride(mock[0], mock[2]);
                 });
                 onError(error);
             };
             // try to call onError with mock-objects
-            local.utility2.tryCatchOnError(function () {
+            local.tryCatchOnError(function () {
                 // mock-objects
                 mockList.forEach(function (mock) {
                     mock[2] = {};
@@ -3382,14 +3582,14 @@ tmp\\)\\(\\b\\|[_s]\\)\
                         mock[2][key] = mock[0][key];
                     });
                     // override mock[0] with mock[1]
-                    local.utility2.objectSetOverride(mock[0], mock[1]);
+                    local.objectSetOverride(mock[0], mock[1]);
                 });
                 // run onTestCase
                 onTestCase(onError2);
             }, onError2);
         };
 
-        local.utility2.testReportCreate = function (testReport) {
+        local.testReportCreate = function (testReport) {
         /*
          * this function will create test-report artifacts
          */
@@ -3411,23 +3611,25 @@ tmp\\)\\(\\b\\|[_s]\\)\
                 .join('\n') + '\n');
             // create test-report.html
             local.fs.writeFileSync(
-                local.utility2.envDict.npm_config_dir_build + '/test-report.html',
-                local.utility2.testReportMerge(testReport, {})
+                local.env.npm_config_dir_build + '/test-report.html',
+                local.testReportMerge(testReport, {})
             );
             // create build.badge.svg
-            local.fs.writeFileSync(local.utility2.envDict.npm_config_dir_build +
-                '/build.badge.svg', local.utility2.templateBuildBadgeSvg
+            local.fs.writeFileSync(local.env.npm_config_dir_build +
+                '/build.badge.svg', local.templateBuildBadgeSvg
                 // edit branch name
                 .replace((/0000-00-00 00:00:00/g),
                     new Date().toISOString().slice(0, 19).replace('T', ' '))
                 // edit branch name
-                .replace((/- master -/g), '| ' + local.utility2.envDict.CI_BRANCH + ' |')
+                .replace((/- master -/g), '| ' + local.env.CI_BRANCH + ' |')
                 // edit commit id
-                .replace((/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/g),
-                    local.utility2.envDict.CI_COMMIT_ID));
+                .replace(
+                    (/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/g),
+                    local.env.CI_COMMIT_ID
+                ));
             // create test-report.badge.svg
-            local.fs.writeFileSync(local.utility2.envDict.npm_config_dir_build +
-                '/test-report.badge.svg', local.utility2.templateTestReportBadgeSvg
+            local.fs.writeFileSync(local.env.npm_config_dir_build +
+                '/test-report.badge.svg', local.templateTestReportBadgeSvg
                 // edit number of tests failed
                 .replace((/999/g), testReport.testsFailed)
                 // edit badge color
@@ -3436,16 +3638,16 @@ tmp\\)\\(\\b\\|[_s]\\)\
                     // coverage-hack - cover both fail and pass cases
                     '0d00'.slice(!!testReport.testsFailed).slice(0, 3)
                 ));
-            console.log('created test-report file://' +
-                local.utility2.envDict.npm_config_dir_build + '/test-report.html\n');
+            console.log('created test-report file://' + local.env.npm_config_dir_build +
+                '/test-report.html\n');
             // if any test failed, then exit with non-zero exit-code
-            console.log('\n' + local.utility2.envDict.MODE_BUILD +
+            console.log('\n' + local.env.MODE_BUILD +
                 ' - ' + testReport.testsFailed + ' failed tests\n');
             // exit with number of tests failed
-            local.utility2.exit(testReport.testsFailed);
+            local.exit(testReport.testsFailed);
         };
 
-        local.utility2.testReportMerge = function (testReport1, testReport2) {
+        local.testReportMerge = function (testReport1, testReport2) {
         /*
          * this function will
          * 1. merge testReport2 into testReport1
@@ -3455,63 +3657,63 @@ tmp\\)\\(\\b\\|[_s]\\)\
             // 1. merge testReport2 into testReport1
             [testReport1, testReport2].forEach(function (testReport, ii) {
                 ii += 1;
-                local.utility2.objectSetDefault(testReport, {
+                local.objectSetDefault(testReport, {
                     date: new Date().toISOString(),
                     errorStackList: [],
                     testPlatformList: [],
                     timeElapsed: 0
                 }, 8);
                 // security - handle malformed testReport
-                local.utility2.assert(
+                local.assert(
                     testReport && typeof testReport === 'object',
                     ii + ' invalid testReport ' + typeof testReport
                 );
                 // validate timeElapsed
-                local.utility2.assert(
+                local.assert(
                     typeof testReport.timeElapsed === 'number',
                     ii + ' invalid testReport.timeElapsed ' + typeof testReport.timeElapsed
                 );
                 // security - handle malformed testReport.testPlatformList
                 testReport.testPlatformList.forEach(function (testPlatform) {
-                    local.utility2.objectSetDefault(testPlatform, {
+                    local.objectSetDefault(testPlatform, {
                         name: 'undefined',
                         testCaseList: [],
                         timeElapsed: 0
                     }, 8);
-                    local.utility2.assert(
+                    local.assert(
                         typeof testPlatform.name === 'string',
                         ii + ' invalid testPlatform.name ' + typeof testPlatform.name
                     );
                     // insert $MODE_BUILD into testPlatform.name
-                    if (local.utility2.envDict.MODE_BUILD) {
+                    if (local.env.MODE_BUILD) {
                         testPlatform.name = testPlatform.name.replace(
                             (/^(browser|node)\b/),
-                            local.utility2.envDict.MODE_BUILD + ' - $1'
+                            local.env.MODE_BUILD + ' - $1'
                         );
                     }
                     // validate timeElapsed
-                    local.utility2.assert(
+                    local.assert(
                         typeof testPlatform.timeElapsed === 'number',
                         ii + ' invalid testPlatform.timeElapsed ' +
                             typeof testPlatform.timeElapsed
                     );
                     // security - handle malformed testPlatform.testCaseList
                     testPlatform.testCaseList.forEach(function (testCase) {
-                        local.utility2.objectSetDefault(testCase, {
+                        local.objectSetDefault(testCase, {
                             errorStack: '',
                             name: 'undefined',
                             timeElapsed: 0
                         }, 8);
-                        local.utility2.assert(
+                        local.assert(
                             typeof testCase.errorStack === 'string',
                             ii + ' invalid testCase.errorStack ' + typeof testCase.errorStack
                         );
-                        local.utility2.assert(
+                        local.assert(
                             typeof testCase.name === 'string',
                             ii + ' invalid testCase.name ' + typeof testCase.name
                         );
                         // validate timeElapsed
-                        local.utility2.assert(
+                        local.assert(
                             typeof testCase.timeElapsed === 'number',
                             ii + ' invalid testCase.timeElapsed ' + typeof testCase.timeElapsed
                         );
@@ -3574,18 +3776,18 @@ tmp\\)\\(\\b\\|[_s]\\)\
             });
             // stop testReport timer
             if (testReport.testsPending === 0) {
-                local.utility2.timeElapsedStop(testReport);
+                local.timeElapsedStop(testReport);
             }
             // 2. return testReport1 in html-format
             // json-copy testReport that will be modified for html templating
-            testReport = local.utility2.jsonCopy(testReport1);
+            testReport = local.jsonCopy(testReport1);
             // update timeElapsed
-            local.utility2.timeElapsedStop(testReport);
+            local.timeElapsedStop(testReport);
             testReport.testPlatformList.forEach(function (testPlatform) {
-                local.utility2.timeElapsedStop(testPlatform);
+                local.timeElapsedStop(testPlatform);
                 testPlatform.testCaseList.forEach(function (testCase) {
                     if (!testCase.done) {
-                        local.utility2.timeElapsedStop(testCase);
+                        local.timeElapsedStop(testCase);
                     }
                     testPlatform.timeElapsed = Math.max(
                         testPlatform.timeElapsed,
@@ -3598,10 +3800,10 @@ tmp\\)\\(\\b\\|[_s]\\)\
             });
             // create html test-report
             testCaseNumber = 0;
-            return local.utility2.templateRender(
-                local.utility2.templateTestReportHtml,
-                local.utility2.objectSetOverride(testReport, {
-                    envDict: local.utility2.envDict,
+            return local.templateRender(
+                local.templateTestReportHtml,
+                local.objectSetOverride(testReport, {
+                    env: local.env,
                     // map testPlatformList
                     testPlatformList: testReport.testPlatformList
                         .filter(function (testPlatform) {
@@ -3610,7 +3812,7 @@ tmp\\)\\(\\b\\|[_s]\\)\
                         })
                         .map(function (testPlatform, ii) {
                             errorStackList = [];
-                            return local.utility2.objectSetOverride(testPlatform, {
+                            return local.objectSetOverride(testPlatform, {
                                 errorStackList: errorStackList,
                                 name: testPlatform.name,
                                 screenCaptureImg: testPlatform.screenCaptureImg,
@@ -3625,7 +3827,7 @@ tmp\\)\\(\\b\\|[_s]\\)\
                                                 '\n' + testCase.errorStack
                                         });
                                     }
-                                    return local.utility2.objectSetOverride(testCase, {
+                                    return local.objectSetOverride(testCase, {
                                         testCaseNumber: testCaseNumber,
                                         testReportTestStatusClass: 'test' +
                                             testCase.status[0].toUpperCase() +
@@ -3645,41 +3847,43 @@ tmp\\)\\(\\b\\|[_s]\\)\
             );
         };
 
-        local.utility2.testRun = function (options) {
+        local.testRunBefore = local.nop;
+
+        local.testRunDefault = function (options) {
         /*
          * this function will run all tests in testPlatform.testCaseList
          */
             var exit, onParallel, testPlatform, testReport, testReportDiv1, timerInterval;
             // init modeTest
-            local.utility2.modeTest = local.utility2.modeTest ||
-                local.utility2.envDict.npm_config_mode_test;
-            if (!(local.utility2.modeTest || options.modeTest)) {
+            local.modeTest = local.modeTest || local.env.npm_config_mode_test;
+            if (!(local.modeTest || options.modeTest)) {
                 return;
             }
-            if (!options.testRunBefore) {
-                options.testRunTimer = options.testRunTimer || setTimeout(function () {
-                    local.utility2.testRunBefore();
-                    local.utility2.onReadyAfter(function () {
-                        options.testRunBefore = true;
-                        local.utility2.testRun(options);
+            if (!options.testRunBeforeDone) {
+                options.testRunBeforeTimer = options.testRunBeforeTimer ||
+                    setTimeout(function () {
+                        local.testRunBefore();
+                        local.onReadyAfter(function () {
+                            options.testRunBeforeDone = true;
+                            local.testRunDefault(options);
+                        });
                     });
-                });
                 return;
             }
             // reset testRunBefore
-            options.testRunBefore = options.testRunTimer = null;
+            options.testRunBeforeDone = options.testRunBeforeTimer = null;
             // visual notification - testRun
-            local.utility2.ajaxProgressUpdate();
+            local.ajaxProgressUpdate();
             // init onParallel
-            onParallel = local.utility2.onParallel(function () {
+            onParallel = local.onParallel(function () {
             /*
              * this function will create the test-report after all tests are done
              */
-                local.utility2.ajaxProgressUpdate();
+                local.ajaxProgressUpdate();
                 // stop testPlatform timer
-                local.utility2.timeElapsedStop(testPlatform);
+                local.timeElapsedStop(testPlatform);
                 // finalize testReport
-                local.utility2.testReportMerge(testReport, {});
+                local.testReportMerge(testReport, {});
                 switch (local.modeJs) {
                 case 'browser':
                     // notify saucelabs of test results
@@ -3694,7 +3898,7 @@ tmp\\)\\(\\b\\|[_s]\\)\
                 case 'node':
                     // create test-report.json
                     local.fs.writeFileSync(
-                        local.utility2.envDict.npm_config_dir_build + '/test-report.json',
+                        local.env.npm_config_dir_build + '/test-report.json',
                         JSON.stringify(testReport)
                     );
                     // restore exit
@@ -3704,12 +3908,12 @@ tmp\\)\\(\\b\\|[_s]\\)\
                 setTimeout(function () {
                     if (local.modeJs === 'browser') {
                         // update coverageReport
-                        local.utility2.istanbulCoverageReportCreate({
+                        local.istanbulCoverageReportCreate({
                             coverage: local.global.__coverage__
                         });
                     }
                     // exit with number of tests failed
-                    local.utility2.exit(testReport.testsFailed);
+                    local.exit(testReport.testsFailed);
                 // coverage-hack - wait 1000 ms for timerInterval
                 }, 1000);
             });
@@ -3718,27 +3922,26 @@ tmp\\)\\(\\b\\|[_s]\\)\
             switch (local.modeJs) {
             case 'node':
                 exit = process.exit;
-                process.exit = local.utility2.nop;
+                process.exit = local.nop;
                 break;
             }
             // init modeTestCase
-            local.utility2.modeTestCase = local.utility2.modeTestCase ||
-                local.utility2.envDict.npm_config_mode_test_case;
+            local.modeTestCase = local.modeTestCase || local.env.npm_config_mode_test_case;
             // init testReport
-            testReport = local.utility2.testReport;
+            testReport = local.testReport;
             // init testReport timer
-            local.utility2.timeElapsedStart(testReport);
+            local.timeElapsedStart(testReport);
             // init testPlatform
-            testPlatform = local.utility2.testReport.testPlatformList[0];
+            testPlatform = local.testReport.testPlatformList[0];
             // init testPlatform timer
-            local.utility2.timeElapsedStart(testPlatform);
+            local.timeElapsedStart(testPlatform);
             // reset testPlatform.testCaseList
             testPlatform.testCaseList.length = 0;
             // add tests into testPlatform.testCaseList
             Object.keys(options).forEach(function (key) {
                 // add testCase options[key] to testPlatform.testCaseList
-                if ((local.utility2.modeTestCase && local.utility2.modeTestCase === key) ||
-                        (!local.utility2.modeTestCase && key.indexOf('testCase_') === 0)) {
+                if ((local.modeTestCase && local.modeTestCase === key) ||
+                        (!local.modeTestCase && key.indexOf('testCase_') === 0)) {
                     testPlatform.testCaseList.push({
                         name: key,
                         status: 'pending',
@@ -3753,11 +3956,11 @@ tmp\\)\\(\\b\\|[_s]\\)\
             }
             testReportDiv1 = testReportDiv1 || { style: {} };
             testReportDiv1.style.display = 'block';
-            testReportDiv1.innerHTML = local.utility2.testReportMerge(testReport, {});
+            testReportDiv1.innerHTML = local.testReportMerge(testReport, {});
             // update test-report status every 1000 ms until done
             timerInterval = setInterval(function () {
                 // update testReportDiv1 in browser
-                testReportDiv1.innerHTML = local.utility2.testReportMerge(testReport, {});
+                testReportDiv1.innerHTML = local.testReportMerge(testReport, {});
                 if (testReport.testsPending === 0) {
                     // cleanup timerInterval
                     clearInterval(timerInterval);
@@ -3783,8 +3986,10 @@ tmp\\)\\(\\b\\|[_s]\\)\
                         testCase.errorStack = testCase.errorStack ||
                             error.message + '\n' + error.stack;
                         // validate errorStack is non-empty
-                        local.utility2.assert(testCase.errorStack, 'invalid errorStack ' +
-                            testCase.errorStack);
+                        local.assert(
+                            testCase.errorStack,
+                            'invalid errorStack ' + testCase.errorStack
+                        );
                     }
                     // if already done, then do nothing
                     if (testCase.done) {
@@ -3795,7 +4000,7 @@ tmp\\)\\(\\b\\|[_s]\\)\
                         testCase.status = 'passed';
                     }
                     // stop testCase timer
-                    local.utility2.timeElapsedStop(testCase);
+                    local.timeElapsedStop(testCase);
                     console.log('[' + local.modeJs + ' test-case ' +
                         testPlatform.testCaseList.filter(function (testCase) {
                             return testCase.done;
@@ -3805,64 +4010,57 @@ tmp\\)\\(\\b\\|[_s]\\)\
                     onParallel();
                 };
                 // init timerTimeout
-                timerTimeout = local.utility2.onTimeout(
-                    onError,
-                    local.utility2.timeoutDefault,
-                    testCase.name
-                );
+                timerTimeout = local.onTimeout(onError, local.timeoutDefault, testCase.name);
                 // increment number of tests remaining
                 onParallel.counter += 1;
                 // try to run testCase
-                local.utility2.tryCatchOnError(function () {
+                local.tryCatchOnError(function () {
                     // start testCase timer
-                    local.utility2.timeElapsedStart(testCase);
+                    local.timeElapsedStart(testCase);
                     testCase.onTestCase(null, onError);
                 }, onError);
             });
             onParallel();
         };
 
-        local.utility2.testRunBefore = local.utility2.nop;
-
-        local.utility2.testRunServer = function (options) {
+        local.testRunServer = function (options) {
         /*
          * this function will
          * 1. create server from options.middleware
-         * 2. start server on local.utility2.envDict.PORT
+         * 2. start server on local.env.PORT
          * 3. run tests
          */
-            local.utility2.onReadyBefore.counter += 1;
-            local.utility2.objectSetDefault(options, {
-                middleware: local.utility2.middlewareGroupCreate([
-                    local.utility2.middlewareInit,
-                    local.utility2.middlewareAssetsCached,
-                    local.utility2.middlewareJsonpStateInit
+            if (local.global.utility2_serverHttp1) {
+                return;
+            }
+            local.onReadyBefore.counter += 1;
+            local.objectSetDefault(options, {
+                middleware: local.middlewareGroupCreate([
+                    local.middlewareInit,
+                    local.middlewareAssetsCached,
+                    local.middlewareJsonpStateInit
                 ]),
-                middlewareError: local.utility2.middlewareError
+                middlewareError: local.middlewareError
             });
             // 1. create server from options.middleware
-            local.utility2.serverLocalRequestHandler = function (request, response) {
+            local.serverLocalRequestHandler = function (request, response) {
                 options.middleware(request, response, function (error) {
                     options.middlewareError(error, request, response);
                 });
             };
             local.global.utility2_serverHttp1 = local.http.createServer(
-                local.utility2.serverLocalRequestHandler
+                local.serverLocalRequestHandler
             );
-            // 2. start server on local.utility2.envDict.PORT
-            local.utility2.envDict.PORT = local.utility2.envDict.PORT || '8081';
-            console.log('server listening on http-port ' + local.utility2.envDict.PORT);
-            local.utility2.onReadyBefore.counter += 1;
-            local.global.utility2_serverHttp1.listen(
-                local.utility2.envDict.PORT,
-                local.utility2.onReadyBefore
-            );
+            // 2. start server on local.env.PORT
+            console.log('server listening on http-port ' + local.env.PORT);
+            local.onReadyBefore.counter += 1;
+            local.global.utility2_serverHttp1.listen(local.env.PORT, local.onReadyBefore);
             // 3. run tests
-            local.utility2.testRun(options);
-            local.utility2.onReadyBefore();
+            local.testRunDefault(options);
+            local.onReadyBefore();
         };
 
-        local.utility2.timeElapsedStart = function (options) {
+        local.timeElapsedStart = function (options) {
         /*
          * this function will start options.timeElapsed
          */
@@ -3871,30 +4069,32 @@ tmp\\)\\(\\b\\|[_s]\\)\
             return options;
         };
 
-        local.utility2.timeElapsedStop = function (options) {
+        local.timeElapsedStop = function (options) {
         /*
          * this function will stop options.timeElapsed
          */
-            options = local.utility2.timeElapsedStart(options);
+            options = local.timeElapsedStart(options);
             options.timeElapsed = Date.now() - options.timeStart;
             return options;
         };
 
-        local.utility2.tryCatchOnError = function (fnc, onError) {
+        local.tryCatchOnError = function (fnc, onError) {
         /*
          * this function will try to run the fnc in a try-catch block,
          * else call onError with the errorCaught
          */
             try {
-                local.utility2._debugTryCatchErrorCaught = null;
+                // reset errorCaught
+                local._debugTryCatchErrorCaught = null;
                 return fnc();
             } catch (errorCaught) {
-                local.utility2._debugTryCatchErrorCaught = errorCaught;
+                // debug errorCaught
+                local._debugTryCatchErrorCaught = errorCaught;
                 return onError(errorCaught);
             }
         };
 
-        local.utility2.tryCatchReadFile = function (file, options) {
+        local.tryCatchReadFile = function (file, options) {
         /*
          * this function will try to read the file or return an empty string
          */
@@ -3907,19 +4107,9 @@ tmp\\)\\(\\b\\|[_s]\\)\
             return data;
         };
 
-        local.utility2.uglify = local.utility2.uglifyjs.uglify || local.utility2.echo;
+        local.uglify = local.uglifyjs.uglify || local.echo;
 
-        local.utility2.uglifyIfProduction = function (code) {
-        /*
-         * this function will, if $NODE_ENV === production, then uglify the js-code
-         *
-         */
-            return local.utility2.envDict.NODE_ENV === 'production'
-                ? local.utility2.uglify(code)
-                : code;
-        };
-
-        local.utility2.urlParse = function (url) {
+        local.urlParse = function (url) {
         /*
          * https://developer.mozilla.org/en-US/docs/Web/API/URL
          * this function will parse the url according to the above spec, plus a query param
@@ -3927,31 +4117,32 @@ tmp\\)\\(\\b\\|[_s]\\)\
             var urlParsed;
             urlParsed = {};
             // try to parse the url
-            local.utility2.tryCatchOnError(function () {
+            local.tryCatchOnError(function () {
                 // resolve host-less url
                 switch (local.modeJs) {
                 case 'browser':
-                    local.utility2.serverLocalHost = local.utility2.serverLocalHost ||
+                    local.serverLocalHost = local.serverLocalHost ||
                         location.protocol + '//' + location.host;
                     // resolve absolute path
                     if (url[0] === '/') {
-                        url = local.utility2.serverLocalHost + url;
+                        url = local.serverLocalHost + url;
                     // resolve relative path
                     } else if (!(/^\w+?:\/\//).test(url)) {
-                        url = local.utility2.serverLocalHost +
+                        url = local.serverLocalHost +
                             location.pathname.replace((/\/[^\/]*?$/), '') + '/' + url;
                     }
                     urlParsed = new local.global.URL(url);
                     break;
                 case 'node':
-                    local.utility2.serverLocalHost = local.utility2.serverLocalHost ||
-                        'http://localhost:' + (local.utility2.envDict.PORT || '80');
+                    local.env.PORT = local.env.PORT || '8081';
+                    local.serverLocalHost = local.serverLocalHost ||
+                        ('http://localhost:' + local.env.PORT);
                     // resolve absolute path
                     if (url[0] === '/') {
-                        url = local.utility2.serverLocalHost + url;
+                        url = local.serverLocalHost + url;
                     // resolve relative path
                     } else if (!(/^\w+?:\/\//).test(url)) {
-                        url = local.utility2.serverLocalHost + '/' + url;
+                        url = local.serverLocalHost + '/' + url;
                     }
                     urlParsed = local.url.parse(url);
                     break;
@@ -3972,7 +4163,7 @@ tmp\\)\\(\\b\\|[_s]\\)\
                         urlParsed.query[item[0]] = item[1];
                     }
                 });
-            }, local.utility2.nop);
+            }, local.nop);
             // https://developer.mozilla.org/en/docs/Web/API/URL#Properties
             return {
                 hash: urlParsed.hash || '',
@@ -3987,7 +4178,7 @@ tmp\\)\\(\\b\\|[_s]\\)\
             };
         };
 
-        local.utility2.uuid4Create = function () {
+        local.uuid4Create = function () {
         /*
          * this function will return a random uuid,
          * with format 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'
@@ -4019,13 +4210,13 @@ tmp\\)\\(\\b\\|[_s]\\)\
             return id;
         };
 
-        local.utility2.uuidTimeCreate = function () {
+        local.uuidTimeCreate = function () {
         /*
          * this function will return a time-based version of uuid4,
          * with format 'tttttttt-tttx-4xxx-yxxx-xxxxxxxxxxxx'
          */
             return Date.now().toString(16).replace((/(.{8})/), '$1-') +
-                local.utility2.uuid4Create().slice(12);
+                local.uuid4Create().slice(12);
         };
     }());
 
@@ -4033,10 +4224,10 @@ tmp\\)\\(\\b\\|[_s]\\)\
 
     // run shared js-env code - post-init
     (function () {
-        local.utility2.ajaxProgressCounter = 0;
-        local.utility2.ajaxProgressState = 0;
-        local.utility2.cacheDict = {};
-        local.utility2.contentTypeDict = {
+        local.ajaxProgressCounter = 0;
+        local.ajaxProgressState = 0;
+        local.cacheDict = {};
+        local.contentTypeDict = {
             // application
             '.js': 'application/javascript; charset=UTF-8',
             '.json': 'application/json; charset=UTF-8',
@@ -4056,36 +4247,34 @@ tmp\\)\\(\\b\\|[_s]\\)\
             '.md': 'text/markdown; charset=UTF-8',
             '.txt': 'text/plain; charset=UTF-8'
         };
-        local.utility2.envDict = local.modeJs === 'browser'
+        local.env = local.modeJs === 'browser'
             ? {}
             : process.env;
-        local.utility2.errorDefault = new Error('default error');
-        local.utility2.regexpUriComponentCharset = (/[\w\!\%\'\(\)\*\-\.\~]/);
-        local.utility2.regexpUuidValidate =
+        local.errorDefault = new Error('default error');
+        local.regexpUriComponentCharset = (/[\w\!\%\'\(\)\*\-\.\~]/);
+        local.regexpUuidValidate =
             (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
-        local.utility2.stringAsciiCharset =
+        local.stringAsciiCharset =
             '\x00\x01\x02\x03\x04\x05\x06\x07\b\t\n\x0b\f\r\x0e\x0f' +
             '\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f' +
             ' !"#$%&\'()*+,-./0123456789:;<=>?' +
             '@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_' +
             '`abcdefghijklmnopqrstuvwxyz{|}~\x7f';
-        local.utility2.stringUriComponentCharset = '!%\'()*-.' +
+        local.stringUriComponentCharset = '!%\'()*-.' +
             '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz~';
-        local.utility2.taskOnTaskDict = {};
-        local.utility2.testCaseDict = local.utility2.objectSetDefault({}, local);
-        local.utility2.testReport = { testPlatformList: [{
+        local.taskOnTaskDict = {};
+        local.testCaseDict = local.objectSetDefault({}, local);
+        local.testReport = { testPlatformList: [{
             name: local.modeJs === 'browser'
-                ? 'browser - ' +
-                    location.pathname + ' - ' +
-                    navigator.userAgent + ' - ' +
+                ? 'browser - ' + location.pathname + ' - ' + navigator.userAgent + ' - ' +
                     new Date().toISOString()
                 : 'node - ' + process.platform + ' ' + process.version + ' - ' +
                     new Date().toISOString(),
-            screenCaptureImg: local.utility2.envDict.MODE_BUILD_SCREEN_CAPTURE,
+            screenCaptureImg: local.env.MODE_BUILD_SCREEN_CAPTURE,
             testCaseList: []
         }] };
         // init serverLocalHost
-        local.utility2.urlParse('');
+        local.urlParse('');
         // init timeoutDefault
         switch (local.modeJs) {
         case 'browser':
@@ -4093,32 +4282,32 @@ tmp\\)\\(\\b\\|[_s]\\)\
                 (/\b(NODE_ENV|mode[A-Z]\w+|timeExit|timeoutDefault)=([\w\-\.\%]+)/g),
                 function (match0, key, value) {
                     // jslint-hack
-                    local.utility2.nop(match0);
-                    local.utility2[key] = local.utility2.envDict[key] = value;
+                    local.nop(match0);
+                    local[key] = local.env[key] = value;
                     // try to JSON.parse the string
-                    local.utility2.tryCatchOnError(function () {
-                        local.utility2[key] = JSON.parse(value);
-                    }, local.utility2.nop);
+                    local.tryCatchOnError(function () {
+                        local[key] = JSON.parse(value);
+                    }, local.nop);
                 }
             );
             break;
         case 'node':
-            local.utility2.timeoutDefault = local.utility2.envDict.npm_config_timeout_default;
+            local.timeoutDefault = local.env.npm_config_timeout_default;
             break;
         }
         // init timeExit
-        local.utility2.timeExit = Number(local.utility2.timeExit) ||
-            Number(Date.now() + Number(local.utility2.envDict.npm_config_timeout_exit)) ||
-            Number(local.utility2.envDict.npm_config_time_exit);
-        if (local.utility2.timeExit) {
-            local.utility2.timeoutDefault = local.utility2.timeExit - Date.now();
-            setTimeout(local.utility2.exit, local.utility2.timeoutDefault);
+        local.timeExit = Number(local.timeExit) ||
+            Number(Date.now() + Number(local.env.npm_config_timeout_exit)) ||
+            Number(local.env.npm_config_time_exit);
+        if (local.timeExit) {
+            local.timeoutDefault = local.timeExit - Date.now();
+            setTimeout(local.exit, local.timeoutDefault);
         }
         // re-init timeoutDefault
-        local.utility2.timeoutDefault = Number(local.utility2.timeoutDefault || 30000);
-        local.utility2.onReadyAfter(local.utility2.nop);
+        local.timeoutDefault = Number(local.timeoutDefault || 30000);
+        local.onReadyAfter(local.nop);
         // init state
-        local.utility2.stateInit({});
+        local.stateInit({});
     }());
     switch (local.modeJs) {
 
@@ -4126,8 +4315,6 @@ tmp\\)\\(\\b\\|[_s]\\)\
 
     // run browser js-env code - post-init
     case 'browser':
-        // init exports
-        local.global.utility2 = local.utility2;
         // require modules
         local.http = local._http;
         local.https = local._http;
@@ -4139,7 +4326,7 @@ tmp\\)\\(\\b\\|[_s]\\)\
     // run node js-env code - post-init
     case 'node':
         // init exports
-        module.exports = local.utility2;
+        module.exports = local;
         module.exports.__dirname = __dirname;
         // require modules
         local.Module = require('module');
@@ -4154,74 +4341,72 @@ tmp\\)\\(\\b\\|[_s]\\)\
         local.url = require('url');
         local.vm = require('vm');
         local.zlib = require('zlib');
-        // init envDict
-        local.utility2.objectSetDefault(local.utility2.envDict, {
+        // init env
+        local.objectSetDefault(local.env, {
             npm_config_dir_build: process.cwd() + '/tmp/build',
             npm_config_dir_tmp: process.cwd() + '/tmp'
         });
-        if (module.isRollup) {
+        if (local.global.utility2_rollup) {
             break;
         }
         // init assets
         [
-            'index.css',
-            'index.js',
-            'index.sh',
             'lib.istanbul.js',
             'lib.jslint.js',
             'lib.db.js',
             'lib.sjcl.js',
             'lib.uglifyjs.js',
+            'lib.utility2.css',
+            'lib.utility2.js',
+            'lib.utility2.sh',
             'templateDocApiHtml',
             'templateTestReportHtml'
         ].forEach(function (key) {
             switch (key) {
-            case 'index.css':
-                local.utility2.assetsDict['/assets.utility2.css'] =
-                    local.utility2.tryCatchReadFile(__dirname + '/' + key, 'utf8');
-                break;
-            case 'index.js':
-                local.utility2.assetsDict['/assets.utility2.js'] =
-                    local.utility2.istanbulInstrumentInPackage(
-                        local.utility2.tryCatchReadFile(__dirname + '/' + key, 'utf8')
-                            .replace((/^#!/), '//'),
-                        __dirname + '/' + key
-                    );
-                break;
-            case 'index.sh':
-                local.utility2.jslintAndPrintHtml(
-                    local.utility2.tryCatchReadFile(__dirname + '/' + key, 'utf8')
-                        .replace((/^#!/), '//'),
-                    __dirname + '/' + key
-                );
-                break;
             case 'lib.istanbul.js':
             case 'lib.jslint.js':
             case 'lib.db.js':
             case 'lib.sjcl.js':
             case 'lib.uglifyjs.js':
-                local.utility2.assetsDict['/assets.utility2.' + key] =
-                    local.utility2.istanbulInstrumentInPackage(
-                        local.utility2.tryCatchReadFile(__dirname + '/' + key, 'utf8')
-                            .replace((/^#!/), '//')
-                            .replace(
-                                (/(\bistanbul instrument in package .*-lite\b)/),
-                                '!$1'
-                            ),
-                        __dirname + '/' + key
-                    );
+                local.assetsDict['/assets.utility2.' + key] = local.istanbulInstrumentInPackage(
+                    local.tryCatchReadFile(__dirname + '/' + key, 'utf8')
+                        .replace((/^#!/), '//')
+                        .replace(
+                            (/(\bistanbul instrument in package .*-lite\b)/),
+                            '!$1'
+                        ),
+                    __dirname + '/' + key
+                );
+                break;
+            case 'lib.utility2.css':
+                local.assetsDict['/assets.utility2.css'] =
+                    local.tryCatchReadFile(__dirname + '/' + key, 'utf8');
+                break;
+            case 'lib.utility2.js':
+                local.assetsDict['/assets.utility2.js'] = local.istanbulInstrumentInPackage(
+                    local.tryCatchReadFile(__dirname + '/' + key, 'utf8')
+                        .replace((/^#!/), '//'),
+                    __dirname + '/' + key
+                );
+                break;
+            case 'lib.utility2.sh':
+                local.jslintAndPrintHtml(
+                    local.tryCatchReadFile(__dirname + '/' + key, 'utf8')
+                        .replace((/^#!/), '//'),
+                    __dirname + '/' + key
+                );
                 break;
             case 'templateDocApiHtml':
             case 'templateTestReportHtml':
-                local.utility2.jslintAndPrintHtml(local.utility2[key], key);
+                local.jslintAndPrintHtml(local[key], key);
                 break;
             }
         });
-        local.utility2.assetsDict['/assets.utility2.rollup.js'] = [
+        local.assetsWrite('/assets.utility2.rollup.js', [
             '/assets.utility2.rollup.begin.js',
+            '/assets.utility2.lib.db.js',
             '/assets.utility2.lib.istanbul.js',
             '/assets.utility2.lib.jslint.js',
-            '/assets.utility2.lib.db.js',
             '/assets.utility2.lib.sjcl.js',
             '/assets.utility2.lib.uglifyjs.js',
             '/assets.utility2.js',
@@ -4230,39 +4415,38 @@ tmp\\)\\(\\b\\|[_s]\\)\
         ].map(function (key) {
             switch (local.path.extname(key)) {
             case '.js':
-                return '// ' + key + '\n' + local.utility2.assetsDict[key];
+                return '// ' + key + '\n' + local.assetsDict[key];
             default:
                 return '// ' + key + '\n' +
-                    local.utility2.assetsDict['/assets.utility2.rollup.content.js']
+                    local.assetsDict['/assets.utility2.rollup.content.js']
                     .replace(
                         '/* utility2.rollup.js content */',
-                        'local.utility2.assetsDict[' + JSON.stringify(key) + '] = ' +
-                            JSON.stringify(local.utility2.assetsDict[key])
+                        'local.assetsDict[' + JSON.stringify(key) + '] = ' +
+                            JSON.stringify(local.assetsDict[key])
                     );
             }
-        }).join('\n\n\n\n');
+        }).join('\n\n\n\n'));
         // init testCaseDict
-        local.utility2.tryCatchReadFile(local.utility2.__dirname + '/test.js', 'utf8').replace(
+        local.tryCatchReadFile(local.__dirname + '/test.js', 'utf8').replace(
             (/\/\/ run shared js-env code - function[\S\s]+?\n {4}\}\(\)\);/),
             function (match0, ii, text) {
                 // preserve lineno
                 match0 = text.slice(0, ii).replace((/.+/g), '') + match0;
-                local.vm.runInNewContext(match0, local.utility2.objectSetDefault({
-                    local: local.utility2.testCaseDict
+                local.vm.runInNewContext(match0, local.objectSetDefault({
+                    local: local.testCaseDict
                 }, local.global));
             }
         );
         // merge previous test-report
-        if (local.utility2.envDict.npm_config_file_test_report_merge &&
-                local.fs.existsSync(
-                    local.utility2.envDict.npm_config_file_test_report_merge
-                )) {
-            local.utility2.testReportMerge(
-                local.utility2.testReport,
-                JSON.parse(local.fs.readFileSync(
-                    local.utility2.envDict.npm_config_file_test_report_merge,
+        if (local.env.npm_config_file_test_report_merge) {
+            console.log('merging file://' + local.env.npm_config_file_test_report_merge +
+                ' to test-report');
+            local.testReportMerge(
+                local.testReport,
+                JSON.parse(local.tryCatchReadFile(
+                    local.env.npm_config_file_test_report_merge,
                     'utf8'
-                ))
+                ) || '{}')
             );
         }
         // run the cli
@@ -4271,11 +4455,13 @@ tmp\\)\\(\\b\\|[_s]\\)\
         }
         switch (process.argv[2]) {
         case 'browserTest':
-            local.utility2.browserTest({}, local.utility2.exit);
+            local.browserTest({}, local.exit);
             break;
         }
         break;
     }
+    // save utility2-api
+    local.global.utility2_apiDict = local.objectSetDefault({}, local);
 }(
     (function () {
         'use strict';
@@ -4296,10 +4482,14 @@ tmp\\)\\(\\b\\|[_s]\\)\
                     'node';
             }
         }());
-        // init module
+        // init global
+        local.global = local.modeJs === 'browser'
+            ? window
+            : global;
+        // init utility2_rollup
+        local = local.global.utility2_rollup || local;
+        // init require
         if (local.modeJs === 'node') {
-            local = module;
-            local.modeJs = 'node';
             local.require2 = require;
         }
         return local;

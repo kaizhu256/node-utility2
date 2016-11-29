@@ -12,7 +12,7 @@ this zero-dependency package will run dynamic browser-tests with coverage (via e
 
 # cdn download
 - [http://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/assets.utility2.rollup.js](http://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/assets.utility2.rollup.js)
-- [http://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/assets.utility2.min.rollup.js](http://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/assets.utility2.min.rollup.js)
+- [http://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/assets.utility2.rollup.min.js](http://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/assets.utility2.rollup.min.js)
 
 
 
@@ -37,12 +37,14 @@ this zero-dependency package will run dynamic browser-tests with coverage (via e
 - add server stress test using electron
 - none
 
-#### change since 1aa51473
-- npm publish 2016.10.4
-- add es6-syntax support for code-coverage
-- add functions utility2.normalizeDict and utility2.normalizeList
-- coverage - globalize local.codeDict to global.__coverageCodeDict__
-- coverage - add in-file config-var /* istanbul ignore all */ to ignore the file
+#### change since 9354dc01
+- npm publish 2016.11.1
+- rename files index.* -> lib.utility2.*
+- use 'local' as primary namespace for tests
+- replace function uglifyIfProduction with assetsWrite
+- rename function middlewareJsonpStateInitDefault -> middlewareJsonpStateInit
+- add env npm_package_nameAlias
+- add webkit-polyfill for TextDecoder and TextEncoder
 - none
 
 #### this package requires
@@ -170,31 +172,26 @@ instruction
                     'node';
             }
         }());
-        /* istanbul ignore next */
-        // re-init local
-        local = local.modeJs === 'browser'
-            ? window.utility2.local
-            : module.isRollup
-            ? module
-            : process.env.npm_config_mode_start
-            // jslint-hack
-            ? module && module.moduleExports.local
-            : require('utility2').local;
-        // require modules
-        local.istanbul = local.utility2.istanbul;
-        local.jslint = local.utility2.jslint;
+        // init global
+        local.global = local.modeJs === 'browser'
+            ? window
+            : global;
+        // init utility2_rollup
+        local = local.global.utility2_rollup || (local.modeJs === 'browser'
+            ? window.utility2
+            : require('utility2'));
         // export local
         local.global.local = local;
-        // init envDict
-        local.utility2.objectSetDefault(local.utility2.envDict, {
+        // init env
+        local.objectSetDefault(local.env, {
             npm_package_description: 'undefined module',
             npm_package_name: 'undefined',
             npm_package_version: '0.0.1'
         });
         // run test-server
-        local.utility2.testRunServer(local);
+        local.testRunServer(local);
         // init assets
-        local.utility2.assetsDict['/assets.hello'] = 'hello';
+        local.assetsDict['/assets.hello'] = 'hello';
     }());
     switch (local.modeJs) {
 
@@ -209,15 +206,13 @@ instruction
          */
             options = {};
             // test ajax-path 'assets.hello'
-            local.utility2.ajax({
-                url: 'assets.hello'
-            }, function (error, xhr) {
-                local.utility2.tryCatchOnError(function () {
+            local.ajax({ url: 'assets.hello' }, function (error, xhr) {
+                local.tryCatchOnError(function () {
                     // validate no error occurred
-                    local.utility2.assert(!error, error);
+                    local.assert(!error, error);
                     // validate data
                     options.data = xhr.responseText;
-                    local.utility2.assert(options.data === 'hello', options.data);
+                    local.assert(options.data === 'hello', options.data);
                     onError();
                 }, onError);
             });
@@ -228,29 +223,29 @@ instruction
          */
             options = {};
             // test ajax-path '/undefined'
-            local.utility2.ajax({ url: '/undefined' }, function (error) {
-                local.utility2.tryCatchOnError(function () {
+            local.ajax({ url: '/undefined' }, function (error) {
+                local.tryCatchOnError(function () {
                     // validate error occurred
-                    local.utility2.assert(error, error);
+                    local.assert(error, error);
                     options.statusCode = error.statusCode;
                     // validate 404 http statusCode
-                    local.utility2.assert(options.statusCode === 404, options.statusCode);
+                    local.assert(options.statusCode === 404, options.statusCode);
                     onError();
                 }, onError);
             });
         };
         /* istanbul ignore next */
         local.testRun = function (event) {
-            if (local.utility2.modeTest) {
-                return;
-            }
-            switch (event && event.currentTarget.id) {
+            switch (event && event.currentTarget && event.currentTarget.id) {
             case 'testRunButton1':
                 // run tests
                 local.modeTest = true;
-                local.utility2.testRun(local);
+                local.testRunDefault(local);
                 break;
             default:
+                if (location.href.indexOf("modeTest=") >= 0) {
+                    return;
+                }
                 // reset stdout
                 document.querySelector('#outputTextarea2').value = '';
                 if (!document.querySelector('#inputTextarea1')) {
@@ -259,7 +254,7 @@ instruction
                 // try to JSON.stringify #inputTextarea1
                 try {
                     document.querySelector('#outputPreJsonStringify1').textContent =
-                        local.utility2.jsonStringifyOrdered(
+                        local.jsonStringifyOrdered(
                             JSON.parse(document.querySelector('#inputTextarea1').value),
                             null,
                             4
@@ -335,19 +330,15 @@ instruction
         /*
          * this function will test the webpage's default handling-behavior
          */
-            options = {
-                modeCoverageMerge: true,
-                url: local.utility2.serverLocalHost + '?modeTest=1'
-            };
-            local.utility2.browserTest(options, onError);
+            options = { modeCoverageMerge: true, url: local.serverLocalHost + '?modeTest=1' };
+            local.browserTest(options, onError);
         };
         // export local
         module.exports = local;
         // init assets
-        local.utility2.tryCatchOnError(function () {
-            local.utility2.assetsDict['/assets.example.js'] =
-                local.fs.readFileSync(__filename, 'utf8');
-        }, local.utility2.nop);
+        local.tryCatchOnError(function () {
+            local.assetsDict['/assets.example.js'] = local.fs.readFileSync(__filename, 'utf8');
+        }, local.nop);
         /* jslint-ignore-begin */
         local.templateIndexHtml = '\
 <!doctype html>\n\
@@ -355,9 +346,8 @@ instruction
 <head>\n\
 <meta charset="UTF-8">\n\
 <meta name="viewport" content="width=device-width, initial-scale=1">\n\
-<title>\n\
-{{envDict.npm_package_name}} v{{envDict.npm_package_version}}\n\
-</title>\n\
+<title>{{env.npm_package_name}} v{{env.npm_package_version}}</title>\n\
+<link href="assets.utility2.css" rel="stylesheet">\n\
 <style>\n\
 /*csslint\n\
     box-sizing: false,\n\
@@ -392,13 +382,13 @@ textarea[readonly] {\n\
     <h1>\n\
         <div id="ajaxProgressDiv1" style="background: #d00; height: 2px; left: 0; margin: 0; padding: 0; position: fixed; top: 0; transition: background 0.5s, width 1.5s; width: 25%;"></div>\n\
         <a\n\
-            {{#if envDict.npm_package_homepage}}\n\
-            href="{{envDict.npm_package_homepage}}"\n\
-            {{/if envDict.npm_package_homepage}}\n\
+            {{#if env.npm_package_homepage}}\n\
+            href="{{env.npm_package_homepage}}"\n\
+            {{/if env.npm_package_homepage}}\n\
             target="_blank"\n\
-        >{{envDict.npm_package_name}} v{{envDict.npm_package_version}}</a>\n\
+        >{{env.npm_package_name}} v{{env.npm_package_version}}</a>\n\
     </h1>\n\
-    <h3>{{envDict.npm_package_description}}</h3>\n\
+    <h3>{{env.npm_package_description}}</h3>\n\
     <h4><a download href="assets.app.js">download standalone app</a></h4>\n\
     <label>edit or paste script below to cover and test</label>\n\
 <textarea class="onkeyup" id="inputTextarea1">\n\
@@ -450,9 +440,7 @@ textarea[readonly] {\n\
         });\n\
     };\n\
 \n\
-    if (!window.utility2.modeTest) {\n\
-        window.utility2.testRun(testCaseDict);\n\
-    }\n\
+    window.utility2.testRunDefault(testCaseDict);\n\
 }());\n\
 </textarea>\n\
     <label>instrumented code</label>\n\
@@ -484,10 +472,8 @@ textarea[readonly] {\n\
 </html>\n\
 ';
         /* jslint-ignore-end */
-        local.utility2.assetsDict['/'] = local.utility2.templateRender(
-            local.templateIndexHtml,
-            { envDict: local.utility2.envDict }
-        );
+        local.assetsDict['/'] =
+            local.templateRender(local.templateIndexHtml, { env: local.env });
         break;
     }
 }());
@@ -510,7 +496,7 @@ textarea[readonly] {\n\
     "package.json": true,
     "author": "kai zhu <kaizhu256@gmail.com>",
     "bin": {
-        "utility2": "index.sh",
+        "utility2": "lib.utility2.sh",
         "utility2-istanbul": "lib.istanbul.js",
         "utility2-jslint": "lib.jslint.js",
         "utility2-uglifyjs": "lib.uglifyjs.js"
@@ -535,6 +521,7 @@ textarea[readonly] {\n\
         "web"
     ],
     "license": "MIT",
+    "main": "lib.utility2",
     "name": "utility2",
     "os": ["darwin", "linux"],
     "repository": {
@@ -542,22 +529,22 @@ textarea[readonly] {\n\
         "url": "https://github.com/kaizhu256/node-utility2.git"
     },
     "scripts": {
-        "build-ci": "./index.sh shRun shReadmeBuild",
+        "build-ci": "./lib.utility2.sh shRun shReadmeBuild",
         "env": "env",
-        "example.sh": "./index.sh shRunScreenCapture shReadmeTestSh example.sh",
+        "example.sh": "./lib.utility2.sh shRunScreenCapture shReadmeTestSh example.sh",
         "start": "\
 export PORT=${PORT:-8080} && \
 if [ -f assets.app.js ]; then node assets.app.js; return; fi && \
 export npm_config_mode_auto_restart=1 && \
-./index.sh shRun shIstanbulCover test.js",
+./lib.utility2.sh shRun shIstanbulCover test.js",
         "test": "\
-export PORT=$(./index.sh shServerPortRandom) && \
-export PORT_REPL=$(./index.sh shServerPortRandom) && \
+export PORT=$(./lib.utility2.sh shServerPortRandom) && \
+export PORT_REPL=$(./lib.utility2.sh shServerPortRandom) && \
 export npm_config_mode_auto_restart=1 && \
-./index.sh test test.js",
+./lib.utility2.sh test test.js",
         "test-all": "npm test --mode-coverage=all"
     },
-    "version": "2016.10.4"
+    "version": "2016.11.1"
 }
 ```
 
@@ -591,7 +578,7 @@ RUN cd / && \
 ```shell
 # Dockerfile.latest
 # https://hub.docker.com/_/node/
-FROM node:latest
+FROM node:boron
 MAINTAINER kai zhu <kaizhu256@gmail.com>
 VOLUME [ \
   "/mnt", \
@@ -613,6 +600,7 @@ RUN apt-get update && \
         gconf2 \
         less \
         libnotify4 \
+        nginx-extras \
         vim \
         xvfb
 # cache electron-lite
@@ -653,7 +641,7 @@ shBuildCiTestPre() {(set -e
 shBuildCiTestPost() {(set -e
 # this function will run the post-test build
     # if running legacy-node, then return
-    [ "$(node --version)" \< "v5.0" ] && return || true
+    [ "$(node --version)" \< "v7.0" ] && return || true
     export NODE_ENV=production
     # deploy app to gh-pages
     export TEST_URL="https://$(printf "$GITHUB_REPO" | \
@@ -685,7 +673,7 @@ shBuildCiTestPost() {(set -e
 shBuild() {(set -e
 # this function will run the main build
     # init env
-    . ./index.sh && shInit
+    . ./lib.utility2.sh && shInit
     # cleanup github-gh-pages dir
     # export BUILD_GITHUB_UPLOAD_PRE_SH="rm -fr build"
     # init github-gh-pages commit-limit
@@ -700,7 +688,7 @@ shBuild() {(set -e
     # docker build
     docker --version 2>/dev/null || return
     # if running legacy-node, then return
-    [ "$TRAVIS" ] && [ "$(node --version)" \< "v5.0" ] && return || true
+    [ "$TRAVIS" ] && [ "$(node --version)" \< "v7.0" ] && return || true
     export DOCKER_TAG="$(printf "$CI_BRANCH" | sed -e "s/docker.//")"
     # if $DOCKER_TAG is not unique from $CI_BRANCH, then return
     [ "$DOCKER_TAG" = "$CI_BRANCH" ] && return || true
@@ -720,8 +708,8 @@ shBuild() {(set -e
         do
             docker run "$GITHUB_REPO:$DOCKER_TAG" /bin/bash -c "set -e
                 curl https://raw.githubusercontent.com\
-/kaizhu256/node-utility2/alpha/index.sh > /tmp/index.sh
-                . /tmp/index.sh
+/kaizhu256/node-utility2/alpha/lib.utility2.sh > /tmp/lib.utility2.sh
+                . /tmp/lib.utility2.sh
                 npm install '$PACKAGE'
                 cd node_modules/utility2
                 shBuildInsideDocker
@@ -733,7 +721,7 @@ shBuild() {(set -e
     # docker push
     if [ "$DOCKER_PASSWORD" ]
     then
-        docker login -e="$DOCKER_EMAIL" -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
+        docker login -p="$DOCKER_PASSWORD" -u="$DOCKER_USERNAME"
         docker push "$GITHUB_REPO:$DOCKER_TAG"
     fi
 )}

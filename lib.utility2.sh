@@ -51,8 +51,8 @@ shBaseInit() {
         fi
         ;;
     esac
-    # init index.sh and .bashrc2
-    for FILE in "$HOME/index.sh" "$HOME/.bashrc2"
+    # init lib.utility2.sh and .bashrc2
+    for FILE in "$HOME/lib.utility2.sh" "$HOME/.bashrc2"
     do
         # source $FILE
         if [ -f "$FILE" ]
@@ -67,16 +67,21 @@ shBaseInit() {
 }
 
 shBaseInstall() {
-# this function will install .bashrc, .screenrc, .vimrc, and index.sh in $HOME,
+# this function will install .bashrc, .screenrc, .vimrc, and lib.utility2.sh in $HOME,
 # and is intended for aws-ec2 setup
-# curl https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/index.sh > $HOME/index.sh && . $HOME/index.sh && shBaseInstall
-    for FILE in .screenrc .vimrc index.sh
+# curl https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/lib.utility2.sh > $HOME/lib.utility2.sh && . $HOME/lib.utility2.sh && shBaseInstall
+    for FILE in .screenrc .vimrc lib.utility2.sh
     do
         curl -s "https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/$FILE" > \
             "$HOME/$FILE" || return $?
     done
+    # backup .bashrc
+    if [ -f "$HOME/.bashrc" ] && [ ! -f "$HOME/.bashrc.00" ]
+    then
+        cp $HOME/.bashrc $HOME/.bashrc.00 || return $?
+    fi
     # create .bashrc
-    printf '. $HOME/index.sh && shBaseInit' > "$HOME/.bashrc" || return $?
+    printf '. $HOME/lib.utility2.sh && shBaseInit' > "$HOME/.bashrc" || return $?
     # init .ssh/authorized_keys.root
     if [ -f "$HOME/.ssh/authorized_keys.root" ]
     then
@@ -105,7 +110,7 @@ shBrowserTest() {(set -e
     stupid: true
 */
 'use strict';
-require('$npm_config_dir_utility2').browserTest({
+require('$npm_config_dir_utility2/lib.utility2.js').browserTest({
     modeBrowserTest: '$modeBrowserTest',
     timeoutDefault: '$timeoutDefault',
     timeoutScreenCapture: '$timeoutScreenCapture',
@@ -125,11 +130,6 @@ require('$npm_config_dir_utility2').browserTest({
 shBuildApp() {(set -e
 # this function will build the app
     npm test --mode-test-case=testCase_build_app
-)}
-
-shBuildDoc() {(set -e
-# this function will build the doc
-    npm test --mode-test-case=testCase_build_doc
 )}
 
 shBuildCiDefault() {(set -e
@@ -161,11 +161,16 @@ shBuildCiDefault() {(set -e
     (export MODE_BUILD=gitLog &&
         shRunScreenCapture git log -50 --pretty="%ai\u000a%B") || return $?
     # if running legacy-node, then do not continue
-    [ "$(node --version)" \< "v5.0" ] && return || true
+    [ "$(node --version)" \< "v7.0" ] && return || true
     # upload build-artifacts to github, and if number of commits > $COMMIT_LIMIT,
     # then squash older commits
     (export MODE_BUILD=buildGithubUpload &&
         shBuildGithubUpload) || return $?
+)}
+
+shBuildDoc() {(set -e
+# this function will build the doc
+    npm test --mode-test-case=testCase_build_doc
 )}
 
 shBuildGithubUpload() {(set -e
@@ -197,14 +202,10 @@ shBuildGithubUpload() {(set -e
 shBuildInsideDocker() {(set -e
 # this function will run the build inside docker
     export npm_config_unsafe_perm=1
-    # source index.sh
-    curl https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/index.sh > \
-        /tmp/index.sh
-    . /tmp/index.sh
     # start xvfb
     shXvfbStart
     # https://github.com/npm/npm/issues/10686
-    # bug workaround - Cannot read property 'target' of null #10686
+    # bug-workaround - Cannot read property 'target' of null #10686
     sed -in -e 's/  "_requiredBy":/  "_requiredBy_":/' package.json
     rm -f package.jsonn
     # npm install
@@ -271,6 +272,26 @@ shDockerInstall() {(set -e
     wget -qO- https://get.docker.com/ | /bin/sh
     # test docker
     docker run hello-world
+)}
+
+shDockerLogs() {(set -e
+# this function log the docker container $1
+    docker logs -f --tail=256 $1
+)}
+
+shDockerNpmRestart() {(set -e
+# this function will npm-restart the app inside the docker-container $IMAGE:$NAME
+    DIR="$3"
+    DOCKER_PORT="$4"
+    IMAGE="$2"
+    NAME="$1"
+    shDockerRestart $NAME $IMAGE /bin/bash -c "set -e
+        curl https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/lib.utility2.sh > \
+            /tmp/lib.utility2.sh
+        . /tmp/lib.utility2.sh
+        cd $DIR
+        PORT=$DOCKER_PORT npm start
+    "
 )}
 
 shDockerRestart() {(set -e
@@ -383,19 +404,20 @@ shDockerRestartTransmission() {(set -e
 
 shDockerRm() {(set -e
 # this function will stop and rm the docker-containers $@
-    docker stop "$@" || true
-    docker rm -v "$@" || true
+    # wait for docker-container to stop
+    # docker stop "$@" || true
+    docker rm -fv "$@" || true
+)}
+
+shDockerRmAll() {(set -e
+# this function will stop and rm all docker-containers
+    shDockerRm $(docker ps -aq)
 )}
 
 shDockerRmSince() {(set -e
 # this function will stop and rm all docker-containers since $NAME
     NAME="$1"
     shDockerRm $(docker ps -aq --since="$NAME")
-)}
-
-shDockerRmAll() {(set -e
-# this function will stop and rm all docker-containers
-    shDockerRm $(docker ps -aq)
 )}
 
 shDockerRmiUntagged() {(set -e
@@ -409,24 +431,24 @@ shDockerSh() {(set -e
     COMMAND="${2:-/bin/bash}"
     NAME="$1"
     docker start "$NAME"
-    docker exec -it "$NAME" "$COMMAND"
+    docker exec -it "$NAME" $COMMAND
 )}
 
 shDockerStart() {(set -e
-# this function will start the docker-container $image:$name
-    COMMAND="$3"
-    IMAGE="$2"
+# this function will start the docker-container $IMAGE:$NAME with the command $@
     NAME="$1"
-    if [ "$COMMAND" ]
+    shift
+    IMAGE="$1"
+    shift
+    if [ "$DOCKER_PORT" ]
     then
-        docker run --name "$NAME" -dt -e debian_chroot="$NAME" \
-            -v "$HOME:/root" \
-            "$IMAGE" "$COMMAND"
-    else
-        docker run --name "$NAME" -dt -e debian_chroot="$NAME" \
-            -v "$HOME:/root" \
-            "$IMAGE"
+        DOCKER_OPTIONS="$DOCKER_OPTIONS -p $DOCKER_PORT:$DOCKER_PORT"
     fi
+    docker run --name "$NAME" -dt -e debian_chroot="$NAME" \
+        -v "$HOME:/root" \
+        $DOCKER_OPTIONS \
+        "$IMAGE" "$@"
+    shDockerLogs $NAME
 )}
 
 shDsStoreRm() {(set -e
@@ -471,7 +493,8 @@ shFileKeySort() {(set -e
 console.log('var aa = [' + require('fs').readFileSync('$FILE', 'utf8')
 /* jslint-ignore-begin */
     .replace((/\\n{2,}/gm), '\\n')
-    .replace((/^ {8}(\\w[^ \']*?) = .*?$/gm), '\`\'\$1\',')
+    .replace((/^( {8}\\w[^ ]*? =) .*?$/gm), '\`\'\$1\',')
+    .replace((/^(\\w+?)\\(\\) \\{.*?$/gm), '\`\'\$1\',')
     .replace((/\\n[^\`].*?$/gm), '')
     .replace((/^\W.*/), '')
     .replace((/\`/g), '') + '];\n\
@@ -485,14 +508,6 @@ JSON.stringify(aa) === JSON.stringify(bb)\n\
     );
 // </script>
     "
-)}
-
-shFileTrimTrailingWhitespace() {(set -e
-# this function will trim trailing whitespaces from the file
-    # find . -type file -print0 | xargs -0 sed -i -e 's/[ ]\{1,\}$//'
-    # find . -type file -print0 | xargs -0 sed -i '' -e 's/[ ]\{1,\}$//'
-    sed -in -e 's/[ ]\{1,\}$//' "$1"
-    rm -f "$1n"
 )}
 
 shFileTrimLeft() {(set -e
@@ -515,6 +530,14 @@ require('fs').writeFileSync('$FILE', require('fs').readFileSync('$FILE', 'utf8')
 process.stdout.write('$FILE');
 // </script>
     "
+)}
+
+shFileTrimTrailingWhitespace() {(set -e
+# this function will trim trailing whitespaces from the file
+    # find . -type file -print0 | xargs -0 sed -i -e 's/[ ]\{1,\}$//'
+    # find . -type file -print0 | xargs -0 sed -i '' -e 's/[ ]\{1,\}$//'
+    sed -in -e 's/[ ]\{1,\}$//' "$1"
+    rm -f "$1n"
 )}
 
 shGitDiffNameStatus() {(set -e
@@ -1198,6 +1221,11 @@ require('fs').writeFileSync(
     "
 )}
 
+shKillallElectron() {
+# this function will killall electron
+    killall Electron electron
+}
+
 shMountData() {(set -e
 # this function will mount $1 to /mnt/data, and is intended for aws-ec2 setup
 # $ shMountData /dev/sdc
@@ -1288,7 +1316,7 @@ shNpmTestPublished() {(set -e
     npm install "$npm_package_name"
     cd "node_modules/$npm_package_name"
     # https://github.com/npm/npm/issues/10686
-    # bug workaround - Cannot read property 'target' of null #10686
+    # bug-workaround - Cannot read property 'target' of null #10686
     sed -in -e 's/  "_requiredBy":/  "_requiredBy_":/' package.json
     rm -f package.jsonn
     # npm install
@@ -1575,7 +1603,7 @@ try {
 } catch (errorCaught) {
     testReport = { testPlatformList: [] };
 }
-require('$npm_config_dir_utility2/index.js').testReportCreate(testReport);
+require('$npm_config_dir_utility2/lib.utility2.js').testReportCreate(testReport);
 // </script>
     "
 )}
@@ -1777,7 +1805,7 @@ shMain() {
         ;;
     start)
         (shInit && export npm_config_mode_auto_restart=1 && export npm_config_mode_start=1 &&
-            shRun node "$npm_config_dir_utility2/test.js" "$@") || return $?
+            shRun shIstanbulCover "$npm_config_dir_utility2/test.js" "$@") || return $?
         ;;
     test)
         (shInit && shNpmTest "$@") || return $?

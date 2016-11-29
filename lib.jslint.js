@@ -38,6 +38,9 @@
         local.global = local.modeJs === 'browser'
             ? window
             : global;
+        // init utility2_rollup
+        local = local.global.utility2_rollup || local;
+        // init lib
         local.local = local.jslint = local;
     }());
 
@@ -755,7 +758,7 @@ local.CSSLint = CSSLint; local.JSLINT = JSLINT; }());
     // run browser js-env code - post-init
     case 'browser':
         // init exports
-        window.utility2_jslint = local;
+        local.global.utility2_jslint = local;
         break;
 
 
@@ -770,7 +773,7 @@ local.CSSLint = CSSLint; local.JSLINT = JSLINT; }());
         module.exports = module['./lib.jslint.js'] = module.jslint = local;
         module.exports.__dirname = __dirname;
         // run the cli
-        if (module !== require.main || module.isRollup) {
+        if (module !== require.main || local.global.utility2_rollup) {
             break;
         }
         // jslint files

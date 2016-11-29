@@ -38,6 +38,9 @@
         local.global = local.modeJs === 'browser'
             ? window
             : global;
+        // init utility2_rollup
+        local = local.global.utility2_rollup || local;
+        // init lib
         local.local = local.uglifyjs = local;
     }());
 
@@ -284,7 +287,7 @@ f){}}else n[1]=n[1].substr(0,2);return i?i.call(n,n):null}throw u}}}(),DOT_CALL_
     // run browser js-env code - post-init
     case 'browser':
         // init exports
-        window.utility2_uglifyjs = local;
+        local.global.utility2_uglifyjs = local;
         break;
 
 
@@ -299,7 +302,7 @@ f){}}else n[1]=n[1].substr(0,2);return i?i.call(n,n):null}throw u}}}(),DOT_CALL_
         module.exports = module['./lib.uglifyjs.js'] = module.uglifyjs = local;
         module.exports.__dirname = __dirname;
         // run the cli
-        if (module !== require.main || module.isRollup) {
+        if (module !== require.main || local.global.utility2_rollup) {
             break;
         }
         if ((/^(?:http|https):\/\//).test(process.argv[2])) {

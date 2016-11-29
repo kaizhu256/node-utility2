@@ -7,7 +7,7 @@
  *     <script src="assets.db-lite.js"></script>
  *     <script>
  *     var dbTable1;
- *     dbTable1 = window.dbTable1 = window.db_lite.dbTableCreateOne({ name: "dbTable1" });
+ *     dbTable1 = window.dbTable1 = window.utility2_db.dbTableCreateOne({ name: "dbTable1" });
  *     dbTable1.idIndexCreate({ name: "field1" });
  *     dbTable1.crudSetOneById({ field1: "hello", field2: "world" });
  *     console.log(dbTable1.crudGetManyByQuery({
@@ -20,8 +20,8 @@
  *
  * node example:
  *     var db, dbTable1;
- *     db_lite = require("./assets.db-lite.js");
- *     dbTable1 = global.dbTable1 = db_lite.dbTableCreateOne({ name: "dbTable1" });
+ *     utility2_db = require("./assets.db-lite.js");
+ *     dbTable1 = global.dbTable1 = utility2_db.dbTableCreateOne({ name: "dbTable1" });
  *     dbTable1.idIndexCreate({ name: "field1" });
  *     dbTable1.crudSetOneById({ field1: "hello", field2: "world" });
  *     console.log(dbTable1.crudGetManyByQuery({
@@ -73,6 +73,9 @@
         local.global = local.modeJs === 'browser'
             ? window
             : global;
+        // init utility2_rollup
+        local = local.global.utility2_rollup || local;
+        // init lib
         local.local = local.db = local;
     }());
 
@@ -80,8 +83,8 @@
 
     /* istanbul ignore next */
     // run shared js-env code - pre-function
-    (function (local) {
-        local.utility2.jsonCopy = function (arg) {
+    (function () {
+        local.jsonCopy = function (arg) {
         /*
          * this function will return a deep-copy of the JSON-arg
          */
@@ -90,7 +93,7 @@
                 : JSON.parse(JSON.stringify(arg));
         };
 
-        local.utility2.jsonStringifyOrdered = function (element, replacer, space) {
+        local.jsonStringifyOrdered = function (element, replacer, space) {
         /*
          * this function will JSON.stringify the element,
          * with object-keys sorted and circular-references removed
@@ -142,14 +145,14 @@
                 : element, replacer, space);
         };
 
-        local.utility2.nop = function () {
+        local.nop = function () {
         /*
          * this function will do nothing
          */
             return;
         };
 
-        local.utility2.normalizeDict = function (dict) {
+        local.normalizeDict = function (dict) {
         /*
          * this function will normalize the dict
          */
@@ -158,7 +161,7 @@
                 : {};
         };
 
-        local.utility2.normalizeList = function (list) {
+        local.normalizeList = function (list) {
         /*
          * this function will normalize the list
          */
@@ -167,7 +170,7 @@
                 : [];
         };
 
-        local.utility2.objectSetOverride = function (arg, overrides, depth) {
+        local.objectSetOverride = function (arg, overrides, depth) {
         /*
          * this function will recursively set overrides for items the arg
          */
@@ -191,20 +194,28 @@
                         (overrides2 &&
                         typeof overrides2 === 'object' &&
                         !Array.isArray(overrides2))) {
-                    // recurse
-                    local.utility2.objectSetOverride(arg2, overrides2, depth - 1);
+                    local.objectSetOverride(arg2, overrides2, depth - 1);
                     return;
                 }
                 // else set arg[key] with overrides[key]
-                arg[key] = arg === local.utility2.envDict
-                    // if arg is envDict, then overrides falsey value with empty string
+                arg[key] = arg === local.env
+                    // if arg is env, then overrides falsey value with empty string
                     ? overrides2 || ''
                     : overrides2;
             });
             return arg;
         };
 
-        local.utility2.onErrorWithStack = function (onError) {
+        local.onErrorDefault = function (error) {
+        /*
+         * this function will if error exists, then print error.stack to stderr
+         */
+            if (error && !local.global.__coverage__) {
+                console.error(error.stack);
+            }
+        };
+
+        local.onErrorWithStack = function (onError) {
         /*
          * this function will return a new callback that will call onError,
          * and append the current stack to any error
@@ -213,7 +224,7 @@
             stack = new Error().stack.replace((/(.*?)\n.*?$/m), '$1');
             return function (error, data, meta) {
                 if (error &&
-                        error !== local.utility2.errorDefault &&
+                        error !== local.errorDefault &&
                         String(error.stack).indexOf(stack.split('\n')[2]) < 0) {
                     // append the current stack to error.stack
                     error.stack += '\n' + stack;
@@ -222,15 +233,15 @@
             };
         };
 
-        local.utility2.onParallel = function (onError, onDebug) {
+        local.onParallel = function (onError, onDebug) {
         /*
          * this function will return a function that will
          * 1. run async tasks in parallel
          * 2. if counter === 0 or error occurred, then call onError with error
          */
             var self;
-            onError = local.utility2.onErrorWithStack(onError);
-            onDebug = onDebug || local.utility2.nop;
+            onError = local.onErrorWithStack(onError);
+            onDebug = onDebug || local.nop;
             self = function (error) {
                 onDebug(error, self);
                 // if previously counter === 0 or error occurred, then return
@@ -255,7 +266,7 @@
             // return callback
             return self;
         };
-    }({ utility2: local }));
+    }());
 
 
 
@@ -685,7 +696,7 @@
             // update timestamp
             timeNow = new Date().toISOString();
             dbRow._timeCreated = dbRow._timeCreated || timeNow;
-            dbRow._timeModified = timeNow;
+            dbRow._timeUpdated = timeNow;
             // normalize
             normalize(dbRow);
             dbRow = local.jsonCopy(dbRow);
@@ -758,21 +769,16 @@
                 return;
             }
             self.timerPersist = setTimeout(function () {
-                self.timerPersist = null;
-                self.save();
+                if (self.timerPersist) {
+                    self.timerPersist = null;
+                    self._save();
+                }
             }, 1000);
-        };
-
-        local._DbTable.prototype.clear = function (onError) {
-        /*
-         * this function will clear the dbTable (excluding idIndexList) and its persistence
-         */
-            this.reset(onError, 'clear');
         };
 
         local._DbTable.prototype.crudCountAll = function (onError) {
         /*
-         * this function will count the total number of dbRow's in the dbTable
+         * this function will count all of dbRow's in the dbTable
          */
             return local.setTimeoutOnError(onError, null, this.dbRowCount);
         };
@@ -859,6 +865,22 @@
                 return result;
             });
             return local.setTimeoutOnError(onError, null, local.dbRowProject(result));
+        };
+
+        local._DbTable.prototype.crudRemoveAll = function (onError) {
+        /*
+         * this function will remove all of the dbRow's from the dbTable
+         */
+            var idIndexList;
+            // save idIndexList
+            idIndexList = this.idIndexList;
+            // reset dbTable
+            local._DbTable.call(this, this);
+            // restore idIndexList
+            local.dbTableCreateOne({
+                name: this.name,
+                idIndexCreateList: idIndexList
+            }, onError);
         };
 
         local._DbTable.prototype.crudRemoveManyById = function (idDictList, onError) {
@@ -956,6 +978,19 @@
             ));
         };
 
+        local._DbTable.prototype.drop = function (onError) {
+        /*
+         * this function will drop the dbTable
+         */
+            console.error('dropping dbTable ' + this.name + ' ...');
+            // reset dbTable
+            local._DbTable.call(this, this);
+            // cancel pending persist
+            this.timerPersist = null;
+            // clear persistence
+            local.storageRemoveItem('dbTable.' + this.name, onError);
+        };
+
         local._DbTable.prototype.export = function (onError) {
         /*
          * this function will export the db
@@ -1026,41 +1061,44 @@
             return local.setTimeoutOnError(onError);
         };
 
-        local._DbTable.prototype.reset = function (onError, mode) {
-        /*
-         * this function will reset the dbTable (including idIndexList) and its persistence
-         */
-            var idIndexList;
-            if (mode === 'clear') {
-                // save idIndexList
-                idIndexList = this.idIndexList;
-                // reset dbTable
-                this.reset(onError);
-                // restore idIndexList
-                local.dbTableCreateOne({ name: this.name, idIndexCreateList: idIndexList });
-                return;
-            }
-            console.error('resetting dbTable ' + this.name + ' ...');
-            // reset dbTable
-            local._DbTable.call(this, this);
-            // cancel pending persist
-            this.timerPersist = null;
-            // clear persistence
-            local.storageRemoveItem('dbTable.' + this.name, onError);
-        };
-
-        local._DbTable.prototype.save = function (onError) {
+        local._DbTable.prototype._save = function (onError) {
         /*
          * this function will save the dbTable to storage
          */
             local.storageSetItem('dbTable.' + this.name, this.export(), onError);
         };
 
-        local.dbClear = function (onError) {
+        local.dbCrudRemoveAll = function (onError) {
         /*
-         * this function will reset the clear (excluding idIndexList) and its persistence
+         * this function will remove all dbRow's from the db
          */
-            local.dbReset(onError, 'clear');
+            var onParallel;
+            onParallel = local.onParallel(function (error) {
+                local.setTimeoutOnError(onError, error);
+            });
+            onParallel.counter += 1;
+            Object.keys(local.dbTableDict).forEach(function (key) {
+                onParallel.counter += 1;
+                local.dbTableDict[key].crudRemoveAll(onParallel);
+            });
+            onParallel();
+        };
+
+        local.dbDrop = function (onError) {
+        /*
+         * this function will drop the db
+         */
+            var onParallel;
+            onParallel = local.onParallel(function (error) {
+                local.setTimeoutOnError(onError, error);
+            });
+            onParallel.counter += 1;
+            local.storageClear(onParallel);
+            Object.keys(local.dbTableDict).forEach(function (key) {
+                onParallel.counter += 1;
+                local.dbTableDict[key].drop(onParallel);
+            });
+            onParallel();
         };
 
         local.dbExport = function (onError) {
@@ -1103,7 +1141,7 @@
                         throw new Error('dbImport - invalid operation - ' + match0);
                     }
                 } catch (errorCaught) {
-                    console.error(errorCaught.stack);
+                    local.onErrorDefault(errorCaught);
                 }
             });
             return local.setTimeoutOnError(onError);
@@ -1135,24 +1173,6 @@
                     });
                 onParallel();
             });
-        };
-
-        local.dbReset = function (onError, mode) {
-        /*
-         * this function will reset the reset (including idIndexList) and its persistence
-         */
-            var onParallel;
-            onParallel = local.onParallel(function (error) {
-                local.setTimeoutOnError(onError, error);
-            });
-            onParallel.counter += 1;
-            onParallel.counter += 1;
-            local.storageClear(onParallel);
-            Object.keys(local.dbTableDict).forEach(function (key) {
-                onParallel.counter += 1;
-                local.dbTableDict[key].reset(onParallel, mode);
-            });
-            onParallel();
         };
 
         local.dbRowGetItem = function (dbRow, key) {
@@ -1385,7 +1405,7 @@
             onParallel.counter += 1;
             Object.keys(local.dbTableDict).forEach(function (key) {
                 onParallel.counter += 1;
-                local.dbTableDict[key].save(onParallel);
+                local.dbTableDict[key]._save(onParallel);
             });
             onParallel();
         };
@@ -1511,7 +1531,7 @@
     // run browser js-env code - post-init
     case 'browser':
         // init exports
-        local.global.db_lite = local.global.utility2_db = local;
+        local.global.utility2_db = local;
         break;
 
 

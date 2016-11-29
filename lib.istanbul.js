@@ -109,8 +109,8 @@
             options = {};
             options.dir = process.cwd() + '/tmp/build/coverage.html';
             // merge previous coverage
-            if (local.modeJs === 'node' && process.env.npm_config_mode_coverage_append) {
-                console.log('appending coverage to file://' + options.dir + '/coverage.json');
+            if (local.modeJs === 'node' && process.env.npm_config_mode_coverage_merge) {
+                console.log('merging file://' + options.dir + '/coverage.json to coverage');
                 try {
                     local.coverageMerge(
                         local.global.__coverage__,
@@ -177,66 +177,66 @@
             return options.coverageReportHtml;
         };
 
-        local.fs = {
-            readFileSync: function (file) {
-                // return head.txt or foot.txt
-                file = local[file.slice(-8)];
-                if (local.modeJs === 'browser') {
-                    file = file
-                        .replace((/\bhtml\b/g), 'x-istanbul-html')
-                        .replace((/<style>[\S\s]+?<\/style>/), function (match0) {
-                            return match0
-                                .replace((/\S.*?\{/g), function (match0) {
-                                    return 'x-istanbul-html ' + match0
-                                        .replace((/,/g), ', x-istanbul-html ');
-                                });
-                        })
-                        .replace('position: fixed;', 'position: static;')
-                        .replace('margin-top: 170px;', 'margin-top: 10px;');
-                }
-                if (local.modeJs === 'node' && process.env.npm_package_homepage) {
-                    file = file
-                        .replace(
-                            '{{envDict.npm_package_homepage}}',
-                            process.env.npm_package_homepage
-                        )
-                        .replace(
-                            '{{envDict.npm_package_name}}',
-                            process.env.npm_package_name
-                        )
-                        .replace(
-                            '{{envDict.npm_package_version}}',
-                            process.env.npm_package_version
-                        );
-                } else {
-                    file = file.replace((/<h1 [\S\s]*<\/h1>/), '<h1>&nbsp;</h1>');
-                }
-                return file;
-            },
-            readdirSync: function () {
-                return [];
+        local.fs = {};
+
+        local.fs.readFileSync = function (file) {
+            // return head.txt or foot.txt
+            file = local[file.slice(-8)];
+            if (local.modeJs === 'browser') {
+                file = file
+                    .replace((/\bhtml\b/g), 'x-istanbul-html')
+                    .replace((/<style>[\S\s]+?<\/style>/), function (match0) {
+                        return match0
+                            .replace((/\S.*?\{/g), function (match0) {
+                                return 'x-istanbul-html ' + match0
+                                    .replace((/,/g), ', x-istanbul-html ');
+                            });
+                    })
+                    .replace('position: fixed;', 'position: static;')
+                    .replace('margin-top: 170px;', 'margin-top: 10px;');
             }
+            if (local.modeJs === 'node' && process.env.npm_package_homepage) {
+                file = file
+                    .replace(
+                        '{{env.npm_package_homepage}}',
+                        process.env.npm_package_homepage
+                    )
+                    .replace(
+                        '{{env.npm_package_name}}',
+                        process.env.npm_package_name
+                    )
+                    .replace(
+                        '{{env.npm_package_version}}',
+                        process.env.npm_package_version
+                    );
+            } else {
+                file = file.replace((/<h1 [\S\s]*<\/h1>/), '<h1>&nbsp;</h1>');
+            }
+            return file;
         };
+
+        local.fs.readdirSync = function () {
+            return [];
+        };
+
+        local.fs.writeFileSync = nop;
 
         local.fsWriteFileWithMkdirpSync = function (file, data) {
         /*
          * this function will synchronously 'mkdir -p' and write the data to file
          */
-            if (!local._fs || !file) {
-                return;
-            }
             // try to write to file
             try {
-                local._fs.writeFileSync(file, data);
+                require('fs').writeFileSync(file, data);
             } catch (errorCaught) {
                 // mkdir -p
                 require('child_process').spawnSync(
                     'mkdir',
-                    ['-p', local.path.dirname(file)],
+                    ['-p', require('path').dirname(file)],
                     { stdio: ['ignore', 1, 2] }
                 );
                 // re-write to file
-                local._fs.writeFileSync(file, data);
+                require('fs').writeFileSync(file, data);
             }
         };
 
@@ -303,6 +303,7 @@
     case 'node':
         // require modules
         local._fs = local.require2('fs');
+        local.fs.writeFileSync = local._fs.writeFileSync;
         local.module = require('module');
         local.path = local.require2('path');
         // init exports
@@ -1212,7 +1213,7 @@ local['head.txt'] = '\
 <body>\n\
 <div class="header {{reportClass}}">\n\
     <h1 style="font-weight: bold;">\n\
-        <a href="{{envDict.npm_package_homepage}}">{{envDict.npm_package_name}} v{{envDict.npm_package_version}}</a>\n\
+        <a href="{{env.npm_package_homepage}}">{{env.npm_package_name}} v{{env.npm_package_version}}</a>\n\
     </h1>\n\
     <h1>Code coverage report for <span class="entity">{{entity}}</span></h1>\n\
     <h2>\n\
@@ -1251,7 +1252,9 @@ local['head.txt'] = '\
                 },
                 writeFile: function (file, onError) {
                     options.coverageReportHtml += options.writerData + '\n\n';
-                    local.fsWriteFileWithMkdirpSync(options.writerFile, options.writerData);
+                    if (options.writerFile) {
+                        local.fsWriteFileWithMkdirpSync(options.writerFile, options.writerData);
+                    }
                     options.writerData = '';
                     options.writerFile = file;
                     onError(options.writer);
@@ -1384,7 +1387,7 @@ local.templateCoverageBadgeSvg =
         /*
          * this function will run the cli
          */
-            if ((module !== local.require2.main || module.isRollup) &&
+            if ((module !== local.require2.main || local.global.utility2_rollup) &&
                     !(options && options.runMain)) {
                 return;
             }
@@ -1476,6 +1479,9 @@ local.templateCoverageBadgeSvg =
         local.global = local.modeJs === 'browser'
             ? window
             : global;
+        // init utility2_rollup
+        local = local.global.utility2_rollup || local;
+        // init lib
         local.local = local.istanbul = local;
         // init module
         if (local.modeJs === 'node') {
