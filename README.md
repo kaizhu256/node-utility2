@@ -37,14 +37,9 @@ this zero-dependency package will run dynamic browser-tests with coverage (via e
 - add server stress test using electron
 - none
 
-#### change since 9354dc01
-- npm publish 2016.11.1
-- rename files index.* -> lib.utility2.*
-- use 'local' as primary namespace for tests
-- replace function uglifyIfProduction with assetsWrite
-- rename function middlewareJsonpStateInitDefault -> middlewareJsonpStateInit
-- add env npm_package_nameAlias
-- add webkit-polyfill for TextDecoder and TextEncoder
+#### change since f1bc7f88
+- npm publish 2016.11.2
+- streamline build-process for other packages
 - none
 
 #### this package requires
@@ -85,19 +80,15 @@ this zero-dependency package will run dynamic browser-tests with coverage (via e
 ```shell
 # example.sh
 
-# this shell script will
-    # npm install utility2
-    # serve a webpage that will interactively run browser-tests with coverage
+# this shell script will serve a webpage that will interactively run browser-tests with coverage
 
 # instruction
     # 1. copy and paste this entire shell script into a console and press enter
-    # 2. open a browser to http://localhost:8081
-    # 3. edit or paste script in browser to cover and test
+    # 2. play with the browser-demo on http://localhost:8081
 
 shExampleSh() {(set -e
     # npm install utility2
     npm install utility2
-
     # serve a webpage that will interactively run browser-tests with coverage
     cd node_modules/utility2 && export PORT=8081 && npm start
 )}
@@ -253,6 +244,7 @@ instruction
                 }
                 // try to JSON.stringify #inputTextarea1
                 try {
+                    document.querySelector('#outputPreJsonStringify1').textContent = '';
                     document.querySelector('#outputPreJsonStringify1').textContent =
                         local.jsonStringifyOrdered(
                             JSON.parse(document.querySelector('#inputTextarea1').value),
@@ -262,10 +254,13 @@ instruction
                 } catch (ignore) {
                 }
                 // jslint #inputTextarea1
-                local.jslint.jslintAndPrint(
-                    document.querySelector('#inputTextarea1').value,
-                    'inputTextarea1.js'
-                );
+                local.jslint.errorText = '';
+                if (document.querySelector('#inputTextarea1').value.indexOf('/*jslint') >= 0) {
+                    local.jslint.jslintAndPrint(
+                        document.querySelector('#inputTextarea1').value,
+                        'inputTextarea1.js'
+                    );
+                }
                 document.querySelector('#outputPreJslint1').textContent =
                     local.jslint.errorText
                     .replace((/\u001b\[\d+m/g), '')
@@ -379,21 +374,37 @@ textarea[readonly] {\n\
 </style>\n\
 </head>\n\
 <body>\n\
+<!-- utility2-comment\n\
+    <div id="ajaxProgressDiv1" style="background: #d00; height: 2px; left: 0; margin: 0; padding: 0; position: fixed; top: 0; transition: background 0.5s, width 1.5s; width: 25%;"></div>\n\
+utility2-comment -->\n\
     <h1>\n\
-        <div id="ajaxProgressDiv1" style="background: #d00; height: 2px; left: 0; margin: 0; padding: 0; position: fixed; top: 0; transition: background 0.5s, width 1.5s; width: 25%;"></div>\n\
+<!-- utility2-comment\n\
         <a\n\
             {{#if env.npm_package_homepage}}\n\
             href="{{env.npm_package_homepage}}"\n\
             {{/if env.npm_package_homepage}}\n\
             target="_blank"\n\
-        >{{env.npm_package_name}} v{{env.npm_package_version}}</a>\n\
+        >\n\
+utility2-comment -->\n\
+            {{env.npm_package_name}} v{{env.npm_package_version}}\n\
+<!-- utility2-comment\n\
+        </a>\n\
+utility2-comment -->\n\
     </h1>\n\
     <h3>{{env.npm_package_description}}</h3>\n\
     <h4><a download href="assets.app.js">download standalone app</a></h4>\n\
     <label>edit or paste script below to cover and test</label>\n\
 <textarea class="onkeyup" id="inputTextarea1">\n\
+// remove comment below to disable jslint\n\
 /*jslint\n\
-    browser: true\n\
+    bitwise: true,\n\
+    browser: true,\n\
+    maxerr: 8,\n\
+    maxlen: 96,\n\
+    node: true,\n\
+    nomen: true,\n\
+    regexp: true,\n\
+    stupid: true\n\
 */\n\
 (function () {\n\
     "use strict";\n\
@@ -443,12 +454,12 @@ textarea[readonly] {\n\
     window.utility2.testRunDefault(testCaseDict);\n\
 }());\n\
 </textarea>\n\
+    <pre id="outputPreJsonStringify1"></pre>\n\
+    <pre id="outputPreJslint1"></pre>\n\
     <label>instrumented code</label>\n\
     <textarea id="outputTextareaIstanbul1" readonly></textarea>\n\
     <label>stderr and stdout</label>\n\
     <textarea id="outputTextarea2" readonly></textarea>\n\
-    <pre id="outputPreJsonStringify1"></pre>\n\
-    <pre id="outputPreJslint1"></pre>\n\
     <button class="onclick" id="testRunButton1">run internal test</button><br>\n\
     <div id="testReportDiv1" style="display: none;"></div>\n\
     <h2>coverage-report</h2>\n\
@@ -462,7 +473,7 @@ textarea[readonly] {\n\
     <script src="assets.utility2.lib.sjcl.js"></script>\n\
     <script src="assets.utility2.lib.uglifyjs.js"></script>\n\
     <script src="assets.utility2.js"></script>\n\
-    <script src="jsonp.utility2.stateInit?callback=window.utility2.stateInit"></script>\n\
+    <script src="jsonp.utility2._stateInit?callback=window.utility2._stateInit"></script>\n\
     <script>window.utility2.onResetBefore.counter += 1;</script>\n\
     <script src="assets.example.js"></script>\n\
     <script src="assets.test.js"></script>\n\
@@ -544,7 +555,7 @@ export npm_config_mode_auto_restart=1 && \
 ./lib.utility2.sh test test.js",
         "test-all": "npm test --mode-coverage=all"
     },
-    "version": "2016.11.1"
+    "version": "2016.11.2"
 }
 ```
 

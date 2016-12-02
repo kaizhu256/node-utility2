@@ -575,14 +575,12 @@
                     // test module.exports is a function handling-behavior
                     function: {
                         example: '',
-                        exports: local.objectSetDefault(
-                            local.nop.bind(null),
-                            { aa: 1 }
-                        )
+                        exports: local.objectSetDefault(local.nop.bind(null), { aa: 1 })
                     },
                     // test default handling-behavior
                     utility2: {
-                        example: local.testRunDefault.toString().replace((/;/g), ';\n    '),
+                        example: local.testRunDefault.toString().replace((/;/g), ';\n    ') +
+                            '\n\n\n\n\n\n\n\nfunction nop(\n\n\n\n\n\n\n\n',
                         exports: local
                     }
                 }
@@ -663,9 +661,9 @@
                 // test path handling-behavior
                 ['/', local.__dirname].forEach(function (dir) {
                     [
-                        'aa/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb/zz.js',
                         'zz.js',
-                        'aa/zz.js'
+                        'aa/zz.js',
+                        'aa/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb/zz.js'
                     ].forEach(function (file) {
                         // cover file
                         eval(local.istanbul.instrumentSync(
@@ -770,28 +768,28 @@
                 [local.jslint, { errorText: '' }]
             ];
             local.testMock(options, function (onError) {
-                // test empty script handling-behavior
+                // test empty-script handling-behavior
                 local.jslint.jslintAndPrint('', 'empty.css');
                 // validate no error occurred
                 local.assert(!local.jslint.errorText, local.jslint.errorText);
-                // test csslint failed handling-behavior
+                // test csslint's failed handling-behavior
                 local.jslint.jslintAndPrint('syntax error', 'failed.css');
                 // validate error occurred
                 local.assert(local.jslint.errorText, local.jslint.errorText);
-                // test csslint passed handling-behavior
+                // test csslint's passed handling-behavior
                 local.jslint.jslintAndPrint('body { font: normal; }', 'passed.css');
                 // validate no error occurred
                 local.assert(!local.jslint.errorText, local.jslint.errorText);
-                // test csslint flexbox handling-behavior
+                // test csslint's flexbox handling-behavior
                 local.jslint.jslintAndPrint('body { display: flex; }', 'passed.css');
                 // validate no error occurred
                 local.assert(!local.jslint.errorText, local.jslint.errorText);
-                // test jslint failed handling-behavior
+                // test jslint's failed handling-behavior
                 local.jslint.jslintAndPrint('syntax error', 'failed.js');
                 // validate error occurred
                 local.assert(local.jslint.errorText, local.jslint.errorText);
-                // test jslint passed handling-behavior
-                local.jslint.jslintAndPrint('{}', 'passed.js');
+                // test jslint's passed handling-behavior
+                local.jslint.jslintAndPrint('var aa = 1;', 'passed.js');
                 // validate no error occurred
                 local.assert(!local.jslint.errorText, local.jslint.errorText);
                 // test /* jslint-ignore-begin */ ... /* jslint-ignore-end */
@@ -815,6 +813,28 @@
                     'String();\n' +
                     '/* jslint-indent-end */\n' +
                     '}());\n', 'passed.js');
+                // validate no error occurred
+                local.assert(!local.jslint.errorText, local.jslint.errorText);
+                onError();
+            }, onError);
+        };
+
+        local.testCase_jslintAndPrint_es6 = function (options, onError) {
+        /*
+         * this function will test jslintAndPrint's es6 handling-behavior
+         */
+            options = [
+                // suppress console.error
+                [console, { error: local.nop }],
+                [local.jslint, { errorText: '' }]
+            ];
+            local.testMock(options, function (onError) {
+                // test jslint's failed handling-behavior
+                local.jslint.jslintAndPrint('/*jslint es6: true*/\nsyntax error', 'failed.js');
+                // validate error occurred
+                local.assert(local.jslint.errorText, local.jslint.errorText);
+                // test jslint's passed handling-behavior
+                local.jslint.jslintAndPrint('/*jslint es6: true*/\nconst aa = 1;', 'passed.js');
                 // validate no error occurred
                 local.assert(!local.jslint.errorText, local.jslint.errorText);
                 onError();
@@ -1533,7 +1553,7 @@
          * this function will test uglify's default handling-behavior
          */
             options = {};
-            options.data = local.uglifyjs.uglify('aa = 1');
+            options.data = local.uglify('aa = 1');
             // validate data
             local.assertJsonEqual(options.data, 'aa=1');
             onError();
@@ -1606,7 +1626,7 @@
         };
 
         // init serverLocal
-        local.serverLocalUrlTest = function (url) {
+        local._serverLocalUrlTest = function (url) {
             url = local.urlParse(url).pathname;
             return local.modeJs === 'browser' && url.indexOf('/test.') === 0;
         };
@@ -1846,7 +1866,7 @@
          * this function will test istanbulCoverageMerge's default handling-behavior
          */
             options = {};
-            options.data = local.istanbulInstrumentSync(
+            options.data = local.istanbul.instrumentSync(
                 '(function () {\nreturn arg ' +
                     '? __coverage__ ' +
                     ': __coverage__;\n}());',
@@ -1856,7 +1876,11 @@
             // test null-case handling-behavior
             options.coverage1 = null;
             options.coverage2 = null;
-            local.istanbulCoverageMerge(options.coverage1, options.coverage2);
+            local.istanbul.coverageMerge(options.coverage1, options.coverage2);
+            // validate merged options.coverage1
+            local.assertJsonEqual(options.coverage1, null);
+            options.coverage2 = { undefined: null };
+            local.istanbul.coverageMerge(options.coverage1, options.coverage2);
             // validate merged options.coverage1
             local.assertJsonEqual(options.coverage1, null);
             // init options.coverage1
@@ -1867,7 +1891,7 @@ local.assertJsonEqual(options.coverage1,
 {"/test":{"b":{"1":[0,1]},"branchMap":{"1":{"line":2,"locations":[{"end":{"column":25,"line":2},"start":{"column":13,"line":2}},{"end":{"column":40,"line":2},"start":{"column":28,"line":2}}],"type":"cond-expr"}},"code":["(function () {","return arg ? __coverage__ : __coverage__;","}());"],"f":{"1":1},"fnMap":{"1":{"line":1,"loc":{"end":{"column":13,"line":1},"start":{"column":1,"line":1}},"name":"(anonymous_1)"}},"path":"/test","s":{"1":1,"2":1},"statementMap":{"1":{"end":{"column":5,"line":3},"start":{"column":0,"line":1}},"2":{"end":{"column":41,"line":2},"start":{"column":0,"line":2}}}}}
 );
 // test merge-create handling-behavior
-options.coverage1 = local.istanbulCoverageMerge({}, options.coverage1);
+options.coverage1 = local.istanbul.coverageMerge({}, options.coverage1);
 // validate options.coverage1
 local.assertJsonEqual(options.coverage1,
 {"/test":{"b":{"1":[0,1]},"branchMap":{"1":{"line":2,"locations":[{"end":{"column":25,"line":2},"start":{"column":13,"line":2}},{"end":{"column":40,"line":2},"start":{"column":28,"line":2}}],"type":"cond-expr"}},"code":["(function () {","return arg ? __coverage__ : __coverage__;","}());"],"f":{"1":1},"fnMap":{"1":{"line":1,"loc":{"end":{"column":13,"line":1},"start":{"column":1,"line":1}},"name":"(anonymous_1)"}},"path":"/test","s":{"1":1,"2":1},"statementMap":{"1":{"end":{"column":5,"line":3},"start":{"column":0,"line":1}},"2":{"end":{"column":41,"line":2},"start":{"column":0,"line":2}}}}}
@@ -1879,7 +1903,7 @@ local.assertJsonEqual(options.coverage2,
 {"/test":{"b":{"1":[1,0]},"branchMap":{"1":{"line":2,"locations":[{"end":{"column":25,"line":2},"start":{"column":13,"line":2}},{"end":{"column":40,"line":2},"start":{"column":28,"line":2}}],"type":"cond-expr"}},"code":["(function () {","return arg ? __coverage__ : __coverage__;","}());"],"f":{"1":1},"fnMap":{"1":{"line":1,"loc":{"end":{"column":13,"line":1},"start":{"column":1,"line":1}},"name":"(anonymous_1)"}},"path":"/test","s":{"1":1,"2":1},"statementMap":{"1":{"end":{"column":5,"line":3},"start":{"column":0,"line":1}},"2":{"end":{"column":41,"line":2},"start":{"column":0,"line":2}}}}}
 );
 // test merge-update handling-behavior
-local.istanbulCoverageMerge(options.coverage1, options.coverage2);
+local.istanbul.coverageMerge(options.coverage1, options.coverage2);
 // validate merged options.coverage1
 local.assertJsonEqual(options.coverage1,
 {"/test":{"b":{"1":[1,1]},"branchMap":{"1":{"line":2,"locations":[{"end":{"column":25,"line":2},"start":{"column":13,"line":2}},{"end":{"column":40,"line":2},"start":{"column":28,"line":2}}],"type":"cond-expr"}},"code":["(function () {","return arg ? __coverage__ : __coverage__;","}());"],"f":{"1":2},"fnMap":{"1":{"line":1,"loc":{"end":{"column":13,"line":1},"start":{"column":1,"line":1}},"name":"(anonymous_1)"}},"path":"/test","s":{"1":2,"2":2},"statementMap":{"1":{"end":{"column":5,"line":3},"start":{"column":0,"line":1}},"2":{"end":{"column":41,"line":2},"start":{"column":0,"line":2}}}}}
@@ -2213,7 +2237,7 @@ local.assertJsonEqual(options.coverage1,
             // start with coverage
             if (local.env.npm_config_mode_coverage) {
                 process.argv.splice(1, 1, __dirname + '/lib.istanbul.js', 'cover');
-                local.istanbul.cliRun({ runMain: true });
+                local.istanbul.cliRunIstanbul({ runMain: true });
                 return;
             }
             // start

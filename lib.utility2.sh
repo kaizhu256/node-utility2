@@ -493,8 +493,8 @@ shFileKeySort() {(set -e
 console.log('var aa = [' + require('fs').readFileSync('$FILE', 'utf8')
 /* jslint-ignore-begin */
     .replace((/\\n{2,}/gm), '\\n')
-    .replace((/^( {8}\\w[^ ]*? =) .*?$/gm), '\`\'\$1\',')
-    .replace((/^(\\w+?)\\(\\) \\{.*?$/gm), '\`\'\$1\',')
+    .replace((/^( {8}\\w[^ ]*? = .*?)$/gm), '\`\"\$1\",')
+    .replace((/^(\\w+?\\(\\) \\{.*?)$/gm), '\`\"\$1\",')
     .replace((/\\n[^\`].*?$/gm), '')
     .replace((/^\W.*/), '')
     .replace((/\`/g), '') + '];\n\

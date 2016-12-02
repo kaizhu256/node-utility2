@@ -50,5 +50,5 @@
 
         "test-all": "npm test --mode-coverage=all"
     },
-    "version": "2016.11.1"
+    "version": "2016.11.2"
 }

@@ -552,8 +552,8 @@
         local.storage = storage;
         local.storageClear = clear;
         local.storageDefer = defer;
-        local.storageDir = storageDir;
         local.storageDeferList = deferList;
+        local.storageDir = storageDir;
         local.storageGetItem = getItem;
         local.storageInit = init;
         local.storageKeys = keys;
@@ -774,6 +774,29 @@
                     self._save();
                 }
             }, 1000);
+        };
+
+        local._DbTable.prototype._save = function (onError) {
+        /*
+         * this function will save the dbTable to storage
+         */
+            local.storageSetItem('dbTable.' + this.name, this.export(), onError);
+        };
+
+        local.dbCrudRemoveAll = function (onError) {
+        /*
+         * this function will remove all dbRow's from the db
+         */
+            var onParallel;
+            onParallel = local.onParallel(function (error) {
+                local.setTimeoutOnError(onError, error);
+            });
+            onParallel.counter += 1;
+            Object.keys(local.dbTableDict).forEach(function (key) {
+                onParallel.counter += 1;
+                local.dbTableDict[key].crudRemoveAll(onParallel);
+            });
+            onParallel();
         };
 
         local._DbTable.prototype.crudCountAll = function (onError) {
@@ -1059,29 +1082,6 @@
             // persist
             self._persist();
             return local.setTimeoutOnError(onError);
-        };
-
-        local._DbTable.prototype._save = function (onError) {
-        /*
-         * this function will save the dbTable to storage
-         */
-            local.storageSetItem('dbTable.' + this.name, this.export(), onError);
-        };
-
-        local.dbCrudRemoveAll = function (onError) {
-        /*
-         * this function will remove all dbRow's from the db
-         */
-            var onParallel;
-            onParallel = local.onParallel(function (error) {
-                local.setTimeoutOnError(onError, error);
-            });
-            onParallel.counter += 1;
-            Object.keys(local.dbTableDict).forEach(function (key) {
-                onParallel.counter += 1;
-                local.dbTableDict[key].crudRemoveAll(onParallel);
-            });
-            onParallel();
         };
 
         local.dbDrop = function (onError) {

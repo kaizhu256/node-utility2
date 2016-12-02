@@ -918,6 +918,45 @@ local.templateTestReportHtml = '\
             return self;
         };
 
+        local._middlewareJsonpStateInit = function (request, response, nextMiddleware) {
+        /*
+         * this function will run the middleware that will
+         * serve the browser-state wrapped in the given jsonp-callback
+         */
+            var state;
+            if (request._stateInit || (request.urlParsed &&
+                    request.urlParsed.pathname === '/jsonp.utility2._stateInit')) {
+                state = { utility2: { env: {
+                    NODE_ENV: local.env.NODE_ENV,
+                    npm_config_mode_backend: local.env.npm_config_mode_backend,
+                    npm_config_mode_rollup: local.env.npm_config_mode_rollup,
+                    npm_package_description: local.env.npm_package_description,
+                    npm_package_homepage: local.env.npm_package_homepage,
+                    npm_package_name: local.env.npm_package_name,
+                    npm_package_nameAlias: local.env.npm_package_nameAlias,
+                    npm_package_version: local.env.npm_package_version
+                } } };
+                if (request._stateInit) {
+                    return state;
+                }
+                response.end(request.urlParsed.query.callback + '(' + JSON.stringify(state) +
+                    ');');
+                return;
+            }
+            nextMiddleware();
+        };
+
+        local._serverLocalUrlTest = local.nop;
+
+        local._stateInit = function (options) {
+        /*
+         * this function will init the state-options
+         */
+            local.objectSetOverride(local, options, 10);
+        };
+
+        local._testRunBefore = local.nop;
+
         local.ajax = function (options, onError) {
         /*
          * this function will send an ajax-request with error-handling and timeout
@@ -925,7 +964,7 @@ local.templateTestReportHtml = '\
             var timerTimeout, tmp, xhr;
             onError = local.onErrorWithStack(onError);
             // init modeServerLocal
-            if (!local.env.npm_config_mode_backend && local.serverLocalUrlTest(options.url)) {
+            if (!local.env.npm_config_mode_backend && local._serverLocalUrlTest(options.url)) {
                 xhr = new local._http.XMLHttpRequest();
             }
             // init xhr
@@ -1605,11 +1644,6 @@ return Utf8ArrayToStr(bff);
          * this function will build the app
          */
             var onParallel;
-            /* istanbul ignore next */
-            if (local.env.npm_config_mode_coverage === 'all') {
-                onError();
-                return;
-            }
             onParallel = local.onParallel(onError);
             onParallel.counter += 1;
             optionsList = optionsList.concat({
@@ -1634,13 +1668,13 @@ return Utf8ArrayToStr(bff);
                 file: '/index.html',
                 url: '/index.html'
             }, {
-                file: '/jsonp.utility2.stateInit',
-                url: '/jsonp.utility2.stateInit?callback=window.utility2.stateInit'
+                file: '/jsonp.utility2._stateInit',
+                url: '/jsonp.utility2._stateInit?callback=window.utility2._stateInit'
             });
             optionsList.forEach(function (options) {
                 // get uglified file
                 switch (local.path.extname(options.file)) {
-                case '.css':
+                // case '.css':
                 case '.js':
                     optionsList.push({
                         file: options.file.replace((/(\.\w+$)/), '.min$1'),
@@ -1701,10 +1735,16 @@ return Utf8ArrayToStr(bff);
             onParallel();
         };
 
+        /* istanbul ignore next */
         local.buildDoc = function (options, onError) {
         /*
          * this function will build the doc
          */
+            if (local.env.npm_config_mode_coverage === 'all') {
+                onError();
+                return;
+            }
+            // init moduleDict
             local.objectSetDefault(options, local.objectLiteralize({
                 exampleFileList: ['README.md', 'test.js', local.env.npm_package_main + '.js'],
                 moduleDict: {
@@ -1714,6 +1754,24 @@ return Utf8ArrayToStr(bff);
                     }]
                 }
             }), 2);
+            // init moduleDict.*.prototype
+            options.moduleExports = options.moduleDict[local.env.npm_package_nameAlias].exports;
+            Object.keys(options.moduleExports).forEach(function (key) {
+                if ((/[A-Z]/).test(key[0]) &&
+                        options.moduleExports[key] &&
+                        options.moduleExports[key].prototype &&
+                        options.moduleExports[key] !== local.global.utility2_apiDict[key]) {
+                    options.moduleDict[
+                        local.env.npm_package_nameAlias + '.' + key + '.prototype'
+                    ] = options.moduleDict[
+                        local.env.npm_package_nameAlias + '.' + key + '.prototype'
+                    ] || {
+                        exampleFileList: [],
+                        exports: options.moduleExports[key].prototype
+                    };
+                }
+            });
+            // init moduleDict.example
             Object.keys(options.moduleDict).forEach(function (key) {
                 options.moduleDict[key].example =
                     options.moduleDict[key].exampleFileList
@@ -1729,6 +1787,8 @@ return Utf8ArrayToStr(bff);
                 local.env.npm_config_dir_build + '/doc.api.html',
                 local.docApiCreate(options)
             );
+            console.log('created documentation file://' + local.env.npm_config_dir_build +
+                '/doc.api.html\n');
             local.browserTest({
                 modeBrowserTest: 'screenCapture',
                 url: 'file://' + local.env.npm_config_dir_build + '/doc.api.html'
@@ -1880,11 +1940,13 @@ return Utf8ArrayToStr(bff);
                     return {
                         elementList: Object.keys(module.exports)
                             .filter(function (key) {
-                                return key && key[0] !== '_' &&
-                                    !(/\W/).test(key) &&
-                                    key.indexOf('testCase_') !== 0 &&
-                                    (module.exports === local || module.exports[key] !==
-                                        local.global.utility2_apiDict[key]);
+                                return local.tryCatchOnError(function () {
+                                    return key && key[0] !== '_' &&
+                                        !(/\W/).test(key) &&
+                                        key.indexOf('testCase_') !== 0 &&
+                                        (module.exports === local || module.exports[key] !==
+                                            local.global.utility2_apiDict[key]);
+                                }, local.nop);
                             })
                             .map(function (key) {
                                 elementName = key;
@@ -2410,34 +2472,6 @@ return Utf8ArrayToStr(bff);
                 };
             });
             // default to nextMiddleware
-            nextMiddleware();
-        };
-
-        local.middlewareJsonpStateInit = function (request, response, nextMiddleware) {
-        /*
-         * this function will run the middleware that will
-         * serve the browser-state wrapped in the given jsonp-callback
-         */
-            var state;
-            if (request.stateInit || (request.urlParsed &&
-                    request.urlParsed.pathname === '/jsonp.utility2.stateInit')) {
-                state = { utility2: { env: {
-                    NODE_ENV: local.env.NODE_ENV,
-                    npm_config_mode_backend: local.env.npm_config_mode_backend,
-                    npm_config_mode_rollup: local.env.npm_config_mode_rollup,
-                    npm_package_description: local.env.npm_package_description,
-                    npm_package_homepage: local.env.npm_package_homepage,
-                    npm_package_name: local.env.npm_package_name,
-                    npm_package_nameAlias: local.env.npm_package_nameAlias,
-                    npm_package_version: local.env.npm_package_version
-                } } };
-                if (request.stateInit) {
-                    return state;
-                }
-                response.end(request.urlParsed.query.callback + '(' + JSON.stringify(state) +
-                    ');');
-                return;
-            }
             nextMiddleware();
         };
 
@@ -2995,7 +3029,7 @@ tmp\\)\\(\\b\\|[_s]\\)\
                     case '.json':
                         // jslint file
                         local.jslintAndPrintConditional(
-                            local.fs.readFileSync(file, 'utf8'),
+                            local.tryCatchReadFile(file, 'utf8'),
                             file
                         );
                         break;
@@ -3019,7 +3053,10 @@ tmp\\)\\(\\b\\|[_s]\\)\
             }
             fileExampleJs = process.cwd() + '/example.js';
             fileMain = process.cwd() + '/' + local.env.npm_package_main;
+            global.utility2_moduleExports = require(fileMain + '.js');
             // read script from README.md
+            script = 'module.exports = require("./");\n' +
+                'module.exports.templateIndexHtml = "";\n';
             local.fs.readFileSync(process.cwd() + '/README.md', 'utf8').replace(
                 (/```\w*?(\n[\W\s]*?example.js[\n\"][\S\s]+?)\n```/),
                 function (match0, match1, ii, text) {
@@ -3029,7 +3066,6 @@ tmp\\)\\(\\b\\|[_s]\\)\
                     script = text.slice(0, ii).replace((/.+/g), '') + match1;
                 }
             );
-            global.utility2_moduleExports = require(fileMain + '.js');
             script = script
                 // alias require($npm_package_name) to utility2_moduleExports;
                 .replace(
@@ -3039,7 +3075,7 @@ tmp\\)\\(\\b\\|[_s]\\)\
                 // uncomment utility2-comment
                 .replace((/<!-- utility2-comment\b([\S\s]+?)\butility2-comment -->/g), '$1');
             // jslint script
-            local.jslintAndPrint(script, fileExampleJs);
+            local.jslintAndPrintConditional(script, fileExampleJs);
             // cover script
             script = local.istanbulInstrumentInPackage(script, fileExampleJs);
             // init module
@@ -3077,7 +3113,7 @@ tmp\\)\\(\\b\\|[_s]\\)\
                 'header',
                 '/assets.utility2.rollup.js',
                 '/assets.utility2.rollup.begin.js',
-                'local.stateInit',
+                'local._stateInit',
                 '/assets.lib.js',
                 '/assets.example.js',
                 '/assets.test.js',
@@ -3096,15 +3132,15 @@ instruction\n\
     1. save this script as assets.app.js\n\
     2. run the shell command:\n\
         $ PORT=8081 node assets.app.js\n\
-    3. run the browser-demo on http://localhost:8081\n\
+    3. play with the browser-demo on http://localhost:8081\n\
 */\n\
 ';
 /* jslint-ignore-end */
-                case 'local.stateInit':
+                case 'local._stateInit':
                     script = local.assetsDict['/assets.utility2.rollup.content.js'].replace(
                         '/* utility2.rollup.js content */',
                         key + '(' + JSON.stringify(
-                            local.middlewareJsonpStateInit({ stateInit: true })
+                            local._middlewareJsonpStateInit({ _stateInit: true })
                         ) + ');'
                     );
                     break;
@@ -3142,8 +3178,6 @@ instruction\n\
                 fnc();
             }
         };
-
-        local.serverLocalUrlTest = local.nop;
 
         local.serverRespondDefault = function (request, response, statusCode, error) {
         /*
@@ -3310,13 +3344,6 @@ instruction\n\
          * this function will return the base64-encoded sha-256 hash of the string data
          */
             return local.sjcl.codec.base64.fromBits(local.sjcl.hash.sha256.hash(data));
-        };
-
-        local.stateInit = function (options) {
-        /*
-         * this function will init the state-options
-         */
-            local.objectSetOverride(local, options, 10);
         };
 
         local.streamReadAll = function (stream, onError) {
@@ -3847,8 +3874,6 @@ instruction\n\
             );
         };
 
-        local.testRunBefore = local.nop;
-
         local.testRunDefault = function (options) {
         /*
          * this function will run all tests in testPlatform.testCaseList
@@ -3862,7 +3887,7 @@ instruction\n\
             if (!options.testRunBeforeDone) {
                 options.testRunBeforeTimer = options.testRunBeforeTimer ||
                     setTimeout(function () {
-                        local.testRunBefore();
+                        local._testRunBefore();
                         local.onReadyAfter(function () {
                             options.testRunBeforeDone = true;
                             local.testRunDefault(options);
@@ -3870,7 +3895,7 @@ instruction\n\
                     });
                 return;
             }
-            // reset testRunBefore
+            // reset _testRunBefore
             options.testRunBeforeDone = options.testRunBeforeTimer = null;
             // visual notification - testRun
             local.ajaxProgressUpdate();
@@ -4038,7 +4063,7 @@ instruction\n\
                 middleware: local.middlewareGroupCreate([
                     local.middlewareInit,
                     local.middlewareAssetsCached,
-                    local.middlewareJsonpStateInit
+                    local._middlewareJsonpStateInit
                 ]),
                 middlewareError: local.middlewareError
             });
@@ -4307,7 +4332,7 @@ instruction\n\
         local.timeoutDefault = Number(local.timeoutDefault || 30000);
         local.onReadyAfter(local.nop);
         // init state
-        local.stateInit({});
+        local._stateInit({});
     }());
     switch (local.modeJs) {
 

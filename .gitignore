@@ -4,7 +4,9 @@
 *~
 .*
 core
+electron-lite
 example.js
 external
 node_modules
 tmp
+utility2

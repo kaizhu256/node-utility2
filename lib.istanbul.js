@@ -1383,7 +1383,7 @@ local.templateCoverageBadgeSvg =
     case 'node':
         /* istanbul ignore next */
         // run the cli
-        local.cliRun = function (options) {
+        local.cliRunIstanbul = function (options) {
         /*
          * this function will run the cli
          */
@@ -1440,7 +1440,7 @@ local.templateCoverageBadgeSvg =
                 if (process.env.npm_config_mode_coverage) {
                     process.argv[2] = 'cover';
                     // re-run cli
-                    local.cliRun(options);
+                    local.cliRunIstanbul(options);
                     return;
                 }
                 // init process.argv
@@ -1451,7 +1451,7 @@ local.templateCoverageBadgeSvg =
                 break;
             }
         };
-        local.cliRun();
+        local.cliRunIstanbul();
         break;
     }
 }(
