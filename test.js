@@ -494,7 +494,7 @@
             local.assertJsonEqual(options.text2, local.bufferToString(options.text2));
             // test base64 handling-behavior
             options.text3 = local.bufferToString(local.bufferCreate(
-                local.bufferToString(options.bff1, 'base64'),
+                local.bufferToBase64(options.bff1),
                 'base64'
             ));
             local.assertJsonEqual(options.text2, options.text3);
@@ -885,30 +885,53 @@
             onError();
         };
 
+        local.testCase_jwtA256GcmXxx_default = function (options, onError) {
+        /*
+         * this function will test jwtA256GcmXxx's default handling-behavior
+         */
+            options = {};
+            options.key = local.jwtAes256KeyCreate();
+            // use canonical example at https://jwt.io/
+            options.data = { sub: '1234567890', name: 'John Doe', admin: true };
+            options.data = local.jwtNormalize(options.data);
+            options.data = JSON.parse(local.jsonStringifyOrdered(options.data));
+            // encrypt token
+            options.token = local.jwtA256GcmEncrypt(options.data, options.key);
+            // validate encrypted-token
+            local.assertJsonEqual(
+                local.jwtA256GcmDecrypt(options.token, options.key),
+                options.data
+            );
+            // test decryption-failed handling-behavior
+            local.assertJsonEqual(local.jwtA256GcmDecrypt(options.token, null), {});
+            onError();
+        };
+
         local.testCase_jwtHs256Xxx_default = function (options, onError) {
         /*
          * this function will test jwtHs256Xxx's default handling-behavior
          */
             options = {};
+            options.key = local.jwtBase64UrlNormalize(local.stringToBase64('secret'));
             // use canonical example at https://jwt.io/
             options.data = { sub: '1234567890', name: 'John Doe', admin: true };
-            options.token = local.jwtHs256Encode('secret', options.data);
-            // validate encoded token
+            options.token = local.jwtHs256Encode(options.data, options.key);
+            // validate encoded-token
             local.assertJsonEqual(
                 options.token,
                 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9' +
                     '.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9' +
                     '.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ'
             );
-            // test decoding-failed handling-behavior
-            options.data = local.jwtHs256Decode('invalid', options.token);
-            local.assertJsonEqual(options.data, undefined);
-            options.data = local.jwtHs256Decode('secret', options.token);
-            // validate decoded data
+            options.data = local.jwtHs256Decode(options.token, options.key);
+            // validate decoded-data
             local.assertJsonEqual(
                 options.data,
                 { admin: true, name: 'John Doe', sub: '1234567890' }
             );
+            // test decoding-failed handling-behavior
+            options.data = local.jwtHs256Decode(options.token, 'undefined');
+            local.assertJsonEqual(options.data, {});
             onError();
         };
 
@@ -1283,31 +1306,6 @@
             local.runIfTrue(options, onError);
         };
 
-        local.testCase_sjclCipherAes128Xxx_default = function (options, onError) {
-        /*
-         * this function will test sjclCipherAes128Xxx's default handling-behavior
-         */
-            options = {};
-            options.encrypted = local.sjclCipherAes128Encrypt('password', 'aa');
-            // test sjclCipherAes128Decrypt's fail handling-behavior
-            options.decrypted = local.sjclCipherAes128Decrypt('invalid', options.encrypted);
-            local.assertJsonEqual(options.decrypted, undefined);
-            // test sjclCipherAes128Decrypt's pass handling-behavior
-            options.decrypted = local.sjclCipherAes128Decrypt('password', options.encrypted);
-            local.assertJsonEqual(options.decrypted, 'aa');
-            onError();
-        };
-
-        local.testCase_sjclHashHmacSha256Xxx_default = function (options, onError) {
-        /*
-         * this function will test sjclHashHmacSha256Xxx's default handling-behavior
-         */
-            options = {};
-            options.data = local.sjclHashHmacSha256Create('password', 'aa');
-            local.assertJsonEqual(options.data, 'VmlfoTFvqZbSJSwCUzquEt5DNQsHSzaVYJ1zr1G8A04=');
-            onError();
-        };
-
         local.testCase_sjclHashScryptXxx_default = function (options, onError) {
         /*
          * this function will test sjclHashScryptXxx's default handling-behavior
@@ -1553,7 +1551,12 @@
          * this function will test uglify's default handling-behavior
          */
             options = {};
-            options.data = local.uglify('aa = 1');
+            // test css handling-behavior
+            options.data = local.uglify('body { margin: 0; }', 'aa.css');
+            // validate data
+            local.assertJsonEqual(options.data, 'body{margin:0;}');
+            // test js handling-behavior
+            options.data = local.uglify('aa = 1', 'aa.js');
             // validate data
             local.assertJsonEqual(options.data, 'aa=1');
             onError();
@@ -2157,7 +2160,7 @@ local.assertJsonEqual(options.coverage1,
         // coverage-hack - re-run test-server
         local.testRunServer(local);
         // init test-middleware
-        local.middleware.middlewareList.push(function (request, response, nextMiddleware) {
+        local._middleware.middlewareList.push(function (request, response, nextMiddleware) {
         /*
          * this function will run the test-middleware
          */
@@ -2196,7 +2199,7 @@ local.assertJsonEqual(options.coverage1,
                     var error;
                     error = new Error('error');
                     error.statusCode = 500;
-                    local.middlewareError(error, request, response);
+                    local._middlewareError(error, request, response);
                     onError();
                 }, local.nop);
                 break;

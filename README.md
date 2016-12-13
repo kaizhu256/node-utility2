@@ -11,8 +11,8 @@ this zero-dependency package will run dynamic browser-tests with coverage (via e
 
 
 # cdn download
-- [http://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/assets.utility2.rollup.js](http://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/assets.utility2.rollup.js)
-- [http://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/assets.utility2.rollup.min.js](http://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/assets.utility2.rollup.min.js)
+- [https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/assets.utility2.rollup.js](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/assets.utility2.rollup.js)
+- [https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/assets.utility2.rollup.min.js](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/assets.utility2.rollup.min.js)
 
 
 
@@ -37,9 +37,10 @@ this zero-dependency package will run dynamic browser-tests with coverage (via e
 - add server stress test using electron
 - none
 
-#### change since f1bc7f88
-- npm publish 2016.11.2
-- streamline build-process for other packages
+#### change since e3e981d4
+- npm publish 2016.12.1
+- merge utility2 namespace into local namespace
+- revamp encryption features to primarily use json-web-encryption
 - none
 
 #### this package requires
@@ -397,15 +398,10 @@ utility2-comment -->\n\
 <textarea class="onkeyup" id="inputTextarea1">\n\
 // remove comment below to disable jslint\n\
 /*jslint\n\
-    bitwise: true,\n\
     browser: true,\n\
-    maxerr: 8,\n\
-    maxlen: 96,\n\
-    node: true,\n\
-    nomen: true,\n\
-    regexp: true,\n\
-    stupid: true\n\
+    es6: true\n\
 */\n\
+/*global window*/\n\
 (function () {\n\
     "use strict";\n\
     var testCaseDict;\n\
@@ -431,7 +427,7 @@ utility2-comment -->\n\
      * this function will demo a passed ajax test\n\
      */\n\
         var data;\n\
-        options = { url: "/" };\n\
+        options = {url: "/"};\n\
         // test ajax request for main-page "/"\n\
         window.utility2.ajax(options, function (error, xhr) {\n\
             try {\n\
@@ -555,7 +551,7 @@ export npm_config_mode_auto_restart=1 && \
 ./lib.utility2.sh test test.js",
         "test-all": "npm test --mode-coverage=all"
     },
-    "version": "2016.11.2"
+    "version": "2016.12.1"
 }
 ```
 

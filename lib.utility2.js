@@ -413,7 +413,7 @@ local.templateTestReportHtml = '\
             ? local.global.Blob
             : function (array, options) {
               /*
-               * this function will return a node-compatible Blob instance
+               * this function will create a node-compatible Blob instance
                */
                 this.bff = local.bufferConcat(array);
                 this.type = options && options.type;
@@ -422,7 +422,7 @@ local.templateTestReportHtml = '\
         // init lib FormData
         local.FormData = function () {
         /*
-         * this function will return a serverLocal-compatible FormData instance
+         * this function will create a serverLocal-compatible FormData instance
          * https://xhr.spec.whatwg.org/#dom-formdata
          * The FormData(form) constructor must run these steps:
          * 1. Let fd be a new FormData object.
@@ -478,7 +478,7 @@ local.templateTestReportHtml = '\
                 return;
             }
             // init boundary
-            boundary = '--' + local.uuidTimeCreate();
+            boundary = '--' + Date.now().toString(16) + Math.random().toString(16);
             // init result
             result = [];
             onParallel = local.onParallel(function (error) {
@@ -918,6 +918,19 @@ local.templateTestReportHtml = '\
             return self;
         };
 
+        local._middlewareError = function (error, request, response) {
+        /*
+         * this function will run the middleware that will handle errors
+         */
+            // if error occurred, then respond with '500 Internal Server Error',
+            // else respond with '404 Not Found'
+            local.serverRespondDefault(request, response, error
+                ? (error.statusCode >= 400 && error.statusCode < 600
+                    ? error.statusCode
+                    : 500)
+                : 404, error);
+        };
+
         local._middlewareJsonpStateInit = function (request, response, nextMiddleware) {
         /*
          * this function will run the middleware that will
@@ -1167,13 +1180,13 @@ local.templateTestReportHtml = '\
                 file.length >= 2 &&
                 file[file.length - 2] !== 'min' &&
                 file[file.length - 1]) {
-            // case 'css':
+            case 'css':
             case 'js':
                 file.splice(-1, 0, 'min');
                 file = file.join('.');
                 local.tryCatchOnError(function () {
                     local.assetsDict[file] = local.env.NODE_ENV === 'production'
-                        ? local.uglify(data)
+                        ? local.uglify(data, file)
                         : data;
                 }, local.nop);
                 break;
@@ -1194,7 +1207,7 @@ local.templateTestReportHtml = '\
                 // readAsDataURL
                 case 'dataURL':
                     data = 'data:' + (blob.type || '') + ';base64,' +
-                        local.bufferToString(blob.bff, 'base64');
+                        local.bufferToBase64(blob.bff);
                     break;
                 // readAsText
                 case 'text':
@@ -1282,8 +1295,8 @@ local.templateTestReportHtml = '\
                     );
                     // init file urlBrowser
                     options.modeNext = 20;
-                    options.urlBrowser = local.env.npm_config_dir_tmp +
-                        '/electron.' + local.uuidTimeCreate() + '.html';
+                    options.urlBrowser = local.env.npm_config_dir_tmp + '/electron.' +
+                        Date.now().toString(16) + Math.random().toString(16) + '.html';
                     local.fsWriteFileWithMkdirpSync(options.urlBrowser, '<style>body {' +
                             'border: 1px solid black;' +
                             'margin: 0;' +
@@ -1488,7 +1501,7 @@ local.templateTestReportHtml = '\
 
         local.bufferCreate = function (text, encoding) {
         /*
-         * this function will return a Uint8Array from the text,
+         * this function will create a Uint8Array from the text,
          * with either 'utf8' (default) or 'base64' encoding
          */
             if (typeof text === 'string') {
@@ -1522,7 +1535,7 @@ return new local.global.Uint8Array(utf8ToBytes(text));
 
         local.bufferCreateIfNotBuffer = function (text, encoding) {
         /*
-         * this function will return a Uint8Array from the text with the given encoding,
+         * this function will create a Uint8Array from the text with the given encoding,
          * if it is not already a Uint8Array
          */
             return text instanceof local.global.Uint8Array
@@ -1561,6 +1574,19 @@ return new local.global.Uint8Array(utf8ToBytes(text));
                 }
             }
             return subBff.length && -1;
+        };
+
+        local.bufferRandomBytes = function (length) {
+        /*
+         * this function will create create a Uint8Array with the given length,
+         * filled with random bytes
+         */
+            var bff, ii;
+            bff = new local.global.Uint8Array(length);
+            for (ii = 0; ii < bff.length; ii += 1) {
+                bff[ii] = Math.random() * 0x100;
+            }
+            return bff;
         };
 
         local.bufferToBase64 = function (bff) {
@@ -1609,18 +1635,15 @@ return new local.global.Uint8Array(utf8ToBytes(text));
             return bff;
         };
 
-        local.bufferToString = function (bff, encoding) {
+        local.bufferToString = function (bff) {
         /*
-         * this function will convert the Uint8Array bff to a string,
-         * with either 'utf8' (default) or 'base64' encoding
+         * this function will convert the Uint8Array bff to a utf8 string
          */
+            bff = bff || '';
             if (typeof bff === 'string') {
                 return bff;
             }
             bff = local.bufferCreateIfNotBuffer(bff);
-            if (encoding === 'base64') {
-                return local.bufferToBase64(bff);
-            }
             if (local.modeJs === 'node') {
                 return new Buffer(bff).toString();
             }
@@ -1674,7 +1697,7 @@ return Utf8ArrayToStr(bff);
             optionsList.forEach(function (options) {
                 // get uglified file
                 switch (local.path.extname(options.file)) {
-                // case '.css':
+                case '.css':
                 case '.js':
                     optionsList.push({
                         file: options.file.replace((/(\.\w+$)/), '.min$1'),
@@ -1841,7 +1864,7 @@ return Utf8ArrayToStr(bff);
 
         local.docApiCreate = function (options) {
         /*
-         * this function will return an html api-doc from the given options
+         * this function will create an html api-doc from the given options
          */
             var element, elementCreate, elementName, module, tmp, trimLeft;
             elementCreate = function () {
@@ -2196,37 +2219,134 @@ return Utf8ArrayToStr(bff);
                 : element, replacer, space);
         };
 
-        local.jwtHs256Decode = function (password, token) {
+        local.jwtA256GcmDecrypt = function (token, key) {
+        /*
+         * https://tools.ietf.org/html/rfc7516
+         * this function will use json-web-encryption to
+         * aes-256-gcm-decrypt the token with the given base64url-encoded key
+         */
+            return local.tryCatchOnError(function () {
+                token = token
+                    .replace((/-/g), '+')
+                    .replace((/_/g), '/')
+                    .split('.');
+                token = local.sjcl.decrypt(local.sjcl.codec.base64url.toBits(
+                    local.jwtAes256KeyInit(key)
+                ), JSON.stringify({
+                    adata: token[4],
+                    ct: token[3],
+                    iv: token[2],
+                    ks: 256,
+                    mode: 'gcm'
+                }));
+                return local.jwtHs256Decode(token, key);
+            }, local.nop) || {};
+        };
+
+        local.jwtA256GcmEncrypt = function (data, key) {
+        /*
+         * https://tools.ietf.org/html/rfc7516
+         * this function will use json-web-encryption to
+         * aes-256-gcm-encrypt the data with the given base64url-encoded key
+         */
+            var adata;
+            adata = local.jwtAes256KeyCreate();
+            data = local.jwtHs256Encode(data, key);
+            data = JSON.parse(local.sjcl.encrypt(
+                local.sjcl.codec.base64url.toBits(local.jwtAes256KeyInit(key)),
+                data,
+                { adata: local.sjcl.codec.base64url.toBits(adata), ks: 256, mode: 'gcm' }
+            ));
+            return local.jwtBase64UrlNormalize('eyJhbGciOiJkaXIiLCJlbmMiOiJBMTI4R0NNIn0..' +
+                data.iv + '.' + data.ct + '.' + adata);
+        };
+
+        local.jwtAes256KeyCreate = function () {
+        /*
+         * this function will create a random, aes-256-base64url-jwt-key
+         */
+            return local.jwtBase64UrlNormalize(
+                local.bufferToBase64(local.bufferRandomBytes(32))
+            );
+        };
+
+        local.jwtAes256KeyInit = function (key) {
         /*
          * https://jwt.io/
-         * this function will decode the json-web-token with the given password
+         * this function will init the aes-256-base64url-jwt-key
          */
-            var data;
+            // init npm_config_jwtAes256Key
+            local.env.npm_config_jwtAes256Key = local.env.npm_config_jwtAes256Key ||
+                'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
+            return key || local.env.npm_config_jwtAes256Key;
+        };
+
+        local.jwtBase64UrlNormalize = function (text) {
+        /*
+         * this function will normlize the text to base64url format
+         */
+            return text
+                .replace((/\=/g), '')
+                .replace((/\+/g), '-')
+                .replace((/\//g), '_');
+        };
+
+        local.jwtHs256Decode = function (token, key) {
+        /*
+         * https://jwt.io/
+         * this function will decode the json-web-token with the given base64-encode key
+         */
+            var timeNow;
+            timeNow = Date.now() / 1000;
             // try to decode the token
-            local.tryCatchOnError(function () {
+            return local.tryCatchOnError(function () {
                 token = token.split('.');
                 // validate header
                 local.assert(token[0] === 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9', token);
                 // validate signature
-                token[3] = JSON.parse(local.stringFromBase64(token[1]));
-                local.assert(local.sjclHashHmacSha256Create(password, token[0] + '.' + token[1])
-                    .replace((/\=/g), '') === token[2]);
-                data = token[3];
-            }, local.nop);
-            // return decoded data
-            return data;
+                local.assert(local.sjcl.codec.base64url.fromBits(
+                    new local.sjcl.misc.hmac(local.sjcl.codec.base64url.toBits(
+                        local.jwtAes256KeyInit(key)
+                    )).encrypt(token[0] + '.' + token[1])
+                ) === token[2]);
+                // return decoded data
+                token = JSON.parse(local.stringFromBase64(token[1]));
+                // https://tools.ietf.org/html/rfc7519#section-4.1
+                // validate jwt-registered-headers
+                local.assert(!token.exp || token.exp >= timeNow);
+                local.assert(!token.nbf || token.nbf <= timeNow);
+                return token;
+            }, local.nop) || {};
         };
 
-        local.jwtHs256Encode = function (password, data) {
+        local.jwtHs256Encode = function (data, key) {
         /*
          * https://jwt.io/
-         * this function will encode the data into a json-web-token with the given password
+         * this function will encode the data into a json-web-token
+         * with the given base64-encode key
          */
-            var token;
-            token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.' +
-                local.stringToBase64(JSON.stringify(data)).replace((/\=/g), '');
-            return (token + '.' + local.sjclHashHmacSha256Create(password, token))
-                .replace((/\=/g), '');
+            data = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.' +
+                local.jwtBase64UrlNormalize(local.stringToBase64(JSON.stringify(data)));
+            return data + '.' + local.sjcl.codec.base64url.fromBits(
+                new local.sjcl.misc.hmac(local.sjcl.codec.base64url.toBits(
+                    local.jwtAes256KeyInit(key)
+                )).encrypt(data)
+            );
+        };
+
+        local.jwtNormalize = function (data) {
+        /*
+         * https://tools.ietf.org/html/rfc7519#section-4.1
+         * this function will normalize the jwt-data with registered-headers
+         */
+            var timeNow;
+            timeNow = Date.now() / 1000;
+            return local.objectSetDefault(data, {
+                exp: timeNow + 5 * 60,
+                iat: timeNow,
+                jti: Math.random().toString(16).slice(2),
+                nbf: timeNow
+            });
         };
 
         local.listGetElementRandom = function (list) {
@@ -2351,19 +2471,6 @@ return Utf8ArrayToStr(bff);
             nextMiddleware();
         };
 
-        local.middlewareError = function (error, request, response) {
-        /*
-         * this function will run the middleware that will handle errors
-         */
-            // if error occurred, then respond with '500 Internal Server Error',
-            // else respond with '404 Not Found'
-            local.serverRespondDefault(request, response, error
-                ? (error.statusCode >= 400 && error.statusCode < 600
-                    ? error.statusCode
-                    : 500)
-                : 404, error);
-        };
-
         local.middlewareFileServer = function (request, response, nextMiddleware) {
         /*
          * this function will run the middleware that will serve files
@@ -2384,7 +2491,7 @@ return Utf8ArrayToStr(bff);
             // run background-task to re-cache file
             }, function (onError) {
                 local.fs.readFile(request.urlFile, function (error, data) {
-                    onError(error, data && local.bufferToString(data, 'base64'));
+                    onError(error, data && local.bufferToBase64(data));
                 });
             }, function (error, data) {
                 // default to nextMiddleware
@@ -2642,7 +2749,7 @@ return Utf8ArrayToStr(bff);
 
         local.onErrorWithStack = function (onError) {
         /*
-         * this function will return a new callback that will call onError,
+         * this function will create a new callback that will call onError,
          * and append the current stack to any error
          */
             var stack;
@@ -2702,7 +2809,7 @@ return Utf8ArrayToStr(bff);
 
         local.onParallel = function (onError, onDebug) {
         /*
-         * this function will return a function that will
+         * this function will create a function that will
          * 1. run async tasks in parallel
          * 2. if counter === 0 or error occurred, then call onError with error
          */
@@ -2785,7 +2892,7 @@ return Utf8ArrayToStr(bff);
         });
         local.onTimeout = function (onError, timeout, message) {
         /*
-         * this function will return a timeout-error-handler,
+         * this function will create a timeout-error-handler,
          * that will append the current stack to any error encountered
          */
             onError = local.onErrorWithStack(onError);
@@ -3046,7 +3153,15 @@ tmp\\)\\(\\b\\|[_s]\\)\
                 local.assetsDict['/'] = local.assetsDict['/index.html'] = local.templateRender(
                     local.templateIndexHtml,
                     { env: local.env, isRollup: true }
-                );
+                )
+                    // inline css
+                    .replace(
+                        '<link href="assets.' + local.env.npm_package_nameAlias +
+                            '.css" rel="stylesheet">',
+                        '<style>' + local.uglify(local.assetsDict[
+                                '/assets.' + local.env.npm_package_nameAlias + '.css'
+                            ] || '', 'assets.lib.css').replace((/\n/g), ' ') + '</style>'
+                    );
                 local.assetsWrite('/assets.app.js', local.fs.readFileSync(__filename, 'utf8'));
                 local[local.env.npm_package_nameAlias] = local;
                 return local;
@@ -3108,7 +3223,15 @@ tmp\\)\\(\\b\\|[_s]\\)\
                     isRollup: local.global.utility2_rollup ||
                         local.env.NODE_ENV === 'production'
                 })
-            );
+            )
+                // inline css
+                .replace(
+                    '<link href="assets.' + local.env.npm_package_nameAlias +
+                        '.css" rel="stylesheet">',
+                    '<style>' + local.uglify(local.assetsDict[
+                            '/assets.' + local.env.npm_package_nameAlias + '.css'
+                        ], 'assets.lib.css').replace((/\n/g), ' ') + '</style>'
+                );
             local.assetsWrite('/assets.app.js', [
                 'header',
                 '/assets.utility2.rollup.js',
@@ -3244,7 +3367,7 @@ instruction\n\
 
         local.serverRespondTimeoutDefault = function (request, response, timeout) {
         /*
-         * this function will return a timeout-error-handler for the server-request
+         * this function will create a timeout-error-handler for the server-request
          */
             request.onTimeout = request.onTimeout || function (error) {
                 local.serverRespondDefault(request, response, 500, error);
@@ -3264,49 +3387,10 @@ instruction\n\
             });
         };
 
-        local.sjclCipherAes128Decrypt = function (password, encrypted) {
-        /*
-         * this function will aes-decrypt the encrypted-data with the given password
-         */
-            var decrypted;
-            local.tryCatchOnError(function () {
-                encrypted = encrypted.split('.');
-                decrypted = local.sjcl.decrypt(password, JSON.stringify({
-                    ct: encrypted[2],
-                    iter: 128,
-                    iv: encrypted[1],
-                    mode: 'gcm',
-                    salt: encrypted[0]
-                }));
-            }, local.nop);
-            return decrypted;
-        };
-
-        local.sjclCipherAes128Encrypt = function (password, decrypted) {
-        /*
-         * this function will aes-encrypt the decrypted-data with the given password
-         */
-            var options;
-            options = { iter: 128, mode: 'gcm' };
-            options = JSON.parse(local.sjcl.encrypt(password, decrypted, options));
-            return (options.salt + '.' + options.iv + '.' + options.ct).replace((/\=/g), '');
-        };
-
-        local.sjclHashHmacSha256Create = function (password, data) {
-        /*
-         * this function will return the base64-encoded hmac-sha256 hash
-         * of the data with the given password
-         */
-            return local.sjcl.codec.base64.fromBits(
-                new local.sjcl.misc.hmac(local.sjcl.codec.utf8String.toBits(password))
-                    .encrypt(data)
-            );
-        };
-
         local.sjclHashScryptCreate = function (password, options) {
         /*
          * https://github.com/wg/scrypt
-         * this function will return the scrypt-hash of the password
+         * this function will create a scrypt-hash of the password
          * with the given options (default = $s0$10801)
          * e.g. $s0$e0801$epIxT/h6HbbwHaehFnh/bw==$7H0vsXlY8UxxyW/BWx/9GuY7jEvGjT71GFd6O4SZND0=
          */
@@ -3341,7 +3425,7 @@ instruction\n\
 
         local.sjclHashSha256Create = function (data) {
         /*
-         * this function will return the base64-encoded sha-256 hash of the string data
+         * this function will create a base64-encoded sha-256 hash of the string data
          */
             return local.sjcl.codec.base64.fromBits(local.sjcl.hash.sha256.hash(data));
         };
@@ -3394,7 +3478,7 @@ instruction\n\
         /*
          * this function will convert the text to base64-encoded text
          */
-            return local.bufferToString(local.bufferCreate(text), 'base64');
+            return local.bufferToBase64(local.bufferCreate(text));
         };
 
         local.taskCreate = function (options, onTask, onError) {
@@ -4051,7 +4135,7 @@ instruction\n\
         local.testRunServer = function (options) {
         /*
          * this function will
-         * 1. create server from options.middleware
+         * 1. create server from local._middleware
          * 2. start server on local.env.PORT
          * 3. run tests
          */
@@ -4059,18 +4143,15 @@ instruction\n\
                 return;
             }
             local.onReadyBefore.counter += 1;
-            local.objectSetDefault(options, {
-                middleware: local.middlewareGroupCreate([
-                    local.middlewareInit,
-                    local.middlewareAssetsCached,
-                    local._middlewareJsonpStateInit
-                ]),
-                middlewareError: local.middlewareError
-            });
-            // 1. create server from options.middleware
+            local._middleware = local._middleware || local.middlewareGroupCreate([
+                local.middlewareInit,
+                local.middlewareAssetsCached,
+                local._middlewareJsonpStateInit
+            ]);
+            // 1. create server from local._middleware
             local.serverLocalRequestHandler = function (request, response) {
-                options.middleware(request, response, function (error) {
-                    options.middlewareError(error, request, response);
+                local._middleware(request, response, function (error) {
+                    local._middlewareError(error, request, response);
                 });
             };
             local.global.utility2_serverHttp1 = local.http.createServer(
@@ -4205,7 +4286,7 @@ instruction\n\
 
         local.uuid4Create = function () {
         /*
-         * this function will return a random uuid,
+         * this function will create a random uuid,
          * with format 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'
          */
             // code derived from http://jsperf.com/uuid4
@@ -4237,7 +4318,7 @@ instruction\n\
 
         local.uuidTimeCreate = function () {
         /*
-         * this function will return a time-based version of uuid4,
+         * this function will create a time-based version of uuid4,
          * with format 'tttttttt-tttx-4xxx-yxxx-xxxxxxxxxxxx'
          */
             return Date.now().toString(16).replace((/(.{8})/), '$1-') +

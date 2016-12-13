@@ -170,7 +170,7 @@ shBuildCiDefault() {(set -e
 
 shBuildDoc() {(set -e
 # this function will build the doc
-    npm test --mode-test-case=testCase_build_doc
+    npm test --mode-test-case=testCase_build_doc --mode-coverage=""
 )}
 
 shBuildGithubUpload() {(set -e
@@ -719,11 +719,11 @@ shGithubDeploy() {(set -e
     shBuildApp
     # upload app
     shBuildGithubUpload
-    # wait 15 seconds for app to deploy
+    shBuildPrint "waiting 15 seconds for $TEST_URL to finish deploying"
     sleep 15
     # verify deployed app's main-page returns status-code < 400
     # '
-    if [ $(curl -Ls -o /dev/null -w "%{http_code}" "$TEST_URL") -lt 400 ]
+    if [ $(curl --connect-timeout 30 -Ls -o /dev/null -w "%{http_code}" "$TEST_URL") -lt 400 ]
     then
         shBuildPrint "curl test passed for $TEST_URL"
     else
@@ -813,11 +813,11 @@ shHerokuDeploy() {(set -e
     # upload app
     (shGitRepoBranchCommand copyPwdLsTree local HEAD "git@heroku.com:$HEROKU_REPO.git" master) \
         || return $?
-    # wait 15 seconds for app to deploy
-    sleep 15
+    shBuildPrint "waiting 30 seconds for $TEST_URL to finish deploying"
+    sleep 30
     # verify deployed app's main-page returns status-code < 400
     # '
-    if [ $(curl -Ls -o /dev/null -w "%{http_code}" "$TEST_URL") -lt 400 ]
+    if [ $(curl --connect-timeout 30 -Ls -o /dev/null -w "%{http_code}" "$TEST_URL") -lt 400 ]
     then
         shBuildPrint "curl test passed for $TEST_URL"
     else
