@@ -56,6 +56,7 @@
         [
             'db',
             'istanbul',
+            'github_crud',
             'jslint',
             'sjcl',
             'uglifyjs'
@@ -63,7 +64,7 @@
             try {
                 local[key] = local.modeJs === 'browser'
                     ? local.global['utility2_' + key]
-                    : require('./lib.' + key + '.js');
+                    : require('./lib.' + key.replace((/_/g), '-') + '.js');
             } catch (ignore) {
             }
             local[key] = local[key] || {};
@@ -1034,6 +1035,18 @@ local.templateTestReportHtml = '\
                     }
                     // handle completed xhr request
                     if (xhr.readyState === 4) {
+                        // debug xhr
+                        if (xhr.modeDebug) {
+                            console.log(new Date().toISOString(
+                            ) + ' ajax-response ' + JSON.stringify({
+                                method: xhr.method,
+                                url: xhr.url,
+                                statusCode: xhr.statusCode,
+                                responseText: local.tryCatchOnError(function () {
+                                    return xhr.responseText.slice(0, 256);
+                                })
+                            }));
+                        }
                         // handle string data
                         if (xhr.error) {
                             // debug statusCode
@@ -1068,6 +1081,16 @@ local.templateTestReportHtml = '\
             Object.keys(xhr.headers).forEach(function (key) {
                 xhr.setRequestHeader(key, xhr.headers[key]);
             });
+            // debug xhr
+            if (xhr.modeDebug) {
+                console.log(new Date().toISOString() + ' ajax-request ' + JSON.stringify({
+                    method: xhr.method,
+                    url: xhr.url,
+                    headers: xhr.headers,
+                    data: xhr.data && xhr.data.slice &&
+                        local.bufferToString(xhr.data.slice(0, 256))
+                }));
+            }
             if (xhr.data instanceof local.FormData) {
                 // handle formData
                 xhr.data.read(function (error, data) {
@@ -2190,6 +2213,7 @@ return Utf8ArrayToStr(bff);
                     // if element is an array, then recurse its elements
                     if (Array.isArray(element)) {
                         return '[' + element.map(function (element) {
+                            // recurse
                             tmp = stringify(element);
                             return typeof tmp === 'string'
                                 ? tmp
@@ -2200,6 +2224,7 @@ return Utf8ArrayToStr(bff);
                         // sort object-keys
                         .sort()
                         .map(function (key) {
+                            // recurse
                             tmp = stringify(element[key]);
                             if (typeof tmp === 'string') {
                                 return JSON.stringify(key) + ':' + tmp;
@@ -2215,6 +2240,7 @@ return Utf8ArrayToStr(bff);
             };
             circularList = [];
             return JSON.stringify(element && typeof element === 'object'
+                // recurse
                 ? JSON.parse(stringify(element))
                 : element, replacer, space);
         };
@@ -2510,6 +2536,83 @@ return Utf8ArrayToStr(bff);
                 // serve file from cache
                 response.end(local.bufferCreate(data, 'base64'));
             });
+        };
+
+        local.middlewareForwardProxy = function (request, response, nextMiddleware) {
+        /*
+         * this function will run the middleware that will forward-proxy the request
+         * to its destination-host
+         */
+            var onError, options, timerTimeout;
+            // handle preflight-cors
+            if ((request.headers['access-control-request-headers'] || '')
+                    .indexOf('forward-proxy-url') >= 0) {
+                // enable cors
+                // http://en.wikipedia.org/wiki/Cross-origin_resource_sharing
+                local.serverRespondHeadSet(request, response, null, {
+                    'Access-Control-Allow-Headers': 'forward-proxy-headers,forward-proxy-url',
+                    'Access-Control-Allow-Methods': 'DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT',
+                    'Access-Control-Allow-Origin': '*'
+                });
+                response.end();
+                return;
+            }
+            if (!request.headers['forward-proxy-url']) {
+                nextMiddleware();
+                return;
+            }
+            // enable cors
+            // http://en.wikipedia.org/wiki/Cross-origin_resource_sharing
+            local.serverRespondHeadSet(request, response, null, {
+                'Access-Control-Allow-Headers': 'forward-proxy-headers,forward-proxy-url',
+                'Access-Control-Allow-Methods': 'DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT',
+                'Access-Control-Allow-Origin': '*'
+            });
+            // init onError
+            onError = function (error) {
+                clearTimeout(timerTimeout);
+                if (!error || options.done) {
+                    return;
+                }
+                options.done = true;
+                // cleanup client
+                local.requestResponseCleanup(options.clientRequest, options.clientResponse);
+                nextMiddleware(error);
+            };
+            // init options
+            options = local.urlParse(request.headers['forward-proxy-url']);
+            options.method = request.method;
+            options.url = request.headers['forward-proxy-url'];
+            // init timerTimeout
+            timerTimeout = local.onTimeout(
+                onError,
+                local.timeoutDefault,
+                'forward-proxy ' + options.method + ' ' + options.url
+            );
+            // parse headers
+            options.headers = {};
+            local.tryCatchOnError(function () {
+                options.headers = JSON.parse(request.headers['forward-proxy-headers']);
+            }, local.nop);
+            // debug options
+            local._debugForwardProxy = options;
+            console.log(new Date().toISOString() + ' middlewareForwardProxy ' + JSON.stringify({
+                method: options.method,
+                url: options.url,
+                headers: options.headers
+            }));
+            options.clientRequest = (options.protocol === 'https:'
+                ? local.https
+                : local.http).request(options, function (clientResponse) {
+                options.clientResponse = clientResponse.on('error', onError);
+                // pipe clientResponse to serverResponse
+                options.clientResponse.pipe(response);
+            }).on('error', onError);
+            // init event-handling
+            request.on('error', onError);
+            response.on('finish', onError).on('error', onError);
+            // pipe serverRequest to clientRequest
+            request.pipe(options.clientRequest);
         };
 
         local.middlewareGroupCreate = function (middlewareList) {
@@ -2890,6 +2993,7 @@ return Utf8ArrayToStr(bff);
                 local.assert(!error, error);
             });
         });
+
         local.onTimeout = function (onError, timeout, message) {
         /*
          * this function will create a timeout-error-handler,
@@ -2929,27 +3033,27 @@ return Utf8ArrayToStr(bff);
             return childProcess;
         };
 
-        local.profile = function (task, onError) {
+        local.profile = function (fnc, onError) {
         /*
-         * this function will profile the async task in milliseconds
+         * this function will profile the async fnc in milliseconds with the callback onError
          */
             var timeStart;
             timeStart = Date.now();
-            // run async task
-            task(function (error) {
+            // run async fnc
+            fnc(function (error) {
                 // call onError with difference in milliseconds between Date.now() and timeStart
                 onError(error, Date.now() - timeStart);
             });
         };
 
-        local.profileSync = function (task) {
+        local.profileSync = function (fnc) {
         /*
-         * this function will profile the sync task in milliseconds
+         * this function will profile the sync fnc in milliseconds
          */
             var timeStart;
             timeStart = Date.now();
-            // run sync task
-            task();
+            // run sync fnc
+            fnc();
             // return difference in milliseconds between Date.now() and timeStart
             return Date.now() - timeStart;
         };
@@ -4145,6 +4249,7 @@ instruction\n\
             local.onReadyBefore.counter += 1;
             local._middleware = local._middleware || local.middlewareGroupCreate([
                 local.middlewareInit,
+                local.middlewareForwardProxy,
                 local.middlewareAssetsCached,
                 local._middlewareJsonpStateInit
             ]);
@@ -4238,6 +4343,11 @@ instruction\n\
                             location.pathname.replace((/\/[^\/]*?$/), '') + '/' + url;
                     }
                     urlParsed = new local.global.URL(url);
+                    urlParsed.path = '/' + urlParsed.href
+                        .split('/')
+                        .slice(3)
+                        .join('/')
+                        .split('#')[0];
                     break;
                 case 'node':
                     local.env.PORT = local.env.PORT || '8081';
@@ -4276,6 +4386,7 @@ instruction\n\
                 host: urlParsed.host || '',
                 hostname: urlParsed.hostname || '',
                 href: urlParsed.href || '',
+                path: urlParsed.path || '',
                 pathname: urlParsed.pathname || '',
                 port: urlParsed.port || '',
                 protocol: urlParsed.protocol || '',
@@ -4314,15 +4425,6 @@ instruction\n\
                 }
             }
             return id;
-        };
-
-        local.uuidTimeCreate = function () {
-        /*
-         * this function will create a time-based version of uuid4,
-         * with format 'tttttttt-tttx-4xxx-yxxx-xxxxxxxxxxxx'
-         */
-            return Date.now().toString(16).replace((/(.{8})/), '$1-') +
-                local.uuid4Create().slice(12);
         };
     }());
 

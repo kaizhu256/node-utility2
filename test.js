@@ -207,7 +207,7 @@
                 // validate statusCode
                 local.assertJsonEqual(xhr.statusCode, 200);
                 // validate responseText
-                local.assert((/"name": "utility2",/).test(xhr.responseText), xhr.responseText);
+                local.assert((/"name": "utility2"/).test(xhr.responseText), xhr.responseText);
                 onError();
             });
         };
@@ -231,7 +231,7 @@
             }, {
                 // test undefined https-url handling-behavior
                 timeout: 1,
-                url: 'https://localhost/undefined'
+                url: 'https://undefined:0'
             }].forEach(function (_) {
                 options = _;
                 onParallel.counter += 1;
@@ -297,9 +297,11 @@
             // test /test.echo handling-behavior
             local.ajax({
                 data:  'aa',
-                // test request header handling-behavior
+                // test request-header handling-behavior
                 headers: { 'X-Request-Header-Test': 'aa' },
                 method: 'POST',
+                // test modeDebug handling-behavior
+                modeDebug: true,
                 url: '/test.echo'
             }, function (error, xhr) {
                 // validate no error occurred
@@ -1583,6 +1585,7 @@
                     host: 'localhost:80',
                     hostname: 'localhost',
                     href: 'https://localhost:80/foo?aa=1&bb%20cc=dd%20=ee&aa=2&aa#zz=1',
+                    path: '/foo?aa=1&bb%20cc=dd%20=ee&aa=2&aa',
                     pathname: '/foo',
                     port: '80',
                     protocol: 'https:',
@@ -1595,6 +1598,7 @@
                     host: '',
                     hostname: '',
                     href: '',
+                    path: '',
                     pathname: '',
                     port: '',
                     protocol: '',
@@ -1605,27 +1609,16 @@
             }, onError);
         };
 
-        local.testCase_uuidXxx_default = function (options, onError) {
+        local.testCase_uuid4Create_default = function (options, onError) {
         /*
-         * this function will test uuidXxx's default handling-behavior
+         * this function will test uuid4Create's default handling-behavior
          */
             options = {};
             // test uuid4 handling-behavior
-            options.data1 = local.uuid4Create();
-            // validate data1
-            local.assert(local.regexpUuidValidate.test(options.data1), options.data1);
-            // test uuidTime handling-behavior
-            options.data1 = local.uuidTimeCreate();
-            // validate data1
-            local.assert(local.regexpUuidValidate.test(options.data1), options.data1);
-            setTimeout(function () {
-                options.data2 = local.uuidTimeCreate();
-                // validate data2
-                local.assert(local.regexpUuidValidate.test(options.data2), options.data2);
-                // validate data1 < data2
-                local.assert(options.data1 < options.data2, [options.data1, options.data2]);
-                onError();
-            }, 1000);
+            options.data = local.uuid4Create();
+            // validate data
+            local.assert(local.regexpUuidValidate.test(options.data), options.data);
+            onError();
         };
 
         // init serverLocal
@@ -1927,6 +1920,43 @@ local.assertJsonEqual(options.coverage1,
             local.fs.writeFileSync('./tmp/lib.utility2.js', options.data);
             require('./tmp/lib.utility2.js');
             onError();
+        };
+
+        local.testCase_middlewareForwardProxy_default = function (options, onError) {
+        /*
+         * this function will test middlewareForwardProxy's default handling-behavior
+         */
+            var onParallel;
+            onParallel = local.onParallel(onError);
+            onParallel.counter += 1;
+            // test preflight-cors handling-behavior
+            options = {
+                headers: {
+                    'access-control-request-headers': 'forward-proxy-headers,forward-proxy-url'
+                },
+                url: ''
+            };
+            onParallel.counter += 1;
+            local.ajax(options, onParallel);
+            // test forward-proxy-http handling-behavior
+            options = { headers: { 'forward-proxy-url': '/assets.hello' }, url: '' };
+            onParallel.counter += 1;
+            local.ajax(options, function (error, data) {
+                // validate no error occurred
+                local.assert(!error, error);
+                // validate responseText
+                local.assertJsonEqual(data.responseText, 'hello');
+                onParallel();
+            });
+            // test error handling-behavior
+            options = { headers: { 'forward-proxy-url': 'https://undefined:0' }, url: '' };
+            onParallel.counter += 1;
+            local.ajax(options, function (error) {
+                // validate error occurred
+                local.assert(error, error);
+                onParallel();
+            });
+            onParallel();
         };
 
         local.testCase_onFileModifiedRestart_watchFile = function (options, onError) {
@@ -2247,6 +2277,44 @@ local.assertJsonEqual(options.coverage1,
             process.argv.splice(1, 1);
             process.argv[1] = local.path.resolve(process.cwd(), process.argv[1]);
             local.Module.runMain();
+        }
+        switch (local.env.HEROKU_APP_NAME) {
+        case 'hrku01-cron':
+            local.cronJob = local.nop;
+            // update cron
+            local.ajax({
+                url: 'https://kaizhu256.github.io/node-utility2/cronJob.js'
+            }, function (error, data) {
+                if (!error && data.responseText !== local.cronScript) {
+                    local.cronScript = data.responseText;
+                    local.vm.runInThisContext(local.cronScript);
+                }
+            });
+            setInterval(function () {
+                var cronTime;
+                cronTime = new Date();
+                if (cronTime.toISOString().slice(0, 16) <
+                        (local.cronTime && local.cronTime.toISOString())) {
+                    return;
+                }
+                local.cronTime = cronTime;
+                // cron every 5 minutes
+                if (local.cronTime.getUTCMinutes() % 5 === 0) {
+                    // heroku-keepalive
+                    local.ajax({ url: 'https://hrku01-cron.herokuapp.com' }, local.nop);
+                    // update cron
+                    local.ajax({
+                        url: 'https://kaizhu256.github.io/node-utility2/cronJob.js'
+                    }, function (error, data) {
+                        if (!error && data.responseText !== local.cronScript) {
+                            local.cronScript = data.responseText;
+                            local.vm.runInThisContext(local.cronScript);
+                        }
+                    });
+                }
+                local.cronJob();
+            }, 30000);
+            break;
         }
         break;
     }

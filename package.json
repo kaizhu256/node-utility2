@@ -3,6 +3,7 @@
     "author": "kai zhu <kaizhu256@gmail.com>",
     "bin": {
         "utility2": "lib.utility2.sh",
+        "utility2-github-crud": "lib.github-crud.js",
         "utility2-istanbul": "lib.istanbul.js",
         "utility2-jslint": "lib.jslint.js",
         "utility2-uglifyjs": "lib.uglifyjs.js"
@@ -50,5 +51,5 @@
 
         "test-all": "npm test --mode-coverage=all"
     },
-    "version": "2016.12.1"
+    "version": "2016.12.2"
 }

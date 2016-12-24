@@ -133,17 +133,18 @@
                 } catch (ignore) {
                 }
             }
-            // init options
-            options.collector = local.collectorCreate();
+            // init writer
+            local.coverageReportHtml = '';
+            local.writerData = '';
             options.sourceStore = {};
-            options.writer = local.writerCreate(options);
+            options.writer = local.writer;
             // 1. print coverage in text-format to stdout
             if (local.modeJs === 'node') {
-                new local.TextReport(options).writeReport(options.collector);
+                new local.TextReport(options).writeReport(local.collector);
             }
             // 2. write coverage in html-format to filesystem
-            new local.HtmlReport(options).writeReport(options.collector);
-            options.writer.writeFile('', nop);
+            new local.HtmlReport(options).writeReport(local.collector);
+            local.writer.writeFile('', nop);
             // write coverage.json
             local.fsWriteFileWithMkdirpSync(
                 options.dir + '/coverage.json',
@@ -172,9 +173,9 @@
             // 3. return coverage in html-format as a single document
             if (local.modeJs === 'browser' && document.querySelector('.istanbulCoverageDiv')) {
                 document.querySelector('.istanbulCoverageDiv').innerHTML =
-                    options.coverageReportHtml;
+                    local.coverageReportHtml;
             }
-            return options.coverageReportHtml;
+            return local.coverageReportHtml;
         };
 
         local.fs = {};
@@ -1646,22 +1647,20 @@ G({},t),exports.browser=!1,exports.FORMAT_MINIFY=N,exports.FORMAT_DEFAULTS=C})()
     // init lib istanbul.collector
     (function () {
         // https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/collector.js
-        local.collectorCreate = function () {
-            return {
-                fileCoverageFor: function (file) {
-                    return local.global.__coverage__[file];
-                },
-                files: function () {
-                    return Object.keys(local.global.__coverage__).filter(function (key) {
-                        if (local.global.__coverage__[key] &&
-                                local.global.__coverageCodeDict__[key]) {
-                            // reset derived info
-                            local.global.__coverage__[key].l = null;
-                            return true;
-                        }
-                    });
-                }
-            };
+        local.collector = {
+            fileCoverageFor: function (file) {
+                return local.global.__coverage__[file];
+            },
+            files: function () {
+                return Object.keys(local.global.__coverage__).filter(function (key) {
+                    if (local.global.__coverage__[key] &&
+                            local.global.__coverageCodeDict__[key]) {
+                        // reset derived info
+                        local.global.__coverage__[key].l = null;
+                        return true;
+                    }
+                });
+            }
         };
     }());
 
@@ -2220,23 +2219,19 @@ local['head.txt'] = '\
     // init lib istanbul.util.file-writer
     (function () {
         // https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/util/file-writer.js
-        local.writerCreate = function (options) {
-            options.coverageReportHtml = '';
-            options.writerData = '';
-            return {
-                write: function (data) {
-                    options.writerData += data;
-                },
-                writeFile: function (file, onError) {
-                    options.coverageReportHtml += options.writerData + '\n\n';
-                    if (options.writerFile) {
-                        local.fsWriteFileWithMkdirpSync(options.writerFile, options.writerData);
-                    }
-                    options.writerData = '';
-                    options.writerFile = file;
-                    onError(options.writer);
+        local.writer = {
+            write: function (data) {
+                local.writerData += data;
+            },
+            writeFile: function (file, onError) {
+                local.coverageReportHtml += local.writerData + '\n\n';
+                if (local.writerFile) {
+                    local.fsWriteFileWithMkdirpSync(local.writerFile, local.writerData);
                 }
-            };
+                local.writerData = '';
+                local.writerFile = file;
+                onError(local.writer);
+            }
         };
     }());
 

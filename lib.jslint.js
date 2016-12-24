@@ -2503,7 +2503,7 @@ local.CSSLint = CSSLint; local.JSLINT = JSLINT, local.jslintEs6 = jslint; }());
         local.fs = require('fs');
         local.path = require('path');
         // init exports
-        module.exports = module['./lib.jslint.js'] = module.jslint = local;
+        module.exports = module['./lib.jslint.js'] = local;
         module.exports.__dirname = __dirname;
         // run the cli
         if (module !== require.main || local.global.utility2_rollup) {

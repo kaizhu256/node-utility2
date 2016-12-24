@@ -2,7 +2,7 @@ utility2
 ========
 this zero-dependency package will run dynamic browser-tests with coverage (via electron and istanbul)
 
-[![travis-ci.org build-status](https://api.travis-ci.org/kaizhu256/node-utility2.svg)](https://travis-ci.org/kaizhu256/node-utility2)
+[![travis-ci.org build-status](https://api.travis-ci.org/kaizhu256/node-utility2.svg)](https://travis-ci.org/kaizhu256/node-utility2) [![istanbul coverage](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/coverage.html/index.html)
 
 [![NPM](https://nodei.co/npm/utility2.png?downloads=true)](https://www.npmjs.com/package/utility2)
 
@@ -30,17 +30,18 @@ this zero-dependency package will run dynamic browser-tests with coverage (via e
 [![api-doc](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/screen-capture.docApiCreate.browser._2Fhome_2Ftravis_2Fbuild_2Fkaizhu256_2Fnode-utility2_2Ftmp_2Fbuild_2Fdoc.api.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/doc.api.html)
 
 #### todo
-- allow secure remote db export / import / reset to backend
-- add decryption / encryption to jwt
-- merge github-crud into this package
+- automate heroku-deploy with custom-buildpack
+- fix timeout edge-cases in github-crud
 - add utility2.middlewareLimit
 - add server stress test using electron
 - none
 
-#### change since e3e981d4
-- npm publish 2016.12.1
-- merge utility2 namespace into local namespace
-- revamp encryption features to primarily use json-web-encryption
+#### change since 0068fb96
+- npm publish 2016.12.2
+- merge github-crud into this package
+- revamp heroku-deploy
+- add middlewareForwardProxy
+- add modeDebug option to function local.ajax
 - none
 
 #### this package requires
@@ -504,6 +505,7 @@ utility2-comment -->\n\
     "author": "kai zhu <kaizhu256@gmail.com>",
     "bin": {
         "utility2": "lib.utility2.sh",
+        "utility2-github-crud": "lib.github-crud.js",
         "utility2-istanbul": "lib.istanbul.js",
         "utility2-jslint": "lib.jslint.js",
         "utility2-uglifyjs": "lib.uglifyjs.js"
@@ -551,7 +553,7 @@ export npm_config_mode_auto_restart=1 && \
 ./lib.utility2.sh test test.js",
         "test-all": "npm test --mode-coverage=all"
     },
-    "version": "2016.12.1"
+    "version": "2016.12.2"
 }
 ```
 
@@ -651,30 +653,11 @@ shBuildCiTestPost() {(set -e
     [ "$(node --version)" \< "v7.0" ] && return || true
     export NODE_ENV=production
     # deploy app to gh-pages
-    export TEST_URL="https://$(printf "$GITHUB_REPO" | \
-        sed 's/\//.github.io\//')/build..$CI_BRANCH..travis-ci.org/app/index.html"
-    (export MODE_BUILD=githubDeploy &&
-        shGithubDeploy) || return $?
-    # test deployed app to gh-pages
-    (export MODE_BUILD=githubTest &&
-        export modeBrowserTest=test &&
-        export url="$TEST_URL?modeTest=1&timeExit={{timeExit}}" &&
-        shBrowserTest) || return $?
+    (export MODE_BUILD=deployGithub &&
+        shDeployGithub) || return $?
     # deploy app to heroku
-    export HEROKU_REPO="hrku01-$npm_package_name-$CI_BRANCH"
-    export TEST_URL="https://$HEROKU_REPO.herokuapp.com"
-    shGitRepoBranchUpdateLocal() {(set -e
-    # this function will local-update git-repo-branch
-        cp "$npm_config_dir_build/app/assets.app.js" .
-        printf "web: npm_config_mode_backend=1 node assets.app.js" > Procfile
-    )}
-    (export MODE_BUILD=herokuDeploy &&
-        shHerokuDeploy) || return $?
-    # test deployed app to heroku
-    (export MODE_BUILD=herokuTest &&
-        export modeBrowserTest=test &&
-        export url="$TEST_URL?modeTest=1&timeExit={{timeExit}}" &&
-        shBrowserTest) || return $?
+    (export MODE_BUILD=deployHeroku &&
+        shDeployHeroku) || return $?
 )}
 
 shBuild() {(set -e

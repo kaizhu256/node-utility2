@@ -658,10 +658,12 @@ split_lines=split_lines,exports.MAP=MAP,exports.ast_squeeze_more=require("./sque
     case 'node':
         // require modules
         local.fs = require('fs');
+        local.http = require('http');
+        local.https = require('https');
         local.path = require('path');
         local.url = require('url');
         // init exports
-        module.exports = module['./lib.uglifyjs.js'] = module.uglifyjs = local;
+        module.exports = module['./lib.uglifyjs.js'] = local;
         module.exports.__dirname = __dirname;
         // run the cli
         if (module !== require.main || local.global.utility2_rollup) {
@@ -669,9 +671,9 @@ split_lines=split_lines,exports.MAP=MAP,exports.ast_squeeze_more=require("./sque
         }
         if ((/^(?:http|https):\/\//).test(process.argv[2])) {
             // uglify url
-            require(process.argv[2].indexOf('https') === 0
-                ? 'https'
-                : 'http').request(require('url').parse(
+            (process.argv[2].indexOf('https') === 0
+                ? local.https
+                : local.http).request(local.url.parse(
                 process.argv[2]
             ), function (response) {
                 local.chunkList = [];

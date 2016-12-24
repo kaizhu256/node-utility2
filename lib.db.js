@@ -116,6 +116,7 @@
                     // if element is an array, then recurse its elements
                     if (Array.isArray(element)) {
                         return '[' + element.map(function (element) {
+                            // recurse
                             tmp = stringify(element);
                             return typeof tmp === 'string'
                                 ? tmp
@@ -126,10 +127,11 @@
                         // sort object-keys
                         .sort()
                         .map(function (key) {
+                            // recurse
                             tmp = stringify(element[key]);
-                            return typeof tmp === 'string'
-                                ? JSON.stringify(key) + ':' + tmp
-                                : undefined;
+                            if (typeof tmp === 'string') {
+                                return JSON.stringify(key) + ':' + tmp;
+                            }
                         })
                         .filter(function (element) {
                             return typeof element === 'string';
@@ -141,6 +143,7 @@
             };
             circularList = [];
             return JSON.stringify(element && typeof element === 'object'
+                // recurse
                 ? JSON.parse(stringify(element))
                 : element, replacer, space);
         };
@@ -217,7 +220,7 @@
 
         local.onErrorWithStack = function (onError) {
         /*
-         * this function will return a new callback that will call onError,
+         * this function will create a new callback that will call onError,
          * and append the current stack to any error
          */
             var stack;
@@ -235,7 +238,7 @@
 
         local.onParallel = function (onError, onDebug) {
         /*
-         * this function will return a function that will
+         * this function will create a function that will
          * 1. run async tasks in parallel
          * 2. if counter === 0 or error occurred, then call onError with error
          */
@@ -1383,10 +1386,9 @@
             id = dbRow[idIndex.name];
             if (typeof id !== 'number' && typeof id !== 'string') {
                 do {
-                    id = Math.floor(Math.random() * 0x1ffffffffffffe);
-                    if (!idIndex.isInteger) {
-                        id = 's' + ('00000000000' + id.toString(36)).slice(-11);
-                    }
+                    id = idIndex.isInteger
+                        ? (1 + Math.random()) * 0x10000000000000
+                        : 'a' + ((1 + Math.random()) * 0x10000000000000).toString(36).slice(1);
                 // optimization - hasOwnProperty
                 } while (idIndex.dict.hasOwnProperty(id));
                 dbRow[idIndex.name] = id;
