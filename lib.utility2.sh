@@ -255,7 +255,7 @@ shDeployGithub() {(set -e
     shBuildPrint "waiting 15 seconds for $TEST_URL to finish deploying"
     sleep 15
     # verify deployed app's main-page returns status-code < 400
-    if [ $(curl --connect-timeout 30 -Ls -o /dev/null -w "%{http_code}" "$TEST_URL") -lt 400 ]
+    if [ $(curl --connect-timeout 60 -Ls -o /dev/null -w "%{http_code}" "$TEST_URL") -lt 400 ]
     then
         shBuildPrint "curl test passed for $TEST_URL"
     else
@@ -277,27 +277,23 @@ shDeployHeroku() {(set -e
 # this function will deploy the app to heroku
 # and run a simple curl check for $TEST_URL
 # and test $TEST_URL
+    # build app inside heroku
+    if [ "$npm_lifecycle_event" = heroku-postbuild ]
+    then
+        shBuildApp
+        cp tmp/build/app/assets.app.js .
+        printf "web: npm_config_mode_backend=1 node assets.app.js" > Procfile
+        rm -fr tmp
+        return
+    fi
     if [ ! "$GIT_SSH" ]
     then
         return
     fi
     export MODE_BUILD=deployHeroku
     export TEST_URL="https://hrku01-$npm_package_name-$CI_BRANCH.herokuapp.com"
-    shBuildPrint "deploying to $TEST_URL"
-    # build app
-    shBuildApp
-    shGitRepoBranchUpdateLocal() {(set -e
-    # this function will local-update git-repo-branch
-        cp "$npm_config_dir_build/app/assets.app.js" .
-        printf "web: npm_config_mode_backend=1 node assets.app.js" > Procfile
-    )}
-    # upload app
-    (shGitRepoBranchCommand copyPwdLsTree local HEAD "git@github.com:$GITHUB_REPO.git" \
-        "heroku.$CI_BRANCH") || return $?
-    shBuildPrint "waiting 60 seconds for $TEST_URL to finish deploying"
-    sleep 60
     # verify deployed app's main-page returns status-code < 400
-    if [ $(curl --connect-timeout 30 -Ls -o /dev/null -w "%{http_code}" "$TEST_URL") -lt 400 ]
+    if [ $(curl --connect-timeout 60 -Ls -o /dev/null -w "%{http_code}" "$TEST_URL") -lt 400 ]
     then
         shBuildPrint "curl test passed for $TEST_URL"
     else
@@ -572,7 +568,7 @@ shFileKeySort() {(set -e
 console.log('var aa = [' + require('fs').readFileSync('$FILE', 'utf8')
 /* jslint-ignore-begin */
     .replace((/\\n{2,}/gm), '\\n')
-    .replace((/^( {8}\\w[^ ]*? = .*?)$/gm), '\`\"\$1\",')
+    .replace((/^( {8}\\w[^ ]*? =(?:| .*?))$/gm), '\`\"\$1\",')
     .replace((/^(\\w+?\\(\\) \\{.*?)$/gm), '\`\"\$1\",')
     .replace((/\\n[^\`].*?$/gm), '')
     .replace((/^\W.*/), '')
@@ -1347,6 +1343,11 @@ shNpmTestPublished() {(set -e
     return "$EXIT_CODE"
 )}
 
+shPasswordRandom() {(set -e
+# this function will create a random password
+    openssl rand -base64 32
+)}
+
 shReadmeBuild() {(set -e
 # this function will run the internal build-script embedded in README.md
     # run shell script from README.md
@@ -1585,7 +1586,26 @@ local.fs.writeFileSync('$npm_config_dir_build/$MODE_BUILD_SCREEN_CAPTURE', local
 shServerPortRandom() {(set -e
 # https://wiki.ubuntu.com/DashAsBinSh#A.24RANDOM
 # this function will print a random port in the inclusive range 0x8000 to 0xffff
-    if (busybox > /dev/null 2>&1)
+    if (node --version > /dev/null 2>&1)
+    then
+        node -e "
+// <script>
+/*jslint
+    bitwise: true,
+    browser: true,
+    maxerr: 8,
+    maxlen: 96,
+    node: true,
+    nomen: true,
+    regexp: true,
+    stupid: true
+*/
+'use strict';
+process.stdout.write(String(Math.random() * 0x10000 | 0x8000));
+// </script>
+        "
+        return
+    elif (busybox > /dev/null 2>&1)
     then
         HEXDUMP="busybox hexdump"
     else

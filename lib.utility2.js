@@ -1044,7 +1044,7 @@ local.templateTestReportHtml = '\
                                 statusCode: xhr.statusCode,
                                 responseText: local.tryCatchOnError(function () {
                                     return xhr.responseText.slice(0, 256);
-                                })
+                                }, local.nop)
                             }));
                         }
                         // handle string data
@@ -4294,6 +4294,8 @@ instruction\n\
          * this function will try to run the fnc in a try-catch block,
          * else call onError with the errorCaught
          */
+            // validate onError
+            local.assert(typeof onError === 'function', typeof onError);
             try {
                 // reset errorCaught
                 local._debugTryCatchErrorCaught = null;

@@ -39,6 +39,7 @@
         "build-ci": "./lib.utility2.sh shRun shReadmeBuild",
         "env": "env",
         "example.sh": "./lib.utility2.sh shRunScreenCapture shReadmeTestSh example.sh",
+        "heroku-postbuild": "./lib.utility2.sh shRun shDeployHeroku",
         "start": "export PORT=${PORT:-8080} && if [ -f assets.app.js ]; then node assets.app.js; return; fi && export npm_config_mode_auto_restart=1 && ./lib.utility2.sh shRun shIstanbulCover test.js",
 
 
@@ -51,5 +52,5 @@
 
         "test-all": "npm test --mode-coverage=all"
     },
-    "version": "2016.12.2"
+    "version": "2016.12.3"
 }

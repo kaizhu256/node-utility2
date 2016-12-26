@@ -30,18 +30,20 @@ this zero-dependency package will run dynamic browser-tests with coverage (via e
 [![api-doc](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/screen-capture.docApiCreate.browser._2Fhome_2Ftravis_2Fbuild_2Fkaizhu256_2Fnode-utility2_2Ftmp_2Fbuild_2Fdoc.api.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/doc.api.html)
 
 #### todo
-- automate heroku-deploy with custom-buildpack
+- npm publish 2016.12.3
 - fix timeout edge-cases in github-crud
 - add utility2.middlewareLimit
 - add server stress test using electron
 - none
 
-#### change since 0068fb96
-- npm publish 2016.12.2
-- merge github-crud into this package
-- revamp heroku-deploy
-- add middlewareForwardProxy
-- add modeDebug option to function local.ajax
+#### change since ee383134
+- add file lib.swgg.css
+- add file lib.swgg.js
+- add file lib.swgg.json-schema.json
+- add file lib.swgg.petstore.json
+- add file lib.swgg.schema.json
+- add file lib.swgg.ui.js
+- add heroku-postbuild npm-script
 - none
 
 #### this package requires
@@ -541,6 +543,7 @@ utility2-comment -->\n\
         "build-ci": "./lib.utility2.sh shRun shReadmeBuild",
         "env": "env",
         "example.sh": "./lib.utility2.sh shRunScreenCapture shReadmeTestSh example.sh",
+        "heroku-postbuild": "./lib.utility2.sh shRun shDeployHeroku",
         "start": "\
 export PORT=${PORT:-8080} && \
 if [ -f assets.app.js ]; then node assets.app.js; return; fi && \
@@ -553,7 +556,7 @@ export npm_config_mode_auto_restart=1 && \
 ./lib.utility2.sh test test.js",
         "test-all": "npm test --mode-coverage=all"
     },
-    "version": "2016.12.2"
+    "version": "2016.12.3"
 }
 ```
 

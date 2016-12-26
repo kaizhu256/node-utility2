@@ -184,131 +184,6 @@
 
     // run node js-env code - function
     case 'node':
-        local.contentRequest = function (options, onError) {
-        /*
-         * this function will request the content from github
-         */
-            // init options
-            options = local.jsonCopy(options);
-            local.objectSetDefault(options, {
-                chunkList: [],
-                headers: {
-                    // github oauth authentication
-                    Authorization: 'token ' + process.env.GITHUB_TOKEN,
-                    // bug - github api requires user-agent header
-                    'User-Agent': 'undefined'
-                },
-                method: 'GET',
-                responseJson: {},
-                responseText: ''
-            }, 2);
-            // init onError2
-            options.onError2 = function (error) {
-                if (options.done) {
-                    return;
-                }
-                // cleanup timerTimeout
-                clearTimeout(options.timerTimeout);
-                // cleanup request and response
-                [options.request, options.response].forEach(function (stream) {
-                    // try to end the stream
-                    try {
-                        stream.end();
-                    // else try to destroy the stream
-                    } catch (errorCaught) {
-                        try {
-                            stream.destroy();
-                        } catch (ignore) {
-                        }
-                    }
-                });
-                console.error(new Date().toISOString(
-                ) + ' github-crud-response ' + JSON.stringify({
-                    method: options.method,
-                    url: options.url,
-                    statusCode: options.response.statusCode
-                }));
-                onError(error, options.responseJson);
-            };
-            // init timerTimeout
-            options.timerTimeout = local.onTimeout(
-                options.onError2,
-                30000,
-                'github-crud ' + options.method + ' ' + options.url
-            );
-            options.url = options.url
-/* jslint-ignore-begin */
-// parse https://github.com/:owner/:repo/blob/:branch/:path
-.replace(
-    (/^https:\/\/github.com\/([^\/]+?\/[^\/]+?)\/blob\/([^\/]+?)\/(.+)/),
-    'https://api.github.com/repos/$1/contents/$3?branch=$2'
-)
-// parse https://github.com/:owner/:repo/tree/:branch/:path
-.replace(
-    (/^https:\/\/github.com\/([^\/]+?\/[^\/]+?)\/tree\/([^\/]+?)\/(.+)/),
-    'https://api.github.com/repos/$1/contents/$3?branch=$2'
-)
-// parse https://raw.githubusercontent.com/:owner/:repo/:branch/:path
-.replace(
-(/^https:\/\/raw.githubusercontent.com\/([^\/]+?\/[^\/]+?)\/([^\/]+?)\/(.+)/),
-    'https://api.github.com/repos/$1/contents/$3?branch=$2'
-)
-// parse https://:owner.github.io/:repo/:path
-.replace(
-    (/^https:\/\/([^\.]+?)\.github\.io\/([^\/]+?)\/(.+)/),
-    'https://api.github.com/repos/$1/$2/contents/$3?branch=gh-pages'
-)
-/* jslint-ignore-end */
-                .replace((/\?branch=(.*)/), function (match0, match1) {
-                    options.branch = match1;
-                    if (options.method === 'GET') {
-                        match0 = match0.replace('branch', 'ref');
-                    }
-                    return match0;
-                });
-            if (options.url.indexOf('https://api.github.com/repos/') !== 0) {
-                options.onError2(new Error('invalid url ' + options.url));
-                return;
-            }
-            options.message = '[skip ci] ' + options.method + ' file ' + options.url;
-            options.url += '&message=' + encodeURIComponent(options.message);
-            if (options.sha) {
-                options.url += '&sha=' + options.sha;
-            }
-            local.objectSetDefault(options, local.url.parse(options.url));
-            console.error(new Date().toISOString() + ' github-crud-request ' + JSON.stringify({
-                method: options.method,
-                url: options.url
-            }));
-            options.request = local.https.request(options, function (response) {
-                options.response = response;
-                if (options.response.statusCode < 200 || options.response.statusCode >= 300) {
-                    options.onError2(new Error(options.response.statusCode));
-                    return;
-                }
-                options.response
-                    .on('data', function (chunk) {
-                        options.chunkList.push(chunk);
-                    })
-                    .on('end', function () {
-                        try {
-                            options.responseText = Buffer.concat(options.chunkList).toString();
-                            options.responseJson = JSON.parse(options.responseText);
-                        } catch (ignore) {
-                        }
-                        options.onError2();
-                    })
-                    .on('error', options.onError2);
-            })
-                .on('error', options.onError2);
-            options.request.end(JSON.stringify({
-                branch: options.branch,
-                content: new Buffer(options.content || '').toString('base64'),
-                message: '[skip ci] ' + options.method + ' file ' + options.url,
-                sha: options.sha
-            }));
-        };
-
         local.contentDelete = function (options, onError) {
         /*
          * this function will delete the github file
@@ -441,6 +316,131 @@
             });
             options.modeNext = 0;
             options.onNext();
+        };
+
+        local.contentRequest = function (options, onError) {
+        /*
+         * this function will request the content from github
+         */
+            // init options
+            options = local.jsonCopy(options);
+            local.objectSetDefault(options, {
+                chunkList: [],
+                headers: {
+                    // github oauth authentication
+                    Authorization: 'token ' + process.env.GITHUB_TOKEN,
+                    // bug - github api requires user-agent header
+                    'User-Agent': 'undefined'
+                },
+                method: 'GET',
+                responseJson: {},
+                responseText: ''
+            }, 2);
+            // init onError2
+            options.onError2 = function (error) {
+                if (options.done) {
+                    return;
+                }
+                // cleanup timerTimeout
+                clearTimeout(options.timerTimeout);
+                // cleanup request and response
+                [options.request, options.response].forEach(function (stream) {
+                    // try to end the stream
+                    try {
+                        stream.end();
+                    // else try to destroy the stream
+                    } catch (errorCaught) {
+                        try {
+                            stream.destroy();
+                        } catch (ignore) {
+                        }
+                    }
+                });
+                console.error(new Date().toISOString(
+                ) + ' github-crud-response ' + JSON.stringify({
+                    method: options.method,
+                    url: options.url,
+                    statusCode: options.response.statusCode
+                }));
+                onError(error, options.responseJson);
+            };
+            // init timerTimeout
+            options.timerTimeout = local.onTimeout(
+                options.onError2,
+                30000,
+                'github-crud ' + options.method + ' ' + options.url
+            );
+            options.url = options.url
+/* jslint-ignore-begin */
+// parse https://github.com/:owner/:repo/blob/:branch/:path
+.replace(
+    (/^https:\/\/github.com\/([^\/]+?\/[^\/]+?)\/blob\/([^\/]+?)\/(.+)/),
+    'https://api.github.com/repos/$1/contents/$3?branch=$2'
+)
+// parse https://github.com/:owner/:repo/tree/:branch/:path
+.replace(
+    (/^https:\/\/github.com\/([^\/]+?\/[^\/]+?)\/tree\/([^\/]+?)\/(.+)/),
+    'https://api.github.com/repos/$1/contents/$3?branch=$2'
+)
+// parse https://raw.githubusercontent.com/:owner/:repo/:branch/:path
+.replace(
+(/^https:\/\/raw.githubusercontent.com\/([^\/]+?\/[^\/]+?)\/([^\/]+?)\/(.+)/),
+    'https://api.github.com/repos/$1/contents/$3?branch=$2'
+)
+// parse https://:owner.github.io/:repo/:path
+.replace(
+    (/^https:\/\/([^\.]+?)\.github\.io\/([^\/]+?)\/(.+)/),
+    'https://api.github.com/repos/$1/$2/contents/$3?branch=gh-pages'
+)
+/* jslint-ignore-end */
+                .replace((/\?branch=(.*)/), function (match0, match1) {
+                    options.branch = match1;
+                    if (options.method === 'GET') {
+                        match0 = match0.replace('branch', 'ref');
+                    }
+                    return match0;
+                });
+            if (options.url.indexOf('https://api.github.com/repos/') !== 0) {
+                options.onError2(new Error('invalid url ' + options.url));
+                return;
+            }
+            options.message = '[skip ci] ' + options.method + ' file ' + options.url;
+            options.url += '&message=' + encodeURIComponent(options.message);
+            if (options.sha) {
+                options.url += '&sha=' + options.sha;
+            }
+            local.objectSetDefault(options, local.url.parse(options.url));
+            console.error(new Date().toISOString() + ' github-crud-request ' + JSON.stringify({
+                method: options.method,
+                url: options.url
+            }));
+            options.request = local.https.request(options, function (response) {
+                options.response = response;
+                if (options.response.statusCode < 200 || options.response.statusCode >= 300) {
+                    options.onError2(new Error(options.response.statusCode));
+                    return;
+                }
+                options.response
+                    .on('data', function (chunk) {
+                        options.chunkList.push(chunk);
+                    })
+                    .on('end', function () {
+                        try {
+                            options.responseText = Buffer.concat(options.chunkList).toString();
+                            options.responseJson = JSON.parse(options.responseText);
+                        } catch (ignore) {
+                        }
+                        options.onError2();
+                    })
+                    .on('error', options.onError2);
+            })
+                .on('error', options.onError2);
+            options.request.end(JSON.stringify({
+                branch: options.branch,
+                content: new Buffer(options.content || '').toString('base64'),
+                message: '[skip ci] ' + options.method + ' file ' + options.url,
+                sha: options.sha
+            }));
         };
         break;
     }
