@@ -6,6 +6,7 @@ branches:
     only:
     - alpha
     - docker.latest
+    - docker.kibana
     - beta
     - master
 env:
