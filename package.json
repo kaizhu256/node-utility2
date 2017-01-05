@@ -1,5 +1,4 @@
 {
-    "package.json": true,
     "author": "kai zhu <kaizhu256@gmail.com>",
     "bin": {
         "utility2": "lib.utility2.sh",
@@ -12,25 +11,46 @@
     "devDependencies": {
         "electron-lite": "kaizhu256/node-electron-lite#alpha"
     },
-    "engines": { "node": ">=4.0" },
+    "engines": {
+        "node": ">=4.0"
+    },
     "homepage": "https://github.com/kaizhu256/node-utility2",
     "keywords": [
-        "atom", "atom-shell",
-        "browser", "build",
-        "ci", "code", "continuous-integration", "cover", "coverage",
+        "atom",
+        "atom-shell",
+        "browser",
+        "build",
+        "ci",
+        "code-coverage",
+        "continuous-integration",
+        "cover",
+        "coverage",
+        "docker",
         "electron",
-        "headless", "headless-browser",
-        "instrument", "istanbul",
-        "jscover", "jscoverage",
-        "phantom", "phantomjs",
-        "slimer", "slimerjs",
-        "test", "travis", "travis-ci",
+        "headless",
+        "headless-browser",
+        "instrument",
+        "istanbul",
+        "jscover",
+        "jscoverage",
+        "phantom",
+        "phantomjs",
+        "slimer",
+        "slimerjs",
+        "test",
+        "travis",
+        "travis-ci",
+        "utility2",
         "web"
     ],
     "license": "MIT",
     "main": "lib.utility2",
     "name": "utility2",
-    "os": ["darwin", "linux"],
+    "nameAlias": "utility2",
+    "os": [
+        "darwin",
+        "linux"
+    ],
     "repository": {
         "type": "git",
         "url": "https://github.com/kaizhu256/node-utility2.git"
@@ -40,17 +60,10 @@
         "env": "env",
         "example.sh": "./lib.utility2.sh shRunScreenCapture shReadmeTestSh example.sh",
         "heroku-postbuild": "./lib.utility2.sh shRun shDeployHeroku",
+        "postinstall": "if [ -f lib.utility2.npm-scripts.sh ]; then ./lib.utility2.npm-scripts.sh postinstall; fi",
         "start": "export PORT=${PORT:-8080} && if [ -f assets.app.js ]; then node assets.app.js; return; fi && export npm_config_mode_auto_restart=1 && ./lib.utility2.sh shRun shIstanbulCover test.js",
-
-
-
-
         "test": "export PORT=$(./lib.utility2.sh shServerPortRandom) && export PORT_REPL=$(./lib.utility2.sh shServerPortRandom) && export npm_config_mode_auto_restart=1 && ./lib.utility2.sh test test.js",
-
-
-
-
         "test-all": "npm test --mode-coverage=all"
     },
-    "version": "2016.12.3"
+    "version": "2017.1.5"
 }

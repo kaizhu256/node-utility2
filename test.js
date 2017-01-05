@@ -238,9 +238,9 @@
                 local.ajax(options, function (error, xhr) {
                     // validate error occurred
                     local.assert(error, error);
-                    // test getAllResponseHeaders' null handling-behavior
+                    // test getAllResponseHeaders' null-case handling-behavior
                     xhr.getAllResponseHeaders();
-                    // test getResponseHeader' null handling-behavior
+                    // test getResponseHeader' null-case handling-behavior
                     xhr.getResponseHeader('undefined');
                     onParallel();
                 });
@@ -1055,7 +1055,7 @@
         /*
          * this function will test objectSetDefault's default handling-behavior
          */
-            // tset null handling behavior
+            // test null-case handling behavior
             local.objectSetDefault();
             local.objectSetDefault({});
             // test falsey handling-behavior
@@ -1100,7 +1100,7 @@
         /*
          * this function will test objectSetOverride's default handling-behavior
          */
-            // tset null handling behavior
+            // test null-case handling behavior
             local.objectSetOverride();
             local.objectSetOverride({});
             // test falsey handling-behavior
@@ -1691,22 +1691,6 @@
             local.assertJsonEqual(options.data.children[0].outerHTML, '<div>aa</div>');
             onError();
         };
-
-        local.testCase_domQuerySelectorAll_default = function (options, onError) {
-        /*
-         * this function will test domQuerySelectorAll's default handling-behavior
-         */
-            options = {};
-            [
-                document,
-                // test jQuery handling-behavior
-                [document]
-            ].forEach(function (element) {
-                options.data = local.domQuerySelectorAll(element, 'body')[0];
-                local.assert(options.data === document.body);
-            });
-            onError();
-        };
         break;
 
 
@@ -1748,6 +1732,20 @@
             options.onNext();
         };
 
+        local.testCase_buildReadmeElectronLite_app = function (options, onError) {
+        /*
+         * this function will test buildReadmeElectronLite's app handling-behavior
+         */
+            local.testMock([
+                [local.fs, { writeFileSync: local.nop }]
+            ], function (onError) {
+                options = {};
+                options.readmeFile = local.fs.readFileSync('README.md', 'utf8');
+                options.readmeTemplate = local.templateReadme;
+                local.buildReadmeElectronLite(options, onError);
+            }, onError);
+        };
+
         local.testCase_build_app = function (options, onError) {
         /*
          * this function will test build's app handling-behavior
@@ -1787,6 +1785,12 @@
         /*
          * this function will test build's doc handling-behavior
          */
+            // coverage-hack
+            local.testMock([
+                [local.env, { npm_config_mode_coverage: 'all' }]
+            ], function (onError) {
+                local.buildDoc(null, onError);
+            }, local.nop);
             options = { moduleDict: {
                 'utility2.Blob': {
                     exampleFileList: [],
@@ -1816,6 +1820,10 @@
                     exampleFileList: ['lib.db.js'],
                     exports: local.db
                 },
+                'utility2.db._DbTable': {
+                    exampleFileList: ['lib.db.js'],
+                    exports: local.db._DbTable
+                },
                 'utility2.db._DbTable.prototype': {
                     exampleFileList: ['lib.db.js'],
                     exports: local.db._DbTable.prototype
@@ -1830,6 +1838,42 @@
                 }
             } };
             local.buildDoc(options, onError);
+        };
+
+        local.testCase_build_readme = function (options, onError) {
+        /*
+         * this function will test build's readme handling-behavior
+         */
+            options = {};
+            options.readmeFile = local.fs.readFileSync('README.md', 'utf8');
+            options.readmeTemplate = local.templateReadme;
+            options.readmeTemplate = options.readmeTemplate.replace(
+                (/(app\/assets\.jslint-lite)/g),
+                '$1.rollup'
+            );
+/* jslint-ignore-begin */
+options.readmeTemplate = options.readmeTemplate.replace('\
+    <button class="onclick" id="testRunButton1">run internal test</button><br>\\n\\\n\
+    <div id="testReportDiv1" style="display: none;"></div>\\n\\\n\
+', '');
+/* jslint-ignore-end */
+            // search-and-replace readmeFile
+            [
+                (/\n<!-- utility2-comment\\n\\\n[\S\s]*?\n\\n\\\n/)
+            ].forEach(function (rgx) {
+                options.readmeTemplate.replace(rgx, function (match0) {
+                    options.readmeFile = options.readmeFile.replace(rgx, match0);
+                });
+            });
+            // search-and-replace readmeTemplate
+            [
+                (/\n# quickstart\b[\S\s]*?\n# package.json\n/)
+            ].forEach(function (rgx) {
+                options.readmeFile.replace(rgx, function (match0) {
+                    options.readmeTemplate = options.readmeTemplate.replace(rgx, match0);
+                });
+            });
+            local.buildReadmeJslintLite(options, onError);
         };
 
         local.testCase_fsWriteFileWithMkdirpSync_default = function (options, onError) {
@@ -1855,6 +1899,62 @@
             // validate data
             local.utility2.assertJsonEqual(options.data, 'aa');
             onError();
+        };
+
+        local.testCase_httpRequest_default = function (options, onError) {
+        /*
+         * this function will test httpRequest's default handling-behavior
+         */
+            var onParallel;
+            onParallel = local.onParallel(onError);
+            onParallel.counter += 1;
+            options = {};
+            // test default handling-behavior
+            onParallel.counter += 1;
+            local.httpRequest({
+                data:  'aa',
+                // test request-header handling-behavior
+                headers: { 'X-Request-Header-Test': 'aa' },
+                method: 'POST',
+                url: local.serverLocalHost + '/test.echo'
+            }, function (error, response) {
+                // validate no error occurred
+                local.assert(!error, error);
+                // validate response.statusCode
+                local.assertJsonEqual(response.statusCode, 200);
+                // validate response.headers
+                local.assertJsonEqual(response.headers['x-response-header-test'], 'bb');
+                // validate response.data
+                options.data = response.data.toString();
+                local.assert((/\r\naa$/).test(options.data), options.data);
+                local.assert(
+                    (/\r\nx-request-header-test: aa\r\n/).test(options.data),
+                    options.data
+                );
+                onParallel();
+            });
+            // test error handling-behavior
+            onParallel.counter += 1;
+            local.httpRequest({
+                url: local.serverLocalHost + '/test.error-404'
+            }, function (error) {
+                // validate error occurred
+                local.assert(error, error);
+                onParallel();
+            });
+            // test timeout handling-behavior
+            onParallel.counter += 1;
+            setTimeout(function () {
+                local.httpRequest({
+                    timeout: 1,
+                    url: local.serverLocalHost + '/test.timeout'
+                }, function (error) {
+                    // validate error occurred
+                    local.assert(error, error);
+                    onParallel();
+                });
+            }, 1000);
+            onParallel();
         };
 
         local.testCase_istanbulCoverageMerge_default = function (options, onError) {
@@ -1913,11 +2013,11 @@ local.assertJsonEqual(options.coverage1,
          * this function will test lib.utility2.js's standalone handling-behavior
          */
             options = {};
-            options.data = local.fs.readFileSync('./lib.utility2.js', 'utf8').replace(
+            options.data = local.fs.readFileSync('lib.utility2.js', 'utf8').replace(
                 '/* istanbul instrument in package utility2 */',
                 ''
             );
-            local.fs.writeFileSync('./tmp/lib.utility2.js', options.data);
+            local.fs.writeFileSync('tmp/lib.utility2.js', options.data);
             require('./tmp/lib.utility2.js');
             onError();
         };

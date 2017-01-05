@@ -19,7 +19,7 @@ this zero-dependency package will run dynamic browser-tests with coverage (via e
 # live demo
 - [https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/index.html](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/index.html)
 
-[![github.com test-server](https://kaizhu256.github.io/node-utility2/build/screen-capture.githubDeploy.browser._2Fnode-utility2_2Fbuild..alpha..travis-ci.org_2Fapp_2Findex.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/index.html)
+[![github.com test-server](https://kaizhu256.github.io/node-utility2/build/screen-capture.deployGithub.browser._2Fnode-utility2_2Fbuild..alpha..travis-ci.org_2Fapp_2Findex.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/index.html)
 
 
 
@@ -30,20 +30,18 @@ this zero-dependency package will run dynamic browser-tests with coverage (via e
 [![api-doc](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/screen-capture.docApiCreate.browser._2Fhome_2Ftravis_2Fbuild_2Fkaizhu256_2Fnode-utility2_2Ftmp_2Fbuild_2Fdoc.api.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/doc.api.html)
 
 #### todo
-- npm publish 2016.12.3
-- fix timeout edge-cases in github-crud
 - add utility2.middlewareLimit
 - add server stress test using electron
 - none
 
-#### change since ee383134
-- add file lib.swgg.css
-- add file lib.swgg.js
-- add file lib.swgg.json-schema.json
-- add file lib.swgg.petstore.json
-- add file lib.swgg.schema.json
-- add file lib.swgg.ui.js
-- add heroku-postbuild npm-script
+#### change since d976efa1
+- npm publish 2017.1.5
+- automate readme-generation with new functions local.buildReadmeElectronLite and local.buildReadmeJslintLite
+- revamp github-crud-api
+- add function httpRequest
+- add shell-function shNpmPublishAlias
+- remove function domQuerySelectorAll
+- update documentation-generator
 - none
 
 #### this package requires
@@ -350,7 +348,6 @@ instruction
 <style>\n\
 /*csslint\n\
     box-sizing: false,\n\
-    ids: false,\n\
     universal-selector: false\n\
 */\n\
 * {\n\
@@ -359,11 +356,16 @@ instruction
 body {\n\
     background: #fff;\n\
     font-family: Arial, Helvetica, sans-serif;\n\
-    margin: 1rem;\n\
+    margin: 2rem;\n\
 }\n\
 body > * {\n\
     margin-bottom: 1rem;\n\
 }\n\
+</style>\n\
+<style>\n\
+/*csslint\n\
+    ids: false,\n\
+*/\n\
 #outputPreJslint1 {\n\
     color: #d00;\n\
 }\n\
@@ -379,7 +381,7 @@ textarea[readonly] {\n\
 </head>\n\
 <body>\n\
 <!-- utility2-comment\n\
-    <div id="ajaxProgressDiv1" style="background: #d00; height: 2px; left: 0; margin: 0; padding: 0; position: fixed; top: 0; transition: background 0.5s, width 1.5s; width: 25%;"></div>\n\
+    <div id="ajaxProgressDiv1" style="background: #d00; height: 4px; left: 0; margin: 0; padding: 0; position: fixed; top: 0; transition: background 0.5s, width 1.5s; width: 25%;"></div>\n\
 utility2-comment -->\n\
     <h1>\n\
 <!-- utility2-comment\n\
@@ -396,7 +398,10 @@ utility2-comment -->\n\
 utility2-comment -->\n\
     </h1>\n\
     <h3>{{env.npm_package_description}}</h3>\n\
+<!-- utility2-comment\n\
     <h4><a download href="assets.app.js">download standalone app</a></h4>\n\
+utility2-comment -->\n\
+\n\
     <label>edit or paste script below to cover and test</label>\n\
 <textarea class="onkeyup" id="inputTextarea1">\n\
 // remove comment below to disable jslint\n\
@@ -463,9 +468,11 @@ utility2-comment -->\n\
     <div id="testReportDiv1" style="display: none;"></div>\n\
     <h2>coverage-report</h2>\n\
     <div class="istanbulCoverageDiv"></div>\n\
+<!-- utility2-comment\n\
     {{#if isRollup}}\n\
     <script src="assets.app.min.js"></script>\n\
     {{#unless isRollup}}\n\
+utility2-comment -->\n\
     <script src="assets.utility2.lib.istanbul.js"></script>\n\
     <script src="assets.utility2.lib.jslint.js"></script>\n\
     <script src="assets.utility2.lib.db.js"></script>\n\
@@ -477,7 +484,9 @@ utility2-comment -->\n\
     <script src="assets.example.js"></script>\n\
     <script src="assets.test.js"></script>\n\
     <script>window.utility2.onResetBefore();</script>\n\
+<!-- utility2-comment\n\
     {{/if isRollup}}\n\
+utility2-comment -->\n\
 </body>\n\
 </html>\n\
 ';
@@ -503,7 +512,6 @@ utility2-comment -->\n\
 # package.json
 ```json
 {
-    "package.json": true,
     "author": "kai zhu <kaizhu256@gmail.com>",
     "bin": {
         "utility2": "lib.utility2.sh",
@@ -512,29 +520,50 @@ utility2-comment -->\n\
         "utility2-jslint": "lib.jslint.js",
         "utility2-uglifyjs": "lib.uglifyjs.js"
     },
-    "description": "{{packageJson.description}}",
+    "description": "this zero-dependency package will run dynamic browser-tests with coverage (via electron and istanbul)",
     "devDependencies": {
         "electron-lite": "kaizhu256/node-electron-lite#alpha"
     },
-    "engines": { "node": ">=4.0" },
+    "engines": {
+        "node": ">=4.0"
+    },
     "homepage": "https://github.com/kaizhu256/node-utility2",
     "keywords": [
-        "atom", "atom-shell",
-        "browser", "build",
-        "ci", "code", "continuous-integration", "cover", "coverage",
+        "atom",
+        "atom-shell",
+        "browser",
+        "build",
+        "ci",
+        "code-coverage",
+        "continuous-integration",
+        "cover",
+        "coverage",
+        "docker",
         "electron",
-        "headless", "headless-browser",
-        "instrument", "istanbul",
-        "jscover", "jscoverage",
-        "phantom", "phantomjs",
-        "slimer", "slimerjs",
-        "test", "travis", "travis-ci",
+        "headless",
+        "headless-browser",
+        "instrument",
+        "istanbul",
+        "jscover",
+        "jscoverage",
+        "phantom",
+        "phantomjs",
+        "slimer",
+        "slimerjs",
+        "test",
+        "travis",
+        "travis-ci",
+        "utility2",
         "web"
     ],
     "license": "MIT",
     "main": "lib.utility2",
     "name": "utility2",
-    "os": ["darwin", "linux"],
+    "nameAlias": "utility2",
+    "os": [
+        "darwin",
+        "linux"
+    ],
     "repository": {
         "type": "git",
         "url": "https://github.com/kaizhu256/node-utility2.git"
@@ -544,19 +573,12 @@ utility2-comment -->\n\
         "env": "env",
         "example.sh": "./lib.utility2.sh shRunScreenCapture shReadmeTestSh example.sh",
         "heroku-postbuild": "./lib.utility2.sh shRun shDeployHeroku",
-        "start": "\
-export PORT=${PORT:-8080} && \
-if [ -f assets.app.js ]; then node assets.app.js; return; fi && \
-export npm_config_mode_auto_restart=1 && \
-./lib.utility2.sh shRun shIstanbulCover test.js",
-        "test": "\
-export PORT=$(./lib.utility2.sh shServerPortRandom) && \
-export PORT_REPL=$(./lib.utility2.sh shServerPortRandom) && \
-export npm_config_mode_auto_restart=1 && \
-./lib.utility2.sh test test.js",
+        "postinstall": "if [ -f lib.utility2.npm-scripts.sh ]; then ./lib.utility2.npm-scripts.sh postinstall; fi",
+        "start": "export PORT=${PORT:-8080} && if [ -f assets.app.js ]; then node assets.app.js; return; fi && export npm_config_mode_auto_restart=1 && ./lib.utility2.sh shRun shIstanbulCover test.js",
+        "test": "export PORT=$(./lib.utility2.sh shServerPortRandom) && export PORT_REPL=$(./lib.utility2.sh shServerPortRandom) && export npm_config_mode_auto_restart=1 && ./lib.utility2.sh test test.js",
         "test-all": "npm test --mode-coverage=all"
     },
-    "version": "2016.12.3"
+    "version": "2017.1.5"
 }
 ```
 
@@ -616,7 +638,7 @@ RUN apt-get update && \
         vim \
         xvfb
 # cache electron-lite
-RUN npm install electron-lite && \
+RUN npm install "kaizhu256/node-electron-lite#alpha" && \
     cp /tmp/electron-*.zip /
 ```
 

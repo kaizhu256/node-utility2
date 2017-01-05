@@ -50,30 +50,35 @@ local.templateUiDatatable = '\
         data-page-number={{pageNumber}}\n\
         data-resource-name="{{name}}"\n\
         {{#if disabled}}disabled{{/if disabled}}\n\
-    >\n\
-        {{value}}\n\
-    </button>\n\
+    >{{valueEncoded htmlSafe}}</button>\n\
     {{/each pageList}}\n\
 </div>\n\
 <table class="borderBottom borderTop">\n\
     <thead>\n\
         <tr>\n\
-            <th style="padding-left: {{iiPadding}}rem; padding-right: {{iiPadding}}rem;">\n\
-                <button class="onEventDatatableSelectedRemove">remove</button>\n\
-            </th>\n\
+            <th\n\
+                class="cursorPointer"\n\
+                style="padding-left: {{iiPadding}}rem; padding-right: {{iiPadding}}rem;"\n\
+            ><button class="onEventDatatableSelectedRemove">remove</button></th>\n\
             {{#each propDefList}}\n\
             <th class="cursorPointer">\n\
                 <div>{{name}}</div>\n\
-                <div class="color777">{{td2.innerHTML htmlSafe}}</div>\n\
+                <div class="color777">\n\
+                    {{type2}}{{#if format2}}<br>({{format2}}){{/if format2}}\n\
+                </div>\n\
                 <div class="sortAsc">+</div>\n\
                 <div class="sortDsc">-</div>\n\
             </th>\n\
             {{/each propDefList}}\n\
+            <th\n\
+                class="cursorPointer"\n\
+                style="padding-left: {{iiPadding}}rem; padding-right: {{iiPadding}}rem;"\n\
+            ><button class="onEventDatatableSelectedRemove">remove</button></th>\n\
         </tr>\n\
     </thead>\n\
     <tbody>\n\
         {{#each dbRowList}}\n\
-        <tr data-id="{{id}}" data-idField="{{idField}}">\n\
+        <tr data-id="{{id jsonStringify encodeURIComponent}}">\n\
             <td class="cursorPointer eventDelegateClick onEventDatatableTrSelect">\n\
                 <span class="tr">\n\
                     <input type="checkbox">\n\
@@ -81,13 +86,48 @@ local.templateUiDatatable = '\
                 </span>\n\
             </td>\n\
             {{#each colList}}\n\
-            <td class="cursorPointer">{{valueEncoded htmlSafe}}</td>\n\
+            <td>{{valueEncoded htmlSafe}}</td>\n\
             {{/each colList}}\n\
+            <td class="cursorPointer eventDelegateClick onEventDatatableTrSelect">\n\
+                <span class="tr">\n\
+                    <input type="checkbox">\n\
+                    <span class="flex1">{{ii}}</span>\n\
+                </span>\n\
         </tr>\n\
         {{/each dbRowList}}\n\
     <tfoot>\n\
+        <tr>\n\
+            <th\n\
+                class="cursorPointer"\n\
+                style="padding-left: {{iiPadding}}rem; padding-right: {{iiPadding}}rem;"\n\
+            ><button class="onEventDatatableSelectedRemove">remove</button></th>\n\
+            {{#each propDefList}}\n\
+            <th class="cursorPointer">\n\
+                <div>{{name}}</div>\n\
+                <div class="color777">\n\
+                    {{type2}}{{#if format2}}<br>({{format2}}){{/if format2}}\n\
+                </div>\n\
+                <div class="sortAsc">+</div>\n\
+                <div class="sortDsc">-</div>\n\
+            </th>\n\
+            {{/each propDefList}}\n\
+            <th\n\
+                class="cursorPointer"\n\
+                style="padding-left: {{iiPadding}}rem; padding-right: {{iiPadding}}rem;"\n\
+            ><button class="onEventDatatableSelectedRemove">remove</button></th>\n\
+        </tr>\n\
     </tfoot>\n\
 </table>\n\
+<div class="pagination tr">\n\
+    {{#each pageList}}\n\
+    <button\n\
+        class="onEventDatatableReload"\n\
+        data-page-number={{pageNumber}}\n\
+        data-resource-name="{{name}}"\n\
+        {{#if disabled}}disabled{{/if disabled}}\n\
+    >{{valueEncoded htmlSafe}}</button>\n\
+    {{/each pageList}}\n\
+</div>\n\
 ';
 
 
@@ -95,7 +135,7 @@ local.templateUiDatatable = '\
 // https://github.com/swagger-api/swagger-ui/blob/v2.1.3/src/main/template/main.handlebars
 local.templateUiMain = '\
 <div class="eventDelegateClick modal onEventModalHide" style="display: none; opacity: 0;">\n\
-    <form class="datatable eventDelegateClick flex1"></form>\n\
+    <form class="datatable eventDelegateClick"></form>\n\
 </div>\n\
 <div class="eventDelegateClick popup" style="display: none;"></div>\n\
 <form2 class="eventDelegateSubmit header onEventUiReload tr">\n\
@@ -123,26 +163,39 @@ local.templateUiMain = '\
         </li>\n\
         {{/if externalDocs}}\n\
         {{#if info.termsOfService}}\n\
-        <li class="marginTop05"><a target="_blank" href="{{info.termsOfService}}">Terms of service</a></li>\n\
+        <li class="marginTop05">\n\
+            <a target="_blank" href="{{info.termsOfService}}">Terms of service</a>\n\
+        </li>\n\
         {{/if info.termsOfService}}\n\
         {{#if info.contact.name}}\n\
         <li class="marginTop05">Created by {{info.contact.name htmlSafe}}</li>\n\
         {{/if info.contact.name}}\n\
         {{#if info.contact.url}}\n\
-        <li class="marginTop05">See more at <a href="{{info.contact.url}}">{{info.contact.url}}</a></li>\n\
+        <li class="marginTop05">\n\
+            See more at <a href="{{info.contact.url}}">{{info.contact.url}}</a>\n\
+        </li>\n\
         {{/if info.contact.url}}\n\
         {{#if info.contact.email}}\n\
-        <li class="marginTop05"><a target="_parent" href="mailto:{{info.contact.email}}?subject={{info.title htmlSafe}}">Contact the developer</a></li>\n\
+        <li class="marginTop05">\n\
+            <a\n\
+                target="_parent"\n\
+                href="mailto:{{info.contact.email}}?subject={{info.title htmlSafe}}"\n\
+            >Contact the developer</a>\n\
+        </li>\n\
         {{/if info.contact.email}}\n\
         {{#if info.license}}\n\
-        <li class="marginTop05"><a target="_blank" href="{{info.license.url}}">{{info.license.name}}</a></li>\n\
+        <li class="marginTop05">\n\
+            <a target="_blank" href="{{info.license.url}}">{{info.license.name}}</a>\n\
+        </li>\n\
         {{/if info.license}}\n\
     </ul>\n\
     {{/if info}}\n\
 </div>\n\
 <div class="reset resourceList"></div>\n\
 <div class="color777 footer reset">\n\
-    <div>[ <span>base url</span>: {{basePath}}, <span>api version</span>: {{info.version}} ]</div>\n\
+    <div>\n\
+        [ <span>base url</span>: {{basePath}}, <span>api version</span>: {{info.version}} ]\n\
+    </div>\n\
 </div>\n\
 ';
 
@@ -157,9 +210,11 @@ local.templateUiOperation = '\
 >\n\
     <div class="cursorPointer eventDelegateClick onEventOperationDisplayShow header tr">\n\
         <span class="td1">{{_method}}</span>\n\
-        <span class="flex1 td2 {{#if deprecated}}fontLineThrough{{/if deprecated}}">{{_path}}</span>\n\
-        <span class="flex1 td3">{{operationId}}</span>\n\
-        <span class="flex1 td4">{{summary htmlSafe}}</span>\n\
+        <span\n\
+            class="td2 {{#if deprecated}}fontLineThrough{{/if deprecated}}"\n\
+        >{{_path}}</span>\n\
+        <span class="td3">{{operationId}}</span>\n\
+        <span class="td4">{{summary htmlSafe}}</span>\n\
     </div>\n\
     <form accept-charset="UTF-8" class="content" style="display: none;">\n\
         {{#if deprecated}}\n\
@@ -178,8 +233,7 @@ local.templateUiOperation = '\
             <span class="color777 td4">Schema</span>\n\
         </div>\n\
         {{#each parameters}}\n\
-        <div class="borderTop paramDef tr" id="{{id}}" name="{{name}}">\n\
-        </div>\n\
+        <div class="borderTop paramDef tr" id="{{id}}" name="{{name}}"></div>\n\
         {{/each parameters}}\n\
         {{/if parameters.length}}\n\
         <h4 class="label marginTop10">Response Messages</h4>\n\
@@ -206,15 +260,18 @@ local.templateUiOperation = '\
 // https://github.com/swagger-api/swagger-ui/blob/v2.1.3/src/main/template/param.handlebars
 local.templateUiParam = '\
 <span class="td1 {{#if required}}fontWeightBold{{/if required}}">\n\
-    {{name}}<br>\n\
+    {{name}}\n\
     {{#if description}}\n\
-    <span class="color777">{{description}}</span>\n\
+    <br><span class="color777">{{description htmlSafe}}</span>\n\
     {{/if description}}\n\
 </span>\n\
-<span class="td2">{{type2}}{{#if format2}} ({{format2}}){{/if format2}}</span>\n\
+<span class="td2">{{type2}}{{#if format2}}<br>({{format2}}){{/if format2}}</span>\n\
 <span class="td3">\n\
     {{#if isTextarea}}\n\
-    <textarea class="input" placeholder="{{placeholder}}"></textarea>\n\
+    <textarea\n\
+        class="input"\n\
+        data-value-encoded="{{valueEncoded encodeURIComponent}}"\n\
+        placeholder="{{placeholder}}"></textarea>\n\
     {{/if isTextarea}}\n\
     {{#if isFile}}\n\
     <input class="input" type="file">\n\
@@ -222,12 +279,21 @@ local.templateUiParam = '\
     {{#if isSelect}}\n\
     <select class="input" {{#if isSelectMultiple}}multiple{{/if isSelectMultiple}}>\n\
         {{#each selectOptionList}}\n\
-        <option id={{id}} {{selected}}>{{valueEncoded htmlSafe}}</option>\n\
+        <option\n\
+            data-value-decoded="{{valueDecoded jsonStringify encodeURIComponent}}"\n\
+            id={{id}}\n\
+            {{selected}}\n\
+        >{{valueEncoded htmlSafe}}</option>\n\
         {{/each selectOptionList}}\n\
     </select>\n\
     {{/if isSelect}}\n\
     {{#if isInputText}}\n\
-    <input class="input" placeholder="{{placeholder}}" type="text">\n\
+    <input\n\
+        class="input"\n\
+        data-value-encoded="{{valueEncoded encodeURIComponent}}"\n\
+        placeholder="{{placeholder}}"\n\
+        type="text"\n\
+    >\n\
     {{/if isInputText}}\n\
 </span>\n\
 <span class="td4">{{#if schemaText}}<pre>{{schemaText}}</pre>{{/if schemaText}}</span>\n\
@@ -248,8 +314,15 @@ local.templateUiResource = '\
         {{/if description}}\n\
         </a>\n\
         <a class="color777 onEventResourceDisplayAction td2" href="#">Show</a>\n\
-        <a class="color777 onEventResourceDisplayAction td3" href="#">Expand / Collapse Operations</a>\n\
-        <a class="color777 onEventDatatableReload td4" data-resource-name="{{name}}" href="#">Datatable</a>\n\
+        <a\n\
+            class="color777 onEventResourceDisplayAction td3"\n\
+            href="#"\n\
+        >Expand / Collapse Operations</a>\n\
+        <a\n\
+            class="color777 onEventDatatableReload td4"\n\
+            data-resource-name="{{name}}"\n\
+            href="#"\n\
+        >Datatable</a>\n\
     </div>\n\
     <div class="operationList" style="display: none;"></div>\n\
 </div>\n\
@@ -277,12 +350,11 @@ local.templateUiResponseAjax = '\
 ';
 /* jslint-ignore-end */
     }());
-    switch (local.modeJs) {
 
 
 
-    // run browser js-env code - post-init
-    case 'browser':
+    // run shared js-env code - function
+    (function () {
         local.uiAnimateFadeIn = function (element) {
         /*
          * this function will fadeIn the element
@@ -400,9 +472,9 @@ local.templateUiResponseAjax = '\
             options.schema = local.schemaNormalizeAndCopy(options.schema);
             options.propDefList = Object.keys(options.schema.properties)
                 .sort(function (aa, bb) {
-                    return aa === options.idField
+                    return aa === options._idAlias
                         ? -1
-                        : bb === options.idField
+                        : bb === options._idAlias
                         ? 1
                         : aa < bb
                         ? -1
@@ -415,25 +487,30 @@ local.templateUiResponseAjax = '\
                     local.uiParamRender(propDef);
                     return propDef;
                 });
+            options.iiPadding = 0;
             options.dbRowList = options.responseJson.data.map(function (dbRow, ii) {
                 dbRow = { paramDict: dbRow };
                 dbRow.colList = options.propDefList.map(function (propDef) {
                     propDef = local.jsonCopy(propDef);
-                    propDef.dataset = {};
-                    propDef.valueDecoded = dbRow.paramDict[propDef.name];
-                    // init valueEncoded
-                    local.uiValueEncode(propDef, propDef);
+                    propDef.valueEncoded = dbRow.paramDict[propDef.name];
+                    if (propDef.valueEncoded === undefined) {
+                        propDef.valueEncoded = '';
+                    }
+                    if (typeof propDef.valueEncoded !== 'string') {
+                        propDef.valueEncoded = JSON.stringify(propDef.valueEncoded);
+                    }
                     return propDef;
                 });
-                dbRow.id = dbRow.paramDict[options.idField];
-                dbRow.ii = options.iiPadding = options.querySkip + ii + 1;
+                dbRow.id = dbRow.paramDict[options._idAlias];
+                dbRow.ii = options.querySkip + ii + 1;
+                options.iiPadding = Math.max(
+                    0.375 * String(dbRow.ii).length,
+                    options.iiPadding
+                );
                 return dbRow;
             });
-            options.iiPadding = 0.3 * String(options.iiPadding || '').length;
             // init pagination
-            options.pageCurrent = Math.floor(
-                options.querySkip / options.queryLimit
-            );
+            options.pageCurrent = Math.floor(options.querySkip / options.queryLimit);
             options.pageTotal = Math.ceil(
                 options.responseJson.meta.paginationCountTotal / options.queryLimit
             );
@@ -443,24 +520,24 @@ local.templateUiResponseAjax = '\
             );
             options.pageMax = Math.min(options.pageMin + 7, options.pageTotal);
             options.pageList = [];
+            // add first page
+            options.pageList.push({
+                disabled: options.pageCurrent === 0,
+                pageNumber: 0,
+                valueEncoded: 'first page'
+            });
             for (tmp = options.pageMin; tmp < options.pageMax; tmp += 1) {
                 options.pageList.push({
                     disabled: tmp === options.pageCurrent,
                     pageNumber: tmp,
-                    value: tmp + 1
+                    valueEncoded: tmp + 1
                 });
             }
-            // add first page
-            options.pageList.unshift({
-                disabled: options.pageCurrent === 0,
-                pageNumber: 0,
-                value: 'first page'
-            });
             // add last page
             options.pageList.push({
                 disabled: options.pageCurrent === options.pageTotal - 1,
                 pageNumber: options.pageTotal - 1,
-                value: 'last page'
+                valueEncoded: 'last page'
             });
             options.pageCurrentIsFirst = options.pageCurrent === 0;
             options.pageCurrentIsLast = options.pageCurrent + 1 === options.pageTotal;
@@ -475,17 +552,6 @@ local.templateUiResponseAjax = '\
             }
             document.body.style.overflow = 'hidden';
             local.uiAnimateFadeIn(document.querySelector('.swggUiContainer > .modal'));
-        };
-
-        local.uiElementClick = function (options) {
-        /*
-         * this function will simulate a click-event on options.target
-         */
-            options.event = new local.global.Event(options.type || 'click', {
-                bubbles: true,
-                cancelable: true
-            });
-            options.target.dispatchEvent(options.event);
         };
 
         local.uiEventDelegate = function (event) {
@@ -511,9 +577,8 @@ local.templateUiResponseAjax = '\
          * this function will init event-handling for the dom-element
          */
             ['Click', 'Submit'].forEach(function (eventType) {
-                local.domQuerySelectorAll(
-                    element,
-                    '.eventDelegate' + eventType
+                Array.from(
+                    element.querySelectorAll('.eventDelegate' + eventType)
                 ).forEach(function (element) {
                     element.addEventListener(eventType.toLowerCase(), local.uiEventDelegate);
                 });
@@ -527,9 +592,6 @@ local.templateUiResponseAjax = '\
             var options;
             options = {};
             if (event) {
-                location.hash = '!/' +
-                    document.querySelector('.swggUiContainer .resource[data-name=' +
-                        event.target.dataset.resourceName + ']').id + '/swgg_datatable';
                 options.name = event.target.dataset.resourceName;
                 options.pageNumber = event.target.dataset.pageNumber;
             } else {
@@ -543,7 +605,10 @@ local.templateUiResponseAjax = '\
                 options,
                 local.jsonCopy(local.uiState['x-swgg-datatableDict'][options.name])
             );
-            options.querySkip = options.pageNumber * options.queryLimit || 0;
+            options._idAlias = local.apiDict[options.crudRemoveOneById]._idAlias;
+            options._idField = local.apiDict[options.crudRemoveOneById]._idField;
+            local.objectSetDefault(options, { pageNumber: 0, queryLimit: 20 });
+            options.querySkip = options.pageNumber * options.queryLimit;
             options.paramDict = {
                 _queryLimit: options.queryLimit,
                 _querySkip: options.querySkip,
@@ -555,6 +620,11 @@ local.templateUiResponseAjax = '\
                 // validate no error occurred
                 local.assert(!error, error);
                 local.uiDatatableRender(options);
+                // emit event uiDatatableRendered
+                document.dispatchEvent(new local.global.Event('uiDatatableRendered', {
+                    bubbles: true,
+                    cancelable: true
+                }));
             });
         };
 
@@ -562,16 +632,18 @@ local.templateUiResponseAjax = '\
             var onParallel;
             onParallel = local.onParallel(local.uiEventListenerDict['.onEventDatatableReload']);
             onParallel.counter += 1;
-            local.domQuerySelectorAll(
-                document,
-                '.swggUiContainer .datatable tr.selected'
+            Array.from(
+                document.querySelectorAll('.swggUiContainer .datatable tr.selected')
             ).forEach(function (element) {
                 onParallel.counter += 1;
                 // remove data
                 local.apiDict[
                     local.uiState.datatable.crudRemoveOneById
                 ]._ajax(local.objectLiteralize({
-                    paramDict: { '$[]': [local.uiState.datatable.idField, element.dataset.id] }
+                    paramDict: { '$[]': [
+                        local.uiState.datatable._idField,
+                        JSON.parse(decodeURIComponent(element.dataset.id))
+                    ] }
                 }), onParallel);
             });
             onParallel();
@@ -582,6 +654,11 @@ local.templateUiResponseAjax = '\
                 event.currentTarget.querySelector('input').checked =
                     !event.currentTarget.querySelector('input').checked;
             }
+            Array.from(
+                event.currentTarget.closest('tr').querySelectorAll('input')
+            ).forEach(function (element) {
+                element.checked = event.currentTarget.querySelector('input').checked;
+            });
             if (event.currentTarget.querySelector('input').checked) {
                 event.currentTarget.closest('tr').classList.add('selected');
             } else {
@@ -624,12 +701,19 @@ local.templateUiResponseAjax = '\
                             ).children[0];
                             switch (tmp.tagName) {
                             case 'INPUT':
-                                tmp = tmp.type === 'file'
-                                    ? tmp.files && tmp.files[0]
-                                    : local.uiValueDecode(tmp, {
-                                        type: paramDef.type,
-                                        valueEncoded: tmp.value
-                                    }).valueDecoded;
+                                // parse file
+                                if (tmp.type === 'file') {
+                                    tmp = tmp.files && tmp.files[0];
+                                    break;
+                                }
+                                tmp = tmp.value;
+                                if (!tmp) {
+                                    return;
+                                }
+                                // parse string
+                                if (paramDef.type !== 'string') {
+                                    tmp = JSON.parse(tmp);
+                                }
                                 break;
                             case 'SELECT':
                                 tmp = Array.from(tmp.options)
@@ -637,14 +721,11 @@ local.templateUiResponseAjax = '\
                                         return element.selected;
                                     })
                                     .map(function (element) {
-                                        return local.uiValueDecode(element, {
-                                            type: paramDef.items
-                                                ? paramDef.items.type
-                                                : paramDef.type,
-                                            valueEncoded: element.value
-                                        }).valueDecoded;
+                                        return JSON.parse(decodeURIComponent(
+                                            element.dataset.valueDecoded
+                                        ));
                                     });
-                                if (!tmp.length || tmp[0] === undefined) {
+                                if (!tmp.length || tmp[0] === '$swggUndefined') {
                                     return;
                                 }
                                 if (paramDef.type !== 'array') {
@@ -652,19 +733,21 @@ local.templateUiResponseAjax = '\
                                 }
                                 break;
                             case 'TEXTAREA':
-                                tmp = paramDef.in === 'body'
-                                    ? local.uiValueDecode(tmp, {
-                                        type: paramDef.type,
-                                        valueEncoded: tmp.value
-                                    }).valueDecoded
-                                    : !tmp.value
-                                    ? undefined
-                                    : tmp.value.split('\n').map(function (element) {
-                                        return local.uiValueDecode(null, {
-                                            type: paramDef.items.type,
-                                            valueEncoded: element
-                                        }).valueDecoded;
-                                    });
+                                tmp = tmp.value;
+                                if (!tmp) {
+                                    return;
+                                }
+                                // parse schema
+                                if (paramDef.in === 'body') {
+                                    tmp = JSON.parse(tmp);
+                                    break;
+                                }
+                                // parse array
+                                tmp = tmp.split('\n').map(function (element) {
+                                    return paramDef.items.type === 'string'
+                                        ? element
+                                        : JSON.parse(element);
+                                });
                                 break;
                             }
                             options.paramDict[paramDef.name] = tmp;
@@ -678,18 +761,16 @@ local.templateUiResponseAjax = '\
                     break;
                 default:
                     // remove previous error
-                    local.domQuerySelectorAll(
-                        options.domOperationContent,
-                        '.paramDef .input'
+                    Array.from(
+                        options.domOperationContent.querySelectorAll('.paramDef .input')
                     ).forEach(function (element) {
                         element.classList.remove('error');
                     });
                     if (options.errorValidate) {
                         // shake input on Error
-                        local.domQuerySelectorAll(
-                            options.domOperationContent,
+                        Array.from(options.domOperationContent.querySelectorAll(
                             '.paramDef[name=' + options.errorValidate.options.key + '] .input'
-                        ).forEach(function (element) {
+                        )).forEach(function (element) {
                             element.classList.add('error');
                             local.uiAnimateShake(element.closest('span'));
                         });
@@ -771,9 +852,8 @@ local.templateUiResponseAjax = '\
             // show the operation, but hide all other operations
             local.uiAnimateSlideAccordian(
                 tmp,
-                local.domQuerySelectorAll(
-                    tmp.closest('.operationList'),
-                    '.operation > .content'
+                Array.from(
+                    tmp.closest('.operationList').querySelectorAll('.operation > .content')
                 )
             );
         };
@@ -791,7 +871,7 @@ local.templateUiResponseAjax = '\
                 case 'td3':
                     local.uiAnimateSlideAccordian(
                         event.currentTarget.querySelector('.operationList'),
-                        local.domQuerySelectorAll(document, '.swggUiContainer .operationList')
+                        Array.from(document.querySelectorAll('.swggUiContainer .operationList'))
                     );
                     break;
                 }
@@ -803,18 +883,16 @@ local.templateUiResponseAjax = '\
                     // collapse all operations in the resource
                     if (event.currentTarget.classList.contains('expanded')) {
                         event.currentTarget.classList.remove('expanded');
-                        local.domQuerySelectorAll(
-                            event.currentTarget,
-                            '.operation > .content'
+                        Array.from(
+                            event.currentTarget.querySelectorAll('.operation > .content')
                         ).forEach(function (element) {
                             local.uiAnimateSlideUp(element);
                         });
                     // expand all operations in the resource
                     } else {
                         event.currentTarget.classList.add('expanded');
-                        local.domQuerySelectorAll(
-                            event.currentTarget,
-                            '.operation > .content'
+                        Array.from(
+                            event.currentTarget.querySelectorAll('.operation > .content')
                         ).forEach(function (element) {
                             local.uiAnimateSlideDown(element);
                         });
@@ -829,9 +907,8 @@ local.templateUiResponseAjax = '\
          * this function will reload the ui
          */
             // reset ui
-            local.domQuerySelectorAll(
-                document,
-                '.swggUiContainer > .reset'
+            Array.from(
+                document.querySelectorAll('.swggUiContainer > .reset')
             ).forEach(function (element) {
                 element.remove();
             });
@@ -857,11 +934,9 @@ local.templateUiResponseAjax = '\
         /*
          * this function will render the param
          */
-            local.objectSetDefault(paramDef, {
-                placeholder: paramDef.required
-                    ? '(required)'
-                    : ''
-            });
+            paramDef.placeholder = paramDef.required
+                ? '(required)'
+                : '';
             // init input - file
             if (paramDef.type === 'file') {
                 paramDef.isFile = true;
@@ -887,10 +962,11 @@ local.templateUiResponseAjax = '\
                         selected: paramDef.enumDefault.indexOf(element) >= 0
                             ? 'selected'
                             : '',
-                        type: paramDef.items
-                            ? paramDef.items.type
-                            : paramDef.type,
-                        valueDecoded: element
+                        type: (paramDef.items && paramDef.items.type) || paramDef.type,
+                        valueDecoded: element,
+                        valueEncoded: typeof element === 'string'
+                            ? element
+                            : JSON.stringify(element)
                     };
                 });
                 // init 'undefined' value
@@ -900,12 +976,11 @@ local.templateUiResponseAjax = '\
                     paramDef.selectOptionList.unshift({
                         id: local.idDomElementCreate('swgg_id_' + paramDef.name),
                         selected: 'selected',
-                        type: paramDef.type
+                        type: paramDef.type,
+                        valueDecoded: '$swggUndefined',
+                        valueEncoded: '<none>'
                     });
                 }
-                paramDef.selectOptionList.forEach(function (element) {
-                    local.uiValueEncode({ dataset: {} }, element);
-                });
             // init input - textarea
             } else if (paramDef.type === 'array') {
                 paramDef.isTextarea = true;
@@ -948,40 +1023,50 @@ local.templateUiResponseAjax = '\
                     ? [paramDef.schema2]
                     : paramDef.schema2, null, 4);
             }
-            // init valueDecoded
-            paramDef.valueDecoded = paramDef.default;
-            if (paramDef.valueDecoded === undefined && paramDef.in === 'body') {
-                if (paramDef.schema2) {
-                    paramDef.valueDecoded = local.dbRowRandomCreate({
-                        override: function () {
-                            var override = {};
-                            // preserve default value
-                            Object.keys(paramDef.schema2).forEach(function (key) {
-                                if (paramDef.schema2[key].default !== undefined) {
-                                    override[key] = paramDef.schema2[key].default;
-                                }
-                            });
-                            return override;
-                        },
-                        properties: paramDef.schema2
-                    });
-                    if (paramDef.type2 === 'array') {
-                        paramDef.valueDecoded = [paramDef.valueDecoded];
-                    }
-                    paramDef.valueEncodeSpace = 4;
-                } else {
-                    paramDef.valueDecoded = paramDef.type2 === 'array'
-                        ? []
-                        : {};
+            // init valueEncoded
+            paramDef.valueEncoded = paramDef.default;
+            if (paramDef.valueEncoded === undefined) {
+                paramDef.valueEncoded = local.dbFieldRandomCreate({
+                    modeNotRandom: true,
+                    propDef: paramDef
+                });
+            }
+            // init valueEncoded for array
+            if (paramDef.valueEncoded && paramDef.type2 === 'array' && paramDef.in !== 'body') {
+                paramDef.valueEncoded = paramDef.valueEncoded.map(function (element) {
+                    return typeof element === 'string'
+                        ? element
+                        : JSON.stringify(element);
+                }).join('\n');
+            }
+            // init valueEncoded for schema
+            if (paramDef.in === 'body' && paramDef.schema2) {
+                paramDef.valueEncoded = local.dbRowRandomCreate({
+                    modeNotRandom: true,
+                    override: function () {
+                        var override = {};
+                        // preserve default value
+                        Object.keys(paramDef.schema2).forEach(function (key) {
+                            if (paramDef.schema2[key].default !== undefined) {
+                                override[key] = paramDef.schema2[key].default;
+                            }
+                        });
+                        return override;
+                    },
+                    properties: paramDef.schema2
+                });
+                if (paramDef.type2 === 'array') {
+                    paramDef.valueEncoded = [paramDef.valueEncoded];
                 }
+                paramDef.valueEncoded = JSON.stringify(paramDef.valueEncoded, null, 4);
+            }
+            if (typeof paramDef.valueEncoded !== 'string') {
+                paramDef.valueEncoded = JSON.stringify(paramDef.valueEncoded) || '';
             }
             // templateRender paramDef
             paramDef.uiFragment = local.domFragmentRender(
                 local.templateRender(local.templateUiParam, paramDef)
             );
-            ['td1', 'td2', 'td3', 'td4'].forEach(function (element) {
-                paramDef[element] = paramDef.uiFragment.querySelector('.' + element);
-            });
         };
 
         local.uiRender = function () {
@@ -1069,26 +1154,16 @@ local.templateUiResponseAjax = '\
                 self.uiFragment.querySelector('#' + paramDef.id).innerHTML = '';
                 self.uiFragment.querySelector('#' + paramDef.id)
                     .appendChild(paramDef.uiFragment);
-                // init valueEncoded
-                paramDef.paramInput =
-                    self.uiFragment.querySelector('#' + paramDef.id + ' > .td3').children[0];
-                local.uiValueEncode(paramDef.paramInput, paramDef);
-                // init input.value
-                if (paramDef.isSelect) {
-                    paramDef.selectOptionList.forEach(function (element) {
-                        element.paramInput = self.uiFragment.querySelector('#' + element.id);
-                        local.uiValueEncode(element.paramInput, element);
-                        element.paramInput.value = element.valueEncoded;
-                    });
-                } else if (paramDef.isInputText) {
-                    paramDef.paramInput.value = paramDef.valueEncoded;
-                } else if (paramDef.isTextarea) {
-                    paramDef.paramInput.value = paramDef.valueEncoded;
-                }
             });
             // overwrite swggUiContainer with uiFragment
             document.querySelector('.swggUiContainer').innerHTML = '';
             document.querySelector('.swggUiContainer').appendChild(self.uiFragment);
+            // render valueEncoded
+            Array.from(
+                document.querySelectorAll('.swggUiContainer [data-value-encoded]')
+            ).forEach(function (element) {
+                element.value = decodeURIComponent(element.dataset.valueEncoded);
+            });
             // init event-handling
             local.uiEventInit(document);
             // scrollTo location.hash
@@ -1108,15 +1183,6 @@ local.templateUiResponseAjax = '\
             local.uiAnimateSlideDown(resource.querySelector('.operationList'));
             // init operation
             operation = locationHash.split('/')[2];
-            // render datatable
-            if (operation === 'swgg_datatable') {
-                local.onReadyAfter(function () {
-                    local.uiElementClick({
-                        target: resource.querySelector('.onEventDatatableReload')
-                    });
-                });
-                return;
-            }
             operation = resource.querySelector('#' + operation);
             // expand operation and scroll to it
             if (operation) {
@@ -1128,67 +1194,5 @@ local.templateUiResponseAjax = '\
                 local.uiAnimateScrollTo(resource);
             }
         };
-
-        local.uiValueDecode = function (input, options) {
-        /*
-         * this function will decode options.valueEncoded
-         * according to input.dataset.swgg_param_value_options
-         */
-            var aa, bb;
-            // restore options
-            if (input) {
-                aa = JSON.parse(decodeURIComponent(input.dataset.swgg_param_value_options));
-                options.type = aa.type;
-                options.valueDecodedDefault = aa.valueDecodedDefault;
-            }
-            aa = options.valueEncoded;
-            if (!aa) {
-                // use valueDecodedDefault
-                bb = options.valueDecodedDefault;
-            } else {
-                // validate valueEncoded is a string
-                local.assertJsonEqual(typeof aa, 'string');
-                if (options.type === 'string') {
-                    bb = aa;
-                } else {
-                    bb = JSON.parse(aa);
-                    // validate valueDecoded is not a string
-                    local.assertJsonNotEqual(typeof bb, 'string');
-                }
-            }
-            options.valueDecoded = bb;
-            return options;
-        };
-
-        local.uiValueEncode = function (input, options) {
-        /*
-         * this function will encode options.valueDecoded according to options.type
-         */
-            var aa, bb;
-            aa = options.valueDecoded;
-            // save options
-            input.dataset.swgg_param_value_options = encodeURIComponent(JSON.stringify({
-                type: options.type,
-                valueDecodedDefault: aa === null || aa === ''
-                    ? aa
-                    : undefined
-            }));
-            if (local.isNullOrUndefined(aa)) {
-                bb = aa === null && options.type !== 'string'
-                    ? 'null'
-                    : '';
-            } else if (options.type === 'string') {
-                // validate valueEncoded is a string
-                local.assertJsonEqual(typeof aa, 'string');
-                bb = aa;
-            } else {
-                // validate valueEncoded is not a string
-                local.assertJsonNotEqual(typeof aa, 'string');
-                bb = JSON.stringify(aa, options.valueEncodeReplacer, options.valueEncodeSpace);
-            }
-            options.valueEncoded = bb;
-            return options;
-        };
-        break;
-    }
+    }());
 }());

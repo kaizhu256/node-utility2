@@ -2493,7 +2493,7 @@ local.templateCoverageBadgeSvg =
             case 'cover':
                 try {
                     process.env.npm_package_name = process.env.npm_package_name || JSON.parse(
-                        local._fs.readFileSync(process.cwd() + '/package.json', 'utf8')
+                        local._fs.readFileSync('package.json', 'utf8')
                     ).name;
                 } catch (ignore) {
                 }

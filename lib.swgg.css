@@ -11,17 +11,17 @@
 
 /* animate */
 .swggAnimateFade {
-    transition: opacity 250ms linear;
+    transition: opacity 250ms;
 }
 @keyframes swggAnimateShake {
     100% {
         transform: translateX(0);
     }
     0%, 20%, 60% {
-        transform: translateX(10px);
+        transform: translateX(1rem);
     }
     40%, 80% {
-        transform: translateX(-10px);
+        transform: translateX(-1rem);
     }
 }
 .swggAnimateShake {
@@ -30,7 +30,7 @@
 }
 .swggAnimateSlide {
     overflow-y: hidden;
-    transition: max-height 500ms linear;
+    transition: max-height 500ms;
 }
 
 
@@ -68,44 +68,13 @@
 .swggUiContainer .color777 {
     color: #777;
 }
-.swggUiContainer .cursorPointer {
+.swggUiContainer .cursorPointer,
+.swggUiContainer .cursorPointer button,
+.swggUiContainer .cursorPointer input {
     cursor: pointer;
 }
 .swggUiContainer .flex1 {
     flex: 1;
-}
-.swggUiContainer .flex2 {
-    flex: 2;
-}
-.swggUiContainer .flex3 {
-    flex: 3;
-}
-.swggUiContainer .flex4 {
-    flex: 4;
-}
-.swggUiContainer .flex5 {
-    flex: 5;
-}
-.swggUiContainer .flex6 {
-    flex: 6;
-}
-.swggUiContainer .flex7 {
-    flex: 7;
-}
-.swggUiContainer .flex8 {
-    flex: 8;
-}
-.swggUiContainer .flex9 {
-    flex: 9;
-}
-.swggUiContainer .flex10 {
-    flex: 10;
-}
-.swggUiContainer .flex11 {
-    flex: 11;
-}
-.swggUiContainer .flex12 {
-    flex: 12;
 }
 .swggUiContainer .fontLineThrough {
     text-decoration: line-through;
@@ -195,20 +164,20 @@
     background: #cfc;
 }
 .swggUiContainer .datatable tbody > tr:nth-child(odd) > td:nth-child(odd) {
-    background: #bfb;
+    background: #beb;
 }
 .swggUiContainer .datatable tbody > tr:hover > td {
-    background: #afa;
+    background: #aea;
 }
 .swggUiContainer .datatable tbody > tr:hover > td:nth-child(odd) {
-    background: #9f9;
+    background: #9e9;
 }
 .swggUiContainer .datatable tbody > tr > td:hover,
 .swggUiContainer .datatable tbody > tr > td:hover:nth-child(odd),
 .swggUiContainer .datatable tbody > tr:nth-child(odd) > td:hover,
 .swggUiContainer .datatable tbody > tr:nth-child(odd) > td:hover:nth-child(odd),
 .swggUiContainer .datatable th:hover {
-    background: #7f7;
+    background: #7d7;
 }
 .swggUiContainer .datatable tbody > tr.selected > td {
     background: #fee;
@@ -217,17 +186,21 @@
     background: #fdd;
 }
 .swggUiContainer .datatable tbody > tr.selected:nth-child(odd) > td {
-    background: #fcc;
+    background: #ecc;
 }
 .swggUiContainer .datatable tbody > tr.selected:nth-child(odd) > td:nth-child(odd) {
-    background: #fbb;
+    background: #ebb;
+}
+.swggUiContainer .datatable th {
+    background: #9e9;
 }
 
 
 
 /* section */
 .swggUiContainer .datatable {
-    background: white;
+    background: #fff;
+    background: rgba(255,255,255,0.875);
     margin: 2rem;
     overflow: auto;
     padding: 1rem;
@@ -255,7 +228,7 @@
 .swggUiContainer > .header > .td1 {
     font-size: x-large;
     background: transparent url(assets.lib.swgg.ui_logo_small.png) no-repeat left center;
-    padding-left: 40px;
+    padding-left: 2.5rem;
     color: white;
 }
 .swggUiContainer > .header > .td2 {
@@ -282,6 +255,7 @@
     height: 100%;
     left: 0;
     margin: 0;
+    margin-top: 4px;
     padding: 0;
     position: fixed;
     top: 0;
@@ -290,6 +264,7 @@
 }
 .swggUiContainer .operation {
     background: #dfd;
+    font-size: smaller;
 }
 .swggUiContainer .operation > .content {
     padding: 1rem;
@@ -316,18 +291,21 @@
 .swggUiContainer .operation > .header > .td1 {
     background: #777;
     color: white;
-    font-size: smaller;
-    padding: 4px;
+    padding-top: 5px;
     height: 1.5rem;
     text-align: center;
-    width: 4.5rem;
+    width: 5rem;
+}
+.swggUiContainer .operation > .header > .td2 {
+    flex: 3;
 }
 .swggUiContainer .operation > .header > .td3 {
     color: #777;
+    flex: 2;
     text-decoration: none;
 }
 .swggUiContainer .operation > .header > .td4 {
-    font-size: smaller;
+    flex: 2;
     padding-right: 1rem;
 }
 .swggUiContainer .operation .paramDef pre,
@@ -341,7 +319,7 @@
     flex: 1;
 }
 .swggUiContainer .operation .paramDef > .td3 {
-    flex: 3;
+    flex: 4;
 }
 .swggUiContainer .operation .paramDef > .td4 {
     flex: 3;

@@ -925,9 +925,126 @@ awoDQjHSelX8hQEoIrAq8p/mgC88HOS1YCl/BRgAmiD/1gn6Nu8AAAAASUVORK5CYII=\
             }, local.onErrorDefault);
         };
 
+        local.dbFieldRandomCreate = function (options) {
+        /*
+         * this function will create a random dbField from options.propDef
+         */
+            var ii, max, min, propDef, tmp;
+            propDef = options.propDef;
+            if (propDef.readOnly) {
+                return;
+            }
+            if (propDef.enum) {
+                tmp = options.modeNotRandom
+                    ? propDef.enum[0]
+                    : local.listGetElementRandom(propDef.enum);
+                return propDef.type === 'array'
+                    ? [tmp]
+                    : tmp;
+            }
+            // http://json-schema.org/latest/json-schema-validation.html#anchor13
+            // 5.1.  Validation keywords for numeric instances (number and integer)
+            max = isFinite(propDef.maximum)
+                ? propDef.maximum
+                : 999;
+            min = isFinite(propDef.maximum)
+                ? propDef.minimum
+                : 0;
+            switch (propDef.type) {
+            case 'array':
+                tmp = [];
+                // http://json-schema.org/latest/json-schema-validation.html#anchor36
+                // 5.3.  Validation keywords for arrays
+                for (ii = 0; ii < (propDef.minItems || 0); ii += 1) {
+                    tmp.push(null);
+                }
+                break;
+            case 'boolean':
+                tmp = options.modeNotRandom
+                    ? false
+                    : Math.random() <= 0.5
+                    ? false
+                    : true;
+                break;
+            case 'integer':
+                if (propDef.exclusiveMaximum) {
+                    max -= 1;
+                }
+                if (propDef.exclusiveMinimum) {
+                    min += 1;
+                }
+                min = Math.min(min, max);
+                tmp = options.modeNotRandom
+                    ? 0
+                    : Math.random();
+                tmp = Math.floor(min + tmp * (max - min));
+                break;
+            case 'object':
+                tmp = {};
+                // http://json-schema.org/latest/json-schema-validation.html#anchor53
+                // 5.4.  Validation keywords for objects
+                for (ii = 0; ii < (propDef.minProperties || 0); ii += 1) {
+                    tmp['property' + ii] = null;
+                }
+                break;
+            case 'number':
+                if (propDef.exclusiveMinimum) {
+                    min = min < 0
+                        ? min * 0.99999
+                        : min * 1.00001 + 0.00001;
+                }
+                if (propDef.exclusiveMaximum) {
+                    max = max > 0
+                        ? max * 0.99999
+                        : max * 1.00001 - 0.00001;
+                }
+                min = Math.min(min, max);
+                tmp = options.modeNotRandom
+                    ? 0
+                    : Math.random();
+                tmp = min + tmp * (max - min);
+                break;
+            case 'string':
+                tmp = options.modeNotRandom
+                    ? 'abc'
+                    : ((1 + Math.random()) * 0x10000000000000).toString(36).slice(1);
+                switch (propDef.format) {
+                case 'byte':
+                    tmp = local.stringToBase64(tmp);
+                    break;
+                case 'date':
+                case 'date-time':
+                    tmp = new Date().toISOString();
+                    break;
+                case 'email':
+                    tmp = tmp + '@random.com';
+                    break;
+                case 'json':
+                    tmp = JSON.stringify({ random: tmp });
+                    break;
+                }
+                // http://json-schema.org/latest/json-schema-validation.html#anchor25
+                // 5.2.  Validation keywords for strings
+                while (tmp.length < (propDef.minLength || 0)) {
+                    tmp += tmp;
+                }
+                tmp = tmp.slice(0, propDef.maxLength || Infinity);
+                break;
+            }
+            // http://json-schema.org/latest/json-schema-validation.html#anchor13
+            // 5.1.  Validation keywords for numeric instances (number and integer)
+            if (propDef.multipleOf) {
+                tmp = propDef.multipleOf * Math.floor(tmp / propDef.multipleOf);
+                if (tmp < min) {
+                    tmp += propDef.multipleOf;
+                }
+            }
+            return tmp;
+        };
+
         local.dbRowListRandomCreate = function (options) {
         /*
-         * this function will return a dbRowList of options.length random dbRow's
+         * this function will create a dbRowList of options.length random dbRow's
          */
             local.objectSetDefault(options, { dbRowList: [] });
             for (options.ii = 0; options.ii < options.length; options.ii += 1) {
@@ -938,105 +1055,22 @@ awoDQjHSelX8hQEoIrAq8p/mgC88HOS1YCl/BRgAmiD/1gn6Nu8AAAAASUVORK5CYII=\
 
         local.dbRowRandomCreate = function (options) {
         /*
-         * this function will return a random dbRow
+         * this function will create a random dbRow from options.properties
          */
-            var dbRow, ii, max, min, propDef, tmp;
+            var dbRow, tmp;
             dbRow = {};
             Object.keys(options.properties).forEach(function (key) {
-                propDef = options.properties[key];
-                if (propDef.readOnly) {
-                    return;
-                }
-                if (propDef.enum) {
-                    dbRow[key] = local.listGetElementRandom(propDef.enum);
-                    return;
-                }
-                // http://json-schema.org/latest/json-schema-validation.html#anchor13
-                // 5.1.  Validation keywords for numeric instances (number and integer)
-                max = isFinite(propDef.maximum)
-                    ? propDef.maximum
-                    : 999;
-                min = isFinite(propDef.maximum)
-                    ? propDef.minimum
-                    : -999;
-                switch (propDef.type) {
-                case 'array':
-                    tmp = [];
-                    // http://json-schema.org/latest/json-schema-validation.html#anchor36
-                    // 5.3.  Validation keywords for arrays
-                    for (ii = 0; ii < (propDef.minItems || 0); ii += 1) {
-                        tmp.push(null);
-                    }
-                    break;
-                case 'boolean':
-                    tmp = local.listGetElementRandom([false, true]);
-                    break;
-                case 'integer':
-                    if (propDef.exclusiveMaximum) {
-                        max -= 1;
-                    }
-                    if (propDef.exclusiveMinimum) {
-                        min += 1;
-                    }
-                    tmp = Math.floor(min + Math.random() * (max - min));
-                    break;
-                case 'object':
-                    tmp = {};
-                    // http://json-schema.org/latest/json-schema-validation.html#anchor53
-                    // 5.4.  Validation keywords for objects
-                    for (ii = 0; ii < (propDef.minProperties || 0); ii += 1) {
-                        tmp['property' + ii] = null;
-                    }
-                    break;
-                case 'number':
-                    if (propDef.exclusiveMinimum) {
-                        min = min < 0
-                            ? min * 0.99999
-                            : min * 1.00001 + 0.00001;
-                    }
-                    if (propDef.exclusiveMaximum) {
-                        max = max > 0
-                            ? max * 0.99999
-                            : max * 1.00001 - 0.00001;
-                    }
-                    tmp = min + Math.random() * (max - min);
-                    break;
-                case 'string':
-                    tmp = ((1 + Math.random()) * 0x10000000000000).toString(36).slice(1);
-                    switch (propDef.format) {
-                    case 'byte':
-                        tmp = local.stringToBase64(tmp);
-                        break;
-                    case 'date':
-                    case 'date-time':
-                        tmp = new Date().toISOString();
-                        break;
-                    case 'email':
-                        tmp = tmp + '@random.com';
-                        break;
-                    case 'json':
-                        tmp = JSON.stringify({ random: tmp });
-                        break;
-                    }
-                    // http://json-schema.org/latest/json-schema-validation.html#anchor25
-                    // 5.2.  Validation keywords for strings
-                    while (tmp.length < (propDef.minLength || 0)) {
-                        tmp += ((1 + Math.random()) * 0x10000000000000).toString(36).slice(1);
-                    }
-                    tmp = tmp.slice(0, propDef.maxLength || Infinity);
-                    break;
-                }
-                // http://json-schema.org/latest/json-schema-validation.html#anchor13
-                // 5.1.  Validation keywords for numeric instances (number and integer)
-                if (propDef.multipleOf) {
-                    tmp = propDef.multipleOf * Math.floor(tmp / propDef.multipleOf);
-                    if (tmp < min) {
-                        tmp += propDef.multipleOf;
-                    }
-                }
                 // try to validate data
                 local.tryCatchOnError(function () {
-                    local.validateByPropDef({ data: tmp, key: propDef.name, schema: propDef });
+                    tmp = local.dbFieldRandomCreate({
+                        modeNotRandom: options.modeNotRandom,
+                        propDef: options.properties[key]
+                    });
+                    local.validateByPropDef({
+                        data: tmp,
+                        key: options.properties[key].name,
+                        schema: options.properties[key]
+                    });
                     dbRow[key] = tmp;
                 }, local.nop);
             });
@@ -1045,7 +1079,7 @@ awoDQjHSelX8hQEoIrAq8p/mgC88HOS1YCl/BRgAmiD/1gn6Nu8AAAAASUVORK5CYII=\
 
         local.idDomElementCreate = function (seed) {
         /*
-         * this function will return a unique dom-element id from the seed,
+         * this function will create a unique dom-element id from the seed,
          * that is both dom-selector and url friendly
          */
             var id, ii;
@@ -2169,7 +2203,7 @@ awoDQjHSelX8hQEoIrAq8p/mgC88HOS1YCl/BRgAmiD/1gn6Nu8AAAAASUVORK5CYII=\
                         break;
                     case 'date':
                     case 'date-time':
-                        local.assert(isFinite(new Date(data).getTime()));
+                        local.assert(JSON.stringify(new Date(data)) !== 'null');
                         break;
                     case 'email':
                         local.assert(local.regexpEmailValidate.test(data));

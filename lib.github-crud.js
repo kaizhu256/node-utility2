@@ -21,9 +21,23 @@
         // init local
         local = {};
         // init modeJs
-        local.modeJs = 'node';
+        local.modeJs = (function () {
+            try {
+                return typeof navigator.userAgent === 'string' &&
+                    typeof document.querySelector('body') === 'object' &&
+                    typeof XMLHttpRequest.prototype.open === 'function' &&
+                    'browser';
+            } catch (errorCaughtBrowser) {
+                return module.exports &&
+                    typeof process.versions.node === 'string' &&
+                    typeof require('http').createServer === 'function' &&
+                    'node';
+            }
+        }());
         // init global
-        local.global = global;
+        local.global = local.modeJs === 'browser'
+            ? window
+            : global;
         // init utility2_rollup
         local = local.global.utility2_rollup || local;
         // init lib
@@ -35,13 +49,73 @@
     /* istanbul ignore next */
     // run shared js-env code - pre-function
     (function () {
-        local.jsonCopy = function (arg) {
+        local.httpRequest = function (options, onError) {
         /*
-         * this function will return a deep-copy of the JSON-arg
+         * this function will request the data from options.url
          */
-            return arg === undefined
-                ? undefined
-                : JSON.parse(JSON.stringify(arg));
+            var chunkList, onError2, timerTimeout, done, request, response, urlParsed;
+            // init onError2
+            onError2 = function (error) {
+                if (done) {
+                    return;
+                }
+                done = true;
+                // cleanup timerTimeout
+                clearTimeout(timerTimeout);
+                // cleanup request and response
+                [request, response].forEach(function (stream) {
+                    // try to end the stream
+                    try {
+                        stream.end();
+                    // else try to destroy the stream
+                    } catch (errorCaught) {
+                        try {
+                            stream.destroy();
+                        } catch (ignore) {
+                        }
+                    }
+                });
+                // debug response
+                console.error(new Date().toISOString() + ' http-response ' + JSON.stringify({
+                    statusCode: (response && response.statusCode) || 0,
+                    method: options.method,
+                    url: options.url
+                }));
+                onError(error, response);
+            };
+            // init timerTimeout
+            timerTimeout = setTimeout(function () {
+                onError2(new Error('http-request timeout'));
+            }, options.timeout || 30000);
+            urlParsed = require('url').parse(options.url);
+            urlParsed.headers = options.headers;
+            urlParsed.method = options.method;
+            // debug request
+            console.error();
+            console.error(new Date().toISOString() + ' http-request ' + JSON.stringify({
+                method: options.method,
+                url: options.url
+            }));
+            request = require(
+                urlParsed.protocol.slice(0, -1)
+            ).request(urlParsed, function (_response) {
+                response = _response;
+                if (response.statusCode < 200 || response.statusCode > 299) {
+                    onError2(new Error(response.statusCode));
+                    return;
+                }
+                chunkList = [];
+                response
+                    .on('data', function (chunk) {
+                        chunkList.push(chunk);
+                    })
+                    .on('end', function () {
+                        response.data = Buffer.concat(chunkList);
+                        onError2();
+                    })
+                    .on('error', onError2);
+            }).on('error', onError2);
+            request.end(options.data);
         };
 
         local.nop = function () {
@@ -49,42 +123,6 @@
          * this function will do nothing
          */
             return;
-        };
-
-        local.objectSetDefault = function (arg, defaults, depth) {
-        /*
-         * this function will recursively set defaults for undefined-items in the arg
-         */
-            arg = arg || {};
-            defaults = defaults || {};
-            Object.keys(defaults).forEach(function (key) {
-                var arg2, defaults2;
-                arg2 = arg[key];
-                defaults2 = defaults[key];
-                if (defaults2 === undefined) {
-                    return;
-                }
-                // init arg[key] to default value defaults[key]
-                if (!arg2) {
-                    arg[key] = defaults2;
-                    return;
-                }
-                // if arg2 and defaults2 are both non-null and non-array objects,
-                // then recurse with arg2 and defaults2
-                if (depth > 1 &&
-                        // arg2 is a non-null and non-array object
-                        arg2 &&
-                        typeof arg2 === 'object' &&
-                        !Array.isArray(arg2) &&
-                        // defaults2 is a non-null and non-array object
-                        defaults2 &&
-                        typeof defaults2 === 'object' &&
-                        !Array.isArray(defaults2)) {
-                    // recurse
-                    local.objectSetDefault(arg2, defaults2, depth - 1);
-                }
-            });
-            return arg;
         };
 
         local.onErrorWithStack = function (onError) {
@@ -112,7 +150,7 @@
          */
             options.onNext = local.onErrorWithStack(function (error, data, meta) {
                 try {
-                    options.modeNext = error
+                    options.modeNext = error && !options.modeErrorIgnore
                         ? Infinity
                         : options.modeNext + 1;
                     onError(error, data, meta);
@@ -161,22 +199,6 @@
             // return callback
             return self;
         };
-
-        local.onTimeout = function (onError, timeout, message) {
-        /*
-         * this function will create a timeout-error-handler,
-         * that will append the current stack to any error encountered
-         */
-            onError = local.onErrorWithStack(onError);
-            // create timeout timer
-            return setTimeout(function () {
-                onError(new Error('onTimeout - timeout-error - ' +
-                    timeout + ' ms - ' + (typeof message === 'function'
-                    ? message()
-                    : message)));
-            // coerce to finite integer
-            }, timeout | 0);
-        };
     }());
     switch (local.modeJs) {
 
@@ -190,24 +212,21 @@
          * https://developer.github.com/v3/repos/contents/#delete-a-file
          */
             var onParallel;
-            options = local.jsonCopy(options);
+            options = { url: options.url };
             local.onNext(options, function (error, data) {
                 switch (options.modeNext) {
                 case 1:
-                    local.contentRequest(options, options.onNext);
+                    // get sha
+                    local.contentRequest({ method: 'GET', url: options.url }, options.onNext);
                     break;
                 case 2:
-                    // file was deleted
-                    if (options.method === 'DELETE') {
-                        options.onNext();
-                        return;
-                    }
-                    // get sha
+                    // delete file with sha
                     if (!error && data.sha) {
-                        // recurse
-                        options.method = 'DELETE';
-                        options.sha = data.sha;
-                        local.contentDelete(options, options.onNext);
+                        local.contentRequest({
+                            method: 'DELETE',
+                            sha: data.sha,
+                            url: options.url
+                        }, options.onNext);
                         return;
                     }
                     // delete tree
@@ -215,6 +234,7 @@
                     onParallel.counter += 1;
                     data.forEach(function (element) {
                         onParallel.counter += 1;
+                        // recurse
                         local.contentDelete({ url: element.url }, onParallel);
                     });
                     onParallel();
@@ -232,12 +252,11 @@
          * this function will get the github file
          * https://developer.github.com/v3/repos/contents/#get-contents
          */
-            options = local.jsonCopy(options);
+            options = { url: options.url };
             local.onNext(options, function (error, data) {
                 switch (options.modeNext) {
                 case 1:
-                    options.method = 'GET';
-                    local.contentRequest(options, options.onNext);
+                    local.contentRequest({ method: 'GET', url: options.url }, options.onNext);
                     break;
                 case 2:
                     options.onNext(null, new Buffer(data.content, 'base64'));
@@ -255,14 +274,28 @@
          * this function will put options.content into the github file
          * https://developer.github.com/v3/repos/contents/#update-a-file
          */
-            options = local.jsonCopy(options);
-            local.contentRequest(options, function (error, data) {
-                if (!error && data) {
-                    options.sha = data.sha;
+            options = { content: options.content, modeErrorIgnore: true, url: options.url };
+            local.onNext(options, function (error, data) {
+                switch (options.modeNext) {
+                case 1:
+                    // get sha
+                    local.contentRequest({ method: 'GET', url: options.url }, options.onNext);
+                    break;
+                case 2:
+                    // put file with sha
+                    local.contentRequest({
+                        content: options.content,
+                        method: 'PUT',
+                        sha: data.sha,
+                        url: options.url
+                    }, options.onNext);
+                    break;
+                default:
+                    onError(error);
                 }
-                options.method = 'PUT';
-                local.contentRequest(options, onError);
             });
+            options.modeNext = 0;
+            options.onNext();
         };
 
         local.contentPutFile = function (options, onError) {
@@ -270,29 +303,18 @@
          * this function will put options.file into the github file
          * https://developer.github.com/v3/repos/contents/#update-a-file
          */
-            options = local.jsonCopy(options);
+            options = { file: options.file, url: options.url };
             local.onNext(options, function (error, data) {
                 switch (options.modeNext) {
                 case 1:
                     // get file from url
                     if ((/^(?:http|https):\/\//).test(options.file)) {
-                        (options.file.indexOf('https') === 0
-                            ? local.https
-                            : local.http).request(local.url.parse(
-                            options.file
-                        ), function (response) {
-                            local.chunkList = [];
-                            response
-                                .on('data', function (chunk) {
-                                    local.chunkList.push(chunk);
-                                })
-                                .on('end', function () {
-                                    options.onNext(null, Buffer.concat(local.chunkList));
-                                })
-                                .on('error', options.onNext);
-                        })
-                            .on('error', options.onNext)
-                            .end();
+                        local.httpRequest({
+                            method: 'GET',
+                            url: options.file
+                        }, function (error, response) {
+                            options.onNext(error, response && response.data);
+                        });
                         return;
                     }
                     // get file
@@ -323,53 +345,21 @@
          * this function will request the content from github
          */
             // init options
-            options = local.jsonCopy(options);
-            local.objectSetDefault(options, {
+            options = {
                 chunkList: [],
+                content: options.content,
                 headers: {
                     // github oauth authentication
                     Authorization: 'token ' + process.env.GITHUB_TOKEN,
-                    // bug - github api requires user-agent header
+                    // bug-workaround - github api requires user-agent header
                     'User-Agent': 'undefined'
                 },
-                method: 'GET',
+                method: options.method,
                 responseJson: {},
-                responseText: ''
-            }, 2);
-            // init onError2
-            options.onError2 = function (error) {
-                if (options.done) {
-                    return;
-                }
-                // cleanup timerTimeout
-                clearTimeout(options.timerTimeout);
-                // cleanup request and response
-                [options.request, options.response].forEach(function (stream) {
-                    // try to end the stream
-                    try {
-                        stream.end();
-                    // else try to destroy the stream
-                    } catch (errorCaught) {
-                        try {
-                            stream.destroy();
-                        } catch (ignore) {
-                        }
-                    }
-                });
-                console.error(new Date().toISOString(
-                ) + ' github-crud-response ' + JSON.stringify({
-                    method: options.method,
-                    url: options.url,
-                    statusCode: options.response.statusCode
-                }));
-                onError(error, options.responseJson);
+                responseText: '',
+                sha: options.sha,
+                url: options.url
             };
-            // init timerTimeout
-            options.timerTimeout = local.onTimeout(
-                options.onError2,
-                30000,
-                'github-crud ' + options.method + ' ' + options.url
-            );
             options.url = options.url
 /* jslint-ignore-begin */
 // parse https://github.com/:owner/:repo/blob/:branch/:path
@@ -404,43 +394,27 @@
                 options.onError2(new Error('invalid url ' + options.url));
                 return;
             }
-            options.message = '[skip ci] ' + options.method + ' file ' + options.url;
-            options.url += '&message=' + encodeURIComponent(options.message);
-            if (options.sha) {
-                options.url += '&sha=' + options.sha;
-            }
-            local.objectSetDefault(options, local.url.parse(options.url));
-            console.error(new Date().toISOString() + ' github-crud-request ' + JSON.stringify({
-                method: options.method,
-                url: options.url
-            }));
-            options.request = local.https.request(options, function (response) {
-                options.response = response;
-                if (options.response.statusCode < 200 || options.response.statusCode >= 300) {
-                    options.onError2(new Error(options.response.statusCode));
-                    return;
+            if (options.method !== 'GET') {
+                options.message = '[skip ci] ' + options.method + ' file ' + options.url
+                    .replace((/\?.*/), '');
+                options.url += '&message=' + encodeURIComponent(options.message);
+                if (options.sha) {
+                    options.url += '&sha=' + options.sha;
                 }
-                options.response
-                    .on('data', function (chunk) {
-                        options.chunkList.push(chunk);
-                    })
-                    .on('end', function () {
-                        try {
-                            options.responseText = Buffer.concat(options.chunkList).toString();
-                            options.responseJson = JSON.parse(options.responseText);
-                        } catch (ignore) {
-                        }
-                        options.onError2();
-                    })
-                    .on('error', options.onError2);
-            })
-                .on('error', options.onError2);
-            options.request.end(JSON.stringify({
-                branch: options.branch,
-                content: new Buffer(options.content || '').toString('base64'),
-                message: '[skip ci] ' + options.method + ' file ' + options.url,
-                sha: options.sha
-            }));
+                options.data = JSON.stringify({
+                    branch: options.branch,
+                    content: new Buffer(options.content || '').toString('base64'),
+                    message: options.message,
+                    sha: options.sha
+                });
+            }
+            local.httpRequest(options, function (error, response) {
+                try {
+                    options.responseJson = JSON.parse(response.data.toString());
+                } catch (ignore) {
+                }
+                onError(error, options.responseJson);
+            });
         };
         break;
     }
@@ -453,10 +427,7 @@
     case 'node':
         // require modules
         local.fs = require('fs');
-        local.http = require('http');
-        local.https = require('https');
         local.path = require('path');
-        local.url = require('url');
         // init exports
         module.exports = module['./lib.db.js'] = local;
         module.exports.__dirname = __dirname;
