@@ -615,10 +615,10 @@ MAINTAINER kai zhu <kaizhu256@gmail.com>
 RUN cd /tmp && \
     curl -#Lo elasticsearch.tar.gz \
         https://download.elastic.co/elasticsearch/elasticsearch/elasticsearch-1.7.6.tar.gz && \
-    mkdir -p elasticsearch && \
+    mkdir -p /elasticsearch && \
     tar -xzf elasticsearch.tar.gz --strip-components=1 -C /elasticsearch && \
     curl -#Lo kibana.tar.gz https://download.elastic.co/kibana/kibana/kibana-3.1.3.tar.gz && \
-    mkdir -p kibana && \
+    mkdir -p /kibana && \
     tar -xzf kibana.tar.gz --strip-components=1 -C /kibana
 ```
 
