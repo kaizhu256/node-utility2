@@ -30,18 +30,13 @@ this zero-dependency package will run dynamic browser-tests with coverage (via e
 [![api-doc](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/screen-capture.docApiCreate.browser._2Fhome_2Ftravis_2Fbuild_2Fkaizhu256_2Fnode-utility2_2Ftmp_2Fbuild_2Fdoc.api.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/doc.api.html)
 
 #### todo
+- npm publish 2017.1.6
 - add utility2.middlewareLimit
 - add server stress test using electron
 - none
 
-#### change since d976efa1
-- npm publish 2017.1.5
-- automate readme-generation with new functions local.buildReadmeElectronLite and local.buildReadmeJslintLite
-- revamp github-crud-api
-- add function httpRequest
-- add shell-function shNpmPublishAlias
-- remove function domQuerySelectorAll
-- update documentation-generator
+#### change since c677c1e9
+- add Dockerfile.kibana
 - none
 
 #### this package requires
@@ -578,7 +573,7 @@ utility2-comment -->\n\
         "test": "export PORT=$(./lib.utility2.sh shServerPortRandom) && export PORT_REPL=$(./lib.utility2.sh shServerPortRandom) && export npm_config_mode_auto_restart=1 && ./lib.utility2.sh test test.js",
         "test-all": "npm test --mode-coverage=all"
     },
-    "version": "2017.1.5"
+    "version": "2017.1.6"
 }
 ```
 
@@ -606,6 +601,25 @@ RUN cd / && \
     ./emsdk activate && \
     find . -name ".git" -print0 | xargs -0 rm -fr && \
     find . -name "src" -print0 | xargs -0 rm -fr
+```
+
+- Dockerfile.kibana
+```shell
+# Dockerfile.kibana
+# docker build -f tmp/README.Dockerfile.kibana -t kibana .
+FROM kaizhu256/node-utility2:latest
+MAINTAINER kai zhu <kaizhu256@gmail.com>
+# https://download.elastic.co/elasticsearch/elasticsearch/elasticsearch-1.7.6.tar.gz
+# https://download.elastic.co/kibana/kibana/kibana-3.1.3.tar.gz
+# build kibana v3.1.3
+RUN cd /tmp && \
+    curl -#Lo elasticsearch.tar.gz \
+        https://download.elastic.co/elasticsearch/elasticsearch/elasticsearch-1.7.6.tar.gz && \
+    mkdir -p elasticsearch && \
+    tar -xzf elasticsearch.tar.gz --strip-components=1 -C /elasticsearch && \
+    curl -#Lo kibana.tar.gz https://download.elastic.co/kibana/kibana/kibana-3.1.3.tar.gz && \
+    mkdir -p kibana && \
+    tar -xzf kibana.tar.gz --strip-components=1 -C /kibana
 ```
 
 - Dockerfile.latest
