@@ -30,18 +30,13 @@ this zero-dependency package will run dynamic browser-tests with coverage (via e
 [![api-doc](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/screen-capture.docApiCreate.browser._2Fhome_2Ftravis_2Fbuild_2Fkaizhu256_2Fnode-utility2_2Ftmp_2Fbuild_2Fdoc.api.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/doc.api.html)
 
 #### todo
+- npm publish 2017.1.6
 - add utility2.middlewareLimit
 - add server stress test using electron
 - none
 
-#### change since d976efa1
-- npm publish 2017.1.5
-- automate readme-generation with new functions local.buildReadmeElectronLite and local.buildReadmeJslintLite
-- revamp github-crud-api
-- add function httpRequest
-- add shell-function shNpmPublishAlias
-- remove function domQuerySelectorAll
-- update documentation-generator
+#### change since c677c1e9
+- add Dockerfile.kibana
 - none
 
 #### this package requires
@@ -578,7 +573,7 @@ utility2-comment -->\n\
         "test": "export PORT=$(./lib.utility2.sh shServerPortRandom) && export PORT_REPL=$(./lib.utility2.sh shServerPortRandom) && export npm_config_mode_auto_restart=1 && ./lib.utility2.sh test test.js",
         "test-all": "npm test --mode-coverage=all"
     },
-    "version": "2017.1.5"
+    "version": "2017.1.6"
 }
 ```
 
@@ -611,35 +606,60 @@ RUN cd / && \
 - Dockerfile.latest
 ```shell
 # Dockerfile.latest
+# docker build -f tmp/README.Dockerfile.latest -t kaizhu256/node-utility2:latest .
+# docker build -f "tmp/README.Dockerfile.$DOCKER_TAG" -t "$GITHUB_REPO:$DOCKER_TAG" . ||
 # https://hub.docker.com/_/node/
-FROM node:boron
+FROM debian:stable
 MAINTAINER kai zhu <kaizhu256@gmail.com>
 VOLUME [ \
   "/mnt", \
   "/root", \
   "/tmp", \
+  "/usr/lib/chromium", \
+  "/usr/share/doc", \
   "/var/cache", \
   "/var/lib/apt/lists", \
   "/var/log", \
   "/var/tmp" \
 ]
 WORKDIR /tmp
-# cache apt-get
+# cache apt-get and busybox
 RUN apt-get update && \
-    apt-get install -y \
+    apt-get install --no-install-recommends -y \
         busybox \
         chromium \
         cmake \
+        curl \
         default-jre \
         gconf2 \
-        less \
-        libnotify4 \
+        git \
         nginx-extras \
+        transmission-daemon \
+        ssh \
         vim \
-        xvfb
+        xvfb && \
+    (busybox --list | xargs -n1 sh -c 'ln -s /bin/busybox /bin/$0 2>/dev/null' || true)
+# cache nodejs
+# https://nodejs.org/en/download/package-manager/#debian-and-ubuntu-based-linux-distributions
+RUN curl -sL https://deb.nodesource.com/setup_6.x | bash - && \
+    apt-get install -y nodejs
 # cache electron-lite
+# COPY /electron-*.zip /tmp
 RUN npm install "kaizhu256/node-electron-lite#alpha" && \
+    cd node_modules/electron-lite && \
+    npm install && \
+    export DISPLAY=:99.0 && \
+    (Xvfb "$DISPLAY" &) && \
+    npm test && \
     cp /tmp/electron-*.zip /
+# cache elasticsearch and kibana
+RUN curl -#Lo elasticsearch.tar.gz \
+        https://download.elastic.co/elasticsearch/elasticsearch/elasticsearch-1.7.6.tar.gz && \
+    mkdir -p /elasticsearch && \
+    tar -xzf elasticsearch.tar.gz --strip-components=1 -C /elasticsearch && \
+    curl -#Lo kibana.tar.gz https://download.elastic.co/kibana/kibana/kibana-3.1.3.tar.gz && \
+    mkdir -p /kibana && \
+    tar -xzf kibana.tar.gz --strip-components=1 -C /kibana
 ```
 
 - build.sh

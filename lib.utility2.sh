@@ -450,8 +450,16 @@ server {
     docker run --name nginx -d -p 80:80 -p 443:443 \
         -v "$HOME:/root:ro" \
         -v "$HOME/docker/etc.nginx.conf.d:/etc/nginx/conf.d:ro" \
-        -v "$HOME/docker/etc.nginx.conf.d/default.conf:/etc/nginx/conf.d/default.conf:ro" \
-        nginx
+        -v "$HOME/docker/etc.nginx.conf.d:/etc/nginx/sites-enabled:ro" \
+        kaizhu256/node-utility2:latest \
+        sh -c "(set -e
+            mkdir -p /var/log/nginx
+            touch /var/log/nginx/access.log
+            ln -sf /dev/stdout /var/log/nginx/access.log
+            touch /var/log/nginx/error.log
+            ln -sf /dev/stderr /var/log/nginx/error.log
+            nginx -g 'daemon off;'
+        )"
 )}
 
 shDockerRestartPptp() {(set -e
@@ -483,19 +491,24 @@ shDockerRestartTransmission() {(set -e
 )}
 
 shDockerRm() {(set -e
-# this function will stop and rm the docker-containers $@
+# this function will rm the docker-containers $@
     # wait for docker-container to stop
     # docker stop "$@" || true
     docker rm -fv "$@" || true
 )}
 
 shDockerRmAll() {(set -e
-# this function will stop and rm all docker-containers
+# this function will rm all docker-containers
     shDockerRm $(docker ps -aq)
 )}
 
+shDockerRmExited() {(set -e
+# this function will rm all docker-containers that have exited
+    shDockerRm $(docker ps -a -q -f status=exited)
+)}
+
 shDockerRmSince() {(set -e
-# this function will stop and rm all docker-containers since $NAME
+# this function will rm all docker-containers since $NAME
     NAME="$1"
     shDockerRm $(docker ps -aq --since="$NAME")
 )}
@@ -528,20 +541,11 @@ shDockerStart() {(set -e
         -v "$HOME:/root" \
         $DOCKER_OPTIONS \
         "$IMAGE" "$@"
-    shDockerLogs $NAME
-)}
-
-shDsStoreRm() {(set -e
-# http://stackoverflow.com/questions/2016844/bash-recursively-remove-files
-# this function will recursively rm .DS_Store from the current dir
-    find . -name "._*" -print0 | xargs -0 rm || true
-    find . -name ".DS_Store" -print0 | xargs -0 rm || true
-    find . -name "npm-debug.log" -print0 | xargs -0 rm || true
 )}
 
 shDuList() {(set -e
 # this function will run du, and create a list of all child dir in $1 sorted by size
-    du -ms $1/* | sort -nr
+    du -md1 $1 | sort -nr
 )}
 
 shEmscriptenInit() {
@@ -572,15 +576,12 @@ shFileKeySort() {(set -e
 'use strict';
 console.log('var aa = [' + require('fs').readFileSync('$FILE', 'utf8')
 /* jslint-ignore-begin */
+    .replace((/[\"\\\\]/g), '#')
     .replace((/\\n{2,}/gm), '\\n')
-    .replace((/^ {0,8}(\\w[^ ]*? =(?:| .*?))$/gm), '\`\"\$1\",')
-    .replace((/^(\\w+?\\(\\) \\{.*?)$/gm), '\`\"\$1\",')
-    .replace((/\\n[^\`].*?$/gm), '')
-    .replace((/^\W.*/), '')
-    .replace((/\`/g), '')
-    .replace((/\".*\"/g), function (match0) {
-        return \"\\\"\" + match0.slice(1, -1).replace((/[\"\\\\]/g), '#') + \"\\\"\";
-    }) + '];\n\
+    .replace((/^ {0,8}(\\w[^\\n ]*? =(?:| .*?))$/gm), '\"\$1\",')
+    .replace((/^(\\w+?\\(\\) \\{.*?)$/gm), '\"\$1\",')
+    .replace((/^(?:[^\\n\"]|\"\W|\"\").*/gm), '')
+    .replace((/\\n{2,}/gm), '\\n') + '];\n\
 var bb = aa.slice().sort();\n\
 aa.forEach(function (aa, ii) {\n\
     console.log(ii, aa === bb[ii], aa, bb[ii]);\n\
@@ -808,7 +809,8 @@ min\\|mock\\|\
 node_module\\|\
 rollup\\|\
 swp\\|\
-tmp\\)\\(\\b\\|[_s]\\)\
+tmp\\|\
+vendor\\)\\(\\b\\|[_s]\\)\
 "
     find "$DIR" -type f | \
         grep -v "$FILE_FILTER" | \
@@ -834,8 +836,8 @@ shGrepFileReplace() {(set -e
 'use strict';
 var local;
 local = {};
-local.fs = require('fs');
 local.fileDict = {};
+local.fs = require('fs');
 local.fs.readFileSync('$FILE', 'utf8').split('\n').forEach(function (element) {
     element = (/^(.+?):(\d+?):(.+?)$/).exec(element);
     if (!element) {
@@ -1528,6 +1530,14 @@ socket.on('end', process.exit);
 shReturn1() {(set -e
 # this function will return 1
     return 1
+)}
+
+shRmDsStore() {(set -e
+# http://stackoverflow.com/questions/2016844/bash-recursively-remove-files
+# this function will recursively rm .DS_Store from the current dir
+    find . -name "._*" -print0 | xargs -0 rm || true
+    find . -name ".DS_Store" -print0 | xargs -0 rm || true
+    find . -name "npm-debug.log" -print0 | xargs -0 rm || true
 )}
 
 shRun() {(set -e

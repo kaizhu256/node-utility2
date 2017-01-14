@@ -17,8 +17,6 @@
 
     // run shared js-env code - pre-init
     (function () {
-        // init Error.stackTraceLimit
-        Error.stackTraceLimit = 20;
         // init local
         local = {};
         // init modeJs
@@ -2366,6 +2364,9 @@ local.assertJsonEqual(options.coverage1,
                 '<script src="assets.test.js"></script>\n' +
                 '<script>window.utility2.onReadyBefore();</script>\n';
         // run the cli
+        if (local.env.npm_config_mode_start) {
+            local.assetsDict['/'] = local.assetsDict['/index.html'] = undefined;
+        }
         if (process.argv[2]) {
             // start with coverage
             if (local.env.npm_config_mode_coverage) {

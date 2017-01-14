@@ -271,12 +271,6 @@ local.templateIndexHtml = '';
 
 
 
-// https://img.shields.io/badge/tests_failed-999-dd0000.svg?style=flat
-local.templateTestReportBadgeSvg =
-'<svg xmlns="http://www.w3.org/2000/svg" width="103" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="103" height="20" fill="#555"/><rect rx="0" x="72" width="31" height="20" fill="#d00"/><path fill="#d00" d="M72 0h4v20h-4z"/><rect rx="0" width="103" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="37" y="15" fill="#010101" fill-opacity=".3">tests failed</text><text x="37" y="14">tests failed</text><text x="86.5" y="15" fill="#010101" fill-opacity=".3">999</text><text x="86.5" y="14">999</text></g></svg>';
-
-
-
 local.templateReadme = '\
 jslint-lite\n\
 ===========\n\
@@ -656,6 +650,12 @@ shBuild() {(set -e\n\
 shBuild\n\
 ```\n\
 '
+
+
+
+// https://img.shields.io/badge/tests_failed-999-dd0000.svg?style=flat
+local.templateTestReportBadgeSvg =
+'<svg xmlns="http://www.w3.org/2000/svg" width="103" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="103" height="20" fill="#555"/><rect rx="0" x="72" width="31" height="20" fill="#d00"/><path fill="#d00" d="M72 0h4v20h-4z"/><rect rx="0" width="103" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="37" y="15" fill="#010101" fill-opacity=".3">tests failed</text><text x="37" y="14">tests failed</text><text x="86.5" y="15" fill="#010101" fill-opacity=".3">999</text><text x="86.5" y="14">999</text></g></svg>';
 
 
 
@@ -3702,7 +3702,8 @@ min\\|mock\\|\
 node_module\\|\
 rollup\\|\
 swp\\|\
-tmp\\)\\(\\b\\|[_s]\\)\
+tmp\\|\
+vendor\\)\\(\\b\\|[_s]\\)\
 " ' +
 /* jslint-ignore-end */
                             '| tr "\\n" "\\000" | xargs -0 grep -in "' +
