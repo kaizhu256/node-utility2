@@ -346,10 +346,9 @@ shDockerCopyFromImage() {(set -e
 )}
 
 shDockerInstall() {(set -e
-# http://docs.docker.com/installation/ubuntulinux
 # this function will install docker
     mkdir -p $HOME/docker
-    wget -qO- https://get.docker.com/ | /bin/sh
+    curl -sSL https://get.docker.com/ | /bin/sh
     # test docker
     docker run hello-world
 )}
@@ -403,7 +402,7 @@ shDockerRestartNginx() {(set -e
         printf '
 # http server
 server {
-    listen 80;
+    listen 8080;
     # redirect to https
     location / {
         rewrite ^ https://$host$request_uri permanent;
@@ -447,12 +446,11 @@ server {
     mkdir -p "$HOME/docker/usr.share.nginx.html"
     shDockerRm nginx
     # https://registry.hub.docker.com/_/nginx/
-    docker run --name nginx -d -p 80:80 -p 443:443 \
+    docker run --name nginx -d -p 80:8080 -p 443:443 \
         -v "$HOME:/root:ro" \
         -v "$HOME/docker/etc.nginx.conf.d:/etc/nginx/conf.d:ro" \
-        -v "$HOME/docker/etc.nginx.conf.d:/etc/nginx/sites-enabled:ro" \
         kaizhu256/node-utility2:latest \
-        sh -c "(set -e
+        /bin/bash -c "(set -e
             mkdir -p /var/log/nginx
             touch /var/log/nginx/access.log
             ln -sf /dev/stdout /var/log/nginx/access.log
@@ -473,21 +471,31 @@ shDockerRestartPptp() {(set -e
         chmod 600 "$FILE"
     fi
     shDockerRm pptp
-    docker run --name pptp --privileged -d -p 1723:1723 \
+    docker run --name pptp --privileged -d -p 127.0.0.1:1723:1723 \
         -v "$HOME:/root" -v "$FILE:/etc/ppp/chap-secrets:ro" \
         mobtitude/vpn-pptp
 )}
 
 shDockerRestartTransmission() {(set -e
-# https://hub.docker.com/r/dperson/transmission/
 # this function will restart the transmission docker-container
-    DIR="$HOME/downloads"
-    mkdir -p "$DIR"
+# http://transmission:transmission@127.0.0.1:9091
+    mkdir -p "$HOME/downloads"
     shDockerRm transmission
-    docker run --name transmission -d -e TRPASSWD=admin -e TRUSER=admin -e TZ=EST5EDT \
-        -p 9091:9091 \
-        -v "$HOME:/root" -v "$DIR:/var/lib/transmission-daemon" \
-        dperson/transmission
+    docker run --name transmission -d \
+        -p 127.0.0.1:9091:9091 \
+        -v "$HOME/downloads:/root" \
+        kaizhu256/node-utility2:latest \
+    /bin/bash -c "transmission-daemon \
+        --allowed \\* \
+        --download-dir /root/complete \
+        --encryption-required \
+        --foreground \
+        --global-seedratio 0 \
+        --incomplete-dir /root/incomplete \
+        --log-info \
+        --no-auth \
+        --no-portmap
+    "
 )}
 
 shDockerRm() {(set -e
@@ -535,7 +543,7 @@ shDockerStart() {(set -e
     shift
     if [ "$DOCKER_PORT" ]
     then
-        DOCKER_OPTIONS="$DOCKER_OPTIONS -p $DOCKER_PORT:$DOCKER_PORT"
+        DOCKER_OPTIONS="$DOCKER_OPTIONS -p 127.0.0.1:$DOCKER_PORT:$DOCKER_PORT"
     fi
     docker run --name "$NAME" -dt -e debian_chroot="$NAME" \
         -v "$HOME:/root" \
@@ -908,7 +916,7 @@ shInit() {
         else
             export CI_BRANCH="${CI_BRANCH:-alpha}" || return $?
             export CI_COMMIT_ID="$(git rev-parse --verify HEAD)" || return $?
-            export CI_HOST=localhost || return $?
+            export CI_HOST=127.0.0.1 || return $?
         fi
         # init $CI_COMMIT_*
         export CI_COMMIT_MESSAGE="$(git log -1 --pretty=%s)" || return $?
@@ -1443,7 +1451,7 @@ console.log((/\n *\\$ (.*)/).exec(require('fs').readFileSync('$FILE', 'utf8'))[1
     # screen-capture server
     (sleep 15 &&
         export modeBrowserTest=screenCapture &&
-        export url="http://localhost:$PORT" &&
+        export url="http://127.0.0.1:$PORT" &&
         shBrowserTest) &
     printf "$SCRIPT\n\n"
     eval "$SCRIPT"
@@ -1490,7 +1498,7 @@ console.log(require('fs').readFileSync('$FILE', 'utf8').trimLeft());
     # screen-capture server
     (sleep 15 &&
         export modeBrowserTest=screenCapture &&
-        export url="http://localhost:$PORT" &&
+        export url="http://127.0.0.1:$PORT" &&
         shBrowserTest) &
     # test $FILE
     /bin/sh "$FILE"
@@ -1675,6 +1683,13 @@ process.stdout.write(String(Math.random() * 0x10000 | 0x8000));
 shSource() {
 # this function will source .bashrc
     . "$HOME/.bashrc" || return $?
+}
+
+shSshReverseTunnel() {
+# this function will ssh $@ with reverse-tunneling
+    ssh -R 2022:127.0.0.1:22 \
+        -R 3022:127.0.0.1:2022 \
+        $@ || return $?
 }
 
 shTestReportCreate() {(set -e

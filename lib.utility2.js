@@ -357,7 +357,7 @@ instruction\n\
         $ npm install jslint-lite && \\\n\
             export PORT=8081 && \\\n\
             node example.js\n\
-    3. play with the browser-demo on http://localhost:8081\n\
+    3. play with the browser-demo on http://127.0.0.1:8081\n\
 */\n\
 \n\
 /* istanbul instrument in package jslint-lite */\n\
@@ -3916,7 +3916,7 @@ instruction\n\
     1. save this script as assets.app.js\n\
     2. run the shell command:\n\
         $ PORT=8081 node assets.app.js\n\
-    3. play with the browser-demo on http://localhost:8081\n\
+    3. play with the browser-demo on http://127.0.0.1:8081\n\
 */\n\
 ';
 /* jslint-ignore-end */
@@ -4914,7 +4914,7 @@ instruction\n\
                 case 'node':
                     local.env.PORT = local.env.PORT || '8081';
                     local.serverLocalHost = local.serverLocalHost ||
-                        ('http://localhost:' + local.env.PORT);
+                        ('http://127.0.0.1:' + local.env.PORT);
                     // resolve absolute path
                     if (url[0] === '/') {
                         url = local.serverLocalHost + url;

@@ -1577,12 +1577,12 @@
             local.testMock(options, function (onError) {
                 // test default handling-behavior
                 local.assertJsonEqual(local.urlParse(
-                    'https://localhost:80/foo?aa=1&bb%20cc=dd%20=ee&aa=2&aa#zz=1'
+                    'https://127.0.0.1:80/foo?aa=1&bb%20cc=dd%20=ee&aa=2&aa#zz=1'
                 ), {
                     hash: '#zz=1',
-                    host: 'localhost:80',
-                    hostname: 'localhost',
-                    href: 'https://localhost:80/foo?aa=1&bb%20cc=dd%20=ee&aa=2&aa#zz=1',
+                    host: '127.0.0.1:80',
+                    hostname: '127.0.0.1',
+                    href: 'https://127.0.0.1:80/foo?aa=1&bb%20cc=dd%20=ee&aa=2&aa#zz=1',
                     path: '/foo?aa=1&bb%20cc=dd%20=ee&aa=2&aa',
                     pathname: '/foo',
                     port: '80',

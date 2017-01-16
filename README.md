@@ -36,7 +36,9 @@ this zero-dependency package will run dynamic browser-tests with coverage (via e
 - none
 
 #### change since c677c1e9
-- add Dockerfile.kibana
+- update Dockerfile.latest
+- add shell-function shSshReverseTunnel
+- replace localhost with 127.0.0.1
 - none
 
 #### this package requires
@@ -81,7 +83,7 @@ this zero-dependency package will run dynamic browser-tests with coverage (via e
 
 # instruction
     # 1. copy and paste this entire shell script into a console and press enter
-    # 2. play with the browser-demo on http://localhost:8081
+    # 2. play with the browser-demo on http://127.0.0.1:8081
 
 shExampleSh() {(set -e
     # npm install utility2
@@ -623,43 +625,57 @@ VOLUME [ \
   "/var/tmp" \
 ]
 WORKDIR /tmp
-# cache apt-get and busybox
-RUN apt-get update && \
+# install nodejs
+# https://nodejs.org/en/download/package-manager/#debian-and-ubuntu-based-linux-distributions
+RUN export DEBIAN_FRONTEND=noninteractive && \
+    apt-get update && \
+    apt-get install --no-install-recommends -y apt-utils && \
     apt-get install --no-install-recommends -y \
+        apt-utils \
         busybox \
+        ca-certificates \
+        curl && \
+    (busybox --list | xargs -n1 /bin/sh -c 'ln -s /bin/busybox /bin/$0 2>/dev/null' || true) \
+        && \
+    curl -sL https://deb.nodesource.com/setup_6.x | /bin/bash - && \
+    apt-get install -y nodejs
+# install electron-lite
+# COPY electron-*.zip /tmp
+RUN export DEBIAN_FRONTEND=noninteractive && \
+    apt-get update && \
+    apt-get install --no-install-recommends -y \
         chromium \
-        cmake \
-        curl \
-        default-jre \
         gconf2 \
         git \
-        nginx-extras \
-        transmission-daemon \
-        ssh \
-        vim \
         xvfb && \
-    (busybox --list | xargs -n1 sh -c 'ln -s /bin/busybox /bin/$0 2>/dev/null' || true)
-# cache nodejs
-# https://nodejs.org/en/download/package-manager/#debian-and-ubuntu-based-linux-distributions
-RUN curl -sL https://deb.nodesource.com/setup_6.x | bash - && \
-    apt-get install -y nodejs
-# cache electron-lite
-# COPY /electron-*.zip /tmp
-RUN npm install "kaizhu256/node-electron-lite#alpha" && \
+    npm install "kaizhu256/node-electron-lite#alpha" && \
     cd node_modules/electron-lite && \
     npm install && \
     export DISPLAY=:99.0 && \
     (Xvfb "$DISPLAY" &) && \
     npm test && \
     cp /tmp/electron-*.zip /
-# cache elasticsearch and kibana
-RUN curl -#Lo elasticsearch.tar.gz \
+# install elasticsearch and kibana
+RUN export DEBIAN_FRONTEND=noninteractive && \
+    apt-get update && \
+    apt-get install --no-install-recommends -y \
+        default-jre && \
+    curl -#Lo elasticsearch.tar.gz \
         https://download.elastic.co/elasticsearch/elasticsearch/elasticsearch-1.7.6.tar.gz && \
     mkdir -p /elasticsearch && \
     tar -xzf elasticsearch.tar.gz --strip-components=1 -C /elasticsearch && \
     curl -#Lo kibana.tar.gz https://download.elastic.co/kibana/kibana/kibana-3.1.3.tar.gz && \
     mkdir -p /kibana && \
     tar -xzf kibana.tar.gz --strip-components=1 -C /kibana
+# install extras
+RUN export DEBIAN_FRONTEND=noninteractive && \
+    apt-get update && \
+    apt-get install --no-install-recommends -y \
+        cmake \
+        nginx-extras \
+        transmission-daemon \
+        ssh \
+        vim
 ```
 
 - build.sh
