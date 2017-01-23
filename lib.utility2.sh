@@ -379,6 +379,40 @@ shDockerRestart() {(set -e
     shDockerStart "$@"
 )}
 
+shDockerRestartKibana() {(set -e
+# https://hub.docker.com/_/elasticsearch/
+# this function will restart the elasticsearch docker-container
+    shDockerRm kibana
+    mkdir -p "$HOME/docker/elasticsearch.data"
+    docker run --name kibana -d \
+        -p 127.0.0.1:9200:9200 \
+        -p 192.168.99.100:9200:9200 \
+        -v "$HOME/docker/elasticsearch.data":/elasticsearch/data \
+        kaizhu256/node-utility2:latest \
+    /bin/bash -c "(set -e
+        printf '
+server {
+    listen 9200;
+    location / {
+        client_max_body_size 256M;
+        proxy_pass http://127.0.0.1:9201$request_uri;
+    }
+    location /kibana {
+        root /;
+    }
+}
+        ' > /etc/nginx/conf.d/default.conf
+        mkdir -p /var/log/nginx
+        touch /var/log/nginx/access.log
+        tail -f /var/log/nginx/access.log &
+        touch /var/log/nginx/error.log
+        tail -f /dev/stderr /var/log/nginx/error.log &
+        /etc/init.d/nginx start
+        /elasticsearch/bin/elasticsearch.in.sh
+        /elasticsearch/bin/elasticsearch
+    )"
+)}
+
 shDockerRestartNginx() {(set -e
 # this function will restart the nginx docker-container
     # init $HOME/docker/etc.nginx.htpasswd.private
@@ -446,34 +480,20 @@ server {
     mkdir -p "$HOME/docker/usr.share.nginx.html"
     shDockerRm nginx
     # https://registry.hub.docker.com/_/nginx/
-    docker run --name nginx -d -p 80:8080 -p 443:443 \
+    docker run --name nginx -d \
+        -p 80:8080 \
+        -p 443:443 \
         -v "$HOME:/root:ro" \
         -v "$HOME/docker/etc.nginx.conf.d:/etc/nginx/conf.d:ro" \
         kaizhu256/node-utility2:latest \
-        /bin/bash -c "(set -e
-            mkdir -p /var/log/nginx
-            touch /var/log/nginx/access.log
-            ln -sf /dev/stdout /var/log/nginx/access.log
-            touch /var/log/nginx/error.log
-            ln -sf /dev/stderr /var/log/nginx/error.log
-            nginx -g 'daemon off;'
-        )"
-)}
-
-shDockerRestartPptp() {(set -e
-# https://github.com/mobtitude/docker-vpn-pptp
-# this function will restart the pptp docker-container
-    FILE="$HOME/docker/pptp.etc.ppp.chap-secrets"
-    # init /etc/ppp/chap-secrets
-    if [ ! -f "$FILE" ]
-    then
-        printf "foo * bar *" > "$FILE"
-        chmod 600 "$FILE"
-    fi
-    shDockerRm pptp
-    docker run --name pptp --privileged -d -p 127.0.0.1:1723:1723 \
-        -v "$HOME:/root" -v "$FILE:/etc/ppp/chap-secrets:ro" \
-        mobtitude/vpn-pptp
+    /bin/bash -c "(set -e
+        mkdir -p /var/log/nginx
+        touch /var/log/nginx/access.log
+        tail -f /var/log/nginx/access.log &
+        touch /var/log/nginx/error.log
+        tail -f /dev/stderr /var/log/nginx/error.log &
+        nginx -g 'daemon off;'
+    )"
 )}
 
 shDockerRestartTransmission() {(set -e
@@ -483,6 +503,7 @@ shDockerRestartTransmission() {(set -e
     shDockerRm transmission
     docker run --name transmission -d \
         -p 127.0.0.1:9091:9091 \
+        -p 192.168.99.100:9091:9091 \
         -v "$HOME/downloads:/root" \
         kaizhu256/node-utility2:latest \
     /bin/bash -c "transmission-daemon \
@@ -543,7 +564,8 @@ shDockerStart() {(set -e
     shift
     if [ "$DOCKER_PORT" ]
     then
-        DOCKER_OPTIONS="$DOCKER_OPTIONS -p 127.0.0.1:$DOCKER_PORT:$DOCKER_PORT"
+        DOCKER_OPTIONS="$DOCKER_OPTIONS -p 127.0.0.1:$DOCKER_PORT:$DOCKER_PORT \
+-p 192.168.99.100:$DOCKER_PORT:$DOCKER_PORT"
     fi
     docker run --name "$NAME" -dt -e debian_chroot="$NAME" \
         -v "$HOME:/root" \

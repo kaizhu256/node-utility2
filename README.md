@@ -36,7 +36,7 @@ this zero-dependency package will run dynamic browser-tests with coverage (via e
 - none
 
 #### change since c677c1e9
-- update Dockerfile.latest
+- move most logic from Dockerfile.latest to Dockerfile.base
 - add shell-function shSshReverseTunnel
 - replace localhost with 127.0.0.1
 - none
@@ -587,6 +587,84 @@ utility2-comment -->\n\
 
 
 # internal build-script
+- Dockerfile.base
+```shell
+# Dockerfile.base
+# docker build -f tmp/README.Dockerfile.base -t kaizhu256/node-utility2:base .
+# docker build -f "tmp/README.Dockerfile.$DOCKER_TAG" -t "$GITHUB_REPO:$DOCKER_TAG" . ||
+# https://hub.docker.com/_/node/
+FROM debian:stable-slim
+MAINTAINER kai zhu <kaizhu256@gmail.com>
+VOLUME [ \
+  "/mnt", \
+  "/root", \
+  "/tmp", \
+  "/usr/share/doc", \
+  "/usr/share/man", \
+  "/var" \
+]
+WORKDIR /tmp
+# install nodejs
+# https://nodejs.org/en/download/package-manager/#debian-and-ubuntu-based-linux-distributions
+RUN export DEBIAN_FRONTEND=noninteractive && \
+    apt-get update && \
+    apt-get install --no-install-recommends -y \
+        apt-utils \
+        busybox \
+        ca-certificates \
+        curl && \
+    (busybox --list | xargs -n1 /bin/sh -c 'ln -s /bin/busybox /bin/$0 2>/dev/null' || true) \
+        && \
+    curl -sL https://deb.nodesource.com/setup_6.x | /bin/bash - && \
+    apt-get install -y nodejs
+# install electron-lite
+VOLUME [ \
+  "/usr/lib/chromium" \
+]
+# COPY electron-*.zip /tmp
+RUN export DEBIAN_FRONTEND=noninteractive && \
+    apt-get update && \
+    apt-get install --no-install-recommends -y \
+        chromium \
+        gconf2 \
+        git \
+        xvfb && \
+    npm install "kaizhu256/node-electron-lite#alpha" && \
+    cd node_modules/electron-lite && \
+    npm install && \
+    export DISPLAY=:99.0 && \
+    (Xvfb "$DISPLAY" &) && \
+    npm test && \
+    cp /tmp/electron-*.zip /
+# install elasticsearch and kibana
+RUN export DEBIAN_FRONTEND=noninteractive && \
+    mkdir -p /usr/share/man/man1 && \
+    apt-get update && \
+    apt-get install --no-install-recommends -y \
+        default-jre && \
+    curl -#Lo elasticsearch.tar.gz \
+        https://download.elastic.co/elasticsearch/elasticsearch/elasticsearch-1.7.6.tar.gz && \
+    mkdir -p /elasticsearch && \
+    tar -xzf elasticsearch.tar.gz --strip-components=1 -C /elasticsearch && \
+    curl -#Lo kibana.tar.gz https://download.elastic.co/kibana/kibana/kibana-3.1.3.tar.gz && \
+    mkdir -p /kibana && \
+    tar -xzf kibana.tar.gz --strip-components=1 -C /kibana
+# install extras
+RUN export DEBIAN_FRONTEND=noninteractive && \
+    apt-get update && \
+    apt-get install --no-install-recommends -y \
+        cmake \
+        nginx-extras \
+        transmission-daemon \
+        ssh \
+        vim
+# install swagger-ui
+RUN export DEBIAN_FRONTEND=noninteractive && \
+    git clone --branch=v2.1.5 --single-branch \
+        https://github.com/swagger-api/swagger-ui.git /swagger-ui && \
+    rm -fr /swagger-ui/.git
+```
+
 - Dockerfile.emscripten
 ```shell
 # Dockerfile.emscripten
@@ -608,74 +686,14 @@ RUN cd / && \
 - Dockerfile.latest
 ```shell
 # Dockerfile.latest
-# docker build -f tmp/README.Dockerfile.latest -t kaizhu256/node-utility2:latest .
-# docker build -f "tmp/README.Dockerfile.$DOCKER_TAG" -t "$GITHUB_REPO:$DOCKER_TAG" . ||
-# https://hub.docker.com/_/node/
-FROM debian:stable
+FROM kaizhu256/node-utility2:base
 MAINTAINER kai zhu <kaizhu256@gmail.com>
-VOLUME [ \
-  "/mnt", \
-  "/root", \
-  "/tmp", \
-  "/usr/lib/chromium", \
-  "/usr/share/doc", \
-  "/var/cache", \
-  "/var/lib/apt/lists", \
-  "/var/log", \
-  "/var/tmp" \
-]
-WORKDIR /tmp
-# install nodejs
-# https://nodejs.org/en/download/package-manager/#debian-and-ubuntu-based-linux-distributions
+# install swagger-ui
 RUN export DEBIAN_FRONTEND=noninteractive && \
-    apt-get update && \
-    apt-get install --no-install-recommends -y apt-utils && \
-    apt-get install --no-install-recommends -y \
-        apt-utils \
-        busybox \
-        ca-certificates \
-        curl && \
-    (busybox --list | xargs -n1 /bin/sh -c 'ln -s /bin/busybox /bin/$0 2>/dev/null' || true) \
-        && \
-    curl -sL https://deb.nodesource.com/setup_6.x | /bin/bash - && \
-    apt-get install -y nodejs
-# install electron-lite
-# COPY electron-*.zip /tmp
-RUN export DEBIAN_FRONTEND=noninteractive && \
-    apt-get update && \
-    apt-get install --no-install-recommends -y \
-        chromium \
-        gconf2 \
-        git \
-        xvfb && \
-    npm install "kaizhu256/node-electron-lite#alpha" && \
-    cd node_modules/electron-lite && \
-    npm install && \
-    export DISPLAY=:99.0 && \
-    (Xvfb "$DISPLAY" &) && \
-    npm test && \
-    cp /tmp/electron-*.zip /
-# install elasticsearch and kibana
-RUN export DEBIAN_FRONTEND=noninteractive && \
-    apt-get update && \
-    apt-get install --no-install-recommends -y \
-        default-jre && \
-    curl -#Lo elasticsearch.tar.gz \
-        https://download.elastic.co/elasticsearch/elasticsearch/elasticsearch-1.7.6.tar.gz && \
-    mkdir -p /elasticsearch && \
-    tar -xzf elasticsearch.tar.gz --strip-components=1 -C /elasticsearch && \
-    curl -#Lo kibana.tar.gz https://download.elastic.co/kibana/kibana/kibana-3.1.3.tar.gz && \
-    mkdir -p /kibana && \
-    tar -xzf kibana.tar.gz --strip-components=1 -C /kibana
-# install extras
-RUN export DEBIAN_FRONTEND=noninteractive && \
-    apt-get update && \
-    apt-get install --no-install-recommends -y \
-        cmake \
-        nginx-extras \
-        transmission-daemon \
-        ssh \
-        vim
+    rm -fr /swagger-ui && \
+    git clone --branch=v2.1.5 --single-branch \
+        https://github.com/swagger-api/swagger-ui.git && \
+    mv swagger-ui/dist /swagger-ui
 ```
 
 - build.sh
@@ -743,8 +761,6 @@ shBuild() {(set -e
     export DOCKER_TAG="$(printf "$CI_BRANCH" | sed -e "s/docker.//")"
     # if $DOCKER_TAG is not unique from $CI_BRANCH, then return
     [ "$DOCKER_TAG" = "$CI_BRANCH" ] && return || true
-    # docker pull
-    docker pull "$GITHUB_REPO:$DOCKER_TAG" || true
     # docker build
     (printf "0" > "$npm_config_file_tmp" &&
         docker build -f "tmp/README.Dockerfile.$DOCKER_TAG" -t "$GITHUB_REPO:$DOCKER_TAG" . ||
@@ -753,7 +769,7 @@ shBuild() {(set -e
     [ "$EXIT_CODE" != 0 ] && return "$EXIT_CODE" || true
     # docker test
     case "$CI_BRANCH" in
-    docker.latest)
+    docker.base)
         # npm test utility2
         for PACKAGE in utility2 "kaizhu256/node-utility2#alpha"
         do

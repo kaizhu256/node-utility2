@@ -1095,22 +1095,23 @@ local.templateUiResponseAjax = '\
             Object.keys(local.apiDict).sort().forEach(function (operation) {
                 // init operation
                 operation = local.jsonCopy(local.apiDict[operation]);
-                if (!operation.tags[0] || self.operationDict[operation._keyOperationId]) {
-                    return;
-                }
-                self.operationDict[operation._keyOperationId] = operation;
-                // init resource
-                resource = self.resourceDict[operation.tags[0]];
-                if (!resource && self.tagDict[operation.tags[0]]) {
-                    resource = self.resourceDict[operation.tags[0]] =
-                        self.tagDict[operation.tags[0]];
-                    local.objectSetDefault(resource, {
-                        description: 'no description available',
-                        id: local.idDomElementCreate('swgg_id_' + operation.tags[0]),
-                        name: operation.tags[0],
-                        operationListInnerHtml: ''
-                    });
-                }
+                operation.tags.forEach(function (tag) {
+                    if (self.operationDict[operation._keyOperationId]) {
+                        return;
+                    }
+                    self.operationDict[operation._keyOperationId] = operation;
+                    // init resource
+                    resource = self.resourceDict[tag];
+                    if (!resource && self.tagDict[tag]) {
+                        resource = self.resourceDict[tag] = self.tagDict[tag];
+                        local.objectSetDefault(resource, {
+                            description: 'no description available',
+                            id: local.idDomElementCreate('swgg_id_' + tag),
+                            name: tag,
+                            operationListInnerHtml: ''
+                        });
+                    }
+                });
             });
             // init resourceDict
             Object.keys(self.resourceDict).sort().forEach(function (key) {
@@ -1130,23 +1131,28 @@ local.templateUiResponseAjax = '\
             }).forEach(function (operation) {
                 operation = self.operationDict[operation];
                 operation.id = local.idDomElementCreate('swgg_id_' + operation.operationId);
-                resource = self.resourceDict[operation.tags[0]];
-                local.objectSetDefault(operation, {
-                    description: '',
-                    responseList: Object.keys(operation.responses).sort().map(function (key) {
-                        return { key: key, value: operation.responses[key] };
-                    }),
-                    summary: 'no summary available'
+                operation.tags.forEach(function (tag) {
+                    operation = local.jsonCopy(operation);
+                    resource = self.resourceDict[tag];
+                    local.objectSetDefault(operation, {
+                        description: '',
+                        responseList: Object.keys(operation.responses).sort()
+                            .map(function (key) {
+                                return { key: key, value: operation.responses[key] };
+                            }),
+                        summary: 'no summary available'
+                    });
+                    operation.parameters.forEach(function (element) {
+                        // init element.id
+                        element.id = local.idDomElementCreate('swgg_id_' + element.name);
+                        self.paramDefDict[element.id] = element;
+                    });
+                    // templateRender operation
+                    self.uiFragment.querySelector('#' + resource.id + ' .operationList')
+                        .appendChild(
+                            local.domFragmentRender(local.templateUiOperation, operation)
+                        );
                 });
-                operation.parameters.forEach(function (element) {
-                    // init element.id
-                    element.id = local.idDomElementCreate('swgg_id_' + element.name);
-                    self.paramDefDict[element.id] = element;
-                });
-                // templateRender operation
-                self.uiFragment.querySelector(
-                    '#' + resource.id + ' .operationList'
-                ).appendChild(local.domFragmentRender(local.templateUiOperation, operation));
             });
             Object.keys(self.paramDefDict).forEach(function (paramDef) {
                 paramDef = self.paramDefDict[paramDef];
