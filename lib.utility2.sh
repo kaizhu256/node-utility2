@@ -382,12 +382,19 @@ shDockerRestart() {(set -e
 shDockerRestartKibana() {(set -e
 # https://hub.docker.com/_/elasticsearch/
 # this function will restart the elasticsearch docker-container
+    case "$(uname)" in
+    Linux)
+        LOCALHOST="${LOCALHOST:-127.0.0.1}"
+        ;;
+    *)
+        LOCALHOST="${LOCALHOST:-192.168.99.100}"
+        ;;
+    esac
     shDockerRm kibana
     mkdir -p "$HOME/docker/elasticsearch.data"
     docker run --name kibana -d \
-        -p 127.0.0.1:9200:9200 \
-        -p 192.168.99.100:9200:9200 \
-        -v "$HOME/docker/elasticsearch.data":/elasticsearch/data \
+        -p "$LOCALHOST:9200:9200" \
+        -v "$HOME/docker/elasticsearch.data:/elasticsearch/data" \
         kaizhu256/node-utility2:latest \
     /bin/bash -c "(set -e
         printf '
@@ -395,9 +402,16 @@ server {
     listen 9200;
     location / {
         client_max_body_size 256M;
-        proxy_pass http://127.0.0.1:9201$request_uri;
+        proxy_pass http://127.0.0.1:9201\$request_uri;
+    }
+    location /assets {
+        root /elasticsearch/data;
+        sendfile off;
     }
     location /kibana {
+        root /;
+    }
+    location /swagger-ui {
         root /;
     }
 }
@@ -408,8 +422,9 @@ server {
         touch /var/log/nginx/error.log
         tail -f /dev/stderr /var/log/nginx/error.log &
         /etc/init.d/nginx start
-        /elasticsearch/bin/elasticsearch.in.sh
+        sed -in -e 's#http://petstore.swagger.io/v2#/assets#' /swagger-ui/index.html
         /elasticsearch/bin/elasticsearch
+        sleep infinity
     )"
 )}
 
@@ -492,18 +507,26 @@ server {
         tail -f /var/log/nginx/access.log &
         touch /var/log/nginx/error.log
         tail -f /dev/stderr /var/log/nginx/error.log &
-        nginx -g 'daemon off;'
+        /etc/init.d/nginx start
+        sleep infinity
     )"
 )}
 
 shDockerRestartTransmission() {(set -e
 # this function will restart the transmission docker-container
 # http://transmission:transmission@127.0.0.1:9091
+    case "$(uname)" in
+    Linux)
+        LOCALHOST="${LOCALHOST:-127.0.0.1}"
+        ;;
+    *)
+        LOCALHOST="${LOCALHOST:-192.168.99.100}"
+        ;;
+    esac
     mkdir -p "$HOME/downloads"
     shDockerRm transmission
     docker run --name transmission -d \
-        -p 127.0.0.1:9091:9091 \
-        -p 192.168.99.100:9091:9091 \
+        -p "$LOCALHOST:9091:9091" \
         -v "$HOME/downloads:/root" \
         kaizhu256/node-utility2:latest \
     /bin/bash -c "transmission-daemon \
@@ -558,14 +581,21 @@ shDockerSh() {(set -e
 
 shDockerStart() {(set -e
 # this function will start the docker-container $IMAGE:$NAME with the command $@
+    case "$(uname)" in
+    Linux)
+        LOCALHOST="${LOCALHOST:-127.0.0.1}"
+        ;;
+    *)
+        LOCALHOST="${LOCALHOST:-192.168.99.100}"
+        ;;
+    esac
     NAME="$1"
     shift
     IMAGE="$1"
     shift
     if [ "$DOCKER_PORT" ]
     then
-        DOCKER_OPTIONS="$DOCKER_OPTIONS -p 127.0.0.1:$DOCKER_PORT:$DOCKER_PORT \
--p 192.168.99.100:$DOCKER_PORT:$DOCKER_PORT"
+        DOCKER_OPTIONS="$DOCKER_OPTIONS -p $LOCALHOST:$DOCKER_PORT:$DOCKER_PORT"
     fi
     docker run --name "$NAME" -dt -e debian_chroot="$NAME" \
         -v "$HOME:/root" \
@@ -880,6 +910,29 @@ local.fs.readFileSync('$FILE', 'utf8').split('\n').forEach(function (element) {
 Object.keys(local.fileDict).forEach(function (key) {
     local.fs.writeFileSync(key, local.fileDict[key].join('\n'));
 });
+// </script>
+    "
+)}
+
+shImageToDataUri() {(set -e
+# this function convert the image $1 to a data-uri string
+    node -e "
+// <script>
+/*jslint
+    bitwise: true,
+    browser: true,
+    maxerr: 8,
+    maxlen: 96,
+    node: true,
+    nomen: true,
+    regexp: true,
+    stupid: true
+*/
+'use strict';
+process.stdout.write('data:image/' +
+    '$1'.split('.').slice(-1)[0] +
+    ';base64,' +
+    require('fs').readFileSync('$1').toString('base64'));
 // </script>
     "
 )}

@@ -37,6 +37,7 @@ this zero-dependency package will run dynamic browser-tests with coverage (via e
 
 #### change since c677c1e9
 - move most logic from Dockerfile.latest to Dockerfile.base
+- add shell-function shImageToDataUri
 - add shell-function shSshReverseTunnel
 - replace localhost with 127.0.0.1
 - none
@@ -601,7 +602,10 @@ VOLUME [ \
   "/tmp", \
   "/usr/share/doc", \
   "/usr/share/man", \
-  "/var" \
+  "/var/cache", \
+  "/var/lib/apt", \
+  "/var/log", \
+  "/var/tmp" \
 ]
 WORKDIR /tmp
 # install nodejs
@@ -661,8 +665,8 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
 # install swagger-ui
 RUN export DEBIAN_FRONTEND=noninteractive && \
     git clone --branch=v2.1.5 --single-branch \
-        https://github.com/swagger-api/swagger-ui.git /swagger-ui && \
-    rm -fr /swagger-ui/.git
+        https://github.com/swagger-api/swagger-ui.git && \
+    mv swagger-ui/dist /swagger-ui
 ```
 
 - Dockerfile.emscripten

@@ -2285,6 +2285,18 @@ local.assertJsonEqual(options.coverage1,
 
     // run shared js-env code - post-init
     (function () {
+        // init lib
+        [
+            'swgg'
+        ].forEach(function (key) {
+            try {
+                local[key] = local.modeJs === 'browser'
+                    ? local.global['utility2_' + key]
+                    : require('./lib.' + key.replace((/_/g), '-') + '.js');
+            } catch (ignore) {
+            }
+            local[key] = local[key] || {};
+        });
         // coverage-hack - re-run test-server
         local.testRunServer(local);
         // init test-middleware
