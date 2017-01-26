@@ -6,6 +6,7 @@ branches:
     only:
     - alpha
     - docker.base
+    - docker.elasticsearch
     - docker.latest
     - beta
     - master

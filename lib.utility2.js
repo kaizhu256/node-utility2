@@ -4091,6 +4091,19 @@ instruction\n\
             return local.sjcl.codec.base64.fromBits(local.sjcl.hash.sha256.hash(data));
         };
 
+        local.sjclHmacSha256Create = function (key, data) {
+        /*
+         * this function will create a string sha-256 hmac
+         * from the string key and string data
+         */
+            return local.sjcl.codec.hex.fromBits(
+                (new local.sjcl.misc.hmac(
+                    local.sjcl.codec.utf8String.toBits(key),
+                    local.sjcl.hash.sha256
+                )).mac(local.sjcl.codec.utf8String.toBits(data))
+            );
+        };
+
         local.streamReadAll = function (stream, onError) {
         /*
          * this function will concat data from the stream,

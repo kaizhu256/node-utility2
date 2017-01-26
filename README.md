@@ -39,6 +39,7 @@ this zero-dependency package will run dynamic browser-tests with coverage (via e
 - move most logic from Dockerfile.latest to Dockerfile.base
 - add shell-function shImageToDataUri
 - add shell-function shSshReverseTunnel
+- add function sjclHmacSha256Create
 - replace localhost with 127.0.0.1
 - none
 
@@ -640,6 +641,21 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
     (Xvfb "$DISPLAY" &) && \
     npm test && \
     cp /tmp/electron-*.zip /
+# install extras
+RUN export DEBIAN_FRONTEND=noninteractive && \
+    apt-get update && \
+    apt-get install --no-install-recommends -y \
+        nginx-extras \
+        transmission-daemon \
+        ssh \
+        vim
+```
+
+- Dockerfile.elasticsearch
+```shell
+# Dockerfile.elasticsearch
+FROM kaizhu256/node-utility2:latest
+MAINTAINER kai zhu <kaizhu256@gmail.com>
 # install elasticsearch and kibana
 RUN export DEBIAN_FRONTEND=noninteractive && \
     mkdir -p /usr/share/man/man1 && \
@@ -648,25 +664,13 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
         default-jre && \
     curl -#Lo elasticsearch.tar.gz \
         https://download.elastic.co/elasticsearch/elasticsearch/elasticsearch-1.7.6.tar.gz && \
+    rm -fr /elasticsearch && \
     mkdir -p /elasticsearch && \
     tar -xzf elasticsearch.tar.gz --strip-components=1 -C /elasticsearch && \
     curl -#Lo kibana.tar.gz https://download.elastic.co/kibana/kibana/kibana-3.1.3.tar.gz && \
+    rm -fr /kibana && \
     mkdir -p /kibana && \
     tar -xzf kibana.tar.gz --strip-components=1 -C /kibana
-# install extras
-RUN export DEBIAN_FRONTEND=noninteractive && \
-    apt-get update && \
-    apt-get install --no-install-recommends -y \
-        cmake \
-        nginx-extras \
-        transmission-daemon \
-        ssh \
-        vim
-# install swagger-ui
-RUN export DEBIAN_FRONTEND=noninteractive && \
-    git clone --branch=v2.1.5 --single-branch \
-        https://github.com/swagger-api/swagger-ui.git && \
-    mv swagger-ui/dist /swagger-ui
 ```
 
 - Dockerfile.emscripten
@@ -678,7 +682,12 @@ MAINTAINER kai zhu <kaizhu256@gmail.com>
 # https://kripken.github.io/emscripten-site/docs
 # /building_from_source/building_emscripten_from_source_using_the_sdk.html
 # build emscripten v1.36.0
-RUN cd / && \
+RUN export DEBIAN_FRONTEND=noninteractive && \
+    mkdir -p /usr/share/man/man1 && \
+    apt-get update && \
+    apt-get install --no-install-recommends -y \
+        cmake && \
+    cd / && \
     git clone https://github.com/juj/emsdk.git --branch=master --single-branch && \
     cd /emsdk && \
     ./emsdk install -j2 --shallow sdk-master-64bit && \

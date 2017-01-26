@@ -930,7 +930,7 @@ shImageToDataUri() {(set -e
 */
 'use strict';
 process.stdout.write('data:image/' +
-    '$1'.split('.').slice(-1)[0] +
+    require('path').extname('$1').slice(1) +
     ';base64,' +
     require('fs').readFileSync('$1').toString('base64'));
 // </script>
