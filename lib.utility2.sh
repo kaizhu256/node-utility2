@@ -342,14 +342,13 @@ shDockerCopyFromImage() {(set -e
     CONTAINER="$(docker create "$IMAGE")"
     docker cp "$CONTAINER:$FILE_FROM" "$FILE_TO"
     # cleanup $CONTAINER
-    docker rm -v "$CONTAINER"
+    docker rm -fv "$CONTAINER"
 )}
 
 shDockerInstall() {(set -e
-# http://docs.docker.com/installation/ubuntulinux
 # this function will install docker
     mkdir -p $HOME/docker
-    wget -qO- https://get.docker.com/ | /bin/sh
+    curl -sSL https://get.docker.com/ | /bin/sh
     # test docker
     docker run hello-world
 )}
@@ -376,8 +375,57 @@ shDockerNpmRestart() {(set -e
 
 shDockerRestart() {(set -e
 # this function will restart the docker-container
-    shDockerRm "$1"
+    docker rm -fv "$1" || true
     shDockerStart "$@"
+)}
+
+shDockerRestartElasticsearch() {(set -e
+# https://hub.docker.com/_/elasticsearch/
+# this function will restart the elasticsearch docker-container
+    case "$(uname)" in
+    Linux)
+        LOCALHOST="${LOCALHOST:-127.0.0.1}"
+        ;;
+    *)
+        LOCALHOST="${LOCALHOST:-192.168.99.100}"
+        ;;
+    esac
+    docker rm -fv elasticsearch || true
+    mkdir -p "$HOME/docker/elasticsearch.data"
+    docker run --name elasticsearch -d \
+        -p "$LOCALHOST:9200:9200" \
+        -v "$HOME/docker/elasticsearch.data:/elasticsearch/data" \
+        kaizhu256/node-utility2:elasticsearch \
+    /bin/bash -c "(set -e
+        printf '
+server {
+    listen 9200;
+    location / {
+        client_max_body_size 256M;
+        proxy_pass http://127.0.0.1:9201\$request_uri;
+    }
+    location /assets {
+        root /elasticsearch/data;
+        sendfile off;
+    }
+    location /kibana {
+        root /;
+    }
+    location /swagger-ui {
+        root /;
+    }
+}
+        ' > /etc/nginx/conf.d/default.conf
+        mkdir -p /var/log/nginx
+        touch /var/log/nginx/access.log
+        tail -f /var/log/nginx/access.log &
+        touch /var/log/nginx/error.log
+        tail -f /dev/stderr /var/log/nginx/error.log &
+        /etc/init.d/nginx start
+        sed -in -e 's#http://petstore.swagger.io/v2#/assets#' /swagger-ui/index.html
+        /elasticsearch/bin/elasticsearch
+        sleep infinity
+    )"
 )}
 
 shDockerRestartNginx() {(set -e
@@ -403,7 +451,7 @@ shDockerRestartNginx() {(set -e
         printf '
 # http server
 server {
-    listen 80;
+    listen 8080;
     # redirect to https
     location / {
         rewrite ^ https://$host$request_uri permanent;
@@ -445,59 +493,74 @@ server {
     fi
     # init $HOME/docker/usr.share.nginx.html
     mkdir -p "$HOME/docker/usr.share.nginx.html"
-    shDockerRm nginx
+    docker rm -fv nginx || true
     # https://registry.hub.docker.com/_/nginx/
-    docker run --name nginx -d -p 80:80 -p 443:443 \
+    docker run --name nginx -d \
+        -p 80:8080 \
+        -p 443:443 \
         -v "$HOME:/root:ro" \
         -v "$HOME/docker/etc.nginx.conf.d:/etc/nginx/conf.d:ro" \
-        -v "$HOME/docker/etc.nginx.conf.d/default.conf:/etc/nginx/conf.d/default.conf:ro" \
-        nginx
-)}
-
-shDockerRestartPptp() {(set -e
-# https://github.com/mobtitude/docker-vpn-pptp
-# this function will restart the pptp docker-container
-    FILE="$HOME/docker/pptp.etc.ppp.chap-secrets"
-    # init /etc/ppp/chap-secrets
-    if [ ! -f "$FILE" ]
-    then
-        printf "foo * bar *" > "$FILE"
-        chmod 600 "$FILE"
-    fi
-    shDockerRm pptp
-    docker run --name pptp --privileged -d -p 1723:1723 \
-        -v "$HOME:/root" -v "$FILE:/etc/ppp/chap-secrets:ro" \
-        mobtitude/vpn-pptp
+        kaizhu256/node-utility2:latest \
+    /bin/bash -c "(set -e
+        mkdir -p /var/log/nginx
+        touch /var/log/nginx/access.log
+        tail -f /var/log/nginx/access.log &
+        touch /var/log/nginx/error.log
+        tail -f /dev/stderr /var/log/nginx/error.log &
+        /etc/init.d/nginx start
+        sleep infinity
+    )"
 )}
 
 shDockerRestartTransmission() {(set -e
-# https://hub.docker.com/r/dperson/transmission/
 # this function will restart the transmission docker-container
-    DIR="$HOME/downloads"
-    mkdir -p "$DIR"
-    shDockerRm transmission
-    docker run --name transmission -d -e TRPASSWD=admin -e TRUSER=admin -e TZ=EST5EDT \
-        -p 9091:9091 \
-        -v "$HOME:/root" -v "$DIR:/var/lib/transmission-daemon" \
-        dperson/transmission
+# http://transmission:transmission@127.0.0.1:9091
+    case "$(uname)" in
+    Linux)
+        LOCALHOST="${LOCALHOST:-127.0.0.1}"
+        ;;
+    *)
+        LOCALHOST="${LOCALHOST:-192.168.99.100}"
+        ;;
+    esac
+    mkdir -p "$HOME/downloads"
+    docker rm -fv transmission || true
+    docker run --name transmission -d \
+        -p "$LOCALHOST:9091:9091" \
+        -v "$HOME/downloads:/root" \
+        kaizhu256/node-utility2:latest \
+    /bin/bash -c "transmission-daemon \
+        --allowed \\* \
+        --download-dir /root/complete \
+        --encryption-required \
+        --foreground \
+        --global-seedratio 0 \
+        --incomplete-dir /root/incomplete \
+        --log-info \
+        --no-auth \
+        --no-portmap
+    "
 )}
 
 shDockerRm() {(set -e
-# this function will stop and rm the docker-containers $@
-    # wait for docker-container to stop
-    # docker stop "$@" || true
+# this function will rm the docker-containers $@
     docker rm -fv "$@" || true
 )}
 
 shDockerRmAll() {(set -e
-# this function will stop and rm all docker-containers
-    shDockerRm $(docker ps -aq)
+# this function will rm all docker-containers
+    docker rm -fv $(docker ps -aq) || true
+)}
+
+shDockerRmExited() {(set -e
+# this function will rm all docker-containers that have exited
+    docker rm -fv $(docker ps -aqf status=exited) || true
 )}
 
 shDockerRmSince() {(set -e
-# this function will stop and rm all docker-containers since $NAME
+# this function will rm all docker-containers since $NAME
     NAME="$1"
-    shDockerRm $(docker ps -aq --since="$NAME")
+    docker rm -fv $(docker ps -aq --since="$NAME") || true
 )}
 
 shDockerRmiUntagged() {(set -e
@@ -516,32 +579,31 @@ shDockerSh() {(set -e
 
 shDockerStart() {(set -e
 # this function will start the docker-container $IMAGE:$NAME with the command $@
+    case "$(uname)" in
+    Linux)
+        LOCALHOST="${LOCALHOST:-127.0.0.1}"
+        ;;
+    *)
+        LOCALHOST="${LOCALHOST:-192.168.99.100}"
+        ;;
+    esac
     NAME="$1"
     shift
     IMAGE="$1"
     shift
     if [ "$DOCKER_PORT" ]
     then
-        DOCKER_OPTIONS="$DOCKER_OPTIONS -p $DOCKER_PORT:$DOCKER_PORT"
+        DOCKER_OPTIONS="$DOCKER_OPTIONS -p $LOCALHOST:$DOCKER_PORT:$DOCKER_PORT"
     fi
     docker run --name "$NAME" -dt -e debian_chroot="$NAME" \
         -v "$HOME:/root" \
         $DOCKER_OPTIONS \
         "$IMAGE" "$@"
-    shDockerLogs $NAME
-)}
-
-shDsStoreRm() {(set -e
-# http://stackoverflow.com/questions/2016844/bash-recursively-remove-files
-# this function will recursively rm .DS_Store from the current dir
-    find . -name "._*" -print0 | xargs -0 rm || true
-    find . -name ".DS_Store" -print0 | xargs -0 rm || true
-    find . -name "npm-debug.log" -print0 | xargs -0 rm || true
 )}
 
 shDuList() {(set -e
 # this function will run du, and create a list of all child dir in $1 sorted by size
-    du -ms $1/* | sort -nr
+    du -md1 $1 | sort -nr
 )}
 
 shEmscriptenInit() {
@@ -572,15 +634,12 @@ shFileKeySort() {(set -e
 'use strict';
 console.log('var aa = [' + require('fs').readFileSync('$FILE', 'utf8')
 /* jslint-ignore-begin */
+    .replace((/[\"\\\\]/g), '#')
     .replace((/\\n{2,}/gm), '\\n')
-    .replace((/^ {0,8}(\\w[^ ]*? =(?:| .*?))$/gm), '\`\"\$1\",')
-    .replace((/^(\\w+?\\(\\) \\{.*?)$/gm), '\`\"\$1\",')
-    .replace((/\\n[^\`].*?$/gm), '')
-    .replace((/^\W.*/), '')
-    .replace((/\`/g), '')
-    .replace((/\".*\"/g), function (match0) {
-        return \"\\\"\" + match0.slice(1, -1).replace((/[\"\\\\]/g), '#') + \"\\\"\";
-    }) + '];\n\
+    .replace((/^ {0,8}(\\w[^\\n ]*? =(?:| .*?))$/gm), '\"\$1\",')
+    .replace((/^(\\w+?\\(\\) \\{.*?)$/gm), '\"\$1\",')
+    .replace((/^(?:[^\\n\"]|\"\W|\"\").*/gm), '')
+    .replace((/\\n{2,}/gm), '\\n') + '];\n\
 var bb = aa.slice().sort();\n\
 aa.forEach(function (aa, ii) {\n\
     console.log(ii, aa === bb[ii], aa, bb[ii]);\n\
@@ -808,7 +867,8 @@ min\\|mock\\|\
 node_module\\|\
 rollup\\|\
 swp\\|\
-tmp\\)\\(\\b\\|[_s]\\)\
+tmp\\|\
+vendor\\)\\(\\b\\|[_s]\\)\
 "
     find "$DIR" -type f | \
         grep -v "$FILE_FILTER" | \
@@ -834,8 +894,8 @@ shGrepFileReplace() {(set -e
 'use strict';
 var local;
 local = {};
-local.fs = require('fs');
 local.fileDict = {};
+local.fs = require('fs');
 local.fs.readFileSync('$FILE', 'utf8').split('\n').forEach(function (element) {
     element = (/^(.+?):(\d+?):(.+?)$/).exec(element);
     if (!element) {
@@ -848,6 +908,29 @@ local.fs.readFileSync('$FILE', 'utf8').split('\n').forEach(function (element) {
 Object.keys(local.fileDict).forEach(function (key) {
     local.fs.writeFileSync(key, local.fileDict[key].join('\n'));
 });
+// </script>
+    "
+)}
+
+shImageToDataUri() {(set -e
+# this function convert the image $1 to a data-uri string
+    node -e "
+// <script>
+/*jslint
+    bitwise: true,
+    browser: true,
+    maxerr: 8,
+    maxlen: 96,
+    node: true,
+    nomen: true,
+    regexp: true,
+    stupid: true
+*/
+'use strict';
+process.stdout.write('data:image/' +
+    require('path').extname('$1').slice(1) +
+    ';base64,' +
+    require('fs').readFileSync('$1').toString('base64'));
 // </script>
     "
 )}
@@ -906,7 +989,7 @@ shInit() {
         else
             export CI_BRANCH="${CI_BRANCH:-alpha}" || return $?
             export CI_COMMIT_ID="$(git rev-parse --verify HEAD)" || return $?
-            export CI_HOST=localhost || return $?
+            export CI_HOST=127.0.0.1 || return $?
         fi
         # init $CI_COMMIT_*
         export CI_COMMIT_MESSAGE="$(git log -1 --pretty=%s)" || return $?
@@ -1441,7 +1524,7 @@ console.log((/\n *\\$ (.*)/).exec(require('fs').readFileSync('$FILE', 'utf8'))[1
     # screen-capture server
     (sleep 15 &&
         export modeBrowserTest=screenCapture &&
-        export url="http://localhost:$PORT" &&
+        export url="http://127.0.0.1:$PORT" &&
         shBrowserTest) &
     printf "$SCRIPT\n\n"
     eval "$SCRIPT"
@@ -1488,7 +1571,7 @@ console.log(require('fs').readFileSync('$FILE', 'utf8').trimLeft());
     # screen-capture server
     (sleep 15 &&
         export modeBrowserTest=screenCapture &&
-        export url="http://localhost:$PORT" &&
+        export url="http://127.0.0.1:$PORT" &&
         shBrowserTest) &
     # test $FILE
     /bin/sh "$FILE"
@@ -1528,6 +1611,14 @@ socket.on('end', process.exit);
 shReturn1() {(set -e
 # this function will return 1
     return 1
+)}
+
+shRmDsStore() {(set -e
+# http://stackoverflow.com/questions/2016844/bash-recursively-remove-files
+# this function will recursively rm .DS_Store from the current dir
+    find . -name "._*" -print0 | xargs -0 rm || true
+    find . -name ".DS_Store" -print0 | xargs -0 rm || true
+    find . -name "npm-debug.log" -print0 | xargs -0 rm || true
 )}
 
 shRun() {(set -e
@@ -1665,6 +1756,13 @@ process.stdout.write(String(Math.random() * 0x10000 | 0x8000));
 shSource() {
 # this function will source .bashrc
     . "$HOME/.bashrc" || return $?
+}
+
+shSshReverseTunnel() {
+# this function will ssh $@ with reverse-tunneling
+    ssh -R 2022:127.0.0.1:22 \
+        -R 3022:127.0.0.1:2022 \
+        $@ || return $?
 }
 
 shTestReportCreate() {(set -e

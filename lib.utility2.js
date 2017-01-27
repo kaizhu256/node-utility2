@@ -271,12 +271,6 @@ local.templateIndexHtml = '';
 
 
 
-// https://img.shields.io/badge/tests_failed-999-dd0000.svg?style=flat
-local.templateTestReportBadgeSvg =
-'<svg xmlns="http://www.w3.org/2000/svg" width="103" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="103" height="20" fill="#555"/><rect rx="0" x="72" width="31" height="20" fill="#d00"/><path fill="#d00" d="M72 0h4v20h-4z"/><rect rx="0" width="103" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="37" y="15" fill="#010101" fill-opacity=".3">tests failed</text><text x="37" y="14">tests failed</text><text x="86.5" y="15" fill="#010101" fill-opacity=".3">999</text><text x="86.5" y="14">999</text></g></svg>';
-
-
-
 local.templateReadme = '\
 jslint-lite\n\
 ===========\n\
@@ -363,7 +357,7 @@ instruction\n\
         $ npm install jslint-lite && \\\n\
             export PORT=8081 && \\\n\
             node example.js\n\
-    3. play with the browser-demo on http://localhost:8081\n\
+    3. play with the browser-demo on http://127.0.0.1:8081\n\
 */\n\
 \n\
 /* istanbul instrument in package jslint-lite */\n\
@@ -656,6 +650,12 @@ shBuild() {(set -e\n\
 shBuild\n\
 ```\n\
 '
+
+
+
+// https://img.shields.io/badge/tests_failed-999-dd0000.svg?style=flat
+local.templateTestReportBadgeSvg =
+'<svg xmlns="http://www.w3.org/2000/svg" width="103" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="103" height="20" fill="#555"/><rect rx="0" x="72" width="31" height="20" fill="#d00"/><path fill="#d00" d="M72 0h4v20h-4z"/><rect rx="0" width="103" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="37" y="15" fill="#010101" fill-opacity=".3">tests failed</text><text x="37" y="14">tests failed</text><text x="86.5" y="15" fill="#010101" fill-opacity=".3">999</text><text x="86.5" y="14">999</text></g></svg>';
 
 
 
@@ -3702,7 +3702,8 @@ min\\|mock\\|\
 node_module\\|\
 rollup\\|\
 swp\\|\
-tmp\\)\\(\\b\\|[_s]\\)\
+tmp\\|\
+vendor\\)\\(\\b\\|[_s]\\)\
 " ' +
 /* jslint-ignore-end */
                             '| tr "\\n" "\\000" | xargs -0 grep -in "' +
@@ -3915,7 +3916,7 @@ instruction\n\
     1. save this script as assets.app.js\n\
     2. run the shell command:\n\
         $ PORT=8081 node assets.app.js\n\
-    3. play with the browser-demo on http://localhost:8081\n\
+    3. play with the browser-demo on http://127.0.0.1:8081\n\
 */\n\
 ';
 /* jslint-ignore-end */
@@ -4088,6 +4089,19 @@ instruction\n\
          * this function will create a base64-encoded sha-256 hash of the string data
          */
             return local.sjcl.codec.base64.fromBits(local.sjcl.hash.sha256.hash(data));
+        };
+
+        local.sjclHmacSha256Create = function (key, data) {
+        /*
+         * this function will create a string sha-256 hmac
+         * from the string key and string data
+         */
+            return local.sjcl.codec.hex.fromBits(
+                (new local.sjcl.misc.hmac(
+                    local.sjcl.codec.utf8String.toBits(key),
+                    local.sjcl.hash.sha256
+                )).mac(local.sjcl.codec.utf8String.toBits(data))
+            );
         };
 
         local.streamReadAll = function (stream, onError) {
@@ -4913,7 +4927,7 @@ instruction\n\
                 case 'node':
                     local.env.PORT = local.env.PORT || '8081';
                     local.serverLocalHost = local.serverLocalHost ||
-                        ('http://localhost:' + local.env.PORT);
+                        ('http://127.0.0.1:' + local.env.PORT);
                     // resolve absolute path
                     if (url[0] === '/') {
                         url = local.serverLocalHost + url;

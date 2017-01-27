@@ -17,8 +17,6 @@
 
     // run shared js-env code - pre-init
     (function () {
-        // init Error.stackTraceLimit
-        Error.stackTraceLimit = 20;
         // init local
         local = {};
         // init modeJs
@@ -1335,13 +1333,26 @@
             onError();
         };
 
-        local.testCase_sjclHashSha256Xxx_default = function (options, onError) {
+        local.testCase_sjclHashSha256Create_default = function (options, onError) {
         /*
-         * this function will test sjclHashSha256Xxx's default handling-behavior
+         * this function will test sjclHashSha256Create's default handling-behavior
          */
             options = {};
             options.data = local.sjclHashSha256Create('aa');
             local.assertJsonEqual(options.data, 'lhtt0+3jy47LqsvWjeBAzXjrLtWIkTDM60xJJo6k1QY=');
+            onError();
+        };
+
+        local.testCase_sjclHmacSha256Create_default = function (options, onError) {
+        /*
+         * this function will test sjclHmacSha256Create's default handling-behavior
+         */
+            options = {};
+            options.data = local.sjclHmacSha256Create('aa', 'bb');
+            local.assertJsonEqual(
+                options.data,
+                'f785efdd574f1c0fa884aca390cd696f45b965502e315726200008d80a8d4424'
+            );
             onError();
         };
 
@@ -1579,12 +1590,12 @@
             local.testMock(options, function (onError) {
                 // test default handling-behavior
                 local.assertJsonEqual(local.urlParse(
-                    'https://localhost:80/foo?aa=1&bb%20cc=dd%20=ee&aa=2&aa#zz=1'
+                    'https://127.0.0.1:80/foo?aa=1&bb%20cc=dd%20=ee&aa=2&aa#zz=1'
                 ), {
                     hash: '#zz=1',
-                    host: 'localhost:80',
-                    hostname: 'localhost',
-                    href: 'https://localhost:80/foo?aa=1&bb%20cc=dd%20=ee&aa=2&aa#zz=1',
+                    host: '127.0.0.1:80',
+                    hostname: '127.0.0.1',
+                    href: 'https://127.0.0.1:80/foo?aa=1&bb%20cc=dd%20=ee&aa=2&aa#zz=1',
                     path: '/foo?aa=1&bb%20cc=dd%20=ee&aa=2&aa',
                     pathname: '/foo',
                     port: '80',
@@ -2287,6 +2298,18 @@ local.assertJsonEqual(options.coverage1,
 
     // run shared js-env code - post-init
     (function () {
+        // init lib
+        [
+            'swgg'
+        ].forEach(function (key) {
+            try {
+                local[key] = local.modeJs === 'browser'
+                    ? local.global['utility2_' + key]
+                    : require('./lib.' + key.replace((/_/g), '-') + '.js');
+            } catch (ignore) {
+            }
+            local[key] = local[key] || {};
+        });
         // coverage-hack - re-run test-server
         local.testRunServer(local);
         // init test-middleware
@@ -2366,6 +2389,9 @@ local.assertJsonEqual(options.coverage1,
                 '<script src="assets.test.js"></script>\n' +
                 '<script>window.utility2.onReadyBefore();</script>\n';
         // run the cli
+        if (local.env.npm_config_mode_start) {
+            local.assetsDict['/'] = local.assetsDict['/index.html'] = undefined;
+        }
         if (process.argv[2]) {
             // start with coverage
             if (local.env.npm_config_mode_coverage) {

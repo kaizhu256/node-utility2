@@ -30,18 +30,18 @@ this zero-dependency package will run dynamic browser-tests with coverage (via e
 [![api-doc](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/screen-capture.docApiCreate.browser._2Fhome_2Ftravis_2Fbuild_2Fkaizhu256_2Fnode-utility2_2Ftmp_2Fbuild_2Fdoc.api.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/doc.api.html)
 
 #### todo
+- rename base64 functions with base64 as prefix
 - add utility2.middlewareLimit
 - add server stress test using electron
 - none
 
-#### change since d976efa1
-- npm publish 2017.1.5
-- automate readme-generation with new functions local.buildReadmeElectronLite and local.buildReadmeJslintLite
-- revamp github-crud-api
-- add function httpRequest
-- add shell-function shNpmPublishAlias
-- remove function domQuerySelectorAll
-- update documentation-generator
+#### change since c677c1e9
+- npm publish 2017.1.27
+- move most logic from Dockerfile.latest to Dockerfile.base
+- add shell-function shImageToDataUri
+- add shell-function shSshReverseTunnel
+- add function sjclHmacSha256Create
+- replace localhost with 127.0.0.1
 - none
 
 #### this package requires
@@ -86,7 +86,7 @@ this zero-dependency package will run dynamic browser-tests with coverage (via e
 
 # instruction
     # 1. copy and paste this entire shell script into a console and press enter
-    # 2. play with the browser-demo on http://localhost:8081
+    # 2. play with the browser-demo on http://127.0.0.1:8081
 
 shExampleSh() {(set -e
     # npm install utility2
@@ -578,7 +578,7 @@ utility2-comment -->\n\
         "test": "export PORT=$(./lib.utility2.sh shServerPortRandom) && export PORT_REPL=$(./lib.utility2.sh shServerPortRandom) && export npm_config_mode_auto_restart=1 && ./lib.utility2.sh test test.js",
         "test-all": "npm test --mode-coverage=all"
     },
-    "version": "2017.1.5"
+    "version": "2017.1.27"
 }
 ```
 
@@ -590,6 +590,90 @@ utility2-comment -->\n\
 
 
 # internal build-script
+- Dockerfile.base
+```shell
+# Dockerfile.base
+# docker build -f tmp/README.Dockerfile.base -t kaizhu256/node-utility2:base .
+# docker build -f "tmp/README.Dockerfile.$DOCKER_TAG" -t "$GITHUB_REPO:$DOCKER_TAG" . ||
+# https://hub.docker.com/_/node/
+FROM debian:stable-slim
+MAINTAINER kai zhu <kaizhu256@gmail.com>
+VOLUME [ \
+  "/mnt", \
+  "/root", \
+  "/tmp", \
+  "/usr/share/doc", \
+  "/usr/share/man", \
+  "/var/cache", \
+  "/var/lib/apt", \
+  "/var/log", \
+  "/var/tmp" \
+]
+WORKDIR /tmp
+# install nodejs
+# https://nodejs.org/en/download/package-manager/#debian-and-ubuntu-based-linux-distributions
+RUN export DEBIAN_FRONTEND=noninteractive && \
+    apt-get update && \
+    apt-get install --no-install-recommends -y \
+        apt-utils \
+        busybox \
+        ca-certificates \
+        curl && \
+    (busybox --list | xargs -n1 /bin/sh -c 'ln -s /bin/busybox /bin/$0 2>/dev/null' || true) \
+        && \
+    curl -sL https://deb.nodesource.com/setup_6.x | /bin/bash - && \
+    apt-get install -y nodejs
+# install electron-lite
+VOLUME [ \
+  "/usr/lib/chromium" \
+]
+# COPY electron-*.zip /tmp
+RUN export DEBIAN_FRONTEND=noninteractive && \
+    apt-get update && \
+    apt-get install --no-install-recommends -y \
+        chromium \
+        gconf2 \
+        git \
+        xvfb && \
+    npm install "kaizhu256/node-electron-lite#alpha" && \
+    cd node_modules/electron-lite && \
+    npm install && \
+    export DISPLAY=:99.0 && \
+    (Xvfb "$DISPLAY" &) && \
+    npm test && \
+    cp /tmp/electron-*.zip /
+# install extras
+RUN export DEBIAN_FRONTEND=noninteractive && \
+    apt-get update && \
+    apt-get install --no-install-recommends -y \
+        nginx-extras \
+        transmission-daemon \
+        ssh \
+        vim
+```
+
+- Dockerfile.elasticsearch
+```shell
+# Dockerfile.elasticsearch
+FROM kaizhu256/node-utility2:latest
+MAINTAINER kai zhu <kaizhu256@gmail.com>
+# install elasticsearch and kibana
+RUN export DEBIAN_FRONTEND=noninteractive && \
+    mkdir -p /usr/share/man/man1 && \
+    apt-get update && \
+    apt-get install --no-install-recommends -y \
+        default-jre && \
+    curl -#Lo elasticsearch.tar.gz \
+        https://download.elastic.co/elasticsearch/elasticsearch/elasticsearch-1.7.6.tar.gz && \
+    rm -fr /elasticsearch && \
+    mkdir -p /elasticsearch && \
+    tar -xzf elasticsearch.tar.gz --strip-components=1 -C /elasticsearch && \
+    curl -#Lo kibana.tar.gz https://download.elastic.co/kibana/kibana/kibana-3.1.3.tar.gz && \
+    rm -fr /kibana && \
+    mkdir -p /kibana && \
+    tar -xzf kibana.tar.gz --strip-components=1 -C /kibana
+```
+
 - Dockerfile.emscripten
 ```shell
 # Dockerfile.emscripten
@@ -599,7 +683,12 @@ MAINTAINER kai zhu <kaizhu256@gmail.com>
 # https://kripken.github.io/emscripten-site/docs
 # /building_from_source/building_emscripten_from_source_using_the_sdk.html
 # build emscripten v1.36.0
-RUN cd / && \
+RUN export DEBIAN_FRONTEND=noninteractive && \
+    mkdir -p /usr/share/man/man1 && \
+    apt-get update && \
+    apt-get install --no-install-recommends -y \
+        cmake && \
+    cd / && \
     git clone https://github.com/juj/emsdk.git --branch=master --single-branch && \
     cd /emsdk && \
     ./emsdk install -j2 --shallow sdk-master-64bit && \
@@ -611,35 +700,14 @@ RUN cd / && \
 - Dockerfile.latest
 ```shell
 # Dockerfile.latest
-# https://hub.docker.com/_/node/
-FROM node:boron
+FROM kaizhu256/node-utility2:base
 MAINTAINER kai zhu <kaizhu256@gmail.com>
-VOLUME [ \
-  "/mnt", \
-  "/root", \
-  "/tmp", \
-  "/var/cache", \
-  "/var/lib/apt/lists", \
-  "/var/log", \
-  "/var/tmp" \
-]
-WORKDIR /tmp
-# cache apt-get
-RUN apt-get update && \
-    apt-get install -y \
-        busybox \
-        chromium \
-        cmake \
-        default-jre \
-        gconf2 \
-        less \
-        libnotify4 \
-        nginx-extras \
-        vim \
-        xvfb
-# cache electron-lite
-RUN npm install "kaizhu256/node-electron-lite#alpha" && \
-    cp /tmp/electron-*.zip /
+# install swagger-ui
+RUN export DEBIAN_FRONTEND=noninteractive && \
+    rm -fr /swagger-ui && \
+    git clone --branch=v2.1.5 --single-branch \
+        https://github.com/swagger-api/swagger-ui.git && \
+    mv swagger-ui/dist /swagger-ui
 ```
 
 - build.sh
@@ -707,8 +775,6 @@ shBuild() {(set -e
     export DOCKER_TAG="$(printf "$CI_BRANCH" | sed -e "s/docker.//")"
     # if $DOCKER_TAG is not unique from $CI_BRANCH, then return
     [ "$DOCKER_TAG" = "$CI_BRANCH" ] && return || true
-    # docker pull
-    docker pull "$GITHUB_REPO:$DOCKER_TAG" || true
     # docker build
     (printf "0" > "$npm_config_file_tmp" &&
         docker build -f "tmp/README.Dockerfile.$DOCKER_TAG" -t "$GITHUB_REPO:$DOCKER_TAG" . ||
@@ -717,7 +783,7 @@ shBuild() {(set -e
     [ "$EXIT_CODE" != 0 ] && return "$EXIT_CODE" || true
     # docker test
     case "$CI_BRANCH" in
-    docker.latest)
+    docker.base)
         # npm test utility2
         for PACKAGE in utility2 "kaizhu256/node-utility2#alpha"
         do
