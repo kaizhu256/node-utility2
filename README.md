@@ -31,6 +31,7 @@ this zero-dependency package will run dynamic browser-tests with coverage (via e
 
 #### todo
 - npm publish 2017.1.6
+- rename base64 functions with base64 as prefix
 - add utility2.middlewareLimit
 - add server stress test using electron
 - none

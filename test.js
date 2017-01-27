@@ -1333,13 +1333,26 @@
             onError();
         };
 
-        local.testCase_sjclHashSha256Xxx_default = function (options, onError) {
+        local.testCase_sjclHashSha256Create_default = function (options, onError) {
         /*
-         * this function will test sjclHashSha256Xxx's default handling-behavior
+         * this function will test sjclHashSha256Create's default handling-behavior
          */
             options = {};
             options.data = local.sjclHashSha256Create('aa');
             local.assertJsonEqual(options.data, 'lhtt0+3jy47LqsvWjeBAzXjrLtWIkTDM60xJJo6k1QY=');
+            onError();
+        };
+
+        local.testCase_sjclHmacSha256Create_default = function (options, onError) {
+        /*
+         * this function will test sjclHmacSha256Create's default handling-behavior
+         */
+            options = {};
+            options.data = local.sjclHmacSha256Create('aa', 'bb');
+            local.assertJsonEqual(
+                options.data,
+                'f785efdd574f1c0fa884aca390cd696f45b965502e315726200008d80a8d4424'
+            );
             onError();
         };
 
