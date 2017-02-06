@@ -129,6 +129,7 @@ require('$npm_config_dir_utility2/lib.utility2.js').browserTest({
 
 shBuildApp() {(set -e
 # this function will build the app
+    npm test --mode-coverage="" --mode-test-case=testCase_build_readme
     npm test --mode-coverage="" --mode-test-case=testCase_build_app
 )}
 
@@ -223,11 +224,6 @@ shBuildPrint() {
     printf '%b' "\n\033[35m[MODE_BUILD=$MODE_BUILD]\033[0m - $(shDateIso) - $1\n\n" || return $?
 }
 
-shBuildReadme() {(set -e
-# this function will build the readme
-    npm test --mode-coverage="" --mode-test-case=testCase_build_readme
-)}
-
 shDateIso() {(set -e
 # this function will print the current date in ISO format
     date -u "+%Y-%m-%dT%H:%M:%SZ"
@@ -282,6 +278,10 @@ shDeployHeroku() {(set -e
 # this function will deploy the app to heroku
 # and run a simple curl check for $TEST_URL
 # and test $TEST_URL
+    if [ ! "$npm_package_nameHeroku" ]
+    then
+        export npm_package_nameHeroku="$npm_package_name"
+    fi
     # build app inside heroku
     if [ "$npm_lifecycle_event" = heroku-postbuild ]
     then
@@ -296,7 +296,7 @@ shDeployHeroku() {(set -e
         return
     fi
     export MODE_BUILD=deployHeroku
-    export TEST_URL="https://hrku01-$npm_package_name-$CI_BRANCH.herokuapp.com"
+    export TEST_URL="https://hrku01-$npm_package_nameHeroku-$CI_BRANCH.herokuapp.com"
     # verify deployed app's main-page returns status-code < 400
     if [ $(curl --connect-timeout 60 -Ls -o /dev/null -w "%{http_code}" "$TEST_URL") -lt 400 ]
     then
@@ -423,7 +423,7 @@ server {
         tail -f /dev/stderr /var/log/nginx/error.log &
         /etc/init.d/nginx start
         sed -in -e 's#http://petstore.swagger.io/v2#/assets#' /swagger-ui/index.html
-        /elasticsearch/bin/elasticsearch
+        /elasticsearch/bin/elasticsearch -Des.http.port=9201
         sleep infinity
     )"
 )}
@@ -632,14 +632,23 @@ shFileKeySort() {(set -e
     stupid: true
 */
 'use strict';
-console.log('var aa = [' + require('fs').readFileSync('$FILE', 'utf8')
+console.log('var aa = [\\n\"\",' + require('fs').readFileSync('$FILE', 'utf8')
 /* jslint-ignore-begin */
+    // escape backslash and double-quote
     .replace((/[\"\\\\]/g), '#')
+    // cull newline
     .replace((/\\n{2,}/gm), '\\n')
+    // add js
     .replace((/^ {0,8}(\\w[^\\n ]*? =(?:| .*?))$/gm), '\"\$1\",')
+    // add js-env
+    .replace((/^ {4}.. (.*? js-env .*?)$/gm), '\"\$1\",')
+    // add sh
     .replace((/^(\\w+?\\(\\) \\{.*?)$/gm), '\"\$1\",')
+    // cull
     .replace((/^(?:[^\\n\"]|\"\W|\"\").*/gm), '')
+    // cull newline
     .replace((/\\n{2,}/gm), '\\n') + '];\n\
+aa = aa.slice(0, aa.indexOf(\"\"));\n\
 var bb = aa.slice().sort();\n\
 aa.forEach(function (aa, ii) {\n\
     console.log(ii, aa === bb[ii], aa, bb[ii]);\n\
@@ -912,29 +921,6 @@ Object.keys(local.fileDict).forEach(function (key) {
     "
 )}
 
-shImageToDataUri() {(set -e
-# this function convert the image $1 to a data-uri string
-    node -e "
-// <script>
-/*jslint
-    bitwise: true,
-    browser: true,
-    maxerr: 8,
-    maxlen: 96,
-    node: true,
-    nomen: true,
-    regexp: true,
-    stupid: true
-*/
-'use strict';
-process.stdout.write('data:image/' +
-    require('path').extname('$1').slice(1) +
-    ';base64,' +
-    require('fs').readFileSync('$1').toString('base64'));
-// </script>
-    "
-)}
-
 shHtpasswdCreate() {(set -e
 # this function will create and print htpasswd to stdout
     printf "$1:$(openssl passwd -apr1 "$2")"
@@ -965,6 +951,29 @@ require('http').createServer(function (request, response) {
         }
     );
 }).listen(process.env.PORT);
+// </script>
+    "
+)}
+
+shImageToDataUri() {(set -e
+# this function convert the image $1 to a data-uri string
+    node -e "
+// <script>
+/*jslint
+    bitwise: true,
+    browser: true,
+    maxerr: 8,
+    maxlen: 96,
+    node: true,
+    nomen: true,
+    regexp: true,
+    stupid: true
+*/
+'use strict';
+process.stdout.write('data:image/' +
+    require('path').extname('$1').slice(1) +
+    ';base64,' +
+    require('fs').readFileSync('$1').toString('base64'));
 // </script>
     "
 )}
@@ -1015,7 +1024,7 @@ var dict, value;
 dict = require('./package.json');
 Object.keys(dict).forEach(function (key) {
     value = dict[key];
-    if (typeof value === 'string' && value.indexOf('\n') === -1) {
+    if (typeof value === 'string' && value.indexOf('\n') < 0) {
         process.stdout.write('export npm_package_' + key + '=' + JSON.stringify(value) + ';');
     }
 });
@@ -1203,23 +1212,6 @@ shIptablesInit() {(set -e
     iptables -t nat -A PREROUTING -m addrtype --dst-type LOCAL -j DOCKER
     iptables -t nat -A PREROUTING -m addrtype --dst-type LOCAL ! --dst 127.0.0.0/8 -j DOCKER
 
-    # https://wiki.archlinux.org/index.php/PPTP_server#iptables_firewall_configuration
-    # open iptables to pptp
-    # Accept incoming connections to port 1723 (PPTP)
-    iptables -A INPUT -i ppp+ -j ACCEPT
-    iptables -A OUTPUT -o ppp+ -j ACCEPT
-    # Accept incoming connections to port 1723 (PPTP)
-    iptables -A INPUT -p tcp --dport 1723 -j ACCEPT
-    # Accept GRE packets
-    iptables -A INPUT -p 47 -j ACCEPT
-    iptables -A OUTPUT -p 47 -j ACCEPT
-    # Enable IP forwarding
-    iptables -F FORWARD
-    iptables -A FORWARD -j ACCEPT
-    # Enable NAT for eth0 и ppp* interfaces
-    iptables -A POSTROUTING -t nat -o eth0 -j MASQUERADE
-    iptables -A POSTROUTING -t nat -o ppp+ -j MASQUERADE
-
     # log iptables denied calls (access via 'dmesg' command)
     iptables -A INPUT -m limit --limit 5/min -j LOG --log-prefix "iptables denied: " \
         --log-level 7
@@ -1379,13 +1371,15 @@ local.fs = require('fs');
 local.packageJson = JSON.parse(local.fs.readFileSync('package.json'));
 local.version = '$VERSION';
 local.version = local.version || Object.keys(local.packageJson.versions).slice(-1)[0];
-local.fs.writeFileSync('README.md', local.packageJson.readme);
+local.fs.writeFileSync('README.md', local.packageJson.readme
+    .replace('this zero-dependency package', 'this package'));
 local.fs.writeFileSync('index.js', 'module.exports = require(\'$NAME\')');
 local.fs.writeFileSync('package.json', JSON.stringify({
     author: local.packageJson.author,
     bugs: local.packageJson.bugs,
     dependencies: { '$NAME': local.version },
-    description: local.packageJson.description,
+    description: local.packageJson.description
+        .replace('this zero-dependency package', 'this package'),
     homepage: local.packageJson.homepage,
     keywords: local.packageJson.keywords,
     license: local.packageJson.license,
@@ -1960,6 +1954,65 @@ shUbuntuInit() {
     fi
 }
 
+shUtility2DependentsSync() {(set -e
+# this function will sync files between utility2 and its dependents
+    cd "$HOME/src"
+    # hardlink "lib.$LIB.js"
+    for LIB in db istanbul jslint uglifyjs
+    do
+        if [ -d "$LIB-lite" ]
+        then
+            ln -f "utility2/lib.$LIB.js" "$LIB-lite"
+        fi
+    done
+    # hardlink .gitignore
+    for DIR in "$UTILITY2_DEPENDENTS"
+    do
+        if [ -d "$DIR" ] && [ "$DIR" != utility2 ]
+        then
+            ln -f utility2/.gitignore "$DIR"
+        fi
+    done
+    (cd utility2 && shUtility2RollupCreate) || return $?
+    # hardlink lib.swgg.js
+    if [ -d swgg ]
+    then
+        ln -f utility2/assets.utility2.rollup.js swgg/assets.swgg.rollup.js
+        ln -f utility2/lib.swgg.js swgg
+    fi
+)}
+
+shUtility2RollupCreate() {(set -e
+# this function create the file assets.utility2.rollup.js
+    node -e "
+// <script>
+/*jslint
+    bitwise: true,
+    browser: true,
+    maxerr: 8,
+    maxlen: 96,
+    node: true,
+    nomen: true,
+    regexp: true,
+    stupid: true
+*/
+'use strict';
+var local;
+local = {};
+local.fs = require('fs');
+try {
+    local.utility2 = require('./lib.utility2.js');
+} catch (errorCaught) {
+    local.utility2 = require('utility2');
+}
+local.fs.writeFileSync(
+    'assets.utility2.rollup.js',
+    local.utility2.assetsDict['/assets.utility2.rollup.js']
+);
+// </script>
+    "
+)}
+
 shXvfbStart() {
 # this function will start xvfb
     export DISPLAY=:99.0 || return $?
@@ -1969,6 +2022,13 @@ shXvfbStart() {
 
 shMain() {
 # this function will run the main program
+    export UTILITY2_DEPENDENTS="db-lite
+        electron-lite
+        istanbul-lite
+        jslint-lite
+        swgg
+        uglifyjs-lite
+        utility2" || return $?
     local COMMAND || return $?
     if [ ! "$1" ]
     then

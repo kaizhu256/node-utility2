@@ -30,18 +30,22 @@ this zero-dependency package will run dynamic browser-tests with coverage (via e
 [![api-doc](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/screen-capture.docApiCreate.browser._2Fhome_2Ftravis_2Fbuild_2Fkaizhu256_2Fnode-utility2_2Ftmp_2Fbuild_2Fdoc.api.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/doc.api.html)
 
 #### todo
-- rename base64 functions with base64 as prefix
 - add utility2.middlewareLimit
 - add server stress test using electron
 - none
 
-#### change since c677c1e9
-- npm publish 2017.1.27
-- move most logic from Dockerfile.latest to Dockerfile.base
-- add shell-function shImageToDataUri
-- add shell-function shSshReverseTunnel
-- add function sjclHmacSha256Create
-- replace localhost with 127.0.0.1
+#### change since a51b1c88
+- npm publish 2017.2.6
+- allow env var npm_config_mode_test_case to have comma-separated list of test-cases
+- replace function requestResponseCleanup with streamListCleanup
+- don't use nameAlias in assets
+- rename base64 functions with base64 as prefix
+- add commandline options --eval -e --interactive -i
+- add env var npm_pacakge_nameHeroku
+- add function assetsAlias
+- add shell-functions shUtility2DependentsSync shUtility2RollupCreate
+- merge files lib.* into standaalone file assets.utility2.rollup.js
+- merge files lib.swgg.* into lib.swgg.js
 - none
 
 #### this package requires
@@ -344,7 +348,6 @@ instruction
 <meta charset="UTF-8">\n\
 <meta name="viewport" content="width=device-width, initial-scale=1">\n\
 <title>{{env.npm_package_name}} v{{env.npm_package_version}}</title>\n\
-<link href="assets.utility2.css" rel="stylesheet">\n\
 <style>\n\
 /*csslint\n\
     box-sizing: false,\n\
@@ -578,7 +581,7 @@ utility2-comment -->\n\
         "test": "export PORT=$(./lib.utility2.sh shServerPortRandom) && export PORT_REPL=$(./lib.utility2.sh shServerPortRandom) && export npm_config_mode_auto_restart=1 && ./lib.utility2.sh test test.js",
         "test-all": "npm test --mode-coverage=all"
     },
-    "version": "2017.1.27"
+    "version": "2017.2.6"
 }
 ```
 
@@ -657,21 +660,12 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
 # Dockerfile.elasticsearch
 FROM kaizhu256/node-utility2:latest
 MAINTAINER kai zhu <kaizhu256@gmail.com>
-# install elasticsearch and kibana
+# install swagger-ui
 RUN export DEBIAN_FRONTEND=noninteractive && \
-    mkdir -p /usr/share/man/man1 && \
-    apt-get update && \
-    apt-get install --no-install-recommends -y \
-        default-jre && \
-    curl -#Lo elasticsearch.tar.gz \
-        https://download.elastic.co/elasticsearch/elasticsearch/elasticsearch-1.7.6.tar.gz && \
-    rm -fr /elasticsearch && \
-    mkdir -p /elasticsearch && \
-    tar -xzf elasticsearch.tar.gz --strip-components=1 -C /elasticsearch && \
-    curl -#Lo kibana.tar.gz https://download.elastic.co/kibana/kibana/kibana-3.1.3.tar.gz && \
-    rm -fr /kibana && \
-    mkdir -p /kibana && \
-    tar -xzf kibana.tar.gz --strip-components=1 -C /kibana
+    rm -fr /swagger-ui && \
+    git clone --branch=v2.1.5 --single-branch \
+        https://github.com/swagger-api/swagger-ui.git && \
+    mv swagger-ui/dist /swagger-ui
 ```
 
 - Dockerfile.emscripten
@@ -702,12 +696,21 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
 # Dockerfile.latest
 FROM kaizhu256/node-utility2:base
 MAINTAINER kai zhu <kaizhu256@gmail.com>
-# install swagger-ui
+# install elasticsearch and kibana
 RUN export DEBIAN_FRONTEND=noninteractive && \
-    rm -fr /swagger-ui && \
-    git clone --branch=v2.1.5 --single-branch \
-        https://github.com/swagger-api/swagger-ui.git && \
-    mv swagger-ui/dist /swagger-ui
+    mkdir -p /usr/share/man/man1 && \
+    apt-get update && \
+    apt-get install --no-install-recommends -y \
+        default-jre && \
+    curl -#Lo elasticsearch.tar.gz \
+        https://download.elastic.co/elasticsearch/elasticsearch/elasticsearch-1.7.6.tar.gz && \
+    rm -fr /elasticsearch && \
+    mkdir -p /elasticsearch && \
+    tar -xzf elasticsearch.tar.gz --strip-components=1 -C /elasticsearch && \
+    curl -#Lo kibana.tar.gz https://download.elastic.co/kibana/kibana/kibana-3.1.3.tar.gz && \
+    rm -fr /kibana && \
+    mkdir -p /kibana && \
+    tar -xzf kibana.tar.gz --strip-components=1 -C /kibana
 ```
 
 - build.sh

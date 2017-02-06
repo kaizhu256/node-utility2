@@ -279,7 +279,7 @@
                     case 'arraybuffer':
                     case 'stream':
                         // cleanup response
-                        local.requestResponseCleanup(null, xhr.response);
+                        local.streamListCleanup([xhr.response]);
                         // validate response
                         options.data = xhr.response;
                         local.assert(options.data, options);
@@ -398,12 +398,35 @@
             onError();
         };
 
+        local.testCase_assetsAlias_default = function (options, onError) {
+        /*
+         * this function will test assetsAlias's default handling-behavior
+         */
+            options = [
+                [local, { assetsDict: {} }]
+            ];
+            local.testMock(options, function (onError) {
+                local.assetsDict['/assets.aa.js'] = 'aa';
+                local.assetsAlias('/assets.bb.js', '/assets.aa.js');
+                local.assertJsonEqual(local.assetsDict['/assets.bb.js'], 'aa');
+                local.assertJsonEqual(local.assetsDict['/assets.bb.min.js'], undefined);
+                local.assetsDict['/assets.aa.js'] = 'bb';
+                local.assetsDict['/assets.aa.min.js'] = 'cc';
+                local.assetsAlias('/assets.bb.js', '/assets.aa.js');
+                local.assertJsonEqual(local.assetsDict['/assets.bb.js'], 'aa');
+                local.assertJsonEqual(local.assetsDict['/assets.bb.min.js'], undefined);
+                local.assetsAlias('/assets.bb.js', '/assets.aa.js', 'force');
+                local.assertJsonEqual(local.assetsDict['/assets.bb.js'], 'bb');
+                local.assertJsonEqual(local.assetsDict['/assets.bb.min.js'], 'cc');
+                onError();
+            }, onError);
+        };
+
         local.testCase_assetsWrite_default = function (options, onError) {
         /*
          * this function will test assetsWrite's default handling-behavior
          */
             options = [
-                // suppress console.error
                 [local.assetsDict, { 'testCase_assetsWrite_default.js': '' }],
                 [local.env, { NODE_ENV: '' }]
             ];
@@ -426,6 +449,27 @@
                 );
                 onError();
             }, onError);
+        };
+
+        local.testCase_base64Xxx_default = function (options, onError) {
+        /*
+         * this function will test base64Xxx's default handling-behavior
+         */
+            options = {};
+            options.base64 = local.base64FromString(local.stringAsciiCharset);
+            local.assertJsonEqual(
+                local.base64FromBuffer(local.base64ToBuffer(options.base64)),
+                options.base64
+            );
+            local.assertJsonEqual(
+                local.base64FromHex(local.base64ToHex(options.base64)),
+                options.base64
+            );
+            local.assertJsonEqual(
+                local.base64FromString(local.base64ToString(options.base64)),
+                options.base64
+            );
+            onError();
         };
 
         local.testCase_blobRead_default = function (options, onError) {
@@ -492,12 +536,6 @@
             options.bff1 = local.bufferCreate(options.text1);
             options.text2 = local.bufferToString(options.bff1);
             local.assertJsonEqual(options.text2, local.bufferToString(options.text2));
-            // test base64 handling-behavior
-            options.text3 = local.bufferToString(local.bufferCreate(
-                local.bufferToBase64(options.bff1),
-                'base64'
-            ));
-            local.assertJsonEqual(options.text2, options.text3);
             onError();
         };
 
@@ -554,7 +592,7 @@
                 } }]
             ], function (onError) {
                 options.data = '';
-                local.global['debug_inlineCallback'.replace('_i', 'I')](local.echo)('aa');
+                local.global['debug_inline'.replace('_i', 'I')]('aa');
                 // validate data
                 local.assertJsonEqual(
                     options.data,
@@ -912,7 +950,7 @@
          * this function will test jwtHs256Xxx's default handling-behavior
          */
             options = {};
-            options.key = local.jwtBase64UrlNormalize(local.stringToBase64('secret'));
+            options.key = local.jwtBase64UrlNormalize(local.base64FromString('secret'));
             // use canonical example at https://jwt.io/
             options.data = { sub: '1234567890', name: 'John Doe', admin: true };
             options.token = local.jwtHs256Encode(options.data, options.key);
@@ -1349,10 +1387,7 @@
          */
             options = {};
             options.data = local.sjclHmacSha256Create('aa', 'bb');
-            local.assertJsonEqual(
-                options.data,
-                'f785efdd574f1c0fa884aca390cd696f45b965502e315726200008d80a8d4424'
-            );
+            local.assertJsonEqual(options.data, 'cgAzwbGmYMrEqU9B05ADLwtflGJxqijX5BWd2hAlcfM=');
             onError();
         };
 
@@ -1751,8 +1786,8 @@
                 [local.fs, { writeFileSync: local.nop }]
             ], function (onError) {
                 options = {};
-                options.readmeFile = local.fs.readFileSync('README.md', 'utf8');
-                options.readmeTemplate = local.templateReadme;
+                options.readmeFrom = local.fs.readFileSync('README.md', 'utf8');
+                options.readmeTo = local.templateReadme;
                 local.buildReadmeElectronLite(options, onError);
             }, onError);
         };
@@ -1856,32 +1891,28 @@
          * this function will test build's readme handling-behavior
          */
             options = {};
-            options.readmeFile = local.fs.readFileSync('README.md', 'utf8');
-            options.readmeTemplate = local.templateReadme;
-            options.readmeTemplate = options.readmeTemplate.replace(
-                (/(app\/assets\.jslint-lite)/g),
-                '$1.rollup'
-            );
+            options.readmeFrom = local.fs.readFileSync('README.md', 'utf8');
+            options.readmeTo = local.templateReadme;
 /* jslint-ignore-begin */
-options.readmeTemplate = options.readmeTemplate.replace('\
+options.readmeTo = options.readmeTo.replace('\
     <button class="onclick" id="testRunButton1">run internal test</button><br>\\n\\\n\
     <div id="testReportDiv1" style="display: none;"></div>\\n\\\n\
 ', '');
 /* jslint-ignore-end */
-            // search-and-replace readmeFile
+            // search-and-replace readmeFrom
             [
                 (/\n<!-- utility2-comment\\n\\\n[\S\s]*?\n\\n\\\n/)
             ].forEach(function (rgx) {
-                options.readmeTemplate.replace(rgx, function (match0) {
-                    options.readmeFile = options.readmeFile.replace(rgx, match0);
+                options.readmeTo.replace(rgx, function (match0) {
+                    options.readmeFrom = options.readmeFrom.replace(rgx, match0);
                 });
             });
-            // search-and-replace readmeTemplate
+            // search-and-replace readmeTo
             [
                 (/\n# quickstart\b[\S\s]*?\n# package.json\n/)
             ].forEach(function (rgx) {
-                options.readmeFile.replace(rgx, function (match0) {
-                    options.readmeTemplate = options.readmeTemplate.replace(rgx, match0);
+                options.readmeFrom.replace(rgx, function (match0) {
+                    options.readmeTo = options.readmeTo.replace(rgx, match0);
                 });
             });
             local.buildReadmeJslintLite(options, onError);
@@ -1898,7 +1929,7 @@ options.readmeTemplate = options.readmeTemplate.replace('\
                 'utf8'
             );
             // validate data
-            local.utility2.assertJsonEqual(options.data, '');
+            local.assertJsonEqual(options.data, '');
             local.fsWriteFileWithMkdirpSync(
                 'tmp/build/testCase_fsWriteFileWithMkdirpSync_default/aa.txt',
                 'aa'
@@ -1908,7 +1939,7 @@ options.readmeTemplate = options.readmeTemplate.replace('\
                 'utf8'
             );
             // validate data
-            local.utility2.assertJsonEqual(options.data, 'aa');
+            local.assertJsonEqual(options.data, 'aa');
             onError();
         };
 
@@ -2215,8 +2246,17 @@ local.assertJsonEqual(options.coverage1,
                 [local.env, {
                     npm_package_nameAlias: '_testCase_requireExampleJsFromReadme_rollup'
                 }],
+                [local.fs, {
+                    readdirSync: function () {
+                        // test jslintAndPrintConditional behavior
+                        return ['aa.css', 'aa.html', 'aa.js', 'aa.json'];
+                    }
+                }],
                 [local.global, { utility2_rollup: {} }],
-                [local, { assetsDict: {} }]
+                [local, {
+                    assetsDict: {},
+                    onFileModifiedRestart: local.nop
+                }]
             ];
             local.testMock(options, function (onError) {
                 options.data = local.requireExampleJsFromReadme();
@@ -2298,18 +2338,6 @@ local.assertJsonEqual(options.coverage1,
 
     // run shared js-env code - post-init
     (function () {
-        // init lib
-        [
-            'swgg'
-        ].forEach(function (key) {
-            try {
-                local[key] = local.modeJs === 'browser'
-                    ? local.global['utility2_' + key]
-                    : require('./lib.' + key.replace((/_/g), '-') + '.js');
-            } catch (ignore) {
-            }
-            local[key] = local[key] || {};
-        });
         // coverage-hack - re-run test-server
         local.testRunServer(local);
         // init test-middleware
@@ -2379,16 +2407,18 @@ local.assertJsonEqual(options.coverage1,
     /* istanbul ignore next */
     // run node js-env code - post-init
     case 'node':
+        // run the cli
         if (module !== require.main || local.global.utility2_rollup) {
             return;
         }
+        // require modules
+        require('./lib.swgg.js');
         local.assetsDict['/assets.script-only.html'] = '<h1>script-only test</h1>\n' +
                 '<script src="assets.utility2.js"></script>\n' +
                 '<script>window.utility2.onReadyBefore.counter += 1;</script>\n' +
                 '<script src="assets.example.js"></script>\n' +
                 '<script src="assets.test.js"></script>\n' +
                 '<script>window.utility2.onReadyBefore();</script>\n';
-        // run the cli
         if (local.env.npm_config_mode_start) {
             local.assetsDict['/'] = local.assetsDict['/index.html'] = undefined;
         }

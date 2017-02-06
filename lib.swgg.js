@@ -12,6 +12,13 @@
 (function () {
     'use strict';
     var local;
+    /* istanbul ignore next */
+    if (typeof global === 'object' &&
+            global.utility2_rollup &&
+            global.process &&
+            global.process.env.npm_package_name === 'swgg') {
+        return;
+    }
 
 
 
@@ -44,557 +51,692 @@
         // init lib utility2
         local.utility2 = local.global.utility2_rollup || (local.modeJs === 'browser'
             ? local.global.utility2
-            : require('./lib.utility2.js'));
+            : (function () {
+                try {
+                    return require('./assets.utility2.rollup.js');
+                } catch (errorCaught) {
+                    return require('./assets.swgg.rollup.js');
+                }
+            }()));
         local.utility2.objectSetDefault(local, local.utility2);
+        local.utility2.swgg = local;
         local.idDomElementDict = {};
-        local.swaggerSchemaJson = {};
-        local.templateApiDict = {};
         local.uiEventListenerDict = {};
-        // init templateApiDict
-        local.templateApiDict.crudCountManyByQuery = {
-            _method: 'get',
-            _path: '/{{_tags0}}/crudCountManyByQuery',
-            parameters: [{
-                default: '{}',
-                description: 'query param',
-                format: 'json',
-                in: 'query',
-                name: '_queryWhere',
-                type: 'string'
-            }],
-            summary: 'count many {{_schemaName}} objects by query'
-        };
-        local.templateApiDict.crudErrorDelete = {
-            _method: 'delete',
-            _path: '/{{_tags0}}/crudErrorDelete',
-            responses: {
-                500: {
-                    description:
-                        '500 error - http://jsonapi.org/format/#document-structure-top-level',
-                    schema: { $ref: '#/definitions/BuiltinJsonapiResponse' }
-                }
-            },
-            summary: 'return error response'
-        };
-        local.templateApiDict.crudErrorGet = {
-            _method: 'get',
-            _path: '/{{_tags0}}/crudErrorGet',
-            responses: {
-                500: {
-                    description:
-                        '500 error - http://jsonapi.org/format/#document-structure-top-level',
-                    schema: { $ref: '#/definitions/BuiltinJsonapiResponse' }
-                }
-            },
-            summary: 'return error response'
-        };
-        local.templateApiDict.crudErrorHead = {
-            _method: 'head',
-            _path: '/{{_tags0}}/crudErrorHead',
-            responses: {
-                500: {
-                    description:
-                        '500 error - http://jsonapi.org/format/#document-structure-top-level',
-                    schema: { $ref: '#/definitions/BuiltinJsonapiResponse' }
-                }
-            },
-            summary: 'return error response'
-        };
-        local.templateApiDict.crudErrorLogin = {
-            _method: 'get',
-            _path: '/{{_tags0}}/crudErrorLogin',
-            responses: {
-                500: {
-                    description:
-                        '500 error - http://jsonapi.org/format/#document-structure-top-level',
-                    schema: { $ref: '#/definitions/BuiltinJsonapiResponse' }
-                }
-            },
-            summary: 'login by password'
-        };
-        local.templateApiDict.crudErrorOptions = {
-            _method: 'options',
-            _path: '/{{_tags0}}/crudErrorOptions',
-            responses: {
-                500: {
-                    description:
-                        '500 error - http://jsonapi.org/format/#document-structure-top-level',
-                    schema: { $ref: '#/definitions/BuiltinJsonapiResponse' }
-                }
-            },
-            summary: 'return error response'
-        };
-        local.templateApiDict.crudErrorPatch = {
-            _method: 'patch',
-            _path: '/{{_tags0}}/crudErrorPatch',
-            responses: {
-                500: {
-                    description:
-                        '500 error - http://jsonapi.org/format/#document-structure-top-level',
-                    schema: { $ref: '#/definitions/BuiltinJsonapiResponse' }
-                }
-            },
-            summary: 'return error response'
-        };
-        local.templateApiDict.crudErrorPost = {
-            _method: 'post',
-            _path: '/{{_tags0}}/crudErrorPost',
-            responses: {
-                500: {
-                    description:
-                        '500 error - http://jsonapi.org/format/#document-structure-top-level',
-                    schema: { $ref: '#/definitions/BuiltinJsonapiResponse' }
-                }
-            },
-            summary: 'return error response'
-        };
-        local.templateApiDict.crudErrorPre = {
-            _method: 'get',
-            _path: '/{{_tags0}}/crudErrorPre',
-            responses: {
-                500: {
-                    description:
-                        '500 error - http://jsonapi.org/format/#document-structure-top-level',
-                    schema: { $ref: '#/definitions/BuiltinJsonapiResponse' }
-                }
-            },
-            summary: 'return error response'
-        };
-        local.templateApiDict.crudErrorPut = {
-            _method: 'put',
-            _path: '/{{_tags0}}/crudErrorPut',
-            responses: {
-                500: {
-                    description:
-                        '500 error - http://jsonapi.org/format/#document-structure-top-level',
-                    schema: { $ref: '#/definitions/BuiltinJsonapiResponse' }
-                }
-            },
-            summary: 'return error response'
-        };
-        local.templateApiDict.crudGetManyByQuery = {
-            _method: 'get',
-            _path: '/{{_tags0}}/crudGetManyByQuery',
-            parameters: [{
-                default: '{"_id":{"$exists":true}}',
-                description: 'query param',
-                format: 'json',
-                in: 'query',
-                name: '_queryWhere',
-                required: true,
-                type: 'string'
-            }, {
-                default: '{}',
-                description: 'projection-fields param',
-                format: 'json',
-                in: 'query',
-                name: '_queryFields',
-                type: 'string'
-            }, {
-                default: 20,
-                description: 'cursor-limit param',
-                in: 'query',
-                name: '_queryLimit',
-                required: true,
-                type: 'integer'
-            }, {
-                default: 0,
-                description: 'cursor-skip param',
-                in: 'query',
-                name: '_querySkip',
-                type: 'integer'
-            }, {
-                default: '[{"fieldName":"_timeUpdated","isDescending":true}]',
-                description: 'cursor-sort param',
-                format: 'json',
-                in: 'query',
-                name: '_querySort',
-                type: 'string'
-            }],
-            responses: {
-                200: {
-                    description:
-                        '200 ok - http://jsonapi.org/format/#document-structure-top-level',
-                    schema: { $ref: '#/definitions/BuiltinJsonapiResponse{{_schemaName}}' }
-                }
-            },
-            summary: 'get many {{_schemaName}} objects by query'
-        };
-        local.templateApiDict.crudGetOneById = {
-            _idField: '{{_idField}}',
-            _method: 'get',
-            _path: '/{{_tags0}}/crudGetOneById.{{_idField}}.{{_idAlias}}',
-            parameters: [{
-                description: '{{_schemaName}} {{_idField}}',
-                in: 'query',
-                name: '{{_idField}}',
-                required: true,
-                type: 'string'
-            }],
-            responses: {
-                200: {
-                    description:
-                        '200 ok - http://jsonapi.org/format/#document-structure-top-level',
-                    schema: { $ref: '#/definitions/BuiltinJsonapiResponse{{_schemaName}}' }
-                }
-            },
-            summary: 'get one {{_schemaName}} object by {{_idField}}'
-        };
-        local.templateApiDict.crudGetOneByQuery = {
-            _method: 'get',
-            _path: '/{{_tags0}}/crudGetOneByQuery',
-            parameters: [{
-                default: '{}',
-                description: 'query param',
-                format: 'json',
-                in: 'query',
-                name: '_queryWhere',
-                required: true,
-                type: 'string'
-            }],
-            responses: {
-                200: {
-                    description:
-                        '200 ok - http://jsonapi.org/format/#document-structure-top-level',
-                    schema: { $ref: '#/definitions/BuiltinJsonapiResponse{{_schemaName}}' }
-                }
-            },
-            summary: 'get one {{_schemaName}} object by query'
-        };
-        local.templateApiDict.crudNullDelete = {
-            _method: 'delete',
-            _path: '/{{_tags0}}/crudNullDelete',
-            responses: {
-                200: {
-                    description:
-                        '200 ok - http://jsonapi.org/format/#document-structure-top-level',
-                    schema: { $ref: '#/definitions/BuiltinJsonapiResponse' }
-                }
-            },
-            summary: 'return null response'
-        };
-        local.templateApiDict.crudNullGet = {
-            _method: 'get',
-            _path: '/{{_tags0}}/crudNullGet',
-            responses: {
-                200: {
-                    description:
-                        '200 ok - http://jsonapi.org/format/#document-structure-top-level',
-                    schema: { $ref: '#/definitions/BuiltinJsonapiResponse' }
-                }
-            },
-            summary: 'return null response'
-        };
-        local.templateApiDict.crudNullHead = {
-            _method: 'head',
-            _path: '/{{_tags0}}/crudNullHead',
-            responses: {
-                200: {
-                    description:
-                        '200 ok - http://jsonapi.org/format/#document-structure-top-level',
-                    schema: { $ref: '#/definitions/BuiltinJsonapiResponse' }
-                }
-            },
-            summary: 'return null response'
-        };
-        local.templateApiDict.crudNullOptions = {
-            _method: 'options',
-            _path: '/{{_tags0}}/crudNullOptions',
-            responses: {
-                200: {
-                    description:
-                        '200 ok - http://jsonapi.org/format/#document-structure-top-level',
-                    schema: { $ref: '#/definitions/BuiltinJsonapiResponse' }
-                }
-            },
-            summary: 'return null response'
-        };
-        local.templateApiDict.crudNullPatch = {
-            _method: 'patch',
-            _path: '/{{_tags0}}/crudNullPatch',
-            responses: {
-                200: {
-                    description:
-                        '200 ok - http://jsonapi.org/format/#document-structure-top-level',
-                    schema: { $ref: '#/definitions/BuiltinJsonapiResponse' }
-                }
-            },
-            summary: 'return null response'
-        };
-        local.templateApiDict.crudNullPost = {
-            _method: 'post',
-            _path: '/{{_tags0}}/crudNullPost',
-            responses: {
-                200: {
-                    description:
-                        '200 ok - http://jsonapi.org/format/#document-structure-top-level',
-                    schema: { $ref: '#/definitions/BuiltinJsonapiResponse' }
-                }
-            },
-            summary: 'return null response'
-        };
-        local.templateApiDict.crudNullPut = {
-            _method: 'put',
-            _path: '/{{_tags0}}/crudNullPut',
-            responses: {
-                200: {
-                    description:
-                        '200 ok - http://jsonapi.org/format/#document-structure-top-level',
-                    schema: { $ref: '#/definitions/BuiltinJsonapiResponse' }
-                }
-            },
-            summary: 'return null response'
-        };
-        local.templateApiDict.crudRemoveManyByQuery = {
-            _method: 'delete',
-            _path: '/{{_tags0}}/crudRemoveManyByQuery',
-            parameters: [{
-                default: '{"id":"undefined"}',
-                description: 'query param',
-                format: 'json',
-                in: 'query',
-                name: '_queryWhere',
-                required: true,
-                type: 'string'
-            }],
-            responses: {
-                200: {
-                    description:
-                        '200 ok - http://jsonapi.org/format/#document-structure-top-level',
-                    schema: { $ref: '#/definitions/BuiltinJsonapiResponse' }
-                }
-            },
-            summary: 'remove many {{_schemaName}} objects by query'
-        };
-        local.templateApiDict.crudRemoveOneById = {
-            _idField: '{{_idField}}',
-            _method: 'delete',
-            _path: '/{{_tags0}}/crudRemoveOneById.{{_idField}}.{{_idAlias}}',
-            parameters: [{
-                description: '{{_schemaName}} {{_idField}}',
-                in: 'query',
-                name: '{{_idField}}',
-                required: true,
-                type: 'string'
-            }],
-            summary: 'remove one {{_schemaName}} object by {{_idField}}'
-        };
-        local.templateApiDict.crudSetManyById = {
-            _method: 'put',
-            _path: '/{{_tags0}}/crudSetManyById',
-            parameters: [{
-                description: '{{_schemaName}} object',
-                in: 'body',
-                name: 'body',
-                required: true,
-                schema: { items: { $ref: '#/definitions/{{_schemaName}}' }, type: 'array' }
-            }],
-            responses: {
-                200: {
-                    description:
-                        '200 ok - http://jsonapi.org/format/#document-structure-top-level',
-                    schema: { $ref: '#/definitions/BuiltinJsonapiResponse{{_schemaName}}' }
-                }
-            },
-            summary: 'create or replace many {{_schemaName}} objects'
-        };
-        local.templateApiDict.crudSetOneById = {
-            _idField: '{{_idField}}',
-            _method: 'put',
-            _path: '/{{_tags0}}/crudSetOneById.{{_idField}}.{{_idAlias}}',
-            parameters: [{
-                description: '{{_schemaName}} {{_idField}}',
-                in: 'query',
-                name: '{{_idField}}',
-                type: 'string'
-            }, {
-                description: '{{_schemaName}} object',
-                in: 'body',
-                name: 'body',
-                required: true,
-                schema: { $ref: '#/definitions/{{_schemaName}}' }
-            }],
-            responses: {
-                200: {
-                    description:
-                        '200 ok - http://jsonapi.org/format/#document-structure-top-level',
-                    schema: { $ref: '#/definitions/BuiltinJsonapiResponse{{_schemaName}}' }
-                }
-            },
-            summary: 'create or replace one {{_schemaName}} object by {{_idField}}'
-        };
-        local.templateApiDict.crudUpdateOneById = {
-            _idField: '{{_idField}}',
-            _method: 'patch',
-            _path: '/{{_tags0}}/crudUpdateOneById.{{_idField}}.{{_idAlias}}',
-            parameters: [{
-                description: '{{_schemaName}} {{_idField}}',
-                in: 'query',
-                name: '{{_idField}}',
-                type: 'string'
-            }, {
-                description: '{{_schemaName}} object',
-                in: 'body',
-                name: 'body',
-                required: true,
-                schema: { $ref: '#/definitions/{{_schemaName}}' },
-                'x-swgg-notRequired': true
-            }],
-            responses: {
-                200: {
-                    description:
-                        '200 ok - http://jsonapi.org/format/#document-structure-top-level',
-                    schema: { $ref: '#/definitions/BuiltinJsonapiResponse{{_schemaName}}' }
-                }
-            },
-            summary: 'create or update one {{_schemaName}} object by {{_idField}}'
-        };
-        local.templateApiDict.fileGetOneById = {
-            _idField: '{{_idField}}',
-            _method: 'get',
-            _path: '/{{_tags0}}/fileGetOneById.{{_idField}}.{{_idAlias}}',
-            parameters: [{
-                description: '{{_schemaName}} {{_idField}}',
-                in: 'query',
-                name: '{{_idField}}',
-                required: true,
-                type: 'string'
-            }],
-            produces: ['application/octet-stream'],
-            responses: {
-                200: {
-                    description:
-                        '200 ok - http://jsonapi.org/format/#document-structure-top-level',
-                    schema: { type: 'file' }
-                }
-            },
-            summary: 'get one {{_schemaName}} file by {{_idField}}'
-        };
-        local.templateApiDict.fileUploadManyByForm = {
-            _fileUploadNumber: '{{_fileUploadNumber}}',
-            _method: 'post',
-            _path: '/{{_tags0}}/fileUploadManyByForm.{{_fileUploadNumber}}',
-            consumes: ['multipart/form-data'],
-            parameters: [{
-                description: '{{_schemaName}} file description',
-                in: 'formData',
-                name: 'fileDescription',
-                type: 'string'
-            }, {
-                description: '{{_schemaName}} file to upload by form',
-                in: 'formData',
-                name: 'file1',
-                type: 'file'
-            }],
-            responses: {
-                200: {
-                    description:
-                        '200 ok - http://jsonapi.org/format/#document-structure-top-level',
-                    schema: { $ref: '#/definitions/BuiltinJsonapiResponse{{_schemaName}}' }
-                }
-            },
-            summary: 'upload many {{_schemaName}} files by form'
-        };
-        local.templateApiDict.userLoginByPassword = {
-            _method: 'get',
-            _path: '/{{_tags0}}/userLoginByPassword',
-            parameters: [
-                {
-                    description: 'The user name for login',
-                    in: 'query',
-                    name: 'username',
-                    required: true,
-                    type: 'string'
-                },
-                {
-                    description: 'The password for login in clear text',
-                    in: 'query',
-                    name: 'password',
-                    required: true,
-                    type: 'string'
-                }
-            ],
-            responses: {
-                200: {
-                    description:
-                        '200 ok - http://jsonapi.org/format/#document-structure-top-level',
-                    schema: { $ref: '#/definitions/BuiltinJsonapiResponse' }
-                }
-            },
-            summary: 'login by password'
-        };
-        local.templateApiDict.userLogout = {
-            _method: 'get',
-            _path: '/{{_tags0}}/userLogout',
-            responses: {
-                200: {
-                    description:
-                        '200 ok - http://jsonapi.org/format/#document-structure-top-level',
-                    schema: { $ref: '#/definitions/BuiltinJsonapiResponse' }
-                }
-            },
-            summary: 'logout'
-        };
-        // JSON.stringify templateApiDict items to prevent side-effects
-        Object.keys(local.templateApiDict).forEach(function (key) {
-            local.templateApiDict[key] = JSON.stringify(local.templateApiDict[key]);
-        });
-        // init templateSwaggerJson
-        local.templateSwaggerJson = JSON.stringify({
-            basePath: '/api/v0',
-            definitions: {
-                BuiltinFile: {
-                    properties: {
-                        _id: { readOnly: true, type: 'string' },
-                        _timeCreated: { format: 'date-time', readOnly: true, type: 'string' },
-                        _timeUpdated: { format: 'date-time', readOnly: true, type: 'string' },
-                        fileBlob: { format: 'byte', type: 'string' },
-                        fileContentType: { type: 'string' },
-                        fileDescription: { type: 'string' },
-                        fileFilename: { type: 'string' },
-                        fileInputName: { type: 'string' },
-                        fileSize: { minimum: 0, type: 'integer' },
-                        fileUrl: { type: 'string' },
-                        id: { type: 'string' }
-                    }
-                },
-                BuiltinUser: {
-                    properties: {
-                        _id: { readOnly: true, type: 'string' },
-                        _timeCreated: { format: 'date-time', readOnly: true, type: 'string' },
-                        _timeUpdated: { format: 'date-time', readOnly: true, type: 'string' },
-                        id: { type: 'string' },
-                        jwtEncrypted: { type: 'string' },
-                        password: { format: 'password', type: 'string' },
-                        username: { type: 'string' }
-                    }
-                },
-                // http://jsonapi.org/format/#document-structure-top-level
-                BuiltinJsonapiResponse: {
-                    properties: {
-                        data: {
-                            items: { type: 'object' },
-                            type: 'array'
-                        },
-                        errors: {
-                            items: { type: 'object' },
-                            type: 'array'
-                        },
-                        meta: { type: 'object' }
-                    }
-                }
-            },
-            info: {
-                description: 'demo of swagger-ui server',
-                title: 'swgg api',
-                version: '0'
-            },
-            paths: {},
-            securityDefinitions: {},
-            swagger: '2.0',
-            tags: []
-        });
+        // init assets and templates
 /* jslint-ignore-begin */
+local.templateApiDict = {
+    "crudCountManyByQuery": {
+        "_method": "get",
+        "_path": "/{{_tags0}}/crudCountManyByQuery",
+        "parameters": [
+            {
+                "default": "{}",
+                "description": "query param",
+                "format": "json",
+                "in": "query",
+                "name": "_queryWhere",
+                "type": "string"
+            }
+        ],
+        "summary": "count many {{_schemaName}} objects by query"
+    },
+    "crudErrorDelete": {
+        "_method": "delete",
+        "_path": "/{{_tags0}}/crudErrorDelete",
+        "responses": {
+            "500": {
+                "description": "500 error - http://jsonapi.org/format/#document-structure-top-level",
+                "schema": {
+                    "$ref": "#/definitions/BuiltinJsonapiResponse"
+                }
+            }
+        },
+        "summary": "return error response"
+    },
+    "crudErrorGet": {
+        "_method": "get",
+        "_path": "/{{_tags0}}/crudErrorGet",
+        "responses": {
+            "500": {
+                "description": "500 error - http://jsonapi.org/format/#document-structure-top-level",
+                "schema": {
+                    "$ref": "#/definitions/BuiltinJsonapiResponse"
+                }
+            }
+        },
+        "summary": "return error response"
+    },
+    "crudErrorHead": {
+        "_method": "head",
+        "_path": "/{{_tags0}}/crudErrorHead",
+        "responses": {
+            "500": {
+                "description": "500 error - http://jsonapi.org/format/#document-structure-top-level",
+                "schema": {
+                    "$ref": "#/definitions/BuiltinJsonapiResponse"
+                }
+            }
+        },
+        "summary": "return error response"
+    },
+    "crudErrorLogin": {
+        "_method": "get",
+        "_path": "/{{_tags0}}/crudErrorLogin",
+        "responses": {
+            "500": {
+                "description": "500 error - http://jsonapi.org/format/#document-structure-top-level",
+                "schema": {
+                    "$ref": "#/definitions/BuiltinJsonapiResponse"
+                }
+            }
+        },
+        "summary": "login by password"
+    },
+    "crudErrorOptions": {
+        "_method": "options",
+        "_path": "/{{_tags0}}/crudErrorOptions",
+        "responses": {
+            "500": {
+                "description": "500 error - http://jsonapi.org/format/#document-structure-top-level",
+                "schema": {
+                    "$ref": "#/definitions/BuiltinJsonapiResponse"
+                }
+            }
+        },
+        "summary": "return error response"
+    },
+    "crudErrorPatch": {
+        "_method": "patch",
+        "_path": "/{{_tags0}}/crudErrorPatch",
+        "responses": {
+            "500": {
+                "description": "500 error - http://jsonapi.org/format/#document-structure-top-level",
+                "schema": {
+                    "$ref": "#/definitions/BuiltinJsonapiResponse"
+                }
+            }
+        },
+        "summary": "return error response"
+    },
+    "crudErrorPost": {
+        "_method": "post",
+        "_path": "/{{_tags0}}/crudErrorPost",
+        "responses": {
+            "500": {
+                "description": "500 error - http://jsonapi.org/format/#document-structure-top-level",
+                "schema": {
+                    "$ref": "#/definitions/BuiltinJsonapiResponse"
+                }
+            }
+        },
+        "summary": "return error response"
+    },
+    "crudErrorPre": {
+        "_method": "get",
+        "_path": "/{{_tags0}}/crudErrorPre",
+        "responses": {
+            "500": {
+                "description": "500 error - http://jsonapi.org/format/#document-structure-top-level",
+                "schema": {
+                    "$ref": "#/definitions/BuiltinJsonapiResponse"
+                }
+            }
+        },
+        "summary": "return error response"
+    },
+    "crudErrorPut": {
+        "_method": "put",
+        "_path": "/{{_tags0}}/crudErrorPut",
+        "responses": {
+            "500": {
+                "description": "500 error - http://jsonapi.org/format/#document-structure-top-level",
+                "schema": {
+                    "$ref": "#/definitions/BuiltinJsonapiResponse"
+                }
+            }
+        },
+        "summary": "return error response"
+    },
+    "crudGetManyByQuery": {
+        "_method": "get",
+        "_path": "/{{_tags0}}/crudGetManyByQuery",
+        "parameters": [
+            {
+                "default": "{\"_id\":{\"$exists\":true}}",
+                "description": "query param",
+                "format": "json",
+                "in": "query",
+                "name": "_queryWhere",
+                "required": true,
+                "type": "string"
+            },
+            {
+                "default": "{}",
+                "description": "projection-fields param",
+                "format": "json",
+                "in": "query",
+                "name": "_queryFields",
+                "type": "string"
+            },
+            {
+                "default": 20,
+                "description": "cursor-limit param",
+                "in": "query",
+                "name": "_queryLimit",
+                "required": true,
+                "type": "integer"
+            },
+            {
+                "default": 0,
+                "description": "cursor-skip param",
+                "in": "query",
+                "name": "_querySkip",
+                "type": "integer"
+            },
+            {
+                "default": "[{\"fieldName\":\"_timeUpdated\",\"isDescending\":true}]",
+                "description": "cursor-sort param",
+                "format": "json",
+                "in": "query",
+                "name": "_querySort",
+                "type": "string"
+            }
+        ],
+        "responses": {
+            "200": {
+                "description": "200 ok - http://jsonapi.org/format/#document-structure-top-level",
+                "schema": {
+                    "$ref": "#/definitions/BuiltinJsonapiResponse{{_schemaName}}"
+                }
+            }
+        },
+        "summary": "get many {{_schemaName}} objects by query"
+    },
+    "crudGetOneById": {
+        "_idField": "{{_idField}}",
+        "_method": "get",
+        "_path": "/{{_tags0}}/crudGetOneById.{{_idField}}.{{_idAlias}}",
+        "parameters": [
+            {
+                "description": "{{_schemaName}} {{_idField}}",
+                "in": "query",
+                "name": "{{_idField}}",
+                "required": true,
+                "type": "string"
+            }
+        ],
+        "responses": {
+            "200": {
+                "description": "200 ok - http://jsonapi.org/format/#document-structure-top-level",
+                "schema": {
+                    "$ref": "#/definitions/BuiltinJsonapiResponse{{_schemaName}}"
+                }
+            }
+        },
+        "summary": "get one {{_schemaName}} object by {{_idField}}"
+    },
+    "crudGetOneByQuery": {
+        "_method": "get",
+        "_path": "/{{_tags0}}/crudGetOneByQuery",
+        "parameters": [
+            {
+                "default": "{}",
+                "description": "query param",
+                "format": "json",
+                "in": "query",
+                "name": "_queryWhere",
+                "required": true,
+                "type": "string"
+            }
+        ],
+        "responses": {
+            "200": {
+                "description": "200 ok - http://jsonapi.org/format/#document-structure-top-level",
+                "schema": {
+                    "$ref": "#/definitions/BuiltinJsonapiResponse{{_schemaName}}"
+                }
+            }
+        },
+        "summary": "get one {{_schemaName}} object by query"
+    },
+    "crudNullDelete": {
+        "_method": "delete",
+        "_path": "/{{_tags0}}/crudNullDelete",
+        "responses": {
+            "200": {
+                "description": "200 ok - http://jsonapi.org/format/#document-structure-top-level",
+                "schema": {
+                    "$ref": "#/definitions/BuiltinJsonapiResponse"
+                }
+            }
+        },
+        "summary": "return null response"
+    },
+    "crudNullGet": {
+        "_method": "get",
+        "_path": "/{{_tags0}}/crudNullGet",
+        "responses": {
+            "200": {
+                "description": "200 ok - http://jsonapi.org/format/#document-structure-top-level",
+                "schema": {
+                    "$ref": "#/definitions/BuiltinJsonapiResponse"
+                }
+            }
+        },
+        "summary": "return null response"
+    },
+    "crudNullHead": {
+        "_method": "head",
+        "_path": "/{{_tags0}}/crudNullHead",
+        "responses": {
+            "200": {
+                "description": "200 ok - http://jsonapi.org/format/#document-structure-top-level",
+                "schema": {
+                    "$ref": "#/definitions/BuiltinJsonapiResponse"
+                }
+            }
+        },
+        "summary": "return null response"
+    },
+    "crudNullOptions": {
+        "_method": "options",
+        "_path": "/{{_tags0}}/crudNullOptions",
+        "responses": {
+            "200": {
+                "description": "200 ok - http://jsonapi.org/format/#document-structure-top-level",
+                "schema": {
+                    "$ref": "#/definitions/BuiltinJsonapiResponse"
+                }
+            }
+        },
+        "summary": "return null response"
+    },
+    "crudNullPatch": {
+        "_method": "patch",
+        "_path": "/{{_tags0}}/crudNullPatch",
+        "responses": {
+            "200": {
+                "description": "200 ok - http://jsonapi.org/format/#document-structure-top-level",
+                "schema": {
+                    "$ref": "#/definitions/BuiltinJsonapiResponse"
+                }
+            }
+        },
+        "summary": "return null response"
+    },
+    "crudNullPost": {
+        "_method": "post",
+        "_path": "/{{_tags0}}/crudNullPost",
+        "responses": {
+            "200": {
+                "description": "200 ok - http://jsonapi.org/format/#document-structure-top-level",
+                "schema": {
+                    "$ref": "#/definitions/BuiltinJsonapiResponse"
+                }
+            }
+        },
+        "summary": "return null response"
+    },
+    "crudNullPut": {
+        "_method": "put",
+        "_path": "/{{_tags0}}/crudNullPut",
+        "responses": {
+            "200": {
+                "description": "200 ok - http://jsonapi.org/format/#document-structure-top-level",
+                "schema": {
+                    "$ref": "#/definitions/BuiltinJsonapiResponse"
+                }
+            }
+        },
+        "summary": "return null response"
+    },
+    "crudRemoveManyByQuery": {
+        "_method": "delete",
+        "_path": "/{{_tags0}}/crudRemoveManyByQuery",
+        "parameters": [
+            {
+                "default": "{\"id\":\"undefined\"}",
+                "description": "query param",
+                "format": "json",
+                "in": "query",
+                "name": "_queryWhere",
+                "required": true,
+                "type": "string"
+            }
+        ],
+        "responses": {
+            "200": {
+                "description": "200 ok - http://jsonapi.org/format/#document-structure-top-level",
+                "schema": {
+                    "$ref": "#/definitions/BuiltinJsonapiResponse"
+                }
+            }
+        },
+        "summary": "remove many {{_schemaName}} objects by query"
+    },
+    "crudRemoveOneById": {
+        "_idField": "{{_idField}}",
+        "_method": "delete",
+        "_path": "/{{_tags0}}/crudRemoveOneById.{{_idField}}.{{_idAlias}}",
+        "parameters": [
+            {
+                "description": "{{_schemaName}} {{_idField}}",
+                "in": "query",
+                "name": "{{_idField}}",
+                "required": true,
+                "type": "string"
+            }
+        ],
+        "summary": "remove one {{_schemaName}} object by {{_idField}}"
+    },
+    "crudSetManyById": {
+        "_method": "put",
+        "_path": "/{{_tags0}}/crudSetManyById",
+        "parameters": [
+            {
+                "description": "{{_schemaName}} object",
+                "in": "body",
+                "name": "body",
+                "required": true,
+                "schema": {
+                    "items": {
+                        "$ref": "#/definitions/{{_schemaName}}"
+                    },
+                    "type": "array"
+                }
+            }
+        ],
+        "responses": {
+            "200": {
+                "description": "200 ok - http://jsonapi.org/format/#document-structure-top-level",
+                "schema": {
+                    "$ref": "#/definitions/BuiltinJsonapiResponse{{_schemaName}}"
+                }
+            }
+        },
+        "summary": "create or replace many {{_schemaName}} objects"
+    },
+    "crudSetOneById": {
+        "_idField": "{{_idField}}",
+        "_method": "put",
+        "_path": "/{{_tags0}}/crudSetOneById.{{_idField}}.{{_idAlias}}",
+        "parameters": [
+            {
+                "description": "{{_schemaName}} {{_idField}}",
+                "in": "query",
+                "name": "{{_idField}}",
+                "type": "string"
+            },
+            {
+                "description": "{{_schemaName}} object",
+                "in": "body",
+                "name": "body",
+                "required": true,
+                "schema": {
+                    "$ref": "#/definitions/{{_schemaName}}"
+                }
+            }
+        ],
+        "responses": {
+            "200": {
+                "description": "200 ok - http://jsonapi.org/format/#document-structure-top-level",
+                "schema": {
+                    "$ref": "#/definitions/BuiltinJsonapiResponse{{_schemaName}}"
+                }
+            }
+        },
+        "summary": "create or replace one {{_schemaName}} object by {{_idField}}"
+    },
+    "crudUpdateOneById": {
+        "_idField": "{{_idField}}",
+        "_method": "patch",
+        "_path": "/{{_tags0}}/crudUpdateOneById.{{_idField}}.{{_idAlias}}",
+        "parameters": [
+            {
+                "description": "{{_schemaName}} {{_idField}}",
+                "in": "query",
+                "name": "{{_idField}}",
+                "type": "string"
+            },
+            {
+                "description": "{{_schemaName}} object",
+                "in": "body",
+                "name": "body",
+                "required": true,
+                "schema": {
+                    "$ref": "#/definitions/{{_schemaName}}"
+                },
+                "x-swgg-notRequired": true
+            }
+        ],
+        "responses": {
+            "200": {
+                "description": "200 ok - http://jsonapi.org/format/#document-structure-top-level",
+                "schema": {
+                    "$ref": "#/definitions/BuiltinJsonapiResponse{{_schemaName}}"
+                }
+            }
+        },
+        "summary": "create or update one {{_schemaName}} object by {{_idField}}"
+    },
+    "fileGetOneById": {
+        "_idField": "{{_idField}}",
+        "_method": "get",
+        "_path": "/{{_tags0}}/fileGetOneById.{{_idField}}.{{_idAlias}}",
+        "parameters": [
+            {
+                "description": "{{_schemaName}} {{_idField}}",
+                "in": "query",
+                "name": "{{_idField}}",
+                "required": true,
+                "type": "string"
+            }
+        ],
+        "produces": [
+            "application/octet-stream"
+        ],
+        "responses": {
+            "200": {
+                "description": "200 ok - http://jsonapi.org/format/#document-structure-top-level",
+                "schema": {
+                    "type": "file"
+                }
+            }
+        },
+        "summary": "get one {{_schemaName}} file by {{_idField}}"
+    },
+    "fileUploadManyByForm": {
+        "_fileUploadNumber": "{{_fileUploadNumber}}",
+        "_method": "post",
+        "_path": "/{{_tags0}}/fileUploadManyByForm.{{_fileUploadNumber}}",
+        "consumes": [
+            "multipart/form-data"
+        ],
+        "parameters": [
+            {
+                "description": "{{_schemaName}} file description",
+                "in": "formData",
+                "name": "fileDescription",
+                "type": "string"
+            },
+            {
+                "description": "{{_schemaName}} file to upload by form",
+                "in": "formData",
+                "name": "file1",
+                "type": "file"
+            }
+        ],
+        "responses": {
+            "200": {
+                "description": "200 ok - http://jsonapi.org/format/#document-structure-top-level",
+                "schema": {
+                    "$ref": "#/definitions/BuiltinJsonapiResponse{{_schemaName}}"
+                }
+            }
+        },
+        "summary": "upload many {{_schemaName}} files by form"
+    },
+    "userLoginByPassword": {
+        "_method": "get",
+        "_path": "/{{_tags0}}/userLoginByPassword",
+        "parameters": [
+            {
+                "description": "The user name for login",
+                "in": "query",
+                "name": "username",
+                "required": true,
+                "type": "string"
+            },
+            {
+                "description": "The password for login in clear text",
+                "in": "query",
+                "name": "password",
+                "required": true,
+                "type": "string"
+            }
+        ],
+        "responses": {
+            "200": {
+                "description": "200 ok - http://jsonapi.org/format/#document-structure-top-level",
+                "schema": {
+                    "$ref": "#/definitions/BuiltinJsonapiResponse"
+                }
+            }
+        },
+        "summary": "login by password"
+    },
+    "userLogout": {
+        "_method": "get",
+        "_path": "/{{_tags0}}/userLogout",
+        "responses": {
+            "200": {
+                "description": "200 ok - http://jsonapi.org/format/#document-structure-top-level",
+                "schema": {
+                    "$ref": "#/definitions/BuiltinJsonapiResponse"
+                }
+            }
+        },
+        "summary": "logout"
+    }
+}
+// JSON.stringify templateApiDict items to prevent side-effects
+Object.keys(local.templateApiDict).forEach(function (key) {
+    local.templateApiDict[key] = JSON.stringify(local.templateApiDict[key]);
+});
+
+
+
+local.templateSwaggerJson = JSON.stringify({
+    "basePath": "/api/v0",
+    "definitions": {
+        "BuiltinFile": {
+            "properties": {
+                "_id": {
+                    "readOnly": true,
+                    "type": "string"
+                },
+                "_timeCreated": {
+                    "format": "date-time",
+                    "readOnly": true,
+                    "type": "string"
+                },
+                "_timeUpdated": {
+                    "format": "date-time",
+                    "readOnly": true,
+                    "type": "string"
+                },
+                "fileBlob": {
+                    "format": "byte",
+                    "type": "string"
+                },
+                "fileContentType": {
+                    "type": "string"
+                },
+                "fileDescription": {
+                    "type": "string"
+                },
+                "fileFilename": {
+                    "type": "string"
+                },
+                "fileInputName": {
+                    "type": "string"
+                },
+                "fileSize": {
+                    "minimum": 0,
+                    "type": "integer"
+                },
+                "fileUrl": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                }
+            }
+        },
+        "BuiltinJsonapiResponse": {
+            "properties": {
+                "data": {
+                    "items": {
+                        "type": "object"
+                    },
+                    "type": "array"
+                },
+                "errors": {
+                    "items": {
+                        "type": "object"
+                    },
+                    "type": "array"
+                },
+                "meta": {
+                    "type": "object"
+                }
+            }
+        },
+        "BuiltinUser": {
+            "properties": {
+                "_id": {
+                    "readOnly": true,
+                    "type": "string"
+                },
+                "_timeCreated": {
+                    "format": "date-time",
+                    "readOnly": true,
+                    "type": "string"
+                },
+                "_timeUpdated": {
+                    "format": "date-time",
+                    "readOnly": true,
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "jwtEncrypted": {
+                    "type": "string"
+                },
+                "password": {
+                    "format": "password",
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        }
+    },
+    "info": {
+        "description": "demo of swagger-ui server",
+        "title": "swgg api",
+        "version": "0"
+    },
+    "paths": {},
+    "securityDefinitions": {},
+    "swagger": "2.0",
+    "tags": []
+});
+
+
+
 // https://github.com/swagger-api/swagger-ui/blob/v2.1.3/dist/images/logo_small.png
 local.templateSwaggerUiLogoSmallBase64 = '\
 iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAYAAAA7MK6iAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFn\
@@ -611,14 +753,772 @@ Au/ptOA1SgO5zqtr6KASJPF0nMV8dgMsRhRPOcMwqQAOoi0VAIMLAEWJ6YYC1c8ibj1GP51RqwzYwZVM
 HQuvOzMCBUtb2tGHx5NAdLKqp5AX7Ng4d+Zi8AGDI9z1ijx9yaCH04y3GCP2S+QcvaGl+pcxyUBvinFl\
 awoDQjHSelX8hQEoIrAq8p/mgC88HOS1YCl/BRgAmiD/1gn6Nu8AAAAASUVORK5CYII=\
 ';
+
+
+
+local.templateUiDatatable = '\
+<div class="pagination tr">\n\
+    {{#each pageList}}\n\
+    <button\n\
+        class="onEventDatatableReload"\n\
+        data-page-number={{pageNumber}}\n\
+        data-resource-name="{{name}}"\n\
+        {{#if disabled}}disabled{{/if disabled}}\n\
+    >{{valueEncoded htmlSafe}}</button>\n\
+    {{/each pageList}}\n\
+</div>\n\
+<table class="borderBottom borderTop">\n\
+    <thead>\n\
+        <tr>\n\
+            <th\n\
+                class="cursorPointer"\n\
+                style="padding-left: {{iiPadding}}rem; padding-right: {{iiPadding}}rem;"\n\
+            ><button class="onEventDatatableSelectedRemove">remove</button></th>\n\
+            {{#each propDefList}}\n\
+            <th class="cursorPointer">\n\
+                <div>{{name}}</div>\n\
+                <div class="color777">\n\
+                    {{type2}}{{#if format2}}<br>({{format2}}){{/if format2}}\n\
+                </div>\n\
+                <div class="sortAsc">+</div>\n\
+                <div class="sortDsc">-</div>\n\
+            </th>\n\
+            {{/each propDefList}}\n\
+            <th\n\
+                class="cursorPointer"\n\
+                style="padding-left: {{iiPadding}}rem; padding-right: {{iiPadding}}rem;"\n\
+            ><button class="onEventDatatableSelectedRemove">remove</button></th>\n\
+        </tr>\n\
+    </thead>\n\
+    <tbody>\n\
+        {{#each dbRowList}}\n\
+        <tr data-id="{{id jsonStringify encodeURIComponent}}">\n\
+            <td class="cursorPointer eventDelegateClick onEventDatatableTrSelect">\n\
+                <span class="tr">\n\
+                    <input type="checkbox">\n\
+                    <span class="flex1">{{ii}}</span>\n\
+                </span>\n\
+            </td>\n\
+            {{#each colList}}\n\
+            <td>{{valueEncoded htmlSafe}}</td>\n\
+            {{/each colList}}\n\
+            <td class="cursorPointer eventDelegateClick onEventDatatableTrSelect">\n\
+                <span class="tr">\n\
+                    <input type="checkbox">\n\
+                    <span class="flex1">{{ii}}</span>\n\
+                </span>\n\
+        </tr>\n\
+        {{/each dbRowList}}\n\
+    <tfoot>\n\
+        <tr>\n\
+            <th\n\
+                class="cursorPointer"\n\
+                style="padding-left: {{iiPadding}}rem; padding-right: {{iiPadding}}rem;"\n\
+            ><button class="onEventDatatableSelectedRemove">remove</button></th>\n\
+            {{#each propDefList}}\n\
+            <th class="cursorPointer">\n\
+                <div>{{name}}</div>\n\
+                <div class="color777">\n\
+                    {{type2}}{{#if format2}}<br>({{format2}}){{/if format2}}\n\
+                </div>\n\
+                <div class="sortAsc">+</div>\n\
+                <div class="sortDsc">-</div>\n\
+            </th>\n\
+            {{/each propDefList}}\n\
+            <th\n\
+                class="cursorPointer"\n\
+                style="padding-left: {{iiPadding}}rem; padding-right: {{iiPadding}}rem;"\n\
+            ><button class="onEventDatatableSelectedRemove">remove</button></th>\n\
+        </tr>\n\
+    </tfoot>\n\
+</table>\n\
+<div class="pagination tr">\n\
+    {{#each pageList}}\n\
+    <button\n\
+        class="onEventDatatableReload"\n\
+        data-page-number={{pageNumber}}\n\
+        data-resource-name="{{name}}"\n\
+        {{#if disabled}}disabled{{/if disabled}}\n\
+    >{{valueEncoded htmlSafe}}</button>\n\
+    {{/each pageList}}\n\
+</div>\n\
+';
+
+
+
+// https://github.com/swagger-api/swagger-ui/blob/v2.1.3/src/main/template/main.handlebars
+local.templateUiMain = '\
+<div class="eventDelegateClick modal onEventModalHide" style="display: none; opacity: 0;">\n\
+    <form class="datatable eventDelegateClick"></form>\n\
+</div>\n\
+<div class="eventDelegateClick popup" style="display: none;"></div>\n\
+<form2 class="eventDelegateSubmit header onEventUiReload tr">\n\
+    <a class="td1" href="http://swagger.io" target="_blank">swagger</a>\n\
+    <input\n\
+        class="flex1 td2"\n\
+        type="text"\n\
+        value="{{url}}"\n\
+    >\n\
+    <button class="eventDelegateClick onEventUiReload td3">Explore</button>\n\
+</form2>\n\
+<div class="info reset">\n\
+    {{#if info}}\n\
+    <div class="fontWeightBold">{{info.title htmlSafe}}</div>\n\
+    {{#if info.description}}\n\
+    <div>{{info.description htmlSafe}}</div>\n\
+    {{/if info.description}}\n\
+    <ul>\n\
+        {{#if externalDocs}}\n\
+        <li class="marginTop05">\n\
+            {{#if externalDocs.description}}\n\
+            <p>{{externalDocs.description htmlSafe}}</p>\n\
+            {{/if externalDocs.description}}\n\
+            <a href="{{externalDocs.url}}" target="_blank">{{externalDocs.url}}</a>\n\
+        </li>\n\
+        {{/if externalDocs}}\n\
+        {{#if info.termsOfService}}\n\
+        <li class="marginTop05">\n\
+            <a target="_blank" href="{{info.termsOfService}}">Terms of service</a>\n\
+        </li>\n\
+        {{/if info.termsOfService}}\n\
+        {{#if info.contact.name}}\n\
+        <li class="marginTop05">Created by {{info.contact.name htmlSafe}}</li>\n\
+        {{/if info.contact.name}}\n\
+        {{#if info.contact.url}}\n\
+        <li class="marginTop05">\n\
+            See more at <a href="{{info.contact.url}}">{{info.contact.url}}</a>\n\
+        </li>\n\
+        {{/if info.contact.url}}\n\
+        {{#if info.contact.email}}\n\
+        <li class="marginTop05">\n\
+            <a\n\
+                target="_parent"\n\
+                href="mailto:{{info.contact.email}}?subject={{info.title htmlSafe}}"\n\
+            >Contact the developer</a>\n\
+        </li>\n\
+        {{/if info.contact.email}}\n\
+        {{#if info.license}}\n\
+        <li class="marginTop05">\n\
+            <a target="_blank" href="{{info.license.url}}">{{info.license.name}}</a>\n\
+        </li>\n\
+        {{/if info.license}}\n\
+    </ul>\n\
+    {{/if info}}\n\
+</div>\n\
+<div class="reset resourceList"></div>\n\
+<div class="color777 footer reset">\n\
+    <div>\n\
+        [ <span>base url</span>: {{basePath}}, <span>api version</span>: {{info.version}} ]\n\
+    </div>\n\
+</div>\n\
+';
+
+
+
+// https://github.com/swagger-api/swagger-ui/blob/v2.1.3/src/main/template/operation.handlebars
+local.templateUiOperation = '\
+<div\n\
+    class="eventDelegateClick eventDelegateSubmit marginTop05 operation {{_method}}"\n\
+    data-_key-operation-id="{{_keyOperationId}}"\n\
+    id="{{id}}"\n\
+>\n\
+    <div class="cursorPointer eventDelegateClick onEventOperationDisplayShow header tr">\n\
+        <span class="td1">{{_method}}</span>\n\
+        <span\n\
+            class="td2 {{#if deprecated}}fontLineThrough{{/if deprecated}}"\n\
+        >{{_path}}</span>\n\
+        <span class="td3">{{operationId}}</span>\n\
+        <span class="td4">{{summary htmlSafe}}</span>\n\
+    </div>\n\
+    <form accept-charset="UTF-8" class="content" style="display: none;">\n\
+        {{#if deprecated}}\n\
+        <h4 class="label marginTop10">Warning: Deprecated</h4>\n\
+        {{/if deprecated}}\n\
+        {{#if description}}\n\
+        <h4 class="label marginTop10">Description</h4>\n\
+        <div>{{description htmlSafe}}</div>\n\
+        {{/if description}}\n\
+        {{#if parameters.length}}\n\
+        <h4 class="label marginTop10">Parameters</h4>\n\
+        <div class="marginTop05 paramDef tr">\n\
+            <span class="color777 td1">Name and Description</span>\n\
+            <span class="color777 td2">Data Type</span>\n\
+            <span class="color777 td3">Value</span>\n\
+            <span class="color777 td4">Schema</span>\n\
+        </div>\n\
+        {{#each parameters}}\n\
+        <div class="borderTop paramDef tr" id="{{id}}" name="{{name}}">{{innerHTML}}</div>\n\
+        {{/each parameters}}\n\
+        {{/if parameters.length}}\n\
+        <h4 class="label marginTop10">Response Messages</h4>\n\
+        <div class="marginTop05 responseList tr">\n\
+            <span class="color777 td1">HTTP Status Code</span>\n\
+            <span class="color777 td2">Reason</span>\n\
+        </div>\n\
+        {{#each responseList}}\n\
+        <div class="borderTop responseList tr">\n\
+            <span class="td1">{{key}}</span>\n\
+            {{#if value.description}}\n\
+            <span class="td2">{{value.description htmlSafe}}</span>\n\
+            {{/if value.description}}\n\
+        </div>\n\
+        {{/each responseList}}\n\
+        <button class="marginTop10 onEventOperationAjax">Try it out!</button>\n\
+        <div class="marginTop05 responseAjax"></div>\n\
+    </form>\n\
+</div>\n\
+';
+
+
+
+// https://github.com/swagger-api/swagger-ui/blob/v2.1.3/src/main/template/param.handlebars
+local.templateUiParam = '\
+<span class="td1 {{#if required}}fontWeightBold{{/if required}}">\n\
+    {{name}}\n\
+    {{#if description}}\n\
+    <br><span class="color777">{{description htmlSafe}}</span>\n\
+    {{/if description}}\n\
+</span>\n\
+<span class="td2">{{type2}}{{#if format2}}<br>({{format2}}){{/if format2}}</span>\n\
+<span class="td3">\n\
+    {{#if isTextarea}}\n\
+    <textarea\n\
+        class="input"\n\
+        data-value-encoded="{{valueEncoded encodeURIComponent}}"\n\
+        placeholder="{{placeholder}}"></textarea>\n\
+    {{/if isTextarea}}\n\
+    {{#if isFile}}\n\
+    <input class="input" type="file">\n\
+    {{/if isFile}}\n\
+    {{#if isSelect}}\n\
+    <select class="input" {{#if isSelectMultiple}}multiple{{/if isSelectMultiple}}>\n\
+        {{#each selectOptionList}}\n\
+        <option\n\
+            data-value-decoded="{{valueDecoded jsonStringify encodeURIComponent}}"\n\
+            id={{id}}\n\
+            {{selected}}\n\
+        >{{valueEncoded htmlSafe}}</option>\n\
+        {{/each selectOptionList}}\n\
+    </select>\n\
+    {{/if isSelect}}\n\
+    {{#if isInputText}}\n\
+    <input\n\
+        class="input"\n\
+        data-value-encoded="{{valueEncoded encodeURIComponent}}"\n\
+        placeholder="{{placeholder}}"\n\
+        type="text"\n\
+    >\n\
+    {{/if isInputText}}\n\
+</span>\n\
+<span class="td4">{{#if schemaText}}<pre>{{schemaText}}</pre>{{/if schemaText}}</span>\n\
+';
+
+
+
+// https://github.com/swagger-api/swagger-ui/blob/v2.1.3/src/main/template/resource.handlebars
+local.templateUiResource = '\
+<div\n\
+    class="borderBottomBold resource eventDelegateClick"\n\
+    data-name="{{name}}"\n\
+    id="{{id}}">\n\
+    <div class="fontWeightBold header tr">\n\
+        <a class="color777 flex1 onEventResourceDisplayAction td1" href="#">{{name}} :\n\
+        {{#if description}}\n\
+        {{description htmlSafe}}\n\
+        {{/if description}}\n\
+        </a>\n\
+        <a class="color777 onEventResourceDisplayAction td2" href="#">Show</a>\n\
+        <a\n\
+            class="color777 onEventResourceDisplayAction td3"\n\
+            href="#"\n\
+        >Expand / Collapse Operations</a>\n\
+        <a\n\
+            class="color777 onEventDatatableReload td4"\n\
+            data-resource-name="{{name}}"\n\
+            href="#"\n\
+        >Datatable</a>\n\
+    </div>\n\
+    <div class="operationList" style="display: none;"></div>\n\
+</div>\n\
+';
+
+
+
+local.templateUiResponseAjax = '\
+<h4 class="label marginTop10">Curl Request</h4>\n\
+{{#if errorValidate}}\n\
+<pre>n/a</pre>\n\
+{{#unless errorValidate}}\n\
+<pre>{{curl htmlSafe}}</pre>\n\
+{{/if errorValidate}}\n\
+<h4 class="label marginTop10">Response Code</h4>\n\
+<pre>{{statusCode}}</pre>\n\
+<h4 class="label marginTop10">Response Headers</h4>\n\
+{{#if errorValidate}}\n\
+<pre>n/a</pre>\n\
+{{#unless errorValidate}}\n\
+<pre>{{responseHeaders htmlSafe}}</pre>\n\
+{{/if errorValidate}}\n\
+<h4 class="label marginTop10">Response Body</h4>\n\
+{{responseBody}}\n\
+';
+
+
+
+local.assetsDict['/assets.swgg.html'] = '\
+<!doctype html>\n\
+<html lang="en">\n\
+<head>\n\
+<meta charset="UTF-8">\n\
+<meta name="viewport" content="width=device-width, initial-scale=1">\n\
+<title>swgg</title>\n\
+<style>\n\
+/*csslint\n\
+    box-sizing: false,\n\
+    universal-selector: false\n\
+*/\n\
+* {\n\
+    box-sizing: border-box;\n\
+}\n\
+body {\n\
+    background: #fff;\n\
+    font-family: Arial, Helvetica, sans-serif;\n\
+    margin: 2rem;\n\
+}\n\
+body > * {\n\
+    margin-bottom: 1rem;\n\
+}\n\
+</style>\n\
+<style>\n\
+/*csslint\n\
+    adjoining-classes: false,\n\
+    box-model: false,\n\
+    box-sizing: false,\n\
+    universal-selector: false\n\
+*/\n\
+/* example.js */\n\
+body > button {\n\
+    width: 15rem;\n\
+}\n\
+.zeroPixel {\n\
+    border: 0;\n\
+    height: 0;\n\
+    margin: 0;\n\
+    padding: 0;\n\
+    width: 0;\n\
+}\n\
+\n\
+\n\
+\n\
+/* animate */\n\
+.swggAnimateFade {\n\
+    transition: opacity 250ms;\n\
+}\n\
+@keyframes swggAnimateShake {\n\
+    100% {\n\
+        transform: translateX(0);\n\
+    }\n\
+    0%, 20%, 60% {\n\
+        transform: translateX(1rem);\n\
+    }\n\
+    40%, 80% {\n\
+        transform: translateX(-1rem);\n\
+    }\n\
+}\n\
+.swggAnimateShake {\n\
+    animation-duration: 500ms;\n\
+    animation-name: swggAnimateShake;\n\
+}\n\
+.swggAnimateSlide {\n\
+    overflow-y: hidden;\n\
+    transition: max-height 500ms;\n\
+}\n\
+\n\
+\n\
+\n\
+/* general */\n\
+.swggUiContainer,\n\
+.swggUiContainer * {\n\
+    box-sizing: border-box;\n\
+    margin: 0;\n\
+    padding: 0;\n\
+}\n\
+.swggUiContainer {\n\
+    font-family: Arial, Helvetica, sans-serif;\n\
+    margin-left: auto;\n\
+    margin-right: auto;\n\
+    max-width: 1024px;\n\
+}\n\
+.swggUiContainer > * {\n\
+    margin-top: 1rem;\n\
+}\n\
+.swggUiContainer a {\n\
+    text-decoration: none;\n\
+}\n\
+.swggUiContainer a:hover {\n\
+    color: black;\n\
+}\n\
+.swggUiContainer a,\n\
+.swggUiContainer input,\n\
+.swggUiContainer span {\n\
+    min-height: 1.5rem;\n\
+}\n\
+.swggUiContainer button {\n\
+    padding: 0.5rem;\n\
+}\n\
+.swggUiContainer .color777 {\n\
+    color: #777;\n\
+}\n\
+.swggUiContainer button,\n\
+.swggUiContainer .cursorPointer,\n\
+.swggUiContainer .cursorPointer input {\n\
+    cursor: pointer;\n\
+}\n\
+.swggUiContainer .flex1 {\n\
+    flex: 1;\n\
+}\n\
+.swggUiContainer .fontLineThrough {\n\
+    text-decoration: line-through;\n\
+}\n\
+.swggUiContainer .fontWeightBold {\n\
+    font-weight: bold;\n\
+}\n\
+.swggUiContainer input {\n\
+    height: 1.5rem;\n\
+    padding-left: 0.25rem;\n\
+    padding-right: 0.25rem;\n\
+}\n\
+.swggUiContainer .marginTop05 {\n\
+    margin-top: 0.5rem;\n\
+}\n\
+.swggUiContainer .marginTop10 {\n\
+    margin-top: 1rem;\n\
+}\n\
+.swggUiContainer pre,\n\
+.swggUiContainer textarea {\n\
+    font-family: Menlo, Monaco, Consolas, Courier New, monospace;\n\
+    font-size: small;\n\
+    line-height: 1.25rem;\n\
+    max-height: 20rem;\n\
+    overflow: auto;\n\
+    padding: 0.25rem;\n\
+    white-space: pre;\n\
+}\n\
+.swggUiContainer .tr {\n\
+    display: flex;\n\
+}\n\
+.swggUiContainer .tr > * {\n\
+    margin-left: 1rem;\n\
+    overflow: auto;\n\
+    padding-top: 0.1rem;\n\
+    word-wrap: break-word;\n\
+}\n\
+.swggUiContainer .tr > *:first-child {\n\
+    margin-left: 0;\n\
+}\n\
+.swggUiContainer .tr > * > * {\n\
+    width: 100%;\n\
+}\n\
+\n\
+\n\
+\n\
+/* border */\n\
+/* border-bottom-bold */\n\
+.swggUiContainer .borderBottom {\n\
+    border-bottom: 1px solid #bbb;\n\
+    margin-bottom: 0.5rem;\n\
+    padding-bottom: 0.5rem;\n\
+}\n\
+.swggUiContainer .borderBottomBold {\n\
+    border-bottom: 1px solid #777;\n\
+    margin-bottom: 0.5rem;\n\
+    padding-bottom: 0.5rem;\n\
+}\n\
+/* border-top */\n\
+.swggUiContainer .borderTop {\n\
+    border-top: 1px solid #bbb;\n\
+    margin-top: 0.5rem;\n\
+    padding-top: 0.5rem;\n\
+}\n\
+/* border-top-bold */\n\
+.swggUiContainer .borderTopBold,\n\
+.swggUiContainer .resource:first-child {\n\
+    border-top: 1px solid #777;\n\
+    margin-top: 0.5rem;\n\
+    padding-top: 0.5rem;\n\
+}\n\
+/* border-error*/\n\
+.swggUiContainer .error {\n\
+    border: 5px solid #b00;\n\
+}\n\
+\n\
+\n\
+\n\
+/* datatable color */\n\
+.swggUiContainer .datatable tbody > tr > td {\n\
+    background: #efe;\n\
+}\n\
+.swggUiContainer .datatable tbody > tr > td:nth-child(odd) {\n\
+    background: #dfd;\n\
+}\n\
+.swggUiContainer .datatable tbody > tr:nth-child(odd) > td {\n\
+    background: #cfc;\n\
+}\n\
+.swggUiContainer .datatable tbody > tr:nth-child(odd) > td:nth-child(odd) {\n\
+    background: #beb;\n\
+}\n\
+.swggUiContainer .datatable tbody > tr:hover > td {\n\
+    background: #aea;\n\
+}\n\
+.swggUiContainer .datatable tbody > tr:hover > td:nth-child(odd) {\n\
+    background: #9e9;\n\
+}\n\
+.swggUiContainer .datatable tbody > tr > td:hover,\n\
+.swggUiContainer .datatable tbody > tr > td:hover:nth-child(odd),\n\
+.swggUiContainer .datatable tbody > tr:nth-child(odd) > td:hover,\n\
+.swggUiContainer .datatable tbody > tr:nth-child(odd) > td:hover:nth-child(odd),\n\
+.swggUiContainer .datatable th:hover {\n\
+    background: #7d7;\n\
+}\n\
+.swggUiContainer .datatable tbody > tr.selected > td {\n\
+    background: #fee;\n\
+}\n\
+.swggUiContainer .datatable tbody > tr.selected > td:nth-child(odd) {\n\
+    background: #fdd;\n\
+}\n\
+.swggUiContainer .datatable tbody > tr.selected:nth-child(odd) > td {\n\
+    background: #ecc;\n\
+}\n\
+.swggUiContainer .datatable tbody > tr.selected:nth-child(odd) > td:nth-child(odd) {\n\
+    background: #ebb;\n\
+}\n\
+.swggUiContainer .datatable th {\n\
+    background: #9e9;\n\
+}\n\
+\n\
+\n\
+\n\
+/* section */\n\
+.swggUiContainer .datatable {\n\
+    background: #fff;\n\
+    background: rgba(255,255,255,0.875);\n\
+    margin: 2rem;\n\
+    overflow: auto;\n\
+    padding: 1rem;\n\
+}\n\
+.swggUiContainer .datatable input[type=checkbox] {\n\
+    width: 1.5rem;\n\
+}\n\
+.swggUiContainer .datatable .sortAsc,\n\
+.swggUiContainer .datatable .sortDsc {\n\
+    display: none;\n\
+}\n\
+.swggUiContainer .datatable td,\n\
+.swggUiContainer .datatable th {\n\
+    max-width: 10rem;\n\
+    overflow: auto;\n\
+    padding: 0.5rem;\n\
+}\n\
+.swggUiContainer .datatable th:first-child {\n\
+    padding-right: 2rem;\n\
+}\n\
+.swggUiContainer > .header {\n\
+    background: #8c0;\n\
+    padding: 0.5rem;\n\
+}\n\
+.swggUiContainer > .header > .td1 {\n\
+    font-size: x-large;\n\
+    background: transparent url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAYAAAA7MK6iAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAqRJREFUeNrEVz1s00AUfnGXii5maMXoEUEHVwIpEkPNgkBdMnQoU5ytiKHJwpp2Q2JIO8DCUDOxIJFIVOoWZyJSh3pp1Q2PVVlcCVBH3ufeVZZ9Zye1Ay86nXV+ue/9fO/lheg/Se02X1rvksmbnTiKvuxQMBNgBnN4a/LCbmnUAP6JV58NCUsBC8CuAJxGPF47OgNqBaA93tolUhnx6jC4NxGwyOEwlccyAs+3kwdzKq0HDn2vEBTi8J2XpyMaywNDE157BhXUE3zJhlq8GKq+Zd2zaWHepPA8oN9XkfLmRdOiJV4XUUg/IyWncLjCYY/SHndV2u7zHr3bPKZtdxgboJOnthvrfGj/oMf3G0r7JVmNlLfKklmrt2MvvcNO7LFOhoFHfuAJI5o6ta10jpt5CQLgwXhXG2YIwvu+34qf78ybOjWTnWwkgR36d7JqJOrW0hHmNrKg9xhiS4+1jFmrxymh03B0w+6kURIAu3yHtOD5oaUNojMnGgbcctNvwdAnyxvxRR+/vaJnjzbpzcZX+nN1SdGv85i9eH8w3qPO+mdm/y4dnQ1iI8Fq6Nf4cxL6GWSjiFDSs0VRnxC5g0xSB2cgHpaseTxfqOv5uoHkNQ6Ha/N1Yz9mNMppEkEkYKj79q6uCq4bCHcSX3fJ0Vk/k9siASjCm1N6gZH6Ec9IXt2WkFES2K/ixoIyktJPAu/ptOA1SgO5zqtr6KASJPF0nMV8dgMsRhRPOcMwqQAOoi0VAIMLAEWJ6YYC1c8ibj1GP51RqwzYwZVMHQuvOzMCBUtb2tGHx5NAdLKqp5AX7Ng4d+Zi8AGDI9z1ijx9yaCH04y3GCP2S+QcvaGl+pcxyUBvinFlawoDQjHSelX8hQEoIrAq8p/mgC88HOS1YCl/BRgAmiD/1gn6Nu8AAAAASUVORK5CYII=) no-repeat left center;\n\
+    padding-left: 2.5rem;\n\
+    color: white;\n\
+}\n\
+.swggUiContainer > .header > .td2 {\n\
+    font-size: medium;\n\
+    height: 2rem;\n\
+}\n\
+.swggUiContainer > .header > .td3 {\n\
+border: 0;\n\
+    color: #fff;\n\
+    padding: 6px 8px;\n\
+    background-color: #580;\n\
+}\n\
+.swggUiContainer > .info > * {\n\
+    margin-top: 1rem;\n\
+}\n\
+.swggUiContainer > .info a {\n\
+    color: #370;\n\
+    text-decoration: underline;\n\
+}\n\
+.swggUiContainer > .info > .fontWeightBold {\n\
+    font-size: x-large;\n\
+}\n\
+.swggUiContainer > .info > ul {\n\
+    margin-left: 2rem;\n\
+}\n\
+.swggUiContainer > .modal {\n\
+    background: black;\n\
+    background: rgba(0,0,0,0.5);\n\
+    display: flex;\n\
+    height: 100%;\n\
+    left: 0;\n\
+    margin: 0;\n\
+    margin-top: 4px;\n\
+    padding: 0;\n\
+    position: fixed;\n\
+    top: 0;\n\
+    width: 100%;\n\
+    z-index: 1;\n\
+}\n\
+.swggUiContainer .operation {\n\
+    background: #dfd;\n\
+    font-size: smaller;\n\
+}\n\
+.swggUiContainer .operation > .content {\n\
+    padding: 1rem;\n\
+}\n\
+.swggUiContainer .operation > .content .label {\n\
+    color: #0b0;\n\
+}\n\
+.swggUiContainer .operation > .content pre {\n\
+    border: 1px solid #bbb;\n\
+    background: #ffd;\n\
+}\n\
+.swggUiContainer .operation > .content .tr {\n\
+    margin-left: 0.5rem;\n\
+}\n\
+.swggUiContainer .operation > .header:hover {\n\
+    background: #bfb;\n\
+}\n\
+.swggUiContainer .operation > .header > span {\n\
+    padding: 2px 0 2px 0;\n\
+}\n\
+.swggUiContainer .operation > .header > span:first-child {\n\
+    margin-left: 0;\n\
+}\n\
+.swggUiContainer .operation > .header > .td1 {\n\
+    background: #777;\n\
+    color: white;\n\
+    padding-top: 5px;\n\
+    height: 1.5rem;\n\
+    text-align: center;\n\
+    width: 5rem;\n\
+}\n\
+.swggUiContainer .operation > .header > .td2 {\n\
+    flex: 3;\n\
+}\n\
+.swggUiContainer .operation > .header > .td3 {\n\
+    color: #777;\n\
+    flex: 2;\n\
+    text-decoration: none;\n\
+}\n\
+.swggUiContainer .operation > .header > .td4 {\n\
+    flex: 2;\n\
+    padding-right: 1rem;\n\
+}\n\
+.swggUiContainer .operation .paramDef pre,\n\
+.swggUiContainer .operation .paramDef textarea {\n\
+    height: 10rem;\n\
+}\n\
+.swggUiContainer .operation .paramDef > .td1 {\n\
+    flex: 2;\n\
+}\n\
+.swggUiContainer .operation .paramDef > .td2 {\n\
+    flex: 1;\n\
+}\n\
+.swggUiContainer .operation .paramDef > .td3 {\n\
+    flex: 4;\n\
+}\n\
+.swggUiContainer .operation .paramDef > .td4 {\n\
+    flex: 3;\n\
+}\n\
+.swggUiContainer .operation .responseList > .td1 {\n\
+    flex: 1;\n\
+}\n\
+.swggUiContainer .operation .responseList > .td2 {\n\
+    flex: 4;\n\
+}\n\
+.swggUiContainer .resource > .header > .td1 {\n\
+    font-size: large;\n\
+}\n\
+.swggUiContainer .resource > .header > .td2,\n\
+.swggUiContainer .resource > .header > .td3 {\n\
+    border-right: 1px solid #777;\n\
+    padding-right: 1rem;\n\
+}\n\
+\n\
+\n\
+\n\
+/* method */\n\
+.swggUiContainer .operation.DELETE > .header > .td1 {\n\
+    background: #b00;\n\
+}\n\
+.swggUiContainer .operation.GET > .header > .td1 {\n\
+    background: #093;\n\
+}\n\
+.swggUiContainer .operation.HEAD > .header > .td1 {\n\
+    background: #f30;\n\
+}\n\
+.swggUiContainer .operation.PATCH > .header > .td1 {\n\
+    background: #b0b;\n\
+}\n\
+.swggUiContainer .operation.POST > .header > .td1 {\n\
+    background: #07b;\n\
+}\n\
+.swggUiContainer .operation.PUT > .header > .td1 {\n\
+    background: #70b;\n\
+}\n\
+/*csslint\n\
+*/\n\
+</style>\n\
+</head>\n\
+<body>\n\
+    <div id="ajaxProgressDiv1" style="background: #d00; height: 4px; left: 0; margin: 0; padding: 0; position: fixed; top: 0; transition: background 0.5s, width 1.5s; width: 25%;"></div>\n\
+    <div class="swggUiContainer">\n\
+<form2 class="header tr">\n\
+    <a class="td1" href="http://swagger.io" target="_blank">swagger</a>\n\
+    <input\n\
+        class="flex1 td2"\n\
+        type="text"\n\
+        value="http://petstore.swagger.io/v2/swagger.json"\n\
+    >\n\
+    <button class="td3">Explore</button>\n\
+</form2>\n\
+    </div>\n\
+    <script src="assets.swgg.rollup.js"></script>\n\
+    <script>window.swgg.uiEventListenerDict[".onEventUiReload"]();</script>\n\
+</body>\n\
+</html>\n\
+';
+
+
+
+// https://github.com/json-schema-org/json-schema-org.github.io/blob/master/draft-04/schema
+// curl -Ls https://raw.githubusercontent.com/json-schema-org/json-schema-org.github.io/master/draft-04/schema > /tmp/aa.json; node -e "console.log(JSON.stringify(require('/tmp/aa.json')));"
+local.assetsDict['/assets.swgg.json-schema.json'] = JSON.stringify(
+{"id":"http://json-schema.org/draft-04/schema#","$schema":"http://json-schema.org/draft-04/schema#","description":"Core schema meta-schema","definitions":{"schemaArray":{"type":"array","minItems":1,"items":{"$ref":"#"}},"positiveInteger":{"type":"integer","minimum":0},"positiveIntegerDefault0":{"allOf":[{"$ref":"#/definitions/positiveInteger"},{"default":0}]},"simpleTypes":{"enum":["array","boolean","integer","null","number","object","string"]},"stringArray":{"type":"array","items":{"type":"string"},"minItems":1,"uniqueItems":true}},"type":"object","properties":{"id":{"type":"string","format":"uri"},"$schema":{"type":"string","format":"uri"},"title":{"type":"string"},"description":{"type":"string"},"default":{},"multipleOf":{"type":"number","minimum":0,"exclusiveMinimum":true},"maximum":{"type":"number"},"exclusiveMaximum":{"type":"boolean","default":false},"minimum":{"type":"number"},"exclusiveMinimum":{"type":"boolean","default":false},"maxLength":{"$ref":"#/definitions/positiveInteger"},"minLength":{"$ref":"#/definitions/positiveIntegerDefault0"},"pattern":{"type":"string","format":"regex"},"additionalItems":{"anyOf":[{"type":"boolean"},{"$ref":"#"}],"default":{}},"items":{"anyOf":[{"$ref":"#"},{"$ref":"#/definitions/schemaArray"}],"default":{}},"maxItems":{"$ref":"#/definitions/positiveInteger"},"minItems":{"$ref":"#/definitions/positiveIntegerDefault0"},"uniqueItems":{"type":"boolean","default":false},"maxProperties":{"$ref":"#/definitions/positiveInteger"},"minProperties":{"$ref":"#/definitions/positiveIntegerDefault0"},"required":{"$ref":"#/definitions/stringArray"},"additionalProperties":{"anyOf":[{"type":"boolean"},{"$ref":"#"}],"default":{}},"definitions":{"type":"object","additionalProperties":{"$ref":"#"},"default":{}},"properties":{"type":"object","additionalProperties":{"$ref":"#"},"default":{}},"patternProperties":{"type":"object","additionalProperties":{"$ref":"#"},"default":{}},"dependencies":{"type":"object","additionalProperties":{"anyOf":[{"$ref":"#"},{"$ref":"#/definitions/stringArray"}]}},"enum":{"type":"array","minItems":1,"uniqueItems":true},"type":{"anyOf":[{"$ref":"#/definitions/simpleTypes"},{"type":"array","items":{"$ref":"#/definitions/simpleTypes"},"minItems":1,"uniqueItems":true}]},"allOf":{"$ref":"#/definitions/schemaArray"},"anyOf":{"$ref":"#/definitions/schemaArray"},"oneOf":{"$ref":"#/definitions/schemaArray"},"not":{"$ref":"#"}},"dependencies":{"exclusiveMaximum":["maximum"],"exclusiveMinimum":["minimum"]},"default":{}}
+);
+
+
+
+// https://petstore.swagger.io/v2/swagger.json
+// curl -Ls https://petstore.swagger.io/v2/swagger.json > /tmp/aa.json; node -e "console.log(JSON.stringify(require('/tmp/aa.json')));"
+local.assetsDict['/assets.swgg.petstore.json'] = JSON.stringify(
+{"swagger":"2.0","info":{"description":"This is a sample server Petstore server.  You can find out more about Swagger at [http://swagger.io](http://swagger.io) or on [irc.freenode.net, #swagger](http://swagger.io/irc/).  For this sample, you can use the api key `special-key` to test the authorization filters.","version":"1.0.0","title":"Swagger Petstore","termsOfService":"http://swagger.io/terms/","contact":{"email":"apiteam@swagger.io"},"license":{"name":"Apache 2.0","url":"http://www.apache.org/licenses/LICENSE-2.0.html"}},"host":"petstore.swagger.io","basePath":"/v2","tags":[{"name":"pet","description":"Everything about your Pets","externalDocs":{"description":"Find out more","url":"http://swagger.io"}},{"name":"store","description":"Access to Petstore orders"},{"name":"user","description":"Operations about user","externalDocs":{"description":"Find out more about our store","url":"http://swagger.io"}}],"schemes":["http"],"paths":{"/pet":{"post":{"tags":["pet"],"summary":"Add a new pet to the store","description":"","operationId":"addPet","consumes":["application/json","application/xml"],"produces":["application/xml","application/json"],"parameters":[{"in":"body","name":"body","description":"Pet object that needs to be added to the store","required":true,"schema":{"$ref":"#/definitions/Pet"}}],"responses":{"405":{"description":"Invalid input"}},"security":[{"petstore_auth":["write:pets","read:pets"]}]},"put":{"tags":["pet"],"summary":"Update an existing pet","description":"","operationId":"updatePet","consumes":["application/json","application/xml"],"produces":["application/xml","application/json"],"parameters":[{"in":"body","name":"body","description":"Pet object that needs to be added to the store","required":true,"schema":{"$ref":"#/definitions/Pet"}}],"responses":{"400":{"description":"Invalid ID supplied"},"404":{"description":"Pet not found"},"405":{"description":"Validation exception"}},"security":[{"petstore_auth":["write:pets","read:pets"]}]}},"/pet/findByStatus":{"get":{"tags":["pet"],"summary":"Finds Pets by status","description":"Multiple status values can be provided with comma separated strings","operationId":"findPetsByStatus","produces":["application/xml","application/json"],"parameters":[{"name":"status","in":"query","description":"Status values that need to be considered for filter","required":true,"type":"array","items":{"type":"string","enum":["available","pending","sold"],"default":"available"},"collectionFormat":"multi"}],"responses":{"200":{"description":"successful operation","schema":{"type":"array","items":{"$ref":"#/definitions/Pet"}}},"400":{"description":"Invalid status value"}},"security":[{"petstore_auth":["write:pets","read:pets"]}]}},"/pet/findByTags":{"get":{"tags":["pet"],"summary":"Finds Pets by tags","description":"Muliple tags can be provided with comma separated strings. Use tag1, tag2, tag3 for testing.","operationId":"findPetsByTags","produces":["application/xml","application/json"],"parameters":[{"name":"tags","in":"query","description":"Tags to filter by","required":true,"type":"array","items":{"type":"string"},"collectionFormat":"multi"}],"responses":{"200":{"description":"successful operation","schema":{"type":"array","items":{"$ref":"#/definitions/Pet"}}},"400":{"description":"Invalid tag value"}},"security":[{"petstore_auth":["write:pets","read:pets"]}],"deprecated":true}},"/pet/{petId}":{"get":{"tags":["pet"],"summary":"Find pet by ID","description":"Returns a single pet","operationId":"getPetById","produces":["application/xml","application/json"],"parameters":[{"name":"petId","in":"path","description":"ID of pet to return","required":true,"type":"integer","format":"int64"}],"responses":{"200":{"description":"successful operation","schema":{"$ref":"#/definitions/Pet"}},"400":{"description":"Invalid ID supplied"},"404":{"description":"Pet not found"}},"security":[{"api_key":[]}]},"post":{"tags":["pet"],"summary":"Updates a pet in the store with form data","description":"","operationId":"updatePetWithForm","consumes":["application/x-www-form-urlencoded"],"produces":["application/xml","application/json"],"parameters":[{"name":"petId","in":"path","description":"ID of pet that needs to be updated","required":true,"type":"integer","format":"int64"},{"name":"name","in":"formData","description":"Updated name of the pet","required":false,"type":"string"},{"name":"status","in":"formData","description":"Updated status of the pet","required":false,"type":"string"}],"responses":{"405":{"description":"Invalid input"}},"security":[{"petstore_auth":["write:pets","read:pets"]}]},"delete":{"tags":["pet"],"summary":"Deletes a pet","description":"","operationId":"deletePet","produces":["application/xml","application/json"],"parameters":[{"name":"api_key","in":"header","required":false,"type":"string"},{"name":"petId","in":"path","description":"Pet id to delete","required":true,"type":"integer","format":"int64"}],"responses":{"400":{"description":"Invalid ID supplied"},"404":{"description":"Pet not found"}},"security":[{"petstore_auth":["write:pets","read:pets"]}]}},"/pet/{petId}/uploadImage":{"post":{"tags":["pet"],"summary":"uploads an image","description":"","operationId":"uploadFile","consumes":["multipart/form-data"],"produces":["application/json"],"parameters":[{"name":"petId","in":"path","description":"ID of pet to update","required":true,"type":"integer","format":"int64"},{"name":"additionalMetadata","in":"formData","description":"Additional data to pass to server","required":false,"type":"string"},{"name":"file","in":"formData","description":"file to upload","required":false,"type":"file"}],"responses":{"200":{"description":"successful operation","schema":{"$ref":"#/definitions/ApiResponse"}}},"security":[{"petstore_auth":["write:pets","read:pets"]}]}},"/store/inventory":{"get":{"tags":["store"],"summary":"Returns pet inventories by status","description":"Returns a map of status codes to quantities","operationId":"getInventory","produces":["application/json"],"parameters":[],"responses":{"200":{"description":"successful operation","schema":{"type":"object","additionalProperties":{"type":"integer","format":"int32"}}}},"security":[{"api_key":[]}]}},"/store/order":{"post":{"tags":["store"],"summary":"Place an order for a pet","description":"","operationId":"placeOrder","produces":["application/xml","application/json"],"parameters":[{"in":"body","name":"body","description":"order placed for purchasing the pet","required":true,"schema":{"$ref":"#/definitions/Order"}}],"responses":{"200":{"description":"successful operation","schema":{"$ref":"#/definitions/Order"}},"400":{"description":"Invalid Order"}}}},"/store/order/{orderId}":{"get":{"tags":["store"],"summary":"Find purchase order by ID","description":"For valid response try integer IDs with value >= 1 and <= 10. Other values will generated exceptions","operationId":"getOrderById","produces":["application/xml","application/json"],"parameters":[{"name":"orderId","in":"path","description":"ID of pet that needs to be fetched","required":true,"type":"integer","maximum":10,"minimum":1,"format":"int64"}],"responses":{"200":{"description":"successful operation","schema":{"$ref":"#/definitions/Order"}},"400":{"description":"Invalid ID supplied"},"404":{"description":"Order not found"}}},"delete":{"tags":["store"],"summary":"Delete purchase order by ID","description":"For valid response try integer IDs with positive integer value. Negative or non-integer values will generate API errors","operationId":"deleteOrder","produces":["application/xml","application/json"],"parameters":[{"name":"orderId","in":"path","description":"ID of the order that needs to be deleted","required":true,"type":"integer","minimum":1,"format":"int64"}],"responses":{"400":{"description":"Invalid ID supplied"},"404":{"description":"Order not found"}}}},"/user":{"post":{"tags":["user"],"summary":"Create user","description":"This can only be done by the logged in user.","operationId":"createUser","produces":["application/xml","application/json"],"parameters":[{"in":"body","name":"body","description":"Created user object","required":true,"schema":{"$ref":"#/definitions/User"}}],"responses":{"default":{"description":"successful operation"}}}},"/user/createWithArray":{"post":{"tags":["user"],"summary":"Creates list of users with given input array","description":"","operationId":"createUsersWithArrayInput","produces":["application/xml","application/json"],"parameters":[{"in":"body","name":"body","description":"List of user object","required":true,"schema":{"type":"array","items":{"$ref":"#/definitions/User"}}}],"responses":{"default":{"description":"successful operation"}}}},"/user/createWithList":{"post":{"tags":["user"],"summary":"Creates list of users with given input array","description":"","operationId":"createUsersWithListInput","produces":["application/xml","application/json"],"parameters":[{"in":"body","name":"body","description":"List of user object","required":true,"schema":{"type":"array","items":{"$ref":"#/definitions/User"}}}],"responses":{"default":{"description":"successful operation"}}}},"/user/login":{"get":{"tags":["user"],"summary":"Logs user into the system","description":"","operationId":"loginUser","produces":["application/xml","application/json"],"parameters":[{"name":"username","in":"query","description":"The user name for login","required":true,"type":"string"},{"name":"password","in":"query","description":"The password for login in clear text","required":true,"type":"string"}],"responses":{"200":{"description":"successful operation","schema":{"type":"string"},"headers":{"X-Rate-Limit":{"type":"integer","format":"int32","description":"calls per hour allowed by the user"},"X-Expires-After":{"type":"string","format":"date-time","description":"date in UTC when token expires"}}},"400":{"description":"Invalid username/password supplied"}}}},"/user/logout":{"get":{"tags":["user"],"summary":"Logs out current logged in user session","description":"","operationId":"logoutUser","produces":["application/xml","application/json"],"parameters":[],"responses":{"default":{"description":"successful operation"}}}},"/user/{username}":{"get":{"tags":["user"],"summary":"Get user by user name","description":"","operationId":"getUserByName","produces":["application/xml","application/json"],"parameters":[{"name":"username","in":"path","description":"The name that needs to be fetched. Use user1 for testing. ","required":true,"type":"string"}],"responses":{"200":{"description":"successful operation","schema":{"$ref":"#/definitions/User"}},"400":{"description":"Invalid username supplied"},"404":{"description":"User not found"}}},"put":{"tags":["user"],"summary":"Updated user","description":"This can only be done by the logged in user.","operationId":"updateUser","produces":["application/xml","application/json"],"parameters":[{"name":"username","in":"path","description":"name that need to be updated","required":true,"type":"string"},{"in":"body","name":"body","description":"Updated user object","required":true,"schema":{"$ref":"#/definitions/User"}}],"responses":{"400":{"description":"Invalid user supplied"},"404":{"description":"User not found"}}},"delete":{"tags":["user"],"summary":"Delete user","description":"This can only be done by the logged in user.","operationId":"deleteUser","produces":["application/xml","application/json"],"parameters":[{"name":"username","in":"path","description":"The name that needs to be deleted","required":true,"type":"string"}],"responses":{"400":{"description":"Invalid username supplied"},"404":{"description":"User not found"}}}}},"securityDefinitions":{"petstore_auth":{"type":"oauth2","authorizationUrl":"http://petstore.swagger.io/oauth/dialog","flow":"implicit","scopes":{"write:pets":"modify pets in your account","read:pets":"read your pets"}},"api_key":{"type":"apiKey","name":"api_key","in":"header"}},"definitions":{"Order":{"type":"object","properties":{"id":{"type":"integer","format":"int64"},"petId":{"type":"integer","format":"int64"},"quantity":{"type":"integer","format":"int32"},"shipDate":{"type":"string","format":"date-time"},"status":{"type":"string","description":"Order Status","enum":["placed","approved","delivered"]},"complete":{"type":"boolean","default":false}},"xml":{"name":"Order"}},"Category":{"type":"object","properties":{"id":{"type":"integer","format":"int64"},"name":{"type":"string"}},"xml":{"name":"Category"}},"User":{"type":"object","properties":{"id":{"type":"integer","format":"int64"},"username":{"type":"string"},"firstName":{"type":"string"},"lastName":{"type":"string"},"email":{"type":"string"},"password":{"type":"string"},"phone":{"type":"string"},"userStatus":{"type":"integer","format":"int32","description":"User Status"}},"xml":{"name":"User"}},"Tag":{"type":"object","properties":{"id":{"type":"integer","format":"int64"},"name":{"type":"string"}},"xml":{"name":"Tag"}},"Pet":{"type":"object","required":["name","photoUrls"],"properties":{"id":{"type":"integer","format":"int64"},"category":{"$ref":"#/definitions/Category"},"name":{"type":"string","example":"doggie"},"photoUrls":{"type":"array","xml":{"name":"photoUrl","wrapped":true},"items":{"type":"string"}},"tags":{"type":"array","xml":{"name":"tag","wrapped":true},"items":{"$ref":"#/definitions/Tag"}},"status":{"type":"string","description":"pet status in the store","enum":["available","pending","sold"]}},"xml":{"name":"Pet"}},"ApiResponse":{"type":"object","properties":{"code":{"type":"integer","format":"int32"},"type":{"type":"string"},"message":{"type":"string"}}}},"externalDocs":{"description":"Find out more about Swagger","url":"http://swagger.io"}}
+);
+
+
+
+// https://github.com/OAI/OpenAPI-Specification/blob/master/schemas/v2.0/schema.json
+// curl -Ls https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/schemas/v2.0/schema.json > /tmp/aa.json; node -e "console.log(JSON.stringify(require('/tmp/aa.json')));"
+local.assetsDict['/assets.swgg.schema.json'] = JSON.stringify(
+{"title":"A JSON Schema for Swagger 2.0 API.","id":"http://swagger.io/v2/schema.json#","$schema":"http://json-schema.org/draft-04/schema#","type":"object","required":["swagger","info","paths"],"additionalProperties":false,"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}},"properties":{"swagger":{"type":"string","enum":["2.0"],"description":"The Swagger version of this document."},"info":{"$ref":"#/definitions/info"},"host":{"type":"string","pattern":"^[^{}/ :\\\\]+(?::\\d+)?$","description":"The host (name or ip) of the API. Example: 'swagger.io'"},"basePath":{"type":"string","pattern":"^/","description":"The base path to the API. Example: '/api'."},"schemes":{"$ref":"#/definitions/schemesList"},"consumes":{"description":"A list of MIME types accepted by the API.","allOf":[{"$ref":"#/definitions/mediaTypeList"}]},"produces":{"description":"A list of MIME types the API can produce.","allOf":[{"$ref":"#/definitions/mediaTypeList"}]},"paths":{"$ref":"#/definitions/paths"},"definitions":{"$ref":"#/definitions/definitions"},"parameters":{"$ref":"#/definitions/parameterDefinitions"},"responses":{"$ref":"#/definitions/responseDefinitions"},"security":{"$ref":"#/definitions/security"},"securityDefinitions":{"$ref":"#/definitions/securityDefinitions"},"tags":{"type":"array","items":{"$ref":"#/definitions/tag"},"uniqueItems":true},"externalDocs":{"$ref":"#/definitions/externalDocs"}},"definitions":{"info":{"type":"object","description":"General information about the API.","required":["version","title"],"additionalProperties":false,"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}},"properties":{"title":{"type":"string","description":"A unique and precise title of the API."},"version":{"type":"string","description":"A semantic version number of the API."},"description":{"type":"string","description":"A longer description of the API. Should be different from the title.  GitHub Flavored Markdown is allowed."},"termsOfService":{"type":"string","description":"The terms of service for the API."},"contact":{"$ref":"#/definitions/contact"},"license":{"$ref":"#/definitions/license"}}},"contact":{"type":"object","description":"Contact information for the owners of the API.","additionalProperties":false,"properties":{"name":{"type":"string","description":"The identifying name of the contact person/organization."},"url":{"type":"string","description":"The URL pointing to the contact information.","format":"uri"},"email":{"type":"string","description":"The email address of the contact person/organization.","format":"email"}},"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}}},"license":{"type":"object","required":["name"],"additionalProperties":false,"properties":{"name":{"type":"string","description":"The name of the license type. It's encouraged to use an OSI compatible license."},"url":{"type":"string","description":"The URL pointing to the license.","format":"uri"}},"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}}},"paths":{"type":"object","description":"Relative paths to the individual endpoints. They must be relative to the 'basePath'.","patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"},"^/":{"$ref":"#/definitions/pathItem"}},"additionalProperties":false},"definitions":{"type":"object","additionalProperties":{"$ref":"#/definitions/schema"},"description":"One or more JSON objects describing the schemas being consumed and produced by the API."},"parameterDefinitions":{"type":"object","additionalProperties":{"$ref":"#/definitions/parameter"},"description":"One or more JSON representations for parameters"},"responseDefinitions":{"type":"object","additionalProperties":{"$ref":"#/definitions/response"},"description":"One or more JSON representations for parameters"},"externalDocs":{"type":"object","additionalProperties":false,"description":"information about external documentation","required":["url"],"properties":{"description":{"type":"string"},"url":{"type":"string","format":"uri"}},"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}}},"examples":{"type":"object","additionalProperties":true},"mimeType":{"type":"string","description":"The MIME type of the HTTP message."},"operation":{"type":"object","required":["responses"],"additionalProperties":false,"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}},"properties":{"tags":{"type":"array","items":{"type":"string"},"uniqueItems":true},"summary":{"type":"string","description":"A brief summary of the operation."},"description":{"type":"string","description":"A longer description of the operation, GitHub Flavored Markdown is allowed."},"externalDocs":{"$ref":"#/definitions/externalDocs"},"operationId":{"type":"string","description":"A unique identifier of the operation."},"produces":{"description":"A list of MIME types the API can produce.","allOf":[{"$ref":"#/definitions/mediaTypeList"}]},"consumes":{"description":"A list of MIME types the API can consume.","allOf":[{"$ref":"#/definitions/mediaTypeList"}]},"parameters":{"$ref":"#/definitions/parametersList"},"responses":{"$ref":"#/definitions/responses"},"schemes":{"$ref":"#/definitions/schemesList"},"deprecated":{"type":"boolean","default":false},"security":{"$ref":"#/definitions/security"}}},"pathItem":{"type":"object","additionalProperties":false,"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}},"properties":{"$ref":{"type":"string"},"get":{"$ref":"#/definitions/operation"},"put":{"$ref":"#/definitions/operation"},"post":{"$ref":"#/definitions/operation"},"delete":{"$ref":"#/definitions/operation"},"options":{"$ref":"#/definitions/operation"},"head":{"$ref":"#/definitions/operation"},"patch":{"$ref":"#/definitions/operation"},"parameters":{"$ref":"#/definitions/parametersList"}}},"responses":{"type":"object","description":"Response objects names can either be any valid HTTP status code or 'default'.","minProperties":1,"additionalProperties":false,"patternProperties":{"^([0-9]{3})$|^(default)$":{"$ref":"#/definitions/responseValue"},"^x-":{"$ref":"#/definitions/vendorExtension"}},"not":{"type":"object","additionalProperties":false,"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}}}},"responseValue":{"oneOf":[{"$ref":"#/definitions/response"},{"$ref":"#/definitions/jsonReference"}]},"response":{"type":"object","required":["description"],"properties":{"description":{"type":"string"},"schema":{"oneOf":[{"$ref":"#/definitions/schema"},{"$ref":"#/definitions/fileSchema"}]},"headers":{"$ref":"#/definitions/headers"},"examples":{"$ref":"#/definitions/examples"}},"additionalProperties":false,"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}}},"headers":{"type":"object","additionalProperties":{"$ref":"#/definitions/header"}},"header":{"type":"object","additionalProperties":false,"required":["type"],"properties":{"type":{"type":"string","enum":["string","number","integer","boolean","array"]},"format":{"type":"string"},"items":{"$ref":"#/definitions/primitivesItems"},"collectionFormat":{"$ref":"#/definitions/collectionFormat"},"default":{"$ref":"#/definitions/default"},"maximum":{"$ref":"#/definitions/maximum"},"exclusiveMaximum":{"$ref":"#/definitions/exclusiveMaximum"},"minimum":{"$ref":"#/definitions/minimum"},"exclusiveMinimum":{"$ref":"#/definitions/exclusiveMinimum"},"maxLength":{"$ref":"#/definitions/maxLength"},"minLength":{"$ref":"#/definitions/minLength"},"pattern":{"$ref":"#/definitions/pattern"},"maxItems":{"$ref":"#/definitions/maxItems"},"minItems":{"$ref":"#/definitions/minItems"},"uniqueItems":{"$ref":"#/definitions/uniqueItems"},"enum":{"$ref":"#/definitions/enum"},"multipleOf":{"$ref":"#/definitions/multipleOf"},"description":{"type":"string"}},"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}}},"vendorExtension":{"description":"Any property starting with x- is valid.","additionalProperties":true,"additionalItems":true},"bodyParameter":{"type":"object","required":["name","in","schema"],"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}},"properties":{"description":{"type":"string","description":"A brief description of the parameter. This could contain examples of use.  GitHub Flavored Markdown is allowed."},"name":{"type":"string","description":"The name of the parameter."},"in":{"type":"string","description":"Determines the location of the parameter.","enum":["body"]},"required":{"type":"boolean","description":"Determines whether or not this parameter is required or optional.","default":false},"schema":{"$ref":"#/definitions/schema"}},"additionalProperties":false},"headerParameterSubSchema":{"additionalProperties":false,"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}},"properties":{"required":{"type":"boolean","description":"Determines whether or not this parameter is required or optional.","default":false},"in":{"type":"string","description":"Determines the location of the parameter.","enum":["header"]},"description":{"type":"string","description":"A brief description of the parameter. This could contain examples of use.  GitHub Flavored Markdown is allowed."},"name":{"type":"string","description":"The name of the parameter."},"type":{"type":"string","enum":["string","number","boolean","integer","array"]},"format":{"type":"string"},"items":{"$ref":"#/definitions/primitivesItems"},"collectionFormat":{"$ref":"#/definitions/collectionFormat"},"default":{"$ref":"#/definitions/default"},"maximum":{"$ref":"#/definitions/maximum"},"exclusiveMaximum":{"$ref":"#/definitions/exclusiveMaximum"},"minimum":{"$ref":"#/definitions/minimum"},"exclusiveMinimum":{"$ref":"#/definitions/exclusiveMinimum"},"maxLength":{"$ref":"#/definitions/maxLength"},"minLength":{"$ref":"#/definitions/minLength"},"pattern":{"$ref":"#/definitions/pattern"},"maxItems":{"$ref":"#/definitions/maxItems"},"minItems":{"$ref":"#/definitions/minItems"},"uniqueItems":{"$ref":"#/definitions/uniqueItems"},"enum":{"$ref":"#/definitions/enum"},"multipleOf":{"$ref":"#/definitions/multipleOf"}}},"queryParameterSubSchema":{"additionalProperties":false,"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}},"properties":{"required":{"type":"boolean","description":"Determines whether or not this parameter is required or optional.","default":false},"in":{"type":"string","description":"Determines the location of the parameter.","enum":["query"]},"description":{"type":"string","description":"A brief description of the parameter. This could contain examples of use.  GitHub Flavored Markdown is allowed."},"name":{"type":"string","description":"The name of the parameter."},"allowEmptyValue":{"type":"boolean","default":false,"description":"allows sending a parameter by name only or with an empty value."},"type":{"type":"string","enum":["string","number","boolean","integer","array"]},"format":{"type":"string"},"items":{"$ref":"#/definitions/primitivesItems"},"collectionFormat":{"$ref":"#/definitions/collectionFormatWithMulti"},"default":{"$ref":"#/definitions/default"},"maximum":{"$ref":"#/definitions/maximum"},"exclusiveMaximum":{"$ref":"#/definitions/exclusiveMaximum"},"minimum":{"$ref":"#/definitions/minimum"},"exclusiveMinimum":{"$ref":"#/definitions/exclusiveMinimum"},"maxLength":{"$ref":"#/definitions/maxLength"},"minLength":{"$ref":"#/definitions/minLength"},"pattern":{"$ref":"#/definitions/pattern"},"maxItems":{"$ref":"#/definitions/maxItems"},"minItems":{"$ref":"#/definitions/minItems"},"uniqueItems":{"$ref":"#/definitions/uniqueItems"},"enum":{"$ref":"#/definitions/enum"},"multipleOf":{"$ref":"#/definitions/multipleOf"}}},"formDataParameterSubSchema":{"additionalProperties":false,"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}},"properties":{"required":{"type":"boolean","description":"Determines whether or not this parameter is required or optional.","default":false},"in":{"type":"string","description":"Determines the location of the parameter.","enum":["formData"]},"description":{"type":"string","description":"A brief description of the parameter. This could contain examples of use.  GitHub Flavored Markdown is allowed."},"name":{"type":"string","description":"The name of the parameter."},"allowEmptyValue":{"type":"boolean","default":false,"description":"allows sending a parameter by name only or with an empty value."},"type":{"type":"string","enum":["string","number","boolean","integer","array","file"]},"format":{"type":"string"},"items":{"$ref":"#/definitions/primitivesItems"},"collectionFormat":{"$ref":"#/definitions/collectionFormatWithMulti"},"default":{"$ref":"#/definitions/default"},"maximum":{"$ref":"#/definitions/maximum"},"exclusiveMaximum":{"$ref":"#/definitions/exclusiveMaximum"},"minimum":{"$ref":"#/definitions/minimum"},"exclusiveMinimum":{"$ref":"#/definitions/exclusiveMinimum"},"maxLength":{"$ref":"#/definitions/maxLength"},"minLength":{"$ref":"#/definitions/minLength"},"pattern":{"$ref":"#/definitions/pattern"},"maxItems":{"$ref":"#/definitions/maxItems"},"minItems":{"$ref":"#/definitions/minItems"},"uniqueItems":{"$ref":"#/definitions/uniqueItems"},"enum":{"$ref":"#/definitions/enum"},"multipleOf":{"$ref":"#/definitions/multipleOf"}}},"pathParameterSubSchema":{"additionalProperties":false,"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}},"required":["required"],"properties":{"required":{"type":"boolean","enum":[true],"description":"Determines whether or not this parameter is required or optional."},"in":{"type":"string","description":"Determines the location of the parameter.","enum":["path"]},"description":{"type":"string","description":"A brief description of the parameter. This could contain examples of use.  GitHub Flavored Markdown is allowed."},"name":{"type":"string","description":"The name of the parameter."},"type":{"type":"string","enum":["string","number","boolean","integer","array"]},"format":{"type":"string"},"items":{"$ref":"#/definitions/primitivesItems"},"collectionFormat":{"$ref":"#/definitions/collectionFormat"},"default":{"$ref":"#/definitions/default"},"maximum":{"$ref":"#/definitions/maximum"},"exclusiveMaximum":{"$ref":"#/definitions/exclusiveMaximum"},"minimum":{"$ref":"#/definitions/minimum"},"exclusiveMinimum":{"$ref":"#/definitions/exclusiveMinimum"},"maxLength":{"$ref":"#/definitions/maxLength"},"minLength":{"$ref":"#/definitions/minLength"},"pattern":{"$ref":"#/definitions/pattern"},"maxItems":{"$ref":"#/definitions/maxItems"},"minItems":{"$ref":"#/definitions/minItems"},"uniqueItems":{"$ref":"#/definitions/uniqueItems"},"enum":{"$ref":"#/definitions/enum"},"multipleOf":{"$ref":"#/definitions/multipleOf"}}},"nonBodyParameter":{"type":"object","required":["name","in","type"],"oneOf":[{"$ref":"#/definitions/headerParameterSubSchema"},{"$ref":"#/definitions/formDataParameterSubSchema"},{"$ref":"#/definitions/queryParameterSubSchema"},{"$ref":"#/definitions/pathParameterSubSchema"}]},"parameter":{"oneOf":[{"$ref":"#/definitions/bodyParameter"},{"$ref":"#/definitions/nonBodyParameter"}]},"schema":{"type":"object","description":"A deterministic version of a JSON Schema object.","patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}},"properties":{"$ref":{"type":"string"},"format":{"type":"string"},"title":{"$ref":"http://json-schema.org/draft-04/schema#/properties/title"},"description":{"$ref":"http://json-schema.org/draft-04/schema#/properties/description"},"default":{"$ref":"http://json-schema.org/draft-04/schema#/properties/default"},"multipleOf":{"$ref":"http://json-schema.org/draft-04/schema#/properties/multipleOf"},"maximum":{"$ref":"http://json-schema.org/draft-04/schema#/properties/maximum"},"exclusiveMaximum":{"$ref":"http://json-schema.org/draft-04/schema#/properties/exclusiveMaximum"},"minimum":{"$ref":"http://json-schema.org/draft-04/schema#/properties/minimum"},"exclusiveMinimum":{"$ref":"http://json-schema.org/draft-04/schema#/properties/exclusiveMinimum"},"maxLength":{"$ref":"http://json-schema.org/draft-04/schema#/definitions/positiveInteger"},"minLength":{"$ref":"http://json-schema.org/draft-04/schema#/definitions/positiveIntegerDefault0"},"pattern":{"$ref":"http://json-schema.org/draft-04/schema#/properties/pattern"},"maxItems":{"$ref":"http://json-schema.org/draft-04/schema#/definitions/positiveInteger"},"minItems":{"$ref":"http://json-schema.org/draft-04/schema#/definitions/positiveIntegerDefault0"},"uniqueItems":{"$ref":"http://json-schema.org/draft-04/schema#/properties/uniqueItems"},"maxProperties":{"$ref":"http://json-schema.org/draft-04/schema#/definitions/positiveInteger"},"minProperties":{"$ref":"http://json-schema.org/draft-04/schema#/definitions/positiveIntegerDefault0"},"required":{"$ref":"http://json-schema.org/draft-04/schema#/definitions/stringArray"},"enum":{"$ref":"http://json-schema.org/draft-04/schema#/properties/enum"},"additionalProperties":{"anyOf":[{"$ref":"#/definitions/schema"},{"type":"boolean"}],"default":{}},"type":{"$ref":"http://json-schema.org/draft-04/schema#/properties/type"},"items":{"anyOf":[{"$ref":"#/definitions/schema"},{"type":"array","minItems":1,"items":{"$ref":"#/definitions/schema"}}],"default":{}},"allOf":{"type":"array","minItems":1,"items":{"$ref":"#/definitions/schema"}},"properties":{"type":"object","additionalProperties":{"$ref":"#/definitions/schema"},"default":{}},"discriminator":{"type":"string"},"readOnly":{"type":"boolean","default":false},"xml":{"$ref":"#/definitions/xml"},"externalDocs":{"$ref":"#/definitions/externalDocs"},"example":{}},"additionalProperties":false},"fileSchema":{"type":"object","description":"A deterministic version of a JSON Schema object.","patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}},"required":["type"],"properties":{"format":{"type":"string"},"title":{"$ref":"http://json-schema.org/draft-04/schema#/properties/title"},"description":{"$ref":"http://json-schema.org/draft-04/schema#/properties/description"},"default":{"$ref":"http://json-schema.org/draft-04/schema#/properties/default"},"required":{"$ref":"http://json-schema.org/draft-04/schema#/definitions/stringArray"},"type":{"type":"string","enum":["file"]},"readOnly":{"type":"boolean","default":false},"externalDocs":{"$ref":"#/definitions/externalDocs"},"example":{}},"additionalProperties":false},"primitivesItems":{"type":"object","additionalProperties":false,"properties":{"type":{"type":"string","enum":["string","number","integer","boolean","array"]},"format":{"type":"string"},"items":{"$ref":"#/definitions/primitivesItems"},"collectionFormat":{"$ref":"#/definitions/collectionFormat"},"default":{"$ref":"#/definitions/default"},"maximum":{"$ref":"#/definitions/maximum"},"exclusiveMaximum":{"$ref":"#/definitions/exclusiveMaximum"},"minimum":{"$ref":"#/definitions/minimum"},"exclusiveMinimum":{"$ref":"#/definitions/exclusiveMinimum"},"maxLength":{"$ref":"#/definitions/maxLength"},"minLength":{"$ref":"#/definitions/minLength"},"pattern":{"$ref":"#/definitions/pattern"},"maxItems":{"$ref":"#/definitions/maxItems"},"minItems":{"$ref":"#/definitions/minItems"},"uniqueItems":{"$ref":"#/definitions/uniqueItems"},"enum":{"$ref":"#/definitions/enum"},"multipleOf":{"$ref":"#/definitions/multipleOf"}},"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}}},"security":{"type":"array","items":{"$ref":"#/definitions/securityRequirement"},"uniqueItems":true},"securityRequirement":{"type":"object","additionalProperties":{"type":"array","items":{"type":"string"},"uniqueItems":true}},"xml":{"type":"object","additionalProperties":false,"properties":{"name":{"type":"string"},"namespace":{"type":"string"},"prefix":{"type":"string"},"attribute":{"type":"boolean","default":false},"wrapped":{"type":"boolean","default":false}},"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}}},"tag":{"type":"object","additionalProperties":false,"required":["name"],"properties":{"name":{"type":"string"},"description":{"type":"string"},"externalDocs":{"$ref":"#/definitions/externalDocs"}},"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}}},"securityDefinitions":{"type":"object","additionalProperties":{"oneOf":[{"$ref":"#/definitions/basicAuthenticationSecurity"},{"$ref":"#/definitions/apiKeySecurity"},{"$ref":"#/definitions/oauth2ImplicitSecurity"},{"$ref":"#/definitions/oauth2PasswordSecurity"},{"$ref":"#/definitions/oauth2ApplicationSecurity"},{"$ref":"#/definitions/oauth2AccessCodeSecurity"}]}},"basicAuthenticationSecurity":{"type":"object","additionalProperties":false,"required":["type"],"properties":{"type":{"type":"string","enum":["basic"]},"description":{"type":"string"}},"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}}},"apiKeySecurity":{"type":"object","additionalProperties":false,"required":["type","name","in"],"properties":{"type":{"type":"string","enum":["apiKey"]},"name":{"type":"string"},"in":{"type":"string","enum":["header","query"]},"description":{"type":"string"}},"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}}},"oauth2ImplicitSecurity":{"type":"object","additionalProperties":false,"required":["type","flow","authorizationUrl"],"properties":{"type":{"type":"string","enum":["oauth2"]},"flow":{"type":"string","enum":["implicit"]},"scopes":{"$ref":"#/definitions/oauth2Scopes"},"authorizationUrl":{"type":"string","format":"uri"},"description":{"type":"string"}},"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}}},"oauth2PasswordSecurity":{"type":"object","additionalProperties":false,"required":["type","flow","tokenUrl"],"properties":{"type":{"type":"string","enum":["oauth2"]},"flow":{"type":"string","enum":["password"]},"scopes":{"$ref":"#/definitions/oauth2Scopes"},"tokenUrl":{"type":"string","format":"uri"},"description":{"type":"string"}},"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}}},"oauth2ApplicationSecurity":{"type":"object","additionalProperties":false,"required":["type","flow","tokenUrl"],"properties":{"type":{"type":"string","enum":["oauth2"]},"flow":{"type":"string","enum":["application"]},"scopes":{"$ref":"#/definitions/oauth2Scopes"},"tokenUrl":{"type":"string","format":"uri"},"description":{"type":"string"}},"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}}},"oauth2AccessCodeSecurity":{"type":"object","additionalProperties":false,"required":["type","flow","authorizationUrl","tokenUrl"],"properties":{"type":{"type":"string","enum":["oauth2"]},"flow":{"type":"string","enum":["accessCode"]},"scopes":{"$ref":"#/definitions/oauth2Scopes"},"authorizationUrl":{"type":"string","format":"uri"},"tokenUrl":{"type":"string","format":"uri"},"description":{"type":"string"}},"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}}},"oauth2Scopes":{"type":"object","additionalProperties":{"type":"string"}},"mediaTypeList":{"type":"array","items":{"$ref":"#/definitions/mimeType"},"uniqueItems":true},"parametersList":{"type":"array","description":"The parameters needed to send a valid API call.","additionalItems":false,"items":{"oneOf":[{"$ref":"#/definitions/parameter"},{"$ref":"#/definitions/jsonReference"}]},"uniqueItems":true},"schemesList":{"type":"array","description":"The transfer protocol of the API.","items":{"type":"string","enum":["http","https","ws","wss"]},"uniqueItems":true},"collectionFormat":{"type":"string","enum":["csv","ssv","tsv","pipes"],"default":"csv"},"collectionFormatWithMulti":{"type":"string","enum":["csv","ssv","tsv","pipes","multi"],"default":"csv"},"title":{"$ref":"http://json-schema.org/draft-04/schema#/properties/title"},"description":{"$ref":"http://json-schema.org/draft-04/schema#/properties/description"},"default":{"$ref":"http://json-schema.org/draft-04/schema#/properties/default"},"multipleOf":{"$ref":"http://json-schema.org/draft-04/schema#/properties/multipleOf"},"maximum":{"$ref":"http://json-schema.org/draft-04/schema#/properties/maximum"},"exclusiveMaximum":{"$ref":"http://json-schema.org/draft-04/schema#/properties/exclusiveMaximum"},"minimum":{"$ref":"http://json-schema.org/draft-04/schema#/properties/minimum"},"exclusiveMinimum":{"$ref":"http://json-schema.org/draft-04/schema#/properties/exclusiveMinimum"},"maxLength":{"$ref":"http://json-schema.org/draft-04/schema#/definitions/positiveInteger"},"minLength":{"$ref":"http://json-schema.org/draft-04/schema#/definitions/positiveIntegerDefault0"},"pattern":{"$ref":"http://json-schema.org/draft-04/schema#/properties/pattern"},"maxItems":{"$ref":"http://json-schema.org/draft-04/schema#/definitions/positiveInteger"},"minItems":{"$ref":"http://json-schema.org/draft-04/schema#/definitions/positiveIntegerDefault0"},"uniqueItems":{"$ref":"http://json-schema.org/draft-04/schema#/properties/uniqueItems"},"enum":{"$ref":"http://json-schema.org/draft-04/schema#/properties/enum"},"jsonReference":{"type":"object","required":["$ref"],"additionalProperties":false,"properties":{"$ref":{"type":"string"}}}}}
+);
 /* jslint-ignore-end */
-        // init assets
-        local.assetsDict['/assets.lib.swgg.json-schema.json'] = '{}';
-        local.assetsDict['/assets.lib.swgg.schema.json'] = '{}';
-        local.assetsDict['/assets.lib.swgg.ui_logo_small.png'] =
-            local.assetsDict['/favicon.ico'] = local.bufferToNodeBuffer(
-                local.bufferCreate(local.templateSwaggerUiLogoSmallBase64, 'base64')
-            );
+        local.swaggerSchemaJson = local.jsonCopy(local.objectSetOverride(
+            JSON.parse(local.assetsDict['/assets.swgg.json-schema.json']),
+            JSON.parse(local.assetsDict['/assets.swgg.schema.json']),
+            2
+        ));
     }());
 
 
@@ -763,9 +1663,8 @@ awoDQjHSelX8hQEoIrAq8p/mgC88HOS1YCl/BRgAmiD/1gn6Nu8AAAAASUVORK5CYII=\
                     xhr.responseJson = JSON.parse(xhr.responseText);
                 }, local.nop);
                 // init userJwtEncrypted
-                tmp = xhr.getResponseHeader('swgg-jwt-encrypted');
-                if (tmp) {
-                    local.userJwtEncrypted = tmp;
+                if (xhr.getResponseHeader('swgg-jwt-encrypted')) {
+                    local.userJwtEncrypted = xhr.getResponseHeader('swgg-jwt-encrypted');
                 }
                 onError(error, xhr);
             });
@@ -1006,11 +1905,11 @@ awoDQjHSelX8hQEoIrAq8p/mgC88HOS1YCl/BRgAmiD/1gn6Nu8AAAAASUVORK5CYII=\
                 break;
             case 'string':
                 tmp = options.modeNotRandom
-                    ? 'abc'
+                    ? 'abcd1234'
                     : ((1 + Math.random()) * 0x10000000000000).toString(36).slice(1);
                 switch (propDef.format) {
                 case 'byte':
-                    tmp = local.stringToBase64(tmp);
+                    tmp = local.base64FromString(tmp);
                     break;
                 case 'date':
                 case 'date-time':
@@ -1319,7 +2218,7 @@ awoDQjHSelX8hQEoIrAq8p/mgC88HOS1YCl/BRgAmiD/1gn6Nu8AAAAASUVORK5CYII=\
                                 tmp = local.jsonCopy(request.swgg.paramDict);
                                 local.objectSetOverride(tmp, {
                                     fileBlob:
-                                        local.bufferToBase64(request.swgg.bodyParsed[key]),
+                                        local.base64FromBuffer(request.swgg.bodyParsed[key]),
                                     fileContentType: request.swgg.bodyMeta[key].contentType,
                                     fileFilename: request.swgg.bodyMeta[key].filename,
                                     fileInputName: request.swgg.bodyMeta[key].name,
@@ -1389,7 +2288,7 @@ awoDQjHSelX8hQEoIrAq8p/mgC88HOS1YCl/BRgAmiD/1gn6Nu8AAAAASUVORK5CYII=\
                         local.serverRespondHeadSet(request, response, null, {
                             'Content-Type': data.fileContentType
                         });
-                        response.end(local.bufferCreate(data.fileBlob, 'base64'));
+                        response.end(local.base64ToBuffer(data.fileBlob));
                         break;
                     case 'userLogout':
                         options.onNext();
@@ -1916,6 +2815,861 @@ awoDQjHSelX8hQEoIrAq8p/mgC88HOS1YCl/BRgAmiD/1gn6Nu8AAAAASUVORK5CYII=\
             })(error, data, meta);
         };
 
+        local.uiAnimateFadeIn = function (element) {
+        /*
+         * this function will fadeIn the element
+         */
+            element.classList.add('swggAnimateFade');
+            element.style.display = '';
+            setTimeout(function () {
+                element.style.opacity = '';
+            }, 20);
+            setTimeout(function () {
+                element.classList.remove('swggAnimateFade');
+            }, 500);
+        };
+
+        local.uiAnimateFadeOut = function (element) {
+        /*
+         * this function will fadeOut the element
+         */
+            element.classList.add('swggAnimateFade');
+            element.style.opacity = '0';
+            setTimeout(function () {
+                element.style.display = 'none';
+                element.classList.remove('swggAnimateFade');
+            }, 500);
+        };
+
+        local.uiAnimateScrollTo = function (element) {
+        /*
+         * this function will scrollTo the element
+         */
+            var ii, timerInterval;
+            ii = 0;
+            timerInterval = setInterval(function () {
+                ii += 0.025;
+                local.global.scrollTo(0, document.body.scrollTop +
+                    Math.min(ii, 1) * (element.offsetTop - document.body.scrollTop) +
+                    -5);
+            }, 25);
+            setTimeout(function () {
+                clearInterval(timerInterval);
+            }, 1000);
+        };
+
+        local.uiAnimateShake = function (element) {
+        /*
+         * this function will shake the dom-element
+         */
+            element.classList.add('swggAnimateShake');
+            setTimeout(function () {
+                element.classList.remove('swggAnimateShake');
+            }, 500);
+        };
+
+        local.uiAnimateSlideAccordian = function (element, elementList) {
+        /*
+         * this function will slideDown the element,
+         * but slideUp all other elements in elementList
+         */
+            // hide elements in elementList
+            elementList.forEach(function (element2) {
+                if (element2 !== element) {
+                    local.uiAnimateSlideUp(element2);
+                }
+            });
+            // show element
+            local.uiAnimateSlideDown(element);
+        };
+
+        local.uiAnimateSlideDown = function (element) {
+        /*
+         * this function will slideDown the dom-element
+         */
+            if (element.style.display !== 'none') {
+                return;
+            }
+            element.style.maxHeight = 0;
+            element.classList.add('swggAnimateSlide');
+            element.style.display = '';
+            setTimeout(function () {
+                element.style.maxHeight = 2 * local.global.innerHeight + 'px';
+            }, 20);
+            setTimeout(function () {
+                element.style.maxHeight = '';
+                element.classList.remove('swggAnimateSlide');
+            }, 500);
+        };
+
+        local.uiAnimateSlideUp = function (element) {
+        /*
+         * this function will slideUp the dom-element
+         */
+            if (element.style.display === 'none') {
+                return;
+            }
+            element.style.maxHeight = 2 * local.global.innerHeight + 'px';
+            element.classList.add('swggAnimateSlide');
+            setTimeout(function () {
+                element.style.maxHeight = '0px';
+            }, 20);
+            setTimeout(function () {
+                element.style.display = 'none';
+            }, 500);
+            setTimeout(function () {
+                element.style.maxHeight = '';
+                element.classList.remove('swggAnimateSlide');
+            }, 500);
+        };
+
+        local.uiDatatableRender = function (options) {
+        /*
+         * this function will render the datatable
+         */
+            var tmp;
+            local.uiState.datatable = options;
+            options.schema = local.schemaNormalizeAndCopy(options.schema);
+            options.propDefList = Object.keys(options.schema.properties)
+                .sort(function (aa, bb) {
+                    return aa === options._idAlias
+                        ? -1
+                        : bb === options._idAlias
+                        ? 1
+                        : aa < bb
+                        ? -1
+                        : 1;
+                })
+                .map(function (propDef) {
+                    tmp = propDef;
+                    propDef = options.schema.properties[tmp];
+                    propDef.name = tmp;
+                    local.uiParamRender(propDef);
+                    return propDef;
+                });
+            options.iiPadding = 0;
+            options.dbRowList = options.responseJson.data.map(function (dbRow, ii) {
+                dbRow = { paramDict: dbRow };
+                dbRow.colList = options.propDefList.map(function (propDef) {
+                    propDef = local.jsonCopy(propDef);
+                    propDef.valueEncoded = dbRow.paramDict[propDef.name];
+                    if (propDef.valueEncoded === undefined) {
+                        propDef.valueEncoded = '';
+                    }
+                    if (typeof propDef.valueEncoded !== 'string') {
+                        propDef.valueEncoded = JSON.stringify(propDef.valueEncoded);
+                    }
+                    return propDef;
+                });
+                dbRow.id = dbRow.paramDict[options._idAlias];
+                dbRow.ii = options.querySkip + ii + 1;
+                options.iiPadding = Math.max(
+                    0.375 * String(dbRow.ii).length,
+                    options.iiPadding
+                );
+                return dbRow;
+            });
+            // init pagination
+            options.pageCurrent = Math.floor(options.querySkip / options.queryLimit);
+            options.pageTotal = Math.ceil(
+                options.responseJson.meta.paginationCountTotal / options.queryLimit
+            );
+            options.pageMin = Math.max(
+                Math.min(options.pageCurrent - 3, options.pageTotal - 7),
+                0
+            );
+            options.pageMax = Math.min(options.pageMin + 7, options.pageTotal);
+            options.pageList = [];
+            // add first page
+            options.pageList.push({
+                disabled: options.pageCurrent === 0,
+                pageNumber: 0,
+                valueEncoded: 'first page'
+            });
+            for (tmp = options.pageMin; tmp < options.pageMax; tmp += 1) {
+                options.pageList.push({
+                    disabled: tmp === options.pageCurrent,
+                    pageNumber: tmp,
+                    valueEncoded: tmp + 1
+                });
+            }
+            // add last page
+            options.pageList.push({
+                disabled: options.pageCurrent === options.pageTotal - 1,
+                pageNumber: options.pageTotal - 1,
+                valueEncoded: 'last page'
+            });
+            options.pageCurrentIsFirst = options.pageCurrent === 0;
+            options.pageCurrentIsLast = options.pageCurrent + 1 === options.pageTotal;
+            // templateRender datatable
+            document.querySelector('.swggUiContainer .datatable').innerHTML =
+                local.templateRender(local.templateUiDatatable, options);
+            // init event-handling
+            local.uiEventInit(document.querySelector('.swggUiContainer .datatable'));
+            // show modal
+            if (document.querySelector('.swggUiContainer > .modal').style.display !== 'none') {
+                return;
+            }
+            document.body.style.overflow = 'hidden';
+            local.uiAnimateFadeIn(document.querySelector('.swggUiContainer > .modal'));
+        };
+
+        local.uiEventDelegate = function (event) {
+            Object.keys(local.uiEventListenerDict).sort().some(function (key) {
+                if (!(event.currentTarget.matches(key) || event.target.matches(key))) {
+                    return;
+                }
+                switch (event.target.tagName) {
+                case 'A':
+                case 'BUTTON':
+                case 'FORM':
+                    event.preventDefault();
+                    break;
+                }
+                event.stopPropagation();
+                local.uiEventListenerDict[key](event);
+                return true;
+            });
+        };
+
+        local.uiEventInit = function (element) {
+        /*
+         * this function will init event-handling for the dom-element
+         */
+            ['Click', 'Submit'].forEach(function (eventType) {
+                Array.from(
+                    element.querySelectorAll('.eventDelegate' + eventType)
+                ).forEach(function (element) {
+                    element.addEventListener(eventType.toLowerCase(), local.uiEventDelegate);
+                });
+            });
+        };
+
+        local.uiEventListenerDict['.onEventDatatableReload'] = function (event) {
+        /*
+         * this function will show the modal
+         */
+            var options;
+            options = {};
+            if (event) {
+                options.name = event.target.dataset.resourceName;
+                options.pageNumber = event.target.dataset.pageNumber;
+            } else {
+                options.name = local.uiState.datatable.name;
+                options.pageNumber = local.uiState.datatable.pageNumber;
+                options.queryLimit = local.uiState.datatable.queryLimit;
+                options.querySort = local.uiState.datatable.querySort;
+                options.queryWhere = local.uiState.datatable.queryWhere;
+            }
+            local.objectSetDefault(
+                options,
+                local.jsonCopy(local.uiState['x-swgg-datatableDict'][options.name])
+            );
+            options._idAlias = local.apiDict[options.crudRemoveOneById]._idAlias;
+            options._idField = local.apiDict[options.crudRemoveOneById]._idField;
+            local.objectSetDefault(options, { pageNumber: 0, queryLimit: 20 });
+            options.querySkip = options.pageNumber * options.queryLimit;
+            options.paramDict = {
+                _queryLimit: options.queryLimit,
+                _querySkip: options.querySkip,
+                _querySort: options.querySort,
+                _queryWhere: options.queryWhere
+            };
+            // request data
+            local.apiDict[options.crudGetManyByQuery]._ajax(options, function (error, options) {
+                // validate no error occurred
+                local.assert(!error, error);
+                local.uiDatatableRender(options);
+                // emit event uiDatatableRendered
+                document.dispatchEvent(new local.global.Event('uiDatatableRendered', {
+                    bubbles: true,
+                    cancelable: true
+                }));
+            });
+        };
+
+        local.uiEventListenerDict['.onEventDatatableSelectedRemove'] = function () {
+            var onParallel;
+            onParallel = local.onParallel(local.uiEventListenerDict['.onEventDatatableReload']);
+            onParallel.counter += 1;
+            Array.from(
+                document.querySelectorAll('.swggUiContainer .datatable tr.selected')
+            ).forEach(function (element) {
+                onParallel.counter += 1;
+                // remove data
+                local.apiDict[
+                    local.uiState.datatable.crudRemoveOneById
+                ]._ajax(local.objectLiteralize({
+                    paramDict: { '$[]': [
+                        local.uiState.datatable._idField,
+                        JSON.parse(decodeURIComponent(element.dataset.id))
+                    ] }
+                }), onParallel);
+            });
+            onParallel();
+        };
+
+        local.uiEventListenerDict['.onEventDatatableTrSelect'] = function (event) {
+            if (event.target.tagName !== 'INPUT') {
+                event.currentTarget.querySelector('input').checked =
+                    !event.currentTarget.querySelector('input').checked;
+            }
+            Array.from(
+                event.currentTarget.closest('tr').querySelectorAll('input')
+            ).forEach(function (element) {
+                element.checked = event.currentTarget.querySelector('input').checked;
+            });
+            if (event.currentTarget.querySelector('input').checked) {
+                event.currentTarget.closest('tr').classList.add('selected');
+            } else {
+                event.currentTarget.closest('tr').classList.remove('selected');
+            }
+        };
+
+        local.uiEventListenerDict['.onEventModalHide'] = function (event) {
+        /*
+         * this function will hide the modal
+         */
+            if (event && !event.target.classList.contains('onEventModalHide')) {
+                return;
+            }
+            if (document.querySelector('.swggUiContainer > .modal').style.display === 'none') {
+                return;
+            }
+            document.body.style.overflow = '';
+            // hide modeal
+            local.uiAnimateFadeOut(document.querySelector('.swggUiContainer > .modal'));
+        };
+
+        local.uiEventListenerDict['.onEventOperationAjax'] = function (event) {
+        /*
+         * this function will return submit the operation to the backend
+         */
+            var options, tmp;
+            options = {};
+            local.onNext(options, function (error, data) {
+                switch (options.modeNext) {
+                case 1:
+                    options.api = local.apiDict[event.currentTarget.dataset._keyOperationId];
+                    options.domOperationContent = event.target.closest('.operation > .content');
+                    options.headers = {};
+                    options.paramDict = {};
+                    options.api.parameters.forEach(function (paramDef) {
+                        local.tryCatchOnError(function () {
+                            tmp = options.domOperationContent.querySelector(
+                                '.paramDef[name=' + paramDef.name + '] > .td3'
+                            ).children[0];
+                            switch (tmp.tagName) {
+                            case 'INPUT':
+                                // parse file
+                                if (tmp.type === 'file') {
+                                    tmp = tmp.files && tmp.files[0];
+                                    break;
+                                }
+                                tmp = tmp.value;
+                                if (!tmp) {
+                                    return;
+                                }
+                                // parse string
+                                if (paramDef.type !== 'string') {
+                                    tmp = JSON.parse(tmp);
+                                }
+                                break;
+                            case 'SELECT':
+                                tmp = Array.from(tmp.options)
+                                    .filter(function (element) {
+                                        return element.selected;
+                                    })
+                                    .map(function (element) {
+                                        return JSON.parse(decodeURIComponent(
+                                            element.dataset.valueDecoded
+                                        ));
+                                    });
+                                if (!tmp.length || tmp[0] === '$swggUndefined') {
+                                    return;
+                                }
+                                if (paramDef.type !== 'array') {
+                                    tmp = tmp[0];
+                                }
+                                break;
+                            case 'TEXTAREA':
+                                tmp = tmp.value;
+                                if (!tmp) {
+                                    return;
+                                }
+                                // parse schema
+                                if (paramDef.in === 'body') {
+                                    tmp = JSON.parse(tmp);
+                                    break;
+                                }
+                                // parse array
+                                tmp = tmp.split('\n').map(function (element) {
+                                    return paramDef.items.type === 'string'
+                                        ? element
+                                        : JSON.parse(element);
+                                });
+                                break;
+                            }
+                            options.paramDict[paramDef.name] = tmp;
+                        }, function (error) {
+                            options.errorValidate = error;
+                            options.errorValidate.options = { key: paramDef.name };
+                            options.onNext(error);
+                        });
+                    });
+                    options.api._ajax(options, options.onNext);
+                    break;
+                default:
+                    // remove previous error
+                    Array.from(
+                        options.domOperationContent.querySelectorAll('.paramDef .input')
+                    ).forEach(function (element) {
+                        element.classList.remove('error');
+                    });
+                    if (options.errorValidate) {
+                        // shake input on Error
+                        Array.from(options.domOperationContent.querySelectorAll(
+                            '.paramDef[name=' + options.errorValidate.options.key + '] .input'
+                        )).forEach(function (element) {
+                            element.classList.add('error');
+                            local.uiAnimateShake(element.closest('span'));
+                        });
+                        data = {
+                            errorValidate: options.errorValidate,
+                            responseText: error.message,
+                            statusCode: 400
+                        };
+                    }
+                    // init responseHeaders
+                    data.responseHeaders = {};
+                    (
+                        (data.getAllResponseHeaders && data.getAllResponseHeaders()) || ''
+                    ).replace(
+                        (/.+/g),
+                        function (item) {
+                            item = item.split(':');
+                            data.responseHeaders[item[0].trim().toLowerCase()] =
+                                item.slice(1).join(':').trim();
+                        }
+                    );
+                    // init contentType
+                    data.contentType =
+                        String(data.responseHeaders['content-type']).split(';')[0];
+                    // init responseBody
+                    switch (data.contentType.split('/')[0]) {
+                    case 'audio':
+                    case 'video':
+                        data.responseBody = '<' + data.contentType.split('/')[0] +
+                            ' controls><source src="data:' + data.contentType + ';base64,' +
+                            local.base64FromBuffer(data.response) +
+                            '" type="' + data.contentType + '"></' +
+                            data.contentType.split('/')[0] + '>';
+                        break;
+                    case 'image':
+                        data.responseBody = '<img src="data:' + data.contentType + ';base64,' +
+                            local.base64FromBuffer(data.response) + '">';
+                        break;
+                    default:
+                        data.responseBody = '<pre>' + local.stringHtmlSafe(
+                            data.responseJson
+                                ? JSON.stringify(data.responseJson, null, 4)
+                                : data.responseText
+                        ) + '</pre>';
+                    }
+                    // init curl
+                    local.tryCatchOnError(function () {
+                        options.data = JSON.stringify(JSON.parse(options.data), null, 4);
+                    }, local.nop);
+                    data.curl = 'curl \\\n' +
+                        '--request ' + options.api._method.toUpperCase() + ' \\\n' +
+                        Object.keys(options.headers).map(function (key) {
+                            return "--header '" + key + ': ' + options.headers[key] + "' \\\n";
+                        }).join('') + '--data-binary ' + (typeof options.data === 'string'
+                            ? "'" + options.data.replace(/'/g, "'\"'\"'") + "'"
+                            : '<blob>') + ' \\\n"' + options.url + '"';
+                    data.responseHeaders = data.getAllResponseHeaders &&
+                        data.getAllResponseHeaders().trim();
+                    // templateRender response
+                    options.domOperationContent.querySelector(
+                        '.responseAjax'
+                    ).innerHTML = local.templateRender(local.templateUiResponseAjax, data);
+                    break;
+                }
+            });
+            options.modeNext = 0;
+            options.onNext();
+        };
+
+        local.uiEventListenerDict['.onEventOperationDisplayShow'] = function (event) {
+        /*
+         * this function will toggle the display of the operation
+         */
+            var tmp;
+            location.hash = '!/' + event.target.closest('.resource').id + '/' +
+                event.target.closest('.operation').id;
+            tmp = event.target.closest('.operation').querySelector('.operation > .content');
+            tmp.closest('.resource').classList.remove('expanded');
+            // show the operation, but hide all other operations
+            local.uiAnimateSlideAccordian(
+                tmp,
+                Array.from(
+                    tmp.closest('.operationList').querySelectorAll('.operation > .content')
+                )
+            );
+        };
+
+        local.uiEventListenerDict['.onEventResourceDisplayAction'] = function (event) {
+        /*
+         * this function will toggle the display of the resource
+         */
+            location.hash = '!/' + event.currentTarget.id;
+            event.target.className.split(' ').some(function (className) {
+                switch (className) {
+                // show the resource, but hide all other resources
+                case 'td1':
+                case 'td2':
+                case 'td3':
+                    local.uiAnimateSlideAccordian(
+                        event.currentTarget.querySelector('.operationList'),
+                        Array.from(document.querySelectorAll('.swggUiContainer .operationList'))
+                    );
+                    break;
+                }
+                switch (className) {
+                case 'td1':
+                case 'td2':
+                    return true;
+                case 'td3':
+                    // collapse all operations in the resource
+                    if (event.currentTarget.classList.contains('expanded')) {
+                        event.currentTarget.classList.remove('expanded');
+                        Array.from(
+                            event.currentTarget.querySelectorAll('.operation > .content')
+                        ).forEach(function (element) {
+                            local.uiAnimateSlideUp(element);
+                        });
+                    // expand all operations in the resource
+                    } else {
+                        event.currentTarget.classList.add('expanded');
+                        Array.from(
+                            event.currentTarget.querySelectorAll('.operation > .content')
+                        ).forEach(function (element) {
+                            local.uiAnimateSlideDown(element);
+                        });
+                    }
+                    return true;
+                }
+            });
+        };
+
+        local.uiEventListenerDict['.onEventUiReload'] = function () {
+        /*
+         * this function will reload the ui
+         */
+            // reset ui
+            Array.from(
+                document.querySelectorAll('.swggUiContainer > .reset')
+            ).forEach(function (element) {
+                element.remove();
+            });
+            // normalize url
+            document.querySelector('.swggUiContainer > .header > .td2').value =
+                local.urlParse(
+                    document.querySelector('.swggUiContainer > .header > .td2').value
+                        .replace((/^\//), '')
+                ).href;
+            local.ajax({
+                url: document.querySelector('.swggUiContainer > .header > .td2').value
+            }, function (error, xhr) {
+                // validate no error occurred
+                local.assert(!error, error);
+                // reset state
+                local.apiDict = local.swaggerJson = null;
+                local.apiDictUpdate(local.objectSetDefault(JSON.parse(xhr.responseText), {
+                    host: local.urlParse(
+                        document.querySelector('.swggUiContainer > .header > .td2').value
+                    ).host
+                }));
+                local.uiRender();
+            });
+        };
+
+        local.uiParamRender = function (paramDef) {
+        /*
+         * this function will render the param
+         */
+            paramDef.placeholder = paramDef.required
+                ? '(required)'
+                : '';
+            // init input - file
+            if (paramDef.type === 'file') {
+                paramDef.isFile = true;
+            // init input - textarea
+            } else if (paramDef.in === 'body') {
+                paramDef.isTextarea = true;
+            // init input - select
+            } else if (paramDef.enum || paramDef.type === 'boolean') {
+                paramDef.enumDefault = [];
+                if (paramDef.default !== undefined) {
+                    paramDef.enumDefault = paramDef.type === 'array'
+                        ? paramDef.default
+                        : [paramDef.default];
+                }
+                paramDef.isSelect = true;
+                paramDef.isSelectMultiple = paramDef.type === 'array';
+                paramDef.selectOptionList = (paramDef.type === 'boolean'
+                    ? [false, true]
+                    : paramDef.enum).map(function (element) {
+                    paramDef.hasDefault |= paramDef.enumDefault.indexOf(element) >= 0;
+                    return {
+                        id: local.idDomElementCreate('swgg_id_' + paramDef.name),
+                        selected: paramDef.enumDefault.indexOf(element) >= 0
+                            ? 'selected'
+                            : '',
+                        type: (paramDef.items && paramDef.items.type) || paramDef.type,
+                        valueDecoded: element,
+                        valueEncoded: typeof element === 'string'
+                            ? element
+                            : JSON.stringify(element)
+                    };
+                });
+                // init 'undefined' value
+                if (!(paramDef.hasDefault ||
+                        paramDef.isSelectMultiple ||
+                        paramDef.required)) {
+                    paramDef.selectOptionList.unshift({
+                        id: local.idDomElementCreate('swgg_id_' + paramDef.name),
+                        selected: 'selected',
+                        type: paramDef.type,
+                        valueDecoded: '$swggUndefined',
+                        valueEncoded: '<none>'
+                    });
+                }
+                // if required, then select at least one value
+                if (paramDef.required && paramDef.selectOptionList.length) {
+                    paramDef.selected = paramDef.selectOptionList[0];
+                    paramDef.selectOptionList.some(function (element) {
+                        if (element.selected) {
+                            paramDef.selected = element.selected;
+                            return true;
+                        }
+                    });
+                    paramDef.selected = 'selected';
+                }
+            // init input - textarea
+            } else if (paramDef.type === 'array') {
+                paramDef.isTextarea = true;
+                paramDef.placeholder = 'provide multiple values in new lines' +
+                    (paramDef.required
+                        ? ' (at least one required)'
+                        : '');
+            // init input - text
+            } else {
+                paramDef.isInputText = true;
+            }
+            // init format2 / type2
+            [
+                paramDef,
+                paramDef.schema
+            ].some(function (element) {
+                local.tryCatchOnError(function () {
+                    paramDef.format2 = paramDef.format2 || element.format;
+                }, local.nop);
+                local.tryCatchOnError(function () {
+                    paramDef.type2 = paramDef.type2 || element.type;
+                }, local.nop);
+                return paramDef.type2;
+            });
+            paramDef.type2 = paramDef.type2 || 'object';
+            // init schema2
+            [
+                paramDef.items,
+                paramDef.schema,
+                paramDef.schema && paramDef.schema.items
+            ].some(function (element) {
+                local.tryCatchOnError(function () {
+                    paramDef.schema2 = paramDef.schema2 ||
+                        local.schemaNormalizeAndCopy(element).properties;
+                }, local.nop);
+                return paramDef.schema2;
+            });
+            if (paramDef.schema2) {
+                paramDef.schemaText = JSON.stringify(paramDef.type2 === 'array'
+                    ? [paramDef.schema2]
+                    : paramDef.schema2, null, 4);
+            }
+            // init valueEncoded
+            paramDef.valueEncoded = paramDef.default;
+            if (paramDef.valueEncoded === undefined) {
+                paramDef.valueEncoded = local.dbFieldRandomCreate({
+                    modeNotRandom: true,
+                    propDef: paramDef
+                });
+            }
+            // init valueEncoded for array
+            if (paramDef.valueEncoded && paramDef.type2 === 'array' && paramDef.in !== 'body') {
+                paramDef.valueEncoded = paramDef.valueEncoded.map(function (element) {
+                    return typeof element === 'string'
+                        ? element
+                        : JSON.stringify(element);
+                }).join('\n');
+            }
+            // init valueEncoded for schema
+            if (paramDef.in === 'body' && paramDef.schema2) {
+                paramDef.valueEncoded = local.dbRowRandomCreate({
+                    modeNotRandom: true,
+                    override: function () {
+                        var override = {};
+                        // preserve default value
+                        Object.keys(paramDef.schema2).forEach(function (key) {
+                            if (paramDef.schema2[key].default !== undefined) {
+                                override[key] = paramDef.schema2[key].default;
+                            }
+                        });
+                        return override;
+                    },
+                    properties: paramDef.schema2
+                });
+                if (paramDef.type2 === 'array') {
+                    paramDef.valueEncoded = [paramDef.valueEncoded];
+                }
+                paramDef.valueEncoded = JSON.stringify(paramDef.valueEncoded, null, 4);
+            }
+            if (typeof paramDef.valueEncoded !== 'string') {
+                paramDef.valueEncoded = JSON.stringify(paramDef.valueEncoded) || '';
+            }
+            // templateRender paramDef
+            paramDef.innerHTML = local.templateRender(local.templateUiParam, paramDef);
+        };
+
+        local.uiRender = function () {
+        /*
+         * this function will render swagger-ui
+         */
+            var resource, self;
+            // reset state
+            local.idDomElementDict = {};
+            self = local.uiState = local.jsonCopy(local.swaggerJson);
+            // init url
+            self.url = document.querySelector('.swggUiContainer > .header > .td2').value;
+            // templateRender main
+            self.uiFragment = local.domFragmentRender(local.templateUiMain, self);
+            local.objectSetDefault(self, {
+                resourceDict: {},
+                operationDict: {},
+                tagDict: {}
+            });
+            // init tagDict
+            self.tags.forEach(function (tag) {
+                self.tagDict[tag.name] = tag;
+            });
+            // init operationDict
+            Object.keys(local.apiDict).sort().forEach(function (operation) {
+                // init operation
+                operation = local.jsonCopy(local.apiDict[operation]);
+                operation.tags.forEach(function (tag) {
+                    self.operationDict[operation._keyOperationId] = operation;
+                    // init resource
+                    resource = self.resourceDict[tag];
+                    if (!resource && self.tagDict[tag]) {
+                        resource = self.resourceDict[tag] = self.tagDict[tag];
+                        local.objectSetDefault(resource, {
+                            description: 'no description available',
+                            id: local.idDomElementCreate('swgg_id_' + tag),
+                            name: tag,
+                            operationListInnerHtml: ''
+                        });
+                    }
+                });
+            });
+            // init resourceDict
+            Object.keys(self.resourceDict).sort().forEach(function (key) {
+                // templateRender resource
+                self.uiFragment.querySelector('.resourceList').appendChild(
+                    local.domFragmentRender(local.templateUiResource, self.resourceDict[key])
+                );
+            });
+            Object.keys(self.operationDict).sort(function (aa, bb) {
+                aa = self.operationDict[aa];
+                aa = aa._path + ' ' + aa._method;
+                bb = self.operationDict[bb];
+                bb = bb._path + ' ' + bb._method;
+                return aa < bb
+                    ? -1
+                    : 1;
+            }).forEach(function (operation) {
+                operation = self.operationDict[operation];
+                operation.id = local.idDomElementCreate('swgg_id_' + operation.operationId);
+                operation.tags.forEach(function (tag) {
+                    operation = local.jsonCopy(operation);
+                    resource = self.resourceDict[tag];
+                    local.objectSetDefault(operation, {
+                        description: '',
+                        responseList: Object.keys(operation.responses).sort()
+                            .map(function (key) {
+                                return { key: key, value: operation.responses[key] };
+                            }),
+                        summary: 'no summary available'
+                    });
+                    operation.parameters.forEach(function (element) {
+                        // init element.id
+                        element.id = local.idDomElementCreate('swgg_id_' + element.name);
+                        local.uiParamRender(element);
+                    });
+                    // templateRender operation
+                    self.uiFragment.querySelector('#' + resource.id + ' .operationList')
+                        .appendChild(
+                            local.domFragmentRender(local.templateUiOperation, operation)
+                        );
+                });
+            });
+            // overwrite swggUiContainer with uiFragment
+            document.querySelector('.swggUiContainer').innerHTML = '';
+            document.querySelector('.swggUiContainer').appendChild(self.uiFragment);
+            /* istanbul ignore next */
+            // bug-workaround - add keypress listener for <form2>
+            document.querySelector('form2').addEventListener('keypress', function (event) {
+                if (event.keyCode === 13) {
+                    local.uiEventListenerDict['.onEventUiReload']();
+                }
+            });
+            // render valueEncoded
+            Array.from(
+                document.querySelectorAll('.swggUiContainer [data-value-encoded]')
+            ).forEach(function (element) {
+                element.value = decodeURIComponent(element.dataset.valueEncoded);
+            });
+            // init event-handling
+            local.uiEventInit(document);
+            // scrollTo location.hash
+            local.uiScrollTo(location.hash);
+        };
+
+        local.uiScrollTo = function (locationHash) {
+        /*
+         * this function will scrollTo locationHash
+         */
+            var operation, resource;
+            // init resource
+            resource = locationHash.split('/')[1];
+            // list operations
+            resource = document.querySelector('.swggUiContainer #' + resource) ||
+                document.querySelector('.swggUiContainer .resource');
+            local.uiAnimateSlideDown(resource.querySelector('.operationList'));
+            // init operation
+            operation = locationHash.split('/')[2];
+            operation = resource.querySelector('#' + operation);
+            // expand operation and scroll to it
+            if (operation) {
+                local.uiAnimateSlideDown(operation.querySelector('.content'));
+                // scroll to operation
+                local.uiAnimateScrollTo(operation);
+            } else {
+                // scroll to resource
+                local.uiAnimateScrollTo(resource);
+            }
+        };
+
         local.urlBaseGet = function () {
         /*
          * this function will return the base swagger url
@@ -2363,59 +4117,11 @@ awoDQjHSelX8hQEoIrAq8p/mgC88HOS1YCl/BRgAmiD/1gn6Nu8AAAAASUVORK5CYII=\
             local.serverRespondJsonapi(request, response, error);
         };
 
-        local.utility2._middlewareJsonpStateInit = function (
-            request,
-            response,
-            nextMiddleware
-        ) {
-        /*
-         * this function will run the middleware that will
-         * serve the browser-state wrapped in the given jsonp-callback
-         */
-            var state;
-            if (request._configInit || request._stateInit || (request.urlParsed &&
-                    request.urlParsed.pathname === '/jsonp.utility2._stateInit')) {
-                state = { utility2: { assetsDict: {
-                    '/assets.lib.swgg.json-schema.json':
-                        local.assetsDict['/assets.lib.swgg.json-schema.json'],
-                    '/assets.lib.swgg.petstore.json':
-                        local.assetsDict['/assets.lib.swgg.petstore.json'],
-                    '/assets.lib.swgg.schema.json':
-                        local.assetsDict['/assets.lib.swgg.schema.json']
-                } } };
-                if (request._configInit) {
-                    return state;
-                }
-                local.objectSetDefault(state, { utility2: { env: {
-                    NODE_ENV: local.env.NODE_ENV,
-                    npm_config_mode_backend: local.env.npm_config_mode_backend,
-                    npm_package_description: local.env.npm_package_description,
-                    npm_package_homepage: local.env.npm_package_homepage,
-                    npm_package_name: local.env.npm_package_name,
-                    npm_package_nameAlias: local.env.npm_package_nameAlias,
-                    npm_package_version: local.env.npm_package_version
-                } } }, 3);
-                if (request._stateInit) {
-                    return state;
-                }
-                response.end(request.urlParsed.query.callback + '(' + JSON.stringify(state) +
-                    ');');
-                return;
-            }
-            nextMiddleware();
-        };
-
         local.utility2._stateInit = function (options) {
         /*
          * this function will init the state-options
          */
             local.objectSetOverride(local, options, 10);
-            // init swaggerSchemaJson
-            local.swaggerSchemaJson = local.objectSetOverride(
-                JSON.parse(local.assetsDict['/assets.lib.swgg.json-schema.json']),
-                JSON.parse(local.assetsDict['/assets.lib.swgg.schema.json']),
-                2
-            );
             // init api
             local.apiDictUpdate(local.swaggerJson);
         };
@@ -2428,6 +4134,8 @@ awoDQjHSelX8hQEoIrAq8p/mgC88HOS1YCl/BRgAmiD/1gn6Nu8AAAAASUVORK5CYII=\
     case 'browser':
         // init exports
         local.global.swgg = local;
+        // init state
+        local.utility2._stateInit({});
         break;
 
 
@@ -2441,95 +4149,41 @@ awoDQjHSelX8hQEoIrAq8p/mgC88HOS1YCl/BRgAmiD/1gn6Nu8AAAAASUVORK5CYII=\
         // init exports
         module.exports = local;
         module.exports.__dirname = __dirname;
-        /* istanbul ignore next */
-        if (local.global.utility2_rollup) {
-            break;
-        }
-        // init assets
-        [
-            'lib.swgg.css',
-            'lib.swgg.js',
-            // https://json-schema.org/draft-04/schema
-            'lib.swgg.json-schema.json',
-            // https://petstore.swagger.io/v2/swagger.json
-            'lib.swgg.petstore.json',
-            // https://swagger.io/v2/schema.json
-            'lib.swgg.schema.json',
-            'lib.swgg.ui.js'
-        ].forEach(function (key) {
-            switch (key) {
-            case 'lib.swgg.css':
-                local.assetsWrite(
-                    '/assets.swgg.css',
-                    local.tryCatchReadFile(__dirname + '/' + key, 'utf8')
-                );
-                break;
-            case 'lib.swgg.js':
-                local.assetsWrite(
-                    '/assets.swgg.js',
-                    local.istanbulInstrumentInPackage(
-                        local.tryCatchReadFile(__dirname + '/' + key, 'utf8'),
-                        __dirname + '/' + key
-                    )
-                );
-                break;
-            case 'lib.swgg.json-schema.json':
-            case 'lib.swgg.petstore.json':
-            case 'lib.swgg.schema.json':
-                local.assetsDict['/assets.' + key] =
-                    local.fs.readFileSync(__dirname + '/' + key, 'utf8');
-                break;
-            case 'lib.swgg.ui.js':
-                local.assetsWrite(
-                    '/assets.' + key,
-                    local.istanbulInstrumentInPackage(
-                        local.fs.readFileSync(__dirname + '/' + key, 'utf8'),
-                        __dirname + '/' + key
-                    )
-                );
-                break;
-            }
-        });
-        local.assetsWrite('/assets.swgg.rollup.js', [
-            '/assets.utility2.rollup.js',
-            '/assets.utility2.rollup.begin.js',
-            '/assets.swgg.css',
-            '/assets.swgg.js',
-            '/assets.lib.swgg.ui.js',
-            'local._stateInit',
-            '/assets.utility2.rollup.end.js'
-        ].map(function (key) {
-            switch (local.path.extname(key)) {
-            case '.js':
-                return '// ' + key + '\n' + local.assetsDict[key];
-            case '._stateInit':
-                return '// ' + key + '\n' +
-                    local.assetsDict['/assets.utility2.rollup.content.js']
-                    .replace(
-                        '/* utility2.rollup.js content */',
-                        key + '(' + JSON.stringify(
-                            local.utility2._middlewareJsonpStateInit({ _configInit: true })
-                        ) + ');'
-                    );
-            default:
-                return '// ' + key + '\n' +
-                    local.assetsDict['/assets.utility2.rollup.content.js']
-                    .replace(
-                        '/* utility2.rollup.js content */',
-                        'local.assetsDict[' + JSON.stringify(key) + '] = ' +
-                            JSON.stringify(local.assetsDict[key])
-                    );
-            }
-        }).join('\n\n\n\n'));
-        require('./lib.swgg.ui.js');
-        break;
-    }
-
-
-
-    // run shared js-env code - post-init
-    (function () {
+        local.assetsWrite(
+            '/assets.swgg.rollup.js',
+            local.assetsDict['/assets.utility2.rollup.js']
+        );
         // init state
         local.utility2._stateInit({});
-    }());
+        break;
+    }
+    switch (local.modeJs) {
+
+
+
+    /* istanbul ignore next */
+    // run node js-env code - cli
+    case 'node':
+        /* istanbul ignore next */
+        if (local.env.SWAGGER_JSON_URL) {
+            if (local.env.SWAGGER_JSON_URL === '127.0.0.1') {
+                local.env.SWAGGER_JSON_URL = '/assets.swgg.petstore.json';
+            }
+            local.assetsDict['/assets.swgg.html'] =
+                local.assetsDict['/assets.swgg.html'].replace(
+                    'http://petstore.swagger.io/v2/swagger.json',
+                    local.env.SWAGGER_JSON_URL
+                );
+        }
+        // run the cli
+        switch (process.argv[2]) {
+        case 'swagger-ui':
+            local.replStart();
+            local.global.local = local;
+            local.assetsDict['/'] = local.assetsDict['/assets.swgg.html'];
+            local.testRunServer({});
+            break;
+        }
+        break;
+    }
 }());

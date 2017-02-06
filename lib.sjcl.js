@@ -44,61 +44,286 @@
 // init lib sjcl
 /* jslint-ignore-begin */
 // https://github.com/bitwiseshiftleft/sjcl/blob/1.0.3/sjcl.js
+// utility2-uglify https://raw.githubusercontent.com/bitwiseshiftleft/sjcl/1.0.3/sjcl.js
 (function () { var module;
-"use strict";function q(a){throw a;}var s=void 0,u=!1;var sjcl={cipher:{},hash:{},keyexchange:{},mode:{},misc:{},codec:{},exception:{corrupt:function(a){this.toString=function(){return"CORRUPT: "+this.message};this.message=a},invalid:function(a){this.toString=function(){return"INVALID: "+this.message};this.message=a},bug:function(a){this.toString=function(){return"BUG: "+this.message};this.message=a},notReady:function(a){this.toString=function(){return"NOT READY: "+this.message};this.message=a}}};
-"undefined"!==typeof module&&module.exports&&(module.exports=sjcl);"function"===typeof define&&define([],function(){return sjcl});
-sjcl.cipher.aes=function(a){this.k[0][0][0]||this.D();var b,c,d,e,f=this.k[0][4],g=this.k[1];b=a.length;var h=1;4!==b&&(6!==b&&8!==b)&&q(new sjcl.exception.invalid("invalid aes key size"));this.b=[d=a.slice(0),e=[]];for(a=b;a<4*b+28;a++){c=d[a-1];if(0===a%b||8===b&&4===a%b)c=f[c>>>24]<<24^f[c>>16&255]<<16^f[c>>8&255]<<8^f[c&255],0===a%b&&(c=c<<8^c>>>24^h<<24,h=h<<1^283*(h>>7));d[a]=d[a-b]^c}for(b=0;a;b++,a--)c=d[b&3?a:a-4],e[b]=4>=a||4>b?c:g[0][f[c>>>24]]^g[1][f[c>>16&255]]^g[2][f[c>>8&255]]^g[3][f[c&
-255]]};
-sjcl.cipher.aes.prototype={encrypt:function(a){return w(this,a,0)},decrypt:function(a){return w(this,a,1)},k:[[[],[],[],[],[]],[[],[],[],[],[]]],D:function(){var a=this.k[0],b=this.k[1],c=a[4],d=b[4],e,f,g,h=[],l=[],k,n,m,p;for(e=0;0x100>e;e++)l[(h[e]=e<<1^283*(e>>7))^e]=e;for(f=g=0;!c[f];f^=k||1,g=l[g]||1){m=g^g<<1^g<<2^g<<3^g<<4;m=m>>8^m&255^99;c[f]=m;d[m]=f;n=h[e=h[k=h[f]]];p=0x1010101*n^0x10001*e^0x101*k^0x1010100*f;n=0x101*h[m]^0x1010100*m;for(e=0;4>e;e++)a[e][f]=n=n<<24^n>>>8,b[e][m]=p=p<<24^p>>>8}for(e=
-0;5>e;e++)a[e]=a[e].slice(0),b[e]=b[e].slice(0)}};
-function w(a,b,c){4!==b.length&&q(new sjcl.exception.invalid("invalid aes block size"));var d=a.b[c],e=b[0]^d[0],f=b[c?3:1]^d[1],g=b[2]^d[2];b=b[c?1:3]^d[3];var h,l,k,n=d.length/4-2,m,p=4,t=[0,0,0,0];h=a.k[c];a=h[0];var r=h[1],v=h[2],y=h[3],z=h[4];for(m=0;m<n;m++)h=a[e>>>24]^r[f>>16&255]^v[g>>8&255]^y[b&255]^d[p],l=a[f>>>24]^r[g>>16&255]^v[b>>8&255]^y[e&255]^d[p+1],k=a[g>>>24]^r[b>>16&255]^v[e>>8&255]^y[f&255]^d[p+2],b=a[b>>>24]^r[e>>16&255]^v[f>>8&255]^y[g&255]^d[p+3],p+=4,e=h,f=l,g=k;for(m=0;4>
-m;m++)t[c?3&-m:m]=z[e>>>24]<<24^z[f>>16&255]<<16^z[g>>8&255]<<8^z[b&255]^d[p++],h=e,e=f,f=g,g=b,b=h;return t}
-sjcl.bitArray={bitSlice:function(a,b,c){a=sjcl.bitArray.P(a.slice(b/32),32-(b&31)).slice(1);return c===s?a:sjcl.bitArray.clamp(a,c-b)},extract:function(a,b,c){var d=Math.floor(-b-c&31);return((b+c-1^b)&-32?a[b/32|0]<<32-d^a[b/32+1|0]>>>d:a[b/32|0]>>>d)&(1<<c)-1},concat:function(a,b){if(0===a.length||0===b.length)return a.concat(b);var c=a[a.length-1],d=sjcl.bitArray.getPartial(c);return 32===d?a.concat(b):sjcl.bitArray.P(b,d,c|0,a.slice(0,a.length-1))},bitLength:function(a){var b=a.length;return 0===
-b?0:32*(b-1)+sjcl.bitArray.getPartial(a[b-1])},clamp:function(a,b){if(32*a.length<b)return a;a=a.slice(0,Math.ceil(b/32));var c=a.length;b&=31;0<c&&b&&(a[c-1]=sjcl.bitArray.partial(b,a[c-1]&2147483648>>b-1,1));return a},partial:function(a,b,c){return 32===a?b:(c?b|0:b<<32-a)+0x10000000000*a},getPartial:function(a){return Math.round(a/0x10000000000)||32},equal:function(a,b){if(sjcl.bitArray.bitLength(a)!==sjcl.bitArray.bitLength(b))return u;var c=0,d;for(d=0;d<a.length;d++)c|=a[d]^b[d];return 0===
-c},P:function(a,b,c,d){var e;e=0;for(d===s&&(d=[]);32<=b;b-=32)d.push(c),c=0;if(0===b)return d.concat(a);for(e=0;e<a.length;e++)d.push(c|a[e]>>>b),c=a[e]<<32-b;e=a.length?a[a.length-1]:0;a=sjcl.bitArray.getPartial(e);d.push(sjcl.bitArray.partial(b+a&31,32<b+a?c:d.pop(),1));return d},l:function(a,b){return[a[0]^b[0],a[1]^b[1],a[2]^b[2],a[3]^b[3]]},byteswapM:function(a){var b,c;for(b=0;b<a.length;++b)c=a[b],a[b]=c>>>24|c>>>8&0xff00|(c&0xff00)<<8|c<<24;return a}};
-sjcl.codec.utf8String={fromBits:function(a){var b="",c=sjcl.bitArray.bitLength(a),d,e;for(d=0;d<c/8;d++)0===(d&3)&&(e=a[d/4]),b+=String.fromCharCode(e>>>24),e<<=8;return decodeURIComponent(escape(b))},toBits:function(a){a=unescape(encodeURIComponent(a));var b=[],c,d=0;for(c=0;c<a.length;c++)d=d<<8|a.charCodeAt(c),3===(c&3)&&(b.push(d),d=0);c&3&&b.push(sjcl.bitArray.partial(8*(c&3),d));return b}};
-sjcl.codec.hex={fromBits:function(a){var b="",c;for(c=0;c<a.length;c++)b+=((a[c]|0)+0xf00000000000).toString(16).substr(4);return b.substr(0,sjcl.bitArray.bitLength(a)/4)},toBits:function(a){var b,c=[],d;a=a.replace(/\s|0x/g,"");d=a.length;a+="00000000";for(b=0;b<a.length;b+=8)c.push(parseInt(a.substr(b,8),16)^0);return sjcl.bitArray.clamp(c,4*d)}};
-sjcl.codec.base64={J:"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",fromBits:function(a,b,c){var d="",e=0,f=sjcl.codec.base64.J,g=0,h=sjcl.bitArray.bitLength(a);c&&(f=f.substr(0,62)+"-_");for(c=0;6*d.length<h;)d+=f.charAt((g^a[c]>>>e)>>>26),6>e?(g=a[c]<<6-e,e+=26,c++):(g<<=6,e-=6);for(;d.length&3&&!b;)d+="=";return d},toBits:function(a,b){a=a.replace(/\s|=/g,"");var c=[],d,e=0,f=sjcl.codec.base64.J,g=0,h;b&&(f=f.substr(0,62)+"-_");for(d=0;d<a.length;d++)h=f.indexOf(a.charAt(d)),
-0>h&&q(new sjcl.exception.invalid("this isn't base64!")),26<e?(e-=26,c.push(g^h>>>e),g=h<<32-e):(e+=6,g^=h<<32-e);e&56&&c.push(sjcl.bitArray.partial(e&56,g,1));return c}};sjcl.codec.base64url={fromBits:function(a){return sjcl.codec.base64.fromBits(a,1,1)},toBits:function(a){return sjcl.codec.base64.toBits(a,1)}};sjcl.hash.sha256=function(a){this.b[0]||this.D();a?(this.r=a.r.slice(0),this.o=a.o.slice(0),this.h=a.h):this.reset()};sjcl.hash.sha256.hash=function(a){return(new sjcl.hash.sha256).update(a).finalize()};
-sjcl.hash.sha256.prototype={blockSize:512,reset:function(){this.r=this.N.slice(0);this.o=[];this.h=0;return this},update:function(a){"string"===typeof a&&(a=sjcl.codec.utf8String.toBits(a));var b,c=this.o=sjcl.bitArray.concat(this.o,a);b=this.h;a=this.h=b+sjcl.bitArray.bitLength(a);for(b=512+b&-512;b<=a;b+=512)x(this,c.splice(0,16));return this},finalize:function(){var a,b=this.o,c=this.r,b=sjcl.bitArray.concat(b,[sjcl.bitArray.partial(1,1)]);for(a=b.length+2;a&15;a++)b.push(0);b.push(Math.floor(this.h/
-4294967296));for(b.push(this.h|0);b.length;)x(this,b.splice(0,16));this.reset();return c},N:[],b:[],D:function(){function a(a){return 0x100000000*(a-Math.floor(a))|0}var b=0,c=2,d;a:for(;64>b;c++){for(d=2;d*d<=c;d++)if(0===c%d)continue a;8>b&&(this.N[b]=a(Math.pow(c,0.5)));this.b[b]=a(Math.pow(c,1/3));b++}}};
-function x(a,b){var c,d,e,f=b.slice(0),g=a.r,h=a.b,l=g[0],k=g[1],n=g[2],m=g[3],p=g[4],t=g[5],r=g[6],v=g[7];for(c=0;64>c;c++)16>c?d=f[c]:(d=f[c+1&15],e=f[c+14&15],d=f[c&15]=(d>>>7^d>>>18^d>>>3^d<<25^d<<14)+(e>>>17^e>>>19^e>>>10^e<<15^e<<13)+f[c&15]+f[c+9&15]|0),d=d+v+(p>>>6^p>>>11^p>>>25^p<<26^p<<21^p<<7)+(r^p&(t^r))+h[c],v=r,r=t,t=p,p=m+d|0,m=n,n=k,k=l,l=d+(k&n^m&(k^n))+(k>>>2^k>>>13^k>>>22^k<<30^k<<19^k<<10)|0;g[0]=g[0]+l|0;g[1]=g[1]+k|0;g[2]=g[2]+n|0;g[3]=g[3]+m|0;g[4]=g[4]+p|0;g[5]=g[5]+t|0;g[6]=
-g[6]+r|0;g[7]=g[7]+v|0}
-sjcl.mode.ccm={name:"ccm",encrypt:function(a,b,c,d,e){var f,g=b.slice(0),h=sjcl.bitArray,l=h.bitLength(c)/8,k=h.bitLength(g)/8;e=e||64;d=d||[];7>l&&q(new sjcl.exception.invalid("ccm: iv must be at least 7 bytes"));for(f=2;4>f&&k>>>8*f;f++);f<15-l&&(f=15-l);c=h.clamp(c,8*(15-f));b=sjcl.mode.ccm.L(a,b,c,d,e,f);g=sjcl.mode.ccm.p(a,g,c,b,e,f);return h.concat(g.data,g.tag)},decrypt:function(a,b,c,d,e){e=e||64;d=d||[];var f=sjcl.bitArray,g=f.bitLength(c)/8,h=f.bitLength(b),l=f.clamp(b,h-e),k=f.bitSlice(b,
-h-e),h=(h-e)/8;7>g&&q(new sjcl.exception.invalid("ccm: iv must be at least 7 bytes"));for(b=2;4>b&&h>>>8*b;b++);b<15-g&&(b=15-g);c=f.clamp(c,8*(15-b));l=sjcl.mode.ccm.p(a,l,c,k,e,b);a=sjcl.mode.ccm.L(a,l.data,c,d,e,b);f.equal(l.tag,a)||q(new sjcl.exception.corrupt("ccm: tag doesn't match"));return l.data},L:function(a,b,c,d,e,f){var g=[],h=sjcl.bitArray,l=h.l;e/=8;(e%2||4>e||16<e)&&q(new sjcl.exception.invalid("ccm: invalid tag length"));(0xffffffff<d.length||0xffffffff<b.length)&&q(new sjcl.exception.bug("ccm: can't deal with 4GiB or more data"));
-f=[h.partial(8,(d.length?64:0)|e-2<<2|f-1)];f=h.concat(f,c);f[3]|=h.bitLength(b)/8;f=a.encrypt(f);if(d.length){c=h.bitLength(d)/8;65279>=c?g=[h.partial(16,c)]:0xffffffff>=c&&(g=h.concat([h.partial(16,65534)],[c]));g=h.concat(g,d);for(d=0;d<g.length;d+=4)f=a.encrypt(l(f,g.slice(d,d+4).concat([0,0,0])))}for(d=0;d<b.length;d+=4)f=a.encrypt(l(f,b.slice(d,d+4).concat([0,0,0])));return h.clamp(f,8*e)},p:function(a,b,c,d,e,f){var g,h=sjcl.bitArray;g=h.l;var l=b.length,k=h.bitLength(b);c=h.concat([h.partial(8,
-f-1)],c).concat([0,0,0]).slice(0,4);d=h.bitSlice(g(d,a.encrypt(c)),0,e);if(!l)return{tag:d,data:[]};for(g=0;g<l;g+=4)c[3]++,e=a.encrypt(c),b[g]^=e[0],b[g+1]^=e[1],b[g+2]^=e[2],b[g+3]^=e[3];return{tag:d,data:h.clamp(b,k)}}};
-sjcl.mode.ocb2={name:"ocb2",encrypt:function(a,b,c,d,e,f){128!==sjcl.bitArray.bitLength(c)&&q(new sjcl.exception.invalid("ocb iv must be 128 bits"));var g,h=sjcl.mode.ocb2.H,l=sjcl.bitArray,k=l.l,n=[0,0,0,0];c=h(a.encrypt(c));var m,p=[];d=d||[];e=e||64;for(g=0;g+4<b.length;g+=4)m=b.slice(g,g+4),n=k(n,m),p=p.concat(k(c,a.encrypt(k(c,m)))),c=h(c);m=b.slice(g);b=l.bitLength(m);g=a.encrypt(k(c,[0,0,0,b]));m=l.clamp(k(m.concat([0,0,0]),g),b);n=k(n,k(m.concat([0,0,0]),g));n=a.encrypt(k(n,k(c,h(c))));d.length&&
-(n=k(n,f?d:sjcl.mode.ocb2.pmac(a,d)));return p.concat(l.concat(m,l.clamp(n,e)))},decrypt:function(a,b,c,d,e,f){128!==sjcl.bitArray.bitLength(c)&&q(new sjcl.exception.invalid("ocb iv must be 128 bits"));e=e||64;var g=sjcl.mode.ocb2.H,h=sjcl.bitArray,l=h.l,k=[0,0,0,0],n=g(a.encrypt(c)),m,p,t=sjcl.bitArray.bitLength(b)-e,r=[];d=d||[];for(c=0;c+4<t/32;c+=4)m=l(n,a.decrypt(l(n,b.slice(c,c+4)))),k=l(k,m),r=r.concat(m),n=g(n);p=t-32*c;m=a.encrypt(l(n,[0,0,0,p]));m=l(m,h.clamp(b.slice(c),p).concat([0,0,0]));
-k=l(k,m);k=a.encrypt(l(k,l(n,g(n))));d.length&&(k=l(k,f?d:sjcl.mode.ocb2.pmac(a,d)));h.equal(h.clamp(k,e),h.bitSlice(b,t))||q(new sjcl.exception.corrupt("ocb: tag doesn't match"));return r.concat(h.clamp(m,p))},pmac:function(a,b){var c,d=sjcl.mode.ocb2.H,e=sjcl.bitArray,f=e.l,g=[0,0,0,0],h=a.encrypt([0,0,0,0]),h=f(h,d(d(h)));for(c=0;c+4<b.length;c+=4)h=d(h),g=f(g,a.encrypt(f(h,b.slice(c,c+4))));c=b.slice(c);128>e.bitLength(c)&&(h=f(h,d(h)),c=e.concat(c,[-2147483648,0,0,0]));g=f(g,c);return a.encrypt(f(d(f(h,
-d(h))),g))},H:function(a){return[a[0]<<1^a[1]>>>31,a[1]<<1^a[2]>>>31,a[2]<<1^a[3]>>>31,a[3]<<1^135*(a[0]>>>31)]}};
-sjcl.mode.gcm={name:"gcm",encrypt:function(a,b,c,d,e){var f=b.slice(0);b=sjcl.bitArray;d=d||[];a=sjcl.mode.gcm.p(!0,a,f,d,c,e||128);return b.concat(a.data,a.tag)},decrypt:function(a,b,c,d,e){var f=b.slice(0),g=sjcl.bitArray,h=g.bitLength(f);e=e||128;d=d||[];e<=h?(b=g.bitSlice(f,h-e),f=g.bitSlice(f,0,h-e)):(b=f,f=[]);a=sjcl.mode.gcm.p(u,a,f,d,c,e);g.equal(a.tag,b)||q(new sjcl.exception.corrupt("gcm: tag doesn't match"));return a.data},Z:function(a,b){var c,d,e,f,g,h=sjcl.bitArray.l;e=[0,0,0,0];f=b.slice(0);
-for(c=0;128>c;c++){(d=0!==(a[Math.floor(c/32)]&1<<31-c%32))&&(e=h(e,f));g=0!==(f[3]&1);for(d=3;0<d;d--)f[d]=f[d]>>>1|(f[d-1]&1)<<31;f[0]>>>=1;g&&(f[0]^=-0x1f000000)}return e},g:function(a,b,c){var d,e=c.length;b=b.slice(0);for(d=0;d<e;d+=4)b[0]^=0xffffffff&c[d],b[1]^=0xffffffff&c[d+1],b[2]^=0xffffffff&c[d+2],b[3]^=0xffffffff&c[d+3],b=sjcl.mode.gcm.Z(b,a);return b},p:function(a,b,c,d,e,f){var g,h,l,k,n,m,p,t,r=sjcl.bitArray;m=c.length;p=r.bitLength(c);t=r.bitLength(d);h=r.bitLength(e);g=b.encrypt([0,
-0,0,0]);96===h?(e=e.slice(0),e=r.concat(e,[1])):(e=sjcl.mode.gcm.g(g,[0,0,0,0],e),e=sjcl.mode.gcm.g(g,e,[0,0,Math.floor(h/0x100000000),h&0xffffffff]));h=sjcl.mode.gcm.g(g,[0,0,0,0],d);n=e.slice(0);d=h.slice(0);a||(d=sjcl.mode.gcm.g(g,h,c));for(k=0;k<m;k+=4)n[3]++,l=b.encrypt(n),c[k]^=l[0],c[k+1]^=l[1],c[k+2]^=l[2],c[k+3]^=l[3];c=r.clamp(c,p);a&&(d=sjcl.mode.gcm.g(g,h,c));a=[Math.floor(t/0x100000000),t&0xffffffff,Math.floor(p/0x100000000),p&0xffffffff];d=sjcl.mode.gcm.g(g,d,a);l=b.encrypt(e);d[0]^=l[0];
-d[1]^=l[1];d[2]^=l[2];d[3]^=l[3];return{tag:r.bitSlice(d,0,f),data:c}}};sjcl.misc.hmac=function(a,b){this.M=b=b||sjcl.hash.sha256;var c=[[],[]],d,e=b.prototype.blockSize/32;this.n=[new b,new b];a.length>e&&(a=b.hash(a));for(d=0;d<e;d++)c[0][d]=a[d]^909522486,c[1][d]=a[d]^1549556828;this.n[0].update(c[0]);this.n[1].update(c[1]);this.G=new b(this.n[0])};
-sjcl.misc.hmac.prototype.encrypt=sjcl.misc.hmac.prototype.mac=function(a){this.Q&&q(new sjcl.exception.invalid("encrypt on already updated hmac called!"));this.update(a);return this.digest(a)};sjcl.misc.hmac.prototype.reset=function(){this.G=new this.M(this.n[0]);this.Q=u};sjcl.misc.hmac.prototype.update=function(a){this.Q=!0;this.G.update(a)};sjcl.misc.hmac.prototype.digest=function(){var a=this.G.finalize(),a=(new this.M(this.n[1])).update(a).finalize();this.reset();return a};
-sjcl.misc.pbkdf2=function(a,b,c,d,e){c=c||1E3;(0>d||0>c)&&q(sjcl.exception.invalid("invalid params to pbkdf2"));"string"===typeof a&&(a=sjcl.codec.utf8String.toBits(a));"string"===typeof b&&(b=sjcl.codec.utf8String.toBits(b));e=e||sjcl.misc.hmac;a=new e(a);var f,g,h,l,k=[],n=sjcl.bitArray;for(l=1;32*k.length<(d||1);l++){e=f=a.encrypt(n.concat(b,[l]));for(g=1;g<c;g++){f=a.encrypt(f);for(h=0;h<f.length;h++)e[h]^=f[h]}k=k.concat(e)}d&&(k=n.clamp(k,d));return k};
-sjcl.prng=function(a){this.c=[new sjcl.hash.sha256];this.i=[0];this.F=0;this.s={};this.C=0;this.K={};this.O=this.d=this.j=this.W=0;this.b=[0,0,0,0,0,0,0,0];this.f=[0,0,0,0];this.A=s;this.B=a;this.q=u;this.w={progress:{},seeded:{}};this.m=this.V=0;this.t=1;this.u=2;this.S=0x10000;this.I=[0,48,64,96,128,192,0x100,384,512,768,1024];this.T=3E4;this.R=80};
-sjcl.prng.prototype={randomWords:function(a,b){var c=[],d;d=this.isReady(b);var e;d===this.m&&q(new sjcl.exception.notReady("generator isn't seeded"));if(d&this.u){d=!(d&this.t);e=[];var f=0,g;this.O=e[0]=(new Date).valueOf()+this.T;for(g=0;16>g;g++)e.push(0x100000000*Math.random()|0);for(g=0;g<this.c.length&&!(e=e.concat(this.c[g].finalize()),f+=this.i[g],this.i[g]=0,!d&&this.F&1<<g);g++);this.F>=1<<this.c.length&&(this.c.push(new sjcl.hash.sha256),this.i.push(0));this.d-=f;f>this.j&&(this.j=f);this.F++;
-this.b=sjcl.hash.sha256.hash(this.b.concat(e));this.A=new sjcl.cipher.aes(this.b);for(d=0;4>d&&!(this.f[d]=this.f[d]+1|0,this.f[d]);d++);}for(d=0;d<a;d+=4)0===(d+1)%this.S&&A(this),e=B(this),c.push(e[0],e[1],e[2],e[3]);A(this);return c.slice(0,a)},setDefaultParanoia:function(a,b){0===a&&"Setting paranoia=0 will ruin your security; use it only for testing"!==b&&q("Setting paranoia=0 will ruin your security; use it only for testing");this.B=a},addEntropy:function(a,b,c){c=c||"user";var d,e,f=(new Date).valueOf(),
-g=this.s[c],h=this.isReady(),l=0;d=this.K[c];d===s&&(d=this.K[c]=this.W++);g===s&&(g=this.s[c]=0);this.s[c]=(this.s[c]+1)%this.c.length;switch(typeof a){case "number":b===s&&(b=1);this.c[g].update([d,this.C++,1,b,f,1,a|0]);break;case "object":c=Object.prototype.toString.call(a);if("[object Uint32Array]"===c){e=[];for(c=0;c<a.length;c++)e.push(a[c]);a=e}else{"[object Array]"!==c&&(l=1);for(c=0;c<a.length&&!l;c++)"number"!==typeof a[c]&&(l=1)}if(!l){if(b===s)for(c=b=0;c<a.length;c++)for(e=a[c];0<e;)b++,
-e>>>=1;this.c[g].update([d,this.C++,2,b,f,a.length].concat(a))}break;case "string":b===s&&(b=a.length);this.c[g].update([d,this.C++,3,b,f,a.length]);this.c[g].update(a);break;default:l=1}l&&q(new sjcl.exception.bug("random: addEntropy only supports number, array of numbers or string"));this.i[g]+=b;this.d+=b;h===this.m&&(this.isReady()!==this.m&&C("seeded",Math.max(this.j,this.d)),C("progress",this.getProgress()))},isReady:function(a){a=this.I[a!==s?a:this.B];return this.j&&this.j>=a?this.i[0]>this.R&&
-(new Date).valueOf()>this.O?this.u|this.t:this.t:this.d>=a?this.u|this.m:this.m},getProgress:function(a){a=this.I[a?a:this.B];return this.j>=a?1:this.d>a?1:this.d/a},startCollectors:function(){this.q||(this.a={loadTimeCollector:D(this,this.aa),mouseCollector:D(this,this.ba),keyboardCollector:D(this,this.$),accelerometerCollector:D(this,this.U),touchCollector:D(this,this.da)},window.addEventListener?(window.addEventListener("load",this.a.loadTimeCollector,u),window.addEventListener("mousemove",this.a.mouseCollector,
-u),window.addEventListener("keypress",this.a.keyboardCollector,u),window.addEventListener("devicemotion",this.a.accelerometerCollector,u),window.addEventListener("touchmove",this.a.touchCollector,u)):document.attachEvent?(document.attachEvent("onload",this.a.loadTimeCollector),document.attachEvent("onmousemove",this.a.mouseCollector),document.attachEvent("keypress",this.a.keyboardCollector)):q(new sjcl.exception.bug("can't attach event")),this.q=!0)},stopCollectors:function(){this.q&&(window.removeEventListener?
-(window.removeEventListener("load",this.a.loadTimeCollector,u),window.removeEventListener("mousemove",this.a.mouseCollector,u),window.removeEventListener("keypress",this.a.keyboardCollector,u),window.removeEventListener("devicemotion",this.a.accelerometerCollector,u),window.removeEventListener("touchmove",this.a.touchCollector,u)):document.detachEvent&&(document.detachEvent("onload",this.a.loadTimeCollector),document.detachEvent("onmousemove",this.a.mouseCollector),document.detachEvent("keypress",
-this.a.keyboardCollector)),this.q=u)},addEventListener:function(a,b){this.w[a][this.V++]=b},removeEventListener:function(a,b){var c,d,e=this.w[a],f=[];for(d in e)e.hasOwnProperty(d)&&e[d]===b&&f.push(d);for(c=0;c<f.length;c++)d=f[c],delete e[d]},$:function(){E(1)},ba:function(a){var b,c;try{b=a.x||a.clientX||a.offsetX||0,c=a.y||a.clientY||a.offsetY||0}catch(d){c=b=0}0!=b&&0!=c&&sjcl.random.addEntropy([b,c],2,"mouse");E(0)},da:function(a){a=a.touches[0]||a.changedTouches[0];sjcl.random.addEntropy([a.pageX||
-a.clientX,a.pageY||a.clientY],1,"touch");E(0)},aa:function(){E(2)},U:function(a){a=a.accelerationIncludingGravity.x||a.accelerationIncludingGravity.y||a.accelerationIncludingGravity.z;if(window.orientation){var b=window.orientation;"number"===typeof b&&sjcl.random.addEntropy(b,1,"accelerometer")}a&&sjcl.random.addEntropy(a,2,"accelerometer");E(0)}};function C(a,b){var c,d=sjcl.random.w[a],e=[];for(c in d)d.hasOwnProperty(c)&&e.push(d[c]);for(c=0;c<e.length;c++)e[c](b)}
-function E(a){"undefined"!==typeof window&&window.performance&&"function"===typeof window.performance.now?sjcl.random.addEntropy(window.performance.now(),a,"loadtime"):sjcl.random.addEntropy((new Date).valueOf(),a,"loadtime")}function A(a){a.b=B(a).concat(B(a));a.A=new sjcl.cipher.aes(a.b)}function B(a){for(var b=0;4>b&&!(a.f[b]=a.f[b]+1|0,a.f[b]);b++);return a.A.encrypt(a.f)}function D(a,b){return function(){b.apply(a,arguments)}}sjcl.random=new sjcl.prng(6);
-a:try{var F,G,H,I;if(I="undefined"!==typeof module){var J;if(J=module.exports){var K;try{K=require("crypto")}catch(L){K=null}J=(G=K)&&G.randomBytes}I=J}if(I)F=G.randomBytes(128),F=new Uint32Array((new Uint8Array(F)).buffer),sjcl.random.addEntropy(F,1024,"crypto['randomBytes']");else if("undefined"!==typeof window&&"undefined"!==typeof Uint32Array){H=new Uint32Array(32);if(window.crypto&&window.crypto.getRandomValues)window.crypto.getRandomValues(H);else if(window.msCrypto&&window.msCrypto.getRandomValues)window.msCrypto.getRandomValues(H);
-else break a;sjcl.random.addEntropy(H,1024,"crypto['getRandomValues']")}}catch(M){"undefined"!==typeof window&&window.console&&(console.log("There was an error collecting entropy from the browser:"),console.log(M))}
-sjcl.json={defaults:{v:1,iter:1E3,ks:128,ts:64,mode:"ccm",adata:"",cipher:"aes"},Y:function(a,b,c,d){c=c||{};d=d||{};var e=sjcl.json,f=e.e({iv:sjcl.random.randomWords(4,0)},e.defaults),g;e.e(f,c);c=f.adata;"string"===typeof f.salt&&(f.salt=sjcl.codec.base64.toBits(f.salt));"string"===typeof f.iv&&(f.iv=sjcl.codec.base64.toBits(f.iv));(!sjcl.mode[f.mode]||!sjcl.cipher[f.cipher]||"string"===typeof a&&100>=f.iter||64!==f.ts&&96!==f.ts&&128!==f.ts||128!==f.ks&&192!==f.ks&&0x100!==f.ks||2>f.iv.length||4<
-f.iv.length)&&q(new sjcl.exception.invalid("json encrypt: invalid parameters"));"string"===typeof a?(g=sjcl.misc.cachedPbkdf2(a,f),a=g.key.slice(0,f.ks/32),f.salt=g.salt):sjcl.ecc&&a instanceof sjcl.ecc.elGamal.publicKey&&(g=a.kem(),f.kemtag=g.tag,a=g.key.slice(0,f.ks/32));"string"===typeof b&&(b=sjcl.codec.utf8String.toBits(b));"string"===typeof c&&(f.adata=c=sjcl.codec.utf8String.toBits(c));g=new sjcl.cipher[f.cipher](a);e.e(d,f);d.key=a;f.ct=sjcl.mode[f.mode].encrypt(g,b,f.iv,c,f.ts);return f},
-encrypt:function(a,b,c,d){var e=sjcl.json,f=e.Y.apply(e,arguments);return e.encode(f)},X:function(a,b,c,d){c=c||{};d=d||{};var e=sjcl.json;b=e.e(e.e(e.e({},e.defaults),b),c,!0);var f,g;f=b.adata;"string"===typeof b.salt&&(b.salt=sjcl.codec.base64.toBits(b.salt));"string"===typeof b.iv&&(b.iv=sjcl.codec.base64.toBits(b.iv));(!sjcl.mode[b.mode]||!sjcl.cipher[b.cipher]||"string"===typeof a&&100>=b.iter||64!==b.ts&&96!==b.ts&&128!==b.ts||128!==b.ks&&192!==b.ks&&0x100!==b.ks||!b.iv||2>b.iv.length||4<b.iv.length)&&
-q(new sjcl.exception.invalid("json decrypt: invalid parameters"));"string"===typeof a?(g=sjcl.misc.cachedPbkdf2(a,b),a=g.key.slice(0,b.ks/32),b.salt=g.salt):sjcl.ecc&&a instanceof sjcl.ecc.elGamal.secretKey&&(a=a.unkem(sjcl.codec.base64.toBits(b.kemtag)).slice(0,b.ks/32));"string"===typeof f&&(f=sjcl.codec.utf8String.toBits(f));g=new sjcl.cipher[b.cipher](a);f=sjcl.mode[b.mode].decrypt(g,b.ct,b.iv,f,b.ts);e.e(d,b);d.key=a;return 1===c.raw?f:sjcl.codec.utf8String.fromBits(f)},decrypt:function(a,b,
-c,d){var e=sjcl.json;return e.X(a,e.decode(b),c,d)},encode:function(a){var b,c="{",d="";for(b in a)if(a.hasOwnProperty(b))switch(b.match(/^[a-z0-9]+$/i)||q(new sjcl.exception.invalid("json encode: invalid property name")),c+=d+'"'+b+'":',d=",",typeof a[b]){case "number":case "boolean":c+=a[b];break;case "string":c+='"'+escape(a[b])+'"';break;case "object":c+='"'+sjcl.codec.base64.fromBits(a[b],0)+'"';break;default:q(new sjcl.exception.bug("json encode: unsupported type"))}return c+"}"},decode:function(a){a=
-a.replace(/\s/g,"");a.match(/^\{.*\}$/)||q(new sjcl.exception.invalid("json decode: this isn't json!"));a=a.replace(/^\{|\}$/g,"").split(/,/);var b={},c,d;for(c=0;c<a.length;c++)(d=a[c].match(/^\s*(?:(["']?)([a-z][a-z0-9]*)\1)\s*:\s*(?:(-?\d+)|"([a-z0-9+\/%*_.@=\-]*)"|(true|false))$/i))||q(new sjcl.exception.invalid("json decode: this isn't json!")),d[3]?b[d[2]]=parseInt(d[3],10):d[4]?b[d[2]]=d[2].match(/^(ct|adata|salt|iv)$/)?sjcl.codec.base64.toBits(d[4]):unescape(d[4]):d[5]&&(b[d[2]]="true"===
-d[5]);return b},e:function(a,b,c){a===s&&(a={});if(b===s)return a;for(var d in b)b.hasOwnProperty(d)&&(c&&(a[d]!==s&&a[d]!==b[d])&&q(new sjcl.exception.invalid("required parameter overridden")),a[d]=b[d]);return a},fa:function(a,b){var c={},d;for(d in a)a.hasOwnProperty(d)&&a[d]!==b[d]&&(c[d]=a[d]);return c},ea:function(a,b){var c={},d;for(d=0;d<b.length;d++)a[b[d]]!==s&&(c[b[d]]=a[b[d]]);return c}};sjcl.encrypt=sjcl.json.encrypt;sjcl.decrypt=sjcl.json.decrypt;sjcl.misc.ca={};
-sjcl.misc.cachedPbkdf2=function(a,b){var c=sjcl.misc.ca,d;b=b||{};d=b.iter||1E3;c=c[a]=c[a]||{};d=c[d]=c[d]||{firstSalt:b.salt&&b.salt.length?b.salt.slice(0):sjcl.random.randomWords(2,0)};c=b.salt===s?d.firstSalt:b.salt;d[c]=d[c]||sjcl.misc.pbkdf2(a,c,b.iter);return{key:d[c].slice(0),salt:c.slice(0)}};
+"use strict";function q(e){throw e}function w(e,t,n){4!==t.length&&q(new sjcl.exception
+.invalid("invalid aes block size"));var r=e.b[n],i=t[0]^r[0],s=t[n?3:1]^r[1],o=t
+[2]^r[2];t=t[n?1:3]^r[3];var u,a,f,l=r.length/4-2,c,h=4,p=[0,0,0,0];u=e.k[n],e=u
+[0];var d=u[1],v=u[2],m=u[3],g=u[4];for(c=0;c<l;c++)u=e[i>>>24]^d[s>>16&255]^v[o>>8&255
+]^m[t&255]^r[h],a=e[s>>>24]^d[o>>16&255]^v[t>>8&255]^m[i&255]^r[h+1],f=e[o>>>24]^
+d[t>>16&255]^v[i>>8&255]^m[s&255]^r[h+2],t=e[t>>>24]^d[i>>16&255]^v[s>>8&255]^m[
+o&255]^r[h+3],h+=4,i=u,s=a,o=f;for(c=0;4>c;c++)p[n?3&-c:c]=g[i>>>24]<<24^g[s>>16&255
+]<<16^g[o>>8&255]<<8^g[t&255]^r[h++],u=i,i=s,s=o,o=t,t=u;return p}function x(e,t
+){var n,r,i,s=t.slice(0),o=e.r,u=e.b,a=o[0],f=o[1],l=o[2],c=o[3],h=o[4],p=o[5],d=
+o[6],v=o[7];for(n=0;64>n;n++)16>n?r=s[n]:(r=s[n+1&15],i=s[n+14&15],r=s[n&15]=(r>>>7^
+r>>>18^r>>>3^r<<25^r<<14)+(i>>>17^i>>>19^i>>>10^i<<15^i<<13)+s[n&15]+s[n+9&15]|0
+),r=r+v+(h>>>6^h>>>11^h>>>25^h<<26^h<<21^h<<7)+(d^h&(p^d))+u[n],v=d,d=p,p=h,h=c+
+r|0,c=l,l=f,f=a,a=r+(f&l^c&(f^l))+(f>>>2^f>>>13^f>>>22^f<<30^f<<19^f<<10)|0;o[0]=
+o[0]+a|0,o[1]=o[1]+f|0,o[2]=o[2]+l|0,o[3]=o[3]+c|0,o[4]=o[4]+h|0,o[5]=o[5]+p|0,o
+[6]=o[6]+d|0,o[7]=o[7]+v|0}function C(e,t){var n,r=sjcl.random.w[e],i=[];for(n in
+r)r.hasOwnProperty(n)&&i.push(r[n]);for(n=0;n<i.length;n++)i[n](t)}function E(e)
+{"undefined"!=typeof window&&window.performance&&"function"==typeof window.performance
+.now?sjcl.random.addEntropy(window.performance.now(),e,"loadtime"):sjcl.random.addEntropy
+((new Date).valueOf(),e,"loadtime")}function A(e){e.b=B(e).concat(B(e)),e.A=new
+sjcl.cipher.aes(e.b)}function B(e){for(var t=0;4>t&&(e.f[t]=e.f[t]+1|0,!e.f[t]);
+t++);return e.A.encrypt(e.f)}function D(e,t){return function(){t.apply(e,arguments
+)}}var s=void 0,u=!1,sjcl={cipher:{},hash:{},keyexchange:{},mode:{},misc:{},codec
+:{},exception:{corrupt:function(e){this.toString=function(){return"CORRUPT: "+this
+.message},this.message=e},invalid:function(e){this.toString=function(){return"INVALID: "+
+this.message},this.message=e},bug:function(e){this.toString=function(){return"BUG: "+
+this.message},this.message=e},notReady:function(e){this.toString=function(){return"NOT READY: "+
+this.message},this.message=e}}};"undefined"!=typeof module&&module.exports&&(module
+.exports=sjcl),"function"==typeof define&&define([],function(){return sjcl}),sjcl
+.cipher.aes=function(e){this.k[0][0][0]||this.D();var t,n,r,i,s=this.k[0][4],o=this
+.k[1];t=e.length;var u=1;4!==t&&6!==t&&8!==t&&q(new sjcl.exception.invalid("invalid aes key size"
+)),this.b=[r=e.slice(0),i=[]];for(e=t;e<4*t+28;e++){n=r[e-1];if(0===e%t||8===t&&4===
+e%t)n=s[n>>>24]<<24^s[n>>16&255]<<16^s[n>>8&255]<<8^s[n&255],0===e%t&&(n=n<<8^n>>>24^
+u<<24,u=u<<1^283*(u>>7));r[e]=r[e-t]^n}for(t=0;e;t++,e--)n=r[t&3?e:e-4],i[t]=4>=
+e||4>t?n:o[0][s[n>>>24]]^o[1][s[n>>16&255]]^o[2][s[n>>8&255]]^o[3][s[n&255]]},sjcl
+.cipher.aes.prototype={encrypt:function(e){return w(this,e,0)},decrypt:function(
+e){return w(this,e,1)},k:[[[],[],[],[],[]],[[],[],[],[],[]]],D:function(){var e=
+this.k[0],t=this.k[1],n=e[4],r=t[4],i,s,o,u=[],a=[],f,l,c,h;for(i=0;256>i;i++)a[
+(u[i]=i<<1^283*(i>>7))^i]=i;for(s=o=0;!n[s];s^=f||1,o=a[o]||1){c=o^o<<1^o<<2^o<<3^
+o<<4,c=c>>8^c&255^99,n[s]=c,r[c]=s,l=u[i=u[f=u[s]]],h=16843009*l^65537*i^257*f^16843008*
+s,l=257*u[c]^16843008*c;for(i=0;4>i;i++)e[i][s]=l=l<<24^l>>>8,t[i][c]=h=h<<24^h>>>8
+}for(i=0;5>i;i++)e[i]=e[i].slice(0),t[i]=t[i].slice(0)}},sjcl.bitArray={bitSlice
+:function(e,t,n){return e=sjcl.bitArray.P(e.slice(t/32),32-(t&31)).slice(1),n===
+s?e:sjcl.bitArray.clamp(e,n-t)},extract:function(e,t,n){var r=Math.floor(-t-n&31
+);return((t+n-1^t)&-32?e[t/32|0]<<32-r^e[t/32+1|0]>>>r:e[t/32|0]>>>r)&(1<<n)-1},
+concat:function(e,t){if(0===e.length||0===t.length)return e.concat(t);var n=e[e.
+length-1],r=sjcl.bitArray.getPartial(n);return 32===r?e.concat(t):sjcl.bitArray.
+P(t,r,n|0,e.slice(0,e.length-1))},bitLength:function(e){var t=e.length;return 0===
+t?0:32*(t-1)+sjcl.bitArray.getPartial(e[t-1])},clamp:function(e,t){if(32*e.length<
+t)return e;e=e.slice(0,Math.ceil(t/32));var n=e.length;return t&=31,0<n&&t&&(e[n-1
+]=sjcl.bitArray.partial(t,e[n-1]&2147483648>>t-1,1)),e},partial:function(e,t,n){
+return 32===e?t:(n?t|0:t<<32-e)+1099511627776*e},getPartial:function(e){return Math
+.round(e/1099511627776)||32},equal:function(e,t){if(sjcl.bitArray.bitLength(e)!==
+sjcl.bitArray.bitLength(t))return u;var n=0,r;for(r=0;r<e.length;r++)n|=e[r]^t[r
+];return 0===n},P:function(e,t,n,r){var i;i=0;for(r===s&&(r=[]);32<=t;t-=32)r.push
+(n),n=0;if(0===t)return r.concat(e);for(i=0;i<e.length;i++)r.push(n|e[i]>>>t),n=
+e[i]<<32-t;return i=e.length?e[e.length-1]:0,e=sjcl.bitArray.getPartial(i),r.push
+(sjcl.bitArray.partial(t+e&31,32<t+e?n:r.pop(),1)),r},l:function(e,t){return[e[0
+]^t[0],e[1]^t[1],e[2]^t[2],e[3]^t[3]]},byteswapM:function(e){var t,n;for(t=0;t<e
+.length;++t)n=e[t],e[t]=n>>>24|n>>>8&65280|(n&65280)<<8|n<<24;return e}},sjcl.codec
+.utf8String={fromBits:function(e){var t="",n=sjcl.bitArray.bitLength(e),r,i;for(
+r=0;r<n/8;r++)0===(r&3)&&(i=e[r/4]),t+=String.fromCharCode(i>>>24),i<<=8;return decodeURIComponent
+(escape(t))},toBits:function(e){e=unescape(encodeURIComponent(e));var t=[],n,r=0
+;for(n=0;n<e.length;n++)r=r<<8|e.charCodeAt(n),3===(n&3)&&(t.push(r),r=0);return n&3&&
+t.push(sjcl.bitArray.partial(8*(n&3),r)),t}},sjcl.codec.hex={fromBits:function(e
+){var t="",n;for(n=0;n<e.length;n++)t+=((e[n]|0)+0xf00000000000).toString(16).substr
+(4);return t.substr(0,sjcl.bitArray.bitLength(e)/4)},toBits:function(e){var t,n=
+[],r;e=e.replace(/\s|0x/g,""),r=e.length,e+="00000000";for(t=0;t<e.length;t+=8)n
+.push(parseInt(e.substr(t,8),16)^0);return sjcl.bitArray.clamp(n,4*r)}},sjcl.codec
+.base64={J:"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",fromBits
+:function(e,t,n){var r="",i=0,s=sjcl.codec.base64.J,o=0,u=sjcl.bitArray.bitLength
+(e);n&&(s=s.substr(0,62)+"-_");for(n=0;6*r.length<u;)r+=s.charAt((o^e[n]>>>i)>>>26
+),6>i?(o=e[n]<<6-i,i+=26,n++):(o<<=6,i-=6);for(;r.length&3&&!t;)r+="=";return r}
+,toBits:function(e,t){e=e.replace(/\s|=/g,"");var n=[],r,i=0,s=sjcl.codec.base64
+.J,o=0,u;t&&(s=s.substr(0,62)+"-_");for(r=0;r<e.length;r++)u=s.indexOf(e.charAt(
+r)),0>u&&q(new sjcl.exception.invalid("this isn't base64!")),26<i?(i-=26,n.push(
+o^u>>>i),o=u<<32-i):(i+=6,o^=u<<32-i);return i&56&&n.push(sjcl.bitArray.partial(
+i&56,o,1)),n}},sjcl.codec.base64url={fromBits:function(e){return sjcl.codec.base64
+.fromBits(e,1,1)},toBits:function(e){return sjcl.codec.base64.toBits(e,1)}},sjcl
+.hash.sha256=function(e){this.b[0]||this.D(),e?(this.r=e.r.slice(0),this.o=e.o.slice
+(0),this.h=e.h):this.reset()},sjcl.hash.sha256.hash=function(e){return(new sjcl.
+hash.sha256).update(e).finalize()},sjcl.hash.sha256.prototype={blockSize:512,reset
+:function(){return this.r=this.N.slice(0),this.o=[],this.h=0,this},update:function(
+e){"string"==typeof e&&(e=sjcl.codec.utf8String.toBits(e));var t,n=this.o=sjcl.bitArray
+.concat(this.o,e);t=this.h,e=this.h=t+sjcl.bitArray.bitLength(e);for(t=512+t&-512
+;t<=e;t+=512)x(this,n.splice(0,16));return this},finalize:function(){var e,t=this
+.o,n=this.r,t=sjcl.bitArray.concat(t,[sjcl.bitArray.partial(1,1)]);for(e=t.length+2
+;e&15;e++)t.push(0);t.push(Math.floor(this.h/4294967296));for(t.push(this.h|0);t
+.length;)x(this,t.splice(0,16));return this.reset(),n},N:[],b:[],D:function(){function e
+(e){return 4294967296*(e-Math.floor(e))|0}var t=0,n=2,r;e:for(;64>t;n++){for(r=2
+;r*r<=n;r++)if(0===n%r)continue e;8>t&&(this.N[t]=e(Math.pow(n,.5))),this.b[t]=e
+(Math.pow(n,1/3)),t++}}},sjcl.mode.ccm={name:"ccm",encrypt:function(e,t,n,r,i){var s
+,o=t.slice(0),u=sjcl.bitArray,a=u.bitLength(n)/8,f=u.bitLength(o)/8;i=i||64,r=r||
+[],7>a&&q(new sjcl.exception.invalid("ccm: iv must be at least 7 bytes"));for(s=2
+;4>s&&f>>>8*s;s++);return s<15-a&&(s=15-a),n=u.clamp(n,8*(15-s)),t=sjcl.mode.ccm
+.L(e,t,n,r,i,s),o=sjcl.mode.ccm.p(e,o,n,t,i,s),u.concat(o.data,o.tag)},decrypt:function(
+e,t,n,r,i){i=i||64,r=r||[];var s=sjcl.bitArray,o=s.bitLength(n)/8,u=s.bitLength(
+t),a=s.clamp(t,u-i),f=s.bitSlice(t,u-i),u=(u-i)/8;7>o&&q(new sjcl.exception.invalid
+("ccm: iv must be at least 7 bytes"));for(t=2;4>t&&u>>>8*t;t++);return t<15-o&&(
+t=15-o),n=s.clamp(n,8*(15-t)),a=sjcl.mode.ccm.p(e,a,n,f,i,t),e=sjcl.mode.ccm.L(e
+,a.data,n,r,i,t),s.equal(a.tag,e)||q(new sjcl.exception.corrupt("ccm: tag doesn't match"
+)),a.data},L:function(e,t,n,r,i,s){var o=[],u=sjcl.bitArray,a=u.l;i/=8,(i%2||4>i||16<
+i)&&q(new sjcl.exception.invalid("ccm: invalid tag length")),(4294967295<r.length||4294967295<
+t.length)&&q(new sjcl.exception.bug("ccm: can't deal with 4GiB or more data")),s=
+[u.partial(8,(r.length?64:0)|i-2<<2|s-1)],s=u.concat(s,n),s[3]|=u.bitLength(t)/8
+,s=e.encrypt(s);if(r.length){n=u.bitLength(r)/8,65279>=n?o=[u.partial(16,n)]:4294967295>=
+n&&(o=u.concat([u.partial(16,65534)],[n])),o=u.concat(o,r);for(r=0;r<o.length;r+=4
+)s=e.encrypt(a(s,o.slice(r,r+4).concat([0,0,0])))}for(r=0;r<t.length;r+=4)s=e.encrypt
+(a(s,t.slice(r,r+4).concat([0,0,0])));return u.clamp(s,8*i)},p:function(e,t,n,r,
+i,s){var o,u=sjcl.bitArray;o=u.l;var a=t.length,f=u.bitLength(t);n=u.concat([u.partial
+(8,s-1)],n).concat([0,0,0]).slice(0,4),r=u.bitSlice(o(r,e.encrypt(n)),0,i);if(!a
+)return{tag:r,data:[]};for(o=0;o<a;o+=4)n[3]++,i=e.encrypt(n),t[o]^=i[0],t[o+1]^=
+i[1],t[o+2]^=i[2],t[o+3]^=i[3];return{tag:r,data:u.clamp(t,f)}}},sjcl.mode.ocb2=
+{name:"ocb2",encrypt:function(e,t,n,r,i,s){128!==sjcl.bitArray.bitLength(n)&&q(new
+sjcl.exception.invalid("ocb iv must be 128 bits"));var o,u=sjcl.mode.ocb2.H,a=sjcl
+.bitArray,f=a.l,l=[0,0,0,0];n=u(e.encrypt(n));var c,h=[];r=r||[],i=i||64;for(o=0
+;o+4<t.length;o+=4)c=t.slice(o,o+4),l=f(l,c),h=h.concat(f(n,e.encrypt(f(n,c)))),
+n=u(n);return c=t.slice(o),t=a.bitLength(c),o=e.encrypt(f(n,[0,0,0,t])),c=a.clamp
+(f(c.concat([0,0,0]),o),t),l=f(l,f(c.concat([0,0,0]),o)),l=e.encrypt(f(l,f(n,u(n
+)))),r.length&&(l=f(l,s?r:sjcl.mode.ocb2.pmac(e,r))),h.concat(a.concat(c,a.clamp
+(l,i)))},decrypt:function(e,t,n,r,i,s){128!==sjcl.bitArray.bitLength(n)&&q(new sjcl
+.exception.invalid("ocb iv must be 128 bits")),i=i||64;var o=sjcl.mode.ocb2.H,u=
+sjcl.bitArray,a=u.l,f=[0,0,0,0],l=o(e.encrypt(n)),c,h,p=sjcl.bitArray.bitLength(
+t)-i,d=[];r=r||[];for(n=0;n+4<p/32;n+=4)c=a(l,e.decrypt(a(l,t.slice(n,n+4)))),f=
+a(f,c),d=d.concat(c),l=o(l);return h=p-32*n,c=e.encrypt(a(l,[0,0,0,h])),c=a(c,u.
+clamp(t.slice(n),h).concat([0,0,0])),f=a(f,c),f=e.encrypt(a(f,a(l,o(l)))),r.length&&
+(f=a(f,s?r:sjcl.mode.ocb2.pmac(e,r))),u.equal(u.clamp(f,i),u.bitSlice(t,p))||q(new
+sjcl.exception.corrupt("ocb: tag doesn't match")),d.concat(u.clamp(c,h))},pmac:function(
+e,t){var n,r=sjcl.mode.ocb2.H,i=sjcl.bitArray,s=i.l,o=[0,0,0,0],u=e.encrypt([0,0
+,0,0]),u=s(u,r(r(u)));for(n=0;n+4<t.length;n+=4)u=r(u),o=s(o,e.encrypt(s(u,t.slice
+(n,n+4))));return n=t.slice(n),128>i.bitLength(n)&&(u=s(u,r(u)),n=i.concat(n,[-2147483648
+,0,0,0])),o=s(o,n),e.encrypt(s(r(s(u,r(u))),o))},H:function(e){return[e[0]<<1^e[1
+]>>>31,e[1]<<1^e[2]>>>31,e[2]<<1^e[3]>>>31,e[3]<<1^135*(e[0]>>>31)]}},sjcl.mode.
+gcm={name:"gcm",encrypt:function(e,t,n,r,i){var s=t.slice(0);return t=sjcl.bitArray
+,r=r||[],e=sjcl.mode.gcm.p(!0,e,s,r,n,i||128),t.concat(e.data,e.tag)},decrypt:function(
+e,t,n,r,i){var s=t.slice(0),o=sjcl.bitArray,a=o.bitLength(s);return i=i||128,r=r||
+[],i<=a?(t=o.bitSlice(s,a-i),s=o.bitSlice(s,0,a-i)):(t=s,s=[]),e=sjcl.mode.gcm.p
+(u,e,s,r,n,i),o.equal(e.tag,t)||q(new sjcl.exception.corrupt("gcm: tag doesn't match"
+)),e.data},Z:function(e,t){var n,r,i,s,o,u=sjcl.bitArray.l;i=[0,0,0,0],s=t.slice
+(0);for(n=0;128>n;n++){(r=0!==(e[Math.floor(n/32)]&1<<31-n%32))&&(i=u(i,s)),o=0!==
+(s[3]&1);for(r=3;0<r;r--)s[r]=s[r]>>>1|(s[r-1]&1)<<31;s[0]>>>=1,o&&(s[0]^=-520093696
+)}return i},g:function(e,t,n){var r,i=n.length;t=t.slice(0);for(r=0;r<i;r+=4)t[0
+]^=4294967295&n[r],t[1]^=4294967295&n[r+1],t[2]^=4294967295&n[r+2],t[3]^=4294967295&
+n[r+3],t=sjcl.mode.gcm.Z(t,e);return t},p:function(e,t,n,r,i,s){var o,u,a,f,l,c,
+h,p,d=sjcl.bitArray;c=n.length,h=d.bitLength(n),p=d.bitLength(r),u=d.bitLength(i
+),o=t.encrypt([0,0,0,0]),96===u?(i=i.slice(0),i=d.concat(i,[1])):(i=sjcl.mode.gcm
+.g(o,[0,0,0,0],i),i=sjcl.mode.gcm.g(o,i,[0,0,Math.floor(u/4294967296),u&4294967295
+])),u=sjcl.mode.gcm.g(o,[0,0,0,0],r),l=i.slice(0),r=u.slice(0),e||(r=sjcl.mode.gcm
+.g(o,u,n));for(f=0;f<c;f+=4)l[3]++,a=t.encrypt(l),n[f]^=a[0],n[f+1]^=a[1],n[f+2]^=
+a[2],n[f+3]^=a[3];return n=d.clamp(n,h),e&&(r=sjcl.mode.gcm.g(o,u,n)),e=[Math.floor
+(p/4294967296),p&4294967295,Math.floor(h/4294967296),h&4294967295],r=sjcl.mode.gcm
+.g(o,r,e),a=t.encrypt(i),r[0]^=a[0],r[1]^=a[1],r[2]^=a[2],r[3]^=a[3],{tag:d.bitSlice
+(r,0,s),data:n}}},sjcl.misc.hmac=function(e,t){this.M=t=t||sjcl.hash.sha256;var n=
+[[],[]],r,i=t.prototype.blockSize/32;this.n=[new t,new t],e.length>i&&(e=t.hash(
+e));for(r=0;r<i;r++)n[0][r]=e[r]^909522486,n[1][r]=e[r]^1549556828;this.n[0].update
+(n[0]),this.n[1].update(n[1]),this.G=new t(this.n[0])},sjcl.misc.hmac.prototype.
+encrypt=sjcl.misc.hmac.prototype.mac=function(e){return this.Q&&q(new sjcl.exception
+.invalid("encrypt on already updated hmac called!")),this.update(e),this.digest(
+e)},sjcl.misc.hmac.prototype.reset=function(){this.G=new this.M(this.n[0]),this.
+Q=u},sjcl.misc.hmac.prototype.update=function(e){this.Q=!0,this.G.update(e)},sjcl
+.misc.hmac.prototype.digest=function(){var e=this.G.finalize(),e=(new this.M(this
+.n[1])).update(e).finalize();return this.reset(),e},sjcl.misc.pbkdf2=function(e,
+t,n,r,i){n=n||1e3,(0>r||0>n)&&q(sjcl.exception.invalid("invalid params to pbkdf2"
+)),"string"==typeof e&&(e=sjcl.codec.utf8String.toBits(e)),"string"==typeof t&&(
+t=sjcl.codec.utf8String.toBits(t)),i=i||sjcl.misc.hmac,e=new i(e);var s,o,u,a,f=
+[],l=sjcl.bitArray;for(a=1;32*f.length<(r||1);a++){i=s=e.encrypt(l.concat(t,[a])
+);for(o=1;o<n;o++){s=e.encrypt(s);for(u=0;u<s.length;u++)i[u]^=s[u]}f=f.concat(i
+)}return r&&(f=l.clamp(f,r)),f},sjcl.prng=function(e){this.c=[new sjcl.hash.sha256
+],this.i=[0],this.F=0,this.s={},this.C=0,this.K={},this.O=this.d=this.j=this.W=0
+,this.b=[0,0,0,0,0,0,0,0],this.f=[0,0,0,0],this.A=s,this.B=e,this.q=u,this.w={progress
+:{},seeded:{}},this.m=this.V=0,this.t=1,this.u=2,this.S=65536,this.I=[0,48,64,96
+,128,192,256,384,512,768,1024],this.T=3e4,this.R=80},sjcl.prng.prototype={randomWords
+:function(e,t){var n=[],r;r=this.isReady(t);var i;r===this.m&&q(new sjcl.exception
+.notReady("generator isn't seeded"));if(r&this.u){r=!(r&this.t),i=[];var s=0,o;this
+.O=i[0]=(new Date).valueOf()+this.T;for(o=0;16>o;o++)i.push(4294967296*Math.random
+()|0);for(o=0;o<this.c.length&&!(i=i.concat(this.c[o].finalize()),s+=this.i[o],this
+.i[o]=0,!r&&this.F&1<<o);o++);this.F>=1<<this.c.length&&(this.c.push(new sjcl.hash
+.sha256),this.i.push(0)),this.d-=s,s>this.j&&(this.j=s),this.F++,this.b=sjcl.hash
+.sha256.hash(this.b.concat(i)),this.A=new sjcl.cipher.aes(this.b);for(r=0;4>r&&(
+this.f[r]=this.f[r]+1|0,!this.f[r]);r++);}for(r=0;r<e;r+=4)0===(r+1)%this.S&&A(this
+),i=B(this),n.push(i[0],i[1],i[2],i[3]);return A(this),n.slice(0,e)},setDefaultParanoia
+:function(e,t){0===e&&"Setting paranoia=0 will ruin your security; use it only for testing"!==
+t&&q("Setting paranoia=0 will ruin your security; use it only for testing"),this
+.B=e},addEntropy:function(e,t,n){n=n||"user";var r,i,o=(new Date).valueOf(),u=this
+.s[n],a=this.isReady(),f=0;r=this.K[n],r===s&&(r=this.K[n]=this.W++),u===s&&(u=this
+.s[n]=0),this.s[n]=(this.s[n]+1)%this.c.length;switch(typeof e){case"number":t===
+s&&(t=1),this.c[u].update([r,this.C++,1,t,o,1,e|0]);break;case"object":n=Object.
+prototype.toString.call(e);if("[object Uint32Array]"===n){i=[];for(n=0;n<e.length
+;n++)i.push(e[n]);e=i}else{"[object Array]"!==n&&(f=1);for(n=0;n<e.length&&!f;n++
+)"number"!=typeof e[n]&&(f=1)}if(!f){if(t===s)for(n=t=0;n<e.length;n++)for(i=e[n
+];0<i;)t++,i>>>=1;this.c[u].update([r,this.C++,2,t,o,e.length].concat(e))}break;
+case"string":t===s&&(t=e.length),this.c[u].update([r,this.C++,3,t,o,e.length]),this
+.c[u].update(e);break;default:f=1}f&&q(new sjcl.exception.bug("random: addEntropy only supports number, array of numbers or string"
+)),this.i[u]+=t,this.d+=t,a===this.m&&(this.isReady()!==this.m&&C("seeded",Math.
+max(this.j,this.d)),C("progress",this.getProgress()))},isReady:function(e){return e=
+this.I[e!==s?e:this.B],this.j&&this.j>=e?this.i[0]>this.R&&(new Date).valueOf()>
+this.O?this.u|this.t:this.t:this.d>=e?this.u|this.m:this.m},getProgress:function(
+e){return e=this.I[e?e:this.B],this.j>=e?1:this.d>e?1:this.d/e},startCollectors:
+function(){this.q||(this.a={loadTimeCollector:D(this,this.aa),mouseCollector:D(this
+,this.ba),keyboardCollector:D(this,this.$),accelerometerCollector:D(this,this.U)
+,touchCollector:D(this,this.da)},window.addEventListener?(window.addEventListener
+("load",this.a.loadTimeCollector,u),window.addEventListener("mousemove",this.a.mouseCollector
+,u),window.addEventListener("keypress",this.a.keyboardCollector,u),window.addEventListener
+("devicemotion",this.a.accelerometerCollector,u),window.addEventListener("touchmove"
+,this.a.touchCollector,u)):document.attachEvent?(document.attachEvent("onload",this
+.a.loadTimeCollector),document.attachEvent("onmousemove",this.a.mouseCollector),
+document.attachEvent("keypress",this.a.keyboardCollector)):q(new sjcl.exception.
+bug("can't attach event")),this.q=!0)},stopCollectors:function(){this.q&&(window
+.removeEventListener?(window.removeEventListener("load",this.a.loadTimeCollector
+,u),window.removeEventListener("mousemove",this.a.mouseCollector,u),window.removeEventListener
+("keypress",this.a.keyboardCollector,u),window.removeEventListener("devicemotion"
+,this.a.accelerometerCollector,u),window.removeEventListener("touchmove",this.a.
+touchCollector,u)):document.detachEvent&&(document.detachEvent("onload",this.a.loadTimeCollector
+),document.detachEvent("onmousemove",this.a.mouseCollector),document.detachEvent
+("keypress",this.a.keyboardCollector)),this.q=u)},addEventListener:function(e,t)
+{this.w[e][this.V++]=t},removeEventListener:function(e,t){var n,r,i=this.w[e],s=
+[];for(r in i)i.hasOwnProperty(r)&&i[r]===t&&s.push(r);for(n=0;n<s.length;n++)r=
+s[n],delete i[r]},$:function(){E(1)},ba:function(e){var t,n;try{t=e.x||e.clientX||
+e.offsetX||0,n=e.y||e.clientY||e.offsetY||0}catch(r){n=t=0}0!=t&&0!=n&&sjcl.random
+.addEntropy([t,n],2,"mouse"),E(0)},da:function(e){e=e.touches[0]||e.changedTouches
+[0],sjcl.random.addEntropy([e.pageX||e.clientX,e.pageY||e.clientY],1,"touch"),E(0
+)},aa:function(){E(2)},U:function(e){e=e.accelerationIncludingGravity.x||e.accelerationIncludingGravity
+.y||e.accelerationIncludingGravity.z;if(window.orientation){var t=window.orientation
+;"number"==typeof t&&sjcl.random.addEntropy(t,1,"accelerometer")}e&&sjcl.random.
+addEntropy(e,2,"accelerometer"),E(0)}},sjcl.random=new sjcl.prng(6);e:try{var F,
+G,H,I;if(I="undefined"!=typeof module){var J;if(J=module.exports){var K;try{K=require
+("crypto")}catch(L){K=null}J=(G=K)&&G.randomBytes}I=J}if(I)F=G.randomBytes(128),
+F=new Uint32Array((new Uint8Array(F)).buffer),sjcl.random.addEntropy(F,1024,"crypto['randomBytes']"
+);else if("undefined"!=typeof window&&"undefined"!=typeof Uint32Array){H=new Uint32Array
+(32);if(window.crypto&&window.crypto.getRandomValues)window.crypto.getRandomValues
+(H);else{if(!window.msCrypto||!window.msCrypto.getRandomValues)break e;window.msCrypto
+.getRandomValues(H)}sjcl.random.addEntropy(H,1024,"crypto['getRandomValues']")}}
+catch(M){"undefined"!=typeof window&&window.console&&(console.log("There was an error collecting entropy from the browser:"
+),console.log(M))}sjcl.json={defaults:{v:1,iter:1e3,ks:128,ts:64,mode:"ccm",adata
+:"",cipher:"aes"},Y:function(e,t,n,r){n=n||{},r=r||{};var i=sjcl.json,s=i.e({iv:
+sjcl.random.randomWords(4,0)},i.defaults),o;return i.e(s,n),n=s.adata,"string"==typeof
+s.salt&&(s.salt=sjcl.codec.base64.toBits(s.salt)),"string"==typeof s.iv&&(s.iv=sjcl
+.codec.base64.toBits(s.iv)),(!sjcl.mode[s.mode]||!sjcl.cipher[s.cipher]||"string"==typeof
+e&&100>=s.iter||64!==s.ts&&96!==s.ts&&128!==s.ts||128!==s.ks&&192!==s.ks&&256!==
+s.ks||2>s.iv.length||4<s.iv.length)&&q(new sjcl.exception.invalid("json encrypt: invalid parameters"
+)),"string"==typeof e?(o=sjcl.misc.cachedPbkdf2(e,s),e=o.key.slice(0,s.ks/32),s.
+salt=o.salt):sjcl.ecc&&e instanceof sjcl.ecc.elGamal.publicKey&&(o=e.kem(),s.kemtag=
+o.tag,e=o.key.slice(0,s.ks/32)),"string"==typeof t&&(t=sjcl.codec.utf8String.toBits
+(t)),"string"==typeof n&&(s.adata=n=sjcl.codec.utf8String.toBits(n)),o=new sjcl.
+cipher[s.cipher](e),i.e(r,s),r.key=e,s.ct=sjcl.mode[s.mode].encrypt(o,t,s.iv,n,s
+.ts),s},encrypt:function(e,t,n,r){var i=sjcl.json,s=i.Y.apply(i,arguments);return i
+.encode(s)},X:function(e,t,n,r){n=n||{},r=r||{};var i=sjcl.json;t=i.e(i.e(i.e({}
+,i.defaults),t),n,!0);var s,o;return s=t.adata,"string"==typeof t.salt&&(t.salt=
+sjcl.codec.base64.toBits(t.salt)),"string"==typeof t.iv&&(t.iv=sjcl.codec.base64
+.toBits(t.iv)),(!sjcl.mode[t.mode]||!sjcl.cipher[t.cipher]||"string"==typeof e&&100>=
+t.iter||64!==t.ts&&96!==t.ts&&128!==t.ts||128!==t.ks&&192!==t.ks&&256!==t.ks||!t
+.iv||2>t.iv.length||4<t.iv.length)&&q(new sjcl.exception.invalid("json decrypt: invalid parameters"
+)),"string"==typeof e?(o=sjcl.misc.cachedPbkdf2(e,t),e=o.key.slice(0,t.ks/32),t.
+salt=o.salt):sjcl.ecc&&e instanceof sjcl.ecc.elGamal.secretKey&&(e=e.unkem(sjcl.
+codec.base64.toBits(t.kemtag)).slice(0,t.ks/32)),"string"==typeof s&&(s=sjcl.codec
+.utf8String.toBits(s)),o=new sjcl.cipher[t.cipher](e),s=sjcl.mode[t.mode].decrypt
+(o,t.ct,t.iv,s,t.ts),i.e(r,t),r.key=e,1===n.raw?s:sjcl.codec.utf8String.fromBits
+(s)},decrypt:function(e,t,n,r){var i=sjcl.json;return i.X(e,i.decode(t),n,r)},encode
+:function(e){var t,n="{",r="";for(t in e)if(e.hasOwnProperty(t))switch(t.match(/^[a-z0-9]+$/i
+)||q(new sjcl.exception.invalid("json encode: invalid property name")),n+=r+'"'+
+t+'":',r=",",typeof e[t]){case"number":case"boolean":n+=e[t];break;case"string":
+n+='"'+escape(e[t])+'"';break;case"object":n+='"'+sjcl.codec.base64.fromBits(e[t
+],0)+'"';break;default:q(new sjcl.exception.bug("json encode: unsupported type")
+)}return n+"}"},decode:function(e){e=e.replace(/\s/g,""),e.match(/^\{.*\}$/)||q(new
+sjcl.exception.invalid("json decode: this isn't json!")),e=e.replace(/^\{|\}$/g,""
+).split(/,/);var t={},n,r;for(n=0;n<e.length;n++)(r=e[n].match(/^\s*(?:(["']?)([a-z][a-z0-9]*)\1)\s*:\s*(?:(-?\d+)|"([a-z0-9+\/%*_.@=\-]*)"|(true|false))$/i
+))||q(new sjcl.exception.invalid("json decode: this isn't json!")),r[3]?t[r[2]]=
+parseInt(r[3],10):r[4]?t[r[2]]=r[2].match(/^(ct|adata|salt|iv)$/)?sjcl.codec.base64
+.toBits(r[4]):unescape(r[4]):r[5]&&(t[r[2]]="true"===r[5]);return t},e:function(
+e,t,n){e===s&&(e={});if(t===s)return e;for(var r in t)t.hasOwnProperty(r)&&(n&&e
+[r]!==s&&e[r]!==t[r]&&q(new sjcl.exception.invalid("required parameter overridden"
+)),e[r]=t[r]);return e},fa:function(e,t){var n={},r;for(r in e)e.hasOwnProperty(
+r)&&e[r]!==t[r]&&(n[r]=e[r]);return n},ea:function(e,t){var n={},r;for(r=0;r<t.length
+;r++)e[t[r]]!==s&&(n[t[r]]=e[t[r]]);return n}},sjcl.encrypt=sjcl.json.encrypt,sjcl
+.decrypt=sjcl.json.decrypt,sjcl.misc.ca={},sjcl.misc.cachedPbkdf2=function(e,t){
+var n=sjcl.misc.ca,r;return t=t||{},r=t.iter||1e3,n=n[e]=n[e]||{},r=n[r]=n[r]||{
+firstSalt:t.salt&&t.salt.length?t.salt.slice(0):sjcl.random.randomWords(2,0)},n=
+t.salt===s?r.firstSalt:t.salt,r[n]=r[n]||sjcl.misc.pbkdf2(e,n,t.iter),{key:r[n].
+slice(0),salt:n.slice(0)}}
 local.sjcl = sjcl; }());
 /* jslint-ignore-end */
 
