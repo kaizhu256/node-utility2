@@ -498,6 +498,7 @@ sjcl.misc.scrypt.blockxor = function(S, Si, D, Di, len) {
     case 'node':
         // init exports
         module.exports = module['./lib.sjcl.js'] = local.sjcl;
+        module.exports.__dirname = __dirname;
         break;
     }
 }());

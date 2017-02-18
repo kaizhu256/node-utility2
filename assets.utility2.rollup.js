@@ -827,22 +827,6 @@
             local.storageSetItem('dbTable.' + this.name, this.export(), onError);
         };
 
-        local.dbCrudRemoveAll = function (onError) {
-        /*
-         * this function will remove all dbRow's from the db
-         */
-            var onParallel;
-            onParallel = local.onParallel(function (error) {
-                local.setTimeoutOnError(onError, error);
-            });
-            onParallel.counter += 1;
-            Object.keys(local.dbTableDict).forEach(function (key) {
-                onParallel.counter += 1;
-                local.dbTableDict[key].crudRemoveAll(onParallel);
-            });
-            onParallel();
-        };
-
         local._DbTable.prototype.crudCountAll = function (onError) {
         /*
          * this function will count all of dbRow's in the dbTable
@@ -1126,6 +1110,22 @@
             // persist
             self._persist();
             return local.setTimeoutOnError(onError);
+        };
+
+        local.dbCrudRemoveAll = function (onError) {
+        /*
+         * this function will remove all dbRow's from the db
+         */
+            var onParallel;
+            onParallel = local.onParallel(function (error) {
+                local.setTimeoutOnError(onError, error);
+            });
+            onParallel.counter += 1;
+            Object.keys(local.dbTableDict).forEach(function (key) {
+                onParallel.counter += 1;
+                local.dbTableDict[key].crudRemoveAll(onParallel);
+            });
+            onParallel();
         };
 
         local.dbDrop = function (onError) {
@@ -1594,7 +1594,7 @@
 
 
 
-/* script-begin /assets.utility2.lib.github-crud.js */
+/* script-begin /assets.utility2.lib.github_crud.js */
 ///usr/bin/env node
 /* istanbul instrument in package github-crud */
 /*jslint
@@ -2026,7 +2026,7 @@
         local.fs = require('fs');
         local.path = require('path');
         // init exports
-        module.exports = module['./lib.github-crud.js'] = local;
+        module.exports = module['./lib.github_crud.js'] = local;
         module.exports.__dirname = __dirname;
         // run the cli
         if (module !== require.main || local.global.utility2_rollup) {
@@ -2065,7 +2065,7 @@
         break;
     }
 }());
-/* script-end /assets.utility2.lib.github-crud.js */
+/* script-end /assets.utility2.lib.github_crud.js */
 
 
 
@@ -2085,20 +2085,18 @@
 */
 (function (local) {
     'use strict';
-    var __dirname, nop, process, require;
+    var __dirname, process, require;
 
 
 
     // run shared js-env code - pre-init
     (function () {
-        // init var
+        // jslint-hack
+        local.nop(__dirname);
         __dirname = '';
-        nop = function () {
-        /*
-         * this function will do nothing
-         */
-            return;
-        };
+        /* istanbul ignore next */
+        local.global.__coverageCodeDict__ = local.global.__coverageCodeDict__ || {};
+        local['./package.json'] = {};
         process = local.modeJs === 'browser'
             ? {
                 cwd: function () {
@@ -2109,16 +2107,10 @@
             : local.process;
         require = function (key) {
             try {
-                return local[key] || local.require2(key);
+                return local[key] || local.require(key);
             } catch (ignore) {
             }
         };
-        // jslint-hack
-        nop(__dirname);
-        // init local properties
-        local['./package.json'] = {};
-        /* istanbul ignore next */
-        local.global.__coverageCodeDict__ = local.global.__coverageCodeDict__ || {};
     }());
 
 
@@ -2208,6 +2200,8 @@
             }
             // init writer
             local.coverageReportHtml = '';
+            local.coverageReportHtml +=
+                '<div style="background: #fff; border: 1px solid #000; margin 0; padding: 0;">';
             local.writerData = '';
             options.sourceStore = {};
             options.writer = local.writer;
@@ -2217,20 +2211,20 @@
             }
             // 2. write coverage in html-format to filesystem
             new local.HtmlReport(options).writeReport(local.collector);
-            local.writer.writeFile('', nop);
+            local.writer.writeFile('', local.nop);
             // write coverage.json
-            local.fsWriteFileWithMkdirpSync(
+            local.fsWriteFileWithMkdirpSync2(
                 options.dir + '/coverage.json',
                 JSON.stringify(local.global.__coverage__)
             );
             // write coverage.code-dict.json
-            local.fsWriteFileWithMkdirpSync(
+            local.fsWriteFileWithMkdirpSync2(
                 options.dir + '/coverage.code-dict.json',
                 JSON.stringify(local.global.__coverageCodeDict__)
             );
             // write coverage.badge.svg
             options.pct = local.coverageReportSummary.root.metrics.lines.pct;
-            local.fsWriteFileWithMkdirpSync(
+            local.fsWriteFileWithMkdirpSync2(
                 local.path.dirname(options.dir) + '/coverage.badge.svg',
                 local.templateCoverageBadgeSvg
                     // edit coverage badge percent
@@ -2248,6 +2242,7 @@
                 document.querySelector('.istanbulCoverageDiv').innerHTML =
                     local.coverageReportHtml;
             }
+            local.coverageReportHtml += '</div>';
             return local.coverageReportHtml;
         };
 
@@ -2271,18 +2266,9 @@
             }
             if (local.modeJs === 'node' && process.env.npm_package_homepage) {
                 file = file
-                    .replace(
-                        '{{env.npm_package_homepage}}',
-                        process.env.npm_package_homepage
-                    )
-                    .replace(
-                        '{{env.npm_package_name}}',
-                        process.env.npm_package_name
-                    )
-                    .replace(
-                        '{{env.npm_package_version}}',
-                        process.env.npm_package_version
-                    );
+                    .replace('{{env.npm_package_homepage}}', process.env.npm_package_homepage)
+                    .replace('{{env.npm_package_name}}', process.env.npm_package_name)
+                    .replace('{{env.npm_package_version}}', process.env.npm_package_version);
             } else {
                 file = file.replace((/<h1 [\S\s]*<\/h1>/), '<h1>&nbsp;</h1>');
             }
@@ -2293,32 +2279,11 @@
             return [];
         };
 
-        local.fs.writeFileSync = nop;
-
-        local.fsWriteFileWithMkdirpSync = function (file, data) {
-        /*
-         * this function will synchronously 'mkdir -p' and write the data to file
-         */
-            // try to write to file
-            try {
-                require('fs').writeFileSync(file, data);
-            } catch (errorCaught) {
-                // mkdir -p
-                require('child_process').spawnSync(
-                    'mkdir',
-                    ['-p', require('path').dirname(file)],
-                    { stdio: ['ignore', 1, 2] }
-                );
-                // re-write to file
-                require('fs').writeFileSync(file, data);
-            }
-        };
-
         /* istanbul ignore next */
         local.instrumentInPackage = function (code, file) {
         /*
          * this function will instrument the code
-         * only if if the macro /\* istanbul instrument in package $npm_package_name *\/
+         * only if the macro /\* istanbul instrument in package $npm_package_name *\/
          * exists in the code
          */
             return process.env.npm_config_mode_coverage &&
@@ -2350,7 +2315,7 @@
                 noAutoWrap: true
             }).instrumentSync(code, file);
         };
-        local.util = { inherits: nop };
+        local.util = { inherits: local.nop };
     }());
     switch (local.modeJs) {
 
@@ -2376,10 +2341,9 @@
     // run node js-env code - pre-init
     case 'node':
         // require modules
-        local._fs = local.require2('fs');
-        local.fs.writeFileSync = local._fs.writeFileSync;
+        local._fs = local.require('fs');
         local.module = require('module');
-        local.path = local.require2('path');
+        local.path = local.require('path');
         // init exports
         module.exports = module['./lib.istanbul.js'] = local;
         break;
@@ -3638,7 +3602,7 @@ G({},t),exports.browser=!1,exports.FORMAT_MINIFY=N,exports.FORMAT_DEFAULTS=C})()
                     (/\{\{#with (.+?)\}\}([\S\s]+?)\{\{\/with\}\}/g),
                     function (match0, match1, match2) {
                         // jslint-hack
-                        nop(match0);
+                        local.nop(match0);
                         return local.handlebars.replace(match2, dict, match1 + '.');
                     }
                 );
@@ -4042,7 +4006,7 @@ local['./common/defaults'] = module.exports; }());
     (function () {
         // https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/index.js
         local['./index'] = {
-            call: nop,
+            call: local.nop,
             mix: function (klass, prototype) {
                 klass.prototype = prototype;
             }
@@ -4299,7 +4263,7 @@ local['head.txt'] = '\
             writeFile: function (file, onError) {
                 local.coverageReportHtml += local.writerData + '\n\n';
                 if (local.writerFile) {
-                    local.fsWriteFileWithMkdirpSync(local.writerFile, local.writerData);
+                    local.fsWriteFileWithMkdirpSync2(local.writerFile, local.writerData);
                 }
                 local.writerData = '';
                 local.writerFile = file;
@@ -4557,7 +4521,7 @@ local.templateCoverageBadgeSvg =
         /*
          * this function will run the cli
          */
-            if ((module !== local.require2.main || local.global.utility2_rollup) &&
+            if ((module !== local.require.main || local.global.utility2_rollup) &&
                     !(options && options.runMain)) {
                 return;
             }
@@ -4653,11 +4617,40 @@ local.templateCoverageBadgeSvg =
         local = local.global.utility2_rollup || local;
         // init lib
         local.local = local.istanbul = local;
-        // init module
-        if (local.modeJs === 'node') {
+        local.fsWriteFileWithMkdirpSync = function (file, data) {
+        /*
+         * this function will synchronously 'mkdir -p' and write the data to file
+         */
+            // try to write to file
+            try {
+                require('fs').writeFileSync(file, data);
+            } catch (errorCaught) {
+                // mkdir -p
+                require('child_process').spawnSync(
+                    'mkdir',
+                    ['-p', require('path').dirname(file)],
+                    { stdio: ['ignore', 1, 2] }
+                );
+                // re-write to file
+                require('fs').writeFileSync(file, data);
+            }
+        };
+        local.nop = function () {
+        /*
+         * this function will do nothing
+         */
+            return;
+        };
+        switch (local.modeJs) {
+        case 'browser':
+            local.fsWriteFileWithMkdirpSync2 = local.nop;
+            break;
+        case 'node':
+            local.fsWriteFileWithMkdirpSync2 = local.fsWriteFileWithMkdirpSync;
             local.__dirname = __dirname;
             local.process = process;
-            local.require2 = require;
+            local.require = require;
+            break;
         }
         return local;
     }())
@@ -7699,6 +7692,7 @@ sjcl.misc.scrypt.blockxor = function(S, Si, D, Di, len) {
     case 'node':
         // init exports
         module.exports = module['./lib.sjcl.js'] = local.sjcl;
+        module.exports.__dirname = __dirname;
         break;
     }
 }());
@@ -8427,18 +8421,43 @@ split_lines=split_lines,exports.MAP=MAP,exports.ast_squeeze_more=require("./sque
     regexp: true,
     stupid: true
 */
-(function (local) {
+(function () {
     'use strict';
-    var require;
+    var local;
 
 
 
     // run shared js-env code - pre-init
     (function () {
-        // init require
-        require = function (key) {
-            return local[key] || local.require2(key);
-        };
+        // init local
+        local = {};
+        // init modeJs
+        local.modeJs = (function () {
+            try {
+                return typeof navigator.userAgent === 'string' &&
+                    typeof document.querySelector('body') === 'object' &&
+                    typeof XMLHttpRequest.prototype.open === 'function' &&
+                    'browser';
+            } catch (errorCaughtBrowser) {
+                return module.exports &&
+                    typeof process.versions.node === 'string' &&
+                    typeof require('http').createServer === 'function' &&
+                    'node';
+            }
+        }());
+        // init global
+        local.global = local.modeJs === 'browser'
+            ? window
+            : global;
+        // init utility2_rollup
+        local = local.global.utility2_rollup || local;
+        return local;
+    }());
+
+
+
+    // run shared js-env code - pre-init
+    (function () {
         // init lib
         local.local = local.utility2 = local.global.utility2 = local;
         // init global.debug_inline
@@ -8474,7 +8493,7 @@ split_lines=split_lines,exports.MAP=MAP,exports.ast_squeeze_more=require("./sque
             try {
                 local[key] = local.modeJs === 'browser'
                     ? local.global['utility2_' + key]
-                    : require('./lib.' + key.replace((/_/g), '-') + '.js');
+                    : require('./lib.' + key + '.js');
             } catch (ignore) {
             }
             local[key] = local[key] || {};
@@ -8482,11 +8501,633 @@ split_lines=split_lines,exports.MAP=MAP,exports.ast_squeeze_more=require("./sque
         // init assets and templates
         local.assetsDict = {};
 /* jslint-ignore-begin */
+local.assetsDict['/assets.apiDoc.template.html'] = '\
+<style>\n\
+/*csslint\n\
+*/\n\
+body {\n\
+    background: #fff;\n\
+}\n\
+.apiDocDiv {\n\
+    font-family: Arial, Helvetica, sans-serif;\n\
+}\n\
+.apiDocDiv a[href] {\n\
+    color: #33f;\n\
+    font-weight: bold;\n\
+    text-decoration: none;\n\
+}\n\
+.apiDocDiv a[href]:hover {\n\
+    text-decoration: underline;\n\
+}\n\
+.apiDocSectionDiv {\n\
+    border-top: 1px solid;\n\
+    margin-top: 20px;\n\
+}\n\
+.apiDocCodeCommentSpan {\n\
+    background: #bbf;\n\
+    color: #000;\n\
+    display: block;\n\
+}\n\
+.apiDocCodeKeywordSpan {\n\
+    color: #d00;\n\
+    font-weight: bold;\n\
+}\n\
+.apiDocCodePre {\n\
+    background: #eef;\n\
+    border: 1px solid;\n\
+    color: #777;\n\
+    padding: 5px;\n\
+    white-space: pre-wrap;\n\
+}\n\
+.apiDocSignatureSpan {\n\
+    color: #777;\n\
+    font-weight: bold;\n\
+}\n\
+</style>\n\
+<div class="apiDocDiv">\n\
+<h1>api-doc\n\
+    <a\n\
+        {{#if env.npm_package_homepage}}\n\
+        href="{{env.npm_package_homepage}}"\n\
+        {{/if env.npm_package_homepage}}\n\
+    >({{env.npm_package_nameAlias}} v{{env.npm_package_version}})</a>\n\
+</h1>\n\
+<div class="apiDocSectionDiv"><a href="#"><h1>table of contents</h1></a><ul>\n\
+{{#each moduleList}}\n\
+    <li><a href="#{{id}}">module {{name}}</a><ol>\n\
+        {{#each elementList}}\n\
+        <li>\n\
+            {{#if source}}\n\
+            <a class="apiDocElementLiA" href="#{{id}}">\n\
+            {{name}}\n\
+            <span class="apiDocSignatureSpan">{{signature}}</span>\n\
+            </a>\n\
+            {{#unless source}}\n\
+            <span class="apiDocSignatureSpan">{{name}}</span>\n\
+        {{/if source}}\n\
+        </li>\n\
+        {{/each elementList}}\n\
+    </ol></li>\n\
+{{/each moduleList}}\n\
+</ul></div>\n\
+    {{#each moduleList}}\n\
+    <div class="apiDocSectionDiv">\n\
+    <h1><a href="#{{id}}" id="{{id}}">module {{name}}</a></h1>\n\
+        {{#each elementList}}\n\
+        {{#if source}}\n\
+        <h2>\n\
+            <a href="#{{id}}" id="{{id}}">\n\
+            {{name}}\n\
+            <span class="apiDocSignatureSpan">{{signature}}</span>\n\
+            </a>\n\
+        </h2>\n\
+        <ul>\n\
+        <li>description and source-code<pre class="apiDocCodePre">{{source}}</pre></li>\n\
+        <li>example usage<pre class="apiDocCodePre">{{example}}</pre></li>\n\
+        </ul>\n\
+        {{/if source}}\n\
+        {{/each elementList}}\n\
+    </div>\n\
+    {{/each moduleList}}\n\
+</div>\n\
+';
+
+
+
+// https://img.shields.io/badge/last_build-0000_00_00_00_00_00_UTC_--_master_--_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-0077ff.svg?style=flat
+local.assetsDict['/assets.buildBadge.template.svg'] =
+'<svg xmlns="http://www.w3.org/2000/svg" width="563" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="563" height="20" fill="#555"/><rect rx="0" x="61" width="502" height="20" fill="#07f"/><path fill="#07f" d="M61 0h4v20h-4z"/><rect rx="0" width="563" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="31.5" y="15" fill="#010101" fill-opacity=".3">last build</text><text x="31.5" y="14">last build</text><text x="311" y="15" fill="#010101" fill-opacity=".3">0000-00-00 00:00:00 UTC - master - aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</text><text x="311" y="14">0000-00-00 00:00:00 UTC - master - aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</text></g></svg>';
+
+
+
 local.assetsDict['/assets.example.js'] = '';
 
 
 
+local.assetsDict['/assets.index.template.html'] = '\
+<!doctype html>\n\
+<html lang="en">\n\
+<head>\n\
+<meta charset="UTF-8">\n\
+<meta name="viewport" content="width=device-width, initial-scale=1">\n\
+<title>{{env.npm_package_nameAlias}} v{{env.npm_package_version}}</title>\n\
+<style>\n\
+/*csslint\n\
+    box-sizing: false,\n\
+    universal-selector: false\n\
+*/\n\
+* {\n\
+    box-sizing: border-box;\n\
+}\n\
+body {\n\
+    background: #dde;\n\
+    font-family: Arial, Helvetica, sans-serif;\n\
+    margin: 2rem;\n\
+}\n\
+body > * {\n\
+    margin-bottom: 1rem;\n\
+}\n\
+</style>\n\
+<style>\n\
+/*csslint\n\
+*/\n\
+</style>\n\
+</head>\n\
+<body>\n\
+<!-- utility2-comment\n\
+    <div id="ajaxProgressDiv1" style="background: #d00; height: 2px; left: 0; margin: 0; padding: 0; position: fixed; top: 0; transition: background 0.5s, width 1.5s; width: 25%;"></div>\n\
+utility2-comment -->\n\
+    <h1>\n\
+<!-- utility2-comment\n\
+        <a\n\
+            {{#if env.npm_package_homepage}}\n\
+            href="{{env.npm_package_homepage}}"\n\
+            {{/if env.npm_package_homepage}}\n\
+            target="_blank"\n\
+        >\n\
+utility2-comment -->\n\
+            {{env.npm_package_nameAlias}} v{{env.npm_package_version}}\n\
+<!-- utility2-comment\n\
+        </a>\n\
+utility2-comment -->\n\
+    </h1>\n\
+    <h3>{{env.npm_package_description}}</h3>\n\
+<!-- utility2-comment\n\
+    <h4><a download href="assets.app.js">download standalone app</a></h4>\n\
+    <button class="onclick" id="testRunButton1">run internal test</button><br>\n\
+    <div id="testReportDiv1" style="display: none;"></div>\n\
+utility2-comment -->\n\
+\n\
+<!-- utility2-comment\n\
+    {{#if isRollup}}\n\
+    <script src="assets.app.js"></script>\n\
+    {{#unless isRollup}}\n\
+utility2-comment -->\n\
+    <script src="assets.utility2.rollup.js"></script>\n\
+    <script src="jsonp.utility2._stateInit?callback=window.utility2._stateInit"></script>\n\
+    <script src="assets.jslint.rollup.js"></script>\n\
+    <script src="assets.example.js"></script>\n\
+    <script src="assets.test.js"></script>\n\
+<!-- utility2-comment\n\
+    {{/if isRollup}}\n\
+utility2-comment -->\n\
+</body>\n\
+</html>\n\
+';
+
+
+
+local.assetsDict['/assets.readme.template.md'] = '\
+jslint-lite\n\
+===========\n\
+{{packageJsonDescription}}\n\
+\n\
+[![travis-ci.org build-status](https://api.travis-ci.org/kaizhu256/node-jslint-lite.svg)](https://travis-ci.org/kaizhu256/node-jslint-lite) [![istanbul-coverage](https://kaizhu256.github.io/node-jslint-lite/build..alpha..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-jslint-lite/build..alpha..travis-ci.org/coverage.html/index.html)\n\
+\n\
+[![NPM](https://nodei.co/npm/jslint-lite.png?downloads=true)](https://www.npmjs.com/package/jslint-lite)\n\
+\n\
+[![package-listing](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.gitLsTree.svg)](https://github.com/kaizhu256/node-jslint-lite)\n\
+\n\
+\n\
+\n\
+# cdn download\n\
+- [https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app/assets.jslint.rollup.js](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app/assets.jslint.rollup.js)\n\
+\n\
+\n\
+\n\
+# live demo\n\
+- [https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app/index.html](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app/index.html)\n\
+\n\
+[![github.com test-server](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.deployGithub.browser._2Fnode-jslint-lite_2Fbuild..alpha..travis-ci.org_2Fapp_2Findex.html.png)](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app/index.html)\n\
+\n\
+\n\
+\n\
+# documentation\n\
+#### api-doc\n\
+- [https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/api-doc.html](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/api-doc.html)\n\
+\n\
+[![api-doc](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.apiDoc.browser._2Fhome_2Ftravis_2Fbuild_2Fkaizhu256_2Fnode-jslint-lite_2Ftmp_2Fbuild_2Fapi-doc.html.png)](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/api-doc.html)\n\
+\n\
+#### todo\n\
+- none\n\
+\n\
+#### change since xxxxxxxx\n\
+- none\n\
+\n\
+#### this package requires\n\
+- darwin or linux os\n\
+\n\
+\n\
+\n\
+# build status [![travis-ci.org build-status](https://api.travis-ci.org/kaizhu256/node-jslint-lite.svg)](https://travis-ci.org/kaizhu256/node-jslint-lite)\n\
+[![build commit status](https://kaizhu256.github.io/node-jslint-lite/build/build.badge.svg)](https://travis-ci.org/kaizhu256/node-jslint-lite)\n\
+\n\
+| git-branch : | [master](https://github.com/kaizhu256/node-jslint-lite/tree/master) | [beta](https://github.com/kaizhu256/node-jslint-lite/tree/beta) | [alpha](https://github.com/kaizhu256/node-jslint-lite/tree/alpha)|\n\
+|--:|:--|:--|:--|\n\
+| test-server-1 : | [![github.com test-server](https://kaizhu256.github.io/node-jslint-lite/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-jslint-lite/build..master..travis-ci.org/app/index.html) | [![github.com test-server](https://kaizhu256.github.io/node-jslint-lite/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app/index.html) | [![github.com test-server](https://kaizhu256.github.io/node-jslint-lite/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-jslint-lite/build..alpha..travis-ci.org/app/index.html)|\n\
+| test-server-2 : | [![heroku.com test-server](https://kaizhu256.github.io/node-jslint-lite/heroku-logo.75x25.png)](https://h1-jslint-master.herokuapp.com) | [![heroku.com test-server](https://kaizhu256.github.io/node-jslint-lite/heroku-logo.75x25.png)](https://h1-jslint-beta.herokuapp.com) | [![heroku.com test-server](https://kaizhu256.github.io/node-jslint-lite/heroku-logo.75x25.png)](https://h1-jslint-alpha.herokuapp.com)|\n\
+| test-report : | [![test-report](https://kaizhu256.github.io/node-jslint-lite/build..master..travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-jslint-lite/build..master..travis-ci.org/test-report.html) | [![test-report](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/test-report.html) | [![test-report](https://kaizhu256.github.io/node-jslint-lite/build..alpha..travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-jslint-lite/build..alpha..travis-ci.org/test-report.html)|\n\
+| coverage : | [![istanbul-coverage](https://kaizhu256.github.io/node-jslint-lite/build..master..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-jslint-lite/build..master..travis-ci.org/coverage.html/index.html) | [![istanbul-coverage](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/coverage.html/index.html) | [![istanbul-coverage](https://kaizhu256.github.io/node-jslint-lite/build..alpha..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-jslint-lite/build..alpha..travis-ci.org/coverage.html/index.html)|\n\
+| build-artifacts : | [![build-artifacts](https://kaizhu256.github.io/node-jslint-lite/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-jslint-lite/tree/gh-pages/build..master..travis-ci.org) | [![build-artifacts](https://kaizhu256.github.io/node-jslint-lite/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-jslint-lite/tree/gh-pages/build..beta..travis-ci.org) | [![build-artifacts](https://kaizhu256.github.io/node-jslint-lite/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-jslint-lite/tree/gh-pages/build..alpha..travis-ci.org)|\n\
+\n\
+#### master branch\n\
+- stable branch\n\
+- HEAD should be tagged, npm-published package\n\
+\n\
+#### beta branch\n\
+- semi-stable branch\n\
+- HEAD should be latest, npm-published package\n\
+\n\
+#### alpha branch\n\
+- unstable branch\n\
+- HEAD is arbitrary\n\
+- commit history may be rewritten\n\
+\n\
+\n\
+\n\
+# quickstart web example\n\
+![screen-capture](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.testExampleJs.browser..png)\n\
+\n\
+#### to run this example, follow the instruction in the script below\n\
+- [example.js](https://kaizhu256.github.io/node-jslint-lite/build/example.js)\n\
+```javascript\n\
+/*\n\
+example.js\n\
+\n\
+{{exampleJsDescription}}\n\
+\n\
+instruction\n\
+    1. save this script as example.js\n\
+    2. run the shell command:\n\
+        $ npm install jslint-lite && PORT=8081 node example.js\n\
+    3. play with the browser-demo on http://127.0.0.1:8081\n\
+*/\n\
+\n\
+\n\
+\n\
+/*jslint\n\
+    bitwise: true,\n\
+    browser: true,\n\
+    maxerr: 8,\n\
+    maxlen: 96,\n\
+    node: true,\n\
+    nomen: true,\n\
+    regexp: true,\n\
+    stupid: true\n\
+*/\n\
+(function () {\n\
+    \'use strict\';\n\
+    var local;\n\
+\n\
+\n\
+\n\
+    // run shared js-env code - pre-init\n\
+    (function () {\n\
+        // init local\n\
+        local = {};\n\
+        // init modeJs\n\
+        local.modeJs = (function () {\n\
+            try {\n\
+                return typeof navigator.userAgent === \'string\' &&\n\
+                    typeof document.querySelector(\'body\') === \'object\' &&\n\
+                    typeof XMLHttpRequest.prototype.open === \'function\' &&\n\
+                    \'browser\';\n\
+            } catch (errorCaughtBrowser) {\n\
+                return module.exports &&\n\
+                    typeof process.versions.node === \'string\' &&\n\
+                    typeof require(\'http\').createServer === \'function\' &&\n\
+                    \'node\';\n\
+            }\n\
+        }());\n\
+        // init global\n\
+        local.global = local.modeJs === \'browser\'\n\
+            ? window\n\
+            : global;\n\
+        // init utility2_rollup\n\
+        local = local.global.utility2_rollup || (local.modeJs === \'browser\'\n\
+            ? local.global.utility2_jslint\n\
+            : require(\'jslint-lite\'));\n\
+        // export local\n\
+        local.global.local = local;\n\
+    }());\n\
+    switch (local.modeJs) {\n\
+\n\
+\n\
+\n\
+    // run node js-env code - post-init\n\
+    case \'node\':\n\
+        // export local\n\
+        module.exports = local;\n\
+        // require modules\n\
+        local.fs = require(\'fs\');\n\
+        local.http = require(\'http\');\n\
+        local.url = require(\'url\');\n\
+        // init assets\n\
+        local.assetsDict = local.assetsDict || {};\n\
+        /* jslint-ignore-begin */\n\
+        local.assetsDict[\'/assets.index.template.html\'] = \'\\\n' +
+local.assetsDict['/assets.index.template.html'].replace((/\n/g), '\\n\\\n') +
+'\';\n\
+        /* jslint-ignore-end */\n\
+        if (local.templateRender) {\n\
+            local.assetsDict[\'/\'] = local.templateRender(\n\
+                local.assetsDict[\'/assets.index.template.html\'],\n\
+                {\n\
+                    env: local.objectSetDefault(local.env, {\n\
+                        npm_package_description: \'example module\',\n\
+                        npm_package_nameAlias: \'example\',\n\
+                        npm_package_version: \'0.0.1\'\n\
+                    })\n\
+                }\n\
+            );\n\
+        } else {\n\
+            local.assetsDict[\'/\'] = local.assetsDict[\'/assets.index.template.html\']\n\
+                .replace((/\\{\\{env\\.(\\w+?)\\}\\}/g), function (match0, match1) {\n\
+                    // jslint-hack\n\
+                    String(match0);\n\
+                    switch (match1) {\n\
+                    case \'npm_package_description\':\n\
+                        return \'example module\';\n\
+                    case \'npm_package_nameAlias\':\n\
+                        return \'example\';\n\
+                    case \'npm_package_version\':\n\
+                        return \'0.0.1\';\n\
+                    }\n\
+                });\n\
+        }\n\
+        // run the cli\n\
+        if (local.global.utility2_rollup || module !== require.main) {\n\
+            break;\n\
+        }\n\
+        local.assetsDict[\'/assets.example.js\'] = local.assetsDict[\'/assets.example.js\'] ||\n\
+            local.fs.readFileSync(__filename, \'utf8\');\n\
+        local.assetsDict[\'/assets.jslint.rollup.js\'] =\n\
+            local.assetsDict[\'/assets.jslint.rollup.js\'] || local.fs.readFileSync(\n\
+                local.jslint.__dirname + \'/lib.jslint.js\',\n\
+                \'utf8\'\n\
+            ).replace((/^#!/), \'//\');\n\
+        local.assetsDict[\'/favicon.ico\'] = local.assetsDict[\'/favicon.ico\'] || \'\';\n\
+        // if $npm_config_timeout_exit exists,\n\
+        // then exit this process after $npm_config_timeout_exit ms\n\
+        if (Number(process.env.npm_config_timeout_exit)) {\n\
+            setTimeout(process.exit, Number(process.env.npm_config_timeout_exit));\n\
+        }\n\
+        // start server\n\
+        if (local.global.utility2_serverHttp1) {\n\
+            break;\n\
+        }\n\
+        process.env.PORT = process.env.PORT || \'8081\';\n\
+        console.log(\'server starting on port \' + process.env.PORT);\n\
+        local.http.createServer(function (request, response) {\n\
+            request.urlParsed = local.url.parse(request.url);\n\
+            if (local.assetsDict[request.urlParsed.pathname] !== undefined) {\n\
+                response.end(local.assetsDict[request.urlParsed.pathname]);\n\
+                return;\n\
+            }\n\
+            response.statusCode = 404;\n\
+            response.end();\n\
+        }).listen(process.env.PORT);\n\
+        break;\n\
+    }\n\
+}());\n\
+```\n\
+\n\
+#### output from electron\n\
+![screen-capture](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.testExampleJs.browser..png)\n\
+\n\
+#### output from shell\n\
+![screen-capture](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.testExampleJs.svg)\n\
+\n\
+\n\
+\n\
+# package.json\n\
+```json\n\
+{\n\
+    "author": "kai zhu <kaizhu256@gmail.com>",\n\
+    "description": "{{packageJsonDescription}}",\n\
+    "devDependencies": {\n\
+        "electron-lite": "kaizhu256/node-electron-lite#alpha",\n\
+        "utility2": "kaizhu256/node-utility2#alpha"\n\
+    },\n\
+    "engines": {\n\
+        "node": ">=4.0"\n\
+    },\n\
+    "homepage": "https://github.com/kaizhu256/node-jslint-lite",\n\
+    "keywords": [],\n\
+    "license": "MIT",\n\
+    "main": "lib.jslint.js",\n\
+    "name": "jslint-lite",\n\
+    "os": [\n\
+        "darwin",\n\
+        "linux"\n\
+    ],\n\
+    "repository": {\n\
+        "type": "git",\n\
+        "url": "https://github.com/kaizhu256/node-jslint-lite.git"\n\
+    },\n\
+    "scripts": {\n\
+        "build-ci": "utility2 shRun shReadmeBuild",\n\
+        "heroku-postbuild": "npm install \'kaizhu256/node-utility2#alpha\' && utility2 shRun shDeployHeroku",\n\
+        "postinstall": "if [ -f lib.jslint.npm-scripts.sh ]; then ./lib.jslint.npm-scripts.sh postinstall; fi",\n\
+        "start": "export PORT=${PORT:-8080} && export npm_config_mode_auto_restart=1 && utility2 shRun shIstanbulCover test.js",\n\
+        "test": "export PORT=$(utility2 shServerPortRandom) && utility2 test test.js"\n\
+    },\n\
+    "version": "0.0.1"\n\
+}\n\
+```\n\
+\n\
+\n\
+\n\
+# changelog of last 50 commits\n\
+[![screen-capture](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.gitLog.svg)](https://github.com/kaizhu256/node-jslint-lite/commits)\n\
+\n\
+\n\
+\n\
+# internal build-script\n\
+- build.sh\n\
+```shell\n\
+# build.sh\n\
+\n\
+# this shell script will run the build for this package\n\
+\n\
+shBuild() {(set -e\n\
+# this function will run the main build\n\
+    # init env\n\
+    . node_modules/.bin/utility2 && shInit\n\
+    # cleanup github-gh-pages dir\n\
+    # export BUILD_GITHUB_UPLOAD_PRE_SH="rm -fr build"\n\
+    # init github-gh-pages commit-limit\n\
+    export COMMIT_LIMIT=16\n\
+    # if branch is alpha, beta, or master, then run default build\n\
+    if [ "$CI_BRANCH" = alpha ] ||\n\
+        [ "$CI_BRANCH" = beta ] ||\n\
+        [ "$CI_BRANCH" = master ]\n\
+    then\n\
+        shBuildCiDefault\n\
+    fi\n\
+)}\n\
+\n\
+shBuildCiTestPost() {(set -e\n\
+# this function will run the post-test build\n\
+    # if running legacy-node, then return\n\
+    [ "$(node --version)" \\< "v7.0" ] && return || true\n\
+    export NODE_ENV=production\n\
+    # deploy app to gh-pages\n\
+    (export MODE_BUILD=deployGithub && shDeployGithub) || return $?\n\
+    # deploy app to heroku\n\
+    (export MODE_BUILD=deployHeroku && shDeployHeroku) || return $?\n\
+)}\n\
+\n\
+shBuildCiTestPre() {(set -e\n\
+# this function will run the pre-test build\n\
+    # test example.js\n\
+    (export MODE_BUILD=testExampleJs && shRunScreenCapture shReadmeTestExampleJs) || return $?\n\
+    # test published-package\n\
+    (export MODE_BUILD=npmTestPublished && shRunScreenCapture shNpmTestPublished) || return $?\n\
+)}\n\
+\n\
+shBuild\n\
+```\n\
+';
+
+
+
 local.assetsDict['/assets.test.js'] = '';
+
+
+
+local.assetsDict['/assets.testReport.template.html'] = '\
+<style>\n\
+/*csslint\n\
+    adjoining-classes: false\n\
+*/\n\
+.testReportPlatformDiv {\n\
+    background: #fff;\n\
+    border: 1px solid black;\n\
+    font-family: Arial, Helvetica, sans-serif;\n\
+    margin-top: 20px;\n\
+    padding: 0 10px 10px 10px;\n\
+    text-align: left;\n\
+}\n\
+.testReportPlatformDiv .displayNone {\n\
+    display: none;\n\
+}\n\
+.testReportPlatformDiv img {\n\
+    border: 1px solid black;\n\
+    margin: 5px 0 5px 0;\n\
+    max-height: 256px;\n\
+    max-width: 512px;\n\
+}\n\
+.testReportPlatformDiv pre {\n\
+    background: #fdd;\n\
+    border-top: 1px solid black;\n\
+    margin-bottom: 0;\n\
+    padding: 10px;\n\
+    white-space: pre-wrap;\n\
+}\n\
+.testReportPlatformDiv span {\n\
+    display: inline-block;\n\
+    width: 8rem;\n\
+}\n\
+.testReportPlatformDiv.summary {\n\
+    background: #bfb;\n\
+}\n\
+.testReportPlatformDiv table {\n\
+    border-top: 1px solid black;\n\
+    text-align: left;\n\
+    width: 100%;\n\
+}\n\
+.testReportPlatformDiv table > tbody > tr:nth-child(odd) {\n\
+    background: #bfb;\n\
+}\n\
+.testReportPlatformDiv .testFailed {\n\
+    background: #f99;\n\
+}\n\
+.testReportPlatformDiv .testPending {\n\
+    background: #99f;\n\
+}\n\
+</style>\n\
+<div class="testReportPlatformDiv summary">\n\
+<h1>\n\
+    <a\n\
+        {{#if env.npm_package_homepage}}\n\
+        href="{{env.npm_package_homepage}}"\n\
+        {{/if env.npm_package_homepage}}\n\
+    >{{env.npm_package_nameAlias}} v{{env.npm_package_version}}</a>\n\
+</h1>\n\
+<h2>test-report summary</h2>\n\
+<h4>\n\
+    <span>version</span>-\n\
+        {{env.npm_package_version}}<br>\n\
+    <span>test date</span>- {{date}}<br>\n\
+    <span>commit info</span>-\n\
+        {{#if env.CI_COMMIT_INFO}}\n\
+        {{env.CI_COMMIT_INFO htmlSafe}}<br>\n\
+        {{#unless env.CI_COMMIT_INFO}}\n\
+        undefined<br>\n\
+        {{/if env.CI_COMMIT_INFO}}\n\
+</h4>\n\
+<table>\n\
+<thead>\n\
+    <tr>\n\
+        <th>total time-elapsed</th>\n\
+        <th>total tests failed</th>\n\
+        <th>total tests passed</th>\n\
+        <th>total tests pending</th>\n\
+    </tr>\n\
+</thead>\n\
+<tbody><tr>\n\
+    <td>{{timeElapsed}} ms</td>\n\
+    <td class="{{testStatusClass}}">{{testsFailed}}</td>\n\
+    <td>{{testsPassed}}</td>\n\
+    <td>{{testsPending}}</td>\n\
+</tr></tbody>\n\
+</table>\n\
+</div>\n\
+{{#each testPlatformList}}\n\
+<div class="testReportPlatformDiv">\n\
+<h4>\n\
+    {{testPlatformNumber}}. {{name htmlSafe}}<br>\n\
+    {{#if screenCaptureImg}}\n\
+    <a href="{{screenCaptureImg}}"><img src="{{screenCaptureImg}}"></a><br>\n\
+    {{/if screenCaptureImg}}\n\
+    <span>time-elapsed</span>- {{timeElapsed}} ms<br>\n\
+    <span>tests failed</span>- {{testsFailed}}<br>\n\
+    <span>tests passed</span>- {{testsPassed}}<br>\n\
+    <span>tests pending</span>- {{testsPending}}<br>\n\
+</h4>\n\
+<table>\n\
+<thead><tr>\n\
+    <th>#</th>\n\
+    <th>time-elapsed</th>\n\
+    <th>status</th>\n\
+    <th>test-case</th>\n\
+</tr></thead>\n\
+<tbody>\n\
+{{#each testCaseList}}\n\
+<tr>\n\
+    <td>{{testCaseNumber}}</td>\n\
+    <td>{{timeElapsed}} ms</td>\n\
+    <td class="{{testReportTestStatusClass}}">{{status}}</td>\n\
+    <td>{{name}}</td>\n\
+</tr>\n\
+{{/each testCaseList}}\n\
+</tbody>\n\
+</table>\n\
+<pre class="{{preClass}}">\n\
+{{#each errorStackList}}\n\
+{{errorStack htmlSafe}}\n\
+{{/each errorStackList}}\n\
+</pre>\n\
+</div>\n\
+{{/each testPlatformList}}\n\
+';
+
+
+
+// https://img.shields.io/badge/tests_failed-999-dd0000.svg?style=flat
+local.assetsDict['/assets.testReportBadge.template.svg'] =
+'<svg xmlns="http://www.w3.org/2000/svg" width="103" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="103" height="20" fill="#555"/><rect rx="0" x="72" width="31" height="20" fill="#d00"/><path fill="#d00" d="M72 0h4v20h-4z"/><rect rx="0" width="103" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="37" y="15" fill="#010101" fill-opacity=".3">tests failed</text><text x="37" y="14">tests failed</text><text x="86.5" y="15" fill="#010101" fill-opacity=".3">999</text><text x="86.5" y="14">999</text></g></svg>';
 
 
 
@@ -8581,619 +9222,6 @@ local.assetsDict['/favicon.ico'] = '';
 local.regexpEmailValidate = (
 /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/
 );
-
-
-
-// https://img.shields.io/badge/last_build-0000_00_00_00_00_00_UTC_--_master_--_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-0077ff.svg?style=flat
-local.templateBuildBadgeSvg =
-'<svg xmlns="http://www.w3.org/2000/svg" width="563" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="563" height="20" fill="#555"/><rect rx="0" x="61" width="502" height="20" fill="#07f"/><path fill="#07f" d="M61 0h4v20h-4z"/><rect rx="0" width="563" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="31.5" y="15" fill="#010101" fill-opacity=".3">last build</text><text x="31.5" y="14">last build</text><text x="311" y="15" fill="#010101" fill-opacity=".3">0000-00-00 00:00:00 UTC - master - aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</text><text x="311" y="14">0000-00-00 00:00:00 UTC - master - aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</text></g></svg>';
-
-
-
-local.templateDocApiHtml = '\
-<style>\n\
-.docApiDiv {\n\
-    font-family: Arial, Helvetica, sans-serif;\n\
-}\n\
-.docApiDiv a[href] {\n\
-    color: #33f;\n\
-    font-weight: bold;\n\
-    text-decoration: none;\n\
-}\n\
-.docApiDiv a[href]:hover {\n\
-    text-decoration: underline;\n\
-}\n\
-.docApiSectionDiv {\n\
-    border-top: 1px solid;\n\
-    margin-top: 20px;\n\
-}\n\
-.docApiCodeCommentSpan {\n\
-    background: #bbf;\n\
-    color: #000;\n\
-    display: block;\n\
-}\n\
-.docApiCodeKeywordSpan {\n\
-    color: #d00;\n\
-    font-weight: bold;\n\
-}\n\
-.docApiCodePre {\n\
-    background: #eef;\n\
-    border: 1px solid;\n\
-    color: #777;\n\
-    padding: 5px;\n\
-    white-space: pre-wrap;\n\
-}\n\
-.docApiSignatureSpan {\n\
-    color: #777;\n\
-    font-weight: bold;\n\
-}\n\
-</style>\n\
-<div class="docApiDiv">\n\
-<h1>api documentation\n\
-    <a\n\
-        {{#if env.npm_package_homepage}}\n\
-        href="{{env.npm_package_homepage}}"\n\
-        {{/if env.npm_package_homepage}}\n\
-    >({{env.npm_package_name}} v{{env.npm_package_version}})</a>\n\
-</h1>\n\
-<div class="docApiSectionDiv"><a href="#"><h1>table of contents</h1></a><ul>\n\
-{{#each moduleList}}\n\
-    <li><a href="#{{id}}">module {{name}}</a><ol>\n\
-        {{#each elementList}}\n\
-        <li>\n\
-            {{#if source}}\n\
-            <a class="docApiElementLiA" href="#{{id}}">\n\
-            {{name}}\n\
-            <span class="docApiSignatureSpan">{{signature}}</span>\n\
-            </a>\n\
-            {{#unless source}}\n\
-            <span class="docApiSignatureSpan">{{name}}</span>\n\
-        {{/if source}}\n\
-        </li>\n\
-        {{/each elementList}}\n\
-    </ol></li>\n\
-{{/each moduleList}}\n\
-</ul></div>\n\
-    {{#each moduleList}}\n\
-    <div class="docApiSectionDiv">\n\
-    <h1><a href="#{{id}}" id="{{id}}">module {{name}}</a></h1>\n\
-        {{#each elementList}}\n\
-        {{#if source}}\n\
-        <h2>\n\
-            <a href="#{{id}}" id="{{id}}">\n\
-            {{name}}\n\
-            <span class="docApiSignatureSpan">{{signature}}</span>\n\
-            </a>\n\
-        </h2>\n\
-        <ul>\n\
-        <li>description and source code<pre class="docApiCodePre">{{source}}</pre></li>\n\
-        <li>example usage<pre class="docApiCodePre">{{example}}</pre></li>\n\
-        </ul>\n\
-        {{/if source}}\n\
-        {{/each elementList}}\n\
-    </div>\n\
-    {{/each moduleList}}\n\
-</div>\n\
-';
-
-
-
-local.templateIndexHtml = '';
-
-
-
-local.templateReadme = '\
-jslint-lite\n\
-===========\n\
-{{packageJsonDescription}}\n\
-\n\
-[![travis-ci.org build-status](https://api.travis-ci.org/kaizhu256/node-jslint-lite.svg)](https://travis-ci.org/kaizhu256/node-jslint-lite) [![istanbul coverage](https://kaizhu256.github.io/node-jslint-lite/build..alpha..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-jslint-lite/build..alpha..travis-ci.org/coverage.html/index.html)\n\
-\n\
-[![NPM](https://nodei.co/npm/jslint-lite.png?downloads=true)](https://www.npmjs.com/package/jslint-lite)\n\
-\n\
-[![package-listing](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.gitLsTree.svg)](https://github.com/kaizhu256/node-jslint-lite)\n\
-\n\
-\n\
-\n\
-# cdn download\n\
-- [https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app/assets.jslint-lite.rollup.js](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app/assets.jslint-lite.rollup.js)\n\
-- [https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app/assets.jslint-lite.rollup.min.js](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app/assets.jslint-lite.rollup.min.js)\n\
-\n\
-\n\
-\n\
-# live demo\n\
-- [https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app/index.html](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app/index.html)\n\
-\n\
-[![github.com test-server](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.deployGithub.browser._2Fnode-jslint-lite_2Fbuild..alpha..travis-ci.org_2Fapp_2Findex.html.png)](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app/index.html)\n\
-\n\
-\n\
-\n\
-# documentation\n\
-#### api-doc\n\
-- [https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/doc.api.html](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/doc.api.html)\n\
-\n\
-[![api-doc](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/screen-capture.docApiCreate.browser._2Fhome_2Ftravis_2Fbuild_2Fkaizhu256_2Fnode-jslint-lite_2Ftmp_2Fbuild_2Fdoc.api.html.png)](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/doc.api.html)\n\
-\n\
-#### todo\n\
-- none\n\
-\n\
-#### change since 842a6a81\n\
-- none\n\
-\n\
-#### this package requires\n\
-- darwin or linux os\n\
-\n\
-\n\
-\n\
-# build-status [![travis-ci.org build-status](https://api.travis-ci.org/kaizhu256/node-jslint-lite.svg)](https://travis-ci.org/kaizhu256/node-jslint-lite)\n\
-[![build commit status](https://kaizhu256.github.io/node-jslint-lite/build/build.badge.svg)](https://travis-ci.org/kaizhu256/node-jslint-lite)\n\
-\n\
-| git-branch : | [master](https://github.com/kaizhu256/node-jslint-lite/tree/master) | [beta](https://github.com/kaizhu256/node-jslint-lite/tree/beta) | [alpha](https://github.com/kaizhu256/node-jslint-lite/tree/alpha)|\n\
-|--:|:--|:--|:--|\n\
-| test-server-1 : | [![github.com test-server](https://kaizhu256.github.io/node-jslint-lite/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-jslint-lite/build..master..travis-ci.org/app/index.html) | [![github.com test-server](https://kaizhu256.github.io/node-jslint-lite/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app/index.html) | [![github.com test-server](https://kaizhu256.github.io/node-jslint-lite/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-jslint-lite/build..alpha..travis-ci.org/app/index.html)|\n\
-| test-server-2 : | [![heroku.com test-server](https://kaizhu256.github.io/node-jslint-lite/heroku-logo.75x25.png)](https://hrku01-jslint-lite-master.herokuapp.com) | [![heroku.com test-server](https://kaizhu256.github.io/node-jslint-lite/heroku-logo.75x25.png)](https://hrku01-jslint-lite-beta.herokuapp.com) | [![heroku.com test-server](https://kaizhu256.github.io/node-jslint-lite/heroku-logo.75x25.png)](https://hrku01-jslint-lite-alpha.herokuapp.com)|\n\
-| test-report : | [![test-report](https://kaizhu256.github.io/node-jslint-lite/build..master..travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-jslint-lite/build..master..travis-ci.org/test-report.html) | [![test-report](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/test-report.html) | [![test-report](https://kaizhu256.github.io/node-jslint-lite/build..alpha..travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-jslint-lite/build..alpha..travis-ci.org/test-report.html)|\n\
-| coverage : | [![istanbul coverage](https://kaizhu256.github.io/node-jslint-lite/build..master..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-jslint-lite/build..master..travis-ci.org/coverage.html/index.html) | [![istanbul coverage](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/coverage.html/index.html) | [![istanbul coverage](https://kaizhu256.github.io/node-jslint-lite/build..alpha..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-jslint-lite/build..alpha..travis-ci.org/coverage.html/index.html)|\n\
-| build-artifacts : | [![build-artifacts](https://kaizhu256.github.io/node-jslint-lite/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-jslint-lite/tree/gh-pages/build..master..travis-ci.org) | [![build-artifacts](https://kaizhu256.github.io/node-jslint-lite/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-jslint-lite/tree/gh-pages/build..beta..travis-ci.org) | [![build-artifacts](https://kaizhu256.github.io/node-jslint-lite/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-jslint-lite/tree/gh-pages/build..alpha..travis-ci.org)|\n\
-\n\
-#### master branch\n\
-- stable branch\n\
-- HEAD should be tagged, npm-published package\n\
-\n\
-#### beta branch\n\
-- semi-stable branch\n\
-- HEAD should be latest, npm-published package\n\
-\n\
-#### alpha branch\n\
-- unstable branch\n\
-- HEAD is arbitrary\n\
-- commit history may be rewritten\n\
-\n\
-\n\
-\n\
-# quickstart web example\n\
-![screen-capture](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.testExampleJs.browser..png)\n\
-\n\
-#### to run this example, follow the instruction in the script below\n\
-- [example.js](https://kaizhu256.github.io/node-jslint-lite/build/example.js)\n\
-```javascript\n\
-/*\n\
-example.js\n\
-\n\
-{{exampleJsDescription}}\n\
-\n\
-instruction\n\
-    1. save this script as example.js\n\
-    2. run the shell command:\n\
-        $ npm install jslint-lite && \\\n\
-            export PORT=8081 && \\\n\
-            node example.js\n\
-    3. play with the browser-demo on http://127.0.0.1:8081\n\
-*/\n\
-\n\
-/* istanbul instrument in package jslint-lite */\n\
-/*jslint\n\
-    bitwise: true,\n\
-    browser: true,\n\
-    maxerr: 8,\n\
-    maxlen: 96,\n\
-    node: true,\n\
-    nomen: true,\n\
-    regexp: true,\n\
-    stupid: true\n\
-*/\n\
-(function () {\n\
-    \'use strict\';\n\
-    var local;\n\
-\n\
-\n\
-\n\
-    // run shared js-env code - pre-init\n\
-    (function () {\n\
-        // init local\n\
-        local = {};\n\
-        // init modeJs\n\
-        local.modeJs = (function () {\n\
-            try {\n\
-                return typeof navigator.userAgent === \'string\' &&\n\
-                    typeof document.querySelector(\'body\') === \'object\' &&\n\
-                    typeof XMLHttpRequest.prototype.open === \'function\' &&\n\
-                    \'browser\';\n\
-            } catch (errorCaughtBrowser) {\n\
-                return module.exports &&\n\
-                    typeof process.versions.node === \'string\' &&\n\
-                    typeof require(\'http\').createServer === \'function\' &&\n\
-                    \'node\';\n\
-            }\n\
-        }());\n\
-        // init global\n\
-        local.global = local.modeJs === \'browser\'\n\
-            ? window\n\
-            : global;\n\
-        // init utility2_rollup\n\
-        local = local.global.utility2_rollup || (local.modeJs === \'browser\'\n\
-            ? local.global.utility2_jslint\n\
-            : require(\'jslint-lite\'));\n\
-        // export local\n\
-        local.global.local = local;\n\
-    }());\n\
-    switch (local.modeJs) {\n\
-\n\
-\n\
-\n\
-    // run browser js-env code - post-init\n\
-    case \'browser\':\n\
-        break;\n\
-\n\
-\n\
-\n\
-    /* istanbul ignore next */\n\
-    // run node js-env code - post-init\n\
-    case \'node\':\n\
-        // export local\n\
-        module.exports = local;\n\
-        // require modules\n\
-        local.fs = require(\'fs\');\n\
-        local.http = require(\'http\');\n\
-        local.path = require(\'path\');\n\
-        local.url = require(\'url\');\n\
-        // init assets\n\
-        /* jslint-ignore-begin */\n\
-        local.templateIndexHtml = \'\\\n\
-<!doctype html>\\n\\\n\
-<html lang="en">\\n\\\n\
-<head>\\n\\\n\
-<meta charset="UTF-8">\\n\\\n\
-<meta name="viewport" content="width=device-width, initial-scale=1">\\n\\\n\
-<title>{{env.npm_package_name}} v{{env.npm_package_version}}</title>\\n\\\n\
-<style>\\n\\\n\
-/*csslint\\n\\\n\
-    box-sizing: false,\\n\\\n\
-    universal-selector: false\\n\\\n\
-*/\\n\\\n\
-* {\\n\\\n\
-    box-sizing: border-box;\\n\\\n\
-}\\n\\\n\
-body {\\n\\\n\
-    background: #fff;\\n\\\n\
-    font-family: Arial, Helvetica, sans-serif;\\n\\\n\
-    margin: 2rem;\\n\\\n\
-}\\n\\\n\
-body > * {\\n\\\n\
-    margin-bottom: 1rem;\\n\\\n\
-}\\n\\\n\
-</style>\\n\\\n\
-<style>\\n\\\n\
-</style>\\n\\\n\
-</head>\\n\\\n\
-<body>\\n\\\n\
-<!-- utility2-comment\\n\\\n\
-    <div id="ajaxProgressDiv1" style="background: #d00; height: 4px; left: 0; margin: 0; padding: 0; position: fixed; top: 0; transition: background 0.5s, width 1.5s; width: 25%;"></div>\\n\\\n\
-utility2-comment -->\\n\\\n\
-    <h1>\\n\\\n\
-<!-- utility2-comment\\n\\\n\
-        <a\\n\\\n\
-            {{#if env.npm_package_homepage}}\\n\\\n\
-            href="{{env.npm_package_homepage}}"\\n\\\n\
-            {{/if env.npm_package_homepage}}\\n\\\n\
-            target="_blank"\\n\\\n\
-        >\\n\\\n\
-utility2-comment -->\\n\\\n\
-            {{env.npm_package_name}} v{{env.npm_package_version}}\\n\\\n\
-<!-- utility2-comment\\n\\\n\
-        </a>\\n\\\n\
-utility2-comment -->\\n\\\n\
-    </h1>\\n\\\n\
-    <h3>{{env.npm_package_description}}</h3>\\n\\\n\
-<!-- utility2-comment\\n\\\n\
-    <h4><a download href="assets.app.js">download standalone app</a></h4>\\n\\\n\
-    <button class="onclick" id="testRunButton1">run internal test</button><br>\\n\\\n\
-    <div id="testReportDiv1" style="display: none;"></div>\\n\\\n\
-utility2-comment -->\\n\\\n\
-\\n\\\n\
-<!-- utility2-comment\\n\\\n\
-    {{#if isRollup}}\\n\\\n\
-    <script src="assets.app.min.js"></script>\\n\\\n\
-    {{#unless isRollup}}\\n\\\n\
-utility2-comment -->\\n\\\n\
-    <script src="assets.utility2.rollup.js"></script>\\n\\\n\
-    <script src="jsonp.utility2._stateInit?callback=window.utility2._stateInit"></script>\\n\\\n\
-    <script src="assets.jslint-lite.js"></script>\\n\\\n\
-    <script src="assets.example.js"></script>\\n\\\n\
-    <script src="assets.test.js"></script>\\n\\\n\
-<!-- utility2-comment\\n\\\n\
-    {{/if isRollup}}\\n\\\n\
-utility2-comment -->\\n\\\n\
-</body>\\n\\\n\
-</html>\\n\\\n\
-\';\n\
-        /* jslint-ignore-end */\n\
-        local[\'/\'] = local.templateIndexHtml\n\
-            .replace((/\\{\\{env\\.(\\w+?)\\}\\}/g), function (match0, match1) {\n\
-                // jslint-hack\n\
-                String(match0);\n\
-                switch (match1) {\n\
-                case \'npm_package_description\':\n\
-                    return \'example module\';\n\
-                case \'npm_package_name\':\n\
-                    return \'example\';\n\
-                case \'npm_package_version\':\n\
-                    return \'0.0.1\';\n\
-                }\n\
-            });\n\
-        if (local.global.utility2_rollup) {\n\
-            break;\n\
-        }\n\
-        try {\n\
-            local[\'/assets.example.js\'] = local.fs.readFileSync(__filename, \'utf8\');\n\
-        } catch (ignore) {\n\
-        }\n\
-        local[\'/assets.jslint-lite.js\'] = \'//\' + local.fs.readFileSync(\n\
-            local.jslint.__dirname + \'/lib.jslint.js\',\n\
-            \'utf8\'\n\
-        );\n\
-        // run the cli\n\
-        if (module !== require.main) {\n\
-            break;\n\
-        }\n\
-        // start server\n\
-        console.log(\'server starting on port \' + process.env.PORT);\n\
-        local.http.createServer(function (request, response) {\n\
-            switch (local.url.parse(request.url).pathname) {\n\
-            case \'/\':\n\
-            case \'/assets.example.js\':\n\
-            case \'/assets.jslint-lite.js\':\n\
-            case \'/assets.test.js\':\n\
-                response.end(local[local.url.parse(request.url).pathname]);\n\
-                break;\n\
-            default:\n\
-                response.end();\n\
-            }\n\
-        }).listen(process.env.PORT);\n\
-        // if $npm_config_timeout_exit exists,\n\
-        // then exit this process after $npm_config_timeout_exit ms\n\
-        if (Number(process.env.npm_config_timeout_exit)) {\n\
-            setTimeout(process.exit, Number(process.env.npm_config_timeout_exit));\n\
-        }\n\
-        break;\n\
-    }\n\
-}());\n\
-```\n\
-\n\
-#### output from electron\n\
-![screen-capture](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.testExampleJs.browser..png)\n\
-\n\
-#### output from shell\n\
-![screen-capture](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.testExampleJs.svg)\n\
-\n\
-\n\
-\n\
-# package.json\n\
-```json\n\
-{\n\
-    "author": "kai zhu <kaizhu256@gmail.com>",\n\
-    "description": "{{packageJsonDescription}}",\n\
-    "devDependencies": {\n\
-        "electron-lite": "kaizhu256/node-electron-lite#alpha",\n\
-        "utility2": "kaizhu256/node-utility2#alpha"\n\
-    },\n\
-    "engines": {\n\
-        "node": ">=4.0"\n\
-    },\n\
-    "homepage": "https://github.com/kaizhu256/node-jslint-lite",\n\
-    "keywords": [],\n\
-    "license": "MIT",\n\
-    "main": "lib.jslint",\n\
-    "name": "jslint-lite",\n\
-    "os": [\n\
-        "darwin",\n\
-        "linux"\n\
-    ],\n\
-    "repository": {\n\
-        "type": "git",\n\
-        "url": "https://github.com/kaizhu256/node-jslint-lite.git"\n\
-    },\n\
-    "scripts": {\n\
-        "build-ci": "utility2 shRun shReadmeBuild",\n\
-        "heroku-postbuild": "npm install \'kaizhu256/node-utility2#alpha\' && utility2 shRun shDeployHeroku",\n\
-        "postinstall": "if [ -f lib.jslint.npm-scripts.sh ]; then ./lib.jslint.npm-scripts.sh postinstall; fi",\n\
-        "start": "export PORT=${PORT:-8080} && export npm_config_mode_auto_restart=1 && utility2 shRun shIstanbulCover test.js",\n\
-        "test": "export PORT=$(utility2 shServerPortRandom) && utility2 test test.js"\n\
-    },\n\
-    "version": "0.0.1"\n\
-}\n\
-```\n\
-\n\
-\n\
-\n\
-# changelog of last 50 commits\n\
-[![screen-capture](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.gitLog.svg)](https://github.com/kaizhu256/node-jslint-lite/commits)\n\
-\n\
-\n\
-\n\
-# internal build-script\n\
-- build.sh\n\
-```shell\n\
-# build.sh\n\
-\n\
-# this shell script will run the build for this package\n\
-\n\
-shBuildCiTestPre() {(set -e\n\
-# this function will run the pre-test build\n\
-    # test example.js\n\
-    (export MODE_BUILD=testExampleJs &&\n\
-        shRunScreenCapture shReadmeTestJs example.js) || return $?\n\
-    # test published-package\n\
-    (export MODE_BUILD=npmTestPublished &&\n\
-        shRunScreenCapture shNpmTestPublished) || return $?\n\
-)}\n\
-\n\
-shBuildCiTestPost() {(set -e\n\
-# this function will run the post-test build\n\
-    # if running legacy-node, then return\n\
-    [ "$(node --version)" \\< "v7.0" ] && return || true\n\
-    export NODE_ENV=production\n\
-    # deploy app to gh-pages\n\
-    (export MODE_BUILD=deployGithub &&\n\
-        shDeployGithub) || return $?\n\
-    # deploy app to heroku\n\
-    (export MODE_BUILD=deployHeroku &&\n\
-        shDeployHeroku) || return $?\n\
-)}\n\
-\n\
-shBuild() {(set -e\n\
-# this function will run the main build\n\
-    # init env\n\
-    . node_modules/.bin/utility2 && shInit\n\
-    # cleanup github-gh-pages dir\n\
-    # export BUILD_GITHUB_UPLOAD_PRE_SH="rm -fr build"\n\
-    # init github-gh-pages commit-limit\n\
-    export COMMIT_LIMIT=16\n\
-    # if branch is alpha, beta, or master, then run default build\n\
-    if [ "$CI_BRANCH" = alpha ] ||\n\
-        [ "$CI_BRANCH" = beta ] ||\n\
-        [ "$CI_BRANCH" = master ]\n\
-    then\n\
-        shBuildCiDefault\n\
-    fi\n\
-)}\n\
-shBuild\n\
-```\n\
-'
-
-
-
-// https://img.shields.io/badge/tests_failed-999-dd0000.svg?style=flat
-local.templateTestReportBadgeSvg =
-'<svg xmlns="http://www.w3.org/2000/svg" width="103" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="103" height="20" fill="#555"/><rect rx="0" x="72" width="31" height="20" fill="#d00"/><path fill="#d00" d="M72 0h4v20h-4z"/><rect rx="0" width="103" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="37" y="15" fill="#010101" fill-opacity=".3">tests failed</text><text x="37" y="14">tests failed</text><text x="86.5" y="15" fill="#010101" fill-opacity=".3">999</text><text x="86.5" y="14">999</text></g></svg>';
-
-
-
-local.templateTestReportHtml = '\
-<style>\n\
-/*csslint\n\
-    adjoining-classes: false\n\
-*/\n\
-.testReportPlatformDiv {\n\
-    border: 1px solid black;\n\
-    font-family: Arial, Helvetica, sans-serif;\n\
-    margin-top: 20px;\n\
-    padding: 0 10px 10px 10px;\n\
-    text-align: left;\n\
-}\n\
-.testReportPlatformDiv .displayNone {\n\
-    display: none;\n\
-}\n\
-.testReportPlatformDiv img {\n\
-    border: 1px solid black;\n\
-    margin: 5px 0 5px 0;\n\
-    max-height: 256px;\n\
-    max-width: 512px;\n\
-}\n\
-.testReportPlatformDiv pre {\n\
-    background: #fdd;\n\
-    border-top: 1px solid black;\n\
-    margin-bottom: 0;\n\
-    padding: 10px;\n\
-    white-space: pre-wrap;\n\
-}\n\
-.testReportPlatformDiv span {\n\
-    display: inline-block;\n\
-    width: 8rem;\n\
-}\n\
-.testReportPlatformDiv.summary {\n\
-    background: #bfb;\n\
-}\n\
-.testReportPlatformDiv table {\n\
-    border-top: 1px solid black;\n\
-    text-align: left;\n\
-    width: 100%;\n\
-}\n\
-.testReportPlatformDiv table > tbody > tr:nth-child(odd) {\n\
-    background: #bfb;\n\
-}\n\
-.testReportPlatformDiv .testFailed {\n\
-    background: #f99;\n\
-}\n\
-.testReportPlatformDiv .testPending {\n\
-    background: #99f;\n\
-}\n\
-</style>\n\
-<div class="testReportPlatformDiv summary">\n\
-<h1>\n\
-    <a\n\
-        {{#if env.npm_package_homepage}}\n\
-        href="{{env.npm_package_homepage}}"\n\
-        {{/if env.npm_package_homepage}}\n\
-    >{{env.npm_package_name}} v{{env.npm_package_version}}</a>\n\
-</h1>\n\
-<h2>test-report summary</h2>\n\
-<h4>\n\
-    <span>version</span>-\n\
-        {{env.npm_package_version}}<br>\n\
-    <span>test date</span>- {{date}}<br>\n\
-    <span>commit info</span>-\n\
-        {{#if env.CI_COMMIT_INFO}}\n\
-        {{env.CI_COMMIT_INFO htmlSafe}}<br>\n\
-        {{#unless env.CI_COMMIT_INFO}}\n\
-        undefined<br>\n\
-        {{/if env.CI_COMMIT_INFO}}\n\
-</h4>\n\
-<table>\n\
-<thead>\n\
-    <tr>\n\
-        <th>total time-elapsed</th>\n\
-        <th>total tests failed</th>\n\
-        <th>total tests passed</th>\n\
-        <th>total tests pending</th>\n\
-    </tr>\n\
-</thead>\n\
-<tbody><tr>\n\
-    <td>{{timeElapsed}} ms</td>\n\
-    <td class="{{testStatusClass}}">{{testsFailed}}</td>\n\
-    <td>{{testsPassed}}</td>\n\
-    <td>{{testsPending}}</td>\n\
-</tr></tbody>\n\
-</table>\n\
-</div>\n\
-{{#each testPlatformList}}\n\
-<div class="testReportPlatformDiv">\n\
-<h4>\n\
-    {{testPlatformNumber}}. {{name htmlSafe}}<br>\n\
-    {{#if screenCaptureImg}}\n\
-    <a href="{{screenCaptureImg}}"><img src="{{screenCaptureImg}}"></a><br>\n\
-    {{/if screenCaptureImg}}\n\
-    <span>time-elapsed</span>- {{timeElapsed}} ms<br>\n\
-    <span>tests failed</span>- {{testsFailed}}<br>\n\
-    <span>tests passed</span>- {{testsPassed}}<br>\n\
-    <span>tests pending</span>- {{testsPending}}<br>\n\
-</h4>\n\
-<table>\n\
-<thead><tr>\n\
-    <th>#</th>\n\
-    <th>time-elapsed</th>\n\
-    <th>status</th>\n\
-    <th>test-case</th>\n\
-</tr></thead>\n\
-<tbody>\n\
-{{#each testCaseList}}\n\
-<tr>\n\
-    <td>{{testCaseNumber}}</td>\n\
-    <td>{{timeElapsed}} ms</td>\n\
-    <td class="{{testReportTestStatusClass}}">{{status}}</td>\n\
-    <td>{{name}}</td>\n\
-</tr>\n\
-{{/each testCaseList}}\n\
-</tbody>\n\
-</table>\n\
-<pre class="{{preClass}}">\n\
-{{#each errorStackList}}\n\
-{{errorStack htmlSafe}}\n\
-{{/each errorStackList}}\n\
-</pre>\n\
-</div>\n\
-{{/each testPlatformList}}\n\
-';
 /* jslint-ignore-end */
     }());
 
@@ -9733,13 +9761,14 @@ local.templateTestReportHtml = '\
             if (request._stateInit || (request.urlParsed &&
                     request.urlParsed.pathname === '/jsonp.utility2._stateInit')) {
                 state = { utility2: { assetsDict: {
+                    '/assets.index.template.html':
+                        local.assetsDict['/assets.index.template.html']
                 } } };
                 local.objectSetDefault(state, { utility2: { env: {
                     NODE_ENV: local.env.NODE_ENV,
                     npm_config_mode_backend: local.env.npm_config_mode_backend,
                     npm_package_description: local.env.npm_package_description,
                     npm_package_homepage: local.env.npm_package_homepage,
-                    npm_package_name: local.env.npm_package_name,
                     npm_package_nameAlias: local.env.npm_package_nameAlias,
                     npm_package_version: local.env.npm_package_version
                 } } }, 3);
@@ -9982,48 +10011,6 @@ local.templateTestReportHtml = '\
             aa = local.jsonStringifyOrdered(aa);
             bb = JSON.stringify(bb);
             local.assert(aa !== bb, [aa, bb]);
-        };
-
-        local.assetsAlias = function (alias, file, mode) {
-        /*
-         * this function will alias the assets-file to assets-alias, if it does not exist
-         *
-         */
-            if (local.assetsDict[alias] && mode !== 'force') {
-                return;
-            }
-            local.assetsDict[alias] = local.assetsDict[file];
-            // alias uglified assets-file
-            alias = alias.replace((/\.([^.]*?)$/), '.min.$1');
-            file = file.replace((/\.([^.]*?)$/), '.min.$1');
-            if (local.assetsDict[file]) {
-                local.assetsDict[alias] = local.assetsDict[file];
-            }
-        };
-
-        local.assetsWrite = function (file, data) {
-        /*
-         * this function will write the data to the assets-file,
-         * and if $NODE_ENV === production, create an uglified assets-file as well
-         *
-         */
-            local.assetsDict[file] = data;
-            // create uglified assets-file
-            file = file.split('.');
-            switch (typeof data === 'string' &&
-                file.length >= 2 &&
-                file[file.length - 2] !== 'min' &&
-                file[file.length - 1]) {
-            case 'js':
-                file.splice(-1, 0, 'min');
-                file = file.join('.');
-                local.tryCatchOnError(function () {
-                    local.assetsDict[file] = local.env.NODE_ENV === 'production'
-                        ? local.uglify(data, file)
-                        : data;
-                }, local.nop);
-                break;
-            }
         };
 
         local.base64FromBuffer = function (bff) {
@@ -10531,123 +10518,100 @@ return Utf8ArrayToStr(bff);
 /* jslint-ignore-end */
         };
 
-        local.buildApp = function (optionsList, onError) {
+        local.buildApiDoc = function (options, onError) {
         /*
-         * this function will build the app
+         * this function will build the api-doc
          */
-            var onParallel;
-            onParallel = local.onParallel(function (error) {
-                /* istanbul ignore next */
-                if (!local.global.__coverage__) {
-                    local.fs.writeFileSync(
-                        'assets.' + local.env.npm_package_name + '.rollup.js',
-                        local.assetsDict['/assets.' + local.env.npm_package_name +
-                            '.rollup.js'] ||
-                            local.assetsDict['/assets.' + local.env.npm_package_name +
-                                '.js']
-                    );
-                }
-                onError(error);
-            });
-            onParallel.counter += 1;
-            optionsList = optionsList.concat({
-                file: '/assets.' + local.env.npm_package_name + '.js',
-                url: '/assets.' + local.env.npm_package_name + '.js'
-            }, {
-                file: '/assets.' + local.env.npm_package_name + '.rollup.js',
-                url: '/assets.' + local.env.npm_package_name + '.rollup.js'
-            }, {
-                file: '/assets.app.js',
-                url: '/assets.app.js'
-            }, {
-                file: '/assets.example.js',
-                url: '/assets.example.js'
-            }, {
-                file: '/assets.test.js',
-                url: '/assets.test.js'
-            }, {
-                file: '/assets.utility2.rollup.js',
-                url: '/assets.utility2.rollup.js'
-            }, {
-                file: '/index.html',
-                url: '/index.html'
-            }, {
-                file: '/jsonp.utility2._stateInit',
-                url: '/jsonp.utility2._stateInit?callback=window.utility2._stateInit'
-            });
-            optionsList.forEach(function (options) {
-                // get uglified file
-                switch (local.path.extname(options.file)) {
-                case '.js':
-                    optionsList.push({
-                        file: options.file.replace((/(\.\w+$)/), '.min$1'),
-                        url: options.url.replace((/(\.\w+$)/), '.min$1')
-                    });
-                    break;
-                }
-            });
-            optionsList.forEach(function (options) {
-                onParallel.counter += 1;
-                local.ajax(options, function (error, xhr) {
-                    if (error && (/\.min\.js$/).test(options.file)) {
-                        onParallel();
-                        return;
-                    }
-                    // validate no error occurred
-                    local.assert(!error, error);
-                    switch (local.path.extname(options.file)) {
-                    case '.js':
-                    case '.json':
-                        local.jslintAndPrintConditional(xhr.responseText, options.file);
-                        // validate no error occurred
-                        local.assert(!local.jslint.errorText, local.jslint.errorText);
-                        break;
-                    }
-                    local.fsWriteFileWithMkdirpSync(
-                        local.env.npm_config_dir_build + '/app' + options.file,
-                        new Buffer(xhr.response)
-                    );
-                    onParallel();
-                });
-            });
-            // test assets.app.js
-            onParallel.counter += 1;
-            local.fs.writeFileSync(
-                local.env.npm_config_dir_tmp + '/assets.app.js',
-                local.assetsDict['/assets.app.js']
-            );
-            local.processSpawnWithTimeout(
-                process.argv[0],
-                ['assets.app.js'],
-                {
-                    cwd: local.env.npm_config_dir_tmp,
-                    env: {
-                        PORT: (Math.random() * 0x10000) | 0x8000,
-                        npm_config_timeout_exit: 5000
-                    },
-                    stdio: ['ignore', 1, 2]
-                }
-            )
-                .once('error', onParallel)
-                .once('exit', function (exitCode) {
-                    // validate exitCode
-                    local.assert(!exitCode, exitCode);
-                    onParallel();
-                });
-            onParallel();
-        };
-
-        local.buildDoc = function (options, onError) {
-        /*
-         * this function will build the doc
-         */
+            var element, elementCreate, elementName, html, module, tmp, trimLeft;
+            // optimization - do not run if $npm_config_mode_coverage = all
             if (local.env.npm_config_mode_coverage === 'all') {
                 onError();
                 return;
             }
+            elementCreate = function () {
+                element = {};
+                element.moduleName = module.name.split('.');
+                // handle case where module.exports is a function
+                if (element.moduleName.slice(-1)[0] === elementName) {
+                    element.moduleName.pop();
+                }
+                element.moduleName = element.moduleName.join('.');
+                element.id = encodeURIComponent('element.' + module.name + '.' + elementName);
+                element.typeof = typeof module.exports[elementName];
+                element.name = (element.typeof + ' <span class="apiDocSignatureSpan">' +
+                    element.moduleName + '.</span>' + elementName)
+                    // handle case where module.exports is a function
+                    .replace('>.<', '');
+                if (element.typeof !== 'function') {
+                    return element;
+                }
+                // init source
+                element.source = trimLeft(module.exports[elementName].toString());
+                if (element.source.length > 4096) {
+                    element.source = element.source.slice(0, 4096).trimRight() + ' ...';
+                }
+                element.source = local.stringHtmlSafe(element.source)
+                    .replace((/\([\S\s]*?\)/), function (match0) {
+                        // init signature
+                        element.signature = match0
+                            .replace((/ *?\/\*[\S\s]*?\*\/ */g), '')
+                            .replace((/,/g), ',\n');
+                        return element.signature;
+                    })
+                    .replace(
+                        (/( *?\/\*[\S\s]*?\*\/\n)/),
+                        '<span class="apiDocCodeCommentSpan">$1</span>'
+                    )
+                    .replace((/^function \(/), elementName + ' = function (');
+                // init example
+                [
+                    '\\b' + element.moduleName,
+                    '\\.',
+                    '\\b'
+                ].some(function (prefix) {
+                    module.example.replace(
+                        new RegExp('((?:\n.*?){8}' +
+                            prefix + ')(' + elementName + ')(\\((?:.*?\n){8})'),
+                        function (match0, match1, match2, match3) {
+                            // jslint-hack
+                            local.nop(match0);
+                            if ((/\b(?:JSON\.|function )$/).test(match1)) {
+                                return;
+                            }
+                            element.example = '...' + trimLeft(local.stringHtmlSafe(match1) +
+                                '<span class="apiDocCodeKeywordSpan">' + match2 + '</span>' +
+                                local.stringHtmlSafe(match3)).trimRight() + '\n...';
+                        }
+                    );
+                    return element.example;
+                });
+                element.example = element.example || 'n/a';
+                return element;
+            };
+            trimLeft = function (text) {
+                /*
+                 * this function will normalize the whitespace around the text
+                 */
+                tmp = '';
+                text.trim().replace((/^ */gm), function (match0) {
+                    if (!tmp || match0.length < tmp.length) {
+                        tmp = match0;
+                    }
+                });
+                text = text.replace(new RegExp('^' + tmp, 'gm'), '');
+                // enforce 128 character column limit
+                while ((/^.{128}[^\\\n]/m).test(text)) {
+                    text = text.replace((/^(.{128})([^\\\n]+)/gm), '$1\\\n$2');
+                }
+                return text;
+            };
+            local.objectSetDefault(options, {
+                env: local.env,
+                exampleFileList: ['README.md', 'test.js', local.env.npm_package_main],
+                blacklistDict: local
+            });
             // init moduleDict
             local.objectSetDefault(options, local.objectLiteralize({
-                exampleFileList: ['README.md', 'test.js', local.env.npm_package_main + '.js'],
                 moduleDict: {
                     '$[]': [local.env.npm_package_nameAlias, {
                         exampleFileList: [],
@@ -10662,7 +10626,7 @@ return Utf8ArrayToStr(bff);
                         options.moduleExports[key].prototype &&
                         (Object.keys(options.moduleExports[key]).length ||
                             Object.keys(options.moduleExports[key].prototype).length) &&
-                        options.moduleExports[key] !== local.global.utility2_apiDict[key]) {
+                        options.moduleExports[key] !== options.blacklistDict[key]) {
                     options.moduleDict[local.env.npm_package_nameAlias + '.' + key] =
                         options.moduleDict[local.env.npm_package_nameAlias + '.' + key] || {
                             exampleFileList: [],
@@ -10685,45 +10649,149 @@ return Utf8ArrayToStr(bff);
                     .concat(options.exampleFileList)
                     .map(function (file) {
                         return '\n\n\n\n\n\n\n\n' +
-                            local.fs.readFileSync(file, 'utf8') +
+                            local.tryCatchReadFile(file, 'utf8') +
                             '\n\n\n\n\n\n\n\n';
                     }).join('');
             });
-            // create doc.api.html
-            local.fsWriteFileWithMkdirpSync(
-                local.env.npm_config_dir_build + '/doc.api.html',
-                local.docApiCreate(options)
+            // init moduleList
+            options.moduleList = Object.keys(options.moduleDict)
+                .sort()
+                .map(function (key) {
+                    module = local.objectSetDefault(options.moduleDict[key], {
+                        example: '',
+                        name: key
+                    });
+                    // handle case where module.exports is a function
+                    tmp = module.exports;
+                    if (typeof tmp === 'function') {
+                        // shallow-copy module.exports to prevent side-effects
+                        module.exports = local.objectSetDefault({}, module.exports);
+                        module.exports[module.name.split('.').slice(-1)[0]] = tmp;
+                    }
+                    return {
+                        elementList: Object.keys(module.exports)
+                            .filter(function (key) {
+                                return local.tryCatchOnError(function () {
+                                    return key && key[0] !== '_' &&
+                                        !(/\W/).test(key) &&
+                                        key.indexOf('testCase_') !== 0 &&
+                                        module.exports[key] !== options.blacklistDict[key];
+                                }, local.nop);
+                            })
+                            .map(function (key) {
+                                elementName = key;
+                                return elementCreate();
+                            })
+                            .sort(function (aa, bb) {
+                                return aa.name > bb.name
+                                    ? 1
+                                    : -1;
+                            }),
+                        id: 'module.' + module.name,
+                        name: module.name
+                    };
+                });
+            html = local.templateRender(
+                local.assetsDict['/assets.apiDoc.template.html'],
+                options
             );
-            console.log('created documentation file://' + local.env.npm_config_dir_build +
-                '/doc.api.html\n');
+            // create api-doc.html
+            local.fsWriteFileWithMkdirpSync(
+                local.env.npm_config_dir_build + '/api-doc.html',
+                html
+            );
+            console.log('created api-doc file://' + local.env.npm_config_dir_build +
+                '/api-doc.html\n');
             local.browserTest({
                 modeBrowserTest: 'screenCapture',
-                url: 'file://' + local.env.npm_config_dir_build + '/doc.api.html'
+                url: 'file://' + local.env.npm_config_dir_build + '/api-doc.html'
             }, onError);
         };
 
-        local.buildReadmeElectronLite = function (options, onError) {
+        local.buildApp = function (optionsList, onError) {
         /*
-         * this function will build the readme in electron-lite style
+         * this function will build the app
          */
-            // search-and-replace - update live-demo
-            [
-                (/\n\[!\[package-listing\][\S\s]*?\n# documentation\n/)
-            ].forEach(function (rgx) {
-                options.readmeFrom.replace(rgx, function (match0) {
-                    options.readmeTo = options.readmeTo.replace(rgx, match0);
+            var onParallel;
+            onParallel = local.onParallel(function (error) {
+                /* istanbul ignore next */
+                if (!local.global.__coverage__) {
+                    local.fs.writeFileSync(
+                        'assets.' + local.env.npm_package_nameAlias + '.rollup.js',
+                        local.assetsDict['/assets.' + local.env.npm_package_nameAlias +
+                            '.rollup.js'] ||
+                            local.assetsDict['/assets.' + local.env.npm_package_nameAlias +
+                                '.js']
+                    );
+                }
+                onError(error);
+            });
+            onParallel.counter += 1;
+            optionsList = optionsList.concat({
+                file: '/assets.' + local.env.npm_package_nameAlias + '.js',
+                url: '/assets.' + local.env.npm_package_nameAlias + '.js'
+            }, {
+                file: '/assets.' + local.env.npm_package_nameAlias + '.rollup.js',
+                url: '/assets.' + local.env.npm_package_nameAlias + '.rollup.js'
+            }, {
+                file: '/assets.app.js',
+                url: '/assets.app.js'
+            }, {
+                file: '/assets.example.js',
+                url: '/assets.example.js'
+            }, {
+                file: '/assets.test.js',
+                url: '/assets.test.js'
+            }, {
+                file: '/assets.utility2.rollup.js',
+                url: '/assets.utility2.rollup.js'
+            }, {
+                file: '/index.html',
+                url: '/index.html'
+            }, {
+                file: '/jsonp.utility2._stateInit',
+                url: '/jsonp.utility2._stateInit?callback=window.utility2._stateInit'
+            });
+            optionsList.forEach(function (options) {
+                onParallel.counter += 1;
+                local.ajax(options, function (error, xhr) {
+                    // validate no error occurred
+                    local.assert(!error, error);
+                    // jslint file
+                    local.jslintAndPrintConditional(xhr.responseText, options.file);
+                    // validate no error occurred
+                    local.assert(!local.jslint.errorText, local.jslint.errorText);
+                    local.fsWriteFileWithMkdirpSync(
+                        local.env.npm_config_dir_build + '/app' + options.file,
+                        new Buffer(xhr.response)
+                    );
+                    onParallel();
                 });
             });
-            // search-and-replace - update server-info
-            [
-                (/\n\| test-server-. : \|[\S\s]*?(\n\| test-report : \|)/)
-            ].forEach(function (rgx) {
-                options.readmeTo = options.readmeTo.replace(rgx, '$1');
-            });
-            local.buildReadmeJslintLite(options, onError);
+            // test standalone assets.app.js
+            onParallel.counter += 1;
+            local.fs.writeFileSync(
+                local.env.npm_config_dir_tmp + '/assets.app.js',
+                local.assetsDict['/assets.app.js']
+            );
+            local.processSpawnWithTimeout(process.argv[0], ['assets.app.js'], {
+                cwd: local.env.npm_config_dir_tmp,
+                env: {
+                    PORT: (Math.random() * 0x10000) | 0x8000,
+                    npm_config_timeout_exit: 5000
+                },
+                stdio: ['ignore', 1, 2]
+            })
+                .once('error', onParallel)
+                .once('exit', function (exitCode) {
+                    // validate exitCode
+                    local.assert(!exitCode, exitCode);
+                    onParallel();
+                });
+            onParallel();
         };
 
-        local.buildReadmeJslintLite = function (options, onError) {
+        local.buildReadme = function (options, onError) {
         /*
          * this function will build the readme in jslint-lite style
          */
@@ -10753,11 +10821,21 @@ return Utf8ArrayToStr(bff);
                     options.packageJson.name
                 );
                 template = template.replace(
-                    (/\b(lib\.)jslint(\.npm-scripts)\b/g),
-                    '$1' + options.packageJson.nameAlias + '$2'
+                    (/h1-jslint/g),
+                    'h1-' + options.packageJson.nameAlias.replace((/_/g), '-')
+                );
+                template = template.replace(
+                    (/\b(assets|lib)\.jslint\.(npm-scripts|rollup)\b/g),
+                    '$1.' + options.packageJson.nameAlias + '.$2'
+                );
+                template = template.replace(
+                    "local.jslint.__dirname + '/lib.jslint.js'",
+                    "local." + options.packageJson.nameAlias + ".__dirname + '/lib." +
+                        options.packageJson.nameAlias + ".js'"
                 );
                 return template;
             };
+            options.readmeFrom = local.fs.readFileSync('README.md', 'utf8');
             // init package.json
             options.rgx = (/\n# package.json\n```json\n([\S\s]*?)\n```\n/);
             options.readmeFrom.replace(options.rgx, function (match0, match1) {
@@ -10770,11 +10848,22 @@ return Utf8ArrayToStr(bff);
                 options.githubRepo[1] = options.githubRepo[1].replace((/\.git$/), '');
                 local.objectSetDefault(
                     options.packageJson,
-                    JSON.parse(templateRender(options.rgx.exec(local.templateReadme)[1])),
+                    JSON.parse(templateRender(
+                        options.rgx.exec(local.assetsDict['/assets.readme.template.md'])[1]
+                    )),
                     2
                 );
                 // avoid npm-installing self
                 delete options.packageJson.devDependencies[options.packageJson.name];
+                // save package.json
+                local.fs.writeFileSync(
+                    'package.json',
+                    local.jsonStringifyOrdered(options.packageJson, null, 4) + '\n'
+                );
+                // update readmeTo
+                options.readmeTo = templateRender(
+                    local.assetsDict['/assets.readme.template.md']
+                );
                 options.readmeTo = options.readmeTo.replace(
                     options.rgx,
                     match0.replace(
@@ -10782,39 +10871,40 @@ return Utf8ArrayToStr(bff);
                         local.jsonStringifyOrdered(options.packageJson, null, 4)
                     )
                 );
-                options.readmeTo = templateRender(options.readmeTo);
-                local.fs.writeFileSync(
-                    'package.json',
-                    local.jsonStringifyOrdered(options.packageJson, null, 4)
-                );
-            });
-            // search-and-replace - normalize readmeFrom
-            [
-                // normalize html-head-header
-                (/\n<!doctype html>\\n\\\n[\S\s]*?\n<\/style>\\n\\\n<style>\\n\\\n/),
-                // normalize html-body-header
-                (/\n<\/style>\\n\\\n<\/head>\\n\\\n[\S\s]*\n\\n\\\n/)
-            ].forEach(function (rgx) {
-                options.readmeTo.replace(rgx, function (match0) {
-                    options.readmeFrom = options.readmeFrom.replace(rgx, match0);
-                });
             });
             // search-and-replace - customize readmeTo
             [
-                // customize README-header
+                // customize header
                 (/.*?\n.*?\n.*?\n/),
-                // customize README-todo
+                // customize todo
                 (/\n#### todo\n[\S\s]*?\n\n\n\n/),
-                // customize README-quickstart
-                (/\n# quickstart\b[\S\s]*?\n```\n/),
-                // customize README-build-script
-                (/\n# internal build-script\n[\S\s]*?$/)
+                // customize quickstart-header
+                (/\n```javascript\n\/\*\nexample\.js\n\n[^`]*?\n/),
+                (/\n {8}\$ npm install [^`]*? &&/),
+                (/\n\n\n\n[^`]*?^\/\*jslint\n/m),
+                (/\n {12}: global;\n[^`]*?\n {8}local.global.local = local;\n/),
+                new RegExp('\\n {8}local.global.local = local;\\n[^`]*?' +
+                    '\\n {4}\\/\\/ run node js-env code - post-init\\n'),
+                // customize quickstart-html-style
+                (/\n<\/style>\\n\\\n<style>\\n\\\n[^`]*?\\n\\\n<\/style>\\n\\\n/),
+                // customize quickstart-html-body
+                (/\nutility2-comment -->\\n\\\n\\n\\\n[^`]*?^<!-- utility2-comment\\n\\\n/m),
+                // customize build-script
+                (/\n# internal build-script\n[\S\s]*?^- build.sh\n/m)
             ].forEach(function (rgx) {
                 options.readmeFrom.replace(rgx, function (match0) {
                     options.readmeTo = options.readmeTo.replace(rgx, match0);
                 });
             });
-            // write readmeTo to README.md
+            // customize comments
+            options.readmeFrom.replace(
+                (/^( *?)(?:#!! |\/\/!! )(.*?)$/gm),
+                function (match0, match1, match2) {
+                    options.readmeTo = options.readmeTo.replace(match1 + match2, match0);
+                }
+            );
+            local.runIfTrue(options.customize, options.customize);
+            // save README.md
             local.fs.writeFileSync('README.md', options.readmeTo);
             onError();
         };
@@ -10861,132 +10951,6 @@ return Utf8ArrayToStr(bff);
                 new Date(Date.now() + expiresOffset).toUTCString();
             document.cookie = tmp;
             return tmp;
-        };
-
-        local.docApiCreate = function (options) {
-        /*
-         * this function will create an html api-doc from the given options
-         */
-            var element, elementCreate, elementName, module, tmp, trimLeft;
-            elementCreate = function () {
-                element = {};
-                element.moduleName = module.name.split('.');
-                // handle case where module.exports is a function
-                if (element.moduleName.slice(-1)[0] === elementName) {
-                    element.moduleName.pop();
-                }
-                element.moduleName = element.moduleName.join('.');
-                element.id = encodeURIComponent('element.' + module.name + '.' + elementName);
-                element.typeof = typeof module.exports[elementName];
-                element.name = (element.typeof + ' <span class="docApiSignatureSpan">' +
-                    element.moduleName + '.</span>' + elementName)
-                    // handle case where module.exports is a function
-                    .replace('>.<', '');
-                if (element.typeof !== 'function') {
-                    return element;
-                }
-                // init source
-                element.source = trimLeft(module.exports[elementName].toString());
-                if (element.source.length > 4096) {
-                    element.source = element.source.slice(0, 4096).trimRight() + ' ...';
-                }
-                element.source = local.stringHtmlSafe(element.source)
-                    .replace((/\([\S\s]*?\)/), function (match0) {
-                        // init signature
-                        element.signature = match0
-                            .replace((/ *?\/\*[\S\s]*?\*\/ */g), '')
-                            .replace((/,/g), ',\n');
-                        return element.signature;
-                    })
-                    .replace(
-                        (/( *?\/\*[\S\s]*?\*\/\n)/),
-                        '<span class="docApiCodeCommentSpan">$1</span>'
-                    )
-                    .replace((/^function \(/), elementName + ' = function (');
-                // init example
-                [
-                    '\\b' + element.moduleName,
-                    '\\.',
-                    '\\b'
-                ].some(function (prefix) {
-                    module.example.replace(
-                        new RegExp('((?:\n.*?){8}' +
-                            prefix + ')(' + elementName + ')(\\((?:.*?\n){8})'),
-                        function (match0, match1, match2, match3) {
-                            // jslint-hack
-                            local.nop(match0);
-                            if ((/\b(?:JSON\.|function )$/).test(match1)) {
-                                return;
-                            }
-                            element.example = '...' + trimLeft(local.stringHtmlSafe(match1) +
-                                '<span class="docApiCodeKeywordSpan">' + match2 + '</span>' +
-                                local.stringHtmlSafe(match3)).trimRight() + '\n...';
-                        }
-                    );
-                    return element.example;
-                });
-                element.example = element.example || 'n/a';
-                return element;
-            };
-            trimLeft = function (text) {
-                /*
-                 * this function will normalize the whitespace around the text
-                 */
-                tmp = '';
-                text.trim().replace((/^ */gm), function (match0) {
-                    if (!tmp || match0.length < tmp.length) {
-                        tmp = match0;
-                    }
-                });
-                text = text.replace(new RegExp('^' + tmp, 'gm'), '');
-                // enforce 128 character column limit
-                while ((/^.{128}[^\\\n]/m).test(text)) {
-                    text = text.replace((/^(.{128})([^\\\n]+)/gm), '$1\\\n$2');
-                }
-                return text;
-            };
-            options.moduleList = Object.keys(options.moduleDict)
-                .sort()
-                .map(function (key) {
-                    module = local.objectSetDefault(options.moduleDict[key], {
-                        example: '',
-                        name: key
-                    });
-                    // handle case where module.exports is a function
-                    if (typeof module.exports === 'function') {
-                        tmp = module.exports;
-                        module.exports = {};
-                        module.exports[module.name.split('.').slice(-1)[0]] = tmp;
-                        Object.keys(tmp).forEach(function (key) {
-                            module.exports[key] = tmp[key];
-                        });
-                    }
-                    return {
-                        elementList: Object.keys(module.exports)
-                            .filter(function (key) {
-                                return local.tryCatchOnError(function () {
-                                    return key && key[0] !== '_' &&
-                                        !(/\W/).test(key) &&
-                                        key.indexOf('testCase_') !== 0 &&
-                                        (module.exports === local || module.exports[key] !==
-                                            local.global.utility2_apiDict[key]);
-                                }, local.nop);
-                            })
-                            .map(function (key) {
-                                elementName = key;
-                                return elementCreate();
-                            })
-                            .sort(function (aa, bb) {
-                                return aa.name > bb.name
-                                    ? 1
-                                    : -1;
-                            }),
-                        id: 'module.' + module.name,
-                        name: module.name
-                    };
-                });
-            options.env = local.env;
-            return local.templateRender(local.templateDocApiHtml, options);
         };
 
         local.domFragmentRender = function (template, dict) {
@@ -11169,6 +11133,10 @@ return Utf8ArrayToStr(bff);
             // cleanup errors
             local.jslint.errorCounter = 0;
             local.jslint.errorText = '';
+            // optimization - ignore uglified/rollup files
+            if ((/\bmin\b|\brollup\b/).test(file)) {
+                return script;
+            }
             extname = (/\.\w+$/).exec(file);
             extname = extname && extname[0];
             switch (extname) {
@@ -11203,7 +11171,6 @@ return Utf8ArrayToStr(bff);
                 break;
             case '.js':
                 if ((script.indexOf('/*jslint') >= 0 &&
-                        local.env.NODE_ENV !== 'production' &&
                         !local.global.__coverage__) || mode === 'force') {
                     local.jslintAndPrint(script, file);
                 }
@@ -12250,6 +12217,9 @@ vendor\\)\\(\\b\\|[_s]\\)\
             // debug dir
             [__dirname, process.cwd()].forEach(function (dir) {
                 local.fs.readdirSync(dir).forEach(function (file) {
+                    if ((/\brollup\b/).test(file)) {
+                        return;
+                    }
                     file = dir + '/' + file;
                     // if the file is modified, then restart the process
                     local.onFileModifiedRestart(file);
@@ -12276,21 +12246,20 @@ vendor\\)\\(\\b\\|[_s]\\)\
                 local.global.local = local;
                 // init assets
                 local.assetsDict['/'] = local.assetsDict['/index.html'] = local.templateRender(
-                    local.templateIndexHtml,
+                    local.assetsDict['/assets.index.template.html'],
                     { env: local.env, isRollup: true }
                 );
-                local.assetsWrite('/assets.app.js', local.fs.readFileSync(__filename, 'utf8'));
+                local.assetsDict['/assets.app.js'] = local.fs.readFileSync(__filename, 'utf8');
                 local[local.env.npm_package_nameAlias] = local;
                 return local;
             }
             fileExampleJs = process.cwd() + '/example.js';
             fileMain = process.cwd() + '/' + local.env.npm_package_main;
-            global.utility2_moduleExports = require(fileMain + '.js');
+            global.utility2_moduleExports = require(fileMain);
             // read script from README.md
-            script = 'module.exports = require("./");\n' +
-                'module.exports.templateIndexHtml = "";\n';
+            script = 'module.exports = require("./");';
             local.fs.readFileSync('README.md', 'utf8').replace(
-                (/```\w*?(\n[\W\s]*?example.js[\n\"][\S\s]+?)\n```/),
+                (/```\w*?(\n[\W\s]*?example\.js[\n\"][\S\s]+?)\n```/),
                 function (match0, match1, ii, text) {
                     // jslint-hack
                     local.nop(match0);
@@ -12311,27 +12280,31 @@ vendor\\)\\(\\b\\|[_s]\\)\
             // cover script
             script = local.istanbulInstrumentInPackage(script, fileExampleJs);
             // init module
-            module = local.require2.cache[fileExampleJs] = new local.Module(fileExampleJs);
+            module = require.cache[fileExampleJs] = new local.Module(fileExampleJs);
             // load script into module
             module._compile(script, fileExampleJs);
             // init exports
             module.exports.utility2 = local;
             module.exports[local.env.npm_package_nameAlias] = global.utility2_moduleExports;
-            local.assetsWrite(
-                '/assets.' + local.env.npm_package_name + '.js',
+            // init assets
+            local.objectSetOverride(local.assetsDict, module.exports.assetsDict);
+            local.assetsDict['/assets.' + local.env.npm_package_nameAlias + '.js'] =
                 local.istanbulInstrumentInPackage(
-                    local.fs.readFileSync(fileMain + '.js', 'utf8').replace((/^#!/), '//'),
-                    fileMain + '.js'
-                )
-            );
-            local.assetsWrite('/assets.example.js', script);
-            local.assetsWrite('/assets.test.js', local.istanbulInstrumentInPackage(
+                    local.fs.readFileSync(fileMain, 'utf8').replace((/^#!/), '//'),
+                    fileMain
+                );
+            local.assetsDict['/assets.example.js'] = script;
+            local.assetsDict['/assets.test.js'] = local.istanbulInstrumentInPackage(
                 local.fs.readFileSync('test.js', 'utf8'),
                 process.cwd() + '/test.js'
-            ));
+            );
+            // init assets.index.html
+            local.assetsDict['/assets.index.template.html'] = local.normalizeText(
+                local.assetsDict['/assets.index.template.html']
+            );
             local.assetsDict['/'] = local.assetsDict['/index.html'] =
                 local.jslintAndPrintConditional(
-                    local.templateRender(module.exports.templateIndexHtml, {
+                    local.templateRender(local.assetsDict['/assets.index.template.html'], {
                         env: local.env,
                         isRollup: local.global.utility2_rollup ||
                             local.env.NODE_ENV === 'rollup' ||
@@ -12339,7 +12312,8 @@ vendor\\)\\(\\b\\|[_s]\\)\
                     }),
                     '/index.html'
                 );
-            local.assetsWrite('/assets.app.js', [
+            // init assets.app.js
+            local.assetsDict['/assets.app.js'] = [
                 'header',
                 '/assets.utility2.rollup.js',
                 '/assets.utility2.rollup.begin.js',
@@ -12349,7 +12323,6 @@ vendor\\)\\(\\b\\|[_s]\\)\
                 '/assets.test.js',
                 '/assets.utility2.rollup.end.js'
             ].map(function (key) {
-                script = local.assetsDict[key];
                 switch (key) {
 /* jslint-ignore-begin */
 case 'header':
@@ -12376,10 +12349,10 @@ instruction\n\
                     break;
                 case '/assets.lib.js':
                     script = local.assetsDict[
-                        '/assets.' + local.env.npm_package_name + '.js'
+                        '/assets.' + local.env.npm_package_nameAlias + '.js'
                     ];
                     local.runIfTrue(local.assetsDict[
-                        '/assets.' + local.env.npm_package_name + '.rollup.js'
+                        '/assets.' + local.env.npm_package_nameAlias + '.rollup.js'
                     ], function () {
                         script = '';
                     });
@@ -12387,23 +12360,27 @@ instruction\n\
                 case '/assets.utility2.rollup.js':
                     script = local.assetsDict['/assets.utility2.rollup.js'];
                     local.runIfTrue(local.assetsDict[
-                        '/assets.' + local.env.npm_package_name + '.rollup.js'
+                        '/assets.' + local.env.npm_package_nameAlias + '.rollup.js'
                     ], function () {
                         script = local.assetsDict[
-                            '/assets.' + local.env.npm_package_name + '.rollup.js'
+                            '/assets.' + local.env.npm_package_nameAlias + '.rollup.js'
                         ];
                     });
                     break;
+                default:
+                    script = local.assetsDict[key];
                 }
                 return '/* script-begin ' + key + ' */\n' +
                     script.trim() +
                     '\n/* script-end ' + key + ' */\n';
-            }).join('\n\n\n\n'));
-            // init rollup
-            local.assetsAlias(
-                '/assets.' + local.env.npm_package_name + '.rollup.js',
-                '/assets.' + local.env.npm_package_name + '.js'
-            );
+            }).join('\n\n\n\n');
+            // init assets.lib.rollup.js
+            local.objectSetDefault(local.assetsDict, local.objectLiteralize({
+                '$[]': [
+                    '/assets.' + local.env.npm_package_nameAlias + '.rollup.js',
+                    local.assetsDict['/assets.' + local.env.npm_package_nameAlias + '.js']
+                ]
+            }));
             local.objectSetDefault(module.exports, local);
             // jslint assetsDict
             Object.keys(local.assetsDict).sort().forEach(function (key) {
@@ -12863,7 +12840,7 @@ instruction\n\
             );
             // create build.badge.svg
             local.fs.writeFileSync(local.env.npm_config_dir_build +
-                '/build.badge.svg', local.templateBuildBadgeSvg
+                '/build.badge.svg', local.assetsDict['/assets.buildBadge.template.svg']
                 // edit branch name
                 .replace((/0000-00-00 00:00:00/g),
                     new Date().toISOString().slice(0, 19).replace('T', ' '))
@@ -12875,16 +12852,18 @@ instruction\n\
                     local.env.CI_COMMIT_ID
                 ));
             // create test-report.badge.svg
-            local.fs.writeFileSync(local.env.npm_config_dir_build +
-                '/test-report.badge.svg', local.templateTestReportBadgeSvg
-                // edit number of tests failed
-                .replace((/999/g), testReport.testsFailed)
-                // edit badge color
-                .replace(
-                    (/d00/g),
-                    // coverage-hack - cover both fail and pass cases
-                    '0d00'.slice(!!testReport.testsFailed).slice(0, 3)
-                ));
+            local.fs.writeFileSync(
+                local.env.npm_config_dir_build + '/test-report.badge.svg',
+                local.assetsDict['/assets.testReportBadge.template.svg']
+                    // edit number of tests failed
+                    .replace((/999/g), testReport.testsFailed)
+                    // edit badge color
+                    .replace(
+                        (/d00/g),
+                        // coverage-hack - cover both fail and pass cases
+                        '0d00'.slice(!!testReport.testsFailed).slice(0, 3)
+                    )
+            );
             console.log('created test-report file://' + local.env.npm_config_dir_build +
                 '/test-report.html\n');
             // if any test failed, then exit with non-zero exit-code
@@ -13048,7 +13027,7 @@ instruction\n\
             // create html test-report
             testCaseNumber = 0;
             return local.templateRender(
-                local.templateTestReportHtml,
+                local.assetsDict['/assets.testReport.template.html'],
                 local.objectSetOverride(testReport, {
                     env: local.env,
                     // map testPlatformList
@@ -13592,27 +13571,26 @@ instruction\n\
         });
         if (local.global.utility2_rollup) {
             local.assetsDict['/assets.utility2.rollup.js'] =
-                local.assetsDict['/assets.utility2.rollup.min.js'] =
-                local.fs.readFileSync(__filename, 'utf8');
+                local.fs.readFileSync(__filename, 'utf8')
+                .split('\n/* script-end /assets.utility2.rollup.end.js */')[0] +
+                '\n/* script-end /assets.utility2.rollup.end.js */\n';
             break;
         }
         // init assets
         [
             'lib.db.js',
-            'lib.github-crud.js',
+            'lib.github_crud.js',
             'lib.istanbul.js',
             'lib.jslint.js',
             'lib.sjcl.js',
             'lib.swgg.js',
             'lib.uglifyjs.js',
             'lib.utility2.js',
-            'lib.utility2.sh',
-            'templateDocApiHtml',
-            'templateTestReportHtml'
+            'lib.utility2.sh'
         ].forEach(function (key) {
             switch (key) {
             case 'lib.db.js':
-            case 'lib.github-crud.js':
+            case 'lib.github_crud.js':
             case 'lib.istanbul.js':
             case 'lib.jslint.js':
             case 'lib.sjcl.js':
@@ -13638,20 +13616,16 @@ instruction\n\
             case 'lib.utility2.sh':
                 local.jslintAndPrintConditional(
                     local.tryCatchReadFile(__dirname + '/' + key, 'utf8')
-                        .replace((/^#!/), '//'),
-                    __dirname + '/' + key
+                        .replace((/^ *?#!! .*$/gm), ''),
+                    __dirname + '/' + key + '.html'
                 );
-                break;
-            case 'templateDocApiHtml':
-            case 'templateTestReportHtml':
-                local.jslintAndPrintConditional(local[key], key);
                 break;
             }
         });
-        local.assetsWrite('/assets.utility2.rollup.js', [
+        local.assetsDict['/assets.utility2.rollup.js'] = [
             '/assets.utility2.rollup.begin.js',
             '/assets.utility2.lib.db.js',
-            '/assets.utility2.lib.github-crud.js',
+            '/assets.utility2.lib.github_crud.js',
             '/assets.utility2.lib.istanbul.js',
             '/assets.utility2.lib.jslint.js',
             '/assets.utility2.lib.sjcl.js',
@@ -13683,7 +13657,10 @@ instruction\n\
             return '/* script-begin ' + key + ' */\n' +
                 script.trim() +
                 '\n/* script-end ' + key + ' */\n';
-        }).join('\n\n\n\n'));
+        }).join('\n\n\n\n');
+        // init assets.lib.rollup.js
+        local.assetsDict['/assets.swgg.rollup.js'] =
+            local.assetsDict['/assets.utility2.rollup.js'];
         // init testCaseDict
         local.tryCatchReadFile(local.__dirname + '/test.js', 'utf8').replace(
             (/\/\/ run shared js-env code - function[\S\s]+?\n {4}\}\(\)\);/),
@@ -13709,8 +13686,6 @@ instruction\n\
         }
         break;
     }
-    // save utility2-api
-    local.global.utility2_apiDict = local.objectSetDefault({}, local);
     switch (local.modeJs) {
 
 
@@ -13731,43 +13706,20 @@ instruction\n\
             break;
         case 'browserTest':
             local.browserTest({}, local.exit);
-            break;
+            return;
         }
+        // init lib
+        [
+            'lib.swgg.js'
+        ].forEach(function (file) {
+            file = __dirname + '/' + file;
+            if (!local.global.utility2_rollup && local.fs.existsSync(file)) {
+                require(file);
+            }
+        });
         break;
     }
-}(
-    (function () {
-        'use strict';
-        var local;
-        // init local
-        local = {};
-        // init modeJs
-        local.modeJs = (function () {
-            try {
-                return typeof navigator.userAgent === 'string' &&
-                    typeof document.querySelector('body') === 'object' &&
-                    typeof XMLHttpRequest.prototype.open === 'function' &&
-                    'browser';
-            } catch (errorCaughtBrowser) {
-                return module.exports &&
-                    typeof process.versions.node === 'string' &&
-                    typeof require('http').createServer === 'function' &&
-                    'node';
-            }
-        }());
-        // init global
-        local.global = local.modeJs === 'browser'
-            ? window
-            : global;
-        // init utility2_rollup
-        local = local.global.utility2_rollup || local;
-        // init require
-        if (local.modeJs === 'node') {
-            local.require2 = require;
-        }
-        return local;
-    }())
-));
+}());
 /* script-end /assets.utility2.js */
 
 
@@ -13792,7 +13744,7 @@ instruction\n\
     if (typeof global === 'object' &&
             global.utility2_rollup &&
             global.process &&
-            global.process.env.npm_package_name === 'swgg') {
+            global.process.env.npm_package_nameAlias === 'swgg') {
         return;
     }
 
@@ -13836,10 +13788,457 @@ instruction\n\
             }()));
         local.utility2.objectSetDefault(local, local.utility2);
         local.utility2.swgg = local;
-        local.idDomElementDict = {};
-        local.uiEventListenerDict = {};
         // init assets and templates
 /* jslint-ignore-begin */
+local.assetsDict['/assets.swgg.html'] = '\
+<!doctype html>\n\
+<html lang="en">\n\
+<head>\n\
+<meta charset="UTF-8">\n\
+<meta name="viewport" content="width=device-width, initial-scale=1">\n\
+<title>swgg</title>\n\
+<style>\n\
+/*csslint\n\
+    box-sizing: false,\n\
+    universal-selector: false\n\
+*/\n\
+* {\n\
+    box-sizing: border-box;\n\
+}\n\
+body {\n\
+    background: #fff;\n\
+    font-family: Arial, Helvetica, sans-serif;\n\
+    margin: 2rem;\n\
+}\n\
+body > * {\n\
+    margin-bottom: 1rem;\n\
+}\n\
+</style>\n\
+<style>\n\
+/*csslint\n\
+    adjoining-classes: false,\n\
+    box-model: false,\n\
+    box-sizing: false,\n\
+    universal-selector: false\n\
+*/\n\
+/* example.js */\n\
+body > button {\n\
+    width: 15rem;\n\
+}\n\
+.zeroPixel {\n\
+    border: 0;\n\
+    height: 0;\n\
+    margin: 0;\n\
+    padding: 0;\n\
+    width: 0;\n\
+}\n\
+\n\
+\n\
+\n\
+/* animate */\n\
+.swggAnimateFade {\n\
+    transition: opacity 250ms;\n\
+}\n\
+@keyframes swggAnimateShake {\n\
+    100% {\n\
+        transform: translateX(0);\n\
+    }\n\
+    0%, 20%, 60% {\n\
+        transform: translateX(1rem);\n\
+    }\n\
+    40%, 80% {\n\
+        transform: translateX(-1rem);\n\
+    }\n\
+}\n\
+.swggAnimateShake {\n\
+    animation-duration: 500ms;\n\
+    animation-name: swggAnimateShake;\n\
+}\n\
+.swggAnimateSlide {\n\
+    overflow-y: hidden;\n\
+    transition: max-height 500ms;\n\
+}\n\
+\n\
+\n\
+\n\
+/* general */\n\
+.swggUiContainer,\n\
+.swggUiContainer * {\n\
+    box-sizing: border-box;\n\
+    margin: 0;\n\
+    padding: 0;\n\
+}\n\
+.swggUiContainer {\n\
+    font-family: Arial, Helvetica, sans-serif;\n\
+    margin-left: auto;\n\
+    margin-right: auto;\n\
+    max-width: 1024px;\n\
+}\n\
+.swggUiContainer > * {\n\
+    margin-top: 1rem;\n\
+}\n\
+.swggUiContainer a {\n\
+    text-decoration: none;\n\
+}\n\
+.swggUiContainer a:hover {\n\
+    color: black;\n\
+}\n\
+.swggUiContainer a,\n\
+.swggUiContainer input,\n\
+.swggUiContainer span {\n\
+    min-height: 1.5rem;\n\
+}\n\
+.swggUiContainer button {\n\
+    padding: 0.5rem;\n\
+}\n\
+.swggUiContainer .color777 {\n\
+    color: #777;\n\
+}\n\
+.swggUiContainer button,\n\
+.swggUiContainer .cursorPointer,\n\
+.swggUiContainer .cursorPointer input {\n\
+    cursor: pointer;\n\
+}\n\
+.swggUiContainer .flex1 {\n\
+    flex: 1;\n\
+}\n\
+.swggUiContainer .fontLineThrough {\n\
+    text-decoration: line-through;\n\
+}\n\
+.swggUiContainer .fontWeightBold {\n\
+    font-weight: bold;\n\
+}\n\
+.swggUiContainer input {\n\
+    height: 1.5rem;\n\
+    padding-left: 0.25rem;\n\
+    padding-right: 0.25rem;\n\
+}\n\
+.swggUiContainer .marginTop05 {\n\
+    margin-top: 0.5rem;\n\
+}\n\
+.swggUiContainer .marginTop10 {\n\
+    margin-top: 1rem;\n\
+}\n\
+.swggUiContainer pre,\n\
+.swggUiContainer textarea {\n\
+    font-family: Menlo, Monaco, Consolas, Courier New, monospace;\n\
+    font-size: small;\n\
+    line-height: 1.25rem;\n\
+    max-height: 20rem;\n\
+    overflow: auto;\n\
+    padding: 0.25rem;\n\
+    white-space: pre;\n\
+}\n\
+.swggUiContainer .tr {\n\
+    display: flex;\n\
+}\n\
+.swggUiContainer .tr > * {\n\
+    margin-left: 1rem;\n\
+    overflow: auto;\n\
+    padding-top: 0.1rem;\n\
+    word-wrap: break-word;\n\
+}\n\
+.swggUiContainer .tr > *:first-child {\n\
+    margin-left: 0;\n\
+}\n\
+.swggUiContainer .tr > * > * {\n\
+    width: 100%;\n\
+}\n\
+\n\
+\n\
+\n\
+/* border */\n\
+/* border-bottom-bold */\n\
+.swggUiContainer .borderBottom {\n\
+    border-bottom: 1px solid #bbb;\n\
+    margin-bottom: 0.5rem;\n\
+    padding-bottom: 0.5rem;\n\
+}\n\
+.swggUiContainer .borderBottomBold {\n\
+    border-bottom: 1px solid #777;\n\
+    margin-bottom: 0.5rem;\n\
+    padding-bottom: 0.5rem;\n\
+}\n\
+/* border-top */\n\
+.swggUiContainer .borderTop {\n\
+    border-top: 1px solid #bbb;\n\
+    margin-top: 0.5rem;\n\
+    padding-top: 0.5rem;\n\
+}\n\
+/* border-top-bold */\n\
+.swggUiContainer .borderTopBold,\n\
+.swggUiContainer .resource:first-child {\n\
+    border-top: 1px solid #777;\n\
+    margin-top: 0.5rem;\n\
+    padding-top: 0.5rem;\n\
+}\n\
+/* border-error*/\n\
+.swggUiContainer .error {\n\
+    border: 5px solid #b00;\n\
+}\n\
+\n\
+\n\
+\n\
+/* datatable color */\n\
+.swggUiContainer .datatable tbody > tr > td {\n\
+    background: #efe;\n\
+}\n\
+.swggUiContainer .datatable tbody > tr > td:nth-child(odd) {\n\
+    background: #dfd;\n\
+}\n\
+.swggUiContainer .datatable tbody > tr:nth-child(odd) > td {\n\
+    background: #cfc;\n\
+}\n\
+.swggUiContainer .datatable tbody > tr:nth-child(odd) > td:nth-child(odd) {\n\
+    background: #beb;\n\
+}\n\
+.swggUiContainer .datatable tbody > tr:hover > td {\n\
+    background: #aea;\n\
+}\n\
+.swggUiContainer .datatable tbody > tr:hover > td:nth-child(odd) {\n\
+    background: #9e9;\n\
+}\n\
+.swggUiContainer .datatable tbody > tr > td:hover,\n\
+.swggUiContainer .datatable tbody > tr > td:hover:nth-child(odd),\n\
+.swggUiContainer .datatable tbody > tr:nth-child(odd) > td:hover,\n\
+.swggUiContainer .datatable tbody > tr:nth-child(odd) > td:hover:nth-child(odd),\n\
+.swggUiContainer .datatable th:hover {\n\
+    background: #7d7;\n\
+}\n\
+.swggUiContainer .datatable tbody > tr.selected > td {\n\
+    background: #fee;\n\
+}\n\
+.swggUiContainer .datatable tbody > tr.selected > td:nth-child(odd) {\n\
+    background: #fdd;\n\
+}\n\
+.swggUiContainer .datatable tbody > tr.selected:nth-child(odd) > td {\n\
+    background: #ecc;\n\
+}\n\
+.swggUiContainer .datatable tbody > tr.selected:nth-child(odd) > td:nth-child(odd) {\n\
+    background: #ebb;\n\
+}\n\
+.swggUiContainer .datatable th {\n\
+    background: #9e9;\n\
+}\n\
+\n\
+\n\
+\n\
+/* section */\n\
+.swggUiContainer .datatable {\n\
+    background: #fff;\n\
+    background: rgba(255,255,255,0.875);\n\
+    margin: 2rem;\n\
+    overflow: auto;\n\
+    padding: 1rem;\n\
+}\n\
+.swggUiContainer .datatable input[type=checkbox] {\n\
+    width: 1.5rem;\n\
+}\n\
+.swggUiContainer .datatable .sortAsc,\n\
+.swggUiContainer .datatable .sortDsc {\n\
+    display: none;\n\
+}\n\
+.swggUiContainer .datatable td,\n\
+.swggUiContainer .datatable th {\n\
+    max-width: 10rem;\n\
+    overflow: auto;\n\
+    padding: 0.5rem;\n\
+}\n\
+.swggUiContainer .datatable th:first-child {\n\
+    padding-right: 2rem;\n\
+}\n\
+.swggUiContainer > .header {\n\
+    background: #8c0;\n\
+    padding: 0.5rem;\n\
+}\n\
+.swggUiContainer > .header > .td1 {\n\
+    font-size: x-large;\n\
+    background: transparent url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAYAAAA7MK6iAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAqRJREFUeNrEVz1s00AUfnGXii5maMXoEUEHVwIpEkPNgkBdMnQoU5ytiKHJwpp2Q2JIO8DCUDOxIJFIVOoWZyJSh3pp1Q2PVVlcCVBH3ufeVZZ9Zye1Ay86nXV+ue/9fO/lheg/Se02X1rvksmbnTiKvuxQMBNgBnN4a/LCbmnUAP6JV58NCUsBC8CuAJxGPF47OgNqBaA93tolUhnx6jC4NxGwyOEwlccyAs+3kwdzKq0HDn2vEBTi8J2XpyMaywNDE157BhXUE3zJhlq8GKq+Zd2zaWHepPA8oN9XkfLmRdOiJV4XUUg/IyWncLjCYY/SHndV2u7zHr3bPKZtdxgboJOnthvrfGj/oMf3G0r7JVmNlLfKklmrt2MvvcNO7LFOhoFHfuAJI5o6ta10jpt5CQLgwXhXG2YIwvu+34qf78ybOjWTnWwkgR36d7JqJOrW0hHmNrKg9xhiS4+1jFmrxymh03B0w+6kURIAu3yHtOD5oaUNojMnGgbcctNvwdAnyxvxRR+/vaJnjzbpzcZX+nN1SdGv85i9eH8w3qPO+mdm/y4dnQ1iI8Fq6Nf4cxL6GWSjiFDSs0VRnxC5g0xSB2cgHpaseTxfqOv5uoHkNQ6Ha/N1Yz9mNMppEkEkYKj79q6uCq4bCHcSX3fJ0Vk/k9siASjCm1N6gZH6Ec9IXt2WkFES2K/ixoIyktJPAu/ptOA1SgO5zqtr6KASJPF0nMV8dgMsRhRPOcMwqQAOoi0VAIMLAEWJ6YYC1c8ibj1GP51RqwzYwZVMHQuvOzMCBUtb2tGHx5NAdLKqp5AX7Ng4d+Zi8AGDI9z1ijx9yaCH04y3GCP2S+QcvaGl+pcxyUBvinFlawoDQjHSelX8hQEoIrAq8p/mgC88HOS1YCl/BRgAmiD/1gn6Nu8AAAAASUVORK5CYII=) no-repeat left center;\n\
+    padding-left: 2.5rem;\n\
+    color: white;\n\
+}\n\
+.swggUiContainer > .header > .td2 {\n\
+    font-size: medium;\n\
+    height: 2rem;\n\
+}\n\
+.swggUiContainer > .header > .td3 {\n\
+border: 0;\n\
+    color: #fff;\n\
+    padding: 6px 8px;\n\
+    background-color: #580;\n\
+}\n\
+.swggUiContainer > .info > * {\n\
+    margin-top: 1rem;\n\
+}\n\
+.swggUiContainer > .info a {\n\
+    color: #370;\n\
+    text-decoration: underline;\n\
+}\n\
+.swggUiContainer > .info > .fontWeightBold {\n\
+    font-size: x-large;\n\
+}\n\
+.swggUiContainer > .info > ul {\n\
+    margin-left: 2rem;\n\
+}\n\
+.swggUiContainer > .modal {\n\
+    background: black;\n\
+    background: rgba(0,0,0,0.5);\n\
+    display: flex;\n\
+    height: 100%;\n\
+    left: 0;\n\
+    margin: 0;\n\
+    margin-top: 4px;\n\
+    padding: 0;\n\
+    position: fixed;\n\
+    top: 0;\n\
+    width: 100%;\n\
+    z-index: 1;\n\
+}\n\
+.swggUiContainer .operation {\n\
+    background: #dfd;\n\
+    font-size: smaller;\n\
+}\n\
+.swggUiContainer .operation > .content {\n\
+    padding: 1rem;\n\
+}\n\
+.swggUiContainer .operation > .content .label {\n\
+    color: #0b0;\n\
+}\n\
+.swggUiContainer .operation > .content pre {\n\
+    border: 1px solid #bbb;\n\
+    background: #ffd;\n\
+}\n\
+.swggUiContainer .operation > .content .tr {\n\
+    margin-left: 0.5rem;\n\
+}\n\
+.swggUiContainer .operation > .header:hover {\n\
+    background: #bfb;\n\
+}\n\
+.swggUiContainer .operation > .header > span {\n\
+    padding: 2px 0 2px 0;\n\
+}\n\
+.swggUiContainer .operation > .header > span:first-child {\n\
+    margin-left: 0;\n\
+}\n\
+.swggUiContainer .operation > .header > .td1 {\n\
+    background: #777;\n\
+    color: white;\n\
+    padding-top: 5px;\n\
+    height: 1.5rem;\n\
+    text-align: center;\n\
+    width: 5rem;\n\
+}\n\
+.swggUiContainer .operation > .header > .td2 {\n\
+    flex: 3;\n\
+}\n\
+.swggUiContainer .operation > .header > .td3 {\n\
+    color: #777;\n\
+    flex: 2;\n\
+    text-decoration: none;\n\
+}\n\
+.swggUiContainer .operation > .header > .td4 {\n\
+    flex: 2;\n\
+    padding-right: 1rem;\n\
+}\n\
+.swggUiContainer .operation .paramDef pre,\n\
+.swggUiContainer .operation .paramDef textarea {\n\
+    height: 10rem;\n\
+}\n\
+.swggUiContainer .operation .paramDef > .td1 {\n\
+    flex: 2;\n\
+}\n\
+.swggUiContainer .operation .paramDef > .td2 {\n\
+    flex: 1;\n\
+}\n\
+.swggUiContainer .operation .paramDef > .td3 {\n\
+    flex: 4;\n\
+}\n\
+.swggUiContainer .operation .paramDef > .td4 {\n\
+    flex: 3;\n\
+}\n\
+.swggUiContainer .operation .responseList > .td1 {\n\
+    flex: 1;\n\
+}\n\
+.swggUiContainer .operation .responseList > .td2 {\n\
+    flex: 4;\n\
+}\n\
+.swggUiContainer .resource > .header > .td1 {\n\
+    font-size: large;\n\
+}\n\
+.swggUiContainer .resource > .header > .td2,\n\
+.swggUiContainer .resource > .header > .td3 {\n\
+    border-right: 1px solid #777;\n\
+    padding-right: 1rem;\n\
+}\n\
+\n\
+\n\
+\n\
+/* method */\n\
+.swggUiContainer .operation.DELETE > .header > .td1 {\n\
+    background: #b00;\n\
+}\n\
+.swggUiContainer .operation.GET > .header > .td1 {\n\
+    background: #093;\n\
+}\n\
+.swggUiContainer .operation.HEAD > .header > .td1 {\n\
+    background: #f30;\n\
+}\n\
+.swggUiContainer .operation.PATCH > .header > .td1 {\n\
+    background: #b0b;\n\
+}\n\
+.swggUiContainer .operation.POST > .header > .td1 {\n\
+    background: #07b;\n\
+}\n\
+.swggUiContainer .operation.PUT > .header > .td1 {\n\
+    background: #70b;\n\
+}\n\
+</style>\n\
+</head>\n\
+<body>\n\
+    <div id="ajaxProgressDiv1" style="background: #d00; height: 4px; left: 0; margin: 0; padding: 0; position: fixed; top: 0; transition: background 0.5s, width 1.5s; width: 25%;"></div>\n\
+    <div class="swggUiContainer">\n\
+<form2 class="header tr">\n\
+    <a class="td1" href="https://github.com/kaizhu256/node-swgg" target="_blank">swgg</a>\n\
+    <input\n\
+        class="flex1 td2"\n\
+        type="text"\n\
+        value="assets.swgg.petstore.json"\n\
+    >\n\
+    <button class="td3">Explore</button>\n\
+</form2>\n\
+    </div>\n\
+    <script src="assets.swgg.rollup.js"></script>\n\
+    <script>window.swgg.uiEventListenerDict[".onEventUiReload"]();</script>\n\
+</body>\n\
+</html>\n\
+';
+
+
+
+// https://github.com/json-schema-org/json-schema-org.github.io/blob/master/draft-04/schema
+// curl -Ls https://raw.githubusercontent.com/json-schema-org/json-schema-org.github.io/master/draft-04/schema > /tmp/aa.json; node -e "console.log(JSON.stringify(require('/tmp/aa.json')));"
+local.assetsDict['/assets.swgg.json-schema.json'] = JSON.stringify(
+{"id":"http://json-schema.org/draft-04/schema#","$schema":"http://json-schema.org/draft-04/schema#","description":"Core schema meta-schema","definitions":{"schemaArray":{"type":"array","minItems":1,"items":{"$ref":"#"}},"positiveInteger":{"type":"integer","minimum":0},"positiveIntegerDefault0":{"allOf":[{"$ref":"#/definitions/positiveInteger"},{"default":0}]},"simpleTypes":{"enum":["array","boolean","integer","null","number","object","string"]},"stringArray":{"type":"array","items":{"type":"string"},"minItems":1,"uniqueItems":true}},"type":"object","properties":{"id":{"type":"string","format":"uri"},"$schema":{"type":"string","format":"uri"},"title":{"type":"string"},"description":{"type":"string"},"default":{},"multipleOf":{"type":"number","minimum":0,"exclusiveMinimum":true},"maximum":{"type":"number"},"exclusiveMaximum":{"type":"boolean","default":false},"minimum":{"type":"number"},"exclusiveMinimum":{"type":"boolean","default":false},"maxLength":{"$ref":"#/definitions/positiveInteger"},"minLength":{"$ref":"#/definitions/positiveIntegerDefault0"},"pattern":{"type":"string","format":"regex"},"additionalItems":{"anyOf":[{"type":"boolean"},{"$ref":"#"}],"default":{}},"items":{"anyOf":[{"$ref":"#"},{"$ref":"#/definitions/schemaArray"}],"default":{}},"maxItems":{"$ref":"#/definitions/positiveInteger"},"minItems":{"$ref":"#/definitions/positiveIntegerDefault0"},"uniqueItems":{"type":"boolean","default":false},"maxProperties":{"$ref":"#/definitions/positiveInteger"},"minProperties":{"$ref":"#/definitions/positiveIntegerDefault0"},"required":{"$ref":"#/definitions/stringArray"},"additionalProperties":{"anyOf":[{"type":"boolean"},{"$ref":"#"}],"default":{}},"definitions":{"type":"object","additionalProperties":{"$ref":"#"},"default":{}},"properties":{"type":"object","additionalProperties":{"$ref":"#"},"default":{}},"patternProperties":{"type":"object","additionalProperties":{"$ref":"#"},"default":{}},"dependencies":{"type":"object","additionalProperties":{"anyOf":[{"$ref":"#"},{"$ref":"#/definitions/stringArray"}]}},"enum":{"type":"array","minItems":1,"uniqueItems":true},"type":{"anyOf":[{"$ref":"#/definitions/simpleTypes"},{"type":"array","items":{"$ref":"#/definitions/simpleTypes"},"minItems":1,"uniqueItems":true}]},"allOf":{"$ref":"#/definitions/schemaArray"},"anyOf":{"$ref":"#/definitions/schemaArray"},"oneOf":{"$ref":"#/definitions/schemaArray"},"not":{"$ref":"#"}},"dependencies":{"exclusiveMaximum":["maximum"],"exclusiveMinimum":["minimum"]},"default":{}}
+);
+
+
+
+// https://petstore.swagger.io/v2/swagger.json
+// curl -Ls https://petstore.swagger.io/v2/swagger.json > /tmp/aa.json; node -e "console.log(JSON.stringify(require('/tmp/aa.json')));"
+local.assetsDict['/assets.swgg.petstore.json'] = JSON.stringify(
+{"swagger":"2.0","info":{"description":"This is a sample server Petstore server.  You can find out more about Swagger at [http://swagger.io](http://swagger.io) or on [irc.freenode.net, #swagger](http://swagger.io/irc/).  For this sample, you can use the api key `special-key` to test the authorization filters.","version":"1.0.0","title":"Swagger Petstore","termsOfService":"http://swagger.io/terms/","contact":{"email":"apiteam@swagger.io"},"license":{"name":"Apache 2.0","url":"http://www.apache.org/licenses/LICENSE-2.0.html"}},"host":"petstore.swagger.io","basePath":"/v2","tags":[{"name":"pet","description":"Everything about your Pets","externalDocs":{"description":"Find out more","url":"http://swagger.io"}},{"name":"store","description":"Access to Petstore orders"},{"name":"user","description":"Operations about user","externalDocs":{"description":"Find out more about our store","url":"http://swagger.io"}}],"schemes":["http"],"paths":{"/pet":{"post":{"tags":["pet"],"summary":"Add a new pet to the store","description":"","operationId":"addPet","consumes":["application/json","application/xml"],"produces":["application/xml","application/json"],"parameters":[{"in":"body","name":"body","description":"Pet object that needs to be added to the store","required":true,"schema":{"$ref":"#/definitions/Pet"}}],"responses":{"405":{"description":"Invalid input"}},"security":[{"petstore_auth":["write:pets","read:pets"]}]},"put":{"tags":["pet"],"summary":"Update an existing pet","description":"","operationId":"updatePet","consumes":["application/json","application/xml"],"produces":["application/xml","application/json"],"parameters":[{"in":"body","name":"body","description":"Pet object that needs to be added to the store","required":true,"schema":{"$ref":"#/definitions/Pet"}}],"responses":{"400":{"description":"Invalid ID supplied"},"404":{"description":"Pet not found"},"405":{"description":"Validation exception"}},"security":[{"petstore_auth":["write:pets","read:pets"]}]}},"/pet/findByStatus":{"get":{"tags":["pet"],"summary":"Finds Pets by status","description":"Multiple status values can be provided with comma separated strings","operationId":"findPetsByStatus","produces":["application/xml","application/json"],"parameters":[{"name":"status","in":"query","description":"Status values that need to be considered for filter","required":true,"type":"array","items":{"type":"string","enum":["available","pending","sold"],"default":"available"},"collectionFormat":"multi"}],"responses":{"200":{"description":"successful operation","schema":{"type":"array","items":{"$ref":"#/definitions/Pet"}}},"400":{"description":"Invalid status value"}},"security":[{"petstore_auth":["write:pets","read:pets"]}]}},"/pet/findByTags":{"get":{"tags":["pet"],"summary":"Finds Pets by tags","description":"Muliple tags can be provided with comma separated strings. Use tag1, tag2, tag3 for testing.","operationId":"findPetsByTags","produces":["application/xml","application/json"],"parameters":[{"name":"tags","in":"query","description":"Tags to filter by","required":true,"type":"array","items":{"type":"string"},"collectionFormat":"multi"}],"responses":{"200":{"description":"successful operation","schema":{"type":"array","items":{"$ref":"#/definitions/Pet"}}},"400":{"description":"Invalid tag value"}},"security":[{"petstore_auth":["write:pets","read:pets"]}],"deprecated":true}},"/pet/{petId}":{"get":{"tags":["pet"],"summary":"Find pet by ID","description":"Returns a single pet","operationId":"getPetById","produces":["application/xml","application/json"],"parameters":[{"name":"petId","in":"path","description":"ID of pet to return","required":true,"type":"integer","format":"int64"}],"responses":{"200":{"description":"successful operation","schema":{"$ref":"#/definitions/Pet"}},"400":{"description":"Invalid ID supplied"},"404":{"description":"Pet not found"}},"security":[{"api_key":[]}]},"post":{"tags":["pet"],"summary":"Updates a pet in the store with form data","description":"","operationId":"updatePetWithForm","consumes":["application/x-www-form-urlencoded"],"produces":["application/xml","application/json"],"parameters":[{"name":"petId","in":"path","description":"ID of pet that needs to be updated","required":true,"type":"integer","format":"int64"},{"name":"name","in":"formData","description":"Updated name of the pet","required":false,"type":"string"},{"name":"status","in":"formData","description":"Updated status of the pet","required":false,"type":"string"}],"responses":{"405":{"description":"Invalid input"}},"security":[{"petstore_auth":["write:pets","read:pets"]}]},"delete":{"tags":["pet"],"summary":"Deletes a pet","description":"","operationId":"deletePet","produces":["application/xml","application/json"],"parameters":[{"name":"api_key","in":"header","required":false,"type":"string"},{"name":"petId","in":"path","description":"Pet id to delete","required":true,"type":"integer","format":"int64"}],"responses":{"400":{"description":"Invalid ID supplied"},"404":{"description":"Pet not found"}},"security":[{"petstore_auth":["write:pets","read:pets"]}]}},"/pet/{petId}/uploadImage":{"post":{"tags":["pet"],"summary":"uploads an image","description":"","operationId":"uploadFile","consumes":["multipart/form-data"],"produces":["application/json"],"parameters":[{"name":"petId","in":"path","description":"ID of pet to update","required":true,"type":"integer","format":"int64"},{"name":"additionalMetadata","in":"formData","description":"Additional data to pass to server","required":false,"type":"string"},{"name":"file","in":"formData","description":"file to upload","required":false,"type":"file"}],"responses":{"200":{"description":"successful operation","schema":{"$ref":"#/definitions/ApiResponse"}}},"security":[{"petstore_auth":["write:pets","read:pets"]}]}},"/store/inventory":{"get":{"tags":["store"],"summary":"Returns pet inventories by status","description":"Returns a map of status codes to quantities","operationId":"getInventory","produces":["application/json"],"parameters":[],"responses":{"200":{"description":"successful operation","schema":{"type":"object","additionalProperties":{"type":"integer","format":"int32"}}}},"security":[{"api_key":[]}]}},"/store/order":{"post":{"tags":["store"],"summary":"Place an order for a pet","description":"","operationId":"placeOrder","produces":["application/xml","application/json"],"parameters":[{"in":"body","name":"body","description":"order placed for purchasing the pet","required":true,"schema":{"$ref":"#/definitions/Order"}}],"responses":{"200":{"description":"successful operation","schema":{"$ref":"#/definitions/Order"}},"400":{"description":"Invalid Order"}}}},"/store/order/{orderId}":{"get":{"tags":["store"],"summary":"Find purchase order by ID","description":"For valid response try integer IDs with value >= 1 and <= 10. Other values will generated exceptions","operationId":"getOrderById","produces":["application/xml","application/json"],"parameters":[{"name":"orderId","in":"path","description":"ID of pet that needs to be fetched","required":true,"type":"integer","maximum":10,"minimum":1,"format":"int64"}],"responses":{"200":{"description":"successful operation","schema":{"$ref":"#/definitions/Order"}},"400":{"description":"Invalid ID supplied"},"404":{"description":"Order not found"}}},"delete":{"tags":["store"],"summary":"Delete purchase order by ID","description":"For valid response try integer IDs with positive integer value. Negative or non-integer values will generate API errors","operationId":"deleteOrder","produces":["application/xml","application/json"],"parameters":[{"name":"orderId","in":"path","description":"ID of the order that needs to be deleted","required":true,"type":"integer","minimum":1,"format":"int64"}],"responses":{"400":{"description":"Invalid ID supplied"},"404":{"description":"Order not found"}}}},"/user":{"post":{"tags":["user"],"summary":"Create user","description":"This can only be done by the logged in user.","operationId":"createUser","produces":["application/xml","application/json"],"parameters":[{"in":"body","name":"body","description":"Created user object","required":true,"schema":{"$ref":"#/definitions/User"}}],"responses":{"default":{"description":"successful operation"}}}},"/user/createWithArray":{"post":{"tags":["user"],"summary":"Creates list of users with given input array","description":"","operationId":"createUsersWithArrayInput","produces":["application/xml","application/json"],"parameters":[{"in":"body","name":"body","description":"List of user object","required":true,"schema":{"type":"array","items":{"$ref":"#/definitions/User"}}}],"responses":{"default":{"description":"successful operation"}}}},"/user/createWithList":{"post":{"tags":["user"],"summary":"Creates list of users with given input array","description":"","operationId":"createUsersWithListInput","produces":["application/xml","application/json"],"parameters":[{"in":"body","name":"body","description":"List of user object","required":true,"schema":{"type":"array","items":{"$ref":"#/definitions/User"}}}],"responses":{"default":{"description":"successful operation"}}}},"/user/login":{"get":{"tags":["user"],"summary":"Logs user into the system","description":"","operationId":"loginUser","produces":["application/xml","application/json"],"parameters":[{"name":"username","in":"query","description":"The user name for login","required":true,"type":"string"},{"name":"password","in":"query","description":"The password for login in clear text","required":true,"type":"string"}],"responses":{"200":{"description":"successful operation","schema":{"type":"string"},"headers":{"X-Rate-Limit":{"type":"integer","format":"int32","description":"calls per hour allowed by the user"},"X-Expires-After":{"type":"string","format":"date-time","description":"date in UTC when token expires"}}},"400":{"description":"Invalid username/password supplied"}}}},"/user/logout":{"get":{"tags":["user"],"summary":"Logs out current logged in user session","description":"","operationId":"logoutUser","produces":["application/xml","application/json"],"parameters":[],"responses":{"default":{"description":"successful operation"}}}},"/user/{username}":{"get":{"tags":["user"],"summary":"Get user by user name","description":"","operationId":"getUserByName","produces":["application/xml","application/json"],"parameters":[{"name":"username","in":"path","description":"The name that needs to be fetched. Use user1 for testing. ","required":true,"type":"string"}],"responses":{"200":{"description":"successful operation","schema":{"$ref":"#/definitions/User"}},"400":{"description":"Invalid username supplied"},"404":{"description":"User not found"}}},"put":{"tags":["user"],"summary":"Updated user","description":"This can only be done by the logged in user.","operationId":"updateUser","produces":["application/xml","application/json"],"parameters":[{"name":"username","in":"path","description":"name that need to be updated","required":true,"type":"string"},{"in":"body","name":"body","description":"Updated user object","required":true,"schema":{"$ref":"#/definitions/User"}}],"responses":{"400":{"description":"Invalid user supplied"},"404":{"description":"User not found"}}},"delete":{"tags":["user"],"summary":"Delete user","description":"This can only be done by the logged in user.","operationId":"deleteUser","produces":["application/xml","application/json"],"parameters":[{"name":"username","in":"path","description":"The name that needs to be deleted","required":true,"type":"string"}],"responses":{"400":{"description":"Invalid username supplied"},"404":{"description":"User not found"}}}}},"securityDefinitions":{"petstore_auth":{"type":"oauth2","authorizationUrl":"http://petstore.swagger.io/oauth/dialog","flow":"implicit","scopes":{"write:pets":"modify pets in your account","read:pets":"read your pets"}},"api_key":{"type":"apiKey","name":"api_key","in":"header"}},"definitions":{"Order":{"type":"object","properties":{"id":{"type":"integer","format":"int64"},"petId":{"type":"integer","format":"int64"},"quantity":{"type":"integer","format":"int32"},"shipDate":{"type":"string","format":"date-time"},"status":{"type":"string","description":"Order Status","enum":["placed","approved","delivered"]},"complete":{"type":"boolean","default":false}},"xml":{"name":"Order"}},"Category":{"type":"object","properties":{"id":{"type":"integer","format":"int64"},"name":{"type":"string"}},"xml":{"name":"Category"}},"User":{"type":"object","properties":{"id":{"type":"integer","format":"int64"},"username":{"type":"string"},"firstName":{"type":"string"},"lastName":{"type":"string"},"email":{"type":"string"},"password":{"type":"string"},"phone":{"type":"string"},"userStatus":{"type":"integer","format":"int32","description":"User Status"}},"xml":{"name":"User"}},"Tag":{"type":"object","properties":{"id":{"type":"integer","format":"int64"},"name":{"type":"string"}},"xml":{"name":"Tag"}},"Pet":{"type":"object","required":["name","photoUrls"],"properties":{"id":{"type":"integer","format":"int64"},"category":{"$ref":"#/definitions/Category"},"name":{"type":"string","example":"doggie"},"photoUrls":{"type":"array","xml":{"name":"photoUrl","wrapped":true},"items":{"type":"string"}},"tags":{"type":"array","xml":{"name":"tag","wrapped":true},"items":{"$ref":"#/definitions/Tag"}},"status":{"type":"string","description":"pet status in the store","enum":["available","pending","sold"]}},"xml":{"name":"Pet"}},"ApiResponse":{"type":"object","properties":{"code":{"type":"integer","format":"int32"},"type":{"type":"string"},"message":{"type":"string"}}}},"externalDocs":{"description":"Find out more about Swagger","url":"http://swagger.io"}}
+);
+
+
+
+// https://github.com/OAI/OpenAPI-Specification/blob/master/schemas/v2.0/schema.json
+// curl -Ls https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/schemas/v2.0/schema.json > /tmp/aa.json; node -e "console.log(JSON.stringify(require('/tmp/aa.json')));"
+local.assetsDict['/assets.swgg.schema.json'] = JSON.stringify(
+{"title":"A JSON Schema for Swagger 2.0 API.","id":"http://swagger.io/v2/schema.json#","$schema":"http://json-schema.org/draft-04/schema#","type":"object","required":["swagger","info","paths"],"additionalProperties":false,"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}},"properties":{"swagger":{"type":"string","enum":["2.0"],"description":"The Swagger version of this document."},"info":{"$ref":"#/definitions/info"},"host":{"type":"string","pattern":"^[^{}/ :\\\\]+(?::\\d+)?$","description":"The host (name or ip) of the API. Example: 'swagger.io'"},"basePath":{"type":"string","pattern":"^/","description":"The base path to the API. Example: '/api'."},"schemes":{"$ref":"#/definitions/schemesList"},"consumes":{"description":"A list of MIME types accepted by the API.","allOf":[{"$ref":"#/definitions/mediaTypeList"}]},"produces":{"description":"A list of MIME types the API can produce.","allOf":[{"$ref":"#/definitions/mediaTypeList"}]},"paths":{"$ref":"#/definitions/paths"},"definitions":{"$ref":"#/definitions/definitions"},"parameters":{"$ref":"#/definitions/parameterDefinitions"},"responses":{"$ref":"#/definitions/responseDefinitions"},"security":{"$ref":"#/definitions/security"},"securityDefinitions":{"$ref":"#/definitions/securityDefinitions"},"tags":{"type":"array","items":{"$ref":"#/definitions/tag"},"uniqueItems":true},"externalDocs":{"$ref":"#/definitions/externalDocs"}},"definitions":{"info":{"type":"object","description":"General information about the API.","required":["version","title"],"additionalProperties":false,"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}},"properties":{"title":{"type":"string","description":"A unique and precise title of the API."},"version":{"type":"string","description":"A semantic version number of the API."},"description":{"type":"string","description":"A longer description of the API. Should be different from the title.  GitHub Flavored Markdown is allowed."},"termsOfService":{"type":"string","description":"The terms of service for the API."},"contact":{"$ref":"#/definitions/contact"},"license":{"$ref":"#/definitions/license"}}},"contact":{"type":"object","description":"Contact information for the owners of the API.","additionalProperties":false,"properties":{"name":{"type":"string","description":"The identifying name of the contact person/organization."},"url":{"type":"string","description":"The URL pointing to the contact information.","format":"uri"},"email":{"type":"string","description":"The email address of the contact person/organization.","format":"email"}},"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}}},"license":{"type":"object","required":["name"],"additionalProperties":false,"properties":{"name":{"type":"string","description":"The name of the license type. It's encouraged to use an OSI compatible license."},"url":{"type":"string","description":"The URL pointing to the license.","format":"uri"}},"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}}},"paths":{"type":"object","description":"Relative paths to the individual endpoints. They must be relative to the 'basePath'.","patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"},"^/":{"$ref":"#/definitions/pathItem"}},"additionalProperties":false},"definitions":{"type":"object","additionalProperties":{"$ref":"#/definitions/schema"},"description":"One or more JSON objects describing the schemas being consumed and produced by the API."},"parameterDefinitions":{"type":"object","additionalProperties":{"$ref":"#/definitions/parameter"},"description":"One or more JSON representations for parameters"},"responseDefinitions":{"type":"object","additionalProperties":{"$ref":"#/definitions/response"},"description":"One or more JSON representations for parameters"},"externalDocs":{"type":"object","additionalProperties":false,"description":"information about external documentation","required":["url"],"properties":{"description":{"type":"string"},"url":{"type":"string","format":"uri"}},"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}}},"examples":{"type":"object","additionalProperties":true},"mimeType":{"type":"string","description":"The MIME type of the HTTP message."},"operation":{"type":"object","required":["responses"],"additionalProperties":false,"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}},"properties":{"tags":{"type":"array","items":{"type":"string"},"uniqueItems":true},"summary":{"type":"string","description":"A brief summary of the operation."},"description":{"type":"string","description":"A longer description of the operation, GitHub Flavored Markdown is allowed."},"externalDocs":{"$ref":"#/definitions/externalDocs"},"operationId":{"type":"string","description":"A unique identifier of the operation."},"produces":{"description":"A list of MIME types the API can produce.","allOf":[{"$ref":"#/definitions/mediaTypeList"}]},"consumes":{"description":"A list of MIME types the API can consume.","allOf":[{"$ref":"#/definitions/mediaTypeList"}]},"parameters":{"$ref":"#/definitions/parametersList"},"responses":{"$ref":"#/definitions/responses"},"schemes":{"$ref":"#/definitions/schemesList"},"deprecated":{"type":"boolean","default":false},"security":{"$ref":"#/definitions/security"}}},"pathItem":{"type":"object","additionalProperties":false,"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}},"properties":{"$ref":{"type":"string"},"get":{"$ref":"#/definitions/operation"},"put":{"$ref":"#/definitions/operation"},"post":{"$ref":"#/definitions/operation"},"delete":{"$ref":"#/definitions/operation"},"options":{"$ref":"#/definitions/operation"},"head":{"$ref":"#/definitions/operation"},"patch":{"$ref":"#/definitions/operation"},"parameters":{"$ref":"#/definitions/parametersList"}}},"responses":{"type":"object","description":"Response objects names can either be any valid HTTP status code or 'default'.","minProperties":1,"additionalProperties":false,"patternProperties":{"^([0-9]{3})$|^(default)$":{"$ref":"#/definitions/responseValue"},"^x-":{"$ref":"#/definitions/vendorExtension"}},"not":{"type":"object","additionalProperties":false,"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}}}},"responseValue":{"oneOf":[{"$ref":"#/definitions/response"},{"$ref":"#/definitions/jsonReference"}]},"response":{"type":"object","required":["description"],"properties":{"description":{"type":"string"},"schema":{"oneOf":[{"$ref":"#/definitions/schema"},{"$ref":"#/definitions/fileSchema"}]},"headers":{"$ref":"#/definitions/headers"},"examples":{"$ref":"#/definitions/examples"}},"additionalProperties":false,"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}}},"headers":{"type":"object","additionalProperties":{"$ref":"#/definitions/header"}},"header":{"type":"object","additionalProperties":false,"required":["type"],"properties":{"type":{"type":"string","enum":["string","number","integer","boolean","array"]},"format":{"type":"string"},"items":{"$ref":"#/definitions/primitivesItems"},"collectionFormat":{"$ref":"#/definitions/collectionFormat"},"default":{"$ref":"#/definitions/default"},"maximum":{"$ref":"#/definitions/maximum"},"exclusiveMaximum":{"$ref":"#/definitions/exclusiveMaximum"},"minimum":{"$ref":"#/definitions/minimum"},"exclusiveMinimum":{"$ref":"#/definitions/exclusiveMinimum"},"maxLength":{"$ref":"#/definitions/maxLength"},"minLength":{"$ref":"#/definitions/minLength"},"pattern":{"$ref":"#/definitions/pattern"},"maxItems":{"$ref":"#/definitions/maxItems"},"minItems":{"$ref":"#/definitions/minItems"},"uniqueItems":{"$ref":"#/definitions/uniqueItems"},"enum":{"$ref":"#/definitions/enum"},"multipleOf":{"$ref":"#/definitions/multipleOf"},"description":{"type":"string"}},"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}}},"vendorExtension":{"description":"Any property starting with x- is valid.","additionalProperties":true,"additionalItems":true},"bodyParameter":{"type":"object","required":["name","in","schema"],"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}},"properties":{"description":{"type":"string","description":"A brief description of the parameter. This could contain examples of use.  GitHub Flavored Markdown is allowed."},"name":{"type":"string","description":"The name of the parameter."},"in":{"type":"string","description":"Determines the location of the parameter.","enum":["body"]},"required":{"type":"boolean","description":"Determines whether or not this parameter is required or optional.","default":false},"schema":{"$ref":"#/definitions/schema"}},"additionalProperties":false},"headerParameterSubSchema":{"additionalProperties":false,"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}},"properties":{"required":{"type":"boolean","description":"Determines whether or not this parameter is required or optional.","default":false},"in":{"type":"string","description":"Determines the location of the parameter.","enum":["header"]},"description":{"type":"string","description":"A brief description of the parameter. This could contain examples of use.  GitHub Flavored Markdown is allowed."},"name":{"type":"string","description":"The name of the parameter."},"type":{"type":"string","enum":["string","number","boolean","integer","array"]},"format":{"type":"string"},"items":{"$ref":"#/definitions/primitivesItems"},"collectionFormat":{"$ref":"#/definitions/collectionFormat"},"default":{"$ref":"#/definitions/default"},"maximum":{"$ref":"#/definitions/maximum"},"exclusiveMaximum":{"$ref":"#/definitions/exclusiveMaximum"},"minimum":{"$ref":"#/definitions/minimum"},"exclusiveMinimum":{"$ref":"#/definitions/exclusiveMinimum"},"maxLength":{"$ref":"#/definitions/maxLength"},"minLength":{"$ref":"#/definitions/minLength"},"pattern":{"$ref":"#/definitions/pattern"},"maxItems":{"$ref":"#/definitions/maxItems"},"minItems":{"$ref":"#/definitions/minItems"},"uniqueItems":{"$ref":"#/definitions/uniqueItems"},"enum":{"$ref":"#/definitions/enum"},"multipleOf":{"$ref":"#/definitions/multipleOf"}}},"queryParameterSubSchema":{"additionalProperties":false,"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}},"properties":{"required":{"type":"boolean","description":"Determines whether or not this parameter is required or optional.","default":false},"in":{"type":"string","description":"Determines the location of the parameter.","enum":["query"]},"description":{"type":"string","description":"A brief description of the parameter. This could contain examples of use.  GitHub Flavored Markdown is allowed."},"name":{"type":"string","description":"The name of the parameter."},"allowEmptyValue":{"type":"boolean","default":false,"description":"allows sending a parameter by name only or with an empty value."},"type":{"type":"string","enum":["string","number","boolean","integer","array"]},"format":{"type":"string"},"items":{"$ref":"#/definitions/primitivesItems"},"collectionFormat":{"$ref":"#/definitions/collectionFormatWithMulti"},"default":{"$ref":"#/definitions/default"},"maximum":{"$ref":"#/definitions/maximum"},"exclusiveMaximum":{"$ref":"#/definitions/exclusiveMaximum"},"minimum":{"$ref":"#/definitions/minimum"},"exclusiveMinimum":{"$ref":"#/definitions/exclusiveMinimum"},"maxLength":{"$ref":"#/definitions/maxLength"},"minLength":{"$ref":"#/definitions/minLength"},"pattern":{"$ref":"#/definitions/pattern"},"maxItems":{"$ref":"#/definitions/maxItems"},"minItems":{"$ref":"#/definitions/minItems"},"uniqueItems":{"$ref":"#/definitions/uniqueItems"},"enum":{"$ref":"#/definitions/enum"},"multipleOf":{"$ref":"#/definitions/multipleOf"}}},"formDataParameterSubSchema":{"additionalProperties":false,"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}},"properties":{"required":{"type":"boolean","description":"Determines whether or not this parameter is required or optional.","default":false},"in":{"type":"string","description":"Determines the location of the parameter.","enum":["formData"]},"description":{"type":"string","description":"A brief description of the parameter. This could contain examples of use.  GitHub Flavored Markdown is allowed."},"name":{"type":"string","description":"The name of the parameter."},"allowEmptyValue":{"type":"boolean","default":false,"description":"allows sending a parameter by name only or with an empty value."},"type":{"type":"string","enum":["string","number","boolean","integer","array","file"]},"format":{"type":"string"},"items":{"$ref":"#/definitions/primitivesItems"},"collectionFormat":{"$ref":"#/definitions/collectionFormatWithMulti"},"default":{"$ref":"#/definitions/default"},"maximum":{"$ref":"#/definitions/maximum"},"exclusiveMaximum":{"$ref":"#/definitions/exclusiveMaximum"},"minimum":{"$ref":"#/definitions/minimum"},"exclusiveMinimum":{"$ref":"#/definitions/exclusiveMinimum"},"maxLength":{"$ref":"#/definitions/maxLength"},"minLength":{"$ref":"#/definitions/minLength"},"pattern":{"$ref":"#/definitions/pattern"},"maxItems":{"$ref":"#/definitions/maxItems"},"minItems":{"$ref":"#/definitions/minItems"},"uniqueItems":{"$ref":"#/definitions/uniqueItems"},"enum":{"$ref":"#/definitions/enum"},"multipleOf":{"$ref":"#/definitions/multipleOf"}}},"pathParameterSubSchema":{"additionalProperties":false,"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}},"required":["required"],"properties":{"required":{"type":"boolean","enum":[true],"description":"Determines whether or not this parameter is required or optional."},"in":{"type":"string","description":"Determines the location of the parameter.","enum":["path"]},"description":{"type":"string","description":"A brief description of the parameter. This could contain examples of use.  GitHub Flavored Markdown is allowed."},"name":{"type":"string","description":"The name of the parameter."},"type":{"type":"string","enum":["string","number","boolean","integer","array"]},"format":{"type":"string"},"items":{"$ref":"#/definitions/primitivesItems"},"collectionFormat":{"$ref":"#/definitions/collectionFormat"},"default":{"$ref":"#/definitions/default"},"maximum":{"$ref":"#/definitions/maximum"},"exclusiveMaximum":{"$ref":"#/definitions/exclusiveMaximum"},"minimum":{"$ref":"#/definitions/minimum"},"exclusiveMinimum":{"$ref":"#/definitions/exclusiveMinimum"},"maxLength":{"$ref":"#/definitions/maxLength"},"minLength":{"$ref":"#/definitions/minLength"},"pattern":{"$ref":"#/definitions/pattern"},"maxItems":{"$ref":"#/definitions/maxItems"},"minItems":{"$ref":"#/definitions/minItems"},"uniqueItems":{"$ref":"#/definitions/uniqueItems"},"enum":{"$ref":"#/definitions/enum"},"multipleOf":{"$ref":"#/definitions/multipleOf"}}},"nonBodyParameter":{"type":"object","required":["name","in","type"],"oneOf":[{"$ref":"#/definitions/headerParameterSubSchema"},{"$ref":"#/definitions/formDataParameterSubSchema"},{"$ref":"#/definitions/queryParameterSubSchema"},{"$ref":"#/definitions/pathParameterSubSchema"}]},"parameter":{"oneOf":[{"$ref":"#/definitions/bodyParameter"},{"$ref":"#/definitions/nonBodyParameter"}]},"schema":{"type":"object","description":"A deterministic version of a JSON Schema object.","patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}},"properties":{"$ref":{"type":"string"},"format":{"type":"string"},"title":{"$ref":"http://json-schema.org/draft-04/schema#/properties/title"},"description":{"$ref":"http://json-schema.org/draft-04/schema#/properties/description"},"default":{"$ref":"http://json-schema.org/draft-04/schema#/properties/default"},"multipleOf":{"$ref":"http://json-schema.org/draft-04/schema#/properties/multipleOf"},"maximum":{"$ref":"http://json-schema.org/draft-04/schema#/properties/maximum"},"exclusiveMaximum":{"$ref":"http://json-schema.org/draft-04/schema#/properties/exclusiveMaximum"},"minimum":{"$ref":"http://json-schema.org/draft-04/schema#/properties/minimum"},"exclusiveMinimum":{"$ref":"http://json-schema.org/draft-04/schema#/properties/exclusiveMinimum"},"maxLength":{"$ref":"http://json-schema.org/draft-04/schema#/definitions/positiveInteger"},"minLength":{"$ref":"http://json-schema.org/draft-04/schema#/definitions/positiveIntegerDefault0"},"pattern":{"$ref":"http://json-schema.org/draft-04/schema#/properties/pattern"},"maxItems":{"$ref":"http://json-schema.org/draft-04/schema#/definitions/positiveInteger"},"minItems":{"$ref":"http://json-schema.org/draft-04/schema#/definitions/positiveIntegerDefault0"},"uniqueItems":{"$ref":"http://json-schema.org/draft-04/schema#/properties/uniqueItems"},"maxProperties":{"$ref":"http://json-schema.org/draft-04/schema#/definitions/positiveInteger"},"minProperties":{"$ref":"http://json-schema.org/draft-04/schema#/definitions/positiveIntegerDefault0"},"required":{"$ref":"http://json-schema.org/draft-04/schema#/definitions/stringArray"},"enum":{"$ref":"http://json-schema.org/draft-04/schema#/properties/enum"},"additionalProperties":{"anyOf":[{"$ref":"#/definitions/schema"},{"type":"boolean"}],"default":{}},"type":{"$ref":"http://json-schema.org/draft-04/schema#/properties/type"},"items":{"anyOf":[{"$ref":"#/definitions/schema"},{"type":"array","minItems":1,"items":{"$ref":"#/definitions/schema"}}],"default":{}},"allOf":{"type":"array","minItems":1,"items":{"$ref":"#/definitions/schema"}},"properties":{"type":"object","additionalProperties":{"$ref":"#/definitions/schema"},"default":{}},"discriminator":{"type":"string"},"readOnly":{"type":"boolean","default":false},"xml":{"$ref":"#/definitions/xml"},"externalDocs":{"$ref":"#/definitions/externalDocs"},"example":{}},"additionalProperties":false},"fileSchema":{"type":"object","description":"A deterministic version of a JSON Schema object.","patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}},"required":["type"],"properties":{"format":{"type":"string"},"title":{"$ref":"http://json-schema.org/draft-04/schema#/properties/title"},"description":{"$ref":"http://json-schema.org/draft-04/schema#/properties/description"},"default":{"$ref":"http://json-schema.org/draft-04/schema#/properties/default"},"required":{"$ref":"http://json-schema.org/draft-04/schema#/definitions/stringArray"},"type":{"type":"string","enum":["file"]},"readOnly":{"type":"boolean","default":false},"externalDocs":{"$ref":"#/definitions/externalDocs"},"example":{}},"additionalProperties":false},"primitivesItems":{"type":"object","additionalProperties":false,"properties":{"type":{"type":"string","enum":["string","number","integer","boolean","array"]},"format":{"type":"string"},"items":{"$ref":"#/definitions/primitivesItems"},"collectionFormat":{"$ref":"#/definitions/collectionFormat"},"default":{"$ref":"#/definitions/default"},"maximum":{"$ref":"#/definitions/maximum"},"exclusiveMaximum":{"$ref":"#/definitions/exclusiveMaximum"},"minimum":{"$ref":"#/definitions/minimum"},"exclusiveMinimum":{"$ref":"#/definitions/exclusiveMinimum"},"maxLength":{"$ref":"#/definitions/maxLength"},"minLength":{"$ref":"#/definitions/minLength"},"pattern":{"$ref":"#/definitions/pattern"},"maxItems":{"$ref":"#/definitions/maxItems"},"minItems":{"$ref":"#/definitions/minItems"},"uniqueItems":{"$ref":"#/definitions/uniqueItems"},"enum":{"$ref":"#/definitions/enum"},"multipleOf":{"$ref":"#/definitions/multipleOf"}},"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}}},"security":{"type":"array","items":{"$ref":"#/definitions/securityRequirement"},"uniqueItems":true},"securityRequirement":{"type":"object","additionalProperties":{"type":"array","items":{"type":"string"},"uniqueItems":true}},"xml":{"type":"object","additionalProperties":false,"properties":{"name":{"type":"string"},"namespace":{"type":"string"},"prefix":{"type":"string"},"attribute":{"type":"boolean","default":false},"wrapped":{"type":"boolean","default":false}},"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}}},"tag":{"type":"object","additionalProperties":false,"required":["name"],"properties":{"name":{"type":"string"},"description":{"type":"string"},"externalDocs":{"$ref":"#/definitions/externalDocs"}},"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}}},"securityDefinitions":{"type":"object","additionalProperties":{"oneOf":[{"$ref":"#/definitions/basicAuthenticationSecurity"},{"$ref":"#/definitions/apiKeySecurity"},{"$ref":"#/definitions/oauth2ImplicitSecurity"},{"$ref":"#/definitions/oauth2PasswordSecurity"},{"$ref":"#/definitions/oauth2ApplicationSecurity"},{"$ref":"#/definitions/oauth2AccessCodeSecurity"}]}},"basicAuthenticationSecurity":{"type":"object","additionalProperties":false,"required":["type"],"properties":{"type":{"type":"string","enum":["basic"]},"description":{"type":"string"}},"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}}},"apiKeySecurity":{"type":"object","additionalProperties":false,"required":["type","name","in"],"properties":{"type":{"type":"string","enum":["apiKey"]},"name":{"type":"string"},"in":{"type":"string","enum":["header","query"]},"description":{"type":"string"}},"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}}},"oauth2ImplicitSecurity":{"type":"object","additionalProperties":false,"required":["type","flow","authorizationUrl"],"properties":{"type":{"type":"string","enum":["oauth2"]},"flow":{"type":"string","enum":["implicit"]},"scopes":{"$ref":"#/definitions/oauth2Scopes"},"authorizationUrl":{"type":"string","format":"uri"},"description":{"type":"string"}},"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}}},"oauth2PasswordSecurity":{"type":"object","additionalProperties":false,"required":["type","flow","tokenUrl"],"properties":{"type":{"type":"string","enum":["oauth2"]},"flow":{"type":"string","enum":["password"]},"scopes":{"$ref":"#/definitions/oauth2Scopes"},"tokenUrl":{"type":"string","format":"uri"},"description":{"type":"string"}},"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}}},"oauth2ApplicationSecurity":{"type":"object","additionalProperties":false,"required":["type","flow","tokenUrl"],"properties":{"type":{"type":"string","enum":["oauth2"]},"flow":{"type":"string","enum":["application"]},"scopes":{"$ref":"#/definitions/oauth2Scopes"},"tokenUrl":{"type":"string","format":"uri"},"description":{"type":"string"}},"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}}},"oauth2AccessCodeSecurity":{"type":"object","additionalProperties":false,"required":["type","flow","authorizationUrl","tokenUrl"],"properties":{"type":{"type":"string","enum":["oauth2"]},"flow":{"type":"string","enum":["accessCode"]},"scopes":{"$ref":"#/definitions/oauth2Scopes"},"authorizationUrl":{"type":"string","format":"uri"},"tokenUrl":{"type":"string","format":"uri"},"description":{"type":"string"}},"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}}},"oauth2Scopes":{"type":"object","additionalProperties":{"type":"string"}},"mediaTypeList":{"type":"array","items":{"$ref":"#/definitions/mimeType"},"uniqueItems":true},"parametersList":{"type":"array","description":"The parameters needed to send a valid API call.","additionalItems":false,"items":{"oneOf":[{"$ref":"#/definitions/parameter"},{"$ref":"#/definitions/jsonReference"}]},"uniqueItems":true},"schemesList":{"type":"array","description":"The transfer protocol of the API.","items":{"type":"string","enum":["http","https","ws","wss"]},"uniqueItems":true},"collectionFormat":{"type":"string","enum":["csv","ssv","tsv","pipes"],"default":"csv"},"collectionFormatWithMulti":{"type":"string","enum":["csv","ssv","tsv","pipes","multi"],"default":"csv"},"title":{"$ref":"http://json-schema.org/draft-04/schema#/properties/title"},"description":{"$ref":"http://json-schema.org/draft-04/schema#/properties/description"},"default":{"$ref":"http://json-schema.org/draft-04/schema#/properties/default"},"multipleOf":{"$ref":"http://json-schema.org/draft-04/schema#/properties/multipleOf"},"maximum":{"$ref":"http://json-schema.org/draft-04/schema#/properties/maximum"},"exclusiveMaximum":{"$ref":"http://json-schema.org/draft-04/schema#/properties/exclusiveMaximum"},"minimum":{"$ref":"http://json-schema.org/draft-04/schema#/properties/minimum"},"exclusiveMinimum":{"$ref":"http://json-schema.org/draft-04/schema#/properties/exclusiveMinimum"},"maxLength":{"$ref":"http://json-schema.org/draft-04/schema#/definitions/positiveInteger"},"minLength":{"$ref":"http://json-schema.org/draft-04/schema#/definitions/positiveIntegerDefault0"},"pattern":{"$ref":"http://json-schema.org/draft-04/schema#/properties/pattern"},"maxItems":{"$ref":"http://json-schema.org/draft-04/schema#/definitions/positiveInteger"},"minItems":{"$ref":"http://json-schema.org/draft-04/schema#/definitions/positiveIntegerDefault0"},"uniqueItems":{"$ref":"http://json-schema.org/draft-04/schema#/properties/uniqueItems"},"enum":{"$ref":"http://json-schema.org/draft-04/schema#/properties/enum"},"jsonReference":{"type":"object","required":["$ref"],"additionalProperties":false,"properties":{"$ref":{"type":"string"}}}}}
+);
+
+
+
 local.templateApiDict = {
     "crudCountManyByQuery": {
         "_method": "get",
@@ -14402,117 +14801,6 @@ Object.keys(local.templateApiDict).forEach(function (key) {
 
 
 
-local.templateSwaggerJson = JSON.stringify({
-    "basePath": "/api/v0",
-    "definitions": {
-        "BuiltinFile": {
-            "properties": {
-                "_id": {
-                    "readOnly": true,
-                    "type": "string"
-                },
-                "_timeCreated": {
-                    "format": "date-time",
-                    "readOnly": true,
-                    "type": "string"
-                },
-                "_timeUpdated": {
-                    "format": "date-time",
-                    "readOnly": true,
-                    "type": "string"
-                },
-                "fileBlob": {
-                    "format": "byte",
-                    "type": "string"
-                },
-                "fileContentType": {
-                    "type": "string"
-                },
-                "fileDescription": {
-                    "type": "string"
-                },
-                "fileFilename": {
-                    "type": "string"
-                },
-                "fileInputName": {
-                    "type": "string"
-                },
-                "fileSize": {
-                    "minimum": 0,
-                    "type": "integer"
-                },
-                "fileUrl": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                }
-            }
-        },
-        "BuiltinJsonapiResponse": {
-            "properties": {
-                "data": {
-                    "items": {
-                        "type": "object"
-                    },
-                    "type": "array"
-                },
-                "errors": {
-                    "items": {
-                        "type": "object"
-                    },
-                    "type": "array"
-                },
-                "meta": {
-                    "type": "object"
-                }
-            }
-        },
-        "BuiltinUser": {
-            "properties": {
-                "_id": {
-                    "readOnly": true,
-                    "type": "string"
-                },
-                "_timeCreated": {
-                    "format": "date-time",
-                    "readOnly": true,
-                    "type": "string"
-                },
-                "_timeUpdated": {
-                    "format": "date-time",
-                    "readOnly": true,
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "jwtEncrypted": {
-                    "type": "string"
-                },
-                "password": {
-                    "format": "password",
-                    "type": "string"
-                },
-                "username": {
-                    "type": "string"
-                }
-            }
-        }
-    },
-    "info": {
-        "description": "demo of swagger-ui server",
-        "title": "swgg api",
-        "version": "0"
-    },
-    "paths": {},
-    "securityDefinitions": {},
-    "swagger": "2.0",
-    "tags": []
-});
-
-
-
 // https://github.com/swagger-api/swagger-ui/blob/v2.1.3/dist/images/logo_small.png
 local.templateSwaggerUiLogoSmallBase64 = '\
 iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAYAAAA7MK6iAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFn\
@@ -14629,7 +14917,7 @@ local.templateUiMain = '\
 </div>\n\
 <div class="eventDelegateClick popup" style="display: none;"></div>\n\
 <form2 class="eventDelegateSubmit header onEventUiReload tr">\n\
-    <a class="td1" href="http://swagger.io" target="_blank">swagger</a>\n\
+    <a class="td1" href="https://github.com/kaizhu256/node-swgg" target="_blank">swgg</a>\n\
     <input\n\
         class="flex1 td2"\n\
         type="text"\n\
@@ -14838,457 +15126,6 @@ local.templateUiResponseAjax = '\
 <h4 class="label marginTop10">Response Body</h4>\n\
 {{responseBody}}\n\
 ';
-
-
-
-local.assetsDict['/assets.swgg.html'] = '\
-<!doctype html>\n\
-<html lang="en">\n\
-<head>\n\
-<meta charset="UTF-8">\n\
-<meta name="viewport" content="width=device-width, initial-scale=1">\n\
-<title>swgg</title>\n\
-<style>\n\
-/*csslint\n\
-    box-sizing: false,\n\
-    universal-selector: false\n\
-*/\n\
-* {\n\
-    box-sizing: border-box;\n\
-}\n\
-body {\n\
-    background: #fff;\n\
-    font-family: Arial, Helvetica, sans-serif;\n\
-    margin: 2rem;\n\
-}\n\
-body > * {\n\
-    margin-bottom: 1rem;\n\
-}\n\
-</style>\n\
-<style>\n\
-/*csslint\n\
-    adjoining-classes: false,\n\
-    box-model: false,\n\
-    box-sizing: false,\n\
-    universal-selector: false\n\
-*/\n\
-/* example.js */\n\
-body > button {\n\
-    width: 15rem;\n\
-}\n\
-.zeroPixel {\n\
-    border: 0;\n\
-    height: 0;\n\
-    margin: 0;\n\
-    padding: 0;\n\
-    width: 0;\n\
-}\n\
-\n\
-\n\
-\n\
-/* animate */\n\
-.swggAnimateFade {\n\
-    transition: opacity 250ms;\n\
-}\n\
-@keyframes swggAnimateShake {\n\
-    100% {\n\
-        transform: translateX(0);\n\
-    }\n\
-    0%, 20%, 60% {\n\
-        transform: translateX(1rem);\n\
-    }\n\
-    40%, 80% {\n\
-        transform: translateX(-1rem);\n\
-    }\n\
-}\n\
-.swggAnimateShake {\n\
-    animation-duration: 500ms;\n\
-    animation-name: swggAnimateShake;\n\
-}\n\
-.swggAnimateSlide {\n\
-    overflow-y: hidden;\n\
-    transition: max-height 500ms;\n\
-}\n\
-\n\
-\n\
-\n\
-/* general */\n\
-.swggUiContainer,\n\
-.swggUiContainer * {\n\
-    box-sizing: border-box;\n\
-    margin: 0;\n\
-    padding: 0;\n\
-}\n\
-.swggUiContainer {\n\
-    font-family: Arial, Helvetica, sans-serif;\n\
-    margin-left: auto;\n\
-    margin-right: auto;\n\
-    max-width: 1024px;\n\
-}\n\
-.swggUiContainer > * {\n\
-    margin-top: 1rem;\n\
-}\n\
-.swggUiContainer a {\n\
-    text-decoration: none;\n\
-}\n\
-.swggUiContainer a:hover {\n\
-    color: black;\n\
-}\n\
-.swggUiContainer a,\n\
-.swggUiContainer input,\n\
-.swggUiContainer span {\n\
-    min-height: 1.5rem;\n\
-}\n\
-.swggUiContainer button {\n\
-    padding: 0.5rem;\n\
-}\n\
-.swggUiContainer .color777 {\n\
-    color: #777;\n\
-}\n\
-.swggUiContainer button,\n\
-.swggUiContainer .cursorPointer,\n\
-.swggUiContainer .cursorPointer input {\n\
-    cursor: pointer;\n\
-}\n\
-.swggUiContainer .flex1 {\n\
-    flex: 1;\n\
-}\n\
-.swggUiContainer .fontLineThrough {\n\
-    text-decoration: line-through;\n\
-}\n\
-.swggUiContainer .fontWeightBold {\n\
-    font-weight: bold;\n\
-}\n\
-.swggUiContainer input {\n\
-    height: 1.5rem;\n\
-    padding-left: 0.25rem;\n\
-    padding-right: 0.25rem;\n\
-}\n\
-.swggUiContainer .marginTop05 {\n\
-    margin-top: 0.5rem;\n\
-}\n\
-.swggUiContainer .marginTop10 {\n\
-    margin-top: 1rem;\n\
-}\n\
-.swggUiContainer pre,\n\
-.swggUiContainer textarea {\n\
-    font-family: Menlo, Monaco, Consolas, Courier New, monospace;\n\
-    font-size: small;\n\
-    line-height: 1.25rem;\n\
-    max-height: 20rem;\n\
-    overflow: auto;\n\
-    padding: 0.25rem;\n\
-    white-space: pre;\n\
-}\n\
-.swggUiContainer .tr {\n\
-    display: flex;\n\
-}\n\
-.swggUiContainer .tr > * {\n\
-    margin-left: 1rem;\n\
-    overflow: auto;\n\
-    padding-top: 0.1rem;\n\
-    word-wrap: break-word;\n\
-}\n\
-.swggUiContainer .tr > *:first-child {\n\
-    margin-left: 0;\n\
-}\n\
-.swggUiContainer .tr > * > * {\n\
-    width: 100%;\n\
-}\n\
-\n\
-\n\
-\n\
-/* border */\n\
-/* border-bottom-bold */\n\
-.swggUiContainer .borderBottom {\n\
-    border-bottom: 1px solid #bbb;\n\
-    margin-bottom: 0.5rem;\n\
-    padding-bottom: 0.5rem;\n\
-}\n\
-.swggUiContainer .borderBottomBold {\n\
-    border-bottom: 1px solid #777;\n\
-    margin-bottom: 0.5rem;\n\
-    padding-bottom: 0.5rem;\n\
-}\n\
-/* border-top */\n\
-.swggUiContainer .borderTop {\n\
-    border-top: 1px solid #bbb;\n\
-    margin-top: 0.5rem;\n\
-    padding-top: 0.5rem;\n\
-}\n\
-/* border-top-bold */\n\
-.swggUiContainer .borderTopBold,\n\
-.swggUiContainer .resource:first-child {\n\
-    border-top: 1px solid #777;\n\
-    margin-top: 0.5rem;\n\
-    padding-top: 0.5rem;\n\
-}\n\
-/* border-error*/\n\
-.swggUiContainer .error {\n\
-    border: 5px solid #b00;\n\
-}\n\
-\n\
-\n\
-\n\
-/* datatable color */\n\
-.swggUiContainer .datatable tbody > tr > td {\n\
-    background: #efe;\n\
-}\n\
-.swggUiContainer .datatable tbody > tr > td:nth-child(odd) {\n\
-    background: #dfd;\n\
-}\n\
-.swggUiContainer .datatable tbody > tr:nth-child(odd) > td {\n\
-    background: #cfc;\n\
-}\n\
-.swggUiContainer .datatable tbody > tr:nth-child(odd) > td:nth-child(odd) {\n\
-    background: #beb;\n\
-}\n\
-.swggUiContainer .datatable tbody > tr:hover > td {\n\
-    background: #aea;\n\
-}\n\
-.swggUiContainer .datatable tbody > tr:hover > td:nth-child(odd) {\n\
-    background: #9e9;\n\
-}\n\
-.swggUiContainer .datatable tbody > tr > td:hover,\n\
-.swggUiContainer .datatable tbody > tr > td:hover:nth-child(odd),\n\
-.swggUiContainer .datatable tbody > tr:nth-child(odd) > td:hover,\n\
-.swggUiContainer .datatable tbody > tr:nth-child(odd) > td:hover:nth-child(odd),\n\
-.swggUiContainer .datatable th:hover {\n\
-    background: #7d7;\n\
-}\n\
-.swggUiContainer .datatable tbody > tr.selected > td {\n\
-    background: #fee;\n\
-}\n\
-.swggUiContainer .datatable tbody > tr.selected > td:nth-child(odd) {\n\
-    background: #fdd;\n\
-}\n\
-.swggUiContainer .datatable tbody > tr.selected:nth-child(odd) > td {\n\
-    background: #ecc;\n\
-}\n\
-.swggUiContainer .datatable tbody > tr.selected:nth-child(odd) > td:nth-child(odd) {\n\
-    background: #ebb;\n\
-}\n\
-.swggUiContainer .datatable th {\n\
-    background: #9e9;\n\
-}\n\
-\n\
-\n\
-\n\
-/* section */\n\
-.swggUiContainer .datatable {\n\
-    background: #fff;\n\
-    background: rgba(255,255,255,0.875);\n\
-    margin: 2rem;\n\
-    overflow: auto;\n\
-    padding: 1rem;\n\
-}\n\
-.swggUiContainer .datatable input[type=checkbox] {\n\
-    width: 1.5rem;\n\
-}\n\
-.swggUiContainer .datatable .sortAsc,\n\
-.swggUiContainer .datatable .sortDsc {\n\
-    display: none;\n\
-}\n\
-.swggUiContainer .datatable td,\n\
-.swggUiContainer .datatable th {\n\
-    max-width: 10rem;\n\
-    overflow: auto;\n\
-    padding: 0.5rem;\n\
-}\n\
-.swggUiContainer .datatable th:first-child {\n\
-    padding-right: 2rem;\n\
-}\n\
-.swggUiContainer > .header {\n\
-    background: #8c0;\n\
-    padding: 0.5rem;\n\
-}\n\
-.swggUiContainer > .header > .td1 {\n\
-    font-size: x-large;\n\
-    background: transparent url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAYAAAA7MK6iAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAqRJREFUeNrEVz1s00AUfnGXii5maMXoEUEHVwIpEkPNgkBdMnQoU5ytiKHJwpp2Q2JIO8DCUDOxIJFIVOoWZyJSh3pp1Q2PVVlcCVBH3ufeVZZ9Zye1Ay86nXV+ue/9fO/lheg/Se02X1rvksmbnTiKvuxQMBNgBnN4a/LCbmnUAP6JV58NCUsBC8CuAJxGPF47OgNqBaA93tolUhnx6jC4NxGwyOEwlccyAs+3kwdzKq0HDn2vEBTi8J2XpyMaywNDE157BhXUE3zJhlq8GKq+Zd2zaWHepPA8oN9XkfLmRdOiJV4XUUg/IyWncLjCYY/SHndV2u7zHr3bPKZtdxgboJOnthvrfGj/oMf3G0r7JVmNlLfKklmrt2MvvcNO7LFOhoFHfuAJI5o6ta10jpt5CQLgwXhXG2YIwvu+34qf78ybOjWTnWwkgR36d7JqJOrW0hHmNrKg9xhiS4+1jFmrxymh03B0w+6kURIAu3yHtOD5oaUNojMnGgbcctNvwdAnyxvxRR+/vaJnjzbpzcZX+nN1SdGv85i9eH8w3qPO+mdm/y4dnQ1iI8Fq6Nf4cxL6GWSjiFDSs0VRnxC5g0xSB2cgHpaseTxfqOv5uoHkNQ6Ha/N1Yz9mNMppEkEkYKj79q6uCq4bCHcSX3fJ0Vk/k9siASjCm1N6gZH6Ec9IXt2WkFES2K/ixoIyktJPAu/ptOA1SgO5zqtr6KASJPF0nMV8dgMsRhRPOcMwqQAOoi0VAIMLAEWJ6YYC1c8ibj1GP51RqwzYwZVMHQuvOzMCBUtb2tGHx5NAdLKqp5AX7Ng4d+Zi8AGDI9z1ijx9yaCH04y3GCP2S+QcvaGl+pcxyUBvinFlawoDQjHSelX8hQEoIrAq8p/mgC88HOS1YCl/BRgAmiD/1gn6Nu8AAAAASUVORK5CYII=) no-repeat left center;\n\
-    padding-left: 2.5rem;\n\
-    color: white;\n\
-}\n\
-.swggUiContainer > .header > .td2 {\n\
-    font-size: medium;\n\
-    height: 2rem;\n\
-}\n\
-.swggUiContainer > .header > .td3 {\n\
-border: 0;\n\
-    color: #fff;\n\
-    padding: 6px 8px;\n\
-    background-color: #580;\n\
-}\n\
-.swggUiContainer > .info > * {\n\
-    margin-top: 1rem;\n\
-}\n\
-.swggUiContainer > .info a {\n\
-    color: #370;\n\
-    text-decoration: underline;\n\
-}\n\
-.swggUiContainer > .info > .fontWeightBold {\n\
-    font-size: x-large;\n\
-}\n\
-.swggUiContainer > .info > ul {\n\
-    margin-left: 2rem;\n\
-}\n\
-.swggUiContainer > .modal {\n\
-    background: black;\n\
-    background: rgba(0,0,0,0.5);\n\
-    display: flex;\n\
-    height: 100%;\n\
-    left: 0;\n\
-    margin: 0;\n\
-    margin-top: 4px;\n\
-    padding: 0;\n\
-    position: fixed;\n\
-    top: 0;\n\
-    width: 100%;\n\
-    z-index: 1;\n\
-}\n\
-.swggUiContainer .operation {\n\
-    background: #dfd;\n\
-    font-size: smaller;\n\
-}\n\
-.swggUiContainer .operation > .content {\n\
-    padding: 1rem;\n\
-}\n\
-.swggUiContainer .operation > .content .label {\n\
-    color: #0b0;\n\
-}\n\
-.swggUiContainer .operation > .content pre {\n\
-    border: 1px solid #bbb;\n\
-    background: #ffd;\n\
-}\n\
-.swggUiContainer .operation > .content .tr {\n\
-    margin-left: 0.5rem;\n\
-}\n\
-.swggUiContainer .operation > .header:hover {\n\
-    background: #bfb;\n\
-}\n\
-.swggUiContainer .operation > .header > span {\n\
-    padding: 2px 0 2px 0;\n\
-}\n\
-.swggUiContainer .operation > .header > span:first-child {\n\
-    margin-left: 0;\n\
-}\n\
-.swggUiContainer .operation > .header > .td1 {\n\
-    background: #777;\n\
-    color: white;\n\
-    padding-top: 5px;\n\
-    height: 1.5rem;\n\
-    text-align: center;\n\
-    width: 5rem;\n\
-}\n\
-.swggUiContainer .operation > .header > .td2 {\n\
-    flex: 3;\n\
-}\n\
-.swggUiContainer .operation > .header > .td3 {\n\
-    color: #777;\n\
-    flex: 2;\n\
-    text-decoration: none;\n\
-}\n\
-.swggUiContainer .operation > .header > .td4 {\n\
-    flex: 2;\n\
-    padding-right: 1rem;\n\
-}\n\
-.swggUiContainer .operation .paramDef pre,\n\
-.swggUiContainer .operation .paramDef textarea {\n\
-    height: 10rem;\n\
-}\n\
-.swggUiContainer .operation .paramDef > .td1 {\n\
-    flex: 2;\n\
-}\n\
-.swggUiContainer .operation .paramDef > .td2 {\n\
-    flex: 1;\n\
-}\n\
-.swggUiContainer .operation .paramDef > .td3 {\n\
-    flex: 4;\n\
-}\n\
-.swggUiContainer .operation .paramDef > .td4 {\n\
-    flex: 3;\n\
-}\n\
-.swggUiContainer .operation .responseList > .td1 {\n\
-    flex: 1;\n\
-}\n\
-.swggUiContainer .operation .responseList > .td2 {\n\
-    flex: 4;\n\
-}\n\
-.swggUiContainer .resource > .header > .td1 {\n\
-    font-size: large;\n\
-}\n\
-.swggUiContainer .resource > .header > .td2,\n\
-.swggUiContainer .resource > .header > .td3 {\n\
-    border-right: 1px solid #777;\n\
-    padding-right: 1rem;\n\
-}\n\
-\n\
-\n\
-\n\
-/* method */\n\
-.swggUiContainer .operation.DELETE > .header > .td1 {\n\
-    background: #b00;\n\
-}\n\
-.swggUiContainer .operation.GET > .header > .td1 {\n\
-    background: #093;\n\
-}\n\
-.swggUiContainer .operation.HEAD > .header > .td1 {\n\
-    background: #f30;\n\
-}\n\
-.swggUiContainer .operation.PATCH > .header > .td1 {\n\
-    background: #b0b;\n\
-}\n\
-.swggUiContainer .operation.POST > .header > .td1 {\n\
-    background: #07b;\n\
-}\n\
-.swggUiContainer .operation.PUT > .header > .td1 {\n\
-    background: #70b;\n\
-}\n\
-/*csslint\n\
-*/\n\
-</style>\n\
-</head>\n\
-<body>\n\
-    <div id="ajaxProgressDiv1" style="background: #d00; height: 4px; left: 0; margin: 0; padding: 0; position: fixed; top: 0; transition: background 0.5s, width 1.5s; width: 25%;"></div>\n\
-    <div class="swggUiContainer">\n\
-<form2 class="header tr">\n\
-    <a class="td1" href="http://swagger.io" target="_blank">swagger</a>\n\
-    <input\n\
-        class="flex1 td2"\n\
-        type="text"\n\
-        value="http://petstore.swagger.io/v2/swagger.json"\n\
-    >\n\
-    <button class="td3">Explore</button>\n\
-</form2>\n\
-    </div>\n\
-    <script src="assets.swgg.rollup.js"></script>\n\
-    <script>window.swgg.uiEventListenerDict[".onEventUiReload"]();</script>\n\
-</body>\n\
-</html>\n\
-';
-
-
-
-// https://github.com/json-schema-org/json-schema-org.github.io/blob/master/draft-04/schema
-// curl -Ls https://raw.githubusercontent.com/json-schema-org/json-schema-org.github.io/master/draft-04/schema > /tmp/aa.json; node -e "console.log(JSON.stringify(require('/tmp/aa.json')));"
-local.assetsDict['/assets.swgg.json-schema.json'] = JSON.stringify(
-{"id":"http://json-schema.org/draft-04/schema#","$schema":"http://json-schema.org/draft-04/schema#","description":"Core schema meta-schema","definitions":{"schemaArray":{"type":"array","minItems":1,"items":{"$ref":"#"}},"positiveInteger":{"type":"integer","minimum":0},"positiveIntegerDefault0":{"allOf":[{"$ref":"#/definitions/positiveInteger"},{"default":0}]},"simpleTypes":{"enum":["array","boolean","integer","null","number","object","string"]},"stringArray":{"type":"array","items":{"type":"string"},"minItems":1,"uniqueItems":true}},"type":"object","properties":{"id":{"type":"string","format":"uri"},"$schema":{"type":"string","format":"uri"},"title":{"type":"string"},"description":{"type":"string"},"default":{},"multipleOf":{"type":"number","minimum":0,"exclusiveMinimum":true},"maximum":{"type":"number"},"exclusiveMaximum":{"type":"boolean","default":false},"minimum":{"type":"number"},"exclusiveMinimum":{"type":"boolean","default":false},"maxLength":{"$ref":"#/definitions/positiveInteger"},"minLength":{"$ref":"#/definitions/positiveIntegerDefault0"},"pattern":{"type":"string","format":"regex"},"additionalItems":{"anyOf":[{"type":"boolean"},{"$ref":"#"}],"default":{}},"items":{"anyOf":[{"$ref":"#"},{"$ref":"#/definitions/schemaArray"}],"default":{}},"maxItems":{"$ref":"#/definitions/positiveInteger"},"minItems":{"$ref":"#/definitions/positiveIntegerDefault0"},"uniqueItems":{"type":"boolean","default":false},"maxProperties":{"$ref":"#/definitions/positiveInteger"},"minProperties":{"$ref":"#/definitions/positiveIntegerDefault0"},"required":{"$ref":"#/definitions/stringArray"},"additionalProperties":{"anyOf":[{"type":"boolean"},{"$ref":"#"}],"default":{}},"definitions":{"type":"object","additionalProperties":{"$ref":"#"},"default":{}},"properties":{"type":"object","additionalProperties":{"$ref":"#"},"default":{}},"patternProperties":{"type":"object","additionalProperties":{"$ref":"#"},"default":{}},"dependencies":{"type":"object","additionalProperties":{"anyOf":[{"$ref":"#"},{"$ref":"#/definitions/stringArray"}]}},"enum":{"type":"array","minItems":1,"uniqueItems":true},"type":{"anyOf":[{"$ref":"#/definitions/simpleTypes"},{"type":"array","items":{"$ref":"#/definitions/simpleTypes"},"minItems":1,"uniqueItems":true}]},"allOf":{"$ref":"#/definitions/schemaArray"},"anyOf":{"$ref":"#/definitions/schemaArray"},"oneOf":{"$ref":"#/definitions/schemaArray"},"not":{"$ref":"#"}},"dependencies":{"exclusiveMaximum":["maximum"],"exclusiveMinimum":["minimum"]},"default":{}}
-);
-
-
-
-// https://petstore.swagger.io/v2/swagger.json
-// curl -Ls https://petstore.swagger.io/v2/swagger.json > /tmp/aa.json; node -e "console.log(JSON.stringify(require('/tmp/aa.json')));"
-local.assetsDict['/assets.swgg.petstore.json'] = JSON.stringify(
-{"swagger":"2.0","info":{"description":"This is a sample server Petstore server.  You can find out more about Swagger at [http://swagger.io](http://swagger.io) or on [irc.freenode.net, #swagger](http://swagger.io/irc/).  For this sample, you can use the api key `special-key` to test the authorization filters.","version":"1.0.0","title":"Swagger Petstore","termsOfService":"http://swagger.io/terms/","contact":{"email":"apiteam@swagger.io"},"license":{"name":"Apache 2.0","url":"http://www.apache.org/licenses/LICENSE-2.0.html"}},"host":"petstore.swagger.io","basePath":"/v2","tags":[{"name":"pet","description":"Everything about your Pets","externalDocs":{"description":"Find out more","url":"http://swagger.io"}},{"name":"store","description":"Access to Petstore orders"},{"name":"user","description":"Operations about user","externalDocs":{"description":"Find out more about our store","url":"http://swagger.io"}}],"schemes":["http"],"paths":{"/pet":{"post":{"tags":["pet"],"summary":"Add a new pet to the store","description":"","operationId":"addPet","consumes":["application/json","application/xml"],"produces":["application/xml","application/json"],"parameters":[{"in":"body","name":"body","description":"Pet object that needs to be added to the store","required":true,"schema":{"$ref":"#/definitions/Pet"}}],"responses":{"405":{"description":"Invalid input"}},"security":[{"petstore_auth":["write:pets","read:pets"]}]},"put":{"tags":["pet"],"summary":"Update an existing pet","description":"","operationId":"updatePet","consumes":["application/json","application/xml"],"produces":["application/xml","application/json"],"parameters":[{"in":"body","name":"body","description":"Pet object that needs to be added to the store","required":true,"schema":{"$ref":"#/definitions/Pet"}}],"responses":{"400":{"description":"Invalid ID supplied"},"404":{"description":"Pet not found"},"405":{"description":"Validation exception"}},"security":[{"petstore_auth":["write:pets","read:pets"]}]}},"/pet/findByStatus":{"get":{"tags":["pet"],"summary":"Finds Pets by status","description":"Multiple status values can be provided with comma separated strings","operationId":"findPetsByStatus","produces":["application/xml","application/json"],"parameters":[{"name":"status","in":"query","description":"Status values that need to be considered for filter","required":true,"type":"array","items":{"type":"string","enum":["available","pending","sold"],"default":"available"},"collectionFormat":"multi"}],"responses":{"200":{"description":"successful operation","schema":{"type":"array","items":{"$ref":"#/definitions/Pet"}}},"400":{"description":"Invalid status value"}},"security":[{"petstore_auth":["write:pets","read:pets"]}]}},"/pet/findByTags":{"get":{"tags":["pet"],"summary":"Finds Pets by tags","description":"Muliple tags can be provided with comma separated strings. Use tag1, tag2, tag3 for testing.","operationId":"findPetsByTags","produces":["application/xml","application/json"],"parameters":[{"name":"tags","in":"query","description":"Tags to filter by","required":true,"type":"array","items":{"type":"string"},"collectionFormat":"multi"}],"responses":{"200":{"description":"successful operation","schema":{"type":"array","items":{"$ref":"#/definitions/Pet"}}},"400":{"description":"Invalid tag value"}},"security":[{"petstore_auth":["write:pets","read:pets"]}],"deprecated":true}},"/pet/{petId}":{"get":{"tags":["pet"],"summary":"Find pet by ID","description":"Returns a single pet","operationId":"getPetById","produces":["application/xml","application/json"],"parameters":[{"name":"petId","in":"path","description":"ID of pet to return","required":true,"type":"integer","format":"int64"}],"responses":{"200":{"description":"successful operation","schema":{"$ref":"#/definitions/Pet"}},"400":{"description":"Invalid ID supplied"},"404":{"description":"Pet not found"}},"security":[{"api_key":[]}]},"post":{"tags":["pet"],"summary":"Updates a pet in the store with form data","description":"","operationId":"updatePetWithForm","consumes":["application/x-www-form-urlencoded"],"produces":["application/xml","application/json"],"parameters":[{"name":"petId","in":"path","description":"ID of pet that needs to be updated","required":true,"type":"integer","format":"int64"},{"name":"name","in":"formData","description":"Updated name of the pet","required":false,"type":"string"},{"name":"status","in":"formData","description":"Updated status of the pet","required":false,"type":"string"}],"responses":{"405":{"description":"Invalid input"}},"security":[{"petstore_auth":["write:pets","read:pets"]}]},"delete":{"tags":["pet"],"summary":"Deletes a pet","description":"","operationId":"deletePet","produces":["application/xml","application/json"],"parameters":[{"name":"api_key","in":"header","required":false,"type":"string"},{"name":"petId","in":"path","description":"Pet id to delete","required":true,"type":"integer","format":"int64"}],"responses":{"400":{"description":"Invalid ID supplied"},"404":{"description":"Pet not found"}},"security":[{"petstore_auth":["write:pets","read:pets"]}]}},"/pet/{petId}/uploadImage":{"post":{"tags":["pet"],"summary":"uploads an image","description":"","operationId":"uploadFile","consumes":["multipart/form-data"],"produces":["application/json"],"parameters":[{"name":"petId","in":"path","description":"ID of pet to update","required":true,"type":"integer","format":"int64"},{"name":"additionalMetadata","in":"formData","description":"Additional data to pass to server","required":false,"type":"string"},{"name":"file","in":"formData","description":"file to upload","required":false,"type":"file"}],"responses":{"200":{"description":"successful operation","schema":{"$ref":"#/definitions/ApiResponse"}}},"security":[{"petstore_auth":["write:pets","read:pets"]}]}},"/store/inventory":{"get":{"tags":["store"],"summary":"Returns pet inventories by status","description":"Returns a map of status codes to quantities","operationId":"getInventory","produces":["application/json"],"parameters":[],"responses":{"200":{"description":"successful operation","schema":{"type":"object","additionalProperties":{"type":"integer","format":"int32"}}}},"security":[{"api_key":[]}]}},"/store/order":{"post":{"tags":["store"],"summary":"Place an order for a pet","description":"","operationId":"placeOrder","produces":["application/xml","application/json"],"parameters":[{"in":"body","name":"body","description":"order placed for purchasing the pet","required":true,"schema":{"$ref":"#/definitions/Order"}}],"responses":{"200":{"description":"successful operation","schema":{"$ref":"#/definitions/Order"}},"400":{"description":"Invalid Order"}}}},"/store/order/{orderId}":{"get":{"tags":["store"],"summary":"Find purchase order by ID","description":"For valid response try integer IDs with value >= 1 and <= 10. Other values will generated exceptions","operationId":"getOrderById","produces":["application/xml","application/json"],"parameters":[{"name":"orderId","in":"path","description":"ID of pet that needs to be fetched","required":true,"type":"integer","maximum":10,"minimum":1,"format":"int64"}],"responses":{"200":{"description":"successful operation","schema":{"$ref":"#/definitions/Order"}},"400":{"description":"Invalid ID supplied"},"404":{"description":"Order not found"}}},"delete":{"tags":["store"],"summary":"Delete purchase order by ID","description":"For valid response try integer IDs with positive integer value. Negative or non-integer values will generate API errors","operationId":"deleteOrder","produces":["application/xml","application/json"],"parameters":[{"name":"orderId","in":"path","description":"ID of the order that needs to be deleted","required":true,"type":"integer","minimum":1,"format":"int64"}],"responses":{"400":{"description":"Invalid ID supplied"},"404":{"description":"Order not found"}}}},"/user":{"post":{"tags":["user"],"summary":"Create user","description":"This can only be done by the logged in user.","operationId":"createUser","produces":["application/xml","application/json"],"parameters":[{"in":"body","name":"body","description":"Created user object","required":true,"schema":{"$ref":"#/definitions/User"}}],"responses":{"default":{"description":"successful operation"}}}},"/user/createWithArray":{"post":{"tags":["user"],"summary":"Creates list of users with given input array","description":"","operationId":"createUsersWithArrayInput","produces":["application/xml","application/json"],"parameters":[{"in":"body","name":"body","description":"List of user object","required":true,"schema":{"type":"array","items":{"$ref":"#/definitions/User"}}}],"responses":{"default":{"description":"successful operation"}}}},"/user/createWithList":{"post":{"tags":["user"],"summary":"Creates list of users with given input array","description":"","operationId":"createUsersWithListInput","produces":["application/xml","application/json"],"parameters":[{"in":"body","name":"body","description":"List of user object","required":true,"schema":{"type":"array","items":{"$ref":"#/definitions/User"}}}],"responses":{"default":{"description":"successful operation"}}}},"/user/login":{"get":{"tags":["user"],"summary":"Logs user into the system","description":"","operationId":"loginUser","produces":["application/xml","application/json"],"parameters":[{"name":"username","in":"query","description":"The user name for login","required":true,"type":"string"},{"name":"password","in":"query","description":"The password for login in clear text","required":true,"type":"string"}],"responses":{"200":{"description":"successful operation","schema":{"type":"string"},"headers":{"X-Rate-Limit":{"type":"integer","format":"int32","description":"calls per hour allowed by the user"},"X-Expires-After":{"type":"string","format":"date-time","description":"date in UTC when token expires"}}},"400":{"description":"Invalid username/password supplied"}}}},"/user/logout":{"get":{"tags":["user"],"summary":"Logs out current logged in user session","description":"","operationId":"logoutUser","produces":["application/xml","application/json"],"parameters":[],"responses":{"default":{"description":"successful operation"}}}},"/user/{username}":{"get":{"tags":["user"],"summary":"Get user by user name","description":"","operationId":"getUserByName","produces":["application/xml","application/json"],"parameters":[{"name":"username","in":"path","description":"The name that needs to be fetched. Use user1 for testing. ","required":true,"type":"string"}],"responses":{"200":{"description":"successful operation","schema":{"$ref":"#/definitions/User"}},"400":{"description":"Invalid username supplied"},"404":{"description":"User not found"}}},"put":{"tags":["user"],"summary":"Updated user","description":"This can only be done by the logged in user.","operationId":"updateUser","produces":["application/xml","application/json"],"parameters":[{"name":"username","in":"path","description":"name that need to be updated","required":true,"type":"string"},{"in":"body","name":"body","description":"Updated user object","required":true,"schema":{"$ref":"#/definitions/User"}}],"responses":{"400":{"description":"Invalid user supplied"},"404":{"description":"User not found"}}},"delete":{"tags":["user"],"summary":"Delete user","description":"This can only be done by the logged in user.","operationId":"deleteUser","produces":["application/xml","application/json"],"parameters":[{"name":"username","in":"path","description":"The name that needs to be deleted","required":true,"type":"string"}],"responses":{"400":{"description":"Invalid username supplied"},"404":{"description":"User not found"}}}}},"securityDefinitions":{"petstore_auth":{"type":"oauth2","authorizationUrl":"http://petstore.swagger.io/oauth/dialog","flow":"implicit","scopes":{"write:pets":"modify pets in your account","read:pets":"read your pets"}},"api_key":{"type":"apiKey","name":"api_key","in":"header"}},"definitions":{"Order":{"type":"object","properties":{"id":{"type":"integer","format":"int64"},"petId":{"type":"integer","format":"int64"},"quantity":{"type":"integer","format":"int32"},"shipDate":{"type":"string","format":"date-time"},"status":{"type":"string","description":"Order Status","enum":["placed","approved","delivered"]},"complete":{"type":"boolean","default":false}},"xml":{"name":"Order"}},"Category":{"type":"object","properties":{"id":{"type":"integer","format":"int64"},"name":{"type":"string"}},"xml":{"name":"Category"}},"User":{"type":"object","properties":{"id":{"type":"integer","format":"int64"},"username":{"type":"string"},"firstName":{"type":"string"},"lastName":{"type":"string"},"email":{"type":"string"},"password":{"type":"string"},"phone":{"type":"string"},"userStatus":{"type":"integer","format":"int32","description":"User Status"}},"xml":{"name":"User"}},"Tag":{"type":"object","properties":{"id":{"type":"integer","format":"int64"},"name":{"type":"string"}},"xml":{"name":"Tag"}},"Pet":{"type":"object","required":["name","photoUrls"],"properties":{"id":{"type":"integer","format":"int64"},"category":{"$ref":"#/definitions/Category"},"name":{"type":"string","example":"doggie"},"photoUrls":{"type":"array","xml":{"name":"photoUrl","wrapped":true},"items":{"type":"string"}},"tags":{"type":"array","xml":{"name":"tag","wrapped":true},"items":{"$ref":"#/definitions/Tag"}},"status":{"type":"string","description":"pet status in the store","enum":["available","pending","sold"]}},"xml":{"name":"Pet"}},"ApiResponse":{"type":"object","properties":{"code":{"type":"integer","format":"int32"},"type":{"type":"string"},"message":{"type":"string"}}}},"externalDocs":{"description":"Find out more about Swagger","url":"http://swagger.io"}}
-);
-
-
-
-// https://github.com/OAI/OpenAPI-Specification/blob/master/schemas/v2.0/schema.json
-// curl -Ls https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/schemas/v2.0/schema.json > /tmp/aa.json; node -e "console.log(JSON.stringify(require('/tmp/aa.json')));"
-local.assetsDict['/assets.swgg.schema.json'] = JSON.stringify(
-{"title":"A JSON Schema for Swagger 2.0 API.","id":"http://swagger.io/v2/schema.json#","$schema":"http://json-schema.org/draft-04/schema#","type":"object","required":["swagger","info","paths"],"additionalProperties":false,"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}},"properties":{"swagger":{"type":"string","enum":["2.0"],"description":"The Swagger version of this document."},"info":{"$ref":"#/definitions/info"},"host":{"type":"string","pattern":"^[^{}/ :\\\\]+(?::\\d+)?$","description":"The host (name or ip) of the API. Example: 'swagger.io'"},"basePath":{"type":"string","pattern":"^/","description":"The base path to the API. Example: '/api'."},"schemes":{"$ref":"#/definitions/schemesList"},"consumes":{"description":"A list of MIME types accepted by the API.","allOf":[{"$ref":"#/definitions/mediaTypeList"}]},"produces":{"description":"A list of MIME types the API can produce.","allOf":[{"$ref":"#/definitions/mediaTypeList"}]},"paths":{"$ref":"#/definitions/paths"},"definitions":{"$ref":"#/definitions/definitions"},"parameters":{"$ref":"#/definitions/parameterDefinitions"},"responses":{"$ref":"#/definitions/responseDefinitions"},"security":{"$ref":"#/definitions/security"},"securityDefinitions":{"$ref":"#/definitions/securityDefinitions"},"tags":{"type":"array","items":{"$ref":"#/definitions/tag"},"uniqueItems":true},"externalDocs":{"$ref":"#/definitions/externalDocs"}},"definitions":{"info":{"type":"object","description":"General information about the API.","required":["version","title"],"additionalProperties":false,"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}},"properties":{"title":{"type":"string","description":"A unique and precise title of the API."},"version":{"type":"string","description":"A semantic version number of the API."},"description":{"type":"string","description":"A longer description of the API. Should be different from the title.  GitHub Flavored Markdown is allowed."},"termsOfService":{"type":"string","description":"The terms of service for the API."},"contact":{"$ref":"#/definitions/contact"},"license":{"$ref":"#/definitions/license"}}},"contact":{"type":"object","description":"Contact information for the owners of the API.","additionalProperties":false,"properties":{"name":{"type":"string","description":"The identifying name of the contact person/organization."},"url":{"type":"string","description":"The URL pointing to the contact information.","format":"uri"},"email":{"type":"string","description":"The email address of the contact person/organization.","format":"email"}},"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}}},"license":{"type":"object","required":["name"],"additionalProperties":false,"properties":{"name":{"type":"string","description":"The name of the license type. It's encouraged to use an OSI compatible license."},"url":{"type":"string","description":"The URL pointing to the license.","format":"uri"}},"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}}},"paths":{"type":"object","description":"Relative paths to the individual endpoints. They must be relative to the 'basePath'.","patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"},"^/":{"$ref":"#/definitions/pathItem"}},"additionalProperties":false},"definitions":{"type":"object","additionalProperties":{"$ref":"#/definitions/schema"},"description":"One or more JSON objects describing the schemas being consumed and produced by the API."},"parameterDefinitions":{"type":"object","additionalProperties":{"$ref":"#/definitions/parameter"},"description":"One or more JSON representations for parameters"},"responseDefinitions":{"type":"object","additionalProperties":{"$ref":"#/definitions/response"},"description":"One or more JSON representations for parameters"},"externalDocs":{"type":"object","additionalProperties":false,"description":"information about external documentation","required":["url"],"properties":{"description":{"type":"string"},"url":{"type":"string","format":"uri"}},"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}}},"examples":{"type":"object","additionalProperties":true},"mimeType":{"type":"string","description":"The MIME type of the HTTP message."},"operation":{"type":"object","required":["responses"],"additionalProperties":false,"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}},"properties":{"tags":{"type":"array","items":{"type":"string"},"uniqueItems":true},"summary":{"type":"string","description":"A brief summary of the operation."},"description":{"type":"string","description":"A longer description of the operation, GitHub Flavored Markdown is allowed."},"externalDocs":{"$ref":"#/definitions/externalDocs"},"operationId":{"type":"string","description":"A unique identifier of the operation."},"produces":{"description":"A list of MIME types the API can produce.","allOf":[{"$ref":"#/definitions/mediaTypeList"}]},"consumes":{"description":"A list of MIME types the API can consume.","allOf":[{"$ref":"#/definitions/mediaTypeList"}]},"parameters":{"$ref":"#/definitions/parametersList"},"responses":{"$ref":"#/definitions/responses"},"schemes":{"$ref":"#/definitions/schemesList"},"deprecated":{"type":"boolean","default":false},"security":{"$ref":"#/definitions/security"}}},"pathItem":{"type":"object","additionalProperties":false,"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}},"properties":{"$ref":{"type":"string"},"get":{"$ref":"#/definitions/operation"},"put":{"$ref":"#/definitions/operation"},"post":{"$ref":"#/definitions/operation"},"delete":{"$ref":"#/definitions/operation"},"options":{"$ref":"#/definitions/operation"},"head":{"$ref":"#/definitions/operation"},"patch":{"$ref":"#/definitions/operation"},"parameters":{"$ref":"#/definitions/parametersList"}}},"responses":{"type":"object","description":"Response objects names can either be any valid HTTP status code or 'default'.","minProperties":1,"additionalProperties":false,"patternProperties":{"^([0-9]{3})$|^(default)$":{"$ref":"#/definitions/responseValue"},"^x-":{"$ref":"#/definitions/vendorExtension"}},"not":{"type":"object","additionalProperties":false,"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}}}},"responseValue":{"oneOf":[{"$ref":"#/definitions/response"},{"$ref":"#/definitions/jsonReference"}]},"response":{"type":"object","required":["description"],"properties":{"description":{"type":"string"},"schema":{"oneOf":[{"$ref":"#/definitions/schema"},{"$ref":"#/definitions/fileSchema"}]},"headers":{"$ref":"#/definitions/headers"},"examples":{"$ref":"#/definitions/examples"}},"additionalProperties":false,"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}}},"headers":{"type":"object","additionalProperties":{"$ref":"#/definitions/header"}},"header":{"type":"object","additionalProperties":false,"required":["type"],"properties":{"type":{"type":"string","enum":["string","number","integer","boolean","array"]},"format":{"type":"string"},"items":{"$ref":"#/definitions/primitivesItems"},"collectionFormat":{"$ref":"#/definitions/collectionFormat"},"default":{"$ref":"#/definitions/default"},"maximum":{"$ref":"#/definitions/maximum"},"exclusiveMaximum":{"$ref":"#/definitions/exclusiveMaximum"},"minimum":{"$ref":"#/definitions/minimum"},"exclusiveMinimum":{"$ref":"#/definitions/exclusiveMinimum"},"maxLength":{"$ref":"#/definitions/maxLength"},"minLength":{"$ref":"#/definitions/minLength"},"pattern":{"$ref":"#/definitions/pattern"},"maxItems":{"$ref":"#/definitions/maxItems"},"minItems":{"$ref":"#/definitions/minItems"},"uniqueItems":{"$ref":"#/definitions/uniqueItems"},"enum":{"$ref":"#/definitions/enum"},"multipleOf":{"$ref":"#/definitions/multipleOf"},"description":{"type":"string"}},"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}}},"vendorExtension":{"description":"Any property starting with x- is valid.","additionalProperties":true,"additionalItems":true},"bodyParameter":{"type":"object","required":["name","in","schema"],"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}},"properties":{"description":{"type":"string","description":"A brief description of the parameter. This could contain examples of use.  GitHub Flavored Markdown is allowed."},"name":{"type":"string","description":"The name of the parameter."},"in":{"type":"string","description":"Determines the location of the parameter.","enum":["body"]},"required":{"type":"boolean","description":"Determines whether or not this parameter is required or optional.","default":false},"schema":{"$ref":"#/definitions/schema"}},"additionalProperties":false},"headerParameterSubSchema":{"additionalProperties":false,"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}},"properties":{"required":{"type":"boolean","description":"Determines whether or not this parameter is required or optional.","default":false},"in":{"type":"string","description":"Determines the location of the parameter.","enum":["header"]},"description":{"type":"string","description":"A brief description of the parameter. This could contain examples of use.  GitHub Flavored Markdown is allowed."},"name":{"type":"string","description":"The name of the parameter."},"type":{"type":"string","enum":["string","number","boolean","integer","array"]},"format":{"type":"string"},"items":{"$ref":"#/definitions/primitivesItems"},"collectionFormat":{"$ref":"#/definitions/collectionFormat"},"default":{"$ref":"#/definitions/default"},"maximum":{"$ref":"#/definitions/maximum"},"exclusiveMaximum":{"$ref":"#/definitions/exclusiveMaximum"},"minimum":{"$ref":"#/definitions/minimum"},"exclusiveMinimum":{"$ref":"#/definitions/exclusiveMinimum"},"maxLength":{"$ref":"#/definitions/maxLength"},"minLength":{"$ref":"#/definitions/minLength"},"pattern":{"$ref":"#/definitions/pattern"},"maxItems":{"$ref":"#/definitions/maxItems"},"minItems":{"$ref":"#/definitions/minItems"},"uniqueItems":{"$ref":"#/definitions/uniqueItems"},"enum":{"$ref":"#/definitions/enum"},"multipleOf":{"$ref":"#/definitions/multipleOf"}}},"queryParameterSubSchema":{"additionalProperties":false,"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}},"properties":{"required":{"type":"boolean","description":"Determines whether or not this parameter is required or optional.","default":false},"in":{"type":"string","description":"Determines the location of the parameter.","enum":["query"]},"description":{"type":"string","description":"A brief description of the parameter. This could contain examples of use.  GitHub Flavored Markdown is allowed."},"name":{"type":"string","description":"The name of the parameter."},"allowEmptyValue":{"type":"boolean","default":false,"description":"allows sending a parameter by name only or with an empty value."},"type":{"type":"string","enum":["string","number","boolean","integer","array"]},"format":{"type":"string"},"items":{"$ref":"#/definitions/primitivesItems"},"collectionFormat":{"$ref":"#/definitions/collectionFormatWithMulti"},"default":{"$ref":"#/definitions/default"},"maximum":{"$ref":"#/definitions/maximum"},"exclusiveMaximum":{"$ref":"#/definitions/exclusiveMaximum"},"minimum":{"$ref":"#/definitions/minimum"},"exclusiveMinimum":{"$ref":"#/definitions/exclusiveMinimum"},"maxLength":{"$ref":"#/definitions/maxLength"},"minLength":{"$ref":"#/definitions/minLength"},"pattern":{"$ref":"#/definitions/pattern"},"maxItems":{"$ref":"#/definitions/maxItems"},"minItems":{"$ref":"#/definitions/minItems"},"uniqueItems":{"$ref":"#/definitions/uniqueItems"},"enum":{"$ref":"#/definitions/enum"},"multipleOf":{"$ref":"#/definitions/multipleOf"}}},"formDataParameterSubSchema":{"additionalProperties":false,"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}},"properties":{"required":{"type":"boolean","description":"Determines whether or not this parameter is required or optional.","default":false},"in":{"type":"string","description":"Determines the location of the parameter.","enum":["formData"]},"description":{"type":"string","description":"A brief description of the parameter. This could contain examples of use.  GitHub Flavored Markdown is allowed."},"name":{"type":"string","description":"The name of the parameter."},"allowEmptyValue":{"type":"boolean","default":false,"description":"allows sending a parameter by name only or with an empty value."},"type":{"type":"string","enum":["string","number","boolean","integer","array","file"]},"format":{"type":"string"},"items":{"$ref":"#/definitions/primitivesItems"},"collectionFormat":{"$ref":"#/definitions/collectionFormatWithMulti"},"default":{"$ref":"#/definitions/default"},"maximum":{"$ref":"#/definitions/maximum"},"exclusiveMaximum":{"$ref":"#/definitions/exclusiveMaximum"},"minimum":{"$ref":"#/definitions/minimum"},"exclusiveMinimum":{"$ref":"#/definitions/exclusiveMinimum"},"maxLength":{"$ref":"#/definitions/maxLength"},"minLength":{"$ref":"#/definitions/minLength"},"pattern":{"$ref":"#/definitions/pattern"},"maxItems":{"$ref":"#/definitions/maxItems"},"minItems":{"$ref":"#/definitions/minItems"},"uniqueItems":{"$ref":"#/definitions/uniqueItems"},"enum":{"$ref":"#/definitions/enum"},"multipleOf":{"$ref":"#/definitions/multipleOf"}}},"pathParameterSubSchema":{"additionalProperties":false,"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}},"required":["required"],"properties":{"required":{"type":"boolean","enum":[true],"description":"Determines whether or not this parameter is required or optional."},"in":{"type":"string","description":"Determines the location of the parameter.","enum":["path"]},"description":{"type":"string","description":"A brief description of the parameter. This could contain examples of use.  GitHub Flavored Markdown is allowed."},"name":{"type":"string","description":"The name of the parameter."},"type":{"type":"string","enum":["string","number","boolean","integer","array"]},"format":{"type":"string"},"items":{"$ref":"#/definitions/primitivesItems"},"collectionFormat":{"$ref":"#/definitions/collectionFormat"},"default":{"$ref":"#/definitions/default"},"maximum":{"$ref":"#/definitions/maximum"},"exclusiveMaximum":{"$ref":"#/definitions/exclusiveMaximum"},"minimum":{"$ref":"#/definitions/minimum"},"exclusiveMinimum":{"$ref":"#/definitions/exclusiveMinimum"},"maxLength":{"$ref":"#/definitions/maxLength"},"minLength":{"$ref":"#/definitions/minLength"},"pattern":{"$ref":"#/definitions/pattern"},"maxItems":{"$ref":"#/definitions/maxItems"},"minItems":{"$ref":"#/definitions/minItems"},"uniqueItems":{"$ref":"#/definitions/uniqueItems"},"enum":{"$ref":"#/definitions/enum"},"multipleOf":{"$ref":"#/definitions/multipleOf"}}},"nonBodyParameter":{"type":"object","required":["name","in","type"],"oneOf":[{"$ref":"#/definitions/headerParameterSubSchema"},{"$ref":"#/definitions/formDataParameterSubSchema"},{"$ref":"#/definitions/queryParameterSubSchema"},{"$ref":"#/definitions/pathParameterSubSchema"}]},"parameter":{"oneOf":[{"$ref":"#/definitions/bodyParameter"},{"$ref":"#/definitions/nonBodyParameter"}]},"schema":{"type":"object","description":"A deterministic version of a JSON Schema object.","patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}},"properties":{"$ref":{"type":"string"},"format":{"type":"string"},"title":{"$ref":"http://json-schema.org/draft-04/schema#/properties/title"},"description":{"$ref":"http://json-schema.org/draft-04/schema#/properties/description"},"default":{"$ref":"http://json-schema.org/draft-04/schema#/properties/default"},"multipleOf":{"$ref":"http://json-schema.org/draft-04/schema#/properties/multipleOf"},"maximum":{"$ref":"http://json-schema.org/draft-04/schema#/properties/maximum"},"exclusiveMaximum":{"$ref":"http://json-schema.org/draft-04/schema#/properties/exclusiveMaximum"},"minimum":{"$ref":"http://json-schema.org/draft-04/schema#/properties/minimum"},"exclusiveMinimum":{"$ref":"http://json-schema.org/draft-04/schema#/properties/exclusiveMinimum"},"maxLength":{"$ref":"http://json-schema.org/draft-04/schema#/definitions/positiveInteger"},"minLength":{"$ref":"http://json-schema.org/draft-04/schema#/definitions/positiveIntegerDefault0"},"pattern":{"$ref":"http://json-schema.org/draft-04/schema#/properties/pattern"},"maxItems":{"$ref":"http://json-schema.org/draft-04/schema#/definitions/positiveInteger"},"minItems":{"$ref":"http://json-schema.org/draft-04/schema#/definitions/positiveIntegerDefault0"},"uniqueItems":{"$ref":"http://json-schema.org/draft-04/schema#/properties/uniqueItems"},"maxProperties":{"$ref":"http://json-schema.org/draft-04/schema#/definitions/positiveInteger"},"minProperties":{"$ref":"http://json-schema.org/draft-04/schema#/definitions/positiveIntegerDefault0"},"required":{"$ref":"http://json-schema.org/draft-04/schema#/definitions/stringArray"},"enum":{"$ref":"http://json-schema.org/draft-04/schema#/properties/enum"},"additionalProperties":{"anyOf":[{"$ref":"#/definitions/schema"},{"type":"boolean"}],"default":{}},"type":{"$ref":"http://json-schema.org/draft-04/schema#/properties/type"},"items":{"anyOf":[{"$ref":"#/definitions/schema"},{"type":"array","minItems":1,"items":{"$ref":"#/definitions/schema"}}],"default":{}},"allOf":{"type":"array","minItems":1,"items":{"$ref":"#/definitions/schema"}},"properties":{"type":"object","additionalProperties":{"$ref":"#/definitions/schema"},"default":{}},"discriminator":{"type":"string"},"readOnly":{"type":"boolean","default":false},"xml":{"$ref":"#/definitions/xml"},"externalDocs":{"$ref":"#/definitions/externalDocs"},"example":{}},"additionalProperties":false},"fileSchema":{"type":"object","description":"A deterministic version of a JSON Schema object.","patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}},"required":["type"],"properties":{"format":{"type":"string"},"title":{"$ref":"http://json-schema.org/draft-04/schema#/properties/title"},"description":{"$ref":"http://json-schema.org/draft-04/schema#/properties/description"},"default":{"$ref":"http://json-schema.org/draft-04/schema#/properties/default"},"required":{"$ref":"http://json-schema.org/draft-04/schema#/definitions/stringArray"},"type":{"type":"string","enum":["file"]},"readOnly":{"type":"boolean","default":false},"externalDocs":{"$ref":"#/definitions/externalDocs"},"example":{}},"additionalProperties":false},"primitivesItems":{"type":"object","additionalProperties":false,"properties":{"type":{"type":"string","enum":["string","number","integer","boolean","array"]},"format":{"type":"string"},"items":{"$ref":"#/definitions/primitivesItems"},"collectionFormat":{"$ref":"#/definitions/collectionFormat"},"default":{"$ref":"#/definitions/default"},"maximum":{"$ref":"#/definitions/maximum"},"exclusiveMaximum":{"$ref":"#/definitions/exclusiveMaximum"},"minimum":{"$ref":"#/definitions/minimum"},"exclusiveMinimum":{"$ref":"#/definitions/exclusiveMinimum"},"maxLength":{"$ref":"#/definitions/maxLength"},"minLength":{"$ref":"#/definitions/minLength"},"pattern":{"$ref":"#/definitions/pattern"},"maxItems":{"$ref":"#/definitions/maxItems"},"minItems":{"$ref":"#/definitions/minItems"},"uniqueItems":{"$ref":"#/definitions/uniqueItems"},"enum":{"$ref":"#/definitions/enum"},"multipleOf":{"$ref":"#/definitions/multipleOf"}},"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}}},"security":{"type":"array","items":{"$ref":"#/definitions/securityRequirement"},"uniqueItems":true},"securityRequirement":{"type":"object","additionalProperties":{"type":"array","items":{"type":"string"},"uniqueItems":true}},"xml":{"type":"object","additionalProperties":false,"properties":{"name":{"type":"string"},"namespace":{"type":"string"},"prefix":{"type":"string"},"attribute":{"type":"boolean","default":false},"wrapped":{"type":"boolean","default":false}},"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}}},"tag":{"type":"object","additionalProperties":false,"required":["name"],"properties":{"name":{"type":"string"},"description":{"type":"string"},"externalDocs":{"$ref":"#/definitions/externalDocs"}},"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}}},"securityDefinitions":{"type":"object","additionalProperties":{"oneOf":[{"$ref":"#/definitions/basicAuthenticationSecurity"},{"$ref":"#/definitions/apiKeySecurity"},{"$ref":"#/definitions/oauth2ImplicitSecurity"},{"$ref":"#/definitions/oauth2PasswordSecurity"},{"$ref":"#/definitions/oauth2ApplicationSecurity"},{"$ref":"#/definitions/oauth2AccessCodeSecurity"}]}},"basicAuthenticationSecurity":{"type":"object","additionalProperties":false,"required":["type"],"properties":{"type":{"type":"string","enum":["basic"]},"description":{"type":"string"}},"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}}},"apiKeySecurity":{"type":"object","additionalProperties":false,"required":["type","name","in"],"properties":{"type":{"type":"string","enum":["apiKey"]},"name":{"type":"string"},"in":{"type":"string","enum":["header","query"]},"description":{"type":"string"}},"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}}},"oauth2ImplicitSecurity":{"type":"object","additionalProperties":false,"required":["type","flow","authorizationUrl"],"properties":{"type":{"type":"string","enum":["oauth2"]},"flow":{"type":"string","enum":["implicit"]},"scopes":{"$ref":"#/definitions/oauth2Scopes"},"authorizationUrl":{"type":"string","format":"uri"},"description":{"type":"string"}},"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}}},"oauth2PasswordSecurity":{"type":"object","additionalProperties":false,"required":["type","flow","tokenUrl"],"properties":{"type":{"type":"string","enum":["oauth2"]},"flow":{"type":"string","enum":["password"]},"scopes":{"$ref":"#/definitions/oauth2Scopes"},"tokenUrl":{"type":"string","format":"uri"},"description":{"type":"string"}},"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}}},"oauth2ApplicationSecurity":{"type":"object","additionalProperties":false,"required":["type","flow","tokenUrl"],"properties":{"type":{"type":"string","enum":["oauth2"]},"flow":{"type":"string","enum":["application"]},"scopes":{"$ref":"#/definitions/oauth2Scopes"},"tokenUrl":{"type":"string","format":"uri"},"description":{"type":"string"}},"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}}},"oauth2AccessCodeSecurity":{"type":"object","additionalProperties":false,"required":["type","flow","authorizationUrl","tokenUrl"],"properties":{"type":{"type":"string","enum":["oauth2"]},"flow":{"type":"string","enum":["accessCode"]},"scopes":{"$ref":"#/definitions/oauth2Scopes"},"authorizationUrl":{"type":"string","format":"uri"},"tokenUrl":{"type":"string","format":"uri"},"description":{"type":"string"}},"patternProperties":{"^x-":{"$ref":"#/definitions/vendorExtension"}}},"oauth2Scopes":{"type":"object","additionalProperties":{"type":"string"}},"mediaTypeList":{"type":"array","items":{"$ref":"#/definitions/mimeType"},"uniqueItems":true},"parametersList":{"type":"array","description":"The parameters needed to send a valid API call.","additionalItems":false,"items":{"oneOf":[{"$ref":"#/definitions/parameter"},{"$ref":"#/definitions/jsonReference"}]},"uniqueItems":true},"schemesList":{"type":"array","description":"The transfer protocol of the API.","items":{"type":"string","enum":["http","https","ws","wss"]},"uniqueItems":true},"collectionFormat":{"type":"string","enum":["csv","ssv","tsv","pipes"],"default":"csv"},"collectionFormatWithMulti":{"type":"string","enum":["csv","ssv","tsv","pipes","multi"],"default":"csv"},"title":{"$ref":"http://json-schema.org/draft-04/schema#/properties/title"},"description":{"$ref":"http://json-schema.org/draft-04/schema#/properties/description"},"default":{"$ref":"http://json-schema.org/draft-04/schema#/properties/default"},"multipleOf":{"$ref":"http://json-schema.org/draft-04/schema#/properties/multipleOf"},"maximum":{"$ref":"http://json-schema.org/draft-04/schema#/properties/maximum"},"exclusiveMaximum":{"$ref":"http://json-schema.org/draft-04/schema#/properties/exclusiveMaximum"},"minimum":{"$ref":"http://json-schema.org/draft-04/schema#/properties/minimum"},"exclusiveMinimum":{"$ref":"http://json-schema.org/draft-04/schema#/properties/exclusiveMinimum"},"maxLength":{"$ref":"http://json-schema.org/draft-04/schema#/definitions/positiveInteger"},"minLength":{"$ref":"http://json-schema.org/draft-04/schema#/definitions/positiveIntegerDefault0"},"pattern":{"$ref":"http://json-schema.org/draft-04/schema#/properties/pattern"},"maxItems":{"$ref":"http://json-schema.org/draft-04/schema#/definitions/positiveInteger"},"minItems":{"$ref":"http://json-schema.org/draft-04/schema#/definitions/positiveIntegerDefault0"},"uniqueItems":{"$ref":"http://json-schema.org/draft-04/schema#/properties/uniqueItems"},"enum":{"$ref":"http://json-schema.org/draft-04/schema#/properties/enum"},"jsonReference":{"type":"object","required":["$ref"],"additionalProperties":false,"properties":{"$ref":{"type":"string"}}}}}
-);
 /* jslint-ignore-end */
         local.swaggerSchemaJson = local.jsonCopy(local.objectSetOverride(
             JSON.parse(local.assetsDict['/assets.swgg.json-schema.json']),
@@ -15455,7 +15292,114 @@ local.assetsDict['/assets.swgg.schema.json'] = JSON.stringify(
             // init apiDict
             local.apiDict = local.apiDict || {};
             // init swaggerJson
-            local.swaggerJson = local.swaggerJson || JSON.parse(local.templateSwaggerJson);
+            local.swaggerJson = local.swaggerJson || {
+                "basePath": "/api/v0",
+                "definitions": {
+                    "BuiltinFile": {
+                        "properties": {
+                            "_id": {
+                                "readOnly": true,
+                                "type": "string"
+                            },
+                            "_timeCreated": {
+                                "format": "date-time",
+                                "readOnly": true,
+                                "type": "string"
+                            },
+                            "_timeUpdated": {
+                                "format": "date-time",
+                                "readOnly": true,
+                                "type": "string"
+                            },
+                            "fileBlob": {
+                                "format": "byte",
+                                "type": "string"
+                            },
+                            "fileContentType": {
+                                "type": "string"
+                            },
+                            "fileDescription": {
+                                "type": "string"
+                            },
+                            "fileFilename": {
+                                "type": "string"
+                            },
+                            "fileInputName": {
+                                "type": "string"
+                            },
+                            "fileSize": {
+                                "minimum": 0,
+                                "type": "integer"
+                            },
+                            "fileUrl": {
+                                "type": "string"
+                            },
+                            "id": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "BuiltinJsonapiResponse": {
+                        "properties": {
+                            "data": {
+                                "items": {
+                                    "type": "object"
+                                },
+                                "type": "array"
+                            },
+                            "errors": {
+                                "items": {
+                                    "type": "object"
+                                },
+                                "type": "array"
+                            },
+                            "meta": {
+                                "type": "object"
+                            }
+                        }
+                    },
+                    "BuiltinUser": {
+                        "properties": {
+                            "_id": {
+                                "readOnly": true,
+                                "type": "string"
+                            },
+                            "_timeCreated": {
+                                "format": "date-time",
+                                "readOnly": true,
+                                "type": "string"
+                            },
+                            "_timeUpdated": {
+                                "format": "date-time",
+                                "readOnly": true,
+                                "type": "string"
+                            },
+                            "id": {
+                                "type": "string"
+                            },
+                            "jwtEncrypted": {
+                                "type": "string"
+                            },
+                            "password": {
+                                "format": "password",
+                                "type": "string"
+                            },
+                            "username": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                },
+                "info": {
+                    "description": "demo of swagger-ui server",
+                    "title": "swgg api",
+                    "version": "0"
+                },
+                "paths": {},
+                "securityDefinitions": {},
+                "swagger": "2.0",
+                "tags": []
+            };
             // save tags
             tmp = {};
             [local.swaggerJson.tags, options.tags || []].forEach(function (tagList) {
@@ -16821,6 +16765,8 @@ local.assetsDict['/assets.swgg.schema.json'] = JSON.stringify(
             });
         };
 
+        local.uiEventListenerDict = {};
+
         local.uiEventListenerDict['.onEventDatatableReload'] = function (event) {
         /*
          * this function will show the modal
@@ -17472,6 +17418,27 @@ local.assetsDict['/assets.swgg.schema.json'] = JSON.stringify(
             local.apiDict["GET /user/userLogout"]._ajax(options, onError);
         };
 
+        local.utility2._middlewareError = function (error, request, response) {
+        /*
+         * this function will run the middleware that will
+         * handle errors according to http://jsonapi.org/format/#errors
+         */
+            if (!error) {
+                error = new Error('404 Not Found');
+                error.statusCode = 404;
+            }
+            local.serverRespondJsonapi(request, response, error);
+        };
+
+        local.utility2._stateInit = function (options) {
+        /*
+         * this function will init the state-options
+         */
+            local.objectSetOverride(local, options, 10);
+            // init api
+            local.apiDictUpdate(local.swaggerJson);
+        };
+
         local.validateByParamDefList = function (options) {
         /*
          * this function will validate options.data against options.paramDefList
@@ -17880,27 +17847,6 @@ local.assetsDict['/assets.swgg.schema.json'] = JSON.stringify(
                 });
             });
         };
-
-        local.utility2._middlewareError = function (error, request, response) {
-        /*
-         * this function will run the middleware that will
-         * handle errors according to http://jsonapi.org/format/#errors
-         */
-            if (!error) {
-                error = new Error('404 Not Found');
-                error.statusCode = 404;
-            }
-            local.serverRespondJsonapi(request, response, error);
-        };
-
-        local.utility2._stateInit = function (options) {
-        /*
-         * this function will init the state-options
-         */
-            local.objectSetOverride(local, options, 10);
-            // init api
-            local.apiDictUpdate(local.swaggerJson);
-        };
     }());
     switch (local.modeJs) {
 
@@ -17918,17 +17864,12 @@ local.assetsDict['/assets.swgg.schema.json'] = JSON.stringify(
 
     // run node js-env code - post-init
     case 'node':
-        // require modules
-        local.fs = require('fs');
-        local.path = require('path');
-        local.url = require('url');
         // init exports
         module.exports = local;
         module.exports.__dirname = __dirname;
-        local.assetsWrite(
-            '/assets.swgg.rollup.js',
-            local.assetsDict['/assets.utility2.rollup.js']
-        );
+        // init assets.lib.rollup.js
+        local.assetsDict['/assets.swgg.rollup.js'] =
+            local.assetsDict['/assets.utility2.rollup.js'];
         // init state
         local.utility2._stateInit({});
         break;
@@ -17947,7 +17888,7 @@ local.assetsDict['/assets.swgg.schema.json'] = JSON.stringify(
             }
             local.assetsDict['/assets.swgg.html'] =
                 local.assetsDict['/assets.swgg.html'].replace(
-                    'http://petstore.swagger.io/v2/swagger.json',
+                    'assets.swgg.petstore.json',
                     local.env.SWAGGER_JSON_URL
                 );
         }

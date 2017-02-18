@@ -127,10 +127,14 @@ require('$npm_config_dir_utility2/lib.utility2.js').browserTest({
     fi
 )}
 
+shBuildApiDoc() {(set -e
+# this function will build the api-doc
+    npm test --mode-coverage="" --mode-test-case=testCase_buildApiDoc_default
+)}
+
 shBuildApp() {(set -e
 # this function will build the app
-    npm test --mode-coverage="" --mode-test-case=testCase_build_readme
-    npm test --mode-coverage="" --mode-test-case=testCase_build_app
+    npm test --mode-coverage="" --mode-test-case=testCase_buildApp_default
 )}
 
 shBuildCiDefault() {(set -e
@@ -153,8 +157,8 @@ shBuildCiDefault() {(set -e
         shBuildCiTestPost || return $?
     fi
     # create api-doc
-    (export MODE_BUILD=docApiCreate &&
-        shBuildDoc) || return $?
+    (export MODE_BUILD=apiDoc &&
+        shBuildApiDoc) || return $?
     # create package-listing
     (export MODE_BUILD=gitLsTree &&
         shRunScreenCapture shGitLsTree) || return $?
@@ -167,11 +171,6 @@ shBuildCiDefault() {(set -e
     # then squash older commits
     (export MODE_BUILD=buildGithubUpload &&
         shBuildGithubUpload) || return $?
-)}
-
-shBuildDoc() {(set -e
-# this function will build the doc
-    npm test --mode-coverage="" --mode-test-case=testCase_build_doc
 )}
 
 shBuildGithubUpload() {(set -e
@@ -224,6 +223,11 @@ shBuildPrint() {
     printf '%b' "\n\033[35m[MODE_BUILD=$MODE_BUILD]\033[0m - $(shDateIso) - $1\n\n" || return $?
 }
 
+shBuildReadme() {(set -e
+# this function will build the app
+    npm test --mode-coverage="" --mode-test-case=testCase_buildReadme_default
+)}
+
 shDateIso() {(set -e
 # this function will print the current date in ISO format
     date -u "+%Y-%m-%dT%H:%M:%SZ"
@@ -241,6 +245,7 @@ shDeployGithub() {(set -e
 # this function will deploy the app to $GITHUB_REPO
 # and run a simple curl check for $TEST_URL
 # and test $TEST_URL
+    shInit
     if [ ! "$GIT_SSH" ]
     then
         return
@@ -278,15 +283,16 @@ shDeployHeroku() {(set -e
 # this function will deploy the app to heroku
 # and run a simple curl check for $TEST_URL
 # and test $TEST_URL
+    shInit
     if [ ! "$npm_package_nameHeroku" ]
     then
-        export npm_package_nameHeroku="$npm_package_name"
+        export npm_package_nameHeroku="$(printf "h1-$npm_package_nameAlias" | tr "_" "-")"
     fi
     # build app inside heroku
     if [ "$npm_lifecycle_event" = heroku-postbuild ]
     then
         shBuildApp
-        cp tmp/build/app/assets.app.js .
+        cp tmp/build/app/*.js .
         printf "web: npm_config_mode_backend=1 node assets.app.js" > Procfile
         rm -fr tmp
         return
@@ -296,7 +302,7 @@ shDeployHeroku() {(set -e
         return
     fi
     export MODE_BUILD=deployHeroku
-    export TEST_URL="https://hrku01-$npm_package_nameHeroku-$CI_BRANCH.herokuapp.com"
+    export TEST_URL="https://$npm_package_nameHeroku-$CI_BRANCH.herokuapp.com"
     # verify deployed app's main-page returns status-code < 400
     if [ $(curl --connect-timeout 60 -Ls -o /dev/null -w "%{http_code}" "$TEST_URL") -lt 400 ]
     then
@@ -335,9 +341,9 @@ shDockerCopyFromImage() {(set -e
 # http://stackoverflow.com/questions/25292198
 # /docker-how-can-i-copy-a-file-from-an-image-to-a-host
 # this function will copy the $FILE_FROM from the docker $IMAGE to $FILE_TO
-    FILE_FROM="$1"
-    FILE_TO="$2"
-    IMAGE="$3"
+    FILE_FROM="$2"
+    FILE_TO="$3"
+    IMAGE="$1"
     # create $CONTAINER from $IMAGE
     CONTAINER="$(docker create "$IMAGE")"
     docker cp "$CONTAINER:$FILE_FROM" "$FILE_TO"
@@ -606,16 +612,6 @@ shDuList() {(set -e
     du -md1 $1 | sort -nr
 )}
 
-shEmscriptenInit() {
-# this function will init emscripten
-    export PATH_EMSCRIPTEN="/emsdk:\
-/emsdk/clang/fastcomp/build_master_64/bin:\
-/emsdk/emscripten/master:\
-/emsdk/node/4.1.1_64bit/bin"
-    export PATH="$PATH_EMSCRIPTEN:$PATH"
-    emsdk activate
-}
-
 shFileKeySort() {(set -e
 # this function sort the keys in the file
     FILE="$1"
@@ -636,7 +632,7 @@ console.log('var aa = [\\n\"\",' + require('fs').readFileSync('$FILE', 'utf8')
 /* jslint-ignore-begin */
     // escape backslash and double-quote
     .replace((/[\"\\\\]/g), '#')
-    // cull newline
+    // remove newline
     .replace((/\\n{2,}/gm), '\\n')
     // add js
     .replace((/^ {0,8}(\\w[^\\n ]*? =(?:| .*?))$/gm), '\"\$1\",')
@@ -644,9 +640,9 @@ console.log('var aa = [\\n\"\",' + require('fs').readFileSync('$FILE', 'utf8')
     .replace((/^ {4}.. (.*? js-env .*?)$/gm), '\"\$1\",')
     // add sh
     .replace((/^(\\w+?\\(\\) \\{.*?)$/gm), '\"\$1\",')
-    // cull
+    // remove non-match
     .replace((/^(?:[^\\n\"]|\"\W|\"\").*/gm), '')
-    // cull newline
+    // remove newline
     .replace((/\\n{2,}/gm), '\\n') + '];\n\
 aa = aa.slice(0, aa.indexOf(\"\"));\n\
 var bb = aa.slice().sort();\n\
@@ -689,11 +685,6 @@ shFileTrimTrailingWhitespace() {(set -e
     # find . -type file -print0 | xargs -0 sed -i '' -e 's/[ ]\{1,\}$//'
     sed -in -e 's/[ ]\{1,\}$//' "$1"
     rm -f "$1n"
-)}
-
-shGitDiffNameStatus() {(set -e
-# this function will only show the name-status of git diff $@
-    git diff --name-status $@
 )}
 
 shGitGc() {(set -e
@@ -923,7 +914,9 @@ Object.keys(local.fileDict).forEach(function (key) {
 
 shHtpasswdCreate() {(set -e
 # this function will create and print htpasswd to stdout
-    printf "$1:$(openssl passwd -apr1 "$2")"
+    PASSWD="$2"
+    USERNAME="$1"
+    printf "$USERNAME:$(openssl passwd -apr1 "$PASSWD")"
 )}
 
 shHttpFileServer() {(set -e
@@ -1035,8 +1028,12 @@ if (process.env.GITHUB_REPO === undefined && value) {
 // </script>
         ") || return $?
     else
-        export npm_package_name=undefined || return $?
+        export npm_package_name=example || return $?
         export npm_package_version=0.0.1 || return $?
+    fi
+    if [ ! "$npm_config_package_nameAlias" ]
+    then
+        export npm_config_package_nameAlias="$npm_package_name" || return $?
     fi
     # init $npm_config_*
     export npm_config_dir_build="$PWD/tmp/build" || return $?
@@ -1049,7 +1046,7 @@ if (process.env.GITHUB_REPO === undefined && value) {
     # init $GIT_SSH
     if [ "$GIT_SSH_KEY" ]
     then
-        export GIT_SSH="$npm_config_dir_utility2/git-ssh.sh" || return $?
+        export GIT_SSH="$npm_config_dir_utility2/git_ssh.sh" || return $?
     fi
     # init $PATH
     export PATH="$PWD/node_modules/.bin:$PATH" || return $?
@@ -1234,7 +1231,7 @@ shIptablesInit() {(set -e
 )}
 
 shIstanbulCover() {(set -e
-# this function will run the command $@ with istanbul coverage
+# this function will run the command $@ with istanbul-coverage
     export NODE_BINARY="${NODE_BINARY:-node}"
     if [ ! "$npm_config_mode_coverage" ]
     then
@@ -1309,6 +1306,49 @@ require('fs').writeFileSync(
 shKillallElectron() {
 # this function will killall electron
     killall Electron electron
+}
+
+shMain() {
+# this function will run the main program
+    export UTILITY2_DEPENDENTS="db-lite
+        electron-lite
+        istanbul-lite
+        jslint-lite
+        swagger-ui-lite
+        swgg
+        uglifyjs-lite
+        utility2" || return $?
+    local COMMAND || return $?
+    if [ ! "$1" ]
+    then
+      return $?
+    fi
+    COMMAND="$1" || return $?
+    shift || return $?
+    case "$COMMAND" in
+    grep)
+        shGrep "$1" "$2" || return $?
+        ;;
+    shRun)
+        (shInit && "$COMMAND" "$@") || return $?
+        ;;
+    shRunScreenCapture)
+        (shInit && "$COMMAND" "$@") || return $?
+        ;;
+    start)
+        (shInit && export npm_config_mode_auto_restart=1 && export npm_config_mode_start=1 &&
+            shRun shIstanbulCover "$npm_config_dir_utility2/test.js" "$@") || return $?
+        ;;
+    test)
+        (shInit && shNpmTest "$@") || return $?
+        ;;
+    utility2Dirname)
+        (shInit && printf "$npm_config_dir_utility2") || return $?
+        ;;
+    *)
+        "$COMMAND" "$@" || return $?
+        ;;
+    esac
 }
 
 shMountData() {(set -e
@@ -1444,6 +1484,7 @@ shNpmTest() {(set -e
 
 shNpmTestPublished() {(set -e
 # this function will run npm-test on the published-package
+    shInit
     export MODE_BUILD=npmTestPublished
     shBuildPrint "npm-testing published-package $npm_package_name"
     # init /tmp/app
@@ -1480,6 +1521,13 @@ shReadmeBuild() {(set -e
     shReadmeTestSh "$npm_config_dir_tmp/README.build.sh"
 )}
 
+shReadmeTestExampleJs() {(set -e
+# this function will extract, save, and test the script example.js embedded in README.md
+    shInit
+    export MODE_BUILD=testExampleJs
+    shReadmeTestJs example.js
+)}
+
 shReadmeTestJs() {(set -e
 # this function will extract, save, and test the script $FILE embedded in README.md
     FILE="$1"
@@ -1492,10 +1540,7 @@ shReadmeTestJs() {(set -e
     # cd /tmp/app
     cd /tmp/app
     # jslint $FILE
-    if [ "$npm_config_mode_jslint" != 0 ]
-    then
-        "$npm_config_dir_utility2/lib.jslint.js" "$FILE"
-    fi
+    "$npm_config_dir_utility2/lib.jslint.js" "$FILE"
     # test $FILE
     SCRIPT="$(node -e "
 // <script>
@@ -1966,14 +2011,14 @@ shUtility2DependentsSync() {(set -e
         fi
     done
     # hardlink .gitignore
-    for DIR in "$UTILITY2_DEPENDENTS"
+    for DIR in $UTILITY2_DEPENDENTS
     do
         if [ -d "$DIR" ] && [ "$DIR" != utility2 ]
         then
             ln -f utility2/.gitignore "$DIR"
         fi
     done
-    (cd utility2 && shUtility2RollupCreate) || return $?
+    (cd utility2 && shBuildApp) || return $?
     # hardlink lib.swgg.js
     if [ -d swgg ]
     then
@@ -1982,35 +2027,27 @@ shUtility2DependentsSync() {(set -e
     fi
 )}
 
-shUtility2RollupCreate() {(set -e
-# this function create the file assets.utility2.rollup.js
-    node -e "
-// <script>
-/*jslint
-    bitwise: true,
-    browser: true,
-    maxerr: 8,
-    maxlen: 96,
-    node: true,
-    nomen: true,
-    regexp: true,
-    stupid: true
-*/
-'use strict';
-var local;
-local = {};
-local.fs = require('fs');
-try {
-    local.utility2 = require('./lib.utility2.js');
-} catch (errorCaught) {
-    local.utility2 = require('utility2');
-}
-local.fs.writeFileSync(
-    'assets.utility2.rollup.js',
-    local.utility2.assetsDict['/assets.utility2.rollup.js']
-);
-// </script>
-    "
+shUtility2Grep() {(set -e
+# this function will recursively grep $UTILITY2_DEPENDENTS for the regexp $REGEXP
+    REGEXP="$1"
+    for DIR in $UTILITY2_DEPENDENTS
+    do
+        DIR="$HOME/src/$DIR"
+        if [ -d "$DIR" ]
+        then
+            shGrep "$DIR" "$REGEXP"
+        fi
+    done
+)}
+
+shUtility2Version() {(set -e
+# this function will print the latest versions in $UTILITY2_DEPENDENTS
+    printf "[\n"
+    for DIR in $UTILITY2_DEPENDENTS
+    do
+        printf "'$(npm info $DIR version) $DIR',\n"
+    done
+    printf "].sort()\n"
 )}
 
 shXvfbStart() {
@@ -2020,45 +2057,4 @@ shXvfbStart() {
     (Xvfb "$DISPLAY" &) 2>/dev/null || true
 }
 
-shMain() {
-# this function will run the main program
-    export UTILITY2_DEPENDENTS="db-lite
-        electron-lite
-        istanbul-lite
-        jslint-lite
-        swgg
-        uglifyjs-lite
-        utility2" || return $?
-    local COMMAND || return $?
-    if [ ! "$1" ]
-    then
-      return $?
-    fi
-    COMMAND="$1" || return $?
-    shift || return $?
-    case "$COMMAND" in
-    grep)
-        shGrep "$1" "$2" || return $?
-        ;;
-    shRun)
-        (shInit && "$COMMAND" "$@") || return $?
-        ;;
-    shRunScreenCapture)
-        (shInit && "$COMMAND" "$@") || return $?
-        ;;
-    start)
-        (shInit && export npm_config_mode_auto_restart=1 && export npm_config_mode_start=1 &&
-            shRun shIstanbulCover "$npm_config_dir_utility2/test.js" "$@") || return $?
-        ;;
-    test)
-        (shInit && shNpmTest "$@") || return $?
-        ;;
-    utility2Dirname)
-        (shInit && printf "$npm_config_dir_utility2") || return $?
-        ;;
-    *)
-        "$COMMAND" "$@" || return $?
-        ;;
-    esac
-}
 shMain "$@"

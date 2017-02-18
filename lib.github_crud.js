@@ -429,7 +429,7 @@
         local.fs = require('fs');
         local.path = require('path');
         // init exports
-        module.exports = module['./lib.github-crud.js'] = local;
+        module.exports = module['./lib.github_crud.js'] = local;
         module.exports.__dirname = __dirname;
         // run the cli
         if (module !== require.main || local.global.utility2_rollup) {

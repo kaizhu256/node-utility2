@@ -2,7 +2,7 @@ utility2
 ========
 this zero-dependency package will run dynamic browser-tests with coverage (via electron and istanbul)
 
-[![travis-ci.org build-status](https://api.travis-ci.org/kaizhu256/node-utility2.svg)](https://travis-ci.org/kaizhu256/node-utility2) [![istanbul coverage](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/coverage.html/index.html)
+[![travis-ci.org build-status](https://api.travis-ci.org/kaizhu256/node-utility2.svg)](https://travis-ci.org/kaizhu256/node-utility2) [![istanbul-coverage](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/coverage.html/index.html)
 
 [![NPM](https://nodei.co/npm/utility2.png?downloads=true)](https://www.npmjs.com/package/utility2)
 
@@ -12,7 +12,6 @@ this zero-dependency package will run dynamic browser-tests with coverage (via e
 
 # cdn download
 - [https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/assets.utility2.rollup.js](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/assets.utility2.rollup.js)
-- [https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/assets.utility2.rollup.min.js](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/assets.utility2.rollup.min.js)
 
 
 
@@ -25,27 +24,27 @@ this zero-dependency package will run dynamic browser-tests with coverage (via e
 
 # documentation
 #### api-doc
-- [https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/doc.api.html](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/doc.api.html)
+- [https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/api-doc.html](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/api-doc.html)
 
-[![api-doc](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/screen-capture.docApiCreate.browser._2Fhome_2Ftravis_2Fbuild_2Fkaizhu256_2Fnode-utility2_2Ftmp_2Fbuild_2Fdoc.api.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/doc.api.html)
+[![api-doc](https://kaizhu256.github.io/node-utility2/build/screen-capture.apiDoc.browser._2Fhome_2Ftravis_2Fbuild_2Fkaizhu256_2Fnode-utility2_2Ftmp_2Fbuild_2Fapi-doc.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/api-doc.html)
 
 #### todo
+- revamp shell-function shNpmPublishAlias
 - add utility2.middlewareLimit
 - add server stress test using electron
 - none
 
-#### change since a51b1c88
-- npm publish 2017.2.6
-- allow env var npm_config_mode_test_case to have comma-separated list of test-cases
-- replace function requestResponseCleanup with streamListCleanup
-- don't use nameAlias in assets
-- rename base64 functions with base64 as prefix
-- add commandline options --eval -e --interactive -i
-- add env var npm_pacakge_nameHeroku
-- add function assetsAlias
-- add shell-functions shUtility2DependentsSync shUtility2RollupCreate
-- merge files lib.* into standaalone file assets.utility2.rollup.js
-- merge files lib.swgg.* into lib.swgg.js
+#### change since 1871110c
+- npm publish 2017.2.18
+- add shell-function shReadmeTestExampleJs
+- do not auto-uglify js-assets in production
+- rename doc-api to api-doc
+- rename hrku01 to h1
+- rename local.template* to local.assetsDict[assets.*.template]
+- revamp function buildApiDoc
+- revamp function buildReadme and include testCase_buildReadme_default inside testCase_buildApp_default
+- remove functions assetsAlias, assetsWrite
+- use env var npm_package_nameAlias over npm_package_name
 - none
 
 #### this package requires
@@ -54,15 +53,15 @@ this zero-dependency package will run dynamic browser-tests with coverage (via e
 
 
 
-# build-status [![travis-ci.org build-status](https://api.travis-ci.org/kaizhu256/node-utility2.svg)](https://travis-ci.org/kaizhu256/node-utility2)
+# build status [![travis-ci.org build-status](https://api.travis-ci.org/kaizhu256/node-utility2.svg)](https://travis-ci.org/kaizhu256/node-utility2)
 [![build commit status](https://kaizhu256.github.io/node-utility2/build/build.badge.svg)](https://travis-ci.org/kaizhu256/node-utility2)
 
 | git-branch : | [master](https://github.com/kaizhu256/node-utility2/tree/master) | [beta](https://github.com/kaizhu256/node-utility2/tree/beta) | [alpha](https://github.com/kaizhu256/node-utility2/tree/alpha)|
 |--:|:--|:--|:--|
 | test-server-1 : | [![github.com test-server](https://kaizhu256.github.io/node-utility2/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/app/index.html) | [![github.com test-server](https://kaizhu256.github.io/node-utility2/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/index.html) | [![github.com test-server](https://kaizhu256.github.io/node-utility2/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/app/index.html)|
-| test-server-2 : | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://hrku01-utility2-master.herokuapp.com) | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://hrku01-utility2-beta.herokuapp.com) | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://hrku01-utility2-alpha.herokuapp.com)|
+| test-server-2 : | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://h1-utility2-master.herokuapp.com) | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://h1-utility2-beta.herokuapp.com) | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://h1-utility2-alpha.herokuapp.com)|
 | test-report : | [![test-report](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/test-report.html) | [![test-report](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/test-report.html) | [![test-report](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/test-report.html)|
-| coverage : | [![istanbul coverage](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/coverage.html/index.html) | [![istanbul coverage](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/coverage.html/index.html) | [![istanbul coverage](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/coverage.html/index.html)|
+| coverage : | [![istanbul-coverage](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/coverage.html/index.html) | [![istanbul-coverage](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/coverage.html/index.html) | [![istanbul-coverage](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/coverage.html/index.html)|
 | build-artifacts : | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..master..travis-ci.org) | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..beta..travis-ci.org) | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..alpha..travis-ci.org)|
 
 #### master branch
@@ -118,22 +117,22 @@ shExampleSh
 /*
 example.js
 
-this script will demo automated browser-tests with coverage
-(via istanbul and electron)
+this script will demo automated browser-tests with coverage (via electron and istanbul)
 
 instruction
     1. save this script as example.js
     2. run the shell command:
         $ npm install electron-lite utility2 && \
-            export PATH="$(pwd)/node_modules/.bin:$PATH" && \
-            export PORT=8081 && \
-            export npm_config_mode_coverage=utility2 && \
+            PATH="$(pwd)/node_modules/.bin:$PATH" \
+            PORT=8081 \
+            npm_config_mode_coverage=utility2 \
             node_modules/.bin/utility2 test example.js
     3. view test-report in ./tmp/build/test-report.html
     4. view coverage in ./tmp/build/coverage.html/index.html
 */
 
-/* istanbul instrument in package utility2 */
+
+
 /*jslint
     bitwise: true,
     browser: true,
@@ -144,7 +143,6 @@ instruction
     regexp: true,
     stupid: true
 */
-
 (function () {
     'use strict';
     var local;
@@ -179,12 +177,6 @@ instruction
             : require('utility2'));
         // export local
         local.global.local = local;
-        // init env
-        local.objectSetDefault(local.env, {
-            npm_package_description: 'undefined module',
-            npm_package_name: 'undefined',
-            npm_package_version: '0.0.1'
-        });
         // run test-server
         local.testRunServer(local);
         // init assets
@@ -194,9 +186,8 @@ instruction
 
 
 
-    // run browser js-env code - post-init
+    // run browser js-env code - function
     case 'browser':
-        // init tests
         local.testCase_ajax_200 = function (options, onError) {
         /*
          * this function will test ajax's "200 ok" handling-behavior
@@ -204,14 +195,16 @@ instruction
             options = {};
             // test ajax-path 'assets.hello'
             local.ajax({ url: 'assets.hello' }, function (error, xhr) {
-                local.tryCatchOnError(function () {
+                try {
                     // validate no error occurred
                     local.assert(!error, error);
                     // validate data
                     options.data = xhr.responseText;
                     local.assert(options.data === 'hello', options.data);
                     onError();
-                }, onError);
+                } catch (errorCaught) {
+                    onError(errorCaught);
+                }
             });
         };
         local.testCase_ajax_404 = function (options, onError) {
@@ -221,17 +214,18 @@ instruction
             options = {};
             // test ajax-path '/undefined'
             local.ajax({ url: '/undefined' }, function (error) {
-                local.tryCatchOnError(function () {
+                try {
                     // validate error occurred
                     local.assert(error, error);
                     options.statusCode = error.statusCode;
                     // validate 404 http statusCode
                     local.assert(options.statusCode === 404, options.statusCode);
                     onError();
-                }, onError);
+                } catch (errorCaught) {
+                    onError(errorCaught);
+                }
             });
         };
-        /* istanbul ignore next */
         local.testRun = function (event) {
             switch (event && event.currentTarget && event.currentTarget.id) {
             case 'testRunButton1':
@@ -298,7 +292,27 @@ instruction
                     document.querySelector('#outputTextarea2').scrollHeight;
             }
         };
-        /* istanbul ignore next */
+        break;
+
+
+
+    // run node js-env code - function
+    case 'node':
+        local.testCase_webpage_default = function (options, onError) {
+        /*
+         * this function will test the webpage's default handling-behavior
+         */
+            options = { modeCoverageMerge: true, url: local.serverLocalHost + '?modeTest=1' };
+            local.browserTest(options, onError);
+        };
+        break;
+    }
+    switch (local.modeJs) {
+
+
+
+    // run browser js-env code - post-init
+    case 'browser':
         // log stderr and stdout to #outputTextarea2
         ['error', 'log'].forEach(function (key) {
             console['_' + key] = console[key];
@@ -326,28 +340,22 @@ instruction
 
     // run node js-env code - post-init
     case 'node':
-        // init tests
-        local.testCase_webpage_default = function (options, onError) {
-        /*
-         * this function will test the webpage's default handling-behavior
-         */
-            options = { modeCoverageMerge: true, url: local.serverLocalHost + '?modeTest=1' };
-            local.browserTest(options, onError);
-        };
         // export local
         module.exports = local;
+        // require modules
+        local.fs = require('fs');
+        local.http = require('http');
+        local.url = require('url');
         // init assets
-        local.tryCatchOnError(function () {
-            local.assetsDict['/assets.example.js'] = local.fs.readFileSync(__filename, 'utf8');
-        }, local.nop);
+        local.assetsDict = local.assetsDict || {};
         /* jslint-ignore-begin */
-        local.templateIndexHtml = '\
+        local.assetsDict['/assets.index.template.html'] = '\
 <!doctype html>\n\
 <html lang="en">\n\
 <head>\n\
 <meta charset="UTF-8">\n\
 <meta name="viewport" content="width=device-width, initial-scale=1">\n\
-<title>{{env.npm_package_name}} v{{env.npm_package_version}}</title>\n\
+<title>{{env.npm_package_nameAlias}} v{{env.npm_package_version}}</title>\n\
 <style>\n\
 /*csslint\n\
     box-sizing: false,\n\
@@ -357,7 +365,7 @@ instruction
     box-sizing: border-box;\n\
 }\n\
 body {\n\
-    background: #fff;\n\
+    background: #dde;\n\
     font-family: Arial, Helvetica, sans-serif;\n\
     margin: 2rem;\n\
 }\n\
@@ -374,7 +382,7 @@ body > * {\n\
 }\n\
 textarea {\n\
     font-family: monospace;\n\
-    height: 16rem;\n\
+    height: 15rem;\n\
     width: 100%;\n\
 }\n\
 textarea[readonly] {\n\
@@ -384,7 +392,7 @@ textarea[readonly] {\n\
 </head>\n\
 <body>\n\
 <!-- utility2-comment\n\
-    <div id="ajaxProgressDiv1" style="background: #d00; height: 4px; left: 0; margin: 0; padding: 0; position: fixed; top: 0; transition: background 0.5s, width 1.5s; width: 25%;"></div>\n\
+    <div id="ajaxProgressDiv1" style="background: #d00; height: 2px; left: 0; margin: 0; padding: 0; position: fixed; top: 0; transition: background 0.5s, width 1.5s; width: 25%;"></div>\n\
 utility2-comment -->\n\
     <h1>\n\
 <!-- utility2-comment\n\
@@ -395,7 +403,7 @@ utility2-comment -->\n\
             target="_blank"\n\
         >\n\
 utility2-comment -->\n\
-            {{env.npm_package_name}} v{{env.npm_package_version}}\n\
+            {{env.npm_package_nameAlias}} v{{env.npm_package_version}}\n\
 <!-- utility2-comment\n\
         </a>\n\
 utility2-comment -->\n\
@@ -444,13 +452,11 @@ utility2-comment -->\n\
             try {\n\
                 // validate no error occurred\n\
                 window.utility2.assert(!error, error);\n\
+                // validate "200 ok" status\n\
+                window.utility2.assert(xhr.statusCode === 200, xhr.statusCode);\n\
                 // validate non-empty data\n\
                 data = xhr.responseText;\n\
                 window.utility2.assert(data && data.length > 0, data);\n\
-                // validate "200 ok" status\n\
-                if (xhr.statusCode === 200) {\n\
-                    window.utility2.assert(data, data);\n\
-                }\n\
                 onError();\n\
             } catch (errorCaught) {\n\
                 onError(errorCaught);\n\
@@ -463,7 +469,7 @@ utility2-comment -->\n\
 </textarea>\n\
     <pre id="outputPreJsonStringify1"></pre>\n\
     <pre id="outputPreJslint1"></pre>\n\
-    <label>instrumented code</label>\n\
+    <label>instrumented-code</label>\n\
     <textarea id="outputTextareaIstanbul1" readonly></textarea>\n\
     <label>stderr and stdout</label>\n\
     <textarea id="outputTextarea2" readonly></textarea>\n\
@@ -473,7 +479,7 @@ utility2-comment -->\n\
     <div class="istanbulCoverageDiv"></div>\n\
 <!-- utility2-comment\n\
     {{#if isRollup}}\n\
-    <script src="assets.app.min.js"></script>\n\
+    <script src="assets.app.js"></script>\n\
     {{#unless isRollup}}\n\
 utility2-comment -->\n\
     <script src="assets.utility2.lib.istanbul.js"></script>\n\
@@ -494,8 +500,64 @@ utility2-comment -->\n\
 </html>\n\
 ';
         /* jslint-ignore-end */
-        local.assetsDict['/'] =
-            local.templateRender(local.templateIndexHtml, { env: local.env });
+        if (local.templateRender) {
+            local.assetsDict['/'] = local.templateRender(
+                local.assetsDict['/assets.index.template.html'],
+                {
+                    env: local.objectSetDefault(local.env, {
+                        npm_package_description: 'example module',
+                        npm_package_nameAlias: 'example',
+                        npm_package_version: '0.0.1'
+                    })
+                }
+            );
+        } else {
+            local.assetsDict['/'] = local.assetsDict['/assets.index.template.html']
+                .replace((/\{\{env\.(\w+?)\}\}/g), function (match0, match1) {
+                    // jslint-hack
+                    String(match0);
+                    switch (match1) {
+                    case 'npm_package_description':
+                        return 'example module';
+                    case 'npm_package_nameAlias':
+                        return 'example';
+                    case 'npm_package_version':
+                        return '0.0.1';
+                    }
+                });
+        }
+        // run the cli
+        if (local.global.utility2_rollup || module !== require.main) {
+            break;
+        }
+        local.assetsDict['/assets.example.js'] = local.assetsDict['/assets.example.js'] ||
+            local.fs.readFileSync(__filename, 'utf8');
+        local.assetsDict['/assets.utility2.rollup.js'] =
+            local.assetsDict['/assets.utility2.rollup.js'] || local.fs.readFileSync(
+                local.utility2.__dirname + '/lib.utility2.js',
+                'utf8'
+            ).replace((/^#!/), '//');
+        local.assetsDict['/favicon.ico'] = local.assetsDict['/favicon.ico'] || '';
+        // if $npm_config_timeout_exit exists,
+        // then exit this process after $npm_config_timeout_exit ms
+        if (Number(process.env.npm_config_timeout_exit)) {
+            setTimeout(process.exit, Number(process.env.npm_config_timeout_exit));
+        }
+        // start server
+        if (local.global.utility2_serverHttp1) {
+            break;
+        }
+        process.env.PORT = process.env.PORT || '8081';
+        console.log('server starting on port ' + process.env.PORT);
+        local.http.createServer(function (request, response) {
+            request.urlParsed = local.url.parse(request.url);
+            if (local.assetsDict[request.urlParsed.pathname] !== undefined) {
+                response.end(local.assetsDict[request.urlParsed.pathname]);
+                return;
+            }
+            response.statusCode = 404;
+            response.end();
+        }).listen(process.env.PORT);
         break;
     }
 }());
@@ -518,7 +580,7 @@ utility2-comment -->\n\
     "author": "kai zhu <kaizhu256@gmail.com>",
     "bin": {
         "utility2": "lib.utility2.sh",
-        "utility2-github-crud": "lib.github-crud.js",
+        "utility2-github-crud": "lib.github_crud.js",
         "utility2-istanbul": "lib.istanbul.js",
         "utility2-jslint": "lib.jslint.js",
         "utility2-uglifyjs": "lib.uglifyjs.js"
@@ -560,7 +622,7 @@ utility2-comment -->\n\
         "web"
     ],
     "license": "MIT",
-    "main": "lib.utility2",
+    "main": "lib.utility2.js",
     "name": "utility2",
     "nameAlias": "utility2",
     "os": [
@@ -581,7 +643,7 @@ utility2-comment -->\n\
         "test": "export PORT=$(./lib.utility2.sh shServerPortRandom) && export PORT_REPL=$(./lib.utility2.sh shServerPortRandom) && export npm_config_mode_auto_restart=1 && ./lib.utility2.sh test test.js",
         "test-all": "npm test --mode-coverage=all"
     },
-    "version": "2017.2.6"
+    "version": "2017.2.18"
 }
 ```
 
@@ -719,45 +781,9 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
 
 # this shell script will run the build for this package
 
-shBuildCiTestPre() {(set -e
-# this function will run the pre-test build
-    # test example.js
-    (export MODE_BUILD=testExampleJs &&
-        shFileTrimLeft tmp/README.example.js &&
-        shRunScreenCapture shReadmeTestJs example.js) || return $?
-    # screen-capture example.js coverage
-    (export MODE_BUILD=testExampleJs &&
-        export modeBrowserTest=screenCapture &&
-        export url=/tmp/app/tmp/build/coverage.html/app/example.js.html &&
-        shBrowserTest) || return $?
-    # screen-capture example.js test-report
-    (export MODE_BUILD=testExampleJs &&
-        export modeBrowserTest=screenCapture &&
-        export url=/tmp/app/tmp/build/test-report.html &&
-        shBrowserTest) || return $?
-    # test example.sh
-    (export MODE_BUILD=testExampleSh &&
-        npm run example.sh) || return $?
-    # test published-package
-    (export MODE_BUILD=npmTestPublished &&
-        shRunScreenCapture shNpmTestPublished) || return $?
-)}
-
-shBuildCiTestPost() {(set -e
-# this function will run the post-test build
-    # if running legacy-node, then return
-    [ "$(node --version)" \< "v7.0" ] && return || true
-    export NODE_ENV=production
-    # deploy app to gh-pages
-    (export MODE_BUILD=deployGithub &&
-        shDeployGithub) || return $?
-    # deploy app to heroku
-    (export MODE_BUILD=deployHeroku &&
-        shDeployHeroku) || return $?
-)}
-
 shBuild() {(set -e
 # this function will run the main build
+    #!! coverage-hack
     # init env
     . ./lib.utility2.sh && shInit
     # cleanup github-gh-pages dir
@@ -809,5 +835,39 @@ shBuild() {(set -e
         docker push "$GITHUB_REPO:$DOCKER_TAG"
     fi
 )}
+
+shBuildCiTestPost() {(set -e
+# this function will run the post-test build
+    # if running legacy-node, then return
+    [ "$(node --version)" \< "v7.0" ] && return || true
+    export NODE_ENV=production
+    # deploy app to gh-pages
+    (export MODE_BUILD=deployGithub && shDeployGithub) || return $?
+    # deploy app to heroku
+    (export MODE_BUILD=deployHeroku && shDeployHeroku) || return $?
+)}
+
+shBuildCiTestPre() {(set -e
+# this function will run the pre-test build
+    # test example.js
+    (export MODE_BUILD=testExampleJs &&
+        shFileTrimLeft tmp/README.example.js &&
+        shRunScreenCapture shReadmeTestExampleJs) || return $?
+    # screen-capture example.js coverage
+    (export MODE_BUILD=testExampleJs &&
+        export modeBrowserTest=screenCapture &&
+        export url=/tmp/app/tmp/build/coverage.html/app/example.js.html &&
+        shBrowserTest) || return $?
+    # screen-capture example.js test-report
+    (export MODE_BUILD=testExampleJs &&
+        export modeBrowserTest=screenCapture &&
+        export url=/tmp/app/tmp/build/test-report.html &&
+        shBrowserTest) || return $?
+    # test example.sh
+    (export MODE_BUILD=testExampleSh && npm run example.sh) || return $?
+    # test published-package
+    (export MODE_BUILD=npmTestPublished && shRunScreenCapture shNpmTestPublished) || return $?
+)}
+
 shBuild
 ```

@@ -2,7 +2,7 @@
     "author": "kai zhu <kaizhu256@gmail.com>",
     "bin": {
         "utility2": "lib.utility2.sh",
-        "utility2-github-crud": "lib.github-crud.js",
+        "utility2-github-crud": "lib.github_crud.js",
         "utility2-istanbul": "lib.istanbul.js",
         "utility2-jslint": "lib.jslint.js",
         "utility2-uglifyjs": "lib.uglifyjs.js"
@@ -44,7 +44,7 @@
         "web"
     ],
     "license": "MIT",
-    "main": "lib.utility2",
+    "main": "lib.utility2.js",
     "name": "utility2",
     "nameAlias": "utility2",
     "os": [
@@ -65,5 +65,5 @@
         "test": "export PORT=$(./lib.utility2.sh shServerPortRandom) && export PORT_REPL=$(./lib.utility2.sh shServerPortRandom) && export npm_config_mode_auto_restart=1 && ./lib.utility2.sh test test.js",
         "test-all": "npm test --mode-coverage=all"
     },
-    "version": "2017.2.6"
+    "version": "2017.2.18"
 }

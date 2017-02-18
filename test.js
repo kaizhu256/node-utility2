@@ -64,6 +64,14 @@
 
     // run shared js-env code - function
     (function () {
+        local._serverLocalUrlTest = function (url) {
+        /*
+         * this function will test if the url is local
+         */
+            url = local.urlParse(url).pathname;
+            return local.modeJs === 'browser' && url.indexOf('/test.') === 0;
+        };
+
         local._testCase_testRunDefault_failure = function (options, onError) {
         /*
          * this function will test testRunDefault's failure handling-behavior
@@ -398,65 +406,12 @@
             onError();
         };
 
-        local.testCase_assetsAlias_default = function (options, onError) {
-        /*
-         * this function will test assetsAlias's default handling-behavior
-         */
-            options = [
-                [local, { assetsDict: {} }]
-            ];
-            local.testMock(options, function (onError) {
-                local.assetsDict['/assets.aa.js'] = 'aa';
-                local.assetsAlias('/assets.bb.js', '/assets.aa.js');
-                local.assertJsonEqual(local.assetsDict['/assets.bb.js'], 'aa');
-                local.assertJsonEqual(local.assetsDict['/assets.bb.min.js'], undefined);
-                local.assetsDict['/assets.aa.js'] = 'bb';
-                local.assetsDict['/assets.aa.min.js'] = 'cc';
-                local.assetsAlias('/assets.bb.js', '/assets.aa.js');
-                local.assertJsonEqual(local.assetsDict['/assets.bb.js'], 'aa');
-                local.assertJsonEqual(local.assetsDict['/assets.bb.min.js'], undefined);
-                local.assetsAlias('/assets.bb.js', '/assets.aa.js', 'force');
-                local.assertJsonEqual(local.assetsDict['/assets.bb.js'], 'bb');
-                local.assertJsonEqual(local.assetsDict['/assets.bb.min.js'], 'cc');
-                onError();
-            }, onError);
-        };
-
-        local.testCase_assetsWrite_default = function (options, onError) {
-        /*
-         * this function will test assetsWrite's default handling-behavior
-         */
-            options = [
-                [local.assetsDict, { 'testCase_assetsWrite_default.js': '' }],
-                [local.env, { NODE_ENV: '' }]
-            ];
-            local.testMock(options, function (onError) {
-                // test no production-mode handling-behavior
-                local.env.NODE_ENV = '';
-                local.assetsWrite('testCase_assetsWrite_default.js', 'aa = 1');
-                // validate data
-                local.assertJsonEqual(
-                    local.assetsDict['testCase_assetsWrite_default.min.js'],
-                    'aa = 1'
-                );
-                // test production-mode handling-behavior
-                local.env.NODE_ENV = 'production';
-                local.assetsWrite('testCase_assetsWrite_default.js', 'aa = 1');
-                // validate data
-                local.assertJsonEqual(
-                    local.assetsDict['testCase_assetsWrite_default.min.js'],
-                    'aa=1'
-                );
-                onError();
-            }, onError);
-        };
-
         local.testCase_base64Xxx_default = function (options, onError) {
         /*
          * this function will test base64Xxx's default handling-behavior
          */
             options = {};
-            options.base64 = local.base64FromString(local.stringAsciiCharset);
+            options.base64 = local.base64FromString(local.stringAsciiCharset + '\u1234');
             local.assertJsonEqual(
                 local.base64FromBuffer(local.base64ToBuffer(options.base64)),
                 options.base64
@@ -600,41 +555,6 @@
                 );
                 onError();
             }, onError);
-        };
-
-        local.testCase_docApiCreate_default = function (options, onError) {
-        /*
-         * this function will test docApiCreate's default handling-behavior
-         */
-            /*jslint evil: true*/
-            options = {};
-            options.data = local.docApiCreate({
-                moduleDict: {
-                    // test module.exports is a function handling-behavior
-                    function: {
-                        example: '',
-                        exports: local.objectSetDefault(local.nop.bind(null), { aa: 1 })
-                    },
-                    // test default handling-behavior
-                    utility2: {
-                        example: local.testRunDefault.toString().replace((/;/g), ';\n    ') +
-                            '\n\n\n\n\n\n\n\nfunction nop(\n\n\n\n\n\n\n\n',
-                        exports: local
-                    }
-                }
-            });
-            // validate data
-            local.assert(new RegExp('\n' +
-                ' *?<h2>\n' +
-                ' *?<a href="#element.utility2.nop" id="element.utility2.nop">\n' +
-                ' *?function <span class="docApiSignatureSpan">utility2.</span>nop\n' +
-                ' *?<span class="docApiSignatureSpan">\\(\\s*?\\)</span>\n' +
-                ' *?</a>\n' +
-                ' *?</h2>\n' +
-                ' *?<ul>\n' +
-                ' *?<li>description and source code<pre class="docApiCodePre">')
-                .test(options.data), options.data);
-            onError();
         };
 
         local.testCase_echo_default = function (options, onError) {
@@ -1666,12 +1586,6 @@
             local.assert(local.regexpUuidValidate.test(options.data), options.data);
             onError();
         };
-
-        // init serverLocal
-        local._serverLocalUrlTest = function (url) {
-            url = local.urlParse(url).pathname;
-            return local.modeJs === 'browser' && url.indexOf('/test.') === 0;
-        };
     }());
     switch (local.modeJs) {
 
@@ -1778,66 +1692,17 @@
             options.onNext();
         };
 
-        local.testCase_buildReadmeElectronLite_app = function (options, onError) {
+        local.testCase_buildApiDoc_default = function (options, onError) {
         /*
-         * this function will test buildReadmeElectronLite's app handling-behavior
+         * this function will test buildApiDoc's handling-behavior
          */
-            local.testMock([
-                [local.fs, { writeFileSync: local.nop }]
-            ], function (onError) {
-                options = {};
-                options.readmeFrom = local.fs.readFileSync('README.md', 'utf8');
-                options.readmeTo = local.templateReadme;
-                local.buildReadmeElectronLite(options, onError);
-            }, onError);
-        };
-
-        local.testCase_build_app = function (options, onError) {
-        /*
-         * this function will test build's app handling-behavior
-         */
-            options = [{
-                file: '/assets.' + local.env.npm_package_name + '.rollup.js',
-                url: '/assets.' + local.env.npm_package_name + '.rollup.js'
-            }, {
-                file: '/assets.hello',
-                url: '/assets.hello'
-            }, {
-                file: '/assets.script-only.html',
-                url: '/assets.script-only.html'
-            }, {
-                file: '/assets.utility2.lib.db.js',
-                url: '/assets.utility2.lib.db.js'
-            }, {
-                file: '/assets.utility2.lib.istanbul.js',
-                url: '/assets.utility2.lib.istanbul.js'
-            }, {
-                file: '/assets.utility2.lib.jslint.js',
-                url: '/assets.utility2.lib.jslint.js'
-            }, {
-                file: '/assets.utility2.lib.sjcl.js',
-                url: '/assets.utility2.lib.sjcl.js'
-            }, {
-                file: '/assets.utility2.lib.uglifyjs.js',
-                url: '/assets.utility2.lib.uglifyjs.js'
-            }, {
-                file: '/package.json',
-                url: '/package.json'
-            }];
-            local.buildApp(options, onError);
-        };
-
-        local.testCase_build_doc = function (options, onError) {
-        /*
-         * this function will test build's doc handling-behavior
-         */
-            // coverage-hack
+            // test $npm_config_mode_coverage = all handling-behavior
             local.testMock([
                 [local.env, { npm_config_mode_coverage: 'all' }]
             ], function (onError) {
-                local.buildDoc(null, onError);
+                local.buildApiDoc(null, onError);
             }, local.nop);
-            options = { moduleDict: {
+            options = { blacklistDict: {}, moduleDict: {
                 'utility2.Blob': {
                     exampleFileList: [],
                     exports: local.Blob
@@ -1883,39 +1748,71 @@
                     exports: local.uglifyjs
                 }
             } };
-            local.buildDoc(options, onError);
+            local.buildApiDoc(options, onError);
         };
 
-        local.testCase_build_readme = function (options, onError) {
+        local.testCase_buildApp_default = function (options, onError) {
         /*
-         * this function will test build's readme handling-behavior
+         * this function will test buildApp's handling-behavior
+         */
+            local.testCase_buildReadme_default(options, local.onErrorDefault);
+            options = [{
+                file: '/assets.hello',
+                url: '/assets.hello'
+            }, {
+                file: '/assets.script-only.html',
+                url: '/assets.script-only.html'
+            }, {
+                file: '/assets.swgg.rollup.js',
+                url: '/assets.swgg.rollup.js'
+            }, {
+                file: '/assets.utility2.lib.db.js',
+                url: '/assets.utility2.lib.db.js'
+            }, {
+                file: '/assets.utility2.lib.istanbul.js',
+                url: '/assets.utility2.lib.istanbul.js'
+            }, {
+                file: '/assets.utility2.lib.jslint.js',
+                url: '/assets.utility2.lib.jslint.js'
+            }, {
+                file: '/assets.utility2.lib.sjcl.js',
+                url: '/assets.utility2.lib.sjcl.js'
+            }, {
+                file: '/assets.utility2.lib.uglifyjs.js',
+                url: '/assets.utility2.lib.uglifyjs.js'
+            }, {
+                file: '/package.json',
+                url: '/package.json'
+            }];
+            local.buildApp(options, onError);
+        };
+
+        local.testCase_buildReadme_default = function (options, onError) {
+        /*
+         * this function will test buildReadme's handling-behavior
          */
             options = {};
-            options.readmeFrom = local.fs.readFileSync('README.md', 'utf8');
-            options.readmeTo = local.templateReadme;
-/* jslint-ignore-begin */
-options.readmeTo = options.readmeTo.replace('\
-    <button class="onclick" id="testRunButton1">run internal test</button><br>\\n\\\n\
-    <div id="testReportDiv1" style="display: none;"></div>\\n\\\n\
-', '');
-/* jslint-ignore-end */
-            // search-and-replace readmeFrom
-            [
-                (/\n<!-- utility2-comment\\n\\\n[\S\s]*?\n\\n\\\n/)
-            ].forEach(function (rgx) {
-                options.readmeTo.replace(rgx, function (match0) {
-                    options.readmeFrom = options.readmeFrom.replace(rgx, match0);
+            options.customize = function () {
+                // search-and-replace - customize readmeTo
+                [
+                    // customize quickstart-example.sh
+                    new RegExp('\\n- commit history may be rewritten\\n[\\S\\s]*\\n#### ' +
+                        'to run this example, follow the instruction in the script below\\n'),
+                    // customize quickstart-instruction
+                    (/\ninstruction[^`]*?\n\n/),
+                    // customize quickstart-footer
+                    (/download standalone app[^`]*?<\/body>/),
+                    (/```[^`]*?# package.json/),
+                    // customize build-script
+                    (/shBuild\(\)[^`]*?\)\}/),
+                    (/shBuildCiTestPre[^`]*?\)\}/)
+                ].forEach(function (rgx) {
+                    options.readmeFrom.replace(rgx, function (match0) {
+                        options.readmeTo = options.readmeTo.replace(rgx, match0);
+                    });
                 });
-            });
-            // search-and-replace readmeTo
-            [
-                (/\n# quickstart\b[\S\s]*?\n# package.json\n/)
-            ].forEach(function (rgx) {
-                options.readmeFrom.replace(rgx, function (match0) {
-                    options.readmeTo = options.readmeTo.replace(rgx, match0);
-                });
-            });
-            local.buildReadmeJslintLite(options, onError);
+            };
+            local.buildReadme(options, onError);
         };
 
         local.testCase_fsWriteFileWithMkdirpSync_default = function (options, onError) {
@@ -2411,8 +2308,6 @@ local.assertJsonEqual(options.coverage1,
         if (module !== require.main || local.global.utility2_rollup) {
             return;
         }
-        // require modules
-        require('./lib.swgg.js');
         local.assetsDict['/assets.script-only.html'] = '<h1>script-only test</h1>\n' +
                 '<script src="assets.utility2.js"></script>\n' +
                 '<script>window.utility2.onReadyBefore.counter += 1;</script>\n' +
@@ -2435,7 +2330,7 @@ local.assertJsonEqual(options.coverage1,
             local.Module.runMain();
         }
         switch (local.env.HEROKU_APP_NAME) {
-        case 'hrku01-cron':
+        case 'h1-cron':
             local.cronJob = local.nop;
             // update cron
             local.ajax({
@@ -2457,7 +2352,7 @@ local.assertJsonEqual(options.coverage1,
                 // cron every 5 minutes
                 if (local.cronTime.getUTCMinutes() % 5 === 0) {
                     // heroku-keepalive
-                    local.ajax({ url: 'https://hrku01-cron.herokuapp.com' }, local.nop);
+                    local.ajax({ url: 'https://h1-cron.herokuapp.com' }, local.nop);
                     // update cron
                     local.ajax({
                         url: 'https://kaizhu256.github.io/node-utility2/cronJob.js'

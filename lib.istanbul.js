@@ -12,20 +12,18 @@
 */
 (function (local) {
     'use strict';
-    var __dirname, nop, process, require;
+    var __dirname, process, require;
 
 
 
     // run shared js-env code - pre-init
     (function () {
-        // init var
+        // jslint-hack
+        local.nop(__dirname);
         __dirname = '';
-        nop = function () {
-        /*
-         * this function will do nothing
-         */
-            return;
-        };
+        /* istanbul ignore next */
+        local.global.__coverageCodeDict__ = local.global.__coverageCodeDict__ || {};
+        local['./package.json'] = {};
         process = local.modeJs === 'browser'
             ? {
                 cwd: function () {
@@ -36,16 +34,10 @@
             : local.process;
         require = function (key) {
             try {
-                return local[key] || local.require2(key);
+                return local[key] || local.require(key);
             } catch (ignore) {
             }
         };
-        // jslint-hack
-        nop(__dirname);
-        // init local properties
-        local['./package.json'] = {};
-        /* istanbul ignore next */
-        local.global.__coverageCodeDict__ = local.global.__coverageCodeDict__ || {};
     }());
 
 
@@ -135,6 +127,8 @@
             }
             // init writer
             local.coverageReportHtml = '';
+            local.coverageReportHtml +=
+                '<div style="background: #fff; border: 1px solid #000; margin 0; padding: 0;">';
             local.writerData = '';
             options.sourceStore = {};
             options.writer = local.writer;
@@ -144,20 +138,20 @@
             }
             // 2. write coverage in html-format to filesystem
             new local.HtmlReport(options).writeReport(local.collector);
-            local.writer.writeFile('', nop);
+            local.writer.writeFile('', local.nop);
             // write coverage.json
-            local.fsWriteFileWithMkdirpSync(
+            local.fsWriteFileWithMkdirpSync2(
                 options.dir + '/coverage.json',
                 JSON.stringify(local.global.__coverage__)
             );
             // write coverage.code-dict.json
-            local.fsWriteFileWithMkdirpSync(
+            local.fsWriteFileWithMkdirpSync2(
                 options.dir + '/coverage.code-dict.json',
                 JSON.stringify(local.global.__coverageCodeDict__)
             );
             // write coverage.badge.svg
             options.pct = local.coverageReportSummary.root.metrics.lines.pct;
-            local.fsWriteFileWithMkdirpSync(
+            local.fsWriteFileWithMkdirpSync2(
                 local.path.dirname(options.dir) + '/coverage.badge.svg',
                 local.templateCoverageBadgeSvg
                     // edit coverage badge percent
@@ -175,6 +169,7 @@
                 document.querySelector('.istanbulCoverageDiv').innerHTML =
                     local.coverageReportHtml;
             }
+            local.coverageReportHtml += '</div>';
             return local.coverageReportHtml;
         };
 
@@ -198,18 +193,9 @@
             }
             if (local.modeJs === 'node' && process.env.npm_package_homepage) {
                 file = file
-                    .replace(
-                        '{{env.npm_package_homepage}}',
-                        process.env.npm_package_homepage
-                    )
-                    .replace(
-                        '{{env.npm_package_name}}',
-                        process.env.npm_package_name
-                    )
-                    .replace(
-                        '{{env.npm_package_version}}',
-                        process.env.npm_package_version
-                    );
+                    .replace('{{env.npm_package_homepage}}', process.env.npm_package_homepage)
+                    .replace('{{env.npm_package_name}}', process.env.npm_package_name)
+                    .replace('{{env.npm_package_version}}', process.env.npm_package_version);
             } else {
                 file = file.replace((/<h1 [\S\s]*<\/h1>/), '<h1>&nbsp;</h1>');
             }
@@ -220,32 +206,11 @@
             return [];
         };
 
-        local.fs.writeFileSync = nop;
-
-        local.fsWriteFileWithMkdirpSync = function (file, data) {
-        /*
-         * this function will synchronously 'mkdir -p' and write the data to file
-         */
-            // try to write to file
-            try {
-                require('fs').writeFileSync(file, data);
-            } catch (errorCaught) {
-                // mkdir -p
-                require('child_process').spawnSync(
-                    'mkdir',
-                    ['-p', require('path').dirname(file)],
-                    { stdio: ['ignore', 1, 2] }
-                );
-                // re-write to file
-                require('fs').writeFileSync(file, data);
-            }
-        };
-
         /* istanbul ignore next */
         local.instrumentInPackage = function (code, file) {
         /*
          * this function will instrument the code
-         * only if if the macro /\* istanbul instrument in package $npm_package_name *\/
+         * only if the macro /\* istanbul instrument in package $npm_package_name *\/
          * exists in the code
          */
             return process.env.npm_config_mode_coverage &&
@@ -277,7 +242,7 @@
                 noAutoWrap: true
             }).instrumentSync(code, file);
         };
-        local.util = { inherits: nop };
+        local.util = { inherits: local.nop };
     }());
     switch (local.modeJs) {
 
@@ -303,10 +268,9 @@
     // run node js-env code - pre-init
     case 'node':
         // require modules
-        local._fs = local.require2('fs');
-        local.fs.writeFileSync = local._fs.writeFileSync;
+        local._fs = local.require('fs');
         local.module = require('module');
-        local.path = local.require2('path');
+        local.path = local.require('path');
         // init exports
         module.exports = module['./lib.istanbul.js'] = local;
         break;
@@ -1565,7 +1529,7 @@ G({},t),exports.browser=!1,exports.FORMAT_MINIFY=N,exports.FORMAT_DEFAULTS=C})()
                     (/\{\{#with (.+?)\}\}([\S\s]+?)\{\{\/with\}\}/g),
                     function (match0, match1, match2) {
                         // jslint-hack
-                        nop(match0);
+                        local.nop(match0);
                         return local.handlebars.replace(match2, dict, match1 + '.');
                     }
                 );
@@ -1969,7 +1933,7 @@ local['./common/defaults'] = module.exports; }());
     (function () {
         // https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/index.js
         local['./index'] = {
-            call: nop,
+            call: local.nop,
             mix: function (klass, prototype) {
                 klass.prototype = prototype;
             }
@@ -2226,7 +2190,7 @@ local['head.txt'] = '\
             writeFile: function (file, onError) {
                 local.coverageReportHtml += local.writerData + '\n\n';
                 if (local.writerFile) {
-                    local.fsWriteFileWithMkdirpSync(local.writerFile, local.writerData);
+                    local.fsWriteFileWithMkdirpSync2(local.writerFile, local.writerData);
                 }
                 local.writerData = '';
                 local.writerFile = file;
@@ -2484,7 +2448,7 @@ local.templateCoverageBadgeSvg =
         /*
          * this function will run the cli
          */
-            if ((module !== local.require2.main || local.global.utility2_rollup) &&
+            if ((module !== local.require.main || local.global.utility2_rollup) &&
                     !(options && options.runMain)) {
                 return;
             }
@@ -2580,11 +2544,40 @@ local.templateCoverageBadgeSvg =
         local = local.global.utility2_rollup || local;
         // init lib
         local.local = local.istanbul = local;
-        // init module
-        if (local.modeJs === 'node') {
+        local.fsWriteFileWithMkdirpSync = function (file, data) {
+        /*
+         * this function will synchronously 'mkdir -p' and write the data to file
+         */
+            // try to write to file
+            try {
+                require('fs').writeFileSync(file, data);
+            } catch (errorCaught) {
+                // mkdir -p
+                require('child_process').spawnSync(
+                    'mkdir',
+                    ['-p', require('path').dirname(file)],
+                    { stdio: ['ignore', 1, 2] }
+                );
+                // re-write to file
+                require('fs').writeFileSync(file, data);
+            }
+        };
+        local.nop = function () {
+        /*
+         * this function will do nothing
+         */
+            return;
+        };
+        switch (local.modeJs) {
+        case 'browser':
+            local.fsWriteFileWithMkdirpSync2 = local.nop;
+            break;
+        case 'node':
+            local.fsWriteFileWithMkdirpSync2 = local.fsWriteFileWithMkdirpSync;
             local.__dirname = __dirname;
             local.process = process;
-            local.require2 = require;
+            local.require = require;
+            break;
         }
         return local;
     }())
