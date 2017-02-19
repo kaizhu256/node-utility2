@@ -75,7 +75,7 @@
 
 
 
-/* !istanbul instrument in package db-lite */
+/* istanbul instrument in package db */
 /*jslint
     bitwise: true,
     browser: true,
@@ -2072,7 +2072,7 @@
 
 /* script-begin /assets.utility2.lib.istanbul.js */
 ///usr/bin/env node
-/* !istanbul instrument in package istanbul-lite */
+/* istanbul instrument in package istanbul */
 /*jslint
     bitwise: true,
     browser: true,
@@ -2267,7 +2267,7 @@
             if (local.modeJs === 'node' && process.env.npm_package_homepage) {
                 file = file
                     .replace('{{env.npm_package_homepage}}', process.env.npm_package_homepage)
-                    .replace('{{env.npm_package_name}}', process.env.npm_package_name)
+                    .replace('{{env.npm_package_nameAlias}}', process.env.npm_package_nameAlias)
                     .replace('{{env.npm_package_version}}', process.env.npm_package_version);
             } else {
                 file = file.replace((/<h1 [\S\s]*<\/h1>/), '<h1>&nbsp;</h1>');
@@ -2283,14 +2283,14 @@
         local.instrumentInPackage = function (code, file) {
         /*
          * this function will instrument the code
-         * only if the macro /\* istanbul instrument in package $npm_package_name *\/
+         * only if the macro /\* istanbul instrument in package $npm_package_nameAlias *\/
          * exists in the code
          */
             return process.env.npm_config_mode_coverage &&
                 code.indexOf('/* istanbul ignore all */\n') < 0 && (
                     process.env.npm_config_mode_coverage === 'all' ||
                     code.indexOf('/* istanbul instrument in package ' +
-                            process.env.npm_package_name + ' */\n') >= 0 ||
+                            process.env.npm_package_nameAlias + ' */\n') >= 0 ||
                     code.indexOf('/* istanbul instrument in package ' +
                             process.env.npm_config_mode_coverage + ' */\n') >= 0
                 )
@@ -4226,7 +4226,7 @@ local['head.txt'] = '\
 <body>\n\
 <div class="header {{reportClass}}">\n\
     <h1 style="font-weight: bold;">\n\
-        <a href="{{env.npm_package_homepage}}">{{env.npm_package_name}} v{{env.npm_package_version}}</a>\n\
+        <a href="{{env.npm_package_homepage}}">{{env.npm_package_nameAlias}} v{{env.npm_package_version}}</a>\n\
     </h1>\n\
     <h1>Code coverage report for <span class="entity">{{entity}}</span></h1>\n\
     <h2>\n\
@@ -4529,13 +4529,14 @@ local.templateCoverageBadgeSvg =
             // transparently adds coverage information to a node command
             case 'cover':
                 try {
-                    process.env.npm_package_name = process.env.npm_package_name || JSON.parse(
-                        local._fs.readFileSync('package.json', 'utf8')
-                    ).name;
+                    process.env.npm_package_nameAlias = process.env.npm_package_nameAlias ||
+                        JSON.parse(local._fs.readFileSync('package.json', 'utf8')).nameAlias ||
+                        JSON.parse(local._fs.readFileSync('package.json', 'utf8')).name;
                 } catch (ignore) {
                 }
                 process.env.npm_config_mode_coverage = process.env.npm_config_mode_coverage ||
-                    process.env.npm_package_name || 'all';
+                    process.env.npm_package_nameAlias ||
+                    'all';
                 // add coverage hook to require
                 local._moduleExtensionsJs = local.module._extensions['.js'];
                 local.module._extensions['.js'] = function (module, file) {
@@ -4662,7 +4663,7 @@ local.templateCoverageBadgeSvg =
 
 /* script-begin /assets.utility2.lib.jslint.js */
 ///usr/bin/env node
-/* !istanbul instrument in package jslint-lite */
+/* istanbul instrument in package jslint */
 /*jslint
     bitwise: true,
     browser: true,
@@ -7703,7 +7704,7 @@ sjcl.misc.scrypt.blockxor = function(S, Si, D, Di, len) {
 
 /* script-begin /assets.utility2.lib.uglifyjs.js */
 ///usr/bin/env node
-/* !istanbul instrument in package uglifyjs-lite */
+/* istanbul instrument in package uglifyjs */
 /*jslint
     bitwise: true,
     browser: true,
@@ -12271,6 +12272,10 @@ vendor\\)\\(\\b\\|[_s]\\)\
                 // alias require($npm_package_name) to utility2_moduleExports;
                 .replace(
                     "require('" + local.env.npm_package_name + "')",
+                    'global.utility2_moduleExports'
+                )
+                .replace(
+                    "require('" + local.env.npm_package_nameOriginal + "')",
                     'global.utility2_moduleExports'
                 )
                 // uncomment utility2-comment

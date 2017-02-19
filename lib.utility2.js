@@ -3862,6 +3862,10 @@ vendor\\)\\(\\b\\|[_s]\\)\
                     "require('" + local.env.npm_package_name + "')",
                     'global.utility2_moduleExports'
                 )
+                .replace(
+                    "require('" + local.env.npm_package_nameOriginal + "')",
+                    'global.utility2_moduleExports'
+                )
                 // uncomment utility2-comment
                 .replace((/<!-- utility2-comment\b([\S\s]+?)\butility2-comment -->/g), '$1');
             // jslint script

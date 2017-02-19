@@ -34,7 +34,7 @@
 
 
 
-/* istanbul instrument in package db-lite */
+/* istanbul instrument in package db */
 /*jslint
     bitwise: true,
     browser: true,

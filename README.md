@@ -29,22 +29,14 @@ this zero-dependency package will run dynamic browser-tests with coverage (via e
 [![api-doc](https://kaizhu256.github.io/node-utility2/build/screen-capture.apiDoc.browser._2Fhome_2Ftravis_2Fbuild_2Fkaizhu256_2Fnode-utility2_2Ftmp_2Fbuild_2Fapi-doc.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/api-doc.html)
 
 #### todo
-- revamp shell-function shNpmPublishAlias
 - add utility2.middlewareLimit
 - add server stress test using electron
 - none
 
-#### change since 1871110c
-- npm publish 2017.2.18
-- add shell-function shReadmeTestExampleJs
-- do not auto-uglify js-assets in production
-- rename doc-api to api-doc
-- rename hrku01 to h1
-- rename local.template* to local.assetsDict[assets.*.template]
-- revamp function buildApiDoc
-- revamp function buildReadme and include testCase_buildReadme_default inside testCase_buildApp_default
-- remove functions assetsAlias, assetsWrite
-- use env var npm_package_nameAlias over npm_package_name
+#### change since 5414add8
+- npm publish 2017.2.19
+- replace env var npm_package_name with npm_package_nameAlias in istanbul code-coverage
+- revamp shell-function shNpmPublishAlias
 - none
 
 #### this package requires
@@ -643,7 +635,7 @@ utility2-comment -->\n\
         "test": "export PORT=$(./lib.utility2.sh shServerPortRandom) && export PORT_REPL=$(./lib.utility2.sh shServerPortRandom) && export npm_config_mode_auto_restart=1 && ./lib.utility2.sh test test.js",
         "test-all": "npm test --mode-coverage=all"
     },
-    "version": "2017.2.18"
+    "version": "2017.2.19"
 }
 ```
 

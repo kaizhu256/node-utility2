@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* istanbul instrument in package jslint-lite */
+/* istanbul instrument in package jslint */
 /*jslint
     bitwise: true,
     browser: true,

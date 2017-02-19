@@ -341,9 +341,9 @@ shDockerCopyFromImage() {(set -e
 # http://stackoverflow.com/questions/25292198
 # /docker-how-can-i-copy-a-file-from-an-image-to-a-host
 # this function will copy the $FILE_FROM from the docker $IMAGE to $FILE_TO
+    IMAGE="$1"
     FILE_FROM="$2"
     FILE_TO="$3"
-    IMAGE="$1"
     # create $CONTAINER from $IMAGE
     CONTAINER="$(docker create "$IMAGE")"
     docker cp "$CONTAINER:$FILE_FROM" "$FILE_TO"
@@ -366,10 +366,10 @@ shDockerLogs() {(set -e
 
 shDockerNpmRestart() {(set -e
 # this function will npm-restart the app inside the docker-container $IMAGE:$NAME
+    NAME="$1"
+    IMAGE="$2"
     DIR="$3"
     DOCKER_PORT="$4"
-    IMAGE="$2"
-    NAME="$1"
     shDockerRestart $NAME $IMAGE /bin/bash -c "set -e
         curl https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/lib.utility2.sh > \
             /tmp/lib.utility2.sh
@@ -577,8 +577,8 @@ shDockerRmiUntagged() {(set -e
 shDockerSh() {(set -e
 # this function will run /bin/bash in the docker-container $NAME
     # http://www.gnu.org/software/bash/manual/html_node/Shell-Parameter-Expansion.html
-    COMMAND="${2:-/bin/bash}"
     NAME="$1"
+    COMMAND="${2:-/bin/bash}"
     docker start "$NAME"
     docker exec -it "$NAME" $COMMAND
 )}
@@ -914,8 +914,8 @@ Object.keys(local.fileDict).forEach(function (key) {
 
 shHtpasswdCreate() {(set -e
 # this function will create and print htpasswd to stdout
-    PASSWD="$2"
     USERNAME="$1"
+    PASSWD="$2"
     printf "$USERNAME:$(openssl passwd -apr1 "$PASSWD")"
 )}
 
@@ -1384,14 +1384,20 @@ shNpmPublish() {(set -e
 
 shNpmPublishAlias() {(set -e
 # this function will run npm-publish $NAME to $ALIAS
-    NAME="$1"
-    ALIAS="$2"
-    VERSION="$3"
+    ALIAS="$1"
+    NAME="$2"
+    NAME_INSTALL="$3"
+    if [ ! "$NAME_INSTALL" ]
+    then
+        NAME_INSTALL="$NAME"
+    fi
+    VERSION="$4"
     # init /tmp/app
     rm -fr /tmp/app /tmp/node_modules && mkdir -p /tmp/app
     # cd /tmp/app
     cd /tmp/app
-    curl "https://registry.npmjs.org/$NAME" > package.json
+    npm install "$NAME_INSTALL"
+    cd "/tmp/app/node_modules/$NAME"
     node -e "
 // <script>
 /*jslint
@@ -1409,26 +1415,21 @@ var local;
 local = {};
 local.fs = require('fs');
 local.packageJson = JSON.parse(local.fs.readFileSync('package.json'));
+// update name
+local.packageJson.name = '$ALIAS';
+// update nameOriginal
+local.packageJson.nameOriginal = '$NAME';
+// update version
+// jslint-hack
 local.version = '$VERSION';
-local.version = local.version || Object.keys(local.packageJson.versions).slice(-1)[0];
-local.fs.writeFileSync('README.md', local.packageJson.readme
-    .replace('this zero-dependency package', 'this package'));
-local.fs.writeFileSync('index.js', 'module.exports = require(\'$NAME\')');
-local.fs.writeFileSync('package.json', JSON.stringify({
-    author: local.packageJson.author,
-    bugs: local.packageJson.bugs,
-    dependencies: { '$NAME': local.version },
-    description: local.packageJson.description
-        .replace('this zero-dependency package', 'this package'),
-    homepage: local.packageJson.homepage,
-    keywords: local.packageJson.keywords,
-    license: local.packageJson.license,
-    maintainers: local.packageJson.maintainers,
-    name: '$ALIAS',
-    repository: local.packageJson.repository,
-    users: local.packageJson.users,
-    version: local.version
-}, null, 4));
+local.packageJson.version = local.version || local.packageJson.version;
+// remove meta-info
+Object.keys(local.packageJson).forEach(function (key) {
+    if (key[0] === '_') {
+        delete local.packageJson[key];
+    }
+});
+local.fs.writeFileSync('package.json', JSON.stringify(local.packageJson));
 // </script>
     "
     npm publish
@@ -1485,6 +1486,10 @@ shNpmTest() {(set -e
 shNpmTestPublished() {(set -e
 # this function will run npm-test on the published-package
     shInit
+    if [ "$1" ]
+    then
+        export npm_package_name="$1"
+    fi
     export MODE_BUILD=npmTestPublished
     shBuildPrint "npm-testing published-package $npm_package_name"
     # init /tmp/app
@@ -2047,7 +2052,9 @@ shUtility2Version() {(set -e
     do
         printf "'$(npm info $DIR version) $DIR',\n"
     done
-    printf "].sort()\n"
+    printf "].map(function (element) {
+    return element.replace((/(\\\\b\\\\d\\\\b)/g), '0\$1');
+}).sort()\n"
 )}
 
 shXvfbStart() {
