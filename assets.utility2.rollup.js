@@ -8766,6 +8766,7 @@ instruction\n\
 \n\
 \n\
 \n\
+/* istanbul instrument in package jslint */\n\
 /*jslint\n\
     bitwise: true,\n\
     browser: true,\n\
@@ -8815,6 +8816,39 @@ instruction\n\
 \n\
 \n\
 \n\
+    // post-init\n\
+    /* istanbul ignore next */\n\
+    // run browser js-env code - post-init\n\
+    case \'browser\':\n\
+        local.testRunBrowser = function (event) {\n\
+            return event;\n\
+        };\n\
+        // log stderr and stdout to #outputTextareaStdout1\n\
+        [\'error\', \'log\'].forEach(function (key) {\n\
+            console[\'_\' + key] = console[key];\n\
+            console[key] = function () {\n\
+                console[\'_\' + key].apply(console, arguments);\n\
+                (document.querySelector(\'#outputTextareaStdout1\') || { value: \'\' }).value +=\n\
+                    Array.from(arguments).map(function (arg) {\n\
+                        return typeof arg === \'string\'\n\
+                            ? arg\n\
+                            : JSON.stringify(arg, null, 4);\n\
+                    }).join(\' \') + \'\\n\';\n\
+            };\n\
+        });\n\
+        // init event-handling\n\
+        [\'change\', \'click\', \'keyup\'].forEach(function (event) {\n\
+            Array.from(document.querySelectorAll(\'.on\' + event)).forEach(function (element) {\n\
+                element.addEventListener(event, local.testRunBrowser);\n\
+            });\n\
+        });\n\
+        // run tests\n\
+        local.testRunBrowser({ currentTarget: { id: \'default\' } });\n\
+        break;\n\
+\n\
+\n\
+\n\
+    /* istanbul ignore next */\n\
     // run node js-env code - post-init\n\
     case \'node\':\n\
         // export local\n\
@@ -8928,8 +8962,10 @@ local.assetsDict['/assets.index.template.html'].replace((/\n/g), '\\n\\\n') +
     },\n\
     "scripts": {\n\
         "build-ci": "utility2 shRun shReadmeBuild",\n\
+        "env": "env",\n\
         "heroku-postbuild": "npm install \'kaizhu256/node-utility2#alpha\' && utility2 shRun shDeployHeroku",\n\
         "postinstall": "if [ -f lib.jslint.npm-scripts.sh ]; then ./lib.jslint.npm-scripts.sh postinstall; fi",\n\
+        "publish-alias": "VERSION=$(npm info $npm_package_name version); for ALIAS in undefined; do utility2 shRun shNpmPublish $ALIAS $VERSION; utility2 shRun shNpmTestPublished $ALIAS || exit $?; done",\n\
         "start": "export PORT=${PORT:-8080} && export npm_config_mode_auto_restart=1 && utility2 shRun shIstanbulCover test.js",\n\
         "test": "export PORT=$(utility2 shServerPortRandom) && utility2 test test.js"\n\
     },\n\
@@ -8958,14 +8994,18 @@ shBuild() {(set -e\n\
     # cleanup github-gh-pages dir\n\
     # export BUILD_GITHUB_UPLOAD_PRE_SH="rm -fr build"\n\
     # init github-gh-pages commit-limit\n\
-    export COMMIT_LIMIT=16\n\
-    # if branch is alpha, beta, or master, then run default build\n\
-    if [ "$CI_BRANCH" = alpha ] ||\n\
-        [ "$CI_BRANCH" = beta ] ||\n\
-        [ "$CI_BRANCH" = master ]\n\
-    then\n\
+    export COMMIT_LIMIT=20\n\
+    case "$CI_BRANCH" in\n\
+    alpha)\n\
         shBuildCiDefault\n\
-    fi\n\
+        ;;\n\
+    beta)\n\
+        shBuildCiDefault\n\
+        ;;\n\
+    master)\n\
+        shBuildCiDefault\n\
+        ;;\n\
+    esac\n\
 )}\n\
 \n\
 shBuildCiTestPost() {(set -e\n\
@@ -10822,6 +10862,10 @@ return Utf8ArrayToStr(bff);
                     options.packageJson.name
                 );
                 template = template.replace(
+                    '/* istanbul instrument in package jslint */',
+                    '/* istanbul instrument in package ' + options.packageJson.nameAlias + ' */'
+                );
+                template = template.replace(
                     (/h1-jslint/g),
                     'h1-' + options.packageJson.nameAlias.replace((/_/g), '-')
                 );
@@ -10843,17 +10887,14 @@ return Utf8ArrayToStr(bff);
                 options.packageJson = JSON.parse(match1);
                 options.packageJson.description = options.readmeFrom.split('\n')[2];
                 local.objectSetDefault(options.packageJson, {
-                    nameAlias: options.packageJson.name
+                    nameAlias: options.packageJson.name,
+                    nameOriginal: options.packageJson.name
                 });
                 options.githubRepo = options.packageJson.repository.url.split('/').slice(-2);
                 options.githubRepo[1] = options.githubRepo[1].replace((/\.git$/), '');
-                local.objectSetDefault(
-                    options.packageJson,
-                    JSON.parse(templateRender(
-                        options.rgx.exec(local.assetsDict['/assets.readme.template.md'])[1]
-                    )),
-                    2
-                );
+                local.objectSetDefault(options.packageJson, JSON.parse(templateRender(
+                    options.rgx.exec(local.assetsDict['/assets.readme.template.md'])[1]
+                )), 2);
                 // avoid npm-installing self
                 delete options.packageJson.devDependencies[options.packageJson.name];
                 // save package.json
@@ -10882,16 +10923,15 @@ return Utf8ArrayToStr(bff);
                 // customize quickstart-header
                 (/\n```javascript\n\/\*\nexample\.js\n\n[^`]*?\n/),
                 (/\n {8}\$ npm install [^`]*? &&/),
-                (/\n\n\n\n[^`]*?^\/\*jslint\n/m),
-                (/\n {12}: global;\n[^`]*?\n {8}local.global.local = local;\n/),
-                new RegExp('\\n {8}local.global.local = local;\\n[^`]*?' +
-                    '\\n {4}\\/\\/ run node js-env code - post-init\\n'),
+                (/\n {12}: global;\n[^`]*?\n {8}local\.global\.local = local;\n/),
+                (/\n {8}local\.global\.local = local;\n[^`]*?\n {4}\/\/ post-init\n/),
+                (/\n {8}local\.testRunBrowser = function \(event\) \{\n[^`]*?\n {8}\};\n/),
                 // customize quickstart-html-style
                 (/\n<\/style>\\n\\\n<style>\\n\\\n[^`]*?\\n\\\n<\/style>\\n\\\n/),
                 // customize quickstart-html-body
                 (/\nutility2-comment -->\\n\\\n\\n\\\n[^`]*?^<!-- utility2-comment\\n\\\n/m),
                 // customize build-script
-                (/\n# internal build-script\n[\S\s]*?^- build.sh\n/m)
+                (/\n# internal build-script\n[\S\s]*?^- build\.sh\n/m)
             ].forEach(function (rgx) {
                 options.readmeFrom.replace(rgx, function (match0) {
                     options.readmeTo = options.readmeTo.replace(rgx, match0);
@@ -12293,6 +12333,7 @@ vendor\\)\\(\\b\\|[_s]\\)\
             module.exports[local.env.npm_package_nameAlias] = global.utility2_moduleExports;
             // init assets
             local.objectSetOverride(local.assetsDict, module.exports.assetsDict);
+            module.exports.assetsDict = local.assetsDict;
             local.assetsDict['/assets.' + local.env.npm_package_nameAlias + '.js'] =
                 local.istanbulInstrumentInPackage(
                     local.fs.readFileSync(fileMain, 'utf8').replace((/^#!/), '//'),
@@ -13599,24 +13640,17 @@ instruction\n\
             case 'lib.istanbul.js':
             case 'lib.jslint.js':
             case 'lib.sjcl.js':
-            case 'lib.swgg.js':
             case 'lib.uglifyjs.js':
-                local.assetsDict['/assets.utility2.' + key] = local.istanbulInstrumentInPackage(
+                local.assetsDict['/assets.utility2.' + key] =
                     local.tryCatchReadFile(__dirname + '/' + key, 'utf8')
-                        .replace((/^#!/), '//')
-                        .replace(
-                            (/(\bistanbul instrument in package .*-lite\b)/),
-                            '!$1'
-                        ),
-                    __dirname + '/' + key
-                );
+                        .replace((/^#!/), '//');
                 break;
+            case 'lib.swgg.js':
             case 'lib.utility2.js':
-                local.assetsDict['/assets.utility2.js'] = local.istanbulInstrumentInPackage(
-                    local.tryCatchReadFile(__dirname + '/' + key, 'utf8')
-                        .replace((/^#!/), '//'),
-                    __dirname + '/' + key
-                );
+                key = key.replace('lib.', '');
+                local.assetsDict['/assets.' + key] =
+                    local.tryCatchReadFile(__dirname + '/lib.' + key, 'utf8')
+                        .replace((/^#!/), '//');
                 break;
             case 'lib.utility2.sh':
                 local.jslintAndPrintConditional(
@@ -13629,34 +13663,35 @@ instruction\n\
         });
         local.assetsDict['/assets.utility2.rollup.js'] = [
             '/assets.utility2.rollup.begin.js',
-            '/assets.utility2.lib.db.js',
-            '/assets.utility2.lib.github_crud.js',
-            '/assets.utility2.lib.istanbul.js',
-            '/assets.utility2.lib.jslint.js',
-            '/assets.utility2.lib.sjcl.js',
-            '/assets.utility2.lib.uglifyjs.js',
-            '/assets.utility2.js',
-            '/assets.swgg.js',
+            'lib.db.js',
+            'lib.github_crud.js',
+            'lib.istanbul.js',
+            'lib.jslint.js',
+            'lib.sjcl.js',
+            'lib.uglifyjs.js',
+            'lib.utility2.js',
+            'lib.swgg.js',
             '/assets.utility2.rollup.end.js'
         ].map(function (key) {
             var script;
             switch (key) {
-            case '/assets.swgg.js':
-                script = local.tryCatchReadFile(local.__dirname + '/lib.swgg.js', 'utf8');
-                return '/* script-begin ' + key + ' */\n' +
-                    script.trim() +
-                    '\n/* script-end ' + key + ' */\n';
-            }
-            switch (local.path.extname(key)) {
-            case '.js':
+            case '/assets.utility2.rollup.begin.js':
+            case '/assets.utility2.rollup.end.js':
                 script = local.assetsDict[key];
                 break;
-            default:
-                script = local.assetsDict['/assets.utility2.rollup.content.js'].replace(
-                    '/* utility2.rollup.js content */',
-                    'local.assetsDict[' + JSON.stringify(key) + '] = ' +
-                        JSON.stringify(local.assetsDict[key])
-                );
+            case 'lib.db.js':
+            case 'lib.github_crud.js':
+            case 'lib.istanbul.js':
+            case 'lib.jslint.js':
+            case 'lib.sjcl.js':
+            case 'lib.uglifyjs.js':
+                key = '/assets.utility2.' + key;
+                script = local.assetsDict[key];
+                break;
+            case 'lib.swgg.js':
+            case 'lib.utility2.js':
+                key = '/assets.' + key.replace('lib.', '');
+                script = local.assetsDict[key];
                 break;
             }
             return '/* script-begin ' + key + ' */\n' +

@@ -142,7 +142,7 @@ shBuildCiDefault() {(set -e
     # run pre-test build
     if (type shBuildCiTestPre > /dev/null 2>&1)
     then
-        shBuildCiTestPre || return $?
+        shBuildCiTestPre
     fi
     # init test-report.json
     cp "/tmp/app/node_modules/$npm_package_name/tmp/build/test-report.json" \
@@ -154,7 +154,7 @@ shBuildCiDefault() {(set -e
     # run post-test build
     if (type shBuildCiTestPost > /dev/null 2>&1)
     then
-        shBuildCiTestPost || return $?
+        shBuildCiTestPost
     fi
     # create api-doc
     (export MODE_BUILD=apiDoc &&
@@ -803,7 +803,7 @@ shGitRepoBranchCommand() {
     fi
     # if number of commits > $COMMIT_LIMIT,
     # then backup current git-repo-branch to git-repo-branch.backup,
-    # and then squash $RANGE to the first commit in git-repo-branch
+    # and then squash $RANGE to $COMMIT_LIMIT/2 in git-repo-branch
     if [ "$COMMIT_LIMIT" ] && [ "$(git rev-list HEAD --count)" -gt "$COMMIT_LIMIT" ]
     then
         RANGE="$(($COMMIT_LIMIT/2))" || return $?
@@ -1326,15 +1326,6 @@ shMain() {
     COMMAND="$1" || return $?
     shift || return $?
     case "$COMMAND" in
-    grep)
-        shGrep "$1" "$2" || return $?
-        ;;
-    shRun)
-        (shInit && "$COMMAND" "$@") || return $?
-        ;;
-    shRunScreenCapture)
-        (shInit && "$COMMAND" "$@") || return $?
-        ;;
     start)
         (shInit && export npm_config_mode_auto_restart=1 && export npm_config_mode_start=1 &&
             shRun shIstanbulCover "$npm_config_dir_utility2/test.js" "$@") || return $?
@@ -1346,7 +1337,7 @@ shMain() {
         (shInit && printf "$npm_config_dir_utility2") || return $?
         ;;
     *)
-        "$COMMAND" "$@" || return $?
+        (shInit && "$COMMAND" "$@") || return $?
         ;;
     esac
 }
@@ -1375,29 +1366,12 @@ shMountData() {(set -e
 )}
 
 shNpmPublish() {(set -e
-# this function will run npm-publish with a clean repo
+# this function will run npm-publish $NAME@$VERSION with a clean repo
+    NAME="$1"
+    VERSION="$2"
     shInit
     shGitRepoBranchCommand copyPwdLsTree
     cd /tmp/git.repo.branch
-    npm publish
-)}
-
-shNpmPublishAlias() {(set -e
-# this function will run npm-publish $NAME to $ALIAS
-    ALIAS="$1"
-    NAME="$2"
-    NAME_INSTALL="$3"
-    if [ ! "$NAME_INSTALL" ]
-    then
-        NAME_INSTALL="$NAME"
-    fi
-    VERSION="$4"
-    # init /tmp/app
-    rm -fr /tmp/app /tmp/node_modules && mkdir -p /tmp/app
-    # cd /tmp/app
-    cd /tmp/app
-    npm install "$NAME_INSTALL"
-    cd "/tmp/app/node_modules/$NAME"
     node -e "
 // <script>
 /*jslint
@@ -1415,20 +1389,12 @@ var local;
 local = {};
 local.fs = require('fs');
 local.packageJson = JSON.parse(local.fs.readFileSync('package.json'));
-// update name
-local.packageJson.name = '$ALIAS';
-// update nameOriginal
-local.packageJson.nameOriginal = '$NAME';
-// update version
 // jslint-hack
+local.name = '$NAME';
 local.version = '$VERSION';
+local.packageJson.nameOriginal = local.packageJson.name;
+local.packageJson.name = local.name || local.packageJson.name;
 local.packageJson.version = local.version || local.packageJson.version;
-// remove meta-info
-Object.keys(local.packageJson).forEach(function (key) {
-    if (key[0] === '_') {
-        delete local.packageJson[key];
-    }
-});
 local.fs.writeFileSync('package.json', JSON.stringify(local.packageJson));
 // </script>
     "
@@ -2004,6 +1970,20 @@ shUbuntuInit() {
     fi
 }
 
+shUtility2BuildApp() {(set -e
+# this function will run shBuildApp in $UTILITY2_DEPENDENTS
+    shUtility2DependentsSync
+    cd "$HOME/src"
+    # shBuildApp
+    for DIR in $UTILITY2_DEPENDENTS
+    do
+        if [ -d "$DIR" ] && [ "$DIR" != utility2 ]
+        then
+            (cd "$DIR" && shBuildApp) || return $?
+        fi
+    done
+)}
+
 shUtility2DependentsSync() {(set -e
 # this function will sync files between utility2 and its dependents
     cd "$HOME/src"
@@ -2030,6 +2010,31 @@ shUtility2DependentsSync() {(set -e
         ln -f utility2/assets.utility2.rollup.js swgg/assets.swgg.rollup.js
         ln -f utility2/lib.swgg.js swgg
     fi
+)}
+
+shUtility2GitCommitAndPush() {(set -e
+# this function will git-commit and git-push $UTILITY2_DEPENDENTS with the given $MESSAGE
+    # init $MESSAGE
+    MESSAGE="$1"
+    for DIR in $UTILITY2_DEPENDENTS
+    do
+        cd "$HOME/src/$DIR"
+        printf "\n\n\n\n$(pwd)\n"
+        git commit -am "'$MESSAGE'" || true
+        git push || true
+    done
+)}
+
+shUtility2GitStatus() {(set -e
+# this function will print the git-status of $UTILITY2_DEPENDENTS to stdout
+    for DIR in $UTILITY2_DEPENDENTS
+    do
+        cd "$HOME/src/$DIR"
+        printf "\n\n\n\n$(pwd)\n"
+        shGitLsTree || return $?
+        git status
+        git diff HEAD | cat
+    done
 )}
 
 shUtility2Grep() {(set -e

@@ -50,12 +50,6 @@
             if (local.global.utility2_rollup) {
                 break;
             }
-            // coverage-hack - cover istanbul
-            require.cache[__dirname + '/lib.istanbul.js'] = null;
-            local.istanbul = require(__dirname + '/lib.istanbul.js');
-            local.istanbulCoverageMerge = local.istanbul.coverageMerge;
-            local.istanbulCoverageReportCreate = local.istanbul.coverageReportCreate;
-            local.istanbulInstrumentInPackage = local.istanbul.instrumentInPackage;
             break;
         }
     }());
@@ -600,84 +594,6 @@
             onError();
         };
 
-        local.testCase_istanbulCoverageReportCreate_default = function (options, onError) {
-        /*
-         * this function will test istanbulCoverageReportCreate's default handling-behavior
-         */
-            options = [
-                [local.istanbul, { coverageMerge: local.echo }],
-                // test $npm_config_mode_coverage_merge handling-behavior
-                [local.env, { npm_config_mode_coverage_merge: '1' }]
-            ];
-            local.env.npm_config_mode_coverage_merge = '';
-            local.testMock(options, function (onError) {
-                /*jslint evil: true*/
-                // cleanup old coverage
-                if (local.modeJs === 'node') {
-                    local.fsRmrSync('tmp/build/coverage.html/aa');
-                }
-                // test path handling-behavior
-                ['/', local.__dirname].forEach(function (dir) {
-                    [
-                        'zz.js',
-                        'aa/zz.js',
-                        'aa/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb/zz.js'
-                    ].forEach(function (file) {
-                        // cover file
-                        eval(local.istanbul.instrumentSync(
-                            // test skip handling-behavior
-                            'null',
-                            dir + '/' + file
-                        ));
-                    });
-                });
-                // create report with covered path
-                local.istanbul.coverageReportCreate();
-                // test file-content handling-behavior
-                [
-                    // test no content handling-behavior
-                    '',
-                    // test uncovereed-code handling-behavior
-                    'null && null && null',
-                    // test trailing-whitespace handling-behavior
-                    'null ',
-                    // test skip handling-behavior
-                    '/* istanbul ignore next */\nnull && null'
-                ].forEach(function (content) {
-                    // cleanup
-                    local.tryCatchOnError(function () {
-                        Object.keys(local.global.__coverage__).forEach(function (file) {
-                            if (file.indexOf('zz.js') >= 0) {
-                                local.global.__coverage__[file] = null;
-                            }
-                        });
-                    }, local.nop);
-                    // cover path
-                    eval(local.istanbul.instrumentSync(content, 'zz.js'));
-                    // create report with covered content
-                    local.istanbul.coverageReportCreate();
-                });
-                // cleanup
-                Object.keys(local.global.__coverage__).forEach(function (file) {
-                    if (file.indexOf('zz.js') >= 0) {
-                        local.global.__coverage__[file] = null;
-                    }
-                });
-                onError();
-            }, onError);
-        };
-
-        local.testCase_istanbulInstrumentSync_default = function (options, onError) {
-        /*
-         * this function will test istanbulInstrumentSync's default handling-behavior
-         */
-            options = {};
-            options.data = local.istanbul.instrumentSync('1', 'test.js');
-            // validate data
-            local.assert(options.data.indexOf(".s['1']++;1;\n") >= 0, options);
-            onError();
-        };
-
         local.testCase_jslintAndPrintConditional_default = function (options, onError) {
         /*
          * this function will test jslintAndPrintConditional's default handling-behavior
@@ -710,89 +626,6 @@
                     'passed.js',
                     'force'
                 );
-                // validate no error occurred
-                local.assert(!local.jslint.errorText, local.jslint.errorText);
-                onError();
-            }, onError);
-        };
-
-        local.testCase_jslintAndPrint_default = function (options, onError) {
-        /*
-         * this function will test jslintAndPrint's default handling-behavior
-         */
-            options = [
-                // suppress console.error
-                [console, { error: local.nop }],
-                [local.jslint, { errorText: '' }]
-            ];
-            local.testMock(options, function (onError) {
-                // test empty-script handling-behavior
-                local.jslint.jslintAndPrint('', 'empty.css');
-                // validate no error occurred
-                local.assert(!local.jslint.errorText, local.jslint.errorText);
-                // test csslint's failed handling-behavior
-                local.jslint.jslintAndPrint('syntax error', 'failed.css');
-                // validate error occurred
-                local.assert(local.jslint.errorText, local.jslint.errorText);
-                // test csslint's passed handling-behavior
-                local.jslint.jslintAndPrint('body { font: normal; }', 'passed.css');
-                // validate no error occurred
-                local.assert(!local.jslint.errorText, local.jslint.errorText);
-                // test csslint's flexbox handling-behavior
-                local.jslint.jslintAndPrint('body { display: flex; }', 'passed.css');
-                // validate no error occurred
-                local.assert(!local.jslint.errorText, local.jslint.errorText);
-                // test jslint's failed handling-behavior
-                local.jslint.jslintAndPrint('syntax error', 'failed.js');
-                // validate error occurred
-                local.assert(local.jslint.errorText, local.jslint.errorText);
-                // test jslint's passed handling-behavior
-                local.jslint.jslintAndPrint('var aa = 1;', 'passed.js');
-                // validate no error occurred
-                local.assert(!local.jslint.errorText, local.jslint.errorText);
-                // test /* jslint-ignore-begin */ ... /* jslint-ignore-end */
-                // handling-behavior
-                local.jslint.jslintAndPrint('/* jslint-ignore-begin */\n' +
-                    'syntax error\n' +
-                    '/* jslint-ignore-end */\n', 'passed.js');
-                // validate no error occurred
-                local.assert(!local.jslint.errorText, local.jslint.errorText);
-                // test /* jslint-ignore-next-line */ ...
-                // handling-behavior
-                local.jslint.jslintAndPrint('/* jslint-ignore-next-line */\n' +
-                    'syntax error\n', 'passed.js');
-                // validate no error occurred
-                local.assert(!local.jslint.errorText, local.jslint.errorText);
-                // test /* jslint-indent-begin */ ... /* jslint-indent-end */
-                // handling-behavior
-                local.jslint.jslintAndPrint('(function () {\n' +
-                    '    "use strict";\n' +
-                    '/* jslint-indent-begin 4 */\n' +
-                    'String();\n' +
-                    '/* jslint-indent-end */\n' +
-                    '}());\n', 'passed.js');
-                // validate no error occurred
-                local.assert(!local.jslint.errorText, local.jslint.errorText);
-                onError();
-            }, onError);
-        };
-
-        local.testCase_jslintAndPrint_es6 = function (options, onError) {
-        /*
-         * this function will test jslintAndPrint's es6 handling-behavior
-         */
-            options = [
-                // suppress console.error
-                [console, { error: local.nop }],
-                [local.jslint, { errorText: '' }]
-            ];
-            local.testMock(options, function (onError) {
-                // test jslint's failed handling-behavior
-                local.jslint.jslintAndPrint('/*jslint es6: true*/\nsyntax error', 'failed.js');
-                // validate error occurred
-                local.assert(local.jslint.errorText, local.jslint.errorText);
-                // test jslint's passed handling-behavior
-                local.jslint.jslintAndPrint('/*jslint es6: true*/\nconst aa = 1;', 'passed.js');
                 // validate no error occurred
                 local.assert(!local.jslint.errorText, local.jslint.errorText);
                 onError();
@@ -1894,57 +1727,6 @@
                 });
             }, 1000);
             onParallel();
-        };
-
-        local.testCase_istanbulCoverageMerge_default = function (options, onError) {
-        /*
-         * this function will test istanbulCoverageMerge's default handling-behavior
-         */
-            options = {};
-            options.data = local.istanbul.instrumentSync(
-                '(function () {\nreturn arg ' +
-                    '? __coverage__ ' +
-                    ': __coverage__;\n}());',
-                'test'
-            );
-            local.arg = 0;
-            // test null-case handling-behavior
-            options.coverage1 = null;
-            options.coverage2 = null;
-            local.istanbul.coverageMerge(options.coverage1, options.coverage2);
-            // validate merged options.coverage1
-            local.assertJsonEqual(options.coverage1, null);
-            options.coverage2 = { undefined: null };
-            local.istanbul.coverageMerge(options.coverage1, options.coverage2);
-            // validate merged options.coverage1
-            local.assertJsonEqual(options.coverage1, null);
-            // init options.coverage1
-            options.coverage1 = local.vm.runInNewContext(options.data, { arg: 0 });
-/* jslint-ignore-begin */
-// validate options.coverage1
-local.assertJsonEqual(options.coverage1,
-{"/test":{"b":{"1":[0,1]},"branchMap":{"1":{"line":2,"locations":[{"end":{"column":25,"line":2},"start":{"column":13,"line":2}},{"end":{"column":40,"line":2},"start":{"column":28,"line":2}}],"type":"cond-expr"}},"code":["(function () {","return arg ? __coverage__ : __coverage__;","}());"],"f":{"1":1},"fnMap":{"1":{"line":1,"loc":{"end":{"column":13,"line":1},"start":{"column":1,"line":1}},"name":"(anonymous_1)"}},"path":"/test","s":{"1":1,"2":1},"statementMap":{"1":{"end":{"column":5,"line":3},"start":{"column":0,"line":1}},"2":{"end":{"column":41,"line":2},"start":{"column":0,"line":2}}}}}
-);
-// test merge-create handling-behavior
-options.coverage1 = local.istanbul.coverageMerge({}, options.coverage1);
-// validate options.coverage1
-local.assertJsonEqual(options.coverage1,
-{"/test":{"b":{"1":[0,1]},"branchMap":{"1":{"line":2,"locations":[{"end":{"column":25,"line":2},"start":{"column":13,"line":2}},{"end":{"column":40,"line":2},"start":{"column":28,"line":2}}],"type":"cond-expr"}},"code":["(function () {","return arg ? __coverage__ : __coverage__;","}());"],"f":{"1":1},"fnMap":{"1":{"line":1,"loc":{"end":{"column":13,"line":1},"start":{"column":1,"line":1}},"name":"(anonymous_1)"}},"path":"/test","s":{"1":1,"2":1},"statementMap":{"1":{"end":{"column":5,"line":3},"start":{"column":0,"line":1}},"2":{"end":{"column":41,"line":2},"start":{"column":0,"line":2}}}}}
-);
-// init options.coverage2
-options.coverage2 = local.vm.runInNewContext(options.data, { arg: 1 });
-// validate options.coverage2
-local.assertJsonEqual(options.coverage2,
-{"/test":{"b":{"1":[1,0]},"branchMap":{"1":{"line":2,"locations":[{"end":{"column":25,"line":2},"start":{"column":13,"line":2}},{"end":{"column":40,"line":2},"start":{"column":28,"line":2}}],"type":"cond-expr"}},"code":["(function () {","return arg ? __coverage__ : __coverage__;","}());"],"f":{"1":1},"fnMap":{"1":{"line":1,"loc":{"end":{"column":13,"line":1},"start":{"column":1,"line":1}},"name":"(anonymous_1)"}},"path":"/test","s":{"1":1,"2":1},"statementMap":{"1":{"end":{"column":5,"line":3},"start":{"column":0,"line":1}},"2":{"end":{"column":41,"line":2},"start":{"column":0,"line":2}}}}}
-);
-// test merge-update handling-behavior
-local.istanbul.coverageMerge(options.coverage1, options.coverage2);
-// validate merged options.coverage1
-local.assertJsonEqual(options.coverage1,
-{"/test":{"b":{"1":[1,1]},"branchMap":{"1":{"line":2,"locations":[{"end":{"column":25,"line":2},"start":{"column":13,"line":2}},{"end":{"column":40,"line":2},"start":{"column":28,"line":2}}],"type":"cond-expr"}},"code":["(function () {","return arg ? __coverage__ : __coverage__;","}());"],"f":{"1":2},"fnMap":{"1":{"line":1,"loc":{"end":{"column":13,"line":1},"start":{"column":1,"line":1}},"name":"(anonymous_1)"}},"path":"/test","s":{"1":2,"2":2},"statementMap":{"1":{"end":{"column":5,"line":3},"start":{"column":0,"line":1}},"2":{"end":{"column":41,"line":2},"start":{"column":0,"line":2}}}}}
-);
-/* jslint-ignore-end */
-            onError();
         };
 
         local.testCase_libUtility2Js_standalone = function (options, onError) {

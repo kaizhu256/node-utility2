@@ -33,10 +33,12 @@ this zero-dependency package will run dynamic browser-tests with coverage (via e
 - add server stress test using electron
 - none
 
-#### change since 5414add8
-- npm publish 2017.2.19
-- replace env var npm_package_name with npm_package_nameAlias in istanbul code-coverage
-- revamp shell-function shNpmPublishAlias
+#### change since 4460ca51
+- npm publish 2017.2.20
+- add field nameOriginal to package.json
+- do not cover rollups
+- merge shell-function shNpmPublishAlias into shNpmPublish
+- normalize example.html
 - none
 
 #### this package requires
@@ -125,6 +127,7 @@ instruction
 
 
 
+/* istanbul instrument in package utility2 */
 /*jslint
     bitwise: true,
     browser: true,
@@ -187,16 +190,14 @@ instruction
             options = {};
             // test ajax-path 'assets.hello'
             local.ajax({ url: 'assets.hello' }, function (error, xhr) {
-                try {
+                local.tryCatchOnError(function () {
                     // validate no error occurred
                     local.assert(!error, error);
                     // validate data
                     options.data = xhr.responseText;
                     local.assert(options.data === 'hello', options.data);
                     onError();
-                } catch (errorCaught) {
-                    onError(errorCaught);
-                }
+                }, onError);
             });
         };
         local.testCase_ajax_404 = function (options, onError) {
@@ -206,20 +207,41 @@ instruction
             options = {};
             // test ajax-path '/undefined'
             local.ajax({ url: '/undefined' }, function (error) {
-                try {
+                local.tryCatchOnError(function () {
                     // validate error occurred
                     local.assert(error, error);
                     options.statusCode = error.statusCode;
                     // validate 404 http statusCode
                     local.assert(options.statusCode === 404, options.statusCode);
                     onError();
-                } catch (errorCaught) {
-                    onError(errorCaught);
-                }
+                }, onError);
             });
         };
-        local.testRun = function (event) {
-            switch (event && event.currentTarget && event.currentTarget.id) {
+        break;
+
+
+
+    // run node js-env code - function
+    case 'node':
+        local.testCase_webpage_default = function (options, onError) {
+        /*
+         * this function will test the webpage's default handling-behavior
+         */
+            options = { modeCoverageMerge: true, url: local.serverLocalHost + '?modeTest=1' };
+            local.browserTest(options, onError);
+        };
+        break;
+    }
+    switch (local.modeJs) {
+
+
+
+    // post-init
+    /* istanbul ignore next */
+    // run browser js-env code - post-init
+    case 'browser':
+        local.testRunBrowser = function (event) {
+            switch (event.currentTarget.id) {
             case 'testRunButton1':
                 // run tests
                 local.modeTest = true;
@@ -230,7 +252,7 @@ instruction
                     return;
                 }
                 // reset stdout
-                document.querySelector('#outputTextarea2').value = '';
+                document.querySelector('#outputTextareaStdout1').value = '';
                 if (!document.querySelector('#inputTextarea1')) {
                     return;
                 }
@@ -280,37 +302,16 @@ instruction
                     console.error(errorCaught.stack);
                 }
                 // scroll stdout to bottom
-                document.querySelector('#outputTextarea2').scrollTop =
-                    document.querySelector('#outputTextarea2').scrollHeight;
+                document.querySelector('#outputTextareaStdout1').scrollTop =
+                    document.querySelector('#outputTextareaStdout1').scrollHeight;
             }
         };
-        break;
-
-
-
-    // run node js-env code - function
-    case 'node':
-        local.testCase_webpage_default = function (options, onError) {
-        /*
-         * this function will test the webpage's default handling-behavior
-         */
-            options = { modeCoverageMerge: true, url: local.serverLocalHost + '?modeTest=1' };
-            local.browserTest(options, onError);
-        };
-        break;
-    }
-    switch (local.modeJs) {
-
-
-
-    // run browser js-env code - post-init
-    case 'browser':
-        // log stderr and stdout to #outputTextarea2
+        // log stderr and stdout to #outputTextareaStdout1
         ['error', 'log'].forEach(function (key) {
             console['_' + key] = console[key];
             console[key] = function () {
                 console['_' + key].apply(console, arguments);
-                (document.querySelector('#outputTextarea2') || { value: '' }).value +=
+                (document.querySelector('#outputTextareaStdout1') || { value: '' }).value +=
                     Array.from(arguments).map(function (arg) {
                         return typeof arg === 'string'
                             ? arg
@@ -319,17 +320,18 @@ instruction
             };
         });
         // init event-handling
-        ['click', 'keyup'].forEach(function (event) {
+        ['change', 'click', 'keyup'].forEach(function (event) {
             Array.from(document.querySelectorAll('.on' + event)).forEach(function (element) {
-                element.addEventListener(event, local.testRun);
+                element.addEventListener(event, local.testRunBrowser);
             });
         });
         // run tests
-        local.testRun();
+        local.testRunBrowser({ currentTarget: { id: 'default' } });
         break;
 
 
 
+    /* istanbul ignore next */
     // run node js-env code - post-init
     case 'node':
         // export local
@@ -464,7 +466,7 @@ utility2-comment -->\n\
     <label>instrumented-code</label>\n\
     <textarea id="outputTextareaIstanbul1" readonly></textarea>\n\
     <label>stderr and stdout</label>\n\
-    <textarea id="outputTextarea2" readonly></textarea>\n\
+    <textarea id="outputTextareaStdout1" readonly></textarea>\n\
     <button class="onclick" id="testRunButton1">run internal test</button><br>\n\
     <div id="testReportDiv1" style="display: none;"></div>\n\
     <h2>coverage-report</h2>\n\
@@ -590,6 +592,7 @@ utility2-comment -->\n\
         "atom-shell",
         "browser",
         "build",
+        "busybox",
         "ci",
         "code-coverage",
         "continuous-integration",
@@ -617,6 +620,7 @@ utility2-comment -->\n\
     "main": "lib.utility2.js",
     "name": "utility2",
     "nameAlias": "utility2",
+    "nameOriginal": "utility2",
     "os": [
         "darwin",
         "linux"
@@ -631,11 +635,12 @@ utility2-comment -->\n\
         "example.sh": "./lib.utility2.sh shRunScreenCapture shReadmeTestSh example.sh",
         "heroku-postbuild": "./lib.utility2.sh shRun shDeployHeroku",
         "postinstall": "if [ -f lib.utility2.npm-scripts.sh ]; then ./lib.utility2.npm-scripts.sh postinstall; fi",
+        "publish-alias": "VERSION=$(npm info $npm_package_name version); for ALIAS in busybox busybox2 busyweb; do utility2 shRun shNpmPublish $ALIAS $VERSION; utility2 shRun shNpmTestPublished $ALIAS || exit $?; done",
         "start": "export PORT=${PORT:-8080} && if [ -f assets.app.js ]; then node assets.app.js; return; fi && export npm_config_mode_auto_restart=1 && ./lib.utility2.sh shRun shIstanbulCover test.js",
         "test": "export PORT=$(./lib.utility2.sh shServerPortRandom) && export PORT_REPL=$(./lib.utility2.sh shServerPortRandom) && export npm_config_mode_auto_restart=1 && ./lib.utility2.sh test test.js",
         "test-all": "npm test --mode-coverage=all"
     },
-    "version": "2017.2.19"
+    "version": "2017.2.20"
 }
 ```
 
@@ -781,14 +786,18 @@ shBuild() {(set -e
     # cleanup github-gh-pages dir
     # export BUILD_GITHUB_UPLOAD_PRE_SH="rm -fr build"
     # init github-gh-pages commit-limit
-    export COMMIT_LIMIT=16
-    # if branch is alpha, beta, or master, then run default build
-    if [ "$CI_BRANCH" = alpha ] ||
-        [ "$CI_BRANCH" = beta ] ||
-        [ "$CI_BRANCH" = master ]
-    then
+    export COMMIT_LIMIT=20
+    case "$CI_BRANCH" in
+    alpha)
         shBuildCiDefault
-    fi
+        ;;
+    beta)
+        shBuildCiDefault
+        ;;
+    master)
+        shBuildCiDefault
+        ;;
+    esac
     # docker build
     docker --version 2>/dev/null || return
     # if running legacy-node, then return
