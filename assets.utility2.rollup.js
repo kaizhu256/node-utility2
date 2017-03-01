@@ -1,3 +1,7 @@
+/* this rollup was created with utility2 (https://github.com/kaizhu256/node-utility2) */
+
+
+
 /* script-begin /assets.utility2.rollup.begin.js */
 /* utility2.rollup.js begin */
 /* istanbul ignore all */
@@ -34,7 +38,6 @@
     local.local = local.global.utility2_rollup = local.global.utility2_rollup_old || local;
 }());
 /* script-end /assets.utility2.rollup.begin.js */
-
 
 
 
@@ -618,43 +621,46 @@
             this.name = String(options.name);
             // register dbTable in dbTableDict
             local.dbTableDict[this.name] = this;
-            this.dbRowCount = 0;
             this.dbRowList = [];
             this.isDirty = null;
             this.idIndexList = [{ name: '_id', dict: {} }];
+            this.ttl = 0;
+            this.ttlLast = 0;
         };
 
         local._DbTable.prototype._cleanup = function () {
         /*
          * this function will cleanup soft-deleted records from the dbTable
          */
-            var self, tmp;
-            self = this;
-            if (!self.isDirty) {
+            var dbRow, ii, list, ttl;
+            ttl = Date.now();
+            if (!(this.isDirty ||
+                  // cleanup ttl every minute
+                  (this.ttl && this.ttlLast + this.ttl < ttl))) {
                 return;
             }
-            self.isDirty = null;
+            this.isDirty = null;
+            this.ttlLast = ttl;
             // cleanup dbRowList
-            self.dbRowList = self.dbRowList.filter(function (dbRow) {
-                return !dbRow.$meta.isRemoved;
-            });
-            // cleanup idIndexList
-            self.idIndexList.forEach(function (dict, ii) {
-                tmp = dict.dict;
-                dict = self.idIndexList[ii].dict = {};
-                Object.keys(tmp).forEach(function (id) {
-                    if (!tmp[id].$meta.isRemoved) {
-                        dict[id] = tmp[id];
-                    }
-                });
-            });
+            list = this.dbRowList;
+            this.dbRowList = [];
+            // optimization - for-loop
+            for (ii = 0; ii < list.length; ii += 1) {
+                dbRow = list[ii];
+                // cleanup ttl
+                if (this.ttl && dbRow.$meta.ttl < ttl) {
+                    this._crudRemoveOneById(dbRow);
+                // cleanup isRemoved
+                } else if (!dbRow.$meta.isRemoved) {
+                    this.dbRowList.push(dbRow);
+                }
+            }
         };
 
         local._DbTable.prototype._crudGetManyByQuery = function (query) {
         /*
          * this function will get the dbRow's in the dbTable with the given query
          */
-            this._cleanup();
             return local.dbRowListGetManyByQuery(this.dbRowList, local.normalizeDict(query));
         };
 
@@ -662,51 +668,51 @@
         /*
          * this function will get the dbRow in the dbTable with the given idDict
          */
-            var id, result, self;
-            self = this;
+            var id, result;
             idDict = local.normalizeDict(idDict);
             result = null;
-            self.idIndexList.some(function (idIndex) {
+            this.idIndexList.some(function (idIndex) {
                 id = idDict[idIndex.name];
                 // optimization - hasOwnProperty
                 if (idIndex.dict.hasOwnProperty(id)) {
                     result = idIndex.dict[id];
-                    result = result.$meta.isRemoved
-                        ? null
-                        : result;
                     return result;
                 }
             });
             return result;
         };
 
-        local._DbTable.prototype._crudRemoveOneById = function (idDict) {
+        local._DbTable.prototype._crudRemoveOneById = function (idDict, circularList) {
         /*
          * this function will remove the dbRow from the dbTable with the given idDict
          */
-            var existing, id, result, self;
+            var id, result, self;
+            if (!idDict) {
+                return null;
+            }
             self = this;
-            idDict = local.normalizeDict(idDict);
+            circularList = circularList || [idDict];
             result = null;
             self.idIndexList.forEach(function (idIndex) {
                 id = idDict[idIndex.name];
                 // optimization - hasOwnProperty
-                if (idIndex.dict.hasOwnProperty(id)) {
-                    existing = idIndex.dict[id];
-                    if (!existing.$meta.isRemoved) {
-                        result = result || existing;
-                        // decrement dbRowCount
-                        self.dbRowCount -= 1;
-                        // optimization - soft-delete
-                        existing.$meta.isRemoved = true;
-                        self.isDirty = true;
-                        // recurse
-                        self._crudRemoveOneById(existing);
-                    }
+                if (!idIndex.dict.hasOwnProperty(id)) {
+                    return;
                 }
+                result = idIndex.dict[id];
+                delete idIndex.dict[id];
+                // optimization - soft-delete
+                result.$meta.isRemoved = true;
+                self.isDirty = true;
+                if (circularList.indexOf(result) >= 0) {
+                    return;
+                }
+                circularList.push(result);
+                // recurse
+                self._crudRemoveOneById(result, circularList);
             });
             // persist
-            self._persist();
+            this._persist();
             return result;
         };
 
@@ -715,8 +721,7 @@
          * this function will set the dbRow into the dbTable with the given dbRow._id
          * WARNING - existing dbRow with conflicting dbRow._id will be removed
          */
-            var existing, id, normalize, timeNow, self;
-            self = this;
+            var existing, id, normalize, timeNow;
             normalize = function (dbRow) {
             /*
              * this function will recursively normalize dbRow
@@ -745,12 +750,10 @@
             normalize(dbRow);
             dbRow = local.jsonCopy(dbRow);
             // remove existing dbRow
-            existing = self._crudRemoveOneById(dbRow) || dbRow;
+            existing = this._crudRemoveOneById(dbRow) || dbRow;
             // init meta
-            dbRow.$meta = {};
-            // increment dbRowCount
-            self.dbRowCount += 1;
-            self.idIndexList.forEach(function (idIndex) {
+            dbRow.$meta = { isRemoved: null, ttl: this.ttl + Date.now() };
+            this.idIndexList.forEach(function (idIndex) {
                 // auto-set id
                 id = local.dbRowSetId(existing, idIndex);
                 // copy id from existing to dbRow
@@ -759,9 +762,9 @@
                 idIndex.dict[id] = dbRow;
             });
             // update dbRowList
-            self.dbRowList.push(dbRow);
+            this.dbRowList.push(dbRow);
             // persist
-            self._persist();
+            this._persist();
             return dbRow;
         };
 
@@ -773,32 +776,27 @@
          * existing dbRow's with conflicting unique-keys (besides the one being updated)
          * will be removed
          */
-            var id, result, self;
-            self = this;
+            var id, result;
             dbRow = local.jsonCopy(local.normalizeDict(dbRow));
             result = null;
-            self.idIndexList.some(function (idIndex) {
+            this.idIndexList.some(function (idIndex) {
                 id = dbRow[idIndex.name];
                 // optimization - hasOwnProperty
                 if (idIndex.dict.hasOwnProperty(id)) {
                     result = idIndex.dict[id];
-                    result = result.$meta.isRemoved
-                        ? null
-                        : result;
-                    if (result) {
-                        // remove existing dbRow
-                        self._crudRemoveOneById(result);
-                        // update dbRow
-                        dbRow._timeCreated = undefined;
-                        result = local.objectSetOverride(result, dbRow, Infinity);
-                        return true;
-                    }
+                    return true;
                 }
             });
-            if (result) {
-                // replace dbRow
-                result = self._crudSetOneById(result);
+            if (!result) {
+                return result;
             }
+            // remove existing dbRow
+            this._crudRemoveOneById(result);
+            // update dbRow
+            dbRow._timeCreated = undefined;
+            local.objectSetOverride(result, dbRow, Infinity);
+            // replace dbRow
+            result = this._crudSetOneById(result);
             return result;
         };
 
@@ -831,13 +829,15 @@
         /*
          * this function will count all of dbRow's in the dbTable
          */
-            return local.setTimeoutOnError(onError, null, this.dbRowCount);
+            this._cleanup();
+            return local.setTimeoutOnError(onError, null, this.dbRowList.length);
         };
 
         local._DbTable.prototype.crudCountManyByQuery = function (query, onError) {
         /*
          * this function will count the number of dbRow's in the dbTable with the given query
          */
+            this._cleanup();
             return local.setTimeoutOnError(
                 onError,
                 null,
@@ -850,6 +850,7 @@
          * this function will get the dbRow's in the dbTable with the given idDictList
          */
             var self;
+            this._cleanup();
             self = this;
             return local.setTimeoutOnError(onError, null, local.dbRowProject(
                 local.normalizeList(idDictList).map(function (idDict) {
@@ -863,6 +864,7 @@
          * this function will get the dbRow's in the dbTable with the given options.query
          */
             var result;
+            this._cleanup();
             options = local.normalizeDict(options);
             // get dbRow's with the given options.query
             result = this._crudGetManyByQuery(options.query);
@@ -899,6 +901,7 @@
         /*
          * this function will get the dbRow in the dbTable with the given idDict
          */
+            this._cleanup();
             return local.setTimeoutOnError(onError, null, local.dbRowProject(
                 this._crudGetOneById(idDict)
             ));
@@ -908,13 +911,15 @@
         /*
          * this function will get the dbRow in the dbTable with the given query
          */
-            var result, self;
-            self = this;
-            self._cleanup();
-            self.dbRowList.some(function (dbRow) {
-                result = local.dbRowListGetManyByQuery([dbRow], query)[0];
-                return result;
-            });
+            var ii, result;
+            this._cleanup();
+            // optimization - for-loop
+            for (ii = 0; ii < this.dbRowList.length; ii += 1) {
+                result = local.dbRowListGetManyByQuery([this.dbRowList[ii]], query)[0];
+                if (result) {
+                    break;
+                }
+            }
             return local.setTimeoutOnError(onError, null, local.dbRowProject(result));
         };
 
@@ -1046,20 +1051,22 @@
         /*
          * this function will export the db
          */
-            var result, self;
+            var ii, result, self;
+            this._cleanup();
             self = this;
-            self._cleanup();
             result = '';
+            result += self.name + ' ttlSet ' + self.ttl + '\n';
             self.idIndexList.forEach(function (idIndex) {
                 result += self.name + ' idIndexCreate ' + JSON.stringify({
                     isInteger: idIndex.isInteger,
                     name: idIndex.name
                 }) + '\n';
             });
-            self.dbRowList.forEach(function (dbRow) {
+            // optimization - for-loop
+            for (ii = 0; ii < self.dbRowList.length; ii += 1) {
                 result += self.name + ' dbRowSet ' +
-                    JSON.stringify(local.dbRowProject(dbRow)) + '\n';
-            });
+                    JSON.stringify(local.dbRowProject(self.dbRowList[ii])) + '\n';
+            }
             return local.setTimeoutOnError(onError, null, result.trim());
         };
 
@@ -1067,8 +1074,7 @@
         /*
          * this function will create an idIndex with the given options.name
          */
-            var idIndex, name, self;
-            self = this;
+            var dbRow, idIndex, ii, name;
             options = local.normalizeDict(options);
             name = String(options.name);
             // disallow idIndex with dot-name
@@ -1076,23 +1082,25 @@
                 return local.setTimeoutOnError(onError);
             }
             // remove existing idIndex
-            self.idIndexRemove(options);
+            this.idIndexRemove(options);
             // init idIndex
             idIndex = {
                 dict: {},
                 isInteger: options.isInteger,
                 name: options.name
             };
-            self.idIndexList.push(idIndex);
-            Object.keys(self.idIndexList[0].dict).forEach(function (dbRow) {
-                dbRow = self.idIndexList[0].dict[dbRow];
+            this.idIndexList.push(idIndex);
+            // populate idIndex with dbRowList
+            // optimization - for-loop
+            for (ii = 0; ii < this.dbRowList.length; ii += 1) {
+                dbRow = this.dbRowList[ii];
                 // auto-set id
                 if (!dbRow.$meta.isRemoved) {
                     idIndex.dict[local.dbRowSetId(dbRow, idIndex)] = dbRow;
                 }
-            });
+            }
             // persist
-            self._persist();
+            this._persist();
             return local.setTimeoutOnError(onError);
         };
 
@@ -1100,15 +1108,32 @@
         /*
          * this function will remove the idIndex with the given options.name
          */
-            var name, self;
-            self = this;
+            var name;
             options = local.normalizeDict(options);
             name = String(options.name);
-            self.idIndexList = self.idIndexList.filter(function (idIndex) {
+            this.idIndexList = this.idIndexList.filter(function (idIndex) {
                 return idIndex.name !== name || idIndex.name === '_id';
             });
             // persist
-            self._persist();
+            this._persist();
+            return local.setTimeoutOnError(onError);
+        };
+
+        local._DbTable.prototype.ttlSet = function (ttl, onError) {
+        /*
+         * this function will set the ttl in milliseconds
+         */
+            var ii;
+            // set ttl in milliseconds
+            this.ttl = ttl;
+            // update dbRowList
+            ttl += Date.now();
+            // optimization - for-loop
+            for (ii = 0; ii < this.dbRowList.length; ii += 1) {
+                this.dbRowList[ii].$meta.ttl = ttl;
+            }
+            // persist
+            this._persist();
             return local.setTimeoutOnError(onError);
         };
 
@@ -1169,23 +1194,23 @@
                 match2,
                 match3
             ) {
-                try {
-                    // jslint-hack
-                    local.nop(match0);
-                    switch (match2) {
-                    case 'dbRowSet':
-                        dbTable = local.dbTableCreateOne({ isLoaded: true, name: match1 });
-                        dbTable.crudSetOneById(JSON.parse(match3));
-                        break;
-                    case 'idIndexCreate':
-                        dbTable = local.dbTableCreateOne({ isLoaded: true, name: match1 });
-                        dbTable.idIndexCreate(JSON.parse(match3));
-                        break;
-                    default:
-                        throw new Error('dbImport - invalid operation - ' + match0);
-                    }
-                } catch (errorCaught) {
-                    local.onErrorDefault(errorCaught);
+                // jslint-hack
+                local.nop(match0);
+                switch (match2) {
+                case 'dbRowSet':
+                    dbTable = local.dbTableCreateOne({ isLoaded: true, name: match1 });
+                    dbTable.crudSetOneById(JSON.parse(match3));
+                    break;
+                case 'idIndexCreate':
+                    dbTable = local.dbTableCreateOne({ isLoaded: true, name: match1 });
+                    dbTable.idIndexCreate(JSON.parse(match3));
+                    break;
+                case 'ttlSet':
+                    dbTable = local.dbTableCreateOne({ isLoaded: true, name: match1 });
+                    dbTable.ttlSet(JSON.parse(match3));
+                    break;
+                default:
+                    local.onErrorDefault(new Error('dbImport - invalid operation - ' + match0));
                 }
             });
             return local.setTimeoutOnError(onError);
@@ -1593,7 +1618,6 @@
 
 
 
-
 /* script-begin /assets.utility2.lib.github_crud.js */
 ///usr/bin/env node
 /* istanbul instrument in package github-crud */
@@ -1672,6 +1696,10 @@
                         }
                     }
                 });
+                if (response && (response.statusCode < 200 || response.statusCode >= 300)) {
+                    error = error || new Error(response.statusCode);
+                    console.error(String(response.data));
+                }
                 // debug response
                 console.error(new Date().toISOString() + ' http-response ' + JSON.stringify({
                     statusCode: (response && response.statusCode) || 0,
@@ -1697,10 +1725,6 @@
                 urlParsed.protocol.slice(0, -1)
             ).request(urlParsed, function (_response) {
                 response = _response;
-                if (response.statusCode < 200 || response.statusCode > 299) {
-                    onError2(new Error(response.statusCode));
-                    return;
-                }
                 chunkList = [];
                 response
                     .on('data', function (chunk) {
@@ -1953,7 +1977,6 @@
                 },
                 method: options.method,
                 responseJson: {},
-                responseText: '',
                 sha: options.sha,
                 url: options.url
             };
@@ -2066,7 +2089,6 @@
     }
 }());
 /* script-end /assets.utility2.lib.github_crud.js */
-
 
 
 
@@ -2200,15 +2222,15 @@
             }
             // init writer
             local.coverageReportHtml = '';
-            local.coverageReportHtml +=
-                '<div style="background: #fff; border: 1px solid #000; margin 0; padding: 0;">';
+            local.coverageReportHtml += '<div class="coverageReportDiv">\n' +
+                '<h1>coverage report</h1>\n' +
+                '<div ' +
+                'style="background: #fff; border: 1px solid #000; margin 0; padding: 0;">\n';
             local.writerData = '';
             options.sourceStore = {};
             options.writer = local.writer;
             // 1. print coverage in text-format to stdout
-            if (local.modeJs === 'node') {
-                new local.TextReport(options).writeReport(local.collector);
-            }
+            new local.TextReport(options).writeReport(local.collector);
             // 2. write coverage in html-format to filesystem
             new local.HtmlReport(options).writeReport(local.collector);
             local.writer.writeFile('', local.nop);
@@ -2238,11 +2260,7 @@
             );
             console.log('created coverage file://' + options.dir + '/index.html');
             // 3. return coverage in html-format as a single document
-            if (local.modeJs === 'browser' && document.querySelector('.istanbulCoverageDiv')) {
-                document.querySelector('.istanbulCoverageDiv').innerHTML =
-                    local.coverageReportHtml;
-            }
-            local.coverageReportHtml += '</div>';
+            local.coverageReportHtml += '</div>\n</div>\n';
             return local.coverageReportHtml;
         };
 
@@ -2313,7 +2331,7 @@
             return new local.Instrumenter({
                 embedSource: true,
                 noAutoWrap: true
-            }).instrumentSync(code, file);
+            }).instrumentSync(code, file).trimLeft();
         };
         local.util = { inherits: local.nop };
     }());
@@ -4021,7 +4039,7 @@ local['./common/defaults'] = module.exports; }());
 local['foot.txt'] = '\
 </div>\n\
 <div class="footer">\n\
-    <div class="meta">Generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at {{datetime}}</div>\n\
+    <div class="meta">Generated by <a href="https://github.com/kaizhu256/node-utility2" target="_blank">utility2</a> at {{datetime}}</div>\n\
 </div>\n\
 </body>\n\
 </html>\n\
@@ -4657,7 +4675,6 @@ local.templateCoverageBadgeSvg =
     }())
 ));
 /* script-end /assets.utility2.lib.istanbul.js */
-
 
 
 
@@ -7191,7 +7208,6 @@ local.CSSLint = CSSLint; local.JSLINT = JSLINT, local.jslintEs6 = jslint; }());
 
 
 
-
 /* script-begin /assets.utility2.lib.sjcl.js */
 /*jslint
     bitwise: true,
@@ -7698,7 +7714,6 @@ sjcl.misc.scrypt.blockxor = function(S, Si, D, Di, len) {
     }
 }());
 /* script-end /assets.utility2.lib.sjcl.js */
-
 
 
 
@@ -8408,7 +8423,6 @@ split_lines=split_lines,exports.MAP=MAP,exports.ast_squeeze_more=require("./sque
 
 
 
-
 /* script-begin /assets.utility2.js */
 ///usr/bin/env node
 /* istanbul instrument in package utility2 */
@@ -8503,13 +8517,12 @@ split_lines=split_lines,exports.MAP=MAP,exports.ast_squeeze_more=require("./sque
         local.assetsDict = {};
 /* jslint-ignore-begin */
 local.assetsDict['/assets.apiDoc.template.html'] = '\
+<div class="apiDocDiv">\n\
 <style>\n\
 /*csslint\n\
 */\n\
-body {\n\
-    background: #fff;\n\
-}\n\
 .apiDocDiv {\n\
+    background: #fff;\n\
     font-family: Arial, Helvetica, sans-serif;\n\
 }\n\
 .apiDocDiv a[href] {\n\
@@ -8519,10 +8532,6 @@ body {\n\
 }\n\
 .apiDocDiv a[href]:hover {\n\
     text-decoration: underline;\n\
-}\n\
-.apiDocSectionDiv {\n\
-    border-top: 1px solid;\n\
-    margin-top: 20px;\n\
 }\n\
 .apiDocCodeCommentSpan {\n\
     background: #bbf;\n\
@@ -8540,13 +8549,23 @@ body {\n\
     padding: 5px;\n\
     white-space: pre-wrap;\n\
 }\n\
+.apiDocFooterDiv {\n\
+    margin-top: 20px;\n\
+    text-align: center;\n\
+}\n\
+.apiDocModuleLi {\n\
+    margin-top: 10px;\n\
+}\n\
+.apiDocSectionDiv {\n\
+    border-top: 1px solid;\n\
+    margin-top: 20px;\n\
+}\n\
 .apiDocSignatureSpan {\n\
     color: #777;\n\
     font-weight: bold;\n\
 }\n\
 </style>\n\
-<div class="apiDocDiv">\n\
-<h1>api-doc\n\
+<h1>api documentation\n\
     <a\n\
         {{#if env.npm_package_homepage}}\n\
         href="{{env.npm_package_homepage}}"\n\
@@ -8554,8 +8573,8 @@ body {\n\
     >({{env.npm_package_nameAlias}} v{{env.npm_package_version}})</a>\n\
 </h1>\n\
 <div class="apiDocSectionDiv"><a href="#"><h1>table of contents</h1></a><ul>\n\
-{{#each moduleList}}\n\
-    <li><a href="#{{id}}">module {{name}}</a><ol>\n\
+    {{#each moduleList}}\n\
+    <li class="apiDocModuleLi"><a href="#{{id}}">module {{name}}</a><ol>\n\
         {{#each elementList}}\n\
         <li>\n\
             {{#if source}}\n\
@@ -8569,27 +8588,32 @@ body {\n\
         </li>\n\
         {{/each elementList}}\n\
     </ol></li>\n\
-{{/each moduleList}}\n\
-</ul></div>\n\
-    {{#each moduleList}}\n\
-    <div class="apiDocSectionDiv">\n\
-    <h1><a href="#{{id}}" id="{{id}}">module {{name}}</a></h1>\n\
-        {{#each elementList}}\n\
-        {{#if source}}\n\
-        <h2>\n\
-            <a href="#{{id}}" id="{{id}}">\n\
-            {{name}}\n\
-            <span class="apiDocSignatureSpan">{{signature}}</span>\n\
-            </a>\n\
-        </h2>\n\
-        <ul>\n\
-        <li>description and source-code<pre class="apiDocCodePre">{{source}}</pre></li>\n\
-        <li>example usage<pre class="apiDocCodePre">{{example}}</pre></li>\n\
-        </ul>\n\
-        {{/if source}}\n\
-        {{/each elementList}}\n\
-    </div>\n\
     {{/each moduleList}}\n\
+</ul></div>\n\
+{{#each moduleList}}\n\
+<div class="apiDocSectionDiv">\n\
+<h1><a href="#{{id}}" id="{{id}}">module {{name}}</a></h1>\n\
+    {{#each elementList}}\n\
+    {{#if source}}\n\
+    <h2>\n\
+        <a href="#{{id}}" id="{{id}}">\n\
+        {{name}}\n\
+        <span class="apiDocSignatureSpan">{{signature}}</span>\n\
+        </a>\n\
+    </h2>\n\
+    <ul>\n\
+    <li>description and source-code<pre class="apiDocCodePre">{{source}}</pre></li>\n\
+    <li>example usage<pre class="apiDocCodePre">{{example}}</pre></li>\n\
+    </ul>\n\
+    {{/if source}}\n\
+    {{/each elementList}}\n\
+</div>\n\
+{{/each moduleList}}\n\
+<div class="apiDocFooterDiv">\n\
+    [ this api documentation was created with\n\
+    <a href="https://github.com/kaizhu256/node-utility2" target="_blank">utility2</a>\n\
+    ]\n\
+</div>\n\
 </div>\n\
 ';
 
@@ -8628,6 +8652,10 @@ body {\n\
 body > * {\n\
     margin-bottom: 1rem;\n\
 }\n\
+.utility2FooterDiv {\n\
+    margin-top: 20px;\n\
+    text-align: center;\n\
+}\n\
 </style>\n\
 <style>\n\
 /*csslint\n\
@@ -8636,42 +8664,49 @@ body > * {\n\
 </head>\n\
 <body>\n\
 <!-- utility2-comment\n\
-    <div id="ajaxProgressDiv1" style="background: #d00; height: 2px; left: 0; margin: 0; padding: 0; position: fixed; top: 0; transition: background 0.5s, width 1.5s; width: 25%;"></div>\n\
+<div id="ajaxProgressDiv1" style="background: #d00; height: 2px; left: 0; margin: 0; padding: 0; position: fixed; top: 0; transition: background 0.5s, width 1.5s; width: 25%;"></div>\n\
 utility2-comment -->\n\
-    <h1>\n\
+<h1>\n\
 <!-- utility2-comment\n\
-        <a\n\
-            {{#if env.npm_package_homepage}}\n\
-            href="{{env.npm_package_homepage}}"\n\
-            {{/if env.npm_package_homepage}}\n\
-            target="_blank"\n\
-        >\n\
+    <a\n\
+        {{#if env.npm_package_homepage}}\n\
+        href="{{env.npm_package_homepage}}"\n\
+        {{/if env.npm_package_homepage}}\n\
+        target="_blank"\n\
+    >\n\
 utility2-comment -->\n\
-            {{env.npm_package_nameAlias}} v{{env.npm_package_version}}\n\
+        {{env.npm_package_nameAlias}} v{{env.npm_package_version}}\n\
 <!-- utility2-comment\n\
-        </a>\n\
+    </a>\n\
 utility2-comment -->\n\
-    </h1>\n\
-    <h3>{{env.npm_package_description}}</h3>\n\
+</h1>\n\
+<h3>{{env.npm_package_description}}</h3>\n\
 <!-- utility2-comment\n\
-    <h4><a download href="assets.app.js">download standalone app</a></h4>\n\
-    <button class="onclick" id="testRunButton1">run internal test</button><br>\n\
-    <div id="testReportDiv1" style="display: none;"></div>\n\
+<h4><a download href="assets.app.js">download standalone app</a></h4>\n\
+<button class="onclick onreset" id="testRunButton1">run internal test</button><br>\n\
+<div id="testReportDiv1" style="display: none;"></div>\n\
 utility2-comment -->\n\
 \n\
+\n\
+\n\
 <!-- utility2-comment\n\
-    {{#if isRollup}}\n\
-    <script src="assets.app.js"></script>\n\
-    {{#unless isRollup}}\n\
+{{#if isRollup}}\n\
+<script src="assets.app.js"></script>\n\
+{{#unless isRollup}}\n\
 utility2-comment -->\n\
-    <script src="assets.utility2.rollup.js"></script>\n\
-    <script src="jsonp.utility2._stateInit?callback=window.utility2._stateInit"></script>\n\
-    <script src="assets.jslint.rollup.js"></script>\n\
-    <script src="assets.example.js"></script>\n\
-    <script src="assets.test.js"></script>\n\
+<script src="assets.utility2.rollup.js"></script>\n\
+<script src="jsonp.utility2._stateInit?callback=window.utility2._stateInit"></script>\n\
+<script src="assets.jslint.rollup.js"></script>\n\
+<script src="assets.example.js"></script>\n\
+<script src="assets.test.js"></script>\n\
 <!-- utility2-comment\n\
-    {{/if isRollup}}\n\
+{{/if isRollup}}\n\
 utility2-comment -->\n\
+<div class="utility2FooterDiv">\n\
+    [ this app was created with\n\
+    <a href="https://github.com/kaizhu256/node-utility2" target="_blank">utility2</a>\n\
+    ]\n\
+</div>\n\
 </body>\n\
 </html>\n\
 ';
@@ -8750,7 +8785,7 @@ jslint-lite\n\
 ![screen-capture](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.testExampleJs.browser..png)\n\
 \n\
 #### to run this example, follow the instruction in the script below\n\
-- [example.js](https://kaizhu256.github.io/node-jslint-lite/build/example.js)\n\
+- [example.js](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/example.js)\n\
 ```javascript\n\
 /*\n\
 example.js\n\
@@ -8821,19 +8856,76 @@ instruction\n\
     // run browser js-env code - post-init\n\
     case \'browser\':\n\
         local.testRunBrowser = function (event) {\n\
-            return event;\n\
+            if (!event || (event &&\n\
+                    event.currentTarget &&\n\
+                    event.currentTarget.className &&\n\
+                    event.currentTarget.className.includes &&\n\
+                    event.currentTarget.className.includes(\'onreset\'))) {\n\
+                // reset output\n\
+                Array.from(\n\
+                    document.querySelectorAll(\'body > .resettable\')\n\
+                ).forEach(function (element) {\n\
+                    switch (element.tagName) {\n\
+                    case \'INPUT\':\n\
+                    case \'TEXTAREA\':\n\
+                        element.value = \'\';\n\
+                        break;\n\
+                    default:\n\
+                        element.textContent = \'\';\n\
+                    }\n\
+                });\n\
+            }\n\
+            switch (event && event.currentTarget && event.currentTarget.id) {\n\
+            case \'testRunButton1\':\n\
+                // show tests\n\
+                if (document.querySelector(\'#testReportDiv1\').style.display === \'none\') {\n\
+                    document.querySelector(\'#testReportDiv1\').style.display = \'block\';\n\
+                    document.querySelector(\'#testRunButton1\').textContent =\n\
+                        \'hide internal test\';\n\
+                    local.modeTest = true;\n\
+                    local.testRunDefault(local);\n\
+                // hide tests\n\
+                } else {\n\
+                    document.querySelector(\'#testReportDiv1\').style.display = \'none\';\n\
+                    document.querySelector(\'#testRunButton1\').textContent = \'run internal test\';\n\
+                }\n\
+                break;\n\
+            // custom-case\n\
+            default:\n\
+                break;\n\
+            }\n\
+            if (document.querySelector(\'#inputTextareaEval1\') && (!event || (event &&\n\
+                    event.currentTarget &&\n\
+                    event.currentTarget.className &&\n\
+                    event.currentTarget.className.includes &&\n\
+                    event.currentTarget.className.includes(\'oneval\')))) {\n\
+                // try to eval input-code\n\
+                try {\n\
+                    /*jslint evil: true*/\n\
+                    eval(document.querySelector(\'#inputTextareaEval1\').value);\n\
+                } catch (errorCaught) {\n\
+                    console.error(errorCaught.stack);\n\
+                }\n\
+            }\n\
         };\n\
         // log stderr and stdout to #outputTextareaStdout1\n\
         [\'error\', \'log\'].forEach(function (key) {\n\
-            console[\'_\' + key] = console[key];\n\
+            console[key + \'_original\'] = console[key];\n\
             console[key] = function () {\n\
-                console[\'_\' + key].apply(console, arguments);\n\
-                (document.querySelector(\'#outputTextareaStdout1\') || { value: \'\' }).value +=\n\
-                    Array.from(arguments).map(function (arg) {\n\
-                        return typeof arg === \'string\'\n\
-                            ? arg\n\
-                            : JSON.stringify(arg, null, 4);\n\
-                    }).join(\' \') + \'\\n\';\n\
+                var element;\n\
+                console[key + \'_original\'].apply(console, arguments);\n\
+                element = document.querySelector(\'#outputTextareaStdout1\');\n\
+                if (!element) {\n\
+                    return;\n\
+                }\n\
+                // append text to #outputTextareaStdout1\n\
+                element.value += Array.from(arguments).map(function (arg) {\n\
+                    return typeof arg === \'string\'\n\
+                        ? arg\n\
+                        : JSON.stringify(arg, null, 4);\n\
+                }).join(\' \') + \'\\n\';\n\
+                // scroll textarea to bottom\n\
+                element.scrollTop = element.scrollHeight;\n\
             };\n\
         });\n\
         // init event-handling\n\
@@ -8843,7 +8935,7 @@ instruction\n\
             });\n\
         });\n\
         // run tests\n\
-        local.testRunBrowser({ currentTarget: { id: \'default\' } });\n\
+        local.testRunBrowser();\n\
         break;\n\
 \n\
 \n\
@@ -8927,7 +9019,7 @@ local.assetsDict['/assets.index.template.html'].replace((/\n/g), '\\n\\\n') +
 }());\n\
 ```\n\
 \n\
-#### output from electron\n\
+#### output from browser\n\
 ![screen-capture](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.testExampleJs.browser..png)\n\
 \n\
 #### output from shell\n\
@@ -8965,7 +9057,7 @@ local.assetsDict['/assets.index.template.html'].replace((/\n/g), '\\n\\\n') +
         "env": "env",\n\
         "heroku-postbuild": "npm install \'kaizhu256/node-utility2#alpha\' && utility2 shRun shDeployHeroku",\n\
         "postinstall": "if [ -f lib.jslint.npm-scripts.sh ]; then ./lib.jslint.npm-scripts.sh postinstall; fi",\n\
-        "publish-alias": "VERSION=$(npm info $npm_package_name version); for ALIAS in undefined; do utility2 shRun shNpmPublish $ALIAS $VERSION; utility2 shRun shNpmTestPublished $ALIAS || exit $?; done",\n\
+        "publish-alias": "VERSION=$(npm info $npm_package_name version); for ALIAS in; do utility2 shRun shNpmPublishAs . $ALIAS $VERSION; utility2 shRun shNpmTestPublished $ALIAS || exit $?; done",\n\
         "start": "export PORT=${PORT:-8080} && export npm_config_mode_auto_restart=1 && utility2 shRun shIstanbulCover test.js",\n\
         "test": "export PORT=$(utility2 shServerPortRandom) && utility2 test test.js"\n\
     },\n\
@@ -8991,8 +9083,6 @@ shBuild() {(set -e\n\
 # this function will run the main build\n\
     # init env\n\
     . node_modules/.bin/utility2 && shInit\n\
-    # cleanup github-gh-pages dir\n\
-    # export BUILD_GITHUB_UPLOAD_PRE_SH="rm -fr build"\n\
     # init github-gh-pages commit-limit\n\
     export COMMIT_LIMIT=20\n\
     case "$CI_BRANCH" in\n\
@@ -9004,6 +9094,16 @@ shBuild() {(set -e\n\
         ;;\n\
     master)\n\
         shBuildCiDefault\n\
+        git tag "$npm_package_version" || true\n\
+        git push "git@github.com:$GITHUB_REPO.git" "$npm_package_version" || true\n\
+        ;;\n\
+    publish)\n\
+        printf "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > "$HOME/.npmrc"\n\
+        export CI_BRANCH=alpha\n\
+        shNpmPublishAs\n\
+        shBuildCiDefault\n\
+        npm run publish-alias\n\
+        git push "git@github.com:$GITHUB_REPO.git" publish:beta\n\
         ;;\n\
     esac\n\
 )}\n\
@@ -9029,6 +9129,11 @@ shBuildCiTestPre() {(set -e\n\
 \n\
 shBuild\n\
 ```\n\
+\n\
+\n\
+\n\
+# misc\n\
+- this package was created with [utility2](https://github.com/kaizhu256/node-utility2)\n\
 ';
 
 
@@ -9038,14 +9143,21 @@ local.assetsDict['/assets.test.js'] = '';
 
 
 local.assetsDict['/assets.testReport.template.html'] = '\
+<div class="testReportDiv">\n\
 <style>\n\
 /*csslint\n\
     adjoining-classes: false\n\
 */\n\
+.testReportDiv {\n\
+    font-family: Arial, Helvetica, sans-serif;\n\
+}\n\
+.testReportFooterDiv {\n\
+    margin-top: 20px;\n\
+    text-align: center;\n\
+}\n\
 .testReportPlatformDiv {\n\
     background: #fff;\n\
     border: 1px solid black;\n\
-    font-family: Arial, Helvetica, sans-serif;\n\
     margin-top: 20px;\n\
     padding: 0 10px 10px 10px;\n\
     text-align: left;\n\
@@ -9068,7 +9180,7 @@ local.assetsDict['/assets.testReport.template.html'] = '\
 }\n\
 .testReportPlatformDiv span {\n\
     display: inline-block;\n\
-    width: 8rem;\n\
+    width: 120px;\n\
 }\n\
 .testReportPlatformDiv.summary {\n\
     background: #bfb;\n\
@@ -9088,15 +9200,15 @@ local.assetsDict['/assets.testReport.template.html'] = '\
     background: #99f;\n\
 }\n\
 </style>\n\
-<div class="testReportPlatformDiv summary">\n\
-<h1>\n\
+<h1>test report\n\
     <a\n\
         {{#if env.npm_package_homepage}}\n\
         href="{{env.npm_package_homepage}}"\n\
         {{/if env.npm_package_homepage}}\n\
-    >{{env.npm_package_nameAlias}} v{{env.npm_package_version}}</a>\n\
+    >({{env.npm_package_nameAlias}} v{{env.npm_package_version}})</a>\n\
 </h1>\n\
-<h2>test-report summary</h2>\n\
+<div class="testReportPlatformDiv summary">\n\
+<h2>summary</h2>\n\
 <h4>\n\
     <span>version</span>-\n\
         {{env.npm_package_version}}<br>\n\
@@ -9162,6 +9274,12 @@ local.assetsDict['/assets.testReport.template.html'] = '\
 </pre>\n\
 </div>\n\
 {{/each testPlatformList}}\n\
+<div class="testReportFooterDiv">\n\
+    [ this test report was created with\n\
+    <a href="https://github.com/kaizhu256/node-utility2" target="_blank">utility2</a>\n\
+    ]\n\
+</div>\n\
+</div>\n\
 ';
 
 
@@ -9256,13 +9374,6 @@ local.assetsDict['/assets.utility2.rollup.end.js'] = '\
 
 
 local.assetsDict['/favicon.ico'] = '';
-
-
-
-// https://www.w3.org/TR/html5/forms.html#valid-e-mail-address
-local.regexpEmailValidate = (
-/^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/
-);
 /* jslint-ignore-end */
     }());
 
@@ -10563,13 +10674,23 @@ return Utf8ArrayToStr(bff);
         /*
          * this function will build the api-doc
          */
-            var element, elementCreate, elementName, html, module, tmp, trimLeft;
+            var element,
+                elementCreate,
+                elementName,
+                module,
+                moduleAddConditional,
+                moduleExports,
+                tmp,
+                trimLeft;
             // optimization - do not run if $npm_config_mode_coverage = all
             if (local.env.npm_config_mode_coverage === 'all') {
                 onError();
                 return;
             }
             elementCreate = function () {
+            /*
+             * this function will create the html-element
+             */
                 element = {};
                 element.moduleName = module.name.split('.');
                 // handle case where module.exports is a function
@@ -10629,10 +10750,36 @@ return Utf8ArrayToStr(bff);
                 element.example = element.example || 'n/a';
                 return element;
             };
+            moduleAddConditional = function (prefix, name, exports) {
+            /*
+             * this function will conditionally add exports to options.moduleDict[name]
+             */
+                if (options.moduleDict[prefix + '.' + name] ||
+                        options.circularList.indexOf(exports) >= 0) {
+                    return;
+                }
+                tmp = [exports, exports && exports.prototype].some(function (dict) {
+                    return dict && Object.keys(dict).some(function (key) {
+                        return typeof dict[key] === 'function';
+                    });
+                });
+                if (!tmp) {
+                    return;
+                }
+                options.circularList.push(exports);
+                options.moduleDict[prefix + '.' + name] = {
+                    exampleFileList: ['lib.' +
+                        name.replace((/\.prototype$/), '').split('.').slice(-1)[0] +
+                        '.js'],
+                    exports: exports
+                };
+                // recurse prototype
+                moduleAddConditional(prefix, name + '.prototype', exports.prototype);
+            };
             trimLeft = function (text) {
-                /*
-                 * this function will normalize the whitespace around the text
-                 */
+            /*
+             * this function will normalize the whitespace around the text
+             */
                 tmp = '';
                 text.trim().replace((/^ */gm), function (match0) {
                     if (!tmp || match0.length < tmp.length) {
@@ -10646,47 +10793,62 @@ return Utf8ArrayToStr(bff);
                 }
                 return text;
             };
-            local.objectSetDefault(options, {
+            // init options
+            options = local.objectSetDefault(options, {
+                blacklistDict: local,
+                circularList: [global],
+                exampleFileList: [
+                    'README.md',
+                    'test.js',
+                    'test.' +  local.env.npm_package_nameAlias + '.js',
+                    local.env.npm_package_main,
+                    'index.js'
+                ],
                 env: local.env,
-                exampleFileList: ['README.md', 'test.js', local.env.npm_package_main],
-                blacklistDict: local
+                html: ''
             });
             // init moduleDict
             local.objectSetDefault(options, local.objectLiteralize({
                 moduleDict: {
                     '$[]': [local.env.npm_package_nameAlias, {
-                        exampleFileList: [],
-                        exports: global.utility2_moduleExports
+                        exports: require(process.cwd())
                     }]
                 }
             }), 2);
-            // init moduleDict.*.prototype
-            options.moduleExports = options.moduleDict[local.env.npm_package_nameAlias].exports;
-            Object.keys(options.moduleExports).forEach(function (key) {
-                if (options.moduleExports[key] &&
-                        options.moduleExports[key].prototype &&
-                        (Object.keys(options.moduleExports[key]).length ||
-                            Object.keys(options.moduleExports[key].prototype).length) &&
-                        options.moduleExports[key] !== options.blacklistDict[key]) {
-                    options.moduleDict[local.env.npm_package_nameAlias + '.' + key] =
-                        options.moduleDict[local.env.npm_package_nameAlias + '.' + key] || {
-                            exampleFileList: [],
-                            exports: options.moduleExports[key]
-                        };
-                    options.moduleDict[
-                        local.env.npm_package_nameAlias + '.' + key + '.prototype'
-                    ] = options.moduleDict[
-                        local.env.npm_package_nameAlias + '.' + key + '.prototype'
-                    ] || {
-                        exampleFileList: [],
-                        exports: options.moduleExports[key].prototype
-                    };
+            // init circularList - builtin
+            Object.keys(process.binding('natives')).forEach(function (key) {
+                if (key.indexOf('/') >= 0) {
+                    return;
                 }
+                tmp = require(key);
+                options.circularList.push(tmp);
+            });
+            // init circularList - blacklistDict
+            Object.keys(options.blacklistDict).forEach(function (key) {
+                options.circularList.push(options.blacklistDict[key]);
+            });
+            // init circularList - moduleDict
+            Object.keys(options.moduleDict).forEach(function (key) {
+                options.circularList.push(options.moduleDict[key].exports);
+            });
+            // init moduleDict children
+            Object.keys(options.moduleDict).forEach(function (prefix) {
+                moduleExports = options.moduleDict[prefix].exports;
+                Object.keys(moduleExports).forEach(function (name) {
+                    moduleAddConditional(prefix, name, moduleExports[name]);
+                });
+            });
+            // init moduleDict grandchildren
+            Object.keys(options.moduleDict).forEach(function (prefix) {
+                moduleExports = options.moduleDict[prefix].exports;
+                Object.keys(moduleExports).forEach(function (name) {
+                    moduleAddConditional(prefix, name, moduleExports[name]);
+                });
             });
             // init moduleDict.example
             Object.keys(options.moduleDict).forEach(function (key) {
                 options.moduleDict[key].example =
-                    options.moduleDict[key].exampleFileList
+                    local.normalizeList(options.moduleDict[key].exampleFileList)
                     .concat(options.exampleFileList)
                     .map(function (file) {
                         return '\n\n\n\n\n\n\n\n' +
@@ -10705,9 +10867,8 @@ return Utf8ArrayToStr(bff);
                     // handle case where module.exports is a function
                     tmp = module.exports;
                     if (typeof tmp === 'function') {
-                        // shallow-copy module.exports to prevent side-effects
-                        module.exports = local.objectSetDefault({}, module.exports);
-                        module.exports[module.name.split('.').slice(-1)[0]] = tmp;
+                        module.exports[module.name.split('.').slice(-1)[0]] =
+                            module.exports[module.name.split('.').slice(-1)[0]] || tmp;
                     }
                     return {
                         elementList: Object.keys(module.exports)
@@ -10732,14 +10893,14 @@ return Utf8ArrayToStr(bff);
                         name: module.name
                     };
                 });
-            html = local.templateRender(
+            options.html = local.templateRender(
                 local.assetsDict['/assets.apiDoc.template.html'],
                 options
             );
             // create api-doc.html
             local.fsWriteFileWithMkdirpSync(
                 local.env.npm_config_dir_build + '/api-doc.html',
-                html
+                options.html
             );
             console.log('created api-doc file://' + local.env.npm_config_dir_build +
                 '/api-doc.html\n');
@@ -10925,11 +11086,13 @@ return Utf8ArrayToStr(bff);
                 (/\n {8}\$ npm install [^`]*? &&/),
                 (/\n {12}: global;\n[^`]*?\n {8}local\.global\.local = local;\n/),
                 (/\n {8}local\.global\.local = local;\n[^`]*?\n {4}\/\/ post-init\n/),
-                (/\n {8}local\.testRunBrowser = function \(event\) \{\n[^`]*?\n {8}\};\n/),
+                new RegExp('\\n {8}local\\.testRunBrowser = function \\(event\\) \\{\\n' +
+                    '[^`]*?^ {12}if \\(!event \\|\\| \\(event &&\\n', 'm'),
+                (/\n {12}\/\/ custom-case\n[^`]*?\n {12}\}\n/),
                 // customize quickstart-html-style
                 (/\n<\/style>\\n\\\n<style>\\n\\\n[^`]*?\\n\\\n<\/style>\\n\\\n/),
                 // customize quickstart-html-body
-                (/\nutility2-comment -->\\n\\\n\\n\\\n[^`]*?^<!-- utility2-comment\\n\\\n/m),
+                (/\nutility2-comment -->(?:\\n\\\n){4}[^`]*?^<!-- utility2-comment\\n\\\n/m),
                 // customize build-script
                 (/\n# internal build-script\n[\S\s]*?^- build\.sh\n/m)
             ].forEach(function (rgx) {
@@ -12373,6 +12536,10 @@ vendor\\)\\(\\b\\|[_s]\\)\
 /* jslint-ignore-begin */
 case 'header':
 return '\
+/* this rollup was created with utility2 (https://github.com/kaizhu256/node-utility2) */\n\
+\n\
+\n\
+\n\
 /*\n\
 assets.app.js\n\
 \n' + local.env.npm_package_description + '\n\
@@ -12419,7 +12586,7 @@ instruction\n\
                 return '/* script-begin ' + key + ' */\n' +
                     script.trim() +
                     '\n/* script-end ' + key + ' */\n';
-            }).join('\n\n\n\n');
+            }).join('\n\n\n');
             // init assets.lib.rollup.js
             local.objectSetDefault(local.assetsDict, local.objectLiteralize({
                 '$[]': [
@@ -13179,6 +13346,12 @@ instruction\n\
                         local.istanbulCoverageReportCreate({
                             coverage: local.global.__coverage__
                         });
+                        if (document.querySelector('#coverageReportDiv1')) {
+                            document.querySelector('#coverageReportDiv1').innerHTML =
+                                local.istanbul.coverageReportCreate({
+                                    coverage: window.__coverage__
+                                });
+                        }
                     }
                     // restore exit
                     local.tryCatchOnError(function () {
@@ -13520,6 +13693,14 @@ instruction\n\
             ? {}
             : process.env;
         local.errorDefault = new Error('default error');
+        // https://www.w3.org/TR/html5/forms.html#valid-e-mail-address
+        local.regexpEmailValidate = new RegExp(
+            '^[a-zA-Z0-9.!#$%&\'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}' +
+                '[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$'
+        );
+        // https://en.wikipedia.org/wiki/E.164
+        local.regexpPhoneValidate =
+            (/^(?:\+\d{1,3}[ \-]{0,1}){0,1}(?:\(\d{1,4}\)[ \-]{0,1}){0,1}\d[\d \-]{7,16}$/);
         local.regexpUriComponentCharset = (/[\w\!\%\'\(\)\*\-\.\~]/);
         local.regexpUuidValidate =
             (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
@@ -13532,7 +13713,6 @@ instruction\n\
         local.stringUriComponentCharset = '!%\'()*-.' +
             '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz~';
         local.taskOnTaskDict = {};
-        local.testCaseDict = local.objectSetDefault({}, local);
         local.testReport = { testPlatformList: [{
             name: local.modeJs === 'browser'
                 ? 'browser - ' + location.pathname + ' - ' + navigator.userAgent + ' - ' +
@@ -13662,6 +13842,7 @@ instruction\n\
             }
         });
         local.assetsDict['/assets.utility2.rollup.js'] = [
+            'header',
             '/assets.utility2.rollup.begin.js',
             'lib.db.js',
             'lib.github_crud.js',
@@ -13675,6 +13856,9 @@ instruction\n\
         ].map(function (key) {
             var script;
             switch (key) {
+            case 'header':
+                return '/* this rollup was created with utility2 ' +
+                    '(https://github.com/kaizhu256/node-utility2) */\n';
             case '/assets.utility2.rollup.begin.js':
             case '/assets.utility2.rollup.end.js':
                 script = local.assetsDict[key];
@@ -13697,21 +13881,10 @@ instruction\n\
             return '/* script-begin ' + key + ' */\n' +
                 script.trim() +
                 '\n/* script-end ' + key + ' */\n';
-        }).join('\n\n\n\n');
+        }).join('\n\n\n');
         // init assets.lib.rollup.js
         local.assetsDict['/assets.swgg.rollup.js'] =
             local.assetsDict['/assets.utility2.rollup.js'];
-        // init testCaseDict
-        local.tryCatchReadFile(local.__dirname + '/test.js', 'utf8').replace(
-            (/\/\/ run shared js-env code - function[\S\s]+?\n {4}\}\(\)\);/),
-            function (match0, ii, text) {
-                // preserve lineno
-                match0 = text.slice(0, ii).replace((/.+/g), '') + match0;
-                local.vm.runInNewContext(match0, local.objectSetDefault({
-                    local: local.testCaseDict
-                }, local.global));
-            }
-        );
         // merge previous test-report
         if (local.env.npm_config_file_test_report_merge) {
             console.log('merging file://' + local.env.npm_config_file_test_report_merge +
@@ -13761,7 +13934,6 @@ instruction\n\
     }
 }());
 /* script-end /assets.utility2.js */
-
 
 
 
@@ -14247,6 +14419,7 @@ border: 0;\n\
     <button class="td3">Explore</button>\n\
 </form2>\n\
     </div>\n\
+    <div class="swggAjaxProgressDiv" style="margin-top: 1rem; text-align: center;">fetching resource list; Please wait.</div>\n\
     <script src="assets.swgg.rollup.js"></script>\n\
     <script>window.swgg.uiEventListenerDict[".onEventUiReload"]();</script>\n\
 </body>\n\
@@ -15681,6 +15854,14 @@ local.templateUiResponseAjax = '\
                 case 'json':
                     tmp = JSON.stringify({ random: tmp });
                     break;
+                case 'phone':
+                    tmp = options.modeNotRandom
+                        ? '+123 (1234) 1234-1234'
+                        : '+' + Math.random().toString().slice(-3) +
+                            ' (' + Math.random().toString().slice(-4) + ') ' +
+                            Math.random().toString().slice(-4) + '-' +
+                            Math.random().toString().slice(-4);
+                    break;
                 }
                 // http://json-schema.org/latest/json-schema-validation.html#anchor25
                 // 5.2.  Validation keywords for strings
@@ -16535,8 +16716,7 @@ local.templateUiResponseAjax = '\
                 // validate schema
                 local.assert(tmp, schema.$ref);
                 // recurse
-                tmp = local.schemaNormalizeAndCopy(tmp);
-                schema = tmp;
+                schema = local.schemaNormalizeAndCopy(tmp);
             }
             // inherit allOf
             if (schema.allOf) {
@@ -16548,7 +16728,11 @@ local.templateUiResponseAjax = '\
                 });
                 schema = tmp;
             }
-            return local.jsonCopy(schema);
+            schema = local.jsonCopy(schema);
+            if (schema.type === 'object') {
+                schema.properties = local.normalizeDict(schema.properties);
+            }
+            return schema;
         };
 
         local.serverRespondJsonapi = function (request, response, error, data, meta) {
@@ -17140,9 +17324,17 @@ local.templateUiResponseAjax = '\
                     document.querySelector('.swggUiContainer > .header > .td2').value
                         .replace((/^\//), '')
                 ).href;
+            // display .swggAjaxProgressDiv
+            document.querySelector('.swggAjaxProgressDiv').textContent =
+                'fetching resource list: ' +
+                document.querySelector('.swggUiContainer > .header > .td2').value +
+                '; Please wait.';
+            document.querySelector('.swggAjaxProgressDiv').style.display = 'block';
             local.ajax({
                 url: document.querySelector('.swggUiContainer > .header > .td2').value
             }, function (error, xhr) {
+                // hide .swggAjaxProgressDiv
+                document.querySelector('.swggAjaxProgressDiv').style.display = 'none';
                 // validate no error occurred
                 local.assert(!error, error);
                 // reset state
@@ -17249,10 +17441,7 @@ local.templateUiResponseAjax = '\
                 paramDef.schema,
                 paramDef.schema && paramDef.schema.items
             ].some(function (element) {
-                local.tryCatchOnError(function () {
-                    paramDef.schema2 = paramDef.schema2 ||
-                        local.schemaNormalizeAndCopy(element).properties;
-                }, local.nop);
+                paramDef.schema2 = local.schemaNormalizeAndCopy(element || {}).properties;
                 return paramDef.schema2;
             });
             if (paramDef.schema2) {
@@ -17745,6 +17934,9 @@ local.templateUiResponseAjax = '\
                     case 'email':
                         local.assert(local.regexpEmailValidate.test(data));
                         break;
+                    case 'phone':
+                        local.assert(local.regexpPhoneValidate.test(data));
+                        break;
                     case 'json':
                         JSON.parse(data);
                         break;
@@ -17945,7 +18137,6 @@ local.templateUiResponseAjax = '\
     }
 }());
 /* script-end /assets.swgg.js */
-
 
 
 

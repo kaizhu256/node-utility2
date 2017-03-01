@@ -129,7 +129,13 @@ require('$npm_config_dir_utility2/lib.utility2.js').browserTest({
 
 shBuildApiDoc() {(set -e
 # this function will build the api-doc
-    npm test --mode-coverage="" --mode-test-case=testCase_buildApiDoc_default
+    shInit
+    if (grep -e testCase_buildApiDoc_default test.js > /dev/null 2>&1)
+    then
+        npm test --mode-coverage="" --mode-test-case=testCase_buildApiDoc_default
+        return $?
+    fi
+    node "$npm_config_dir_utility2/lib.utility2.js" buildApiDoc
 )}
 
 shBuildApp() {(set -e
@@ -185,11 +191,12 @@ shBuildGithubUpload() {(set -e
     then
         shGitRepoBranchUpdateLocal() {
         # this function will local-update git-repo-branch
-            # run $BUILD_GITHUB_UPLOAD_PRE_SH
-            if [ "$BUILD_GITHUB_UPLOAD_PRE_SH" ]
-            then
-                $BUILD_GITHUB_UPLOAD_PRE_SH
-            fi
+            case "$CI_COMMIT_MESSAGE" in
+            CLEAN_BUILD)
+                shBuildPrint "CLEAN_BUILD"
+                rm -fr build
+                ;;
+            esac
             # copy build-artifacts to gh-pages
             cp -a "$npm_config_dir_build" .
             DIR="build..$CI_BRANCH..$CI_HOST"
@@ -674,7 +681,6 @@ shFileTrimLeft() {(set -e
 */
 'use strict';
 require('fs').writeFileSync('$FILE', require('fs').readFileSync('$FILE', 'utf8').trimLeft());
-process.stdout.write('$FILE');
 // </script>
     "
 )}
@@ -963,7 +969,7 @@ shImageToDataUri() {(set -e
     stupid: true
 */
 'use strict';
-process.stdout.write('data:image/' +
+console.log('data:image/' +
     require('path').extname('$1').slice(1) +
     ';base64,' +
     require('fs').readFileSync('$1').toString('base64'));
@@ -1031,9 +1037,9 @@ if (process.env.GITHUB_REPO === undefined && value) {
         export npm_package_name=example || return $?
         export npm_package_version=0.0.1 || return $?
     fi
-    if [ ! "$npm_config_package_nameAlias" ]
+    if [ ! "$npm_package_nameAlias" ]
     then
-        export npm_config_package_nameAlias="$npm_package_name" || return $?
+        export npm_package_nameAlias="$npm_package_name" || return $?
     fi
     # init $npm_config_*
     export npm_config_dir_build="$PWD/tmp/build" || return $?
@@ -1366,9 +1372,35 @@ shMountData() {(set -e
 )}
 
 shNpmPublish() {(set -e
-# this function will run npm-publish $NAME@$VERSION with a clean repo
-    NAME="$1"
-    VERSION="$2"
+# this function will npm-publish the $DIR as $NAME@$VERSION with a clean repo
+    cd "$1"
+    if ! [ -d .git ]
+    then
+        git init
+        git add .
+        git rm --cached node_modules > /dev/null 2>&1 || true
+        git commit -am "npm publish" > /dev/null 2>&1 || true
+    fi
+    shInit
+    shGitInfo
+    read -p "npm publish? [y/n]: " INPUT
+    case "$INPUT" in
+    y)
+        ;;
+    *)
+        printf "canceled\n"
+        exit
+        ;;
+    esac
+    shNpmPublishAs $@
+)}
+
+shNpmPublishAs() {(set -e
+# this function will npm-publish the $DIR as $NAME@$VERSION with a clean repo
+    DIR="$1"
+    NAME="$2"
+    VERSION="$3"
+    cd "$DIR"
     shInit
     shGitRepoBranchCommand copyPwdLsTree
     cd /tmp/git.repo.branch
@@ -1399,14 +1431,6 @@ local.fs.writeFileSync('package.json', JSON.stringify(local.packageJson));
 // </script>
     "
     npm publish
-)}
-
-shNpmStartExampleJs() {(set -e
-# this function will extract and run example.js from README.md
-    shInit
-    cp tmp/README.example.js example.js
-    export PORT=8081
-    node example.js
 )}
 
 shNpmStartStandalone() {(set -e
@@ -1750,7 +1774,7 @@ shServerPortRandom() {(set -e
     stupid: true
 */
 'use strict';
-process.stdout.write(String(Math.random() * 0x10000 | 0x8000));
+console.log(String(Math.random() * 0x10000 | 0x8000));
 // </script>
         "
         return
@@ -1982,6 +2006,7 @@ shUtility2BuildApp() {(set -e
             (cd "$DIR" && shBuildApp) || return $?
         fi
     done
+    shUtility2GitDiff | less
 )}
 
 shUtility2DependentsSync() {(set -e
@@ -2012,6 +2037,18 @@ shUtility2DependentsSync() {(set -e
     fi
 )}
 
+shUtility2GitCommit() {(set -e
+# this function will git-commit $UTILITY2_DEPENDENTS with the given $MESSAGE
+    # init $MESSAGE
+    MESSAGE="$1"
+    for DIR in $UTILITY2_DEPENDENTS
+    do
+        cd "$HOME/src/$DIR"
+        printf "\n\n\n\n$(pwd)\n"
+        git commit -am "'$MESSAGE'" || true
+    done
+)}
+
 shUtility2GitCommitAndPush() {(set -e
 # this function will git-commit and git-push $UTILITY2_DEPENDENTS with the given $MESSAGE
     # init $MESSAGE
@@ -2025,7 +2062,7 @@ shUtility2GitCommitAndPush() {(set -e
     done
 )}
 
-shUtility2GitStatus() {(set -e
+shUtility2GitDiff() {(set -e
 # this function will print the git-status of $UTILITY2_DEPENDENTS to stdout
     for DIR in $UTILITY2_DEPENDENTS
     do

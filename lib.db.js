@@ -577,43 +577,46 @@
             this.name = String(options.name);
             // register dbTable in dbTableDict
             local.dbTableDict[this.name] = this;
-            this.dbRowCount = 0;
             this.dbRowList = [];
             this.isDirty = null;
             this.idIndexList = [{ name: '_id', dict: {} }];
+            this.ttl = 0;
+            this.ttlLast = 0;
         };
 
         local._DbTable.prototype._cleanup = function () {
         /*
          * this function will cleanup soft-deleted records from the dbTable
          */
-            var self, tmp;
-            self = this;
-            if (!self.isDirty) {
+            var dbRow, ii, list, ttl;
+            ttl = Date.now();
+            if (!(this.isDirty ||
+                  // cleanup ttl every minute
+                  (this.ttl && this.ttlLast + this.ttl < ttl))) {
                 return;
             }
-            self.isDirty = null;
+            this.isDirty = null;
+            this.ttlLast = ttl;
             // cleanup dbRowList
-            self.dbRowList = self.dbRowList.filter(function (dbRow) {
-                return !dbRow.$meta.isRemoved;
-            });
-            // cleanup idIndexList
-            self.idIndexList.forEach(function (dict, ii) {
-                tmp = dict.dict;
-                dict = self.idIndexList[ii].dict = {};
-                Object.keys(tmp).forEach(function (id) {
-                    if (!tmp[id].$meta.isRemoved) {
-                        dict[id] = tmp[id];
-                    }
-                });
-            });
+            list = this.dbRowList;
+            this.dbRowList = [];
+            // optimization - for-loop
+            for (ii = 0; ii < list.length; ii += 1) {
+                dbRow = list[ii];
+                // cleanup ttl
+                if (this.ttl && dbRow.$meta.ttl < ttl) {
+                    this._crudRemoveOneById(dbRow);
+                // cleanup isRemoved
+                } else if (!dbRow.$meta.isRemoved) {
+                    this.dbRowList.push(dbRow);
+                }
+            }
         };
 
         local._DbTable.prototype._crudGetManyByQuery = function (query) {
         /*
          * this function will get the dbRow's in the dbTable with the given query
          */
-            this._cleanup();
             return local.dbRowListGetManyByQuery(this.dbRowList, local.normalizeDict(query));
         };
 
@@ -621,51 +624,51 @@
         /*
          * this function will get the dbRow in the dbTable with the given idDict
          */
-            var id, result, self;
-            self = this;
+            var id, result;
             idDict = local.normalizeDict(idDict);
             result = null;
-            self.idIndexList.some(function (idIndex) {
+            this.idIndexList.some(function (idIndex) {
                 id = idDict[idIndex.name];
                 // optimization - hasOwnProperty
                 if (idIndex.dict.hasOwnProperty(id)) {
                     result = idIndex.dict[id];
-                    result = result.$meta.isRemoved
-                        ? null
-                        : result;
                     return result;
                 }
             });
             return result;
         };
 
-        local._DbTable.prototype._crudRemoveOneById = function (idDict) {
+        local._DbTable.prototype._crudRemoveOneById = function (idDict, circularList) {
         /*
          * this function will remove the dbRow from the dbTable with the given idDict
          */
-            var existing, id, result, self;
+            var id, result, self;
+            if (!idDict) {
+                return null;
+            }
             self = this;
-            idDict = local.normalizeDict(idDict);
+            circularList = circularList || [idDict];
             result = null;
             self.idIndexList.forEach(function (idIndex) {
                 id = idDict[idIndex.name];
                 // optimization - hasOwnProperty
-                if (idIndex.dict.hasOwnProperty(id)) {
-                    existing = idIndex.dict[id];
-                    if (!existing.$meta.isRemoved) {
-                        result = result || existing;
-                        // decrement dbRowCount
-                        self.dbRowCount -= 1;
-                        // optimization - soft-delete
-                        existing.$meta.isRemoved = true;
-                        self.isDirty = true;
-                        // recurse
-                        self._crudRemoveOneById(existing);
-                    }
+                if (!idIndex.dict.hasOwnProperty(id)) {
+                    return;
                 }
+                result = idIndex.dict[id];
+                delete idIndex.dict[id];
+                // optimization - soft-delete
+                result.$meta.isRemoved = true;
+                self.isDirty = true;
+                if (circularList.indexOf(result) >= 0) {
+                    return;
+                }
+                circularList.push(result);
+                // recurse
+                self._crudRemoveOneById(result, circularList);
             });
             // persist
-            self._persist();
+            this._persist();
             return result;
         };
 
@@ -674,8 +677,7 @@
          * this function will set the dbRow into the dbTable with the given dbRow._id
          * WARNING - existing dbRow with conflicting dbRow._id will be removed
          */
-            var existing, id, normalize, timeNow, self;
-            self = this;
+            var existing, id, normalize, timeNow;
             normalize = function (dbRow) {
             /*
              * this function will recursively normalize dbRow
@@ -704,12 +706,10 @@
             normalize(dbRow);
             dbRow = local.jsonCopy(dbRow);
             // remove existing dbRow
-            existing = self._crudRemoveOneById(dbRow) || dbRow;
+            existing = this._crudRemoveOneById(dbRow) || dbRow;
             // init meta
-            dbRow.$meta = {};
-            // increment dbRowCount
-            self.dbRowCount += 1;
-            self.idIndexList.forEach(function (idIndex) {
+            dbRow.$meta = { isRemoved: null, ttl: this.ttl + Date.now() };
+            this.idIndexList.forEach(function (idIndex) {
                 // auto-set id
                 id = local.dbRowSetId(existing, idIndex);
                 // copy id from existing to dbRow
@@ -718,9 +718,9 @@
                 idIndex.dict[id] = dbRow;
             });
             // update dbRowList
-            self.dbRowList.push(dbRow);
+            this.dbRowList.push(dbRow);
             // persist
-            self._persist();
+            this._persist();
             return dbRow;
         };
 
@@ -732,32 +732,27 @@
          * existing dbRow's with conflicting unique-keys (besides the one being updated)
          * will be removed
          */
-            var id, result, self;
-            self = this;
+            var id, result;
             dbRow = local.jsonCopy(local.normalizeDict(dbRow));
             result = null;
-            self.idIndexList.some(function (idIndex) {
+            this.idIndexList.some(function (idIndex) {
                 id = dbRow[idIndex.name];
                 // optimization - hasOwnProperty
                 if (idIndex.dict.hasOwnProperty(id)) {
                     result = idIndex.dict[id];
-                    result = result.$meta.isRemoved
-                        ? null
-                        : result;
-                    if (result) {
-                        // remove existing dbRow
-                        self._crudRemoveOneById(result);
-                        // update dbRow
-                        dbRow._timeCreated = undefined;
-                        result = local.objectSetOverride(result, dbRow, Infinity);
-                        return true;
-                    }
+                    return true;
                 }
             });
-            if (result) {
-                // replace dbRow
-                result = self._crudSetOneById(result);
+            if (!result) {
+                return result;
             }
+            // remove existing dbRow
+            this._crudRemoveOneById(result);
+            // update dbRow
+            dbRow._timeCreated = undefined;
+            local.objectSetOverride(result, dbRow, Infinity);
+            // replace dbRow
+            result = this._crudSetOneById(result);
             return result;
         };
 
@@ -790,13 +785,15 @@
         /*
          * this function will count all of dbRow's in the dbTable
          */
-            return local.setTimeoutOnError(onError, null, this.dbRowCount);
+            this._cleanup();
+            return local.setTimeoutOnError(onError, null, this.dbRowList.length);
         };
 
         local._DbTable.prototype.crudCountManyByQuery = function (query, onError) {
         /*
          * this function will count the number of dbRow's in the dbTable with the given query
          */
+            this._cleanup();
             return local.setTimeoutOnError(
                 onError,
                 null,
@@ -809,6 +806,7 @@
          * this function will get the dbRow's in the dbTable with the given idDictList
          */
             var self;
+            this._cleanup();
             self = this;
             return local.setTimeoutOnError(onError, null, local.dbRowProject(
                 local.normalizeList(idDictList).map(function (idDict) {
@@ -822,6 +820,7 @@
          * this function will get the dbRow's in the dbTable with the given options.query
          */
             var result;
+            this._cleanup();
             options = local.normalizeDict(options);
             // get dbRow's with the given options.query
             result = this._crudGetManyByQuery(options.query);
@@ -858,6 +857,7 @@
         /*
          * this function will get the dbRow in the dbTable with the given idDict
          */
+            this._cleanup();
             return local.setTimeoutOnError(onError, null, local.dbRowProject(
                 this._crudGetOneById(idDict)
             ));
@@ -867,13 +867,15 @@
         /*
          * this function will get the dbRow in the dbTable with the given query
          */
-            var result, self;
-            self = this;
-            self._cleanup();
-            self.dbRowList.some(function (dbRow) {
-                result = local.dbRowListGetManyByQuery([dbRow], query)[0];
-                return result;
-            });
+            var ii, result;
+            this._cleanup();
+            // optimization - for-loop
+            for (ii = 0; ii < this.dbRowList.length; ii += 1) {
+                result = local.dbRowListGetManyByQuery([this.dbRowList[ii]], query)[0];
+                if (result) {
+                    break;
+                }
+            }
             return local.setTimeoutOnError(onError, null, local.dbRowProject(result));
         };
 
@@ -1005,20 +1007,22 @@
         /*
          * this function will export the db
          */
-            var result, self;
+            var ii, result, self;
+            this._cleanup();
             self = this;
-            self._cleanup();
             result = '';
+            result += self.name + ' ttlSet ' + self.ttl + '\n';
             self.idIndexList.forEach(function (idIndex) {
                 result += self.name + ' idIndexCreate ' + JSON.stringify({
                     isInteger: idIndex.isInteger,
                     name: idIndex.name
                 }) + '\n';
             });
-            self.dbRowList.forEach(function (dbRow) {
+            // optimization - for-loop
+            for (ii = 0; ii < self.dbRowList.length; ii += 1) {
                 result += self.name + ' dbRowSet ' +
-                    JSON.stringify(local.dbRowProject(dbRow)) + '\n';
-            });
+                    JSON.stringify(local.dbRowProject(self.dbRowList[ii])) + '\n';
+            }
             return local.setTimeoutOnError(onError, null, result.trim());
         };
 
@@ -1026,8 +1030,7 @@
         /*
          * this function will create an idIndex with the given options.name
          */
-            var idIndex, name, self;
-            self = this;
+            var dbRow, idIndex, ii, name;
             options = local.normalizeDict(options);
             name = String(options.name);
             // disallow idIndex with dot-name
@@ -1035,23 +1038,25 @@
                 return local.setTimeoutOnError(onError);
             }
             // remove existing idIndex
-            self.idIndexRemove(options);
+            this.idIndexRemove(options);
             // init idIndex
             idIndex = {
                 dict: {},
                 isInteger: options.isInteger,
                 name: options.name
             };
-            self.idIndexList.push(idIndex);
-            Object.keys(self.idIndexList[0].dict).forEach(function (dbRow) {
-                dbRow = self.idIndexList[0].dict[dbRow];
+            this.idIndexList.push(idIndex);
+            // populate idIndex with dbRowList
+            // optimization - for-loop
+            for (ii = 0; ii < this.dbRowList.length; ii += 1) {
+                dbRow = this.dbRowList[ii];
                 // auto-set id
                 if (!dbRow.$meta.isRemoved) {
                     idIndex.dict[local.dbRowSetId(dbRow, idIndex)] = dbRow;
                 }
-            });
+            }
             // persist
-            self._persist();
+            this._persist();
             return local.setTimeoutOnError(onError);
         };
 
@@ -1059,15 +1064,32 @@
         /*
          * this function will remove the idIndex with the given options.name
          */
-            var name, self;
-            self = this;
+            var name;
             options = local.normalizeDict(options);
             name = String(options.name);
-            self.idIndexList = self.idIndexList.filter(function (idIndex) {
+            this.idIndexList = this.idIndexList.filter(function (idIndex) {
                 return idIndex.name !== name || idIndex.name === '_id';
             });
             // persist
-            self._persist();
+            this._persist();
+            return local.setTimeoutOnError(onError);
+        };
+
+        local._DbTable.prototype.ttlSet = function (ttl, onError) {
+        /*
+         * this function will set the ttl in milliseconds
+         */
+            var ii;
+            // set ttl in milliseconds
+            this.ttl = ttl;
+            // update dbRowList
+            ttl += Date.now();
+            // optimization - for-loop
+            for (ii = 0; ii < this.dbRowList.length; ii += 1) {
+                this.dbRowList[ii].$meta.ttl = ttl;
+            }
+            // persist
+            this._persist();
             return local.setTimeoutOnError(onError);
         };
 
@@ -1128,23 +1150,23 @@
                 match2,
                 match3
             ) {
-                try {
-                    // jslint-hack
-                    local.nop(match0);
-                    switch (match2) {
-                    case 'dbRowSet':
-                        dbTable = local.dbTableCreateOne({ isLoaded: true, name: match1 });
-                        dbTable.crudSetOneById(JSON.parse(match3));
-                        break;
-                    case 'idIndexCreate':
-                        dbTable = local.dbTableCreateOne({ isLoaded: true, name: match1 });
-                        dbTable.idIndexCreate(JSON.parse(match3));
-                        break;
-                    default:
-                        throw new Error('dbImport - invalid operation - ' + match0);
-                    }
-                } catch (errorCaught) {
-                    local.onErrorDefault(errorCaught);
+                // jslint-hack
+                local.nop(match0);
+                switch (match2) {
+                case 'dbRowSet':
+                    dbTable = local.dbTableCreateOne({ isLoaded: true, name: match1 });
+                    dbTable.crudSetOneById(JSON.parse(match3));
+                    break;
+                case 'idIndexCreate':
+                    dbTable = local.dbTableCreateOne({ isLoaded: true, name: match1 });
+                    dbTable.idIndexCreate(JSON.parse(match3));
+                    break;
+                case 'ttlSet':
+                    dbTable = local.dbTableCreateOne({ isLoaded: true, name: match1 });
+                    dbTable.ttlSet(JSON.parse(match3));
+                    break;
+                default:
+                    local.onErrorDefault(new Error('dbImport - invalid operation - ' + match0));
                 }
             });
             return local.setTimeoutOnError(onError);

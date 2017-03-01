@@ -75,6 +75,10 @@
                         }
                     }
                 });
+                if (response && (response.statusCode < 200 || response.statusCode >= 300)) {
+                    error = error || new Error(response.statusCode);
+                    console.error(String(response.data));
+                }
                 // debug response
                 console.error(new Date().toISOString() + ' http-response ' + JSON.stringify({
                     statusCode: (response && response.statusCode) || 0,
@@ -100,10 +104,6 @@
                 urlParsed.protocol.slice(0, -1)
             ).request(urlParsed, function (_response) {
                 response = _response;
-                if (response.statusCode < 200 || response.statusCode > 299) {
-                    onError2(new Error(response.statusCode));
-                    return;
-                }
                 chunkList = [];
                 response
                     .on('data', function (chunk) {
@@ -356,7 +356,6 @@
                 },
                 method: options.method,
                 responseJson: {},
-                responseText: '',
                 sha: options.sha,
                 url: options.url
             };

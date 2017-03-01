@@ -91,13 +91,12 @@
         local.assetsDict = {};
 /* jslint-ignore-begin */
 local.assetsDict['/assets.apiDoc.template.html'] = '\
+<div class="apiDocDiv">\n\
 <style>\n\
 /*csslint\n\
 */\n\
-body {\n\
-    background: #fff;\n\
-}\n\
 .apiDocDiv {\n\
+    background: #fff;\n\
     font-family: Arial, Helvetica, sans-serif;\n\
 }\n\
 .apiDocDiv a[href] {\n\
@@ -107,10 +106,6 @@ body {\n\
 }\n\
 .apiDocDiv a[href]:hover {\n\
     text-decoration: underline;\n\
-}\n\
-.apiDocSectionDiv {\n\
-    border-top: 1px solid;\n\
-    margin-top: 20px;\n\
 }\n\
 .apiDocCodeCommentSpan {\n\
     background: #bbf;\n\
@@ -128,13 +123,23 @@ body {\n\
     padding: 5px;\n\
     white-space: pre-wrap;\n\
 }\n\
+.apiDocFooterDiv {\n\
+    margin-top: 20px;\n\
+    text-align: center;\n\
+}\n\
+.apiDocModuleLi {\n\
+    margin-top: 10px;\n\
+}\n\
+.apiDocSectionDiv {\n\
+    border-top: 1px solid;\n\
+    margin-top: 20px;\n\
+}\n\
 .apiDocSignatureSpan {\n\
     color: #777;\n\
     font-weight: bold;\n\
 }\n\
 </style>\n\
-<div class="apiDocDiv">\n\
-<h1>api-doc\n\
+<h1>api documentation\n\
     <a\n\
         {{#if env.npm_package_homepage}}\n\
         href="{{env.npm_package_homepage}}"\n\
@@ -142,8 +147,8 @@ body {\n\
     >({{env.npm_package_nameAlias}} v{{env.npm_package_version}})</a>\n\
 </h1>\n\
 <div class="apiDocSectionDiv"><a href="#"><h1>table of contents</h1></a><ul>\n\
-{{#each moduleList}}\n\
-    <li><a href="#{{id}}">module {{name}}</a><ol>\n\
+    {{#each moduleList}}\n\
+    <li class="apiDocModuleLi"><a href="#{{id}}">module {{name}}</a><ol>\n\
         {{#each elementList}}\n\
         <li>\n\
             {{#if source}}\n\
@@ -157,27 +162,32 @@ body {\n\
         </li>\n\
         {{/each elementList}}\n\
     </ol></li>\n\
-{{/each moduleList}}\n\
-</ul></div>\n\
-    {{#each moduleList}}\n\
-    <div class="apiDocSectionDiv">\n\
-    <h1><a href="#{{id}}" id="{{id}}">module {{name}}</a></h1>\n\
-        {{#each elementList}}\n\
-        {{#if source}}\n\
-        <h2>\n\
-            <a href="#{{id}}" id="{{id}}">\n\
-            {{name}}\n\
-            <span class="apiDocSignatureSpan">{{signature}}</span>\n\
-            </a>\n\
-        </h2>\n\
-        <ul>\n\
-        <li>description and source-code<pre class="apiDocCodePre">{{source}}</pre></li>\n\
-        <li>example usage<pre class="apiDocCodePre">{{example}}</pre></li>\n\
-        </ul>\n\
-        {{/if source}}\n\
-        {{/each elementList}}\n\
-    </div>\n\
     {{/each moduleList}}\n\
+</ul></div>\n\
+{{#each moduleList}}\n\
+<div class="apiDocSectionDiv">\n\
+<h1><a href="#{{id}}" id="{{id}}">module {{name}}</a></h1>\n\
+    {{#each elementList}}\n\
+    {{#if source}}\n\
+    <h2>\n\
+        <a href="#{{id}}" id="{{id}}">\n\
+        {{name}}\n\
+        <span class="apiDocSignatureSpan">{{signature}}</span>\n\
+        </a>\n\
+    </h2>\n\
+    <ul>\n\
+    <li>description and source-code<pre class="apiDocCodePre">{{source}}</pre></li>\n\
+    <li>example usage<pre class="apiDocCodePre">{{example}}</pre></li>\n\
+    </ul>\n\
+    {{/if source}}\n\
+    {{/each elementList}}\n\
+</div>\n\
+{{/each moduleList}}\n\
+<div class="apiDocFooterDiv">\n\
+    [ this api documentation was created with\n\
+    <a href="https://github.com/kaizhu256/node-utility2" target="_blank">utility2</a>\n\
+    ]\n\
+</div>\n\
 </div>\n\
 ';
 
@@ -216,6 +226,10 @@ body {\n\
 body > * {\n\
     margin-bottom: 1rem;\n\
 }\n\
+.utility2FooterDiv {\n\
+    margin-top: 20px;\n\
+    text-align: center;\n\
+}\n\
 </style>\n\
 <style>\n\
 /*csslint\n\
@@ -224,42 +238,49 @@ body > * {\n\
 </head>\n\
 <body>\n\
 <!-- utility2-comment\n\
-    <div id="ajaxProgressDiv1" style="background: #d00; height: 2px; left: 0; margin: 0; padding: 0; position: fixed; top: 0; transition: background 0.5s, width 1.5s; width: 25%;"></div>\n\
+<div id="ajaxProgressDiv1" style="background: #d00; height: 2px; left: 0; margin: 0; padding: 0; position: fixed; top: 0; transition: background 0.5s, width 1.5s; width: 25%;"></div>\n\
 utility2-comment -->\n\
-    <h1>\n\
+<h1>\n\
 <!-- utility2-comment\n\
-        <a\n\
-            {{#if env.npm_package_homepage}}\n\
-            href="{{env.npm_package_homepage}}"\n\
-            {{/if env.npm_package_homepage}}\n\
-            target="_blank"\n\
-        >\n\
+    <a\n\
+        {{#if env.npm_package_homepage}}\n\
+        href="{{env.npm_package_homepage}}"\n\
+        {{/if env.npm_package_homepage}}\n\
+        target="_blank"\n\
+    >\n\
 utility2-comment -->\n\
-            {{env.npm_package_nameAlias}} v{{env.npm_package_version}}\n\
+        {{env.npm_package_nameAlias}} v{{env.npm_package_version}}\n\
 <!-- utility2-comment\n\
-        </a>\n\
+    </a>\n\
 utility2-comment -->\n\
-    </h1>\n\
-    <h3>{{env.npm_package_description}}</h3>\n\
+</h1>\n\
+<h3>{{env.npm_package_description}}</h3>\n\
 <!-- utility2-comment\n\
-    <h4><a download href="assets.app.js">download standalone app</a></h4>\n\
-    <button class="onclick" id="testRunButton1">run internal test</button><br>\n\
-    <div id="testReportDiv1" style="display: none;"></div>\n\
+<h4><a download href="assets.app.js">download standalone app</a></h4>\n\
+<button class="onclick onreset" id="testRunButton1">run internal test</button><br>\n\
+<div id="testReportDiv1" style="display: none;"></div>\n\
 utility2-comment -->\n\
 \n\
+\n\
+\n\
 <!-- utility2-comment\n\
-    {{#if isRollup}}\n\
-    <script src="assets.app.js"></script>\n\
-    {{#unless isRollup}}\n\
+{{#if isRollup}}\n\
+<script src="assets.app.js"></script>\n\
+{{#unless isRollup}}\n\
 utility2-comment -->\n\
-    <script src="assets.utility2.rollup.js"></script>\n\
-    <script src="jsonp.utility2._stateInit?callback=window.utility2._stateInit"></script>\n\
-    <script src="assets.jslint.rollup.js"></script>\n\
-    <script src="assets.example.js"></script>\n\
-    <script src="assets.test.js"></script>\n\
+<script src="assets.utility2.rollup.js"></script>\n\
+<script src="jsonp.utility2._stateInit?callback=window.utility2._stateInit"></script>\n\
+<script src="assets.jslint.rollup.js"></script>\n\
+<script src="assets.example.js"></script>\n\
+<script src="assets.test.js"></script>\n\
 <!-- utility2-comment\n\
-    {{/if isRollup}}\n\
+{{/if isRollup}}\n\
 utility2-comment -->\n\
+<div class="utility2FooterDiv">\n\
+    [ this app was created with\n\
+    <a href="https://github.com/kaizhu256/node-utility2" target="_blank">utility2</a>\n\
+    ]\n\
+</div>\n\
 </body>\n\
 </html>\n\
 ';
@@ -338,7 +359,7 @@ jslint-lite\n\
 ![screen-capture](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.testExampleJs.browser..png)\n\
 \n\
 #### to run this example, follow the instruction in the script below\n\
-- [example.js](https://kaizhu256.github.io/node-jslint-lite/build/example.js)\n\
+- [example.js](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/example.js)\n\
 ```javascript\n\
 /*\n\
 example.js\n\
@@ -409,19 +430,76 @@ instruction\n\
     // run browser js-env code - post-init\n\
     case \'browser\':\n\
         local.testRunBrowser = function (event) {\n\
-            return event;\n\
+            if (!event || (event &&\n\
+                    event.currentTarget &&\n\
+                    event.currentTarget.className &&\n\
+                    event.currentTarget.className.includes &&\n\
+                    event.currentTarget.className.includes(\'onreset\'))) {\n\
+                // reset output\n\
+                Array.from(\n\
+                    document.querySelectorAll(\'body > .resettable\')\n\
+                ).forEach(function (element) {\n\
+                    switch (element.tagName) {\n\
+                    case \'INPUT\':\n\
+                    case \'TEXTAREA\':\n\
+                        element.value = \'\';\n\
+                        break;\n\
+                    default:\n\
+                        element.textContent = \'\';\n\
+                    }\n\
+                });\n\
+            }\n\
+            switch (event && event.currentTarget && event.currentTarget.id) {\n\
+            case \'testRunButton1\':\n\
+                // show tests\n\
+                if (document.querySelector(\'#testReportDiv1\').style.display === \'none\') {\n\
+                    document.querySelector(\'#testReportDiv1\').style.display = \'block\';\n\
+                    document.querySelector(\'#testRunButton1\').textContent =\n\
+                        \'hide internal test\';\n\
+                    local.modeTest = true;\n\
+                    local.testRunDefault(local);\n\
+                // hide tests\n\
+                } else {\n\
+                    document.querySelector(\'#testReportDiv1\').style.display = \'none\';\n\
+                    document.querySelector(\'#testRunButton1\').textContent = \'run internal test\';\n\
+                }\n\
+                break;\n\
+            // custom-case\n\
+            default:\n\
+                break;\n\
+            }\n\
+            if (document.querySelector(\'#inputTextareaEval1\') && (!event || (event &&\n\
+                    event.currentTarget &&\n\
+                    event.currentTarget.className &&\n\
+                    event.currentTarget.className.includes &&\n\
+                    event.currentTarget.className.includes(\'oneval\')))) {\n\
+                // try to eval input-code\n\
+                try {\n\
+                    /*jslint evil: true*/\n\
+                    eval(document.querySelector(\'#inputTextareaEval1\').value);\n\
+                } catch (errorCaught) {\n\
+                    console.error(errorCaught.stack);\n\
+                }\n\
+            }\n\
         };\n\
         // log stderr and stdout to #outputTextareaStdout1\n\
         [\'error\', \'log\'].forEach(function (key) {\n\
-            console[\'_\' + key] = console[key];\n\
+            console[key + \'_original\'] = console[key];\n\
             console[key] = function () {\n\
-                console[\'_\' + key].apply(console, arguments);\n\
-                (document.querySelector(\'#outputTextareaStdout1\') || { value: \'\' }).value +=\n\
-                    Array.from(arguments).map(function (arg) {\n\
-                        return typeof arg === \'string\'\n\
-                            ? arg\n\
-                            : JSON.stringify(arg, null, 4);\n\
-                    }).join(\' \') + \'\\n\';\n\
+                var element;\n\
+                console[key + \'_original\'].apply(console, arguments);\n\
+                element = document.querySelector(\'#outputTextareaStdout1\');\n\
+                if (!element) {\n\
+                    return;\n\
+                }\n\
+                // append text to #outputTextareaStdout1\n\
+                element.value += Array.from(arguments).map(function (arg) {\n\
+                    return typeof arg === \'string\'\n\
+                        ? arg\n\
+                        : JSON.stringify(arg, null, 4);\n\
+                }).join(\' \') + \'\\n\';\n\
+                // scroll textarea to bottom\n\
+                element.scrollTop = element.scrollHeight;\n\
             };\n\
         });\n\
         // init event-handling\n\
@@ -431,7 +509,7 @@ instruction\n\
             });\n\
         });\n\
         // run tests\n\
-        local.testRunBrowser({ currentTarget: { id: \'default\' } });\n\
+        local.testRunBrowser();\n\
         break;\n\
 \n\
 \n\
@@ -515,7 +593,7 @@ local.assetsDict['/assets.index.template.html'].replace((/\n/g), '\\n\\\n') +
 }());\n\
 ```\n\
 \n\
-#### output from electron\n\
+#### output from browser\n\
 ![screen-capture](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.testExampleJs.browser..png)\n\
 \n\
 #### output from shell\n\
@@ -553,7 +631,7 @@ local.assetsDict['/assets.index.template.html'].replace((/\n/g), '\\n\\\n') +
         "env": "env",\n\
         "heroku-postbuild": "npm install \'kaizhu256/node-utility2#alpha\' && utility2 shRun shDeployHeroku",\n\
         "postinstall": "if [ -f lib.jslint.npm-scripts.sh ]; then ./lib.jslint.npm-scripts.sh postinstall; fi",\n\
-        "publish-alias": "VERSION=$(npm info $npm_package_name version); for ALIAS in undefined; do utility2 shRun shNpmPublish $ALIAS $VERSION; utility2 shRun shNpmTestPublished $ALIAS || exit $?; done",\n\
+        "publish-alias": "VERSION=$(npm info $npm_package_name version); for ALIAS in; do utility2 shRun shNpmPublishAs . $ALIAS $VERSION; utility2 shRun shNpmTestPublished $ALIAS || exit $?; done",\n\
         "start": "export PORT=${PORT:-8080} && export npm_config_mode_auto_restart=1 && utility2 shRun shIstanbulCover test.js",\n\
         "test": "export PORT=$(utility2 shServerPortRandom) && utility2 test test.js"\n\
     },\n\
@@ -579,8 +657,6 @@ shBuild() {(set -e\n\
 # this function will run the main build\n\
     # init env\n\
     . node_modules/.bin/utility2 && shInit\n\
-    # cleanup github-gh-pages dir\n\
-    # export BUILD_GITHUB_UPLOAD_PRE_SH="rm -fr build"\n\
     # init github-gh-pages commit-limit\n\
     export COMMIT_LIMIT=20\n\
     case "$CI_BRANCH" in\n\
@@ -592,6 +668,16 @@ shBuild() {(set -e\n\
         ;;\n\
     master)\n\
         shBuildCiDefault\n\
+        git tag "$npm_package_version" || true\n\
+        git push "git@github.com:$GITHUB_REPO.git" "$npm_package_version" || true\n\
+        ;;\n\
+    publish)\n\
+        printf "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > "$HOME/.npmrc"\n\
+        export CI_BRANCH=alpha\n\
+        shNpmPublishAs\n\
+        shBuildCiDefault\n\
+        npm run publish-alias\n\
+        git push "git@github.com:$GITHUB_REPO.git" publish:beta\n\
         ;;\n\
     esac\n\
 )}\n\
@@ -617,6 +703,11 @@ shBuildCiTestPre() {(set -e\n\
 \n\
 shBuild\n\
 ```\n\
+\n\
+\n\
+\n\
+# misc\n\
+- this package was created with [utility2](https://github.com/kaizhu256/node-utility2)\n\
 ';
 
 
@@ -626,14 +717,21 @@ local.assetsDict['/assets.test.js'] = '';
 
 
 local.assetsDict['/assets.testReport.template.html'] = '\
+<div class="testReportDiv">\n\
 <style>\n\
 /*csslint\n\
     adjoining-classes: false\n\
 */\n\
+.testReportDiv {\n\
+    font-family: Arial, Helvetica, sans-serif;\n\
+}\n\
+.testReportFooterDiv {\n\
+    margin-top: 20px;\n\
+    text-align: center;\n\
+}\n\
 .testReportPlatformDiv {\n\
     background: #fff;\n\
     border: 1px solid black;\n\
-    font-family: Arial, Helvetica, sans-serif;\n\
     margin-top: 20px;\n\
     padding: 0 10px 10px 10px;\n\
     text-align: left;\n\
@@ -656,7 +754,7 @@ local.assetsDict['/assets.testReport.template.html'] = '\
 }\n\
 .testReportPlatformDiv span {\n\
     display: inline-block;\n\
-    width: 8rem;\n\
+    width: 120px;\n\
 }\n\
 .testReportPlatformDiv.summary {\n\
     background: #bfb;\n\
@@ -676,15 +774,15 @@ local.assetsDict['/assets.testReport.template.html'] = '\
     background: #99f;\n\
 }\n\
 </style>\n\
-<div class="testReportPlatformDiv summary">\n\
-<h1>\n\
+<h1>test report\n\
     <a\n\
         {{#if env.npm_package_homepage}}\n\
         href="{{env.npm_package_homepage}}"\n\
         {{/if env.npm_package_homepage}}\n\
-    >{{env.npm_package_nameAlias}} v{{env.npm_package_version}}</a>\n\
+    >({{env.npm_package_nameAlias}} v{{env.npm_package_version}})</a>\n\
 </h1>\n\
-<h2>test-report summary</h2>\n\
+<div class="testReportPlatformDiv summary">\n\
+<h2>summary</h2>\n\
 <h4>\n\
     <span>version</span>-\n\
         {{env.npm_package_version}}<br>\n\
@@ -750,6 +848,12 @@ local.assetsDict['/assets.testReport.template.html'] = '\
 </pre>\n\
 </div>\n\
 {{/each testPlatformList}}\n\
+<div class="testReportFooterDiv">\n\
+    [ this test report was created with\n\
+    <a href="https://github.com/kaizhu256/node-utility2" target="_blank">utility2</a>\n\
+    ]\n\
+</div>\n\
+</div>\n\
 ';
 
 
@@ -844,13 +948,6 @@ local.assetsDict['/assets.utility2.rollup.end.js'] = '\
 
 
 local.assetsDict['/favicon.ico'] = '';
-
-
-
-// https://www.w3.org/TR/html5/forms.html#valid-e-mail-address
-local.regexpEmailValidate = (
-/^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/
-);
 /* jslint-ignore-end */
     }());
 
@@ -2151,13 +2248,23 @@ return Utf8ArrayToStr(bff);
         /*
          * this function will build the api-doc
          */
-            var element, elementCreate, elementName, html, module, tmp, trimLeft;
+            var element,
+                elementCreate,
+                elementName,
+                module,
+                moduleAddConditional,
+                moduleExports,
+                tmp,
+                trimLeft;
             // optimization - do not run if $npm_config_mode_coverage = all
             if (local.env.npm_config_mode_coverage === 'all') {
                 onError();
                 return;
             }
             elementCreate = function () {
+            /*
+             * this function will create the html-element
+             */
                 element = {};
                 element.moduleName = module.name.split('.');
                 // handle case where module.exports is a function
@@ -2217,10 +2324,36 @@ return Utf8ArrayToStr(bff);
                 element.example = element.example || 'n/a';
                 return element;
             };
+            moduleAddConditional = function (prefix, name, exports) {
+            /*
+             * this function will conditionally add exports to options.moduleDict[name]
+             */
+                if (options.moduleDict[prefix + '.' + name] ||
+                        options.circularList.indexOf(exports) >= 0) {
+                    return;
+                }
+                tmp = [exports, exports && exports.prototype].some(function (dict) {
+                    return dict && Object.keys(dict).some(function (key) {
+                        return typeof dict[key] === 'function';
+                    });
+                });
+                if (!tmp) {
+                    return;
+                }
+                options.circularList.push(exports);
+                options.moduleDict[prefix + '.' + name] = {
+                    exampleFileList: ['lib.' +
+                        name.replace((/\.prototype$/), '').split('.').slice(-1)[0] +
+                        '.js'],
+                    exports: exports
+                };
+                // recurse prototype
+                moduleAddConditional(prefix, name + '.prototype', exports.prototype);
+            };
             trimLeft = function (text) {
-                /*
-                 * this function will normalize the whitespace around the text
-                 */
+            /*
+             * this function will normalize the whitespace around the text
+             */
                 tmp = '';
                 text.trim().replace((/^ */gm), function (match0) {
                     if (!tmp || match0.length < tmp.length) {
@@ -2234,47 +2367,62 @@ return Utf8ArrayToStr(bff);
                 }
                 return text;
             };
-            local.objectSetDefault(options, {
+            // init options
+            options = local.objectSetDefault(options, {
+                blacklistDict: local,
+                circularList: [global],
+                exampleFileList: [
+                    'README.md',
+                    'test.js',
+                    'test.' +  local.env.npm_package_nameAlias + '.js',
+                    local.env.npm_package_main,
+                    'index.js'
+                ],
                 env: local.env,
-                exampleFileList: ['README.md', 'test.js', local.env.npm_package_main],
-                blacklistDict: local
+                html: ''
             });
             // init moduleDict
             local.objectSetDefault(options, local.objectLiteralize({
                 moduleDict: {
                     '$[]': [local.env.npm_package_nameAlias, {
-                        exampleFileList: [],
-                        exports: global.utility2_moduleExports
+                        exports: require(process.cwd())
                     }]
                 }
             }), 2);
-            // init moduleDict.*.prototype
-            options.moduleExports = options.moduleDict[local.env.npm_package_nameAlias].exports;
-            Object.keys(options.moduleExports).forEach(function (key) {
-                if (options.moduleExports[key] &&
-                        options.moduleExports[key].prototype &&
-                        (Object.keys(options.moduleExports[key]).length ||
-                            Object.keys(options.moduleExports[key].prototype).length) &&
-                        options.moduleExports[key] !== options.blacklistDict[key]) {
-                    options.moduleDict[local.env.npm_package_nameAlias + '.' + key] =
-                        options.moduleDict[local.env.npm_package_nameAlias + '.' + key] || {
-                            exampleFileList: [],
-                            exports: options.moduleExports[key]
-                        };
-                    options.moduleDict[
-                        local.env.npm_package_nameAlias + '.' + key + '.prototype'
-                    ] = options.moduleDict[
-                        local.env.npm_package_nameAlias + '.' + key + '.prototype'
-                    ] || {
-                        exampleFileList: [],
-                        exports: options.moduleExports[key].prototype
-                    };
+            // init circularList - builtin
+            Object.keys(process.binding('natives')).forEach(function (key) {
+                if (key.indexOf('/') >= 0) {
+                    return;
                 }
+                tmp = require(key);
+                options.circularList.push(tmp);
+            });
+            // init circularList - blacklistDict
+            Object.keys(options.blacklistDict).forEach(function (key) {
+                options.circularList.push(options.blacklistDict[key]);
+            });
+            // init circularList - moduleDict
+            Object.keys(options.moduleDict).forEach(function (key) {
+                options.circularList.push(options.moduleDict[key].exports);
+            });
+            // init moduleDict children
+            Object.keys(options.moduleDict).forEach(function (prefix) {
+                moduleExports = options.moduleDict[prefix].exports;
+                Object.keys(moduleExports).forEach(function (name) {
+                    moduleAddConditional(prefix, name, moduleExports[name]);
+                });
+            });
+            // init moduleDict grandchildren
+            Object.keys(options.moduleDict).forEach(function (prefix) {
+                moduleExports = options.moduleDict[prefix].exports;
+                Object.keys(moduleExports).forEach(function (name) {
+                    moduleAddConditional(prefix, name, moduleExports[name]);
+                });
             });
             // init moduleDict.example
             Object.keys(options.moduleDict).forEach(function (key) {
                 options.moduleDict[key].example =
-                    options.moduleDict[key].exampleFileList
+                    local.normalizeList(options.moduleDict[key].exampleFileList)
                     .concat(options.exampleFileList)
                     .map(function (file) {
                         return '\n\n\n\n\n\n\n\n' +
@@ -2293,9 +2441,8 @@ return Utf8ArrayToStr(bff);
                     // handle case where module.exports is a function
                     tmp = module.exports;
                     if (typeof tmp === 'function') {
-                        // shallow-copy module.exports to prevent side-effects
-                        module.exports = local.objectSetDefault({}, module.exports);
-                        module.exports[module.name.split('.').slice(-1)[0]] = tmp;
+                        module.exports[module.name.split('.').slice(-1)[0]] =
+                            module.exports[module.name.split('.').slice(-1)[0]] || tmp;
                     }
                     return {
                         elementList: Object.keys(module.exports)
@@ -2320,14 +2467,14 @@ return Utf8ArrayToStr(bff);
                         name: module.name
                     };
                 });
-            html = local.templateRender(
+            options.html = local.templateRender(
                 local.assetsDict['/assets.apiDoc.template.html'],
                 options
             );
             // create api-doc.html
             local.fsWriteFileWithMkdirpSync(
                 local.env.npm_config_dir_build + '/api-doc.html',
-                html
+                options.html
             );
             console.log('created api-doc file://' + local.env.npm_config_dir_build +
                 '/api-doc.html\n');
@@ -2513,11 +2660,13 @@ return Utf8ArrayToStr(bff);
                 (/\n {8}\$ npm install [^`]*? &&/),
                 (/\n {12}: global;\n[^`]*?\n {8}local\.global\.local = local;\n/),
                 (/\n {8}local\.global\.local = local;\n[^`]*?\n {4}\/\/ post-init\n/),
-                (/\n {8}local\.testRunBrowser = function \(event\) \{\n[^`]*?\n {8}\};\n/),
+                new RegExp('\\n {8}local\\.testRunBrowser = function \\(event\\) \\{\\n' +
+                    '[^`]*?^ {12}if \\(!event \\|\\| \\(event &&\\n', 'm'),
+                (/\n {12}\/\/ custom-case\n[^`]*?\n {12}\}\n/),
                 // customize quickstart-html-style
                 (/\n<\/style>\\n\\\n<style>\\n\\\n[^`]*?\\n\\\n<\/style>\\n\\\n/),
                 // customize quickstart-html-body
-                (/\nutility2-comment -->\\n\\\n\\n\\\n[^`]*?^<!-- utility2-comment\\n\\\n/m),
+                (/\nutility2-comment -->(?:\\n\\\n){4}[^`]*?^<!-- utility2-comment\\n\\\n/m),
                 // customize build-script
                 (/\n# internal build-script\n[\S\s]*?^- build\.sh\n/m)
             ].forEach(function (rgx) {
@@ -3961,6 +4110,10 @@ vendor\\)\\(\\b\\|[_s]\\)\
 /* jslint-ignore-begin */
 case 'header':
 return '\
+/* this rollup was created with utility2 (https://github.com/kaizhu256/node-utility2) */\n\
+\n\
+\n\
+\n\
 /*\n\
 assets.app.js\n\
 \n' + local.env.npm_package_description + '\n\
@@ -4007,7 +4160,7 @@ instruction\n\
                 return '/* script-begin ' + key + ' */\n' +
                     script.trim() +
                     '\n/* script-end ' + key + ' */\n';
-            }).join('\n\n\n\n');
+            }).join('\n\n\n');
             // init assets.lib.rollup.js
             local.objectSetDefault(local.assetsDict, local.objectLiteralize({
                 '$[]': [
@@ -4767,6 +4920,12 @@ instruction\n\
                         local.istanbulCoverageReportCreate({
                             coverage: local.global.__coverage__
                         });
+                        if (document.querySelector('#coverageReportDiv1')) {
+                            document.querySelector('#coverageReportDiv1').innerHTML =
+                                local.istanbul.coverageReportCreate({
+                                    coverage: window.__coverage__
+                                });
+                        }
                     }
                     // restore exit
                     local.tryCatchOnError(function () {
@@ -5108,6 +5267,14 @@ instruction\n\
             ? {}
             : process.env;
         local.errorDefault = new Error('default error');
+        // https://www.w3.org/TR/html5/forms.html#valid-e-mail-address
+        local.regexpEmailValidate = new RegExp(
+            '^[a-zA-Z0-9.!#$%&\'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}' +
+                '[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$'
+        );
+        // https://en.wikipedia.org/wiki/E.164
+        local.regexpPhoneValidate =
+            (/^(?:\+\d{1,3}[ \-]{0,1}){0,1}(?:\(\d{1,4}\)[ \-]{0,1}){0,1}\d[\d \-]{7,16}$/);
         local.regexpUriComponentCharset = (/[\w\!\%\'\(\)\*\-\.\~]/);
         local.regexpUuidValidate =
             (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
@@ -5120,7 +5287,6 @@ instruction\n\
         local.stringUriComponentCharset = '!%\'()*-.' +
             '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz~';
         local.taskOnTaskDict = {};
-        local.testCaseDict = local.objectSetDefault({}, local);
         local.testReport = { testPlatformList: [{
             name: local.modeJs === 'browser'
                 ? 'browser - ' + location.pathname + ' - ' + navigator.userAgent + ' - ' +
@@ -5250,6 +5416,7 @@ instruction\n\
             }
         });
         local.assetsDict['/assets.utility2.rollup.js'] = [
+            'header',
             '/assets.utility2.rollup.begin.js',
             'lib.db.js',
             'lib.github_crud.js',
@@ -5263,6 +5430,9 @@ instruction\n\
         ].map(function (key) {
             var script;
             switch (key) {
+            case 'header':
+                return '/* this rollup was created with utility2 ' +
+                    '(https://github.com/kaizhu256/node-utility2) */\n';
             case '/assets.utility2.rollup.begin.js':
             case '/assets.utility2.rollup.end.js':
                 script = local.assetsDict[key];
@@ -5285,21 +5455,10 @@ instruction\n\
             return '/* script-begin ' + key + ' */\n' +
                 script.trim() +
                 '\n/* script-end ' + key + ' */\n';
-        }).join('\n\n\n\n');
+        }).join('\n\n\n');
         // init assets.lib.rollup.js
         local.assetsDict['/assets.swgg.rollup.js'] =
             local.assetsDict['/assets.utility2.rollup.js'];
-        // init testCaseDict
-        local.tryCatchReadFile(local.__dirname + '/test.js', 'utf8').replace(
-            (/\/\/ run shared js-env code - function[\S\s]+?\n {4}\}\(\)\);/),
-            function (match0, ii, text) {
-                // preserve lineno
-                match0 = text.slice(0, ii).replace((/.+/g), '') + match0;
-                local.vm.runInNewContext(match0, local.objectSetDefault({
-                    local: local.testCaseDict
-                }, local.global));
-            }
-        );
         // merge previous test-report
         if (local.env.npm_config_file_test_report_merge) {
             console.log('merging file://' + local.env.npm_config_file_test_report_merge +

@@ -1535,52 +1535,7 @@
             ], function (onError) {
                 local.buildApiDoc(null, onError);
             }, local.nop);
-            options = { blacklistDict: {}, moduleDict: {
-                'utility2.Blob': {
-                    exampleFileList: [],
-                    exports: local.Blob
-                },
-                'utility2.Blob.prototype': {
-                    exampleFileList: [],
-                    exports: local.Blob.prototype
-                },
-                'utility2.FormData': {
-                    exampleFileList: [],
-                    exports: local.FormData
-                },
-                'utility2.FormData.prototype': {
-                    exampleFileList: [],
-                    exports: local.FormData.prototype
-                },
-                'utility2.istanbul': {
-                    exampleFileList: ['lib.istanbul.js'],
-                    exports: local.istanbul
-                },
-                'utility2.jslint': {
-                    exampleFileList: ['lib.jslint.js'],
-                    exports: local.jslint
-                },
-                'utility2.db': {
-                    exampleFileList: ['lib.db.js'],
-                    exports: local.db
-                },
-                'utility2.db._DbTable': {
-                    exampleFileList: ['lib.db.js'],
-                    exports: local.db._DbTable
-                },
-                'utility2.db._DbTable.prototype': {
-                    exampleFileList: ['lib.db.js'],
-                    exports: local.db._DbTable.prototype
-                },
-                'utility2.sjcl': {
-                    exampleFileList: ['lib.sjcl.js'],
-                    exports: local.sjcl
-                },
-                'utility2.uglifyjs': {
-                    exampleFileList: ['lib.uglifyjs.js'],
-                    exports: local.uglifyjs
-                }
-            } };
+            options = { blacklistDict: { '': null } };
             local.buildApiDoc(options, onError);
         };
 
@@ -1634,7 +1589,7 @@
                     // customize quickstart-instruction
                     (/\ninstruction[^`]*?\n\n/),
                     // customize quickstart-footer
-                    (/download standalone app[^`]*?<\/body>/),
+                    (/download standalone app[^`]*?utility2FooterDiv/),
                     (/```[^`]*?# package.json/),
                     // customize build-script
                     (/shBuild\(\)[^`]*?\)\}/),
