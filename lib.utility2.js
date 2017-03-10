@@ -205,7 +205,7 @@ jslint-lite\n\
 # live demo\n\
 - [https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app/index.html](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app/index.html)\n\
 \n\
-[![github.com test-server](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.deployGithub.browser._2Fnode-jslint-lite_2Fbuild..alpha..travis-ci.org_2Fapp_2Findex.html.png)](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app/index.html)\n\
+[![github.com test-server](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.deployGithub.browser._2Fnode-jslint-lite_2Fbuild_2Fapp_2Findex.html.png)](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app/index.html)\n\
 \n\
 \n\
 \n\
@@ -1780,7 +1780,11 @@ local.assetsDict['/favicon.ico'] = '';
                 case 1:
                     // init options
                     options.testName = local.env.MODE_BUILD + '.browser.' +
-                        encodeURIComponent(local.urlParse(options.url).pathname);
+                        encodeURIComponent(local.urlParse(options.url).pathname
+                            .replace(
+                                '/build..' + local.env.CI_BRANCH + '..' + local.env.CI_HOST,
+                                '/build'
+                            ));
                     local.objectSetDefault(options, {
                         fileCoverage: local.env.npm_config_dir_tmp +
                             '/coverage.' + options.testName + '.json',
