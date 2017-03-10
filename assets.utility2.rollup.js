@@ -41,6 +41,751 @@
 
 
 
+/* script-begin /assets.utility2.lib.apidoc.js */
+///usr/bin/env node
+/* istanbul instrument in package apidoc */
+/*jslint
+    bitwise: true,
+    browser: true,
+    maxerr: 8,
+    maxlen: 96,
+    node: true,
+    nomen: true,
+    regexp: true,
+    stupid: true
+*/
+(function () {
+    'use strict';
+    var local;
+
+
+
+    /* istanbul ignore next */
+    // run shared js-env code - pre-init
+    (function () {
+        // init local
+        local = {};
+        // init modeJs
+        local.modeJs = (function () {
+            try {
+                return typeof navigator.userAgent === 'string' &&
+                    typeof document.querySelector('body') === 'object' &&
+                    typeof XMLHttpRequest.prototype.open === 'function' &&
+                    'browser';
+            } catch (errorCaughtBrowser) {
+                return module.exports &&
+                    typeof process.versions.node === 'string' &&
+                    typeof require('http').createServer === 'function' &&
+                    'node';
+            }
+        }());
+        // init global
+        local.global = local.modeJs === 'browser'
+            ? window
+            : global;
+        // init utility2_rollup
+        local = local.global.utility2_rollup || local;
+        // init lib
+        local.local = local.apidoc = local;
+    }());
+
+
+
+    /* istanbul ignore next */
+    // run shared js-env code - pre-function
+    (function () {
+        local.assert = function (passed, message) {
+        /*
+         * this function will throw the error message if passed is falsey
+         */
+            var error;
+            if (passed) {
+                return;
+            }
+            error = message && message.message
+                // if message is an error-object, then leave it as is
+                ? message
+                : new Error(typeof message === 'string'
+                    // if message is a string, then leave it as is
+                    ? message
+                    // else JSON.stringify message
+                    : JSON.stringify(message));
+            throw error;
+        };
+
+        local.moduleDirname = function (module) {
+        /*
+         * this function will return the __dirname of the module
+         */
+            var result;
+            if (!module || module.indexOf('/') >= 0 || module === '.') {
+                return require('path').resolve(process.cwd(), module || '');
+            }
+            try {
+                require(module);
+            } catch (ignore) {
+            }
+            [
+                new RegExp('(.*?/' + module + ')\\b'),
+                new RegExp('(.*?/' + module + ')/[^/].*?$')
+            ].some(function (rgx) {
+                return Object.keys(require.cache).some(function (key) {
+                    result = rgx.exec(key);
+                    result = result && result[1];
+                    return result;
+                });
+            });
+            return result || '';
+        };
+
+        local.nop = function () {
+        /*
+         * this function will do nothing
+         */
+            return;
+        };
+
+        local.objectSetDefault = function (arg, defaults, depth) {
+        /*
+         * this function will recursively set defaults for undefined-items in the arg
+         */
+            arg = arg || {};
+            defaults = defaults || {};
+            Object.keys(defaults).forEach(function (key) {
+                var arg2, defaults2;
+                arg2 = arg[key];
+                // handle misbehaving getter
+                try {
+                    defaults2 = defaults[key];
+                } catch (ignore) {
+                }
+                if (defaults2 === undefined) {
+                    return;
+                }
+                // init arg[key] to default value defaults[key]
+                if (!arg2) {
+                    arg[key] = defaults2;
+                    return;
+                }
+                // if arg2 and defaults2 are both non-null and non-array objects,
+                // then recurse with arg2 and defaults2
+                if (depth > 1 &&
+                        // arg2 is a non-null and non-array object
+                        arg2 &&
+                        typeof arg2 === 'object' &&
+                        !Array.isArray(arg2) &&
+                        // defaults2 is a non-null and non-array object
+                        defaults2 &&
+                        typeof defaults2 === 'object' &&
+                        !Array.isArray(defaults2)) {
+                    // recurse
+                    local.objectSetDefault(arg2, defaults2, depth - 1);
+                }
+            });
+            return arg;
+        };
+
+        local.stringHtmlSafe = function (text) {
+        /*
+         * this function will make the text html-safe
+         */
+            // new RegExp('[' + '"&\'<>'.split('').sort().join('') + ']', 'g')
+            return text.replace((/["&'<>]/g), function (match0) {
+                return '&#x' + match0.charCodeAt(0).toString(16) + ';';
+            });
+        };
+
+        local.templateRender = function (template, dict) {
+        /*
+         * this function will render the template with the given dict
+         */
+            var argList, getValue, match, renderPartial, rgx, value;
+            dict = dict || {};
+            getValue = function (key) {
+                argList = key.split(' ');
+                value = dict;
+                // iteratively lookup nested values in the dict
+                argList[0].split('.').forEach(function (key) {
+                    value = value && value[key];
+                });
+                return value;
+            };
+            renderPartial = function (match0, helper, key, partial) {
+                switch (helper) {
+                case 'each':
+                    value = getValue(key);
+                    return Array.isArray(value)
+                        ? value.map(function (dict) {
+                            // recurse with partial
+                            return local.templateRender(partial, dict);
+                        }).join('')
+                        : '';
+                case 'if':
+                    partial = partial.split('{{#unless ' + key + '}}');
+                    partial = getValue(key)
+                        ? partial[0]
+                        // handle 'unless' case
+                        : partial.slice(1).join('{{#unless ' + key + '}}');
+                    // recurse with partial
+                    return local.templateRender(partial, dict);
+                case 'unless':
+                    return getValue(key)
+                        ? ''
+                        // recurse with partial
+                        : local.templateRender(partial, dict);
+                default:
+                    // recurse with partial
+                    return match0[0] + local.templateRender(match0.slice(1), dict);
+                }
+            };
+            // render partials
+            rgx = (/\{\{#(\w+) ([^}]+?)\}\}/g);
+            template = template || '';
+            for (match = rgx.exec(template); match; match = rgx.exec(template)) {
+                rgx.lastIndex += 1 - match[0].length;
+                template = template.replace(
+                    new RegExp('\\{\\{#(' + match[1] + ') (' + match[2] +
+                        ')\\}\\}([\\S\\s]*?)\\{\\{/' + match[1] + ' ' + match[2] +
+                        '\\}\\}'),
+                    renderPartial
+                );
+            }
+            // search for keys in the template
+            return template.replace((/\{\{[^}]+?\}\}/g), function (match0) {
+                getValue(match0.slice(2, -2));
+                if (value === undefined) {
+                    return match0;
+                }
+                argList.slice(1).forEach(function (arg) {
+                    switch (arg) {
+                    case 'decodeURIComponent':
+                        value = decodeURIComponent(value);
+                        break;
+                    case 'encodeURIComponent':
+                        value = encodeURIComponent(value);
+                        break;
+                    case 'htmlSafe':
+                        value = local.stringHtmlSafe(String(value));
+                        break;
+                    case 'jsonStringify':
+                        value = JSON.stringify(value);
+                        break;
+                    default:
+                        value = value[arg]();
+                        break;
+                    }
+                });
+                return String(value);
+            });
+        };
+    }());
+
+
+
+    // run shared js-env code - pre-init
+/* jslint-ignore-begin */
+local.templateApidocHtml = '\
+<div class="apidocDiv">\n\
+<style>\n\
+/*csslint\n\
+*/\n\
+.apidocDiv {\n\
+    background: #fff;\n\
+    font-family: Arial, Helvetica, sans-serif;\n\
+}\n\
+.apidocDiv a[href] {\n\
+    color: #33f;\n\
+    font-weight: bold;\n\
+    text-decoration: none;\n\
+}\n\
+.apidocDiv a[href]:hover {\n\
+    text-decoration: underline;\n\
+}\n\
+.apidocCodeCommentSpan {\n\
+    background: #bbf;\n\
+    color: #000;\n\
+    display: block;\n\
+}\n\
+.apidocCodeKeywordSpan {\n\
+    color: #d00;\n\
+    font-weight: bold;\n\
+}\n\
+.apidocCodePre {\n\
+    background: #eef;\n\
+    border: 1px solid;\n\
+    color: #777;\n\
+    padding: 5px;\n\
+    white-space: pre-wrap;\n\
+}\n\
+.apidocFooterDiv {\n\
+    margin-top: 20px;\n\
+    text-align: center;\n\
+}\n\
+.apidocModuleLi {\n\
+    margin-top: 10px;\n\
+}\n\
+.apidocSectionDiv {\n\
+    border-top: 1px solid;\n\
+    margin-top: 20px;\n\
+}\n\
+.apidocSignatureSpan {\n\
+    color: #777;\n\
+    font-weight: bold;\n\
+}\n\
+</style>\n\
+<h1>api-documentation for\n\
+    <a\n\
+        {{#if env.npm_package_homepage}}\n\
+        href="{{env.npm_package_homepage}}"\n\
+        {{/if env.npm_package_homepage}}\n\
+    >{{env.npm_package_nameAlias}} (v{{env.npm_package_version}})</a>\n\
+</h1>\n\
+<div class="apidocSectionDiv"><a\n\
+    href="#apidoc.tableOfContents"\n\
+    id="apidoc.tableOfContents"\n\
+><h1>table of contents</h1></a><ol>\n\
+    {{#each moduleList}}\n\
+    <li class="apidocModuleLi"><a href="#{{id}}">module {{name}}</a><ol>\n\
+        {{#each elementList}}\n\
+        <li>\n\
+            {{#if source}}\n\
+            <a class="apidocElementLiA" href="#{{id}}">\n\
+            {{name}}\n\
+            <span class="apidocSignatureSpan">{{signature}}</span>\n\
+            </a>\n\
+            {{#unless source}}\n\
+            <span class="apidocSignatureSpan">{{name}}</span>\n\
+            {{/if source}}\n\
+        </li>\n\
+        {{/each elementList}}\n\
+    </ol></li>\n\
+    {{/each moduleList}}\n\
+</ol></div>\n\
+{{#each moduleList}}\n\
+<div class="apidocSectionDiv">\n\
+<h1><a href="#{{id}}" id="{{id}}">module {{name}}</a></h1>\n\
+    {{#each elementList}}\n\
+    {{#if source}}\n\
+    <h2>\n\
+        <a href="#{{id}}" id="{{id}}">\n\
+        {{name}}\n\
+        <span class="apidocSignatureSpan">{{signature}}</span>\n\
+        </a>\n\
+    </h2>\n\
+    <ul>\n\
+    <li>description and source-code<pre class="apidocCodePre">{{source}}</pre></li>\n\
+    <li>example usage<pre class="apidocCodePre">{{example}}</pre></li>\n\
+    </ul>\n\
+    {{/if source}}\n\
+    {{/each elementList}}\n\
+</div>\n\
+{{/each moduleList}}\n\
+<div class="apidocFooterDiv">\n\
+    [ this document was created with\n\
+    <a href="https://github.com/kaizhu256/node-utility2" target="_blank">utility2</a>\n\
+    ]\n\
+</div>\n\
+</div>\n\
+';
+
+local.templateApidocMd = '\
+# api-documentation for \
+{{#if env.npm_package_homepage}} \
+[{{env.npm_package_nameAlias}} (v{{env.npm_package_version}})]({{env.npm_package_homepage}}) \
+{{#unless env.npm_package_homepage}} \
+{{env.npm_package_nameAlias}} (v{{env.npm_package_version}}) \
+{{/if env.npm_package_homepage}} \
+\n\
+\n\
+\n\
+\n\
+# <a name="apidoc.tableOfContents"></a>[table of contents](#apidoc.tableOfContents) \
+{{#each moduleList}} \
+\n\
+\n\
+#### [module {{name}}](#{{id}}) \
+    {{#each elementList}} \
+\n\
+1. \
+{{#if source}} \
+[{{name}} {{signature}}](#{{id}}) \
+{{#unless source}} \
+{{name}} \
+{{/if source}} \
+{{/each elementList}} \
+{{/each moduleList}} \
+{{#each moduleList}} \
+\n\
+\n\
+\n\
+\n\
+# <a name="{{id}}"></a>[module {{name}}](#{{id}}) \
+{{#each elementList}} \
+{{#if source}} \
+\n\
+\n\
+#### <a name="{{id}}"></a>[{{name}} {{signature}}](#{{id}}) \
+\n\
+- description and source-code \
+\n\
+```javascript \
+\n\
+{{source}} \
+\n\
+``` \
+\n\
+- example usage \
+\n\
+```shell \
+\n\
+{{example}} \
+\n\
+``` \
+{{/if source}} \
+{{/each elementList}} \
+{{/each moduleList}} \
+\n\
+\n\
+\n\
+\n\
+# misc \
+\n\
+- this document was created with [utility2](https://github.com/kaizhu256/node-utility2) \
+\n';
+/* jslint-ignore-end */
+
+
+
+    // run shared js-env code - function
+    (function () {
+        local.apidocCreate = function (options) {
+        /*
+         * this function will create the apidoc from options.dir
+         */
+            var elementCreate, module, moduleMain, readExample, tmp, trimLeft;
+            elementCreate = function (module, prefix, key) {
+            /*
+             * this function will create the apidoc-element in the given module
+             */
+                var element;
+                element = {};
+                element.moduleName = prefix.split('.');
+                // handle case where module is a function
+                if (element.moduleName.slice(-1)[0] === key) {
+                    element.moduleName.pop();
+                }
+                element.moduleName = element.moduleName.join('.');
+                element.id = encodeURIComponent('apidoc.element.' + prefix + '.' + key);
+                element.typeof = typeof module[key];
+                element.name = (element.typeof + ' <span class="apidocSignatureSpan">' +
+                    element.moduleName + '.</span>' + key)
+                    // handle case where module is a function
+                    .replace('>.<', '');
+                if (element.typeof !== 'function') {
+                    return element;
+                }
+                // init source
+                element.source = trimLeft(module[key].toString());
+                if (element.source.length > 4096) {
+                    element.source = element.source.slice(0, 4096).trimRight() + ' ...';
+                }
+                element.source = (options.template === local.templateApidocHtml
+                    ? local.stringHtmlSafe(element.source)
+                    : element.source.replace((/`/g), '_'))
+                    .replace((/\([\S\s]*?\)/), function (match0) {
+                        // init signature
+                        element.signature = match0
+                            .replace((/ *?\/\*[\S\s]*?\*\/ */g), '')
+                            .replace((/,/g), ', ')
+                            .replace((/\s+/g), ' ');
+                        return element.signature;
+                    })
+                    .replace(
+                        (/( *?\/\*[\S\s]*?\*\/\n)/),
+                        '<span class="apidocCodeCommentSpan">$1</span>'
+                    )
+                    .replace((/^function \(/), key + ' = function (');
+                // init example
+                options.exampleList.some(function (example) {
+                    example.replace(
+                        new RegExp('((?:\n.*?){8}\\.)(' + key + ')(\\((?:.*?\n){8})'),
+                        function (match0, match1, match2, match3) {
+                            element.example = '...' + trimLeft(
+                                options.template === local.templateApidocHtml
+                                    ?  local.stringHtmlSafe(match1) +
+                                        '<span class="apidocCodeKeywordSpan">' +
+                                        local.stringHtmlSafe(match2) +
+                                        '</span>' +
+                                        local.stringHtmlSafe(match3)
+                                    : match0.replace((/`/g), "'")
+                            ).trimRight() + '\n...';
+                        }
+                    );
+                    return element.example;
+                });
+                element.example = element.example || 'n/a';
+                return element;
+            };
+            readExample = function (file) {
+            /*
+             * this function will read the example from the given file
+             */
+                try {
+                    return ('\n\n\n\n\n\n\n\n' +
+                        local.fs.readFileSync(local.path.resolve(options.dir, file), 'utf8') +
+                        '\n\n\n\n\n\n\n\n').replace((/\r\n*/g), '\n');
+                } catch (errorCaught) {
+                    return '';
+                }
+            };
+            trimLeft = function (text) {
+            /*
+             * this function will normalize the whitespace around the text
+             */
+                var whitespace;
+                whitespace = '';
+                text.trim().replace((/^ */gm), function (match0) {
+                    if (!whitespace || match0.length < whitespace.length) {
+                        whitespace = match0;
+                    }
+                });
+                text = text.replace(new RegExp('^' + whitespace, 'gm'), '');
+                // enforce 128 character column limit
+                while ((/^.{128}[^\\\n]/m).test(text)) {
+                    text = text.replace((/^(.{128})([^\\\n]+)/gm), '$1\\\n$2');
+                }
+                return text;
+            };
+            // init options
+            options = local.objectSetDefault(options, {});
+            options.dir = local.moduleDirname(options.dir);
+            options = local.objectSetDefault(options, {
+                packageJson: JSON.parse(readExample('package.json'))
+            });
+            local.objectSetDefault(options, { env: {
+                npm_package_homepage: options.packageJson.homepage,
+                npm_package_nameAlias: options.packageJson.nameAlias ||
+                    options.packageJson.name,
+                npm_package_version: options.packageJson.version
+            } }, 2);
+            local.objectSetDefault(options, {
+                blacklistDict: { global: global },
+                circularList: [global],
+                exampleFileList: [],
+                exampleList: [],
+                html: '',
+                moduleDict: {},
+                moduleExtraDict: {},
+                template: local.templateApidocHtml
+            });
+            // init exampleList
+            options.exampleList = options.exampleList.concat(options.exampleFileList.concat(
+                local.fs.readdirSync(options.dir)
+                    .sort()
+                    .filter(function (file) {
+                        return file.indexOf(options.env.npm_package_main) === 0 ||
+                            (/^(?:readme)\b/i).test(file) ||
+                            (/^(?:index|lib|test)\b.*\.js$/i).test(file);
+                    })
+            ).map(readExample));
+            // init moduleMain
+            moduleMain = options.moduleDict[options.env.npm_package_nameAlias] =
+                options.moduleDict[options.env.npm_package_nameAlias] || require(options.dir);
+            // init circularList - builtin
+            Object.keys(process.binding('natives')).forEach(function (key) {
+                if (!(/\/|_linklist|sys/).test(key)) {
+                    options.blacklistDict[key] = options.blacklistDict[key] || require(key);
+                }
+            });
+            // init circularList - blacklistDict
+            Object.keys(options.blacklistDict).forEach(function (key) {
+                options.circularList.push(options.blacklistDict[key]);
+            });
+            // init circularList - moduleDict
+            Object.keys(options.moduleDict).forEach(function (key) {
+                options.circularList.push(options.moduleDict[key]);
+            });
+            // init circularList - prototype
+            Object.keys(options.circularList).forEach(function (key) {
+                tmp = options.circularList[key];
+                options.circularList.push(tmp && tmp.prototype);
+            });
+            // cleanup circularList
+            tmp = options.circularList;
+            options.circularList = [];
+            tmp.forEach(function (element) {
+                if (options.circularList.indexOf(element) < 0) {
+                    options.circularList.push(element);
+                }
+            });
+            // init moduleDict child
+            local.apidocModuleDictAdd(options, options.moduleDict);
+            // init moduleDict lib
+            (function () {
+                // optimization - isolate try-catch block
+                try {
+                    options.libFileList = options.libFileList ||
+                        local.fs.readdirSync(options.dir + '/lib')
+                        .sort()
+                        .map(function (file) {
+                            return 'lib/' + file;
+                        });
+                } catch (ignore) {
+                }
+            }());
+            module = options.moduleExtraDict[options.env.npm_package_nameAlias] =
+                options.moduleExtraDict[options.env.npm_package_nameAlias] || {};
+            (options.libFileList || []).forEach(function (file) {
+                try {
+                    tmp = {
+                        module: require(local.path.resolve(options.dir, file)),
+                        name: local.path.basename(file)
+                            .replace((/\.[^.]*?$/), '')
+                            .replace((/\W/g), '_')
+                    };
+                    if (module[tmp.name] || options.circularList.indexOf(tmp.module) >= 0) {
+                        return;
+                    }
+                    module[tmp.name] = tmp.module;
+                    // update exampleList
+                    options.exampleList.push(readExample(file));
+                } catch (ignore) {
+                }
+            });
+            local.apidocModuleDictAdd(options, options.moduleExtraDict);
+            // normalize moduleMain
+            moduleMain = options.moduleDict[options.env.npm_package_nameAlias] =
+                local.objectSetDefault({}, moduleMain);
+            Object.keys(options.moduleDict).forEach(function (key) {
+                if (key.indexOf(options.env.npm_package_nameAlias + '.') !== 0) {
+                    return;
+                }
+                tmp = key.split('.').slice(1).join('.');
+                moduleMain[tmp] = moduleMain[tmp] || options.moduleDict[key];
+            });
+            // init moduleList
+            options.moduleList = Object.keys(options.moduleDict)
+                .sort()
+                .map(function (prefix) {
+                    module = options.moduleDict[prefix];
+                    // handle case where module is a function
+                    if (typeof module === 'function') {
+                        module[prefix.split('.').slice(-1)[0]] =
+                            module[prefix.split('.').slice(-1)[0]] || module;
+                    }
+                    return {
+                        elementList: Object.keys(module)
+                            .filter(function (key) {
+                                try {
+                                    return key &&
+                                        (/^\w[\w\-.]*?$/).test(key) &&
+                                        key.indexOf('testCase_') !== 0 &&
+                                        module[key] !== options.blacklistDict[key];
+                                } catch (ignore) {
+                                }
+                            })
+                            .map(function (key) {
+                                return elementCreate(module, prefix, key);
+                            })
+                            .sort(function (aa, bb) {
+                                return aa.name > bb.name
+                                    ? 1
+                                    : -1;
+                            }),
+                        id: encodeURIComponent('apidoc.module.' + prefix),
+                        name: prefix
+                    };
+                });
+            // render apidoc
+            return local.templateRender(options.template, options);
+        };
+
+        local.apidocModuleDictAdd = function (options, moduleDict) {
+        /*
+         * this function will add the modules in moduleDict to options.moduleDict
+         */
+            var isModule, tmp;
+            ['child', 'prototype', 'grandchild', 'prototype'].forEach(function (element) {
+                Object.keys(moduleDict).sort().forEach(function (prefix) {
+                    if (!(/^\w[\w\-.]*?$/).test(prefix)) {
+                        return;
+                    }
+                    Object.keys(moduleDict[prefix]).forEach(function (key) {
+                        if (!(/^\w[\w\-.]*?$/).test(key)) {
+                            return;
+                        }
+                        // bug-workaround - buggy electron accessors
+                        try {
+                            tmp = element === 'prototype'
+                                ? {
+                                    module: moduleDict[prefix][key].prototype,
+                                    name: prefix + '.' + key + '.prototype'
+                                }
+                                : {
+                                    module: moduleDict[prefix][key],
+                                    name: prefix + '.' + key
+                                };
+                            if (!tmp.module ||
+                                    !(typeof tmp.module === 'function' ||
+                                    typeof tmp.module === 'object') ||
+                                    options.moduleDict[tmp.name] ||
+                                    options.circularList.indexOf(tmp.module) >= 0) {
+                                return;
+                            }
+                            isModule = [
+                                tmp.module,
+                                tmp.module.prototype
+                            ].some(function (dict) {
+                                return Object.keys(dict || {}).some(function (key) {
+                                    try {
+                                        return typeof dict[key] === 'function';
+                                    } catch (ignore) {
+                                    }
+                                });
+                            });
+                            if (!isModule) {
+                                return;
+                            }
+                            options.circularList.push(tmp.module);
+                            options.moduleDict[tmp.name] = tmp.module;
+                        } catch (ignore) {
+                        }
+                    });
+                });
+            });
+        };
+    }());
+    switch (local.modeJs) {
+
+
+
+    /* istanbul ignore next */
+    // run node js-env code - post-init
+    case 'node':
+        // require modules
+        local.fs = require('fs');
+        local.path = require('path');
+        // init exports
+        module.exports = module['./lib.apidoc.js'] = local;
+        module.exports.__dirname = __dirname;
+        // run the cli
+        if (module !== require.main || local.global.utility2_rollup) {
+            break;
+        }
+        // jslint files
+        process.stdout.write(local.apidocCreate({
+            dir: process.argv[2],
+            template: process.argv[3] === '--markdown'
+                ? local.templateApidocMd
+                : local.templateApidocHtml
+        }));
+        break;
+    }
+}());
+/* script-end /assets.utility2.lib.apidoc.js */
+
+
+
 /* script-begin /assets.utility2.lib.db.js */
 /*
  * assets.db-lite.js
@@ -2223,7 +2968,7 @@
             // init writer
             local.coverageReportHtml = '';
             local.coverageReportHtml += '<div class="coverageReportDiv">\n' +
-                '<h1>coverage report</h1>\n' +
+                '<h1>coverage-report</h1>\n' +
                 '<div ' +
                 'style="background: #fff; border: 1px solid #000; margin 0; padding: 0;">\n';
             local.writerData = '';
@@ -4244,7 +4989,7 @@ local['head.txt'] = '\
 <body>\n\
 <div class="header {{reportClass}}">\n\
     <h1 style="font-weight: bold;">\n\
-        <a href="{{env.npm_package_homepage}}">{{env.npm_package_nameAlias}} v{{env.npm_package_version}}</a>\n\
+        <a href="{{env.npm_package_homepage}}">{{env.npm_package_nameAlias}} (v{{env.npm_package_version}})</a>\n\
     </h1>\n\
     <h1>Code coverage report for <span class="entity">{{entity}}</span></h1>\n\
     <h2>\n\
@@ -8466,7 +9211,6 @@ split_lines=split_lines,exports.MAP=MAP,exports.ast_squeeze_more=require("./sque
             : global;
         // init utility2_rollup
         local = local.global.utility2_rollup || local;
-        return local;
     }());
 
 
@@ -8498,6 +9242,7 @@ split_lines=split_lines,exports.MAP=MAP,exports.ast_squeeze_more=require("./sque
         };
         // init lib
         [
+            'apidoc',
             'db',
             'github_crud',
             'istanbul',
@@ -8516,109 +9261,6 @@ split_lines=split_lines,exports.MAP=MAP,exports.ast_squeeze_more=require("./sque
         // init assets and templates
         local.assetsDict = {};
 /* jslint-ignore-begin */
-local.assetsDict['/assets.apiDoc.template.html'] = '\
-<div class="apiDocDiv">\n\
-<style>\n\
-/*csslint\n\
-*/\n\
-.apiDocDiv {\n\
-    background: #fff;\n\
-    font-family: Arial, Helvetica, sans-serif;\n\
-}\n\
-.apiDocDiv a[href] {\n\
-    color: #33f;\n\
-    font-weight: bold;\n\
-    text-decoration: none;\n\
-}\n\
-.apiDocDiv a[href]:hover {\n\
-    text-decoration: underline;\n\
-}\n\
-.apiDocCodeCommentSpan {\n\
-    background: #bbf;\n\
-    color: #000;\n\
-    display: block;\n\
-}\n\
-.apiDocCodeKeywordSpan {\n\
-    color: #d00;\n\
-    font-weight: bold;\n\
-}\n\
-.apiDocCodePre {\n\
-    background: #eef;\n\
-    border: 1px solid;\n\
-    color: #777;\n\
-    padding: 5px;\n\
-    white-space: pre-wrap;\n\
-}\n\
-.apiDocFooterDiv {\n\
-    margin-top: 20px;\n\
-    text-align: center;\n\
-}\n\
-.apiDocModuleLi {\n\
-    margin-top: 10px;\n\
-}\n\
-.apiDocSectionDiv {\n\
-    border-top: 1px solid;\n\
-    margin-top: 20px;\n\
-}\n\
-.apiDocSignatureSpan {\n\
-    color: #777;\n\
-    font-weight: bold;\n\
-}\n\
-</style>\n\
-<h1>api documentation\n\
-    <a\n\
-        {{#if env.npm_package_homepage}}\n\
-        href="{{env.npm_package_homepage}}"\n\
-        {{/if env.npm_package_homepage}}\n\
-    >({{env.npm_package_nameAlias}} v{{env.npm_package_version}})</a>\n\
-</h1>\n\
-<div class="apiDocSectionDiv"><a href="#"><h1>table of contents</h1></a><ul>\n\
-    {{#each moduleList}}\n\
-    <li class="apiDocModuleLi"><a href="#{{id}}">module {{name}}</a><ol>\n\
-        {{#each elementList}}\n\
-        <li>\n\
-            {{#if source}}\n\
-            <a class="apiDocElementLiA" href="#{{id}}">\n\
-            {{name}}\n\
-            <span class="apiDocSignatureSpan">{{signature}}</span>\n\
-            </a>\n\
-            {{#unless source}}\n\
-            <span class="apiDocSignatureSpan">{{name}}</span>\n\
-        {{/if source}}\n\
-        </li>\n\
-        {{/each elementList}}\n\
-    </ol></li>\n\
-    {{/each moduleList}}\n\
-</ul></div>\n\
-{{#each moduleList}}\n\
-<div class="apiDocSectionDiv">\n\
-<h1><a href="#{{id}}" id="{{id}}">module {{name}}</a></h1>\n\
-    {{#each elementList}}\n\
-    {{#if source}}\n\
-    <h2>\n\
-        <a href="#{{id}}" id="{{id}}">\n\
-        {{name}}\n\
-        <span class="apiDocSignatureSpan">{{signature}}</span>\n\
-        </a>\n\
-    </h2>\n\
-    <ul>\n\
-    <li>description and source-code<pre class="apiDocCodePre">{{source}}</pre></li>\n\
-    <li>example usage<pre class="apiDocCodePre">{{example}}</pre></li>\n\
-    </ul>\n\
-    {{/if source}}\n\
-    {{/each elementList}}\n\
-</div>\n\
-{{/each moduleList}}\n\
-<div class="apiDocFooterDiv">\n\
-    [ this api documentation was created with\n\
-    <a href="https://github.com/kaizhu256/node-utility2" target="_blank">utility2</a>\n\
-    ]\n\
-</div>\n\
-</div>\n\
-';
-
-
-
 // https://img.shields.io/badge/last_build-0000_00_00_00_00_00_UTC_--_master_--_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-0077ff.svg?style=flat
 local.assetsDict['/assets.buildBadge.template.svg'] =
 '<svg xmlns="http://www.w3.org/2000/svg" width="563" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="563" height="20" fill="#555"/><rect rx="0" x="61" width="502" height="20" fill="#07f"/><path fill="#07f" d="M61 0h4v20h-4z"/><rect rx="0" width="563" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="31.5" y="15" fill="#010101" fill-opacity=".3">last build</text><text x="31.5" y="14">last build</text><text x="311" y="15" fill="#010101" fill-opacity=".3">0000-00-00 00:00:00 UTC - master - aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</text><text x="311" y="14">0000-00-00 00:00:00 UTC - master - aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</text></g></svg>';
@@ -8635,7 +9277,7 @@ local.assetsDict['/assets.index.template.html'] = '\
 <head>\n\
 <meta charset="UTF-8">\n\
 <meta name="viewport" content="width=device-width, initial-scale=1">\n\
-<title>{{env.npm_package_nameAlias}} v{{env.npm_package_version}}</title>\n\
+<title>{{env.npm_package_nameAlias}} (v{{env.npm_package_version}})</title>\n\
 <style>\n\
 /*csslint\n\
     box-sizing: false,\n\
@@ -8675,7 +9317,7 @@ utility2-comment -->\n\
         target="_blank"\n\
     >\n\
 utility2-comment -->\n\
-        {{env.npm_package_nameAlias}} v{{env.npm_package_version}}\n\
+        {{env.npm_package_nameAlias}} (v{{env.npm_package_version}})\n\
 <!-- utility2-comment\n\
     </a>\n\
 utility2-comment -->\n\
@@ -8718,7 +9360,7 @@ jslint-lite\n\
 ===========\n\
 {{packageJsonDescription}}\n\
 \n\
-[![travis-ci.org build-status](https://api.travis-ci.org/kaizhu256/node-jslint-lite.svg)](https://travis-ci.org/kaizhu256/node-jslint-lite) [![istanbul-coverage](https://kaizhu256.github.io/node-jslint-lite/build..alpha..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-jslint-lite/build..alpha..travis-ci.org/coverage.html/index.html)\n\
+[![travis-ci.org build-status](https://api.travis-ci.org/kaizhu256/node-jslint-lite.svg)](https://travis-ci.org/kaizhu256/node-jslint-lite) [![istanbul-coverage](https://kaizhu256.github.io/node-jslint-lite/build/coverage.badge.svg)](https://kaizhu256.github.io/node-jslint-lite/build/coverage.html/index.html)\n\
 \n\
 [![NPM](https://nodei.co/npm/jslint-lite.png?downloads=true)](https://www.npmjs.com/package/jslint-lite)\n\
 \n\
@@ -8739,10 +9381,10 @@ jslint-lite\n\
 \n\
 \n\
 # documentation\n\
-#### api-doc\n\
-- [https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/api-doc.html](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/api-doc.html)\n\
+#### apidoc\n\
+- [https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/apidoc.html](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/apidoc.html)\n\
 \n\
-[![api-doc](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.apiDoc.browser._2Fhome_2Ftravis_2Fbuild_2Fkaizhu256_2Fnode-jslint-lite_2Ftmp_2Fbuild_2Fapi-doc.html.png)](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/api-doc.html)\n\
+[![apidoc](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.buildApidoc.browser._2Fhome_2Ftravis_2Fbuild_2Fkaizhu256_2Fnode-jslint-lite_2Ftmp_2Fbuild_2Fapidoc.html.png)](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/apidoc.html)\n\
 \n\
 #### todo\n\
 - none\n\
@@ -8760,8 +9402,8 @@ jslint-lite\n\
 \n\
 | git-branch : | [master](https://github.com/kaizhu256/node-jslint-lite/tree/master) | [beta](https://github.com/kaizhu256/node-jslint-lite/tree/beta) | [alpha](https://github.com/kaizhu256/node-jslint-lite/tree/alpha)|\n\
 |--:|:--|:--|:--|\n\
-| test-server-1 : | [![github.com test-server](https://kaizhu256.github.io/node-jslint-lite/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-jslint-lite/build..master..travis-ci.org/app/index.html) | [![github.com test-server](https://kaizhu256.github.io/node-jslint-lite/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app/index.html) | [![github.com test-server](https://kaizhu256.github.io/node-jslint-lite/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-jslint-lite/build..alpha..travis-ci.org/app/index.html)|\n\
-| test-server-2 : | [![heroku.com test-server](https://kaizhu256.github.io/node-jslint-lite/heroku-logo.75x25.png)](https://h1-jslint-master.herokuapp.com) | [![heroku.com test-server](https://kaizhu256.github.io/node-jslint-lite/heroku-logo.75x25.png)](https://h1-jslint-beta.herokuapp.com) | [![heroku.com test-server](https://kaizhu256.github.io/node-jslint-lite/heroku-logo.75x25.png)](https://h1-jslint-alpha.herokuapp.com)|\n\
+| test-server-github : | [![github.com test-server](https://kaizhu256.github.io/node-jslint-lite/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-jslint-lite/build..master..travis-ci.org/app/index.html) | [![github.com test-server](https://kaizhu256.github.io/node-jslint-lite/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app/index.html) | [![github.com test-server](https://kaizhu256.github.io/node-jslint-lite/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-jslint-lite/build..alpha..travis-ci.org/app/index.html)|\n\
+| test-server-heroku : | [![heroku.com test-server](https://kaizhu256.github.io/node-jslint-lite/heroku-logo.75x25.png)](https://h1-jslint-master.herokuapp.com) | [![heroku.com test-server](https://kaizhu256.github.io/node-jslint-lite/heroku-logo.75x25.png)](https://h1-jslint-beta.herokuapp.com) | [![heroku.com test-server](https://kaizhu256.github.io/node-jslint-lite/heroku-logo.75x25.png)](https://h1-jslint-alpha.herokuapp.com)|\n\
 | test-report : | [![test-report](https://kaizhu256.github.io/node-jslint-lite/build..master..travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-jslint-lite/build..master..travis-ci.org/test-report.html) | [![test-report](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/test-report.html) | [![test-report](https://kaizhu256.github.io/node-jslint-lite/build..alpha..travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-jslint-lite/build..alpha..travis-ci.org/test-report.html)|\n\
 | coverage : | [![istanbul-coverage](https://kaizhu256.github.io/node-jslint-lite/build..master..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-jslint-lite/build..master..travis-ci.org/coverage.html/index.html) | [![istanbul-coverage](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/coverage.html/index.html) | [![istanbul-coverage](https://kaizhu256.github.io/node-jslint-lite/build..alpha..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-jslint-lite/build..alpha..travis-ci.org/coverage.html/index.html)|\n\
 | build-artifacts : | [![build-artifacts](https://kaizhu256.github.io/node-jslint-lite/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-jslint-lite/tree/gh-pages/build..master..travis-ci.org) | [![build-artifacts](https://kaizhu256.github.io/node-jslint-lite/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-jslint-lite/tree/gh-pages/build..beta..travis-ci.org) | [![build-artifacts](https://kaizhu256.github.io/node-jslint-lite/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-jslint-lite/tree/gh-pages/build..alpha..travis-ci.org)|\n\
@@ -9048,17 +9690,18 @@ local.assetsDict['/assets.index.template.html'].replace((/\n/g), '\\n\\\n') +
         "darwin",\n\
         "linux"\n\
     ],\n\
+    "readmeParse": "1",\n\
     "repository": {\n\
         "type": "git",\n\
         "url": "https://github.com/kaizhu256/node-jslint-lite.git"\n\
     },\n\
     "scripts": {\n\
-        "build-ci": "utility2 shRun shReadmeBuild",\n\
+        "build-ci": "utility2 shReadmeTest build_ci.sh",\n\
         "env": "env",\n\
-        "heroku-postbuild": "npm install \'kaizhu256/node-utility2#alpha\' && utility2 shRun shDeployHeroku",\n\
-        "postinstall": "if [ -f lib.jslint.npm-scripts.sh ]; then ./lib.jslint.npm-scripts.sh postinstall; fi",\n\
-        "publish-alias": "VERSION=$(npm info $npm_package_name version); for ALIAS in; do utility2 shRun shNpmPublishAs . $ALIAS $VERSION; utility2 shRun shNpmTestPublished $ALIAS || exit $?; done",\n\
-        "start": "export PORT=${PORT:-8080} && export npm_config_mode_auto_restart=1 && utility2 shRun shIstanbulCover test.js",\n\
+        "heroku-postbuild": "npm install \'kaizhu256/node-utility2#alpha\' && utility2 shDeployHeroku",\n\
+        "postinstall": "if [ -f lib.jslint.npm_scripts.sh ]; then ./lib.jslint.npm_scripts.sh postinstall; fi",\n\
+        "publish-alias": "VERSION=$(npm info $npm_package_name version); for ALIAS in; do utility2 shNpmPublishAs . $ALIAS $VERSION; utility2 shNpmTestPublished $ALIAS || exit $?; done",\n\
+        "start": "export PORT=${PORT:-8080} && utility2 start",\n\
         "test": "export PORT=$(utility2 shServerPortRandom) && utility2 test test.js"\n\
     },\n\
     "version": "0.0.1"\n\
@@ -9073,61 +9716,34 @@ local.assetsDict['/assets.index.template.html'].replace((/\n/g), '\\n\\\n') +
 \n\
 \n\
 # internal build-script\n\
-- build.sh\n\
+- build_ci.sh\n\
 ```shell\n\
-# build.sh\n\
+# build_ci.sh\n\
 \n\
 # this shell script will run the build for this package\n\
 \n\
-shBuild() {(set -e\n\
-# this function will run the main build\n\
-    # init env\n\
-    . node_modules/.bin/utility2 && shInit\n\
-    # init github-gh-pages commit-limit\n\
-    export COMMIT_LIMIT=20\n\
-    case "$CI_BRANCH" in\n\
-    alpha)\n\
-        shBuildCiDefault\n\
-        ;;\n\
-    beta)\n\
-        shBuildCiDefault\n\
-        ;;\n\
-    master)\n\
-        shBuildCiDefault\n\
-        git tag "$npm_package_version" || true\n\
-        git push "git@github.com:$GITHUB_REPO.git" "$npm_package_version" || true\n\
-        ;;\n\
-    publish)\n\
-        printf "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > "$HOME/.npmrc"\n\
-        export CI_BRANCH=alpha\n\
-        shNpmPublishAs\n\
-        shBuildCiDefault\n\
-        npm run publish-alias\n\
-        git push "git@github.com:$GITHUB_REPO.git" publish:beta\n\
-        ;;\n\
-    esac\n\
+shBuildCiInternalPost() {(set -e\n\
+    shDeployGithub\n\
+    shDeployHeroku\n\
+    shReadmeBuildLinkVerify\n\
 )}\n\
 \n\
-shBuildCiTestPost() {(set -e\n\
-# this function will run the post-test build\n\
-    # if running legacy-node, then return\n\
-    [ "$(node --version)" \\< "v7.0" ] && return || true\n\
-    export NODE_ENV=production\n\
-    # deploy app to gh-pages\n\
-    (export MODE_BUILD=deployGithub && shDeployGithub) || return $?\n\
-    # deploy app to heroku\n\
-    (export MODE_BUILD=deployHeroku && shDeployHeroku) || return $?\n\
+shBuildCiInternalPre() {(set -e\n\
+    shReadmeTest example.js\n\
+    shReadmeTest example.sh\n\
+    shNpmTestPublished\n\
 )}\n\
 \n\
-shBuildCiTestPre() {(set -e\n\
-# this function will run the pre-test build\n\
-    # test example.js\n\
-    (export MODE_BUILD=testExampleJs && shRunScreenCapture shReadmeTestExampleJs) || return $?\n\
-    # test published-package\n\
-    (export MODE_BUILD=npmTestPublished && shRunScreenCapture shNpmTestPublished) || return $?\n\
+shBuildCiPost() {(set -e\n\
+    return\n\
 )}\n\
 \n\
-shBuild\n\
+shBuildCiPre() {(set -e\n\
+    return\n\
+)}\n\
+\n\
+# init env\n\
+eval $(utility2 source) && shBuildCi\n\
 ```\n\
 \n\
 \n\
@@ -9200,12 +9816,12 @@ local.assetsDict['/assets.testReport.template.html'] = '\
     background: #99f;\n\
 }\n\
 </style>\n\
-<h1>test report\n\
+<h1>test-report for\n\
     <a\n\
         {{#if env.npm_package_homepage}}\n\
         href="{{env.npm_package_homepage}}"\n\
         {{/if env.npm_package_homepage}}\n\
-    >({{env.npm_package_nameAlias}} v{{env.npm_package_version}})</a>\n\
+    >{{env.npm_package_nameAlias}} (v{{env.npm_package_version}})</a>\n\
 </h1>\n\
 <div class="testReportPlatformDiv summary">\n\
 <h2>summary</h2>\n\
@@ -9275,7 +9891,7 @@ local.assetsDict['/assets.testReport.template.html'] = '\
 </div>\n\
 {{/each testPlatformList}}\n\
 <div class="testReportFooterDiv">\n\
-    [ this test report was created with\n\
+    [ this document was created with\n\
     <a href="https://github.com/kaizhu256/node-utility2" target="_blank">utility2</a>\n\
     ]\n\
 </div>\n\
@@ -10670,243 +11286,26 @@ return Utf8ArrayToStr(bff);
 /* jslint-ignore-end */
         };
 
-        local.buildApiDoc = function (options, onError) {
+        local.buildApidoc = function (options, onError) {
         /*
-         * this function will build the api-doc
+         * this function will build the apidoc
          */
-            var element,
-                elementCreate,
-                elementName,
-                module,
-                moduleAddConditional,
-                moduleExports,
-                tmp,
-                trimLeft;
             // optimization - do not run if $npm_config_mode_coverage = all
             if (local.env.npm_config_mode_coverage === 'all') {
                 onError();
                 return;
             }
-            elementCreate = function () {
-            /*
-             * this function will create the html-element
-             */
-                element = {};
-                element.moduleName = module.name.split('.');
-                // handle case where module.exports is a function
-                if (element.moduleName.slice(-1)[0] === elementName) {
-                    element.moduleName.pop();
-                }
-                element.moduleName = element.moduleName.join('.');
-                element.id = encodeURIComponent('element.' + module.name + '.' + elementName);
-                element.typeof = typeof module.exports[elementName];
-                element.name = (element.typeof + ' <span class="apiDocSignatureSpan">' +
-                    element.moduleName + '.</span>' + elementName)
-                    // handle case where module.exports is a function
-                    .replace('>.<', '');
-                if (element.typeof !== 'function') {
-                    return element;
-                }
-                // init source
-                element.source = trimLeft(module.exports[elementName].toString());
-                if (element.source.length > 4096) {
-                    element.source = element.source.slice(0, 4096).trimRight() + ' ...';
-                }
-                element.source = local.stringHtmlSafe(element.source)
-                    .replace((/\([\S\s]*?\)/), function (match0) {
-                        // init signature
-                        element.signature = match0
-                            .replace((/ *?\/\*[\S\s]*?\*\/ */g), '')
-                            .replace((/,/g), ',\n');
-                        return element.signature;
-                    })
-                    .replace(
-                        (/( *?\/\*[\S\s]*?\*\/\n)/),
-                        '<span class="apiDocCodeCommentSpan">$1</span>'
-                    )
-                    .replace((/^function \(/), elementName + ' = function (');
-                // init example
-                [
-                    '\\b' + element.moduleName,
-                    '\\.',
-                    '\\b'
-                ].some(function (prefix) {
-                    module.example.replace(
-                        new RegExp('((?:\n.*?){8}' +
-                            prefix + ')(' + elementName + ')(\\((?:.*?\n){8})'),
-                        function (match0, match1, match2, match3) {
-                            // jslint-hack
-                            local.nop(match0);
-                            if ((/\b(?:JSON\.|function )$/).test(match1)) {
-                                return;
-                            }
-                            element.example = '...' + trimLeft(local.stringHtmlSafe(match1) +
-                                '<span class="apiDocCodeKeywordSpan">' + match2 + '</span>' +
-                                local.stringHtmlSafe(match3)).trimRight() + '\n...';
-                        }
-                    );
-                    return element.example;
-                });
-                element.example = element.example || 'n/a';
-                return element;
-            };
-            moduleAddConditional = function (prefix, name, exports) {
-            /*
-             * this function will conditionally add exports to options.moduleDict[name]
-             */
-                if (options.moduleDict[prefix + '.' + name] ||
-                        options.circularList.indexOf(exports) >= 0) {
-                    return;
-                }
-                tmp = [exports, exports && exports.prototype].some(function (dict) {
-                    return dict && Object.keys(dict).some(function (key) {
-                        return typeof dict[key] === 'function';
-                    });
-                });
-                if (!tmp) {
-                    return;
-                }
-                options.circularList.push(exports);
-                options.moduleDict[prefix + '.' + name] = {
-                    exampleFileList: ['lib.' +
-                        name.replace((/\.prototype$/), '').split('.').slice(-1)[0] +
-                        '.js'],
-                    exports: exports
-                };
-                // recurse prototype
-                moduleAddConditional(prefix, name + '.prototype', exports.prototype);
-            };
-            trimLeft = function (text) {
-            /*
-             * this function will normalize the whitespace around the text
-             */
-                tmp = '';
-                text.trim().replace((/^ */gm), function (match0) {
-                    if (!tmp || match0.length < tmp.length) {
-                        tmp = match0;
-                    }
-                });
-                text = text.replace(new RegExp('^' + tmp, 'gm'), '');
-                // enforce 128 character column limit
-                while ((/^.{128}[^\\\n]/m).test(text)) {
-                    text = text.replace((/^(.{128})([^\\\n]+)/gm), '$1\\\n$2');
-                }
-                return text;
-            };
-            // init options
-            options = local.objectSetDefault(options, {
-                blacklistDict: local,
-                circularList: [global],
-                exampleFileList: [
-                    'README.md',
-                    'test.js',
-                    'test.' +  local.env.npm_package_nameAlias + '.js',
-                    local.env.npm_package_main,
-                    'index.js'
-                ],
-                env: local.env,
-                html: ''
-            });
-            // init moduleDict
-            local.objectSetDefault(options, local.objectLiteralize({
-                moduleDict: {
-                    '$[]': [local.env.npm_package_nameAlias, {
-                        exports: require(process.cwd())
-                    }]
-                }
-            }), 2);
-            // init circularList - builtin
-            Object.keys(process.binding('natives')).forEach(function (key) {
-                if (key.indexOf('/') >= 0) {
-                    return;
-                }
-                tmp = require(key);
-                options.circularList.push(tmp);
-            });
-            // init circularList - blacklistDict
-            Object.keys(options.blacklistDict).forEach(function (key) {
-                options.circularList.push(options.blacklistDict[key]);
-            });
-            // init circularList - moduleDict
-            Object.keys(options.moduleDict).forEach(function (key) {
-                options.circularList.push(options.moduleDict[key].exports);
-            });
-            // init moduleDict children
-            Object.keys(options.moduleDict).forEach(function (prefix) {
-                moduleExports = options.moduleDict[prefix].exports;
-                Object.keys(moduleExports).forEach(function (name) {
-                    moduleAddConditional(prefix, name, moduleExports[name]);
-                });
-            });
-            // init moduleDict grandchildren
-            Object.keys(options.moduleDict).forEach(function (prefix) {
-                moduleExports = options.moduleDict[prefix].exports;
-                Object.keys(moduleExports).forEach(function (name) {
-                    moduleAddConditional(prefix, name, moduleExports[name]);
-                });
-            });
-            // init moduleDict.example
-            Object.keys(options.moduleDict).forEach(function (key) {
-                options.moduleDict[key].example =
-                    local.normalizeList(options.moduleDict[key].exampleFileList)
-                    .concat(options.exampleFileList)
-                    .map(function (file) {
-                        return '\n\n\n\n\n\n\n\n' +
-                            local.tryCatchReadFile(file, 'utf8') +
-                            '\n\n\n\n\n\n\n\n';
-                    }).join('');
-            });
-            // init moduleList
-            options.moduleList = Object.keys(options.moduleDict)
-                .sort()
-                .map(function (key) {
-                    module = local.objectSetDefault(options.moduleDict[key], {
-                        example: '',
-                        name: key
-                    });
-                    // handle case where module.exports is a function
-                    tmp = module.exports;
-                    if (typeof tmp === 'function') {
-                        module.exports[module.name.split('.').slice(-1)[0]] =
-                            module.exports[module.name.split('.').slice(-1)[0]] || tmp;
-                    }
-                    return {
-                        elementList: Object.keys(module.exports)
-                            .filter(function (key) {
-                                return local.tryCatchOnError(function () {
-                                    return key && key[0] !== '_' &&
-                                        !(/\W/).test(key) &&
-                                        key.indexOf('testCase_') !== 0 &&
-                                        module.exports[key] !== options.blacklistDict[key];
-                                }, local.nop);
-                            })
-                            .map(function (key) {
-                                elementName = key;
-                                return elementCreate();
-                            })
-                            .sort(function (aa, bb) {
-                                return aa.name > bb.name
-                                    ? 1
-                                    : -1;
-                            }),
-                        id: 'module.' + module.name,
-                        name: module.name
-                    };
-                });
-            options.html = local.templateRender(
-                local.assetsDict['/assets.apiDoc.template.html'],
-                options
-            );
-            // create api-doc.html
+            options = local.objectSetDefault(options, { blacklistDict: local });
+            // create apidoc.html
             local.fsWriteFileWithMkdirpSync(
-                local.env.npm_config_dir_build + '/api-doc.html',
-                options.html
+                local.env.npm_config_dir_build + '/apidoc.html',
+                local.apidocCreate(options)
             );
-            console.log('created api-doc file://' + local.env.npm_config_dir_build +
-                '/api-doc.html\n');
+            console.log('created apidoc file://' + local.env.npm_config_dir_build +
+                '/apidoc.html\n');
             local.browserTest({
                 modeBrowserTest: 'screenCapture',
-                url: 'file://' + local.env.npm_config_dir_build + '/api-doc.html'
+                url: 'file://' + local.env.npm_config_dir_build + '/apidoc.html'
             }, onError);
         };
 
@@ -10915,6 +11314,7 @@ return Utf8ArrayToStr(bff);
          * this function will build the app
          */
             var onParallel;
+            local.fsRmrSync(local.env.npm_config_dir_build + '/app');
             onParallel = local.onParallel(function (error) {
                 /* istanbul ignore next */
                 if (!local.global.__coverage__) {
@@ -10972,12 +11372,9 @@ return Utf8ArrayToStr(bff);
             });
             // test standalone assets.app.js
             onParallel.counter += 1;
-            local.fs.writeFileSync(
-                local.env.npm_config_dir_tmp + '/assets.app.js',
-                local.assetsDict['/assets.app.js']
-            );
+            local.fs.writeFileSync('tmp/assets.app.js', local.assetsDict['/assets.app.js']);
             local.processSpawnWithTimeout(process.argv[0], ['assets.app.js'], {
-                cwd: local.env.npm_config_dir_tmp,
+                cwd: 'tmp',
                 env: {
                     PORT: (Math.random() * 0x10000) | 0x8000,
                     npm_config_timeout_exit: 5000
@@ -11041,7 +11438,8 @@ return Utf8ArrayToStr(bff);
                 );
                 return template;
             };
-            options.readmeFrom = local.fs.readFileSync('README.md', 'utf8');
+            options.readmeFrom = options.readmeFrom ||
+                local.fs.readFileSync('README.md', 'utf8');
             // init package.json
             options.rgx = (/\n# package.json\n```json\n([\S\s]*?)\n```\n/);
             options.readmeFrom.replace(options.rgx, function (match0, match1) {
@@ -11094,15 +11492,19 @@ return Utf8ArrayToStr(bff);
                 // customize quickstart-html-body
                 (/\nutility2-comment -->(?:\\n\\\n){4}[^`]*?^<!-- utility2-comment\\n\\\n/m),
                 // customize build-script
-                (/\n# internal build-script\n[\S\s]*?^- build\.sh\n/m)
+                (/\n# internal build-script\n[\S\s]*?^- build_ci\.sh\n/m),
+                (/\nshBuildCiInternalPost\(\) \{\(set -e\n[^`]*?\n\)\}\n/),
+                (/\nshBuildCiInternalPre\(\) \{\(set -e\n[^`]*?\n\)\}\n/),
+                (/\nshBuildCiPost\(\) \{\(set -e\n[^`]*?\n\)\}\n/),
+                (/\nshBuildCiPre\(\) \{\(set -e\n[^`]*?\n\)\}\n/)
             ].forEach(function (rgx) {
                 options.readmeFrom.replace(rgx, function (match0) {
                     options.readmeTo = options.readmeTo.replace(rgx, match0);
                 });
             });
-            // customize comments
+            // customize comment
             options.readmeFrom.replace(
-                (/^( *?)(?:#!! |\/\/!! )(.*?)$/gm),
+                (/^( *?)(?:#!! |#\/\/ |\/\/!!)(.*?)$/gm),
                 function (match0, match1, match2) {
                     options.readmeTo = options.readmeTo.replace(match1 + match2, match0);
                 }
@@ -11309,24 +11711,6 @@ return Utf8ArrayToStr(bff);
          */
             return arg === null || arg === undefined;
         };
-
-        // init istanbulCoverageMerge
-        local.istanbulCoverageMerge = local.istanbul.coverageMerge || local.echo;
-
-        // init istanbulCoverageMerge
-        local.istanbulCoverageMerge = local.istanbul.coverageMerge || local.echo;
-
-        // init istanbulCoverageReportCreate
-        local.istanbulCoverageReportCreate = local.istanbul.coverageReportCreate || local.echo;
-
-        // init istanbulInstrumentInPackage
-        local.istanbulInstrumentInPackage = local.istanbul.instrumentInPackage || local.echo;
-
-        // init istanbulInstrumentSync
-        local.istanbulInstrumentSync = local.istanbul.instrumentSync || local.echo;
-
-        // init jslintAndPrint
-        local.jslintAndPrint = local.jslint.jslintAndPrint || local.echo;
 
         local.jslintAndPrintConditional = function (script, file, mode) {
         /*
@@ -11887,6 +12271,31 @@ return Utf8ArrayToStr(bff);
             nextMiddleware();
         };
 
+        local.moduleDirname = function (module) {
+        /*
+         * this function will return the __dirname of the module
+         */
+            var result;
+            if (!module || module.indexOf('/') >= 0 || module === '.') {
+                return require('path').resolve(process.cwd(), module || '');
+            }
+            try {
+                require(module);
+            } catch (ignore) {
+            }
+            [
+                new RegExp('(.*?/' + module + ')\\b'),
+                new RegExp('(.*?/' + module + ')/[^/].*?$')
+            ].some(function (rgx) {
+                return Object.keys(require.cache).some(function (key) {
+                    result = rgx.exec(key);
+                    result = result && result[1];
+                    return result;
+                });
+            });
+            return result || '';
+        };
+
         local.normalizeDict = function (dict) {
         /*
          * this function will normalize the dict
@@ -11961,7 +12370,11 @@ return Utf8ArrayToStr(bff);
             Object.keys(defaults).forEach(function (key) {
                 var arg2, defaults2;
                 arg2 = arg[key];
-                defaults2 = defaults[key];
+                // handle misbehaving getter
+                try {
+                    defaults2 = defaults[key];
+                } catch (ignore) {
+                }
                 if (defaults2 === undefined) {
                     return;
                 }
@@ -12041,6 +12454,13 @@ return Utf8ArrayToStr(bff);
                 });
             }
             return arg;
+        };
+
+        local.onErrorAssert = function (error) {
+        /*
+         * this function will assert no error occurred
+         */
+            local.assert(!error, error);
         };
 
         local.onErrorDefault = function (error) {
@@ -12461,7 +12881,7 @@ vendor\\)\\(\\b\\|[_s]\\)\
             fileMain = process.cwd() + '/' + local.env.npm_package_main;
             global.utility2_moduleExports = require(fileMain);
             // read script from README.md
-            script = 'module.exports = require("./");';
+            script = 'module.exports = require(".");';
             local.fs.readFileSync('README.md', 'utf8').replace(
                 (/```\w*?(\n[\W\s]*?example\.js[\n\"][\S\s]+?)\n```/),
                 function (match0, match1, ii, text) {
@@ -12794,16 +13214,12 @@ instruction\n\
 
         local.stringHtmlSafe = function (text) {
         /*
-         * this function will replace '&' to '&amp;', '<' to '&lt;',
-         * and '>' to '&gt;' in the text to make it htmlSafe
+         * this function will make the text html-safe
          */
-            return text
-                .replace((/&/g), '&amp;')
-                .replace((/</g), '&lt;')
-                .replace((/>/g), '&gt;')
-                .replace((/"/g), '&quot;')
-                .replace((/'/g), '&#x27;')
-                .replace((/`/g), '&#x60;');
+            // new RegExp('[' + '"&\'<>'.split('').sort().join('') + ']', 'g')
+            return text.replace((/["&'<>]/g), function (match0) {
+                return '&#x' + match0.charCodeAt(0).toString(16) + ';';
+            });
         };
 
         local.taskCreate = function (options, onTask, onError) {
@@ -13552,8 +13968,6 @@ instruction\n\
             return data;
         };
 
-        local.uglify = local.uglifyjs.uglify || local.echo;
-
         local.urlParse = function (url) {
         /*
          * https://developer.mozilla.org/en-US/docs/Web/API/URL
@@ -13668,6 +14082,7 @@ instruction\n\
     (function () {
         local.ajaxProgressCounter = 0;
         local.ajaxProgressState = 0;
+        local.apidocCreate = local.apidoc.apidocCreate || local.normalizeText;
         local.cacheDict = {};
         local.contentTypeDict = {
             // application
@@ -13693,7 +14108,12 @@ instruction\n\
             ? {}
             : process.env;
         local.errorDefault = new Error('default error');
-        // https://www.w3.org/TR/html5/forms.html#valid-e-mail-address
+        local.istanbulCoverageMerge = local.istanbul.coverageMerge || local.echo;
+        local.istanbulCoverageMerge = local.istanbul.coverageMerge || local.echo;
+        local.istanbulCoverageReportCreate = local.istanbul.coverageReportCreate || local.echo;
+        local.istanbulInstrumentInPackage = local.istanbul.instrumentInPackage || local.echo;
+        local.istanbulInstrumentSync = local.istanbul.instrumentSync || local.echo;
+        local.jslintAndPrint = local.jslint.jslintAndPrint || local.echo;
         local.regexpEmailValidate = new RegExp(
             '^[a-zA-Z0-9.!#$%&\'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}' +
                 '[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$'
@@ -13722,6 +14142,7 @@ instruction\n\
             screenCaptureImg: local.env.MODE_BUILD_SCREEN_CAPTURE,
             testCaseList: []
         }] };
+        local.uglify = local.uglifyjs.uglify || local.echo;
         // init serverLocalHost
         local.urlParse('');
         // init timeoutDefault
@@ -13776,6 +14197,7 @@ instruction\n\
     case 'node':
         // require modules
         local.Module = require('module');
+        local.__require = require;
         local.child_process = require('child_process');
         local.fs = require('fs');
         local.http = require('http');
@@ -13804,6 +14226,7 @@ instruction\n\
         }
         // init assets
         [
+            'lib.apidoc.js',
             'lib.db.js',
             'lib.github_crud.js',
             'lib.istanbul.js',
@@ -13815,6 +14238,7 @@ instruction\n\
             'lib.utility2.sh'
         ].forEach(function (key) {
             switch (key) {
+            case 'lib.apidoc.js':
             case 'lib.db.js':
             case 'lib.github_crud.js':
             case 'lib.istanbul.js':
@@ -13844,6 +14268,7 @@ instruction\n\
         local.assetsDict['/assets.utility2.rollup.js'] = [
             'header',
             '/assets.utility2.rollup.begin.js',
+            'lib.apidoc.js',
             'lib.db.js',
             'lib.github_crud.js',
             'lib.istanbul.js',
@@ -13863,6 +14288,7 @@ instruction\n\
             case '/assets.utility2.rollup.end.js':
                 script = local.assetsDict[key];
                 break;
+            case 'lib.apidoc.js':
             case 'lib.db.js':
             case 'lib.github_crud.js':
             case 'lib.istanbul.js':

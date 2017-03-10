@@ -1,8 +1,8 @@
 utility2
 ========
-the zero-dependency swiss-army-knife for building, testing, and deploying webapps
+the zero-dependency swiss-army-knife tool for building, testing, and deploying webapps
 
-[![travis-ci.org build-status](https://api.travis-ci.org/kaizhu256/node-utility2.svg)](https://travis-ci.org/kaizhu256/node-utility2) [![istanbul-coverage](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/coverage.html/index.html)
+[![travis-ci.org build-status](https://api.travis-ci.org/kaizhu256/node-utility2.svg)](https://travis-ci.org/kaizhu256/node-utility2) [![istanbul-coverage](https://kaizhu256.github.io/node-utility2/build/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build/coverage.html/index.html)
 
 [![NPM](https://nodei.co/npm/utility2.png?downloads=true)](https://www.npmjs.com/package/utility2)
 
@@ -23,34 +23,33 @@ the zero-dependency swiss-army-knife for building, testing, and deploying webapp
 
 
 # documentation
-#### api-doc
-- [https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/api-doc.html](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/api-doc.html)
+#### apidoc
+- [https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/apidoc.html](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/apidoc.html)
 
-[![api-doc](https://kaizhu256.github.io/node-utility2/build/screen-capture.apiDoc.browser._2Fhome_2Ftravis_2Fbuild_2Fkaizhu256_2Fnode-utility2_2Ftmp_2Fbuild_2Fapi-doc.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/api-doc.html)
+[![apidoc](https://kaizhu256.github.io/node-utility2/build/screen-capture.buildApidoc.browser._2Fhome_2Ftravis_2Fbuild_2Fkaizhu256_2Fnode-utility2_2Ftmp_2Fbuild_2Fapidoc.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/apidoc.html)
 
 #### todo
-- split function buildApiDoc into file lib.apidoc.js
+- add npm script publish-deprecate
+- shFileTrimLeft example.* before shBuildGithubUpload
+- allow server-side stdout to be streamed to webapps
 - split function testRun into file lib.test.js
 - rename test.js -> test.$npm_package_nameAlias.js
 - add utility2.middlewareLimit
 - add server stress test using electron
 - none
 
-#### change since 345e02c6
-- npm publish 2017.2.28
-- build - add publish build-branch
-- build - auto-clean build if commit-message is CLEAN_BUILD
-- build - auto-tag branch in master build-branch
-- README.md - normalize browser-script in example.js
-- promote utility2 plug in README.md, api-doc, code-coverage, rollup, test-coverage
-- lib.db.js - add ttl-cache
-- lib.utility2.js - revamp function buildApiDoc
-- lib.utility2.sh - revamp shell-function shNpmPublish
+#### change since 36c37242
+- npm publish 2017.3.9
+- add functions moduleDirname and onErrorAssert
+- add shell-command shPasswordEnvUnset
+- rename name api-doc -> apidoc
+- revamp build scripts
+- split function buildApidoc into new file lib.apidoc.js
+- verify README.md's build-links during build
 - none
 
 #### this package requires
 - darwin or linux os
-- chromium-based browser or firefox browser
 
 
 
@@ -59,8 +58,8 @@ the zero-dependency swiss-army-knife for building, testing, and deploying webapp
 
 | git-branch : | [master](https://github.com/kaizhu256/node-utility2/tree/master) | [beta](https://github.com/kaizhu256/node-utility2/tree/beta) | [alpha](https://github.com/kaizhu256/node-utility2/tree/alpha)|
 |--:|:--|:--|:--|
-| test-server-1 : | [![github.com test-server](https://kaizhu256.github.io/node-utility2/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/app/index.html) | [![github.com test-server](https://kaizhu256.github.io/node-utility2/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/index.html) | [![github.com test-server](https://kaizhu256.github.io/node-utility2/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/app/index.html)|
-| test-server-2 : | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://h1-utility2-master.herokuapp.com) | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://h1-utility2-beta.herokuapp.com) | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://h1-utility2-alpha.herokuapp.com)|
+| test-server-github : | [![github.com test-server](https://kaizhu256.github.io/node-utility2/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/app/index.html) | [![github.com test-server](https://kaizhu256.github.io/node-utility2/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/index.html) | [![github.com test-server](https://kaizhu256.github.io/node-utility2/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/app/index.html)|
+| test-server-heroku : | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://h1-utility2-master.herokuapp.com) | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://h1-utility2-beta.herokuapp.com) | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://h1-utility2-alpha.herokuapp.com)|
 | test-report : | [![test-report](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/test-report.html) | [![test-report](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/test-report.html) | [![test-report](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/test-report.html)|
 | coverage : | [![istanbul-coverage](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/coverage.html/index.html) | [![istanbul-coverage](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/coverage.html/index.html) | [![istanbul-coverage](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/coverage.html/index.html)|
 | build-artifacts : | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..master..travis-ci.org) | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..beta..travis-ci.org) | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..alpha..travis-ci.org)|
@@ -110,7 +109,7 @@ shExampleSh
 
 
 # quickstart automated example
-![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleJs.browser._2Ftmp_2Fapp_2Ftmp_2Fbuild_2Ftest-report.html.png)
+![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleJs.browser._2Fhome_2Ftravis_2Fbuild_2Fkaizhu256_2Fnode-utility2_2Ftmp_2Fbuild_2Ftest-report.html.png)
 
 #### to run this example, follow the instruction in the script below
 - [example.js](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/example.js)
@@ -402,7 +401,7 @@ instruction
 <head>\n\
 <meta charset="UTF-8">\n\
 <meta name="viewport" content="width=device-width, initial-scale=1">\n\
-<title>{{env.npm_package_nameAlias}} v{{env.npm_package_version}}</title>\n\
+<title>{{env.npm_package_nameAlias}} (v{{env.npm_package_version}})</title>\n\
 <style>\n\
 /*csslint\n\
     box-sizing: false,\n\
@@ -454,7 +453,7 @@ utility2-comment -->\n\
         target="_blank"\n\
     >\n\
 utility2-comment -->\n\
-        {{env.npm_package_nameAlias}} v{{env.npm_package_version}}\n\
+        {{env.npm_package_nameAlias}} (v{{env.npm_package_version}})\n\
 <!-- utility2-comment\n\
     </a>\n\
 utility2-comment -->\n\
@@ -621,7 +620,7 @@ utility2-comment -->\n\
 ```
 
 #### output from utility2
-![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleJs.browser._2Ftmp_2Fapp_2Ftmp_2Fbuild_2Ftest-report.html.png)
+![screen-capture](https://kaizhu256.github.io/screen-capture.testExampleJs.browser._2Fhome_2Ftravis_2Fbuild_2Fkaizhu256_2Fnode-utility2_2Ftmp_2Fbuild_2Ftest-report.html.png)
 
 #### output from istanbul
 ![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleJs.browser._2Ftmp_2Fapp_2Ftmp_2Fbuild_2Fcoverage.html_2Fapp_2Fexample.js.html.png)
@@ -637,12 +636,13 @@ utility2-comment -->\n\
     "author": "kai zhu <kaizhu256@gmail.com>",
     "bin": {
         "utility2": "lib.utility2.sh",
+        "utility2-apidoc": "lib.apidoc.js",
         "utility2-github-crud": "lib.github_crud.js",
         "utility2-istanbul": "lib.istanbul.js",
         "utility2-jslint": "lib.jslint.js",
         "utility2-uglifyjs": "lib.uglifyjs.js"
     },
-    "description": "the zero-dependency swiss-army-knife for building, testing, and deploying webapps",
+    "description": "the zero-dependency swiss-army-knife tool for building, testing, and deploying webapps",
     "devDependencies": {
         "electron-lite": "kaizhu256/node-electron-lite#alpha"
     },
@@ -683,22 +683,21 @@ utility2-comment -->\n\
         "darwin",
         "linux"
     ],
+    "readmeParse": "1",
     "repository": {
         "type": "git",
         "url": "https://github.com/kaizhu256/node-utility2.git"
     },
     "scripts": {
-        "build-ci": "./lib.utility2.sh shRun shReadmeBuild",
+        "build-ci": "./lib.utility2.sh shReadmeTest build_ci.sh",
         "env": "env",
-        "example.sh": "./lib.utility2.sh shRunScreenCapture shReadmeTestSh example.sh",
-        "heroku-postbuild": "./lib.utility2.sh shRun shDeployHeroku",
-        "postinstall": "if [ -f lib.utility2.npm-scripts.sh ]; then ./lib.utility2.npm-scripts.sh postinstall; fi",
-        "publish-alias": "VERSION=$(npm info $npm_package_name version); for ALIAS in apidocs busybox busybox2 busyweb test-lite; do utility2 shRun shNpmPublishAs . $ALIAS $VERSION; utility2 shRun shNpmTestPublished $ALIAS || exit $?; done",
+        "heroku-postbuild": "./lib.utility2.sh shDeployHeroku",
+        "postinstall": "if [ -f lib.utility2.npm_scripts.sh ]; then ./lib.utility2.npm_scripts.sh postinstall; fi",
+        "publish-alias": "VERSION=$(npm info $npm_package_name version); for ALIAS in busybox busybox2 busyweb test-lite; do ./lib.utility2.sh shNpmPublishAs . $ALIAS $VERSION; ./lib.utility2.sh shNpmTestPublished $ALIAS || exit $?; done",
         "start": "export PORT=${PORT:-8080} && if [ -f assets.app.js ]; then node assets.app.js; return; fi && export npm_config_mode_auto_restart=1 && ./lib.utility2.sh shRun shIstanbulCover test.js",
-        "test": "export PORT=$(./lib.utility2.sh shServerPortRandom) && export PORT_REPL=$(./lib.utility2.sh shServerPortRandom) && export npm_config_mode_auto_restart=1 && ./lib.utility2.sh test test.js",
-        "test-all": "npm test --mode-coverage=all"
+        "test": "export PORT=$(./lib.utility2.sh shServerPortRandom) && export PORT_REPL=$(./lib.utility2.sh shServerPortRandom) && export npm_config_mode_auto_restart=1 && ./lib.utility2.sh test test.js"
     },
-    "version": "2017.2.28"
+    "version": "2017.3.9"
 }
 ```
 
@@ -830,113 +829,42 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
     tar -xzf kibana.tar.gz --strip-components=1 -C /kibana
 ```
 
-- build.sh
+- build_ci.sh
 ```shell
-# build.sh
+# build_ci.sh
 
 # this shell script will run the build for this package
 
-shBuild() {(set -e
-# this function will run the main build
-    #!! coverage-hack
-    # init env
-    . ./lib.utility2.sh && shInit
-    # init github-gh-pages commit-limit
-    export COMMIT_LIMIT=20
-    case "$CI_BRANCH" in
-    alpha)
-        shBuildCiDefault
-        ;;
-    beta)
-        shBuildCiDefault
-        ;;
-    master)
-        shBuildCiDefault
-        git tag "$npm_package_version"
-        git push "git@github.com:$GITHUB_REPO.git" "$npm_package_version" || true
-        ;;
-    publish)
-        printf "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > "$HOME/.npmrc"
-        export CI_BRANCH=alpha
-        shNpmPublishAs
-        shBuildCiDefault
-        npm run publish-alias
-        git push "git@github.com:$GITHUB_REPO.git" publish:beta
-        ;;
-    esac
-    # docker build
-    docker --version 2>/dev/null || return
-    # if running legacy-node, then return
-    [ "$TRAVIS" ] && [ "$(node --version)" \< "v7.0" ] && return || true
-    export DOCKER_TAG="$(printf "$CI_BRANCH" | sed -e "s/docker.//")"
-    # if $DOCKER_TAG is not unique from $CI_BRANCH, then return
-    [ "$DOCKER_TAG" = "$CI_BRANCH" ] && return || true
-    # docker build
-    (printf "0" > "$npm_config_file_tmp" &&
-        docker build -f "tmp/README.Dockerfile.$DOCKER_TAG" -t "$GITHUB_REPO:$DOCKER_TAG" . ||
-        printf $? > "$npm_config_file_tmp") | tee "tmp/build/build.$CI_BRANCH.log"
-    EXIT_CODE="$(cat "$npm_config_file_tmp")"
-    [ "$EXIT_CODE" != 0 ] && return "$EXIT_CODE" || true
-    # docker test
-    case "$CI_BRANCH" in
-    docker.base)
-        # npm test utility2
-        for PACKAGE in utility2 "kaizhu256/node-utility2#alpha"
-        do
-            docker run "$GITHUB_REPO:$DOCKER_TAG" /bin/bash -c "set -e
-                curl https://raw.githubusercontent.com\
-/kaizhu256/node-utility2/alpha/lib.utility2.sh > /tmp/lib.utility2.sh
-                . /tmp/lib.utility2.sh
-                npm install '$PACKAGE'
-                cd node_modules/utility2
-                shBuildInsideDocker
-            "
-        done
-        ;;
-    esac
-    # https://docs.travis-ci.com/user/docker/#Pushing-a-Docker-Image-to-a-Registry
-    # docker push
-    if [ "$DOCKER_PASSWORD" ]
-    then
-        docker login -p="$DOCKER_PASSWORD" -u="$DOCKER_USERNAME"
-        docker push "$GITHUB_REPO:$DOCKER_TAG"
-    fi
+shBuildCiInternalPost() {(set -e
+    #// coverage-hack
+    shDeployGithub
+    shDeployHeroku
+    shReadmeBuildLinkVerify
 )}
 
-shBuildCiTestPost() {(set -e
-# this function will run the post-test build
-    # if running legacy-node, then return
-    [ "$(node --version)" \< "v7.0" ] && return || true
-    export NODE_ENV=production
-    # deploy app to gh-pages
-    (export MODE_BUILD=deployGithub && shDeployGithub) || return $?
-    # deploy app to heroku
-    (export MODE_BUILD=deployHeroku && shDeployHeroku) || return $?
-)}
-
-shBuildCiTestPre() {(set -e
-# this function will run the pre-test build
-    # test example.js
-    (export MODE_BUILD=testExampleJs &&
-        shFileTrimLeft tmp/README.example.js &&
-        shRunScreenCapture shReadmeTestExampleJs) || return $?
-    # screen-capture example.js coverage
+shBuildCiInternalPre() {(set -e
+    shReadmeTest example.js
+    # save screen-capture
     (export MODE_BUILD=testExampleJs &&
         export modeBrowserTest=screenCapture &&
-        export url=/tmp/app/tmp/build/coverage.html/app/example.js.html &&
+        export url="/tmp/app/tmp/build/coverage.html/app/example.js.html" &&
+        shBrowserTest &&
+        export url="$npm_config_dir_build/test-report.html" &&
         shBrowserTest) || return $?
-    # screen-capture example.js test-report
-    (export MODE_BUILD=testExampleJs &&
-        export modeBrowserTest=screenCapture &&
-        export url=/tmp/app/tmp/build/test-report.html &&
-        shBrowserTest) || return $?
-    # test example.sh
-    (export MODE_BUILD=testExampleSh && npm run example.sh) || return $?
-    # test published-package
-    (export MODE_BUILD=npmTestPublished && shRunScreenCapture shNpmTestPublished) || return $?
+    shReadmeTest example.sh
+    shNpmTestPublished
 )}
 
-shBuild
+shBuildCiPost() {(set -e
+    return
+)}
+
+shBuildCiPre() {(set -e
+    return
+)}
+
+# init env
+. ./lib.utility2.sh && shBuildCi
 ```
 
 

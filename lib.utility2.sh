@@ -127,56 +127,84 @@ require('$npm_config_dir_utility2/lib.utility2.js').browserTest({
     fi
 )}
 
-shBuildApiDoc() {(set -e
-# this function will build the api-doc
-    shInit
-    if (grep -e testCase_buildApiDoc_default test.js > /dev/null 2>&1)
-    then
-        npm test --mode-coverage="" --mode-test-case=testCase_buildApiDoc_default
-        return $?
-    fi
-    node "$npm_config_dir_utility2/lib.utility2.js" buildApiDoc
+shBuildApidoc() {(set -e
+# this function will build the apidoc
+    shPasswordEnvUnset
+    export MODE_BUILD=buildApidoc
+    npm test --mode-coverage="" --mode-test-case=testCase_buildApidoc_default
 )}
 
 shBuildApp() {(set -e
 # this function will build the app
+    shPasswordEnvUnset
+    export MODE_BUILD=buildApp
     npm test --mode-coverage="" --mode-test-case=testCase_buildApp_default
 )}
 
-shBuildCiDefault() {(set -e
-# this function will run the default build-ci
-    # run pre-test build
-    if (type shBuildCiTestPre > /dev/null 2>&1)
+shBuildCi() {(set -e
+# this function will run the main build
+    # run pre-build
+    if (type shBuildCiPre > /dev/null 2>&1)
     then
-        shBuildCiTestPre
+        shBuildCiPre
     fi
-    # init test-report.json
-    cp "/tmp/app/node_modules/$npm_package_name/tmp/build/test-report.json" \
-        "$npm_config_dir_build" > /dev/null 2>&1 || true
+    case "$CI_BRANCH" in
+    alpha)
+        shBuildCiInternal
+        ;;
+    beta)
+        shBuildCiInternal
+        ;;
+    master)
+        shBuildCiInternal
+        git tag "$npm_package_version" || true
+        git push "git@github.com:$GITHUB_REPO.git" "$npm_package_version" || true
+        ;;
+    publish)
+        printf "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > "$HOME/.npmrc"
+        export CI_BRANCH=alpha
+        shNpmPublishAs || true
+        shBuildCiInternal
+        npm run publish-alias
+        git push "git@github.com:$GITHUB_REPO.git" publish:beta
+        ;;
+    esac
+    # run post-build
+    if (type shBuildCiPost > /dev/null 2>&1)
+    then
+        shBuildCiPost
+    fi
+)}
+
+shBuildCiInternal() {(set -e
+# this function will run the internal build
+    # run internal pre-build
+    if (type shBuildCiInternalPre > /dev/null 2>&1)
+    then
+        shBuildCiInternalPre
+    fi
     export npm_config_file_test_report_merge="$npm_config_dir_build/test-report.json"
     # run npm-test
-    (export MODE_BUILD=npmTest &&
-        shRunScreenCapture npm test --mode-coverage) || return $?
-    # run post-test build
-    if (type shBuildCiTestPost > /dev/null 2>&1)
-    then
-        shBuildCiTestPost
-    fi
-    # create api-doc
-    (export MODE_BUILD=apiDoc &&
-        shBuildApiDoc) || return $?
+    (export MODE_BUILD=npmTest && shRunScreenCapture npm test --mode-coverage) || return $?
+    # create apidoc
+    shBuildApidoc
     # create package-listing
-    (export MODE_BUILD=gitLsTree &&
-        shRunScreenCapture shGitLsTree) || return $?
+    (export MODE_BUILD=gitLsTree && shRunScreenCapture shGitLsTree) || return $?
     # create recent changelog of last 50 commits
-    (export MODE_BUILD=gitLog &&
-        shRunScreenCapture git log -50 --pretty="%ai\u000a%B") || return $?
+    (export MODE_BUILD=gitLog && shRunScreenCapture git log -50 --pretty="%ai\u000a%B") || \
+        return $?
     # if running legacy-node, then do not continue
-    [ "$(node --version)" \< "v7.0" ] && return || true
+    if [ "$(node --version)" \< "v6.0" ]
+        then return
+    fi
+    # run internal post-build
+    if (type shBuildCiInternalPost > /dev/null 2>&1)
+    then
+        shBuildCiInternalPost
+    fi
     # upload build-artifacts to github, and if number of commits > $COMMIT_LIMIT,
     # then squash older commits
-    (export MODE_BUILD=buildGithubUpload &&
-        shBuildGithubUpload) || return $?
+    (export COMMIT_LIMIT=20 && shBuildGithubUpload) || return $?
 )}
 
 shBuildGithubUpload() {(set -e
@@ -187,27 +215,45 @@ shBuildGithubUpload() {(set -e
     fi
     export MODE_BUILD=buildGithubUpload
     shBuildPrint "uploading build-artifacts to git@github.com:$GITHUB_REPO.git"
-    if ! (type shGitRepoBranchUpdateLocal > /dev/null 2>&1)
+    REPO="git@github.com:$GITHUB_REPO.git"
+    # init /tmp/app
+    rm -fr /tmp/app
+    git clone "$REPO" --branch=gh-pages --single-branch /tmp/app
+    cd /tmp/app
+    if ! (git config user.email  > /dev/null 2>&1)
     then
-        shGitRepoBranchUpdateLocal() {
-        # this function will local-update git-repo-branch
-            case "$CI_COMMIT_MESSAGE" in
-            CLEAN_BUILD)
-                shBuildPrint "CLEAN_BUILD"
-                rm -fr build
-                ;;
-            esac
-            # copy build-artifacts to gh-pages
-            cp -a "$npm_config_dir_build" .
-            DIR="build..$CI_BRANCH..$CI_HOST"
-            rm -fr "$DIR" && cp -a "$npm_config_dir_build" "$DIR"
-        }
+        git config user.email nobody
+        git config user.name nobody
     fi
-    (shGitRepoBranchCommand update "git@github.com:$GITHUB_REPO.git" gh-pages) || return $?
+    case "$CI_COMMIT_MESSAGE" in
+    # clean build
+    "[clean build]")
+        shBuildPrint "[clean build]"
+        rm -fr build
+        ;;
+    esac
+    # copy build-artifacts
+    cp -a "$npm_config_dir_build" .
+    rm -fr "build..$CI_BRANCH..$CI_HOST"
+    cp -a "$npm_config_dir_build" "build..$CI_BRANCH..$CI_HOST"
+    # git add .
+    git add .
+    # git commit
+    git commit -am "[skip ci] update gh-pages" || true
+    # if number of commits > $COMMIT_LIMIT,
+    # then backup current git-repo-branch to git-repo-branch.backup,
+    # and then squash to $COMMIT_LIMIT/2 in git-repo-branch
+    if [ "$COMMIT_LIMIT" ] && [ "$(git rev-list HEAD --count)" -gt "$COMMIT_LIMIT" ]
+    then
+        git push -f "$REPO" gh-pages:gh-pages.backup
+        shGitSquashShift "$(($COMMIT_LIMIT/2))"
+    fi
+    git push -f "$REPO" gh-pages:gh-pages
 )}
 
 shBuildInsideDocker() {(set -e
 # this function will run the build inside docker
+    shPasswordEnvUnset
     export npm_config_unsafe_perm=1
     # start xvfb
     shXvfbStart
@@ -232,6 +278,8 @@ shBuildPrint() {
 
 shBuildReadme() {(set -e
 # this function will build the app
+    shPasswordEnvUnset
+    export MODE_BUILD=buildReadme
     npm test --mode-coverage="" --mode-test-case=testCase_buildReadme_default
 )}
 
@@ -291,15 +339,13 @@ shDeployHeroku() {(set -e
 # and run a simple curl check for $TEST_URL
 # and test $TEST_URL
     shInit
-    if [ ! "$npm_package_nameHeroku" ]
-    then
-        export npm_package_nameHeroku="$(printf "h1-$npm_package_nameAlias" | tr "_" "-")"
-    fi
+    export npm_package_nameHeroku=\
+"${npm_package_nameHeroku:-$(printf "h1-$npm_package_nameAlias" | tr "_" "-")}"
     # build app inside heroku
     if [ "$npm_lifecycle_event" = heroku-postbuild ]
     then
         shBuildApp
-        cp tmp/build/app/*.js .
+        cp "$npm_config_dir_build"/app/*.js .
         printf "web: npm_config_mode_backend=1 node assets.app.js" > Procfile
         rm -fr tmp
         return
@@ -327,6 +373,53 @@ shDeployHeroku() {(set -e
     (export modeBrowserTest=screenCapture &&
         export url="$TEST_URL" &&
         shBrowserTest) || return $?
+)}
+
+shModuleDirname() {(set -e
+# this function will print the __dirname of the $MODULE
+    MODULE="$1"
+    node -e "
+// <script>
+/*jslint
+    bitwise: true,
+    browser: true,
+    maxerr: 8,
+    maxlen: 96,
+    node: true,
+    nomen: true,
+    regexp: true,
+    stupid: true
+*/
+'use strict';
+var local;
+local = {};
+local.moduleDirname = function (module) {
+/*
+ * this function will return the __dirname of the module
+ */
+    var result;
+    if (!module || module.indexOf('/') >= 0 || module === '.') {
+        return require('path').resolve(process.cwd(), module || '');
+    }
+    try {
+        require(module);
+    } catch (ignore) {
+    }
+    [
+        new RegExp('(.*?/' + module + ')\\b'),
+        new RegExp('(.*?/' + module + ')/[^/].*?$')
+    ].some(function (rgx) {
+        return Object.keys(require.cache).some(function (key) {
+            result = rgx.exec(key);
+            result = result && result[1];
+            return result;
+        });
+    });
+    return result || '';
+};
+console.log(local.moduleDirname('$MODULE'));
+// </script>
+    "
 )}
 
 shDockerBuildCleanup() {(set -e
@@ -608,8 +701,9 @@ shDockerStart() {(set -e
     then
         DOCKER_OPTIONS="$DOCKER_OPTIONS -p $LOCALHOST:$DOCKER_PORT:$DOCKER_PORT"
     fi
+    DOCKER_ROOT="${DOCKER_HOME:-$HOME}"
     docker run --name "$NAME" -dt -e debian_chroot="$NAME" \
-        -v "$HOME:/root" \
+        -v "$DOCKER_ROOT:/root" \
         $DOCKER_OPTIONS \
         "$IMAGE" "$@"
 )}
@@ -711,11 +805,11 @@ shGitGc() {(set -e
 
 shGitInfo() {(set -e
 # this function will run checks before npm-publixh
-    shGitLsTree
-    printf "\n"
     git diff HEAD
     printf "\n"
     git status
+    printf "\n"
+    shGitLsTree
     printf "\n"
     git grep '!\! ' || true
     printf "\n"
@@ -737,93 +831,6 @@ shGitLsTree() {(set -e
             "$file"
     done
 )}
-
-shGitRepoBranchCommand() {
-# this fuction will copy / move / update git-repo-branch
-    local BRANCH1 BRANCH2 COMMAND EXIT_CODE MESSAGE RANGE REPO1 REPO2 || return $?
-    EXIT_CODE=0 || return $?
-    # http://superuser.com/questions/897148/shell-cant-shift-that-many-error
-    COMMAND="$1" || return $?
-    shift $(( $# > 0 ? 1 : 0 )) || return $?
-    REPO1="$1" || return $?
-    shift $(( $# > 0 ? 1 : 0 )) || return $?
-    BRANCH1="$1" || return $?
-    shift $(( $# > 0 ? 1 : 0 )) || return $?
-    REPO2="${1:-$REPO1}" || return $?
-    shift $(( $# > 0 ? 1 : 0 )) || return $?
-    BRANCH2="${1:-$BRANCH1}" || return $?
-    shift $(( $# > 0 ? 1 : 0 )) || return $?
-    MESSAGE="$@" || return $?
-    # cleanup /tmp/git.repo.branch
-    rm -fr /tmp/git.repo.branch || return $?
-    # init /tmp/git.repo.branch
-    case "$COMMAND" in
-    copyPwdA)
-        cp -a "$PWD" /tmp/git.repo.branch || return $?
-        ;;
-    copyPwdLsTree)
-        mkdir -p /tmp/git.repo.branch || return $?
-        git ls-tree --name-only -r HEAD | \
-            xargs tar -czf - | \
-            tar -C /tmp/git.repo.branch -xvzf - || return $?
-        ;;
-    *)
-        git clone "$REPO1" "--branch=$BRANCH1" --single-branch /tmp/git.repo.branch || return $?
-        ;;
-    esac
-    if [ ! "$REPO1" ]
-    then
-        return
-    fi
-    cd /tmp/git.repo.branch || return $?
-    # init git
-    git init 2>/dev/null || true
-    if ! (git config user.email  > /dev/null 2>&1)
-    then
-        git config user.email nobody || return $?
-        git config user.name nobody || return $?
-    fi
-    # update git-repo-branch
-    if (type shGitRepoBranchUpdateLocal > /dev/null 2>&1)
-    then
-        shGitRepoBranchUpdateLocal || EXIT_CODE=$?
-        # reset shGitRepoBranchUpdateLocal
-        unset -f shGitRepoBranchUpdateLocal || return $?
-        [ "$EXIT_CODE" = 0 ] || return "$EXIT_CODE"
-    fi
-    # git add .
-    git add .
-    # git commit
-    if [ "$MESSAGE" ]
-    then
-        git commit -am "$MESSAGE" 2>/dev/null || true
-    else
-        git commit -am "[skip ci]" \
-            -m "$(shDateIso)" \
-            -m "$COMMAND $REPO1#$BRANCH1 to $REPO2#$BRANDH2" \
-            -m "$(uname -a)" 2>/dev/null || true
-    fi
-    if [ ! "$REPO2" ]
-    then
-        return
-    fi
-    # if number of commits > $COMMIT_LIMIT,
-    # then backup current git-repo-branch to git-repo-branch.backup,
-    # and then squash $RANGE to $COMMIT_LIMIT/2 in git-repo-branch
-    if [ "$COMMIT_LIMIT" ] && [ "$(git rev-list HEAD --count)" -gt "$COMMIT_LIMIT" ]
-    then
-        RANGE="$(($COMMIT_LIMIT/2))" || return $?
-        git push -f "$REPO2" "$BRANCH2:$BRANCH2.backup" || return $?
-        shGitSquashShift "$RANGE" || return $?
-    fi
-    git push -f "$REPO2" "$BRANCH1:$BRANCH2" || return $?
-    case "$COMMAND" in
-    # move git-repo-branch1 to git-repo-branch2
-    move)
-        git push "$REPO1":"$BRANCH1" || return $?
-        ;;
-    esac
-}
 
 shGitSquashPop() {(set -e
 # http://stackoverflow.com/questions/5189560
@@ -1037,14 +1044,13 @@ if (process.env.GITHUB_REPO === undefined && value) {
         export npm_package_name=example || return $?
         export npm_package_version=0.0.1 || return $?
     fi
-    if [ ! "$npm_package_nameAlias" ]
-    then
-        export npm_package_nameAlias="$npm_package_name" || return $?
-    fi
+    export npm_package_nameAlias="${npm_package_nameAlias:-$npm_package_name}" || return $?
     # init $npm_config_*
-    export npm_config_dir_build="$PWD/tmp/build" || return $?
+    export npm_config_dir_build="${npm_config_dir_build:-$PWD/tmp/build}" || return $?
+    mkdir -p "$npm_config_dir_build"
     export npm_config_dir_tmp="$PWD/tmp" || return $?
-    export npm_config_file_tmp="$PWD/tmp/tmpfile" || return $?
+    mkdir -p "$npm_config_dir_tmp"
+    export npm_config_file_tmp="${npm_config_file_tmp:-$PWD/tmp/tmpfile}" || return $?
     # init $npm_config_dir_build dir
     mkdir -p "$npm_config_dir_build/coverage.html"
     # init $npm_config_dir_utility2
@@ -1057,9 +1063,8 @@ if (process.env.GITHUB_REPO === undefined && value) {
     # init $PATH
     export PATH="$PWD/node_modules/.bin:$PATH" || return $?
     # extract and save the scripts embedded in README.md to tmp/
-    if [ -f README.md ]
+    if [ -f README.md ] && [ "$npm_package_readmeParse" ]
     then
-        mkdir -p tmp
         node -e "
 // <script>
 /*jslint
@@ -1179,7 +1184,7 @@ shIptablesInit() {(set -e
     iptables -P OUTPUT ACCEPT
 
     # https://wiki.debian.org/iptables
-    # Allows all loopback (lo0) traffic and drop all traffic to 127/8 that doesn't use lo0
+    # Allows all loopback (lo0) traffic and drop all traffic to 127/8 that doesn''t use lo0
     iptables -A INPUT -i lo -j ACCEPT
     iptables -A INPUT ! -i lo -d 127.0.0.0/8 -j REJECT
     # Accepts all established inbound connections
@@ -1276,7 +1281,8 @@ try {
 }
 local.fs.writeFileSync(
     '$FILE',
-    local.utility2.jsonStringifyOrdered(JSON.parse(local.fs.readFileSync('$FILE')), null, 4)
+    local.utility2.jsonStringifyOrdered(JSON.parse(local.fs.readFileSync('$FILE')), null, 4) +
+        '\n'
 );
 // </script>
     "
@@ -1303,7 +1309,7 @@ shJsonFilePrettify() {(set -e
 'use strict';
 require('fs').writeFileSync(
     '$FILE',
-    JSON.stringify(JSON.parse(require('fs').readFileSync('$FILE')), null, 4)
+    JSON.stringify(JSON.parse(require('fs').readFileSync('$FILE')), null, 4) + '\n'
 );
 // </script>
     "
@@ -1316,7 +1322,8 @@ shKillallElectron() {
 
 shMain() {
 # this function will run the main program
-    export UTILITY2_DEPENDENTS="db-lite
+    export UTILITY2_DEPENDENTS="apidoc-lite
+        db-lite
         electron-lite
         istanbul-lite
         jslint-lite
@@ -1332,15 +1339,21 @@ shMain() {
     COMMAND="$1" || return $?
     shift || return $?
     case "$COMMAND" in
+    source)
+        (shInitNpmConfigDirUtility2 &&
+            printf ". $npm_config_dir_utility2/lib.utility2.sh") || return $?
+        ;;
     start)
-        (shInit && export npm_config_mode_auto_restart=1 && export npm_config_mode_start=1 &&
+        (export npm_config_mode_auto_restart=1 &&
+            export npm_config_mode_start=1 &&
+            shInit &&
             shRun shIstanbulCover "$npm_config_dir_utility2/test.js" "$@") || return $?
         ;;
     test)
         (shInit && shNpmTest "$@") || return $?
         ;;
     utility2Dirname)
-        (shInit && printf "$npm_config_dir_utility2") || return $?
+        (shInitNpmConfigDirUtility2 && printf "$npm_config_dir_utility2") || return $?
         ;;
     *)
         (shInit && "$COMMAND" "$@") || return $?
@@ -1374,7 +1387,7 @@ shMountData() {(set -e
 shNpmPublish() {(set -e
 # this function will npm-publish the $DIR as $NAME@$VERSION with a clean repo
     cd "$1"
-    if ! [ -d .git ]
+    if [ ! -d .git ]
     then
         git init
         git add .
@@ -1402,8 +1415,13 @@ shNpmPublishAs() {(set -e
     VERSION="$3"
     cd "$DIR"
     shInit
-    shGitRepoBranchCommand copyPwdLsTree
-    cd /tmp/git.repo.branch
+    # init /tmp/app
+    rm -fr /tmp/app /tmp/node_modules && mkdir -p /tmp/app
+    # clean-copy git $DIR to /tmp/app
+    git ls-tree --name-only -r HEAD | \
+        xargs tar -czf - | \
+        tar -C /tmp/app -xvzf -
+    cd /tmp/app
     node -e "
 // <script>
 /*jslint
@@ -1435,8 +1453,9 @@ local.fs.writeFileSync('package.json', JSON.stringify(local.packageJson));
 
 shNpmStartStandalone() {(set -e
 # this function will build and start the standalone app assets.app.js
+    shInit
     shBuildApp
-    node tmp/build/app/assets.app.js
+    node "$npm_config_dir_build/app/assets.app.js"
 )}
 
 shNpmTest() {(set -e
@@ -1445,10 +1464,10 @@ shNpmTest() {(set -e
     export MODE_BUILD="${MODE_BUILD:-npmTest}"
     export NODE_BINARY="${NODE_BINARY:-node}"
     shBuildPrint "npm-testing $PWD"
-    # cleanup $npm_config_dir_tmp/*.json
-    rm -f "$npm_config_dir_tmp/"*.json
+    # cleanup tmp/*.json
+    rm -f tmp/*.json
     # cleanup old electron pages
-    rm -f "$npm_config_dir_tmp/"electron.*.html
+    rm -f tmp/electron.*.html
     # init npm-test-mode
     export NODE_ENV="${NODE_ENV:-test}"
     export npm_config_mode_test=1
@@ -1470,11 +1489,13 @@ shNpmTest() {(set -e
     fi
     # create test-report artifacts
     shTestReportCreate || EXIT_CODE=$?
+    shBuildPrint "EXIT_CODE - $EXIT_CODE"
     return "$EXIT_CODE"
 )}
 
 shNpmTestPublished() {(set -e
-# this function will run npm-test on the published-package
+# this function will run npm-test on the published npm-package $npm_package_name
+    shPasswordEnvUnset
     shInit
     if [ "$1" ]
     then
@@ -1497,47 +1518,29 @@ shNpmTestPublished() {(set -e
     npm install
     # npm-test package
     npm test --mode-coverage
-    EXIT_CODE=$?
-    # save screen-capture
-    cp "/tmp/app/node_modules/$npm_package_name/tmp/build/"screen-capture.*.png \
-        "$npm_config_dir_build" 2>/dev/null || true
-    return "$EXIT_CODE"
 )}
+
+shPasswordEnvUnset() {
+# this function will unset the password-env, e.g.
+# (eval $(utility2 source); shPasswordEnvUnset; node -e "console.log(process.env.AES_256_KEY)")
+# undefined
+    unset AES_256_KEY || return $?
+    unset DOCKER_PASSWORD || return $?
+    unset DOCKER_USERNAME || return $?
+    unset GIT_SSH_KEY || return $?
+    unset NPM_TOKEN || return $?
+}
 
 shPasswordRandom() {(set -e
 # this function will create a random password
     openssl rand -base64 32
 )}
 
-shReadmeBuild() {(set -e
-# this function will run the internal build-script embedded in README.md
-    # run shell script from README.md
-    export MODE_BUILD=build
-    shReadmeTestSh "$npm_config_dir_tmp/README.build.sh"
-)}
-
-shReadmeTestExampleJs() {(set -e
-# this function will extract, save, and test the script example.js embedded in README.md
+shReadmeBuildLinkVerify() {(set -e
+# this function will verify the build-links embedded in README.md
     shInit
-    export MODE_BUILD=testExampleJs
-    shReadmeTestJs example.js
-)}
-
-shReadmeTestJs() {(set -e
-# this function will extract, save, and test the script $FILE embedded in README.md
-    FILE="$1"
-    shBuildPrint "testing $FILE"
-    # init /tmp/app
-    rm -fr /tmp/app /tmp/node_modules && mkdir -p /tmp/app
-    # cp script from README.md
-    cp "tmp/README.$FILE" "/tmp/app/$FILE"
-    cp "tmp/README.$FILE" "tmp/build/$FILE"
-    # cd /tmp/app
-    cd /tmp/app
-    # jslint $FILE
-    "$npm_config_dir_utility2/lib.jslint.js" "$FILE"
-    # test $FILE
-    SCRIPT="$(node -e "
+    find "$npm_config_dir_build" | sort
+    node -e "
 // <script>
 /*jslint
     bitwise: true,
@@ -1550,41 +1553,86 @@ shReadmeTestJs() {(set -e
     stupid: true
 */
 'use strict';
-console.log((/\n *\\$ (.*)/).exec(require('fs').readFileSync('$FILE', 'utf8'))[1]);
+var local;
+local = {};
+local.fs = require('fs');
+local.nop = function () {
+    return;
+};
+local.fs.readFileSync('README.md', 'utf8').replace(new RegExp(
+    '$GITHUB_REPO'.replace('/', '.github.io\\\\/') + '\\\\/build\\\\b.*?\\\\/(.*?)[)\\\\]]',
+    'g'
+), function (match0, match1) {
+    if (!local.fs.existsSync('$npm_config_dir_build/' + match1)) {
+        throw new Error('shReadmeBuildLinkVerify - invalid link - https://' + match0);
+    }
+});
 // </script>
-    ")"
-    export PORT=8081
-    export npm_config_timeout_exit=30000
-    # screen-capture server
-    (sleep 15 &&
-        export modeBrowserTest=screenCapture &&
-        export url="http://127.0.0.1:$PORT" &&
-        shBrowserTest) &
-    printf "$SCRIPT\n\n"
-    eval "$SCRIPT"
-    EXIT_CODE=$?
-    # save screen-capture
-    cp "/tmp/app/node_modules/$npm_package_name/tmp/build/"screen-capture.*.png \
-        "$npm_config_dir_build" 2>/dev/null || true
-    return "$EXIT_CODE"
+    "
 )}
 
-shReadmeTestSh() {(set -e
-# this function will extract, save, and test the shell script $FILE embedded in README.md
+shReadmeTest() {(set -e
+# this function will extract, save, and test the script $FILE embedded in README.md
+    shInit
     FILE="$1"
+    if [ ! -f "tmp/README.$FILE" ]
+    then
+        return
+    fi
+    case "$FILE" in
+    build_ci.sh)
+        export MODE_BUILD=build
+        FILE=tmp/README.build_ci.sh
+        ;;
+    example.js)
+        export MODE_BUILD=testExampleJs
+        ;;
+    example.sh)
+        export MODE_BUILD=testExampleSh
+        ;;
+    esac
     shBuildPrint "testing $FILE"
-    if [ "$MODE_BUILD" != "build" ]
+    if [ "$FILE" = example.js ] || [ "$FILE" = example.sh ]
     then
         # init /tmp/app
         rm -fr /tmp/app /tmp/node_modules && mkdir -p /tmp/app
         # cp script from README.md
+        shFileTrimLeft "tmp/README.$FILE"
         cp "tmp/README.$FILE" "/tmp/app/$FILE"
-        cp "tmp/README.$FILE" "tmp/build/$FILE"
+        cp "tmp/README.$FILE" "$npm_config_dir_build/$FILE"
         # cd /tmp/app
         cd /tmp/app
+        SCRIPT="$(node -e "
+// <script>
+/*jslint
+    bitwise: true,
+    browser: true,
+    maxerr: 8,
+    maxlen: 96,
+    node: true,
+    nomen: true,
+    regexp: true,
+    stupid: true
+*/
+'use strict';
+var local;
+local = {};
+local.fs = require('fs');
+local.nop = function () {
+    return;
+};
+local.fs.readFileSync('$FILE', 'utf8').replace((/\n *\\$ (.*)/), function (match0, match1) {
+    // jslint-hack
+    local.nop(match0);
+    console.log(match1);
+});
+// </script>
+        ")"
     fi
-    # display file
-    node -e "
+    if [ "$FILE" = tmp/README.build_ci.sh ] || [ "$FILE" = example.sh ]
+    then
+        # display shell script
+        node -e "
 // <script>
 /*jslint
     bitwise: true,
@@ -1599,7 +1647,8 @@ shReadmeTestSh() {(set -e
 'use strict';
 console.log(require('fs').readFileSync('$FILE', 'utf8').trimLeft());
 // </script>
-    "
+        "
+    fi
     export PORT=8081
     export npm_config_timeout_exit=30000
     # screen-capture server
@@ -1607,13 +1656,18 @@ console.log(require('fs').readFileSync('$FILE', 'utf8').trimLeft());
         export modeBrowserTest=screenCapture &&
         export url="http://127.0.0.1:$PORT" &&
         shBrowserTest) &
-    # test $FILE
-    /bin/sh "$FILE"
-    EXIT_CODE=$?
-    # save screen-capture
-    cp "/tmp/app/node_modules/$npm_package_name/tmp/build/"screen-capture.*.png \
-        "$npm_config_dir_build" 2>/dev/null || true
-    return "$EXIT_CODE"
+    case "$FILE" in
+    example.js)
+        printf "$SCRIPT\n\n"
+        shRunScreenCapture eval "$SCRIPT"
+        ;;
+    example.sh)
+        shRunScreenCapture /bin/sh "$FILE"
+        ;;
+    tmp/README.build_ci.sh)
+        /bin/sh "$FILE"
+        ;;
+    esac
 )}
 
 shReplClient() {(set -e
@@ -1677,6 +1731,7 @@ shRun() {(set -e
             # else restart process after 1 second
             sleep 1
         done
+        shBuildPrint "EXIT_CODE - $EXIT_CODE"
         return "$EXIT_CODE"
     # eval argv
     else
@@ -1695,6 +1750,8 @@ shRunScreenCapture() {(set -e
         printf $? > "$npm_config_file_tmp") | \
         tee "$npm_config_dir_tmp/screen-capture.txt"
     EXIT_CODE="$(cat "$npm_config_file_tmp")"
+    shBuildPrint "EXIT_CODE - $EXIT_CODE"
+    [ "$EXIT_CODE" = 0 ] || return "$EXIT_CODE"
     # format text-output
     node -e "
 // <script>
@@ -1753,7 +1810,6 @@ local.result = '<svg height=\"' + (local.yy + 20) +
 local.fs.writeFileSync('$npm_config_dir_build/$MODE_BUILD_SCREEN_CAPTURE', local.result);
 // </script>
     "
-    return "$EXIT_CODE"
 )}
 
 shServerPortRandom() {(set -e
@@ -2013,7 +2069,7 @@ shUtility2DependentsSync() {(set -e
 # this function will sync files between utility2 and its dependents
     cd "$HOME/src"
     # hardlink "lib.$LIB.js"
-    for LIB in db istanbul jslint uglifyjs
+    for LIB in apidoc db istanbul jslint uglifyjs
     do
         if [ -d "$LIB-lite" ]
         then

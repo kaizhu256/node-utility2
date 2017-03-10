@@ -128,7 +128,7 @@
             // init writer
             local.coverageReportHtml = '';
             local.coverageReportHtml += '<div class="coverageReportDiv">\n' +
-                '<h1>coverage report</h1>\n' +
+                '<h1>coverage-report</h1>\n' +
                 '<div ' +
                 'style="background: #fff; border: 1px solid #000; margin 0; padding: 0;">\n';
             local.writerData = '';
@@ -2149,7 +2149,7 @@ local['head.txt'] = '\
 <body>\n\
 <div class="header {{reportClass}}">\n\
     <h1 style="font-weight: bold;">\n\
-        <a href="{{env.npm_package_homepage}}">{{env.npm_package_nameAlias}} v{{env.npm_package_version}}</a>\n\
+        <a href="{{env.npm_package_homepage}}">{{env.npm_package_nameAlias}} (v{{env.npm_package_version}})</a>\n\
     </h1>\n\
     <h1>Code coverage report for <span class="entity">{{entity}}</span></h1>\n\
     <h2>\n\

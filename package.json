@@ -2,12 +2,13 @@
     "author": "kai zhu <kaizhu256@gmail.com>",
     "bin": {
         "utility2": "lib.utility2.sh",
+        "utility2-apidoc": "lib.apidoc.js",
         "utility2-github-crud": "lib.github_crud.js",
         "utility2-istanbul": "lib.istanbul.js",
         "utility2-jslint": "lib.jslint.js",
         "utility2-uglifyjs": "lib.uglifyjs.js"
     },
-    "description": "the zero-dependency swiss-army-knife for building, testing, and deploying webapps",
+    "description": "the zero-dependency swiss-army-knife tool for building, testing, and deploying webapps",
     "devDependencies": {
         "electron-lite": "kaizhu256/node-electron-lite#alpha"
     },
@@ -48,20 +49,19 @@
         "darwin",
         "linux"
     ],
+    "readmeParse": "1",
     "repository": {
         "type": "git",
         "url": "https://github.com/kaizhu256/node-utility2.git"
     },
     "scripts": {
-        "build-ci": "./lib.utility2.sh shRun shReadmeBuild",
+        "build-ci": "./lib.utility2.sh shReadmeTest build_ci.sh",
         "env": "env",
-        "example.sh": "./lib.utility2.sh shRunScreenCapture shReadmeTestSh example.sh",
-        "heroku-postbuild": "./lib.utility2.sh shRun shDeployHeroku",
-        "postinstall": "if [ -f lib.utility2.npm-scripts.sh ]; then ./lib.utility2.npm-scripts.sh postinstall; fi",
-        "publish-alias": "VERSION=$(npm info $npm_package_name version); for ALIAS in apidocs busybox busybox2 busyweb test-lite; do utility2 shRun shNpmPublishAs . $ALIAS $VERSION; utility2 shRun shNpmTestPublished $ALIAS || exit $?; done",
+        "heroku-postbuild": "./lib.utility2.sh shDeployHeroku",
+        "postinstall": "if [ -f lib.utility2.npm_scripts.sh ]; then ./lib.utility2.npm_scripts.sh postinstall; fi",
+        "publish-alias": "VERSION=$(npm info $npm_package_name version); for ALIAS in busybox busybox2 busyweb test-lite; do ./lib.utility2.sh shNpmPublishAs . $ALIAS $VERSION; ./lib.utility2.sh shNpmTestPublished $ALIAS || exit $?; done",
         "start": "export PORT=${PORT:-8080} && if [ -f assets.app.js ]; then node assets.app.js; return; fi && export npm_config_mode_auto_restart=1 && ./lib.utility2.sh shRun shIstanbulCover test.js",
-        "test": "export PORT=$(./lib.utility2.sh shServerPortRandom) && export PORT_REPL=$(./lib.utility2.sh shServerPortRandom) && export npm_config_mode_auto_restart=1 && ./lib.utility2.sh test test.js",
-        "test-all": "npm test --mode-coverage=all"
+        "test": "export PORT=$(./lib.utility2.sh shServerPortRandom) && export PORT_REPL=$(./lib.utility2.sh shServerPortRandom) && export npm_config_mode_auto_restart=1 && ./lib.utility2.sh test test.js"
     },
-    "version": "2017.2.28"
+    "version": "2017.3.9"
 }
