@@ -1,0 +1,8 @@
+[core]
+    bare = false
+    filemode = true
+    logallrefupdates = true
+    repositoryformatversion = 0
+[remote "origin"]
+    fetch = +refs/heads/*:refs/remotes/origin/*
+    url = https://github.com/kaizhu256/node-utility2.git
