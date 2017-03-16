@@ -1,5 +1,4 @@
-utility2
-========
+# utility2
 the zero-dependency swiss-army-knife tool for building, testing, and deploying webapps
 
 [![travis-ci.org build-status](https://api.travis-ci.org/kaizhu256/node-utility2.svg)](https://travis-ci.org/kaizhu256/node-utility2) [![istanbul-coverage](https://kaizhu256.github.io/node-utility2/build/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build/coverage.html/index.html)
@@ -29,18 +28,24 @@ the zero-dependency swiss-army-knife tool for building, testing, and deploying w
 [![apidoc](https://kaizhu256.github.io/node-utility2/build/screen-capture.buildApidoc.browser._2Fhome_2Ftravis_2Fbuild_2Fkaizhu256_2Fnode-utility2_2Ftmp_2Fbuild_2Fapidoc.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/apidoc.html)
 
 #### todo
+- use remote credentials
+- use github oauth - https://stackoverflow.com/questions/18027115/committing-via-travis-ci-failing
 - add npm script publish-deprecate
 - shFileTrimLeft example.* before shBuildGithubUpload
 - allow server-side stdout to be streamed to webapps
-- split function testRun into file lib.test.js
-- rename test.js -> test.$npm_package_nameAlias.js
 - add utility2.middlewareLimit
 - add server stress test using electron
 - none
 
-#### change since 31c8c1e9
-- npm publish 2017.3.10
-- fix build in beta branch
+#### change since 22302d24
+- npm publish 2017.3.16
+- add function buildNpmdoc and buildTest
+- automate building and publishing of npmdoc's
+- commit tag 'npm publish' will publish package in alpha-branch and promote to beta
+- harden shell-function shPasswordEnvUnset
+- remove '|| return \$?' from shell-scripts when possible to fix 'set -e' failing to exit on error
+- rename function onErrorAssert -> onErrorThrow
+- partially revert npm_package_nameAlias back to npm_package_name
 - none
 
 #### this package requires
@@ -238,8 +243,8 @@ instruction
 
 
     // post-init
-    /* istanbul ignore next */
     // run browser js-env code - post-init
+    /* istanbul ignore next */
     case 'browser':
         local.testRunBrowser = function (event) {
             if (!event || (event &&
@@ -378,8 +383,8 @@ instruction
 
 
 
-    /* istanbul ignore next */
     // run node js-env code - post-init
+    /* istanbul ignore next */
     case 'node':
         // export local
         module.exports = local;
@@ -396,7 +401,7 @@ instruction
 <head>\n\
 <meta charset="UTF-8">\n\
 <meta name="viewport" content="width=device-width, initial-scale=1">\n\
-<title>{{env.npm_package_nameAlias}} (v{{env.npm_package_version}})</title>\n\
+<title>{{env.npm_package_name}} (v{{env.npm_package_version}})</title>\n\
 <style>\n\
 /*csslint\n\
     box-sizing: false,\n\
@@ -448,7 +453,7 @@ utility2-comment -->\n\
         target="_blank"\n\
     >\n\
 utility2-comment -->\n\
-        {{env.npm_package_nameAlias}} (v{{env.npm_package_version}})\n\
+        {{env.npm_package_name}} (v{{env.npm_package_version}})\n\
 <!-- utility2-comment\n\
     </a>\n\
 utility2-comment -->\n\
@@ -557,6 +562,7 @@ utility2-comment -->\n\
                 {
                     env: local.objectSetDefault(local.env, {
                         npm_package_description: 'example module',
+                        npm_package_name: 'example',
                         npm_package_nameAlias: 'example',
                         npm_package_version: '0.0.1'
                     })
@@ -570,6 +576,8 @@ utility2-comment -->\n\
                     switch (match1) {
                     case 'npm_package_description':
                         return 'example module';
+                    case 'npm_package_name':
+                        return 'example';
                     case 'npm_package_nameAlias':
                         return 'example';
                     case 'npm_package_version':
@@ -688,11 +696,11 @@ utility2-comment -->\n\
         "env": "env",
         "heroku-postbuild": "./lib.utility2.sh shDeployHeroku",
         "postinstall": "if [ -f lib.utility2.npm_scripts.sh ]; then ./lib.utility2.npm_scripts.sh postinstall; fi",
-        "publish-alias": "VERSION=$(npm info $npm_package_name version); for ALIAS in busybox busybox2 busyweb test-lite; do ./lib.utility2.sh shNpmPublishAs . $ALIAS $VERSION; ./lib.utility2.sh shNpmTestPublished $ALIAS || exit $?; done",
-        "start": "export PORT=${PORT:-8080} && if [ -f assets.app.js ]; then node assets.app.js; return; fi && export npm_config_mode_auto_restart=1 && ./lib.utility2.sh shRun shIstanbulCover test.js",
-        "test": "export PORT=$(./lib.utility2.sh shServerPortRandom) && export PORT_REPL=$(./lib.utility2.sh shServerPortRandom) && export npm_config_mode_auto_restart=1 && ./lib.utility2.sh test test.js"
+        "publish-alias": "VERSION=$(npm info $npm_package_name version); for ALIAS in busybox busybox2 busyweb test-lite; do ./lib.utility2.sh shNpmPublishAs . $ALIAS $VERSION; eval ./lib.utility2.sh shNpmTestPublished $ALIAS || exit $?; done",
+        "start": "(set -e; export PORT=${PORT:-8080}; if [ -f assets.app.js ]; then node assets.app.js; exit; fi; export npm_config_mode_auto_restart=1; ./lib.utility2.sh shRun shIstanbulCover test.js)",
+        "test": "(set -e; export PORT=$(./lib.utility2.sh shServerPortRandom); export PORT_REPL=$(./lib.utility2.sh shServerPortRandom); export npm_config_mode_auto_restart=1; ./lib.utility2.sh test test.js)"
     },
-    "version": "2017.3.10"
+    "version": "2017.3.16"
 }
 ```
 
@@ -708,7 +716,7 @@ utility2-comment -->\n\
 ```shell
 # Dockerfile.base
 # docker build -f tmp/README.Dockerfile.base -t kaizhu256/node-utility2:base .
-# docker build -f "tmp/README.Dockerfile.$DOCKER_TAG" -t "$GITHUB_REPO:$DOCKER_TAG" . ||
+# docker build -f "tmp/README.Dockerfile.$DOCKER_TAG" -t "$GITHUB_REPO:$DOCKER_TAG" .
 # https://hub.docker.com/_/node/
 FROM debian:stable-slim
 MAINTAINER kai zhu <kaizhu256@gmail.com>
@@ -840,12 +848,12 @@ shBuildCiInternalPost() {(set -e
 shBuildCiInternalPre() {(set -e
     shReadmeTest example.js
     # save screen-capture
-    (export MODE_BUILD=testExampleJs &&
-        export modeBrowserTest=screenCapture &&
-        export url="/tmp/app/tmp/build/coverage.html/app/example.js.html" &&
-        shBrowserTest &&
-        export url="$npm_config_dir_build/test-report.html" &&
-        shBrowserTest) || return $?
+    (export MODE_BUILD=testExampleJs
+        export modeBrowserTest=screenCapture
+        export url="/tmp/app/tmp/build/coverage.html/app/example.js.html"
+        shBrowserTest
+        export url="$npm_config_dir_build/test-report.html"
+        shBrowserTest)
     shReadmeTest example.sh
     shNpmTestPublished
 )}
@@ -858,8 +866,9 @@ shBuildCiPre() {(set -e
     return
 )}
 
-# init env
-. ./lib.utility2.sh && shBuildCi
+# run shBuildCi
+. ./lib.utility2.sh
+shBuildCi
 ```
 
 

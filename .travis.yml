@@ -7,7 +7,6 @@ branches:
     - alpha
     - beta
     - docker.base
-    - docker.elasticsearch
     - docker.latest
     - master
     - publish

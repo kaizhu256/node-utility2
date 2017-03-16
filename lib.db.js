@@ -77,6 +77,13 @@
         local = local.global.utility2_rollup || local;
         // init lib
         local.local = local.db = local;
+        // init exports
+        if (local.modeJs === 'browser') {
+            local.global.utility2_db = local;
+        } else {
+            module.exports = local;
+            module.exports.__dirname = __dirname;
+        }
     }());
 
 
@@ -173,11 +180,12 @@
                 : [];
         };
 
-        local.objectSetOverride = function (arg, overrides, depth) {
+        local.objectSetOverride = function (arg, overrides, depth, env) {
         /*
-         * this function will recursively set overrides for items the arg
+         * this function will recursively set overrides for items in the arg
          */
             arg = arg || {};
+            env = env || (typeof process === 'object' && process.env) || {};
             overrides = overrides || {};
             Object.keys(overrides).forEach(function (key) {
                 var arg2, overrides2;
@@ -197,11 +205,11 @@
                         (overrides2 &&
                         typeof overrides2 === 'object' &&
                         !Array.isArray(overrides2))) {
-                    local.objectSetOverride(arg2, overrides2, depth - 1);
+                    local.objectSetOverride(arg2, overrides2, depth - 1, env);
                     return;
                 }
                 // else set arg[key] with overrides[key]
-                arg[key] = arg === local.env
+                arg[key] = arg === env
                     // if arg is env, then overrides falsey value with empty string
                     ? overrides2 || ''
                     : overrides2;
@@ -1552,21 +1560,10 @@
 
 
 
-    // run browser js-env code - post-init
-    case 'browser':
-        // init exports
-        local.global.utility2_db = local;
-        break;
-
-
-
     // run node js-env code - post-init
     case 'node':
         // require modules
         local.fs = require('fs');
-        // init exports
-        module.exports = module['./lib.db.js'] = local;
-        local.__dirname = __dirname;
         break;
     }
 }());

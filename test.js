@@ -46,10 +46,6 @@
         case 'node':
             local = (local.global.utility2_rollup || require('./lib.utility2.js'))
                 .requireExampleJsFromReadme();
-            /* istanbul ignore next */
-            if (local.global.utility2_rollup) {
-                break;
-            }
             break;
         }
     }());
@@ -932,7 +928,8 @@
                 local.env,
                 { 'emptyString': null },
                 // test default-depth handling-behavior
-                null
+                null,
+                local.env
             );
             // validate options
             local.assertJsonEqual(options.emptyString, '');
@@ -980,6 +977,21 @@
                 local.assert(options, options);
                 onError();
             }, onError);
+        };
+
+        local.testCase_onErrorThrow_error = function (options, onError) {
+        /*
+         * this function will test onErrorThrow's error handling-behavior
+         */
+            local.tryCatchOnError(function () {
+                options = {};
+                options.error = new Error();
+                local.onErrorThrow(options.error);
+            }, function (error) {
+                // validate error occurred
+                local.assert(error, error);
+                onError();
+            });
         };
 
         local.testCase_onNext_error = function (options, onError) {
@@ -1537,7 +1549,7 @@
                 [local.env, { npm_config_mode_coverage: 'all' }]
             ], function (onError) {
                 local.buildApidoc(null, onError);
-            }, local.nop);
+            }, local.onErrorThrow);
             options = { blacklistDict: {} };
             local.buildApidoc(options, onError);
         };
@@ -1546,7 +1558,9 @@
         /*
          * this function will test buildApp's default handling-behavior
          */
-            local.testCase_buildReadme_default(options, local.onErrorAssert);
+            local.testCase_buildReadme_default(options, local.onErrorThrow);
+            local.testCase_buildLib_default(options, local.onErrorThrow);
+            local.testCase_buildTest_default(options, local.onErrorThrow);
             options = [{
                 file: '/assets.hello',
                 url: '/assets.hello'
@@ -1578,13 +1592,51 @@
             local.buildApp(options, onError);
         };
 
+        local.testCase_buildLib_default = function (options, onError) {
+        /*
+         * this function will test buildLib's default handling-behavior
+         */
+            options = {};
+            options.customize = function () {
+                // search-and-replace - customize dataTo
+                [
+                    // customize js-env code
+                    (/[\S\s]*?run shared js-env code - pre-function/)
+                ].forEach(function (rgx) {
+                    options.dataFrom.replace(rgx, function (match0) {
+                        options.dataTo = options.dataTo.replace(rgx, match0);
+                    });
+                });
+            };
+            local.buildLib(options, onError);
+        };
+
+        local.testCase_buildNpmdoc_default = function (options, onError) {
+        /*
+         * this function will test buildNpmdoc's default handling-behavior
+         */
+            local.testMock([
+                [local, {
+                    buildApidoc: function (options, onError) {
+                        onError(null, options);
+                    }
+                }],
+                [local.fs, { writeFileSync: local.nop }],
+                [local.env, { npm_package_buildNpmdoc: 'electron-lite' }]
+            ], function (onError) {
+                options = {};
+                local.buildNpmdoc(options, local.onErrorThrow);
+                onError();
+            }, onError);
+        };
+
         local.testCase_buildReadme_default = function (options, onError) {
         /*
          * this function will test buildReadme's default handling-behavior
          */
             options = {};
             options.customize = function () {
-                // search-and-replace - customize readmeTo
+                // search-and-replace - customize dataTo
                 [
                     // customize quickstart-example.sh
                     new RegExp('\\n- commit history may be rewritten\\n[\\S\\s]*\\n#### ' +
@@ -1595,14 +1647,34 @@
                     (/download standalone app[^`]*?utility2FooterDiv/),
                     (/```[^`]*?# package.json/),
                     // customize build-script
-                    (/# init env[^`]*?```/)
+                    (/# run shBuildCi[^`]*?```/)
                 ].forEach(function (rgx) {
-                    options.readmeFrom.replace(rgx, function (match0) {
-                        options.readmeTo = options.readmeTo.replace(rgx, match0);
+                    options.dataFrom.replace(rgx, function (match0) {
+                        options.dataTo = options.dataTo.replace(rgx, match0);
                     });
                 });
             };
             local.buildReadme(options, onError);
+        };
+
+        local.testCase_buildTest_default = function (options, onError) {
+        /*
+         * this function will test buildTest's default handling-behavior
+         */
+            options = {};
+            options.customize = function () {
+                // search-and-replace - customize dataTo
+                [
+                    // customize js-env code
+                    (/\n {4}\/\/ run browser js-env code - post-init\n[\S\s]*?\n {8}break;\n/),
+                    (/\n {4}\/\/ run node js-env code - post-init\n[\S\s]*?\n {8}break;\n/)
+                ].forEach(function (rgx) {
+                    options.dataFrom.replace(rgx, function (match0) {
+                        options.dataTo = options.dataTo.replace(rgx, match0);
+                    });
+                });
+            };
+            local.buildTest(options, onError);
         };
 
         local.testCase_fsWriteFileWithMkdirpSync_default = function (options, onError) {
@@ -1752,7 +1824,7 @@
             options.data = local.moduleDirname('electron-lite');
             local.assert((/\/electron-lite$/).test(options.data), options.data);
             // test module does not exists handling-behavior
-            options.data = local.moduleDirname('undefined');
+            options.data = local.moduleDirname('syntax error');
             local.assertJsonEqual(options.data, '');
             onError();
         };
@@ -1806,7 +1878,7 @@
             ], function (onError) {
                 options.childProcess = local.processSpawnWithTimeout('sleep', [5000]);
                 onError();
-            }, local.nop);
+            }, local.onErrorThrow);
             options.childProcess
                 .on('error', onParallel)
                 .on('exit', function (exitCode, signal) {
@@ -1894,13 +1966,14 @@
             options.socket.end('undefined()\n');
         };
 
-        local.testCase_requireExampleJsFromReadme_rollup = function (options, onError) {
+        local.testCase_requireExampleJsFromReadme_start = function (options, onError) {
         /*
-         * this function will test requireExampleJsFromReadme's rollup handling-behavior
+         * this function will test requireExampleJsFromReadme's start handling-behavior
          */
             options = [
                 [local.env, {
-                    npm_package_nameAlias: '_testCase_requireExampleJsFromReadme_rollup'
+                    npm_config_mode_start: '1',
+                    npm_package_nameAlias: '_testCase_requireExampleJsFromReadme_start'
                 }],
                 [local.fs, {
                     readdirSync: function () {
@@ -1908,16 +1981,15 @@
                         return ['aa.css', 'aa.html', 'aa.js', 'aa.json'];
                     }
                 }],
-                [local.global, { utility2_rollup: {} }],
                 [local, {
-                    assetsDict: {},
+                    assetsDict: local.objectSetDefault({}, local.assetsDict),
                     onFileModifiedRestart: local.nop
                 }]
             ];
             local.testMock(options, function (onError) {
                 options.data = local.requireExampleJsFromReadme();
                 // validate data
-                local.assert(local._testCase_requireExampleJsFromReadme_rollup === local);
+                local.assert(local._testCase_requireExampleJsFromReadme_start === local);
                 onError();
             }, onError);
         };
@@ -2038,7 +2110,7 @@
                     error.statusCode = 500;
                     local._middlewareError(error, request, response);
                     onError();
-                }, local.nop);
+                }, local.onErrorThrow);
                 break;
             // test undefined-error handling-behavior
             case '/test.error-undefined':
@@ -2060,8 +2132,14 @@
 
 
 
-    /* istanbul ignore next */
+    // run browser js-env code - post-init
+    case 'browser':
+        break;
+
+
+
     // run node js-env code - post-init
+    /* istanbul ignore next */
     case 'node':
         // run the cli
         if (module !== require.main || local.global.utility2_rollup) {
@@ -2073,9 +2151,6 @@
                 '<script src="assets.example.js"></script>\n' +
                 '<script src="assets.test.js"></script>\n' +
                 '<script>window.utility2.onReadyBefore();</script>\n';
-        if (local.env.npm_config_mode_start) {
-            local.assetsDict['/'] = local.assetsDict['/index.html'] = undefined;
-        }
         if (process.argv[2]) {
             // start with coverage
             if (local.env.npm_config_mode_coverage) {
@@ -2111,7 +2186,7 @@
                 // cron every 5 minutes
                 if (local.cronTime.getUTCMinutes() % 5 === 0) {
                     // heroku-keepalive
-                    local.ajax({ url: 'https://h1-cron1.herokuapp.com' }, local.nop);
+                    local.ajax({ url: 'https://h1-cron1.herokuapp.com' }, local.onErrorThrow);
                     // update cron
                     local.ajax({
                         url: 'https://kaizhu256.github.io/node-utility2/cronJob.js'

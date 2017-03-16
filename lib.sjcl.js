@@ -481,24 +481,12 @@ sjcl.misc.scrypt.blockxor = function(S, Si, D, Di, len) {
 };
 }());
 /* jslint-ignore-end */
+        // init exports
+        if (local.modeJs === 'browser') {
+            local.global.utility2_sjcl = local.sjcl;
+        } else {
+            module.exports = local.sjcl;
+            module.exports.__dirname = __dirname;
+        }
     }());
-    switch (local.modeJs) {
-
-
-
-    // run browser js-env code - post-init
-    case 'browser':
-        // init exports
-        local.global.utility2_sjcl = local.sjcl;
-        break;
-
-
-
-    // run node js-env code - post-init
-    case 'node':
-        // init exports
-        module.exports = module['./lib.sjcl.js'] = local.sjcl;
-        module.exports.__dirname = __dirname;
-        break;
-    }
 }());

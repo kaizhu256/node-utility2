@@ -166,6 +166,11 @@
             console.log('created coverage file://' + options.dir + '/index.html');
             // 3. return coverage in html-format as a single document
             local.coverageReportHtml += '</div>\n</div>\n';
+            // write coverage.rollup.html
+            local.fsWriteFileWithMkdirpSync2(
+                options.dir + '/coverage.rollup.html',
+                local.coverageReportHtml
+            );
             return local.coverageReportHtml;
         };
 
@@ -190,7 +195,7 @@
             if (local.modeJs === 'node' && process.env.npm_package_homepage) {
                 file = file
                     .replace('{{env.npm_package_homepage}}', process.env.npm_package_homepage)
-                    .replace('{{env.npm_package_nameAlias}}', process.env.npm_package_nameAlias)
+                    .replace('{{env.npm_package_name}}', process.env.npm_package_name)
                     .replace('{{env.npm_package_version}}', process.env.npm_package_version);
             } else {
                 file = file.replace((/<h1 [\S\s]*<\/h1>/), '<h1>&nbsp;</h1>');
@@ -255,8 +260,6 @@
                 return arguments[arguments.length - 1];
             }
         };
-        // init exports
-        local.global.utility2_istanbul = local;
         break;
 
 
@@ -267,8 +270,6 @@
         local._fs = local.require('fs');
         local.module = require('module');
         local.path = local.require('path');
-        // init exports
-        module.exports = module['./lib.istanbul.js'] = local;
         break;
     }
 
@@ -2149,7 +2150,7 @@ local['head.txt'] = '\
 <body>\n\
 <div class="header {{reportClass}}">\n\
     <h1 style="font-weight: bold;">\n\
-        <a href="{{env.npm_package_homepage}}">{{env.npm_package_nameAlias}} (v{{env.npm_package_version}})</a>\n\
+        <a href="{{env.npm_package_homepage}}">{{env.npm_package_name}} (v{{env.npm_package_version}})</a>\n\
     </h1>\n\
     <h1>Code coverage report for <span class="entity">{{entity}}</span></h1>\n\
     <h2>\n\
@@ -2444,6 +2445,7 @@ local.templateCoverageBadgeSvg =
         /*
          * this function will run the cli
          */
+            var tmp;
             if ((module !== local.require.main || local.global.utility2_rollup) &&
                     !(options && options.runMain)) {
                 return;
@@ -2452,9 +2454,10 @@ local.templateCoverageBadgeSvg =
             // transparently adds coverage information to a node command
             case 'cover':
                 try {
+                    tmp = JSON.parse(local._fs.readFileSync('package.json', 'utf8'));
                     process.env.npm_package_nameAlias = process.env.npm_package_nameAlias ||
-                        JSON.parse(local._fs.readFileSync('package.json', 'utf8')).nameAlias ||
-                        JSON.parse(local._fs.readFileSync('package.json', 'utf8')).name;
+                        tmp.nameAlias ||
+                        tmp.name.replace((/-/g), '_');
                 } catch (ignore) {
                 }
                 process.env.npm_config_mode_coverage = process.env.npm_config_mode_coverage ||
@@ -2541,6 +2544,13 @@ local.templateCoverageBadgeSvg =
         local = local.global.utility2_rollup || local;
         // init lib
         local.local = local.istanbul = local;
+        // init exports
+        if (local.modeJs === 'browser') {
+            local.global.utility2_istanbul = local;
+        } else {
+            module.exports = local;
+            module.exports.__dirname = __dirname;
+        }
         local.fsWriteFileWithMkdirpSync = function (file, data) {
         /*
          * this function will synchronously 'mkdir -p' and write the data to file

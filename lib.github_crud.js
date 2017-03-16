@@ -42,6 +42,13 @@
         local = local.global.utility2_rollup || local;
         // init lib
         local.local = local.github_crud = local;
+        // init exports
+        if (local.modeJs === 'browser') {
+            local.global.utility2_github_crud = local;
+        } else {
+            module.exports = local;
+            module.exports.__dirname = __dirname;
+        }
     }());
 
 
@@ -427,9 +434,6 @@
         // require modules
         local.fs = require('fs');
         local.path = require('path');
-        // init exports
-        module.exports = module['./lib.github_crud.js'] = local;
-        module.exports.__dirname = __dirname;
         // run the cli
         if (module !== require.main || local.global.utility2_rollup) {
             break;

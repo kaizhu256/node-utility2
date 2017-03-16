@@ -42,6 +42,13 @@
         local = local.global.utility2_rollup || local;
         // init lib
         local.local = local.jslint = local;
+        // init exports
+        if (local.modeJs === 'browser') {
+            local.global.utility2_jslint = local;
+        } else {
+            module.exports = local;
+            module.exports.__dirname = __dirname;
+        }
     }());
 
 
@@ -2488,23 +2495,12 @@ local.CSSLint = CSSLint; local.JSLINT = JSLINT, local.jslintEs6 = jslint; }());
 
 
 
-    // run browser js-env code - post-init
-    case 'browser':
-        // init exports
-        local.global.utility2_jslint = local;
-        break;
-
-
-
-    /* istanbul ignore next */
     // run node js-env code - post-init
+    /* istanbul ignore next */
     case 'node':
         // require modules
         local.fs = require('fs');
         local.path = require('path');
-        // init exports
-        module.exports = module['./lib.jslint.js'] = local;
-        module.exports.__dirname = __dirname;
         // run the cli
         if (module !== require.main || local.global.utility2_rollup) {
             break;

@@ -60,7 +60,6 @@
 
 
 
-    /* istanbul ignore next */
     // run shared js-env code - pre-init
     (function () {
         // init local
@@ -87,12 +86,19 @@
         local = local.global.utility2_rollup || local;
         // init lib
         local.local = local.apidoc = local;
+        // init exports
+        if (local.modeJs === 'browser') {
+            local.global.utility2_apidoc = local;
+        } else {
+            module.exports = local;
+            module.exports.__dirname = __dirname;
+        }
     }());
 
 
 
-    /* istanbul ignore next */
     // run shared js-env code - pre-function
+    /* istanbul ignore next */
     (function () {
         local.assert = function (passed, message) {
         /*
@@ -122,8 +128,12 @@
                 return require('path').resolve(process.cwd(), module || '');
             }
             try {
-                require(module);
-            } catch (ignore) {
+                require(process.cwd() + '/node_modules/' + module);
+            } catch (errorCaught) {
+                try {
+                    require(module);
+                } catch (ignore) {
+                }
             }
             [
                 new RegExp('(.*?/' + module + ')\\b'),
@@ -338,7 +348,7 @@ local.templateApidocHtml = '\
         {{#if env.npm_package_homepage}}\n\
         href="{{env.npm_package_homepage}}"\n\
         {{/if env.npm_package_homepage}}\n\
-    >{{env.npm_package_nameAlias}} (v{{env.npm_package_version}})</a>\n\
+    >{{env.npm_package_name}} (v{{env.npm_package_version}})</a>\n\
 </h1>\n\
 <div class="apidocSectionDiv"><a\n\
     href="#apidoc.tableOfContents"\n\
@@ -391,9 +401,9 @@ local.templateApidocHtml = '\
 local.templateApidocMd = '\
 # api-documentation for \
 {{#if env.npm_package_homepage}} \
-[{{env.npm_package_nameAlias}} (v{{env.npm_package_version}})]({{env.npm_package_homepage}}) \
+[{{env.npm_package_name}} (v{{env.npm_package_version}})]({{env.npm_package_homepage}}) \
 {{#unless env.npm_package_homepage}} \
-{{env.npm_package_nameAlias}} (v{{env.npm_package_version}}) \
+{{env.npm_package_name}} (v{{env.npm_package_version}}) \
 {{/if env.npm_package_homepage}} \
 \n\
 \n\
@@ -557,15 +567,13 @@ local.templateApidocMd = '\
                 return text;
             };
             // init options
-            options = local.objectSetDefault(options, {});
             options.dir = local.moduleDirname(options.dir);
-            options = local.objectSetDefault(options, {
+            local.objectSetDefault(options, {
                 packageJson: JSON.parse(readExample('package.json'))
             });
             local.objectSetDefault(options, { env: {
                 npm_package_homepage: options.packageJson.homepage,
-                npm_package_nameAlias: options.packageJson.nameAlias ||
-                    options.packageJson.name,
+                npm_package_name: options.packageJson.name,
                 npm_package_version: options.packageJson.version
             } }, 2);
             local.objectSetDefault(options, {
@@ -589,8 +597,8 @@ local.templateApidocMd = '\
                     })
             ).map(readExample));
             // init moduleMain
-            moduleMain = options.moduleDict[options.env.npm_package_nameAlias] =
-                options.moduleDict[options.env.npm_package_nameAlias] || require(options.dir);
+            moduleMain = options.moduleDict[options.env.npm_package_name] =
+                options.moduleDict[options.env.npm_package_name] || require(options.dir);
             // init circularList - builtin
             Object.keys(process.binding('natives')).forEach(function (key) {
                 if (!(/\/|_linklist|sys/).test(key)) {
@@ -633,8 +641,8 @@ local.templateApidocMd = '\
                 } catch (ignore) {
                 }
             }());
-            module = options.moduleExtraDict[options.env.npm_package_nameAlias] =
-                options.moduleExtraDict[options.env.npm_package_nameAlias] || {};
+            module = options.moduleExtraDict[options.env.npm_package_name] =
+                options.moduleExtraDict[options.env.npm_package_name] || {};
             (options.libFileList || []).forEach(function (file) {
                 try {
                     tmp = {
@@ -654,10 +662,10 @@ local.templateApidocMd = '\
             });
             local.apidocModuleDictAdd(options, options.moduleExtraDict);
             // normalize moduleMain
-            moduleMain = options.moduleDict[options.env.npm_package_nameAlias] =
+            moduleMain = options.moduleDict[options.env.npm_package_name] =
                 local.objectSetDefault({}, moduleMain);
             Object.keys(options.moduleDict).forEach(function (key) {
-                if (key.indexOf(options.env.npm_package_nameAlias + '.') !== 0) {
+                if (key.indexOf(options.env.npm_package_name + '.') !== 0) {
                     return;
                 }
                 tmp = key.split('.').slice(1).join('.');
@@ -759,15 +767,12 @@ local.templateApidocMd = '\
 
 
 
-    /* istanbul ignore next */
     // run node js-env code - post-init
+    /* istanbul ignore next */
     case 'node':
         // require modules
         local.fs = require('fs');
         local.path = require('path');
-        // init exports
-        module.exports = module['./lib.apidoc.js'] = local;
-        module.exports.__dirname = __dirname;
         // run the cli
         if (module !== require.main || local.global.utility2_rollup) {
             break;
@@ -866,6 +871,13 @@ local.templateApidocMd = '\
         local = local.global.utility2_rollup || local;
         // init lib
         local.local = local.db = local;
+        // init exports
+        if (local.modeJs === 'browser') {
+            local.global.utility2_db = local;
+        } else {
+            module.exports = local;
+            module.exports.__dirname = __dirname;
+        }
     }());
 
 
@@ -962,11 +974,12 @@ local.templateApidocMd = '\
                 : [];
         };
 
-        local.objectSetOverride = function (arg, overrides, depth) {
+        local.objectSetOverride = function (arg, overrides, depth, env) {
         /*
-         * this function will recursively set overrides for items the arg
+         * this function will recursively set overrides for items in the arg
          */
             arg = arg || {};
+            env = env || (typeof process === 'object' && process.env) || {};
             overrides = overrides || {};
             Object.keys(overrides).forEach(function (key) {
                 var arg2, overrides2;
@@ -986,11 +999,11 @@ local.templateApidocMd = '\
                         (overrides2 &&
                         typeof overrides2 === 'object' &&
                         !Array.isArray(overrides2))) {
-                    local.objectSetOverride(arg2, overrides2, depth - 1);
+                    local.objectSetOverride(arg2, overrides2, depth - 1, env);
                     return;
                 }
                 // else set arg[key] with overrides[key]
-                arg[key] = arg === local.env
+                arg[key] = arg === env
                     // if arg is env, then overrides falsey value with empty string
                     ? overrides2 || ''
                     : overrides2;
@@ -2341,21 +2354,10 @@ local.templateApidocMd = '\
 
 
 
-    // run browser js-env code - post-init
-    case 'browser':
-        // init exports
-        local.global.utility2_db = local;
-        break;
-
-
-
     // run node js-env code - post-init
     case 'node':
         // require modules
         local.fs = require('fs');
-        // init exports
-        module.exports = module['./lib.db.js'] = local;
-        local.__dirname = __dirname;
         break;
     }
 }());
@@ -2408,6 +2410,13 @@ local.templateApidocMd = '\
         local = local.global.utility2_rollup || local;
         // init lib
         local.local = local.github_crud = local;
+        // init exports
+        if (local.modeJs === 'browser') {
+            local.global.utility2_github_crud = local;
+        } else {
+            module.exports = local;
+            module.exports.__dirname = __dirname;
+        }
     }());
 
 
@@ -2793,9 +2802,6 @@ local.templateApidocMd = '\
         // require modules
         local.fs = require('fs');
         local.path = require('path');
-        // init exports
-        module.exports = module['./lib.github_crud.js'] = local;
-        module.exports.__dirname = __dirname;
         // run the cli
         if (module !== require.main || local.global.utility2_rollup) {
             break;
@@ -3006,6 +3012,11 @@ local.templateApidocMd = '\
             console.log('created coverage file://' + options.dir + '/index.html');
             // 3. return coverage in html-format as a single document
             local.coverageReportHtml += '</div>\n</div>\n';
+            // write coverage.rollup.html
+            local.fsWriteFileWithMkdirpSync2(
+                options.dir + '/coverage.rollup.html',
+                local.coverageReportHtml
+            );
             return local.coverageReportHtml;
         };
 
@@ -3030,7 +3041,7 @@ local.templateApidocMd = '\
             if (local.modeJs === 'node' && process.env.npm_package_homepage) {
                 file = file
                     .replace('{{env.npm_package_homepage}}', process.env.npm_package_homepage)
-                    .replace('{{env.npm_package_nameAlias}}', process.env.npm_package_nameAlias)
+                    .replace('{{env.npm_package_name}}', process.env.npm_package_name)
                     .replace('{{env.npm_package_version}}', process.env.npm_package_version);
             } else {
                 file = file.replace((/<h1 [\S\s]*<\/h1>/), '<h1>&nbsp;</h1>');
@@ -3095,8 +3106,6 @@ local.templateApidocMd = '\
                 return arguments[arguments.length - 1];
             }
         };
-        // init exports
-        local.global.utility2_istanbul = local;
         break;
 
 
@@ -3107,8 +3116,6 @@ local.templateApidocMd = '\
         local._fs = local.require('fs');
         local.module = require('module');
         local.path = local.require('path');
-        // init exports
-        module.exports = module['./lib.istanbul.js'] = local;
         break;
     }
 
@@ -4989,7 +4996,7 @@ local['head.txt'] = '\
 <body>\n\
 <div class="header {{reportClass}}">\n\
     <h1 style="font-weight: bold;">\n\
-        <a href="{{env.npm_package_homepage}}">{{env.npm_package_nameAlias}} (v{{env.npm_package_version}})</a>\n\
+        <a href="{{env.npm_package_homepage}}">{{env.npm_package_name}} (v{{env.npm_package_version}})</a>\n\
     </h1>\n\
     <h1>Code coverage report for <span class="entity">{{entity}}</span></h1>\n\
     <h2>\n\
@@ -5284,6 +5291,7 @@ local.templateCoverageBadgeSvg =
         /*
          * this function will run the cli
          */
+            var tmp;
             if ((module !== local.require.main || local.global.utility2_rollup) &&
                     !(options && options.runMain)) {
                 return;
@@ -5292,9 +5300,10 @@ local.templateCoverageBadgeSvg =
             // transparently adds coverage information to a node command
             case 'cover':
                 try {
+                    tmp = JSON.parse(local._fs.readFileSync('package.json', 'utf8'));
                     process.env.npm_package_nameAlias = process.env.npm_package_nameAlias ||
-                        JSON.parse(local._fs.readFileSync('package.json', 'utf8')).nameAlias ||
-                        JSON.parse(local._fs.readFileSync('package.json', 'utf8')).name;
+                        tmp.nameAlias ||
+                        tmp.name.replace((/-/g), '_');
                 } catch (ignore) {
                 }
                 process.env.npm_config_mode_coverage = process.env.npm_config_mode_coverage ||
@@ -5381,6 +5390,13 @@ local.templateCoverageBadgeSvg =
         local = local.global.utility2_rollup || local;
         // init lib
         local.local = local.istanbul = local;
+        // init exports
+        if (local.modeJs === 'browser') {
+            local.global.utility2_istanbul = local;
+        } else {
+            module.exports = local;
+            module.exports.__dirname = __dirname;
+        }
         local.fsWriteFileWithMkdirpSync = function (file, data) {
         /*
          * this function will synchronously 'mkdir -p' and write the data to file
@@ -5468,6 +5484,13 @@ local.templateCoverageBadgeSvg =
         local = local.global.utility2_rollup || local;
         // init lib
         local.local = local.jslint = local;
+        // init exports
+        if (local.modeJs === 'browser') {
+            local.global.utility2_jslint = local;
+        } else {
+            module.exports = local;
+            module.exports.__dirname = __dirname;
+        }
     }());
 
 
@@ -7914,23 +7937,12 @@ local.CSSLint = CSSLint; local.JSLINT = JSLINT, local.jslintEs6 = jslint; }());
 
 
 
-    // run browser js-env code - post-init
-    case 'browser':
-        // init exports
-        local.global.utility2_jslint = local;
-        break;
-
-
-
-    /* istanbul ignore next */
     // run node js-env code - post-init
+    /* istanbul ignore next */
     case 'node':
         // require modules
         local.fs = require('fs');
         local.path = require('path');
-        // init exports
-        module.exports = module['./lib.jslint.js'] = local;
-        module.exports.__dirname = __dirname;
         // run the cli
         if (module !== require.main || local.global.utility2_rollup) {
             break;
@@ -8437,26 +8449,14 @@ sjcl.misc.scrypt.blockxor = function(S, Si, D, Di, len) {
 };
 }());
 /* jslint-ignore-end */
+        // init exports
+        if (local.modeJs === 'browser') {
+            local.global.utility2_sjcl = local.sjcl;
+        } else {
+            module.exports = local.sjcl;
+            module.exports.__dirname = __dirname;
+        }
     }());
-    switch (local.modeJs) {
-
-
-
-    // run browser js-env code - post-init
-    case 'browser':
-        // init exports
-        local.global.utility2_sjcl = local.sjcl;
-        break;
-
-
-
-    // run node js-env code - post-init
-    case 'node':
-        // init exports
-        module.exports = module['./lib.sjcl.js'] = local.sjcl;
-        module.exports.__dirname = __dirname;
-        break;
-    }
 }());
 /* script-end /assets.utility2.lib.sjcl.js */
 
@@ -8507,6 +8507,13 @@ sjcl.misc.scrypt.blockxor = function(S, Si, D, Di, len) {
         local = local.global.utility2_rollup || local;
         // init lib
         local.local = local.uglifyjs = local;
+        // init exports
+        if (local.modeJs === 'browser') {
+            local.global.utility2_uglifyjs = local;
+        } else {
+            module.exports = local;
+            module.exports.__dirname = __dirname;
+        }
     }());
 
 
@@ -9110,14 +9117,6 @@ split_lines=split_lines,exports.MAP=MAP,exports.ast_squeeze_more=require("./sque
 
 
 
-    // run browser js-env code - post-init
-    case 'browser':
-        // init exports
-        local.global.utility2_uglifyjs = local;
-        break;
-
-
-
     /* istanbul ignore next */
     // run node js-env code - post-init
     case 'node':
@@ -9127,9 +9126,6 @@ split_lines=split_lines,exports.MAP=MAP,exports.ast_squeeze_more=require("./sque
         local.https = require('https');
         local.path = require('path');
         local.url = require('url');
-        // init exports
-        module.exports = module['./lib.uglifyjs.js'] = local;
-        module.exports.__dirname = __dirname;
         // run the cli
         if (module !== require.main || local.global.utility2_rollup) {
             break;
@@ -9211,14 +9207,21 @@ split_lines=split_lines,exports.MAP=MAP,exports.ast_squeeze_more=require("./sque
             : global;
         // init utility2_rollup
         local = local.global.utility2_rollup || local;
+        // init lib
+        local.local = local.utility2 = local.global.utility2 = local;
+        // init exports
+        if (local.modeJs === 'browser') {
+            local.global.utility2 = local;
+        } else {
+            module.exports = local;
+            module.exports.__dirname = __dirname;
+        }
     }());
 
 
 
-    // run shared js-env code - pre-init
+    // run shared js-env code - pre-function
     (function () {
-        // init lib
-        local.local = local.utility2 = local.global.utility2 = local;
         // init global.debug_inline
         local.global['debug_inline'.replace('_i', 'I')] = local.global[
             'debug_inline'.replace('_i', 'I')
@@ -9261,23 +9264,13 @@ split_lines=split_lines,exports.MAP=MAP,exports.ast_squeeze_more=require("./sque
         // init assets and templates
         local.assetsDict = {};
 /* jslint-ignore-begin */
-// https://img.shields.io/badge/last_build-0000_00_00_00_00_00_UTC_--_master_--_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-0077ff.svg?style=flat
-local.assetsDict['/assets.buildBadge.template.svg'] =
-'<svg xmlns="http://www.w3.org/2000/svg" width="563" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="563" height="20" fill="#555"/><rect rx="0" x="61" width="502" height="20" fill="#07f"/><path fill="#07f" d="M61 0h4v20h-4z"/><rect rx="0" width="563" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="31.5" y="15" fill="#010101" fill-opacity=".3">last build</text><text x="31.5" y="14">last build</text><text x="311" y="15" fill="#010101" fill-opacity=".3">0000-00-00 00:00:00 UTC - master - aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</text><text x="311" y="14">0000-00-00 00:00:00 UTC - master - aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</text></g></svg>';
-
-
-
-local.assetsDict['/assets.example.js'] = '';
-
-
-
-local.assetsDict['/assets.index.template.html'] = '\
+local.assetsDict['/'] = local.assetsDict['/assets.index.template.html'] = '\
 <!doctype html>\n\
 <html lang="en">\n\
 <head>\n\
 <meta charset="UTF-8">\n\
 <meta name="viewport" content="width=device-width, initial-scale=1">\n\
-<title>{{env.npm_package_nameAlias}} (v{{env.npm_package_version}})</title>\n\
+<title>{{env.npm_package_name}} (v{{env.npm_package_version}})</title>\n\
 <style>\n\
 /*csslint\n\
     box-sizing: false,\n\
@@ -9302,6 +9295,14 @@ body > * {\n\
 <style>\n\
 /*csslint\n\
 */\n\
+textarea {\n\
+    font-family: monospace;\n\
+    height: 10rem;\n\
+    width: 100%;\n\
+}\n\
+textarea[readonly] {\n\
+    background: #ddd;\n\
+}\n\
 </style>\n\
 </head>\n\
 <body>\n\
@@ -9317,7 +9318,7 @@ utility2-comment -->\n\
         target="_blank"\n\
     >\n\
 utility2-comment -->\n\
-        {{env.npm_package_nameAlias}} (v{{env.npm_package_version}})\n\
+        {{env.npm_package_name}} (v{{env.npm_package_version}})\n\
 <!-- utility2-comment\n\
     </a>\n\
 utility2-comment -->\n\
@@ -9331,6 +9332,8 @@ utility2-comment -->\n\
 \n\
 \n\
 \n\
+<label>stderr and stdout</label>\n\
+<textarea class="resettable" id="outputTextareaStdout1" readonly></textarea>\n\
 <!-- utility2-comment\n\
 {{#if isRollup}}\n\
 <script src="assets.app.js"></script>\n\
@@ -9338,7 +9341,7 @@ utility2-comment -->\n\
 utility2-comment -->\n\
 <script src="assets.utility2.rollup.js"></script>\n\
 <script src="jsonp.utility2._stateInit?callback=window.utility2._stateInit"></script>\n\
-<script src="assets.jslint.rollup.js"></script>\n\
+<script src="assets.{{env.npm_package_nameAlias}}.rollup.js"></script>\n\
 <script src="assets.example.js"></script>\n\
 <script src="assets.test.js"></script>\n\
 <!-- utility2-comment\n\
@@ -9355,80 +9358,13 @@ utility2-comment -->\n\
 
 
 
-local.assetsDict['/assets.readme.template.md'] = '\
-jslint-lite\n\
-===========\n\
-{{packageJsonDescription}}\n\
-\n\
-[![travis-ci.org build-status](https://api.travis-ci.org/kaizhu256/node-jslint-lite.svg)](https://travis-ci.org/kaizhu256/node-jslint-lite) [![istanbul-coverage](https://kaizhu256.github.io/node-jslint-lite/build/coverage.badge.svg)](https://kaizhu256.github.io/node-jslint-lite/build/coverage.html/index.html)\n\
-\n\
-[![NPM](https://nodei.co/npm/jslint-lite.png?downloads=true)](https://www.npmjs.com/package/jslint-lite)\n\
-\n\
-[![package-listing](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.gitLsTree.svg)](https://github.com/kaizhu256/node-jslint-lite)\n\
-\n\
-\n\
-\n\
-# cdn download\n\
-- [https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app/assets.jslint.rollup.js](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app/assets.jslint.rollup.js)\n\
-\n\
-\n\
-\n\
-# live demo\n\
-- [https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app/index.html](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app/index.html)\n\
-\n\
-[![github.com test-server](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.deployGithub.browser._2Fnode-jslint-lite_2Fbuild_2Fapp_2Findex.html.png)](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app/index.html)\n\
-\n\
-\n\
-\n\
-# documentation\n\
-#### apidoc\n\
-- [https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/apidoc.html](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/apidoc.html)\n\
-\n\
-[![apidoc](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.buildApidoc.browser._2Fhome_2Ftravis_2Fbuild_2Fkaizhu256_2Fnode-jslint-lite_2Ftmp_2Fbuild_2Fapidoc.html.png)](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/apidoc.html)\n\
-\n\
-#### todo\n\
-- none\n\
-\n\
-#### change since xxxxxxxx\n\
-- none\n\
-\n\
-#### this package requires\n\
-- darwin or linux os\n\
-\n\
-\n\
-\n\
-# build status [![travis-ci.org build-status](https://api.travis-ci.org/kaizhu256/node-jslint-lite.svg)](https://travis-ci.org/kaizhu256/node-jslint-lite)\n\
-[![build commit status](https://kaizhu256.github.io/node-jslint-lite/build/build.badge.svg)](https://travis-ci.org/kaizhu256/node-jslint-lite)\n\
-\n\
-| git-branch : | [master](https://github.com/kaizhu256/node-jslint-lite/tree/master) | [beta](https://github.com/kaizhu256/node-jslint-lite/tree/beta) | [alpha](https://github.com/kaizhu256/node-jslint-lite/tree/alpha)|\n\
-|--:|:--|:--|:--|\n\
-| test-server-github : | [![github.com test-server](https://kaizhu256.github.io/node-jslint-lite/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-jslint-lite/build..master..travis-ci.org/app/index.html) | [![github.com test-server](https://kaizhu256.github.io/node-jslint-lite/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app/index.html) | [![github.com test-server](https://kaizhu256.github.io/node-jslint-lite/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-jslint-lite/build..alpha..travis-ci.org/app/index.html)|\n\
-| test-server-heroku : | [![heroku.com test-server](https://kaizhu256.github.io/node-jslint-lite/heroku-logo.75x25.png)](https://h1-jslint-master.herokuapp.com) | [![heroku.com test-server](https://kaizhu256.github.io/node-jslint-lite/heroku-logo.75x25.png)](https://h1-jslint-beta.herokuapp.com) | [![heroku.com test-server](https://kaizhu256.github.io/node-jslint-lite/heroku-logo.75x25.png)](https://h1-jslint-alpha.herokuapp.com)|\n\
-| test-report : | [![test-report](https://kaizhu256.github.io/node-jslint-lite/build..master..travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-jslint-lite/build..master..travis-ci.org/test-report.html) | [![test-report](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/test-report.html) | [![test-report](https://kaizhu256.github.io/node-jslint-lite/build..alpha..travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-jslint-lite/build..alpha..travis-ci.org/test-report.html)|\n\
-| coverage : | [![istanbul-coverage](https://kaizhu256.github.io/node-jslint-lite/build..master..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-jslint-lite/build..master..travis-ci.org/coverage.html/index.html) | [![istanbul-coverage](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/coverage.html/index.html) | [![istanbul-coverage](https://kaizhu256.github.io/node-jslint-lite/build..alpha..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-jslint-lite/build..alpha..travis-ci.org/coverage.html/index.html)|\n\
-| build-artifacts : | [![build-artifacts](https://kaizhu256.github.io/node-jslint-lite/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-jslint-lite/tree/gh-pages/build..master..travis-ci.org) | [![build-artifacts](https://kaizhu256.github.io/node-jslint-lite/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-jslint-lite/tree/gh-pages/build..beta..travis-ci.org) | [![build-artifacts](https://kaizhu256.github.io/node-jslint-lite/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-jslint-lite/tree/gh-pages/build..alpha..travis-ci.org)|\n\
-\n\
-#### master branch\n\
-- stable branch\n\
-- HEAD should be tagged, npm-published package\n\
-\n\
-#### beta branch\n\
-- semi-stable branch\n\
-- HEAD should be latest, npm-published package\n\
-\n\
-#### alpha branch\n\
-- unstable branch\n\
-- HEAD is arbitrary\n\
-- commit history may be rewritten\n\
-\n\
-\n\
-\n\
-# quickstart web example\n\
-![screen-capture](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.testExampleJs.browser..png)\n\
-\n\
-#### to run this example, follow the instruction in the script below\n\
-- [example.js](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/example.js)\n\
-```javascript\n\
+// https://img.shields.io/badge/last_build-0000_00_00_00_00_00_UTC_--_master_--_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-0077ff.svg?style=flat
+local.assetsDict['/assets.buildBadge.template.svg'] =
+'<svg xmlns="http://www.w3.org/2000/svg" width="563" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="563" height="20" fill="#555"/><rect rx="0" x="61" width="502" height="20" fill="#07f"/><path fill="#07f" d="M61 0h4v20h-4z"/><rect rx="0" width="563" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="31.5" y="15" fill="#010101" fill-opacity=".3">last build</text><text x="31.5" y="14">last build</text><text x="311" y="15" fill="#010101" fill-opacity=".3">0000-00-00 00:00:00 UTC - master - aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</text><text x="311" y="14">0000-00-00 00:00:00 UTC - master - aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</text></g></svg>';
+
+
+
+local.assetsDict['/assets.example.js'] = local.assetsDict['/assets.example.template.js'] = '\
 /*\n\
 example.js\n\
 \n\
@@ -9460,7 +9396,7 @@ instruction\n\
 \n\
 \n\
 \n\
-    // run shared js-env code - pre-init\n\
+    // run shared js\-env code - pre-init\n\
     (function () {\n\
         // init local\n\
         local = {};\n\
@@ -9494,8 +9430,8 @@ instruction\n\
 \n\
 \n\
     // post-init\n\
+    // run browser js\-env code - post-init\n\
     /* istanbul ignore next */\n\
-    // run browser js-env code - post-init\n\
     case \'browser\':\n\
         local.testRunBrowser = function (event) {\n\
             if (!event || (event &&\n\
@@ -9582,8 +9518,8 @@ instruction\n\
 \n\
 \n\
 \n\
+    // run node js\-env code - post-init\n\
     /* istanbul ignore next */\n\
-    // run node js-env code - post-init\n\
     case \'node\':\n\
         // export local\n\
         module.exports = local;\n\
@@ -9604,6 +9540,7 @@ local.assetsDict['/assets.index.template.html'].replace((/\n/g), '\\n\\\n') +
                 {\n\
                     env: local.objectSetDefault(local.env, {\n\
                         npm_package_description: \'example module\',\n\
+                        npm_package_name: \'example\',\n\
                         npm_package_nameAlias: \'example\',\n\
                         npm_package_version: \'0.0.1\'\n\
                     })\n\
@@ -9617,6 +9554,8 @@ local.assetsDict['/assets.index.template.html'].replace((/\n/g), '\\n\\\n') +
                     switch (match1) {\n\
                     case \'npm_package_description\':\n\
                         return \'example module\';\n\
+                    case \'npm_package_name\':\n\
+                        return \'example\';\n\
                     case \'npm_package_nameAlias\':\n\
                         return \'example\';\n\
                     case \'npm_package_version\':\n\
@@ -9659,7 +9598,140 @@ local.assetsDict['/assets.index.template.html'].replace((/\n/g), '\\n\\\n') +
         break;\n\
     }\n\
 }());\n\
-```\n\
+';
+
+
+
+local.assetsDict['/assets.lib.template.js'] = '\
+/* istanbul instrument in package jslint */\n\
+/*jslint\n\
+    bitwise: true,\n\
+    browser: true,\n\
+    maxerr: 8,\n\
+    maxlen: 96,\n\
+    node: true,\n\
+    nomen: true,\n\
+    regexp: true,\n\
+    stupid: true\n\
+*/\n\
+(function () {\n\
+    \'use strict\';\n\
+    var local;\n\
+\n\
+\n\
+\n\
+    // run shared js\-env code - pre-init\n\
+    (function () {\n\
+        // init local\n\
+        local = {};\n\
+        // init modeJs\n\
+        local.modeJs = (function () {\n\
+            try {\n\
+                return typeof navigator.userAgent === \'string\' &&\n\
+                    typeof document.querySelector(\'body\') === \'object\' &&\n\
+                    typeof XMLHttpRequest.prototype.open === \'function\' &&\n\
+                    \'browser\';\n\
+            } catch (errorCaughtBrowser) {\n\
+                return module.exports &&\n\
+                    typeof process.versions.node === \'string\' &&\n\
+                    typeof require(\'http\').createServer === \'function\' &&\n\
+                    \'node\';\n\
+            }\n\
+        }());\n\
+        // init global\n\
+        local.global = local.modeJs === \'browser\'\n\
+            ? window\n\
+            : global;\n\
+        // init utility2_rollup\n\
+        local = local.global.utility2_rollup || local;\n\
+        // init lib\n\
+        local.local = local.jslint = local;\n\
+        // init exports\n\
+        if (local.modeJs === \'browser\') {\n\
+            local.global.utility2_jslint = local;\n\
+        } else {\n\
+            module.exports = local;\n\
+            module.exports.__dirname = __dirname;\n\
+        }\n\
+    }());\n\
+}());\n\
+';
+
+
+
+local.assetsDict['/assets.readme.template.md'] = '\
+# jslint-lite\n\
+example module\n\
+\n\
+[![travis-ci.org build-status](https://api.travis-ci.org/kaizhu256/node-jslint-lite.svg)](https://travis-ci.org/kaizhu256/node-jslint-lite) [![istanbul-coverage](https://kaizhu256.github.io/node-jslint-lite/build/coverage.badge.svg)](https://kaizhu256.github.io/node-jslint-lite/build/coverage.html/index.html)\n\
+\n\
+[![NPM](https://nodei.co/npm/jslint-lite.png?downloads=true)](https://www.npmjs.com/package/jslint-lite)\n\
+\n\
+[![package-listing](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.gitLsTree.svg)](https://github.com/kaizhu256/node-jslint-lite)\n\
+\n\
+\n\
+\n\
+# cdn download\n\
+- [https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app/assets.jslint.rollup.js](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app/assets.jslint.rollup.js)\n\
+\n\
+\n\
+\n\
+# live demo\n\
+- [https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app/index.html](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app/index.html)\n\
+\n\
+[![github.com test-server](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.deployGithub.browser._2Fnode-jslint-lite_2Fbuild_2Fapp_2Findex.html.png)](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app/index.html)\n\
+\n\
+\n\
+\n\
+# documentation\n\
+#### apidoc\n\
+- [https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/apidoc.html](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/apidoc.html)\n\
+\n\
+[![apidoc](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.buildApidoc.browser._2Fhome_2Ftravis_2Fbuild_2Fkaizhu256_2Fnode-jslint-lite_2Ftmp_2Fbuild_2Fapidoc.html.png)](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/apidoc.html)\n\
+\n\
+#### todo\n\
+- none\n\
+\n\
+#### change since xxxxxxxx\n\
+- none\n\
+\n\
+#### this package requires\n\
+- darwin or linux os\n\
+\n\
+\n\
+\n\
+# build status [![travis-ci.org build-status](https://api.travis-ci.org/kaizhu256/node-jslint-lite.svg)](https://travis-ci.org/kaizhu256/node-jslint-lite)\n\
+[![build commit status](https://kaizhu256.github.io/node-jslint-lite/build/build.badge.svg)](https://travis-ci.org/kaizhu256/node-jslint-lite)\n\
+\n\
+| git-branch : | [master](https://github.com/kaizhu256/node-jslint-lite/tree/master) | [beta](https://github.com/kaizhu256/node-jslint-lite/tree/beta) | [alpha](https://github.com/kaizhu256/node-jslint-lite/tree/alpha)|\n\
+|--:|:--|:--|:--|\n\
+| test-server-github : | [![github.com test-server](https://kaizhu256.github.io/node-jslint-lite/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-jslint-lite/build..master..travis-ci.org/app/index.html) | [![github.com test-server](https://kaizhu256.github.io/node-jslint-lite/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app/index.html) | [![github.com test-server](https://kaizhu256.github.io/node-jslint-lite/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-jslint-lite/build..alpha..travis-ci.org/app/index.html)|\n\
+| test-server-heroku : | [![heroku.com test-server](https://kaizhu256.github.io/node-jslint-lite/heroku-logo.75x25.png)](https://h1-jslint-master.herokuapp.com) | [![heroku.com test-server](https://kaizhu256.github.io/node-jslint-lite/heroku-logo.75x25.png)](https://h1-jslint-beta.herokuapp.com) | [![heroku.com test-server](https://kaizhu256.github.io/node-jslint-lite/heroku-logo.75x25.png)](https://h1-jslint-alpha.herokuapp.com)|\n\
+| test-report : | [![test-report](https://kaizhu256.github.io/node-jslint-lite/build..master..travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-jslint-lite/build..master..travis-ci.org/test-report.html) | [![test-report](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/test-report.html) | [![test-report](https://kaizhu256.github.io/node-jslint-lite/build..alpha..travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-jslint-lite/build..alpha..travis-ci.org/test-report.html)|\n\
+| coverage : | [![istanbul-coverage](https://kaizhu256.github.io/node-jslint-lite/build..master..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-jslint-lite/build..master..travis-ci.org/coverage.html/index.html) | [![istanbul-coverage](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/coverage.html/index.html) | [![istanbul-coverage](https://kaizhu256.github.io/node-jslint-lite/build..alpha..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-jslint-lite/build..alpha..travis-ci.org/coverage.html/index.html)|\n\
+| build-artifacts : | [![build-artifacts](https://kaizhu256.github.io/node-jslint-lite/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-jslint-lite/tree/gh-pages/build..master..travis-ci.org) | [![build-artifacts](https://kaizhu256.github.io/node-jslint-lite/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-jslint-lite/tree/gh-pages/build..beta..travis-ci.org) | [![build-artifacts](https://kaizhu256.github.io/node-jslint-lite/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-jslint-lite/tree/gh-pages/build..alpha..travis-ci.org)|\n\
+\n\
+#### master branch\n\
+- stable branch\n\
+- HEAD should be tagged, npm-published package\n\
+\n\
+#### beta branch\n\
+- semi-stable branch\n\
+- HEAD should be latest, npm-published package\n\
+\n\
+#### alpha branch\n\
+- unstable branch\n\
+- HEAD is arbitrary\n\
+- commit history may be rewritten\n\
+\n\
+\n\
+\n\
+# quickstart web example\n\
+![screen-capture](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.testExampleJs.browser..png)\n\
+\n\
+#### to run this example, follow the instruction in the script below\n\
+- [example.js](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/example.js)\n\
+```javascript\n' + local.assetsDict['/assets.example.template.js'] + '```\n\
 \n\
 #### output from browser\n\
 ![screen-capture](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.testExampleJs.browser..png)\n\
@@ -9673,7 +9745,7 @@ local.assetsDict['/assets.index.template.html'].replace((/\n/g), '\\n\\\n') +
 ```json\n\
 {\n\
     "author": "kai zhu <kaizhu256@gmail.com>",\n\
-    "description": "{{packageJsonDescription}}",\n\
+    "description": "example module",\n\
     "devDependencies": {\n\
         "electron-lite": "kaizhu256/node-electron-lite#alpha",\n\
         "utility2": "kaizhu256/node-utility2#alpha"\n\
@@ -9690,7 +9762,6 @@ local.assetsDict['/assets.index.template.html'].replace((/\n/g), '\\n\\\n') +
         "darwin",\n\
         "linux"\n\
     ],\n\
-    "readmeParse": "1",\n\
     "repository": {\n\
         "type": "git",\n\
         "url": "https://github.com/kaizhu256/node-jslint-lite.git"\n\
@@ -9698,11 +9769,11 @@ local.assetsDict['/assets.index.template.html'].replace((/\n/g), '\\n\\\n') +
     "scripts": {\n\
         "build-ci": "utility2 shReadmeTest build_ci.sh",\n\
         "env": "env",\n\
-        "heroku-postbuild": "npm install \'kaizhu256/node-utility2#alpha\' && utility2 shDeployHeroku",\n\
+        "heroku-postbuild": "(set -e; npm install \'kaizhu256/node-utility2#alpha\'; utility2 shDeployHeroku)",\n\
         "postinstall": "if [ -f lib.jslint.npm_scripts.sh ]; then ./lib.jslint.npm_scripts.sh postinstall; fi",\n\
-        "publish-alias": "VERSION=$(npm info $npm_package_name version); for ALIAS in; do utility2 shNpmPublishAs . $ALIAS $VERSION; utility2 shNpmTestPublished $ALIAS || exit $?; done",\n\
-        "start": "export PORT=${PORT:-8080} && utility2 start",\n\
-        "test": "export PORT=$(utility2 shServerPortRandom) && utility2 test test.js"\n\
+        "publish-alias": "VERSION=$(npm info $npm_package_name version); for ALIAS in; do utility2 shNpmPublishAs . $ALIAS $VERSION; eval utility2 shNpmTestPublished $ALIAS || exit $?; done",\n\
+        "start": "(set -e; export PORT=${PORT:-8080}; utility2 start test.js)",\n\
+        "test": "(set -e; export PORT=$(utility2 shServerPortRandom); utility2 test test.js)"\n\
     },\n\
     "version": "0.0.1"\n\
 }\n\
@@ -9742,8 +9813,9 @@ shBuildCiPre() {(set -e\n\
     return\n\
 )}\n\
 \n\
-# init env\n\
-eval $(utility2 source) && shBuildCi\n\
+# run shBuildCi\n\
+eval $(utility2 source)\n\
+shBuildCi\n\
 ```\n\
 \n\
 \n\
@@ -9754,7 +9826,190 @@ eval $(utility2 source) && shBuildCi\n\
 
 
 
-local.assetsDict['/assets.test.js'] = '';
+local.assetsDict['/assets.test.js'] = local.assetsDict['/assets.test.template.js'] = '\
+/* istanbul instrument in package jslint */\n\
+/*jslint\n\
+    bitwise: true,\n\
+    browser: true,\n\
+    maxerr: 8,\n\
+    maxlen: 96,\n\
+    node: true,\n\
+    nomen: true,\n\
+    regexp: true,\n\
+    stupid: true\n\
+*/\n\
+(function () {\n\
+    \'use strict\';\n\
+    var local;\n\
+\n\
+\n\
+\n\
+    // run shared js\-env code - pre-init\n\
+    (function () {\n\
+        // init local\n\
+        local = {};\n\
+        // init modeJs\n\
+        local.modeJs = (function () {\n\
+            try {\n\
+                return typeof navigator.userAgent === \'string\' &&\n\
+                    typeof document.querySelector(\'body\') === \'object\' &&\n\
+                    typeof XMLHttpRequest.prototype.open === \'function\' &&\n\
+                    \'browser\';\n\
+            } catch (errorCaughtBrowser) {\n\
+                return module.exports &&\n\
+                    typeof process.versions.node === \'string\' &&\n\
+                    typeof require(\'http\').createServer === \'function\' &&\n\
+                    \'node\';\n\
+            }\n\
+        }());\n\
+        // init global\n\
+        local.global = local.modeJs === \'browser\'\n\
+            ? window\n\
+            : global;\n\
+        switch (local.modeJs) {\n\
+        // re-init local from window.local\n\
+        case \'browser\':\n\
+            local = local.global.utility2.objectSetDefault(\n\
+                local.global.utility2_rollup || local.global.local,\n\
+                local.global.utility2\n\
+            );\n\
+            break;\n\
+        // re-init local from example.js\n\
+        case \'node\':\n\
+            local = (local.global.utility2_rollup || require(\'utility2\'))\n\
+                .requireExampleJsFromReadme();\n\
+            break;\n\
+        }\n\
+        // export local\n\
+        local.global.local = local;\n\
+    }());\n\
+\n\
+\n\
+\n\
+    // run shared js\-env code - function\n\
+    (function () {\n\
+        return;\n\
+    }());\n\
+    switch (local.modeJs) {\n\
+\n\
+\n\
+\n\
+    // run browser js\-env code - function\n\
+    case \'browser\':\n\
+        break;\n\
+\n\
+\n\
+\n\
+    // run node js\-env code - function\n\
+    case \'node\':\n\
+        break;\n\
+    }\n\
+\n\
+\n\
+\n\
+    // run shared js\-env code - post-init\n\
+    (function () {\n\
+        return;\n\
+    }());\n\
+    switch (local.modeJs) {\n\
+\n\
+\n\
+\n\
+    // run browser js\-env code - post-init\n\
+    case \'browser\':\n\
+        // run tests\n\
+        local.nop(local.modeTest && document.querySelector(\'#testRunButton1\').click());\n\
+        break;\n\
+\n\
+\n\
+\n\
+    // run node js\-env code - post-init\n\
+    /* istanbul ignore next */\n\
+    case \'node\':\n\
+        local.testCase_buildApidoc_default = local.testCase_buildApidoc_default || function (\n\
+            options,\n\
+            onError\n\
+        ) {\n\
+        /*\n\
+         * this function will test buildApidoc\'s default handling-behavior-behavior\n\
+         */\n\
+            if (local.env.npm_package_buildNpmdoc) {\n\
+                options = {};\n\
+                local.buildNpmdoc(options, onError);\n\
+                return;\n\
+            }\n\
+            options = {};\n\
+            local.buildApidoc(options, onError);\n\
+        };\n\
+\n\
+        local.testCase_buildApp_default = local.testCase_buildApp_default || function (\n\
+            options,\n\
+            onError\n\
+        ) {\n\
+        /*\n\
+         * this function will test buildApp\'s default handling-behavior-behavior\n\
+         */\n\
+            local.testCase_buildReadme_default(options, local.onErrorThrow);\n\
+            local.testCase_buildLib_default(options, local.onErrorThrow);\n\
+            local.testCase_buildTest_default(options, local.onErrorThrow);\n\
+            options = [];\n\
+            local.buildApp(options, onError);\n\
+        };\n\
+\n\
+        local.testCase_buildLib_default = local.testCase_buildLib_default || function (\n\
+            options,\n\
+            onError\n\
+        ) {\n\
+        /*\n\
+         * this function will test buildLib\'s default handling-behavior\n\
+         */\n\
+            options = {};\n\
+            local.buildLib(options, onError);\n\
+        };\n\
+\n\
+        local.testCase_buildReadme_default = local.testCase_buildReadme_default || function (\n\
+            options,\n\
+            onError\n\
+        ) {\n\
+        /*\n\
+         * this function will test buildReadme\'s default handling-behavior-behavior\n\
+         */\n\
+            if (local.env.npm_package_buildNpmdoc) {\n\
+                onError();\n\
+                return;\n\
+            }\n\
+            options = {};\n\
+            local.buildReadme(options, onError);\n\
+        };\n\
+\n\
+        local.testCase_buildTest_default = local.testCase_buildTest_default || function (\n\
+            options,\n\
+            onError\n\
+        ) {\n\
+        /*\n\
+         * this function will test buildTest\'s default handling-behavior\n\
+         */\n\
+            options = {};\n\
+            local.buildTest(options, onError);\n\
+        };\n\
+\n\
+        local.testCase_webpage_default = local.testCase_webpage_default || function (\n\
+            options,\n\
+            onError\n\
+        ) {\n\
+        /*\n\
+         * this function will test the webpage\'s default handling-behavior\n\
+         */\n\
+            options = { modeCoverageMerge: true, url: local.serverLocalHost + \'?modeTest=1\' };\n\
+            local.browserTest(options, onError);\n\
+        };\n\
+\n\
+        // run test-server\n\
+        local.testRunServer(local);\n\
+        break;\n\
+    }\n\
+}());\n\
+';
 
 
 
@@ -9821,7 +10076,7 @@ local.assetsDict['/assets.testReport.template.html'] = '\
         {{#if env.npm_package_homepage}}\n\
         href="{{env.npm_package_homepage}}"\n\
         {{/if env.npm_package_homepage}}\n\
-    >{{env.npm_package_nameAlias}} (v{{env.npm_package_version}})</a>\n\
+    >{{env.npm_package_name}} (v{{env.npm_package_version}})</a>\n\
 </h1>\n\
 <div class="testReportPlatformDiv summary">\n\
 <h2>summary</h2>\n\
@@ -10537,6 +10792,7 @@ local.assetsDict['/favicon.ico'] = '';
                     npm_config_mode_backend: local.env.npm_config_mode_backend,
                     npm_package_description: local.env.npm_package_description,
                     npm_package_homepage: local.env.npm_package_homepage,
+                    npm_package_name: local.env.npm_package_name,
                     npm_package_nameAlias: local.env.npm_package_nameAlias,
                     npm_package_version: local.env.npm_package_version
                 } } }, 3);
@@ -11299,7 +11555,7 @@ return Utf8ArrayToStr(bff);
                 onError();
                 return;
             }
-            options = local.objectSetDefault(options, { blacklistDict: local });
+            local.objectSetDefault(options, { blacklistDict: local });
             // create apidoc.html
             local.fsWriteFileWithMkdirpSync(
                 local.env.npm_config_dir_build + '/apidoc.html',
@@ -11394,70 +11650,118 @@ return Utf8ArrayToStr(bff);
             onParallel();
         };
 
+        local.buildLib = function (options, onError) {
+        /*
+         * this function will build the lib
+         */
+            options.dataFrom = options.dataFrom || local.tryCatchReadFile(
+                'lib.' + local.env.npm_package_nameAlias + '.js',
+                'utf8'
+            );
+            options.dataTo = local.templateRenderJslintLite(
+                local.assetsDict['/assets.lib.template.js'],
+                {}
+            );
+            // search-and-replace - customize dataTo
+            [
+                // customize body before istanbul
+                (/[\S\s]*?^\/\* istanbul instrument in package /m),
+                // customize body after init exports
+                (/\n {12}module.exports.__dirname = __dirname;\n[\S\s]*?$/)
+            ].forEach(function (rgx) {
+                // handle large string-replace
+                options.dataFrom.replace(rgx, function (match0) {
+                    options.dataTo.replace(rgx, function (match1) {
+                        options.dataTo = options.dataTo.split(match1);
+                        options.dataTo[0] += match0;
+                        options.dataTo[0] += options.dataTo.splice(1, 1)[0];
+                        options.dataTo = options.dataTo.join(match1);
+                    });
+                });
+            });
+            local.runIfTrue(options.customize, options.customize);
+            // save lib.xxx.js
+            local.fs.writeFileSync(
+                'lib.' + local.env.npm_package_nameAlias + '.js',
+                options.dataTo
+            );
+            onError();
+        };
+
+        local.buildNpmdoc = function (options, onError) {
+        /*
+         * this function will build the npmdoc
+         */
+            var onParallel, packageJson;
+            onParallel = local.utility2.onParallel(onError);
+            onParallel.counter += 1;
+            // build package.json
+            packageJson = JSON.parse(local.fs.readFileSync('package.json', 'utf8'));
+            local.objectSetDefault(packageJson, local.objectLiteralize({
+                devDependencies: {
+                    '$[]': [local.env.npm_package_buildNpmdoc, '*']
+                },
+                repository: {
+                    type: 'git',
+                    url: 'https://github.com/npmdoc/node-npmdoc-' +
+                        local.env.npm_package_buildNpmdoc + '.git'
+                }
+            }), 2);
+            local.objectSetOverride(packageJson, local.objectLiteralize({
+                keywords: ['documentation', local.env.npm_package_buildNpmdoc]
+            }), 2);
+            onParallel.counter += 1;
+            local.buildReadme({
+                dataFrom: '\n# package.json\n```json\n' +
+                    JSON.stringify(packageJson) + '\n```\n'
+            }, onParallel);
+            packageJson = JSON.parse(local.fs.readFileSync('package.json', 'utf8'));
+            // build apidoc.html
+            onParallel.counter += 1;
+            local.buildApidoc({
+                dir: local.env.npm_package_buildNpmdoc
+            }, onParallel);
+            // build README.md
+            options = {};
+            options.readme = local.apidocCreate({
+                dir: local.env.npm_package_buildNpmdoc,
+                template: local.apidoc.templateApidocMd
+            });
+            local.fs.writeFileSync('README.md', options.readme);
+            // re-build package.json
+            packageJson.description = (/.*/).exec(options.readme)[0]
+                .slice(2)
+                .replace((/ {2,}/g), ' ')
+                .trim();
+            local.fs.writeFileSync(
+                'package.json',
+                local.jsonStringifyOrdered(packageJson, null, 4) + '\n'
+            );
+            onParallel();
+        };
+
         local.buildReadme = function (options, onError) {
         /*
          * this function will build the readme in jslint-lite style
          */
-            var templateRender;
-            templateRender = function (template) {
-            /*
-             * this function will replace jslint-lite with $npm_package_name
-             */
-                template = template.replace(
-                    (/https:\/\/kaizhu256\.github\.io\/node-jslint-lite/g),
-                    'https://' +  options.githubRepo[0] + '.github.io/' +  options.githubRepo[1]
-                );
-                template = template.replace(
-                    (/kaizhu256\/node-jslint-lite/g),
-                    options.githubRepo.join('/')
-                );
-                template = template.replace(
-                    (/kaizhu256_2Fnode-jslint-lite/g),
-                    options.githubRepo.join('_2F')
-                );
-                template = template.replace(
-                    (/node-jslint-lite/g),
-                    options.githubRepo[1]
-                );
-                template = template.replace(
-                    (/jslint-lite/g),
-                    options.packageJson.name
-                );
-                template = template.replace(
-                    '/* istanbul instrument in package jslint */',
-                    '/* istanbul instrument in package ' + options.packageJson.nameAlias + ' */'
-                );
-                template = template.replace(
-                    (/h1-jslint/g),
-                    'h1-' + options.packageJson.nameAlias.replace((/_/g), '-')
-                );
-                template = template.replace(
-                    (/\b(assets|lib)\.jslint\.(npm-scripts|rollup)\b/g),
-                    '$1.' + options.packageJson.nameAlias + '.$2'
-                );
-                template = template.replace(
-                    "local.jslint.__dirname + '/lib.jslint.js'",
-                    "local." + options.packageJson.nameAlias + ".__dirname + '/lib." +
-                        options.packageJson.nameAlias + ".js'"
-                );
-                return template;
-            };
-            options.readmeFrom = options.readmeFrom ||
-                local.fs.readFileSync('README.md', 'utf8');
+            options.dataFrom = options.dataFrom || local.tryCatchReadFile('README.md', 'utf8');
             // init package.json
             options.rgx = (/\n# package.json\n```json\n([\S\s]*?)\n```\n/);
-            options.readmeFrom.replace(options.rgx, function (match0, match1) {
+            options.dataFrom.replace(options.rgx, function (match0, match1) {
                 options.packageJson = JSON.parse(match1);
-                options.packageJson.description = options.readmeFrom.split('\n')[2];
+                options.packageJson.description = options.dataFrom.split('\n')[1];
                 local.objectSetDefault(options.packageJson, {
-                    nameAlias: options.packageJson.name,
+                    nameAlias: options.packageJson.name.replace((/-/g), '_'),
                     nameOriginal: options.packageJson.name
                 });
-                options.githubRepo = options.packageJson.repository.url.split('/').slice(-2);
-                options.githubRepo[1] = options.githubRepo[1].replace((/\.git$/), '');
-                local.objectSetDefault(options.packageJson, JSON.parse(templateRender(
-                    options.rgx.exec(local.assetsDict['/assets.readme.template.md'])[1]
-                )), 2);
+                local.objectSetDefault(
+                    options.packageJson,
+                    JSON.parse(local.templateRenderJslintLite(
+                        options.rgx.exec(local.assetsDict['/assets.readme.template.md'])[1],
+                        options
+                    )),
+                    2
+                );
                 // avoid npm-installing self
                 delete options.packageJson.devDependencies[options.packageJson.name];
                 // save package.json
@@ -11465,11 +11769,12 @@ return Utf8ArrayToStr(bff);
                     'package.json',
                     local.jsonStringifyOrdered(options.packageJson, null, 4) + '\n'
                 );
-                // update readmeTo
-                options.readmeTo = templateRender(
-                    local.assetsDict['/assets.readme.template.md']
+                // update dataTo
+                options.dataTo = local.templateRenderJslintLite(
+                    local.assetsDict['/assets.readme.template.md'],
+                    options
                 );
-                options.readmeTo = options.readmeTo.replace(
+                options.dataTo = options.dataTo.replace(
                     options.rgx,
                     match0.replace(
                         match1,
@@ -11477,10 +11782,10 @@ return Utf8ArrayToStr(bff);
                     )
                 );
             });
-            // search-and-replace - customize readmeTo
+            // search-and-replace - customize dataTo
             [
                 // customize header
-                (/.*?\n.*?\n.*?\n/),
+                (/.*?\n.*?\n/),
                 // customize todo
                 (/\n#### todo\n[\S\s]*?\n\n\n\n/),
                 // customize quickstart-header
@@ -11502,20 +11807,63 @@ return Utf8ArrayToStr(bff);
                 (/\nshBuildCiPost\(\) \{\(set -e\n[^`]*?\n\)\}\n/),
                 (/\nshBuildCiPre\(\) \{\(set -e\n[^`]*?\n\)\}\n/)
             ].forEach(function (rgx) {
-                options.readmeFrom.replace(rgx, function (match0) {
-                    options.readmeTo = options.readmeTo.replace(rgx, match0);
+                // handle large string-replace
+                options.dataFrom.replace(rgx, function (match0) {
+                    options.dataTo.replace(rgx, function (match1) {
+                        options.dataTo = options.dataTo.split(match1);
+                        options.dataTo[0] += match0;
+                        options.dataTo[0] += options.dataTo.splice(1, 1)[0];
+                        options.dataTo = options.dataTo.join(match1);
+                    });
                 });
             });
             // customize comment
-            options.readmeFrom.replace(
+            options.dataFrom.replace(
                 (/^( *?)(?:#!! |#\/\/ |\/\/!!)(.*?)$/gm),
                 function (match0, match1, match2) {
-                    options.readmeTo = options.readmeTo.replace(match1 + match2, match0);
+                    options.dataTo = options.dataTo.replace(match1 + match2, match0);
                 }
             );
             local.runIfTrue(options.customize, options.customize);
             // save README.md
-            local.fs.writeFileSync('README.md', options.readmeTo);
+            local.fs.writeFileSync('README.md', options.dataTo);
+            onError();
+        };
+
+        local.buildTest = function (options, onError) {
+        /*
+         * this function will build the test
+         */
+            options.dataFrom = options.dataFrom || local.tryCatchReadFile('test.js', 'utf8');
+            options.dataTo = local.templateRenderJslintLite(
+                local.assetsDict['/assets.test.template.js'],
+                {}
+            );
+            // search-and-replace - customize dataTo
+            [
+                // customize js\-env code
+                (/\n {8}local.global.local = local;\n[\S\s]*?^ {4}\}\(\)\);\n/m),
+                (/\n {4}\/\/ run browser js\-env code - pre-init\n[\S\s]*?\n {8}break;\n/),
+                (/\n {4}\/\/ run node js\-env code - pre-init\n[\S\s]*?\n {8}break;\n/),
+                (/\n {4}\/\/ run shared js\-env code - function\n[\S\s]*?\n {4}\}\(\)\);\n/),
+                (/\n {4}\/\/ run browser js\-env code - function\n[\S\s]*?\n {8}break;\n/),
+                (/\n {4}\/\/ run shared js\-env code - pre-init\n[\S\s]*?\n {4}\}\(\)\);\n/),
+                (/\n {4}\/\/ run node js\-env code - function\n[\S\s]*?\n {8}break;\n/),
+                (/\n {4}\/\/ run shared js\-env code - post-init\n[\S\s]*?\n {4}\}\(\)\);\n/)
+            ].forEach(function (rgx) {
+                // handle large string-replace
+                options.dataFrom.replace(rgx, function (match0) {
+                    options.dataTo.replace(rgx, function (match1) {
+                        options.dataTo = options.dataTo.split(match1);
+                        options.dataTo[0] += match0;
+                        options.dataTo[0] += options.dataTo.splice(1, 1)[0];
+                        options.dataTo = options.dataTo.join(match1);
+                    });
+                });
+            });
+            local.runIfTrue(options.customize, options.customize);
+            // save test.js
+            local.fs.writeFileSync('test.js', options.dataTo);
             onError();
         };
 
@@ -12284,8 +12632,12 @@ return Utf8ArrayToStr(bff);
                 return require('path').resolve(process.cwd(), module || '');
             }
             try {
-                require(module);
-            } catch (ignore) {
+                require(process.cwd() + '/node_modules/' + module);
+            } catch (errorCaught) {
+                try {
+                    require(module);
+                } catch (ignore) {
+                }
             }
             [
                 new RegExp('(.*?/' + module + ')\\b'),
@@ -12405,11 +12757,12 @@ return Utf8ArrayToStr(bff);
             return arg;
         };
 
-        local.objectSetOverride = function (arg, overrides, depth) {
+        local.objectSetOverride = function (arg, overrides, depth, env) {
         /*
-         * this function will recursively set overrides for items the arg
+         * this function will recursively set overrides for items in the arg
          */
             arg = arg || {};
+            env = env || (typeof process === 'object' && process.env) || {};
             overrides = overrides || {};
             Object.keys(overrides).forEach(function (key) {
                 var arg2, overrides2;
@@ -12429,11 +12782,11 @@ return Utf8ArrayToStr(bff);
                         (overrides2 &&
                         typeof overrides2 === 'object' &&
                         !Array.isArray(overrides2))) {
-                    local.objectSetOverride(arg2, overrides2, depth - 1);
+                    local.objectSetOverride(arg2, overrides2, depth - 1, env);
                     return;
                 }
                 // else set arg[key] with overrides[key]
-                arg[key] = arg === local.env
+                arg[key] = arg === env
                     // if arg is env, then overrides falsey value with empty string
                     ? overrides2 || ''
                     : overrides2;
@@ -12460,19 +12813,21 @@ return Utf8ArrayToStr(bff);
             return arg;
         };
 
-        local.onErrorAssert = function (error) {
-        /*
-         * this function will assert no error occurred
-         */
-            local.assert(!error, error);
-        };
-
         local.onErrorDefault = function (error) {
         /*
          * this function will if error exists, then print error.stack to stderr
          */
             if (error && !local.global.__coverage__) {
                 console.error(error.stack);
+            }
+        };
+
+        local.onErrorThrow = function (error) {
+        /*
+         * this function will assert no error occurred
+         */
+            if (error) {
+                throw error;
             }
         };
 
@@ -12839,7 +13194,7 @@ vendor\\)\\(\\b\\|[_s]\\)\
         /*
          * this function will require and export example.js embedded in README.md
          */
-            var fileExampleJs, fileMain, module, script;
+            var module, script, tmp;
             // start the repl-debugger
             local.replStart();
             // debug dir
@@ -12865,36 +13220,57 @@ vendor\\)\\(\\b\\|[_s]\\)\
                     }
                 });
             });
-            // init npm_package_nameAlias
-            local.objectSetDefault(local.env, {
-                npm_package_nameAlias: local.env.npm_package_name
-            });
-            if (local.env.npm_config_mode_start || local.global.utility2_rollup) {
-                // init exports
-                local.global.local = local;
+            if (local.global.utility2_rollup || local.env.npm_config_mode_start) {
                 // init assets
                 local.assetsDict['/'] = local.assetsDict['/index.html'] = local.templateRender(
-                    local.assetsDict['/assets.index.template.html'],
+                    // uncomment utility2-comment
+                    local.assetsDict['/assets.index.template.html'].replace(
+                        (/<!-- utility2-comment\b([\S\s]+?)\butility2-comment -->/g),
+                        '$1'
+                    ),
                     { env: local.env, isRollup: true }
                 );
-                local.assetsDict['/assets.app.js'] = local.fs.readFileSync(__filename, 'utf8');
+                local.assetsDict['/assets.app.js'] =
+                    local.fs.readFileSync(__filename, 'utf8').replace((/^#!/), '//');
+                local.runIfTrue(local.env.npm_config_mode_start, function () {
+                    local.assetsDict['/assets.app.js'] =
+                        local.assetsDict['/assets.utility2.rollup.begin.js'];
+                    local.assetsDict['/assets.app.js'] += '\n\n\n' +
+                        local.fs.readFileSync(__filename, 'utf8').replace((/^#!/), '//');
+                    local.assetsDict['/assets.app.js'] += '\n\n\n' +
+                        local.assetsDict['/assets.example.js'];
+                    local.assetsDict['/assets.app.js'] += '\n\n\n' +
+                        local.assetsDict['/assets.test.js'];
+                    local.global.local = local;
+                });
                 local[local.env.npm_package_nameAlias] = local;
                 return local;
             }
-            fileExampleJs = process.cwd() + '/example.js';
-            fileMain = process.cwd() + '/' + local.env.npm_package_main;
-            global.utility2_moduleExports = require(fileMain);
+            // init file $npm_package_main
+            tmp = process.cwd() + '/' + local.env.npm_package_main;
+            global.utility2_moduleExports = require(tmp);
+            local.assetsDict['/assets.' + local.env.npm_package_nameAlias + '.js'] =
+                local.istanbulInstrumentInPackage(
+                    local.fs.readFileSync(tmp, 'utf8').replace((/^#!/), '//'),
+                    tmp
+                );
+            global.utility2_moduleExports.global = global;
             // read script from README.md
-            script = 'module.exports = require(".");';
-            local.fs.readFileSync('README.md', 'utf8').replace(
-                (/```\w*?(\n[\W\s]*?example\.js[\n\"][\S\s]+?)\n```/),
-                function (match0, match1, ii, text) {
-                    // jslint-hack
-                    local.nop(match0);
-                    // preserve lineno
-                    script = text.slice(0, ii).replace((/.+/g), '') + match1;
-                }
+            script = local.templateRenderJslintLite(
+                local.assetsDict['/assets.example.template.js'],
+                {}
             );
+            local.runIfTrue(local.env.npm_package_readmeParse, function () {
+                local.fs.readFileSync('README.md', 'utf8').replace(
+                    (/```\w*?(\n[\W\s]*?example\.js[\n\"][\S\s]+?)\n```/),
+                    function (match0, match1, ii, text) {
+                        // jslint-hack
+                        local.nop(match0);
+                        // preserve lineno
+                        script = text.slice(0, ii).replace((/.+/g), '') + match1;
+                    }
+                );
+            });
             script = script
                 // alias require($npm_package_name) to utility2_moduleExports;
                 .replace(
@@ -12904,47 +13280,43 @@ vendor\\)\\(\\b\\|[_s]\\)\
                 .replace(
                     "require('" + local.env.npm_package_nameOriginal + "')",
                     'global.utility2_moduleExports'
-                )
-                // uncomment utility2-comment
-                .replace((/<!-- utility2-comment\b([\S\s]+?)\butility2-comment -->/g), '$1');
+                );
+            // init example.js
+            tmp = process.cwd() + '/example.js';
             // jslint script
-            local.jslintAndPrintConditional(script, fileExampleJs);
+            local.jslintAndPrintConditional(script, tmp);
             // cover script
-            script = local.istanbulInstrumentInPackage(script, fileExampleJs);
+            script = local.istanbulInstrumentInPackage(script, tmp);
             // init module
-            module = require.cache[fileExampleJs] = new local.Module(fileExampleJs);
+            module = require.cache[tmp] = new local.Module(tmp);
             // load script into module
-            module._compile(script, fileExampleJs);
+            module._compile(script, tmp);
             // init exports
             module.exports.utility2 = local;
             module.exports[local.env.npm_package_nameAlias] = global.utility2_moduleExports;
             // init assets
             local.objectSetOverride(local.assetsDict, module.exports.assetsDict);
             module.exports.assetsDict = local.assetsDict;
-            local.assetsDict['/assets.' + local.env.npm_package_nameAlias + '.js'] =
-                local.istanbulInstrumentInPackage(
-                    local.fs.readFileSync(fileMain, 'utf8').replace((/^#!/), '//'),
-                    fileMain
-                );
             local.assetsDict['/assets.example.js'] = script;
             local.assetsDict['/assets.test.js'] = local.istanbulInstrumentInPackage(
                 local.fs.readFileSync('test.js', 'utf8'),
                 process.cwd() + '/test.js'
             );
             // init assets.index.html
-            local.assetsDict['/assets.index.template.html'] = local.normalizeText(
-                local.assetsDict['/assets.index.template.html']
-            );
             local.assetsDict['/'] = local.assetsDict['/index.html'] =
-                local.jslintAndPrintConditional(
-                    local.templateRender(local.assetsDict['/assets.index.template.html'], {
+                local.jslintAndPrintConditional(local.templateRender(
+                    // uncomment utility2-comment
+                    local.assetsDict['/assets.index.template.html'].replace(
+                        (/<!-- utility2-comment\b([\S\s]+?)\butility2-comment -->/g),
+                        '$1'
+                    ),
+                    {
                         env: local.env,
                         isRollup: local.global.utility2_rollup ||
                             local.env.NODE_ENV === 'rollup' ||
                             local.env.NODE_ENV === 'production'
-                    }),
-                    '/index.html'
-                );
+                    }
+                ), '/index.html');
             // init assets.app.js
             local.assetsDict['/assets.app.js'] = [
                 'header',
@@ -13415,6 +13787,51 @@ instruction\n\
                 });
                 return String(value);
             });
+        };
+
+        local.templateRenderJslintLite = function (template, options) {
+        /*
+         * this function will render the jslint-lite template with the given options.packageJson
+         */
+            options.packageJson = options.packageJson ||
+                JSON.parse(local.fs.readFileSync('package.json', 'utf8'));
+            local.objectSetDefault(options.packageJson, {
+                nameAlias: options.packageJson.name.replace((/-/g), '_'),
+                repository: { url: 'https://github.com/kaizhu256/node-jslint-lite.git' }
+            }, 2);
+            options.githubRepo = options.packageJson.repository.url.split('/').slice(-2);
+            options.githubRepo[1] = options.githubRepo[1].replace((/\.git$/), '');
+            template = template.replace(
+                (/https:\/\/kaizhu256\.github\.io\/node-jslint-lite/g),
+                'https://' +  options.githubRepo[0] + '.github.io/' +  options.githubRepo[1]
+            );
+            template = template.replace(
+                (/kaizhu256\/node-jslint-lite/g),
+                options.githubRepo.join('/')
+            );
+            template = template.replace(
+                (/kaizhu256_2Fnode-jslint-lite/g),
+                options.githubRepo.join('_2F')
+            );
+            template = template.replace(
+                (/node-jslint-lite/g),
+                options.githubRepo[1]
+            );
+            template = template.replace((/^#!/), '//');
+            template = template.replace((/jslint-lite/g), options.packageJson.name);
+            template = template.replace(
+                '/* istanbul instrument in package jslint */',
+                '/* istanbul instrument in package ' + options.packageJson.nameAlias + ' */'
+            );
+            template = template.replace(
+                (/\b(assets\.|lib\.|local\.|utility2_)jslint\b/g),
+                '$1' + options.packageJson.nameAlias
+            );
+            template = template.replace(
+                (/\bh1-jslint\b/g),
+                'h1-' + options.packageJson.nameAlias.replace((/_/g), '-')
+            );
+            return template;
         };
 
         local.testMock = function (mockList, onTestCase, onError) {
@@ -14108,9 +14525,19 @@ instruction\n\
             '.md': 'text/markdown; charset=UTF-8',
             '.txt': 'text/plain; charset=UTF-8'
         };
+        // init env
         local.env = local.modeJs === 'browser'
             ? {}
             : process.env;
+        local.objectSetDefault(local.env, {
+            npm_package_nameAlias: (local.env.npm_package_name || '').replace((/-/g), '_')
+        });
+        local.objectSetDefault(local.env, {
+            npm_package_description: 'example module',
+            npm_package_name: 'example',
+            npm_package_nameAlias: 'example',
+            npm_package_version: '0.0.1'
+        });
         local.errorDefault = new Error('default error');
         local.istanbulCoverageMerge = local.istanbul.coverageMerge || local.echo;
         local.istanbulCoverageMerge = local.istanbul.coverageMerge || local.echo;
@@ -14118,6 +14545,23 @@ instruction\n\
         local.istanbulInstrumentInPackage = local.istanbul.instrumentInPackage || local.echo;
         local.istanbulInstrumentSync = local.istanbul.instrumentSync || local.echo;
         local.jslintAndPrint = local.jslint.jslintAndPrint || local.echo;
+        local.packageJsonNpmdocDefault = {
+            "buildNpmdoc": "mysql",
+            "devDependencies": {
+                "electron-lite": "kaizhu256/node-electron-lite#alpha",
+                "utility2": "kaizhu256/node-utility2#alpha"
+            },
+            "homepage": "https://github.com/npmdoc/node-npmdoc-mysql",
+            "name": "npmdoc-mysql",
+            "nameOriginal": "npmdoc-mysql",
+            "repository": {
+                "type": "git",
+                "url": "https://github.com/npmdoc/node-npmdoc-mysql.git"
+            },
+            "scripts": {
+                "build-ci": "utility2 shReadmeTest build_ci.sh"
+            }
+        };
         local.regexpEmailValidate = new RegExp(
             '^[a-zA-Z0-9.!#$%&\'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}' +
                 '[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$'
@@ -14196,8 +14640,8 @@ instruction\n\
 
 
 
-    /* istanbul ignore next */
     // run node js-env code - post-init
+    /* istanbul ignore next */
     case 'node':
         // require modules
         local.Module = require('module');
@@ -14213,9 +14657,6 @@ instruction\n\
         local.url = require('url');
         local.vm = require('vm');
         local.zlib = require('zlib');
-        // init exports
-        module.exports = local;
-        module.exports.__dirname = __dirname;
         // init env
         local.objectSetDefault(local.env, {
             npm_config_dir_build: process.cwd() + '/tmp/build',
@@ -14333,15 +14774,15 @@ instruction\n\
 
 
 
-    /* istanbul ignore next */
     // run node js-env code - cli
+    /* istanbul ignore next */
     case 'node':
         switch (process.argv[2]) {
         case '--eval':
         case '-e':
             local.global.local = local;
             local.vm.runInThisContext(process.argv[3]);
-            break;
+            return;
         case '--interactive':
         case '-i':
             local.replStart();
@@ -14418,6 +14859,13 @@ instruction\n\
         local = local.global.utility2_rollup || local;
         // init lib
         local.local = local.swgg = local;
+        // init exports
+        if (local.modeJs === 'browser') {
+            local.global.swgg = local;
+        } else {
+            module.exports = local;
+            module.exports.__dirname = __dirname;
+        }
         // init lib utility2
         local.utility2 = local.global.utility2_rollup || (local.modeJs === 'browser'
             ? local.global.utility2
@@ -18516,8 +18964,6 @@ local.templateUiResponseAjax = '\
 
     // run browser js-env code - post-init
     case 'browser':
-        // init exports
-        local.global.swgg = local;
         // init state
         local.utility2._stateInit({});
         break;
@@ -18526,9 +18972,6 @@ local.templateUiResponseAjax = '\
 
     // run node js-env code - post-init
     case 'node':
-        // init exports
-        module.exports = local;
-        module.exports.__dirname = __dirname;
         // init assets.lib.rollup.js
         local.assetsDict['/assets.swgg.rollup.js'] =
             local.assetsDict['/assets.utility2.rollup.js'];

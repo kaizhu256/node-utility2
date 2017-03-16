@@ -48,6 +48,13 @@
         local = local.global.utility2_rollup || local;
         // init lib
         local.local = local.swgg = local;
+        // init exports
+        if (local.modeJs === 'browser') {
+            local.global.swgg = local;
+        } else {
+            module.exports = local;
+            module.exports.__dirname = __dirname;
+        }
         // init lib utility2
         local.utility2 = local.global.utility2_rollup || (local.modeJs === 'browser'
             ? local.global.utility2
@@ -4146,8 +4153,6 @@ local.templateUiResponseAjax = '\
 
     // run browser js-env code - post-init
     case 'browser':
-        // init exports
-        local.global.swgg = local;
         // init state
         local.utility2._stateInit({});
         break;
@@ -4156,9 +4161,6 @@ local.templateUiResponseAjax = '\
 
     // run node js-env code - post-init
     case 'node':
-        // init exports
-        module.exports = local;
-        module.exports.__dirname = __dirname;
         // init assets.lib.rollup.js
         local.assetsDict['/assets.swgg.rollup.js'] =
             local.assetsDict['/assets.utility2.rollup.js'];

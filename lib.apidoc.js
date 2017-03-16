@@ -16,7 +16,6 @@
 
 
 
-    /* istanbul ignore next */
     // run shared js-env code - pre-init
     (function () {
         // init local
@@ -43,12 +42,19 @@
         local = local.global.utility2_rollup || local;
         // init lib
         local.local = local.apidoc = local;
+        // init exports
+        if (local.modeJs === 'browser') {
+            local.global.utility2_apidoc = local;
+        } else {
+            module.exports = local;
+            module.exports.__dirname = __dirname;
+        }
     }());
 
 
 
-    /* istanbul ignore next */
     // run shared js-env code - pre-function
+    /* istanbul ignore next */
     (function () {
         local.assert = function (passed, message) {
         /*
@@ -78,8 +84,12 @@
                 return require('path').resolve(process.cwd(), module || '');
             }
             try {
-                require(module);
-            } catch (ignore) {
+                require(process.cwd() + '/node_modules/' + module);
+            } catch (errorCaught) {
+                try {
+                    require(module);
+                } catch (ignore) {
+                }
             }
             [
                 new RegExp('(.*?/' + module + ')\\b'),
@@ -294,7 +304,7 @@ local.templateApidocHtml = '\
         {{#if env.npm_package_homepage}}\n\
         href="{{env.npm_package_homepage}}"\n\
         {{/if env.npm_package_homepage}}\n\
-    >{{env.npm_package_nameAlias}} (v{{env.npm_package_version}})</a>\n\
+    >{{env.npm_package_name}} (v{{env.npm_package_version}})</a>\n\
 </h1>\n\
 <div class="apidocSectionDiv"><a\n\
     href="#apidoc.tableOfContents"\n\
@@ -347,9 +357,9 @@ local.templateApidocHtml = '\
 local.templateApidocMd = '\
 # api-documentation for \
 {{#if env.npm_package_homepage}} \
-[{{env.npm_package_nameAlias}} (v{{env.npm_package_version}})]({{env.npm_package_homepage}}) \
+[{{env.npm_package_name}} (v{{env.npm_package_version}})]({{env.npm_package_homepage}}) \
 {{#unless env.npm_package_homepage}} \
-{{env.npm_package_nameAlias}} (v{{env.npm_package_version}}) \
+{{env.npm_package_name}} (v{{env.npm_package_version}}) \
 {{/if env.npm_package_homepage}} \
 \n\
 \n\
@@ -513,15 +523,13 @@ local.templateApidocMd = '\
                 return text;
             };
             // init options
-            options = local.objectSetDefault(options, {});
             options.dir = local.moduleDirname(options.dir);
-            options = local.objectSetDefault(options, {
+            local.objectSetDefault(options, {
                 packageJson: JSON.parse(readExample('package.json'))
             });
             local.objectSetDefault(options, { env: {
                 npm_package_homepage: options.packageJson.homepage,
-                npm_package_nameAlias: options.packageJson.nameAlias ||
-                    options.packageJson.name,
+                npm_package_name: options.packageJson.name,
                 npm_package_version: options.packageJson.version
             } }, 2);
             local.objectSetDefault(options, {
@@ -545,8 +553,8 @@ local.templateApidocMd = '\
                     })
             ).map(readExample));
             // init moduleMain
-            moduleMain = options.moduleDict[options.env.npm_package_nameAlias] =
-                options.moduleDict[options.env.npm_package_nameAlias] || require(options.dir);
+            moduleMain = options.moduleDict[options.env.npm_package_name] =
+                options.moduleDict[options.env.npm_package_name] || require(options.dir);
             // init circularList - builtin
             Object.keys(process.binding('natives')).forEach(function (key) {
                 if (!(/\/|_linklist|sys/).test(key)) {
@@ -589,8 +597,8 @@ local.templateApidocMd = '\
                 } catch (ignore) {
                 }
             }());
-            module = options.moduleExtraDict[options.env.npm_package_nameAlias] =
-                options.moduleExtraDict[options.env.npm_package_nameAlias] || {};
+            module = options.moduleExtraDict[options.env.npm_package_name] =
+                options.moduleExtraDict[options.env.npm_package_name] || {};
             (options.libFileList || []).forEach(function (file) {
                 try {
                     tmp = {
@@ -610,10 +618,10 @@ local.templateApidocMd = '\
             });
             local.apidocModuleDictAdd(options, options.moduleExtraDict);
             // normalize moduleMain
-            moduleMain = options.moduleDict[options.env.npm_package_nameAlias] =
+            moduleMain = options.moduleDict[options.env.npm_package_name] =
                 local.objectSetDefault({}, moduleMain);
             Object.keys(options.moduleDict).forEach(function (key) {
-                if (key.indexOf(options.env.npm_package_nameAlias + '.') !== 0) {
+                if (key.indexOf(options.env.npm_package_name + '.') !== 0) {
                     return;
                 }
                 tmp = key.split('.').slice(1).join('.');
@@ -715,15 +723,12 @@ local.templateApidocMd = '\
 
 
 
-    /* istanbul ignore next */
     // run node js-env code - post-init
+    /* istanbul ignore next */
     case 'node':
         // require modules
         local.fs = require('fs');
         local.path = require('path');
-        // init exports
-        module.exports = module['./lib.apidoc.js'] = local;
-        module.exports.__dirname = __dirname;
         // run the cli
         if (module !== require.main || local.global.utility2_rollup) {
             break;

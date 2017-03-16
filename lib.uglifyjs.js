@@ -42,6 +42,13 @@
         local = local.global.utility2_rollup || local;
         // init lib
         local.local = local.uglifyjs = local;
+        // init exports
+        if (local.modeJs === 'browser') {
+            local.global.utility2_uglifyjs = local;
+        } else {
+            module.exports = local;
+            module.exports.__dirname = __dirname;
+        }
     }());
 
 
@@ -645,14 +652,6 @@ split_lines=split_lines,exports.MAP=MAP,exports.ast_squeeze_more=require("./sque
 
 
 
-    // run browser js-env code - post-init
-    case 'browser':
-        // init exports
-        local.global.utility2_uglifyjs = local;
-        break;
-
-
-
     /* istanbul ignore next */
     // run node js-env code - post-init
     case 'node':
@@ -662,9 +661,6 @@ split_lines=split_lines,exports.MAP=MAP,exports.ast_squeeze_more=require("./sque
         local.https = require('https');
         local.path = require('path');
         local.url = require('url');
-        // init exports
-        module.exports = module['./lib.uglifyjs.js'] = local;
-        module.exports.__dirname = __dirname;
         // run the cli
         if (module !== require.main || local.global.utility2_rollup) {
             break;
