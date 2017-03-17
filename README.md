@@ -28,24 +28,22 @@ the zero-dependency swiss-army-knife tool for building, testing, and deploying w
 [![apidoc](https://kaizhu256.github.io/node-utility2/build/screen-capture.buildApidoc.browser._2Fhome_2Ftravis_2Fbuild_2Fkaizhu256_2Fnode-utility2_2Ftmp_2Fbuild_2Fapidoc.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/apidoc.html)
 
 #### todo
+- replace shell-function shGitRemoteRepoCreate -> shGithubRepoCreate
+- add package-listing to npmdoc
 - use remote credentials
 - use github oauth - https://stackoverflow.com/questions/18027115/committing-via-travis-ci-failing
-- add npm script publish-deprecate
 - shFileTrimLeft example.* before shBuildGithubUpload
 - allow server-side stdout to be streamed to webapps
 - add utility2.middlewareLimit
 - add server stress test using electron
+- analytics
 - none
 
-#### change since 22302d24
-- npm publish 2017.3.16
-- add function buildNpmdoc and buildTest
-- automate building and publishing of npmdoc's
-- commit tag 'npm publish' will publish package in alpha-branch and promote to beta
-- harden shell-function shPasswordEnvUnset
-- remove '|| return \$?' from shell-scripts when possible to fix 'set -e' failing to exit on error
-- rename function onErrorAssert -> onErrorThrow
-- partially revert npm_package_nameAlias back to npm_package_name
+#### change since ba418372
+- npm publish 2017.3.17
+- fix quickstart demo for example.js
+- allow auto-deprecating of aliases in publish branch
+- allow auto-publishing of aliases in publish branch
 - none
 
 #### this package requires
@@ -589,7 +587,8 @@ utility2-comment -->\n\
         if (local.global.utility2_rollup || module !== require.main) {
             break;
         }
-        local.assetsDict['/assets.example.js'] = local.assetsDict['/assets.example.js'] ||
+        local.assetsDict['/assets.example.js'] =
+            local.assetsDict['/assets.example.js'] ||
             local.fs.readFileSync(__filename, 'utf8');
         local.assetsDict['/assets.utility2.rollup.js'] =
             local.assetsDict['/assets.utility2.rollup.js'] || local.fs.readFileSync(
@@ -681,6 +680,8 @@ utility2-comment -->\n\
     "main": "lib.utility2.js",
     "name": "utility2",
     "nameAlias": "utility2",
+    "nameAliasDeprecate": "busybox2 busyweb",
+    "nameAliasPublish": "busybox test-lite",
     "nameOriginal": "utility2",
     "os": [
         "darwin",
@@ -696,11 +697,10 @@ utility2-comment -->\n\
         "env": "env",
         "heroku-postbuild": "./lib.utility2.sh shDeployHeroku",
         "postinstall": "if [ -f lib.utility2.npm_scripts.sh ]; then ./lib.utility2.npm_scripts.sh postinstall; fi",
-        "publish-alias": "VERSION=$(npm info $npm_package_name version); for ALIAS in busybox busybox2 busyweb test-lite; do ./lib.utility2.sh shNpmPublishAs . $ALIAS $VERSION; eval ./lib.utility2.sh shNpmTestPublished $ALIAS || exit $?; done",
         "start": "(set -e; export PORT=${PORT:-8080}; if [ -f assets.app.js ]; then node assets.app.js; exit; fi; export npm_config_mode_auto_restart=1; ./lib.utility2.sh shRun shIstanbulCover test.js)",
         "test": "(set -e; export PORT=$(./lib.utility2.sh shServerPortRandom); export PORT_REPL=$(./lib.utility2.sh shServerPortRandom); export npm_config_mode_auto_restart=1; ./lib.utility2.sh test test.js)"
     },
-    "version": "2017.3.16"
+    "version": "2017.3.17"
 }
 ```
 

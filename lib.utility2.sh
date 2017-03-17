@@ -61,7 +61,7 @@ shBaseInit() {
         fi
     done
     # init ubuntu .bashrc
-    (eval shUbuntuInit) || return $?
+    eval shUbuntuInit || return $?
     # init custom alias
     alias lld="ls -adlF" || return $?
 }
@@ -230,7 +230,8 @@ shBuildCi() {(set -e
     publish)
         printf "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > "$HOME/.npmrc"
         export CI_BRANCH=alpha
-        (eval shNpmPublishAs) || true
+        (eval shNpmPublishAlias) || true
+        sleep 15
         shBuildCiInternal
         ;;
     esac
@@ -254,7 +255,8 @@ shBuildCi() {(set -e
             ;;
         "[npmdoc build]")
             git add .
-            git commit -am "[npmdoc publish]" || true
+            shFilePackageJsonVersionIncrement
+            git commit -am "[npmdoc publish]"
             shBuildScriptEval "githubPush" \
                 "git push git@github.com:$GITHUB_REPO.git HEAD:alpha"
             ;;
@@ -274,7 +276,13 @@ shBuildCi() {(set -e
             "git push git@github.com:$GITHUB_REPO.git $npm_package_version"
         ;;
     publish)
-        npm run publish-alias
+        shNpmPublishAliasList . "$npm_package_nameAliasPublish"
+        sleep 15
+        shNpmTestPublishedList "$npm_package_nameAliasPublish"
+        sleep 15
+        shNpmDeprecateAliasList "$npm_package_nameAliasDeprecate" \
+            "this package is deprecated and superseded by \
+[$npm_package_name](https://www.npmjs.com/package/$npm_package_name)"
         case "$CI_COMMIT_MESSAGE_META" in
         "[npmdoc publish]")
             shBuildScriptEval "githubPush" \
@@ -324,9 +332,10 @@ shBuildGithubUpload() {(set -e
     export MODE_BUILD=buildGithubUpload
     shBuildPrint "uploading build-artifacts to git@github.com:$GITHUB_REPO.git"
     REPO="git@github.com:$GITHUB_REPO.git"
-    # init /tmp/app
-    rm -fr /tmp/app && git clone "$REPO" --single-branch -b gh-pages /tmp/app
-    cd /tmp/app
+    # init /tmp/buildGithubUpload
+    rm -fr /tmp/buildGithubUpload
+    git clone "$REPO" --single-branch -b gh-pages /tmp/buildGithubUpload
+    cd /tmp/buildGithubUpload
     case "$CI_COMMIT_MESSAGE_META" in
     "[build clean]")
         shBuildPrint "[build clean]"
@@ -451,13 +460,13 @@ shDateIso() {(set -e
     date -u "+%Y-%m-%dT%H:%M:%SZ"
 )}
 
-shDebugArgv() {(set -e
-# this function will print each element in $@ in a separate line
-    for ARG in "$@"
-    do
-        printf "'$ARG'\n"
-    done
-)}
+shDebugArgv() {
+# this function will print $1 $2 $3 $4 in separte lines
+    printf "\$1 - $1\n"
+    printf "\$2 - $2\n"
+    printf "\$3 - $3\n"
+    printf "\$4 - $4\n"
+}
 
 shDeployGithub() {(set -e
 # this function will deploy the app to $GITHUB_REPO
@@ -1050,7 +1059,7 @@ console.assert(JSON.stringify(aa) === JSON.stringify(bb));\n\
 shFilePackageJsonVersionIncrement() {(set -e
 # this function will increment the package.json version before npm publish
 VERSION="$(npm info "" version 2>/dev/null)" || true
-VERSION="${VERSION:-0.0.1}"
+VERSION="${VERSION:-0.0.0}"
     node -e "
 // <script>
 /*jslint
@@ -1077,6 +1086,7 @@ local.versionList = [
     });
 });
 if (local.versionList[0] < local.versionList[1]) {
+    console.log(local.versionList[1]);
     process.exit();
 }
 local.versionList[0] = local.versionList[0].split('.').map(Number);
@@ -1084,6 +1094,7 @@ local.versionList[0][2] += 1;
 local.versionList[0] = local.versionList[0].join('.');
 local.packageJson.version = local.versionList[0];
 local.fs.writeFileSync('package.json', JSON.stringify(local.packageJson, null, 4) + '\n');
+console.log(local.packageJson.version);
 // </script>
     "
 )}
@@ -1154,7 +1165,8 @@ shGitRemoteRepoCreate() {(set -e
 # this function will create the $REPO git-repo
     REPO="$1"
     # init /tmp/gitRemoteRepo
-    rm -fr /tmp/gitRemoteRepo /tmp/node_modules && mkdir -p /tmp/gitRemoteRepo
+    rm -fr /tmp/gitRemoteRepo /tmp/node_modules
+    mkdir -p /tmp/gitRemoteRepo
     cd /tmp/gitRemoteRepo
     git clone --single-branch -b base.git https://github.com/kaizhu256/node-utility2.git .git
     git push "$REPO" base:alpha || true
@@ -1594,9 +1606,10 @@ shKillallElectron() {(set -e
     killall Electron electron
 )}
 
-shMain() {(set -e
+shMain() {
 # this function will run the main program
     export UTILITY2_DEPENDENTS="apidoc-lite
+        cron
         db-lite
         electron-lite
         istanbul-lite
@@ -1605,9 +1618,10 @@ shMain() {(set -e
         swgg
         uglifyjs-lite
         utility2"
+(set -e
     if [ ! "$1" ]
     then
-      return
+        return
     fi
     COMMAND="$1"
     shift
@@ -1728,6 +1742,63 @@ shMountData() {(set -e
     chmod 1777 /tmp
 )}
 
+shNpmDeprecateAlias() {(set -e
+# this function will deprecate the npm package $NAME with the given $MESSAGE
+    NAME="$1"
+    MESSAGE="$2"
+    # init /tmp/npmDeprecate
+    rm -fr /tmp/npmDeprecate /tmp/node_modules
+    mkdir -p /tmp/npmDeprecate && cd /tmp/npmDeprecate
+    npm install "$NAME"
+    cd "node_modules/$NAME"
+    # update README.md
+    printf "$MESSAGE\n" > README.md
+    # update package.json
+    node -e "
+// <script>
+/*jslint
+    bitwise: true,
+    browser: true,
+    maxerr: 8,
+    maxlen: 96,
+    node: true,
+    nomen: true,
+    regexp: true,
+    stupid: true
+*/
+'use strict';
+var local;
+local = {};
+local.fs = require('fs');
+local.packageJson = JSON.parse(local.fs.readFileSync('package.json'));
+local.packageJson.description = '$MESSAGE';
+Object.keys(local.packageJson).forEach(function (key) {
+    if (key[0] === '_') {
+        delete local.packageJson[key];
+    }
+});
+local.fs.writeFileSync('package.json', JSON.stringify(local.packageJson, null, 4) + '\n');
+// </script>
+    "
+    shFilePackageJsonVersionIncrement
+    npm publish
+    npm deprecate "$NAME" "$MESSAGE"
+)}
+
+shNpmDeprecateAliasList() {(set -e
+# this function will deprecate the npm $LIST of packages with the given $MESSAGE
+    LIST="$1"
+    MESSAGE="$2"
+    if [ ! "$LIST" ]
+    then
+        return
+    fi
+    for NAME in $LIST
+    do
+        shNpmDeprecateAlias "$NAME" "$MESSAGE"
+    done
+)}
+
 shNpmPublish() {(set -e
 # this function will npm-publish the $DIR as $NAME@$VERSION with a clean repo
     cd "$1"
@@ -1749,23 +1820,24 @@ shNpmPublish() {(set -e
         exit
         ;;
     esac
-    shNpmPublishAs $@
+    shNpmPublishAlias $@
 )}
 
-shNpmPublishAs() {(set -e
+shNpmPublishAlias() {(set -e
 # this function will npm-publish the $DIR as $NAME@$VERSION with a clean repo
     DIR="$1"
     NAME="$2"
     VERSION="$3"
     cd "$DIR"
     shInit
-    # init /tmp/app
-    rm -fr /tmp/app /tmp/node_modules && mkdir -p /tmp/app
-    # clean-copy git $DIR to /tmp/app
+    # init /tmp/npmPublish
+    rm -fr /tmp/npmPublish /tmp/node_modules
+    mkdir -p /tmp/npmPublish
+    # clean-copy git $DIR to /tmp/npmPublish
     git ls-tree --name-only -r HEAD | \
         xargs tar -czf - | \
-        tar -C /tmp/app -xvzf -
-    cd /tmp/app
+        tar -C /tmp/npmPublish -xvzf -
+    cd /tmp/npmPublish
     node -e "
 // <script>
 /*jslint
@@ -1795,11 +1867,19 @@ local.fs.writeFileSync('package.json', JSON.stringify(local.packageJson, null, 4
     npm publish
 )}
 
-shNpmStartStandalone() {(set -e
-# this function will build and start the standalone app assets.app.js
-    shInit
-    shBuildApp
-    node "$npm_config_dir_build/app/assets.app.js"
+shNpmPublishAliasList() {(set -e
+# this function will npm-publish the $DIR as $LIST@$VERSION with a clean repo
+    DIR="$1"
+    LIST="$2"
+    VERSION="$3"
+    if [ ! "$LIST" ]
+    then
+        return
+    fi
+    for NAME in $LIST
+    do
+        (eval shNpmPublishAlias "$DIR" "$NAME" "$VERSION") || true
+    done
 )}
 
 shNpmTest() {(set -e
@@ -1849,7 +1929,8 @@ shNpmTestPublished() {(set -e
     export MODE_BUILD=npmTestPublished
     shBuildPrint "npm-testing published-package $npm_package_name"
     # init /tmp/app
-    rm -fr /tmp/app /tmp/node_modules && mkdir -p /tmp/app
+    rm -fr /tmp/app /tmp/node_modules
+    mkdir -p /tmp/app
     # cd /tmp/app
     cd /tmp/app
     # npm-install package
@@ -1863,6 +1944,19 @@ shNpmTestPublished() {(set -e
     npm install
     # npm-test package
     npm test --mode-coverage
+)}
+
+shNpmTestPublishedList() {(set -e
+# this function will run npm-test on the published npm-package $LIST
+    LIST="$1"
+    if [ ! "$LIST" ]
+    then
+        return
+    fi
+    for NAME in $LIST
+    do
+        shNpmTestPublished "$NAME"
+    done
 )}
 
 shPasswordEnvUnset() {
@@ -1962,7 +2056,8 @@ shReadmeTest() {(set -e
     if [ "$FILE" = example.js ] || [ "$FILE" = example.sh ]
     then
         # init /tmp/app
-        rm -fr /tmp/app /tmp/node_modules && mkdir -p /tmp/app
+        rm -fr /tmp/app /tmp/node_modules
+        mkdir -p /tmp/app
         # cp script from README.md
         shFileTrimLeft "tmp/README.$FILE"
         cp "tmp/README.$FILE" "/tmp/app/$FILE"

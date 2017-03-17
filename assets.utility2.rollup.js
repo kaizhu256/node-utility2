@@ -9264,7 +9264,7 @@ split_lines=split_lines,exports.MAP=MAP,exports.ast_squeeze_more=require("./sque
         // init assets and templates
         local.assetsDict = {};
 /* jslint-ignore-begin */
-local.assetsDict['/'] = local.assetsDict['/assets.index.template.html'] = '\
+local.assetsDict['/assets.index.template.html'] = '\
 <!doctype html>\n\
 <html lang="en">\n\
 <head>\n\
@@ -9364,11 +9364,11 @@ local.assetsDict['/assets.buildBadge.template.svg'] =
 
 
 
-local.assetsDict['/assets.example.js'] = local.assetsDict['/assets.example.template.js'] = '\
+local.assetsDict['/assets.example.template.js'] = '\
 /*\n\
 example.js\n\
 \n\
-{{exampleJsDescription}}\n\
+quickstart example\n\
 \n\
 instruction\n\
     1. save this script as example.js\n\
@@ -9567,7 +9567,8 @@ local.assetsDict['/assets.index.template.html'].replace((/\n/g), '\\n\\\n') +
         if (local.global.utility2_rollup || module !== require.main) {\n\
             break;\n\
         }\n\
-        local.assetsDict[\'/assets.example.js\'] = local.assetsDict[\'/assets.example.js\'] ||\n\
+        local.assetsDict[\'/assets.example.js\'] =\n\
+            local.assetsDict[\'/assets.example.js\'] ||\n\
             local.fs.readFileSync(__filename, \'utf8\');\n\
         local.assetsDict[\'/assets.jslint.rollup.js\'] =\n\
             local.assetsDict[\'/assets.jslint.rollup.js\'] || local.fs.readFileSync(\n\
@@ -9769,9 +9770,8 @@ example module\n\
     "scripts": {\n\
         "build-ci": "utility2 shReadmeTest build_ci.sh",\n\
         "env": "env",\n\
-        "heroku-postbuild": "(set -e; npm install \'kaizhu256/node-utility2#alpha\'; utility2 shDeployHeroku)",\n\
+        "heroku-postbuild": "(set -e; npm install \\\"kaizhu256/node-utility2#alpha\\\"; utility2 shDeployHeroku)",\n\
         "postinstall": "if [ -f lib.jslint.npm_scripts.sh ]; then ./lib.jslint.npm_scripts.sh postinstall; fi",\n\
-        "publish-alias": "VERSION=$(npm info $npm_package_name version); for ALIAS in; do utility2 shNpmPublishAs . $ALIAS $VERSION; eval utility2 shNpmTestPublished $ALIAS || exit $?; done",\n\
         "start": "(set -e; export PORT=${PORT:-8080}; utility2 start test.js)",\n\
         "test": "(set -e; export PORT=$(utility2 shServerPortRandom); utility2 test test.js)"\n\
     },\n\
@@ -9826,7 +9826,7 @@ shBuildCi\n\
 
 
 
-local.assetsDict['/assets.test.js'] = local.assetsDict['/assets.test.template.js'] = '\
+local.assetsDict['/assets.test.template.js'] = '\
 /* istanbul instrument in package jslint */\n\
 /*jslint\n\
     bitwise: true,\n\
@@ -9918,7 +9918,9 @@ local.assetsDict['/assets.test.js'] = local.assetsDict['/assets.test.template.js
     // run browser js\-env code - post-init\n\
     case \'browser\':\n\
         // run tests\n\
-        local.nop(local.modeTest && document.querySelector(\'#testRunButton1\').click());\n\
+        local.nop(local.modeTest &&\n\
+            document.querySelector(\'#testRunButton1\') &&\n\
+            document.querySelector(\'#testRunButton1\').click());\n\
         break;\n\
 \n\
 \n\
@@ -13230,6 +13232,8 @@ vendor\\)\\(\\b\\|[_s]\\)\
                     ),
                     { env: local.env, isRollup: true }
                 );
+                local.assetsDict['/assets.example.js'] =
+                    local.assetsDict['/assets.example.template.js'];
                 local.assetsDict['/assets.app.js'] =
                     local.fs.readFileSync(__filename, 'utf8').replace((/^#!/), '//');
                 local.runIfTrue(local.env.npm_config_mode_start, function () {
