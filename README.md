@@ -5,7 +5,7 @@ the zero-dependency swiss-army-knife tool for building, testing, and deploying w
 
 [![NPM](https://nodei.co/npm/utility2.png?downloads=true)](https://www.npmjs.com/package/utility2)
 
-[![package-listing](https://kaizhu256.github.io/node-utility2/build/screen-capture.gitLsTree.svg)](https://github.com/kaizhu256/node-utility2)
+[![package-listing](https://kaizhu256.github.io/node-utility2/build/screen-capture.npmPackageListing.svg)](https://github.com/kaizhu256/node-utility2)
 
 
 
@@ -28,22 +28,34 @@ the zero-dependency swiss-army-knife tool for building, testing, and deploying w
 [![apidoc](https://kaizhu256.github.io/node-utility2/build/screen-capture.buildApidoc.browser._2Fhome_2Ftravis_2Fbuild_2Fkaizhu256_2Fnode-utility2_2Ftmp_2Fbuild_2Fapidoc.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/apidoc.html)
 
 #### todo
-- replace shell-function shGitRemoteRepoCreate -> shGithubRepoCreate
-- add package-listing to npmdoc
-- use remote credentials
-- use github oauth - https://stackoverflow.com/questions/18027115/committing-via-travis-ci-failing
-- shFileTrimLeft example.* before shBuildGithubUpload
+- rename sub-package db-lite -> nedb-lite
+- rename sub-package istanbul-lite -> istanbul-classic
+- rename sub-package jslint-lite -> jslint-classic
+- use options remote credentials during travis-ci build
+- deprecate ssh-key in favor of github oauth - https://stackoverflow.com/questions/18027115/committing-via-travis-ci-failing
 - allow server-side stdout to be streamed to webapps
 - add utility2.middlewareLimit
 - add server stress test using electron
 - analytics
 - none
 
-#### change since ba418372
-- npm publish 2017.3.17
-- fix quickstart demo for example.js
-- allow auto-deprecating of aliases in publish branch
-- allow auto-publishing of aliases in publish branch
+#### changes for v2017.3.21
+- npm publish 2017.3.21
+- security - rewrite function moduleDirname, so that it doesn't have to require arbitrary modules
+- add github-crud command 'touch' to trigger github-hooks and add commit-messages without changing files
+- add commit-message-meta macro 'promote branch1 -> branch2'
+- add env var TRAVIS_REPO_CREATE_FORCE to force re-creation of npmdoc
+- add env var npm_package_buildNpmdocMain to customize npmdoc target
+- add optional commit-message for PUT, DELETE, and TOUCH requests in github-crud
+- add package-description to apidoc
+- add package-listing to npmdoc
+- add package.json to npmdoc
+- add async shell-function shNpmdocRepoListCreate to automate creation of npmdoc's
+- add shell function shUtility2GrepTravisYml
+- fix 'span class' error in https://www.npmjs.com/package/npmdoc-glob
+- merge function local.runIfTrue -> local.nop
+- rename lib.xxx.npm_scripts.sh to npm_scripts.sh
+- shBuildPrint message for deprecate and publish operations
 - none
 
 #### this package requires
@@ -229,7 +241,7 @@ instruction
     case 'node':
         local.testCase_webpage_default = function (options, onError) {
         /*
-         * this function will test the webpage's default handling-behavior
+         * this function will test webpage's default handling-behavior
          */
             options = { modeCoverageMerge: true, url: local.serverLocalHost + '?modeTest=1' };
             local.browserTest(options, onError);
@@ -591,8 +603,11 @@ utility2-comment -->\n\
             local.assetsDict['/assets.example.js'] ||
             local.fs.readFileSync(__filename, 'utf8');
         local.assetsDict['/assets.utility2.rollup.js'] =
-            local.assetsDict['/assets.utility2.rollup.js'] || local.fs.readFileSync(
-                local.utility2.__dirname + '/lib.utility2.js',
+            local.assetsDict['/assets.utility2.rollup.js'] ||
+            local.fs.readFileSync(
+                // npmdoc-hack
+                local.utility2.__dirname +
+                    '/lib.utility2.js',
                 'utf8'
             ).replace((/^#!/), '//');
         local.assetsDict['/favicon.ico'] = local.assetsDict['/favicon.ico'] || '';
@@ -680,8 +695,7 @@ utility2-comment -->\n\
     "main": "lib.utility2.js",
     "name": "utility2",
     "nameAlias": "utility2",
-    "nameAliasDeprecate": "busybox2 busyweb",
-    "nameAliasPublish": "busybox test-lite",
+    "nameAliasPublish": "busybox npmtest-lite test-lite",
     "nameOriginal": "utility2",
     "os": [
         "darwin",
@@ -696,11 +710,11 @@ utility2-comment -->\n\
         "build-ci": "./lib.utility2.sh shReadmeTest build_ci.sh",
         "env": "env",
         "heroku-postbuild": "./lib.utility2.sh shDeployHeroku",
-        "postinstall": "if [ -f lib.utility2.npm_scripts.sh ]; then ./lib.utility2.npm_scripts.sh postinstall; fi",
+        "postinstall": "if [ -f npm_scripts.sh ]; then ./npm_scripts.sh postinstall; fi",
         "start": "(set -e; export PORT=${PORT:-8080}; if [ -f assets.app.js ]; then node assets.app.js; exit; fi; export npm_config_mode_auto_restart=1; ./lib.utility2.sh shRun shIstanbulCover test.js)",
         "test": "(set -e; export PORT=$(./lib.utility2.sh shServerPortRandom); export PORT_REPL=$(./lib.utility2.sh shServerPortRandom); export npm_config_mode_auto_restart=1; ./lib.utility2.sh test test.js)"
     },
-    "version": "2017.3.17"
+    "version": "2017.3.21"
 }
 ```
 

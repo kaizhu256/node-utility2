@@ -48,6 +48,7 @@
         } else {
             module.exports = local;
             module.exports.__dirname = __dirname;
+            module.exports.module = module;
         }
     }());
 

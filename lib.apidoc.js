@@ -48,6 +48,7 @@
         } else {
             module.exports = local;
             module.exports.__dirname = __dirname;
+            module.exports.module = module;
         }
     }());
 
@@ -75,31 +76,36 @@
             throw error;
         };
 
-        local.moduleDirname = function (module) {
+        local.moduleDirname = function (module, modulePathList) {
         /*
-         * this function will return the __dirname of the module
+         * this function will search modulePathList for the module's __dirname
          */
-            var result;
-            if (!module || module.indexOf('/') >= 0 || module === '.') {
+            var result, tmp;
+            // search process.cwd()
+            if (!module || module === '.' || module.indexOf('/') >= 0) {
                 return require('path').resolve(process.cwd(), module || '');
             }
-            try {
-                require(process.cwd() + '/node_modules/' + module);
-            } catch (errorCaught) {
-                try {
-                    require(module);
-                } catch (ignore) {
-                }
+            // search builtin
+            if (Object.keys(process.binding('natives')).indexOf(module) >= 0) {
+                return module;
             }
+            // search modulePathList
             [
-                new RegExp('(.*?/' + module + ')\\b'),
-                new RegExp('(.*?/' + module + ')/[^/].*?$')
-            ].some(function (rgx) {
-                return Object.keys(require.cache).some(function (key) {
-                    result = rgx.exec(key);
-                    result = result && result[1];
-                    return result;
+                modulePathList,
+                require('module').globalPaths
+            ].some(function (modulePathList) {
+                modulePathList.some(function (modulePath) {
+                    try {
+                        tmp = require('path').resolve(
+                            process.cwd(),
+                            modulePath + '/' + module
+                        );
+                        result = require('fs').statSync(tmp).isDirectory() && tmp;
+                        return result;
+                    } catch (ignore) {
+                    }
                 });
+                return result;
             });
             return result || '';
         };
@@ -236,6 +242,12 @@
                     case 'jsonStringify':
                         value = JSON.stringify(value);
                         break;
+                    case 'jsonStringify4':
+                        value = JSON.stringify(value, null, 4);
+                        break;
+                    case 'markdownCodeSafe':
+                        value = value.replace((/`/g), "'");
+                        break;
                     default:
                         value = value[arg]();
                         break;
@@ -306,6 +318,7 @@ local.templateApidocHtml = '\
         {{/if env.npm_package_homepage}}\n\
     >{{env.npm_package_name}} (v{{env.npm_package_version}})</a>\n\
 </h1>\n\
+<h4>{{env.npm_package_description}}</h4>\n\
 <div class="apidocSectionDiv"><a\n\
     href="#apidoc.tableOfContents"\n\
     id="apidoc.tableOfContents"\n\
@@ -355,6 +368,9 @@ local.templateApidocHtml = '\
 ';
 
 local.templateApidocMd = '\
+{{#if header}} \
+{{header}} \
+{{#unless header}} \
 # api-documentation for \
 {{#if env.npm_package_homepage}} \
 [{{env.npm_package_name}} (v{{env.npm_package_version}})]({{env.npm_package_homepage}}) \
@@ -362,6 +378,9 @@ local.templateApidocMd = '\
 {{env.npm_package_name}} (v{{env.npm_package_version}}) \
 {{/if env.npm_package_homepage}} \
 \n\
+## {{env.npm_package_description}} \
+\n\
+{{/if header}} \
 \n\
 \n\
 \n\
@@ -396,7 +415,7 @@ local.templateApidocMd = '\
 \n\
 ```javascript \
 \n\
-{{source}} \
+{{source markdownCodeSafe}} \
 \n\
 ``` \
 \n\
@@ -404,7 +423,7 @@ local.templateApidocMd = '\
 \n\
 ```shell \
 \n\
-{{example}} \
+{{example markdownCodeSafe}} \
 \n\
 ``` \
 {{/if source}} \
@@ -446,7 +465,7 @@ local.templateApidocMd = '\
                 element.name = (element.typeof + ' <span class="apidocSignatureSpan">' +
                     element.moduleName + '.</span>' + key)
                     // handle case where module is a function
-                    .replace('>.<', '');
+                    .replace('>.<', '><');
                 if (element.typeof !== 'function') {
                     return element;
                 }
@@ -457,7 +476,7 @@ local.templateApidocMd = '\
                 }
                 element.source = (options.template === local.templateApidocHtml
                     ? local.stringHtmlSafe(element.source)
-                    : element.source.replace((/`/g), '_'))
+                    : element.source)
                     .replace((/\([\S\s]*?\)/), function (match0) {
                         // init signature
                         element.signature = match0
@@ -483,7 +502,7 @@ local.templateApidocMd = '\
                                         local.stringHtmlSafe(match2) +
                                         '</span>' +
                                         local.stringHtmlSafe(match3)
-                                    : match0.replace((/`/g), "'")
+                                    : match0
                             ).trimRight() + '\n...';
                         }
                     );
@@ -517,21 +536,27 @@ local.templateApidocMd = '\
                 });
                 text = text.replace(new RegExp('^' + whitespace, 'gm'), '');
                 // enforce 128 character column limit
-                while ((/^.{128}[^\\\n]/m).test(text)) {
-                    text = text.replace((/^(.{128})([^\\\n]+)/gm), '$1\\\n$2');
-                }
+                text = text.replace((/^.{128}[^\\\n]+/gm), function (match0) {
+                    return match0.replace((/(.{128}(?:\b|\w+))/g), '$1\n').trimRight();
+                });
                 return text;
             };
             // init options
-            options.dir = local.moduleDirname(options.dir);
+            options.dir = local.moduleDirname(
+                options.dir,
+                options.modulePathList || local.module.paths
+            );
             local.objectSetDefault(options, {
+                env: {},
                 packageJson: JSON.parse(readExample('package.json'))
             });
-            local.objectSetDefault(options, { env: {
-                npm_package_homepage: options.packageJson.homepage,
-                npm_package_name: options.packageJson.name,
-                npm_package_version: options.packageJson.version
-            } }, 2);
+            Object.keys(options.packageJson).forEach(function (key) {
+                if (key[0] === '_') {
+                    delete options.packageJson[key];
+                } else if (typeof options.packageJson[key] === 'string') {
+                    options.env['npm_package_' + key] = options.packageJson[key];
+                }
+            });
             local.objectSetDefault(options, {
                 blacklistDict: { global: global },
                 circularList: [global],
@@ -554,7 +579,8 @@ local.templateApidocMd = '\
             ).map(readExample));
             // init moduleMain
             moduleMain = options.moduleDict[options.env.npm_package_name] =
-                options.moduleDict[options.env.npm_package_name] || require(options.dir);
+                options.moduleDict[options.env.npm_package_name] ||
+                require(options.dir + (process.env.npm_package_buildNpmdocMain || ''));
             // init circularList - builtin
             Object.keys(process.binding('natives')).forEach(function (key) {
                 if (!(/\/|_linklist|sys/).test(key)) {
@@ -661,7 +687,10 @@ local.templateApidocMd = '\
                     };
                 });
             // render apidoc
-            return local.templateRender(options.template, options);
+            options.result = local.templateRender(options.template, options)
+                .trim()
+                .replace((/ +$/gm), '') + '\n';
+            return options.result;
         };
 
         local.apidocModuleDictAdd = function (options, moduleDict) {
@@ -736,6 +765,7 @@ local.templateApidocMd = '\
         // jslint files
         process.stdout.write(local.apidocCreate({
             dir: process.argv[2],
+            modulePathList: module.paths,
             template: process.argv[3] === '--markdown'
                 ? local.templateApidocMd
                 : local.templateApidocHtml

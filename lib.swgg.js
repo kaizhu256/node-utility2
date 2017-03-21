@@ -54,6 +54,7 @@
         } else {
             module.exports = local;
             module.exports.__dirname = __dirname;
+            module.exports.module = module;
         }
         // init lib utility2
         local.utility2 = local.global.utility2_rollup || (local.modeJs === 'browser'

@@ -1099,16 +1099,6 @@
             });
         };
 
-        local.testCase_runIfTrue_default = function (options, onError) {
-        /*
-         * this function will test runIfTrue's default handling-behavior
-         */
-            options = null;
-            local.runIfTrue(options, onError);
-            options = true;
-            local.runIfTrue(options, onError);
-        };
-
         local.testCase_sjclHashScryptXxx_default = function (options, onError) {
         /*
          * this function will test sjclHashScryptXxx's default handling-behavior
@@ -1276,10 +1266,11 @@
             local.assertJsonEqual(options.data, '{{aa}}');
             // test default handling-behavior
             options.data = local.templateRender('{{aa}} ' +
-                '{{aa jsonStringify htmlSafe encodeURIComponent decodeURIComponent trim}} ' +
+                '{{aa htmlSafe jsonStringify jsonStringify4 markdownCodeSafe ' +
+                'decodeURIComponent encodeURIComponent trim}} ' +
                 '{{bb}} {{cc}} {{dd}} {{ee.ff}}', {
                     // test string value handling-behavior
-                    aa: '<aa>',
+                    aa: '`<aa>`',
                     // test non-string value handling-behavior
                     bb: 1,
                     // test null-value handling-behavior
@@ -1291,7 +1282,7 @@
                 });
             local.assertJsonEqual(
                 options.data,
-                '<aa> &#x22;&#x3c;aa&#x3e;&#x22; 1 null {{dd}} gg'
+                '`<aa>` %22%5C%22\'%26%23x3c%3Baa%26%23x3e%3B\'%5C%22%22 1 null {{dd}} gg'
             );
             // test partial handling-behavior
             options.data = local.templateRender('{{#undefined aa}}\n' +
@@ -1600,8 +1591,8 @@
             options.customize = function () {
                 // search-and-replace - customize dataTo
                 [
-                    // customize js-env code
-                    (/[\S\s]*?run shared js-env code - pre-function/)
+                    // customize js\-env code
+                    (/[\S\s]*?run shared js\-env code - pre-function/)
                 ].forEach(function (rgx) {
                     options.dataFrom.replace(rgx, function (match0) {
                         options.dataTo = options.dataTo.replace(rgx, match0);
@@ -1665,9 +1656,10 @@
             options.customize = function () {
                 // search-and-replace - customize dataTo
                 [
-                    // customize js-env code
-                    (/\n {4}\/\/ run browser js-env code - post-init\n[\S\s]*?\n {8}break;\n/),
-                    (/\n {4}\/\/ run node js-env code - post-init\n[\S\s]*?\n {8}break;\n/)
+                    // customize js\-env code
+                    (/\n {4}\/\/ run shared js\-env code - pre-init\n[\S\s]*?\n {4}\}\(\)\);/),
+                    (/\n {4}\/\/ run browser js\-env code - post-init\n[\S\s]*?\n {8}break;\n/),
+                    (/\n {4}\/\/ run node js\-env code - post-init\n[\S\s]*?\n {8}break;\n/)
                 ].forEach(function (rgx) {
                     options.dataFrom.replace(rgx, function (match0) {
                         options.dataTo = options.dataTo.replace(rgx, match0);
@@ -1814,17 +1806,23 @@
          * this function will test moduleDirname's default handling-behavior
          */
             options = {};
+            options.modulePathList = module.paths;
             // test null-case handling-behavior
-            options.data = local.moduleDirname();
+            options.data = local.moduleDirname(null, options.modulePathList);
             local.assertJsonEqual(options.data, process.cwd());
             // test path handling-behavior
-            options.data = local.moduleDirname('.');
+            options.data = local.moduleDirname('.', options.modulePathList);
             local.assertJsonEqual(options.data, process.cwd());
+            options.data = local.moduleDirname('./', options.modulePathList);
+            local.assertJsonEqual(options.data, process.cwd());
+            // test builtin-module handling-behavior
+            options.data = local.moduleDirname('fs', options.modulePathList);
+            local.assertJsonEqual(options.data, 'fs');
             // test module exists handling-behavior
-            options.data = local.moduleDirname('electron-lite');
+            options.data = local.moduleDirname('electron-lite', options.modulePathList);
             local.assert((/\/electron-lite$/).test(options.data), options.data);
             // test module does not exists handling-behavior
-            options.data = local.moduleDirname('syntax error');
+            options.data = local.moduleDirname('syntax error', options.modulePathList);
             local.assertJsonEqual(options.data, '');
             onError();
         };
@@ -2034,7 +2032,7 @@
 
         local.testCase_webpage_error = function (options, onError) {
         /*
-         * this function will test the webpage's error handling-behavior
+         * this function will test webpage's error handling-behavior
          */
             options = {
                 modeCoverageMerge: true,

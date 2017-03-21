@@ -44,8 +44,7 @@
     "main": "lib.utility2.js",
     "name": "utility2",
     "nameAlias": "utility2",
-    "nameAliasDeprecate": "busybox2 busyweb",
-    "nameAliasPublish": "busybox test-lite",
+    "nameAliasPublish": "busybox npmtest-lite test-lite",
     "nameOriginal": "utility2",
     "os": [
         "darwin",
@@ -60,9 +59,9 @@
         "build-ci": "./lib.utility2.sh shReadmeTest build_ci.sh",
         "env": "env",
         "heroku-postbuild": "./lib.utility2.sh shDeployHeroku",
-        "postinstall": "if [ -f lib.utility2.npm_scripts.sh ]; then ./lib.utility2.npm_scripts.sh postinstall; fi",
+        "postinstall": "if [ -f npm_scripts.sh ]; then ./npm_scripts.sh postinstall; fi",
         "start": "(set -e; export PORT=${PORT:-8080}; if [ -f assets.app.js ]; then node assets.app.js; exit; fi; export npm_config_mode_auto_restart=1; ./lib.utility2.sh shRun shIstanbulCover test.js)",
         "test": "(set -e; export PORT=$(./lib.utility2.sh shServerPortRandom); export PORT_REPL=$(./lib.utility2.sh shServerPortRandom); export npm_config_mode_auto_restart=1; ./lib.utility2.sh test test.js)"
     },
-    "version": "2017.3.17"
+    "version": "2017.3.21"
 }

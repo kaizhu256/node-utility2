@@ -48,6 +48,7 @@
         } else {
             module.exports = local;
             module.exports.__dirname = __dirname;
+            module.exports.module = module;
         }
     }());
 
@@ -219,7 +220,7 @@
          * https://developer.github.com/v3/repos/contents/#delete-a-file
          */
             var onParallel;
-            options = { url: options.url };
+            options = { message: options.message, url: options.url };
             local.onNext(options, function (error, data) {
                 switch (options.modeNext) {
                 case 1:
@@ -230,6 +231,7 @@
                     // delete file with sha
                     if (!error && data.sha) {
                         local.contentRequest({
+                            message: options.message,
                             method: 'DELETE',
                             sha: data.sha,
                             url: options.url
@@ -242,7 +244,10 @@
                     data.forEach(function (element) {
                         onParallel.counter += 1;
                         // recurse
-                        local.contentDelete({ url: element.url }, onParallel);
+                        local.contentDelete({
+                            message: options.message,
+                            url: element.url
+                        }, onParallel);
                     });
                     onParallel();
                     break;
@@ -281,7 +286,12 @@
          * this function will put options.content into the github file
          * https://developer.github.com/v3/repos/contents/#update-a-file
          */
-            options = { content: options.content, modeErrorIgnore: true, url: options.url };
+            options = {
+                content: options.content,
+                message: options.message,
+                modeErrorIgnore: true,
+                url: options.url
+            };
             local.onNext(options, function (error, data) {
                 switch (options.modeNext) {
                 case 1:
@@ -292,6 +302,7 @@
                     // put file with sha
                     local.contentRequest({
                         content: options.content,
+                        message: options.message,
                         method: 'PUT',
                         sha: data.sha,
                         url: options.url
@@ -310,7 +321,7 @@
          * this function will put options.file into the github file
          * https://developer.github.com/v3/repos/contents/#update-a-file
          */
-            options = { file: options.file, url: options.url };
+            options = { file: options.file, message: options.message, url: options.url };
             local.onNext(options, function (error, data) {
                 switch (options.modeNext) {
                 case 1:
@@ -333,6 +344,7 @@
                 case 2:
                     local.contentPut({
                         content: data,
+                        message: options.message,
                         // resolve file in url
                         url: (/\/$/).test(options.url)
                             ? options.url + local.path.basename(options.file)
@@ -361,6 +373,7 @@
                     // bug-workaround - github api requires user-agent header
                     'User-Agent': 'undefined'
                 },
+                message: options.message,
                 method: options.method,
                 responseJson: {},
                 sha: options.sha,
@@ -401,7 +414,8 @@
                 return;
             }
             if (options.method !== 'GET') {
-                options.message = '[skip ci] ' + options.method + ' file ' + options.url
+                options.message = options.message ||
+                    '[ci skip] ' + options.method + ' file ' + options.url
                     .replace((/\?.*/), '');
                 options.url += '&message=' + encodeURIComponent(options.message);
                 if (options.sha) {
@@ -422,6 +436,40 @@
                 onError(error, options.responseJson);
             });
         };
+
+        local.contentTouch = function (options, onError) {
+        /*
+         * this function will touch options.url
+         * https://developer.github.com/v3/repos/contents/#update-a-file
+         */
+            options = {
+                message: options.message,
+                modeErrorIgnore: true,
+                url: options.url
+            };
+            local.onNext(options, function (error, data) {
+                switch (options.modeNext) {
+                case 1:
+                    // get sha
+                    local.contentRequest({ method: 'GET', url: options.url }, options.onNext);
+                    break;
+                case 2:
+                    // put file with sha
+                    local.contentRequest({
+                        content: new Buffer(data.content || '', 'base64'),
+                        message: options.message,
+                        method: 'PUT',
+                        sha: data.sha,
+                        url: options.url
+                    }, options.onNext);
+                    break;
+                default:
+                    onError(error);
+                }
+            });
+            options.modeNext = 0;
+            options.onNext();
+        };
         break;
     }
     switch (local.modeJs) {
@@ -441,7 +489,10 @@
         switch (String(process.argv[2]).toLowerCase()) {
         // delete file
         case 'delete':
-            local.contentDelete({ url: process.argv[3] }, function (error) {
+            local.contentDelete({
+                message: process.argv[4],
+                url: process.argv[3]
+            }, function (error) {
                 // validate no error occurred
                 console.assert(!error, error);
             });
@@ -460,8 +511,19 @@
         // put file
         case 'put':
             local.contentPutFile({
+                message: process.argv[5],
                 url: process.argv[3],
                 file: process.argv[4]
+            }, function (error) {
+                // validate no error occurred
+                console.assert(!error, error);
+            });
+            break;
+        // touch
+        case 'touch':
+            local.contentTouch({
+                message: process.argv[4],
+                url: process.argv[3]
             }, function (error) {
                 // validate no error occurred
                 console.assert(!error, error);
