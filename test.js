@@ -1146,6 +1146,20 @@
             onError();
         };
 
+        local.testCase_stringHtmlSafe_default = function (options, onError) {
+        /*
+         * this function will test stringHtmlSafe's default handling-behavior
+         */
+            options = {};
+            // test undefined valueDefault handling-behavior
+            options.data = local.stringHtmlSafe('<a href="/undefined?aa=1&bb=2#cc"></a>');
+            local.assertJsonEqual(
+                options.data,
+                '&#x3c;a href=&#x22;/undefined?aa=1&#x26;bb=2#cc&#x22;&#x3e;&#x3c;/a&#x3e;'
+            );
+            onError();
+        };
+
         local.testCase_taskCreateCached_default = function (options, onError) {
         /*
          * this function will test taskCreateCached's default handling-behavior
@@ -1265,7 +1279,7 @@
             options.data = local.templateRender('{{aa}}', {});
             local.assertJsonEqual(options.data, '{{aa}}');
             // test default handling-behavior
-            options.data = local.templateRender('{{aa}} ' +
+            options.data = local.templateRender('{{aa alphanumeric}} ' +
                 '{{aa htmlSafe jsonStringify jsonStringify4 markdownCodeSafe ' +
                 'decodeURIComponent encodeURIComponent trim}} ' +
                 '{{bb}} {{cc}} {{dd}} {{ee.ff}}', {
@@ -1282,7 +1296,7 @@
                 });
             local.assertJsonEqual(
                 options.data,
-                '`<aa>` %22%5C%22\'%26%23x3c%3Baa%26%23x3e%3B\'%5C%22%22 1 null {{dd}} gg'
+                '__aa__ %22%5C%22\'%26%23x3c%3Baa%26%23x3e%3B\'%5C%22%22 1 null {{dd}} gg'
             );
             // test partial handling-behavior
             options.data = local.templateRender('{{#undefined aa}}\n' +

@@ -28,34 +28,26 @@ the zero-dependency swiss-army-knife tool for building, testing, and deploying w
 [![apidoc](https://kaizhu256.github.io/node-utility2/build/screen-capture.buildApidoc.browser._2Fhome_2Ftravis_2Fbuild_2Fkaizhu256_2Fnode-utility2_2Ftmp_2Fbuild_2Fapidoc.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/apidoc.html)
 
 #### todo
+- npm publish 2017.3.22
+- add function to remotely update .travis.yml
+- query failed travis-ci builds
 - rename sub-package db-lite -> nedb-lite
 - rename sub-package istanbul-lite -> istanbul-classic
 - rename sub-package jslint-lite -> jslint-classic
-- use options remote credentials during travis-ci build
-- deprecate ssh-key in favor of github oauth - https://stackoverflow.com/questions/18027115/committing-via-travis-ci-failing
+- use optional remote-credentials during travis-ci build
 - allow server-side stdout to be streamed to webapps
 - add utility2.middlewareLimit
 - add server stress test using electron
 - analytics
 - none
 
-#### changes for v2017.3.21
-- npm publish 2017.3.21
-- security - rewrite function moduleDirname, so that it doesn't have to require arbitrary modules
-- add github-crud command 'touch' to trigger github-hooks and add commit-messages without changing files
-- add commit-message-meta macro 'promote branch1 -> branch2'
-- add env var TRAVIS_REPO_CREATE_FORCE to force re-creation of npmdoc
-- add env var npm_package_buildNpmdocMain to customize npmdoc target
-- add optional commit-message for PUT, DELETE, and TOUCH requests in github-crud
-- add package-description to apidoc
-- add package-listing to npmdoc
-- add package.json to npmdoc
-- add async shell-function shNpmdocRepoListCreate to automate creation of npmdoc's
-- add shell function shUtility2GrepTravisYml
-- fix 'span class' error in https://www.npmjs.com/package/npmdoc-glob
-- merge function local.runIfTrue -> local.nop
-- rename lib.xxx.npm_scripts.sh to npm_scripts.sh
-- shBuildPrint message for deprecate and publish operations
+#### changes for v2017.3.22
+- add shell-function shGitRemotePromote to auto-promote branches alpha -> beta -> master
+- deprecate ssh-key in favor of github oauth - https://stackoverflow.com/questions/18027115/committing-via-travis-ci-failing
+- enable shNpmdocRepoListCreate in travis-ci
+- enhance shell-function shNpmPackageListingCreate to add total package-size to package-listing
+- fix apidoc bug 'Function.prototype.toString is not generic'
+- fix shell-function shInit bug - export: npm_package_react-native: bad variable name
 - none
 
 #### this package requires
@@ -103,7 +95,7 @@ the zero-dependency swiss-army-knife tool for building, testing, and deploying w
 
 shExampleSh() {(set -e
     # npm install utility2
-    npm install utility2
+    npm install "kaizhu256/node-utility2#alpha"
     # serve a webpage that will interactively run browser-tests with coverage
     cd node_modules/utility2 && export PORT=8081 && npm start
 )}
@@ -132,7 +124,7 @@ this script will demo automated browser-tests with coverage (via electron and is
 instruction
     1. save this script as example.js
     2. run the shell command:
-        $ npm install electron-lite utility2 && \
+        $ npm install electron-lite "kaizhu256/node-utility2#alpha" && \
             PATH="$(pwd)/node_modules/.bin:$PATH" \
             PORT=8081 \
             npm_config_mode_coverage=utility2 \
@@ -714,7 +706,7 @@ utility2-comment -->\n\
         "start": "(set -e; export PORT=${PORT:-8080}; if [ -f assets.app.js ]; then node assets.app.js; exit; fi; export npm_config_mode_auto_restart=1; ./lib.utility2.sh shRun shIstanbulCover test.js)",
         "test": "(set -e; export PORT=$(./lib.utility2.sh shServerPortRandom); export PORT_REPL=$(./lib.utility2.sh shServerPortRandom); export npm_config_mode_auto_restart=1; ./lib.utility2.sh test test.js)"
     },
-    "version": "2017.3.21"
+    "version": "2017.3.22"
 }
 ```
 
@@ -870,14 +862,6 @@ shBuildCiInternalPre() {(set -e
         shBrowserTest)
     shReadmeTest example.sh
     shNpmTestPublished
-)}
-
-shBuildCiPost() {(set -e
-    return
-)}
-
-shBuildCiPre() {(set -e
-    return
 )}
 
 # run shBuildCi

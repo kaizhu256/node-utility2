@@ -1,29 +1,5 @@
 #/bin/sh
 
-shAesDecrypt() {(set -e
-# this function will decrypt base64-encoded stdin to stdout using aes-256-cbc
-    # save stdin to $STRING
-    STRING="$(cat /dev/stdin)"
-    # init $IV from first 44 base64-encoded bytes of $STRING
-    IV="$(printf "$STRING" | cut -c1-44 | base64 --decode)"
-    # decrypt remaining base64-encoded bytes of $STRING to stdout using aes-256-cbc
-    printf "$STRING" | \
-        cut -c45-9999 | \
-        base64 --decode | \
-        openssl enc -aes-256-cbc -d -K "$AES_256_KEY" -iv "$IV"
-)}
-
-shAesEncrypt() {(set -e
-# this function will encrypt stdin to base64-encoded stdout,
-# with a random iv prepended using aes-256-cbc
-    # init $IV from random 16 bytes
-    IV="$(openssl rand -hex 16)"
-    # print base64-encoded $IV to stdout
-    printf "$(printf "$IV" | base64)"
-    # encrypt stdin and stream to stdout using aes-256-cbc with base64-encoding
-    openssl enc -aes-256-cbc -K "$AES_256_KEY" -iv "$IV" | base64 | tr -d "\n"
-)}
-
 shBaseInit() {
 # this function will init the base bash-login env, and is intended for aws-ec2 setup
     local FILE || return $?
@@ -91,9 +67,17 @@ shBaseInstall() {
     . "$HOME/.bashrc" || return $?
 }
 
+shBrowserScreenCapture() {(set -e
+# this function will spawn an electron process to screen-capture the given $URL,
+    export modeBrowserTest=screenCapture
+    export url="$1"
+    shBrowserTest
+)}
+
 shBrowserTest() {(set -e
 # this function will spawn an electron process to test the given $URL,
 # and merge the test-report into the existing test-report
+    shInit
     export MODE_BUILD="${MODE_BUILD:-browserTest}"
     shBuildPrint "electron.${modeBrowserTest} - $url"
     # run browser-test
@@ -208,24 +192,18 @@ try {
 shBuildCi() {(set -e
 # this function will run the main build
     shInit
+    # decrypt and exec encrypted data
+    if [ "$CRYPTO_AES_KEY" ]
+    then
+        eval "$(shTravisCryptoAesDecryptYml)"
+    fi
     # init git config
-    if ! (git config user.email  > /dev/null 2>&1)
+    if ! (git config user.email > /dev/null 2>&1)
     then
         git config --global user.email nobody
         git config --global user.name nobody
     fi
     case "$CI_BRANCH" in
-    task)
-        $CI_COMMIT_MESSAGE
-        return
-        ;;
-    esac
-    # run pre-build
-    if (type shBuildCiPre > /dev/null 2>&1)
-    then
-        shBuildCiPre
-    fi
-    case "$CI_BRANCH" in
     alpha)
         shBuildCiInternal
         ;;
@@ -236,86 +214,66 @@ shBuildCi() {(set -e
         shBuildCiInternal
         ;;
     publish)
+        # init .npmrc
         printf "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > "$HOME/.npmrc"
         export CI_BRANCH=alpha
         (eval shNpmPublishAlias) || true
+        # security - cleanup .npmrc
+        rm "$HOME/.npmrc"
         sleep 15
         shBuildCiInternal
         ;;
+    task)
+        case "$CI_COMMIT_MESSAGE_META" in
+        \[\$\ *\])
+            eval "$(printf "$CI_COMMIT_MESSAGE_META" | sed -e s/^...// -e s/.\$//)"
+            ;;
+        esac
+        return
+        ;;
     esac
-    # run post-build
-    if (type shBuildCiPost > /dev/null 2>&1)
-    then
-        shBuildCiPost
-    fi
     # restore $CI_BRANCH
     export CI_BRANCH="$CI_BRANCH_OLD"
-    if [ ! "$TRAVIS" ]
+    if [ ! "$GITHUB_TOKEN" ]
     then
         return
     fi
     case "$CI_BRANCH" in
     alpha)
         case "$CI_COMMIT_MESSAGE_META" in
-        "[promote alpha -> beta]")
-            shBuildScriptEval "githubPush" \
-                "git push -f git@github.com:$GITHUB_REPO.git HEAD:beta"
-            ;;
-        "[promote alpha -> beta -> master]")
-            shBuildScriptEval "githubPush" \
-                "git push -f git@github.com:$GITHUB_REPO.git HEAD:beta"
-            ;;
         "[npm publish]")
-            shBuildScriptEval "githubPush" \
-                "git push git@github.com:$GITHUB_REPO.git HEAD:publish"
+            shGithubPush "https://github.com/$GITHUB_REPO.git" HEAD:publish
             ;;
-        "[npmdoc build]")
-            git add .
-            shFilePackageJsonVersionIncrement
-            git commit -am "[npmdoc publish]" || true
-            shBuildScriptEval "githubPush" \
-                "git push git@github.com:$GITHUB_REPO.git HEAD:alpha" || true
-            ;;
-        "[npmdoc publish]")
+        "[npm publishAfterCommit]")
             git add .
             shFilePackageJsonVersionIncrement
             git commit -am "$CI_COMMIT_MESSAGE" || true
-            shBuildScriptEval "githubPush" \
-                "git push -f git@github.com:$GITHUB_REPO.git HEAD:publish"
+            shGithubPush -f "https://github.com/$GITHUB_REPO.git" HEAD:publish
             ;;
-        "[npmdoc test]")
+        "[npm publishAfterCommitAfterBuild]")
             git add .
             shFilePackageJsonVersionIncrement
-            git commit -am "[npmdoc tested]" || true
-            shBuildScriptEval "githubPush" \
-                "git push -f git@github.com:$GITHUB_REPO.git HEAD:alpha"
+            git commit -am "[npm publishAfterCommit]"
+            shGithubPush "https://github.com/$GITHUB_REPO.git" HEAD:alpha
             ;;
         esac
         ;;
     beta)
-        case "$CI_COMMIT_MESSAGE_META" in
-        "[promote alpha -> beta -> master]")
-            shBuildScriptEval "githubPush" \
-                "git push -f git@github.com:$GITHUB_REPO.git HEAD:master"
-            ;;
-        "[promote beta -> master]")
-            shBuildScriptEval "githubPush" \
-                "git push -f git@github.com:$GITHUB_REPO.git HEAD:master"
-            ;;
-        esac
         ;;
     master)
         git tag "$npm_package_version" || true
-        shBuildScriptEval "githubPush" \
-            "git push git@github.com:$GITHUB_REPO.git $npm_package_version" || true
+        shGithubPush "https://github.com/$GITHUB_REPO.git" "$npm_package_version" || true
         case "$CI_COMMIT_MESSAGE_META" in
-        "[promote master -> alpha]")
-            shBuildScriptEval "githubPush" \
-                "git push -f git@github.com:$GITHUB_REPO.git HEAD:alpha"
+        "[npm publishAfterCommit]")
+            shGithubPush -f "https://github.com/$GITHUB_REPO.git" HEAD:alpha
+            ;;
+        *)
             ;;
         esac
         ;;
     publish)
+        # init .npmrc
+        printf "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > "$HOME/.npmrc"
         shNpmPublishAliasList . "$npm_package_nameAliasPublish"
         sleep 15
         shNpmTestPublishedList "$npm_package_nameAliasPublish"
@@ -324,15 +282,15 @@ shBuildCi() {(set -e
             "this package is deprecated and superseded by \
 [$npm_package_name](https://www.npmjs.com/package/$npm_package_name)"
         case "$CI_COMMIT_MESSAGE_META" in
-        "[npmdoc publish]")
-            shBuildScriptEval "githubPush" \
-                "git push -f git@github.com:$GITHUB_REPO.git HEAD:beta"
+        "[npm publishAfterCommit]")
+            shGithubPush -f "https://github.com/$GITHUB_REPO.git" HEAD:beta
             ;;
         *)
-            shBuildScriptEval "githubPush" \
-                "git push git@github.com:$GITHUB_REPO.git HEAD:beta"
+            shGithubPush "https://github.com/$GITHUB_REPO.git" HEAD:beta
             ;;
         esac
+        # security - cleanup .npmrc
+        rm "$HOME/.npmrc"
         ;;
     esac
 )}
@@ -358,6 +316,10 @@ shBuildCiInternal() {(set -e
     fi
     # create recent changelog of last 50 commits
     (export MODE_BUILD=gitLog; shRunScreenCapture git log -50 --pretty="%ai\u000a%B")
+    if [ ! "$GITHUB_TOKEN" ]
+    then
+        return
+    fi
     # run internal post-build
     if (type shBuildCiInternalPost > /dev/null 2>&1)
     then
@@ -370,16 +332,16 @@ shBuildCiInternal() {(set -e
 
 shBuildGithubUpload() {(set -e
 # this function will upload build-artifacts to github
-    if [ ! "$GIT_SSH" ]
+    if [ ! "$GITHUB_TOKEN" ]
     then
         return
     fi
-    export MODE_BUILD=buildGithubUpload
+    export MODE_BUILD="${MODE_BUILD:-buildGithubUpload}"
     shBuildPrint "uploading build-artifacts to git@github.com:$GITHUB_REPO.git"
-    REPO="git@github.com:$GITHUB_REPO.git"
+    URL="https://github.com/$GITHUB_REPO.git"
     # init /tmp/buildGithubUpload
     rm -fr /tmp/buildGithubUpload
-    git clone "$REPO" --single-branch -b gh-pages /tmp/buildGithubUpload
+    git clone "$URL" --single-branch -b gh-pages /tmp/buildGithubUpload
     cd /tmp/buildGithubUpload
     case "$CI_COMMIT_MESSAGE_META" in
     "[build clean]")
@@ -400,10 +362,10 @@ shBuildGithubUpload() {(set -e
     # and then squash to $COMMIT_LIMIT/2 in git-repo-branch
     if [ "$COMMIT_LIMIT" ] && [ "$(git rev-list HEAD --count)" -gt "$COMMIT_LIMIT" ]
     then
-        shBuildScriptEval "githubPush" "git push -f $REPO gh-pages:gh-pages.backup"
+        shGithubPush -f "$URL" gh-pages:gh-pages.backup
         shGitSquashShift "$(($COMMIT_LIMIT/2))"
     fi
-    shBuildScriptEval "githubPush" "git push -f $REPO gh-pages:gh-pages"
+    shGithubPush -f "$URL" gh-pages:gh-pages
 )}
 
 shBuildInsideDocker() {(set -e
@@ -452,19 +414,35 @@ shBuildReadme() {(set -e
     npm test --mode-coverage="" --mode-test-case=testCase_buildReadme_default
 )}
 
-shBuildScriptEval() {(set -e
-# this function will print $MODE_BUILD and eval the $SCRIPT
-    MODE_BUILD="${MODE_BUILD:-1}"
-    SCRIPT="$2"
-    shBuildPrint "$SCRIPT"
-    eval "$SCRIPT"
-)}
-
 shBuildTest() {(set -e
 # this function will build the test
     shPasswordEnvUnset
     export MODE_BUILD=buildTest
     npm test --mode-coverage="" --mode-test-case=testCase_buildTest_default
+)}
+
+shCryptoAesDecrypt() {(set -e
+# this function will decrypt base64-encoded stdin to stdout using aes-256-cbc
+    # save stdin to $STRING
+    STRING="$(cat /dev/stdin)"
+    # init $IV from first 44 base64-encoded bytes of $STRING
+    IV="$(printf "$STRING" | cut -c1-44 | base64 --decode)"
+    # decrypt remaining base64-encoded bytes of $STRING to stdout using aes-256-cbc
+    printf "$STRING" | \
+        cut -c45-9999 | \
+        base64 --decode | \
+        openssl enc -aes-256-cbc -d -K "$CRYPTO_AES_KEY" -iv "$IV"
+)}
+
+shCryptoAesEncrypt() {(set -e
+# this function will encrypt stdin to base64-encoded stdout,
+# with a random iv prepended using aes-256-cbc
+    # init $IV from random 16 bytes
+    IV="$(openssl rand -hex 16)"
+    # print base64-encoded $IV to stdout
+    printf "$(printf "$IV" | base64)"
+    # encrypt stdin and stream to stdout using aes-256-cbc with base64-encoding
+    openssl enc -aes-256-cbc -K "$CRYPTO_AES_KEY" -iv "$IV" | base64 | tr -d "\n"
 )}
 
 shDateIso() {(set -e
@@ -484,7 +462,7 @@ shDeployGithub() {(set -e
 # this function will deploy the app to $GITHUB_REPO
 # and run a simple curl check for $TEST_URL
 # and test $TEST_URL
-    if [ ! "$GIT_SSH" ]
+    if [ ! "$GITHUB_TOKEN" ]
     then
         return
     fi
@@ -532,7 +510,7 @@ shDeployHeroku() {(set -e
         rm -fr tmp
         return
     fi
-    if [ ! "$GIT_SSH" ]
+    if [ ! "$GITHUB_TOKEN" ]
     then
         return
     fi
@@ -1135,6 +1113,10 @@ require('fs').writeFileSync('$FILE', require('fs').readFileSync('$FILE', 'utf8')
 shGitGc() {(set -e
 # http://stackoverflow.com/questions/3797907/how-to-remove-unused-objects-from-a-git-repository
 # this function will gc unreachable .git objects
+    # git remote rm origin || true
+    # git branch -D in || true
+    # (cd .git && rm -fr refs/remotes/ refs/original/ *_HEAD logs/) || return $?
+    # git for-each-ref --format="%(refname)" refs/original/ | xargs -n1 --no-run-if-empty git update-ref -d
     git \
         -c gc.reflogExpire=0 \
         -c gc.reflogExpireUnreachable=0 \
@@ -1161,16 +1143,44 @@ shGitInfo() {(set -e
 
 shGitLsTree() {(set -e
 # this function will list all files committed in HEAD
-    ii=0
-    git ls-tree --name-only -r HEAD | while read file
+    II=0
+    SIZE=0
+    SIZE_TOTAL=0
+    for FILE in $(git ls-tree --name-only -r HEAD)
     do
-        ii=$((ii+1))
-        printf "%3s.  %s  %7s byte  %s\n" \
-            "$ii" \
-            "$(git log -1 --format="%ai" -- "$file")" \
-            "$(ls -ln "$file" | awk "{print \$5}")" \
-            "$file"
+        if [ ! -f "$FILE" ]
+        then
+            continue
+        fi
+        II="$((II+1))"
+        SIZE=$(ls -ln "$FILE" | awk "{print \$5}")
+        SIZE_TOTAL="$((SIZE_TOTAL+$SIZE))"
+        printf "%3s.  %s %8s byte  %s\n" \
+            "$II" \
+            "$(git log -1 --format="%ai" -- "$FILE")" \
+            "$SIZE" \
+            "$FILE"
     done
+    FILE=.
+    II="$((II+1))"
+    printf "%3s.  %s %8s byte  %s\n" \
+        "$II" \
+        "$(git log -1 --format="%ai" -- "$FILE")" \
+        "$SIZE_TOTAL" \
+        "$FILE"
+)}
+
+shGitRemotePromote() {(set -e
+# this function will clone and promote the remote git $REPO#$BRANCH1 -> $BRANCH2
+    export MODE_BUILD="${MODE_BUILD:-shGitRemotePromote}"
+    REPO="$1"
+    BRANCH1="$2"
+    BRANCH2="$3"
+    # init /tmp/gitRemotePromote
+    rm -fr /tmp/gitRemotePromote
+    git clone --branch="$BRANCH1" --single-branch "$REPO" /tmp/gitRemotePromote
+    cd /tmp/gitRemotePromote
+    shGithubPush -f "$REPO" "$BRANCH1":"$BRANCH2"
 )}
 
 shGitSquashPop() {(set -e
@@ -1202,7 +1212,25 @@ shGitSquashShift() {(set -e
     git checkout "$BRANCH"
 )}
 
-shGithubRepoBaseCreate() {(# set -e
+shGithubPush() {(set -e
+    # this function will push to github using $GITHUB_TOKEN
+    # http://stackoverflow.com/questions/18027115/committing-via-travis-ci-failing
+    EXIT_CODE=0
+    export MODE_BUILD="${MODE_BUILD:-shGithubPush}"
+    if [ "$GITHUB_TOKEN" ]
+    then
+        # init github-authentication
+        git config credential.helper "store --file=.git/tmp"
+        printf "https://nobody:$GITHUB_TOKEN@github.com\n" > .git/tmp
+    fi
+    shBuildPrint "git push $*"
+    git push $@ || EXIT_CODE=$?
+    # security - cleanup github-authentication
+    rm -f .git/tmp
+    return "$EXIT_CODE"
+)}
+
+shGithubRepoBaseCreate() {(set -e
 # this function will create the base github-repo https://github.com/$GITHUB_REPO.git
     if [ ! "$GITHUB_TOKEN" ]
     then
@@ -1218,21 +1246,21 @@ shGithubRepoBaseCreate() {(# set -e
         URL="https://api.github.com/orgs/$ORG/repos"
     fi
     printf "creating github repo https://github.com/$GITHUB_REPO.git\n"
-    # init /tmp/githubRepoBase.git
-    if [ ! -d /tmp/githubRepoBase.git ]
+    # init /tmp/githubRepoBase
+    if [ ! -d /tmp/githubRepoBase ]
     then
     (
-        git clone https://github.com/kaizhu256/base.git /tmp/githubRepoBase.git
-        cd /tmp/githubRepoBase.git
-        git checkout -b alpha origin/alpha
-        git checkout -b beta origin/beta
-        git checkout -b gh-pages origin/gh-pages
-        git checkout -b master origin/master
-        git checkout -b publish origin/publish
+        git clone https://github.com/kaizhu256/base.git /tmp/githubRepoBase
+        cd /tmp/githubRepoBase
+        git checkout -b alpha origin/alpha || true
+        git checkout -b beta origin/beta || true
+        git checkout -b gh-pages origin/gh-pages || true
+        git checkout -b master origin/master || true
+        git checkout -b publish origin/publish || true
         git checkout alpha
     )
     fi
-    cd /tmp/githubRepoBase.git
+    cd /tmp/githubRepoBase
     # create github $GITHUB_REPO with $GITHUB_TOKEN
     if ! (curl -fs "https://github.com/$GITHUB_REPO" > /dev/null 2>&1)
     then
@@ -1240,9 +1268,9 @@ shGithubRepoBaseCreate() {(# set -e
             "$URL" > /dev/null
     fi
     # set default-branch to alpha
-    git push "https://github.com/$GITHUB_REPO.git" alpha
+    shGithubPush "https://github.com/$GITHUB_REPO.git" alpha || true
     # push all branches
-    git push --all "https://github.com/$GITHUB_REPO.git"
+    shGithubPush --all "https://github.com/$GITHUB_REPO.git" || true
 )}
 
 shGrep() {(set -e
@@ -1379,11 +1407,6 @@ shInit() {
             export CI_BRANCH="${CI_BRANCH:-$TRAVIS_BRANCH}" || return $?
             export CI_COMMIT_ID="$TRAVIS_COMMIT" || return $?
             export CI_HOST=travis-ci.org || return $?
-            # decrypt and exec encrypted data
-            if [ "$AES_256_KEY" ]
-            then
-                eval "$(shTravisDecryptYml)" || return $?
-            fi
         # init default env
         else
             export CI_BRANCH="${CI_BRANCH:-alpha}" || return $?
@@ -1419,7 +1442,8 @@ dict = require('./package.json');
 Object.keys(dict).forEach(function (key) {
     value = dict[key];
     if (typeof value === 'string' && !(/[\n\"\$]/).test(value)) {
-        process.stdout.write('export npm_package_' + key + '=' + JSON.stringify(value) + ';');
+        process.stdout.write('export npm_package_' + key.replace((/\W/g), '_') + '=' +
+            JSON.stringify(value) + ';');
     }
 });
 value = String((dict.repository && dict.repository.url) || dict.repository || '')
@@ -1449,11 +1473,6 @@ if (process.env.GITHUB_REPO === undefined && (/^[^\/]+\/[^\/]+\$/).test(value)) 
     mkdir -p "$npm_config_dir_build/coverage.html"
     # init $npm_config_dir_utility2
     shInitNpmConfigDirUtility2 || return $?
-    # init $GIT_SSH
-    if [ "$GIT_SSH_KEY" ]
-    then
-        export GIT_SSH="$npm_config_dir_utility2/git_ssh.sh" || return $?
-    fi
     # init $PATH
     export PATH="$PWD/node_modules/.bin:$PATH" || return $?
     # extract and save the scripts embedded in README.md to tmp/
@@ -1856,7 +1875,6 @@ shNpmDeprecateAliasList() {(set -e
 
 shNpmPackageListingCreate() {(set -e
 # this function will create a svg listing of the npm-package
-    shInit
     cd "$1"
     # init git
     if [ ! -d .git ]
@@ -1871,6 +1889,7 @@ tmp
         git add .
         git commit -m 'initial commit'
     fi
+    shInit
     export MODE_BUILD=npmPackageListing
     shRunScreenCapture shGitLsTree
 )}
@@ -2040,21 +2059,42 @@ shNpmTestPublishedList() {(set -e
 shNpmdocRepoListCreate() {(set -e
 # this function will create and push the npmdoc-repo npmdoc/node-npmdoc-$LIST[ii]
 # https://docs.travis-ci.com/api
-    export MODE_BUILD=shTravisRepoListCreate
+    sleep 1
     EXIT_CODE=0
+    export MODE_BUILD=shTravisRepoListCreate
     LIST="$1"
     LIST2=""
     for NAME in $LIST
     do
+        case "$NAME" in
+        # filter npmdoc-*
+        npmdoc-*)
+            continue
+            ;;
+        # filter npmtest-*
+        npmtest-*)
+            continue
+            ;;
+        esac
         LIST2="$LIST2 npmdoc/node-npmdoc-$NAME"
     done
     # init $TRAVIS_REPO
     shTravisRepoListCreate "$LIST2" npmdoc
     sleep 5
     shBuildPrint "creating npmdoc-repos $LIST ..."
+    # bug-workaround - cannot run following code async in travis
     for NAME in $LIST
     do
-    (
+        case "$NAME" in
+        # filter npmdoc-*
+        npmdoc-*)
+            continue
+            ;;
+        # filter npmtest-*
+        npmtest-*)
+            continue
+            ;;
+        esac
         GITHUB_REPO="npmdoc/node-npmdoc-$NAME"
         if [ ! "$TRAVIS_REPO_CREATE_FORCE" ] && (curl -fs \
             "https://raw.githubusercontent.com/$GITHUB_REPO/alpha/test.js" \
@@ -2062,64 +2102,55 @@ shNpmdocRepoListCreate() {(set -e
         then
             continue
         fi
-        TRAVIS_REPO_ID="$(shTravisRepoIdGet $GITHUB_REPO)"
-        # init travis-cron monthly
-        curl -H "Travis-API-Version: 3" \
-            -H "Content-Type: application/json" \
-            -H "Authorization: token $TRAVIS_TOKEN" \
-            -X POST \
-            -d '{"dont_run_if_recent_build_exists":true,"interval":"monthly"}' \
-            -fs \
-            "https://api.travis-ci.org/repo/$TRAVIS_REPO_ID/branch/alpha/cron"
         # build and push initial repo to npmdoc/node-npmdoc-$NAME#alpha
         # init /tmp/node-npmdoc-$NAME
         rm -fr /tmp/node-npmdoc-$NAME /tmp/node_modules
         mkdir -p /tmp/node-npmdoc-$NAME
         cd /tmp/node-npmdoc-$NAME
+        touch README.md
+        for FILE in .gitignore .travis.yml LICENSE
+        do
+            if [ ! -f "$FILE" ]
+            then
+                cp "$npm_config_dir_utility2/$FILE" "$FILE"
+            fi
+        done
         # init package.json
         printf "{
     \"buildNpmdoc\":\"$NAME\",
+    \"devDependencies\": {
+        \"$NAME\": \"*\",
+        \"electron-lite\": \"kaizhu256/node-electron-lite#alpha\",
+        \"utility2\": \"kaizhu256/node-utility2#alpha\"
+    },
     \"name\":\"npmdoc-$NAME\",
     \"repository\": {
         \"type\": \"git\",
         \"url\": \"https://github.com/$GITHUB_REPO.git\"
-    }
+    },
+    \"scripts\": {
+        \"build-ci\": \"utility2 shReadmeTest build_ci.sh\"
+    },
+    \"version\": \"0.0.1\"
 }\n" > package.json
-        shBuildApp
-        (eval shBuildNpmdoc "$NAME") || true
-        # update .travis.yml
-        shTravisEncryptYml "$AES_DECRYPTED_SH"
+        shTravisCryptoAesEncryptYmlNpmdoc
         # init git
-        cp -a /tmp/githubRepoBase.git/.git .
+        cp -a /tmp/githubRepoBase/.git .
         git checkout alpha
         git add .
         git add -f .gitignore .travis.yml
         # git commit and push
-        git commit -am "[npmdoc build]"
-        git push -f "https://github.com/$GITHUB_REPO.git" alpha
-    ) &
-    done
-    for JOB in $(jobs -p)
-    do
-        if ! wait $JOB
-        then
-            EXIT_CODE=1
-            for JOB in $(jobs -p)
-            do
-                kill "$JOB" || true
-            done
-            shBuildPrint "EXIT_CODE - $EXIT_CODE"
-            return "$EXIT_CODE"
-        fi
+        git commit -am "[npm publishAfterCommitAfterBuild]"
+        shGithubPush -f "https://github.com/$GITHUB_REPO.git" alpha
     done
     shBuildPrint "... created npmdoc-repos $LIST"
 )}
 
 shPasswordEnvUnset() {
 # this function will unset the password-env, e.g.
-# (eval "$(utility2 source)"; shPasswordEnvUnset; printf "$AES_256_KEY\n")
+# (eval "$(utility2 source)"; shPasswordEnvUnset; printf "$CRYPTO_AES_KEY\n")
 # undefined
-    eval $(node -e "
+    eval "$(node -e "
 // <script>
 /*jslint
     bitwise: true,
@@ -2133,13 +2164,13 @@ shPasswordEnvUnset() {
 */
 'use strict';
 console.log(Object.keys(process.env).sort().map(function (key) {
-    return (/(?:\b|_)(?:decrypt|key|pass|secret|token)/).test(key.toLowerCase()) ||
-        (/Decrypt|Key|Pass|Secret|Token/).test(key)
+    return (/(?:\b|_)(?:decrypt|key|pass|private|secret|token)/).test(key.toLowerCase()) ||
+        (/Decrypt|Key|Pass|Private|Secret|Token/).test(key)
         ? 'unset ' + key + '; '
         : '';
 }).join('').trim());
 // </script>
-    ") || return $?
+    ")" || return $?
 }
 
 shPasswordRandom() {(set -e
@@ -2187,6 +2218,10 @@ shReadmeTest() {(set -e
     shInit
     if [ "$npm_package_buildNpmdoc" ]
     then
+        if [ ! -f test.js ]
+        then
+            shBuildApp
+        fi
         shBuildNpmdoc
         shBuildCi
         return
@@ -2311,11 +2346,6 @@ socket.pipe(process.stdout);
 socket.on('end', process.exit);
 // </script>
     " $1
-)}
-
-shReturn1() {(set -e
-# this function will return 1
-    return 1
 )}
 
 shRmDsStore() {(set -e
@@ -2498,17 +2528,17 @@ require('$npm_config_dir_utility2').testReportCreate(testReport);
 
 shTravisCronAlphaDelete() {(set -e
 # this function will delete the alpha-branch cron-job for the travis-repo $1
-    curl "https://api.travis-ci.org/cron/$(shTravisCronIdGet $1)" \
-        -H "Authorization: token $TRAVIS_TOKEN" \
+    curl -H "Authorization: token $TRAVIS_ACCESS_TOKEN" \
         -H "Travis-API-Version: 3" \
         -X DELETE \
-        -fs
+        -fs \
+        "https://api.travis-ci.org/cron/$(shTravisCronAlphaIdGet $1)" \
 )}
 
 shTravisCronAlphaIdGet() {(set -e
 # this function will get the alpha-branch cron-id for the travis-repo $1
     node -e "try { console.log(
-        $(curl -H \"Authorization: token $TRAVIS_TOKEN\" \
+        $(curl -H \"Authorization: token $TRAVIS_ACCESS_TOKEN\" \
             -H "Travis-API-Version: 3" \
             -s \
             https://api.travis-ci.org/repo/$(shTravisRepoIdGet $1)/branch/alpha/cron).id || ''
@@ -2519,7 +2549,7 @@ shTravisCronAlphaMonthlySet() {(set -e
 # this function will set the alpha-branch cron to run monthlyfor the travis-repo $1
     curl -H "Travis-API-Version: 3" \
         -H "Content-Type: application/json" \
-        -H "Authorization: token $TRAVIS_TOKEN" \
+        -H "Authorization: token $TRAVIS_ACCESS_TOKEN" \
         -X POST \
         -d '{"dont_run_if_recent_build_exists":true,"interval":"monthly"}' \
         -fs \
@@ -2527,31 +2557,30 @@ shTravisCronAlphaMonthlySet() {(set -e
     printf "\n"
 )}
 
-shTravisDecryptYml() {(set -e
-# this function will decrypt $AES_ENCRYPTED_SH in .travis.yml to stdout
-    sed -n "s/.* - AES_ENCRYPTED_SH: \(.*\) # AES_ENCRYPTED_SH\$/\\1/p" .travis.yml | \
-        shAesDecrypt
+shTravisCryptoAesDecryptYml() {(set -e
+# this function will decrypt $CRYPTO_AES_ENCRYPTED_SH in .travis.yml to stdout
+    sed -n "s/.* - CRYPTO_AES_ENCRYPTED_SH: \(.*\) # CRYPTO_AES_ENCRYPTED_SH\$/\\1/p" \
+        .travis.yml | shCryptoAesDecrypt
 )}
 
-shTravisEncryptYml() {(set -e
-# this function will travis-encrypt $FILE to $AES_ENCRYPTED_SH and embed it in .travis.yml
+shTravisCryptoAesEncryptYml() {(set -e
+# this function will encrypt $FILE to $CRYPTO_AES_ENCRYPTED_SH and embed it in .travis.yml
     shInit
+    export MODE_BUILD="${MODE_BUILD:-shTravisCryptoAesEncryptYml}"
     FILE="$1"
-    if [ ! -f "$FILE" ]
+    if [ -f "$FILE" ]
     then
-        printf "# non-existent file $FILE\n"
-        return 1
+        printf "# sourcing file $FILE\n"
+        . "$FILE"
     fi
-    printf "# sourcing file $FILE\n"
-    . "$FILE"
-    if [ ! "$AES_256_KEY" ]
+    if [ ! "$CRYPTO_AES_KEY" ]
     then
-        printf "# no \$AES_256_KEY detected in env - creating new AES_256_KEY\n"
-        AES_256_KEY="$(openssl rand -hex 32)"
-        printf "# created new \$AES_256_KEY for encrypting data:\n"
-        printf "export AES_256_KEY=$AES_256_KEY\n\n"
+        printf "# no \$CRYPTO_AES_KEY detected in env - creating new CRYPTO_AES_KEY\n"
+        CRYPTO_AES_KEY="$(openssl rand -hex 32)"
+        printf "# created new \$CRYPTO_AES_KEY for encrypting data:\n"
+        printf "export CRYPTO_AES_KEY=$CRYPTO_AES_KEY\n\n"
     fi
-    printf "# travis-encrypting \$AES_256_KEY for $GITHUB_REPO\n"
+    printf "# travis-encrypting \$CRYPTO_AES_KEY for $GITHUB_REPO\n"
     # get public rsa key from https://api.travis-ci.org/repos/<owner>/<repo>/key
     curl -s "https://api.travis-ci.org/repos/$GITHUB_REPO/key" | \
         sed -n \
@@ -2560,23 +2589,47 @@ shTravisEncryptYml() {(set -e
             -e "s/\\\\n/%/gp" | \
         tr "%" "\n" > \
         "$npm_config_file_tmp"
-    # rsa-encrypt $AES_256_KEY
-    AES_256_KEY_ENCRYPTED="$(printf "AES_256_KEY=$AES_256_KEY" | \
+    # rsa-encrypt $CRYPTO_AES_KEY
+    CRYPTO_AES_KEY_ENCRYPTED="$(printf "CRYPTO_AES_KEY=$CRYPTO_AES_KEY" | \
         openssl rsautl -encrypt -pubin -inkey "$npm_config_file_tmp" | \
         base64 | \
         tr -d "\n")"
-    # return non-zero exit-code if $AES_256_KEY_ENCRYPTED is empty string
-    if [ ! "$AES_256_KEY_ENCRYPTED" ]
+    # assert $CRYPTO_AES_KEY_ENCRYPTED is non-empty string
+    if [ ! "$CRYPTO_AES_KEY_ENCRYPTED" ]
     then
         return 1
     fi
     printf "# updating .travis.yml with encrypted key and encrypted script\n"
     sed -in \
-        -e "s%\(- secure: \).*\( # AES_256_KEY$\)%\\1$AES_256_KEY_ENCRYPTED\\2%" \
--e "s%\(- AES_ENCRYPTED_SH: \).*\( # AES_ENCRYPTED_SH$\)%\\1$(shAesEncrypt < $FILE)\\2%" \
+        -e "s%\(- secure: \).*\( # CRYPTO_AES_KEY$\)%\\1$CRYPTO_AES_KEY_ENCRYPTED\\2%" \
         .travis.yml
+    if [ -f "$FILE" ]
+    then
+        sed -in -e \
+"s%\(- CRYPTO_AES_ENCRYPTED_SH: \).*\( # CRYPTO_AES_ENCRYPTED_SH$\)%\\1$(shCryptoAesEncrypt < $FILE)\\2%" \
+            .travis.yml
+    fi
     rm -f .travis.ymln
 )}
+
+shTravisCryptoAesEncryptYmlNpmdoc() {
+# this function will encrypt and embed npmdoc in .travis.yml
+    # export $CRYPTO_AES_KEY
+    if [ "$CRYPTO_AES_KEY_NPMDOC" ]
+    then
+        export CRYPTO_AES_KEY="$CRYPTO_AES_KEY_NPMDOC" || return $?
+    fi
+    # update .travis.yml
+    shTravisCryptoAesEncryptYml || return $?
+    sed -in -e \
+"s%\(- CRYPTO_AES_ENCRYPTED_SH: \).*\( # CRYPTO_AES_ENCRYPTED_SH$\)%\\1\
+YjZiMmIwNjYyY2E0OGI5YjQ4ZmI3YTdkYmU4NjViN2I=I93wn43H8K4/eB5Wvi6A2irUFGh17rfCMer38OP/nGwK/4CqVaqXLLQlnG0aW/B+Zt+rUVfwxFxQplOTNqrK3WtMKw1307LZjVv/TPshn/uGxPUqpJTI075x+/b73WEYCXFvwCMwE1GVNiZTS8hGRmmhdLsFy7jlqQwGm0sp7VhUDRSmPsSH5rPplwKCvisqfcMBfCiGjfpXmrbX3gAnwDorfdHLKPFJlzUTcxPeEAjhT8pDckamS+V5scyCZwCqQdRFGOGva3KDyjBIOISbKkdhk1Yn8PczsJe7zrT+j2+mbBV32HPOQdmrwfPC/u3uLZSeTa+kob416KrOdHZWzk1p8DitQBgZUDwBd3ZVvxwc1lOrpciCunR3HXuaJIXKEkrzDu0V2uV/0V9vkeKFmFrTTnKad/4HPtB3GEfBkDPWEWOoYglEeIhMv5cBWdYnfFaV5Kkp145NI8IBQovJ07UyMk7uPcUEcY+V4s3RP3JZ2ZkfSOBXSMT5oa6m6DOX+w3ZNMsj4S0DYt/ncKvOOtqNOiXCChFGgwVd3hgfifgpiWF9CyqDL9AUkRgJyE9uFWccdPID8hw9hvHm1CinboH0CQZkX0/RbIy/R0S8nVS22HTX0SOgq6/yhacalRn6pkX1KxWgZc8gmgTlGvX/YcEzB31sQhy//jm69dd+XELcijk+jFmdf9jnW9Lyo366sRXXdnqFE5gDE4ZMOvyDyURDtKyBnaoy4FnMJY0HAfAIY46MN2/9ZKb9FQTigvVV\
+\\2%" \
+        .travis.yml || return $?
+    rm -f .travis.ymln || return $?
+    # eval $CRYPTO_AES_ENCRYPTED_SH
+    eval "$(shTravisCryptoAesDecryptYml)" || return $?
+}
 
 shTravisRepoIdGet() {(set -e
 # this function will get the id for the travis-repo $1
@@ -2588,22 +2641,22 @@ shTravisRepoIdGet() {(set -e
 shTravisRepoListCreate() {(set -e
 # this function will create the travis-repo $LIST[ii]
 # https://docs.travis-ci.com/api
-    export MODE_BUILD=shTravisRepoListCreate
     EXIT_CODE=0
+    export MODE_BUILD=shTravisRepoListCreate
     LIST="$1"
     ORG="$2"
     shBuildPrint "creating github-repos $LIST ..."
-    # init /tmp/githubRepoBase.git
-    if [ ! -d /tmp/githubRepoBase.git ]
+    # init /tmp/githubRepoBase
+    if [ ! -d /tmp/githubRepoBase ]
     then
     (
-        git clone https://github.com/kaizhu256/base.git /tmp/githubRepoBase.git
-        cd /tmp/githubRepoBase.git
-        git checkout -b alpha origin/alpha
-        git checkout -b beta origin/beta
-        git checkout -b gh-pages origin/gh-pages
-        git checkout -b master origin/master
-        git checkout -b publish origin/publish
+        git clone https://github.com/kaizhu256/base.git /tmp/githubRepoBase
+        cd /tmp/githubRepoBase
+        git checkout -b alpha origin/alpha || true
+        git checkout -b beta origin/beta || true
+        git checkout -b gh-pages origin/gh-pages || true
+        git checkout -b master origin/master || true
+        git checkout -b publish origin/publish || true
         git checkout alpha
     )
     fi
@@ -2615,12 +2668,12 @@ shTravisRepoListCreate() {(set -e
         then
             return
         fi
-        (eval shGithubRepoBaseCreate "$GITHUB_REPO" npmdoc) || true
+        shGithubRepoBaseCreate "$GITHUB_REPO" npmdoc
     ) &
     done
     for JOB in $(jobs -p)
     do
-        if ! wait $JOB
+        if ! wait "$JOB"
         then
             EXIT_CODE=1
             for JOB in $(jobs -p)
@@ -2634,7 +2687,7 @@ shTravisRepoListCreate() {(set -e
     sleep 5
     shBuildPrint "... created github-repos $LIST"
     shBuildPrint "syncing travis ..."
-    curl -H "Authorization: token $TRAVIS_TOKEN" -X POST -fs \
+    curl -H "Authorization: token $TRAVIS_ACCESS_TOKEN" -X POST -fs \
         "https://api.travis-ci.org/users/sync" || true
     sleep 30
     shBuildPrint "... synced travis"
@@ -2644,7 +2697,7 @@ shTravisRepoListCreate() {(set -e
     (
         TRAVIS_REPO_ID="$(shTravisRepoIdGet $GITHUB_REPO)"
         # init travis-hook
-        curl -H "Authorization: token $TRAVIS_TOKEN" \
+        curl -H "Authorization: token $TRAVIS_ACCESS_TOKEN" \
             -H "Content-Type: application/json; charset=UTF-8" \
             -X PUT \
             -d '{"hook":{"active":true}}' \
@@ -2653,7 +2706,7 @@ shTravisRepoListCreate() {(set -e
         # init travis-settings
         curl -H "Travis-API-Version: 3" \
             -H "Content-Type: application/json; charset=UTF-8" \
-            -H "Authorization: token $TRAVIS_TOKEN" \
+            -H "Authorization: token $TRAVIS_ACCESS_TOKEN" \
             -X PATCH \
             -d '{"user_setting.value":true}' \
             -fs \
@@ -2663,7 +2716,7 @@ shTravisRepoListCreate() {(set -e
     done
     for JOB in $(jobs -p)
     do
-        if ! wait $JOB
+        if ! wait "$JOB"
         then
             EXIT_CODE=1
             for JOB in $(jobs -p)
@@ -2679,8 +2732,8 @@ shTravisRepoListCreate() {(set -e
 )}
 
 shTravisRepoListGet() {(set -e
-# this function will get the list of travis-repos for the given $TRAVIS_TOKEN
-    curl -H "Authorization: token $TRAVIS_TOKEN" -fs \
+# this function will get the list of travis-repos for the given $TRAVIS_ACCESS_TOKEN
+    curl -H "Authorization: token $TRAVIS_ACCESS_TOKEN" -fs \
         "https://api.travis-ci.org/hooks?owner_name=npmdoc"
 )}
 
@@ -2821,6 +2874,7 @@ shUtility2DependentsSync() {(set -e
 # this function will sync files between utility2 and its dependents
     cd "$HOME/src"
     # hardlink "lib.$LIB.js"
+    ln -f "utility2/lib.utility2.sh" "$HOME"
     for LIB in apidoc db istanbul jslint uglifyjs
     do
         if [ -d "$LIB-lite" ]

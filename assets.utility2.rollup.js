@@ -274,6 +274,9 @@
                 }
                 argList.slice(1).forEach(function (arg) {
                     switch (arg) {
+                    case 'alphanumeric':
+                        value = value.replace((/\W/g), '_');
+                        break;
                     case 'decodeURIComponent':
                         value = decodeURIComponent(value);
                         break;
@@ -281,7 +284,9 @@
                         value = encodeURIComponent(value);
                         break;
                     case 'htmlSafe':
-                        value = local.stringHtmlSafe(String(value));
+                        value = value.replace((/["&'<>]/g), function (match0) {
+                            return '&#x' + match0.charCodeAt(0).toString(16) + ';';
+                        });
                         break;
                     case 'jsonStringify':
                         value = JSON.stringify(value);
@@ -290,7 +295,7 @@
                         value = JSON.stringify(value, null, 4);
                         break;
                     case 'markdownCodeSafe':
-                        value = value.replace((/`/g), "'");
+                        value = value.replace((/`/g), '\'');
                         break;
                     default:
                         value = value[arg]();
@@ -355,7 +360,7 @@ local.templateApidocHtml = '\
     font-weight: bold;\n\
 }\n\
 </style>\n\
-<h1>api-documentation for\n\
+<h1>api documentation for\n\
     <a\n\
         {{#if env.npm_package_homepage}}\n\
         href="{{env.npm_package_homepage}}"\n\
@@ -415,7 +420,7 @@ local.templateApidocMd = '\
 {{#if header}} \
 {{header}} \
 {{#unless header}} \
-# api-documentation for \
+# api documentation for \
 {{#if env.npm_package_homepage}} \
 [{{env.npm_package_name}} (v{{env.npm_package_version}})]({{env.npm_package_homepage}}) \
 {{#unless env.npm_package_homepage}} \
@@ -514,7 +519,13 @@ local.templateApidocMd = '\
                     return element;
                 }
                 // init source
-                element.source = trimLeft(module[key].toString());
+                element.source = 'n/a';
+                // bug-workaround - catch and ignore error
+                // "Function.prototype.toString is not generic"
+                try {
+                    element.source = trimLeft(module[key].toString());
+                } catch (ignore) {
+                }
                 if (element.source.length > 4096) {
                     element.source = element.source.slice(0, 4096).trimRight() + ' ...';
                 }
@@ -9905,14 +9916,6 @@ shBuildCiInternalPre() {(set -e\n\
     shNpmTestPublished\n\
 )}\n\
 \n\
-shBuildCiPost() {(set -e\n\
-    return\n\
-)}\n\
-\n\
-shBuildCiPre() {(set -e\n\
-    return\n\
-)}\n\
-\n\
 # run shBuildCi\n\
 eval $(utility2 source)\n\
 shBuildCi\n\
@@ -11832,7 +11835,7 @@ return Utf8ArrayToStr(bff);
                 dir: local.env.npm_package_buildNpmdoc,
 /* jslint-ignore-begin */
 header: '\
-# api-documentation for \
+# api documentation for \
 {{#if env.npm_package_homepage}} \
 [{{env.npm_package_name}} (v{{env.npm_package_version}})]({{env.npm_package_homepage}}) \
 {{#unless env.npm_package_homepage}} \
@@ -11844,6 +11847,9 @@ header: '\
 \n\
 \n\
 [![NPM](https://nodei.co/npm/{{env.npm_package_name}}.png?downloads=true)](https://www.npmjs.com/package/{{env.npm_package_name}}) \
+\n\
+\n\
+[![apidoc](https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build/screen-capture.buildNpmdoc.browser._2Fhome_2Ftravis_2Fbuild_2Fnpmdoc_2Fnode-npmdoc-{{env.npm_package_name encodeURIComponent alphanumeric}}_2Ftmp_2Fbuild_2Fapidoc.html.png)](https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build..beta..travis-ci.org/apidoc.html) \
 \n\
 \n\
 ![package-listing](https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build/screen-capture.npmPackageListing.svg) \
@@ -13914,6 +13920,9 @@ instruction\n\
                 }
                 argList.slice(1).forEach(function (arg) {
                     switch (arg) {
+                    case 'alphanumeric':
+                        value = value.replace((/\W/g), '_');
+                        break;
                     case 'decodeURIComponent':
                         value = decodeURIComponent(value);
                         break;
@@ -13921,7 +13930,9 @@ instruction\n\
                         value = encodeURIComponent(value);
                         break;
                     case 'htmlSafe':
-                        value = local.stringHtmlSafe(String(value));
+                        value = value.replace((/["&'<>]/g), function (match0) {
+                            return '&#x' + match0.charCodeAt(0).toString(16) + ';';
+                        });
                         break;
                     case 'jsonStringify':
                         value = JSON.stringify(value);
@@ -13930,7 +13941,7 @@ instruction\n\
                         value = JSON.stringify(value, null, 4);
                         break;
                     case 'markdownCodeSafe':
-                        value = value.replace((/`/g), "'");
+                        value = value.replace((/`/g), '\'');
                         break;
                     default:
                         value = value[arg]();
