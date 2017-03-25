@@ -596,7 +596,7 @@ shDockerNpmRestart() {(set -e
 shDockerRestart() {(set -e
 # this function will restart the docker-container
     docker rm -fv "$1" || true
-    shDockerStart "$@"
+    shDockerStart $*
 )}
 
 shDockerRestartElasticsearch() {(set -e
@@ -1659,10 +1659,10 @@ shIstanbulCover() {(set -e
     export NODE_BINARY="${NODE_BINARY:-node}"
     if [ ! "$npm_config_mode_coverage" ]
     then
-        $NODE_BINARY $*
+        "$NODE_BINARY" $*
         return
     fi
-    $NODE_BINARY $npm_config_dir_utility2/lib.istanbul.js cover "$@"
+    "$NODE_BINARY" "$npm_config_dir_utility2/lib.istanbul.js" cover $*
 )}
 
 shKillallElectron() {(set -e
@@ -1671,7 +1671,7 @@ shKillallElectron() {(set -e
 )}
 
 shListUnflattenAndApply() {(set -e
-# this function will unflatten the list and apply it to $@
+# this function will unflatten the list and apply it to $*
     LIST="$1"
     shift
     GROUP="$1"
@@ -1723,7 +1723,7 @@ shMain() {
         [ "$COMMAND" = browserTest ]
     then
         shInitNpmConfigDirUtility2
-        "$npm_config_dir_utility2/lib.utility2.js" "$COMMAND" "$@"
+        "$npm_config_dir_utility2/lib.utility2.js" "$COMMAND" $*
         return
     fi
     case "$COMMAND" in
@@ -1742,11 +1742,11 @@ shMain() {
         export npm_config_mode_auto_restart=1
         export npm_config_mode_start="$MODE_START"
         shInit
-        shRun shIstanbulCover "$FILE" "$@"
+        shRun shIstanbulCover "$FILE" $*
         ;;
     test)
         shInit
-        shNpmTest "$@"
+        shNpmTest $*
         ;;
     utility2Dirname)
         shInitNpmConfigDirUtility2
@@ -1754,7 +1754,7 @@ shMain() {
         ;;
     *)
         shInit
-        "$COMMAND" "$@"
+        "$COMMAND" $*
         ;;
     esac
 )}
@@ -2022,17 +2022,17 @@ shNpmTest() {(set -e
     # run npm-test without coverage
     if [ ! "$npm_config_mode_coverage" ]
     then
-        (eval $NODE_BINARY "$@") || EXIT_CODE=$?
+        (eval "$NODE_BINARY" $*) || EXIT_CODE=$?
     # run npm-test with coverage
     else
         # cleanup old coverage
         rm -f "$npm_config_dir_build/coverage.html/"coverage.*.json
         # run npm-test with coverage
-        (eval shIstanbulCover "$@") || EXIT_CODE=$?
+        (eval shIstanbulCover $*) || EXIT_CODE=$?
         # if $EXIT_CODE != 0, then debug covered-test by re-running it uncovered
         if [ "$EXIT_CODE" != 0 ] && [ "$EXIT_CODE" != 130 ]
         then
-            npm_config_mode_coverage="" $NODE_BINARY "$@" || true
+            npm_config_mode_coverage="" "$NODE_BINARY" $* || true
         fi
     fi
     # create test-report artifacts
@@ -2383,7 +2383,7 @@ shRmDsStore() {(set -e
 )}
 
 shRun() {(set -e
-# this function will run the command $@ with auto-restart
+# this function will run the command $* with auto-restart
     EXIT_CODE=0
     # eval argv and auto-restart on non-zero exit-code, unless exited by SIGINT
     if [ "$npm_config_mode_auto_restart" ] && [ ! "$npm_config_mode_auto_restart_child" ]
@@ -2392,7 +2392,7 @@ shRun() {(set -e
         while true
         do
             printf "(re)starting $*\n"
-            (eval "$@") || EXIT_CODE=$?
+            (eval $*) || EXIT_CODE=$?
             printf "process exited with code $EXIT_CODE\n"
             # http://en.wikipedia.org/wiki/Unix_signal
             # if $EXIT_CODE != 77, then exit process
@@ -2407,18 +2407,18 @@ shRun() {(set -e
         return "$EXIT_CODE"
     # eval argv
     else
-        "$@"
+        $*
     fi
 )}
 
 shRunScreenCapture() {(set -e
 # http://www.cnx-software.com/2011/09/22
 # /how-to-convert-a-command-line-result-into-an-image-in-linux/
-# this function will run the command $@ and screen-capture the output
+# this function will run the command $* and screen-capture the output
     EXIT_CODE=0
     export MODE_BUILD_SCREEN_CAPTURE="screen-capture.${MODE_BUILD:-undefined}.svg"
     (printf "0" > "$npm_config_file_tmp"
-        (eval shRun "$@" 2>&1) ||
+        (eval shRun $* 2>&1) ||
         printf $? > "$npm_config_file_tmp") | tee "$npm_config_dir_tmp/screen-capture.txt"
     EXIT_CODE="$(cat "$npm_config_file_tmp")"
     shBuildPrint "EXIT_CODE - $EXIT_CODE"
@@ -2759,7 +2759,7 @@ shTravisRepoListCreate() {(set -e
 
 shTravisRepoListGet() {(set -e
 # this function will get the list of travis-repos for the given $TRAVIS_ACCESS_TOKEN
-    shTravisRepoListGetJson "$@"
+    shTravisRepoListGetJson $*
 )}
 
 shTravisRepoListGetJson() {(set -e
@@ -3020,4 +3020,4 @@ shXvfbStart() {
     (Xvfb "$DISPLAY" &) 2>/dev/null || true
 }
 
-shMain "$@"
+shMain $*
