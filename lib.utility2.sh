@@ -1224,7 +1224,7 @@ shGithubPush() {(set -e
         printf "https://nobody:$GITHUB_TOKEN@github.com\n" > .git/tmp
     fi
     shBuildPrint "git push $*"
-    git push $@ || EXIT_CODE=$?
+    git push $* || EXIT_CODE=$?
     # security - cleanup github-authentication
     rm -f .git/tmp
     return "$EXIT_CODE"
@@ -1670,6 +1670,32 @@ shKillallElectron() {(set -e
     killall Electron electron
 )}
 
+shListUnflattenAndApply() {(set -e
+# this function will unflatten the list and apply it to $@
+    LIST="$1"
+    shift
+    GROUP="$1"
+    shift
+    LIST2=""
+    II=0
+    for ELEMENT in $LIST
+    do
+        if [ "$LIST2" ]
+        then
+            LIST2="$LIST2 $ELEMENT"
+        else
+            LIST2="$ELEMENT"
+        fi
+        II="$((II+1))"
+        if [ "$II" -ge "$GROUP" ]
+        then
+            $* "$LIST2"
+            II=0
+            LIST2=""
+        fi
+    done
+)}
+
 shMain() {
 # this function will run the main program
     export UTILITY2_DEPENDENTS="apidoc-lite
@@ -1916,7 +1942,7 @@ shNpmPublish() {(set -e
         exit
         ;;
     esac
-    shNpmPublishAlias $@
+    shNpmPublishAlias $*
 )}
 
 shNpmPublishAlias() {(set -e
@@ -2053,32 +2079,6 @@ shNpmTestPublishedList() {(set -e
     for NAME in $LIST
     do
         shNpmTestPublished "$NAME"
-    done
-)}
-
-shListUnflattenAndApply() {(set -e
-# this function will unflatten the list and apply it to $@
-    LIST="$1"
-    shift
-    GROUP="$1"
-    shift
-    LIST2=""
-    II=0
-    for ELEMENT in $LIST
-    do
-        if [ "$LIST2" ]
-        then
-            LIST2="$LIST2 $ELEMENT"
-        else
-            LIST2="$ELEMENT"
-        fi
-        II="$((II+1))"
-        if [ "$II" -ge "$GROUP" ]
-        then
-            $* "$LIST2"
-            II=0
-            LIST2=""
-        fi
     done
 )}
 
@@ -2520,10 +2520,10 @@ shSource() {
 }
 
 shSshReverseTunnel() {
-# this function will ssh $@ with reverse-tunneling
+# this function will ssh $* with reverse-tunneling
     ssh -R 2022:127.0.0.1:22 \
         -R 3022:127.0.0.1:2022 \
-        $@ || return $?
+        $* || return $?
 }
 
 shTestReportCreate() {(set -e
@@ -2759,8 +2759,21 @@ shTravisRepoListCreate() {(set -e
 
 shTravisRepoListGet() {(set -e
 # this function will get the list of travis-repos for the given $TRAVIS_ACCESS_TOKEN
+    shTravisRepoListGetJson "$@"
+)}
+
+shTravisRepoListGetJson() {(set -e
+# this function will get the list of travis-repos for the given $TRAVIS_ACCESS_TOKEN
+# https://docs.travis-ci.com/api#repositories
+# Parameter - Default - Description
+# ids - "" - list of repository ids to fetch, cannot be combined with other parameters
+# member - "" - filter by user that has access to it (github login)
+# owner_name - "" - filter by owner name (first segment of slug)
+# slug - "" - filter by slug
+# search - "" - filter by search term
+# active - false - if true, will only return repositories that are enabled
     curl -H "Authorization: token $TRAVIS_ACCESS_TOKEN" -fs \
-        "https://api.travis-ci.org/hooks?owner_name=npmdoc"
+        "https://api.travis-ci.org/repos?$1"
 )}
 
 shUbuntuInit() {
