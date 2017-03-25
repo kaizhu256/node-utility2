@@ -2056,6 +2056,32 @@ shNpmTestPublishedList() {(set -e
     done
 )}
 
+shListUnflattenAndApply() {(set -e
+# this function will unflatten the list and apply it to $@
+    LIST="$1"
+    shift
+    GROUP="$1"
+    shift
+    LIST2=""
+    II=0
+    for ELEMENT in $LIST
+    do
+        if [ "$LIST2" ]
+        then
+            LIST2="$LIST2 $ELEMENT"
+        else
+            LIST2="$ELEMENT"
+        fi
+        II="$((II+1))"
+        if [ "$II" -ge "$GROUP" ]
+        then
+            $* "$LIST2"
+            II=0
+            LIST2=""
+        fi
+    done
+)}
+
 shNpmdocRepoListCreate() {(set -e
 # this function will create and push the npmdoc-repo npmdoc/node-npmdoc-$LIST[ii]
 # https://docs.travis-ci.com/api

@@ -43,6 +43,7 @@ the zero-dependency swiss-army-knife tool for building, testing, and deploying w
 
 #### changes for v2017.3.22
 - add shell-function shGitRemotePromote to auto-promote branches alpha -> beta -> master
+- add shell-function shListUnflattenAndApply
 - deprecate ssh-key in favor of github oauth - https://stackoverflow.com/questions/18027115/committing-via-travis-ci-failing
 - enable shNpmdocRepoListCreate in travis-ci
 - enhance shell-function shNpmPackageListingCreate to add total package-size to package-listing
