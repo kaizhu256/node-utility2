@@ -764,8 +764,8 @@ shDockerRestartTransmission() {(set -e
 )}
 
 shDockerRm() {(set -e
-# this function will rm the docker-containers $@
-    docker rm -fv "$@" || true
+# this function will rm the docker-containers $*
+    docker rm -fv $* || true
 )}
 
 shDockerRmAll() {(set -e
@@ -799,7 +799,7 @@ shDockerSh() {(set -e
 )}
 
 shDockerStart() {(set -e
-# this function will start the docker-container $IMAGE:$NAME with the command $@
+# this function will start the docker-container $IMAGE:$NAME with the command $*
     case "$(uname)" in
     Linux)
         LOCALHOST="${LOCALHOST:-127.0.0.1}"
@@ -820,7 +820,7 @@ shDockerStart() {(set -e
     docker run --name "$NAME" -dt -e debian_chroot="$NAME" \
         -v "$DOCKER_ROOT:/root" \
         $DOCKER_OPTIONS \
-        "$IMAGE" "$@"
+        "$IMAGE" $*
 )}
 
 shDuList() {(set -e
@@ -1123,7 +1123,7 @@ shGitGc() {(set -e
         -c gc.rerereresolved=0 \
         -c gc.rerereunresolved=0 \
         -c gc.pruneExpire=now \
-        gc "$@"
+        gc
 )}
 
 shGitInfo() {(set -e
@@ -1655,11 +1655,11 @@ shIptablesInit() {(set -e
 )}
 
 shIstanbulCover() {(set -e
-# this function will run the command $@ with istanbul-coverage
+# this function will run the command $* with istanbul-coverage
     export NODE_BINARY="${NODE_BINARY:-node}"
     if [ ! "$npm_config_mode_coverage" ]
     then
-        $NODE_BINARY "$@"
+        $NODE_BINARY $*
         return
     fi
     $NODE_BINARY $npm_config_dir_utility2/lib.istanbul.js cover "$@"
