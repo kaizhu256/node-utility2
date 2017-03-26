@@ -2841,6 +2841,12 @@ shTravisRepoListGetJson() {(set -e
         "https://api.travis-ci.org/repos?$1"
 )}
 
+shTravisTaskRun() {(set -e
+# this function will push the shell-task $1 to travis
+    utility2-github-crud put https://github.com/kaizhu256/node-utility2/blob/task/.task.sh \
+        "$1" '[$ /bin/sh .task.sh]'
+)}
+
 shUbuntuInit() {
 # this function will init ubuntu's default .bashrc
     # ~/.bashrc: executed by bash(1) for non-login shells.

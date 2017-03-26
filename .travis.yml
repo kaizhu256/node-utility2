@@ -6,6 +6,7 @@ branches:
     only:
     - alpha
     - beta
+    - cron
     - docker.base
     - docker.latest
     - master
