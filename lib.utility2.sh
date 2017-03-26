@@ -254,7 +254,7 @@ shBuildCi() {(set -e
             git add .
             shFilePackageJsonVersionIncrement
             git commit -am "[npm publishAfterCommit]"
-            shGithubPush "https://github.com/$GITHUB_REPO.git" HEAD:alpha
+            shGithubPush -f "https://github.com/$GITHUB_REPO.git" HEAD:alpha
             ;;
         esac
         ;;
@@ -2657,6 +2657,20 @@ YjZiMmIwNjYyY2E0OGI5YjQ4ZmI3YTdkYmU4NjViN2I=I93wn43H8K4/eB5Wvi6A2irUFGh17rfCMer3
     eval "$(shTravisCryptoAesDecryptYml)" || return $?
 }
 
+shTravisHookListGetJson() {(set -e
+# this function will get the list of travis-repos for the given $TRAVIS_ACCESS_TOKEN
+# https://docs.travis-ci.com/api#repositories
+# Parameter - Default - Description
+# ids - "" - list of repository ids to fetch, cannot be combined with other parameters
+# member - "" - filter by user that has access to it (github login)
+# owner_name - "" - filter by owner name (first segment of slug)
+# slug - "" - filter by slug
+# search - "" - filter by search term
+# active - false - if true, will only return repositories that are enabled
+    curl -H "Authorization: token $TRAVIS_ACCESS_TOKEN" -fs \
+        "https://api.travis-ci.org/hooks?$1"
+)}
+
 shTravisRepoIdGet() {(set -e
 # this function will get the id for the travis-repo $1
     node -e "try { console.log(
@@ -2759,7 +2773,7 @@ shTravisRepoListCreate() {(set -e
 
 shTravisRepoListGet() {(set -e
 # this function will get the list of travis-repos for the given $TRAVIS_ACCESS_TOKEN
-    shTravisRepoListGetJson $*
+    shTravisRepoListGetJson "$1"
 )}
 
 shTravisRepoListGetJson() {(set -e
