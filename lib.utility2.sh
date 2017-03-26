@@ -1694,6 +1694,10 @@ shListUnflattenAndApply() {(set -e
             LIST2=""
         fi
     done
+    if [ "$LIST2" ]
+    then
+        $* "$LIST2"
+    fi
 )}
 
 shMain() {
@@ -1943,6 +1947,29 @@ shNpmPublish() {(set -e
         ;;
     esac
     shNpmPublishAlias $*
+)}
+
+shNpmPublishListAfterCommitAfterBuild() {(set -e
+# this function will npm-publish the $GITHUB_REPO $LIST after commit after build
+    LIST="$1"
+    for GITHUB_REPO in $LIST
+    do
+        utility2-github-crud touch "https://github.com/$GITHUB_REPO/blob/alpha/package.json" '[npm publishAfterCommit]' &
+    done
+    EXIT_CODE=0
+    for JOB in $(jobs -p)
+    do
+        if ! wait "$JOB"
+        then
+            EXIT_CODE=1
+            for JOB in $(jobs -p)
+            do
+                kill "$JOB" || true
+            done
+            shBuildPrint "EXIT_CODE - $EXIT_CODE"
+            return "$EXIT_CODE"
+        fi
+    done
 )}
 
 shNpmPublishAlias() {(set -e
