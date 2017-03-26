@@ -2657,8 +2657,24 @@ YjZiMmIwNjYyY2E0OGI5YjQ4ZmI3YTdkYmU4NjViN2I=I93wn43H8K4/eB5Wvi6A2irUFGh17rfCMer3
     eval "$(shTravisCryptoAesDecryptYml)" || return $?
 }
 
+shTravisHookListGet() {(set -e
+# this function will get the list of travis-repos with the search paramters $1
+# https://docs.travis-ci.com/api#repositories
+# Parameter - Default - Description
+# ids - "" - list of repository ids to fetch, cannot be combined with other parameters
+# member - "" - filter by user that has access to it (github login)
+# owner_name - "" - filter by owner name (first segment of slug)
+# slug - "" - filter by slug
+# search - "" - filter by search term
+# active - false - if true, will only return repositories that are enabled
+    LIST="$(shTravisHookListGetJson $*)"
+    node -e "console.log($(shTravisHookListGetJson $*).map(function (element) {
+        return element.uid.replace(':', '/');
+    }).join(' '));"
+)}
+
 shTravisHookListGetJson() {(set -e
-# this function will get the list of travis-repos for the given $TRAVIS_ACCESS_TOKEN
+# this function will get the json-list of travis-repos with the search paramters $1
 # https://docs.travis-ci.com/api#repositories
 # Parameter - Default - Description
 # ids - "" - list of repository ids to fetch, cannot be combined with other parameters
@@ -2670,6 +2686,14 @@ shTravisHookListGetJson() {(set -e
     curl -H "Authorization: token $TRAVIS_ACCESS_TOKEN" -fs \
         "https://api.travis-ci.org/hooks?$1"
 )}
+
+#!! shTravisHookListGetNotPassing() {(set -e
+#!! # this function will get the not-passing-list of travis-repos with the search paramters $1
+    #!! LIST="$(shTravisHookListGetJson $*)"
+    #!! node -e "console.log($(shTravisHookListGetJson $*).map(function (element) {
+        #!! return element.uid.replace(':', '/');
+    #!! }).join(' '));"
+#!! )}
 
 shTravisRepoIdGet() {(set -e
 # this function will get the id for the travis-repo $1
