@@ -245,38 +245,53 @@
             };
         };
 
-        local.onParallel = function (onError, onDebug) {
+        local.onParallel = function (onError, onEach) {
         /*
          * this function will create a function that will
          * 1. run async tasks in parallel
          * 2. if counter === 0 or error occurred, then call onError with error
          */
-            var self;
+            var onParallel;
             onError = local.onErrorWithStack(onError);
-            onDebug = onDebug || local.nop;
-            self = function (error) {
-                onDebug(error, self);
-                // if previously counter === 0 or error occurred, then return
-                if (self.counter === 0 || self.error) {
+            onEach = onEach || local.nop;
+            onParallel = function (error) {
+                // decrement counter
+                onParallel.counter -= 1;
+                // validate counter
+                console.assert(onParallel.counter >= 0 || error || onParallel.error);
+                // ensure onError is run only once
+                if (onParallel.counter < 0) {
                     return;
                 }
                 // handle error
                 if (error) {
-                    self.error = error;
-                    // ensure counter will decrement to 0
-                    self.counter = 1;
+                    onParallel.error = error;
+                    // ensure counter < 0
+                    onParallel.counter = -1;
                 }
-                // decrement counter
-                self.counter -= 1;
-                // if counter === 0, then call onError with error
-                if (self.counter === 0) {
+                // call onError when done
+                if (onParallel.counter <= 0) {
                     onError(error);
+                    return;
                 }
+                onEach();
             };
             // init counter
-            self.counter = 0;
+            onParallel.counter = 0;
             // return callback
-            return self;
+            return onParallel;
+        };
+
+        local.setTimeoutOnError = function (onError, error, data) {
+        /*
+         * this function will asynchronously call onError
+         */
+            if (typeof onError === 'function') {
+                setTimeout(function () {
+                    onError(error, data);
+                });
+            }
+            return data;
         };
     }());
 
@@ -752,9 +767,7 @@
                     return true;
                 }
             });
-            if (!result) {
-                return result;
-            }
+            result = result || {};
             // remove existing dbRow
             this._crudRemoveOneById(result);
             // update dbRow
@@ -858,7 +871,7 @@
             );
             return local.setTimeoutOnError(onError, null, local.dbRowProject(
                 result,
-                options.projection
+                options.fieldList
             ));
         };
 
@@ -869,6 +882,16 @@
             this._cleanup();
             return local.setTimeoutOnError(onError, null, local.dbRowProject(
                 this._crudGetOneById(idDict)
+            ));
+        };
+
+        local._DbTable.prototype.crudGetOneByRandom = function (onError) {
+        /*
+         * this function will get a random dbRow in the dbTable
+         */
+            this._cleanup();
+            return local.setTimeoutOnError(onError, null, local.dbRowProject(
+                this.dbRowList[Math.floor(Math.random() * this.dbRowList.length)]
             ));
         };
 
@@ -1127,6 +1150,7 @@
                 local.setTimeoutOnError(onError, error);
             });
             onParallel.counter += 1;
+            onParallel.counter += 1;
             local.storageClear(onParallel);
             Object.keys(local.dbTableDict).forEach(function (key) {
                 onParallel.counter += 1;
@@ -1153,7 +1177,7 @@
          * this function will import the serialized text into the db
          */
             var dbTable;
-            text.replace((/^(\w\S*?) (\S+?) (\S+?)$/gm), function (
+            text.replace((/^(\w\S*?) (\S+?) (\S.+?)$/gm), function (
                 match0,
                 match1,
                 match2,
@@ -1380,9 +1404,9 @@
             return result;
         };
 
-        local.dbRowProject = function (dbRow, projection) {
+        local.dbRowProject = function (dbRow, fieldList) {
         /*
-         * this function will project and deepcopy the dbRow
+         * this function will deepcopy and project the dbRow with the given fieldList
          */
             var result;
             if (!dbRow) {
@@ -1392,20 +1416,20 @@
             if (Array.isArray(dbRow)) {
                 return dbRow.map(function (dbRow) {
                     // recurse
-                    return local.dbRowProject(dbRow, projection);
+                    return local.dbRowProject(dbRow, fieldList);
                 });
             }
             // normalize to list
-            if (!(Array.isArray(projection) && projection.length)) {
-                projection = Object.keys(dbRow);
+            if (!(Array.isArray(fieldList) && fieldList.length)) {
+                fieldList = Object.keys(dbRow);
             }
             result = {};
-            projection.forEach(function (key) {
+            fieldList.forEach(function (key) {
                 if (key[0] !== '$') {
                     result[key] = dbRow[key];
                 }
             });
-            return local.jsonCopy(result);
+            return JSON.parse(local.jsonStringifyOrdered(result));
         };
 
         local.dbRowSetId = function (dbRow, idIndex) {
@@ -1495,18 +1519,6 @@
         };
 
         local.dbTableDict = {};
-
-        local.setTimeoutOnError = function (onError, error, data) {
-        /*
-         * this function will asynchronously call onError
-         */
-            if (typeof onError === 'function') {
-                setTimeout(function () {
-                    onError(error, data);
-                });
-            }
-            return data;
-        };
 
         local.sortCompare = function (aa, bb) {
         /*

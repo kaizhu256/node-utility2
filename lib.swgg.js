@@ -374,6 +374,9 @@ border: 0;\n\
     width: 100%;\n\
     z-index: 1;\n\
 }\n\
+.swggUiContainer .modal button {\n\
+    padding: 0.5rem;\n\
+}\n\
 .swggUiContainer .operation {\n\
     background: #dfd;\n\
     font-size: smaller;\n\
@@ -2168,8 +2171,8 @@ local.templateUiResponseAjax = '\
                         onParallel = local.onParallel(options.onNext);
                         onParallel.counter += 1;
                         crud.dbTable.crudGetManyByQuery({
+                            fieldList: crud.queryFields,
                             limit: crud.queryLimit,
-                            projection: crud.queryFields,
                             query: crud.queryWhere,
                             skip: crud.querySkip,
                             sort: crud.querySort
@@ -3002,7 +3005,7 @@ local.templateUiResponseAjax = '\
                 options.pageList.push({
                     disabled: tmp === options.pageCurrent,
                     pageNumber: tmp,
-                    valueEncoded: tmp + 1
+                    valueEncoded: JSON.stringify(tmp + 1)
                 });
             }
             // add last page

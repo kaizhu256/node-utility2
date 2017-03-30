@@ -1,5 +1,5 @@
 # utility2
-the zero-dependency swiss-army-knife tool for building, testing, and deploying webapps
+the zero-dependency, swiss-army-knife utility for building, testing, and deploying webapps
 
 [![travis-ci.org build-status](https://api.travis-ci.org/kaizhu256/node-utility2.svg)](https://travis-ci.org/kaizhu256/node-utility2) [![istanbul-coverage](https://kaizhu256.github.io/node-utility2/build/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build/coverage.html/index.html)
 
@@ -31,31 +31,29 @@ the zero-dependency swiss-army-knife tool for building, testing, and deploying w
 - rename sub-package db-lite -> nedb-lite
 - rename sub-package istanbul-lite -> istanbul-classic
 - rename sub-package jslint-lite -> jslint-classic
-- use options remote credentials during travis-ci build
-- deprecate ssh-key in favor of github oauth - https://stackoverflow.com/questions/18027115/committing-via-travis-ci-failing
+- rename sub-package uglifyjs-lite -> uglifyjs-classic
 - allow server-side stdout to be streamed to webapps
 - add utility2.middlewareLimit
 - add server stress test using electron
 - analytics
 - none
 
-#### changes for v2017.3.21
-- npm publish 2017.3.21
-- security - rewrite function moduleDirname, so that it doesn't have to require arbitrary modules
-- add github-crud command 'touch' to trigger github-hooks and add commit-messages without changing files
-- add commit-message-meta macro 'promote branch1 -> branch2'
-- add env var TRAVIS_REPO_CREATE_FORCE to force re-creation of npmdoc
-- add env var npm_package_buildNpmdocMain to customize npmdoc target
-- add optional commit-message for PUT, DELETE, and TOUCH requests in github-crud
-- add package-description to apidoc
-- add package-listing to npmdoc
-- add package.json to npmdoc
-- add async shell-function shNpmdocRepoListCreate to automate creation of npmdoc's
-- add shell function shUtility2GrepTravisYml
-- fix 'span class' error in https://www.npmjs.com/package/npmdoc-glob
-- merge function local.runIfTrue -> local.nop
-- rename lib.xxx.npm_scripts.sh to npm_scripts.sh
-- shBuildPrint message for deprecate and publish operations
+#### changes for v2017.3.29
+- npm publish 2017.3.29
+- add args \$modeBrowserTest and \$url to shell-function shBrowserTest
+- add branch-cron
+- add function dbTableTravisRepoCreate, dbTableTravisRepoCrudGetManyByQuery, dbTableTravisRepoUpdate, and listForEachAsync
+- add github-crud function contentTouchList
+- add shell-function shGitRemotePromote to auto-promote branches alpha -> beta -> master
+- add shell-function shGithubRepoListTouch, shListUnflattenAndApply, and shNpmInstallWithPeerDependencies
+- auto update public travis-repos in alpha-branch
+- deprecate ssh-key in favor of github oauth - https://stackoverflow.com/questions/18027115/committing-via-travis-ci-failing
+- enable shNpmdocRepoListCreate in travis-ci
+- enhance shell-function shNpmPackageListingCreate to add total package-size to package-listing
+- fix apidoc bug 'Function.prototype.toString is not generic'
+- fix shell-function shInit bug - export: npm_package_react-native: bad variable name
+- sanitize sensitive env-vars from electron.*.html
+- use optional remote-credentials during travis-ci build
 - none
 
 #### this package requires
@@ -621,7 +619,7 @@ utility2-comment -->\n\
             break;
         }
         process.env.PORT = process.env.PORT || '8081';
-        console.log('server starting on port ' + process.env.PORT);
+        console.error('server starting on port ' + process.env.PORT);
         local.http.createServer(function (request, response) {
             request.urlParsed = local.url.parse(request.url);
             if (local.assetsDict[request.urlParsed.pathname] !== undefined) {
@@ -659,7 +657,7 @@ utility2-comment -->\n\
         "utility2-jslint": "lib.jslint.js",
         "utility2-uglifyjs": "lib.uglifyjs.js"
     },
-    "description": "the zero-dependency swiss-army-knife tool for building, testing, and deploying webapps",
+    "description": "the zero-dependency, swiss-army-knife utility for building, testing, and deploying webapps",
     "devDependencies": {
         "electron-lite": "kaizhu256/node-electron-lite#alpha"
     },
@@ -668,34 +666,28 @@ utility2-comment -->\n\
     },
     "homepage": "https://github.com/kaizhu256/node-utility2",
     "keywords": [
-        "browser",
         "build",
-        "busybox",
         "ci",
         "code-coverage",
         "continuous-integration",
         "deploy",
-        "docker",
+        "devops",
         "electron",
         "headless-browser",
         "istanbul",
-        "jscover",
         "jscoverage",
         "phantomjs",
         "slimerjs",
-        "swiss-army-knife",
         "test",
         "test-coverage",
         "travis",
-        "travis-ci",
-        "utility2",
-        "webapp"
+        "travis-ci"
     ],
     "license": "MIT",
     "main": "lib.utility2.js",
     "name": "utility2",
     "nameAlias": "utility2",
-    "nameAliasPublish": "busybox npmtest-lite test-lite",
+    "nameAliasPublish": "npmtest-lite npmtest2 test-lite",
     "nameOriginal": "utility2",
     "os": [
         "darwin",
@@ -714,7 +706,7 @@ utility2-comment -->\n\
         "start": "(set -e; export PORT=${PORT:-8080}; if [ -f assets.app.js ]; then node assets.app.js; exit; fi; export npm_config_mode_auto_restart=1; ./lib.utility2.sh shRun shIstanbulCover test.js)",
         "test": "(set -e; export PORT=$(./lib.utility2.sh shServerPortRandom); export PORT_REPL=$(./lib.utility2.sh shServerPortRandom); export npm_config_mode_auto_restart=1; ./lib.utility2.sh test test.js)"
     },
-    "version": "2017.3.21"
+    "version": "2017.3.29"
 }
 ```
 
@@ -757,7 +749,7 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
         curl && \
     (busybox --list | xargs -n1 /bin/sh -c 'ln -s /bin/busybox /bin/$0 2>/dev/null' || true) \
         && \
-    curl -sL https://deb.nodesource.com/setup_6.x | /bin/bash - && \
+    curl -#L https://deb.nodesource.com/setup_6.x | /bin/bash - && \
     apt-get install -y nodejs
 # install electron-lite
 VOLUME [ \
@@ -788,19 +780,6 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
         vim
 ```
 
-- Dockerfile.elasticsearch
-```shell
-# Dockerfile.elasticsearch
-FROM kaizhu256/node-utility2:latest
-MAINTAINER kai zhu <kaizhu256@gmail.com>
-# install swagger-ui
-RUN export DEBIAN_FRONTEND=noninteractive && \
-    rm -fr /swagger-ui && \
-    git clone --branch=v2.1.5 --single-branch \
-        https://github.com/swagger-api/swagger-ui.git && \
-    mv swagger-ui/dist /swagger-ui
-```
-
 - Dockerfile.emscripten
 ```shell
 # Dockerfile.emscripten
@@ -829,6 +808,15 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
 # Dockerfile.latest
 FROM kaizhu256/node-utility2:base
 MAINTAINER kai zhu <kaizhu256@gmail.com>
+# install utility2
+RUN export DEBIAN_FRONTEND=noninteractive && \
+    npm install "kaizhu256/node-utility2#alpha" && \
+    cp -a node_modules / && \
+    cd node_modules/utility2 && \
+    npm install && \
+    export DISPLAY=:99.0 && \
+    (Xvfb "$DISPLAY" &) && \
+    npm test
 # install elasticsearch and kibana
 RUN export DEBIAN_FRONTEND=noninteractive && \
     mkdir -p /usr/share/man/man1 && \
@@ -852,32 +840,69 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
 
 # this shell script will run the build for this package
 
-shBuildCiInternalPost() {(set -e
+shBuildCiPost() {(set -e
     #// coverage-hack
     shDeployGithub
     shDeployHeroku
+    case "$CI_BRANCH" in
+    # update public, travis-repo db
+    alpha)
+        mkdir -p tmp/storage.undefined
+        curl -Ls https://kaizhu256.github.io/node-utility2/build/dbTable.TravisRepo > \
+            tmp/storage.undefined/dbTable.TravisRepo
+        ./lib.utility2.sh dbTableTravisRepoUpdate
+        cp tmp/storage.undefined/dbTable.TravisRepo tmp/build
+        ;;
+    esac
     shReadmeBuildLinkVerify
-)}
-
-shBuildCiInternalPre() {(set -e
-    shReadmeTest example.js
-    # save screen-capture
-    (export MODE_BUILD=testExampleJs
-        export modeBrowserTest=screenCapture
-        export url="/tmp/app/tmp/build/coverage.html/app/example.js.html"
-        shBrowserTest
-        export url="$npm_config_dir_build/test-report.html"
-        shBrowserTest)
-    shReadmeTest example.sh
-    shNpmTestPublished
-)}
-
-shBuildCiPost() {(set -e
-    return
+    # restore $CI_BRANCH
+    export CI_BRANCH="$CI_BRANCH_OLD"
+    # docker build
+    docker --version 2>/dev/null || return
+    export DOCKER_TAG="$(printf "$CI_BRANCH" | sed -e "s/docker.//")"
+    # if $DOCKER_TAG is not unique from $CI_BRANCH, then return
+    if [ "$DOCKER_TAG" = "$CI_BRANCH" ]
+    then
+        return
+    fi
+    # docker build
+    docker build -f "tmp/README.Dockerfile.$DOCKER_TAG" -t "$GITHUB_REPO:$DOCKER_TAG" .
+    # docker test
+    case "$CI_BRANCH" in
+    docker.base)
+        # npm test utility2
+        for PACKAGE in utility2 "kaizhu256/node-utility2#alpha"
+        do
+            docker run "$GITHUB_REPO:$DOCKER_TAG" /bin/bash -c "set -e
+                curl -Ls https://raw.githubusercontent.com\
+/kaizhu256/node-utility2/alpha/lib.utility2.sh > /tmp/lib.utility2.sh
+                . /tmp/lib.utility2.sh
+                npm install '$PACKAGE'
+                cd node_modules/utility2
+                shBuildInsideDocker
+            "
+        done
+        ;;
+    esac
+    # https://docs.travis-ci.com/user/docker/#Pushing-a-Docker-Image-to-a-Registry
+    # docker push
+    if [ "$DOCKER_PASSWORD" ]
+    then
+        docker login -p="$DOCKER_PASSWORD" -u="$DOCKER_USERNAME"
+        docker push "$GITHUB_REPO:$DOCKER_TAG"
+    fi
 )}
 
 shBuildCiPre() {(set -e
-    return
+    shReadmeTest example.js
+    # save screen-capture
+    (
+    export MODE_BUILD=testExampleJs
+    shBrowserTest screenCapture /tmp/app/tmp/build/coverage.html/app/example.js.html
+    shBrowserTest screenCapture tmp/build/test-report.html
+    )
+    shReadmeTest example.sh
+    shNpmTestPublished
 )}
 
 # run shBuildCi

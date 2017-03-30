@@ -174,38 +174,41 @@
             return options;
         };
 
-        local.onParallel = function (onError, onDebug) {
+        local.onParallel = function (onError, onEach) {
         /*
          * this function will create a function that will
          * 1. run async tasks in parallel
          * 2. if counter === 0 or error occurred, then call onError with error
          */
-            var self;
+            var onParallel;
             onError = local.onErrorWithStack(onError);
-            onDebug = onDebug || local.nop;
-            self = function (error) {
-                onDebug(error, self);
-                // if previously counter === 0 or error occurred, then return
-                if (self.counter === 0 || self.error) {
+            onEach = onEach || local.nop;
+            onParallel = function (error) {
+                // decrement counter
+                onParallel.counter -= 1;
+                // validate counter
+                console.assert(onParallel.counter >= 0 || error || onParallel.error);
+                // ensure onError is run only once
+                if (onParallel.counter < 0) {
                     return;
                 }
                 // handle error
                 if (error) {
-                    self.error = error;
-                    // ensure counter will decrement to 0
-                    self.counter = 1;
+                    onParallel.error = error;
+                    // ensure counter < 0
+                    onParallel.counter = -1;
                 }
-                // decrement counter
-                self.counter -= 1;
-                // if counter === 0, then call onError with error
-                if (self.counter === 0) {
+                // call onError when done
+                if (onParallel.counter <= 0) {
                     onError(error);
+                    return;
                 }
+                onEach();
             };
             // init counter
-            self.counter = 0;
+            onParallel.counter = 0;
             // return callback
-            return self;
+            return onParallel;
         };
     }());
     switch (local.modeJs) {
@@ -470,6 +473,25 @@
             options.modeNext = 0;
             options.onNext();
         };
+
+        local.contentTouchList = function (options, onError) {
+        /*
+         * this function will touch options.urlList in parallel
+         * https://developer.github.com/v3/repos/contents/#update-a-file
+         */
+            var onParallel;
+            onParallel = local.onParallel(onError);
+            onParallel.counter += 1;
+            options.urlList.forEach(function (url) {
+                onParallel.counter += 1;
+                local.contentTouch({
+                    message: options.message,
+                    modeErrorIgnore: true,
+                    url: url
+                }, onParallel);
+            });
+            onParallel();
+        };
         break;
     }
     switch (local.modeJs) {
@@ -519,11 +541,22 @@
                 console.assert(!error, error);
             });
             break;
-        // touch
+        // touch file
         case 'touch':
             local.contentTouch({
                 message: process.argv[4],
                 url: process.argv[3]
+            }, function (error) {
+                // validate no error occurred
+                console.assert(!error, error);
+            });
+            break;
+        case 'touchlist':
+            local.contentTouchList({
+                message: process.argv[4],
+                urlList: process.argv[3].split(' ').filter(function (element) {
+                    return element;
+                })
             }, function (error) {
                 // validate no error occurred
                 console.assert(!error, error);

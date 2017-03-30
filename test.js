@@ -212,10 +212,7 @@
         /*
          * this function will test ajax's error handling-behavior
          */
-            var onParallel;
-            onParallel = local.onParallel(onError);
-            onParallel.counter += 1;
-            [{
+            options = [{
                 // test 404-not-found-error handling-behavior
                 url: '/test.error-404'
             }, {
@@ -228,8 +225,9 @@
                 // test undefined https-url handling-behavior
                 timeout: 1,
                 url: 'https://undefined:0'
-            }].forEach(function (_) {
-                options = _;
+            }];
+            local.listForEachAsync(options, function (options, ii, list, onParallel) {
+                options = list[ii];
                 onParallel.counter += 1;
                 local.ajax(options, function (error, xhr) {
                     // validate error occurred
@@ -240,21 +238,23 @@
                     xhr.getResponseHeader('undefined');
                     onParallel();
                 });
-            });
-            onParallel();
+            }, onError);
         };
 
         local.testCase_ajax_post = function (options, onError) {
         /*
          * this function will test ajax's POST handling-behavior
          */
-            var onParallel;
             options = {};
-            onParallel = local.onParallel(onError);
-            onParallel.counter += 1;
             // test /test.body handling-behavior
-            onParallel.counter += 1;
-            ['', 'arraybuffer', 'stream', 'text'].forEach(function (responseType) {
+            local.listForEachAsync([
+                '',
+                'arraybuffer',
+                'stream',
+                'text'
+            ], function (responseType, ii, list, onParallel) {
+                responseType = list[ii];
+                onParallel.counter += 1;
                 local.ajax({
                     data: responseType === 'arraybuffer'
                         // test buffer post handling-behavior
@@ -289,41 +289,43 @@
                     }
                     onParallel();
                 });
-            });
-            // test /test.echo handling-behavior
-            local.ajax({
-                data:  'aa',
-                // test request-header handling-behavior
-                headers: { 'X-Request-Header-Test': 'aa' },
-                method: 'POST',
-                // test modeDebug handling-behavior
-                modeDebug: true,
-                url: '/test.echo'
-            }, function (error, xhr) {
+            }, function (error) {
                 // validate no error occurred
                 local.assert(!error, error);
-                // validate statusCode
-                local.assertJsonEqual(xhr.statusCode, 200);
-                // validate response
-                options.data = xhr.responseText;
-                local.assert((/\r\naa$/).test(options.data), options.data);
-                local.assert(
-                    (/\r\nx-request-header-test: aa\r\n/).test(options.data),
-                    options.data
-                );
-                // validate responseHeaders
-                options.data = xhr.getAllResponseHeaders();
-                local.assert(
-                    (/^X-Response-Header-Test: bb\r\n/im).test(options.data),
-                    options.data
-                );
-                options.data = xhr.getResponseHeader('x-response-header-test');
-                local.assertJsonEqual(options.data, 'bb');
-                options.data = xhr.getResponseHeader('undefined');
-                local.assertJsonEqual(options.data, null);
-                onParallel();
+                // test /test.echo handling-behavior
+                local.ajax({
+                    data:  'aa',
+                    // test request-header handling-behavior
+                    headers: { 'X-Request-Header-Test': 'aa' },
+                    method: 'POST',
+                    // test modeDebug handling-behavior
+                    modeDebug: true,
+                    url: '/test.echo'
+                }, function (error, xhr) {
+                    // validate no error occurred
+                    local.assert(!error, error);
+                    // validate statusCode
+                    local.assertJsonEqual(xhr.statusCode, 200);
+                    // validate response
+                    options.data = xhr.responseText;
+                    local.assert((/\r\naa$/).test(options.data), options.data);
+                    local.assert(
+                        (/\r\nx-request-header-test: aa\r\n/).test(options.data),
+                        options.data
+                    );
+                    // validate responseHeaders
+                    options.data = xhr.getAllResponseHeaders();
+                    local.assert(
+                        (/^X-Response-Header-Test: bb\r\n/im).test(options.data),
+                        options.data
+                    );
+                    options.data = xhr.getResponseHeader('x-response-header-test');
+                    local.assertJsonEqual(options.data, 'bb');
+                    options.data = xhr.getResponseHeader('undefined');
+                    local.assertJsonEqual(options.data, null);
+                    onError();
+                });
             });
-            onParallel();
         };
 
         local.testCase_ajax_timeout = function (options, onError) {
@@ -421,20 +423,18 @@
         /*
          * this function will test blobRead's default handling-behavior
          */
-            var onParallel;
-            onParallel = local.onParallel(onError);
-            onParallel.counter += 1;
-            options = {};
-            [
+            options = { list: [
                 new local.Blob(['aa', 'bb', '\u1234 ', 0]),
                 new local.Blob(['aa', 'bb', '\u1234 ', 0], {
                     type: 'text/plain; charset=utf-8'
                 })
-            ].forEach(function (blob, ii) {
-                options.blob = blob;
+            ] };
+            local.listForEachAsync(options.list, function (blob, ii, list, onParallel) {
+                onParallel.counter += 1;
+                blob = list[ii];
                 [null, 'dataURL', 'text'].forEach(function (encoding) {
                     onParallel.counter += 1;
-                    local.blobRead(options.blob, encoding, function (error, data) {
+                    local.blobRead(blob, encoding, function (error, data) {
                         // validate no error occurred
                         local.assert(!error, error);
                         // validate data
@@ -461,8 +461,8 @@
                         onParallel();
                     });
                 });
-            });
-            onParallel();
+                onParallel();
+            }, onError);
         };
 
         local.testCase_bufferCreate_default = function (options, onError) {
@@ -523,6 +523,41 @@
                 local.assertJsonEqual(options.data, options.validate);
             });
             onError();
+        };
+
+        local.testCase_dbTableTravisRepoUpdate_default = function (options, onError) {
+        /*
+         * this function will test dbTableTravisRepoUpdate's default handling-behavior
+         */
+            options = [
+                [local, {
+                    ajax: function (options, onError) {
+                        onError(null, { responseText: JSON.stringify([{
+                            active: true,
+                            private: false,
+                            uid: ''
+                        }]) }, options);
+                    },
+                    db: {
+                        crudGetManyByQuery: function () {
+                            return [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}];
+                        },
+                        crudUpdateManyById: local.nop,
+                        crudUpdateOneById: local.nop,
+                        dbTableCreateOne: function (options, onError) {
+                            (onError || local.nop)(null, local.db, options);
+                            return local.db;
+                        }
+                    },
+                    timeElapsedPoll: function () {
+                        return { timeElapsed: Infinity };
+                    }
+                }]
+            ];
+            local.testMock(options, function (onError) {
+                local.dbTableTravisRepoUpdate({}, local.onErrorThrow);
+                onError();
+            }, onError);
         };
 
         local.testCase_debug_inline_default = function (options, onError) {
@@ -720,6 +755,80 @@
             options.data = local.jwtHs256Decode(options.token, 'undefined');
             local.assertJsonEqual(options.data, {});
             onError();
+        };
+
+        local.testCase_listForEachAsync_default = function (options, onError) {
+        /*
+         * this function will test listForEachAsync's default handling-behavior
+         */
+            options = {};
+            local.onNext(options, function (error) {
+                switch (options.modeNext) {
+                case 1:
+                    // test null-case handling-behavior
+                    local.listForEachAsync([], local.onErrorThrow, options.onNext);
+                    break;
+                case 2:
+                    local.listForEachAsync([null], function (element, ii, list, onParallel) {
+                        // test error handling-behavior
+                        onParallel(local.errorDefault, element, list[ii]);
+                        // test multiple callback handling behavior
+                        onParallel();
+                    }, function (error) {
+                        // validate error occurred
+                        local.assert(error, error);
+                        options.onNext();
+                    });
+                    break;
+                case 3:
+                    options.data = [];
+                    // test rateLimit handling-behavior
+                    options.rateLimit = 2;
+                    options.rateMax = 0;
+                    local.listForEachAsync([1, 2, 3], function (element, ii, list, onParallel) {
+                        onParallel.counter += 1;
+                        options.rateMax = Math.max(onParallel.counter, options.rateMax);
+                        // test async handling-behavior
+                        setTimeout(function () {
+                            element = list[ii];
+                            options.data[ii] = element;
+                            onParallel();
+                        });
+                    }, options.onNext, options.rateLimit);
+                    break;
+                case 4:
+                    // validate data
+                    local.assertJsonEqual(options.data, [1, 2, 3]);
+                    local.assertJsonEqual(options.rateMax, 2);
+                    options.data = [];
+                    options.rateLimit = 'syntax error';
+                    options.rateMax = 0;
+                    local.listForEachAsync([1, 2, 3], function (
+                        element,
+                        ii,
+                        list,
+                        onParallel
+                    ) {
+                        // test sync handling-behavior
+                        onParallel.counter += 1;
+                        options.rateMax = Math.max(onParallel.counter, options.rateMax);
+                        element = list[ii];
+                        options.data[ii] = element;
+                        onParallel();
+                    }, options.onNext, options.rateLimit);
+                    break;
+                case 5:
+                    // validate data
+                    local.assertJsonEqual(options.data, [1, 2, 3]);
+                    local.assertJsonEqual(options.rateMax, 2);
+                    options.onNext();
+                    break;
+                default:
+                    onError(error);
+                }
+            });
+            options.modeNext = 0;
+            options.onNext();
         };
 
         local.testCase_listGetElementRandom_default = function (options, onError) {
@@ -1020,12 +1129,10 @@
             var onParallel, onParallelError;
             // jslint-hack
             local.nop(options);
-            // test onDebug handling-behavior
-            onParallel = local.onParallel(onError, function (error, self) {
-                // validate no error occurred
-                local.assert(!error, error);
-                // validate self
-                local.assert(self.counter >= 0, self);
+            // test onEach handling-behavior
+            onParallel = local.onParallel(onError, function () {
+                // validate counter
+                local.assert(onParallel.counter >= 0, onParallel);
             });
             onParallel.counter += 1;
             // test multiple-task handling-behavior
@@ -1060,8 +1167,8 @@
                     error.message.indexOf('testCase_onTimeout_errorTimeout') >= 0,
                     error
                 );
-                // save timeElapsed
-                local.timeElapsedStop(options);
+                // poll timeElapsed
+                local.timeElapsedPoll(options);
                 // validate timeElapsed passed is greater than timeout
                 local.assert(options.timeElapsed >= 1500, options);
                 onError();
@@ -1097,6 +1204,17 @@
                     options.timeElapsed < local.timeoutDefault, options.timeElapsed);
                 onError();
             });
+        };
+
+        local.testCase_setTimeoutOnError_default = function (options, onError) {
+        /*
+         * this function will test setTimeoutOnError's default handling-behavior
+         */
+            options = {};
+            // test null-case handling-behavior
+            local.assertJsonEqual(local.setTimeoutOnError(), undefined);
+            // test onError handling-behavior
+            local.assertJsonEqual(local.setTimeoutOnError(onError, null, options), {});
         };
 
         local.testCase_sjclHashScryptXxx_default = function (options, onError) {
@@ -1143,6 +1261,20 @@
             options = {};
             options.data = local.sjclHmacSha256Create('aa', 'bb');
             local.assertJsonEqual(options.data, 'cgAzwbGmYMrEqU9B05ADLwtflGJxqijX5BWd2hAlcfM=');
+            onError();
+        };
+
+        local.testCase_stringHtmlSafe_default = function (options, onError) {
+        /*
+         * this function will test stringHtmlSafe's default handling-behavior
+         */
+            options = {};
+            // test undefined valueDefault handling-behavior
+            options.data = local.stringHtmlSafe('<a href="/undefined?aa=1&bb=2#cc"></a>');
+            local.assertJsonEqual(
+                options.data,
+                '&#x3c;a href=&#x22;/undefined?aa=1&#x26;bb=2#cc&#x22;&#x3e;&#x3c;/a&#x3e;'
+            );
             onError();
         };
 
@@ -1265,7 +1397,7 @@
             options.data = local.templateRender('{{aa}}', {});
             local.assertJsonEqual(options.data, '{{aa}}');
             // test default handling-behavior
-            options.data = local.templateRender('{{aa}} ' +
+            options.data = local.templateRender('{{aa alphanumeric}} ' +
                 '{{aa htmlSafe jsonStringify jsonStringify4 markdownCodeSafe ' +
                 'decodeURIComponent encodeURIComponent trim}} ' +
                 '{{bb}} {{cc}} {{dd}} {{ee.ff}}', {
@@ -1282,7 +1414,7 @@
                 });
             local.assertJsonEqual(
                 options.data,
-                '`<aa>` %22%5C%22\'%26%23x3c%3Baa%26%23x3e%3B\'%5C%22%22 1 null {{dd}} gg'
+                '__aa__ %22%5C%22\'%26%23x3c%3Baa%26%23x3e%3B\'%5C%22%22 1 null {{dd}} gg'
             );
             // test partial handling-behavior
             options.data = local.templateRender('{{#undefined aa}}\n' +

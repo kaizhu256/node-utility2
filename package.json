@@ -8,7 +8,7 @@
         "utility2-jslint": "lib.jslint.js",
         "utility2-uglifyjs": "lib.uglifyjs.js"
     },
-    "description": "the zero-dependency swiss-army-knife tool for building, testing, and deploying webapps",
+    "description": "the zero-dependency, swiss-army-knife utility for building, testing, and deploying webapps",
     "devDependencies": {
         "electron-lite": "kaizhu256/node-electron-lite#alpha"
     },
@@ -17,34 +17,28 @@
     },
     "homepage": "https://github.com/kaizhu256/node-utility2",
     "keywords": [
-        "browser",
         "build",
-        "busybox",
         "ci",
         "code-coverage",
         "continuous-integration",
         "deploy",
-        "docker",
+        "devops",
         "electron",
         "headless-browser",
         "istanbul",
-        "jscover",
         "jscoverage",
         "phantomjs",
         "slimerjs",
-        "swiss-army-knife",
         "test",
         "test-coverage",
         "travis",
-        "travis-ci",
-        "utility2",
-        "webapp"
+        "travis-ci"
     ],
     "license": "MIT",
     "main": "lib.utility2.js",
     "name": "utility2",
     "nameAlias": "utility2",
-    "nameAliasPublish": "busybox npmtest-lite test-lite",
+    "nameAliasPublish": "npmtest-lite npmtest2 test-lite",
     "nameOriginal": "utility2",
     "os": [
         "darwin",
@@ -63,5 +57,5 @@
         "start": "(set -e; export PORT=${PORT:-8080}; if [ -f assets.app.js ]; then node assets.app.js; exit; fi; export npm_config_mode_auto_restart=1; ./lib.utility2.sh shRun shIstanbulCover test.js)",
         "test": "(set -e; export PORT=$(./lib.utility2.sh shServerPortRandom); export PORT_REPL=$(./lib.utility2.sh shServerPortRandom); export npm_config_mode_auto_restart=1; ./lib.utility2.sh test test.js)"
     },
-    "version": "2017.3.21"
+    "version": "2017.3.29"
 }
