@@ -539,14 +539,20 @@
                         }]) }, options);
                     },
                     db: {
+                        crudCountAll: function () {
+                            return 0;
+                        },
                         crudGetManyByQuery: function () {
                             return [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}];
                         },
+                        crudSetManyById: local.nop,
                         crudUpdateManyById: local.nop,
-                        crudUpdateOneById: local.nop,
                         dbTableCreateOne: function (options, onError) {
                             (onError || local.nop)(null, local.db, options);
                             return local.db;
+                        },
+                        save: function (onError) {
+                            onError();
                         }
                     },
                     timeElapsedPoll: function () {
@@ -597,8 +603,8 @@
          * this function will exit's default handling-behavior
          */
             options = [
-                // suppress console.log
-                [console, { log: local.nop }]
+                // suppress console.error
+                [console, { error: local.nop }]
             ];
             // test exit's default handling-behavior
             local.testMock(options, function (onError) {
@@ -2151,8 +2157,8 @@
          * this function will test testReport's default handling-behavior
          */
             options = [
-                // suppress console.log
-                [console, { log: local.nop }],
+                // suppress console.error
+                [console, { error: local.nop }],
                 [local, { exit: local.nop }]
             ];
             local.testMock(options, function (onError) {

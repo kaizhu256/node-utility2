@@ -39,21 +39,11 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 - none
 
 #### changes for v2017.3.29
-- npm publish 2017.3.29
-- add args \$modeBrowserTest and \$url to shell-function shBrowserTest
-- add branch-cron
-- add function dbTableTravisRepoCreate, dbTableTravisRepoCrudGetManyByQuery, dbTableTravisRepoUpdate, and listForEachAsync
-- add github-crud function contentTouchList
-- add shell-function shGitRemotePromote to auto-promote branches alpha -> beta -> master
-- add shell-function shGithubRepoListTouch, shListUnflattenAndApply, and shNpmInstallWithPeerDependencies
-- auto update public travis-repos in alpha-branch
-- deprecate ssh-key in favor of github oauth - https://stackoverflow.com/questions/18027115/committing-via-travis-ci-failing
-- enable shNpmdocRepoListCreate in travis-ci
-- enhance shell-function shNpmPackageListingCreate to add total package-size to package-listing
-- fix apidoc bug 'Function.prototype.toString is not generic'
-- fix shell-function shInit bug - export: npm_package_react-native: bad variable name
-- sanitize sensitive env-vars from electron.*.html
-- use optional remote-credentials during travis-ci build
+- add html-scraper to function browerTest
+- add property 'sortDefault' to dbTable, which defaults to [{ fieldName: '_timeUpdated', isDescending: true }]
+- add optional callback to function dbTable.prototype.save
+- add shell-function shListForEachAsyncSpawn
+- optimize function dbTableTravisRepoUpdate for db-storage-space
 - none
 
 #### this package requires
@@ -101,7 +91,7 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 
 shExampleSh() {(set -e
     # npm install utility2
-    npm install utility2
+    npm install "kaizhu256/node-utility2#alpha"
     # serve a webpage that will interactively run browser-tests with coverage
     cd node_modules/utility2 && export PORT=8081 && npm start
 )}
@@ -130,7 +120,7 @@ this script will demo automated browser-tests with coverage (via electron and is
 instruction
     1. save this script as example.js
     2. run the shell command:
-        $ npm install electron-lite utility2 && \
+        $ npm install electron-lite "kaizhu256/node-utility2#alpha" && \
             PATH="$(pwd)/node_modules/.bin:$PATH" \
             PORT=8081 \
             npm_config_mode_coverage=utility2 \
@@ -687,7 +677,7 @@ utility2-comment -->\n\
     "main": "lib.utility2.js",
     "name": "utility2",
     "nameAlias": "utility2",
-    "nameAliasPublish": "npmtest-lite npmtest2 test-lite",
+    "nameAliasPublish": "npmtest-lite npmtest4 test-lite",
     "nameOriginal": "utility2",
     "os": [
         "darwin",
@@ -848,10 +838,10 @@ shBuildCiPost() {(set -e
     # update public, travis-repo db
     alpha)
         mkdir -p tmp/storage.undefined
-        curl -Ls https://kaizhu256.github.io/node-utility2/build/dbTable.TravisRepo > \
-            tmp/storage.undefined/dbTable.TravisRepo
-        ./lib.utility2.sh dbTableTravisRepoUpdate
-        cp tmp/storage.undefined/dbTable.TravisRepo tmp/build
+        curl -Ls https://kaizhu256.github.io/node-utility2/build/dbTable.TravisRepo.json > \
+            tmp/storage.undefined/dbTable.TravisRepo.json
+        ./lib.utility2.sh dbTableTravisRepoUpdate '{"queryLimit":500,"rateLimit":20}'
+        cp tmp/storage.undefined/dbTable.TravisRepo.json tmp/build
         ;;
     esac
     shReadmeBuildLinkVerify
@@ -902,7 +892,7 @@ shBuildCiPre() {(set -e
     shBrowserTest screenCapture tmp/build/test-report.html
     )
     shReadmeTest example.sh
-    shNpmTestPublished
+    #!! shNpmTestPublished
 )}
 
 # run shBuildCi

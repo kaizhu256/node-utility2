@@ -1231,6 +1231,7 @@ shGithubRepoBaseCreate() {(set -e
     fi
     GITHUB_REPO="$1"
     GITHUB_ORG="$2"
+    export MODE_BUILD="${MODE_BUILD:-shGithubRepoBaseCreate}"
     NAME="$(printf "$GITHUB_REPO" | sed -e s/.*\\///)"
     URL=https://api.github.com/user/repos
     # init github $GITHUB_ORG url
@@ -1238,7 +1239,7 @@ shGithubRepoBaseCreate() {(set -e
     then
         URL="https://api.github.com/orgs/$GITHUB_ORG/repos"
     fi
-    shBuildPrint "creating github repo https://github.com/$GITHUB_REPO.git"
+    shBuildPrint "creating github-repo https://github.com/$GITHUB_REPO.git"
     # init /tmp/githubRepoBase
     if [ ! -d /tmp/githubRepoBase ]
     then
@@ -1253,7 +1254,9 @@ shGithubRepoBaseCreate() {(set -e
         git checkout alpha
     )
     fi
-    cd /tmp/githubRepoBase
+    rm -fr "/tmp/$GITHUB_REPO"
+    cp -a /tmp/githubRepoBase "/tmp/$GITHUB_REPO"
+    cd "/tmp/$GITHUB_REPO"
     # create github $GITHUB_REPO with $GITHUB_TOKEN
     if ! (curl -fs "https://github.com/$GITHUB_REPO" > /dev/null 2>&1)
     then
@@ -1678,6 +1681,14 @@ shKillallElectron() {(set -e
     killall Electron electron
 )}
 
+shListForEachAsyncSpawn() {(set -e
+# this function will async-run the newline-separated tasks in $LIST with the given $RATE_LIMIT
+    LIST="$1"
+    RATE_LIMIT="$1"
+    shInitNpmConfigDirUtility2
+    "$npm_config_dir_utility2/lib.utility2.js" listForEachAsyncSpawn "$LIST" "$RATE_LIMIT"
+)}
+
 shListUnflattenAndApply() {(set -e
 # this function will unflatten the list and apply it to $@
     LIST="$1"
@@ -1735,7 +1746,8 @@ shMain() {
         [ "$COMMAND" = ajax ] ||
         [ "$COMMAND" = browserTest ] ||
         [ "$COMMAND" = dbTableTravisRepoCrudGetManyByQuery ] ||
-        [ "$COMMAND" = dbTableTravisRepoUpdate ]
+        [ "$COMMAND" = dbTableTravisRepoUpdate ] ||
+        [ "$COMMAND" = listForEachAsyncSpawn ]
     then
         shInitNpmConfigDirUtility2
         "$npm_config_dir_utility2/lib.utility2.js" "$COMMAND" "$@"
@@ -2471,9 +2483,9 @@ shRun() {(set -e
         export npm_config_mode_auto_restart_child=1
         while true
         do
-            shBuildPrint "(re)starting $*"
+            printf "(re)starting $*\n"
             (eval "$@") || EXIT_CODE=$?
-            shBuildPrint "process exited with code $EXIT_CODE"
+            printf "process exited with code $EXIT_CODE\n"
             # http://en.wikipedia.org/wiki/Unix_signal
             # if $EXIT_CODE != 77, then exit process
             if [ "$EXIT_CODE" != 77 ]
@@ -2481,9 +2493,9 @@ shRun() {(set -e
                 break
             fi
             # else restart process after 1 second
-            shSleep 1
+            sleep 1
         done
-        shBuildPrint "EXIT_CODE - $EXIT_CODE"
+        printf "EXIT_CODE - $EXIT_CODE\n"
         return "$EXIT_CODE"
     # eval argv
     else
@@ -2749,30 +2761,19 @@ shTravisRepoListCreate() {(set -e
         git checkout alpha
     )
     fi
+    LIST2=""
     for GITHUB_REPO in $LIST
     do
-    (
         if [ ! "$TRAVIS_REPO_CREATE_FORCE" ] && (curl -fs \
             "https://raw.githubusercontent.com/$GITHUB_REPO/alpha/README.md" > /dev/null)
         then
-            return
+            continue
         fi
-        shGithubRepoBaseCreate "$GITHUB_REPO" "$GITHUB_ORG"
-    ) &
+        LIST2="$LIST2\n\
+shGithubRepoBaseCreate $GITHUB_REPO $GITHUB_ORG\
+"
     done
-    for JOB in $(jobs -p)
-    do
-        if ! wait "$JOB"
-        then
-            EXIT_CODE=1
-            for JOB in $(jobs -p)
-            do
-                kill "$JOB" || true
-            done
-            shBuildPrint "EXIT_CODE - $EXIT_CODE"
-            return "$EXIT_CODE"
-        fi
-    done
+    shListForEachAsyncSpawn "$LIST2"
     shSleep 5
     shBuildPrint "... created github-repos $LIST"
     shBuildPrint "syncing travis ..."

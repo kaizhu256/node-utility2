@@ -618,6 +618,7 @@ local.templateApidocMd = '\
                 exampleFileList: [],
                 exampleList: [],
                 html: '',
+                libFileList: [],
                 moduleDict: {},
                 moduleExtraDict: {},
                 template: local.templateApidocHtml
@@ -633,9 +634,14 @@ local.templateApidocMd = '\
                     })
             ).map(readExample));
             // init moduleMain
-            moduleMain = options.moduleDict[options.env.npm_package_name] =
-                options.moduleDict[options.env.npm_package_name] ||
-                require(options.dir + (process.env.npm_package_buildNpmdocMain || ''));
+            try {
+                moduleMain = {};
+                moduleMain = options.moduleDict[options.env.npm_package_name] =
+                    options.moduleDict[options.env.npm_package_name] ||
+                    require(options.dir + (process.env.npm_package_buildNpmdocMain || ''));
+            } catch (ignore) {
+            }
+            options.moduleDict[options.env.npm_package_name] = moduleMain;
             // init circularList - builtin
             Object.keys(process.binding('natives')).forEach(function (key) {
                 if (!(/\/|_linklist|sys/).test(key)) {
@@ -665,30 +671,55 @@ local.templateApidocMd = '\
             });
             // init moduleDict child
             local.apidocModuleDictAdd(options, options.moduleDict);
-            // init moduleDict lib
-            (function () {
-                // optimization - isolate try-catch block
+            // init moduleExtraDict
+            local.fs.readdirSync(options.dir).sort().forEach(function (file) {
                 try {
-                    options.libFileList = options.libFileList ||
-                        local.fs.readdirSync(options.dir + '/lib')
-                        .sort()
-                        .map(function (file) {
-                            return 'lib/' + file;
-                        });
-                } catch (ignore) {
+                    local.fs.readdirSync(options.dir + '/' + file).sort().forEach(function (
+                        file2
+                    ) {
+                        file2 = file + '/' + file2;
+                        options.libFileList.push(file2);
+                    });
+                } catch (errorCaught) {
+                    options.libFileList.push(file);
                 }
-            }());
+            });
             module = options.moduleExtraDict[options.env.npm_package_name] =
                 options.moduleExtraDict[options.env.npm_package_name] || {};
-            (options.libFileList || []).forEach(function (file) {
+            options.libFileList.forEach(function (file) {
                 try {
-                    tmp = {
-                        module: require(local.path.resolve(options.dir, file)),
-                        name: local.path.basename(file)
-                            .replace((/\.[^.]*?$/), '')
-                            .replace((/\W/g), '_')
-                    };
-                    if (module[tmp.name] || options.circularList.indexOf(tmp.module) >= 0) {
+                    tmp = {};
+                    tmp.name = local.path.basename(file)
+                        .replace('lib.', '')
+                        .replace((/\.[^.]*?$/), '')
+                        .replace((/\W/g), '_');
+                    [
+                        tmp.name,
+                        tmp.name[0].toUpperCase() + tmp.name.slice(1)
+                    ].some(function (name) {
+                        tmp.skip = local.path.extname(file) !== '.js' ||
+                            file.indexOf(options.packageJson.main) >= 0 ||
+                            new RegExp('(?:\\b|_)(?:archive|artifact|assets|' +
+                                'bin|bower_component|build|' +
+                                'cli|coverage' +
+                                'doc|dist|' +
+                                'example|external|' +
+                                'fixture|' +
+                                'index|' +
+                                'log|' +
+                                'min|mock|' +
+                                'node_modules|' +
+                                'rollup|' +
+                                'test|tmp|' +
+                                'vendor)(?:\\b|_)').test(file.toLowerCase()) ||
+                            module[name];
+                        return tmp.skip;
+                    });
+                    if (tmp.skip) {
+                        return;
+                    }
+                    tmp.module = require(options.dir + '/' + file);
+                    if (options.circularList.indexOf(tmp.module) >= 0) {
                         return;
                     }
                     module[tmp.name] = tmp.module;
@@ -1439,6 +1470,7 @@ local.templateApidocMd = '\
             this.dbRowList = [];
             this.isDirty = null;
             this.idIndexList = [{ name: '_id', dict: {} }];
+            this.onSaveList = [];
             this.ttl = 0;
             this.ttlLast = 0;
         };
@@ -1526,8 +1558,7 @@ local.templateApidocMd = '\
                 // recurse
                 self._crudRemoveOneById(result, circularList);
             });
-            // persist
-            this._persist();
+            self.save();
             return result;
         };
 
@@ -1560,7 +1591,9 @@ local.templateApidocMd = '\
             // update timestamp
             timeNow = new Date().toISOString();
             dbRow._timeCreated = dbRow._timeCreated || timeNow;
-            dbRow._timeUpdated = timeNow;
+            if (!local.modeImport) {
+                dbRow._timeUpdated = timeNow;
+            }
             // normalize
             normalize(dbRow);
             dbRow = local.jsonCopy(dbRow);
@@ -1578,8 +1611,7 @@ local.templateApidocMd = '\
             });
             // update dbRowList
             this.dbRowList.push(dbRow);
-            // persist
-            this._persist();
+            this.save();
             return dbRow;
         };
 
@@ -1611,31 +1643,6 @@ local.templateApidocMd = '\
             // replace dbRow
             result = this._crudSetOneById(result);
             return result;
-        };
-
-        local._DbTable.prototype._persist = function () {
-        /*
-         * this function will persist the dbTable to storage
-         */
-            var self;
-            self = this;
-            // throttle storage-writes to once every 1000 ms
-            if (self.timerPersist) {
-                return;
-            }
-            self.timerPersist = setTimeout(function () {
-                if (self.timerPersist) {
-                    self.timerPersist = null;
-                    self._save();
-                }
-            }, 1000);
-        };
-
-        local._DbTable.prototype._save = function (onError) {
-        /*
-         * this function will save the dbTable to storage
-         */
-            local.storageSetItem('dbTable.' + this.name, this.export(), onError);
         };
 
         local._DbTable.prototype.crudCountAll = function (onError) {
@@ -1682,7 +1689,7 @@ local.templateApidocMd = '\
             // get dbRow's with the given options.query
             result = this._crudGetManyByQuery(options.query);
             // sort dbRow's with the given options.sort
-            local.normalizeList(options.sort).forEach(function (element) {
+            local.normalizeList(options.sort || this.sortDefault).forEach(function (element) {
                 if (element.isDescending) {
                     result.sort(function (aa, bb) {
                         return -local.sortCompare(
@@ -1862,10 +1869,13 @@ local.templateApidocMd = '\
          * this function will drop the dbTable
          */
             console.error('dropping dbTable ' + this.name + ' ...');
+            // cancel pending save
+            this.timerSave = null;
+            while (this.onSaveList.length) {
+                this.onSaveList.shift()();
+            }
             // reset dbTable
             local._DbTable.call(this, this);
-            // cancel pending persist
-            this.timerPersist = null;
             // clear persistence
             local.storageRemoveItem('dbTable.' + this.name, onError);
         };
@@ -1874,7 +1884,7 @@ local.templateApidocMd = '\
         /*
          * this function will export the db
          */
-            var ii, result, self;
+            var result, self;
             this._cleanup();
             self = this;
             result = '';
@@ -1885,11 +1895,10 @@ local.templateApidocMd = '\
                     name: idIndex.name
                 }) + '\n';
             });
-            // optimization - for-loop
-            for (ii = 0; ii < self.dbRowList.length; ii += 1) {
-                result += self.name + ' dbRowSet ' +
-                    JSON.stringify(local.dbRowProject(self.dbRowList[ii])) + '\n';
-            }
+            result += self.name + ' sortDefault ' + JSON.stringify(self.sortDefault) + '\n';
+            self.crudGetManyByQuery({}).forEach(function (dbRow) {
+                result += self.name + ' dbRowSet ' + JSON.stringify(dbRow) + '\n';
+            });
             return local.setTimeoutOnError(onError, null, result.trim());
         };
 
@@ -1922,8 +1931,7 @@ local.templateApidocMd = '\
                     idIndex.dict[local.dbRowSetId(dbRow, idIndex)] = dbRow;
                 }
             }
-            // persist
-            this._persist();
+            this.save();
             return local.setTimeoutOnError(onError);
         };
 
@@ -1937,9 +1945,33 @@ local.templateApidocMd = '\
             this.idIndexList = this.idIndexList.filter(function (idIndex) {
                 return idIndex.name !== name || idIndex.name === '_id';
             });
-            // persist
-            this._persist();
+            this.save();
             return local.setTimeoutOnError(onError);
+        };
+
+        local._DbTable.prototype.save = function (onError) {
+        /*
+         * this function will save the dbTable to storage
+         */
+            var self;
+            self = this;
+            if (local.modeImport) {
+                return;
+            }
+            if (onError) {
+                self.onSaveList.push(onError);
+            }
+            // throttle storage-writes to once every 1000 ms
+            self.timerSave = self.timerSave || setTimeout(function () {
+                self.timerSave = null;
+                local.storageSetItem('dbTable.' + self.name + '.json', self.export(), function (
+                    error
+                ) {
+                    while (self.onSaveList.length) {
+                        self.onSaveList.shift()(error);
+                    }
+                });
+            }, 1000);
         };
 
         local._DbTable.prototype.ttlSet = function (ttl, onError) {
@@ -1955,8 +1987,7 @@ local.templateApidocMd = '\
             for (ii = 0; ii < this.dbRowList.length; ii += 1) {
                 this.dbRowList[ii].$meta.ttl = ttl;
             }
-            // persist
-            this._persist();
+            this.save();
             return local.setTimeoutOnError(onError);
         };
 
@@ -2012,6 +2043,10 @@ local.templateApidocMd = '\
          * this function will import the serialized text into the db
          */
             var dbTable;
+            local.modeImport = true;
+            setTimeout(function () {
+                local.modeImport = null;
+            });
             text.replace((/^(\w\S*?) (\S+?) (\S.+?)$/gm), function (
                 match0,
                 match1,
@@ -2029,6 +2064,9 @@ local.templateApidocMd = '\
                     dbTable = local.dbTableCreateOne({ isLoaded: true, name: match1 });
                     dbTable.idIndexCreate(JSON.parse(match3));
                     break;
+                case 'sortDefault':
+                    dbTable = local.dbTableCreateOne({ isLoaded: true, name: match1 });
+                    break;
                 case 'ttlSet':
                     dbTable = local.dbTableCreateOne({ isLoaded: true, name: match1 });
                     dbTable.ttlSet(JSON.parse(match3));
@@ -2037,6 +2075,7 @@ local.templateApidocMd = '\
                     local.onErrorDefault(new Error('dbImport - invalid operation - ' + match0));
                 }
             });
+            local.modeImport = null;
             return local.setTimeoutOnError(onError);
         };
 
@@ -2297,7 +2336,7 @@ local.templateApidocMd = '\
             onParallel.counter += 1;
             Object.keys(local.dbTableDict).forEach(function (key) {
                 onParallel.counter += 1;
-                local.dbTableDict[key]._save(onParallel);
+                local.dbTableDict[key].save(onParallel);
             });
             onParallel();
         };
@@ -2327,6 +2366,9 @@ local.templateApidocMd = '\
             // register dbTable
             self = local.dbTableDict[options.name] =
                 local.dbTableDict[options.name] || new local._DbTable(options);
+            self.sortDefault = options.sortDefault ||
+                self.sortDefault ||
+                [{ fieldName: '_timeUpdated', isDescending: true }];
             // remove idIndex
             local.normalizeList(options.idIndexRemoveList).forEach(function (index) {
                 self.idIndexRemove(index);
@@ -2339,7 +2381,7 @@ local.templateApidocMd = '\
             self.crudSetManyById(options.dbRowList);
             self.isLoaded = self.isLoaded || options.isLoaded;
             if (!self.isLoaded) {
-                local.storageGetItem('dbTable.' + self.name, function (error, data) {
+                local.storageGetItem('dbTable.' + self.name + '.json', function (error, data) {
                     // validate no error occurred
                     console.assert(!error, error);
                     if (!self.isLoaded) {
@@ -11344,7 +11386,7 @@ local.assetsDict['/favicon.ico'] = '';
          * this function will spawn an electron process to test options.url
          */
             var done, modeNext, onNext, onParallel, timerTimeout;
-            if (local.modeJs === 'node') {
+            if (typeof local === 'object' && local && local.modeJs === 'node') {
                 local.objectSetDefault(options, local.envSanitize(local.env));
                 options.timeoutDefault = options.timeoutDefault || local.timeoutDefault;
             }
@@ -11376,7 +11418,8 @@ local.assetsDict['/favicon.ico'] = '';
                         fileTestReport: local.env.npm_config_dir_tmp +
                             '/test-report.' + options.testName + '.json',
                         modeBrowserTest: 'test',
-                        timeExit: Date.now() + options.timeoutDefault
+                        timeExit: Date.now() + options.timeoutDefault,
+                        timeoutScreenCapture: Number(options.timeoutScreenCapture || 10000)
                     }, 1);
                     // init timerTimeout
                     timerTimeout = local.onTimeout(
@@ -11384,16 +11427,22 @@ local.assetsDict['/favicon.ico'] = '';
                         options.timeoutDefault,
                         options.testName
                     );
-                    // init file urlBrowser
+                    // init file fileElectronHtml
+                    options.browserTestScript = local.browserTest
+                        .toString()
+                        .replace((/<\//g), '<\\/')
+                        // coverage-hack - un-instrument
+                        .replace((/\b__cov_.*?\+\+/g), '0');
                     options.modeNext = 20;
-                    options.urlBrowser = local.env.npm_config_dir_tmp + '/electron.' +
+                    options.fileElectronHtml = local.env.npm_config_dir_tmp + '/electron.' +
                         Date.now().toString(16) + Math.random().toString(16) + '.html';
-                    local.fsWriteFileWithMkdirpSync(options.urlBrowser, '<style>body {' +
+                    local.fsWriteFileWithMkdirpSync(options.fileElectronHtml, '<style>body {' +
                             'border: 1px solid black;' +
                             'margin: 0;' +
                             'padding: 0;' +
                         '}</style>' +
-                        '<webview id=webview1 src="' +
+                        '<webview id=webview1 preload="' + options.fileElectronHtml +
+                        '.preload.js" src="' +
                         options.url.replace('{{timeExit}}', options.timeExit) +
                         '" style="' +
                             'border: none;' +
@@ -11402,14 +11451,17 @@ local.assetsDict['/favicon.ico'] = '';
                             'padding: 0;' +
                             'width: 100%;' +
                         '"></webview>' +
-                        '<script>window.local = {}; (' + local.browserTest
-                            .toString()
-                            .replace((/<\//g), '<\\/')
-                            // coverage-hack - un-instrument
-                            .replace((/\b__cov_.*?\+\+/g), '0') +
+                        '<script>window.local = {}; (' + options.browserTestScript +
                         '(' + JSON.stringify(options) + '))</script>');
                     console.error('\nbrowserTest - created electron entry-page ' +
-                        options.urlBrowser + '\n');
+                        options.fileElectronHtml + '\n');
+                    // init file fileElectronHtml.preload.js
+                    options.modeNext = 30;
+                    local.fsWriteFileWithMkdirpSync(
+                        options.fileElectronHtml + '.preload.js',
+                        '(' + options.browserTestScript + '(' + JSON.stringify(options) +
+                            '))'
+                    );
                     // spawn an electron process to test a url
                     options.modeNext = 10;
                     local.processSpawnWithTimeout('electron', [
@@ -11470,32 +11522,35 @@ local.assetsDict['/favicon.ico'] = '';
                     break;
                 // run electron-node code
                 case 11:
+                    local.electron = require('electron');
                     // handle uncaughtexception
                     process.once('uncaughtException', onNext);
                     // wait for electron to init
-                    require('electron').app.once('ready', onNext);
+                    local.electron.app.once('ready', onNext);
                     break;
                 case 12:
-                    options.BrowserWindow = require('electron').BrowserWindow;
+                    options.BrowserWindow = local.electron.BrowserWindow;
                     local.objectSetDefault(
                         options,
                         { frame: false, height: 768, width: 1024, x: 0, y: 0 }
                     );
                     // init browserWindow
                     options.browserWindow = new options.BrowserWindow(options);
-                    options.browserWindow.once('page-title-updated', onNext);
+                    onParallel = local.onParallel(onNext);
+                    onParallel.counter += 1;
+                    options.browserWindow.on('page-title-updated', function (event, title) {
+                        if ((!event || title).indexOf(options.fileElectronHtml) === 0) {
+                            onParallel();
+                        }
+                    });
                     // load url in browserWindow
-                    options.browserWindow.loadURL('file://' + options.urlBrowser);
+                    options.browserWindow.loadURL('file://' + options.fileElectronHtml);
                     break;
                 case 13:
                     console.error('\nbrowserTest - opened url ' + options.url + '\n');
-                    onParallel = local.onParallel(onNext);
                     onParallel.counter += 1;
                     if (options.modeBrowserTest === 'test') {
                         onParallel.counter += 1;
-                        options.browserWindow.once('page-title-updated', function () {
-                            onParallel();
-                        });
                     }
                     onParallel.counter += 1;
                     setTimeout(function () {
@@ -11505,47 +11560,82 @@ local.assetsDict['/favicon.ico'] = '';
                                 options.fileScreenCapture + '\n');
                             onParallel();
                         });
-                    }, Number(options.timeoutScreenCapture || 5000));
-                    onParallel();
+                    }, options.timeoutScreenCapture);
                     break;
-                // run electron-browser code
+                case 14:
+                    console.error('browserTest - created screen-capture file://' +
+                        options.fileScreenCapture + '.html');
+                    onNext();
+                    break;
+                // run electron-browserWindow code
                 case 21:
                     options.fs = require('fs');
                     options.webview1 = document.querySelector('#webview1');
                     options.webview1.addEventListener('did-get-response-details', function () {
-                        document.title = 'opened ' + location.href;
+                        document.title = options.fileElectronHtml + ' url opened';
                     });
                     options.webview1.addEventListener('console-message', function (event) {
+                        modeNext = 21;
                         try {
-                            options.global_test_results = event.message
-                                .indexOf('{"global_test_results":{') === 0 &&
-                                JSON.parse(event.message).global_test_results;
-                            if (options.global_test_results.testReport) {
-                                // merge screen-capture into test-report
-                                options.global_test_results.testReport.testPlatformList[
-                                    0
-                                ].screenCaptureImg =
-                                    options.fileScreenCapture.replace((/.*\//), '');
-                                // save browser test-report
-                                options.fs.writeFileSync(
-                                    options.fileTestReport,
-                                    JSON.stringify(options.global_test_results.testReport)
-                                );
-                                // save browser coverage
-                                if (options.global_test_results.coverage) {
-                                    require('fs').writeFileSync(
-                                        options.fileCoverage,
-                                        JSON.stringify(options.global_test_results.coverage)
-                                    );
-                                }
-                                document.title = 'testReport written';
-                                return;
-                            }
+                            onNext(null, event);
                         } catch (errorCaught) {
                             console.error(errorCaught.stack);
                         }
-                        console.error(event.message);
                     });
+                    break;
+                case 22:
+                    data.tmp = data.message
+                        .slice(0, 1024)
+                        .split(options.fileElectronHtml + ' ')
+                        .slice(0, 2);
+                    if (data.tmp.length >= 2) {
+                        data.tmp[1] = data.tmp[1].split(' ')[0];
+                        data.tmp[2] = data.message
+                            .slice(data.tmp.join(options.fileElectronHtml + ' ').length + 1);
+                    }
+                    switch (data.tmp[1]) {
+                    case 'global_test_results':
+                        options.global_test_results =
+                            JSON.parse(data.tmp[2]).global_test_results;
+                        if (options.global_test_results.testReport) {
+                            // merge screen-capture into test-report
+                            options.global_test_results.testReport.testPlatformList[0]
+                                .screenCaptureImg =
+                                options.fileScreenCapture.replace((/.*\//), '');
+                            // save browser test-report
+                            options.fs.writeFileSync(
+                                options.fileTestReport,
+                                JSON.stringify(options.global_test_results.testReport)
+                            );
+                            // save browser coverage
+                            if (options.global_test_results.coverage) {
+                                require('fs').writeFileSync(
+                                    options.fileCoverage,
+                                    JSON.stringify(options.global_test_results.coverage)
+                                );
+                            }
+                            document.title = options.fileElectronHtml + ' testReport written';
+                        }
+                        break;
+                    case 'html':
+                        options.fs.writeFileSync(
+                            options.fileScreenCapture + '.html',
+                            data.tmp[2]
+                        );
+                        document.title = options.fileElectronHtml + ' html written';
+                        break;
+                    default:
+                        console.error(data.message);
+                    }
+                    break;
+                // run electron-webview code
+                case 31:
+                    window.fileElectronHtml = options.fileElectronHtml;
+                    // message html back to browserWindow
+                    setTimeout(function () {
+                        console.error(options.fileElectronHtml + ' html ' +
+                            document.documentElement.outerHTML);
+                    }, options.timeoutScreenCapture);
                     break;
                 default:
                     if (done) {
@@ -11727,6 +11817,7 @@ return Utf8ArrayToStr(bff);
         /*
          * this function will build the app
          */
+            var writeFileSync;
             local.fsRmrSync(local.env.npm_config_dir_build + '/app');
             local.listForEachAsync(options.concat([{
                 file: '/assets.' + local.env.npm_package_nameAlias + '.js',
@@ -11771,16 +11862,16 @@ return Utf8ArrayToStr(bff);
             }, function (error) {
                 // validate no error occurred
                 local.assert(!error, error);
-                /* istanbul ignore next */
-                if (!local.global.__coverage__) {
-                    local.fs.writeFileSync(
-                        'assets.' + local.env.npm_package_nameAlias + '.rollup.js',
-                        local.assetsDict['/assets.' + local.env.npm_package_nameAlias +
-                            '.rollup.js'] ||
-                            local.assetsDict['/assets.' + local.env.npm_package_nameAlias +
-                                '.js']
-                    );
-                }
+                // coverage-hack
+                writeFileSync = local.fs.writeFileSync;
+                local.nop(local.global.__coverage__ && (function () {
+                    writeFileSync = local.nop;
+                }()));
+                writeFileSync(
+                    'assets.' + local.env.npm_package_nameAlias + '.rollup.js',
+                    local.assetsDict['/assets.' + local.env.npm_package_nameAlias +
+                        '.rollup.js']
+                );
                 // test standalone assets.app.js
                 local.fs.writeFileSync('tmp/assets.app.js', local.assetsDict['/assets.app.js']);
                 local.processSpawnWithTimeout(process.argv[0], ['assets.app.js'], {
@@ -12113,6 +12204,11 @@ header: '\
          */
             options = local.objectSetDefault(options, {
                 idIndexCreateList: [{ name: 'githubRepo' }],
+                sortDefault: [{
+                    fieldName: 'githubRepo'
+                }, {
+                    fieldName: 'last_build_started_at'
+                }],
                 name: 'TravisRepo'
             });
             local.dbTableTravisRepo = local.db.dbTableCreateOne(options, onError);
@@ -12134,19 +12230,20 @@ header: '\
         /*
          * this function will update dbTableTravisRepo with active, public repos
          */
-            var self;
+            var dbRowList, self;
             options = local.objectSetDefault(options, { queryLimit: 100, rateLimit: 10 });
             local.onNext(options, function (error, data) {
                 switch (options.modeNext) {
                 case 1:
-                    console.error('dbTableTravisRepoUpdate - updating ' + options.queryLimit +
-                        ' dbRows ...');
                     local.timeElapsedStart(options);
                     self = local.dbTableTravisRepo =
                         local.dbTableTravisRepoCreate(options, options.onNext);
                     break;
                 case 2:
                     self = local.dbTableTravisRepo = data;
+                    console.error('dbTableTravisRepoUpdate - updating ' +
+                        Math.min(options.queryLimit, self.crudCountAll()) +
+                        ' of ' + self.crudCountAll() + ' dbRows ...');
                     local.ajax({
                         headers: { Authorization: 'token ' + local.env.TRAVIS_ACCESS_TOKEN },
                         url: 'https://api.travis-ci.org/hooks'
@@ -12161,13 +12258,15 @@ header: '\
                         })
                         .map(function (dbRow) {
                             dbRow.githubRepo = dbRow.uid.replace(':', '/');
+                            dbRow.uid = null;
+                            dbRow.url = null;
                             return dbRow;
                         });
                     self.crudUpdateManyById(data);
-                    data = local.dbTableTravisRepoCrudGetManyByQuery({
+                    dbRowList = local.dbTableTravisRepoCrudGetManyByQuery({
                         limit: options.queryLimit
                     });
-                    local.listForEachAsync(data, function (dbRow, ii, list, onParallel) {
+                    local.listForEachAsync(dbRowList, function (dbRow, ii, list, onParallel) {
                         dbRow = list[ii];
                         onParallel.counter += 1;
                         local.ajax({
@@ -12178,9 +12277,18 @@ header: '\
                         }, function (error, data) {
                             // validate no error occurred
                             local.assert(!error, error);
-                            data = JSON.parse(data.responseText);
-                            data.githubRepo = dbRow.githubRepo;
-                            self.crudUpdateOneById(data);
+                            local.objectSetOverride(dbRow, JSON.parse(data.responseText));
+                            // ignore extraneous data to save space
+                            dbRow.description = null;
+                            dbRow.last_build_duration = null;
+                            dbRow.last_build_finished_at = null;
+                            dbRow.last_build_id = null;
+                            dbRow.last_build_number = null;
+                            dbRow.last_build_result = null;
+                            dbRow.public_key = null;
+                            dbRow.slug = null;
+                            dbRow.uid = null;
+                            dbRow.url = null;
                             if (onParallel.counter === 1 || ((onParallel.ii + 1) % 10 === 0 &&
                                     local.timeElapsedPoll(options).timeElapsed >= 5000)) {
                                 local.timeElapsedStart(options, Date.now());
@@ -12190,6 +12298,10 @@ header: '\
                             onParallel();
                         });
                     }, options.onNext, options.rateLimit);
+                    break;
+                case 4:
+                    self.crudSetManyById(dbRowList);
+                    self.save(options.onNext);
                     break;
                 default:
                     local.setTimeoutOnError(onError, error, self);
@@ -12234,7 +12346,9 @@ header: '\
             var result;
             result = {};
             Object.keys(env).forEach(function (key) {
-                if (!local.envKeyIsSensitive(key)) {
+                if (!local.envKeyIsSensitive(key) &&
+                        typeof env[key] === 'string' &&
+                        env[key].length <= 4096) {
                     result[key] = env[key];
                 }
             });
@@ -12259,9 +12373,8 @@ header: '\
                 : Number(exitCode) || 1;
             switch (local.modeJs) {
             case 'browser':
-                console.error(JSON.stringify({
-                    global_test_results: local.global.global_test_results
-                }));
+                console.error(local.global.fileElectronHtml + ' global_test_results ' +
+                    JSON.stringify({ global_test_results: local.global.global_test_results }));
                 break;
             case 'node':
                 process.exit(exitCode);
@@ -15182,7 +15295,28 @@ instruction\n\
             });
             return;
         case 'dbTableTravisRepoUpdate':
-            local.dbTableTravisRepoUpdate({}, local.exit);
+            local.dbTableTravisRepoUpdate(JSON.parse(process.argv[3] || '{}'), local.exit);
+            return;
+        case 'listForEachAsyncSpawn':
+            local.listForEachAsync(
+                process.argv[3].split('\n'),
+                function (element, ii, list, onParallel) {
+                    element = list[ii];
+                    if (!element.trim()) {
+                        return;
+                    }
+                    onParallel.counter += 1;
+                    local.child_process.spawn(
+                        '/bin/sh',
+                        ['-c', '. ' + local.__dirname + '/lib.utility2.sh; ' + element],
+                        { stdio: ['ignore', 1, 2] }
+                    ).on('exit', function (exitCode) {
+                        onParallel(exitCode && new Error(exitCode));
+                    });
+                },
+                local.exit,
+                process.argv[4]
+            );
             return;
         }
         // init lib

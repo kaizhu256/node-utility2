@@ -38,7 +38,7 @@
     "main": "lib.utility2.js",
     "name": "utility2",
     "nameAlias": "utility2",
-    "nameAliasPublish": "npmtest-lite npmtest2 test-lite",
+    "nameAliasPublish": "npmtest-lite npmtest4 test-lite",
     "nameOriginal": "utility2",
     "os": [
         "darwin",

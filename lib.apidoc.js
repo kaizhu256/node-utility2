@@ -574,6 +574,7 @@ local.templateApidocMd = '\
                 exampleFileList: [],
                 exampleList: [],
                 html: '',
+                libFileList: [],
                 moduleDict: {},
                 moduleExtraDict: {},
                 template: local.templateApidocHtml
@@ -589,9 +590,14 @@ local.templateApidocMd = '\
                     })
             ).map(readExample));
             // init moduleMain
-            moduleMain = options.moduleDict[options.env.npm_package_name] =
-                options.moduleDict[options.env.npm_package_name] ||
-                require(options.dir + (process.env.npm_package_buildNpmdocMain || ''));
+            try {
+                moduleMain = {};
+                moduleMain = options.moduleDict[options.env.npm_package_name] =
+                    options.moduleDict[options.env.npm_package_name] ||
+                    require(options.dir + (process.env.npm_package_buildNpmdocMain || ''));
+            } catch (ignore) {
+            }
+            options.moduleDict[options.env.npm_package_name] = moduleMain;
             // init circularList - builtin
             Object.keys(process.binding('natives')).forEach(function (key) {
                 if (!(/\/|_linklist|sys/).test(key)) {
@@ -621,30 +627,55 @@ local.templateApidocMd = '\
             });
             // init moduleDict child
             local.apidocModuleDictAdd(options, options.moduleDict);
-            // init moduleDict lib
-            (function () {
-                // optimization - isolate try-catch block
+            // init moduleExtraDict
+            local.fs.readdirSync(options.dir).sort().forEach(function (file) {
                 try {
-                    options.libFileList = options.libFileList ||
-                        local.fs.readdirSync(options.dir + '/lib')
-                        .sort()
-                        .map(function (file) {
-                            return 'lib/' + file;
-                        });
-                } catch (ignore) {
+                    local.fs.readdirSync(options.dir + '/' + file).sort().forEach(function (
+                        file2
+                    ) {
+                        file2 = file + '/' + file2;
+                        options.libFileList.push(file2);
+                    });
+                } catch (errorCaught) {
+                    options.libFileList.push(file);
                 }
-            }());
+            });
             module = options.moduleExtraDict[options.env.npm_package_name] =
                 options.moduleExtraDict[options.env.npm_package_name] || {};
-            (options.libFileList || []).forEach(function (file) {
+            options.libFileList.forEach(function (file) {
                 try {
-                    tmp = {
-                        module: require(local.path.resolve(options.dir, file)),
-                        name: local.path.basename(file)
-                            .replace((/\.[^.]*?$/), '')
-                            .replace((/\W/g), '_')
-                    };
-                    if (module[tmp.name] || options.circularList.indexOf(tmp.module) >= 0) {
+                    tmp = {};
+                    tmp.name = local.path.basename(file)
+                        .replace('lib.', '')
+                        .replace((/\.[^.]*?$/), '')
+                        .replace((/\W/g), '_');
+                    [
+                        tmp.name,
+                        tmp.name[0].toUpperCase() + tmp.name.slice(1)
+                    ].some(function (name) {
+                        tmp.skip = local.path.extname(file) !== '.js' ||
+                            file.indexOf(options.packageJson.main) >= 0 ||
+                            new RegExp('(?:\\b|_)(?:archive|artifact|assets|' +
+                                'bin|bower_component|build|' +
+                                'cli|coverage' +
+                                'doc|dist|' +
+                                'example|external|' +
+                                'fixture|' +
+                                'index|' +
+                                'log|' +
+                                'min|mock|' +
+                                'node_modules|' +
+                                'rollup|' +
+                                'test|tmp|' +
+                                'vendor)(?:\\b|_)').test(file.toLowerCase()) ||
+                            module[name];
+                        return tmp.skip;
+                    });
+                    if (tmp.skip) {
+                        return;
+                    }
+                    tmp.module = require(options.dir + '/' + file);
+                    if (options.circularList.indexOf(tmp.module) >= 0) {
                         return;
                     }
                     module[tmp.name] = tmp.module;
