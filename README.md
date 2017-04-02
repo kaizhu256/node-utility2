@@ -39,11 +39,13 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 - none
 
 #### changes for v2017.3.29
+- add auto-retry option to function onParallelList
 - add html-scraper to function browerTest
 - add property 'sortDefault' to dbTable, which defaults to [{ fieldName: '_timeUpdated', isDescending: true }]
 - add optional callback to function dbTable.prototype.save
-- add shell-function shListForEachAsyncSpawn
-- optimize function dbTableTravisRepoUpdate for db-storage-space
+- add shell-function shOnParallelListSpawn
+- enable auto-cancel-mode by default when creating travis-repo
+- rename function listForEachAsync -> onParallelList
 - none
 
 #### this package requires

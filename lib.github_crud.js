@@ -183,7 +183,7 @@
             var onParallel;
             onError = local.onErrorWithStack(onError);
             onEach = onEach || local.nop;
-            onParallel = function (error) {
+            onParallel = function (error, data) {
                 // decrement counter
                 onParallel.counter -= 1;
                 // validate counter
@@ -195,12 +195,12 @@
                 // handle error
                 if (error) {
                     onParallel.error = error;
-                    // ensure counter < 0
-                    onParallel.counter = -1;
+                    // ensure counter <= 0
+                    onParallel.counter = -Math.abs(onParallel.counter);
                 }
                 // call onError when done
                 if (onParallel.counter <= 0) {
-                    onError(error);
+                    onError(error, data);
                     return;
                 }
                 onEach();

@@ -212,7 +212,7 @@
         /*
          * this function will test ajax's error handling-behavior
          */
-            options = [{
+            options = { list: [{
                 // test 404-not-found-error handling-behavior
                 url: '/test.error-404'
             }, {
@@ -225,9 +225,9 @@
                 // test undefined https-url handling-behavior
                 timeout: 1,
                 url: 'https://undefined:0'
-            }];
-            local.listForEachAsync(options, function (options, ii, list, onParallel) {
-                options = list[ii];
+            }] };
+            local.onParallelList(options, function (options, onParallel) {
+                options = options.element;
                 onParallel.counter += 1;
                 local.ajax(options, function (error, xhr) {
                     // validate error occurred
@@ -247,13 +247,13 @@
          */
             options = {};
             // test /test.body handling-behavior
-            local.listForEachAsync([
+            local.onParallelList({ list: [
                 '',
                 'arraybuffer',
                 'stream',
                 'text'
-            ], function (responseType, ii, list, onParallel) {
-                responseType = list[ii];
+            ] }, function (responseType, onParallel) {
+                responseType = responseType.element;
                 onParallel.counter += 1;
                 local.ajax({
                     data: responseType === 'arraybuffer'
@@ -429,18 +429,17 @@
                     type: 'text/plain; charset=utf-8'
                 })
             ] };
-            local.listForEachAsync(options.list, function (blob, ii, list, onParallel) {
+            local.onParallelList(options, function (options, onParallel) {
                 onParallel.counter += 1;
-                blob = list[ii];
                 [null, 'dataURL', 'text'].forEach(function (encoding) {
                     onParallel.counter += 1;
-                    local.blobRead(blob, encoding, function (error, data) {
+                    local.blobRead(options.element, encoding, function (error, data) {
                         // validate no error occurred
                         local.assert(!error, error);
                         // validate data
                         switch (encoding) {
                         case 'dataURL':
-                            if (ii === 0) {
+                            if (options.ii === 0) {
                                 local.assertJsonEqual(data, 'data:;base64,YWFiYuGItCAw');
                                 break;
                             }
@@ -763,80 +762,6 @@
             onError();
         };
 
-        local.testCase_listForEachAsync_default = function (options, onError) {
-        /*
-         * this function will test listForEachAsync's default handling-behavior
-         */
-            options = {};
-            local.onNext(options, function (error) {
-                switch (options.modeNext) {
-                case 1:
-                    // test null-case handling-behavior
-                    local.listForEachAsync([], local.onErrorThrow, options.onNext);
-                    break;
-                case 2:
-                    local.listForEachAsync([null], function (element, ii, list, onParallel) {
-                        // test error handling-behavior
-                        onParallel(local.errorDefault, element, list[ii]);
-                        // test multiple callback handling behavior
-                        onParallel();
-                    }, function (error) {
-                        // validate error occurred
-                        local.assert(error, error);
-                        options.onNext();
-                    });
-                    break;
-                case 3:
-                    options.data = [];
-                    // test rateLimit handling-behavior
-                    options.rateLimit = 2;
-                    options.rateMax = 0;
-                    local.listForEachAsync([1, 2, 3], function (element, ii, list, onParallel) {
-                        onParallel.counter += 1;
-                        options.rateMax = Math.max(onParallel.counter, options.rateMax);
-                        // test async handling-behavior
-                        setTimeout(function () {
-                            element = list[ii];
-                            options.data[ii] = element;
-                            onParallel();
-                        });
-                    }, options.onNext, options.rateLimit);
-                    break;
-                case 4:
-                    // validate data
-                    local.assertJsonEqual(options.data, [1, 2, 3]);
-                    local.assertJsonEqual(options.rateMax, 2);
-                    options.data = [];
-                    options.rateLimit = 'syntax error';
-                    options.rateMax = 0;
-                    local.listForEachAsync([1, 2, 3], function (
-                        element,
-                        ii,
-                        list,
-                        onParallel
-                    ) {
-                        // test sync handling-behavior
-                        onParallel.counter += 1;
-                        options.rateMax = Math.max(onParallel.counter, options.rateMax);
-                        element = list[ii];
-                        options.data[ii] = element;
-                        onParallel();
-                    }, options.onNext, options.rateLimit);
-                    break;
-                case 5:
-                    // validate data
-                    local.assertJsonEqual(options.data, [1, 2, 3]);
-                    local.assertJsonEqual(options.rateMax, 2);
-                    options.onNext();
-                    break;
-                default:
-                    onError(error);
-                }
-            });
-            options.modeNext = 0;
-            options.onNext();
-        };
-
         local.testCase_listGetElementRandom_default = function (options, onError) {
         /*
          * this function will test listGetRandom's default handling-behavior
@@ -1126,6 +1051,83 @@
                 local.assert(error, error);
                 onError();
             });
+        };
+
+        local.testCase_onParallelList_default = function (options, onError) {
+        /*
+         * this function will test onParallelList's default handling-behavior
+         */
+            options = {};
+            local.onNext(options, function (error) {
+                switch (options.modeNext) {
+                case 1:
+                    // test null-case handling-behavior
+                    local.onParallelList({ list: [] }, local.onErrorThrow, options.onNext);
+                    break;
+                case 2:
+                    local.onParallelList({
+                        list: [null],
+                        // test retryLimit handling-behavior
+                        retryLimit: 1
+                    }, function (data, onParallel) {
+                        // test error handling-behavior
+                        onParallel(local.errorDefault, data);
+                        // test multiple callback handling behavior
+                        onParallel(null, data);
+                    }, function (error) {
+                        // validate error occurred
+                        local.assert(error, error);
+                        options.onNext();
+                    });
+                    break;
+                case 3:
+                    options.data = [];
+                    // test rateLimit handling-behavior
+                    options.rateLimit = 2;
+                    options.rateMax = 0;
+                    local.onParallelList({
+                        list: [1, 2, 3],
+                        rateLimit: options.rateLimit
+                    }, function (data, onParallel) {
+                        onParallel.counter += 1;
+                        options.rateMax = Math.max(onParallel.counter, options.rateMax);
+                        // test async handling-behavior
+                        setTimeout(function () {
+                            options.data[data.ii] = data.element;
+                            onParallel();
+                        });
+                    }, options.onNext, options.rateLimit);
+                    break;
+                case 4:
+                    // validate data
+                    local.assertJsonEqual(options.data, [1, 2, 3]);
+                    local.assertJsonEqual(options.rateMax, 2);
+                    options.data = [];
+                    options.rateLimit = 'syntax error';
+                    options.rateMax = 0;
+                    local.onParallelList({
+                        list: [1, 2, 3],
+                        rateLimit: options.rateLimit
+                    }, function (data, onParallel) {
+                        // test sync handling-behavior
+                        onParallel.counter += 1;
+                        options.rateMax = Math.max(onParallel.counter, options.rateMax);
+                        options.data[data.ii] = data.element;
+                        onParallel();
+                    }, options.onNext);
+                    break;
+                case 5:
+                    // validate data
+                    local.assertJsonEqual(options.data, [1, 2, 3]);
+                    local.assertJsonEqual(options.rateMax, 2);
+                    options.onNext();
+                    break;
+                default:
+                    onError(error);
+                }
+            });
+            options.modeNext = 0;
+            options.onNext();
         };
 
         local.testCase_onParallel_default = function (options, onError) {

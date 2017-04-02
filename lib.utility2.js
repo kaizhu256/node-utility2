@@ -1156,14 +1156,14 @@ local.assetsDict['/favicon.ico'] = '';
             boundary = '--' + Date.now().toString(16) + Math.random().toString(16);
             // init result
             result = [];
-            local.listForEachAsync(this.entryList, function (element, ii, list, onParallel) {
+            local.onParallelList({
+                list: this.entryList
+            }, function (options, onParallel) {
                 var value;
-                // jslint-hack
-                local.nop(list);
-                value = element.value;
+                value = options.element.value;
                 if (!(value instanceof local.Blob)) {
-                    result[ii] = [boundary +
-                        '\r\nContent-Disposition: form-data; name="' + element.name +
+                    result[options.ii] = [boundary +
+                        '\r\nContent-Disposition: form-data; name="' + options.element.name +
                         '"\r\n\r\n', value, '\r\n'];
                     onParallel.counter += 1;
                     onParallel();
@@ -1172,8 +1172,9 @@ local.assetsDict['/favicon.ico'] = '';
                 // read from blob in parallel
                 onParallel.counter += 1;
                 local.blobRead(value, 'binary', function (error, data) {
-                    result[ii] = !error && [boundary +
-                        '\r\nContent-Disposition: form-data; name="' + element.name + '"' +
+                    result[options.ii] = !error && [boundary +
+                        '\r\nContent-Disposition: form-data; name="' + options.element.name +
+                        '"' +
                         // read param filename
                         (value && value.name
                             ? '; filename="' + value.name + '"'
@@ -2204,7 +2205,7 @@ local.assetsDict['/favicon.ico'] = '';
                     break;
                 case 14:
                     console.error('browserTest - created screen-capture file://' +
-                        options.fileScreenCapture + '.html');
+                        options.fileScreenCapture.replace((/\.\w+$/), '.html'));
                     onNext();
                     break;
                 // run electron-browserWindow code
@@ -2259,7 +2260,7 @@ local.assetsDict['/favicon.ico'] = '';
                         break;
                     case 'html':
                         options.fs.writeFileSync(
-                            options.fileScreenCapture + '.html',
+                            options.fileScreenCapture.replace((/\.\w+$/), '.html'),
                             data.tmp[2]
                         );
                         document.title = options.fileElectronHtml + ' html written';
@@ -2459,7 +2460,7 @@ return Utf8ArrayToStr(bff);
          */
             var writeFileSync;
             local.fsRmrSync(local.env.npm_config_dir_build + '/app');
-            local.listForEachAsync(options.concat([{
+            local.onParallelList({ list: options.concat([{
                 file: '/assets.' + local.env.npm_package_nameAlias + '.js',
                 url: '/assets.' + local.env.npm_package_nameAlias + '.js'
             }, {
@@ -2483,8 +2484,8 @@ return Utf8ArrayToStr(bff);
             }, {
                 file: '/jsonp.utility2._stateInit',
                 url: '/jsonp.utility2._stateInit?callback=window.utility2._stateInit'
-            }]), function (options, ii, list, onParallel) {
-                options = list[ii];
+            }]) }, function (options, onParallel) {
+                options = options.element;
                 onParallel.counter += 1;
                 local.ajax(options, function (error, xhr) {
                     // validate no error occurred
@@ -2871,7 +2872,7 @@ header: '\
          * this function will update dbTableTravisRepo with active, public repos
          */
             var dbRowList, self;
-            options = local.objectSetDefault(options, { queryLimit: 100, rateLimit: 10 });
+            options = local.objectSetDefault(options, { queryLimit: 500, rateLimit: 10 });
             local.onNext(options, function (error, data) {
                 switch (options.modeNext) {
                 case 1:
@@ -2906,8 +2907,11 @@ header: '\
                     dbRowList = local.dbTableTravisRepoCrudGetManyByQuery({
                         limit: options.queryLimit
                     });
-                    local.listForEachAsync(dbRowList, function (dbRow, ii, list, onParallel) {
-                        dbRow = list[ii];
+                    local.onParallelList({
+                        list: dbRowList,
+                        rateLimit: options.rateLimit
+                    }, function (dbRow, onParallel) {
+                        dbRow = dbRow.element;
                         onParallel.counter += 1;
                         local.ajax({
                             headers: {
@@ -2937,7 +2941,7 @@ header: '\
                             }
                             onParallel();
                         });
-                    }, options.onNext, options.rateLimit);
+                    }, options.onNext);
                     break;
                 case 4:
                     self.crudSetManyById(dbRowList);
@@ -3377,32 +3381,6 @@ header: '\
                 jti: Math.random().toString(16).slice(2),
                 nbf: timeNow
             });
-        };
-
-        local.listForEachAsync = function (list, onEach, onError, rateLimit) {
-        /*
-         * this function will
-         * 1. async-run onEach(element, ii, list, onParallel) with the given rateLimit
-         * 2. call onError when done
-         */
-            var ii, onEach2, onParallel;
-            onEach2 = function () {
-                while (ii + 1 < list.length && onParallel.counter < rateLimit) {
-                    ii += 1;
-                    onParallel.ii += 1;
-                    onParallel.remaining -= 1;
-                    onEach(list[ii], ii, list, onParallel);
-                }
-            };
-            onParallel = local.onParallel(onError, onEach2);
-            onParallel.counter += 1;
-            ii = -1;
-            onParallel.ii = -1;
-            onParallel.remaining = list.length;
-            rateLimit = Number(rateLimit) || 8;
-            rateLimit = Math.max(rateLimit, 2);
-            onEach2();
-            onParallel();
         };
 
         local.listGetElementRandom = function (list) {
@@ -3989,7 +3967,7 @@ header: '\
             return options;
         };
 
-        local.onParallel = function (onError, onEach) {
+        local.onParallel = function (onError, onEach, onRetry) {
         /*
          * this function will create a function that will
          * 1. run async tasks in parallel
@@ -3998,7 +3976,11 @@ header: '\
             var onParallel;
             onError = local.onErrorWithStack(onError);
             onEach = onEach || local.nop;
-            onParallel = function (error) {
+            onRetry = onRetry || local.nop;
+            onParallel = function (error, data) {
+                if (onRetry(error, data)) {
+                    return;
+                }
                 // decrement counter
                 onParallel.counter -= 1;
                 // validate counter
@@ -4010,12 +3992,12 @@ header: '\
                 // handle error
                 if (error) {
                     onParallel.error = error;
-                    // ensure counter < 0
-                    onParallel.counter = -1;
+                    // ensure counter <= 0
+                    onParallel.counter = -Math.abs(onParallel.counter);
                 }
                 // call onError when done
                 if (onParallel.counter <= 0) {
-                    onError(error);
+                    onError(error, data);
                     return;
                 }
                 onEach();
@@ -4024,6 +4006,45 @@ header: '\
             onParallel.counter = 0;
             // return callback
             return onParallel;
+        };
+
+        local.onParallelList = function (options, onEach, onError) {
+        /*
+         * this function will
+         * 1. async-run onEach in parallel,
+         *    with the given options.rateLimit and options.retryLimit
+         * 2. call onError when done
+         */
+            var ii, onEach2, onParallel;
+            onEach2 = function () {
+                while (ii + 1 < options.list.length && onParallel.counter < options.rateLimit) {
+                    ii += 1;
+                    onParallel.ii += 1;
+                    onParallel.remaining -= 1;
+                    onEach({
+                        element: options.list[ii],
+                        ii: ii,
+                        list: options.list,
+                        retry: 0
+                    }, onParallel);
+                }
+            };
+            onParallel = local.onParallel(onError, onEach2, function (error, data) {
+                if (error && data && data.retry < options.retryLimit) {
+                    local.onErrorDefault(error);
+                    data.retry += 1;
+                    onEach(data, onParallel);
+                    return true;
+                }
+            });
+            onParallel.counter += 1;
+            ii = -1;
+            onParallel.ii = -1;
+            onParallel.remaining = options.list.length;
+            options.rateLimit = Number(options.rateLimit) || 8;
+            options.rateLimit = Math.max(options.rateLimit, 2);
+            onEach2();
+            onParallel();
         };
 
         local.onReadyAfter = function (onError) {
@@ -5323,12 +5344,9 @@ instruction\n\
             }, 1000);
             // shallow-copy testPlatform.testCaseList to prevent side-effects
             // from in-place sort from testReportMerge
-            local.listForEachAsync(testPlatform.testCaseList.slice(), function (
-                testCase,
-                ii,
-                list,
-                onParallel
-            ) {
+            local.onParallelList({
+                list: testPlatform.testCaseList.slice()
+            }, function (testCase, onParallel) {
                 var onError, timerTimeout;
                 onError = function (error) {
                     // cleanup timerTimeout
@@ -5369,7 +5387,7 @@ instruction\n\
                     // if all tests are done, then create test-report
                     onParallel();
                 };
-                testCase = list[ii];
+                testCase = testCase.element;
                 // init timerTimeout
                 timerTimeout = local.onTimeout(onError, local.timeoutDefault, testCase.name);
                 // increment number of tests remaining
@@ -5937,26 +5955,25 @@ instruction\n\
         case 'dbTableTravisRepoUpdate':
             local.dbTableTravisRepoUpdate(JSON.parse(process.argv[3] || '{}'), local.exit);
             return;
-        case 'listForEachAsyncSpawn':
-            local.listForEachAsync(
-                process.argv[3].split('\n'),
-                function (element, ii, list, onParallel) {
-                    element = list[ii];
-                    if (!element.trim()) {
-                        return;
-                    }
-                    onParallel.counter += 1;
-                    local.child_process.spawn(
-                        '/bin/sh',
-                        ['-c', '. ' + local.__dirname + '/lib.utility2.sh; ' + element],
-                        { stdio: ['ignore', 1, 2] }
-                    ).on('exit', function (exitCode) {
-                        onParallel(exitCode && new Error(exitCode));
-                    });
-                },
-                local.exit,
-                process.argv[4]
-            );
+        case 'onParallelListSpawn':
+            local.onParallelList({
+                list: process.argv[3].split('\n').filter(function (element) {
+                    return element.trim();
+                }),
+                rateLimit: process.argv[4],
+                retryLimit: process.argv[5]
+            }, function (options, onParallel) {
+                onParallel.counter += 1;
+                local.child_process.spawn(
+                    '/bin/sh',
+                    ['-c', '. ' + local.__dirname + '/lib.utility2.sh; ' + options.element],
+                    { stdio: ['ignore', 1, 2] }
+                ).on('exit', function (exitCode) {
+                    console.error('onParallelListSpawn - [' + (onParallel.ii + 1) +
+                        ' of ' + options.list.length + '] exitCode ' + exitCode);
+                    onParallel(exitCode && new Error(exitCode), options);
+                });
+            }, local.exit);
             return;
         }
         // init lib

@@ -395,6 +395,72 @@ shBuildLib() {(set -e
 
 shBuildNpmdoc() {(set -e
 # this function will build the npmdoc for the npm-package $NAME
+    NAME="$1"
+    if [ "$NAME" ]
+    then
+        case "$NAME" in
+        npmclassic-*)
+            return
+            ;;
+        npmdoc-*)
+            return
+            ;;
+        npmstable-*)
+            return
+            ;;
+        npmtest-*)
+            return
+            ;;
+        esac
+        GITHUB_REPO="npmdoc/node-npmdoc-$NAME"
+        if [ ! "$TRAVIS_REPO_CREATE_FORCE" ] && (curl -fs \
+            "https://raw.githubusercontent.com/$GITHUB_REPO/alpha/test.js" \
+            > /dev/null 2>&1)
+        then
+            return
+        fi
+        # build and push initial repo to npmdoc/node-npmdoc-$NAME#alpha
+        # init /tmp/npmdoc.node-npmdoc-$NAME
+        shGithubRepoBaseCreate "$GITHUB_REPO" "$GITHUB_ORG"
+        cd /tmp/npmdoc.node-npmdoc-$NAME
+        touch README.md
+        for FILE in .gitignore .travis.yml LICENSE
+        do
+            if [ ! -f "$FILE" ]
+            then
+                curl -Ls -O \
+                    "https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/$FILE"
+            fi
+        done
+        # init package.json
+        printf "{
+    \"buildNpmdoc\":\"$NAME\",
+    \"devDependencies\": {
+        \"$NAME\": \"*\",
+        \"electron-lite\": \"kaizhu256/node-electron-lite#alpha\",
+        \"utility2\": \"kaizhu256/node-utility2#alpha\"
+    },
+    \"name\":\"npmdoc-$NAME\",
+    \"repository\": {
+        \"type\": \"git\",
+        \"url\": \"https://github.com/$GITHUB_REPO.git\"
+    },
+    \"scripts\": {
+        \"build-ci\": \"utility2 shReadmeTest build_ci.sh\"
+    },
+    \"version\": \"0.0.1\"
+}\n" > package.json
+        # update .travis.yml
+        sed -in -e s/.*CRYPTO_AES_ENCRYPTED_SH.*// .travis.yml
+        rm -f .travis.ymln
+        shTravisCryptoAesEncryptYml
+        # git commit and push
+        git add .
+        git add -f .gitignore .travis.yml
+        git commit -am "[npm publishAfterCommitAfterBuild]"
+        shGithubPush -f "https://github.com/$GITHUB_REPO.git" alpha
+        return
+    fi
     shPasswordEnvUnset
     export MODE_BUILD=buildNpmdoc
     npm test --mode-coverage="" --mode-test-case=testCase_buildApidoc_default
@@ -1254,9 +1320,10 @@ shGithubRepoBaseCreate() {(set -e
         git checkout alpha
     )
     fi
-    rm -fr "/tmp/$GITHUB_REPO"
-    cp -a /tmp/githubRepoBase "/tmp/$GITHUB_REPO"
-    cd "/tmp/$GITHUB_REPO"
+    DIR="/tmp/$(printf "$GITHUB_REPO" | tr / .)"
+    rm -fr "$DIR"
+    cp -a /tmp/githubRepoBase "$DIR"
+    cd "$DIR"
     # create github $GITHUB_REPO with $GITHUB_TOKEN
     if ! (curl -fs "https://github.com/$GITHUB_REPO" > /dev/null 2>&1)
     then
@@ -1681,14 +1748,6 @@ shKillallElectron() {(set -e
     killall Electron electron
 )}
 
-shListForEachAsyncSpawn() {(set -e
-# this function will async-run the newline-separated tasks in $LIST with the given $RATE_LIMIT
-    LIST="$1"
-    RATE_LIMIT="$1"
-    shInitNpmConfigDirUtility2
-    "$npm_config_dir_utility2/lib.utility2.js" listForEachAsyncSpawn "$LIST" "$RATE_LIMIT"
-)}
-
 shListUnflattenAndApply() {(set -e
 # this function will unflatten the list and apply it to $@
     LIST="$1"
@@ -1747,7 +1806,7 @@ shMain() {
         [ "$COMMAND" = browserTest ] ||
         [ "$COMMAND" = dbTableTravisRepoCrudGetManyByQuery ] ||
         [ "$COMMAND" = dbTableTravisRepoUpdate ] ||
-        [ "$COMMAND" = listForEachAsyncSpawn ]
+        [ "$COMMAND" = onParallelListSpawn ]
     then
         shInitNpmConfigDirUtility2
         "$npm_config_dir_utility2/lib.utility2.js" "$COMMAND" "$@"
@@ -2155,13 +2214,16 @@ shNpmdocRepoListCreate() {(set -e
 # https://docs.travis-ci.com/api
 # this function will create and push the npmdoc-repo npmdoc/node-npmdoc-$LIST[ii]
     EXIT_CODE=0
-    export MODE_BUILD=shTravisRepoListCreate
-    shSleep 1
+    export MODE_BUILD=shNpmdocRepoListCreate
+    sleep 1
     # init npmdoc-env
     cd /tmp
-    export CRYPTO_AES_KEY="$CRYPTO_AES_KEY_npmdoc"
     export GITHUB_ORG=npmdoc
-    eval "$(shTravisCryptoAesDecryptYml)"
+    if [ "$CRYPTO_AES_KEY_npmdoc" ]
+    then
+        export CRYPTO_AES_KEY="$CRYPTO_AES_KEY_npmdoc"
+        eval "$(shTravisCryptoAesDecryptYml)"
+    fi
     LIST="$1"
     LIST2=""
     for NAME in $LIST
@@ -2180,74 +2242,25 @@ shNpmdocRepoListCreate() {(set -e
     done
     # init $TRAVIS_REPO
     shTravisRepoListCreate "$LIST2" npmdoc
-    shSleep 5
     shBuildPrint "creating npmdoc-repos $LIST ..."
-    # bug-workaround - cannot run following code async in travis
+    shSleep 30
+    LIST2=""
     for NAME in $LIST
     do
-        case "$NAME" in
-        # filter npmdoc-*
-        npmdoc-*)
-            continue
-            ;;
-        # filter npmtest-*
-        npmtest-*)
-            continue
-            ;;
-        esac
-        GITHUB_REPO="npmdoc/node-npmdoc-$NAME"
-        if [ ! "$TRAVIS_REPO_CREATE_FORCE" ] && (curl -fs \
-            "https://raw.githubusercontent.com/$GITHUB_REPO/alpha/test.js" \
-            > /dev/null 2>&1)
-        then
-            continue
-        fi
-        # build and push initial repo to npmdoc/node-npmdoc-$NAME#alpha
-        # init /tmp/node-npmdoc-$NAME
-        rm -fr /tmp/node-npmdoc-$NAME
-        mkdir -p /tmp/node-npmdoc-$NAME
-        cd /tmp/node-npmdoc-$NAME
-        touch README.md
-        for FILE in .gitignore .travis.yml LICENSE
-        do
-            if [ ! -f "$FILE" ]
-            then
-                curl -Ls -O \
-                    "https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/$FILE"
-            fi
-        done
-        # init package.json
-        printf "{
-    \"buildNpmdoc\":\"$NAME\",
-    \"devDependencies\": {
-        \"$NAME\": \"*\",
-        \"electron-lite\": \"kaizhu256/node-electron-lite#alpha\",
-        \"utility2\": \"kaizhu256/node-utility2#alpha\"
-    },
-    \"name\":\"npmdoc-$NAME\",
-    \"repository\": {
-        \"type\": \"git\",
-        \"url\": \"https://github.com/$GITHUB_REPO.git\"
-    },
-    \"scripts\": {
-        \"build-ci\": \"utility2 shReadmeTest build_ci.sh\"
-    },
-    \"version\": \"0.0.1\"
-}\n" > package.json
-        # update .travis.yml
-        sed -in -e s/.*CRYPTO_AES_ENCRYPTED_SH.*// .travis.yml
-        rm -f .travis.ymln
-        shTravisCryptoAesEncryptYml
-        # init git
-        cp -a /tmp/githubRepoBase/.git .
-        git checkout alpha
-        git add .
-        git add -f .gitignore .travis.yml
-        # git commit and push
-        git commit -am "[npm publishAfterCommitAfterBuild]"
-        shGithubPush -f "https://github.com/$GITHUB_REPO.git" alpha
+        LIST2="$(printf "$LIST2\n \
+shBuildNpmdoc $NAME\
+")"
     done
+    shOnParallelListSpawn "$LIST2"
     shBuildPrint "... created npmdoc-repos $LIST"
+)}
+
+shOnParallelListSpawn() {(set -e
+# this function will async-run the newline-separated tasks in $LIST with the given $RATE_LIMIT
+    LIST="$1"
+    RATE_LIMIT="$2"
+    shInitNpmConfigDirUtility2
+    "$npm_config_dir_utility2/lib.utility2.js" onParallelListSpawn "$LIST" "$RATE_LIMIT"
 )}
 
 shPasswordEnvUnset() {
@@ -2688,7 +2701,7 @@ shTravisCryptoAesEncryptYml() {(set -e
     fi
     printf "# travis-encrypting \$CRYPTO_AES_KEY for $GITHUB_REPO\n"
     # get public rsa key from https://api.travis-ci.org/repos/<owner>/<repo>/key
-    curl -Ls "https://api.travis-ci.org/repos/$GITHUB_REPO/key" | \
+    curl -Lfs "https://api.travis-ci.org/repos/$GITHUB_REPO/key" | \
         sed -n \
             -e "s/.*-----BEGIN [RSA ]*PUBLIC KEY-----\(.*\)-----END [RSA ]*PUBLIC KEY-----.*/\
 -----BEGIN PUBLIC KEY-----\\1-----END PUBLIC KEY-----/" \
@@ -2742,8 +2755,7 @@ shTravisRepoIdGet() {(set -e
 shTravisRepoListCreate() {(set -e
 # https://docs.travis-ci.com/api
 # this function will create the travis-repo $LIST[ii]
-    EXIT_CODE=0
-    export MODE_BUILD=shTravisRepoListCreate
+    export MODE_BUILD="${MODE_BUILD:-shTravisRepoListCreate}"
     LIST="$1"
     GITHUB_ORG="$2"
     shBuildPrint "creating github-repos $LIST ..."
@@ -2769,56 +2781,53 @@ shTravisRepoListCreate() {(set -e
         then
             continue
         fi
-        LIST2="$LIST2\n\
+        LIST2="$(printf "$LIST2\n \
 shGithubRepoBaseCreate $GITHUB_REPO $GITHUB_ORG\
-"
+")"
     done
-    shListForEachAsyncSpawn "$LIST2"
-    shSleep 5
+    shOnParallelListSpawn "$LIST2"
     shBuildPrint "... created github-repos $LIST"
     shBuildPrint "syncing travis ..."
+    shSleep 30
     curl -H "Authorization: token $TRAVIS_ACCESS_TOKEN" -X POST -fs \
         "https://api.travis-ci.org/users/sync" || true
-    shSleep 30
     shBuildPrint "... synced travis"
     shBuildPrint "creating travis-repos $LIST ..."
+    shSleep 30
+    LIST2=""
     for GITHUB_REPO in $LIST
     do
-    (
-        TRAVIS_REPO_ID="$(shTravisRepoIdGet $GITHUB_REPO)"
-        # init travis-hook
-        curl -H "Authorization: token $TRAVIS_ACCESS_TOKEN" \
-            -H "Content-Type: application/json; charset=UTF-8" \
-            -X PUT \
-            -d '{"hook":{"active":true}}' \
-            -fs \
-            "https://api.travis-ci.org/hooks/$TRAVIS_REPO_ID"
-        # init travis-settings
-        curl -H "Travis-API-Version: 3" \
-            -H "Content-Type: application/json; charset=UTF-8" \
-            -H "Authorization: token $TRAVIS_ACCESS_TOKEN" \
-            -X PATCH \
-            -d '{"user_setting.value":true}' \
-            -fs \
-            "https://api.travis-ci.org"\
-"/repo/$TRAVIS_REPO_ID/setting/builds_only_with_travis_yml"
-    ) &
+        LIST2="$(printf "$LIST2\n \
+(set -e; \
+TRAVIS_REPO_ID=\"\$(shTravisRepoIdGet $GITHUB_REPO)\"; \
+curl -H \"Authorization: token $TRAVIS_ACCESS_TOKEN\" \
+    -H \"Content-Type: application/json; charset=UTF-8\" \
+    -X PUT \
+    -d '{\"hook\":{\"active\":true}}' \
+    -fs \
+    \"https://api.travis-ci.org/hooks/\$TRAVIS_REPO_ID\"; \
+sleep 1; \
+curl -H \"Travis-API-Version: 3\" \
+    -H \"Content-Type: application/json; charset=UTF-8\" \
+    -H \"Authorization: token $TRAVIS_ACCESS_TOKEN\" \
+    -X PATCH \
+    -d '{\"setting.value\":true}' \
+    -fs \
+    \"https://api.travis-ci.org\"\
+\"/repo/\$TRAVIS_REPO_ID/setting/builds_only_with_travis_yml\"; \
+sleep 1; \
+curl -H \"Travis-API-Version: 3\" \
+    -H \"Content-Type: application/json; charset=UTF-8\" \
+    -H \"Authorization: token $TRAVIS_ACCESS_TOKEN\" \
+    -X PATCH \
+    -d '{\"setting.value\":true}' \
+    -fs \
+    \"https://api.travis-ci.org\"\
+\"/repo/\$TRAVIS_REPO_ID/setting/auto_cancel_pushes\"; \
+)")"
     done
-    for JOB in $(jobs -p)
-    do
-        if ! wait "$JOB"
-        then
-            EXIT_CODE=1
-            for JOB in $(jobs -p)
-            do
-                kill "$JOB" || true
-            done
-            shBuildPrint "EXIT_CODE - $EXIT_CODE"
-            return "$EXIT_CODE"
-        fi
-    done
+    shOnParallelListSpawn "$LIST2"
     shBuildPrint "... created travis-repos $LIST"
-    shBuildPrint "EXIT_CODE - $EXIT_CODE"
 )}
 
 shTravisRepoListGet() {(set -e
