@@ -91,6 +91,7 @@
             }
             // search modulePathList
             [
+                ['node_modules'],
                 modulePathList,
                 require('module').globalPaths
             ].some(function (modulePathList) {
@@ -655,8 +656,8 @@ local.templateApidocMd = '\
                     ].some(function (name) {
                         tmp.skip = local.path.extname(file) !== '.js' ||
                             file.indexOf(options.packageJson.main) >= 0 ||
-                            new RegExp('(?:\\b|_)(?:archive|artifact|assets|' +
-                                'bin|bower_component|build|' +
+                            new RegExp('(?:\\b|_)(?:archive|artifact|asset|' +
+                                'bin|bower_components|build|' +
                                 'cli|coverage' +
                                 'doc|dist|' +
                                 'example|external|' +
@@ -667,7 +668,7 @@ local.templateApidocMd = '\
                                 'node_modules|' +
                                 'rollup|' +
                                 'test|tmp|' +
-                                'vendor)(?:\\b|_)').test(file.toLowerCase()) ||
+                                'vendor)s{0,1}(?:\\b|_)').test(file.toLowerCase()) ||
                             module[name];
                         return tmp.skip;
                     });

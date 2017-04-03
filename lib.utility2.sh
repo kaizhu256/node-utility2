@@ -252,13 +252,6 @@ shBuildCi() {(set -e
     master)
         git tag "$npm_package_version" || true
         shGithubPush "https://github.com/$GITHUB_REPO.git" "$npm_package_version" || true
-        case "$CI_COMMIT_MESSAGE_META" in
-        "[npm publishAfterCommit]")
-            shGithubPush -f "https://github.com/$GITHUB_REPO.git" HEAD:alpha
-            ;;
-        *)
-            ;;
-        esac
         ;;
     publish)
         # init .npmrc
@@ -272,8 +265,10 @@ shBuildCi() {(set -e
 [$npm_package_name](https://www.npmjs.com/package/$npm_package_name)"
         case "$CI_COMMIT_MESSAGE_META" in
         "[npm publishAfterCommit]")
+            printf "$(shDateIso)\n" > touch.txt
+            git add .
+            git commit -am "[ci skip] npm published"
             shGithubPush -f "https://github.com/$GITHUB_REPO.git" HEAD:alpha
-            shGithubPush -f "https://github.com/$GITHUB_REPO.git" HEAD:beta
             ;;
         *)
             shGithubPush "https://github.com/$GITHUB_REPO.git" HEAD:beta
@@ -422,8 +417,7 @@ shBuildNpmdoc() {(set -e
         esac
         GITHUB_REPO="npmdoc/node-npmdoc-$NAME"
         if [ ! "$TRAVIS_REPO_CREATE_FORCE" ] && (curl -Lfs \
-            "https://raw.githubusercontent.com/$GITHUB_REPO/alpha/test.js" \
-            > /dev/null 2>&1)
+            "https://raw.githubusercontent.com/$GITHUB_REPO/alpha/test.js" > /dev/null)
         then
             return
         fi
@@ -1295,6 +1289,7 @@ shGithubPush() {(set -e
 
 shGithubRepoBaseCreate() {(set -e
 # this function will create the base github-repo https://github.com/$GITHUB_REPO.git
+    export GITHUB_TOKEN="${GITHUB_TOKEN_API:-$GITHUB_TOKEN}"
     if [ ! "$GITHUB_TOKEN" ]
     then
         return
@@ -1331,7 +1326,7 @@ shGithubRepoBaseCreate() {(set -e
     # create github $GITHUB_REPO with $GITHUB_TOKEN
     if ! (curl -Lfs "https://github.com/$GITHUB_REPO" > /dev/null 2>&1)
     then
-        curl -H "Authorization: token $GITHUB_TOKEN" -Lfs -X POST -d "{\"name\":\"$NAME\"}" \
+        curl -H "Authorization: token $GITHUB_TOKEN" -#Lf -X POST -d "{\"name\":\"$NAME\"}" \
             "$URL" > /dev/null
     fi
     # set default-branch to alpha
@@ -1867,6 +1862,7 @@ local.moduleDirname = function (module, modulePathList) {
     }
     // search modulePathList
     [
+        ['node_modules'],
         modulePathList,
         require('module').globalPaths
     ].some(function (modulePathList) {
@@ -2281,6 +2277,7 @@ shNpmdocRepoListCreate() {(set -e
         eval "$(shTravisCryptoAesDecryptYml)"
     fi
     LIST="$1"
+    LIST_LENGTH="${2:-999999999}"
     # get $LIST of $NAME from $URL
     if (printf "$LIST" | grep -qe "^https://")
     then
@@ -2288,22 +2285,45 @@ shNpmdocRepoListCreate() {(set -e
     fi
     # convert $NAME to lower-case
     LIST="$(printf "$LIST" | tr [:upper:] [:lower:])"
+    # filter $LIST
     LIST2=""
     for NAME in $LIST
     do
         case "$NAME" in
-        # filter npmdoc-*
+        npmclassic-*)
+            continue
+            ;;
         npmdoc-*)
             continue
             ;;
-        # filter npmtest-*
+        npmstable-*)
+            continue
+            ;;
         npmtest-*)
             continue
             ;;
         esac
+        LIST2="$LIST2 $NAME"
+    done
+    LIST="$LIST2"
+    # truncate $LIST to $LIST_LENGTH
+    LIST2=""
+    for NAME in $LIST
+    do
+        LIST2="$LIST2 $NAME"
+        LIST_LENGTH="$((LIST_LENGTH-1))"
+        if [ "$LIST_LENGTH" -le 0 ]
+        then
+            break
+        fi
+    done
+    LIST="$LIST2"
+    # init $TRAVIS_REPO
+    LIST2=""
+    for NAME in $LIST
+    do
         LIST2="$LIST2 npmdoc/node-npmdoc-$NAME"
     done
-    # init $TRAVIS_REPO
     shTravisRepoListCreate "$LIST2" npmdoc
     shBuildPrint "creating npmdoc-repos $LIST ..."
     shSleep 30
@@ -2842,7 +2862,7 @@ shGithubRepoBaseCreate $GITHUB_REPO $GITHUB_ORG\
     shBuildPrint "... created github-repos $LIST"
     shBuildPrint "syncing travis ..."
     shSleep 30
-    curl -H "Authorization: token $TRAVIS_ACCESS_TOKEN" -Lfs -X POST \
+    curl -H "Authorization: token $TRAVIS_ACCESS_TOKEN" -#Lf -X POST \
         "https://api.travis-ci.org/users/sync" || true
     shBuildPrint "... synced travis"
     shBuildPrint "creating travis-repos $LIST ..."
@@ -2852,11 +2872,12 @@ shGithubRepoBaseCreate $GITHUB_REPO $GITHUB_ORG\
     do
         LIST2="$(printf "$LIST2\n \
 (set -e; \
+shBuildPrint \"creating travis-repo $GITHUB_REPO\"; \
 TRAVIS_REPO_ID=\"\$(node -e \
     \"console.log(\$(curl -Lfs https://api.travis-ci.org/repos/$GITHUB_REPO).id);\")\"; \
 curl -H \"Authorization: token $TRAVIS_ACCESS_TOKEN\" \
     -H \"Content-Type: application/json; charset=UTF-8\" \
-    -Lfs \
+    -#Lf \
     -X PUT \
     -d '{\"hook\":{\"active\":true}}' \
     \"https://api.travis-ci.org/hooks/\$TRAVIS_REPO_ID\"; \
@@ -2864,7 +2885,7 @@ sleep 1; \
 curl -H \"Travis-API-Version: 3\" \
     -H \"Content-Type: application/json; charset=UTF-8\" \
     -H \"Authorization: token $TRAVIS_ACCESS_TOKEN\" \
-    -Lfs \
+    -#Lf \
     -X PATCH \
     -d '{\"setting.value\":true}' \
     \"https://api.travis-ci.org\"\
@@ -2873,7 +2894,7 @@ sleep 1; \
 curl -H \"Travis-API-Version: 3\" \
     -H \"Content-Type: application/json; charset=UTF-8\" \
     -H \"Authorization: token $TRAVIS_ACCESS_TOKEN\" \
-    -Lfs \
+    -#Lf \
     -X PATCH \
     -d '{\"setting.value\":true}' \
     \"https://api.travis-ci.org\"\

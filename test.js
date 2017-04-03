@@ -1698,8 +1698,8 @@
                 file: '/assets.hello',
                 url: '/assets.hello'
             }, {
-                file: '/assets.script-only.html',
-                url: '/assets.script-only.html'
+                file: '/assets.scriptOnly.html',
+                url: '/assets.scriptOnly.html'
             }, {
                 file: '/assets.swgg.rollup.js',
                 url: '/assets.swgg.rollup.js'
@@ -1744,18 +1744,21 @@
             local.buildLib(options, onError);
         };
 
-        local.testCase_buildNpmdoc_default = function (options, onError) {
+        local.testCase_buildNpmdoc_error = function (options, onError) {
         /*
-         * this function will test buildNpmdoc's default handling-behavior
+         * this function will test buildNpmdoc's error handling-behavior
          */
             local.testMock([
                 [local, {
                     buildApidoc: function (options, onError) {
-                        onError(null, options);
+                        onError(local.errorDefault, options);
                     }
                 }],
                 [local.fs, { writeFileSync: local.nop }],
-                [local.env, { npm_package_buildNpmdoc: 'electron-lite' }]
+                [local.env, { npm_package_buildNpmdoc: 'electron-lite' }],
+                [process, { on: function (options, onError) {
+                    onError(local.errorDefault, options);
+                } }]
             ], function (onError) {
                 options = {};
                 local.buildNpmdoc(options, local.onErrorThrow);
@@ -2183,8 +2186,8 @@
                 modeTestIgnore: true,
                 timeoutDefault: local.timeoutDefault - 1000,
                 url: local.serverLocalHost +
-                    // test script-only handling-behavior
-                    '/assets.script-only.html' +
+                    // test scriptOnly handling-behavior
+                    '/assets.scriptOnly.html' +
                     // test electron-callback handling-behavior
                     '?modeTest=1&' +
                     // test specific testCase handling-behavior
@@ -2285,7 +2288,7 @@
         if (module !== require.main || local.global.utility2_rollup) {
             return;
         }
-        local.assetsDict['/assets.script-only.html'] = '<h1>script-only test</h1>\n' +
+        local.assetsDict['/assets.scriptOnly.html'] = '<h1>scriptOnlyTest</h1>\n' +
                 '<script src="assets.utility2.js"></script>\n' +
                 '<script>window.utility2.onReadyBefore.counter += 1;</script>\n' +
                 '<script src="assets.example.js"></script>\n' +

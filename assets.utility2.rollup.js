@@ -135,6 +135,7 @@
             }
             // search modulePathList
             [
+                ['node_modules'],
                 modulePathList,
                 require('module').globalPaths
             ].some(function (modulePathList) {
@@ -699,8 +700,8 @@ local.templateApidocMd = '\
                     ].some(function (name) {
                         tmp.skip = local.path.extname(file) !== '.js' ||
                             file.indexOf(options.packageJson.main) >= 0 ||
-                            new RegExp('(?:\\b|_)(?:archive|artifact|assets|' +
-                                'bin|bower_component|build|' +
+                            new RegExp('(?:\\b|_)(?:archive|artifact|asset|' +
+                                'bin|bower_components|build|' +
                                 'cli|coverage' +
                                 'doc|dist|' +
                                 'example|external|' +
@@ -711,7 +712,7 @@ local.templateApidocMd = '\
                                 'node_modules|' +
                                 'rollup|' +
                                 'test|tmp|' +
-                                'vendor)(?:\\b|_)').test(file.toLowerCase()) ||
+                                'vendor)s{0,1}(?:\\b|_)').test(file.toLowerCase()) ||
                             module[name];
                         return tmp.skip;
                     });
@@ -11947,8 +11948,21 @@ return Utf8ArrayToStr(bff);
         /*
          * this function will build the npmdoc
          */
-            var onParallel, packageJson;
-            onParallel = local.utility2.onParallel(onError);
+            var done, onError2, onParallel, packageJson;
+            // ensure exit after 5 minutes
+            setTimeout(process.exit, 5 * 60 * 1000);
+            onError2 = function (error) {
+                local.onErrorDefault(error);
+                if (done) {
+                    return;
+                }
+                done = true;
+                // try to recover from error
+                setTimeout(onError, error && local.timeoutDefault);
+            };
+            // try to salvage uncaughtException
+            process.on('uncaughtException', onError2);
+            onParallel = local.utility2.onParallel(onError2);
             onParallel.counter += 1;
             // build package.json
             packageJson = JSON.parse(local.fs.readFileSync('package.json', 'utf8'));
@@ -11998,7 +12012,7 @@ header: '\
 [![NPM](https://nodei.co/npm/{{env.npm_package_name}}.png?downloads=true)](https://www.npmjs.com/package/{{env.npm_package_name}}) \
 \n\
 \n\
-[![apidoc](https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build/screenCapture.buildNpmdoc.browser._2Fhome_2Ftravis_2Fbuild_2Fnpmdoc_2Fnode-npmdoc-{{env.npm_package_name}}_2Ftmp_2Fbuild_2Fapidoc.html.png)](https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build..beta..travis-ci.org/apidoc.html) \
+[![apidoc](https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build/screenCapture.buildNpmdoc.browser._2Fhome_2Ftravis_2Fbuild_2Fnpmdoc_2Fnode-npmdoc-{{env.npm_package_name}}_2Ftmp_2Fbuild_2Fapidoc.html.png)](https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build/apidoc.html) \
 \n\
 \n\
 ![npmPackageListing](https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build/screenCapture.npmPackageListing.svg) \
@@ -13082,6 +13096,7 @@ header: '\
             }
             // search modulePathList
             [
+                ['node_modules'],
                 modulePathList,
                 require('module').globalPaths
             ].some(function (modulePathList) {
@@ -13417,8 +13432,8 @@ header: '\
             ii = -1;
             onParallel.ii = -1;
             onParallel.remaining = options.list.length;
-            options.rateLimit = Number(options.rateLimit) || 8;
-            options.rateLimit = Math.max(options.rateLimit, 2);
+            options.rateLimit = Number(options.rateLimit) || 4;
+            options.rateLimit = Math.max(options.rateLimit, 3);
             options.retryLimit = Number(options.retryLimit) || 2;
             onEach2();
             onParallel();

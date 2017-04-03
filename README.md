@@ -30,6 +30,7 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 [![apidoc](https://kaizhu256.github.io/node-utility2/build/screenCapture.buildApidoc.browser._2Fhome_2Ftravis_2Fbuild_2Fkaizhu256_2Fnode-utility2_2Ftmp_2Fbuild_2Fapidoc.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/apidoc.html)
 
 #### todo
+- fix package-listing bug on https://travis-ci.org/npmdoc/node-npmdoc-object-assign
 - rename sub-package db-lite -> nedb-lite
 - rename sub-package istanbul-lite -> istanbul-classic
 - rename sub-package jslint-lite -> jslint-classic
@@ -50,7 +51,7 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 - add shell-function shNpmPackageNameListGetFromUrl, which allows shNpmdocRepoListCreate to create npmdocs directly from npm-website
 - enable auto-cancel-mode by default when creating travis-repo
 - rename function listForEachAsync -> onParallelList
-- streamline build-process for 'npm publishAfterCommitAfterBuild' into only 2-stages (alpha and beta)
+- streamline build-process for 'npm publishAfterCommitAfterBuild' to just one stage (alpha)
 - none
 
 #### this package requires
@@ -847,7 +848,7 @@ shBuildCiPost() {(set -e
         mkdir -p tmp/storage.undefined
         curl -Ls https://kaizhu256.github.io/node-utility2/build/dbTable.TravisRepo.json > \
             tmp/storage.undefined/dbTable.TravisRepo.json
-        ./lib.utility2.sh dbTableTravisRepoUpdate '{"queryLimit":500,"rateLimit":20}'
+        ./lib.utility2.sh dbTableTravisRepoUpdate
         cp tmp/storage.undefined/dbTable.TravisRepo.json tmp/build
         ;;
     esac
