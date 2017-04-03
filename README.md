@@ -7,6 +7,8 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 
 [![package-listing](https://kaizhu256.github.io/node-utility2/build/screen-capture.npmPackageListing.svg)](https://github.com/kaizhu256/node-utility2)
 
+![dependency-tree](https://kaizhu256.github.io/node-utility2/build/screen-capture.npmDepedencyTree.svg)
+
 
 
 # cdn download
@@ -40,12 +42,15 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 
 #### changes for v2017.3.29
 - add auto-retry option to function onParallelList
+- add depencency-tree-visualization to README.md
 - add html-scraper to function browerTest
 - add property 'sortDefault' to dbTable, which defaults to [{ fieldName: '_timeUpdated', isDescending: true }]
 - add optional callback to function dbTable.prototype.save
 - add shell-function shOnParallelListSpawn
+- add shell-function shNpmPackageNameListGetFromUrl, which allows shNpmdocRepoListCreate to create npmdocs directly from npm-website
 - enable auto-cancel-mode by default when creating travis-repo
 - rename function listForEachAsync -> onParallelList
+- streamline build-process for 'npm publishAfterCommitAfterBuild' into only 2-stages (alpha and beta)
 - none
 
 #### this package requires

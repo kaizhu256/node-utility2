@@ -1065,15 +1065,15 @@
                     local.onParallelList({ list: [] }, local.onErrorThrow, options.onNext);
                     break;
                 case 2:
-                    local.onParallelList({
-                        list: [null],
-                        // test retryLimit handling-behavior
-                        retryLimit: 1
-                    }, function (data, onParallel) {
+                    options.list = [null];
+                    // test retryLimit handling-behavior
+                    options.retryLimit = 1;
+                    local.onParallelList(options, function (data, onParallel) {
+                        onParallel.counter += 1;
                         // test error handling-behavior
                         onParallel(local.errorDefault, data);
                         // test multiple callback handling behavior
-                        onParallel(null, data);
+                        setTimeout(onParallel, 5000);
                     }, function (error) {
                         // validate error occurred
                         local.assert(error, error);
@@ -1083,10 +1083,12 @@
                 case 3:
                     options.data = [];
                     // test rateLimit handling-behavior
-                    options.rateLimit = 2;
+                    options.rateLimit = 3;
                     options.rateMax = 0;
+                    // test retryLimit handling-behavior
+                    options.retryLimit = 1;
                     local.onParallelList({
-                        list: [1, 2, 3],
+                        list: [1, 2, 3, 4, 5],
                         rateLimit: options.rateLimit
                     }, function (data, onParallel) {
                         onParallel.counter += 1;
@@ -1094,19 +1096,19 @@
                         // test async handling-behavior
                         setTimeout(function () {
                             options.data[data.ii] = data.element;
-                            onParallel();
+                            onParallel(data.retry < 1 && local.onErrorDefault, data);
                         });
                     }, options.onNext, options.rateLimit);
                     break;
                 case 4:
                     // validate data
-                    local.assertJsonEqual(options.data, [1, 2, 3]);
-                    local.assertJsonEqual(options.rateMax, 2);
+                    local.assertJsonEqual(options.data, [1, 2, 3, 4, 5]);
+                    local.assertJsonEqual(options.rateMax, 3);
                     options.data = [];
                     options.rateLimit = 'syntax error';
                     options.rateMax = 0;
                     local.onParallelList({
-                        list: [1, 2, 3],
+                        list: [1, 2, 3, 4, 5],
                         rateLimit: options.rateLimit
                     }, function (data, onParallel) {
                         // test sync handling-behavior
@@ -1118,7 +1120,7 @@
                     break;
                 case 5:
                     // validate data
-                    local.assertJsonEqual(options.data, [1, 2, 3]);
+                    local.assertJsonEqual(options.data, [1, 2, 3, 4, 5]);
                     local.assertJsonEqual(options.rateMax, 2);
                     options.onNext();
                     break;

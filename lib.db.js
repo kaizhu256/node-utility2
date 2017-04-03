@@ -245,7 +245,7 @@
             };
         };
 
-        local.onParallel = function (onError, onEach) {
+        local.onParallel = function (onError, onEach, onRetry) {
         /*
          * this function will create a function that will
          * 1. run async tasks in parallel
@@ -254,7 +254,11 @@
             var onParallel;
             onError = local.onErrorWithStack(onError);
             onEach = onEach || local.nop;
+            onRetry = onRetry || local.nop;
             onParallel = function (error, data) {
+                if (onRetry(error, data)) {
+                    return;
+                }
                 // decrement counter
                 onParallel.counter -= 1;
                 // validate counter

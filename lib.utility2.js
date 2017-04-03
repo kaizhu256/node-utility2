@@ -508,6 +508,8 @@ example module\n\
 \n\
 [![package-listing](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.npmPackageListing.svg)](https://github.com/kaizhu256/node-jslint-lite)\n\
 \n\
+![dependency-tree](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.npmDepedencyTree.svg)\n\
+\n\
 \n\
 \n\
 # cdn download\n\
@@ -2634,6 +2636,9 @@ header: '\
 ![package-listing](https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build/screen-capture.npmPackageListing.svg) \
 \n\
 \n\
+![dependency-tree](https://kaizhu256.github.io/node-npmdoc-{{env.npm_package_name}}/build/screen-capture.npmDepedencyTree.svg) \
+\n\
+\n\
 \n\
 \n\
 # package.json \
@@ -4033,7 +4038,10 @@ header: '\
                 if (error && data && data.retry < options.retryLimit) {
                     local.onErrorDefault(error);
                     data.retry += 1;
-                    onEach(data, onParallel);
+                    setTimeout(function () {
+                        onParallel.counter -= 1;
+                        onEach(data, onParallel);
+                    }, 1000);
                     return true;
                 }
             });
@@ -4043,6 +4051,7 @@ header: '\
             onParallel.remaining = options.list.length;
             options.rateLimit = Number(options.rateLimit) || 8;
             options.rateLimit = Math.max(options.rateLimit, 2);
+            options.retryLimit = Number(options.retryLimit) || 2;
             onEach2();
             onParallel();
         };
