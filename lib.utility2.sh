@@ -297,30 +297,22 @@ shBuildCiInternal() {(set -e
     (
     shPasswordEnvUnset
     export MODE_BUILD=npmTest
-    shRunScreenCapture npm test --mode-coverage
+    shRunScreenCaptureTxt npm test --mode-coverage
     )
     # create apidoc
     shBuildApidoc
-    # create package-listing
     if [ "$npm_package_buildNpmdoc" ]
     then
         shNpmPackageListingCreate "node_modules/$npm_package_buildNpmdoc"
+        shNpmPackageDependencyTreeCreate "$npm_package_buildNpmdoc"
     else
         shNpmPackageListingCreate
+        shNpmPackageDependencyTreeCreate "$npm_package_name"
     fi
-    # create dependency-tree
-    (
-    # init /tmp/app
-    rm -fr /tmp/app
-    mkdir -p /tmp/app
-    cd /tmp/app
-    export MODE_BUILD=npmDepedencyTree
-    shRunScreenCapture npm install "${npm_config_dependencyTree:-$npm_package_name}"
-    )
     # create recent changelog of last 50 commits
     (
     export MODE_BUILD=gitLog
-    shRunScreenCapture git log -50 --pretty="%ai\u000a%B"
+    shRunScreenCaptureTxt git log -50 --pretty="%ai\u000a%B"
     )
     if [ ! "$GITHUB_TOKEN" ]
     then
@@ -569,7 +561,7 @@ shDeployGithub() {(set -e
     export MODE_BUILD=${MODE_BUILD}Test
     shBrowserTest test "$TEST_URL?modeTest=1&timeExit={{timeExit}}"
     )
-    # screen-capture deployed app
+    # screenCapture deployed app
     shBrowserTest screenCapture "$TEST_URL"
 )}
 
@@ -607,7 +599,7 @@ shDeployHeroku() {(set -e
     export MODE_BUILD=${MODE_BUILD}Test
     shBrowserTest test "$TEST_URL?modeTest=1&timeExit={{timeExit}}"
     )
-    # screen-capture deployed app
+    # screenCapture deployed app
     shBrowserTest screenCapture "$TEST_URL"
 )}
 
@@ -1219,31 +1211,26 @@ shGitInfo() {(set -e
 
 shGitLsTree() {(set -e
 # this function will list all files committed in HEAD
-    II=0
-    SIZE=0
-    SIZE_TOTAL=0
-    for FILE in $(git ls-tree --name-only -r HEAD)
-    do
-        if [ ! -f "$FILE" ]
-        then
-            continue
-        fi
-        II="$((II+1))"
-        SIZE=$(ls -ln "$FILE" | awk "{print \$5}")
-        SIZE_TOTAL="$((SIZE_TOTAL+$SIZE))"
-        printf "%3s.  %s %8s byte  %s\n" \
-            "$II" \
-            "$(git log -1 --format="%ai" -- "$FILE")" \
-            "$SIZE" \
-            "$FILE"
-    done
-    FILE=.
-    II="$((II+1))"
-    printf "%3s.  %s %8s byte  %s\n" \
-        "$II" \
-        "$(git log -1 --format="%ai" -- "$FILE")" \
-        "$SIZE_TOTAL" \
-        "$FILE"
+    printf "$(git ls-tree --name-only -r HEAD)" | awk '{
+    ii += 1
+    file = $0
+    cmd = "git log -1 --format=\"%ai\" -- " file
+    (cmd | getline date)
+    close(cmd)
+    cmd = "ls -ln " file " | awk \"{print \\$5}\""
+    (cmd | getline size)
+    close(cmd)
+    sizeTotal += size
+    printf("%3s.  %s %8s byte  %s\n", ii, date, size, file)
+} END {
+    ii = 0
+    file = "."
+    cmd = "git log -1 --format=\"%ai\" -- " file
+    (cmd | getline date)
+    close(cmd)
+    size = sizeTotal
+    printf("%3s.  %s %8s byte  %s\n", ii, date, size, file)
+    }'
 )}
 
 shGitRemotePromote() {(set -e
@@ -2029,6 +2016,26 @@ console.log('true');
     npm install "$@"
 )}
 
+shNpmPackageDependencyTreeCreate() {(set -e
+# this function will create a svg dependency-tree of the npm-package
+    shPasswordEnvUnset
+    # init /tmp/node_modules
+    rm -fr /tmp/node_modules
+    cd /tmp
+    npm install "kaizhu256/node-electron-lite#alpha" "kaizhu256/node-utility2#alpha"
+    # init /tmp/app
+    rm -fr /tmp/app
+    mkdir -p /tmp/app
+    cd /tmp/app
+    shInit
+    export MODE_BUILD=npmPackageDependencyTree
+    shRunScreenCaptureTxtPost() {(set -e
+        grep -e '^ *[│└├]' "$npm_config_dir_tmp/runScreenCapture.txt" > "$npm_config_file_tmp"
+        mv "$npm_config_file_tmp" "$npm_config_dir_tmp/runScreenCapture.txt"
+    )}
+    shRunScreenCaptureTxt npm install "$1"
+)}
+
 shNpmPackageListingCreate() {(set -e
 # this function will create a svg listing of the npm-package
     cd "$1"
@@ -2047,7 +2054,18 @@ tmp
     fi
     shInit
     export MODE_BUILD=npmPackageListing
-    shRunScreenCapture shGitLsTree
+    shRunScreenCaptureTxtPost() {(set -e
+        awk '{
+lineList[NR] = $0
+} END {
+    print lineList[NR]
+    for (ii = 1; ii < NR; ii += 1) {
+        print lineList[ii]
+    }
+        }' "$npm_config_dir_tmp/runScreenCapture.txt" > "$npm_config_file_tmp"
+        mv "$npm_config_file_tmp" "$npm_config_dir_tmp/runScreenCapture.txt"
+    )}
+    shRunScreenCaptureTxt shGitLsTree
 )}
 
 shNpmPackageNameListGetFromUrl() {(set -e
@@ -2397,7 +2415,6 @@ shReadmeTest() {(set -e
         fi
         shNpmInstallWithPeerDependencies "$npm_package_buildNpmdoc"
         shBuildNpmdoc
-        export npm_config_dependencyTree="$npm_package_buildNpmdoc"
         shBuildCi
         return
     fi
@@ -2480,7 +2497,7 @@ console.log(require('fs').readFileSync('$FILE', 'utf8').trimLeft());
     fi
     export PORT=8081
     export npm_config_timeout_exit=30000
-    # screen-capture server
+    # screenCapture server
     (
     shBuildPrint "screenCapture http://127.0.0.1:$PORT"
     shSleep 20
@@ -2489,10 +2506,10 @@ console.log(require('fs').readFileSync('$FILE', 'utf8').trimLeft());
     case "$FILE" in
     example.js)
         printf "$SCRIPT\n\n"
-        shRunScreenCapture eval "$SCRIPT"
+        shRunScreenCaptureTxt eval "$SCRIPT"
         ;;
     example.sh)
-        shRunScreenCapture /bin/sh "$FILE"
+        shRunScreenCaptureTxt /bin/sh "$FILE"
         ;;
     tmp/README.build_ci.sh)
         /bin/sh "$FILE"
@@ -2563,20 +2580,29 @@ shRun() {(set -e
     fi
 )}
 
-shRunScreenCapture() {(set -e
+shRunScreenCaptureTxt() {(set -e
 # http://www.cnx-software.com/2011/09/22
 # /how-to-convert-a-command-line-result-into-an-image-in-linux/
-# this function will run the command $@ and screen-capture the output
+# this function will run the command $@ and screenCapture the output
     EXIT_CODE=0
-    export MODE_BUILD_SCREEN_CAPTURE="screen-capture.${MODE_BUILD:-undefined}.svg"
+    export MODE_BUILD_SCREEN_CAPTURE="screenCapture.${MODE_BUILD:-undefined}.svg"
     (
     printf "0" > "$npm_config_file_tmp"
     (eval shRun "$@" 2>&1)
     printf $? > "$npm_config_file_tmp"
-    ) | tee "$npm_config_dir_tmp/screen-capture.txt"
+    ) | tee "$npm_config_dir_tmp/runScreenCapture.txt"
     EXIT_CODE="$(cat "$npm_config_file_tmp")"
     shBuildPrint "EXIT_CODE - $EXIT_CODE"
-    [ "$EXIT_CODE" = 0 ] || return "$EXIT_CODE"
+    if [ "$EXIT_CODE" != 0 ]
+    then
+        return "$EXIT_CODE"
+    fi
+    # run shRunScreenCaptureTxtPost
+    if (type shRunScreenCaptureTxtPost > /dev/null 2>&1)
+    then
+        shRunScreenCaptureTxtPost
+        unset shRunScreenCaptureTxtPost
+    fi
     # format text-output
     node -e "
 // <script>
@@ -2609,7 +2635,7 @@ local.wordwrap = function (line, ii) {
 };
 local.yy = 10;
 local.result = (local.fs
-    .readFileSync('$npm_config_dir_tmp/screen-capture.txt', 'utf8')
+    .readFileSync('$npm_config_dir_tmp/runScreenCapture.txt', 'utf8')
     // remove ansi escape-code
     .replace((/\u001b.*?m/g), '')
     // format unicode
@@ -2635,6 +2661,7 @@ local.result = '<svg height=\"' + (local.yy + 20) +
 local.fs.writeFileSync('$npm_config_dir_build/$MODE_BUILD_SCREEN_CAPTURE', local.result);
 // </script>
     "
+    shBuildPrint "create file://$npm_config_dir_build/$MODE_BUILD_SCREEN_CAPTURE"
 )}
 
 shServerPortRandom() {(set -e

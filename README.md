@@ -5,9 +5,9 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 
 [![NPM](https://nodei.co/npm/utility2.png?downloads=true)](https://www.npmjs.com/package/utility2)
 
-[![package-listing](https://kaizhu256.github.io/node-utility2/build/screen-capture.npmPackageListing.svg)](https://github.com/kaizhu256/node-utility2)
+[![npmPackageListing](https://kaizhu256.github.io/node-utility2/build/screenCapture.npmPackageListing.svg)](https://github.com/kaizhu256/node-utility2)
 
-![dependency-tree](https://kaizhu256.github.io/node-utility2/build/screen-capture.npmDepedencyTree.svg)
+![npmPackageDependencyTree](https://kaizhu256.github.io/node-utility2/build/screenCapture.npmPackageDependencyTree.svg)
 
 
 
@@ -19,7 +19,7 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 # live demo
 - [https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/index.html](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/index.html)
 
-[![github.com test-server](https://kaizhu256.github.io/node-utility2/build/screen-capture.deployGithub.browser._2Fnode-utility2_2Fbuild_2Fapp_2Findex.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/index.html)
+[![github.com test-server](https://kaizhu256.github.io/node-utility2/build/screenCapture.deployGithub.browser._2Fnode-utility2_2Fbuild_2Fapp_2Findex.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/index.html)
 
 
 
@@ -27,7 +27,7 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 #### apidoc
 - [https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/apidoc.html](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/apidoc.html)
 
-[![apidoc](https://kaizhu256.github.io/node-utility2/build/screen-capture.buildApidoc.browser._2Fhome_2Ftravis_2Fbuild_2Fkaizhu256_2Fnode-utility2_2Ftmp_2Fbuild_2Fapidoc.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/apidoc.html)
+[![apidoc](https://kaizhu256.github.io/node-utility2/build/screenCapture.buildApidoc.browser._2Fhome_2Ftravis_2Fbuild_2Fkaizhu256_2Fnode-utility2_2Ftmp_2Fbuild_2Fapidoc.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/apidoc.html)
 
 #### todo
 - rename sub-package db-lite -> nedb-lite
@@ -46,7 +46,7 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 - add html-scraper to function browerTest
 - add property 'sortDefault' to dbTable, which defaults to [{ fieldName: '_timeUpdated', isDescending: true }]
 - add optional callback to function dbTable.prototype.save
-- add shell-function shOnParallelListSpawn
+- add shell-functions shNpmPackageDependencyTreeCreate, shOnParallelListSpawn
 - add shell-function shNpmPackageNameListGetFromUrl, which allows shNpmdocRepoListCreate to create npmdocs directly from npm-website
 - enable auto-cancel-mode by default when creating travis-repo
 - rename function listForEachAsync -> onParallelList
@@ -106,15 +106,15 @@ shExampleSh
 ```
 
 #### output from browser
-![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleSh.browser..png)
+![screenCapture](https://kaizhu256.github.io/node-utility2/build/screenCapture.testExampleSh.browser..png)
 
 #### output from shell
-![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleSh.svg)
+![screenCapture](https://kaizhu256.github.io/node-utility2/build/screenCapture.testExampleSh.svg)
 
 
 
 # quickstart automated example
-![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleJs.browser._2Fhome_2Ftravis_2Fbuild_2Fkaizhu256_2Fnode-utility2_2Ftmp_2Fbuild_2Ftest-report.html.png)
+![screenCapture](https://kaizhu256.github.io/node-utility2/build/screenCapture.testExampleJs.browser._2Fhome_2Ftravis_2Fbuild_2Fkaizhu256_2Fnode-utility2_2Ftmp_2Fbuild_2Ftest-report.html.png)
 
 #### to run this example, follow the instruction in the script below
 - [example.js](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/example.js)
@@ -632,13 +632,13 @@ utility2-comment -->\n\
 ```
 
 #### output from utility2
-![screen-capture](https://kaizhu256.github.io/screen-capture.testExampleJs.browser._2Fhome_2Ftravis_2Fbuild_2Fkaizhu256_2Fnode-utility2_2Ftmp_2Fbuild_2Ftest-report.html.png)
+![screenCapture](https://kaizhu256.github.io/screenCapture.testExampleJs.browser._2Fhome_2Ftravis_2Fbuild_2Fkaizhu256_2Fnode-utility2_2Ftmp_2Fbuild_2Ftest-report.html.png)
 
 #### output from istanbul
-![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleJs.browser._2Ftmp_2Fapp_2Ftmp_2Fbuild_2Fcoverage.html_2Fapp_2Fexample.js.html.png)
+![screenCapture](https://kaizhu256.github.io/node-utility2/build/screenCapture.testExampleJs.browser._2Ftmp_2Fapp_2Ftmp_2Fbuild_2Fcoverage.html_2Fapp_2Fexample.js.html.png)
 
 #### output from shell
-![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleJs.svg)
+![screenCapture](https://kaizhu256.github.io/node-utility2/build/screenCapture.testExampleJs.svg)
 
 
 
@@ -710,7 +710,7 @@ utility2-comment -->\n\
 
 
 # changelog of last 50 commits
-[![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.gitLog.svg)](https://github.com/kaizhu256/node-utility2/commits)
+[![screenCapture](https://kaizhu256.github.io/node-utility2/build/screenCapture.gitLog.svg)](https://github.com/kaizhu256/node-utility2/commits)
 
 
 
@@ -892,7 +892,7 @@ shBuildCiPost() {(set -e
 
 shBuildCiPre() {(set -e
     shReadmeTest example.js
-    # save screen-capture
+    # save screenCapture
     (
     export MODE_BUILD=testExampleJs
     shBrowserTest screenCapture /tmp/app/tmp/build/coverage.html/app/example.js.html
