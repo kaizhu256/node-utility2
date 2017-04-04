@@ -506,9 +506,9 @@ example module\n\
 \n\
 [![NPM](https://nodei.co/npm/jslint-lite.png?downloads=true)](https://www.npmjs.com/package/jslint-lite)\n\
 \n\
-[![package-listing](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.npmPackageListing.svg)](https://github.com/kaizhu256/node-jslint-lite)\n\
+[![npmPackageListing](https://kaizhu256.github.io/node-jslint-lite/build/screenCapture.npmPackageListing.svg)](https://github.com/kaizhu256/node-jslint-lite)\n\
 \n\
-![dependency-tree](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.npmDepedencyTree.svg)\n\
+![npmPackageDependencyTree](https://kaizhu256.github.io/node-jslint-lite/build/screenCapture.npmPackageDependencyTree.svg)\n\
 \n\
 \n\
 \n\
@@ -520,7 +520,7 @@ example module\n\
 # live demo\n\
 - [https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app/index.html](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app/index.html)\n\
 \n\
-[![github.com test-server](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.deployGithub.browser._2Fnode-jslint-lite_2Fbuild_2Fapp_2Findex.html.png)](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app/index.html)\n\
+[![github.com test-server](https://kaizhu256.github.io/node-jslint-lite/build/screenCapture.deployGithub.browser._2Fnode-jslint-lite_2Fbuild_2Fapp_2Findex.html.png)](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app/index.html)\n\
 \n\
 \n\
 \n\
@@ -528,7 +528,7 @@ example module\n\
 #### apidoc\n\
 - [https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/apidoc.html](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/apidoc.html)\n\
 \n\
-[![apidoc](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.buildApidoc.browser._2Fhome_2Ftravis_2Fbuild_2Fkaizhu256_2Fnode-jslint-lite_2Ftmp_2Fbuild_2Fapidoc.html.png)](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/apidoc.html)\n\
+[![apidoc](https://kaizhu256.github.io/node-jslint-lite/build/screenCapture.buildApidoc.browser._2Fhome_2Ftravis_2Fbuild_2Fkaizhu256_2Fnode-jslint-lite_2Ftmp_2Fbuild_2Fapidoc.html.png)](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/apidoc.html)\n\
 \n\
 #### todo\n\
 - none\n\
@@ -568,17 +568,17 @@ example module\n\
 \n\
 \n\
 # quickstart web example\n\
-![screen-capture](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.testExampleJs.browser..png)\n\
+![screenCapture](https://kaizhu256.github.io/node-jslint-lite/build/screenCapture.testExampleJs.browser..png)\n\
 \n\
 #### to run this example, follow the instruction in the script below\n\
 - [example.js](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/example.js)\n\
 ```javascript\n' + local.assetsDict['/assets.example.template.js'] + '```\n\
 \n\
 #### output from browser\n\
-![screen-capture](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.testExampleJs.browser..png)\n\
+![screenCapture](https://kaizhu256.github.io/node-jslint-lite/build/screenCapture.testExampleJs.browser..png)\n\
 \n\
 #### output from shell\n\
-![screen-capture](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.testExampleJs.svg)\n\
+![screenCapture](https://kaizhu256.github.io/node-jslint-lite/build/screenCapture.testExampleJs.svg)\n\
 \n\
 \n\
 \n\
@@ -622,7 +622,7 @@ example module\n\
 \n\
 \n\
 # changelog of last 50 commits\n\
-[![screen-capture](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.gitLog.svg)](https://github.com/kaizhu256/node-jslint-lite/commits)\n\
+[![screenCapture](https://kaizhu256.github.io/node-jslint-lite/build/screenCapture.gitLog.svg)](https://github.com/kaizhu256/node-jslint-lite/commits)\n\
 \n\
 \n\
 \n\
@@ -2055,7 +2055,7 @@ local.assetsDict['/favicon.ico'] = '';
                         fileCoverage: local.env.npm_config_dir_tmp +
                             '/coverage.' + options.testName + '.json',
                         fileScreenCapture: (local.env.npm_config_dir_build +
-                            '/screen-capture.' + options.testName + '.png')
+                            '/screenCapture.' + options.testName + '.png')
                             .replace((/%/g), '_')
                             .replace((/_2F\.png$/), '.png'),
                         fileTestReport: local.env.npm_config_dir_tmp +
@@ -2199,14 +2199,14 @@ local.assetsDict['/favicon.ico'] = '';
                     setTimeout(function () {
                         options.browserWindow.capturePage(options, function (data) {
                             local.fs.writeFileSync(options.fileScreenCapture, data.toPng());
-                            console.error('\nbrowserTest - created screen-capture file://' +
+                            console.error('\nbrowserTest - created screenCapture file://' +
                                 options.fileScreenCapture + '\n');
                             onParallel();
                         });
                     }, options.timeoutScreenCapture);
                     break;
                 case 14:
-                    console.error('browserTest - created screen-capture file://' +
+                    console.error('browserTest - created screenCapture file://' +
                         options.fileScreenCapture.replace((/\.\w+$/), '.html'));
                     onNext();
                     break;
@@ -2241,7 +2241,7 @@ local.assetsDict['/favicon.ico'] = '';
                         options.global_test_results =
                             JSON.parse(data.tmp[2]).global_test_results;
                         if (options.global_test_results.testReport) {
-                            // merge screen-capture into test-report
+                            // merge screenCapture into test-report
                             options.global_test_results.testReport.testPlatformList[0]
                                 .screenCaptureImg =
                                 options.fileScreenCapture.replace((/.*\//), '');
@@ -2579,8 +2579,21 @@ return Utf8ArrayToStr(bff);
         /*
          * this function will build the npmdoc
          */
-            var onParallel, packageJson;
-            onParallel = local.utility2.onParallel(onError);
+            var done, onError2, onParallel, packageJson;
+            // ensure exit after 5 minutes
+            setTimeout(process.exit, 5 * 60 * 1000);
+            onError2 = function (error) {
+                local.onErrorDefault(error);
+                if (done) {
+                    return;
+                }
+                done = true;
+                // try to recover from error
+                setTimeout(onError, error && local.timeoutDefault);
+            };
+            // try to salvage uncaughtException
+            process.on('uncaughtException', onError2);
+            onParallel = local.utility2.onParallel(onError2);
             onParallel.counter += 1;
             // build package.json
             packageJson = JSON.parse(local.fs.readFileSync('package.json', 'utf8'));
@@ -2630,13 +2643,13 @@ header: '\
 [![NPM](https://nodei.co/npm/{{env.npm_package_name}}.png?downloads=true)](https://www.npmjs.com/package/{{env.npm_package_name}}) \
 \n\
 \n\
-[![apidoc](https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build/screen-capture.buildNpmdoc.browser._2Fhome_2Ftravis_2Fbuild_2Fnpmdoc_2Fnode-npmdoc-{{env.npm_package_name}}_2Ftmp_2Fbuild_2Fapidoc.html.png)](https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build..beta..travis-ci.org/apidoc.html) \
+[![apidoc](https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build/screenCapture.buildNpmdoc.browser._2Fhome_2Ftravis_2Fbuild_2Fnpmdoc_2Fnode-npmdoc-{{env.npm_package_name}}_2Ftmp_2Fbuild_2Fapidoc.html.png)](https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build/apidoc.html) \
 \n\
 \n\
-![package-listing](https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build/screen-capture.npmPackageListing.svg) \
+![npmPackageListing](https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build/screenCapture.npmPackageListing.svg) \
 \n\
 \n\
-![dependency-tree](https://kaizhu256.github.io/node-npmdoc-{{env.npm_package_name}}/build/screen-capture.npmDepedencyTree.svg) \
+![npmPackageDependencyTree](https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build/screenCapture.npmPackageDependencyTree.svg) \
 \n\
 \n\
 \n\
@@ -2877,7 +2890,7 @@ header: '\
          * this function will update dbTableTravisRepo with active, public repos
          */
             var dbRowList, self;
-            options = local.objectSetDefault(options, { queryLimit: 500, rateLimit: 10 });
+            options = local.objectSetDefault(options, { queryLimit: 100 });
             local.onNext(options, function (error, data) {
                 switch (options.modeNext) {
                 case 1:
@@ -2919,14 +2932,16 @@ header: '\
                         dbRow = dbRow.element;
                         onParallel.counter += 1;
                         local.ajax({
-                            headers: {
-                                Authorization: 'token ' + local.env.TRAVIS_ACCESS_TOKEN
-                            },
                             url: 'https://api.travis-ci.org/repos/' + dbRow.githubRepo
                         }, function (error, data) {
                             // validate no error occurred
                             local.assert(!error, error);
-                            local.objectSetOverride(dbRow, JSON.parse(data.responseText));
+                            data = JSON.parse(data.responseText);
+                            Object.keys(data).forEach(function (key) {
+                                if (data[key] !== null) {
+                                    dbRow[key] = data[key];
+                                }
+                            });
                             // ignore extraneous data to save space
                             dbRow.description = null;
                             dbRow.last_build_duration = null;
@@ -2953,7 +2968,8 @@ header: '\
                     self.save(options.onNext);
                     break;
                 default:
-                    local.setTimeoutOnError(onError, error, self);
+                    local.onErrorDefault(error);
+                    local.setTimeoutOnError(onError, null, self);
                 }
             });
             options.modeNext = 0;
@@ -3714,6 +3730,7 @@ header: '\
             }
             // search modulePathList
             [
+                ['node_modules'],
                 modulePathList,
                 require('module').globalPaths
             ].some(function (modulePathList) {
@@ -4049,8 +4066,8 @@ header: '\
             ii = -1;
             onParallel.ii = -1;
             onParallel.remaining = options.list.length;
-            options.rateLimit = Number(options.rateLimit) || 8;
-            options.rateLimit = Math.max(options.rateLimit, 2);
+            options.rateLimit = Number(options.rateLimit) || 4;
+            options.rateLimit = Math.max(options.rateLimit, 3);
             options.retryLimit = Number(options.retryLimit) || 2;
             onEach2();
             onParallel();
