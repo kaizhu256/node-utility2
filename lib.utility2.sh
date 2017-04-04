@@ -1301,10 +1301,9 @@ shGithubRepoBaseCreate() {(set -e
         git checkout alpha
     )
     fi
-    DIR="/tmp/$GITHUB_REPO"
-    rm -fr "$DIR"
-    mkdir -p "$DIR"
-    cp -a /tmp/githubRepoBase/ "$DIR"
+    rm -fr "/tmp/$GITHUB_REPO"
+    mkdir -p "/tmp/$(printf "$GITHUB_REPO" | sed -e "s/\/.*//")"
+    cp -a /tmp/githubRepoBase "/tmp/$GITHUB_REPO"
     cd "$DIR"
     # create github $GITHUB_REPO with $GITHUB_TOKEN
     if (! curl -Lfs "https://github.com/$GITHUB_REPO" > /dev/null 2>&1)
