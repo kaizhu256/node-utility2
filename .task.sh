@@ -27,8 +27,8 @@ shInit
   #!! '2017.03.19 swagger-ui-lite',
   #!! '2017.03.21 utility2' ]
 
-II=2100
-while [ "$II" -lt 5000 ]
+II=2450
+while [ "$II" -lt 3000 ]
 do
     LIST="https://www.npmjs.com/browse/star?offset=$II"
     printf "$LIST\n"
