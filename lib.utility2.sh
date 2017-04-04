@@ -2300,7 +2300,7 @@ shNpmdocRepoListCreate() {(set -e
         fi
     done
     LIST="$LIST2"
-    LIST="$(shTravisRepoListFilterIfActive "$LIST")"
+    LIST="$(shTravisRepoListFilterForNonActive "$LIST")"
     if [ ! "$LIST" ]
     then
         return
@@ -2879,25 +2879,35 @@ curl -H \"Authorization: token $TRAVIS_ACCESS_TOKEN\" \
     shBuildPrint "... created travis-repos $LIST"
 )}
 
-shTravisRepoListFilterIfActive() {(set -e
+shTravisRepoListFilterForNonActive() {(set -e
 # https://docs.travis-ci.com/api
-# this function will filter out active travis-repos from the $LIST
+# this function will filter for non-active travis-repos from $LIST
     LIST="$1"
     export MODE_BUILD="${MODE_BUILD:-shTravisRepoListFilter}"
-    shBuildPrint "filtering out existing travis-repos in list $LIST"
+    shBuildPrint "filtering out non-active travis-repos in list $LIST"
     # convert $LIST toLowerCase
     LIST="$(printf "$LIST" | tr [:upper:] [:lower:])"
+    # filter-for existing travis-repos
+    LIST2=""
+    for GITHUB_REPO in $LIST
+    do
+        LIST2="$LIST2
+if (curl -Lfs -o /dev/null https://api.travis-ci.org/repos/$GITHUB_REPO); \
+then printf \"$GITHUB_REPO\n\"; fi"
+    done
+    LIST="$(shOnParallelListSpawn "$LIST2")"
     if [ "$TRAVIS_REPO_CREATE_FORCE" ]
     then
         printf "$LIST"
         return
     fi
     LIST2=""
+    # filter-for non-active travis-repos
     for GITHUB_REPO in $LIST
     do
         LIST2="$LIST2
-! curl -Lfs https://api.travis-ci.org/repos/$GITHUB_REPO | grep -qv '\"active\":true' || \
-printf \"$GITHUB_REPO\n\""
+if (curl -Lfs https://api.travis-ci.org/repos/$GITHUB_REPO | grep -qv '\"active\":true'); \
+then printf \"$GITHUB_REPO\n\"; fi"
     done
     LIST="$(shOnParallelListSpawn "$LIST2")"
     printf "$LIST"

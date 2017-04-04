@@ -47,7 +47,7 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 - add html-scraper to function browerTest
 - add property 'sortDefault' to dbTable, which defaults to [{ fieldName: '_timeUpdated', isDescending: true }]
 - add optional callback to function dbTable.prototype.save
-- add shell-functions shGithubRepoListCreate, shNpmNameNormalize, shNpmPackageDependencyTreeCreate, shOnParallelListSpawn, shTravisRepoListFilterIfExists
+- add shell-functions shGithubRepoListCreate, shNpmNameNormalize, shNpmPackageDependencyTreeCreate, shOnParallelListSpawn, shTravisRepoListFilterForNonActive
 - add shell-function shNpmPackageNameListGetFromUrl, which allows shNpmdocRepoListCreate to create npmdocs directly from npm-website
 - enable auto-cancel-mode by default when creating travis-repo
 - streamline build-process for 'npm publishAfterCommitAfterBuild' to just one stage (alpha)
