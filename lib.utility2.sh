@@ -1304,7 +1304,7 @@ shGithubRepoBaseCreate() {(set -e
     rm -fr "/tmp/$GITHUB_REPO"
     mkdir -p "/tmp/$(printf "$GITHUB_REPO" | sed -e "s/\/.*//")"
     cp -a /tmp/githubRepoBase "/tmp/$GITHUB_REPO"
-    cd "$DIR"
+    cd "/tmp/$GITHUB_REPO"
     # create github $GITHUB_REPO with $GITHUB_TOKEN
     if (! curl -Lfs "https://github.com/$GITHUB_REPO" > /dev/null 2>&1)
     then
