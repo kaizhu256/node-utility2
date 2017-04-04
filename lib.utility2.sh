@@ -1305,16 +1305,33 @@ shGithubRepoBaseCreate() {(set -e
     mkdir -p "/tmp/$(printf "$GITHUB_REPO" | sed -e "s/\/.*//")"
     cp -a /tmp/githubRepoBase "/tmp/$GITHUB_REPO"
     cd "/tmp/$GITHUB_REPO"
-    # create github $GITHUB_REPO with $GITHUB_TOKEN
-    if (! curl -Lfs "https://github.com/$GITHUB_REPO" > /dev/null 2>&1)
-    then
-        curl -H "Authorization: token $GITHUB_TOKEN" -#Lf -X POST -d "{\"name\":\"$NAME\"}" \
-            "$URL" > /dev/null
-    fi
+    shGithubRepoListCreate "$GITHUB_REPO"
     # set default-branch to alpha
     shGithubPush "https://github.com/$GITHUB_REPO.git" alpha || true
     # push all branches
     shGithubPush --all "https://github.com/$GITHUB_REPO.git" || true
+)}
+
+shGithubRepoListCreate() {(set -e
+# this function will create the $GITHUB_REPO in $LIST with $GITHUB_TOKEN
+    LIST="$1"
+    GITHUB_ORG="$2"
+    export MODE_BUILD="${MODE_BUILD:-shGithubRepoBaseCreate}"
+    URL=https://api.github.com/user/repos
+    # init github $GITHUB_ORG url
+    if [ "$GITHUB_ORG" ]
+    then
+        URL="https://api.github.com/orgs/$GITHUB_ORG/repos"
+    fi
+    LIST2=""
+    for GITHUB_REPO in $LIST
+    do
+        NAME="$(printf "$GITHUB_REPO" | sed -e s/.*\\///)"
+        LIST2="$LIST2
+curl -ILfs -o /dev/null https://github.com/$GITHUB_REPO || \
+curl -#Lf -H 'Authorization: token $GITHUB_TOKEN' -X POST -d '{\"name\":\"$NAME\"}' $URL"
+    done
+    shOnParallelListSpawn "$LIST2"
 )}
 
 shGithubRepoListTouch() {(set -e
@@ -1994,6 +2011,43 @@ console.log('true');
     npm install "$@"
 )}
 
+shNpmNameListGetFromUrl() {(set -e
+# this function will scrape the $URL for the list of npm-package-names
+    URL="$1"
+    FILE=/tmp/shNpmNameListGetFromUrl.html
+    curl -Lfs -o "$FILE" "$URL"
+    node -e "
+// <script>
+/*jslint
+    bitwise: true,
+    browser: true,
+    maxerr: 8,
+    maxlen: 96,
+    node: true,
+    nomen: true,
+    regexp: true,
+    stupid: true
+*/
+'use strict';
+var local;
+local = {};
+local.dict = {};
+local.file = process.argv[1];
+local.fs = require('fs');
+local.nop = function () {
+    return;
+};
+local.rgx = (/href=\"\/package\/(.*?)\"/g);
+local.fs.readFileSync(local.file, 'utf8').replace(local.rgx, function (match0, match1) {
+    // jslint-hack
+    local.nop(match0);
+    local.dict[match1] = true;
+});
+console.log(Object.keys(local.dict).join('\n'));
+// </script>
+    " "$FILE"
+)}
+
 shNpmNameNormalize() {(set -e
 # this function will normalize the npm $NAME
     NAME="$1"
@@ -2056,43 +2110,6 @@ lineList[NR] = $0
         mv "$npm_config_file_tmp" "$npm_config_dir_tmp/runScreenCapture.txt"
     )}
     shRunScreenCaptureTxt shGitLsTree
-)}
-
-shNpmPackageNameListGetFromUrl() {(set -e
-# this function will scrape the $URL for the list of npm-package-names
-    URL="$1"
-    FILE=/tmp/shNpmPackageNameListGetFromUrl.html
-    curl -Lfs -o "$FILE" "$URL"
-    node -e "
-// <script>
-/*jslint
-    bitwise: true,
-    browser: true,
-    maxerr: 8,
-    maxlen: 96,
-    node: true,
-    nomen: true,
-    regexp: true,
-    stupid: true
-*/
-'use strict';
-var local;
-local = {};
-local.dict = {};
-local.file = process.argv[1];
-local.fs = require('fs');
-local.nop = function () {
-    return;
-};
-local.rgx = (/href=\"\/package\/(.*?)\"/g);
-local.fs.readFileSync(local.file, 'utf8').replace(local.rgx, function (match0, match1) {
-    // jslint-hack
-    local.nop(match0);
-    local.dict[match1] = true;
-});
-console.log(Object.keys(local.dict).join('\n'));
-// </script>
-    " "$FILE"
 )}
 
 shNpmPublish() {(set -e
@@ -2275,7 +2292,7 @@ shNpmdocRepoListCreate() {(set -e
     # get $LIST of $NAME from $URL
     if (printf "$LIST" | grep -qe "^https://")
     then
-        LIST="$(shNpmPackageNameListGetFromUrl "$LIST")"
+        LIST="$(shNpmNameListGetFromUrl "$LIST")"
     fi
     # filter $LIST
     LIST="$(printf "$LIST" | sed -e "s/npmdoc\/node-npmdoc-//g")"
