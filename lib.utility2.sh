@@ -2805,6 +2805,14 @@ shTravisCryptoAesEncryptYml() {(set -e
     rm -f .travis.ymln
 )}
 
+shTravisRepoIdGet() {(set -e
+# this function will get the $TRAVIS_REPO_ID from $GITHUB_REPO
+    GITHUB_REPO="$1"
+    node -e "console.log(
+        $(curl -Lfs https://api.travis-ci.org/repos/$GITHUB_REPO).id || process.exit(1)
+    )" 2>/dev/null
+)}
+
 shTravisRepoListCreate() {(set -e
 # https://docs.travis-ci.com/api
 # this function will create the travis-repo $LIST[ii]
@@ -2847,28 +2855,27 @@ shGithubRepoBaseCreate $GITHUB_REPO $GITHUB_ORG"
         LIST2="$LIST2
 (set -e; \
 shBuildPrint \"creating travis-repo $GITHUB_REPO\"; \
-TRAVIS_REPO_ID=\"\$(node -e \
-    \"console.log(\$(curl -Lfs https://api.travis-ci.org/repos/$GITHUB_REPO).id);\")\"; \
-curl -H \"Authorization: token $TRAVIS_ACCESS_TOKEN\" \
+TRAVIS_REPO_ID=\"\$(shTravisRepoIdGet $GITHUB_REPO)\"; \
+curl -#Lf \
+    -H \"Authorization: token $TRAVIS_ACCESS_TOKEN\" \
     -H \"Content-Type: application/json; charset=UTF-8\" \
-    -#Lf \
     -X PUT \
     -d '{\"hook\":{\"active\":true}}' \
     \"https://api.travis-ci.org/hooks/\$TRAVIS_REPO_ID\"; \
 sleep 1; \
-curl -H \"Authorization: token $TRAVIS_ACCESS_TOKEN\" \
+curl -#Lf \
+    -H \"Authorization: token $TRAVIS_ACCESS_TOKEN\" \
     -H \"Content-Type: application/json; charset=UTF-8\" \
     -H \"Travis-API-Version: 3\" \
-    -#Lf \
     -X PATCH \
     -d '{\"setting.value\":true}' \
     \"https://api.travis-ci.org\"\
 \"/repo/\$TRAVIS_REPO_ID/setting/builds_only_with_travis_yml\"; \
 sleep 1; \
-curl -H \"Authorization: token $TRAVIS_ACCESS_TOKEN\" \
+curl -#Lf \
+    -H \"Authorization: token $TRAVIS_ACCESS_TOKEN\" \
     -H \"Content-Type: application/json; charset=UTF-8\" \
     -H \"Travis-API-Version: 3\" \
-    -#Lf \
     -X PATCH \
     -d '{\"setting.value\":true}' \
     \"https://api.travis-ci.org\"\
@@ -2892,8 +2899,7 @@ shTravisRepoListFilterForNonActive() {(set -e
     for GITHUB_REPO in $LIST
     do
         LIST2="$LIST2
-if (curl -Lfs -o /dev/null https://api.travis-ci.org/repos/$GITHUB_REPO); \
-then printf \"$GITHUB_REPO\n\"; fi"
+shTravisRepoIdGet $GITHUB_REPO"
     done
     LIST="$(shOnParallelListSpawn "$LIST2")"
     if [ "$TRAVIS_REPO_CREATE_FORCE" ]
