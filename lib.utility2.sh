@@ -1329,7 +1329,8 @@ shGithubRepoListCreate() {(set -e
         NAME="$(printf "$GITHUB_REPO" | sed -e s/.*\\///)"
         LIST2="$LIST2
 curl -ILfs -o /dev/null https://github.com/$GITHUB_REPO || \
-curl -#Lf -H 'Authorization: token $GITHUB_TOKEN' -X POST -d '{\"name\":\"$NAME\"}' $URL"
+curl -#Lf -H 'Authorization: token $GITHUB_TOKEN' -X POST -d '{\"name\":\"$NAME\"}' \
+-o /dev/null $URL"
     done
     shOnParallelListSpawn "$LIST2"
 )}
