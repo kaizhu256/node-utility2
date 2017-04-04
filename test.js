@@ -531,11 +531,11 @@
             options = [
                 [local, {
                     ajax: function (options, onError) {
-                        onError(null, { responseText: JSON.stringify([{
-                            active: true,
-                            private: false,
-                            uid: ''
-                        }]) }, options);
+                        onError(null, {
+                            responseText: JSON.stringify(options.url.indexOf('hook') >= 0
+                                ? [{ active: true, private: false, uid: '' }]
+                                : { uid: '', undefined: null })
+                        }, options);
                     },
                     db: {
                         crudCountAll: function () {

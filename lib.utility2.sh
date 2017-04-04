@@ -168,10 +168,10 @@ shBuildCi() {(set -e
     # decrypt and exec encrypted data
     if [ "$CRYPTO_AES_KEY" ]
     then
-        eval "$(shTravisCryptoAesDecryptYml)"
+        eval "$(shTravisCryptoAesDecryptYml $CRYPTO_AES_KEY $GITHUB_ORG)"
     fi
     # init git config
-    if ! (git config user.email > /dev/null 2>&1)
+    if (! git config user.email > /dev/null 2>&1)
     then
         git config --global user.email nobody
         git config --global user.name nobody
@@ -265,9 +265,7 @@ shBuildCi() {(set -e
 [$npm_package_name](https://www.npmjs.com/package/$npm_package_name)"
         case "$CI_COMMIT_MESSAGE_META" in
         "[npm publishAfterCommit]")
-            printf "$(shDateIso)\n" > touch.txt
-            git add .
-            git commit -am "[ci skip] npm published"
+            shGitSquashPop HEAD~1 "[ci skip] npm published"
             shGithubPush -f "https://github.com/$GITHUB_REPO.git" HEAD:alpha
             ;;
         *)
@@ -401,30 +399,15 @@ shBuildNpmdoc() {(set -e
     NAME="$1"
     if [ "$NAME" ]
     then
-        case "$NAME" in
-        npmclassic-*)
-            return
-            ;;
-        npmdoc-*)
-            return
-            ;;
-        npmstable-*)
-            return
-            ;;
-        npmtest-*)
-            return
-            ;;
-        esac
+        NAME="$(printf "$NAME" | sed -e "s/^npmdoc\/node-npmdoc-//")"
         GITHUB_REPO="npmdoc/node-npmdoc-$NAME"
-        if [ ! "$TRAVIS_REPO_CREATE_FORCE" ] && (curl -Lfs \
-            "https://raw.githubusercontent.com/$GITHUB_REPO/alpha/test.js" > /dev/null)
-        then
-            return
-        fi
         # build and push initial repo to npmdoc/node-npmdoc-$NAME#alpha
-        # init /tmp/npmdoc.node-npmdoc-$NAME
-        shGithubRepoBaseCreate "$GITHUB_REPO" "$GITHUB_ORG"
-        cd /tmp/npmdoc.node-npmdoc-$NAME
+        # init /tmp/$GITHUB_REPO
+        if [ ! -d "/tmp/$GITHUB_REPO" ]
+        then
+            shGithubRepoBaseCreate "$GITHUB_REPO" "$GITHUB_ORG"
+        fi
+        cd "/tmp/$GITHUB_REPO"
         touch README.md
         for FILE in .gitignore .travis.yml LICENSE
         do
@@ -1289,7 +1272,6 @@ shGithubPush() {(set -e
 
 shGithubRepoBaseCreate() {(set -e
 # this function will create the base github-repo https://github.com/$GITHUB_REPO.git
-    export GITHUB_TOKEN="${GITHUB_TOKEN_API:-$GITHUB_TOKEN}"
     if [ ! "$GITHUB_TOKEN" ]
     then
         return
@@ -1319,12 +1301,13 @@ shGithubRepoBaseCreate() {(set -e
         git checkout alpha
     )
     fi
-    DIR="/tmp/$(printf "$GITHUB_REPO" | tr / .)"
+    DIR="/tmp/$GITHUB_REPO"
     rm -fr "$DIR"
-    cp -a /tmp/githubRepoBase "$DIR"
+    mkdir -p "$DIR"
+    cp -a /tmp/githubRepoBase/ "$DIR"
     cd "$DIR"
     # create github $GITHUB_REPO with $GITHUB_TOKEN
-    if ! (curl -Lfs "https://github.com/$GITHUB_REPO" > /dev/null 2>&1)
+    if (! curl -Lfs "https://github.com/$GITHUB_REPO" > /dev/null 2>&1)
     then
         curl -H "Authorization: token $GITHUB_TOKEN" -#Lf -X POST -d "{\"name\":\"$NAME\"}" \
             "$URL" > /dev/null
@@ -2012,6 +1995,18 @@ console.log('true');
     npm install "$@"
 )}
 
+shNpmNameNormalize() {(set -e
+# this function will normalize the npm $NAME
+    NAME="$1"
+    printf "$NAME" | awk '{
+    if (/[^\-.0-9A-Z_a-z]|(^([^a-z]|npmclassic|npmdoc|npmstable|npmtest))/) {
+        exit
+    } else {
+        print tolower($0)
+    }
+}'
+)}
+
 shNpmPackageDependencyTreeCreate() {(set -e
 # this function will create a svg dependency-tree of the npm-package
     shPasswordEnvUnset
@@ -2067,7 +2062,8 @@ lineList[NR] = $0
 shNpmPackageNameListGetFromUrl() {(set -e
 # this function will scrape the $URL for the list of npm-package-names
     URL="$1"
-    curl -Lfs "$URL" > /tmp/shNpmPackageNameListGetFromUrl.html
+    FILE=/tmp/shNpmPackageNameListGetFromUrl.html
+    curl -Lfs -o "$FILE" "$URL"
     node -e "
 // <script>
 /*jslint
@@ -2084,7 +2080,7 @@ shNpmPackageNameListGetFromUrl() {(set -e
 var local;
 local = {};
 local.dict = {};
-local.file = '/tmp/shNpmPackageNameListGetFromUrl.html';
+local.file = process.argv[1];
 local.fs = require('fs');
 local.nop = function () {
     return;
@@ -2097,7 +2093,7 @@ local.fs.readFileSync(local.file, 'utf8').replace(local.rgx, function (match0, m
 });
 console.log(Object.keys(local.dict).join('\n'));
 // </script>
-    "
+    " "$FILE"
 )}
 
 shNpmPublish() {(set -e
@@ -2265,7 +2261,6 @@ shNpmTestPublishedList() {(set -e
 shNpmdocRepoListCreate() {(set -e
 # https://docs.travis-ci.com/api
 # this function will create and push the npmdoc-repo npmdoc/node-npmdoc-$LIST[ii]
-    EXIT_CODE=0
     export MODE_BUILD=shNpmdocRepoListCreate
     sleep 1
     # init npmdoc-env
@@ -2274,7 +2269,7 @@ shNpmdocRepoListCreate() {(set -e
     if [ "$CRYPTO_AES_KEY_npmdoc" ]
     then
         export CRYPTO_AES_KEY="$CRYPTO_AES_KEY_npmdoc"
-        eval "$(shTravisCryptoAesDecryptYml)"
+        eval "$(shTravisCryptoAesDecryptYml $CRYPTO_AES_KEY_npmdoc $GITHUB_ORG)"
     fi
     LIST="$1"
     LIST_LENGTH="${2:-999999999}"
@@ -2283,34 +2278,24 @@ shNpmdocRepoListCreate() {(set -e
     then
         LIST="$(shNpmPackageNameListGetFromUrl "$LIST")"
     fi
-    # convert $NAME to lower-case
-    LIST="$(printf "$LIST" | tr [:upper:] [:lower:])"
     # filter $LIST
+    LIST="$(printf "$LIST" | sed -e "s/npmdoc\/node-npmdoc-//g")"
     LIST2=""
     for NAME in $LIST
     do
-        case "$NAME" in
-        npmclassic-*)
-            continue
-            ;;
-        npmdoc-*)
-            continue
-            ;;
-        npmstable-*)
-            continue
-            ;;
-        npmtest-*)
-            continue
-            ;;
-        esac
-        LIST2="$LIST2 $NAME"
+        NAME="$(shNpmNameNormalize $NAME)"
+        if [ "$NAME" ]
+        then
+            LIST2="$LIST2 npmdoc/node-npmdoc-$NAME"
+        fi
     done
     LIST="$LIST2"
+    LIST="$(shTravisRepoListFilterIfExists "$LIST")"
     # truncate $LIST to $LIST_LENGTH
     LIST2=""
-    for NAME in $LIST
+    for GITHUB_REPO in $LIST
     do
-        LIST2="$LIST2 $NAME"
+        LIST2="$LIST2 $GITHUB_REPO"
         LIST_LENGTH="$((LIST_LENGTH-1))"
         if [ "$LIST_LENGTH" -le 0 ]
         then
@@ -2318,21 +2303,15 @@ shNpmdocRepoListCreate() {(set -e
         fi
     done
     LIST="$LIST2"
-    # init $TRAVIS_REPO
-    LIST2=""
-    for NAME in $LIST
-    do
-        LIST2="$LIST2 npmdoc/node-npmdoc-$NAME"
-    done
-    shTravisRepoListCreate "$LIST2" npmdoc
+    # init travis-repos
+    shTravisRepoListCreate "$LIST" npmdoc
     shBuildPrint "creating npmdoc-repos $LIST ..."
     shSleep 30
     LIST2=""
-    for NAME in $LIST
+    for GITHUB_REPO in $LIST
     do
-        LIST2="$(printf "$LIST2\n \
-shBuildNpmdoc $NAME\
-")"
+        LIST2="$LIST2
+shBuildNpmdoc $GITHUB_REPO"
     done
     shOnParallelListSpawn "$LIST2"
     shBuildPrint "... created npmdoc-repos $LIST"
@@ -2761,17 +2740,16 @@ require('$npm_config_dir_utility2').testReportCreate(testReport);
 
 shTravisCryptoAesDecryptYml() {(set -e
 # this function will decrypt $CRYPTO_AES_ENCRYPTED_SH in .travis.yml to stdout
-    if [ -f .travis.yml ]
+    CRYPTO_AES_KEY="${1:-$CRYPTO_AES_KEY}"
+    GITHUB_ORG="$2"
+    if [ "$GITHUB_ORG" ]
     then
+        CRYPTO_AES_ENCRYPTED_SH="$(curl -Lfs \
+            https://kaizhu256.github.io/node-utility2/CRYPTO_AES_ENCRYPTED_SH_$GITHUB_ORG)"
+    else
         CRYPTO_AES_ENCRYPTED_SH="$(sed -n \
             "s/.* - CRYPTO_AES_ENCRYPTED_SH: \(.*\) # CRYPTO_AES_ENCRYPTED_SH\$/\\1/p" \
             .travis.yml)"
-    fi
-    if [ ! "$CRYPTO_AES_ENCRYPTED_SH" ]
-    then
-        shInit
-        CRYPTO_AES_ENCRYPTED_SH="$(curl -Lfs \
-            https://kaizhu256.github.io/node-utility2/CRYPTO_AES_ENCRYPTED_SH_$GITHUB_ORG)"
     fi
     printf "$CRYPTO_AES_ENCRYPTED_SH" | shCryptoAesDecrypt
 )}
@@ -2849,14 +2827,8 @@ shTravisRepoListCreate() {(set -e
     LIST2=""
     for GITHUB_REPO in $LIST
     do
-        if [ ! "$TRAVIS_REPO_CREATE_FORCE" ] && (curl -Lfs \
-            "https://raw.githubusercontent.com/$GITHUB_REPO/alpha/README.md" > /dev/null)
-        then
-            continue
-        fi
-        LIST2="$(printf "$LIST2\n \
-shGithubRepoBaseCreate $GITHUB_REPO $GITHUB_ORG\
-")"
+        LIST2="$LIST2
+shGithubRepoBaseCreate $GITHUB_REPO $GITHUB_ORG"
     done
     shOnParallelListSpawn "$LIST2"
     shBuildPrint "... created github-repos $LIST"
@@ -2870,7 +2842,7 @@ shGithubRepoBaseCreate $GITHUB_REPO $GITHUB_ORG\
     LIST2=""
     for GITHUB_REPO in $LIST
     do
-        LIST2="$(printf "$LIST2\n \
+        LIST2="$LIST2
 (set -e; \
 shBuildPrint \"creating travis-repo $GITHUB_REPO\"; \
 TRAVIS_REPO_ID=\"\$(node -e \
@@ -2882,27 +2854,51 @@ curl -H \"Authorization: token $TRAVIS_ACCESS_TOKEN\" \
     -d '{\"hook\":{\"active\":true}}' \
     \"https://api.travis-ci.org/hooks/\$TRAVIS_REPO_ID\"; \
 sleep 1; \
-curl -H \"Travis-API-Version: 3\" \
+curl -H \"Authorization: token $TRAVIS_ACCESS_TOKEN\" \
     -H \"Content-Type: application/json; charset=UTF-8\" \
-    -H \"Authorization: token $TRAVIS_ACCESS_TOKEN\" \
+    -H \"Travis-API-Version: 3\" \
     -#Lf \
     -X PATCH \
     -d '{\"setting.value\":true}' \
     \"https://api.travis-ci.org\"\
 \"/repo/\$TRAVIS_REPO_ID/setting/builds_only_with_travis_yml\"; \
 sleep 1; \
-curl -H \"Travis-API-Version: 3\" \
+curl -H \"Authorization: token $TRAVIS_ACCESS_TOKEN\" \
     -H \"Content-Type: application/json; charset=UTF-8\" \
-    -H \"Authorization: token $TRAVIS_ACCESS_TOKEN\" \
+    -H \"Travis-API-Version: 3\" \
     -#Lf \
     -X PATCH \
     -d '{\"setting.value\":true}' \
     \"https://api.travis-ci.org\"\
 \"/repo/\$TRAVIS_REPO_ID/setting/auto_cancel_pushes\"; \
-)")"
+)"
     done
     shOnParallelListSpawn "$LIST2"
     shBuildPrint "... created travis-repos $LIST"
+)}
+
+shTravisRepoListFilterIfExists() {(set -e
+# https://docs.travis-ci.com/api
+# this function will filter out existing travis-repos from the $LIST
+    LIST="$1"
+    export MODE_BUILD="${MODE_BUILD:-shTravisRepoListFilter}"
+    shBuildPrint "filtering out existing travis-repos in list $LIST"
+    # convert $LIST toLowerCase
+    LIST="$(printf "$LIST" | tr [:upper:] [:lower:])"
+    if [ "$TRAVIS_REPO_CREATE_FORCE" ]
+    then
+        printf "$LIST"
+        return
+    fi
+    LIST2=""
+    for GITHUB_REPO in $LIST
+    do
+        LIST2="$LIST2
+curl -Lfs -o /dev/null https://api.travis-ci.org/repos/$GITHUB_REPO/key \
+|| printf \"$GITHUB_REPO\n\""
+    done
+    LIST="$(shOnParallelListSpawn "$LIST2")"
+    printf "$LIST"
 )}
 
 shTravisTaskPush() {(set -e
