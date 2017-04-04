@@ -50,8 +50,8 @@ shInit
 #!! done
 
 #!! II=890
-II=1100
-while [ "$II" -lt 2000 ]
+II=2000
+while [ "$II" -lt 3000 ]
 do
     LIST="https://www.npmjs.com/browse/star?offset=$II"
     printf "$LIST\n"
