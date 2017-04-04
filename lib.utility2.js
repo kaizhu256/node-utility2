@@ -2968,7 +2968,8 @@ header: '\
                     self.save(options.onNext);
                     break;
                 default:
-                    local.setTimeoutOnError(onError, error, self);
+                    local.onErrorDefault(error);
+                    local.setTimeoutOnError(onError, null, self);
                 }
             });
             options.modeNext = 0;
