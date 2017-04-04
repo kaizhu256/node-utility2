@@ -27,40 +27,37 @@ shInit
   #!! '2017.03.19 swagger-ui-lite',
   #!! '2017.03.21 utility2' ]
 
-II=2450
-while [ "$II" -lt 3000 ]
+#!! II=2450
+#!! while [ "$II" -lt 3000 ]
+#!! do
+    #!! LIST="https://www.npmjs.com/browse/star?offset=$II"
+    #!! printf "$LIST\n"
+    #!! LIST="$(shNpmNameListGetFromUrl "$LIST")"
+    #!! LIST2=""
+    #!! for NAME in $LIST
+    #!! do
+        #!! NAME="$(shNpmNameNormalize $NAME)"
+        #!! if [ "$NAME" ]
+        #!! then
+            #!! LIST2="$LIST2
+#!! npmdoc/node-npmdoc-$NAME"
+        #!! fi
+    #!! done
+    #!! LIST="$LIST2"
+    #!! printf "$LIST\n"
+    #!! shGithubRepoListCreate "$LIST" npmdoc
+    #!! II="$((II+32))"
+#!! done
+
+II=0
+while [ "$II" -lt 1000 ]
 do
     LIST="https://www.npmjs.com/browse/star?offset=$II"
     printf "$LIST\n"
-    LIST="$(shNpmNameListGetFromUrl "$LIST")"
-    LIST2=""
-    for NAME in $LIST
-    do
-        NAME="$(shNpmNameNormalize $NAME)"
-        if [ "$NAME" ]
-        then
-            LIST2="$LIST2
-npmdoc/node-npmdoc-$NAME"
-        fi
-    done
-    LIST="$LIST2"
-    printf "$LIST\n"
-    shGithubRepoListCreate "$LIST" npmdoc
     #!! export TRAVIS_REPO_CREATE_FORCE=1
-    #!! shNpmdocRepoListCreate "$LIST"
+    shNpmdocRepoListCreate "$LIST"
     II="$((II+32))"
 done
-
-#!! II=980
-#!! while [ "$II" -lt 2000 ]
-#!! do
-    #!! LIST="https://www.npmjs.com/browse/star?offset=$II"
-    #!! shNpmNameListGetFromUrl "$LIST"
-    #!! #!! printf "$LIST\n"
-    #!! #!! export TRAVIS_REPO_CREATE_FORCE=1
-    #!! #!! shNpmdocRepoListCreate "$LIST"
-    #!! II="$((II+36))"
-#!! done
 
 #!! LIST="
 #!! npmdoc/node-npmdoc-hapi
