@@ -36,8 +36,12 @@ do
     LIST2=""
     for NAME in $LIST
     do
-        LIST2="$LIST2
+        NAME="$(shNpmNameNormalize $NAME)"
+        if [ "$NAME" ]
+        then
+            LIST2="$LIST2
 npmdoc/node-npmdoc-$NAME"
+        fi
     done
     LIST="$LIST2"
     printf "$LIST\n"
