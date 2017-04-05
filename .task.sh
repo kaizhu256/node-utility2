@@ -49,20 +49,40 @@ shInit
     #!! II="$((II+32))"
 #!! done
 
-#!! II=890
-II=875
-while [ "$II" -lt 1100 ]
-do
-    LIST="https://www.npmjs.com/browse/star?offset=$II"
-    printf "$LIST\n"
-    #!! export TRAVIS_REPO_CREATE_FORCE=1
-    shNpmdocRepoListCreate "$LIST"
-    II="$((II+32))"
-done
+#!! II=850
+#!! while [ "$II" -lt 1000 ]
+#!! II=1000
+#!! while [ "$II" -lt 1001 ]
+#!! do
+    #!! LIST="https://www.npmjs.com/browse/star?offset=$II"
+    #!! printf "$LIST\n"
+    #!! #!! export TRAVIS_REPO_CREATE_FORCE=1
+    #!! shNpmdocRepoListCreate "$LIST"
+    #!! II="$((II+32))"
+#!! done
 
 #!! LIST="
-#!! npmdoc/node-npmdoc-hapi
-#!! npmdoc/node-npmdoc-immutable
+#!! npmdoc/node-npmdoc-istanbul
+#!! npmdoc/node-npmdoc-joi
+#!! npmdoc/node-npmdoc-jshint
+#!! npmdoc/node-npmdoc-jquery
+#!! npmdoc/node-npmdoc-jscs
+#!! npmdoc/node-npmdoc-jsdom
+#!! npmdoc/node-npmdoc-jslint
+#!! npmdoc/node-npmdoc-jsonfile
+#!! npmdoc/node-npmdoc-jsonwebtoken
+#!! npmdoc/node-npmdoc-karma
+#!! npmdoc/node-npmdoc-koa
+#!! npmdoc/node-npmdoc-log4js
+#!! npmdoc/node-npmdoc-lodash
+#!! npmdoc/node-npmdoc-knex
+#!! npmdoc/node-npmdoc-marked
+#!! npmdoc/node-npmdoc-mime
+#!! npmdoc/node-npmdoc-minimist
+#!! npmdoc/node-npmdoc-mkdirp
+#!! npmdoc/node-npmdoc-mocha
+#!! npmdoc/node-npmdoc-mongodb
+
 #!! "
 #!! export TRAVIS_REPO_CREATE_FORCE=1
 #!! shNpmdocRepoListCreate "$LIST"
