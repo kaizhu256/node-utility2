@@ -232,7 +232,7 @@ shBuildCi() {(set -e
     alpha)
         case "$CI_COMMIT_MESSAGE_META" in
         "[npm publish]")
-            shGithubPush "https://github.com/$GITHUB_REPO" HEAD:publish
+            shGithubPush "git@github.com:$GITHUB_REPO.git" HEAD:publish
             ;;
         "[npm publishAfterCommitAfterBuild]")
             shFilePackageJsonVersionIncrement
@@ -251,7 +251,7 @@ shBuildCi() {(set -e
         ;;
     master)
         git tag "$npm_package_version" || true
-        shGithubPush "https://github.com/$GITHUB_REPO" "$npm_package_version" || true
+        shGithubPush "git@github.com:$GITHUB_REPO.git" "$npm_package_version" || true
         ;;
     publish)
         # init .npmrc
@@ -266,10 +266,10 @@ shBuildCi() {(set -e
         case "$CI_COMMIT_MESSAGE_META" in
         "[npm publishAfterCommit]")
             shGitSquashPop HEAD~1 "[ci skip] npm published"
-            shGithubPush -f "https://github.com/$GITHUB_REPO" HEAD:alpha
+            shGithubPush -f "git@github.com:$GITHUB_REPO.git" HEAD:alpha
             ;;
         *)
-            shGithubPush "https://github.com/$GITHUB_REPO" HEAD:beta
+            shGithubPush "git@github.com:$GITHUB_REPO.git" HEAD:beta
             ;;
         esac
         # security - cleanup .npmrc
@@ -337,7 +337,7 @@ shBuildGithubUpload() {(set -e
     fi
     export MODE_BUILD="${MODE_BUILD:-buildGithubUpload}"
     shBuildPrint "uploading build-artifacts to https://github.com/$GITHUB_REPO"
-    URL="https://github.com/$GITHUB_REPO"
+    URL="git@github.com:$GITHUB_REPO.git"
     # init /tmp/buildGithubUpload
     rm -fr /tmp/buildGithubUpload
     git clone "$URL" --single-branch -b gh-pages /tmp/buildGithubUpload
@@ -443,7 +443,7 @@ shBuildNpmdoc() {(set -e
         git add .
         git add -f .gitignore .travis.yml
         git commit -am "[npm publishAfterCommitAfterBuild]"
-        shGithubPush -f "https://github.com/$GITHUB_REPO" alpha
+        shGithubPush -f "git@github.com:$GITHUB_REPO.git" alpha
         return
     fi
     shPasswordEnvUnset
@@ -1299,9 +1299,9 @@ shGithubRepoBaseCreate() {(set -e
     cd "/tmp/$GITHUB_REPO"
     shGithubRepoListCreate "$GITHUB_REPO" "$GITHUB_ORG"
     # set default-branch to alpha
-    shGithubPush "https://github.com/$GITHUB_REPO" alpha || true
+    shGithubPush "git@github.com:$GITHUB_REPO.git" alpha || true
     # push all branches
-    shGithubPush --all "https://github.com/$GITHUB_REPO" || true
+    shGithubPush --all "git@github.com:$GITHUB_REPO.git" || true
 )}
 
 shGithubRepoListCreate() {(set -e
