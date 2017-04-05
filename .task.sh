@@ -61,31 +61,47 @@ shInit
     #!! II="$((II+32))"
 #!! done
 
-#!! LIST="
-#!! npmdoc/node-npmdoc-istanbul
-#!! npmdoc/node-npmdoc-joi
-#!! npmdoc/node-npmdoc-jshint
-#!! npmdoc/node-npmdoc-jquery
-#!! npmdoc/node-npmdoc-jscs
-#!! npmdoc/node-npmdoc-jsdom
-#!! npmdoc/node-npmdoc-jslint
-#!! npmdoc/node-npmdoc-jsonfile
-#!! npmdoc/node-npmdoc-jsonwebtoken
-#!! npmdoc/node-npmdoc-karma
-#!! npmdoc/node-npmdoc-koa
-#!! npmdoc/node-npmdoc-log4js
-#!! npmdoc/node-npmdoc-lodash
-#!! npmdoc/node-npmdoc-knex
-#!! npmdoc/node-npmdoc-marked
-#!! npmdoc/node-npmdoc-mime
-#!! npmdoc/node-npmdoc-minimist
-#!! npmdoc/node-npmdoc-mkdirp
-#!! npmdoc/node-npmdoc-mocha
-#!! npmdoc/node-npmdoc-mongodb
-#!! "
 LIST="
-npmdoc/node-npmdoc-accessibility-developer-tools
-npmdoc/node-npmdoc-accounting
+npmdoc/node-npmdoc-actionhero
+npmdoc/node-npmdoc-activedirectory
+npmdoc/node-npmdoc-adventure
+npmdoc/node-npmdoc-airplay
+npmdoc/node-npmdoc-alexa-app
+npmdoc/node-npmdoc-alexa-app-server
+npmdoc/node-npmdoc-aliasify
+npmdoc/node-npmdoc-aliyun-sdk
+npmdoc/node-npmdoc-alt
+npmdoc/node-npmdoc-amd-optimize
+npmdoc/node-npmdoc-amok
+npmdoc/node-npmdoc-ampersand
+npmdoc/node-npmdoc-android
+npmdoc/node-npmdoc-angular2-datatable
+npmdoc/node-npmdoc-angular2-jwt
+npmdoc/node-npmdoc-angular-cookies
+npmdoc/node-npmdoc-angular-messages
+npmdoc/node-npmdoc-angular-moment
+npmdoc/node-npmdoc-angular-permission
+npmdoc/node-npmdoc-angular-resource
+npmdoc/node-npmdoc-angular-route
+npmdoc/node-npmdoc-angular-sanitize
+npmdoc/node-npmdoc-angular-translate
+npmdoc/node-npmdoc-animate.css
+npmdoc/node-npmdoc-ansi
+npmdoc/node-npmdoc-any-promise
+npmdoc/node-npmdoc-aphrodite
+npmdoc/node-npmdoc-apiai
+npmdoc/node-npmdoc-api-benchmark
+npmdoc/node-npmdoc-apicache
+npmdoc/node-npmdoc-api-mock
+npmdoc/node-npmdoc-app-root-path
+npmdoc/node-npmdoc-arangojs
+npmdoc/node-npmdoc-arduino-firmata
+npmdoc/node-npmdoc-argon2
+npmdoc/node-npmdoc-args
+npmdoc/node-npmdoc-argv
+npmdoc/node-npmdoc-array-flatten
+npmdoc/node-npmdoc-asar
+npmdoc/node-npmdoc-ascii-chart
 "
 #!! export TRAVIS_REPO_CREATE_FORCE=1
 shNpmdocRepoListCreate "$LIST"
