@@ -1543,6 +1543,11 @@ if (!process.env.GITHUB_ORG && (/^[^\/]+\/[^\/]+\$/).test(value)) {
     mkdir -p "$npm_config_dir_build/coverage.html"
     # init $npm_config_dir_utility2
     shInitNpmConfigDirUtility2 || return $?
+    # init $GIT_SSH
+    if [ "$GIT_SSH_KEY" ]
+    then
+        export GIT_SSH="$npm_config_dir_utility2/git_ssh.sh" || return $?
+    fi
     # init $PATH
     export PATH="$PWD/node_modules/.bin:$PATH" || return $?
     # extract and save the scripts embedded in README.md to tmp/
@@ -2849,6 +2854,16 @@ shGithubRepoBaseCreate $GITHUB_REPO $GITHUB_ORG"
     shBuildPrint "... synced travis"
     shBuildPrint "creating travis-repos $LIST ..."
     shSleep 30
+    # filter-for existing travis-repos
+    LIST2=""
+    for GITHUB_REPO in $LIST
+    do
+        LIST2="$LIST2
+if (shTravisRepoIdGet $GITHUB_REPO); \
+then printf \"$GITHUB_REPO\n\"; fi"
+    done
+    # create travis-repo
+    LIST="$(shOnParallelListSpawn "$LIST2")"
     LIST2=""
     for GITHUB_REPO in $LIST
     do
@@ -2894,19 +2909,6 @@ shTravisRepoListFilterForNonActive() {(set -e
     shBuildPrint "filtering out non-active travis-repos in list $LIST"
     # convert $LIST toLowerCase
     LIST="$(printf "$LIST" | tr [:upper:] [:lower:])"
-    # filter-for existing travis-repos
-    LIST2=""
-    for GITHUB_REPO in $LIST
-    do
-        LIST2="$LIST2
-shTravisRepoIdGet $GITHUB_REPO"
-    done
-    LIST="$(shOnParallelListSpawn "$LIST2")"
-    if [ "$TRAVIS_REPO_CREATE_FORCE" ]
-    then
-        printf "$LIST"
-        return
-    fi
     LIST2=""
     # filter-for non-active travis-repos
     for GITHUB_REPO in $LIST
