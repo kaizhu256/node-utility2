@@ -1257,7 +1257,7 @@ shGithubPush() {(set -e
     # http://stackoverflow.com/questions/18027115/committing-via-travis-ci-failing
     EXIT_CODE=0
     export MODE_BUILD="${MODE_BUILD:-shGithubPush}"
-    #!! if [ "$GITHUB_TOKEN" ] && [ ! "$GIT_SSH_KEY" ]
+    #!! if [ "$GITHUB_TOKEN" ] && [ ! "$GIT_SSH" ]
     #!! then
         #!! # init github-authentication
         #!! git config credential.helper "store --file=.git/tmp"
