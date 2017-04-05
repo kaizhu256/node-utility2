@@ -224,7 +224,7 @@ shBuildCi() {(set -e
     esac
     # restore $CI_BRANCH
     export CI_BRANCH="$CI_BRANCH_OLD"
-    if [ ! "$GITHUB_TOKEN" ]
+    if [ ! "$GIT_SSH" ]
     then
         return
     fi
@@ -307,7 +307,7 @@ shBuildCiInternal() {(set -e
     export MODE_BUILD=gitLog
     shRunScreenCaptureTxt git log -50 --pretty="%ai\u000a%B"
     )
-    if [ ! "$GITHUB_TOKEN" ]
+    if [ ! "$GIT_SSH" ]
     then
         return
     fi
@@ -331,7 +331,7 @@ shBuildCiInternal() {(set -e
 
 shBuildGithubUpload() {(set -e
 # this function will upload build-artifacts to github
-    if [ ! "$GITHUB_TOKEN" ]
+    if [ ! "$GIT_SSH" ]
     then
         return
     fi
@@ -512,7 +512,7 @@ shDeployGithub() {(set -e
 # this function will deploy the app to $GITHUB_REPO
 # and run a simple curl check for $TEST_URL
 # and test $TEST_URL
-    if [ ! "$GITHUB_TOKEN" ]
+    if [ ! "$GIT_SSH" ]
     then
         return
     fi
@@ -557,7 +557,7 @@ shDeployHeroku() {(set -e
         rm -fr tmp
         return
     fi
-    if [ ! "$GITHUB_TOKEN" ]
+    if [ ! "$GIT_SSH" ]
     then
         return
     fi
@@ -1272,7 +1272,7 @@ shGithubPush() {(set -e
 
 shGithubRepoBaseCreate() {(set -e
 # this function will create the base github-repo https://github.com/$GITHUB_REPO
-    if [ ! "$GITHUB_TOKEN" ]
+    if [ ! "$GIT_SSH" ]
     then
         return
     fi
