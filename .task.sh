@@ -82,9 +82,13 @@ shInit
 #!! npmdoc/node-npmdoc-mkdirp
 #!! npmdoc/node-npmdoc-mocha
 #!! npmdoc/node-npmdoc-mongodb
-
 #!! "
+LIST="
+npmdoc/node-npmdoc-accessibility-developer-tools
+npmdoc/node-npmdoc-accounting
+"
 #!! export TRAVIS_REPO_CREATE_FORCE=1
-#!! shNpmdocRepoListCreate "$LIST"
+shNpmdocRepoListCreate "$LIST"
 #!! shGithubRepoListTouch "$LIST" '[npm publishAfterCommitAfterBuild]'
+#!! shGithubRepoListCreate "$LIST" npmdoc
 )
