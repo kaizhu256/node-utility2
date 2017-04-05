@@ -62,46 +62,8 @@ shInit
 #!! done
 
 LIST="
-npmdoc/node-npmdoc-actionhero
-npmdoc/node-npmdoc-activedirectory
-npmdoc/node-npmdoc-adventure
-npmdoc/node-npmdoc-airplay
-npmdoc/node-npmdoc-alexa-app
-npmdoc/node-npmdoc-alexa-app-server
-npmdoc/node-npmdoc-aliasify
-npmdoc/node-npmdoc-aliyun-sdk
-npmdoc/node-npmdoc-alt
-npmdoc/node-npmdoc-amd-optimize
-npmdoc/node-npmdoc-amok
-npmdoc/node-npmdoc-ampersand
-npmdoc/node-npmdoc-android
-npmdoc/node-npmdoc-angular2-datatable
-npmdoc/node-npmdoc-angular2-jwt
-npmdoc/node-npmdoc-angular-cookies
-npmdoc/node-npmdoc-angular-messages
-npmdoc/node-npmdoc-angular-moment
-npmdoc/node-npmdoc-angular-permission
-npmdoc/node-npmdoc-angular-resource
-npmdoc/node-npmdoc-angular-route
-npmdoc/node-npmdoc-angular-sanitize
-npmdoc/node-npmdoc-angular-translate
-npmdoc/node-npmdoc-animate.css
-npmdoc/node-npmdoc-ansi
-npmdoc/node-npmdoc-any-promise
-npmdoc/node-npmdoc-aphrodite
-npmdoc/node-npmdoc-apiai
-npmdoc/node-npmdoc-api-benchmark
-npmdoc/node-npmdoc-apicache
-npmdoc/node-npmdoc-api-mock
-npmdoc/node-npmdoc-app-root-path
-npmdoc/node-npmdoc-arangojs
-npmdoc/node-npmdoc-arduino-firmata
-npmdoc/node-npmdoc-argon2
-npmdoc/node-npmdoc-args
-npmdoc/node-npmdoc-argv
-npmdoc/node-npmdoc-array-flatten
-npmdoc/node-npmdoc-asar
-npmdoc/node-npmdoc-ascii-chart
+npmdoc/node-npmdoc-accessibility-developer-tools
+npmdoc/node-npmdoc-accounting
 "
 #!! export TRAVIS_REPO_CREATE_FORCE=1
 shNpmdocRepoListCreate "$LIST"
