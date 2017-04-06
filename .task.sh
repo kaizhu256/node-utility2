@@ -186,16 +186,18 @@ npmdoc/node-npmdoc-connect-timeout
 npmdoc/node-npmdoc-consign
 npmdoc/node-npmdoc-console.table
 npmdoc/node-npmdoc-consul
+
 npmdoc/node-npmdoc-content-disposition
 npmdoc/node-npmdoc-conventional-changelog
+
 npmdoc/node-npmdoc-co-prompt
 npmdoc/node-npmdoc-copy-paste
 npmdoc/node-npmdoc-cordova-gen-icon
 npmdoc/node-npmdoc-cordova-plugin-calendar
 "
 LIST="
-npmdoc/node-npmdoc-cordova-gen-icon
-npmdoc/node-npmdoc-cordova-plugin-calendar
+npmdoc/node-npmdoc-content-disposition
+npmdoc/node-npmdoc-conventional-changelog
 "
 #!! export TRAVIS_REPO_CREATE_FORCE=1
 shNpmdocRepoListCreate "$LIST"
