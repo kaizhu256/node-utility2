@@ -193,6 +193,10 @@ npmdoc/node-npmdoc-copy-paste
 npmdoc/node-npmdoc-cordova-gen-icon
 npmdoc/node-npmdoc-cordova-plugin-calendar
 "
+LIST="
+npmdoc/node-npmdoc-cordova-gen-icon
+npmdoc/node-npmdoc-cordova-plugin-calendar
+"
 #!! export TRAVIS_REPO_CREATE_FORCE=1
 shNpmdocRepoListCreate "$LIST"
 #!! shGithubRepoListTouch "$LIST" '[npm publishAfterCommitAfterBuild]'
