@@ -199,7 +199,7 @@ LIST="
 npmdoc/node-npmdoc-content-disposition
 npmdoc/node-npmdoc-conventional-changelog
 "
-#!! export TRAVIS_REPO_CREATE_FORCE=1
+export TRAVIS_REPO_CREATE_FORCE=1
 shNpmdocRepoListCreate "$LIST"
 #!! shGithubRepoListTouch "$LIST" '[npm publishAfterCommitAfterBuild]'
 #!! shGithubRepoListCreate "$LIST" npmdoc
