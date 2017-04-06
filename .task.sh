@@ -82,6 +82,6 @@ shListUnflattenAndApplyFunction() {(set -e
     #!! shGithubRepoListTouch "$LIST" '[npm publishAfterCommitAfterBuild]'
     #!! shGithubRepoListCreate "$LIST" npmdoc
 )}
-shListUnflattenAndApply "$LIST" 2
+shListUnflattenAndApply "$LIST" 8
 
 )
