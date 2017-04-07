@@ -16,16 +16,16 @@ export PATH="/tmp/node_modules/.bin:$PATH"
 export npm_config_dir_utility2="/tmp/node_modules/utility2"
 shInit
 
-#!! [ '01.02.01 cron',
-  #!! '2017.02.19 uglifyjs-lite',
-  #!! '2017.02.20 swgg',
-  #!! '2017.02.27 jslint-lite',
+#!! [ '2017.02.27 jslint-lite',
   #!! '2017.02.28 istanbul-lite',
   #!! '2017.03.07 electron-lite',
   #!! '2017.03.16 apidoc-lite',
-  #!! '2017.03.16 db-lite',
   #!! '2017.03.19 swagger-ui-lite',
-  #!! '2017.03.21 utility2' ]
+  #!! '2017.03.28 uglifyjs-lite',
+  #!! '2017.03.29 db-lite',
+  #!! '2017.03.29 swgg',
+  #!! '2017.03.29 utility2' ]
+
 
 #!! II=2450
 #!! while [ "$II" -lt 3000 ]
