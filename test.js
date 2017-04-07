@@ -212,7 +212,7 @@
         /*
          * this function will test ajax's error handling-behavior
          */
-            options = [{
+            options = { list: [{
                 // test 404-not-found-error handling-behavior
                 url: '/test.error-404'
             }, {
@@ -225,9 +225,9 @@
                 // test undefined https-url handling-behavior
                 timeout: 1,
                 url: 'https://undefined:0'
-            }];
-            local.listForEachAsync(options, function (options, ii, list, onParallel) {
-                options = list[ii];
+            }] };
+            local.onParallelList(options, function (options, onParallel) {
+                options = options.element;
                 onParallel.counter += 1;
                 local.ajax(options, function (error, xhr) {
                     // validate error occurred
@@ -247,13 +247,13 @@
          */
             options = {};
             // test /test.body handling-behavior
-            local.listForEachAsync([
+            local.onParallelList({ list: [
                 '',
                 'arraybuffer',
                 'stream',
                 'text'
-            ], function (responseType, ii, list, onParallel) {
-                responseType = list[ii];
+            ] }, function (responseType, onParallel) {
+                responseType = responseType.element;
                 onParallel.counter += 1;
                 local.ajax({
                     data: responseType === 'arraybuffer'
@@ -429,18 +429,17 @@
                     type: 'text/plain; charset=utf-8'
                 })
             ] };
-            local.listForEachAsync(options.list, function (blob, ii, list, onParallel) {
+            local.onParallelList(options, function (options, onParallel) {
                 onParallel.counter += 1;
-                blob = list[ii];
                 [null, 'dataURL', 'text'].forEach(function (encoding) {
                     onParallel.counter += 1;
-                    local.blobRead(blob, encoding, function (error, data) {
+                    local.blobRead(options.element, encoding, function (error, data) {
                         // validate no error occurred
                         local.assert(!error, error);
                         // validate data
                         switch (encoding) {
                         case 'dataURL':
-                            if (ii === 0) {
+                            if (options.ii === 0) {
                                 local.assertJsonEqual(data, 'data:;base64,YWFiYuGItCAw');
                                 break;
                             }
@@ -532,21 +531,27 @@
             options = [
                 [local, {
                     ajax: function (options, onError) {
-                        onError(null, { responseText: JSON.stringify([{
-                            active: true,
-                            private: false,
-                            uid: ''
-                        }]) }, options);
+                        onError(null, {
+                            responseText: JSON.stringify(options.url.indexOf('hook') >= 0
+                                ? [{ active: true, private: false, uid: '' }]
+                                : { uid: '', undefined: null })
+                        }, options);
                     },
                     db: {
+                        crudCountAll: function () {
+                            return 0;
+                        },
                         crudGetManyByQuery: function () {
                             return [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}];
                         },
+                        crudSetManyById: local.nop,
                         crudUpdateManyById: local.nop,
-                        crudUpdateOneById: local.nop,
                         dbTableCreateOne: function (options, onError) {
                             (onError || local.nop)(null, local.db, options);
                             return local.db;
+                        },
+                        save: function (onError) {
+                            onError();
                         }
                     },
                     timeElapsedPoll: function () {
@@ -597,8 +602,8 @@
          * this function will exit's default handling-behavior
          */
             options = [
-                // suppress console.log
-                [console, { log: local.nop }]
+                // suppress console.error
+                [console, { error: local.nop }]
             ];
             // test exit's default handling-behavior
             local.testMock(options, function (onError) {
@@ -755,80 +760,6 @@
             options.data = local.jwtHs256Decode(options.token, 'undefined');
             local.assertJsonEqual(options.data, {});
             onError();
-        };
-
-        local.testCase_listForEachAsync_default = function (options, onError) {
-        /*
-         * this function will test listForEachAsync's default handling-behavior
-         */
-            options = {};
-            local.onNext(options, function (error) {
-                switch (options.modeNext) {
-                case 1:
-                    // test null-case handling-behavior
-                    local.listForEachAsync([], local.onErrorThrow, options.onNext);
-                    break;
-                case 2:
-                    local.listForEachAsync([null], function (element, ii, list, onParallel) {
-                        // test error handling-behavior
-                        onParallel(local.errorDefault, element, list[ii]);
-                        // test multiple callback handling behavior
-                        onParallel();
-                    }, function (error) {
-                        // validate error occurred
-                        local.assert(error, error);
-                        options.onNext();
-                    });
-                    break;
-                case 3:
-                    options.data = [];
-                    // test rateLimit handling-behavior
-                    options.rateLimit = 2;
-                    options.rateMax = 0;
-                    local.listForEachAsync([1, 2, 3], function (element, ii, list, onParallel) {
-                        onParallel.counter += 1;
-                        options.rateMax = Math.max(onParallel.counter, options.rateMax);
-                        // test async handling-behavior
-                        setTimeout(function () {
-                            element = list[ii];
-                            options.data[ii] = element;
-                            onParallel();
-                        });
-                    }, options.onNext, options.rateLimit);
-                    break;
-                case 4:
-                    // validate data
-                    local.assertJsonEqual(options.data, [1, 2, 3]);
-                    local.assertJsonEqual(options.rateMax, 2);
-                    options.data = [];
-                    options.rateLimit = 'syntax error';
-                    options.rateMax = 0;
-                    local.listForEachAsync([1, 2, 3], function (
-                        element,
-                        ii,
-                        list,
-                        onParallel
-                    ) {
-                        // test sync handling-behavior
-                        onParallel.counter += 1;
-                        options.rateMax = Math.max(onParallel.counter, options.rateMax);
-                        element = list[ii];
-                        options.data[ii] = element;
-                        onParallel();
-                    }, options.onNext, options.rateLimit);
-                    break;
-                case 5:
-                    // validate data
-                    local.assertJsonEqual(options.data, [1, 2, 3]);
-                    local.assertJsonEqual(options.rateMax, 2);
-                    options.onNext();
-                    break;
-                default:
-                    onError(error);
-                }
-            });
-            options.modeNext = 0;
-            options.onNext();
         };
 
         local.testCase_listGetElementRandom_default = function (options, onError) {
@@ -1120,6 +1051,85 @@
                 local.assert(error, error);
                 onError();
             });
+        };
+
+        local.testCase_onParallelList_default = function (options, onError) {
+        /*
+         * this function will test onParallelList's default handling-behavior
+         */
+            options = {};
+            local.onNext(options, function (error) {
+                switch (options.modeNext) {
+                case 1:
+                    // test null-case handling-behavior
+                    local.onParallelList({ list: [] }, local.onErrorThrow, options.onNext);
+                    break;
+                case 2:
+                    options.list = [null];
+                    // test retryLimit handling-behavior
+                    options.retryLimit = 1;
+                    local.onParallelList(options, function (data, onParallel) {
+                        onParallel.counter += 1;
+                        // test error handling-behavior
+                        onParallel(local.errorDefault, data);
+                        // test multiple callback handling behavior
+                        setTimeout(onParallel, 5000);
+                    }, function (error) {
+                        // validate error occurred
+                        local.assert(error, error);
+                        options.onNext();
+                    });
+                    break;
+                case 3:
+                    options.data = [];
+                    // test rateLimit handling-behavior
+                    options.rateLimit = 3;
+                    options.rateMax = 0;
+                    // test retryLimit handling-behavior
+                    options.retryLimit = 1;
+                    local.onParallelList({
+                        list: [1, 2, 3, 4, 5],
+                        rateLimit: options.rateLimit
+                    }, function (data, onParallel) {
+                        onParallel.counter += 1;
+                        options.rateMax = Math.max(onParallel.counter, options.rateMax);
+                        // test async handling-behavior
+                        setTimeout(function () {
+                            options.data[data.ii] = data.element;
+                            onParallel(data.retry < 1 && local.onErrorDefault, data);
+                        });
+                    }, options.onNext, options.rateLimit);
+                    break;
+                case 4:
+                    // validate data
+                    local.assertJsonEqual(options.data, [1, 2, 3, 4, 5]);
+                    local.assertJsonEqual(options.rateMax, 3);
+                    options.data = [];
+                    options.rateLimit = 'syntax error';
+                    options.rateMax = 0;
+                    local.onParallelList({
+                        list: [1, 2, 3, 4, 5],
+                        rateLimit: options.rateLimit
+                    }, function (data, onParallel) {
+                        // test sync handling-behavior
+                        onParallel.counter += 1;
+                        options.rateMax = Math.max(onParallel.counter, options.rateMax);
+                        options.data[data.ii] = data.element;
+                        onParallel();
+                    }, options.onNext);
+                    break;
+                case 5:
+                    // validate data
+                    local.assertJsonEqual(options.data, [1, 2, 3, 4, 5]);
+                    local.assertJsonEqual(options.rateMax, 2);
+                    options.onNext();
+                    break;
+                default:
+                    onError(error);
+                }
+            });
+            options.modeNext = 0;
+            options.onNext();
         };
 
         local.testCase_onParallel_default = function (options, onError) {
@@ -1688,8 +1698,8 @@
                 file: '/assets.hello',
                 url: '/assets.hello'
             }, {
-                file: '/assets.script-only.html',
-                url: '/assets.script-only.html'
+                file: '/assets.scriptOnly.html',
+                url: '/assets.scriptOnly.html'
             }, {
                 file: '/assets.swgg.rollup.js',
                 url: '/assets.swgg.rollup.js'
@@ -1734,18 +1744,21 @@
             local.buildLib(options, onError);
         };
 
-        local.testCase_buildNpmdoc_default = function (options, onError) {
+        local.testCase_buildNpmdoc_error = function (options, onError) {
         /*
-         * this function will test buildNpmdoc's default handling-behavior
+         * this function will test buildNpmdoc's error handling-behavior
          */
             local.testMock([
                 [local, {
                     buildApidoc: function (options, onError) {
-                        onError(null, options);
+                        onError(local.errorDefault, options);
                     }
                 }],
                 [local.fs, { writeFileSync: local.nop }],
-                [local.env, { npm_package_buildNpmdoc: 'electron-lite' }]
+                [local.env, { npm_package_buildNpmdoc: 'electron-lite' }],
+                [process, { on: function (options, onError) {
+                    onError(local.errorDefault, options);
+                } }]
             ], function (onError) {
                 options = {};
                 local.buildNpmdoc(options, local.onErrorThrow);
@@ -2151,8 +2164,8 @@
          * this function will test testReport's default handling-behavior
          */
             options = [
-                // suppress console.log
-                [console, { log: local.nop }],
+                // suppress console.error
+                [console, { error: local.nop }],
                 [local, { exit: local.nop }]
             ];
             local.testMock(options, function (onError) {
@@ -2173,8 +2186,8 @@
                 modeTestIgnore: true,
                 timeoutDefault: local.timeoutDefault - 1000,
                 url: local.serverLocalHost +
-                    // test script-only handling-behavior
-                    '/assets.script-only.html' +
+                    // test scriptOnly handling-behavior
+                    '/assets.scriptOnly.html' +
                     // test electron-callback handling-behavior
                     '?modeTest=1&' +
                     // test specific testCase handling-behavior
@@ -2275,7 +2288,7 @@
         if (module !== require.main || local.global.utility2_rollup) {
             return;
         }
-        local.assetsDict['/assets.script-only.html'] = '<h1>script-only test</h1>\n' +
+        local.assetsDict['/assets.scriptOnly.html'] = '<h1>scriptOnlyTest</h1>\n' +
                 '<script src="assets.utility2.js"></script>\n' +
                 '<script>window.utility2.onReadyBefore.counter += 1;</script>\n' +
                 '<script src="assets.example.js"></script>\n' +

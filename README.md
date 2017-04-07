@@ -5,7 +5,9 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 
 [![NPM](https://nodei.co/npm/utility2.png?downloads=true)](https://www.npmjs.com/package/utility2)
 
-[![package-listing](https://kaizhu256.github.io/node-utility2/build/screen-capture.npmPackageListing.svg)](https://github.com/kaizhu256/node-utility2)
+[![npmPackageListing](https://kaizhu256.github.io/node-utility2/build/screenCapture.npmPackageListing.svg)](https://github.com/kaizhu256/node-utility2)
+
+![npmPackageDependencyTree](https://kaizhu256.github.io/node-utility2/build/screenCapture.npmPackageDependencyTree.svg)
 
 
 
@@ -17,7 +19,7 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 # live demo
 - [https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/index.html](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/index.html)
 
-[![github.com test-server](https://kaizhu256.github.io/node-utility2/build/screen-capture.deployGithub.browser._2Fnode-utility2_2Fbuild_2Fapp_2Findex.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/index.html)
+[![github.com test-server](https://kaizhu256.github.io/node-utility2/build/screenCapture.deployGithub.browser._2Fnode-utility2_2Fbuild_2Fapp_2Findex.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/index.html)
 
 
 
@@ -25,9 +27,10 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 #### apidoc
 - [https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/apidoc.html](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/apidoc.html)
 
-[![apidoc](https://kaizhu256.github.io/node-utility2/build/screen-capture.buildApidoc.browser._2Fhome_2Ftravis_2Fbuild_2Fkaizhu256_2Fnode-utility2_2Ftmp_2Fbuild_2Fapidoc.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/apidoc.html)
+[![apidoc](https://kaizhu256.github.io/node-utility2/build/screenCapture.buildApidoc.browser._2Fhome_2Ftravis_2Fbuild_2Fkaizhu256_2Fnode-utility2_2Ftmp_2Fbuild_2Fapidoc.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/apidoc.html)
 
 #### todo
+- fix package-listing bug on https://travis-ci.org/npmdoc/node-npmdoc-object-assign
 - rename sub-package db-lite -> nedb-lite
 - rename sub-package istanbul-lite -> istanbul-classic
 - rename sub-package jslint-lite -> jslint-classic
@@ -38,22 +41,17 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 - analytics
 - none
 
-#### changes for v2017.3.29
-- npm publish 2017.3.29
-- add args \$modeBrowserTest and \$url to shell-function shBrowserTest
-- add branch-cron
-- add function dbTableTravisRepoCreate, dbTableTravisRepoCrudGetManyByQuery, dbTableTravisRepoUpdate, and listForEachAsync
-- add github-crud function contentTouchList
-- add shell-function shGitRemotePromote to auto-promote branches alpha -> beta -> master
-- add shell-function shGithubRepoListTouch, shListUnflattenAndApply, and shNpmInstallWithPeerDependencies
-- auto update public travis-repos in alpha-branch
-- deprecate ssh-key in favor of github oauth - https://stackoverflow.com/questions/18027115/committing-via-travis-ci-failing
-- enable shNpmdocRepoListCreate in travis-ci
-- enhance shell-function shNpmPackageListingCreate to add total package-size to package-listing
-- fix apidoc bug 'Function.prototype.toString is not generic'
-- fix shell-function shInit bug - export: npm_package_react-native: bad variable name
-- sanitize sensitive env-vars from electron.*.html
-- use optional remote-credentials during travis-ci build
+#### changes for v2017.4.6
+- npm publish 2017.4.6
+- add auto-retry option to function onParallelList
+- add depencency-tree-visualization and dependency-tree-size to README.md
+- add html-scraper to function browerTest
+- add property 'sortDefault' to dbTable, which defaults to [{ fieldName: '_timeUpdated', isDescending: true }]
+- add optional callback to function dbTable.prototype.save
+- add shell-functions shGithubRepoListCreate, shNpmNameNormalize, shNpmPackageDependencyTreeCreate, shOnParallelListSpawn, shTravisRepoListFilterForNonActive
+- add shell-function shNpmPackageNameListGetFromUrl, which allows shNpmdocRepoListCreate to create npmdocs directly from npm-website
+- enable auto-cancel-mode by default when creating travis-repo
+- streamline build-process for 'npm publishAfterCommitAfterBuild' to just one stage (alpha)
 - none
 
 #### this package requires
@@ -109,15 +107,15 @@ shExampleSh
 ```
 
 #### output from browser
-![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleSh.browser..png)
+![screenCapture](https://kaizhu256.github.io/node-utility2/build/screenCapture.testExampleSh.browser..png)
 
 #### output from shell
-![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleSh.svg)
+![screenCapture](https://kaizhu256.github.io/node-utility2/build/screenCapture.testExampleSh.svg)
 
 
 
 # quickstart automated example
-![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleJs.browser._2Fhome_2Ftravis_2Fbuild_2Fkaizhu256_2Fnode-utility2_2Ftmp_2Fbuild_2Ftest-report.html.png)
+![screenCapture](https://kaizhu256.github.io/node-utility2/build/screenCapture.testExampleJs.browser._2Fhome_2Ftravis_2Fbuild_2Fkaizhu256_2Fnode-utility2_2Ftmp_2Fbuild_2Ftest-report.html.png)
 
 #### to run this example, follow the instruction in the script below
 - [example.js](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/example.js)
@@ -635,13 +633,13 @@ utility2-comment -->\n\
 ```
 
 #### output from utility2
-![screen-capture](https://kaizhu256.github.io/screen-capture.testExampleJs.browser._2Fhome_2Ftravis_2Fbuild_2Fkaizhu256_2Fnode-utility2_2Ftmp_2Fbuild_2Ftest-report.html.png)
+![screenCapture](https://kaizhu256.github.io/screenCapture.testExampleJs.browser._2Fhome_2Ftravis_2Fbuild_2Fkaizhu256_2Fnode-utility2_2Ftmp_2Fbuild_2Ftest-report.html.png)
 
 #### output from istanbul
-![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleJs.browser._2Ftmp_2Fapp_2Ftmp_2Fbuild_2Fcoverage.html_2Fapp_2Fexample.js.html.png)
+![screenCapture](https://kaizhu256.github.io/node-utility2/build/screenCapture.testExampleJs.browser._2Ftmp_2Fapp_2Ftmp_2Fbuild_2Fcoverage.html_2Fapp_2Fexample.js.html.png)
 
 #### output from shell
-![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleJs.svg)
+![screenCapture](https://kaizhu256.github.io/node-utility2/build/screenCapture.testExampleJs.svg)
 
 
 
@@ -687,7 +685,7 @@ utility2-comment -->\n\
     "main": "lib.utility2.js",
     "name": "utility2",
     "nameAlias": "utility2",
-    "nameAliasPublish": "npmtest-lite npmtest2 test-lite",
+    "nameAliasPublish": "npmtest-lite npmtest4 test-lite",
     "nameOriginal": "utility2",
     "os": [
         "darwin",
@@ -706,14 +704,14 @@ utility2-comment -->\n\
         "start": "(set -e; export PORT=${PORT:-8080}; if [ -f assets.app.js ]; then node assets.app.js; exit; fi; export npm_config_mode_auto_restart=1; ./lib.utility2.sh shRun shIstanbulCover test.js)",
         "test": "(set -e; export PORT=$(./lib.utility2.sh shServerPortRandom); export PORT_REPL=$(./lib.utility2.sh shServerPortRandom); export npm_config_mode_auto_restart=1; ./lib.utility2.sh test test.js)"
     },
-    "version": "2017.3.29"
+    "version": "2017.4.6"
 }
 ```
 
 
 
 # changelog of last 50 commits
-[![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.gitLog.svg)](https://github.com/kaizhu256/node-utility2/commits)
+[![screenCapture](https://kaizhu256.github.io/node-utility2/build/screenCapture.gitLog.svg)](https://github.com/kaizhu256/node-utility2/commits)
 
 
 
@@ -848,10 +846,14 @@ shBuildCiPost() {(set -e
     # update public, travis-repo db
     alpha)
         mkdir -p tmp/storage.undefined
-        curl -Ls https://kaizhu256.github.io/node-utility2/build/dbTable.TravisRepo > \
-            tmp/storage.undefined/dbTable.TravisRepo
+        curl -Ls https://kaizhu256.github.io/node-utility2/build/dbTable.TravisRepo.json > \
+            tmp/storage.undefined/dbTable.TravisRepo.json
         ./lib.utility2.sh dbTableTravisRepoUpdate
-        cp tmp/storage.undefined/dbTable.TravisRepo tmp/build
+        (
+        eval "$(shTravisCryptoAesDecryptYml $CRYPTO_AES_KEY_npmdoc npmdoc)"
+        ./lib.utility2.sh dbTableTravisRepoUpdate
+        )
+        cp tmp/storage.undefined/dbTable.TravisRepo.json tmp/build
         ;;
     esac
     shReadmeBuildLinkVerify
@@ -895,7 +897,7 @@ shBuildCiPost() {(set -e
 
 shBuildCiPre() {(set -e
     shReadmeTest example.js
-    # save screen-capture
+    # save screenCapture
     (
     export MODE_BUILD=testExampleJs
     shBrowserTest screenCapture /tmp/app/tmp/build/coverage.html/app/example.js.html

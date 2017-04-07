@@ -245,7 +245,7 @@
             };
         };
 
-        local.onParallel = function (onError, onEach) {
+        local.onParallel = function (onError, onEach, onRetry) {
         /*
          * this function will create a function that will
          * 1. run async tasks in parallel
@@ -254,7 +254,11 @@
             var onParallel;
             onError = local.onErrorWithStack(onError);
             onEach = onEach || local.nop;
-            onParallel = function (error) {
+            onRetry = onRetry || local.nop;
+            onParallel = function (error, data) {
+                if (onRetry(error, data)) {
+                    return;
+                }
                 // decrement counter
                 onParallel.counter -= 1;
                 // validate counter
@@ -266,12 +270,12 @@
                 // handle error
                 if (error) {
                     onParallel.error = error;
-                    // ensure counter < 0
-                    onParallel.counter = -1;
+                    // ensure counter <= 0
+                    onParallel.counter = -Math.abs(onParallel.counter);
                 }
                 // call onError when done
                 if (onParallel.counter <= 0) {
-                    onError(error);
+                    onError(error, data);
                     return;
                 }
                 onEach();
@@ -604,6 +608,7 @@
             this.dbRowList = [];
             this.isDirty = null;
             this.idIndexList = [{ name: '_id', dict: {} }];
+            this.onSaveList = [];
             this.ttl = 0;
             this.ttlLast = 0;
         };
@@ -691,8 +696,7 @@
                 // recurse
                 self._crudRemoveOneById(result, circularList);
             });
-            // persist
-            this._persist();
+            self.save();
             return result;
         };
 
@@ -725,7 +729,9 @@
             // update timestamp
             timeNow = new Date().toISOString();
             dbRow._timeCreated = dbRow._timeCreated || timeNow;
-            dbRow._timeUpdated = timeNow;
+            if (!local.modeImport) {
+                dbRow._timeUpdated = timeNow;
+            }
             // normalize
             normalize(dbRow);
             dbRow = local.jsonCopy(dbRow);
@@ -743,8 +749,7 @@
             });
             // update dbRowList
             this.dbRowList.push(dbRow);
-            // persist
-            this._persist();
+            this.save();
             return dbRow;
         };
 
@@ -776,31 +781,6 @@
             // replace dbRow
             result = this._crudSetOneById(result);
             return result;
-        };
-
-        local._DbTable.prototype._persist = function () {
-        /*
-         * this function will persist the dbTable to storage
-         */
-            var self;
-            self = this;
-            // throttle storage-writes to once every 1000 ms
-            if (self.timerPersist) {
-                return;
-            }
-            self.timerPersist = setTimeout(function () {
-                if (self.timerPersist) {
-                    self.timerPersist = null;
-                    self._save();
-                }
-            }, 1000);
-        };
-
-        local._DbTable.prototype._save = function (onError) {
-        /*
-         * this function will save the dbTable to storage
-         */
-            local.storageSetItem('dbTable.' + this.name, this.export(), onError);
         };
 
         local._DbTable.prototype.crudCountAll = function (onError) {
@@ -847,7 +827,7 @@
             // get dbRow's with the given options.query
             result = this._crudGetManyByQuery(options.query);
             // sort dbRow's with the given options.sort
-            local.normalizeList(options.sort).forEach(function (element) {
+            local.normalizeList(options.sort || this.sortDefault).forEach(function (element) {
                 if (element.isDescending) {
                     result.sort(function (aa, bb) {
                         return -local.sortCompare(
@@ -1027,10 +1007,13 @@
          * this function will drop the dbTable
          */
             console.error('dropping dbTable ' + this.name + ' ...');
+            // cancel pending save
+            this.timerSave = null;
+            while (this.onSaveList.length) {
+                this.onSaveList.shift()();
+            }
             // reset dbTable
             local._DbTable.call(this, this);
-            // cancel pending persist
-            this.timerPersist = null;
             // clear persistence
             local.storageRemoveItem('dbTable.' + this.name, onError);
         };
@@ -1039,7 +1022,7 @@
         /*
          * this function will export the db
          */
-            var ii, result, self;
+            var result, self;
             this._cleanup();
             self = this;
             result = '';
@@ -1050,11 +1033,10 @@
                     name: idIndex.name
                 }) + '\n';
             });
-            // optimization - for-loop
-            for (ii = 0; ii < self.dbRowList.length; ii += 1) {
-                result += self.name + ' dbRowSet ' +
-                    JSON.stringify(local.dbRowProject(self.dbRowList[ii])) + '\n';
-            }
+            result += self.name + ' sortDefault ' + JSON.stringify(self.sortDefault) + '\n';
+            self.crudGetManyByQuery({}).forEach(function (dbRow) {
+                result += self.name + ' dbRowSet ' + JSON.stringify(dbRow) + '\n';
+            });
             return local.setTimeoutOnError(onError, null, result.trim());
         };
 
@@ -1087,8 +1069,7 @@
                     idIndex.dict[local.dbRowSetId(dbRow, idIndex)] = dbRow;
                 }
             }
-            // persist
-            this._persist();
+            this.save();
             return local.setTimeoutOnError(onError);
         };
 
@@ -1102,9 +1083,33 @@
             this.idIndexList = this.idIndexList.filter(function (idIndex) {
                 return idIndex.name !== name || idIndex.name === '_id';
             });
-            // persist
-            this._persist();
+            this.save();
             return local.setTimeoutOnError(onError);
+        };
+
+        local._DbTable.prototype.save = function (onError) {
+        /*
+         * this function will save the dbTable to storage
+         */
+            var self;
+            self = this;
+            if (local.modeImport) {
+                return;
+            }
+            if (onError) {
+                self.onSaveList.push(onError);
+            }
+            // throttle storage-writes to once every 1000 ms
+            self.timerSave = self.timerSave || setTimeout(function () {
+                self.timerSave = null;
+                local.storageSetItem('dbTable.' + self.name + '.json', self.export(), function (
+                    error
+                ) {
+                    while (self.onSaveList.length) {
+                        self.onSaveList.shift()(error);
+                    }
+                });
+            }, 1000);
         };
 
         local._DbTable.prototype.ttlSet = function (ttl, onError) {
@@ -1120,8 +1125,7 @@
             for (ii = 0; ii < this.dbRowList.length; ii += 1) {
                 this.dbRowList[ii].$meta.ttl = ttl;
             }
-            // persist
-            this._persist();
+            this.save();
             return local.setTimeoutOnError(onError);
         };
 
@@ -1177,6 +1181,10 @@
          * this function will import the serialized text into the db
          */
             var dbTable;
+            local.modeImport = true;
+            setTimeout(function () {
+                local.modeImport = null;
+            });
             text.replace((/^(\w\S*?) (\S+?) (\S.+?)$/gm), function (
                 match0,
                 match1,
@@ -1194,6 +1202,9 @@
                     dbTable = local.dbTableCreateOne({ isLoaded: true, name: match1 });
                     dbTable.idIndexCreate(JSON.parse(match3));
                     break;
+                case 'sortDefault':
+                    dbTable = local.dbTableCreateOne({ isLoaded: true, name: match1 });
+                    break;
                 case 'ttlSet':
                     dbTable = local.dbTableCreateOne({ isLoaded: true, name: match1 });
                     dbTable.ttlSet(JSON.parse(match3));
@@ -1202,6 +1213,7 @@
                     local.onErrorDefault(new Error('dbImport - invalid operation - ' + match0));
                 }
             });
+            local.modeImport = null;
             return local.setTimeoutOnError(onError);
         };
 
@@ -1462,7 +1474,7 @@
             onParallel.counter += 1;
             Object.keys(local.dbTableDict).forEach(function (key) {
                 onParallel.counter += 1;
-                local.dbTableDict[key]._save(onParallel);
+                local.dbTableDict[key].save(onParallel);
             });
             onParallel();
         };
@@ -1492,6 +1504,9 @@
             // register dbTable
             self = local.dbTableDict[options.name] =
                 local.dbTableDict[options.name] || new local._DbTable(options);
+            self.sortDefault = options.sortDefault ||
+                self.sortDefault ||
+                [{ fieldName: '_timeUpdated', isDescending: true }];
             // remove idIndex
             local.normalizeList(options.idIndexRemoveList).forEach(function (index) {
                 self.idIndexRemove(index);
@@ -1504,7 +1519,7 @@
             self.crudSetManyById(options.dbRowList);
             self.isLoaded = self.isLoaded || options.isLoaded;
             if (!self.isLoaded) {
-                local.storageGetItem('dbTable.' + self.name, function (error, data) {
+                local.storageGetItem('dbTable.' + self.name + '.json', function (error, data) {
                     // validate no error occurred
                     console.assert(!error, error);
                     if (!self.isLoaded) {
