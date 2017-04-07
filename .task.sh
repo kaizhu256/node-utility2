@@ -29,26 +29,6 @@ shInit
 
 #!! II=2450
 #!! while [ "$II" -lt 3000 ]
-#!! do
-    #!! LIST="https://www.npmjs.com/browse/star?offset=$II"
-    #!! printf "$LIST\n"
-    #!! LIST="$(shNpmNameListGetFromUrl "$LIST")"
-    #!! LIST2=""
-    #!! for NAME in $LIST
-    #!! do
-        #!! NAME="$(shNpmNameNormalize $NAME)"
-        #!! if [ "$NAME" ]
-        #!! then
-            #!! LIST2="$LIST2
-#!! npmdoc/node-npmdoc-$NAME"
-        #!! fi
-    #!! done
-    #!! LIST="$LIST2"
-    #!! printf "$LIST\n"
-    #!! shGithubRepoListCreate "$LIST" npmdoc
-    #!! II="$((II+32))"
-#!! done
-
 #!! II=850
 #!! while [ "$II" -lt 1000 ]
 #!! II=1000
@@ -144,11 +124,144 @@ npmdoc/node-npmdoc-zookeeper
 npmdoc/node-npmdoc-zxcvbn
 "
 
+LIST="
+npmdoc/node-npmdoc-moment
+npmdoc/node-npmdoc-mongoose
+npmdoc/node-npmdoc-morgan
+npmdoc/node-npmdoc-mssql
+npmdoc/node-npmdoc-multer
+npmdoc/node-npmdoc-mysql
+npmdoc/node-npmdoc-natural
+npmdoc/node-npmdoc-nedb
+npmdoc/node-npmdoc-nock
+npmdoc/node-npmdoc-nconf
+npmdoc/node-npmdoc-nodemon
+npmdoc/node-npmdoc-nodemailer
+npmdoc/node-npmdoc-nopt
+npmdoc/node-npmdoc-optimist
+npmdoc/node-npmdoc-npmdoc
+npmdoc/node-npmdoc-passport
+npmdoc/node-npmdoc-pg
+npmdoc/node-npmdoc-phantomjs
+npmdoc/node-npmdoc-pm2
+npmdoc/node-npmdoc-postcss
+npmdoc/node-npmdoc-promise
+npmdoc/node-npmdoc-progress
+npmdoc/node-npmdoc-prompt
+npmdoc/node-npmdoc-pug
+npmdoc/node-npmdoc-q
+npmdoc/node-npmdoc-qs
+npmdoc/node-npmdoc-react
+npmdoc/node-npmdoc-redis
+npmdoc/node-npmdoc-redux
+npmdoc/node-npmdoc-request
+npmdoc/node-npmdoc-rimraf
+npmdoc/node-npmdoc-restify
+npmdoc/node-npmdoc-sandbox2
+npmdoc/node-npmdoc-sails
+npmdoc/node-npmdoc-shortid
+npmdoc/node-npmdoc-sequelize
+npmdoc/node-npmdoc-semver
+npmdoc/node-npmdoc-shelljs
+npmdoc/node-npmdoc-slug
+npmdoc/node-npmdoc-sinon
+npmdoc/node-npmdoc-should
+npmdoc/node-npmdoc-sinopia
+npmdoc/node-npmdoc-standard
+npmdoc/node-npmdoc-sqlite3
+npmdoc/node-npmdoc-superagent
+npmdoc/node-npmdoc-stylus
+npmdoc/node-npmdoc-supertest
+npmdoc/node-npmdoc-supervisor
+npmdoc/node-npmdoc-through2
+npmdoc/node-npmdoc-tape
+npmdoc/node-npmdoc-through
+npmdoc/node-npmdoc-twitter
+npmdoc/node-npmdoc-underscore
+npmdoc/node-npmdoc-uuid
+npmdoc/node-npmdoc-validator
+npmdoc/node-npmdoc-uglifyjs
+npmdoc/node-npmdoc-utility2
+npmdoc/node-npmdoc-watchify
+npmdoc/node-npmdoc-vue
+npmdoc/node-npmdoc-webpack
+npmdoc/node-npmdoc-winston
+npmdoc/node-npmdoc-xlsx
+npmdoc/node-npmdoc-ws
+npmdoc/node-npmdoc-xml2js
+npmdoc/node-npmdoc-yargs
+npmdoc/node-npmdoc-cors
+npmdoc/node-npmdoc-cron
+npmdoc/node-npmdoc-csurf
+npmdoc/node-npmdoc-csv
+npmdoc/node-npmdoc-del
+npmdoc/node-npmdoc-dotenv
+npmdoc/node-npmdoc-debug
+npmdoc/node-npmdoc-d3
+npmdoc/node-npmdoc-bunyan
+npmdoc/node-npmdoc-firebase
+npmdoc/node-npmdoc-less
+npmdoc/node-npmdoc-yo
+npmdoc/node-npmdoc-aws-sdk
+npmdoc/node-npmdoc-body-parser
+npmdoc/node-npmdoc-coffee-script
+npmdoc/node-npmdoc-concat-stream
+npmdoc/node-npmdoc-browser-sync
+npmdoc/node-npmdoc-babel-core
+npmdoc/node-npmdoc-connect-mongo
+npmdoc/node-npmdoc-connect-redis
+npmdoc/node-npmdoc-cookie-parser
+npmdoc/node-npmdoc-grunt-contrib-watch
+npmdoc/node-npmdoc-cross-env
+npmdoc/node-npmdoc-eslint-config-airbnb
+npmdoc/node-npmdoc-event-stream
+npmdoc/node-npmdoc-crypto-js
+npmdoc/node-npmdoc-gulp-filter
+npmdoc/node-npmdoc-express-session
+npmdoc/node-npmdoc-grunt-contrib-cssmin
+npmdoc/node-npmdoc-grunt-contrib-clean
+npmdoc/node-npmdoc-fs-extra
+npmdoc/node-npmdoc-gulp-clean-css
+npmdoc/node-npmdoc-gulp-clean
+npmdoc/node-npmdoc-grunt-contrib-jshint
+npmdoc/node-npmdoc-gulp-autoprefixer
+npmdoc/node-npmdoc-gulp-jshint
+npmdoc/node-npmdoc-grunt-contrib-uglify
+npmdoc/node-npmdoc-gulp-if
+npmdoc/node-npmdoc-gulp-imagemin
+npmdoc/node-npmdoc-gulp-jade
+npmdoc/node-npmdoc-gulp-load-plugins
+npmdoc/node-npmdoc-gulp-minify-html
+npmdoc/node-npmdoc-grunt-contrib-concat
+npmdoc/node-npmdoc-gulp-replace
+npmdoc/node-npmdoc-gulp-livereload
+npmdoc/node-npmdoc-gulp-plumber
+npmdoc/node-npmdoc-gulp-minify-css
+npmdoc/node-npmdoc-gulp-notify
+npmdoc/node-npmdoc-gulp-rev
+npmdoc/node-npmdoc-gulp-connect
+npmdoc/node-npmdoc-gulp-concat
+npmdoc/node-npmdoc-gulp-changed
+npmdoc/node-npmdoc-gulp-file-include
+npmdoc/node-npmdoc-gulp-babel
+npmdoc/node-npmdoc-gulp-useref
+npmdoc/node-npmdoc-gulp-htmlmin
+npmdoc/node-npmdoc-gulp-sass
+npmdoc/node-npmdoc-gulp-inject
+npmdoc/node-npmdoc-gulp-watch
+npmdoc/node-npmdoc-http-proxy
+npmdoc/node-npmdoc-gulp-util
+npmdoc/node-npmdoc-gulp-html-replace
+npmdoc/node-npmdoc-gulp-sourcemaps
+npmdoc/node-npmdoc-gulp-rename
+npmdoc/node-npmdoc-gulp-uglify
+"
+
 shListUnflattenAndApplyFunction() {(set -e
     LIST="$1"
     #!! export TRAVIS_REPO_CREATE_FORCE=1
-    shNpmdocRepoListCreate "$LIST"
-    #!! shGithubRepoListTouch "$LIST" '[npm publishAfterCommitAfterBuild]'
+    #!! shNpmdocRepoListCreate "$LIST"
+    shGithubRepoListTouch "$LIST" '[npm publishAfterCommitAfterBuild]'
     #!! shGithubRepoListCreate "$LIST" npmdoc
 )}
 shListUnflattenAndApply "$LIST" 16
