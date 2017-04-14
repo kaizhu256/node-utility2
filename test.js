@@ -202,12 +202,6 @@
                 local.assert(!error, error);
                 // validate statusCode
                 local.assertJsonEqual(xhr.statusCode, 200);
-                // validate responseText
-                local.assert(
-                    xhr.responseText
-                        .indexOf('"name": "' + local.env.npm_package_name + '",') >= 0,
-                    xhr.responseText
-                );
                 onError();
             });
         };
