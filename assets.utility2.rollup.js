@@ -607,10 +607,23 @@ local.templateApidocMd = '\
                 packageJson: JSON.parse(readExample('package.json'))
             });
             Object.keys(options.packageJson).forEach(function (key) {
+                tmp = options.packageJson[key];
+                // strip email from npmdoc documentation
+                // https://github.com/npmdoc/node-npmdoc-hpp/issues/1
+                if (tmp) {
+                    delete tmp.email;
+                    if (Array.isArray(tmp)) {
+                        tmp.forEach(function (element) {
+                            if (element) {
+                                delete element.email;
+                            }
+                        });
+                    }
+                }
                 if (key[0] === '_') {
                     delete options.packageJson[key];
-                } else if (typeof options.packageJson[key] === 'string') {
-                    options.env['npm_package_' + key] = options.packageJson[key];
+                } else if (typeof tmp === 'string') {
+                    options.env['npm_package_' + key] = tmp;
                 }
             });
             if (options.modeRenderFast) {
@@ -643,13 +656,31 @@ local.templateApidocMd = '\
             ).map(readExample));
             // init moduleMain
             try {
+                console.error('apidocCreate - requiring ' + options.dir + ' ...');
                 moduleMain = {};
-                moduleMain = options.moduleDict[options.env.npm_package_name] =
-                    options.moduleDict[options.env.npm_package_name] ||
+                moduleMain = options.moduleDict[options.env.npm_package_name] ||
                     require(options.dir);
-            } catch (ignore) {
+                console.error('apidocCreate - ... required ' + options.dir);
+            } catch (errorCaught) {
+                console.error(errorCaught);
             }
-            options.moduleDict[options.env.npm_package_name] = moduleMain;
+            tmp = {};
+            // handle case where module is a function
+            if (typeof moduleMain === 'function') {
+                (function () {
+                    var toString;
+                    toString = moduleMain.toString();
+                    tmp = function () {
+                        return;
+                    };
+                    tmp.toString = function () {
+                        return toString;
+                    };
+                }());
+            }
+            // normalize moduleMain
+            moduleMain = options.moduleDict[options.env.npm_package_name] =
+                local.objectSetDefault(tmp, moduleMain);
             // init circularList - builtin
             Object.keys(process.binding('natives')).forEach(function (key) {
                 if (!(/\/|_linklist|sys/).test(key)) {
@@ -739,9 +770,6 @@ local.templateApidocMd = '\
             });
             options.exampleList = options.exampleList.slice(0, 20);
             local.apidocModuleDictAdd(options, options.moduleExtraDict);
-            // normalize moduleMain
-            moduleMain = options.moduleDict[options.env.npm_package_name] =
-                local.objectSetDefault({}, moduleMain);
             Object.keys(options.moduleDict).forEach(function (key) {
                 if (key.indexOf(options.env.npm_package_name + '.') !== 0) {
                     return;
@@ -1099,7 +1127,7 @@ local.templateApidocMd = '\
          * this function will if error exists, then print error.stack to stderr
          */
             if (error && !local.global.__coverage__) {
-                console.error(error.stack);
+                console.error(error);
             }
         };
 
@@ -9736,7 +9764,7 @@ instruction\n\
                     /*jslint evil: true*/\n\
                     eval(document.querySelector(\'#inputTextareaEval1\').value);\n\
                 } catch (errorCaught) {\n\
-                    console.error(errorCaught.stack);\n\
+                    console.error(errorCaught);\n\
                 }\n\
             }\n\
         };\n\
@@ -11759,7 +11787,7 @@ local.assetsDict['/favicon.ico'] = '';
                         try {
                             onNext(null, event);
                         } catch (errorCaught) {
-                            console.error(errorCaught.stack);
+                            console.error(errorCaught);
                         }
                     });
                     break;
@@ -13416,7 +13444,7 @@ return Utf8ArrayToStr(bff);
          * this function will if error exists, then print error.stack to stderr
          */
             if (error && !local.global.__coverage__) {
-                console.error(error.stack);
+                console.error(error);
             }
         };
 
@@ -13710,7 +13738,7 @@ return Utf8ArrayToStr(bff);
              */
                 // debug error
                 global.utility2_debugReplError = error;
-                console.error(error.stack);
+                console.error(error);
             };
             // save repl eval function
             self.evalDefault = self.eval;

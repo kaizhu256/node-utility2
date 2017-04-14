@@ -384,6 +384,13 @@ shBuildCiInternal() {(set -e
     fi
 )}
 
+shBuildCustomOrg() {(set -e
+# this function will build the customOrg
+    shPasswordEnvUnset
+    export MODE_BUILD=buildCustomOrg
+    npm test --mode-coverage="" --mode-test-case=testCase_buildCustomOrg_default
+)}
+
 shBuildGithubUpload() {(set -e
 # this function will upload build-artifacts to github
     export MODE_BUILD="${MODE_BUILD:-buildGithubUpload}"
@@ -1333,6 +1340,8 @@ shGitInfo() {(set -e
     git grep '#alpha' || true
     printf "\n"
     git grep '\becho\b' *.sh || true
+    printf "\n"
+    git grep '\bset -\w*x\b' *.sh || true
 )}
 
 shGitLsTree() {(set -e
@@ -1656,9 +1665,8 @@ var dict, value;
 dict = require('./package.json');
 Object.keys(dict).forEach(function (key) {
     value = dict[key];
-    if (typeof value === 'string' && !(/[\n\"\$]/).test(value)) {
-        process.stdout.write('export npm_package_' + key.replace((/\W/g), '_') + '=' +
-            JSON.stringify(value) + ';');
+    if (!(/\W/g).test(key) && typeof value === 'string' && !(/[\n\"\$']/).test(value)) {
+        process.stdout.write('export npm_package_' + key + '=\'' + value + '\';');
     }
 });
 value = String((dict.repository && dict.repository.url) || dict.repository || '')

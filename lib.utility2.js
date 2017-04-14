@@ -316,7 +316,7 @@ instruction\n\
                     /*jslint evil: true*/\n\
                     eval(document.querySelector(\'#inputTextareaEval1\').value);\n\
                 } catch (errorCaught) {\n\
-                    console.error(errorCaught.stack);\n\
+                    console.error(errorCaught);\n\
                 }\n\
             }\n\
         };\n\
@@ -2339,7 +2339,7 @@ local.assetsDict['/favicon.ico'] = '';
                         try {
                             onNext(null, event);
                         } catch (errorCaught) {
-                            console.error(errorCaught.stack);
+                            console.error(errorCaught);
                         }
                     });
                     break;
@@ -3996,7 +3996,7 @@ return Utf8ArrayToStr(bff);
          * this function will if error exists, then print error.stack to stderr
          */
             if (error && !local.global.__coverage__) {
-                console.error(error.stack);
+                console.error(error);
             }
         };
 
@@ -4290,7 +4290,7 @@ return Utf8ArrayToStr(bff);
              */
                 // debug error
                 global.utility2_debugReplError = error;
-                console.error(error.stack);
+                console.error(error);
             };
             // save repl eval function
             self.evalDefault = self.eval;

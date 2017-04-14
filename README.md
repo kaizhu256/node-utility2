@@ -30,6 +30,7 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 [![apidoc](https://kaizhu256.github.io/node-utility2/build/screenCapture.buildApidoc.browser.%252Fhome%252Ftravis%252Fbuild%252Fkaizhu256%252Fnode-utility2%252Ftmp%252Fbuild%252Fapidoc.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/apidoc.html)
 
 #### todo
+- npm publish 2017.4.15
 - find electron-lite binary path in shell-function shInit
 - filter emails in package.json
 - add browser-side testing of npmtest
@@ -45,17 +46,10 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 - analytics
 - none
 
-#### changes for v2017.4.14
-- npm publish 2017.4.14
-- begin mass test-coverage of npm-ecosystem under https://github.com/npmtest
-- add default testCase testCase_buildCustomOrg_default
-- add shell-function shIsInGithubOrg to auto-determine whether using env-var \$GITHUB_ORG is appropriate or not
-- add shell-functions shCryptoAesWithGithubOrg, shNpmNameListFetch
-- auto-screenCapture test-report and coverage.html in shell-function shBuildCiInternal
-- improve scaffolding feature of shell-function shBuildApp
-- merge env-vars \$npm_package_buildNpmdoc and \$npm_package_readmeParse into \$npm_package_buildCustomOrg
-- merge shell-function shBuildCustomOrg into shBuildCiInternal
-- preserve percent-encoding in screenCapture files (so the url can be reconstructed)
+#### changes for v2017.4.15
+- fix bug where function apidocCreate cannot document module-functions
+- fix bug parsing package.json in shell-function shInit
+- strip email from npmdoc documentation - https://github.com/npmdoc/node-npmdoc-hpp/issues/1
 - none
 
 #### this package requires
@@ -344,7 +338,7 @@ instruction
                             coverage: window.__coverage__
                         });
                 } catch (errorCaught) {
-                    console.error(errorCaught.stack);
+                    console.error(errorCaught);
                 }
             }
             if (document.querySelector('#inputTextareaEval1') && (!event || (event &&
@@ -357,7 +351,7 @@ instruction
                     /*jslint evil: true*/
                     eval(document.querySelector('#inputTextareaEval1').value);
                 } catch (errorCaught) {
-                    console.error(errorCaught.stack);
+                    console.error(errorCaught);
                 }
             }
         };
@@ -707,7 +701,7 @@ utility2-comment -->\n\
         "start": "(set -e; export PORT=${PORT:-8080}; if [ -f assets.app.js ]; then node assets.app.js; exit; fi; export npm_config_mode_auto_restart=1; ./lib.utility2.sh shRun shIstanbulCover test.js)",
         "test": "(set -e; export PORT=$(./lib.utility2.sh shServerPortRandom); export PORT_REPL=$(./lib.utility2.sh shServerPortRandom); export npm_config_mode_auto_restart=1; ./lib.utility2.sh test test.js)"
     },
-    "version": "2017.4.14"
+    "version": "2017.4.15"
 }
 ```
 
