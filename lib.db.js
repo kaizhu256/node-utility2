@@ -609,44 +609,80 @@
             this.isDirty = null;
             this.idIndexList = [{ name: '_id', dict: {} }];
             this.onSaveList = [];
-            this.ttl = 0;
-            this.ttlLast = 0;
+            this.sizeLimit = options.sizeLimit || 0;
         };
 
         local._DbTable.prototype._cleanup = function () {
         /*
          * this function will cleanup soft-deleted records from the dbTable
          */
-            var dbRow, ii, list, ttl;
-            ttl = Date.now();
-            if (!(this.isDirty ||
-                  // cleanup ttl every minute
-                  (this.ttl && this.ttlLast + this.ttl < ttl))) {
+            var dbRow, ii, list;
+            if (!this.isDirty && this.dbRowList.length <= this.sizeLimit) {
                 return;
             }
             this.isDirty = null;
-            this.ttlLast = ttl;
             // cleanup dbRowList
             list = this.dbRowList;
             this.dbRowList = [];
             // optimization - for-loop
             for (ii = 0; ii < list.length; ii += 1) {
                 dbRow = list[ii];
-                // cleanup ttl
-                if (this.ttl && dbRow.$meta.ttl < ttl) {
-                    this._crudRemoveOneById(dbRow);
                 // cleanup isRemoved
-                } else if (!dbRow.$meta.isRemoved) {
+                if (!dbRow.$meta.isRemoved) {
                     this.dbRowList.push(dbRow);
                 }
             }
+            if (this.sizeLimit && this.dbRowList.length >= 1.5 * this.sizeLimit) {
+                this.dbRowList = this._crudGetManyByQuery(
+                    {},
+                    this.sortDefault,
+                    0,
+                    this.sizeLimit
+                );
+            }
         };
 
-        local._DbTable.prototype._crudGetManyByQuery = function (query) {
+        local._DbTable.prototype._crudGetManyByQuery = function (query, sort, skip, limit) {
         /*
-         * this function will get the dbRow's in the dbTable with the given query
+         * this function will get the dbRow's in the dbTable,
+         * with the given query, sort, skip, and limit
          */
-            return local.dbRowListGetManyByQuery(this.dbRowList, local.normalizeDict(query));
+            var ii, result;
+            result = this.dbRowList;
+            // get by query
+            if (result.length && query && Object.keys(query).length) {
+                result = local.dbRowListGetManyByQuery(this.dbRowList, query);
+            }
+            // sort
+            local.normalizeList(sort).forEach(function (element) {
+                // bug-workaround - v8 does not have stable-sort
+                // optimization - for-loop
+                for (ii = 0; ii < result.length; ii += 1) {
+                    result[ii].$meta.ii = ii;
+                }
+                if (element.isDescending) {
+                    result.sort(function (aa, bb) {
+                        return -local.sortCompare(
+                            local.dbRowGetItem(aa, element.fieldName),
+                            local.dbRowGetItem(bb, element.fieldName),
+                            aa.$meta.ii,
+                            bb.$meta.ii
+                        );
+                    });
+                } else {
+                    result.sort(function (aa, bb) {
+                        return local.sortCompare(
+                            local.dbRowGetItem(aa, element.fieldName),
+                            local.dbRowGetItem(bb, element.fieldName),
+                            aa.$meta.ii,
+                            bb.$meta.ii
+                        );
+                    });
+                }
+            });
+            // skip and limit
+            result = result.slice(skip || 0, (skip || 0) + (limit || Infinity));
+            return result;
         };
 
         local._DbTable.prototype._crudGetOneById = function (idDict) {
@@ -738,7 +774,7 @@
             // remove existing dbRow
             existing = this._crudRemoveOneById(dbRow) || dbRow;
             // init meta
-            dbRow.$meta = { isRemoved: null, ttl: this.ttl + Date.now() };
+            dbRow.$meta = { isRemoved: null };
             this.idIndexList.forEach(function (idIndex) {
                 // auto-set id
                 id = local.dbRowSetId(existing, idIndex);
@@ -821,36 +857,15 @@
         /*
          * this function will get the dbRow's in the dbTable with the given options.query
          */
-            var result;
             this._cleanup();
             options = local.normalizeDict(options);
-            // get dbRow's with the given options.query
-            result = this._crudGetManyByQuery(options.query);
-            // sort dbRow's with the given options.sort
-            local.normalizeList(options.sort || this.sortDefault).forEach(function (element) {
-                if (element.isDescending) {
-                    result.sort(function (aa, bb) {
-                        return -local.sortCompare(
-                            local.dbRowGetItem(aa, element.fieldName),
-                            local.dbRowGetItem(bb, element.fieldName)
-                        );
-                    });
-                } else {
-                    result.sort(function (aa, bb) {
-                        return local.sortCompare(
-                            local.dbRowGetItem(aa, element.fieldName),
-                            local.dbRowGetItem(bb, element.fieldName)
-                        );
-                    });
-                }
-            });
-            // skip and limit dbRow's with the given options.skip and options.limit
-            result = result.slice(
-                options.skip || 0,
-                (options.skip || 0) + (options.limit || Infinity)
-            );
             return local.setTimeoutOnError(onError, null, local.dbRowProject(
-                result,
+                this._crudGetManyByQuery(
+                    options.query,
+                    options.sort || this.sortDefault,
+                    options.skip,
+                    options.limit
+                ),
                 options.fieldList
             ));
         };
@@ -1026,13 +1041,13 @@
             this._cleanup();
             self = this;
             result = '';
-            result += self.name + ' ttlSet ' + self.ttl + '\n';
             self.idIndexList.forEach(function (idIndex) {
                 result += self.name + ' idIndexCreate ' + JSON.stringify({
                     isInteger: idIndex.isInteger,
                     name: idIndex.name
                 }) + '\n';
             });
+            result += self.name + ' sizeLimit ' + self.sizeLimit + '\n';
             result += self.name + ' sortDefault ' + JSON.stringify(self.sortDefault) + '\n';
             self.crudGetManyByQuery({}).forEach(function (dbRow) {
                 result += self.name + ' dbRowSet ' + JSON.stringify(dbRow) + '\n';
@@ -1112,23 +1127,6 @@
             }, 1000);
         };
 
-        local._DbTable.prototype.ttlSet = function (ttl, onError) {
-        /*
-         * this function will set the ttl in milliseconds
-         */
-            var ii;
-            // set ttl in milliseconds
-            this.ttl = ttl;
-            // update dbRowList
-            ttl += Date.now();
-            // optimization - for-loop
-            for (ii = 0; ii < this.dbRowList.length; ii += 1) {
-                this.dbRowList[ii].$meta.ttl = ttl;
-            }
-            this.save();
-            return local.setTimeoutOnError(onError);
-        };
-
         local.dbCrudRemoveAll = function (onError) {
         /*
          * this function will remove all dbRow's from the db
@@ -1185,7 +1183,7 @@
             setTimeout(function () {
                 local.modeImport = null;
             });
-            text.replace((/^(\w\S*?) (\S+?) (\S.+?)$/gm), function (
+            text.replace((/^(\w\S*?) (\S+?) (\S.*?)$/gm), function (
                 match0,
                 match1,
                 match2,
@@ -1202,12 +1200,12 @@
                     dbTable = local.dbTableCreateOne({ isLoaded: true, name: match1 });
                     dbTable.idIndexCreate(JSON.parse(match3));
                     break;
+                case 'sizeLimit':
+                    dbTable = local.dbTableCreateOne({ isLoaded: true, name: match1 });
+                    dbTable.sizeLimit = JSON.parse(match3);
+                    break;
                 case 'sortDefault':
                     dbTable = local.dbTableCreateOne({ isLoaded: true, name: match1 });
-                    break;
-                case 'ttlSet':
-                    dbTable = local.dbTableCreateOne({ isLoaded: true, name: match1 });
-                    dbTable.ttlSet(JSON.parse(match3));
                     break;
                 default:
                     local.onErrorDefault(new Error('dbImport - invalid operation - ' + match0));
@@ -1383,9 +1381,6 @@
          */
             var bb, dbRowDict, result;
             result = dbRowList;
-            if (!result.length) {
-                return result;
-            }
             if (!(query && typeof query === 'object')) {
                 result = local.dbRowListGetManyByOperator(result, fieldName, '$eq', query);
                 return result;
@@ -1535,7 +1530,7 @@
 
         local.dbTableDict = {};
 
-        local.sortCompare = function (aa, bb) {
+        local.sortCompare = function (aa, bb, ii, jj) {
         /*
          * this function will compare aa vs bb and return:
          * -1 if aa < bb
@@ -1546,7 +1541,9 @@
          */
             var typeof1, typeof2;
             if (aa === bb) {
-                return 0;
+                return ii < jj
+                    ? -1
+                    : 1;
             }
             if (aa === null) {
                 return -1;

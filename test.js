@@ -203,7 +203,11 @@
                 // validate statusCode
                 local.assertJsonEqual(xhr.statusCode, 200);
                 // validate responseText
-                local.assert((/"name": "utility2"/).test(xhr.responseText), xhr.responseText);
+                local.assert(
+                    xhr.responseText
+                        .indexOf('"name": "' + local.env.npm_package_name + '",') >= 0,
+                    xhr.responseText
+                );
                 onError();
             });
         };
@@ -524,44 +528,40 @@
             onError();
         };
 
-        local.testCase_dbTableTravisRepoUpdate_default = function (options, onError) {
+        local.testCase_dbTableTravisOrgUpdate_default = function (options, onError) {
         /*
-         * this function will test dbTableTravisRepoUpdate's default handling-behavior
+         * this function will test dbTableTravisOrgUpdate's default handling-behavior
          */
             options = [
                 [local, {
                     ajax: function (options, onError) {
                         onError(null, {
-                            responseText: JSON.stringify(options.url.indexOf('hook') >= 0
-                                ? [{ active: true, private: false, uid: '' }]
-                                : { uid: '', undefined: null })
+                            responseText: JSON.stringify({
+                                '@pagination': { count: 0 },
+                                repositories: [{
+                                    _id: '',
+                                    private: false,
+                                    slug: 'aa/node-aa-'
+                                }]
+                            })
                         }, options);
                     },
                     db: {
-                        crudCountAll: function () {
-                            return 0;
+                        crudSetManyById: function (options, onError) {
+                            onError(null, options);
                         },
-                        crudGetManyByQuery: function () {
-                            return [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}];
-                        },
-                        crudSetManyById: local.nop,
-                        crudUpdateManyById: local.nop,
                         dbTableCreateOne: function (options, onError) {
-                            (onError || local.nop)(null, local.db, options);
+                            onError(null, local.db, options);
                             return local.db;
-                        },
-                        save: function (onError) {
-                            onError();
                         }
                     },
-                    timeElapsedPoll: function () {
-                        return { timeElapsed: Infinity };
+                    setTimeoutOnError: function (onError, error) {
+                        onError(error);
                     }
                 }]
             ];
             local.testMock(options, function (onError) {
-                local.dbTableTravisRepoUpdate({}, local.onErrorThrow);
-                onError();
+                local.dbTableTravisOrgUpdate({ githubOrg: 'aa' }, onError);
             }, onError);
         };
 
@@ -1677,11 +1677,19 @@
         /*
          * this function will test buildApidoc's default handling-behavior
          */
-            // test $npm_config_mode_coverage = all handling-behavior
+            // test $npm_config_mode_coverage=all handling-behavior
+            options = null;
             local.testMock([
                 [local.env, { npm_config_mode_coverage: 'all' }]
             ], function (onError) {
-                local.buildApidoc(null, onError);
+                local.buildApidoc(options, onError);
+            }, local.onErrorThrow);
+            // test $npm_package_buildCustomOrg handling-behavior
+            options = {};
+            local.testMock([
+                [local.env, { npm_package_buildCustomOrg: 'electron-lite' }]
+            ], function (onError) {
+                local.buildApidoc(options, onError);
             }, local.onErrorThrow);
             options = { blacklistDict: {} };
             local.buildApidoc(options, onError);
@@ -1698,8 +1706,8 @@
                 file: '/assets.hello',
                 url: '/assets.hello'
             }, {
-                file: '/assets.scriptOnly.html',
-                url: '/assets.scriptOnly.html'
+                file: '/assets.script_only.html',
+                url: '/assets.script_only.html'
             }, {
                 file: '/assets.swgg.rollup.js',
                 url: '/assets.swgg.rollup.js'
@@ -1725,6 +1733,35 @@
             local.buildApp(options, onError);
         };
 
+        local.testCase_buildCustomOrg_default = function (options, onError) {
+        /*
+         * this function will test buildCustomOrg's default handling-behavior
+         */
+            options = {};
+            local.testMock([
+                [local.env, { GITHUB_ORG: '', npm_package_buildCustomOrg: 'electron-lite' }],
+                [local.fs, { writeFileSync: local.nop }],
+                [local.global, { setTimeout: function (onError) {
+                    onError();
+                } }],
+                [process, { on: function (options, onError) {
+                    // test error handling-behavior
+                    onError(local.errorDefault, options);
+                } }]
+            ], function (onError) {
+                options = {};
+                // test npmdoc handling-behavior
+                local.env.GITHUB_ORG = 'npmdoc';
+                local.buildCustomOrg(options, local.onErrorThrow);
+                // test npmtest handling-behavior
+                local.env.GITHUB_ORG = 'npmtest';
+                local.buildCustomOrg(options, local.onErrorThrow);
+                onError();
+            }, local.onErrorThrow);
+            options = {};
+            local.buildCustomOrg(options, onError);
+        };
+
         local.testCase_buildLib_default = function (options, onError) {
         /*
          * this function will test buildLib's default handling-behavior
@@ -1744,32 +1781,17 @@
             local.buildLib(options, onError);
         };
 
-        local.testCase_buildNpmdoc_error = function (options, onError) {
-        /*
-         * this function will test buildNpmdoc's error handling-behavior
-         */
-            local.testMock([
-                [local, {
-                    buildApidoc: function (options, onError) {
-                        onError(local.errorDefault, options);
-                    }
-                }],
-                [local.fs, { writeFileSync: local.nop }],
-                [local.env, { npm_package_buildNpmdoc: 'electron-lite' }],
-                [process, { on: function (options, onError) {
-                    onError(local.errorDefault, options);
-                } }]
-            ], function (onError) {
-                options = {};
-                local.buildNpmdoc(options, local.onErrorThrow);
-                onError();
-            }, onError);
-        };
-
         local.testCase_buildReadme_default = function (options, onError) {
         /*
          * this function will test buildReadme's default handling-behavior
          */
+            // test $npm_package_buildCustomOrg handling-behavior
+            options = {};
+            local.testMock([
+                [local.env, { npm_package_buildCustomOrg: 'electron-lite' }]
+            ], function (onError) {
+                local.buildReadme(options, onError);
+            }, local.onErrorThrow);
             options = {};
             options.customize = function () {
                 // search-and-replace - customize dataTo
@@ -2186,8 +2208,8 @@
                 modeTestIgnore: true,
                 timeoutDefault: local.timeoutDefault - 1000,
                 url: local.serverLocalHost +
-                    // test scriptOnly handling-behavior
-                    '/assets.scriptOnly.html' +
+                    // test script_only handling-behavior
+                    '/assets.script_only.html' +
                     // test electron-callback handling-behavior
                     '?modeTest=1&' +
                     // test specific testCase handling-behavior
@@ -2288,7 +2310,7 @@
         if (module !== require.main || local.global.utility2_rollup) {
             return;
         }
-        local.assetsDict['/assets.scriptOnly.html'] = '<h1>scriptOnlyTest</h1>\n' +
+        local.assetsDict['/assets.script_only.html'] = '<h1>script_only_test</h1>\n' +
                 '<script src="assets.utility2.js"></script>\n' +
                 '<script>window.utility2.onReadyBefore.counter += 1;</script>\n' +
                 '<script src="assets.example.js"></script>\n' +

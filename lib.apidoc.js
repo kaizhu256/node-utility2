@@ -569,6 +569,13 @@ local.templateApidocMd = '\
                     options.env['npm_package_' + key] = options.packageJson[key];
                 }
             });
+            if (options.modeRenderFast) {
+                // render apidoc
+                options.result = local.templateRender(options.template, options)
+                    .trim()
+                    .replace((/ +$/gm), '') + '\n';
+                return options.result;
+            }
             local.objectSetDefault(options, {
                 blacklistDict: { global: global },
                 circularList: [global],
@@ -595,7 +602,7 @@ local.templateApidocMd = '\
                 moduleMain = {};
                 moduleMain = options.moduleDict[options.env.npm_package_name] =
                     options.moduleDict[options.env.npm_package_name] ||
-                    require(options.dir + (process.env.npm_package_buildNpmdocMain || ''));
+                    require(options.dir);
             } catch (ignore) {
             }
             options.moduleDict[options.env.npm_package_name] = moduleMain;
@@ -643,7 +650,7 @@ local.templateApidocMd = '\
             });
             module = options.moduleExtraDict[options.env.npm_package_name] =
                 options.moduleExtraDict[options.env.npm_package_name] || {};
-            options.libFileList.forEach(function (file) {
+            options.libFileList.some(function (file) {
                 try {
                     tmp = {};
                     tmp.name = local.path.basename(file)
@@ -684,7 +691,9 @@ local.templateApidocMd = '\
                     options.exampleList.push(readExample(file));
                 } catch (ignore) {
                 }
+                return options.exampleList.length <= 20;
             });
+            options.exampleList = options.exampleList.slice(0, 20);
             local.apidocModuleDictAdd(options, options.moduleExtraDict);
             // normalize moduleMain
             moduleMain = options.moduleDict[options.env.npm_package_name] =

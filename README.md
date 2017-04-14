@@ -19,7 +19,7 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 # live demo
 - [https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/index.html](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/index.html)
 
-[![github.com test-server](https://kaizhu256.github.io/node-utility2/build/screenCapture.deployGithub.browser._2Fnode-utility2_2Fbuild_2Fapp_2Findex.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/index.html)
+[![github.com test-server](https://kaizhu256.github.io/node-utility2/build/screenCapture.deployGithub.browser.%252Fnode-utility2%252Fbuild%252Fapp%252Findex.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/index.html)
 
 
 
@@ -27,9 +27,13 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 #### apidoc
 - [https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/apidoc.html](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/apidoc.html)
 
-[![apidoc](https://kaizhu256.github.io/node-utility2/build/screenCapture.buildApidoc.browser._2Fhome_2Ftravis_2Fbuild_2Fkaizhu256_2Fnode-utility2_2Ftmp_2Fbuild_2Fapidoc.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/apidoc.html)
+[![apidoc](https://kaizhu256.github.io/node-utility2/build/screenCapture.buildApidoc.browser.%252Fhome%252Ftravis%252Fbuild%252Fkaizhu256%252Fnode-utility2%252Ftmp%252Fbuild%252Fapidoc.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/apidoc.html)
 
 #### todo
+- find electron-lite binary path in shell-function shInit
+- filter emails in package.json
+- add browser-side testing of npmtest
+- add \$NAME argument to shBuildApp
 - fix package-listing bug on https://travis-ci.org/npmdoc/node-npmdoc-object-assign
 - rename sub-package db-lite -> nedb-lite
 - rename sub-package istanbul-lite -> istanbul-classic
@@ -41,17 +45,17 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 - analytics
 - none
 
-#### changes for v2017.4.6
-- npm publish 2017.4.6
-- add auto-retry option to function onParallelList
-- add depencency-tree-visualization and dependency-tree-size to README.md
-- add html-scraper to function browerTest
-- add property 'sortDefault' to dbTable, which defaults to [{ fieldName: '_timeUpdated', isDescending: true }]
-- add optional callback to function dbTable.prototype.save
-- add shell-functions shGithubRepoListCreate, shNpmNameNormalize, shNpmPackageDependencyTreeCreate, shOnParallelListSpawn, shTravisRepoListFilterForNonActive
-- add shell-function shNpmPackageNameListGetFromUrl, which allows shNpmdocRepoListCreate to create npmdocs directly from npm-website
-- enable auto-cancel-mode by default when creating travis-repo
-- streamline build-process for 'npm publishAfterCommitAfterBuild' to just one stage (alpha)
+#### changes for v2017.4.14
+- npm publish 2017.4.14
+- begin mass test-coverage of npm-ecosystem under https://github.com/npmtest
+- add default testCase testCase_buildCustomOrg_default
+- add shell-function shIsInGithubOrg to auto-determine whether using env-var \$GITHUB_ORG is appropriate or not
+- add shell-functions shCryptoAesWithGithubOrg, shNpmNameListFetch
+- auto-screenCapture test-report and coverage.html in shell-function shBuildCiInternal
+- improve scaffolding feature of shell-function shBuildApp
+- merge env-vars \$npm_package_buildNpmdoc and \$npm_package_readmeParse into \$npm_package_buildCustomOrg
+- merge shell-function shBuildCustomOrg into shBuildCiInternal
+- preserve percent-encoding in screenCapture files (so the url can be reconstructed)
 - none
 
 #### this package requires
@@ -107,7 +111,7 @@ shExampleSh
 ```
 
 #### output from browser
-![screenCapture](https://kaizhu256.github.io/node-utility2/build/screenCapture.testExampleSh.browser..png)
+![screenCapture](https://kaizhu256.github.io/node-utility2/build/screenCapture.testExampleSh.browser.%252F.png)
 
 #### output from shell
 ![screenCapture](https://kaizhu256.github.io/node-utility2/build/screenCapture.testExampleSh.svg)
@@ -115,7 +119,7 @@ shExampleSh
 
 
 # quickstart automated example
-![screenCapture](https://kaizhu256.github.io/node-utility2/build/screenCapture.testExampleJs.browser._2Fhome_2Ftravis_2Fbuild_2Fkaizhu256_2Fnode-utility2_2Ftmp_2Fbuild_2Ftest-report.html.png)
+![screenCapture](https://kaizhu256.github.io/node-utility2/build/screenCapture.testExampleJs.browser.%252Fhome%252Ftravis%252Fbuild%252Fkaizhu256%252Fnode-utility2%252Ftmp%252Fbuild%252Ftest-report.html.png)
 
 #### to run this example, follow the instruction in the script below
 - [example.js](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/example.js)
@@ -567,9 +571,9 @@ utility2-comment -->\n\
                 local.assetsDict['/assets.index.template.html'],
                 {
                     env: local.objectSetDefault(local.env, {
-                        npm_package_description: 'example module',
-                        npm_package_name: 'example',
-                        npm_package_nameAlias: 'example',
+                        npm_package_description: 'the greatest app in the world!',
+                        npm_package_name: 'my-app',
+                        npm_package_nameAlias: 'my_app',
                         npm_package_version: '0.0.1'
                     })
                 }
@@ -581,11 +585,11 @@ utility2-comment -->\n\
                     String(match0);
                     switch (match1) {
                     case 'npm_package_description':
-                        return 'example module';
+                        return 'the greatest app in the world!';
                     case 'npm_package_name':
-                        return 'example';
+                        return 'my-app';
                     case 'npm_package_nameAlias':
-                        return 'example';
+                        return 'my_app';
                     case 'npm_package_version':
                         return '0.0.1';
                     }
@@ -601,7 +605,7 @@ utility2-comment -->\n\
         local.assetsDict['/assets.utility2.rollup.js'] =
             local.assetsDict['/assets.utility2.rollup.js'] ||
             local.fs.readFileSync(
-                // npmdoc-hack
+                // buildCustomOrg-hack
                 local.utility2.__dirname +
                     '/lib.utility2.js',
                 'utf8'
@@ -633,10 +637,10 @@ utility2-comment -->\n\
 ```
 
 #### output from utility2
-![screenCapture](https://kaizhu256.github.io/screenCapture.testExampleJs.browser._2Fhome_2Ftravis_2Fbuild_2Fkaizhu256_2Fnode-utility2_2Ftmp_2Fbuild_2Ftest-report.html.png)
+![screenCapture](https://kaizhu256.github.io/screenCapture.testExampleJs.browser.%252Fhome%252Ftravis%252Fbuild%252Fkaizhu256%252Fnode-utility2%252Ftmp%252Fbuild%252Ftest-report.html.png)
 
 #### output from istanbul
-![screenCapture](https://kaizhu256.github.io/node-utility2/build/screenCapture.testExampleJs.browser._2Ftmp_2Fapp_2Ftmp_2Fbuild_2Fcoverage.html_2Fapp_2Fexample.js.html.png)
+![screenCapture](https://kaizhu256.github.io/node-utility2/build/screenCapture.testExampleJs.browser.%252Ftmp%252Fapp%252Ftmp%252Fbuild%252Fcoverage.html%252Fapp%252Fexample.js.html.png)
 
 #### output from shell
 ![screenCapture](https://kaizhu256.github.io/node-utility2/build/screenCapture.testExampleJs.svg)
@@ -691,7 +695,6 @@ utility2-comment -->\n\
         "darwin",
         "linux"
     ],
-    "readmeParse": "1",
     "repository": {
         "type": "git",
         "url": "https://github.com/kaizhu256/node-utility2.git"
@@ -704,7 +707,7 @@ utility2-comment -->\n\
         "start": "(set -e; export PORT=${PORT:-8080}; if [ -f assets.app.js ]; then node assets.app.js; exit; fi; export npm_config_mode_auto_restart=1; ./lib.utility2.sh shRun shIstanbulCover test.js)",
         "test": "(set -e; export PORT=$(./lib.utility2.sh shServerPortRandom); export PORT_REPL=$(./lib.utility2.sh shServerPortRandom); export npm_config_mode_auto_restart=1; ./lib.utility2.sh test test.js)"
     },
-    "version": "2017.4.6"
+    "version": "2017.4.14"
 }
 ```
 
@@ -842,20 +845,6 @@ shBuildCiPost() {(set -e
     #// coverage-hack
     shDeployGithub
     shDeployHeroku
-    case "$CI_BRANCH" in
-    # update public, travis-repo db
-    alpha)
-        mkdir -p tmp/storage.undefined
-        curl -Ls https://kaizhu256.github.io/node-utility2/build/dbTable.TravisRepo.json > \
-            tmp/storage.undefined/dbTable.TravisRepo.json
-        ./lib.utility2.sh dbTableTravisRepoUpdate
-        (
-        eval "$(shTravisCryptoAesDecryptYml $CRYPTO_AES_KEY_npmdoc npmdoc)"
-        ./lib.utility2.sh dbTableTravisRepoUpdate
-        )
-        cp tmp/storage.undefined/dbTable.TravisRepo.json tmp/build
-        ;;
-    esac
     shReadmeBuildLinkVerify
     # restore $CI_BRANCH
     export CI_BRANCH="$CI_BRANCH_OLD"

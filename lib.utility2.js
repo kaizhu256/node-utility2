@@ -373,9 +373,9 @@ local.assetsDict['/assets.index.template.html'].replace((/\n/g), '\\n\\\n') +
                 local.assetsDict[\'/assets.index.template.html\'],\n\
                 {\n\
                     env: local.objectSetDefault(local.env, {\n\
-                        npm_package_description: \'example module\',\n\
-                        npm_package_name: \'example\',\n\
-                        npm_package_nameAlias: \'example\',\n\
+                        npm_package_description: \'the greatest app in the world!\',\n\
+                        npm_package_name: \'my-app\',\n\
+                        npm_package_nameAlias: \'my_app\',\n\
                         npm_package_version: \'0.0.1\'\n\
                     })\n\
                 }\n\
@@ -387,11 +387,11 @@ local.assetsDict['/assets.index.template.html'].replace((/\n/g), '\\n\\\n') +
                     String(match0);\n\
                     switch (match1) {\n\
                     case \'npm_package_description\':\n\
-                        return \'example module\';\n\
+                        return \'the greatest app in the world!\';\n\
                     case \'npm_package_name\':\n\
-                        return \'example\';\n\
+                        return \'my-app\';\n\
                     case \'npm_package_nameAlias\':\n\
-                        return \'example\';\n\
+                        return \'my_app\';\n\
                     case \'npm_package_version\':\n\
                         return \'0.0.1\';\n\
                     }\n\
@@ -407,7 +407,7 @@ local.assetsDict['/assets.index.template.html'].replace((/\n/g), '\\n\\\n') +
         local.assetsDict[\'/assets.jslint.rollup.js\'] =\n\
             local.assetsDict[\'/assets.jslint.rollup.js\'] ||\n\
             local.fs.readFileSync(\n\
-                // npmdoc-hack\n\
+                // buildCustomOrg-hack\n\
                 local.jslint.__dirname +\n\
                     \'/lib.jslint.js\',\n\
                 \'utf8\'\n\
@@ -500,7 +500,7 @@ local.assetsDict['/assets.lib.template.js'] = '\
 
 local.assetsDict['/assets.readme.template.md'] = '\
 # jslint-lite\n\
-example module\n\
+the greatest app in the world!\n\
 \n\
 [![travis-ci.org build-status](https://api.travis-ci.org/kaizhu256/node-jslint-lite.svg)](https://travis-ci.org/kaizhu256/node-jslint-lite) [![istanbul-coverage](https://kaizhu256.github.io/node-jslint-lite/build/coverage.badge.svg)](https://kaizhu256.github.io/node-jslint-lite/build/coverage.html/index.html)\n\
 \n\
@@ -520,7 +520,7 @@ example module\n\
 # live demo\n\
 - [https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app/index.html](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app/index.html)\n\
 \n\
-[![github.com test-server](https://kaizhu256.github.io/node-jslint-lite/build/screenCapture.deployGithub.browser._2Fnode-jslint-lite_2Fbuild_2Fapp_2Findex.html.png)](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app/index.html)\n\
+[![github.com test-server](https://kaizhu256.github.io/node-jslint-lite/build/screenCapture.deployGithub.browser.%252Fnode-jslint-lite%252Fbuild%252Fapp%252Findex.html.png)](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app/index.html)\n\
 \n\
 \n\
 \n\
@@ -528,12 +528,12 @@ example module\n\
 #### apidoc\n\
 - [https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/apidoc.html](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/apidoc.html)\n\
 \n\
-[![apidoc](https://kaizhu256.github.io/node-jslint-lite/build/screenCapture.buildApidoc.browser._2Fhome_2Ftravis_2Fbuild_2Fkaizhu256_2Fnode-jslint-lite_2Ftmp_2Fbuild_2Fapidoc.html.png)](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/apidoc.html)\n\
+[![apidoc](https://kaizhu256.github.io/node-jslint-lite/build/screenCapture.buildApidoc.browser.%252Fhome%252Ftravis%252Fbuild%252Fkaizhu256%252Fnode-jslint-lite%252Ftmp%252Fbuild%252Fapidoc.html.png)](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/apidoc.html)\n\
 \n\
 #### todo\n\
 - none\n\
 \n\
-#### change since xxxxxxxx\n\
+#### changes for v0.0.1\n\
 - none\n\
 \n\
 #### this package requires\n\
@@ -568,14 +568,14 @@ example module\n\
 \n\
 \n\
 # quickstart web example\n\
-![screenCapture](https://kaizhu256.github.io/node-jslint-lite/build/screenCapture.testExampleJs.browser..png)\n\
+![screenCapture](https://kaizhu256.github.io/node-jslint-lite/build/screenCapture.testExampleJs.browser.%252F.png)\n\
 \n\
 #### to run this example, follow the instruction in the script below\n\
 - [example.js](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/example.js)\n\
 ```javascript\n' + local.assetsDict['/assets.example.template.js'] + '```\n\
 \n\
 #### output from browser\n\
-![screenCapture](https://kaizhu256.github.io/node-jslint-lite/build/screenCapture.testExampleJs.browser..png)\n\
+![screenCapture](https://kaizhu256.github.io/node-jslint-lite/build/screenCapture.testExampleJs.browser.%252F.png)\n\
 \n\
 #### output from shell\n\
 ![screenCapture](https://kaizhu256.github.io/node-jslint-lite/build/screenCapture.testExampleJs.svg)\n\
@@ -586,7 +586,7 @@ example module\n\
 ```json\n\
 {\n\
     "author": "kai zhu <kaizhu256@gmail.com>",\n\
-    "description": "example module",\n\
+    "description": "the greatest app in the world!",\n\
     "devDependencies": {\n\
         "electron-lite": "kaizhu256/node-electron-lite#alpha",\n\
         "utility2": "kaizhu256/node-utility2#alpha"\n\
@@ -635,7 +635,7 @@ example module\n\
 \n\
 shBuildCiPost() {(set -e\n\
     shDeployGithub\n\
-    shDeployHeroku\n\
+    # shDeployHeroku\n\
     shReadmeBuildLinkVerify\n\
 )}\n\
 \n\
@@ -654,6 +654,109 @@ shBuildCi\n\
 \n\
 # misc\n\
 - this package was created with [utility2](https://github.com/kaizhu256/node-utility2)\n\
+';
+
+
+
+local.assetsDict['/assets.readmeCustomOrgNpmdocHeader.template.md'] = '\
+# api documentation for \
+{{#if env.npm_package_homepage}} \
+[{{env.npm_package_name}} (v{{env.npm_package_version}})]({{env.npm_package_homepage}}) \
+{{#unless env.npm_package_homepage}} \
+{{env.npm_package_name}} (v{{env.npm_package_version}}) \
+{{/if env.npm_package_homepage}} \
+[![npm package](https://img.shields.io/npm/v/npmdoc-{{env.npm_package_name}}.svg?style=flat-square)](https://www.npmjs.org/package/npmdoc-{{env.npm_package_name}}) \
+[![travis-ci.org build-status](https://api.travis-ci.org/npmdoc/node-npmdoc-{{env.npm_package_name}}.svg)](https://travis-ci.org/npmdoc/node-npmdoc-{{env.npm_package_name}}) \
+\n\
+#### {{env.npm_package_description}} \
+\n\
+\n\
+[![NPM](https://nodei.co/npm/{{env.npm_package_name}}.png?downloads=true&downloadRank=true&stars=true)](https://www.npmjs.com/package/{{env.npm_package_name}}) \
+\n\
+\n\
+[![apidoc](https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build/screenCapture.buildApidoc.browser.%252Fhome%252Ftravis%252Fbuild%252Fnpmdoc%252Fnode-npmdoc-{{env.npm_package_name}}%252Ftmp%252Fbuild%252Fapidoc.html.png)](https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build/apidoc.html) \
+\n\
+\n\
+![npmPackageListing](https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build/screenCapture.npmPackageListing.svg) \
+\n\
+\n\
+![npmPackageDependencyTree](https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build/screenCapture.npmPackageDependencyTree.svg) \
+\n\
+\n\
+\n\
+\n\
+# package.json \
+\n\
+\n\
+```json \
+\n\
+\n\
+{{packageJson jsonStringify4 markdownCodeSafe}} \
+\n\
+``` \
+\n\
+';
+
+
+
+local.assetsDict['/assets.readmeCustomOrgNpmtest.template.md'] = '\
+# test coverage for \
+{{#if env.npm_package_homepage}} \
+[{{env.npm_package_name}} (v{{env.npm_package_version}})]({{env.npm_package_homepage}}) \
+{{#unless env.npm_package_homepage}} \
+{{env.npm_package_name}} (v{{env.npm_package_version}}) \
+{{/if env.npm_package_homepage}} \
+[![npm package](https://img.shields.io/npm/v/npmtest-{{env.npm_package_name}}.svg?style=flat-square)](https://www.npmjs.org/package/npmtest-{{env.npm_package_name}}) \
+[![travis-ci.org build-status](https://api.travis-ci.org/npmtest/node-npmtest-{{env.npm_package_name}}.svg)](https://travis-ci.org/npmtest/node-npmtest-{{env.npm_package_name}}) \
+\n\
+#### {{env.npm_package_description}} \
+\n\
+\n\
+[![NPM](https://nodei.co/npm/{{env.npm_package_name}}.png?downloads=true&downloadRank=true&stars=true)](https://www.npmjs.com/package/{{env.npm_package_name}}) \
+\n\
+\n\
+| git-branch : | [alpha](https://github.com/npmtest/node-npmtest-{{env.npm_package_name}}/tree/alpha)|\n\
+|--:|:--| \
+\n\
+| coverage : | [![istanbul-coverage](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/coverage.badge.svg)](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/coverage.html/index.html)| \
+\n\
+| test-report : | [![test-report](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/test-report.badge.svg)](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/test-report.html)| \
+\n\
+| build-artifacts : | [![build-artifacts](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/glyphicons_144_folder_open.png)](https://github.com/npmtest/node-npmtest-{{env.npm_package_name}}/tree/gh-pages/build)| \
+\n\
+\n\
+[![istanbul-coverage](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/screenCapture.buildCustomOrg.browser.coverage.html.png)](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/coverage.html/index.html) \
+\n\
+\n\
+[![test-report](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/screenCapture.buildCustomOrg.browser.%252Fhome%252Ftravis%252Fbuild%252Fnpmtest%252Fnode-npmtest-{{env.npm_package_name}}%252Ftmp%252Fbuild%252Ftest-report.html.png)](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/test-report.html) \
+\n\
+\n\
+[![apidoc](https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build/screenCapture.buildApidoc.browser.%252Fhome%252Ftravis%252Fbuild%252Fnpmdoc%252Fnode-npmdoc-{{env.npm_package_name}}%252Ftmp%252Fbuild%252Fapidoc.html.png)](https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build/apidoc.html) \
+\n\
+\n\
+![npmPackageListing](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/screenCapture.npmPackageListing.svg) \
+\n\
+\n\
+![npmPackageDependencyTree](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/screenCapture.npmPackageDependencyTree.svg) \
+\n\
+\n\
+\n\
+\n\
+# package.json \
+\n\
+\n\
+```json \
+\n\
+\n\
+{{packageJson jsonStringify4 markdownCodeSafe}} \
+\n\
+``` \
+\n\
+\n\
+\n\
+\n\
+# misc\n\
+- this document was created with [utility2](https://github.com/kaizhu256/node-utility2)\n\
 ';
 
 
@@ -768,10 +871,6 @@ local.assetsDict['/assets.test.template.js'] = '\
          * this function will test buildApidoc\'s default handling-behavior-behavior\n\
          */\n\
             options = { modulePathList: module.paths };\n\
-            if (local.env.npm_package_buildNpmdoc) {\n\
-                local.buildNpmdoc(options, onError);\n\
-                return;\n\
-            }\n\
             local.buildApidoc(options, onError);\n\
         };\n\
 \n\
@@ -785,9 +884,19 @@ local.assetsDict['/assets.test.template.js'] = '\
             local.testCase_buildReadme_default(options, local.onErrorThrow);\n\
             local.testCase_buildLib_default(options, local.onErrorThrow);\n\
             local.testCase_buildTest_default(options, local.onErrorThrow);\n\
+            local.testCase_buildCustomOrg_default(options, local.onErrorThrow);\n\
             options = [];\n\
             local.buildApp(options, onError);\n\
         };\n\
+\n\
+        local.testCase_buildCustomOrg_default = local.testCase_buildCustomOrg_default ||\n\
+            function (options, onError) {\n\
+            /*\n\
+             * this function will test buildCustomOrg\'s default handling-behavior\n\
+             */\n\
+                options = {};\n\
+                local.buildCustomOrg(options, onError);\n\
+            };\n\
 \n\
         local.testCase_buildLib_default = local.testCase_buildLib_default || function (\n\
             options,\n\
@@ -807,10 +916,6 @@ local.assetsDict['/assets.test.template.js'] = '\
         /*\n\
          * this function will test buildReadme\'s default handling-behavior-behavior\n\
          */\n\
-            if (local.env.npm_package_buildNpmdoc) {\n\
-                onError();\n\
-                return;\n\
-            }\n\
             options = {};\n\
             local.buildReadme(options, onError);\n\
         };\n\
@@ -946,7 +1051,10 @@ local.assetsDict['/assets.testReport.template.html'] = '\
 <h4>\n\
     {{testPlatformNumber}}. {{name htmlSafe}}<br>\n\
     {{#if screenCaptureImg}}\n\
-    <a href="{{screenCaptureImg}}"><img src="{{screenCaptureImg}}"></a><br>\n\
+    <a href="{{screenCaptureImg encodeURIComponent}}">\n\
+        <img src="{{screenCaptureImg encodeURIComponent}}">\n\
+    </a>\n\
+    <br>\n\
     {{/if screenCaptureImg}}\n\
     <span>time-elapsed</span>- {{timeElapsed}} ms<br>\n\
     <span>tests failed</span>- {{testsFailed}}<br>\n\
@@ -2060,14 +2168,12 @@ local.assetsDict['/favicon.ico'] = '';
                         fileCoverage: local.env.npm_config_dir_tmp +
                             '/coverage.' + options.testName + '.json',
                         fileScreenCapture: (local.env.npm_config_dir_build +
-                            '/screenCapture.' + options.testName + '.png')
-                            .replace((/%/g), '_')
-                            .replace((/_2F\.png$/), '.png'),
+                            '/screenCapture.' + options.testName + '.png'),
                         fileTestReport: local.env.npm_config_dir_tmp +
                             '/test-report.' + options.testName + '.json',
                         modeBrowserTest: 'test',
                         timeExit: Date.now() + options.timeoutDefault,
-                        timeoutScreenCapture: Number(options.timeoutScreenCapture || 15000)
+                        timeoutScreenCapture: Number(options.timeoutScreenCapture || 10000)
                     }, 1);
                     // init timerTimeout
                     timerTimeout = local.onTimeout(
@@ -2125,6 +2231,12 @@ local.assetsDict['/favicon.ico'] = '';
                     }).once('exit', onNext);
                     break;
                 case 2:
+                    // cleanup fileElectronHtml
+                    try {
+                        local.fs.unlinkSync(options.fileElectronHtml);
+                        local.fs.unlinkSync(options.fileElectronHtml + '.preload.js');
+                    } catch (ignore) {
+                    }
                     console.error('\nbrowserTest - exit-code ' + error + ' - ' + options.url +
                         '\n');
                     // merge browser coverage
@@ -2442,6 +2554,10 @@ return Utf8ArrayToStr(bff);
         /*
          * this function will build the apidoc
          */
+            if (local.env.npm_package_buildCustomOrg && !options.modeForce) {
+                onError();
+                return;
+            }
             // optimization - do not run if $npm_config_mode_coverage = all
             if (local.env.npm_config_mode_coverage === 'all') {
                 onError();
@@ -2455,10 +2571,7 @@ return Utf8ArrayToStr(bff);
             );
             console.error('created apidoc file://' + local.env.npm_config_dir_build +
                 '/apidoc.html\n');
-            local.browserTest({
-                modeBrowserTest: 'screenCapture',
-                url: local.env.npm_config_dir_build + '/apidoc.html'
-            }, onError);
+            onError();
         };
 
         local.buildApp = function (options, onError) {
@@ -2539,6 +2652,87 @@ return Utf8ArrayToStr(bff);
             });
         };
 
+        local.buildCustomOrg = function (options, onError) {
+        /*
+         * this function will build the customOrg
+         */
+            var done, onError2, onParallel;
+            if (!local.env.npm_package_buildCustomOrg && !options.modeForce) {
+                onError();
+                return;
+            }
+            // ensure exit after 5 minutes
+            setTimeout(process.exit, 5 * 60 * 1000);
+            onError2 = function (error) {
+                local.onErrorDefault(error);
+                if (done) {
+                    return;
+                }
+                done = true;
+                // try to recover from error
+                setTimeout(onError, error && local.timeoutDefault);
+            };
+            // try to salvage uncaughtException
+            process.on('uncaughtException', onError2);
+            onParallel = local.utility2.onParallel(onError2);
+            onParallel.counter += 1;
+            // build package.json
+            options.packageJson = JSON.parse(local.fs.readFileSync('package.json', 'utf8'));
+            onParallel.counter += 1;
+            local.buildReadme({
+                dataFrom: '\n# package.json\n```json\n' + JSON.stringify(options.packageJson) +
+                    '\n```\n',
+                modeForce: true
+            }, onParallel);
+            options.packageJson = JSON.parse(local.fs.readFileSync('package.json', 'utf8'));
+            switch (local.env.GITHUB_ORG) {
+            case 'npmdoc':
+                // update package.json
+                local.objectSetOverride(options.packageJson, local.objectLiteralize({
+                    keywords: ['documentation', local.env.npm_package_buildCustomOrg]
+                }), 2);
+                // build apidoc.html
+                onParallel.counter += 1;
+                local.buildApidoc({
+                    dir: local.env.npm_package_buildCustomOrg,
+                    modeForce: true,
+                    modulePathList: options.modulePathList
+                }, onParallel);
+                // build README.md
+                options.readme = local.apidocCreate({
+                    dir: local.env.npm_package_buildCustomOrg,
+                    header: local.assetsDict['/assets.readmeCustomOrgNpmdocHeader.template.md'],
+                    modulePathList: options.modulePathList,
+                    template: local.apidoc.templateApidocMd
+                });
+                local.fs.writeFileSync('README.md', options.readme);
+                break;
+            case 'npmtest':
+                // update package.json
+                local.objectSetOverride(options.packageJson, local.objectLiteralize({
+                    keywords: ['coverage', 'test', local.env.npm_package_buildCustomOrg]
+                }), 2);
+                // build README.md
+                options.readme = local.apidocCreate({
+                    dir: local.env.npm_package_buildCustomOrg,
+                    modeRenderFast: true,
+                    modulePathList: options.modulePathList,
+                    template: local.assetsDict['/assets.readmeCustomOrgNpmtest.template.md']
+                });
+                local.fs.writeFileSync('README.md', options.readme);
+                break;
+            }
+            // re-build package.json
+            options.packageJson.description = (/\w.*/).exec(options.readme)[0]
+                .replace((/ {2,}/g), ' ')
+                .trim();
+            local.fs.writeFileSync(
+                'package.json',
+                local.jsonStringifyOrdered(options.packageJson, null, 4) + '\n'
+            );
+            onParallel();
+        };
+
         local.buildLib = function (options, onError) {
         /*
          * this function will build the lib
@@ -2580,116 +2774,14 @@ return Utf8ArrayToStr(bff);
             onError();
         };
 
-        local.buildNpmdoc = function (options, onError) {
-        /*
-         * this function will build the npmdoc
-         */
-            var done, onError2, onParallel, packageJson;
-            // ensure exit after 5 minutes
-            setTimeout(process.exit, 5 * 60 * 1000);
-            onError2 = function (error) {
-                local.onErrorDefault(error);
-                if (done) {
-                    return;
-                }
-                done = true;
-                // try to recover from error
-                setTimeout(onError, error && local.timeoutDefault);
-            };
-            // try to salvage uncaughtException
-            process.on('uncaughtException', onError2);
-            onParallel = local.utility2.onParallel(onError2);
-            onParallel.counter += 1;
-            // build package.json
-            packageJson = JSON.parse(local.fs.readFileSync('package.json', 'utf8'));
-            local.objectSetDefault(packageJson, local.objectLiteralize({
-                devDependencies: {
-                    '$[]': [local.env.npm_package_buildNpmdoc, '*']
-                },
-                repository: {
-                    type: 'git',
-                    url: 'https://github.com/npmdoc/node-npmdoc-' +
-                        local.env.npm_package_buildNpmdoc + '.git'
-                }
-            }), 2);
-            local.objectSetOverride(packageJson, local.objectLiteralize({
-                keywords: ['documentation', local.env.npm_package_buildNpmdoc]
-            }), 2);
-            onParallel.counter += 1;
-            local.buildReadme({
-                dataFrom: '\n# package.json\n```json\n' +
-                    JSON.stringify(packageJson) + '\n```\n'
-            }, onParallel);
-            packageJson = JSON.parse(local.fs.readFileSync('package.json', 'utf8'));
-            // build apidoc.html
-            onParallel.counter += 1;
-            local.buildApidoc({
-                dir: local.env.npm_package_buildNpmdoc,
-                modulePathList: options.modulePathList
-            }, onParallel);
-            // build README.md
-            options = { modulePathList: options.modulePathList };
-            options.readme = local.apidocCreate({
-                dir: local.env.npm_package_buildNpmdoc,
-/* jslint-ignore-begin */
-header: '\
-# api documentation for \
-{{#if env.npm_package_homepage}} \
-[{{env.npm_package_name}} (v{{env.npm_package_version}})]({{env.npm_package_homepage}}) \
-{{#unless env.npm_package_homepage}} \
-{{env.npm_package_name}} (v{{env.npm_package_version}}) \
-{{/if env.npm_package_homepage}} \
-[![npm package](https://img.shields.io/npm/v/npmdoc-{{env.npm_package_name}}.svg?style=flat-square)](https://www.npmjs.org/package/npmdoc-{{env.npm_package_name}}) \
-[![travis-ci.org build-status](https://api.travis-ci.org/npmdoc/node-npmdoc-{{env.npm_package_name}}.svg)](https://travis-ci.org/npmdoc/node-npmdoc-{{env.npm_package_name}}) \
-\n\
-#### {{env.npm_package_description}} \
-\n\
-\n\
-[![NPM](https://nodei.co/npm/{{env.npm_package_name}}.png?downloads=true)](https://www.npmjs.com/package/{{env.npm_package_name}}) \
-\n\
-\n\
-[![apidoc](https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build/screenCapture.buildNpmdoc.browser._2Fhome_2Ftravis_2Fbuild_2Fnpmdoc_2Fnode-npmdoc-{{env.npm_package_name}}_2Ftmp_2Fbuild_2Fapidoc.html.png)](https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build/apidoc.html) \
-\n\
-\n\
-![npmPackageListing](https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build/screenCapture.npmPackageListing.svg) \
-\n\
-\n\
-![npmPackageDependencyTree](https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build/screenCapture.npmPackageDependencyTree.svg) \
-\n\
-\n\
-\n\
-\n\
-# package.json \
-\n\
-\n\
-```json \
-\n\
-\n\
-{{packageJson jsonStringify4 markdownCodeSafe}} \
-\n\
-``` \
-\n\
-',
-/* jslint-ignore-end */
-                modulePathList: options.modulePathList,
-                template: local.apidoc.templateApidocMd
-            });
-            local.fs.writeFileSync('README.md', options.readme);
-            // re-build package.json
-            packageJson.description = (/\w.*/).exec(options.readme)[0]
-                .replace((/ {2,}/g), ' ')
-                .trim();
-            local.fs.writeFileSync(
-                'package.json',
-                local.jsonStringifyOrdered(packageJson, null, 4) + '\n'
-            );
-            onParallel();
-        };
-
         local.buildReadme = function (options, onError) {
         /*
          * this function will build the readme in jslint-lite style
          */
+            if (local.env.npm_package_buildCustomOrg && !options.modeForce) {
+                onError();
+                return;
+            }
             local.objectSetDefault(options, {
                 customize: local.nop,
                 dataFrom: local.tryCatchReadFile('README.md', 'utf8')
@@ -2862,119 +2954,102 @@ header: '\
             return tmp;
         };
 
-        local.dbTableTravisRepoCreate = function (options, onError) {
+        local.dbTableTravisOrgCreate = function (options, onError) {
         /*
-         * this function will create a persistent dbTableTravisRepo
+         * this function will create a persistent dbTableTravisOrg
          */
+            options = local.objectSetDefault(options, { githubOrg: local.env.GITHUB_ORG });
             options = local.objectSetDefault(options, {
-                idIndexCreateList: [{ name: 'githubRepo' }],
+                name: 'TravisOrg.' + options.githubOrg,
+                sizeLimit: 1000,
                 sortDefault: [{
-                    fieldName: 'githubRepo'
+                    fieldName: '_id'
                 }, {
-                    fieldName: 'last_build_started_at'
-                }],
-                name: 'TravisRepo'
+                    fieldName: 'buildFinishedAt'
+                }, {
+                    fieldName: 'buildState'
+                }, {
+                    fieldName: 'active'
+                }]
             });
-            local.dbTableTravisRepo = local.db.dbTableCreateOne(options, onError);
-            return local.dbTableTravisRepo;
+            local.dbTableTravisOrg = local.db.dbTableCreateOne(options, onError);
+            return local.dbTableTravisOrg;
         };
 
-        local.dbTableTravisRepoCrudGetManyByQuery = function (options, onError) {
+        local.dbTableTravisOrgUpdate = function (options, onError) {
         /*
-         * this function will query dbTableTravisRepo
-         */
-            options = local.objectSetDefault(options, {
-                fieldList: ['githubRepo', 'last_build_started_at', 'last_build_status'],
-                sort: [{ fieldName: 'last_build_started_at' }]
-            });
-            return local.dbTableTravisRepoCreate().crudGetManyByQuery(options, onError);
-        };
-
-        local.dbTableTravisRepoUpdate = function (options, onError) {
-        /*
-         * this function will update dbTableTravisRepo with active, public repos
+         * this function will update dbTableTravisOrg with active, public repos
          */
             var dbRowList, self;
-            options = local.objectSetDefault(options, { queryLimit: 100 });
+            options = local.objectSetDefault(options, { githubOrg: local.env.GITHUB_ORG });
             local.onNext(options, function (error, data) {
                 switch (options.modeNext) {
                 case 1:
-                    local.timeElapsedStart(options);
-                    self = local.dbTableTravisRepo =
-                        local.dbTableTravisRepoCreate(options, options.onNext);
+                    self = local.dbTableTravisOrg =
+                        local.dbTableTravisOrgCreate(options, options.onNext);
                     break;
                 case 2:
-                    self = local.dbTableTravisRepo = data;
-                    console.error('dbTableTravisRepoUpdate - updating ' +
-                        Math.min(options.queryLimit, self.crudCountAll()) +
-                        ' of ' + self.crudCountAll() + ' dbRows ...');
-                    local.ajax({
-                        headers: { Authorization: 'token ' + local.env.TRAVIS_ACCESS_TOKEN },
-                        url: 'https://api.travis-ci.org/hooks'
-                    }, options.onNext);
+                    self = local.dbTableTravisOrg = data;
+                    data = {
+                        headers: {
+                            'Travis-API-Version': '3',
+                            Authorization: 'token ' + local.env.TRAVIS_ACCESS_TOKEN
+                        },
+                        url: 'https://api.travis-ci.org/repos?limit=1'
+                    };
+                    console.error('fetching ' + data.url + ' ...');
+                    local.ajax(data, options.onNext);
                     break;
                 case 3:
-                    // validate no error occurred
-                    local.assert(!error, error);
-                    data = JSON.parse(data.responseText)
-                        .filter(function (dbRow) {
-                            return dbRow.active === true && dbRow.private === false;
-                        })
-                        .map(function (dbRow) {
-                            dbRow.githubRepo = dbRow.uid.replace(':', '/');
-                            dbRow.uid = null;
-                            dbRow.url = null;
-                            return dbRow;
-                        });
-                    self.crudUpdateManyById(data);
-                    dbRowList = local.dbTableTravisRepoCrudGetManyByQuery({
-                        limit: options.queryLimit
-                    });
+                    console.error('... fetched ' + data.url);
+                    data = JSON.parse(data.responseText);
+                    dbRowList = [];
                     local.onParallelList({
-                        list: dbRowList,
-                        rateLimit: options.rateLimit
-                    }, function (dbRow, onParallel) {
-                        dbRow = dbRow.element;
+                        list: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+                    }, function (options2, onParallel) {
                         onParallel.counter += 1;
-                        local.ajax({
-                            url: 'https://api.travis-ci.org/repos/' + dbRow.githubRepo
-                        }, function (error, data) {
+                        options2 = {
+                            headers: {
+                                'Travis-API-Version': '3',
+                                Authorization: 'token ' + local.env.TRAVIS_ACCESS_TOKEN
+                            },
+                            url: 'https://api.travis-ci.org/repos?' +
+                                'include=repository.current_build&' +
+                                'limit=100&' +
+                                'offset=' +
+                                    (data['@pagination'].count - options2.element * 100) + '&' +
+                                'sort_by=current_build%3Adesc'
+                        };
+                        console.error('fetching ' + options2.url + ' ...');
+                        local.ajax(options2, function (error, data) {
                             // validate no error occurred
                             local.assert(!error, error);
-                            data = JSON.parse(data.responseText);
-                            Object.keys(data).forEach(function (key) {
-                                if (data[key] !== null) {
-                                    dbRow[key] = data[key];
-                                }
-                            });
-                            // ignore extraneous data to save space
-                            dbRow.description = null;
-                            dbRow.last_build_duration = null;
-                            dbRow.last_build_finished_at = null;
-                            dbRow.last_build_id = null;
-                            dbRow.last_build_number = null;
-                            dbRow.last_build_result = null;
-                            dbRow.public_key = null;
-                            dbRow.slug = null;
-                            dbRow.uid = null;
-                            dbRow.url = null;
-                            if (onParallel.counter === 1 || ((onParallel.ii + 1) % 10 === 0 &&
-                                    local.timeElapsedPoll(options).timeElapsed >= 5000)) {
-                                local.timeElapsedStart(options, Date.now());
-                                console.error('dbTableTravisRepoUpdate - updated ' +
-                                    (onParallel.ii + 1) + ' dbRows');
-                            }
+                            dbRowList = dbRowList
+                                .concat(JSON.parse(data.responseText).repositories);
+                            console.error('... fetched ' + options2.url);
                             onParallel();
                         });
                     }, options.onNext);
                     break;
                 case 4:
-                    self.crudSetManyById(dbRowList);
-                    self.save(options.onNext);
+                    self.crudSetManyById(dbRowList
+                        .filter(function (dbRow) {
+                            return dbRow.private === false && dbRow.slug.indexOf(
+                                options.githubOrg + '/node-' + options.githubOrg + '-'
+                            ) === 0;
+                        })
+                        .map(function (dbRow) {
+                            data = dbRow.current_build || {};
+                            return {
+                                _id: dbRow.name,
+                                active: dbRow.active,
+                                buildFinishedAt: data.finished_at,
+                                buildState: data.state
+                            };
+                        }), options.onNext);
                     break;
                 default:
-                    local.onErrorDefault(error);
-                    local.setTimeoutOnError(onError, null, self);
+                    local.setTimeoutOnError(onError, error, self);
                 }
             });
             options.modeNext = 0;
@@ -4071,7 +4146,7 @@ header: '\
             ii = -1;
             onParallel.ii = -1;
             onParallel.remaining = options.list.length;
-            options.rateLimit = Number(options.rateLimit) || 4;
+            options.rateLimit = Number(options.rateLimit) || 6;
             options.rateLimit = Math.max(options.rateLimit, 3);
             options.retryLimit = Number(options.retryLimit) || 2;
             onEach2();
@@ -4416,7 +4491,7 @@ vendor\\)\\(\\b\\|[_s]\\)\
                 {}
             );
             // coverage-hack
-            local.nop(local.env.npm_package_readmeParse && (function () {
+            local.nop(!local.env.npm_package_buildCustomOrg && (function () {
                 local.fs.readFileSync('README.md', 'utf8').replace(
                     (/```\w*?(\n[\W\s]*?example\.js[\n\"][\S\s]+?)\n```/),
                     function (match0, match1, ii, text) {
@@ -4983,8 +5058,8 @@ instruction\n\
                 options.githubRepo.join('/')
             );
             template = template.replace(
-                (/kaizhu256_2Fnode-jslint-lite/g),
-                options.githubRepo.join('_2F')
+                (/kaizhu256%252Fnode-jslint-lite/g),
+                options.githubRepo.join('%252F')
             );
             template = template.replace(
                 (/node-jslint-lite/g),
@@ -5019,7 +5094,9 @@ instruction\n\
             onError2 = function (error) {
                 // restore mock[0] from mock[2]
                 mockList.reverse().forEach(function (mock) {
-                    local.objectSetOverride(mock[0], mock[2]);
+                    Object.keys(mock[2]).forEach(function (key) {
+                        mock[0][key] = mock[2][key];
+                    });
                 });
                 onError(error);
             };
@@ -5030,10 +5107,17 @@ instruction\n\
                     mock[2] = {};
                     // backup mock[0] into mock[2]
                     Object.keys(mock[1]).forEach(function (key) {
+                        if (typeof process === 'object' &&
+                                process.env === mock[0] &&
+                                mock[0][key] === undefined) {
+                            mock[0][key] = '';
+                        }
                         mock[2][key] = mock[0][key];
                     });
                     // override mock[0] with mock[1]
-                    local.objectSetOverride(mock[0], mock[1]);
+                    Object.keys(mock[1]).forEach(function (key) {
+                        mock[0][key] = mock[1][key];
+                    });
                 });
                 // run onTestCase
                 onTestCase(onError2);
@@ -5330,6 +5414,12 @@ instruction\n\
                 // mock proces.exit
                 exit = process.exit;
                 process.exit = local.nop;
+                /* istanbul ignore next */
+                if (local.env.npm_package_buildCustomOrg &&
+                        local.fs.existsSync(local.env.npm_package_buildCustomOrg)) {
+                    local.exportsCustomOrg =
+                        require(process.cwd() + '/' + local.env.npm_package_buildCustomOrg);
+                }
                 break;
             }
             // init modeTestCase
@@ -5376,7 +5466,8 @@ instruction\n\
             // shallow-copy testPlatform.testCaseList to prevent side-effects
             // from in-place sort from testReportMerge
             local.onParallelList({
-                list: testPlatform.testCaseList.slice()
+                list: testPlatform.testCaseList.slice(),
+                rateLimit: Infinity
             }, function (testCase, onParallel) {
                 var onError, timerTimeout;
                 onError = function (error) {
@@ -5711,9 +5802,9 @@ instruction\n\
             npm_package_nameAlias: (local.env.npm_package_name || '').replace((/\W/g), '_')
         });
         local.objectSetDefault(local.env, {
-            npm_package_description: 'example module',
-            npm_package_name: 'example',
-            npm_package_nameAlias: 'example',
+            npm_package_description: 'the greatest app in the world!',
+            npm_package_name: 'my-app',
+            npm_package_nameAlias: 'my_app',
             npm_package_version: '0.0.1'
         });
         local.errorDefault = new Error('default error');
@@ -5723,23 +5814,6 @@ instruction\n\
         local.istanbulInstrumentInPackage = local.istanbul.instrumentInPackage || local.echo;
         local.istanbulInstrumentSync = local.istanbul.instrumentSync || local.echo;
         local.jslintAndPrint = local.jslint.jslintAndPrint || local.echo;
-        local.packageJsonNpmdocDefault = {
-            "buildNpmdoc": "mysql",
-            "devDependencies": {
-                "electron-lite": "kaizhu256/node-electron-lite#alpha",
-                "utility2": "kaizhu256/node-utility2#alpha"
-            },
-            "homepage": "https://github.com/npmdoc/node-npmdoc-mysql",
-            "name": "npmdoc-mysql",
-            "nameOriginal": "npmdoc-mysql",
-            "repository": {
-                "type": "git",
-                "url": "https://github.com/npmdoc/node-npmdoc-mysql.git"
-            },
-            "scripts": {
-                "build-ci": "utility2 shReadmeTest build_ci.sh"
-            }
-        };
         local.regexpEmailValidate = new RegExp(
             '^[a-zA-Z0-9.!#$%&\'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}' +
                 '[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$'
@@ -5976,15 +6050,22 @@ instruction\n\
         case 'browserTest':
             local.browserTest({}, local.exit);
             return;
-        case 'dbTableTravisRepoCrudGetManyByQuery':
-            local.dbTableTravisRepoCreate({}, function () {
-                console.log(JSON.stringify(local.dbTableTravisRepoCrudGetManyByQuery(
-                    JSON.parse(process.argv[3] || '{}')
-                ), null, 4));
+        case 'dbTableTravisOrgCrudGetManyByQuery':
+            local.dbTableTravisOrgCreate(JSON.parse(process.argv[3]), function (error, data) {
+                // validate no error occurred
+                local.assert(!error, error);
+                console.log(data.crudGetManyByQuery(JSON.parse(process.argv[3]))
+                    .map(function (element) {
+                        return element._id;
+                    })
+                    .join('\n'));
             });
             return;
-        case 'dbTableTravisRepoUpdate':
-            local.dbTableTravisRepoUpdate(JSON.parse(process.argv[3] || '{}'), local.exit);
+        case 'dbTableTravisOrgUpdate':
+            local.dbTableTravisOrgUpdate(
+                JSON.parse(process.argv[3]),
+                local.onErrorThrow
+            );
             return;
         case 'onParallelListSpawn':
             local.onParallelList({
@@ -6004,7 +6085,7 @@ instruction\n\
                         ' of ' + options.list.length + '] exitCode ' + exitCode);
                     onParallel(exitCode && new Error(exitCode), options);
                 });
-            }, local.exit);
+            }, local.onErrorThrow);
             return;
         }
         // init lib

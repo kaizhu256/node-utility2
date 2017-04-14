@@ -466,7 +466,7 @@
                     return match0;
                 });
             if (options.url.indexOf('https://api.github.com/repos/') !== 0) {
-                options.onError2(new Error('invalid url ' + options.url));
+                onError(new Error('invalid url ' + options.url));
                 return;
             }
             if (options.method !== 'GET') {
