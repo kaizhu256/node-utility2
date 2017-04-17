@@ -534,19 +534,22 @@
                                 '@pagination': { count: 0 },
                                 repositories: [{
                                     _id: '',
+                                    name: 'node-aa-bb-cc',
                                     private: false,
-                                    slug: 'aa/node-aa-'
+                                    slug: 'aa/node-aa-bb-cc'
                                 }]
                             })
                         }, options);
                     },
                     db: {
-                        crudSetManyById: function (options, onError) {
-                            onError(null, options);
-                        },
+                        crudRemoveManyByQuery: local.nop,
+                        crudSetManyById: local.nop,
                         dbTableCreateOne: function (options, onError) {
                             onError(null, local.db, options);
                             return local.db;
+                        },
+                        save: function (onError) {
+                            onError();
                         }
                     },
                     setTimeoutOnError: function (onError, error) {
@@ -1471,6 +1474,19 @@
                 '\n' +
                 '{{/undefined aa}}\n');
             onError();
+        };
+
+        local.testCase_throwError_default = function (options, onError) {
+        /*
+         * this function will test throwError's default handling-behavior
+         */
+            local.tryCatchOnError(function () {
+                local.throwError();
+            }, function (error) {
+                // validate error occurred
+                local.assert(error, error);
+                onError(null, options);
+            });
         };
 
         local.testCase_testRunDefault_nop = function (options, onError) {

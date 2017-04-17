@@ -27,15 +27,13 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 #### apidoc
 - [https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/apidoc.html](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/apidoc.html)
 
-[![apidoc](https://kaizhu256.github.io/node-utility2/build/screenCapture.buildApidoc.browser.%252Fhome%252Ftravis%252Fbuild%252Fkaizhu256%252Fnode-utility2%252Ftmp%252Fbuild%252Fapidoc.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/apidoc.html)
+[![apidoc](https://kaizhu256.github.io/node-utility2/build/screenCapture.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/apidoc.html)
 
 #### todo
-- npm publish 2017.4.15
 - find electron-lite binary path in shell-function shInit
 - filter emails in package.json
 - add browser-side testing of npmtest
 - add \$NAME argument to shBuildApp
-- fix package-listing bug on https://travis-ci.org/npmdoc/node-npmdoc-object-assign
 - rename sub-package db-lite -> nedb-lite
 - rename sub-package istanbul-lite -> istanbul-classic
 - rename sub-package jslint-lite -> jslint-classic
@@ -46,7 +44,13 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 - analytics
 - none
 
-#### changes for v2017.4.15
+#### changelog for v2017.4.16
+- npm publish 2017.4.16
+- npmdoc - remove markdown renderer
+- npmdoc - bug-workaround for npm-package material-design-icons - limit npmPackageListing size maximum of 4096 items
+- add shell-function shBrowserTestList
+- add 'shuffle' param in function function dbTable.prototype.crudGetManyByQuery
+- Merge pull request #6 from kaizhu256/alpha
 - fix bug where function apidocCreate cannot document module-functions
 - fix bug parsing package.json in shell-function shInit
 - strip email from npmdoc documentation - https://github.com/npmdoc/node-npmdoc-hpp/issues/1
@@ -113,7 +117,7 @@ shExampleSh
 
 
 # quickstart automated example
-![screenCapture](https://kaizhu256.github.io/node-utility2/build/screenCapture.testExampleJs.browser.%252Fhome%252Ftravis%252Fbuild%252Fkaizhu256%252Fnode-utility2%252Ftmp%252Fbuild%252Ftest-report.html.png)
+![screenCapture](https://kaizhu256.github.io/node-utility2/build/screenCapture.testExampleJs.browser.%252Ftmp%252Fbuild%252Ftest-report.html.png)
 
 #### to run this example, follow the instruction in the script below
 - [example.js](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/example.js)
@@ -631,7 +635,7 @@ utility2-comment -->\n\
 ```
 
 #### output from utility2
-![screenCapture](https://kaizhu256.github.io/screenCapture.testExampleJs.browser.%252Fhome%252Ftravis%252Fbuild%252Fkaizhu256%252Fnode-utility2%252Ftmp%252Fbuild%252Ftest-report.html.png)
+![screenCapture](https://kaizhu256.github.io/screenCapture.testExampleJs.browser.%252Ftmp%252Fbuild%252Ftest-report.html.png)
 
 #### output from istanbul
 ![screenCapture](https://kaizhu256.github.io/node-utility2/build/screenCapture.testExampleJs.browser.%252Ftmp%252Fapp%252Ftmp%252Fbuild%252Fcoverage.html%252Fapp%252Fexample.js.html.png)
@@ -697,11 +701,11 @@ utility2-comment -->\n\
         "build-ci": "./lib.utility2.sh shReadmeTest build_ci.sh",
         "env": "env",
         "heroku-postbuild": "./lib.utility2.sh shDeployHeroku",
-        "postinstall": "if [ -f npm_scripts.sh ]; then ./npm_scripts.sh postinstall; fi",
-        "start": "(set -e; export PORT=${PORT:-8080}; if [ -f assets.app.js ]; then node assets.app.js; exit; fi; export npm_config_mode_auto_restart=1; ./lib.utility2.sh shRun shIstanbulCover test.js)",
-        "test": "(set -e; export PORT=$(./lib.utility2.sh shServerPortRandom); export PORT_REPL=$(./lib.utility2.sh shServerPortRandom); export npm_config_mode_auto_restart=1; ./lib.utility2.sh test test.js)"
+        "postinstall": "[ ! -f npm_scripts.sh ] || ./npm_scripts.sh postinstall",
+        "start": "set -e; export PORT=${PORT:-8080}; if [ -f assets.app.js ]; then node assets.app.js; else npm_config_mode_auto_restart=1 ./lib.utility2.sh shRun shIstanbulCover test.js; fi",
+        "test": "PORT=$(./lib.utility2.sh shServerPortRandom) PORT_REPL=$(./lib.utility2.sh shServerPortRandom) npm_config_mode_auto_restart=1 ./lib.utility2.sh test test.js"
     },
-    "version": "2017.4.15"
+    "version": "2017.4.16"
 }
 ```
 
@@ -881,11 +885,10 @@ shBuildCiPost() {(set -e
 shBuildCiPre() {(set -e
     shReadmeTest example.js
     # save screenCapture
-    (
-    export MODE_BUILD=testExampleJs
-    shBrowserTest screenCapture /tmp/app/tmp/build/coverage.html/app/example.js.html
-    shBrowserTest screenCapture tmp/build/test-report.html
-    )
+    MODE_BUILD=testExampleJs shBrowserTestList "
+/tmp/app/tmp/build/coverage.html/app/example.js.html
+tmp/build/test-report.html
+" screenCapture
     shReadmeTest example.sh
     shNpmTestPublished
 )}

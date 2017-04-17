@@ -70,14 +70,30 @@ shBaseInstall() {
 shBrowserTest() {(set -e
 # this function will spawn an electron process to test the given $URL,
 # and merge the test-report into the existing test-report
-    export modeBrowserTest="$1"
-    export url="$2"
-    export fileScreenCapture="$3"
+    export url="$1"
+    export modeBrowserTest="$2"
     shInit
     export MODE_BUILD="${MODE_BUILD:-browserTest}"
     shBuildPrint "electron.${modeBrowserTest} - $url"
     # run browser-test
     "$npm_config_dir_utility2/lib.utility2.js" browserTest
+    if [ "$modeBrowserTest" = test ]
+    then
+        # create test-report artifacts
+        shTestReportCreate
+    fi
+)}
+
+shBrowserTestList() {(set -e
+# this function will spawn an electron process to test the given $URL,
+# and merge the test-report into the existing test-report
+    LIST="$1"
+    export modeBrowserTest="$2"
+    shInit
+    export MODE_BUILD="${MODE_BUILD:-browserTest}"
+    shBuildPrint "electron.${modeBrowserTest} - $LIST"
+    # run browser-test
+    "$npm_config_dir_utility2/lib.utility2.js" browserTestList "$LIST"
     if [ "$modeBrowserTest" = test ]
     then
         # create test-report artifacts
@@ -184,6 +200,14 @@ shBuildCi() {(set -e
         "[npm publishAfterCommit]")
             return
             ;;
+        "[npm publishAfterCommitAfterBuild]")
+            if [ ! "$GITHUB_TOKEN" ]
+            then
+                shBuildPrint "missing GITHUB_TOKEN"
+                return 1
+            fi
+            shBuildCiInternal
+            ;;
         *)
             shBuildCiInternal
             ;;
@@ -193,9 +217,9 @@ shBuildCi() {(set -e
         shBuildCiInternal
         ;;
     cron)
-        if [ -f .cron.sh ]
+        if [ -f .task.sh ]
         then
-            /bin/sh .cron.sh
+            /bin/sh .task.sh
         fi
         ;;
     docker.base)
@@ -267,6 +291,8 @@ shBuildCi() {(set -e
         shNpmTestPublishedList "$npm_package_nameAliasPublish"
         sleep 5
         shNpmDeprecateAliasList "$npm_package_nameAliasDeprecate"
+        # security - cleanup .npmrc
+        rm "$HOME/.npmrc"
         case "$CI_COMMIT_MESSAGE_META" in
         "[npm publishAfterCommit]")
             shGitSquashPop HEAD~1 "[ci skip] npm published"
@@ -276,8 +302,6 @@ shBuildCi() {(set -e
             shGithubPush "https://github.com/$GITHUB_REPO" HEAD:beta
             ;;
         esac
-        # security - cleanup .npmrc
-        rm "$HOME/.npmrc"
         ;;
     esac
 )}
@@ -298,54 +322,30 @@ shBuildCiInternal() {(set -e
     (
     shPasswordEnvUnset
     export MODE_BUILD=npmTest
+    shBuildPrint "$(du -ms node_modules | awk '{print $1}') megabytes installed"
     if [ "$npm_package_buildCustomOrg" ]
     then
         export npm_config_timeout_default=60000
+        rm -fr "node_modules/$npm_package_buildCustomOrg"
+        shNpmInstallWithPeerDependencies "$npm_package_buildCustomOrg"
         rm -f test.js
         shBuildApp
-        rm -fr "$npm_package_buildCustomOrg" "node_modules/$npm_package_buildCustomOrg"
-        shNpmInstallWithPeerDependencies "$npm_package_buildCustomOrg"
-        if [ -d "node_modules/$npm_package_buildCustomOrg" ]
-        then
-            cp -a "node_modules/$npm_package_buildCustomOrg" .
-        fi
         case "$GITHUB_ORG" in
         npmdoc)
             (eval npm test --mode-coverage="") || true
             ;;
         npmtest)
-            (eval npm test --mode-coverage=all) || true
+            (eval npm test --mode-coverage=all \
+                --mode-coverage-dir="$(shModuleDirname $npm_package_buildCustomOrg)") || true
             ;;
         esac
-        rm -fr "$npm_package_buildCustomOrg"
     else
         shRunScreenCaptureTxt npm test --mode-coverage
     fi
     )
-
-
-
-    # save screenCapture
-    if [ -f "$npm_config_dir_build/test-report.html" ]
-    then
-        MODE_BUILD=npmTest shBrowserTest screenCapture \
-            "$npm_config_dir_build/test-report.html" &
-    fi
-    if [ -d "$npm_config_dir_build/coverage.html" ]
-    then
-        for FILE in $(find "$npm_config_dir_build/coverage.html" -name *.js.html)
-        do
-            MODE_BUILD=npmTest shBrowserTest screenCapture "$FILE" &
-            break;
-        done
-    fi
     # create apidoc
     shBuildApidoc
-    # save screenCapture
-    if [ -f "$npm_config_dir_build/apidoc.html" ]
-    then
-        MODE_BUILD=buildApidoc shBrowserTest screenCapture "$npm_config_dir_build/apidoc.html" &
-    fi
+    # create npmPackageListing
     if [ "$npm_package_buildCustomOrg" ]
     then
         shNpmPackageListingCreate "node_modules/$npm_package_buildCustomOrg"
@@ -355,15 +355,50 @@ shBuildCiInternal() {(set -e
         shNpmPackageDependencyTreeCreate "$npm_package_name"
     fi
     # create recent changelog of last 50 commits
-    MODE_BUILD=gitLog shRunScreenCaptureTxt git log -50 --pretty="%ai\u000a%B"
-    shBuildPrint "waiting for background task to finish ..."
-    shSleep 15
-    shBuildPrint "... waited for background task to finish"
+    MODE_BUILD=gitLog shRunScreenCaptureTxt git log -50 --pretty="%ai\\u000a%B"
+
+
+
+    # save screenCapture
+    DIR_COVERAGE="$npm_config_dir_build/coverage.html"
+    if [ "$npm_package_buildCustomOrg" ]
+    then
+        DIR_COVERAGE="$npm_config_dir_build/coverage.html/node-$GITHUB_ORG-$npm_package_buildCustomOrg\
+/node_modules/$npm_package_buildCustomOrg"
+    fi
+    if [ -d "$DIR_COVERAGE" ]
+    then
+        for FILE in $(find "$DIR_COVERAGE" -name *.js.html)
+        do
+            cp "$FILE" "$npm_config_dir_build/coverage.lib.html"
+            break;
+        done
+    fi
+    # bug-workaround - travis-ci cannot run node in certain subprocesses
+    LIST=""
+    for FILE in apidoc.html coverage.lib.html test-report.html
+    do
+        if [ -f "$npm_config_dir_build/$FILE" ]
+        then
+            LIST="$LIST $npm_config_dir_build/$FILE"
+        fi
+    done
+    MODE_BUILD=buildCi shBrowserTestList "$LIST" screenCapture
+    if [ "$npm_package_buildCustomOrg" ]
+    then
+        case "$GITHUB_ORG" in
+        npmtest)
+            shReadmeBuildLinkVerify
+            ;;
+        esac
+        rm -fr "$npm_package_buildCustomOrg"
+    fi
 
 
 
     if [ ! "$GITHUB_TOKEN" ]
     then
+        shBuildPrint "missing GITHUB_TOKEN"
         return
     fi
     # run post-build
@@ -377,10 +412,7 @@ shBuildCiInternal() {(set -e
         [ "$CI_BRANCH" = beta ] ||
         [ "$CI_BRANCH" = master ]
     then
-        (
-        export COMMIT_LIMIT=20
-        shBuildGithubUpload
-        )
+        COMMIT_LIMIT=20 shBuildGithubUpload
     fi
 )}
 
@@ -410,6 +442,8 @@ shBuildGithubUpload() {(set -e
     cp -a "$npm_config_dir_build" .
     rm -fr "build..$CI_BRANCH..$CI_HOST"
     cp -a "$npm_config_dir_build" "build..$CI_BRANCH..$CI_HOST"
+    # .nojekyll
+    touch .nojekyll
     # git add .
     git add .
     # git commit
@@ -580,15 +614,7 @@ shGithubRepoBaseCreate $GITHUB_REPO"
 
 
 
-    shBuildPrint "syncing travis ..."
-    sleep 5
-    curl -H "Authorization: token $TRAVIS_ACCESS_TOKEN" -#Lf -X POST \
-        "https://api.travis-ci.org/users/sync" || true
-    shBuildPrint "... synced travis"
-
-
-
-    # bug-workaround - travis-ci cannot run shBuildApp in onParallelListSpawn
+    # bug-workaround - travis-ci cannot run node in certain subprocesses
     shBuildPrint "creating $GITHUB_ORG-repos $LIST ..."
     sleep 5
     LIST2=""
@@ -629,6 +655,10 @@ curl -#Lf \
     -d '{\"setting.value\":true}' \
     \"https://api.travis-ci.org/repo/\$TRAVIS_REPO_ID/setting/auto_cancel_pushes\"; \
 sleep 1; \
+if [ ! -d /tmp/$GITHUB_REPO ]; \
+then \
+    shGithubRepoBaseCreate $GITHUB_REPO; \
+fi; \
 cd /tmp/$GITHUB_REPO; \
 touch README.md; \
 curl -Lfs -O https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/.gitignore; \
@@ -698,10 +728,9 @@ shDeployGithub() {(set -e
         return 1
     fi
     # screenCapture deployed app
-    shBrowserTest screenCapture "$TEST_URL" &
+    shBrowserTest "$TEST_URL" screenCapture &
     # test deployed app
-    MODE_BUILD="${MODE_BUILD}Test" shBrowserTest test \
-        "$TEST_URL?modeTest=1&timeExit={{timeExit}}"
+    MODE_BUILD="${MODE_BUILD}Test" shBrowserTest "$TEST_URL?modeTest=1&timeExit={{timeExit}}"
 )}
 
 shDeployHeroku() {(set -e
@@ -730,10 +759,9 @@ shDeployHeroku() {(set -e
         return 1
     fi
     # screenCapture deployed app
-    shBrowserTest screenCapture "$TEST_URL" &
+    shBrowserTest "$TEST_URL" screenCapture &
     # test deployed app
-    MODE_BUILD="${MODE_BUILD}Test" shBrowserTest test \
-        "$TEST_URL?modeTest=1&timeExit={{timeExit}}"
+    MODE_BUILD="${MODE_BUILD}Test" shBrowserTest "$TEST_URL?modeTest=1&timeExit={{timeExit}}"
 )}
 
 shDockerBuildCleanup() {(set -e
@@ -1346,7 +1374,7 @@ shGitInfo() {(set -e
 
 shGitLsTree() {(set -e
 # this function will list all files committed in HEAD
-    printf "$(git ls-tree --name-only -r HEAD)" | awk '{
+    printf "$(git ls-tree --name-only -r HEAD | head -n 4096)" | awk '{
     ii += 1
     file = $0
     cmd = "git log -1 --format=\"%ai\" -- " file
@@ -1431,9 +1459,11 @@ shGithubCrudRepoListCreate() {(set -e
         NAME="$(printf "$GITHUB_REPO" | sed -e s/.*\\///)"
         LIST2="$LIST2
 if (! curl -ILfs -o /dev/null https://github.com/$GITHUB_REPO); \
-then printf 'creating github-repo $GITHUB_REPO\n' 1>&2; \
-curl -#Lf -H 'Authorization: token $GITHUB_TOKEN' -X POST -d '{\"name\":\"$NAME\"}' \
--o /dev/null $URL; fi"
+then \
+    printf 'creating github-repo $GITHUB_REPO\n' 1>&2; \
+    curl -#Lf -H 'Authorization: token $GITHUB_TOKEN' -X POST -d '{\"name\":\"$NAME\"}' \
+        -o /dev/null $URL; \
+fi"
     done
     shOnParallelListSpawn "$LIST2"
 )}
@@ -2037,10 +2067,7 @@ local.moduleDirname = function (module, modulePathList) {
     ].some(function (modulePathList) {
         modulePathList.some(function (modulePath) {
             try {
-                tmp = require('path').resolve(
-                    process.cwd(),
-                    modulePath + '/' + module
-                );
+                tmp = require('path').resolve(process.cwd(), modulePath + '/' + module);
                 result = require('fs').statSync(tmp).isDirectory() && tmp;
                 return result;
             } catch (ignore) {
@@ -2188,7 +2215,7 @@ shNpmNameListFetch() {(set -e
     URL="$1"
     shBuildPrint "fetching npm $NAME-list from $URL"
     shBuildPrint "fetching list of $GITHUB_ORG-repos from $URL ..."
-    curl -Lfs -o "/tmp/$GITHUB_ORG.list.html" "$URL"
+    curl -L -o "/tmp/$GITHUB_ORG.list.html" "$URL"
     node -e "
 // <script>
 /*jslint
@@ -2251,6 +2278,7 @@ shNpmPackageDependencyTreeCreate() {(set -e
     cd /tmp/app
     shInit
     export MODE_BUILD=npmPackageDependencyTree
+    shBuildPrint "creating npmDependencyTree ..."
     shRunScreenCaptureTxtPost() {(set -e
         du -ms /tmp/app | awk '{print $1 " megabytes installed\n\nnode_modules"}' > \
             "$npm_config_file_tmp"
@@ -2263,6 +2291,7 @@ shNpmPackageDependencyTreeCreate() {(set -e
         rm -fr /tmp/node_modules
         mv /tmp/node_modules.00 /tmp/node_modules
     fi
+    shBuildPrint "... created npmDependencyTree"
 )}
 
 shNpmPackageListingCreate() {(set -e
@@ -2279,7 +2308,7 @@ tmp
 " > .gitignore
         git init
         git add .
-        git commit -m 'initial commit'
+        git commit -m 'initial commit' | head -n 4096
     fi
     shInit
     export MODE_BUILD=npmPackageListing
@@ -2639,7 +2668,7 @@ console.log(require('fs').readFileSync('$FILE', 'utf8').trimLeft());
     (
     shBuildPrint "screenCapture http://127.0.0.1:$PORT"
     shSleep 15
-    shBrowserTest screenCapture "http://127.0.0.1:$PORT"
+    shBrowserTest "http://127.0.0.1:$PORT" screenCapture
     ) &
     case "$FILE" in
     example.js)
@@ -2777,7 +2806,7 @@ local.result = (local.fs
     // remove ansi escape-code
     .replace((/\u001b.*?m/g), '')
     // format unicode
-    .replace((/\\\\u[0-9a-f]{4}/g), function (match0) {
+    .replace((/\\u[0-9a-f]{4}/g), function (match0) {
         return String.fromCharCode('0x' + match0.slice(-4));
     })
     .trimRight() + '\n')
@@ -2943,6 +2972,13 @@ shTravisCryptoAesEncryptYml() {(set -e
             .travis.yml
     fi
     rm -f .travis.ymln
+)}
+
+shTravisSync() {(set -e
+# this function will sync travis-ci with the given $TRAVIS_ACCESS_TOKEN
+# this is an expensive operation that will use up your github rate-limit quota
+    curl -H "Authorization: token $TRAVIS_ACCESS_TOKEN" -#Lf -X POST \
+        "https://api.travis-ci.org/users/sync"
 )}
 
 shTravisTaskPush() {(set -e

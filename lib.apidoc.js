@@ -97,10 +97,7 @@
             ].some(function (modulePathList) {
                 modulePathList.some(function (modulePath) {
                     try {
-                        tmp = require('path').resolve(
-                            process.cwd(),
-                            modulePath + '/' + module
-                        );
+                        tmp = require('path').resolve(process.cwd(), modulePath + '/' + module);
                         result = require('fs').statSync(tmp).isDirectory() && tmp;
                         return result;
                     } catch (ignore) {
@@ -372,77 +369,6 @@ local.templateApidocHtml = '\
 </div>\n\
 </div>\n\
 ';
-
-local.templateApidocMd = '\
-{{#if header}} \
-{{header}} \
-{{#unless header}} \
-# api documentation for \
-{{#if env.npm_package_homepage}} \
-[{{env.npm_package_name}} (v{{env.npm_package_version}})]({{env.npm_package_homepage}}) \
-{{#unless env.npm_package_homepage}} \
-{{env.npm_package_name}} (v{{env.npm_package_version}}) \
-{{/if env.npm_package_homepage}} \
-\n\
-## {{env.npm_package_description}} \
-\n\
-{{/if header}} \
-\n\
-\n\
-\n\
-# <a name="apidoc.tableOfContents"></a>[table of contents](#apidoc.tableOfContents) \
-{{#each moduleList}} \
-\n\
-\n\
-#### [module {{name}}](#{{id}}) \
-    {{#each elementList}} \
-\n\
-1. \
-{{#if source}} \
-[{{name}} {{signature}}](#{{id}}) \
-{{#unless source}} \
-{{name}} \
-{{/if source}} \
-{{/each elementList}} \
-{{/each moduleList}} \
-{{#each moduleList}} \
-\n\
-\n\
-\n\
-\n\
-# <a name="{{id}}"></a>[module {{name}}](#{{id}}) \
-{{#each elementList}} \
-{{#if source}} \
-\n\
-\n\
-#### <a name="{{id}}"></a>[{{name}} {{signature}}](#{{id}}) \
-\n\
-- description and source-code \
-\n\
-```javascript \
-\n\
-{{source markdownCodeSafe}} \
-\n\
-``` \
-\n\
-- example usage \
-\n\
-```shell \
-\n\
-{{example markdownCodeSafe}} \
-\n\
-``` \
-{{/if source}} \
-{{/each elementList}} \
-{{/each moduleList}} \
-\n\
-\n\
-\n\
-\n\
-# misc \
-\n\
-- this document was created with [utility2](https://github.com/kaizhu256/node-utility2) \
-\n';
 /* jslint-ignore-end */
 
 
@@ -453,12 +379,15 @@ local.templateApidocMd = '\
         /*
          * this function will create the apidoc from options.dir
          */
-            var elementCreate, module, moduleMain, readExample, tmp, trimLeft;
+            var elementCreate, module, moduleMain, readExample, tmp, toString, trimLeft;
             elementCreate = function (module, prefix, key) {
             /*
              * this function will create the apidoc-element in the given module
              */
                 var element;
+                if (options.modeNoApidoc) {
+                    return element;
+                }
                 element = {};
                 element.moduleName = prefix.split('.');
                 // handle case where module is a function
@@ -476,19 +405,11 @@ local.templateApidocMd = '\
                     return element;
                 }
                 // init source
-                element.source = 'n/a';
-                // bug-workaround - catch and ignore error
-                // "Function.prototype.toString is not generic"
-                try {
-                    element.source = trimLeft(module[key].toString());
-                } catch (ignore) {
-                }
+                element.source = trimLeft(toString(module[key])) || 'n/a';
                 if (element.source.length > 4096) {
                     element.source = element.source.slice(0, 4096).trimRight() + ' ...';
                 }
-                element.source = (options.template === local.templateApidocHtml
-                    ? local.stringHtmlSafe(element.source)
-                    : element.source)
+                element.source = local.stringHtmlSafe(element.source)
                     .replace((/\([\S\s]*?\)/), function (match0) {
                         // init signature
                         element.signature = match0
@@ -507,15 +428,13 @@ local.templateApidocMd = '\
                     example.replace(
                         new RegExp('((?:\n.*?){8}\\.)(' + key + ')(\\((?:.*?\n){8})'),
                         function (match0, match1, match2, match3) {
-                            element.example = '...' + trimLeft(
-                                options.template === local.templateApidocHtml
-                                    ?  local.stringHtmlSafe(match1) +
-                                        '<span class="apidocCodeKeywordSpan">' +
-                                        local.stringHtmlSafe(match2) +
-                                        '</span>' +
-                                        local.stringHtmlSafe(match3)
-                                    : match0
-                            ).trimRight() + '\n...';
+                            // jslint-hack
+                            local.nop(match0);
+                            element.example = '...' + trimLeft(local.stringHtmlSafe(match1) +
+                                '<span class="apidocCodeKeywordSpan">' +
+                                local.stringHtmlSafe(match2) +
+                                '</span>' +
+                                local.stringHtmlSafe(match3)).trimRight() + '\n...';
                         }
                     );
                     return element.example;
@@ -531,6 +450,16 @@ local.templateApidocMd = '\
                     return ('\n\n\n\n\n\n\n\n' +
                         local.fs.readFileSync(local.path.resolve(options.dir, file), 'utf8') +
                         '\n\n\n\n\n\n\n\n').replace((/\r\n*/g), '\n');
+                } catch (errorCaught) {
+                    return '';
+                }
+            };
+            toString = function (value) {
+            /*
+             * this function will try to return the string form of the value
+             */
+                try {
+                    return String(value);
                 } catch (errorCaught) {
                     return '';
                 }
@@ -567,28 +496,23 @@ local.templateApidocMd = '\
                 // strip email from npmdoc documentation
                 // https://github.com/npmdoc/node-npmdoc-hpp/issues/1
                 if (tmp) {
-                    delete tmp.email;
+                    if (tmp.email) {
+                        delete tmp.email;
+                    }
                     if (Array.isArray(tmp)) {
                         tmp.forEach(function (element) {
-                            if (element) {
+                            if (element && element.email) {
                                 delete element.email;
                             }
                         });
                     }
                 }
-                if (key[0] === '_') {
+                if (key[0] === '_' || key === 'readme') {
                     delete options.packageJson[key];
                 } else if (typeof tmp === 'string') {
                     options.env['npm_package_' + key] = tmp;
                 }
             });
-            if (options.modeRenderFast) {
-                // render apidoc
-                options.result = local.templateRender(options.template, options)
-                    .trim()
-                    .replace((/ +$/gm), '') + '\n';
-                return options.result;
-            }
             local.objectSetDefault(options, {
                 blacklistDict: { global: global },
                 circularList: [global],
@@ -609,7 +533,11 @@ local.templateApidocMd = '\
                             (/^(?:readme)\b/i).test(file) ||
                             (/^(?:index|lib|test)\b.*\.js$/i).test(file);
                     })
-            ).map(readExample));
+            ).map(readExample))
+                .filter(function (element) {
+                    return element.trim();
+                })
+                .slice(0, 128);
             // init moduleMain
             try {
                 console.error('apidocCreate - requiring ' + options.dir + ' ...');
@@ -617,20 +545,21 @@ local.templateApidocMd = '\
                 moduleMain = options.moduleDict[options.env.npm_package_name] ||
                     require(options.dir);
                 console.error('apidocCreate - ... required ' + options.dir);
-            } catch (errorCaught) {
-                console.error(errorCaught);
+            } catch (ignore) {
             }
             tmp = {};
             // handle case where module is a function
             if (typeof moduleMain === 'function') {
                 (function () {
-                    var toString;
-                    toString = moduleMain.toString();
+                    var text;
+                    text = toString(moduleMain);
                     tmp = function () {
                         return;
                     };
+                    // coverage-hack
+                    tmp();
                     tmp.toString = function () {
-                        return toString;
+                        return text;
                     };
                 }());
             }
@@ -669,12 +598,12 @@ local.templateApidocMd = '\
             // init moduleExtraDict
             local.fs.readdirSync(options.dir).sort().forEach(function (file) {
                 try {
-                    local.fs.readdirSync(options.dir + '/' + file).sort().forEach(function (
-                        file2
-                    ) {
-                        file2 = file + '/' + file2;
-                        options.libFileList.push(file2);
-                    });
+                    local.fs.readdirSync(options.dir + '/' + file)
+                        .sort()
+                        .forEach(function (file2) {
+                            file2 = file + '/' + file2;
+                            options.libFileList.push(file2);
+                        });
                 } catch (errorCaught) {
                     options.libFileList.push(file);
                 }
@@ -688,15 +617,18 @@ local.templateApidocMd = '\
                         .replace('lib.', '')
                         .replace((/\.[^.]*?$/), '')
                         .replace((/\W/g), '_');
+                    if (!tmp.name) {
+                        return;
+                    }
                     [
                         tmp.name,
-                        tmp.name[0].toUpperCase() + tmp.name.slice(1)
+                        tmp.name.slice(0, 1).toUpperCase() + tmp.name.slice(1)
                     ].some(function (name) {
                         tmp.skip = local.path.extname(file) !== '.js' ||
                             file.indexOf(options.packageJson.main) >= 0 ||
                             new RegExp('(?:\\b|_)(?:archive|artifact|asset|' +
                                 'bin|bower_components|build|' +
-                                'cli|coverage' +
+                                'cli|coverage|' +
                                 'doc|dist|' +
                                 'example|external|' +
                                 'fixture|' +
@@ -720,11 +652,13 @@ local.templateApidocMd = '\
                     module[tmp.name] = tmp.module;
                     // update exampleList
                     options.exampleList.push(readExample(file));
-                } catch (ignore) {
+                    console.error('apidocCreate - ' + options.exampleList.length +
+                        '. added libFile ' + tmp.name);
+                } catch (errorCaught) {
+                    console.error(errorCaught);
                 }
-                return options.exampleList.length <= 20;
+                return options.exampleList.length >= 256;
             });
-            options.exampleList = options.exampleList.slice(0, 20);
             local.apidocModuleDictAdd(options, options.moduleExtraDict);
             Object.keys(options.moduleDict).forEach(function (key) {
                 if (key.indexOf(options.env.npm_package_name + '.') !== 0) {
@@ -740,8 +674,11 @@ local.templateApidocMd = '\
                     module = options.moduleDict[prefix];
                     // handle case where module is a function
                     if (typeof module === 'function') {
-                        module[prefix.split('.').slice(-1)[0]] =
-                            module[prefix.split('.').slice(-1)[0]] || module;
+                        try {
+                            module[prefix.split('.').slice(-1)[0]] =
+                                module[prefix.split('.').slice(-1)[0]] || module;
+                        } catch (ignore) {
+                        }
                     }
                     return {
                         elementList: Object.keys(module)
@@ -784,11 +721,11 @@ local.templateApidocMd = '\
                         return;
                     }
                     Object.keys(moduleDict[prefix]).forEach(function (key) {
-                        if (!(/^\w[\w\-.]*?$/).test(key)) {
-                            return;
-                        }
-                        // bug-workaround - buggy electron accessors
+                        // bug-workaround - buggy electron getter / setter
                         try {
+                            if (!(/^\w[\w\-.]*?$/).test(key) || !moduleDict[prefix][key]) {
+                                return;
+                            }
                             tmp = element === 'prototype'
                                 ? {
                                     module: moduleDict[prefix][key].prototype,
@@ -809,12 +746,14 @@ local.templateApidocMd = '\
                                 tmp.module,
                                 tmp.module.prototype
                             ].some(function (dict) {
-                                return Object.keys(dict || {}).some(function (key) {
-                                    try {
-                                        return typeof dict[key] === 'function';
-                                    } catch (ignore) {
-                                    }
-                                });
+                                return typeof dict === 'function' ||
+                                    Object.keys(dict || {}).some(function (key) {
+                                        // bug-workaround - buggy electron getter / setter
+                                        try {
+                                            return typeof dict[key] === 'function';
+                                        } catch (ignore) {
+                                        }
+                                    });
                             });
                             if (!isModule) {
                                 return;
@@ -845,10 +784,7 @@ local.templateApidocMd = '\
         // jslint files
         process.stdout.write(local.apidocCreate({
             dir: process.argv[2],
-            modulePathList: module.paths,
-            template: process.argv[3] === '--markdown'
-                ? local.templateApidocMd
-                : local.templateApidocHtml
+            modulePathList: module.paths
         }));
         break;
     }

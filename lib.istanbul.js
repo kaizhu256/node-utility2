@@ -2467,8 +2467,10 @@ local.templateCoverageBadgeSvg =
                 local._moduleExtensionsJs = local.module._extensions['.js'];
                 local.module._extensions['.js'] = function (module, file) {
                     if (typeof file === 'string' &&
-                            file.indexOf(process.cwd()) === 0 &&
-                            file.indexOf(process.cwd() + '/node_modules/') !== 0) {
+                            (file.indexOf(process.env.npm_config_mode_coverage_dir) === 0 || (
+                                file.indexOf(process.cwd()) === 0 &&
+                                file.indexOf(process.cwd() + '/node_modules/') !== 0
+                            ))) {
                         module._compile(local.instrumentInPackage(
                             local._fs.readFileSync(file, 'utf8'),
                             file

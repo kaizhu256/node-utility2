@@ -156,6 +156,22 @@
                 : element, replacer, space);
         };
 
+        local.listShuffle = function (list) {
+        /*
+         * https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle
+         * this function will inplace shuffle the list, via fisher-yates algorithm
+         */
+            var ii, random, swap;
+            for (ii = list.length - 1; ii > 0; ii -= 1) {
+                // coerce to finite integer
+                random = (Math.random() * (ii + 1)) | 0;
+                swap = list[ii];
+                list[ii] = list[random];
+                list[random] = swap;
+            }
+            return list;
+        };
+
         local.nop = function () {
         /*
          * this function will do nothing
@@ -288,7 +304,7 @@
 
         local.setTimeoutOnError = function (onError, error, data) {
         /*
-         * this function will asynchronously call onError
+         * this function will async-call onError
          */
             if (typeof onError === 'function') {
                 setTimeout(function () {
@@ -642,7 +658,13 @@
             }
         };
 
-        local._DbTable.prototype._crudGetManyByQuery = function (query, sort, skip, limit) {
+        local._DbTable.prototype._crudGetManyByQuery = function (
+            query,
+            sort,
+            skip,
+            limit,
+            shuffle
+        ) {
         /*
          * this function will get the dbRow's in the dbTable,
          * with the given query, sort, skip, and limit
@@ -680,8 +702,12 @@
                     });
                 }
             });
-            // skip and limit
-            result = result.slice(skip || 0, (skip || 0) + (limit || Infinity));
+            // skip
+            result = result.slice(skip || 0);
+            // shuffle
+            ((shuffle && local.listShuffle) || local.nop)(result);
+            // limit
+            result = result.slice(0, limit || Infinity);
             return result;
         };
 
@@ -864,7 +890,8 @@
                     options.query,
                     options.sort || this.sortDefault,
                     options.skip,
-                    options.limit
+                    options.limit,
+                    options.shuffle
                 ),
                 options.fieldList
             ));
