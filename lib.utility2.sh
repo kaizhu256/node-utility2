@@ -2062,12 +2062,11 @@ local.moduleDirname = function (module, modulePathList) {
         return require('path').resolve(process.cwd(), module || '');
     }
     // search modulePathList
-    [
-        ['node_modules'],
-        modulePathList,
-        require('module').globalPaths
-    ].some(function (modulePathList) {
-        modulePathList.some(function (modulePath) {
+    ['node_modules']
+        .concat(modulePathList)
+        .concat(require('module').globalPaths)
+        .concat([process.env.HOME + '/node_modules', '/usr/local/lib/node_modules'])
+        .some(function (modulePath) {
             try {
                 tmp = require('path').resolve(process.cwd(), modulePath + '/' + module);
                 result = require('fs').statSync(tmp).isDirectory() && tmp;
@@ -2075,8 +2074,6 @@ local.moduleDirname = function (module, modulePathList) {
             } catch (ignore) {
             }
         });
-        return result;
-    });
     return result || '';
 };
 console.log(local.moduleDirname('$MODULE', module.paths));
@@ -2086,38 +2083,14 @@ console.log(local.moduleDirname('$MODULE', module.paths));
 
 shModuleDirnameUtility2() {
 # this function will init $npm_config_dir_utility2
-    local DIR SOURCE || return $?
-    if [ "$npm_config_dir_utility2" ]
+    if [ ! "$npm_config_dir_utility2" ]
     then
-        return
-    fi
-    # init $npm_config_dir_utility2
-    if [ -f lib.utility2.js ]
-    then
-        export npm_config_dir_utility2="$PWD" || return $?
-    else
-        export npm_config_dir_utility2="$(shModuleDirname utility2)" || return $?
-    fi
-    if [ ! -d "$npm_config_dir_utility2" ]
-    then
-        export npm_config_dir_utility2="$(dirname "$(readlink -f "$0" 2>/dev/null)")" ||
-            return $?
-    fi
-    if [ ! -d "$npm_config_dir_utility2" ]
-    then
-        # http://stackoverflow.com/questions/59895
-        # /can-a-bash-script-tell-what-directory-its-stored-in
-        SOURCE="$0" || return $?
-        # resolve $SOURCE until the file is no longer a symlink
-        while [ -h "$SOURCE" ]; do
-          DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )" || return $?
-          SOURCE="$(readlink "$SOURCE")" || return $?
-          # if $SOURCE was a relative symlink,
-          # we need to resolve it relative to the path where the symlink file was located
-          [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE" || true
-        done
-        DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
-        export npm_config_dir_utility2="$DIR" || return $?
+        # init $npm_config_dir_utility2
+        [ -f lib.utility2.js ] && export npm_config_dir_utility2="$PWD"
+        export npm_config_dir_utility2="${npm_config_dir_utility2:-$(shModuleDirname utility2)}"
+        export npm_config_dir_utility2="${npm_config_dir_utility2:-$HOME/node_modules/utility2}"
+        export PATH="$PATH:$npm_config_dir_utility2"
+        alias utility2="$npm_config_dir_utility2/lib.utility2.sh"
     fi
 }
 

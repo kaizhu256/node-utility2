@@ -86,12 +86,11 @@
                 return require('path').resolve(process.cwd(), module || '');
             }
             // search modulePathList
-            [
-                ['node_modules'],
-                modulePathList,
-                require('module').globalPaths
-            ].some(function (modulePathList) {
-                modulePathList.some(function (modulePath) {
+            ['node_modules']
+                .concat(modulePathList)
+                .concat(require('module').globalPaths)
+                .concat([process.env.HOME + '/node_modules', '/usr/local/lib/node_modules'])
+                .some(function (modulePath) {
                     try {
                         tmp = require('path').resolve(process.cwd(), modulePath + '/' + module);
                         result = require('fs').statSync(tmp).isDirectory() && tmp;
@@ -99,8 +98,6 @@
                     } catch (ignore) {
                     }
                 });
-                return result;
-            });
             return result || '';
         };
 
