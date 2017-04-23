@@ -12174,10 +12174,11 @@ return Utf8ArrayToStr(bff);
             options.packageJson = JSON.parse(local.fs.readFileSync('package.json', 'utf8'));
             switch (local.env.GITHUB_ORG) {
             case 'npmdoc':
-                // update package.json
-                local.objectSetOverride(options.packageJson, local.objectLiteralize({
-                    keywords: ['documentation', local.env.npm_package_buildCustomOrg]
-                }), 2);
+                local.objectSetOverride(options, {
+                    packageJson: {
+                        keywords: ['documentation', local.env.npm_package_buildCustomOrg]
+                    }
+                }, 2);
                 // build apidoc.html
                 onParallel.counter += 1;
                 local.buildApidoc({
@@ -12187,10 +12188,11 @@ return Utf8ArrayToStr(bff);
                 }, onParallel);
                 break;
             case 'npmtest':
-                // update package.json
-                local.objectSetOverride(options.packageJson, local.objectLiteralize({
-                    keywords: ['coverage', 'test', local.env.npm_package_buildCustomOrg]
-                }), 2);
+                local.objectSetOverride(options, {
+                    packageJson: {
+                        keywords: ['coverage', 'test', local.env.npm_package_buildCustomOrg]
+                    }
+                }, 2);
                 break;
             }
             // build README.md

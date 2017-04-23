@@ -1703,8 +1703,6 @@ console.log('data:image/' +
 
 shInit() {
 # this function will init the env
-    # node-check
-    which node || return
     # init $npm_package_*
     if [ -f package.json ]
     then
