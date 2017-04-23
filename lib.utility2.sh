@@ -197,13 +197,31 @@ shBuildCi() {(set -e
     case "$CI_BRANCH" in
     alpha)
         case "$CI_COMMIT_MESSAGE_META" in
+        "[npm publish]")
+            # init .npmrc
+            printf "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > "$HOME/.npmrc"
+            (eval shNpmPublishAlias) || true
+            # security - cleanup .npmrc
+            rm "$HOME/.npmrc"
+            case "$CI_COMMIT_MESSAGE_META" in
+            "[npm publishAfterCommit]")
+                shGitSquashPop HEAD~1 "[ci skip] npm published"
+                shGithubPush -f "https://github.com/$GITHUB_REPO" HEAD:alpha
+                return
+                ;;
+            *)
+                sleep 5
+                shBuildCiInternal
+                ;;
+            esac
+            ;;
         "[npm publishAfterCommit]")
             return
             ;;
         "[npm publishAfterCommitAfterBuild]")
             if [ ! "$GITHUB_TOKEN" ]
             then
-                shBuildPrint "missing GITHUB_TOKEN"
+                shBuildPrint "no GITHUB_TOKEN"
                 return 1
             fi
             shBuildCiInternal
@@ -233,16 +251,6 @@ shBuildCi() {(set -e
     master)
         shBuildCiInternal
         ;;
-    publish)
-        export CI_BRANCH=alpha
-        # init .npmrc
-        printf "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > "$HOME/.npmrc"
-        (eval shNpmPublishAlias) || true
-        # security - cleanup .npmrc
-        rm "$HOME/.npmrc"
-        sleep 5
-        shBuildCiInternal
-        ;;
     task)
         case "$CI_COMMIT_MESSAGE_META" in
         \[\$\ *\])
@@ -262,10 +270,20 @@ shBuildCi() {(set -e
     alpha)
         case "$CI_COMMIT_MESSAGE_META" in
         "[npm publish]")
-            shGithubPush "https://github.com/$GITHUB_REPO" HEAD:publish
+            # init .npmrc
+            printf "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > "$HOME/.npmrc"
+            shNpmPublishAliasList . "$npm_package_nameAliasPublish"
+            sleep 5
+            shNpmTestPublishedList "$npm_package_nameAliasPublish"
+            sleep 5
+            shNpmDeprecateAliasList "$npm_package_nameAliasDeprecate"
+            # security - cleanup .npmrc
+            rm "$HOME/.npmrc"
+            shGithubPush "https://github.com/$GITHUB_REPO" HEAD:beta
             ;;
         "[npm publishAfterCommitAfterBuild]")
-            shFilePackageJsonVersionIncrement
+            # use date-semver
+            shFilePackageJsonVersionIncrement "$(shDateIso | sed -e "s/-0*/./g" -e "s/T.*//")"
             printf "$(shDateIso)\n" > touch.txt
             git add .
             git commit -am "[npm publishAfterCommit]"
@@ -283,26 +301,6 @@ shBuildCi() {(set -e
         git tag "$npm_package_version" || true
         shGithubPush "https://github.com/$GITHUB_REPO" "$npm_package_version" || true
         ;;
-    publish)
-        # init .npmrc
-        printf "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > "$HOME/.npmrc"
-        shNpmPublishAliasList . "$npm_package_nameAliasPublish"
-        sleep 5
-        shNpmTestPublishedList "$npm_package_nameAliasPublish"
-        sleep 5
-        shNpmDeprecateAliasList "$npm_package_nameAliasDeprecate"
-        # security - cleanup .npmrc
-        rm "$HOME/.npmrc"
-        case "$CI_COMMIT_MESSAGE_META" in
-        "[npm publishAfterCommit]")
-            shGitSquashPop HEAD~1 "[ci skip] npm published"
-            shGithubPush -f "https://github.com/$GITHUB_REPO" HEAD:alpha
-            ;;
-        *)
-            shGithubPush "https://github.com/$GITHUB_REPO" HEAD:beta
-            ;;
-        esac
-        ;;
     esac
 )}
 
@@ -310,9 +308,9 @@ shBuildCiInternal() {(set -e
 # this function will run the internal build
     shInit
     # run pre-build
-    if (type shBuildCiPre > /dev/null 2>&1)
+    if (type shBuildCiBefore > /dev/null 2>&1)
     then
-        shBuildCiPre
+        shBuildCiBefore
     fi
     export npm_config_file_test_report_merge="$npm_config_dir_build/test-report.json"
 
@@ -326,8 +324,13 @@ shBuildCiInternal() {(set -e
     if [ "$npm_package_buildCustomOrg" ]
     then
         export npm_config_timeout_default=60000
-        rm -fr "node_modules/$npm_package_buildCustomOrg"
-        shNpmInstallWithPeerDependencies "$npm_package_buildCustomOrg"
+        rm -fr "node_modules/$npm_package_buildCustomOrg/.git"
+        (eval shNpmInstallWithPeerDependencies "$npm_package_buildCustomOrg") || true
+        if (! node -e "require('$npm_package_buildCustomOrg')")
+        then
+            shBuildPrint "fallback to $npm_package_buildCustomOrg tarball"
+            shNpmInstallTarball "$npm_package_buildCustomOrg"
+        fi
         rm -f test.js
         shBuildApp
         case "$GITHUB_ORG" in
@@ -360,15 +363,15 @@ shBuildCiInternal() {(set -e
 
 
     # save screenCapture
-    DIR_COVERAGE="$npm_config_dir_build/coverage.html"
+    DIR="$npm_config_dir_build/coverage.html"
     if [ "$npm_package_buildCustomOrg" ]
     then
-        DIR_COVERAGE="$npm_config_dir_build/coverage.html/node-$GITHUB_ORG-$npm_package_buildCustomOrg\
+        DIR="$npm_config_dir_build/coverage.html/node-$GITHUB_ORG-$npm_package_buildCustomOrg\
 /node_modules/$npm_package_buildCustomOrg"
     fi
-    if [ -d "$DIR_COVERAGE" ]
+    if [ -d "$DIR" ]
     then
-        for FILE in $(find "$DIR_COVERAGE" -name *.js.html)
+        for FILE in $(find "$DIR" -name *.js.html)
         do
             cp "$FILE" "$npm_config_dir_build/coverage.lib.html"
             break;
@@ -388,6 +391,7 @@ shBuildCiInternal() {(set -e
     then
         case "$GITHUB_ORG" in
         npmtest)
+            shBuildApp
             shReadmeBuildLinkVerify
             ;;
         esac
@@ -398,13 +402,13 @@ shBuildCiInternal() {(set -e
 
     if [ ! "$GITHUB_TOKEN" ]
     then
-        shBuildPrint "missing GITHUB_TOKEN"
+        shBuildPrint "no GITHUB_TOKEN"
         return
     fi
     # run post-build
-    if (type shBuildCiPost > /dev/null 2>&1)
+    if (type shBuildCiAfter > /dev/null 2>&1)
     then
-        shBuildCiPost
+        shBuildCiAfter
     fi
     # upload build-artifacts to github, and if number of commits > $COMMIT_LIMIT,
     # then squash older commits
@@ -537,6 +541,20 @@ shCryptoAesWithGithubOrg() {(set -e
     "$@"
 )}
 
+shCustomOrgNameNormalize() {(set -e
+# this function will normalize the customOrg name $LIST
+    LIST="$1"
+    for NAME in $LIST
+    do
+        NAME="$(shNpmNameNormalize $NAME)"
+        if [ "$NAME" ]
+        then
+            LIST2="$LIST2 $GITHUB_ORG/node-$GITHUB_ORG-$NAME"
+        fi
+    done
+    printf "$LIST2\n"
+)}
+
 shCustomOrgRepoListCreate() {(set -e
 # https://docs.travis-ci.com/api
 # this function will create and push the customOrg-repo $GITHUB_ORG/node-$GITHUB_ORG-$LIST[ii]
@@ -547,8 +565,8 @@ shCustomOrgRepoListCreate() {(set -e
 
 
     shBuildPrint "filtering invalid-names from $LIST ..."
-    LIST="$(printf "$LIST" | tr [:upper:] [:lower:])"
-    LIST="$(printf "$LIST" | sed -e "s/$GITHUB_ORG\/node-$GITHUB_ORG-//g")"
+    LIST="$(printf "$LIST\n" | tr [:upper:] [:lower:])"
+    LIST="$(printf "$LIST\n" | sed -e "s/$GITHUB_ORG\/node-$GITHUB_ORG-//g")"
     LIST2=""
     for NAME in $LIST
     do
@@ -559,6 +577,7 @@ shCustomOrgRepoListCreate() {(set -e
         fi
     done
     LIST="$LIST2"
+    LIST2=""
     shBuildPrint "... filtered invalid-names from $LIST"
 
 
@@ -573,9 +592,13 @@ shCustomOrgRepoListCreate() {(set -e
 if (curl -Lfs https://api.travis-ci.org/repos/$GITHUB_REPO | \
     grep ',\"active\":' | \
     grep -qv ',\"active\":true'); \
-then printf \"$GITHUB_REPO\n\"; fi"
+then \
+    printf \"$GITHUB_REPO\n\"; \
+fi
+"
         done
-        LIST="$(shOnParallelListSpawn "$LIST2")"
+        LIST="$(shOnParallelListExec "$LIST2")"
+        LIST2=""
         shBuildPrint "... filtered non-existent or active travis-repos from $LIST"
     fi
 
@@ -609,7 +632,7 @@ then printf \"$GITHUB_REPO\n\"; fi"
         LIST2="$LIST2
 shGithubRepoBaseCreate $GITHUB_REPO"
     done
-    shOnParallelListSpawn "$LIST2"
+    shOnParallelListExec "$LIST2"
     shBuildPrint "... created github-repos $LIST"
 
 
@@ -638,7 +661,7 @@ curl -#Lf \
     -X PUT \
     -d '{\"hook\":{\"active\":true}}' \
     \"https://api.travis-ci.org/hooks/\$TRAVIS_REPO_ID\"; \
-sleep 1; \
+sleep 5; \
 curl -#Lf \
     -H \"Authorization: token $TRAVIS_ACCESS_TOKEN\" \
     -H \"Content-Type: application/json; charset=UTF-8\" \
@@ -665,7 +688,6 @@ curl -Lfs -O https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/.gi
 curl -Lfs -O https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/.travis.yml; \
 printf '{ \
     \"devDependencies\": { \
-        \"$NAME\": \"*\", \
         \"electron-lite\": \"kaizhu256/node-electron-lite#alpha\", \
         \"utility2\": \"kaizhu256/node-utility2#alpha\" \
     }, \
@@ -689,13 +711,24 @@ shGithubPush -f https://github.com/$GITHUB_REPO alpha; \
 shBuildPrint \"... created $GITHUB_ORG-repo $GITHUB_REPO\"; \
 )"
     done
-    shOnParallelListSpawn "$LIST2"
+    shOnParallelListExec "$LIST2"
     shBuildPrint "... created $GITHUB_ORG-repos $LIST"
 )}
 
 shDateIso() {(set -e
-# this function will print the current date in ISO format
-    date -u "+%Y-%m-%dT%H:%M:%SZ"
+# this function will print the current date in ISO format with the given $OFFSET in ms
+    OFFSET="$1"
+    node -e "console.log(new Date(Date.now() + Number($OFFSET)).toISOString())"
+)}
+
+shDbTableCustomOrgCrudGetManyByQuery() {(set -e
+# this function will query dbTableCustomOrg
+   utility2 dbTableCustomOrgCrudGetManyByQuery "$@"
+)}
+
+shDbTableCustomOrgUpdate() {(set -e
+# this function will update dbTableCustomOrg
+   utility2 dbTableCustomOrgUpdate "$@"
 )}
 
 shDebugArgv() {
@@ -1465,7 +1498,7 @@ then \
         -o /dev/null $URL; \
 fi"
     done
-    shOnParallelListSpawn "$LIST2"
+    shOnParallelListExec "$LIST2"
 )}
 
 shGithubPush() {(set -e
@@ -1532,7 +1565,7 @@ shGrep() {(set -e
     DIR="$1"
     REGEXP="$2"
     FILE_FILTER="\
-/\\.\\|.*\\(\\b\\|_\\)\\(\\.\\d\\|\
+/\\.\\|\\(\\b\\|_\\)\\(\\.\\d\\|\
 archive\\|artifact\\|\
 bower_component\\|build\\|\
 coverage\\|\
@@ -1547,7 +1580,7 @@ node_module\\|\
 rollup\\|\
 swp\\|\
 tmp\\|\
-vendor\\)\\(\\b\\|[_s]\\)\
+vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
 "
     find "$DIR" -type f | \
         grep -v "$FILE_FILTER" | \
@@ -1659,14 +1692,12 @@ shInit() {
         if [ "$TRAVIS" ]
         then
             export CI_BRANCH="${CI_BRANCH:-$TRAVIS_BRANCH}" || return $?
-            export CI_COMMIT_ID="$TRAVIS_COMMIT" || return $?
-            export CI_HOST=travis-ci.org || return $?
-        # init default env
-        else
-            export CI_BRANCH="${CI_BRANCH:-alpha}" || return $?
-            export CI_COMMIT_ID="$(git rev-parse --verify HEAD)" || return $?
-            export CI_HOST=127.0.0.1 || return $?
+            export CI_HOST="${CI_HOST:-travis-ci.org}" || return $?
         fi
+        # init default env
+        export CI_BRANCH="${CI_BRANCH:-alpha}" || return $?
+        export CI_COMMIT_ID="${CI_BRANCH:-(git rev-parse --verify HEAD)}" || return $?
+        export CI_HOST="${CI_HOST:-127.0.0.1}" || return $?
         # save $CI_BRANCH
         export CI_BRANCH_OLD="${CI_BRANCH_OLD:-$CI_BRANCH}" || return $?
         # init $CI_COMMIT_*
@@ -1829,6 +1860,20 @@ shInitNpmConfigDirUtility2() {
     fi
 }
 
+shInitUnset() {
+# this function will unset the env set by shInit
+    unset CI_BRANCH || return $?
+    unset CI_BRANCH_OLD || return $?
+    unset CI_COMMIT_ID || return $?
+    unset CI_COMMIT_INFO || return $?
+    unset CI_COMMIT_MESSAGE || return $?
+    unset CI_COMMIT_MESSAGE_META || return $?
+    unset CI_HOST || return $?
+    unset GITHUB_REPO || return $?
+    unset GITHUB_ORG || return $?
+    eval "$(env | sort | grep -oe "^npm_\w*" | sed -e "s/\(\w*\)/unset \1/")" || return $?
+}
+
 shIptablesDockerInit() {(set -e
 # https://github.com/docker/docker/issues/1871
 # this function will create an iptables DOCKER chain
@@ -1987,9 +2032,10 @@ shMain() {
         [ "$COMMAND" = -i ] ||
         [ "$COMMAND" = ajax ] ||
         [ "$COMMAND" = browserTest ] ||
-        [ "$COMMAND" = dbTableTravisOrgCrudGetManyByQuery ] ||
-        [ "$COMMAND" = dbTableTravisOrgUpdate ] ||
-        [ "$COMMAND" = onParallelListSpawn ]
+        [ "$COMMAND" = dbTableCustomOrgCrudGetManyByQuery ] ||
+        [ "$COMMAND" = dbTableCustomOrgUpdate ] ||
+        [ "$COMMAND" = testReportCreate ] ||
+        [ "$COMMAND" = onParallelListExec ]
     then
         shInitNpmConfigDirUtility2
         "$npm_config_dir_utility2/lib.utility2.js" "$COMMAND" "$@"
@@ -2055,10 +2101,6 @@ local.moduleDirname = function (module, modulePathList) {
     if (!module || module === '.' || module.indexOf('/') >= 0) {
         return require('path').resolve(process.cwd(), module || '');
     }
-    // search builtin
-    if (Object.keys(process.binding('natives')).indexOf(module) >= 0) {
-        return module;
-    }
     // search modulePathList
     [
         ['node_modules'],
@@ -2118,10 +2160,8 @@ shNpmDeprecateAlias() {(set -e
     fi
     export MODE_BUILD=npmDeprecate
     shBuildPrint "npm-deprecate $NAME"
-    # init /tmp/npmDeprecate
-    rm -fr /tmp/npmDeprecate
-    mkdir -p /tmp/npmDeprecate
-    cd /tmp/npmDeprecate
+    DIR=/tmp/npmDeprecate
+    rm -fr "$DIR" && mkdir -p "$DIR" && cd "$DIR"
     npm install "$NAME"
     cd "node_modules/$NAME"
     # update README.md
@@ -2168,8 +2208,16 @@ shNpmDeprecateAliasList() {(set -e
     done
 )}
 
+shNpmInstallTarball() {(set -e
+# this function will npm-install a tarball instead of the full module
+    NAME="$1"
+    mkdir -p "node_modules/$NAME"
+    curl -Lfs "$(npm view "$NAME" dist.tarball)" | \
+        tar --strip-components 1 -C "node_modules/$NAME" -xzf -
+)}
+
 shNpmInstallWithPeerDependencies() {(set -e
-# this function will run npm-install $@ with peer-dependencies auto-installed
+# this function will npm install $@ with peer-dependencies auto-installed
     shPasswordEnvUnset
     npm install "$@" | tee /tmp/npmInstallWithPeerDependencies
     eval "$(node -e "
@@ -2211,11 +2259,11 @@ console.log('true');
 )}
 
 shNpmNameListFetch() {(set -e
-# this function will fetch the npm $NAME-list from $URL
+# this function will fetch the npm-name-list from $URL
     URL="$1"
-    shBuildPrint "fetching npm $NAME-list from $URL"
+    shBuildPrint "fetching npm-name-list from $URL"
     shBuildPrint "fetching list of $GITHUB_ORG-repos from $URL ..."
-    curl -L -o "/tmp/$GITHUB_ORG.list.html" "$URL"
+    curl -#L -o "/tmp/$GITHUB_ORG.list.html" "$URL" || true
     node -e "
 // <script>
 /*jslint
@@ -2245,8 +2293,8 @@ local.fs.readFileSync(local.file, 'utf8').replace(local.rgx, function (match0, m
 });
 console.log(Object.keys(local.dict).join('\n'));
 // </script>
-    " "/tmp/$GITHUB_ORG.list.html"
-    shBuildPrint "... fetched npm $NAME-list from $URL"
+    " "/tmp/$GITHUB_ORG.list.html" || true
+    shBuildPrint "... fetched npm-name-list from $URL"
 )}
 
 shNpmNameNormalize() {(set -e
@@ -2272,20 +2320,18 @@ shNpmPackageDependencyTreeCreate() {(set -e
         mv /tmp/node_modules /tmp/node_modules.00
         export PATH="$PATH:/tmp/node_modules.00/.bin"
     fi
-    # init /tmp/app
-    rm -fr /tmp/app
-    mkdir -p /tmp/app
-    cd /tmp/app
+    DIR=/tmp/app
+    rm -fr "$DIR" && mkdir -p "$DIR" && cd "$DIR"
     shInit
     export MODE_BUILD=npmPackageDependencyTree
     shBuildPrint "creating npmDependencyTree ..."
     shRunScreenCaptureTxtPost() {(set -e
-        du -ms /tmp/app | awk '{print $1 " megabytes installed\n\nnode_modules"}' > \
+        du -ms "$DIR" | awk '{print $1 " megabytes installed\n\nnode_modules"}' > \
             "$npm_config_file_tmp"
         grep -e '^ *[│└├]' "$npm_config_dir_tmp/runScreenCapture.txt" >> "$npm_config_file_tmp"
         mv "$npm_config_file_tmp" "$npm_config_dir_tmp/runScreenCapture.txt"
     )}
-    shRunScreenCaptureTxt npm install "$1"
+    shRunScreenCaptureTxt npm install "$1" || true
     if [ -d /tmp/node_modules.00 ]
     then
         rm -fr /tmp/node_modules
@@ -2360,14 +2406,11 @@ shNpmPublishAlias() {(set -e
     shBuildPrint "npm-publish alias $NAME"
     cd "$DIR"
     shInit
-    # init /tmp/npmPublishAlias
-    rm -fr /tmp/npmPublishAlias
-    mkdir -p /tmp/npmPublishAlias
-    # clean-copy git $DIR to /tmp/npmPublishAlias
-    git ls-tree --name-only -r HEAD | \
-        xargs tar -czf - | \
-        tar -C /tmp/npmPublishAlias -xvzf -
-    cd /tmp/npmPublishAlias
+    DIR=/tmp/npmPublishAlias
+    rm -fr "$DIR" && mkdir -p "$DIR"
+    # clean-copy . to $DIR
+    git ls-tree --name-only -r HEAD | xargs tar -czf - | tar -C "$DIR" -xvzf -
+    cd "$DIR"
     node -e "
 // <script>
 /*jslint
@@ -2446,7 +2489,6 @@ shNpmTest() {(set -e
     # create test-report artifacts
     (eval shTestReportCreate) || EXIT_CODE=$?
     shBuildPrint "EXIT_CODE - $EXIT_CODE"
-    (eval shKillallElectron 2>/dev/null) || true
     return "$EXIT_CODE"
 )}
 
@@ -2460,10 +2502,8 @@ shNpmTestPublished() {(set -e
     fi
     export MODE_BUILD=npmTestPublished
     shBuildPrint "npm-testing published-package $npm_package_name"
-    # init /tmp/app
-    rm -fr /tmp/app
-    mkdir -p /tmp/app
-    cd /tmp/app
+    DIR=/tmp/app
+    rm -fr "$DIR" && mkdir -p "$DIR" && cd "$DIR"
     # npm-install package
     npm install "$npm_package_name"
     cd "node_modules/$npm_package_name"
@@ -2490,12 +2530,12 @@ shNpmTestPublishedList() {(set -e
     done
 )}
 
-shOnParallelListSpawn() {(set -e
+shOnParallelListExec() {(set -e
 # this function will async-run the newline-separated tasks in $LIST with the given $RATE_LIMIT
     LIST="$1"
     RATE_LIMIT="$2"
     shInitNpmConfigDirUtility2
-    "$npm_config_dir_utility2/lib.utility2.js" onParallelListSpawn "$LIST" "$RATE_LIMIT"
+    "$npm_config_dir_utility2/lib.utility2.js" onParallelListExec "$LIST" "$RATE_LIMIT"
 )}
 
 shPasswordEnvUnset() {
@@ -2605,14 +2645,13 @@ shReadmeTest() {(set -e
     shBuildPrint "testing $FILE"
     if [ "$FILE" = example.js ] || [ "$FILE" = example.sh ]
     then
-        # init /tmp/app
-        rm -fr /tmp/app
-        mkdir -p /tmp/app
+        DIR=/tmp/app
+        rm -fr "$DIR" && mkdir -p "$DIR"
         # cp script from README.md
         shFileTrimLeft "tmp/README.$FILE"
-        cp "tmp/README.$FILE" "/tmp/app/$FILE"
+        cp "tmp/README.$FILE" "$DIR/$FILE"
         cp "tmp/README.$FILE" "$npm_config_dir_build/$FILE"
-        cd /tmp/app
+        cd "$DIR"
         SCRIPT="$(node -e "
 // <script>
 /*jslint
@@ -2682,6 +2721,7 @@ console.log(require('fs').readFileSync('$FILE', 'utf8').trimLeft());
         /bin/sh "$FILE"
         ;;
     esac
+    (eval shKillallElectron 2>/dev/null) || true
 )}
 
 shReplClient() {(set -e
@@ -2752,7 +2792,8 @@ shRunScreenCaptureTxt() {(set -e
 # /how-to-convert-a-command-line-result-into-an-image-in-linux/
 # this function will run the command $@ and screenCapture the output
     EXIT_CODE=0
-    export MODE_BUILD_SCREEN_CAPTURE="screenCapture.${MODE_BUILD:-undefined}.svg"
+    MODE_BUILD_SCREEN_CAPTURE_SVG="screenCapture.${MODE_BUILD:-undefined}.svg"
+    touch "$npm_config_dir_build/$MODE_BUILD_SCREEN_CAPTURE_SVG"
     (
     printf "0" > "$npm_config_file_tmp"
     (eval shRun "$@" 2>&1)
@@ -2760,10 +2801,6 @@ shRunScreenCaptureTxt() {(set -e
     ) | tee "$npm_config_dir_tmp/runScreenCapture.txt"
     EXIT_CODE="$(cat "$npm_config_file_tmp")"
     shBuildPrint "EXIT_CODE - $EXIT_CODE"
-    if [ "$EXIT_CODE" != 0 ]
-    then
-        return "$EXIT_CODE"
-    fi
     # run shRunScreenCaptureTxtPost
     if (type shRunScreenCaptureTxtPost > /dev/null 2>&1)
     then
@@ -2825,10 +2862,11 @@ local.result = '<svg height=\"' + (local.yy + 20) +
     '<text fill=\"#7f7\" font-family=\"Courier New\" font-size=\"12\" ' +
     'xml:space=\"preserve\">\n' +
     local.result + '</text>\n</svg>\n';
-local.fs.writeFileSync('$npm_config_dir_build/$MODE_BUILD_SCREEN_CAPTURE', local.result);
+local.fs.writeFileSync('$npm_config_dir_build/$MODE_BUILD_SCREEN_CAPTURE_SVG', local.result);
 // </script>
     "
-    shBuildPrint "created file://$npm_config_dir_build/$MODE_BUILD_SCREEN_CAPTURE"
+    shBuildPrint "created file://$npm_config_dir_build/$MODE_BUILD_SCREEN_CAPTURE_SVG"
+    return "$EXIT_CODE"
 )}
 
 shServerPortRandom() {(set -e
@@ -2882,28 +2920,8 @@ shSshReverseTunnel() {
 
 shTestReportCreate() {(set -e
 # this function will create test-report artifacts
-    node -e "
-// <script>
-/*jslint
-    bitwise: true,
-    browser: true,
-    maxerr: 8,
-    maxlen: 96,
-    node: true,
-    nomen: true,
-    regexp: true,
-    stupid: true
-*/
-'use strict';
-var testReport;
-try {
-    testReport = require('$npm_config_dir_build/test-report.json');
-} catch (errorCaught) {
-    testReport = { testPlatformList: [] };
-}
-require('$npm_config_dir_utility2').testReportCreate(testReport);
-// </script>
-    "
+    shInit
+    "$npm_config_dir_utility2/lib.utility2.js" testReportCreate
 )}
 
 shTravisCryptoAesDecryptYml() {(set -e
@@ -2972,6 +2990,20 @@ shTravisCryptoAesEncryptYml() {(set -e
             .travis.yml
     fi
     rm -f .travis.ymln
+)}
+
+shTravisHookListGet() {(set -e
+# https://docs.travis-ci.com/api#repositories
+# this function will get the json-list of travis-repos with the search paramters $1
+# Parameter - Default - Description
+# ids - "" - list of repository ids to fetch, cannot be combined with other parameters
+# member - "" - filter by user that has access to it (github login)
+# owner_name - "" - filter by owner name (first segment of slug)
+# slug - "" - filter by slug
+# search - "" - filter by search term
+# active - false - if true, will only return repositories that are enabled
+    curl -H "Authorization: token $TRAVIS_ACCESS_TOKEN" -#Lf \
+        "https://api.travis-ci.org/hooks?$1"
 )}
 
 shTravisSync() {(set -e

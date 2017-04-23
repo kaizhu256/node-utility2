@@ -426,7 +426,7 @@
                 headers: {
                     // github oauth authentication
                     Authorization: 'token ' + process.env.GITHUB_TOKEN,
-                    // bug-workaround - github api requires user-agent header
+                    // bug-workaround - https://developer.github.com/v3/#user-agent-required
                     'User-Agent': 'undefined'
                 },
                 message: options.message,

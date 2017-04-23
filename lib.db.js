@@ -1286,7 +1286,7 @@
                 : value;
         };
 
-        local.dbRowListGetManyByOperator = function (dbRowList, fieldName, operator, bb) {
+        local.dbRowListGetManyByOperator = function (dbRowList, fieldName, operator, bb, not) {
         /*
          * this function will get the dbRow's in dbRowList with the given operator
          */
@@ -1393,7 +1393,7 @@
                 }
                 // optimization - for-loop
                 for (jj = fieldValue.length - 1; jj >= 0; jj -= 1) {
-                    if (test(fieldValue[jj], bb, typeof fieldValue[jj], typeof2)) {
+                    if (not ^ test(fieldValue[jj], bb, typeof fieldValue[jj], typeof2)) {
                         result.push(dbRowList[ii]);
                         break;
                     }
@@ -1402,19 +1402,29 @@
             return result;
         };
 
-        local.dbRowListGetManyByQuery = function (dbRowList, query, fieldName) {
+        local.dbRowListGetManyByQuery = function (dbRowList, query, fieldName, not) {
         /*
          * this function will get the dbRow's in dbRowList with the given query
          */
             var bb, dbRowDict, result;
+            // optimization - convert to boolean
+            not = !!not;
             result = dbRowList;
             if (!(query && typeof query === 'object')) {
-                result = local.dbRowListGetManyByOperator(result, fieldName, '$eq', query);
+                result = local.dbRowListGetManyByOperator(result, fieldName, '$eq', query, not);
                 return result;
             }
             Object.keys(query).some(function (key) {
                 bb = query[key];
-                if (key === '$or' && Array.isArray(bb)) {
+                switch (key) {
+                case '$not':
+                    key = fieldName;
+                    not = !not;
+                    break;
+                case '$or':
+                    if (!Array.isArray(bb)) {
+                        break;
+                    }
                     dbRowDict = {};
                     bb.forEach(function (query) {
                         // recurse
@@ -1428,11 +1438,11 @@
                     return !result.length;
                 }
                 if (key[0] === '$') {
-                    result = local.dbRowListGetManyByOperator(result, fieldName, key, bb);
+                    result = local.dbRowListGetManyByOperator(result, fieldName, key, bb, not);
                     return !result.length;
                 }
                 // recurse
-                result = local.dbRowListGetManyByQuery(result, bb, key);
+                result = local.dbRowListGetManyByQuery(result, bb, key, not);
                 return !result.length;
             });
             return result;

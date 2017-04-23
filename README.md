@@ -30,8 +30,8 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 [![apidoc](https://kaizhu256.github.io/node-utility2/build/screenCapture.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/apidoc.html)
 
 #### todo
+- fix https://travis-ci.org/npmtest/node-npmtest-npmrc
 - find electron-lite binary path in shell-function shInit
-- filter emails in package.json
 - add browser-side testing of npmtest
 - add \$NAME argument to shBuildApp
 - rename sub-package db-lite -> nedb-lite
@@ -44,16 +44,15 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 - analytics
 - none
 
-#### changelog for v2017.4.16
-- npm publish 2017.4.16
-- npmdoc - remove markdown renderer
-- npmdoc - bug-workaround for npm-package material-design-icons - limit npmPackageListing size maximum of 4096 items
-- add shell-function shBrowserTestList
-- add 'shuffle' param in function function dbTable.prototype.crudGetManyByQuery
-- Merge pull request #6 from kaizhu256/alpha
-- fix bug where function apidocCreate cannot document module-functions
-- fix bug parsing package.json in shell-function shInit
-- strip email from npmdoc documentation - https://github.com/npmdoc/node-npmdoc-hpp/issues/1
+#### changelog for v2017.4.22
+- npm publish 2017.4.22
+- add \$not query-operator in function dbTable.prototype.crudGetManyByQuery
+- add function requireInSandbox to try and build customOrg in sandbox-like env
+- fallback to tarball-install if npm-install fails when building customOrg
+- merge git-branch public) -> alpha)
+- remove redundant shBuildCiInternal process after publishing customOrg
+- rename name dbTableTravisOrg -> dbTableCustomOrg
+- use breadth-first-search for files to add to libFileList-param in function apidocCreate
 - none
 
 #### this package requires
@@ -600,14 +599,15 @@ utility2-comment -->\n\
         local.assetsDict['/assets.example.js'] =
             local.assetsDict['/assets.example.js'] ||
             local.fs.readFileSync(__filename, 'utf8');
+        // bug-workaround - long $npm_package_buildCustomOrg
+        /* jslint-ignore-begin */
         local.assetsDict['/assets.utility2.rollup.js'] =
             local.assetsDict['/assets.utility2.rollup.js'] ||
             local.fs.readFileSync(
-                // buildCustomOrg-hack
-                local.utility2.__dirname +
-                    '/lib.utility2.js',
+                local.utility2.__dirname + '/lib.utility2.js',
                 'utf8'
             ).replace((/^#!/), '//');
+        /* jslint-ignore-end */
         local.assetsDict['/favicon.ico'] = local.assetsDict['/favicon.ico'] || '';
         // if $npm_config_timeout_exit exists,
         // then exit this process after $npm_config_timeout_exit ms
@@ -705,7 +705,7 @@ utility2-comment -->\n\
         "start": "set -e; export PORT=${PORT:-8080}; if [ -f assets.app.js ]; then node assets.app.js; else npm_config_mode_auto_restart=1 ./lib.utility2.sh shRun shIstanbulCover test.js; fi",
         "test": "PORT=$(./lib.utility2.sh shServerPortRandom) PORT_REPL=$(./lib.utility2.sh shServerPortRandom) npm_config_mode_auto_restart=1 ./lib.utility2.sh test test.js"
     },
-    "version": "2017.4.16"
+    "version": "2017.4.22"
 }
 ```
 
@@ -839,7 +839,7 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
 
 # this shell script will run the build for this package
 
-shBuildCiPost() {(set -e
+shBuildCiAfter() {(set -e
     #// coverage-hack
     shDeployGithub
     shDeployHeroku
@@ -882,7 +882,7 @@ shBuildCiPost() {(set -e
     fi
 )}
 
-shBuildCiPre() {(set -e
+shBuildCiBefore() {(set -e
     shReadmeTest example.js
     # save screenCapture
     MODE_BUILD=testExampleJs shBrowserTestList "

@@ -404,14 +404,15 @@ local.assetsDict['/assets.index.template.html'].replace((/\n/g), '\\n\\\n') +
         local.assetsDict[\'/assets.example.js\'] =\n\
             local.assetsDict[\'/assets.example.js\'] ||\n\
             local.fs.readFileSync(__filename, \'utf8\');\n\
+        // bug-workaround - long $npm_package_buildCustomOrg\n\
+        /* jslint-ignore-begin */\n\
         local.assetsDict[\'/assets.jslint.rollup.js\'] =\n\
             local.assetsDict[\'/assets.jslint.rollup.js\'] ||\n\
             local.fs.readFileSync(\n\
-                // buildCustomOrg-hack\n\
-                local.jslint.__dirname +\n\
-                    \'/lib.jslint.js\',\n\
+                local.jslint.__dirname + \'/lib.jslint.js\',\n\
                 \'utf8\'\n\
             ).replace((/^#!/), \'//\');\n\
+        /* jslint-ignore-end */\n\
         local.assetsDict[\'/favicon.ico\'] = local.assetsDict[\'/favicon.ico\'] || \'\';\n\
         // if $npm_config_timeout_exit exists,\n\
         // then exit this process after $npm_config_timeout_exit ms\n\
@@ -633,13 +634,13 @@ the greatest app in the world!\n\
 \n\
 # this shell script will run the build for this package\n\
 \n\
-shBuildCiPost() {(set -e\n\
+shBuildCiAfter() {(set -e\n\
     shDeployGithub\n\
     # shDeployHeroku\n\
     shReadmeBuildLinkVerify\n\
 )}\n\
 \n\
-shBuildCiPre() {(set -e\n\
+shBuildCiBefore() {(set -e\n\
     shReadmeTest example.js\n\
     shReadmeTest example.sh\n\
     shNpmTestPublished\n\
@@ -659,7 +660,10 @@ shBuildCi\n\
 
 
 local.assetsDict['/assets.readmeCustomOrg.npmdoc.template.md'] = '\
-# api documentation for \
+# npmdoc-{{env.npm_package_name}} \
+\n\
+\n\
+#### api documentation for \
 {{#if env.npm_package_homepage}} \
 [{{env.npm_package_name}} (v{{env.npm_package_version}})]({{env.npm_package_homepage}}) \
 {{#unless env.npm_package_homepage}} \
@@ -667,6 +671,7 @@ local.assetsDict['/assets.readmeCustomOrg.npmdoc.template.md'] = '\
 {{/if env.npm_package_homepage}} \
 [![npm package](https://img.shields.io/npm/v/npmdoc-{{env.npm_package_name}}.svg?style=flat-square)](https://www.npmjs.org/package/npmdoc-{{env.npm_package_name}}) \
 [![travis-ci.org build-status](https://api.travis-ci.org/npmdoc/node-npmdoc-{{env.npm_package_name}}.svg)](https://travis-ci.org/npmdoc/node-npmdoc-{{env.npm_package_name}}) \
+\n\
 \n\
 #### {{env.npm_package_description}} \
 \n\
@@ -708,7 +713,10 @@ local.assetsDict['/assets.readmeCustomOrg.npmdoc.template.md'] = '\
 
 
 local.assetsDict['/assets.readmeCustomOrg.npmtest.template.md'] = '\
-# test coverage for \
+# npmtest-{{env.npm_package_name}} \
+\n\
+\n\
+#### basic test coverage for \
 {{#if env.npm_package_homepage}} \
 [{{env.npm_package_name}} (v{{env.npm_package_version}})]({{env.npm_package_homepage}}) \
 {{#unless env.npm_package_homepage}} \
@@ -716,6 +724,7 @@ local.assetsDict['/assets.readmeCustomOrg.npmtest.template.md'] = '\
 {{/if env.npm_package_homepage}} \
 [![npm package](https://img.shields.io/npm/v/npmtest-{{env.npm_package_name}}.svg?style=flat-square)](https://www.npmjs.org/package/npmtest-{{env.npm_package_name}}) \
 [![travis-ci.org build-status](https://api.travis-ci.org/npmtest/node-npmtest-{{env.npm_package_name}}.svg)](https://travis-ci.org/npmtest/node-npmtest-{{env.npm_package_name}}) \
+\n\
 \n\
 #### {{env.npm_package_description}} \
 \n\
@@ -730,6 +739,7 @@ local.assetsDict['/assets.readmeCustomOrg.npmtest.template.md'] = '\
 \n\
 | test-report : | [![test-report](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/test-report.badge.svg)](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/test-report.html)| \
 \n\
+| test-server-github : | [![github.com test-server](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/GitHub-Mark-32px.png)](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/app/index.html) | \
 | build-artifacts : | [![build-artifacts](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/glyphicons_144_folder_open.png)](https://github.com/npmtest/node-npmtest-{{env.npm_package_name}}/tree/gh-pages/build)| \
 \n\
 \n\
@@ -829,7 +839,7 @@ local.assetsDict['/assets.test.template.js'] = '\
         // re-init local from example.js\n\
         case \'node\':\n\
             local = (local.global.utility2_rollup || require(\'utility2\'))\n\
-                .requireExampleJsFromReadme();\n\
+                .requireReadme();\n\
             break;\n\
         }\n\
         // export local\n\
@@ -869,6 +879,16 @@ local.assetsDict['/assets.test.template.js'] = '\
 \n\
     // run browser js\-env code - post-init\n\
     case \'browser\':\n\
+        local.testCase_browser_nullCase = local.testCase_browser_nullCase || function (\n\
+            options,\n\
+            onError\n\
+        ) {\n\
+        /*\n\
+         * this function will test browsers\'s null-case handling-behavior-behavior\n\
+         */\n\
+            onError(null, options);\n\
+        };\n\
+\n\
         // run tests\n\
         local.nop(local.modeTest &&\n\
             document.querySelector(\'#testRunButton1\') &&\n\
@@ -2287,10 +2307,10 @@ local.assetsDict['/favicon.ico'] = '';
                         onNext(local._debugTryCatchErrorCaught);
                         return;
                     }
-                    console.error('\nbrowserTest - merging test-report from ' +
-                        options.fileTestReport + '\n');
                     if (!options.modeTestIgnore) {
                         local.testReportMerge(local.testReport, data);
+                        console.error('\nbrowserTest - merged test-report from file://' +
+                            options.fileTestReport + '\n');
                     }
                     // create test-report.json
                     local.fs.writeFileSync(
@@ -2582,7 +2602,10 @@ return Utf8ArrayToStr(bff);
                 onError();
                 return;
             }
-            local.objectSetDefault(options, { blacklistDict: local });
+            local.objectSetDefault(options, {
+                blacklistDict: local,
+                require: local.requireInSandbox
+            });
             // create apidoc.html
             local.fsWriteFileWithMkdirpSync(
                 local.env.npm_config_dir_build + '/apidoc.html',
@@ -2691,7 +2714,7 @@ return Utf8ArrayToStr(bff);
                 // try to recover from error
                 setTimeout(onError, error && local.timeoutDefault);
             };
-            // try to salvage uncaughtException
+            // try to recover from uncaughtException
             process.on('uncaughtException', onError2);
             onParallel = local.utility2.onParallel(onError2);
             onParallel.counter += 1;
@@ -2730,14 +2753,14 @@ return Utf8ArrayToStr(bff);
                 dir: local.env.npm_package_buildCustomOrg,
                 modeNoApidoc: true,
                 modulePathList: options.modulePathList,
+                require: local.requireInSandbox,
                 template: local.assetsDict['/assets.readmeCustomOrg.' + local.env.GITHUB_ORG +
                     '.template.md']
             });
             local.fs.writeFileSync('README.md', options.readme);
+            console.error('created customOrg file://' + process.cwd() + '/README.md\n');
             // re-build package.json
-            options.packageJson.description = (/\w.*/).exec(options.readme)[0]
-                .replace((/ {2,}/g), ' ')
-                .trim();
+            options.packageJson.description = options.readme.split('\n')[2].trim();
             local.fs.writeFileSync(
                 'package.json',
                 local.jsonStringifyOrdered(options.packageJson, null, 4) + '\n'
@@ -2855,8 +2878,8 @@ return Utf8ArrayToStr(bff);
                 (/\nutility2-comment -->(?:\\n\\\n){4}[^`]*?^<!-- utility2-comment\\n\\\n/m),
                 // customize build-script
                 (/\n# internal build-script\n[\S\s]*?^- build_ci\.sh\n/m),
-                (/\nshBuildCiPost\(\) \{\(set -e\n[^`]*?\n\)\}\n/),
-                (/\nshBuildCiPre\(\) \{\(set -e\n[^`]*?\n\)\}\n/)
+                (/\nshBuildCiAfter\(\) \{\(set -e\n[^`]*?\n\)\}\n/),
+                (/\nshBuildCiBefore\(\) \{\(set -e\n[^`]*?\n\)\}\n/)
             ].forEach(function (rgx) {
                 // handle large string-replace
                 options.dataFrom.replace(rgx, function (match0) {
@@ -2966,13 +2989,13 @@ return Utf8ArrayToStr(bff);
             return tmp;
         };
 
-        local.dbTableTravisOrgCreate = function (options, onError) {
+        local.dbTableCustomOrgCreate = function (options, onError) {
         /*
-         * this function will create a persistent dbTableTravisOrg
+         * this function will create a persistent dbTableCustomOrg
          */
             options = local.objectSetDefault(options, { githubOrg: local.env.GITHUB_ORG });
             options = local.objectSetDefault(options, {
-                name: 'TravisOrg.' + options.githubOrg,
+                name: 'CustomOrg.' + options.githubOrg,
                 sizeLimit: 1000,
                 sortDefault: [{
                     fieldName: '_id'
@@ -2984,24 +3007,38 @@ return Utf8ArrayToStr(bff);
                     fieldName: 'active'
                 }]
             });
-            local.dbTableTravisOrg = local.db.dbTableCreateOne(options, onError);
-            return local.dbTableTravisOrg;
+            local.dbTableCustomOrg = local.db.dbTableCreateOne(options, onError);
+            return local.dbTableCustomOrg;
         };
 
-        local.dbTableTravisOrgUpdate = function (options, onError) {
+        local.dbTableCustomOrgCrudGetManyByQuery = function (options) {
         /*
-         * this function will update dbTableTravisOrg with active, public repos
+         * this function will query dbTableCustomOrg
+         */
+            options = local.objectSetDefault(options, { githubOrg: local.env.GITHUB_ORG });
+            options = local.objectSetDefault(options, {
+                query: { buildStartedAt: { $not: { $gt: new Date(Date.now() - (
+                    Number(options.olderThanLast) || 0
+                )).toISOString() } } }
+            }, 2);
+            console.error('dbTableCustomOrgCrudGetManyByQuery - ' + JSON.stringify(options));
+            return local.dbTableCustomOrg.crudGetManyByQuery(options);
+        };
+
+        local.dbTableCustomOrgUpdate = function (options, onError) {
+        /*
+         * this function will update dbTableCustomOrg with active, public repos
          */
             var count, dbRowList, self;
             options = local.objectSetDefault(options, { githubOrg: local.env.GITHUB_ORG });
             local.onNext(options, function (error, data) {
                 switch (options.modeNext) {
                 case 1:
-                    self = local.dbTableTravisOrg =
-                        local.dbTableTravisOrgCreate(options, options.onNext);
+                    self = local.dbTableCustomOrg =
+                        local.dbTableCustomOrgCreate(options, options.onNext);
                     break;
                 case 2:
-                    self = local.dbTableTravisOrg = data;
+                    self = local.dbTableCustomOrg = data;
                     data = {
                         headers: {
                             'Travis-API-Version': '3',
@@ -3019,31 +3056,42 @@ return Utf8ArrayToStr(bff);
                     local.onParallelList({
                         list: [{
                             offset: 0,
-                            limit: 100,
                             sort_by: 'asc'
                         }, {
                             offset: 100,
-                            limit: 100,
+                            sort_by: 'asc'
+                        }, {
+                            offset: 200,
+                            sort_by: 'asc'
+                        }, {
+                            offset: 300,
+                            sort_by: 'asc'
+                        }, {
+                            offset: 400,
                             sort_by: 'asc'
                         }, {
                             offset: Math.floor(Math.random() * count) - 100,
-                            limit: 100,
                             sort_by: 'asc'
                         }, {
                             offset: Math.floor(Math.random() * count) - 100,
-                            limit: 100,
                             sort_by: 'asc'
                         }, {
                             offset: 0,
-                            limit: 50,
+                            sort_by: 'desc'
+                        }, {
+                            offset: count - 500,
+                            sort_by: 'desc'
+                        }, {
+                            offset: count - 400,
+                            sort_by: 'desc'
+                        }, {
+                            offset: count - 300,
                             sort_by: 'desc'
                         }, {
                             offset: count - 200,
-                            limit: 100,
                             sort_by: 'desc'
                         }, {
                             offset: count - 100,
-                            limit: 100,
                             sort_by: 'desc'
                         }]
                     }, function (options2, onParallel) {
@@ -3055,7 +3103,7 @@ return Utf8ArrayToStr(bff);
                             },
                             url: 'https://api.travis-ci.org/repos?' +
                                 'include=repository.current_build&' +
-                                'limit=' + options2.element.limit + '&' +
+                                'limit=100&' +
                                 'offset=' + options2.element.offset + '&' +
                                 'sort_by=current_build%3A' + options2.element.sort_by
                         };
@@ -3848,10 +3896,6 @@ return Utf8ArrayToStr(bff);
             if (!module || module === '.' || module.indexOf('/') >= 0) {
                 return require('path').resolve(process.cwd(), module || '');
             }
-            // search builtin
-            if (Object.keys(process.binding('natives')).indexOf(module) >= 0) {
-                return module;
-            }
             // search modulePathList
             [
                 ['node_modules'],
@@ -4383,7 +4427,7 @@ return Utf8ArrayToStr(bff);
                         ['-c', 'find . -type f | grep -v ' +
 /* jslint-ignore-begin */
 '"\
-/\\.\\|.*\\(\\b\\|_\\)\\(\\.\\d\\|\
+/\\.\\|\\(\\b\\|_\\)\\(\\.\\d\\|\
 archive\\|artifact\\|\
 bower_component\\|build\\|\
 coverage\\|\
@@ -4398,7 +4442,7 @@ node_module\\|\
 rollup\\|\
 swp\\|\
 tmp\\|\
-vendor\\)\\(\\b\\|[_s]\\)\
+vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
 " ' +
 /* jslint-ignore-end */
                             '| tr "\\n" "\\000" | xargs -0 grep -in "' +
@@ -4458,7 +4502,54 @@ vendor\\)\\(\\b\\|[_s]\\)\
             }()));
         };
 
-        local.requireExampleJsFromReadme = function () {
+        local.requireInSandbox = function (file) {
+        /*
+         * this function will require the file in a sandbox-lite env
+         */
+            var exports, mockDict, mockList, tmp;
+            mockList = [
+                [ local.global, {
+                    setImmediate: local.nop,
+                    setInterval: local.nop,
+                    setTimeout: local.nop
+                }]
+            ];
+            [
+                [local, 'child_process'],
+                [local, 'cluster'],
+                [local, 'fs'],
+                [local, 'http'],
+                [local, 'https'],
+                [local, 'net'],
+                [local, 'repl'],
+                [local.global, 'process'],
+                [process, 'stdin']
+            ].forEach(function (element) {
+                tmp = element[0][element[1]];
+                mockDict = {};
+                Object.keys(tmp).forEach(function (key) {
+                    if (typeof tmp[key] === 'function' && !(
+                            /^(?:fs\.Read|fs\.read|process\.binding|process\.dlopen)/
+                        ).test(element[1] + '.' + key)) {
+                        mockDict[key] = function () {
+                            return;
+                        };
+                        // coverage-hack
+                        mockDict[key]();
+                    }
+                });
+                mockList.push([ module, mockDict ]);
+            });
+            local.testMock(mockList, function (onError) {
+                local.tryCatchOnError(function () {
+                    exports = require(file);
+                }, console.error);
+                onError();
+            }, local.onErrorThrow);
+            return exports;
+        };
+
+        local.requireReadme = function () {
         /*
          * this function will require and export example.js embedded in README.md
          */
@@ -5169,6 +5260,7 @@ instruction\n\
         /*
          * this function will create test-report artifacts
          */
+            testReport = local.objectSetDefault(testReport, { testPlatformList: [] });
             // print test-report summary
             console.error('\n' + new Array(56).join('-') + '\n' + testReport.testPlatformList
                 .filter(function (testPlatform) {
@@ -5221,8 +5313,11 @@ instruction\n\
             // if any test failed, then exit with non-zero exit-code
             console.error('\n' + local.env.MODE_BUILD +
                 ' - ' + testReport.testsFailed + ' failed tests\n');
-            // exit with number of tests failed
-            local.exit(testReport.testsFailed);
+            // print test-report detail
+            if (testReport.testsFailed) {
+                console.error('\n' + JSON.stringify(testReport, null, 4) + '\n');
+            }
+            return testReport;
         };
 
         local.testReportMerge = function (testReport1, testReport2) {
@@ -5455,14 +5550,6 @@ instruction\n\
                 // mock proces.exit
                 exit = process.exit;
                 process.exit = local.nop;
-                /* istanbul ignore next */
-                if (local.env.npm_package_buildCustomOrg) {
-                    local.exportsCustomOrg = {};
-                    local.tryCatchOnError(function () {
-                        local.exportsCustomOrg = require(process.cwd() + '/node_modules/' +
-                            local.env.npm_package_buildCustomOrg);
-                    }, local.onErrorDefault);
-                }
                 break;
             }
             // init modeTestCase
@@ -5652,6 +5739,13 @@ instruction\n\
             local.onReadyBefore();
         };
 
+        local.throwError = function () {
+        /*
+         * this function will throw an error
+         */
+            throw new Error();
+        };
+
         local.timeElapsedPoll = function (options) {
         /*
          * this function will poll options.timeElapsed
@@ -5668,13 +5762,6 @@ instruction\n\
             options = options || {};
             options.timeStart = timeStart || options.timeStart || Date.now();
             return options;
-        };
-
-        local.throwError = function () {
-        /*
-         * this function will throw an error
-         */
-            throw new Error();
         };
 
         local.tryCatchOnError = function (fnc, onError) {
@@ -5963,6 +6050,7 @@ instruction\n\
         local.Module = require('module');
         local.__require = require;
         local.child_process = require('child_process');
+        local.cluster = require('cluster');
         local.fs = require('fs');
         local.http = require('http');
         local.https = require('https');
@@ -6074,8 +6162,6 @@ instruction\n\
             local.assetsDict['/assets.utility2.rollup.js'];
         // merge previous test-report
         if (local.env.npm_config_file_test_report_merge) {
-            console.error('merging file://' + local.env.npm_config_file_test_report_merge +
-                ' to test-report');
             local.testReportMerge(
                 local.testReport,
                 JSON.parse(local.tryCatchReadFile(
@@ -6083,6 +6169,8 @@ instruction\n\
                     'utf8'
                 ) || '{}')
             );
+            console.error('\n' + local.env.MODE_BUILD + ' - merged test-report from file://' +
+                local.env.npm_config_file_test_report_merge);
         }
         break;
     }
@@ -6126,24 +6214,26 @@ instruction\n\
                 });
             }, local.exit);
             return;
-        case 'dbTableTravisOrgCrudGetManyByQuery':
-            local.dbTableTravisOrgCreate(JSON.parse(process.argv[3]), function (error, data) {
+        case 'dbTableCustomOrgCrudGetManyByQuery':
+            local.dbTableCustomOrgCreate(JSON.parse(process.argv[3] || '{}'), function (error) {
                 // validate no error occurred
                 local.assert(!error, error);
-                console.log(data.crudGetManyByQuery(JSON.parse(process.argv[3]))
+                console.log(local.dbTableCustomOrgCrudGetManyByQuery(
+                    JSON.parse(process.argv[3] || '{}')
+                )
                     .map(function (element) {
                         return element._id;
                     })
                     .join('\n'));
             });
             return;
-        case 'dbTableTravisOrgUpdate':
-            local.dbTableTravisOrgUpdate(
-                JSON.parse(process.argv[3]),
+        case 'dbTableCustomOrgUpdate':
+            local.dbTableCustomOrgUpdate(
+                JSON.parse(process.argv[3] || '{}'),
                 local.onErrorThrow
             );
             return;
-        case 'onParallelListSpawn':
+        case 'onParallelListExec':
             local.onParallelList({
                 list: process.argv[3].split('\n').filter(function (element) {
                     return element.trim();
@@ -6157,11 +6247,16 @@ instruction\n\
                     ['-c', '. ' + local.__dirname + '/lib.utility2.sh; ' + options.element],
                     { stdio: ['ignore', 1, 2] }
                 ).on('exit', function (exitCode) {
-                    console.error('onParallelListSpawn - [' + (onParallel.ii + 1) +
+                    console.error('onParallelListExec - [' + (onParallel.ii + 1) +
                         ' of ' + options.list.length + '] exitCode ' + exitCode);
                     onParallel(exitCode && new Error(exitCode), options);
                 });
             }, local.exit);
+            return;
+        case 'testReportCreate':
+            local.exit(local.testReportCreate(local.tryCatchOnError(function () {
+                return require(local.env.npm_config_dir_build + '/test-report.json');
+            }, local.onErrorDefault)).testsFailed);
             return;
         }
         // init lib

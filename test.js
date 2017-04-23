@@ -45,7 +45,7 @@
         // re-init local from example.js
         case 'node':
             local = (local.global.utility2_rollup || require('./lib.utility2.js'))
-                .requireExampleJsFromReadme();
+                .requireReadme();
             break;
         }
     }());
@@ -522,9 +522,9 @@
             onError();
         };
 
-        local.testCase_dbTableTravisOrgUpdate_default = function (options, onError) {
+        local.testCase_dbTableCustomOrgXxx_default = function (options, onError) {
         /*
-         * this function will test dbTableTravisOrgUpdate's default handling-behavior
+         * this function will test dbTableCustomOrgXxx's default handling-behavior
          */
             options = [
                 [local, {
@@ -542,6 +542,7 @@
                         }, options);
                     },
                     db: {
+                        crudGetManyByQuery: local.nop,
                         crudRemoveManyByQuery: local.nop,
                         crudSetManyById: local.nop,
                         dbTableCreateOne: function (options, onError) {
@@ -558,8 +559,11 @@
                 }]
             ];
             local.testMock(options, function (onError) {
-                local.dbTableTravisOrgUpdate({ githubOrg: 'aa' }, onError);
-            }, onError);
+                local.dbTableCustomOrgUpdate({ githubOrg: 'aa' }, local.onErrorThrow);
+                local.dbTableCustomOrgCrudGetManyByQuery();
+                onError();
+            }, local.onErrorThrow);
+            onError();
         };
 
         local.testCase_debug_inline_default = function (options, onError) {
@@ -598,16 +602,9 @@
         /*
          * this function will exit's default handling-behavior
          */
-            options = [
-                // suppress console.error
-                [console, { error: local.nop }]
-            ];
-            // test exit's default handling-behavior
-            local.testMock(options, function (onError) {
-                // test invalid exit-code handling-behavior
-                local.exit('invalid exit-code');
-                onError();
-            }, onError);
+            // test invalid exit-code handling-behavior
+            local.exit('invalid exit-code', options);
+            onError();
         };
 
         local.testCase_isNullOrUndefined_default = function (options, onError) {
@@ -1476,19 +1473,6 @@
             onError();
         };
 
-        local.testCase_throwError_default = function (options, onError) {
-        /*
-         * this function will test throwError's default handling-behavior
-         */
-            local.tryCatchOnError(function () {
-                local.throwError();
-            }, function (error) {
-                // validate error occurred
-                local.assert(error, error);
-                onError(null, options);
-            });
-        };
-
         local.testCase_testRunDefault_nop = function (options, onError) {
         /*
          * this function will test testRunDefault's nop handling-behavior
@@ -1503,6 +1487,19 @@
                 local.assert(!options.onReadyAfter, options);
                 onError();
             }, onError);
+        };
+
+        local.testCase_throwError_default = function (options, onError) {
+        /*
+         * this function will test throwError's default handling-behavior
+         */
+            local.tryCatchOnError(function () {
+                local.throwError();
+            }, function (error) {
+                // validate error occurred
+                local.assert(error, error);
+                onError(null, options);
+            });
         };
 
         local.testCase_uglify_default = function (options, onError) {
@@ -1992,9 +1989,6 @@
             local.assertJsonEqual(options.data, process.cwd());
             options.data = local.moduleDirname('./', options.modulePathList);
             local.assertJsonEqual(options.data, process.cwd());
-            // test builtin-module handling-behavior
-            options.data = local.moduleDirname('fs', options.modulePathList);
-            local.assertJsonEqual(options.data, 'fs');
             // test module exists handling-behavior
             options.data = local.moduleDirname('electron-lite', options.modulePathList);
             local.assert((/\/electron-lite$/).test(options.data), options.data);
@@ -2141,14 +2135,14 @@
             options.socket.end('undefined()\n');
         };
 
-        local.testCase_requireExampleJsFromReadme_start = function (options, onError) {
+        local.testCase_requireReadme_start = function (options, onError) {
         /*
-         * this function will test requireExampleJsFromReadme's start handling-behavior
+         * this function will test requireReadme's start handling-behavior
          */
             options = [
                 [local.env, {
                     npm_config_mode_start: '1',
-                    npm_package_nameAlias: '_testCase_requireExampleJsFromReadme_start'
+                    npm_package_nameAlias: '_testCase_requireReadme_start'
                 }],
                 [local.fs, {
                     readdirSync: function () {
@@ -2162,9 +2156,9 @@
                 }]
             ];
             local.testMock(options, function (onError) {
-                options.data = local.requireExampleJsFromReadme();
+                options.data = local.requireReadme();
                 // validate data
-                local.assert(local._testCase_requireExampleJsFromReadme_start === local);
+                local.assert(local._testCase_requireReadme_start === local);
                 onError();
             }, onError);
         };
@@ -2197,12 +2191,15 @@
          */
             options = [
                 // suppress console.error
-                [console, { error: local.nop }],
-                [local, { exit: local.nop }]
+                [console, { error: local.nop }]
             ];
             local.testMock(options, function (onError) {
-                // test exit handling-behavior
-                local.testReportCreate(local.testReport);
+                // test null-case handling-behavior
+                local.testReportCreate();
+                // test testsFailed handling-behavior
+                local.testReportCreate({ testPlatformList: [{
+                    testCaseList: [{ status: 'failed' }]
+                }] });
                 onError();
             }, onError);
         };
