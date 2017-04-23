@@ -183,6 +183,23 @@ try {
 shBuildCi() {(set -e
 # this function will run the main build
     shInit
+    # init travis-ci.org env
+    if [ "$TRAVIS" ]
+    then
+        export CI_BRANCH="${CI_BRANCH:-$TRAVIS_BRANCH}" || return $?
+        export CI_HOST="${CI_HOST:-travis-ci.org}" || return $?
+    fi
+    # init default env
+    export CI_BRANCH="${CI_BRANCH:-alpha}" || return $?
+    export CI_COMMIT_ID="${CI_BRANCH:-(git rev-parse --verify HEAD)}" || return $?
+    export CI_HOST="${CI_HOST:-127.0.0.1}" || return $?
+    # save $CI_BRANCH
+    export CI_BRANCH_OLD="${CI_BRANCH_OLD:-$CI_BRANCH}" || return $?
+    # init $CI_COMMIT_*
+    export CI_COMMIT_MESSAGE="$(git log -1 --pretty=%s)" || return $?
+    export CI_COMMIT_INFO="$CI_COMMIT_ID - $CI_COMMIT_MESSAGE" || return $?
+    export CI_COMMIT_MESSAGE_META="$(printf "#$CI_COMMIT_MESSAGE" | \
+        sed -e "s/.*\(\[.*\]\).*/\1/")" || return $?
     # decrypt and exec encrypted data
     if [ "$CRYPTO_AES_KEY" ]
     then
@@ -1686,27 +1703,8 @@ console.log('data:image/' +
 
 shInit() {
 # this function will init the env
-    # init CI_*
-    if [ -d .git ]
-    then
-        # init travis-ci.org env
-        if [ "$TRAVIS" ]
-        then
-            export CI_BRANCH="${CI_BRANCH:-$TRAVIS_BRANCH}" || return $?
-            export CI_HOST="${CI_HOST:-travis-ci.org}" || return $?
-        fi
-        # init default env
-        export CI_BRANCH="${CI_BRANCH:-alpha}" || return $?
-        export CI_COMMIT_ID="${CI_BRANCH:-(git rev-parse --verify HEAD)}" || return $?
-        export CI_HOST="${CI_HOST:-127.0.0.1}" || return $?
-        # save $CI_BRANCH
-        export CI_BRANCH_OLD="${CI_BRANCH_OLD:-$CI_BRANCH}" || return $?
-        # init $CI_COMMIT_*
-        export CI_COMMIT_MESSAGE="$(git log -1 --pretty=%s)" || return $?
-        export CI_COMMIT_INFO="$CI_COMMIT_ID - $CI_COMMIT_MESSAGE" || return $?
-        export CI_COMMIT_MESSAGE_META="$(printf "#$CI_COMMIT_MESSAGE" | \
-            sed -e "s/.*\(\[.*\]\).*/\1/")" || return $?
-    fi
+    # node-check
+    which node || return
     # init $npm_package_*
     if [ -f package.json ]
     then
@@ -1776,7 +1774,7 @@ if ((/^[^\/]+\/[^\/]+\$/).test(value)) {
     # init $npm_config_dir_build dir
     mkdir -p "$npm_config_dir_build/coverage.html"
     # init $npm_config_dir_utility2
-    shInitNpmConfigDirUtility2 || return $?
+    shModuleDirnameUtility2 || return $?
     # init $PATH
     export PATH="$PWD/node_modules/.bin:$PATH" || return $?
     # extract and save the scripts embedded in README.md to tmp/
@@ -1821,43 +1819,6 @@ local.readme.replace((
 });
 // </script>
         "
-    fi
-}
-
-shInitNpmConfigDirUtility2() {
-# this function will init $npm_config_dir_utility2
-    local DIR SOURCE || return $?
-    if [ "$npm_config_dir_utility2" ]
-    then
-        return
-    fi
-    # init $npm_config_dir_utility2
-    if [ -f lib.utility2.js ]
-    then
-        export npm_config_dir_utility2="$PWD" || return $?
-    else
-        export npm_config_dir_utility2="$(shModuleDirname utility2)" || return $?
-    fi
-    if [ ! -d "$npm_config_dir_utility2" ]
-    then
-        export npm_config_dir_utility2="$(dirname "$(readlink -f "$0" 2>/dev/null)")" ||
-            return $?
-    fi
-    if [ ! -d "$npm_config_dir_utility2" ]
-    then
-        # http://stackoverflow.com/questions/59895
-        # /can-a-bash-script-tell-what-directory-its-stored-in
-        SOURCE="$0" || return $?
-        # resolve $SOURCE until the file is no longer a symlink
-        while [ -h "$SOURCE" ]; do
-          DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )" || return $?
-          SOURCE="$(readlink "$SOURCE")" || return $?
-          # if $SOURCE was a relative symlink,
-          # we need to resolve it relative to the path where the symlink file was located
-          [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE" || true
-        done
-        DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
-        export npm_config_dir_utility2="$DIR" || return $?
     fi
 }
 
@@ -2038,13 +1999,13 @@ shMain() {
         [ "$COMMAND" = testReportCreate ] ||
         [ "$COMMAND" = onParallelListExec ]
     then
-        shInitNpmConfigDirUtility2
+        shModuleDirnameUtility2
         "$npm_config_dir_utility2/lib.utility2.js" "$COMMAND" "$@"
         return
     fi
     case "$COMMAND" in
     source)
-        shInitNpmConfigDirUtility2
+        shModuleDirnameUtility2
         printf ". $npm_config_dir_utility2/lib.utility2.sh\n"
         ;;
     start)
@@ -2052,7 +2013,7 @@ shMain() {
         then
             MODE_START=1
         fi
-        shInitNpmConfigDirUtility2
+        shModuleDirnameUtility2
         FILE="${1:-"$npm_config_dir_utility2/test.js"}"
         shift || true
         export npm_config_mode_auto_restart=1
@@ -2065,7 +2026,7 @@ shMain() {
         shNpmTest "$@"
         ;;
     utility2Dirname)
-        shInitNpmConfigDirUtility2
+        shModuleDirnameUtility2
         printf "$npm_config_dir_utility2\n"
         ;;
     *)
@@ -2124,6 +2085,43 @@ console.log(local.moduleDirname('$MODULE', module.paths));
 // </script>
     "
 )}
+
+shModuleDirnameUtility2() {
+# this function will init $npm_config_dir_utility2
+    local DIR SOURCE || return $?
+    if [ "$npm_config_dir_utility2" ]
+    then
+        return
+    fi
+    # init $npm_config_dir_utility2
+    if [ -f lib.utility2.js ]
+    then
+        export npm_config_dir_utility2="$PWD" || return $?
+    else
+        export npm_config_dir_utility2="$(shModuleDirname utility2)" || return $?
+    fi
+    if [ ! -d "$npm_config_dir_utility2" ]
+    then
+        export npm_config_dir_utility2="$(dirname "$(readlink -f "$0" 2>/dev/null)")" ||
+            return $?
+    fi
+    if [ ! -d "$npm_config_dir_utility2" ]
+    then
+        # http://stackoverflow.com/questions/59895
+        # /can-a-bash-script-tell-what-directory-its-stored-in
+        SOURCE="$0" || return $?
+        # resolve $SOURCE until the file is no longer a symlink
+        while [ -h "$SOURCE" ]; do
+          DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )" || return $?
+          SOURCE="$(readlink "$SOURCE")" || return $?
+          # if $SOURCE was a relative symlink,
+          # we need to resolve it relative to the path where the symlink file was located
+          [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE" || true
+        done
+        DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+        export npm_config_dir_utility2="$DIR" || return $?
+    fi
+}
 
 shMountData() {(set -e
 # this function will mount $1 to /mnt/data, and is intended for aws-ec2 setup
@@ -2535,7 +2533,7 @@ shOnParallelListExec() {(set -e
 # this function will async-run the newline-separated tasks in $LIST with the given $RATE_LIMIT
     LIST="$1"
     RATE_LIMIT="$2"
-    shInitNpmConfigDirUtility2
+    shModuleDirnameUtility2
     "$npm_config_dir_utility2/lib.utility2.js" onParallelListExec "$LIST" "$RATE_LIMIT"
 )}
 
