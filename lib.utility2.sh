@@ -197,24 +197,6 @@ shBuildCi() {(set -e
     case "$CI_BRANCH" in
     alpha)
         case "$CI_COMMIT_MESSAGE_META" in
-        "[npm publish]")
-            # init .npmrc
-            printf "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > "$HOME/.npmrc"
-            (eval shNpmPublishAlias) || true
-            # security - cleanup .npmrc
-            rm "$HOME/.npmrc"
-            case "$CI_COMMIT_MESSAGE_META" in
-            "[npm publishAfterCommit]")
-                shGitSquashPop HEAD~1 "[ci skip] npm published"
-                shGithubPush -f "https://github.com/$GITHUB_REPO" HEAD:alpha
-                return
-                ;;
-            *)
-                sleep 5
-                shBuildCiInternal
-                ;;
-            esac
-            ;;
         "[npm publishAfterCommit]")
             return
             ;;
@@ -251,6 +233,25 @@ shBuildCi() {(set -e
     master)
         shBuildCiInternal
         ;;
+    publish)
+        export CI_BRANCH=alpha
+        # init .npmrc
+        printf "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > "$HOME/.npmrc"
+        (eval shNpmPublishAlias) || true
+        # security - cleanup .npmrc
+        rm "$HOME/.npmrc"
+        case "$CI_COMMIT_MESSAGE_META" in
+        "[npm publishAfterCommit]")
+            shGitSquashPop HEAD~1 "[ci skip] npm published"
+            shGithubPush -f "https://github.com/$GITHUB_REPO" HEAD:alpha
+            return
+            ;;
+        *)
+            sleep 5
+            shBuildCiInternal
+            ;;
+        esac
+        ;;
     task)
         case "$CI_COMMIT_MESSAGE_META" in
         \[\$\ *\])
@@ -270,16 +271,7 @@ shBuildCi() {(set -e
     alpha)
         case "$CI_COMMIT_MESSAGE_META" in
         "[npm publish]")
-            # init .npmrc
-            printf "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > "$HOME/.npmrc"
-            shNpmPublishAliasList . "$npm_package_nameAliasPublish"
-            sleep 5
-            shNpmTestPublishedList "$npm_package_nameAliasPublish"
-            sleep 5
-            shNpmDeprecateAliasList "$npm_package_nameAliasDeprecate"
-            # security - cleanup .npmrc
-            rm "$HOME/.npmrc"
-            shGithubPush "https://github.com/$GITHUB_REPO" HEAD:beta
+            shGithubPush "https://github.com/$GITHUB_REPO" HEAD:publish
             ;;
         "[npm publishAfterCommitAfterBuild]")
             # use date-semver
@@ -300,6 +292,18 @@ shBuildCi() {(set -e
     master)
         git tag "$npm_package_version" || true
         shGithubPush "https://github.com/$GITHUB_REPO" "$npm_package_version" || true
+        ;;
+    publish)
+        # init .npmrc
+        printf "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > "$HOME/.npmrc"
+        shNpmPublishAliasList . "$npm_package_nameAliasPublish"
+        sleep 5
+        shNpmTestPublishedList "$npm_package_nameAliasPublish"
+        sleep 5
+        shNpmDeprecateAliasList "$npm_package_nameAliasDeprecate"
+        # security - cleanup .npmrc
+        rm "$HOME/.npmrc"
+        shGithubPush "https://github.com/$GITHUB_REPO" HEAD:beta
         ;;
     esac
 )}
@@ -343,7 +347,7 @@ shBuildCiInternal() {(set -e
             ;;
         esac
     else
-        shRunScreenCaptureTxt npm test --mode-coverage
+        npm test --mode-coverage
     fi
     )
     # create apidoc
@@ -363,20 +367,17 @@ shBuildCiInternal() {(set -e
 
 
     # save screenCapture
-    DIR="$npm_config_dir_build/coverage.html"
-    if [ "$npm_package_buildCustomOrg" ]
-    then
-        DIR="$npm_config_dir_build/coverage.html/node-$GITHUB_ORG-$npm_package_buildCustomOrg\
-/node_modules/$npm_package_buildCustomOrg"
-    fi
-    if [ -d "$DIR" ]
-    then
-        for FILE in $(find "$DIR" -name *.js.html)
-        do
+    for FILE in "$npm_config_dir_build/coverage.html\
+/node-$GITHUB_ORG-$npm_package_buildCustomOrg/node_modules/$npm_package_buildCustomOrg" \
+        "$npm_config_dir_build/coverage.html"
+    do
+        FILE="$(find "$FILE" -name *.js.html 2>/dev/null | head -n 1)"
+        if [ -f "$FILE" ]
+        then
             cp "$FILE" "$npm_config_dir_build/coverage.lib.html"
-            break;
-        done
-    fi
+            break
+        fi
+    done
     # bug-workaround - travis-ci cannot run node in certain subprocesses
     LIST=""
     for FILE in apidoc.html coverage.lib.html test-report.html
@@ -1737,12 +1738,12 @@ value = String((dict.repository && dict.repository.url) || dict.repository || ''
     .join('/')
     .replace((/\.git\$/), '');
 if ((/^[^\/]+\/[^\/]+\$/).test(value)) {
+    value = value.split('/');
     if (!process.env.GITHUB_REPO) {
-        process.env.GITHUB_REPO = value;
+        process.env.GITHUB_REPO = value.join('/');
         process.stdout.write('export GITHUB_REPO=' + JSON.stringify(process.env.GITHUB_REPO) +
             ';');
     }
-    value = value.split('/');
     if (!process.env.GITHUB_ORG) {
         process.env.GITHUB_ORG = value[0];
         process.stdout.write('export GITHUB_ORG=' + JSON.stringify(process.env.GITHUB_ORG) +
@@ -2922,6 +2923,15 @@ shTestReportCreate() {(set -e
 # this function will create test-report artifacts
     shInit
     "$npm_config_dir_utility2/lib.utility2.js" testReportCreate
+)}
+
+shTravisBuildRestart() {(set -e
+# this function will restart the travis $BUILD
+# https://docs.travis-ci.com/api#builds
+    BUILD="$1"
+    curl -H "Authorization: token $TRAVIS_ACCESS_TOKEN" -#Lfs \
+        -X POST \
+        "https://api.travis-ci.org/builds/$BUILD/restart"
 )}
 
 shTravisCryptoAesDecryptYml() {(set -e

@@ -30,7 +30,9 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 [![apidoc](https://kaizhu256.github.io/node-utility2/build/screenCapture.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/apidoc.html)
 
 #### todo
-- fix https://travis-ci.org/npmtest/node-npmtest-npmrc
+- npm publish 2017.4.23
+- add quickstart example for npmdoc and npmtest
+- use breadth-first-search for exampleList in apidoc
 - find electron-lite binary path in shell-function shInit
 - add browser-side testing of npmtest
 - add \$NAME argument to shBuildApp
@@ -44,15 +46,8 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 - analytics
 - none
 
-#### changelog for v2017.4.22
-- npm publish 2017.4.22
-- add \$not query-operator in function dbTable.prototype.crudGetManyByQuery
-- add function requireInSandbox to try and build customOrg in sandbox-like env
-- fallback to tarball-install if npm-install fails when building customOrg
-- merge git-branch public) -> alpha)
-- remove redundant shBuildCiInternal process after publishing customOrg
-- rename name dbTableTravisOrg -> dbTableCustomOrg
-- use breadth-first-search for files to add to libFileList-param in function apidocCreate
+#### changelog for v2017.4.23
+- add default-coverage fallback for npmtest
 - none
 
 #### this package requires
@@ -705,7 +700,7 @@ utility2-comment -->\n\
         "start": "set -e; export PORT=${PORT:-8080}; if [ -f assets.app.js ]; then node assets.app.js; else npm_config_mode_auto_restart=1 ./lib.utility2.sh shRun shIstanbulCover test.js; fi",
         "test": "PORT=$(./lib.utility2.sh shServerPortRandom) PORT_REPL=$(./lib.utility2.sh shServerPortRandom) npm_config_mode_auto_restart=1 ./lib.utility2.sh test test.js"
     },
-    "version": "2017.4.22"
+    "version": "2017.4.23"
 }
 ```
 
