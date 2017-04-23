@@ -72,7 +72,7 @@ shBrowserTest() {(set -e
 # and merge the test-report into the existing test-report
     export url="$1"
     export modeBrowserTest="$2"
-    shInit
+    shModuleDirnameUtility2
     export MODE_BUILD="${MODE_BUILD:-browserTest}"
     shBuildPrint "electron.${modeBrowserTest} - $url"
     # run browser-test
@@ -2083,14 +2083,26 @@ console.log(local.moduleDirname('$MODULE', module.paths));
 
 shModuleDirnameUtility2() {
 # this function will init $npm_config_dir_utility2
+    # init $npm_config_dir_utility2
     if [ ! "$npm_config_dir_utility2" ]
     then
-        # init $npm_config_dir_utility2
         [ -f lib.utility2.js ] && export npm_config_dir_utility2="$PWD"
         export npm_config_dir_utility2="${npm_config_dir_utility2:-$(shModuleDirname utility2)}"
         export npm_config_dir_utility2="${npm_config_dir_utility2:-$HOME/node_modules/utility2}"
         export PATH="$PATH:$npm_config_dir_utility2"
         alias utility2="$npm_config_dir_utility2/lib.utility2.sh"
+        alias utility2_js="$npm_config_dir_utility2/lib.utility2.js"
+    fi
+    # init $npm_config_dir_electron
+    if [ ! "$npm_config_dir_electron" ]
+    then
+        [ -f lib.electron.js ] && export npm_config_dir_electron="$PWD"
+        export npm_config_dir_electron="${npm_config_dir_electron:-\
+$(shModuleDirname electron-lite)}"
+        export npm_config_dir_electron="${npm_config_dir_electron:-\
+$HOME/node_modules/electron-lite}"
+        export PATH="$PATH:$npm_config_dir_electron"
+        alias electron="$npm_config_dir_electron/lib.electron.js"
     fi
 }
 

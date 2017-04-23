@@ -33,7 +33,6 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 - npm publish 2017.4.23
 - add quickstart example for npmdoc and npmtest
 - use breadth-first-search for exampleList in apidoc
-- find electron-lite binary path in shell-function shInit
 - add browser-side testing of npmtest
 - add \$NAME argument to shBuildApp
 - rename sub-package db-lite -> nedb-lite
@@ -48,6 +47,7 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 
 #### changelog for v2017.4.23
 - add default-coverage fallback for npmtest
+- find electron-lite binary path in shell-function shModuleDirnameUtility2
 - none
 
 #### this package requires
