@@ -22,7 +22,7 @@
 
 
 
-    // run shared js-env code - pre-init
+    // run shared js-env code - init-before
     (function () {
         // init local
         local = {};
@@ -50,12 +50,14 @@
         local.local = local.swgg = local;
         // init exports
         if (local.modeJs === 'browser') {
-            local.global.swgg = local;
+            local.global.utility2_swgg = local;
         } else {
             module.exports = local;
             module.exports.__dirname = __dirname;
             module.exports.module = module;
         }
+        // init swgg
+        local.global.swgg = local.swgg = local;
         // init lib utility2
         local.utility2 = local.global.utility2_rollup || (local.modeJs === 'browser'
             ? local.global.utility2
@@ -2617,7 +2619,7 @@ local.templateUiResponseAjax = '\
                             )
                         ) || element.value;
                     });
-                    // pre-init crud.idField
+                    // init-before crud.idField
                     crud.modeQueryByIdInvert = true;
                     local.idFieldInit(crud);
                     // init crud.data.id
@@ -2630,7 +2632,7 @@ local.templateUiResponseAjax = '\
                         crud.data[crud.idField] = (crud.body && crud.body[crud.idAlias]);
                         break;
                     }
-                    // post-init crud.idField
+                    // init-after crud.idField
                     crud.modeQueryByIdInvert = true;
                     local.idFieldInit(crud);
                     nextMiddleware();
@@ -4155,7 +4157,7 @@ local.templateUiResponseAjax = '\
 
 
 
-    // run browser js-env code - post-init
+    // run browser js-env code - init-after
     case 'browser':
         // init state
         local.utility2._stateInit({});
@@ -4163,7 +4165,7 @@ local.templateUiResponseAjax = '\
 
 
 
-    // run node js-env code - post-init
+    // run node js-env code - init-after
     case 'node':
         // init assets.lib.rollup.js
         local.assetsDict['/assets.swgg.rollup.js'] =

@@ -16,7 +16,7 @@
 
 
 
-    // run shared js-env code - pre-init
+    // run shared js-env code - init-before
     (function () {
         // init local
         local = {};
@@ -54,7 +54,7 @@
 
 
 
-    // run shared js-env code - pre-function
+    // run shared js-env code - function-before
     /* istanbul ignore next */
     (function () {
         local.assert = function (passed, message) {
@@ -86,12 +86,11 @@
                 return require('path').resolve(process.cwd(), module || '');
             }
             // search modulePathList
-            [
-                ['node_modules'],
-                modulePathList,
-                require('module').globalPaths
-            ].some(function (modulePathList) {
-                modulePathList.some(function (modulePath) {
+            ['node_modules']
+                .concat(modulePathList)
+                .concat(require('module').globalPaths)
+                .concat([process.env.HOME + '/node_modules', '/usr/local/lib/node_modules'])
+                .some(function (modulePath) {
                     try {
                         tmp = require('path').resolve(process.cwd(), modulePath + '/' + module);
                         result = require('fs').statSync(tmp).isDirectory() && tmp;
@@ -99,8 +98,6 @@
                     } catch (ignore) {
                     }
                 });
-                return result;
-            });
             return result || '';
         };
 
@@ -277,7 +274,7 @@
 
 
 
-    // run shared js-env code - pre-init
+    // run shared js-env code - init-before
 /* jslint-ignore-begin */
 local.templateApidocHtml = '\
 <div class="apidocDiv">\n\
@@ -462,9 +459,11 @@ local.templateApidocHtml = '\
              */
                 var result;
                 local.tryCatchOnError(function () {
+                    file = local.path.resolve(options.dir, file);
+                    console.error('apidocCreate - readExample ' + file);
                     result = '';
                     result = ('\n\n\n\n\n\n\n\n' +
-                        local.fs.readFileSync(local.path.resolve(options.dir, file), 'utf8') +
+                        local.fs.readFileSync(file, 'utf8').slice(0, 262144) +
                         '\n\n\n\n\n\n\n\n').replace((/\r\n*/g), '\n');
                 }, console.error);
                 return result;
@@ -537,7 +536,7 @@ local.templateApidocHtml = '\
             local.objectSetDefault(options, {
                 blacklistDict: { global: global },
                 circularList: [global],
-                exampleFileList: [],
+                exampleDict: {},
                 exampleList: [],
                 html: '',
                 libFileList: [],
@@ -547,19 +546,38 @@ local.templateApidocHtml = '\
                 template: local.templateApidocHtml
             }, 2);
             // init exampleList
-            options.exampleList = options.exampleList.concat(options.exampleFileList.concat(
-                local.fs.readdirSync(options.dir)
-                    .sort()
-                    .filter(function (file) {
-                        return file.indexOf(options.env.npm_package_main) === 0 ||
-                            (/^(?:readme)\b/i).test(file) ||
-                            (/^(?:index|lib|test)\b.*\.js$/i).test(file);
-                    })
-            ).map(readExample))
-                .filter(function (element) {
-                    return element.trim();
-                })
-                .slice(0, 128);
+            [1, 2, 3, 4].forEach(function (depth) {
+                options.exampleList = options.exampleList.concat(
+                    // http://stackoverflow.com
+                    // /questions/4509624/how-to-limit-depth-for-recursive-file-list
+                    // find . -maxdepth 1 -mindepth 1 -name "*.js" -type f
+                    local.child_process.execSync('find "' + options.dir +
+                        '" -maxdepth ' + depth + ' -mindepth ' + depth +
+                        ' -type f | sed -e "s|' + options.dir +
+                        '/||" | grep -iv ' +
+/* jslint-ignore-begin */
+'"\
+/\\.\\|\\(\\b\\|_\\)\\(\
+bower_component\\|\
+coverage\\|\
+git\\|\
+min\\|\
+node_module\\|\
+rollup\\|\
+tmp\\|\
+vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
+" ' +
+/* jslint-ignore-end */
+                            ' | sort | head -n 256').toString()
+                        .split('\n')
+                );
+            });
+            options.exampleList = options.exampleList.filter(function (file) {
+                if (file && !options.exampleDict[file]) {
+                    options.exampleDict[file] = true;
+                    return true;
+                }
+            }).slice(0, 256).map(readExample);
             // init moduleMain
             local.tryCatchOnError(function () {
                 console.error('apidocCreate - requiring ' + options.dir + ' ...');
@@ -611,7 +629,7 @@ local.templateApidocHtml = '\
                 tmp = options.circularList[key];
                 options.circularList.push(tmp && tmp.prototype);
             });
-            // cleanup circularList
+            // deduplicate circularList
             tmp = options.circularList;
             options.circularList = [];
             tmp.forEach(function (element) {
@@ -642,19 +660,22 @@ coverage\\|\
 doc\\|dist\\|\
 example\\|external\\|\
 fixture\\|\
+git\\|\
 log\\|\
 min\\|mock\\|\
 node_module\\|\
 rollup\\|\
+spec\\|\
 test\\|tmp\\|\
 vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
 " ' +
 /* jslint-ignore-end */
-                            ' | sort | head -n 4096').toString()
+                            ' | sort | head -n 256').toString()
                         .split('\n')
                 );
             });
-            options.libFileList.some(function (file) {
+            options.ii = 256;
+            options.libFileList.every(function (file) {
                 local.tryCatchOnError(function () {
                     tmp = {};
                     tmp.name = local.path.basename(file)
@@ -673,17 +694,15 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
                     if (!tmp.isFiltered) {
                         return;
                     }
+                    console.error('apidocCreate - libFile ' + file);
                     tmp.module = options.require(options.dir + '/' + file);
                     if (!(tmp.module && options.circularList.indexOf(tmp.module) < 0)) {
                         return;
                     }
+                    options.ii -= 1;
                     module[tmp.name] = tmp.module;
-                    // update exampleList
-                    options.exampleList.push(readExample(file));
-                    console.error('apidocCreate - ' + options.exampleList.length +
-                        '. added libFile ' + file);
                 }, console.error);
-                return options.exampleList.length >= 256;
+                return options.ii;
             });
             local.apidocModuleDictAdd(options, options.moduleExtraDict);
             Object.keys(options.moduleDict).forEach(function (key) {
@@ -792,7 +811,7 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
 
 
 
-    // run node js-env code - post-init
+    // run node js-env code - init-after
     /* istanbul ignore next */
     case 'node':
         // require modules

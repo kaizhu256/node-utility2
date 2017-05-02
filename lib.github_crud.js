@@ -16,7 +16,7 @@
 
 
 
-    // run shared js-env code - pre-init
+    // run shared js-env code - init-before
     (function () {
         // init local
         local = {};
@@ -55,19 +55,19 @@
 
 
     /* istanbul ignore next */
-    // run shared js-env code - pre-function
+    // run shared js-env code - function-before
     (function () {
         local.httpRequest = function (options, onError) {
         /*
          * this function will request the data from options.url
          */
-            var chunkList, onError2, timerTimeout, done, request, response, urlParsed;
+            var chunkList, isDone, onError2, timerTimeout, request, response, urlParsed;
             // init onError2
             onError2 = function (error) {
-                if (done) {
+                if (isDone) {
                     return;
                 }
-                done = true;
+                isDone = true;
                 // cleanup timerTimeout
                 clearTimeout(timerTimeout);
                 // cleanup request and response
@@ -202,7 +202,7 @@
                     // ensure counter <= 0
                     onParallel.counter = -Math.abs(onParallel.counter);
                 }
-                // call onError when done
+                // call onError when isDone
                 if (onParallel.counter <= 0) {
                     onError(error, data);
                     return;
@@ -220,7 +220,7 @@
          * this function will
          * 1. async-run onEach in parallel,
          *    with the given options.rateLimit and options.retryLimit
-         * 2. call onError when done
+         * 2. call onError when isDone
          */
             var ii, onEach2, onParallel;
             onEach2 = function () {
@@ -548,7 +548,7 @@
 
 
     /* istanbul ignore next */
-    // run node js-env code - post-init
+    // run node js-env code - init-after
     case 'node':
         // require modules
         local.fs = require('fs');

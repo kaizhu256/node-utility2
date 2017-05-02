@@ -30,10 +30,9 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 [![apidoc](https://kaizhu256.github.io/node-utility2/build/screenCapture.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/apidoc.html)
 
 #### todo
-- fix https://travis-ci.org/npmtest/node-npmtest-npmrc
-- find electron-lite binary path in shell-function shInit
-- add browser-side testing of npmtest
-- add \$NAME argument to shBuildApp
+- fix https://travis-ci.org/npmdoc/node-npmdoc-cash
+- add quickstart example for npmdoc and npmtest
+- add browser-side testing of npmtest for /bower-components and /dist
 - rename sub-package db-lite -> nedb-lite
 - rename sub-package istanbul-lite -> istanbul-classic
 - rename sub-package jslint-lite -> jslint-classic
@@ -44,15 +43,14 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 - analytics
 - none
 
-#### changelog for v2017.4.22
-- npm publish 2017.4.22
-- add \$not query-operator in function dbTable.prototype.crudGetManyByQuery
-- add function requireInSandbox to try and build customOrg in sandbox-like env
-- fallback to tarball-install if npm-install fails when building customOrg
-- merge git-branch public) -> alpha)
-- remove redundant shBuildCiInternal process after publishing customOrg
-- rename name dbTableTravisOrg -> dbTableCustomOrg
-- use breadth-first-search for files to add to libFileList-param in function apidocCreate
+#### changelog for v2017.5.1
+- npm publish 2017.5.1
+- add cli-code cli.customOrgStarFilterNotBuilt
+- add default-coverage fallback for npmtest
+- add shell-functions shCustomOrgBuildCi, shCustomOrgTravisRebuild
+- auto-include electron-lite binary path in shell-function shBuildInit
+- streamline shell-based crypto-functions
+- use breadth-first-search for exampleList in apidoc
 - none
 
 #### this package requires
@@ -157,7 +155,7 @@ instruction
 
 
 
-    // run shared js-env code - pre-init
+    // run shared js-env code - init-before
     (function () {
         // init local
         local = {};
@@ -249,8 +247,8 @@ instruction
 
 
 
-    // post-init
-    // run browser js-env code - post-init
+    // init-after
+    // run browser js-env code - init-after
     /* istanbul ignore next */
     case 'browser':
         local.testRunBrowser = function (event) {
@@ -390,7 +388,7 @@ instruction
 
 
 
-    // run node js-env code - post-init
+    // run node js-env code - init-after
     /* istanbul ignore next */
     case 'node':
         // export local
@@ -705,7 +703,7 @@ utility2-comment -->\n\
         "start": "set -e; export PORT=${PORT:-8080}; if [ -f assets.app.js ]; then node assets.app.js; else npm_config_mode_auto_restart=1 ./lib.utility2.sh shRun shIstanbulCover test.js; fi",
         "test": "PORT=$(./lib.utility2.sh shServerPortRandom) PORT_REPL=$(./lib.utility2.sh shServerPortRandom) npm_config_mode_auto_restart=1 ./lib.utility2.sh test test.js"
     },
-    "version": "2017.4.22"
+    "version": "2017.5.1"
 }
 ```
 

@@ -16,7 +16,7 @@
 
 
 
-    // run shared js-env code - pre-init
+    // run shared js-env code - init-before
     (function () {
         // jslint-hack
         local.nop(__dirname);
@@ -249,7 +249,7 @@
 
 
 
-    // run browser js-env code - pre-init
+    // run browser js-env code - init-before
     case 'browser':
         // require modules
         local.path = {
@@ -264,7 +264,7 @@
 
 
 
-    // run node js-env code - pre-init
+    // run node js-env code - init-before
     case 'node':
         // require modules
         local._fs = local.require('fs');
@@ -2437,7 +2437,7 @@ local.templateCoverageBadgeSvg =
 
 
 
-    // run node js-env code - post-init
+    // run node js-env code - init-after
     case 'node':
         /* istanbul ignore next */
         // run the cli
@@ -2518,7 +2518,7 @@ local.templateCoverageBadgeSvg =
         break;
     }
 }(
-    // run shared js-env code - pre-init
+    // run shared js-env code - init-before
     (function () {
         'use strict';
         var local;

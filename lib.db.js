@@ -51,7 +51,7 @@
 
 
 
-    // run shared js-env code - pre-init
+    // run shared js-env code - init-before
     (function () {
         // init local
         local = {};
@@ -90,7 +90,7 @@
 
 
     /* istanbul ignore next */
-    // run shared js-env code - pre-function
+    // run shared js-env code - function-before
     (function () {
         local.jsonCopy = function (arg) {
         /*
@@ -289,7 +289,7 @@
                     // ensure counter <= 0
                     onParallel.counter = -Math.abs(onParallel.counter);
                 }
-                // call onError when done
+                // call onError when isDone
                 if (onParallel.counter <= 0) {
                     onError(error, data);
                     return;
@@ -372,7 +372,7 @@
         /*
          * this function will defer options.action until storage is ready
          */
-            var data, done, objectStore, onError2, request, tmp;
+            var data, isDone, objectStore, onError2, request, tmp;
             onError = onError || function (error) {
                 // validate no error occurred
                 console.assert(!error, error);
@@ -388,10 +388,10 @@
             case 'browser':
                 onError2 = function () {
                     /* istanbul ignore next */
-                    if (done) {
+                    if (isDone) {
                         return;
                     }
-                    done = true;
+                    isDone = true;
                     onError(
                         request && (request.error || request.transaction.error),
                         data || request.result || ''
@@ -1622,7 +1622,7 @@
 
 
 
-    // run node js-env code - post-init
+    // run node js-env code - init-after
     case 'node':
         // require modules
         local.fs = require('fs');

@@ -15,7 +15,7 @@
 
 
 
-    // run shared js-env code - pre-init
+    // run shared js-env code - init-before
     (function () {
         // init local
         local = {};
@@ -546,7 +546,7 @@
                         crudRemoveManyByQuery: local.nop,
                         crudSetManyById: local.nop,
                         dbTableCreateOne: function (options, onError) {
-                            onError(null, local.db, options);
+                            (onError || local.nop)(null, local.db, options);
                             return local.db;
                         },
                         save: function (onError) {
@@ -559,8 +559,8 @@
                 }]
             ];
             local.testMock(options, function (onError) {
-                local.dbTableCustomOrgUpdate({ githubOrg: 'aa' }, local.onErrorThrow);
-                local.dbTableCustomOrgCrudGetManyByQuery();
+                local.dbTableCustomOrgUpdate({ customOrg: 'aa' }, local.onErrorThrow);
+                local.dbTableCustomOrgCrudGetManyByQuery({});
                 onError();
             }, local.onErrorThrow);
             onError();
@@ -1763,6 +1763,9 @@
                 // test npmtest handling-behavior
                 local.env.GITHUB_ORG = 'npmtest';
                 local.buildCustomOrg(options, local.onErrorThrow);
+                // test scrapeitall handling-behavior
+                local.env.GITHUB_ORG = 'scrapeitall';
+                local.buildCustomOrg(options, local.onErrorThrow);
                 onError();
             }, local.onErrorThrow);
             options = {};
@@ -1778,7 +1781,7 @@
                 // search-and-replace - customize dataTo
                 [
                     // customize js\-env code
-                    (/[\S\s]*?run shared js\-env code - pre-function/)
+                    (/[\S\s]*?run shared js\-env code - function-before/)
                 ].forEach(function (rgx) {
                     options.dataFrom.replace(rgx, function (match0) {
                         options.dataTo = options.dataTo.replace(rgx, match0);
@@ -1831,9 +1834,11 @@
                 // search-and-replace - customize dataTo
                 [
                     // customize js\-env code
-                    (/\n {4}\/\/ run shared js\-env code - pre-init\n[\S\s]*?\n {4}\}\(\)\);/),
-                    (/\n {4}\/\/ run browser js\-env code - post-init\n[\S\s]*?\n {8}break;\n/),
-                    (/\n {4}\/\/ run node js\-env code - post-init\n[\S\s]*?\n {8}break;\n/)
+                    new RegExp('\\n {4}\\/\\/ run shared js\\-env code - init-before\\n' +
+                        '[\\S\\s]*?\\n {4}\\}\\(\\)\\);'),
+                    new RegExp('\\n {4}\\/\\/ run browser js\\-env code - init-after\\n' +
+                        '[\\S\\s]*?\\n {8}break;\\n'),
+                    (/\n {4}\/\/ run node js\-env code - init-after\n[\S\s]*?\n {8}break;\n/)
                 ].forEach(function (rgx) {
                     options.dataFrom.replace(rgx, function (match0) {
                         options.dataTo = options.dataTo.replace(rgx, match0);
@@ -2236,7 +2241,7 @@
 
 
 
-    // run shared js-env code - post-init
+    // run shared js-env code - init-after
     (function () {
         // coverage-hack - re-run test-server
         local.testRunServer(local);
@@ -2304,13 +2309,13 @@
 
 
 
-    // run browser js-env code - post-init
+    // run browser js-env code - init-after
     case 'browser':
         break;
 
 
 
-    // run node js-env code - post-init
+    // run node js-env code - init-after
     /* istanbul ignore next */
     case 'node':
         // run the cli
