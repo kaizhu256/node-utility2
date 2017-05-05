@@ -2103,8 +2103,7 @@ shMain() {
         [ "$COMMAND" = -e ] ||
         [ "$COMMAND" = -i ] ||
         [ "$COMMAND" = ajax ] ||
-        [ "$COMMAND" = browserTest ] ||
-        [ "$COMMAND" = onParallelListExec ]
+        [ "$COMMAND" = browserTest ]
     then
         shBuildInit
         lib.utility2.js "$COMMAND" "$@"
@@ -2555,7 +2554,7 @@ shOnParallelListExec() {(set -e
     LIST="$1"
     RATE_LIMIT="$2"
     shBuildInit
-    utility2 onParallelListExec "$LIST" "$RATE_LIMIT"
+    utility2 cli.onParallelListExec "$LIST" "$RATE_LIMIT"
 )}
 
 shPasswordEnvUnset() {
@@ -3126,7 +3125,7 @@ shUtility2DependentsSync() {(set -e
     # hardlink lib.swgg.js
     if [ -d swgg ]
     then
-        ln -f utility2/assets.utility2.rollup.js swgg/assets.swgg.rollup.js
+        ln -f utility2/tmp/build/app/assets.utility2.rollup.js swgg
         ln -f utility2/lib.swgg.js swgg
     fi
 )}

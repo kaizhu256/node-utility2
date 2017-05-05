@@ -41,11 +41,10 @@
         // init utility2_rollup
         local = local.global.utility2_rollup || local;
         // init lib
-        local.local = local.utility2 = local.global.utility2 = local;
+        local.local = local.utility2 = local.global.utility2 = local.global.utility2_utility2 =
+            local;
         // init exports
-        if (local.modeJs === 'browser') {
-            local.global.utility2 = local;
-        } else {
+        if (local.modeJs === 'node') {
             module.exports = local;
             module.exports.__dirname = __dirname;
             module.exports.module = module;
@@ -256,7 +255,7 @@ instruction\n\
         local = local.global.utility2_rollup || (local.modeJs === \'browser\'\n\
             ? local.global.utility2_jslint\n\
             : require(\'jslint-lite\'));\n\
-        // export local\n\
+        // init exports\n\
         local.global.local = local;\n\
     }());\n\
     switch (local.modeJs) {\n\
@@ -355,7 +354,7 @@ instruction\n\
     // run node js\-env code - init-after\n\
     /* istanbul ignore next */\n\
     case \'node\':\n\
-        // export local\n\
+        // init exports\n\
         module.exports = local;\n\
         // require modules\n\
         local.fs = require(\'fs\');\n\
@@ -364,39 +363,28 @@ instruction\n\
         // init assets\n\
         local.assetsDict = local.assetsDict || {};\n\
         /* jslint-ignore-begin */\n\
-        local.assetsDict[\'/assets.index.template.html\'] = \'\\\n' +
+        local.assetsDict[\'/assets.index.template.html\'] =\n\
+            local.assetsDict[\'/assets.index.template.html\'] || \'\\\n' +
 local.assetsDict['/assets.index.template.html'].replace((/\n/g), '\\n\\\n') +
 '\';\n\
         /* jslint-ignore-end */\n\
-        if (local.templateRender) {\n\
-            local.assetsDict[\'/\'] = local.templateRender(\n\
-                local.assetsDict[\'/assets.index.template.html\'],\n\
-                {\n\
-                    env: local.objectSetDefault(local.env, {\n\
-                        npm_package_description: \'the greatest app in the world!\',\n\
-                        npm_package_name: \'my-app\',\n\
-                        npm_package_nameAlias: \'my_app\',\n\
-                        npm_package_version: \'0.0.1\'\n\
-                    })\n\
+        local.assetsDict[\'/\'] = local.assetsDict[\'/assets.index.template.html\']\n\
+            .replace((/\\{\\{env\\.(\\w+?)\\}\\}/g), function (match0, match1) {\n\
+                // jslint-hack\n\
+                String(match0);\n\
+                switch (match1) {\n\
+                case \'npm_package_description\':\n\
+                    return \'the greatest app in the world!\';\n\
+                case \'npm_package_name\':\n\
+                    return \'my-app\';\n\
+                case \'npm_package_nameAlias\':\n\
+                    return \'my_app\';\n\
+                case \'npm_package_version\':\n\
+                    return \'0.0.1\';\n\
+                default:\n\
+                    return match0;\n\
                 }\n\
-            );\n\
-        } else {\n\
-            local.assetsDict[\'/\'] = local.assetsDict[\'/assets.index.template.html\']\n\
-                .replace((/\\{\\{env\\.(\\w+?)\\}\\}/g), function (match0, match1) {\n\
-                    // jslint-hack\n\
-                    String(match0);\n\
-                    switch (match1) {\n\
-                    case \'npm_package_description\':\n\
-                        return \'the greatest app in the world!\';\n\
-                    case \'npm_package_name\':\n\
-                        return \'my-app\';\n\
-                    case \'npm_package_nameAlias\':\n\
-                        return \'my_app\';\n\
-                    case \'npm_package_version\':\n\
-                        return \'0.0.1\';\n\
-                    }\n\
-                });\n\
-        }\n\
+            });\n\
         // run the cli\n\
         if (local.global.utility2_rollup || module !== require.main) {\n\
             break;\n\
@@ -643,7 +631,7 @@ shBuildCiAfter() {(set -e\n\
 shBuildCiBefore() {(set -e\n\
     shReadmeTest example.js\n\
     shReadmeTest example.sh\n\
-    shNpmTestPublished\n\
+    # shNpmTestPublished\n\
 )}\n\
 \n\
 # run shBuildCi\n\
@@ -842,7 +830,7 @@ local.assetsDict['/assets.test.template.js'] = '\
                 .requireReadme();\n\
             break;\n\
         }\n\
-        // export local\n\
+        // init exports\n\
         local.global.local = local;\n\
     }());\n\
 \n\
@@ -1762,30 +1750,31 @@ local.assetsDict['/favicon.ico'] = '';
          * serve the browser-state wrapped in the given jsonp-callback
          */
             var state;
-            if (request._stateInit || (request.urlParsed &&
-                    request.urlParsed.pathname === '/jsonp.utility2._stateInit')) {
-                state = { utility2: { assetsDict: {
-                    '/assets.index.template.html':
-                        local.assetsDict['/assets.index.template.html']
-                } } };
-                local.objectSetDefault(state, { utility2: { env: {
-                    NODE_ENV: local.env.NODE_ENV,
-                    npm_config_mode_backend: local.env.npm_config_mode_backend,
-                    npm_package_description: local.env.npm_package_description,
-                    npm_package_homepage: local.env.npm_package_homepage,
-                    npm_package_name: local.env.npm_package_name,
-                    npm_package_nameAlias: local.env.npm_package_nameAlias,
-                    npm_package_version: local.env.npm_package_version
-                } } }, 3);
-                if (request._stateInit) {
-                    return state;
-                }
-                response.end(
-                    request.urlParsed.query.callback + '(' + JSON.stringify(state) + ');'
-                );
+            if (!(request._stateInit || (request.urlParsed &&
+                    request.urlParsed.pathname === '/jsonp.utility2._stateInit'))) {
+                nextMiddleware();
                 return;
             }
-            nextMiddleware();
+            state = { utility2: { assetsDict: {}, env: {
+                NODE_ENV: local.env.NODE_ENV,
+                npm_config_mode_backend: local.env.npm_config_mode_backend,
+                npm_package_description: local.env.npm_package_description,
+                npm_package_homepage: local.env.npm_package_homepage,
+                npm_package_name: local.env.npm_package_name,
+                npm_package_nameAlias: local.env.npm_package_nameAlias,
+                npm_package_version: local.env.npm_package_version
+            } } };
+            [
+                '/assets.' + local.env.npm_package_nameAlias + '.css',
+                '/assets.index.template.html',
+                '/assets.swgg.swagger.json'
+            ].forEach(function (key) {
+                state.utility2.assetsDict[key] = local.assetsDict[key];
+            });
+            if (request._stateInit) {
+                return state;
+            }
+            response.end(request.urlParsed.query.callback + '(' + JSON.stringify(state) + ');');
         };
 
         local._serverLocalUrlTest = local.nop;
@@ -1806,7 +1795,9 @@ local.assetsDict['/favicon.ico'] = '';
             var timerTimeout, tmp, xhr;
             onError = local.onErrorWithStack(onError);
             // init modeServerLocal
-            if (!local.env.npm_config_mode_backend && local._serverLocalUrlTest(options.url)) {
+            if (local.env &&
+                    !local.env.npm_config_mode_backend &&
+                    (local._serverLocalUrlTest && local._serverLocalUrlTest(options.url))) {
                 xhr = new local._http.XMLHttpRequest();
             }
             // init xhr
@@ -1824,6 +1815,8 @@ local.assetsDict['/favicon.ico'] = '';
             });
             // init method
             xhr.method = xhr.method || 'GET';
+            // init modeForwardProxyUrl
+            xhr.modeForwardProxyUrl = xhr.modeForwardProxyUrl || local.modeForwardProxyUrl;
             // init timeout
             xhr.timeout = xhr.timeout || local.timeoutDefault;
             // init timerTimeout
@@ -1904,8 +1897,16 @@ local.assetsDict['/favicon.ico'] = '';
             xhr.addEventListener('progress', local.ajaxProgressUpdate);
             xhr.upload.addEventListener('progress', local.ajaxProgressUpdate);
             // open url
-            xhr.open(xhr.method, xhr.url);
-            // set request-headers
+            if (local.modeJs === 'browser' &&
+                    xhr.modeForwardProxyUrl &&
+                    (/^https{0,1}:/).test(xhr.url) &&
+                    xhr.url.indexOf(location.protocol + '//' + location.host) !== 0) {
+                xhr.open(xhr.method, xhr.modeForwardProxyUrl);
+                xhr.setRequestHeader('forward-proxy-headers', JSON.stringify(xhr.headers));
+                xhr.setRequestHeader('forward-proxy-url', xhr.url);
+            } else {
+                xhr.open(xhr.method, xhr.url);
+            }
             Object.keys(xhr.headers).forEach(function (key) {
                 xhr.setRequestHeader(key, xhr.headers[key]);
             });
@@ -1919,7 +1920,7 @@ local.assetsDict['/favicon.ico'] = '';
                         local.bufferToString(xhr.data.slice(0, 256))
                 }));
             }
-            if (xhr.data instanceof local.FormData) {
+            if (local.FormData && xhr.data instanceof local.FormData) {
                 // handle formData
                 xhr.data.read(function (error, data) {
                     if (error) {
@@ -2620,9 +2621,14 @@ return Utf8ArrayToStr(bff);
         /*
          * this function will build the app
          */
-            var writeFileSync;
             local.fsRmrSync(local.env.npm_config_dir_build + '/app');
             local.onParallelList({ list: options.concat([{
+                file: '/assets.' + local.env.npm_package_nameAlias + '.css',
+                url: '/assets.' + local.env.npm_package_nameAlias + '.css'
+            }, {
+                file: '/assets.' + local.env.npm_package_nameAlias + '.html',
+                url: '/index.html'
+            }, {
                 file: '/assets.' + local.env.npm_package_nameAlias + '.js',
                 url: '/assets.' + local.env.npm_package_nameAlias + '.js'
             }, {
@@ -2634,6 +2640,12 @@ return Utf8ArrayToStr(bff);
             }, {
                 file: '/assets.example.js',
                 url: '/assets.example.js'
+            }, {
+                file: '/assets.swgg.html',
+                url: '/assets.swgg.html'
+            }, {
+                file: '/assets.swgg.swagger.json',
+                url: '/assets.swgg.swagger.json'
             }, {
                 file: '/assets.test.js',
                 url: '/assets.test.js'
@@ -2666,22 +2678,13 @@ return Utf8ArrayToStr(bff);
                 // validate no error occurred
                 local.assert(!error, error);
                 // coverage-hack
-                writeFileSync = local.fs.writeFileSync;
-                local.nop(local.global.__coverage__ && (function () {
-                    writeFileSync = local.nop;
-                }()));
-                writeFileSync(
-                    'assets.' + local.env.npm_package_nameAlias + '.rollup.js',
-                    local.assetsDict['/assets.' + local.env.npm_package_nameAlias +
-                        '.rollup.js']
-                );
                 // test standalone assets.app.js
                 local.fs.writeFileSync('tmp/assets.app.js', local.assetsDict['/assets.app.js']);
                 local.processSpawnWithTimeout('node', ['assets.app.js'], {
                     cwd: 'tmp',
                     env: {
                         PATH: local.env.PATH,
-                        PORT: (Math.random() * 0x10000) | 0x8000,
+                        PORT: (local.env.PORT ^ (Math.random() * 0x10000)) | 0x8000,
                         npm_config_timeout_exit: 5000
                     },
                     stdio: ['ignore', 1, 2]
@@ -2870,7 +2873,6 @@ return Utf8ArrayToStr(bff);
                 // customize quickstart-header
                 (/\n```javascript\n\/\*\nexample\.js\n\n[^`]*?\n/),
                 (/\n {8}\$ npm install [^`]*? &&/),
-                (/\n {12}: global;\n[^`]*?\n {8}local\.global\.local = local;\n/),
                 (/\n {8}local\.global\.local = local;\n[^`]*?\n {4}\/\/ init-after\n/),
                 new RegExp('\\n {8}local\\.testRunBrowser = function \\(event\\) \\{\\n' +
                     '[^`]*?^ {12}if \\(!event \\|\\| \\(event &&\\n', 'm'),
@@ -2928,9 +2930,11 @@ return Utf8ArrayToStr(bff);
                 (/\n {4}\/\/ run shared js\-env code - function\n[\S\s]*?\n {4}\}\(\)\);\n/),
                 (/\n {4}\/\/ run browser js\-env code - function\n[\S\s]*?\n {8}break;\n/),
                 (/\n {4}\/\/ run node js\-env code - function\n[\S\s]*?\n {8}break;\n/),
+                (/\n {4}\/\/ run shared js\-env code - init-after\n[\S\s]*?\n {4}\}\(\)\);\n/),
                 new RegExp('\\n {4}\\/\\/ run browser js\\-env code - init-after\\n[\\S\\s]*?' +
-                    '^ {4}case \'browser\':\n', 'm'),
-                (/\n {4}\/\/ run shared js\-env code - init-after\n[\S\s]*?\n {4}\}\(\)\);\n/)
+                    '\n {8}local.testCase_browser_nullCase = '),
+                new RegExp('\\n {4}\\/\\/ run node js\\-env code - init-after\\n[\\S\\s]*?' +
+                    '\n {8}local.testCase_buildApidoc_default = ')
             ].forEach(function (rgx) {
                 // handle large string-replace
                 options.dataFrom.replace(rgx, function (match0) {
@@ -3754,7 +3758,8 @@ return Utf8ArrayToStr(bff);
                 // enable cors
                 // http://en.wikipedia.org/wiki/Cross-origin_resource_sharing
                 local.serverRespondHeadSet(request, response, null, {
-                    'Access-Control-Allow-Headers': 'forward-proxy-headers,forward-proxy-url',
+                    'Access-Control-Allow-Headers':
+                        'content-type,forward-proxy-headers,forward-proxy-url',
                     'Access-Control-Allow-Methods': 'DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT',
                     'Access-Control-Allow-Origin': '*'
                 });
@@ -3810,6 +3815,7 @@ return Utf8ArrayToStr(bff);
                 ? local.https
                 : local.http).request(options, function (clientResponse) {
                 options.clientResponse = clientResponse.on('error', onError);
+                response.statusCode = options.clientResponse.statusCode;
                 // pipe clientResponse to serverResponse
                 options.clientResponse.pipe(response);
             }).on('error', onError);
@@ -4594,19 +4600,8 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
                     local.assetsDict['/assets.example.template.js'];
                 local.assetsDict['/assets.app.js'] =
                     local.fs.readFileSync(__filename, 'utf8').replace((/^#!/), '//');
-                // coverage-hack
-                local.nop(local.env.npm_config_mode_start && (function () {
-                    local.assetsDict['/assets.app.js'] =
-                        local.assetsDict['/assets.utility2.rollup.begin.js'];
-                    local.assetsDict['/assets.app.js'] += '\n\n\n' +
-                        local.fs.readFileSync(__filename, 'utf8').replace((/^#!/), '//');
-                    local.assetsDict['/assets.app.js'] += '\n\n\n' +
-                        local.assetsDict['/assets.example.js'];
-                    local.assetsDict['/assets.app.js'] += '\n\n\n' +
-                        local.assetsDict['/assets.test.js'];
-                    local.global.local = local;
-                }()));
-                local[local.env.npm_package_nameAlias] = local;
+                // init exports
+                local.global.local = local[local.env.npm_package_nameAlias] = local;
                 return local;
             }
             // init file $npm_package_main
@@ -4667,6 +4662,10 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
                 process.cwd() + '/test.js'
             );
             // init assets.index.html
+            local.tryCatchOnError(function () {
+                local.assetsDict['/assets.index.template.html'] =
+                    local.fs.readFileSync('assets.index.template.html', 'utf8');
+            }, local.nop);
             local.assetsDict['/'] = local.assetsDict['/index.html'] =
                 local.jslintAndPrintConditional(local.templateRender(
                     // uncomment utility2-comment
@@ -4713,17 +4712,24 @@ instruction\n\
 ';
 /* jslint-ignore-end */
                 case 'local._stateInit':
-                    script = local.assetsDict['/assets.utility2.rollup.content.js'].replace(
-                        '/* utility2.rollup.js content */',
-                        key + '(' + JSON.stringify(
-                            local._middlewareJsonpStateInit({ _stateInit: true })
-                        ) + ');'
-                    );
+                    // handle large string-replace
+                    script = local.assetsDict['/assets.utility2.rollup.content.js']
+                        .split('/* utility2.rollup.js content */');
+                    script.splice(1, 0, key + '(' + JSON.stringify(
+                        local._middlewareJsonpStateInit({ _stateInit: true })
+                    ) + ');');
+                    script = script.join('');
                     break;
                 case '/assets.lib.js':
-                    script = local.assetsDict[
-                        '/assets.' + local.env.npm_package_nameAlias + '.js'
-                    ];
+                    // handle large string-replace
+                    tmp = '/assets.' + local.env.npm_package_nameAlias + '.js';
+                    script = local.assetsDict['/assets.utility2.rollup.content.js']
+                        .split('/* utility2.rollup.js content */');
+                    script.splice(1, 0, 'local.assetsDict["' + tmp + '"] = ' +
+                        JSON.stringify(local.assetsDict[tmp]));
+                    script = script.join('');
+                    script += '\n';
+                    script += local.assetsDict[tmp];
                     // coverage-hack
                     local.nop(local.assetsDict[
                         '/assets.' + local.env.npm_package_nameAlias + '.rollup.js'
@@ -5952,6 +5958,7 @@ instruction\n\
         local.istanbulInstrumentInPackage = local.istanbul.instrumentInPackage || local.echo;
         local.istanbulInstrumentSync = local.istanbul.instrumentSync || local.echo;
         local.jslintAndPrint = local.jslint.jslintAndPrint || local.echo;
+        // init objectWeird
         local.objectWeird = function () {
             return;
         };
@@ -6003,12 +6010,11 @@ instruction\n\
             location.search.replace(
                 (/\b(NODE_ENV|mode[A-Z]\w+|timeExit|timeoutDefault)=([^#&]+)/g),
                 function (match0, key, value) {
-                    // jslint-hack
-                    local.nop(match0);
-                    local[key] = local.env[key] = value;
+                    match0 = decodeURIComponent(value);
+                    local[key] = local.env[key] = match0;
                     // try to JSON.parse the string
                     local.tryCatchOnError(function () {
-                        local[key] = JSON.parse(value);
+                        local[key] = JSON.parse(match0);
                     }, local.nop);
                 }
             );
@@ -6068,100 +6074,6 @@ instruction\n\
             npm_config_dir_build: process.cwd() + '/tmp/build',
             npm_config_dir_tmp: process.cwd() + '/tmp'
         });
-        if (local.global.utility2_rollup) {
-            local.assetsDict['/assets.utility2.rollup.js'] =
-                local.fs.readFileSync(__filename, 'utf8')
-                .split('\n/* script-end /assets.utility2.rollup.end.js */')[0] +
-                '\n/* script-end /assets.utility2.rollup.end.js */\n';
-            break;
-        }
-        // init assets
-        [
-            'lib.apidoc.js',
-            'lib.db.js',
-            'lib.github_crud.js',
-            'lib.istanbul.js',
-            'lib.jslint.js',
-            'lib.sjcl.js',
-            'lib.swgg.js',
-            'lib.uglifyjs.js',
-            'lib.utility2.js',
-            'lib.utility2.sh'
-        ].forEach(function (key) {
-            switch (key) {
-            case 'lib.apidoc.js':
-            case 'lib.db.js':
-            case 'lib.github_crud.js':
-            case 'lib.istanbul.js':
-            case 'lib.jslint.js':
-            case 'lib.sjcl.js':
-            case 'lib.uglifyjs.js':
-                local.assetsDict['/assets.utility2.' + key] =
-                    local.tryCatchReadFile(__dirname + '/' + key, 'utf8')
-                        .replace((/^#!/), '//');
-                break;
-            case 'lib.swgg.js':
-            case 'lib.utility2.js':
-                key = key.replace('lib.', '');
-                local.assetsDict['/assets.' + key] =
-                    local.tryCatchReadFile(__dirname + '/lib.' + key, 'utf8')
-                        .replace((/^#!/), '//');
-                break;
-            case 'lib.utility2.sh':
-                local.jslintAndPrintConditional(
-                    local.tryCatchReadFile(__dirname + '/' + key, 'utf8')
-                        .replace((/^ *?#!! .*$/gm), ''),
-                    __dirname + '/' + key + '.html'
-                );
-                break;
-            }
-        });
-        local.assetsDict['/assets.utility2.rollup.js'] = [
-            'header',
-            '/assets.utility2.rollup.begin.js',
-            'lib.apidoc.js',
-            'lib.db.js',
-            'lib.github_crud.js',
-            'lib.istanbul.js',
-            'lib.jslint.js',
-            'lib.sjcl.js',
-            'lib.uglifyjs.js',
-            'lib.utility2.js',
-            'lib.swgg.js',
-            '/assets.utility2.rollup.end.js'
-        ].map(function (key) {
-            var script;
-            switch (key) {
-            case 'header':
-                return '/* this rollup was created with utility2 ' +
-                    '(https://github.com/kaizhu256/node-utility2) */\n';
-            case '/assets.utility2.rollup.begin.js':
-            case '/assets.utility2.rollup.end.js':
-                script = local.assetsDict[key];
-                break;
-            case 'lib.apidoc.js':
-            case 'lib.db.js':
-            case 'lib.github_crud.js':
-            case 'lib.istanbul.js':
-            case 'lib.jslint.js':
-            case 'lib.sjcl.js':
-            case 'lib.uglifyjs.js':
-                key = '/assets.utility2.' + key;
-                script = local.assetsDict[key];
-                break;
-            case 'lib.swgg.js':
-            case 'lib.utility2.js':
-                key = '/assets.' + key.replace('lib.', '');
-                script = local.assetsDict[key];
-                break;
-            }
-            return '/* script-begin ' + key + ' */\n' +
-                script.trim() +
-                '\n/* script-end ' + key + ' */\n';
-        }).join('\n\n\n');
-        // init assets.lib.rollup.js
-        local.assetsDict['/assets.swgg.rollup.js'] =
-            local.assetsDict['/assets.utility2.rollup.js'];
         // merge previous test-report
         if (local.env.npm_config_file_test_report_merge) {
             local.testReportMerge(
@@ -6174,15 +6086,7 @@ instruction\n\
             console.error('\n' + local.env.MODE_BUILD + ' - merged test-report from file://' +
                 local.env.npm_config_file_test_report_merge);
         }
-        break;
-    }
-    switch (local.modeJs) {
-
-
-
-    // run node js-env code - cli
-    /* istanbul ignore next */
-    case 'node':
+        // run the cli
         switch (process.argv[2]) {
         case '--eval':
         case '-e':
@@ -6293,7 +6197,7 @@ instruction\n\
                 local.onErrorThrow
             );
             return;
-        case 'onParallelListExec':
+        case 'cli.onParallelListExec':
             local.onParallelList({
                 list: process.argv[3].split('\n').filter(function (element) {
                     return element.trim();
@@ -6319,13 +6223,116 @@ instruction\n\
             }, local.onErrorDefault)).testsFailed);
             return;
         }
+        // override assets
+        [
+            'assets.' + local.env.npm_package_nameAlias + '.css',
+            'assets.index.template.html',
+            'assets.swgg.swagger.json'
+        ].forEach(function (file) {
+            local.assetsDict['/' + file] = local.assetsDict['/' + file] || '';
+            if (local.fs.existsSync(file)) {
+                local.assetsDict['/' + file] = local.fs.readFileSync(file, 'utf8');
+            }
+        });
+        if (local.global.utility2_rollup) {
+            local.assetsDict['/assets.utility2.rollup.js'] =
+                local.fs.readFileSync(__filename, 'utf8')
+                .split('\n/* script-end /assets.utility2.rollup.end.js */')[0] +
+                '\n/* script-end /assets.utility2.rollup.end.js */\n';
+            break;
+        }
+        // init assets
+        [
+            'lib.apidoc.js',
+            'lib.db.js',
+            'lib.github_crud.js',
+            'lib.istanbul.js',
+            'lib.jslint.js',
+            'lib.sjcl.js',
+            'lib.swgg.js',
+            'lib.uglifyjs.js',
+            'lib.utility2.js',
+            'lib.utility2.sh'
+        ].forEach(function (key) {
+            switch (key) {
+            case 'lib.apidoc.js':
+            case 'lib.db.js':
+            case 'lib.github_crud.js':
+            case 'lib.istanbul.js':
+            case 'lib.jslint.js':
+            case 'lib.sjcl.js':
+            case 'lib.uglifyjs.js':
+                local.assetsDict['/assets.utility2.' + key] =
+                    local.tryCatchReadFile(__dirname + '/' + key, 'utf8')
+                        .replace((/^#!/), '//');
+                break;
+            case 'lib.swgg.js':
+            case 'lib.utility2.js':
+                key = key.replace('lib.', '');
+                local.assetsDict['/assets.' + key] =
+                    local.tryCatchReadFile(__dirname + '/lib.' + key, 'utf8')
+                        .replace((/^#!/), '//');
+                break;
+            case 'lib.utility2.sh':
+                local.jslintAndPrintConditional(
+                    local.tryCatchReadFile(__dirname + '/' + key, 'utf8')
+                        .replace((/^ *?#!! .*$/gm), ''),
+                    __dirname + '/' + key + '.html'
+                );
+                break;
+            }
+        });
+        local.assetsDict['/assets.utility2.rollup.js'] = [
+            'header',
+            '/assets.utility2.rollup.begin.js',
+            'lib.apidoc.js',
+            'lib.db.js',
+            'lib.github_crud.js',
+            'lib.istanbul.js',
+            'lib.jslint.js',
+            'lib.sjcl.js',
+            'lib.uglifyjs.js',
+            'lib.utility2.js',
+            'lib.swgg.js',
+            '/assets.utility2.rollup.end.js'
+        ].map(function (key) {
+            var script;
+            switch (key) {
+            case 'header':
+                return '/* this rollup was created with utility2 ' +
+                    '(https://github.com/kaizhu256/node-utility2) */\n';
+            case '/assets.utility2.rollup.begin.js':
+            case '/assets.utility2.rollup.end.js':
+                script = local.assetsDict[key];
+                break;
+            case 'lib.apidoc.js':
+            case 'lib.db.js':
+            case 'lib.github_crud.js':
+            case 'lib.istanbul.js':
+            case 'lib.jslint.js':
+            case 'lib.sjcl.js':
+            case 'lib.uglifyjs.js':
+                key = '/assets.utility2.' + key;
+                script = local.assetsDict[key];
+                break;
+            case 'lib.swgg.js':
+            case 'lib.utility2.js':
+                key = '/assets.' + key.replace('lib.', '');
+                script = local.assetsDict[key];
+                break;
+            }
+            return '/* script-begin ' + key + ' */\n' +
+                script.trim() +
+                '\n/* script-end ' + key + ' */\n';
+        }).join('\n\n\n');
         // init lib
         [
-            'lib.swgg.js'
-        ].forEach(function (file) {
-            file = __dirname + '/' + file;
-            if (!local.global.utility2_rollup && local.fs.existsSync(file)) {
-                require(file);
+            'swgg'
+        ].forEach(function (lib) {
+            var file;
+            file = __dirname + '/lib.' + lib + '.js';
+            if (local.fs.existsSync(file)) {
+                local[lib] = require(file);
             }
         });
         break;

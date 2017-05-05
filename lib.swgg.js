@@ -57,15 +57,15 @@
             module.exports.module = module;
         }
         // init swgg
-        local.global.swgg = local.swgg = local;
+        local.global.swgg = local.global.utility2_swgg = local.swgg = local;
         // init lib utility2
         local.utility2 = local.global.utility2_rollup || (local.modeJs === 'browser'
             ? local.global.utility2
             : (function () {
                 try {
-                    return require('./assets.utility2.rollup.js');
+                    return require(__dirname + '/lib.utility2.js');
                 } catch (errorCaught) {
-                    return require('./assets.swgg.rollup.js');
+                    return require(__dirname + '/assets.utility2.rollup.js');
                 }
             }()));
         local.utility2.objectSetDefault(local, local.utility2);
@@ -480,21 +480,21 @@ border: 0;\n\
 </style>\n\
 </head>\n\
 <body>\n\
-    <div id="ajaxProgressDiv1" style="background: #d00; height: 4px; left: 0; margin: 0; padding: 0; position: fixed; top: 0; transition: background 0.5s, width 1.5s; width: 25%;"></div>\n\
-    <div class="swggUiContainer">\n\
+<div id="ajaxProgressDiv1" style="background: #d00; height: 4px; left: 0; margin: 0; padding: 0; position: fixed; top: 0; transition: background 0.5s, width 1.5s; width: 25%;"></div>\n\
+<div class="swggUiContainer">\n\
 <form2 class="header tr">\n\
     <a class="td1" href="https://github.com/kaizhu256/node-swgg" target="_blank">swgg</a>\n\
-    <input\n\
-        class="flex1 td2"\n\
-        type="text"\n\
-        value="assets.swgg.petstore.json"\n\
-    >\n\
+    <input class="flex1 td2" type="text">\n\
     <button class="td3">Explore</button>\n\
 </form2>\n\
-    </div>\n\
-    <div class="swggAjaxProgressDiv" style="margin-top: 1rem; text-align: center;">fetching resource list; Please wait.</div>\n\
-    <script src="assets.swgg.rollup.js"></script>\n\
-    <script>window.swgg.uiEventListenerDict[".onEventUiReload"]();</script>\n\
+</div>\n\
+<div class="swggAjaxProgressDiv" style="margin-top: 1rem; text-align: center;">fetching resource list; Please wait.</div>\n\
+<script src="assets.utility2.rollup.js"></script>\n\
+<script>\n\
+document.querySelector(".swggUiContainer > .header > .td2").value =\n\
+    window.swgg.modeSwaggerJsonUrl || "assets.swgg.swagger.json";\n\
+window.swgg.uiEventListenerDict[".onEventUiReload"]();\n\
+</script>\n\
 </body>\n\
 </html>\n\
 ';
@@ -1679,7 +1679,7 @@ local.templateUiResponseAjax = '\
                 "info": {
                     "description": "demo of swagger-ui server",
                     "title": "swgg api",
-                    "version": "0"
+                    "version": "0.0.1"
                 },
                 "paths": {},
                 "securityDefinitions": {},
@@ -1828,6 +1828,9 @@ local.templateUiResponseAjax = '\
             local.tryCatchOnError(function () {
                 local.validateBySwagger(local.swaggerJson);
             }, local.onErrorDefault);
+            // init modeForwardProxyUrl
+            local.modeForwardProxyUrl = local.modeForwardProxyUrl ||
+                local.swaggerJson['x-modeForwardProxyUrl'];
         };
 
         local.dbFieldRandomCreate = function (options) {
@@ -3385,39 +3388,48 @@ local.templateUiResponseAjax = '\
         /*
          * this function will reload the ui
          */
+            var notify;
+            notify = function (message) {
+            /*
+             * this function will notify with the given message
+             */
+                document.querySelector('.swggAjaxProgressDiv').style.display = 'block';
+                document.querySelector('.swggAjaxProgressDiv').textContent = message;
+            };
             // reset ui
             Array.from(
                 document.querySelectorAll('.swggUiContainer > .reset')
             ).forEach(function (element) {
                 element.remove();
             });
-            // normalize url
+            // normalize swaggerJsonUrl
             document.querySelector('.swggUiContainer > .header > .td2').value =
                 local.urlParse(
                     document.querySelector('.swggUiContainer > .header > .td2').value
                         .replace((/^\//), '')
                 ).href;
             // display .swggAjaxProgressDiv
-            document.querySelector('.swggAjaxProgressDiv').textContent =
-                'fetching resource list: ' +
+            notify('fetching resource list: ' +
                 document.querySelector('.swggUiContainer > .header > .td2').value +
-                '; Please wait.';
+                '; Please wait.');
             document.querySelector('.swggAjaxProgressDiv').style.display = 'block';
             local.ajax({
                 url: document.querySelector('.swggUiContainer > .header > .td2').value
             }, function (error, xhr) {
-                // hide .swggAjaxProgressDiv
-                document.querySelector('.swggAjaxProgressDiv').style.display = 'none';
-                // validate no error occurred
-                local.assert(!error, error);
-                // reset state
-                local.apiDict = local.swaggerJson = null;
-                local.apiDictUpdate(local.objectSetDefault(JSON.parse(xhr.responseText), {
-                    host: local.urlParse(
-                        document.querySelector('.swggUiContainer > .header > .td2').value
-                    ).host
-                }));
-                local.uiRender();
+                local.tryCatchOnError(function () {
+                    // validate no error occurred
+                    local.assert(!error, error);
+                    // hide .swggAjaxProgressDiv
+                    document.querySelector('.swggAjaxProgressDiv').style.display = 'none';
+                    // reset state
+                    local.apiDict = local.swaggerJson = null;
+                    local.apiDictUpdate(local.objectSetDefault(JSON.parse(xhr.responseText), {
+                        host: local.urlParse(
+                            document.querySelector('.swggUiContainer > .header > .td2').value
+                        ).host
+                    }));
+                    local.uiRender();
+                }, notify);
             });
         };
 
@@ -3726,8 +3738,8 @@ local.templateUiResponseAjax = '\
          * handle errors according to http://jsonapi.org/format/#errors
          */
             if (!error) {
-                error = new Error('404 Not Found');
-                error.statusCode = 404;
+                local.serverRespondDefault(request, response, 404);
+                return;
             }
             local.serverRespondJsonapi(request, response, error);
         };
@@ -4166,32 +4178,10 @@ local.templateUiResponseAjax = '\
 
 
     // run node js-env code - init-after
+    /* istanbul ignore next */
     case 'node':
-        // init assets.lib.rollup.js
-        local.assetsDict['/assets.swgg.rollup.js'] =
-            local.assetsDict['/assets.utility2.rollup.js'];
         // init state
         local.utility2._stateInit({});
-        break;
-    }
-    switch (local.modeJs) {
-
-
-
-    /* istanbul ignore next */
-    // run node js-env code - cli
-    case 'node':
-        /* istanbul ignore next */
-        if (local.env.SWAGGER_JSON_URL) {
-            if (local.env.SWAGGER_JSON_URL === '127.0.0.1') {
-                local.env.SWAGGER_JSON_URL = '/assets.swgg.petstore.json';
-            }
-            local.assetsDict['/assets.swgg.html'] =
-                local.assetsDict['/assets.swgg.html'].replace(
-                    'assets.swgg.petstore.json',
-                    local.env.SWAGGER_JSON_URL
-                );
-        }
         // run the cli
         switch (process.argv[2]) {
         case 'swagger-ui':

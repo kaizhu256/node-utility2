@@ -43,14 +43,13 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 - analytics
 - none
 
-#### changelog for v2017.5.1
-- npm publish 2017.5.1
-- add cli-code cli.customOrgStarFilterNotBuilt
-- add default-coverage fallback for npmtest
-- add shell-functions shCustomOrgBuildCi, shCustomOrgTravisRebuild
-- auto-include electron-lite binary path in shell-function shBuildInit
-- streamline shell-based crypto-functions
-- use breadth-first-search for exampleList in apidoc
+#### changelog for v2017.5.5
+- npm publish 2017.5.5
+- add local.env param modeForwardProxyUrl to enable serverless browser-xss
+- allow assets.index.template.html and assets.lib.css to be overridden by external files
+- fix apidoc for duplicating main-module if circularly-referenced
+- merge assets.swgg.rollup.js into assets.utility2.rollup.js
+- remove file assets.utility2.rollup.js
 - none
 
 #### this package requires
@@ -100,7 +99,7 @@ shExampleSh() {(set -e
     # npm install utility2
     npm install utility2
     # serve a webpage that will interactively run browser-tests with coverage
-    cd node_modules/utility2 && export PORT=8081 && npm start
+    cd node_modules/utility2 && npm install && PORT=8081 npm start
 )}
 shExampleSh
 ```
@@ -179,14 +178,15 @@ instruction
             : global;
         // init utility2_rollup
         local = local.global.utility2_rollup || (local.modeJs === 'browser'
-            ? window.utility2
+            ? local.global.utility2_utility2
             : require('utility2'));
-        // export local
+        // init exports
         local.global.local = local;
         // run test-server
         local.testRunServer(local);
         // init assets
         local.assetsDict['/assets.hello'] = 'hello';
+        local.assetsDict['/assets.index.template.html'] = '';
     }());
     switch (local.modeJs) {
 
@@ -391,7 +391,7 @@ instruction
     // run node js-env code - init-after
     /* istanbul ignore next */
     case 'node':
-        // export local
+        // init exports
         module.exports = local;
         // require modules
         local.fs = require('fs');
@@ -400,7 +400,8 @@ instruction
         // init assets
         local.assetsDict = local.assetsDict || {};
         /* jslint-ignore-begin */
-        local.assetsDict['/assets.index.template.html'] = '\
+        local.assetsDict['/assets.index.template.html'] =
+            local.assetsDict['/assets.index.template.html'] || '\
 <!doctype html>\n\
 <html lang="en">\n\
 <head>\n\
@@ -561,35 +562,23 @@ utility2-comment -->\n\
 </html>\n\
 ';
         /* jslint-ignore-end */
-        if (local.templateRender) {
-            local.assetsDict['/'] = local.templateRender(
-                local.assetsDict['/assets.index.template.html'],
-                {
-                    env: local.objectSetDefault(local.env, {
-                        npm_package_description: 'the greatest app in the world!',
-                        npm_package_name: 'my-app',
-                        npm_package_nameAlias: 'my_app',
-                        npm_package_version: '0.0.1'
-                    })
+        local.assetsDict['/'] = local.assetsDict['/assets.index.template.html']
+            .replace((/\{\{env\.(\w+?)\}\}/g), function (match0, match1) {
+                // jslint-hack
+                String(match0);
+                switch (match1) {
+                case 'npm_package_description':
+                    return 'the greatest app in the world!';
+                case 'npm_package_name':
+                    return 'my-app';
+                case 'npm_package_nameAlias':
+                    return 'my_app';
+                case 'npm_package_version':
+                    return '0.0.1';
+                default:
+                    return match0;
                 }
-            );
-        } else {
-            local.assetsDict['/'] = local.assetsDict['/assets.index.template.html']
-                .replace((/\{\{env\.(\w+?)\}\}/g), function (match0, match1) {
-                    // jslint-hack
-                    String(match0);
-                    switch (match1) {
-                    case 'npm_package_description':
-                        return 'the greatest app in the world!';
-                    case 'npm_package_name':
-                        return 'my-app';
-                    case 'npm_package_nameAlias':
-                        return 'my_app';
-                    case 'npm_package_version':
-                        return '0.0.1';
-                    }
-                });
-        }
+            });
         // run the cli
         if (local.global.utility2_rollup || module !== require.main) {
             break;
@@ -703,7 +692,7 @@ utility2-comment -->\n\
         "start": "set -e; export PORT=${PORT:-8080}; if [ -f assets.app.js ]; then node assets.app.js; else npm_config_mode_auto_restart=1 ./lib.utility2.sh shRun shIstanbulCover test.js; fi",
         "test": "PORT=$(./lib.utility2.sh shServerPortRandom) PORT_REPL=$(./lib.utility2.sh shServerPortRandom) npm_config_mode_auto_restart=1 ./lib.utility2.sh test test.js"
     },
-    "version": "2017.5.1"
+    "version": "2017.5.5"
 }
 ```
 
@@ -737,67 +726,50 @@ VOLUME [ \
 WORKDIR /tmp
 # install nodejs
 # https://nodejs.org/en/download/package-manager/#debian-and-ubuntu-based-linux-distributions
-RUN export DEBIAN_FRONTEND=noninteractive && \
-    apt-get update && \
+RUN (set -e; \
+    export DEBIAN_FRONTEND=noninteractive; \
+    apt-get update; \
     apt-get install --no-install-recommends -y \
         apt-utils \
         busybox \
         ca-certificates \
-        curl && \
+        curl; \
     (busybox --list | xargs -n1 /bin/sh -c 'ln -s /bin/busybox /bin/$0 2>/dev/null' || true) \
-        && \
-    curl -#L https://deb.nodesource.com/setup_6.x | /bin/bash - && \
-    apt-get install -y nodejs
+       ; \
+    curl -#L https://deb.nodesource.com/setup_6.x | /bin/bash -; \
+    apt-get install -y nodejs; \
+)
 # install electron-lite
 VOLUME [ \
   "/usr/lib/chromium" \
 ]
 # COPY electron-*.zip /tmp
-RUN export DEBIAN_FRONTEND=noninteractive && \
-    apt-get update && \
+RUN (set -e; \
+    export DEBIAN_FRONTEND=noninteractive; \
+    apt-get update; \
     apt-get install --no-install-recommends -y \
         chromium \
         gconf2 \
         git \
-        xvfb && \
-    npm install "kaizhu256/node-electron-lite#alpha" && \
-    cd node_modules/electron-lite && \
-    npm install && \
-    export DISPLAY=:99.0 && \
-    (Xvfb "$DISPLAY" &) && \
-    npm test && \
-    cp /tmp/electron-*.zip /
+        xvfb; \
+    npm install "kaizhu256/node-electron-lite#alpha"; \
+    cd node_modules/electron-lite; \
+    npm install; \
+    export DISPLAY=:99.0; \
+    (Xvfb "$DISPLAY" &); \
+    npm test; \
+    cp /tmp/electron-*.zip /; \
+)
 # install extras
-RUN export DEBIAN_FRONTEND=noninteractive && \
-    apt-get update && \
+RUN (set -e; \
+    export DEBIAN_FRONTEND=noninteractive; \
+    apt-get update; \
     apt-get install --no-install-recommends -y \
         nginx-extras \
         transmission-daemon \
         ssh \
-        vim
-```
-
-- Dockerfile.emscripten
-```shell
-# Dockerfile.emscripten
-# docker build -f tmp/README.Dockerfile.emscripten -t emscripten .
-FROM kaizhu256/node-utility2:latest
-MAINTAINER kai zhu <kaizhu256@gmail.com>
-# https://kripken.github.io/emscripten-site/docs
-# /building_from_source/building_emscripten_from_source_using_the_sdk.html
-# build emscripten v1.36.0
-RUN export DEBIAN_FRONTEND=noninteractive && \
-    mkdir -p /usr/share/man/man1 && \
-    apt-get update && \
-    apt-get install --no-install-recommends -y \
-        cmake && \
-    cd / && \
-    git clone https://github.com/juj/emsdk.git --branch=master --single-branch && \
-    cd /emsdk && \
-    ./emsdk install -j2 --shallow sdk-master-64bit && \
-    ./emsdk activate && \
-    find . -name ".git" -print0 | xargs -0 rm -fr && \
-    find . -name "src" -print0 | xargs -0 rm -fr
+        vim; \
+)
 ```
 
 - Dockerfile.latest
@@ -806,29 +778,33 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
 FROM kaizhu256/node-utility2:base
 MAINTAINER kai zhu <kaizhu256@gmail.com>
 # install utility2
-RUN export DEBIAN_FRONTEND=noninteractive && \
-    npm install "kaizhu256/node-utility2#alpha" && \
-    cp -a node_modules / && \
-    cd node_modules/utility2 && \
-    npm install && \
-    export DISPLAY=:99.0 && \
-    (Xvfb "$DISPLAY" &) && \
-    npm test
+RUN (set -e; \
+    export DEBIAN_FRONTEND=noninteractive; \
+    npm install "kaizhu256/node-utility2#alpha"; \
+    cp -a node_modules /; \
+    cd node_modules/utility2; \
+    npm install; \
+    export DISPLAY=:99.0; \
+    (Xvfb "$DISPLAY" &); \
+    npm test; \
+)
 # install elasticsearch and kibana
-RUN export DEBIAN_FRONTEND=noninteractive && \
-    mkdir -p /usr/share/man/man1 && \
-    apt-get update && \
+RUN (set -e; \
+    export DEBIAN_FRONTEND=noninteractive; \
+    mkdir -p /usr/share/man/man1; \
+    apt-get update; \
     apt-get install --no-install-recommends -y \
-        default-jre && \
+        default-jre; \
     curl -#Lo elasticsearch.tar.gz \
-        https://download.elastic.co/elasticsearch/elasticsearch/elasticsearch-1.7.6.tar.gz && \
-    rm -fr /elasticsearch && \
-    mkdir -p /elasticsearch && \
-    tar -xzf elasticsearch.tar.gz --strip-components=1 -C /elasticsearch && \
-    curl -#Lo kibana.tar.gz https://download.elastic.co/kibana/kibana/kibana-3.1.3.tar.gz && \
-    rm -fr /kibana && \
-    mkdir -p /kibana && \
-    tar -xzf kibana.tar.gz --strip-components=1 -C /kibana
+        https://download.elastic.co/elasticsearch/elasticsearch/elasticsearch-1.7.6.tar.gz; \
+    rm -fr /elasticsearch; \
+    mkdir -p /elasticsearch; \
+    tar -xzf elasticsearch.tar.gz --strip-components=1 -C /elasticsearch; \
+    curl -#Lo kibana.tar.gz https://download.elastic.co/kibana/kibana/kibana-3.1.3.tar.gz; \
+    rm -fr /kibana; \
+    mkdir -p /kibana; \
+    tar -xzf kibana.tar.gz --strip-components=1 -C /kibana; \
+)
 ```
 
 - build_ci.sh

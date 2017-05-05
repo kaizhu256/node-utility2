@@ -220,7 +220,9 @@
                 // test undefined-error handling-behavior
                 url: '/test.error-undefined'
             }, {
-                // test undefined https-url handling-behavior
+                // test modeForwardProxyUrl handling-behavior
+                modeForwardProxyUrl: local.serverLocalHost,
+                // test undefined-https-url handling-behavior
                 timeout: 1,
                 url: 'https://undefined:0'
             }] };
@@ -1716,9 +1718,6 @@
                 file: '/assets.script_only.html',
                 url: '/assets.script_only.html'
             }, {
-                file: '/assets.swgg.rollup.js',
-                url: '/assets.swgg.rollup.js'
-            }, {
                 file: '/assets.utility2.lib.db.js',
                 url: '/assets.utility2.lib.db.js'
             }, {
@@ -1837,8 +1836,7 @@
                     new RegExp('\\n {4}\\/\\/ run shared js\\-env code - init-before\\n' +
                         '[\\S\\s]*?\\n {4}\\}\\(\\)\\);'),
                     new RegExp('\\n {4}\\/\\/ run browser js\\-env code - init-after\\n' +
-                        '[\\S\\s]*?\\n {8}break;\\n'),
-                    (/\n {4}\/\/ run node js\-env code - init-after\n[\S\s]*?\n {8}break;\n/)
+                        '[\\S\\s]*?\\n {8}break;\\n')
                 ].forEach(function (rgx) {
                     options.dataFrom.replace(rgx, function (match0) {
                         options.dataTo = options.dataTo.replace(rgx, match0);
@@ -2318,6 +2316,52 @@
     // run node js-env code - init-after
     /* istanbul ignore next */
     case 'node':
+        switch (local.env.HEROKU_APP_NAME) {
+        case 'h1-cron1':
+            // heroku-keepalive
+            setInterval(function () {
+                local.ajax({ url: 'https://h1-cron1.herokuapp.com' }, local.onErrorThrow);
+            }, 5 * 60 * 1000);
+            local.cronJob = local.nop;
+            // update cron
+            local.ajax({
+                url: 'https://kaizhu256.github.io/node-utility2/cronJob.js'
+            }, function (error, data) {
+                if (!error && data.responseText !== local.cronScript) {
+                    local.cronScript = data.responseText;
+                    local.vm.runInThisContext(local.cronScript);
+                }
+            });
+            setInterval(function () {
+                var cronTime;
+                cronTime = new Date();
+                if (cronTime.toISOString().slice(0, 16) <
+                        (local.cronTime && local.cronTime.toISOString())) {
+                    return;
+                }
+                local.cronTime = cronTime;
+                // cron every 5 minutes
+                if (local.cronTime.getUTCMinutes() % 5 === 0) {
+                    // update cron
+                    local.ajax({
+                        url: 'https://kaizhu256.github.io/node-utility2/cronJob.js'
+                    }, function (error, data) {
+                        if (!error && data.responseText !== local.cronScript) {
+                            local.cronScript = data.responseText;
+                            local.vm.runInThisContext(local.cronScript);
+                        }
+                    });
+                }
+                local.cronJob();
+            }, 30000);
+            break;
+        case 'h1-proxy1':
+            // heroku-keepalive
+            setInterval(function () {
+                local.ajax({ url: 'https://h1-proxy1.herokuapp.com' }, local.onErrorThrow);
+            }, 5 * 60 * 1000);
+            break;
+        }
         // run the cli
         if (module !== require.main || local.global.utility2_rollup) {
             return;
@@ -2340,44 +2384,88 @@
             process.argv[1] = local.path.resolve(process.cwd(), process.argv[1]);
             local.Module.runMain();
         }
-        switch (local.env.HEROKU_APP_NAME) {
-        case 'h1-cron1':
-            local.cronJob = local.nop;
-            // update cron
-            local.ajax({
-                url: 'https://kaizhu256.github.io/node-utility2/cronJob.js'
-            }, function (error, data) {
-                if (!error && data.responseText !== local.cronScript) {
-                    local.cronScript = data.responseText;
-                    local.vm.runInThisContext(local.cronScript);
-                }
-            });
-            setInterval(function () {
-                var cronTime;
-                cronTime = new Date();
-                if (cronTime.toISOString().slice(0, 16) <
-                        (local.cronTime && local.cronTime.toISOString())) {
-                    return;
-                }
-                local.cronTime = cronTime;
-                // cron every 5 minutes
-                if (local.cronTime.getUTCMinutes() % 5 === 0) {
-                    // heroku-keepalive
-                    local.ajax({ url: 'https://h1-cron1.herokuapp.com' }, local.onErrorThrow);
-                    // update cron
-                    local.ajax({
-                        url: 'https://kaizhu256.github.io/node-utility2/cronJob.js'
-                    }, function (error, data) {
-                        if (!error && data.responseText !== local.cronScript) {
-                            local.cronScript = data.responseText;
-                            local.vm.runInThisContext(local.cronScript);
-                        }
-                    });
-                }
-                local.cronJob();
-            }, 30000);
-            break;
-        }
+
+        local.testCase_buildApidoc_default = local.testCase_buildApidoc_default || function (
+            options,
+            onError
+        ) {
+        /*
+         * this function will test buildApidoc's default handling-behavior-behavior
+         */
+            options = { modulePathList: module.paths };
+            local.buildApidoc(options, onError);
+        };
+
+        local.testCase_buildApp_default = local.testCase_buildApp_default || function (
+            options,
+            onError
+        ) {
+        /*
+         * this function will test buildApp's default handling-behavior-behavior
+         */
+            local.testCase_buildReadme_default(options, local.onErrorThrow);
+            local.testCase_buildLib_default(options, local.onErrorThrow);
+            local.testCase_buildTest_default(options, local.onErrorThrow);
+            local.testCase_buildCustomOrg_default(options, local.onErrorThrow);
+            options = [];
+            local.buildApp(options, onError);
+        };
+
+        local.testCase_buildCustomOrg_default = local.testCase_buildCustomOrg_default ||
+            function (options, onError) {
+            /*
+             * this function will test buildCustomOrg's default handling-behavior
+             */
+                options = {};
+                local.buildCustomOrg(options, onError);
+            };
+
+        local.testCase_buildLib_default = local.testCase_buildLib_default || function (
+            options,
+            onError
+        ) {
+        /*
+         * this function will test buildLib's default handling-behavior
+         */
+            options = {};
+            local.buildLib(options, onError);
+        };
+
+        local.testCase_buildReadme_default = local.testCase_buildReadme_default || function (
+            options,
+            onError
+        ) {
+        /*
+         * this function will test buildReadme's default handling-behavior-behavior
+         */
+            options = {};
+            local.buildReadme(options, onError);
+        };
+
+        local.testCase_buildTest_default = local.testCase_buildTest_default || function (
+            options,
+            onError
+        ) {
+        /*
+         * this function will test buildTest's default handling-behavior
+         */
+            options = {};
+            local.buildTest(options, onError);
+        };
+
+        local.testCase_webpage_default = local.testCase_webpage_default || function (
+            options,
+            onError
+        ) {
+        /*
+         * this function will test webpage's default handling-behavior
+         */
+            options = { modeCoverageMerge: true, url: local.serverLocalHost + '?modeTest=1' };
+            local.browserTest(options, onError);
+        };
+
+        // run test-server
+        local.testRunServer(local);
         break;
     }
 }());

@@ -89,8 +89,8 @@
 
 
 
-    /* istanbul ignore next */
     // run shared js-env code - function-before
+    /* istanbul ignore next */
     (function () {
         local.jsonCopy = function (arg) {
         /*

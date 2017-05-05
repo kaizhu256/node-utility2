@@ -587,6 +587,7 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
                     options.require(options.dir + '/' + (options.packageJson.bin)[
                         Object.keys(options.packageJson.bin)[0]
                     ]) || {};
+                options.circularList.push(moduleMain);
                 console.error('apidocCreate - ... required ' + options.dir);
             }, console.error);
             tmp = {};
