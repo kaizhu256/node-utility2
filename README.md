@@ -1,13 +1,81 @@
 # utility2
 the zero-dependency, swiss-army-knife utility for building, testing, and deploying webapps
 
-[![travis-ci.org build-status](https://api.travis-ci.org/kaizhu256/node-utility2.svg)](https://travis-ci.org/kaizhu256/node-utility2) [![istanbul-coverage](https://kaizhu256.github.io/node-utility2/build/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build/coverage.html/index.html)
+[![travis-ci.org build-status](https://api.travis-ci.org/kaizhu256/node-utility2.svg)](https://travis-ci.org/kaizhu256/node-utility2)
 
 [![NPM](https://nodei.co/npm/utility2.png?downloads=true)](https://www.npmjs.com/package/utility2)
 
-[![npmPackageListing](https://kaizhu256.github.io/node-utility2/build/screenCapture.npmPackageListing.svg)](https://github.com/kaizhu256/node-utility2)
+[![build commit status](https://kaizhu256.github.io/node-utility2/build/build.badge.svg)](https://travis-ci.org/kaizhu256/node-utility2)
 
-![npmPackageDependencyTree](https://kaizhu256.github.io/node-utility2/build/screenCapture.npmPackageDependencyTree.svg)
+| git-branch : | [master](https://github.com/kaizhu256/node-utility2/tree/master) | [beta](https://github.com/kaizhu256/node-utility2/tree/beta) | [alpha](https://github.com/kaizhu256/node-utility2/tree/alpha)|
+|--:|:--|:--|:--|
+| test-server-github : | [![github.com test-server](https://kaizhu256.github.io/node-utility2/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/app) | [![github.com test-server](https://kaizhu256.github.io/node-utility2/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app) | [![github.com test-server](https://kaizhu256.github.io/node-utility2/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/app)|
+| test-server-heroku : | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://h1-utility2-master.herokuapp.com) | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://h1-utility2-beta.herokuapp.com) | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://h1-utility2-alpha.herokuapp.com)|
+| test-report : | [![test-report](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/test-report.html) | [![test-report](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/test-report.html) | [![test-report](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/test-report.html)|
+| coverage : | [![coverage](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/coverage.html/index.html) | [![coverage](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/coverage.html/index.html) | [![coverage](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/coverage.html/index.html)|
+| build-artifacts : | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..master..travis-ci.org) | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..beta..travis-ci.org) | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..alpha..travis-ci.org)|
+
+[![npmPackageListing](https://kaizhu256.github.io/node-utility2/build/screen-capture.npmPackageListing.svg)](https://github.com/kaizhu256/node-utility2)
+
+![npmPackageDependencyTree](https://kaizhu256.github.io/node-utility2/build/screen-capture.npmPackageDependencyTree.svg)
+
+
+
+# package.json
+```json
+{
+    "author": "kai zhu <kaizhu256@gmail.com>",
+    "bin": {
+        "utility2": "lib.utility2.sh",
+        "utility2-apidoc": "lib.apidoc.js",
+        "utility2-github-crud": "lib.github_crud.js",
+        "utility2-istanbul": "lib.istanbul.js",
+        "utility2-jslint": "lib.jslint.js",
+        "utility2-uglifyjs": "lib.uglifyjs.js"
+    },
+    "description": "the zero-dependency, swiss-army-knife utility for building, testing, and deploying webapps",
+    "devDependencies": {
+        "electron-lite": "kaizhu256/node-electron-lite#alpha"
+    },
+    "engines": {
+        "node": ">=4.0"
+    },
+    "homepage": "https://github.com/kaizhu256/node-utility2",
+    "keywords": [
+        "code-coverage",
+        "continuous-integration",
+        "devops",
+        "istanbul",
+        "jscoverage",
+        "test",
+        "test-coverage",
+        "travis-ci"
+    ],
+    "license": "MIT",
+    "main": "lib.utility2.js",
+    "name": "utility2",
+    "nameAlias": "utility2",
+    "nameAliasPublish": "npmtest-lite npmtest4 test-lite",
+    "nameOriginal": "utility2",
+    "os": [
+        "darwin",
+        "linux"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/kaizhu256/node-utility2.git"
+    },
+    "scripts": {
+        "build-ci": "./lib.utility2.sh shReadmeTest build_ci.sh",
+        "env": "env",
+        "heroku-postbuild": "./lib.utility2.sh shDeployHeroku",
+        "postinstall": "[ ! -f npm_scripts.sh ] || ./npm_scripts.sh postinstall",
+        "start": "set -e; export PORT=${PORT:-8080}; if [ -f assets.app.js ]; then node assets.app.js; else npm_config_mode_auto_restart=1 ./lib.utility2.sh shRun shIstanbulCover test.js; fi",
+        "test": "PORT=$(./lib.utility2.sh shServerPortRandom) PORT_REPL=$(./lib.utility2.sh shServerPortRandom) npm_config_mode_auto_restart=1 ./lib.utility2.sh test test.js"
+    },
+    "version": "2017.5.20"
+}
+```
 
 
 
@@ -17,9 +85,9 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 
 
 # live demo
-- [https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/index.html](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/index.html)
+- [https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app)
 
-[![github.com test-server](https://kaizhu256.github.io/node-utility2/build/screenCapture.deployGithub.browser.%252Fnode-utility2%252Fbuild%252Fapp%252Findex.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/index.html)
+[![github.com test-server](https://kaizhu256.github.io/node-utility2/build/screen-capture.deployGithub.browser.%252Fnode-utility2%252Fbuild%252Fapp.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app)
 
 
 
@@ -27,29 +95,34 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 #### apidoc
 - [https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/apidoc.html](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/apidoc.html)
 
-[![apidoc](https://kaizhu256.github.io/node-utility2/build/screenCapture.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/apidoc.html)
+[![apidoc](https://kaizhu256.github.io/node-utility2/build/screen-capture.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/apidoc.html)
 
 #### todo
-- fix https://travis-ci.org/npmdoc/node-npmdoc-cash
-- add quickstart example for npmdoc and npmtest
-- add browser-side testing of npmtest for /bower-components and /dist
-- rename sub-package db-lite -> nedb-lite
-- rename sub-package istanbul-lite -> istanbul-classic
-- rename sub-package jslint-lite -> jslint-classic
-- rename sub-package uglifyjs-lite -> uglifyjs-classic
+- auto-create README section 'table of contents'
+- customize README's cdn-download section
+- customize README's assetsDict section with file-override
+- add shell command buildCiCreate
 - allow server-side stdout to be streamed to webapps
 - add utility2.middlewareLimit
 - add server stress test using electron
 - analytics
 - none
 
-#### changelog for v2017.5.5
-- npm publish 2017.5.5
-- add local.env param modeForwardProxyUrl to enable serverless browser-xss
-- allow assets.index.template.html and assets.lib.css to be overridden by external files
-- fix apidoc for duplicating main-module if circularly-referenced
-- merge assets.swgg.rollup.js into assets.utility2.rollup.js
-- remove file assets.utility2.rollup.js
+#### changelog for v2017.5.20
+- npm publish 2017.5.20
+- auto npm install from alpha-branch
+- auto-build assets.example.html
+- auto-detect if package is npm-published to create npmPackageDependencyTree
+- deprecate and remove auto-rollup generation
+- merge function middlewareGroupCreate into testRunServer
+- merge shell command shBuildCiBefore into shBuildCiAfter
+- rename /app/index.html -> /app
+- rename istanbul-coverage -> coverage
+- rename screenCapture -> screen-capture
+- un-uglify embedded-lib jslint.js
+- add README section 'internal screen-capture'
+- add README section 'quickstart standalone app'
+- rename README section 'quickstart web example' -> 'quickstart example.js'
 - none
 
 #### this package requires
@@ -57,66 +130,34 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 
 
 
-# build status [![travis-ci.org build-status](https://api.travis-ci.org/kaizhu256/node-utility2.svg)](https://travis-ci.org/kaizhu256/node-utility2)
-[![build commit status](https://kaizhu256.github.io/node-utility2/build/build.badge.svg)](https://travis-ci.org/kaizhu256/node-utility2)
-
-| git-branch : | [master](https://github.com/kaizhu256/node-utility2/tree/master) | [beta](https://github.com/kaizhu256/node-utility2/tree/beta) | [alpha](https://github.com/kaizhu256/node-utility2/tree/alpha)|
-|--:|:--|:--|:--|
-| test-server-github : | [![github.com test-server](https://kaizhu256.github.io/node-utility2/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/app/index.html) | [![github.com test-server](https://kaizhu256.github.io/node-utility2/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/index.html) | [![github.com test-server](https://kaizhu256.github.io/node-utility2/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/app/index.html)|
-| test-server-heroku : | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://h1-utility2-master.herokuapp.com) | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://h1-utility2-beta.herokuapp.com) | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://h1-utility2-alpha.herokuapp.com)|
-| test-report : | [![test-report](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/test-report.html) | [![test-report](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/test-report.html) | [![test-report](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/test-report.html)|
-| coverage : | [![istanbul-coverage](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.org/coverage.html/index.html) | [![istanbul-coverage](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/coverage.html/index.html) | [![istanbul-coverage](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.org/coverage.html/index.html)|
-| build-artifacts : | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..master..travis-ci.org) | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..beta..travis-ci.org) | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..alpha..travis-ci.org)|
-
-#### master branch
-- stable branch
-- HEAD should be tagged, npm-published package
-
-#### beta branch
-- semi-stable branch
-- HEAD should be latest, npm-published package
-
-#### alpha branch
-- unstable branch
-- HEAD is arbitrary
-- commit history may be rewritten
-
-
-
-# quickstart interactive example
+# quickstart standalone app
 #### to run this example, follow the instruction in the script below
 - [example.sh](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/example.sh)
+- [assets.app.js](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/assets.app.js)
 ```shell
 # example.sh
 
-# this shell script will serve a webpage that will interactively run browser-tests with coverage
-
-# instruction
-    # 1. copy and paste this entire shell script into a console and press enter
-    # 2. play with the browser-demo on http://127.0.0.1:8081
-
-shExampleSh() {(set -e
-    # npm install utility2
-    npm install utility2
-    # serve a webpage that will interactively run browser-tests with coverage
-    cd node_modules/utility2 && npm install && PORT=8081 npm start
-)}
-shExampleSh
+# 1. download standalone app
+curl -O https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/assets.app.js
+# 2. run standalone app
+node ./assets.app.js
+# 3. open a browser to http://127.0.0.1:8081 and play with the web demo
+# 4. edit standalone app to suit your needs
 ```
 
 #### output from browser
-![screenCapture](https://kaizhu256.github.io/node-utility2/build/screenCapture.testExampleSh.browser.%252F.png)
+[![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleSh.browser.%252F.png)](https://kaizhu256.github.io/node-utility2/build/app/assets.example.html)
 
 #### output from shell
-![screenCapture](https://kaizhu256.github.io/node-utility2/build/screenCapture.testExampleSh.svg)
+![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleSh.svg)
 
 
 
-# quickstart automated example
-![screenCapture](https://kaizhu256.github.io/node-utility2/build/screenCapture.testExampleJs.browser.%252Ftmp%252Fbuild%252Ftest-report.html.png)
+# quickstart example.js
+![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleJs.browser.%252Ftmp%252Fbuild%252Ftest-report.html.png)
 
 #### to run this example, follow the instruction in the script below
-- [example.js](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/example.js)
+- [example.js](https://kaizhu256.github.io/node-utility2/build/example.js)
 ```javascript
 /*
 example.js
@@ -126,7 +167,7 @@ this script will demo automated browser-tests with coverage (via electron and is
 instruction
     1. save this script as example.js
     2. run the shell command:
-        $ npm install electron-lite utility2 && \
+        $ npm install utility2 electron-lite && \
             PATH="$(pwd)/node_modules/.bin:$PATH" \
             PORT=8081 \
             npm_config_mode_coverage=utility2 \
@@ -400,8 +441,7 @@ instruction
         // init assets
         local.assetsDict = local.assetsDict || {};
         /* jslint-ignore-begin */
-        local.assetsDict['/assets.index.template.html'] =
-            local.assetsDict['/assets.index.template.html'] || '\
+        local.assetsDict['/assets.index.template.html'] = '\
 <!doctype html>\n\
 <html lang="en">\n\
 <head>\n\
@@ -448,7 +488,7 @@ textarea[readonly] {\n\
 </head>\n\
 <body>\n\
 <!-- utility2-comment\n\
-<div id="ajaxProgressDiv1" style="background: #d00; height: 2px; left: 0; margin: 0; padding: 0; position: fixed; top: 0; transition: background 0.5s, width 1.5s; width: 25%;"></div>\n\
+<div id="ajaxProgressDiv1" style="background: #d00; height: 2px; left: 0; margin: 0; padding: 0; position: fixed; top: 0; width: 25%;"></div>\n\
 utility2-comment -->\n\
 <h1>\n\
 <!-- utility2-comment\n\
@@ -545,7 +585,7 @@ utility2-comment -->\n\
 <script src="assets.utility2.lib.sjcl.js"></script>\n\
 <script src="assets.utility2.lib.uglifyjs.js"></script>\n\
 <script src="assets.utility2.js"></script>\n\
-<script src="jsonp.utility2._stateInit?callback=window.utility2._stateInit"></script>\n\
+<script src="jsonp.utility2.stateInit?callback=window.utility2.stateInit"></script>\n\
 <script>window.utility2.onResetBefore.counter += 1;</script>\n\
 <script src="assets.example.js"></script>\n\
 <script src="assets.test.js"></script>\n\
@@ -562,7 +602,23 @@ utility2-comment -->\n\
 </html>\n\
 ';
         /* jslint-ignore-end */
-        local.assetsDict['/'] = local.assetsDict['/assets.index.template.html']
+        [
+            'assets.index.css',
+            'assets.index.template.html',
+            'assets.swgg.swagger.json',
+            'assets.swgg.swagger.server.json'
+        ].forEach(function (file) {
+            local.assetsDict['/' + file] = local.assetsDict['/' + file] || '';
+            if (local.fs.existsSync(local.__dirname + '/' + file)) {
+                local.assetsDict['/' + file] = local.fs.readFileSync(
+                    local.__dirname + '/' + file,
+                    'utf8'
+                );
+            }
+        });
+        local.assetsDict['/'] =
+            local.assetsDict['/assets.example.html'] =
+            local.assetsDict['/assets.index.template.html']
             .replace((/\{\{env\.(\w+?)\}\}/g), function (match0, match1) {
                 // jslint-hack
                 String(match0);
@@ -570,9 +626,9 @@ utility2-comment -->\n\
                 case 'npm_package_description':
                     return 'the greatest app in the world!';
                 case 'npm_package_name':
-                    return 'my-app';
+                    return 'utility2';
                 case 'npm_package_nameAlias':
-                    return 'my_app';
+                    return 'utility2';
                 case 'npm_package_version':
                     return '0.0.1';
                 default:
@@ -588,8 +644,8 @@ utility2-comment -->\n\
             local.fs.readFileSync(__filename, 'utf8');
         // bug-workaround - long $npm_package_buildCustomOrg
         /* jslint-ignore-begin */
-        local.assetsDict['/assets.utility2.rollup.js'] =
-            local.assetsDict['/assets.utility2.rollup.js'] ||
+        local.assetsDict['/assets.utility2.js'] =
+            local.assetsDict['/assets.utility2.js'] ||
             local.fs.readFileSync(
                 local.utility2.__dirname + '/lib.utility2.js',
                 'utf8'
@@ -622,84 +678,18 @@ utility2-comment -->\n\
 ```
 
 #### output from utility2
-![screenCapture](https://kaizhu256.github.io/screenCapture.testExampleJs.browser.%252Ftmp%252Fbuild%252Ftest-report.html.png)
+![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleJs.browser.%252Ftmp%252Fbuild%252Ftest-report.html.png)
 
 #### output from istanbul
-![screenCapture](https://kaizhu256.github.io/node-utility2/build/screenCapture.testExampleJs.browser.%252Ftmp%252Fapp%252Ftmp%252Fbuild%252Fcoverage.html%252Fapp%252Fexample.js.html.png)
+![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleJs.browser.%252Ftmp%252Fapp%252Ftmp%252Fbuild%252Fcoverage.html%252Fapp%252Fexample.js.html.png)
 
 #### output from shell
-![screenCapture](https://kaizhu256.github.io/node-utility2/build/screenCapture.testExampleJs.svg)
-
-
-
-# package.json
-```json
-{
-    "author": "kai zhu <kaizhu256@gmail.com>",
-    "bin": {
-        "utility2": "lib.utility2.sh",
-        "utility2-apidoc": "lib.apidoc.js",
-        "utility2-github-crud": "lib.github_crud.js",
-        "utility2-istanbul": "lib.istanbul.js",
-        "utility2-jslint": "lib.jslint.js",
-        "utility2-uglifyjs": "lib.uglifyjs.js"
-    },
-    "description": "the zero-dependency, swiss-army-knife utility for building, testing, and deploying webapps",
-    "devDependencies": {
-        "electron-lite": "kaizhu256/node-electron-lite#alpha"
-    },
-    "engines": {
-        "node": ">=4.0"
-    },
-    "homepage": "https://github.com/kaizhu256/node-utility2",
-    "keywords": [
-        "build",
-        "ci",
-        "code-coverage",
-        "continuous-integration",
-        "deploy",
-        "devops",
-        "electron",
-        "headless-browser",
-        "istanbul",
-        "jscoverage",
-        "phantomjs",
-        "slimerjs",
-        "test",
-        "test-coverage",
-        "travis",
-        "travis-ci"
-    ],
-    "license": "MIT",
-    "main": "lib.utility2.js",
-    "name": "utility2",
-    "nameAlias": "utility2",
-    "nameAliasPublish": "npmtest-lite npmtest4 test-lite",
-    "nameOriginal": "utility2",
-    "os": [
-        "darwin",
-        "linux"
-    ],
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/kaizhu256/node-utility2.git"
-    },
-    "scripts": {
-        "build-ci": "./lib.utility2.sh shReadmeTest build_ci.sh",
-        "env": "env",
-        "heroku-postbuild": "./lib.utility2.sh shDeployHeroku",
-        "postinstall": "[ ! -f npm_scripts.sh ] || ./npm_scripts.sh postinstall",
-        "start": "set -e; export PORT=${PORT:-8080}; if [ -f assets.app.js ]; then node assets.app.js; else npm_config_mode_auto_restart=1 ./lib.utility2.sh shRun shIstanbulCover test.js; fi",
-        "test": "PORT=$(./lib.utility2.sh shServerPortRandom) PORT_REPL=$(./lib.utility2.sh shServerPortRandom) npm_config_mode_auto_restart=1 ./lib.utility2.sh test test.js"
-    },
-    "version": "2017.5.5"
-}
-```
+![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleJs.svg)
 
 
 
 # changelog of last 50 commits
-[![screenCapture](https://kaizhu256.github.io/node-utility2/build/screenCapture.gitLog.svg)](https://github.com/kaizhu256/node-utility2/commits)
+[![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.gitLog.svg)](https://github.com/kaizhu256/node-utility2/commits)
 
 
 
@@ -815,9 +805,16 @@ RUN (set -e; \
 
 shBuildCiAfter() {(set -e
     #// coverage-hack
+    shNpmTestPublished
+    shReadmeTest example.js
+    # screen-capture
+    MODE_BUILD=testExampleJs shBrowserTestList "
+/tmp/app/tmp/build/coverage.html/app/example.js.html
+tmp/build/test-report.html
+" screenCapture
     shDeployGithub
     shDeployHeroku
-    shReadmeBuildLinkVerify
+    shReadmeTest example.sh
     # restore $CI_BRANCH
     export CI_BRANCH="$CI_BRANCH_OLD"
     # docker build
@@ -856,21 +853,49 @@ shBuildCiAfter() {(set -e
     fi
 )}
 
-shBuildCiBefore() {(set -e
-    shReadmeTest example.js
-    # save screenCapture
-    MODE_BUILD=testExampleJs shBrowserTestList "
-/tmp/app/tmp/build/coverage.html/app/example.js.html
-tmp/build/test-report.html
-" screenCapture
-    shReadmeTest example.sh
-    shNpmTestPublished
-)}
-
 # run shBuildCi
 . ./lib.utility2.sh
 shBuildCi
 ```
+
+
+
+# internal screen-capture
+- [https://kaizhu256.github.io/node-utility2/build/screen-capture.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png](https://kaizhu256.github.io/node-utility2/build/screen-capture.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)
+[![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)](https://kaizhu256.github.io/node-utility2/build/screen-capture.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)
+
+- [https://kaizhu256.github.io/node-utility2/build/screen-capture.buildCi.browser.%252Ftmp%252Fbuild%252Fcoverage.lib.html.png](https://kaizhu256.github.io/node-utility2/build/screen-capture.buildCi.browser.%252Ftmp%252Fbuild%252Fcoverage.lib.html.png)
+[![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.buildCi.browser.%252Ftmp%252Fbuild%252Fcoverage.lib.html.png)](https://kaizhu256.github.io/node-utility2/build/screen-capture.buildCi.browser.%252Ftmp%252Fbuild%252Fcoverage.lib.html.png)
+
+- [https://kaizhu256.github.io/node-utility2/build/screen-capture.buildCi.browser.%252Ftmp%252Fbuild%252Ftest-report.html.png](https://kaizhu256.github.io/node-utility2/build/screen-capture.buildCi.browser.%252Ftmp%252Fbuild%252Ftest-report.html.png)
+[![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.buildCi.browser.%252Ftmp%252Fbuild%252Ftest-report.html.png)](https://kaizhu256.github.io/node-utility2/build/screen-capture.buildCi.browser.%252Ftmp%252Fbuild%252Ftest-report.html.png)
+
+- [https://kaizhu256.github.io/node-utility2/build/screen-capture.deployGithub.browser.%252Fnode-utility2%252Fbuild%252Fapp.png](https://kaizhu256.github.io/node-utility2/build/screen-capture.deployGithub.browser.%252Fnode-utility2%252Fbuild%252Fapp.png)
+[![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.deployGithub.browser.%252Fnode-utility2%252Fbuild%252Fapp.png)](https://kaizhu256.github.io/node-utility2/build/screen-capture.deployGithub.browser.%252Fnode-utility2%252Fbuild%252Fapp.png)
+
+- [https://kaizhu256.github.io/node-utility2/build/screen-capture.deployGithub.browser.%252Fnode-utility2%252Fbuild%252Fapp%252Fassets.swgg.html.png](https://kaizhu256.github.io/node-utility2/build/screen-capture.deployGithub.browser.%252Fnode-utility2%252Fbuild%252Fapp%252Fassets.swgg.html.png)
+[![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.deployGithub.browser.%252Fnode-utility2%252Fbuild%252Fapp%252Fassets.swgg.html.png)](https://kaizhu256.github.io/node-utility2/build/screen-capture.deployGithub.browser.%252Fnode-utility2%252Fbuild%252Fapp%252Fassets.swgg.html.png)
+
+- [https://kaizhu256.github.io/node-utility2/build/screen-capture.deployGithubTest.browser.%252Fnode-utility2%252Fbuild%252Fapp.png](https://kaizhu256.github.io/node-utility2/build/screen-capture.deployGithubTest.browser.%252Fnode-utility2%252Fbuild%252Fapp.png)
+[![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.deployGithubTest.browser.%252Fnode-utility2%252Fbuild%252Fapp.png)](https://kaizhu256.github.io/node-utility2/build/screen-capture.deployGithubTest.browser.%252Fnode-utility2%252Fbuild%252Fapp.png)
+
+- [https://kaizhu256.github.io/node-utility2/build/screen-capture.deployHeroku.browser.%252F.png](https://kaizhu256.github.io/node-utility2/build/screen-capture.deployHeroku.browser.%252F.png)
+[![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.deployHeroku.browser.%252F.png)](https://kaizhu256.github.io/node-utility2/build/screen-capture.deployHeroku.browser.%252F.png)
+
+- [https://kaizhu256.github.io/node-utility2/build/screen-capture.deployHeroku.browser.%252Fassets.swgg.html.png](https://kaizhu256.github.io/node-utility2/build/screen-capture.deployHeroku.browser.%252Fassets.swgg.html.png)
+[![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.deployHeroku.browser.%252Fassets.swgg.html.png)](https://kaizhu256.github.io/node-utility2/build/screen-capture.deployHeroku.browser.%252Fassets.swgg.html.png)
+
+- [https://kaizhu256.github.io/node-utility2/build/screen-capture.deployHerokuTest.browser.%252F.png](https://kaizhu256.github.io/node-utility2/build/screen-capture.deployHerokuTest.browser.%252F.png)
+[![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.deployHerokuTest.browser.%252F.png)](https://kaizhu256.github.io/node-utility2/build/screen-capture.deployHerokuTest.browser.%252F.png)
+
+- [https://kaizhu256.github.io/node-utility2/build/screen-capture.npmTest.browser.%252F.png](https://kaizhu256.github.io/node-utility2/build/screen-capture.npmTest.browser.%252F.png)
+[![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.npmTest.browser.%252F.png)](https://kaizhu256.github.io/node-utility2/build/screen-capture.npmTest.browser.%252F.png)
+
+- [https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleJs.browser.%252F.png](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleJs.browser.%252F.png)
+[![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleJs.browser.%252F.png)](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleJs.browser.%252F.png)
+
+- [https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleSh.browser.%252F.png](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleSh.browser.%252F.png)
+[![screen-capture](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleSh.browser.%252F.png)](https://kaizhu256.github.io/node-utility2/build/screen-capture.testExampleSh.browser.%252F.png)
 
 
 

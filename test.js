@@ -54,14 +54,6 @@
 
     // run shared js-env code - function
     (function () {
-        local._serverLocalUrlTest = function (url) {
-        /*
-         * this function will test if the url is local
-         */
-            url = local.urlParse(url).pathname;
-            return local.modeJs === 'browser' && url.indexOf('/test.') === 0;
-        };
-
         local._testCase_testRunDefault_failure = function (options, onError) {
         /*
          * this function will test testRunDefault's failure handling-behavior
@@ -1576,6 +1568,16 @@
             local.assert(local.regexpUuidValidate.test(options.data), options.data);
             onError();
         };
+
+        local.utility2.serverLocalUrlTest = function (url) {
+        /*
+         * this function will test if the url is local
+         */
+            url = local.urlParse(url).pathname;
+            return local.modeJs === 'browser' &&
+                !local.env.npm_config_mode_backend &&
+                (/^\/test\./).test(url);
+        };
     }());
     switch (local.modeJs) {
 
@@ -1733,6 +1735,9 @@
                 file: '/assets.utility2.lib.uglifyjs.js',
                 url: '/assets.utility2.lib.uglifyjs.js'
             }, {
+                file: '/assets.utility2.rollup.js',
+                url: '/assets.utility2.rollup.js'
+            }, {
                 file: '/package.json',
                 url: '/package.json'
             }];
@@ -1805,14 +1810,13 @@
             options.customize = function () {
                 // search-and-replace - customize dataTo
                 [
-                    // customize quickstart-example.sh
-                    new RegExp('\\n- commit history may be rewritten\\n[\\S\\s]*\\n#### ' +
-                        'to run this example, follow the instruction in the script below\\n'),
-                    // customize quickstart-instruction
-                    (/\ninstruction[^`]*?\n\n/),
+                    // customize cdn-download
+                    (/cdn download[\S\s]*?\n\n\n\n/),
+                    // customize quickstart example.js
+                    (/# quickstart example.js[\S\s]*?istanbul instrument in package/),
                     // customize quickstart-footer
                     (/download standalone app[^`]*?utility2FooterDiv/),
-                    (/```[^`]*?# package.json/),
+                    (/```[^`]*?\n# changelog/),
                     // customize build-script
                     (/# run shBuildCi[^`]*?```/)
                 ].forEach(function (rgx) {
@@ -2150,7 +2154,7 @@
                 [local.fs, {
                     readdirSync: function () {
                         // test jslintAndPrintConditional behavior
-                        return ['aa.css', 'aa.html', 'aa.js', 'aa.json'];
+                        return ['aa.css', 'aa.html', 'aa.js', 'aa.json', 'aa.rollup.js'];
                     }
                 }],
                 [local, {
@@ -2243,8 +2247,10 @@
     (function () {
         // coverage-hack - re-run test-server
         local.testRunServer(local);
+        // coverage-hack - stateInit
+        local.stateInit({});
         // init test-middleware
-        local._middleware.middlewareList.push(function (request, response, nextMiddleware) {
+        local.middlewareList.push(function (request, response, nextMiddleware) {
         /*
          * this function will run the test-middleware
          */
@@ -2283,7 +2289,7 @@
                     var error;
                     error = new Error('error');
                     error.statusCode = 500;
-                    local._middlewareError(error, request, response);
+                    local.middlewareError(error, request, response);
                     onError();
                 }, local.onErrorThrow);
                 break;

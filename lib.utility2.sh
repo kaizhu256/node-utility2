@@ -76,7 +76,7 @@ shBrowserTest() {(set -e
     export MODE_BUILD="${MODE_BUILD:-browserTest}"
     shBuildPrint "electron.${modeBrowserTest} - $url"
     # run browser-test
-    lib.utility2.js browserTest
+    lib.utility2.js cli.browserTest
     if [ "$modeBrowserTest" = test ]
     then
         # create test-report artifacts
@@ -93,7 +93,7 @@ shBrowserTestList() {(set -e
     export MODE_BUILD="${MODE_BUILD:-browserTest}"
     shBuildPrint "electron.${modeBrowserTest} - $LIST"
     # run browser-test
-    lib.utility2.js browserTestList "$LIST"
+    lib.utility2.js cli.browserTestList "$LIST"
     if [ "$modeBrowserTest" = test ]
     then
         # create test-report artifacts
@@ -190,15 +190,14 @@ shBuildCi() {(set -e
     fi
     # init default env
     export CI_BRANCH="${CI_BRANCH:-alpha}"
-    export CI_COMMIT_ID="${CI_BRANCH:-(git rev-parse --verify HEAD)}"
+    export CI_COMMIT_ID="${CI_COMMIT_ID:-$(git rev-parse --verify HEAD)}"
     export CI_HOST="${CI_HOST:-127.0.0.1}"
     # save $CI_BRANCH
     export CI_BRANCH_OLD="${CI_BRANCH_OLD:-$CI_BRANCH}"
     # init $CI_COMMIT_*
     export CI_COMMIT_MESSAGE="$(git log -1 --pretty=%s)"
     export CI_COMMIT_INFO="$CI_COMMIT_ID - $CI_COMMIT_MESSAGE"
-    export CI_COMMIT_MESSAGE_META="$(printf "#$CI_COMMIT_MESSAGE" | \
-        sed -e "s/.*\(\[.*\]\).*/\1/")"
+    export CI_COMMIT_MESSAGE_META="$(printf "#$CI_COMMIT_MESSAGE" | sed "s/.*\(\[.*\]\).*/\1/")"
     # decrypt and exec encrypted data
     if [ "$CRYPTO_AES_KEY" ]
     then
@@ -337,11 +336,6 @@ shBuildCi() {(set -e
 shBuildCiInternal() {(set -e
 # this function will run the internal build
     shBuildInit
-    # run build-ci-before
-    if (type shBuildCiBefore > /dev/null 2>&1)
-    then
-        shBuildCiBefore
-    fi
     export npm_config_file_test_report_merge="$npm_config_dir_build/test-report.json"
 
 
@@ -350,7 +344,7 @@ shBuildCiInternal() {(set -e
     (
     shPasswordEnvUnset
     export MODE_BUILD=npmTest
-    shBuildPrint "$(du -ms node_modules | awk '{print $1}') megabytes installed"
+    shBuildPrint "$(du -ms node_modules | awk '{print "npm install - " $1 " megabytes"}')"
     if [ "$npm_package_buildCustomOrg" ]
     then
         export npm_config_timeout_default=120000
@@ -398,12 +392,12 @@ shBuildCiInternal() {(set -e
 
 
 
-    # save screenCapture
+    # screen-capture coverage
     for FILE in "$npm_config_dir_build/coverage.html\
 /node-$GITHUB_ORG-$npm_package_buildCustomOrg/node_modules/$npm_package_buildCustomOrg" \
         "$npm_config_dir_build/coverage.html"
     do
-        FILE="$(find "$FILE" -name *.js.html 2>/dev/null | head -n 1)"
+        FILE="$(find "$FILE" -name *.js.html 2>/dev/null | tail -n 1)"
         if [ -f "$FILE" ]
         then
             cp "$FILE" "$npm_config_dir_build/coverage.lib.html"
@@ -425,7 +419,6 @@ shBuildCiInternal() {(set -e
         case "$GITHUB_ORG" in
         npmtest)
             shBuildApp
-            shReadmeBuildLinkVerify
             ;;
         esac
         rm -fr "$npm_package_buildCustomOrg"
@@ -443,6 +436,9 @@ shBuildCiInternal() {(set -e
     then
         shBuildCiAfter
     fi
+    # wait for background tasks to finish
+    shSleep 15
+    shReadmeBuildLinkVerify
     # upload build-artifacts to github, and if number of commits > $COMMIT_LIMIT,
     # then squash older commits
     if [ "$CI_BRANCH" = alpha ] ||
@@ -579,7 +575,7 @@ if ((/^[^\/]+\/[^\/]+\$/).test(value)) {
         export npm_package_version=0.0.1 || return $?
     fi
     export npm_package_nameAlias=\
-"${npm_package_nameAlias:-$(printf "$npm_package_name" | sed -e "s/[^0-9A-Z_a-z]/_/g")}" || \
+"${npm_package_nameAlias:-$(printf "$npm_package_name" | sed "s/[^0-9A-Z_a-z]/_/g")}" || \
         return $?
     # init $npm_config_*
     export npm_config_dir_build="${npm_config_dir_build:-$PWD/tmp/build}" || return $?
@@ -625,7 +621,7 @@ local.readme.replace((
     if (match2.slice(-5) === '.json') {
         match1 = match1.trim();
     }
-    local.fs.writeFileSync('tmp/README.' + match2, match1);
+    local.fs.writeFileSync('tmp/README.' + match2, match1.trimRight() + '\n');
 });
 // </script>
         "
@@ -638,9 +634,9 @@ shBuildInsideDocker() {(set -e
     export npm_config_unsafe_perm=1
     # start xvfb
     shXvfbStart
-    # https://github.com/npm/npm/issues/10686
     # bug-workaround - Cannot read property 'target' of null #10686
-    sed -in -e 's/  "_requiredBy":/  "_requiredBy_":/' package.json
+    # https://github.com/npm/npm/issues/10686
+    sed -in 's/  "_requiredBy":/  "_requiredBy_":/' package.json
     rm -f package.jsonn
     # npm-install
     npm install
@@ -761,8 +757,7 @@ shCryptoTravisEncrypt() {(set -e
             shBuildPrint "no CRYPTO_AES_KEY_ENCRYPTED"
             return 1
         fi
-        sed -in \
-            -e "s%\(- secure: \).*\( # CRYPTO_AES_KEY$\)%\\1$CRYPTO_AES_KEY_ENCRYPTED\\2%" \
+        sed -in "s|\(- secure: \).*\( # CRYPTO_AES_KEY$\)|\\1$CRYPTO_AES_KEY_ENCRYPTED\\2|" \
             .travis.yml
         rm -f .travis.ymln
         shBuildPrint "updated .travis.yml with CRYPTO_AES_KEY_ENCRYPTED"
@@ -795,7 +790,7 @@ shCustomOrgBuildCi() {(set -e
     unset GITHUB_REPO
     unset GITHUB_ORG
     unset MODE_BUILD
-    eval "$(env | sort | grep -oe "^npm_\w*" | sed -e "s/\(\w*\)/unset \1/")"
+    eval "$(env | sort | grep -oe "^npm_\w*" | sed "s/\(\w*\)/unset \1/")"
     # git-clone $GITHUB_REPO
     export GITHUB_REPO="$1"
     DIR="/tmp/$GITHUB_REPO"
@@ -864,8 +859,8 @@ console.log(process.argv[1]
 )}
 
 shCustomOrgRepoListCreate() {(set -e
-# https://docs.travis-ci.com/api
 # this function will create and push the customOrg-repo $GITHUB_ORG/node-$GITHUB_ORG-$LIST[ii]
+# https://docs.travis-ci.com/api
     LIST="$1"
     export MODE_BUILD=shCustomOrgRepoListCreate
     cd /tmp
@@ -932,13 +927,13 @@ shGithubRepoBaseCreate $GITHUB_REPO"
     LIST2=""
     for GITHUB_REPO in $LIST
     do
-        NAME="$(printf "$GITHUB_REPO" | sed -e "s/^$GITHUB_ORG\/node-$GITHUB_ORG-//")"
+        NAME="$(printf "$GITHUB_REPO" | sed "s|^$GITHUB_ORG/node-$GITHUB_ORG-||")"
         LIST2="$LIST2
 (set -e; \
 shBuildPrint \"creating $GITHUB_ORG-repo $GITHUB_REPO ...\"; \
 TRAVIS_REPO_ID=\"\$(curl -#Lf https://api.travis-ci.org/repos/$GITHUB_REPO | \
     grep -oe '\"id\":[^,]*' | \
-    sed -e 's/.*://')\"; \
+    sed 's/.*://')\"; \
 if [ ! \$TRAVIS_REPO_ID ]; \
 then \
     shBuildPrint \"error - travis-repo not found - $GITHUB_REPO\" 1>&2; \
@@ -991,7 +986,7 @@ printf '{ \
     }, \
     \"version\": \"0.0.1\" \
 }' > package.json; \
-sed -in -e s/.*CRYPTO_AES_SH_ENCRYPTED.*// .travis.yml; \
+sed -in 's/.*CRYPTO_AES_SH_ENCRYPTED.*//' .travis.yml; \
 rm -f .travis.ymln; \
 shCryptoTravisEncrypt; \
 git add -f . .gitignore .travis.yml; \
@@ -1024,7 +1019,7 @@ shDeployGithub() {(set -e
 # and test $TEST_URL
     export MODE_BUILD=deployGithub
     export TEST_URL="https://$(printf "$GITHUB_REPO" | \
-        sed 's/\//.github.io\//')/build..$CI_BRANCH..travis-ci.org/app/index.html"
+        sed "s|/|.github.io/|")/build..$CI_BRANCH..travis-ci.org/app"
     shBuildPrint "deploying to $TEST_URL"
     # build app
     shBuildApp
@@ -1039,8 +1034,8 @@ shDeployGithub() {(set -e
         shBuildPrint "curl test failed for $TEST_URL"
         return 1
     fi
-    # screenCapture deployed app
-    shBrowserTest "$TEST_URL" screenCapture &
+    # screen-capture deployed app
+    shBrowserTestList "$TEST_URL $TEST_URL/assets.swgg.html" screenCapture &
     # test deployed app
     MODE_BUILD="${MODE_BUILD}Test" shBrowserTest "$TEST_URL?modeTest=1&timeExit={{timeExit}}"
 )}
@@ -1070,8 +1065,8 @@ shDeployHeroku() {(set -e
         shBuildPrint "curl test failed for $TEST_URL"
         return 1
     fi
-    # screenCapture deployed app
-    shBrowserTest "$TEST_URL" screenCapture &
+    # screen-capture deployed app
+    shBrowserTestList "$TEST_URL $TEST_URL/assets.swgg.html" screenCapture &
     # test deployed app
     MODE_BUILD="${MODE_BUILD}Test" shBrowserTest "$TEST_URL?modeTest=1&timeExit={{timeExit}}"
 )}
@@ -1092,9 +1087,9 @@ shDockerBuildCleanup() {(set -e
 )}
 
 shDockerCopyFromImage() {(set -e
+# this function will copy the $FILE_FROM from the docker $IMAGE to $FILE_TO
 # http://stackoverflow.com/questions/25292198
 # /docker-how-can-i-copy-a-file-from-an-image-to-a-host
-# this function will copy the $FILE_FROM from the docker $IMAGE to $FILE_TO
     IMAGE="$1"
     FILE_FROM="$2"
     FILE_TO="$3"
@@ -1141,8 +1136,8 @@ shDockerRestart() {(set -e
 )}
 
 shDockerRestartElasticsearch() {(set -e
-# https://hub.docker.com/_/elasticsearch/
 # this function will restart the elasticsearch docker-container
+# https://hub.docker.com/_/elasticsearch/
     case "$(uname)" in
     Linux)
         LOCALHOST="${LOCALHOST:-127.0.0.1}"
@@ -1183,7 +1178,7 @@ server {
         touch /var/log/nginx/error.log
         tail -f /dev/stderr /var/log/nginx/error.log &
         /etc/init.d/nginx start
-        sed -in -e 's#http://petstore.swagger.io/v2#/assets#' /swagger-ui/index.html
+        sed -in 's|http://petstore.swagger.io/v2|/assets|' /swagger-ui/index.html
         rm -f /swagger-ui/index.htmln
         /elasticsearch/bin/elasticsearch -Des.http.port=9201
         sleep infinity
@@ -1204,8 +1199,8 @@ shDockerRestartNginx() {(set -e
     then
         printf "foo:$(openssl passwd -crypt bar)\n" > $FILE
     fi
-    # https://www.nginx.com/resources/wiki/start/topics/examples/full/#nginx-conf
     # init $HOME/docker/etc.nginx.conf.d.default.conf
+    # https://www.nginx.com/resources/wiki/start/topics/examples/full/#nginx-conf
     FILE="$HOME/docker/etc.nginx.conf.d/default.conf"
     if [ ! -f "$FILE" ]
     then
@@ -1219,8 +1214,8 @@ server {
         rewrite ^ https://$host$request_uri permanent;
     }
 }
-# https://www.nginx.com/resources/wiki/start/topics/examples/SSL-Offloader/#sslproxy-conf
 # https server
+# https://www.nginx.com/resources/wiki/start/topics/examples/SSL-Offloader/#sslproxy-conf
 server {
     listen 443;
     root /root/docker/usr.share.nginx.html;
@@ -1245,8 +1240,8 @@ server {
 }
 ' > "$FILE"
     fi
-    # http://superuser.com/questions/226192/openssl-without-prompt
     # init $HOME/docker/etc.nginx.ssl
+    # http://superuser.com/questions/226192/openssl-without-prompt
     FILE="$HOME/docker/etc.nginx.ssl"
     if [ ! -f "$FILE.pem" ]
     then
@@ -1275,8 +1270,8 @@ server {
 )}
 
 shDockerRestartTransmission() {(set -e
-# http://transmission:transmission@127.0.0.1:9091
 # this function will restart the transmission docker-container
+# http://transmission:transmission@127.0.0.1:9091
     case "$(uname)" in
     Linux)
         LOCALHOST="${LOCALHOST:-127.0.0.1}"
@@ -1332,7 +1327,7 @@ shDockerRmiUntagged() {(set -e
 
 shDockerSh() {(set -e
 # this function will run /bin/bash in the docker-container $NAME
-    # http://www.gnu.org/software/bash/manual/html_node/Shell-Parameter-Expansion.html
+# http://www.gnu.org/software/bash/manual/html_node/Shell-Parameter-Expansion.html
     NAME="$1"
     COMMAND="${2:-/bin/bash}"
     docker start "$NAME"
@@ -1632,29 +1627,15 @@ console.error('shFilePackageJsonVersionIncrement - ' + local.packageJson.version
 )}
 
 shFileTrimLeft() {(set -e
-# this function will inline trimLeft the $FILE
-    FILE="$1"
-    node -e "
-// <script>
-/*jslint
-    bitwise: true,
-    browser: true,
-    maxerr: 8,
-    maxlen: 96,
-    node: true,
-    nomen: true,
-    regexp: true,
-    stupid: true
-*/
-'use strict';
-require('fs').writeFileSync('$FILE', require('fs').readFileSync('$FILE', 'utf8').trimLeft());
-// </script>
-    "
+# this function will inline trimLeft the file $1
+# http://stackoverflow.com/questions/1935081/remove-leading-whitespace-from-file
+    sed -in '/./,$!d' "$1"
+    rm -f "$1"n
 )}
 
 shGitGc() {(set -e
-# http://stackoverflow.com/questions/3797907/how-to-remove-unused-objects-from-a-git-repository
 # this function will gc unreachable .git objects
+# http://stackoverflow.com/questions/3797907/how-to-remove-unused-objects-from-a-git-repository
     # git remote rm origin || true
     # git branch -D in || true
     # (cd .git && rm -fr refs/remotes/ refs/original/ *_HEAD logs/) || return $?
@@ -1677,8 +1658,6 @@ shGitInfo() {(set -e
     shGitLsTree
     printf "\n"
     git grep '!\! ' || true
-    printf "\n"
-    git grep '#alpha' || true
     printf "\n"
     git grep '\becho\b' *.sh || true
     printf "\n"
@@ -1710,8 +1689,8 @@ shGitLsTree() {(set -e
 )}
 
 shGitSquashPop() {(set -e
-# http://stackoverflow.com/questions/5189560
 # this function will squash HEAD to the given $COMMIT
+# http://stackoverflow.com/questions/5189560
 # /how-can-i-squash-my-last-x-commits-together-using-git
     COMMIT="$1"
     MESSAGE="${2:-$(git log -1 --pretty=%s)}"
@@ -1756,7 +1735,7 @@ shGithubCrudRepoListCreate() {(set -e
     LIST2=""
     for GITHUB_REPO in $LIST
     do
-        NAME="$(printf "$GITHUB_REPO" | sed -e s/.*\\///)"
+        NAME="$(printf "$GITHUB_REPO" | sed "s|.*/||")"
         LIST2="$LIST2
 if (! curl -ILfs -o /dev/null https://github.com/$GITHUB_REPO); \
 then \
@@ -1805,7 +1784,7 @@ shGithubRepoBaseCreate() {(set -e
     )
     fi
     rm -fr "/tmp/$GITHUB_REPO"
-    mkdir -p "/tmp/$(printf "$GITHUB_REPO" | sed -e "s/\/.*//")"
+    mkdir -p "/tmp/$(printf "$GITHUB_REPO" | sed "s|/.*||")"
     cp -a /tmp/githubRepoBase "/tmp/$GITHUB_REPO"
     cd "/tmp/$GITHUB_REPO"
     (eval shGithubCrudRepoListCreate "$GITHUB_REPO") || true
@@ -1951,8 +1930,8 @@ console.log('data:image/' +
 )}
 
 shIptablesDockerInit() {(set -e
-# https://github.com/docker/docker/issues/1871
 # this function will create an iptables DOCKER chain
+# https://github.com/docker/docker/issues/1871
     iptables -t nat -N DOCKER
     iptables -t nat -A PREROUTING -m addrtype --dst-type LOCAL -j DOCKER
     iptables -t nat -A PREROUTING -m addrtype --dst-type LOCAL ! --dst 127.0.0.0/8 -j DOCKER
@@ -1997,16 +1976,16 @@ shIptablesInit() {(set -e
     #  https://security.stackexchange.com/questions/22711
     iptables -A INPUT -p icmp -m icmp --icmp-type 8 -j ACCEPT
 
-    # https://blog.andyet.com/2014/09/11/docker-host-iptables-forwarding
     # allow forwarding between docker0 and eth0
+    # https://blog.andyet.com/2014/09/11/docker-host-iptables-forwarding
     # Forward chain between docker0 and eth0
     iptables -A FORWARD -i docker0 -o eth0 -j ACCEPT
     iptables -A FORWARD -i eth0 -o docker0 -j ACCEPT
     # IPv6 chain if needed
     ip6tables -A FORWARD -i docker0 -o eth0 -j ACCEPT
     ip6tables -A FORWARD -i eth0 -o docker0 -j ACCEPT
-    # https://github.com/docker/docker/issues/1871
     # create iptables DOCKER chain
+    # https://github.com/docker/docker/issues/1871
     iptables -t nat -N DOCKER
     iptables -t nat -A PREROUTING -m addrtype --dst-type LOCAL -j DOCKER
     iptables -t nat -A PREROUTING -m addrtype --dst-type LOCAL ! --dst 127.0.0.0/8 -j DOCKER
@@ -2101,9 +2080,7 @@ shMain() {
     if [ "$COMMAND" = --eval ] ||
         [ "$COMMAND" = --interactive ] ||
         [ "$COMMAND" = -e ] ||
-        [ "$COMMAND" = -i ] ||
-        [ "$COMMAND" = ajax ] ||
-        [ "$COMMAND" = browserTest ]
+        [ "$COMMAND" = -i ]
     then
         shBuildInit
         lib.utility2.js "$COMMAND" "$@"
@@ -2133,7 +2110,7 @@ shMain() {
         ;;
     test)
         shBuildInit
-        shNpmTest "$@"
+        shRunScreenCaptureTxt shNpmTest "$@"
         ;;
     utility2Dirname)
         shBuildInit
@@ -2278,7 +2255,7 @@ shNpmDeprecateAliasList() {(set -e
 )}
 
 shNpmInstallTarball() {(set -e
-# this function will npm-install a tarball instead of the full module
+# this function will npm-install the tarball instead of the full module
     NAME="$1"
     mkdir -p "node_modules/$NAME"
     curl -Lfs "$(npm view "$NAME" dist.tarball)" | \
@@ -2333,6 +2310,10 @@ console.log('true');
 
 shNpmPackageDependencyTreeCreate() {(set -e
 # this function will create a svg dependency-tree of the npm-package
+    if ! (grep -q "https://nodei.co/npm/$1" README.md)
+    then
+        return
+    fi
     shPasswordEnvUnset
     # init /tmp/node_modules
     if [ -d /tmp/node_modules ]
@@ -2346,8 +2327,8 @@ shNpmPackageDependencyTreeCreate() {(set -e
     shBuildInit
     export MODE_BUILD=npmPackageDependencyTree
     shBuildPrint "creating npmDependencyTree ..."
-    shRunScreenCaptureTxtPost() {(set -e
-        du -ms "$DIR" | awk '{print $1 " megabytes installed\n\nnode_modules"}' \
+    shRunScreenCaptureTxtAfter() {(set -e
+        du -ms "$DIR" | awk '{print "npm install - " $1 " megabytes\n\nnode_modules"}' \
             > "$npm_config_file_tmp"
         grep -e '^ *[│└├]' "$npm_config_dir_tmp/runScreenCaptureTxt" >> "$npm_config_file_tmp"
         mv "$npm_config_file_tmp" "$npm_config_dir_tmp/runScreenCaptureTxt"
@@ -2379,10 +2360,11 @@ tmp
     fi
     shBuildInit
     export MODE_BUILD=npmPackageListing
-    shRunScreenCaptureTxtPost() {(set -e
+    shRunScreenCaptureTxtAfter() {(set -e
         awk '{
 lineList[NR] = $0
 } END {
+    print "  package files\n"
     print lineList[NR]
     for (ii = 1; ii < NR; ii += 1) {
         print lineList[ii]
@@ -2526,9 +2508,9 @@ shNpmTestPublished() {(set -e
     # npm-install package
     npm install "$npm_package_name"
     cd "node_modules/$npm_package_name"
-    # https://github.com/npm/npm/issues/10686
     # bug-workaround - Cannot read property 'target' of null #10686
-    sed -in -e 's/  "_requiredBy":/  "_requiredBy_":/' package.json
+    # https://github.com/npm/npm/issues/10686
+    sed -in 's/  "_requiredBy":/  "_requiredBy_":/' package.json
     rm -f package.jsonn
     # npm-install
     npm install
@@ -2651,7 +2633,7 @@ shReadmeTest() {(set -e
     fi
     case "$FILE" in
     build_ci.sh)
-        export MODE_BUILD=build
+        export MODE_BUILD=buildCi
         FILE=tmp/README.build_ci.sh
         ;;
     example.js)
@@ -2667,69 +2649,35 @@ shReadmeTest() {(set -e
         DIR=/tmp/app
         rm -fr "$DIR" && mkdir -p "$DIR"
         # cp script from README.md
-        shFileTrimLeft "tmp/README.$FILE"
         cp "tmp/README.$FILE" "$DIR/$FILE"
         cp "tmp/README.$FILE" "$npm_config_dir_build/$FILE"
+        shFileTrimLeft "$npm_config_dir_build/$FILE"
         cd "$DIR"
-        SCRIPT="$(node -e "
-// <script>
-/*jslint
-    bitwise: true,
-    browser: true,
-    maxerr: 8,
-    maxlen: 96,
-    node: true,
-    nomen: true,
-    regexp: true,
-    stupid: true
-*/
-'use strict';
-var local;
-local = {};
-local.file = '$FILE';
-local.fs = require('fs');
-local.nop = function () {
-    return;
-};
-local.rgx = (/\n *\\$ (.*)/);
-local.fs.readFileSync(local.file, 'utf8').replace(local.rgx, function (match0, match1) {
-    // jslint-hack
-    local.nop(match0);
-    console.log(match1);
-});
-// </script>
-        ")"
+        if [ "$CI_BRANCH" = alpha ]
+        then
+            sed -in \
+                -e "s|/build..beta..travis-ci.org/|/build..alpha..travis-ci.org/|g" \
+                -e "s|npm install $npm_package_name|npm install '$GITHUB_REPO#alpha'|g" \
+                "$FILE"
+            rm -f "$FILE"n
+        fi
     fi
     if [ "$FILE" = tmp/README.build_ci.sh ] || [ "$FILE" = example.sh ]
     then
         # display shell script
-        node -e "
-// <script>
-/*jslint
-    bitwise: true,
-    browser: true,
-    maxerr: 8,
-    maxlen: 96,
-    node: true,
-    nomen: true,
-    regexp: true,
-    stupid: true
-*/
-'use strict';
-console.log(require('fs').readFileSync('$FILE', 'utf8').trimLeft());
-// </script>
-        "
+        # http://stackoverflow.com/questions/1935081/remove-leading-whitespace-from-file
+        sed '/./,$!d' "$FILE"
     fi
     export PORT=8081
     export npm_config_timeout_exit=30000
-    # save screenCapture
+    # screen-capture
     (
-    shBuildPrint "screenCapture http://127.0.0.1:$PORT"
     shSleep 15
     shBrowserTest "http://127.0.0.1:$PORT" screenCapture
     ) &
     case "$FILE" in
     example.js)
+        SCRIPT="$(grep -e "^ *\$ " < "$FILE" | grep -oe "\w.*")" || true
         printf "$SCRIPT\n\n"
         shRunScreenCaptureTxt eval "$SCRIPT"
         ;;
@@ -2744,8 +2692,8 @@ console.log(require('fs').readFileSync('$FILE', 'utf8').trimLeft());
 )}
 
 shReplClient() {(set -e
-# https://gist.github.com/TooTallNate/2209310
 # this function will connect the repl-client to tcp-port $1
+# https://gist.github.com/TooTallNate/2209310
     node -e "
 // <script>
 /*jslint
@@ -2770,8 +2718,8 @@ socket.on('end', process.exit);
 )}
 
 shRmDsStore() {(set -e
-# http://stackoverflow.com/questions/2016844/bash-recursively-remove-files
 # this function will recursively rm .DS_Store from the current dir
+# http://stackoverflow.com/questions/2016844/bash-recursively-remove-files
     find . -name "._*" -print0 | xargs -0 rm || true
     find . -name ".DS_Store" -print0 | xargs -0 rm || true
     find . -name "npm-debug.log" -print0 | xargs -0 rm || true
@@ -2789,8 +2737,8 @@ shRun() {(set -e
             printf "(re)starting $*\n"
             (eval "$@") || EXIT_CODE=$?
             printf "process exited with code $EXIT_CODE\n"
-            # http://en.wikipedia.org/wiki/Unix_signal
             # if $EXIT_CODE != 77, then exit process
+            # http://en.wikipedia.org/wiki/Unix_signal
             if [ "$EXIT_CODE" != 77 ]
             then
                 break
@@ -2807,12 +2755,12 @@ shRun() {(set -e
 )}
 
 shRunScreenCaptureTxt() {(set -e
+# this function will run the command $@ and screen-capture the text-output
 # http://www.cnx-software.com/2011/09/22
 # /how-to-convert-a-command-line-result-into-an-image-in-linux/
-# this function will run the command $@ and screenCapture the output
     EXIT_CODE=0
-    MODE_BUILD_SCREEN_CAPTURE_SVG="screenCapture.${MODE_BUILD:-undefined}.svg"
-    touch "$npm_config_dir_build/$MODE_BUILD_SCREEN_CAPTURE_SVG"
+    export MODE_BUILD_SCREEN_CAPTURE_IMG="screen-capture.${MODE_BUILD:-undefined}.svg"
+    touch "$npm_config_dir_build/$MODE_BUILD_SCREEN_CAPTURE_IMG"
     (
     printf "0" > "$npm_config_file_tmp"
     (eval shRun "$@" 2>&1)
@@ -2820,11 +2768,11 @@ shRunScreenCaptureTxt() {(set -e
     ) | tee "$npm_config_dir_tmp/runScreenCaptureTxt"
     EXIT_CODE="$(cat "$npm_config_file_tmp")"
     shBuildPrint "EXIT_CODE - $EXIT_CODE"
-    # run shRunScreenCaptureTxtPost
-    if (type shRunScreenCaptureTxtPost > /dev/null 2>&1)
+    # run shRunScreenCaptureTxtAfter
+    if (type shRunScreenCaptureTxtAfter > /dev/null 2>&1)
     then
-        shRunScreenCaptureTxtPost
-        unset shRunScreenCaptureTxtPost
+        shRunScreenCaptureTxtAfter
+        unset shRunScreenCaptureTxtAfter
     fi
     # format text-output
     node -e "
@@ -2881,11 +2829,19 @@ local.result = '<svg height=\"' + (local.yy + 20) +
     '<text fill=\"#7f7\" font-family=\"Courier New\" font-size=\"12\" ' +
     'xml:space=\"preserve\">\n' +
     local.result + '</text>\n</svg>\n';
-local.fs.writeFileSync('$npm_config_dir_build/$MODE_BUILD_SCREEN_CAPTURE_SVG', local.result);
+local.fs.writeFileSync('$npm_config_dir_build/$MODE_BUILD_SCREEN_CAPTURE_IMG', local.result);
 // </script>
     "
-    shBuildPrint "created file://$npm_config_dir_build/$MODE_BUILD_SCREEN_CAPTURE_SVG"
+    shBuildPrint "created file://$npm_config_dir_build/$MODE_BUILD_SCREEN_CAPTURE_IMG"
     return "$EXIT_CODE"
+)}
+
+shScreencastToGif() {(set -e
+# this function will convert the quicktime.mov $1 to the animated gif $2
+# https://gist.github.com/dergachev/4627207
+# https://gist.github.com/baumandm/1dba6a055356d183bbf7
+    ffmpeg -y -i "$1" -vf fps=10,palettegen /tmp/palette.png
+    ffmpeg -i "$1" -i /tmp/palette.png -filter_complex "fps=10,paletteuse" "$2"
 )}
 
 shServerPortRandom() {(set -e

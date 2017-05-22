@@ -140,7 +140,7 @@ textarea[readonly] {\n\
 </head>\n\
 <body>\n\
 <!-- utility2-comment\n\
-<div id="ajaxProgressDiv1" style="background: #d00; height: 2px; left: 0; margin: 0; padding: 0; position: fixed; top: 0; transition: background 0.5s, width 1.5s; width: 25%;"></div>\n\
+<div id="ajaxProgressDiv1" style="background: #d00; height: 2px; left: 0; margin: 0; padding: 0; position: fixed; top: 0; width: 25%;"></div>\n\
 utility2-comment -->\n\
 <h1>\n\
 <!-- utility2-comment\n\
@@ -173,10 +173,12 @@ utility2-comment -->\n\
 {{#unless isRollup}}\n\
 utility2-comment -->\n\
 <script src="assets.utility2.rollup.js"></script>\n\
-<script src="jsonp.utility2._stateInit?callback=window.utility2._stateInit"></script>\n\
-<script src="assets.{{env.npm_package_nameAlias}}.rollup.js"></script>\n\
+<script>window.utility2.onResetBefore.counter += 1;</script>\n\
+<script src="jsonp.utility2.stateInit?callback=window.utility2.stateInit"></script>\n\
+<script src="assets.{{env.npm_package_nameAlias}}.js"></script>\n\
 <script src="assets.example.js"></script>\n\
 <script src="assets.test.js"></script>\n\
+<script>window.utility2.onResetBefore();</script>\n\
 <!-- utility2-comment\n\
 {{/if isRollup}}\n\
 utility2-comment -->\n\
@@ -197,17 +199,21 @@ local.assetsDict['/assets.buildBadge.template.svg'] =
 
 
 
+local.assetsDict['/assets.example.html'] = '';
+
+
+
 local.assetsDict['/assets.example.template.js'] = '\
 /*\n\
 example.js\n\
 \n\
-quickstart example\n\
+this script will create a web demo of jslint-lite\n\
 \n\
 instruction\n\
     1. save this script as example.js\n\
     2. run the shell command:\n\
         $ npm install jslint-lite && PORT=8081 node example.js\n\
-    3. play with the browser-demo on http://127.0.0.1:8081\n\
+    3. open a browser to http://127.0.0.1:8081 and play with the web demo\n\
 */\n\
 \n\
 \n\
@@ -363,12 +369,27 @@ instruction\n\
         // init assets\n\
         local.assetsDict = local.assetsDict || {};\n\
         /* jslint-ignore-begin */\n\
-        local.assetsDict[\'/assets.index.template.html\'] =\n\
-            local.assetsDict[\'/assets.index.template.html\'] || \'\\\n' +
+        local.assetsDict[\'/assets.index.template.html\'] = \'\\\n' +
 local.assetsDict['/assets.index.template.html'].replace((/\n/g), '\\n\\\n') +
 '\';\n\
         /* jslint-ignore-end */\n\
-        local.assetsDict[\'/\'] = local.assetsDict[\'/assets.index.template.html\']\n\
+        [\n\
+            \'assets.index.css\',\n\
+            \'assets.index.template.html\',\n\
+            \'assets.swgg.swagger.json\',\n\
+            \'assets.swgg.swagger.server.json\'\n\
+        ].forEach(function (file) {\n\
+            local.assetsDict[\'/\' + file] = local.assetsDict[\'/\' + file] || \'\';\n\
+            if (local.fs.existsSync(local.__dirname + \'/\' + file)) {\n\
+                local.assetsDict[\'/\' + file] = local.fs.readFileSync(\n\
+                    local.__dirname + \'/\' + file,\n\
+                    \'utf8\'\n\
+                );\n\
+            }\n\
+        });\n\
+        local.assetsDict[\'/\'] =\n\
+            local.assetsDict[\'/assets.example.html\'] =\n\
+            local.assetsDict[\'/assets.index.template.html\']\n\
             .replace((/\\{\\{env\\.(\\w+?)\\}\\}/g), function (match0, match1) {\n\
                 // jslint-hack\n\
                 String(match0);\n\
@@ -394,8 +415,8 @@ local.assetsDict['/assets.index.template.html'].replace((/\n/g), '\\n\\\n') +
             local.fs.readFileSync(__filename, \'utf8\');\n\
         // bug-workaround - long $npm_package_buildCustomOrg\n\
         /* jslint-ignore-begin */\n\
-        local.assetsDict[\'/assets.jslint.rollup.js\'] =\n\
-            local.assetsDict[\'/assets.jslint.rollup.js\'] ||\n\
+        local.assetsDict[\'/assets.jslint.js\'] =\n\
+            local.assetsDict[\'/assets.jslint.js\'] ||\n\
             local.fs.readFileSync(\n\
                 local.jslint.__dirname + \'/lib.jslint.js\',\n\
                 \'utf8\'\n\
@@ -491,83 +512,23 @@ local.assetsDict['/assets.readme.template.md'] = '\
 # jslint-lite\n\
 the greatest app in the world!\n\
 \n\
-[![travis-ci.org build-status](https://api.travis-ci.org/kaizhu256/node-jslint-lite.svg)](https://travis-ci.org/kaizhu256/node-jslint-lite) [![istanbul-coverage](https://kaizhu256.github.io/node-jslint-lite/build/coverage.badge.svg)](https://kaizhu256.github.io/node-jslint-lite/build/coverage.html/index.html)\n\
+[![travis-ci.org build-status](https://api.travis-ci.org/kaizhu256/node-jslint-lite.svg)](https://travis-ci.org/kaizhu256/node-jslint-lite)\n\
 \n\
 [![NPM](https://nodei.co/npm/jslint-lite.png?downloads=true)](https://www.npmjs.com/package/jslint-lite)\n\
 \n\
-[![npmPackageListing](https://kaizhu256.github.io/node-jslint-lite/build/screenCapture.npmPackageListing.svg)](https://github.com/kaizhu256/node-jslint-lite)\n\
-\n\
-![npmPackageDependencyTree](https://kaizhu256.github.io/node-jslint-lite/build/screenCapture.npmPackageDependencyTree.svg)\n\
-\n\
-\n\
-\n\
-# cdn download\n\
-- [https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app/assets.jslint.rollup.js](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app/assets.jslint.rollup.js)\n\
-\n\
-\n\
-\n\
-# live demo\n\
-- [https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app/index.html](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app/index.html)\n\
-\n\
-[![github.com test-server](https://kaizhu256.github.io/node-jslint-lite/build/screenCapture.deployGithub.browser.%252Fnode-jslint-lite%252Fbuild%252Fapp%252Findex.html.png)](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app/index.html)\n\
-\n\
-\n\
-\n\
-# documentation\n\
-#### apidoc\n\
-- [https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/apidoc.html](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/apidoc.html)\n\
-\n\
-[![apidoc](https://kaizhu256.github.io/node-jslint-lite/build/screenCapture.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/apidoc.html)\n\
-\n\
-#### todo\n\
-- none\n\
-\n\
-#### changelog for v0.0.1\n\
-- none\n\
-\n\
-#### this package requires\n\
-- darwin or linux os\n\
-\n\
-\n\
-\n\
-# build status [![travis-ci.org build-status](https://api.travis-ci.org/kaizhu256/node-jslint-lite.svg)](https://travis-ci.org/kaizhu256/node-jslint-lite)\n\
 [![build commit status](https://kaizhu256.github.io/node-jslint-lite/build/build.badge.svg)](https://travis-ci.org/kaizhu256/node-jslint-lite)\n\
 \n\
 | git-branch : | [master](https://github.com/kaizhu256/node-jslint-lite/tree/master) | [beta](https://github.com/kaizhu256/node-jslint-lite/tree/beta) | [alpha](https://github.com/kaizhu256/node-jslint-lite/tree/alpha)|\n\
 |--:|:--|:--|:--|\n\
-| test-server-github : | [![github.com test-server](https://kaizhu256.github.io/node-jslint-lite/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-jslint-lite/build..master..travis-ci.org/app/index.html) | [![github.com test-server](https://kaizhu256.github.io/node-jslint-lite/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app/index.html) | [![github.com test-server](https://kaizhu256.github.io/node-jslint-lite/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-jslint-lite/build..alpha..travis-ci.org/app/index.html)|\n\
+| test-server-github : | [![github.com test-server](https://kaizhu256.github.io/node-jslint-lite/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-jslint-lite/build..master..travis-ci.org/app) | [![github.com test-server](https://kaizhu256.github.io/node-jslint-lite/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app) | [![github.com test-server](https://kaizhu256.github.io/node-jslint-lite/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-jslint-lite/build..alpha..travis-ci.org/app)|\n\
 | test-server-heroku : | [![heroku.com test-server](https://kaizhu256.github.io/node-jslint-lite/heroku-logo.75x25.png)](https://h1-jslint-master.herokuapp.com) | [![heroku.com test-server](https://kaizhu256.github.io/node-jslint-lite/heroku-logo.75x25.png)](https://h1-jslint-beta.herokuapp.com) | [![heroku.com test-server](https://kaizhu256.github.io/node-jslint-lite/heroku-logo.75x25.png)](https://h1-jslint-alpha.herokuapp.com)|\n\
 | test-report : | [![test-report](https://kaizhu256.github.io/node-jslint-lite/build..master..travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-jslint-lite/build..master..travis-ci.org/test-report.html) | [![test-report](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/test-report.html) | [![test-report](https://kaizhu256.github.io/node-jslint-lite/build..alpha..travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-jslint-lite/build..alpha..travis-ci.org/test-report.html)|\n\
-| coverage : | [![istanbul-coverage](https://kaizhu256.github.io/node-jslint-lite/build..master..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-jslint-lite/build..master..travis-ci.org/coverage.html/index.html) | [![istanbul-coverage](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/coverage.html/index.html) | [![istanbul-coverage](https://kaizhu256.github.io/node-jslint-lite/build..alpha..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-jslint-lite/build..alpha..travis-ci.org/coverage.html/index.html)|\n\
+| coverage : | [![coverage](https://kaizhu256.github.io/node-jslint-lite/build..master..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-jslint-lite/build..master..travis-ci.org/coverage.html/index.html) | [![coverage](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/coverage.html/index.html) | [![coverage](https://kaizhu256.github.io/node-jslint-lite/build..alpha..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-jslint-lite/build..alpha..travis-ci.org/coverage.html/index.html)|\n\
 | build-artifacts : | [![build-artifacts](https://kaizhu256.github.io/node-jslint-lite/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-jslint-lite/tree/gh-pages/build..master..travis-ci.org) | [![build-artifacts](https://kaizhu256.github.io/node-jslint-lite/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-jslint-lite/tree/gh-pages/build..beta..travis-ci.org) | [![build-artifacts](https://kaizhu256.github.io/node-jslint-lite/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-jslint-lite/tree/gh-pages/build..alpha..travis-ci.org)|\n\
 \n\
-#### master branch\n\
-- stable branch\n\
-- HEAD should be tagged, npm-published package\n\
+[![npmPackageListing](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.npmPackageListing.svg)](https://github.com/kaizhu256/node-jslint-lite)\n\
 \n\
-#### beta branch\n\
-- semi-stable branch\n\
-- HEAD should be latest, npm-published package\n\
-\n\
-#### alpha branch\n\
-- unstable branch\n\
-- HEAD is arbitrary\n\
-- commit history may be rewritten\n\
-\n\
-\n\
-\n\
-# quickstart web example\n\
-![screenCapture](https://kaizhu256.github.io/node-jslint-lite/build/screenCapture.testExampleJs.browser.%252F.png)\n\
-\n\
-#### to run this example, follow the instruction in the script below\n\
-- [example.js](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/example.js)\n\
-```javascript\n' + local.assetsDict['/assets.example.template.js'] + '```\n\
-\n\
-#### output from browser\n\
-![screenCapture](https://kaizhu256.github.io/node-jslint-lite/build/screenCapture.testExampleJs.browser.%252F.png)\n\
-\n\
-#### output from shell\n\
-![screenCapture](https://kaizhu256.github.io/node-jslint-lite/build/screenCapture.testExampleJs.svg)\n\
+![npmPackageDependencyTree](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.npmPackageDependencyTree.svg)\n\
 \n\
 \n\
 \n\
@@ -610,8 +571,80 @@ the greatest app in the world!\n\
 \n\
 \n\
 \n\
+# cdn download\n\
+- [https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app/assets.jslint.js](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app/assets.jslint.js)\n\
+\n\
+\n\
+\n\
+# live demo\n\
+- [https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app)\n\
+\n\
+[![github.com test-server](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.deployGithub.browser.%252Fnode-jslint-lite%252Fbuild%252Fapp.png)](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app)\n\
+\n\
+\n\
+\n\
+# documentation\n\
+#### apidoc\n\
+- [https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/apidoc.html](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/apidoc.html)\n\
+\n\
+[![apidoc](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/apidoc.html)\n\
+\n\
+#### swaggerdoc\n\
+- [https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app/assets.swgg.html](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app/assets.swgg.html)\n\
+\n\
+[![swaggerdoc](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.deployGithub.browser.%252Fnode-jslint-lite%252Fbuild%252Fapp%252Fassets.swgg.html.png)](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app/assets.swgg.html)\n\
+\n\
+#### todo\n\
+- none\n\
+\n\
+#### changelog for v0.0.1\n\
+- none\n\
+\n\
+#### this package requires\n\
+- darwin or linux os\n\
+\n\
+\n\
+\n\
+# quickstart standalone app\n\
+#### to run this example, follow the instruction in the script below\n\
+- [example.sh](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/example.sh)\n\
+- [assets.app.js](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app/assets.app.js)\n\
+```shell\n\
+# example.sh\n\
+\n\
+# 1. download standalone app\n\
+curl -O https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app/assets.app.js\n\
+# 2. run standalone app\n\
+node ./assets.app.js\n\
+# 3. open a browser to http://127.0.0.1:8081 and play with the web demo\n\
+# 4. edit standalone app to suit your needs\n\
+```\n\
+\n\
+#### output from browser\n\
+[![screen-capture](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.testExampleSh.browser.%252F.png)](https://kaizhu256.github.io/node-jslint-lite/build/app/assets.example.html)\n\
+\n\
+#### output from shell\n\
+![screen-capture](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.testExampleSh.svg)\n\
+\n\
+\n\
+\n\
+# quickstart example.js\n\
+[![screen-capture](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.testExampleJs.browser.%252F.png)](https://kaizhu256.github.io/node-jslint-lite/build/app/assets.example.html)\n\
+\n\
+#### to run this example, follow the instruction in the script below\n\
+- [example.js](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/example.js)\n\
+```javascript\n' + local.assetsDict['/assets.example.template.js'] + '```\n\
+\n\
+#### output from browser\n\
+[![screen-capture](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.testExampleJs.browser.%252F.png)](https://kaizhu256.github.io/node-jslint-lite/build/app/assets.example.html)\n\
+\n\
+#### output from shell\n\
+![screen-capture](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.testExampleJs.svg)\n\
+\n\
+\n\
+\n\
 # changelog of last 50 commits\n\
-[![screenCapture](https://kaizhu256.github.io/node-jslint-lite/build/screenCapture.gitLog.svg)](https://github.com/kaizhu256/node-jslint-lite/commits)\n\
+[![screen-capture](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.gitLog.svg)](https://github.com/kaizhu256/node-jslint-lite/commits)\n\
 \n\
 \n\
 \n\
@@ -623,21 +656,56 @@ the greatest app in the world!\n\
 # this shell script will run the build for this package\n\
 \n\
 shBuildCiAfter() {(set -e\n\
+    # shNpmTestPublished\n\
+    shReadmeTest example.js\n\
     shDeployGithub\n\
     # shDeployHeroku\n\
-    shReadmeBuildLinkVerify\n\
-)}\n\
-\n\
-shBuildCiBefore() {(set -e\n\
-    shReadmeTest example.js\n\
     shReadmeTest example.sh\n\
-    # shNpmTestPublished\n\
 )}\n\
 \n\
 # run shBuildCi\n\
 eval $(utility2 source)\n\
 shBuildCi\n\
 ```\n\
+\n\
+\n\
+\n\
+# internal screen-capture\n\
+- [https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)\n\
+[![screen-capture](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)\n\
+\n\
+- [https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.buildCi.browser.%252Ftmp%252Fbuild%252Fcoverage.lib.html.png](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.buildCi.browser.%252Ftmp%252Fbuild%252Fcoverage.lib.html.png)\n\
+[![screen-capture](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.buildCi.browser.%252Ftmp%252Fbuild%252Fcoverage.lib.html.png)](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.buildCi.browser.%252Ftmp%252Fbuild%252Fcoverage.lib.html.png)\n\
+\n\
+- [https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.buildCi.browser.%252Ftmp%252Fbuild%252Ftest-report.html.png](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.buildCi.browser.%252Ftmp%252Fbuild%252Ftest-report.html.png)\n\
+[![screen-capture](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.buildCi.browser.%252Ftmp%252Fbuild%252Ftest-report.html.png)](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.buildCi.browser.%252Ftmp%252Fbuild%252Ftest-report.html.png)\n\
+\n\
+- [https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.deployGithub.browser.%252Fnode-jslint-lite%252Fbuild%252Fapp.png](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.deployGithub.browser.%252Fnode-jslint-lite%252Fbuild%252Fapp.png)\n\
+[![screen-capture](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.deployGithub.browser.%252Fnode-jslint-lite%252Fbuild%252Fapp.png)](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.deployGithub.browser.%252Fnode-jslint-lite%252Fbuild%252Fapp.png)\n\
+\n\
+- [https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.deployGithub.browser.%252Fnode-jslint-lite%252Fbuild%252Fapp%252Fassets.swgg.html.png](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.deployGithub.browser.%252Fnode-jslint-lite%252Fbuild%252Fapp%252Fassets.swgg.html.png)\n\
+[![screen-capture](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.deployGithub.browser.%252Fnode-jslint-lite%252Fbuild%252Fapp%252Fassets.swgg.html.png)](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.deployGithub.browser.%252Fnode-jslint-lite%252Fbuild%252Fapp%252Fassets.swgg.html.png)\n\
+\n\
+- [https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.deployGithubTest.browser.%252Fnode-jslint-lite%252Fbuild%252Fapp.png](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.deployGithubTest.browser.%252Fnode-jslint-lite%252Fbuild%252Fapp.png)\n\
+[![screen-capture](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.deployGithubTest.browser.%252Fnode-jslint-lite%252Fbuild%252Fapp.png)](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.deployGithubTest.browser.%252Fnode-jslint-lite%252Fbuild%252Fapp.png)\n\
+\n\
+- [https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.deployHeroku.browser.%252F.png](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.deployHeroku.browser.%252F.png)\n\
+[![screen-capture](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.deployHeroku.browser.%252F.png)](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.deployHeroku.browser.%252F.png)\n\
+\n\
+- [https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.deployHeroku.browser.%252Fassets.swgg.html.png](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.deployHeroku.browser.%252Fassets.swgg.html.png)\n\
+[![screen-capture](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.deployHeroku.browser.%252Fassets.swgg.html.png)](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.deployHeroku.browser.%252Fassets.swgg.html.png)\n\
+\n\
+- [https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.deployHerokuTest.browser.%252F.png](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.deployHerokuTest.browser.%252F.png)\n\
+[![screen-capture](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.deployHerokuTest.browser.%252F.png)](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.deployHerokuTest.browser.%252F.png)\n\
+\n\
+- [https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.npmTest.browser.%252F.png](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.npmTest.browser.%252F.png)\n\
+[![screen-capture](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.npmTest.browser.%252F.png)](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.npmTest.browser.%252F.png)\n\
+\n\
+- [https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.testExampleJs.browser.%252F.png](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.testExampleJs.browser.%252F.png)\n\
+[![screen-capture](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.testExampleJs.browser.%252F.png)](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.testExampleJs.browser.%252F.png)\n\
+\n\
+- [https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.testExampleSh.browser.%252F.png](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.testExampleSh.browser.%252F.png)\n\
+[![screen-capture](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.testExampleSh.browser.%252F.png)](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.testExampleSh.browser.%252F.png)\n\
 \n\
 \n\
 \n\
@@ -670,13 +738,13 @@ local.assetsDict['/assets.readmeCustomOrg.npmdoc.template.md'] = '\
 - [https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build/apidoc.html](https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build/apidoc.html) \
 \n\
 \n\
-[![apidoc](https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build/screenCapture.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)](https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build/apidoc.html) \
+[![apidoc](https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build/screen-capture.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)](https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build/apidoc.html) \
 \n\
 \n\
-![npmPackageListing](https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build/screenCapture.npmPackageListing.svg) \
+![npmPackageListing](https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build/screen-capture.npmPackageListing.svg) \
 \n\
 \n\
-![npmPackageDependencyTree](https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build/screenCapture.npmPackageDependencyTree.svg) \
+![npmPackageDependencyTree](https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build/screen-capture.npmPackageDependencyTree.svg) \
 \n\
 \n\
 \n\
@@ -723,36 +791,36 @@ local.assetsDict['/assets.readmeCustomOrg.npmtest.template.md'] = '\
 | git-branch : | [alpha](https://github.com/npmtest/node-npmtest-{{env.npm_package_name}}/tree/alpha)|\n\
 |--:|:--| \
 \n\
-| coverage : | [![istanbul-coverage](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/coverage.badge.svg)](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/coverage.html/index.html)| \
+| coverage : | [![coverage](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/coverage.badge.svg)](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/coverage.html/index.html)| \
 \n\
 | test-report : | [![test-report](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/test-report.badge.svg)](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/test-report.html)| \
 \n\
-| test-server-github : | [![github.com test-server](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/GitHub-Mark-32px.png)](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/app/index.html) | \
+| test-server-github : | [![github.com test-server](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/GitHub-Mark-32px.png)](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/app) | \
 | build-artifacts : | [![build-artifacts](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/glyphicons_144_folder_open.png)](https://github.com/npmtest/node-npmtest-{{env.npm_package_name}}/tree/gh-pages/build)| \
 \n\
 \n\
 - [https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/coverage.html/index.html](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/coverage.html/index.html) \
 \n\
 \n\
-[![istanbul-coverage](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/screenCapture.buildCi.browser.%252Ftmp%252Fbuild%252Fcoverage.lib.html.png)](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/coverage.html/index.html) \
+[![coverage](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/screen-capture.buildCi.browser.%252Ftmp%252Fbuild%252Fcoverage.lib.html.png)](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/coverage.html/index.html) \
 \n\
 \n\
 - [https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/test-report.html](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/test-report.html) \
 \n\
 \n\
-[![test-report](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/screenCapture.buildCi.browser.%252Ftmp%252Fbuild%252Ftest-report.html.png)](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/test-report.html) \
+[![test-report](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/screen-capture.buildCi.browser.%252Ftmp%252Fbuild%252Ftest-report.html.png)](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/test-report.html) \
 \n\
 \n\
 - [https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build/apidoc.html](https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build/apidoc.html) \
 \n\
 \n\
-[![apidoc](https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build/screenCapture.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)](https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build/apidoc.html) \
+[![apidoc](https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build/screen-capture.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)](https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build/apidoc.html) \
 \n\
 \n\
-![npmPackageListing](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/screenCapture.npmPackageListing.svg) \
+![npmPackageListing](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/screen-capture.npmPackageListing.svg) \
 \n\
 \n\
-![npmPackageDependencyTree](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/screenCapture.npmPackageDependencyTree.svg) \
+![npmPackageDependencyTree](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/screen-capture.npmPackageDependencyTree.svg) \
 \n\
 \n\
 \n\
@@ -1731,63 +1799,6 @@ local.assetsDict['/favicon.ico'] = '';
             return self;
         };
 
-        local._middlewareError = function (error, request, response) {
-        /*
-         * this function will run the middleware that will handle errors
-         */
-            // if error occurred, then respond with '500 Internal Server Error',
-            // else respond with '404 Not Found'
-            local.serverRespondDefault(request, response, error
-                ? (error.statusCode >= 400 && error.statusCode < 600
-                    ? error.statusCode
-                    : 500)
-                : 404, error);
-        };
-
-        local._middlewareJsonpStateInit = function (request, response, nextMiddleware) {
-        /*
-         * this function will run the middleware that will
-         * serve the browser-state wrapped in the given jsonp-callback
-         */
-            var state;
-            if (!(request._stateInit || (request.urlParsed &&
-                    request.urlParsed.pathname === '/jsonp.utility2._stateInit'))) {
-                nextMiddleware();
-                return;
-            }
-            state = { utility2: { assetsDict: {}, env: {
-                NODE_ENV: local.env.NODE_ENV,
-                npm_config_mode_backend: local.env.npm_config_mode_backend,
-                npm_package_description: local.env.npm_package_description,
-                npm_package_homepage: local.env.npm_package_homepage,
-                npm_package_name: local.env.npm_package_name,
-                npm_package_nameAlias: local.env.npm_package_nameAlias,
-                npm_package_version: local.env.npm_package_version
-            } } };
-            [
-                '/assets.' + local.env.npm_package_nameAlias + '.css',
-                '/assets.index.template.html',
-                '/assets.swgg.swagger.json'
-            ].forEach(function (key) {
-                state.utility2.assetsDict[key] = local.assetsDict[key];
-            });
-            if (request._stateInit) {
-                return state;
-            }
-            response.end(request.urlParsed.query.callback + '(' + JSON.stringify(state) + ');');
-        };
-
-        local._serverLocalUrlTest = local.nop;
-
-        local._stateInit = function (options) {
-        /*
-         * this function will init the state-options
-         */
-            local.objectSetOverride(local, options, 10);
-        };
-
-        local._testRunBefore = local.nop;
-
         local.ajax = function (options, onError) {
         /*
          * this function will send an ajax-request with error-handling and timeout
@@ -1795,9 +1806,7 @@ local.assetsDict['/favicon.ico'] = '';
             var timerTimeout, tmp, xhr;
             onError = local.onErrorWithStack(onError);
             // init modeServerLocal
-            if (local.env &&
-                    !local.env.npm_config_mode_backend &&
-                    (local._serverLocalUrlTest && local._serverLocalUrlTest(options.url))) {
+            if (local.serverLocalUrlTest && local.serverLocalUrlTest(options.url)) {
                 xhr = new local._http.XMLHttpRequest();
             }
             // init xhr
@@ -1948,36 +1957,45 @@ local.assetsDict['/favicon.ico'] = '';
             if (!ajaxProgressDiv1) {
                 return;
             }
+            // init transition
+            ajaxProgressDiv1.style.transition = 'width 1500ms';
             // init ajaxProgressDiv1StyleBackground
             local.ajaxProgressDiv1StyleBackground = local.ajaxProgressDiv1StyleBackground ||
                 ajaxProgressDiv1.style.background;
             // show ajaxProgress
-            if (ajaxProgressDiv1.style.background === 'transparent') {
-                ajaxProgressDiv1.style.background = local.ajaxProgressDiv1StyleBackground;
-            }
-            // cleanup timerTimeout
-            clearTimeout(local.timerTimeoutAjaxProgressHide);
+            ajaxProgressDiv1.style.background = local.ajaxProgressDiv1StyleBackground;
             // increment ajaxProgress
             if (local.ajaxProgressCounter > 0) {
                 // this algorithm will indefinitely increment the ajaxProgressBar
                 // with successively smaller increments without ever reaching 100%
                 local.ajaxProgressState += 1;
-                ajaxProgressDiv1.style.width =
-                    100 - 75 * Math.exp(-0.125 * local.ajaxProgressState) + '%';
-                return;
+                ajaxProgressDiv1.style.width = Math.max(
+                    100 - 75 * Math.exp(-0.125 * local.ajaxProgressState),
+                    Number(ajaxProgressDiv1.style.width.slice(0, -1)) || 0
+                ) + '%';
+            } else {
+                // finish ajaxProgress
+                ajaxProgressDiv1.style.width = '100%';
             }
-            // finish ajaxProgress
-            ajaxProgressDiv1.style.width = '100%';
+            // cleanup timerTimeout
+            clearTimeout(local.timerTimeoutAjaxProgressHide);
             // hide ajaxProgress
             local.timerTimeoutAjaxProgressHide = setTimeout(function () {
+                ajaxProgressDiv1.style.transition = 'background 500ms';
                 ajaxProgressDiv1.style.background = 'transparent';
+                local.ajaxProgressCounter = 0;
+                local.ajaxProgressState = 0;
                 // reset ajaxProgress
                 setTimeout(function () {
-                    local.ajaxProgressCounter = 0;
-                    local.ajaxProgressState = 0;
-                    ajaxProgressDiv1.style.width = '25%';
+                    // coverage-hack
+                    local.nop(!local.ajaxProgressState && (function () {
+                        ajaxProgressDiv1.style.transition = '';
+                        ajaxProgressDiv1.style.width = '0%';
+                    }()));
                 }, 500);
-            }, 1500);
+            }, local.ajaxProgressCounter > 0
+                ? local.timeoutDefault
+                : 1500);
         };
 
         local.assert = function (passed, message) {
@@ -2209,7 +2227,7 @@ local.assetsDict['/favicon.ico'] = '';
                         fileCoverage: local.env.npm_config_dir_tmp +
                             '/coverage.' + options.testName + '.json',
                         fileScreenCapture: (local.env.npm_config_dir_build +
-                            '/screenCapture.' + options.testName + '.png'),
+                            '/screen-capture.' + options.testName + '.png'),
                         fileTestReport: local.env.npm_config_dir_tmp +
                             '/test-report.' + options.testName + '.json',
                         modeBrowserTest: 'test',
@@ -2261,7 +2279,7 @@ local.assetsDict['/favicon.ico'] = '';
                     options.modeNext = 10;
                     local.processSpawnWithTimeout('electron', [
                         __filename,
-                        'browserTest',
+                        'cli.browserTest',
                         '--enable-logging'
                     ], {
                         env: options,
@@ -2330,10 +2348,13 @@ local.assetsDict['/favicon.ico'] = '';
                     break;
                 case 12:
                     options.BrowserWindow = local.electron.BrowserWindow;
-                    local.objectSetDefault(
-                        options,
-                        { frame: false, height: 768, width: 1024, x: 0, y: 0 }
-                    );
+                    local.objectSetDefault(options, {
+                        frame: false,
+                        height: 768,
+                        width: 1024,
+                        x: 0,
+                        y: 0
+                    });
                     // init browserWindow
                     options.browserWindow = new options.BrowserWindow(options);
                     onParallel = local.onParallel(onNext);
@@ -2356,14 +2377,14 @@ local.assetsDict['/favicon.ico'] = '';
                     setTimeout(function () {
                         options.browserWindow.capturePage(options, function (data) {
                             local.fs.writeFileSync(options.fileScreenCapture, data.toPng());
-                            console.error('\nbrowserTest - created screenCapture file://' +
+                            console.error('\nbrowserTest - created screen-capture file://' +
                                 options.fileScreenCapture + '\n');
                             onParallel();
                         });
                     }, options.timeoutScreenCapture);
                     break;
                 case 14:
-                    console.error('browserTest - created screenCapture file://' +
+                    console.error('browserTest - created screen-capture file://' +
                         options.fileScreenCapture.replace((/\.\w+$/), '.html'));
                     onNext();
                     break;
@@ -2398,7 +2419,7 @@ local.assetsDict['/favicon.ico'] = '';
                         options.global_test_results =
                             JSON.parse(data.tmp[2]).global_test_results;
                         if (options.global_test_results.testReport) {
-                            // merge screenCapture into test-report
+                            // merge screen-capture into test-report
                             options.global_test_results.testReport.testPlatformList[0]
                                 .screenCaptureImg =
                                 options.fileScreenCapture.replace((/.*\//), '');
@@ -2623,29 +2644,32 @@ return Utf8ArrayToStr(bff);
          */
             local.fsRmrSync(local.env.npm_config_dir_build + '/app');
             local.onParallelList({ list: options.concat([{
-                file: '/assets.' + local.env.npm_package_nameAlias + '.css',
-                url: '/assets.' + local.env.npm_package_nameAlias + '.css'
-            }, {
                 file: '/assets.' + local.env.npm_package_nameAlias + '.html',
                 url: '/index.html'
             }, {
                 file: '/assets.' + local.env.npm_package_nameAlias + '.js',
                 url: '/assets.' + local.env.npm_package_nameAlias + '.js'
             }, {
-                file: '/assets.' + local.env.npm_package_nameAlias + '.rollup.js',
-                url: '/assets.' + local.env.npm_package_nameAlias + '.rollup.js'
-            }, {
                 file: '/assets.app.js',
                 url: '/assets.app.js'
             }, {
+                file: '/assets.example.html',
+                url: '/assets.example.html'
+            }, {
                 file: '/assets.example.js',
                 url: '/assets.example.js'
+            }, {
+                file: '/assets.index.css',
+                url: '/assets.index.css'
             }, {
                 file: '/assets.swgg.html',
                 url: '/assets.swgg.html'
             }, {
                 file: '/assets.swgg.swagger.json',
                 url: '/assets.swgg.swagger.json'
+            }, {
+                file: '/assets.swgg.swagger.server.json',
+                url: '/assets.swgg.swagger.server.json'
             }, {
                 file: '/assets.test.js',
                 url: '/assets.test.js'
@@ -2656,8 +2680,8 @@ return Utf8ArrayToStr(bff);
                 file: '/index.html',
                 url: '/index.html'
             }, {
-                file: '/jsonp.utility2._stateInit',
-                url: '/jsonp.utility2._stateInit?callback=window.utility2._stateInit'
+                file: '/jsonp.utility2.stateInit',
+                url: '/jsonp.utility2.stateInit?callback=window.utility2.stateInit'
             }]) }, function (options, onParallel) {
                 options = options.element;
                 onParallel.counter += 1;
@@ -2791,8 +2815,10 @@ return Utf8ArrayToStr(bff);
             });
             // search-and-replace - customize dataTo
             [
-                // customize body before istanbul
+                // customize body before istanbul instrument in package
                 (/[\S\s]*?^\/\* istanbul instrument in package /m),
+                // customize body after use strict
+                (/\n {4}'use strict';\n[\S\s]*?\n\n\n\n/),
                 // customize body after init exports
                 (/\n {12}module.exports.module = module;\n[\S\s]*?$/)
             ].forEach(function (rgx) {
@@ -2870,9 +2896,7 @@ return Utf8ArrayToStr(bff);
                 (/.*?\n.*?\n/),
                 // customize todo
                 (/\n#### todo\n[\S\s]*?\n\n\n\n/),
-                // customize quickstart-header
-                (/\n```javascript\n\/\*\nexample\.js\n\n[^`]*?\n/),
-                (/\n {8}\$ npm install [^`]*? &&/),
+                // customize quickstart-example-js
                 (/\n {8}local\.global\.local = local;\n[^`]*?\n {4}\/\/ init-after\n/),
                 new RegExp('\\n {8}local\\.testRunBrowser = function \\(event\\) \\{\\n' +
                     '[^`]*?^ {12}if \\(!event \\|\\| \\(event &&\\n', 'm'),
@@ -2883,8 +2907,7 @@ return Utf8ArrayToStr(bff);
                 (/\nutility2-comment -->(?:\\n\\\n){4}[^`]*?^<!-- utility2-comment\\n\\\n/m),
                 // customize build-script
                 (/\n# internal build-script\n[\S\s]*?^- build_ci\.sh\n/m),
-                (/\nshBuildCiAfter\(\) \{\(set -e\n[^`]*?\n\)\}\n/),
-                (/\nshBuildCiBefore\(\) \{\(set -e\n[^`]*?\n\)\}\n/)
+                (/\nshBuildCiAfter\(\) \{\(set -e\n[^`]*?\n\)\}\n/)
             ].forEach(function (rgx) {
                 // handle large string-replace
                 options.dataFrom.replace(rgx, function (match0) {
@@ -2896,6 +2919,14 @@ return Utf8ArrayToStr(bff);
                     });
                 });
             });
+            // customize swaggerdoc
+            // coverage-hack
+            local.nop(!local.assetsDict['/assets.swgg.swagger.json'] && (function () {
+                options.dataTo = options.dataTo.replace(
+                    (/\n#### swaggerdoc\n[\S\s]*?\n#### todo\n/),
+                    '\n#### todo\n'
+                );
+            }()));
             // customize comment
             options.dataFrom.replace(
                 (/^( *?)(?:#!! |#\/\/ |\/\/!!)(.*?)$/gm),
@@ -2924,17 +2955,17 @@ return Utf8ArrayToStr(bff);
             // search-and-replace - customize dataTo
             [
                 // customize js\-env code
-                new RegExp('\\n {4}\\/\\/ run shared js\\-env code - init-before\\n[\\S\\s]*?' +
-                    '^ {4}\\(function \\(\\) \\{\\n', 'm'),
+                new RegExp('\\n {4}\\/\\/ run shared js\\-env code - init-before\\n' +
+                    '[\\S\\s]*?^ {4}\\(function \\(\\) \\{\\n', 'm'),
                 (/\n {8}local.global.local = local;\n[\S\s]*?^ {4}\}\(\)\);\n/m),
                 (/\n {4}\/\/ run shared js\-env code - function\n[\S\s]*?\n {4}\}\(\)\);\n/),
                 (/\n {4}\/\/ run browser js\-env code - function\n[\S\s]*?\n {8}break;\n/),
                 (/\n {4}\/\/ run node js\-env code - function\n[\S\s]*?\n {8}break;\n/),
                 (/\n {4}\/\/ run shared js\-env code - init-after\n[\S\s]*?\n {4}\}\(\)\);\n/),
-                new RegExp('\\n {4}\\/\\/ run browser js\\-env code - init-after\\n[\\S\\s]*?' +
-                    '\n {8}local.testCase_browser_nullCase = '),
-                new RegExp('\\n {4}\\/\\/ run node js\\-env code - init-after\\n[\\S\\s]*?' +
-                    '\n {8}local.testCase_buildApidoc_default = ')
+                new RegExp('\\n {4}\\/\\/ run browser js\\-env code - init-after\\n' +
+                    '[\\S\\s]*?\n {8}local.testCase_browser_nullCase = '),
+                new RegExp('\\n {4}\\/\\/ run node js\\-env code - init-after\\n' +
+                    '[\\S\\s]*?\n {8}local.testCase_buildApidoc_default = ')
             ].forEach(function (rgx) {
                 // handle large string-replace
                 options.dataFrom.replace(rgx, function (match0) {
@@ -3705,6 +3736,19 @@ return Utf8ArrayToStr(bff);
             nextMiddleware();
         };
 
+        local.middlewareError = function (error, request, response) {
+        /*
+         * this function will run the middleware that will handle errors
+         */
+            // if error occurred, then respond with '500 Internal Server Error',
+            // else respond with '404 Not Found'
+            local.serverRespondDefault(request, response, error
+                ? (error.statusCode >= 400 && error.statusCode < 600
+                    ? error.statusCode
+                    : 500)
+                : 404, error);
+        };
+
         local.middlewareFileServer = function (request, response, nextMiddleware) {
         /*
          * this function will run the middleware that will serve files
@@ -3826,36 +3870,6 @@ return Utf8ArrayToStr(bff);
             request.pipe(options.clientRequest);
         };
 
-        local.middlewareGroupCreate = function (middlewareList) {
-        /*
-         * this function will create a middleware that will
-         * sequentially run the sub-middlewares in middlewareList
-         */
-            var self;
-            self = function (request, response, nextMiddleware) {
-                var options;
-                options = {};
-                local.onNext(options, function (error) {
-                    // recurse with next middleware in middlewareList
-                    if (options.modeNext < self.middlewareList.length) {
-                        // run the sub-middleware
-                        self.middlewareList[options.modeNext](
-                            request,
-                            response,
-                            options.onNext
-                        );
-                        return;
-                    }
-                    // default to nextMiddleware
-                    nextMiddleware(error);
-                });
-                options.modeNext = -1;
-                options.onNext();
-            };
-            self.middlewareList = middlewareList;
-            return self;
-        };
-
         local.middlewareInit = function (request, response, nextMiddleware) {
         /*
          * this function will run the middleware that will init the request and response
@@ -3894,6 +3908,40 @@ return Utf8ArrayToStr(bff);
             });
             // default to nextMiddleware
             nextMiddleware();
+        };
+
+        local.middlewareJsonpStateInit = function (request, response, nextMiddleware) {
+        /*
+         * this function will run the middleware that will
+         * serve the browser-state wrapped in the given jsonp-callback
+         */
+            var state;
+            if (!(request.stateInit || (request.urlParsed &&
+                    request.urlParsed.pathname === '/jsonp.utility2.stateInit'))) {
+                nextMiddleware();
+                return;
+            }
+            state = { utility2: {
+                assetsDict: {
+                    '/assets.index.css': local.assetsDict['/assets.index.css'],
+                    '/assets.index.template.html':
+                        local.assetsDict['/assets.index.template.html'],
+                    '/assets.swgg.swagger.json': local.assetsDict['/assets.swgg.swagger.json']
+                },
+                env: {
+                    NODE_ENV: local.env.NODE_ENV,
+                    npm_config_mode_backend: local.env.npm_config_mode_backend,
+                    npm_package_description: local.env.npm_package_description,
+                    npm_package_homepage: local.env.npm_package_homepage,
+                    npm_package_name: local.env.npm_package_name,
+                    npm_package_nameAlias: local.env.npm_package_nameAlias,
+                    npm_package_version: local.env.npm_package_version
+                }
+            } };
+            if (request.stateInit) {
+                return state;
+            }
+            response.end(request.urlParsed.query.callback + '(' + JSON.stringify(state) + ');');
         };
 
         local.moduleDirname = function (module, modulePathList) {
@@ -4685,7 +4733,7 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
                 'header',
                 '/assets.utility2.rollup.js',
                 '/assets.utility2.rollup.begin.js',
-                'local._stateInit',
+                'local.stateInit',
                 '/assets.lib.js',
                 '/assets.example.js',
                 '/assets.test.js',
@@ -4707,19 +4755,11 @@ instruction\n\
     1. save this script as assets.app.js\n\
     2. run the shell command:\n\
         $ PORT=8081 node assets.app.js\n\
-    3. play with the browser-demo on http://127.0.0.1:8081\n\
+    3. open a browser to http://127.0.0.1:8081 and play with the web demo\n\
 */\n\
-';
+' + local.assetsDict['/assets.utility2.rollup.begin.js']
+    .replace((/utility2_rollup/g), 'utility2_app');
 /* jslint-ignore-end */
-                case 'local._stateInit':
-                    // handle large string-replace
-                    script = local.assetsDict['/assets.utility2.rollup.content.js']
-                        .split('/* utility2.rollup.js content */');
-                    script.splice(1, 0, key + '(' + JSON.stringify(
-                        local._middlewareJsonpStateInit({ _stateInit: true })
-                    ) + ');');
-                    script = script.join('');
-                    break;
                 case '/assets.lib.js':
                     // handle large string-replace
                     tmp = '/assets.' + local.env.npm_package_nameAlias + '.js';
@@ -4730,23 +4770,15 @@ instruction\n\
                     script = script.join('');
                     script += '\n';
                     script += local.assetsDict[tmp];
-                    // coverage-hack
-                    local.nop(local.assetsDict[
-                        '/assets.' + local.env.npm_package_nameAlias + '.rollup.js'
-                    ] && (function () {
-                        script = '';
-                    }()));
                     break;
-                case '/assets.utility2.rollup.js':
-                    script = local.assetsDict['/assets.utility2.rollup.js'];
-                    // coverage-hack
-                    local.nop(local.assetsDict[
-                        '/assets.' + local.env.npm_package_nameAlias + '.rollup.js'
-                    ] && (function () {
-                        script = local.assetsDict[
-                            '/assets.' + local.env.npm_package_nameAlias + '.rollup.js'
-                        ];
-                    }()));
+                case 'local.stateInit':
+                    // handle large string-replace
+                    script = local.assetsDict['/assets.utility2.rollup.content.js']
+                        .split('/* utility2.rollup.js content */');
+                    script.splice(1, 0, key + '(' + JSON.stringify(
+                        local.middlewareJsonpStateInit({ stateInit: true })
+                    ) + ');');
+                    script = script.join('');
                     break;
                 default:
                     script = local.assetsDict[key];
@@ -4755,13 +4787,6 @@ instruction\n\
                     script.trim() +
                     '\n/* script-end ' + key + ' */\n';
             }).join('\n\n\n');
-            // init assets.lib.rollup.js
-            local.objectSetDefault(local.assetsDict, local.objectLiteralize({
-                '$[]': [
-                    '/assets.' + local.env.npm_package_nameAlias + '.rollup.js',
-                    local.assetsDict['/assets.' + local.env.npm_package_nameAlias + '.js']
-                ]
-            }));
             local.objectSetDefault(module.exports, local);
             // jslint assetsDict
             Object.keys(local.assetsDict).sort().forEach(function (key) {
@@ -4921,6 +4946,15 @@ instruction\n\
                     local.sjcl.hash.sha256
                 )).mac(local.sjcl.codec.utf8String.toBits(data))
             );
+        };
+
+        local.stateInit = function (options) {
+        /*
+         * this function will init the state-options
+         */
+            local.objectSetOverride(local, options, 10);
+            // init api
+            local.nop(local.swgg && local.swgg.apiDictUpdate(local.swgg.swaggerJson));
         };
 
         local.streamListCleanup = function (streamList) {
@@ -5222,6 +5256,8 @@ instruction\n\
                 'assets.{{env.npm_package_nameAlias}}',
                 'assets.' + options.packageJson.nameAlias
             );
+            template = template.replace('my-app', options.packageJson.name);
+            template = template.replace('my_app', options.packageJson.nameAlias);
             return template;
         };
 
@@ -5290,18 +5326,15 @@ instruction\n\
                 local.testReportMerge(testReport, {})
             );
             // create build.badge.svg
-            local.fs.writeFileSync(local.env.npm_config_dir_build +
-                '/build.badge.svg', local.assetsDict['/assets.buildBadge.template.svg']
-                // edit branch name
-                .replace((/0000-00-00 00:00:00/g),
-                    new Date().toISOString().slice(0, 19).replace('T', ' '))
-                // edit branch name
-                .replace((/- master -/g), '| ' + local.env.CI_BRANCH + ' |')
-                // edit commit id
-                .replace(
-                    (/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/g),
-                    local.env.CI_COMMIT_ID
-                ));
+            local.fs.writeFileSync(
+                local.env.npm_config_dir_build + '/build.badge.svg',
+                local.assetsDict['/assets.buildBadge.template.svg'].replace(
+                    new RegExp('0000-00-00 00:00:00 UTC - master - ' +
+                        'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'g'),
+                    new Date().toISOString().slice(0, 19).replace('T', ' ') +
+                        ' - ' + local.env.CI_BRANCH + ' - ' + local.env.CI_COMMIT_ID
+                )
+            );
             // create test-report.badge.svg
             local.fs.writeFileSync(
                 local.env.npm_config_dir_build + '/test-report.badge.svg',
@@ -5527,6 +5560,8 @@ instruction\n\
             );
         };
 
+        local.testRunBefore = local.nop;
+
         local.testRunDefault = function (options) {
         /*
          * this function will run all tests in testPlatform.testCaseList
@@ -5540,7 +5575,7 @@ instruction\n\
             if (!options.testRunBeforeDone) {
                 options.testRunBeforeTimer = options.testRunBeforeTimer ||
                     setTimeout(function () {
-                        local._testRunBefore();
+                        local.testRunBefore();
                         local.onReadyAfter(function () {
                             options.testRunBeforeDone = true;
                             local.testRunDefault(options);
@@ -5548,7 +5583,7 @@ instruction\n\
                     });
                 return;
             }
-            // reset _testRunBefore
+            // reset testRunBefore
             options.testRunBeforeDone = options.testRunBeforeTimer = null;
             // visual notification - testRun
             local.ajaxProgressUpdate();
@@ -5714,7 +5749,7 @@ instruction\n\
         local.testRunServer = function (options) {
         /*
          * this function will
-         * 1. create server from local._middleware
+         * 1. create server from local.middlewareList
          * 2. start server on local.env.PORT
          * 3. run tests
          */
@@ -5722,21 +5757,34 @@ instruction\n\
                 return;
             }
             local.onReadyBefore.counter += 1;
-            local._middleware = local._middleware || local.middlewareGroupCreate([
+            // 1. create server from local.middlewareList
+            local.middlewareList = local.middlewareList || [
                 local.middlewareInit,
                 local.middlewareForwardProxy,
                 local.middlewareAssetsCached,
-                local._middlewareJsonpStateInit
-            ]);
-            // 1. create server from local._middleware
+                local.middlewareJsonpStateInit
+            ];
             local.serverLocalRequestHandler = function (request, response) {
-                local._middleware(request, response, function (error) {
-                    local._middlewareError(error, request, response);
+                var self;
+                self = {};
+                local.onNext(self, function (error) {
+                    if (error || self.modeNext >= local.middlewareList.length) {
+                        // default to middlewareError
+                        local.middlewareError(error, request, response);
+                        return;
+                    }
+                    // recurse with next middleware in middlewareList
+                    local.middlewareList[self.modeNext](
+                        request,
+                        response,
+                        self.onNext
+                    );
                 });
+                self.modeNext = -1;
+                self.onNext();
             };
-            local.global.utility2_serverHttp1 = local.http.createServer(
-                local.serverLocalRequestHandler
-            );
+            local.global.utility2_serverHttp1 =
+                local.http.createServer(local.serverLocalRequestHandler);
             // 2. start server on local.env.PORT
             console.error('server listening on http-port ' + local.env.PORT);
             local.onReadyBefore.counter += 1;
@@ -5998,7 +6046,7 @@ instruction\n\
                     new Date().toISOString()
                 : 'node - ' + process.platform + ' ' + process.version + ' - ' +
                     new Date().toISOString(),
-            screenCaptureImg: local.env.MODE_BUILD_SCREEN_CAPTURE,
+            screenCaptureImg: local.env.MODE_BUILD_SCREEN_CAPTURE_IMG,
             testCaseList: []
         }] };
         local.uglify = local.uglifyjs.uglify || local.echo;
@@ -6034,8 +6082,6 @@ instruction\n\
         // re-init timeoutDefault
         local.timeoutDefault = Number(local.timeoutDefault || 30000);
         local.onReadyAfter(local.nop);
-        // init state
-        local._stateInit({});
     }());
     switch (local.modeJs) {
 
@@ -6055,7 +6101,6 @@ instruction\n\
     case 'node':
         // require modules
         local.Module = require('module');
-        local.__require = require;
         local.child_process = require('child_process');
         local.cluster = require('cluster');
         local.events = require('events');
@@ -6098,17 +6143,10 @@ instruction\n\
             local.replStart();
             local.global.local = local;
             break;
-        case 'ajax':
-            local.ajax(JSON.parse(process.argv[3]), function (error, data) {
-                // validate no error occurred
-                local.assert(!error, error);
-                process.stdout.write(new Buffer((data && data.response) || ''));
-            });
-            return;
-        case 'browserTest':
+        case 'cli.browserTest':
             local.browserTest({}, local.exit);
             return;
-        case 'browserTestList':
+        case 'cli.browserTestList':
             local.onParallelList({
                 list: process.argv[3].split(/\s+/).filter(function (element) {
                     return element;
@@ -6152,7 +6190,7 @@ instruction\n\
                             local.onParallelList({ list: [{
                                 url: 'https://raw.githubusercontent.com/' + match0 +
                                     '/gh-pages/build..alpha..travis-ci.org' +
-                                    '/screenCapture.npmPackageListing.svg'
+                                    '/screen-capture.npmPackageListing.svg'
                             // }, {
                                 // url: 'https://registry.npmjs.org/' + local.env.GITHUB_ORG +
                                     // '-' + match1
@@ -6225,9 +6263,10 @@ instruction\n\
         }
         // override assets
         [
-            'assets.' + local.env.npm_package_nameAlias + '.css',
+            'assets.index.css',
             'assets.index.template.html',
-            'assets.swgg.swagger.json'
+            'assets.swgg.swagger.json',
+            'assets.swgg.swagger.server.json'
         ].forEach(function (file) {
             local.assetsDict['/' + file] = local.assetsDict['/' + file] || '';
             if (local.fs.existsSync(file)) {

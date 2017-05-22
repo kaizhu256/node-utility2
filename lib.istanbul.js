@@ -104,12 +104,9 @@
             if (local.modeJs === 'node' && process.env.npm_config_mode_coverage_merge) {
                 console.log('merging file://' + options.dir + '/coverage.json to coverage');
                 try {
-                    local.coverageMerge(
-                        local.global.__coverage__,
-                        JSON.parse(
-                            local._fs.readFileSync(options.dir + '/coverage.json', 'utf8')
-                        )
-                    );
+                    local.coverageMerge(local.global.__coverage__, JSON.parse(
+                        local._fs.readFileSync(options.dir + '/coverage.json', 'utf8')
+                    ));
                 } catch (ignore) {
                 }
                 try {
@@ -275,8 +272,8 @@
 
 
 
-/* istanbul ignore next */
 // init lib esprima
+/* istanbul ignore next */
 /* jslint-ignore-begin */
 // https://github.com/jquery/esprima/blob/2.5.0/esprima.js
 // utility2-uglifyjs https://raw.githubusercontent.com/jquery/esprima/2.5.0/esprima.js
@@ -966,8 +963,8 @@ Object.freeze=="function"&&Object.freeze(t),t}()})
 
 
 
-/* istanbul ignore next */
 // init lib estraverse
+/* istanbul ignore next */
 /* jslint-ignore-begin */
 // https://github.com/estools/estraverse/blob/1.9.3/estraverse.js
 // utility2-uglifyjs https://raw.githubusercontent.com/estools/estraverse/1.9.3/estraverse.js
@@ -1105,8 +1102,8 @@ i,t.Controller=b,t.cloneEnvironment=function(){return e({})},t})
 
 
 
-/* istanbul ignore next */
 // init lib esutils.code
+/* istanbul ignore next */
 /* jslint-ignore-begin */
 // https://github.com/estools/esutils/blob/2.0.2/lib/code.js
 // utility2-uglifyjs https://raw.githubusercontent.com/estools/esutils/2.0.2/lib/code.js
@@ -1135,8 +1132,8 @@ local.esutils = { code: module.exports }; }());
 
 
 
-/* istanbul ignore next */
 // init lib escodegen
+/* istanbul ignore next */
 /* jslint-ignore-begin */
 // https://github.com/estools/escodegen/blob/1.7.1/escodegen.js
 // utility2-uglifyjs https://raw.githubusercontent.com/estools/escodegen/1.7.1/escodegen.js
@@ -1627,8 +1624,8 @@ G({},t),exports.browser=!1,exports.FORMAT_MINIFY=N,exports.FORMAT_DEFAULTS=C})()
 
 
 
-/* istanbul ignore next */
 // init lib istanbul.insertion-text
+/* istanbul ignore next */
 /* jslint-ignore-begin */
 // https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/util/insertion-text.js
 // utility2-uglifyjs https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/util/insertion-text.js
@@ -1654,8 +1651,8 @@ local['../util/insertion-text'] = module.exports; }());
 
 
 
-/* istanbul ignore next */
 // init lib istanbul.instrumenter
+/* istanbul ignore next */
 /* jslint-ignore-begin */
 // https://github.com/gotwarlost/istanbul/blob/v0.3.20/lib/instrumenter.js
 // utility2-uglifyjs https://raw.githubusercontent.com/gotwarlost/istanbul/v0.3.20/lib/instrumenter.js
@@ -1865,8 +1862,8 @@ module.exports!="undefined"&&typeof exports!="undefined")
 
 
 
-/* istanbul ignore next */
 // init lib istanbul.object-utils
+/* istanbul ignore next */
 /* jslint-ignore-begin */
 // https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/object-utils.js
 // utility2-uglifyjs https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/object-utils.js
@@ -1910,8 +1907,8 @@ local['../object-utils'] = window.coverageUtils; }());
 
 
 
-/* istanbul ignore next */
 // init lib istanbul.report.common.defaults
+/* istanbul ignore next */
 /* jslint-ignore-begin */
 // https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/common/defaults.js
 // utility2-uglifyjs https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/report/common/defaults.js
@@ -2176,8 +2173,8 @@ local['head.txt'] = '\
 
 
 
-    /* istanbul ignore next */
     // init lib istanbul.util.file-writer
+    /* istanbul ignore next */
     (function () {
         // https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/util/file-writer.js
         local.writer = {
@@ -2198,8 +2195,8 @@ local['head.txt'] = '\
 
 
 
-    /* istanbul ignore next */
     // init lib istanbul.util.tree-summarizer
+    /* istanbul ignore next */
     (function () {
         var module;
         module = {};
@@ -2253,8 +2250,8 @@ TreeSummary(this.summaryMap,e)}},module.exports=TreeSummarizer
 
 
 
-/* istanbul ignore next */
 // init lib istanbul.report.html
+/* istanbul ignore next */
 /* jslint-ignore-begin */
 // https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/html.js
 // utility2-uglifyjs https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/report/html.js
@@ -2384,8 +2381,8 @@ local.HtmlReport = module.exports; }());
 
 
 
-/* istanbul ignore next */
 // init lib istanbul.report.text
+/* istanbul ignore next */
 /* jslint-ignore-begin */
 // https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/text.js
 // utility2-uglifyjs https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/report/text.js
@@ -2487,7 +2484,7 @@ local.templateCoverageBadgeSvg =
                 process.on('exit', function () {
                     local.coverageReportCreate({ coverage: local.global.__coverage__ });
                 });
-                // re-run cli
+                // re-run the cli
                 local.module.runMain();
                 break;
             // instrument a file and print result to stdout
@@ -2502,14 +2499,14 @@ local.templateCoverageBadgeSvg =
             case 'test':
                 if (process.env.npm_config_mode_coverage) {
                     process.argv[2] = 'cover';
-                    // re-run cli
+                    // re-run the cli
                     local.cliRunIstanbul(options);
                     return;
                 }
                 // init process.argv
                 process.argv.splice(1, 2);
                 process.argv[1] = local.path.resolve(process.cwd(), process.argv[1]);
-                // re-run cli
+                // re-run the cli
                 local.module.runMain();
                 break;
             }

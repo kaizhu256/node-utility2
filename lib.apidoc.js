@@ -782,6 +782,7 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
                             if (!tmp.module ||
                                     !(typeof tmp.module === 'function' ||
                                     typeof tmp.module === 'object') ||
+                                    Array.isArray(tmp.module) ||
                                     options.moduleDict[tmp.name] ||
                                     options.circularList.indexOf(tmp.module) >= 0) {
                                 return;
