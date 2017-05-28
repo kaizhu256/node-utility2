@@ -907,16 +907,6 @@
             ));
         };
 
-        local._DbTable.prototype.crudGetOneByRandom = function (onError) {
-        /*
-         * this function will get a random dbRow in the dbTable
-         */
-            this._cleanup();
-            return local.setTimeoutOnError(onError, null, local.dbRowProject(
-                this.dbRowList[Math.floor(Math.random() * this.dbRowList.length)]
-            ));
-        };
-
         local._DbTable.prototype.crudGetOneByQuery = function (query, onError) {
         /*
          * this function will get the dbRow in the dbTable with the given query
@@ -931,6 +921,16 @@
                 }
             }
             return local.setTimeoutOnError(onError, null, local.dbRowProject(result));
+        };
+
+        local._DbTable.prototype.crudGetOneByRandom = function (onError) {
+        /*
+         * this function will get a random dbRow in the dbTable
+         */
+            this._cleanup();
+            return local.setTimeoutOnError(onError, null, local.dbRowProject(
+                this.dbRowList[Math.floor(Math.random() * this.dbRowList.length)]
+            ));
         };
 
         local._DbTable.prototype.crudRemoveAll = function (onError) {

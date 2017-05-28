@@ -40,14 +40,19 @@
         switch (local.modeJs) {
         // re-init local from window.local
         case 'browser':
-            local = local.global.utility2_rollup || local.global.local;
+            local = local.global.utility2.objectSetDefault(
+                local.global.utility2_rollup || local.global.local,
+                local.global.utility2
+            );
             break;
         // re-init local from example.js
         case 'node':
-            local = (local.global.utility2_rollup || require('./lib.utility2.js'))
-                .requireReadme();
+            local = (local.global.utility2_rollup ||
+                require('./lib.utility2.js')).requireReadme();
             break;
         }
+        // init exports
+        local.global.local = local;
     }());
 
 
@@ -213,7 +218,8 @@
                 url: '/test.error-undefined'
             }, {
                 // test modeForwardProxyUrl handling-behavior
-                modeForwardProxyUrl: local.serverLocalHost,
+                modeForwardProxyUrl: local.serverLocalHost.indexOf('github.io') < 0 &&
+                    local.serverLocalHost,
                 // test undefined-https-url handling-behavior
                 timeout: 1,
                 url: 'https://undefined:0'
@@ -1776,47 +1782,35 @@
             local.buildCustomOrg(options, onError);
         };
 
-        local.testCase_buildLib_default = function (options, onError) {
-        /*
-         * this function will test buildLib's default handling-behavior
-         */
-            options = {};
-            options.customize = function () {
-                // search-and-replace - customize dataTo
-                [
-                    // customize js\-env code
-                    (/[\S\s]*?run shared js\-env code - function-before/)
-                ].forEach(function (rgx) {
-                    options.dataFrom.replace(rgx, function (match0) {
-                        options.dataTo = options.dataTo.replace(rgx, match0);
-                    });
-                });
-            };
-            local.buildLib(options, onError);
-        };
-
         local.testCase_buildReadme_default = function (options, onError) {
         /*
          * this function will test buildReadme's default handling-behavior
          */
-            // test $npm_package_buildCustomOrg handling-behavior
             options = {};
+            options.customize = function () {
+                options.dataFrom = options.dataFrom.replace((/shDeployGithub/g), '');
+            };
             local.testMock([
-                [local.env, { npm_package_buildCustomOrg: 'electron-lite' }]
+                [local.env, { npm_package_buildCustomOrg: '' }],
+                [local.fs, { writeFileSync: local.nop }],
+                // test swaggerdoc handling-behavior
+                [local.assetsDict, { '/assets.swgg.swagger.json': '{}' }]
             ], function (onError) {
                 local.buildReadme(options, onError);
+                // test $npm_package_buildCustomOrg handling-behavior
+                local.env.npm_package_buildCustomOrg = 'aa';
+                local.buildReadme(options, onError);
+                onError();
             }, local.onErrorThrow);
             options = {};
             options.customize = function () {
                 // search-and-replace - customize dataTo
                 [
-                    // customize cdn-download
-                    (/cdn download[\S\s]*?\n\n\n\n/),
                     // customize quickstart example.js
                     (/# quickstart example.js[\S\s]*?istanbul instrument in package/),
                     // customize quickstart-footer
-                    (/download standalone app[^`]*?utility2FooterDiv/),
-                    (/```[^`]*?\n# changelog/),
+                    (/>download standalone app<[^`]*?utility2FooterDiv/),
+                    (/```[^`]*?\n# all screenshots/),
                     // customize build-script
                     (/# run shBuildCi[^`]*?```/)
                 ].forEach(function (rgx) {
@@ -1826,28 +1820,6 @@
                 });
             };
             local.buildReadme(options, onError);
-        };
-
-        local.testCase_buildTest_default = function (options, onError) {
-        /*
-         * this function will test buildTest's default handling-behavior
-         */
-            options = {};
-            options.customize = function () {
-                // search-and-replace - customize dataTo
-                [
-                    // customize js\-env code
-                    new RegExp('\\n {4}\\/\\/ run shared js\\-env code - init-before\\n' +
-                        '[\\S\\s]*?\\n {4}\\}\\(\\)\\);'),
-                    new RegExp('\\n {4}\\/\\/ run browser js\\-env code - init-after\\n' +
-                        '[\\S\\s]*?\\n {8}break;\\n')
-                ].forEach(function (rgx) {
-                    options.dataFrom.replace(rgx, function (match0) {
-                        options.dataTo = options.dataTo.replace(rgx, match0);
-                    });
-                });
-            };
-            local.buildTest(options, onError);
         };
 
         local.testCase_fsWriteFileWithMkdirpSync_default = function (options, onError) {
@@ -2205,7 +2177,7 @@
                 local.testReportCreate();
                 // test testsFailed handling-behavior
                 local.testReportCreate({ testPlatformList: [{
-                    testCaseList: [{ status: 'failed' }]
+                    testCaseList: [{ status: 'failed' }, { status: 'passed' }]
                 }] });
                 onError();
             }, onError);
@@ -2314,7 +2286,23 @@
 
 
     // run browser js-env code - init-after
+    /* istanbul ignore next */
     case 'browser':
+        local.testCase_browser_nullCase = local.testCase_browser_nullCase || function (
+            options,
+            onError
+        ) {
+        /*
+         * this function will test browser's null-case handling-behavior-behavior
+         */
+            onError(null, options);
+        };
+
+        // run tests
+        // coverage-hack - ignore else-statement
+        local.nop(local.modeTest &&
+            document.querySelector('#testRunButton1') &&
+            document.querySelector('#testRunButton1').click());
         break;
 
 

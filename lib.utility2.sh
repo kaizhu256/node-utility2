@@ -336,6 +336,11 @@ shBuildCi() {(set -e
 shBuildCiInternal() {(set -e
 # this function will run the internal build
     shBuildInit
+    # run build-ci-before
+    if (type shBuildCiBefore > /dev/null 2>&1)
+    then
+        shBuildCiBefore
+    fi
     export npm_config_file_test_report_merge="$npm_config_dir_build/test-report.json"
 
 
@@ -388,11 +393,11 @@ shBuildCiInternal() {(set -e
         shNpmPackageDependencyTreeCreate "$npm_package_name"
     fi
     # create recent changelog of last 50 commits
-    MODE_BUILD=gitLog shRunScreenCaptureTxt git log -50 --pretty="%ai\\u000a%B"
+    MODE_BUILD=gitLog shRunWithScreenshotTxt git log -50 --pretty="%ai\\u000a%B"
 
 
 
-    # screen-capture coverage
+    # screenshot coverage
     for FILE in "$npm_config_dir_build/coverage.html\
 /node-$GITHUB_ORG-$npm_package_buildCustomOrg/node_modules/$npm_package_buildCustomOrg" \
         "$npm_config_dir_build/coverage.html"
@@ -413,7 +418,7 @@ shBuildCiInternal() {(set -e
             LIST="$LIST $npm_config_dir_build/$FILE"
         fi
     done
-    MODE_BUILD=buildCi shBrowserTestList "$LIST" screenCapture
+    MODE_BUILD=buildCi shBrowserTestList "$LIST" screenshot
     if [ "$npm_package_buildCustomOrg" ]
     then
         case "$GITHUB_ORG" in
@@ -438,7 +443,45 @@ shBuildCiInternal() {(set -e
     fi
     # wait for background tasks to finish
     shSleep 15
-    shReadmeBuildLinkVerify
+    # list $npm_config_dir_build
+    find "$npm_config_dir_build" | sort
+    # verify the build-links embedded in README.md
+    node -e "
+// <script>
+/*jslint
+    bitwise: true,
+    browser: true,
+    maxerr: 8,
+    maxlen: 96,
+    node: true,
+    nomen: true,
+    regexp: true,
+    stupid: true
+*/
+'use strict';
+var local;
+local = {};
+local.file = 'README.md';
+local.fs = require('fs');
+local.nop = function () {
+    return;
+};
+local.rgx = new RegExp(
+    '$GITHUB_REPO'.replace('/', '.github.io\\\\/') + '\\\\/build\\\\b.*?\\\\/(.*?)[)\\\\]]',
+    'g'
+);
+local.fs.readFileSync(local.file, 'utf8')
+    .replace(/\\n# all screenshots\\n[\\S\\s]*?\\n\\n\\n\\n/, '')
+    .replace(local.rgx, function (match0, match1) {
+        if (match1.replace((/%25/g), '').indexOf('%') >= 0 ||
+                !local.fs.existsSync(
+                    '$npm_config_dir_build/' + match1.replace((/%25/g), '%')
+                )) {
+            throw new Error('shReadmeBuildLinkVerify - invalid link - https://' + match0);
+        }
+    });
+// </script>
+    "
     # upload build-artifacts to github, and if number of commits > $COMMIT_LIMIT,
     # then squash older commits
     if [ "$CI_BRANCH" = alpha ] ||
@@ -1034,8 +1077,8 @@ shDeployGithub() {(set -e
         shBuildPrint "curl test failed for $TEST_URL"
         return 1
     fi
-    # screen-capture deployed app
-    shBrowserTestList "$TEST_URL $TEST_URL/assets.swgg.html" screenCapture &
+    # screenshot deployed app
+    shBrowserTestList "$TEST_URL $TEST_URL/assets.swgg.html" screenshot &
     # test deployed app
     MODE_BUILD="${MODE_BUILD}Test" shBrowserTest "$TEST_URL?modeTest=1&timeExit={{timeExit}}"
 )}
@@ -1065,8 +1108,8 @@ shDeployHeroku() {(set -e
         shBuildPrint "curl test failed for $TEST_URL"
         return 1
     fi
-    # screen-capture deployed app
-    shBrowserTestList "$TEST_URL $TEST_URL/assets.swgg.html" screenCapture &
+    # screenshot deployed app
+    shBrowserTestList "$TEST_URL $TEST_URL/assets.swgg.html" screenshot &
     # test deployed app
     MODE_BUILD="${MODE_BUILD}Test" shBrowserTest "$TEST_URL?modeTest=1&timeExit={{timeExit}}"
 )}
@@ -1747,6 +1790,12 @@ fi"
     shOnParallelListExec "$LIST2"
 )}
 
+shGithubFileCommitDate() {(set -e
+    # this function will print the commit-date for the github file url $1
+    curl -Lfs "$1" | grep -e "datetime=" | grep -oe "\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d*Z"
+    printf "$1\n"
+)}
+
 shGithubPush() {(set -e
     # this function will push to github using $GITHUB_TOKEN
     # http://stackoverflow.com/questions/18027115/committing-via-travis-ci-failing
@@ -2110,7 +2159,7 @@ shMain() {
         ;;
     test)
         shBuildInit
-        shRunScreenCaptureTxt shNpmTest "$@"
+        shRunWithScreenshotTxt shNpmTest "$@"
         ;;
     utility2Dirname)
         shBuildInit
@@ -2310,7 +2359,7 @@ console.log('true');
 
 shNpmPackageDependencyTreeCreate() {(set -e
 # this function will create a svg dependency-tree of the npm-package
-    if ! (grep -q "https://nodei.co/npm/$1" README.md)
+    if ! (grep -q "https://nodei.co/npm/$1\b" README.md)
     then
         return
     fi
@@ -2327,13 +2376,13 @@ shNpmPackageDependencyTreeCreate() {(set -e
     shBuildInit
     export MODE_BUILD=npmPackageDependencyTree
     shBuildPrint "creating npmDependencyTree ..."
-    shRunScreenCaptureTxtAfter() {(set -e
+    shRunWithScreenshotTxtAfter() {(set -e
         du -ms "$DIR" | awk '{print "npm install - " $1 " megabytes\n\nnode_modules"}' \
             > "$npm_config_file_tmp"
-        grep -e '^ *[│└├]' "$npm_config_dir_tmp/runScreenCaptureTxt" >> "$npm_config_file_tmp"
-        mv "$npm_config_file_tmp" "$npm_config_dir_tmp/runScreenCaptureTxt"
+        grep -e '^ *[│└├]' "$npm_config_dir_tmp/runWithScreenshotTxt" >> "$npm_config_file_tmp"
+        mv "$npm_config_file_tmp" "$npm_config_dir_tmp/runWithScreenshotTxt"
     )}
-    shRunScreenCaptureTxt npm install "$1" || true
+    shRunWithScreenshotTxt npm install "$1" || true
     if [ -d /tmp/node_modules.00 ]
     then
         rm -fr /tmp/node_modules
@@ -2360,7 +2409,7 @@ tmp
     fi
     shBuildInit
     export MODE_BUILD=npmPackageListing
-    shRunScreenCaptureTxtAfter() {(set -e
+    shRunWithScreenshotTxtAfter() {(set -e
         awk '{
 lineList[NR] = $0
 } END {
@@ -2369,10 +2418,10 @@ lineList[NR] = $0
     for (ii = 1; ii < NR; ii += 1) {
         print lineList[ii]
     }
-        }' "$npm_config_dir_tmp/runScreenCaptureTxt" > "$npm_config_file_tmp"
-        mv "$npm_config_file_tmp" "$npm_config_dir_tmp/runScreenCaptureTxt"
+        }' "$npm_config_dir_tmp/runWithScreenshotTxt" > "$npm_config_file_tmp"
+        mv "$npm_config_file_tmp" "$npm_config_dir_tmp/runWithScreenshotTxt"
     )}
-    shRunScreenCaptureTxt shGitLsTree
+    shRunWithScreenshotTxt shGitLsTree
 )}
 
 shNpmPublish() {(set -e
@@ -2580,44 +2629,6 @@ shPasswordRandom() {(set -e
     openssl rand -base64 32
 )}
 
-shReadmeBuildLinkVerify() {(set -e
-# this function will verify the build-links embedded in README.md
-    shBuildInit
-    find "$npm_config_dir_build" | sort
-    node -e "
-// <script>
-/*jslint
-    bitwise: true,
-    browser: true,
-    maxerr: 8,
-    maxlen: 96,
-    node: true,
-    nomen: true,
-    regexp: true,
-    stupid: true
-*/
-'use strict';
-var local;
-local = {};
-local.file = 'README.md';
-local.fs = require('fs');
-local.nop = function () {
-    return;
-};
-local.rgx = new RegExp(
-    '$GITHUB_REPO'.replace('/', '.github.io\\\\/') + '\\\\/build\\\\b.*?\\\\/(.*?)[)\\\\]]',
-    'g'
-);
-local.fs.readFileSync(local.file, 'utf8').replace(local.rgx, function (match0, match1) {
-    if (match1.replace((/%25/g), '').indexOf('%') >= 0 ||
-            !local.fs.existsSync('$npm_config_dir_build/' + match1.replace((/%25/g), '%'))) {
-        throw new Error('shReadmeBuildLinkVerify - invalid link - https://' + match0);
-    }
-});
-// </script>
-    "
-)}
-
 shReadmeTest() {(set -e
 # this function will extract, save, and test the script $FILE embedded in README.md
     shBuildInit
@@ -2670,19 +2681,19 @@ shReadmeTest() {(set -e
     fi
     export PORT=8081
     export npm_config_timeout_exit=30000
-    # screen-capture
+    # screenshot
     (
     shSleep 15
-    shBrowserTest "http://127.0.0.1:$PORT" screenCapture
+    shBrowserTest "http://127.0.0.1:$PORT" screenshot
     ) &
     case "$FILE" in
     example.js)
         SCRIPT="$(grep -e "^ *\$ " < "$FILE" | grep -oe "\w.*")" || true
         printf "$SCRIPT\n\n"
-        shRunScreenCaptureTxt eval "$SCRIPT"
+        shRunWithScreenshotTxt eval "$SCRIPT"
         ;;
     example.sh)
-        shRunScreenCaptureTxt /bin/sh "$FILE"
+        shRunWithScreenshotTxt /bin/sh "$FILE"
         ;;
     tmp/README.build_ci.sh)
         /bin/sh "$FILE"
@@ -2754,25 +2765,25 @@ shRun() {(set -e
     fi
 )}
 
-shRunScreenCaptureTxt() {(set -e
-# this function will run the command $@ and screen-capture the text-output
+shRunWithScreenshotTxt() {(set -e
+# this function will run the command $@ and screenshot the text-output
 # http://www.cnx-software.com/2011/09/22
 # /how-to-convert-a-command-line-result-into-an-image-in-linux/
     EXIT_CODE=0
-    export MODE_BUILD_SCREEN_CAPTURE_IMG="screen-capture.${MODE_BUILD:-undefined}.svg"
-    touch "$npm_config_dir_build/$MODE_BUILD_SCREEN_CAPTURE_IMG"
+    export MODE_BUILD_SCREENSHOT_IMG="screenshot.${MODE_BUILD:-undefined}.svg"
+    touch "$npm_config_dir_build/$MODE_BUILD_SCREENSHOT_IMG"
     (
     printf "0" > "$npm_config_file_tmp"
     (eval shRun "$@" 2>&1)
     printf $? > "$npm_config_file_tmp"
-    ) | tee "$npm_config_dir_tmp/runScreenCaptureTxt"
+    ) | tee "$npm_config_dir_tmp/runWithScreenshotTxt"
     EXIT_CODE="$(cat "$npm_config_file_tmp")"
     shBuildPrint "EXIT_CODE - $EXIT_CODE"
-    # run shRunScreenCaptureTxtAfter
-    if (type shRunScreenCaptureTxtAfter > /dev/null 2>&1)
+    # run shRunWithScreenshotTxtAfter
+    if (type shRunWithScreenshotTxtAfter > /dev/null 2>&1)
     then
-        shRunScreenCaptureTxtAfter
-        unset shRunScreenCaptureTxtAfter
+        shRunWithScreenshotTxtAfter
+        unset shRunWithScreenshotTxtAfter
     fi
     # format text-output
     node -e "
@@ -2806,7 +2817,7 @@ local.wordwrap = function (line, ii) {
 };
 local.yy = 10;
 local.result = (local.fs
-    .readFileSync('$npm_config_dir_tmp/runScreenCaptureTxt', 'utf8')
+    .readFileSync('$npm_config_dir_tmp/runWithScreenshotTxt', 'utf8')
     // remove ansi escape-code
     .replace((/\u001b.*?m/g), '')
     // format unicode
@@ -2829,10 +2840,10 @@ local.result = '<svg height=\"' + (local.yy + 20) +
     '<text fill=\"#7f7\" font-family=\"Courier New\" font-size=\"12\" ' +
     'xml:space=\"preserve\">\n' +
     local.result + '</text>\n</svg>\n';
-local.fs.writeFileSync('$npm_config_dir_build/$MODE_BUILD_SCREEN_CAPTURE_IMG', local.result);
+local.fs.writeFileSync('$npm_config_dir_build/$MODE_BUILD_SCREENSHOT_IMG', local.result);
 // </script>
     "
-    shBuildPrint "created file://$npm_config_dir_build/$MODE_BUILD_SCREEN_CAPTURE_IMG"
+    shBuildPrint "created file://$npm_config_dir_build/$MODE_BUILD_SCREENSHOT_IMG"
     return "$EXIT_CODE"
 )}
 
