@@ -73,55 +73,17 @@
         local.utility2.swgg = local;
         // init assets and templates
 /* jslint-ignore-begin */
-local.assetsDict['/assets.swgg.html'] = '\
-<!doctype html>\n\
-<html lang="en">\n\
-<head>\n\
-<meta charset="UTF-8">\n\
-<meta name="viewport" content="width=device-width, initial-scale=1">\n\
-<title>swgg</title>\n\
-<style>\n\
-/*csslint\n\
-    box-sizing: false,\n\
-    universal-selector: false\n\
-*/\n\
-* {\n\
-    box-sizing: border-box;\n\
-}\n\
-body {\n\
-    background: #dde;\n\
-    font-family: Arial, Helvetica, sans-serif;\n\
-    margin: 2rem;\n\
-}\n\
-body > * {\n\
-    margin-bottom: 1rem;\n\
-}\n\
-.utility2FooterDiv {\n\
-    margin-top: 20px;\n\
-    text-align: center;\n\
-}\n\
-</style>\n\
+local.assetsDict['/assets.swgg.html'] = (/[\S\s]+?<\/style>\n/)
+    .exec(local.assetsDict['/assets.example.template.html'])[0]
+    .replace((/<title>.*?<\/title>/), '<title>swgg</title>') + '\
 <style>\n\
 /*csslint\n\
     adjoining-classes: false,\n\
     box-model: false,\n\
     box-sizing: false,\n\
+    outline-none: false,\n\
     universal-selector: false\n\
 */\n\
-/* example.js */\n\
-body > button {\n\
-    width: 15rem;\n\
-}\n\
-.zeroPixel {\n\
-    border: 0;\n\
-    height: 0;\n\
-    margin: 0;\n\
-    padding: 0;\n\
-    width: 0;\n\
-}\n\
-\n\
-\n\
-\n\
 /* animate */\n\
 .uiAnimateFade {\n\
     transition: opacity 250ms;\n\
@@ -140,10 +102,6 @@ body > button {\n\
 .uiAnimateShake {\n\
     animation-duration: 500ms;\n\
     animation-name: uiAnimateShake;\n\
-}\n\
-.uiAnimateSlide {\n\
-    overflow-y: hidden;\n\
-    transition: max-height 500ms;\n\
 }\n\
 \n\
 \n\
@@ -352,7 +310,7 @@ body > button {\n\
 border: 0;\n\
     color: #fff;\n\
     padding: 6px 8px;\n\
-    background-color: #580;\n\
+    background: #580;\n\
 }\n\
 .swggUiContainer > .info > * {\n\
     margin-top: 1rem;\n\
@@ -387,6 +345,7 @@ border: 0;\n\
 .swggUiContainer .operation {\n\
     background: #dfd;\n\
     font-size: smaller;\n\
+    outline: none;\n\
 }\n\
 .swggUiContainer .operation > .content {\n\
     padding: 1rem;\n\
@@ -451,6 +410,9 @@ border: 0;\n\
 }\n\
 .swggUiContainer .operation .responseList > .td2 {\n\
     flex: 4;\n\
+}\n\
+.swggUiContainer .resource {\n\
+    outline: none;\n\
 }\n\
 .swggUiContainer .resource > .header > .td1 {\n\
     font-size: large;\n\
@@ -1293,6 +1255,7 @@ local.templateUiOperation = '\
     class="eventDelegateClick eventDelegateSubmit marginTop05 operation {{_method}}"\n\
     data-_key-operation-id="{{_keyOperationId}}"\n\
     id="{{id}}"\n\
+    tabindex="-1"\n\
 >\n\
     <div class="cursorPointer eventDelegateClick onEventOperationDisplayShow header tr">\n\
         <span class="td1">{{_method}}</span>\n\
@@ -1302,7 +1265,7 @@ local.templateUiOperation = '\
         <span class="td3">{{operationId}}</span>\n\
         <span class="td4">{{summary htmlSafe}}</span>\n\
     </div>\n\
-    <form accept-charset="UTF-8" class="content" style="display: none;">\n\
+    <form accept-charset="UTF-8" class="content uiAnimateSlide" style="border-bottom: 0; border-top: 0; margin-bottom: 0; margin-top: 0; max-height: 0; padding-bottom: 0; padding-top: 0;">\n\
         {{#if deprecated}}\n\
         <h4 class="label marginTop10">Warning: Deprecated</h4>\n\
         {{/if deprecated}}\n\
@@ -1367,7 +1330,7 @@ local.templateUiParam = '\
         {{#each selectOptionList}}\n\
         <option\n\
             data-value-decoded="{{valueDecoded jsonStringify encodeURIComponent}}"\n\
-            id={{id}}\n\
+            id="{{id}}"\n\
             {{selected}}\n\
         >{{valueEncoded htmlSafe}}</option>\n\
         {{/each selectOptionList}}\n\
@@ -1392,7 +1355,9 @@ local.templateUiResource = '\
 <div\n\
     class="borderBottomBold resource eventDelegateClick"\n\
     data-name="{{name}}"\n\
-    id="{{id}}">\n\
+    id="{{id}}"\n\
+    tabindex="-1"\n\
+>\n\
     <div class="fontWeightBold header tr">\n\
         <a class="color777 flex1 onEventResourceDisplayAction td1" href="#">{{name}} :\n\
         {{#if description}}\n\
@@ -1410,7 +1375,7 @@ local.templateUiResource = '\
             href="#"\n\
         >Datatable</a>\n\
     </div>\n\
-    <div class="operationList" style="display: none;"></div>\n\
+    <div class="operationList uiAnimateSlide" style="border-bottom: 0; border-top: 0; margin-bottom: 0; margin-top: 0; max-height: 0; padding-bottom: 0; padding-top: 0;"></div>\n\
 </div>\n\
 ';
 
@@ -2881,23 +2846,6 @@ local.templateUiResponseAjax = '\
             }, 500);
         };
 
-        local.uiAnimateScrollTo = function (element) {
-        /*
-         * this function will scrollTo the element
-         */
-            var ii, timerInterval;
-            ii = 0;
-            timerInterval = setInterval(function () {
-                ii += 0.025;
-                local.global.scrollTo(0, document.body.scrollTop +
-                    Math.min(ii, 1) * (element.offsetTop - document.body.scrollTop) +
-                    -5);
-            }, 25);
-            setTimeout(function () {
-                clearInterval(timerInterval);
-            }, 1000);
-        };
-
         local.uiAnimateShake = function (element) {
         /*
          * this function will shake the dom-element
@@ -2905,61 +2853,6 @@ local.templateUiResponseAjax = '\
             element.classList.add('uiAnimateShake');
             setTimeout(function () {
                 element.classList.remove('uiAnimateShake');
-            }, 500);
-        };
-
-        local.uiAnimateSlideAccordian = function (element, elementList) {
-        /*
-         * this function will slideDown the element,
-         * but slideUp all other elements in elementList
-         */
-            // hide elements in elementList
-            elementList.forEach(function (element2) {
-                if (element2 !== element) {
-                    local.uiAnimateSlideUp(element2);
-                }
-            });
-            // show element
-            local.uiAnimateSlideDown(element);
-        };
-
-        local.uiAnimateSlideDown = function (element) {
-        /*
-         * this function will slideDown the dom-element
-         */
-            if (element.style.display !== 'none') {
-                return;
-            }
-            element.style.maxHeight = 0;
-            element.classList.add('uiAnimateSlide');
-            element.style.display = '';
-            setTimeout(function () {
-                element.style.maxHeight = 1.5 * local.global.innerHeight + 'px';
-            }, 20);
-            setTimeout(function () {
-                element.style.maxHeight = '';
-                element.classList.remove('uiAnimateSlide');
-            }, 500);
-        };
-
-        local.uiAnimateSlideUp = function (element) {
-        /*
-         * this function will slideUp the dom-element
-         */
-            if (element.style.display === 'none') {
-                return;
-            }
-            element.style.maxHeight = 2 * local.global.innerHeight + 'px';
-            element.classList.add('uiAnimateSlide');
-            setTimeout(function () {
-                element.style.maxHeight = '0px';
-            }, 20);
-            setTimeout(function () {
-                element.style.display = 'none';
-            }, 500);
-            setTimeout(function () {
-                element.style.maxHeight = '';
-                element.classList.remove('uiAnimateSlide');
             }, 500);
         };
 
@@ -3347,8 +3240,7 @@ local.templateUiResponseAjax = '\
          * this function will toggle the display of the operation
          */
             var tmp;
-            location.hash = '!/' + event.target.closest('.resource').id + '/' +
-                event.target.closest('.operation').id;
+            location.hash = '!' + event.target.closest('.operation').id;
             tmp = event.target.closest('.operation').querySelector('.operation > .content');
             tmp.closest('.resource').classList.remove('expanded');
             // show the operation, but hide all other operations
@@ -3364,7 +3256,7 @@ local.templateUiResponseAjax = '\
         /*
          * this function will toggle the display of the resource
          */
-            location.hash = '!/' + event.currentTarget.id;
+            location.hash = '!' + event.currentTarget.id;
             event.target.className.split(' ').some(function (className) {
                 switch (className) {
                 // show the resource, but hide all other resources
@@ -3703,34 +3595,21 @@ local.templateUiResponseAjax = '\
             // init event-handling
             local.uiEventInit(document);
             // scrollTo location.hash
-            local.uiScrollTo(location.hash);
-        };
-
-        local.uiScrollTo = function (locationHash) {
-        /*
-         * this function will scrollTo locationHash
-         */
-            var operation, resource;
-            // init resource
-            resource = document.querySelector('.swggUiContainer #' +
-                locationHash.split('/')[1]) ||
-                document.querySelector('.swggUiContainer .resource');
-            if (!resource) {
-                return;
-            }
-            local.uiAnimateSlideDown(resource.querySelector('.operationList'));
-            // init operation
-            operation = locationHash.split('/')[2];
-            operation = resource.querySelector('#' + operation);
-            // expand operation and scroll to it
-            if (operation) {
-                local.uiAnimateSlideDown(operation.querySelector('.content'));
-                // scroll to operation
-                local.uiAnimateScrollTo(operation);
-            } else {
-                // scroll to resource
-                local.uiAnimateScrollTo(resource);
-            }
+            local.tryCatchOnError(function () {
+                var element, parent;
+                element = document.querySelector(
+                    '.swggUiContainer .operation, .swggUiContainer .operation'
+                );
+                local.tryCatchOnError(function () {
+                    element = document.querySelector('#' + location.hash.slice(2));
+                }, local.nop);
+                parent = element.querySelector('.uiAnimateSlide');
+                while (parent) {
+                    local.uiAnimateSlideDown(parent);
+                    parent = parent.parentElement;
+                }
+                element.focus();
+            }, local.nop);
         };
 
         local.urlBaseGet = function () {

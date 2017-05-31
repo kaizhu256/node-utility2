@@ -54,8 +54,7 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 [![apidoc](https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/apidoc.html)
 
 #### todo
-- move functions uiAnimateXxx from file lib.swgg.js to file lib.utility2.js
-- customize README's assetsDict section with file-override
+- fix slow swgg load-time
 - add shell command buildCiCreate
 - allow server-side stdout to be streamed to webapps
 - add utility2.middlewareLimit
@@ -63,14 +62,15 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 - analytics
 - none
 
-#### changelog for v2017.5.27
-- npm publish 2017.5.27
-- ignore missing links in README section 'all screenshots'
-- merge shell function shReadmeBuildLinkVerify into shBuildCiInternal
-- rename screenCapture -> screenshot
-- uprade to istanbul v0.4.5
-- upgrade to sjcl v1.0.6
-- auto-create README section 'table of contents'
+#### changelog for v2017.5.30
+- npm publish 2017.5.30
+- fix 'use strict' bug in firefox and safari
+- auto-mock browserTest if webapp is missing window.utility2
+- cleanup customOrg templates
+- customize assets.index.template.html with file-override
+- fix missing test-report for deployed app to github and heroku
+- github-deployed demos should auto-default to heroku forward-proxy
+- move functions uiAnimateSlideXxx from file lib.swgg.js to file lib.utility2.js
 - none
 
 #### this package requires
@@ -175,7 +175,7 @@ instruction
         // run test-server
         local.testRunServer(local);
         // init assets
-        local.assetsDict['/assets.hello'] = 'hello';
+        local.assetsDict['/assets.hello'] = 'hello\n';
         local.assetsDict['/assets.index.template.html'] = '';
     }());
     switch (local.modeJs) {
@@ -196,7 +196,7 @@ instruction
                     local.assert(!error, error);
                     // validate data
                     options.data = xhr.responseText;
-                    local.assert(options.data === 'hello', options.data);
+                    local.assert(options.data === 'hello\n', options.data);
                     onError();
                 }, onError);
             });
@@ -264,15 +264,15 @@ instruction
             switch (event && event.currentTarget && event.currentTarget.id) {
             case 'testRunButton1':
                 // show tests
-                if (document.querySelector('#testReportDiv1').style.display === 'none') {
-                    document.querySelector('#testReportDiv1').style.display = 'block';
+                if (document.querySelector('#testReportDiv1').style.maxHeight === '0px') {
+                    local.uiAnimateSlideDown(document.querySelector('#testReportDiv1'));
                     document.querySelector('#testRunButton1').textContent =
                         'hide internal test';
                     local.modeTest = true;
                     local.testRunDefault(local);
                 // hide tests
                 } else {
-                    document.querySelector('#testReportDiv1').style.display = 'none';
+                    local.uiAnimateSlideUp(document.querySelector('#testReportDiv1'));
                     document.querySelector('#testRunButton1').textContent = 'run internal test';
                 }
                 break;
@@ -413,9 +413,26 @@ body {\n\
 body > * {\n\
     margin-bottom: 1rem;\n\
 }\n\
+body > button {\n\
+    width: 20rem;\n\
+}\n\
+button {\n\
+    cursor: pointer;\n\
+}\n\
+.uiAnimateSlide {\n\
+    overflow-y: hidden;\n\
+    transition: border-bottom 250ms, border-top 250ms, margin-bottom 250ms, margin-top 250ms, max-height 250ms, min-height 250ms, padding-bottom 250ms, padding-top 250ms;\n\
+}\n\
 .utility2FooterDiv {\n\
     margin-top: 20px;\n\
     text-align: center;\n\
+}\n\
+.zeroPixel {\n\
+    border: 0;\n\
+    height: 0;\n\
+    margin: 0;\n\
+    padding: 0;\n\
+    width: 0;\n\
 }\n\
 </style>\n\
 <style>\n\
@@ -456,6 +473,7 @@ utility2-comment -->\n\
 <h3>{{env.npm_package_description}}</h3>\n\
 <!-- utility2-comment\n\
 <h4><a download href="assets.app.js">download standalone app</a></h4>\n\
+<button class="onclick onreset" id="testRunButton2">run internal test</button><br>\n\
 utility2-comment -->\n\
 \n\
 \n\
@@ -520,9 +538,8 @@ utility2-comment -->\n\
 <textarea class="resettable" id="outputTextarea1" readonly></textarea>\n\
 <label>stderr and stdout</label>\n\
 <textarea class="resettable" id="outputTextareaStdout1" readonly></textarea>\n\
-<button class="onclick onreset" id="testRunButton2">run internal test</button><br>\n\
-<div class="resettable" id="testReportDiv1" style="display: none;"></div>\n\
-<div id="coverageReportDiv1" class="resettable"></div>\n\
+<div class="resettable" id="testReportDiv1"></div>\n\
+<div class="resettable" id="coverageReportDiv1"></div>\n\
 <!-- utility2-comment\n\
 {{#if isRollup}}\n\
 <script src="assets.app.js"></script>\n\
@@ -557,10 +574,11 @@ utility2-comment -->\n\
             'assets.swgg.swagger.json',
             'assets.swgg.swagger.server.json'
         ].forEach(function (file) {
-            local.assetsDict['/' + file] = local.assetsDict['/' + file] || '';
-            if (local.fs.existsSync(local.__dirname + '/' + file)) {
-                local.assetsDict['/' + file] = local.fs.readFileSync(
-                    local.__dirname + '/' + file,
+            file = '/' + file;
+            local.assetsDict[file] = local.assetsDict[file] || '';
+            if (local.fs.existsSync(local.__dirname + file)) {
+                local.assetsDict[file] = local.fs.readFileSync(
+                    local.__dirname + file,
                     'utf8'
                 );
             }
@@ -702,6 +720,8 @@ utility2-comment -->\n\
         "devops",
         "istanbul",
         "jscoverage",
+        "npmdoc",
+        "npmtest",
         "test",
         "test-coverage",
         "travis-ci"
@@ -728,7 +748,7 @@ utility2-comment -->\n\
         "start": "set -e; export PORT=${PORT:-8080}; if [ -f assets.app.js ]; then node assets.app.js; else npm_config_mode_auto_restart=1 ./lib.utility2.sh shRun shIstanbulCover test.js; fi",
         "test": "PORT=$(./lib.utility2.sh shServerPortRandom) PORT_REPL=$(./lib.utility2.sh shServerPortRandom) npm_config_mode_auto_restart=1 ./lib.utility2.sh test test.js"
     },
-    "version": "2017.5.27"
+    "version": "2017.5.30"
 }
 ```
 

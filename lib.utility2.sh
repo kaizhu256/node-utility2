@@ -436,6 +436,8 @@ shBuildCiInternal() {(set -e
         shBuildPrint "no GITHUB_TOKEN"
         return
     fi
+    # build and deploy app to github
+    shBuildApp && shBuildGithubUpload && shSleep 15
     # run build-ci-after
     if (type shBuildCiAfter > /dev/null 2>&1)
     then
@@ -1063,12 +1065,7 @@ shDeployGithub() {(set -e
     export MODE_BUILD=deployGithub
     export TEST_URL="https://$(printf "$GITHUB_REPO" | \
         sed "s|/|.github.io/|")/build..$CI_BRANCH..travis-ci.org/app"
-    shBuildPrint "deploying to $TEST_URL"
-    # build app
-    shBuildApp
-    # upload app
-    shBuildGithubUpload
-    shSleep 15
+    shBuildPrint "deployed to $TEST_URL"
     # verify deployed app's main-page returns status-code < 400
     if [ $(curl --connect-timeout 60 -Ls -o /dev/null -w "%{http_code}" "$TEST_URL") -lt 400 ]
     then
@@ -1080,7 +1077,8 @@ shDeployGithub() {(set -e
     # screenshot deployed app
     shBrowserTestList "$TEST_URL $TEST_URL/assets.swgg.html" screenshot &
     # test deployed app
-    MODE_BUILD="${MODE_BUILD}Test" shBrowserTest "$TEST_URL?modeTest=1&timeExit={{timeExit}}"
+    MODE_BUILD="${MODE_BUILD}Test" shBrowserTest "$TEST_URL?modeTest=1&timeExit={{timeExit}}" \
+        test
 )}
 
 shDeployHeroku() {(set -e
@@ -1100,6 +1098,7 @@ shDeployHeroku() {(set -e
     fi
     export MODE_BUILD=deployHeroku
     export TEST_URL="https://$npm_package_nameHeroku-$CI_BRANCH.herokuapp.com"
+    shBuildPrint "deployed to $TEST_URL"
     # verify deployed app's main-page returns status-code < 400
     if [ $(curl --connect-timeout 60 -Ls -o /dev/null -w "%{http_code}" "$TEST_URL") -lt 400 ]
     then
@@ -1111,7 +1110,8 @@ shDeployHeroku() {(set -e
     # screenshot deployed app
     shBrowserTestList "$TEST_URL $TEST_URL/assets.swgg.html" screenshot &
     # test deployed app
-    MODE_BUILD="${MODE_BUILD}Test" shBrowserTest "$TEST_URL?modeTest=1&timeExit={{timeExit}}"
+    MODE_BUILD="${MODE_BUILD}Test" shBrowserTest "$TEST_URL?modeTest=1&timeExit={{timeExit}}" \
+        test
 )}
 
 shDockerBuildCleanup() {(set -e

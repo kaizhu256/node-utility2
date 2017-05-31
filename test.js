@@ -217,9 +217,6 @@
                 // test undefined-error handling-behavior
                 url: '/test.error-undefined'
             }, {
-                // test modeForwardProxyUrl handling-behavior
-                modeForwardProxyUrl: local.serverLocalHost.indexOf('github.io') < 0 &&
-                    local.serverLocalHost,
                 // test undefined-https-url handling-behavior
                 timeout: 1,
                 url: 'https://undefined:0'
@@ -1591,6 +1588,35 @@
 
     // run browser js-env code - function
     case 'browser':
+        local.testCase_ajax_standalone = function (options, onError) {
+        /*
+         * this function will test ajax's standalone handling-behavior
+         */
+            options = [
+                [local, {
+                    ajaxForwardProxyUrlTest: null,
+                    ajaxProgressUpdate: null,
+                    bufferToNodeBuffer: null,
+                    bufferToString: null,
+                    errorMessagePrepend: null,
+                    nop: null,
+                    onErrorWithStack: null,
+                    onTimeout: null,
+                    serverLocalUrlTest: null,
+                    streamListCleanup: null,
+                    timeoutDefault: null,
+                    tryCatchOnError: null
+                }]
+            ];
+            local.testMock(options, function (onError) {
+                local.ajax({ undefined: undefined, url: '/' }, function (error) {
+                    // validate no error occurred
+                    local.assert(!error, error);
+                });
+                onError();
+            }, onError);
+        };
+
         local.testCase_blobRead_error = function (options, onError) {
         /*
          * this function will test blobRead's error handling-behavior
@@ -1649,6 +1675,23 @@
             local.assertJsonEqual(options.data.children[0].outerHTML, '<div>aa</div>');
             onError();
         };
+
+        local.testCase_uiAnimateSlideXxx_default = function (options, onError) {
+        /*
+         * this function will test uiAnimateSlideXxx's default handling-behavior
+         */
+            // test null-case handling-behavior
+            local.uiAnimateSlideDown();
+            local.uiAnimateSlideUp();
+            // test default handling-behavior
+            options = document.createElement('div');
+            options.classList.add('uiAnimateSlide');
+            local.uiAnimateSlideDown(options);
+            local.uiAnimateSlideUp(options);
+            // test uiAnimateSlideAccordian handling-behavior
+            local.uiAnimateSlideAccordian(options, [options, document.createElement('div')]);
+            onError();
+        };
         break;
 
 
@@ -1668,7 +1711,7 @@
                     break;
                 case 2:
                     // validate responseText
-                    local.assertJsonEqual(data.responseText, 'hello');
+                    local.assertJsonEqual(data.responseText, 'hello\n');
                     // test http GET 304 cache handling-behavior
                     local.ajax({
                         headers: {
@@ -1792,7 +1835,12 @@
             };
             local.testMock([
                 [local.env, { npm_package_buildCustomOrg: '' }],
-                [local.fs, { writeFileSync: local.nop }],
+                [local.fs, {
+                    existsSync: function () {
+                        return true;
+                    },
+                    writeFileSync: local.nop
+                }],
                 // test swaggerdoc handling-behavior
                 [local.assetsDict, { '/assets.swgg.swagger.json': '{}' }]
             ], function (onError) {
@@ -1940,7 +1988,7 @@
                 // validate no error occurred
                 local.assert(!error, error);
                 // validate responseText
-                local.assertJsonEqual(data.responseText, 'hello');
+                local.assertJsonEqual(data.responseText, 'hello\n');
                 onParallel();
             });
             // test error handling-behavior
@@ -2298,11 +2346,22 @@
             onError(null, options);
         };
 
+        local.utility2.ajaxForwardProxyUrlTest = local.utility2.ajaxForwardProxyUrlTest ||
+            function (url, location) {
+            /*
+             * this function will test if the url requires forward-proxy
+             */
+                // jslint-hack
+                local.nop(url);
+                return local.env.npm_package_nameAlias && (/\bgithub.io$/).test(location.host)
+                    ? 'https://h1-' + local.env.npm_package_nameAlias + '-alpha.herokuapp.com'
+                    : location.protocol + '//' + location.host;
+            };
+
         // run tests
-        // coverage-hack - ignore else-statement
-        local.nop(local.modeTest &&
-            document.querySelector('#testRunButton1') &&
-            document.querySelector('#testRunButton1').click());
+        if (local.modeTest && document.querySelector('#testRunButton1')) {
+            document.querySelector('#testRunButton1').click();
+        }
         break;
 
 

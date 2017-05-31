@@ -123,9 +123,26 @@ body {\n\
 body > * {\n\
     margin-bottom: 1rem;\n\
 }\n\
+body > button {\n\
+    width: 20rem;\n\
+}\n\
+button {\n\
+    cursor: pointer;\n\
+}\n\
+.uiAnimateSlide {\n\
+    overflow-y: hidden;\n\
+    transition: border-bottom 250ms, border-top 250ms, margin-bottom 250ms, margin-top 250ms, max-height 250ms, min-height 250ms, padding-bottom 250ms, padding-top 250ms;\n\
+}\n\
 .utility2FooterDiv {\n\
     margin-top: 20px;\n\
     text-align: center;\n\
+}\n\
+.zeroPixel {\n\
+    border: 0;\n\
+    height: 0;\n\
+    margin: 0;\n\
+    padding: 0;\n\
+    width: 0;\n\
 }\n\
 </style>\n\
 <style>\n\
@@ -163,7 +180,7 @@ utility2-comment -->\n\
 <!-- utility2-comment\n\
 <h4><a download href="assets.app.js">download standalone app</a></h4>\n\
 <button class="onclick onreset" id="testRunButton1">run internal test</button><br>\n\
-<div id="testReportDiv1" style="display: none;"></div>\n\
+<div class="uiAnimateSlide" id="testReportDiv1" style="border-bottom: 0; border-top: 0; margin-bottom: 0; margin-top: 0; max-height: 0; padding-bottom: 0; padding-top: 0;"></div>\n\
 utility2-comment -->\n\
 \n\
 \n\
@@ -206,17 +223,23 @@ local.assetsDict['/assets.example.html'] = '';
 
 
 
+local.assetsDict['/assets.example.template.html'] =
+    local.assetsDict['/assets.index.template.html'];
+
+
+
 local.assetsDict['/assets.example.template.js'] = '\
 /*\n\
 example.js\n\
 \n\
-this script will create a web demo of jslint-lite\n\
+this script will run a web demo of jslint-lite\n\
 \n\
 instruction\n\
     1. save this script as example.js\n\
     2. run the shell command:\n\
         $ npm install jslint-lite && PORT=8081 node example.js\n\
     3. open a browser to http://127.0.0.1:8081 and play with the web demo\n\
+    4. edit this script to suit your needs\n\
 */\n\
 \n\
 \n\
@@ -298,15 +321,15 @@ instruction\n\
             switch (event && event.currentTarget && event.currentTarget.id) {\n\
             case \'testRunButton1\':\n\
                 // show tests\n\
-                if (document.querySelector(\'#testReportDiv1\').style.display === \'none\') {\n\
-                    document.querySelector(\'#testReportDiv1\').style.display = \'block\';\n\
+                if (document.querySelector(\'#testReportDiv1\').style.maxHeight === \'0px\') {\n\
+                    local.uiAnimateSlideDown(document.querySelector(\'#testReportDiv1\'));\n\
                     document.querySelector(\'#testRunButton1\').textContent =\n\
                         \'hide internal test\';\n\
                     local.modeTest = true;\n\
                     local.testRunDefault(local);\n\
                 // hide tests\n\
                 } else {\n\
-                    document.querySelector(\'#testReportDiv1\').style.display = \'none\';\n\
+                    local.uiAnimateSlideUp(document.querySelector(\'#testReportDiv1\'));\n\
                     document.querySelector(\'#testRunButton1\').textContent = \'run internal test\';\n\
                 }\n\
                 break;\n\
@@ -373,8 +396,7 @@ instruction\n\
         local.assetsDict = local.assetsDict || {};\n\
         /* jslint-ignore-begin */\n\
         local.assetsDict[\'/assets.index.template.html\'] = \'\\\n' +
-local.assetsDict['/assets.index.template.html'].replace((/\n/g), '\\n\\\n') +
-'\';\n\
+local.assetsDict['/assets.index.template.html'].replace((/\n/g), '\\n\\\n') + '\';\n\
         /* jslint-ignore-end */\n\
         [\n\
             \'assets.index.css\',\n\
@@ -382,10 +404,11 @@ local.assetsDict['/assets.index.template.html'].replace((/\n/g), '\\n\\\n') +
             \'assets.swgg.swagger.json\',\n\
             \'assets.swgg.swagger.server.json\'\n\
         ].forEach(function (file) {\n\
-            local.assetsDict[\'/\' + file] = local.assetsDict[\'/\' + file] || \'\';\n\
-            if (local.fs.existsSync(local.__dirname + \'/\' + file)) {\n\
-                local.assetsDict[\'/\' + file] = local.fs.readFileSync(\n\
-                    local.__dirname + \'/\' + file,\n\
+            file = \'/\' + file;\n\
+            local.assetsDict[file] = local.assetsDict[file] || \'\';\n\
+            if (local.fs.existsSync(local.__dirname + file)) {\n\
+                local.assetsDict[file] = local.fs.readFileSync(\n\
+                    local.__dirname + file,\n\
                     \'utf8\'\n\
                 );\n\
             }\n\
@@ -515,7 +538,7 @@ local.assetsDict['/assets.readme.template.md'] = '\
 # jslint-lite\n\
 the greatest app in the world!\n\
 \n\
-[![travis-ci.org build-status](https://api.travis-ci.org/kaizhu256/node-jslint-lite.svg)](https://travis-ci.org/kaizhu256/node-jslint-lite) [![coverage](https://kaizhu256.github.io/node-utility2/build/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build/coverage.html/index.html)\n\
+[![travis-ci.org build-status](https://api.travis-ci.org/kaizhu256/node-jslint-lite.svg)](https://travis-ci.org/kaizhu256/node-jslint-lite) [![coverage](https://kaizhu256.github.io/node-jslint-lite/build/coverage.badge.svg)](https://kaizhu256.github.io/node-jslint-lite/build/coverage.html/index.html)\n\
 \n\
 [![NPM](https://nodei.co/npm/jslint-lite.png?downloads=true)](https://www.npmjs.com/package/jslint-lite)\n\
 \n\
@@ -730,8 +753,7 @@ shBuildCi\n\
 
 
 local.assetsDict['/assets.readmeCustomOrg.npmdoc.template.md'] = '\
-# npmdoc-{{env.npm_package_name}} \
-\n\
+# npmdoc-{{env.npm_package_name}}\n\
 \n\
 #### basic api documentation for \
 {{#if env.npm_package_homepage}} \
@@ -740,39 +762,28 @@ local.assetsDict['/assets.readmeCustomOrg.npmdoc.template.md'] = '\
 {{env.npm_package_name}} (v{{env.npm_package_version}}) \
 {{/if env.npm_package_homepage}} \
 [![npm package](https://img.shields.io/npm/v/npmdoc-{{env.npm_package_name}}.svg?style=flat-square)](https://www.npmjs.org/package/npmdoc-{{env.npm_package_name}}) \
-[![travis-ci.org build-status](https://api.travis-ci.org/npmdoc/node-npmdoc-{{env.npm_package_name}}.svg)](https://travis-ci.org/npmdoc/node-npmdoc-{{env.npm_package_name}}) \
+[![travis-ci.org build-status](https://api.travis-ci.org/npmdoc/node-npmdoc-{{env.npm_package_name}}.svg)](https://travis-ci.org/npmdoc/node-npmdoc-{{env.npm_package_name}})\n\
 \n\
+#### {{env.npm_package_description}}\n\
 \n\
-#### {{env.npm_package_description}} \
+[![NPM](https://nodei.co/npm/{{env.npm_package_name}}.png?downloads=true&downloadRank=true&stars=true)](https://www.npmjs.com/package/{{env.npm_package_name}})\n\
 \n\
+- [https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build/apidoc.html](https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build/apidoc.html)\n\
 \n\
-[![NPM](https://nodei.co/npm/{{env.npm_package_name}}.png?downloads=true&downloadRank=true&stars=true)](https://www.npmjs.com/package/{{env.npm_package_name}}) \
+[![apidoc](https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)](https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build/apidoc.html)\n\
 \n\
+![npmPackageListing](https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build/screenshot.npmPackageListing.svg)\n\
 \n\
-- [https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build/apidoc.html](https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build/apidoc.html) \
-\n\
-\n\
-[![apidoc](https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)](https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build/apidoc.html) \
-\n\
-\n\
-![npmPackageListing](https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build/screenshot.npmPackageListing.svg) \
-\n\
-\n\
-![npmPackageDependencyTree](https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build/screenshot.npmPackageDependencyTree.svg) \
+![npmPackageDependencyTree](https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build/screenshot.npmPackageDependencyTree.svg)\n\
 \n\
 \n\
 \n\
+# package.json\n\
 \n\
-# package.json \
+```json\n\
 \n\
-\n\
-```json \
-\n\
-\n\
-{{packageJson jsonStringify4 markdownCodeSafe}} \
-\n\
-``` \
-\n\
+{{packageJson jsonStringify4 markdownCodeSafe}}\n\
+```\n\
 \n\
 \n\
 \n\
@@ -783,8 +794,7 @@ local.assetsDict['/assets.readmeCustomOrg.npmdoc.template.md'] = '\
 
 
 local.assetsDict['/assets.readmeCustomOrg.npmtest.template.md'] = '\
-# npmtest-{{env.npm_package_name}} \
-\n\
+# npmtest-{{env.npm_package_name}}\n\
 \n\
 #### basic test coverage for \
 {{#if env.npm_package_homepage}} \
@@ -793,62 +803,42 @@ local.assetsDict['/assets.readmeCustomOrg.npmtest.template.md'] = '\
 {{env.npm_package_name}} (v{{env.npm_package_version}}) \
 {{/if env.npm_package_homepage}} \
 [![npm package](https://img.shields.io/npm/v/npmtest-{{env.npm_package_name}}.svg?style=flat-square)](https://www.npmjs.org/package/npmtest-{{env.npm_package_name}}) \
-[![travis-ci.org build-status](https://api.travis-ci.org/npmtest/node-npmtest-{{env.npm_package_name}}.svg)](https://travis-ci.org/npmtest/node-npmtest-{{env.npm_package_name}}) \
+[![travis-ci.org build-status](https://api.travis-ci.org/npmtest/node-npmtest-{{env.npm_package_name}}.svg)](https://travis-ci.org/npmtest/node-npmtest-{{env.npm_package_name}})\n\
 \n\
+#### {{env.npm_package_description}}\n\
 \n\
-#### {{env.npm_package_description}} \
-\n\
-\n\
-[![NPM](https://nodei.co/npm/{{env.npm_package_name}}.png?downloads=true&downloadRank=true&stars=true)](https://www.npmjs.com/package/{{env.npm_package_name}}) \
-\n\
+[![NPM](https://nodei.co/npm/{{env.npm_package_name}}.png?downloads=true&downloadRank=true&stars=true)](https://www.npmjs.com/package/{{env.npm_package_name}})\n\
 \n\
 | git-branch : | [alpha](https://github.com/npmtest/node-npmtest-{{env.npm_package_name}}/tree/alpha)|\n\
-|--:|:--| \
+|--:|:--|\n\
+| coverage : | [![coverage](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/coverage.badge.svg)](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/coverage.html/index.html)|\n\
+| test-report : | [![test-report](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/test-report.badge.svg)](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/test-report.html)|\n\
+| test-server-github : | [![github.com test-server](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/GitHub-Mark-32px.png)](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/app) || build-artifacts : | [![build-artifacts](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/glyphicons_144_folder_open.png)](https://github.com/npmtest/node-npmtest-{{env.npm_package_name}}/tree/gh-pages/build)|\n\
 \n\
-| coverage : | [![coverage](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/coverage.badge.svg)](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/coverage.html/index.html)| \
+- [https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/coverage.html/index.html](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/coverage.html/index.html)\n\
 \n\
-| test-report : | [![test-report](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/test-report.badge.svg)](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/test-report.html)| \
+[![coverage](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Fcoverage.lib.html.png)](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/coverage.html/index.html)\n\
 \n\
-| test-server-github : | [![github.com test-server](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/GitHub-Mark-32px.png)](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/app) | \
-| build-artifacts : | [![build-artifacts](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/glyphicons_144_folder_open.png)](https://github.com/npmtest/node-npmtest-{{env.npm_package_name}}/tree/gh-pages/build)| \
+- [https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/test-report.html](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/test-report.html)\n\
 \n\
+[![test-report](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Ftest-report.html.png)](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/test-report.html)\n\
 \n\
-- [https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/coverage.html/index.html](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/coverage.html/index.html) \
+- [https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build/apidoc.html](https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build/apidoc.html)\n\
 \n\
+[![apidoc](https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)](https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build/apidoc.html)\n\
 \n\
-[![coverage](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Fcoverage.lib.html.png)](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/coverage.html/index.html) \
+![npmPackageListing](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/screenshot.npmPackageListing.svg)\n\
 \n\
-\n\
-- [https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/test-report.html](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/test-report.html) \
-\n\
-\n\
-[![test-report](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Ftest-report.html.png)](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/test-report.html) \
-\n\
-\n\
-- [https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build/apidoc.html](https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build/apidoc.html) \
-\n\
-\n\
-[![apidoc](https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)](https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build/apidoc.html) \
-\n\
-\n\
-![npmPackageListing](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/screenshot.npmPackageListing.svg) \
-\n\
-\n\
-![npmPackageDependencyTree](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/screenshot.npmPackageDependencyTree.svg) \
+![npmPackageDependencyTree](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/screenshot.npmPackageDependencyTree.svg)\n\
 \n\
 \n\
 \n\
+# package.json\n\
 \n\
-# package.json \
+```json\n\
 \n\
-\n\
-```json \
-\n\
-\n\
-{{packageJson jsonStringify4 markdownCodeSafe}} \
-\n\
-``` \
-\n\
+{{packageJson jsonStringify4 markdownCodeSafe}}\n\
+```\n\
 \n\
 \n\
 \n\
@@ -948,6 +938,7 @@ local.assetsDict['/assets.test.template.js'] = '\
 \n\
 \n\
     // run browser js\-env code - init-after\n\
+    /* istanbul ignore next */\n\
     case \'browser\':\n\
         local.testCase_browser_nullCase = local.testCase_browser_nullCase || function (\n\
             options,\n\
@@ -959,11 +950,22 @@ local.assetsDict['/assets.test.template.js'] = '\
             onError(null, options);\n\
         };\n\
 \n\
+        local.utility2.ajaxForwardProxyUrlTest = local.utility2.ajaxForwardProxyUrlTest ||\n\
+            function (url, location) {\n\
+            /*\n\
+             * this function will test if the url requires forward-proxy\n\
+             */\n\
+                // jslint-hack\n\
+                local.nop(url);\n\
+                return local.env.npm_package_nameAlias && (/\\bgithub.io$/).test(location.host)\n\
+                    ? \'https://h1-\' + local.env.npm_package_nameAlias + \'-alpha.herokuapp.com\'\n\
+                    : location.protocol + \'//\' + location.host;\n\
+            };\n\
+\n\
         // run tests\n\
-        // coverage-hack - ignore else-statement\n\
-        local.nop(local.modeTest &&\n\
-            document.querySelector(\'#testRunButton1\') &&\n\
-            document.querySelector(\'#testRunButton1\').click());\n\
+        if (local.modeTest && document.querySelector(\'#testRunButton1\')) {\n\
+            document.querySelector(\'#testRunButton1\').click();\n\
+        }\n\
         break;\n\
 \n\
 \n\
@@ -1818,20 +1820,37 @@ local.assetsDict['/favicon.ico'] = '';
         /*
          * this function will send an ajax-request with error-handling and timeout
          */
-            var timerTimeout, tmp, xhr;
+            var tmp, xhr;
+            // init standalone handling-behavior
+            local.nop = local.nop || function () {
+                return;
+            };
+            local.ajaxForwardProxyUrlTest = local.ajaxForwardProxyUrlTest || local.nop;
+            local.ajaxProgressUpdate = local.ajaxProgressUpdate || local.nop;
+            local.bufferToNodeBuffer = local.bufferToNodeBuffer || local.nop;
+            local.bufferToString = local.bufferToString || local.nop;
+            local.errorMessagePrepend = local.errorMessagePrepend || local.nop;
+            local.onErrorWithStack = local.onErrorWithStack || function (arg) {
+                return arg;
+            };
+            local.serverLocalUrlTest = local.serverLocalUrlTest || local.nop;
+            local.streamListCleanup = local.streamListCleanup || local.nop;
+            local.timeoutDefault = local.timeoutDefault || 30000;
+            local.tryCatchOnError = local.tryCatchOnError || local.nop;
+            // init onError
             onError = local.onErrorWithStack(onError);
-            // init modeServerLocal
-            if (local.serverLocalUrlTest && local.serverLocalUrlTest(options.url)) {
-                xhr = new local._http.XMLHttpRequest();
-            }
             // init xhr
-            xhr = xhr || (local.modeJs === 'browser'
-                ? new local.global.XMLHttpRequest()
-                : new local._http.XMLHttpRequest());
+            xhr = local.modeJs === 'node' || local.serverLocalUrlTest(options.url)
+                ? new local._http.XMLHttpRequest()
+                : new window.XMLHttpRequest();
             // debug xhr
             local._debugXhr = xhr;
             // init options
-            local.objectSetOverride(xhr, options);
+            Object.keys(options).forEach(function (key) {
+                if (options[key] !== undefined) {
+                    xhr[key] = options[key];
+                }
+            });
             // init headers
             xhr.headers = {};
             Object.keys(options.headers || {}).forEach(function (key) {
@@ -1839,17 +1858,16 @@ local.assetsDict['/favicon.ico'] = '';
             });
             // init method
             xhr.method = xhr.method || 'GET';
-            // init modeForwardProxyUrl
-            xhr.modeForwardProxyUrl = xhr.modeForwardProxyUrl || local.modeForwardProxyUrl;
             // init timeout
             xhr.timeout = xhr.timeout || local.timeoutDefault;
             // init timerTimeout
-            timerTimeout = local.onTimeout(function (error) {
-                xhr.error = xhr.error || error;
+            xhr.timerTimeout = setTimeout(function () {
+                xhr.error = xhr.error || new Error('onTimeout - timeout-error - ' +
+                    xhr.timeout + ' ms - ' + 'ajax ' + xhr.method + ' ' + xhr.url);
                 xhr.abort();
                 // cleanup requestStream and responseStream
                 local.streamListCleanup([xhr.requestStream, xhr.responseStream]);
-            }, xhr.timeout, 'ajax ' + xhr.method + ' ' + xhr.url);
+            }, xhr.timeout | 0);
             // init event handling
             xhr.onEvent = function (event) {
                 // init statusCode
@@ -1864,7 +1882,7 @@ local.assetsDict['/favicon.ico'] = '';
                     }
                     xhr.isDone = true;
                     // cleanup timerTimeout
-                    clearTimeout(timerTimeout);
+                    clearTimeout(xhr.timerTimeout);
                     // cleanup requestStream and responseStream
                     setTimeout(function () {
                         local.streamListCleanup([xhr.requestStream, xhr.responseStream]);
@@ -1921,11 +1939,12 @@ local.assetsDict['/favicon.ico'] = '';
             xhr.addEventListener('progress', local.ajaxProgressUpdate);
             xhr.upload.addEventListener('progress', local.ajaxProgressUpdate);
             // open url
-            if (local.modeJs === 'browser' &&
-                    xhr.modeForwardProxyUrl &&
-                    (/^https{0,1}:/).test(xhr.url) &&
-                    xhr.url.indexOf(location.protocol + '//' + location.host) !== 0) {
-                xhr.open(xhr.method, xhr.modeForwardProxyUrl);
+            xhr.forwardProxyUrl = local.modeJs === 'browser' &&
+                (/^https{0,1}:/).test(xhr.url) &&
+                xhr.url.indexOf(location.protocol + '//' + location.host) !== 0 &&
+                local.ajaxForwardProxyUrlTest(xhr.url, location);
+            if (xhr.forwardProxyUrl) {
+                xhr.open(xhr.method, xhr.forwardProxyUrl);
                 xhr.setRequestHeader('forward-proxy-headers', JSON.stringify(xhr.headers));
                 xhr.setRequestHeader('forward-proxy-url', xhr.url);
             } else {
@@ -2218,7 +2237,7 @@ local.assetsDict['/favicon.ico'] = '';
                     ? Infinity
                     : modeNext + 1;
                 switch (modeNext) {
-                // run node code
+                // node - init
                 case 1:
                     // init options
                     if (!(/^\w+:\/\//).test(options.url)) {
@@ -2303,6 +2322,7 @@ local.assetsDict['/favicon.ico'] = '';
                             : ['ignore', 1, 2]
                     }).once('exit', onNext);
                     break;
+                // node - after electron
                 case 2:
                     // cleanup fileElectronHtml
                     try {
@@ -2353,7 +2373,7 @@ local.assetsDict['/favicon.ico'] = '';
                     );
                     onNext(data && data.testsFailed && new Error(data.testsFailed));
                     break;
-                // run electron-node code
+                // node.electron - init
                 case 11:
                     local.electron = require('electron');
                     // handle uncaughtexception
@@ -2361,6 +2381,7 @@ local.assetsDict['/favicon.ico'] = '';
                     // wait for electron to init
                     local.electron.app.once('ready', onNext);
                     break;
+                // node.electron - after ready
                 case 12:
                     options.BrowserWindow = local.electron.BrowserWindow;
                     local.objectSetDefault(options, {
@@ -2382,6 +2403,7 @@ local.assetsDict['/favicon.ico'] = '';
                     // load url in browserWindow
                     options.browserWindow.loadURL('file://' + options.fileElectronHtml);
                     break;
+                // node.electron - after url-open
                 case 13:
                     console.error('\nbrowserTest - opened url ' + options.url + '\n');
                     onParallel.counter += 1;
@@ -2398,12 +2420,13 @@ local.assetsDict['/favicon.ico'] = '';
                         });
                     }, options.timeoutScreenshot);
                     break;
+                // node.electron - after test
                 case 14:
                     console.error('browserTest - created screenshot file://' +
                         options.fileScreenshot.replace((/\.\w+$/), '.html'));
                     onNext();
                     break;
-                // run electron-browserWindow code
+                // node.electron.browserWindow - init
                 case 21:
                     options.fs = require('fs');
                     options.webview1 = document.querySelector('#webview1');
@@ -2419,6 +2442,7 @@ local.assetsDict['/favicon.ico'] = '';
                         }
                     });
                     break;
+                // node.electron.browserWindow - handle event console-message
                 case 22:
                     data.tmp = data.message
                         .slice(0, 1024)
@@ -2431,6 +2455,9 @@ local.assetsDict['/favicon.ico'] = '';
                     }
                     switch (data.tmp[1]) {
                     case 'global_test_results':
+                        if (options.modeBrowserTest !== 'test') {
+                            return;
+                        }
                         options.global_test_results =
                             JSON.parse(data.tmp[2]).global_test_results;
                         if (options.global_test_results.testReport) {
@@ -2450,7 +2477,10 @@ local.assetsDict['/favicon.ico'] = '';
                                     JSON.stringify(options.global_test_results.coverage)
                                 );
                             }
-                            document.title = options.fileElectronHtml + ' testReport written';
+                            setTimeout(function () {
+                                document.title = options.fileElectronHtml +
+                                    ' testReport written';
+                            });
                         }
                         break;
                     case 'html':
@@ -2458,19 +2488,30 @@ local.assetsDict['/favicon.ico'] = '';
                             options.fileScreenshot.replace((/\.\w+$/), '.html'),
                             data.tmp[2]
                         );
-                        document.title = options.fileElectronHtml + ' html written';
+                        setTimeout(function () {
+                            document.title = options.fileElectronHtml +
+                                ' html written';
+                        });
                         break;
                     default:
                         console.error(data.message);
                     }
                     break;
-                // run electron-webview code
+                // node.electron.browserWindow.webview - run preload.js
                 case 31:
                     window.fileElectronHtml = options.fileElectronHtml;
                     // message html back to browserWindow
                     setTimeout(function () {
                         console.error(options.fileElectronHtml + ' html ' +
                             document.documentElement.outerHTML);
+                        if (options.modeBrowserTest === 'test' && !window.utility2) {
+                            console.error(options.fileElectronHtml +
+                                ' global_test_results ' +
+                                JSON.stringify({ global_test_results: {
+                                    coverage: window.__coverage__,
+                                    testReport: { testPlatformList: [{}] }
+                                } }));
+                        }
                     }, options.timeoutScreenshot);
                     break;
                 default:
@@ -2521,13 +2562,6 @@ local.assetsDict['/favicon.ico'] = '';
          * this function will create a Uint8Array from the text,
          * with either 'utf8' (default) or 'base64' encoding
          */
-            if (typeof text === 'string') {
-                if (local.modeJs === 'node') {
-                    return new Buffer(text);
-                }
-                if (local.global.TextEncoder) {
-                    return new local.global.TextEncoder('utf-8').encode(text);
-                }
 // bug-workaround - TextEncoder.encode polyfill
 /* jslint-ignore-begin */
 // utility2-uglifyjs https://github.com/feross/buffer/blob/v4.9.1/index.js#L1670
@@ -2541,8 +2575,16 @@ n-56320)+65536}else i&&(t-=3)>-1&&s.push(239,191,189);i=null;if(n<128){if((t-=1)
 n<65536){if((t-=3)<0)break;s.push(n>>12|224,n>>6&63|128,n&63|128)}else{if(!(n<1114112
 ))throw new Error("Invalid code point");if((t-=4)<0)break;s.push(n>>18|240,n>>12&63|128
 ,n>>6&63|128,n&63|128)}}return s}
-return new local.global.Uint8Array(utf8ToBytes(text));
 /* jslint-ignore-end */
+            if (typeof text === 'string') {
+                if (local.modeJs === 'node') {
+                    return new Buffer(text);
+                }
+                if (local.global.TextEncoder) {
+                    return new local.global.TextEncoder('utf-8').encode(text);
+                }
+                /* jslint-ignore-next-line */
+                return new local.global.Uint8Array(utf8ToBytes(text));
             }
             return new local.global.Uint8Array(text);
         };
@@ -2682,6 +2724,9 @@ return Utf8ArrayToStr(bff);
             }, {
                 file: '/assets.swgg.swagger.json',
                 url: '/assets.swgg.swagger.json'
+            }, {
+                file: '/assets.swgg.swagger.petstore.json',
+                url: '/assets.swgg.swagger.petstore.json'
             }, {
                 file: '/assets.swgg.swagger.server.json',
                 url: '/assets.swgg.swagger.server.json'
@@ -2973,11 +3018,21 @@ return Utf8ArrayToStr(bff);
                 [
                     // customize screenshot
                     new RegExp('^1\\. .*?screenshot\\.' +
-                        '(?:deployGithub|deployHeroku|testExampleJs|testExampleSh)' +
+                        '(?:deployGithub|deployHeroku|npmTest|testExampleJs|testExampleSh)' +
                         '.*?\\.png[\\S\\s]*?\\n\\n', 'gm')
                 ].forEach(function (rgx) {
                     options.dataTo = options.dataTo.replace(rgx, '');
                 });
+            }
+            // customize assets.index.template.html with file-override
+            if (local.fs.existsSync('./assets.index.template.html')) {
+                options.dataTo = options.dataTo.replace(
+                    new RegExp('\\n {8}\\/\\* jslint-ignore-begin \\*\\/\\n' +
+                        ' {8}local.assetsDict\\[\'\\/assets.index.template.html\'\\]' +
+                        ' = \'\\\\\\n' +
+                        '[\\S\\s]*?\\n {8}\\/\\* jslint-ignore-end \\*\\/\\n'),
+                    '\n'
+                );
             }
             // render dataTo - customizeAfter
             options.customizeAfter = true;
@@ -4419,7 +4474,7 @@ return Utf8ArrayToStr(bff);
          * that will append the current stack to any error encountered
          */
             onError = local.onErrorWithStack(onError);
-            // create timeout timer
+            // create timerTimeout
             return setTimeout(function () {
                 onError(new Error('onTimeout - timeout-error - ' +
                     timeout + ' ms - ' + (typeof message === 'function'
@@ -4820,13 +4875,15 @@ return '\
 \n\
 /*\n\
 assets.app.js\n\
-\n' + local.env.npm_package_description + '\n\
+\n\
+' + local.env.npm_package_description + '\n\
 \n\
 instruction\n\
     1. save this script as assets.app.js\n\
     2. run the shell command:\n\
         $ PORT=8081 node assets.app.js\n\
     3. open a browser to http://127.0.0.1:8081 and play with the web demo\n\
+    4. edit this script to suit your needs\n\
 */\n\
 ' + local.assetsDict['/assets.utility2.rollup.begin.js']
     .replace((/utility2_rollup/g), 'utility2_app');
@@ -4846,9 +4903,17 @@ instruction\n\
                     // handle large string-replace
                     script = local.assetsDict['/assets.utility2.rollup.content.js']
                         .split('/* utility2.rollup.js content */');
-                    script.splice(1, 0, key + '(' + JSON.stringify(
-                        local.middlewareJsonpStateInit({ stateInit: true })
-                    ) + ');');
+                    tmp = local.middlewareJsonpStateInit({ stateInit: true });
+                    // add extra physical files to assetsDict
+                    local.fs.readdirSync('.').forEach(function (file) {
+                        file = '/' + file;
+                        if (file.indexOf('/assets.') === 0 &&
+                                local.fs.readFileSync('.' + file, 'utf8') ===
+                                local.assetsDict[file]) {
+                            tmp.utility2.assetsDict[file] = local.assetsDict[file];
+                        }
+                    });
+                    script.splice(1, 0, key + '(' + JSON.stringify(tmp, null, 4) + ');');
                     script = script.join('');
                     break;
                 default:
@@ -5023,7 +5088,7 @@ instruction\n\
         /*
          * this function will init the state-options
          */
-            local.objectSetOverride(local, options, 10);
+            local.objectSetOverride(local, options, Infinity);
             // init swgg
             // coverage-hack - ignore else-statement
             local.nop(local.swgg && local.swgg.apiDictUpdate(local.swgg.swaggerJson));
@@ -5703,7 +5768,7 @@ instruction\n\
                 testReportDiv1 = document.querySelector('#testReportDiv1');
             }
             testReportDiv1 = testReportDiv1 || { style: {} };
-            testReportDiv1.style.display = 'block';
+            local.uiAnimateSlideDown(testReportDiv1);
             testReportDiv1.innerHTML = local.testReportMerge(testReport, {});
             // update test-report status every 1000 ms until isDone
             timerInterval = setInterval(function () {
@@ -5927,6 +5992,64 @@ instruction\n\
             } catch (ignore) {
             }
             return data;
+        };
+
+        local.uiAnimateSlideAccordian = function (element, elementList, callback) {
+        /*
+         * this function will slideDown the element,
+         * and slideUp all other elements in elementList
+         */
+            elementList.forEach(function (element2) {
+                if (element2 !== element) {
+                    local.uiAnimateSlideUp(element2);
+                }
+            });
+            local.uiAnimateSlideDown(element, callback);
+        };
+
+        local.uiAnimateSlideDown = function (element, callback) {
+        /*
+         * this function will slideDown the dom-element
+         */
+            callback = callback || local.nop;
+            if (!(element &&
+                    element.style && element.style.maxHeight !== '100%' &&
+                    element.classList && element.classList.contains('uiAnimateSlide'))) {
+                setTimeout(callback);
+                return;
+            }
+            element.style.borderBottom = '';
+            element.style.borderTop = '';
+            element.style.marginBottom = '';
+            element.style.marginTop = '';
+            element.style.maxHeight = 1.5 * local.global.innerHeight + 'px';
+            element.style.paddingBottom = '';
+            element.style.paddingTop = '';
+            setTimeout(function () {
+                element.style.maxHeight = '100%';
+                callback();
+            }, 250);
+        };
+
+        local.uiAnimateSlideUp = function (element, callback) {
+        /*
+         * this function will slideUp the dom-element
+         */
+            callback = callback || local.nop;
+            if (!(element &&
+                    element.style && element.style.maxHeight !== '0px' &&
+                    element.classList && element.classList.contains('uiAnimateSlide'))) {
+                setTimeout(callback);
+                return;
+            }
+            element.style.borderBottom = '0';
+            element.style.borderTop = '0';
+            element.style.marginBottom = '0';
+            element.style.marginTop = '0';
+            element.style.maxHeight = '0';
+            element.style.paddingBottom = '0';
+            element.style.paddingTop = '0';
+            setTimeout(callback, 250);
         };
 
         local.urlParse = function (url) {
