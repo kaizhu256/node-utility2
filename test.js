@@ -811,31 +811,47 @@
             onError();
         };
 
-        local.testCase_normalizeXxx_default = function (options, onError) {
+        local.testCase_normalizeValue_default = function (options, onError) {
         /*
-         * this function will test normalizeXxx's default handling-behavior
+         * this function will test normalizeValue's default handling-behavior
          */
             options = {};
-            // test normalizeDict handling-behavior
-            options.data = local.normalizeDict({ aa: 1 });
+            // test dict handling-behavior
+            options.data = local.normalizeValue('dict', { aa: 1 });
             local.assertJsonEqual(options.data, { aa: 1 });
-            options.data = local.normalizeDict(null);
+            options.data = local.normalizeValue('dict', null);
             local.assertJsonEqual(options.data, {});
-            options.data = local.normalizeDict([]);
+            options.data = local.normalizeValue('dict', []);
             local.assertJsonEqual(options.data, {});
-            // test normalizeList handling-behavior
-            options.data = local.normalizeList([1]);
+            // test function handling-behavior
+            options.data = local.normalizeValue('function', function () {
+                return true;
+            });
+            local.assertJsonEqual(options.data(), true);
+            options.data = local.normalizeValue('function', null);
+            local.assertJsonEqual(options.data(), undefined);
+            options.data = local.normalizeValue('function', {});
+            local.assertJsonEqual(options.data(), undefined);
+            // test list handling-behavior
+            options.data = local.normalizeValue('list', [1]);
             local.assertJsonEqual(options.data, [1]);
-            options.data = local.normalizeList(null);
+            options.data = local.normalizeValue('list', null);
             local.assertJsonEqual(options.data, []);
-            options.data = local.normalizeList({});
+            options.data = local.normalizeValue('list', {});
             local.assertJsonEqual(options.data, []);
-            // test normalizeText handling-behavior
-            options.data = local.normalizeText('aa');
+            // test number handling-behavior
+            options.data = local.normalizeValue('number', 0.5);
+            local.assertJsonEqual(options.data, 0.5);
+            options.data = local.normalizeValue('number', null);
+            local.assertJsonEqual(options.data, 0);
+            options.data = local.normalizeValue('number', {});
+            local.assertJsonEqual(options.data, 0);
+            // test string handling-behavior
+            options.data = local.normalizeValue('string', 'aa');
             local.assertJsonEqual(options.data, 'aa');
-            options.data = local.normalizeText(null);
+            options.data = local.normalizeValue('string', null);
             local.assertJsonEqual(options.data, '');
-            options.data = local.normalizeText({});
+            options.data = local.normalizeValue('string', {});
             local.assertJsonEqual(options.data, '');
             onError();
         };
@@ -2359,7 +2375,7 @@
             onError
         ) {
         /*
-         * this function will test browser's null-case handling-behavior-behavior
+         * this function will test browser's null-case handling-behavior
          */
             onError(null, options);
         };
@@ -2456,9 +2472,9 @@
             local.Module.runMain();
         }
 
-        local.testCase_browserTestTranslate_default = function (options, onError) {
+        local.testCase_browserTest_translate = function (options, onError) {
         /*
-         * this function will test browserTestTranslate's default handling-behavior-behavior
+         * this function will test browserTest's translate handling-behavior
          */
             options = {
                 modeBrowserTest: 'scrape',
@@ -2468,9 +2484,10 @@
             local.browserTest(options, function (error) {
                 // validate no error occurred
                 local.assert(!error, error);
+                options.modeBrowserTest = 'translateAfterScrape';
                 options.modeBrowserTestTranslate = 'ru,zh-CN';
                 options.url = options.fileScreenshotBase;
-                local.browserTestTranslate(options, onError);
+                local.browserTest(options, onError);
             });
         };
 
@@ -2479,7 +2496,7 @@
             onError
         ) {
         /*
-         * this function will test buildApidoc's default handling-behavior-behavior
+         * this function will test buildApidoc's default handling-behavior
          */
             options = { modulePathList: module.paths };
             local.buildApidoc(options, onError);
@@ -2490,7 +2507,7 @@
             onError
         ) {
         /*
-         * this function will test buildApp's default handling-behavior-behavior
+         * this function will test buildApp's default handling-behavior
          */
             local.testCase_buildReadme_default(options, local.onErrorThrow);
             local.testCase_buildLib_default(options, local.onErrorThrow);
@@ -2525,7 +2542,7 @@
             onError
         ) {
         /*
-         * this function will test buildReadme's default handling-behavior-behavior
+         * this function will test buildReadme's default handling-behavior
          */
             options = {};
             local.buildReadme(options, onError);

@@ -945,7 +945,7 @@ local.assetsDict['/assets.test.template.js'] = '\
             onError\n\
         ) {\n\
         /*\n\
-         * this function will test browser\'s null-case handling-behavior-behavior\n\
+         * this function will test browser\'s null-case handling-behavior\n\
          */\n\
             onError(null, options);\n\
         };\n\
@@ -978,7 +978,7 @@ local.assetsDict['/assets.test.template.js'] = '\
             onError\n\
         ) {\n\
         /*\n\
-         * this function will test buildApidoc\'s default handling-behavior-behavior\n\
+         * this function will test buildApidoc\'s default handling-behavior\n\
          */\n\
             options = { modulePathList: module.paths };\n\
             local.buildApidoc(options, onError);\n\
@@ -989,7 +989,7 @@ local.assetsDict['/assets.test.template.js'] = '\
             onError\n\
         ) {\n\
         /*\n\
-         * this function will test buildApp\'s default handling-behavior-behavior\n\
+         * this function will test buildApp\'s default handling-behavior\n\
          */\n\
             local.testCase_buildReadme_default(options, local.onErrorThrow);\n\
             local.testCase_buildLib_default(options, local.onErrorThrow);\n\
@@ -1024,7 +1024,7 @@ local.assetsDict['/assets.test.template.js'] = '\
             onError\n\
         ) {\n\
         /*\n\
-         * this function will test buildReadme\'s default handling-behavior-behavior\n\
+         * this function will test buildReadme\'s default handling-behavior\n\
          */\n\
             options = {};\n\
             local.buildReadme(options, onError);\n\
@@ -2235,7 +2235,7 @@ local.assetsDict['/favicon.ico'] = '';
          * this function will spawn an electron process to test options.url
          */
             var isDone, modeNext, onNext, onParallel, timerTimeout, tmp;
-            modeNext = Number(options.modeNext || 0);
+            modeNext = Number(options.modeNext) || 0;
             onError = onError || function (error) {
                 if (error) {
                     console.error(error);
@@ -2246,21 +2246,56 @@ local.assetsDict['/favicon.ico'] = '';
                     ? Infinity
                     : modeNext + 1;
                 switch (modeNext) {
-                // node.electron - init
+                // node - init
                 case 1:
                     // init options
                     local.browserTestInit(options);
-                    if (!process.versions.electron) {
-                        // node - spawn electron
-                        modeNext = 30;
-                        // node - translate
-                        if (options.modeBrowserTest2 === 'translateAfterScrape' &&
-                                !options.modeBrowserTestTranslating) {
-                            modeNext += 1;
-                        }
+                    // node.electron - init
+                    if (process.versions.electron) {
+                        modeNext = 10;
+                    }
+                    onNext();
+                    break;
+                // node - spawn electron
+                case 2:
+                    // node - translateAfterScrape
+                    if (options.modeBrowserTest2 === 'translateAfterScrape' &&
+                            !options.modeBrowserTestTranslating) {
                         onNext();
                         return;
                     }
+                    if (options.modeBrowserTest !== 'scrape') {
+                        modeNext = Infinity;
+                    }
+                    local.childProcessSpawnWithTimeout('electron', [
+                        __filename,
+                        'cli.browserTest',
+                        options.url,
+                        '--enable-logging'
+                    ], {
+                        env: options,
+                        stdio: options.modeSilent
+                            ? 'ignore'
+                            : ['ignore', 1, 2],
+                        timeout: options.timeoutDefault
+                    })
+                        .on('error', onNext)
+                        .once('exit', onNext);
+                    break;
+                // node - translate
+                case 3:
+                    if (options.modeBrowserTest2 === 'translateAfterScrape' &&
+                            !options.modeBrowserTestTranslating) {
+                        modeNext = Infinity;
+                    }
+                    local.browserTestTranslate(options, onNext);
+                    break;
+                // node - recurse
+                case 4:
+                    local.browserTestRecurse(options, onNext);
+                    break;
+                // node.electron - init
+                case 11:
                     // init timerTimeout
                     timerTimeout = local.onTimeout(
                         onNext,
@@ -2275,7 +2310,7 @@ local.assetsDict['/favicon.ico'] = '';
                         .replace((/\b__cov_.*?\+\+/g), '0');
                     options.fileElectronHtml = options.npm_config_dir_tmp + '/electron.' +
                         Date.now().toString(16) + Math.random().toString(16) + '.html';
-                    options.modeNext = 10;
+                    options.modeNext = 20;
                     local.fsWriteFileWithMkdirpSync(options.fileElectronHtml, '<style>body {' +
                             'border: 1px solid black;' +
                             'margin: 0;' +
@@ -2296,7 +2331,7 @@ local.assetsDict['/favicon.ico'] = '';
                     console.error('\nbrowserTest - created electron entry-page ' +
                         options.fileElectronHtml + '\n');
                     // init file fileElectronHtml.preload.js
-                    options.modeNext = 20;
+                    options.modeNext = 30;
                     local.fsWriteFileWithMkdirpSync(
                         options.fileElectronHtml + '.preload.js',
                         '(' + options.browserTestScript + '(' + JSON.stringify(options) +
@@ -2309,7 +2344,7 @@ local.assetsDict['/favicon.ico'] = '';
                     local.electron.app.once('ready', onNext);
                     break;
                 // node.electron - after ready
-                case 2:
+                case 12:
                     options.BrowserWindow = local.electron.BrowserWindow;
                     local.objectSetDefault(options, {
                         frame: false,
@@ -2344,7 +2379,7 @@ local.assetsDict['/favicon.ico'] = '';
                     });
                     break;
                 // node.electron - after html
-                case 3:
+                case 13:
                     options.browserWindow.capturePage(options, function (data) {
                         local.fs.writeFileSync(options.fileScreenshot, data.toPng());
                         console.error('\nbrowserTest - created screenshot file ' +
@@ -2353,21 +2388,21 @@ local.assetsDict['/favicon.ico'] = '';
                     });
                     break;
                 // node.electron - after screenshot
-                case 4:
+                case 14:
                     console.error('browserTest - created screenshot file ' +
                         options.fileScreenshotBase + '.html');
                     onNext();
                     local.exit();
                     break;
                 // node.electron.browserWindow - init
-                case 11:
+                case 21:
                     options.fs = require('fs');
                     options.webview1 = document.querySelector('#webview1');
                     options.webview1.addEventListener('did-get-response-details', function () {
                         document.title = options.fileElectronHtml + ' opened';
                     });
                     options.webview1.addEventListener('console-message', function (event) {
-                        modeNext = 11;
+                        modeNext = 21;
                         try {
                             onNext(null, event);
                         } catch (errorCaught) {
@@ -2376,7 +2411,7 @@ local.assetsDict['/favicon.ico'] = '';
                     });
                     break;
                 // node.electron.browserWindow - handle event console-message
-                case 12:
+                case 22:
                     data.message.replace(new RegExp(
                         '^' + options.fileElectronHtml + ' (\\w+) '
                     ), function (match0, match1) {
@@ -2426,14 +2461,14 @@ local.assetsDict['/favicon.ico'] = '';
                     break;
                 // preload.js
                 // node.electron.browserWindow.webview - init event-handling
-                case 21:
+                case 31:
                     if (options.modeBrowserTest === 'test') {
                         window.fileElectronHtml = options.fileElectronHtml;
                     }
                     setTimeout(onNext, options.timeoutScreenshot);
                     break;
                 // node.electron.browserWindow.webview - emit event console-message
-                case 22:
+                case 32:
                     // init data
                     data = {};
                     try {
@@ -2503,31 +2538,6 @@ local.assetsDict['/favicon.ico'] = '';
                                 testReport: { testPlatformList: [{}] }
                             } }));
                     }
-                    break;
-                // node - spawn electron
-                case 31:
-                    local.childProcessSpawnWithTimeout('electron', [
-                        __filename,
-                        'cli.browserTest',
-                        options.url,
-                        '--enable-logging'
-                    ], {
-                        env: options,
-                        stdio: options.modeSilent
-                            ? 'ignore'
-                            : ['ignore', 1, 2],
-                        timeout: options.timeoutDefault
-                    })
-                        .on('error', onNext)
-                        .once('exit', onNext);
-                    break;
-                // node - translate
-                case 32:
-                    if (options.modeBrowserTest === 'scrape') {
-                        local.browserTestTranslate(options, onNext);
-                        return;
-                    }
-                    onNext();
                     break;
                 default:
                     if (isDone) {
@@ -2671,14 +2681,23 @@ local.assetsDict['/favicon.ico'] = '';
             options.fileScreenshot = options.fileScreenshotBase + '.png';
         };
 
+        local.browserTestRecurse = function (options, onError) {
+        /*
+         * this function will recursively scrape url-links from the webpage options.url
+         */
+            options.modeBrowserTestRecurseDepth = local.normalizeValue(
+                'number',
+                options.modeBrowserTestRecurseDepth
+            );
+            onError(null, options);
+        };
+
         local.browserTestTranslate = function (options, onError) {
         /*
          * https://translate.googleapis.com/translate_a/l?client=te
-         * this function will spawn an electron process to test options.url
+         * this function will google-translate options.url
+         * to the languages given in options.modeBrowserTranslate
          */
-            // init options
-            options.modeBrowserTest = 'translateAfterScrape';
-            local.browserTestInit(options);
             local.onParallelList({
                 list: (!options.modeBrowserTestTranslating && options.modeBrowserTestTranslate
                     .split(/[\s,]+/)
@@ -3420,7 +3439,7 @@ return Utf8ArrayToStr(bff);
             options = local.objectSetDefault(options, {
                 customOrg: local.env.GITHUB_ORG,
                 query: { buildStartedAt: { $not: { $gt: new Date(Date.now() - (
-                    Number(options && options.olderThanLast) || 0
+                    local.normalizeValue('number', options && options.olderThanLast)
                 )).toISOString() } } }
             }, 2);
             console.error('dbTableCustomOrgCrudGetManyByQuery - ' + JSON.stringify(options));
@@ -3683,7 +3702,7 @@ return Utf8ArrayToStr(bff);
                 console.error(new Date().toISOString() + ' http-response ' + JSON.stringify({
                     method: options.method,
                     url: options.url,
-                    statusCode: (response && response.statusCode) || 0
+                    statusCode: local.normalizeValue('number', response && response.statusCode)
                 }));
                 onError(error, response);
             };
@@ -4333,31 +4352,32 @@ return Utf8ArrayToStr(bff);
             return result || '';
         };
 
-        local.normalizeDict = function (dict) {
+        local.normalizeValue = function (type, value, valueDefault) {
         /*
-         * this function will normalize the dict
+         * this function will normalize the value by type
          */
-            return dict && typeof dict === 'object' && !Array.isArray(dict)
-                ? dict
-                : {};
-        };
-
-        local.normalizeList = function (list) {
-        /*
-         * this function will normalize the list
-         */
-            return Array.isArray(list)
-                ? list
-                : [];
-        };
-
-        local.normalizeText = function (text) {
-        /*
-         * this function will normalize the text
-         */
-            return typeof text === 'string'
-                ? text
-                : '';
+            switch (type) {
+            case 'dict':
+                return value && typeof value === 'object' && !Array.isArray(value)
+                    ? value
+                    : valueDefault || {};
+            case 'function':
+                return typeof value === 'function'
+                    ? value
+                    : valueDefault || function () {
+                        return;
+                    };
+            case 'list':
+                return Array.isArray(value)
+                    ? value
+                    : valueDefault || [];
+            case 'number':
+                return Number(value) || valueDefault || 0;
+            case 'string':
+                return typeof value === 'string'
+                    ? value
+                    : valueDefault || '';
+            }
         };
 
         local.objectGetElementFirst = function (arg) {
@@ -6381,7 +6401,7 @@ instruction\n\
     (function () {
         local.ajaxProgressCounter = 0;
         local.ajaxProgressState = 0;
-        local.apidocCreate = local.apidoc.apidocCreate || local.normalizeText;
+        local.apidocCreate = local.apidoc.apidocCreate;
         local.cacheDict = {};
         local.contentTypeDict = {
             // application

@@ -179,22 +179,32 @@
             return;
         };
 
-        local.normalizeDict = function (dict) {
+        local.normalizeValue = function (type, value, valueDefault) {
         /*
-         * this function will normalize the dict
+         * this function will normalize the value by type
          */
-            return dict && typeof dict === 'object' && !Array.isArray(dict)
-                ? dict
-                : {};
-        };
-
-        local.normalizeList = function (list) {
-        /*
-         * this function will normalize the list
-         */
-            return Array.isArray(list)
-                ? list
-                : [];
+            switch (type) {
+            case 'dict':
+                return value && typeof value === 'object' && !Array.isArray(value)
+                    ? value
+                    : valueDefault || {};
+            case 'function':
+                return typeof value === 'function'
+                    ? value
+                    : valueDefault || function () {
+                        return;
+                    };
+            case 'list':
+                return Array.isArray(value)
+                    ? value
+                    : valueDefault || [];
+            case 'number':
+                return Number(value) || valueDefault || 0;
+            case 'string':
+                return typeof value === 'string'
+                    ? value
+                    : valueDefault || '';
+            }
         };
 
         local.objectSetOverride = function (arg, overrides, depth, env) {
@@ -617,7 +627,7 @@
         /*
          * this function will create a dbTable
          */
-            options = local.normalizeDict(options);
+            options = local.normalizeValue('dict', options);
             this.name = String(options.name);
             // register dbTable in dbTableDict
             local.dbTableDict[this.name] = this;
@@ -676,7 +686,7 @@
                 result = local.dbRowListGetManyByQuery(this.dbRowList, query);
             }
             // sort
-            local.normalizeList(sort).forEach(function (element) {
+            local.normalizeValue('list', sort).forEach(function (element) {
                 // bug-workaround - v8 does not have stable-sort
                 // optimization - for-loop
                 for (ii = 0; ii < result.length; ii += 1) {
@@ -716,7 +726,7 @@
          * this function will get the dbRow in the dbTable with the given idDict
          */
             var id, result;
-            idDict = local.normalizeDict(idDict);
+            idDict = local.normalizeValue('dict', idDict);
             result = null;
             this.idIndexList.some(function (idIndex) {
                 id = idDict[idIndex.name];
@@ -824,7 +834,7 @@
          * will be removed
          */
             var id, result;
-            dbRow = local.jsonCopy(local.normalizeDict(dbRow));
+            dbRow = local.jsonCopy(local.normalizeValue('dict', dbRow));
             result = null;
             this.idIndexList.some(function (idIndex) {
                 id = dbRow[idIndex.name];
@@ -873,7 +883,7 @@
             this._cleanup();
             self = this;
             return local.setTimeoutOnError(onError, null, local.dbRowProject(
-                local.normalizeList(idDictList).map(function (idDict) {
+                local.normalizeValue('list', idDictList).map(function (idDict) {
                     return self._crudGetOneById(idDict);
                 })
             ));
@@ -884,7 +894,7 @@
          * this function will get the dbRow's in the dbTable with the given options.query
          */
             this._cleanup();
-            options = local.normalizeDict(options);
+            options = local.normalizeValue('dict', options);
             return local.setTimeoutOnError(onError, null, local.dbRowProject(
                 this._crudGetManyByQuery(
                     options.query,
@@ -956,7 +966,7 @@
             var self;
             self = this;
             return local.setTimeoutOnError(onError, null, local.dbRowProject(
-                local.normalizeList(idDictList).map(function (dbRow) {
+                local.normalizeValue('list', idDictList).map(function (dbRow) {
                     return self._crudRemoveOneById(dbRow);
                 })
             ));
@@ -991,7 +1001,7 @@
             var self;
             self = this;
             return local.setTimeoutOnError(onError, null, local.dbRowProject(
-                local.normalizeList(dbRowList).map(function (dbRow) {
+                local.normalizeValue('list', dbRowList).map(function (dbRow) {
                     return self._crudSetOneById(dbRow);
                 })
             ));
@@ -1014,7 +1024,7 @@
             var self;
             self = this;
             return local.setTimeoutOnError(onError, null, local.dbRowProject(
-                local.normalizeList(dbRowList).map(function (dbRow) {
+                local.normalizeValue('list', dbRowList).map(function (dbRow) {
                     return self._crudUpdateOneById(dbRow);
                 })
             ));
@@ -1026,7 +1036,7 @@
          */
             var result, self, tmp;
             self = this;
-            tmp = local.jsonCopy(local.normalizeDict(dbRow));
+            tmp = local.jsonCopy(local.normalizeValue('dict', dbRow));
             result = self._crudGetManyByQuery(query).map(function (dbRow) {
                 tmp._id = dbRow._id;
                 return self._crudUpdateOneById(tmp);
@@ -1087,7 +1097,7 @@
          * this function will create an idIndex with the given options.name
          */
             var dbRow, idIndex, ii, name;
-            options = local.normalizeDict(options);
+            options = local.normalizeValue('dict', options);
             name = String(options.name);
             // disallow idIndex with dot-name
             if (name.indexOf('.') >= 0 || name === '_id') {
@@ -1120,7 +1130,7 @@
          * this function will remove the idIndex with the given options.name
          */
             var name;
-            options = local.normalizeDict(options);
+            options = local.normalizeValue('dict', options);
             name = String(options.name);
             this.idIndexList = this.idIndexList.filter(function (idIndex) {
                 return idIndex.name !== name || idIndex.name === '_id';
@@ -1254,7 +1264,7 @@
                 onParallel.counter += 1;
                 onParallel.counter += 1;
                 onParallel(error);
-                local.normalizeList(data)
+                local.normalizeValue('list', data)
                     .filter(function (key) {
                         return key.indexOf('dbTable.') === 0;
                     })
@@ -1520,7 +1530,7 @@
                 local.setTimeoutOnError(onError, error, result);
             });
             onParallel.counter += 1;
-            result = local.normalizeList(optionsList).map(function (options) {
+            result = local.normalizeValue('list', optionsList).map(function (options) {
                 onParallel.counter += 1;
                 return local.dbTableCreateOne(options, onParallel);
             });
@@ -1532,7 +1542,7 @@
          * this function will create a dbTable with the given options
          */
             var self;
-            options = local.normalizeDict(options);
+            options = local.normalizeValue('dict', options);
             // register dbTable
             self = local.dbTableDict[options.name] =
                 local.dbTableDict[options.name] || new local._DbTable(options);
@@ -1540,11 +1550,11 @@
                 self.sortDefault ||
                 [{ fieldName: '_timeUpdated', isDescending: true }];
             // remove idIndex
-            local.normalizeList(options.idIndexRemoveList).forEach(function (index) {
+            local.normalizeValue('list', options.idIndexRemoveList).forEach(function (index) {
                 self.idIndexRemove(index);
             });
             // create idIndex
-            local.normalizeList(options.idIndexCreateList).forEach(function (index) {
+            local.normalizeValue('list', options.idIndexCreateList).forEach(function (index) {
                 self.idIndexCreate(index);
             });
             // upsert dbRow

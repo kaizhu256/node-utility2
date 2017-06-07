@@ -1562,7 +1562,7 @@ local.templateUiResponseAjax = '\
          */
             var tmp;
             // init options
-            options = local.normalizeDict(options);
+            options = local.normalizeValue('dict', options);
             // init apiDict
             local.apiDict = local.apiDict || {};
             // init swaggerJson
@@ -1677,7 +1677,7 @@ local.templateUiResponseAjax = '\
             // save tags
             tmp = {};
             [local.swaggerJson.tags, options.tags].forEach(function (tagList) {
-                local.normalizeList(tagList).forEach(function (tag) {
+                local.normalizeValue('list', tagList).forEach(function (tag) {
                     local.objectSetOverride(tmp, local.objectLiteralize({
                         '$[]': [tag.name, tag]
                     }));
@@ -2791,7 +2791,7 @@ local.templateUiResponseAjax = '\
             }
             schema = local.jsonCopy(schema);
             if (schema.type === 'object') {
-                schema.properties = local.normalizeDict(schema.properties);
+                schema.properties = local.normalizeValue('dict', schema.properties);
             }
             return schema;
         };
