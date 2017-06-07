@@ -595,9 +595,27 @@
             onError();
         };
 
-        local.testCase_exit_default = function (options, onError) {
+        local.testCase_envSanitize_default = function (options, onError) {
         /*
-         * this function will exit's default handling-behavior
+         * this function will envSanitize's default handling-behavior
+         */
+            // test invalid envSanitize-code handling-behavior
+            options = local.envSanitize({
+                aa: '',
+                aaPassword: '',
+                aa_password: '',
+                aapassword: '',
+                bb: null,
+                passport: '',
+                password: ''
+            });
+            local.assertJsonEqual(options, { aa: '', aapassword: '' });
+            onError();
+        };
+
+        local.testCase_exit_error = function (options, onError) {
+        /*
+         * this function will exit's error handling-behavior
          */
             // test invalid exit-code handling-behavior
             local.exit('invalid exit-code', options);
@@ -1530,14 +1548,14 @@
             local.testMock(options, function (onError) {
                 // test default handling-behavior
                 local.assertJsonEqual(local.urlParse(
-                    'https://127.0.0.1:80/foo?aa=1&bb%20cc=dd%20=ee&aa=2&aa#zz=1'
+                    'https://127.0.0.1:80/foo/bar?aa=1&bb%20cc=dd%20=ee&aa=2&aa#zz=1'
                 ), {
                     hash: '#zz=1',
                     host: '127.0.0.1:80',
                     hostname: '127.0.0.1',
-                    href: 'https://127.0.0.1:80/foo?aa=1&bb%20cc=dd%20=ee&aa=2&aa#zz=1',
-                    path: '/foo?aa=1&bb%20cc=dd%20=ee&aa=2&aa',
-                    pathname: '/foo',
+                    href: 'https://127.0.0.1:80/foo/bar?aa=1&bb%20cc=dd%20=ee&aa=2&aa#zz=1',
+                    path: '/foo/bar?aa=1&bb%20cc=dd%20=ee&aa=2&aa',
+                    pathname: '/foo/bar',
                     port: '80',
                     protocol: 'https:',
                     query: { aa: ['1', '2', ''], 'bb cc': 'dd =ee' },
@@ -1870,6 +1888,45 @@
             local.buildReadme(options, onError);
         };
 
+        local.testCase_childProcessSpawnWithTimeout_default = function (options, onError) {
+        /*
+         * this function will test childProcessSpawnWithTimeout's default handling-behavior
+         */
+            var onParallel;
+            options = {};
+            onParallel = local.onParallel(onError);
+            onParallel.counter += 1;
+            // test default handling-behavior
+            onParallel.counter += 1;
+            local.childProcessSpawnWithTimeout('ls')
+                .on('error', onParallel)
+                .on('exit', function (exitCode, signal) {
+                    // validate exitCode
+                    local.assertJsonEqual(exitCode, 0);
+                    // validate signal
+                    local.assertJsonEqual(signal, null);
+                    onParallel();
+                });
+            // test timeout handling-behavior
+            onParallel.counter += 1;
+            local.testMock([
+                [local, { timeoutDefault: 1000 }]
+            ], function (onError) {
+                options.childProcess = local.childProcessSpawnWithTimeout('sleep', [5000]);
+                onError();
+            }, local.onErrorThrow);
+            options.childProcess
+                .on('error', onParallel)
+                .on('exit', function (exitCode, signal) {
+                    // validate exitCode
+                    local.assertJsonEqual(exitCode, null);
+                    // validate signal
+                    local.assertJsonEqual(signal, 'SIGKILL');
+                    onParallel();
+                });
+            onParallel();
+        };
+
         local.testCase_fsWriteFileWithMkdirpSync_default = function (options, onError) {
         /*
          * this function will test fsWriteFileWithMkdirpSync's default handling-behavior
@@ -2046,45 +2103,6 @@
                 }, 1500);
                 onParallel(error);
             });
-        };
-
-        local.testCase_processSpawnWithTimeout_default = function (options, onError) {
-        /*
-         * this function will test processSpawnWithTimeout's default handling-behavior
-         */
-            var onParallel;
-            options = {};
-            onParallel = local.onParallel(onError);
-            onParallel.counter += 1;
-            // test default handling-behavior
-            onParallel.counter += 1;
-            local.processSpawnWithTimeout('ls')
-                .on('error', onParallel)
-                .on('exit', function (exitCode, signal) {
-                    // validate exitCode
-                    local.assertJsonEqual(exitCode, 0);
-                    // validate signal
-                    local.assertJsonEqual(signal, null);
-                    onParallel();
-                });
-            // test timeout handling-behavior
-            onParallel.counter += 1;
-            local.testMock([
-                [local, { timeoutDefault: 1000 }]
-            ], function (onError) {
-                options.childProcess = local.processSpawnWithTimeout('sleep', [5000]);
-                onError();
-            }, local.onErrorThrow);
-            options.childProcess
-                .on('error', onParallel)
-                .on('exit', function (exitCode, signal) {
-                    // validate exitCode
-                    local.assertJsonEqual(exitCode, null);
-                    // validate signal
-                    local.assertJsonEqual(signal, 'SIGKILL');
-                    onParallel();
-                });
-            onParallel();
         };
 
         local.testCase_replStart_default = function (options, onError) {
@@ -2437,6 +2455,24 @@
             process.argv[1] = local.path.resolve(process.cwd(), process.argv[1]);
             local.Module.runMain();
         }
+
+        local.testCase_browserTestTranslate_default = function (options, onError) {
+        /*
+         * this function will test browserTestTranslate's default handling-behavior-behavior
+         */
+            options = {
+                modeBrowserTest: 'scrape',
+                timeoutScreenshot: 5000,
+                url: local.serverLocalHost + '/assets.hello'
+            };
+            local.browserTest(options, function (error) {
+                // validate no error occurred
+                local.assert(!error, error);
+                options.modeBrowserTestTranslate = 'ru,zh-CN';
+                options.url = options.fileScreenshotBase;
+                local.browserTestTranslate(options, onError);
+            });
+        };
 
         local.testCase_buildApidoc_default = local.testCase_buildApidoc_default || function (
             options,

@@ -54,6 +54,7 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 [![apidoc](https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/apidoc.html)
 
 #### todo
+- npm publish 2017.5.31
 - fix slow swgg load-time
 - add shell command buildCiCreate
 - allow server-side stdout to be streamed to webapps
@@ -62,15 +63,10 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 - analytics
 - none
 
-#### changelog for v2017.5.30
-- npm publish 2017.5.30
-- fix 'use strict' bug in firefox and safari
-- auto-mock browserTest if webapp is missing window.utility2
-- cleanup customOrg templates
-- customize assets.index.template.html with file-override
-- fix missing test-report for deployed app to github and heroku
-- github-deployed demos should auto-default to heroku forward-proxy
-- move functions uiAnimateSlideXxx from file lib.swgg.js to file lib.utility2.js
+#### changelog for v2017.5.31
+- add google-translate ability to function browserTest
+- add env-vars modeBrowserTest=translateAfterScrape and modeBrowserTestTranslate
+- add function browserTestTranslate
 - none
 
 #### this package requires
@@ -748,7 +744,7 @@ utility2-comment -->\n\
         "start": "set -e; export PORT=${PORT:-8080}; if [ -f assets.app.js ]; then node assets.app.js; else npm_config_mode_auto_restart=1 ./lib.utility2.sh shRun shIstanbulCover test.js; fi",
         "test": "PORT=$(./lib.utility2.sh shServerPortRandom) PORT_REPL=$(./lib.utility2.sh shServerPortRandom) npm_config_mode_auto_restart=1 ./lib.utility2.sh test test.js"
     },
-    "version": "2017.5.30"
+    "version": "2017.5.31"
 }
 ```
 
@@ -871,6 +867,8 @@ RUN (set -e; \
 
 shBuildCiAfter() {(set -e
     #// coverage-hack
+    # screenshot
+    rm -f tmp/build/screenshot.npmTest.browser.http*
     shDeployGithub
     shDeployHeroku
     shReadmeTest example.sh
@@ -916,7 +914,7 @@ shBuildCiBefore() {(set -e
     shNpmTestPublished
     shReadmeTest example.js
     # screenshot
-    MODE_BUILD=testExampleJs shBrowserTestList "
+    MODE_BUILD=testExampleJs shBrowserTest "
 /tmp/app/tmp/build/coverage.html/app/example.js.html
 tmp/build/test-report.html
 " screenshot

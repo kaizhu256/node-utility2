@@ -68,24 +68,7 @@ shBaseInstall() {
 }
 
 shBrowserTest() {(set -e
-# this function will spawn an electron process to test the given $URL,
-# and merge the test-report into the existing test-report
-    export url="$1"
-    export modeBrowserTest="$2"
-    shBuildInit
-    export MODE_BUILD="${MODE_BUILD:-browserTest}"
-    shBuildPrint "electron.${modeBrowserTest} - $url"
-    # run browser-test
-    lib.utility2.js cli.browserTest
-    if [ "$modeBrowserTest" = test ]
-    then
-        # create test-report artifacts
-        lib.utility2.js cli.testReportCreate
-    fi
-)}
-
-shBrowserTestList() {(set -e
-# this function will spawn an electron process to test the given $URL,
+# this function will spawn an electron process to test the given url $LIST,
 # and merge the test-report into the existing test-report
     LIST="$1"
     export modeBrowserTest="$2"
@@ -93,7 +76,7 @@ shBrowserTestList() {(set -e
     export MODE_BUILD="${MODE_BUILD:-browserTest}"
     shBuildPrint "electron.${modeBrowserTest} - $LIST"
     # run browser-test
-    lib.utility2.js cli.browserTestList "$LIST"
+    lib.utility2.js cli.browserTest "$LIST"
     if [ "$modeBrowserTest" = test ]
     then
         # create test-report artifacts
@@ -418,7 +401,7 @@ shBuildCiInternal() {(set -e
             LIST="$LIST $npm_config_dir_build/$FILE"
         fi
     done
-    MODE_BUILD=buildCi shBrowserTestList "$LIST" screenshot
+    MODE_BUILD=buildCi shBrowserTest "$LIST" screenshot
     if [ "$npm_package_buildCustomOrg" ]
     then
         case "$GITHUB_ORG" in
@@ -1075,7 +1058,7 @@ shDeployGithub() {(set -e
         return 1
     fi
     # screenshot deployed app
-    shBrowserTestList "$TEST_URL $TEST_URL/assets.swgg.html" screenshot &
+    shBrowserTest "$TEST_URL $TEST_URL/assets.swgg.html" screenshot &
     # test deployed app
     MODE_BUILD="${MODE_BUILD}Test" shBrowserTest "$TEST_URL?modeTest=1&timeExit={{timeExit}}" \
         test
@@ -1108,7 +1091,7 @@ shDeployHeroku() {(set -e
         return 1
     fi
     # screenshot deployed app
-    shBrowserTestList "$TEST_URL $TEST_URL/assets.swgg.html" screenshot &
+    shBrowserTest "$TEST_URL $TEST_URL/assets.swgg.html" screenshot &
     # test deployed app
     MODE_BUILD="${MODE_BUILD}Test" shBrowserTest "$TEST_URL?modeTest=1&timeExit={{timeExit}}" \
         test
@@ -2680,7 +2663,7 @@ shReadmeTest() {(set -e
         sed '/./,$!d' "$FILE"
     fi
     export PORT=8081
-    export npm_config_timeout_exit=30000
+    export npm_config_timeout_exit="${npm_config_timeout_exit:-30000}"
     # screenshot
     (
     shSleep 15
@@ -2699,7 +2682,8 @@ shReadmeTest() {(set -e
         /bin/sh "$FILE"
         ;;
     esac
-    (eval shKillallElectron 2>/dev/null) || true
+    shSleep 15
+    ! shKillallElectron 2>/dev/null
 )}
 
 shReplClient() {(set -e
@@ -2843,7 +2827,7 @@ local.result = '<svg height=\"' + (local.yy + 20) +
 local.fs.writeFileSync('$npm_config_dir_build/$MODE_BUILD_SCREENSHOT_IMG', local.result);
 // </script>
     "
-    shBuildPrint "created file://$npm_config_dir_build/$MODE_BUILD_SCREENSHOT_IMG"
+    shBuildPrint "created screenshot file $npm_config_dir_build/$MODE_BUILD_SCREENSHOT_IMG"
     return "$EXIT_CODE"
 )}
 

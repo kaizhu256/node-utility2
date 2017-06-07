@@ -1819,6 +1819,14 @@ local.assetsDict['/favicon.ico'] = '';
         local.ajax = function (options, onError) {
         /*
          * this function will send an ajax-request with error-handling and timeout
+         * example usage:
+            local.ajax({
+                method: 'GET',
+                url: '/index.html'
+            }, function (error, xhr) {
+                console.log(xhr.responseText);
+                console.log(xhr.statusCode);
+            });
          */
             var tmp, xhr;
             // init standalone handling-behavior
@@ -2226,63 +2234,48 @@ local.assetsDict['/favicon.ico'] = '';
         /*
          * this function will spawn an electron process to test options.url
          */
-            var isDone, modeNext, onNext, onParallel, timerTimeout;
-            if (typeof local === 'object' && local && local.modeJs === 'node') {
-                local.objectSetDefault(options, local.envSanitize(local.env));
-                options.timeoutDefault = options.timeoutDefault || local.timeoutDefault;
-            }
+            var isDone, modeNext, onNext, onParallel, timerTimeout, tmp;
             modeNext = Number(options.modeNext || 0);
+            onError = onError || function (error) {
+                if (error) {
+                    console.error(error);
+                }
+            };
             onNext = function (error, data) {
                 modeNext = error instanceof Error
                     ? Infinity
                     : modeNext + 1;
                 switch (modeNext) {
-                // node - init
+                // node.electron - init
                 case 1:
                     // init options
-                    if (!(/^\w+:\/\//).test(options.url)) {
-                        options.url = local.path.resolve(process.cwd(), options.url);
+                    local.browserTestInit(options);
+                    if (!process.versions.electron) {
+                        // node - spawn electron
+                        modeNext = 30;
+                        // node - translate
+                        if (options.modeBrowserTest2 === 'translateAfterScrape' &&
+                                !options.modeBrowserTestTranslating) {
+                            modeNext += 1;
+                        }
+                        onNext();
+                        return;
                     }
-                    options.urlParsed = local.urlParse(options.url);
-                    options.testName = options.urlParsed.pathname;
-                    if (options.testName.indexOf(process.cwd()) === 0) {
-                        options.testName = options.testName.replace(process.cwd(), '');
-                    }
-                    if (local.env.npm_config_modeBrowserTestHostInclude) {
-                        options.testName = options.urlParsed.host + options.testName;
-                    }
-                    options.testName = local.env.MODE_BUILD + '.browser.' +
-                        encodeURIComponent(options.testName
-                            .replace(
-                                '/build..' + local.env.CI_BRANCH + '..' + local.env.CI_HOST,
-                                '/build'
-                            ));
-                    local.objectSetDefault(options, {
-                        fileCoverage: local.env.npm_config_dir_tmp +
-                            '/coverage.' + options.testName + '.json',
-                        fileScreenshot: (local.env.npm_config_dir_build +
-                            '/screenshot.' + options.testName + '.png'),
-                        fileTestReport: local.env.npm_config_dir_tmp +
-                            '/test-report.' + options.testName + '.json',
-                        modeBrowserTest: 'test',
-                        timeExit: Date.now() + options.timeoutDefault,
-                        timeoutScreenshot: Number(options.timeoutScreenshot || 10000)
-                    }, 1);
                     // init timerTimeout
                     timerTimeout = local.onTimeout(
                         onNext,
                         options.timeoutDefault,
                         options.testName
-                    );
+                    ).unref();
                     // init file fileElectronHtml
                     options.browserTestScript = local.browserTest
                         .toString()
                         .replace((/<\//g), '<\\/')
                         // coverage-hack - un-instrument
                         .replace((/\b__cov_.*?\+\+/g), '0');
-                    options.modeNext = 20;
-                    options.fileElectronHtml = local.env.npm_config_dir_tmp + '/electron.' +
+                    options.fileElectronHtml = options.npm_config_dir_tmp + '/electron.' +
                         Date.now().toString(16) + Math.random().toString(16) + '.html';
+                    options.modeNext = 10;
                     local.fsWriteFileWithMkdirpSync(options.fileElectronHtml, '<style>body {' +
                             'border: 1px solid black;' +
                             'margin: 0;' +
@@ -2303,78 +2296,12 @@ local.assetsDict['/favicon.ico'] = '';
                     console.error('\nbrowserTest - created electron entry-page ' +
                         options.fileElectronHtml + '\n');
                     // init file fileElectronHtml.preload.js
-                    options.modeNext = 30;
+                    options.modeNext = 20;
                     local.fsWriteFileWithMkdirpSync(
                         options.fileElectronHtml + '.preload.js',
                         '(' + options.browserTestScript + '(' + JSON.stringify(options) +
                             '))'
                     );
-                    // spawn an electron process to test a url
-                    options.modeNext = 10;
-                    local.processSpawnWithTimeout('electron', [
-                        __filename,
-                        'cli.browserTest',
-                        '--enable-logging'
-                    ], {
-                        env: options,
-                        stdio: options.modeSilent
-                            ? 'ignore'
-                            : ['ignore', 1, 2]
-                    }).once('exit', onNext);
-                    break;
-                // node - after electron
-                case 2:
-                    // cleanup fileElectronHtml
-                    try {
-                        local.fs.unlinkSync(options.fileElectronHtml);
-                        local.fs.unlinkSync(options.fileElectronHtml + '.preload.js');
-                    } catch (ignore) {
-                    }
-                    console.error('\nbrowserTest - exit-code ' + error + ' - ' + options.url +
-                        '\n');
-                    // merge browser coverage
-                    if (options.modeCoverageMerge) {
-                        // try to JSON.parse the string
-                        local.tryCatchOnError(function () {
-                            data = JSON.parse(
-                                local.fs.readFileSync(options.fileCoverage, 'utf8')
-                            );
-                        }, local.nop);
-                        if (!local._debugTryCatchErrorCaught) {
-                            local.istanbulCoverageMerge(local.global.__coverage__, data);
-                            console.error('\nbrowserTest - merged coverage from ' +
-                                options.fileCoverage + '\n');
-                        }
-                    }
-                    if (options.modeBrowserTest !== 'test') {
-                        modeNext = Infinity;
-                        onNext();
-                        return;
-                    }
-                    // try to merge browser test-report
-                    local.tryCatchOnError(function () {
-                        data = JSON.parse(
-                            local.fs.readFileSync(options.fileTestReport, 'utf8')
-                        );
-                    }, local.nop);
-                    if (local._debugTryCatchErrorCaught) {
-                        onNext(local._debugTryCatchErrorCaught);
-                        return;
-                    }
-                    if (!options.modeTestIgnore) {
-                        local.testReportMerge(local.testReport, data);
-                        console.error('\nbrowserTest - merged test-report from file://' +
-                            options.fileTestReport + '\n');
-                    }
-                    // create test-report.json
-                    local.fs.writeFileSync(
-                        local.env.npm_config_dir_build + '/test-report.json',
-                        JSON.stringify(local.testReport)
-                    );
-                    onNext(data && data.testsFailed && new Error(data.testsFailed));
-                    break;
-                // node.electron - init
-                case 11:
                     local.electron = require('electron');
                     // handle uncaughtexception
                     process.once('uncaughtException', onNext);
@@ -2382,7 +2309,7 @@ local.assetsDict['/favicon.ico'] = '';
                     local.electron.app.once('ready', onNext);
                     break;
                 // node.electron - after ready
-                case 12:
+                case 2:
                     options.BrowserWindow = local.electron.BrowserWindow;
                     local.objectSetDefault(options, {
                         frame: false,
@@ -2394,47 +2321,53 @@ local.assetsDict['/favicon.ico'] = '';
                     // init browserWindow
                     options.browserWindow = new options.BrowserWindow(options);
                     onParallel = local.onParallel(onNext);
+                    // onParallel - html
                     onParallel.counter += 1;
+                    // onParallel - test
+                    if (options.modeBrowserTest === 'test') {
+                        onParallel.counter += 1;
+                    }
                     options.browserWindow.on('page-title-updated', function (event, title) {
-                        if ((!event || title).indexOf(options.fileElectronHtml) === 0) {
+                        if ((event && title).indexOf(options.fileElectronHtml) === 0) {
+                            if (title.split(' ').slice(-1)[0] === 'opened') {
+                                console.error('\nbrowserTest - opened ' + options.url + '\n');
+                                return;
+                            }
                             onParallel();
                         }
                     });
                     // load url in browserWindow
-                    options.browserWindow.loadURL('file://' + options.fileElectronHtml);
+                    options.browserWindow.loadURL('file://' + options.fileElectronHtml, {
+                        userAgent: options.modeBrowserTest === 'scrape' &&
+                            'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 ' +
+                            '(KHTML, like Gecko) Chrome/53.0.2785.143 Safari/537.36'
+                    });
                     break;
-                // node.electron - after url-open
-                case 13:
-                    console.error('\nbrowserTest - opened url ' + options.url + '\n');
-                    onParallel.counter += 1;
-                    if (options.modeBrowserTest === 'test') {
-                        onParallel.counter += 1;
-                    }
-                    onParallel.counter += 1;
-                    setTimeout(function () {
-                        options.browserWindow.capturePage(options, function (data) {
-                            local.fs.writeFileSync(options.fileScreenshot, data.toPng());
-                            console.error('\nbrowserTest - created screenshot file://' +
-                                options.fileScreenshot + '\n');
-                            onParallel();
-                        });
-                    }, options.timeoutScreenshot);
+                // node.electron - after html
+                case 3:
+                    options.browserWindow.capturePage(options, function (data) {
+                        local.fs.writeFileSync(options.fileScreenshot, data.toPng());
+                        console.error('\nbrowserTest - created screenshot file ' +
+                            options.fileScreenshot + '\n');
+                        onNext();
+                    });
                     break;
-                // node.electron - after test
-                case 14:
-                    console.error('browserTest - created screenshot file://' +
-                        options.fileScreenshot.replace((/\.\w+$/), '.html'));
+                // node.electron - after screenshot
+                case 4:
+                    console.error('browserTest - created screenshot file ' +
+                        options.fileScreenshotBase + '.html');
                     onNext();
+                    local.exit();
                     break;
                 // node.electron.browserWindow - init
-                case 21:
+                case 11:
                     options.fs = require('fs');
                     options.webview1 = document.querySelector('#webview1');
                     options.webview1.addEventListener('did-get-response-details', function () {
-                        document.title = options.fileElectronHtml + ' url opened';
+                        document.title = options.fileElectronHtml + ' opened';
                     });
                     options.webview1.addEventListener('console-message', function (event) {
-                        modeNext = 21;
+                        modeNext = 11;
                         try {
                             onNext(null, event);
                         } catch (errorCaught) {
@@ -2443,23 +2376,20 @@ local.assetsDict['/favicon.ico'] = '';
                     });
                     break;
                 // node.electron.browserWindow - handle event console-message
-                case 22:
-                    data.tmp = data.message
-                        .slice(0, 1024)
-                        .split(options.fileElectronHtml + ' ')
-                        .slice(0, 2);
-                    if (data.tmp.length >= 2) {
-                        data.tmp[1] = data.tmp[1].split(' ')[0];
-                        data.tmp[2] = data.message
-                            .slice(data.tmp.join(options.fileElectronHtml + ' ').length + 1);
-                    }
-                    switch (data.tmp[1]) {
+                case 12:
+                    data.message.replace(new RegExp(
+                        '^' + options.fileElectronHtml + ' (\\w+) '
+                    ), function (match0, match1) {
+                        data.type2 = match1;
+                        data.data = data.message.slice(match0.length);
+                    });
+                    switch (data.type2) {
                     case 'global_test_results':
                         if (options.modeBrowserTest !== 'test') {
                             return;
                         }
                         options.global_test_results =
-                            JSON.parse(data.tmp[2]).global_test_results;
+                            JSON.parse(data.data).global_test_results;
                         if (options.global_test_results.testReport) {
                             // merge screenshot into test-report
                             options.global_test_results.testReport.testPlatformList[0]
@@ -2484,47 +2414,315 @@ local.assetsDict['/favicon.ico'] = '';
                         }
                         break;
                     case 'html':
-                        options.fs.writeFileSync(
-                            options.fileScreenshot.replace((/\.\w+$/), '.html'),
-                            data.tmp[2]
-                        );
+                        data = data.data;
+                        options.fs.writeFileSync(options.fileScreenshotBase + '.html', data);
                         setTimeout(function () {
-                            document.title = options.fileElectronHtml +
-                                ' html written';
+                            document.title = options.fileElectronHtml + ' html written';
                         });
                         break;
                     default:
                         console.error(data.message);
                     }
                     break;
-                // node.electron.browserWindow.webview - run preload.js
+                // preload.js
+                // node.electron.browserWindow.webview - init event-handling
+                case 21:
+                    if (options.modeBrowserTest === 'test') {
+                        window.fileElectronHtml = options.fileElectronHtml;
+                    }
+                    setTimeout(onNext, options.timeoutScreenshot);
+                    break;
+                // node.electron.browserWindow.webview - emit event console-message
+                case 22:
+                    // init data
+                    data = {};
+                    try {
+                        data.hrefDict = {};
+                        // disable <script> tag
+                        Array.from(
+                            document.querySelectorAll('script')
+                        ).forEach(function (element) {
+                            element.outerHTML = '<script></script>';
+                        });
+                        // absolute href and src attribute
+                        Array.from(
+                            document.querySelectorAll('[href],[src]')
+                        ).forEach(function (element) {
+                            ['href', 'src'].forEach(function (key) {
+                                tmp = element[key];
+                                if ((/^http:|^https:/).test(tmp)) {
+                                    element[key] = tmp;
+                                    if (key === 'href') {
+                                        tmp = tmp.split(/[?#]/)[0];
+                                        data.hrefDict[tmp] = (data.hrefDict[tmp] ||
+                                            element.textContent || '')
+                                            .trim()
+                                            .replace((/^["']+|["']+$/), '');
+                                    }
+                                    return;
+                                }
+                                if ((/^javascript/).test(tmp)) {
+                                    element[key] = '#';
+                                }
+                            });
+                        });
+                        // deduplicate '/'
+                        Object.keys(data.hrefDict).forEach(function (key) {
+                            if (data.hrefDict.hasOwnProperty(key + '/')) {
+                                delete data.hrefDict[key];
+                            }
+                        });
+                        data.href = location.href;
+                        data.url = location.href.split(/[?#]/)[0];
+                        document.documentElement.dataset.data = JSON.stringify(data);
+                        data = '';
+                        tmp = document.body.textContent;
+                        Array.from(
+                            document.querySelectorAll('style')
+                        ).forEach(function (element) {
+                            tmp = tmp.replace(element.textContent, '');
+                        });
+                        (tmp.trim() + '\n\n').replace((/\S[\S\s]*?\n\n/g), function (match0) {
+                            match0 = match0.trim() + '\n\n';
+                            if (match0.length >= 256) {
+                                data += match0;
+                            }
+                        });
+                        document.documentElement.dataset.bodyTextContent = data;
+                    } catch (errorCaught) {
+                        console.error(errorCaught);
+                    }
+                    // html
+                    console.error(options.fileElectronHtml + ' html ' +
+                        document.documentElement.outerHTML);
+                    // test
+                    if (options.modeBrowserTest === 'test' && !window.utility2) {
+                        console.error(options.fileElectronHtml +
+                            ' global_test_results ' +
+                            JSON.stringify({ global_test_results: {
+                                testReport: { testPlatformList: [{}] }
+                            } }));
+                    }
+                    break;
+                // node - spawn electron
                 case 31:
-                    window.fileElectronHtml = options.fileElectronHtml;
-                    // message html back to browserWindow
-                    setTimeout(function () {
-                        console.error(options.fileElectronHtml + ' html ' +
-                            document.documentElement.outerHTML);
-                        if (options.modeBrowserTest === 'test' && !window.utility2) {
-                            console.error(options.fileElectronHtml +
-                                ' global_test_results ' +
-                                JSON.stringify({ global_test_results: {
-                                    coverage: window.__coverage__,
-                                    testReport: { testPlatformList: [{}] }
-                                } }));
-                        }
-                    }, options.timeoutScreenshot);
+                    local.childProcessSpawnWithTimeout('electron', [
+                        __filename,
+                        'cli.browserTest',
+                        options.url,
+                        '--enable-logging'
+                    ], {
+                        env: options,
+                        stdio: options.modeSilent
+                            ? 'ignore'
+                            : ['ignore', 1, 2],
+                        timeout: options.timeoutDefault
+                    })
+                        .on('error', onNext)
+                        .once('exit', onNext);
+                    break;
+                // node - translate
+                case 32:
+                    if (options.modeBrowserTest === 'scrape') {
+                        local.browserTestTranslate(options, onNext);
+                        return;
+                    }
+                    onNext();
                     break;
                 default:
                     if (isDone) {
                         return;
                     }
                     isDone = true;
+                    if (error) {
+                        console.error(options.fileScreenshot);
+                        console.error(error);
+                    }
                     // cleanup timerTimeout
                     clearTimeout(timerTimeout);
+                    // cleanup fileElectronHtml
+                    try {
+                        local.fs.unlinkSync(options.fileElectronHtml);
+                        local.fs.unlinkSync(options.fileElectronHtml + '.preload.js');
+                    } catch (ignore) {
+                    }
+                    // close window
+                    try {
+                        options.browserWindow.close();
+                    } catch (ignore) {
+                    }
+                    // create test-report
+                    if (!(options.modeBrowserTest === 'test' &&
+                            local.modeJs === 'node' &&
+                            !process.versions.electron)) {
+                        onError(error);
+                        return;
+                    }
+                    // merge browser coverage
+                    // try to JSON.parse the string
+                    data = null;
+                    try {
+                        data = options.modeCoverageMerge && JSON.parse(
+                            local.fs.readFileSync(options.fileCoverage, 'utf8')
+                        );
+                    } catch (ignore) {
+                    }
+                    if (data) {
+                        local.istanbulCoverageMerge(local.global.__coverage__, data);
+                        console.error('\nbrowserTest - merged coverage from file ' +
+                            options.fileCoverage + '\n');
+                    }
+                    // try to merge browser test-report
+                    data = null;
+                    try {
+                        data = !error && JSON.parse(
+                            local.fs.readFileSync(options.fileTestReport, 'utf8')
+                        );
+                    } catch (ignore) {
+                    }
+                    if (data && !options.modeTestIgnore) {
+                        local.testReportMerge(local.testReport, data);
+                        console.error('\nbrowserTest - merged test-report from file ' +
+                            options.fileTestReport + '\n');
+                    }
+                    // create test-report.json
+                    local.fs.writeFileSync(
+                        options.npm_config_dir_build + '/test-report.json',
+                        JSON.stringify(local.testReport)
+                    );
+                    error = data && data.testsFailed && new Error(data.testsFailed);
                     onError(error);
                 }
             };
             onNext();
+        };
+
+        local.browserTestInit = function (options) {
+        /*
+         * this function will spawn an electron process to test options.url
+         */
+            [
+                'CI_BRANCH',
+                'CI_HOST',
+                'DISPLAY',
+                'MODE_BUILD',
+                'PATH',
+                'fileCoverage',
+                'fileScreenshotBase',
+                'fileTestReport',
+                'modeBrowserTest',
+                //!! 'modeBrowserTestRecurseDepth',
+                //!! 'modeBrowserTestRecurseHost',
+                'modeBrowserTestTranslate',
+                'modeBrowserTestTranslating',
+                'modeCoverageMerge',
+                'modeSilent',
+                'modeTestIgnore',
+                'npm_config_dir_build',
+                'npm_config_dir_tmp',
+                'timeExit',
+                'timeoutDefault',
+                'timeoutScreenshot',
+                'url'
+            ].forEach(function (key) {
+                options[key] = options[key] || local.env[key] || '';
+                local.assert(!(options[key] && typeof options[key] === 'object'));
+            });
+            if (options.modeBrowserTest === 'translateAfterScrape') {
+                options.modeBrowserTest = 'scrape';
+                options.modeBrowserTest2 = 'translateAfterScrape';
+            }
+            options.timeoutDefault = options.timeoutDefault || local.timeoutDefault;
+            // init url
+            if (!(/^\w+:\/\//).test(options.url)) {
+                options.url = local.path.resolve(process.cwd(), options.url);
+                if (options.modeBrowserTest2 === 'translateAfterScrape') {
+                    options.fileScreenshotBase = options.url;
+                }
+            }
+            options.urlParsed = local.urlParse(options.url);
+            // init testName
+            options.testName = options.urlParsed.pathname;
+            if (options.testName.indexOf(process.cwd()) === 0) {
+                options.testName = options.testName.replace(process.cwd(), '');
+            }
+            if (options.modeBrowserTest === 'scrape') {
+                options.testName = options.urlParsed.href
+                    .split('/')
+                    .slice(0, 3)
+                    .join('/') + options.testName;
+            }
+            options.testName = options.MODE_BUILD + '.browser.' +
+                encodeURIComponent(options.testName.replace(
+                    '/build..' + options.CI_BRANCH + '..' + options.CI_HOST,
+                    '/build'
+                ));
+            local.objectSetDefault(options, {
+                fileCoverage: options.npm_config_dir_tmp +
+                    '/coverage.' + options.testName + '.json',
+                fileScreenshotBase: options.npm_config_dir_build +
+                    '/screenshot.' + options.testName,
+                fileTestReport: options.npm_config_dir_tmp +
+                    '/test-report.' + options.testName + '.json',
+                modeBrowserTest: 'test',
+                timeExit: Date.now() + options.timeoutDefault,
+                timeoutScreenshot: options.timeoutScreenshot || 15000
+            }, 1);
+            options.fileScreenshot = options.fileScreenshotBase + '.png';
+        };
+
+        local.browserTestTranslate = function (options, onError) {
+        /*
+         * https://translate.googleapis.com/translate_a/l?client=te
+         * this function will spawn an electron process to test options.url
+         */
+            // init options
+            options.modeBrowserTest = 'translateAfterScrape';
+            local.browserTestInit(options);
+            local.onParallelList({
+                list: (!options.modeBrowserTestTranslating && options.modeBrowserTestTranslate
+                    .split(/[\s,]+/)
+                    .filter(function (element) {
+                        return element;
+                    }))
+            }, function (options2, onParallel) {
+                options2.fileScreenshotBase = options.fileScreenshotBase + '.translate.' +
+                    options2.element;
+                local.fs.writeFileSync(
+                    options2.fileScreenshotBase + '.html',
+                    local.fs.readFileSync(options.fileScreenshotBase + '.html', 'utf8')
+/* jslint-ignore-begin */
+// local.ajax({url: 'https://translate.googleapis.com/translate_a/l?client=te' }, function () { console.log(local.jsonStringifyOrdered(JSON.parse(arguments[1].responseText), null, 4)); });
++ '\
+\n\
+<div id="google_translate_element"></div>\n\
+<script type="text/javascript">\n\
+function TranslateElementInit() {\n\
+    new google.translate.TranslateElement({\n\
+        includedLanguages: "' + options2.element + '",\n\
+        layout: google.translate.TranslateElement.InlineLayout.HORIZONTAL\n\
+    }, "google_translate_element");\n\
+    document.querySelector(".goog-te-combo").selectedIndex = 1;\n\
+    document.querySelector(".goog-te-combo").dispatchEvent(new Event("change"));\n\
+    document.querySelector(".goog-te-combo").dispatchEvent(new Event("change"));\n\
+    setInterval(function () {\n\
+        window.scrollTo(0, 0);\n\
+    }, 1000);\n\
+}\n\
+</script>\n\
+<script type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=TranslateElementInit"></script>\n\
+'
+/* jslint-ignore-end */
+                );
+                onParallel.counter += 1;
+                local.browserTest({
+                    fileScreenshotBase: options2.fileScreenshotBase,
+                    modeBrowserTestTranslate: options.modeBrowserTestTranslate,
+                    modeBrowserTestTranslating: options2.element,
+                    timeoutScreenshot: options.timeoutScreenshot,
+                    url: (options2.fileScreenshotBase + '.html').replace((/%/g), '%25')
+                }, onParallel);
+            }, onError);
         };
 
         local.bufferConcat = function (bufferList) {
@@ -2690,7 +2888,7 @@ return Utf8ArrayToStr(bff);
                 local.env.npm_config_dir_build + '/apidoc.html',
                 local.apidocCreate(options)
             );
-            console.error('created apidoc file://' + local.env.npm_config_dir_build +
+            console.error('created apidoc file ' + local.env.npm_config_dir_build +
                 '/apidoc.html\n');
             onError();
         };
@@ -2763,7 +2961,7 @@ return Utf8ArrayToStr(bff);
                 local.assert(!error, error);
                 // test standalone assets.app.js
                 local.fs.writeFileSync('tmp/assets.app.js', local.assetsDict['/assets.app.js']);
-                local.processSpawnWithTimeout('node', ['assets.app.js'], {
+                local.childProcessSpawnWithTimeout('node', ['assets.app.js'], {
                     cwd: 'tmp',
                     env: {
                         PATH: local.env.PATH,
@@ -2847,7 +3045,7 @@ return Utf8ArrayToStr(bff);
                     '.template.md']
             });
             local.fs.writeFileSync('README.md', options.readme);
-            console.error('created customOrg file://' + process.cwd() + '/README.md\n');
+            console.error('created customOrg file ' + process.cwd() + '/README.md\n');
             // re-build package.json
             options.packageJson.description = options.readme.split('\n')[2].trim();
             local.fs.writeFileSync(
@@ -3107,6 +3305,46 @@ return Utf8ArrayToStr(bff);
             // save test.js
             local.fs.writeFileSync('test.js', options.dataTo);
             onError();
+        };
+
+        local.childProcessSpawnWithTimeout = function () {
+        /*
+         * this function will run like child_process.spawn,
+         * but with auto-timeout after timeout milliseconds
+         * example usage:
+            var child = local.childProcessSpawnWithTimeout(
+                '/bin/sh',
+                ['-c', 'echo hello world'],
+                {
+                    stdio: ['ignore', 1, 2],
+                    // timeout in ms
+                    timeout: 5000
+                }
+            );
+            child.on('error', console.error);
+            child.on('exit', function (exitCode) {
+                console.error('exitCode ' + exitCode);
+            });
+         */
+            var argList, child, child_process, timerTimeout;
+            argList = arguments;
+            child_process = require('child_process');
+            // spawn child
+            child = child_process.spawn.apply(child_process, argList)
+                .on('exit', function () {
+                    // cleanup timerTimeout
+                    try {
+                        process.kill(timerTimeout.pid);
+                    } catch (ignore) {
+                    }
+                });
+            // init timerTimeout
+            timerTimeout = child_process.spawn('/bin/sh', ['-c', 'sleep ' +
+                // convert timeout to integer seconds with 2 second delay
+                ((0.001 * (Number(argList[2] && argList[2].timeout) ||
+                Number(local.timeoutDefault)) + 2) | 0) +
+                '; kill -9 ' + child.pid + ' 2>/dev/null'], { stdio: 'ignore' });
+            return child;
         };
 
         local.cookieDict = function () {
@@ -4484,29 +4722,6 @@ return Utf8ArrayToStr(bff);
             }, timeout | 0);
         };
 
-        local.processSpawnWithTimeout = function () {
-        /*
-         * this function will run like child_process.spawn,
-         * but with auto-timeout after timeoutDefault milliseconds
-         */
-            var childProcess;
-            // spawn childProcess
-            childProcess = local.child_process.spawn.apply(local.child_process, arguments)
-                .on('exit', function () {
-                    // try to kill timerTimeout childProcess
-                    local.tryCatchOnError(function () {
-                        process.kill(childProcess.timerTimeout.pid);
-                    }, local.nop);
-                });
-            // init failsafe timerTimeout
-            childProcess.timerTimeout = local.child_process.spawn('/bin/sh', ['-c', 'sleep ' +
-                // coerce to finite integer
-                (((0.001 * local.timeoutDefault) | 0) +
-                // add 2 second delay to failsafe timerTimeout
-                2) + '; kill -9 ' + childProcess.pid + ' 2>/dev/null'], { stdio: 'ignore' });
-            return childProcess;
-        };
-
         local.profile = function (fnc, onError) {
         /*
          * this function will profile the async fnc in milliseconds with the callback onError
@@ -5488,7 +5703,7 @@ instruction\n\
                         '0d00'.slice(!!testReport.testsFailed).slice(0, 3)
                     )
             );
-            console.error('created test-report file://' + local.env.npm_config_dir_build +
+            console.error('created test-report file ' + local.env.npm_config_dir_build +
                 '/test-report.html\n');
             // if any test failed, then exit with non-zero exit-code
             console.error('\n' + local.env.MODE_BUILD +
@@ -6097,7 +6312,7 @@ instruction\n\
                 }
                 // init query
                 urlParsed.query = {};
-                urlParsed.search.slice(1).replace((/[^&]+/g), function (item) {
+                (urlParsed.search || '').slice(1).replace((/[^&]+/g), function (item) {
                     item = item.split('=');
                     item[0] = decodeURIComponent(item[0]);
                     item[1] = decodeURIComponent(item.slice(1).join('='));
@@ -6330,7 +6545,7 @@ instruction\n\
                     'utf8'
                 ) || '{}')
             );
-            console.error('\n' + local.env.MODE_BUILD + ' - merged test-report from file://' +
+            console.error('\n' + local.env.MODE_BUILD + ' - merged test-report from file ' +
                 local.env.npm_config_file_test_report_merge);
         }
         // run the cli
@@ -6346,9 +6561,6 @@ instruction\n\
             local.global.local = local;
             break;
         case 'cli.browserTest':
-            local.browserTest({}, local.exit);
-            return;
-        case 'cli.browserTestList':
             local.onParallelList({
                 list: process.argv[3].split(/\s+/).filter(function (element) {
                     return element;
