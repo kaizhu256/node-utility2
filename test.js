@@ -823,15 +823,6 @@
             local.assertJsonEqual(options.data, {});
             options.data = local.normalizeValue('dict', []);
             local.assertJsonEqual(options.data, {});
-            // test function handling-behavior
-            options.data = local.normalizeValue('function', function () {
-                return true;
-            });
-            local.assertJsonEqual(options.data(), true);
-            options.data = local.normalizeValue('function', null);
-            local.assertJsonEqual(options.data(), undefined);
-            options.data = local.normalizeValue('function', {});
-            local.assertJsonEqual(options.data(), undefined);
             // test list handling-behavior
             options.data = local.normalizeValue('list', [1]);
             local.assertJsonEqual(options.data, [1]);
@@ -1087,7 +1078,7 @@
                 switch (options.modeNext) {
                 case 1:
                     // test null-case handling-behavior
-                    local.onParallelList({ list: [] }, local.onErrorThrow, options.onNext);
+                    local.onParallelList({}, local.onErrorThrow, options.onNext);
                     break;
                 case 2:
                     options.list = [null];
@@ -2472,9 +2463,49 @@
             local.Module.runMain();
         }
 
-        local.testCase_browserTest_translate = function (options, onError) {
+        local.testCase_browserTest_electron = function (options, onError) {
         /*
-         * this function will test browserTest's translate handling-behavior
+         * this function will test browserTest's electron handling-behavior
+         */
+            options = function (arg0, arg1) {
+                // test onParallel handling-behavior
+                if (typeof arg0 === 'function') {
+                    arg0();
+                }
+                // test on handling-behavior
+                if (typeof arg1 === 'function') {
+                    arg1(options, '');
+                    arg1(options, options.fileElectronHtml);
+                    arg1(options, options.fileElectronHtml + ' opened');
+                }
+                return options;
+            };
+            options.BrowserWindow = options;
+            options.app = options;
+            options.electron = options;
+            options.capturePage = options;
+            options.loadURL = options;
+            options.on = options;
+            options.once = options;
+            options.prototype = options;
+            options.toPng = options;
+            options.unref = options;
+            local.testMock([
+                [local.global, { setTimeout: options }],
+                [process.versions, { electron: true }],
+                [local, { onParallel: options }]
+            ], function (onError) {
+                local.browserTest(options, local.nop);
+                options.modeNext = 0;
+                options.modeBrowserTest = 'scrape';
+                local.browserTest(options, local.nop);
+                onError();
+            }, onError);
+        };
+
+        local.testCase_browserTest_translateAfterScrape = function (options, onError) {
+        /*
+         * this function will test browserTest's translateAfterScrape handling-behavior
          */
             options = {
                 modeBrowserTest: 'scrape',
@@ -2486,8 +2517,26 @@
                 local.assert(!error, error);
                 options.modeBrowserTest = 'translateAfterScrape';
                 options.modeBrowserTestTranslate = 'ru,zh-CN';
+                options.modeNext = 0;
                 options.url = options.fileScreenshotBase;
-                local.browserTest(options, onError);
+                local.browserTest(options, function (error) {
+                    // validate no error occurred
+                    local.assert(!error, error);
+                    // validate scraped files
+                    [
+                        '.html',
+                        '.png',
+                        '.translate.ru.html',
+                        '.translate.ru.png',
+                        '.translate.zh-CN.html',
+                        '.translate.zh-CN.png'
+                    ].forEach(function (file) {
+                        file = options.fileScreenshotBase + file;
+                        local.assert(local.fs.existsSync(file), file);
+                        local.fs.unlinkSync(file);
+                    });
+                    onError();
+                });
             });
         };
 

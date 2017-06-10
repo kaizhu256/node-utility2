@@ -188,12 +188,6 @@
                 return value && typeof value === 'object' && !Array.isArray(value)
                     ? value
                     : valueDefault || {};
-            case 'function':
-                return typeof value === 'function'
-                    ? value
-                    : valueDefault || function () {
-                        return;
-                    };
             case 'list':
                 return Array.isArray(value)
                     ? value

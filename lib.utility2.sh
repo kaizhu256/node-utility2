@@ -70,6 +70,8 @@ shBaseInstall() {
 shBrowserTest() {(set -e
 # this function will spawn an electron process to test the given url $LIST,
 # and merge the test-report into the existing test-report
+# example usage:
+# $ modeBrowserTestTranslate=en shBrowserTest http://www.news.cn/local/index.htm scrape
     LIST="$1"
     export modeBrowserTest="$2"
     shBuildInit
@@ -494,6 +496,8 @@ shBuildGithubUpload() {(set -e
     rm -fr "$DIR"
     git clone "$URL" --single-branch -b gh-pages "$DIR"
     cd "$DIR"
+    # cleanup screenshot
+    rm -f build/*127.0.0.1*
     case "$CI_COMMIT_MESSAGE_META" in
     "[build clean]")
         shBuildPrint "[build clean]"
@@ -504,7 +508,7 @@ shBuildGithubUpload() {(set -e
     cp -a "$npm_config_dir_build" .
     rm -fr "build..$CI_BRANCH..$CI_HOST"
     cp -a "$npm_config_dir_build" "build..$CI_BRANCH..$CI_HOST"
-    # .nojekyll
+    # disable github-jekyll
     touch .nojekyll
     # git-add .
     git add .

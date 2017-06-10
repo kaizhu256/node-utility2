@@ -52,6 +52,7 @@
         }
         // init lib utility2
         local.global.utility2 = local.global.utility2_utility2 = local.utility2 = local;
+        local.timeStart = local.timeStart || Date.now();
     }());
 
 
@@ -2062,7 +2063,7 @@ local.assetsDict['/favicon.ico'] = '';
         local.assertJsonEqual = function (aa, bb) {
         /*
          * this function will assert
-         * utility2.jsonStringifyOrdered(aa) === JSON.stringify(bb)
+         * jsonStringifyOrdered(aa) === JSON.stringify(bb)
          */
             aa = local.jsonStringifyOrdered(aa);
             bb = JSON.stringify(bb);
@@ -2072,11 +2073,11 @@ local.assetsDict['/favicon.ico'] = '';
         local.assertJsonNotEqual = function (aa, bb) {
         /*
          * this function will assert
-         * utility2.jsonStringifyOrdered(aa) !== JSON.stringify(bb)
+         * jsonStringifyOrdered(aa) !== JSON.stringify(bb)
          */
             aa = local.jsonStringifyOrdered(aa);
             bb = JSON.stringify(bb);
-            local.assert(aa !== bb, [aa, bb]);
+            local.assert(aa !== bb, [aa]);
         };
 
         local.base64FromBuffer = function (bff) {
@@ -2156,7 +2157,7 @@ local.assetsDict['/favicon.ico'] = '';
             bff = local.base64ToBuffer(text);
             text = '';
             for (ii = 0; ii < bff.length; ii += 1) {
-                text += (0x100 + bff[ii]).toString(16).slice(-2);
+                text += (256 + bff[ii]).toString(16).slice(-2);
             }
             return text;
         };
@@ -2229,43 +2230,101 @@ local.assetsDict['/favicon.ico'] = '';
             }
         };
 
-        /* istanbul ignore next */
         local.browserTest = function (options, onError) {
         /*
          * this function will spawn an electron process to test options.url
          */
-            var isDone, modeNext, onNext, onParallel, timerTimeout, tmp;
-            modeNext = Number(options.modeNext) || 0;
-            onError = onError || function (error) {
-                if (error) {
-                    console.error(error);
-                }
-            };
-            onNext = function (error, data) {
-                modeNext = error instanceof Error
-                    ? Infinity
-                    : modeNext + 1;
-                switch (modeNext) {
+            var isDone, onParallel, timerTimeout;
+            local.onNext(options, function (error, data) {
+                switch (options.modeNext) {
                 // node - init
                 case 1:
                     // init options
-                    local.browserTestInit(options);
+                    [
+                        'CI_BRANCH',
+                        'CI_HOST',
+                        'DISPLAY',
+                        'MODE_BUILD',
+                        'PATH',
+                        'fileCoverage',
+                        'fileScreenshotBase',
+                        'fileTestReport',
+                        'modeBrowserTest',
+                        //!! 'modeBrowserTestRecurseDepth',
+                        //!! 'modeBrowserTestRecurseHost',
+                        'modeBrowserTestTranslate',
+                        'modeBrowserTestTranslating',
+                        'modeCoverageMerge',
+                        'modeSilent',
+                        'modeTestIgnore',
+                        'npm_config_dir_build',
+                        'npm_config_dir_tmp',
+                        'timeExit',
+                        'timeoutDefault',
+                        'timeoutScreenshot',
+                        'url'
+                    ].forEach(function (key) {
+                        options[key] = options[key] || local.env[key] || '';
+                        local.assert(!(options[key] && typeof options[key] === 'object'));
+                    });
+                    if (options.modeBrowserTest === 'translateAfterScrape') {
+                        options.modeBrowserTest = 'scrape';
+                        options.modeBrowserTest2 = 'translateAfterScrape';
+                    }
+                    options.timeoutDefault = options.timeoutDefault || local.timeoutDefault;
+                    // init url
+                    if (!(/^\w+:\/\//).test(options.url)) {
+                        options.url = local.path.resolve(process.cwd(), options.url);
+                        if (options.modeBrowserTest2 === 'translateAfterScrape' &&
+                                !options.modeBrowserTestTranslating) {
+                            options.fileScreenshotBase = options.url;
+                        }
+                    }
+                    options.urlParsed = local.urlParse(options.url);
+                    // init testName
+                    options.testName = options.urlParsed.pathname;
+                    if (options.testName.indexOf(process.cwd()) === 0) {
+                        options.testName = options.testName.replace(process.cwd(), '');
+                    }
+                    if (options.modeBrowserTest === 'scrape') {
+                        options.testName = options.urlParsed.href
+                            .split('/')
+                            .slice(0, 3)
+                            .join('/') + options.testName;
+                    }
+                    options.testName = options.MODE_BUILD + '.browser.' +
+                        encodeURIComponent(options.testName.replace(
+                            '/build..' + options.CI_BRANCH + '..' + options.CI_HOST,
+                            '/build'
+                        ));
+                    local.objectSetDefault(options, {
+                        fileCoverage: options.npm_config_dir_tmp +
+                            '/coverage.' + options.testName + '.json',
+                        fileScreenshotBase: options.npm_config_dir_build +
+                            '/screenshot.' + options.testName,
+                        fileTestReport: options.npm_config_dir_tmp +
+                            '/test-report.' + options.testName + '.json',
+                        modeBrowserTest: 'test',
+                        timeExit: Date.now() + options.timeoutDefault,
+                        timeoutScreenshot: options.timeoutScreenshot || 15000
+                    }, 1);
+                    options.fileScreenshot = options.fileScreenshotBase + '.png';
                     // node.electron - init
                     if (process.versions.electron) {
-                        modeNext = 10;
+                        options.modeNext = 10;
                     }
-                    onNext();
+                    options.onNext();
                     break;
                 // node - spawn electron
                 case 2:
                     // node - translateAfterScrape
                     if (options.modeBrowserTest2 === 'translateAfterScrape' &&
                             !options.modeBrowserTestTranslating) {
-                        onNext();
+                        options.onNext();
                         return;
                     }
                     if (options.modeBrowserTest !== 'scrape') {
-                        modeNext = Infinity;
+                        options.modeNext = Infinity;
                     }
                     local.childProcessSpawnWithTimeout('electron', [
                         __filename,
@@ -2279,31 +2338,75 @@ local.assetsDict['/favicon.ico'] = '';
                             : ['ignore', 1, 2],
                         timeout: options.timeoutDefault
                     })
-                        .on('error', onNext)
-                        .once('exit', onNext);
+                        .on('error', options.onNext)
+                        .once('exit', options.onNext);
                     break;
-                // node - translate
+                // node - google-translate options.url
+                // to the languages in options.modeBrowserTranslate
                 case 3:
                     if (options.modeBrowserTest2 === 'translateAfterScrape' &&
                             !options.modeBrowserTestTranslating) {
-                        modeNext = Infinity;
+                        options.modeNext = Infinity;
                     }
-                    local.browserTestTranslate(options, onNext);
+                    local.onParallelList({
+                        list: (!options.modeBrowserTestTranslating &&
+                            options.modeBrowserTestTranslate
+                            .split(/[\s,]+/)
+                            .filter(function (element) {
+                                return element;
+                            }))
+                    }, function (options2, onParallel) {
+                        options2.fileScreenshotBase = options.fileScreenshotBase +
+                            '.translate.' + options2.element;
+                        local.fs.writeFileSync(
+                            options2.fileScreenshotBase + '.html',
+                            local.fs.readFileSync(options.fileScreenshotBase + '.html', 'utf8')
+/* jslint-ignore-begin */
+// local.ajax({url: 'https://translate.googleapis.com/translate_a/l?client=te' }, function () { console.log(local.jsonStringifyOrdered(JSON.parse(arguments[1].responseText), null, 4)); });
++ '\
+\n\
+<div id="google_translate_element"></div>\n\
+<script type="text/javascript">\n\
+function TranslateElementInit() {\n\
+    new google.translate.TranslateElement({\n\
+        includedLanguages: "' + options2.element + '",\n\
+        layout: google.translate.TranslateElement.InlineLayout.HORIZONTAL\n\
+    }, "google_translate_element");\n\
+    document.querySelector(".goog-te-combo").selectedIndex = 1;\n\
+    document.querySelector(".goog-te-combo").dispatchEvent(new Event("change"));\n\
+    document.querySelector(".goog-te-combo").dispatchEvent(new Event("change"));\n\
+    setInterval(function () {\n\
+        window.scrollTo(0, 0);\n\
+    }, 1000);\n\
+}\n\
+</script>\n\
+<script type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=TranslateElementInit"></script>\n\
+'
+/* jslint-ignore-end */
+                        );
+                        onParallel.counter += 1;
+                        local.browserTest({
+                            fileScreenshotBase: options2.fileScreenshotBase,
+                            modeBrowserTestTranslating: options2.element,
+                            timeoutScreenshot: options.timeoutScreenshot,
+                            url: (options2.fileScreenshotBase + '.html').replace((/%/g), '%25')
+                        }, onParallel);
+                    }, options.onNext);
                     break;
                 // node - recurse
                 case 4:
-                    local.browserTestRecurse(options, onNext);
+                    local.browserTestRecurse(options, options.onNext);
                     break;
                 // node.electron - init
                 case 11:
                     // init timerTimeout
                     timerTimeout = local.onTimeout(
-                        onNext,
+                        options.onNext,
                         options.timeoutDefault,
                         options.testName
                     ).unref();
                     // init file fileElectronHtml
-                    options.browserTestScript = local.browserTest
+                    options.browserTestScript = local.browserTestElectron
                         .toString()
                         .replace((/<\//g), '<\\/')
                         // coverage-hack - un-instrument
@@ -2337,11 +2440,17 @@ local.assetsDict['/favicon.ico'] = '';
                         '(' + options.browserTestScript + '(' + JSON.stringify(options) +
                             '))'
                     );
-                    local.electron = require('electron');
+                    options.modeNext = 11;
+                    local.electron = options.electron;
+                    local.tryCatchOnError(function () {
+                        local.electron = require('electron');
+                    }, local.nop);
                     // handle uncaughtexception
-                    process.once('uncaughtException', onNext);
+                    process.once('uncaughtException', options.onNext);
                     // wait for electron to init
-                    local.electron.app.once('ready', onNext);
+                    local.electron.app.once('ready', function () {
+                        options.onNext();
+                    });
                     break;
                 // node.electron - after ready
                 case 12:
@@ -2355,7 +2464,7 @@ local.assetsDict['/favicon.ico'] = '';
                     });
                     // init browserWindow
                     options.browserWindow = new options.BrowserWindow(options);
-                    onParallel = local.onParallel(onNext);
+                    onParallel = local.onParallel(options.onNext);
                     // onParallel - html
                     onParallel.counter += 1;
                     // onParallel - test
@@ -2363,7 +2472,7 @@ local.assetsDict['/favicon.ico'] = '';
                         onParallel.counter += 1;
                     }
                     options.browserWindow.on('page-title-updated', function (event, title) {
-                        if ((event && title).indexOf(options.fileElectronHtml) === 0) {
+                        if (event && title.indexOf(options.fileElectronHtml) === 0) {
                             if (title.split(' ').slice(-1)[0] === 'opened') {
                                 console.error('\nbrowserTest - opened ' + options.url + '\n');
                                 return;
@@ -2384,16 +2493,82 @@ local.assetsDict['/favicon.ico'] = '';
                         local.fs.writeFileSync(options.fileScreenshot, data.toPng());
                         console.error('\nbrowserTest - created screenshot file ' +
                             options.fileScreenshot + '\n');
-                        onNext();
+                        options.onNext();
                     });
                     break;
                 // node.electron - after screenshot
                 case 14:
                     console.error('browserTest - created screenshot file ' +
                         options.fileScreenshotBase + '.html');
-                    onNext();
+                    options.onNext();
                     local.exit();
                     break;
+                default:
+                    if (isDone) {
+                        return;
+                    }
+                    isDone = true;
+                    local.onErrorDefault(error);
+                    // cleanup timerTimeout
+                    clearTimeout(timerTimeout);
+                    // cleanup fileElectronHtml
+                    local.tryCatchOnError(function () {
+                        local.fs.unlinkSync(options.fileElectronHtml);
+                        local.fs.unlinkSync(options.fileElectronHtml + '.preload.js');
+                    }, local.nop);
+                    // create test-report
+                    if (!(options.modeBrowserTest === 'test' &&
+                            local.modeJs === 'node' &&
+                            !process.versions.electron)) {
+                        onError(error);
+                        return;
+                    }
+                    // merge browser coverage
+                    // try to JSON.parse the string
+                    data = null;
+                    local.tryCatchOnError(function () {
+                        data = options.modeCoverageMerge && JSON.parse(
+                            local.fs.readFileSync(options.fileCoverage, 'utf8')
+                        );
+                    }, local.nop);
+                    local.istanbulCoverageMerge(local.global.__coverage__, data);
+                    console.error('\nbrowserTest - merged coverage from file ' +
+                        options.fileCoverage + '\n');
+                    // try to merge browser test-report
+                    data = null;
+                    local.tryCatchOnError(function () {
+                        data = !error && JSON.parse(
+                            local.fs.readFileSync(options.fileTestReport, 'utf8')
+                        );
+                    }, local.nop);
+                    if (data && !options.modeTestIgnore) {
+                        local.testReportMerge(local.testReport, data);
+                        console.error('\nbrowserTest - merged test-report from file ' +
+                            options.fileTestReport + '\n');
+                    }
+                    // create test-report.json
+                    local.fs.writeFileSync(
+                        options.npm_config_dir_build + '/test-report.json',
+                        JSON.stringify(local.testReport)
+                    );
+                    onError(data && data.testsFailed && new Error(data.testsFailed));
+                }
+            });
+            options.modeNext = Number(options.modeNext) || 0;
+            options.onNext();
+        };
+
+        /* istanbul ignore next */
+        local.browserTestElectron = function (options) {
+        /*
+         * this function will spawn an electron process to test options.url
+         */
+            var modeNext, onNext, tmp;
+            onNext = function (error, data) {
+                modeNext = error instanceof Error
+                    ? Infinity
+                    : modeNext + 1;
+                switch (modeNext) {
                 // node.electron.browserWindow - init
                 case 21:
                     options.fs = require('fs');
@@ -2489,10 +2664,11 @@ local.assetsDict['/favicon.ico'] = '';
                                     element[key] = tmp;
                                     if (key === 'href') {
                                         tmp = tmp.split(/[?#]/)[0];
-                                        data.hrefDict[tmp] = (data.hrefDict[tmp] ||
-                                            element.textContent || '')
+                                        data.hrefDict[tmp] = data.hrefDict[tmp] ||
+                                            element.textContent.slice(0, 0x100000)
                                             .trim()
-                                            .replace((/^["']+|["']+$/), '');
+                                            .replace((/^["']+|["']+$/), '')
+                                            .slice(0, 256);
                                     }
                                     return;
                                 }
@@ -2504,26 +2680,30 @@ local.assetsDict['/favicon.ico'] = '';
                         // deduplicate '/'
                         Object.keys(data.hrefDict).forEach(function (key) {
                             if (data.hrefDict.hasOwnProperty(key + '/')) {
-                                delete data.hrefDict[key];
+                                data.hrefDict[key] = undefined;
                             }
                         });
                         data.href = location.href;
                         data.url = location.href.split(/[?#]/)[0];
-                        document.documentElement.dataset.data = JSON.stringify(data);
-                        data = '';
-                        tmp = document.body.textContent;
+                        // body.textContent
+                        tmp = document.body.textContent.slice(0, 0x100000);
                         Array.from(
                             document.querySelectorAll('style')
                         ).forEach(function (element) {
-                            tmp = tmp.replace(element.textContent, '');
+                            tmp = tmp.replace(element.textContent.slice(0, 65536), '');
                         });
-                        (tmp.trim() + '\n\n').replace((/\S[\S\s]*?\n\n/g), function (match0) {
-                            match0 = match0.trim() + '\n\n';
-                            if (match0.length >= 256) {
-                                data += match0;
-                            }
-                        });
-                        document.documentElement.dataset.bodyTextContent = data;
+                        tmp = (tmp.trim() + '\n\n')
+                            .replace((/\s*?\n/g), '\n')
+                            .replace((/\S[\S\s]*?\n{2,}/g), function (match0) {
+                                match0 = match0.trim() + '\n\n';
+                                return match0.length >= 256 + 2
+                                    ? match0
+                                    : '';
+                            })
+                            .trim()
+                            .slice(0, 65536);
+                        data.bodyTextContent = tmp;
+                        document.documentElement.dataset.data = JSON.stringify(data);
                     } catch (errorCaught) {
                         console.error(errorCaught);
                     }
@@ -2540,208 +2720,28 @@ local.assetsDict['/favicon.ico'] = '';
                     }
                     break;
                 default:
-                    if (isDone) {
-                        return;
-                    }
-                    isDone = true;
                     if (error) {
                         console.error(options.fileScreenshot);
                         console.error(error);
-                    }
-                    // cleanup timerTimeout
-                    clearTimeout(timerTimeout);
-                    // cleanup fileElectronHtml
-                    try {
-                        local.fs.unlinkSync(options.fileElectronHtml);
-                        local.fs.unlinkSync(options.fileElectronHtml + '.preload.js');
-                    } catch (ignore) {
                     }
                     // close window
                     try {
                         options.browserWindow.close();
                     } catch (ignore) {
                     }
-                    // create test-report
-                    if (!(options.modeBrowserTest === 'test' &&
-                            local.modeJs === 'node' &&
-                            !process.versions.electron)) {
-                        onError(error);
-                        return;
-                    }
-                    // merge browser coverage
-                    // try to JSON.parse the string
-                    data = null;
-                    try {
-                        data = options.modeCoverageMerge && JSON.parse(
-                            local.fs.readFileSync(options.fileCoverage, 'utf8')
-                        );
-                    } catch (ignore) {
-                    }
-                    if (data) {
-                        local.istanbulCoverageMerge(local.global.__coverage__, data);
-                        console.error('\nbrowserTest - merged coverage from file ' +
-                            options.fileCoverage + '\n');
-                    }
-                    // try to merge browser test-report
-                    data = null;
-                    try {
-                        data = !error && JSON.parse(
-                            local.fs.readFileSync(options.fileTestReport, 'utf8')
-                        );
-                    } catch (ignore) {
-                    }
-                    if (data && !options.modeTestIgnore) {
-                        local.testReportMerge(local.testReport, data);
-                        console.error('\nbrowserTest - merged test-report from file ' +
-                            options.fileTestReport + '\n');
-                    }
-                    // create test-report.json
-                    local.fs.writeFileSync(
-                        options.npm_config_dir_build + '/test-report.json',
-                        JSON.stringify(local.testReport)
-                    );
-                    error = data && data.testsFailed && new Error(data.testsFailed);
-                    onError(error);
                 }
             };
+            modeNext = Number(options.modeNext);
             onNext();
-        };
-
-        local.browserTestInit = function (options) {
-        /*
-         * this function will spawn an electron process to test options.url
-         */
-            [
-                'CI_BRANCH',
-                'CI_HOST',
-                'DISPLAY',
-                'MODE_BUILD',
-                'PATH',
-                'fileCoverage',
-                'fileScreenshotBase',
-                'fileTestReport',
-                'modeBrowserTest',
-                //!! 'modeBrowserTestRecurseDepth',
-                //!! 'modeBrowserTestRecurseHost',
-                'modeBrowserTestTranslate',
-                'modeBrowserTestTranslating',
-                'modeCoverageMerge',
-                'modeSilent',
-                'modeTestIgnore',
-                'npm_config_dir_build',
-                'npm_config_dir_tmp',
-                'timeExit',
-                'timeoutDefault',
-                'timeoutScreenshot',
-                'url'
-            ].forEach(function (key) {
-                options[key] = options[key] || local.env[key] || '';
-                local.assert(!(options[key] && typeof options[key] === 'object'));
-            });
-            if (options.modeBrowserTest === 'translateAfterScrape') {
-                options.modeBrowserTest = 'scrape';
-                options.modeBrowserTest2 = 'translateAfterScrape';
-            }
-            options.timeoutDefault = options.timeoutDefault || local.timeoutDefault;
-            // init url
-            if (!(/^\w+:\/\//).test(options.url)) {
-                options.url = local.path.resolve(process.cwd(), options.url);
-                if (options.modeBrowserTest2 === 'translateAfterScrape') {
-                    options.fileScreenshotBase = options.url;
-                }
-            }
-            options.urlParsed = local.urlParse(options.url);
-            // init testName
-            options.testName = options.urlParsed.pathname;
-            if (options.testName.indexOf(process.cwd()) === 0) {
-                options.testName = options.testName.replace(process.cwd(), '');
-            }
-            if (options.modeBrowserTest === 'scrape') {
-                options.testName = options.urlParsed.href
-                    .split('/')
-                    .slice(0, 3)
-                    .join('/') + options.testName;
-            }
-            options.testName = options.MODE_BUILD + '.browser.' +
-                encodeURIComponent(options.testName.replace(
-                    '/build..' + options.CI_BRANCH + '..' + options.CI_HOST,
-                    '/build'
-                ));
-            local.objectSetDefault(options, {
-                fileCoverage: options.npm_config_dir_tmp +
-                    '/coverage.' + options.testName + '.json',
-                fileScreenshotBase: options.npm_config_dir_build +
-                    '/screenshot.' + options.testName,
-                fileTestReport: options.npm_config_dir_tmp +
-                    '/test-report.' + options.testName + '.json',
-                modeBrowserTest: 'test',
-                timeExit: Date.now() + options.timeoutDefault,
-                timeoutScreenshot: options.timeoutScreenshot || 15000
-            }, 1);
-            options.fileScreenshot = options.fileScreenshotBase + '.png';
         };
 
         local.browserTestRecurse = function (options, onError) {
         /*
          * this function will recursively scrape url-links from the webpage options.url
          */
-            options.modeBrowserTestRecurseDepth = local.normalizeValue(
-                'number',
-                options.modeBrowserTestRecurseDepth
-            );
+            options.modeBrowserTestRecurseDepth = Number(options.modeBrowserTestRecurseDepth) ||
+                0;
             onError(null, options);
-        };
-
-        local.browserTestTranslate = function (options, onError) {
-        /*
-         * https://translate.googleapis.com/translate_a/l?client=te
-         * this function will google-translate options.url
-         * to the languages given in options.modeBrowserTranslate
-         */
-            local.onParallelList({
-                list: (!options.modeBrowserTestTranslating && options.modeBrowserTestTranslate
-                    .split(/[\s,]+/)
-                    .filter(function (element) {
-                        return element;
-                    }))
-            }, function (options2, onParallel) {
-                options2.fileScreenshotBase = options.fileScreenshotBase + '.translate.' +
-                    options2.element;
-                local.fs.writeFileSync(
-                    options2.fileScreenshotBase + '.html',
-                    local.fs.readFileSync(options.fileScreenshotBase + '.html', 'utf8')
-/* jslint-ignore-begin */
-// local.ajax({url: 'https://translate.googleapis.com/translate_a/l?client=te' }, function () { console.log(local.jsonStringifyOrdered(JSON.parse(arguments[1].responseText), null, 4)); });
-+ '\
-\n\
-<div id="google_translate_element"></div>\n\
-<script type="text/javascript">\n\
-function TranslateElementInit() {\n\
-    new google.translate.TranslateElement({\n\
-        includedLanguages: "' + options2.element + '",\n\
-        layout: google.translate.TranslateElement.InlineLayout.HORIZONTAL\n\
-    }, "google_translate_element");\n\
-    document.querySelector(".goog-te-combo").selectedIndex = 1;\n\
-    document.querySelector(".goog-te-combo").dispatchEvent(new Event("change"));\n\
-    document.querySelector(".goog-te-combo").dispatchEvent(new Event("change"));\n\
-    setInterval(function () {\n\
-        window.scrollTo(0, 0);\n\
-    }, 1000);\n\
-}\n\
-</script>\n\
-<script type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=TranslateElementInit"></script>\n\
-'
-/* jslint-ignore-end */
-                );
-                onParallel.counter += 1;
-                local.browserTest({
-                    fileScreenshotBase: options2.fileScreenshotBase,
-                    modeBrowserTestTranslate: options.modeBrowserTestTranslate,
-                    modeBrowserTestTranslating: options2.element,
-                    timeoutScreenshot: options.timeoutScreenshot,
-                    url: (options2.fileScreenshotBase + '.html').replace((/%/g), '%25')
-                }, onParallel);
-            }, onError);
         };
 
         local.bufferConcat = function (bufferList) {
@@ -2842,7 +2842,7 @@ n<65536){if((t-=3)<0)break;s.push(n>>12|224,n>>6&63|128,n&63|128)}else{if(!(n<11
             var bff, ii;
             bff = new local.global.Uint8Array(length);
             for (ii = 0; ii < bff.length; ii += 1) {
-                bff[ii] = Math.random() * 0x100;
+                bff[ii] = Math.random() * 256;
             }
             return bff;
         };
@@ -3018,7 +3018,7 @@ return Utf8ArrayToStr(bff);
             };
             // try to recover from uncaughtException
             process.on('uncaughtException', onError2);
-            onParallel = local.utility2.onParallel(onError2);
+            onParallel = local.onParallel(onError2);
             onParallel.counter += 1;
             // build package.json
             options.packageJson = JSON.parse(local.fs.readFileSync('package.json', 'utf8'));
@@ -3439,7 +3439,7 @@ return Utf8ArrayToStr(bff);
             options = local.objectSetDefault(options, {
                 customOrg: local.env.GITHUB_ORG,
                 query: { buildStartedAt: { $not: { $gt: new Date(Date.now() - (
-                    local.normalizeValue('number', options && options.olderThanLast)
+                    Number(options && options.olderThanLast) || 0
                 )).toISOString() } } }
             }, 2);
             console.error('dbTableCustomOrgCrudGetManyByQuery - ' + JSON.stringify(options));
@@ -3702,7 +3702,7 @@ return Utf8ArrayToStr(bff);
                 console.error(new Date().toISOString() + ' http-response ' + JSON.stringify({
                     method: options.method,
                     url: options.url,
-                    statusCode: local.normalizeValue('number', response && response.statusCode)
+                    statusCode: Number(response && response.statusCode) || 0
                 }));
                 onError(error, response);
             };
@@ -3758,7 +3758,7 @@ return Utf8ArrayToStr(bff);
             local.jslint.errorCounter = 0;
             local.jslint.errorText = '';
             // optimization - ignore uglified/rollup files
-            if ((/\bmin\b|\brollup\b/).test(file)) {
+            if (!script || script.length >= 0x100000) {
                 return script;
             }
             extname = (/\.\w+$/).exec(file);
@@ -4361,12 +4361,6 @@ return Utf8ArrayToStr(bff);
                 return value && typeof value === 'object' && !Array.isArray(value)
                     ? value
                     : valueDefault || {};
-            case 'function':
-                return typeof value === 'function'
-                    ? value
-                    : valueDefault || function () {
-                        return;
-                    };
             case 'list':
                 return Array.isArray(value)
                     ? value
@@ -4641,6 +4635,7 @@ return Utf8ArrayToStr(bff);
          * 2. call onError when isDone
          */
             var ii, onEach2, onParallel;
+            options.list = options.list || [];
             onEach2 = function () {
                 while (ii + 1 < options.list.length && onParallel.counter < options.rateLimit) {
                     ii += 1;
@@ -4987,10 +4982,9 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
                     case '.js':
                     case '.json':
                         // jslint file
-                        local.jslintAndPrintConditional(
-                            local.tryCatchReadFile(file, 'utf8'),
-                            file
-                        );
+                        local.fs.readFile(file, 'utf8', function (error, data) {
+                            local.jslintAndPrintConditional(!error && data, file);
+                        });
                         break;
                     }
                 });
@@ -5161,7 +5155,9 @@ instruction\n\
             local.objectSetDefault(module.exports, local);
             // jslint assetsDict
             Object.keys(local.assetsDict).sort().forEach(function (key) {
-                local.jslintAndPrintConditional(local.assetsDict[key], key);
+                setTimeout(function () {
+                    local.jslintAndPrintConditional(local.assetsDict[key], key);
+                });
             });
             return module.exports;
         };

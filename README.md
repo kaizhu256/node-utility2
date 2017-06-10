@@ -56,7 +56,6 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 #### todo
 - npm publish 2017.5.31
 - add browerTest env-vars modeBrowserTestRecurseDepth and modeBrowserTestRecurseHost
-- fix slow swgg load-time
 - add shell command buildCiCreate
 - allow server-side stdout to be streamed to webapps
 - add utility2.middlewareLimit
@@ -67,7 +66,7 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 #### changelog for v2017.5.31
 - add google-translate ability to function browserTest
 - add browerTest env-vars modeBrowserTest=translateAfterScrape and modeBrowserTestTranslate
-- add functions browserTestTranslate
+- improve load-time
 - merge functions normalizeDict, normalizeList, normalizeText into function normalizeValue
 - rename function processSpawnWithTimeout -> childProcessSpawnWithTimeout
 - none
@@ -870,8 +869,6 @@ RUN (set -e; \
 
 shBuildCiAfter() {(set -e
     #// coverage-hack
-    # screenshot
-    rm -f tmp/build/screenshot.npmTest.browser.http*
     shDeployGithub
     shDeployHeroku
     shReadmeTest example.sh
