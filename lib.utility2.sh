@@ -318,6 +318,14 @@ shBuildCi() {(set -e
     esac
 )}
 
+shBuildCiCreate() {(set -e
+# this function will create the build-ci for the $GITHUB_REPO
+    GITHUB_REPO="$1"
+    shCustomOrgRepoListCreate "$GITHUB_REPO"
+    cd "/tmp/$GITHUB_REPO"
+    shBuildApp
+)}
+
 shBuildCiInternal() {(set -e
 # this function will run the internal build
     shBuildInit
@@ -1018,6 +1026,8 @@ printf '{ \
     }, \
     \"version\": \"0.0.1\" \
 }' > package.json; \
+sed -in 's/kaizhu256-kaizhu256/kaizhu256/' package.json; \
+rm -f package.jsonn; \
 sed -in 's/.*CRYPTO_AES_SH_ENCRYPTED.*//' .travis.yml; \
 rm -f .travis.ymln; \
 shCryptoTravisEncrypt; \
