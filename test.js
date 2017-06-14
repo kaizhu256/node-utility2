@@ -1108,7 +1108,7 @@
                         rateLimit: options.rateLimit
                     }, function (data, onParallel) {
                         onParallel.counter += 1;
-                        options.rateMax = Math.max(onParallel.counter, options.rateMax);
+                        options.rateMax = Math.max(onParallel.counter - 1, options.rateMax);
                         // test async handling-behavior
                         setTimeout(function () {
                             options.data[data.ii] = data.element;
@@ -1765,6 +1765,8 @@
             // test $npm_config_mode_coverage=all handling-behavior
             options = null;
             local.testMock([
+                // suppress console.log and console.error
+                [console, { error: local.nop, log: local.nop }],
                 [local.env, { npm_config_mode_coverage: 'all' }]
             ], function (onError) {
                 local.buildApidoc(options, onError);
@@ -2450,6 +2452,10 @@
                 '<script src="assets.example.js"></script>\n' +
                 '<script src="assets.test.js"></script>\n' +
                 '<script>window.utility2.onReadyBefore();</script>\n';
+        local.assetsDict['/assets.recurse1'] = local.assetsDict['/assets.recurse2'] =
+            '<a href="assets.recurse1"></a>\n' +
+            '<a href="assets.recurse2"></a>\n' +
+            '<a href="assets.undefined"></a>\n';
         if (process.argv[2]) {
             // start with coverage
             if (local.env.npm_config_mode_coverage) {
@@ -2503,41 +2509,56 @@
             }, onError);
         };
 
-        local.testCase_browserTest_translateAfterScrape = function (options, onError) {
+        local.testCase_browserTest_default = function (options, onError) {
         /*
-         * this function will test browserTest's translateAfterScrape handling-behavior
+         * this function will test browserTest's default handling-behavior
          */
-            options = {
-                modeBrowserTest: 'scrape',
-                timeoutScreenshot: 5000,
-                url: local.serverLocalHost + '/assets.hello'
-            };
-            local.browserTest(options, function (error) {
-                // validate no error occurred
-                local.assert(!error, error);
-                options.modeBrowserTest = 'translateAfterScrape';
-                options.modeBrowserTestTranslate = 'ru,zh-CN';
-                options.modeNext = 0;
-                options.url = options.fileScreenshotBase;
-                local.browserTest(options, function (error) {
-                    // validate no error occurred
-                    local.assert(!error, error);
+            var options2;
+            options = {};
+            local.onNext(options, function (error) {
+                switch (options.modeNext) {
+                // test scrape handling-behavior
+                case 1:
+                    options2 = {};
+                    options2.modeBrowserTest = 'scrape';
+                    options2.modeBrowserTestRecurseDepth = 1;
+                    options2.modeBrowserTestRecurseExclude = 'undefined';
+                    options2.modeTestIgnore = true;
+                    options2.timeoutScreenshot = 1000;
+                    options2.url = local.serverLocalHost + '/assets.recurse1';
+                    local.browserTest(options2, options.onNext);
+                    break;
+                // test translateAfterScrape handling-behavior
+                case 2:
+                    options2.modeBrowserTest = 'translateAfterScrape';
+                    options2.modeBrowserTestTranslate = 'ru,zh-CN';
+                    options2.modeNext = 0;
+                    options2.url = options2.fileScreenshotBase;
+                    local.browserTest(options2, options.onNext);
+                    break;
+                case 3:
                     // validate scraped files
                     [
-                        '.html',
-                        '.png',
-                        '.translate.ru.html',
-                        '.translate.ru.png',
-                        '.translate.zh-CN.html',
-                        '.translate.zh-CN.png'
+                        options2.fileScreenshotBase + '.html',
+                        options2.fileScreenshotBase + '.png',
+                        options2.fileScreenshotBase + '.translateAfterScrape.ru.html',
+                        options2.fileScreenshotBase + '.translateAfterScrape.ru.png',
+                        options2.fileScreenshotBase + '.translateAfterScrape.zh-CN.html',
+                        options2.fileScreenshotBase + '.translateAfterScrape.zh-CN.png',
+                        options2.fileScreenshotBase.replace('recurse1', 'recurse2') + '.html',
+                        options2.fileScreenshotBase.replace('recurse1', 'recurse2') + '.png'
                     ].forEach(function (file) {
-                        file = options.fileScreenshotBase + file;
                         local.assert(local.fs.existsSync(file), file);
                         local.fs.unlinkSync(file);
                     });
-                    onError();
-                });
+                    options.onNext();
+                    break;
+                default:
+                    onError(error);
+                }
             });
+            options.modeNext = 0;
+            options.onNext();
         };
 
         local.testCase_buildApidoc_default = local.testCase_buildApidoc_default || function (

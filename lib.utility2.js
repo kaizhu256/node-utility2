@@ -2234,11 +2234,15 @@ local.assetsDict['/favicon.ico'] = '';
         /*
          * this function will spawn an electron process to test options.url
          */
-            var isDone, onParallel, timerTimeout;
+            var fileScreenshotBaseScrape, isDone, onParallel, timerTimeout;
             local.onNext(options, function (error, data) {
                 switch (options.modeNext) {
                 // node - init
                 case 1:
+                    fileScreenshotBaseScrape = function (url) {
+                        return options.npm_config_dir_build + '/screenshot.scrape.browser.' +
+                            encodeURIComponent(url.split(/[?#]/)[0]);
+                    };
                     // init options
                     [
                         'CI_BRANCH',
@@ -2250,23 +2254,32 @@ local.assetsDict['/favicon.ico'] = '';
                         'fileScreenshotBase',
                         'fileTestReport',
                         'modeBrowserTest',
-                        //!! 'modeBrowserTestRecurseDepth',
-                        //!! 'modeBrowserTestRecurseHost',
+                        'modeBrowserTestRecurseDepth',
+                        'modeBrowserTestRecurseExclude',
+                        'modeBrowserTestRecurseInclude',
+                        'modeBrowserTestRecursePath',
+                        'modeBrowserTestShow',
                         'modeBrowserTestTranslate',
                         'modeBrowserTestTranslating',
                         'modeCoverageMerge',
                         'modeSilent',
-                        'modeTestIgnore',
                         'npm_config_dir_build',
                         'npm_config_dir_tmp',
+                        'rateLimit',
                         'timeExit',
                         'timeoutDefault',
                         'timeoutScreenshot',
                         'url'
                     ].forEach(function (key) {
+                        if (typeof options[key] === 'number') {
+                            return;
+                        }
                         options[key] = options[key] || local.env[key] || '';
                         local.assert(!(options[key] && typeof options[key] === 'object'));
                     });
+                    options.modeBrowserTestRecurseDepth = Number(
+                        options.modeBrowserTestRecurseDepth
+                    ) || 0;
                     if (options.modeBrowserTest === 'translateAfterScrape') {
                         options.modeBrowserTest = 'scrape';
                         options.modeBrowserTest2 = 'translateAfterScrape';
@@ -2291,6 +2304,8 @@ local.assetsDict['/favicon.ico'] = '';
                             .split('/')
                             .slice(0, 3)
                             .join('/') + options.testName;
+                        options.fileScreenshotBase = options.fileScreenshotBase ||
+                            fileScreenshotBaseScrape(options.url);
                     }
                     options.testName = options.MODE_BUILD + '.browser.' +
                         encodeURIComponent(options.testName.replace(
@@ -2312,6 +2327,51 @@ local.assetsDict['/favicon.ico'] = '';
                     // node.electron - init
                     if (process.versions.electron) {
                         options.modeNext = 10;
+                        options.onNext();
+                        return;
+                    }
+                    // node - translating
+                    if (options.modeBrowserTestTranslating) {
+                        options.onNext();
+                        return;
+                    }
+                    // node - recurse
+/*
+example usage:
+mkdir -p /tmp/100 && \
+    rm -f /tmp/100/screenshot.* && \
+    modeBrowserTestRecurseDepth=1 \
+    modeBrowserTestRecurseInclude=/www.iana.org/,/example.com/ \
+    modeBrowserTestTranslate=zh-CN \
+    npm_config_dir_build=/tmp/100 \
+    timeoutScreenshot=5000 \
+    shBrowserTest 'http://example.com/' scrape && \
+    ls -l /tmp/100
+mkdir -p /tmp/100 && \
+    rm -f /tmp/100/screenshot.* && \
+    modeBrowserTestRecurseDepth=1 \
+    modeBrowserTestRecurseExclude=/english/ \
+    modeBrowserTestRecurseInclude=.xinhuanet.com/,/xinhuanet.com/ \
+    modeBrowserTestTranslate2=en \
+    npm_config_dir_build=/tmp/100 \
+    rateLimit=4 \
+    timeoutScreenshot=10000 \
+    shBrowserTest 'http://xinhuanet.com/' scrape && \
+    ls -l /tmp/100
+*/
+                    if (options.modeBrowserTestRecursePath) {
+                        if (options.modeBrowserTestRecurseDepth < 0 ||
+                                local.fs.existsSync(options.fileScreenshot)) {
+                            options.modeNext = Infinity;
+                        } else {
+                            console.error('\nbrowserTest - recurse ' +
+                                options.modeBrowserTestRecurseDepth + ' ' +
+                                options.modeBrowserTestRecursePath + options.url +
+                                '\n');
+                            local.fs.writeFileSync(options.fileScreenshot, '');
+                        }
+                        options.onNext();
+                        return;
                     }
                     options.onNext();
                     break;
@@ -2344,8 +2404,8 @@ local.assetsDict['/favicon.ico'] = '';
                 // node - google-translate options.url
                 // to the languages in options.modeBrowserTranslate
                 case 3:
-                    if (options.modeBrowserTest2 === 'translateAfterScrape' &&
-                            !options.modeBrowserTestTranslating) {
+                    if (options.modeBrowserTest2 === 'translateAfterScrape' ||
+                            options.modeBrowserTestTranslating) {
                         options.modeNext = Infinity;
                     }
                     local.onParallelList({
@@ -2357,7 +2417,7 @@ local.assetsDict['/favicon.ico'] = '';
                             }))
                     }, function (options2, onParallel) {
                         options2.fileScreenshotBase = options.fileScreenshotBase +
-                            '.translate.' + options2.element;
+                            '.translateAfterScrape.' + options2.element;
                         local.fs.writeFileSync(
                             options2.fileScreenshotBase + '.html',
                             local.fs.readFileSync(options.fileScreenshotBase + '.html', 'utf8')
@@ -2386,6 +2446,7 @@ function TranslateElementInit() {\n\
                         );
                         onParallel.counter += 1;
                         local.browserTest({
+                            modeBrowserTest: options2.modeBrowserTest,
                             fileScreenshotBase: options2.fileScreenshotBase,
                             modeBrowserTestTranslating: options2.element,
                             timeoutScreenshot: options.timeoutScreenshot,
@@ -2395,7 +2456,62 @@ function TranslateElementInit() {\n\
                     break;
                 // node - recurse
                 case 4:
-                    local.browserTestRecurse(options, options.onNext);
+                    local.fs.readFileSync(
+                        options.fileScreenshotBase + '.html',
+                        'utf8'
+                    ).replace((/ data-scrape="([\S\s]*?)"/), function (match0, match1) {
+                        // jslint-hack
+                        local.nop(match0);
+                        data = JSON.parse(match1
+                            .replace((/&quot;/g), '"')
+                            .replace((/&amp;/g), '&'));
+                    });
+                    data.readdirDict = {};
+                    data.recurseDict = {};
+                    data.tmp = local.fs.readdirSync(options.npm_config_dir_build);
+                    data.tmp.forEach(function (file) {
+                        data.readdirDict[options.npm_config_dir_build + '/' + file] = true;
+                    });
+                    data.exclude = options.modeBrowserTestRecurseExclude
+                        .split(/[\s,]+/)
+                        .filter(function (element) {
+                            return element;
+                        });
+                    data.include = (options.modeBrowserTestRecurseInclude ||
+                        (options.url.split((/[\/?#]/)).slice(0, 3).join('/')))
+                        .split(/[\s,]+/)
+                        .filter(function (element) {
+                            return element;
+                        });
+                    Object.keys(data.hrefDict).forEach(function (url) {
+                        if (url && data.exclude.every(function (element) {
+                                return url.indexOf(element) < 0;
+                            }) && data.include.some(function (element) {
+                                return url.indexOf(element) >= 0;
+                            })) {
+                            data.recurseDict[url] = true;
+                        }
+                    });
+                    local.onParallelList({
+                        list: Object.keys(data.recurseDict).sort(),
+                        rateLimit: options.rateLimit || 1
+                    }, function (options2, onParallel) {
+                        onParallel.counter += 1;
+                        local.browserTest({
+                            modeBrowserTest: options.modeBrowserTest,
+                            modeBrowserTestRecurseDepth:
+                                options.modeBrowserTestRecurseDepth - 1,
+                            modeBrowserTestRecurseExclude:
+                                options.modeBrowserTestRecurseExclude,
+                            modeBrowserTestRecurseInclude:
+                                options.modeBrowserTestRecurseInclude,
+                            modeBrowserTestRecursePath: options.modeBrowserTestRecursePath +
+                                options.url + ' -> ',
+                            modeBrowserTestTranslate: options.modeBrowserTestTranslate,
+                            timeoutScreenshot: options.timeoutScreenshot,
+                            url: options2.element
+                        }, onParallel);
+                    }, options.onNext);
                     break;
                 // node.electron - init
                 case 11:
@@ -2440,6 +2556,7 @@ function TranslateElementInit() {\n\
                         '(' + options.browserTestScript + '(' + JSON.stringify(options) +
                             '))'
                     );
+                    // reset modeNext
                     options.modeNext = 11;
                     local.electron = options.electron;
                     local.tryCatchOnError(function () {
@@ -2458,6 +2575,7 @@ function TranslateElementInit() {\n\
                     local.objectSetDefault(options, {
                         frame: false,
                         height: 768,
+                        show: !!options.modeBrowserTestShow,
                         width: 1024,
                         x: 0,
                         y: 0
@@ -2509,6 +2627,9 @@ function TranslateElementInit() {\n\
                     }
                     isDone = true;
                     local.onErrorDefault(error);
+                    if (options.modeBrowserTestRecursePath) {
+                        error = null;
+                    }
                     // cleanup timerTimeout
                     clearTimeout(timerTimeout);
                     // cleanup fileElectronHtml
@@ -2679,31 +2800,37 @@ function TranslateElementInit() {\n\
                         });
                         // deduplicate '/'
                         Object.keys(data.hrefDict).forEach(function (key) {
-                            if (data.hrefDict.hasOwnProperty(key + '/')) {
+                            if (data.hrefDict.hasOwnProperty(key + '/') ||
+                                    (/\.(?:css|js)$/).test(key)) {
                                 data.hrefDict[key] = undefined;
                             }
                         });
                         data.href = location.href;
                         data.url = location.href.split(/[?#]/)[0];
                         // body.textContent
-                        tmp = document.body.textContent.slice(0, 0x100000);
-                        Array.from(
-                            document.querySelectorAll('style')
-                        ).forEach(function (element) {
-                            tmp = tmp.replace(element.textContent.slice(0, 65536), '');
-                        });
-                        tmp = (tmp.trim() + '\n\n')
-                            .replace((/\s*?\n/g), '\n')
-                            .replace((/\S[\S\s]*?\n{2,}/g), function (match0) {
-                                match0 = match0.trim() + '\n\n';
-                                return match0.length >= 256 + 2
-                                    ? match0
-                                    : '';
-                            })
-                            .trim()
-                            .slice(0, 65536);
+                        tmp = '';
+                        try {
+                            tmp = document.body.textContent.slice(0, 0x100000);
+                            Array.from(
+                                document.querySelectorAll('style')
+                            ).forEach(function (element) {
+                                tmp = tmp.replace(element.textContent.slice(0, 65536), '');
+                            });
+                            tmp = (tmp.trim() + '\n\n')
+                                .replace((/\s*?\n/g), '\n')
+                                .replace((/\S[\S\s]*?\n{2,}/g), function (match0) {
+                                    match0 = match0.trim() + '\n\n';
+                                    return match0.length >= 256 + 2
+                                        ? match0
+                                        : '';
+                                })
+                                .trim()
+                                .slice(0, 65536);
+                        } catch (errorCaught) {
+                            console.error(errorCaught);
+                        }
                         data.bodyTextContent = tmp;
-                        document.documentElement.dataset.data = JSON.stringify(data);
+                        document.documentElement.dataset.scrape = JSON.stringify(data, null, 4);
                     } catch (errorCaught) {
                         console.error(errorCaught);
                     }
@@ -2733,15 +2860,6 @@ function TranslateElementInit() {\n\
             };
             modeNext = Number(options.modeNext);
             onNext();
-        };
-
-        local.browserTestRecurse = function (options, onError) {
-        /*
-         * this function will recursively scrape url-links from the webpage options.url
-         */
-            options.modeBrowserTestRecurseDepth = Number(options.modeBrowserTestRecurseDepth) ||
-                0;
-            onError(null, options);
         };
 
         local.bufferConcat = function (bufferList) {
@@ -4637,7 +4755,8 @@ return Utf8ArrayToStr(bff);
             var ii, onEach2, onParallel;
             options.list = options.list || [];
             onEach2 = function () {
-                while (ii + 1 < options.list.length && onParallel.counter < options.rateLimit) {
+                while (ii + 1 < options.list.length &&
+                        onParallel.counter < options.rateLimit + 1) {
                     ii += 1;
                     onParallel.ii += 1;
                     onParallel.remaining -= 1;
@@ -4660,13 +4779,13 @@ return Utf8ArrayToStr(bff);
                     return true;
                 }
             });
-            onParallel.counter += 1;
             ii = -1;
             onParallel.ii = -1;
             onParallel.remaining = options.list.length;
             options.rateLimit = Number(options.rateLimit) || 6;
-            options.rateLimit = Math.max(options.rateLimit, 3);
+            options.rateLimit = Math.max(options.rateLimit, 1);
             options.retryLimit = Number(options.retryLimit) || 2;
+            onParallel.counter += 1;
             onEach2();
             onParallel();
         };
