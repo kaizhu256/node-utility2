@@ -3,6 +3,7 @@
 shBaseInit() {
 # this function will init the base bash-login env, and is intended for aws-ec2 setup
     local FILE || return $?
+    # PATH=/usr/local/bin:/usr/bin:/bin
     # init $PATH_BIN
     if [ ! "$PATH_BIN" ]
     then

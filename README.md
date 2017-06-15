@@ -801,9 +801,13 @@ RUN (set -e; \
     export DEBIAN_FRONTEND=noninteractive; \
     apt-get update; \
     apt-get install --no-install-recommends -y \
-        chromium \
-        gconf2 \
         git \
+        libasound2 \
+        libgconf-2-4 \
+        libgtk2.0-0 \
+        libnss3 \
+        libxss1 \
+        libxtst6 \
         xvfb; \
     npm install "kaizhu256/node-electron-lite#alpha"; \
     mv node_modules/electron-lite/external /electron; \
