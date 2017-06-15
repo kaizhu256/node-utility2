@@ -793,9 +793,6 @@ RUN (set -e; \
     apt-get install -y nodejs; \
 )
 # install electron-lite
-VOLUME [ \
-  "/usr/lib/chromium" \
-]
 # COPY electron-*.zip /tmp
 RUN (set -e; \
     export DEBIAN_FRONTEND=noninteractive; \
