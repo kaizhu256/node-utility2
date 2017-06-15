@@ -788,8 +788,7 @@ RUN (set -e; \
         busybox \
         ca-certificates \
         curl; \
-    (busybox --list | xargs -n1 /bin/sh -c 'ln -s /bin/busybox /bin/$0 2>/dev/null' || true) \
-       ; \
+    (busybox --list | xargs -n1 /bin/sh -c 'ln -s /bin/busybox /bin/$0 2>/dev/null' || true); \
     curl -#L https://deb.nodesource.com/setup_6.x | /bin/bash -; \
     apt-get install -y nodejs; \
 )
@@ -807,6 +806,8 @@ RUN (set -e; \
         git \
         xvfb; \
     npm install "kaizhu256/node-electron-lite#alpha"; \
+    mv node_modules/electron-lite/external /electron; \
+    cp -s /electron/electron /bin/electron; \
     cd node_modules/electron-lite; \
     npm install; \
     export DISPLAY=:99.0; \
