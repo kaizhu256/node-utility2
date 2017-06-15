@@ -6558,21 +6558,6 @@ instruction\n\
         local.istanbulInstrumentInPackage = local.istanbul.instrumentInPackage || local.echo;
         local.istanbulInstrumentSync = local.istanbul.instrumentSync || local.echo;
         local.jslintAndPrint = local.jslint.jslintAndPrint || local.echo;
-        // init objectWeird
-        local.objectWeird = function () {
-            return;
-        };
-        // coverage-hack
-        local.tryCatchOnError(function () {
-            local.objectWeird();
-        }, local.nop);
-        // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Working_with_Objects
-        // #Defining_getters_and_setters
-        Object.defineProperty(local.objectWeird, 'error', {
-            get: local.throwError,
-            set: local.throwError
-        });
-        local.objectWeird.toString = local.throwError;
         local.regexpEmailValidate = new RegExp(
             '^[a-zA-Z0-9.!#$%&\'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}' +
                 '[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$'

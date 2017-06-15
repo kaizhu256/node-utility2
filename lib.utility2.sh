@@ -1026,7 +1026,7 @@ printf '{ \
     }, \
     \"version\": \"0.0.1\" \
 }' > package.json; \
-sed -in 's/kaizhu256-kaizhu256/kaizhu256/' package.json; \
+sed -in 's/kaizhu256-kaizhu256.//' package.json; \
 rm -f package.jsonn; \
 sed -in 's/.*CRYPTO_AES_SH_ENCRYPTED.*//' .travis.yml; \
 rm -f .travis.ymln; \
