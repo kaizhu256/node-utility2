@@ -813,7 +813,6 @@ RUN (set -e; \
     export DISPLAY=:99.0; \
     (Xvfb "$DISPLAY" &); \
     npm test; \
-    cp /tmp/electron-*.zip /; \
 )
 # install extras
 RUN (set -e; \
