@@ -227,6 +227,10 @@ shBuildCi() {(set -e
         export CI_BRANCH=alpha
         shBuildCiInternal
         ;;
+    docker.binaryen)
+        export CI_BRANCH=alpha
+        shBuildCiInternal
+        ;;
     docker.latest)
         export CI_BRANCH=alpha
         shBuildCiInternal
