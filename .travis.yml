@@ -8,6 +8,7 @@ branches:
     - beta
     - cron
     - docker.base
+    - docker.binaryen
     - docker.latest
     - master
     - publish
