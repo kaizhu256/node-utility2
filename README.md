@@ -827,6 +827,29 @@ RUN (set -e; \
 )
 ```
 
+- Dockerfile.binaryen
+```shell
+# Dockerfile.binaryen
+FROM kaizhu256/node-utility2:base
+MAINTAINER kai zhu <kaizhu256@gmail.com>
+# install binaryen
+RUN (set -e; \
+    export DEBIAN_FRONTEND=noninteractive; \
+    apt-get update; \
+    apt-get install --no-install-recommends -y \
+        cmake \
+        gcc \
+        make \
+        g++; \
+    git clone https://github.com/WebAssembly/binaryen.git \
+        --branch version_31 \
+        --depth 1; \
+    cd binaryen; \
+    cmake .; \
+    make; \
+)
+```
+
 - Dockerfile.latest
 ```shell
 # Dockerfile.latest

@@ -1114,6 +1114,7 @@ shDeployHeroku() {(set -e
 
 shDockerBuildCleanup() {(set -e
 # this function will cleanup the docker build
+# apt list --installed
     rm -fr \
         /root/.npm \
         /tmp/.* \
@@ -1394,8 +1395,11 @@ shDockerStart() {(set -e
         DOCKER_OPTIONS="$DOCKER_OPTIONS -p $LOCALHOST:$DOCKER_PORT:$DOCKER_PORT"
     fi
     DOCKER_ROOT="${DOCKER_HOME:-$HOME}"
+    if [ ! "$DOCKER_SANDBOX" ]
+    then
+        DOCKER_OPTIONS="$DOCKER_OPTIONS -v $DOCKER_ROOT:/root"
+    fi
     docker run --name "$NAME" -dt -e debian_chroot="$NAME" \
-        -v "$DOCKER_ROOT:/root" \
         $DOCKER_OPTIONS \
         "$IMAGE" "$@"
 )}
