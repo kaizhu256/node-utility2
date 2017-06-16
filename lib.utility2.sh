@@ -223,15 +223,7 @@ shBuildCi() {(set -e
             /bin/sh .task.sh
         fi
         ;;
-    docker.base)
-        export CI_BRANCH=alpha
-        shBuildCiInternal
-        ;;
-    docker.binaryen)
-        export CI_BRANCH=alpha
-        shBuildCiInternal
-        ;;
-    docker.latest)
+    docker.*)
         export CI_BRANCH=alpha
         shBuildCiInternal
         ;;

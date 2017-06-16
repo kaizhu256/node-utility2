@@ -807,8 +807,8 @@ RUN (set -e; \
         libxtst6 \
         xvfb; \
     npm install "kaizhu256/node-electron-lite#alpha"; \
-    mv node_modules/electron-lite/external /electron; \
-    cp -s /electron/electron /bin/electron; \
+    mv node_modules/electron-lite/external /opt; \
+    cp -s /opt/electron/electron /bin/electron; \
     cd node_modules/electron-lite; \
     npm install; \
     export DISPLAY=:99.0; \
@@ -832,7 +832,7 @@ RUN (set -e; \
 # Dockerfile.binaryen
 FROM kaizhu256/node-utility2:base
 MAINTAINER kai zhu <kaizhu256@gmail.com>
-# install binaryen
+# install cmake
 RUN (set -e; \
     export DEBIAN_FRONTEND=noninteractive; \
     apt-get update; \
@@ -841,13 +841,17 @@ RUN (set -e; \
         g++ \
         gcc \
         make; \
+)
+# install binaryen
+RUN (set -e; \
+    export DEBIAN_FRONTEND=noninteractive; \
     git clone https://github.com/WebAssembly/binaryen.git \
         --branch version_31 \
         --depth 1; \
     cd binaryen; \
     cmake .; \
     make; \
-    mv bin /binaryen; \
+    mv bin /opt/binaryen; \
 )
 ```
 
