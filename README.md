@@ -838,9 +838,9 @@ RUN (set -e; \
     apt-get update; \
     apt-get install --no-install-recommends -y \
         cmake \
+        g++ \
         gcc \
-        make \
-        g++; \
+        make; \
     git clone https://github.com/WebAssembly/binaryen.git \
         --branch version_31 \
         --depth 1; \
