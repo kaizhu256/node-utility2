@@ -847,7 +847,7 @@ RUN (set -e; \
     cd binaryen; \
     cmake .; \
     make; \
-    mv binaryen/bin /binaryen; \
+    mv binaryen /binaryen; \
 )
 ```
 
