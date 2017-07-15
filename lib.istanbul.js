@@ -102,7 +102,7 @@
             options.dir = process.cwd() + '/tmp/build/coverage.html';
             // merge previous coverage
             if (local.modeJs === 'node' && process.env.npm_config_mode_coverage_merge) {
-                console.log('merging file://' + options.dir + '/coverage.json to coverage');
+                console.log('merging file ' + options.dir + '/coverage.json to coverage');
                 try {
                     local.coverageMerge(local.global.__coverage__, JSON.parse(
                         local._fs.readFileSync(options.dir + '/coverage.json', 'utf8')
@@ -160,7 +160,7 @@
                             ('0' + Math.round(options.pct * 2.21).toString(16)).slice(-2) + '00'
                     )
             );
-            console.log('created coverage file://' + options.dir + '/index.html');
+            console.log('created coverage file ' + options.dir + '/index.html');
             // 3. return coverage in html-format as a single document
             local.coverageReportHtml += '</div>\n</div>\n';
             // write coverage.rollup.html

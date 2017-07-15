@@ -595,12 +595,57 @@
             onError();
         };
 
-        local.testCase_exit_default = function (options, onError) {
+        local.testCase_envSanitize_default = function (options, onError) {
         /*
-         * this function will exit's default handling-behavior
+         * this function will envSanitize's default handling-behavior
+         */
+            // test invalid envSanitize-code handling-behavior
+            options = local.envSanitize({
+                aa: '',
+                aaPassword: '',
+                aa_password: '',
+                aapassword: '',
+                bb: null,
+                passport: '',
+                password: ''
+            });
+            local.assertJsonEqual(options, { aa: '', aapassword: '' });
+            onError();
+        };
+
+        local.testCase_exit_error = function (options, onError) {
+        /*
+         * this function will exit's error handling-behavior
          */
             // test invalid exit-code handling-behavior
             local.exit('invalid exit-code', options);
+            onError();
+        };
+
+        local.testCase_githubCorsUrlOverride_default = function (options, onError) {
+        /*
+         * this function will githubCorsUrlOverride's default handling-behavior
+         */
+            options = {};
+            // test null-case handling-behavior
+            options.data = local.githubCorsUrlOverride();
+            local.assertJsonEqual(options.data, undefined);
+            // test override-all handling-behavior
+            options.data = local.githubCorsUrlOverride(
+                'cc.com',
+                'aa-alpha.bb.com',
+                null,
+                { host: 'github.io', pathname: '/build..beta..travis-ci.org/' }
+            );
+            local.assertJsonEqual(options.data, 'aa-beta.bb.com');
+            // test override-rgx handling-behavior
+            options.data = local.githubCorsUrlOverride(
+                'cc/dd',
+                'aa-alpha.bb.com/',
+                (/(^cc\/)/),
+                { host: 'github.io', pathname: '/build..beta..travis-ci.org/' }
+            );
+            local.assertJsonEqual(options.data, 'aa-beta.bb.com/cc/dd');
             onError();
         };
 
@@ -793,31 +838,38 @@
             onError();
         };
 
-        local.testCase_normalizeXxx_default = function (options, onError) {
+        local.testCase_normalizeValue_default = function (options, onError) {
         /*
-         * this function will test normalizeXxx's default handling-behavior
+         * this function will test normalizeValue's default handling-behavior
          */
             options = {};
-            // test normalizeDict handling-behavior
-            options.data = local.normalizeDict({ aa: 1 });
+            // test dict handling-behavior
+            options.data = local.normalizeValue('dict', { aa: 1 });
             local.assertJsonEqual(options.data, { aa: 1 });
-            options.data = local.normalizeDict(null);
+            options.data = local.normalizeValue('dict', null);
             local.assertJsonEqual(options.data, {});
-            options.data = local.normalizeDict([]);
+            options.data = local.normalizeValue('dict', []);
             local.assertJsonEqual(options.data, {});
-            // test normalizeList handling-behavior
-            options.data = local.normalizeList([1]);
+            // test list handling-behavior
+            options.data = local.normalizeValue('list', [1]);
             local.assertJsonEqual(options.data, [1]);
-            options.data = local.normalizeList(null);
+            options.data = local.normalizeValue('list', null);
             local.assertJsonEqual(options.data, []);
-            options.data = local.normalizeList({});
+            options.data = local.normalizeValue('list', {});
             local.assertJsonEqual(options.data, []);
-            // test normalizeText handling-behavior
-            options.data = local.normalizeText('aa');
+            // test number handling-behavior
+            options.data = local.normalizeValue('number', 0.5);
+            local.assertJsonEqual(options.data, 0.5);
+            options.data = local.normalizeValue('number', null);
+            local.assertJsonEqual(options.data, 0);
+            options.data = local.normalizeValue('number', {});
+            local.assertJsonEqual(options.data, 0);
+            // test string handling-behavior
+            options.data = local.normalizeValue('string', 'aa');
             local.assertJsonEqual(options.data, 'aa');
-            options.data = local.normalizeText(null);
+            options.data = local.normalizeValue('string', null);
             local.assertJsonEqual(options.data, '');
-            options.data = local.normalizeText({});
+            options.data = local.normalizeValue('string', {});
             local.assertJsonEqual(options.data, '');
             onError();
         };
@@ -1053,7 +1105,7 @@
                 switch (options.modeNext) {
                 case 1:
                     // test null-case handling-behavior
-                    local.onParallelList({ list: [] }, local.onErrorThrow, options.onNext);
+                    local.onParallelList({}, local.onErrorThrow, options.onNext);
                     break;
                 case 2:
                     options.list = [null];
@@ -1083,7 +1135,7 @@
                         rateLimit: options.rateLimit
                     }, function (data, onParallel) {
                         onParallel.counter += 1;
-                        options.rateMax = Math.max(onParallel.counter, options.rateMax);
+                        options.rateMax = Math.max(onParallel.counter - 1, options.rateMax);
                         // test async handling-behavior
                         setTimeout(function () {
                             options.data[data.ii] = data.element;
@@ -1530,14 +1582,14 @@
             local.testMock(options, function (onError) {
                 // test default handling-behavior
                 local.assertJsonEqual(local.urlParse(
-                    'https://127.0.0.1:80/foo?aa=1&bb%20cc=dd%20=ee&aa=2&aa#zz=1'
+                    'https://127.0.0.1:80/foo/bar?aa=1&bb%20cc=dd%20=ee&aa=2&aa#zz=1'
                 ), {
                     hash: '#zz=1',
                     host: '127.0.0.1:80',
                     hostname: '127.0.0.1',
-                    href: 'https://127.0.0.1:80/foo?aa=1&bb%20cc=dd%20=ee&aa=2&aa#zz=1',
-                    path: '/foo?aa=1&bb%20cc=dd%20=ee&aa=2&aa',
-                    pathname: '/foo',
+                    href: 'https://127.0.0.1:80/foo/bar?aa=1&bb%20cc=dd%20=ee&aa=2&aa#zz=1',
+                    path: '/foo/bar?aa=1&bb%20cc=dd%20=ee&aa=2&aa',
+                    pathname: '/foo/bar',
                     port: '80',
                     protocol: 'https:',
                     query: { aa: ['1', '2', ''], 'bb cc': 'dd =ee' },
@@ -1740,6 +1792,8 @@
             // test $npm_config_mode_coverage=all handling-behavior
             options = null;
             local.testMock([
+                // suppress console.log and console.error
+                [console, { error: local.nop, log: local.nop }],
                 [local.env, { npm_config_mode_coverage: 'all' }]
             ], function (onError) {
                 local.buildApidoc(options, onError);
@@ -1831,7 +1885,7 @@
          */
             options = {};
             options.customize = function () {
-                options.dataFrom = options.dataFrom.replace((/shDeployGithub/g), '');
+                options.dataFrom = options.dataFrom.replace('shDeployGithub', 'shDeployCustom');
             };
             local.testMock([
                 [local.env, { npm_package_buildCustomOrg: '' }],
@@ -1858,7 +1912,7 @@
                     (/# quickstart example.js[\S\s]*?istanbul instrument in package/),
                     // customize quickstart-footer
                     (/>download standalone app<[^`]*?utility2FooterDiv/),
-                    (/```[^`]*?\n# all screenshots/),
+                    (/```[^`]*?\n# extra screenshots/),
                     // customize build-script
                     (/# run shBuildCi[^`]*?```/)
                 ].forEach(function (rgx) {
@@ -1868,6 +1922,45 @@
                 });
             };
             local.buildReadme(options, onError);
+        };
+
+        local.testCase_childProcessSpawnWithTimeout_default = function (options, onError) {
+        /*
+         * this function will test childProcessSpawnWithTimeout's default handling-behavior
+         */
+            var onParallel;
+            options = {};
+            onParallel = local.onParallel(onError);
+            onParallel.counter += 1;
+            // test default handling-behavior
+            onParallel.counter += 1;
+            local.childProcessSpawnWithTimeout('ls')
+                .on('error', onParallel)
+                .on('exit', function (exitCode, signal) {
+                    // validate exitCode
+                    local.assertJsonEqual(exitCode, 0);
+                    // validate signal
+                    local.assertJsonEqual(signal, null);
+                    onParallel();
+                });
+            // test timeout handling-behavior
+            onParallel.counter += 1;
+            local.testMock([
+                [local, { timeoutDefault: 1000 }]
+            ], function (onError) {
+                options.childProcess = local.childProcessSpawnWithTimeout('sleep', [5000]);
+                onError();
+            }, local.onErrorThrow);
+            options.childProcess
+                .on('error', onParallel)
+                .on('exit', function (exitCode, signal) {
+                    // validate exitCode
+                    local.assertJsonEqual(exitCode, null);
+                    // validate signal
+                    local.assertJsonEqual(signal, 'SIGKILL');
+                    onParallel();
+                });
+            onParallel();
         };
 
         local.testCase_fsWriteFileWithMkdirpSync_default = function (options, onError) {
@@ -1977,6 +2070,7 @@
                 headers: {
                     'access-control-request-headers': 'forward-proxy-headers,forward-proxy-url'
                 },
+                method: 'OPTIONS',
                 url: ''
             };
             onParallel.counter += 1;
@@ -2046,45 +2140,6 @@
                 }, 1500);
                 onParallel(error);
             });
-        };
-
-        local.testCase_processSpawnWithTimeout_default = function (options, onError) {
-        /*
-         * this function will test processSpawnWithTimeout's default handling-behavior
-         */
-            var onParallel;
-            options = {};
-            onParallel = local.onParallel(onError);
-            onParallel.counter += 1;
-            // test default handling-behavior
-            onParallel.counter += 1;
-            local.processSpawnWithTimeout('ls')
-                .on('error', onParallel)
-                .on('exit', function (exitCode, signal) {
-                    // validate exitCode
-                    local.assertJsonEqual(exitCode, 0);
-                    // validate signal
-                    local.assertJsonEqual(signal, null);
-                    onParallel();
-                });
-            // test timeout handling-behavior
-            onParallel.counter += 1;
-            local.testMock([
-                [local, { timeoutDefault: 1000 }]
-            ], function (onError) {
-                options.childProcess = local.processSpawnWithTimeout('sleep', [5000]);
-                onError();
-            }, local.onErrorThrow);
-            options.childProcess
-                .on('error', onParallel)
-                .on('exit', function (exitCode, signal) {
-                    // validate exitCode
-                    local.assertJsonEqual(exitCode, null);
-                    // validate signal
-                    local.assertJsonEqual(signal, 'SIGKILL');
-                    onParallel();
-                });
-            onParallel();
         };
 
         local.testCase_replStart_default = function (options, onError) {
@@ -2178,7 +2233,7 @@
                     }
                 }],
                 [local, {
-                    assetsDict: local.objectSetDefault({}, local.assetsDict),
+                    assetsDict: { '/assets.index.template.html': '' },
                     onFileModifiedRestart: local.nop
                 }]
             ];
@@ -2341,7 +2396,7 @@
             onError
         ) {
         /*
-         * this function will test browser's null-case handling-behavior-behavior
+         * this function will test browser's null-case handling-behavior
          */
             onError(null, options);
         };
@@ -2425,6 +2480,10 @@
                 '<script src="assets.example.js"></script>\n' +
                 '<script src="assets.test.js"></script>\n' +
                 '<script>window.utility2.onReadyBefore();</script>\n';
+        local.assetsDict['/assets.recurse1'] = local.assetsDict['/assets.recurse2'] =
+            '<a href="assets.recurse1"></a>\n' +
+            '<a href="assets.recurse2"></a>\n' +
+            '<a href="assets.undefined"></a>\n';
         if (process.argv[2]) {
             // start with coverage
             if (local.env.npm_config_mode_coverage) {
@@ -2438,12 +2497,104 @@
             local.Module.runMain();
         }
 
+        local.testCase_browserTest_electron = function (options, onError) {
+        /*
+         * this function will test browserTest's electron handling-behavior
+         */
+            options = function (arg0, arg1) {
+                // test onParallel handling-behavior
+                if (typeof arg0 === 'function') {
+                    arg0();
+                }
+                // test on handling-behavior
+                if (typeof arg1 === 'function') {
+                    arg1(options, '');
+                    arg1(options, options.fileElectronHtml);
+                    arg1(options, options.fileElectronHtml + ' opened');
+                }
+                return options;
+            };
+            options.BrowserWindow = options;
+            options.app = options;
+            options.electron = options;
+            options.capturePage = options;
+            options.loadURL = options;
+            options.on = options;
+            options.once = options;
+            options.prototype = options;
+            options.toPng = options;
+            options.unref = options;
+            local.testMock([
+                [local.global, { setTimeout: options }],
+                [process.versions, { electron: true }],
+                [local, { onParallel: options }]
+            ], function (onError) {
+                local.browserTest(options, local.nop);
+                options.modeNext = 0;
+                options.modeBrowserTest = 'scrape';
+                local.browserTest(options, local.nop);
+                onError();
+            }, onError);
+        };
+
+        local.testCase_browserTest_default = function (options, onError) {
+        /*
+         * this function will test browserTest's default handling-behavior
+         */
+            var options2;
+            options = {};
+            local.onNext(options, function (error) {
+                switch (options.modeNext) {
+                // test scrape handling-behavior
+                case 1:
+                    options2 = {};
+                    options2.modeBrowserTest = 'scrape';
+                    options2.modeBrowserTestRecurseDepth = 1;
+                    options2.modeBrowserTestRecurseExclude = 'undefined';
+                    options2.modeTestIgnore = true;
+                    options2.timeoutScreenshot = 1000;
+                    options2.url = local.serverLocalHost + '/assets.recurse1';
+                    local.browserTest(options2, options.onNext);
+                    break;
+                // test translateAfterScrape handling-behavior
+                case 2:
+                    options2.modeBrowserTest = 'translateAfterScrape';
+                    options2.modeBrowserTestTranslate = 'ru,zh-CN';
+                    options2.modeNext = 0;
+                    options2.url = options2.fileScreenshotBase;
+                    local.browserTest(options2, options.onNext);
+                    break;
+                case 3:
+                    // validate scraped files
+                    [
+                        options2.fileScreenshotBase + '.html',
+                        options2.fileScreenshotBase + '.png',
+                        options2.fileScreenshotBase + '.translateAfterScrape.ru.html',
+                        options2.fileScreenshotBase + '.translateAfterScrape.ru.png',
+                        options2.fileScreenshotBase + '.translateAfterScrape.zh-CN.html',
+                        options2.fileScreenshotBase + '.translateAfterScrape.zh-CN.png',
+                        options2.fileScreenshotBase.replace('recurse1', 'recurse2') + '.html',
+                        options2.fileScreenshotBase.replace('recurse1', 'recurse2') + '.png'
+                    ].forEach(function (file) {
+                        local.assert(local.fs.existsSync(file), file);
+                        local.fs.unlinkSync(file);
+                    });
+                    options.onNext();
+                    break;
+                default:
+                    onError(error);
+                }
+            });
+            options.modeNext = 0;
+            options.onNext();
+        };
+
         local.testCase_buildApidoc_default = local.testCase_buildApidoc_default || function (
             options,
             onError
         ) {
         /*
-         * this function will test buildApidoc's default handling-behavior-behavior
+         * this function will test buildApidoc's default handling-behavior
          */
             options = { modulePathList: module.paths };
             local.buildApidoc(options, onError);
@@ -2454,7 +2605,7 @@
             onError
         ) {
         /*
-         * this function will test buildApp's default handling-behavior-behavior
+         * this function will test buildApp's default handling-behavior
          */
             local.testCase_buildReadme_default(options, local.onErrorThrow);
             local.testCase_buildLib_default(options, local.onErrorThrow);
@@ -2489,7 +2640,7 @@
             onError
         ) {
         /*
-         * this function will test buildReadme's default handling-behavior-behavior
+         * this function will test buildReadme's default handling-behavior
          */
             options = {};
             local.buildReadme(options, onError);

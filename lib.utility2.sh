@@ -3,6 +3,7 @@
 shBaseInit() {
 # this function will init the base bash-login env, and is intended for aws-ec2 setup
     local FILE || return $?
+    # PATH=/usr/local/bin:/usr/bin:/bin
     # init $PATH_BIN
     if [ ! "$PATH_BIN" ]
     then
@@ -68,32 +69,17 @@ shBaseInstall() {
 }
 
 shBrowserTest() {(set -e
-# this function will spawn an electron process to test the given $URL,
+# this function will spawn an electron process to test the given url $LIST,
 # and merge the test-report into the existing test-report
-    export url="$1"
-    export modeBrowserTest="$2"
-    shBuildInit
-    export MODE_BUILD="${MODE_BUILD:-browserTest}"
-    shBuildPrint "electron.${modeBrowserTest} - $url"
-    # run browser-test
-    lib.utility2.js cli.browserTest
-    if [ "$modeBrowserTest" = test ]
-    then
-        # create test-report artifacts
-        lib.utility2.js cli.testReportCreate
-    fi
-)}
-
-shBrowserTestList() {(set -e
-# this function will spawn an electron process to test the given $URL,
-# and merge the test-report into the existing test-report
+# example usage:
+# $ modeBrowserTestTranslate=en shBrowserTest http://www.news.cn/local/index.htm scrape
     LIST="$1"
     export modeBrowserTest="$2"
     shBuildInit
     export MODE_BUILD="${MODE_BUILD:-browserTest}"
     shBuildPrint "electron.${modeBrowserTest} - $LIST"
     # run browser-test
-    lib.utility2.js cli.browserTestList "$LIST"
+    lib.utility2.js cli.browserTest "$LIST"
     if [ "$modeBrowserTest" = test ]
     then
         # create test-report artifacts
@@ -237,11 +223,7 @@ shBuildCi() {(set -e
             /bin/sh .task.sh
         fi
         ;;
-    docker.base)
-        export CI_BRANCH=alpha
-        shBuildCiInternal
-        ;;
-    docker.latest)
+    docker.*)
         export CI_BRANCH=alpha
         shBuildCiInternal
         ;;
@@ -333,6 +315,14 @@ shBuildCi() {(set -e
     esac
 )}
 
+shBuildCiCreate() {(set -e
+# this function will create the build-ci for the $GITHUB_REPO
+    GITHUB_REPO="$1"
+    shCustomOrgRepoListCreate "$GITHUB_REPO"
+    cd "/tmp/$GITHUB_REPO"
+    shBuildApp
+)}
+
 shBuildCiInternal() {(set -e
 # this function will run the internal build
     shBuildInit
@@ -418,7 +408,7 @@ shBuildCiInternal() {(set -e
             LIST="$LIST $npm_config_dir_build/$FILE"
         fi
     done
-    MODE_BUILD=buildCi shBrowserTestList "$LIST" screenshot
+    MODE_BUILD=buildCi shBrowserTest "$LIST" screenshot
     if [ "$npm_package_buildCustomOrg" ]
     then
         case "$GITHUB_ORG" in
@@ -473,7 +463,7 @@ local.rgx = new RegExp(
     'g'
 );
 local.fs.readFileSync(local.file, 'utf8')
-    .replace(/\\n# all screenshots\\n[\\S\\s]*?\\n\\n\\n\\n/, '')
+    .replace((/build.screenshot.npmTestPublished./g), '')
     .replace(local.rgx, function (match0, match1) {
         if (match1.replace((/%25/g), '').indexOf('%') >= 0 ||
                 !local.fs.existsSync(
@@ -511,6 +501,8 @@ shBuildGithubUpload() {(set -e
     rm -fr "$DIR"
     git clone "$URL" --single-branch -b gh-pages "$DIR"
     cd "$DIR"
+    # cleanup screenshot
+    rm -f build/*127.0.0.1*
     case "$CI_COMMIT_MESSAGE_META" in
     "[build clean]")
         shBuildPrint "[build clean]"
@@ -521,7 +513,7 @@ shBuildGithubUpload() {(set -e
     cp -a "$npm_config_dir_build" .
     rm -fr "build..$CI_BRANCH..$CI_HOST"
     cp -a "$npm_config_dir_build" "build..$CI_BRANCH..$CI_HOST"
-    # .nojekyll
+    # disable github-jekyll
     touch .nojekyll
     # git-add .
     git add .
@@ -841,7 +833,7 @@ shCustomOrgBuildCi() {(set -e
     DIR="/tmp/$GITHUB_REPO"
     mkdir -p "$DIR"
     rm -fr "/tmp/$GITHUB_REPO"
-    git clone --branch=alpha --depth=50 "https://github.com/$GITHUB_REPO" "$DIR"
+    git clone --branch=alpha --depth=50 --single-branch "https://github.com/$GITHUB_REPO" "$DIR"
     cd "$DIR"
     if (
         export CI_BRANCH=alpha
@@ -1031,6 +1023,8 @@ printf '{ \
     }, \
     \"version\": \"0.0.1\" \
 }' > package.json; \
+sed -in 's/kaizhu256-kaizhu256.//' package.json; \
+rm -f package.jsonn; \
 sed -in 's/.*CRYPTO_AES_SH_ENCRYPTED.*//' .travis.yml; \
 rm -f .travis.ymln; \
 shCryptoTravisEncrypt; \
@@ -1075,7 +1069,7 @@ shDeployGithub() {(set -e
         return 1
     fi
     # screenshot deployed app
-    shBrowserTestList "$TEST_URL $TEST_URL/assets.swgg.html" screenshot &
+    shBrowserTest "$TEST_URL $TEST_URL/assets.swgg.html" screenshot
     # test deployed app
     MODE_BUILD="${MODE_BUILD}Test" shBrowserTest "$TEST_URL?modeTest=1&timeExit={{timeExit}}" \
         test
@@ -1108,7 +1102,7 @@ shDeployHeroku() {(set -e
         return 1
     fi
     # screenshot deployed app
-    shBrowserTestList "$TEST_URL $TEST_URL/assets.swgg.html" screenshot &
+    shBrowserTest "$TEST_URL $TEST_URL/assets.swgg.html" screenshot
     # test deployed app
     MODE_BUILD="${MODE_BUILD}Test" shBrowserTest "$TEST_URL?modeTest=1&timeExit={{timeExit}}" \
         test
@@ -1116,6 +1110,7 @@ shDeployHeroku() {(set -e
 
 shDockerBuildCleanup() {(set -e
 # this function will cleanup the docker build
+# apt list --installed
     rm -fr \
         /root/.npm \
         /tmp/.* \
@@ -1396,8 +1391,11 @@ shDockerStart() {(set -e
         DOCKER_OPTIONS="$DOCKER_OPTIONS -p $LOCALHOST:$DOCKER_PORT:$DOCKER_PORT"
     fi
     DOCKER_ROOT="${DOCKER_HOME:-$HOME}"
+    if [ ! "$DOCKER_SANDBOX" ]
+    then
+        DOCKER_OPTIONS="$DOCKER_OPTIONS -v $DOCKER_ROOT:/root"
+    fi
     docker run --name "$NAME" -dt -e debian_chroot="$NAME" \
-        -v "$DOCKER_ROOT:/root" \
         $DOCKER_OPTIONS \
         "$IMAGE" "$@"
 )}
@@ -1956,7 +1954,20 @@ require('http').createServer(function (request, response) {
 )}
 
 shImageToDataUri() {(set -e
-# this function convert the image $1 to a data-uri string
+# this function convert the image $FILE to a data-uri string
+    case "$1" in
+    http://*)
+        FILE=/tmp/shImageToDataUri.png
+        curl -#Lf "$1" > "$FILE"
+        ;;
+    https://*)
+        FILE=/tmp/shImageToDataUri.png
+        curl -#Lf "$1" > "$FILE"
+        ;;
+    *)
+        FILE="$1"
+        ;;
+    esac
     node -e "
 // <script>
 /*jslint
@@ -1971,9 +1982,9 @@ shImageToDataUri() {(set -e
 */
 'use strict';
 console.log('data:image/' +
-    require('path').extname('$1').slice(1) +
+    require('path').extname('$FILE').slice(1) +
     ';base64,' +
-    require('fs').readFileSync('$1').toString('base64'));
+    require('fs').readFileSync('$FILE').toString('base64'));
 // </script>
     "
 )}
@@ -2112,6 +2123,7 @@ shMain() {
 # this function will run the main program
     export UTILITY2_DEPENDENTS="apidoc-lite
         db-lite
+        elasticsearch-lite
         electron-lite
         istanbul-lite
         jslint-lite
@@ -2629,6 +2641,20 @@ shPasswordRandom() {(set -e
     openssl rand -base64 32
 )}
 
+shPidByPort() {(set -e
+# this function will print the process pid for the given port $1
+# https://stackoverflow.com/questions/4421633/who-is-listening-on-a-given-tcp-port-on-mac-os-x
+# https://unix.stackexchange.com/questions/106561/finding-the-pid-of-the-process-using-a-specific-port
+    case "$(uname)" in
+    Darwin)
+        lsof -n -i:"$1" | grep LISTEN
+        ;;
+    Linux)
+        netstat -nlp | grep 9000
+        ;;
+    esac
+)}
+
 shReadmeTest() {(set -e
 # this function will extract, save, and test the script $FILE embedded in README.md
     shBuildInit
@@ -2680,7 +2706,7 @@ shReadmeTest() {(set -e
         sed '/./,$!d' "$FILE"
     fi
     export PORT=8081
-    export npm_config_timeout_exit=30000
+    export npm_config_timeout_exit="${npm_config_timeout_exit:-30000}"
     # screenshot
     (
     shSleep 15
@@ -2699,7 +2725,8 @@ shReadmeTest() {(set -e
         /bin/sh "$FILE"
         ;;
     esac
-    (eval shKillallElectron 2>/dev/null) || true
+    shSleep 15
+    ! shKillallElectron 2>/dev/null
 )}
 
 shReplClient() {(set -e
@@ -2843,7 +2870,7 @@ local.result = '<svg height=\"' + (local.yy + 20) +
 local.fs.writeFileSync('$npm_config_dir_build/$MODE_BUILD_SCREENSHOT_IMG', local.result);
 // </script>
     "
-    shBuildPrint "created file://$npm_config_dir_build/$MODE_BUILD_SCREENSHOT_IMG"
+    shBuildPrint "created screenshot file $npm_config_dir_build/$MODE_BUILD_SCREENSHOT_IMG"
     return "$EXIT_CODE"
 )}
 
@@ -3071,6 +3098,7 @@ shUtility2BuildApp() {(set -e
 shUtility2DependentsSync() {(set -e
 # this function will sync files between utility2 and its dependents
     cd "$HOME/src"
+    (cd utility2 && shBuildApp)
     # hardlink "lib.$LIB.js"
     ln -f "utility2/lib.utility2.sh" "$HOME"
     for LIB in apidoc db istanbul jslint uglifyjs
@@ -3080,21 +3108,28 @@ shUtility2DependentsSync() {(set -e
             ln -f "utility2/lib.$LIB.js" "$LIB-lite"
         fi
     done
-    # hardlink .gitignore
     for DIR in $UTILITY2_DEPENDENTS
     do
-        if [ -d "$DIR" ] && [ "$DIR" != utility2 ]
+        # hardlink .gitignore
+        if [ ! -d "$DIR" ]
+        then
+            continue
+        fi
+        if [ "$DIR" != utility2 ]
         then
             ln -f utility2/.gitignore "$DIR"
         fi
+        # hardlink assets.utility2.rollup.js
+        case "$DIR" in
+        elasticsearch-lite)
+            ln -f utility2/tmp/build/app/assets.utility2.rollup.js "$DIR"
+            ;;
+        swgg)
+            ln -f utility2/tmp/build/app/assets.utility2.rollup.js "$DIR"
+            ln -f utility2/lib.swgg.js "$DIR"
+            ;;
+        esac
     done
-    (cd utility2; shBuildApp)
-    # hardlink lib.swgg.js
-    if [ -d swgg ]
-    then
-        ln -f utility2/tmp/build/app/assets.utility2.rollup.js swgg
-        ln -f utility2/lib.swgg.js swgg
-    fi
 )}
 
 shUtility2GitCommit() {(set -e
@@ -3174,9 +3209,10 @@ shUtility2Version() {(set -e
 
 shXvfbStart() {
 # this function will start xvfb
-    export DISPLAY=:99.0 || return $?
-    rm -f /tmp/.X99-lock || return $?
-    (Xvfb "$DISPLAY" &) 2>/dev/null || true
+    if [ "$(uname)" = Linux ] && [ ! "$DISPLAY" ]
+    then
+        rm -f /tmp/.X99-lock && export DISPLAY=:99.0 && (Xvfb "$DISPLAY" &) 2>/dev/null || true
+    fi
 }
 
 shMain "$@"

@@ -52,6 +52,7 @@
         }
         // init lib utility2
         local.global.utility2 = local.global.utility2_utility2 = local.utility2 = local;
+        local.timeStart = local.timeStart || Date.now();
     }());
 
 
@@ -160,7 +161,7 @@ textarea[readonly] {\n\
 </head>\n\
 <body>\n\
 <!-- utility2-comment\n\
-<div id="ajaxProgressDiv1" style="background: #d00; height: 2px; left: 0; margin: 0; padding: 0; position: fixed; top: 0; width: 25%;"></div>\n\
+<div id="ajaxProgressDiv1" style="background: #d00; height: 2px; left: 0; margin: 0; padding: 0; position: fixed; top: 0; transition: background 500ms, width 1500ms; width: 25%;"></div>\n\
 utility2-comment -->\n\
 <h1>\n\
 <!-- utility2-comment\n\
@@ -635,7 +636,7 @@ node ./assets.app.js\n\
 \n\
 \n\
 \n\
-# all screenshots\n\
+# extra screenshots\n\
 1. [https://kaizhu256.github.io/node-jslint-lite/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png](https://kaizhu256.github.io/node-jslint-lite/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)\n\
 [![screenshot](https://kaizhu256.github.io/node-jslint-lite/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)](https://kaizhu256.github.io/node-jslint-lite/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)\n\
 \n\
@@ -945,7 +946,7 @@ local.assetsDict['/assets.test.template.js'] = '\
             onError\n\
         ) {\n\
         /*\n\
-         * this function will test browser\'s null-case handling-behavior-behavior\n\
+         * this function will test browser\'s null-case handling-behavior\n\
          */\n\
             onError(null, options);\n\
         };\n\
@@ -978,7 +979,7 @@ local.assetsDict['/assets.test.template.js'] = '\
             onError\n\
         ) {\n\
         /*\n\
-         * this function will test buildApidoc\'s default handling-behavior-behavior\n\
+         * this function will test buildApidoc\'s default handling-behavior\n\
          */\n\
             options = { modulePathList: module.paths };\n\
             local.buildApidoc(options, onError);\n\
@@ -989,7 +990,7 @@ local.assetsDict['/assets.test.template.js'] = '\
             onError\n\
         ) {\n\
         /*\n\
-         * this function will test buildApp\'s default handling-behavior-behavior\n\
+         * this function will test buildApp\'s default handling-behavior\n\
          */\n\
             local.testCase_buildReadme_default(options, local.onErrorThrow);\n\
             local.testCase_buildLib_default(options, local.onErrorThrow);\n\
@@ -1024,7 +1025,7 @@ local.assetsDict['/assets.test.template.js'] = '\
             onError\n\
         ) {\n\
         /*\n\
-         * this function will test buildReadme\'s default handling-behavior-behavior\n\
+         * this function will test buildReadme\'s default handling-behavior\n\
          */\n\
             options = {};\n\
             local.buildReadme(options, onError);\n\
@@ -1819,6 +1820,14 @@ local.assetsDict['/favicon.ico'] = '';
         local.ajax = function (options, onError) {
         /*
          * this function will send an ajax-request with error-handling and timeout
+         * example usage:
+            local.ajax({
+                method: 'GET',
+                url: '/index.html'
+            }, function (error, xhr) {
+                console.log(xhr.responseText);
+                console.log(xhr.statusCode);
+            });
          */
             var tmp, xhr;
             // init standalone handling-behavior
@@ -1991,8 +2000,6 @@ local.assetsDict['/favicon.ico'] = '';
             if (!ajaxProgressDiv1) {
                 return;
             }
-            // init transition
-            ajaxProgressDiv1.style.transition = 'width 1500ms';
             // init ajaxProgressDiv1StyleBackground
             local.ajaxProgressDiv1StyleBackground = local.ajaxProgressDiv1StyleBackground ||
                 ajaxProgressDiv1.style.background;
@@ -2015,7 +2022,6 @@ local.assetsDict['/favicon.ico'] = '';
             clearTimeout(local.timerTimeoutAjaxProgressHide);
             // hide ajaxProgress
             local.timerTimeoutAjaxProgressHide = setTimeout(function () {
-                ajaxProgressDiv1.style.transition = 'background 500ms';
                 ajaxProgressDiv1.style.background = 'transparent';
                 local.ajaxProgressCounter = 0;
                 local.ajaxProgressState = 0;
@@ -2023,7 +2029,6 @@ local.assetsDict['/favicon.ico'] = '';
                 setTimeout(function () {
                     // coverage-hack - ignore else-statement
                     local.nop(!local.ajaxProgressState && (function () {
-                        ajaxProgressDiv1.style.transition = '';
                         ajaxProgressDiv1.style.width = '0%';
                     }()));
                 }, 500);
@@ -2054,7 +2059,7 @@ local.assetsDict['/favicon.ico'] = '';
         local.assertJsonEqual = function (aa, bb) {
         /*
          * this function will assert
-         * utility2.jsonStringifyOrdered(aa) === JSON.stringify(bb)
+         * jsonStringifyOrdered(aa) === JSON.stringify(bb)
          */
             aa = local.jsonStringifyOrdered(aa);
             bb = JSON.stringify(bb);
@@ -2064,11 +2069,11 @@ local.assetsDict['/favicon.ico'] = '';
         local.assertJsonNotEqual = function (aa, bb) {
         /*
          * this function will assert
-         * utility2.jsonStringifyOrdered(aa) !== JSON.stringify(bb)
+         * jsonStringifyOrdered(aa) !== JSON.stringify(bb)
          */
             aa = local.jsonStringifyOrdered(aa);
             bb = JSON.stringify(bb);
-            local.assert(aa !== bb, [aa, bb]);
+            local.assert(aa !== bb, [aa]);
         };
 
         local.base64FromBuffer = function (bff) {
@@ -2148,7 +2153,7 @@ local.assetsDict['/favicon.ico'] = '';
             bff = local.base64ToBuffer(text);
             text = '';
             for (ii = 0; ii < bff.length; ii += 1) {
-                text += (0x100 + bff[ii]).toString(16).slice(-2);
+                text += (256 + bff[ii]).toString(16).slice(-2);
             }
             return text;
         };
@@ -2221,68 +2226,306 @@ local.assetsDict['/favicon.ico'] = '';
             }
         };
 
-        /* istanbul ignore next */
         local.browserTest = function (options, onError) {
         /*
          * this function will spawn an electron process to test options.url
          */
-            var isDone, modeNext, onNext, onParallel, timerTimeout;
-            if (typeof local === 'object' && local && local.modeJs === 'node') {
-                local.objectSetDefault(options, local.envSanitize(local.env));
-                options.timeoutDefault = options.timeoutDefault || local.timeoutDefault;
-            }
-            modeNext = Number(options.modeNext || 0);
-            onNext = function (error, data) {
-                modeNext = error instanceof Error
-                    ? Infinity
-                    : modeNext + 1;
-                switch (modeNext) {
+            var fileScreenshotBaseScrape, isDone, onParallel, timerTimeout;
+            local.onNext(options, function (error, data) {
+                switch (options.modeNext) {
                 // node - init
                 case 1:
+                    fileScreenshotBaseScrape = function (url) {
+                        return options.npm_config_dir_build + '/screenshot.scrape.browser.' +
+                            encodeURIComponent(url.split(/[?#]/)[0]);
+                    };
                     // init options
+                    [
+                        'CI_BRANCH',
+                        'CI_HOST',
+                        'DISPLAY',
+                        'MODE_BUILD',
+                        'PATH',
+                        'fileCoverage',
+                        'fileScreenshotBase',
+                        'fileTestReport',
+                        'modeBrowserTest',
+                        'modeBrowserTestRecurseDepth',
+                        'modeBrowserTestRecurseExclude',
+                        'modeBrowserTestRecurseInclude',
+                        'modeBrowserTestRecursePath',
+                        'modeBrowserTestShow',
+                        'modeBrowserTestTranslate',
+                        'modeBrowserTestTranslating',
+                        'modeCoverageMerge',
+                        'modeSilent',
+                        'npm_config_dir_build',
+                        'npm_config_dir_tmp',
+                        'rateLimit',
+                        'timeExit',
+                        'timeoutDefault',
+                        'timeoutScreenshot',
+                        'url'
+                    ].forEach(function (key) {
+                        if (typeof options[key] === 'number') {
+                            return;
+                        }
+                        options[key] = options[key] || local.env[key] || '';
+                        local.assert(!(options[key] && typeof options[key] === 'object'));
+                    });
+                    options.modeBrowserTestRecurseDepth = Number(
+                        options.modeBrowserTestRecurseDepth
+                    ) || 0;
+                    if (options.modeBrowserTest === 'translateAfterScrape') {
+                        options.modeBrowserTest = 'scrape';
+                        options.modeBrowserTest2 = 'translateAfterScrape';
+                    }
+                    options.timeoutDefault = options.timeoutDefault || local.timeoutDefault;
+                    // init url
                     if (!(/^\w+:\/\//).test(options.url)) {
                         options.url = local.path.resolve(process.cwd(), options.url);
+                        if (options.modeBrowserTest2 === 'translateAfterScrape' &&
+                                !options.modeBrowserTestTranslating) {
+                            options.fileScreenshotBase = options.url;
+                        }
                     }
                     options.urlParsed = local.urlParse(options.url);
+                    // init testName
                     options.testName = options.urlParsed.pathname;
                     if (options.testName.indexOf(process.cwd()) === 0) {
                         options.testName = options.testName.replace(process.cwd(), '');
                     }
-                    if (local.env.npm_config_modeBrowserTestHostInclude) {
-                        options.testName = options.urlParsed.host + options.testName;
+                    if (options.modeBrowserTest === 'scrape') {
+                        options.testName = options.urlParsed.href
+                            .split('/')
+                            .slice(0, 3)
+                            .join('/') + options.testName;
+                        options.fileScreenshotBase = options.fileScreenshotBase ||
+                            fileScreenshotBaseScrape(options.url);
                     }
-                    options.testName = local.env.MODE_BUILD + '.browser.' +
-                        encodeURIComponent(options.testName
-                            .replace(
-                                '/build..' + local.env.CI_BRANCH + '..' + local.env.CI_HOST,
-                                '/build'
-                            ));
+                    options.testName = options.MODE_BUILD + '.browser.' +
+                        encodeURIComponent(options.testName.replace(
+                            '/build..' + options.CI_BRANCH + '..' + options.CI_HOST,
+                            '/build'
+                        ));
                     local.objectSetDefault(options, {
-                        fileCoverage: local.env.npm_config_dir_tmp +
+                        fileCoverage: options.npm_config_dir_tmp +
                             '/coverage.' + options.testName + '.json',
-                        fileScreenshot: (local.env.npm_config_dir_build +
-                            '/screenshot.' + options.testName + '.png'),
-                        fileTestReport: local.env.npm_config_dir_tmp +
+                        fileScreenshotBase: options.npm_config_dir_build +
+                            '/screenshot.' + options.testName,
+                        fileTestReport: options.npm_config_dir_tmp +
                             '/test-report.' + options.testName + '.json',
                         modeBrowserTest: 'test',
                         timeExit: Date.now() + options.timeoutDefault,
-                        timeoutScreenshot: Number(options.timeoutScreenshot || 10000)
+                        timeoutScreenshot: options.timeoutScreenshot || 15000
                     }, 1);
+                    options.fileScreenshot = options.fileScreenshotBase + '.png';
+                    // node.electron - init
+                    if (process.versions.electron) {
+                        options.modeNext = 10;
+                        options.onNext();
+                        return;
+                    }
+                    // node - translating
+                    if (options.modeBrowserTestTranslating) {
+                        options.onNext();
+                        return;
+                    }
+                    // node - recurse
+/*
+example usage:
+mkdir -p /tmp/100 && \
+    rm -f /tmp/100/screenshot.* && \
+    modeBrowserTestRecurseDepth=1 \
+    modeBrowserTestRecurseInclude=/www.iana.org/,/example.com/ \
+    modeBrowserTestTranslate=zh-CN \
+    npm_config_dir_build=/tmp/100 \
+    timeoutScreenshot=5000 \
+    shBrowserTest 'http://example.com/' scrape && \
+    ls -l /tmp/100
+mkdir -p /tmp/100 && \
+    rm -f /tmp/100/screenshot.* && \
+    modeBrowserTestRecurseDepth=1 \
+    modeBrowserTestRecurseExclude=/english/ \
+    modeBrowserTestRecurseInclude=.xinhuanet.com/,/xinhuanet.com/ \
+    modeBrowserTestTranslate2=en \
+    npm_config_dir_build=/tmp/100 \
+    rateLimit=4 \
+    timeoutScreenshot=10000 \
+    shBrowserTest 'http://xinhuanet.com/' scrape && \
+    ls -l /tmp/100
+*/
+                    if (options.modeBrowserTestRecursePath) {
+                        if (options.modeBrowserTestRecurseDepth < 0 ||
+                                local.fs.existsSync(options.fileScreenshot)) {
+                            options.modeNext = Infinity;
+                        } else {
+                            console.error('\nbrowserTest - recurse ' +
+                                options.modeBrowserTestRecurseDepth + ' ' +
+                                options.modeBrowserTestRecursePath + options.url +
+                                '\n');
+                            local.fs.writeFileSync(options.fileScreenshot, '');
+                        }
+                        options.onNext();
+                        return;
+                    }
+                    options.onNext();
+                    break;
+                // node - spawn electron
+                case 2:
+                    // node - translateAfterScrape
+                    if (options.modeBrowserTest2 === 'translateAfterScrape' &&
+                            !options.modeBrowserTestTranslating) {
+                        options.onNext();
+                        return;
+                    }
+                    if (options.modeBrowserTest !== 'scrape') {
+                        options.modeNext = Infinity;
+                    }
+                    local.childProcessSpawnWithTimeout('electron', [
+                        __filename,
+                        'cli.browserTest',
+                        options.url,
+                        '--enable-logging'
+                    ], {
+                        env: options,
+                        stdio: options.modeSilent
+                            ? 'ignore'
+                            : ['ignore', 1, 2],
+                        timeout: options.timeoutDefault
+                    })
+                        .on('error', options.onNext)
+                        .once('exit', options.onNext);
+                    break;
+                // node - google-translate options.url
+                // to the languages in options.modeBrowserTranslate
+                case 3:
+                    if (options.modeBrowserTest2 === 'translateAfterScrape' ||
+                            options.modeBrowserTestTranslating) {
+                        options.modeNext = Infinity;
+                    }
+                    local.onParallelList({
+                        list: (!options.modeBrowserTestTranslating &&
+                            options.modeBrowserTestTranslate
+                            .split(/[\s,]+/)
+                            .filter(function (element) {
+                                return element;
+                            }))
+                    }, function (options2, onParallel) {
+                        options2.fileScreenshotBase = options.fileScreenshotBase +
+                            '.translateAfterScrape.' + options2.element;
+                        local.fs.writeFileSync(
+                            options2.fileScreenshotBase + '.html',
+                            local.fs.readFileSync(options.fileScreenshotBase + '.html', 'utf8')
+/* jslint-ignore-begin */
+// local.ajax({url: 'https://translate.googleapis.com/translate_a/l?client=te' }, function () { console.log(local.jsonStringifyOrdered(JSON.parse(arguments[1].responseText), null, 4)); });
++ '\
+\n\
+<div id="google_translate_element"></div>\n\
+<script type="text/javascript">\n\
+function TranslateElementInit() {\n\
+    new google.translate.TranslateElement({\n\
+        includedLanguages: "' + options2.element + '",\n\
+        layout: google.translate.TranslateElement.InlineLayout.HORIZONTAL\n\
+    }, "google_translate_element");\n\
+    document.querySelector(".goog-te-combo").selectedIndex = 1;\n\
+    document.querySelector(".goog-te-combo").dispatchEvent(new Event("change"));\n\
+    document.querySelector(".goog-te-combo").dispatchEvent(new Event("change"));\n\
+    setInterval(function () {\n\
+        window.scrollTo(0, 0);\n\
+    }, 1000);\n\
+}\n\
+</script>\n\
+<script type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=TranslateElementInit"></script>\n\
+'
+/* jslint-ignore-end */
+                        );
+                        onParallel.counter += 1;
+                        local.browserTest({
+                            modeBrowserTest: options2.modeBrowserTest,
+                            fileScreenshotBase: options2.fileScreenshotBase,
+                            modeBrowserTestTranslating: options2.element,
+                            timeoutScreenshot: options.timeoutScreenshot,
+                            url: (options2.fileScreenshotBase + '.html').replace((/%/g), '%25')
+                        }, onParallel);
+                    }, options.onNext);
+                    break;
+                // node - recurse
+                case 4:
+                    local.fs.readFileSync(
+                        options.fileScreenshotBase + '.html',
+                        'utf8'
+                    ).replace((/ data-scrape="([\S\s]*?)"/), function (match0, match1) {
+                        // jslint-hack
+                        local.nop(match0);
+                        data = JSON.parse(match1
+                            .replace((/&quot;/g), '"')
+                            .replace((/&amp;/g), '&'));
+                    });
+                    data.readdirDict = {};
+                    data.recurseDict = {};
+                    data.tmp = local.fs.readdirSync(options.npm_config_dir_build);
+                    data.tmp.forEach(function (file) {
+                        data.readdirDict[options.npm_config_dir_build + '/' + file] = true;
+                    });
+                    data.exclude = options.modeBrowserTestRecurseExclude
+                        .split(/[\s,]+/)
+                        .filter(function (element) {
+                            return element;
+                        });
+                    data.include = (options.modeBrowserTestRecurseInclude ||
+                        (options.url.split((/[\/?#]/)).slice(0, 3).join('/')))
+                        .split(/[\s,]+/)
+                        .filter(function (element) {
+                            return element;
+                        });
+                    Object.keys(data.hrefDict).forEach(function (url) {
+                        if (url && data.exclude.every(function (element) {
+                                return url.indexOf(element) < 0;
+                            }) && data.include.some(function (element) {
+                                return url.indexOf(element) >= 0;
+                            })) {
+                            data.recurseDict[url] = true;
+                        }
+                    });
+                    local.onParallelList({
+                        list: Object.keys(data.recurseDict).sort(),
+                        rateLimit: options.rateLimit || 1
+                    }, function (options2, onParallel) {
+                        onParallel.counter += 1;
+                        local.browserTest({
+                            modeBrowserTest: options.modeBrowserTest,
+                            modeBrowserTestRecurseDepth:
+                                options.modeBrowserTestRecurseDepth - 1,
+                            modeBrowserTestRecurseExclude:
+                                options.modeBrowserTestRecurseExclude,
+                            modeBrowserTestRecurseInclude:
+                                options.modeBrowserTestRecurseInclude,
+                            modeBrowserTestRecursePath: options.modeBrowserTestRecursePath +
+                                options.url + ' -> ',
+                            modeBrowserTestTranslate: options.modeBrowserTestTranslate,
+                            timeoutScreenshot: options.timeoutScreenshot,
+                            url: options2.element
+                        }, onParallel);
+                    }, options.onNext);
+                    break;
+                // node.electron - init
+                case 11:
                     // init timerTimeout
                     timerTimeout = local.onTimeout(
-                        onNext,
+                        options.onNext,
                         options.timeoutDefault,
                         options.testName
-                    );
+                    ).unref();
                     // init file fileElectronHtml
-                    options.browserTestScript = local.browserTest
+                    options.browserTestScript = local.browserTestElectron
                         .toString()
                         .replace((/<\//g), '<\\/')
                         // coverage-hack - un-instrument
                         .replace((/\b__cov_.*?\+\+/g), '0');
-                    options.modeNext = 20;
-                    options.fileElectronHtml = local.env.npm_config_dir_tmp + '/electron.' +
+                    options.fileElectronHtml = options.npm_config_dir_tmp + '/electron.' +
                         Date.now().toString(16) + Math.random().toString(16) + '.html';
+                    options.modeNext = 20;
                     local.fsWriteFileWithMkdirpSync(options.fileElectronHtml, '<style>body {' +
                             'border: 1px solid black;' +
                             'margin: 0;' +
@@ -2309,77 +2552,18 @@ local.assetsDict['/favicon.ico'] = '';
                         '(' + options.browserTestScript + '(' + JSON.stringify(options) +
                             '))'
                     );
-                    // spawn an electron process to test a url
-                    options.modeNext = 10;
-                    local.processSpawnWithTimeout('electron', [
-                        __filename,
-                        'cli.browserTest',
-                        '--enable-logging'
-                    ], {
-                        env: options,
-                        stdio: options.modeSilent
-                            ? 'ignore'
-                            : ['ignore', 1, 2]
-                    }).once('exit', onNext);
-                    break;
-                // node - after electron
-                case 2:
-                    // cleanup fileElectronHtml
-                    try {
-                        local.fs.unlinkSync(options.fileElectronHtml);
-                        local.fs.unlinkSync(options.fileElectronHtml + '.preload.js');
-                    } catch (ignore) {
-                    }
-                    console.error('\nbrowserTest - exit-code ' + error + ' - ' + options.url +
-                        '\n');
-                    // merge browser coverage
-                    if (options.modeCoverageMerge) {
-                        // try to JSON.parse the string
-                        local.tryCatchOnError(function () {
-                            data = JSON.parse(
-                                local.fs.readFileSync(options.fileCoverage, 'utf8')
-                            );
-                        }, local.nop);
-                        if (!local._debugTryCatchErrorCaught) {
-                            local.istanbulCoverageMerge(local.global.__coverage__, data);
-                            console.error('\nbrowserTest - merged coverage from ' +
-                                options.fileCoverage + '\n');
-                        }
-                    }
-                    if (options.modeBrowserTest !== 'test') {
-                        modeNext = Infinity;
-                        onNext();
-                        return;
-                    }
-                    // try to merge browser test-report
+                    // reset modeNext
+                    options.modeNext = 11;
+                    local.electron = options.electron;
                     local.tryCatchOnError(function () {
-                        data = JSON.parse(
-                            local.fs.readFileSync(options.fileTestReport, 'utf8')
-                        );
+                        local.electron = require('electron');
                     }, local.nop);
-                    if (local._debugTryCatchErrorCaught) {
-                        onNext(local._debugTryCatchErrorCaught);
-                        return;
-                    }
-                    if (!options.modeTestIgnore) {
-                        local.testReportMerge(local.testReport, data);
-                        console.error('\nbrowserTest - merged test-report from file://' +
-                            options.fileTestReport + '\n');
-                    }
-                    // create test-report.json
-                    local.fs.writeFileSync(
-                        local.env.npm_config_dir_build + '/test-report.json',
-                        JSON.stringify(local.testReport)
-                    );
-                    onNext(data && data.testsFailed && new Error(data.testsFailed));
-                    break;
-                // node.electron - init
-                case 11:
-                    local.electron = require('electron');
                     // handle uncaughtexception
-                    process.once('uncaughtException', onNext);
+                    process.once('uncaughtException', options.onNext);
                     // wait for electron to init
-                    local.electron.app.once('ready', onNext);
+                    local.electron.app.once('ready', function () {
+                        options.onNext();
+                    });
                     break;
                 // node.electron - after ready
                 case 12:
@@ -2387,51 +2571,127 @@ local.assetsDict['/favicon.ico'] = '';
                     local.objectSetDefault(options, {
                         frame: false,
                         height: 768,
+                        show: !!options.modeBrowserTestShow,
                         width: 1024,
                         x: 0,
                         y: 0
                     });
                     // init browserWindow
                     options.browserWindow = new options.BrowserWindow(options);
-                    onParallel = local.onParallel(onNext);
+                    onParallel = local.onParallel(options.onNext);
+                    // onParallel - html
                     onParallel.counter += 1;
+                    // onParallel - test
+                    if (options.modeBrowserTest === 'test') {
+                        onParallel.counter += 1;
+                    }
                     options.browserWindow.on('page-title-updated', function (event, title) {
-                        if ((!event || title).indexOf(options.fileElectronHtml) === 0) {
+                        if (event && title.indexOf(options.fileElectronHtml) === 0) {
+                            if (title.split(' ').slice(-1)[0] === 'opened') {
+                                console.error('\nbrowserTest - opened ' + options.url + '\n');
+                                return;
+                            }
                             onParallel();
                         }
                     });
                     // load url in browserWindow
-                    options.browserWindow.loadURL('file://' + options.fileElectronHtml);
+                    options.browserWindow.loadURL('file://' + options.fileElectronHtml, {
+                        userAgent: options.modeBrowserTest === 'scrape' &&
+                            'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 ' +
+                            '(KHTML, like Gecko) Chrome/53.0.2785.143 Safari/537.36'
+                    });
                     break;
-                // node.electron - after url-open
+                // node.electron - after html
                 case 13:
-                    console.error('\nbrowserTest - opened url ' + options.url + '\n');
-                    onParallel.counter += 1;
-                    if (options.modeBrowserTest === 'test') {
-                        onParallel.counter += 1;
-                    }
-                    onParallel.counter += 1;
-                    setTimeout(function () {
-                        options.browserWindow.capturePage(options, function (data) {
-                            local.fs.writeFileSync(options.fileScreenshot, data.toPng());
-                            console.error('\nbrowserTest - created screenshot file://' +
-                                options.fileScreenshot + '\n');
-                            onParallel();
-                        });
-                    }, options.timeoutScreenshot);
+                    options.browserWindow.capturePage(options, function (data) {
+                        local.fs.writeFileSync(options.fileScreenshot, data.toPng());
+                        console.error('\nbrowserTest - created screenshot file ' +
+                            options.fileScreenshot + '\n');
+                        options.onNext();
+                    });
                     break;
-                // node.electron - after test
+                // node.electron - after screenshot
                 case 14:
-                    console.error('browserTest - created screenshot file://' +
-                        options.fileScreenshot.replace((/\.\w+$/), '.html'));
-                    onNext();
+                    console.error('browserTest - created screenshot file ' +
+                        options.fileScreenshotBase + '.html');
+                    options.onNext();
+                    local.exit();
                     break;
+                default:
+                    if (isDone) {
+                        return;
+                    }
+                    isDone = true;
+                    local.onErrorDefault(error);
+                    if (options.modeBrowserTestRecursePath) {
+                        error = null;
+                    }
+                    // cleanup timerTimeout
+                    clearTimeout(timerTimeout);
+                    // cleanup fileElectronHtml
+                    local.tryCatchOnError(function () {
+                        local.fs.unlinkSync(options.fileElectronHtml);
+                        local.fs.unlinkSync(options.fileElectronHtml + '.preload.js');
+                    }, local.nop);
+                    // create test-report
+                    if (!(options.modeBrowserTest === 'test' &&
+                            local.modeJs === 'node' &&
+                            !process.versions.electron)) {
+                        onError(error);
+                        return;
+                    }
+                    // merge browser coverage
+                    // try to JSON.parse the string
+                    data = null;
+                    local.tryCatchOnError(function () {
+                        data = options.modeCoverageMerge && JSON.parse(
+                            local.fs.readFileSync(options.fileCoverage, 'utf8')
+                        );
+                    }, local.nop);
+                    local.istanbulCoverageMerge(local.global.__coverage__, data);
+                    console.error('\nbrowserTest - merged coverage from file ' +
+                        options.fileCoverage + '\n');
+                    // try to merge browser test-report
+                    data = null;
+                    local.tryCatchOnError(function () {
+                        data = !error && JSON.parse(
+                            local.fs.readFileSync(options.fileTestReport, 'utf8')
+                        );
+                    }, local.nop);
+                    if (data && !options.modeTestIgnore) {
+                        local.testReportMerge(local.testReport, data);
+                        console.error('\nbrowserTest - merged test-report from file ' +
+                            options.fileTestReport + '\n');
+                    }
+                    // create test-report.json
+                    local.fs.writeFileSync(
+                        options.npm_config_dir_build + '/test-report.json',
+                        JSON.stringify(local.testReport)
+                    );
+                    onError(data && data.testsFailed && new Error(data.testsFailed));
+                }
+            });
+            options.modeNext = Number(options.modeNext) || 0;
+            options.onNext();
+        };
+
+        /* istanbul ignore next */
+        local.browserTestElectron = function (options) {
+        /*
+         * this function will spawn an electron process to test options.url
+         */
+            var modeNext, onNext, tmp;
+            onNext = function (error, data) {
+                modeNext = error instanceof Error
+                    ? Infinity
+                    : modeNext + 1;
+                switch (modeNext) {
                 // node.electron.browserWindow - init
                 case 21:
                     options.fs = require('fs');
                     options.webview1 = document.querySelector('#webview1');
                     options.webview1.addEventListener('did-get-response-details', function () {
-                        document.title = options.fileElectronHtml + ' url opened';
+                        document.title = options.fileElectronHtml + ' opened';
                     });
                     options.webview1.addEventListener('console-message', function (event) {
                         modeNext = 21;
@@ -2444,22 +2704,19 @@ local.assetsDict['/favicon.ico'] = '';
                     break;
                 // node.electron.browserWindow - handle event console-message
                 case 22:
-                    data.tmp = data.message
-                        .slice(0, 1024)
-                        .split(options.fileElectronHtml + ' ')
-                        .slice(0, 2);
-                    if (data.tmp.length >= 2) {
-                        data.tmp[1] = data.tmp[1].split(' ')[0];
-                        data.tmp[2] = data.message
-                            .slice(data.tmp.join(options.fileElectronHtml + ' ').length + 1);
-                    }
-                    switch (data.tmp[1]) {
+                    data.message.replace(new RegExp(
+                        '^' + options.fileElectronHtml + ' (\\w+) '
+                    ), function (match0, match1) {
+                        data.type2 = match1;
+                        data.data = data.message.slice(match0.length);
+                    });
+                    switch (data.type2) {
                     case 'global_test_results':
                         if (options.modeBrowserTest !== 'test') {
                             return;
                         }
                         options.global_test_results =
-                            JSON.parse(data.tmp[2]).global_test_results;
+                            JSON.parse(data.data).global_test_results;
                         if (options.global_test_results.testReport) {
                             // merge screenshot into test-report
                             options.global_test_results.testReport.testPlatformList[0]
@@ -2484,46 +2741,120 @@ local.assetsDict['/favicon.ico'] = '';
                         }
                         break;
                     case 'html':
-                        options.fs.writeFileSync(
-                            options.fileScreenshot.replace((/\.\w+$/), '.html'),
-                            data.tmp[2]
-                        );
+                        data = data.data;
+                        options.fs.writeFileSync(options.fileScreenshotBase + '.html', data);
                         setTimeout(function () {
-                            document.title = options.fileElectronHtml +
-                                ' html written';
+                            document.title = options.fileElectronHtml + ' html written';
                         });
                         break;
                     default:
                         console.error(data.message);
                     }
                     break;
-                // node.electron.browserWindow.webview - run preload.js
+                // preload.js
+                // node.electron.browserWindow.webview - init event-handling
                 case 31:
-                    window.fileElectronHtml = options.fileElectronHtml;
-                    // message html back to browserWindow
-                    setTimeout(function () {
-                        console.error(options.fileElectronHtml + ' html ' +
-                            document.documentElement.outerHTML);
-                        if (options.modeBrowserTest === 'test' && !window.utility2) {
-                            console.error(options.fileElectronHtml +
-                                ' global_test_results ' +
-                                JSON.stringify({ global_test_results: {
-                                    coverage: window.__coverage__,
-                                    testReport: { testPlatformList: [{}] }
-                                } }));
+                    if (options.modeBrowserTest === 'test') {
+                        window.fileElectronHtml = options.fileElectronHtml;
+                    }
+                    setTimeout(onNext, options.timeoutScreenshot);
+                    break;
+                // node.electron.browserWindow.webview - emit event console-message
+                case 32:
+                    // init data
+                    data = {};
+                    try {
+                        data.hrefDict = {};
+                        // disable <script> tag
+                        Array.from(
+                            document.querySelectorAll('script')
+                        ).forEach(function (element) {
+                            element.outerHTML = '<script></script>';
+                        });
+                        // absolute href and src attribute
+                        Array.from(
+                            document.querySelectorAll('[href],[src]')
+                        ).forEach(function (element) {
+                            ['href', 'src'].forEach(function (key) {
+                                tmp = element[key];
+                                if ((/^http:|^https:/).test(tmp)) {
+                                    element[key] = tmp;
+                                    if (key === 'href') {
+                                        tmp = tmp.split(/[?#]/)[0];
+                                        data.hrefDict[tmp] = data.hrefDict[tmp] ||
+                                            element.textContent.slice(0, 0x100000)
+                                            .trim()
+                                            .replace((/^["']+|["']+$/), '')
+                                            .slice(0, 256);
+                                    }
+                                    return;
+                                }
+                                if ((/^javascript/).test(tmp)) {
+                                    element[key] = '#';
+                                }
+                            });
+                        });
+                        // deduplicate '/'
+                        Object.keys(data.hrefDict).forEach(function (key) {
+                            if (data.hrefDict.hasOwnProperty(key + '/') ||
+                                    (/\.(?:css|js)$/).test(key)) {
+                                data.hrefDict[key] = undefined;
+                            }
+                        });
+                        data.href = location.href;
+                        data.url = location.href.split(/[?#]/)[0];
+                        // body.textContent
+                        tmp = '';
+                        try {
+                            tmp = document.body.textContent.slice(0, 0x100000);
+                            Array.from(
+                                document.querySelectorAll('style')
+                            ).forEach(function (element) {
+                                tmp = tmp.replace(element.textContent.slice(0, 65536), '');
+                            });
+                            tmp = (tmp.trim() + '\n\n')
+                                .replace((/\s*?\n/g), '\n')
+                                .replace((/\S[\S\s]*?\n{2,}/g), function (match0) {
+                                    match0 = match0.trim() + '\n\n';
+                                    return match0.length >= 256 + 2
+                                        ? match0
+                                        : '';
+                                })
+                                .trim()
+                                .slice(0, 65536);
+                        } catch (errorCaught) {
+                            console.error(errorCaught);
                         }
-                    }, options.timeoutScreenshot);
+                        data.bodyTextContent = tmp;
+                        document.documentElement.dataset.scrape = JSON.stringify(data, null, 4);
+                    } catch (errorCaught) {
+                        console.error(errorCaught);
+                    }
+                    // html
+                    console.error(options.fileElectronHtml + ' html ' +
+                        document.documentElement.outerHTML);
+                    // test
+                    if (options.modeBrowserTest === 'test' && !window.utility2) {
+                        console.error(options.fileElectronHtml +
+                            ' global_test_results ' +
+                            JSON.stringify({ global_test_results: {
+                                testReport: { testPlatformList: [{}] }
+                            } }));
+                    }
                     break;
                 default:
-                    if (isDone) {
-                        return;
+                    if (error) {
+                        console.error(options.fileScreenshot);
+                        console.error(error);
                     }
-                    isDone = true;
-                    // cleanup timerTimeout
-                    clearTimeout(timerTimeout);
-                    onError(error);
+                    // close window
+                    try {
+                        options.browserWindow.close();
+                    } catch (ignore) {
+                    }
                 }
             };
+            modeNext = Number(options.modeNext);
             onNext();
         };
 
@@ -2625,7 +2956,7 @@ n<65536){if((t-=3)<0)break;s.push(n>>12|224,n>>6&63|128,n&63|128)}else{if(!(n<11
             var bff, ii;
             bff = new local.global.Uint8Array(length);
             for (ii = 0; ii < bff.length; ii += 1) {
-                bff[ii] = Math.random() * 0x100;
+                bff[ii] = Math.random() * 256;
             }
             return bff;
         };
@@ -2688,9 +3019,9 @@ return Utf8ArrayToStr(bff);
             // create apidoc.html
             local.fsWriteFileWithMkdirpSync(
                 local.env.npm_config_dir_build + '/apidoc.html',
-                local.apidocCreate(options)
+                local.tryCatchReadFile('apidoc.html', 'utf8') || local.apidocCreate(options)
             );
-            console.error('created apidoc file://' + local.env.npm_config_dir_build +
+            console.error('created apidoc file ' + local.env.npm_config_dir_build +
                 '/apidoc.html\n');
             onError();
         };
@@ -2763,7 +3094,7 @@ return Utf8ArrayToStr(bff);
                 local.assert(!error, error);
                 // test standalone assets.app.js
                 local.fs.writeFileSync('tmp/assets.app.js', local.assetsDict['/assets.app.js']);
-                local.processSpawnWithTimeout('node', ['assets.app.js'], {
+                local.childProcessSpawnWithTimeout('node', ['assets.app.js'], {
                     cwd: 'tmp',
                     env: {
                         PATH: local.env.PATH,
@@ -2801,7 +3132,7 @@ return Utf8ArrayToStr(bff);
             };
             // try to recover from uncaughtException
             process.on('uncaughtException', onError2);
-            onParallel = local.utility2.onParallel(onError2);
+            onParallel = local.onParallel(onError2);
             onParallel.counter += 1;
             // build package.json
             options.packageJson = JSON.parse(local.fs.readFileSync('package.json', 'utf8'));
@@ -2847,7 +3178,7 @@ return Utf8ArrayToStr(bff);
                     '.template.md']
             });
             local.fs.writeFileSync('README.md', options.readme);
-            console.error('created customOrg file://' + process.cwd() + '/README.md\n');
+            console.error('created customOrg file ' + process.cwd() + '/README.md\n');
             // re-build package.json
             options.packageJson.description = options.readme.split('\n')[2].trim();
             local.fs.writeFileSync(
@@ -2960,6 +3291,8 @@ return Utf8ArrayToStr(bff);
                 (/.*?\n.*?\n/),
                 // customize cdn-download
                 (/\n# cdn download\n[\S\s]*?\n\n\n\n/),
+                // customize demo
+                (/\n# live demo\n[\S\s]*?\n\n\n\n/),
                 // customize todo
                 (/\n#### todo\n[\S\s]*?\n\n\n\n/),
                 // customize quickstart-example-js
@@ -2987,29 +3320,30 @@ return Utf8ArrayToStr(bff);
                 });
             });
             // customize swaggerdoc
-            if (!local.assetsDict['/assets.swgg.swagger.json']) {
+            if (!local.assetsDict['/assets.swgg.swagger.json'] ||
+                    local.assetsDict['/index.html'] === local.assetsDict['/assets.swgg.html']) {
                 options.dataTo = options.dataTo.replace(
-                    (/\n#### swaggerdoc\n[\S\s]*?\n#### todo\n/),
-                    '\n#### todo\n'
+                    (/\n#### swaggerdoc\n[\S\s]*?\n#### /),
+                    '\n#### '
                 );
             }
             // customize comment
             options.dataFrom.replace(
-                (/^( *?)(?:#!! |#\/\/ |\/\/!!)(.*?)$/gm),
+                (/^( *?)(?:#!\! |#\/\/ |\/\/!\! )(.*?)$/gm),
                 function (match0, match1, match2) {
                     options.dataTo = options.dataTo.replace(match1 + match2, match0);
                 }
             );
             options.customize();
             // customize no shDeployGithub
-            if (options.dataFrom.indexOf('shDeployGithub') < 0) {
+            if (options.dataFrom.indexOf('shDeployCustom') >= 0) {
                 [
-                    // customize demo
-                    (/\n# cdn download\n[\S\s]*?\n# documentation\n/),
                     // customize test-server
                     (/\n\| git-branch : \|[\S\s]*?\n\| test-report : \|/),
+                    // customize swaggerdoc
+                    (/\n#### swaggerdoc\n[\S\s]*?\n#### /),
                     // customize quickstart
-                    (/\n# quickstart[\S\s]*?\n# all screenshots\n/)
+                    (/\n# quickstart [\S\s]*?\n# extra screenshots\n/)
                 ].forEach(function (rgx) {
                     options.dataFrom.replace(rgx, function (match0) {
                         options.dataTo = options.dataTo.replace(rgx, match0);
@@ -3025,7 +3359,9 @@ return Utf8ArrayToStr(bff);
                 });
             }
             // customize assets.index.template.html with file-override
-            if (local.fs.existsSync('./assets.index.template.html')) {
+            if (local.assetsDict['/index.html'] ===
+                    local.assetsDict['/assets.swgg.html'] ||
+                    local.fs.existsSync('./assets.index.template.html')) {
                 options.dataTo = options.dataTo.replace(
                     new RegExp('\\n {8}\\/\\* jslint-ignore-begin \\*\\/\\n' +
                         ' {8}local.assetsDict\\[\'\\/assets.index.template.html\'\\]' +
@@ -3107,6 +3443,46 @@ return Utf8ArrayToStr(bff);
             // save test.js
             local.fs.writeFileSync('test.js', options.dataTo);
             onError();
+        };
+
+        local.childProcessSpawnWithTimeout = function () {
+        /*
+         * this function will run like child_process.spawn,
+         * but with auto-timeout after timeout milliseconds
+         * example usage:
+            var child = local.childProcessSpawnWithTimeout(
+                '/bin/sh',
+                ['-c', 'echo hello world'],
+                {
+                    stdio: ['ignore', 1, 2],
+                    // timeout in ms
+                    timeout: 5000
+                }
+            );
+            child.on('error', console.error);
+            child.on('exit', function (exitCode) {
+                console.error('exitCode ' + exitCode);
+            });
+         */
+            var argList, child, child_process, timerTimeout;
+            argList = arguments;
+            child_process = require('child_process');
+            // spawn child
+            child = child_process.spawn.apply(child_process, argList)
+                .on('exit', function () {
+                    // cleanup timerTimeout
+                    try {
+                        process.kill(timerTimeout.pid);
+                    } catch (ignore) {
+                    }
+                });
+            // init timerTimeout
+            timerTimeout = child_process.spawn('sleep ' +
+                // convert timeout to integer seconds with 2 second delay
+                ((0.001 * (Number(argList[2] && argList[2].timeout) ||
+                Number(local.timeoutDefault)) + 2) | 0) +
+                '; kill -9 ' + child.pid + ' 2>/dev/null', { shell: true, stdio: 'ignore' });
+            return child;
         };
 
         local.cookieDict = function () {
@@ -3389,10 +3765,10 @@ return Utf8ArrayToStr(bff);
         /*
          * this function will synchronously 'rm -fr' the dir
          */
-            local.child_process.spawnSync(
+            local.child_process.execFileSync(
                 'rm',
                 ['-fr', local.path.resolve(process.cwd(), dir)],
-                { stdio: ['ignore', 1, 2] }
+                { stdio: ['ignore', 2, 2] }
             );
         };
 
@@ -3413,6 +3789,28 @@ return Utf8ArrayToStr(bff);
                 // re-write to file
                 require('fs').writeFileSync(file, data);
             }
+        };
+
+        local.githubCorsUrlOverride = function (url, hostOverride, rgxHostOverride, location) {
+        /*
+         * this function will return hostOverride over location.host,
+         * if this app is hosted on github.io
+         */
+            location = location || (typeof window === 'object' && window && window.location);
+            if (!(hostOverride && location && (local.githubCorsHostTest ||
+                    (/\bgithub.com$|\bgithub.io$/)).test(location.host))) {
+                return url;
+            }
+            // init github-branch
+            location.pathname.replace(
+                (/\/build\.\.(alpha|beta|master)\.\.travis-ci\.org\//),
+                function (match0, match1) {
+                    // jslint-hack
+                    match0 = match1;
+                    hostOverride = hostOverride.replace('-alpha.', '-' + match0 + '.');
+                }
+            );
+            return url.replace(rgxHostOverride || (/.*()/), hostOverride + '$1');
         };
 
         local.httpRequest = function (options, onError) {
@@ -3445,7 +3843,7 @@ return Utf8ArrayToStr(bff);
                 console.error(new Date().toISOString() + ' http-response ' + JSON.stringify({
                     method: options.method,
                     url: options.url,
-                    statusCode: (response && response.statusCode) || 0
+                    statusCode: Number(response && response.statusCode) || 0
                 }));
                 onError(error, response);
             };
@@ -3501,7 +3899,7 @@ return Utf8ArrayToStr(bff);
             local.jslint.errorCounter = 0;
             local.jslint.errorText = '';
             // optimization - ignore uglified/rollup files
-            if ((/\bmin\b|\brollup\b/).test(file)) {
+            if (!script || script.length >= 0x100000) {
                 return script;
             }
             extname = (/\.\w+$/).exec(file);
@@ -3923,16 +4321,10 @@ return Utf8ArrayToStr(bff);
          */
             var onError, options, timerTimeout;
             // handle preflight-cors
-            if ((request.headers['access-control-request-headers'] || '')
-                    .indexOf('forward-proxy-url') >= 0) {
-                // enable cors
-                // http://en.wikipedia.org/wiki/Cross-origin_resource_sharing
-                local.serverRespondHeadSet(request, response, null, {
-                    'Access-Control-Allow-Headers':
-                        'content-type,forward-proxy-headers,forward-proxy-url',
-                    'Access-Control-Allow-Methods': 'DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT',
-                    'Access-Control-Allow-Origin': '*'
-                });
+            if (request.method === 'OPTIONS' && (/forward-proxy-url/).test(
+                    request.headers['access-control-request-headers']
+                )) {
+                local.serverRespondCors(request, response);
                 response.end();
                 return;
             }
@@ -3940,13 +4332,7 @@ return Utf8ArrayToStr(bff);
                 nextMiddleware();
                 return;
             }
-            // enable cors
-            // http://en.wikipedia.org/wiki/Cross-origin_resource_sharing
-            local.serverRespondHeadSet(request, response, null, {
-                'Access-Control-Allow-Headers': 'forward-proxy-headers,forward-proxy-url',
-                'Access-Control-Allow-Methods': 'DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT',
-                'Access-Control-Allow-Origin': '*'
-            });
+            local.serverRespondCors(request, response);
             // init onError
             onError = function (error) {
                 clearTimeout(timerTimeout);
@@ -4095,31 +4481,26 @@ return Utf8ArrayToStr(bff);
             return result || '';
         };
 
-        local.normalizeDict = function (dict) {
+        local.normalizeValue = function (type, value, valueDefault) {
         /*
-         * this function will normalize the dict
+         * this function will normalize the value by type
          */
-            return dict && typeof dict === 'object' && !Array.isArray(dict)
-                ? dict
-                : {};
-        };
-
-        local.normalizeList = function (list) {
-        /*
-         * this function will normalize the list
-         */
-            return Array.isArray(list)
-                ? list
-                : [];
-        };
-
-        local.normalizeText = function (text) {
-        /*
-         * this function will normalize the text
-         */
-            return typeof text === 'string'
-                ? text
-                : '';
+            switch (type) {
+            case 'dict':
+                return value && typeof value === 'object' && !Array.isArray(value)
+                    ? value
+                    : valueDefault || {};
+            case 'list':
+                return Array.isArray(value)
+                    ? value
+                    : valueDefault || [];
+            case 'number':
+                return Number(value) || valueDefault || 0;
+            case 'string':
+                return typeof value === 'string'
+                    ? value
+                    : valueDefault || '';
+            }
         };
 
         local.objectGetElementFirst = function (arg) {
@@ -4383,8 +4764,10 @@ return Utf8ArrayToStr(bff);
          * 2. call onError when isDone
          */
             var ii, onEach2, onParallel;
+            options.list = options.list || [];
             onEach2 = function () {
-                while (ii + 1 < options.list.length && onParallel.counter < options.rateLimit) {
+                while (ii + 1 < options.list.length &&
+                        onParallel.counter < options.rateLimit + 1) {
                     ii += 1;
                     onParallel.ii += 1;
                     onParallel.remaining -= 1;
@@ -4407,13 +4790,13 @@ return Utf8ArrayToStr(bff);
                     return true;
                 }
             });
-            onParallel.counter += 1;
             ii = -1;
             onParallel.ii = -1;
             onParallel.remaining = options.list.length;
             options.rateLimit = Number(options.rateLimit) || 6;
-            options.rateLimit = Math.max(options.rateLimit, 3);
+            options.rateLimit = Math.max(options.rateLimit, 1);
             options.retryLimit = Number(options.retryLimit) || 2;
+            onParallel.counter += 1;
             onEach2();
             onParallel();
         };
@@ -4482,29 +4865,6 @@ return Utf8ArrayToStr(bff);
                     : message)));
             // coerce to finite integer
             }, timeout | 0);
-        };
-
-        local.processSpawnWithTimeout = function () {
-        /*
-         * this function will run like child_process.spawn,
-         * but with auto-timeout after timeoutDefault milliseconds
-         */
-            var childProcess;
-            // spawn childProcess
-            childProcess = local.child_process.spawn.apply(local.child_process, arguments)
-                .on('exit', function () {
-                    // try to kill timerTimeout childProcess
-                    local.tryCatchOnError(function () {
-                        process.kill(childProcess.timerTimeout.pid);
-                    }, local.nop);
-                });
-            // init failsafe timerTimeout
-            childProcess.timerTimeout = local.child_process.spawn('/bin/sh', ['-c', 'sleep ' +
-                // coerce to finite integer
-                (((0.001 * local.timeoutDefault) | 0) +
-                // add 2 second delay to failsafe timerTimeout
-                2) + '; kill -9 ' + childProcess.pid + ' 2>/dev/null'], { stdio: 'ignore' });
-            return childProcess;
         };
 
         local.profile = function (fnc, onError) {
@@ -4582,11 +4942,10 @@ return Utf8ArrayToStr(bff);
                         break;
                     }
                     // run async shell command
-                    require('child_process').spawn(
-                        '/bin/sh',
-                        ['-c', match[2]],
-                        { stdio: ['ignore', 1, 2] }
-                    )
+                    require('child_process').spawn(match[2], {
+                        shell: true,
+                        stdio: ['ignore', 1, 2]
+                    })
                         // on shell exit, print return prompt
                         .on('exit', function (exitCode) {
                             console.error('exit-code ' + exitCode);
@@ -4602,9 +4961,7 @@ return Utf8ArrayToStr(bff);
                 // syntax sugar to grep current dir
                 case 'grep':
                     // run async shell command
-                    require('child_process').spawn(
-                        '/bin/sh',
-                        ['-c', 'find . -type f | grep -v ' +
+                    require('child_process').spawn('find . -type f | grep -v ' +
 /* jslint-ignore-begin */
 '"\
 /\\.\\|\\(\\b\\|_\\)\\(\\.\\d\\|\
@@ -4626,9 +4983,7 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
 " ' +
 /* jslint-ignore-end */
                             '| tr "\\n" "\\000" | xargs -0 grep -in "' +
-                            match[2].trim() + '"'],
-                        { stdio: ['ignore', 1, 2] }
-                    )
+                            match[2].trim() + '"', { shell: true, stdio: ['ignore', 1, 2] })
                         // on shell exit, print return prompt
                         .on('exit', function (exitCode) {
                             console.error('exit-code ' + exitCode);
@@ -4735,14 +5090,11 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
          * this function will require and export example.js embedded in README.md
          */
             var module, script, tmp;
-            // start the repl-debugger
+            // start repl-debugger
             local.replStart();
             // debug dir
             [__dirname, process.cwd()].forEach(function (dir) {
                 local.fs.readdirSync(dir).forEach(function (file) {
-                    if ((/\brollup\b/).test(file)) {
-                        return;
-                    }
                     file = dir + '/' + file;
                     // if the file is modified, then restart the process
                     local.onFileModifiedRestart(file);
@@ -4751,25 +5103,28 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
                     case '.html':
                     case '.js':
                     case '.json':
+                        if ((/\brollup\b/).test(file)) {
+                            return;
+                        }
                         // jslint file
-                        local.jslintAndPrintConditional(
-                            local.tryCatchReadFile(file, 'utf8'),
-                            file
-                        );
+                        local.fs.readFile(file, 'utf8', function (error, data) {
+                            local.jslintAndPrintConditional(!error && data, file);
+                        });
                         break;
                     }
                 });
             });
             if (local.global.utility2_rollup || local.env.npm_config_mode_start) {
                 // init assets
-                local.assetsDict['/'] = local.assetsDict['/index.html'] = local.templateRender(
-                    // uncomment utility2-comment
-                    local.assetsDict['/assets.index.template.html'].replace(
-                        (/<!-- utility2-comment\b([\S\s]+?)\butility2-comment -->/g),
-                        '$1'
-                    ),
-                    { env: local.env, isRollup: true }
-                );
+                local.assetsDict['/'] = local.assetsDict['/index.html'] =
+                    local.assetsDict['/index.html'] || local.templateRender(
+                        // uncomment utility2-comment
+                        local.assetsDict['/assets.index.template.html'].replace(
+                            (/<!-- utility2-comment\b([\S\s]+?)\butility2-comment -->/g),
+                            '$1'
+                        ),
+                        { env: local.env, isRollup: true }
+                    );
                 local.assetsDict['/assets.example.js'] =
                     local.assetsDict['/assets.example.template.js'];
                 local.assetsDict['/assets.app.js'] =
@@ -4835,12 +5190,13 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
                 local.fs.readFileSync('test.js', 'utf8'),
                 process.cwd() + '/test.js'
             );
-            // init assets.index.html
+            // init assets index.html
             local.tryCatchOnError(function () {
                 local.assetsDict['/assets.index.template.html'] =
                     local.fs.readFileSync('assets.index.template.html', 'utf8');
             }, local.nop);
             local.assetsDict['/'] = local.assetsDict['/index.html'] =
+                local.assetsDict['/index.html'] ||
                 local.jslintAndPrintConditional(local.templateRender(
                     // uncomment utility2-comment
                     local.assetsDict['/assets.index.template.html'].replace(
@@ -4926,9 +5282,25 @@ instruction\n\
             local.objectSetDefault(module.exports, local);
             // jslint assetsDict
             Object.keys(local.assetsDict).sort().forEach(function (key) {
-                local.jslintAndPrintConditional(local.assetsDict[key], key);
+                setTimeout(function () {
+                    local.jslintAndPrintConditional(local.assetsDict[key], key);
+                });
             });
             return module.exports;
+        };
+
+        local.serverRespondCors = function (request, response) {
+        /*
+         * this function will enable cors for the request
+         * http://en.wikipedia.org/wiki/Cross-origin_resource_sharing
+         */
+            local.serverRespondHeadSet(request, response, null, local.jsonCopy({
+                'access-control-allow-headers':
+                    request.headers['access-control-request-headers'],
+                'access-control-allow-methods':
+                    request.headers['access-control-request-methods'],
+                'access-control-allow-origin': '*'
+            }));
         };
 
         local.serverRespondDefault = function (request, response, statusCode, error) {
@@ -5488,7 +5860,7 @@ instruction\n\
                         '0d00'.slice(!!testReport.testsFailed).slice(0, 3)
                     )
             );
-            console.error('created test-report file://' + local.env.npm_config_dir_build +
+            console.error('created test-report file ' + local.env.npm_config_dir_build +
                 '/test-report.html\n');
             // if any test failed, then exit with non-zero exit-code
             console.error('\n' + local.env.MODE_BUILD +
@@ -6097,7 +6469,7 @@ instruction\n\
                 }
                 // init query
                 urlParsed.query = {};
-                urlParsed.search.slice(1).replace((/[^&]+/g), function (item) {
+                (urlParsed.search || '').slice(1).replace((/[^&]+/g), function (item) {
                     item = item.split('=');
                     item[0] = decodeURIComponent(item[0]);
                     item[1] = decodeURIComponent(item.slice(1).join('='));
@@ -6166,7 +6538,7 @@ instruction\n\
     (function () {
         local.ajaxProgressCounter = 0;
         local.ajaxProgressState = 0;
-        local.apidocCreate = local.apidoc.apidocCreate || local.normalizeText;
+        local.apidocCreate = local.apidoc.apidocCreate;
         local.cacheDict = {};
         local.contentTypeDict = {
             // application
@@ -6208,21 +6580,6 @@ instruction\n\
         local.istanbulInstrumentInPackage = local.istanbul.instrumentInPackage || local.echo;
         local.istanbulInstrumentSync = local.istanbul.instrumentSync || local.echo;
         local.jslintAndPrint = local.jslint.jslintAndPrint || local.echo;
-        // init objectWeird
-        local.objectWeird = function () {
-            return;
-        };
-        // coverage-hack
-        local.tryCatchOnError(function () {
-            local.objectWeird();
-        }, local.nop);
-        // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Working_with_Objects
-        // #Defining_getters_and_setters
-        Object.defineProperty(local.objectWeird, 'error', {
-            get: local.throwError,
-            set: local.throwError
-        });
-        local.objectWeird.toString = local.throwError;
         local.regexpEmailValidate = new RegExp(
             '^[a-zA-Z0-9.!#$%&\'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}' +
                 '[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$'
@@ -6330,7 +6687,7 @@ instruction\n\
                     'utf8'
                 ) || '{}')
             );
-            console.error('\n' + local.env.MODE_BUILD + ' - merged test-report from file://' +
+            console.error('\n' + local.env.MODE_BUILD + ' - merged test-report from file ' +
                 local.env.npm_config_file_test_report_merge);
         }
         // run the cli
@@ -6346,9 +6703,6 @@ instruction\n\
             local.global.local = local;
             break;
         case 'cli.browserTest':
-            local.browserTest({}, local.exit);
-            return;
-        case 'cli.browserTestList':
             local.onParallelList({
                 list: process.argv[3].split(/\s+/).filter(function (element) {
                     return element;
@@ -6446,15 +6800,13 @@ instruction\n\
                 retryLimit: process.argv[5]
             }, function (options, onParallel) {
                 onParallel.counter += 1;
-                local.child_process.spawn(
-                    '/bin/sh',
-                    ['-c', '. ' + local.__dirname + '/lib.utility2.sh; ' + options.element],
-                    { stdio: ['ignore', 1, 2] }
-                ).on('exit', function (exitCode) {
-                    console.error('onParallelListExec - [' + (onParallel.ii + 1) +
-                        ' of ' + options.list.length + '] exitCode ' + exitCode);
-                    onParallel(exitCode && new Error(exitCode), options);
-                });
+                local.child_process.spawn('. ' + local.__dirname + '/lib.utility2.sh; ' +
+                    options.element, { shell: true, stdio: ['ignore', 1, 2] })
+                    .on('exit', function (exitCode) {
+                        console.error('onParallelListExec - [' + (onParallel.ii + 1) +
+                            ' of ' + options.list.length + '] exitCode ' + exitCode);
+                        onParallel(exitCode && new Error(exitCode), options);
+                    });
             }, local.exit);
             return;
         case 'cli.testReportCreate':
@@ -6472,6 +6824,7 @@ instruction\n\
         ].forEach(function (file) {
             local.assetsDict['/' + file] = local.assetsDict['/' + file] || '';
             if (local.fs.existsSync(file)) {
+                console.error('override assets ' + file);
                 local.assetsDict['/' + file] = local.fs.readFileSync(file, 'utf8');
             }
         });
@@ -6517,7 +6870,7 @@ instruction\n\
             case 'lib.utility2.sh':
                 local.jslintAndPrintConditional(
                     local.tryCatchReadFile(__dirname + '/' + key, 'utf8')
-                        .replace((/^ *?#!! .*$/gm), ''),
+                        .replace((/^ *?#!\! .*$/gm), ''),
                     __dirname + '/' + key + '.html'
                 );
                 break;

@@ -497,7 +497,8 @@ local.assetsDict['/assets.swgg.schema.json'] = JSON.stringify(
 
 
 
-local.assetsDict['/assets.swgg.swagger.json'] = '';
+local.assetsDict['/assets.swgg.swagger.json'] = local.assetsDict['/assets.swgg.swagger.json'] ||
+    '';
 
 
 
@@ -1562,7 +1563,7 @@ local.templateUiResponseAjax = '\
          */
             var tmp;
             // init options
-            options = local.normalizeDict(options);
+            options = local.normalizeValue('dict', options);
             // init apiDict
             local.apiDict = local.apiDict || {};
             // init swaggerJson
@@ -1677,7 +1678,7 @@ local.templateUiResponseAjax = '\
             // save tags
             tmp = {};
             [local.swaggerJson.tags, options.tags].forEach(function (tagList) {
-                local.normalizeList(tagList).forEach(function (tag) {
+                local.normalizeValue('list', tagList).forEach(function (tag) {
                     local.objectSetOverride(tmp, local.objectLiteralize({
                         '$[]': [tag.name, tag]
                     }));
@@ -2791,7 +2792,7 @@ local.templateUiResponseAjax = '\
             }
             schema = local.jsonCopy(schema);
             if (schema.type === 'object') {
-                schema.properties = local.normalizeDict(schema.properties);
+                schema.properties = local.normalizeValue('dict', schema.properties);
             }
             return schema;
         };
@@ -3132,6 +3133,9 @@ local.templateUiResponseAjax = '\
                                 if (!tmp) {
                                     return;
                                 }
+                                if (paramDef.type === 'string' && typeof tmp === 'string') {
+                                    break;
+                                }
                                 // parse schema
                                 if (paramDef.in === 'body') {
                                     tmp = JSON.parse(tmp);
@@ -3340,11 +3344,16 @@ local.templateUiResponseAjax = '\
                     local.nop(xhr.responseText && (function () {
                         tmp = xhr.responseText;
                     }()));
-                    local.apiDictUpdate(local.objectSetDefault(JSON.parse(tmp), {
-                        host: local.urlParse(
-                            document.querySelector('.swggUiContainer > .header > .td2').value
-                        ).host
-                    }));
+                    tmp = JSON.parse(tmp);
+                    local.objectSetDefault(tmp, {
+                        host: local.githubCorsUrlOverride(
+                            local.urlParse(document.querySelector(
+                                '.swggUiContainer > .header > .td2'
+                            ).value).host,
+                            tmp['x-github-cors-host']
+                        )
+                    });
+                    local.apiDictUpdate(tmp);
                     local.uiRender();
                 }, notify);
             });
@@ -3616,7 +3625,7 @@ local.templateUiResponseAjax = '\
         /*
          * this function will return the base swagger url
          */
-            return (local.swaggerJson.schemes ||
+            return (local.normalizeValue('list', local.swaggerJson.schemes)[0] ||
                 local.urlParse('').protocol.slice(0, -1)) + '://' +
                 (local.swaggerJson.host || local.urlParse('').host) +
                 local.swaggerJson.basePath;

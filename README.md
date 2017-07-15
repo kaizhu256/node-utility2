@@ -27,7 +27,7 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 1. [documentation](#documentation)
 1. [quickstart standalone app](#quickstart-standalone-app)
 1. [quickstart example.js](#quickstart-examplejs)
-1. [all screenshots](#all-screenshots)
+1. [extra screenshots](#extra-screenshots)
 1. [package.json](#packagejson)
 1. [changelog of last 50 commits](#changelog-of-last-50-commits)
 1. [internal build script](#internal-build-script)
@@ -54,7 +54,7 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 [![apidoc](https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/apidoc.html)
 
 #### todo
-- fix slow swgg load-time
+- rename ajaxForwardProxyUrlTest to githubForwardProxyUrlTest
 - add shell command buildCiCreate
 - allow server-side stdout to be streamed to webapps
 - add utility2.middlewareLimit
@@ -62,15 +62,17 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 - analytics
 - none
 
-#### changelog for v2017.5.30
-- npm publish 2017.5.30
-- fix 'use strict' bug in firefox and safari
-- auto-mock browserTest if webapp is missing window.utility2
-- cleanup customOrg templates
-- customize assets.index.template.html with file-override
-- fix missing test-report for deployed app to github and heroku
-- github-deployed demos should auto-default to heroku forward-proxy
-- move functions uiAnimateSlideXxx from file lib.swgg.js to file lib.utility2.js
+#### changelog for v2017.7.15
+- npm publish 2017.7.15
+- add google-translate ability to function browserTest
+- add browerTest env-vars modeBrowserTestRecurseDepth, modeBrowserTestRecurseExclude, and modeBrowserTestRecurseInclude
+- add browerTest env-vars modeBrowserTest=translateAfterScrape and modeBrowserTestTranslate
+- add shell function shPidByPort
+- allow file override for apidoc.html in function buildApidoc
+- enhance github-cors with function githubCorsUrlOverride
+- improve load-time
+- merge functions normalizeDict, normalizeList, normalizeText into function normalizeValue
+- rename function processSpawnWithTimeout -> childProcessSpawnWithTimeout
 - none
 
 #### this package requires
@@ -454,7 +456,7 @@ textarea[readonly] {\n\
 </head>\n\
 <body>\n\
 <!-- utility2-comment\n\
-<div id="ajaxProgressDiv1" style="background: #d00; height: 2px; left: 0; margin: 0; padding: 0; position: fixed; top: 0; width: 25%;"></div>\n\
+<div id="ajaxProgressDiv1" style="background: #d00; height: 2px; left: 0; margin: 0; padding: 0; position: fixed; top: 0; transition: background 500ms, width 1500ms; width: 25%;"></div>\n\
 utility2-comment -->\n\
 <h1>\n\
 <!-- utility2-comment\n\
@@ -652,7 +654,7 @@ utility2-comment -->\n\
 
 
 
-# all screenshots
+# extra screenshots
 1. [https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png](https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)
 [![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)](https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)
 
@@ -748,7 +750,7 @@ utility2-comment -->\n\
         "start": "set -e; export PORT=${PORT:-8080}; if [ -f assets.app.js ]; then node assets.app.js; else npm_config_mode_auto_restart=1 ./lib.utility2.sh shRun shIstanbulCover test.js; fi",
         "test": "PORT=$(./lib.utility2.sh shServerPortRandom) PORT_REPL=$(./lib.utility2.sh shServerPortRandom) npm_config_mode_auto_restart=1 ./lib.utility2.sh test test.js"
     },
-    "version": "2017.5.30"
+    "version": "2017.7.15"
 }
 ```
 
@@ -790,33 +792,39 @@ RUN (set -e; \
         busybox \
         ca-certificates \
         curl; \
-    (busybox --list | xargs -n1 /bin/sh -c 'ln -s /bin/busybox /bin/$0 2>/dev/null' || true) \
-       ; \
+    (busybox --list | xargs -n1 /bin/sh -c 'ln -s /bin/busybox /bin/$0 2>/dev/null' || true); \
     curl -#L https://deb.nodesource.com/setup_6.x | /bin/bash -; \
     apt-get install -y nodejs; \
 )
 # install electron-lite
-VOLUME [ \
-  "/usr/lib/chromium" \
-]
 # COPY electron-*.zip /tmp
+# libasound.so.2: cannot open shared object file: No such file or directory
+# libgconf-2.so.4: cannot open shared object file: No such file or directory
+# libgtk-x11-2.0.so.0: cannot open shared object file: No such file or directory
+# libnss3.so: cannot open shared object file: No such file or directory
+# libXss.so.1: cannot open shared object file: No such file or directory
+# libXtst.so.6: cannot open shared object file: No such file or directory
 RUN (set -e; \
     export DEBIAN_FRONTEND=noninteractive; \
     apt-get update; \
     apt-get install --no-install-recommends -y \
-        chromium \
-        gconf2 \
         git \
+        libasound2 \
+        libgconf-2-4 \
+        libgtk2.0-0 \
+        libnss3 \
+        libxss1 \
+        libxtst6 \
         xvfb; \
-    npm install "kaizhu256/node-electron-lite#alpha"; \
+    rm -f /tmp/.X99-lock && export DISPLAY=:99.0 && (Xvfb "$DISPLAY" &); \
+    npm install kaizhu256/node-electron-lite#alpha; \
+    mv node_modules/electron-lite/external /opt/electron; \
+    ln -s /opt/electron/electron /bin/electron; \
     cd node_modules/electron-lite; \
     npm install; \
-    export DISPLAY=:99.0; \
-    (Xvfb "$DISPLAY" &); \
     npm test; \
-    cp /tmp/electron-*.zip /; \
 )
-# install extras
+# install extra
 RUN (set -e; \
     export DEBIAN_FRONTEND=noninteractive; \
     apt-get update; \
@@ -836,15 +844,16 @@ MAINTAINER kai zhu <kaizhu256@gmail.com>
 # install utility2
 RUN (set -e; \
     export DEBIAN_FRONTEND=noninteractive; \
-    npm install "kaizhu256/node-utility2#alpha"; \
+    rm -f /tmp/.X99-lock && export DISPLAY=:99.0 && (Xvfb "$DISPLAY" &); \
+    npm install kaizhu256/node-utility2#alpha; \
     cp -a node_modules /; \
     cd node_modules/utility2; \
     npm install; \
-    export DISPLAY=:99.0; \
-    (Xvfb "$DISPLAY" &); \
     npm test; \
 )
 # install elasticsearch and kibana
+# https://www.elastic.co/downloads/past-releases/elasticsearch-1-7-6
+# https://www.elastic.co/downloads/past-releases/kibana-3-1-3
 RUN (set -e; \
     export DEBIAN_FRONTEND=noninteractive; \
     mkdir -p /usr/share/man/man1; \
@@ -860,6 +869,34 @@ RUN (set -e; \
     rm -fr /kibana; \
     mkdir -p /kibana; \
     tar -xzf kibana.tar.gz --strip-components=1 -C /kibana; \
+)
+```
+
+- Dockerfile.tmp
+```shell
+# Dockerfile.tmp
+FROM kaizhu256/node-utility2:base
+MAINTAINER kai zhu <kaizhu256@gmail.com>
+# install extra
+RUN (set -e; \
+    export DEBIAN_FRONTEND=noninteractive; \
+    apt-get update; \
+    apt-get install --no-install-recommends -y \
+        aptitude \
+        cmake \
+        g++ \
+        make; \
+)
+# install binaryen
+RUN (set -e; \
+    export DEBIAN_FRONTEND=noninteractive; \
+    git clone https://github.com/WebAssembly/binaryen.git \
+        --branch version_31 \
+        --depth 1; \
+    cd binaryen; \
+    cmake .; \
+    make; \
+    mv bin /opt/binaryen; \
 )
 ```
 
@@ -916,7 +953,7 @@ shBuildCiBefore() {(set -e
     shNpmTestPublished
     shReadmeTest example.js
     # screenshot
-    MODE_BUILD=testExampleJs shBrowserTestList "
+    MODE_BUILD=testExampleJs shBrowserTest "
 /tmp/app/tmp/build/coverage.html/app/example.js.html
 tmp/build/test-report.html
 " screenshot
