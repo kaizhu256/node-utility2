@@ -145,7 +145,7 @@
                 // validate no error occurred
                 local.assert(!error, error);
                 // validate responseText
-                local.assert((/\r\n\r\n$/).test(xhr.responseText), xhr.responseText);
+                local.assert(xhr.responseText.match(/\r\n\r\n$/), xhr.responseText);
                 onError();
             });
         };
@@ -303,15 +303,15 @@
                     local.assertJsonEqual(xhr.statusCode, 200);
                     // validate response
                     options.data = xhr.responseText;
-                    local.assert((/\r\naa$/).test(options.data), options.data);
+                    local.assert(options.data.match(/\r\naa$/), options.data);
                     local.assert(
-                        (/\r\nx-request-header-test: aa\r\n/).test(options.data),
+                        options.data.match(/\r\nx-request-header-test: aa\r\n/),
                         options.data
                     );
                     // validate responseHeaders
                     options.data = xhr.getAllResponseHeaders();
                     local.assert(
-                        (/^X-Response-Header-Test: bb\r\n/im).test(options.data),
+                        options.data.match(/^X-Response-Header-Test: bb\r\n/im),
                         options.data
                     );
                     options.data = xhr.getResponseHeader('x-response-header-test');
@@ -1259,6 +1259,15 @@
             });
         };
 
+        local.testCase_serverLog_default = function (options, onError) {
+        /*
+         * this function will test serverLog's default handling-behavior
+         */
+            options = {};
+            local._serverLog(options);
+            onError();
+        };
+
         local.testCase_setTimeoutOnError_default = function (options, onError) {
         /*
          * this function will test setTimeoutOnError's default handling-behavior
@@ -1620,7 +1629,7 @@
             // test uuid4 handling-behavior
             options.data = local.uuid4Create();
             // validate data
-            local.assert(local.regexpUuidValidate.test(options.data), options.data);
+            local.assert(options.data.match(local.regexpUuidValidate), options.data);
             onError();
         };
 
@@ -1631,7 +1640,7 @@
             url = local.urlParse(url).pathname;
             return local.modeJs === 'browser' &&
                 !local.env.npm_config_mode_backend &&
-                (/^\/test\./).test(url);
+                url.match(/^\/test\./);
         };
     }());
     switch (local.modeJs) {
@@ -1785,6 +1794,98 @@
             options.onNext();
         };
 
+        local.testCase_browserTest_default = function (options, onError) {
+        /*
+         * this function will test browserTest's default handling-behavior
+         */
+            var options2;
+            options = {};
+            local.onNext(options, function (error) {
+                switch (options.modeNext) {
+                // test scrape handling-behavior
+                case 1:
+                    options2 = {};
+                    options2.modeBrowserTest = 'scrape';
+                    options2.modeBrowserTestRecurseDepth = 1;
+                    options2.modeBrowserTestRecurseExclude = 'undefined';
+                    options2.modeTestIgnore = true;
+                    options2.timeoutScreenshot = 1000;
+                    options2.url = local.serverLocalHost + '/assets.recurse1';
+                    local.browserTest(options2, options.onNext);
+                    break;
+                // test translateAfterScrape handling-behavior
+                case 2:
+                    options2.modeBrowserTest = 'translateAfterScrape';
+                    options2.modeBrowserTestTranslate = 'ru,zh-CN';
+                    options2.modeNext = 0;
+                    options2.url = options2.fileScreenshotBase;
+                    local.browserTest(options2, options.onNext);
+                    break;
+                case 3:
+                    // validate scraped files
+                    [
+                        options2.fileScreenshotBase + '.html',
+                        options2.fileScreenshotBase + '.png',
+                        options2.fileScreenshotBase + '.translateAfterScrape.ru.html',
+                        options2.fileScreenshotBase + '.translateAfterScrape.ru.png',
+                        options2.fileScreenshotBase + '.translateAfterScrape.zh-CN.html',
+                        options2.fileScreenshotBase + '.translateAfterScrape.zh-CN.png',
+                        options2.fileScreenshotBase.replace('recurse1', 'recurse2') + '.html',
+                        options2.fileScreenshotBase.replace('recurse1', 'recurse2') + '.png'
+                    ].forEach(function (file) {
+                        local.assert(local.fs.existsSync(file), file);
+                        local.fs.unlinkSync(file);
+                    });
+                    options.onNext();
+                    break;
+                default:
+                    onError(error);
+                }
+            });
+            options.modeNext = 0;
+            options.onNext();
+        };
+
+        local.testCase_browserTest_electron = function (options, onError) {
+        /*
+         * this function will test browserTest's electron handling-behavior
+         */
+            options = function (arg0, arg1) {
+                // test onParallel handling-behavior
+                if (typeof arg0 === 'function') {
+                    arg0();
+                }
+                // test on handling-behavior
+                if (typeof arg1 === 'function') {
+                    arg1(options, '');
+                    arg1(options, options.fileElectronHtml);
+                    arg1(options, options.fileElectronHtml + ' opened');
+                }
+                return options;
+            };
+            options.BrowserWindow = options;
+            options.app = options;
+            options.electron = options;
+            options.capturePage = options;
+            options.loadURL = options;
+            options.on = options;
+            options.once = options;
+            options.prototype = options;
+            options.toPng = options;
+            options.unref = options;
+            local.testMock([
+                [local.global, { setTimeout: options }],
+                [process.versions, { electron: true }],
+                [local, { onParallel: options }]
+            ], function (onError) {
+                local.browserTest(options, local.nop);
+                options.modeNext = 0;
+                options.modeBrowserTest = 'scrape';
+                local.browserTest(options, local.nop);
+                onError();
+            }, onError);
+        };
+
         local.testCase_buildApidoc_default = function (options, onError) {
         /*
          * this function will test buildApidoc's default handling-behavior
@@ -1885,18 +1986,33 @@
          */
             options = {};
             options.customize = function () {
-                options.dataFrom = options.dataFrom.replace('shDeployGithub', 'shDeployCustom');
+                options.dataFrom = options.dataFrom
+                    // test shDeployCustom handling-behavior
+                    .replace('shDeployGithub', 'shDeployCustom')
+                    .replace('assets.index.default.template.html', '');
             };
+            options.fsReadFileSync = local.fs.readFileSync;
             local.testMock([
                 [local.env, { npm_package_buildCustomOrg: '' }],
                 [local.fs, {
                     existsSync: function () {
                         return true;
                     },
+                    readFileSync: function (file) {
+                        return local.tryCatchOnError(function () {
+                            return options.fsReadFileSync(file, 'utf8');
+                        }, function () {
+                            return '';
+                        });
+                    },
                     writeFileSync: local.nop
                 }],
-                // test swaggerdoc handling-behavior
-                [local.assetsDict, { '/assets.swgg.swagger.json': '{}' }]
+                [local.assetsDict, {
+                    // test no-assets.index.default.template.html handling-behavior
+                    '/assets.index.template.html': '',
+                    // test swaggerdoc handling-behavior
+                    '/assets.swgg.swagger.json': '{}'
+                }]
             ], function (onError) {
                 local.buildReadme(options, onError);
                 // test $npm_package_buildCustomOrg handling-behavior
@@ -2013,9 +2129,9 @@
                 local.assertJsonEqual(response.headers['x-response-header-test'], 'bb');
                 // validate response.data
                 options.data = response.data.toString();
-                local.assert((/\r\naa$/).test(options.data), options.data);
+                local.assert(options.data.match(/\r\naa$/), options.data);
                 local.assert(
-                    (/\r\nx-request-header-test: aa\r\n/).test(options.data),
+                    options.data.match(/\r\nx-request-header-test: aa\r\n/),
                     options.data
                 );
                 onParallel();
@@ -2112,7 +2228,7 @@
             local.assertJsonEqual(options.data, process.cwd());
             // test module exists handling-behavior
             options.data = local.moduleDirname('electron-lite', options.modulePathList);
-            local.assert((/\/electron-lite$/).test(options.data), options.data);
+            local.assert(options.data.match(/\/electron-lite$/), options.data);
             // test module does not exists handling-behavior
             options.data = local.moduleDirname('syntax error', options.modulePathList);
             local.assertJsonEqual(options.data, '');
@@ -2255,6 +2371,7 @@
             local.testMock(options, function (onError) {
                 local.serverRespondTimeoutDefault(
                     {
+                        on: local.nop,
                         // test default onTimeout handling-behavior
                         onTimeout: null,
                         url: ''
@@ -2408,7 +2525,7 @@
              */
                 // jslint-hack
                 local.nop(url);
-                return local.env.npm_package_nameAlias && (/\bgithub.io$/).test(location.host)
+                return local.env.npm_package_nameAlias && location.host.match(/\bgithub.io$/)
                     ? 'https://h1-' + local.env.npm_package_nameAlias + '-alpha.herokuapp.com'
                     : location.protocol + '//' + location.host;
             };
@@ -2474,16 +2591,16 @@
         if (module !== require.main || local.global.utility2_rollup) {
             return;
         }
-        local.assetsDict['/assets.script_only.html'] = '<h1>script_only_test</h1>\n' +
-                '<script src="assets.utility2.js"></script>\n' +
-                '<script>window.utility2.onReadyBefore.counter += 1;</script>\n' +
-                '<script src="assets.example.js"></script>\n' +
-                '<script src="assets.test.js"></script>\n' +
-                '<script>window.utility2.onReadyBefore();</script>\n';
         local.assetsDict['/assets.recurse1'] = local.assetsDict['/assets.recurse2'] =
             '<a href="assets.recurse1"></a>\n' +
             '<a href="assets.recurse2"></a>\n' +
             '<a href="assets.undefined"></a>\n';
+        local.assetsDict['/assets.script_only.html'] = '<h1>script_only_test</h1>\n' +
+            '<script src="assets.utility2.js"></script>\n' +
+            '<script>window.utility2.onReadyBefore.counter += 1;</script>\n' +
+            '<script src="assets.example.js"></script>\n' +
+            '<script src="assets.test.js"></script>\n' +
+            '<script>window.utility2.onReadyBefore();</script>\n';
         if (process.argv[2]) {
             // start with coverage
             if (local.env.npm_config_mode_coverage) {
@@ -2496,98 +2613,6 @@
             process.argv[1] = local.path.resolve(process.cwd(), process.argv[1]);
             local.Module.runMain();
         }
-
-        local.testCase_browserTest_electron = function (options, onError) {
-        /*
-         * this function will test browserTest's electron handling-behavior
-         */
-            options = function (arg0, arg1) {
-                // test onParallel handling-behavior
-                if (typeof arg0 === 'function') {
-                    arg0();
-                }
-                // test on handling-behavior
-                if (typeof arg1 === 'function') {
-                    arg1(options, '');
-                    arg1(options, options.fileElectronHtml);
-                    arg1(options, options.fileElectronHtml + ' opened');
-                }
-                return options;
-            };
-            options.BrowserWindow = options;
-            options.app = options;
-            options.electron = options;
-            options.capturePage = options;
-            options.loadURL = options;
-            options.on = options;
-            options.once = options;
-            options.prototype = options;
-            options.toPng = options;
-            options.unref = options;
-            local.testMock([
-                [local.global, { setTimeout: options }],
-                [process.versions, { electron: true }],
-                [local, { onParallel: options }]
-            ], function (onError) {
-                local.browserTest(options, local.nop);
-                options.modeNext = 0;
-                options.modeBrowserTest = 'scrape';
-                local.browserTest(options, local.nop);
-                onError();
-            }, onError);
-        };
-
-        local.testCase_browserTest_default = function (options, onError) {
-        /*
-         * this function will test browserTest's default handling-behavior
-         */
-            var options2;
-            options = {};
-            local.onNext(options, function (error) {
-                switch (options.modeNext) {
-                // test scrape handling-behavior
-                case 1:
-                    options2 = {};
-                    options2.modeBrowserTest = 'scrape';
-                    options2.modeBrowserTestRecurseDepth = 1;
-                    options2.modeBrowserTestRecurseExclude = 'undefined';
-                    options2.modeTestIgnore = true;
-                    options2.timeoutScreenshot = 1000;
-                    options2.url = local.serverLocalHost + '/assets.recurse1';
-                    local.browserTest(options2, options.onNext);
-                    break;
-                // test translateAfterScrape handling-behavior
-                case 2:
-                    options2.modeBrowserTest = 'translateAfterScrape';
-                    options2.modeBrowserTestTranslate = 'ru,zh-CN';
-                    options2.modeNext = 0;
-                    options2.url = options2.fileScreenshotBase;
-                    local.browserTest(options2, options.onNext);
-                    break;
-                case 3:
-                    // validate scraped files
-                    [
-                        options2.fileScreenshotBase + '.html',
-                        options2.fileScreenshotBase + '.png',
-                        options2.fileScreenshotBase + '.translateAfterScrape.ru.html',
-                        options2.fileScreenshotBase + '.translateAfterScrape.ru.png',
-                        options2.fileScreenshotBase + '.translateAfterScrape.zh-CN.html',
-                        options2.fileScreenshotBase + '.translateAfterScrape.zh-CN.png',
-                        options2.fileScreenshotBase.replace('recurse1', 'recurse2') + '.html',
-                        options2.fileScreenshotBase.replace('recurse1', 'recurse2') + '.png'
-                    ].forEach(function (file) {
-                        local.assert(local.fs.existsSync(file), file);
-                        local.fs.unlinkSync(file);
-                    });
-                    options.onNext();
-                    break;
-                default:
-                    onError(error);
-                }
-            });
-            options.modeNext = 0;
-            options.onNext();
-        };
 
         local.testCase_buildApidoc_default = local.testCase_buildApidoc_default || function (
             options,

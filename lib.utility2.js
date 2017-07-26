@@ -52,7 +52,6 @@
         }
         // init lib utility2
         local.global.utility2 = local.global.utility2_utility2 = local.utility2 = local;
-        local.timeStart = local.timeStart || Date.now();
     }());
 
 
@@ -100,13 +99,18 @@
         });
         // init assets and templates
         local.assetsDict = {};
+
+
+
 /* jslint-ignore-begin */
+local.assetsDict['/assets.index.default.template.html'] =
 local.assetsDict['/assets.index.template.html'] = '\
 <!doctype html>\n\
 <html lang="en">\n\
 <head>\n\
 <meta charset="UTF-8">\n\
 <meta name="viewport" content="width=device-width, initial-scale=1">\n\
+<!-- "assets.index.default.template.html" -->\n\
 <title>{{env.npm_package_name}} (v{{env.npm_package_version}})</title>\n\
 <style>\n\
 /*csslint\n\
@@ -161,7 +165,32 @@ textarea[readonly] {\n\
 </head>\n\
 <body>\n\
 <!-- utility2-comment\n\
-<div id="ajaxProgressDiv1" style="background: #d00; height: 2px; left: 0; margin: 0; padding: 0; position: fixed; top: 0; transition: background 500ms, width 1500ms; width: 25%;"></div>\n\
+<div id="ajaxProgressDiv1" style="background: #d00; height: 2px; left: 0; margin: 0; padding: 0; position: fixed; top: 0; transition: background 500ms, width 1500ms; width: 0%;"></div>\n\
+<script>\n\
+/*jslint\n\
+    bitwise: true,\n\
+    browser: true,\n\
+    maxerr: 8,\n\
+    maxlen: 96,\n\
+    node: true,\n\
+    nomen: true,\n\
+    regexp: true,\n\
+    stupid: true\n\
+*/\n\
+(function () {\n\
+    "use strict";\n\
+    var ajaxProgressDiv1, ajaxProgressState;\n\
+    ajaxProgressDiv1 = document.querySelector("#ajaxProgressDiv1");\n\
+    ajaxProgressState = 0;\n\
+    window.timerIntervalAjaxProgressUpdate = setInterval(function () {\n\
+        ajaxProgressState += 1;\n\
+        ajaxProgressDiv1.style.width = Math.max(\n\
+            100 - 100 * Math.exp(-0.0625 * ajaxProgressState),\n\
+            Number(ajaxProgressDiv1.style.width.slice(0, -1)) || 0\n\
+        ) + "%";\n\
+    }, 1000);\n\
+}());\n\
+</script>\n\
 utility2-comment -->\n\
 <h1>\n\
 <!-- utility2-comment\n\
@@ -221,11 +250,6 @@ local.assetsDict['/assets.buildBadge.template.svg'] =
 
 
 local.assetsDict['/assets.example.html'] = '';
-
-
-
-local.assetsDict['/assets.example.template.html'] =
-    local.assetsDict['/assets.index.template.html'];
 
 
 
@@ -539,6 +563,8 @@ local.assetsDict['/assets.readme.template.md'] = '\
 # jslint-lite\n\
 the greatest app in the world!\n\
 \n\
+![screenshot]()\n\
+\n\
 [![travis-ci.org build-status](https://api.travis-ci.org/kaizhu256/node-jslint-lite.svg)](https://travis-ci.org/kaizhu256/node-jslint-lite) [![coverage](https://kaizhu256.github.io/node-jslint-lite/build/coverage.badge.svg)](https://kaizhu256.github.io/node-jslint-lite/build/coverage.html/index.html)\n\
 \n\
 [![NPM](https://nodei.co/npm/jslint-lite.png?downloads=true)](https://www.npmjs.com/package/jslint-lite)\n\
@@ -547,7 +573,7 @@ the greatest app in the world!\n\
 \n\
 | git-branch : | [master](https://github.com/kaizhu256/node-jslint-lite/tree/master) | [beta](https://github.com/kaizhu256/node-jslint-lite/tree/beta) | [alpha](https://github.com/kaizhu256/node-jslint-lite/tree/alpha)|\n\
 |--:|:--|:--|:--|\n\
-| test-server-github : | [![github.com test-server](https://kaizhu256.github.io/node-jslint-lite/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-jslint-lite/build..master..travis-ci.org/app) | [![github.com test-server](https://kaizhu256.github.io/node-jslint-lite/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app) | [![github.com test-server](https://kaizhu256.github.io/node-jslint-lite/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-jslint-lite/build..alpha..travis-ci.org/app)|\n\
+| test-server-github : | [![github.com test-server](https://kaizhu256.github.io/node-jslint-lite/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-jslint-lite/build..master..travis-ci.org/app/) | [![github.com test-server](https://kaizhu256.github.io/node-jslint-lite/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app/) | [![github.com test-server](https://kaizhu256.github.io/node-jslint-lite/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-jslint-lite/build..alpha..travis-ci.org/app/)|\n\
 | test-server-heroku : | [![heroku.com test-server](https://kaizhu256.github.io/node-jslint-lite/heroku-logo.75x25.png)](https://h1-jslint-master.herokuapp.com) | [![heroku.com test-server](https://kaizhu256.github.io/node-jslint-lite/heroku-logo.75x25.png)](https://h1-jslint-beta.herokuapp.com) | [![heroku.com test-server](https://kaizhu256.github.io/node-jslint-lite/heroku-logo.75x25.png)](https://h1-jslint-alpha.herokuapp.com)|\n\
 | test-report : | [![test-report](https://kaizhu256.github.io/node-jslint-lite/build..master..travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-jslint-lite/build..master..travis-ci.org/test-report.html) | [![test-report](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/test-report.html) | [![test-report](https://kaizhu256.github.io/node-jslint-lite/build..alpha..travis-ci.org/test-report.badge.svg)](https://kaizhu256.github.io/node-jslint-lite/build..alpha..travis-ci.org/test-report.html)|\n\
 | coverage : | [![coverage](https://kaizhu256.github.io/node-jslint-lite/build..master..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-jslint-lite/build..master..travis-ci.org/coverage.html/index.html) | [![coverage](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/coverage.html/index.html) | [![coverage](https://kaizhu256.github.io/node-jslint-lite/build..alpha..travis-ci.org/coverage.badge.svg)](https://kaizhu256.github.io/node-jslint-lite/build..alpha..travis-ci.org/coverage.html/index.html)|\n\
@@ -569,9 +595,9 @@ the greatest app in the world!\n\
 \n\
 \n\
 # live demo\n\
-- [https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app)\n\
+- [https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app/](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app/)\n\
 \n\
-[![github.com test-server](https://kaizhu256.github.io/node-jslint-lite/build/screenshot.deployGithub.browser.%252Fnode-jslint-lite%252Fbuild%252Fapp.png)](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app)\n\
+[![screenshot](https://kaizhu256.github.io/node-jslint-lite/build/screenshot.deployGithub.browser.%252Fnode-jslint-lite%252Fbuild%252Fapp%252F.png)](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app/)\n\
 \n\
 \n\
 \n\
@@ -649,11 +675,11 @@ node ./assets.app.js\n\
 1. [https://kaizhu256.github.io/node-jslint-lite/build/screenshot.deployGithub.browser.%252Fnode-jslint-lite%252Fbuild%252Fapp%252Fassets.swgg.html.png](https://kaizhu256.github.io/node-jslint-lite/build/screenshot.deployGithub.browser.%252Fnode-jslint-lite%252Fbuild%252Fapp%252Fassets.swgg.html.png)\n\
 [![screenshot](https://kaizhu256.github.io/node-jslint-lite/build/screenshot.deployGithub.browser.%252Fnode-jslint-lite%252Fbuild%252Fapp%252Fassets.swgg.html.png)](https://kaizhu256.github.io/node-jslint-lite/build/screenshot.deployGithub.browser.%252Fnode-jslint-lite%252Fbuild%252Fapp%252Fassets.swgg.html.png)\n\
 \n\
-1. [https://kaizhu256.github.io/node-jslint-lite/build/screenshot.deployGithub.browser.%252Fnode-jslint-lite%252Fbuild%252Fapp.png](https://kaizhu256.github.io/node-jslint-lite/build/screenshot.deployGithub.browser.%252Fnode-jslint-lite%252Fbuild%252Fapp.png)\n\
-[![screenshot](https://kaizhu256.github.io/node-jslint-lite/build/screenshot.deployGithub.browser.%252Fnode-jslint-lite%252Fbuild%252Fapp.png)](https://kaizhu256.github.io/node-jslint-lite/build/screenshot.deployGithub.browser.%252Fnode-jslint-lite%252Fbuild%252Fapp.png)\n\
+1. [https://kaizhu256.github.io/node-jslint-lite/build/screenshot.deployGithub.browser.%252Fnode-jslint-lite%252Fbuild%252Fapp%252F.png](https://kaizhu256.github.io/node-jslint-lite/build/screenshot.deployGithub.browser.%252Fnode-jslint-lite%252Fbuild%252Fapp%252F.png)\n\
+[![screenshot](https://kaizhu256.github.io/node-jslint-lite/build/screenshot.deployGithub.browser.%252Fnode-jslint-lite%252Fbuild%252Fapp%252F.png)](https://kaizhu256.github.io/node-jslint-lite/build/screenshot.deployGithub.browser.%252Fnode-jslint-lite%252Fbuild%252Fapp%252F.png)\n\
 \n\
-1. [https://kaizhu256.github.io/node-jslint-lite/build/screenshot.deployGithubTest.browser.%252Fnode-jslint-lite%252Fbuild%252Fapp.png](https://kaizhu256.github.io/node-jslint-lite/build/screenshot.deployGithubTest.browser.%252Fnode-jslint-lite%252Fbuild%252Fapp.png)\n\
-[![screenshot](https://kaizhu256.github.io/node-jslint-lite/build/screenshot.deployGithubTest.browser.%252Fnode-jslint-lite%252Fbuild%252Fapp.png)](https://kaizhu256.github.io/node-jslint-lite/build/screenshot.deployGithubTest.browser.%252Fnode-jslint-lite%252Fbuild%252Fapp.png)\n\
+1. [https://kaizhu256.github.io/node-jslint-lite/build/screenshot.deployGithubTest.browser.%252Fnode-jslint-lite%252Fbuild%252Fapp%252F.png](https://kaizhu256.github.io/node-jslint-lite/build/screenshot.deployGithubTest.browser.%252Fnode-jslint-lite%252Fbuild%252Fapp%252F.png)\n\
+[![screenshot](https://kaizhu256.github.io/node-jslint-lite/build/screenshot.deployGithubTest.browser.%252Fnode-jslint-lite%252Fbuild%252Fapp%252F.png)](https://kaizhu256.github.io/node-jslint-lite/build/screenshot.deployGithubTest.browser.%252Fnode-jslint-lite%252Fbuild%252Fapp%252F.png)\n\
 \n\
 1. [https://kaizhu256.github.io/node-jslint-lite/build/screenshot.deployHeroku.browser.%252Fassets.swgg.html.png](https://kaizhu256.github.io/node-jslint-lite/build/screenshot.deployHeroku.browser.%252Fassets.swgg.html.png)\n\
 [![screenshot](https://kaizhu256.github.io/node-jslint-lite/build/screenshot.deployHeroku.browser.%252Fassets.swgg.html.png)](https://kaizhu256.github.io/node-jslint-lite/build/screenshot.deployHeroku.browser.%252Fassets.swgg.html.png)\n\
@@ -706,7 +732,7 @@ node ./assets.app.js\n\
     "scripts": {\n\
         "build-ci": "utility2 shReadmeTest build_ci.sh",\n\
         "env": "env",\n\
-        "heroku-postbuild": "npm install \\\"kaizhu256/node-utility2#alpha\\\" && utility2 shDeployHeroku",\n\
+        "heroku-postbuild": "npm uninstall utility2 2>/dev/null; npm install kaizhu256/node-utility2#alpha && utility2 shDeployHeroku",\n\
         "postinstall": "[ ! -f npm_scripts.sh ] || ./npm_scripts.sh postinstall",\n\
         "start": "PORT=${PORT:-8080} utility2 start test.js",\n\
         "test": "PORT=$(utility2 shServerPortRandom) utility2 test test.js"\n\
@@ -814,7 +840,7 @@ local.assetsDict['/assets.readmeCustomOrg.npmtest.template.md'] = '\
 |--:|:--|\n\
 | coverage : | [![coverage](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/coverage.badge.svg)](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/coverage.html/index.html)|\n\
 | test-report : | [![test-report](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/test-report.badge.svg)](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/test-report.html)|\n\
-| test-server-github : | [![github.com test-server](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/GitHub-Mark-32px.png)](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/app) || build-artifacts : | [![build-artifacts](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/glyphicons_144_folder_open.png)](https://github.com/npmtest/node-npmtest-{{env.npm_package_name}}/tree/gh-pages/build)|\n\
+| test-server-github : | [![github.com test-server](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/GitHub-Mark-32px.png)](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/app/) || build-artifacts : | [![build-artifacts](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/glyphicons_144_folder_open.png)](https://github.com/npmtest/node-npmtest-{{env.npm_package_name}}/tree/gh-pages/build)|\n\
 \n\
 - [https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/coverage.html/index.html](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/coverage.html/index.html)\n\
 \n\
@@ -958,7 +984,7 @@ local.assetsDict['/assets.test.template.js'] = '\
              */\n\
                 // jslint-hack\n\
                 local.nop(url);\n\
-                return local.env.npm_package_nameAlias && (/\\bgithub.io$/).test(location.host)\n\
+                return local.env.npm_package_nameAlias && location.host.match(/\\bgithub.io$/)\n\
                     ? \'https://h1-\' + local.env.npm_package_nameAlias + \'-alpha.herokuapp.com\'\n\
                     : location.protocol + \'//\' + location.host;\n\
             };\n\
@@ -1835,6 +1861,7 @@ local.assetsDict['/favicon.ico'] = '';
                 return;
             };
             local.ajaxForwardProxyUrlTest = local.ajaxForwardProxyUrlTest || local.nop;
+            local.ajaxProgressCounter = local.ajaxProgressCounter || 0;
             local.ajaxProgressUpdate = local.ajaxProgressUpdate || local.nop;
             local.bufferToNodeBuffer = local.bufferToNodeBuffer || local.nop;
             local.bufferToString = local.bufferToString || local.nop;
@@ -1867,6 +1894,8 @@ local.assetsDict['/favicon.ico'] = '';
             });
             // init method
             xhr.method = xhr.method || 'GET';
+            // init timeStart
+            xhr.timeStart = Date.now();
             // init timeout
             xhr.timeout = xhr.timeout || local.timeoutDefault;
             // init timerTimeout
@@ -1890,6 +1919,24 @@ local.assetsDict['/favicon.ico'] = '';
                         return;
                     }
                     xhr.isDone = true;
+                    // debug ajaxResponse
+                    if (xhr.modeDebug) {
+                        console.error({
+                            type: 'ajaxResponse',
+                            time: new Date(xhr.timeStart).toISOString(),
+                            method: xhr.method,
+                            url: xhr.url,
+                            statusCode: xhr.statusCode,
+                            duration: Date.now() - xhr.timeStart,
+                            // extra
+                            headers: xhr.headers,
+                            data: xhr.data && xhr.data.slice &&
+                                local.bufferToString(xhr.data.slice(0, 256)),
+                            responseText: local.tryCatchOnError(function () {
+                                return xhr.responseText.slice(0, 256);
+                            }, local.nop)
+                        });
+                    }
                     // cleanup timerTimeout
                     clearTimeout(xhr.timerTimeout);
                     // cleanup requestStream and responseStream
@@ -1907,18 +1954,6 @@ local.assetsDict['/favicon.ico'] = '';
                     }
                     // handle completed xhr request
                     if (xhr.readyState === 4) {
-                        // debug xhr
-                        if (xhr.modeDebug) {
-                            console.error(new Date().toISOString(
-                            ) + ' ajax-response ' + JSON.stringify({
-                                statusCode: xhr.statusCode,
-                                method: xhr.method,
-                                url: xhr.url,
-                                responseText: local.tryCatchOnError(function () {
-                                    return xhr.responseText.slice(0, 256);
-                                }, local.nop)
-                            }));
-                        }
                         // handle string data
                         if (xhr.error) {
                             // debug statusCode
@@ -1949,7 +1984,7 @@ local.assetsDict['/favicon.ico'] = '';
             xhr.upload.addEventListener('progress', local.ajaxProgressUpdate);
             // open url
             xhr.forwardProxyUrl = local.modeJs === 'browser' &&
-                (/^https{0,1}:/).test(xhr.url) &&
+                xhr.url.match(/^https{0,1}:/) &&
                 xhr.url.indexOf(location.protocol + '//' + location.host) !== 0 &&
                 local.ajaxForwardProxyUrlTest(xhr.url, location);
             if (xhr.forwardProxyUrl) {
@@ -1962,16 +1997,6 @@ local.assetsDict['/favicon.ico'] = '';
             Object.keys(xhr.headers).forEach(function (key) {
                 xhr.setRequestHeader(key, xhr.headers[key]);
             });
-            // debug xhr
-            if (xhr.modeDebug) {
-                console.error(new Date().toISOString() + ' ajax-request ' + JSON.stringify({
-                    method: xhr.method,
-                    url: xhr.url,
-                    headers: xhr.headers,
-                    data: xhr.data && xhr.data.slice &&
-                        local.bufferToString(xhr.data.slice(0, 256))
-                }));
-            }
             if (local.FormData && xhr.data instanceof local.FormData) {
                 // handle formData
                 xhr.data.read(function (error, data) {
@@ -1995,6 +2020,8 @@ local.assetsDict['/favicon.ico'] = '';
          * this function will update ajaxProgress
          */
             var ajaxProgressDiv1;
+            // cleanup timerInterval
+            clearInterval(local.global.timerIntervalAjaxProgressUpdate);
             ajaxProgressDiv1 = local.modeJs === 'browser' &&
                 document.querySelector('#ajaxProgressDiv1');
             if (!ajaxProgressDiv1) {
@@ -2282,7 +2309,7 @@ local.assetsDict['/favicon.ico'] = '';
                     }
                     options.timeoutDefault = options.timeoutDefault || local.timeoutDefault;
                     // init url
-                    if (!(/^\w+:\/\//).test(options.url)) {
+                    if (!options.url.match(/^\w+:\/\//)) {
                         options.url = local.path.resolve(process.cwd(), options.url);
                         if (options.modeBrowserTest2 === 'translateAfterScrape' &&
                                 !options.modeBrowserTestTranslating) {
@@ -2777,7 +2804,10 @@ function TranslateElementInit() {\n\
                         ).forEach(function (element) {
                             ['href', 'src'].forEach(function (key) {
                                 tmp = element[key];
-                                if ((/^http:|^https:/).test(tmp)) {
+                                if (!tmp) {
+                                    return;
+                                }
+                                if (tmp.match(/^http:|^https:/)) {
                                     element[key] = tmp;
                                     if (key === 'href') {
                                         tmp = tmp.split(/[?#]/)[0];
@@ -2789,7 +2819,7 @@ function TranslateElementInit() {\n\
                                     }
                                     return;
                                 }
-                                if ((/^javascript/).test(tmp)) {
+                                if (tmp.match(/^javascript/)) {
                                     element[key] = '#';
                                 }
                             });
@@ -2797,7 +2827,7 @@ function TranslateElementInit() {\n\
                         // deduplicate '/'
                         Object.keys(data.hrefDict).forEach(function (key) {
                             if (data.hrefDict.hasOwnProperty(key + '/') ||
-                                    (/\.(?:css|js)$/).test(key)) {
+                                    key.match(/\.(?:css|js)$/)) {
                                 data.hrefDict[key] = undefined;
                             }
                         });
@@ -3260,7 +3290,7 @@ return Utf8ArrayToStr(bff);
                 local.objectSetDefault(
                     options.packageJson,
                     JSON.parse(local.templateRenderJslintLite(
-                        options.rgx.exec(local.assetsDict['/assets.readme.template.md'])[1],
+                        local.assetsDict['/assets.readme.template.md'].match(options.rgx)[1],
                         options
                     )),
                     2
@@ -3285,6 +3315,21 @@ return Utf8ArrayToStr(bff);
                     )
                 );
             });
+            // init assets.swgg.swagger.json
+            if (local.fs.existsSync('assets.swgg.swagger.json')) {
+                local.fs.writeFileSync(
+                    'assets.swgg.swagger.json',
+                    local.fs.readFileSync('assets.swgg.swagger.json', 'utf8')
+                        .replace((/(\n {8}"description": ").*?(".*\n)/), '$1' +
+                            options.packageJson.description + '$2')
+                        .replace((/(\n {8}"title": ").*?(".*\n)/), '$1' +
+                            options.packageJson.name + '$2')
+                        .replace((/(\n {8}"version": ").*?(".*\n)/), '$1' +
+                            options.packageJson.version + '$2')
+                        .replace((/(\n {8}"x-homepage": ").*?(".*\n)/), '$1' +
+                            options.packageJson.homepage + '$2')
+                );
+            }
             // search-and-replace - customize dataTo
             [
                 // customize name and description
@@ -3321,7 +3366,7 @@ return Utf8ArrayToStr(bff);
             });
             // customize swaggerdoc
             if (!local.assetsDict['/assets.swgg.swagger.json'] ||
-                    local.assetsDict['/index.html'] === local.assetsDict['/assets.swgg.html']) {
+                    local.assetsDict['/index.html'].match(/\bswggUiContainer\b/)) {
                 options.dataTo = options.dataTo.replace(
                     (/\n#### swaggerdoc\n[\S\s]*?\n#### /),
                     '\n#### '
@@ -3335,33 +3380,28 @@ return Utf8ArrayToStr(bff);
                 }
             );
             options.customize();
-            // customize no shDeployGithub
+            // customize shDeployCustom
             if (options.dataFrom.indexOf('shDeployCustom') >= 0) {
                 [
                     // customize test-server
                     (/\n\| git-branch : \|[\S\s]*?\n\| test-report : \|/),
-                    // customize swaggerdoc
-                    (/\n#### swaggerdoc\n[\S\s]*?\n#### /),
                     // customize quickstart
-                    (/\n# quickstart [\S\s]*?\n# extra screenshots\n/)
+                    (/\n#### changelog [\S\s]*\n# quickstart example.js\n/),
+                    options.dataFrom.indexOf('"assets.index.default.template.html"') < 0 &&
+                        (/\n# quickstart [\S\s]*?\n# extra screenshots\n/)
                 ].forEach(function (rgx) {
                     options.dataFrom.replace(rgx, function (match0) {
                         options.dataTo = options.dataTo.replace(rgx, match0);
                     });
                 });
-                [
-                    // customize screenshot
-                    new RegExp('^1\\. .*?screenshot\\.' +
-                        '(?:deployGithub|deployHeroku|npmTest|testExampleJs|testExampleSh)' +
-                        '.*?\\.png[\\S\\s]*?\\n\\n', 'gm')
-                ].forEach(function (rgx) {
-                    options.dataTo = options.dataTo.replace(rgx, '');
-                });
+                // customize screenshot
+                options.dataTo = options.dataTo.replace(new RegExp('^1\\. .*?screenshot\\.' +
+                    '(?:deployGithub|deployHeroku|npmTest|testExampleJs|testExampleSh)' +
+                    '.*?\\.png[\\S\\s]*?\\n\\n', 'gm'), '');
             }
-            // customize assets.index.template.html with file-override
-            if (local.assetsDict['/index.html'] ===
-                    local.assetsDict['/assets.swgg.html'] ||
-                    local.fs.existsSync('./assets.index.template.html')) {
+            // customize assets.index.template.html
+            if (local.assetsDict['/assets.index.template.html']
+                    .indexOf('"assets.index.default.template.html"') < 0) {
                 options.dataTo = options.dataTo.replace(
                     new RegExp('\\n {8}\\/\\* jslint-ignore-begin \\*\\/\\n' +
                         ' {8}local.assetsDict\\[\'\\/assets.index.template.html\'\\]' +
@@ -3385,6 +3425,19 @@ return Utf8ArrayToStr(bff);
                     .replace(/[^ \-0-9A-Z_a-z]/g, '').replace(/ /g, '-') + ')\n';
             });
             options.dataTo = options.dataTo.replace('\n# table of contents\n', options.toc);
+            // customize screenshot
+            options.dataTo = options.dataTo.replace(
+                (/\n.*?!\[screenshot\].*?\n([\S\s]+?(\n.*?!\[screenshot\].*?\n))/),
+                function (match0, match1, match2) {
+                    // jslint-hack
+                    local.nop(match0);
+                    return match2 + match1;
+                }
+            );
+            // normalize whitespace
+            options.dataTo = options.dataTo
+                .replace((/\n{5,}/g), '\n\n\n\n')
+                .replace((/(\S)\n{3}(\S)/g), '$1\n\n$2');
             // save README.md
             local.fs.writeFileSync('README.md', options.dataTo);
             onError();
@@ -3709,9 +3762,9 @@ return Utf8ArrayToStr(bff);
         /*
          * this function will try to determine if the env-key is sensitive
          */
-            return (/(?:\b|_)(?:crypt|decrypt|key|pass|private|secret|token)/)
-                .test(key.toLowerCase()) ||
-                (/Crypt|Decrypt|Key|Pass|Private|Secret|Token/).test(key);
+            return key.toLowerCase()
+                .match(/(?:\b|_)(?:crypt|decrypt|key|pass|private|secret|token)/) ||
+                key.match(/Crypt|Decrypt|Key|Pass|Private|Secret|Token/);
         };
 
         local.envSanitize = function (env) {
@@ -3798,7 +3851,7 @@ return Utf8ArrayToStr(bff);
          */
             location = location || (typeof window === 'object' && window && window.location);
             if (!(hostOverride && location && (local.githubCorsHostTest ||
-                    (/\bgithub.com$|\bgithub.io$/)).test(location.host))) {
+                    location.host.match(/\bgithub.com$|\bgithub.io$/)))) {
                 return url;
             }
             // init github-branch
@@ -3817,13 +3870,29 @@ return Utf8ArrayToStr(bff);
         /*
          * this function will request the data from options.url
          */
-            var chunkList, isDone, onError2, timerTimeout, request, response, urlParsed;
+            var chunkList,
+                isDone,
+                onError2,
+                timerTimeout,
+                request,
+                response,
+                timeStart,
+                urlParsed;
             // init onError2
             onError2 = function (error) {
                 if (isDone) {
                     return;
                 }
                 isDone = true;
+                // debug httpResponse
+                local.serverLog({
+                    type: 'httpResponse',
+                    time: new Date(timeStart).toISOString(),
+                    method: options.method,
+                    url: options.url,
+                    statusCode: local.normalizeValue('number', response && response.statusCode),
+                    duration: Date.now() - timeStart
+                });
                 // cleanup timerTimeout
                 clearTimeout(timerTimeout);
                 // cleanup request and response
@@ -3839,12 +3908,6 @@ return Utf8ArrayToStr(bff);
                         }
                     }
                 });
-                // debug response
-                console.error(new Date().toISOString() + ' http-response ' + JSON.stringify({
-                    method: options.method,
-                    url: options.url,
-                    statusCode: Number(response && response.statusCode) || 0
-                }));
                 onError(error, response);
             };
             // init timerTimeout
@@ -3855,11 +3918,7 @@ return Utf8ArrayToStr(bff);
             urlParsed.headers = options.headers;
             urlParsed.method = options.method;
             // debug request
-            console.error();
-            console.error(new Date().toISOString() + ' http-request ' + JSON.stringify({
-                method: options.method,
-                url: options.url
-            }));
+            timeStart = Date.now();
             request = require(
                 urlParsed.protocol.slice(0, -1)
             ).request(urlParsed, function (_response) {
@@ -3902,8 +3961,7 @@ return Utf8ArrayToStr(bff);
             if (!script || script.length >= 0x100000) {
                 return script;
             }
-            extname = (/\.\w+$/).exec(file);
-            extname = extname && extname[0];
+            extname = file.match(/\.\w+$/) && file.match(/\.\w+$/)[0];
             switch (extname) {
             case '.css':
                 if (script.indexOf('/*csslint') >= 0 || mode === 'force') {
@@ -4177,7 +4235,7 @@ return Utf8ArrayToStr(bff);
                 case 1:
                     // skip gzip
                     if (response.headersSent ||
-                            !(/\bgzip\b/).test(request.headers['accept-encoding'])) {
+                            !String(request.headers['accept-encoding']).match(/\bgzip\b/)) {
                         options.modeNext += 1;
                         options.onNext();
                         return;
@@ -4302,9 +4360,9 @@ return Utf8ArrayToStr(bff);
                     return;
                 }
                 // init response-header content-type
-                request.urlParsed.contentType = (/\.[^\.]*$/).exec(request.urlParsed.pathname);
                 request.urlParsed.contentType = local.contentTypeDict[
-                    request.urlParsed.contentType && request.urlParsed.contentType[0]
+                    request.urlParsed.pathname.match(/\.[^\.]*$/) &&
+                        request.urlParsed.pathname.match(/\.[^\.]*$/)
                 ];
                 local.serverRespondHeadSet(request, response, null, {
                     'Content-Type': request.urlParsed.contentType
@@ -4321,9 +4379,10 @@ return Utf8ArrayToStr(bff);
          */
             var onError, options, timerTimeout;
             // handle preflight-cors
-            if (request.method === 'OPTIONS' && (/forward-proxy-url/).test(
+            if (request.method === 'OPTIONS' &&
+                    request.headers['access-control-request-headers'] &&
                     request.headers['access-control-request-headers']
-                )) {
+                    .match(/forward-proxy-url/)) {
                 local.serverRespondCors(request, response);
                 response.end();
                 return;
@@ -4336,10 +4395,24 @@ return Utf8ArrayToStr(bff);
             // init onError
             onError = function (error) {
                 clearTimeout(timerTimeout);
-                if (!error || options.isDone) {
+                if (options.isDone) {
                     return;
                 }
                 options.isDone = true;
+                // debug middlewareForwardProxy
+                local.serverLog({
+                    type: 'middlewareForwardProxy',
+                    time: new Date(options.timeStart).toISOString(),
+                    method: options.method,
+                    url: options.url,
+                    statusCode: local.normalizeValue('number', response.statusCode),
+                    duration: Date.now() - options.timeStart,
+                    // extra
+                    headers: options.headers
+                });
+                if (!error) {
+                    return;
+                }
                 // cleanup client
                 local.streamListCleanup([options.clientRequest, options.clientResponse]);
                 nextMiddleware(error);
@@ -4361,12 +4434,6 @@ return Utf8ArrayToStr(bff);
             }, local.nop);
             // debug options
             local._debugForwardProxy = options;
-            console.error(new Date().toISOString() + ' middlewareForwardProxy ' +
-                JSON.stringify({
-                    method: options.method,
-                    url: options.url,
-                    headers: options.headers
-                }));
             options.clientRequest = (options.protocol === 'https:'
                 ? local.https
                 : local.http).request(options, function (clientResponse) {
@@ -4375,6 +4442,7 @@ return Utf8ArrayToStr(bff);
                 // pipe clientResponse to serverResponse
                 options.clientResponse.pipe(response);
             }).on('error', onError);
+            options.timeStart = Date.now();
             // init event-handling
             request.on('error', onError);
             response.on('finish', onError).on('error', onError);
@@ -4395,9 +4463,9 @@ return Utf8ArrayToStr(bff);
             // init request.urlParsed
             request.urlParsed = local.urlParse(request.url);
             // init response-header content-type
-            request.urlParsed.contentType = (/\.[^\.]*$/).exec(request.urlParsed.pathname);
             request.urlParsed.contentType = local.contentTypeDict[
-                request.urlParsed.contentType && request.urlParsed.contentType[0]
+                request.urlParsed.pathname.match(/\.[^\.]*$/) &&
+                    request.urlParsed.pathname.match(/\.[^\.]*$/)
             ];
             local.serverRespondHeadSet(request, response, null, {
                 'Content-Type': request.urlParsed.contentType
@@ -4922,7 +4990,7 @@ return Utf8ArrayToStr(bff);
             // hook custom repl eval function
             self.eval = function (script, context, file, onError) {
                 var match, onError2;
-                match = (/^(\S+)(.*?)\n/).exec(script);
+                match = script.match(/^(\S+)(.*?)\n/);
                 onError2 = function (error, data) {
                     // debug error
                     global.utility2_debugReplError = error || global.utility2_debugReplError;
@@ -5064,9 +5132,8 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
                 tmp = element[0][element[1]];
                 mockDict = {};
                 Object.keys(tmp).forEach(function (key) {
-                    if (typeof tmp[key] === 'function' && !(
-                            /^(?:fs\.Read|fs\.read|process\.binding|process\.dlopen)/
-                        ).test(element[1] + '.' + key)) {
+                    if (typeof tmp[key] === 'function' && !(element[1] + '.' + key)
+                            .match(/^(?:fs\.Read|fs\.read|process\.binding|process\.dlopen)/)) {
                         mockDict[key] = function () {
                             return;
                         };
@@ -5103,7 +5170,7 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
                     case '.html':
                     case '.js':
                     case '.json':
-                        if ((/\brollup\b/).test(file)) {
+                        if (file.match(/\brollup\b/)) {
                             return;
                         }
                         // jslint file
@@ -5195,21 +5262,24 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
                 local.assetsDict['/assets.index.template.html'] =
                     local.fs.readFileSync('assets.index.template.html', 'utf8');
             }, local.nop);
-            local.assetsDict['/'] = local.assetsDict['/index.html'] =
-                local.assetsDict['/index.html'] ||
-                local.jslintAndPrintConditional(local.templateRender(
-                    // uncomment utility2-comment
-                    local.assetsDict['/assets.index.template.html'].replace(
-                        (/<!-- utility2-comment\b([\S\s]+?)\butility2-comment -->/g),
-                        '$1'
-                    ),
-                    {
-                        env: local.env,
-                        isRollup: local.global.utility2_rollup ||
-                            local.env.NODE_ENV === 'rollup' ||
-                            local.env.NODE_ENV === 'production'
-                    }
-                ), '/index.html');
+            ['index', 'index.default'].forEach(function (element) {
+                local.assetsDict['/' + element + '.html'] =
+                    local.assetsDict['/' + element + '.html'] ||
+                    local.jslintAndPrintConditional(local.templateRender(
+                        // uncomment utility2-comment
+                        local.assetsDict['/assets.' + element + '.template.html'].replace(
+                            (/<!-- utility2-comment\b([\S\s]+?)\butility2-comment -->/g),
+                            '$1'
+                        ),
+                        {
+                            env: local.env,
+                            isRollup: local.global.utility2_rollup ||
+                                local.env.NODE_ENV === 'rollup' ||
+                                local.env.NODE_ENV === 'production'
+                        }
+                    ), '/' + element + '.html');
+            });
+            local.assetsDict['/'] = local.assetsDict['/index.html'];
             // init assets.app.js
             local.assetsDict['/assets.app.js'] = [
                 'header',
@@ -5289,6 +5359,10 @@ instruction\n\
             return module.exports;
         };
 
+        local.serverLog = function (options) {
+            console.error('serverLog - ' + JSON.stringify(options));
+        };
+
         local.serverRespondCors = function (request, response) {
         /*
          * this function will enable cors for the request
@@ -5298,7 +5372,7 @@ instruction\n\
                 'access-control-allow-headers':
                     request.headers['access-control-request-headers'],
                 'access-control-allow-methods':
-                    request.headers['access-control-request-methods'],
+                    request.headers['access-control-request-method'],
                 'access-control-allow-origin': '*'
             }));
         };
@@ -5370,6 +5444,32 @@ instruction\n\
         /*
          * this function will create a timeout-error-handler for the server-request
          */
+            var onError;
+            onError = function () {
+                if (response.isDone) {
+                    return;
+                }
+                response.isDone = true;
+                // debug serverResponse
+                local.serverLog({
+                    type: 'serverResponse',
+                    time: new Date(request.timeStart).toISOString(),
+                    method: request.method,
+                    url: request.url,
+                    statusCode: local.normalizeValue('number', response.statusCode),
+                    duration: Date.now() - request.timeStart,
+                    // extra
+                    requestContentLength: request.dataLength || 0,
+                    responseContentLength: response.contentLength,
+                    requestHeaderXForwardedFor: request.headers['x-forwarded-for'] || '',
+                    requestHeaderOrigin: request.headers.origin || '',
+                    requestHeaderReferer: request.headers.referer || '',
+                    requestHeaderUserAgent: request.headers['user-agent']
+                });
+                // cleanup timerTimeout
+                clearTimeout(request.timerTimeout);
+            };
+            request.timeStart = Date.now();
             request.onTimeout = request.onTimeout || function (error) {
                 local.serverRespondDefault(request, response, 500, error);
                 setTimeout(function () {
@@ -5382,10 +5482,14 @@ instruction\n\
                 timeout || local.timeoutDefault,
                 'server ' + request.method + ' ' + request.url
             );
-            response.on('finish', function () {
-                // cleanup timerTimeout
-                clearTimeout(request.timerTimeout);
-            });
+            response.contentLength = 0;
+            response.writeContentLength = response.writeContentLength || response.write;
+            response.write = function (chunk, encoding, callback) {
+                response.contentLength += chunk.length;
+                response.writeContentLength(chunk, encoding, callback);
+            };
+            response.on('error', onError);
+            response.on('finish', onError);
         };
 
         local.setTimeoutOnError = function (onError, error, data) {
@@ -5490,11 +5594,13 @@ instruction\n\
          */
             var chunkList;
             chunkList = [];
+            stream.dataLength = 0;
             // read data from the stream
             stream
                 // on data event, push the buffer chunk to chunkList
                 .on('data', function (chunk) {
                     chunkList.push(chunk);
+                    stream.dataLength += chunk.length;
                 })
                 // on end event, pass concatenated read buffer to onError
                 .on('end', function () {
@@ -6103,6 +6209,9 @@ instruction\n\
             options.testRunBeforeDone = options.testRunBeforeTimer = null;
             // visual notification - testRun
             local.ajaxProgressUpdate();
+            // mock serverLog
+            local._serverLog = local._serverLog || local.serverLog;
+            local.serverLog = local.nop;
             switch (local.modeJs) {
             case 'node':
                 // mock proces.exit
@@ -6237,6 +6346,8 @@ instruction\n\
                     break;
                 }
                 setTimeout(function () {
+                    // restore serverLog
+                    local.serverLog = local._serverLog;
                     switch (local.modeJs) {
                     case 'browser':
                         // update coverageReport
@@ -6442,7 +6553,7 @@ instruction\n\
                     if (url[0] === '/') {
                         url = local.serverLocalHost + url;
                     // resolve relative path
-                    } else if (!(/^\w+?:\/\//).test(url)) {
+                    } else if (!url.match(/^\w+?:\/\//)) {
                         url = local.serverLocalHost +
                             location.pathname.replace((/\/[^\/]*?$/), '') + '/' + url;
                     }
@@ -6461,7 +6572,7 @@ instruction\n\
                     if (url[0] === '/') {
                         url = local.serverLocalHost + url;
                     // resolve relative path
-                    } else if (!(/^\w+?:\/\//).test(url)) {
+                    } else if (!url.match(/^\w+?:\/\//)) {
                         url = local.serverLocalHost + '/' + url;
                     }
                     urlParsed = local.url.parse(url);
@@ -6823,10 +6934,11 @@ instruction\n\
             'assets.swgg.swagger.server.json'
         ].forEach(function (file) {
             local.assetsDict['/' + file] = local.assetsDict['/' + file] || '';
-            if (local.fs.existsSync(file)) {
-                console.error('override assets ' + file);
-                local.assetsDict['/' + file] = local.fs.readFileSync(file, 'utf8');
+            if (!local.fs.existsSync(file)) {
+                return;
             }
+            console.error('override assets ' + file);
+            local.assetsDict['/' + file] = local.fs.readFileSync(file, 'utf8');
         });
         if (local.global.utility2_rollup) {
             local.assetsDict['/assets.utility2.rollup.js'] =

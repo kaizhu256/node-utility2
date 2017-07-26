@@ -437,43 +437,6 @@ shBuildCiInternal() {(set -e
     shSleep 15
     # list $npm_config_dir_build
     find "$npm_config_dir_build" | sort
-    # verify the build-links embedded in README.md
-    node -e "
-// <script>
-/*jslint
-    bitwise: true,
-    browser: true,
-    maxerr: 8,
-    maxlen: 96,
-    node: true,
-    nomen: true,
-    regexp: true,
-    stupid: true
-*/
-'use strict';
-var local;
-local = {};
-local.file = 'README.md';
-local.fs = require('fs');
-local.nop = function () {
-    return;
-};
-local.rgx = new RegExp(
-    '$GITHUB_REPO'.replace('/', '.github.io\\\\/') + '\\\\/build\\\\b.*?\\\\/(.*?)[)\\\\]]',
-    'g'
-);
-local.fs.readFileSync(local.file, 'utf8')
-    .replace((/build.screenshot.npmTestPublished./g), '')
-    .replace(local.rgx, function (match0, match1) {
-        if (match1.replace((/%25/g), '').indexOf('%') >= 0 ||
-                !local.fs.existsSync(
-                    '$npm_config_dir_build/' + match1.replace((/%25/g), '%')
-                )) {
-            throw new Error('shReadmeBuildLinkVerify - invalid link - https://' + match0);
-        }
-    });
-// </script>
-    "
     # upload build-artifacts to github, and if number of commits > $COMMIT_LIMIT,
     # then squash older commits
     if [ "$CI_BRANCH" = alpha ] ||
@@ -482,6 +445,9 @@ local.fs.readFileSync(local.file, 'utf8')
     then
         COMMIT_LIMIT=20 shBuildGithubUpload
     fi
+    # validate http-links embedded in README.md
+    shSleep 15
+    shReadmeLinkValidate
 )}
 
 shBuildCustomOrg() {(set -e
@@ -574,7 +540,7 @@ var dict, value;
 dict = require('./package.json');
 Object.keys(dict).forEach(function (key) {
     value = dict[key];
-    if (!(/\W/g).test(key) && typeof value === 'string' && !(/[\n\"\$']/).test(value)) {
+    if (!key.match(/\W/g) && typeof value === 'string' && !value.match(/[\n\"\$']/)) {
         process.stdout.write('export npm_package_' + key + '=\'' + value + '\';');
     }
 });
@@ -584,7 +550,7 @@ value = String((dict.repository && dict.repository.url) || dict.repository || ''
     .slice(-2)
     .join('/')
     .replace((/\.git\$/), '');
-if ((/^[^\/]+\/[^\/]+\$/).test(value)) {
+if (value.match(/^[^\/]+\/[^\/]+\$/)) {
     value = value.split('/');
     if (!process.env.GITHUB_REPO) {
         process.env.GITHUB_REPO = value.join('/');
@@ -694,7 +660,7 @@ shBuildLib() {(set -e
 
 shBuildPrint() {(set -e
 # this function will print debug info about the build state
-    printf '%b' "\n\033[35m[MODE_BUILD=$MODE_BUILD]\033[0m - $(shDateIso) - $1\n\n" 1>&2
+    printf '%b' "\n\033[35m[MODE_BUILD=$MODE_BUILD]\033[0m - $(shDateIso) - $@\n\n" 1>&2
 )}
 
 shBuildReadme() {(set -e
@@ -878,14 +844,13 @@ console.log(process.argv[1]
     .replace((/$GITHUB_ORG\/node-$GITHUB_ORG-/g), '')
     .replace((/\S+/g), function (match0) {
         return match0.length >= 64 ||
-                new RegExp('[^\\\\w\\\\-.]|(?:^(?:[^a-z]|' +
+                match0.match(new RegExp('[^\\\\w\\\\-.]|(?:^(?:[^a-z]|' +
                 'npmclassic|' +
                 'npmdoc|' +
                 'npmlite|' +
                 'npmstable|' +
                 'npmtest|' +
-                'scrapeitall))')
-                .test(match0)
+                'scrapeitall))'))
             ? ''
             : '$GITHUB_ORG/node-$GITHUB_ORG-' + match0;
     })
@@ -1059,19 +1024,19 @@ shDeployGithub() {(set -e
     export MODE_BUILD=deployGithub
     export TEST_URL="https://$(printf "$GITHUB_REPO" | \
         sed "s|/|.github.io/|")/build..$CI_BRANCH..travis-ci.org/app"
-    shBuildPrint "deployed to $TEST_URL"
+    shBuildPrint "deployed to $TEST_URL/"
     # verify deployed app's main-page returns status-code < 400
-    if [ $(curl --connect-timeout 60 -Ls -o /dev/null -w "%{http_code}" "$TEST_URL") -lt 400 ]
+    if [ $(curl --connect-timeout 60 -Ls -o /dev/null -w "%{http_code}" "$TEST_URL/") -lt 400 ]
     then
-        shBuildPrint "curl test passed for $TEST_URL"
+        shBuildPrint "curl test passed for $TEST_URL/"
     else
-        shBuildPrint "curl test failed for $TEST_URL"
+        shBuildPrint "curl test failed for $TEST_URL/"
         return 1
     fi
     # screenshot deployed app
-    shBrowserTest "$TEST_URL $TEST_URL/assets.swgg.html" screenshot
+    shBrowserTest "$TEST_URL/ $TEST_URL/assets.swgg.html" screenshot
     # test deployed app
-    MODE_BUILD="${MODE_BUILD}Test" shBrowserTest "$TEST_URL?modeTest=1&timeExit={{timeExit}}" \
+    MODE_BUILD="${MODE_BUILD}Test" shBrowserTest "$TEST_URL/?modeTest=1&timeExit={{timeExit}}" \
         test
 )}
 
@@ -1092,19 +1057,19 @@ shDeployHeroku() {(set -e
     fi
     export MODE_BUILD=deployHeroku
     export TEST_URL="https://$npm_package_nameHeroku-$CI_BRANCH.herokuapp.com"
-    shBuildPrint "deployed to $TEST_URL"
+    shBuildPrint "deployed to $TEST_URL/"
     # verify deployed app's main-page returns status-code < 400
-    if [ $(curl --connect-timeout 60 -Ls -o /dev/null -w "%{http_code}" "$TEST_URL") -lt 400 ]
+    if [ $(curl --connect-timeout 60 -Ls -o /dev/null -w "%{http_code}" "$TEST_URL/") -lt 400 ]
     then
-        shBuildPrint "curl test passed for $TEST_URL"
+        shBuildPrint "curl test passed for $TEST_URL/"
     else
-        shBuildPrint "curl test failed for $TEST_URL"
+        shBuildPrint "curl test failed for $TEST_URL/"
         return 1
     fi
     # screenshot deployed app
-    shBrowserTest "$TEST_URL $TEST_URL/assets.swgg.html" screenshot
+    shBrowserTest "$TEST_URL/ $TEST_URL/assets.swgg.html" screenshot
     # test deployed app
-    MODE_BUILD="${MODE_BUILD}Test" shBrowserTest "$TEST_URL?modeTest=1&timeExit={{timeExit}}" \
+    MODE_BUILD="${MODE_BUILD}Test" shBrowserTest "$TEST_URL/?modeTest=1&timeExit={{timeExit}}" \
         test
 )}
 
@@ -1899,19 +1864,19 @@ shGrepFileReplace() {(set -e
 'use strict';
 var local;
 local = {};
-local.fileDict = {};
+local.dict = {};
 local.fs = require('fs');
 local.fs.readFileSync('$FILE', 'utf8').split('\n').forEach(function (element) {
-    element = (/^(.+?):(\d+?):(.+?)$/).exec(element);
+    element = element.match(/^(.+?):(\d+?):(.+?)$/);
     if (!element) {
         return;
     }
-    local.fileDict[element[1]] = local.fileDict[element[1]] ||
+    local.dict[element[1]] = local.dict[element[1]] ||
         local.fs.readFileSync(element[1], 'utf8').split('\n');
-    local.fileDict[element[1]][element[2] - 1] = element[3];
+    local.dict[element[1]][element[2] - 1] = element[3];
 });
-Object.keys(local.fileDict).forEach(function (key) {
-    local.fs.writeFileSync(key, local.fileDict[key].join('\n'));
+Object.keys(local.dict).forEach(function (key) {
+    local.fs.writeFileSync(key, local.dict[key].join('\n'));
 });
 // </script>
     "
@@ -2623,9 +2588,9 @@ local.envKeyIsSensitive = function (key) {
 /*
  * this function will try to determine if the env-key is sensitive
  */
-    return (/(?:\b|_)(?:crypt|decrypt|key|pass|private|secret|token)/)
-        .test(key.toLowerCase()) ||
-        (/Crypt|Decrypt|Key|Pass|Private|Secret|Token/).test(key);
+    return key.toLowerCase()
+        .match(/(?:\b|_)(?:crypt|decrypt|key|pass|private|secret|token)/) ||
+        key.match(/Crypt|Decrypt|Key|Pass|Private|Secret|Token/);
 };
 console.log(Object.keys(process.env).sort().map(function (key) {
     return local.envKeyIsSensitive(key)
@@ -2653,6 +2618,52 @@ shPidByPort() {(set -e
         netstat -nlp | grep 9000
         ;;
     esac
+)}
+
+shReadmeLinkValidate() {(set -e
+# this function will validate http-links embedded in README.md
+    node -e "
+// <script>
+/*jslint
+    bitwise: true,
+    browser: true,
+    maxerr: 8,
+    maxlen: 96,
+    node: true,
+    nomen: true,
+    regexp: true,
+    stupid: true
+*/
+'use strict';
+var local;
+local = {};
+local.file = 'README.md';
+local.fs = require('fs');
+local.http = require('http');
+local.https = require('https');
+local.nop = function () {
+    return;
+};
+local.url = require('url');
+local.rgx = new RegExp('\\\\b(http|https):\\\\/\\\\/.*?[)\\\\]]', 'g');
+local.fs.readFileSync(local.file, 'utf8')
+    .replace(local.rgx, function (match0, match1) {
+        match0 = match0
+            .slice(0, -1)
+            .replace((/\\bbeta\\b/g), 'alpha')
+            .replace((/\/build\//g), '/build..alpha..travis-ci.org/');
+        local.request = local[match1].request(local.url.parse(match0), function (response) {
+            console.log('shReadmeLinkValidate ' + response.statusCode + ' ' + match0);
+            response.destroy();
+            if (!(response.statusCode < 400)) {
+                throw new Error('shReadmeLinkValidate - invalid link ' + match0);
+            }
+        });
+        local.request.setTimeout(30000);
+        local.request.end();
+    });
+// </script>
+    "
 )}
 
 shReadmeTest() {(set -e
@@ -2694,7 +2705,7 @@ shReadmeTest() {(set -e
         then
             sed -in \
                 -e "s|/build..beta..travis-ci.org/|/build..alpha..travis-ci.org/|g" \
-                -e "s|npm install $npm_package_name|npm install '$GITHUB_REPO#alpha'|g" \
+                -e "s|npm install $npm_package_name|npm install $GITHUB_REPO#alpha|g" \
                 "$FILE"
             rm -f "$FILE"n
         fi
@@ -2705,7 +2716,7 @@ shReadmeTest() {(set -e
         # http://stackoverflow.com/questions/1935081/remove-leading-whitespace-from-file
         sed '/./,$!d' "$FILE"
     fi
-    export PORT=8081
+    export PORT="${PORT:-8081}"
     export npm_config_timeout_exit="${npm_config_timeout_exit:-30000}"
     # screenshot
     (
@@ -2801,8 +2812,8 @@ shRunWithScreenshotTxt() {(set -e
     touch "$npm_config_dir_build/$MODE_BUILD_SCREENSHOT_IMG"
     (
     printf "0" > "$npm_config_file_tmp"
-    (eval shRun "$@" 2>&1)
-    printf $? > "$npm_config_file_tmp"
+    shBuildPrint "(eval shRun $@ 2>&1)"
+    (eval shRun "$@" 2>&1) || printf $? > "$npm_config_file_tmp"
     ) | tee "$npm_config_dir_tmp/runWithScreenshotTxt"
     EXIT_CODE="$(cat "$npm_config_file_tmp")"
     shBuildPrint "EXIT_CODE - $EXIT_CODE"

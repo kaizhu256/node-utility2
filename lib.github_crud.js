@@ -382,7 +382,7 @@
                 switch (options.modeNext) {
                 case 1:
                     // get file from url
-                    if ((/^(?:http|https):\/\//).test(options.file)) {
+                    if (options.file.match(/^(?:http|https):\/\//)) {
                         local.httpRequest({
                             method: 'GET',
                             url: options.file
@@ -402,7 +402,7 @@
                         content: data,
                         message: options.message,
                         // resolve file in url
-                        url: (/\/$/).test(options.url)
+                        url: options.url.match(/\/$/)
                             ? options.url + local.path.basename(options.file)
                             : options.url
                     }, options.onNext);
