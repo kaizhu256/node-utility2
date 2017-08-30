@@ -446,7 +446,7 @@ shBuildCiInternal() {(set -e
         COMMIT_LIMIT=20 shBuildGithubUpload
     fi
     # validate http-links embedded in README.md
-    shSleep 15
+    shSleep 30
     shReadmeLinkValidate
 )}
 
@@ -1024,19 +1024,19 @@ shDeployGithub() {(set -e
     export MODE_BUILD=deployGithub
     export TEST_URL="https://$(printf "$GITHUB_REPO" | \
         sed "s|/|.github.io/|")/build..$CI_BRANCH..travis-ci.org/app"
-    shBuildPrint "deployed to $TEST_URL/"
+    shBuildPrint "deployed to $TEST_URL"
     # verify deployed app's main-page returns status-code < 400
-    if [ $(curl --connect-timeout 60 -Ls -o /dev/null -w "%{http_code}" "$TEST_URL/") -lt 400 ]
+    if [ $(curl --connect-timeout 60 -Ls -o /dev/null -w "%{http_code}" "$TEST_URL") -lt 400 ]
     then
-        shBuildPrint "curl test passed for $TEST_URL/"
+        shBuildPrint "curl test passed for $TEST_URL"
     else
-        shBuildPrint "curl test failed for $TEST_URL/"
+        shBuildPrint "curl test failed for $TEST_URL"
         return 1
     fi
     # screenshot deployed app
-    shBrowserTest "$TEST_URL/ $TEST_URL/assets.swgg.html" screenshot
+    shBrowserTest "$TEST_URL $TEST_URL/assets.swgg.html" screenshot
     # test deployed app
-    MODE_BUILD="${MODE_BUILD}Test" shBrowserTest "$TEST_URL/?modeTest=1&timeExit={{timeExit}}" \
+    MODE_BUILD="${MODE_BUILD}Test" shBrowserTest "$TEST_URL?modeTest=1&timeExit={{timeExit}}" \
         test
 )}
 
@@ -1057,19 +1057,19 @@ shDeployHeroku() {(set -e
     fi
     export MODE_BUILD=deployHeroku
     export TEST_URL="https://$npm_package_nameHeroku-$CI_BRANCH.herokuapp.com"
-    shBuildPrint "deployed to $TEST_URL/"
+    shBuildPrint "deployed to $TEST_URL"
     # verify deployed app's main-page returns status-code < 400
-    if [ $(curl --connect-timeout 60 -Ls -o /dev/null -w "%{http_code}" "$TEST_URL/") -lt 400 ]
+    if [ $(curl --connect-timeout 60 -Ls -o /dev/null -w "%{http_code}" "$TEST_URL") -lt 400 ]
     then
-        shBuildPrint "curl test passed for $TEST_URL/"
+        shBuildPrint "curl test passed for $TEST_URL"
     else
-        shBuildPrint "curl test failed for $TEST_URL/"
+        shBuildPrint "curl test failed for $TEST_URL"
         return 1
     fi
     # screenshot deployed app
-    shBrowserTest "$TEST_URL/ $TEST_URL/assets.swgg.html" screenshot
+    shBrowserTest "$TEST_URL $TEST_URL/assets.swgg.html" screenshot
     # test deployed app
-    MODE_BUILD="${MODE_BUILD}Test" shBrowserTest "$TEST_URL/?modeTest=1&timeExit={{timeExit}}" \
+    MODE_BUILD="${MODE_BUILD}Test" shBrowserTest "$TEST_URL?modeTest=1&timeExit={{timeExit}}" \
         test
 )}
 
@@ -2650,7 +2650,7 @@ local.fs.readFileSync(local.file, 'utf8')
     .replace(local.rgx, function (match0, match1) {
         match0 = match0
             .slice(0, -1)
-            .replace((/\\bbeta\\b/g), 'alpha')
+            .replace((/\\bbeta\\b|\\bmaster\\b/g), 'alpha')
             .replace((/\/build\//g), '/build..alpha..travis-ci.org/');
         local.request = local[match1].request(local.url.parse(match0), function (response) {
             console.log('shReadmeLinkValidate ' + response.statusCode + ' ' + match0);
