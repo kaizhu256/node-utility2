@@ -1800,7 +1800,7 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
         };
         local.cliDict.dbTableCrudGetManyByQuery = function () {
         /*
-         * this function will query from the dbTable
+         * this function will query the dbRow's from the dbTable
          */
             local.dbTableCreateOne({ name: process.argv[3] }, function (error, self) {
                 // validate no error occurred
@@ -1810,9 +1810,21 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
                 ), null, 4));
             });
         };
+        local.cliDict.dbTableCrudRemoveManyByQuery = function () {
+        /*
+         * this function will query and remove the dbRow's from the dbTable
+         */
+            local.dbTableCreateOne({ name: process.argv[3] }, function (error, self) {
+                // validate no error occurred
+                console.assert(!error, error);
+                console.log(JSON.stringify(self.crudRemoveManyByQuery(
+                    JSON.parse(process.argv[4])
+                ), null, 4));
+            });
+        };
         local.cliDict.dbTableCrudSetManyById = function () {
         /*
-         * this function will set the bulk-data into the dbTable
+         * this function will set the dbRow's into the dbTable
          */
             local.dbTableCreateOne({ name: process.argv[3] }, function (error, self) {
                 // validate no error occurred

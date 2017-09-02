@@ -6932,7 +6932,7 @@ instruction\n\
         };
         local.cliDict['cli.onParallelListExec'] = function () {
         /*
-         * this function will run in parallel the list of shell-commands
+         * this function will run in parallel the list of line-separated shell-commands
          */
             local.onParallelList({
                 list: process.argv[3].split('\n').filter(function (element) {
