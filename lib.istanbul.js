@@ -2484,83 +2484,95 @@ local.templateCoverageBadgeSvg =
 
 
     // run node js-env code - init-after
+    /* istanbul ignore next */
     case 'node':
-        /* istanbul ignore next */
         // run the cli
-        local.cliRunIstanbul = function (options) {
+        if (module !== local.require.main || local.global.utility2_rollup) {
+            break;
+        }
+        local.cliDict = {};
+        local.cliDict['--help'] = function () {
         /*
-         * this function will run the cli
+         * this function will print the help-menu
+         */
+            console.log('commands:');
+            Object.keys(local.cliDict).forEach(function (key) {
+                console.log('    ' + key + '\n        ' +
+                    local.cliDict[key].toString().match(/this function will (.*)/)[1]);
+            });
+        };
+        local.cliDict.cover = function () {
+        /*
+         * this function will transparently add coverage information to the node command
          */
             var tmp;
-            if ((module !== local.require.main || local.global.utility2_rollup) &&
-                    !(options && options.runMain)) {
-                return;
+            try {
+                tmp = JSON.parse(local._fs.readFileSync('package.json', 'utf8'));
+                process.env.npm_package_nameAlias = process.env.npm_package_nameAlias ||
+                    tmp.nameAlias ||
+                    tmp.name.replace((/-/g), '_');
+            } catch (ignore) {
             }
-            switch (process.argv[2]) {
-            // transparently adds coverage information to a node command
-            case 'cover':
-                try {
-                    tmp = JSON.parse(local._fs.readFileSync('package.json', 'utf8'));
-                    process.env.npm_package_nameAlias = process.env.npm_package_nameAlias ||
-                        tmp.nameAlias ||
-                        tmp.name.replace((/-/g), '_');
-                } catch (ignore) {
-                }
-                process.env.npm_config_mode_coverage = process.env.npm_config_mode_coverage ||
-                    process.env.npm_package_nameAlias ||
-                    'all';
-                // add coverage hook to require
-                local._moduleExtensionsJs = local.module._extensions['.js'];
-                local.module._extensions['.js'] = function (module, file) {
-                    if (typeof file === 'string' &&
-                            (file.indexOf(process.env.npm_config_mode_coverage_dir) === 0 || (
-                                file.indexOf(process.cwd()) === 0 &&
-                                file.indexOf(process.cwd() + '/node_modules/') !== 0
-                            ))) {
-                        module._compile(local.instrumentInPackage(
-                            local._fs.readFileSync(file, 'utf8'),
-                            file
-                        ), file);
-                        return;
-                    }
-                    local._moduleExtensionsJs(module, file);
-                };
-                // init process.argv
-                process.argv.splice(1, 2);
-                process.argv[1] = local.path.resolve(process.cwd(), process.argv[1]);
-                console.log('\ncovering $ ' + process.argv.join(' '));
-                // create coverage on exit
-                process.on('exit', function () {
-                    local.coverageReportCreate({ coverage: local.global.__coverage__ });
-                });
-                // re-run the cli
-                local.module.runMain();
-                break;
-            // instrument a file and print result to stdout
-            case 'instrument':
-                process.argv[3] = local.path.resolve(process.cwd(), process.argv[3]);
-                process.stdout.write(local.instrumentSync(
-                    local._fs.readFileSync(process.argv[3], 'utf8'),
-                    process.argv[3]
-                ));
-                break;
-            // cover a node command only when npm_config_mode_coverage is set
-            case 'test':
-                if (process.env.npm_config_mode_coverage) {
-                    process.argv[2] = 'cover';
-                    // re-run the cli
-                    local.cliRunIstanbul(options);
+            process.env.npm_config_mode_coverage = process.env.npm_config_mode_coverage ||
+                process.env.npm_package_nameAlias ||
+                'all';
+            // add coverage hook to require
+            local._moduleExtensionsJs = local.module._extensions['.js'];
+            local.module._extensions['.js'] = function (module, file) {
+                if (typeof file === 'string' &&
+                        (file.indexOf(process.env.npm_config_mode_coverage_dir) === 0 || (
+                            file.indexOf(process.cwd()) === 0 &&
+                            file.indexOf(process.cwd() + '/node_modules/') !== 0
+                        ))) {
+                    module._compile(local.instrumentInPackage(
+                        local._fs.readFileSync(file, 'utf8'),
+                        file
+                    ), file);
                     return;
                 }
-                // init process.argv
-                process.argv.splice(1, 2);
-                process.argv[1] = local.path.resolve(process.cwd(), process.argv[1]);
-                // re-run the cli
-                local.module.runMain();
-                break;
-            }
+                local._moduleExtensionsJs(module, file);
+            };
+            // init process.argv
+            process.argv.splice(1, 2);
+            process.argv[1] = local.path.resolve(process.cwd(), process.argv[1]);
+            console.log('\ncovering $ ' + process.argv.join(' '));
+            // create coverage on exit
+            process.on('exit', function () {
+                local.coverageReportCreate({ coverage: local.global.__coverage__ });
+            });
+            // re-run the cli
+            local.module.runMain();
         };
-        local.cliRunIstanbul();
+        local.cliDict.instrument = function () {
+        /*
+         * this function will instrument the file and print result to stdout
+         */
+            process.argv[3] = local.path.resolve(process.cwd(), process.argv[3]);
+            process.stdout.write(local.instrumentSync(
+                local._fs.readFileSync(process.argv[3], 'utf8'),
+                process.argv[3]
+            ));
+        };
+        //
+        local.cliDict.test = function () {
+        /*
+         * this function will cover the node command if npm_config_mode_coverage is set
+         */
+            if (process.env.npm_config_mode_coverage) {
+                process.argv[2] = 'cover';
+                // re-run the cli
+                local.cliDict[process.argv[2]]();
+                return;
+            }
+            // init process.argv
+            process.argv.splice(1, 2);
+            process.argv[1] = local.path.resolve(process.cwd(), process.argv[1]);
+            // re-run the cli
+            local.module.runMain();
+        };
+        if (local.cliDict[process.argv[2]]) {
+            local.cliDict[process.argv[2]]();
+        }
         break;
     }
 }(

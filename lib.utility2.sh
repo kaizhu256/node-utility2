@@ -72,7 +72,7 @@ shBrowserTest() {(set -e
 # this function will spawn an electron process to test the given url $LIST,
 # and merge the test-report into the existing test-report
 # example usage:
-# $ modeBrowserTestTranslate=en shBrowserTest http://www.news.cn/local/index.htm scrape
+# $ modeBrowserTestTranslate=ru,zh-CN shBrowserTest http://www.example.com/foo scrape
     LIST="$1"
     export modeBrowserTest="$2"
     shBuildInit
@@ -85,6 +85,116 @@ shBrowserTest() {(set -e
         # create test-report artifacts
         lib.utility2.js cli.testReportCreate
     fi
+)}
+
+shBrowserTestOnload() {(set -e
+# this function will spawn an electron process to test the onload time of the given url $URL,
+    node -e "
+// <script>
+/*jslint
+    bitwise: true,
+    browser: true,
+    maxerr: 8,
+    maxlen: 96,
+    node: true,
+    nomen: true,
+    regexp: true,
+    stupid: true
+*/
+(function () {
+    'use strict';
+    var local;
+    local = {};
+    // inject onload timer
+    if (typeof window === 'object') {
+        local.now = Date.now();
+        window.addEventListener('load', function () {
+            console.error('onLoadTime ' + (Date.now() - local.now));
+        });
+        return;
+    }
+    // npm install electron-lite
+    if (!require('fs').existsSync('node_modules/electron-lite') ||
+            process.env.npm_config_electron_version) {
+        require('child_process').spawnSync('mkdir', [
+            '-p',
+            'node_modules'
+        ], { stdio: ['ignore', 1, 2] });
+    }
+    // wait for electron to init
+    (process.versions.electron >= '0.35'
+        ? require('electron').app
+        : require('app')).once('ready', function () {
+        // init local
+        local = { frame: false, height: 768, width: 1024, x: 0, y: 0 };
+        // init browserWindow;
+        local.BrowserWindow = (process.versions.electron >= '0.35'
+            ? require('electron').BrowserWindow
+            : require('browser-window'));
+        local.browserWindow = new local.BrowserWindow(local);
+        // title
+        local.browserWindow.on('page-title-updated', function (event, title) {
+            if (event && title.indexOf('onLoadTime ') !== 0) {
+                return;
+            }
+            local.tmp = JSON.parse(JSON.stringify(process.versions));
+            local.tmp.arch = process.arch;
+            local.tmp.onLoadTime = title.split(' ')[1];
+            local.tmp.platform = process.platform;
+            local.tmp.timestamp = new Date().toISOString();
+            local.tmp.url = process.env.url;
+            local.result = {};
+            Object.keys(local.tmp).sort().forEach(function (key) {
+                local.result[key] = local.tmp[key];
+            });
+            console.log();
+            console.log(title + ' - ' + local.result.url + ' - ' + local.result.chrome);
+            console.log(JSON.stringify(local.result));
+            local.browserWindow.close();
+            process.exit(0);
+        });
+/* jslint-ignore-begin */
+require('fs').writeFileSync('/tmp/electron.webview.html', '\\
+<style>\\n\\
+body {\\n\\
+  border: 1px solid black;\\n\\
+  margin: 0;\\n\\
+  padding: 0;\\n\\
+}\\n\\
+<\/style>\\n\\
+<webview\\n\\
+    id=\"webview1\"\\n\\
+    preload=\"' +  __filename + '\"\\n\\
+    src=\"' + process.env.url + '\"\\n\\
+    style=\"border: none;height: 100%;margin: 0;padding: 0;width: 100%;\"\\n\\
+>\\n\\
+<\/webview>\\n\\
+<script>\\n\\
+(function () {\\n\\
+    var local;\\n\\
+    local = {};\\n\\
+    local.webview1 = document.querySelector(\"#webview1\");\\n\\
+    local.webview1.addEventListener(\"console-message\", function (event) {\\n\\
+        if (event.message.indexOf(\"onLoadTime \") === 0) {\\n\\
+            console.log(event.message);\\n\\
+            document.title = event.message;\\n\\
+        }\\n\\
+    });\\n\\
+}());\\n\\
+<\/script>\\n\\
+');
+/* jslint-ignore-end */
+        // open url
+        local.url = 'file:///tmp/electron.webview.html';
+        local.browserWindow.loadURL(local.url, {
+            userAgent: local.modeBrowserTest === 'scrape' &&
+                'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 ' +
+                '(KHTML, like Gecko) Chrome/53.0.2785.143 Safari/537.36'
+        });
+    });
+}());
+// </script>
+    "
 )}
 
 shBuildApidoc() {(set -e
@@ -863,6 +973,8 @@ console.log(process.argv[1]
 shCustomOrgRepoListCreate() {(set -e
 # this function will create and push the customOrg-repo $GITHUB_ORG/node-$GITHUB_ORG-$LIST[ii]
 # https://docs.travis-ci.com/api
+# example usage:
+# TRAVIS_REPO_CREATE_FORCE=1 shCryptoWithGithubOrg kaizhu256 shCustomOrgRepoListCreate kaizhu256/sandbox3
     LIST="$1"
     export MODE_BUILD=shCustomOrgRepoListCreate
     cd /tmp
@@ -1754,14 +1866,14 @@ fi"
 )}
 
 shGithubFileCommitDate() {(set -e
-    # this function will print the commit-date for the github file url $1
+# this function will print the commit-date for the github file url $1
     curl -Lfs "$1" | grep -e "datetime=" | grep -oe "\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d*Z"
     printf "$1\n"
 )}
 
 shGithubPush() {(set -e
-    # this function will push to github using $GITHUB_TOKEN
-    # http://stackoverflow.com/questions/18027115/committing-via-travis-ci-failing
+# this function will push to github using $GITHUB_TOKEN
+# http://stackoverflow.com/questions/18027115/committing-via-travis-ci-failing
     EXIT_CODE=0
     export MODE_BUILD="${MODE_BUILD:-shGithubPush}"
     if [ "$GITHUB_TOKEN" ]
@@ -1779,6 +1891,8 @@ shGithubPush() {(set -e
 
 shGithubRepoBaseCreate() {(set -e
 # this function will create the base github-repo https://github.com/$GITHUB_REPO
+# example usage:
+# shGithubRepoBaseCreate kaizhu256/sandbox3
     GITHUB_REPO="$1"
     export MODE_BUILD="${MODE_BUILD:-shGithubRepoBaseCreate}"
     # init /tmp/githubRepoBase
@@ -2090,6 +2204,7 @@ shMain() {
         db-lite
         elasticsearch-lite
         electron-lite
+        electron-onload-test
         istanbul-lite
         jslint-lite
         swagger-ui-lite
@@ -2113,6 +2228,10 @@ shMain() {
         return
     fi
     case "$COMMAND" in
+    --help)
+        shBuildInit
+        lib.utility2.js "$COMMAND" "$@"
+        ;;
     cli.*)
         shBuildInit
         lib.utility2.js "$COMMAND" "$@"
@@ -2650,6 +2769,8 @@ local.fs.readFileSync(local.file, 'utf8')
     .replace(local.rgx, function (match0, match1) {
         match0 = match0
             .slice(0, -1)
+            .replace('\u0022', '')
+            .replace('\u0027', '')
             .replace((/\\bbeta\\b|\\bmaster\\b/g), 'alpha')
             .replace((/\/build\//g), '/build..alpha..travis-ci.org/');
         local.request = local[match1].request(local.url.parse(match0), function (response) {

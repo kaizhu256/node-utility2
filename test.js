@@ -2605,7 +2605,7 @@
             // start with coverage
             if (local.env.npm_config_mode_coverage) {
                 process.argv.splice(1, 1, __dirname + '/lib.istanbul.js', 'cover');
-                local.istanbul.cliRunIstanbul({ runMain: true });
+                local.istanbul.cliDict[process.argv[2]]();
                 return;
             }
             // start

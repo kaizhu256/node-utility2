@@ -3,6 +3,7 @@
     "bin": {
         "utility2": "lib.utility2.sh",
         "utility2-apidoc": "lib.apidoc.js",
+        "utility2-db": "lib.db.js",
         "utility2-github-crud": "lib.github_crud.js",
         "utility2-istanbul": "lib.istanbul.js",
         "utility2-jslint": "lib.jslint.js",
@@ -50,5 +51,5 @@
         "start": "set -e; export PORT=${PORT:-8080}; if [ -f assets.app.js ]; then node assets.app.js; else npm_config_mode_auto_restart=1 ./lib.utility2.sh shRun shIstanbulCover test.js; fi",
         "test": "PORT=$(./lib.utility2.sh shServerPortRandom) PORT_REPL=$(./lib.utility2.sh shServerPortRandom) npm_config_mode_auto_restart=1 ./lib.utility2.sh test test.js"
     },
-    "version": "2017.8.29"
+    "version": "2017.8.30"
 }

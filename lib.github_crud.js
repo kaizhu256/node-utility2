@@ -557,9 +557,21 @@
         if (module !== require.main || local.global.utility2_rollup) {
             break;
         }
-        switch (String(process.argv[2]).toLowerCase()) {
-        // delete file
-        case 'delete':
+        local.cliDict = {};
+        local.cliDict['--help'] = function () {
+        /*
+         * this function will print the help-menu
+         */
+            console.log('commands:');
+            Object.keys(local.cliDict).forEach(function (key) {
+                console.log('    ' + key + '\n        ' +
+                    local.cliDict[key].toString().match(/this function will (.*)/)[1]);
+            });
+        };
+        local.cliDict.delete = function () {
+        /*
+         * this function will delete the file from github
+         */
             local.contentDelete({
                 message: process.argv[4],
                 url: process.argv[3]
@@ -567,9 +579,11 @@
                 // validate no error occurred
                 console.assert(!error, error);
             });
-            break;
-        // get file
-        case 'get':
+        };
+        local.cliDict.get = function () {
+        /*
+         * this function will get the file from github
+         */
             local.contentGet({ url: process.argv[3] }, function (error, data) {
                 // validate no error occurred
                 console.assert(!error, error);
@@ -578,9 +592,11 @@
                 } catch (ignore) {
                 }
             });
-            break;
-        // put file
-        case 'put':
+        };
+        local.cliDict.put = function () {
+        /*
+         * this function will put the file to github
+         */
             local.contentPutFile({
                 message: process.argv[5],
                 url: process.argv[3],
@@ -589,9 +605,11 @@
                 // validate no error occurred
                 console.assert(!error, error);
             });
-            break;
-        // touch file
-        case 'touch':
+        };
+        local.cliDict.touch = function () {
+        /*
+         * this function will touch the file to github
+         */
             local.contentTouch({
                 message: process.argv[4],
                 url: process.argv[3]
@@ -599,8 +617,11 @@
                 // validate no error occurred
                 console.assert(!error, error);
             });
-            break;
-        case 'touchlist':
+        };
+        local.cliDict.touchlist = function () {
+        /*
+         * this function will touch the list of space-separated files to github
+         */
             local.contentTouchList({
                 message: process.argv[4],
                 urlList: process.argv[3].split(' ').filter(function (element) {
@@ -610,7 +631,9 @@
                 // validate no error occurred
                 console.assert(!error, error);
             });
-            break;
+        };
+        if (local.cliDict[String(process.argv[2]).toLowerCase()]) {
+            local.cliDict[String(process.argv[2]).toLowerCase()]();
         }
         break;
     }

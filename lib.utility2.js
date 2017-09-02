@@ -458,7 +458,7 @@ local.assetsDict['/assets.index.template.html'].replace((/\n/g), '\\n\\\n') + '\
                 }\n\
             });\n\
         // run the cli\n\
-        if (local.global.utility2_rollup || module !== require.main) {\n\
+        if (module !== require.main || local.global.utility2_rollup) {\n\
             break;\n\
         }\n\
         local.assetsDict[\'/assets.example.js\'] =\n\
@@ -2360,6 +2360,7 @@ local.assetsDict['/favicon.ico'] = '';
                     }
                     // node - recurse
 /*
+https://cloud.google.com/translate/docs/languages
 example usage:
 mkdir -p /tmp/100 && \
     rm -f /tmp/100/screenshot.* && \
@@ -2558,7 +2559,7 @@ function TranslateElementInit() {\n\
                             'margin: 0;' +
                             'padding: 0;' +
                         '}</style>' +
-                        '<webview id=webview1 preload="' + options.fileElectronHtml +
+                        '<webview id="webview1" preload="' + options.fileElectronHtml +
                         '.preload.js" src="' +
                         options.url.replace('{{timeExit}}', options.timeExit) +
                         '" style="' +
@@ -6234,8 +6235,9 @@ instruction\n\
             // add tests into testPlatform.testCaseList
             Object.keys(options).forEach(function (key) {
                 // add testCase options[key] to testPlatform.testCaseList
-                if ((local.modeTestCase && local.modeTestCase.split(',').indexOf(key) >= 0) ||
-                        (!local.modeTestCase && key.indexOf('testCase_') === 0)) {
+                if (typeof options[key] === 'function' && (local.modeTestCase
+                        ? local.modeTestCase.split(',').indexOf(key) >= 0
+                        : key.indexOf('testCase_') === 0)) {
                     testPlatform.testCaseList.push({
                         name: key,
                         status: 'pending',
@@ -6802,18 +6804,37 @@ instruction\n\
                 local.env.npm_config_file_test_report_merge);
         }
         // run the cli
-        switch (process.argv[2]) {
-        case '--eval':
-        case '-e':
+        local.cliDict = {};
+        local.cliDict['--eval'] = function () {
+        /*
+         * this function will eval the given string
+         */
             local.global.local = local;
             local.vm.runInThisContext(process.argv[3]);
-            return;
-        case '--interactive':
-        case '-i':
+        };
+        local.cliDict['-e'] = local.cliDict['--eval'];
+        local.cliDict['--help'] = function () {
+        /*
+         * this function will print the help-menu
+         */
+            console.log('commands:');
+            Object.keys(local.cliDict).forEach(function (key) {
+                console.log('    ' + key + '\n        ' +
+                    local.cliDict[key].toString().match(/this function will (.*)/)[1]);
+            });
+        };
+        local.cliDict['--interactive'] = function () {
+        /*
+         * this function will start the repl
+         */
             local.replStart();
             local.global.local = local;
-            break;
-        case 'cli.browserTest':
+        };
+        local.cliDict['-i'] = local.cliDict['--interactive'];
+        local.cliDict['cli.browserTest'] = function () {
+        /*
+         * this function will run browerTest
+         */
             local.onParallelList({
                 list: process.argv[3].split(/\s+/).filter(function (element) {
                     return element;
@@ -6824,8 +6845,11 @@ instruction\n\
                     onParallel();
                 });
             }, local.exit);
-            return;
-        case 'cli.customOrgStarFilterNotBuilt':
+        };
+        local.cliDict['cli.customOrgStarFilterNotBuilt'] = function () {
+        /*
+         * this function will filter customOrg
+         */
             (function () {
                 var options;
                 options = {};
@@ -6882,8 +6906,11 @@ instruction\n\
                     });
                 }, local.onErrorThrow);
             }());
-            return;
-        case 'cli.dbTableCustomOrgCrudGetManyByQuery':
+        };
+        local.cliDict['cli.dbTableCustomOrgCrudGetManyByQuery'] = function () {
+        /*
+         * this function will query dbTableCustomOrg
+         */
             local.dbTableCustomOrgCreate(JSON.parse(process.argv[3] || '{}'), function (error) {
                 // validate no error occurred
                 local.assert(!error, error);
@@ -6895,14 +6922,20 @@ instruction\n\
                     })
                     .join('\n'));
             });
-            return;
-        case 'cli.dbTableCustomOrgUpdate':
+        };
+        local.cliDict['cli.dbTableCustomOrgUpdate'] = function () {
+        /*
+         * this function will update dbTableCustomOrg
+         */
             local.dbTableCustomOrgUpdate(
                 JSON.parse(process.argv[3] || '{}'),
                 local.onErrorThrow
             );
-            return;
-        case 'cli.onParallelListExec':
+        };
+        local.cliDict['cli.onParallelListExec'] = function () {
+        /*
+         * this function will run in parallel the list of shell-commands
+         */
             local.onParallelList({
                 list: process.argv[3].split('\n').filter(function (element) {
                     return element.trim();
@@ -6919,12 +6952,20 @@ instruction\n\
                         onParallel(exitCode && new Error(exitCode), options);
                     });
             }, local.exit);
-            return;
-        case 'cli.testReportCreate':
+        };
+        local.cliDict['cli.testReportCreate'] = function () {
+        /*
+         * this function will create the test-report
+         */
             local.exit(local.testReportCreate(local.tryCatchOnError(function () {
                 return require(local.env.npm_config_dir_build + '/test-report.json');
             }, local.onErrorDefault)).testsFailed);
-            return;
+        };
+        if (local.cliDict[process.argv[2]]) {
+            local.cliDict[process.argv[2]]();
+            if (!(/--interactive|-i/).test(process.argv[2])) {
+                return;
+            }
         }
         // override assets
         [

@@ -56,6 +56,8 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 [![apidoc](https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/apidoc.html)
 
 #### todo
+- npm publish 2017.8.30
+- merge shDeployGithub and shDeployHeroku into shDeploy
 - revamp serverLog to consoleLog and consoleError
 - deprecate and remove local.serverLocalHost
 - rename ajaxForwardProxyUrlTest to githubForwardProxyUrlTest
@@ -66,9 +68,8 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 - analytics
 - none
 
-#### changelog for v2017.8.29
-- npm publish 2017.8.29
-- revert adding backslash to TEST_URL
+#### changelog for v2017.8.30
+- revert String.prototype.match back to RegExp.prototype.exec
 - none
 
 #### this package requires
@@ -114,7 +115,7 @@ this script will demo automated browser-tests with coverage (via electron and is
 instruction
     1. save this script as example.js
     2. run the shell command:
-        $ npm install utility2 electron-lite && \
+        $ mkdir -p node_modules && npm install utility2 electron-lite && \
             PATH="$(pwd)/node_modules/.bin:$PATH" \
             PORT=8081 \
             npm_config_mode_coverage=utility2 \
@@ -627,7 +628,7 @@ utility2-comment -->\n\
                 }
             });
         // run the cli
-        if (local.global.utility2_rollup || module !== require.main) {
+        if (module !== require.main || local.global.utility2_rollup) {
             break;
         }
         local.assetsDict['/assets.example.js'] =
@@ -725,6 +726,7 @@ utility2-comment -->\n\
     "bin": {
         "utility2": "lib.utility2.sh",
         "utility2-apidoc": "lib.apidoc.js",
+        "utility2-db": "lib.db.js",
         "utility2-github-crud": "lib.github_crud.js",
         "utility2-istanbul": "lib.istanbul.js",
         "utility2-jslint": "lib.jslint.js",
@@ -772,7 +774,7 @@ utility2-comment -->\n\
         "start": "set -e; export PORT=${PORT:-8080}; if [ -f assets.app.js ]; then node assets.app.js; else npm_config_mode_auto_restart=1 ./lib.utility2.sh shRun shIstanbulCover test.js; fi",
         "test": "PORT=$(./lib.utility2.sh shServerPortRandom) PORT_REPL=$(./lib.utility2.sh shServerPortRandom) npm_config_mode_auto_restart=1 ./lib.utility2.sh test test.js"
     },
-    "version": "2017.8.29"
+    "version": "2017.8.30"
 }
 ```
 
@@ -819,6 +821,12 @@ RUN (set -e; \
     curl -#L https://deb.nodesource.com/setup_6.x | /bin/bash -; \
     apt-get install -y nodejs; \
 )
+# install sqlite3
+RUN (set -e; \
+    export DEBIAN_FRONTEND=noninteractive; \
+    mkdir -p node_modules && npm install sqlite3@3.1.8; \
+    cp -a node_modules /; \
+)
 # install electron-lite
 # COPY electron-*.zip /tmp
 # libasound.so.2: cannot open shared object file: No such file or directory
@@ -840,7 +848,7 @@ RUN (set -e; \
         libxtst6 \
         xvfb; \
     rm -f /tmp/.X99-lock && export DISPLAY=:99.0 && (Xvfb "$DISPLAY" &); \
-    npm install kaizhu256/node-electron-lite#alpha; \
+    mkdir -p node_modules && npm install kaizhu256/node-electron-lite#alpha; \
     mv node_modules/electron-lite/external /opt/electron; \
     ln -s /opt/electron/electron /bin/electron; \
     cd node_modules/electron-lite; \
@@ -860,6 +868,57 @@ RUN (set -e; \
 )
 ```
 
+- Dockerfile.electron
+```shell
+# Dockerfile.electron
+FROM kaizhu256/node-utility2:latest
+MAINTAINER kai zhu <kaizhu256@gmail.com>
+# install electron-lite
+RUN (set -e; \
+    export DEBIAN_FRONTEND=noninteractive; \
+    apt-get update; \
+    apt-get install --no-install-recommends -y \
+        libnotify-dev; \
+    for ELECTRON_VERSION in \
+        v0.24.0 \
+        v0.25.1 \
+        v0.26.1 \
+        v0.27.1 \
+        v0.28.1 \
+        v0.29.1 \
+        v0.30.1 \
+        v0.31.1 \
+        v0.32.1 \
+        v0.33.1 \
+        v0.34.1 \
+        v0.35.1 \
+        v0.36.1 \
+        v0.37.1 \
+        v1.0.1 \
+        v1.1.1 \
+        v1.2.1 \
+        v1.3.1 \
+        v1.4.1 \
+        v1.5.1 \
+        v1.6.1 \
+        v1.7.1; \
+    do \
+        mkdir -p node_modules && npm install kaizhu256/node-electron-lite#alpha \
+            --electron-version="$ELECTRON_VERSION"; \
+        mv node_modules/electron-lite/external "/opt/electron-$ELECTRON_VERSION"; \
+        ln -s "/opt/electron-$ELECTRON_VERSION/electron" "/bin/electron-$ELECTRON_VERSION"; \
+        if [ "$ELECTRON_VERSION" \>= 0.35.0 ]; \
+        then \
+            cd node_modules/electron-lite; \
+            npm install; \
+            npm test; \
+        fi; \
+        cd /tmp; \
+    done; \
+    mv electron-v*.zip /; \
+)
+```
+
 - Dockerfile.latest
 ```shell
 # Dockerfile.latest
@@ -869,30 +928,25 @@ MAINTAINER kai zhu <kaizhu256@gmail.com>
 RUN (set -e; \
     export DEBIAN_FRONTEND=noninteractive; \
     rm -f /tmp/.X99-lock && export DISPLAY=:99.0 && (Xvfb "$DISPLAY" &); \
-    npm install kaizhu256/node-utility2#alpha; \
+    mkdir -p node_modules && npm install kaizhu256/node-utility2#alpha; \
     cp -a node_modules /; \
     cd node_modules/utility2; \
     npm install; \
     npm test; \
 )
-# install elasticsearch and kibana
-# https://www.elastic.co/downloads/past-releases/elasticsearch-1-7-6
-# https://www.elastic.co/downloads/past-releases/kibana-3-1-3
+# install elasticsearch-lite
 RUN (set -e; \
     export DEBIAN_FRONTEND=noninteractive; \
     mkdir -p /usr/share/man/man1; \
     apt-get update; \
     apt-get install --no-install-recommends -y \
         default-jre; \
-    curl -#Lo elasticsearch.tar.gz \
-        https://download.elastic.co/elasticsearch/elasticsearch/elasticsearch-1.7.6.tar.gz; \
-    rm -fr /elasticsearch; \
-    mkdir -p /elasticsearch; \
-    tar -xzf elasticsearch.tar.gz --strip-components=1 -C /elasticsearch; \
-    curl -#Lo kibana.tar.gz https://download.elastic.co/kibana/kibana/kibana-3.1.3.tar.gz; \
-    rm -fr /kibana; \
-    mkdir -p /kibana; \
-    tar -xzf kibana.tar.gz --strip-components=1 -C /kibana; \
+    rm -f /tmp/.X99-lock && export DISPLAY=:99.0 && (Xvfb "$DISPLAY" &); \
+    mkdir -p node_modules && npm install kaizhu256/node-elasticsearch-lite#alpha; \
+    cp -a node_modules /; \
+    cd node_modules/elasticsearch-lite; \
+    npm install; \
+    npm test; \
 )
 ```
 
