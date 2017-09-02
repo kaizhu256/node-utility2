@@ -613,7 +613,7 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
                 local.objectSetDefault(tmp, moduleMain);
             // init circularList - builtin
             Object.keys(process.binding('natives')).forEach(function (key) {
-                if (!key.match(/\/|_linklist|sys/)) {
+                if (!(/\/|_linklist|sys/).test(key)) {
                     options.blacklistDict[key] = options.blacklistDict[key] || require(key);
                 }
             });
@@ -730,7 +730,7 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
                             .filter(function (key) {
                                 return local.tryCatchOnError(function () {
                                     return key &&
-                                        key.match(/^\w[\w\-.]*?$/) &&
+                                        (/^\w[\w\-.]*?$/).test(key) &&
                                         key.indexOf('testCase_') !== 0 &&
                                         module[key] !== options.blacklistDict[key];
                                 }, console.error);
@@ -761,13 +761,13 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
             var isModule, tmp;
             ['child', 'prototype', 'grandchild', 'prototype'].forEach(function (element) {
                 Object.keys(moduleDict).sort().forEach(function (prefix) {
-                    if (!prefix.match(/^\w[\w\-.]*?$/)) {
+                    if (!(/^\w[\w\-.]*?$/).test(prefix)) {
                         return;
                     }
                     Object.keys(moduleDict[prefix]).forEach(function (key) {
                         // bug-workaround - buggy electron getter / setter
                         local.tryCatchOnError(function () {
-                            if (!key.match(/^\w[\w\-.]*?$/) || !moduleDict[prefix][key]) {
+                            if (!(/^\w[\w\-.]*?$/).test(key) || !moduleDict[prefix][key]) {
                                 return;
                             }
                             tmp = element === 'prototype'

@@ -666,7 +666,7 @@ split_lines=split_lines,exports.MAP=MAP,exports.ast_squeeze_more=require("./sque
         if (module !== require.main || local.global.utility2_rollup) {
             break;
         }
-        if (process.argv[2].match(/^(?:http|https):\/\//)) {
+        if ((/^(?:http|https):\/\//).test(process.argv[2])) {
             // uglify url
             (process.argv[2].indexOf('https') === 0
                 ? local.https

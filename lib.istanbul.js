@@ -2498,7 +2498,7 @@ local.templateCoverageBadgeSvg =
             console.log('commands:');
             Object.keys(local.cliDict).forEach(function (key) {
                 console.log('    ' + key + '\n        ' +
-                    local.cliDict[key].toString().match(/this function will (.*)/)[1]);
+                    (/this function will (.*)/).exec(local.cliDict[key].toString())[1]);
             });
         };
         local.cliDict.cover = function () {

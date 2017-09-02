@@ -382,7 +382,7 @@
                 switch (options.modeNext) {
                 case 1:
                     // get file from url
-                    if (options.file.match(/^(?:http|https):\/\//)) {
+                    if ((/^(?:http|https):\/\//).test(options.file)) {
                         local.httpRequest({
                             method: 'GET',
                             url: options.file
@@ -402,7 +402,7 @@
                         content: data,
                         message: options.message,
                         // resolve file in url
-                        url: options.url.match(/\/$/)
+                        url: (/\/$/).test(options.url)
                             ? options.url + local.path.basename(options.file)
                             : options.url
                     }, options.onNext);
@@ -565,7 +565,7 @@
             console.log('commands:');
             Object.keys(local.cliDict).forEach(function (key) {
                 console.log('    ' + key + '\n        ' +
-                    local.cliDict[key].toString().match(/this function will (.*)/)[1]);
+                    (/this function will (.*)/).exec(local.cliDict[key].toString())[1]);
             });
         };
         local.cliDict.delete = function () {

@@ -6158,8 +6158,8 @@ local.CSSLint = CSSLint; local.JSLINT = JSLINT, local.jslintEs6 = jslint; }());
                             ', col ' + error.col + '\u001b[39m\n';
                     });
             // jslint es6-script
-            } else if (scriptParsed.slice(0, 0x1000)
-                    .match(/^\/\*jslint\b[\s\w,:]*?\bes6: true\b/m)) {
+            } else if ((/^\/\*jslint\b[\s\w,:]*?\bes6: true\b/m)
+                    .test(scriptParsed.slice(0, 0x1000))) {
                 // comment shebang
                 scriptParsed = scriptParsed.replace((/^#!/), '//');
                 local.jslintEs6.errors = local.jslintEs6(scriptParsed).warnings;

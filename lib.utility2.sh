@@ -650,7 +650,7 @@ var dict, value;
 dict = require('./package.json');
 Object.keys(dict).forEach(function (key) {
     value = dict[key];
-    if (!key.match(/\W/g) && typeof value === 'string' && !value.match(/[\n\"\$']/)) {
+    if (!(/\W/g).test(key) && typeof value === 'string' && !(/[\n\"\$']/).test(value)) {
         process.stdout.write('export npm_package_' + key + '=\'' + value + '\';');
     }
 });
@@ -660,7 +660,7 @@ value = String((dict.repository && dict.repository.url) || dict.repository || ''
     .slice(-2)
     .join('/')
     .replace((/\.git\$/), '');
-if (value.match(/^[^\/]+\/[^\/]+\$/)) {
+if ((/^[^\/]+\/[^\/]+\$/).test(value)) {
     value = value.split('/');
     if (!process.env.GITHUB_REPO) {
         process.env.GITHUB_REPO = value.join('/');
@@ -953,14 +953,13 @@ console.log(process.argv[1]
     .toLowerCase()
     .replace((/$GITHUB_ORG\/node-$GITHUB_ORG-/g), '')
     .replace((/\S+/g), function (match0) {
-        return match0.length >= 64 ||
-                match0.match(new RegExp('[^\\\\w\\\\-.]|(?:^(?:[^a-z]|' +
-                'npmclassic|' +
-                'npmdoc|' +
-                'npmlite|' +
-                'npmstable|' +
-                'npmtest|' +
-                'scrapeitall))'))
+        return match0.length >= 64 || new RegExp('[^\\\\w\\\\-.]|(?:^(?:[^a-z]|' +
+            'npmclassic|' +
+            'npmdoc|' +
+            'npmlite|' +
+            'npmstable|' +
+            'npmtest|' +
+            'scrapeitall))').exec(match0)
             ? ''
             : '$GITHUB_ORG/node-$GITHUB_ORG-' + match0;
     })
@@ -1981,7 +1980,7 @@ local = {};
 local.dict = {};
 local.fs = require('fs');
 local.fs.readFileSync('$FILE', 'utf8').split('\n').forEach(function (element) {
-    element = element.match(/^(.+?):(\d+?):(.+?)$/);
+    element = (/^(.+?):(\d+?):(.+?)$/).exec(element);
     if (!element) {
         return;
     }
@@ -2707,9 +2706,9 @@ local.envKeyIsSensitive = function (key) {
 /*
  * this function will try to determine if the env-key is sensitive
  */
-    return key.toLowerCase()
-        .match(/(?:\b|_)(?:crypt|decrypt|key|pass|private|secret|token)/) ||
-        key.match(/Crypt|Decrypt|Key|Pass|Private|Secret|Token/);
+    return (/(?:\b|_)(?:crypt|decrypt|key|pass|private|secret|token)/)
+        .test(key.toLowerCase()) ||
+        (/Crypt|Decrypt|Key|Pass|Private|Secret|Token/).test(key);
 };
 console.log(Object.keys(process.env).sort().map(function (key) {
     return local.envKeyIsSensitive(key)

@@ -474,8 +474,8 @@ border: 0;\n\
 */\n\
 "use strict";\n\
 document.querySelector(".swggUiContainer > .header > .td2").value =\n\
-    (location.search.match(/\\bmodeSwaggerJsonUrl=([^&]+)/g) &&\n\
-        location.search.match(/\\bmodeSwaggerJsonUrl=([^&]+)/g)[1]) ||\n\
+    ((/\\bmodeSwaggerJsonUrl=([^&]+)/g).exec(location.search) &&\n\
+        (/\\bmodeSwaggerJsonUrl=([^&]+)/g).exec(location.search)[1]) ||\n\
         "assets.swgg.swagger.json";\n\
 </script>\n\
 <script src="assets.utility2.rollup.js"></script>\n\
@@ -2122,13 +2122,13 @@ swgg\n\
                     }
                     options.header = local.bufferToString(request.bodyRaw.slice(ii, ii + 1024))
                         .split('\r\n').slice(0, 2).join('\r\n');
-                    options.contentType = options.header.match(/^content-type:(.*)/im);
+                    options.contentType = (/^content-type:(.*)/im).exec(options.header);
                     options.contentType = options.contentType && options.contentType[1].trim();
-                    options.filename = options.header
-                        .match(/^content-disposition:.*?\bfilename="([^"]+)/im);
+                    options.filename = (/^content-disposition:.*?\bfilename="([^"]+)/im)
+                        .exec(options.header);
                     options.filename = options.filename && options.filename[1];
-                    options.name = options.header
-                        .match(/^content-disposition:.*?\bname="([^"]+)/im);
+                    options.name = (/^content-disposition:.*?\bname="([^"]+)/im)
+                        .exec(options.header);
                     options.name = options.name && options.name[1];
                     ii = local.bufferIndexOfSubBuffer(
                         request.bodyRaw,
@@ -2530,7 +2530,7 @@ swgg\n\
                     tmp = request.urlParsed.pathname
                         .replace(local.swaggerJsonBasePath, '').split('/');
                     request.swgg.pathObject._path.split('/').forEach(function (key, ii) {
-                        if (key.match(/^\{\S*?\}$/)) {
+                        if ((/^\{\S*?\}$/).test(key)) {
                             request.swgg.paramDict[key.slice(1, -1)] =
                                 decodeURIComponent(tmp[ii]);
                         }
@@ -3854,7 +3854,7 @@ swgg\n\
                     }
                     if (propDef.pattern) {
                         local.assert(
-                            data.match(new RegExp(propDef.pattern)),
+                            new RegExp(propDef.pattern).test(data),
                             prefix + ' must match regex pattern /' + propDef.pattern + '/'
                         );
                     }
@@ -3972,17 +3972,17 @@ swgg\n\
                     // https://github.com/swagger-api/swagger-spec/issues/50
                     // Clarify 'byte' format #50
                     case 'byte':
-                        local.assert(!data.match(/[^\n\r\+\/0-9\=A-Za-z]/));
+                        local.assert(!(/[^\n\r\+\/0-9\=A-Za-z]/).test(data));
                         break;
                     case 'date':
                     case 'date-time':
                         local.assert(JSON.stringify(new Date(data)) !== 'null');
                         break;
                     case 'email':
-                        local.assert(data.match(local.regexpEmailValidate));
+                        local.assert((local.regexpEmailValidate).test(data));
                         break;
                     case 'phone':
-                        local.assert(data.match(local.regexpPhoneValidate));
+                        local.assert((local.regexpPhoneValidate).test(data));
                         break;
                     case 'json':
                         JSON.parse(data);
@@ -4058,7 +4058,7 @@ swgg\n\
                         return;
                     }
                     tmp = Object.keys(schema.patternProperties || {}).some(function (_) {
-                        if (key.match(new RegExp(_))) {
+                        if (new RegExp(_).test(key)) {
                             validateByPropDef(schema.patternProperties[_]);
                             return true;
                         }

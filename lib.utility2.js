@@ -984,7 +984,7 @@ local.assetsDict['/assets.test.template.js'] = '\
              */\n\
                 // jslint-hack\n\
                 local.nop(url);\n\
-                return local.env.npm_package_nameAlias && location.host.match(/\\bgithub.io$/)\n\
+                return local.env.npm_package_nameAlias && (/\\bgithub.io$/).test(location.host)\n\
                     ? \'https://h1-\' + local.env.npm_package_nameAlias + \'-alpha.herokuapp.com\'\n\
                     : location.protocol + \'//\' + location.host;\n\
             };\n\
@@ -1984,7 +1984,7 @@ local.assetsDict['/favicon.ico'] = '';
             xhr.upload.addEventListener('progress', local.ajaxProgressUpdate);
             // open url
             xhr.forwardProxyUrl = local.modeJs === 'browser' &&
-                xhr.url.match(/^https{0,1}:/) &&
+                (/^https{0,1}:/).test(xhr.url) &&
                 xhr.url.indexOf(location.protocol + '//' + location.host) !== 0 &&
                 local.ajaxForwardProxyUrlTest(xhr.url, location);
             if (xhr.forwardProxyUrl) {
@@ -2309,7 +2309,7 @@ local.assetsDict['/favicon.ico'] = '';
                     }
                     options.timeoutDefault = options.timeoutDefault || local.timeoutDefault;
                     // init url
-                    if (!options.url.match(/^\w+:\/\//)) {
+                    if (!(/^\w+:\/\//).test(options.url)) {
                         options.url = local.path.resolve(process.cwd(), options.url);
                         if (options.modeBrowserTest2 === 'translateAfterScrape' &&
                                 !options.modeBrowserTestTranslating) {
@@ -2808,7 +2808,7 @@ function TranslateElementInit() {\n\
                                 if (!tmp) {
                                     return;
                                 }
-                                if (tmp.match(/^http:|^https:/)) {
+                                if ((/^http:|^https:/).test(tmp)) {
                                     element[key] = tmp;
                                     if (key === 'href') {
                                         tmp = tmp.split(/[?#]/)[0];
@@ -2820,7 +2820,7 @@ function TranslateElementInit() {\n\
                                     }
                                     return;
                                 }
-                                if (tmp.match(/^javascript/)) {
+                                if ((/^javascript/).test(tmp)) {
                                     element[key] = '#';
                                 }
                             });
@@ -2828,7 +2828,7 @@ function TranslateElementInit() {\n\
                         // deduplicate '/'
                         Object.keys(data.hrefDict).forEach(function (key) {
                             if (data.hrefDict.hasOwnProperty(key + '/') ||
-                                    key.match(/\.(?:css|js)$/)) {
+                                    (/\.(?:css|js)$/).test(key)) {
                                 data.hrefDict[key] = undefined;
                             }
                         });
@@ -3291,7 +3291,7 @@ return Utf8ArrayToStr(bff);
                 local.objectSetDefault(
                     options.packageJson,
                     JSON.parse(local.templateRenderJslintLite(
-                        local.assetsDict['/assets.readme.template.md'].match(options.rgx)[1],
+                        options.rgx.exec(local.assetsDict['/assets.readme.template.md'])[1],
                         options
                     )),
                     2
@@ -3367,7 +3367,7 @@ return Utf8ArrayToStr(bff);
             });
             // customize swaggerdoc
             if (!local.assetsDict['/assets.swgg.swagger.json'] ||
-                    local.assetsDict['/index.html'].match(/\bswggUiContainer\b/)) {
+                    (/\bswggUiContainer\b/).exec(local.assetsDict['/index.html'])) {
                 options.dataTo = options.dataTo.replace(
                     (/\n#### swaggerdoc\n[\S\s]*?\n#### /),
                     '\n#### '
@@ -3763,9 +3763,9 @@ return Utf8ArrayToStr(bff);
         /*
          * this function will try to determine if the env-key is sensitive
          */
-            return key.toLowerCase()
-                .match(/(?:\b|_)(?:crypt|decrypt|key|pass|private|secret|token)/) ||
-                key.match(/Crypt|Decrypt|Key|Pass|Private|Secret|Token/);
+            return (/(?:\b|_)(?:crypt|decrypt|key|pass|private|secret|token)/)
+                .test(key.toLowerCase()) ||
+                (/Crypt|Decrypt|Key|Pass|Private|Secret|Token/).test(key);
         };
 
         local.envSanitize = function (env) {
@@ -3852,7 +3852,7 @@ return Utf8ArrayToStr(bff);
          */
             location = location || (typeof window === 'object' && window && window.location);
             if (!(hostOverride && location && (local.githubCorsHostTest ||
-                    location.host.match(/\bgithub.com$|\bgithub.io$/)))) {
+                    (/\bgithub.com$|\bgithub.io$/).test(location.host)))) {
                 return url;
             }
             // init github-branch
@@ -3954,7 +3954,6 @@ return Utf8ArrayToStr(bff);
          * this function will jslint / csslint the script and print any errors to stderr,
          * conditionally
          */
-            var extname;
             // cleanup errors
             local.jslint.errorCounter = 0;
             local.jslint.errorText = '';
@@ -3962,8 +3961,7 @@ return Utf8ArrayToStr(bff);
             if (!script || script.length >= 0x100000) {
                 return script;
             }
-            extname = file.match(/\.\w+$/) && file.match(/\.\w+$/)[0];
-            switch (extname) {
+            switch ((/\.\w+$/).exec(file) && (/\.\w+$/).exec(file)[0]) {
             case '.css':
                 if (script.indexOf('/*csslint') >= 0 || mode === 'force') {
                     local.jslintAndPrint(script, file);
@@ -4236,7 +4234,7 @@ return Utf8ArrayToStr(bff);
                 case 1:
                     // skip gzip
                     if (response.headersSent ||
-                            !String(request.headers['accept-encoding']).match(/\bgzip\b/)) {
+                            !(/\bgzip\b/).exec(request.headers['accept-encoding'])) {
                         options.modeNext += 1;
                         options.onNext();
                         return;
@@ -4362,8 +4360,8 @@ return Utf8ArrayToStr(bff);
                 }
                 // init response-header content-type
                 request.urlParsed.contentType = local.contentTypeDict[
-                    request.urlParsed.pathname.match(/\.[^\.]*$/) &&
-                        request.urlParsed.pathname.match(/\.[^\.]*$/)
+                    (/\.[^\.]*$/).exec(request.urlParsed.pathname) &&
+                        (/\.[^\.]*$/).exec(request.urlParsed.pathname)[0]
                 ];
                 local.serverRespondHeadSet(request, response, null, {
                     'Content-Type': request.urlParsed.contentType
@@ -4381,9 +4379,8 @@ return Utf8ArrayToStr(bff);
             var onError, options, timerTimeout;
             // handle preflight-cors
             if (request.method === 'OPTIONS' &&
-                    request.headers['access-control-request-headers'] &&
-                    request.headers['access-control-request-headers']
-                    .match(/forward-proxy-url/)) {
+                    (/forward-proxy-url/)
+                    .test(request.headers['access-control-request-headers'])) {
                 local.serverRespondCors(request, response);
                 response.end();
                 return;
@@ -4465,8 +4462,8 @@ return Utf8ArrayToStr(bff);
             request.urlParsed = local.urlParse(request.url);
             // init response-header content-type
             request.urlParsed.contentType = local.contentTypeDict[
-                request.urlParsed.pathname.match(/\.[^\.]*$/) &&
-                    request.urlParsed.pathname.match(/\.[^\.]*$/)
+                (/\.[^\.]*$/).exec(request.urlParsed.pathname) &&
+                    (/\.[^\.]*$/).exec(request.urlParsed.pathname)[0]
             ];
             local.serverRespondHeadSet(request, response, null, {
                 'Content-Type': request.urlParsed.contentType
@@ -4991,7 +4988,7 @@ return Utf8ArrayToStr(bff);
             // hook custom repl eval function
             self.eval = function (script, context, file, onError) {
                 var match, onError2;
-                match = script.match(/^(\S+)(.*?)\n/);
+                match = (/^(\S+)(.*?)\n/).exec(script);
                 onError2 = function (error, data) {
                     // debug error
                     global.utility2_debugReplError = error || global.utility2_debugReplError;
@@ -5133,8 +5130,9 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
                 tmp = element[0][element[1]];
                 mockDict = {};
                 Object.keys(tmp).forEach(function (key) {
-                    if (typeof tmp[key] === 'function' && !(element[1] + '.' + key)
-                            .match(/^(?:fs\.Read|fs\.read|process\.binding|process\.dlopen)/)) {
+                    if (typeof tmp[key] === 'function' &&
+                            !(/^(?:fs\.Read|fs\.read|process\.binding|process\.dlopen)/)
+                            .test((element[1] + '.' + key))) {
                         mockDict[key] = function () {
                             return;
                         };
@@ -5171,7 +5169,7 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
                     case '.html':
                     case '.js':
                     case '.json':
-                        if (file.match(/\brollup\b/)) {
+                        if ((/\brollup\b/).test(file)) {
                             return;
                         }
                         // jslint file
@@ -6555,7 +6553,7 @@ instruction\n\
                     if (url[0] === '/') {
                         url = local.serverLocalHost + url;
                     // resolve relative path
-                    } else if (!url.match(/^\w+?:\/\//)) {
+                    } else if (!(/^\w+?:\/\//).test(url)) {
                         url = local.serverLocalHost +
                             location.pathname.replace((/\/[^\/]*?$/), '') + '/' + url;
                     }
@@ -6574,7 +6572,7 @@ instruction\n\
                     if (url[0] === '/') {
                         url = local.serverLocalHost + url;
                     // resolve relative path
-                    } else if (!url.match(/^\w+?:\/\//)) {
+                    } else if (!(/^\w+?:\/\//).test(url)) {
                         url = local.serverLocalHost + '/' + url;
                     }
                     urlParsed = local.url.parse(url);
@@ -6820,7 +6818,7 @@ instruction\n\
             console.log('commands:');
             Object.keys(local.cliDict).forEach(function (key) {
                 console.log('    ' + key + '\n        ' +
-                    local.cliDict[key].toString().match(/this function will (.*)/)[1]);
+                    (/this function will (.*)/).exec(local.cliDict[key].toString())[1]);
             });
         };
         local.cliDict['--interactive'] = function () {

@@ -337,7 +337,7 @@
             // hook custom repl eval function
             self.eval = function (script, context, file, onError) {
                 var match, onError2;
-                match = script.match(/^(\S+)(.*?)\n/);
+                match = (/^(\S+)(.*?)\n/).exec(script);
                 onError2 = function (error, data) {
                     // debug error
                     global.utility2_debugReplError = error || global.utility2_debugReplError;
@@ -1788,7 +1788,7 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
             console.log('commands:');
             Object.keys(local.cliDict).forEach(function (key) {
                 console.log('    ' + key + '\n        ' +
-                    local.cliDict[key].toString().match(/this function will (.*)/)[1]);
+                    (/this function will (.*)/).exec(local.cliDict[key].toString())[1]);
             });
         };
         local.cliDict['--interactive'] = local.cliDict['-i'] = function () {

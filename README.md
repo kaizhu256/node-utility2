@@ -70,6 +70,7 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 
 #### changelog for v2017.8.30
 - revert String.prototype.match back to RegExp.prototype.exec
+- revert String.prototype.match back to RegExp.prototype.test
 - none
 
 #### this package requires

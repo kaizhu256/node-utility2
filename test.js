@@ -145,7 +145,7 @@
                 // validate no error occurred
                 local.assert(!error, error);
                 // validate responseText
-                local.assert(xhr.responseText.match(/\r\n\r\n$/), xhr.responseText);
+                local.assert((/\r\n\r\n$/).test(xhr.responseText), xhr.responseText);
                 onError();
             });
         };
@@ -303,15 +303,15 @@
                     local.assertJsonEqual(xhr.statusCode, 200);
                     // validate response
                     options.data = xhr.responseText;
-                    local.assert(options.data.match(/\r\naa$/), options.data);
+                    local.assert((/\r\naa$/).test(options.data), options.data);
                     local.assert(
-                        options.data.match(/\r\nx-request-header-test: aa\r\n/),
+                        (/\r\nx-request-header-test: aa\r\n/).test(options.data),
                         options.data
                     );
                     // validate responseHeaders
                     options.data = xhr.getAllResponseHeaders();
                     local.assert(
-                        options.data.match(/^X-Response-Header-Test: bb\r\n/im),
+                        (/^X-Response-Header-Test: bb\r\n/im).test(options.data),
                         options.data
                     );
                     options.data = xhr.getResponseHeader('x-response-header-test');
@@ -1629,7 +1629,7 @@
             // test uuid4 handling-behavior
             options.data = local.uuid4Create();
             // validate data
-            local.assert(options.data.match(local.regexpUuidValidate), options.data);
+            local.assert((local.regexpUuidValidate).test(options.data), options.data);
             onError();
         };
 
@@ -1640,7 +1640,7 @@
             url = local.urlParse(url).pathname;
             return local.modeJs === 'browser' &&
                 !local.env.npm_config_mode_backend &&
-                url.match(/^\/test\./);
+                (/^\/test\./).test(url);
         };
     }());
     switch (local.modeJs) {
@@ -2129,9 +2129,9 @@
                 local.assertJsonEqual(response.headers['x-response-header-test'], 'bb');
                 // validate response.data
                 options.data = response.data.toString();
-                local.assert(options.data.match(/\r\naa$/), options.data);
+                local.assert((/\r\naa$/).test(options.data), options.data);
                 local.assert(
-                    options.data.match(/\r\nx-request-header-test: aa\r\n/),
+                    (/\r\nx-request-header-test: aa\r\n/).test(options.data),
                     options.data
                 );
                 onParallel();
@@ -2228,7 +2228,7 @@
             local.assertJsonEqual(options.data, process.cwd());
             // test module exists handling-behavior
             options.data = local.moduleDirname('electron-lite', options.modulePathList);
-            local.assert(options.data.match(/\/electron-lite$/), options.data);
+            local.assert((/\/electron-lite$/).test(options.data), options.data);
             // test module does not exists handling-behavior
             options.data = local.moduleDirname('syntax error', options.modulePathList);
             local.assertJsonEqual(options.data, '');
@@ -2525,7 +2525,7 @@
              */
                 // jslint-hack
                 local.nop(url);
-                return local.env.npm_package_nameAlias && location.host.match(/\bgithub.io$/)
+                return local.env.npm_package_nameAlias && (/\bgithub.io$/).test(location.host)
                     ? 'https://h1-' + local.env.npm_package_nameAlias + '-alpha.herokuapp.com'
                     : location.protocol + '//' + location.host;
             };
