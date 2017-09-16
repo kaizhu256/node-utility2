@@ -46,6 +46,12 @@
         if (local.modeJs === 'browser') {
             local.global.utility2_apidoc = local;
         } else {
+            // require builtins
+            Object.keys(process.binding('natives')).forEach(function (key) {
+                if (!local[key] && !(/\/|^_|^sys$/).test(key)) {
+                    local[key] = require(key);
+                }
+            });
             module.exports = local;
             module.exports.__dirname = __dirname;
             module.exports.module = module;
@@ -74,6 +80,107 @@
                     // else JSON.stringify message
                     : JSON.stringify(message));
             throw error;
+        };
+
+        local.cliRun = function (fnc) {
+        /*
+         * this function will run the cli
+         */
+            var nop;
+            nop = function () {
+            /*
+             * this function will do nothing
+             */
+                return;
+            };
+            local.cliDict._eval = local.cliDict._eval || function () {
+            /*
+             * code
+             * eval code
+             */
+                local.global.local = local;
+                require('vm').runInThisContext(process.argv[3]);
+            };
+            local.cliDict['--eval'] = local.cliDict['--eval'] || local.cliDict._eval;
+            local.cliDict['-e'] = local.cliDict['-e'] || local.cliDict._eval;
+            local.cliDict._help = local.cliDict._help || function () {
+            /*
+             * [none]
+             * print help
+             */
+                var element, result, lengthList, sortDict;
+                sortDict = {};
+                result = [['[command]', '[args]', '[description]', -1]];
+                lengthList = [result[0][0].length, result[0][1].length];
+                Object.keys(local.cliDict).sort().forEach(function (key, ii) {
+                    if (key[0] === '_' && key !== '_default') {
+                        return;
+                    }
+                    sortDict[local.cliDict[key].toString()] =
+                        sortDict[local.cliDict[key].toString()] || (ii + 1);
+                    element = (/\n +\*(.*)\n +\*(.*)/).exec(local.cliDict[key].toString());
+                    // coverage-hack - ignore else-statement
+                    nop(local.global.__coverage__ && (function () {
+                        element = element || ['', '', ''];
+                    }()));
+                    element = [
+                        key.replace('_default', '[none]') + ' ',
+                        element[1].trim() + ' ',
+                        element[2].trim(),
+                        (sortDict[local.cliDict[key].toString()] << 8) + ii
+                    ];
+                    result.push(element);
+                    lengthList.forEach(function (length, jj) {
+                        lengthList[jj] = Math.max(element[jj].length, length);
+                    });
+                });
+                result.sort(function (aa, bb) {
+                    return aa[3] < bb[3]
+                        ? -1
+                        : 1;
+                });
+                console.log('usage:   ' + __filename + ' [command] [args]');
+                console.log('example: ' + __filename + ' --eval    ' +
+                    '"console.log(\'hello world\')"\n');
+                result.forEach(function (element, ii) {
+                    lengthList.forEach(function (length, jj) {
+                        while (element[jj].length < length) {
+                            element[jj] += '-';
+                        }
+                    });
+                    element = element.slice(0, 3).join('---- ');
+                    if (ii === 0) {
+                        element = element.replace((/-/g), ' ');
+                    }
+                    console.log(element);
+                });
+            };
+            local.cliDict['--help'] = local.cliDict['--help'] || local.cliDict._help;
+            local.cliDict['-h'] = local.cliDict['-h'] || local.cliDict._help;
+            local.cliDict._default = local.cliDict._default || local.cliDict._help;
+            local.cliDict.help = local.cliDict.help || local.cliDict._help;
+            local.cliDict._interactive = local.cliDict._interactive || function () {
+            /*
+             * [none]
+             * start interactive-mode
+             */
+                local.global.local = local;
+                local.replStart();
+            };
+            if (local.replStart) {
+                local.cliDict['--interactive'] = local.cliDict['--interactive'] ||
+                    local.cliDict._interactive;
+                local.cliDict['-i'] = local.cliDict['-i'] || local.cliDict._interactive;
+            }
+            // run fnc()
+            fnc = fnc || function () {
+                if (local.cliDict[process.argv[2]]) {
+                    local.cliDict[process.argv[2]]();
+                    return;
+                }
+                local.cliDict._default();
+            };
+            fnc();
         };
 
         local.moduleDirname = function (module, modulePathList) {
@@ -816,19 +923,23 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
     // run node js-env code - init-after
     /* istanbul ignore next */
     case 'node':
-        // require modules
-        local.child_process = require('child_process');
-        local.fs = require('fs');
-        local.path = require('path');
-        // run the cli
+        // init cli
         if (module !== require.main || local.global.utility2_rollup) {
             break;
         }
-        // jslint files
-        process.stdout.write(local.apidocCreate({
-            dir: process.argv[2],
-            modulePathList: module.paths
-        }));
+        local.cliDict = {};
+        local.cliDict._default = function () {
+        /*
+         * moduleDirectory
+         * create apidoc from moduleDirectory
+         */
+            // jslint files
+            process.stdout.write(local.apidocCreate({
+                dir: process.argv[2],
+                modulePathList: module.paths
+            }));
+        };
+        local.cliRun();
         break;
     }
 }());

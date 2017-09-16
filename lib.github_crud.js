@@ -46,6 +46,12 @@
         if (local.modeJs === 'browser') {
             local.global.utility2_github_crud = local;
         } else {
+            // require builtins
+            Object.keys(process.binding('natives')).forEach(function (key) {
+                if (!local[key] && !(/\/|^_|^sys$/).test(key)) {
+                    local[key] = require(key);
+                }
+            });
             module.exports = local;
             module.exports.__dirname = __dirname;
             module.exports.module = module;
@@ -57,6 +63,115 @@
     /* istanbul ignore next */
     // run shared js-env code - function-before
     (function () {
+        local.assert = function (passed, message) {
+        /*
+         * this function will throw the error message if passed is falsey
+         */
+            var error;
+            if (passed) {
+                return;
+            }
+            error = message && message.message
+                // if message is an error-object, then leave it as is
+                ? message
+                : new Error(typeof message === 'string'
+                    // if message is a string, then leave it as is
+                    ? message
+                    // else JSON.stringify message
+                    : JSON.stringify(message));
+            throw error;
+        };
+
+        local.cliRun = function (fnc) {
+        /*
+         * this function will run the cli
+         */
+            var nop;
+            nop = function () {
+            /*
+             * this function will do nothing
+             */
+                return;
+            };
+            local.cliDict._eval = local.cliDict._eval || function () {
+            /*
+             * code
+             * eval code
+             */
+                local.global.local = local;
+                require('vm').runInThisContext(process.argv[3]);
+            };
+            local.cliDict['--eval'] = local.cliDict['--eval'] || local.cliDict._eval;
+            local.cliDict['-e'] = local.cliDict['-e'] || local.cliDict._eval;
+            local.cliDict._help = local.cliDict._help || function () {
+            /*
+             * [none]
+             * print help
+             */
+                var element, result, lengthList;
+                result = [['[command]', '[arguments]', '[description]']];
+                lengthList = [result[0][0].length, result[0][1].length];
+                Object.keys(local.cliDict).sort().forEach(function (key) {
+                    if (key[0] === '_' && key !== '_default') {
+                        return;
+                    }
+                    element = (/\n +\*(.*)\n +\*(.*)/).exec(local.cliDict[key].toString());
+                    // coverage-hack - ignore else-statement
+                    nop(local.global.__coverage__ && (function () {
+                        element = element || ['', '', ''];
+                    }()));
+                    element = [
+                        key.replace('_default', '[none]') + ' ',
+                        element[1].trim() + ' ',
+                        element[2].trim()
+                    ];
+                    result.push(element);
+                    lengthList.forEach(function (length, jj) {
+                        lengthList[jj] = Math.max(element[jj].length, length);
+                    });
+                });
+                console.log('usage: ' + __filename + ' [command] [arguments]\n');
+                result.forEach(function (element, ii) {
+                    lengthList.forEach(function (length, jj) {
+                        while (element[jj].length < length) {
+                            element[jj] += '-';
+                        }
+                    });
+                    element = element.join('-- ');
+                    if (ii === 0) {
+                        element = element.replace((/-/g), ' ');
+                    }
+                    console.log(element);
+                });
+            };
+            local.cliDict['--help'] = local.cliDict['--help'] || local.cliDict._help;
+            local.cliDict['-h'] = local.cliDict['-h'] || local.cliDict._help;
+            local.cliDict._default = local.cliDict._default || local.cliDict._help;
+            local.cliDict.help = local.cliDict.help || local.cliDict._help;
+            local.cliDict._interactive = local.cliDict._interactive || function () {
+            /*
+             * [none]
+             * start interactive-mode
+             */
+                local.global.local = local;
+                local.replStart();
+            };
+            if (local.replStart) {
+                local.cliDict['--interactive'] = local.cliDict['--interactive'] ||
+                    local.cliDict._interactive;
+                local.cliDict['-i'] = local.cliDict['-i'] || local.cliDict._interactive;
+            }
+            // run fnc()
+            fnc = fnc || function () {
+                if (local.cliDict[String(process.argv[2]).toLowerCase()]) {
+                    local.cliDict[String(process.argv[2]).toLowerCase()]();
+                    return;
+                }
+                local.cliDict._default();
+            };
+            fnc();
+        };
+
         local.httpRequest = function (options, onError) {
         /*
          * this function will request the data from options.url
@@ -191,7 +306,10 @@
                 // decrement counter
                 onParallel.counter -= 1;
                 // validate counter
-                console.assert(onParallel.counter >= 0 || error || onParallel.error);
+                local.assert(
+                    onParallel.counter >= 0 || error || onParallel.error,
+                    'invalid onParallel.counter = ' + onParallel.counter
+                );
                 // ensure onError is run only once
                 if (onParallel.counter < 0) {
                     return;
@@ -550,27 +668,15 @@
     /* istanbul ignore next */
     // run node js-env code - init-after
     case 'node':
-        // require modules
-        local.fs = require('fs');
-        local.path = require('path');
-        // run the cli
+        // init cli
         if (module !== require.main || local.global.utility2_rollup) {
             break;
         }
         local.cliDict = {};
-        local.cliDict['--help'] = function () {
-        /*
-         * this function will print the help-menu
-         */
-            console.log('commands:');
-            Object.keys(local.cliDict).forEach(function (key) {
-                console.log('    ' + key + '\n        ' +
-                    (/this function will (.*)/).exec(local.cliDict[key].toString())[1]);
-            });
-        };
         local.cliDict.delete = function () {
         /*
-         * this function will delete the file from github
+         * fileRemote
+         * delete fileRemote from github
          */
             local.contentDelete({
                 message: process.argv[4],
@@ -582,7 +688,8 @@
         };
         local.cliDict.get = function () {
         /*
-         * this function will get the file from github
+         * fileRemote
+         * get fileRemote from github
          */
             local.contentGet({ url: process.argv[3] }, function (error, data) {
                 // validate no error occurred
@@ -595,7 +702,8 @@
         };
         local.cliDict.put = function () {
         /*
-         * this function will put the file to github
+         * fileRemote fileLocal
+         * put fileLocal as fileRemote on github
          */
             local.contentPutFile({
                 message: process.argv[5],
@@ -608,7 +716,8 @@
         };
         local.cliDict.touch = function () {
         /*
-         * this function will touch the file to github
+         * fileRemote
+         * touch fileRemote on github
          */
             local.contentTouch({
                 message: process.argv[4],
@@ -620,11 +729,12 @@
         };
         local.cliDict.touchlist = function () {
         /*
-         * this function will touch the list of space-separated files to github
+         * fileRemoteList
+         * touch comma-separated fileRemoteList on github
          */
             local.contentTouchList({
                 message: process.argv[4],
-                urlList: process.argv[3].split(' ').filter(function (element) {
+                urlList: process.argv[3].split(',').filter(function (element) {
                     return element;
                 })
             }, function (error) {
@@ -632,9 +742,7 @@
                 console.assert(!error, error);
             });
         };
-        if (local.cliDict[String(process.argv[2]).toLowerCase()]) {
-            local.cliDict[String(process.argv[2]).toLowerCase()]();
-        }
+        local.cliRun();
         break;
     }
 }());

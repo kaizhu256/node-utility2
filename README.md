@@ -1,9 +1,14 @@
 # utility2
 the zero-dependency, swiss-army-knife utility for building, testing, and deploying webapps
 
+# live demo
+- [https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/)
+
 [![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.deployGithub.browser.%252Fnode-utility2%252Fbuild%252Fapp.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/)
 
-[![travis-ci.org build-status](https://api.travis-ci.org/kaizhu256/node-utility2.svg)](https://travis-ci.org/kaizhu256/node-utility2) [![coverage](https://kaizhu256.github.io/node-utility2/build/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build/coverage.html/index.html)
+
+
+[![travis-ci.org build-status](https://api.travis-ci.org/kaizhu256/node-utility2.svg)](https://travis-ci.org/kaizhu256/node-utility2) [![coverage](https://kaizhu256.github.io/node-utility2/build/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build/coverage.html/index.html) [![snyk.io vulnerabilities](https://snyk.io/test/github/kaizhu256/node-utility2/badge.svg)](https://snyk.io/test/github/kaizhu256/node-utility2)
 
 [![NPM](https://nodei.co/npm/utility2.png?downloads=true)](https://www.npmjs.com/package/utility2)
 
@@ -25,7 +30,6 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 
 # table of contents
 1. [cdn download](#cdn-download)
-1. [live demo](#live-demo)
 1. [documentation](#documentation)
 1. [quickstart standalone app](#quickstart-standalone-app)
 1. [quickstart example.js](#quickstart-examplejs)
@@ -42,21 +46,16 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 
 
 
-# live demo
-- [https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/)
-
-[![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.deployGithub.browser.%252Fnode-utility2%252Fbuild%252Fapp.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/)
-
-
-
 # documentation
+#### cli help
+![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.npmPackageCliHelp.svg)
+
 #### apidoc
 - [https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/apidoc.html](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/apidoc.html)
 
 [![apidoc](https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/apidoc.html)
 
 #### todo
-- merge shDeployGithub and shDeployHeroku into shDeploy
 - revamp serverLog to consoleLog and consoleError
 - deprecate and remove local.serverLocalHost
 - rename ajaxForwardProxyUrlTest to githubForwardProxyUrlTest
@@ -67,11 +66,17 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 - analytics
 - none
 
-#### changelog for v2017.9.1
-- npm publish 2017.9.1
-- add cli to lib.db.js
-- revert String.prototype.match back to RegExp.prototype.exec
-- revert String.prototype.match back to RegExp.prototype.test
+#### changelog for v2017.9.15
+- npm publish 2017.9.15
+- add cli-help doc to README.md
+- fix timeoutDefault bug in function browserTest
+- increase npm test timeout to 60000 ms
+- add function cliInit
+- update function buildLib - add feature auto-normalize section function-before
+- update function buildLib - add feature auto-require builtins
+- update function testCase_webpage_default - auto-fallback to /index.default.html
+- update function testMock - auto-suppress console.error and console.log
+- move live-demo to top of README.md
 - none
 
 #### this package requires
@@ -117,7 +122,7 @@ this script will demo automated browser-tests with coverage (via electron and is
 instruction
     1. save this script as example.js
     2. run the shell command:
-        $ mkdir -p node_modules && npm install utility2 electron-lite && \
+        $ npm install utility2 electron-lite && \
             PATH="$(pwd)/node_modules/.bin:$PATH" \
             PORT=8081 \
             npm_config_mode_coverage=utility2 \
@@ -384,10 +389,12 @@ instruction
     case 'node':
         // init exports
         module.exports = local;
-        // require modules
-        local.fs = require('fs');
-        local.http = require('http');
-        local.url = require('url');
+        // require builtins
+        Object.keys(process.binding('natives')).forEach(function (key) {
+            if (!local[key] && !(/\/|^_|^sys$/).test(key)) {
+                local[key] = require(key);
+            }
+        });
         // init assets
         local.assetsDict = local.assetsDict || {};
         /* jslint-ignore-begin */
@@ -629,7 +636,7 @@ utility2-comment -->\n\
                     return match0;
                 }
             });
-        // run the cli
+        // init cli
         if (module !== require.main || local.global.utility2_rollup) {
             break;
         }
@@ -743,11 +750,9 @@ utility2-comment -->\n\
     },
     "homepage": "https://github.com/kaizhu256/node-utility2",
     "keywords": [
-        "code-coverage",
         "continuous-integration",
-        "devops",
         "istanbul",
-        "jscoverage",
+        "jslint",
         "npmdoc",
         "npmtest",
         "test",
@@ -774,9 +779,9 @@ utility2-comment -->\n\
         "heroku-postbuild": "./lib.utility2.sh shDeployHeroku",
         "postinstall": "[ ! -f npm_scripts.sh ] || ./npm_scripts.sh postinstall",
         "start": "set -e; export PORT=${PORT:-8080}; if [ -f assets.app.js ]; then node assets.app.js; else npm_config_mode_auto_restart=1 ./lib.utility2.sh shRun shIstanbulCover test.js; fi",
-        "test": "PORT=$(./lib.utility2.sh shServerPortRandom) PORT_REPL=$(./lib.utility2.sh shServerPortRandom) npm_config_mode_auto_restart=1 ./lib.utility2.sh test test.js"
+        "test": "PORT=$(./lib.utility2.sh shServerPortRandom) PORT_REPL=$(./lib.utility2.sh shServerPortRandom) npm_config_mode_auto_restart=1 npm_config_timeout_default=60000 ./lib.utility2.sh test test.js"
     },
-    "version": "2017.9.1"
+    "version": "2017.9.15"
 }
 ```
 
@@ -826,7 +831,7 @@ RUN (set -e; \
 # install sqlite3
 RUN (set -e; \
     export DEBIAN_FRONTEND=noninteractive; \
-    mkdir -p node_modules && npm install sqlite3@3.1.8; \
+    npm install sqlite3@3.1.8; \
     cp -a node_modules /; \
 )
 # install electron-lite
@@ -850,7 +855,7 @@ RUN (set -e; \
         libxtst6 \
         xvfb; \
     rm -f /tmp/.X99-lock && export DISPLAY=:99.0 && (Xvfb "$DISPLAY" &); \
-    mkdir -p node_modules && npm install kaizhu256/node-electron-lite#alpha; \
+    npm install kaizhu256/node-electron-lite#alpha; \
     mv node_modules/electron-lite/external /opt/electron; \
     ln -s /opt/electron/electron /bin/electron; \
     cd node_modules/electron-lite; \
@@ -905,7 +910,7 @@ RUN (set -e; \
         v1.6.1 \
         v1.7.1; \
     do \
-        mkdir -p node_modules && npm install kaizhu256/node-electron-lite#alpha \
+        npm install kaizhu256/node-electron-lite#alpha \
             --electron-version="$ELECTRON_VERSION"; \
         mv node_modules/electron-lite/external "/opt/electron-$ELECTRON_VERSION"; \
         ln -s "/opt/electron-$ELECTRON_VERSION/electron" "/bin/electron-$ELECTRON_VERSION"; \
@@ -930,7 +935,7 @@ MAINTAINER kai zhu <kaizhu256@gmail.com>
 RUN (set -e; \
     export DEBIAN_FRONTEND=noninteractive; \
     rm -f /tmp/.X99-lock && export DISPLAY=:99.0 && (Xvfb "$DISPLAY" &); \
-    mkdir -p node_modules && npm install kaizhu256/node-utility2#alpha; \
+    npm install kaizhu256/node-utility2#alpha; \
     cp -a node_modules /; \
     cd node_modules/utility2; \
     npm install; \
@@ -944,7 +949,7 @@ RUN (set -e; \
     apt-get install --no-install-recommends -y \
         default-jre; \
     rm -f /tmp/.X99-lock && export DISPLAY=:99.0 && (Xvfb "$DISPLAY" &); \
-    mkdir -p node_modules && npm install kaizhu256/node-elasticsearch-lite#alpha; \
+    npm install kaizhu256/node-elasticsearch-lite#alpha; \
     cp -a node_modules /; \
     cd node_modules/elasticsearch-lite; \
     npm install; \
@@ -1030,7 +1035,8 @@ shBuildCiAfter() {(set -e
 )}
 
 shBuildCiBefore() {(set -e
-    shNpmTestPublished
+    #!! shNpmTestPublished
+touch tmp/build/screenshot.npmTestPublished.browser.%2F.png
     shReadmeTest example.js
     # screenshot
     MODE_BUILD=testExampleJs shBrowserTest "

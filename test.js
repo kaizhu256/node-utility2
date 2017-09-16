@@ -193,7 +193,7 @@
         /*
          * this function will test ajax's assets handling-behavior
          */
-            options = { url: 'package.json' };
+            options = { url: 'LICENSE' };
             local.ajax(options, function (error, xhr) {
                 // validate no error occurred
                 local.assert(!error, error);
@@ -569,7 +569,6 @@
          */
             options = {};
             local.testMock([
-                // suppress console.error
                 [console, { error: function (arg) {
                     options.data += (arg || '') + '\n';
                 } }]
@@ -671,8 +670,6 @@
          * this function will test jslintAndPrintConditional's default handling-behavior
          */
             options = [
-                // suppress console.error
-                [console, { error: local.nop }],
                 [local.jslint, { errorText: '' }]
             ];
             local.testMock(options, function (onError) {
@@ -1044,7 +1041,6 @@
          * this function will test onErrorDefault's default handling-behavior
          */
             local.testMock([
-                // suppress console.error
                 [console, { error: function (arg) {
                     options = arg;
                 } }],
@@ -1893,8 +1889,6 @@
             // test $npm_config_mode_coverage=all handling-behavior
             options = null;
             local.testMock([
-                // suppress console.log and console.error
-                [console, { error: local.nop, log: local.nop }],
                 [local.env, { npm_config_mode_coverage: 'all' }]
             ], function (onError) {
                 local.buildApidoc(options, onError);
@@ -1918,6 +1912,9 @@
             local.testCase_buildLib_default(options, local.onErrorThrow);
             local.testCase_buildTest_default(options, local.onErrorThrow);
             options = [{
+                file: '/LICENSE',
+                url: '/LICENSE'
+            }, {
                 file: '/assets.hello',
                 url: '/assets.hello'
             }, {
@@ -1941,9 +1938,6 @@
             }, {
                 file: '/assets.utility2.rollup.js',
                 url: '/assets.utility2.rollup.js'
-            }, {
-                file: '/package.json',
-                url: '/package.json'
             }];
             local.buildApp(options, onError);
         };
@@ -2077,6 +2071,28 @@
                     onParallel();
                 });
             onParallel();
+        };
+
+        local.testCase_cliRun_default = function (options, onError) {
+        /*
+         * this function will test cliRun's default handling-behavior
+         */
+            options = [
+                [local, { replStart: null }],
+                [local.cliDict, { _default: null }],
+                [local.vm, { runInThisContext: local.nop }],
+                [process, { argv: [] }]
+            ];
+            local.testMock(options, function (onError) {
+                local.cliRun();
+                local.replStart = local.nop;
+                process.argv[2] = '--help';
+                local.cliRun();
+                ['--eval', '--help', '--interactive'].forEach(function (key) {
+                    local.cliDict[key]();
+                });
+                onError();
+            }, onError);
         };
 
         local.testCase_fsWriteFileWithMkdirpSync_default = function (options, onError) {
@@ -2267,8 +2283,6 @@
             // coverage-hack - test replStart's muliple-call handling-behavior
             local.replStart();
             options = [
-                // suppress console.error
-                [console, { error: local.nop }],
                 [local.child_process, { spawn: function () {
                     return { on: function (event, callback) {
                         // jslint-hack
@@ -2281,6 +2295,8 @@
             ];
             local.testMock(options, function (onError) {
                 [
+                    // test null-case handling-behavior
+                    '',
                     // test shell handling-behavior
                     '$ :\n',
                     // test git diff handling-behavior
@@ -2389,8 +2405,6 @@
          * this function will test testReport's default handling-behavior
          */
             options = [
-                // suppress console.error
-                [console, { error: local.nop }]
             ];
             local.testMock(options, function (onError) {
                 // test null-case handling-behavior
@@ -2475,8 +2489,6 @@
                 nextMiddleware(local.errorDefault);
                 // test onErrorDefault handling-behavior
                 local.testMock([
-                    // suppress console.error
-                    [console, { error: local.nop }]
                 ], function (onError) {
                     var error;
                     error = new Error('error');
@@ -2587,7 +2599,7 @@
             }, 5 * 60 * 1000);
             break;
         }
-        // run the cli
+        // init cli
         if (module !== require.main || local.global.utility2_rollup) {
             return;
         }
@@ -2689,7 +2701,15 @@
         /*
          * this function will test webpage's default handling-behavior
          */
-            options = { modeCoverageMerge: true, url: local.serverLocalHost + '?modeTest=1' };
+            options = {
+                fileScreenshotBase: local.env.npm_config_dir_build +
+                    '/screenshot.' + local.env.MODE_BUILD + '.browser.%2F',
+                modeCoverageMerge: true,
+                url: local.assetsDict['/']
+                    .indexOf('<script src="assets.test.js"></script>') >= 0
+                    ? local.serverLocalHost + '?modeTest=1'
+                    : local.serverLocalHost + '/index.default.html?modeTest=1'
+            };
             local.browserTest(options, onError);
         };
 

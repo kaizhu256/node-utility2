@@ -46,6 +46,12 @@
         if (local.modeJs === 'browser') {
             local.global.utility2_utility2 = local;
         } else {
+            // require builtins
+            Object.keys(process.binding('natives')).forEach(function (key) {
+                if (!local[key] && !(/\/|^_|^sys$/).test(key)) {
+                    local[key] = require(key);
+                }
+            });
             module.exports = local;
             module.exports.__dirname = __dirname;
             module.exports.module = module;
@@ -413,10 +419,12 @@ instruction\n\
     case \'node\':\n\
         // init exports\n\
         module.exports = local;\n\
-        // require modules\n\
-        local.fs = require(\'fs\');\n\
-        local.http = require(\'http\');\n\
-        local.url = require(\'url\');\n\
+        // require builtins\n\
+        Object.keys(process.binding(\'natives\')).forEach(function (key) {\n\
+            if (!local[key] && !(/\\/|^_|^sys$/).test(key)) {\n\
+                local[key] = require(key);\n\
+            }\n\
+        });\n\
         // init assets\n\
         local.assetsDict = local.assetsDict || {};\n\
         /* jslint-ignore-begin */\n\
@@ -457,7 +465,7 @@ local.assetsDict['/assets.index.template.html'].replace((/\n/g), '\\n\\\n') + '\
                     return match0;\n\
                 }\n\
             });\n\
-        // run the cli\n\
+        // init cli\n\
         if (module !== require.main || local.global.utility2_rollup) {\n\
             break;\n\
         }\n\
@@ -549,6 +557,12 @@ local.assetsDict['/assets.lib.template.js'] = '\
         if (local.modeJs === \'browser\') {\n\
             local.global.utility2_jslint = local;\n\
         } else {\n\
+            // require builtins\n\
+            Object.keys(process.binding(\'natives\')).forEach(function (key) {\n\
+                if (!local[key] && !(/\\/|^_|^sys$/).test(key)) {\n\
+                    local[key] = require(key);\n\
+                }\n\
+            });\n\
             module.exports = local;\n\
             module.exports.__dirname = __dirname;\n\
             module.exports.module = module;\n\
@@ -563,9 +577,14 @@ local.assetsDict['/assets.readme.template.md'] = '\
 # jslint-lite\n\
 the greatest app in the world!\n\
 \n\
-![screenshot]()\n\
+# live demo\n\
+- [https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app/](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app)\n\
 \n\
-[![travis-ci.org build-status](https://api.travis-ci.org/kaizhu256/node-jslint-lite.svg)](https://travis-ci.org/kaizhu256/node-jslint-lite) [![coverage](https://kaizhu256.github.io/node-jslint-lite/build/coverage.badge.svg)](https://kaizhu256.github.io/node-jslint-lite/build/coverage.html/index.html)\n\
+[![screenshot](https://kaizhu256.github.io/node-jslint-lite/build/screenshot.deployGithub.browser.%252Fnode-jslint-lite%252Fbuild%252Fapp.png)](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app)\n\
+\n\
+\n\
+\n\
+[![travis-ci.org build-status](https://api.travis-ci.org/kaizhu256/node-jslint-lite.svg)](https://travis-ci.org/kaizhu256/node-jslint-lite) [![coverage](https://kaizhu256.github.io/node-jslint-lite/build/coverage.badge.svg)](https://kaizhu256.github.io/node-jslint-lite/build/coverage.html/index.html) [![snyk.io vulnerabilities](https://snyk.io/test/github/kaizhu256/node-jslint-lite/badge.svg)](https://snyk.io/test/github/kaizhu256/node-jslint-lite)\n\
 \n\
 [![NPM](https://nodei.co/npm/jslint-lite.png?downloads=true)](https://www.npmjs.com/package/jslint-lite)\n\
 \n\
@@ -594,14 +613,10 @@ the greatest app in the world!\n\
 \n\
 \n\
 \n\
-# live demo\n\
-- [https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app/](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app)\n\
-\n\
-[![screenshot](https://kaizhu256.github.io/node-jslint-lite/build/screenshot.deployGithub.browser.%252Fnode-jslint-lite%252Fbuild%252Fapp.png)](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app)\n\
-\n\
-\n\
-\n\
 # documentation\n\
+#### cli help\n\
+![screenshot](https://kaizhu256.github.io/node-jslint-lite/build/screenshot.npmPackageCliHelp.svg)\n\
+\n\
 #### apidoc\n\
 - [https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/apidoc.html](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/apidoc.html)\n\
 \n\
@@ -1075,7 +1090,15 @@ local.assetsDict['/assets.test.template.js'] = '\
         /*\n\
          * this function will test webpage\'s default handling-behavior\n\
          */\n\
-            options = { modeCoverageMerge: true, url: local.serverLocalHost + \'?modeTest=1\' };\n\
+            options = {\n\
+                fileScreenshotBase: local.env.npm_config_dir_build +\n\
+                    \'/screenshot.\' + local.env.MODE_BUILD + \'.browser.%2F\',\n\
+                modeCoverageMerge: true,\n\
+                url: local.assetsDict[\'/\']\n\
+                    .indexOf(\'<script src="assets.test.js"></script>\') >= 0\n\
+                    ? local.serverLocalHost + \'?modeTest=1\'\n\
+                    : local.serverLocalHost + \'/index.default.html?modeTest=1\'\n\
+            };\n\
             local.browserTest(options, onError);\n\
         };\n\
 \n\
@@ -2346,6 +2369,7 @@ local.assetsDict['/favicon.ico'] = '';
                         timeExit: Date.now() + options.timeoutDefault,
                         timeoutScreenshot: options.timeoutScreenshot || 15000
                     }, 1);
+                    options.npm_config_time_exit = options.timeExit;
                     options.fileScreenshot = options.fileScreenshotBase + '.png';
                     // node.electron - init
                     if (process.versions.electron) {
@@ -3253,6 +3277,22 @@ return Utf8ArrayToStr(bff);
                     });
                 });
             });
+            /* istanbul ignore next */
+            if (!local.env.npm_config_mode_coverage) {
+                // normalize function-before
+                options.dataTo = options.dataTo.replace(new RegExp('\\n {4}\\/\\/ ' +
+                    'run shared js-env code - function-before\\n' +
+                    '[\\S\\s]+?\\n {4}\\}\\(\\)\\);\\n'), function (match0) {
+                    return match0.replace(new RegExp('^ {8}local\\.(\\w+) = ' +
+                        'function \\([\\S\\s]+?\\n {8}\\};$', 'gm'), function (match0, match1) {
+                        if (typeof local[match1] !== 'function') {
+                            return match0;
+                        }
+                        return '        local.' + match1 + ' = ' + local[match1].toString() +
+                            ';';
+                    });
+                });
+            }
             options.customize();
             // save lib.xxx.js
             local.fs.writeFileSync(
@@ -3382,7 +3422,7 @@ return Utf8ArrayToStr(bff);
             );
             options.customize();
             // customize shDeployCustom
-            if (options.dataFrom.indexOf('shDeployCustom') >= 0) {
+            if (options.dataFrom.indexOf(' shDeployCustom\n') >= 0) {
                 [
                     // customize test-server
                     (/\n\| git-branch : \|[\S\s]*?\n\| test-report : \|/),
@@ -3426,15 +3466,6 @@ return Utf8ArrayToStr(bff);
                     .replace(/[^ \-0-9A-Z_a-z]/g, '').replace(/ /g, '-') + ')\n';
             });
             options.dataTo = options.dataTo.replace('\n# table of contents\n', options.toc);
-            // customize screenshot
-            options.dataTo = options.dataTo.replace(
-                (/\n.*?!\[screenshot\].*?\n([\S\s]+?(\n.*?!\[screenshot\].*?\n))/),
-                function (match0, match1, match2) {
-                    // jslint-hack
-                    local.nop(match0);
-                    return match2 + match1;
-                }
-            );
             // normalize whitespace
             options.dataTo = options.dataTo
                 .replace((/\n{5,}/g), '\n\n\n\n')
@@ -3537,6 +3568,107 @@ return Utf8ArrayToStr(bff);
                 Number(local.timeoutDefault)) + 2) | 0) +
                 '; kill -9 ' + child.pid + ' 2>/dev/null', { shell: true, stdio: 'ignore' });
             return child;
+        };
+
+        local.cliRun = function (fnc) {
+        /*
+         * this function will run the cli
+         */
+            var nop;
+            nop = function () {
+            /*
+             * this function will do nothing
+             */
+                return;
+            };
+            local.cliDict._eval = local.cliDict._eval || function () {
+            /*
+             * code
+             * eval code
+             */
+                local.global.local = local;
+                require('vm').runInThisContext(process.argv[3]);
+            };
+            local.cliDict['--eval'] = local.cliDict['--eval'] || local.cliDict._eval;
+            local.cliDict['-e'] = local.cliDict['-e'] || local.cliDict._eval;
+            local.cliDict._help = local.cliDict._help || function () {
+            /*
+             * [none]
+             * print help
+             */
+                var element, result, lengthList, sortDict;
+                sortDict = {};
+                result = [['[command]', '[args]', '[description]', -1]];
+                lengthList = [result[0][0].length, result[0][1].length];
+                Object.keys(local.cliDict).sort().forEach(function (key, ii) {
+                    if (key[0] === '_' && key !== '_default') {
+                        return;
+                    }
+                    sortDict[local.cliDict[key].toString()] =
+                        sortDict[local.cliDict[key].toString()] || (ii + 1);
+                    element = (/\n +\*(.*)\n +\*(.*)/).exec(local.cliDict[key].toString());
+                    // coverage-hack - ignore else-statement
+                    nop(local.global.__coverage__ && (function () {
+                        element = element || ['', '', ''];
+                    }()));
+                    element = [
+                        key.replace('_default', '[none]') + ' ',
+                        element[1].trim() + ' ',
+                        element[2].trim(),
+                        (sortDict[local.cliDict[key].toString()] << 8) + ii
+                    ];
+                    result.push(element);
+                    lengthList.forEach(function (length, jj) {
+                        lengthList[jj] = Math.max(element[jj].length, length);
+                    });
+                });
+                result.sort(function (aa, bb) {
+                    return aa[3] < bb[3]
+                        ? -1
+                        : 1;
+                });
+                console.log('usage:   ' + __filename + ' [command] [args]');
+                console.log('example: ' + __filename + ' --eval    ' +
+                    '"console.log(\'hello world\')"\n');
+                result.forEach(function (element, ii) {
+                    lengthList.forEach(function (length, jj) {
+                        while (element[jj].length < length) {
+                            element[jj] += '-';
+                        }
+                    });
+                    element = element.slice(0, 3).join('---- ');
+                    if (ii === 0) {
+                        element = element.replace((/-/g), ' ');
+                    }
+                    console.log(element);
+                });
+            };
+            local.cliDict['--help'] = local.cliDict['--help'] || local.cliDict._help;
+            local.cliDict['-h'] = local.cliDict['-h'] || local.cliDict._help;
+            local.cliDict._default = local.cliDict._default || local.cliDict._help;
+            local.cliDict.help = local.cliDict.help || local.cliDict._help;
+            local.cliDict._interactive = local.cliDict._interactive || function () {
+            /*
+             * [none]
+             * start interactive-mode
+             */
+                local.global.local = local;
+                local.replStart();
+            };
+            if (local.replStart) {
+                local.cliDict['--interactive'] = local.cliDict['--interactive'] ||
+                    local.cliDict._interactive;
+                local.cliDict['-i'] = local.cliDict['-i'] || local.cliDict._interactive;
+            }
+            // run fnc()
+            fnc = fnc || function () {
+                if (local.cliDict[process.argv[2]]) {
+                    local.cliDict[process.argv[2]]();
+                    return;
+                }
+                local.cliDict._default();
+            };
+            fnc();
         };
 
         local.cookieDict = function () {
@@ -3822,7 +3954,7 @@ return Utf8ArrayToStr(bff);
             local.child_process.execFileSync(
                 'rm',
                 ['-fr', local.path.resolve(process.cwd(), dir)],
-                { stdio: ['ignore', 2, 2] }
+                { stdio: ['ignore', 1, 2] }
             );
         };
 
@@ -3961,7 +4093,7 @@ return Utf8ArrayToStr(bff);
             if (!script || script.length >= 0x100000) {
                 return script;
             }
-            switch ((/\.\w+$/).exec(file) && (/\.\w+$/).exec(file)[0]) {
+            switch (((/\.\w+$/).exec(file) || {})[0]) {
             case '.css':
                 if (script.indexOf('/*csslint') >= 0 || mode === 'force') {
                     local.jslintAndPrint(script, file);
@@ -4360,8 +4492,7 @@ return Utf8ArrayToStr(bff);
                 }
                 // init response-header content-type
                 request.urlParsed.contentType = local.contentTypeDict[
-                    (/\.[^\.]*$/).exec(request.urlParsed.pathname) &&
-                        (/\.[^\.]*$/).exec(request.urlParsed.pathname)[0]
+                    ((/\.[^\.]*$/).exec(request.urlParsed.pathname) || {})[0]
                 ];
                 local.serverRespondHeadSet(request, response, null, {
                     'Content-Type': request.urlParsed.contentType
@@ -4462,8 +4593,7 @@ return Utf8ArrayToStr(bff);
             request.urlParsed = local.urlParse(request.url);
             // init response-header content-type
             request.urlParsed.contentType = local.contentTypeDict[
-                (/\.[^\.]*$/).exec(request.urlParsed.pathname) &&
-                    (/\.[^\.]*$/).exec(request.urlParsed.pathname)[0]
+                ((/\.[^\.]*$/).exec(request.urlParsed.pathname) || {})[0]
             ];
             local.serverRespondHeadSet(request, response, null, {
                 'Content-Type': request.urlParsed.contentType
@@ -4798,7 +4928,10 @@ return Utf8ArrayToStr(bff);
                 // decrement counter
                 onParallel.counter -= 1;
                 // validate counter
-                console.assert(onParallel.counter >= 0 || error || onParallel.error);
+                local.assert(
+                    onParallel.counter >= 0 || error || onParallel.error,
+                    'invalid onParallel.counter = ' + onParallel.counter
+                );
                 // ensure onError is run only once
                 if (onParallel.counter < 0) {
                     return;
@@ -4988,13 +5121,13 @@ return Utf8ArrayToStr(bff);
             // hook custom repl eval function
             self.eval = function (script, context, file, onError) {
                 var match, onError2;
-                match = (/^(\S+)(.*?)\n/).exec(script);
+                match = (/^(\S+)(.*?)\n/).exec(script) || {};
                 onError2 = function (error, data) {
                     // debug error
                     global.utility2_debugReplError = error || global.utility2_debugReplError;
                     onError(error, data);
                 };
-                switch (match && match[1]) {
+                switch (match[1]) {
                 // syntax sugar to run async shell command
                 case '$':
                     switch (match[2]) {
@@ -5894,6 +6027,11 @@ instruction\n\
             };
             // try to call onError with mock-objects
             local.tryCatchOnError(function () {
+                // suppress console.error and console.log
+                if (!(mockList[0] && mockList[0][0] === console)) {
+                    mockList.unshift([console, {}]);
+                }
+                local.objectSetDefault(mockList[0][1], { error: local.nop, log: local.nop });
                 // mock-objects
                 mockList.forEach(function (mock) {
                     mock[2] = {};
@@ -6343,6 +6481,9 @@ instruction\n\
                         local.env.npm_config_dir_build + '/test-report.json',
                         JSON.stringify(testReport)
                     );
+                    // cleanup $npm_config_dir_tmp
+                    local.child_process.spawnSync('rm -f ' +  local.env.npm_config_dir_tmp +
+                        '/electron.*', { shell: true, stdio: ['ignore', 1, 2] });
                     break;
                 }
                 setTimeout(function () {
@@ -6687,6 +6828,7 @@ instruction\n\
         local.errorDefault = new Error('default error');
         local.istanbulCoverageMerge = local.istanbul.coverageMerge || local.echo;
         local.istanbulCoverageMerge = local.istanbul.coverageMerge || local.echo;
+        // cbranch-no cstat-no fstat-no missing-if-branch
         local.istanbulCoverageReportCreate = local.istanbul.coverageReportCreate || local.echo;
         local.istanbulInstrumentInPackage = local.istanbul.instrumentInPackage || local.echo;
         local.istanbulInstrumentSync = local.istanbul.instrumentSync || local.echo;
@@ -6742,9 +6884,8 @@ instruction\n\
             break;
         }
         // init timeExit
-        local.timeExit = Number(local.timeExit) ||
-            Number(Date.now() + Number(local.env.npm_config_timeout_exit)) ||
-            Number(local.env.npm_config_time_exit);
+        local.timeExit = Number(local.env.npm_config_time_exit) ||
+            Number(Date.now() + Number(local.env.npm_config_timeout_exit));
         if (local.timeExit) {
             local.timeoutDefault = local.timeExit - Date.now();
             setTimeout(local.exit, local.timeoutDefault);
@@ -6769,21 +6910,7 @@ instruction\n\
     // run node js-env code - init-after
     /* istanbul ignore next */
     case 'node':
-        // require modules
         local.Module = require('module');
-        local.child_process = require('child_process');
-        local.cluster = require('cluster');
-        local.events = require('events');
-        local.fs = require('fs');
-        local.http = require('http');
-        local.https = require('https');
-        local.net = require('net');
-        local.path = require('path');
-        local.repl = require('repl');
-        local.stream = require('stream');
-        local.url = require('url');
-        local.vm = require('vm');
-        local.zlib = require('zlib');
         // init env
         local.objectSetDefault(local.env, {
             npm_config_dir_build: process.cwd() + '/tmp/build',
@@ -6798,40 +6925,17 @@ instruction\n\
                     'utf8'
                 ) || '{}')
             );
-            console.error('\n' + local.env.MODE_BUILD + ' - merged test-report from file ' +
-                local.env.npm_config_file_test_report_merge);
+            if (process.argv[2] !== '--help') {
+                console.error('\n' + local.env.MODE_BUILD + ' - merged test-report from file ' +
+                    local.env.npm_config_file_test_report_merge);
+            }
         }
-        // run the cli
+        // init cli
         local.cliDict = {};
-        local.cliDict['--eval'] = function () {
-        /*
-         * this function will eval the given string
-         */
-            local.global.local = local;
-            local.vm.runInThisContext(process.argv[3]);
-        };
-        local.cliDict['-e'] = local.cliDict['--eval'];
-        local.cliDict['--help'] = function () {
-        /*
-         * this function will print the help-menu
-         */
-            console.log('commands:');
-            Object.keys(local.cliDict).forEach(function (key) {
-                console.log('    ' + key + '\n        ' +
-                    (/this function will (.*)/).exec(local.cliDict[key].toString())[1]);
-            });
-        };
-        local.cliDict['--interactive'] = function () {
-        /*
-         * this function will start the repl
-         */
-            local.replStart();
-            local.global.local = local;
-        };
-        local.cliDict['-i'] = local.cliDict['--interactive'];
         local.cliDict['cli.browserTest'] = function () {
         /*
-         * this function will run browerTest
+         * url mode
+         * run browserTest on the url with the given mode
          */
             local.onParallelList({
                 list: process.argv[3].split(/\s+/).filter(function (element) {
@@ -6846,7 +6950,8 @@ instruction\n\
         };
         local.cliDict['cli.customOrgStarFilterNotBuilt'] = function () {
         /*
-         * this function will filter customOrg
+         * begin end
+         * filter customOrg
          */
             (function () {
                 var options;
@@ -6907,7 +7012,8 @@ instruction\n\
         };
         local.cliDict['cli.dbTableCustomOrgCrudGetManyByQuery'] = function () {
         /*
-         * this function will query dbTableCustomOrg
+         * dbTableAndQuery
+         * query dbTableCustomOrg
          */
             local.dbTableCustomOrgCreate(JSON.parse(process.argv[3] || '{}'), function (error) {
                 // validate no error occurred
@@ -6923,7 +7029,8 @@ instruction\n\
         };
         local.cliDict['cli.dbTableCustomOrgUpdate'] = function () {
         /*
-         * this function will update dbTableCustomOrg
+         * dbTable
+         * update dbTableCustomOrg
          */
             local.dbTableCustomOrgUpdate(
                 JSON.parse(process.argv[3] || '{}'),
@@ -6932,7 +7039,8 @@ instruction\n\
         };
         local.cliDict['cli.onParallelListExec'] = function () {
         /*
-         * this function will run in parallel the list of line-separated shell-commands
+         * commandList
+         * run in parallel the list of line-separated shell-commands
          */
             local.onParallelList({
                 list: process.argv[3].split('\n').filter(function (element) {
@@ -6953,16 +7061,25 @@ instruction\n\
         };
         local.cliDict['cli.testReportCreate'] = function () {
         /*
-         * this function will create the test-report
+         * [none]
+         * create the test-report
          */
             local.exit(local.testReportCreate(local.tryCatchOnError(function () {
                 return require(local.env.npm_config_dir_build + '/test-report.json');
             }, local.onErrorDefault)).testsFailed);
         };
-        if (local.cliDict[process.argv[2]]) {
-            local.cliDict[process.argv[2]]();
-            if (!(/--interactive|-i/).test(process.argv[2])) {
-                return;
+        if ((module === require.main && !local.global.utility2_rollup) ||
+                process.argv[2] === 'cli.browserTest') {
+            local.cliRun(local.nop);
+            if (local.cliDict[process.argv[2]]) {
+                local.cliDict[process.argv[2]]();
+                switch (process.argv[2]) {
+                case '--interactive':
+                case '-i':
+                    break;
+                default:
+                    return;
+                }
             }
         }
         // override assets
@@ -6976,7 +7093,9 @@ instruction\n\
             if (!local.fs.existsSync(file)) {
                 return;
             }
-            console.error('override assets ' + file);
+            if (process.argv[2] !== '--help') {
+                console.error('override assets ' + file);
+            }
             local.assetsDict['/' + file] = local.fs.readFileSync(file, 'utf8');
         });
         if (local.global.utility2_rollup) {

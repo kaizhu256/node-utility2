@@ -492,6 +492,8 @@ shBuildCiInternal() {(set -e
         shNpmPackageListingCreate
         shNpmPackageDependencyTreeCreate "$npm_package_name"
     fi
+    # create npmPackageCliHelp
+    shNpmPackageCliHelpCreate
     # create recent changelog of last 50 commits
     MODE_BUILD=gitLog shRunWithScreenshotTxt git log -50 --pretty="%ai\\u000a%B"
 
@@ -2203,7 +2205,6 @@ shMain() {
         db-lite
         elasticsearch-lite
         electron-lite
-        electron-onload-test
         istanbul-lite
         jslint-lite
         swagger-ui-lite
@@ -2217,21 +2218,16 @@ shMain() {
     fi
     COMMAND="$1"
     shift
-    if [ "$COMMAND" = --eval ] ||
-        [ "$COMMAND" = --interactive ] ||
-        [ "$COMMAND" = -e ] ||
-        [ "$COMMAND" = -i ]
-    then
-        shBuildInit
-        lib.utility2.js "$COMMAND" "$@"
-        return
-    fi
     case "$COMMAND" in
-    --help)
+    -*)
         shBuildInit
         lib.utility2.js "$COMMAND" "$@"
         ;;
     cli.*)
+        shBuildInit
+        lib.utility2.js "$COMMAND" "$@"
+        ;;
+    help)
         shBuildInit
         lib.utility2.js "$COMMAND" "$@"
         ;;
@@ -2450,6 +2446,38 @@ console.log('true');
     ")"
     npm install "$@"
     shBuildPrint "... npm-installed with peer-dependencies"
+)}
+
+shNpmPackageCliHelpCreate() {(set -e
+# this function will create a svg cli-help npm-package
+    shBuildInit
+    export MODE_BUILD=npmPackageCliHelp
+    shBuildPrint "creating npmPackageCliHelp ..."
+    FILE="$(node -e "
+// <script>
+/*jslint
+    bitwise: true,
+    browser: true,
+    maxerr: 8,
+    maxlen: 96,
+    node: true,
+    nomen: true,
+    regexp: true,
+    stupid: true
+*/
+'use strict';
+var dict;
+dict = require('./package.json').bin || {};
+process.stdout.write(String(dict[Object.keys(dict)[0]]));
+// </script>
+    ")"
+    if [ -f "./$FILE" ]
+    then
+        shRunWithScreenshotTxt "./$FILE" --help
+    else
+        shRunWithScreenshotTxt printf none
+    fi
+    shBuildPrint "... created npmPackageCliHelp"
 )}
 
 shNpmPackageDependencyTreeCreate() {(set -e

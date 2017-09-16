@@ -53,6 +53,12 @@
         if (local.modeJs === 'browser') {
             local.global.utility2_swgg = local;
         } else {
+            // require builtins
+            Object.keys(process.binding('natives')).forEach(function (key) {
+                if (!local[key] && !(/\/|^_|^sys$/).test(key)) {
+                    local[key] = require(key);
+                }
+            });
             module.exports = local;
             module.exports.__dirname = __dirname;
             module.exports.module = module;
@@ -474,8 +480,7 @@ border: 0;\n\
 */\n\
 "use strict";\n\
 document.querySelector(".swggUiContainer > .header > .td2").value =\n\
-    ((/\\bmodeSwaggerJsonUrl=([^&]+)/g).exec(location.search) &&\n\
-        (/\\bmodeSwaggerJsonUrl=([^&]+)/g).exec(location.search)[1]) ||\n\
+    ((/\\bmodeSwaggerJsonUrl=([^&]+)/g).exec(location.search) || {})[1] ||\n\
         "assets.swgg.swagger.json";\n\
 </script>\n\
 <script src="assets.utility2.rollup.js"></script>\n\
@@ -2059,7 +2064,7 @@ swgg\n\
         /*
          * this function will run the middleware that will parse request.bodyRaw
          */
-            var ii, jj, options;
+            var boundary, crlf, data, header, ii, jj, name;
             // jslint-hack
             local.nop(response);
             // if request is already parsed, then goto nextMiddleware
@@ -2098,51 +2103,43 @@ swgg\n\
                 request.swgg.isMultipartFormData = true;
                 request.swgg.bodyParsed = {};
                 request.swgg.bodyMeta = {};
-                options = {};
-                options.crlf = local.bufferCreate([0x0d, 0x0a]);
+                crlf = local.bufferCreate([0x0d, 0x0a]);
                 // init boundary
                 ii = 0;
-                jj = local.bufferIndexOfSubBuffer(request.bodyRaw, options.crlf, ii);
+                jj = local.bufferIndexOfSubBuffer(request.bodyRaw, crlf, ii);
                 if (jj <= 0) {
                     break;
                 }
-                options.boundary = local.bufferConcat([
-                    options.crlf,
-                    request.bodyRaw.slice(ii, jj)
-                ]);
+                boundary = local.bufferConcat([crlf, request.bodyRaw.slice(ii, jj)]);
                 ii = jj + 2;
                 while (true) {
                     jj = local.bufferIndexOfSubBuffer(
                         request.bodyRaw,
-                        options.boundary,
+                        boundary,
                         ii
                     );
                     if (jj < 0) {
                         break;
                     }
-                    options.header = local.bufferToString(request.bodyRaw.slice(ii, ii + 1024))
+                    header = local.bufferToString(request.bodyRaw.slice(ii, ii + 1024))
                         .split('\r\n').slice(0, 2).join('\r\n');
-                    options.contentType = (/^content-type:(.*)/im).exec(options.header);
-                    options.contentType = options.contentType && options.contentType[1].trim();
-                    options.filename = (/^content-disposition:.*?\bfilename="([^"]+)/im)
-                        .exec(options.header);
-                    options.filename = options.filename && options.filename[1];
-                    options.name = (/^content-disposition:.*?\bname="([^"]+)/im)
-                        .exec(options.header);
-                    options.name = options.name && options.name[1];
+                    name = (/^content-disposition:.*?\bname="([^"]+)/im).exec(header);
+                    name = name && name[1];
+                    request.swgg.bodyMeta[name] = {
+                        contentType: ((/^content-type:(.*)/im)
+                        .exec(header) || {1: ''})[1].trim() || null,
+                        filename: ((/^content-disposition:.*?\bfilename="([^"]+)/im)
+                        .exec(header) || {1: ''})[1].trim() || null,
+                        name: name
+                    };
                     ii = local.bufferIndexOfSubBuffer(
                         request.bodyRaw,
                         [0x0d, 0x0a, 0x0d, 0x0a],
                         ii + 2
                     ) + 4;
-                    options.data = request.bodyRaw.slice(ii, jj);
-                    request.swgg.bodyParsed[options.name] = options.data;
-                    request.swgg.bodyMeta[options.name] = {
-                        contentType: options.contentType,
-                        filename: options.filename,
-                        name: options.name
-                    };
-                    ii = jj + options.boundary.length + 2;
+                    data = request.bodyRaw.slice(ii, jj);
+                    request.swgg.bodyParsed[name] = data;
+                    ii = jj + boundary.length + 2;
                 }
                 break;
             default:
@@ -4134,7 +4131,7 @@ swgg\n\
     // run node js-env code - init-after
     /* istanbul ignore next */
     case 'node':
-        // run the cli
+        // init cli
         switch (process.argv[2]) {
         case 'swagger-ui':
             local.replStart();

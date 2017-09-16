@@ -10,33 +10,188 @@
     regexp: true,
     stupid: true
 */
-(function (local) {
+(function () {
     'use strict';
-    var __dirname, process, require;
+    var local;
 
 
 
     // run shared js-env code - init-before
     (function () {
-        // jslint-hack
-        local.nop(__dirname);
-        __dirname = '';
-        /* istanbul ignore next */
-        local.global.__coverageCodeDict__ = local.global.__coverageCodeDict__ || {};
-        local['./package.json'] = {};
-        process = local.modeJs === 'browser'
-            ? {
-                cwd: function () {
-                    return '';
-                },
-                stdout: {}
-            }
-            : local.process;
-        require = function (key) {
+        // init local
+        local = {};
+        // init modeJs
+        local.modeJs = (function () {
             try {
-                return local[key] || local.require(key);
-            } catch (ignore) {
+                return typeof navigator.userAgent === 'string' &&
+                    typeof document.querySelector('body') === 'object' &&
+                    typeof XMLHttpRequest.prototype.open === 'function' &&
+                    'browser';
+            } catch (errorCaughtBrowser) {
+                return module.exports &&
+                    typeof process.versions.node === 'string' &&
+                    typeof require('http').createServer === 'function' &&
+                    'node';
             }
+        }());
+        // init global
+        local.global = local.modeJs === 'browser'
+            ? window
+            : global;
+        // init utility2_rollup
+        local = local.global.utility2_rollup || local;
+        // init lib
+        local.local = local.istanbul = local;
+        // init exports
+        if (local.modeJs === 'browser') {
+            local.global.utility2_istanbul = local;
+        } else {
+            // require builtins
+            Object.keys(process.binding('natives')).forEach(function (key) {
+                if (!local[key] && !(/\/|^_|^sys$/).test(key)) {
+                    local[key] = require(key);
+                }
+            });
+            module.exports = local;
+            module.exports.__dirname = __dirname;
+            module.exports.module = module;
+            // init custom
+            local._istanbul_module = require('module');
+            local.process = process;
+            local.require = require;
+        }
+    }());
+
+
+
+    // run shared js-env code - function-before
+    /* istanbul ignore next */
+    (function () {
+        local.cliRun = function (fnc) {
+        /*
+         * this function will run the cli
+         */
+            var nop;
+            nop = function () {
+            /*
+             * this function will do nothing
+             */
+                return;
+            };
+            local.cliDict._eval = local.cliDict._eval || function () {
+            /*
+             * code
+             * eval code
+             */
+                local.global.local = local;
+                require('vm').runInThisContext(process.argv[3]);
+            };
+            local.cliDict['--eval'] = local.cliDict['--eval'] || local.cliDict._eval;
+            local.cliDict['-e'] = local.cliDict['-e'] || local.cliDict._eval;
+            local.cliDict._help = local.cliDict._help || function () {
+            /*
+             * [none]
+             * print help
+             */
+                var element, result, lengthList, sortDict;
+                sortDict = {};
+                result = [['[command]', '[args]', '[description]', -1]];
+                lengthList = [result[0][0].length, result[0][1].length];
+                Object.keys(local.cliDict).sort().forEach(function (key, ii) {
+                    if (key[0] === '_' && key !== '_default') {
+                        return;
+                    }
+                    sortDict[local.cliDict[key].toString()] =
+                        sortDict[local.cliDict[key].toString()] || (ii + 1);
+                    element = (/\n +\*(.*)\n +\*(.*)/).exec(local.cliDict[key].toString());
+                    // coverage-hack - ignore else-statement
+                    nop(local.global.__coverage__ && (function () {
+                        element = element || ['', '', ''];
+                    }()));
+                    element = [
+                        key.replace('_default', '[none]') + ' ',
+                        element[1].trim() + ' ',
+                        element[2].trim(),
+                        (sortDict[local.cliDict[key].toString()] << 8) + ii
+                    ];
+                    result.push(element);
+                    lengthList.forEach(function (length, jj) {
+                        lengthList[jj] = Math.max(element[jj].length, length);
+                    });
+                });
+                result.sort(function (aa, bb) {
+                    return aa[3] < bb[3]
+                        ? -1
+                        : 1;
+                });
+                console.log('usage:   ' + __filename + ' [command] [args]');
+                console.log('example: ' + __filename + ' --eval    ' +
+                    '"console.log(\'hello world\')"\n');
+                result.forEach(function (element, ii) {
+                    lengthList.forEach(function (length, jj) {
+                        while (element[jj].length < length) {
+                            element[jj] += '-';
+                        }
+                    });
+                    element = element.slice(0, 3).join('---- ');
+                    if (ii === 0) {
+                        element = element.replace((/-/g), ' ');
+                    }
+                    console.log(element);
+                });
+            };
+            local.cliDict['--help'] = local.cliDict['--help'] || local.cliDict._help;
+            local.cliDict['-h'] = local.cliDict['-h'] || local.cliDict._help;
+            local.cliDict._default = local.cliDict._default || local.cliDict._help;
+            local.cliDict.help = local.cliDict.help || local.cliDict._help;
+            local.cliDict._interactive = local.cliDict._interactive || function () {
+            /*
+             * [none]
+             * start interactive-mode
+             */
+                local.global.local = local;
+                local.replStart();
+            };
+            if (local.replStart) {
+                local.cliDict['--interactive'] = local.cliDict['--interactive'] ||
+                    local.cliDict._interactive;
+                local.cliDict['-i'] = local.cliDict['-i'] || local.cliDict._interactive;
+            }
+            // run fnc()
+            fnc = fnc || function () {
+                if (local.cliDict[process.argv[2]]) {
+                    local.cliDict[process.argv[2]]();
+                    return;
+                }
+                local.cliDict._default();
+            };
+            fnc();
+        };
+
+        local.fsWriteFileWithMkdirpSync = function (file, data) {
+        /*
+         * this function will synchronously 'mkdir -p' and write the data to file
+         */
+            // try to write to file
+            try {
+                require('fs').writeFileSync(file, data);
+            } catch (errorCaught) {
+                // mkdir -p
+                require('child_process').spawnSync(
+                    'mkdir',
+                    ['-p', require('path').dirname(file)],
+                    { stdio: ['ignore', 1, 2] }
+                );
+                // re-write to file
+                require('fs').writeFileSync(file, data);
+            }
+        };
+
+        local.nop = function () {
+        /*
+         * this function will do nothing
+         */
+            return;
         };
     }());
 
@@ -44,6 +199,68 @@
 
     // run shared js-env code - function
     (function () {
+        var __dirname, process, require;
+        // jslint-hack
+        local.nop(__dirname, require);
+        /* istanbul ignore next */
+        local.global.__coverageCodeDict__ = local.global.__coverageCodeDict__ || {};
+        // mock builtins
+        __dirname = '';
+        process = local.process || {
+            cwd: function () {
+                return '';
+            },
+            env: {},
+            stdout: {}
+        };
+        require = function (key) {
+            try {
+                return local['_istanbul_' + key] || local[key] || local.require(key);
+            } catch (ignore) {
+            }
+        };
+        local['./package.json'] = {};
+        // mock module fs
+        local._istanbul_fs = {};
+        local._istanbul_fs.readFileSync = function (file) {
+            // return head.txt or foot.txt
+            file = local[file.slice(-8)];
+            if (local.modeJs === 'browser') {
+                file = file
+                    .replace((/\bhtml\b/g), 'x-istanbul-html')
+                    .replace((/<style>[\S\s]+?<\/style>/), function (match0) {
+                        return match0
+                            .replace((/\S.*?\{/g), function (match0) {
+                                return 'x-istanbul-html ' + match0
+                                    .replace((/,/g), ', x-istanbul-html ');
+                            });
+                    })
+                    .replace('position: fixed;', 'position: static;')
+                    .replace('margin-top: 170px;', 'margin-top: 10px;');
+            }
+            if (local.modeJs === 'node' && process.env.npm_package_homepage) {
+                file = file
+                    .replace('{{env.npm_package_homepage}}', process.env.npm_package_homepage)
+                    .replace('{{env.npm_package_name}}', process.env.npm_package_name)
+                    .replace('{{env.npm_package_version}}', process.env.npm_package_version);
+            } else {
+                file = file.replace((/<h1 [\S\s]*<\/h1>/), '<h1>&nbsp;</h1>');
+            }
+            return file;
+        };
+        local._istanbul_fs.readdirSync = function () {
+            return [];
+        };
+        // mock module path
+        local._istanbul_path = local.path || {
+            dirname: function (file) {
+                return file.replace((/\/[\w\-\.]+?$/), '');
+            },
+            resolve: function () {
+                return arguments[arguments.length - 1];
+            }
+        };
+
         local.coverageMerge = function (coverage1, coverage2) {
         /*
          * this function will merge coverage2 into coverage1
@@ -105,12 +322,12 @@
                 console.log('merging file ' + options.dir + '/coverage.json to coverage');
                 try {
                     local.coverageMerge(local.global.__coverage__, JSON.parse(
-                        local._fs.readFileSync(options.dir + '/coverage.json', 'utf8')
+                        local.fs.readFileSync(options.dir + '/coverage.json', 'utf8')
                     ));
                 } catch (ignore) {
                 }
                 try {
-                    options.coverageCodeDict = JSON.parse(local._fs.readFileSync(
+                    options.coverageCodeDict = JSON.parse(local.fs.readFileSync(
                         options.dir + '/coverage.code-dict.json',
                         'utf8'
                     ));
@@ -136,72 +353,42 @@
             // 2. write coverage in html-format to filesystem
             new local.HtmlReport(options).writeReport(local.collector);
             local.writer.writeFile('', local.nop);
-            // write coverage.json
-            local.fsWriteFileWithMkdirpSync2(
-                options.dir + '/coverage.json',
-                JSON.stringify(local.global.__coverage__)
-            );
-            // write coverage.code-dict.json
-            local.fsWriteFileWithMkdirpSync2(
-                options.dir + '/coverage.code-dict.json',
-                JSON.stringify(local.global.__coverageCodeDict__)
-            );
-            // write coverage.badge.svg
-            options.pct = local.coverageReportSummary.root.metrics.lines.pct;
-            local.fsWriteFileWithMkdirpSync2(
-                local.path.dirname(options.dir) + '/coverage.badge.svg',
-                local.templateCoverageBadgeSvg
-                    // edit coverage badge percent
-                    .replace((/100.0/g), options.pct)
-                    // edit coverage badge color
-                    .replace(
-                        (/0d0/g),
-                        ('0' + Math.round((100 - options.pct) * 2.21).toString(16)).slice(-2) +
-                            ('0' + Math.round(options.pct * 2.21).toString(16)).slice(-2) + '00'
-                    )
-            );
+            if (local.modeJs === 'node') {
+                // write coverage.json
+                local.fsWriteFileWithMkdirpSync(
+                    options.dir + '/coverage.json',
+                    JSON.stringify(local.global.__coverage__)
+                );
+                // write coverage.code-dict.json
+                local.fsWriteFileWithMkdirpSync(
+                    options.dir + '/coverage.code-dict.json',
+                    JSON.stringify(local.global.__coverageCodeDict__)
+                );
+                // write coverage.badge.svg
+                options.pct = local.coverageReportSummary.root.metrics.lines.pct;
+                local.fsWriteFileWithMkdirpSync(
+                    local._istanbul_path.dirname(options.dir) + '/coverage.badge.svg',
+                    local.templateCoverageBadgeSvg
+                        // edit coverage badge percent
+                        .replace((/100.0/g), options.pct)
+                        // edit coverage badge color
+                        .replace((/0d0/g), ('0' + Math.round((100 - options.pct) * 2.21)
+                            .toString(16)).slice(-2) +
+                            ('0' + Math.round(options.pct * 2.21).toString(16)).slice(-2) +
+                            '00')
+                );
+            }
             console.log('created coverage file ' + options.dir + '/index.html');
             // 3. return coverage in html-format as a single document
             local.coverageReportHtml += '</div>\n</div>\n';
             // write coverage.rollup.html
-            local.fsWriteFileWithMkdirpSync2(
-                options.dir + '/coverage.rollup.html',
-                local.coverageReportHtml
-            );
+            if (local.modeJs === 'node') {
+                local.fsWriteFileWithMkdirpSync(
+                    options.dir + '/coverage.rollup.html',
+                    local.coverageReportHtml
+                );
+            }
             return local.coverageReportHtml;
-        };
-
-        local.fs = {};
-
-        local.fs.readFileSync = function (file) {
-            // return head.txt or foot.txt
-            file = local[file.slice(-8)];
-            if (local.modeJs === 'browser') {
-                file = file
-                    .replace((/\bhtml\b/g), 'x-istanbul-html')
-                    .replace((/<style>[\S\s]+?<\/style>/), function (match0) {
-                        return match0
-                            .replace((/\S.*?\{/g), function (match0) {
-                                return 'x-istanbul-html ' + match0
-                                    .replace((/,/g), ', x-istanbul-html ');
-                            });
-                    })
-                    .replace('position: fixed;', 'position: static;')
-                    .replace('margin-top: 170px;', 'margin-top: 10px;');
-            }
-            if (local.modeJs === 'node' && process.env.npm_package_homepage) {
-                file = file
-                    .replace('{{env.npm_package_homepage}}', process.env.npm_package_homepage)
-                    .replace('{{env.npm_package_name}}', process.env.npm_package_name)
-                    .replace('{{env.npm_package_version}}', process.env.npm_package_version);
-            } else {
-                file = file.replace((/<h1 [\S\s]*<\/h1>/), '<h1>&nbsp;</h1>');
-            }
-            return file;
-        };
-
-        local.fs.readdirSync = function () {
-            return [];
         };
 
         /* istanbul ignore next */
@@ -231,7 +418,7 @@
          * 3. return instrumented code
          */
             // 1. normalize the file
-            file = local.path.resolve('/', file);
+            file = local._istanbul_path.resolve('/', file);
             // 2. save code to __coverageCodeDict__[file] for future html-report
             local.global.__coverageCodeDict__[file] = code;
             // 3. return instrumented code
@@ -241,34 +428,6 @@
             }).instrumentSync(code, file).trimLeft();
         };
         local.util = { inherits: local.nop };
-    }());
-    switch (local.modeJs) {
-
-
-
-    // run browser js-env code - init-before
-    case 'browser':
-        // require modules
-        local.path = {
-            dirname: function (file) {
-                return file.replace((/\/[\w\-\.]+?$/), '');
-            },
-            resolve: function () {
-                return arguments[arguments.length - 1];
-            }
-        };
-        break;
-
-
-
-    // run node js-env code - init-before
-    case 'node':
-        // require modules
-        local._fs = local.require('fs');
-        local.module = require('module');
-        local.path = local.require('path');
-        break;
-    }
 
 
 
@@ -1531,10 +1690,9 @@ G({},t),exports.browser=!1,exports.FORMAT_MINIFY=N,exports.FORMAT_DEFAULTS=C})()
 
 
 
-    // init lib handlebars
-    // 2013-12-26T22:37:39Z
-    // https://github.com/components/handlebars.js/blob/v1.2.1/handlebars.js
-    (function () {
+// init lib handlebars
+// 2013-12-26T22:37:39Z
+// https://github.com/components/handlebars.js/blob/v1.2.1/handlebars.js
         local.handlebars = {};
         local.handlebars.compile = function (template) {
         /*
@@ -1625,14 +1783,12 @@ G({},t),exports.browser=!1,exports.FORMAT_MINIFY=N,exports.FORMAT_DEFAULTS=C})()
                     : String(value);
             });
         };
-    }());
 
 
 
-    // init lib istanbul.collector
-    // 2013-12-17T03:00:58Z
-    // https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/collector.js
-    (function () {
+// init lib istanbul.collector
+// 2013-12-17T03:00:58Z
+// https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/collector.js
         local.collector = {
             fileCoverageFor: function (file) {
                 return local.global.__coverage__[file];
@@ -1648,7 +1804,6 @@ G({},t),exports.browser=!1,exports.FORMAT_MINIFY=N,exports.FORMAT_DEFAULTS=C})()
                 });
             }
         };
-    }());
 
 
 
@@ -1964,17 +2119,15 @@ local['./common/defaults'] = module.exports; }());
 
 
 
-    // init lib istanbul.report.index
-    // 2012-10-30T23:48:18Z
-    // https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/index.js
-    (function () {
+// init lib istanbul.report.index
+// 2012-10-30T23:48:18Z
+// https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/report/index.js
         local['./index'] = {
             call: local.nop,
             mix: function (klass, prototype) {
                 klass.prototype = prototype;
             }
         };
-    }());
 
 
 
@@ -2217,36 +2370,34 @@ local['head.txt'] = '\
 
 
 
-    // init lib istanbul.util.file-writer
-    /* istanbul ignore next */
-    // 2013-03-31T22:11:41Z
-    // https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/util/file-writer.js
-    (function () {
+// init lib istanbul.util.file-writer
+/* istanbul ignore next */
+// 2013-03-31T22:11:41Z
+// https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/util/file-writer.js
         local.writer = {
             write: function (data) {
                 local.writerData += data;
             },
             writeFile: function (file, onError) {
                 local.coverageReportHtml += local.writerData + '\n\n';
-                if (local.writerFile) {
-                    local.fsWriteFileWithMkdirpSync2(local.writerFile, local.writerData);
+                if (local.modeJs === 'node' && local.writerFile) {
+                    local.fsWriteFileWithMkdirpSync(local.writerFile, local.writerData);
                 }
                 local.writerData = '';
                 local.writerFile = file;
                 onError(local.writer);
             }
         };
-    }());
 
 
 
-    // init lib istanbul.util.tree-summarizer
-    /* istanbul ignore next */
-    // 2014-03-05T18:58:42Z
-    // https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/util/tree-summarizer.js
-    (function () {
-        var module;
-        module = {};
+// init lib istanbul.util.tree-summarizer
+/* istanbul ignore next */
+// 2014-03-05T18:58:42Z
+// https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/util/tree-summarizer.js
+        (function () {
+            var module;
+            module = {};
 /* jslint-ignore-begin */
 // https://github.com/gotwarlost/istanbul/blob/v0.2.16/lib/util/tree-summarizer.js
 // utility2-uglifyjs https://raw.githubusercontent.com/gotwarlost/istanbul/v0.2.16/lib/util/tree-summarizer.js
@@ -2287,13 +2438,13 @@ prototype={addFileCoverageSummary:function(e,t){this.summaryMap[e]=t},getTreeSum
 :function(){var e=findCommonArrayPrefix(Object.keys(this.summaryMap));return new
 TreeSummary(this.summaryMap,e)}},module.exports=TreeSummarizer
 /* jslint-ignore-end */
-        local['../util/tree-summarizer'] = module.exports;
-        module.exports.prototype._getTreeSummary = module.exports.prototype.getTreeSummary;
-        module.exports.prototype.getTreeSummary = function () {
-            local.coverageReportSummary = this._getTreeSummary();
-            return local.coverageReportSummary;
-        };
-    }());
+            local['../util/tree-summarizer'] = module.exports;
+            module.exports.prototype._getTreeSummary = module.exports.prototype.getTreeSummary;
+            module.exports.prototype.getTreeSummary = function () {
+                local.coverageReportSummary = this._getTreeSummary();
+                return local.coverageReportSummary;
+            };
+        }());
 
 
 
@@ -2479,6 +2630,7 @@ local.TextReport = module.exports; }());
 local.templateCoverageBadgeSvg =
 '<svg xmlns="http://www.w3.org/2000/svg" width="117" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="117" height="20" fill="#555"/><rect rx="0" x="63" width="54" height="20" fill="#0d0"/><path fill="#0d0" d="M63 0h4v20h-4z"/><rect rx="0" width="117" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="32.5" y="15" fill="#010101" fill-opacity=".3">coverage</text><text x="32.5" y="14">coverage</text><text x="89" y="15" fill="#010101" fill-opacity=".3">100.0%</text><text x="89" y="14">100.0%</text></g></svg>';
 /* jslint-ignore-end */
+    }());
     switch (local.modeJs) {
 
 
@@ -2486,28 +2638,19 @@ local.templateCoverageBadgeSvg =
     // run node js-env code - init-after
     /* istanbul ignore next */
     case 'node':
-        // run the cli
+        // init cli
         if (module !== local.require.main || local.global.utility2_rollup) {
             break;
         }
         local.cliDict = {};
-        local.cliDict['--help'] = function () {
-        /*
-         * this function will print the help-menu
-         */
-            console.log('commands:');
-            Object.keys(local.cliDict).forEach(function (key) {
-                console.log('    ' + key + '\n        ' +
-                    (/this function will (.*)/).exec(local.cliDict[key].toString())[1]);
-            });
-        };
         local.cliDict.cover = function () {
         /*
-         * this function will transparently add coverage information to the node command
+         * script
+         * run and cover the script
          */
             var tmp;
             try {
-                tmp = JSON.parse(local._fs.readFileSync('package.json', 'utf8'));
+                tmp = JSON.parse(local.fs.readFileSync('package.json', 'utf8'));
                 process.env.npm_package_nameAlias = process.env.npm_package_nameAlias ||
                     tmp.nameAlias ||
                     tmp.name.replace((/-/g), '_');
@@ -2517,20 +2660,20 @@ local.templateCoverageBadgeSvg =
                 process.env.npm_package_nameAlias ||
                 'all';
             // add coverage hook to require
-            local._moduleExtensionsJs = local.module._extensions['.js'];
-            local.module._extensions['.js'] = function (module, file) {
+            local._istanbul_moduleExtensionsJs = local._istanbul_module._extensions['.js'];
+            local._istanbul_module._extensions['.js'] = function (module, file) {
                 if (typeof file === 'string' &&
                         (file.indexOf(process.env.npm_config_mode_coverage_dir) === 0 || (
                             file.indexOf(process.cwd()) === 0 &&
                             file.indexOf(process.cwd() + '/node_modules/') !== 0
                         ))) {
                     module._compile(local.instrumentInPackage(
-                        local._fs.readFileSync(file, 'utf8'),
+                        local.fs.readFileSync(file, 'utf8'),
                         file
                     ), file);
                     return;
                 }
-                local._moduleExtensionsJs(module, file);
+                local._istanbul_moduleExtensionsJs(module, file);
             };
             // init process.argv
             process.argv.splice(1, 2);
@@ -2540,112 +2683,39 @@ local.templateCoverageBadgeSvg =
             process.on('exit', function () {
                 local.coverageReportCreate({ coverage: local.global.__coverage__ });
             });
-            // re-run the cli
-            local.module.runMain();
+            // re-init cli
+            local._istanbul_module.runMain();
         };
         local.cliDict.instrument = function () {
         /*
-         * this function will instrument the file and print result to stdout
+         * script
+         * instrument the script and print result to stdout
          */
             process.argv[3] = local.path.resolve(process.cwd(), process.argv[3]);
             process.stdout.write(local.instrumentSync(
-                local._fs.readFileSync(process.argv[3], 'utf8'),
+                local.fs.readFileSync(process.argv[3], 'utf8'),
                 process.argv[3]
             ));
         };
         //
         local.cliDict.test = function () {
         /*
-         * this function will cover the node command if npm_config_mode_coverage is set
+         * script
+         * run and cover the script if env var $npm_config_mode_coverage is set
          */
             if (process.env.npm_config_mode_coverage) {
                 process.argv[2] = 'cover';
-                // re-run the cli
+                // re-init cli
                 local.cliDict[process.argv[2]]();
                 return;
             }
             // init process.argv
             process.argv.splice(1, 2);
             process.argv[1] = local.path.resolve(process.cwd(), process.argv[1]);
-            // re-run the cli
-            local.module.runMain();
+            // re-init cli
+            local._istanbul_module.runMain();
         };
-        if (local.cliDict[process.argv[2]]) {
-            local.cliDict[process.argv[2]]();
-        }
+        local.cliRun();
         break;
     }
-}(
-    // run shared js-env code - init-before
-    (function () {
-        'use strict';
-        var local;
-        // init local
-        local = {};
-        // init modeJs
-        local.modeJs = (function () {
-            try {
-                return typeof navigator.userAgent === 'string' &&
-                    typeof document.querySelector('body') === 'object' &&
-                    typeof XMLHttpRequest.prototype.open === 'function' &&
-                    'browser';
-            } catch (errorCaughtBrowser) {
-                return module.exports &&
-                    typeof process.versions.node === 'string' &&
-                    typeof require('http').createServer === 'function' &&
-                    'node';
-            }
-        }());
-        // init global
-        local.global = local.modeJs === 'browser'
-            ? window
-            : global;
-        // init utility2_rollup
-        local = local.global.utility2_rollup || local;
-        // init lib
-        local.local = local.istanbul = local;
-        // init exports
-        if (local.modeJs === 'browser') {
-            local.global.utility2_istanbul = local;
-        } else {
-            module.exports = local;
-            module.exports.__dirname = __dirname;
-        }
-        local.fsWriteFileWithMkdirpSync = function (file, data) {
-        /*
-         * this function will synchronously 'mkdir -p' and write the data to file
-         */
-            // try to write to file
-            try {
-                require('fs').writeFileSync(file, data);
-            } catch (errorCaught) {
-                // mkdir -p
-                require('child_process').spawnSync(
-                    'mkdir',
-                    ['-p', require('path').dirname(file)],
-                    { stdio: ['ignore', 1, 2] }
-                );
-                // re-write to file
-                require('fs').writeFileSync(file, data);
-            }
-        };
-        local.nop = function () {
-        /*
-         * this function will do nothing
-         */
-            return;
-        };
-        switch (local.modeJs) {
-        case 'browser':
-            local.fsWriteFileWithMkdirpSync2 = local.nop;
-            break;
-        case 'node':
-            local.fsWriteFileWithMkdirpSync2 = local.fsWriteFileWithMkdirpSync;
-            local.__dirname = __dirname;
-            local.process = process;
-            local.require = require;
-            break;
-        }
-        return local;
-    }())
-));
+}());
