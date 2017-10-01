@@ -17,7 +17,7 @@
             !global.utility2_app &&
             global.utility2_rollup &&
             global.process &&
-            global.process.env.npm_package_nameAlias === 'swgg') {
+            global.process.env.npm_package_nameLib === 'swgg') {
         return;
     }
 

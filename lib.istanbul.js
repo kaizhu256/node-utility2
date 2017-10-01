@@ -395,14 +395,14 @@
         local.instrumentInPackage = function (code, file) {
         /*
          * this function will instrument the code
-         * only if the macro /\* istanbul instrument in package $npm_package_nameAlias *\/
+         * only if the macro /\* istanbul instrument in package $npm_package_nameLib *\/
          * exists in the code
          */
             return process.env.npm_config_mode_coverage &&
                 code.indexOf('/* istanbul ignore all */\n') < 0 && (
                     process.env.npm_config_mode_coverage === 'all' ||
                     code.indexOf('/* istanbul instrument in package ' +
-                            process.env.npm_package_nameAlias + ' */\n') >= 0 ||
+                            process.env.npm_package_nameLib + ' */\n') >= 0 ||
                     code.indexOf('/* istanbul instrument in package ' +
                             process.env.npm_config_mode_coverage + ' */\n') >= 0
                 )
@@ -2651,13 +2651,13 @@ local.templateCoverageBadgeSvg =
             var tmp;
             try {
                 tmp = JSON.parse(local.fs.readFileSync('package.json', 'utf8'));
-                process.env.npm_package_nameAlias = process.env.npm_package_nameAlias ||
-                    tmp.nameAlias ||
+                process.env.npm_package_nameLib = process.env.npm_package_nameLib ||
+                    tmp.nameLib ||
                     tmp.name.replace((/-/g), '_');
             } catch (ignore) {
             }
             process.env.npm_config_mode_coverage = process.env.npm_config_mode_coverage ||
-                process.env.npm_package_nameAlias ||
+                process.env.npm_package_nameLib ||
                 'all';
             // add coverage hook to require
             local._istanbul_moduleExtensionsJs = local._istanbul_module._extensions['.js'];

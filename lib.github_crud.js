@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* istanbul instrument in package github-crud */
+/* istanbul instrument in package github_crud */
 /*jslint
     bitwise: true,
     browser: true,
@@ -108,13 +108,16 @@
              * [none]
              * print help
              */
-                var element, result, lengthList;
-                result = [['[command]', '[arguments]', '[description]']];
+                var element, result, lengthList, sortDict;
+                sortDict = {};
+                result = [['[command]', '[args]', '[description]', -1]];
                 lengthList = [result[0][0].length, result[0][1].length];
-                Object.keys(local.cliDict).sort().forEach(function (key) {
+                Object.keys(local.cliDict).sort().forEach(function (key, ii) {
                     if (key[0] === '_' && key !== '_default') {
                         return;
                     }
+                    sortDict[local.cliDict[key].toString()] =
+                        sortDict[local.cliDict[key].toString()] || (ii + 1);
                     element = (/\n +\*(.*)\n +\*(.*)/).exec(local.cliDict[key].toString());
                     // coverage-hack - ignore else-statement
                     nop(local.global.__coverage__ && (function () {
@@ -123,21 +126,29 @@
                     element = [
                         key.replace('_default', '[none]') + ' ',
                         element[1].trim() + ' ',
-                        element[2].trim()
+                        element[2].trim(),
+                        (sortDict[local.cliDict[key].toString()] << 8) + ii
                     ];
                     result.push(element);
                     lengthList.forEach(function (length, jj) {
                         lengthList[jj] = Math.max(element[jj].length, length);
                     });
                 });
-                console.log('usage: ' + __filename + ' [command] [arguments]\n');
+                result.sort(function (aa, bb) {
+                    return aa[3] < bb[3]
+                        ? -1
+                        : 1;
+                });
+                console.log('usage:   ' + __filename + ' [command] [args]');
+                console.log('example: ' + __filename + ' --eval    ' +
+                    '"console.log(\'hello world\')"\n');
                 result.forEach(function (element, ii) {
                     lengthList.forEach(function (length, jj) {
                         while (element[jj].length < length) {
                             element[jj] += '-';
                         }
                     });
-                    element = element.join('-- ');
+                    element = element.slice(0, 3).join('---- ');
                     if (ii === 0) {
                         element = element.replace((/-/g), ' ');
                     }
@@ -163,8 +174,8 @@
             }
             // run fnc()
             fnc = fnc || function () {
-                if (local.cliDict[String(process.argv[2]).toLowerCase()]) {
-                    local.cliDict[String(process.argv[2]).toLowerCase()]();
+                if (local.cliDict[process.argv[2]]) {
+                    local.cliDict[process.argv[2]]();
                     return;
                 }
                 local.cliDict._default();
@@ -176,13 +187,30 @@
         /*
          * this function will request the data from options.url
          */
-            var chunkList, isDone, onError2, timerTimeout, request, response, urlParsed;
+            var chunkList,
+                isDone,
+                onError2,
+                serverLog,
+                timerTimeout,
+                request,
+                response,
+                timeStart,
+                urlParsed;
             // init onError2
             onError2 = function (error) {
                 if (isDone) {
                     return;
                 }
                 isDone = true;
+                // debug httpResponse
+                serverLog({
+                    type: 'httpResponse',
+                    time: new Date(timeStart).toISOString(),
+                    method: options.method,
+                    url: options.url,
+                    statusCode: Number(response && response.statusCode) || 0,
+                    duration: Date.now() - timeStart
+                });
                 // cleanup timerTimeout
                 clearTimeout(timerTimeout);
                 // cleanup request and response
@@ -198,18 +226,10 @@
                         }
                     }
                 });
-                if (response && (response.statusCode < 200 || response.statusCode >= 300)) {
-                    error = error || new Error(response.statusCode);
-                    console.error(String(response.data));
-                }
-                // debug response
-                console.error(new Date().toISOString() + ' http-response ' + JSON.stringify({
-                    statusCode: (response && response.statusCode) || 0,
-                    method: options.method,
-                    url: options.url
-                }));
                 onError(error, response);
             };
+            // init serverLog
+            serverLog = local.serverLog || console.error;
             // init timerTimeout
             timerTimeout = setTimeout(function () {
                 onError2(new Error('http-request timeout'));
@@ -218,15 +238,15 @@
             urlParsed.headers = options.headers;
             urlParsed.method = options.method;
             // debug request
-            console.error();
-            console.error(new Date().toISOString() + ' http-request ' + JSON.stringify({
-                method: options.method,
-                url: options.url
-            }));
+            timeStart = Date.now();
             request = require(
                 urlParsed.protocol.slice(0, -1)
             ).request(urlParsed, function (_response) {
                 response = _response;
+                if (response.statusCode < 200 || response.statusCode > 299) {
+                    onError2(new Error(response.statusCode));
+                    return;
+                }
                 chunkList = [];
                 response
                     .on('data', function (chunk) {
@@ -341,8 +361,10 @@
          * 2. call onError when isDone
          */
             var ii, onEach2, onParallel;
+            options.list = options.list || [];
             onEach2 = function () {
-                while (ii + 1 < options.list.length && onParallel.counter < options.rateLimit) {
+                while (ii + 1 < options.list.length &&
+                        onParallel.counter < options.rateLimit + 1) {
                     ii += 1;
                     onParallel.ii += 1;
                     onParallel.remaining -= 1;
@@ -365,13 +387,13 @@
                     return true;
                 }
             });
-            onParallel.counter += 1;
             ii = -1;
             onParallel.ii = -1;
             onParallel.remaining = options.list.length;
-            options.rateLimit = Number(options.rateLimit) || 4;
-            options.rateLimit = Math.max(options.rateLimit, 3);
+            options.rateLimit = Number(options.rateLimit) || 6;
+            options.rateLimit = Math.max(options.rateLimit, 1);
             options.retryLimit = Number(options.retryLimit) || 2;
+            onParallel.counter += 1;
             onEach2();
             onParallel();
         };
@@ -675,7 +697,7 @@
         local.cliDict = {};
         local.cliDict.delete = function () {
         /*
-         * fileRemote
+         * fileRemote commitMessage
          * delete fileRemote from github
          */
             local.contentDelete({
@@ -702,7 +724,7 @@
         };
         local.cliDict.put = function () {
         /*
-         * fileRemote fileLocal
+         * fileRemote fileLocal commitMessage
          * put fileLocal as fileRemote on github
          */
             local.contentPutFile({
@@ -716,7 +738,7 @@
         };
         local.cliDict.touch = function () {
         /*
-         * fileRemote
+         * fileRemote commitMessage
          * touch fileRemote on github
          */
             local.contentTouch({
@@ -729,7 +751,7 @@
         };
         local.cliDict.touchlist = function () {
         /*
-         * fileRemoteList
+         * fileRemoteList commitMessage
          * touch comma-separated fileRemoteList on github
          */
             local.contentTouchList({

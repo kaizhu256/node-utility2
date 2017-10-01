@@ -66,17 +66,11 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 - analytics
 - none
 
-#### changelog for v2017.9.15
-- npm publish 2017.9.15
-- add cli-help doc to README.md
-- fix timeoutDefault bug in function browserTest
-- increase npm test timeout to 60000 ms
-- add function cliInit
-- update function buildLib - add feature auto-normalize section function-before
-- update function buildLib - add feature auto-require builtins
-- update function testCase_webpage_default - auto-fallback to /index.default.html
-- update function testMock - auto-suppress console.error and console.log
-- move live-demo to top of README.md
+#### changelog for v2017.9.29
+- npm publish 2017.9.29
+- merge test-init into new function testRunInit
+- rename env var npm_package_nameAlias to npm_package_nameLib
+- update function testRunDefault - add testCase.onTestCase.timeout override
 - none
 
 #### this package requires
@@ -243,8 +237,7 @@ instruction
 
 
 
-    // init-after
-    // run browser js-env code - init-after
+    // run browser js-env code - init-test
     /* istanbul ignore next */
     case 'browser':
         local.testRunBrowser = function (event) {
@@ -384,7 +377,7 @@ instruction
 
 
 
-    // run node js-env code - init-after
+    // run node js-env code - init-test
     /* istanbul ignore next */
     case 'node':
         // init exports
@@ -477,16 +470,19 @@ textarea[readonly] {\n\
 */\n\
 (function () {\n\
     "use strict";\n\
-    var ajaxProgressDiv1, ajaxProgressState;\n\
+    var ajaxProgressDiv1, ajaxProgressState, timerIntervalAjaxProgressUpdate;\n\
     ajaxProgressDiv1 = document.querySelector("#ajaxProgressDiv1");\n\
     ajaxProgressState = 0;\n\
-    window.timerIntervalAjaxProgressUpdate = setInterval(function () {\n\
+    timerIntervalAjaxProgressUpdate = setInterval(function () {\n\
         ajaxProgressState += 1;\n\
         ajaxProgressDiv1.style.width = Math.max(\n\
             100 - 100 * Math.exp(-0.0625 * ajaxProgressState),\n\
             Number(ajaxProgressDiv1.style.width.slice(0, -1)) || 0\n\
         ) + "%";\n\
     }, 1000);\n\
+    window.addEventListener("load", function () {\n\
+        clearInterval(timerIntervalAjaxProgressUpdate);\n\
+    });\n\
 }());\n\
 </script>\n\
 utility2-comment -->\n\
@@ -628,7 +624,7 @@ utility2-comment -->\n\
                     return 'the greatest app in the world!';
                 case 'npm_package_name':
                     return 'utility2';
-                case 'npm_package_nameAlias':
+                case 'npm_package_nameLib':
                     return 'utility2';
                 case 'npm_package_version':
                     return '0.0.1';
@@ -717,9 +713,6 @@ utility2-comment -->\n\
 1. [https://kaizhu256.github.io/node-utility2/build/screenshot.npmTest.browser.%252F.png](https://kaizhu256.github.io/node-utility2/build/screenshot.npmTest.browser.%252F.png)
 [![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.npmTest.browser.%252F.png)](https://kaizhu256.github.io/node-utility2/build/screenshot.npmTest.browser.%252F.png)
 
-1. [https://kaizhu256.github.io/node-utility2/build/screenshot.npmTestPublished.browser.%252F.png](https://kaizhu256.github.io/node-utility2/build/screenshot.npmTestPublished.browser.%252F.png)
-[![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.npmTestPublished.browser.%252F.png)](https://kaizhu256.github.io/node-utility2/build/screenshot.npmTestPublished.browser.%252F.png)
-
 1. [https://kaizhu256.github.io/node-utility2/build/screenshot.testExampleJs.browser.%252F.png](https://kaizhu256.github.io/node-utility2/build/screenshot.testExampleJs.browser.%252F.png)
 [![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.testExampleJs.browser.%252F.png)](https://kaizhu256.github.io/node-utility2/build/screenshot.testExampleJs.browser.%252F.png)
 
@@ -762,8 +755,8 @@ utility2-comment -->\n\
     "license": "MIT",
     "main": "lib.utility2.js",
     "name": "utility2",
-    "nameAlias": "utility2",
     "nameAliasPublish": "npmtest-lite npmtest4 test-lite",
+    "nameLib": "utility2",
     "nameOriginal": "utility2",
     "os": [
         "darwin",
@@ -779,9 +772,9 @@ utility2-comment -->\n\
         "heroku-postbuild": "./lib.utility2.sh shDeployHeroku",
         "postinstall": "[ ! -f npm_scripts.sh ] || ./npm_scripts.sh postinstall",
         "start": "set -e; export PORT=${PORT:-8080}; if [ -f assets.app.js ]; then node assets.app.js; else npm_config_mode_auto_restart=1 ./lib.utility2.sh shRun shIstanbulCover test.js; fi",
-        "test": "PORT=$(./lib.utility2.sh shServerPortRandom) PORT_REPL=$(./lib.utility2.sh shServerPortRandom) npm_config_mode_auto_restart=1 npm_config_timeout_default=60000 ./lib.utility2.sh test test.js"
+        "test": "PORT=$(./lib.utility2.sh shServerPortRandom) PORT_REPL=$(./lib.utility2.sh shServerPortRandom) npm_config_mode_auto_restart=1 ./lib.utility2.sh test test.js"
     },
-    "version": "2017.9.15"
+    "version": "2017.9.29"
 }
 ```
 
@@ -1035,8 +1028,7 @@ shBuildCiAfter() {(set -e
 )}
 
 shBuildCiBefore() {(set -e
-    #!! shNpmTestPublished
-touch tmp/build/screenshot.npmTestPublished.browser.%2F.png
+    shNpmTestPublished
     shReadmeTest example.js
     # screenshot
     MODE_BUILD=testExampleJs shBrowserTest "

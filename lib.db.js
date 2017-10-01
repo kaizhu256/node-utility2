@@ -175,8 +175,8 @@
                         ? -1
                         : 1;
                 });
-                console.log('$ usage:   ' + __filename + ' [command] [args]');
-                console.log('$ example: ' + __filename + ' --eval    ' +
+                console.log('usage:   ' + __filename + ' [command] [args]');
+                console.log('example: ' + __filename + ' --eval    ' +
                     '"console.log(\'hello world\')"\n');
                 result.forEach(function (element, ii) {
                     lengthList.forEach(function (length, jj) {

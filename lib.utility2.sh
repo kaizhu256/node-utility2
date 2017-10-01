@@ -211,7 +211,7 @@ shBuildApp() {(set -e
     if [ "$1" ] && [ ! -f package.json ]
     then
         printf "{\"name\":\"$1\"}\n" > package.json
-        unset npm_package_nameAlias
+        unset npm_package_nameLib
     fi
     shBuildInit
     for FILE in .gitignore .travis.yml LICENSE
@@ -223,7 +223,7 @@ shBuildApp() {(set -e
     done
     shFileJsonNormalize package.json "{
     \"description\": \"the greatest app in the world!\",
-    \"main\": \"lib.$npm_package_nameAlias.js\",
+    \"main\": \"lib.$npm_package_nameLib.js\",
     \"name\": \"$npm_package_name\",
     \"scripts\": {
         \"test\": \
@@ -255,9 +255,9 @@ try {
     ));
 }
 try {
-    local.assert(local.fs.readFileSync('lib.$npm_package_nameAlias.js', 'utf8'));
+    local.assert(local.fs.readFileSync('lib.$npm_package_nameLib.js', 'utf8'));
 } catch (errorCaught) {
-    local.fs.writeFileSync('lib.$npm_package_nameAlias.js', local.templateRenderJslintLite(
+    local.fs.writeFileSync('lib.$npm_package_nameLib.js', local.templateRenderJslintLite(
         local.assetsDict['/assets.lib.template.js'],
         {}
     ));
@@ -689,8 +689,8 @@ if ((/^[^\/]+\/[^\/]+\$/).test(value)) {
         export npm_package_name=my-app || return $?
         export npm_package_version=0.0.1 || return $?
     fi
-    export npm_package_nameAlias=\
-"${npm_package_nameAlias:-$(printf "$npm_package_name" | sed "s/[^0-9A-Z_a-z]/_/g")}" || \
+    export npm_package_nameLib=\
+"${npm_package_nameLib:-$(printf "$npm_package_name" | sed "s/[^0-9A-Z_a-z]/_/g")}" || \
         return $?
     # init $npm_config_*
     export npm_config_dir_build="${npm_config_dir_build:-$PWD/tmp/build}" || return $?
@@ -976,6 +976,9 @@ shCustomOrgRepoListCreate() {(set -e
 # https://docs.travis-ci.com/api
 # example usage:
 # TRAVIS_REPO_CREATE_FORCE=1 shCryptoWithGithubOrg kaizhu256 shCustomOrgRepoListCreate kaizhu256/sandbox3
+# sleep 5
+# shCryptoWithGithubOrg kaizhu256 shTravisSync
+# TRAVIS_REPO_CREATE_FORCE=1 shCryptoWithGithubOrg kaizhu256 shCustomOrgRepoListCreate kaizhu256/sandbox3
     LIST="$1"
     export MODE_BUILD=shCustomOrgRepoListCreate
     cd /tmp
@@ -1158,7 +1161,7 @@ shDeployHeroku() {(set -e
 # and run a simple curl check for $TEST_URL
 # and test $TEST_URL
     export npm_package_nameHeroku=\
-"${npm_package_nameHeroku:-$(printf "h1-$npm_package_nameAlias" | tr "_" "-")}"
+"${npm_package_nameHeroku:-$(printf "h1-$npm_package_nameLib" | tr "_" "-")}"
     # build app inside heroku
     if [ "$npm_lifecycle_event" = heroku-postbuild ]
     then
@@ -2205,7 +2208,10 @@ shMain() {
         db-lite
         elasticsearch-lite
         electron-lite
+        github-crud
+        google-maps-lite
         istanbul-lite
+        itunes-search-lite
         jslint-lite
         swagger-ui-lite
         swgg
@@ -3260,23 +3266,22 @@ shUtility2DependentsSync() {(set -e
     (cd utility2 && shBuildApp)
     # hardlink "lib.$LIB.js"
     ln -f "utility2/lib.utility2.sh" "$HOME"
-    for LIB in apidoc db istanbul jslint uglifyjs
-    do
-        if [ -d "$LIB-lite" ]
-        then
-            ln -f "utility2/lib.$LIB.js" "$LIB-lite"
-        fi
-    done
     for DIR in $UTILITY2_DEPENDENTS
     do
-        # hardlink .gitignore
-        if [ ! -d "$DIR" ]
+        if [ "$DIR" = utility2 ] || [ ! -d "$DIR" ]
         then
             continue
         fi
+        LIB="$(printf "$DIR" | sed -e "s/-lite\$//" -e "s/-/_/g")"
+        if [ -f "utility2/lib.$LIB.js" ]
+        then
+            ln -f "utility2/lib.$LIB.js" "$DIR"
+        fi
+        # hardlink .gitignore
         if [ "$DIR" != utility2 ]
         then
             ln -f utility2/.gitignore "$DIR"
+            ln -f utility2/LICENSE "$DIR"
         fi
         # hardlink assets.utility2.rollup.js
         case "$DIR" in

@@ -30,8 +30,8 @@
     "license": "MIT",
     "main": "lib.utility2.js",
     "name": "utility2",
-    "nameAlias": "utility2",
     "nameAliasPublish": "npmtest-lite npmtest4 test-lite",
+    "nameLib": "utility2",
     "nameOriginal": "utility2",
     "os": [
         "darwin",
@@ -47,7 +47,7 @@
         "heroku-postbuild": "./lib.utility2.sh shDeployHeroku",
         "postinstall": "[ ! -f npm_scripts.sh ] || ./npm_scripts.sh postinstall",
         "start": "set -e; export PORT=${PORT:-8080}; if [ -f assets.app.js ]; then node assets.app.js; else npm_config_mode_auto_restart=1 ./lib.utility2.sh shRun shIstanbulCover test.js; fi",
-        "test": "PORT=$(./lib.utility2.sh shServerPortRandom) PORT_REPL=$(./lib.utility2.sh shServerPortRandom) npm_config_mode_auto_restart=1 npm_config_timeout_default=60000 ./lib.utility2.sh test test.js"
+        "test": "PORT=$(./lib.utility2.sh shServerPortRandom) PORT_REPL=$(./lib.utility2.sh shServerPortRandom) npm_config_mode_auto_restart=1 ./lib.utility2.sh test test.js"
     },
-    "version": "2017.9.15"
+    "version": "2017.9.29"
 }

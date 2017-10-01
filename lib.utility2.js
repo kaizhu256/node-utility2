@@ -185,16 +185,19 @@ textarea[readonly] {\n\
 */\n\
 (function () {\n\
     "use strict";\n\
-    var ajaxProgressDiv1, ajaxProgressState;\n\
+    var ajaxProgressDiv1, ajaxProgressState, timerIntervalAjaxProgressUpdate;\n\
     ajaxProgressDiv1 = document.querySelector("#ajaxProgressDiv1");\n\
     ajaxProgressState = 0;\n\
-    window.timerIntervalAjaxProgressUpdate = setInterval(function () {\n\
+    timerIntervalAjaxProgressUpdate = setInterval(function () {\n\
         ajaxProgressState += 1;\n\
         ajaxProgressDiv1.style.width = Math.max(\n\
             100 - 100 * Math.exp(-0.0625 * ajaxProgressState),\n\
             Number(ajaxProgressDiv1.style.width.slice(0, -1)) || 0\n\
         ) + "%";\n\
     }, 1000);\n\
+    window.addEventListener("load", function () {\n\
+        clearInterval(timerIntervalAjaxProgressUpdate);\n\
+    });\n\
 }());\n\
 </script>\n\
 utility2-comment -->\n\
@@ -231,7 +234,7 @@ utility2-comment -->\n\
 <script src="assets.utility2.rollup.js"></script>\n\
 <script>window.utility2.onResetBefore.counter += 1;</script>\n\
 <script src="jsonp.utility2.stateInit?callback=window.utility2.stateInit"></script>\n\
-<script src="assets.{{env.npm_package_nameAlias}}.js"></script>\n\
+<script src="assets.{{env.npm_package_nameLib}}.js"></script>\n\
 <script src="assets.example.js"></script>\n\
 <script src="assets.test.js"></script>\n\
 <script>window.utility2.onResetBefore();</script>\n\
@@ -325,8 +328,7 @@ instruction\n\
 \n\
 \n\
 \n\
-    // init-after\n\
-    // run browser js\-env code - init-after\n\
+    // run browser js\-env code - init-test\n\
     /* istanbul ignore next */\n\
     case \'browser\':\n\
         local.testRunBrowser = function (event) {\n\
@@ -414,7 +416,7 @@ instruction\n\
 \n\
 \n\
 \n\
-    // run node js\-env code - init-after\n\
+    // run node js\-env code - init-test\n\
     /* istanbul ignore next */\n\
     case \'node\':\n\
         // init exports\n\
@@ -457,7 +459,7 @@ local.assetsDict['/assets.index.template.html'].replace((/\n/g), '\\n\\\n') + '\
                     return \'the greatest app in the world!\';\n\
                 case \'npm_package_name\':\n\
                     return \'my-app\';\n\
-                case \'npm_package_nameAlias\':\n\
+                case \'npm_package_nameLib\':\n\
                     return \'my_app\';\n\
                 case \'npm_package_version\':\n\
                     return \'0.0.1\';\n\
@@ -708,9 +710,6 @@ node ./assets.app.js\n\
 1. [https://kaizhu256.github.io/node-jslint-lite/build/screenshot.npmTest.browser.%252F.png](https://kaizhu256.github.io/node-jslint-lite/build/screenshot.npmTest.browser.%252F.png)\n\
 [![screenshot](https://kaizhu256.github.io/node-jslint-lite/build/screenshot.npmTest.browser.%252F.png)](https://kaizhu256.github.io/node-jslint-lite/build/screenshot.npmTest.browser.%252F.png)\n\
 \n\
-1. [https://kaizhu256.github.io/node-jslint-lite/build/screenshot.npmTestPublished.browser.%252F.png](https://kaizhu256.github.io/node-jslint-lite/build/screenshot.npmTestPublished.browser.%252F.png)\n\
-[![screenshot](https://kaizhu256.github.io/node-jslint-lite/build/screenshot.npmTestPublished.browser.%252F.png)](https://kaizhu256.github.io/node-jslint-lite/build/screenshot.npmTestPublished.browser.%252F.png)\n\
-\n\
 1. [https://kaizhu256.github.io/node-jslint-lite/build/screenshot.testExampleJs.browser.%252F.png](https://kaizhu256.github.io/node-jslint-lite/build/screenshot.testExampleJs.browser.%252F.png)\n\
 [![screenshot](https://kaizhu256.github.io/node-jslint-lite/build/screenshot.testExampleJs.browser.%252F.png)](https://kaizhu256.github.io/node-jslint-lite/build/screenshot.testExampleJs.browser.%252F.png)\n\
 \n\
@@ -930,182 +929,12 @@ local.assetsDict['/assets.test.template.js'] = '\
         local.global = local.modeJs === \'browser\'\n\
             ? window\n\
             : global;\n\
-        switch (local.modeJs) {\n\
-        // re-init local from window.local\n\
-        case \'browser\':\n\
-            local = local.global.utility2.objectSetDefault(\n\
-                local.global.utility2_rollup || local.global.local,\n\
-                local.global.utility2\n\
-            );\n\
-            break;\n\
-        // re-init local from example.js\n\
-        case \'node\':\n\
-            local = (local.global.utility2_rollup ||\n\
-                require(\'utility2\')).requireReadme();\n\
-            break;\n\
-        }\n\
-        // init exports\n\
-        local.global.local = local;\n\
+        // re-init local\n\
+        local = local.global.local = (local.global.utility2 ||\n\
+            require(\'utility2\')).requireReadme();\n\
+        // init test\n\
+        local.testRunInit(local);\n\
     }());\n\
-\n\
-\n\
-\n\
-    // run shared js\-env code - function\n\
-    (function () {\n\
-        return;\n\
-    }());\n\
-    switch (local.modeJs) {\n\
-\n\
-\n\
-\n\
-    // run browser js\-env code - function\n\
-    case \'browser\':\n\
-        break;\n\
-\n\
-\n\
-\n\
-    // run node js\-env code - function\n\
-    case \'node\':\n\
-        break;\n\
-    }\n\
-\n\
-\n\
-\n\
-    // run shared js\-env code - init-after\n\
-    (function () {\n\
-        return;\n\
-    }());\n\
-    switch (local.modeJs) {\n\
-\n\
-\n\
-\n\
-    // run browser js\-env code - init-after\n\
-    /* istanbul ignore next */\n\
-    case \'browser\':\n\
-        local.testCase_browser_nullCase = local.testCase_browser_nullCase || function (\n\
-            options,\n\
-            onError\n\
-        ) {\n\
-        /*\n\
-         * this function will test browser\'s null-case handling-behavior\n\
-         */\n\
-            onError(null, options);\n\
-        };\n\
-\n\
-        local.utility2.ajaxForwardProxyUrlTest = local.utility2.ajaxForwardProxyUrlTest ||\n\
-            function (url, location) {\n\
-            /*\n\
-             * this function will test if the url requires forward-proxy\n\
-             */\n\
-                // jslint-hack\n\
-                local.nop(url);\n\
-                return local.env.npm_package_nameAlias && (/\\bgithub.io$/).test(location.host)\n\
-                    ? \'https://h1-\' + local.env.npm_package_nameAlias + \'-alpha.herokuapp.com\'\n\
-                    : location.protocol + \'//\' + location.host;\n\
-            };\n\
-\n\
-        // run tests\n\
-        if (local.modeTest && document.querySelector(\'#testRunButton1\')) {\n\
-            document.querySelector(\'#testRunButton1\').click();\n\
-        }\n\
-        break;\n\
-\n\
-\n\
-\n\
-    // run node js\-env code - init-after\n\
-    /* istanbul ignore next */\n\
-    case \'node\':\n\
-        local.testCase_buildApidoc_default = local.testCase_buildApidoc_default || function (\n\
-            options,\n\
-            onError\n\
-        ) {\n\
-        /*\n\
-         * this function will test buildApidoc\'s default handling-behavior\n\
-         */\n\
-            options = { modulePathList: module.paths };\n\
-            local.buildApidoc(options, onError);\n\
-        };\n\
-\n\
-        local.testCase_buildApp_default = local.testCase_buildApp_default || function (\n\
-            options,\n\
-            onError\n\
-        ) {\n\
-        /*\n\
-         * this function will test buildApp\'s default handling-behavior\n\
-         */\n\
-            local.testCase_buildReadme_default(options, local.onErrorThrow);\n\
-            local.testCase_buildLib_default(options, local.onErrorThrow);\n\
-            local.testCase_buildTest_default(options, local.onErrorThrow);\n\
-            local.testCase_buildCustomOrg_default(options, local.onErrorThrow);\n\
-            options = [];\n\
-            local.buildApp(options, onError);\n\
-        };\n\
-\n\
-        local.testCase_buildCustomOrg_default = local.testCase_buildCustomOrg_default ||\n\
-            function (options, onError) {\n\
-            /*\n\
-             * this function will test buildCustomOrg\'s default handling-behavior\n\
-             */\n\
-                options = {};\n\
-                local.buildCustomOrg(options, onError);\n\
-            };\n\
-\n\
-        local.testCase_buildLib_default = local.testCase_buildLib_default || function (\n\
-            options,\n\
-            onError\n\
-        ) {\n\
-        /*\n\
-         * this function will test buildLib\'s default handling-behavior\n\
-         */\n\
-            options = {};\n\
-            local.buildLib(options, onError);\n\
-        };\n\
-\n\
-        local.testCase_buildReadme_default = local.testCase_buildReadme_default || function (\n\
-            options,\n\
-            onError\n\
-        ) {\n\
-        /*\n\
-         * this function will test buildReadme\'s default handling-behavior\n\
-         */\n\
-            options = {};\n\
-            local.buildReadme(options, onError);\n\
-        };\n\
-\n\
-        local.testCase_buildTest_default = local.testCase_buildTest_default || function (\n\
-            options,\n\
-            onError\n\
-        ) {\n\
-        /*\n\
-         * this function will test buildTest\'s default handling-behavior\n\
-         */\n\
-            options = {};\n\
-            local.buildTest(options, onError);\n\
-        };\n\
-\n\
-        local.testCase_webpage_default = local.testCase_webpage_default || function (\n\
-            options,\n\
-            onError\n\
-        ) {\n\
-        /*\n\
-         * this function will test webpage\'s default handling-behavior\n\
-         */\n\
-            options = {\n\
-                fileScreenshotBase: local.env.npm_config_dir_build +\n\
-                    \'/screenshot.\' + local.env.MODE_BUILD + \'.browser.%2F\',\n\
-                modeCoverageMerge: true,\n\
-                url: local.assetsDict[\'/\']\n\
-                    .indexOf(\'<script src="assets.test.js"></script>\') >= 0\n\
-                    ? local.serverLocalHost + \'?modeTest=1\'\n\
-                    : local.serverLocalHost + \'/index.default.html?modeTest=1\'\n\
-            };\n\
-            local.browserTest(options, onError);\n\
-        };\n\
-\n\
-        // run test-server\n\
-        local.testRunServer(local);\n\
-        break;\n\
-    }\n\
 }());\n\
 ';
 
@@ -1866,6 +1695,95 @@ local.assetsDict['/favicon.ico'] = '';
             return self;
         };
 
+        local._testCase_buildApidoc_default = function (options, onError) {
+        /*
+         * this function will test buildApidoc's default handling-behavior
+         */
+            if (local.modeJs !== 'node') {
+                onError(null, options);
+                return;
+            }
+            local.buildApidoc({ modulePathList: module.paths }, onError);
+        };
+
+        local._testCase_buildApp_default = function (options, onError) {
+        /*
+         * this function will test buildApp's default handling-behavior
+         */
+            if (local.modeJs !== 'node') {
+                onError(null, options);
+                return;
+            }
+            global.local.testCase_buildReadme_default(options, local.onErrorThrow);
+            global.local.testCase_buildLib_default(options, local.onErrorThrow);
+            global.local.testCase_buildTest_default(options, local.onErrorThrow);
+            global.local.testCase_buildCustomOrg_default(options, local.onErrorThrow);
+            local.buildApp([], onError);
+        };
+
+        local._testCase_buildCustomOrg_default = function (options, onError) {
+        /*
+         * this function will test buildCustomOrg's default handling-behavior
+         */
+            if (local.modeJs !== 'node') {
+                onError(null, options);
+                return;
+            }
+            local.buildCustomOrg({}, onError);
+        };
+
+        local._testCase_buildLib_default = function (options, onError) {
+        /*
+         * this function will test buildLib's default handling-behavior
+         */
+            if (local.modeJs !== 'node') {
+                onError(null, options);
+                return;
+            }
+            local.buildLib({}, onError);
+        };
+
+        local._testCase_buildReadme_default = function (options, onError) {
+        /*
+         * this function will test buildReadme's default handling-behavior
+         */
+            if (local.modeJs !== 'node') {
+                onError(null, options);
+                return;
+            }
+            local.buildReadme({}, onError);
+        };
+
+        local._testCase_buildTest_default = function (options, onError) {
+        /*
+         * this function will test buildTest's default handling-behavior
+         */
+            if (local.modeJs !== 'node') {
+                onError(null, options);
+                return;
+            }
+            local.buildTest({}, onError);
+        };
+
+        local._testCase_webpage_default = function (options, onError) {
+        /*
+         * this function will test webpage's default handling-behavior
+         */
+            if (local.modeJs !== 'node') {
+                onError(null, options);
+                return;
+            }
+            local.browserTest({
+                fileScreenshotBase: local.env.npm_config_dir_build +
+                    '/screenshot.' + local.env.MODE_BUILD + '.browser.%2F',
+                modeCoverageMerge: true,
+                url: local.assetsDict['/']
+                    .indexOf('<script src="assets.test.js"></script>') >= 0
+                    ? local.serverLocalHost + '?modeTest=1'
+                    : local.serverLocalHost + '/index.default.html?modeTest=1'
+            }, onError);
+        };
+
         local.ajax = function (options, onError) {
         /*
          * this function will send an ajax-request with error-handling and timeout
@@ -2038,13 +1956,24 @@ local.assetsDict['/favicon.ico'] = '';
             return xhr;
         };
 
+        local.ajaxForwardProxyUrlTest = function (url, location) {
+        /*
+         * this function will test if the url requires forward-proxy
+         */
+            // jslint-hack
+            local.nop(url);
+            return local.modeJs === 'browser' &&
+                local.env.npm_package_nameLib &&
+                (/\bgithub.io$/).test(location.host)
+                ? 'https://h1-' + local.env.npm_package_nameLib + '-alpha.herokuapp.com'
+                : location.protocol + '//' + location.host;
+        };
+
         local.ajaxProgressUpdate = function () {
         /*
          * this function will update ajaxProgress
          */
             var ajaxProgressDiv1;
-            // cleanup timerInterval
-            clearInterval(local.global.timerIntervalAjaxProgressUpdate);
             ajaxProgressDiv1 = local.modeJs === 'browser' &&
                 document.querySelector('#ajaxProgressDiv1');
             if (!ajaxProgressDiv1) {
@@ -3087,11 +3016,11 @@ return Utf8ArrayToStr(bff);
          */
             local.fsRmrSync(local.env.npm_config_dir_build + '/app');
             local.onParallelList({ list: options.concat([{
-                file: '/assets.' + local.env.npm_package_nameAlias + '.html',
+                file: '/assets.' + local.env.npm_package_nameLib + '.html',
                 url: '/index.html'
             }, {
-                file: '/assets.' + local.env.npm_package_nameAlias + '.js',
-                url: '/assets.' + local.env.npm_package_nameAlias + '.js'
+                file: '/assets.' + local.env.npm_package_nameLib + '.js',
+                url: '/assets.' + local.env.npm_package_nameLib + '.js'
             }, {
                 file: '/assets.app.js',
                 url: '/assets.app.js'
@@ -3250,7 +3179,7 @@ return Utf8ArrayToStr(bff);
             local.objectSetDefault(options, {
                 customize: local.nop,
                 dataFrom: local.tryCatchReadFile(
-                    'lib.' + local.env.npm_package_nameAlias + '.js',
+                    'lib.' + local.env.npm_package_nameLib + '.js',
                     'utf8'
                 ),
                 dataTo: local.templateRenderJslintLite(
@@ -3296,7 +3225,7 @@ return Utf8ArrayToStr(bff);
             options.customize();
             // save lib.xxx.js
             local.fs.writeFileSync(
-                'lib.' + local.env.npm_package_nameAlias + '.js',
+                'lib.' + local.env.npm_package_nameLib + '.js',
                 options.dataTo
             );
             onError();
@@ -3324,8 +3253,13 @@ return Utf8ArrayToStr(bff);
             options.dataFrom.replace(options.rgx, function (match0, match1) {
                 options.packageJson = JSON.parse(match1);
                 options.packageJson.description = options.dataFrom.split('\n')[1];
+                local.tryCatchOnError(function () {
+                    local.objectSetDefault(options.packageJson, {
+                        nameLib: JSON.parse(local.fs.readFileSync('./package.json')).nameLib
+                    });
+                }, local.nop);
                 local.objectSetDefault(options.packageJson, {
-                    nameAlias: options.packageJson.name.replace((/\W/g), '_'),
+                    nameLib: options.packageJson.name.replace((/\W/g), '_'),
                     nameOriginal: options.packageJson.name
                 });
                 local.objectSetDefault(
@@ -3382,7 +3316,8 @@ return Utf8ArrayToStr(bff);
                 // customize todo
                 (/\n#### todo\n[\S\s]*?\n\n\n\n/),
                 // customize quickstart-example-js
-                (/\n {8}local\.global\.local = local;\n[^`]*?\n {4}\/\/ init-after\n/),
+                new RegExp('\\n {8}local\\.global\\.local = local;\\n' +
+                    '[^`]*?\\n {4}\\/\\/ run browser js\\-env code - init-test\\n'),
                 new RegExp('\\n {8}local\\.testRunBrowser = function \\(event\\) \\{\\n' +
                     '[^`]*?^ {12}if \\(!event \\|\\| \\(event &&\\n', 'm'),
                 (/\n {12}\/\/ custom-case\n[^`]*?\n {12}\}\n/),
@@ -3490,17 +3425,7 @@ return Utf8ArrayToStr(bff);
             // search-and-replace - customize dataTo
             [
                 // customize js\-env code
-                new RegExp('\\n {4}\\/\\/ run shared js\\-env code - init-before\\n' +
-                    '[\\S\\s]*?^ {4}\\(function \\(\\) \\{\\n', 'm'),
-                (/\n {8}local.global.local = local;\n[\S\s]*?^ {4}\}\(\)\);\n/m),
-                (/\n {4}\/\/ run shared js\-env code - function\n[\S\s]*?\n {4}\}\(\)\);\n/),
-                (/\n {4}\/\/ run browser js\-env code - function\n[\S\s]*?\n {8}break;\n/),
-                (/\n {4}\/\/ run node js\-env code - function\n[\S\s]*?\n {8}break;\n/),
-                (/\n {4}\/\/ run shared js\-env code - init-after\n[\S\s]*?\n {4}\}\(\)\);\n/),
-                new RegExp('\\n {4}\\/\\/ run browser js\\-env code - init-after\\n' +
-                    '[\\S\\s]*?\n {8}local.testCase_browser_nullCase = '),
-                new RegExp('\\n {4}\\/\\/ run node js\\-env code - init-after\\n' +
-                    '[\\S\\s]*?\n {8}local.testCase_buildApidoc_default = ')
+                (/\n {4}\}\(\)\);\n[\S\s]*?$/)
             ].forEach(function (rgx) {
                 // handle large string-replace
                 options.dataFrom.replace(rgx, function (match0) {
@@ -4006,6 +3931,7 @@ return Utf8ArrayToStr(bff);
             var chunkList,
                 isDone,
                 onError2,
+                serverLog,
                 timerTimeout,
                 request,
                 response,
@@ -4018,12 +3944,12 @@ return Utf8ArrayToStr(bff);
                 }
                 isDone = true;
                 // debug httpResponse
-                local.serverLog({
+                serverLog({
                     type: 'httpResponse',
                     time: new Date(timeStart).toISOString(),
                     method: options.method,
                     url: options.url,
-                    statusCode: local.normalizeValue('number', response && response.statusCode),
+                    statusCode: Number(response && response.statusCode) || 0,
                     duration: Date.now() - timeStart
                 });
                 // cleanup timerTimeout
@@ -4043,6 +3969,8 @@ return Utf8ArrayToStr(bff);
                 });
                 onError(error, response);
             };
+            // init serverLog
+            serverLog = local.serverLog || console.error;
             // init timerTimeout
             timerTimeout = setTimeout(function () {
                 onError2(new Error('http-request timeout'));
@@ -4642,7 +4570,7 @@ return Utf8ArrayToStr(bff);
                     npm_package_description: local.env.npm_package_description,
                     npm_package_homepage: local.env.npm_package_homepage,
                     npm_package_name: local.env.npm_package_name,
-                    npm_package_nameAlias: local.env.npm_package_nameAlias,
+                    npm_package_nameLib: local.env.npm_package_nameLib,
                     npm_package_version: local.env.npm_package_version
                 }
             } };
@@ -5289,6 +5217,15 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
          * this function will require and export example.js embedded in README.md
          */
             var module, script, tmp;
+            // init module.exports
+            module = {};
+            if (local.modeJs === 'browser') {
+                module.exports = local.objectSetDefault(
+                    local.global.utility2_rollup || local.global.local,
+                    local
+                );
+                return module.exports;
+            }
             // start repl-debugger
             local.replStart();
             // debug dir
@@ -5329,13 +5266,14 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
                 local.assetsDict['/assets.app.js'] =
                     local.fs.readFileSync(__filename, 'utf8').replace((/^#!/), '//');
                 // init exports
-                local.global.local = local[local.env.npm_package_nameAlias] = local;
-                return local;
+                local[local.env.npm_package_nameLib] = local;
+                module.exports = local;
+                return module.exports;
             }
             // init file $npm_package_main
             tmp = process.cwd() + '/' + local.env.npm_package_main;
             global.utility2_moduleExports = require(tmp);
-            local.assetsDict['/assets.' + local.env.npm_package_nameAlias + '.js'] =
+            local.assetsDict['/assets.' + local.env.npm_package_nameLib + '.js'] =
                 local.istanbulInstrumentInPackage(
                     local.fs.readFileSync(tmp, 'utf8').replace((/^#!/), '//'),
                     tmp
@@ -5374,13 +5312,13 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
             local.jslintAndPrintConditional(script, tmp);
             // cover script
             script = local.istanbulInstrumentInPackage(script, tmp);
-            // init module
+            // init module.exports
             module = require.cache[tmp] = new local.Module(tmp);
             // load script into module
             module._compile(script, tmp);
             // init exports
             module.exports.utility2 = local;
-            module.exports[local.env.npm_package_nameAlias] = global.utility2_moduleExports;
+            module.exports[local.env.npm_package_nameLib] = global.utility2_moduleExports;
             // init assets
             local.objectSetOverride(local.assetsDict, module.exports.assetsDict);
             module.exports.assetsDict = local.assetsDict;
@@ -5448,7 +5386,7 @@ instruction\n\
 /* jslint-ignore-end */
                 case '/assets.lib.js':
                     // handle large string-replace
-                    tmp = '/assets.' + local.env.npm_package_nameAlias + '.js';
+                    tmp = '/assets.' + local.env.npm_package_nameLib + '.js';
                     script = local.assetsDict['/assets.utility2.rollup.content.js']
                         .split('/* utility2.rollup.js content */');
                     script.splice(1, 0, 'local.assetsDict["' + tmp + '"] = ' +
@@ -5963,7 +5901,7 @@ instruction\n\
             options.packageJson = options.packageJson ||
                 JSON.parse(local.fs.readFileSync('package.json', 'utf8'));
             local.objectSetDefault(options.packageJson, {
-                nameAlias: options.packageJson.name.replace((/\W/g), '_'),
+                nameLib: options.packageJson.name.replace((/\W/g), '_'),
                 repository: { url: 'https://github.com/kaizhu256/node-' +
                     options.packageJson.name + '.git' }
             }, 2);
@@ -5989,26 +5927,34 @@ instruction\n\
             template = template.replace((/jslint-lite/g), options.packageJson.name);
             template = template.replace(
                 '/* istanbul instrument in package jslint */',
-                '/* istanbul instrument in package ' + options.packageJson.nameAlias + ' */'
+                '/* istanbul instrument in package ' + options.packageJson.nameLib + ' */'
             );
             template = template.replace(
                 (/\bh1-jslint\b/g),
-                'h1-' + options.packageJson.nameAlias.replace((/_/g), '-')
+                'h1-' + options.packageJson.nameLib.replace((/_/g), '-')
             );
             template = template.replace(
-                'assets.{{env.npm_package_nameAlias}}',
-                'assets.' + options.packageJson.nameAlias
+                'assets.{{env.npm_package_nameLib}}',
+                'assets.' + options.packageJson.nameLib
             );
             template = template.replace('my-app', options.packageJson.name);
-            template = template.replace('my_app', options.packageJson.nameAlias);
+            template = template.replace('my_app', options.packageJson.nameLib);
             if (options.customizeAfter) {
                 return template;
             }
             template = template.replace(
                 (/\b(assets\.|lib\.|local\.|utility2_)jslint\b/g),
-                '$1' + options.packageJson.nameAlias
+                '$1' + options.packageJson.nameLib
             );
             return template;
+        };
+
+        local.testCase_nop_default = function (options, onError) {
+        /*
+         * this function will test nop's default handling-behavior
+         */
+            local.nop();
+            onError(null, options);
         };
 
         local.testMock = function (mockList, onTestCase, onError) {
@@ -6446,7 +6392,11 @@ instruction\n\
                 };
                 testCase = testCase.element;
                 // init timerTimeout
-                timerTimeout = local.onTimeout(onError, local.timeoutDefault, testCase.name);
+                timerTimeout = local.onTimeout(
+                    onError,
+                    testCase.onTestCase.timeout || local.timeoutDefault,
+                    testCase.name
+                );
                 // increment number of tests remaining
                 onParallel.counter += 1;
                 // try to run testCase
@@ -6511,6 +6461,33 @@ instruction\n\
                     local.exit(testReport.testsFailed);
                 // coverage-hack - wait 1000 ms for timerInterval
                 }, 1000);
+            });
+        };
+
+        local.testRunInit = function (local) {
+        /*
+         * this function will init testRunXxx
+         */
+            // init testCase_buildXxx
+            Object.keys(local).forEach(function (key) {
+                if (key.indexOf('_testCase_build') === 0 ||
+                        key === '_testCase_webpage_default') {
+                    local[key.slice(1)] = local[key.slice(1)] || local[key];
+                }
+            });
+            // run test
+            setTimeout(function () {
+                if (local.modeJs === 'node' || local.global.utility2_serverHttp1) {
+                    local.testRunServer(local);
+                    return;
+                }
+                if (local.modeTest &&
+                        local.testRunBrowser &&
+                        document.querySelector('#testRunButton1')) {
+                    document.querySelector('#testRunButton1').click();
+                    return;
+                }
+                local.testRunDefault(local);
             });
         };
 
@@ -6817,12 +6794,12 @@ instruction\n\
             ? {}
             : process.env;
         local.objectSetDefault(local.env, {
-            npm_package_nameAlias: (local.env.npm_package_name || '').replace((/\W/g), '_')
+            npm_package_nameLib: (local.env.npm_package_name || '').replace((/\W/g), '_')
         });
         local.objectSetDefault(local.env, {
             npm_package_description: 'the greatest app in the world!',
             npm_package_name: 'my-app',
-            npm_package_nameAlias: 'my_app',
+            npm_package_nameLib: 'my_app',
             npm_package_version: '0.0.1'
         });
         local.errorDefault = new Error('default error');
@@ -6884,7 +6861,7 @@ instruction\n\
             break;
         }
         // init timeExit
-        local.timeExit = Number(local.env.npm_config_time_exit) ||
+        local.timeExit = Number(local.env.npm_config_time_exit || local.timeExit) ||
             Number(Date.now() + Number(local.env.npm_config_timeout_exit));
         if (local.timeExit) {
             local.timeoutDefault = local.timeExit - Date.now();
