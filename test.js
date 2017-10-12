@@ -151,7 +151,6 @@
                 return;
             }
             local.testMock([
-                // test testRunDefault's no modeTest handling-behavior
                 [local.global, { setTimeout: function (fnc) {
                     fnc();
                 } }]
@@ -1333,14 +1332,19 @@
             onError();
         };
 
-        local.testCase_sjclHmacSha256Create_default = function (options, onError) {
+        local.testCase_sjclHmacShaXxx_default = function (options, onError) {
         /*
-         * this function will test sjclHmacSha256Create's default handling-behavior
+         * this function will test sjclHmacShaXxx's default handling-behavior
          */
-            options = {};
-            options.data = local.sjclHmacSha256Create('aa', 'bb');
-            local.assertJsonEqual(options.data, 'cgAzwbGmYMrEqU9B05ADLwtflGJxqijX5BWd2hAlcfM=');
-            onError();
+            local.assertJsonEqual(
+                local.sjclHmacSha1Create('aa', 'bb'),
+                '15pOinCz63A+qZoxnv+mJB6UF1k='
+            );
+            local.assertJsonEqual(
+                local.sjclHmacSha256Create('aa', 'bb'),
+                '94Xv3VdPHA+ohKyjkM1pb0W5ZVAuMVcmIAAI2AqNRCQ='
+            );
+            onError(null, options);
         };
 
         local.testCase_stringHtmlSafe_default = function (options, onError) {
@@ -1553,14 +1557,14 @@
          * this function will test testRunDefault's nop handling-behavior
          */
             options = {};
+            local.testRunDefault(options);
             local.testMock([
-                // test testRunDefault's no modeTest handling-behavior
                 [local, { env: {}, modeTest: null }]
             ], function (onError) {
                 local.testRunDefault(options);
                 // validate no options.onReadyAfter
                 local.assert(!options.onReadyAfter, options);
-                onError();
+                onError(null, options);
             }, onError);
         };
 
@@ -1672,11 +1676,11 @@
          */
             options = [
                 [local, {
-                    ajaxForwardProxyUrlTest: null,
                     ajaxProgressUpdate: null,
                     bufferToNodeBuffer: null,
                     bufferToString: null,
                     errorMessagePrepend: null,
+                    githubForwardProxyUrlTest: null,
                     nop: null,
                     onErrorWithStack: null,
                     onTimeout: null,
@@ -1693,21 +1697,6 @@
                 });
                 onError();
             }, onError);
-        };
-
-        local.testCase_ajaxForwardProxyUrlTest_default = function (options, onError) {
-        /*
-         * this function will ajaxForwardProxyUrlTest's default handling-behavior
-         */
-            local.assertJsonEqual(
-                local.ajaxForwardProxyUrlTest('', { host: '', protocol: 'http:' }),
-                'http://'
-            );
-            local.assert(local.ajaxForwardProxyUrlTest('', {
-                host: 'github.io',
-                protocol: 'https:'
-            }).indexOf('.herokuapp.com') >= 0);
-            onError(null, options);
         };
 
         local.testCase_blobRead_error = function (options, onError) {
@@ -1767,6 +1756,51 @@
             options.data = local.domFragmentRender('<div>{{value}}</div>', { value: 'aa' });
             local.assertJsonEqual(options.data.children[0].outerHTML, '<div>aa</div>');
             onError();
+        };
+
+        local.testCase_githubForwardProxyUrlTest_default = function (options, onError) {
+        /*
+         * this function will githubForwardProxyUrlTest's default handling-behavior
+         */
+            local.assertJsonEqual(
+                local.githubForwardProxyUrlTest('', { host: '', protocol: 'http:' }),
+                'http://'
+            );
+            local.assert(local.githubForwardProxyUrlTest('', {
+                host: 'github.io',
+                protocol: 'https:'
+            }).indexOf('.herokuapp.com') >= 0);
+            onError(null, options);
+        };
+
+        local.testCase_localStorageSetItemOrClear_default = function (options, onError) {
+        /*
+         * this function will localStorageSetItemOrClear's default handling-behavior
+         */
+            // jslint-hack
+            local.nop(options);
+            local.localStorageSetItemOrClear(
+                'testCase_localStorageSetItemOrClear_default',
+                null
+            );
+            local.assertJsonEqual(
+                localStorage.testCase_localStorageSetItemOrClear_default,
+                'null'
+            );
+            local.testMock([
+                [localStorage, {
+                    clear: null,
+                    setItem: function () {
+                        throw local.errorDefault;
+                    }
+                }]
+            ], function (onError) {
+                localStorage.clear = onError;
+                local.localStorageSetItemOrClear(
+                    'testCase_localStorageSetItemOrClear_default',
+                    null
+                );
+            }, onError);
         };
 
         local.testCase_testRunInit_default = function (options, onError) {
@@ -2062,7 +2096,7 @@
                         return local.tryCatchOnError(function () {
                             return options.fsReadFileSync(file, 'utf8');
                         }, function () {
-                            return '';
+                            return '{}';
                         });
                     },
                     writeFileSync: local.nop

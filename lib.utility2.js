@@ -170,7 +170,6 @@ textarea[readonly] {\n\
 </style>\n\
 </head>\n\
 <body>\n\
-<!-- utility2-comment\n\
 <div id="ajaxProgressDiv1" style="background: #d00; height: 2px; left: 0; margin: 0; padding: 0; position: fixed; top: 0; transition: background 500ms, width 1500ms; width: 0%;"></div>\n\
 <script>\n\
 /*jslint\n\
@@ -185,22 +184,38 @@ textarea[readonly] {\n\
 */\n\
 (function () {\n\
     "use strict";\n\
-    var ajaxProgressDiv1, ajaxProgressState, timerIntervalAjaxProgressUpdate;\n\
+    var ajaxProgressDiv1,\n\
+        ajaxProgressState,\n\
+        ajaxProgressUpdate,\n\
+        timerIntervalAjaxProgressUpdate;\n\
     ajaxProgressDiv1 = document.querySelector("#ajaxProgressDiv1");\n\
+    setTimeout(function () {\n\
+        ajaxProgressDiv1.style.width = "25%";\n\
+    });\n\
     ajaxProgressState = 0;\n\
+    ajaxProgressUpdate = (window.local &&\n\
+        window.local.ajaxProgressUpdate) || function () {\n\
+        ajaxProgressDiv1.style.width = "100%";\n\
+        setTimeout(function () {\n\
+            ajaxProgressDiv1.style.background = "transparent";\n\
+            setTimeout(function () {\n\
+                ajaxProgressDiv1.style.width = "0%";\n\
+            }, 500);\n\
+        }, 1500);\n\
+    };\n\
     timerIntervalAjaxProgressUpdate = setInterval(function () {\n\
         ajaxProgressState += 1;\n\
         ajaxProgressDiv1.style.width = Math.max(\n\
-            100 - 100 * Math.exp(-0.0625 * ajaxProgressState),\n\
+            100 - 75 * Math.exp(-0.125 * ajaxProgressState),\n\
             Number(ajaxProgressDiv1.style.width.slice(0, -1)) || 0\n\
         ) + "%";\n\
     }, 1000);\n\
     window.addEventListener("load", function () {\n\
         clearInterval(timerIntervalAjaxProgressUpdate);\n\
+        ajaxProgressUpdate();\n\
     });\n\
 }());\n\
 </script>\n\
-utility2-comment -->\n\
 <h1>\n\
 <!-- utility2-comment\n\
     <a\n\
@@ -479,7 +494,7 @@ local.assetsDict['/assets.index.template.html'].replace((/\n/g), '\\n\\\n') + '\
         local.assetsDict[\'/assets.jslint.js\'] =\n\
             local.assetsDict[\'/assets.jslint.js\'] ||\n\
             local.fs.readFileSync(\n\
-                local.jslint.__dirname + \'/lib.jslint.js\',\n\
+                local.__dirname + \'/lib.jslint.js\',\n\
                 \'utf8\'\n\
             ).replace((/^#!/), \'//\');\n\
         /* jslint-ignore-end */\n\
@@ -619,12 +634,12 @@ the greatest app in the world!\n\
 #### cli help\n\
 ![screenshot](https://kaizhu256.github.io/node-jslint-lite/build/screenshot.npmPackageCliHelp.svg)\n\
 \n\
-#### apidoc\n\
+#### api doc\n\
 - [https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/apidoc.html](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/apidoc.html)\n\
 \n\
 [![apidoc](https://kaizhu256.github.io/node-jslint-lite/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/apidoc.html)\n\
 \n\
-#### swaggerdoc\n\
+#### swagger doc\n\
 - [https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app/assets.swgg.html](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app/assets.swgg.html)\n\
 \n\
 [![swaggerdoc](https://kaizhu256.github.io/node-jslint-lite/build/screenshot.deployGithub.browser.%252Fnode-jslint-lite%252Fbuild%252Fapp%252Fassets.swgg.html.png)](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app/assets.swgg.html)\n\
@@ -1125,6 +1140,7 @@ local.assetsDict['/assets.utility2.rollup.begin.js'] = '\
         ? window\n\
         : global;\n\
     local.local = local.global.utility2_rollup = local.global.utility2_rollup_old || local;\n\
+    local.global.utility2_rollup_old = null;\n\
 }());\n\
 ';
 
@@ -1801,12 +1817,12 @@ local.assetsDict['/favicon.ico'] = '';
             local.nop = local.nop || function () {
                 return;
             };
-            local.ajaxForwardProxyUrlTest = local.ajaxForwardProxyUrlTest || local.nop;
             local.ajaxProgressCounter = local.ajaxProgressCounter || 0;
             local.ajaxProgressUpdate = local.ajaxProgressUpdate || local.nop;
             local.bufferToNodeBuffer = local.bufferToNodeBuffer || local.nop;
             local.bufferToString = local.bufferToString || local.nop;
             local.errorMessagePrepend = local.errorMessagePrepend || local.nop;
+            local.githubForwardProxyUrlTest = local.githubForwardProxyUrlTest || local.nop;
             local.onErrorWithStack = local.onErrorWithStack || function (arg) {
                 return arg;
             };
@@ -1891,7 +1907,7 @@ local.assetsDict['/favicon.ico'] = '';
                             (event.type === 'abort' ||
                             event.type === 'error' ||
                             xhr.statusCode >= 400)) {
-                        xhr.error = new Error(event.type);
+                        xhr.error = new Error('ajax - event ' + event.type);
                     }
                     // handle completed xhr request
                     if (xhr.readyState === 4) {
@@ -1924,12 +1940,12 @@ local.assetsDict['/favicon.ico'] = '';
             xhr.addEventListener('progress', local.ajaxProgressUpdate);
             xhr.upload.addEventListener('progress', local.ajaxProgressUpdate);
             // open url
-            xhr.forwardProxyUrl = local.modeJs === 'browser' &&
+            xhr.githubForwardProxyUrl = local.modeJs === 'browser' &&
                 (/^https{0,1}:/).test(xhr.url) &&
                 xhr.url.indexOf(location.protocol + '//' + location.host) !== 0 &&
-                local.ajaxForwardProxyUrlTest(xhr.url, location);
-            if (xhr.forwardProxyUrl) {
-                xhr.open(xhr.method, xhr.forwardProxyUrl);
+                local.githubForwardProxyUrlTest(xhr.url, location);
+            if (xhr.githubForwardProxyUrl) {
+                xhr.open(xhr.method, xhr.githubForwardProxyUrl);
                 xhr.setRequestHeader('forward-proxy-headers', JSON.stringify(xhr.headers));
                 xhr.setRequestHeader('forward-proxy-url', xhr.url);
             } else {
@@ -1954,19 +1970,6 @@ local.assetsDict['/favicon.ico'] = '';
                 xhr.send(local.bufferToNodeBuffer(xhr.data));
             }
             return xhr;
-        };
-
-        local.ajaxForwardProxyUrlTest = function (url, location) {
-        /*
-         * this function will test if the url requires forward-proxy
-         */
-            // jslint-hack
-            local.nop(url);
-            return local.modeJs === 'browser' &&
-                local.env.npm_package_nameLib &&
-                (/\bgithub.io$/).test(location.host)
-                ? 'https://h1-' + local.env.npm_package_nameLib + '-alpha.herokuapp.com'
-                : location.protocol + '//' + location.host;
         };
 
         local.ajaxProgressUpdate = function () {
@@ -2740,7 +2743,7 @@ function TranslateElementInit() {\n\
                     }
                     setTimeout(onNext, options.timeoutScreenshot);
                     break;
-                // node.electron.browserWindow.webview - emit event console-message
+                // node.electron.browserWindow.webview - emit event console-message-html
                 case 32:
                     // init data
                     data = {};
@@ -2814,17 +2817,20 @@ function TranslateElementInit() {\n\
                     } catch (errorCaught) {
                         console.error(errorCaught);
                     }
-                    // html
+                    // print html
                     console.error(options.fileElectronHtml + ' html ' +
                         document.documentElement.outerHTML);
-                    // test
-                    if (options.modeBrowserTest === 'test' && !window.utility2) {
-                        console.error(options.fileElectronHtml +
-                            ' global_test_results ' +
+                    // print test
+                    setTimeout(function () {
+                        if (options.modeBrowserTest !== 'test' || window.utility2_modeTestRun) {
+                            return;
+                        }
+                        console.error(options.fileElectronHtml + ' global_test_results ' +
                             JSON.stringify({ global_test_results: {
+                                coverage: window.__coverage__,
                                 testReport: { testPlatformList: [{}] }
                             } }));
-                    }
+                    }, 1000);
                     break;
                 default:
                     if (error) {
@@ -3294,15 +3300,16 @@ return Utf8ArrayToStr(bff);
             if (local.fs.existsSync('assets.swgg.swagger.json')) {
                 local.fs.writeFileSync(
                     'assets.swgg.swagger.json',
-                    local.fs.readFileSync('assets.swgg.swagger.json', 'utf8')
-                        .replace((/(\n {8}"description": ").*?(".*\n)/), '$1' +
-                            options.packageJson.description + '$2')
-                        .replace((/(\n {8}"title": ").*?(".*\n)/), '$1' +
-                            options.packageJson.name + '$2')
-                        .replace((/(\n {8}"version": ").*?(".*\n)/), '$1' +
-                            options.packageJson.version + '$2')
-                        .replace((/(\n {8}"x-homepage": ").*?(".*\n)/), '$1' +
-                            options.packageJson.homepage + '$2')
+                    local.jsonStringifyOrdered(local.objectSetOverride(
+                        JSON.parse(local.fs.readFileSync('assets.swgg.swagger.json', 'utf8')),
+                        { info: {
+                            description: options.packageJson.description,
+                            title: options.packageJson.name,
+                            version: options.packageJson.version,
+                            'x-homepage': options.packageJson.homepage
+                        } },
+                        2
+                    ), null, 4) + '\n'
                 );
             }
             // search-and-replace - customize dataTo
@@ -3344,7 +3351,7 @@ return Utf8ArrayToStr(bff);
             if (!local.assetsDict['/assets.swgg.swagger.json'] ||
                     (/\bswggUiContainer\b/).exec(local.assetsDict['/index.html'])) {
                 options.dataTo = options.dataTo.replace(
-                    (/\n#### swaggerdoc\n[\S\s]*?\n#### /),
+                    (/\n#### swagger doc\n[\S\s]*?\n#### /),
                     '\n#### '
                 );
             }
@@ -3924,6 +3931,20 @@ return Utf8ArrayToStr(bff);
             return url.replace(rgxHostOverride || (/.*()/), hostOverride + '$1');
         };
 
+        local.githubForwardProxyUrlTest = function (url, location) {
+        /*
+         * this function will test if the url requires forward-proxy
+         */
+            // jslint-hack
+            local.nop(url);
+            return local.modeJs === 'browser' &&
+                local.env.npm_package_nameLib &&
+                (/\bgithub.io$/).test(location.host)
+                ? local.githubForwardProxyUrl ||
+                    'https://h1-' + local.env.npm_package_nameLib + '-alpha.herokuapp.com'
+                : location.protocol + '//' + location.host;
+        };
+
         local.httpRequest = function (options, onError) {
         /*
          * this function will request the data from options.url
@@ -4276,6 +4297,18 @@ return Utf8ArrayToStr(bff);
                 list[random] = swap;
             }
             return list;
+        };
+
+        local.localStorageSetItemOrClear = function (key, value) {
+        /*
+         * this function will try to set the key/value pair to localStorage,
+         * or else call localStorage.clear()
+         */
+            try {
+                localStorage.setItem(key, value);
+            } catch (errorCaught) {
+                localStorage.clear();
+            }
         };
 
         local.middlewareAssetsCached = function (request, response, nextMiddleware) {
@@ -5617,14 +5650,27 @@ instruction\n\
             return local.sjcl.codec.base64.fromBits(local.sjcl.hash.sha256.hash(data));
         };
 
-        local.sjclHmacSha256Create = function (key, data) {
+        local.sjclHmacSha1Create = function (key, data) {
         /*
-         * this function will create a base64-encoded sha-256 hmac
-         * from the base64-encoded key and string data
+         * this function will create a base64-encoded sha-1 hmac
+         * from the string key and string data
          */
             return local.sjcl.codec.base64.fromBits(
                 (new local.sjcl.misc.hmac(
-                    local.sjcl.codec.base64.toBits(key),
+                    local.sjcl.codec.utf8String.toBits(key),
+                    local.sjcl.hash.sha1
+                )).mac(local.sjcl.codec.utf8String.toBits(data))
+            );
+        };
+
+        local.sjclHmacSha256Create = function (key, data) {
+        /*
+         * this function will create a base64-encoded sha-256 hmac
+         * from the string key and string data
+         */
+            return local.sjcl.codec.base64.fromBits(
+                (new local.sjcl.misc.hmac(
+                    local.sjcl.codec.utf8String.toBits(key),
                     local.sjcl.hash.sha256
                 )).mac(local.sjcl.codec.utf8String.toBits(data))
             );
@@ -5637,7 +5683,7 @@ instruction\n\
             local.objectSetOverride(local, options, Infinity);
             // init swgg
             // coverage-hack - ignore else-statement
-            local.nop(local.swgg && local.swgg.apiDictUpdate(local.swgg.swaggerJson));
+            local.nop(local.swgg && local.swgg.apiUpdate(local.swgg.swaggerJson));
         };
 
         local.streamListCleanup = function (streamList) {
@@ -6277,19 +6323,20 @@ instruction\n\
             if (!(local.modeTest || options.modeTest)) {
                 return;
             }
-            if (!options.testRunBeforeDone) {
-                options.testRunBeforeTimer = options.testRunBeforeTimer ||
-                    setTimeout(function () {
-                        local.testRunBefore();
-                        local.onReadyAfter(function () {
-                            options.testRunBeforeDone = true;
-                            local.testRunDefault(options);
-                        });
+            if (!local.global.utility2_modeTestRun) {
+                local.global.utility2_modeTestRun = 1;
+                setTimeout(function () {
+                    local.testRunBefore();
+                    local.onReadyAfter(function () {
+                        local.testRunDefault(options);
                     });
+                });
                 return;
             }
-            // reset testRunBefore
-            options.testRunBeforeDone = options.testRunBeforeTimer = null;
+            if (local.global.utility2_modeTestRun !== 1) {
+                return;
+            }
+            local.global.utility2_modeTestRun = 2;
             // visual notification - testRun
             local.ajaxProgressUpdate();
             // mock serverLog
@@ -6409,6 +6456,7 @@ instruction\n\
             /*
              * this function will create the test-report after all tests isDone
              */
+                local.global.utility2_modeTestRun = 0;
                 local.ajaxProgressUpdate();
                 // stop testPlatform timer
                 local.timeElapsedPoll(testPlatform);

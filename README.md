@@ -50,27 +50,32 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 #### cli help
 ![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.npmPackageCliHelp.svg)
 
-#### apidoc
+#### api doc
 - [https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/apidoc.html](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/apidoc.html)
 
 [![apidoc](https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/apidoc.html)
 
 #### todo
+- apidoc - fix assert-module bug
 - revamp serverLog to consoleLog and consoleError
 - deprecate and remove local.serverLocalHost
-- rename ajaxForwardProxyUrlTest to githubForwardProxyUrlTest
-- add shell command buildCiCreate
 - allow server-side stdout to be streamed to webapps
-- add utility2.middlewareLimit
+- add utility2.middlewareRateLimit
 - add server stress test using electron
 - analytics
 - none
 
-#### changelog for v2017.9.29
-- npm publish 2017.9.29
-- merge test-init into new function testRunInit
-- rename env var npm_package_nameAlias to npm_package_nameLib
-- update function testRunDefault - add testCase.onTestCase.timeout override
+#### changelog for v2017.10.11
+- npm publish 2017.10.11
+- add function utility2.sjclHmacSha1Create
+- add shell-function shGitLogDateIsoString
+- function buildReadme - auto-normalize file assets.swgg.swagger.json
+- rename utility2.ajaxForwardProxyUrlTest to utility2.githubForwardProxyUrlTest
+- try to recover __coverage__ from node-utility2 test-page
+- apidoc - include swgg.apiDict
+- swgg - add param-property x-host
+- swgg - document library-call equivalent to curl-request
+- swgg - rename function swgg.apiDictUpdate -> swgg.apiUpdate
 - none
 
 #### this package requires
@@ -455,7 +460,6 @@ textarea[readonly] {\n\
 </style>\n\
 </head>\n\
 <body>\n\
-<!-- utility2-comment\n\
 <div id="ajaxProgressDiv1" style="background: #d00; height: 2px; left: 0; margin: 0; padding: 0; position: fixed; top: 0; transition: background 500ms, width 1500ms; width: 0%;"></div>\n\
 <script>\n\
 /*jslint\n\
@@ -470,22 +474,38 @@ textarea[readonly] {\n\
 */\n\
 (function () {\n\
     "use strict";\n\
-    var ajaxProgressDiv1, ajaxProgressState, timerIntervalAjaxProgressUpdate;\n\
+    var ajaxProgressDiv1,\n\
+        ajaxProgressState,\n\
+        ajaxProgressUpdate,\n\
+        timerIntervalAjaxProgressUpdate;\n\
     ajaxProgressDiv1 = document.querySelector("#ajaxProgressDiv1");\n\
+    setTimeout(function () {\n\
+        ajaxProgressDiv1.style.width = "25%";\n\
+    });\n\
     ajaxProgressState = 0;\n\
+    ajaxProgressUpdate = (window.local &&\n\
+        window.local.ajaxProgressUpdate) || function () {\n\
+        ajaxProgressDiv1.style.width = "100%";\n\
+        setTimeout(function () {\n\
+            ajaxProgressDiv1.style.background = "transparent";\n\
+            setTimeout(function () {\n\
+                ajaxProgressDiv1.style.width = "0%";\n\
+            }, 500);\n\
+        }, 1500);\n\
+    };\n\
     timerIntervalAjaxProgressUpdate = setInterval(function () {\n\
         ajaxProgressState += 1;\n\
         ajaxProgressDiv1.style.width = Math.max(\n\
-            100 - 100 * Math.exp(-0.0625 * ajaxProgressState),\n\
+            100 - 75 * Math.exp(-0.125 * ajaxProgressState),\n\
             Number(ajaxProgressDiv1.style.width.slice(0, -1)) || 0\n\
         ) + "%";\n\
     }, 1000);\n\
     window.addEventListener("load", function () {\n\
         clearInterval(timerIntervalAjaxProgressUpdate);\n\
+        ajaxProgressUpdate();\n\
     });\n\
 }());\n\
 </script>\n\
-utility2-comment -->\n\
 <h1>\n\
 <!-- utility2-comment\n\
     <a\n\
@@ -644,7 +664,7 @@ utility2-comment -->\n\
         local.assetsDict['/assets.utility2.js'] =
             local.assetsDict['/assets.utility2.js'] ||
             local.fs.readFileSync(
-                local.utility2.__dirname + '/lib.utility2.js',
+                local.__dirname + '/lib.utility2.js',
                 'utf8'
             ).replace((/^#!/), '//');
         /* jslint-ignore-end */
@@ -748,6 +768,7 @@ utility2-comment -->\n\
         "jslint",
         "npmdoc",
         "npmtest",
+        "swgg",
         "test",
         "test-coverage",
         "travis-ci"
@@ -774,7 +795,7 @@ utility2-comment -->\n\
         "start": "set -e; export PORT=${PORT:-8080}; if [ -f assets.app.js ]; then node assets.app.js; else npm_config_mode_auto_restart=1 ./lib.utility2.sh shRun shIstanbulCover test.js; fi",
         "test": "PORT=$(./lib.utility2.sh shServerPortRandom) PORT_REPL=$(./lib.utility2.sh shServerPortRandom) npm_config_mode_auto_restart=1 ./lib.utility2.sh test test.js"
     },
-    "version": "2017.9.29"
+    "version": "2017.10.11"
 }
 ```
 

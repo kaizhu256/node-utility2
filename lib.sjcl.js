@@ -45,7 +45,7 @@
 // init lib sjcl
 // 2016-09-10T10:34:50Z
 // https://github.com/bitwiseshiftleft/sjcl/blob/1.0.6/sjcl.js
-// utility2-uglify https://raw.githubusercontent.com/bitwiseshiftleft/sjcl/1.0.6/sjcl.js
+// utility2-uglifyjs https://raw.githubusercontent.com/bitwiseshiftleft/sjcl/1.0.6/sjcl.js
 (function () { var module;
 "use strict";function t(e,t,n){if(4!==t.length)throw new sjcl.exception.invalid("invalid aes block size"
 );var r=e.b[n],i=t[0]^r[0],s=t[n?3:1]^r[1],o=t[2]^r[2];t=t[n?1:3]^r[3];var u,a,f
@@ -354,10 +354,43 @@ local.sjcl = sjcl; }());
 
 
 
+// init lib sjcl.hash.sha1
+// 2016-06-09T23:25:22Z
+// https://github.com/bitwiseshiftleft/sjcl/blob/1.0.6/core/sha1.js
+// utility2-uglifyjs https://raw.githubusercontent.com/bitwiseshiftleft/sjcl/1.0.6/core/sha1.js
+(function () { var sjcl; sjcl = local.sjcl;
+sjcl.hash.sha1=function(e){e?(this._h=e._h.slice(0),this._buffer=e._buffer.slice
+(0),this._length=e._length):this.reset()},sjcl.hash.sha1.hash=function(e){return(new
+sjcl.hash.sha1).update(e).finalize()},sjcl.hash.sha1.prototype={blockSize:512,reset
+:function(){return this._h=this._init.slice(0),this._buffer=[],this._length=0,this
+},update:function(e){typeof e=="string"&&(e=sjcl.codec.utf8String.toBits(e));var t
+,n=this._buffer=sjcl.bitArray.concat(this._buffer,e),r=this._length,i=this._length=
+r+sjcl.bitArray.bitLength(e);if(i>9007199254740991)throw new sjcl.exception.invalid
+("Cannot hash more than 2^53 - 1 bits");if(typeof Uint32Array!="undefined"){var s=new
+Uint32Array(n),o=0;for(t=this.blockSize+r-(this.blockSize+r&this.blockSize-1);t<=
+i;t+=this.blockSize)this._block(s.subarray(16*o,16*(o+1))),o+=1;n.splice(0,16*o)
+}else for(t=this.blockSize+r-(this.blockSize+r&this.blockSize-1);t<=i;t+=this.blockSize
+)this._block(n.splice(0,16));return this},finalize:function(){var e,t=this._buffer
+,n=this._h;t=sjcl.bitArray.concat(t,[sjcl.bitArray.partial(1,1)]);for(e=t.length+2
+;e&15;e++)t.push(0);t.push(Math.floor(this._length/4294967296)),t.push(this._length|0
+);while(t.length)this._block(t.splice(0,16));return this.reset(),n},_init:[1732584193
+,4023233417,2562383102,271733878,3285377520],_key:[1518500249,1859775393,2400959708
+,3395469782],_f:function(e,t,n,r){if(e<=19)return t&n|~t&r;if(e<=39)return t^n^r
+;if(e<=59)return t&n|t&r|n&r;if(e<=79)return t^n^r},_S:function(e,t){return t<<e|
+t>>>32-e},_block:function(e){var t,n,r,i,s,o,u,a=this._h,f;if(typeof Uint32Array!="undefined"
+){f=Array(80);for(var l=0;l<16;l++)f[l]=e[l]}else f=e;r=a[0],i=a[1],s=a[2],o=a[3
+],u=a[4];for(t=0;t<=79;t++)t>=16&&(f[t]=this._S(1,f[t-3]^f[t-8]^f[t-14]^f[t-16])
+),n=this._S(5,r)+this._f(t,i,s,o)+u+f[t]+this._key[Math.floor(t/20)]|0,u=o,o=s,s=
+this._S(30,i),i=r,r=n;a[0]=a[0]+r|0,a[1]=a[1]+i|0,a[2]=a[2]+s|0,a[3]=a[3]+o|0,a[4
+]=a[4]+u|0}}
+}());
+
+
+
 // init lib sjcl.misc.scrypt
 // 2016-05-31T18:10:00Z
 // https://github.com/bitwiseshiftleft/sjcl/blob/1.0.6/core/scrypt.js
-// utility2-uglify https://raw.githubusercontent.com/bitwiseshiftleft/sjcl/1.0.6/core/scrypt.js
+// utility2-uglifyjs https://raw.githubusercontent.com/bitwiseshiftleft/sjcl/1.0.6/core/scrypt.js
 (function () { var sjcl; sjcl = local.sjcl;
 sjcl.misc.scrypt=function(e,t,n,r,i,s,o){var u=Math.pow(2,32)-1,a=sjcl.misc.scrypt
 ;n=n||16384,r=r||8,i=i||1;if(r*i>=Math.pow(2,30))throw sjcl.exception.invalid("The parameters r, p must satisfy r * p < 2^30"

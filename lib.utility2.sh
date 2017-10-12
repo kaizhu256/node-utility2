@@ -346,11 +346,11 @@ shBuildCi() {(set -e
         printf "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > "$HOME/.npmrc"
         case "$GITHUB_ORG" in
         # bug-workaround - disable npm-publish for npmdoc
-        npmdoc)
-            ;;
+        # npmdoc)
+            # ;;
         # bug-workaround - disable npm-publish for npmtest
-        npmtest)
-            ;;
+        # npmtest)
+            # ;;
         *)
             (eval shNpmPublishAlias) || true
             ;;
@@ -423,14 +423,6 @@ shBuildCi() {(set -e
         shGithubPush "https://github.com/$GITHUB_REPO" HEAD:beta
         ;;
     esac
-)}
-
-shBuildCiCreate() {(set -e
-# this function will create the build-ci for the $GITHUB_REPO
-    GITHUB_REPO="$1"
-    shCustomOrgRepoListCreate "$GITHUB_REPO"
-    cd "/tmp/$GITHUB_REPO"
-    shBuildApp
 )}
 
 shBuildCiInternal() {(set -e
@@ -787,6 +779,23 @@ shBuildTest() {(set -e
     shPasswordEnvUnset
     export MODE_BUILD=buildTest
     npm test --mode-coverage="" --mode-test-case=testCase_buildTest_default
+)}
+
+shChromeSocks5() {(set -e
+# this function will run chrome with socks5 proxy
+# https://sites.google.com/a/chromium.org/dev/developers/design-documents/network-stack/socks-proxy
+    if [ "$1" = "canary" ]
+    then
+        /Applications/Google\ Chrome\ Canary.app/Contents/MacOS/Google\ Chrome\ Canary\
+            --proxy-bypass-list="127.*;192.*;localhost"\
+            --proxy-server="socks5://localhost:2080"\
+            --host-resolver-rules="MAP * 0.0.0.0, EXCLUDE localhost" $@ || return $?
+    else
+        /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome\
+            --proxy-bypass-list="127.*;192.*;localhost"\
+            --proxy-server="socks5://localhost:2080"\
+            --host-resolver-rules="MAP * 0.0.0.0, EXCLUDE localhost" $@ || return $?
+    fi
 )}
 
 shCryptoAesDecrypt() {(set -e
@@ -1730,7 +1739,9 @@ local.versionList = [
     local.versionOverride || local.packageJson.version,
     '$VERSION_PUBLISHED'
 ].map(function (element) {
-    return element.split('.').slice(0, 3).map(Number);
+    return element.split('.').slice(0, 3).map(function (element) {
+        return Number(element) || 0;
+    });
 });
 local.versionList[1][2] += 1;
 if (local.versionList[0][0] < local.versionList[1][0] ||
@@ -1926,12 +1937,14 @@ shGithubRepoBaseCreate() {(set -e
 
 shGithubRepoListTouch() {(set -e
 # this function will touch the $GITHUB_REPO $LIST with the $CI_COMMIT_MESSAGE
+# example usage:
+# shCryptoWithGithubOrg npmdoc shGithubRepoListTouch "npmdoc/node-npmdoc-sandbox2 npmdoc/node-npmdoc-sandbox3" "[npm publishAfterCommitAfterBuild]"
     LIST="$1"
     CI_COMMIT_MESSAGE="$2"
     LIST2=""
     for GITHUB_REPO in $LIST
     do
-        LIST2="$LIST2 https://github.com/$GITHUB_REPO/blob/alpha/package.json"
+        LIST2="$LIST2,https://github.com/$GITHUB_REPO/blob/alpha/package.json"
     done
     utility2-github-crud touchList "$LIST2" "$CI_COMMIT_MESSAGE"
 )}
@@ -2205,6 +2218,7 @@ $ELEMENT"
 shMain() {
 # this function will run the main program
     export UTILITY2_DEPENDENTS="apidoc-lite
+        api-google
         db-lite
         elasticsearch-lite
         electron-lite
@@ -2242,15 +2256,16 @@ shMain() {
         printf ". $npm_config_dir_utility2/lib.utility2.sh\n"
         ;;
     start)
-        if [ ! "$1" ]
-        then
-            MODE_START=1
-        fi
         shBuildInit
-        FILE="${1:-"$npm_config_dir_utility2/test.js"}"
+        if [ "$1" ]
+        then
+            FILE="$1"
+        else
+            export npm_config_mode_start="1"
+            FILE="$npm_config_dir_utility2/test.js"
+        fi
         shift || true
         export npm_config_mode_auto_restart=1
-        export npm_config_mode_start="$MODE_START"
         shBuildInit
         shRun shIstanbulCover "$FILE" "$@"
         ;;
@@ -3285,7 +3300,16 @@ shUtility2DependentsSync() {(set -e
         fi
         # hardlink assets.utility2.rollup.js
         case "$DIR" in
+        api-*)
+            ln -f utility2/tmp/build/app/assets.utility2.rollup.js "$DIR"
+            ;;
         elasticsearch-lite)
+            ln -f utility2/tmp/build/app/assets.utility2.rollup.js "$DIR"
+            ;;
+        google-maps-lite)
+            ln -f utility2/tmp/build/app/assets.utility2.rollup.js "$DIR"
+            ;;
+        swgg-*)
             ln -f utility2/tmp/build/app/assets.utility2.rollup.js "$DIR"
             ;;
         swgg)

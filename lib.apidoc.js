@@ -747,6 +747,15 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
             });
             // init moduleDict child
             local.apidocModuleDictAdd(options, options.moduleDict);
+            // init swgg.apiDict
+            Object.keys(
+                (moduleMain.swgg && moduleMain.swgg.apiDict) || {}
+            ).forEach(function (key) {
+                tmp = options.env.npm_package_name + '.swgg.apiDict';
+                tmp = options.moduleDict[tmp] = options.moduleDict[tmp] || {};
+                tmp[encodeURIComponent(key) + '.ajax'] = moduleMain.swgg.apiDict[key] &&
+                    moduleMain.swgg.apiDict[key].ajax;
+            });
             // init moduleExtraDict
             module = options.moduleExtraDict[options.env.npm_package_name] =
                 options.moduleExtraDict[options.env.npm_package_name] || {};
@@ -837,7 +846,7 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
                             .filter(function (key) {
                                 return local.tryCatchOnError(function () {
                                     return key &&
-                                        (/^\w[\w\-.]*?$/).test(key) &&
+                                        (/^\w[\w%\-.]*?$/).test(key) &&
                                         key.indexOf('testCase_') !== 0 &&
                                         module[key] !== options.blacklistDict[key];
                                 }, console.error);
