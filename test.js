@@ -539,6 +539,33 @@
             }, onError);
         };
 
+        local.testCase_corsBackendHostInject_default = function (options, onError) {
+        /*
+         * this function will corsBackendHostInject's default handling-behavior
+         */
+            options = {};
+            // test null-case handling-behavior
+            options.data = local.corsBackendHostInject();
+            local.assertJsonEqual(options.data, undefined);
+            // test override-all handling-behavior
+            options.data = local.corsBackendHostInject(
+                'cc.com',
+                'aa-alpha.bb.com',
+                null,
+                { host: 'github.io', pathname: '/build..beta..travis-ci.org/' }
+            );
+            local.assertJsonEqual(options.data, 'aa-beta.bb.com');
+            // test override-rgx handling-behavior
+            options.data = local.corsBackendHostInject(
+                'cc/dd',
+                'aa-alpha.bb.com/',
+                (/(^cc\/)/),
+                { host: 'github.io', pathname: '/build..beta..travis-ci.org/' }
+            );
+            local.assertJsonEqual(options.data, 'aa-beta.bb.com/cc/dd');
+            onError();
+        };
+
         local.testCase_dbTableCustomOrgXxx_default = function (options, onError) {
         /*
          * this function will test dbTableCustomOrgXxx's default handling-behavior
@@ -638,33 +665,6 @@
          */
             // test invalid exit-code handling-behavior
             local.exit('invalid exit-code', options);
-            onError();
-        };
-
-        local.testCase_githubCorsUrlOverride_default = function (options, onError) {
-        /*
-         * this function will githubCorsUrlOverride's default handling-behavior
-         */
-            options = {};
-            // test null-case handling-behavior
-            options.data = local.githubCorsUrlOverride();
-            local.assertJsonEqual(options.data, undefined);
-            // test override-all handling-behavior
-            options.data = local.githubCorsUrlOverride(
-                'cc.com',
-                'aa-alpha.bb.com',
-                null,
-                { host: 'github.io', pathname: '/build..beta..travis-ci.org/' }
-            );
-            local.assertJsonEqual(options.data, 'aa-beta.bb.com');
-            // test override-rgx handling-behavior
-            options.data = local.githubCorsUrlOverride(
-                'cc/dd',
-                'aa-alpha.bb.com/',
-                (/(^cc\/)/),
-                { host: 'github.io', pathname: '/build..beta..travis-ci.org/' }
-            );
-            local.assertJsonEqual(options.data, 'aa-beta.bb.com/cc/dd');
             onError();
         };
 
@@ -1680,7 +1680,7 @@
                     bufferToNodeBuffer: null,
                     bufferToString: null,
                     errorMessagePrepend: null,
-                    githubForwardProxyUrlTest: null,
+                    corsForwardProxyHostifNeeded: null,
                     nop: null,
                     onErrorWithStack: null,
                     onTimeout: null,
@@ -1758,15 +1758,15 @@
             onError();
         };
 
-        local.testCase_githubForwardProxyUrlTest_default = function (options, onError) {
+        local.testCase_corsForwardProxyHostifNeeded_default = function (options, onError) {
         /*
-         * this function will githubForwardProxyUrlTest's default handling-behavior
+         * this function will corsForwardProxyHostifNeeded's default handling-behavior
          */
             local.assertJsonEqual(
-                local.githubForwardProxyUrlTest('', { host: '', protocol: 'http:' }),
+                local.corsForwardProxyHostifNeeded('', { host: '', protocol: 'http:' }),
                 'http://'
             );
-            local.assert(local.githubForwardProxyUrlTest('', {
+            local.assert(local.corsForwardProxyHostifNeeded('', {
                 host: 'github.io',
                 protocol: 'https:'
             }).indexOf('.herokuapp.com') >= 0);
@@ -2087,32 +2087,18 @@
             };
             options.fsReadFileSync = local.fs.readFileSync;
             local.testMock([
-                [local.env, { npm_package_buildCustomOrg: '' }],
-                [local.fs, {
-                    existsSync: function () {
-                        return true;
-                    },
-                    readFileSync: function (file) {
-                        return local.tryCatchOnError(function () {
-                            return options.fsReadFileSync(file, 'utf8');
-                        }, function () {
-                            return '{}';
-                        });
-                    },
-                    writeFileSync: local.nop
-                }],
+                [local.env, { npm_package_buildCustomOrg: '', npm_package_name: 'undefined' }],
+                [local.fs, { writeFileSync: local.nop }],
                 [local.assetsDict, {
                     // test no-assets.index.default.template.html handling-behavior
-                    '/assets.index.template.html': '',
-                    // test swaggerdoc handling-behavior
-                    '/assets.swgg.swagger.json': '{}'
+                    '/assets.index.template.html': ''
                 }]
             ], function (onError) {
                 local.buildReadme(options, onError);
                 // test $npm_package_buildCustomOrg handling-behavior
                 local.env.npm_package_buildCustomOrg = 'aa';
                 local.buildReadme(options, onError);
-                onError();
+                onError(null, options);
             }, local.onErrorThrow);
             options = {};
             options.customize = function () {

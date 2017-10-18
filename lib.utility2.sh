@@ -984,10 +984,10 @@ shCustomOrgRepoListCreate() {(set -e
 # this function will create and push the customOrg-repo $GITHUB_ORG/node-$GITHUB_ORG-$LIST[ii]
 # https://docs.travis-ci.com/api
 # example usage:
-# TRAVIS_REPO_CREATE_FORCE=1 shCryptoWithGithubOrg kaizhu256 shCustomOrgRepoListCreate kaizhu256/sandbox3
+# TRAVIS_REPO_CREATE_FORCE=1 shCryptoWithGithubOrg kaizhu256 shCustomOrgRepoListCreate kaizhu256/node-sandbox3
 # sleep 5
 # shCryptoWithGithubOrg kaizhu256 shTravisSync
-# TRAVIS_REPO_CREATE_FORCE=1 shCryptoWithGithubOrg kaizhu256 shCustomOrgRepoListCreate kaizhu256/sandbox3
+# TRAVIS_REPO_CREATE_FORCE=1 shCryptoWithGithubOrg kaizhu256 shCustomOrgRepoListCreate kaizhu256/node-sandbox3
     LIST="$1"
     export MODE_BUILD=shCustomOrgRepoListCreate
     cd /tmp
@@ -2229,6 +2229,9 @@ shMain() {
         jslint-lite
         swagger-ui-lite
         swgg
+        swgg-google
+        swgg-facebook
+        swgg-wechat
         uglifyjs-lite
         utility2"
 (set -e
@@ -2821,6 +2824,9 @@ local.fs.readFileSync(local.file, 'utf8')
             .replace('\u0027', '')
             .replace((/\\bbeta\\b|\\bmaster\\b/g), 'alpha')
             .replace((/\/build\//g), '/build..alpha..travis-ci.org/');
+        if ((/^https:\/\/snyk\.io\//).test(match0)) {
+            return;
+        }
         local.request = local[match1].request(local.url.parse(match0), function (response) {
             console.log('shReadmeLinkValidate ' + response.statusCode + ' ' + match0);
             response.destroy();

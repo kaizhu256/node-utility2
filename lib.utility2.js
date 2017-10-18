@@ -120,6 +120,7 @@ local.assetsDict['/assets.index.template.html'] = '\
 <title>{{env.npm_package_name}} (v{{env.npm_package_version}})</title>\n\
 <style>\n\
 /*csslint\n\
+    box-model: false,\n\
     box-sizing: false,\n\
     universal-selector: false\n\
 */\n\
@@ -143,6 +144,20 @@ button {\n\
 .uiAnimateSlide {\n\
     overflow-y: hidden;\n\
     transition: border-bottom 250ms, border-top 250ms, margin-bottom 250ms, margin-top 250ms, max-height 250ms, min-height 250ms, padding-bottom 250ms, padding-top 250ms;\n\
+}\n\
+@keyframes uiAnimateSpin {\n\
+    0% { transform: rotate(0deg); }\n\
+    100% { transform: rotate(360deg); }\n\
+}\n\
+.uiAnimateSpin {\n\
+    animation: uiAnimateSpin 2s linear infinite;\n\
+    border: 0.5rem solid #999;\n\
+    border-radius: 50%;\n\
+    border-top: 0.5rem solid #7d7;\n\
+    display: inline-block;\n\
+    height: 2rem;\n\
+    vertical-align: middle;\n\
+    width: 2rem;\n\
 }\n\
 .utility2FooterDiv {\n\
     margin-top: 20px;\n\
@@ -1822,7 +1837,6 @@ local.assetsDict['/favicon.ico'] = '';
             local.bufferToNodeBuffer = local.bufferToNodeBuffer || local.nop;
             local.bufferToString = local.bufferToString || local.nop;
             local.errorMessagePrepend = local.errorMessagePrepend || local.nop;
-            local.githubForwardProxyUrlTest = local.githubForwardProxyUrlTest || local.nop;
             local.onErrorWithStack = local.onErrorWithStack || function (arg) {
                 return arg;
             };
@@ -1849,6 +1863,9 @@ local.assetsDict['/favicon.ico'] = '';
             Object.keys(options.headers || {}).forEach(function (key) {
                 xhr.headers[key.toLowerCase()] = options.headers[key];
             });
+            // init corsForwardProxyHostifNeeded
+            xhr.corsForwardProxyHostifNeeded = xhr.corsForwardProxyHostifNeeded ||
+                local.corsForwardProxyHostifNeeded || local.nop;
             // init method
             xhr.method = xhr.method || 'GET';
             // init timeStart
@@ -1939,15 +1956,16 @@ local.assetsDict['/favicon.ico'] = '';
             xhr.addEventListener('loadstart', local.ajaxProgressUpdate);
             xhr.addEventListener('progress', local.ajaxProgressUpdate);
             xhr.upload.addEventListener('progress', local.ajaxProgressUpdate);
-            // open url
-            xhr.githubForwardProxyUrl = local.modeJs === 'browser' &&
+            // open url through corsForwardProxyHost
+            xhr.corsForwardProxyHost = local.modeJs === 'browser' &&
                 (/^https{0,1}:/).test(xhr.url) &&
                 xhr.url.indexOf(location.protocol + '//' + location.host) !== 0 &&
-                local.githubForwardProxyUrlTest(xhr.url, location);
-            if (xhr.githubForwardProxyUrl) {
-                xhr.open(xhr.method, xhr.githubForwardProxyUrl);
+                xhr.corsForwardProxyHostifNeeded(xhr.url, location);
+            if (xhr.corsForwardProxyHost) {
+                xhr.open(xhr.method, xhr.corsForwardProxyHost);
                 xhr.setRequestHeader('forward-proxy-headers', JSON.stringify(xhr.headers));
                 xhr.setRequestHeader('forward-proxy-url', xhr.url);
+            // open url
             } else {
                 xhr.open(xhr.method, xhr.url);
             }
@@ -3297,7 +3315,8 @@ return Utf8ArrayToStr(bff);
                 );
             });
             // init assets.swgg.swagger.json
-            if (local.fs.existsSync('assets.swgg.swagger.json')) {
+            if (process.env.npm_package_name !== 'utility2' &&
+                    local.fs.existsSync('assets.swgg.swagger.json')) {
                 local.fs.writeFileSync(
                     'assets.swgg.swagger.json',
                     local.jsonStringifyOrdered(local.objectSetOverride(
@@ -3348,7 +3367,8 @@ return Utf8ArrayToStr(bff);
                 });
             });
             // customize swaggerdoc
-            if (!local.assetsDict['/assets.swgg.swagger.json'] ||
+            if (process.env.npm_package_name === 'utility2' ||
+                    !local.assetsDict['/assets.swgg.swagger.json'] ||
                     (/\bswggUiContainer\b/).exec(local.assetsDict['/index.html'])) {
                 options.dataTo = options.dataTo.replace(
                     (/\n#### swagger doc\n[\S\s]*?\n#### /),
@@ -3647,6 +3667,41 @@ return Utf8ArrayToStr(bff);
             return tmp;
         };
 
+        local.corsBackendHostInject = function (url, backendHost, rgxInject, location) {
+        /*
+         * this function will inject backendHost into the url,
+         * if location.host is a github site
+         */
+            location = location || (typeof window === 'object' && window && window.location);
+            if (!(backendHost && location && (/\bgithub.io$/).test(location.host))) {
+                return url;
+            }
+            // init github-branch
+            location.pathname.replace(
+                (/\/build\.\.(alpha|beta|master)\.\.travis-ci\.org\//),
+                function (match0, match1) {
+                    // jslint-hack
+                    match0 = match1;
+                    backendHost = backendHost.replace('-alpha.', '-' + match0 + '.');
+                }
+            );
+            return url.replace(rgxInject || (/.*()/), backendHost + '$1');
+        };
+
+        local.corsForwardProxyHostifNeeded = function (url, location) {
+        /*
+         * this function will return a corsForwardProxyHost if needed by the url
+         */
+            // jslint-hack
+            local.nop(url);
+            return local.modeJs === 'browser' &&
+                local.env.npm_package_nameLib &&
+                (/\bgithub.io$/).test(location.host)
+                ? local.corsForwardProxyHost ||
+                    'https://h1-' + local.env.npm_package_nameLib + '-alpha.herokuapp.com'
+                : location.protocol + '//' + location.host;
+        };
+
         local.dbTableCustomOrgCreate = function (options, onError) {
         /*
          * this function will create a persistent dbTableCustomOrg
@@ -3907,42 +3962,6 @@ return Utf8ArrayToStr(bff);
                 // re-write to file
                 require('fs').writeFileSync(file, data);
             }
-        };
-
-        local.githubCorsUrlOverride = function (url, hostOverride, rgxHostOverride, location) {
-        /*
-         * this function will return hostOverride over location.host,
-         * if this app is hosted on github.io
-         */
-            location = location || (typeof window === 'object' && window && window.location);
-            if (!(hostOverride && location && (local.githubCorsHostTest ||
-                    (/\bgithub.com$|\bgithub.io$/).test(location.host)))) {
-                return url;
-            }
-            // init github-branch
-            location.pathname.replace(
-                (/\/build\.\.(alpha|beta|master)\.\.travis-ci\.org\//),
-                function (match0, match1) {
-                    // jslint-hack
-                    match0 = match1;
-                    hostOverride = hostOverride.replace('-alpha.', '-' + match0 + '.');
-                }
-            );
-            return url.replace(rgxHostOverride || (/.*()/), hostOverride + '$1');
-        };
-
-        local.githubForwardProxyUrlTest = function (url, location) {
-        /*
-         * this function will test if the url requires forward-proxy
-         */
-            // jslint-hack
-            local.nop(url);
-            return local.modeJs === 'browser' &&
-                local.env.npm_package_nameLib &&
-                (/\bgithub.io$/).test(location.host)
-                ? local.githubForwardProxyUrl ||
-                    'https://h1-' + local.env.npm_package_nameLib + '-alpha.herokuapp.com'
-                : location.protocol + '//' + location.host;
         };
 
         local.httpRequest = function (options, onError) {

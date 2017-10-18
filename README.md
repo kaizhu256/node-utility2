@@ -56,6 +56,8 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 [![apidoc](https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/apidoc.html)
 
 #### todo
+- npm publish 2017.10.12
+- styleguide - change indent from 4-space -> 2-space
 - apidoc - fix assert-module bug
 - revamp serverLog to consoleLog and consoleError
 - deprecate and remove local.serverLocalHost
@@ -65,17 +67,11 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 - analytics
 - none
 
-#### changelog for v2017.10.11
-- npm publish 2017.10.11
-- add function utility2.sjclHmacSha1Create
-- add shell-function shGitLogDateIsoString
-- function buildReadme - auto-normalize file assets.swgg.swagger.json
-- rename utility2.ajaxForwardProxyUrlTest to utility2.githubForwardProxyUrlTest
-- try to recover __coverage__ from node-utility2 test-page
-- apidoc - include swgg.apiDict
-- swgg - add param-property x-host
-- swgg - document library-call equivalent to curl-request
-- swgg - rename function swgg.apiDictUpdate -> swgg.apiUpdate
+#### changelog for v2017.10.12
+- add file assets.swgg.swagger.json from petstore.swagger.io
+- css - add class uiAnimate
+- rename function githubCorsUrlOverride -> corsBackendHostInject
+- rename function githubForwardProxyUrlTest -> corsForwardProxyHostifNeeded
 - none
 
 #### this package requires
@@ -406,6 +402,7 @@ instruction
 <title>{{env.npm_package_name}} (v{{env.npm_package_version}})</title>\n\
 <style>\n\
 /*csslint\n\
+    box-model: false,\n\
     box-sizing: false,\n\
     universal-selector: false\n\
 */\n\
@@ -429,6 +426,20 @@ button {\n\
 .uiAnimateSlide {\n\
     overflow-y: hidden;\n\
     transition: border-bottom 250ms, border-top 250ms, margin-bottom 250ms, margin-top 250ms, max-height 250ms, min-height 250ms, padding-bottom 250ms, padding-top 250ms;\n\
+}\n\
+@keyframes uiAnimateSpin {\n\
+    0% { transform: rotate(0deg); }\n\
+    100% { transform: rotate(360deg); }\n\
+}\n\
+.uiAnimateSpin {\n\
+    animation: uiAnimateSpin 2s linear infinite;\n\
+    border: 0.5rem solid #999;\n\
+    border-radius: 50%;\n\
+    border-top: 0.5rem solid #7d7;\n\
+    display: inline-block;\n\
+    height: 2rem;\n\
+    vertical-align: middle;\n\
+    width: 2rem;\n\
 }\n\
 .utility2FooterDiv {\n\
     margin-top: 20px;\n\
@@ -795,7 +806,7 @@ utility2-comment -->\n\
         "start": "set -e; export PORT=${PORT:-8080}; if [ -f assets.app.js ]; then node assets.app.js; else npm_config_mode_auto_restart=1 ./lib.utility2.sh shRun shIstanbulCover test.js; fi",
         "test": "PORT=$(./lib.utility2.sh shServerPortRandom) PORT_REPL=$(./lib.utility2.sh shServerPortRandom) npm_config_mode_auto_restart=1 ./lib.utility2.sh test test.js"
     },
-    "version": "2017.10.11"
+    "version": "2017.10.12"
 }
 ```
 
