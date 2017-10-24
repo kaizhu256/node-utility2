@@ -4,7 +4,7 @@
     bitwise: true,
     browser: true,
     maxerr: 8,
-    maxlen: 96,
+    maxlen: 100,
     node: true,
     nomen: true,
     regexp: true,
@@ -168,8 +168,8 @@
                 local.replStart();
             };
             if (local.replStart) {
-                local.cliDict['--interactive'] = local.cliDict['--interactive'] ||
-                    local.cliDict._interactive;
+                local.cliDict['--interactive'] =
+                    local.cliDict['--interactive'] || local.cliDict._interactive;
                 local.cliDict['-i'] = local.cliDict['-i'] || local.cliDict._interactive;
             }
             // run fnc()
@@ -691,9 +691,8 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
                 moduleMain = {};
                 moduleMain = options.moduleDict[options.env.npm_package_name] ||
                     options.require(options.dir) ||
-                    options.require(options.dir + '/' + (options.packageJson.bin)[
-                        Object.keys(options.packageJson.bin)[0]
-                    ]) || {};
+                    options.require(options.dir + '/' +
+                        (options.packageJson.bin)[Object.keys(options.packageJson.bin)[0]]) || {};
                 options.circularList.push(moduleMain);
                 console.error('apidocCreate - ... required ' + options.dir);
             }, console.error);
@@ -720,8 +719,8 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
                 local.objectSetDefault(tmp, moduleMain);
             // init circularList - builtin
             Object.keys(process.binding('natives')).forEach(function (key) {
-                if (!(/\/|_linklist|sys/).test(key)) {
-                    options.blacklistDict[key] = options.blacklistDict[key] || require(key);
+                if (!(/\/|^_linklist$|^sys$/).test(key)) {
+                    options.circularList.push(require(key));
                 }
             });
             // init circularList - blacklistDict
@@ -748,13 +747,11 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
             // init moduleDict child
             local.apidocModuleDictAdd(options, options.moduleDict);
             // init swgg.apiDict
-            Object.keys(
-                (moduleMain.swgg && moduleMain.swgg.apiDict) || {}
-            ).forEach(function (key) {
+            Object.keys((moduleMain.swgg && moduleMain.swgg.apiDict) || {}).forEach(function (key) {
                 tmp = options.env.npm_package_name + '.swgg.apiDict';
                 tmp = options.moduleDict[tmp] = options.moduleDict[tmp] || {};
-                tmp[encodeURIComponent(key) + '.ajax'] = moduleMain.swgg.apiDict[key] &&
-                    moduleMain.swgg.apiDict[key].ajax;
+                tmp[encodeURIComponent(key) + '.ajax'] =
+                    moduleMain.swgg.apiDict[key] && moduleMain.swgg.apiDict[key].ajax;
             });
             // init moduleExtraDict
             module = options.moduleExtraDict[options.env.npm_package_name] =
@@ -813,6 +810,7 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
                     }
                     console.error('apidocCreate - libFile ' + file);
                     tmp.module = options.require(options.dir + '/' + file);
+                    // filter circular-reference
                     if (!(tmp.module && options.circularList.indexOf(tmp.module) < 0)) {
                         return;
                     }

@@ -7,8 +7,8 @@ shBaseInit() {
     # init $PATH_BIN
     if [ ! "$PATH_BIN" ]
     then
-        export PATH_BIN=\
-"$HOME/bin:$HOME/node_modules/.bin:/usr/local/bin:/usr/local/sbin" || return $?
+        export PATH_BIN="$HOME/bin:$HOME/node_modules/.bin:/usr/local/bin:/usr/local/sbin" || \
+            return $?
         export PATH="$PATH_BIN:$PATH" || return $?
     fi
     # init $PATH_OS
@@ -95,7 +95,7 @@ shBrowserTestOnload() {(set -e
     bitwise: true,
     browser: true,
     maxerr: 8,
-    maxlen: 96,
+    maxlen: 100,
     node: true,
     nomen: true,
     regexp: true,
@@ -164,7 +164,7 @@ body {\\n\\
 <\/style>\\n\\
 <webview\\n\\
     id=\"webview1\"\\n\\
-    preload=\"' +  __filename + '\"\\n\\
+    preload=\"' + __filename + '\"\\n\\
     src=\"' + process.env.url + '\"\\n\\
     style=\"border: none;height: 100%;margin: 0;padding: 0;width: 100%;\"\\n\\
 >\\n\\
@@ -237,7 +237,7 @@ shBuildApp() {(set -e
     bitwise: true,
     browser: true,
     maxerr: 8,
-    maxlen: 96,
+    maxlen: 100,
     node: true,
     nomen: true,
     regexp: true,
@@ -633,7 +633,7 @@ $HOME/node_modules/utility2}" || return $?
     bitwise: true,
     browser: true,
     maxerr: 8,
-    maxlen: 96,
+    maxlen: 100,
     node: true,
     nomen: true,
     regexp: true,
@@ -699,7 +699,7 @@ if ((/^[^\/]+\/[^\/]+\$/).test(value)) {
     bitwise: true,
     browser: true,
     maxerr: 8,
-    maxlen: 96,
+    maxlen: 100,
     node: true,
     nomen: true,
     regexp: true,
@@ -819,7 +819,7 @@ shCryptoAesEncrypt() {(set -e
     # print base64-encoded $IV to stdout
     printf "$(printf "$IV" | base64)"
     # encrypt stdin and stream to stdout using aes-256-cbc with base64-encoding
-    openssl enc -aes-256-cbc -K "$CRYPTO_AES_KEY" -iv "$IV" | base64  | tr -d "\n"
+    openssl enc -aes-256-cbc -K "$CRYPTO_AES_KEY" -iv "$IV" | base64 | tr -d "\n"
     printf "\n"
 )}
 
@@ -953,7 +953,7 @@ shCustomOrgNameNormalize() {(set -e
     bitwise: true,
     browser: true,
     maxerr: 8,
-    maxlen: 96,
+    maxlen: 100,
     node: true,
     nomen: true,
     regexp: true,
@@ -1509,7 +1509,7 @@ shFileJsonNormalize() {(set -e
     bitwise: true,
     browser: true,
     maxerr: 8,
-    maxlen: 96,
+    maxlen: 100,
     node: true,
     nomen: true,
     regexp: true,
@@ -1676,7 +1676,7 @@ shFileKeySort() {(set -e
     bitwise: true,
     browser: true,
     maxerr: 8,
-    maxlen: 96,
+    maxlen: 100,
     node: true,
     nomen: true,
     regexp: true,
@@ -1722,7 +1722,7 @@ VERSION_PUBLISHED="${VERSION_PUBLISHED:-0.0.0}"
     bitwise: true,
     browser: true,
     maxerr: 8,
-    maxlen: 96,
+    maxlen: 100,
     node: true,
     nomen: true,
     regexp: true,
@@ -1986,7 +1986,7 @@ shGrepFileReplace() {(set -e
     bitwise: true,
     browser: true,
     maxerr: 8,
-    maxlen: 96,
+    maxlen: 100,
     node: true,
     nomen: true,
     regexp: true,
@@ -2028,7 +2028,7 @@ shHttpFileServer() {(set -e
     bitwise: true,
     browser: true,
     maxerr: 8,
-    maxlen: 96,
+    maxlen: 100,
     node: true,
     nomen: true,
     regexp: true,
@@ -2070,7 +2070,7 @@ shImageToDataUri() {(set -e
     bitwise: true,
     browser: true,
     maxerr: 8,
-    maxlen: 96,
+    maxlen: 100,
     node: true,
     nomen: true,
     regexp: true,
@@ -2218,20 +2218,16 @@ $ELEMENT"
 shMain() {
 # this function will run the main program
     export UTILITY2_DEPENDENTS="apidoc-lite
-        api-google
         db-lite
         elasticsearch-lite
         electron-lite
         github-crud
-        google-maps-lite
         istanbul-lite
         itunes-search-lite
         jslint-lite
         swagger-ui-lite
         swgg
         swgg-google
-        swgg-facebook
-        swgg-wechat
         uglifyjs-lite
         utility2"
 (set -e
@@ -2296,7 +2292,7 @@ shModuleDirname() {(set -e
     bitwise: true,
     browser: true,
     maxerr: 8,
-    maxlen: 96,
+    maxlen: 100,
     node: true,
     nomen: true,
     regexp: true,
@@ -2383,7 +2379,7 @@ shNpmDeprecateAlias() {(set -e
     bitwise: true,
     browser: true,
     maxerr: 8,
-    maxlen: 96,
+    maxlen: 100,
     node: true,
     nomen: true,
     regexp: true,
@@ -2439,7 +2435,7 @@ shNpmInstallWithPeerDependencies() {(set -e
     bitwise: true,
     browser: true,
     maxerr: 8,
-    maxlen: 96,
+    maxlen: 100,
     node: true,
     nomen: true,
     regexp: true,
@@ -2483,7 +2479,7 @@ shNpmPackageCliHelpCreate() {(set -e
     bitwise: true,
     browser: true,
     maxerr: 8,
-    maxlen: 96,
+    maxlen: 100,
     node: true,
     nomen: true,
     regexp: true,
@@ -2614,7 +2610,7 @@ shNpmPublishAlias() {(set -e
     bitwise: true,
     browser: true,
     maxerr: 8,
-    maxlen: 96,
+    maxlen: 100,
     node: true,
     nomen: true,
     regexp: true,
@@ -2745,7 +2741,7 @@ shPasswordEnvUnset() {
     bitwise: true,
     browser: true,
     maxerr: 8,
-    maxlen: 96,
+    maxlen: 100,
     node: true,
     nomen: true,
     regexp: true,
@@ -2798,7 +2794,7 @@ shReadmeLinkValidate() {(set -e
     bitwise: true,
     browser: true,
     maxerr: 8,
-    maxlen: 96,
+    maxlen: 100,
     node: true,
     nomen: true,
     regexp: true,
@@ -2924,7 +2920,7 @@ shReplClient() {(set -e
     bitwise: true,
     browser: true,
     maxerr: 8,
-    maxlen: 96,
+    maxlen: 100,
     node: true,
     nomen: true,
     regexp: true,
@@ -3005,7 +3001,7 @@ shRunWithScreenshotTxt() {(set -e
     bitwise: true,
     browser: true,
     maxerr: 8,
-    maxlen: 96,
+    maxlen: 100,
     node: true,
     nomen: true,
     regexp: true,
@@ -3306,16 +3302,7 @@ shUtility2DependentsSync() {(set -e
         fi
         # hardlink assets.utility2.rollup.js
         case "$DIR" in
-        api-*)
-            ln -f utility2/tmp/build/app/assets.utility2.rollup.js "$DIR"
-            ;;
         elasticsearch-lite)
-            ln -f utility2/tmp/build/app/assets.utility2.rollup.js "$DIR"
-            ;;
-        google-maps-lite)
-            ln -f utility2/tmp/build/app/assets.utility2.rollup.js "$DIR"
-            ;;
-        swgg-*)
             ln -f utility2/tmp/build/app/assets.utility2.rollup.js "$DIR"
             ;;
         swgg)
@@ -3323,6 +3310,11 @@ shUtility2DependentsSync() {(set -e
             ln -f utility2/lib.swgg.js "$DIR"
             ;;
         esac
+    done
+    # hardlink assets.utility2.rollup.js
+    for DIR in $(ls -d swgg-* 2>/dev/null)
+    do
+        ln -f utility2/tmp/build/app/assets.utility2.rollup.js "$DIR"
     done
 )}
 

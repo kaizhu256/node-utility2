@@ -4,7 +4,7 @@
     bitwise: true,
     browser: true,
     maxerr: 8,
-    maxlen: 96,
+    maxlen: 100,
     node: true,
     nomen: true,
     regexp: true,
@@ -191,7 +191,7 @@ textarea[readonly] {\n\
     bitwise: true,\n\
     browser: true,\n\
     maxerr: 8,\n\
-    maxlen: 96,\n\
+    maxlen: 100,\n\
     node: true,\n\
     nomen: true,\n\
     regexp: true,\n\
@@ -313,7 +313,7 @@ instruction\n\
     bitwise: true,\n\
     browser: true,\n\
     maxerr: 8,\n\
-    maxlen: 96,\n\
+    maxlen: 100,\n\
     node: true,\n\
     nomen: true,\n\
     regexp: true,\n\
@@ -547,7 +547,7 @@ local.assetsDict['/assets.lib.template.js'] = '\
     bitwise: true,\n\
     browser: true,\n\
     maxerr: 8,\n\
-    maxlen: 96,\n\
+    maxlen: 100,\n\
     node: true,\n\
     nomen: true,\n\
     regexp: true,\n\
@@ -925,7 +925,7 @@ local.assetsDict['/assets.test.template.js'] = '\
     bitwise: true,\n\
     browser: true,\n\
     maxerr: 8,\n\
-    maxlen: 96,\n\
+    maxlen: 100,\n\
     node: true,\n\
     nomen: true,\n\
     regexp: true,\n\
@@ -1128,7 +1128,7 @@ local.assetsDict['/assets.utility2.rollup.begin.js'] = '\
     bitwise: true,\n\
     browser: true,\n\
     maxerr: 8,\n\
-    maxlen: 96,\n\
+    maxlen: 100,\n\
     node: true,\n\
     nomen: true,\n\
     regexp: true,\n\
@@ -1217,9 +1217,9 @@ local.assetsDict['/favicon.ico'] = '';
         local.Blob = local.modeJs === 'browser'
             ? local.global.Blob
             : function (array, options) {
-              /*
-               * this function will create a node-compatible Blob instance
-               */
+            /*
+             * this function will create a node-compatible Blob instance
+             */
                 this.bff = local.bufferConcat(array);
                 this.type = options && options.type;
             };
@@ -1957,7 +1957,8 @@ local.assetsDict['/favicon.ico'] = '';
             xhr.addEventListener('progress', local.ajaxProgressUpdate);
             xhr.upload.addEventListener('progress', local.ajaxProgressUpdate);
             // open url through corsForwardProxyHost
-            xhr.corsForwardProxyHost = local.modeJs === 'browser' &&
+            xhr.corsForwardProxyHost =
+                local.modeJs === 'browser' &&
                 (/^https{0,1}:/).test(xhr.url) &&
                 xhr.url.indexOf(location.protocol + '//' + location.host) !== 0 &&
                 xhr.corsForwardProxyHostifNeeded(xhr.url, location);
@@ -1995,8 +1996,8 @@ local.assetsDict['/favicon.ico'] = '';
          * this function will update ajaxProgress
          */
             var ajaxProgressDiv1;
-            ajaxProgressDiv1 = local.modeJs === 'browser' &&
-                document.querySelector('#ajaxProgressDiv1');
+            ajaxProgressDiv1 =
+                local.modeJs === 'browser' && document.querySelector('#ajaxProgressDiv1');
             if (!ajaxProgressDiv1) {
                 return;
             }
@@ -2717,12 +2718,10 @@ function TranslateElementInit() {\n\
                         if (options.modeBrowserTest !== 'test') {
                             return;
                         }
-                        options.global_test_results =
-                            JSON.parse(data.data).global_test_results;
+                        options.global_test_results = JSON.parse(data.data).global_test_results;
                         if (options.global_test_results.testReport) {
                             // merge screenshot into test-report
-                            options.global_test_results.testReport.testPlatformList[0]
-                                .screenshot =
+                            options.global_test_results.testReport.testPlatformList[0].screenshot =
                                 options.fileScreenshot.replace((/.*\//), '');
                             // save browser test-report
                             options.fs.writeFileSync(
@@ -3308,28 +3307,26 @@ return Utf8ArrayToStr(bff);
                 );
                 options.dataTo = options.dataTo.replace(
                     options.rgx,
-                    match0.replace(
-                        match1,
-                        local.jsonStringifyOrdered(options.packageJson, null, 4)
-                    )
+                    match0.replace(match1, local.jsonStringifyOrdered(options.packageJson, null, 4))
                 );
             });
             // init assets.swgg.swagger.json
-            if (process.env.npm_package_name !== 'utility2' &&
-                    local.fs.existsSync('assets.swgg.swagger.json')) {
-                local.fs.writeFileSync(
-                    'assets.swgg.swagger.json',
-                    local.jsonStringifyOrdered(local.objectSetOverride(
-                        JSON.parse(local.fs.readFileSync('assets.swgg.swagger.json', 'utf8')),
-                        { info: {
-                            description: options.packageJson.description,
-                            title: options.packageJson.name,
-                            version: options.packageJson.version,
-                            'x-homepage': options.packageJson.homepage
-                        } },
-                        2
-                    ), null, 4) + '\n'
-                );
+            if (local.fs.existsSync('assets.swgg.swagger.json')) {
+                // save assets.swgg.swagger.json
+                local.fs.writeFileSync('assets.swgg.swagger.json', local.jsonStringifyOrdered(
+                    // normalize assets.swgg.swagger.json
+                    local.objectSetOverride(local.swgg.swaggerJsonNormalize(JSON.parse(
+                        // read assets.swgg.swagger.json
+                        local.fs.readFileSync('assets.swgg.swagger.json', 'utf8')
+                    )), { info: {
+                        description: options.packageJson.description,
+                        title: options.packageJson.name,
+                        version: options.packageJson.version,
+                        'x-swgg-homepage': options.packageJson.homepage
+                    } }, 2),
+                    null,
+                    4
+                ) + '\n');
             }
             // search-and-replace - customize dataTo
             [
@@ -3370,10 +3367,8 @@ return Utf8ArrayToStr(bff);
             if (process.env.npm_package_name === 'utility2' ||
                     !local.assetsDict['/assets.swgg.swagger.json'] ||
                     (/\bswggUiContainer\b/).exec(local.assetsDict['/index.html'])) {
-                options.dataTo = options.dataTo.replace(
-                    (/\n#### swagger doc\n[\S\s]*?\n#### /),
-                    '\n#### '
-                );
+                options.dataTo = options.dataTo.replace((/\n#### swagger doc\n[\S\s]*?\n#### /),
+                    '\n#### ');
             }
             // customize comment
             options.dataFrom.replace(
@@ -3608,8 +3603,8 @@ return Utf8ArrayToStr(bff);
                 local.replStart();
             };
             if (local.replStart) {
-                local.cliDict['--interactive'] = local.cliDict['--interactive'] ||
-                    local.cliDict._interactive;
+                local.cliDict['--interactive'] =
+                    local.cliDict['--interactive'] || local.cliDict._interactive;
                 local.cliDict['-i'] = local.cliDict['-i'] || local.cliDict._interactive;
             }
             // run fnc()
@@ -3747,8 +3742,10 @@ return Utf8ArrayToStr(bff);
             local.onNext(options, function (error, data) {
                 switch (options.modeNext) {
                 case 1:
-                    self = local.dbTableCustomOrg =
-                        local.dbTableCustomOrgCreate(options, options.onNext);
+                    self = local.dbTableCustomOrg = local.dbTableCustomOrgCreate(
+                        options,
+                        options.onNext
+                    );
                     break;
                 case 2:
                     self = local.dbTableCustomOrg = data;
@@ -4398,19 +4395,14 @@ return Utf8ArrayToStr(bff);
             });
         };
 
-        local.middlewareCacheControlLastModified = function (
-            request,
-            response,
-            nextMiddleware
-        ) {
+        local.middlewareCacheControlLastModified = function (request, response, nextMiddleware) {
         /*
          * this function will run the middleware that will update the Last-Modified header
          */
             // do not cache if headers already sent or url has '?' search indicator
             if (!(response.headersSent || request.url.indexOf('?') >= 0)) {
                 // init serverResponseHeaderLastModified
-                local.serverResponseHeaderLastModified =
-                    local.serverResponseHeaderLastModified ||
+                local.serverResponseHeaderLastModified = local.serverResponseHeaderLastModified ||
                     // resolve to 1000 ms
                     new Date(new Date(Math.floor(Date.now() / 1000) * 1000).toGMTString());
                 // respond with 304 If-Modified-Since serverResponseHeaderLastModified
@@ -5286,6 +5278,23 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
                     file = dir + '/' + file;
                     // if the file is modified, then restart the process
                     local.onFileModifiedRestart(file);
+                    switch (local.path.basename(file)) {
+                    // swagger-validate assets.swgg.swagger.json
+                    case 'assets.swgg.swagger.json':
+                        local.fs.readFile(file, 'utf8', function (error, data) {
+                            local.tryCatchOnError(function () {
+                                // validate no error occurred
+                                local.assert(!error, error);
+                                // coverage-hack - ignore else-statement
+                                local.nop(local.swgg &&
+                                    local.swgg.validateBySwagger &&
+                                    (function () {
+                                        local.swgg.validateBySwagger(JSON.parse(data));
+                                    }()));
+                            }, console.error);
+                        });
+                        break;
+                    }
                     switch (local.path.extname(file)) {
                     case '.css':
                     case '.html':
@@ -5304,7 +5313,8 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
             });
             if (local.global.utility2_rollup || local.env.npm_config_mode_start) {
                 // init assets
-                local.assetsDict['/'] = local.assetsDict['/index.html'] =
+                local.assetsDict['/'] =
+                    local.assetsDict['/index.html'] =
                     local.assetsDict['/index.html'] || local.templateRender(
                         // uncomment utility2-comment
                         local.assetsDict['/assets.index.template.html'].replace(
@@ -5824,7 +5834,7 @@ instruction\n\
          */
             local.onNext(options, function (error, data) {
                 switch (options.modeNext) {
-                //  1. if cache-hit, then call onError with cacheValue
+                // 1. if cache-hit, then call onError with cacheValue
                 case 1:
                     // read cacheValue from memory-cache
                     local.cacheDict[options.cacheDict] = local.cacheDict[options.cacheDict] ||
@@ -5974,7 +5984,7 @@ instruction\n\
             options.githubRepo[1] = options.githubRepo[1].replace((/\.git$/), '');
             template = template.replace(
                 (/https:\/\/kaizhu256\.github\.io\/node-jslint-lite/g),
-                'https://' +  options.githubRepo[0] + '.github.io/' +  options.githubRepo[1]
+                'https://' + options.githubRepo[0] + '.github.io/' + options.githubRepo[1]
             );
             template = template.replace(
                 (/kaizhu256\/node-jslint-lite/g),
@@ -5996,7 +6006,8 @@ instruction\n\
             );
             template = template.replace(
                 (/\bh1-jslint\b/g),
-                'h1-' + options.packageJson.nameLib.replace((/_/g), '-')
+                options.packageJson.nameHeroku ||
+                    ('h1-' + options.packageJson.nameLib.replace((/_/g), '-'))
             );
             template = template.replace(
                 'assets.{{env.npm_package_nameLib}}',
@@ -6300,9 +6311,7 @@ instruction\n\
                                 name: testPlatform.name,
                                 screenshot: testPlatform.screenshot,
                                 // map testCaseList
-                                testCaseList: testPlatform.testCaseList.map(function (
-                                    testCase
-                                ) {
+                                testCaseList: testPlatform.testCaseList.map(function (testCase) {
                                     testCaseNumber += 1;
                                     if (testCase.errorStack) {
                                         errorStackList.push({
@@ -6499,7 +6508,7 @@ instruction\n\
                         JSON.stringify(testReport)
                     );
                     // cleanup $npm_config_dir_tmp
-                    local.child_process.spawnSync('rm -f ' +  local.env.npm_config_dir_tmp +
+                    local.child_process.spawnSync('rm -f ' + local.env.npm_config_dir_tmp +
                         '/electron.*', { shell: true, stdio: ['ignore', 1, 2] });
                     break;
                 }
@@ -7112,6 +7121,37 @@ instruction\n\
                 return require(local.env.npm_config_dir_build + '/test-report.json');
             }, local.onErrorDefault)).testsFailed);
         };
+        local.cliDict['cli.swaggerValidate'] = function () {
+        /*
+         * swagger-json-file
+         * validate swagger-json-file
+         */
+            var options;
+            options = {};
+            local.onNext(options, function (error, data) {
+                switch (options.modeNext) {
+                case 1:
+                    // fetch url
+                    if ((/^(?:http|https):\/\//).test(process.argv[3])) {
+                        local.ajax({ url: process.argv[3] }, function (error, data) {
+                            options.onNext(error, data && data.responseText);
+                        });
+                        return;
+                    }
+                    // read file
+                    local.fs.readFile(process.argv[3], 'utf8', options.onNext);
+                    break;
+                case 2:
+                    // validate data
+                    local.swgg.validateBySwagger(JSON.parse(data));
+                    break;
+                default:
+                    local.assert(!error, error);
+                }
+            });
+            options.modeNext = 0;
+            options.onNext();
+        };
         if ((module === require.main && !local.global.utility2_rollup) ||
                 process.argv[2] === 'cli.browserTest') {
             local.cliRun(local.nop);
@@ -7120,6 +7160,7 @@ instruction\n\
                 switch (process.argv[2]) {
                 case '--interactive':
                 case '-i':
+                case 'cli.swaggerValidate':
                     break;
                 default:
                     return;

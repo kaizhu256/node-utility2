@@ -56,23 +56,21 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 [![apidoc](https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/apidoc.html)
 
 #### todo
-- styleguide - change indent from 4-space -> 2-space
-- apidoc - fix assert-module bug
-- revamp serverLog to consoleLog and consoleError
-- deprecate and remove local.serverLocalHost
 - allow server-side stdout to be streamed to webapps
-- add utility2.middlewareRateLimit
 - add server stress test using electron
 - analytics
 - none
 
-#### changelog for v2017.10.17
-- npm publish 2017.10.17
-- README.md - disable link validation for snyk.io
-- add file assets.swgg.swagger.json from petstore.swagger.io
-- css - add class uiAnimate
-- rename function githubCorsUrlOverride -> corsBackendHostInject
-- rename function githubForwardProxyUrlTest -> corsForwardProxyHostifNeeded
+#### changelog for v2017.10.24
+- npm publish 2017.10.24
+- apidoc - fix assert-module bug
+- auto-validate assets.swgg.swagger.json
+- cli - add commend cli.swaggerValidate
+- remove file assets.swgg.swagger.json
+- styleguide - change max characters per line from 96 -> 100
+- swgg - remove datatable for future revamp
+- swgg - add feature \$SWGG_TAGS0_FILTER to filter x-swgg-tags0
+- swgg - add feature x-swgg-operationIdFromPath to auto-create operationId from path
 - none
 
 #### this package requires
@@ -134,7 +132,7 @@ instruction
     bitwise: true,
     browser: true,
     maxerr: 8,
-    maxlen: 96,
+    maxlen: 100,
     node: true,
     nomen: true,
     regexp: true,
@@ -478,7 +476,7 @@ textarea[readonly] {\n\
     bitwise: true,\n\
     browser: true,\n\
     maxerr: 8,\n\
-    maxlen: 96,\n\
+    maxlen: 100,\n\
     node: true,\n\
     nomen: true,\n\
     regexp: true,\n\
@@ -807,7 +805,7 @@ utility2-comment -->\n\
         "start": "set -e; export PORT=${PORT:-8080}; if [ -f assets.app.js ]; then node assets.app.js; else npm_config_mode_auto_restart=1 ./lib.utility2.sh shRun shIstanbulCover test.js; fi",
         "test": "PORT=$(./lib.utility2.sh shServerPortRandom) PORT_REPL=$(./lib.utility2.sh shServerPortRandom) npm_config_mode_auto_restart=1 ./lib.utility2.sh test test.js"
     },
-    "version": "2017.10.17"
+    "version": "2017.10.24"
 }
 ```
 

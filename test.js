@@ -3,7 +3,7 @@
     bitwise: true,
     browser: true,
     maxerr: 8,
-    maxlen: 96,
+    maxlen: 100,
     node: true,
     nomen: true,
     regexp: true,
@@ -55,7 +55,7 @@
             // test failure from callback handling-behavior
             onError(local.errorDefault);
             // test failure from multiple-callback handling-behavior
-            onError();
+            onError(null, options);
             // test failure from ajax handling-behavior
             options = { url: '/undefined' };
             local.ajax(options, onError);
@@ -97,7 +97,7 @@
                         'filename="filename2.txt"\r\nContent-Type: text/plain; ' +
                         'charset=utf-8\r\n\r\naabb\u1234 0\r\n'
                 ) >= 0, xhr.responseText);
-                onError();
+                onError(null, options);
             });
         };
 
@@ -135,7 +135,7 @@
                 local.assert(!error, error);
                 // validate responseText
                 local.assert((/\r\n\r\n$/).test(xhr.responseText), xhr.responseText);
-                onError();
+                onError(null, options);
             });
         };
 
@@ -144,10 +144,10 @@
          * this function will test ajaxProgressUpdate's misc handling-behavior
          */
             options = {};
-            options.ajaxProgressDiv1 = local.modeJs === 'browser' &&
-                document.querySelector('#ajaxProgressDiv1');
+            options.ajaxProgressDiv1 =
+                local.modeJs === 'browser' && document.querySelector('#ajaxProgressDiv1');
             if (!options.ajaxProgressDiv1) {
-                onError();
+                onError(null, options);
                 return;
             }
             local.testMock([
@@ -158,7 +158,7 @@
                 options.ajaxProgressDiv1.style.background = 'transparent';
                 local.ajaxProgressCounter = 0;
                 local.ajaxProgressUpdate();
-                onError();
+                onError(null, options);
             }, onError);
         };
 
@@ -169,7 +169,7 @@
             options = local.ajax({ url: '/test.timeout' }, function (error) {
                 // validate error occurred
                 local.assert(error, error);
-                onError();
+                onError(null, options);
             });
             // test multiple-callback handling-behavior
             options.onEvent({ type: 'abort' });
@@ -187,7 +187,7 @@
                 local.assert(!error, error);
                 // validate statusCode
                 local.assertJsonEqual(xhr.statusCode, 200);
-                onError();
+                onError(null, options);
             });
         };
 
@@ -277,7 +277,7 @@
                 local.assert(!error, error);
                 // test /test.echo handling-behavior
                 local.ajax({
-                    data:  'aa',
+                    data: 'aa',
                     // test request-header handling-behavior
                     headers: { 'X-Request-Header-Test': 'aa' },
                     method: 'POST',
@@ -306,7 +306,7 @@
                     local.assertJsonEqual(options.data, 'bb');
                     options.data = xhr.getResponseHeader('undefined');
                     local.assertJsonEqual(options.data, null);
-                    onError();
+                    onError(null, options);
                 });
             });
         };
@@ -320,7 +320,7 @@
                 local.ajax(options, function (error) {
                     // validate error occurred
                     local.assert(error, error);
-                    onError();
+                    onError(null, options);
                 });
             }, 1000);
         };
@@ -378,7 +378,7 @@
                     }
                 });
             });
-            onError();
+            onError(null, options);
         };
 
         local.testCase_base64Xxx_default = function (options, onError) {
@@ -399,7 +399,7 @@
                 local.base64FromString(local.base64ToString(options.base64)),
                 options.base64
             );
-            onError();
+            onError(null, options);
         };
 
         local.testCase_blobRead_default = function (options, onError) {
@@ -463,7 +463,7 @@
             options.bff1 = local.bufferCreate(options.text1);
             options.text2 = local.bufferToString(options.bff1);
             local.assertJsonEqual(options.text2, local.bufferToString(options.text2));
-            onError();
+            onError(null, options);
         };
 
         local.testCase_bufferCreate_polyfill = function (options, onError) {
@@ -504,7 +504,7 @@
                 );
                 local.assertJsonEqual(options.data, options.validate);
             });
-            onError();
+            onError(null, options);
         };
 
         local.testCase_buildXxx_default = function (options, onError) {
@@ -563,7 +563,7 @@
                 { host: 'github.io', pathname: '/build..beta..travis-ci.org/' }
             );
             local.assertJsonEqual(options.data, 'aa-beta.bb.com/cc/dd');
-            onError();
+            onError(null, options);
         };
 
         local.testCase_dbTableCustomOrgXxx_default = function (options, onError) {
@@ -594,7 +594,7 @@
                             return local.db;
                         },
                         save: function (onError) {
-                            onError();
+                            onError(null, options);
                         }
                     },
                     setTimeoutOnError: function (onError, error) {
@@ -605,9 +605,9 @@
             local.testMock(options, function (onError) {
                 local.dbTableCustomOrgUpdate({ customOrg: 'aa' }, local.onErrorThrow);
                 local.dbTableCustomOrgCrudGetManyByQuery({});
-                onError();
+                onError(null, options);
             }, local.onErrorThrow);
-            onError();
+            onError(null, options);
         };
 
         local.testCase_debug_inline_default = function (options, onError) {
@@ -627,7 +627,7 @@
                     options.data,
                     '\n\n\ndebug_inline\naa\n\n'.replace('_i', 'I')
                 );
-                onError();
+                onError(null, options);
             }, onError);
         };
 
@@ -638,7 +638,7 @@
             options = {};
             options.data = local.echo('aa');
             local.assertJsonEqual(options.data, 'aa');
-            onError();
+            onError(null, options);
         };
 
         local.testCase_envSanitize_default = function (options, onError) {
@@ -656,7 +656,7 @@
                 password: ''
             });
             local.assertJsonEqual(options, { aa: '', aapassword: '' });
-            onError();
+            onError(null, options);
         };
 
         local.testCase_exit_error = function (options, onError) {
@@ -665,7 +665,7 @@
          */
             // test invalid exit-code handling-behavior
             local.exit('invalid exit-code', options);
-            onError();
+            onError(null, options);
         };
 
         local.testCase_isNullOrUndefined_default = function (options, onError) {
@@ -682,7 +682,7 @@
             options.data = local.isNullOrUndefined(false);
             // validate data
             local.assertJsonEqual(options.data, false);
-            onError();
+            onError(null, options);
         };
 
         local.testCase_jslintAndPrintConditional_default = function (options, onError) {
@@ -717,7 +717,7 @@
                 );
                 // validate no error occurred
                 local.assert(!local.jslint.errorText, local.jslint.errorText);
-                onError();
+                onError(null, options);
             }, onError);
         };
 
@@ -731,7 +731,7 @@
                 options.data = local.jsonCopy(element);
                 local.assertJsonEqual(options.data, element);
             });
-            onError();
+            onError(null, options);
         };
 
         local.testCase_jsonStringifyOrdered_default = function (options, onError) {
@@ -762,7 +762,7 @@
                 options,
                 { aa: 1, bb: null, ee: [ 1, null, null ], ff: { gg: 1, hh: 2 } }
             );
-            onError();
+            onError(null, options);
         };
 
         local.testCase_jwtA256GcmXxx_default = function (options, onError) {
@@ -784,7 +784,7 @@
             );
             // test decryption-failed handling-behavior
             local.assertJsonEqual(local.jwtA256GcmDecrypt(options.token, null), {});
-            onError();
+            onError(null, options);
         };
 
         local.testCase_jwtHs256Xxx_default = function (options, onError) {
@@ -812,7 +812,7 @@
             // test decoding-failed handling-behavior
             options.data = local.jwtHs256Decode(options.token, 'undefined');
             local.assertJsonEqual(options.data, {});
-            onError();
+            onError(null, options);
         };
 
         local.testCase_listGetElementRandom_default = function (options, onError) {
@@ -832,7 +832,7 @@
                 Object.keys(options.elementDict).sort(),
                 ['aa', 'bb', 'cc', 'dd']
             );
-            onError();
+            onError(null, options);
         };
 
         local.testCase_listShuffle_default = function (options, onError) {
@@ -852,7 +852,7 @@
             }
             // validate list changed at least once during the shuffle
             local.assert(options.changed, options);
-            onError();
+            onError(null, options);
         };
 
         local.testCase_normalizeValue_default = function (options, onError) {
@@ -888,7 +888,7 @@
             local.assertJsonEqual(options.data, '');
             options.data = local.normalizeValue('string', {});
             local.assertJsonEqual(options.data, '');
-            onError();
+            onError(null, options);
         };
 
         local.testCase_objectGetElementFirst_default = function (options, onError) {
@@ -900,7 +900,7 @@
                 local.objectGetElementFirst(options),
                 { key: 'aa', value: 1 }
             );
-            onError();
+            onError(null, options);
         };
 
         local.testCase_objectKeysTypeOf_default = function (options, onError) {
@@ -920,7 +920,7 @@
                 options,
                 'boolean aa\nfunction bb\nnumber cc\nobject dd\nstring ee\nundefined ff'
             );
-            onError();
+            onError(null, options);
         };
 
         local.testCase_objectLiteralize_default = function (options, onError) {
@@ -933,7 +933,7 @@
             });
             // validate options
             local.assertJsonEqual(options, { 1: { 2: 3 }, '': '$[]' });
-            onError();
+            onError(null, options);
         };
 
         local.testCase_objectSetDefault_default = function (options, onError) {
@@ -978,7 +978,7 @@
                 options,
                 { aa: 2, bb: { cc: 1, dd: 2 }, cc: { dd: {} }, dd: [1, 1], ee: [1, 1] }
             );
-            onError();
+            onError(null, options);
         };
 
         local.testCase_objectSetOverride_default = function (options, onError) {
@@ -1033,7 +1033,7 @@
             );
             // validate options
             local.assertJsonEqual(options.emptyString, '');
-            onError();
+            onError(null, options);
         };
 
         local.testCase_objectTraverse_default = function (options, onError) {
@@ -1053,7 +1053,7 @@
                 options,
                 { aa: null, bb: 2, cc: { dd: 4, ee: [5, 6, 7], zz: true }, zz: true }
             );
-            onError();
+            onError(null, options);
         };
 
         local.testCase_onErrorDefault_default = function (options, onError) {
@@ -1074,7 +1074,7 @@
                 local.onErrorDefault(local.errorDefault);
                 // validate options
                 local.assert(options, options);
-                onError();
+                onError(null, options);
             }, onError);
         };
 
@@ -1089,7 +1089,7 @@
             }, function (error) {
                 // validate error occurred
                 local.assert(error, error);
-                onError();
+                onError(null, options);
             });
         };
 
@@ -1108,7 +1108,7 @@
             }, function (error) {
                 // validate error occurred
                 local.assert(error, error);
-                onError();
+                onError(null, options);
             });
         };
 
@@ -1240,7 +1240,7 @@
                 local.timeElapsedPoll(options);
                 // validate timeElapsed passed is greater than timeout
                 local.assert(options.timeElapsed >= 1500, options);
-                onError();
+                onError(null, options);
             // coverage-hack - use 1500 ms to cover setInterval
             }, 1500, function () {
                 return 'testCase_onTimeout_errorTimeout';
@@ -1271,7 +1271,7 @@
                 // validate timeElapsed
                 local.assert(0 <= options.timeElapsed &&
                     options.timeElapsed < local.timeoutDefault, options.timeElapsed);
-                onError();
+                onError(null, options);
             });
         };
 
@@ -1281,7 +1281,7 @@
          */
             options = {};
             local._serverLog(options);
-            onError();
+            onError(null, options);
         };
 
         local.testCase_setTimeoutOnError_default = function (options, onError) {
@@ -1319,7 +1319,7 @@
                     '$l/guDhz2Q0v/D93gq0K0qtSX6FWP8pH5maAJkbIcRaE='
             );
             local.assertJsonEqual(options.data, true);
-            onError();
+            onError(null, options);
         };
 
         local.testCase_sjclHashSha256Create_default = function (options, onError) {
@@ -1329,7 +1329,7 @@
             options = {};
             options.data = local.sjclHashSha256Create('aa');
             local.assertJsonEqual(options.data, 'lhtt0+3jy47LqsvWjeBAzXjrLtWIkTDM60xJJo6k1QY=');
-            onError();
+            onError(null, options);
         };
 
         local.testCase_sjclHmacShaXxx_default = function (options, onError) {
@@ -1358,7 +1358,7 @@
                 options.data,
                 '&#x3c;a href=&#x22;/undefined?aa=1&#x26;bb=2#cc&#x22;&#x3e;&#x3c;/a&#x3e;'
             );
-            onError();
+            onError(null, options);
         };
 
         local.testCase_taskCreateCached_default = function (options, onError) {
@@ -1441,15 +1441,15 @@
          */
             options = { counter: 0, key: 'testCase_taskCreate_multiCallback' };
             local.taskCreate(options, function (onError) {
-                onError();
+                onError(null, options);
                 // test multiple-callback handling-behavior
-                onError();
+                onError(null, options);
             }, function () {
                 options.counter += 1;
             });
             // validate counter incremented once
             local.assertJsonEqual(options.counter, 1);
-            onError();
+            onError(null, options);
         };
 
         local.testCase_taskCreate_upsert = function (options, onError) {
@@ -1467,7 +1467,7 @@
             // validate counter incremented once
             setTimeout(function () {
                 local.assertJsonEqual(options.counter, 1);
-                onError();
+                onError(null, options);
             });
         };
 
@@ -1549,7 +1549,7 @@
                 '    \n' +
                 '\n' +
                 '{{/undefined aa}}\n');
-            onError();
+            onError(null, options);
         };
 
         local.testCase_testRunDefault_nop = function (options, onError) {
@@ -1594,7 +1594,7 @@
             options.data = local.uglify('aa = 1', 'aa.js');
             // validate data
             local.assertJsonEqual(options.data, 'aa=1');
-            onError();
+            onError(null, options);
         };
 
         local.testCase_urlParse_default = function (options, onError) {
@@ -1638,7 +1638,7 @@
                     query: {},
                     search: ''
                 });
-                onError();
+                onError(null, options);
             }, onError);
         };
 
@@ -1651,7 +1651,7 @@
             options.data = local.uuid4Create();
             // validate data
             local.assert((local.regexpUuidValidate).test(options.data), options.data);
-            onError();
+            onError(null, options);
         };
 
         local.utility2.serverLocalUrlTest = function (url) {
@@ -1695,7 +1695,7 @@
                     // validate no error occurred
                     local.assert(!error, error);
                 });
-                onError();
+                onError(null, options);
             }, onError);
         };
 
@@ -1714,7 +1714,7 @@
                     // validate error occurred
                     local.assert(error, error);
                 });
-                onError();
+                onError(null, options);
             }, onError);
         };
 
@@ -1745,17 +1745,7 @@
             // validate data
             options.data = local.cookieDict().aa;
             local.assertJsonEqual(options.data, undefined);
-            onError();
-        };
-
-        local.testCase_domFragmentRender_default = function (options, onError) {
-        /*
-         * this function will test domFragmentRender's default handling-behavior
-         */
-            options = {};
-            options.data = local.domFragmentRender('<div>{{value}}</div>', { value: 'aa' });
-            local.assertJsonEqual(options.data.children[0].outerHTML, '<div>aa</div>');
-            onError();
+            onError(null, options);
         };
 
         local.testCase_corsForwardProxyHostifNeeded_default = function (options, onError) {
@@ -1770,6 +1760,16 @@
                 host: 'github.io',
                 protocol: 'https:'
             }).indexOf('.herokuapp.com') >= 0);
+            onError(null, options);
+        };
+
+        local.testCase_domFragmentRender_default = function (options, onError) {
+        /*
+         * this function will test domFragmentRender's default handling-behavior
+         */
+            options = {};
+            options.data = local.domFragmentRender('<div>{{value}}</div>', { value: 'aa' });
+            local.assertJsonEqual(options.data.children[0].outerHTML, '<div>aa</div>');
             onError(null, options);
         };
 
@@ -1846,7 +1846,7 @@
             local.uiAnimateSlideUp(options);
             // test uiAnimateSlideAccordian handling-behavior
             local.uiAnimateSlideAccordian(options, [options, document.createElement('div')]);
-            onError();
+            onError(null, options);
         };
         break;
 
@@ -1978,7 +1978,7 @@
                 options.modeNext = 0;
                 options.modeBrowserTest = 'scrape';
                 local.browserTest(options, local.nop);
-                onError();
+                onError(null, options);
             }, onError);
         };
 
@@ -2051,7 +2051,7 @@
                 [local.env, { GITHUB_ORG: '', npm_package_buildCustomOrg: 'electron-lite' }],
                 [local.fs, { writeFileSync: local.nop }],
                 [local.global, { setTimeout: function (onError) {
-                    onError();
+                    onError(null, options);
                 } }],
                 [process, { on: function (options, onError) {
                     // test error handling-behavior
@@ -2068,7 +2068,7 @@
                 // test scrapeitall handling-behavior
                 local.env.GITHUB_ORG = 'scrapeitall';
                 local.buildCustomOrg(options, local.onErrorThrow);
-                onError();
+                onError(null, options);
             }, local.onErrorThrow);
             options = {};
             local.buildCustomOrg(options, onError);
@@ -2088,10 +2088,24 @@
             options.fsReadFileSync = local.fs.readFileSync;
             local.testMock([
                 [local.env, { npm_package_buildCustomOrg: '', npm_package_name: 'undefined' }],
-                [local.fs, { writeFileSync: local.nop }],
+                [local.fs, {
+                    existsSync: function () {
+                        return true;
+                    },
+                    readFileSync: function (file) {
+                        return local.tryCatchOnError(function () {
+                            return options.fsReadFileSync(file, 'utf8');
+                        }, function () {
+                            return '{}';
+                        });
+                    },
+                    writeFileSync: local.nop
+                }],
                 [local.assetsDict, {
                     // test no-assets.index.default.template.html handling-behavior
-                    '/assets.index.template.html': ''
+                    '/assets.index.template.html': '',
+                    // test swaggerdoc handling-behavior
+                    '/assets.swgg.swagger.json': '{}'
                 }]
             ], function (onError) {
                 local.buildReadme(options, onError);
@@ -2145,7 +2159,7 @@
                 [local, { timeoutDefault: 1000 }]
             ], function (onError) {
                 options.childProcess = local.childProcessSpawnWithTimeout('sleep', [5000]);
-                onError();
+                onError(null, options);
             }, local.onErrorThrow);
             options.childProcess
                 .on('error', onParallel)
@@ -2177,7 +2191,7 @@
                 ['--eval', '--help', '--interactive'].forEach(function (key) {
                     local.cliDict[key]();
                 });
-                onError();
+                onError(null, options);
             }, onError);
         };
 
@@ -2203,7 +2217,7 @@
             );
             // validate data
             local.assertJsonEqual(options.data, 'aa');
-            onError();
+            onError(null, options);
         };
 
         local.testCase_httpRequest_default = function (options, onError) {
@@ -2217,7 +2231,7 @@
             // test default handling-behavior
             onParallel.counter += 1;
             local.httpRequest({
-                data:  'aa',
+                data: 'aa',
                 // test request-header handling-behavior
                 headers: { 'X-Request-Header-Test': 'aa' },
                 method: 'POST',
@@ -2258,7 +2272,7 @@
                 };
                 local.http.request.end = local.http.request.on = local.http.request;
                 local.httpRequest({ url: 'http://example.com' });
-                onError();
+                onError(null, options);
             }, onParallel);
             // test timeout handling-behavior
             onParallel.counter += 1;
@@ -2286,7 +2300,7 @@
             );
             local.fs.writeFileSync('tmp/lib.utility2.js', options.data);
             require('./tmp/lib.utility2.js');
-            onError();
+            onError(null, options);
         };
 
         local.testCase_middlewareForwardProxy_default = function (options, onError) {
@@ -2347,7 +2361,7 @@
             // test module does not exists handling-behavior
             options.data = local.moduleDirname('syntax error', options.modulePathList);
             local.assertJsonEqual(options.data, '');
-            onError();
+            onError(null, options);
         };
 
         local.testCase_onFileModifiedRestart_watchFile = function (options, onError) {
@@ -2416,7 +2430,7 @@
                 // coverage-hack
                 local.global.utility2_serverRepl1.nop();
                 local.global.utility2_serverRepl1.onError(local.errorDefault);
-                onError();
+                onError(null, options);
             }, onError);
         };
 
@@ -2441,7 +2455,7 @@
                     options.data.indexOf(options.input) >= 0,
                     JSON.stringify([options.data, options.input])
                 );
-                onError();
+                onError(null, options);
             });
             options.socket.write(options.input + '\n');
             // test error-handling behavior
@@ -2462,11 +2476,22 @@
                     npm_package_nameLib: '_testCase_requireReadme_start'
                 }],
                 [local.fs, {
+                    readFile: function (file, options, onError) {
+                        onError(null, '{}', file, options);
+                    },
                     readdirSync: function () {
                         // test jslintAndPrintConditional behavior
-                        return ['aa.css', 'aa.html', 'aa.js', 'aa.json', 'aa.rollup.js'];
+                        return [
+                            'aa.css',
+                            'aa.html',
+                            'aa.js',
+                            'aa.json',
+                            'aa.rollup.js',
+                            'assets.swgg.swagger.json'
+                        ];
                     }
-                }]
+                }],
+                [local.swgg, { validateBySwagger: local.nop }]
             ], function (onError) {
                 // validate data
                 local.requireReadme();
@@ -2494,7 +2519,7 @@
                     // test default timeout handling-behavior
                     null
                 );
-                onError();
+                onError(null, options);
             }, onError);
         };
 
@@ -2546,6 +2571,10 @@
 
     // run shared js-env code - init-after
     (function () {
+        // init assets
+        local.assetsDict['/assets.swgg.swagger.json'] =
+            local.assetsDict['/assets.swgg.swagger.json'] ||
+            local.assetsDict['/assets.swgg.swagger.petstore.json'];
         // coverage-hack - re-run test-server
         local.testRunServer(local);
         // coverage-hack - stateInit
