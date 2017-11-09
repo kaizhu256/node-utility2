@@ -277,7 +277,7 @@
                 return JSON.stringify(element);
             };
             circularList = [];
-            return JSON.stringify(element && typeof element === 'object'
+            return JSON.stringify(typeof element === 'object' && element
                 // recurse
                 ? JSON.parse(stringify(element))
                 : element, replacer, space);
@@ -312,7 +312,7 @@
          */
             switch (type) {
             case 'dict':
-                return value && typeof value === 'object' && !Array.isArray(value)
+                return typeof value === 'object' && value && !Array.isArray(value)
                     ? value
                     : valueDefault || {};
             case 'list':
@@ -1050,7 +1050,7 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
             /*
              * this function will recursively normalize dbRow
              */
-                if (dbRow && typeof dbRow === 'object') {
+                if (typeof dbRow === 'object' && dbRow) {
                     Object.keys(dbRow).forEach(function (key) {
                         // remove invalid property
                         if (key[0] === '$' || key.indexOf('.') >= 0 || dbRow[key] === null) {
@@ -1063,7 +1063,7 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
                     });
                 }
             };
-            dbRow = local.jsonCopy(dbRow && typeof dbRow === 'object'
+            dbRow = local.jsonCopy(typeof dbRow === 'object' && dbRow
                 ? dbRow
                 : {});
             // update timestamp
@@ -1117,7 +1117,7 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
             this._crudRemoveOneById(result);
             // update dbRow
             dbRow._timeCreated = undefined;
-            local.objectSetOverride(result, dbRow, Infinity);
+            local.objectSetOverride(result, dbRow, 10);
             // replace dbRow
             result = this._crudSetOneById(result);
             return result;
@@ -1556,7 +1556,7 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
             value = dbRow;
             key = String(key).split('.');
             // optimization - for-loop
-            for (ii = 0; ii < key.length && value && typeof value === 'object'; ii += 1) {
+            for (ii = 0; ii < key.length && typeof value === 'object' && value; ii += 1) {
                 value = value[key[ii]];
             }
             return value === undefined
@@ -1688,7 +1688,7 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
             // optimization - convert to boolean
             not = !!not;
             result = dbRowList;
-            if (!(query && typeof query === 'object')) {
+            if (!(typeof query === 'object' && query)) {
                 result = local.dbRowListGetManyByOperator(result, fieldName, '$eq', query, not);
                 return result;
             }

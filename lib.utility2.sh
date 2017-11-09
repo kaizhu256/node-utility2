@@ -79,11 +79,11 @@ shBrowserTest() {(set -e
     export MODE_BUILD="${MODE_BUILD:-browserTest}"
     shBuildPrint "electron.${modeBrowserTest} - $LIST"
     # run browser-test
-    lib.utility2.js cli.browserTest "$LIST"
+    lib.utility2.js utility2.browserTest "$LIST"
     if [ "$modeBrowserTest" = test ]
     then
         # create test-report artifacts
-        lib.utility2.js cli.testReportCreate
+        lib.utility2.js utility2.testReportCreate
     fi
 )}
 
@@ -605,7 +605,7 @@ shBuildInit() {
     # init $npm_config_dir_electron
     if [ ! "$npm_config_dir_electron" ]
     then
-        [ -f lib.electron.js ] && export npm_config_dir_electron="$PWD" || true
+        [ ! -f lib.electron.js ] || export npm_config_dir_electron="$PWD"
         export npm_config_dir_electron="${npm_config_dir_electron:-\
 $(shModuleDirname electron-lite)}" || return $?
         export npm_config_dir_electron="${npm_config_dir_electron:-\
@@ -616,7 +616,7 @@ $HOME/node_modules/electron-lite}" || return $?
     # init $npm_config_dir_utility2
     if [ ! "$npm_config_dir_utility2" ]
     then
-        [ -f lib.utility2.js ] && export npm_config_dir_utility2="$PWD" || true
+        [ ! -f lib.utility2.js ] || export npm_config_dir_utility2="$PWD"
         export npm_config_dir_utility2="${npm_config_dir_utility2:-\
 $(shModuleDirname utility2)}" || return $?
         export npm_config_dir_utility2="${npm_config_dir_utility2:-\
@@ -1568,7 +1568,7 @@ local.jsonStringifyOrdered = function (element, replacer, space) {
         return JSON.stringify(element);
     };
     circularList = [];
-    return JSON.stringify(element && typeof element === 'object'
+    return JSON.stringify(typeof element === 'object' && element
         // recurse
         ? JSON.parse(stringify(element))
         : element, replacer, space);
@@ -1652,10 +1652,7 @@ local.file = process.argv[1];
 local.defaults = process.argv[2];
 local.overrides = process.argv[3];
 local.data = {};
-try {
-    local.data = JSON.parse(local.fs.readFileSync(local.file, 'utf8'));
-} catch (ignore) {
-}
+local.data = JSON.parse(local.fs.readFileSync(local.file, 'utf8'));
 if (local.defaults) {
     local.objectSetDefault(local.data, JSON.parse(local.defaults), Infinity);
 }
@@ -1826,13 +1823,9 @@ shGitSquashPop() {(set -e
 # http://stackoverflow.com/questions/5189560
 # /how-can-i-squash-my-last-x-commits-together-using-git
     COMMIT="$1"
-    MESSAGE="${2:-$(git log -1 --pretty=%s)}"
-    # commit any uncommitted data
-    git commit -am "$MESSAGE" || true
+    MESSAGE="$2"
     # reset git to previous $COMMIT
-    git reset --hard "$COMMIT"
-    # reset files to current HEAD
-    git merge --squash HEAD@{1}
+    git reset "$COMMIT"
     # commit HEAD immediately after previous $COMMIT
     git commit -am "$MESSAGE"
 )}
@@ -2217,19 +2210,7 @@ $ELEMENT"
 
 shMain() {
 # this function will run the main program
-    export UTILITY2_DEPENDENTS="apidoc-lite
-        db-lite
-        elasticsearch-lite
-        electron-lite
-        github-crud
-        istanbul-lite
-        itunes-search-lite
-        jslint-lite
-        swagger-ui-lite
-        swgg
-        swgg-google
-        uglifyjs-lite
-        utility2"
+    export UTILITY2_DEPENDENTS="$(shUtility2Dependents)"
 (set -e
     if [ ! "$1" ]
     then
@@ -2242,7 +2223,7 @@ shMain() {
         shBuildInit
         lib.utility2.js "$COMMAND" "$@"
         ;;
-    cli.*)
+    utility2.*)
         shBuildInit
         lib.utility2.js "$COMMAND" "$@"
         ;;
@@ -2681,7 +2662,7 @@ shNpmTest() {(set -e
         fi
     fi
     # create test-report artifacts
-    (eval lib.utility2.js cli.testReportCreate) || EXIT_CODE=$?
+    (eval lib.utility2.js utility2.testReportCreate) || EXIT_CODE=$?
     shBuildPrint "EXIT_CODE - $EXIT_CODE"
     return "$EXIT_CODE"
 )}
@@ -2728,7 +2709,7 @@ shOnParallelListExec() {(set -e
     LIST="$1"
     RATE_LIMIT="$2"
     shBuildInit
-    utility2 cli.onParallelListExec "$LIST" "$RATE_LIMIT"
+    utility2 utility2.onParallelListExec "$LIST" "$RATE_LIMIT"
 )}
 
 shPasswordEnvUnset() {
@@ -3277,6 +3258,26 @@ shUtility2BuildApp() {(set -e
     shUtility2GitDiff | less
 )}
 
+shUtility2Dependents() {(set -e
+# this function will return a list of utility2 dependents
+    cd "$HOME/src" 2>/dev/null || true
+printf "apidoc-lite
+db-lite
+elasticsearch-lite
+electron-lite
+github-crud
+istanbul-lite
+itunes-search-lite
+jslint-lite
+swagger-ui-lite
+swgg
+swgg-google
+uglifyjs-lite
+utility2
+$(ls -d swgg-* 2>/dev/null)
+"
+)}
+
 shUtility2DependentsSync() {(set -e
 # this function will sync files between utility2 and its dependents
     cd "$HOME/src"
@@ -3309,12 +3310,10 @@ shUtility2DependentsSync() {(set -e
             ln -f utility2/tmp/build/app/assets.utility2.rollup.js "$DIR"
             ln -f utility2/lib.swgg.js "$DIR"
             ;;
+        swgg-*)
+            ln -f utility2/tmp/build/app/assets.utility2.rollup.js "$DIR"
+            ;;
         esac
-    done
-    # hardlink assets.utility2.rollup.js
-    for DIR in $(ls -d swgg-* 2>/dev/null)
-    do
-        ln -f utility2/tmp/build/app/assets.utility2.rollup.js "$DIR"
     done
 )}
 

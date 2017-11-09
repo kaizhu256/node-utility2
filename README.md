@@ -1,7 +1,7 @@
 # utility2
 the zero-dependency, swiss-army-knife utility for building, testing, and deploying webapps
 
-# live demo
+# live web demo
 - [https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/)
 
 [![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.deployGithub.browser.%252Fnode-utility2%252Fbuild%252Fapp.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/)
@@ -61,16 +61,14 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 - analytics
 - none
 
-#### changelog for v2017.10.24
-- npm publish 2017.10.24
-- apidoc - fix assert-module bug
-- auto-validate assets.swgg.swagger.json
-- cli - add commend cli.swaggerValidate
-- remove file assets.swgg.swagger.json
-- styleguide - change max characters per line from 96 -> 100
-- swgg - remove datatable for future revamp
-- swgg - add feature \$SWGG_TAGS0_FILTER to filter x-swgg-tags0
-- swgg - add feature x-swgg-operationIdFromPath to auto-create operationId from path
+#### changelog for v2017.11.8
+- npm publish 2017.11.8
+- add function normalizeChunk
+- change default corsForwardProxyHost
+- cleanup tests
+- rename commandline-prefix cli. -> utility2.
+- remove unused browser-code when building README.md
+- revamp swgg library with improved swagger-validation
 - none
 
 #### this package requires
@@ -84,13 +82,13 @@ the zero-dependency, swiss-army-knife utility for building, testing, and deployi
 ```shell
 # example.sh
 
-# this shell script will download and run a web demo of utility2 as a standalone app
+# this shell script will download and run a web-demo of utility2 as a standalone app
 
 # 1. download standalone app
 curl -O https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.org/app/assets.app.js
 # 2. run standalone app
-node ./assets.app.js
-# 3. open a browser to http://127.0.0.1:8081 and play with the web demo
+PORT=8081 node ./assets.app.js
+# 3. open a browser to http://127.0.0.1:8081 and play with the web-demo
 # 4. edit file assets.app.js to suit your needs
 ```
 
@@ -411,16 +409,20 @@ instruction
 body {\n\
     background: #dde;\n\
     font-family: Arial, Helvetica, sans-serif;\n\
-    margin: 2rem;\n\
+    margin: 20px;\n\
 }\n\
 body > * {\n\
-    margin-bottom: 1rem;\n\
+    margin-bottom: 10px;\n\
 }\n\
 body > button {\n\
     width: 20rem;\n\
 }\n\
 button {\n\
     cursor: pointer;\n\
+}\n\
+.textOverflowEllipsis {\n\
+    text-overflow: ellipsis;\n\
+    white-space: nowrap;\n\
 }\n\
 .uiAnimateSlide {\n\
     overflow-y: hidden;\n\
@@ -441,7 +443,6 @@ button {\n\
     width: 2rem;\n\
 }\n\
 .utility2FooterDiv {\n\
-    margin-top: 20px;\n\
     text-align: center;\n\
 }\n\
 .zeroPixel {\n\
@@ -805,7 +806,7 @@ utility2-comment -->\n\
         "start": "set -e; export PORT=${PORT:-8080}; if [ -f assets.app.js ]; then node assets.app.js; else npm_config_mode_auto_restart=1 ./lib.utility2.sh shRun shIstanbulCover test.js; fi",
         "test": "PORT=$(./lib.utility2.sh shServerPortRandom) PORT_REPL=$(./lib.utility2.sh shServerPortRandom) npm_config_mode_auto_restart=1 ./lib.utility2.sh test test.js"
     },
-    "version": "2017.10.24"
+    "version": "2017.11.8"
 }
 ```
 

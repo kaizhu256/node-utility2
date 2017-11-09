@@ -168,8 +168,8 @@
                 local.replStart();
             };
             if (local.replStart) {
-                local.cliDict['--interactive'] =
-                    local.cliDict['--interactive'] || local.cliDict._interactive;
+                local.cliDict['--interactive'] = local.cliDict['--interactive'] ||
+                    local.cliDict._interactive;
                 local.cliDict['-i'] = local.cliDict['-i'] || local.cliDict._interactive;
             }
             // run fnc()
@@ -331,6 +331,9 @@
                     case 'alphanumeric':
                         value = value.replace((/\W/g), '_');
                         break;
+                    case 'br':
+                        value = value.replace((/\n/g), '<br>');
+                        break;
                     case 'decodeURIComponent':
                         value = decodeURIComponent(value);
                         break;
@@ -365,12 +368,15 @@
          * this function will try to run the fnc in a try-catch block,
          * else call onError with the errorCaught
          */
+            var result;
             // validate onError
             local.assert(typeof onError === 'function', typeof onError);
             try {
                 // reset errorCaught
                 local._debugTryCatchErrorCaught = null;
-                return fnc();
+                result = fnc();
+                local._debugTryCatchErrorCaught = null;
+                return result;
             } catch (errorCaught) {
                 // debug errorCaught
                 local._debugTryCatchErrorCaught = errorCaught;
@@ -715,8 +721,10 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
                 }());
             }
             // normalize moduleMain
-            moduleMain = options.moduleDict[options.env.npm_package_name] =
-                local.objectSetDefault(tmp, moduleMain);
+            moduleMain = options.moduleDict[options.env.npm_package_name] = local.objectSetDefault(
+                tmp,
+                moduleMain
+            );
             // init circularList - builtin
             Object.keys(process.binding('natives')).forEach(function (key) {
                 if (!(/\/|^_linklist$|^sys$/).test(key)) {
@@ -748,10 +756,10 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
             local.apidocModuleDictAdd(options, options.moduleDict);
             // init swgg.apiDict
             Object.keys((moduleMain.swgg && moduleMain.swgg.apiDict) || {}).forEach(function (key) {
-                tmp = options.env.npm_package_name + '.swgg.apiDict';
+                tmp = 'swgg.apiDict';
                 tmp = options.moduleDict[tmp] = options.moduleDict[tmp] || {};
-                tmp[encodeURIComponent(key) + '.ajax'] =
-                    moduleMain.swgg.apiDict[key] && moduleMain.swgg.apiDict[key].ajax;
+                tmp[key + '.ajax'] = moduleMain.swgg.apiDict[key] &&
+                    moduleMain.swgg.apiDict[key].ajax;
             });
             // init moduleExtraDict
             module = options.moduleExtraDict[options.env.npm_package_name] =
@@ -844,7 +852,7 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
                             .filter(function (key) {
                                 return local.tryCatchOnError(function () {
                                     return key &&
-                                        (/^\w[\w%\-.]*?$/).test(key) &&
+                                        (/^\w[\w\-.]*?$/).test(key) &&
                                         key.indexOf('testCase_') !== 0 &&
                                         module[key] !== options.blacklistDict[key];
                                 }, console.error);
